@@ -3,6 +3,8 @@ import itertools
 import glob
 import logging
 
+from collections import Counter
+
 import numpy as np
 
 from cyvcf2 import VCF
@@ -87,10 +89,9 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
             if gt.shape[1] < len(family):
                 res = -1 * np.ones((gt.shape[0], len(family)), dtype=np.int8)
                 gt_column = 0
-                for family_index, member in enumerate(family.members_in_order):
-                    if not member.missing:
-                        res[:, family_index] = gt[:, gt_column]
-                        gt_column += 1
+                for family_index, _member in enumerate(family.members_in_order):
+                    res[:, family_index] = gt[:, gt_column]
+                    gt_column += 1
                 gt = res
 
             if is_all_reference_genotype(gt) and \
@@ -289,7 +290,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                     f"{intersection}")
 
             vcf_samples += vcf.samples
-        vcf_samples = np.array(vcf_samples)
+
+        logger.debug(f"vcf samples (all): {vcf_samples}")
 
         vcf_samples_order = [list(vcf.samples) for vcf in self.vcfs]
         vcf_samples = set(vcf_samples)
@@ -305,10 +307,15 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
         vcf_samples = vcf_samples.difference(missing_samples)
         assert vcf_samples.issubset(pedigree_samples)
+        logger.debug(f"vcf samples (matched): {vcf_samples}")
 
         seen = set()
         not_sequenced = set()
+        counters = Counter()
         for person in self.families.persons.values():
+            if person.generated:
+                counters["generated"] += 1
+                continue
 
             if person.sample_id in vcf_samples:
                 if person.sample_id in seen:
@@ -323,28 +330,38 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                             )
                         )
                         seen.add(person.sample_id)
+                        counters["found"] += 1
                         break
             elif not self.fixed_pedigree:
                 if not person.generated and not person.not_sequenced:
                     not_sequenced.add(person.person_id)
                     person.set_attr("not_sequenced", True)
+                    counters["not_sequenced"] += 1
                     logger.warning(
                         f"person {person.person_id} marked as "
                         f"'not_sequenced'")
             else:
-                person.set_attr(
-                    "sample_index",
-                    (
-                        None,
-                        None
+                if not person.missing:
+                    logger.info(
+                        f"person {person} changed to missing")
+
+                    person.set_attr(
+                        "sample_index",
+                        (
+                            None,
+                            None
+                        )
                     )
-                )
-                person.set_attr("missing", True)
+                    person.set_attr("not_sequenced", True)
+                    counters["not_sequenced"] += 1
+                counters["missing"] += 1
+
+        logger.warning(f"people stats: {counters}")
 
         self.families.redefine()
         logger.warning(
             f"persons changed to not_sequenced {len(not_sequenced)}: "
-            f"{not_sequenced}")
+            f"{not_sequenced} in {self.filenames}")
 
     def _build_family_alleles_indexes(self):
         vcf_offsets = [0] * len(self.vcfs)
@@ -357,7 +374,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
         for family in self.families.values():
             samples_indexes = []
-            for vcf_index, sample_index in family.samples_index:
+            for person in family.members_in_order:
+                vcf_index, sample_index = person.sample_index
                 if vcf_index is None or sample_index is None:
                     assert vcf_index is None and sample_index is None
                     continue
@@ -376,13 +394,22 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         self.independent = self.families.persons_without_parents()
         self.independent_indexes = []
 
+        logger.debug(f"independent persons: {len(self.independent)}")
         missing = 0
         for person in self.independent:
             if person.missing:
+                logger.debug(
+                    f"independent individual missing: "
+                    f"{person}; {person.missing}"
+                )
                 missing += 1
                 continue
             self.independent_indexes.append(person.sample_index)
         self.independent_indexes = np.array(tuple(self.independent_indexes))
+
+        logger.debug(
+            f"independent: found={len(self.independent_indexes)}; "
+            f"missing={missing}")
 
         assert len(self.independent_indexes) + missing == \
             len(self.independent), (
@@ -454,14 +481,17 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
             allele_index = np.stack(
                 [2 * sample_index, 2 * sample_index + 1]).reshape(
-                    [1, 2 * len(sample_index)], order="F")[0]
+                    [1, 2 * len(sample_index)], order="F")[0].astype(np.int)
 
             current_vcf = self.vcfs[vcf_index]
             samples_count = len(current_vcf.samples)
             logger.debug(
                 f"samples len: {samples_count}; "
                 f"gt_idxs: {len(vcf.gt_idxs)}; "
-                f"{set(vcf.gt_idxs)}")
+                f"{set(vcf.gt_idxs)}; "
+                f"allele_index: {allele_index}, "
+                f"{allele_index.dtype}, {[type(v) for v in allele_index]}")
+
             if len(vcf.gt_idxs) == samples_count and \
                     set(vcf.gt_idxs) == set([-1]):
                 gt_idxs = -1 * np.ones(2 * samples_count, dtype=np.int)
@@ -481,6 +511,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 result[vcf_index]["n_alleles"][allele_index] += np.sum(
                     matched_alleles
                 )
+
         n_independent_parents = len(self.independent_indexes)
         n_parents_called = sum([r["n_parents_called"] for r in result])
         percent_parents_called = 0.0
@@ -511,7 +542,15 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 "af_ref_allele_count": int(ref_n_alleles),
                 "af_ref_allele_freq": float(ref_allele_freq),
             }
+            logger.debug(
+                f"allele {allele}: "
+                f"n_independent_parents={n_independent_parents}; "
+                f"n_parents_called={n_parents_called}; "
+                f"n_alleles={n_alleles}; "
+                f"allele_freq={allele_freq}")
+            logger.debug(f"allele {allele} frequencies: {freq}")
             allele.update_attributes(freq)
+            logger.debug(f"allele {allele} attributes: {allele.attributes}")
 
     def _full_variants_iterator_impl(self, initial_summary_variant_index=0):
 

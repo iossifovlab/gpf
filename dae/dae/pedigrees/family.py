@@ -28,6 +28,7 @@ PEDIGREE_COLUMN_NAMES = {
     "generated": "generated",
     "proband": "proband",
     "not_sequenced": "not_sequenced",
+    "missing": "missing",
 }
 
 
@@ -101,6 +102,10 @@ class Person(object):
             value = self._attributes.get("not_sequenced")
             if value == "None":
                 self._attributes["not_sequenced"] = None
+        if self._attributes.get("missing"):
+            value = self._attributes.get("missing")
+            if value == "None":
+                self._attributes["not_sequenced"] = None
 
     def __repr__(self):
         decorator = ""
@@ -138,7 +143,7 @@ class Person(object):
 
     @property
     def missing(self):
-        return self._attributes.get("missing", None)
+        return self.generated or self.not_sequenced
 
     @property
     def family_bin(self):
@@ -280,7 +285,7 @@ class Family(object):
         if self._members_in_order is None:
             self._members_in_order = list(
                 filter(
-                    lambda m: not (m.generated or m.not_sequenced),
+                    lambda m: not m.missing,
                     self.persons.values())
             )
         return self._members_in_order
@@ -638,3 +643,9 @@ class FamiliesData(Mapping):
             roles = [Role.from_name(role) for role in roles]
 
         return list(filter(lambda m: m.role in roles, persons))
+
+    def families_of_persons(self, person_ids: Set[str]) -> Set[str]:
+        family_ids: Set[str] = set()
+        for person_id in person_ids:
+            family_ids.add(self.persons[person_id].family_id)
+        return family_ids

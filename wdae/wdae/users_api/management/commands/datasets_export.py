@@ -1,12 +1,21 @@
 import sys
+import logging
+
 from django.core.management.base import BaseCommand
-from datasets_api.models import Dataset
 from django.contrib.auth.models import Group
 from guardian.shortcuts import get_perms
 
+from .dataset_mixin import DatasetBaseMixin
 
-class Command(BaseCommand):
+logger = logging.getLogger(__name__)
+
+
+class Command(BaseCommand, DatasetBaseMixin):
     help = "Export all existing datasets"
+
+    def __init__(self, **kwargs):
+        DatasetBaseMixin.__init__(self)
+        BaseCommand.__init__(self, **kwargs)
 
     def add_arguments(self, parser):
         parser.add_argument("--file", type=str)
@@ -19,13 +28,17 @@ class Command(BaseCommand):
         else:
             outfile = sys.stdout
 
-        datasets = Dataset.objects.all()
         print("dataset,groups", file=outfile)
-        for ds in datasets:
-            authorized = [
-                group.name
-                for group in groups
-                if "view" in get_perms(group, ds)
-            ]
-            authorized = ";".join(authorized)
-            print(f"{ds.dataset_id},{authorized}", file=outfile)
+        for genotype_data_id in self.gpf_instance.get_genotype_data_ids():
+            try:
+                dataset = self.get_dataset(genotype_data_id)
+                authorized = [
+                    group.name
+                    for group in groups
+                    if "view" in get_perms(group, dataset)
+                ]
+                authorized = ";".join(authorized)
+                print(f"{dataset.dataset_id},{authorized}", file=outfile)
+            except Exception as ex:
+                logger.warning(f"dataset {genotype_data_id} not found")
+                logger.exception(ex)

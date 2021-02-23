@@ -210,6 +210,7 @@ class VariantsDb(object):
 
         genotype_data_study = self.make_genotype_data_study(conf)
         if genotype_data_study is None:
+            del self.genotype_data_study_configs[study_id]
             return
         self._genotype_data_study_cache[study_id] = genotype_data_study
 
@@ -230,12 +231,18 @@ class VariantsDb(object):
         if not conf:
             return
 
-        genotype_data_group = self.make_genotype_data_group(conf)
-        if genotype_data_group is None:
-            return
-        self._genotype_data_group_cache[
-            genotype_data_group_id
-        ] = genotype_data_group
+        try:
+            genotype_data_group = self.make_genotype_data_group(conf)
+            if genotype_data_group is None:
+                return
+            self._genotype_data_group_cache[
+                genotype_data_group_id
+            ] = genotype_data_group
+        except Exception as ex:
+            logger.error(
+                f"unable to create genotype data group "
+                f"{genotype_data_group_id}")
+            logger.exception(ex)
 
     def make_genotype_data_study(self, study_config):
         if study_config is None:
@@ -256,11 +263,16 @@ class VariantsDb(object):
             )
             return None
 
-        variants = genotype_storage.build_backend(
-            study_config, self.genomes_db
-        )
+        try:
+            variants = genotype_storage.build_backend(
+                study_config, self.genomes_db
+            )
 
-        return GenotypeDataStudy(study_config, variants)
+            return GenotypeDataStudy(study_config, variants)
+        except Exception as ex:
+            logger.error(f"unable to create study {study_config.id}")
+            logger.exception(ex)
+            return None
 
     def make_genotype_data_group(self, genotype_data_group_config):
         if genotype_data_group_config is None:

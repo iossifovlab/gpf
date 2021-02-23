@@ -32,14 +32,14 @@ logger = logging.getLogger(__name__)
 
 def run_tabix(filename):
     def run_command(cmd):
-        print("executing", cmd)
+        logger.info(f"executing {cmd}")
         try:
             subprocess.check_output(cmd, shell=True)
         except subprocess.CalledProcessError as ex:
             status = ex.returncode
             output = ex.output
 
-            print(status, output)
+            logger.info(f"{status}, {output}")
             raise Exception("FAILURE AT: " + cmd)
 
     cmd = "bgzip -c {filename} > {filename}.bgz".format(filename=filename)
