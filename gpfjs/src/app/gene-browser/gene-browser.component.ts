@@ -84,6 +84,8 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   }
 
   ngOnInit() {
+    console.log(this.route.snapshot.params.gene);
+
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
     this.datasetsService.getSelectedDataset().subscribe(dataset => {
       this.geneBrowserConfig = dataset.geneBrowser;

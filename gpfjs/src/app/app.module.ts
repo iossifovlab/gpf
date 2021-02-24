@@ -211,6 +211,10 @@ const appRoutes: Routes = [
       {
         path: 'geneBrowser',
         component: GeneBrowserComponent
+      },
+      {
+        path: 'geneBrowser/:gene',
+        component: GeneBrowserComponent
       }
     ]
   },
