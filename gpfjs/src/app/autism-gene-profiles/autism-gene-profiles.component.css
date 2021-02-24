@@ -10,6 +10,18 @@ td {
   writing-mode: vertical-rl;
   transform-origin: center center;
   transform: rotate(180deg);
+  width: 100%;
+  float: left;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-height: 80%;
+}
+
+.effect-type-header gpf-sorting-buttons {
+  position: relative;
+  top: 5px;
+  /* white-space: nowrap; */
 }
 
 .table-subheader {

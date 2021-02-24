@@ -78,7 +78,7 @@
       <tr>
         <ng-container *ngFor="let dataset of config.datasets">
           <ng-container *ngFor="let personSet of dataset.personSets">
-            <td *ngFor="let effectType of dataset.effects">
+            <td *ngFor="let effectType of dataset.effects" class="effect-type-header">
               {{effectType}}
               <gpf-sorting-buttons [id]="dataset.name + '_' + personSet + '_' + effectType" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
             </td>
