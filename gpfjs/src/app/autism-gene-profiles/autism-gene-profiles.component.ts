@@ -6,8 +6,7 @@ import { Subject } from 'rxjs';
 import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile';
 import { AutismGeneProfilesService } from './autism-gene-profiles.service';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
-import { environment } from 'environments/environment';
-
+import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 
 @Component({
   selector: 'gpf-autism-gene-profiles',
@@ -38,6 +37,8 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
 
   sortBy: string;
   orderBy: string;
+  @ViewChildren(SortingButtonsComponent) sortingButtonsComponents: SortingButtonsComponent[];
+  currentSortingColumnId: string;
 
   @HostListener('window:scroll', ['$event'])
   onWindowScroll(event: any) {
@@ -80,6 +81,10 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
 
   calculateDatasetColspan(datasetConfig) {
     return datasetConfig.effects.length * datasetConfig.personSets.length;
+  }
+
+  getMapValues(map: Map<string, number>) {
+    return Array.from(map.values());
   }
 
   handleMultipleSelectMenuApplyEvent($event) {
@@ -139,6 +144,10 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
   }
 
   sort(sortBy: string, orderBy?: string) {
+    if (this.currentSortingColumnId !== sortBy) {
+      this.resetSortButtons(sortBy);
+    }
+
     this.sortBy = sortBy;
     if (orderBy) {
       this.orderBy = orderBy;
@@ -149,7 +158,12 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
     this.updateGenes();
   }
 
-  get imgPathPrefix() {
-    return environment.imgPathPrefix;
+  resetSortButtons(sortBy: string) {
+    if (this.currentSortingColumnId !== undefined) {
+      this.sortingButtonsComponents.find(
+        sortingButtonsComponent => sortingButtonsComponent.id === this.currentSortingColumnId
+      ).resetHideState();
+    } 
+    this.currentSortingColumnId = sortBy;
   }
 }

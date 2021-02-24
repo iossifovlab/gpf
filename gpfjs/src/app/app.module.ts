@@ -165,6 +165,7 @@ import { AutismGeneSingleProfileComponent } from './autism-gene-single-profile/a
 import { MiddleClickDirective } from './autism-gene-profiles/middle-click.directive';
 import { PersonFiltersBlockComponent } from './person-filters-block/person-filters-block.component';
 import { PersonIdsComponent } from './person-ids/person-ids.component';
+import { SortingButtonsComponent } from './sorting-buttons/sorting-buttons.component';
 
 const appRoutes: Routes = [
   {
@@ -371,6 +372,7 @@ const appRoutes: Routes = [
     MiddleClickDirective,
     PersonFiltersBlockComponent,
     PersonIdsComponent,
+    SortingButtonsComponent,
   ],
   imports: [
     BrowserModule,

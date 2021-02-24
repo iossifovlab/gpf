@@ -50,9 +50,26 @@
           <input #geneSearchInput (keyup)="sendKeystrokes(geneSearchInput.value)" id="gene-search-input"
             class="form-control" autocomplete="off" type="text" placeholder="Search gene" aria-label="Search gene">
         </th>
-        <th class="table-subheader" rowspan="2" *ngFor="let geneSet of shownGeneSets"><span class="vertical-text">{{geneSet}}</span></th>
-        <th class="table-subheader" rowspan="2" *ngFor="let autismScore of shownAutismScores"><span class="vertical-text">{{autismScore}}</span></th>
-        <th class="table-subheader" rowspan="2" *ngFor="let protectionScore of shownProtectionScores"><span class="vertical-text">{{protectionScore}}</span></th>
+        <th class="table-subheader" rowspan="2" *ngFor="let geneSet of shownGeneSets">
+          <span class="vertical-text">
+            {{geneSet}}
+          </span>
+          <gpf-sorting-buttons [id]="geneSet" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
+        </th>
+
+        <th class="table-subheader" rowspan="2" *ngFor="let autismScore of shownAutismScores">
+          <span class="vertical-text">
+            {{autismScore}}
+          </span>
+          <gpf-sorting-buttons [id]="'autism_' + autismScore" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
+        </th>
+
+        <th class="table-subheader" rowspan="2" *ngFor="let protectionScore of shownProtectionScores">
+          <span class="vertical-text">
+            {{protectionScore}}
+          </span>
+          <gpf-sorting-buttons [id]="'protection_' + protectionScore" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
+        </th>
 
         <ng-container *ngFor="let dataset of config.datasets">
           <th class="table-subheader" colspan="3" *ngFor="let personSet of dataset.personSets">{{personSet}}</th>
@@ -61,7 +78,10 @@
       <tr>
         <ng-container *ngFor="let dataset of config.datasets">
           <ng-container *ngFor="let personSet of dataset.personSets">
-            <td *ngFor="let effectType of dataset.effects">{{effectType}}</td>
+            <td *ngFor="let effectType of dataset.effects">
+              {{effectType}}
+              <gpf-sorting-buttons [id]="dataset.name + '_' + personSet + '_' + effectType" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
+            </td>
           </ng-container>
         </ng-container>
       </tr>
@@ -82,7 +102,9 @@
 
         <ng-container *ngFor="let study of gene.studies">
           <ng-container *ngFor="let personSet of study.personSets">
-            <td *ngFor="let effectType of personSet.effectTypes | keyvalue">{{effectType.value}}</td>
+            <td *ngFor="let effectType of getMapValues(personSet.effectTypes)">
+              {{effectType}}
+            </td>
           </ng-container>
         </ng-container>
       </tr>
