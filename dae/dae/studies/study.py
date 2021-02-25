@@ -383,25 +383,29 @@ class GenotypeDataGroup(GenotypeData):
 
     def _build_families(self):
         logger.info(
-            f"combining families in studies: "
+            f"building combined families from studies: "
             f"{[st.study_id for st in self.studies]}")
 
         if len(self.studies) == 1:
             return self.studies[0].families
         elif len(self.studies) >= 2:
             logger.info(
-                f"combining families in {self.studies[0].study_id} "
-                f"and {self.studies[0].study_id}")
+                f"combining families from study {self.studies[0].study_id} "
+                f"and from study {self.studies[0].study_id}")
             result = GenotypeDataGroup._combine_families(
                 self.studies[0].families,
                 self.studies[1].families)
 
             if len(self.studies) > 2:
-                for si in range(3, len(self.studies)):
+                for si in range(2, len(self.studies)):
+                    logger.debug(
+                        f"processing study ({si}): "
+                        f"{self.studies[si].study_id}")
                     logger.info(
-                        f"combining families in studies "
+                        f"combining families from studies ({si}) "
                         f"{[st.study_id for st in self.studies[:si]]} "
-                        f"with {self.studies[si].study_id}")
+                        f"with families from study "
+                        f"{self.studies[si].study_id}")
                     result = GenotypeDataGroup._combine_families(
                         result,
                         self.studies[si].families
@@ -433,7 +437,7 @@ class GenotypeDataGroup(GenotypeData):
             if not forced:
                 assert len(mismatched_families) == 0, mismatched_families
             else:
-                logger.warning(f"second study overwrites family definition")
+                logger.warning("second study overwrites family definition")
 
         return combined_dict
 
