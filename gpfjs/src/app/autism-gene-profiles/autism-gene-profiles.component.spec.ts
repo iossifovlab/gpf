@@ -78,7 +78,6 @@ describe('AutismGeneProfilesComponent', () => {
       ['fakeAutismScore'],
       undefined,
       ['fakeGeneList'],
-      undefined,
       ['fakeProtectionScore']
     );
 
