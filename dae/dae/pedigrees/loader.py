@@ -522,4 +522,4 @@ class FamiliesLoader(CLILoader):
     @staticmethod
     def save_families(families, filename):
         assert isinstance(families, FamiliesData)
-        FamiliesLoader.save_pedigree(families.ped_df, filename)
+        FamiliesLoader.save_pedigree(families, filename)
