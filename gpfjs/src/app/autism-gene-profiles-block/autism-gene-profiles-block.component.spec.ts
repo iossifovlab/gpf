@@ -113,19 +113,25 @@ describe('AutismGeneProfilesBlockComponent', () => {
   it('should open previous tab', () => {
     const getActiveTabIndexSpy = spyOn(component, 'getActiveTabIndex');
     const openHomeTabSpy = spyOn(component, 'openHomeTab');
-    const openTabAtIndexSpy = spyOn(component, 'openTabAtIndex').and.callFake(arg => {
-      expect(arg).toBe(54639824 - 1);
-    });
+    const openTabAtIndexSpy = spyOn(component, 'openTabAtIndex').and.callThrough();
 
     getActiveTabIndexSpy.and.returnValue(0);
     component.openPreviousTab();
     expect(openHomeTabSpy).toHaveBeenCalledTimes(1);
     expect(openTabAtIndexSpy).not.toHaveBeenCalled();
 
-    getActiveTabIndexSpy.and.returnValue(54639824);
+    getActiveTabIndexSpy.and.returnValue(5);
     component.openPreviousTab();
     expect(openHomeTabSpy).toHaveBeenCalledTimes(1);
-    expect(openTabAtIndexSpy).toHaveBeenCalledTimes(1);
+    expect(openTabAtIndexSpy).toHaveBeenCalledWith(4);
+    getActiveTabIndexSpy.and.returnValue(4);
+    component.openPreviousTab();
+    expect(openHomeTabSpy).toHaveBeenCalledTimes(1);
+    expect(openTabAtIndexSpy).toHaveBeenCalledWith(3);
+    getActiveTabIndexSpy.and.returnValue(3);
+    component.openPreviousTab();
+    expect(openHomeTabSpy).toHaveBeenCalledTimes(1);
+    expect(openTabAtIndexSpy).toHaveBeenCalledWith(2);
   });
 
   it('should open next tab', () => {
