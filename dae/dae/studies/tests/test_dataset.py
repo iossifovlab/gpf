@@ -31,7 +31,8 @@ def test_combine_families():
     )
     new_families = GenotypeDataGroup._combine_families(
         families_A,
-        families_B
+        families_B,
+        forced=False
     )
 
     merged_f1 = new_families["f1"]
@@ -54,7 +55,8 @@ def test_combine_families_role_mismatch():
     with pytest.raises(AssertionError):
         GenotypeDataGroup._combine_families(
             families_A,
-            families_C
+            families_C,
+            forced=False
         )
 
 
@@ -68,7 +70,8 @@ def test_combine_families_sex_mismatch():
     with pytest.raises(AssertionError):
         GenotypeDataGroup._combine_families(
             families_A,
-            families_D
+            families_D,
+            forced=False
         )
 
 
@@ -82,7 +85,8 @@ def test_combine_families_sex_unspecified_mismatch():
 
     new_families = GenotypeDataGroup._combine_families(
             families_A,
-            families_E
+            families_E,
+            forced=False,
         )
 
     merged_f1 = new_families["f1"]

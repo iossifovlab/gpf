@@ -361,7 +361,7 @@ class Family(object):
         return FamilyType.OTHER
 
     @staticmethod
-    def merge(l_fam: "Family", r_fam: "Family") -> "Family":
+    def merge(l_fam: "Family", r_fam: "Family", forced=True) -> "Family":
         assert l_fam.family_id == r_fam.family_id, \
             ("Merging families is only allowed with matching family IDs!"
              f" ({l_fam.family_id} != {r_fam.family_id})")
@@ -391,17 +391,25 @@ class Family(object):
             elif r_person.role == Role.unknown:
                 merged_persons[person_id] = l_person
 
-            assert (l_person.sex == r_person.sex or
-                    l_person.sex == Sex.unspecified or
-                    r_person.sex == Sex.unspecified) \
-                and (l_person.role == r_person.role or
+            match = (l_person.sex == r_person.sex or
+                     l_person.sex == Sex.unspecified or
+                     r_person.sex == Sex.unspecified) and \
+                    (l_person.role == r_person.role or
                      l_person.role == Role.unknown or
-                     r_person.role == Role.unknown) \
-                and (l_person.family_id == r_person.family_id), \
-                f"Mismatched attributes for person {person_id}; " \
-                f"{l_person.sex} == {r_person.sex}, " \
-                f"{l_person.role} == {r_person.role}, " \
-                f"{l_person.family_id} == {r_person.family_id}"
+                     r_person.role == Role.unknown) and \
+                    (l_person.family_id == r_person.family_id)
+            if not match:
+                message = f"Mismatched attributes for person {person_id}; " \
+                    f"{l_person.sex} == {r_person.sex}, " \
+                    f"{l_person.role} == {r_person.role}, " \
+                    f"{l_person.family_id} == {r_person.family_id}"
+
+                logger.warning(message)
+                if forced:
+                    logger.warning(f"second person overwrites: {r_person}")
+                    merged_persons[person_id] = r_person
+                else:
+                    raise AssertionError(message)
 
         # Construct new instances of Person to avoid
         # modifying the original family's Person instances

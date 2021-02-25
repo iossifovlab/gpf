@@ -386,18 +386,31 @@ class GenotypeDataGroup(GenotypeData):
             f"combining families in studies: "
             f"{[st.study_id for st in self.studies]}")
 
-        return FamiliesData.from_families(
-            functools.reduce(
-                lambda x, y: GenotypeDataGroup._combine_families(x, y),
-                [
-                    genotype_data_study.families
-                    for genotype_data_study in self.studies
-                ],
-            )
-        )
+        if len(self.studies) == 1:
+            return self.studies[0].families
+        elif len(self.studies) >= 2:
+            logger.info(
+                f"combining families in {self.studies[0].study_id} "
+                f"and {self.studies[0].study_id}")
+            result = GenotypeDataGroup._combine_families(
+                self.studies[0].families,
+                self.studies[1].families)
+
+            if len(self.studies) > 2:
+                for si in range(3, len(self.studies)):
+                    logger.info(
+                        f"combining families in studies "
+                        f"{[st.study_id for st in self.studies[:si]]} "
+                        f"with {self.studies[si].study_id}")
+                    result = GenotypeDataGroup._combine_families(
+                        result,
+                        self.studies[si].families
+                    )
+
+        return FamiliesData.from_families(result)
 
     @staticmethod
-    def _combine_families(first, second):
+    def _combine_families(first, second, forced=True):
         same_families = set(first.keys()) & set(second.keys())
         combined_dict = {}
         combined_dict.update(first)
@@ -405,13 +418,22 @@ class GenotypeDataGroup(GenotypeData):
         mismatched_families = []
         for sf in same_families:
             try:
-                combined_dict[sf] = Family.merge(first[sf], second[sf])
-            except AssertionError:
+                combined_dict[sf] = Family.merge(
+                    first[sf], second[sf], forced=forced)
+            except AssertionError as ex:
                 import traceback
                 traceback.print_exc()
+                logger.error(f"mismatched families: {first[sf]}, {second[sf]}")
+                logger.exception(ex)
+
                 mismatched_families.append(sf)
 
-        assert len(mismatched_families) == 0, mismatched_families
+        if len(mismatched_families) > 0:
+            logger.warning(f"mismatched families: {mismatched_families}")
+            if not forced:
+                assert len(mismatched_families) == 0, mismatched_families
+            else:
+                logger.warning(f"second study overwrites family definition")
 
         return combined_dict
 
