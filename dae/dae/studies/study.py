@@ -1,5 +1,4 @@
 import time
-import functools
 import logging
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
