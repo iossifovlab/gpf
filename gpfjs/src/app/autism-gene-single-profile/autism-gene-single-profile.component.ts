@@ -1,9 +1,9 @@
 import { Component, Input, OnChanges, OnInit } from '@angular/core';
 import { AutismGeneToolConfig, AutismGeneToolGene } from 'app/autism-gene-profiles/autism-gene-profile';
 import { Observable } from 'rxjs';
-import { AutismGeneSingleProfileService } from './autism-gene-single-profile.service';
 import { GeneWeightsService } from '../gene-weights/gene-weights.service';
 import { GeneWeights } from 'app/gene-weights/gene-weights';
+import { AutismGeneProfilesService } from 'app/autism-gene-profiles/autism-gene-profiles.service';
 
 @Component({
   selector: 'gpf-autism-gene-single-profile',
@@ -20,7 +20,7 @@ export class AutismGeneSingleProfileComponent implements OnInit, OnChanges {
   private geneSets: string[];
 
   constructor(
-    private autismGeneSingleProfileService: AutismGeneSingleProfileService,
+    private autismGeneProfilesService: AutismGeneProfilesService,
     private geneWeightsService: GeneWeightsService,
   ) { }
 
@@ -31,7 +31,7 @@ export class AutismGeneSingleProfileComponent implements OnInit, OnChanges {
   }
 
   ngOnInit(): void {
-    this.gene$ = this.autismGeneSingleProfileService.getGene(this.geneSymbol);
+    this.gene$ = this.autismGeneProfilesService.getGene(this.geneSymbol);
 
     this.gene$.subscribe(res => {
       const autismScores: string = [...res['autismScores'].keys()].join(',');

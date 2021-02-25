@@ -10,7 +10,7 @@ import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile'
 })
 export class AutismGeneProfilesService {
   private readonly configUrl = 'autism_gene_tool/configuration';
-  private readonly genesUrl = 'autism_gene_tool/genes';
+  private readonly genesUrl = 'autism_gene_tool/genes/';
 
   constructor(
     private http: HttpClient,
@@ -26,6 +26,14 @@ export class AutismGeneProfilesService {
       }
 
       return AutismGeneToolConfig.fromJson(res);
+    });
+  }
+
+  getGene(geneSymbol: string): Observable<AutismGeneToolGene> {
+    return this.http
+    .get(this.config.baseUrl + this.genesUrl + geneSymbol)
+    .map(res => {
+      return AutismGeneToolGene.fromJson(res);
     });
   }
 
