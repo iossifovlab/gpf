@@ -14,12 +14,14 @@
       <li [ngbNavItem]="'advanced'" *ngIf="showAdvancedButton" id="advanced">
           <a ngbNavLink>Advanced</a>
           <ng-template ngbNavContent>
+            <div style="padding-bottom: 5px">
               <gpf-family-type-filter *ngIf="showFamilyTypeFilter" style="padding: 10px;"></gpf-family-type-filter>
               <gpf-person-filters
                 [dataset]="dataset"
                 [filters]="dataset?.genotypeBrowserConfig?.familyFilters"
                 [isFamilyFilters]="true"
               ></gpf-person-filters>
+            </div>
           </ng-template>
       </li>
     </ul>
