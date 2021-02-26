@@ -1,4 +1,5 @@
-import { Component, AfterViewInit, Input, forwardRef, ViewChild } from '@angular/core';
+import { Component, AfterViewInit, Input, forwardRef, ViewChild, OnInit } from '@angular/core';
+import { DatasetsService } from 'app/datasets/datasets.service';
 import { Dataset } from '../datasets/datasets';
 import { QueryStateCollector } from '../query/query-state-provider';
 import { StateRestoreService } from '../store/state-restore.service';
@@ -12,15 +13,23 @@ import { StateRestoreService } from '../store/state-restore.service';
     useExisting: forwardRef(() => FamilyFiltersBlockComponent)
   }]
 })
-export class FamilyFiltersBlockComponent extends QueryStateCollector implements AfterViewInit {
+export class FamilyFiltersBlockComponent extends QueryStateCollector implements OnInit, AfterViewInit {
   @Input() dataset: Dataset;
   @Input() genotypeBrowserState: Object;
   @ViewChild('nav') ngbNav;
+  private showFamilyTypeFilter: boolean;
 
   constructor(
-    private stateRestoreService: StateRestoreService
+    private stateRestoreService: StateRestoreService,
+    private datasetsService: DatasetsService,
   ) {
     super();
+  }
+
+  ngOnInit(): void {
+    this.datasetsService.getSelectedDataset().subscribe(res => 
+      this.showFamilyTypeFilter = res.genotypeBrowserConfig.hasFamilyStructureFilter
+    );
   }
 
   ngAfterViewInit() {
@@ -37,8 +46,4 @@ export class FamilyFiltersBlockComponent extends QueryStateCollector implements 
         }
       );
   }
-
-  ngOnDestroy() {
-  }
-
 }
