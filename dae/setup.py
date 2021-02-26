@@ -39,6 +39,7 @@ setuptools.setup(
         "dae/tools/genotype_data_tool.py",
         "dae/tools/vcfinfo_extractor.py",
         "dae/tools/generate_autism_gene_profile.py",
+        "dae/tools/generate_agp_cache_table.py",
     ],
     entry_points="""
     [console_scripts]
