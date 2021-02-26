@@ -54,7 +54,7 @@ class DatasetBaseMixin(DatasetHelpers):
 
             for group in groups:
                 logger.info(
-                    f"going to rename wdae dataset group name from {dataset_id} "
+                    f"going to rename wdae dataset group from {dataset_id} "
                     f"to {new_id}")
                 if not dry_run:
                     group.name = new_id

@@ -1,10 +1,15 @@
 import time
+import logging
+
 from collections import OrderedDict
 
 from dae.variants.attributes import Role
 
 from dae.common_reports.family_report import FamiliesReport
 from dae.common_reports.denovo_report import DenovoReport
+
+
+logger = logging.getLogger(__name__)
 
 
 class CommonReport(object):
@@ -34,7 +39,8 @@ class CommonReport(object):
             config.families_count_show_id,
         )
         elapsed = time.time() - start
-        print(f"COMMON REPORTS family report " f"build in {elapsed:.2f} sec")
+        logger.info(
+            f"COMMON REPORTS family report " f"build in {elapsed:.2f} sec")
 
         start = time.time()
 
@@ -55,7 +61,8 @@ class CommonReport(object):
             denovo_report_collections
         )
         elapsed = time.time() - start
-        print(f"COMMON REPORTS denovo report " f"build in {elapsed:.2f} sec")
+        logger.info(
+            f"COMMON REPORTS denovo report " f"build in {elapsed:.2f} sec")
 
         self.study_name = genotype_data_study.name
         self.phenotype = self._get_phenotype()

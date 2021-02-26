@@ -36,7 +36,9 @@ def main(gpf_instance=None, argv=None):
     elif args.verbose >= 3:
         logging.basicConfig(level=logging.DEBUG)
     else:
-        logging.basicConfig(level=logging.ERROR)
+        logging.basicConfig(level=logging.WARNING)
+
+    logging.getLogger("impala").setLevel(logging.WARNING)
 
     start = time.time()
     if gpf_instance is None:
@@ -46,16 +48,17 @@ def main(gpf_instance=None, argv=None):
 
     if args.show_studies:
         for study_id in common_report_facade.get_all_common_report_ids():
-            print(study_id)
+            logger.waring(f"study: {study_id}")
     else:
         elapsed = time.time() - start
-        print(f"started common reports generation after {elapsed:0.2f} sec")
+        logger.info(
+            f"started common reports generation after {elapsed:0.2f} sec")
         if args.studies:
             studies = args.studies.split(",")
-            print("generating common reports for:", studies)
+            logger.info(f"generating common reports for: {studies}")
             common_report_facade.generate_common_reports(studies)
         else:
-            print("generating common reports for all studies!!!")
+            logger.info("generating common reports for all studies!!!")
             common_report_facade.generate_all_common_reports()
 
 
