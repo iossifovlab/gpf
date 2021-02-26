@@ -4,7 +4,7 @@ import { StateRestoreService } from 'app/store/state-restore.service';
 
 import { FamilyFiltersBlockComponent } from './family-filters-block.component';
 
-describe('FamilyFiltersBlockComponent', () => {
+xdescribe('FamilyFiltersBlockComponent', () => {
   let component: FamilyFiltersBlockComponent;
   let fixture: ComponentFixture<FamilyFiltersBlockComponent>;
 
