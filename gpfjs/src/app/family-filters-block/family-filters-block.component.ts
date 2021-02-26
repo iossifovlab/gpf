@@ -17,8 +17,8 @@ export class FamilyFiltersBlockComponent extends QueryStateCollector implements 
   @Input() dataset: Dataset;
   @Input() genotypeBrowserState: Object;
   @ViewChild('nav') ngbNav;
-  private showFamilyTypeFilter: boolean;
-  private showAdvancedButton: boolean;
+  showFamilyTypeFilter: boolean;
+  showAdvancedButton: boolean;
 
   constructor(
     private stateRestoreService: StateRestoreService,

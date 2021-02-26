@@ -17,7 +17,7 @@ export class PersonFiltersBlockComponent extends QueryStateCollector implements 
   @Input() dataset: Dataset;
   @Input() genotypeBrowserState: Object;
   @ViewChild('nav') ngbNav;
-  private showAdvancedButton: boolean;
+  showAdvancedButton: boolean;
 
   constructor(
     private stateRestoreService: StateRestoreService
