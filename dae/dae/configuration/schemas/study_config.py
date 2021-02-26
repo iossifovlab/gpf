@@ -242,6 +242,12 @@ study_config_schema = {
         "schema": {
             "enabled": {"type": "boolean", "required": True},
             "has_family_filters": {"type": "boolean"},
+            "has_family_structure_filter": {
+                "type": "boolean", 
+                "dependencies": {
+                    "has_family_filters": [True]
+                }
+            },
             "has_person_filters": {"type": "boolean"},
             "has_study_filters": {"type": "boolean"},
             "has_present_in_child": {"type": "boolean"},
