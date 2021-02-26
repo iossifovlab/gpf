@@ -84,8 +84,6 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   }
 
   ngOnInit() {
-    console.log(this.route.snapshot.params.gene);
-
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
     this.datasetsService.getSelectedDataset().subscribe(dataset => {
       this.geneBrowserConfig = dataset.geneBrowser;
@@ -96,6 +94,23 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
         this.selectedDatasetId = params['dataset'];
       }
     );
+
+    if (this.route.snapshot.params.gene) {
+      this.waitForGeneViewComponent().then(() => {
+        this.stateRestoreService.pushNewState({'geneSymbols': [this.route.snapshot.params.gene]});
+        this.submitGeneRequest();
+      })
+    }
+  }
+
+  async waitForGeneViewComponent() {
+    return new Promise<void>(resolve => {
+      setTimeout(() => {
+        if (this.geneViewComponent !== undefined) {
+          resolve();
+        }
+      }, 100);
+    });
   }
 
   getCurrentState() {
