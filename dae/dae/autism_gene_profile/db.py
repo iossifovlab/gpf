@@ -2,7 +2,7 @@ import logging
 from copy import copy
 
 from dae.autism_gene_profile.statistic import AGPStatistic
-from sqlalchemy import MetaData, create_engine
+from sqlalchemy import MetaData, create_engine, inspect
 from sqlalchemy import Table, Column, Integer, String, Float, ForeignKey
 from sqlalchemy.sql import select, insert, join, delete, and_, desc, asc
 from sqlalchemy.orm import aliased
@@ -22,6 +22,8 @@ class AutismGeneProfileDB:
         self.configuration = self._build_configuration(configuration)
         self.build_gene_profile_db(clear)
         self._agp_view = None
+        if self.cache_table_exists():
+            self.cache_table = self._create_db_cache_table(autoload=True)
 
     @property
     def agp_view(self):
@@ -202,11 +204,19 @@ class AutismGeneProfileDB:
             sort_by = sort_by.replace("gene_set_", "", 1)
         return sort_by
 
-    def query_agps(self, page, symbol_like=None, sort_by=None, order=None):
-        s = self.agp_view.select()
+    def query_agps(
+            self, page, symbol_like=None, sort_by=None, order=None,
+            force_view=False):
+        if force_view:
+            table = self.agp_view
+        elif self.cache_table_exists():
+            table = self.cache_table
+        else:
+            table = self.agp_view
 
+        s = table.select()
         if symbol_like:
-            s = s.where(self.agp_view.c.symbol_name.like(f"%{symbol_like}%"))
+            s = s.where(table.c.symbol_name.like(f"%{symbol_like}%"))
 
         if sort_by is not None:
             if order is None:
@@ -215,7 +225,8 @@ class AutismGeneProfileDB:
             query_order_func = desc if order == "desc" else asc
             s = s.order_by(query_order_func(sort_by))
 
-        s = s.limit(self.PAGE_SIZE).offset(self.PAGE_SIZE*(page-1))
+        if page is not None:
+            s = s.limit(self.PAGE_SIZE).offset(self.PAGE_SIZE*(page-1))
         with self.engine.connect() as connection:
             return connection.execute(s).fetchall()
 
@@ -318,6 +329,69 @@ class AutismGeneProfileDB:
                 index=True,
             ),
         )
+
+    def drop_cache_table(self):
+        with self.engine.connect() as connection:
+            connection.execute("DROP TABLE IF EXISTS agp_view_cache")
+
+    def cache_table_exists(self):
+        insp = inspect(self.engine)
+        with self.engine.connect() as connection:
+            has_cache_table = insp.dialect.has_table(
+                connection, "agp_view_cache"
+            )
+            return has_cache_table
+
+    def _cache_table_columns(self):
+        columns = {}
+        columns["symbol_name"] = \
+            Column("symbol_name", String(64), primary_key=True)
+        for gs in self.configuration["gene_sets"]:
+            columns[gs] = Column(gs, Integer())
+
+        for ps in self.configuration["protection_scores"]:
+            col = f"protection_{ps}"
+            columns[col] = Column(col, Float())
+
+        for aus in self.configuration["autism_scores"]:
+            col = f"autism_{aus}"
+            columns[col] = Column(col, Float())
+
+        for dataset_id, dataset in self.configuration["datasets"].items():
+            config_section = self.configuration["datasets"][dataset_id]
+            for person_set in config_section["person_sets"]:
+                for effect_type in config_section["effects"]:
+                    column_name = f"{dataset_id}_{person_set}_{effect_type}"
+                    columns[column_name] = Column(column_name, Float())
+        return columns
+
+    def _create_db_cache_table(self, autoload=False):
+        columns = self._cache_table_columns().values()
+
+        return Table(
+            "agp_view_cache",
+            self.metadata,
+            *columns,
+            autoload=autoload
+        )
+
+    def _clear_cache_table(self):
+        d = self.cache_table.delete()
+        with self.engine.connect() as connection:
+            connection.execute(d)
+
+    def generate_cache_table(self, regenerate=False):
+        self.drop_cache_table()
+        if not regenerate:
+            self.cache_table = self._create_db_cache_table()
+            self.metadata.create_all(tables=[self.cache_table])
+        else:
+            self._clear_cache_table()
+        columns = list(self._cache_table_columns().keys())
+        s = self.agp_view.select()
+        ins = self.cache_table.insert().from_select(columns, s)
+        with self.engine.connect() as connection:
+            connection.execute(ins)
 
     def build_agp_view(self):
         study_ids = self._get_study_ids()
