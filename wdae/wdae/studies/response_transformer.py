@@ -306,7 +306,9 @@ class ResponseTransformer:
                     )
                 elif col_source in self.PHENOTYPE_ATTRS:
                     phenotype_person_sets = \
-                        self.study_wrapper.person_set_collections.get("phenotype")
+                        self.study_wrapper.person_set_collections.get(
+                            "phenotype"
+                        )
                     if phenotype_person_sets is None:
                         row_variant.append("-")
                     else:
@@ -315,7 +317,9 @@ class ResponseTransformer:
                             ",".join(fn(v, phenotype_person_sets)))
 
                 elif col_source == "study_phenotype":
-                    row_variant.append(self.study_wrapper.config.study_phenotype)
+                    row_variant.append(
+                        self.study_wrapper.config.study_phenotype
+                    )
 
                 else:
                     if col_source in self.SPECIAL_ATTRS:
@@ -422,4 +426,6 @@ class ResponseTransformer:
 
     def transform_summary_variants(self, variants_iterable):
         for v in self._add_additional_columns_summary(variants_iterable):
-            yield self._build_variant_row(v, self.study_wrapper.summary_preview_descs)
+            yield self._build_variant_row(
+                v, self.study_wrapper.summary_preview_descs
+            )
