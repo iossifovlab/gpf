@@ -142,7 +142,8 @@ class ResponseTransformer:
         self.study_wrapper = study_wrapper
 
     def _get_all_pheno_values(self, family_ids):
-        if not self.study_wrapper.phenotype_data or not self.study_wrapper.pheno_column_slots:
+        if not self.study_wrapper.phenotype_data \
+           or not self.study_wrapper.pheno_column_slots:
             return None
 
         pheno_column_names = []
@@ -355,7 +356,9 @@ class ResponseTransformer:
                     a.get_attribute("seen_in_status") in {1, 3},
                 ]
 
-    def transform_gene_view_summary_variant(self, variant: SummaryVariant, frequency_column):
+    def transform_gene_view_summary_variant(
+        self, variant: SummaryVariant, frequency_column
+    ):
         for a in variant.alt_alleles:
             yield {
                 "location": a.cshl_location,
@@ -390,7 +393,9 @@ class ResponseTransformer:
             "seen_in_affected",
             "seen_in_unaffected"
         ]
-        rows = self.gene_view_summary_download_variants_iterator(variants, frequency_column)
+        rows = self.gene_view_summary_download_variants_iterator(
+            variants, frequency_column
+        )
         return map(join_line, itertools.chain([columns], rows))
 
     def transform_variants(self, variants_iterable):

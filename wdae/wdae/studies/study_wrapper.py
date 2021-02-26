@@ -408,7 +408,8 @@ class StudyWrapper(StudyWrapperBase):
             self.genotype_data_study.query_summary_variants(**kwargs), limit
         )
         for v in variants_from_studies:
-            for a in self.response_transformer.transform_gene_view_summary_variant(v, frequency_column):
+            for a in self.response_transformer.\
+               transform_gene_view_summary_variant(v, frequency_column):
                 yield a
 
     def get_gene_view_summary_variants_download(
@@ -421,9 +422,10 @@ class StudyWrapper(StudyWrapperBase):
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_summary_variants(**kwargs), limit
         )
-        return self.response_transformer.transform_gene_view_summary_variant_download(
-            variants_from_studies, frequency_column
-        )
+        return self.response_transformer.\
+            transform_gene_view_summary_variant_download(
+                variants_from_studies, frequency_column
+            )
 
     def query_variants(self, **kwargs):
         kwargs = self.query_transformer.transform_kwargs(**kwargs)
@@ -434,7 +436,9 @@ class StudyWrapper(StudyWrapperBase):
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_variants(**kwargs), limit
         )
-        for variant in self.response_transformer.transform_variants(variants_from_studies):
+        for variant in self.response_transformer.transform_variants(
+            variants_from_studies
+        ):
             yield variant
 
     def query_summary_variants(self, **kwargs):
@@ -446,7 +450,9 @@ class StudyWrapper(StudyWrapperBase):
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_summary_variants(**kwargs), limit
         )
-        for variant in self.response_transformer.transform_summary_variants(variants_from_studies):
+        for variant in self.response_transformer.transform_summary_variants(
+            variants_from_studies
+        ):
             yield variant
 
     def _get_roles_value(self, allele, roles):
