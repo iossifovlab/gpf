@@ -49,15 +49,16 @@ class DatasetBaseMixin(DatasetHelpers):
             logger.warning(
                 f"wdae group {dataset_id} not found; nothing to rename")
         else:
-            assert len(groups) == 1, groups
-            group = groups[0]
+            if len(groups) != 1:
+                logger.warning(f"more than one group found: {groups}")
 
-            logger.info(
-                f"going to rename wdae dataset group name from {dataset_id} "
-                f"to {new_id}")
-            if not dry_run:
-                group.name = new_id
-                group.save()
+            for group in groups:
+                logger.info(
+                    f"going to rename wdae dataset group name from {dataset_id} "
+                    f"to {new_id}")
+                if not dry_run:
+                    group.name = new_id
+                    group.save()
 
     def remove_wdae_dataset_and_groups(self, dataset_id, dry_run=None):
         dataset = self.get_dataset(dataset_id)
