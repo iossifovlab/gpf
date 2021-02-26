@@ -18,6 +18,7 @@ export class FamilyFiltersBlockComponent extends QueryStateCollector implements 
   @Input() genotypeBrowserState: Object;
   @ViewChild('nav') ngbNav;
   private showFamilyTypeFilter: boolean;
+  private showAdvancedButton: boolean;
 
   constructor(
     private stateRestoreService: StateRestoreService,
@@ -27,9 +28,10 @@ export class FamilyFiltersBlockComponent extends QueryStateCollector implements 
   }
 
   ngOnInit(): void {
-    this.datasetsService.getSelectedDataset().subscribe(res => 
-      this.showFamilyTypeFilter = res.genotypeBrowserConfig.hasFamilyStructureFilter
-    );
+    this.showFamilyTypeFilter = this.dataset.genotypeBrowserConfig.hasFamilyStructureFilter;
+    this.showAdvancedButton =
+      this.dataset.genotypeBrowserConfig.familyFilters.length !== 0 ||
+      this.dataset.genotypeBrowserConfig.hasFamilyStructureFilter;
   }
 
   ngAfterViewInit() {
