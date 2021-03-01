@@ -48,7 +48,7 @@ def main(gpf_instance=None, argv=None):
 
     if args.show_studies:
         for study_id in common_report_facade.get_all_common_report_ids():
-            logger.waring(f"study: {study_id}")
+            logger.warning(f"study: {study_id}")
     else:
         elapsed = time.time() - start
         logger.info(
