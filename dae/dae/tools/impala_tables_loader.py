@@ -96,11 +96,11 @@ def main(argv=sys.argv[1:], gpf_instance=None):
 
     argv = parse_cli_arguments(argv, gpf_instance)
 
-    if args.verbose == 1:
+    if argv.verbose == 1:
         logging.basicConfig(level=logging.WARNING)
-    elif args.verbose == 2:
+    elif argv.verbose == 2:
         logging.basicConfig(level=logging.INFO)
-    elif args.verbose >= 3:
+    elif argv.verbose >= 3:
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.ERROR)
