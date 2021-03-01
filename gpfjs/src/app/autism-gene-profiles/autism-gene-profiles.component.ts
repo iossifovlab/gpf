@@ -129,9 +129,10 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
 
   async waitForGeneSearchToLoad() {
     return new Promise<void>(resolve => {
-      setTimeout(() => {
+      const timer = setInterval(() => {
         if (this.geneSearchInput !== undefined) {
           resolve();
+          clearInterval(timer);
         }
       }, 100);
     });
