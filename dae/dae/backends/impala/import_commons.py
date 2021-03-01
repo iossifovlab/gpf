@@ -391,7 +391,7 @@ rule pedigree:
         stderr="logs/pedigree_stderr.log"
     shell:
         '''
-        ped2parquet.py --study-id {{study_id}} \\
+        ped2parquet.py --study-id {{study_id}} {{pedigree.verbose}} \\
 {%- if partition_description %}
             --pd {input.partition_description} \\
 {%- endif %}
@@ -420,7 +420,7 @@ rule {{prefix}}_variants_region_bin:
         stderr="logs/{{prefix}}_{rb}_stderr.log"
     shell:
         '''
-        {{prefix}}2parquet.py --study-id {{study_id}} \\
+        {{prefix}}2parquet.py --study-id {{study_id}} {{context.verbose}} \\
             {{pedigree.params}} {input.pedigree} \\
             {{context.params}} \\
 {%- if partition_description %}
@@ -767,6 +767,11 @@ class BatchImporter:
             "outdir": outdir,
             "dae_db_dir": self.gpf_instance.dae_db_dir,
         }
+
+        verbose = ""
+        if argv.verbose > 0:
+            verbose = f"-{'V'*argv.verbose}"
+
         if argv.genotype_storage:
             context["genotype_storage"] = argv.genotype_storage
         if argv.partition_description:
@@ -783,6 +788,7 @@ class BatchImporter:
             "pedigree": pedigree_pedigree,
             "params": pedigree_params,
             "output": pedigree_output,
+            "verbose": verbose,
         }
 
         context["variants"] = {}
@@ -811,6 +817,8 @@ class BatchImporter:
             variants_params_dict = variants_loader.build_arguments_dict()
             variants_context["params"] = variants_loader.build_cli_arguments(
                 variants_params_dict)
+            variants_context["verbose"] = verbose
+
             context["variants"][prefix] = variants_context
 
         context["mirror_of"] = {}

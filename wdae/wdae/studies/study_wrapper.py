@@ -344,7 +344,7 @@ class StudyWrapper(StudyWrapperBase):
                 v.alt_alleles
             )),
 
-        "carrier_person_attributes": 
+        "carrier_person_attributes":
         lambda v: list(
             map(
                 lambda aa: members_in_order_get_family_structure(

@@ -3,6 +3,8 @@ Created on Feb 13, 2018
 
 @author: lubo
 """
+import logging
+
 from abc import ABC, abstractproperty
 from dae.utils.variant_utils import vcf2cshl
 
@@ -10,6 +12,9 @@ from dae.variants.attributes import VariantType, TransmissionType, VariantDesc
 from typing import List, Dict, Set, Any, Optional
 from dae.variants.effects import Effect, EffectGene
 import itertools
+
+
+logger = logging.getLogger(__name__)
 
 
 # class AltAlleleItems:
@@ -111,7 +116,12 @@ class VariantDetails:
         self.variant_desc = variant_desc
 
         self.cshl_position = self.variant_desc.position
-        self.cshl_location = f"{self.chrom}:{self.cshl_position}"
+        if VariantType.is_cnv(self.variant_desc.variant_type):
+            self.cshl_location = f"{self.chrom}:" \
+                f"{self.variant_desc.position}-" \
+                f"{self.variant_desc.end_position}"
+        else:
+            self.cshl_location = f"{self.chrom}:{self.cshl_position}"
         self.cshl_variant = str(variant_desc)
         self.cshl_variant_full = variant_desc.to_cshl_full()
 
@@ -120,6 +130,17 @@ class VariantDetails:
         return VariantDetails(
             chrom, vcf2cshl(position, reference, alternative)
         )
+
+    @staticmethod
+    def from_cnv(variant):
+        assert VariantType.is_cnv(variant._variant_type)
+
+        variant_desc = VariantDesc(
+            variant_type=variant._variant_type,
+            position=variant.position,
+            end_position=variant.end_position)
+        return VariantDetails(
+            variant.chrom, variant_desc)
 
 
 class Allele(ABC):
@@ -290,7 +311,7 @@ class Allele(ABC):
         return item in self.attributes
 
     def __repr__(self) -> str:
-        if VariantType.is_cnv(self.variant_type):
+        if VariantType.is_cnv(self._variant_type):
             return f"{self.chromosome}:{self.position}-{self.end_position}"
         elif not self.alternative:
             return f"{self.chrom}:{self.position} {self.reference}(ref)"
@@ -569,15 +590,18 @@ class SummaryAllele(Allele):
 
     @property
     def details(self) -> Optional[VariantDetails]:
-        if self.alternative is None:
-            return None
         if self._details is None:
-            self._details = VariantDetails.from_vcf(
-                self.chromosome,
-                self.position,
-                self.reference,
-                self.alternative,
-            )
+            if VariantType.is_cnv(self._variant_type):
+                self._details = VariantDetails.from_cnv(self)
+            elif self.alternative is None:
+                return None
+            else:
+                self._details = VariantDetails.from_vcf(
+                    self.chromosome,
+                    self.position,
+                    self.reference,
+                    self.alternative,
+                )
         return self._details
 
     @property
@@ -615,6 +639,7 @@ class SummaryAllele(Allele):
         new_attributes = {
             "chrom": allele.attributes.get("chrom"),
             "position": allele.attributes.get("position"),
+            "end_position": allele.attributes.get("end_position"),
             "reference": allele.attributes.get("reference"),
             "summary_variant_index": allele.attributes.get(
                 "summary_variant_index"),
@@ -625,6 +650,7 @@ class SummaryAllele(Allele):
             allele.chromosome,
             allele.position,
             allele.reference,
+            end_position=allele.end_position,
             summary_index=allele.summary_index,
             transmission_type=allele.transmission_type,
             attributes=new_attributes,

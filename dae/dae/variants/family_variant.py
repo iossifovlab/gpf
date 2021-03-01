@@ -172,6 +172,10 @@ class FamilyAllele(Allele, FamilyDelegate):
         return self.summary_allele.variant_type
 
     @property
+    def _variant_type(self) -> Optional[VariantType]:
+        return self.summary_allele._variant_type
+
+    @property
     def end_position(self) -> Optional[int]:
         return self.summary_allele.end_position
 
@@ -217,11 +221,6 @@ class FamilyAllele(Allele, FamilyDelegate):
                     continue
                 trio = self.family.trios[pid]
                 trio_index = self.family.members_index(trio)
-
-                # logger.debug(
-                #     f"family {self.family} trio {trio} indexes: {trio_index}; "
-                #     f"gt: {self.gt}"
-                # )
 
                 trio_gt = self.gt[:, trio_index]
                 if np.any(trio_gt == -1):
