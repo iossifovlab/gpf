@@ -381,8 +381,8 @@ class AutismGeneProfileDB:
             connection.execute(d)
 
     def generate_cache_table(self, regenerate=False):
-        self.drop_cache_table()
         if not regenerate:
+            self.drop_cache_table()
             self.cache_table = self._create_db_cache_table()
             self.metadata.create_all(tables=[self.cache_table])
         else:
