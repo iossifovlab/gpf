@@ -14,5 +14,4 @@ def visit_create_view(element, compiler, **kw):
         name=element.name,
         sql=compiler.process(element.select, literal_binds=True)
     )
-    print(create)
     return create

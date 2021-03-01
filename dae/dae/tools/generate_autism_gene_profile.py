@@ -116,7 +116,8 @@ def main(gpf_instance=None, argv=None):
     gene_symbols = set()
     for gs in gene_sets:
         gene_symbols = gene_symbols.union(gs["syms"])
-    print(len(gene_symbols))
+    gs_count = len(gene_symbols)
+    logger.info(f"Collected {gs_count} gene symbols")
     variants = dict()
     person_ids = dict()
     for dataset_id, filters in config.datasets.items():
@@ -144,7 +145,7 @@ def main(gpf_instance=None, argv=None):
             logger.info(f"Generated {idx}/{gs_count} AGP statistics")
     logger.info("Done generating AGP statistics!")
     duration = time.time() - start
-    print(duration)
+    logger.info(f"Took {duration} seconds")
 
     agpdb = AutismGeneProfileDB(
         gpf_instance._autism_gene_profile_config.to_dict(),
