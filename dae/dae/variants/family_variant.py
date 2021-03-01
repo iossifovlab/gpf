@@ -603,3 +603,10 @@ class FamilyVariant(Variant, FamilyDelegate):
         :return: list of all allele indexes present into genotype passed.
         """
         return sorted(list(set(gt.flatten()).difference({-1})))
+
+    @property
+    def variant_in_members(self):
+        members = set()
+        for a in self.alleles:
+            members = members.union(a.variant_in_members)
+        return members

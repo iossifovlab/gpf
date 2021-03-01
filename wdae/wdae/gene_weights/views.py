@@ -12,18 +12,28 @@ class GeneWeightsListView(QueryBaseView):
         super(GeneWeightsListView, self).__init__()
 
     def get(self, request):
-        return Response([
-            {
-                "weight": weight.id,
-                "desc": weight.desc,
-                "bars": weight.histogram_bars,
-                "bins": weight.histogram_bins,
-                "xscale": weight.xscale,
-                "yscale": weight.yscale,
-                "range": weight.range,
-            }
-            for weight in self.gpf_instance.get_all_gene_weights()
-        ])
+        ids = request.query_params.get("ids")
+        if ids:
+            gene_weights = [
+                self.gpf_instance.get_gene_weight(gene_weight)
+                for gene_weight in ids.strip().split(",")
+            ]
+        else:
+            gene_weights = self.gpf_instance.get_all_gene_weights()
+        return Response(
+            [
+                {
+                    "weight": weight.id,
+                    "desc": weight.desc,
+                    "bars": weight.histogram_bars,
+                    "bins": weight.histogram_bins,
+                    "xscale": weight.xscale,
+                    "yscale": weight.yscale,
+                    "range": weight.range,
+                }
+                for weight in gene_weights
+            ]
+        )
 
 
 class GeneWeightsDownloadView(QueryBaseView):

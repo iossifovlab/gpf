@@ -408,6 +408,20 @@ class Variant(ABC):
         return [sa.effect for sa in self.alt_alleles]
 
     @property
+    def effect_types(self) -> List[str]:
+        ets = set()
+        for a in self.alt_alleles:
+            ets = ets.union(a.effect_types)
+        return list(ets)
+
+    @property
+    def effect_gene_symbols(self):
+        egs = set()
+        for a in self.alt_alleles:
+            egs = egs.union(a.effect_gene_symbols)
+        return list(egs)
+
+    @property
     def frequencies(self) -> List[Optional[float]]:
         """
         0-base list of frequencies for variant.

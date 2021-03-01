@@ -1,6 +1,8 @@
 import pytest
 import os
 
+from box import Box
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 
@@ -12,6 +14,7 @@ from dae.gpf_instance.gpf_instance import cached
 from gpf_instance.gpf_instance import WGPFInstance,\
     reload_datasets, load_gpf_instance
 from dae.genome.genomes_db import GenomesDB
+from dae.autism_gene_profile.db import AutismGeneProfileDB
 
 
 pytest_plugins = ["dae_conftests.dae_conftests"]
@@ -128,8 +131,71 @@ def wdae_gpf_instance(
         "datasets_api.permissions.get_gpf_instance",
         return_value=fixtures_wgpf_instance,
     )
+    wdae_gpf_instance.__autism_gene_profile_config = None
 
     return fixtures_wgpf_instance
+
+
+@pytest.fixture(scope="function")
+def wdae_gpf_instance_agp(
+        db, mocker, admin_client, wgpf_instance, sample_agp,
+        global_dae_fixtures_dir, agp_config):
+
+    wdae_gpf_instance = wgpf_instance(global_dae_fixtures_dir)
+    reload_datasets(wdae_gpf_instance)
+    mocker.patch(
+        "query_base.query_base.get_gpf_instance",
+        return_value=wdae_gpf_instance,
+    )
+    mocker.patch(
+        "gpf_instance.gpf_instance.get_gpf_instance",
+        return_value=wdae_gpf_instance,
+    )
+    mocker.patch(
+        "gene_sets.expand_gene_set_decorator.get_gpf_instance",
+        return_value=wdae_gpf_instance,
+    )
+    mocker.patch(
+        "datasets_api.permissions.get_gpf_instance",
+        return_value=wdae_gpf_instance,
+    )
+
+    wdae_gpf_instance.__autism_gene_profile_config = agp_config
+    main_gene_sets = {
+        'CHD8 target genes',
+        'FMRP Darnell',
+        'FMRP Tuschl',
+        'PSD',
+        'autism candidates from Iossifov PNAS 2015',
+        'autism candidates from Sanders Neuron 2015',
+        'brain critical genes',
+        'brain embryonically expressed',
+        'chromatin modifiers',
+        'essential genes',
+        'non-essential genes',
+        'postsynaptic inhibition',
+        'synaptic clefts excitatory',
+        'synaptic clefts inhibitory',
+        'topotecan downreg genes'
+    }
+    mocker.patch.object(
+        wdae_gpf_instance.gene_sets_db,
+        "get_gene_set_ids",
+        return_value=main_gene_sets
+    )
+    wdae_gpf_instance.__autism_gene_profile_db = \
+        AutismGeneProfileDB(
+            agp_config,
+            os.path.join(wdae_gpf_instance.dae_db_dir, "agpdb"),
+            clear=True
+        )
+    wdae_gpf_instance._autism_gene_profile_db.clear_all_tables()
+    wdae_gpf_instance._autism_gene_profile_db.populate_data_tables(
+        wdae_gpf_instance.get_genotype_data_ids())
+    wdae_gpf_instance._autism_gene_profile_db.build_agp_view()
+    wdae_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
+
+    return wdae_gpf_instance
 
 
 @pytest.fixture(scope="function")
@@ -149,6 +215,7 @@ def remote_settings(settings):
     reload_datasets(load_gpf_instance())
 
     return remote
+
 
 @pytest.fixture(scope="function")
 def rest_client(admin_client, remote_settings):

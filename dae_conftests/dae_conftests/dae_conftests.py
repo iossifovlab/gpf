@@ -10,6 +10,8 @@ import logging
 import pandas as pd
 from io import StringIO
 
+from box import Box
+
 from dae.genome.genomes_db import GenomesDB
 
 from dae.gpf_instance.gpf_instance import GPFInstance, cached
@@ -40,6 +42,8 @@ from dae.backends.impala.parquet_io import ParquetManager, \
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
 from dae.gene.denovo_gene_set_collection_factory import \
     DenovoGeneSetCollectionFactory
+from dae.autism_gene_profile.statistic import AGPStatistic
+from dae.autism_gene_profile.db import AutismGeneProfileDB
 
 
 logging.basicConfig(
@@ -939,3 +943,104 @@ def fvX2(fam1, svX2):
         return FamilyVariant(svX2, fam1, gt, best_st)
 
     return build
+
+
+@pytest.fixture
+def temp_dbfile(request):
+    dbfile = tempfile.mktemp(prefix="dbfile_")
+
+    def fin():
+        if os.path.exists(dbfile):
+            os.remove(dbfile)
+
+    request.addfinalizer(fin)
+    return dbfile
+
+@pytest.fixture
+def agp_config():
+    return Box({
+        'gene_sets': ['CHD8 target genes'],
+        'protection_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
+        'autism_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
+        'datasets': Box({
+            'f1_study': Box({
+                'effects': ['synonymous', 'missense'],
+                'person_sets': [
+                    Box({
+                        'set_name': 'phenotype1',
+                        'collection_name': 'phenotype'
+                    }),
+                    Box({
+                        'set_name': 'unaffected',
+                        'collection_name': 'phenotype'
+                    }),
+                ]
+            })
+        })
+    })
+
+
+@pytest.fixture
+def agp_gpf_instance(
+        fixtures_gpf_instance, mocker, sample_agp, temp_dbfile, agp_config):
+    mocker.patch.object(
+        GPFInstance,
+        "_autism_gene_profile_config",
+        return_value=agp_config,
+        new_callable=mocker.PropertyMock
+    )
+    main_gene_sets = {
+        'CHD8 target genes',
+        'FMRP Darnell',
+        'FMRP Tuschl',
+        'PSD',
+        'autism candidates from Iossifov PNAS 2015',
+        'autism candidates from Sanders Neuron 2015',
+        'brain critical genes',
+        'brain embryonically expressed',
+        'chromatin modifiers',
+        'essential genes',
+        'non-essential genes',
+        'postsynaptic inhibition',
+        'synaptic clefts excitatory',
+        'synaptic clefts inhibitory',
+        'topotecan downreg genes'
+    }
+    mocker.patch.object(
+        fixtures_gpf_instance.gene_sets_db,
+        "get_gene_set_ids",
+        return_value=main_gene_sets
+    )
+    fixtures_gpf_instance.__autism_gene_profile_db = \
+        AutismGeneProfileDB(
+            fixtures_gpf_instance._autism_gene_profile_config,
+            temp_dbfile,
+            clear=True
+        )
+    print(temp_dbfile)
+    fixtures_gpf_instance._autism_gene_profile_db.clear_all_tables()
+    fixtures_gpf_instance._autism_gene_profile_db.populate_data_tables(
+        fixtures_gpf_instance.get_genotype_data_ids())
+    fixtures_gpf_instance._autism_gene_profile_db.build_agp_view()
+    fixtures_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
+    return fixtures_gpf_instance
+
+
+@pytest.fixture(scope="session")
+def sample_agp():
+    gene_sets = ['CHD8 target genes']
+    protection_scores = {
+        'SFARI_gene_score': 1, 'RVIS_rank': 193.0, 'RVIS': -2.34
+    }
+    autism_scores = {
+        'SFARI_gene_score': 1, 'RVIS_rank': 193.0, 'RVIS': -2.34
+    }
+    variant_counts = {
+        'f1_study': {
+            'phenotype1': {'synonymous': 53, 'missense': 21},
+            'unaffected': {'synonymous': 43, 'missense': 51},
+        }
+    }
+    return AGPStatistic(
+        "CHD8", gene_sets, protection_scores, autism_scores, variant_counts
+    )
