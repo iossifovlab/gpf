@@ -253,6 +253,7 @@ def reverse_complement(nucleotides: str) -> str:
 
 
 def liftover_variant(chrom, pos, ref, alt, lo, target_genome):
+
     lo_coordinates = lo.convert_coordinate(chrom, pos - 1)
 
     if not lo_coordinates:

@@ -637,6 +637,7 @@ class BatchImporter:
         variants_filename, variants_params = \
             CNVLoader.parse_cli_arguments(argv)
 
+        logger.info(f"CNV loader parameters: {variants_params}")
         if variants_filename is None:
             return self
         variants_loader = CNVLoader(
