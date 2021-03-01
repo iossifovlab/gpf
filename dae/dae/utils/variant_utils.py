@@ -325,7 +325,7 @@ def vcf2cshl(pos, ref, alt, trimmer=trim_str_back):
         assert tr_alt is not None
 
         tr_vd = VariantDesc(
-            VariantType.tandem_repeat, pos, 
+            VariantType.tandem_repeat, pos,
             tr_ref=tr_ref, tr_alt=tr_alt, tr_unit=tr_unit)
 
         vd = cshl_format(pos, ref, alt, trimmer=trimmer)

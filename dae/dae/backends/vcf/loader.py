@@ -89,7 +89,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
             if gt.shape[1] < len(family):
                 res = -1 * np.ones((gt.shape[0], len(family)), dtype=np.int8)
                 gt_column = 0
-                for family_index, _member in enumerate(family.members_in_order):
+                for family_index, _m in enumerate(family.members_in_order):
                     res[:, family_index] = gt[:, gt_column]
                     gt_column += 1
                 gt = res

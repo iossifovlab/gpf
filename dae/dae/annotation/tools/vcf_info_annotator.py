@@ -20,6 +20,11 @@ class VcfInfoAnnotator(VariantScoreAnnotatorBase):
         logger.debug(f"variants builder {self.variant_builder}")
 
     def do_annotate(self, aline, variant, liftover_variants):
+        if VariantType.is_cnv(variant):
+            logger.info(
+                f"skip trying to add VCF info score for CNV variant {variant}")
+            return
+
         if self.liftover:
             variant = liftover_variants.get(self.liftover)
 

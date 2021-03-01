@@ -106,6 +106,11 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             return float(score)
 
     def do_annotate(self, aline, variant, liftover_variants):
+        if VariantType.is_cnv(variant):
+            logger.info(
+                f"skip trying to add position score for CNV variant {variant}")
+            return
+
         if self.liftover:
             variant = liftover_variants.get(self.liftover)
 
@@ -200,14 +205,17 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
         return res
 
     def do_annotate(self, aline, variant, liftover_variants):
+        if VariantType.is_cnv(variant):
+            logger.info(
+                f"skip trying to add NP position score for CNV variant "
+                f"{variant}")
+            return
+
         if self.liftover:
             variant = liftover_variants.get(self.liftover)
 
         if variant is None:
             self._scores_not_found(aline)
-            return
-        elif VariantType.is_cnv(variant.variant_type):
-            self._annotate_cnv(aline, variant)
             return
 
         scores = self._fetch_scores(variant)

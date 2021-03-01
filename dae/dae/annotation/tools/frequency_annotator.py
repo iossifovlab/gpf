@@ -28,6 +28,11 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
         super(FrequencyAnnotator, self).collect_annotator_schema(schema)
 
     def do_annotate(self, aline, variant, liftover_variants):
+        if VariantType.is_cnv(variant):
+            logger.info(
+                f"skip trying to add frequency for CNV variant {variant}")
+            return
+
         if self.liftover:
             variant = liftover_variants.get(self.liftover)
 
