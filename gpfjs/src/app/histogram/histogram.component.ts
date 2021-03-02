@@ -444,4 +444,8 @@ export class HistogramComponent implements OnInit, OnChanges {
     const distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
     this.selectedEndIndex = this.getClosestIndexByX(newPositionX - this.xScale.bandwidth() - distBetweenBars / 2 + 1);
   }
+
+  get viewBox(): string {
+    return `0 0 ${this.width} ${this.height}`;
+  }
 }

@@ -1,5 +1,5 @@
 <div class="histogram">
-	<svg [attr.width]="width" [attr.height]="height" viewBox="0 0 650 145">
+	<svg [attr.width]="width" [attr.height]="height" [attr.viewBox]="viewBox">
 	  <g [attr.transform]="'translate(' + marginLeft +',' + marginTop + ')'">
 	    <g #histogramContainer transform="translate(0, 50)"> </g>
 	  	<g *ngIf="isInteractive">
