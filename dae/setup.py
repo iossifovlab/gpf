@@ -28,6 +28,7 @@ setuptools.setup(
         "dae/tools/simple_study_import.py",
         "dae/annotation/annotation_pipeline.py",
         "dae/tools/generate_histogram.py",
+        "dae/tools/generate_histogram2.py",
         "dae/tools/run_gpf_impala.sh",
         "dae/tools/simple_family2pedigree.py",
         "dae/tools/ped2parquet.py",

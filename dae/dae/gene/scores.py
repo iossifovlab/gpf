@@ -1,14 +1,15 @@
-from collections import OrderedDict
-
-from dae.gene.genomic_values import GenomicValues
+import pandas as pd
 
 
-class Scores(GenomicValues):
+class Scores:
     def __init__(self, config, config_id):
-        super(Scores, self).__init__(config_id)
 
         self.config = config
         self.genomic_values_col = "scores"
+
+        self.id = config_id
+        self.df = None
+        self._dict = None
 
         self.desc = self.config.desc
         self.bins = self.config.bins
@@ -30,6 +31,19 @@ class Scores(GenomicValues):
         self._load_data()
         self.df.fillna(value=0, inplace=True)
 
+    def _load_data(self):
+        assert self.filename is not None
+
+        df = pd.read_csv(self.filename)
+        assert self.id in df.columns, "{} not found in {}".format(
+            self.id, df.columns
+        )
+        self.df = df[[self.genomic_values_col, self.id]].copy()
+        return self.df
+
+    def values(self):
+        return self.df[self.id].values
+
     def get_scores(self):
         return self.df["scores"].values
 
@@ -39,7 +53,7 @@ class ScoresFactory(object):
         super(ScoresFactory, self).__init__()
         self.config = config
 
-        self.scores = OrderedDict()
+        self.scores = {}
 
         self._load()
 

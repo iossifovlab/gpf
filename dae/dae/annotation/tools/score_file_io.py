@@ -166,6 +166,16 @@ class ScoreFile(object):
             df[score_name] = df[score_name].astype("float32")
         return df
 
+    def fetch_scores_iterator(self, chrom, pos_begin, pos_end):
+        stripped_chrom = handle_chrom_prefix(self.chr_prefix, chrom)
+
+        score_lines = self.accessor._fetch(stripped_chrom, pos_begin, pos_end)
+        for line in score_lines:
+            result = {}
+            for index, column in enumerate(self.schema.col_names):
+                result[column] = line[index]
+            yield result
+
     def fetch_scores(self, chrom, pos_begin, pos_end):
         stripped_chrom = handle_chrom_prefix(self.chr_prefix, chrom)
 
