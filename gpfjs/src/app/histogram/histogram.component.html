@@ -1,7 +1,7 @@
 <div class="histogram">
 	<svg [attr.width]="width" [attr.height]="height" [attr.viewBox]="viewBox">
 	  <g [attr.transform]="'translate(' + marginLeft +',' + marginTop + ')'">
-	    <g #histogramContainer transform="translate(0, 50)"> </g>
+		<g #histogramContainer [ngStyle]="isInteractive ? {'transform': 'translate(0px, 50px)'} : {'transform': 'translate(0px, 0px)'}"></g>
 	  	<g *ngIf="isInteractive">
 			<g gpf-histogram-range-selector-line [width]="2" [(x)]="startX" [textOnRight]="false" [text]=beforeRangeText></g>
 			<g gpf-histogram-range-selector-line [width]="2" [(x)]="endX" [textOnRight]="true" [text]=afterRangeText></g>
@@ -9,7 +9,7 @@
 	  	</g>
 
 		<g *ngIf="!isInteractive && singleScoreValue">
-			<line [attr.x1]="scaleXAxis(singleScoreValue)" [attr.y1]="scaleYAxis(1)" [attr.x2]="scaleXAxis(singleScoreValue)" [attr.y2]="100" style="stroke:rgb(255,0,0); stroke-width: 2" />
+			<line [attr.x1]="scaleXAxis(singleScoreValue)" [attr.y1]="scaleYAxis(1)" [attr.x2]="scaleXAxis(singleScoreValue)" [attr.y2]="-height" style="stroke:rgb(255,0,0); stroke-width: 2" />
 		</g>
 	  </g>
 	</svg>
