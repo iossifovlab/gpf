@@ -61,15 +61,15 @@ class ImpalaVariants:
         })
         self._fetch_tblproperties()
 
-    def count_variants(self, **kwargs):
-        if not self.variants_table:
-            return 0
-        with closing(self.connection()) as conn:
-            with conn.cursor() as cursor:
-                query = self.build_count_query(**kwargs)
-                cursor.execute(query)
-                row = next(cursor)
-                return row[0]
+    # def count_variants(self, **kwargs):
+    #     if not self.variants_table:
+    #         return 0
+    #     with closing(self.connection()) as conn:
+    #         with conn.cursor() as cursor:
+    #             query = self.build_count_query(**kwargs)
+    #             cursor.execute(query)
+    #             row = next(cursor)
+    #             return row[0]
 
     def connection(self):
         return self._impala_helpers.connection()

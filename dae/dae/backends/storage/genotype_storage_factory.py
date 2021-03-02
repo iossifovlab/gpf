@@ -44,9 +44,11 @@ class GenotypeStorageFactory:
 
         genotype_storage = None
         if conf.storage_type == "impala":
-            genotype_storage = ImpalaGenotypeStorage(conf, genotype_storage_id)
+            genotype_storage = ImpalaGenotypeStorage(
+                conf, genotype_storage_id)
         elif conf.storage_type == "filesystem":
-            genotype_storage = FilesystemGenotypeStorage(conf, genotype_storage_id)
+            genotype_storage = FilesystemGenotypeStorage(
+                conf, genotype_storage_id)
 
         assert genotype_storage
 
