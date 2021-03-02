@@ -1,0 +1,19 @@
+.row {
+  margin-right: 0px;
+  margin-left: 0px;
+  margin-bottom: 15px;
+}
+
+#autism-scores-table, #protection-scores-table {
+  width: 25%;
+  float: left;
+  margin-right: 15px;
+  margin-bottom: 0px;
+}
+
+#gene-sets-table {
+  width: 20%;
+  float: left;
+  margin-right: 15px;
+  margin-bottom: 0px;
+}
