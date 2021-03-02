@@ -61,6 +61,33 @@ const geneMock = {
   }
 };
 
+const geneMock2 = {
+  'gene_symbol': 'mockGene2',
+  'gene_sets': [
+      'mockSet'
+  ],
+  'protection_scores': {
+      'protectionScore1': 9,
+      'protectionScore2': 10,
+  },
+  'autism_scores': {
+      'autismScore1': 11,
+      'autismScore2': 12,
+  },
+  'studies': {
+      'mockDataset': {
+          'personSet1': {
+              'effect1': 13,
+              'effect2': 14,
+          },
+          'personSet2': {
+              'effect3': 15,
+              'effect4': 16,
+          }
+      }
+  }
+};
+
 describe('AutismGeneProfilesService', () => {
   let service: AutismGeneProfilesService;
 
@@ -79,35 +106,23 @@ describe('AutismGeneProfilesService', () => {
   it('should get config', () => {
     const getConfigSpy = spyOn(service['http'], 'get');
 
-    getConfigSpy.and.returnValue(of({}));
-    let resultConfig = service.getConfig();
-    resultConfig.take(1).subscribe(res => {
-      expect(res).toEqual(undefined);
-    });
-
     getConfigSpy.and.returnValue(of(configurationMock));
-    resultConfig = service.getConfig();
+    const resultConfig = service.getConfig();
     expect(getConfigSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['configUrl']);
     resultConfig.take(1).subscribe(res => {
       expect(res['geneSets']).toEqual(['mockSet']);
       expect(res['autismScores']).toEqual(['autismScore1', 'autismScore2']);
       expect(res['protectionScores']).toEqual( [ 'protectionScore1', 'protectionScore2' ]);
-      expect(res['datasets']['mockDataset']['effects']).toEqual(['effect1', 'effect2', 'effect3']);
-      expect(res['datasets']['mockDataset']['personSets']).toEqual(['personSet1', 'personSet2']);
+      expect(res['datasets'][0]['effects']).toEqual(['effect1', 'effect2', 'effect3']);
+      expect(res['datasets'][0]['personSets']).toEqual(['personSet1', 'personSet2']);
     });
   });
 
   it('should get single gene', () => {
     const getGeneSpy = spyOn(service['http'], 'get');
 
-    getGeneSpy.and.returnValue(of({}));
-    let resultGene = service.getGene('mockGene');
-    resultGene.take(1).subscribe(res => {
-      expect(res).toEqual(undefined);
-    });
-
     getGeneSpy.and.returnValue(of(geneMock));
-    resultGene = service.getGene('mockGene');
+    const resultGene = service.getGene('mockGene');
     expect(getGeneSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['genesUrl'] + 'mockGene');
     resultGene.take(1).subscribe(res => {
       expect(res['geneSymbol']).toEqual('mockGene');
@@ -116,14 +131,49 @@ describe('AutismGeneProfilesService', () => {
       expect(res['protectionScores'].get('protectionScore2')).toBe(2);
       expect(res['autismScores'].get('autismScore1')).toBe(3);
       expect(res['autismScores'].get('autismScore2')).toBe(4);
-      expect(res['studies']['mockDataset']['personSet1']['effect1']).toBe(5);
-      expect(res['studies']['mockDataset']['personSet1']['effect2']).toBe(6);
-      expect(res['studies']['mockDataset']['personSet2']['effect3']).toBe(7);
-      expect(res['studies']['mockDataset']['personSet1']['effect4']).toBe(8);
+      expect(Number(res['studies'][0]['personSets'][0]['effectTypes'].get('effect1'))).toBe(5);
+      expect(Number(res['studies'][0]['personSets'][0]['effectTypes'].get('effect2'))).toBe(6);
+      expect(Number(res['studies'][0]['personSets'][1]['effectTypes'].get('effect3'))).toBe(7);
+      expect(Number(res['studies'][0]['personSets'][1]['effectTypes'].get('effect4'))).toBe(8);
     });
   });
 
   it('should get genes', () => {
-    // to do
+    const getGenesSpy = spyOn(service['http'], 'get');
+
+    getGenesSpy.and.returnValue(of({}));
+    service.getGenes(1);
+    service.getGenes(1, 'mockSearch');
+    service.getGenes(1, 'mockSearch', 'mockSort', 'desc');
+    expect(getGenesSpy.calls.allArgs()).toEqual([
+      [service['config'].baseUrl + service['genesUrl'] + '?page=1'],
+      [service['config'].baseUrl + service['genesUrl'] + '?page=1' + '&symbol=mockSearch'],
+      [service['config'].baseUrl + service['genesUrl'] + '?page=1' + '&symbol=mockSearch' + '&sortBy=mockSort&order=desc']
+    ]);
+
+    getGenesSpy.and.returnValue(of([geneMock, geneMock2]));
+    const resultGenes = service.getGenes(1);
+    resultGenes.take(1).subscribe(res => {
+      expect(res[0]['geneSymbol']).toEqual('mockGene');
+      expect(res[0]['geneSets']).toEqual(['mockSet']);
+      expect(res[0]['protectionScores'].get('protectionScore1')).toBe(1);
+      expect(res[0]['protectionScores'].get('protectionScore2')).toBe(2);
+      expect(res[0]['autismScores'].get('autismScore1')).toBe(3);
+      expect(res[0]['autismScores'].get('autismScore2')).toBe(4);
+      expect(Number(res[0]['studies'][0]['personSets'][0]['effectTypes'].get('effect1'))).toBe(5);
+      expect(Number(res[0]['studies'][0]['personSets'][0]['effectTypes'].get('effect2'))).toBe(6);
+      expect(Number(res[0]['studies'][0]['personSets'][1]['effectTypes'].get('effect3'))).toBe(7);
+      expect(Number(res[0]['studies'][0]['personSets'][1]['effectTypes'].get('effect4'))).toBe(8);
+      expect(res[1]['geneSymbol']).toEqual('mockGene2');
+      expect(res[1]['geneSets']).toEqual(['mockSet']);
+      expect(res[1]['protectionScores'].get('protectionScore1')).toBe(9);
+      expect(res[1]['protectionScores'].get('protectionScore2')).toBe(10);
+      expect(res[1]['autismScores'].get('autismScore1')).toBe(11);
+      expect(res[1]['autismScores'].get('autismScore2')).toBe(12);
+      expect(Number(res[1]['studies'][0]['personSets'][0]['effectTypes'].get('effect1'))).toBe(13);
+      expect(Number(res[1]['studies'][0]['personSets'][0]['effectTypes'].get('effect2'))).toBe(14);
+      expect(Number(res[1]['studies'][0]['personSets'][1]['effectTypes'].get('effect3'))).toBe(15);
+      expect(Number(res[1]['studies'][0]['personSets'][1]['effectTypes'].get('effect4'))).toBe(16);
+    });
   });
 });
