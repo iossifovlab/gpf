@@ -2,45 +2,49 @@
 
   <h2>{{geneSymbol}}</h2>
 
-  <table class="table table-bordered table-centered" style="width: 49%; float: left; margin-right: 15px;">
+  <table class="table table-bordered table-centered" style="width: 25%; float: left; margin-right: 15px;">
     <th [attr.colspan]="2" style="text-align: center;">Autism scores</th>
     <tr *ngFor="let autismScore of gene.autismScores | keyvalue" class="card-block">
       <td style="vertical-align: middle;">{{formatScoreName(autismScore.key)}}</td>
       <td>
         <gpf-histogram *ngIf="autismScoreGeneWeights && getAutismScoreGeneWeight(autismScore.key) as geneWeight"
-          width="650" height="145"
+          width="525" height="145"
+          [width]="525" height="145"
           [bins]="geneWeight.bins"
           [bars]="geneWeight.bars"
           [logScaleX]="geneWeight.logScaleX"
           [logScaleY]="geneWeight.logScaleY"
           [showMinMaxInput]="false"
           [isInteractive]="false"
-          [singleScoreValue]="autismScore.value">
+          [singleScoreValue]="autismScore.value"
+          [marginLeft]="50">
         </gpf-histogram>
       </td>
     </tr>
   </table>
 
-  <table class="table table-bordered table-centered" style="width: 49%; float: left; margin-right: 15px;">
+  <table class="table table-bordered table-centered" style="width: 25%; float: left; margin-right: 15px;">
     <th [attr.colspan]="2" style="text-align: center;">Protection scores</th>
     <tr *ngFor="let protectionScore of gene.protectionScores | keyvalue" class="card-block">
       <td style="vertical-align: middle;">{{formatScoreName(protectionScore.key)}}</td>
       <td>
         <gpf-histogram *ngIf="protectionScoreGeneWeights && getProtectionScoreGeneWeight(protectionScore.key) as geneWeight"
-          width="650" height="145"
+          width="525" height="145"
+          [width]="525" height="145"
           [bins]="geneWeight.bins"
           [bars]="geneWeight.bars"
           [logScaleX]="geneWeight.logScaleX"
           [logScaleY]="geneWeight.logScaleY"
           [showMinMaxInput]="false"
           [isInteractive]="false"
-          [singleScoreValue]="protectionScore.value">
+          [singleScoreValue]="protectionScore.value"
+          [marginLeft]="50">
         </gpf-histogram>
       </td>
     </tr>
   </table>
 
-  <table class="table table-bordered table-centered" style="width: 30%; float: left; margin-right: 15px;">
+  <table class="table table-bordered table-centered" style="width: 20%; float: left; margin-right: 15px;">
     <th [attr.colspan]="2" style="text-align: center;">Gene sets</th>
     <tr *ngFor="let geneSet of geneSets" class="card-block">
       <td>{{geneSet}}</td>
