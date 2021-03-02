@@ -8,8 +8,8 @@
       <td style="vertical-align: middle;">{{formatScoreName(autismScore.key)}}</td>
       <td>
         <gpf-histogram *ngIf="autismScoreGeneWeights && getAutismScoreGeneWeight(autismScore.key) as geneWeight"
-          [style.width]="histogramWidth" [style.height]="histogramHeight"
-          [width]="histogramWidth" [height]="histogramHeight"
+          [style.width]="histogramOptions.width" [style.height]="histogramOptions.height"
+          [width]="histogramOptions.width" [height]="histogramOptions.height"
           [bins]="geneWeight.bins"
           [bars]="geneWeight.bars"
           [logScaleX]="geneWeight.logScaleX"
@@ -17,7 +17,8 @@
           [showMinMaxInput]="false"
           [isInteractive]="false"
           [singleScoreValue]="autismScore.value"
-          [marginLeft]="50">
+          [marginLeft]="histogramOptions.marginLeft"
+          [marginTop]="histogramOptions.marginTop">
         </gpf-histogram>
       </td>
     </tr>
@@ -29,8 +30,8 @@
       <td style="vertical-align: middle;">{{formatScoreName(protectionScore.key)}}</td>
       <td>
         <gpf-histogram *ngIf="protectionScoreGeneWeights && getProtectionScoreGeneWeight(protectionScore.key) as geneWeight"
-          [style.width]="histogramWidth" [style.height]="histogramHeight"
-          [width]="histogramWidth" [height]="histogramHeight"
+          [style.width]="histogramOptions.width" [style.height]="histogramOptions.height"
+          [width]="histogramOptions.width" [height]="histogramOptions.height"
           [bins]="geneWeight.bins"
           [bars]="geneWeight.bars"
           [logScaleX]="geneWeight.logScaleX"
@@ -38,7 +39,8 @@
           [showMinMaxInput]="false"
           [isInteractive]="false"
           [singleScoreValue]="protectionScore.value"
-          [marginLeft]="50">
+          [marginLeft]="histogramOptions.marginLeft"
+          [marginTop]="histogramOptions.marginTop">
         </gpf-histogram>
       </td>
     </tr>
