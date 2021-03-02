@@ -8,15 +8,15 @@ from os.path import exists
 import pandas as pd
 import numpy as np
 
-import matplotlib as mpl
-
-mpl.use("PS")  # noqa
-import matplotlib.pyplot as plt
-
-plt.ioff()  # noqa
-
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.score_file_conf import score_file_conf_schema
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+
+mpl.use("PS")  # noqa
+plt.ioff()  # noqa
 
 
 def get_argument_parser():

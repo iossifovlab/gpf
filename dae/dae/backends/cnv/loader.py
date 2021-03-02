@@ -1,3 +1,5 @@
+import logging
+
 from argparse import Namespace
 from typing import List, Optional, Dict, Any, Tuple, Generator
 from copy import copy
@@ -14,6 +16,9 @@ from dae.backends.raw.loader import CLIArgument
 
 from dae.utils.regions import Region
 from dae.utils.variant_utils import GENOTYPE_TYPE, get_interval_locus_ploidy
+
+
+logger = logging.getLogger(__name__)
 
 
 class CNVLoader(VariantsGenotypesLoader):
@@ -36,9 +41,11 @@ class CNVLoader(VariantsGenotypesLoader):
             params=params,
         )
 
+        logger.info(f"CNV loader params: {params}")
         self.genome = genome
         self.set_attribute("source_type", "cnv")
 
+        logger.info(f"CNV loader params: {self.params}")
         self.cnv_df = self.load_cnv(
             cnv_filename,
             families,
@@ -88,7 +95,7 @@ class CNVLoader(VariantsGenotypesLoader):
             " [Default: familyId]",
         ))
         arguments.append(CLIArgument(
-            "--cnv-variant_type",
+            "--cnv-variant-type",
             value_type=str,
             default_value="variant",
             help_text="The label or index of the"
@@ -111,14 +118,14 @@ class CNVLoader(VariantsGenotypesLoader):
             " the variant is. [Default: None]",
         ))
         arguments.append(CLIArgument(
-            "--cnv-plus-type-value",
+            "--cnv-plus-values",
             value_type=str,
             default_value="CNV+",
             help_text="The cnv+ value used in the columns containing"
             " the variant's type. [Default: CNV+]",
         ))
         arguments.append(CLIArgument(
-            "--cnv-minus-type-value",
+            "--cnv-minus-values",
             value_type=str,
             default_value="CNV-",
             help_text="The cnv- value used in the columns containing"
@@ -322,6 +329,8 @@ class CNVLoader(VariantsGenotypesLoader):
                 return "CNV+"
             if variant_type in cnv_minus_values:
                 return "CNV-"
+            else:
+                logger.error(f"unexpected CNV variant type: {variant_type}")
             return None
 
         variant_types_transformed = raw_df[cnv_variant_type].apply(
@@ -431,6 +440,8 @@ class CNVLoader(VariantsGenotypesLoader):
                 "cnv_person_id": argv.cnv_person_id,
                 "cnv_family_id": argv.cnv_family_id,
                 "cnv_variant_type": argv.cnv_variant_type,
+                "cnv_plus_values": argv.cnv_plus_values,
+                "cnv_minus_values": argv.cnv_minus_values,
                 "cnv_best_state": argv.cnv_best_state,
                 "cnv_sep": argv.cnv_sep,
                 "add_chrom_prefix": argv.add_chrom_prefix,

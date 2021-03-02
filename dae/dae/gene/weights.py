@@ -1,13 +1,14 @@
 import itertools
 from collections import OrderedDict, namedtuple
-import numpy as np
 
-from dae.gene.genomic_values import GenomicValues
+import numpy as np
+import pandas as pd
+
 from dae.gene.gene_sets_db import cached
 from dae.utils.dae_utils import join_line
 
 
-class GeneWeight(GenomicValues):
+class GeneWeight:
     """
     Represents gene weights.
 
@@ -16,8 +17,11 @@ class GeneWeight(GenomicValues):
     """
 
     def __init__(self, section_id, config):
-        super(GeneWeight, self).__init__(section_id)
         self.config = config
+
+        self.id = section_id
+        self.df = None
+        self._dict = None
 
         self.genomic_values_col = "gene"
 
@@ -32,6 +36,19 @@ class GeneWeight(GenomicValues):
         self.df.dropna(inplace=True)
 
         self.histogram_bins, self.histogram_bars = self._bins_bars()
+
+    def _load_data(self):
+        assert self.filename is not None
+
+        df = pd.read_csv(self.filename)
+        assert self.id in df.columns, "{} not found in {}".format(
+            self.id, df.columns
+        )
+        self.df = df[[self.genomic_values_col, self.id]].copy()
+        return self.df
+
+    def values(self):
+        return self.df[self.id].values
 
     def _bins_bars(self):
         step = 1.0 * (self.max() - self.min()) / (self.bins - 1)

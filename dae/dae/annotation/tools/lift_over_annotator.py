@@ -1,13 +1,15 @@
 #!/usr/bin/env python
-
-from dae.variants.variant import SummaryAllele
-from dae.utils.variant_utils import liftover_variant
 import gzip
 
 import os
 import logging
 
 from pyliftover import LiftOver
+
+from dae.variants.attributes import VariantType
+from dae.variants.variant import SummaryAllele
+from dae.utils.variant_utils import liftover_variant
+
 from dae.annotation.tools.annotator_base import VariantAnnotatorBase
 from dae.genome.genome_access import open_ref
 
@@ -47,7 +49,8 @@ class LiftOverAnnotator(VariantAnnotatorBase):
 
     def liftover_variant(self, variant):
         assert isinstance(variant, SummaryAllele)
-
+        if VariantType.is_cnv(variant.variant_type):
+            return
         lo_variant = liftover_variant(
             variant.chrom, variant.position,
             variant.reference, variant.alternative,

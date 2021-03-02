@@ -201,7 +201,8 @@ class CommonReportFacade(object):
         common_report_config = self._common_report_config_cache[
             common_report_id
         ]
-        common_report = CommonReport(genotype_data_study, common_report_config)
+        common_report = CommonReport(
+            genotype_data_study, common_report_config)
         denovo_report = common_report.denovo_report
 
         for table in denovo_report.tables:

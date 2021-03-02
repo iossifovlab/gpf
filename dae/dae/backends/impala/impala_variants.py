@@ -61,15 +61,15 @@ class ImpalaVariants:
         })
         self._fetch_tblproperties()
 
-    def count_variants(self, **kwargs):
-        if not self.variants_table:
-            return 0
-        with closing(self.connection()) as conn:
-            with conn.cursor() as cursor:
-                query = self.build_count_query(**kwargs)
-                cursor.execute(query)
-                row = next(cursor)
-                return row[0]
+    # def count_variants(self, **kwargs):
+    #     if not self.variants_table:
+    #         return 0
+    #     with closing(self.connection()) as conn:
+    #         with conn.cursor() as cursor:
+    #             query = self.build_count_query(**kwargs)
+    #             cursor.execute(query)
+    #             row = next(cursor)
+    #             return row[0]
 
     def connection(self):
         return self._impala_helpers.connection()
@@ -132,13 +132,17 @@ class ImpalaVariants:
                 )
 
                 for row in cursor:
+                    try:
+                        v = deserialize_row(row)
 
-                    v = deserialize_row(row)
+                        if v is None:
+                            continue
 
-                    if v is None:
+                        yield v
+                    except Exception as ex:
+                        logger.error("unable to deserialize summary variant")
+                        logger.exception(ex)
                         continue
-
-                    yield v
 
     def _family_variants_iterator(
             self,
@@ -202,12 +206,17 @@ class ImpalaVariants:
 
                 cursor.execute(query)
                 for row in cursor:
-                    v = deserialize_row(row)
+                    try:
+                        v = deserialize_row(row)
 
-                    if v is None:
+                        if v is None:
+                            continue
+
+                        yield v
+                    except Exception as ex:
+                        logger.error("unable to deserialize family variant")
+                        logger.exception(ex)
                         continue
-
-                    yield v
 
     def query_summary_variants(
             self,

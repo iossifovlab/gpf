@@ -21,6 +21,8 @@ def parse_cli_arguments(argv, gpf_instance):
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
+    parser.add_argument('--verbose', '-V', action='count', default=0)
+
     parser.add_argument(
         "study_id",
         type=str,
@@ -93,6 +95,17 @@ def main(argv=sys.argv[1:], gpf_instance=None):
         gpf_instance = GPFInstance()
 
     argv = parse_cli_arguments(argv, gpf_instance)
+
+    if argv.verbose == 1:
+        logging.basicConfig(level=logging.WARNING)
+    elif argv.verbose == 2:
+        logging.basicConfig(level=logging.INFO)
+    elif argv.verbose >= 3:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.ERROR)
+
+    logging.getLogger("impala").setLevel(logging.WARNING)
 
     genotype_storage_db = gpf_instance.genotype_storage_db
     genotype_storage = genotype_storage_db.get_genotype_storage(

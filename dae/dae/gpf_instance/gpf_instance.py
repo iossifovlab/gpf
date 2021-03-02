@@ -320,7 +320,7 @@ class GPFInstance(object):
 
     def get_regressions(self, study_wrapper):
         dataset_config = self.get_genotype_data_config(
-            study_wrapper.id)
+            study_wrapper.study_id)
 
         pheno_config = self.get_phenotype_db_config()
         browser_dbfile = \

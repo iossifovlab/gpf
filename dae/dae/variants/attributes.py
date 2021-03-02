@@ -363,11 +363,14 @@ class VariantDesc:
 
     def __init__(
             self, variant_type, position,
+            end_position=None,
             ref=None, alt=None, length=None,
             tr_ref=None, tr_alt=None, tr_unit=None):
 
         self.variant_type = variant_type
         self.position = position
+        self.end_position = end_position
+
         self.ref = ref
         self.alt = alt
         self.length = length

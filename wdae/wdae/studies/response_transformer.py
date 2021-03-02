@@ -73,7 +73,7 @@ class ResponseTransformer:
                 v.alt_alleles
             )),
 
-        "carrier_person_attributes": 
+        "carrier_person_attributes":
         lambda v: list(
             map(
                 lambda aa: members_in_order_get_family_structure(
@@ -119,6 +119,7 @@ class ResponseTransformer:
 
         "seen_in_unaffected":
         lambda v: bool(v.get_attribute("seen_in_status") in {1, 3}),
+
     }
 
     PHENOTYPE_ATTRS = {
