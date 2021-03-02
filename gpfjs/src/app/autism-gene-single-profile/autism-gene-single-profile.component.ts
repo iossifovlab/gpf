@@ -19,6 +19,9 @@ export class AutismGeneSingleProfileComponent implements OnInit, OnChanges {
   private protectionScoreGeneWeights: GeneWeights[];
   private geneSets: string[];
 
+  private _histogramWidth = 525;
+  private _histogramHeight = 145;
+
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
     private geneWeightsService: GeneWeightsService,
@@ -57,5 +60,13 @@ export class AutismGeneSingleProfileComponent implements OnInit, OnChanges {
 
   getProtectionScoreGeneWeight(protectionScoreKey: string): GeneWeights {
     return this.protectionScoreGeneWeights.find(weight => weight.weight === protectionScoreKey);
+  }
+
+  get histogramWidth() {
+    return this._histogramWidth;
+  }
+
+  get histogramHeight() {
+    return this._histogramHeight;
   }
 }

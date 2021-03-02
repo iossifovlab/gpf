@@ -8,8 +8,8 @@
       <td style="vertical-align: middle;">{{formatScoreName(autismScore.key)}}</td>
       <td>
         <gpf-histogram *ngIf="autismScoreGeneWeights && getAutismScoreGeneWeight(autismScore.key) as geneWeight"
-          width="525" height="145"
-          [width]="525" height="145"
+          [style.width]="histogramWidth" [style.height]="histogramHeight"
+          [width]="histogramWidth" [height]="histogramHeight"
           [bins]="geneWeight.bins"
           [bars]="geneWeight.bars"
           [logScaleX]="geneWeight.logScaleX"
@@ -29,8 +29,8 @@
       <td style="vertical-align: middle;">{{formatScoreName(protectionScore.key)}}</td>
       <td>
         <gpf-histogram *ngIf="protectionScoreGeneWeights && getProtectionScoreGeneWeight(protectionScore.key) as geneWeight"
-          width="525" height="145"
-          [width]="525" height="145"
+          [style.width]="histogramWidth" [style.height]="histogramHeight"
+          [width]="histogramWidth" [height]="histogramHeight"
           [bins]="geneWeight.bins"
           [bars]="geneWeight.bars"
           [logScaleX]="geneWeight.logScaleX"
