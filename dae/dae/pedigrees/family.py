@@ -105,7 +105,7 @@ class Person(object):
         if self._attributes.get("missing"):
             value = self._attributes.get("missing")
             if value == "None":
-                self._attributes["not_sequenced"] = None
+                self._attributes["missing"] = None
 
     def __repr__(self):
         decorator = ""
@@ -165,7 +165,7 @@ class Person(object):
     def has_both_parents(self):
         return self.has_dad() and self.has_mom()
 
-    def has_generated_parent(self):
+    def has_missing_parent(self):
         return \
             (self.has_dad() and
              (self.dad.generated or self.dad.not_sequenced)) or \
@@ -622,7 +622,7 @@ class FamiliesData(Mapping):
         person = []
         for fam in list(self._families.values()):
             for p in fam.members_in_order:
-                if p.has_both_parents() and (not p.has_generated_parent()):
+                if p.has_both_parents() and (not p.has_missing_parent()):
                     person.append(p)
         return person
 
@@ -631,7 +631,7 @@ class FamiliesData(Mapping):
             self._person_ids_with_parents = set()
             for fam in list(self._families.values()):
                 for p in fam.members_in_order:
-                    if p.has_both_parents() and (not p.has_generated_parent()):
+                    if p.has_both_parents() and (not p.has_missing_parent()):
                         self._person_ids_with_parents.add(p.person_id)
         return self._person_ids_with_parents
 
