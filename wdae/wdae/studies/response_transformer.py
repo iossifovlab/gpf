@@ -330,8 +330,8 @@ class ResponseTransformer:
                     if all([a == attribute[0] for a in attribute]):
                         attribute = [attribute[0]]
                     attribute = list(map(col_formatter, attribute))
-
-                    row_variant.append(",".join([str(a) for a in attribute]))
+                    row_variant.append(attribute)
+                    # row_variant.append(",".join([str(a) for a in attribute]))
 
             except (AttributeError, KeyError, Exception):
                 logging.exception(f'error build variant: {v}')

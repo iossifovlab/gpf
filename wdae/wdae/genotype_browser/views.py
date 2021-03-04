@@ -1,4 +1,4 @@
-from django.http.response import StreamingHttpResponse, FileResponse
+from django.http.response import StreamingHttpResponse, FileResponse, HttpResponse
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -89,10 +89,14 @@ class QueryPreviewVariantsView(QueryBaseView):
             data, max_variants_count=max_variants
         )
 
-        response = StreamingHttpResponse(
-            iterator_to_json(response),
+        # response = StreamingHttpResponse(
+        #     iterator_to_json(response),
+        #     status=status.HTTP_200_OK,
+        #     content_type="text/event-stream",
+        # )
+        response = HttpResponse(
+            list(response),
             status=status.HTTP_200_OK,
-            content_type="text/event-stream",
         )
         response["Cache-Control"] = "no-cache"
         return response

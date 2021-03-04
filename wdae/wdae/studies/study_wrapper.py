@@ -308,7 +308,6 @@ class StudyWrapper(StudyWrapperBase):
             if not matched:
                 continue
 
-            row_variant = []
             row_variant = self.response_transformer._build_variant_row(
                 v, sources, person_set_collection=person_set_collection
             )
@@ -365,7 +364,7 @@ class StudyWrapper(StudyWrapperBase):
             join_line, itertools.chain([self.download_columns], rows)
         )
 
-        return wdae_download
+        return list(itertools.chain([self.download_columns], rows))
 
     def get_summary_wdae_preview_info(self, query, max_variants_count=10000):
         preview_info = {}
