@@ -2,11 +2,11 @@
   <table *ngIf="config" class="table table-hover table-sm table-centered table-header-rotate" style="table-layout: fixed; min-width: 1500px;">
     <thead>
       <tr>
-        <th class="table-main-header" style="width: 160px; max-width: 160px">
+        <th class="table-main-header" style="width: 160px; max-width: 160px; position: sticky; top: 0px">
           <span>Gene</span>
         </th>
 
-        <th class="table-main-header" [attr.colspan]="shownGeneSets.length">
+        <th class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="shownGeneSets.length">
           <span>
             Gene sets
           </span>
@@ -18,7 +18,7 @@
           </span>
         </th>
 
-        <th class="table-main-header" [attr.colspan]="shownAutismScores.length">
+        <th class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="shownAutismScores.length">
           <span>
             Autism scores
           </span>
@@ -30,7 +30,7 @@
           </span>
         </th>
 
-        <th class="table-main-header" [attr.colspan]="shownProtectionScores.length">
+        <th class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="shownProtectionScores.length">
           <span>
             Protection scores
           </span>
@@ -42,7 +42,7 @@
           </span>
         </th>
 
-        <th class="table-main-header" *ngFor="let dataset of config.datasets" [attr.colspan]="calculateDatasetColspan(dataset)">{{dataset.name}}</th>
+        <th class="table-main-header" style="position: sticky; top: 0px" *ngFor="let dataset of config.datasets" [attr.colspan]="calculateDatasetColspan(dataset)">{{dataset.name}}</th>
       </tr>
 
       <tr style="height: 110px;">

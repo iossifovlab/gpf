@@ -57,3 +57,22 @@ td, th {
 #gene-search-input {
   border-radius: 0;
 }
+
+thead th {
+  position: sticky;
+  top: 36px;
+}
+
+.effect-type-header {
+  position: sticky;
+  top: 186px;
+}
+
+.table-main-header {
+  position: sticky;
+  top: 0px;
+}
+
+thead th, .effect-type-header {
+  background-color: #eeeeee;
+}
