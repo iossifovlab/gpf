@@ -81,9 +81,9 @@ class VariantAnnotator(object):
 
     def _do_annotate_cnv(self, variant):
         assert VariantType.is_cnv(variant.variant_type)
-        if variant.variant_type == VariantType.cnv_p:
+        if variant.variant_type & VariantType.cnv_p:
             effect_type = "CNV+"
-        elif variant.variant_type == VariantType.cnv_m:
+        elif variant.variant_type & VariantType.cnv_m:
             effect_type = "CNV-"
         else:
             raise ValueError(

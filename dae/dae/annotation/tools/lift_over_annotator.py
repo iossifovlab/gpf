@@ -72,6 +72,6 @@ class LiftOverAnnotator(VariantAnnotatorBase):
         lo_variant = self.liftover_variant(variant)
         if lo_variant is None:
             logger.info(
-                f"can not liftover variant: {variant}")
+                f"unable to liftover variant: {variant}")
             return
         liftover_variants[self.liftover_id] = lo_variant

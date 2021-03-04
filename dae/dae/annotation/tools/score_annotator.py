@@ -74,10 +74,10 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
                 variant.position + len(variant.reference),
             )
         else:
-            print(
-                f"Unexpected variant type in score annotation: "
-                f"{variant}, {variant.variant_type}",
-                file=sys.stderr,
+            logger.warning(
+                f"unexpected variant type in score annotation: "
+                f"{variant}, {variant.variant_type}, "
+                f"({variant.variant_type.value})"
             )
         return scores
 
@@ -178,9 +178,7 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
         return res
 
     def _aggregate_indel(self, variant, scores_df):
-        assert variant.variant_type in set(
-            [VariantType.insertion, VariantType.deletion, VariantType.comp]
-        )
+        assert VariantType.indel & variant.variant_type, variant
 
         aggregate = {sn: "max" for sn in self.score_names}
 
@@ -218,18 +216,13 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
             return
         scores_df = self.score_file.scores_to_dataframe(scores)
 
-        if variant.variant_type == VariantType.substitution:
+        if variant.variant_type & VariantType.substitution:
             aline.update(self._aggregate_substitution(variant, scores_df))
-        elif variant.variant_type in set(
-            [VariantType.insertion, VariantType.deletion, VariantType.comp]
-        ):
+        elif variant.variant_type & VariantType.indel:
             aline.update(self._aggregate_indel(variant, scores_df))
         else:
-            print(
-                "Unexpected variant type: {}, {}".format(
-                    variant, variant.variant_type
-                ),
-                file=sys.stderr,
+            logger.warning(
+                f"unexpected variant type: {variant}, {variant.variant_type}"
             )
             self._scores_not_found(aline)
 
