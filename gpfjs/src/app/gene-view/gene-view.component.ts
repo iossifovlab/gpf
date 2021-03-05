@@ -216,9 +216,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       this.geneTableStats.geneSymbol = this.gene.gene;
       this.geneTableStats.chromosome = this.gene.transcripts[0].chrom;
       this.geneTableStats.totalSummaryVariants = this.summaryVariantsArray.summaryVariants.length;
-      this.geneTableStats.totalFamilyVariants = this.summaryVariantsArray.summaryVariants.reduce(
-        (a, b) => a + b.numberOfFamilyVariants, 0
-      );
+      this.geneTableStats.totalFamilyVariants = this.summaryVariantsArray.getTotalFamilyVariantsCount();
 
       this.loadingService.setLoadingStop();
     });
@@ -500,11 +498,9 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     return this.selectedVariantTypes.includes(variantType) ? true : false;
   }
 
-  filterSummaryVariantsArray(
-    summaryVariantsArray: GeneViewSummaryVariantsArray, startPos: number, endPos: number
-  ): GeneViewSummaryVariantsArray {
-    const result = new GeneViewSummaryVariantsArray();
-    for (const summaryVariant of summaryVariantsArray.summaryVariants) {
+  filterSummaryVariants(summaryVariantsArray: GeneViewSummaryVariant[], startPos: number, endPos: number) {
+    const result = [];
+    for (const summaryVariant of summaryVariantsArray) {
       if (
         (!this.isVariantEffectSelected(summaryVariant.effect)) ||
         (!this.showDenovo && summaryVariant.seenAsDenovo) ||
@@ -526,6 +522,20 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
             result.push(summaryVariant);
           }
         }
+      }
+    }
+    return result;
+  }
+
+  filterSummaryVariantsArray(
+    summaryVariantsArray: GeneViewSummaryVariantsArray, startPos: number, endPos: number
+  ): GeneViewSummaryVariantsArray {
+    const result = new GeneViewSummaryVariantsArray();
+    result.summaryVariants = this.filterSummaryVariants(summaryVariantsArray.summaryVariants, startPos, endPos);
+    result.allAlleles = this.filterSummaryVariants(summaryVariantsArray.allAlleles, startPos, endPos);
+    for (const summaryVariant of summaryVariantsArray.summaryVariants) {
+      if (result.summaryVariantsIds.indexOf(summaryVariant.svuid) === -1) {
+        result.summaryVariantsIds.push(summaryVariant.svuid);
       }
     }
     return result;
@@ -595,9 +605,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.filteredSummaryVariantsArray = filteredSummaryVariants;
 
     this.geneTableStats.selectedSummaryVariants = filteredSummaryVariants.summaryVariants.length;
-    this.geneTableStats.selectedFamilyVariants = filteredSummaryVariants.summaryVariants.reduce(
-      (a, b) => a + b.numberOfFamilyVariants, 0
-    );
+    this.geneTableStats.selectedFamilyVariants = filteredSummaryVariants.getTotalFamilyVariantsCount();
 
     if (this.gene !== undefined) {
       this.x_axis = d3.axisBottom(this.x).tickValues(this.calculateXAxisTicks());
