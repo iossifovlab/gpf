@@ -1,6 +1,14 @@
 <div *ngIf="gene$ | async as gene" style="padding: 25px;">
 
-  <h2>{{geneSymbol}}</h2>
+  <div class="row">
+    <h2 style="margin-right: 15px">{{geneSymbol}}</h2>
+    <a class="nav-link"
+      target="_blank"
+      style="text-decoration: underline; padding-left: 0px;"
+      routerLink="/datasets/IossifovWE2014/geneBrowser/{{geneSymbol}}">
+      View {{geneSymbol}} in the Gene Browser
+    </a>
+  </div>
 
   <div class="row">
     <table id="autism-scores-table" class="table table-bordered table-centered">
@@ -59,14 +67,4 @@
       </tr>
     </table>
   </div>
-
-  <div class="row">
-    <a class="nav-link"
-      target="_blank"
-      style="text-decoration: underline; padding-left: 0px;"
-      routerLink="/datasets/IossifovWE2014/geneBrowser/{{geneSymbol}}">
-      View {{geneSymbol}} in the Gene Browser
-    </a>
-  </div>
-
 </div>
