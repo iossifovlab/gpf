@@ -1,4 +1,3 @@
-import itertools
 import logging
 
 from typing import Any, List, Optional

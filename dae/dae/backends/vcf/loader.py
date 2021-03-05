@@ -588,7 +588,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 )
                 current_summary_variant = \
                     SummaryVariantFactory.summary_variant_from_vcf(
-                        current_vcf_variant, summary_variant_index)
+                        current_vcf_variant, summary_variant_index,
+                        transmission_type=self.transmission_type)
 
                 vcf_iterator_idexes_to_advance = list()
                 vcf_gt_variants = list()

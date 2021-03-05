@@ -1,3 +1,12 @@
+SELECT variants.bucket_index, variants.summary_index, allele_index, variant_type, transmission_type, COUNT(DISTINCT variants.family_id)
+FROM impala_test_db.summary_stats_variants as variants JOIN impala_test_db.summary_stats_pedigree as pedigree 
+WHERE
+  ( (`chromosome` = '1' AND ((`position` >= 865582 AND `position` <= 865583) OR (COALESCE(end_position, -1) >= 865582 AND COALESCE(end_position, -1) <= 865583) OR (865582 >= `position` AND 865583 <= COALESCE(end_position, -1)))) ) AND 
+  ( variants.allele_index > 0 ) AND variants.variant_in_members = pedigree.person_id 
+GROUP BY bucket_index, summary_index, allele_index, variant_type, transmission_type
+
+
+
 SELECT variants.bucket_index, variants.summary_index, COUNT(DISTINCT variants.family_id)
 FROM data_hg38_production.SFARI_SSC_WGS_2b_variants as variants JOIN data_hg38_production.SFARI_SSC_WGS_2b_pedigree as pedigree 
 WHERE

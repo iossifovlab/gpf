@@ -1,5 +1,7 @@
 import pytest
 
+from dae.utils.regions import Region
+
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
 def test_summary_stats_simple(
@@ -12,26 +14,34 @@ def test_summary_stats_simple(
     vs = list(vs)
     print(vs)
 
-    assert len(vs) == 5
+    assert len(vs) == 10
 
 
-@pytest.mark.parametrize("variants", ["variants_impala",])  # "variants_vcf"])
-def test_summary_stats_summary(variants_impl, variants):
+@pytest.mark.parametrize("variants", ["variants_impala", ])  # "variants_vcf"])
+@pytest.mark.parametrize("regions,inheritance,count", [
+    ([Region("1", 865582, 865582)], None, 5),
+    ([Region("1", 865583, 865583)], None, 5),
+    ([Region("1", 865583, 865583)], "denovo", 1),
+    ([Region("1", 865582, 865583)], None, 10),
+    ([Region("1", 865582, 865583)], "denovo", 1),
+])
+def test_summary_stats_summary(
+        variants_impl, variants, regions, inheritance, count):
 
     vvars = variants_impl(variants)("backends/summary_stats")
     assert vvars is not None
 
-    vs = vvars.query_summary_variants()
+    vs = vvars.query_summary_variants(
+        regions=regions,
+        inheritance=inheritance)
     vs = list(vs)
     print(vs)
 
-    assert len(vs) == 1
-    count = 0
+    # assert len(vs) == 1
+    result = 0
     for v in vs:
-        for aa in v.matched_alleles:
-            print(aa, aa.get_attribute("family_variants_count"))
-        count += max([
+        result += max([
             aa.get_attribute("family_variants_count")
             for aa in v.matched_alleles])
-    
-    assert count == 5
+
+    assert result == count
