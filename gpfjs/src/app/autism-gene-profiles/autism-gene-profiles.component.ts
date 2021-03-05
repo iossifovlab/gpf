@@ -40,10 +40,14 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
   @ViewChildren(SortingButtonsComponent) sortingButtonsComponents: SortingButtonsComponent[];
   currentSortingColumnId: string;
 
+  bottom: number = 0;
+
   @HostListener('window:scroll', ['$event'])
-  onWindowScroll(event: any) {
+  onWindowScroll() {
     const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
     const totalScrollHeight = document.documentElement.scrollHeight;
+
+    this.bottom = (document.documentElement.scrollTop / 11)
 
     if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
       this.updateGenes();
@@ -166,5 +170,9 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
       ).resetHideState();
     } 
     this.currentSortingColumnId = sortBy;
+  }
+
+  openDropdown(dropdownId: string) {
+    this.ngbDropdownMenu.find(ele => ele.nativeElement.id === dropdownId).dropdown.open();
   }
 }
