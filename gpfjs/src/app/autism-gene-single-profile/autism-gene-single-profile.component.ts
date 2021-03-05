@@ -69,4 +69,14 @@ export class AutismGeneSingleProfileComponent implements OnInit, OnChanges {
   get histogramOptions() {
     return this._histogramOptions;
   }
+
+  get geneBrowserUrl(): string {
+    if (!this.config) {
+      return;
+    }
+
+    const dataset = this.config['defaultDataset'];
+
+    return `/datasets/${dataset}/geneBrowser/${this.geneSymbol}`;
+  }
 }

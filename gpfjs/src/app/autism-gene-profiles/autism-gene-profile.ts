@@ -4,6 +4,7 @@ export class AutismGeneToolConfig {
     private datasets: AutismGeneToolDataset[],
     private geneSets: string[],
     private protectionScores: string[],
+    private defaultDataset: string,
   ) { }
 
   static fromJson(json: any) {
@@ -11,7 +12,8 @@ export class AutismGeneToolConfig {
       json['autism_scores'],
       this.datasetsFromJson(json['datasets']),
       json['gene_sets'],
-      json['protection_scores']
+      json['protection_scores'],
+      json['default_dataset']
     );
   }
 
