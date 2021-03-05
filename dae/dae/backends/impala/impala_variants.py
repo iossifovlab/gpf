@@ -3,7 +3,8 @@ from contextlib import closing
 
 from impala.util import as_pandas
 
-from dae.backends.raw.raw_variants import RawVariantsIterator
+from dae.backends.raw.raw_variants import RawVariantsIterator, \
+    RawSummaryVariantsIterator
 
 from dae.annotation.tools.file_io_parquet import ParquetSchema
 from dae.pedigrees.family import FamiliesData
@@ -245,23 +246,43 @@ class ImpalaVariants:
             limit = 10 * limit
 
         summary_variants_iterator = self._summary_variants_iterator(
-                    regions=regions,
-                    genes=genes,
-                    effect_types=effect_types,
-                    family_ids=family_ids,
-                    person_ids=person_ids,
-                    inheritance=inheritance,
-                    roles=roles,
-                    sexes=sexes,
-                    variant_type=variant_type,
-                    real_attr_filter=real_attr_filter,
-                    ultra_rare=ultra_rare,
-                    frequency_filter=frequency_filter,
-                    return_reference=return_reference,
-                    return_unknown=return_unknown,
-                    limit=limit)
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            limit=limit)
 
-        for v in summary_variants_iterator:
+        raw_variants_iterator = RawSummaryVariantsIterator(
+            summary_variants_iterator, self.families)
+
+        result = raw_variants_iterator.query_summary_variants(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            limit=count)
+
+        for v in result:
             if v is None:
                 continue
             yield v

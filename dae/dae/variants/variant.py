@@ -323,6 +323,10 @@ class Allele(ABC):
 
 
 class Variant(ABC):
+
+    def __init__(self):
+        self._matched_alleles: List[int] = []
+
     @property
     def chrom(self) -> str:
         return self.chromosome
@@ -347,9 +351,6 @@ class Variant(ABC):
     def alternative(self) -> Optional[str]:
         if not self.alt_alleles:
             return None
-        # if any([aa.alternative is None for aa in self.alt_alleles]):
-        #     assert all([aa.alternative is None for aa in self.alt_alleles])
-        #     return None
         return ",".join(
             [
                 aa.alternative if aa.alternative else ""
@@ -498,6 +499,29 @@ class Variant(ABC):
         return (
             self.chromosome >= other.chromosome
             and self.position > other.position
+        )
+
+    def set_matched_alleles(self, alleles_indexes):
+        self._matched_alleles = sorted(alleles_indexes)
+
+    @property
+    def matched_alleles(self):
+        return [
+            aa
+            for aa in self.alleles
+            if aa.allele_index in self._matched_alleles
+        ]
+
+    @property
+    def matched_alleles_indexes(self):
+        return self._matched_alleles
+
+    @property
+    def matched_gene_effects(self):
+        return set(
+            itertools.chain.from_iterable(
+                [ma.matched_gene_effects for ma in self.matched_alleles]
+            )
         )
 
 
@@ -658,7 +682,10 @@ class SummaryAllele(Allele):
 
 
 class SummaryVariant(Variant):
+
     def __init__(self, alleles):
+        super(SummaryVariant, self).__init__()
+
         assert len(alleles) >= 1
         assert len(set([sa.position for sa in alleles])) == 1
 

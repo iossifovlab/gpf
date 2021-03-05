@@ -229,7 +229,6 @@ class RawFamilyVariants:
                 parsed = variant_type_query.transform_query_string_to_tree(
                     parsed
                 )
-            print(parsed)
             kwargs[
                 "variant_type"
             ] = variant_type_query.transform_tree_to_matcher(parsed)
@@ -249,7 +248,7 @@ class RawFamilyVariants:
                         continue
                     alleles_matched.append(allele.allele_index)
             if alleles_matched:
-                # sv.set_matched_alleles(alleles_matched)
+                sv.set_matched_alleles(alleles_matched)
                 yield sv
 
     def query_variants(self, **kwargs):
@@ -331,7 +330,7 @@ class RawMemoryVariants(RawFamilyVariants):
         if len(loaders) > 0:
             self._full_variants = None
         else:
-            print("No variants to load")
+            logger.debug("no variants to load")
             self._full_variants = []
 
     @property
@@ -344,7 +343,7 @@ class RawMemoryVariants(RawFamilyVariants):
                     self._full_variants.append((sv, fvs))
 
             elapsed = time.time() - start
-            print(f"Variants loaded in in {elapsed:.2f} sec", file=sys.stderr)
+            logger.debug(f"variants loaded in in {elapsed:.2f} sec")
         return self._full_variants
 
     def full_variants_iterator(self):
@@ -360,3 +359,26 @@ class RawVariantsIterator(RawFamilyVariants):
     def family_variants_iterator(self):
         for fv in self.family_variants:
             yield fv
+
+    def full_variants_iterator(self):
+        seen = set()
+        for fv in self.family_variants_iterator():
+            sv = fv.summary_variant
+            if sv.svuid in seen:
+                continue
+            yield sv
+            seen.add(sv.svuid)
+
+
+class RawSummaryVariantsIterator(RawFamilyVariants):
+    def __init__(self, summary_variants, families):
+        super(RawSummaryVariantsIterator, self).__init__(families)
+        self.summary_variants = summary_variants
+
+    def full_variants_iterator(self):
+        seen = set()
+        for sv in self.summary_variants:
+            if sv.svuid in seen:
+                continue
+            yield sv, []
+            seen.add(sv.svuid)

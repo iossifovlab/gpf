@@ -391,6 +391,7 @@ class FamilyVariant(Variant, FamilyDelegate):
         genotype: Any,
         best_state: Any,
     ):
+        super(FamilyVariant, self).__init__()
 
         assert family is not None
         assert isinstance(family, Family)
@@ -404,7 +405,6 @@ class FamilyVariant(Variant, FamilyDelegate):
 
         self._family_alleles: Optional[List[FamilyAllele]] = None
         self._best_state = best_state
-        self._matched_alleles: List[Allele] = []
         self._fvuid: Optional[str] = None
 
     @property
@@ -490,29 +490,6 @@ class FamilyVariant(Variant, FamilyDelegate):
             self._family_alleles = alleles
 
         return self._family_alleles
-
-    def set_matched_alleles(self, alleles_indexes):
-        self._matched_alleles = sorted(alleles_indexes)
-
-    @property
-    def matched_alleles(self):
-        return [
-            aa
-            for aa in self.alleles
-            if aa.allele_index in self._matched_alleles
-        ]
-
-    @property
-    def matched_alleles_indexes(self):
-        return self._matched_alleles
-
-    @property
-    def matched_gene_effects(self):
-        return set(
-            itertools.chain.from_iterable(
-                [ma.matched_gene_effects for ma in self.matched_alleles]
-            )
-        )
 
     def gt_flatten(self):
         """
