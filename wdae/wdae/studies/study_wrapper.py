@@ -487,9 +487,6 @@ class StudyWrapper(StudyWrapperBase):
                         row_variant.append(
                             ",".join(fn(v, phenotype_person_sets)))
 
-                elif col_source == "study_phenotype":
-                    row_variant.append(self.config.study_phenotype)
-
                 else:
                     if col_source in self.SPECIAL_ATTRS:
                         attribute = self.SPECIAL_ATTRS[col_source](v)
