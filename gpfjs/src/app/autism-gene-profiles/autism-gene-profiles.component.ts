@@ -175,4 +175,17 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
   openDropdown(dropdownId: string) {
     this.ngbDropdownMenu.find(ele => ele.nativeElement.id === dropdownId).dropdown.open();
   }
+
+  calculateColumnSize(columnsCount: number): string {
+    let result: number;
+    const singleColumnSize = 80;
+
+    if (columnsCount === 1) {
+      result = 200;
+    } else {
+      result = columnsCount * singleColumnSize;
+    }
+
+    return result + 'px';
+  }
 }

@@ -2,11 +2,11 @@
   <table *ngIf="config" class="table table-hover table-sm table-centered table-header-rotate" style="table-layout: fixed; min-width: 1500px;">
     <thead>
       <tr>
-        <th class="table-main-header" style="width: 160px; max-width: 160px; position: sticky; top: 0px">
+        <th class="table-main-header" style="width: 160px; position: sticky; top: 0px">
           <span>Gene</span>
         </th>
 
-        <th class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="shownGeneSets.length">
+        <th class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="shownGeneSets.length" [style.width]="calculateColumnSize(shownGeneSets.length)">
           <span>
             Gene sets
           </span>
@@ -15,7 +15,7 @@
           </button>
         </th>
 
-        <th class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="shownAutismScores.length">
+        <th class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="shownAutismScores.length" [style.width]="calculateColumnSize(shownAutismScores.length)">
           <span>
             Autism scores
           </span>
@@ -24,7 +24,7 @@
           </button>
         </th>
 
-        <th class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="shownProtectionScores.length">
+        <th class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="shownProtectionScores.length" [style.width]="calculateColumnSize(shownProtectionScores.length)">
           <span>
             Protection scores
           </span>
