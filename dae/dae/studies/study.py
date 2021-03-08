@@ -471,6 +471,10 @@ class GenotypeDataStudy(GenotypeData):
         self._build_person_set_collections()
 
     @property
+    def study_phenotype(self):
+        return self.config.get("study_phenotype", "-")
+
+    @property
     def is_group(self):
         return False
 
@@ -541,7 +545,11 @@ class GenotypeDataStudy(GenotypeData):
 
             for allele in variant.alleles:
                 if allele.get_attribute("study_name") is None:
-                    allele.update_attributes({"study_name": self.name})
+                    allele.update_attributes(
+                        {"study_name": self.name})
+                if allele.get_attribute("study_phenotype") is None:
+                    allele.update_attributes(
+                        {"study_phenotype": self.study_phenotype})
             yield variant
 
     def query_summary_variants(
