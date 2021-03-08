@@ -98,3 +98,4 @@ import './app/autism-gene-profiles/autism-gene-profiles.component.spec';
 import './app/autism-gene-profiles/autism-gene-profiles.service.spec';
 import './app/autism-gene-profiles-block/autism-gene-profiles-block.component.spec';
 import './app/autism-gene-single-profile/autism-gene-single-profile.component.spec';
+import './app/multiple-select-menu/multiple-select-menu.component.spec';

@@ -67,6 +67,6 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
   focusSearchInput() {
     setTimeout(() => {
       this.searchInput.nativeElement.focus();
-    },0); 
+    }, 0);
   }
 }
