@@ -78,7 +78,8 @@ describe('AutismGeneProfilesComponent', () => {
       ['fakeAutismScore'],
       undefined,
       ['fakeGeneList'],
-      ['fakeProtectionScore']
+      ['fakeProtectionScore'],
+      'fakeDefaultDataset'
     );
 
     component.ngOnChanges();
