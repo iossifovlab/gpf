@@ -36,7 +36,9 @@ def test_region_partition(vcf_variants_loaders, temp_dirname):
     )
 
 
-def test_region_partition_chromosome_filter(vcf_variants_loaders, temp_dirname):
+def test_region_partition_chromosome_filter(
+        vcf_variants_loaders, temp_dirname):
+
     fvars = vcf_variants_loaders("backends/partition")[0]
 
     partition_desc = ParquetPartitionDescriptor(

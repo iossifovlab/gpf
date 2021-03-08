@@ -384,12 +384,12 @@ class FamilyAllele(Allele, FamilyDelegate):
 
 class FamilyVariant(Variant, FamilyDelegate):
     def __init__(
-        self,
-        summary_variant: SummaryVariant,
-        family: Family,
-        genotype: Any,
-        best_state: Any,
-    ):
+            self,
+            summary_variant: SummaryVariant,
+            family: Family,
+            genotype: Any,
+            best_state: Any):
+
         super(FamilyVariant, self).__init__()
 
         assert family is not None
@@ -398,13 +398,53 @@ class FamilyVariant(Variant, FamilyDelegate):
 
         self.summary_variant = summary_variant
         self.summary_alleles = self.summary_variant.alleles
-
         self.gt = genotype
         self._genetic_model = None
 
         self._family_alleles: Optional[List[FamilyAllele]] = None
         self._best_state = best_state
+
         self._fvuid: Optional[str] = None
+        # self._build_family_alleles()
+
+    def _build_family_alleles(self):
+        assert self._family_alleles is None
+
+        summary_allele = self.summary_variant.alleles[0]
+        alleles = [
+            FamilyAllele(
+                summary_allele,
+                self.family,
+                self.gt,
+                self._best_state,
+                inheritance_in_members=summary_allele.get_attribute(
+                    "inheritance_in_members")
+            )
+        ]
+
+        for ai in self.calc_alt_alleles(self.gt):
+            summary_allele = None
+            for allele in self.summary_variant.alt_alleles:
+                if allele.allele_index == ai:
+                    summary_allele = allele
+                    break
+            if summary_allele is None:
+                continue
+
+            inheritance = summary_allele.get_attribute(
+                "inheritance_in_members")
+
+            allele = FamilyAllele(
+                summary_allele,
+                self.family,
+                self.gt,
+                self._best_state,
+                inheritance_in_members=inheritance
+            )
+
+            alleles.append(allele)
+
+        self._family_alleles = alleles
 
     @property
     def fvuid(self) -> Optional[str]:
@@ -467,26 +507,7 @@ class FamilyVariant(Variant, FamilyDelegate):
     @property
     def alleles(self):
         if self._family_alleles is None:
-            family_alleles = [
-                FamilyAllele(
-                    sum_allele, self.family, self.gt, self._best_state
-                )
-                for sum_allele in self.summary_variant.alleles
-            ]
-            alleles = [family_alleles[0]]
-            for ai in self.calc_alt_alleles(self.gt):
-                allele = None
-                for fa in family_alleles:
-                    if fa.allele_index == ai:
-                        allele = fa
-                        break
-                if allele is None:
-                    continue
-                assert allele.allele_index == ai, (allele.allele_index, ai)
-
-                alleles.append(allele)
-
-            self._family_alleles = alleles
+            self._build_family_alleles()
 
         return self._family_alleles
 

@@ -705,6 +705,10 @@ class SummaryVariant(Variant):
         else:
             self._end_position = None
 
+        for allele_index, allele in enumerate(alleles):
+            if allele.allele_index == 0:
+                allele._allele_index = allele_index
+
         self._svuid: Optional[str] = None
 
     @property
