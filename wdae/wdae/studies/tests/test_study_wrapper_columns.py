@@ -123,7 +123,7 @@ def phenotype_person_sets(variants_impl):
             "mom:F:unaffected"]),
         ("genotype", ["1/1;1/1;1/2;1/1;1/1;1/1;1/1"]),
         ("best_st", ["0000000/2212222/0010000"]),
-        ("inheritance_type", ["mendelian", "-"]),
+        ("inheritance_type", ["mendelian", "mendelian"]),
         ("is_denovo", [False, False]),
     ]
 )
