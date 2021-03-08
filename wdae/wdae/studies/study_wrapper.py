@@ -633,8 +633,12 @@ class StudyWrapper(StudyWrapperBase):
             self.genotype_data_study.query_summary_variants(**kwargs), limit
         )
         for v in variants_from_studies:
+            out = {
+                "svuid": v.svuid,
+                "alleles": []
+            }
             for a in v.alt_alleles:
-                yield {
+                out["alleles"].append({
                     "location": a.cshl_location,
                     "position": a.position,
                     "end_position": a.end_position,
@@ -649,7 +653,8 @@ class StudyWrapper(StudyWrapperBase):
                         a.get_attribute("seen_in_status") in {2, 3},
                     "seen_in_unaffected":
                         a.get_attribute("seen_in_status") in {1, 3},
-                }
+                })
+            yield out
 
     def get_gene_view_summary_variants_download(
             self, frequency_column, **kwargs):
