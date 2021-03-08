@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter, forwardRef, ViewChild, ViewChildren } from '@angular/core';
 import * as d3 from 'd3';
-import { Gene, GeneViewSummaryVariantsArray, GeneViewSummaryVariant, DomainRange } from 'app/gene-view/gene';
+import { Gene, GeneViewSummaryVariantsArray, GeneViewSummaryAllele, DomainRange, GeneViewSummaryVariant } from 'app/gene-view/gene';
 import { Subject, Observable } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
@@ -154,7 +154,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     totalSummaryVariants: 0,
     selectedSummaryVariants: 0,
   };
-  denovoVariantsSpacings = {};
+  denovoAllelesSpacings = {};
   additionalZeroAxisHeight = 0;
   constructor(
     private datasetsService: DatasetsService,
@@ -216,7 +216,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       this.geneTableStats.geneSymbol = this.gene.gene;
       this.geneTableStats.chromosome = this.gene.transcripts[0].chrom;
       this.geneTableStats.totalSummaryVariants = this.summaryVariantsArray.summaryVariants.length;
-      this.geneTableStats.totalFamilyVariants = this.summaryVariantsArray.getTotalFamilyVariantsCount();
+      this.geneTableStats.totalFamilyVariants = this.summaryVariantsArray.totalFamilyVariantsCount;
 
       this.loadingService.setLoadingStop();
     });
@@ -468,7 +468,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     return color;
   }
 
-  getVariantAffectedStatus(summaryVariant: GeneViewSummaryVariant): string {
+  getVariantAffectedStatus(summaryVariant: GeneViewSummaryAllele): string {
     let variantAffectedStatus: string;
 
     if (summaryVariant.seenInAffected) {
@@ -498,28 +498,28 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     return this.selectedVariantTypes.includes(variantType) ? true : false;
   }
 
-  filterSummaryVariants(summaryVariantsArray: GeneViewSummaryVariant[], startPos: number, endPos: number) {
-    const result = [];
-    for (const summaryVariant of summaryVariantsArray) {
+  filterSummaryVariant(summaryVariant: GeneViewSummaryVariant, startPos: number, endPos: number) {
+    const result = new GeneViewSummaryVariant(summaryVariant.svuid);
+    for (const summaryAllele of summaryVariant.summaryAlleles) {
       if (
-        (!this.isVariantEffectSelected(summaryVariant.effect)) ||
-        (!this.showDenovo && summaryVariant.seenAsDenovo) ||
-        (!this.showTransmitted && !summaryVariant.seenAsDenovo) ||
-        (!this.isAffectedStatusSelected(this.getVariantAffectedStatus(summaryVariant))) ||
-        (!this.isVariantTypeSelected(summaryVariant.variant))
+        (!this.isVariantEffectSelected(summaryAllele.effect)) ||
+        (!this.showDenovo && summaryAllele.seenAsDenovo) ||
+        (!this.showTransmitted && !summaryAllele.seenAsDenovo) ||
+        (!this.isAffectedStatusSelected(this.getVariantAffectedStatus(summaryAllele))) ||
+        (!this.isVariantTypeSelected(summaryAllele.variant))
       ) {
         continue;
-      } else if (this.frequencyIsSelected(summaryVariant.frequency)) {
-        if (summaryVariant.isCNV()) {
+      } else if (this.frequencyIsSelected(summaryAllele.frequency)) {
+        if (summaryAllele.isCNV()) {
           if (
-            !(summaryVariant.position <= startPos && summaryVariant.endPosition <= startPos) &&
-            !(summaryVariant.position >= endPos && summaryVariant.endPosition >= endPos)
+            !(summaryAllele.position <= startPos && summaryAllele.endPosition <= startPos) &&
+            !(summaryAllele.position >= endPos && summaryAllele.endPosition >= endPos)
           ) {
-            result.push(summaryVariant);
+            result.push(summaryAllele);
           }
         } else  {
-          if (summaryVariant.position >= startPos && summaryVariant.position <= endPos) {
-            result.push(summaryVariant);
+          if (summaryAllele.position >= startPos && summaryAllele.position <= endPos) {
+            result.push(summaryAllele);
           }
         }
       }
@@ -531,12 +531,8 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     summaryVariantsArray: GeneViewSummaryVariantsArray, startPos: number, endPos: number
   ): GeneViewSummaryVariantsArray {
     const result = new GeneViewSummaryVariantsArray();
-    result.summaryVariants = this.filterSummaryVariants(summaryVariantsArray.summaryVariants, startPos, endPos);
-    result.allAlleles = this.filterSummaryVariants(summaryVariantsArray.allAlleles, startPos, endPos);
     for (const summaryVariant of summaryVariantsArray.summaryVariants) {
-      if (result.summaryVariantsIds.indexOf(summaryVariant.svuid) === -1) {
-        result.summaryVariantsIds.push(summaryVariant.svuid);
-      }
+      result.push(this.filterSummaryVariant(summaryVariant, startPos, endPos));
     }
     return result;
   }
@@ -574,19 +570,19 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.updateShownTablePreviewVariantsArrayEvent.emit(domains);
   }
 
-  doVariantsIntersect(variant1: GeneViewSummaryVariant, variant2: GeneViewSummaryVariant): boolean {
+  doAllelesIntersect(allele1: GeneViewSummaryAllele, allele2: GeneViewSummaryAllele): boolean {
     let result: boolean;
 
-    if (!variant1.isCNV()) {
-      variant1.endPosition = variant1.position;
+    if (!allele1.isCNV()) {
+      allele1.endPosition = allele1.position;
     }
 
-    if (!variant2.isCNV()) {
-      variant2.endPosition = variant2.position;
+    if (!allele2.isCNV()) {
+      allele2.endPosition = allele2.position;
     }
 
-    if (this.x(variant1.endPosition) + 6 < this.x(variant2.position) - 6 ||
-        this.x(variant1.position) - 6 > this.x(variant2.endPosition) + 6) {
+    if (this.x(allele1.endPosition) + 6 < this.x(allele2.position) - 6 ||
+        this.x(allele1.position) - 6 > this.x(allele2.endPosition) + 6) {
       result = false;
     } else {
       result = true;
@@ -605,7 +601,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.filteredSummaryVariantsArray = filteredSummaryVariants;
 
     this.geneTableStats.selectedSummaryVariants = filteredSummaryVariants.summaryVariants.length;
-    this.geneTableStats.selectedFamilyVariants = filteredSummaryVariants.getTotalFamilyVariantsCount();
+    this.geneTableStats.selectedFamilyVariants = filteredSummaryVariants.totalFamilyVariantsCount;
 
     if (this.gene !== undefined) {
       this.x_axis = d3.axisBottom(this.x).tickValues(this.calculateXAxisTicks());
@@ -645,100 +641,109 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         .call(this.brush);
 
       for (const variant of filteredSummaryVariants.summaryVariants) {
-        const variantPosition = this.x(variant.position);
-        const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant));
-        const variantTitle = `Effect type: ${variant.effect}\nVariant position: ${variant.location}`;
+        for (const allele of variant.summaryAlleles) {
+          const allelePosition = this.x(allele.position);
+          const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(allele));
+          const alleleTitle = `Effect type: ${allele.effect}\nVariant position: ${allele.location}`;
 
-        const variantHeight = this.getVariantY(variant.frequency);
+          const alleleHeight = this.getVariantY(allele.frequency);
 
-        let spacing = 0;
-        if (variant.seenAsDenovo) {
-          if (variant.frequency === null) {
-            spacing = this.denovoVariantsSpacings[variant.svuid] + 8;
+          let spacing = 0;
+          if (allele.seenAsDenovo) {
+            if (allele.frequency === null) {
+              spacing = this.denovoAllelesSpacings[allele.svuid] + 8;
+            }
+
+            if (allele.isCNV()) {
+              const cnvLength = this.x(allele.endPosition) - allelePosition;
+              draw.surroundingRectangle(
+                this.svgElement, allelePosition + cnvLength / 2,
+                alleleHeight + spacing, color, alleleTitle, 1, cnvLength
+              );
+            } else {
+              draw.surroundingRectangle(this.svgElement, allelePosition, alleleHeight + spacing, color, alleleTitle);
+            }
           }
 
-          if (variant.isCNV()) {
-            const cnvLength = this.x(variant.endPosition) - variantPosition;
-            draw.surroundingRectangle(
-              this.svgElement, variantPosition + cnvLength / 2,
-              variantHeight + spacing, color, variantTitle, 1, cnvLength
+          if (allele.isLGDs()) {
+            draw.star(this.svgElement, allelePosition, alleleHeight + spacing, color, alleleTitle);
+          } else if (allele.isMissense()) {
+            draw.triangle(this.svgElement, allelePosition, alleleHeight + spacing, color, alleleTitle);
+          } else if (allele.isSynonymous()) {
+            draw.circle(this.svgElement, allelePosition, alleleHeight + spacing, color, alleleTitle);
+          } else if (allele.isCNVPlus()) {
+            draw.rect(
+              this.svgElement, this.x(allele.position), this.x(allele.endPosition),
+              alleleHeight - 3 + spacing, 6, color, 1, alleleTitle
+            );
+          } else if (allele.isCNVPMinus()) {
+            draw.rect(
+              this.svgElement, this.x(allele.position), this.x(allele.endPosition),
+              alleleHeight - 0.5 + spacing, 1, color, 1, alleleTitle
             );
           } else {
-            draw.surroundingRectangle(this.svgElement, variantPosition, variantHeight + spacing, color, variantTitle);
+            draw.dot(this.svgElement, allelePosition, alleleHeight + spacing, color, alleleTitle);
           }
-        }
-
-        if (variant.isLGDs()) {
-          draw.star(this.svgElement, variantPosition, variantHeight + spacing, color, variantTitle);
-        } else if (variant.isMissense()) {
-          draw.triangle(this.svgElement, variantPosition, variantHeight + spacing, color, variantTitle);
-        } else if (variant.isSynonymous()) {
-          draw.circle(this.svgElement, variantPosition, variantHeight + spacing, color, variantTitle);
-        } else if (variant.isCNVPlus()) {
-          draw.rect(
-            this.svgElement, this.x(variant.position), this.x(variant.endPosition),
-            variantHeight - 3 + spacing, 6, color, 1, variantTitle
-          );
-        } else if (variant.isCNVPMinus()) {
-          draw.rect(
-            this.svgElement, this.x(variant.position), this.x(variant.endPosition),
-            variantHeight - 0.5 + spacing, 1, color, 1, variantTitle
-          );
-        } else {
-          draw.dot(this.svgElement, variantPosition, variantHeight + spacing, color, variantTitle);
         }
       }
     }
   }
 
-  calculateDenovoVariantsSpacings(summaryVariantsArray: GeneViewSummaryVariantsArray) {
-    summaryVariantsArray.summaryVariants.filter(variant => variant.frequency === 0).forEach(variant => variant.frequency = null)
-    let denovoVariants = summaryVariantsArray.summaryVariants
-      .filter(variant => variant.seenAsDenovo && variant.frequency === null)
-      .sort((sv, sv2) => sv.position > sv2.position ? 1 : sv.position < sv2.position ? -1 : 0);
+  calculateDenovoAllelesSpacings(summaryVariantsArray: GeneViewSummaryVariantsArray) {
+    let denovoAlleles = [];
+    for (const variant of summaryVariantsArray.summaryVariants) {
+      for (const allele of variant.summaryAlleles) {
+        if (allele.frequency === 0 && allele.seenAsDenovo) {
+          allele.frequency = null;
+          denovoAlleles.push(allele);
+        }
+      }
+    }
+    denovoAlleles.sort((sa, sa2) => sa.position > sa2.position ? 1 : sa.position < sa2.position ? -1 : 0)
+    console.log(denovoAlleles);
 
-    if (!denovoVariants.length) {
+    if (!denovoAlleles.length) {
       return;
     }
 
-    const leveledDenovos: GeneViewSummaryVariant[][] = [];
-    const denovoCount = denovoVariants.length;
+    const leveledDenovos: GeneViewSummaryAllele[][] = [];
+    const denovoCount = denovoAlleles.length;
     for (let level = 0; level < denovoCount; level++) {
       leveledDenovos[level] = [];
 
       const toRemove = [];
-      for (let i = 0; i < denovoVariants.length; i++) {
+      for (let i = 0; i < denovoAlleles.length; i++) {
         let canFitInLevel = true;
 
         for (let k = 0; k < leveledDenovos[level].length; k++) {
-          if (this.doVariantsIntersect(leveledDenovos[level][k], denovoVariants[i])) {
+          if (this.doAllelesIntersect(leveledDenovos[level][k], denovoAlleles[i])) {
             canFitInLevel = false;
             break;
           }
         }
 
         if (canFitInLevel) {
-          leveledDenovos[level].push(denovoVariants[i]);
+          leveledDenovos[level].push(denovoAlleles[i]);
           toRemove.push(i);
         }
       }
       toRemove.reverse().forEach(index => {
-        denovoVariants.splice(index, 1);
+        denovoAlleles.splice(index, 1);
       });
 
-      if (denovoVariants.length === 0) {
+      if (denovoAlleles.length === 0) {
         break;
       }
     }
 
-    const denovoVariantsSpacings = {};
+    const denovoAllelesSpacings = {};
     for (let row = 0; row < leveledDenovos.length; row++) {
       for (let col = 0; col < leveledDenovos[row].length; col++) {
-        denovoVariantsSpacings[leveledDenovos[row][col].svuid] = 22 * row;
+        denovoAllelesSpacings[leveledDenovos[row][col].svuid] = 22 * row;
       }
     }
 
-    return denovoVariantsSpacings;
+    return denovoAllelesSpacings;
   }
 
   setDenovoPlotHeight() {
@@ -752,10 +757,10 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.subdomainAxisY = Math.round(this.svgHeightFreq * this.options.axisScale.domain);
     this.zeroAxisY = this.subdomainAxisY + Math.round(this.svgHeightFreq * this.options.axisScale.subdomain);
 
-    this.denovoVariantsSpacings = this.calculateDenovoVariantsSpacings(filteredSummaryVariants);
+    this.denovoAllelesSpacings = this.calculateDenovoAllelesSpacings(filteredSummaryVariants);
     this.additionalZeroAxisHeight = 0;
-    if (this.denovoVariantsSpacings) {
-      this.additionalZeroAxisHeight = Math.max.apply(Math, Object.values(this.denovoVariantsSpacings));
+    if (this.denovoAllelesSpacings) {
+      this.additionalZeroAxisHeight = Math.max.apply(Math, Object.values(this.denovoAllelesSpacings));
     }
 
     this.svgHeightFreq += this.additionalZeroAxisHeight;
@@ -970,7 +975,9 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     for (const [chromosome, range] of Object.entries(chromosomes)) {
       from = Math.max(range[0], domainMin);
       to = Math.min(range[1], domainMax);
-      draw.hoverText(element, (this.x(from) + this.x(to))/2 + 50, yPos + 35, `Chromosome: ${chromosome}`, `Chromosome: ${chromosome}`, this.fontSize);
+      draw.hoverText(
+        element, (this.x(from) + this.x(to)) / 2 + 50, yPos + 35, `Chromosome: ${chromosome}`, `Chromosome: ${chromosome}`, this.fontSize
+      );
     }
   }
 
@@ -1085,7 +1092,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   }
 
   commaSeparateNumber(number: number): string {
-    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
 
   formatExonsLength(exonsLength: number): string {
@@ -1093,11 +1100,11 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     const numLen = exonsLength.toString().length;
 
     if (numLen < 4) {
-     result = `${exonsLength} bp`; 
+     result = `${exonsLength} bp`;
     } else if (numLen < 7) {
-      result = `${Math.round(exonsLength/100 + Number.EPSILON) / 10} kbp`;
+      result = `${Math.round(exonsLength / 100 + Number.EPSILON) / 10} kbp`;
     } else if (numLen < 10) {
-      result = `${Math.round(exonsLength/10000 + Number.EPSILON) / 10} mbp`;
+      result = `${Math.round(exonsLength / 10000 + Number.EPSILON) / 10} mbp`;
     }
 
     return result;

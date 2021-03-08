@@ -1,6 +1,6 @@
 import { GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
 
-import { Exon, Transcript, Gene, GeneViewSummaryVariant, GeneViewSummaryVariantsArray } from './gene';
+import { Exon, Transcript, Gene, GeneViewSummaryAllele, GeneViewSummaryVariantsArray } from './gene';
 
 describe('Exon', () => {
   it('should have working getters', () => {
@@ -265,21 +265,21 @@ describe('Gene', () => {
   });
 });
 
-describe('GeneViewSummaryVariant', () => {
+describe('GeneViewSummaryAllele', () => {
   it('should check if its LGDs', () => {
-    const testSummaryVariant = new GeneViewSummaryVariant();
+    const testSummaryVariant = new GeneViewSummaryAllele();
     testSummaryVariant.effect = 'lgds';
     expect(testSummaryVariant.isLGDs()).toBeTruthy();
   });
 
   it('should check if its Missense', () => {
-    const testSummaryVariant = new GeneViewSummaryVariant();
+    const testSummaryVariant = new GeneViewSummaryAllele();
     testSummaryVariant.effect = 'missense';
     expect(testSummaryVariant.isMissense()).toBeTruthy();
   });
 
   it('should check if its Synonymous', () => {
-    const testSummaryVariant = new GeneViewSummaryVariant();
+    const testSummaryVariant = new GeneViewSummaryAllele();
     testSummaryVariant.effect = 'synonymous';
     expect(testSummaryVariant.isSynonymous()).toBeTruthy();
   });
@@ -310,9 +310,9 @@ describe('GeneViewSummaryVariant', () => {
     ];
 
     const length = 18;
-    const testSummaryVariants = Array<GeneViewSummaryVariant>();
+    const testSummaryVariants = Array<GeneViewSummaryAllele>();
     for (let i = 0; i < length; i++) {
-      testSummaryVariants[i] = new GeneViewSummaryVariant();
+      testSummaryVariants[i] = new GeneViewSummaryAllele();
       testSummaryVariants[i].seenAsDenovo = correctOrder[i][0] as boolean;
       testSummaryVariants[i].effect = correctOrder[i][1] as string;
       testSummaryVariants[i].seenInAffected = correctOrder[i][2] as boolean;
@@ -345,13 +345,13 @@ describe('GeneViewSummaryVariantsArray', () => {
     const summaryVariantsArray = new GeneViewSummaryVariantsArray();
     summaryVariantsArray.addSummaryRow(mockRow);
 
-    const expectedSummaryVariant = GeneViewSummaryVariant.fromRow(mockRow);
+    const expectedSummaryVariant = GeneViewSummaryAllele.fromRow(mockRow);
 
     expect(summaryVariantsArray.summaryVariants[0]).toEqual(expectedSummaryVariant);
   });
 
   it('should push summary variant', () => {
-    const expectedSummaryVariant = GeneViewSummaryVariant.fromRow(mockRow);
+    const expectedSummaryVariant = GeneViewSummaryAllele.fromRow(mockRow);
     const summaryVariantsArray = new GeneViewSummaryVariantsArray();
     summaryVariantsArray.push(expectedSummaryVariant);
 

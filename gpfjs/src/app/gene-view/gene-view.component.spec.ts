@@ -11,7 +11,7 @@ import * as d3 from 'd3';
 const d3Selection = require('d3-selection');
 // tslint:disable-next-line:import-blacklist
 import { Subject, Observable } from 'rxjs';
-import { Gene, GeneViewSummaryVariant, GeneViewSummaryVariantsArray, Transcript } from './gene';
+import { Gene, GeneViewSummaryAllele, GeneViewSummaryVariantsArray, Transcript } from './gene';
 import { GeneViewModel, GeneViewTranscript } from './gene-view';
 
 import { GeneViewComponent, GeneViewZoomHistory, GeneViewScaleState } from './gene-view.component';
@@ -389,13 +389,13 @@ describe('GeneViewComponent', () => {
   });
 
   it('should get a variant\'s Affected Status', () => {
-    let testVariant = GeneViewSummaryVariant.fromRow({ seen_in_affected: true, seen_in_unaffected: true });
+    let testVariant = GeneViewSummaryAllele.fromRow({ seen_in_affected: true, seen_in_unaffected: true });
     expect(component.getVariantAffectedStatus(testVariant)).toBe('Affected and unaffected');
 
-    testVariant = GeneViewSummaryVariant.fromRow({ seen_in_affected: true, seen_in_unaffected: false });
+    testVariant = GeneViewSummaryAllele.fromRow({ seen_in_affected: true, seen_in_unaffected: false });
     expect(component.getVariantAffectedStatus(testVariant)).toBe('Affected only');
 
-    testVariant = GeneViewSummaryVariant.fromRow({ seen_in_affected: false, seen_in_unaffected: true });
+    testVariant = GeneViewSummaryAllele.fromRow({ seen_in_affected: false, seen_in_unaffected: true });
     expect(component.getVariantAffectedStatus(testVariant)).toBe('Unaffected only');
   });
 
@@ -413,27 +413,27 @@ describe('GeneViewComponent', () => {
     component.selectedAffectedStatus = ['Affected only'];
     component.showDenovo = false;
 
-    const testVariant1 = GeneViewSummaryVariant.fromRow({
+    const testVariant1 = GeneViewSummaryAllele.fromRow({
       effect: 'missense', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15, variant: 'sub'
     });
 
-    const testVariant2 = GeneViewSummaryVariant.fromRow({
+    const testVariant2 = GeneViewSummaryAllele.fromRow({
       effect: 'lgds', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15, variant: 'del'
     });
 
-    const testVariant3 = GeneViewSummaryVariant.fromRow({
+    const testVariant3 = GeneViewSummaryAllele.fromRow({
       effect: 'missense', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15, variant: 'ins'
     });
 
-    const testVariant4 = GeneViewSummaryVariant.fromRow({
+    const testVariant4 = GeneViewSummaryAllele.fromRow({
       effect: 'missense', is_denovo: false, seen_in_affected: false, seen_in_unaffected: true, frequency: 15, position: 15, variant: 'cnv+'
     });
 
-    const testVariant5 = GeneViewSummaryVariant.fromRow({
+    const testVariant5 = GeneViewSummaryAllele.fromRow({
       effect: 'missense', is_denovo: false, seen_in_affected: false, seen_in_unaffected: true, frequency: 9, position: 15, variant: 'cnv-'
     });
 
-    const testVariant6 = GeneViewSummaryVariant.fromRow({
+    const testVariant6 = GeneViewSummaryAllele.fromRow({
       effect: 'missense', is_denovo: false, seen_in_affected: false, seen_in_unaffected: true, frequency: 15, position: 9, variant: 'cnv+'
     });
 
@@ -496,23 +496,23 @@ describe('GeneViewComponent', () => {
 
     const drawSurroundingSquareSpy = spyOn(draw, 'surroundingRectangle');
 
-    const testVariant1 = GeneViewSummaryVariant.fromRow({
+    const testVariant1 = GeneViewSummaryAllele.fromRow({
       effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15, variant: 'sub'
     });
 
-    const testVariant2 = GeneViewSummaryVariant.fromRow({
+    const testVariant2 = GeneViewSummaryAllele.fromRow({
       effect: 'missense', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15, variant: 'ins'
     });
 
-    const testVariant3 = GeneViewSummaryVariant.fromRow({
+    const testVariant3 = GeneViewSummaryAllele.fromRow({
       effect: 'synonymous', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15, variant: 'del'
     });
 
-    const testVariant4 = GeneViewSummaryVariant.fromRow({
+    const testVariant4 = GeneViewSummaryAllele.fromRow({
       effect: 'other', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15, variant: 'del'
     });
 
-    const testVariant5 = GeneViewSummaryVariant.fromRow({
+    const testVariant5 = GeneViewSummaryAllele.fromRow({
       effect: 'CNV+', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15, endPosition: 25, variant: 'cnv+'
     });
 

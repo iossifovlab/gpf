@@ -185,7 +185,7 @@ export class Gene {
   }
 }
 
-export class GeneViewSummaryVariant {
+export class GeneViewSummaryAllele {
   location: string;
   position: number;
   endPosition: number;
@@ -199,11 +199,11 @@ export class GeneViewSummaryVariant {
   seenInAffected: boolean;
   seenInUnaffected: boolean;
   svuid: string;
-  svuid_prime: string; // this is the svuid from the backend, current workaround for table
+  sauid: string;
 
   lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
 
-  static comparator(a: GeneViewSummaryVariant, b: GeneViewSummaryVariant) {
+  static comparator(a: GeneViewSummaryAllele, b: GeneViewSummaryAllele) {
     if (a.comparisonValue > b.comparisonValue) {
       return 1;
     } else if (a.comparisonValue < b.comparisonValue) {
@@ -213,8 +213,8 @@ export class GeneViewSummaryVariant {
     }
   }
 
-  static fromRow(row: any, svuid?: string): GeneViewSummaryVariant {
-    const result = new GeneViewSummaryVariant();
+  static fromRow(row: any, svuid?: string): GeneViewSummaryAllele {
+    const result = new GeneViewSummaryAllele();
     result.location = row.location;
     result.position = row.position;
     result.endPosition = row.end_position;
@@ -226,9 +226,8 @@ export class GeneViewSummaryVariant {
     result.seenAsDenovo = row.is_denovo;
     result.seenInAffected = row.seen_in_affected;
     result.seenInUnaffected = row.seen_in_unaffected;
-    result.svuid = result.location + ':' + result.variant;
-    result.svuid_prime = svuid;
-
+    result.sauid = result.location + ':' + result.variant;
+    result.svuid = svuid ? svuid : result.sauid;
     return result;
   }
 
@@ -265,40 +264,69 @@ export class GeneViewSummaryVariant {
   }
 }
 
+export class GeneViewSummaryVariant {
+  svuid: string;
+  summaryAlleles: GeneViewSummaryAllele[] = [];
+  summaryAlleleIds: string[] = [];
+
+  constructor(svuid: string) {
+    this.svuid = svuid;
+  }
+
+  addSummaryAlleleRow(alleleRow: any) {
+    if (!alleleRow) {
+      return;
+    }
+    const summaryAllele = GeneViewSummaryAllele.fromRow(alleleRow, this.svuid);
+    // This is a temporary fix to merge duplicate variants
+    // TODO: Remove when backend is fixed
+    const alleleIndex = this.summaryAlleleIds.indexOf(summaryAllele.sauid);
+    if (alleleIndex !== -1) {
+      this.summaryAlleles[alleleIndex].numberOfFamilyVariants = Math.max(
+        this.summaryAlleles[alleleIndex].numberOfFamilyVariants,
+        summaryAllele.numberOfFamilyVariants
+      );
+      this.summaryAlleles[alleleIndex].seenAsDenovo =
+        this.summaryAlleles[alleleIndex].seenAsDenovo || summaryAllele.seenAsDenovo;
+      this.summaryAlleles[alleleIndex].seenInAffected =
+        this.summaryAlleles[alleleIndex].seenInAffected || summaryAllele.seenInAffected;
+      this.summaryAlleles[alleleIndex].seenInUnaffected =
+        this.summaryAlleles[alleleIndex].seenInUnaffected || summaryAllele.seenInUnaffected;
+    } else {
+      this.summaryAlleles.push(summaryAllele);
+      this.summaryAlleleIds.push(summaryAllele.sauid);
+    }
+  }
+
+  push(allele: GeneViewSummaryAllele) {
+    this.summaryAlleles.push(allele);
+    this.summaryAlleleIds.push(allele.sauid);
+  }
+
+  get familyVariantsCount(): number {
+    return this.summaryAlleles.reduce((a, b) => a + b.numberOfFamilyVariants, 0);
+  }
+}
+
 export class GeneViewSummaryVariantsArray {
   summaryVariants: GeneViewSummaryVariant[] = [];
   summaryVariantsIds: string[] = [];
-  allAlleles = [];
 
-  constructor() { }
+  constructor() {}
 
-  addSummaryRow(variant: any) {
-    if (!variant) {
+  addSummaryRow(row: any) {
+    if (!row) {
       return;
     }
-
-    for (let i = 0; i < variant['alleles'].length; i++) {
-      const summaryVariant = GeneViewSummaryVariant.fromRow(variant['alleles'][i], variant['svuid']);
-      this.allAlleles.push(summaryVariant);
-
-      // This is a temporary fix to merge duplicate variants
-      // TODO: Remove when backend is fixed
-      const variantIndex = this.summaryVariantsIds.indexOf(summaryVariant.svuid);
-      if (variantIndex !== -1) {
-        this.summaryVariants[variantIndex].numberOfFamilyVariants = Math.max(
-          this.summaryVariants[variantIndex].numberOfFamilyVariants,
-          summaryVariant.numberOfFamilyVariants
-        );
-        this.summaryVariants[variantIndex].seenAsDenovo =
-          this.summaryVariants[variantIndex].seenAsDenovo || summaryVariant.seenAsDenovo;
-        this.summaryVariants[variantIndex].seenInAffected =
-          this.summaryVariants[variantIndex].seenInAffected || summaryVariant.seenInAffected;
-        this.summaryVariants[variantIndex].seenInUnaffected =
-          this.summaryVariants[variantIndex].seenInUnaffected || summaryVariant.seenInUnaffected;
-      } else {
-        this.summaryVariants.push(summaryVariant);
-        this.summaryVariantsIds.push(summaryVariant.svuid);
-      }
+    const svuid = row['svuid'];
+    let variantIndex = this.summaryVariantsIds.indexOf(svuid);
+    if (variantIndex === -1) {
+      this.summaryVariants.push(new GeneViewSummaryVariant(svuid));
+      this.summaryVariantsIds.push(svuid);
+      variantIndex = this.summaryVariantsIds.indexOf(svuid);
+    }
+    for (let i = 0; i < row['alleles'].length; i++) {
+      this.summaryVariants[variantIndex].addSummaryAlleleRow(row['alleles'][i]);
     }
   }
 
@@ -307,24 +335,8 @@ export class GeneViewSummaryVariantsArray {
     this.summaryVariantsIds.push(variant.svuid);
   }
 
-  getTotalFamilyVariantsCount(): number {
-    const familyVariantCounts = {};
-    for (let i = 0; i < this.allAlleles.length; i++) {
-      const allele = this.allAlleles[i];
-      if (this.summaryVariantsIds.indexOf(allele.svuid) === -1) {
-        continue;
-      }
-      if (allele.svuid_prime in familyVariantCounts) {
-        familyVariantCounts[allele.svuid_prime] = Math.max(
-          familyVariantCounts[allele.svuid_prime],
-          allele.numberOfFamilyVariants
-        );
-      } else {
-        familyVariantCounts[allele.svuid_prime] = allele.numberOfFamilyVariants;
-      }
-    }
-    const seen_counts: number[] = Object.values(familyVariantCounts);
-    return seen_counts.reduce((a: number, b: number) => a + b, 0);
+  get totalFamilyVariantsCount(): number {
+    return this.summaryVariants.reduce((a, b) => a + b.familyVariantsCount, 0);
   }
 }
 
