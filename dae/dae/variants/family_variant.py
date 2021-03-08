@@ -388,7 +388,8 @@ class FamilyVariant(Variant, FamilyDelegate):
             summary_variant: SummaryVariant,
             family: Family,
             genotype: Any,
-            best_state: Any):
+            best_state: Any,
+            inheritance_in_members=None):
 
         super(FamilyVariant, self).__init__()
 
@@ -405,6 +406,11 @@ class FamilyVariant(Variant, FamilyDelegate):
         self._best_state = best_state
 
         self._fvuid: Optional[str] = None
+        if inheritance_in_members is None:
+            self._inheritance_in_members = {}
+        else:
+            self._inheritance_in_members = inheritance_in_members
+
         # self._build_family_alleles()
 
     def _build_family_alleles(self):
@@ -417,8 +423,7 @@ class FamilyVariant(Variant, FamilyDelegate):
                 self.family,
                 self.gt,
                 self._best_state,
-                inheritance_in_members=summary_allele.get_attribute(
-                    "inheritance_in_members")
+                inheritance_in_members=self._inheritance_in_members.get(0)
             )
         ]
 
@@ -431,8 +436,7 @@ class FamilyVariant(Variant, FamilyDelegate):
             if summary_allele is None:
                 continue
 
-            inheritance = summary_allele.get_attribute(
-                "inheritance_in_members")
+            inheritance = self._inheritance_in_members.get(ai)
 
             allele = FamilyAllele(
                 summary_allele,

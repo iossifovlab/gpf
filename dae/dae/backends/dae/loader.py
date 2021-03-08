@@ -199,7 +199,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                     inheritance = [
                         Inheritance.denovo
                         if vinmem is not None and
-                        mem.role in set([Role.prb, Role.sib])
+                        mem.role in set([Role.prb, Role.sib, Role.unknown])
                         and inh in set([
                             Inheritance.unknown,
                             Inheritance.possible_denovo,

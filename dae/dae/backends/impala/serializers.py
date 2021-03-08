@@ -663,14 +663,19 @@ class AlleleParquetSerializer:
         stream = io.BytesIO(main_blob)
         allele_count = read_int8(stream)
         records = []
+        inheritnace_in_members = {}
         for _i in range(0, allele_count):
             allele_data = self.deserialize_allele(stream)
+            allele_index = allele_data["allele_index"]
+            inheritnace_in_members[allele_index] = \
+                allele_data.get("inheritance_in_members")
             records.append(allele_data)
 
         sv = SummaryVariantFactory.summary_variant_from_records(
             records, attr_filter=self.ALLELE_CREATION_PROPERTIES)
         fv = FamilyVariant(
             sv, family, allele_data["gt"], allele_data["best_state"],
+            inheritance_in_members=inheritnace_in_members
         )
 
         extra_attributes = {}
