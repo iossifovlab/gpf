@@ -252,7 +252,9 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       'zoomState': this.zoomHistory.currentState,
       'showDenovo': this.showDenovo,
       'showTransmitted': this.showTransmitted,
-      'summaryVariantIds': this.filteredSummaryVariantsArray.summaryVariants.map(sv => sv.svuid),
+      'summaryVariantIds': this.filteredSummaryVariantsArray.summaryVariants.map(sv => sv.summaryAlleleIds).reduce(
+        (a, b) => a.concat(b), []
+      ),
     };
     if (state['zoomState']) {
       state['regions'] = this.geneViewModel.collapsedGeneViewTranscript.resolveRegionChromosomes(
@@ -693,14 +695,13 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     let denovoAlleles = [];
     for (const variant of summaryVariantsArray.summaryVariants) {
       for (const allele of variant.summaryAlleles) {
-        if (allele.frequency === 0 && allele.seenAsDenovo) {
+        if ((allele.frequency === 0 || allele.frequency === null) && allele.seenAsDenovo) {
           allele.frequency = null;
           denovoAlleles.push(allele);
         }
       }
     }
-    denovoAlleles.sort((sa, sa2) => sa.position > sa2.position ? 1 : sa.position < sa2.position ? -1 : 0)
-    console.log(denovoAlleles);
+    denovoAlleles = denovoAlleles.sort((sa, sa2) => sa.position > sa2.position ? 1 : sa.position < sa2.position ? -1 : 0);
 
     if (!denovoAlleles.length) {
       return;
