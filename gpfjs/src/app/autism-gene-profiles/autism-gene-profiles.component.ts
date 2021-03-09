@@ -1,5 +1,5 @@
 import {
-  AfterViewInit, Component, ElementRef, EventEmitter, HostListener,
+  AfterViewInit, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostListener,
   Input, OnChanges, OnInit, Output, QueryList, Renderer2, ViewChild, ViewChildren
 } from '@angular/core';
 import { Subject } from 'rxjs';
@@ -42,23 +42,24 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
 
   @ViewChildren('columnFilteringButton') columnFilteringButtons: QueryList<ElementRef>;
   @ViewChildren('dropdownSpan') dropdownSpans: QueryList<ElementRef>;
-  bottom: number = 0;
+  modalBottom: number;
 
   @HostListener('window:scroll', ['$event'])
   onWindowScroll() {
     const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
     const totalScrollHeight = document.documentElement.scrollHeight;
 
-    this.bottom = (document.documentElement.scrollTop / 11)
-
     if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
       this.updateGenes();
     }
+
+    this.modalBottom = this.calculateModalBottom();
   }
 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
     private renderer: Renderer2,
+    private cdr: ChangeDetectorRef,
   ) { }
 
   ngOnChanges(): void {
@@ -84,6 +85,16 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
 
   ngAfterViewInit(): void {
     this.focusGeneSearch();
+
+    this.columnFilteringButtons.changes.take(1).subscribe(() => {
+      this.modalBottom = this.calculateModalBottom();
+      this.cdr.detectChanges();
+    });
+  }
+
+  calculateModalBottom(): number {
+    const columnFilteringButtonHeight = 28;
+    return  window.innerHeight - this.columnFilteringButtons.first.nativeElement.getBoundingClientRect().y - columnFilteringButtonHeight;
   }
 
   calculateDatasetColspan(datasetConfig) {
