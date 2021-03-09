@@ -100,8 +100,8 @@ class CommonReportFacade(object):
                 row = [
                     p.family_id,
                     p.person_id,
-                    p.mom_id if p.mom_id else "0",
                     p.dad_id if p.dad_id else "0",
+                    p.mom_id if p.mom_id else "0",
                     p.sex,
                     p.status,
                     p.role,
