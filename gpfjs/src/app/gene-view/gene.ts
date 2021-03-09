@@ -264,28 +264,30 @@ export class GeneViewSummaryAllele {
   }
 }
 
-export class GeneViewSummaryVariant {
-  svuid: string;
+
+export class GeneViewSummaryAllelesArray {
+
   summaryAlleles: GeneViewSummaryAllele[] = [];
   summaryAlleleIds: string[] = [];
 
-  constructor(svuid: string) {
-    this.svuid = svuid;
-  }
+  constructor() {}
 
-  addSummaryAlleleRow(alleleRow: any) {
-    if (!alleleRow) {
+  addSummaryRow(row: any) {
+    if (!row) {
       return;
     }
-    const summaryAllele = GeneViewSummaryAllele.fromRow(alleleRow, this.svuid);
-    // This is a temporary fix to merge duplicate variants
-    // TODO: Remove when backend is fixed
+    for (let i = 0; i < row['alleles'].length; i++) {
+      this.addSummaryAlleleRow(row['alleles'][i])
+    }
+  }
+
+  addSummaryAllele(summaryAllele: GeneViewSummaryAllele) {
     const alleleIndex = this.summaryAlleleIds.indexOf(summaryAllele.sauid);
     if (alleleIndex !== -1) {
-      this.summaryAlleles[alleleIndex].numberOfFamilyVariants = Math.max(
-        this.summaryAlleles[alleleIndex].numberOfFamilyVariants,
-        summaryAllele.numberOfFamilyVariants
-      );
+      this.summaryAlleles[alleleIndex].numberOfFamilyVariants = 
+        this.summaryAlleles[alleleIndex].numberOfFamilyVariants +
+        summaryAllele.numberOfFamilyVariants;
+
       this.summaryAlleles[alleleIndex].seenAsDenovo =
         this.summaryAlleles[alleleIndex].seenAsDenovo || summaryAllele.seenAsDenovo;
       this.summaryAlleles[alleleIndex].seenInAffected =
@@ -298,45 +300,20 @@ export class GeneViewSummaryVariant {
     }
   }
 
-  push(allele: GeneViewSummaryAllele) {
-    this.summaryAlleles.push(allele);
-    this.summaryAlleleIds.push(allele.sauid);
-  }
-
-  get familyVariantsCount(): number {
-    return this.summaryAlleles.reduce((a, b) => a + b.numberOfFamilyVariants, 0);
-  }
-}
-
-export class GeneViewSummaryVariantsArray {
-  summaryVariants: GeneViewSummaryVariant[] = [];
-  summaryVariantsIds: string[] = [];
-
-  constructor() {}
-
-  addSummaryRow(row: any) {
-    if (!row) {
+  addSummaryAlleleRow(alleleRow: any) {
+    if (!alleleRow) {
       return;
     }
-    const svuid = row['svuid'];
-    let variantIndex = this.summaryVariantsIds.indexOf(svuid);
-    if (variantIndex === -1) {
-      this.summaryVariants.push(new GeneViewSummaryVariant(svuid));
-      this.summaryVariantsIds.push(svuid);
-      variantIndex = this.summaryVariantsIds.indexOf(svuid);
-    }
-    for (let i = 0; i < row['alleles'].length; i++) {
-      this.summaryVariants[variantIndex].addSummaryAlleleRow(row['alleles'][i]);
-    }
-  }
-
-  push(variant: GeneViewSummaryVariant) {
-    this.summaryVariants.push(variant);
-    this.summaryVariantsIds.push(variant.svuid);
+    const summaryAllele = GeneViewSummaryAllele.fromRow(alleleRow);
+    this.addSummaryAllele(summaryAllele);
   }
 
   get totalFamilyVariantsCount(): number {
-    return this.summaryVariants.reduce((a, b) => a + b.familyVariantsCount, 0);
+    return this.summaryAlleles.reduce((a, b) => a + b.numberOfFamilyVariants, 0);
+  }
+
+  get totalSummaryAllelesCount(): number {
+    return this.summaryAlleles.length;
   }
 }
 

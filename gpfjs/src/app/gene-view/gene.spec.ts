@@ -1,6 +1,6 @@
 import { GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
 
-import { Exon, Transcript, Gene, GeneViewSummaryAllele, GeneViewSummaryVariantsArray } from './gene';
+import { Exon, Transcript, Gene, GeneViewSummaryAllele, GeneViewSummaryAllelesArray } from './gene';
 
 describe('Exon', () => {
   it('should have working getters', () => {
@@ -327,7 +327,7 @@ describe('GeneViewSummaryAllele', () => {
   });
 });
 
-describe('GeneViewSummaryVariantsArray', () => {
+describe('GeneViewSummaryAllelesArray', () => {
   const mockRow = {
     location: '1:999',
     position: 999,
@@ -342,19 +342,19 @@ describe('GeneViewSummaryVariantsArray', () => {
   };
 
   it('should add summary row', () => {
-    const summaryVariantsArray = new GeneViewSummaryVariantsArray();
-    summaryVariantsArray.addSummaryRow(mockRow);
+    const summaryVariantsArray = new GeneViewSummaryAllelesArray();
+    summaryVariantsArray.addSummaryAlleleRow(mockRow);
 
     const expectedSummaryVariant = GeneViewSummaryAllele.fromRow(mockRow);
 
-    expect(summaryVariantsArray.summaryVariants[0]).toEqual(expectedSummaryVariant);
+    expect(summaryVariantsArray.summaryAlleles[0]).toEqual(expectedSummaryVariant);
   });
 
   it('should push summary variant', () => {
     const expectedSummaryVariant = GeneViewSummaryAllele.fromRow(mockRow);
-    const summaryVariantsArray = new GeneViewSummaryVariantsArray();
-    summaryVariantsArray.push(expectedSummaryVariant);
+    const summaryVariantsArray = new GeneViewSummaryAllelesArray();
+    summaryVariantsArray.addSummaryAllele(expectedSummaryVariant);
 
-    expect(summaryVariantsArray.summaryVariants[0]).toEqual(expectedSummaryVariant);
+    expect(summaryVariantsArray.summaryAlleles[0]).toEqual(expectedSummaryVariant);
   });
 });

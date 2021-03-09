@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter, forwardRef, ViewChild, ViewChildren } from '@angular/core';
 import * as d3 from 'd3';
-import { Gene, GeneViewSummaryVariantsArray, GeneViewSummaryAllele, DomainRange, GeneViewSummaryVariant } from 'app/gene-view/gene';
+import { Gene, GeneViewSummaryAllelesArray, GeneViewSummaryAllele, DomainRange } from 'app/gene-view/gene';
 import { Subject, Observable } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
@@ -85,7 +85,7 @@ export class GeneViewZoomHistory {
 })
 export class GeneViewComponent extends QueryStateWithErrorsProvider implements OnInit {
   @Input() gene: Gene;
-  @Input() variantsArray: GeneViewSummaryVariantsArray;
+  @Input() variantsArray: GeneViewSummaryAllelesArray;
   @Input() streamingFinished$: Subject<boolean>;
   @Output() updateShownTablePreviewVariantsArrayEvent = new EventEmitter<DomainRange>();
   @ViewChildren('affectedStatusCheckbox') affectedStatusCheckboxes;
@@ -99,8 +99,8 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   frequencyDomainMax: number;
   condenseIntrons: boolean;
 
-  summaryVariantsArray: GeneViewSummaryVariantsArray;
-  filteredSummaryVariantsArray: GeneViewSummaryVariantsArray = new GeneViewSummaryVariantsArray();
+  summaryVariantsArray: GeneViewSummaryAllelesArray;
+  filteredSummaryVariantsArray: GeneViewSummaryAllelesArray = new GeneViewSummaryAllelesArray();
 
   options = {
     margin: { top: 10, right: 50, left: 140, bottom: 0 },
@@ -215,7 +215,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
       this.geneTableStats.geneSymbol = this.gene.gene;
       this.geneTableStats.chromosome = this.gene.transcripts[0].chrom;
-      this.geneTableStats.totalSummaryVariants = this.summaryVariantsArray.summaryVariants.length;
+      this.geneTableStats.totalSummaryVariants = this.summaryVariantsArray.totalSummaryAllelesCount;
       this.geneTableStats.totalFamilyVariants = this.summaryVariantsArray.totalFamilyVariantsCount;
 
       this.loadingService.setLoadingStop();
@@ -252,7 +252,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       'zoomState': this.zoomHistory.currentState,
       'showDenovo': this.showDenovo,
       'showTransmitted': this.showTransmitted,
-      'summaryVariantIds': this.filteredSummaryVariantsArray.summaryVariants.map(sv => sv.summaryAlleleIds).reduce(
+      'summaryVariantIds': this.filteredSummaryVariantsArray.summaryAlleleIds.reduce(
         (a, b) => a.concat(b), []
       ),
     };
@@ -500,43 +500,42 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     return this.selectedVariantTypes.includes(variantType) ? true : false;
   }
 
-  filterSummaryVariant(summaryVariant: GeneViewSummaryVariant, startPos: number, endPos: number) {
-    const result = new GeneViewSummaryVariant(summaryVariant.svuid);
-    for (const summaryAllele of summaryVariant.summaryAlleles) {
-      if (
-        (!this.isVariantEffectSelected(summaryAllele.effect)) ||
-        (!this.showDenovo && summaryAllele.seenAsDenovo) ||
-        (!this.showTransmitted && !summaryAllele.seenAsDenovo) ||
-        (!this.isAffectedStatusSelected(this.getVariantAffectedStatus(summaryAllele))) ||
-        (!this.isVariantTypeSelected(summaryAllele.variant))
-      ) {
-        continue;
-      } else if (this.frequencyIsSelected(summaryAllele.frequency)) {
-        if (summaryAllele.isCNV()) {
-          if (
-            !(summaryAllele.position <= startPos && summaryAllele.endPosition <= startPos) &&
-            !(summaryAllele.position >= endPos && summaryAllele.endPosition >= endPos)
-          ) {
-            result.push(summaryAllele);
-          }
-        } else  {
-          if (summaryAllele.position >= startPos && summaryAllele.position <= endPos) {
-            result.push(summaryAllele);
-          }
+  filterSummaryAllele(summaryAllele: GeneViewSummaryAllele, startPos: number, endPos: number) {
+    if (
+      (!this.isVariantEffectSelected(summaryAllele.effect)) ||
+      (!this.showDenovo && summaryAllele.seenAsDenovo) ||
+      (!this.showTransmitted && !summaryAllele.seenAsDenovo) ||
+      (!this.isAffectedStatusSelected(this.getVariantAffectedStatus(summaryAllele))) ||
+      (!this.isVariantTypeSelected(summaryAllele.variant))
+    ) {
+      return false;
+    } else if (this.frequencyIsSelected(summaryAllele.frequency)) {
+      if (summaryAllele.isCNV()) {
+        if (
+          !(summaryAllele.position <= startPos && summaryAllele.endPosition <= startPos) &&
+          !(summaryAllele.position >= endPos && summaryAllele.endPosition >= endPos)
+        ) {
+          return true;
+        }
+      } else  {
+        if (summaryAllele.position >= startPos && summaryAllele.position <= endPos) {
+          return true;
         }
       }
+
     }
-    return result;
+    return false;
   }
 
   filterSummaryVariantsArray(
-    summaryVariantsArray: GeneViewSummaryVariantsArray, startPos: number, endPos: number
-  ): GeneViewSummaryVariantsArray {
-    const result = new GeneViewSummaryVariantsArray();
-    for (const summaryVariant of summaryVariantsArray.summaryVariants) {
-      const sv: GeneViewSummaryVariant = this.filterSummaryVariant(summaryVariant, startPos, endPos);
-      if (sv.summaryAlleles.length > 0) {
-        result.push(sv);
+    summaryVariantsArray: GeneViewSummaryAllelesArray,
+    startPos: number, endPos: number): GeneViewSummaryAllelesArray {
+
+    const result = new GeneViewSummaryAllelesArray();
+
+    for (const summaryAllele of summaryVariantsArray.summaryAlleles) {
+      if(this.filterSummaryAllele(summaryAllele, startPos, endPos)) {
+        result.addSummaryAllele(summaryAllele);
       }
     }
     return result;
@@ -601,11 +600,11 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     const maxDomain = this.x.domain()[this.x.domain().length - 1];
 
     const filteredSummaryVariants = this.filterSummaryVariantsArray(
-      this.summaryVariantsArray, minDomain, maxDomain
-    );
+      this.summaryVariantsArray, minDomain, maxDomain);
+
     this.filteredSummaryVariantsArray = filteredSummaryVariants;
 
-    this.geneTableStats.selectedSummaryVariants = filteredSummaryVariants.summaryVariants.length;
+    this.geneTableStats.selectedSummaryVariants = filteredSummaryVariants.summaryAlleles.length;
     this.geneTableStats.selectedFamilyVariants = filteredSummaryVariants.totalFamilyVariantsCount;
 
     if (this.gene !== undefined) {
@@ -645,8 +644,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         .attr('class', 'brush')
         .call(this.brush);
 
-      for (const variant of filteredSummaryVariants.summaryVariants) {
-        for (const allele of variant.summaryAlleles) {
+      for (const allele of filteredSummaryVariants.summaryAlleles) {
           const allelePosition = this.x(allele.position);
           const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(allele));
           const alleleTitle = `Effect type: ${allele.effect}\nVariant position: ${allele.location}`;
@@ -656,7 +654,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
           let spacing = 0;
           if (allele.seenAsDenovo) {
             if (allele.frequency === null) {
-              spacing = this.denovoAllelesSpacings[allele.svuid] + 8;
+              spacing = this.denovoAllelesSpacings[allele.sauid] + 8;
             }
 
             if (allele.isCNV()) {
@@ -690,18 +688,15 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
             draw.dot(this.svgElement, allelePosition, alleleHeight + spacing, color, alleleTitle);
           }
         }
-      }
     }
   }
 
-  calculateDenovoAllelesSpacings(summaryVariantsArray: GeneViewSummaryVariantsArray) {
+  calculateDenovoAllelesSpacings(summaryVariantsArray: GeneViewSummaryAllelesArray) {
     let denovoAlleles = [];
-    for (const variant of summaryVariantsArray.summaryVariants) {
-      for (const allele of variant.summaryAlleles) {
-        if ((allele.frequency === 0 || allele.frequency === null) && allele.seenAsDenovo) {
-          allele.frequency = null;
-          denovoAlleles.push(allele);
-        }
+    for (const allele of summaryVariantsArray.summaryAlleles) {
+      if ((allele.frequency === 0 || allele.frequency === null) && allele.seenAsDenovo) {
+        allele.frequency = null;
+        denovoAlleles.push(allele);
       }
     }
     denovoAlleles = denovoAlleles.sort((sa, sa2) => sa.position > sa2.position ? 1 : sa.position < sa2.position ? -1 : 0);
@@ -743,7 +738,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     const denovoAllelesSpacings = {};
     for (let row = 0; row < leveledDenovos.length; row++) {
       for (let col = 0; col < leveledDenovos[row].length; col++) {
-        denovoAllelesSpacings[leveledDenovos[row][col].svuid] = 22 * row;
+        denovoAllelesSpacings[leveledDenovos[row][col].sauid] = 22 * row;
       }
     }
 
