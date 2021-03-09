@@ -363,10 +363,14 @@ class ResponseTransformer:
                 ]
 
     def transform_gene_view_summary_variant(
-        self, variant: SummaryVariant, frequency_column
-    ):
+            self, variant: SummaryVariant, frequency_column):
+
+        out = {
+            "svuid": variant.svuid,
+            "alleles": []
+        }
         for a in variant.alt_alleles:
-            yield {
+            out["alleles"].append({
                 "location": a.cshl_location,
                 "position": a.position,
                 "end_position": a.end_position,
@@ -381,11 +385,30 @@ class ResponseTransformer:
                     a.get_attribute("seen_in_status") in {2, 3},
                 "seen_in_unaffected":
                     a.get_attribute("seen_in_status") in {1, 3},
-            }
+            })
+        yield out
+
+
+        # for a in variant.alt_alleles:
+        #     yield {
+        #         "location": a.cshl_location,
+        #         "position": a.position,
+        #         "end_position": a.end_position,
+        #         "chrom": a.chrom,
+        #         "frequency": a.get_attribute(frequency_column),
+        #         "effect": gene_effect_get_worst_effect(a.effect),
+        #         "variant": a.cshl_variant,
+        #         "family_variants_count":
+        #             a.get_attribute("family_variants_count"),
+        #         "is_denovo": a.get_attribute("seen_as_denovo"),
+        #         "seen_in_affected":
+        #             a.get_attribute("seen_in_status") in {2, 3},
+        #         "seen_in_unaffected":
+        #             a.get_attribute("seen_in_status") in {1, 3},
+        #     }
 
     def transform_gene_view_summary_variant_download(
-        self, variants: List[SummaryVariant], frequency_column
-    ):
+            self, variants: List[SummaryVariant], frequency_column):
         columns = [
             "location",
             "position",
