@@ -1,6 +1,6 @@
 import {
   AfterViewInit, Component, ElementRef, EventEmitter, HostListener,
-  Input, OnChanges, OnInit, Output, ViewChild, ViewChildren
+  Input, OnChanges, OnInit, Output, QueryList, Renderer2, ViewChild, ViewChildren
 } from '@angular/core';
 import { Subject } from 'rxjs';
 import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile';
@@ -40,6 +40,8 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
   @ViewChildren(SortingButtonsComponent) sortingButtonsComponents: SortingButtonsComponent[];
   currentSortingColumnId: string;
 
+  @ViewChildren('columnFilteringButton') columnFilteringButtons: QueryList<ElementRef>;
+  @ViewChildren('dropdownSpan') dropdownSpans: QueryList<ElementRef>;
   bottom: number = 0;
 
   @HostListener('window:scroll', ['$event'])
@@ -56,6 +58,7 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
+    private renderer: Renderer2,
   ) { }
 
   ngOnChanges(): void {
@@ -173,7 +176,23 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
   }
 
   openDropdown(dropdownId: string) {
+    this.updateDropdownPosition(dropdownId.replace('-dropdown', ''));
     this.ngbDropdownMenu.find(ele => ele.nativeElement.id === dropdownId).dropdown.open();
+  }
+
+  updateDropdownPosition(id: string) {
+    this.renderer.setStyle(
+      this.dropdownSpans.find(ele => ele.nativeElement.id === `${id}-span`).nativeElement,
+      'left',
+      this.calculateModalLeftPosition(this.columnFilteringButtons.find(ele => ele.nativeElement.id === `${id}-button`).nativeElement)
+    );
+  }
+
+  calculateModalLeftPosition(ele: HTMLElement): string {
+    const mondalWidth = 400;
+    const buttonWidth = 40;
+
+    return ((ele.getBoundingClientRect().left - mondalWidth + buttonWidth) - (document.body.getBoundingClientRect().left)) + 'px';
   }
 
   calculateColumnSize(columnsCount: number): string {
