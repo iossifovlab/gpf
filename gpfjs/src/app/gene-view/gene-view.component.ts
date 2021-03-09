@@ -534,7 +534,10 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   ): GeneViewSummaryVariantsArray {
     const result = new GeneViewSummaryVariantsArray();
     for (const summaryVariant of summaryVariantsArray.summaryVariants) {
-      result.push(this.filterSummaryVariant(summaryVariant, startPos, endPos));
+      const sv: GeneViewSummaryVariant = this.filterSummaryVariant(summaryVariant, startPos, endPos);
+      if (sv.summaryAlleles.length > 0) {
+        result.push(sv);
+      }
     }
     return result;
   }
