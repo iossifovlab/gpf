@@ -1,7 +1,7 @@
 import os
 import gzip
-import sys
 import warnings
+import logging
 
 from typing import List, Optional, Dict, Any
 from contextlib import closing
@@ -19,7 +19,7 @@ from dae.utils.helpers import str2bool
 from dae.utils.dae_utils import dae2vcf_variant
 
 from dae.pedigrees.family import Family, FamiliesData
-from dae.variants.attributes import Inheritance
+from dae.variants.attributes import Inheritance, Role
 
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
@@ -32,8 +32,10 @@ from dae.backends.raw.loader import (
 )
 
 from dae.variants.attributes import VariantType
-
 from dae.utils.variant_utils import get_locus_ploidy
+
+
+logger = logging.getLogger(__name__)
 
 
 class DenovoFamiliesGenotypes(FamiliesGenotypes):
@@ -117,7 +119,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             else:
                 result.append(Region.from_str(r))
         self.regions = result
-        print("denovo reset regions:", self.regions)
+        logger.debug(f"denovo reset regions: {self.regions}")
 
     def _is_in_regions(self, summary_variant):
         isin = [
@@ -134,7 +136,6 @@ class DenovoLoader(VariantsGenotypesLoader):
                 continue
             region.chrom = self._adjust_chrom_prefix(region.chrom)
 
-        print(self.denovo_df)
         group = self.denovo_df.groupby(
             ["chrom", "position", "reference", "alternative"],
             sort=False).agg(
@@ -196,9 +197,18 @@ class DenovoLoader(VariantsGenotypesLoader):
             for fv in family_variants:
                 for fa in fv.alt_alleles:
                     inheritance = [
-                        Inheritance.denovo if mem is not None else inh
-                        for inh, mem in zip(
-                            fa.inheritance_in_members, fa.variant_in_members
+                        Inheritance.denovo
+                        if vinmem is not None and
+                        mem.role in set([Role.prb, Role.sib, Role.unknown])
+                        and inh in set([
+                            Inheritance.unknown,
+                            Inheritance.possible_denovo,
+                            Inheritance.possible_omission])
+                        else inh
+                        for inh, vinmem, mem in zip(
+                            fa.inheritance_in_members,
+                            fa.variant_in_members,
+                            fa.members_in_order
                         )
                     ]
                     fa._inheritance_in_members = inheritance
@@ -321,14 +331,14 @@ class DenovoLoader(VariantsGenotypesLoader):
     def parse_cli_arguments(cls, argv):
 
         if argv.denovo_location and (argv.denovo_chrom or argv.denovo_pos):
-            print(
+            logger.error(
                 "--denovo-location and (--denovo-chrom, --denovo-pos) "
                 "are mutually exclusive"
             )
             raise ValueError()
 
         if argv.denovo_variant and (argv.denovo_ref or argv.denovo_alt):
-            print(
+            logger.error(
                 "--denovo-variant and (denovo-ref, denovo-alt) "
                 "are mutually exclusive"
             )
@@ -336,7 +346,7 @@ class DenovoLoader(VariantsGenotypesLoader):
 
         if argv.denovo_person_id and (
                 argv.denovo_family_id or argv.denovo_best_state):
-            print(
+            logger.error(
                 "--denovo-person-id and (denovo-family-id, denovo-best-state) "
                 "are mutually exclusive"
             )
@@ -947,11 +957,11 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                         yield summary_variant, family_variants
                         summary_index += 1
             except ValueError as ex:
-                print(
+                logger.warning(
                     f"could not find region {region} in "
                     f"{self.summary_filename} "
-                    f"or {self.toomany_filename}:",
-                    ex, file=sys.stderr)
+                    f"or {self.toomany_filename}:")
+                logger.exception(ex)
 
             self.lines_iterator = None
 

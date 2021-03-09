@@ -3,8 +3,8 @@ from dae.backends.impala.parquet_io import VariantsParquetWriter
 from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 
 
-def test_region_partition(vcf_variants_loader, temp_dirname):
-    fvars = vcf_variants_loader("backends/partition")
+def test_region_partition(vcf_variants_loaders, temp_dirname):
+    fvars = vcf_variants_loaders("backends/partition")[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"], 10000, root_dirname=temp_dirname
@@ -36,8 +36,10 @@ def test_region_partition(vcf_variants_loader, temp_dirname):
     )
 
 
-def test_region_partition_chromosome_filter(vcf_variants_loader, temp_dirname):
-    fvars = vcf_variants_loader("backends/partition")
+def test_region_partition_chromosome_filter(
+        vcf_variants_loaders, temp_dirname):
+
+    fvars = vcf_variants_loaders("backends/partition")[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1"], 10000, root_dirname=temp_dirname
@@ -70,8 +72,8 @@ def test_region_partition_chromosome_filter(vcf_variants_loader, temp_dirname):
     )
 
 
-def test_region_partition_small_region(vcf_variants_loader, temp_dirname):
-    fvars = vcf_variants_loader("backends/partition")
+def test_region_partition_small_region(vcf_variants_loaders, temp_dirname):
+    fvars = vcf_variants_loaders("backends/partition")[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"], 10, root_dirname=temp_dirname
@@ -113,8 +115,8 @@ def test_region_partition_small_region(vcf_variants_loader, temp_dirname):
     )
 
 
-def test_region_partition_large_region(vcf_variants_loader, temp_dirname):
-    fvars = vcf_variants_loader("backends/partition")
+def test_region_partition_large_region(vcf_variants_loaders, temp_dirname):
+    fvars = vcf_variants_loaders("backends/partition")[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"], 10000000, root_dirname=temp_dirname
@@ -140,8 +142,8 @@ def test_region_partition_large_region(vcf_variants_loader, temp_dirname):
     )
 
 
-def test_family_partition(vcf_variants_loader, temp_dirname):
-    fvars = vcf_variants_loader("backends/partition")
+def test_family_partition(vcf_variants_loaders, temp_dirname):
+    fvars = vcf_variants_loaders("backends/partition")[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"], 10000000, 1000, root_dirname=temp_dirname
@@ -193,8 +195,8 @@ def test_family_partition(vcf_variants_loader, temp_dirname):
     )
 
 
-def test_coding_partition_1(vcf_variants_loader, temp_dirname):
-    fvars = vcf_variants_loader("backends/partition")
+def test_coding_partition_1(vcf_variants_loaders, temp_dirname):
+    fvars = vcf_variants_loaders("backends/partition")[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"],
@@ -244,8 +246,8 @@ def test_coding_partition_1(vcf_variants_loader, temp_dirname):
     )
 
 
-def test_coding_partition_2(vcf_variants_loader, temp_dirname):
-    fvars = vcf_variants_loader("backends/partition")
+def test_coding_partition_2(vcf_variants_loaders, temp_dirname):
+    fvars = vcf_variants_loaders("backends/partition")[0]
 
     temp_dirname = "/tmp/dataset-partition-test"
 
@@ -291,8 +293,8 @@ def test_coding_partition_2(vcf_variants_loader, temp_dirname):
     )
 
 
-def test_coding_partition_3(vcf_variants_loader, temp_dirname):
-    fvars = vcf_variants_loader("backends/partition")
+def test_coding_partition_3(vcf_variants_loaders, temp_dirname):
+    fvars = vcf_variants_loaders("backends/partition")[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"],
@@ -331,8 +333,8 @@ def test_coding_partition_3(vcf_variants_loader, temp_dirname):
     )
 
 
-def test_frequency_partition_1(vcf_variants_loader, temp_dirname):
-    fvars = vcf_variants_loader("backends/partition")
+def test_frequency_partition_1(vcf_variants_loaders, temp_dirname):
+    fvars = vcf_variants_loaders("backends/partition")[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"], 10000000, rare_boundary=30, root_dirname=temp_dirname
@@ -390,8 +392,8 @@ def test_frequency_partition_1(vcf_variants_loader, temp_dirname):
     )
 
 
-def test_frequency_partition_2(vcf_variants_loader, temp_dirname):
-    fvars = vcf_variants_loader("backends/partition")
+def test_frequency_partition_2(vcf_variants_loaders, temp_dirname):
+    fvars = vcf_variants_loaders("backends/partition")[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"], 10000000, rare_boundary=1, root_dirname=temp_dirname
@@ -427,8 +429,8 @@ def test_frequency_partition_2(vcf_variants_loader, temp_dirname):
     )
 
 
-def test_frequency_partition_3(vcf_variants_loader, temp_dirname):
-    fvars = vcf_variants_loader("backends/partition")
+def test_frequency_partition_3(vcf_variants_loaders, temp_dirname):
+    fvars = vcf_variants_loaders("backends/partition")[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"], 10000000, rare_boundary=100, root_dirname=temp_dirname
@@ -464,8 +466,8 @@ def test_frequency_partition_3(vcf_variants_loader, temp_dirname):
     )
 
 
-def test_all(vcf_variants_loader, temp_dirname):
-    fvars = vcf_variants_loader("backends/partition")
+def test_all(vcf_variants_loaders, temp_dirname):
+    fvars = vcf_variants_loaders("backends/partition")[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"],
@@ -619,8 +621,8 @@ def test_all(vcf_variants_loader, temp_dirname):
     )
 
 
-def test_region_family_frequency(vcf_variants_loader, temp_dirname):
-    fvars = vcf_variants_loader("backends/partition")
+def test_region_family_frequency(vcf_variants_loaders, temp_dirname):
+    fvars = vcf_variants_loaders("backends/partition")[0]
 
     temp_dirname = temp_dirname
 

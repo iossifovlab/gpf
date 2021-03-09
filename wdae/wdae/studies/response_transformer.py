@@ -83,15 +83,16 @@ class ResponseTransformer:
             )),
 
         "inheritance_type":
-        lambda v: list(
-            map(
-                lambda aa:
-                "denovo"
-                if Inheritance.denovo in aa.inheritance_in_members
-                else "mendelian"
-                if Inheritance.mendelian in aa.inheritance_in_members
-                else "-",
-                v.alt_alleles)
+        lambda v: list(map(
+            lambda aa:
+            "denovo"
+            if Inheritance.denovo in aa.inheritance_in_members
+            else "-"
+            if set([
+                Inheritance.possible_denovo, Inheritance.possible_omission]) &
+                set(aa.inheritance_in_members)
+            else "mendelian",
+            v.alt_alleles)
         ),
 
         "is_denovo":

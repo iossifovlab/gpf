@@ -315,7 +315,7 @@ def test_vcf_omission_mode(
     ],
 )
 def test_vcf_loader_params(
-    vcf_variants_loader,
+    vcf_variants_loaders,
     vcf_include_reference_genotypes,
     vcf_include_unknown_family_genotypes,
     vcf_include_unknown_person_genotypes,
@@ -330,7 +330,8 @@ def test_vcf_loader_params(
         vcf_include_unknown_person_genotypes,
     }
 
-    variants_loader = vcf_variants_loader("backends/f1_test", params=params)
+    variants_loader = vcf_variants_loaders(
+        "backends/f1_test", params=params)[0]
     vs = list(variants_loader.family_variants_iterator())
     assert len(vs) == count
 

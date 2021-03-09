@@ -57,9 +57,13 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
                     f"gt_idxs: {len(vcf_variant.gt_idxs)}; "
                     f"{set(vcf_variant.gt_idxs)}")
 
-                if len(vcf_variant.gt_idxs) == samples_count and \
-                        set(vcf_variant.gt_idxs) == set([-1]):
-                    gt_idxs = -1 * np.ones(2 * samples_count, dtype=np.int)
+                if len(vcf_variant.gt_idxs) == samples_count:
+                    gt_idxs = np.stack([
+                        vcf_variant.gt_idxs[:], vcf_variant.gt_idxs[:]
+                    ]).reshape(
+                        [1, 2 * samples_count], order="F")[0].astype(np.int)
+
+                    # gt_idxs = -1 * np.ones(2 * samples_count, dtype=np.int)
                 else:
                     gt_idxs = vcf_variant.gt_idxs
 
@@ -485,18 +489,34 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
             current_vcf = self.vcfs[vcf_index]
             samples_count = len(current_vcf.samples)
-            logger.debug(
-                f"samples len: {samples_count}; "
-                f"gt_idxs: {len(vcf.gt_idxs)}; "
-                f"{set(vcf.gt_idxs)}; "
-                f"allele_index: {allele_index}, "
-                f"{allele_index.dtype}, {[type(v) for v in allele_index]}")
+            # logger.debug(
+            #     f"variant: {vcf.CHROM}:{vcf.POS} {vcf.REF}->{vcf.ALT}; "
+            #     f"({vcf.aaf}); "
+            #     f"genotypes: {vcf.genotypes}; "
+            #     f"gt_phases: {vcf.gt_phases}; "
+            #     f"gt_phases: {vcf.gt_types}; "
+            #     f"gt_phred_ll_homref: {vcf.gt_phred_ll_homref}; "
+            #     f"samples len: {samples_count}; "
+            #     f"gt_idxs: {len(vcf.gt_idxs)}; "
+            #     f"{set(vcf.gt_idxs)}; "
+            #     f"{vcf.gt_idxs}; {vcf.gt_idxs.dtype}; "
+            #     f"allele_index: {allele_index}, "
+            #     f"{allele_index.dtype}, {[type(v) for v in allele_index]}")
 
-            if len(vcf.gt_idxs) == samples_count and \
-                    set(vcf.gt_idxs) == set([-1]):
-                gt_idxs = -1 * np.ones(2 * samples_count, dtype=np.int)
+            if len(vcf.gt_idxs) == samples_count:
+                gt_idxs = np.stack([
+                    vcf.gt_idxs[:], vcf.gt_idxs[:]
+                ]).reshape(
+                    [1, 2 * samples_count], order="F")[0].astype(np.int)
+
+                # gt_idxs = -1 * np.ones(2 * samples_count, dtype=np.int)
             else:
                 gt_idxs = vcf.gt_idxs
+
+            logger.debug(
+                f"max allele index: {np.max(allele_index)}; "
+                f"len(gt_idxs)={len(gt_idxs)}"
+            )
 
             vcf_gt = gt_idxs[allele_index]
             vcf_gt = vcf_gt.reshape([2, len(sample_index)], order="F")
@@ -568,7 +588,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 )
                 current_summary_variant = \
                     SummaryVariantFactory.summary_variant_from_vcf(
-                        current_vcf_variant, summary_variant_index)
+                        current_vcf_variant, summary_variant_index,
+                        transmission_type=self.transmission_type)
 
                 vcf_iterator_idexes_to_advance = list()
                 vcf_gt_variants = list()

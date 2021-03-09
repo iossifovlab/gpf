@@ -55,13 +55,13 @@ def test_parquet_family_bin(fam1, fam2, gt):
         assert pd._evaluate_family_bin(fa2) == 6
         assert (
             pd.variant_filename(fa1)
-            == f"region_bin=1_11/family_bin=9/"
-            + f"variants_region_bin_1_11_family_bin_9.parquet"
+            == "region_bin=1_11/family_bin=9/"
+            "variants_region_bin_1_11_family_bin_9.parquet"
         )
         assert (
             pd.variant_filename(fa2)
-            == f"region_bin=1_11/family_bin=6/"
-            + f"variants_region_bin_1_11_family_bin_6.parquet"
+            == "region_bin=1_11/family_bin=6/"
+            "variants_region_bin_1_11_family_bin_6.parquet"
         )
 
 
@@ -102,34 +102,34 @@ def test_parquet_frequency_bin(fam1, gt, attributes, rare_boundary, expected):
             ["synonymous"],
             [0, 1, 1, 1],
         ),
-        (
-            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-            ["missense"],
-            [0, 0, 0, 0],
-        ),
-        (
-            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-            ["missense", "synonymous"],
-            [0, 1, 1, 1],
-        ),
-        (
-            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-            "missense!SAMD11:missense!NM_152486_1:54/681(Ser->Arg)",
-            "intergenic!intergenic:intergenic!intergenic:intergenic",
-            ["synonymous"],
-            [0, 1, 0, 0],
-        ),
-        (
-            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-            "missense!SAMD11:missense!NM_152486_1:54/681(Ser->Arg)",
-            "missense!SAMD11:missense!NM_152486_1:54/681(Ser->Arg)",
-            ["nonsense", "intergenic"],
-            [0, 0, 0, 0],
-        ),
+        # (
+        #     "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
+        #     "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
+        #     "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
+        #     ["missense"],
+        #     [0, 0, 0, 0],
+        # ),
+        # (
+        #     "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
+        #     "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
+        #     "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
+        #     ["missense", "synonymous"],
+        #     [0, 1, 1, 1],
+        # ),
+        # (
+        #     "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
+        #     "missense!SAMD11:missense!NM_152486_1:54/681(Ser->Arg)",
+        #     "intergenic!intergenic:intergenic!intergenic:intergenic",
+        #     ["synonymous"],
+        #     [0, 1, 0, 0],
+        # ),
+        # (
+        #     "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
+        #     "missense!SAMD11:missense!NM_152486_1:54/681(Ser->Arg)",
+        #     "missense!SAMD11:missense!NM_152486_1:54/681(Ser->Arg)",
+        #     ["nonsense", "intergenic"],
+        #     [0, 0, 0, 0],
+        # ),
     ],
 )
 def test_parquet_coding_bin(

@@ -348,16 +348,22 @@ def from_prefix_denovo(prefix):
 
 
 def from_prefix_vcf(prefix):
+    pedigree_filename = f"{prefix}.ped"
+    assert os.path.exists(pedigree_filename)
+    conf = {
+        "prefix": prefix,
+        "pedigree": pedigree_filename,
+    }
+
     vcf_filename = "{}.vcf".format(prefix)
     if not os.path.exists(vcf_filename):
         vcf_filename = "{}.vcf.gz".format(prefix)
+    if os.path.exists(vcf_filename):
+        conf["vcf"] = vcf_filename
 
-    conf = {
-        "pedigree": "{}.ped".format(prefix),
-        "vcf": vcf_filename,
-        "annotation": "{}-vcf-eff.txt".format(prefix),
-        "prefix": prefix,
-    }
+    denovo_filename = f"{prefix}.tsv"
+    if os.path.exists(denovo_filename):
+        conf["denovo"] = denovo_filename
     return FrozenBox(conf)
 
 
@@ -537,9 +543,9 @@ def vcf_loader_data():
 
 
 @pytest.fixture(scope="session")
-def vcf_variants_loader(
-    vcf_loader_data, default_annotation_pipeline, genomes_db_2013
-):
+def vcf_variants_loaders(
+        vcf_loader_data, default_annotation_pipeline, genomes_db_2013):
+
     def builder(
         path,
         params={
@@ -550,27 +556,48 @@ def vcf_variants_loader(
             "vcf_omission_mode": "omission",
         },
     ):
-        conf = vcf_loader_data(path)
+        config = vcf_loader_data(path)
 
-        families_loader = FamiliesLoader(conf.pedigree)
+        families_loader = FamiliesLoader(config.pedigree)
         families = families_loader.load()
 
-        loader = VcfLoader(
-            families, [conf.vcf], genomes_db_2013.get_genome(), params=params
-        )
-        assert loader is not None
+        loaders = []
 
-        loader = AnnotationPipelineDecorator(
-            loader, default_annotation_pipeline
+        if config.denovo:
+            denovo_loader = DenovoLoader(
+                families,
+                config.denovo,
+                genomes_db_2013.get_genome(),
+                params={
+                    "denovo_genotype": "genotype",
+                    "denovo_family_id": "family",
+                    "denovo_chrom": "chrom",
+                    "denovo_pos": "pos",
+                    "denovo_ref": "ref",
+                    "denovo_alt": "alt",
+                }
+            )
+            loaders.append(AnnotationPipelineDecorator(
+                denovo_loader, default_annotation_pipeline))
+
+        vcf_loader = VcfLoader(
+            families,
+            [config.vcf],
+            genomes_db_2013.get_genome(),
+            params=params
         )
 
-        return loader
+        loaders.append(AnnotationPipelineDecorator(
+            vcf_loader, default_annotation_pipeline
+        ))
+
+        return loaders
 
     return builder
 
 
 @pytest.fixture(scope="session")
-def variants_vcf(vcf_variants_loader):
+def variants_vcf(vcf_variants_loaders):
     def builder(
         path,
         params={
@@ -582,8 +609,9 @@ def variants_vcf(vcf_variants_loader):
         },
     ):
 
-        loader = vcf_variants_loader(path, params=params)
-        fvars = RawMemoryVariants([loader], loader.families)
+        loaders = vcf_variants_loaders(path, params=params)
+        assert len(loaders) > 0
+        fvars = RawMemoryVariants(loaders, loaders[0].families)
         return fvars
 
     return builder
@@ -763,10 +791,10 @@ def data_import(
         )
         vcf_configs = collect_vcf(vcfdirname)
 
-        for vcf in vcf_configs:
-            print("importing vcf:", vcf.vcf)
+        for config in vcf_configs:
+            logger.debug(f"importing: {config}")
 
-            filename = os.path.basename(vcf.pedigree)
+            filename = os.path.basename(config.pedigree)
             study_id = os.path.splitext(filename)[0]
 
             (variant_table, pedigree_table) = \
@@ -784,16 +812,34 @@ def data_import(
             ):
                 continue
 
-            study_id = study_id_from_path(vcf.pedigree)
+            study_id = study_id_from_path(config.pedigree)
             study_temp_dirname = os.path.join(temp_dirname, study_id)
 
-            families_loader = FamiliesLoader(vcf.pedigree)
+            families_loader = FamiliesLoader(config.pedigree)
             families = families_loader.load()
             genome = gpf_instance_2013.genomes_db.get_genome()
 
-            loader = VcfLoader(
+            loaders = []
+            if config.denovo:
+                denovo_loader = DenovoLoader(
+                    families,
+                    config.denovo,
+                    genome,
+                    params={
+                        "denovo_genotype": "genotype",
+                        "denovo_family_id": "family",
+                        "denovo_chrom": "chrom",
+                        "denovo_pos": "pos",
+                        "denovo_ref": "ref",
+                        "denovo_alt": "alt",
+                    }
+                )
+                loaders.append(AnnotationPipelineDecorator(
+                    denovo_loader, annotation_pipeline))
+
+            vcf_loader = VcfLoader(
                 families,
-                [vcf.vcf],
+                [config.vcf],
                 genome,
                 regions=None,
                 params={
@@ -806,12 +852,13 @@ def data_import(
                 },
             )
 
-            loader = AnnotationPipelineDecorator(loader, annotation_pipeline)
+            loaders.append(AnnotationPipelineDecorator(
+                vcf_loader, annotation_pipeline))
 
             impala_genotype_storage.simple_study_import(
                 study_id,
                 families_loader=families_loader,
-                variant_loaders=[loader],
+                variant_loaders=loaders,
                 output=study_temp_dirname,
                 include_reference=True)
 

@@ -23,9 +23,11 @@ from dae.variants.attributes import GeneticModel
         ],
     ],
 )
-def test_get_diploid_males(vcf, expected, vcf_variants_loader):
-    loader = vcf_variants_loader(vcf)
+def test_get_diploid_males(vcf, expected, vcf_variants_loaders):
+    loaders = vcf_variants_loaders(vcf)
+    loader = loaders[0]
     assert loader is not None
+
     counter = 0
     for sv, fvs in loader.full_variants_iterator():
         for fv in fvs:
@@ -53,9 +55,12 @@ def test_get_diploid_males(vcf, expected, vcf_variants_loader):
     ],
 )
 def test_vcf_loader_genetic_model(
-    vcf, expected, vcf_variants_loader, genome_2013
-):
-    loader = vcf_variants_loader(vcf)
+        vcf, expected, vcf_variants_loaders, genome_2013):
+
+    loaders = vcf_variants_loaders(vcf)
+    loader = loaders[0]
+    assert loader is not None
+
     counter = 0
     for sv, fvs in loader.full_variants_iterator():
         for fv in fvs:
@@ -92,9 +97,12 @@ def test_vcf_loader_genetic_model(
     ],
 )
 def test_vcf_loader_best_state(
-    vcf, expected, vcf_variants_loader, genome_2013
-):
-    loader = vcf_variants_loader(vcf)
+        vcf, expected, vcf_variants_loaders, genome_2013):
+
+    loaders = vcf_variants_loaders(vcf)
+    loader = loaders[0]
+    assert loader is not None
+
     counter = 0
     for sv, fvs in loader.full_variants_iterator():
         for fv in fvs:

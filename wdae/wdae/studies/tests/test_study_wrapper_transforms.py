@@ -51,6 +51,11 @@ from studies.query_transformer import QueryTransformer
             set(["mother only"]),
             [Inheritance.missing],
             [Role.mom], True),
+        (
+            set(["proband only", "proband and sibling", "neither"]),
+            set(["mother only", "neither"]),
+            [Inheritance.denovo, Inheritance.mendelian, Inheritance.missing],
+            [Role.prb, Role.sib, Role.mom], True),    
     ]
 )
 def test_transform_present_in_child_and_present_in_parent(
