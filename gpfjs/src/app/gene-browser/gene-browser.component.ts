@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { GeneService } from 'app/gene-view/gene.service';
-import { Gene, GeneViewSummaryVariantsArray, DomainRange } from 'app/gene-view/gene';
+import { Gene, GeneViewSummaryAllelesArray, DomainRange } from 'app/gene-view/gene';
 import { GenotypePreviewVariantsArray, GenotypePreviewInfo } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
 import { Observable } from 'rxjs';
@@ -28,7 +28,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   geneSymbol = '';
   maxFamilyVariants = 1000;
   genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
-  summaryVariantsArray: GeneViewSummaryVariantsArray;
+  summaryVariantsArray: GeneViewSummaryAllelesArray;
   selectedDataset$: Observable<Dataset>;
   selectedDatasetId: string;
   genotypePreviewInfo: GenotypePreviewInfo;

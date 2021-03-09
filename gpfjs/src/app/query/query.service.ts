@@ -11,7 +11,7 @@ import { environment } from 'environments/environment';
 import { QueryData } from './query';
 import { ConfigService } from '../config/config.service';
 import { GenotypePreview, GenotypePreviewInfo, GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
-import { GeneViewSummaryVariantsArray } from '../gene-view/gene';
+import { GeneViewSummaryAllelesArray } from '../gene-view/gene';
 import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Injectable()
@@ -149,7 +149,7 @@ export class QueryService {
   }
 
   getGeneViewVariants(filter: QueryData, loadingService?: any) {
-    const summaryVariantsArray = new GeneViewSummaryVariantsArray();
+    const summaryVariantsArray = new GeneViewSummaryAllelesArray();
     this.summaryStreamPost(this.geneViewVariants, filter).subscribe((variant: string[]) => {
       summaryVariantsArray.addSummaryRow(variant);
     });

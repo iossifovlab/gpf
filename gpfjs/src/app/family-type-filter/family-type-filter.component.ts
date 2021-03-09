@@ -34,12 +34,14 @@ export class FamilyTypeFilterComponent extends QueryStateWithErrorsProvider impl
 
   getState() {
     return this.validateAndGetState(this.familyTypes).map(familyTypes => {
+      if (familyTypes.familyTypes.length === 0) {
+        return;
+      }
       return { familyTypes: familyTypes.familyTypes };
     });
   }
 
   checkFamilyType(familyType: string, value: boolean): void {
-    console.log(familyType, value);
     if (this.allFamilyTypes.indexOf(familyType) !== -1) {
       if (!value) {
         this.familyTypes.familyTypes.push(familyType);
@@ -47,6 +49,5 @@ export class FamilyTypeFilterComponent extends QueryStateWithErrorsProvider impl
         this.familyTypes.familyTypes.splice(this.familyTypes.familyTypes.indexOf(familyType), 1);
       }
     }
-    console.log(this.familyTypes.familyTypes);
   }
 }
