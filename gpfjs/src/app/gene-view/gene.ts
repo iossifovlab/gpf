@@ -304,7 +304,7 @@ export class GeneViewSummaryVariant {
   }
 
   get familyVariantsCount(): number {
-    return this.summaryAlleles.reduce((a, b) => Math.max(a, b.numberOfFamilyVariants), 0);
+    return this.summaryAlleles.reduce((a, b) => a + b.numberOfFamilyVariants, 0);
   }
 }
 
