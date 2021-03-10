@@ -88,7 +88,6 @@ describe('MultipleSelectMenuComponent', () => {
     component.ngOnInit();
     expect(component.areAllUnchecked(component['checkboxDataArray'])).toBeFalse();
 
-
     component.selectedItems = [
       'item1',
       'item2'
@@ -122,8 +121,7 @@ describe('MultipleSelectMenuComponent', () => {
     expect(component['checkUncheckAllButtonName']).toEqual('Uncheck all');
   });
 
-  it('should check is selection is valid', () => {
-
+  it('should check if selection is valid', () => {
     component['checkboxDataArray'] = [
       {id: 'item1', isChecked: true},
       {id: 'item2', isChecked: true},
