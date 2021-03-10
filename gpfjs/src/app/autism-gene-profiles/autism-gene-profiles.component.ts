@@ -200,10 +200,10 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
   }
 
   calculateModalLeftPosition(ele: HTMLElement): string {
-    const mondalWidth = 400;
+    const modalWidth = 400;
     const buttonWidth = 40;
 
-    return ((ele.getBoundingClientRect().left - mondalWidth + buttonWidth) - (document.body.getBoundingClientRect().left)) + 'px';
+    return ((ele.getBoundingClientRect().left - modalWidth + buttonWidth) - (document.body.getBoundingClientRect().left)) + 'px';
   }
 
   calculateColumnSize(columnsCount: number): string {
