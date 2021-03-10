@@ -186,8 +186,10 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
     this.currentSortingColumnId = sortBy;
   }
 
-  openDropdown(dropdownId: string) {
-    this.updateDropdownPosition(dropdownId.replace('-dropdown', ''));
+  openDropdown(columnId: string) {
+    const dropdownId = columnId + '-dropdown';
+
+    this.updateDropdownPosition(columnId);
     this.ngbDropdownMenu.find(ele => ele.nativeElement.id === dropdownId).dropdown.open();
   }
 
