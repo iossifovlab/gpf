@@ -491,6 +491,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   }
 
   isVariantTypeSelected(variantType: string): boolean {
+    variantType = variantType.toLowerCase();
     if (variantType.substr(0, 3) === 'cnv') {
       variantType = variantType.substr(0, 4);
     } else {
