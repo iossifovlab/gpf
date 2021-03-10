@@ -93,8 +93,7 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
   }
 
   calculateModalBottom(): number {
-    const columnFilteringButtonHeight = 28;
-    return  window.innerHeight - this.columnFilteringButtons.first.nativeElement.getBoundingClientRect().y - columnFilteringButtonHeight;
+    return  window.innerHeight - this.columnFilteringButtons.first.nativeElement.getBoundingClientRect().bottom;
   }
 
   calculateDatasetColspan(datasetConfig) {
@@ -201,11 +200,9 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
     );
   }
 
-  calculateModalLeftPosition(ele: HTMLElement): string {
+  calculateModalLeftPosition(columnFilteringButton: HTMLElement): string {
     const modalWidth = 400;
-    const buttonWidth = 40;
-
-    return ((ele.getBoundingClientRect().left - modalWidth + buttonWidth) - (document.body.getBoundingClientRect().left)) + 'px';
+    return ((columnFilteringButton.getBoundingClientRect().right - modalWidth) - (document.body.getBoundingClientRect().left)) + 'px';
   }
 
   calculateColumnSize(columnsCount: number): string {
