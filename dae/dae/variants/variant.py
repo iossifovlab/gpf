@@ -237,16 +237,12 @@ class Allele(ABC):
 
     @property
     def cshl_variant(self) -> Optional[str]:
-        if self.alternative is None:
-            return None
         if self.details is None:
             return None
         return self.details.cshl_variant  # type: ignore
 
     @property
     def cshl_variant_full(self) -> Optional[str]:
-        if self.alternative is None:
-            return None
         if self.details is None:
             return None
         return self.details.cshl_variant_full  # type: ignore
