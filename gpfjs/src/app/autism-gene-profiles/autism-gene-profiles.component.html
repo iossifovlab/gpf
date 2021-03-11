@@ -2,47 +2,38 @@
   <table *ngIf="config" class="table table-hover table-sm table-centered table-header-rotate" style="table-layout: fixed; min-width: 1500px;">
     <thead>
       <tr>
-        <th class="table-main-header" style="width: 160px; max-width: 160px">
+        <th class="table-main-header" style="width: 160px; position: sticky; top: 0px">
           <span>Gene</span>
         </th>
 
-        <th class="table-main-header" [attr.colspan]="shownGeneSets.length">
+        <th class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="shownGeneSets.length" [style.width]="calculateColumnSize(shownGeneSets.length)">
           <span>
             Gene sets
           </span>
-          <span ngbDropdown (openChange)="focusGeneSetsInput = $event;">
-            <button class="dropdown-toggle btn navbar-toggler" ngbDropdownToggle style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
-              <span style="font-size: 14px;">&#9776;</span>
-            </button>
-            <gpf-multiple-select-menu ngbDropdownMenu [focusInput]="focusGeneSetsInput" [id]="'geneSets'" [allItems]="config.geneSets" [selectedItems]="shownGeneSets" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
-          </span>
+          <button #columnFilteringButton id="gene-sets-button" (click)="openDropdown('gene-sets')" class="dropdown-toggle btn navbar-toggler" style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
+            <span style="font-size: 14px;">&#9776;</span>
+          </button>
         </th>
 
-        <th class="table-main-header" [attr.colspan]="shownAutismScores.length">
+        <th class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="shownAutismScores.length" [style.width]="calculateColumnSize(shownAutismScores.length)">
           <span>
             Autism scores
           </span>
-          <span ngbDropdown (openChange)="focusAutismScoresInput = $event;">
-            <button class="dropdown-toggle btn navbar-toggler" ngbDropdownToggle style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
-              <span style="font-size: 14px;">&#9776;</span>
-            </button>
-            <gpf-multiple-select-menu ngbDropdownMenu [focusInput]="focusAutismScoresInput" [id]="'autismScores'" [allItems]="config.autismScores" [selectedItems]="shownAutismScores" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
-          </span>
+          <button #columnFilteringButton id="autism-scores-button" (click)="openDropdown('autism-scores')" class="dropdown-toggle btn navbar-toggler" style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
+            <span style="font-size: 14px;">&#9776;</span>
+          </button>
         </th>
 
-        <th class="table-main-header" [attr.colspan]="shownProtectionScores.length">
+        <th class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="shownProtectionScores.length" [style.width]="calculateColumnSize(shownProtectionScores.length)">
           <span>
             Protection scores
           </span>
-          <span ngbDropdown (openChange)="focusProtectionScoresInput = $event;">
-            <button class="dropdown-toggle btn navbar-toggler" ngbDropdownToggle style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
-              <span style="font-size: 14px;">&#9776;</span>
-            </button>
-            <gpf-multiple-select-menu ngbDropdownMenu [focusInput]="focusProtectionScoresInput" [id]="'protectionScores'" [allItems]="config.protectionScores" [selectedItems]="shownProtectionScores" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
-          </span>
+          <button #columnFilteringButton id="protection-scores-button" (click)="openDropdown('protection-scores')" class="dropdown-toggle btn navbar-toggler" style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
+            <span style="font-size: 14px;">&#9776;</span>
+          </button>
         </th>
 
-        <th class="table-main-header" *ngFor="let dataset of config.datasets" [attr.colspan]="calculateDatasetColspan(dataset)">{{dataset.name}}</th>
+        <th class="table-main-header" style="position: sticky; top: 0px" *ngFor="let dataset of config.datasets" [attr.colspan]="calculateDatasetColspan(dataset)">{{dataset.name}}</th>
       </tr>
 
       <tr style="height: 110px;">
@@ -111,4 +102,22 @@
     </tbody>
 
   </table>
+</div>
+
+<div *ngIf="config" style="position: sticky;" [style.bottom.px]="modalBottom">
+  <span #dropdownSpan id="gene-sets-span" ngbDropdown (openChange)="focusGeneSetsInput = $event;">
+    <gpf-multiple-select-menu ngbDropdownMenu id="gene-sets-dropdown" [focusInput]="focusGeneSetsInput" [id]="'geneSets'" [allItems]="config.geneSets" [selectedItems]="shownGeneSets" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
+  </span>
+</div>
+
+<div *ngIf="config" style="position: sticky;" [style.bottom.px]="modalBottom">
+  <span #dropdownSpan id="autism-scores-span" ngbDropdown (openChange)="focusAutismScoresInput = $event;">
+    <gpf-multiple-select-menu ngbDropdownMenu id="autism-scores-dropdown" [focusInput]="focusAutismScoresInput" [id]="'autismScores'" [allItems]="config.autismScores" [selectedItems]="shownAutismScores" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
+  </span>
+</div>
+
+<div *ngIf="config" style="position: sticky;" [style.bottom.px]="modalBottom">
+  <span #dropdownSpan id="protection-scores-span" ngbDropdown (openChange)="focusProtectionScoresInput = $event;">
+    <gpf-multiple-select-menu ngbDropdownMenu id="protection-scores-dropdown" [focusInput]="focusProtectionScoresInput" [id]="'protectionScores'" [allItems]="config.protectionScores" [selectedItems]="shownProtectionScores" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
+  </span>
 </div>

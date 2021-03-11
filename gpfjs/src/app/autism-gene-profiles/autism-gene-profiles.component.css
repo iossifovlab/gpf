@@ -6,6 +6,13 @@ td {
     text-align: center;
 }
 
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+  border-right: 1px solid #dddddd;
+  border-bottom: 1px solid #dddddd;
+}
+
 .vertical-text {
   writing-mode: vertical-rl;
   transform-origin: center center;
@@ -40,10 +47,9 @@ thead {
 
 td, th, .table-subheader, .table-main-header {
   border-bottom: none;
-}
-
-td, th {
-  border: 1px solid #dddddd;
+  border-top: 1px solid #dddddd;
+  border-left: 1px solid #dddddd;
+  border-right: none;
 }
 
 .dropdown-toggle::after {
@@ -56,4 +62,23 @@ td, th {
 
 #gene-search-input {
   border-radius: 0;
+}
+
+thead th {
+  position: sticky;
+  top: 36px;
+}
+
+.effect-type-header {
+  position: sticky;
+  top: 186px;
+}
+
+.table-main-header {
+  position: sticky;
+  top: 0px;
+}
+
+thead th, .effect-type-header {
+  background-color: #eeeeee;
 }

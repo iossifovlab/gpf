@@ -1,6 +1,6 @@
 import {
-  AfterViewInit, Component, ElementRef, EventEmitter, HostListener,
-  Input, OnChanges, OnInit, Output, ViewChild, ViewChildren
+  AfterViewInit, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostListener,
+  Input, OnChanges, OnInit, Output, QueryList, Renderer2, ViewChild, ViewChildren
 } from '@angular/core';
 import { Subject } from 'rxjs';
 import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile';
@@ -40,18 +40,26 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
   @ViewChildren(SortingButtonsComponent) sortingButtonsComponents: SortingButtonsComponent[];
   currentSortingColumnId: string;
 
+  @ViewChildren('columnFilteringButton') columnFilteringButtons: QueryList<ElementRef>;
+  @ViewChildren('dropdownSpan') dropdownSpans: QueryList<ElementRef>;
+  modalBottom: number;
+
   @HostListener('window:scroll', ['$event'])
-  onWindowScroll(event: any) {
+  onWindowScroll() {
     const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
     const totalScrollHeight = document.documentElement.scrollHeight;
 
     if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
       this.updateGenes();
     }
+
+    this.modalBottom = this.calculateModalBottom();
   }
 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
+    private renderer: Renderer2,
+    private cdr: ChangeDetectorRef,
   ) { }
 
   ngOnChanges(): void {
@@ -77,6 +85,15 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
 
   ngAfterViewInit(): void {
     this.focusGeneSearch();
+
+    this.columnFilteringButtons.changes.take(1).subscribe(() => {
+      this.modalBottom = this.calculateModalBottom();
+      this.cdr.detectChanges();
+    });
+  }
+
+  calculateModalBottom(): number {
+    return  window.innerHeight - this.columnFilteringButtons.first.nativeElement.getBoundingClientRect().bottom;
   }
 
   calculateDatasetColspan(datasetConfig) {
@@ -166,5 +183,38 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
       ).resetHideState();
     } 
     this.currentSortingColumnId = sortBy;
+  }
+
+  openDropdown(columnId: string) {
+    const dropdownId = columnId + '-dropdown';
+
+    this.updateDropdownPosition(columnId);
+    this.ngbDropdownMenu.find(ele => ele.nativeElement.id === dropdownId).dropdown.open();
+  }
+
+  updateDropdownPosition(id: string) {
+    this.renderer.setStyle(
+      this.dropdownSpans.find(ele => ele.nativeElement.id === `${id}-span`).nativeElement,
+      'left',
+      this.calculateModalLeftPosition(this.columnFilteringButtons.find(ele => ele.nativeElement.id === `${id}-button`).nativeElement)
+    );
+  }
+
+  calculateModalLeftPosition(columnFilteringButton: HTMLElement): string {
+    const modalWidth = 400;
+    return ((columnFilteringButton.getBoundingClientRect().right - modalWidth) - (document.body.getBoundingClientRect().left)) + 'px';
+  }
+
+  calculateColumnSize(columnsCount: number): string {
+    let result: number;
+    const singleColumnSize = 80;
+
+    if (columnsCount === 1) {
+      result = 200;
+    } else {
+      result = columnsCount * singleColumnSize;
+    }
+
+    return result + 'px';
   }
 }
