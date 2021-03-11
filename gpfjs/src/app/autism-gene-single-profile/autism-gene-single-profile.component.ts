@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { AutismGeneToolConfig, AutismGeneToolGene } from 'app/autism-gene-profiles/autism-gene-profile';
 import { Observable } from 'rxjs';
 import { GeneWeightsService } from '../gene-weights/gene-weights.service';
@@ -10,7 +10,7 @@ import { AutismGeneProfilesService } from 'app/autism-gene-profiles/autism-gene-
   templateUrl: './autism-gene-single-profile.component.html',
   styleUrls: ['./autism-gene-single-profile.component.css']
 })
-export class AutismGeneSingleProfileComponent implements OnInit, OnChanges {
+export class AutismGeneSingleProfileComponent implements OnInit {
   @Input() readonly geneSymbol: string;
   @Input() config: AutismGeneToolConfig;
 
@@ -31,13 +31,8 @@ export class AutismGeneSingleProfileComponent implements OnInit, OnChanges {
     private geneWeightsService: GeneWeightsService,
   ) { }
 
-  ngOnChanges(): void {
-    if (this.config) {
-      this.geneSets = this.config['geneSets'];
-    }
-  }
-
   ngOnInit(): void {
+    this.geneSets = this.config['geneSets'];
     this.gene$ = this.autismGeneProfilesService.getGene(this.geneSymbol);
 
     this.gene$.subscribe(res => {

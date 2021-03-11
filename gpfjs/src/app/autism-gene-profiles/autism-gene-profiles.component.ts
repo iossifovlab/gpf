@@ -1,6 +1,6 @@
 import {
   AfterViewInit, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostListener,
-  Input, OnChanges, OnInit, Output, QueryList, Renderer2, ViewChild, ViewChildren
+  Input, OnInit, Output, QueryList, Renderer2, ViewChild, ViewChildren
 } from '@angular/core';
 import { Subject } from 'rxjs';
 import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile';
@@ -13,7 +13,7 @@ import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.com
   templateUrl: './autism-gene-profiles.component.html',
   styleUrls: ['./autism-gene-profiles.component.css'],
 })
-export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterViewInit {
+export class AutismGeneProfilesComponent implements OnInit, AfterViewInit {
   @Input() config: AutismGeneToolConfig;
   @Output() createTabEvent = new EventEmitter();
   @ViewChildren(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu[];
@@ -62,15 +62,11 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
     private cdr: ChangeDetectorRef,
   ) { }
 
-  ngOnChanges(): void {
-    if (this.config) {
-      this.shownGeneSets = this.config['geneSets'];
-      this.shownAutismScores = this.config['autismScores'];
-      this.shownProtectionScores = this.config['protectionScores'];
-    }
-  }
-
   ngOnInit(): void {
+    this.shownGeneSets = this.config['geneSets'];
+    this.shownAutismScores = this.config['autismScores'];
+    this.shownProtectionScores = this.config['protectionScores'];
+
     this.autismGeneProfilesService.getGenes(this.pageIndex).take(1).subscribe(res => {
       this.genes = this.genes.concat(res);
     });

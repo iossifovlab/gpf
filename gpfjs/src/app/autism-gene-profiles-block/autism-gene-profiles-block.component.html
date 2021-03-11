@@ -1,19 +1,21 @@
-<nav ngbNav #nav="ngbNav" class="navbar" style="justify-content: flex-start; padding: 0; padding-left: 25px;">
-  <li class="nav-tabs" [ngbNavItem]="'autismGenesTool'" [destroyOnHide]="false">
-    <a ngbNavLink>Autism genes tool</a>
-    <ng-template ngbNavContent>
-      <gpf-autism-gene-profiles [config]="autismGeneToolConfig" (createTabEvent)="createTabEventHandler($event)"></gpf-autism-gene-profiles>
-    </ng-template>
-  </li>
+<div *ngIf="autismGeneToolConfig">
+  <nav ngbNav #nav="ngbNav" class="navbar" style="justify-content: flex-start; padding: 0; padding-left: 25px;">
+    <li class="nav-tabs" [ngbNavItem]="'autismGenesTool'" [destroyOnHide]="false">
+      <a ngbNavLink>Autism genes tool</a>
+      <ng-template ngbNavContent>
+        <gpf-autism-gene-profiles [config]="autismGeneToolConfig" (createTabEvent)="createTabEventHandler($event)"></gpf-autism-gene-profiles>
+      </ng-template>
+    </li>
 
-  <li class="nav-tabs" *ngFor="let geneTab of geneTabs" [ngbNavItem]="geneTab" [destroyOnHide]="false">
-    <a ngbNavLink>
-      {{geneTab}}
-      <span class="close position-relative pl-2 font-weight-light" (click)="closeTab($event, geneTab)">×</span>
-    </a>
-    <ng-template ngbNavContent>
-      <gpf-autism-gene-single-profile [config]="autismGeneToolConfig" [geneSymbol]="geneTab"></gpf-autism-gene-single-profile>
-    </ng-template>
-  </li>
-</nav>
-<div [ngbNavOutlet]="nav" class="card-block"></div>
+    <li class="nav-tabs" *ngFor="let geneTab of geneTabs" [ngbNavItem]="geneTab" [destroyOnHide]="false">
+      <a ngbNavLink>
+        {{geneTab}}
+        <span class="close position-relative pl-2 font-weight-light" (click)="closeTab($event, geneTab)">×</span>
+      </a>
+      <ng-template ngbNavContent>
+        <gpf-autism-gene-single-profile [config]="autismGeneToolConfig" [geneSymbol]="geneTab"></gpf-autism-gene-single-profile>
+      </ng-template>
+    </li>
+  </nav>
+  <div [ngbNavOutlet]="nav" class="card-block"></div>
+</div>
