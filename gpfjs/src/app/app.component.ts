@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { trigger, transition, style, animate } from '@angular/animations';
-import { Dataset } from './datasets/datasets';
 import { environment } from '../environments/environment';
+import { AutismGeneProfilesService } from './autism-gene-profiles/autism-gene-profiles.service';
 
 @Component({
   selector: 'gpf-root',
@@ -47,6 +47,17 @@ import { environment } from '../environments/environment';
 export class AppComponent {
   showSidenav = false;
   title = 'GPF: Genotypes and Phenotypes in Families';
+  private autismGeneProfilesConfig;
+
+  constructor(
+    private autismGeneProfilesService: AutismGeneProfilesService,
+  ) { }
+
+  ngOnInit(): void {
+    this.autismGeneProfilesService.getConfig().subscribe(res => {
+      this.autismGeneProfilesConfig = res;
+    });
+  }
 
   get imgPathPrefix() {
     return environment.imgPathPrefix;

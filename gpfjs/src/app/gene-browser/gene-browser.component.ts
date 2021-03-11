@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { GeneService } from 'app/gene-view/gene.service';
 import { Gene, GeneViewSummaryAllelesArray, DomainRange } from 'app/gene-view/gene';
 import { GenotypePreviewVariantsArray, GenotypePreviewInfo } from 'app/genotype-preview-model/genotype-preview';
@@ -22,7 +22,7 @@ import { ConfigService } from 'app/config/config.service';
     useExisting: GeneBrowserComponent
   }]
 })
-export class GeneBrowserComponent extends QueryStateCollector implements OnInit {
+export class GeneBrowserComponent extends QueryStateCollector implements OnInit, AfterViewInit {
   @ViewChild(GeneViewComponent) geneViewComponent: GeneViewComponent;
   selectedGene: Gene;
   geneSymbol = '';
@@ -94,6 +94,26 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
         this.selectedDatasetId = params['dataset'];
       }
     );
+  }
+
+  ngAfterViewInit(): void {
+    if (this.route.snapshot.params.gene) {
+      this.waitForGeneViewComponent().then(() => {
+        this.stateRestoreService.pushNewState({'geneSymbols': [this.route.snapshot.params.gene]});
+        this.submitGeneRequest();
+      })
+    }
+  }
+
+  async waitForGeneViewComponent() {
+    return new Promise<void>(resolve => {
+      const timer = setInterval(() => {
+        if (this.geneViewComponent !== undefined && this.geneViewComponent.svgElement) {
+          resolve();
+          clearInterval(timer);
+        }
+      }, 100);
+    });
   }
 
   getCurrentState() {

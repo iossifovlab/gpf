@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 // tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
 
@@ -16,12 +16,17 @@ export class GeneWeightsService {
     private config: ConfigService
   ) {}
 
-  getGeneWeights(): Observable<GeneWeights[]> {
-    return this.http
-      .get(this.config.baseUrl + this.geneWeightsUrl)
-      .map((res: any) => {
-        return GeneWeights.fromJsonArray(res);
-      });
+  getGeneWeights(geneWeightIds?: string): Observable<GeneWeights[]> {
+    let url = this.config.baseUrl + this.geneWeightsUrl;
+
+    if (geneWeightIds) {
+      const searchParams = new HttpParams().set('ids', geneWeightIds);
+      url += `?${searchParams.toString()}`;
+    }
+
+    return this.http.get(url).map((res: any) => {
+      return GeneWeights.fromJsonArray(res);
+    });
   }
 
   getPartitions(weight: string, min: number, max: number): Observable<Partitions> {

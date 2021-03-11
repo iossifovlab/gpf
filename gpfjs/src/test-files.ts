@@ -94,3 +94,8 @@ import './app/gene-view/gene-view.component.spec.ts';
 import './app/gene-browser/gene-browser.component.spec.ts';
 import './app/loading-spinner/loading-spinner.component.spec.ts';
 import './app/dataset-node/dataset-node.component.spec.ts';
+import './app/autism-gene-profiles/autism-gene-profiles.component.spec';
+import './app/autism-gene-profiles/autism-gene-profiles.service.spec';
+import './app/autism-gene-profiles-block/autism-gene-profiles-block.component.spec';
+import './app/autism-gene-single-profile/autism-gene-single-profile.component.spec';
+import './app/multiple-select-menu/multiple-select-menu.component.spec';

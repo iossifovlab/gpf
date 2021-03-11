@@ -1,0 +1,63 @@
+<div *ngIf="gene$ | async as gene" style="padding: 25px;">
+  <h2 style="margin-right: 15px">{{geneSymbol}}</h2>
+  <a class="nav-link"
+    target="_blank"
+    style="text-decoration: underline; padding-left: 0px;"
+    [attr.href]="geneBrowserUrl">
+    View {{geneSymbol}} in the Gene Browser
+  </a>
+
+  <table id="autism-scores-table" class="table table-bordered table-centered">
+    <th [attr.colspan]="2" style="text-align: center;">Autism scores</th>
+    <tr *ngFor="let autismScore of gene.autismScores | keyvalue" class="card-block">
+      <td style="vertical-align: middle;">{{formatScoreName(autismScore.key)}}</td>
+      <td>
+        <gpf-histogram *ngIf="autismScoreGeneWeights && getAutismScoreGeneWeight(autismScore.key) as geneWeight"
+          [style.width]="histogramOptions.width" [style.height]="histogramOptions.height"
+          [width]="histogramOptions.width" [height]="histogramOptions.height"
+          [bins]="geneWeight.bins"
+          [bars]="geneWeight.bars"
+          [logScaleX]="geneWeight.logScaleX"
+          [logScaleY]="geneWeight.logScaleY"
+          [showMinMaxInput]="false"
+          [isInteractive]="false"
+          [singleScoreValue]="autismScore.value"
+          [marginLeft]="histogramOptions.marginLeft"
+          [marginTop]="histogramOptions.marginTop">
+        </gpf-histogram>
+      </td>
+    </tr>
+  </table>
+
+  <table id="protection-scores-table" class="table table-bordered table-centered">
+    <th [attr.colspan]="2" style="text-align: center;">Protection scores</th>
+    <tr *ngFor="let protectionScore of gene.protectionScores | keyvalue" class="card-block">
+      <td style="vertical-align: middle;">{{formatScoreName(protectionScore.key)}}</td>
+      <td>
+        <gpf-histogram *ngIf="protectionScoreGeneWeights && getProtectionScoreGeneWeight(protectionScore.key) as geneWeight"
+          [style.width]="histogramOptions.width" [style.height]="histogramOptions.height"
+          [width]="histogramOptions.width" [height]="histogramOptions.height"
+          [bins]="geneWeight.bins"
+          [bars]="geneWeight.bars"
+          [logScaleX]="geneWeight.logScaleX"
+          [logScaleY]="geneWeight.logScaleY"
+          [showMinMaxInput]="false"
+          [isInteractive]="false"
+          [singleScoreValue]="protectionScore.value"
+          [marginLeft]="histogramOptions.marginLeft"
+          [marginTop]="histogramOptions.marginTop">
+        </gpf-histogram>
+      </td>
+    </tr>
+  </table>
+
+  <table id="gene-sets-table" class="table table-bordered table-centered">
+    <th [attr.colspan]="2" style="text-align: center;">Gene sets</th>
+    <tr *ngFor="let geneSet of geneSets" class="card-block">
+      <td>{{geneSet}}</td>
+      <td style="text-align: center;">
+        <span *ngIf="gene.geneSets.indexOf(geneSet) !== -1">&#10003;</span>
+      </td>
+    </tr>
+  </table>
+</div>

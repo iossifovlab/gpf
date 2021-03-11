@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation, ChangeDetectorRef, forwardRef } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, ChangeDetectorRef, forwardRef, Input } from '@angular/core';
 import { GeneWeights, Partitions } from './gene-weights';
 import { GeneWeightsService } from './gene-weights.service';
 // tslint:disable-next-line:import-blacklist
@@ -104,13 +104,11 @@ export class GeneWeightsComponent extends QueryStateWithErrorsProvider implement
   }
 
   ngOnInit() {
-
     this.geneWeightsService.getGeneWeights()
       .subscribe(geneWeights => {
-          this.geneWeightsArray = geneWeights;
-          this.selectedGeneWeights = geneWeights[0];
-
-          this.restoreStateSubscribe();
+        this.geneWeightsArray = geneWeights;
+        this.selectedGeneWeights = geneWeights[0];
+        this.restoreStateSubscribe();
       });
   }
 

@@ -40,6 +40,7 @@
     "karma-junit-reporter": "^2.0.1",
     "lodash": "^4.17.15",
     "ng-multiselect-dropdown": "^0.3.0",
+    "ng2-search-filter": "^0.5.1",
     "ngx-cookie-service": "^3.0.4",
     "ngx-markdown": "^11.0.1",
     "oboe": "^2.1.5",

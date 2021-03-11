@@ -1,0 +1,84 @@
+td {
+  text-align: center;
+}
+
+.table-main-header {
+    text-align: center;
+}
+
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+  border-right: 1px solid #dddddd;
+  border-bottom: 1px solid #dddddd;
+}
+
+.vertical-text {
+  writing-mode: vertical-rl;
+  transform-origin: center center;
+  transform: rotate(180deg);
+  width: 100%;
+  float: left;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-height: 80%;
+}
+
+.effect-type-header gpf-sorting-buttons {
+  position: relative;
+  top: 5px;
+  /* white-space: nowrap; */
+}
+
+.table-subheader {
+  text-align: center;
+  height: 150px;
+  line-height: 130%;
+}
+
+.table-subheader span {
+  text-align: start;
+}
+
+thead {
+  background-color: #eeeeee;
+}
+
+td, th, .table-subheader, .table-main-header {
+  border-bottom: none;
+  border-top: 1px solid #dddddd;
+  border-left: 1px solid #dddddd;
+  border-right: none;
+}
+
+.dropdown-toggle::after {
+  content: none;
+}
+
+#gene-search-input:focus {
+  box-shadow: inset 0 -1px 0 #ddd;
+}
+
+#gene-search-input {
+  border-radius: 0;
+}
+
+thead th {
+  position: sticky;
+  top: 36px;
+}
+
+.effect-type-header {
+  position: sticky;
+  top: 186px;
+}
+
+.table-main-header {
+  position: sticky;
+  top: 0px;
+}
+
+thead th, .effect-type-header {
+  background-color: #eeeeee;
+}

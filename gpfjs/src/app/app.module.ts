@@ -157,9 +157,15 @@ import { GeneViewComponent } from './gene-view/gene-view.component';
 import { GeneSymbolsWithSearchComponent } from './gene-symbols-with-search/gene-symbols-with-search.component';
 import { LoadingSpinnerComponent } from './loading-spinner/loading-spinner.component';
 import { DatasetNodeComponent } from './dataset-node/dataset-node.component';
+import { AutismGeneProfilesComponent } from './autism-gene-profiles/autism-gene-profiles.component';
+import { MultipleSelectMenuComponent } from './multiple-select-menu/multiple-select-menu.component';
+import { Ng2SearchPipeModule } from 'ng2-search-filter';
+import { AutismGeneProfilesBlockComponent } from './autism-gene-profiles-block/autism-gene-profiles-block.component';
+import { AutismGeneSingleProfileComponent } from './autism-gene-single-profile/autism-gene-single-profile.component';
+import { MiddleClickDirective } from './autism-gene-profiles/middle-click.directive';
 import { PersonFiltersBlockComponent } from './person-filters-block/person-filters-block.component';
 import { PersonIdsComponent } from './person-ids/person-ids.component';
-import { FamilyTypeFilterComponent } from './family-type-filter/family-type-filter.component';
+import { SortingButtonsComponent } from './sorting-buttons/sorting-buttons.component';
 
 const appRoutes: Routes = [
   {
@@ -205,8 +211,16 @@ const appRoutes: Routes = [
       {
         path: 'geneBrowser',
         component: GeneBrowserComponent
+      },
+      {
+        path: 'geneBrowser/:gene',
+        component: GeneBrowserComponent
       }
     ]
+  },
+  {
+    path: 'autismGeneProfiles',
+    component: AutismGeneProfilesBlockComponent
   },
   {
     path: 'management',
@@ -355,9 +369,14 @@ const appRoutes: Routes = [
     GeneSymbolsWithSearchComponent,
     LoadingSpinnerComponent,
     DatasetNodeComponent,
+    AutismGeneProfilesComponent,
+    MultipleSelectMenuComponent,
+    AutismGeneProfilesBlockComponent,
+    AutismGeneSingleProfileComponent,
+    MiddleClickDirective,
     PersonFiltersBlockComponent,
     PersonIdsComponent,
-    FamilyTypeFilterComponent,
+    SortingButtonsComponent,
   ],
   imports: [
     BrowserModule,
@@ -374,6 +393,7 @@ const appRoutes: Routes = [
       confirmButtonType: 'danger'
     }),
     NgMultiSelectDropDownModule.forRoot(),
+    Ng2SearchPipeModule
   ],
   providers: [
     CookieService,

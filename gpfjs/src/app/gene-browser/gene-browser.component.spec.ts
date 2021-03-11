@@ -16,8 +16,8 @@ import { GeneBrowserComponent } from './gene-browser.component';
 class MockActivatedRoute {
   params = {dataset: 'testDatasetId', get: () => ''};
   parent = {params: of(this.params)};
-
   queryParamMap = of(this.params);
+  snapshot = {params: {gene: 'mockGeneSymbol'}};
 }
 
 describe('GeneBrowserComponent', () => {
