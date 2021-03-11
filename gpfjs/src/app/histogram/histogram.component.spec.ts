@@ -115,15 +115,9 @@ describe('HistogramComponent', () => {
 
   it('should render a correct label with the sum of bars within the range', async(() => {
     fixture.whenStable().then(() => {
-      const gRootEl = fixture.debugElement.query((el) => el.nativeElement.tagName === 'svg').children[0];
-      let midLabelEl;
-      for (const el of gRootEl.children) {
-        if (el.nativeElement.tagName === 'text') {
-          midLabelEl = el;
-        }
-      }
-      expect(midLabelEl).not.toBeNull();
-      expect(midLabelEl.nativeElement.innerHTML).toEqual('7 (50.00%)');
+      const sumOfBarsLabelEl = fixture.debugElement.query(By.css('#sumOfBarsLabel'));
+      expect(sumOfBarsLabelEl).not.toBeNull();
+      expect(sumOfBarsLabelEl.nativeElement.innerHTML).toEqual('7 (50.00%)');
     });
   }));
 
