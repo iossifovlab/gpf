@@ -9,7 +9,7 @@ import { environment } from 'environments/environment';
 export class SortingButtonsComponent implements OnInit {
   @Input() id: string;
   @Output() sortEvent = new EventEmitter<{id: string, order: string}>();
-  private hideState = 0;
+  hideState = 0;
 
   constructor() { }
 

@@ -10,8 +10,8 @@ import { AutismGeneProfilesService } from 'app/autism-gene-profiles/autism-gene-
 })
 export class AutismGeneProfilesBlockComponent implements OnInit {
   @ViewChild('nav') nav: NgbNav;
-  private geneTabs = new Set<string>();
-  private autismGeneToolConfig: AutismGeneToolConfig;
+  geneTabs = new Set<string>();
+  autismGeneToolConfig: AutismGeneToolConfig;
 
   @HostListener('window:keydown', ['$event'])
   keyEvent($event: KeyboardEvent) {

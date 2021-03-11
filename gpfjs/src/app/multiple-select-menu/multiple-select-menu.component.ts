@@ -14,9 +14,9 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
   @Input() focusInput: boolean;
   @ViewChild('searchInput') searchInput: ElementRef;
 
-  private checkUncheckAllButtonName = 'Uncheck all';
-  private searchText: String;
-  private checkboxDataArray: {id: string; isChecked: boolean}[];
+  checkUncheckAllButtonName = 'Uncheck all';
+  searchText: String;
+  checkboxDataArray: {id: string; isChecked: boolean}[];
 
   constructor() { }
 

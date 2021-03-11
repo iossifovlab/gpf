@@ -14,17 +14,17 @@ export class AutismGeneSingleProfileComponent implements OnInit, OnChanges {
   @Input() readonly geneSymbol: string;
   @Input() config: AutismGeneToolConfig;
 
-  private gene$: Observable<AutismGeneToolGene>;
-  private autismScoreGeneWeights: GeneWeights[];
-  private protectionScoreGeneWeights: GeneWeights[];
-  private geneSets: string[];
+  gene$: Observable<AutismGeneToolGene>;
+  autismScoreGeneWeights: GeneWeights[];
+  protectionScoreGeneWeights: GeneWeights[];
+  geneSets: string[];
 
   private _histogramOptions = {
     width: 525,
     height: 100,
     marginLeft: 50,
     marginTop: 25,
-  }
+  };
 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
