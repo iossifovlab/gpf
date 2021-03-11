@@ -22,13 +22,13 @@ import { HistogramRangeSelectorLineComponent } from './histogram-range-selector-
     `
 })
 class TestHostComponent {
-  bins = [1,2,3,4];
-  bars = [2,3,4,5];
+  bins = [1, 2, 3, 4];
+  bars = [2, 3, 4, 5];
   rangeStart = 2;
   rangeEnd = 4;
   domainMin = 1;
   domainMax = 12;
-  rangesCounts: Observable<Array<number>> = of([2,7,5]);
+  rangesCounts: Observable<Array<number>> = of([2, 7, 5]);
 
   @ViewChild('gpfhistogram') histogramEl;
 }
@@ -47,13 +47,14 @@ class TestHostComponent {
     `
 })
 class TestHostComponentManyBins {
-  bins = [1,2,3,4,5,6,7,8,9,10];
-  bars = [2,3,4,5,6,7,8,9,10,11];
+  bins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  bars = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
   rangeStart = 2;
   rangeEnd = 4;
   domainMin = 1;
   domainMax = 12;
-  rangesCounts: Observable<Array<number>> = of([2,7,56]);
+  isInteractive = true;
+  rangesCounts: Observable<Array<number>> = of([2, 7, 56]);
 
   @ViewChild('gpfhistogram') histogramEl;
 }
@@ -65,7 +66,7 @@ describe('HistogramComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       imports: [ FormsModule ],
-      declarations: [ 
+      declarations: [
         HistogramComponent, HistogramRangeSelectorLineComponent,
         TestHostComponent,
       ]
@@ -100,11 +101,11 @@ describe('HistogramComponent', () => {
 
   it('should redraw the histogram on changes', async(() => {
     spyOn(component.histogramEl, 'redrawHistogram').and.callThrough();
-    let bins = [7,8,9,10];
-    let bars = [8,9,10,11];
-    let binsChange = new SimpleChange(component.bins, bins, true);
-    let barsChange = new SimpleChange(component.bars, bars, true);
-    let changes = {bins: binsChange, bars: barsChange};
+    const bins = [7, 8, 9, 10];
+    const bars = [8, 9, 10, 11];
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
     component.histogramEl.ngOnChanges(changes as SimpleChanges);
     fixture.detectChanges();
     fixture.whenStable().then(() => {
@@ -114,10 +115,10 @@ describe('HistogramComponent', () => {
 
   it('should render a correct label with the sum of bars within the range', async(() => {
     fixture.whenStable().then(() => {
-      let gRootEl = fixture.debugElement.query((el) => el.nativeElement.tagName == 'svg').children[0];
+      const gRootEl = fixture.debugElement.query((el) => el.nativeElement.tagName === 'svg').children[0];
       let midLabelEl;
-      for (let el of gRootEl.children) {
-        if(el.nativeElement.tagName == 'text') {
+      for (const el of gRootEl.children) {
+        if (el.nativeElement.tagName === 'text') {
           midLabelEl = el;
         }
       }
@@ -127,21 +128,21 @@ describe('HistogramComponent', () => {
   }));
 
   it('should render sliders', async(() => {
-    let sliderEls = fixture.debugElement.queryAll((el) => el.nativeElement.attributes.getNamedItem('gpf-histogram-range-selector-line'));
+    const sliderEls = fixture.debugElement.queryAll((el) => el.nativeElement.attributes.getNamedItem('gpf-histogram-range-selector-line'));
     expect(sliderEls.length).toBe(2);
   }));
 
   it('should set the correct labels to the sliders', () => {
-    let sliderLabels = fixture.debugElement.queryAll(By.css('.partitions-text'));
-    let sliderLabelsText = sliderLabels.map((label) => label.nativeElement.innerHTML);
+    const sliderLabels = fixture.debugElement.queryAll(By.css('.partitions-text'));
+    const sliderLabelsText = sliderLabels.map((label) => label.nativeElement.innerHTML);
     expect(sliderLabels.length).toBe(3);
     expect(sliderLabelsText.length).toBe(3);
     expect(sliderLabelsText).toEqual(jasmine.arrayContaining(['2 (14.29%)', '5 (35.71%)', '7 (50.00%)']));
   });
 
   it('should not render range input fields if less than 10 bins', async(() => {
-    let rangeInputElFrom = fixture.debugElement.query(By.css('.histogram-from'));
-    let rangeInputElTo = fixture.debugElement.query(By.css('.histogram-to'));
+    const rangeInputElFrom = fixture.debugElement.query(By.css('.histogram-from'));
+    const rangeInputElTo = fixture.debugElement.query(By.css('.histogram-to'));
     expect(rangeInputElFrom).toBeNull();
     expect(rangeInputElTo).toBeNull();
   }));
@@ -154,7 +155,7 @@ describe('HistogramComponentManyBins', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       imports: [ FormsModule ],
-      declarations: [ 
+      declarations: [
         HistogramComponent, HistogramRangeSelectorLineComponent,
         TestHostComponentManyBins,
       ]
@@ -173,15 +174,15 @@ describe('HistogramComponentManyBins', () => {
   });
 
   it('should render range input fields if 10 or more bins', () => {
-    let rangeInputElFrom = fixture.debugElement.query(By.css('.histogram-from'));
-    let rangeInputElTo = fixture.debugElement.query(By.css('.histogram-to'));
+    const rangeInputElFrom = fixture.debugElement.query(By.css('.histogram-from'));
+    const rangeInputElTo = fixture.debugElement.query(By.css('.histogram-to'));
     expect(rangeInputElFrom).not.toBeNull();
     expect(rangeInputElTo).not.toBeNull();
   });
 
   it('should render buttons for the range input fields', () => {
-    let rangeInputElFrom = fixture.debugElement.query(By.css('.histogram-from'));
-    let rangeInputElTo = fixture.debugElement.query(By.css('.histogram-to'));
+    const rangeInputElFrom = fixture.debugElement.query(By.css('.histogram-from'));
+    const rangeInputElTo = fixture.debugElement.query(By.css('.histogram-to'));
     expect(rangeInputElFrom.queryAll(By.css('button')).length).toBe(2);
     expect(rangeInputElFrom.query(By.css('.step.up'))).not.toBeNull();
     expect(rangeInputElFrom.query(By.css('.step.down'))).not.toBeNull();
