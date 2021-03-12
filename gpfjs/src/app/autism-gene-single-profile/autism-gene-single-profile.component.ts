@@ -41,7 +41,10 @@ export class AutismGeneSingleProfileComponent implements OnInit {
       mergeMap((res) => {
         autismScores = [...res['autismScores'].keys()].join(',');
         protectionScores = [...res['protectionScores'].keys()].join(',');
-        return zip(this.geneWeightsService.getGeneWeights(autismScores),this.geneWeightsService.getGeneWeights(autismScores));
+        return zip(
+          this.geneWeightsService.getGeneWeights(autismScores),
+          this.geneWeightsService.getGeneWeights(protectionScores)
+        );
       }),
     ).subscribe(res => {
       this.autismScoreGeneWeights = res[0];

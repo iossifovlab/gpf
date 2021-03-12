@@ -23,6 +23,7 @@ describe('AutismGeneSingleProfileComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(AutismGeneSingleProfileComponent);
     component = fixture.componentInstance;
+    component.config = {geneSets: ['mockGeneSet']} as any;
     fixture.detectChanges();
   });
 
@@ -30,21 +31,9 @@ describe('AutismGeneSingleProfileComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should set gene sets if config is passed', () => {
-    expect(component.config).toEqual(undefined);
-    expect(component['geneSets']).toEqual(undefined);
-
-    component.ngOnChanges();
-    expect(component['geneSets']).toEqual(undefined);
-
-    component.config = {geneSets: ['fakeGeneSet1', 'fakeGeneSet2']} as any;
-
-    component.ngOnChanges();
-    expect(component['geneSets']).toEqual(['fakeGeneSet1', 'fakeGeneSet2']);
-  });
-
   it('should initialize', () => {
     (component as any).geneSymbol = 'mockGeneSymbol';
+    component.config = {geneSets: ['mockGeneSet']} as any;
     const getGeneSpy = spyOn(component['autismGeneProfilesService'], 'getGene');
     const mockAutismScores = new Map();
     mockAutismScores.set('fakeAutismScore', 1);
@@ -61,6 +50,7 @@ describe('AutismGeneSingleProfileComponent', () => {
     getGeneWeightsSpy.and.returnValue(of('fakeWeight' as any));
 
     component.ngOnInit();
+    expect(component.geneSets).toEqual(['mockGeneSet']);
     expect(component['gene$']).toEqual(geneMock);
     expect(getGeneSpy).toHaveBeenCalledWith('mockGeneSymbol');
     expect(getGeneWeightsSpy.calls.allArgs()).toEqual([
