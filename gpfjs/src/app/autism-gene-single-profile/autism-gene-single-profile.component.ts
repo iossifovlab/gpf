@@ -1,9 +1,10 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { AutismGeneToolConfig, AutismGeneToolGene } from 'app/autism-gene-profiles/autism-gene-profile';
-import { Observable } from 'rxjs';
+import { Observable, zip } from 'rxjs';
 import { GeneWeightsService } from '../gene-weights/gene-weights.service';
 import { GeneWeights } from 'app/gene-weights/gene-weights';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles/autism-gene-profiles.service';
+import { mergeMap } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-autism-gene-single-profile',
@@ -34,18 +35,17 @@ export class AutismGeneSingleProfileComponent implements OnInit {
   ngOnInit(): void {
     this.geneSets = this.config['geneSets'];
     this.gene$ = this.autismGeneProfilesService.getGene(this.geneSymbol);
-
-    this.gene$.subscribe(res => {
-      const autismScores: string = [...res['autismScores'].keys()].join(',');
-      const protectionScores: string = [...res['protectionScores'].keys()].join(',');
-
-      this.geneWeightsService.getGeneWeights(autismScores).subscribe(
-        geneWeights => this.autismScoreGeneWeights = geneWeights
-      );
-
-      this.geneWeightsService.getGeneWeights(protectionScores).subscribe(
-        geneWeights => this.protectionScoreGeneWeights = geneWeights
-      );
+    let autismScores: string;
+    let protectionScores: string;
+    this.gene$.pipe(
+      mergeMap((res) => {
+        autismScores = [...res['autismScores'].keys()].join(',');
+        protectionScores = [...res['protectionScores'].keys()].join(',');
+        return zip(this.geneWeightsService.getGeneWeights(autismScores),this.geneWeightsService.getGeneWeights(autismScores));
+      }),
+    ).subscribe(res => {
+      this.autismScoreGeneWeights = res[0];
+      this.protectionScoreGeneWeights = res[1];
     });
   }
 
