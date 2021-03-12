@@ -104,45 +104,45 @@ pipeline {
             }
         }
 
-        // stage('Start federation remote instance') {
-        //     steps {
-        //         sh '''
-        //             ${WD}/scripts/setup_remote_gpf_container.sh
-        //             ${WD}/scripts/run_remote_gpf_container.sh
-        //         '''
-        //     }
-        // }
+        stage('Start federation remote instance') {
+            steps {
+                sh '''
+                    ${WD}/scripts/setup_remote_gpf_container.sh
+                    ${WD}/scripts/run_remote_gpf_container.sh
+                '''
+            }
+        }
 
-        // stage('Lint') {
-        //     steps {
-        //         sh '''
-        //             docker run --rm \
-        //                 -v ${DAE_DB_DIR}:/data \
-        //                 -v ${WD}:/code \
-        //                 ${GPF_DOCKER_IMAGE} /code/jenkins_flake8.sh
+        stage('Lint') {
+            steps {
+                sh '''
+                    docker run --rm \
+                        -v ${DAE_DB_DIR}:/data \
+                        -v ${WD}:/code \
+                        ${GPF_DOCKER_IMAGE} /code/jenkins_flake8.sh
 
-        //         '''
-        //     }
-        // }
+                '''
+            }
+        }
 
-        // stage('Type Check') {
-        //     steps {
-        //         sh '''
-        //             docker run --rm \
-        //                 -v ${DAE_DB_DIR}:/data \
-        //                 -v ${WD}:/code \
-        //                 ${GPF_DOCKER_IMAGE} /code/jenkins_mypy.sh
-        //         '''
-        //     }
-        // }
+        stage('Type Check') {
+            steps {
+                sh '''
+                    docker run --rm \
+                        -v ${DAE_DB_DIR}:/data \
+                        -v ${WD}:/code \
+                        ${GPF_DOCKER_IMAGE} /code/jenkins_mypy.sh
+                '''
+            }
+        }
 
-        // stage('Test') {
-        //     steps {
-        //         sh '''
-        //             ${WD}/run_tests.sh
-        //         '''
-        //     }
-        // }
+        stage('Test') {
+            steps {
+                sh '''
+                    ${WD}/run_tests.sh
+                '''
+            }
+        }
     }
     post {
         always {
@@ -150,11 +150,11 @@ pipeline {
                 ${WORKSPACE}/scripts/clean_up_docker.sh
             '''
 
-            // junit 'test_results/wdae-junit.xml, test_results/dae-junit.xml'
+            junit 'test_results/wdae-junit.xml, test_results/dae-junit.xml'
 
-            // step([
-            //     $class: 'CoberturaPublisher',
-            //     coberturaReportFile: 'test_results/coverage.xml'])
+            step([
+                $class: 'CoberturaPublisher',
+                coberturaReportFile: 'test_results/coverage.xml'])
 
             zulipNotification(
                 topic: "${env.JOB_NAME}"
@@ -171,7 +171,6 @@ pipeline {
                     booleanParam(name: "PUBLISH", value: false)
                 ]
             }
-
         }
     }
 }
