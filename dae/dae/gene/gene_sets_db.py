@@ -32,7 +32,7 @@ class GeneSetCollection(object):
 
         self.collection_id = collection_id
         for gene_set in gene_sets:
-            self.gene_sets[gene_sets.name] = gene_set
+            self.gene_sets[gene_set.name] = gene_set
 
         assert self.collection_id, self.gene_sets
 

@@ -93,13 +93,13 @@ class GeneSetsView(QueryBaseView):
 
         response = [
             {
-                "count": gs["count"],
-                "name": gs["name"],
-                "desc": gs["desc"],
+                "count": gs.count,
+                "name": gs.name,
+                "desc": gs.desc,
                 "download": self._build_download_url(
                     {
                         "geneSetsCollection": gene_sets_collection_id,
-                        "geneSet": gs["name"],
+                        "geneSet": gs.name,
                         "geneSetsTypes": gene_sets_types,
                     }
                 ),
@@ -159,8 +159,8 @@ class GeneSetDownloadView(QueryBaseView):
             print("GENE SET NOT FOUND", permitted_datasets)
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        gene_syms = ["{}\r\n".format(s) for s in gene_set["syms"]]
-        title = '"{}: {}"\r\n'.format(gene_set["name"], gene_set["desc"])
+        gene_syms = ["{}\r\n".format(s) for s in gene_set.syms]
+        title = '"{}: {}"\r\n'.format(gene_set.name, gene_set.desc)
         result = itertools.chain([title], gene_syms)
 
         response = StreamingHttpResponse(result, content_type="text/csv")

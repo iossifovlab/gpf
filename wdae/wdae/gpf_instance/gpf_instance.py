@@ -10,6 +10,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper
 
 from remote.rest_api_client import RESTClient, RESTClientRequestError
+from remote.gene_sets_db import RemoteGeneSetsDb
 
 from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.event_counters import CounterBase
