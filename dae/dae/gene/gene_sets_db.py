@@ -56,7 +56,7 @@ class GeneSetsDb(object):
     def __init__(self, config, load_eagerly=False):
         assert config is not None
         self.config = config
-        self.gene_set_collections = dict()
+        self.gene_set_collections: Dict[str, GeneSetCollection] = dict()
         self.load_eagerly = load_eagerly
         if load_eagerly:
             LOGGER.info(
@@ -127,11 +127,11 @@ class GeneSetsDb(object):
 
     def get_gene_set_ids(self, collection_id):
         gsc = self._load_gene_set_collection(collection_id)
-        return set(gsc.gene_terms_descriptions.keys())
+        return set(gsc.gene_sets.keys())
 
     def get_all_gene_sets(self, collection_id):
         gsc = self._load_gene_set_collection(collection_id)
-        return list(gsc.gene_terms_descriptions.values())
+        return list(gsc.gene_sets.values())
 
     def get_gene_set(self, collection_id, gene_set_id):
         gsc = self._load_gene_set_collection(collection_id)
