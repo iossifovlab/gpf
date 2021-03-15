@@ -348,3 +348,13 @@ class RESTClient:
             return None
 
         return response.json()
+
+    def get_gene_sets_collections(self):
+        response = self._get(
+            "gene_sets/gene_sets_collections"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
