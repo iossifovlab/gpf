@@ -32,20 +32,10 @@ from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.autism_gene_profile.statistic import AGPStatistic
 
 from dae.utils.helpers import isnan
+from dae.utils.dae_utils import cached
 
 
 logger = logging.getLogger(__name__)
-
-
-def cached(prop):
-    cached_val_name = "_" + prop.__name__
-
-    def wrap(self):
-        if getattr(self, cached_val_name, None) is None:
-            setattr(self, cached_val_name, prop(self))
-        return getattr(self, cached_val_name)
-
-    return wrap
 
 
 class GPFInstance(object):

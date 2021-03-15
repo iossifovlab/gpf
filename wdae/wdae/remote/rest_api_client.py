@@ -358,3 +358,28 @@ class RESTClient:
             return None
 
         return response.json()
+
+    def get_gene_sets(self, collection_id):
+        response = self._post(
+            "gene_sets/gene_sets",
+            data={"geneSetsCollection": collection_id}
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_gene_set_download(self, gene_sets_collection, gene_set):
+        response = self._get(
+            "gene_sets/gene_set_download",
+            query_values={
+                "geneSetsCollection": gene_sets_collection,
+                "geneSet": gene_set,
+            }
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.content

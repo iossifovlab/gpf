@@ -1,55 +1,55 @@
 import os
 import logging
 
+from typing import Dict, List, Optional
+
 from dae.gene.utils import getGeneTerms, getGeneTermAtt, rename_gene_terms
 from dae.gene.gene_term import loadGeneTerm
+from dae.utils.dae_utils import cached
 
 LOGGER = logging.getLogger(__name__)
 
 
-def cached(prop):
-    # FIXME This has been duplicated temporarily - once
-    # the master branch is merged into this branch, this
-    # should be removed
+class GeneSet:
+    name: str
+    desc: str
+    count: int
+    syms: List[str]
 
-    cached_val_name = "_" + prop.__name__
-
-    def wrap(self):
-        if getattr(self, cached_val_name, None) is None:
-            setattr(self, cached_val_name, prop(self))
-        return getattr(self, cached_val_name)
-
-    return wrap
+    def __init__(self, name: str, desc: str, syms: List[str]):
+        self.name = name
+        self.desc = desc
+        self.count = len(syms)
+        self.syms = syms
 
 
 class GeneSetCollection(object):
-    def __init__(self, gene_sets_collection_id, config):
-        assert gene_sets_collection_id != "denovo"
+    collection_id: str
+    gene_sets: Dict[str, GeneSet] = dict()
 
-        self.gsc_id = gene_sets_collection_id
+    def __init__(self, collection_id: str, gene_sets: List[GeneSet]):
+        assert collection_id != "denovo"
 
-        self.gene_terms = getGeneTerms(config, self.gsc_id, inNS="sym")
-        assert self.gene_terms, self.gsc_id
+        self.collection_id = collection_id
+        for gene_set in gene_sets:
+            self.gene_sets[gene_sets.name] = gene_set
 
-        self.gene_terms_descriptions = dict()
-        for key, value in self.gene_terms.tDesc.items():
-            syms = list(self.gene_terms.t2G[key].keys())
-            self.gene_terms_descriptions[key] = {
-                "name": key,
-                "desc": value,
-                "count": len(syms),
-                "syms": syms,
-            }
-        assert self.gene_terms_descriptions, self.gsc_id
+        assert self.collection_id, self.gene_sets
 
-    def get_gene_set(self, gene_set_id):
-        if gene_set_id not in self.gene_terms_descriptions:
-            print(
-                f"{gene_set_id} not found in "
-                "{self.gene_terms_descriptions.keys()}"
-            )
-            return None
-        return self.gene_terms_descriptions[gene_set_id]
+    @staticmethod
+    def from_config(collection_id: str, config) -> "GeneSetCollection":
+        gene_sets = list()
+        gene_terms = getGeneTerms(config, collection_id, inNS="sym")
+        for key, value in gene_terms.tDesc.items():
+            syms = list(gene_terms.t2G[key].keys())
+            gene_sets.append(GeneSet(key, value, syms))
+        return GeneSetCollection(collection_id, gene_sets)
+
+    def get_gene_set(self, gene_set_id: str) -> Optional[GeneSet]:
+        gene_set = self.gene_sets.get(gene_set_id)
+        if gene_set is None:
+            print(f"{gene_set_id} not found in {self.gene_sets.keys()}")
+        return gene_set
 
 
 class GeneSetsDb(object):
@@ -104,10 +104,10 @@ class GeneSetsDb(object):
             LOGGER.info(
                 f"gene set collection <{gene_sets_collection_id}> "
                 f"not found in GeneSetDb cache")
-
-            self.gene_set_collections[
-                gene_sets_collection_id
-            ] = GeneSetCollection(gene_sets_collection_id, config=self.config)
+            self.gene_set_collections[gene_sets_collection_id] = \
+                GeneSetCollection.from_config(
+                    gene_sets_collection_id, self.config
+                )
             LOGGER.info(
                 f"gene set collection <{gene_sets_collection_id}> "
                 f"loaded into GeneSetsDb cache")

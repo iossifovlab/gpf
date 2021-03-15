@@ -173,6 +173,7 @@ class GeneSetDownloadView(QueryBaseView):
     def _parse_query_params(self, data):
         res = {str(k): str(v) for k, v in list(data.items())}
         if "geneSetsTypes" in res:
+            # FIXME replace usage of literal_eval
             res["geneSetsTypes"] = ast.literal_eval(res["geneSetsTypes"])
         return res
 
