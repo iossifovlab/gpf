@@ -1,6 +1,10 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { FormsModule } from '@angular/forms';
 import { ConfigService } from 'app/config/config.service';
+import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
+import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
+import { Ng2SearchPipeModule } from 'ng2-search-filter';
 // tslint:disable-next-line:import-blacklist
 import { of } from 'rxjs';
 import { AutismGeneToolConfig } from './autism-gene-profile';
@@ -13,9 +17,9 @@ describe('AutismGeneProfilesComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ AutismGeneProfilesComponent ],
+      declarations: [ AutismGeneProfilesComponent, MultipleSelectMenuComponent, SortingButtonsComponent],
       providers: [ConfigService],
-      imports: [HttpClientTestingModule]
+      imports: [Ng2SearchPipeModule, HttpClientTestingModule, FormsModule]
     })
     .compileComponents();
   }));
