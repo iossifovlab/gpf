@@ -117,7 +117,7 @@ describe('HistogramComponent', () => {
     fixture.whenStable().then(() => {
       const sumOfBarsLabelEl = fixture.debugElement.query(By.css('#sumOfBarsLabel'));
       expect(sumOfBarsLabelEl).not.toBeNull();
-      expect(sumOfBarsLabelEl.nativeElement.innerHTML).toEqual('7 (50.00%)');
+      expect(sumOfBarsLabelEl.nativeElement.textContent.trim()).toEqual('7 (50.00%)');
     });
   }));
 
@@ -128,10 +128,10 @@ describe('HistogramComponent', () => {
 
   it('should set the correct labels to the sliders', () => {
     const sliderLabels = fixture.debugElement.queryAll(By.css('.partitions-text'));
-    const sliderLabelsText = sliderLabels.map((label) => label.nativeElement.innerHTML);
+    const sliderLabelsText = sliderLabels.map((label) => label.nativeElement.textContent.trim());
     expect(sliderLabels.length).toBe(3);
     expect(sliderLabelsText.length).toBe(3);
-    expect(sliderLabelsText).toEqual(jasmine.arrayContaining(['2 (14.29%)', '5 (35.71%)', '7 (50.00%)']));
+    expect(sliderLabelsText).toEqual(['2 (14.29%)', '5 (35.71%)', '7 (50.00%)']);
   });
 
   it('should not render range input fields if less than 10 bins', async(() => {
