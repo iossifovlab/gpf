@@ -1,7 +1,7 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
-import { AutismGeneProfilesComponent } from 'app/autism-gene-profiles/autism-gene-profiles.component';
+import { AutismGeneProfilesTableComponent } from 'app/autism-gene-profiles-table/autism-gene-profiles-table.component';
 import { ConfigService } from 'app/config/config.service';
 // tslint:disable-next-line:import-blacklist
 import { of } from 'rxjs';
@@ -14,7 +14,7 @@ describe('AutismGeneProfilesBlockComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ AutismGeneProfilesBlockComponent, AutismGeneProfilesComponent ],
+      declarations: [ AutismGeneProfilesBlockComponent, AutismGeneProfilesTableComponent ],
       providers: [ConfigService],
       imports: [HttpClientTestingModule, NgbNavModule]
     })

@@ -1,19 +1,17 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { AutismGeneToolConfig } from 'app/autism-gene-profiles/autism-gene-profile';
 import { ConfigService } from 'app/config/config.service';
 import { GeneWeightsService } from 'app/gene-weights/gene-weights.service';
 import { of } from 'rxjs';
+import { AutismGeneProfileSingleViewComponent } from './autism-gene-profile-single-view.component';
 
-import { AutismGeneSingleProfileComponent } from './autism-gene-single-profile.component';
-
-describe('AutismGeneSingleProfileComponent', () => {
-  let component: AutismGeneSingleProfileComponent;
-  let fixture: ComponentFixture<AutismGeneSingleProfileComponent>;
+describe('AutismGeneProfileSingleViewComponent', () => {
+  let component: AutismGeneProfileSingleViewComponent;
+  let fixture: ComponentFixture<AutismGeneProfileSingleViewComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ AutismGeneSingleProfileComponent ],
+      declarations: [ AutismGeneProfileSingleViewComponent ],
       providers: [ConfigService, GeneWeightsService],
       imports: [HttpClientTestingModule]
     })
@@ -21,7 +19,7 @@ describe('AutismGeneSingleProfileComponent', () => {
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(AutismGeneSingleProfileComponent);
+    fixture = TestBed.createComponent(AutismGeneProfileSingleViewComponent);
     component = fixture.componentInstance;
     component.config = {geneSets: ['mockGeneSet']} as any;
     fixture.detectChanges();

@@ -1,17 +1,17 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { AutismGeneToolConfig, AutismGeneToolGene } from 'app/autism-gene-profiles/autism-gene-profile';
+import { AutismGeneToolConfig, AutismGeneToolGene } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { Observable, zip } from 'rxjs';
 import { GeneWeightsService } from '../gene-weights/gene-weights.service';
 import { GeneWeights } from 'app/gene-weights/gene-weights';
-import { AutismGeneProfilesService } from 'app/autism-gene-profiles/autism-gene-profiles.service';
+import { AutismGeneProfilesService } from 'app/autism-gene-profiles-table/autism-gene-profiles.service';
 import { mergeMap } from 'rxjs/operators';
 
 @Component({
-  selector: 'gpf-autism-gene-single-profile',
-  templateUrl: './autism-gene-single-profile.component.html',
-  styleUrls: ['./autism-gene-single-profile.component.css']
+  selector: 'gpf-autism-gene-profile-single-view',
+  templateUrl: './autism-gene-profile-single-view.component.html',
+  styleUrls: ['./autism-gene-profile-single-view.component.css']
 })
-export class AutismGeneSingleProfileComponent implements OnInit {
+export class AutismGeneProfileSingleViewComponent implements OnInit {
   @Input() readonly geneSymbol: string;
   @Input() config: AutismGeneToolConfig;
 

@@ -1,7 +1,7 @@
 import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
-import { AutismGeneToolConfig } from 'app/autism-gene-profiles/autism-gene-profile';
-import { AutismGeneProfilesService } from 'app/autism-gene-profiles/autism-gene-profiles.service';
+import { AutismGeneToolConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import { AutismGeneProfilesService } from 'app/autism-gene-profiles-table/autism-gene-profiles.service';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-block',

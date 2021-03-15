@@ -7,17 +7,17 @@ import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.com
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 // tslint:disable-next-line:import-blacklist
 import { of } from 'rxjs';
-import { AutismGeneToolConfig } from './autism-gene-profile';
+import { AutismGeneToolConfig } from './autism-gene-profile-table';
 
-import { AutismGeneProfilesComponent } from './autism-gene-profiles.component';
+import { AutismGeneProfilesTableComponent } from './autism-gene-profiles-table.component';
 
-describe('AutismGeneProfilesComponent', () => {
-  let component: AutismGeneProfilesComponent;
-  let fixture: ComponentFixture<AutismGeneProfilesComponent>;
+describe('AutismGeneProfilesTableComponent', () => {
+  let component: AutismGeneProfilesTableComponent;
+  let fixture: ComponentFixture<AutismGeneProfilesTableComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ AutismGeneProfilesComponent, MultipleSelectMenuComponent, SortingButtonsComponent],
+      declarations: [ AutismGeneProfilesTableComponent, MultipleSelectMenuComponent, SortingButtonsComponent],
       providers: [ConfigService],
       imports: [Ng2SearchPipeModule, HttpClientTestingModule, FormsModule]
     })
@@ -25,7 +25,7 @@ describe('AutismGeneProfilesComponent', () => {
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(AutismGeneProfilesComponent);
+    fixture = TestBed.createComponent(AutismGeneProfilesTableComponent);
     component = fixture.componentInstance;
     component.config = new AutismGeneToolConfig(
       ['fakeAutismScores'],

@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { ConfigService } from 'app/config/config.service';
 // tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
-import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile';
+import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile-table';
 
 @Injectable({
   providedIn: 'root'

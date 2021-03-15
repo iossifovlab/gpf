@@ -3,7 +3,7 @@
     <li class="nav-tabs" [ngbNavItem]="'autismGenesTool'" [destroyOnHide]="false">
       <a ngbNavLink>Autism genes tool</a>
       <ng-template ngbNavContent>
-        <gpf-autism-gene-profiles [config]="autismGeneToolConfig" (createTabEvent)="createTabEventHandler($event)"></gpf-autism-gene-profiles>
+        <gpf-autism-gene-profiles-table [config]="autismGeneToolConfig" (createTabEvent)="createTabEventHandler($event)"></gpf-autism-gene-profiles-table>
       </ng-template>
     </li>
 
@@ -13,7 +13,7 @@
         <span class="close position-relative pl-2 font-weight-light" (click)="closeTab($event, geneTab)">×</span>
       </a>
       <ng-template ngbNavContent>
-        <gpf-autism-gene-single-profile [config]="autismGeneToolConfig" [geneSymbol]="geneTab"></gpf-autism-gene-single-profile>
+        <gpf-autism-gene-profile-single-view [config]="autismGeneToolConfig" [geneSymbol]="geneTab"></gpf-autism-gene-profile-single-view>
       </ng-template>
     </li>
   </nav>

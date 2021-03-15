@@ -3,17 +3,17 @@ import {
   Input, OnInit, Output, QueryList, Renderer2, ViewChild, ViewChildren
 } from '@angular/core';
 import { Subject } from 'rxjs';
-import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile';
+import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile-table';
 import { AutismGeneProfilesService } from './autism-gene-profiles.service';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 
 @Component({
-  selector: 'gpf-autism-gene-profiles',
-  templateUrl: './autism-gene-profiles.component.html',
-  styleUrls: ['./autism-gene-profiles.component.css'],
+  selector: 'gpf-autism-gene-profiles-table',
+  templateUrl: './autism-gene-profiles-table.component.html',
+  styleUrls: ['./autism-gene-profiles-table.component.css'],
 })
-export class AutismGeneProfilesComponent implements OnInit, AfterViewInit {
+export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
   @Input() config: AutismGeneToolConfig;
   @Output() createTabEvent = new EventEmitter();
   @ViewChildren(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu[];
