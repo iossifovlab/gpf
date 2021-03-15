@@ -14,7 +14,7 @@ import { StateRestoreService } from 'app/store/state-restore.service';
 import { ConfigService } from 'app/config/config.service';
 
 @Component({
-  selector: 'gpf-gene-browser-component',
+  selector: 'gpf-gene-browser',
   templateUrl: './gene-browser.component.html',
   styleUrls: ['./gene-browser.component.css'],
   providers: [{
