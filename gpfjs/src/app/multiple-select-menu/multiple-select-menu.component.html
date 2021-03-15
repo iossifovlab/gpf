@@ -1,6 +1,6 @@
 <div style="padding: 10px; min-width: 400px; display: grid;">
   <div style="width: 100%; padding-bottom: 5px">
-    <button type="button" class="btn btn-default" style="float: left; position: relative; width: 30%; margin-right: 2%;" (click)="toggleCheckingAll()">{{checkUncheckAllButtonName}}</button>
+    <button id="check-uncheck-all-button" type="button" class="btn btn-default" style="float: left; position: relative; width: 30%; margin-right: 2%;" (click)="toggleCheckingAll()">{{checkUncheckAllButtonName}}</button>
     <input #searchInput class="form-control" type="text" style="width: 68%;" name="search" [(ngModel)]="searchText" autocomplete="off" placeholder="Search...">
   </div>
 
