@@ -65,9 +65,10 @@ class GeneSetsView(QueryBaseView):
         if gene_sets_collection_id == "denovo":
             if not self.gpf_instance.has_denovo_gene_sets():
                 return Response(status=status.HTTP_404_NOT_FOUND)
-            gene_sets = self.gpf_instance.get_all_denovo_gene_sets(
-                gene_sets_types, self.get_permitted_datasets(request.user)
-            )
+            # gene_sets = self.gpf_instance.get_all_denovo_gene_sets(
+                # gene_sets_types, self.get_permitted_datasets(request.user)
+            # )
+            gene_sets = []
         else:
             if not self.gpf_instance.has_gene_set_collection(
                 gene_sets_collection_id
