@@ -25,6 +25,10 @@ describe('AutismGeneProfilesBlockComponent', () => {
     fixture = TestBed.createComponent(AutismGeneProfilesBlockComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+    component.nav = {
+      select(id: any) {},
+      activeId: '',
+    } as any;
   });
 
   it('should listen for key press events', () => {
