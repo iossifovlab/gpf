@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { environment } from '../environments/environment';
-import { AutismGeneProfilesService } from './autism-gene-profiles-table/autism-gene-profiles.service';
+import { AutismGeneProfilesService } from './autism-gene-profiles-block/autism-gene-profiles.service';
 
 @Component({
   selector: 'gpf-root',

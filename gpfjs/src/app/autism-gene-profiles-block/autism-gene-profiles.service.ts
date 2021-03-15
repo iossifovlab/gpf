@@ -1,9 +1,9 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { AutismGeneToolConfig, AutismGeneToolGene } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { ConfigService } from 'app/config/config.service';
 // tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
-import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile-table';
 
 @Injectable({
   providedIn: 'root'

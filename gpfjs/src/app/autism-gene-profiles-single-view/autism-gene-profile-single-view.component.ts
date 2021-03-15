@@ -3,7 +3,7 @@ import { AutismGeneToolConfig, AutismGeneToolGene } from 'app/autism-gene-profil
 import { Observable, zip } from 'rxjs';
 import { GeneWeightsService } from '../gene-weights/gene-weights.service';
 import { GeneWeights } from 'app/gene-weights/gene-weights';
-import { AutismGeneProfilesService } from 'app/autism-gene-profiles-table/autism-gene-profiles.service';
+import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { mergeMap } from 'rxjs/operators';
 
 @Component({

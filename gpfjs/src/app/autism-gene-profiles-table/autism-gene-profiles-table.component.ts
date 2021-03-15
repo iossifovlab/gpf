@@ -4,7 +4,7 @@ import {
 } from '@angular/core';
 import { Subject } from 'rxjs';
 import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile-table';
-import { AutismGeneProfilesService } from './autism-gene-profiles.service';
+import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 
