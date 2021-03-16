@@ -77,7 +77,7 @@ class RemoteGeneSetsDb(GeneSetsDb):
         for gsc in self.gene_set_collections.values():
             gene_sets_collections_desc.append(
                 {
-                    "desc": gsc.collection_desc,
+                    "desc": gsc.collection_description,
                     "name": gsc.collection_id,
                     "format": gsc.collection_format,
                     "types": [],
