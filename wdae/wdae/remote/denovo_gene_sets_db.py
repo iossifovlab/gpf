@@ -79,16 +79,13 @@ class RemoteDenovoGeneSetsDb:
             self._local_dgsdb.get_gene_set_descriptions(permitted_datasets)
         ]
         for collection in self.remote_denovo_gene_set_collections.values():
-            if (
-                permitted_datasets is None
-                or collection.collection_id in permitted_datasets
-            ):
-                result.append({
-                    "desc": collection.collection_description,
-                    "name": collection.collection_id,
-                    "format": collection.collection_format,
-                    "types": collection.collection_types,
-                })
+            # TODO Implement permitted datasets
+            result.append({
+                "desc": collection.collection_description,
+                "name": collection.collection_id,
+                "format": collection.collection_format,
+                "types": collection.collection_types,
+            })
         return result
 
     def get_gene_set(
