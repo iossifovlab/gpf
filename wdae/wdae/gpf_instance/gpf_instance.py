@@ -11,6 +11,7 @@ from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper
 
 from remote.rest_api_client import RESTClient, RESTClientRequestError
 from remote.gene_sets_db import RemoteGeneSetsDb
+from remote.denovo_gene_sets_db import RemoteDenovoGeneSetsDb
 
 from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.event_counters import CounterBase
@@ -68,12 +69,12 @@ class WGPFInstance(GPFInstance):
         return RemoteGeneSetsDb(
             self._remote_clients, gene_sets_db)
 
-    # @property  # type: ignore
-    # @cached
-    # def denovo_gene_sets_db(self):
-        # denovo_gene_sets_db = super().denovo_gene_sets_db
-        # return RemoteDenovoGeneSetsDb(
-            # self._remote_clients, self, denovo_gene_sets_db)
+    @property  # type: ignore
+    @cached
+    def denovo_gene_sets_db(self):
+        denovo_gene_sets_db = super().denovo_gene_sets_db
+        return RemoteDenovoGeneSetsDb(
+            self._remote_clients, self, denovo_gene_sets_db)
 
     def _fetch_remote_studies(self, rest_client):
         studies = rest_client.get_datasets()

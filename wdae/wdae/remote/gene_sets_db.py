@@ -61,6 +61,8 @@ class RemoteGeneSetsDb(GeneSetsDb):
         for remote_client in self.remote_clients:
             for collection in remote_client.get_gene_set_collections():
                 gsc_id = collection["name"]
+                if gsc_id == "denovo":
+                    continue
                 gsc_desc = collection["desc"]
                 gsc_fmt = collection["format"]
                 gsc = RemoteGeneSetCollection(

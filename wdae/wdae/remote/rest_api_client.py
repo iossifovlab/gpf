@@ -383,3 +383,38 @@ class RESTClient:
             return None
 
         return response.content.decode()
+
+    def has_denovo_gene_sets(self):
+        response = self._get("gene_sets/has_denovo")
+        if response.status_code != 204:
+            return False
+        return True
+
+    def get_denovo_gene_sets(self, gene_set_types):
+        response = self._post(
+            "gene_sets/gene_sets",
+            data={
+                "geneSetsCollection": "denovo",
+                "geneSetsTypes": gene_set_types
+            }
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_denovo_gene_set(self, gene_set_id, gene_set_types):
+        response = self._post(
+            "gene_sets/gene_set_download",
+            data={
+                "geneSetsCollection": "denovo",
+                "geneSet": gene_set_id,
+                "geneSetsTypes": gene_set_types
+            }
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
