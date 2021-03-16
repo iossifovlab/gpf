@@ -28,7 +28,6 @@ PEDIGREE_COLUMN_NAMES = {
     "generated": "generated",
     "proband": "proband",
     "not_sequenced": "not_sequenced",
-    "missing": "missing",
 }
 
 
@@ -100,12 +99,12 @@ class Person(object):
             (self, self._attributes)
         if self._attributes.get("not_sequenced"):
             value = self._attributes.get("not_sequenced")
-            if value == "None":
+            if value == "None" or value == "0" or value == "False":
                 self._attributes["not_sequenced"] = None
-        if self._attributes.get("missing"):
-            value = self._attributes.get("missing")
-            if value == "None":
-                self._attributes["missing"] = None
+        if self._attributes.get("generated"):
+            value = self._attributes.get("generated")
+            if value == "None" or value == "0" or value == "False":
+                self._attributes["generated"] = None
 
     def __repr__(self):
         decorator = ""
@@ -138,12 +137,13 @@ class Person(object):
 
     @property
     def not_sequenced(self):
-        return self._attributes.get("not_sequenced", None) or \
-            self._attributes.get("generated", None)
+        return self.generated or \
+            self._attributes.get("not_sequenced", None)
 
     @property
     def missing(self):
-        return self.generated or self.not_sequenced
+        return self.generated or self.not_sequenced or\
+            self._attributes.get("missing", False)
 
     @property
     def family_bin(self):
@@ -234,7 +234,7 @@ class Family(object):
             member.family = self
             member.mom = self.get_member(member.mom_id, None)
             member.dad = self.get_member(member.dad_id, None)
-            if member.generated or member.not_sequenced:
+            if member.missing:
                 member.index = -1
             else:
                 member.index = index
@@ -553,9 +553,12 @@ class FamiliesData(Mapping):
                     rec = copy.deepcopy(person._attributes)
                     rec["mom_id"] = person.mom_id if person.mom_id else "0"
                     rec["dad_id"] = person.dad_id if person.dad_id else "0"
+                    rec["generated"] = person.generated \
+                        if person.generated else False
+                    rec["not_sequenced"] = person.not_sequenced \
+                        if person.not_sequenced else False
                     column_names = column_names.union(set(rec.keys()))
                     records.append(rec)
-
             columns = [
                 col
                 for col in PEDIGREE_COLUMN_NAMES.values()
@@ -570,6 +573,9 @@ class FamiliesData(Mapping):
             self._ped_df = ped_df
 
         return self._ped_df
+
+    def copy(self):
+        return FamiliesData.from_pedigree_df(self.ped_df)
 
     def __getitem__(self, family_id):
         return self._families[family_id]

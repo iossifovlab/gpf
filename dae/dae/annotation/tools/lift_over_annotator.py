@@ -51,18 +51,23 @@ class LiftOverAnnotator(VariantAnnotatorBase):
         assert isinstance(variant, SummaryAllele)
         if VariantType.is_cnv(variant.variant_type):
             return
-        lo_variant = liftover_variant(
-            variant.chrom, variant.position,
-            variant.reference, variant.alternative,
-            self.liftover, self.target_genome)
+        try:
+            lo_variant = liftover_variant(
+                variant.chrom, variant.position,
+                variant.reference, variant.alternative,
+                self.liftover, self.target_genome)
 
-        if lo_variant is None:
-            return
+            if lo_variant is None:
+                return
 
-        lo_chrom, lo_pos, lo_ref, lo_alt = lo_variant
-        result = SummaryAllele(lo_chrom, lo_pos, lo_ref, lo_alt)
+            lo_chrom, lo_pos, lo_ref, lo_alt = lo_variant
+            result = SummaryAllele(lo_chrom, lo_pos, lo_ref, lo_alt)
+            result.variant_type
 
-        return result
+            return result
+        except Exception as ex:
+            logger.warning(f"problem in variant liftover: {variant}")
+            logger.exception(ex)
 
     def do_annotate(self, _, variant, liftover_variants):
         assert self.liftover_id not in liftover_variants, \
