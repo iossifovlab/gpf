@@ -27,7 +27,7 @@ class GeneSetsCollectionsView(QueryBaseView):
             )
         )
 
-        gene_sets_collections[1:1] = [denovo_gene_sets]
+        gene_sets_collections[1:1] = denovo_gene_sets
         return Response(gene_sets_collections, status=status.HTTP_200_OK)
 
 
