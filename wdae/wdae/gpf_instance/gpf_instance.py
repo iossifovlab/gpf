@@ -74,7 +74,7 @@ class WGPFInstance(GPFInstance):
     def denovo_gene_sets_db(self):
         denovo_gene_sets_db = super().denovo_gene_sets_db
         return RemoteDenovoGeneSetsDb(
-            self._remote_clients, self, denovo_gene_sets_db)
+            self._remote_clients, denovo_gene_sets_db)
 
     def _fetch_remote_studies(self, rest_client):
         studies = rest_client.get_datasets()
