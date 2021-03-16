@@ -655,8 +655,8 @@ class VariantsGenotypesLoader(VariantsLoader):
                 family_variant.gt, family_variant.allele_count
             )
             male_ids = [
-                person_id
-                for person_id, person in family_variant.family.persons.items()
+                person.person_id
+                for person in family_variant.family.members_in_order
                 if person.sex == Sex.M
             ]
             male_indices = family_variant.family.members_index(male_ids)
