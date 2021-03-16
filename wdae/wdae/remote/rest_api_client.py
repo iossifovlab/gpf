@@ -114,8 +114,11 @@ class RESTClient:
                     yield o
                 del objects[:]
 
-    def prefix_remote_identifier(self, dataset_id):
-        return f"{self.remote_id}_{dataset_id}"
+    def prefix_remote_identifier(self, value):
+        return f"{self.remote_id}_{value}"
+
+    def prefix_remote_name(self, value):
+        return f"({self.remote_id}) {value}"
 
     def get_datasets(self):
         response = self._get("datasets")

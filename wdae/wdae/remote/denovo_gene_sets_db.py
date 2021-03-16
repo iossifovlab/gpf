@@ -18,7 +18,9 @@ class RemoteDenovoGeneSetsCollection:
             rest_client.get_gene_set_collections()
         ))
         self.collection_id = rest_client.prefix_remote_identifier("denovo")
-        self.collection_description = self.denovo_collection["desc"]
+        self.collection_description = rest_client.prefix_remote_name(
+            self.denovo_collection["desc"]
+        )
         self.collection_format = self.denovo_collection["format"]
         self.collection_types = self.denovo_collection["types"]
         # for collection_type in self.collection_types:

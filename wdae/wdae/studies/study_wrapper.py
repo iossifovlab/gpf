@@ -565,7 +565,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
         config = self.rest_client.get_dataset_config(self._remote_study_id)
         config["id"] = self.rest_client.prefix_remote_identifier(study_id)
-        config["name"] = f"({rest_client.remote_id}) {config['name']}"
+        config["name"] = self.rest_client.prefix_remote_name(config["name"])
         del config["access_rights"]
         del config["groups"]
         if config["parents"]:

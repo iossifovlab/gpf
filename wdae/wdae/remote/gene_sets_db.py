@@ -23,7 +23,7 @@ class RemoteGeneSetCollection(GeneSetCollection):
         collection_id = self.rest_client.prefix_remote_identifier(
             collection_id
         )
-        self.collection_description = desc
+        self.collection_description = self.rest_client.prefix_remote_name(desc)
         self.collection_format = fmt
         super().__init__(collection_id, list())
 
