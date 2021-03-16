@@ -93,13 +93,13 @@ class GeneSetsView(QueryBaseView):
 
         response = [
             {
-                "count": gs.count,
-                "name": gs.name,
-                "desc": gs.desc,
+                "count": gs["count"],
+                "name": gs["name"],
+                "desc": gs["desc"],
                 "download": self._build_download_url(
                     {
                         "geneSetsCollection": gene_sets_collection_id,
-                        "geneSet": gs.name,
+                        "geneSet": gs["name"],
                         "geneSetsTypes": gene_sets_types,
                     }
                 ),

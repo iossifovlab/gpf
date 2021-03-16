@@ -22,6 +22,18 @@ class GeneSet:
         self.count = len(syms)
         self.syms = syms
 
+    def __getitem__(self, name):
+        if name == "name":
+            return self.name
+        elif name == "desc":
+            return self.desc
+        elif name == "count":
+            return self.count
+        elif name == "syms":
+            return self.syms
+        else:
+            raise KeyError()
+
 
 class GeneSetCollection(object):
     collection_id: str
