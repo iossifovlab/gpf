@@ -23,7 +23,7 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
   constructor() { }
 
   ngOnChanges(): void {
-    this.checkboxDataArray = cloneDeep(this.checkboxDataArraySavedState);
+    this.applySavedState();
     this.searchText = '';
 
     if (this.focusInput) {
@@ -33,7 +33,7 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.checkboxDataArraySavedState = this.toCheckboxDataArray(this.allItems);
-    this.checkboxDataArray = cloneDeep(this.checkboxDataArraySavedState);
+    this.applySavedState();
 
     if (this.areAllUnchecked(this.checkboxDataArraySavedState)) {
       this.checkUncheckAllButtonName = 'Check all';
@@ -44,6 +44,14 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
     return allItems.map(
       item => ({id: item, isChecked: this.selectedItems.includes(item)})
     );
+  }
+
+  applySavedState() {
+    this.checkboxDataArray = cloneDeep(this.checkboxDataArraySavedState);
+  }
+
+  updateSavedState() {
+    this.checkboxDataArraySavedState = cloneDeep(this.checkboxDataArray);
   }
 
   areAllUnchecked(checkboxDataArray): boolean {
@@ -65,7 +73,7 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
   }
 
   apply() {
-    this.checkboxDataArraySavedState = cloneDeep(this.checkboxDataArray);
+    this.updateSavedState();
 
     this.applyEvent.emit({
       id: this.id,
