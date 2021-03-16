@@ -7,8 +7,12 @@ from remote.rest_api_client import RESTClient
 class RemoteGeneSetCollection(GeneSetCollection):
     rest_client: RESTClient
     remote_gene_sets: List[str]
+    collection_description: str
+    collection_format: str
 
-    def __init__(self, collection_id: str, rest_client: RESTClient):
+    def __init__(
+        self, collection_id: str, rest_client: RESTClient, desc: str, fmt: str
+    ):
         self.rest_client = rest_client
         self._remote_collection_id = collection_id
         self.remote_gene_sets = [
@@ -19,6 +23,8 @@ class RemoteGeneSetCollection(GeneSetCollection):
         collection_id = self.rest_client.prefix_remote_identifier(
             collection_id
         )
+        self.collection_description = desc
+        self.collection_format = fmt
         super().__init__(collection_id, list())
 
     def get_gene_set(self, gene_set_id: str) -> Optional[GeneSet]:
@@ -55,13 +61,29 @@ class RemoteGeneSetsDb(GeneSetsDb):
         for remote_client in self.remote_clients:
             for collection in remote_client.get_gene_set_collections():
                 gsc_id = collection["name"]
-                gsc = RemoteGeneSetCollection(gsc_id, remote_client)
+                gsc_desc = collection["desc"]
+                gsc_fmt = collection["format"]
+                gsc = RemoteGeneSetCollection(
+                    gsc_id, remote_client, gsc_desc, gsc_fmt
+                )
                 gsc_id = gsc.collection_id
                 self.gene_set_collections[gsc_id] = gsc
 
     @property  # type: ignore
     def collections_descriptions(self):
-        return self._local_gsdb.collections_descriptions
+        gene_sets_collections_desc = list(
+            self._local_gsdb.collections_descriptions
+        )
+        for gsc in self.gene_set_collections.values():
+            gene_sets_collections_desc.append(
+                {
+                    "desc": gsc.collection_desc,
+                    "name": gsc.collection_id,
+                    "format": gsc.collection_format,
+                    "types": [],
+                }
+            )
+        return gene_sets_collections_desc
 
     def has_gene_set_collection(self, gsc_id: str) -> bool:
         return self._local_gsdb.has_gene_set_collection(gsc_id) \
