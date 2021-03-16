@@ -1,4 +1,5 @@
 import { Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
+import {cloneDeep} from 'lodash';
 
 @Component({
   selector: 'gpf-multiple-select-menu',
@@ -17,18 +18,24 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
   checkUncheckAllButtonName = 'Uncheck all';
   searchText: String;
   checkboxDataArray: {id: string; isChecked: boolean}[];
+  checkboxDataArraySavedState: {id: string; isChecked: boolean}[];
 
   constructor() { }
 
   ngOnChanges(): void {
+    this.checkboxDataArray = cloneDeep(this.checkboxDataArraySavedState);
+    this.searchText = '';
+
     if (this.focusInput) {
       this.focusSearchInput();
     }
   }
 
   ngOnInit(): void {
-    this.checkboxDataArray = this.toCheckboxDataArray(this.allItems);
-    if (this.areAllUnchecked(this.checkboxDataArray)) {
+    this.checkboxDataArraySavedState = this.toCheckboxDataArray(this.allItems);
+    this.checkboxDataArray = cloneDeep(this.checkboxDataArraySavedState);
+
+    if (this.areAllUnchecked(this.checkboxDataArraySavedState)) {
       this.checkUncheckAllButtonName = 'Check all';
     }
   }
@@ -58,6 +65,8 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
   }
 
   apply() {
+    this.checkboxDataArraySavedState = cloneDeep(this.checkboxDataArray);
+
     this.applyEvent.emit({
       id: this.id,
       data: this.checkboxDataArray.filter(item => item.isChecked).map(item => item.id)
