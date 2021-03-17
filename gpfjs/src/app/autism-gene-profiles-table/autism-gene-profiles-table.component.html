@@ -104,20 +104,25 @@
   </table>
 </div>
 
+<!-- Added ngbDropdownToggle buttons with display: none because bootstrap crashes on escape without an ngbDropdownToggle
+Described in GPF-546 -->
 <div *ngIf="config" style="position: sticky;" [style.bottom.px]="modalBottom">
   <span #dropdownSpan id="gene-sets-span" ngbDropdown (openChange)="focusGeneSetsInput = $event;">
-    <gpf-multiple-select-menu ngbDropdownMenu id="gene-sets-dropdown" [focusInput]="focusGeneSetsInput" [id]="'geneSets'" [allItems]="config.geneSets" [selectedItems]="shownGeneSets" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
+    <button ngbDropdownToggle style="display: none;"></button>
+    <gpf-multiple-select-menu ngbDropdownMenu ngbDropdownToggle id="gene-sets-dropdown" [focusInput]="focusGeneSetsInput" [id]="'geneSets'" [allItems]="config.geneSets" [selectedItems]="shownGeneSets" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
   </span>
 </div>
 
 <div *ngIf="config" style="position: sticky;" [style.bottom.px]="modalBottom">
   <span #dropdownSpan id="autism-scores-span" ngbDropdown (openChange)="focusAutismScoresInput = $event;">
+    <button ngbDropdownToggle style="display: none;"></button>
     <gpf-multiple-select-menu ngbDropdownMenu id="autism-scores-dropdown" [focusInput]="focusAutismScoresInput" [id]="'autismScores'" [allItems]="config.autismScores" [selectedItems]="shownAutismScores" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
   </span>
 </div>
 
 <div *ngIf="config" style="position: sticky;" [style.bottom.px]="modalBottom">
   <span #dropdownSpan id="protection-scores-span" ngbDropdown (openChange)="focusProtectionScoresInput = $event;">
+    <button ngbDropdownToggle style="display: none;"></button>
     <gpf-multiple-select-menu ngbDropdownMenu id="protection-scores-dropdown" [focusInput]="focusProtectionScoresInput" [id]="'protectionScores'" [allItems]="config.protectionScores" [selectedItems]="shownProtectionScores" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
   </span>
 </div>
