@@ -109,7 +109,7 @@ Described in GPF-546 -->
 <div *ngIf="config" style="position: sticky;" [style.bottom.px]="modalBottom">
   <span #dropdownSpan id="gene-sets-span" ngbDropdown (openChange)="focusGeneSetsInput = $event;">
     <button ngbDropdownToggle style="display: none;"></button>
-    <gpf-multiple-select-menu ngbDropdownMenu ngbDropdownToggle id="gene-sets-dropdown" [focusInput]="focusGeneSetsInput" [id]="'geneSets'" [allItems]="config.geneSets" [selectedItems]="shownGeneSets" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
+    <gpf-multiple-select-menu ngbDropdownMenu id="gene-sets-dropdown" [focusInput]="focusGeneSetsInput" [id]="'geneSets'" [allItems]="config.geneSets" [selectedItems]="shownGeneSets" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
   </span>
 </div>
 
