@@ -150,11 +150,11 @@ pipeline {
                 ${WORKSPACE}/scripts/clean_up_docker.sh
             '''
 
-            junit 'test_results/wdae-junit.xml, test_results/dae-junit.xml'
+            // junit 'test_results/wdae-junit.xml, test_results/dae-junit.xml'
 
-            step([
-                $class: 'CoberturaPublisher',
-                coberturaReportFile: 'test_results/coverage.xml'])
+            // step([
+            //     $class: 'CoberturaPublisher',
+            //     coberturaReportFile: 'test_results/coverage.xml'])
 
             zulipNotification(
                 topic: "${env.JOB_NAME}"
