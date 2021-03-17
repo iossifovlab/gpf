@@ -77,41 +77,41 @@ pipeline {
             }
         }
 
-        stage('Data') {
-            steps {
-                sh '''
-                    rm -f builds/*
-                '''
-                script {
-                    println "DATA_HG19_BRANCH=" + DATA_HG19_BRANCH
+        // stage('Data') {
+        //     steps {
+        //         sh '''
+        //             rm -f builds/*
+        //         '''
+        //         script {
+        //             println "DATA_HG19_BRANCH=" + DATA_HG19_BRANCH
 
-                    copyArtifacts(
-                        projectName: 'seqpipe/data-hg19-startup/' + DATA_HG19_BRANCH,
-                        selector: lastSuccessful()
-                    );
-                }
-                sh '''
-                    tar zxf builds/data-hg19-startup-*.tar.gz -C $WD
+        //             copyArtifacts(
+        //                 projectName: 'seqpipe/data-hg19-startup/' + DATA_HG19_BRANCH,
+        //                 selector: lastSuccessful()
+        //             );
+        //         }
+        //         sh '''
+        //             tar zxf builds/data-hg19-startup-*.tar.gz -C $WD
                     
-                    mkdir -p $WD/data-hg19-startup/wdae
+        //             mkdir -p $WD/data-hg19-startup/wdae
 
-                    sed -i "s/localhost/impala/" $WD/data-hg19-startup/DAE.conf
-                    docker run -d --rm \
-                        -v ${WD}:/code \
-                        busybox:latest \
-                        /bin/sh -c "sed -i \"s/localhost/impala/\" /code/dae_conftests/dae_conftests/tests/fixtures/DAE.conf"
-                '''
-            }
-        }
+        //             sed -i "s/localhost/impala/" $WD/data-hg19-startup/DAE.conf
+        //             docker run -d --rm \
+        //                 -v ${WD}:/code \
+        //                 busybox:latest \
+        //                 /bin/sh -c "sed -i \"s/localhost/impala/\" /code/dae_conftests/dae_conftests/tests/fixtures/DAE.conf"
+        //         '''
+        //     }
+        // }
 
-        stage('Start federation remote instance') {
-            steps {
-                sh '''
-                    ${WD}/scripts/setup_remote_gpf_container.sh
-                    ${WD}/scripts/run_remote_gpf_container.sh
-                '''
-            }
-        }
+        // stage('Start federation remote instance') {
+        //     steps {
+        //         sh '''
+        //             ${WD}/scripts/setup_remote_gpf_container.sh
+        //             ${WD}/scripts/run_remote_gpf_container.sh
+        //         '''
+        //     }
+        // }
 
         stage('Lint') {
             steps {
@@ -136,13 +136,13 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            steps {
-                sh '''
-                    ${WD}/run_tests.sh
-                '''
-            }
-        }
+        // stage('Test') {
+        //     steps {
+        //         sh '''
+        //             ${WD}/run_tests.sh
+        //         '''
+        //     }
+        // }
     }
     post {
         always {
@@ -162,7 +162,13 @@ pipeline {
 
         }
         success {
+            sh '''
+                ${WORKSPACE}/scripts/package.sh
+            '''
+
     	    archiveArtifacts artifacts: 'mypy_report.tar.gz'
+            
+            archiveArtifacts artifacts: 'builds/*.tar.gz'
 
             script {
                 def job_result = build job: 'seqpipe/seqpipe-gpf-containers/master', propagate: true, wait: false, parameters: [
