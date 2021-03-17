@@ -53,7 +53,12 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
       this.updateGenes();
     }
 
-    this.modalBottom = this.calculateModalBottom();
+    this.updateModalBottom();
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize() {
+    this.updateModalBottom();
   }
 
   constructor(
@@ -83,13 +88,17 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     this.focusGeneSearch();
 
     this.columnFilteringButtons.changes.take(1).subscribe(() => {
-      this.modalBottom = this.calculateModalBottom();
+      this.updateModalBottom();
       this.cdr.detectChanges();
     });
   }
 
+  updateModalBottom() {
+    this.modalBottom = this.calculateModalBottom();
+  }
+
   calculateModalBottom(): number {
-    return  window.innerHeight - this.columnFilteringButtons.first.nativeElement.getBoundingClientRect().bottom;
+    return window.innerHeight - this.columnFilteringButtons.first.nativeElement.getBoundingClientRect().bottom;
   }
 
   calculateDatasetColspan(datasetConfig) {
@@ -177,7 +186,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
       this.sortingButtonsComponents.find(
         sortingButtonsComponent => sortingButtonsComponent.id === this.currentSortingColumnId
       ).resetHideState();
-    } 
+    }
     this.currentSortingColumnId = sortBy;
   }
 
