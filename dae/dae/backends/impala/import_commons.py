@@ -189,10 +189,6 @@ class MakefilePartitionHelper:
         targets = defaultdict(list)
         for target_chrom in generated_target_chromosomes:
             if target_chrom not in self.chromosome_lengths:
-                # print(
-                #     f"WARNING: contig {target_chrom} not found in specified "
-                #     f"genome",
-                #     file=sys.stderr)
                 continue
 
             assert target_chrom in self.chromosome_lengths, (
@@ -1198,7 +1194,7 @@ class Variants2ParquetTool:
 
         elif argv.regions is not None:
             regions = argv.regions
-            print("resetting regions (region):", regions)
+            logger.info(f"resetting regions (region): {regions}")
             variants_loader.reset_regions(regions)
 
         variants_loader = cls._build_variants_loader_pipeline(

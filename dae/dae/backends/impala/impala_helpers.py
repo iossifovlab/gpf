@@ -1,6 +1,5 @@
 import os
 import re
-import sys
 import itertools
 import logging
 
@@ -19,7 +18,7 @@ class ImpalaHelpers(object):
 
         if os.environ.get("DAE_IMPALA_HOST", None) is not None:
             impala_host = os.environ.get("DAE_IMPALA_HOST", None)
-            print("impala host overwritten:", impala_host)
+            logger.info(f"impala host overwritten: {impala_host}")
             if impala_host is not None:
                 impala_hosts = [impala_host]
         if impala_hosts is None:
@@ -31,9 +30,8 @@ class ImpalaHelpers(object):
             impala_host = next(host_generator)
             return dbapi.connect(host=impala_host, port=impala_port)
 
-        print(
-            f"Creating impala pool with {pool_size} connections",
-            file=sys.stderr)
+        logger.info(
+            f"Creating impala pool with {pool_size} connections")
 
         self._connection_pool = QueuePool(
             getconn, pool_size=pool_size, reset_on_return=False)
@@ -238,7 +236,7 @@ class ImpalaHelpers(object):
                     variants_sample=variants_sample,
                     variants_schema=variants_schema)
                 # statement = " ".join(statement)
-                print(statement)
+                logger.info(f"going to execute: {statement}")
                 cursor.execute(statement)
 
                 if partition_description.has_partitions():
@@ -310,7 +308,7 @@ class ImpalaHelpers(object):
                     f"DROP TABLE IF EXISTS {db}.{new_table}"
                 )
 
-                print(create_statement)
+                logger.info(f"going to execute {create_statement}")
                 cursor.execute(create_statement)
 
                 if "PARTITIONED" in create_statement:
@@ -326,7 +324,7 @@ class ImpalaHelpers(object):
             f"ALTER TABLE {db}.{table} RENAME TO {db}.{new_table}"
         ]
         statement = " ".join(statement)
-        print(statement)
+        logger.info(f"going to execute {statement}")
 
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
