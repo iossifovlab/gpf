@@ -77,41 +77,41 @@ pipeline {
             }
         }
 
-        // stage('Data') {
-        //     steps {
-        //         sh '''
-        //             rm -f builds/*
-        //         '''
-        //         script {
-        //             println "DATA_HG19_BRANCH=" + DATA_HG19_BRANCH
+        stage('Data') {
+            steps {
+                sh '''
+                    rm -f builds/*
+                '''
+                script {
+                    println "DATA_HG19_BRANCH=" + DATA_HG19_BRANCH
 
-        //             copyArtifacts(
-        //                 projectName: 'seqpipe/data-hg19-startup/' + DATA_HG19_BRANCH,
-        //                 selector: lastSuccessful()
-        //             );
-        //         }
-        //         sh '''
-        //             tar zxf builds/data-hg19-startup-*.tar.gz -C $WD
+                    copyArtifacts(
+                        projectName: 'seqpipe/data-hg19-startup/' + DATA_HG19_BRANCH,
+                        selector: lastSuccessful()
+                    );
+                }
+                sh '''
+                    tar zxf builds/data-hg19-startup-*.tar.gz -C $WD
                     
-        //             mkdir -p $WD/data-hg19-startup/wdae
+                    mkdir -p $WD/data-hg19-startup/wdae
 
-        //             sed -i "s/localhost/impala/" $WD/data-hg19-startup/DAE.conf
-        //             docker run -d --rm \
-        //                 -v ${WD}:/code \
-        //                 busybox:latest \
-        //                 /bin/sh -c "sed -i \"s/localhost/impala/\" /code/dae_conftests/dae_conftests/tests/fixtures/DAE.conf"
-        //         '''
-        //     }
-        // }
+                    sed -i "s/localhost/impala/" $WD/data-hg19-startup/DAE.conf
+                    docker run -d --rm \
+                        -v ${WD}:/code \
+                        busybox:latest \
+                        /bin/sh -c "sed -i \"s/localhost/impala/\" /code/dae_conftests/dae_conftests/tests/fixtures/DAE.conf"
+                '''
+            }
+        }
 
-        // stage('Start federation remote instance') {
-        //     steps {
-        //         sh '''
-        //             ${WD}/scripts/setup_remote_gpf_container.sh
-        //             ${WD}/scripts/run_remote_gpf_container.sh
-        //         '''
-        //     }
-        // }
+        stage('Start federation remote instance') {
+            steps {
+                sh '''
+                    ${WD}/scripts/setup_remote_gpf_container.sh
+                    ${WD}/scripts/run_remote_gpf_container.sh
+                '''
+            }
+        }
 
         stage('Lint') {
             steps {
@@ -136,13 +136,13 @@ pipeline {
             }
         }
 
-        // stage('Test') {
-        //     steps {
-        //         sh '''
-        //             ${WD}/run_tests.sh
-        //         '''
-        //     }
-        // }
+        stage('Test') {
+            steps {
+                sh '''
+                    ${WD}/run_tests.sh
+                '''
+            }
+        }
     }
     post {
         always {
@@ -150,11 +150,11 @@ pipeline {
                 ${WORKSPACE}/scripts/clean_up_docker.sh
             '''
 
-            // junit 'test_results/wdae-junit.xml, test_results/dae-junit.xml'
+            junit 'test_results/wdae-junit.xml, test_results/dae-junit.xml'
 
-            // step([
-            //     $class: 'CoberturaPublisher',
-            //     coberturaReportFile: 'test_results/coverage.xml'])
+            step([
+                $class: 'CoberturaPublisher',
+                coberturaReportFile: 'test_results/coverage.xml'])
 
             zulipNotification(
                 topic: "${env.JOB_NAME}"
