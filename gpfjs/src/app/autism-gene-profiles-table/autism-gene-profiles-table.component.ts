@@ -198,7 +198,10 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
 
   calculateModalLeftPosition(columnFilteringButton: HTMLElement): string {
     const modalWidth = 400;
-    return ((columnFilteringButton.getBoundingClientRect().right - modalWidth) - (document.body.getBoundingClientRect().left)) + 'px';
+    const leftCap = 30;
+    const modalLeft = (columnFilteringButton.getBoundingClientRect().right - modalWidth) - (document.body.getBoundingClientRect().left);
+
+    return (modalLeft >= leftCap ? modalLeft : leftCap) + 'px';
   }
 
   calculateColumnSize(columnsCount: number): string {
