@@ -282,7 +282,8 @@ def test_denovo_gene_sets_remote(db, admin_client):
     assert response.status_code == status.HTTP_200_OK
     print(response.data)
     assert len(response.data) == 16
-    assert response.data[0]["count"] == 363
+    lgds = list(filter(lambda x: x["name"] == "LGDs", response.data))[0]
+    assert lgds["count"] == 363
 
 
 def test_denovo_gene_sets_remote_download(db, admin_client):
