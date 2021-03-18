@@ -25,6 +25,15 @@ else
         -o comp_pheno \
         --regression ${PHENO_DIR}/comp_pheno_regressions.conf
     sed -i '5i\\nphenotype_data="comp_pheno"' /data/studies/iossifov_2014/iossifov_2014.conf
+    echo "Done"
+fi
+
+if [ -f "/data/studies/iossifov_2014/denovo_cache_status.json" ]; then
+    echo "Denovo gene sets found"
+else
+    echo "Denovo gene sets cache missing, generating..."
+    /code/dae/dae/tools/generate_denovo_gene_sets.py
+    echo "Done"
 fi
 
 /code/wdae/wdae/wdaemanage.py migrate
