@@ -66,7 +66,9 @@ class GeneSetsView(QueryBaseView):
             if not self.gpf_instance.has_denovo_gene_sets():
                 return Response(status=status.HTTP_404_NOT_FOUND)
             gene_sets = self.gpf_instance.get_all_denovo_gene_sets(
-                gene_sets_types, self.get_permitted_datasets(request.user)
+                gene_sets_types,
+                self.get_permitted_datasets(request.user),
+                gene_sets_collection_id
             )
         else:
             if not self.gpf_instance.has_gene_set_collection(
@@ -140,7 +142,8 @@ class GeneSetDownloadView(QueryBaseView):
             if not self.gpf_instance.has_denovo_gene_sets():
                 return Response(status=status.HTTP_404_NOT_FOUND)
             gene_set = self.gpf_instance.get_denovo_gene_set(
-                gene_set_id, gene_sets_types, permitted_datasets
+                gene_set_id, gene_sets_types, permitted_datasets,
+                gene_sets_collection_id
             )
         else:
             if not self.gpf_instance.has_gene_set_collection(
@@ -159,8 +162,8 @@ class GeneSetDownloadView(QueryBaseView):
             print("GENE SET NOT FOUND", permitted_datasets)
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        gene_syms = ["{}\r\n".format(s) for s in gene_set.syms]
-        title = '"{}: {}"\r\n'.format(gene_set.name, gene_set.desc)
+        gene_syms = ["{}\r\n".format(s) for s in gene_set["syms"]]
+        title = '"{}: {}"\r\n'.format(gene_set["name"], gene_set["desc"])
         result = itertools.chain([title], gene_syms)
 
         response = StreamingHttpResponse(result, content_type="text/csv")

@@ -1,6 +1,7 @@
 from typing import List, Dict
 
 from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
+from dae.gene.gene_sets_db import GeneSet
 from remote.rest_api_client import RESTClient
 
 
@@ -39,9 +40,14 @@ class RemoteDenovoGeneSetsCollection:
         self, gene_set_id, denovo_gene_set_spec, permitted_datasets=None
     ):
         # TODO FIXME Utilise permitted datasets
-        return self.rest_client.get_denovo_gene_set(
+        raw_gene_set = self.rest_client.get_denovo_gene_set(
             gene_set_id, denovo_gene_set_spec
-        )
+        ).split("\n\r")
+
+        description = raw_gene_set.pop(0)
+        gene_set = GeneSet(gene_set_id, description, raw_gene_set)
+
+        return gene_set
 
 
 class RemoteDenovoGeneSetsDb:

@@ -420,4 +420,4 @@ class RESTClient:
         if response.status_code != 200:
             return None
 
-        return response.json()
+        return response.content.decode()

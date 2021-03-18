@@ -324,6 +324,16 @@ class WGPFInstance(GPFInstance):
     def remote_studies(self):
         return list(self._remote_study_clients.keys())
 
+    def get_all_denovo_gene_sets(self, types, datasets, collection_id):
+        return self.denovo_gene_sets_db.get_all_gene_sets(
+            types, datasets, collection_id
+        )
+
+    def get_denovo_gene_set(self, gene_set_id, types, datasets, collection_id):
+        return self.denovo_gene_sets_db.get_gene_set(
+            gene_set_id, types, datasets, collection_id
+        )
+
 
 def get_gpf_instance():
     load_gpf_instance()
