@@ -8,7 +8,7 @@
         <label>
           <input #affectedStatusCheckbox checked type="checkbox"
             (change)="checkAffectedStatus(affectedStatus, affectedStatusCheckbox.checked)"
-            id="{{affectedStatus}}-checkbox">
+            id="affectedStatus{{affectedStatus}}-checkbox">
           <span class="pedigree-icon" [style.background-color]="getAffectedStatusColor(affectedStatus)"
             style="opacity: 0.75;"></span>
           <label for="{{affectedStatus}}-checkbox" style="display: inline-block;vertical-align: middle;line-height: 95%;"
@@ -30,7 +30,7 @@
         <label>
           <input #effectTypeCheckbox checked type="checkbox"
             (change)="checkEffectType(effect, effectTypeCheckbox.checked)"
-            id="{{effect}}-checkbox">
+            id="effect{{effect}}-checkbox">
           <svg id={{effect}}></svg>
           {{ effect }}
         </label>
@@ -45,7 +45,7 @@
         <label>
           <input style="margin-right: 5px;" #denovoCheckbox checked type="checkbox"
             (click)="checkShowDenovo(denovoCheckbox.checked)"
-            id="Denovo-checkbox">
+            id="inheritanceTypesDenovo-checkbox">
           <svg id="denovo"></svg>
           <span style="margin-left: 10px">Denovo</span>
         </label>
@@ -54,7 +54,7 @@
         <label>
           <input #transmittedCheckbox checked type="checkbox"
             (click)="checkShowTransmitted(transmittedCheckbox.checked)"
-            id="Transmitted-checkbox">
+            id="inheritanceTypesTransmitted-checkbox">
           <svg id="transmitted"></svg>
           <span style="margin-left: 10px">Transmitted</span>
         </label>
@@ -70,7 +70,7 @@
         <label>
           <input #variantTypeCheckbox checked type="checkbox"
             (change)="checkVariantType(variantType, variantTypeCheckbox.checked)"
-            id="{{variantType}}-checkbox">
+            id="variantType{{variantType}}-checkbox">
           {{ variantType }}
         </label>
       </div>
