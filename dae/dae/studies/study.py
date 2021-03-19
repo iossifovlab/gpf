@@ -183,6 +183,34 @@ class GenotypeData(ABC):
                 self.person_set_collection_configs[collection_id] = \
                     collection_conf
 
+    def _transform_person_set_collection_query(
+            self, person_set_collection, person_ids):
+
+        if person_set_collection is not None:
+            person_set_collection_id, selected_person_sets = \
+                person_set_collection
+            selected_person_sets = set(selected_person_sets)
+            person_set_collection = self.get_person_set_collection(
+                person_set_collection_id)
+            person_set_ids = set(person_set_collection.person_sets.keys())
+            selected_person_sets = person_set_ids & selected_person_sets
+
+            if selected_person_sets == person_set_ids:
+                # all persons selected
+                pass
+            else:
+                selected_person_ids = set()
+                for set_id in selected_person_sets:
+                    selected_person_ids.update(
+                        person_set_collection.
+                        person_sets[set_id].persons.keys()
+                    )
+                if person_ids is not None:
+                    person_ids = set(person_ids) & selected_person_ids
+                else:
+                    person_ids = selected_person_ids
+        return person_ids
+
     def get_person_set_collection(self, person_set_collection_id):
         if person_set_collection_id is None:
             return None
@@ -612,34 +640,6 @@ class GenotypeDataStudy(GenotypeData):
             for allele in variant.alleles:
                 allele.update_attributes({"studyName": self.name})
             yield variant
-
-    def _transform_person_set_collection_query(
-            self, person_set_collection, person_ids):
-
-        if person_set_collection is not None:
-            person_set_collection_id, selected_person_sets = \
-                person_set_collection
-            selected_person_sets = set(selected_person_sets)
-            person_set_collection = self.get_person_set_collection(
-                person_set_collection_id)
-            person_set_ids = set(person_set_collection.person_sets.keys())
-            selected_person_sets = person_set_ids & selected_person_sets
-
-            if selected_person_sets == person_set_ids:
-                # all persons selected
-                pass
-            else:
-                selected_person_ids = set()
-                for set_id in selected_person_sets:
-                    selected_person_ids.update(
-                        person_set_collection.
-                        person_sets[set_id].persons.keys()
-                    )
-                if person_ids is not None:
-                    person_ids = set(person_ids) & selected_person_ids
-                else:
-                    person_ids = selected_person_ids
-        return person_ids
 
     @property
     def families(self):

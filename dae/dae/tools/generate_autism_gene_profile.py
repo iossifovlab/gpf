@@ -103,12 +103,14 @@ def main(gpf_instance=None, argv=None):
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.ERROR)
+    logging.getLogger("impala").setLevel(logging.WARNING)
 
     start = time.time()
     if gpf_instance is None:
         gpf_instance = GPFInstance()
 
     config = gpf_instance._autism_gene_profile_config
+
     gene_sets = gpf_instance.gene_sets_db.get_all_gene_sets("main")
     gene_sets = list(
         filter(lambda gs: gs["name"] in config.gene_sets, gene_sets)
@@ -122,8 +124,11 @@ def main(gpf_instance=None, argv=None):
     person_ids = dict()
     for dataset_id, filters in config.datasets.items():
         genotype_data = gpf_instance.get_genotype_data(dataset_id)
+
         variants[dataset_id] = list(
-            genotype_data.query_variants(genes=gene_symbols)
+            genotype_data.query_variants(
+                effect_types=filters.effects, genes=gene_symbols,
+                inheritance="denovo")
         )
         person_ids[dataset_id] = dict()
         for ps in filters.person_sets:
@@ -139,13 +144,20 @@ def main(gpf_instance=None, argv=None):
     output = []
     gene_symbols = list(gene_symbols)
     gs_count = len(gene_symbols)
+    elapsed = time.time() - start
+    logger.inf(f"data collected: {elapsed:.2f} secs")
+
+    start = time.time()
     for idx, sym in enumerate(gene_symbols, 1):
         output.append(generate_agp(gpf_instance, sym, variants, person_ids))
         if idx % 25 == 0:
-            logger.info(f"Generated {idx}/{gs_count} AGP statistics")
+            elapsed = time.time() - start
+            logger.info(
+                f"Generated {idx}/{gs_count} AGP statistics "
+                f"{elapsed:.2f} secs")
     logger.info("Done generating AGP statistics!")
-    duration = time.time() - start
-    logger.info(f"Took {duration} seconds")
+    elapsed = time.time() - start
+    logger.info(f"Took {elapsed:.2f} secs")
 
     agpdb = AutismGeneProfileDB(
         gpf_instance._autism_gene_profile_config.to_dict(),
