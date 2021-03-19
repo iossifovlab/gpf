@@ -280,15 +280,19 @@ class VariantsDb(object):
 
         genotype_studies = []
         for study_id in genotype_data_group_config.studies:
-            genotype_data_study = self.get_study(study_id)
+            genotype_data = self.get_study(study_id)
 
-            if not genotype_data_study:
-                raise ValueError(
-                    "Unknown study: {}, known studies: [{}]".format(
-                        study_id,
-                        ",".join(self.get_genotype_studies_ids()),
+            if not genotype_data:
+                genotype_data = self.get_genotype_data_group(study_id)
+
+                if genotype_data is None:
+                    raise ValueError(
+                        "Unknown study: {}, known studies: [{}]".format(
+                            study_id,
+                            ",".join(self.get_genotype_studies_ids()),
+                        )
                     )
-                )
-            genotype_studies.append(genotype_data_study)
+
+            genotype_studies.append(genotype_data)
         assert genotype_studies
         return GenotypeDataGroup(genotype_data_group_config, genotype_studies)
