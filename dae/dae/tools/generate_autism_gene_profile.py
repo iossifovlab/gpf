@@ -145,7 +145,7 @@ def main(gpf_instance=None, argv=None):
     gene_symbols = list(gene_symbols)
     gs_count = len(gene_symbols)
     elapsed = time.time() - start
-    logger.inf(f"data collected: {elapsed:.2f} secs")
+    logger.info(f"data collected: {elapsed:.2f} secs")
 
     start = time.time()
     for idx, sym in enumerate(gene_symbols, 1):
