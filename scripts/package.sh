@@ -23,7 +23,7 @@ GPF_VERSION=$(cat ${WORKSPACE}/VERSION)
 
 cd ${WORKSPACE}
 
-tar zcvf builds/gpf-${GPF_VERSION}.${BUILD_NUMBER}.tar.gz \
+tar zcvf builds/gpf-${BRANCH}-${GPF_VERSION}.${BUILD_NUMBER}.tar.gz \
     --exclude builds \
     --exclude .git \
     --exclude gpf_remote \
@@ -41,3 +41,7 @@ tar zcvf builds/gpf-${GPF_VERSION}.${BUILD_NUMBER}.tar.gz \
     --exclude dae_conftests \
     --transform "s/^\./gpf/" \
     .
+
+cp conda-environment.yml \
+    builds/conda-environment-${BRANCH}-${GPF_VERSION}.${BUILD_NUMBER}.yml
+
