@@ -169,6 +169,7 @@ pipeline {
     	    archiveArtifacts artifacts: 'mypy_report.tar.gz'
             
             archiveArtifacts artifacts: 'builds/*.tar.gz'
+            archiveArtifacts artifacts: 'builds/*.yml'
 
             script {
                 def job_result = build job: 'seqpipe/seqpipe-gpf-containers/master', propagate: true, wait: false, parameters: [
