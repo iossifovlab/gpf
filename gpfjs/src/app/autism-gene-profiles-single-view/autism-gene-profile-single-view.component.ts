@@ -5,6 +5,8 @@ import { GeneWeightsService } from '../gene-weights/gene-weights.service';
 import { GeneWeights } from 'app/gene-weights/gene-weights';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { mergeMap } from 'rxjs/operators';
+import { Router } from '@angular/router';
+import { Location } from '@angular/common';
 
 @Component({
   selector: 'gpf-autism-gene-profile-single-view',
@@ -30,6 +32,8 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
     private geneWeightsService: GeneWeightsService,
+    private location: Location,
+    private router: Router,
   ) { }
 
   ngOnInit(): void {
@@ -74,7 +78,10 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     }
 
     const dataset = this.config['defaultDataset'];
+    let pathname = this.router.createUrlTree(['datasets', dataset, 'geneBrowser', this.geneSymbol]).toString();
 
-    return `/datasets/${dataset}/geneBrowser/${this.geneSymbol}`;
+    pathname = this.location.prepareExternalUrl(pathname);
+
+    return window.location.origin + pathname;
   }
 }
