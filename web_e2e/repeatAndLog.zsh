@@ -1,0 +1,1 @@
+repeat 50 { ./node_modules/.bin/cypress run } | tee log
