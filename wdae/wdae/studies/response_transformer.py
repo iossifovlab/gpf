@@ -422,7 +422,7 @@ class ResponseTransformer:
             "seen_in_affected",
             "seen_in_unaffected"
         ]
-        rows = self.gene_view_summary_download_variants_iterator(
+        rows = self._gene_view_summary_download_variants_iterator(
             variants, frequency_column
         )
         return map(join_line, itertools.chain([columns], rows))
