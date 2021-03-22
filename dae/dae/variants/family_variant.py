@@ -607,6 +607,6 @@ class FamilyVariant(Variant, FamilyDelegate):
     @property
     def variant_in_members(self):
         members = set()
-        for a in self.alleles:
-            members = members.union(a.variant_in_members)
+        for a in self.alt_alleles:
+            members = members.union(filter(None, a.variant_in_members))
         return members
