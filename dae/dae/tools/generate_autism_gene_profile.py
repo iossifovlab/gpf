@@ -5,7 +5,6 @@ import argparse
 import logging
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.variants.attributes import Inheritance
 from dae.autism_gene_profile.statistic import AGPStatistic
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.utils.effect_utils import expand_effect_types
