@@ -344,7 +344,7 @@ def reload_datasets(gpf_instance):
         if not genotype_data.studies:
             continue
 
-        for study_id in genotype_data.studies:
+        for study_id in genotype_data.get_studies_ids(leafs=False):
             if study_id is None:
                 continue
             Dataset.recreate_dataset_perm(
