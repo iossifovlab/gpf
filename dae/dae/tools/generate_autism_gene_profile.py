@@ -78,11 +78,21 @@ def get_variant_count(
         variants, person_ids, dataset_id):
     pids = set(person_ids[dataset_id][person_set])
     ets = set(expand_effect_types(effect))
+
+    def filter_variant(fv):
+        members = set()
+        for aa in fv.alt_alleles:
+            for member in aa.variant_in_members:
+                if member is not None:
+                    members.add(member)
+        in_members = len(pids.intersection(members)) > 0
+        in_effect_types = len(ets.intersection(fv.effect_types)) > 0
+        in_gene_syms = gene_symbol in fv.effect_gene_symbols
+
+        return in_members and in_effect_types and in_gene_syms
+
     return len(list(filter(
-        lambda fv:
-            len(pids.intersection(fv.variant_in_members))
-            and len(ets.intersection(fv.effect_types))
-            and gene_symbol in fv.effect_gene_symbols,
+        filter_variant,
         variants[dataset_id]
     )))
 
