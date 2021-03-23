@@ -685,12 +685,13 @@ class VcfLoader(VariantsGenotypesLoader):
         self.vcf_files = vcf_files
         self.vcf_loaders = []
         if vcf_files:
-            for vcf_files in filenames:
-                vcf_families = families.copy()
-                vcf_loader = SingleVcfLoader(
-                    vcf_families, vcf_files,
-                    genome, regions=regions, params=params)
-                self.vcf_loaders.append(vcf_loader)
+            for vcf_files_batch in filenames:
+                if vcf_files_batch:
+                    vcf_families = families.copy()
+                    vcf_loader = SingleVcfLoader(
+                        vcf_families, vcf_files_batch,
+                        genome, regions=regions, params=params)
+                    self.vcf_loaders.append(vcf_loader)
 
         pedigree_mode = params.get("vcf_pedigree_mode", "fixed")
         if pedigree_mode == "intersection":
