@@ -10,9 +10,12 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper
 
 from remote.rest_api_client import RESTClient, RESTClientRequestError
+from remote.gene_sets_db import RemoteGeneSetsDb
+from remote.denovo_gene_sets_db import RemoteDenovoGeneSetsDb
 
 from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.event_counters import CounterBase
+from dae.gpf_instance.gpf_instance import cached
 from enrichment_api.enrichment_builder import \
     EnrichmentBuilder, RemoteEnrichmentBuilder
 
@@ -32,6 +35,7 @@ class WGPFInstance(GPFInstance):
         self._remote_study_clients = dict()
         self._remote_study_ids = dict()
         self._study_wrappers = dict()
+        self._remote_clients = []
 
         remotes = self.dae_config.remotes
 
@@ -50,11 +54,27 @@ class WGPFInstance(GPFInstance):
                         gpf_prefix=remote.get("gpf_prefix", None)
                     )
                     self._fetch_remote_studies(client)
+                    self._remote_clients.append(client)
                 except ConnectionError as err:
                     logger.error(err)
                     logger.error(f"Failed to create remote {remote['id']}")
                 except RESTClientRequestError as err:
                     logger.error(err.message)
+
+    @property  # type: ignore
+    @cached
+    def gene_sets_db(self):
+        logger.debug("creating new instance of GeneSetsDb")
+        gene_sets_db = super().gene_sets_db
+        return RemoteGeneSetsDb(
+            self._remote_clients, gene_sets_db)
+
+    @property  # type: ignore
+    @cached
+    def denovo_gene_sets_db(self):
+        denovo_gene_sets_db = super().denovo_gene_sets_db
+        return RemoteDenovoGeneSetsDb(
+            self._remote_clients, denovo_gene_sets_db)
 
     def _fetch_remote_studies(self, rest_client):
         studies = rest_client.get_datasets()
@@ -303,6 +323,16 @@ class WGPFInstance(GPFInstance):
     @property
     def remote_studies(self):
         return list(self._remote_study_clients.keys())
+
+    def get_all_denovo_gene_sets(self, types, datasets, collection_id):
+        return self.denovo_gene_sets_db.get_all_gene_sets(
+            types, datasets, collection_id
+        )
+
+    def get_denovo_gene_set(self, gene_set_id, types, datasets, collection_id):
+        return self.denovo_gene_sets_db.get_gene_set(
+            gene_set_id, types, datasets, collection_id
+        )
 
 
 def get_gpf_instance():

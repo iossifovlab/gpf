@@ -564,14 +564,14 @@ class RemoteStudyWrapper(StudyWrapperBase):
         self.rest_client = rest_client
 
         config = self.rest_client.get_dataset_config(self._remote_study_id)
-        config["id"] = self.rest_client.get_remote_dataset_id(study_id)
-        config["name"] = f"({rest_client.remote_id}) {config['name']}"
+        config["id"] = self.rest_client.prefix_remote_identifier(study_id)
+        config["name"] = self.rest_client.prefix_remote_name(config["name"])
         del config["access_rights"]
         del config["groups"]
         if config["parents"]:
             config["parents"] = list(
                 map(
-                    self.rest_client.get_remote_dataset_id,
+                    self.rest_client.prefix_remote_identifier,
                     config["parents"]
                 )
             )
@@ -579,7 +579,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
         if config.get("studies"):
             config["studies"] = list(
                 map(
-                    self.rest_client.get_remote_dataset_id,
+                    self.rest_client.prefix_remote_identifier,
                     config["studies"]
                 )
             )
