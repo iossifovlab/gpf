@@ -24,11 +24,6 @@ class RemoteDenovoGeneSetsCollection:
         )
         self.collection_format = self.denovo_collection["format"]
         self.collection_types = self.denovo_collection["types"]
-        # for collection_type in self.collection_types:
-        #     collection_type["datasetId"] = \
-        #         rest_client.prefix_remote_identifier(
-        #             collection_type["datasetId"]
-        #         )
 
     def get_all_gene_sets(self, denovo_gene_set_spec, permitted_datasets=None):
         # TODO FIXME Utilise permitted datasets
