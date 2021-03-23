@@ -114,8 +114,11 @@ class RESTClient:
                     yield o
                 del objects[:]
 
-    def get_remote_dataset_id(self, dataset_id):
-        return f"{self.remote_id}_{dataset_id}"
+    def prefix_remote_identifier(self, value):
+        return f"{self.remote_id}_{value}"
+
+    def prefix_remote_name(self, value):
+        return f"({self.remote_id}) {value}"
 
     def get_datasets(self):
         response = self._get("datasets")
@@ -348,3 +351,73 @@ class RESTClient:
             return None
 
         return response.json()
+
+    def get_gene_set_collections(self):
+        response = self._get(
+            "gene_sets/gene_sets_collections"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_gene_sets(self, collection_id):
+        response = self._post(
+            "gene_sets/gene_sets",
+            data={"geneSetsCollection": collection_id}
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_gene_set_download(self, gene_sets_collection, gene_set):
+        response = self._get(
+            "gene_sets/gene_set_download",
+            query_values={
+                "geneSetsCollection": gene_sets_collection,
+                "geneSet": gene_set,
+            }
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.content.decode()
+
+    def has_denovo_gene_sets(self):
+        response = self._get("gene_sets/has_denovo")
+        if response.status_code != 204:
+            return False
+        return True
+
+    def get_denovo_gene_sets(self, gene_set_types):
+        response = self._post(
+            "gene_sets/gene_sets",
+            data={
+                "geneSetsCollection": "denovo",
+                "geneSetsTypes": gene_set_types
+            }
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_denovo_gene_set(self, gene_set_id, gene_set_types):
+        response = self._post(
+            "gene_sets/gene_set_download",
+            data={
+                "geneSetsCollection": "denovo",
+                "geneSet": gene_set_id,
+                "geneSetsTypes": gene_set_types
+            }
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.content.decode()
