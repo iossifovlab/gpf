@@ -23,6 +23,8 @@ class GeneSet:
         self.syms = syms
 
     def __getitem__(self, name):
+        # This is done so that GeneSet instances and
+        # denovo gene set dictionaries can be accessed in a uniform way
         if name == "name":
             return self.name
         elif name == "desc":
