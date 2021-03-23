@@ -13,7 +13,7 @@ from dae.utils.effect_utils import expand_effect_types
 logger = logging.getLogger(__name__)
 
 
-def generate_agp(gpf_instance, gene_symbol, variants, person_ids):
+def generate_agp(gpf_instance, gene_symbol, variants):
     gene_weights_db = gpf_instance.gene_weights_db
     config = gpf_instance._autism_gene_profile_config
     autism_scores = dict()
@@ -45,11 +45,6 @@ def generate_agp(gpf_instance, gene_symbol, variants, person_ids):
 
     for dataset_id, filters in config.datasets.items():
         current_counts = dict()
-        variant_gene_symbols = {
-            eg
-            for fv in variants[dataset_id]
-            for eg in fv.effect_gene_symbols
-        }
         for ps in filters.person_sets:
             person_set = ps.set_name
             for effect in filters.effects:
@@ -58,16 +53,10 @@ def generate_agp(gpf_instance, gene_symbol, variants, person_ids):
                     current_counts[person_set] = dict()
                     counts = current_counts[person_set]
 
-                if gene_symbol in variant_gene_symbols:
-                    counts[effect] = get_variant_count(
-                        gene_symbol, person_set, effect,
-                        variants, person_ids, dataset_id
-                    )
-                else:
-                    counts[effect] = 0
+                counts[effect] = 0
         variant_counts[dataset_id] = current_counts
 
-    return AGPStatistic(
+    return gene_symbol, AGPStatistic(
         gene_symbol, sets_in, protection_scores,
         autism_scores, variant_counts
     )
@@ -95,6 +84,46 @@ def get_variant_count(
         filter_variant,
         variants[dataset_id]
     )))
+
+
+def add_variant_count(variant, agps, dataset_id, person_set, effect):
+    for gs in variant.effect_gene_symbols:
+        if gs not in agps:
+            continue
+
+        agps[gs].variant_counts[dataset_id][person_set][effect] += 1
+
+
+def fill_variant_counts(variants_datasets, agps, config, person_ids):
+    for dataset_id, variants in variants_datasets.items():
+        logger.info(f"Counting variants in {dataset_id}")
+
+        filters = config.datasets[dataset_id]
+
+        variants_count = len(variants)
+
+        for idx, v in enumerate(variants, 1):
+            if idx % 25 == 0:
+                logger.info(
+                    f"Counted {idx}/{variants_count} variants"
+                )
+            members = set()
+
+            for aa in v.alt_alleles:
+                for member in aa.variant_in_members:
+                    if member is not None:
+                        members.add(member)
+
+            for ps in filters.person_sets:
+                pids = set(person_ids[dataset_id][ps.set_name])
+                for effect in filters.effects:
+                    ets = set(expand_effect_types(effect))
+                    in_members = len(pids.intersection(members)) > 0
+                    in_effect_types = len(ets.intersection(v.effect_types)) > 0
+                    if in_members and in_effect_types:
+                        add_variant_count(
+                            v, agps, dataset_id, ps.set_name, effect
+                        )
 
 
 def main(gpf_instance=None, argv=None):
@@ -151,7 +180,7 @@ def main(gpf_instance=None, argv=None):
                     person_set_query, None
                 )
 
-    output = []
+    agps = dict()
     gene_symbols = list(gene_symbols)
     gs_count = len(gene_symbols)
     elapsed = time.time() - start
@@ -159,14 +188,23 @@ def main(gpf_instance=None, argv=None):
 
     start = time.time()
     for idx, sym in enumerate(gene_symbols, 1):
-        output.append(generate_agp(gpf_instance, sym, variants, person_ids))
+        gs, agp = generate_agp(gpf_instance, sym, variants)
+        agps[gs] = agp
         if idx % 25 == 0:
             elapsed = time.time() - start
             logger.info(
                 f"Generated {idx}/{gs_count} AGP statistics "
                 f"{elapsed:.2f} secs")
+
     logger.info("Done generating AGP statistics!")
-    elapsed = time.time() - start
+    generate_end = time.time()
+    elapsed = generate_end - start
+    logger.info(f"Took {elapsed:.2f} secs")
+
+    logger.info("Counting variants...")
+    fill_variant_counts(variants, agps, config, person_ids)
+    logger.info("Done counting variants")
+    elapsed = time.time() - generate_end
     logger.info(f"Took {elapsed:.2f} secs")
 
     agpdb = AutismGeneProfileDB(
@@ -178,7 +216,7 @@ def main(gpf_instance=None, argv=None):
     agpdb.clear_all_tables()
     agpdb.populate_data_tables(gpf_instance.get_genotype_data_ids())
     logger.info("Inserting statistics into DB")
-    agpdb.insert_agps(output)
+    agpdb.insert_agps(agps.values())
     logger.info("Building AGP output view")
     agpdb.build_agp_view()
     logger.info("Done")
