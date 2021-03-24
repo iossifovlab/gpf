@@ -61,7 +61,7 @@ def test_agpdb_get_studies(temp_dbfile, agp_gpf_instance, agp_config):
         temp_dbfile
     )
     study_ids = agpdb._get_study_ids().keys()
-    assert len(study_ids) == 40
+    assert len(study_ids) == 41
 
 
 def test_agpdb_get_gene_sets(temp_dbfile, agp_config, agp_gpf_instance):
@@ -106,8 +106,8 @@ def test_agpdb_insert_and_get_agp(
     }
 
     assert agp.variant_counts == {
-        'f1_study': {
-            'phenotype1': {'synonymous': 53, 'missense': 21},
+        'iossifov_we2014_test': {
+            'unknown': {'synonymous': 53, 'missense': 21},
             'unaffected': {'synonymous': 43, 'missense': 51},
         }
     }
@@ -131,7 +131,7 @@ def test_agpdb_sort(agp_gpf_instance, sample_agp):
         1, sort_by="autism_SFARI_gene_score", order="desc"
     )
     stats_sorted = agp_gpf_instance.query_agp_statistics(
-        1, sort_by="f1_study_phenotype1_synonymous", order="desc"
+        1, sort_by="iossifov_we2014_test_unknown_synonymous", order="desc"
     )
     stats_sorted = agp_gpf_instance.query_agp_statistics(
         1, sort_by="CHD8 target genes", order="desc"

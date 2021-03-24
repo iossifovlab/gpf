@@ -40,6 +40,7 @@ from dae.utils.helpers import study_id_from_path
 from dae.backends.impala.parquet_io import ParquetManager, \
     NoPartitionDescriptor
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
+from dae.gene.gene_sets_db import GeneSet
 from dae.gene.denovo_gene_set_collection_factory import \
     DenovoGeneSetCollectionFactory
 from dae.autism_gene_profile.statistic import AGPStatistic
@@ -1003,6 +1004,7 @@ def temp_dbfile(request):
     request.addfinalizer(fin)
     return dbfile
 
+
 @pytest.fixture
 def agp_config():
     return Box({
@@ -1089,8 +1091,8 @@ def sample_agp():
         'SFARI_gene_score': 1, 'RVIS_rank': 193.0, 'RVIS': -2.34
     }
     variant_counts = {
-        'f1_study': {
-            'phenotype1': {'synonymous': 53, 'missense': 21},
+        'iossifov_we2014_test': {
+            'unknown': {'synonymous': 53, 'missense': 21},
             'unaffected': {'synonymous': 43, 'missense': 51},
         }
     }
