@@ -1010,11 +1010,11 @@ def agp_config():
         'protection_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
         'autism_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
         'datasets': Box({
-            'f1_study': Box({
+            'iossifov_we2014_test': Box({
                 'effects': ['synonymous', 'missense'],
                 'person_sets': [
                     Box({
-                        'set_name': 'phenotype1',
+                        'set_name': 'unknown',
                         'collection_name': 'phenotype'
                     }),
                     Box({
@@ -1057,6 +1057,12 @@ def agp_gpf_instance(
         fixtures_gpf_instance.gene_sets_db,
         "get_gene_set_ids",
         return_value=main_gene_sets
+    )
+    all_gene_sets = [GeneSet(gs, "", ["C2orf42"]) for gs in main_gene_sets]
+    mocker.patch.object(
+        fixtures_gpf_instance.gene_sets_db,
+        "get_all_gene_sets",
+        return_value=all_gene_sets
     )
     fixtures_gpf_instance.__autism_gene_profile_db = \
         AutismGeneProfileDB(
