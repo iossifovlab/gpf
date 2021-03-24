@@ -40,6 +40,7 @@ from dae.utils.helpers import study_id_from_path
 from dae.backends.impala.parquet_io import ParquetManager, \
     NoPartitionDescriptor
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
+from dae.gene.gene_sets_db import GeneSet
 from dae.gene.denovo_gene_set_collection_factory import \
     DenovoGeneSetCollectionFactory
 from dae.autism_gene_profile.statistic import AGPStatistic
@@ -1003,6 +1004,7 @@ def temp_dbfile(request):
     request.addfinalizer(fin)
     return dbfile
 
+
 @pytest.fixture
 def agp_config():
     return Box({
@@ -1010,11 +1012,11 @@ def agp_config():
         'protection_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
         'autism_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
         'datasets': Box({
-            'f1_study': Box({
+            'iossifov_we2014_test': Box({
                 'effects': ['synonymous', 'missense'],
                 'person_sets': [
                     Box({
-                        'set_name': 'phenotype1',
+                        'set_name': 'unknown',
                         'collection_name': 'phenotype'
                     }),
                     Box({
@@ -1058,6 +1060,12 @@ def agp_gpf_instance(
         "get_gene_set_ids",
         return_value=main_gene_sets
     )
+    all_gene_sets = [GeneSet(gs, "", ["C2orf42"]) for gs in main_gene_sets]
+    mocker.patch.object(
+        fixtures_gpf_instance.gene_sets_db,
+        "get_all_gene_sets",
+        return_value=all_gene_sets
+    )
     fixtures_gpf_instance.__autism_gene_profile_db = \
         AutismGeneProfileDB(
             fixtures_gpf_instance._autism_gene_profile_config,
@@ -1083,8 +1091,8 @@ def sample_agp():
         'SFARI_gene_score': 1, 'RVIS_rank': 193.0, 'RVIS': -2.34
     }
     variant_counts = {
-        'f1_study': {
-            'phenotype1': {'synonymous': 53, 'missense': 21},
+        'iossifov_we2014_test': {
+            'unknown': {'synonymous': 53, 'missense': 21},
             'unaffected': {'synonymous': 43, 'missense': 51},
         }
     }
