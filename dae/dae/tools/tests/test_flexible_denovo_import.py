@@ -54,7 +54,7 @@ def test_import_iossifov2014_filesystem(
     assert storage_config.storage_type == "filesystem"
 
     gpf_instance_2013.reload()
-    study = gpf_instance_2013._variants_db.get_study(study_id)
+    study = gpf_instance_2013.get_genotype_data(study_id)
     assert study is not None
 
     vs = list(study.query_variants())
@@ -147,7 +147,7 @@ def test_flexible_denovo_default(
     assert storage_config.storage_type == "filesystem"
 
     gpf_instance_2019.reload()
-    study = gpf_instance_2019._variants_db.get_study(study_id)
+    study = gpf_instance_2019.get_genotype_data(study_id)
     assert study is not None
 
     vs = list(study.query_variants())
@@ -207,7 +207,7 @@ def test_flexible_denovo_vcf(
     assert storage_config.storage_type == "filesystem"
 
     gpf_instance_2019.reload()
-    study = gpf_instance_2019._variants_db.get_study(study_id)
+    study = gpf_instance_2019.get_genotype_data(study_id)
     assert study is not None
 
     vs = list(study.query_variants())
@@ -267,7 +267,7 @@ def test_flexible_denovo_vcf_location(
     assert storage_config.storage_type == "filesystem"
 
     gpf_instance_2019.reload()
-    study = gpf_instance_2019._variants_db.get_study(study_id)
+    study = gpf_instance_2019.get_genotype_data(study_id)
     assert study is not None
 
     vs = list(study.query_variants())
@@ -329,7 +329,7 @@ def test_flexible_denovo_vcf_best_state(
     assert storage_config.storage_type == "filesystem"
 
     gpf_instance_2019.reload()
-    study = gpf_instance_2019._variants_db.get_study(study_id)
+    study = gpf_instance_2019.get_genotype_data(study_id)
     assert study is not None
 
     vs = list(study.query_variants())
@@ -391,7 +391,7 @@ def test_flexible_denovo_dae_chrom_pos(
     assert storage_config.storage_type == "filesystem"
 
     gpf_instance_2019.reload()
-    study = gpf_instance_2019._variants_db.get_study(study_id)
+    study = gpf_instance_2019.get_genotype_data(study_id)
     assert study is not None
 
     vs = list(study.query_variants())
@@ -447,7 +447,7 @@ def test_flexible_denovo_dae_person(
     assert storage_config.storage_type == "filesystem"
 
     gpf_instance_2019.reload()
-    study = gpf_instance_2019._variants_db.get_study(study_id)
+    study = gpf_instance_2019.get_genotype_data(study_id)
     assert study is not None
 
     vs = list(study.query_variants())

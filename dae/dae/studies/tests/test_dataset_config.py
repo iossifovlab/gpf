@@ -91,7 +91,7 @@ def test_composite_genotype_data_group_config_genotype_browser_overwrite(
 
     assert quads_composite_genotype_data_group_config is not None
 
-    study_config = variants_db_fixture.get_study_config(
+    study_config = variants_db_fixture.get_genotype_study_config(
         quads_composite_genotype_data_group_config.studies[0]
     )
 

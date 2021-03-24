@@ -12,11 +12,11 @@ logger = logging.getLogger(__name__)
 
 class VariantsDb(object):
     def __init__(
-        self,
-        dae_config,
-        genomes_db,
-        genotype_storage_factory,
-    ):
+            self,
+            dae_config,
+            genomes_db,
+            genotype_storage_factory):
+
         self.dae_config = dae_config
 
         assert genomes_db is not None
@@ -37,11 +37,11 @@ class VariantsDb(object):
             study_config_schema,
             default_config_filename=default_config_filename,
         )
-        self.genotype_data_study_configs = {}
+        self.genotype_study_configs = {}
         for study_config in study_configs:
             assert study_config.id is not None, study_config
 
-            self.genotype_data_study_configs[study_config.id] = \
+            self.genotype_study_configs[study_config.id] = \
                 study_config
 
         data_groups = GPFConfigParser.load_directory_configs(
@@ -50,40 +50,40 @@ class VariantsDb(object):
             default_config_filename=default_config_filename,
         )
 
-        self.genotype_data_group_configs = {dg.id: dg for dg in data_groups}
+        self.genotype_group_configs = {dg.id: dg for dg in data_groups}
 
         self._filter_disabled()
-
-        self._genotype_data_study_cache = {}
-
-        self._genotype_data_group_cache = {}
-
         self._configuration_check()
+
+        self._genotype_study_cache = {}
+        self._genotype_group_cache = {}
+        self._load_all_group_studies()
+        self._load_all_genotype_groups()
 
     def _filter_disabled(self):
 
         to_remove = []
-        for k, v in self.genotype_data_study_configs.items():
+        for k, v in self.genotype_study_configs.items():
             if v.enabled is False:
                 to_remove.append(k)
         for disabled_study_id in to_remove:
             logger.debug(f"removing disable study {disabled_study_id}")
-            del self.genotype_data_study_configs[disabled_study_id]
+            del self.genotype_study_configs[disabled_study_id]
         to_remove.clear()
-        for k, v in self.genotype_data_group_configs.items():
+        for k, v in self.genotype_group_configs.items():
             if v.enabled is False:
                 to_remove.append(k)
         for disabled_group_id in to_remove:
             logger.debug(f"removing disable group {disabled_group_id}")
-            del self.genotype_data_group_configs[disabled_group_id]
+            del self.genotype_group_configs[disabled_group_id]
         logger.debug(
-            f"active studies: {list(self.genotype_data_study_configs.keys())}")
+            f"active studies: {list(self.genotype_study_configs.keys())}")
         logger.debug(
-            f"active groups: {list(self.genotype_data_group_configs.keys())}")
+            f"active groups: {list(self.genotype_group_configs.keys())}")
 
     def _configuration_check(self):
-        studies_ids = set(self.get_genotype_studies_ids())
-        genotype_data_group_ids = set(self.get_genotype_data_groups_ids())
+        studies_ids = set(self.get_all_genotype_study_ids())
+        genotype_data_group_ids = set(self.get_all_genotype_group_ids())
 
         overlapping = studies_ids.intersection(genotype_data_group_ids)
 
@@ -91,160 +91,92 @@ class VariantsDb(object):
             overlapping == set()
         ), "Overlapping studies and groups ids: {}".format(overlapping)
 
-    def get_genotype_studies_ids(self):
-        return list(self.genotype_data_study_configs.keys())
+    def get_genotype_study_config(self, study_id):
+        return self.genotype_study_configs.get(study_id)
 
-    def get_study_config(self, study_id):
-        return self.genotype_data_study_configs.get(study_id)
+    def get_genotype_study(self, study_id):
+        return self._genotype_study_cache.get(study_id)
 
-    def get_study(self, study_id):
-        self._load_study_cache({study_id})
-        if study_id not in self._genotype_data_study_cache:
-            return None
+    def get_all_genotype_study_ids(self):
+        return list(self.genotype_study_configs.keys())
 
-        return self._genotype_data_study_cache[study_id]
-
-    def get_all_studies(self):
-        self._load_study_cache()
-
-        return list(self._genotype_data_study_cache.values())
-
-    def get_all_study_configs(self):
-        self._load_study_cache()
-
+    def get_all_genotype_study_configs(self):
         return [
             genotype_data_study.config
-            for genotype_data_study in self._genotype_data_study_cache.values()
+            for genotype_data_study in self._genotype_study_cache.values()
         ]
 
-    def get_genotype_data_groups_ids(self):
-        return list(self.genotype_data_group_configs.keys())
+    def get_all_genotype_studies(self):
+        return list(self._genotype_study_cache.values())
 
-    def get_genotype_data_group_config(self, genotype_data_group_id):
-        return self.genotype_data_group_configs.get(genotype_data_group_id)
+    def get_genotype_group_config(self, genotype_data_group_id):
+        return self.genotype_group_configs.get(genotype_data_group_id)
 
-    def get_genotype_data_group(self, genotype_data_group_id):
-        self._load_genotype_data_group_cache({genotype_data_group_id})
+    def get_genotype_group(self, genotype_data_group_id):
+        return self._genotype_group_cache.get(genotype_data_group_id)
 
-        if genotype_data_group_id not in self._genotype_data_group_cache:
-            return None
+    def get_all_genotype_group_ids(self):
+        return list(self.genotype_group_configs.keys())
 
-        return self._genotype_data_group_cache[genotype_data_group_id]
+    def get_all_genotype_groups(self):
+        return list(self._genotype_group_cache.values())
 
-    def get_all_genotype_data_groups(self):
-        self._load_genotype_data_group_cache()
-
-        return list(self._genotype_data_group_cache.values())
-
-    def get_all_genotype_data_group_configs(self):
-        self._load_genotype_data_group_cache()
-
+    def get_all_genotype_group_configs(self):
         return [
-            genotype_data_group.config
-            for genotype_data_group in self._genotype_data_group_cache.values()
+            genotype_group.config
+            for genotype_group in self._genotype_group_cache.values()
         ]
 
     @deprecated(details="start using GPFInstance methods")
     def get_all_ids(self):
         return (
-            self.get_genotype_studies_ids()
-            + self.get_genotype_data_groups_ids()
+            self.get_all_genotype_study_ids()
+            + self.get_all_genotype_group_ids()
         )
 
     @deprecated(details="start using GPFInstance methods")
     def get_config(self, config_id):
-        study_config = self.get_study_config(config_id)
-        genotype_data_group_config = self.get_genotype_data_group_config(
+        study_config = self.get_genotype_study_config(config_id)
+        genotype_data_group_config = self.get_genotype_group_config(
             config_id
         )
         return study_config if study_config else genotype_data_group_config
 
     @deprecated(details="start using GPFInstance methods")
     def get(self, object_id):
-        genotype_data_study = self.get_study(object_id)
-        genotype_data_group = self.get_genotype_data_group(object_id)
+        genotype_data_study = self.get_genotype_study(object_id)
+        genotype_data_group = self.get_genotype_group(object_id)
         return (
             genotype_data_study if genotype_data_study else genotype_data_group
         )
 
-    # def get_wdae_wrapper(self, wdae_wrapper_id):
-    #     study_wdae_wrapper = self.get_study_wdae_wrapper(wdae_wrapper_id)
-    #     genotype_data_group_wdae_wrapper = \
-    #         self.get_genotype_data_group_wdae_wrapper(wdae_wrapper_id)
-
-    #     return (
-    #         study_wdae_wrapper
-    #         if study_wdae_wrapper
-    #         else genotype_data_group_wdae_wrapper
-    #     )
-
     @deprecated(details="start using GPFInstance methods")
     def get_all_genotype_data(self):
-        genotype_studies = self.get_all_studies()
-        genotype_data_groups = self.get_all_genotype_data_groups()
-        return genotype_studies + genotype_data_groups
+        group_studies = self.get_all_genotype_studies()
+        genotype_data_groups = self.get_all_genotype_groups()
+        return group_studies + genotype_data_groups
 
-    def get_all_genotype_data_wrappers(self):
-        study_wrappers = self.get_all_studies_wrapper()
-        genotype_data_group_wrappers = (
-            self.get_all_genotype_data_groups_wrapper()
-        )
-        return study_wrappers + genotype_data_group_wrappers
+    def _load_all_group_studies(self):
+        study_ids = set(self.get_all_genotype_study_ids())
+        for study_id in study_ids:
+            if study_id not in self._genotype_study_cache:
+                self._load_genotype_study(study_id)
 
-    def _load_study_cache(self, study_ids=None):
-        if study_ids is None:
-            study_ids = set(self.get_genotype_studies_ids())
+    def _load_genotype_study(self, study_id):
+        assert study_id not in self._genotype_study_cache
 
-        assert isinstance(study_ids, set)
-
-        cached_ids = set(self._genotype_data_study_cache.keys())
-        if study_ids != cached_ids:
-            to_load = study_ids - cached_ids
-            for study_id in to_load:
-                self._load_study_in_cache(study_id)
-
-    def _load_study_in_cache(self, study_id):
-        conf = self.genotype_data_study_configs.get(study_id)
+        conf = self.genotype_study_configs.get(study_id)
         if not conf:
             return
 
-        genotype_data_study = self.make_genotype_data_study(conf)
+        genotype_data_study = self._make_genotype_study(conf)
         if genotype_data_study is None:
-            del self.genotype_data_study_configs[study_id]
+            del self.genotype_study_configs[study_id]
             return
-        self._genotype_data_study_cache[study_id] = genotype_data_study
+        self._genotype_study_cache[study_id] = genotype_data_study
+        return genotype_data_study
 
-    def _load_genotype_data_group_cache(self, genotype_data_group_ids=None):
-        if genotype_data_group_ids is None:
-            genotype_data_group_ids = set(self.get_genotype_data_groups_ids())
-
-        assert isinstance(genotype_data_group_ids, set)
-
-        cached_ids = set(self._genotype_data_group_cache.keys())
-        if genotype_data_group_ids != cached_ids:
-            to_load = genotype_data_group_ids - cached_ids
-            for genotype_data_group_id in to_load:
-                self._load_genotype_data_group_in_cache(genotype_data_group_id)
-
-    def _load_genotype_data_group_in_cache(self, genotype_data_group_id):
-        conf = self.genotype_data_group_configs.get(genotype_data_group_id)
-        if not conf:
-            return
-
-        try:
-            genotype_data_group = self.make_genotype_data_group(conf)
-            if genotype_data_group is None:
-                return
-            self._genotype_data_group_cache[
-                genotype_data_group_id
-            ] = genotype_data_group
-        except Exception as ex:
-            logger.error(
-                f"unable to create genotype data group "
-                f"{genotype_data_group_id}")
-            logger.exception(ex)
-
-    def make_genotype_data_study(self, study_config):
+    def _make_genotype_study(self, study_config):
         if study_config is None:
             return None
 
@@ -256,7 +188,7 @@ class VariantsDb(object):
             storage_ids = (
                 self.genotype_storage_factory.get_genotype_storage_ids()
             )
-            print(
+            logger.error(
                 f"Unknown genotype storage id: "
                 f"{study_config.genotype_storage.id}; "
                 f"Known ones: {storage_ids}"
@@ -274,25 +206,42 @@ class VariantsDb(object):
             logger.exception(ex)
             return None
 
-    def make_genotype_data_group(self, genotype_data_group_config):
-        if genotype_data_group_config is None:
-            return None
+    def _load_all_genotype_groups(self):
+        genotype_group_ids = set(self.get_all_genotype_group_ids())
+        for group_id in genotype_group_ids:
+            if group_id not in self._genotype_group_cache:
+                self._load_genotype_group(group_id)
 
-        genotype_studies = []
-        for study_id in genotype_data_group_config.studies:
-            genotype_data = self.get_study(study_id)
+    def _load_genotype_group(self, group_id):
+        assert group_id not in self._genotype_study_cache
 
-            if not genotype_data:
-                genotype_data = self.get_genotype_data_group(study_id)
+        group_config = self.genotype_group_configs.get(group_id)
+        if group_config is None:
+            return
 
-                if genotype_data is None:
-                    raise ValueError(
-                        "Unknown study: {}, known studies: [{}]".format(
-                            study_id,
-                            ",".join(self.get_genotype_studies_ids()),
-                        )
-                    )
+        try:
+            group_studies = []
+            for child_id in group_config.studies:
+                if child_id in self.genotype_study_configs:
+                    child_data = self.get_genotype_study(child_id)
+                    assert child_data is not None
+                else:
+                    assert child_id in self.genotype_group_configs
+                    child_data = self.get_genotype_group(child_id)
 
-            genotype_studies.append(genotype_data)
-        assert genotype_studies
-        return GenotypeDataGroup(genotype_data_group_config, genotype_studies)
+                    if child_data is None:
+                        # group not loaded... load it...
+                        child_config = self.genotype_group_configs[child_id]
+                        child_data = self._load_genotype_group(child_config)
+
+                group_studies.append(child_data)
+            assert group_studies
+
+            genotype_group = GenotypeDataGroup(group_config, group_studies)
+            self._genotype_group_cache[group_id] = genotype_group
+            return genotype_group
+
+        except Exception as ex:
+            logger.error(
+                f"unable to create genotype data group {group_id}")
+            logger.exception(ex)

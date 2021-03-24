@@ -182,26 +182,27 @@ class GPFInstance(object):
 
     def get_genotype_data_ids(self):
         return (
-            self._variants_db.get_genotype_studies_ids()
-            + self._variants_db.get_genotype_data_groups_ids()
+            self._variants_db.get_all_genotype_study_ids()
+            + self._variants_db.get_all_genotype_group_ids()
         )
 
     def get_genotype_data(self, genotype_data_id):
-        genotype_data_study = self._variants_db.get_study(genotype_data_id)
+        genotype_data_study = self._variants_db.get_genotype_study(
+            genotype_data_id)
         if genotype_data_study:
             return genotype_data_study
-        return self._variants_db.get_genotype_data_group(genotype_data_id)
+        return self._variants_db.get_genotype_group(genotype_data_id)
 
     def get_all_genotype_data(self):
-        genotype_studies = self._variants_db.get_all_studies()
-        genotype_data_groups = self._variants_db.get_all_genotype_data_groups()
+        genotype_studies = self._variants_db.get_all_genotype_studies()
+        genotype_data_groups = self._variants_db.get_all_genotype_groups()
         return genotype_studies + genotype_data_groups
 
     def get_genotype_data_config(self, genotype_data_id):
-        config = self._variants_db.get_study_config(genotype_data_id)
+        config = self._variants_db.get_genotype_study_config(genotype_data_id)
         if config is not None:
             return config
-        return self._variants_db.get_genotype_data_group_config(
+        return self._variants_db.get_genotype_group_config(
             genotype_data_id
         )
 
@@ -210,11 +211,18 @@ class GPFInstance(object):
             logger.warning(
                 f"replacing genotype data instance {genotype_data.study_id}")
 
-        self._variants_db\
-            ._genotype_data_group_cache[genotype_data.study_id] = genotype_data
-        self._variants_db\
-            .genotype_data_group_configs[genotype_data.study_id] = \
-            genotype_data.config
+        if genotype_data.is_group:
+            self._variants_db\
+                ._genotype_group_cache[genotype_data.study_id] = genotype_data
+            self._variants_db\
+                .genotype_group_configs[genotype_data.study_id] = \
+                genotype_data.config
+        else:
+            self._variants_db \
+                ._genotype_study_cache[genotype_data.study_id] = genotype_data
+            self._variants_db \
+                ._genotype_study_configs[genotype_data.study_id] = \
+                    genotype_data.config
 
     # Phenotype data
     def get_phenotype_db_config(self):
