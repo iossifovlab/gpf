@@ -207,22 +207,7 @@ class GPFInstance(object):
         )
 
     def register_genotype_data(self, genotype_data):
-        if genotype_data.study_id in self.get_genotype_data_ids():
-            logger.warning(
-                f"replacing genotype data instance {genotype_data.study_id}")
-
-        if genotype_data.is_group:
-            self._variants_db\
-                ._genotype_group_cache[genotype_data.study_id] = genotype_data
-            self._variants_db\
-                .genotype_group_configs[genotype_data.study_id] = \
-                genotype_data.config
-        else:
-            self._variants_db \
-                ._genotype_study_cache[genotype_data.study_id] = genotype_data
-            self._variants_db \
-                ._genotype_study_configs[genotype_data.study_id] = \
-                    genotype_data.config
+        self._variants_db.register_genotype_data(genotype_data)
 
     # Phenotype data
     def get_phenotype_db_config(self):

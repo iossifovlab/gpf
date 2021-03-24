@@ -25,6 +25,11 @@ class VariantsDb(object):
         self.genomes_db = genomes_db
         self.genotype_storage_factory = genotype_storage_factory
 
+        self._genotype_study_cache = {}
+        self._genotype_group_cache = {}
+        self.reload()
+
+    def reload(self):
         genotype_study_configs = self._load_study_configs()
         genotype_group_configs = self._load_group_configs()
 
@@ -38,8 +43,6 @@ class VariantsDb(object):
                 f"overlapping configurations for studies and groups: "
                         f"{overlap}"
                 )
-        self._genotype_study_cache = {}
-        self._genotype_group_cache = {}
         self._load_all_genotype_studies(genotype_study_configs)
         self._load_all_genotype_groups(genotype_group_configs)
 
@@ -88,6 +91,11 @@ class VariantsDb(object):
         return genotype_group_configs
 
     def get_genotype_study(self, study_id):
+        # if study_id not in self._genotype_study_cache:
+        #     study_configs = self._load_study_configs()
+        #     if study_id not in study_configs:
+        #         return None
+        #     self._load_genotype_study(study_configs[study_id])
         return self._genotype_study_cache.get(study_id)
 
     def get_genotype_study_config(self, study_id):
@@ -108,8 +116,13 @@ class VariantsDb(object):
     def get_all_genotype_studies(self):
         return list(self._genotype_study_cache.values())
 
-    def get_genotype_group(self, genotype_data_group_id):
-        return self._genotype_group_cache.get(genotype_data_group_id)
+    def get_genotype_group(self, group_id):
+        # if group_id not in self._genotype_group_cache:
+        #     group_configs = self._load_group_configs()
+        #     if group_id not in group_configs:
+        #         return None
+        #     self._load_genotype_group(group_configs[group_id])
+        return self._genotype_group_cache.get(group_id)
 
     def get_genotype_group_config(self, group_id):
         genotype_group = self.get_genotype_group(group_id)
@@ -159,6 +172,9 @@ class VariantsDb(object):
         return group_studies + genotype_data_groups
 
     def _load_all_genotype_studies(self, genotype_study_configs):
+        if genotype_study_configs is None:
+            genotype_study_configs = self._load_study_configs()
+
         for study_id, study_config in genotype_study_configs.items():
             if study_id not in self._genotype_study_cache:
                 self._load_genotype_study(study_config)
@@ -201,7 +217,10 @@ class VariantsDb(object):
             logger.exception(ex)
             return None
 
-    def _load_all_genotype_groups(self, genotype_group_configs):
+    def _load_all_genotype_groups(self, genotype_group_configs=None):
+        if genotype_group_configs is None:
+            genotype_group_configs = self._load_group_configs()
+
         for group_id, group_config in genotype_group_configs.items():
             if group_id not in self._genotype_group_cache:
                 self._load_genotype_group(group_config)
@@ -237,19 +256,14 @@ class VariantsDb(object):
             logger.exception(ex)
 
     def register_genotype_data(self, genotype_data):
-        if genotype_data.study_id in self.get_genotype_data_ids():
+        if genotype_data.study_id in self.get_all_genotype_study_ids():
             logger.warning(
-                f"replacing genotype data instance {genotype_data.study_id}")
+                f"replacing genotype study instance {genotype_data.study_id}")
+        if genotype_data.study_id in self.get_all_genotype_group_ids():
+            logger.warning(
+                f"replacing genotype group instance {genotype_data.study_id}")
 
         if genotype_data.is_group:
-            self._variants_db\
-                ._genotype_group_cache[genotype_data.study_id] = genotype_data
-            self._variants_db\
-                .genotype_group_configs[genotype_data.study_id] = \
-                genotype_data.config
+            self._genotype_group_cache[genotype_data.study_id] = genotype_data
         else:
-            self._variants_db \
-                ._genotype_study_cache[genotype_data.study_id] = genotype_data
-            self._variants_db \
-                ._genotype_study_configs[genotype_data.study_id] = \
-                    genotype_data.config
+            self._genotype_study_cache[genotype_data.study_id] = genotype_data
