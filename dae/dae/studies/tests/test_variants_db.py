@@ -216,6 +216,8 @@ def test_get_all(fixtures_gpf_instance, variants_db_fixture):
 
 
 def test_get_all_studies_ids(fixtures_gpf_instance, variants_db_fixture):
+    fixtures_gpf_instance.reload()
+
     genotype_ids = fixtures_gpf_instance.get_genotype_data_ids()
     assert len(genotype_ids) == 41, genotype_ids
 
