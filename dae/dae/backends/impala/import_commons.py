@@ -1283,7 +1283,10 @@ class DatasetHelpers:
     def find_genotype_data_config_file(self, dataset_id):
         config = self.gpf_instance.get_genotype_data_config(dataset_id)
         if config is None:
-            return None
+            self.gpf_instance._variants_db.reload()
+            config = self.gpf_instance.get_genotype_data_config(dataset_id)
+            if config is None:
+                return None
 
         assert config is not None, dataset_id
 
@@ -1298,7 +1301,7 @@ class DatasetHelpers:
 
     def find_genotype_data_config(self, dataset_id):
         config_file = self.find_genotype_data_config_file(dataset_id)
-        if config_file is None:
+        if config_file is None:            
             return None
         with open(config_file, "r") as infile:
             short_config = toml.load(infile)
@@ -1307,6 +1310,8 @@ class DatasetHelpers:
 
     def get_genotype_storage(self, dataset_id):
         config = self.find_genotype_data_config(dataset_id)
+        if config is None:
+            return None
         gpf_instance = self.gpf_instance
         genotype_storage = gpf_instance \
             .genotype_storage_db \
