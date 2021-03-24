@@ -252,7 +252,19 @@ def test_gene_sets_remote(db, admin_client):
     assert response.status_code == status.HTTP_200_OK
     print(response.data)
     assert len(response.data) == 15
-    assert response.data[0]["count"] == 1445
+    checked = 0
+    for gs in response.data:
+        if gs["name"] == "chromatin modifiers":
+            assert gs["count"] == 428
+            checked += 1
+        if gs["name"] == "CHD8 target genes":
+            assert gs["count"] == 2158
+            checked += 1
+        if gs["name"] == "autism candidates from Iossifov PNAS 2015":
+            assert gs["count"] == 239
+            checked += 1
+
+    assert checked == 3
 
 
 def test_gene_sets_remote_download(db, admin_client):

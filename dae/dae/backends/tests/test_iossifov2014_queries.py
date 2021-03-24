@@ -3,7 +3,7 @@ from dae.utils.regions import Region
 
 
 @pytest.mark.parametrize(
-    "variants", ["iossifov2014_raw_denovo", "iossifov2014_impala",]
+    "variants", ["iossifov2014_raw_denovo", "iossifov2014_impala", ]
 )
 @pytest.mark.parametrize(
     "region,cshl_location,effect_type",
