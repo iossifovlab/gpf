@@ -13,10 +13,12 @@ def test_configuration(admin_client):
     assert len(response.data["autism_scores"]) == 3
     assert len(response.data["protection_scores"]) == 3
     assert len(response.data["datasets"].keys()) == 1
-    assert len(response.data["datasets"]["f1_study"]["effects"]) == 2
-    assert len(response.data["datasets"]["f1_study"]["person_sets"]) == 2
-    assert response.data["datasets"]["f1_study"]["person_sets"] == [
-        "phenotype1", "unaffected"
+
+    datasets = response.data["datasets"]
+    assert len(datasets["iossifov_we2014_test"]["effects"]) == 2
+    assert len(datasets["iossifov_we2014_test"]["person_sets"]) == 2
+    assert datasets["iossifov_we2014_test"]["person_sets"] == [
+        "unknown", "unaffected"
     ]
 
 

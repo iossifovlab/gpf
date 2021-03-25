@@ -53,7 +53,7 @@ def genotype_storage_factory(local_gpf_instance):
 
 @pytest.fixture(scope="session")
 def genotype_data_study_configs(variants_db_fixture):
-    return variants_db_fixture.genotype_study_configs
+    return variants_db_fixture._load_study_configs()
 
 
 @pytest.fixture(scope="session")
@@ -125,7 +125,7 @@ def quads_in_parent(variants_db_fixture, genotype_data_study_configs):
 
 @pytest.fixture(scope="session")
 def genotype_data_group_configs(variants_db_fixture):
-    return variants_db_fixture.genotype_group_configs
+    return variants_db_fixture._load_group_configs()
 
 
 @pytest.fixture(scope="session")
@@ -145,10 +145,10 @@ def composite_dataset_config(variants_db_fixture):
 def load_genotype_data_group(
     variants_db_fixture, genotype_data_group_configs, genotype_data_group_name
 ):
-    # config = genotype_data_group_configs.get(genotype_data_group_name)
-    # assert config is not None, genotype_data_group_name
+    config = genotype_data_group_configs.get(genotype_data_group_name)
+    assert config is not None, genotype_data_group_name
 
-    result = variants_db_fixture._load_genotype_group(genotype_data_group_name)
+    result = variants_db_fixture._load_genotype_group(config)
     assert result is not None
     return result
 

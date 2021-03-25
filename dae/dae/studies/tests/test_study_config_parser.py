@@ -6,6 +6,7 @@ def test_fixture_study_config_parser_is_loaded(genotype_data_study_configs):
         "f3_triple",
         "fake_study",
         "inheritance_trio",
+        'iossifov_we2014_test',
         "quads_f1",  # 'quads_f1_impala',
         "quads_f2",
         "quads_in_child",
