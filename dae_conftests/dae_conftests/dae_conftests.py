@@ -1006,7 +1006,7 @@ def temp_dbfile(request):
 
 
 @pytest.fixture
-def agp_config():
+def agp_config(data_import):
     return Box({
         'gene_sets': ['CHD8 target genes'],
         'protection_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
