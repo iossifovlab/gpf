@@ -1,27 +1,27 @@
 nav {
-    border-bottom: 1px solid #dee2e6;
-    padding: none;
-    padding-left: 25px;
+  border-bottom: 1px solid #dee2e6;
+  padding: none;
+  padding-left: 25px;
 }
 
 .nav-tabs {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .nav-link {
-    color: #495057;
+  color: #495057;
 }
 
 .nav-link.active{
-    border-color: #dee2e6 #dee2e6 #fff;
+  border-color: #dee2e6 #dee2e6 #fff;
 }
 
 .nav-item {
-    margin-bottom: -1px;
+  margin-bottom: -1px;
 }
 
 span.close {
-    font-size: 18px;
-    top: 3px;
-    left: 6px;
+  font-size: 18px;
+  top: 3px;
+  left: 6px;
 }

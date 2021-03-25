@@ -9,82 +9,82 @@ import { AutismGeneProfilesService } from './autism-gene-profiles.service';
 
 const configurationMock = {
   'gene_sets': [
-      'mockSet'
+    'mockSet'
   ],
   'protection_scores': [
-      'protectionScore1',
-      'protectionScore2',
+    'protectionScore1',
+    'protectionScore2',
   ],
   'autism_scores': [
-      'autismScore1',
-      'autismScore2',
+    'autismScore1',
+    'autismScore2',
   ],
   'datasets': {
-      'mockDataset': {
-          'effects': [
-              'effect1',
-              'effect2',
-              'effect3'
-          ],
-          'person_sets': [
-              'personSet1',
-              'personSet2'
-          ]
-      }
+    'mockDataset': {
+      'effects': [
+        'effect1',
+        'effect2',
+        'effect3'
+      ],
+      'person_sets': [
+        'personSet1',
+        'personSet2'
+      ]
+    }
   }
 };
 
 const geneMock = {
   'gene_symbol': 'mockGene',
   'gene_sets': [
-      'mockSet'
+    'mockSet'
   ],
   'protection_scores': {
-      'protectionScore1': 1,
-      'protectionScore2': 2,
+    'protectionScore1': 1,
+    'protectionScore2': 2,
   },
   'autism_scores': {
-      'autismScore1': 3,
-      'autismScore2': 4,
+    'autismScore1': 3,
+    'autismScore2': 4,
   },
   'studies': {
-      'mockDataset': {
-          'personSet1': {
-              'effect1': 5,
-              'effect2': 6,
-          },
-          'personSet2': {
-              'effect3': 7,
-              'effect4': 8,
-          }
+    'mockDataset': {
+      'personSet1': {
+        'effect1': 5,
+        'effect2': 6,
+      },
+      'personSet2': {
+        'effect3': 7,
+        'effect4': 8,
       }
+    }
   }
 };
 
 const geneMock2 = {
   'gene_symbol': 'mockGene2',
   'gene_sets': [
-      'mockSet'
+    'mockSet'
   ],
   'protection_scores': {
-      'protectionScore1': 9,
-      'protectionScore2': 10,
+    'protectionScore1': 9,
+    'protectionScore2': 10,
   },
   'autism_scores': {
-      'autismScore1': 11,
-      'autismScore2': 12,
+    'autismScore1': 11,
+    'autismScore2': 12,
   },
   'studies': {
-      'mockDataset': {
-          'personSet1': {
-              'effect1': 13,
-              'effect2': 14,
-          },
-          'personSet2': {
-              'effect3': 15,
-              'effect4': 16,
-          }
+    'mockDataset': {
+      'personSet1': {
+        'effect1': 13,
+        'effect2': 14,
+      },
+      'personSet2': {
+        'effect3': 15,
+        'effect4': 16,
       }
+    }
   }
 };
 
