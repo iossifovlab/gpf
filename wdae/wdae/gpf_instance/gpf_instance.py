@@ -35,6 +35,13 @@ class WGPFInstance(GPFInstance):
         self._remote_study_clients = dict()
         self._remote_study_ids = dict()
         self._study_wrappers = dict()
+        self._remote_clients = None
+        self._load_remotes()
+
+    def _load_remotes(self):
+        if self._remote_clients is not None:
+            return
+
         self._remote_clients = []
 
         remotes = self.dae_config.remotes
@@ -65,6 +72,7 @@ class WGPFInstance(GPFInstance):
     @cached
     def gene_sets_db(self):
         logger.debug("creating new instance of GeneSetsDb")
+        self._load_remotes()
         gene_sets_db = super().gene_sets_db
         return RemoteGeneSetsDb(
             self._remote_clients, gene_sets_db)
@@ -72,6 +80,7 @@ class WGPFInstance(GPFInstance):
     @property  # type: ignore
     @cached
     def denovo_gene_sets_db(self):
+        self._load_remotes()
         denovo_gene_sets_db = super().denovo_gene_sets_db
         return RemoteDenovoGeneSetsDb(
             self._remote_clients, denovo_gene_sets_db)
