@@ -21,6 +21,7 @@ echo "WD                            : ${WD}"
 
 echo "DAE_DB_DIR                    : ${DAE_DB_DIR}"
 
+ls -la ${DOWNLOADS}
 
 tar zxf ${DOWNLOADS}/data-hg19-startup-${GPF_SERIES}*.tar.gz \
     -C ${DAE_DB_DIR} --strip-components=1 \

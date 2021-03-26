@@ -21,40 +21,40 @@ pipeline {
             }
         }
 
-        stage('Clean up') {
-            steps {
-                sh '''
-                    echo "removing GPF data..."
-                    docker run -d --rm \
-                        -v ${WD}:/wd \
-                        busybox:latest \
-                        /bin/sh -c "rm -rf /wd/data/*"
+        // stage('Clean up') {
+        //     steps {
+        //         sh '''
+        //             echo "removing GPF data..."
+        //             docker run -d --rm \
+        //                 -v ${WD}:/wd \
+        //                 busybox:latest \
+        //                 /bin/sh -c "rm -rf /wd/data/*"
 
-                    echo "removing GPF import..."
-                    docker run -d --rm \
-                        -v ${WD}:/wd \
-                        busybox:latest \
-                        /bin/sh -c "rm -rf /wd/import/*"
+        //             echo "removing GPF import..."
+        //             docker run -d --rm \
+        //                 -v ${WD}:/wd \
+        //                 busybox:latest \
+        //                 /bin/sh -c "rm -rf /wd/import/*"
 
-                    echo "removing downloaded data..."
-                    docker run -d --rm \
-                        -v ${WD}:/wd \
-                        busybox:latest \
-                        /bin/sh -c "rm -rf /wd/downloads/*"
+        //             echo "removing downloaded data..."
+        //             docker run -d --rm \
+        //                 -v ${WD}:/wd \
+        //                 busybox:latest \
+        //                 /bin/sh -c "rm -rf /wd/downloads/*"
                     
-                    echo "removing results..."
-                    docker run -d --rm \
-                        -v ${WD}:/wd \
-                        busybox:latest \
-                        /bin/sh -c "rm -rf /wd/results/*"
+        //             echo "removing results..."
+        //             docker run -d --rm \
+        //                 -v ${WD}:/wd \
+        //                 busybox:latest \
+        //                 /bin/sh -c "rm -rf /wd/results/*"
 
-                    mkdir -p ${WD}/data
-                    mkdir -p ${WD}/import
-                    mkdir -p ${WD}/downloads
-                    mkdir -p ${WD}/results
-                '''
-            }
-        }
+        //             mkdir -p ${WD}/data
+        //             mkdir -p ${WD}/import
+        //             mkdir -p ${WD}/downloads
+        //             mkdir -p ${WD}/results
+        //         '''
+        //     }
+        // }
 
         stage('Docker build') {
             steps {
@@ -166,9 +166,9 @@ pipeline {
     }
     post {
         always {
-            sh '''
-                ${WORKSPACE}/tests_cleanup.sh
-            '''
+            // sh '''
+            //     ${WORKSPACE}/tests_cleanup.sh
+            // '''
 
             junit 'results/wdae-junit.xml, results/dae-junit.xml'
 
