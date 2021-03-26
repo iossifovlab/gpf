@@ -34,8 +34,12 @@ pheno_slot_schema = {
 
 genotype_schema = {
     "name": {"type": "string"},
-    "source": {"type": "string"},
-    "slots": {"type": "list", "schema": genotype_slot_schema},
+    "source": {"type": "string", "excludes": "slots"},
+    "slots": {
+        "type": "list",
+        "schema": genotype_slot_schema,
+        "excludes": "source"
+    },
 }
 
 pheno_schema = {
@@ -243,7 +247,7 @@ study_config_schema = {
             "enabled": {"type": "boolean", "required": True},
             "has_family_filters": {"type": "boolean"},
             "has_family_structure_filter": {
-                "type": "boolean", 
+                "type": "boolean",
                 "dependencies": {
                     "has_family_filters": [True]
                 }
