@@ -40,6 +40,15 @@ echo "DAE_DB_DIR                    : ${DAE_DB_DIR}"
 export DAE_DB_DIR_REMOTE="${WD}/data/data-hg19-remote"
 echo "DAE_DB_DIR_REMOTE             : ${DAE_DB_DIR_REMOTE}"
 
+
+if [ ${BUILD_NUMBER} == "0" ];
+then
+    export DOWNLOADS=${WD}/downloads
+else
+    export DOWNLOADS=${WD}/downloads/builds
+fi
+echo "DOWNLOADS                     : ${DOWNLOADS}"
+
 . ${WD}/scripts/env.sh 
 
 

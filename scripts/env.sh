@@ -22,14 +22,10 @@ fi
 echo "WORKSPACE                    3: ${WORKSPACE}"
 echo "WD                           3: ${WD}"
 
-
-if [ ${BUILD_NUMBER} == "0" ];
+if [ -z ${DOWNLOADS} ];
 then
-    export DOWNLOADS=${WD}/downloads
-else
-    export DOWNLOADS=${WD}/downloads/builds
+    export DOWNLOADS="${WD}/downloads"
 fi
-echo "DOWNLOADS                     : ${DOWNLOADS}"
 
 export SCRIPTS=${WD}/scripts
 echo "SCRIPTS                       : ${SCRIPTS}"

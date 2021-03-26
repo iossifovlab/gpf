@@ -66,33 +66,6 @@ echo "preparing DAE_DB_DIR: ${DAE_DB_DIR}"
 mkdir -p ${DAE_DB_DIR}
 
 
-# cat <<EOT >> ${WD}/import_command.txt
-# docker -D run \
-#     --rm \
-#     --entrypoint /bin/bash \
-#     --hostname ${CONTAINER_GPF_DEV} \
-#     --link ${CONTAINER_MYSQL}:${CONTAINER_MYSQL} \
-#     --link ${CONTAINER_GPF_IMPALA}:impala \
-#     --network ${NETWORK} \
-#     -v ${DAE_DB_DIR}:/data \
-#     -v ${IMPORT}:/import \
-#     -v ${DOWNLOADS}:/downloads \
-#     -v ${SCRIPTS}:/scripts \
-#     -e BUILD_NUMBER=${BUILD_NUMBER} \
-#     -e GPF_VERSION=${GPF_VERSION} \
-#     -e GPF_TAG=${GPF_TAG} \
-#     -e GS=${GS} \
-#     -e WORKSPACE="/" \
-#     -e WD="/" \
-#     -e DAE_DB_DIR="/data" \
-#     -e IMPORT="/import" \
-#     ${IMAGE_GPF_DEV}  -c "/opt/conda/bin/conda run --no-capture-output -n gpf /scripts/internal_prepare_gpf_data.sh"
-# EOT
-
-# export CMD=$(cat ${WD}/import_command.txt)
-# echo "IMPORT: ${CMD}"
-
-
 docker run \
     --rm --network ${NETWORK} \
     --entrypoint /bin/bash \
