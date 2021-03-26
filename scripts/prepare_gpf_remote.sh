@@ -62,24 +62,29 @@ echo "waiting gpf_impala container..."
 docker exec ${CONTAINER_GPF_IMPALA} /wait-for-it.sh -h localhost -p 21050 -t 300
 
 
-echo "preparing DAE_DB_DIR_REMOTE: ${DAE_DB_DIR_REMOTE}"
-mkdir -p ${DAE_DB_DIR_REMOTE}
+if [ ! -d ${DAE_DB_DIR_REMOTE} ];
+then
+
+    echo "preparing DAE_DB_DIR_REMOTE: ${DAE_DB_DIR_REMOTE}"
+    mkdir -p ${DAE_DB_DIR_REMOTE}
 
 
-docker run \
-    --rm --network ${NETWORK} \
-    --link ${CONTAINER_GPF_IMPALA}:impala \
-    --entrypoint /bin/bash \
-    -v ${WD}:/code \
-    -v ${DAE_DB_DIR_REMOTE}:/data \
-    -v ${IMPORT}:/import \
-    -v ${DOWNLOADS}:/downloads \
-    -v ${SCRIPTS}:/scripts \
-    -e BUILD_NUMBER=${BUILD_NUMBER} \
-    -e BRANCH_NAME=${BRANCH_NAME} \
-    -e GPF_VERSION=${GPF_VERSION} \
-    -e GPF_TAG=${GPF_TAG} \
-    -e WORKSPACE="/" \
-    -e WD="/" \
-    -e DAE_DB_DIR="/data" \
-    ${IMAGE_GPF_DEV} -c "/opt/conda/bin/conda run --no-capture-output -n gpf /scripts/internal_prepare_gpf_remote.sh"
+    docker run \
+        --rm --network ${NETWORK} \
+        --link ${CONTAINER_GPF_IMPALA}:impala \
+        --entrypoint /bin/bash \
+        -v ${WD}:/code \
+        -v ${DAE_DB_DIR_REMOTE}:/data \
+        -v ${IMPORT}:/import \
+        -v ${DOWNLOADS}:/downloads \
+        -v ${SCRIPTS}:/scripts \
+        -e BUILD_NUMBER=${BUILD_NUMBER} \
+        -e BRANCH_NAME=${BRANCH_NAME} \
+        -e GPF_VERSION=${GPF_VERSION} \
+        -e GPF_TAG=${GPF_TAG} \
+        -e WORKSPACE="/" \
+        -e WD="/" \
+        -e DAE_DB_DIR="/data" \
+        ${IMAGE_GPF_DEV} -c "/opt/conda/bin/conda run --no-capture-output -n gpf /scripts/internal_prepare_gpf_remote.sh"
+
+fi

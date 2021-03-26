@@ -27,4 +27,7 @@ done
 
 
 cd /code/dae_conftests
-py.test -vs --reimport dae_conftests/tests/
+py.test -v --reimport dae_conftests/tests/
+
+cd /code/dae
+py.test -v dae/gene/tests/test_denovo_gene_sets_db.py

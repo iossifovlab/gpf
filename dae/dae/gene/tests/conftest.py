@@ -94,16 +94,16 @@ def calc_gene_sets(request, local_gpf_instance, genotype_data_names):
 
     print("PRECALCULATION COMPLETE")
 
-    def remove_gene_sets():
-        for dgs in genotype_data_names:
-            genotype_data = local_gpf_instance.get_genotype_data(dgs)
-            os.remove(
-                DenovoGeneSetCollectionFactory.denovo_gene_set_cache_file(
-                    genotype_data.config, "phenotype"
-                )
-            )
+    # def remove_gene_sets():
+    #     for dgs in genotype_data_names:
+    #         genotype_data = local_gpf_instance.get_genotype_data(dgs)
+    #         os.remove(
+    #             DenovoGeneSetCollectionFactory.denovo_gene_set_cache_file(
+    #                 genotype_data.config, "phenotype"
+    #             )
+    #         )
 
-    request.addfinalizer(remove_gene_sets)
+    # request.addfinalizer(remove_gene_sets)
 
 
 @pytest.fixture(scope="session")
