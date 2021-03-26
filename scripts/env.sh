@@ -23,7 +23,12 @@ echo "WORKSPACE                    3: ${WORKSPACE}"
 echo "WD                           3: ${WD}"
 
 
-export DOWNLOADS=${WD}/downloads
+if [ ${BUILD_NUMBER} == "0" ];
+then
+    export DOWNLOADS=${WD}/downloads
+else
+    export DOWNLOADS=${WD}/downloads/builds
+fi
 echo "DOWNLOADS                     : ${DOWNLOADS}"
 
 export SCRIPTS=${WD}/scripts

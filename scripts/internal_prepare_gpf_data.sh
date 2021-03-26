@@ -2,9 +2,6 @@
 
 set -e
 
-if [ -z ${GS} ]; then
-    export GS="genotype_impala"
-fi 
 
 if [ -z ${WORKSPACE} ];
 then
