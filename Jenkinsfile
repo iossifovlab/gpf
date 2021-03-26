@@ -72,10 +72,10 @@ pipeline {
         stage('Data Download') {
             steps {
                 script {
-
                     copyArtifacts(
                         projectName: 'seqpipe/data-hg19-startup/master',
-                        selector: lastSuccessful()
+                        selector: lastSuccessful(),
+                        target: "${env.WORKSPACE}" + "/downloads"
                     );
                 }
             }
