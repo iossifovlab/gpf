@@ -147,7 +147,7 @@ pipeline {
                 stage("Run dae Tests") {
                     steps {
                         sh '''
-                        . ${WD}/version.sh
+                        . ${WD}/scripts/version.sh
                         ${SCRIPTS}/run_gpf_dev.sh internal_run_dae_tests.sh
                         '''
                     }
@@ -155,7 +155,7 @@ pipeline {
                 stage("Run wdae Tests") {
                     steps {
                         sh '''
-                        . ${WD}/version.sh
+                        . ${WD}/scripts/version.sh
                         ${SCRIPTS}/run_gpf_dev.sh internal_run_wdae_tests.sh
                         '''
                     }
