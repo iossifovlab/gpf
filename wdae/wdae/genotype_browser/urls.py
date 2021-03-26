@@ -8,19 +8,14 @@ from genotype_browser import views
 
 urlpatterns = [
     url(
-        r"^/preview/?$",
-        views.QueryPreviewView.as_view(),
-        name="genotype_browser_preview",
+        r"^/config/?$",
+        views.GenotypeBrowserConfigView.as_view(),
+        name="genotype_browser_config",
     ),
     url(
-        r"^/preview/variants/?$",
-        views.QueryPreviewVariantsView.as_view(),
-        name="genotype_browser_preview_variants",
-    ),
-    url(
-        r"^/download/?$",
-        views.QueryDownloadView.as_view(),
-        name="genotype_browser_download",
+        r"^/query/?",
+        views.GenotypeBrowserQueryView.as_view(),
+        name="genotype_browser_query"
     ),
     url(
         r"^/summary/preview/?$",

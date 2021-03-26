@@ -32,7 +32,87 @@ def handle_partial_permissions(user, dataset_id: str, request_data: dict):
         get_allowed_genotype_studies(user, dataset_id)
 
 
+class GenotypeBrowserConfigView(QueryBaseView):
+    @request_logging(LOGGER)
+    def get(self, request):
+        data = request.query_params
+        dataset_id = data.pop("datasetId", None)
+        if dataset_id is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+
+        preview_info = dataset.get_wdae_preview_info(
+            data,
+            GenotypeBrowserQueryView.MAX_SHOWN_VARIANTS
+        )
+
+        config = self.gpf_instance.dae_config.genotype_browser
+
+        preview_info.update(config)
+
+        return Response(preview_info, status=status.HTTP_200_OK)
+
+
+class GenotypeBrowserQueryView(QueryBaseView):
+
+    MAX_SHOWN_VARIANTS = 1000
+
+    @expand_gene_set
+    @request_logging
+    def post(self, request):
+        LOGGER.info("query v3 variants request: " + str(request.data))
+
+        data = request.data
+        dataset_id = data.pop("datasetId", None)
+        if dataset_id is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        if "genomicScores" in data:
+            scores = data["genomicScores"]
+            for score in scores:
+                if score["rangeStart"] is None and score["rangeEnd"] is None:
+                    return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        if "sources" not in data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        sources = data.pop("sources")
+
+        is_download = data.pop("download", False)
+
+        max_variants = data.pop(
+            "maxVariantsCount", self.MAX_SHOWN_VARIANTS + 1)
+        if max_variants == -1:
+            # unlimitted variants preview
+            max_variants = None
+
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        user = request.user
+
+        handle_partial_permissions(user, dataset_id, data)
+
+        response = dataset.query_variants_wdae(
+            data, sources, max_variants_count=max_variants
+        )
+
+        if is_download:
+            response = FileResponse(response, content_type="text/tsv")
+        else:
+            response = StreamingHttpResponse(
+                iterator_to_json(response),
+                status=status.HTTP_200_OK,
+                content_type="text/event-stream",
+            )
+
+        response["Cache-Control"] = "no-cache"
+        return response
+
+
 class QueryPreviewView(QueryBaseView):
+
+    MAX_SHOWN_VARIANTS = 1000
+
     @expand_gene_set
     @request_logging(LOGGER)
     def post(self, request):
@@ -48,54 +128,10 @@ class QueryPreviewView(QueryBaseView):
         # LOGGER.info('dataset ' + str(dataset))
         response = dataset.get_wdae_preview_info(
             data,
-            max_variants_count=QueryPreviewVariantsView.MAX_SHOWN_VARIANTS,
+            max_variants_count=QueryPreviewView.MAX_SHOWN_VARIANTS,
         )
 
         return Response(response, status=status.HTTP_200_OK)
-
-
-class QueryPreviewVariantsView(QueryBaseView):
-
-    MAX_SHOWN_VARIANTS = 1000
-
-    @expand_gene_set
-    @request_logging(LOGGER)
-    def post(self, request):
-        LOGGER.info("query v3 preview request: " + str(request.data))
-
-        data = request.data
-        dataset_id = data.pop("datasetId", None)
-        if dataset_id is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        if "genomicScores" in data:
-            scores = data["genomicScores"]
-            for score in scores:
-                if score["rangeStart"] is None and score["rangeEnd"] is None:
-                    return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        max_variants = data.pop(
-            "maxVariantsCount", self.MAX_SHOWN_VARIANTS + 1)
-        if max_variants == -1:
-            # unlimitted variants preview
-            max_variants = None
-
-        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        user = request.user
-
-        handle_partial_permissions(user, dataset_id, data)
-
-        response = dataset.get_variants_wdae_preview(
-            data, max_variants_count=max_variants
-        )
-
-        response = StreamingHttpResponse(
-            iterator_to_json(response),
-            status=status.HTTP_200_OK,
-            content_type="text/event-stream",
-        )
-        response["Cache-Control"] = "no-cache"
-        return response
 
 
 class QueryDownloadView(QueryBaseView):

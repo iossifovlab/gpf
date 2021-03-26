@@ -292,7 +292,7 @@ class StudyWrapper(StudyWrapperBase):
                 return True
         else:
             summary_variant_ids = set(kwargs.get("summaryVariantIds"))
-            logger.debug(f"sumamry variants ids: {summary_variant_ids}")
+            logger.debug(f"summary variants ids: {summary_variant_ids}")
 
             def filter_allele(allele):
                 svid = f"{allele.cshl_location}:{allele.cshl_variant}"
@@ -315,44 +315,34 @@ class StudyWrapper(StudyWrapperBase):
 
             yield row_variant
 
-    def get_variant_web_rows(self, query, sources, max_variants_count=10000):
-        person_set_collection_id = query.get("peopleGroup", {}).get(
-            "id", list(self.legend.keys())[0] if self.legend else None
-        )
-        person_set_collection = self.get_person_set_collection(
-            person_set_collection_id
-        )
-
-        # if max_variants_count is not None:
-        #     query["limit"] = max_variants_count
-
-        rows_iterator = self._query_variants_rows_iterator(
-            sources, person_set_collection, **query
-        )
-
-        if max_variants_count is not None:
-            limited_rows = itertools.islice(rows_iterator, max_variants_count)
-        else:
-            limited_rows = rows_iterator
-
-        return limited_rows
-
     def get_wdae_preview_info(self, query, max_variants_count=10000):
         preview_info = {}
 
-        preview_info["cols"] = self.preview_columns
         preview_info["legend"] = self.get_legend(**query)
 
         preview_info["maxVariantsCount"] = max_variants_count
 
         return preview_info
 
-    def get_variants_wdae_preview(self, query, max_variants_count=10000):
-        variants_data = self.get_variant_web_rows(
-            query,
-            self.preview_descs,
-            max_variants_count=max_variants_count,
+    def query_variants_wdae(self, kwargs, sources, max_variants_count=10000):
+        people_group = kwargs.get("peopleGroup", {})
+        person_set_collection_id = people_group.get(
+            "id",
+            list(self.legend.keys())[0] if self.legend else None
         )
+
+        person_set_collection = self.get_person_set_collection(
+            person_set_collection_id
+        )
+
+        rows_iterator = self._query_variants_rows_iterator(
+            sources, person_set_collection, **kwargs
+        )
+
+        if max_variants_count is not None:
+            limited_rows = itertools.islice(rows_iterator, max_variants_count)
+        else:
+            limited_rows = rows_iterator
 
         return variants_data
 
