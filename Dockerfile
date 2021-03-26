@@ -1,4 +1,4 @@
-FROM seqpipe/seqpipe-node-base:latest
+FROM seqpipe/seqpipe-anaconda-base:latest
 
 ARG SOURCE_DIR="."
 

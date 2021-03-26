@@ -686,6 +686,11 @@ def pytest_addoption(parser):
     )
 
 
+def pytest_configure(config):
+    logger.info("pytest_configure")
+    pass
+
+
 @pytest.fixture(scope="session")
 def reimport(request):
     return bool(request.config.getoption("--reimport"))
