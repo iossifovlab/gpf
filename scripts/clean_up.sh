@@ -42,6 +42,7 @@ if [[ $HAS_NETWORK ]]; then
     docker network rm ${NETWORK}
 fi
 
+
 echo "removing GPF data..."
 docker run -d --rm \
     -v ${WD}:/wd \

@@ -32,6 +32,7 @@ coverage
 flake8
 pytest-cov
 pytest-mock
+pytest-xdist
 pylint
 seaborn
 openjdk=8.0.192

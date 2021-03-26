@@ -2,9 +2,9 @@ pipeline {
     agent {
         label 'dory'
     }
-    options {
-        disableConcurrentBuilds()
-    }
+    // options {
+    //     disableConcurrentBuilds()
+    // }
     triggers {
         pollSCM('* * * * *')
         cron('H 2 * * *')
@@ -117,6 +117,7 @@ pipeline {
             }
         }
 
+
         // stage('Lint') {
         //     steps {
         //         sh '''
@@ -140,13 +141,28 @@ pipeline {
         //     }
         // }
 
+
         stage('Test') {
-            steps {
-                sh '''
-                    ${WD}/tests_run.sh
-                '''
+            parallel {
+                stage("Run dae Tests") {
+                    steps {
+                        sh '''
+                        . ${WD}/version.sh
+                        ${SCRIPTS}/run_gpf_dev.sh internal_run_dae_tests.sh
+                        '''
+                    }
+                }
+                stage("Run wdae Tests") {
+                    steps {
+                        sh '''
+                        . ${WD}/version.sh
+                        ${SCRIPTS}/run_gpf_dev.sh internal_run_wdae_tests.sh
+                        '''
+                    }
+                }
             }
         }
+
     }
     post {
         always {
@@ -154,11 +170,11 @@ pipeline {
                 ${WORKSPACE}/tests_cleanup.sh
             '''
 
-            junit 'test_results/wdae-junit.xml, test_results/dae-junit.xml'
+            junit 'results/wdae-junit.xml, results/dae-junit.xml'
 
-            step([
-                $class: 'CoberturaPublisher',
-                coberturaReportFile: 'test_results/coverage.xml'])
+            // step([
+            //     $class: 'CoberturaPublisher',
+            //     coberturaReportFile: 'test_results/coverage.xml'])
 
             zulipNotification(
                 topic: "${env.JOB_NAME}"

@@ -26,13 +26,13 @@ for d in /code/dae /code/wdae /code/dae_conftests; do
 done
 
 
-cd /code/
+cd /code/wdae
 
-py.test -v --cov-config /code/coveragerc \
+PYTHONHASHSEED=0 py.test -v -n 10 \
+    --cov-config /code/coveragerc \
     --junitxml=/code/results/wdae-junit.xml \
-    --cov-append \
-    --cov-report=html:/code/results/coverage.html \
-    --cov-report=xml:/code/results/coverage.xml \
-    --cov wdae/ \
-    wdae/wdae
+    --cov-report=html:/code/results/wdae-coverage.html \
+    --cov-report=xml:/code/results/wdae-coverage.xml \
+    --cov /code/wdae/ \
+    wdae
 

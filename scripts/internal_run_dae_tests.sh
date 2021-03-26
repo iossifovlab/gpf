@@ -25,13 +25,13 @@ for d in /code/dae /code/wdae /code/dae_conftests; do
     pip install -e .
 done
 
-cd /code/
+cd /code/dae
 
-py.test -v \
+PYTHONHASHSEED=0 py.test -v -n 10 \
     --cov-config /code/coveragerc \
     --junitxml=./results/dae-junit.xml \
-    --cov-report=html:/code/results/coverage.html \
-    --cov-report=xml:/code/results/coverage.xml \
-    --cov dae/ \
-    dae/dae/
+    --cov-report=html:/code/results/dae-coverage.html \
+    --cov-report=xml:/code/results/dae-coverage.xml \
+    --cov /code/dae/ \
+    dae/
 
