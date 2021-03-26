@@ -72,8 +72,6 @@ docker run \
     --rm --network ${NETWORK} \
     --link ${CONTAINER_GPF_IMPALA}:impala \
     --entrypoint /bin/bash \
-    --name ${CONTAINER_GPF_DEV} \
-    --hostname ${CONTAINER_GPF_DEV} \
     -v ${WD}:/code \
     -v ${DAE_DB_DIR}:/data \
     -v ${IMPORT}:/import \
