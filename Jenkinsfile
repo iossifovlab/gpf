@@ -148,20 +148,18 @@ pipeline {
                     steps {
                         sh '''
                         . ${WD}/scripts/version.sh
+                        touch ${WD}/results/dae-junit.xml
                         ${SCRIPTS}/run_gpf_dev.sh internal_run_dae_tests.sh
                         '''
-    
-                        junit 'results/dae-junit.xml'
                     }
                 }
                 stage("Run wdae Tests") {
                     steps {
                         sh '''
                         . ${WD}/scripts/version.sh
+                        touch ${WD}/results/wdae-junit.xml
                         ${SCRIPTS}/run_gpf_dev.sh internal_run_wdae_tests.sh
-                        '''
-    
-                        junit 'results/wdae-junit.xml'
+                        '''    
                     }
                 }
             }
@@ -173,6 +171,8 @@ pipeline {
             sh '''
                 ${WORKSPACE}/tests_cleanup.sh
             '''
+
+            junit 'results/wdae-junit.xml, results/dae-junit.xml'
 
             // step([
             //     $class: 'CoberturaPublisher',
