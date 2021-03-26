@@ -168,15 +168,16 @@ pipeline {
     }
     post {
         always {
-            sh '''
-                ${WORKSPACE}/tests_cleanup.sh
-            '''
 
             junit 'results/wdae-junit.xml, results/dae-junit.xml'
 
             // step([
             //     $class: 'CoberturaPublisher',
             //     coberturaReportFile: 'test_results/coverage.xml'])
+
+            sh '''
+                ${WORKSPACE}/tests_cleanup.sh
+            '''
 
             zulipNotification(
                 topic: "${env.JOB_NAME}"

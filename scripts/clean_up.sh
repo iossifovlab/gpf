@@ -61,8 +61,8 @@ docker run -d --rm \
     busybox:latest \
     /bin/sh -c "rm -rf /wd/downloads/*"
 
-echo "removing results..."
-docker run -d --rm \
-    -v ${WD}:/wd \
-    busybox:latest \
-    /bin/sh -c "rm -rf /wd/results/*"
+# echo "removing results..."
+# docker run -d --rm \
+#     -v ${WD}:/wd \
+#     busybox:latest \
+#     /bin/sh -c "rm -rf /wd/results/*"
