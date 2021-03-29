@@ -1,5 +1,4 @@
 import pytest
-import os
 
 import numpy as np
 
@@ -9,8 +8,6 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 from dae.backends.raw.raw_variants import RawMemoryVariants
 
-from dae.backends.impala.parquet_io import ParquetManager, \
-    NoPartitionDescriptor
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.utils.regions import Region
 

@@ -8,7 +8,10 @@ if [ -f "/data/studies/iossifov_2014/iossifov_2014.conf" ]; then
     echo "Studies found"
 else
     echo "Studies missing, importing..."
-    /code/dae/dae/tools/simple_study_import.py /study/IossifovWE2014.ped --denovo-file /study/IossifovWE2014.tsv --id iossifov_2014
+    /code/dae/dae/tools/simple_study_import.py \
+        /study/IossifovWE2014.ped \
+        --denovo-file /study/IossifovWE2014.tsv \
+        --id iossifov_2014
     echo -e "\n[enrichment]\nenabled = true" >> /data/studies/iossifov_2014/iossifov_2014.conf
     echo "Done"
 fi
