@@ -787,15 +787,15 @@ def data_import(
     temp_dirname = hdfs.tempdir(prefix="variants_", suffix="_data")
     hdfs.mkdir(temp_dirname)
 
-    annotation_pipeline = construct_import_annotation_pipeline(
-        gpf_instance_2013
-    )
-
     def fin():
         hdfs.delete(temp_dirname, recursive=True)
 
     if cleanup:
         request.addfinalizer(fin)
+
+    annotation_pipeline = construct_import_annotation_pipeline(
+        gpf_instance_2013
+    )
 
     from dae.backends.impala.impala_helpers import ImpalaHelpers
 
