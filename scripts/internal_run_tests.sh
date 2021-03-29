@@ -28,11 +28,6 @@ done
 
 cd /code/
 
-py.test -v -n 10 --no-cleanup --cov-config /code/coveragerc \
-    --cov-append \
-    --cov-report=html:/code/results/coverage.html \
-    --cov-report=xml:/code/results/coverage.xml \
-    --cov wdae/ \
-    --cov dae/ \
+PYTHONHASHSEED=0 py.test -v -n 10 --no-cleanup \
     ${RUN_WHAT}
 
