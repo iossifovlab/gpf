@@ -32,10 +32,6 @@ class StudyWrapperBase(GenotypeData):
         pass
 
     @abstractmethod
-    def get_variants_wdae_preview(self, query, max_variants_count=10000):
-        pass
-
-    @abstractmethod
     def get_variants_wdae_download(self, query, max_variants_count=10000):
         pass
 
@@ -309,6 +305,7 @@ class StudyWrapper(StudyWrapperBase):
                 continue
 
             row_variant = []
+
             row_variant = self.response_transformer._build_variant_row(
                 v, sources, person_set_collection=person_set_collection
             )
@@ -318,7 +315,9 @@ class StudyWrapper(StudyWrapperBase):
     def get_wdae_preview_info(self, query, max_variants_count=10000):
         preview_info = {}
 
-        preview_info["legend"] = self.get_legend(**query)
+        preview_info["legend"] = self.get_legend(
+            query["personSetCollectionId"]
+        )
 
         preview_info["maxVariantsCount"] = max_variants_count
 
@@ -344,7 +343,7 @@ class StudyWrapper(StudyWrapperBase):
         else:
             limited_rows = rows_iterator
 
-        return variants_data
+        return limited_rows
 
     def get_variants_wdae_download(self, query, max_variants_count=10000):
         rows = self.get_variant_web_rows(
@@ -465,11 +464,11 @@ class StudyWrapper(StudyWrapperBase):
             }
         ]
 
-    def get_legend(self, *args, **kwargs):
-        if "peopleGroup" not in kwargs:
+    def get_legend(self, person_set_collection_id=None):
+        if person_set_collection_id is None:
             legend = list(self.legend.values())[0] if self.legend else []
         else:
-            legend = self.legend.get(kwargs["peopleGroup"]["id"], [])
+            legend = self.legend.get(person_set_collection_id, [])
         return legend + self._get_legend_default_values()
 
     def get_present_in_role(self, present_in_role_id):

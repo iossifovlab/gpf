@@ -36,22 +36,43 @@ class GenotypeBrowserConfigView(QueryBaseView):
     @request_logging(LOGGER)
     def get(self, request):
         data = request.query_params
-        dataset_id = data.pop("datasetId", None)
+        dataset_id = data.get("datasetId", None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        study_wrapper = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
-        preview_info = dataset.get_wdae_preview_info(
-            data,
-            GenotypeBrowserQueryView.MAX_SHOWN_VARIANTS
+        preview_info = dict(study_wrapper.get_wdae_preview_info(
+            data, GenotypeBrowserQueryView.MAX_SHOWN_VARIANTS
+        ))
+
+        config = study_wrapper.config
+
+        preview_info.update(config.genotype_browser)
+
+        result_config = {k: preview_info[k] for k in [
+            "legend",
+            "maxVariantsCount",
+            "preview_columns",
+            "download_columns",
+            "summary_preview_columns",
+            "summary_download_columns",
+        ]}
+
+        result_config["preview_columns_sources"] = list(
+            study_wrapper.preview_descs
+        )
+        result_config["download_columns_sources"] = list(
+            study_wrapper.download_descs
+        )
+        result_config["summary_preview_columns_sources"] = list(
+            study_wrapper.summary_preview_descs
+        )
+        result_config["summary_download_columns_sources"] = list(
+            study_wrapper.summary_download_descs
         )
 
-        config = self.gpf_instance.dae_config.genotype_browser
-
-        preview_info.update(config)
-
-        return Response(preview_info, status=status.HTTP_200_OK)
+        return Response(result_config, status=status.HTTP_200_OK)
 
 
 class GenotypeBrowserQueryView(QueryBaseView):
@@ -59,7 +80,7 @@ class GenotypeBrowserQueryView(QueryBaseView):
     MAX_SHOWN_VARIANTS = 1000
 
     @expand_gene_set
-    @request_logging
+    @request_logging(LOGGER)
     def post(self, request):
         LOGGER.info("query v3 variants request: " + str(request.data))
 
