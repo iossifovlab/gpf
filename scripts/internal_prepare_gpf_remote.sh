@@ -2,10 +2,6 @@
 
 set -e
 
-if [ -z ${GS} ]; then
-    export GS="genotype_impala"
-fi 
-
 if [ -z ${WORKSPACE} ];
 then
     export WORKSPACE=`pwd`
@@ -68,7 +64,6 @@ cd iossifov_2014/
 simple_study_import.py --id iossifov_2014 \
     -o ./data_iossifov_2014 \
     --denovo-file IossifovWE2014.tsv \
-    --genotype-storage ${GS} \
     IossifovWE2014.ped
 cd -
 

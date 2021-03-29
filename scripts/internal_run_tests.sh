@@ -28,8 +28,7 @@ done
 
 cd /code/
 
-py.test -v --cov-config /code/coveragerc \
-    --junitxml=/code/results/wdae-junit.xml \
+py.test -v -n 10 --no-cleanup --cov-config /code/coveragerc \
     --cov-append \
     --cov-report=html:/code/results/coverage.html \
     --cov-report=xml:/code/results/coverage.xml \
