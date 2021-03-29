@@ -2,7 +2,8 @@ import pytest
 
 from rest_framework import status
 
-pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
+pytestmark = pytest.mark.usefixtures(
+    "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
 def test_get_genomic_scores(user_client):

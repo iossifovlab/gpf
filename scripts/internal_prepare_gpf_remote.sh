@@ -92,3 +92,10 @@ simple_pheno_import.py -p comp_pheno.ped \
     --regression comp_pheno_regressions.conf
 
 cd -
+
+# Enable comp_pheno for iossifov_2014
+sed -i '5i\\nphenotype_data="comp_pheno"' ${DAE_DB_DIR}/studies/iossifov_2014/iossifov_2014.conf
+
+
+# generate denovo gene sets
+generate_denovo_gene_sets.py

@@ -7,7 +7,8 @@ from datasets_api.permissions import add_group_perm_to_user, \
 from rest_framework import status
 
 
-pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
+pytestmark = pytest.mark.usefixtures(
+    "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
 EXAMPLE_REQUEST_F1 = {

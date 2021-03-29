@@ -55,7 +55,7 @@ export CONTAINER_GPF_IMPALA="gpf-dev-impala-container-${BRANCH_NAME}-${GPF_VERSI
 export CONTAINER_GPF_IMPALA=$(tr '_' '-' <<<"${CONTAINER_GPF_IMPALA}")
 export CONTAINER_GPF_IMPALA=$(tr '.' '-' <<<"${CONTAINER_GPF_IMPALA}")
 
-export IMAGE_GPF_DEV="gpf-image-dev-${BRANCH_NAME}-${GPF_VERSION}-${BUILD_NUMBER}"
+export IMAGE_GPF_DEV="gpf-dev-image-${BRANCH_NAME}-${GPF_VERSION}-${BUILD_NUMBER}"
 export IMAGE_GPF_DEV=$(tr '_' '-' <<<"${IMAGE_GPF_DEV}")
 export IMAGE_GPF_DEV=$(tr '.' '-' <<<"${IMAGE_GPF_DEV}")
 export IMAGE_GPF_DEV=${REGISTRY}/${IMAGE_GPF_DEV}:${GPF_TAG}
@@ -64,7 +64,7 @@ export CONTAINER_GPF_DEV="gpf-dev-${BRANCH_NAME}-${GPF_VERSION}-${BUILD_NUMBER}"
 export CONTAINER_GPF_DEV=$(tr '_' '-' <<<"${CONTAINER_GPF_DEV}")
 export CONTAINER_GPF_DEV=$(tr '.' '-' <<<"${CONTAINER_GPF_DEV}")
 
-export CONTAINER_GPF_REMOTE="gpf-remote-${BRANCH_NAME}-${GPF_VERSION}-${BUILD_NUMBER}"
+export CONTAINER_GPF_REMOTE="gpf-dev-remote-${BRANCH_NAME}-${GPF_VERSION}-${BUILD_NUMBER}"
 export CONTAINER_GPF_REMOTE=$(tr '_' '-' <<<"${CONTAINER_GPF_REMOTE}")
 export CONTAINER_GPF_REMOTE=$(tr '.' '-' <<<"${CONTAINER_GPF_REMOTE}")
 

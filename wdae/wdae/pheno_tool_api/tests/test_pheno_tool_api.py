@@ -6,7 +6,8 @@ import json
 from rest_framework import status
 
 
-pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
+pytestmark = pytest.mark.usefixtures(
+    "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
 TOOL_URL = "/api/v3/pheno_tool"

@@ -36,6 +36,8 @@ for container in ${CONTAINER_TESTS} ${CONTAINER_GPF_DEV} ${CONTAINER_GPF_REMOTE}
 
 done
 
+sleep 2
+
 export HAS_NETWORK=`docker network ls | grep ${NETWORK} | sed -e "s/\s\{2,\}/\t/g" | cut -f 1`
 if [[ $HAS_NETWORK ]]; then
     echo "removing network ${container}"
