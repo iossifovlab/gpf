@@ -1,4 +1,4 @@
-import { UsersPage } from "./users_page";
+import { UsersPage } from "./users-page";
 
 export const datasetIds = {
   compAll: 'comp_all',
@@ -43,8 +43,8 @@ export class BasePage {
     const usersPage = new UsersPage();
 
     this.login(this.adminUsername, this.adminPassword);
-    usersPage.loginWindow.should("not.exist");
-    // cy.wait(1000);
+    cy.get('#datasets-dropdown-menu-button').should("not.exist");
+    cy.wait(500);
   }
 
   logout() {

@@ -1,4 +1,4 @@
-import { UsersPage } from "./users_page";
+import { UsersPage } from "./users-page";
 
 export class AppPage{
   get title() {

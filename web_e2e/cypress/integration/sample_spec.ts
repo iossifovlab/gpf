@@ -1,4 +1,4 @@
-import { AppPage } from '../elements/sample_page';
+import { AppPage } from '../elements/sample-page';
 
 describe('My First Test', () => {
   const appPage = new AppPage();
