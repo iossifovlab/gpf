@@ -68,7 +68,7 @@ export CONTAINER_GPF_REMOTE="gpf-remote-${BRANCH_NAME}-${GPF_VERSION}-${BUILD_NU
 export CONTAINER_GPF_REMOTE=$(tr '_' '-' <<<"${CONTAINER_GPF_REMOTE}")
 export CONTAINER_GPF_REMOTE=$(tr '.' '-' <<<"${CONTAINER_GPF_REMOTE}")
 
-export CONTAINER_TESTS="gpf-e2e-tests-${BRANCH_NAME}-${GPF_VERSION}-${BUILD_NUMBER}"
+export CONTAINER_TESTS="gpf-dev-tests-${BRANCH_NAME}-${GPF_VERSION}-${BUILD_NUMBER}"
 export CONTAINER_TESTS=$(tr '_' '-' <<<"${CONTAINER_TESTS}")
 export CONTAINER_TESTS=$(tr '.' '-' <<<"${CONTAINER_TESTS}")
 
