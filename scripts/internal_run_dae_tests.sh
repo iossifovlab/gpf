@@ -29,7 +29,7 @@ cd /code/dae
 
 PYTHONHASHSEED=0 py.test -v -n 10 \
     --cov-config /code/coveragerc \
-    --junitxml=./results/dae-junit.xml \
+    --junitxml=/code/results/dae-junit.xml \
     --cov-report=html:/code/results/dae-coverage.html \
     --cov-report=xml:/code/results/dae-coverage.xml \
     --cov /code/dae/ \
