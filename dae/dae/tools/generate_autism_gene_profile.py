@@ -162,6 +162,7 @@ def main(gpf_instance=None, argv=None):
     person_ids = dict()
     for dataset_id, filters in config.datasets.items():
         genotype_data = gpf_instance.get_genotype_data(dataset_id)
+        assert genotype_data is not None, dataset_id
 
         variants[dataset_id] = list(
             genotype_data.query_variants(

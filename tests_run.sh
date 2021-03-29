@@ -25,7 +25,7 @@ sed -i "s/localhost/impala/" ${WD}/dae_conftests/dae_conftests/tests/fixtures/DA
 if [ -z ${1} ];
 then
     ${SCRIPTS}/run_gpf_dev.sh internal_run_dae_tests.sh
-    ${SCRIPTS}/run_gpf_dev.sh internal_run_wdae_tests.sh
+    # ${SCRIPTS}/run_gpf_dev.sh internal_run_wdae_tests.sh
 else
     ${SCRIPTS}/run_gpf_dev.sh internal_run_tests.sh ${1}
 fi

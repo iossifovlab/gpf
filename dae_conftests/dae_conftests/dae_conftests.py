@@ -86,13 +86,14 @@ def global_dae_fixtures_dir():
 
 
 @pytest.fixture(scope="session")
-def default_dae_config(request):
+def default_dae_config(request, cleanup):
     studies_dirname = tempfile.mkdtemp(prefix="studies_", suffix="_test")
 
     def fin():
         shutil.rmtree(studies_dirname)
 
-    request.addfinalizer(fin)
+    if cleanup:
+        request.addfinalizer(fin)
     dae_conf_path = os.path.join(
         os.environ.get("DAE_DB_DIR", None), "DAE.conf"
     )
@@ -233,24 +234,25 @@ def result_df():
 
 
 @pytest.fixture
-def temp_dirname(request):
+def temp_dirname(request, cleanup):
     dirname = tempfile.mkdtemp(suffix="_data", prefix="variants_")
 
     def fin():
         shutil.rmtree(dirname)
-
-    request.addfinalizer(fin)
+    if cleanup:
+        request.addfinalizer(fin)
     return dirname
 
 
 @pytest.fixture
-def temp_filename(request):
+def temp_filename(request, cleanup):
     dirname = tempfile.mkdtemp(suffix="_eff", prefix="variants_")
 
     def fin():
         shutil.rmtree(dirname)
+    if cleanup:
+        request.addfinalizer(fin)
 
-    # request.addfinalizer(fin)
     output = os.path.join(dirname, "temp_filename.tmp")
     return output
 
@@ -682,8 +684,14 @@ def raw_dae(config_dae, genome_2013):
 
 def pytest_addoption(parser):
     parser.addoption(
-        "--reimport", action="store_true", default=False, help="force reimport"
+        "--reimport", action="store_true",
+        default=False, help="force reimport"
     )
+    parser.addoption(
+        "--no-cleanup", action="store_true",
+        default=False, help="skip clean up after fixtures setup"
+    )
+
 
 
 def pytest_configure(config):
@@ -694,6 +702,11 @@ def pytest_configure(config):
 @pytest.fixture(scope="session")
 def reimport(request):
     return bool(request.config.getoption("--reimport"))
+
+
+@pytest.fixture(scope="session")
+def cleanup(request):
+    return not bool(request.config.getoption("--no-cleanup"))
 
 
 @pytest.fixture(scope="session")
@@ -758,6 +771,7 @@ def data_import(
         impala_host,
         impala_genotype_storage,
         reimport,
+        cleanup,
         default_dae_config,
         gpf_instance_2013):
 
@@ -780,7 +794,8 @@ def data_import(
     def fin():
         hdfs.delete(temp_dirname, recursive=True)
 
-    request.addfinalizer(fin)
+    if cleanup:
+        request.addfinalizer(fin)
 
     from dae.backends.impala.impala_helpers import ImpalaHelpers
 
@@ -999,14 +1014,15 @@ def fvX2(fam1, svX2):
 
 
 @pytest.fixture
-def temp_dbfile(request):
+def temp_dbfile(request, cleanup):
     dbfile = tempfile.mktemp(prefix="dbfile_")
 
     def fin():
         if os.path.exists(dbfile):
             os.remove(dbfile)
 
-    request.addfinalizer(fin)
+    if cleanup:
+        request.addfinalizer(fin)
     return dbfile
 
 

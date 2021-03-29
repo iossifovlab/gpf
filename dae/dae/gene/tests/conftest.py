@@ -61,12 +61,12 @@ def gene_sets_db(local_gpf_instance):
 
 
 @pytest.fixture(scope="module")
-def gene_info_cache_dir():
+def gene_info_cache_dir(cleanup):
     cache_dir = path_to_fixtures("geneInfo", "cache")
-    assert not os.path.exists(
-        cache_dir
-    ), 'Cache dir "{}" already  exists..'.format(cache_dir)
-    os.makedirs(cache_dir)
+    # assert not os.path.exists(
+    #     cache_dir
+    # ), 'Cache dir "{}" already  exists..'.format(cache_dir)
+    os.makedirs(cache_dir, exist_ok=True)
 
     new_envs = {
         "DATA_STUDY_GROUPS_DENOVO_GENE_SETS_DIR": path_to_fixtures(
@@ -78,7 +78,8 @@ def gene_info_cache_dir():
     for val in change_environment(new_envs):
         yield val
 
-    shutil.rmtree(cache_dir)
+    if cleanup:
+        shutil.rmtree(cache_dir)
 
 
 @pytest.fixture(scope="session")
@@ -87,23 +88,23 @@ def genotype_data_names():
 
 
 @pytest.fixture(scope="session")
-def calc_gene_sets(request, local_gpf_instance, genotype_data_names):
+def calc_gene_sets(request, local_gpf_instance, genotype_data_names, cleanup):
     for dgs in genotype_data_names:
         genotype_data = local_gpf_instance.get_genotype_data(dgs)
         DenovoGeneSetCollectionFactory.build_collection(genotype_data)
 
     print("PRECALCULATION COMPLETE")
 
-    # def remove_gene_sets():
-    #     for dgs in genotype_data_names:
-    #         genotype_data = local_gpf_instance.get_genotype_data(dgs)
-    #         os.remove(
-    #             DenovoGeneSetCollectionFactory.denovo_gene_set_cache_file(
-    #                 genotype_data.config, "phenotype"
-    #             )
-    #         )
-
-    # request.addfinalizer(remove_gene_sets)
+    def remove_gene_sets():
+        for dgs in genotype_data_names:
+            genotype_data = local_gpf_instance.get_genotype_data(dgs)
+            os.remove(
+                DenovoGeneSetCollectionFactory.denovo_gene_set_cache_file(
+                    genotype_data.config, "phenotype"
+                )
+            )
+    if cleanup:
+        request.addfinalizer(remove_gene_sets)
 
 
 @pytest.fixture(scope="session")
