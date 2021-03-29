@@ -6,7 +6,7 @@ import logging
 from contextlib import closing
 
 from impala import dbapi
-from sqlalchemy.pool import QueuePool
+from sqlalchemy.pool import SingletonThreadPool
 
 
 logger = logging.getLogger(__name__)
@@ -26,18 +26,28 @@ class ImpalaHelpers(object):
 
         host_generator = itertools.cycle(impala_hosts)
 
-        def getconn():
+        def create_connection():
             impala_host = next(host_generator)
+            logger.info(f"creating connection to impala host {impala_host}")
             return dbapi.connect(host=impala_host, port=impala_port)
 
         logger.info(
-            f"Creating impala pool with {pool_size} connections")
+            f"creating impala pool with {pool_size} connections")
 
-        self._connection_pool = QueuePool(
-            getconn, pool_size=pool_size, reset_on_return=False)
+        self._connection_pool = SingletonThreadPool(
+            create_connection, pool_size=10,  # pool_size,
+            reset_on_return=False,
+            use_threadlocal=True,
+        )
+        logger.info(
+            f"created impala pool with {self._connection_pool.size} "
+            f"connections")
 
     def connection(self):
-        return self._connection_pool.connect()
+        logger.info("going to get impala connection from the pool")
+        conn = self._connection_pool.connect()
+        logger.info("[DONE] going to get impala connection from the pool")
+        return conn
 
     def _import_single_file(self, cursor, db, table, import_file):
 

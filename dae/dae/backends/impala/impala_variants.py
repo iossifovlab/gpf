@@ -1,5 +1,6 @@
 import logging
-from contextlib import closing
+import threading
+from contextlib import AbstractContextManager  # , closing 
 
 from impala.util import as_pandas
 
@@ -20,6 +21,47 @@ from dae.backends.impala.summary_variants_query_builder import \
 
 
 logger = logging.getLogger(__name__)
+
+
+LIVE_CONNECTIONS = 0
+
+
+class closing(AbstractContextManager):
+    """Context to automatically close something at the end of a block.
+
+    Code like this:
+
+        with closing(<module>.open(<arguments>)) as f:
+            <block>
+
+    is equivalent to this:
+
+        f = <module>.open(<arguments>)
+        try:
+            <block>
+        finally:
+            f.close()
+
+    """
+    def __init__(self, thing):
+        self.thing = thing
+
+    def __enter__(self):
+        global LIVE_CONNECTIONS
+
+        logger.info("[closing] enter...")
+        LIVE_CONNECTIONS +=1
+        logger.info(f"[closing] live {LIVE_CONNECTIONS}")
+        return self.thing
+
+    def __exit__(self, *exc_info):
+        global LIVE_CONNECTIONS
+
+        logger.info("[closing] exit...")
+        self.thing.close()
+
+        LIVE_CONNECTIONS -= 1
+        logger.info(f"[closing] connection closed; live {LIVE_CONNECTIONS}")
 
 
 class ImpalaVariants:
@@ -73,7 +115,8 @@ class ImpalaVariants:
     #             return row[0]
 
     def connection(self):
-        return self._impala_helpers.connection()
+        conn = self._impala_helpers.connection()
+        return conn
 
     def _summary_variants_iterator(
             self,
@@ -122,16 +165,16 @@ class ImpalaVariants:
                     limit=None,
                 )
 
-                query = query_builder.product
-
-                logger.debug(f"SUMMARY VARIANTS QUERY: {query}")
-
-                cursor.execute(query)
-
                 deserialize_row = query_builder.create_row_deserializer(
                     self.serializer
                 )
 
+                query = query_builder.product
+                logger.debug(f"SUMMARY VARIANTS QUERY: {query}")
+
+                cursor.execute(query)
+                logger.info(
+                    f"[START] thread {threading.get_ident()} deserialization")
                 for row in cursor:
                     try:
                         v = deserialize_row(row)
@@ -144,6 +187,8 @@ class ImpalaVariants:
                         logger.error("unable to deserialize summary variant")
                         logger.exception(ex)
                         continue
+                logger.info(
+                    f"[DONE] thread {threading.get_ident()} deserialization")
 
     def _family_variants_iterator(
             self,
@@ -206,6 +251,8 @@ class ImpalaVariants:
                 )
 
                 cursor.execute(query)
+                logger.info(
+                    f"[START] thread {threading.get_ident()} deserialization")
                 for row in cursor:
                     try:
                         v = deserialize_row(row)
@@ -218,6 +265,8 @@ class ImpalaVariants:
                         logger.error("unable to deserialize family variant")
                         logger.exception(ex)
                         continue
+                logger.info(
+                    f"[DONE] thread {threading.get_ident()} deserialization")
 
     def query_summary_variants(
             self,

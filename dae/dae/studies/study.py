@@ -2,6 +2,7 @@ import time
 import logging
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from queue import Queue
 
 from abc import ABC, abstractmethod, abstractproperty
 
@@ -100,6 +101,26 @@ class GenotypeData(ABC):
     @abstractmethod
     def get_studies_ids(self, leafs=True):
         pass
+
+    def get_leaf_children(self):
+        if not self.is_group:
+            return []
+        result = []
+        seen = set()
+        for study in self.studies:
+            if not study.is_group:
+                if study.study_id in seen:
+                    continue
+                result.append(study)
+                seen.add(study.study_id)
+            else:
+                children = study.get_leaf_children()
+                for child in children:
+                    if child.study_id in seen:
+                        continue
+                    result.append(child)
+                    seen.add(child.study_id)
+        return result
 
     @abstractmethod
     def query_variants(
@@ -235,7 +256,8 @@ class GenotypeDataGroup(GenotypeData):
     @property
     def executor(self):
         if self._executor is None:
-            self._executor = ThreadPoolExecutor(max_workers=len(self.studies))
+            self._executor = ThreadPoolExecutor(
+                max_workers=10)
         return self._executor
 
     @property
@@ -265,8 +287,10 @@ class GenotypeDataGroup(GenotypeData):
         variants_futures = list()
         logger.info(f"summary query - study_filters: {study_filters}")
 
+        results_queue = Queue(maxsize=1000)
+
         def get_summary_variants(genotype_data_study):
-            return genotype_data_study.query_summary_variants(
+            vs = genotype_data_study.query_summary_variants(
                 regions=regions,
                 genes=genes,
                 effect_types=effect_types,
@@ -283,19 +307,31 @@ class GenotypeDataGroup(GenotypeData):
                 return_unknown=return_unknown,
                 limit=limit,
                 study_filters=study_filters,
-                **kwargs,
-            )
-
-        for genotype_data_study in self.studies:
+                **kwargs)
+            for v in vs:
+                # print("put:", v)
+                results_queue.put(v)
+            results_queue.put(None)
+        logger.info(
+            f"study {self.study_id} children: {self.get_leaf_children()}")
+        for genotype_study in self.get_leaf_children():
             future = self.executor.submit(
-                get_summary_variants, genotype_data_study)
-            future.study_id = genotype_data_study.study_id
+                get_summary_variants, genotype_study)
+            future.study_id = genotype_study.study_id
             variants_futures.append(future)
 
         variants = dict()
-        for future in as_completed(variants_futures):
-            started = time.time()
-            for v in future.result():
+        futures_done = 0
+        started = time.time()
+        while futures_done < len(variants_futures):
+            while True:
+                v = results_queue.get()
+                # print("get:", v)
+
+                if v is None:
+                    futures_done += 1
+                    break
+
                 if v.svuid in variants:
                     existing = variants[v.svuid]
                     fv_count = existing.get_attribute(
@@ -322,11 +358,13 @@ class GenotypeDataGroup(GenotypeData):
                 variants[v.svuid] = v
                 if limit and len(variants) >= limit:
                     return
-            elapsed = time.time() - started
-            logger.info(
-                f"Processing study {future.study_id} "
-                f"elapsed: {elapsed:.3f}"
-            )
+            logger.info(f"done {futures_done}/{len(variants_futures)}")
+
+        elapsed = time.time() - started
+        logger.info(
+            f"processing study {self.study_id} "
+            f"elapsed: {elapsed:.3f}"
+        )
         for v in variants.values():
             yield v
 
@@ -354,9 +392,10 @@ class GenotypeDataGroup(GenotypeData):
 
         variants_futures = list()
         logger.info(f"study_filters: {study_filters}")
+        results_queue = Queue(maxsize=1000)
 
         def get_variants(genotype_data_study):
-            return genotype_data_study.query_variants(
+            vs = genotype_data_study.query_variants(
                 regions=regions,
                 genes=genes,
                 effect_types=effect_types,
@@ -376,17 +415,29 @@ class GenotypeDataGroup(GenotypeData):
                 affected_status=affected_status,
                 unique_family_variants=unique_family_variants,
                 **kwargs,)
+            for v in vs:
+                results_queue.put(v)
+            results_queue.put(None)
 
-        for genotype_data_study in self.studies:
-            future = self.executor.submit(get_variants, genotype_data_study)
-            future.study_id = genotype_data_study.study_id
+        logger.info(
+            f"study {self.study_id} children: {self.get_leaf_children()}")
+        for genotype_study in self.get_leaf_children():
+            future = self.executor.submit(get_variants, genotype_study)
+            future.study_id = genotype_study.study_id
 
             variants_futures.append(future)
 
         seen = set()
-        for future in as_completed(variants_futures):
-            started = time.time()
-            for v in future.result():
+        started = time.time()
+        futures_done = 0
+
+        while futures_done < len(variants_futures):
+            while True:
+                v = results_queue.get()
+
+                if v is None:
+                    futures_done += 1
+                    break
                 if v.fvuid in seen:
                     continue
                 if unique_family_variants:
@@ -394,10 +445,10 @@ class GenotypeDataGroup(GenotypeData):
                 yield v
                 if limit and len(seen) >= limit:
                     return
-            elapsed = time.time() - started
-            logger.info(
-                f"processing study {future.study_id} "
-                f"elapsed: {elapsed:.3f}")
+        elapsed = time.time() - started
+        logger.info(
+            f"processing study {self.study_id} "
+            f"elapsed: {elapsed:.3f}")
 
     def get_studies_ids(self, leafs=True):
         if not leafs:
@@ -508,7 +559,7 @@ class GenotypeDataStudy(GenotypeData):
 
     def get_studies_ids(self, leafs=True):
         return [self.study_id]
-
+        
     def query_variants(
             self,
             regions=None,
