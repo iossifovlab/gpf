@@ -69,10 +69,6 @@ export class GenesBlockPage extends BasePage {
     return cy.get('gpf-gene-sets select.form-control');
   }
 
-  findGeneSetsCollectionOptionByText(text: string) {
-    return cy.get('gpf-gene-sets option').contains(text);
-  }
-
   findDenovoDropdownByText(text: string) {
     return cy.get('ngb-accordion span').contains(text);
   }

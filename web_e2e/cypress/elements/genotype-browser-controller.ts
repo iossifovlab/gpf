@@ -1,4 +1,5 @@
 import { BaseController } from "./base-controller";
+import { EffecttypesPage } from "./effectypes-page";
 import { FamilyFilterBlockPage } from "./family-filter-block-page";
 import { GenesBlockPage } from "./genes-block-page";
 import { GenotypeBlockPage } from "./genotype-block-page";
@@ -75,290 +76,120 @@ export class GenotypeBrowserController extends BaseController {
     this.setEffectTypes(this.genotypeBlockPage.effectTypesGroups.get(group));
   }
 
-  // setPhenotypeToAll() {
-  //   if ((element(by.cssContainingText('gpf-pedigree-selector', 'Phenotype'))).isPresent()) {
-  //     this.genotypeBrowserPage.browserWaitForVisibilityOfElement(
-  //       this.genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'All')
-  //     );
-  //     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'All').click();
+  setPhenotypeToAll() {
+    cy.get('gpf-pedigree-selector').contains('Phenotype').should('exist');
+    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'All').click();
+  }
 
-  //     this.genotypeBlockPage.findAllCheckboxesInComponent('gpf-pedigree-selector').each((checkbox) => {
-  //       browser.driver.wait(() => {
-  //         return checkbox.isSelected() === true;
-  //       }, 35000);
-  //     });
-  //   }
-  // }
+  setPhenotypeToNone() {
+    cy.get('gpf-pedigree-selector').contains('Phenotype').should('exist');
+    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'None').click();
+  }
 
-  // setPhenotypeToNone() {
-  //   if ((element(by.cssContainingText('gpf-pedigree-selector', 'Phenotype'))).isPresent()) {
-  //     this.genotypeBrowserPage.browserWaitForVisibilityOfElement(
-  //       this.genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'None')
-  //     );
-  //     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'None').click();
+  setPhenotype(phenotype: string) {
+    this.setPhenotypeToNone();
+    this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-pedigree-selector', phenotype).click();
+  }
 
-  //     this.genotypeBlockPage.findAllCheckboxesInComponent('gpf-pedigree-selector').each((checkbox) => {
-  //       browser.driver.wait(() => {
-  //         return checkbox.isSelected() === false;
-  //       }, 35000);
-  //     });
-  //   }
-  // }
+  setPresentInChildToAll() {
+    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-present-in-child', 'All').click();
+  }
 
-  // setPhenotype(phenotype: string) {
-  //   this.setPhenotypeToNone();
-  //   if ((element(by.cssContainingText('gpf-pedigree-selector', 'Phenotype'))).isPresent()) {
-  //     const checkbox = this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-pedigree-selector', phenotype);
-  //     this.genotypeBrowserPage.browserWaitForVisibilityOfElement(checkbox);
-  //     checkbox.click();
+  setPresentInChildToNone() {
+    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-present-in-child', 'None').click();
+  }
 
-  //     browser.driver.wait(() => {
-  //       return checkbox.isSelected() === true;
-  //     }, 35000);
-  //   }
-  // }
+  setPresentInChild(child: string) {
+    this.setPresentInChildToNone();
+    this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-present-in-child', child).click();
+  }
 
-  // setPresentInChildToAll() {
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(
-  //     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-present-in-child', 'All')
-  //   );
-  //   this.genotypeBlockPage.findButtonInComponentContainingText('gpf-present-in-child', 'All').click();
+  setPresentInParentToAll() {
+    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-present-in-parent', 'All').click();
+  }
 
-  //   this.genotypeBlockPage.findAllCheckboxesInComponent('gpf-present-in-child').each((checkbox) => {
-  //     browser.driver.wait(() => {
-  //       return checkbox.isSelected() === true;
-  //     }, 35000);
-  //   });
-  // }
+  setPresentInParentToNone() {
+    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-present-in-parent', 'None').click();
+  }
 
-  // setPresentInChildToNone() {
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(
-  //     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-present-in-child', 'None')
-  //   );
-  //   this.genotypeBlockPage.findButtonInComponentContainingText('gpf-present-in-child', 'None').click();
+  setPresentInParent(parent: string) {
+    this.setPresentInParentToNone();
+    this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-present-in-parent', parent).click();
+  }
 
-  //   this.genotypeBlockPage.findAllCheckboxesInComponent('gpf-present-in-child').each((checkbox) => {
-  //     browser.driver.wait(() => {
-  //       return checkbox.isSelected() === false;
-  //     }, 35000);
-  //   });
-  // }
+  setGendersToAll() {
+    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-gender', 'All').click();
+  }
 
-  // setPresentInChild(child: string) {
-  //   this.setPresentInChildToNone();
-  //   const checkbox = this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-present-in-child', child);
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(checkbox);
-  //   checkbox.click();
+  setGendersToNone() {
+    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-gender', 'None').click();
+  }
 
-  //   browser.driver.wait(() => {
-  //     return checkbox.isSelected() === true;
-  //   }, 35000);
-  // }
+  setGender(gender: string) {
+    this.setGendersToNone();
+    cy.get('gpf-gender span.gender-icon.' + gender).click();
+  }
 
-  // setPresentInParentToAll() {
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(
-  //     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-present-in-parent', 'All')
-  //   );
-  //   this.genotypeBlockPage.findButtonInComponentContainingText('gpf-present-in-parent', 'All').click();
+  setVariantTypesToAll() {
+    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-varianttypes', 'All').click();
+  }
 
-  //   this.genotypeBlockPage.findAllCheckboxesInComponent('gpf-present-in-parent').each((checkbox) => {
-  //     browser.driver.wait(() => {
-  //       return checkbox.isSelected() === true;
-  //     }, 35000);
-  //   });
-  // }
+  setVariantTypesToNone() {
+    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-varianttypes', 'None').click();
+  }
 
-  // setPresentInParentToNone() {
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(
-  //     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-present-in-parent', 'None')
-  //   );
-  //   this.genotypeBlockPage.findButtonInComponentContainingText('gpf-present-in-parent', 'None').click();
+  setVariantType(variantType: string) {
+    this.setVariantTypesToNone();
+    this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-varianttypes', variantType).click();
+  }
 
-  //   this.genotypeBlockPage.findAllCheckboxesInComponent('gpf-present-in-parent').each((checkbox) => {
-  //     browser.driver.wait(() => {
-  //       return checkbox.isSelected() === false;
-  //     }, 35000);
-  //   });
-  // }
+  setInheritanceTypeToAll() {
+    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-inheritancetypes', 'All').click();
+  }
 
-  // setPresentInParent(parent: string) {
-  //   this.setPresentInParentToNone();
-  //   const checkbox = this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-present-in-parent', parent);
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(checkbox);
-  //   checkbox.click();
+  setInheritanceTypeToNone() {
+    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-inheritancetypes', 'None').click();
+  }
 
-  //   browser.driver.wait(() => {
-  //     return checkbox.isSelected() === true;
-  //   }, 35000);
-  // }
-
-  // setGendersToAll() {
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(
-  //     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-gender', 'All')
-  //   );
-  //   this.genotypeBlockPage.findButtonInComponentContainingText('gpf-gender', 'All').click();
-
-  //   this.genotypeBlockPage.findAllCheckboxesInComponent('gpf-gender').each((checkbox) => {
-  //     browser.driver.wait(() => {
-  //       return checkbox.isSelected() === true;
-  //     }, 35000);
-  //   });
-  // }
-
-  // setGendersToNone() {
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(
-  //     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-gender', 'None')
-  //   );
-  //   this.genotypeBlockPage.findButtonInComponentContainingText('gpf-gender', 'None').click();
-
-  //   this.genotypeBlockPage.findAllCheckboxesInComponent('gpf-gender').each((checkbox) => {
-  //     browser.driver.wait(() => {
-  //       return checkbox.isSelected() === false;
-  //     }, 35000);
-  //   });
-  // }
-
-  // setGender(gender: string) {
-  //   this.setGendersToNone();
-  //   const icon = element(by.css('gpf-gender span.gender-icon.' + gender));
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(icon);
-  //   icon.click();
-
-  //   browser.driver.wait(() => {
-  //     return icon.element(by.xpath('..')).element(by.css('input')).isSelected() === true;
-  //   }, 35000);
-  // }
-
-  // setVariantTypesToAll() {
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(
-  //     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-varianttypes', 'All')
-  //   );
-  //   this.genotypeBlockPage.findButtonInComponentContainingText('gpf-varianttypes', 'All').click();
-
-  //   this.genotypeBlockPage.findAllCheckboxesInComponent('gpf-varianttypes').each((checkbox) => {
-  //     browser.driver.wait(() => {
-  //       return checkbox.isSelected() === true;
-  //     }, 35000);
-  //   });
-  // }
-
-  // setVariantTypesToNone() {
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(
-  //     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-varianttypes', 'None')
-  //   );
-  //   this.genotypeBlockPage.findButtonInComponentContainingText('gpf-varianttypes', 'None').click();
-
-  //   this.genotypeBlockPage.findAllCheckboxesInComponent('gpf-varianttypes').each((checkbox) => {
-  //     browser.driver.wait(() => {
-  //       return checkbox.isSelected() === false;
-  //     }, 35000);
-  //   });
-  // }
-
-  // setVariantType(variantType: string) {
-  //   this.setVariantTypesToNone();
-  //   const checkbox = this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-varianttypes', variantType);
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(checkbox);
-  //   checkbox.click();
-
-  //   browser.driver.wait(() => {
-  //     return checkbox.isSelected() === true;
-  //   }, 35000);
-  // }
-
-  // setInheritanceTypeToAll() {
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(
-  //     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-inheritancetypes', 'All')
-  //   );
-  //   this.genotypeBlockPage.findButtonInComponentContainingText('gpf-inheritancetypes', 'All').click();
-
-  //   this.genotypeBlockPage.findAllCheckboxesInComponent('gpf-inheritancetypes').each((checkbox) => {
-  //     browser.driver.wait(() => {
-  //       return checkbox.isSelected() === true;
-  //     }, 35000);
-  //   });
-  // }
-
-  // setInheritanceTypeToNone() {
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(
-  //     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-inheritancetypes', 'None')
-  //   );
-  //   this.genotypeBlockPage.findButtonInComponentContainingText('gpf-inheritancetypes', 'None').click();
-
-  //   this.genotypeBlockPage.findAllCheckboxesInComponent('gpf-inheritancetypes').each((checkbox) => {
-  //     browser.driver.wait(() => {
-  //       return checkbox.isSelected() === false;
-  //     }, 35000);
-  //   });
-  // }
-
-  // setInheritanceType(inheritanceType: string) {
-  //   this.setInheritanceTypeToNone().then(() => {
-  //       const checkbox = this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-inheritancetypes', inheritanceType);
-  //       this.genotypeBrowserPage.browserWaitForVisibilityOfElement(checkbox);
-  //       checkbox.click();
-
-  //       browser.driver.wait(() => {
-  //         return checkbox.isSelected() === true;
-  //       }, 35000);
-  //   });
-
-  // }
-
+  setInheritanceType(inheritanceType: string) {
+    this.setInheritanceTypeToNone();
+    this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-inheritancetypes', inheritanceType).click();
+  }
   // // Add genomic score filter
 
   // // Remove genomic score filter
 
-  // setFamilyFilterToAll() {
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(
-  //     this.genotypeBrowserPage.findButtonInComponentContainingText('gpf-family-filters-block', 'All')
-  //   );
-  //   this.genotypeBrowserPage.findButtonInComponentContainingText('gpf-family-filters-block', 'All').click();
-  // }
+  setFamilyFilterToAll() {
+    this.genotypeBrowserPage.findButtonInComponentContainingText('gpf-family-filters-block', 'All').click();
+  }
 
-  // setFamilyFilterToId(id: string) {
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(this.familyFilterBlockPage.familyIdsButton);
-  //   this.familyFilterBlockPage.familyIdsButton.click();
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(this.familyFilterBlockPage.familyIdsTextarea);
-  //   this.familyFilterBlockPage.familyIdsTextarea.sendKeys(id);
-  // }
+  setFamilyFilterToId(id: string) {
+    this.familyFilterBlockPage.familyIdsButton.click();
+    this.familyFilterBlockPage.familyIdsTextarea.type(id);
+  }
 
-  // filterGenesByAll() {
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(this.genesBlockPage.allButton);
-  //   this.genesBlockPage.allButton.click();
-  // }
+  filterGenesByAll() {
+    this.genesBlockPage.allButton.click();
+  }
 
   filterGenesByGeneSymbol(symbol: string) {
     this.genesBlockPage.geneSymbolsButton.click();
     this.genesBlockPage.geneSymbolsTextarea.type(symbol);
   }
 
-  // filterGenesByGeneSets(collection: string, set: string) {
-  //   this.genesBlockPage.browserWaitForVisibilityOfElement(this.genesBlockPage.geneSetsButton);
-  //   this.genesBlockPage.geneSetsButton.click();
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(this.genesBlockPage.geneSetsPanel);
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(this.genesBlockPage.geneSetsCollectionSelectorDropdownMenu);
-  //   this.genesBlockPage.geneSetsCollectionSelectorDropdownMenu.click();
-  //   this.genesBlockPage.browserWaitForVisibilityOfElement(
-  //     this.genesBlockPage.findGeneSetsCollectionOptionByText(collection)
-  //   );
-  //   this.genesBlockPage.findGeneSetsCollectionOptionByText(collection).click();
+  filterGenesByGeneSets(collection: string, set: string) {
+    this.genesBlockPage.geneSetsButton.click();
+    this.genesBlockPage.geneSetsCollectionSelectorDropdownMenu.select(collection);
 
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(this.genesBlockPage.geneSetsSearchbox);
-  //   this.genesBlockPage.geneSetsSearchbox.click();
-  //   this.genesBlockPage.geneSetsSearchbox.sendKeys(set);
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(
-  //     this.genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText(set)
-  //   );
-  //   this.genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText(set).click();
-  // }
+    this.genesBlockPage.geneSetsSearchbox.click();
+    this.genesBlockPage.geneSetsSearchbox.type(set);
+    this.genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText(set).click();
+  }
 
-  // setRegion(region: string) {
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(this.regionsBlockPage.regionsFilterButton);
-  //   this.regionsBlockPage.regionsFilterButton.click();
-  //   this.genotypeBrowserPage.browserWaitForVisibilityOfElement(this.regionsBlockPage.regionsFilterTextarea);
-  //   this.regionsBlockPage.regionsFilterTextarea.sendKeys(region);
-  // }
+  setRegion(region: string) {
+    this.regionsBlockPage.regionsFilterButton.click();
+    this.regionsBlockPage.regionsFilterTextarea.type(region);
+  }
 
   showTablePreview() {
     cy.wait(500);
