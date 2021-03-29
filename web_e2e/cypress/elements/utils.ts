@@ -54,4 +54,45 @@ export class BasePage {
     cy.get('a.dropdown-item').contains(dataset).click();
     cy.get('a.nav-link').contains(page).click();
   }
+
+  toggleSidenav() {
+    cy.get('.navbar-toggler-icon').click();
+    // cy.wait(1000); // Waits for the animation to finish
+  }
+
+  get sidenavDatasetButton() {
+    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/datasets"]');
+  }
+
+  get sidenavSavedQueriesButton() {
+    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/queries"]');
+  }
+
+  get sidenavAutismGeneProfilesButton() {
+    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/autismGeneProfiles"]');
+  }
+
+  get sidenavManagementButton() {
+    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/management"]');
+  }
+
+  findButtonInComponentContainingText(componentSelector: string, text: string) {
+    return cy.get(componentSelector).contains(text);
+  }
+
+  // listenersCleanup() {
+  //   const exitListeners = process.listeners('exit');
+  //   const exitListenersFn = exitListeners.map((f) => f.toString());
+  //   exitListeners.forEach((listener: any, index: number) => {
+  //     if (exitListenersFn.indexOf(listener.toString()) !== index) {
+  //       process.removeListener('exit', listener);
+  //     }
+  //   });
+  // }
+
+  // prepareBrowser() {
+  //   browser.restart();
+  //   this.listenersCleanup();
+  //   browser.waitForAngularEnabled(false);
+  // }
 }
