@@ -63,7 +63,6 @@ export class GenotypePreview {
         }
       }
     }
-
     return result;
   }
 
@@ -77,14 +76,25 @@ export class GenotypePreviewInfo {
 
   static fromJson(json: any): GenotypePreviewInfo {
     const genotypePreviewInfo = new GenotypePreviewInfo(
-      json.cols, json.legend, json.maxVariantsCount
+      json.preview_columns, json.preview_columns_sources,
+      json.download_columns, json.download_columns_sources,
+      json.summary_preview_columns, json.summary_preview_columns_sources,
+      json.summary_download_columns, json.summary_download_columns_sources,
+      json.legend, json.maxVariantsCount
     );
 
     return genotypePreviewInfo;
   }
 
   constructor(
-    readonly columns: Array<string>,
+    readonly preview_columns: Array<string>,
+    readonly preview_columns_sources: Array<any>,
+    readonly download_columns: Array<string>,
+    readonly download_columns_sources: Array<any>,
+    readonly summary_preview_columns: Array<string>,
+    readonly summary_preview_columns_sources: Array<any>,
+    readonly summary_download_columns: Array<string>,
+    readonly summary_download_columns_sources: Array<any>,
     readonly legend: Array<any>,
     readonly maxVariantsCount: number
   ) { }
@@ -96,7 +106,7 @@ export class GenotypePreviewVariantsArray {
   constructor() { }
 
   addPreviewVariant(row: Array<string>, genotypePreviewInfo: GenotypePreviewInfo) {
-    const genotypePreview = GenotypePreview.fromJson(row, genotypePreviewInfo.columns);
+    const genotypePreview = GenotypePreview.fromJson(row, genotypePreviewInfo.preview_columns_sources.map(c => c['id']));
     if (genotypePreview.data.size) {
       this.genotypePreviews.push(genotypePreview);
     }

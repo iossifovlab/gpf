@@ -116,7 +116,13 @@ export class AdditionalColumn {
     const res = [];
     for (const column_id of Object.keys(json)) {
       const column = json[column_id];
-      res.push(new AdditionalColumn(column_id, column['name'], column['source'], AdditionalColumnSlot.fromJson(column['slots'])));
+      let columnSlots;
+      if ('slots' in column) {
+        columnSlots = AdditionalColumnSlot.fromJson(column['slots']);
+      } else { 
+        columnSlots = [];
+      }
+      res.push(new AdditionalColumn(column_id, column['name'], column['source'], columnSlots));
     }
     return res;
   }

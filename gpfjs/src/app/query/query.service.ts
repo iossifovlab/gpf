@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 // tslint:disable-next-line:import-blacklist
@@ -16,8 +16,8 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Injectable()
 export class QueryService {
-  private readonly genotypePreviewUrl = 'genotype_browser/preview';
-  private readonly genotypePreviewVariantsUrl = 'genotype_browser/preview/variants';
+  private readonly genotypeBrowserConfigUrl = 'genotype_browser/config';
+  private readonly genotypePreviewVariantsUrl = 'genotype_browser/query';
   private readonly geneViewVariants = 'gene_view/query_summary_variants';
   private readonly saveQueryEndpoint = 'query_state/save';
   private readonly loadQueryEndpoint = 'query_state/load';
@@ -41,24 +41,21 @@ export class QueryService {
     private datasetsService: DatasetsService,
   ) { }
 
-  private parseGenotypePreviewInfoResponse(response: Response): GenotypePreviewInfo {
-    const data = response;
-    const genotypePreviewInfoArray = GenotypePreviewInfo.fromJson(data);
-
-    return genotypePreviewInfoArray;
-  }
-
   private parseGenotypePreviewVariantsResponse(
     response: any, genotypePreviewInfo: GenotypePreviewInfo,
     genotypePreviewVariantsArray: GenotypePreviewVariantsArray) {
     genotypePreviewVariantsArray.addPreviewVariant(response, genotypePreviewInfo);
   }
 
-  getGenotypePreviewInfo(filter: QueryData): Observable<GenotypePreviewInfo> {
-    const options = { headers: this.headers, withCredentials: true };
+  getGenotypePreviewInfo(data: QueryData): Observable<GenotypePreviewInfo> {
+    let params = new HttpParams().set('datasetId', data['datasetId']);
+    if (data['peopleGroup']) {
+      params = params.set('personSetCollectionId', data['peopleGroup']['id']);
+    }
+    const options = { params: params, headers: this.headers, withCredentials: true };
 
-    return this.http.post(this.config.baseUrl + this.genotypePreviewUrl, filter, options)
-      .map(this.parseGenotypePreviewInfoResponse);
+    return this.http.get(this.config.baseUrl + this.genotypeBrowserConfigUrl, options)
+      .map(GenotypePreviewInfo.fromJson);
   }
 
   streamPost(url: string, filter: QueryData) {
@@ -128,7 +125,8 @@ export class QueryService {
   ): GenotypePreviewVariantsArray {
     const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
     const queryFilter = { ...filter };
-    queryFilter['maxVariantsCount'] = maxVariantsCount;
+    queryFilter['maxVariantsCount'] = genotypePreviewInfo.maxVariantsCount;
+    queryFilter['sources'] = genotypePreviewInfo.preview_columns_sources;
     this.datasetsService.getDatasetDetails(filter['datasetId']).subscribe(datasetDetails => {
       this.streamPost(this.genotypePreviewVariantsUrl, queryFilter).subscribe(variant => {
         this.parseGenotypePreviewVariantsResponse(variant, genotypePreviewInfo, genotypePreviewVariantsArray);
