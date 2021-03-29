@@ -6,7 +6,7 @@ export class GenotypeBrowserPage extends BasePage {
   }
 
   get tablePreviewButton() {
-    return cy.get('table-preview-button');
+    return cy.get('#table-preview-button');
   }
 
   get downloadButton() {

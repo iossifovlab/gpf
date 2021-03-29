@@ -40,10 +40,7 @@ export class BasePage {
   }
 
   loginAdmin() {
-    const usersPage = new UsersPage();
-
     this.login(this.adminUsername, this.adminPassword);
-    cy.get('#datasets-dropdown-menu-button').should("not.exist");
     cy.wait(500);
   }
 

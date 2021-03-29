@@ -4,38 +4,37 @@ import { RegionsBlockPage } from "cypress/elements/regions-block-page";
 import { datasetIds, toolPageNames } from "cypress/elements/utils";
 
 describe('Genotype browser tests', () => {
-    const genotypeBrowserPage = new GenotypeBrowserPage();
-    const datasetList = [
-      datasetIds.compAll, datasetIds.compDenovo, datasetIds.compVcf, datasetIds.iossifov2014, datasetIds.multi
-    ];
-  
-    beforeEach(() => {
-      genotypeBrowserPage.navigateToHome();
-      genotypeBrowserPage.loginAdmin();
-    });
+  const genotypeBrowserPage = new GenotypeBrowserPage();
+  const datasetList = [
+    datasetIds.compAll, datasetIds.compDenovo, datasetIds.compVcf, datasetIds.iossifov2014, datasetIds.multi
+  ];
 
-    afterEach(() => {
-      genotypeBrowserPage.logout();
-    });
+  beforeEach(() => {
+    genotypeBrowserPage.navigateToHome();
+    genotypeBrowserPage.loginAdmin();
+  });
 
-    datasetList.forEach(dataset => {
-      it('should display regions block panel in genotype browser at /' + dataset + '/browser', () => {
-        const regionsBlockPage = new RegionsBlockPage();
-        genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
-        regionsBlockPage.block.should('be.visible');
-      });
+  afterEach(() => {
+    genotypeBrowserPage.logout();
+  });
+
+  datasetList.forEach(dataset => {
+    it('should display regions block panel in genotype browser at /' + dataset + '/browser', () => {
+      const regionsBlockPage = new RegionsBlockPage();
+      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
+      regionsBlockPage.block.should('be.visible');
     });
+  });
   
   datasetList.forEach(dataset => {
-    it('should display genotype preview table after table preview button click at /' + dataset + '/browser',  () => {
+    it.only('should display genotype preview table after table preview button click at /' + dataset + '/browser',  () => {
       const genotypePreviewTablePage = new GenotypePreviewTablePage();
-      const genotypePreviewTable = genotypePreviewTablePage.table;
 
       genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
-      genotypePreviewTable.should('not.be.visible');
+      genotypePreviewTablePage.table.should('not.exist');
 
       genotypeBrowserPage.tablePreviewButton.click();
-      genotypePreviewTable.should('be.visible');
+      genotypePreviewTablePage.table.should('be.visible');
     });
   });
 });
