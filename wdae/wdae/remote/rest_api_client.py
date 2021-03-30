@@ -138,9 +138,9 @@ class RESTClient:
         )
         return response
 
-    def get_browser_preview_info(self, data):
-        response = self._post("genotype_browser/preview", data=data)
-        return response.json()
+    # def get_browser_preview_info(self, data):
+    #     response = self._post("genotype_browser/preview", data=data)
+    #     return response.json()
 
     def get_common_report(self, common_report_id):
         response = self._get(f"common_reports/studies/{common_report_id}")

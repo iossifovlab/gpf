@@ -42,35 +42,29 @@ class GenotypeBrowserConfigView(QueryBaseView):
 
         study_wrapper = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
-        preview_info = dict(study_wrapper.get_wdae_preview_info(
-            data, GenotypeBrowserQueryView.MAX_SHOWN_VARIANTS
-        ))
+        # preview_info = dict(study_wrapper.get_wdae_preview_info(
+        #     data, GenotypeBrowserQueryView.MAX_SHOWN_VARIANTS
+        # ))
+
+        preview_info = dict()
 
         config = study_wrapper.config
 
         preview_info.update(config.genotype_browser)
 
         result_config = {k: preview_info[k] for k in [
-            "legend",
-            "maxVariantsCount",
+            # "legend",
+            # "maxVariantsCount",
             "preview_columns",
             "download_columns",
             "summary_preview_columns",
             "summary_download_columns",
+            "columns",
+            "column_groups"
         ]}
 
-        result_config["preview_columns_sources"] = list(
-            study_wrapper.preview_descs
-        )
-        result_config["download_columns_sources"] = list(
-            study_wrapper.download_descs
-        )
-        result_config["summary_preview_columns_sources"] = list(
-            study_wrapper.summary_preview_descs
-        )
-        result_config["summary_download_columns_sources"] = list(
-            study_wrapper.summary_download_descs
-        )
+        # TODO Should we merge genotype and phenotype columns before sending
+        # them to the frontend? Does it care for the distinction?
 
         return Response(result_config, status=status.HTTP_200_OK)
 
@@ -147,10 +141,11 @@ class QueryPreviewView(QueryBaseView):
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
         # LOGGER.info('dataset ' + str(dataset))
-        response = dataset.get_wdae_preview_info(
-            data,
-            max_variants_count=QueryPreviewView.MAX_SHOWN_VARIANTS,
-        )
+        # response = dataset.get_wdae_preview_info(
+        #     data,
+        #     max_variants_count=QueryPreviewView.MAX_SHOWN_VARIANTS,
+        # )
+        response = dict()
 
         return Response(response, status=status.HTTP_200_OK)
 
