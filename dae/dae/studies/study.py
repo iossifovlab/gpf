@@ -1,5 +1,6 @@
 import time
 import logging
+import threading
 
 from dae.utils.debug_closing import closing
 
@@ -242,7 +243,8 @@ class GenotypeData(ABC):
 
 class GenotypeDataGroup(GenotypeData):
 
-    EXECUTOR = ThreadPoolExecutor(max_workers=20)
+    _EXECUTOR_LOCK = threading.Lock()
+    EXECUTOR = None
 
     def __init__(self, genotype_data_group_config, studies):
         super(GenotypeDataGroup, self).__init__(
@@ -260,7 +262,10 @@ class GenotypeDataGroup(GenotypeData):
 
     @property
     def executor(self):
-        return self.EXECUTOR
+        with self._EXECUTOR_LOCK:
+            if self.EXECUTOR is None:
+                self.EXECUTOR = ThreadPoolExecutor(max_workers=20)
+            return self.EXECUTOR
 
     @property
     def families(self):

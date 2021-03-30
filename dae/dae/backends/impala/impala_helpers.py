@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class ImpalaHelpers(object):
 
-    def __init__(self, impala_hosts, impala_port=21050, pool_size=10):
+    def __init__(self, impala_hosts, impala_port=21050, pool_size=20):
 
         if os.environ.get("DAE_IMPALA_HOST", None) is not None:
             impala_host = os.environ.get("DAE_IMPALA_HOST", None)
