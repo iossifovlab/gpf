@@ -65,7 +65,6 @@ export class GenotypeBrowserController extends BaseController {
   }
 
   setEffectTypes(effectTypes: string[]) {
-    console.log(effectTypes);
     this.setEffectTypesToNone();
     for (const effectType of effectTypes) {
       this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-effecttypes', effectType).click();
