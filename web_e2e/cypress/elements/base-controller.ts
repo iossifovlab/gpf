@@ -3,19 +3,19 @@ import { BasePage } from './utils';
 export class BaseController {
   basePage = new BasePage();
 
-  async navigateToHome() {
+  navigateToHome() {
     this.basePage.navigateToHome();
   }
 
-  async loginAdmin() {
+  loginAdmin() {
     this.basePage.loginAdmin();
   }
 
-  async login(username: string, password: string) {
+  login(username: string, password: string) {
     this.basePage.login(username, password);
   }
 
-  async logout() {
+  logout() {
     this.basePage.logout();
   }
 
