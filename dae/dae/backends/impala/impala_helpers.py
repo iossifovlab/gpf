@@ -3,7 +3,8 @@ import re
 import itertools
 import logging
 
-from dae.utils.debug_closing import closing
+# from dae.utils.debug_closing import closing
+from contextlib import closing
 
 from impala import dbapi
 from sqlalchemy.pool import QueuePool
@@ -31,16 +32,13 @@ class ImpalaHelpers(object):
             logger.info(f"creating connection to impala host {impala_host}")
             return dbapi.connect(host=impala_host, port=impala_port)
 
-        logger.info(
-            f"creating impala pool with {pool_size} connections")
-
         self._connection_pool = QueuePool(
             create_connection, pool_size=20,  # pool_size,
             reset_on_return=False,
             use_threadlocal=True,
         )
         logger.info(
-            f"created impala pool with {self._connection_pool.size} "
+            f"created impala pool with {self._connection_pool.status()} "
             f"connections")
 
     def connection(self):
@@ -49,7 +47,8 @@ class ImpalaHelpers(object):
             f"{self._connection_pool.status()}")
         conn = self._connection_pool.connect()
         logger.info(
-            f"[DONE] connection pool status: {self._connection_pool.status()}")
+            f"[DONE] going to get impala connection from the pool; "
+            f"{self._connection_pool.status()}")
         return conn
 
     def _import_single_file(self, cursor, db, table, import_file):

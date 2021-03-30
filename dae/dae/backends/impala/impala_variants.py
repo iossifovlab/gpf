@@ -1,6 +1,7 @@
 import logging
 import threading
-from dae.utils.debug_closing import closing
+# from dae.utils.debug_closing import closing
+from contextlib import closing
 
 from impala.util import as_pandas
 
@@ -132,8 +133,6 @@ class ImpalaVariants:
                 logger.debug(f"SUMMARY VARIANTS QUERY: {query}")
 
                 cursor.execute(query)
-                logger.info(
-                    f"[START] thread {threading.get_ident()} deserialization")
                 for row in cursor:
                     try:
                         v = deserialize_row(row)
@@ -146,8 +145,6 @@ class ImpalaVariants:
                         logger.error("unable to deserialize summary variant")
                         logger.exception(ex)
                         continue
-                logger.info(
-                    f"[DONE] thread {threading.get_ident()} deserialization")
 
     def _family_variants_iterator(
             self,
@@ -208,10 +205,8 @@ class ImpalaVariants:
                 deserialize_row = query_builder.create_row_deserializer(
                     self.serializer
                 )
-
                 cursor.execute(query)
-                logger.info(
-                    f"[START] thread {threading.get_ident()} deserialization")
+
                 for row in cursor:
                     try:
                         v = deserialize_row(row)
@@ -224,8 +219,6 @@ class ImpalaVariants:
                         logger.error("unable to deserialize family variant")
                         logger.exception(ex)
                         continue
-                logger.info(
-                    f"[DONE] thread {threading.get_ident()} deserialization")
 
     def query_summary_variants(
             self,

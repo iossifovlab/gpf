@@ -2,7 +2,8 @@ import time
 import logging
 import threading
 
-from dae.utils.debug_closing import closing
+# from dae.utils.debug_closing import closing
+from contextlib import closing
 
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue, Full
