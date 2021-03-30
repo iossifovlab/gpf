@@ -120,7 +120,7 @@ describe('Genotype browser table preview result tests', () => {
     {study: datasetIds.multi,
     affectedStatus: 'unaffected', expectedOverviewParagraph: '2 variants selected (2 shown)'}
   ].forEach((data) => {
-    it('should display \'' + data.expectedOverviewParagraph + '\' in overview paragraph when ' +
+    it.only('should display \'' + data.expectedOverviewParagraph + '\' in overview paragraph when ' +
       'affected status - ' + data.affectedStatus + ' is checked at /' + data.study + '/browser', () => {
       genotypeBrowserController.setStudy(data.study);
       genotypeBrowserController.setAffectedStatus(data.affectedStatus);
