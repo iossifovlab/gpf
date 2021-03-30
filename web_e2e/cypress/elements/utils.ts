@@ -23,7 +23,8 @@ export class BasePage {
 
 
   navigateToHome() {
-    cy.visit('http://172.18.0.4/gpf/datasets/comp_all/commonReport');
+    const baseUrl = Cypress.config().baseUrl;
+    cy.visit(`${baseUrl}/datasets/comp_all/commonReport`);
   }
 
   login(username: string, password: string) {
