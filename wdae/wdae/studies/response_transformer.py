@@ -296,9 +296,10 @@ class ResponseTransformer:
                         try:
                             return col_format % val
                         except Exception:
-                            logging.exception(f'error build variant: {v}')
-                            traceback.print_stack()
-                            return "-"
+                            logging.warning(
+                                f'error formatting variant: {v} ({val})',
+                                exc_info=True)
+                            return val
 
                 if col_source == "pedigree":
                     person_set_collection = \
@@ -387,7 +388,6 @@ class ResponseTransformer:
                     a.get_attribute("seen_in_status") in {1, 3},
             })
         yield out
-
 
         # for a in variant.alt_alleles:
         #     yield {

@@ -6,7 +6,7 @@ import logging
 from dae.utils.debug_closing import closing
 
 from impala import dbapi
-from sqlalchemy.pool import SingletonThreadPool, QueuePool
+from sqlalchemy.pool import QueuePool
 
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ class ImpalaHelpers(object):
             f"creating impala pool with {pool_size} connections")
 
         self._connection_pool = QueuePool(
-            create_connection, pool_size=10,  # pool_size,
+            create_connection, pool_size=20,  # pool_size,
             reset_on_return=False,
             use_threadlocal=True,
         )

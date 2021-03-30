@@ -241,6 +241,9 @@ class GenotypeData(ABC):
 
 
 class GenotypeDataGroup(GenotypeData):
+
+    EXECUTOR = ThreadPoolExecutor(max_workers=20)
+
     def __init__(self, genotype_data_group_config, studies):
         super(GenotypeDataGroup, self).__init__(
             genotype_data_group_config, studies
@@ -257,13 +260,7 @@ class GenotypeDataGroup(GenotypeData):
 
     @property
     def executor(self):
-        if self._executor is None:
-            self._executor = ThreadPoolExecutor(
-                max_workers=10)
-        elif self._executor._shutdown:
-            self._executor = ThreadPoolExecutor(
-                max_workers=10)
-        return self._executor
+        return self.EXECUTOR
 
     @property
     def families(self):
