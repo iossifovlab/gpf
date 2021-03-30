@@ -336,24 +336,18 @@ class StudyWrapper(StudyWrapperBase):
         if "limit" in kwargs:
             limit = kwargs["limit"]
         logger.info(f"query filters after translation: {kwargs}")
-        variants_from_studies = itertools.islice(
-            self.genotype_data_study.query_variants(**kwargs), limit
-        )
-        for variant in self.response_transformer.transform_variants(
-            variants_from_studies
-        ):
-            yield variant
+        query_summary = kwargs.get("query_summary", False)
 
-    def query_summary_variants(self, **kwargs):
-        kwargs = self.query_transformer.transform_kwargs(**kwargs)
-        limit = None
-        if "limit" in kwargs:
-            limit = kwargs["limit"]
-        logger.info(f"query filters after translation: {kwargs}")
-        variants_from_studies = itertools.islice(
-            self.genotype_data_study.query_summary_variants(**kwargs), limit
-        )
-        for variant in self.response_transformer.transform_summary_variants(
+        if query_summary:
+            variants_from_studies = itertools.islice(
+                self.genotype_data_study.query_summary_variants(**kwargs),
+                limit
+            )
+        else:
+            variants_from_studies = itertools.islice(
+                self.genotype_data_study.query_variants(**kwargs), limit
+            )
+        for variant in self.response_transformer.transform_variants(
             variants_from_studies
         ):
             yield variant
