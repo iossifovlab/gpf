@@ -343,14 +343,19 @@ class StudyWrapper(StudyWrapperBase):
                 self.genotype_data_study.query_summary_variants(**kwargs),
                 limit
             )
+            freq_column = self.config.gene_browser.frequency_column
+            for variant in variants_from_studies:
+                yield self.response_transformer.transform_gene_view_summary_variant(
+                    variant, freq_column
+                )
         else:
             variants_from_studies = itertools.islice(
                 self.genotype_data_study.query_variants(**kwargs), limit
             )
-        for variant in self.response_transformer.transform_variants(
-            variants_from_studies
-        ):
-            yield variant
+            for variant in self.response_transformer.transform_variants(
+                variants_from_studies
+            ):
+                yield variant
 
     def _get_roles_value(self, allele, roles):
         result = []
