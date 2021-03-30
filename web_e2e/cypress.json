@@ -1,1 +1,6 @@
-{}
+{
+  "retries": {
+    "runMode": 4,
+    "openMode": 0
+  }
+}

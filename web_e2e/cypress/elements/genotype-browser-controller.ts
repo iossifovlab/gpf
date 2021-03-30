@@ -191,7 +191,7 @@ export class GenotypeBrowserController extends BaseController {
   }
 
   showTablePreview() {
-    cy.wait(1000);
+    cy.wait(500);
     this.genotypeBrowserPage.tablePreviewButton.click();
   }
 
