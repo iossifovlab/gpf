@@ -83,13 +83,8 @@ export class GenotypeBrowserComponent extends QueryStateCollector
         this.loadingFinished = false;
         this.loadingService.setLoadingStart();
 
-        this.queryService.getGenotypePreviewInfo(
-          { datasetId: this.selectedDatasetId, peopleGroup: state['peopleGroup'] }
-        ).subscribe(
-          (genotypePreviewInfo) => {
-            this.genotypePreviewInfo = genotypePreviewInfo;
+        this.selectedDataset$.subscribe( selectedDataset => {
             this.genotypePreviewVariantsArray = null;
-
             this.genotypeBrowserState = state;
 
             this.queryService.streamingFinishedSubject.subscribe(
@@ -98,7 +93,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector
 
             this.genotypePreviewVariantsArray =
               this.queryService.getGenotypePreviewVariantsByFilter(
-                state, this.genotypePreviewInfo, this.loadingService
+                state, selectedDataset.genotypeBrowserConfig.previewColumnsSources, this.loadingService
               );
 
           }, error => {

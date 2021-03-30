@@ -13,6 +13,7 @@ import { ConfigService } from '../config/config.service';
 import { GenotypePreview, GenotypePreviewInfo, GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
 import { GeneViewSummaryAllelesArray } from '../gene-view/gene';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { Column } from '../datasets/datasets';
 
 @Injectable()
 export class QueryService {
@@ -40,12 +41,6 @@ export class QueryService {
     private config: ConfigService,
     private datasetsService: DatasetsService,
   ) { }
-
-  private parseGenotypePreviewVariantsResponse(
-    response: any, genotypePreviewInfo: GenotypePreviewInfo,
-    genotypePreviewVariantsArray: GenotypePreviewVariantsArray) {
-    genotypePreviewVariantsArray.addPreviewVariant(response, genotypePreviewInfo);
-  }
 
   getGenotypePreviewInfo(data: QueryData): Observable<GenotypePreviewInfo> {
     let params = new HttpParams().set('datasetId', data['datasetId']);
@@ -121,15 +116,17 @@ export class QueryService {
   }
 
   getGenotypePreviewVariantsByFilter(
-    filter: QueryData, genotypePreviewInfo: GenotypePreviewInfo, loadingService?: any, maxVariantsCount: number = 1001
+    filter: QueryData, sources: Array<Column>, loadingService?: any, maxVariantsCount: number = 1001
   ): GenotypePreviewVariantsArray {
     const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
     const queryFilter = { ...filter };
-    queryFilter['maxVariantsCount'] = genotypePreviewInfo.maxVariantsCount;
-    queryFilter['sources'] = genotypePreviewInfo.preview_columns_sources;
+    const columnIds = sources.map(c => c.id);
+    queryFilter['maxVariantsCount'] = maxVariantsCount;
+    queryFilter['sources'] = sources;
+
     this.datasetsService.getDatasetDetails(filter['datasetId']).subscribe(datasetDetails => {
       this.streamPost(this.genotypePreviewVariantsUrl, queryFilter).subscribe(variant => {
-        this.parseGenotypePreviewVariantsResponse(variant, genotypePreviewInfo, genotypePreviewVariantsArray);
+        genotypePreviewVariantsArray.addPreviewVariant(<Array<string>> variant, columnIds);
         if (variant) {
           // Attach the genome version to each variant
           // This is done so that the table can construct the correct UCSC link for the variant

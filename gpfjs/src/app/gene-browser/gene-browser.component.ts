@@ -129,6 +129,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
 
     this.getCurrentState().subscribe(state => {
       const requestParams = this.transformFamilyVariantsQueryParameters(state);
+      requestParams['querySummary'] = true;
       requestParams['maxVariantsCount'] = this.maxFamilyVariants;
       requestParams['summaryVariantIds'] = state['summaryVariantIds'];
       requestParams['uniqueFamilyVariants'] = false;
@@ -137,8 +138,11 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
         'rangeStart': $event.start > 0 ? $event.start : null,
         'rangeEnd': $event.end,
       }];
-      this.genotypePreviewVariantsArray =
-        this.queryService.getGenotypePreviewVariantsByFilter(requestParams, this.genotypePreviewInfo);
+      this.selectedDataset$.subscribe( selectedDataset => {
+        this.genotypePreviewVariantsArray = this.queryService.getGenotypePreviewVariantsByFilter(
+          requestParams, selectedDataset.genotypeBrowserConfig.previewColumnsSources
+        );
+      });
     });
   }
 

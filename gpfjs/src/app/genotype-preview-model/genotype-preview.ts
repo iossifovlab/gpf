@@ -74,12 +74,13 @@ export class GenotypePreview {
 
 export class GenotypePreviewInfo {
 
+  preview_columns_sources: Array<any> = [];
+
   static fromJson(json: any): GenotypePreviewInfo {
     const genotypePreviewInfo = new GenotypePreviewInfo(
-      json.preview_columns, json.preview_columns_sources,
-      json.download_columns, json.download_columns_sources,
-      json.summary_preview_columns, json.summary_preview_columns_sources,
-      json.summary_download_columns, json.summary_download_columns_sources,
+      json.preview_columns, json.download_columns,
+      json.summary_preview_columns, json.summary_download_columns,
+      json.columns, json.column_groups,
       json.legend, json.maxVariantsCount
     );
 
@@ -88,16 +89,32 @@ export class GenotypePreviewInfo {
 
   constructor(
     readonly preview_columns: Array<string>,
-    readonly preview_columns_sources: Array<any>,
     readonly download_columns: Array<string>,
-    readonly download_columns_sources: Array<any>,
     readonly summary_preview_columns: Array<string>,
-    readonly summary_preview_columns_sources: Array<any>,
     readonly summary_download_columns: Array<string>,
-    readonly summary_download_columns_sources: Array<any>,
+    readonly columns: Array<any>,
+    readonly column_groups: Array<any>,
     readonly legend: Array<any>,
     readonly maxVariantsCount: number
-  ) { }
+  ) { 
+    for (let column_id of this.preview_columns) {
+      if (column_id in column_groups) {
+        for (let subcolumn_id of column_groups[column_id].columns) {
+          if (subcolumn_id in columns['genotype']) {
+            this.preview_columns_sources.push(columns['genotype'][subcolumn_id]);
+          } else {
+            this.preview_columns_sources.push(columns['phenotype'][subcolumn_id]);
+          }
+        }
+      } else {
+        if (column_id in columns['genotype']) {
+          this.preview_columns_sources.push(columns['genotype'][column_id]);
+        } else {
+          this.preview_columns_sources.push(columns['phenotype'][column_id]);
+        }
+      }
+    }
+  }
 }
 
 export class GenotypePreviewVariantsArray {
@@ -105,8 +122,8 @@ export class GenotypePreviewVariantsArray {
 
   constructor() { }
 
-  addPreviewVariant(row: Array<string>, genotypePreviewInfo: GenotypePreviewInfo) {
-    const genotypePreview = GenotypePreview.fromJson(row, genotypePreviewInfo.preview_columns_sources.map(c => c['id']));
+  addPreviewVariant(row: Array<string>, column_ids: Array<string>) {
+    const genotypePreview = GenotypePreview.fromJson(row, column_ids);
     if (genotypePreview.data.size) {
       this.genotypePreviews.push(genotypePreview);
     }

@@ -4,13 +4,13 @@
             <gpf-table-column *ngFor="let column of columns" [columnWidth]="singleColumnWidth">
                 <gpf-table-header caption="{{ column.name }}">
                 </gpf-table-header>
-                <gpf-table-header>
-                    <gpf-table-subheader *ngFor="let slot of column.slots" caption="{{ slot.name }}"
-                      [comparator]="comparator(column.id + '.' + slot.name)">
+                <gpf-table-header *ngIf="'columns' in column">
+                    <gpf-table-subheader *ngFor="let slot of column.columns" caption="{{ slot.name }}"
+                    [comparator]="comparator(slot.id)">
                     </gpf-table-subheader>
                 </gpf-table-header>
                 <gpf-table-content>
-                    <gpf-table-subcontent *ngIf="column.source; else slots">
+                    <gpf-table-subcontent *ngIf="column.source; else columns">
                         <gpf-genotype-preview-field
                             *gpfTableCellContent="let data"
                             [field]="column.id"
@@ -19,12 +19,12 @@
                             [genome]="data.get('genome')">
                         </gpf-genotype-preview-field>
                     </gpf-table-subcontent>
-                    <ng-template #slots>
-                        <gpf-table-subcontent *ngFor="let slot of column.slots">
+                    <ng-template #columns>
+                        <gpf-table-subcontent *ngFor="let slot of column.columns">
                             <gpf-genotype-preview-field
                                 *gpfTableCellContent="let data"
-                                [field]="column.id + '.' + slot.name"
-                                [value]="data.get(column.id + '.' + slot.name)"
+                                [field]="slot.id"
+                                [value]="data.get(slot.id)"
                                 [format]="slot.format"
                                 [genome]="data.get('genome')">
                             </gpf-genotype-preview-field>

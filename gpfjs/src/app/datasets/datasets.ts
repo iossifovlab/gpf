@@ -93,12 +93,12 @@ export class PresentInRole {
   }
 }
 
-export class AdditionalColumnSlot {
-  static fromJson(json: any): Array<AdditionalColumnSlot> {
-    const res = [];
+export class Column {
+  static fromJson(json: any): {[id: string] : Column} {
+    const res = {};
     for (const column_id of Object.keys(json)) {
       const column = json[column_id];
-      res.push(new AdditionalColumnSlot(column_id, column['name'], column['source'], column['format']));
+      res[column_id] = new Column(column_id, column['name'], column['source'], column['format']);
     }
     return res;
   }
@@ -111,18 +111,13 @@ export class AdditionalColumnSlot {
   ) {}
 }
 
-export class AdditionalColumn {
-  static fromJson(json: any): Array<AdditionalColumn> {
-    const res = [];
-    for (const column_id of Object.keys(json)) {
-      const column = json[column_id];
-      let columnSlots;
-      if ('slots' in column) {
-        columnSlots = AdditionalColumnSlot.fromJson(column['slots']);
-      } else { 
-        columnSlots = [];
-      }
-      res.push(new AdditionalColumn(column_id, column['name'], column['source'], columnSlots));
+export class ColumnGroup {
+  static fromJson(json: any, allColumns: {[id: string] : Column}): {[id: string] : ColumnGroup} {
+    const res = {};
+    for (const column_group_id of Object.keys(json)) {
+      const columnGroup = json[column_group_id];
+      const columns = columnGroup['columns'].map(c_id => allColumns[c_id]);
+      res[column_group_id] = new ColumnGroup(column_group_id, columnGroup['name'], columns);
     }
     return res;
   }
@@ -130,8 +125,7 @@ export class AdditionalColumn {
   constructor(
     readonly id: string,
     readonly name: string,
-    readonly source: string,
-    readonly slots: Array<AdditionalColumnSlot>
+    readonly columns: Array<Column>
   ) {}
 }
 
@@ -168,9 +162,8 @@ export class PersonFilter {
 
 export class GenotypeBrowser {
 
-  readonly columns: Array<AdditionalColumn>;
-
   static fromJson(json: any): GenotypeBrowser {
+    const allColumns = Column.fromJson({...json['columns']['genotype'], ...json['columns']['phenotype']});
     return new GenotypeBrowser(
       json['has_pedigree_selector'],
       json['has_present_in_child'],
@@ -183,7 +176,8 @@ export class GenotypeBrowser {
       json['has_study_types'],
       json['has_graphical_preview'],
       json['preview_columns'],
-      [...AdditionalColumn.fromJson(json['columns'])],
+      allColumns,
+      ColumnGroup.fromJson(json['column_groups'], allColumns),
       PersonFilter.fromJson(json['person_filters']),
       PersonFilter.fromJson(json['family_filters']),
       PresentInRole.fromJsonArray(json['present_in_role']),
@@ -206,7 +200,8 @@ export class GenotypeBrowser {
     readonly hasStudyTypes: boolean,
     readonly hasGraphicalPreview: boolean,
     readonly previewColumnsIds: string[],
-    readonly allColumns: Array<AdditionalColumn>,
+    readonly columns: {[id: string] : Column},
+    readonly columnGroups: {[id: string] : ColumnGroup},
     readonly personFilters: Array<PersonFilter>,
     readonly familyFilters: Array<PersonFilter>,
     readonly presentInRole: PresentInRole[],
@@ -214,9 +209,26 @@ export class GenotypeBrowser {
     readonly selectedInheritanceTypeFilterValues: string[],
     readonly variantTypes: Set<string>,
     readonly selectedVariantTypes: Set<string>,
-  ) {
-    this.columns = _.filter(this.allColumns,
-      (column: AdditionalColumn) => this.previewColumnsIds.indexOf(column.id) > -1);
+  ) { }
+
+  get allColumns(): Array<Column | ColumnGroup> {
+    return [...Object.values(this.columns), ...Object.values(this.columnGroups)];
+  }
+
+  get previewColumns(): Array<Column | ColumnGroup> {
+    return this.allColumns.filter(col => this.previewColumnsIds.indexOf(col.id) !== -1);
+  }
+
+  get previewColumnsSources(): Array<Column> {
+    let res = [];
+    for (const column_id of this.previewColumnsIds) {
+      if (column_id in this.columnGroups) {
+        res = res.concat(this.columnGroups[column_id].columns);
+      } else {
+        res.push(this.columns[column_id]);
+      }
+    }
+    return res;
   }
 }
 
