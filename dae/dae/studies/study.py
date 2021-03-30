@@ -1,8 +1,10 @@
 import time
 import logging
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from queue import Queue
+from dae.utils.debug_closing import closing
+
+from concurrent.futures import ThreadPoolExecutor
+from queue import Queue, Full
 
 from abc import ABC, abstractmethod, abstractproperty
 
@@ -258,6 +260,9 @@ class GenotypeDataGroup(GenotypeData):
         if self._executor is None:
             self._executor = ThreadPoolExecutor(
                 max_workers=10)
+        elif self._executor._shutdown:
+            self._executor = ThreadPoolExecutor(
+                max_workers=10)
         return self._executor
 
     @property
@@ -290,28 +295,34 @@ class GenotypeDataGroup(GenotypeData):
         results_queue = Queue(maxsize=1000)
 
         def get_summary_variants(genotype_data_study):
-            vs = genotype_data_study.query_summary_variants(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                family_ids=family_ids,
-                person_ids=person_ids,
-                person_set_collection=person_set_collection,
-                inheritance=inheritance,
-                roles=roles,
-                sexes=sexes,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                ultra_rare=ultra_rare,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                limit=limit,
-                study_filters=study_filters,
-                **kwargs)
-            for v in vs:
-                # print("put:", v)
-                results_queue.put(v)
-            results_queue.put(None)
+            with closing(genotype_data_study.query_summary_variants(
+                    regions=regions,
+                    genes=genes,
+                    effect_types=effect_types,
+                    family_ids=family_ids,
+                    person_ids=person_ids,
+                    person_set_collection=person_set_collection,
+                    inheritance=inheritance,
+                    roles=roles,
+                    sexes=sexes,
+                    variant_type=variant_type,
+                    real_attr_filter=real_attr_filter,
+                    ultra_rare=ultra_rare,
+                    return_reference=return_reference,
+                    return_unknown=return_unknown,
+                    limit=limit,
+                    study_filters=study_filters,
+                    **kwargs)) as vs:
+
+                try:
+                    for v in vs:
+                        # print("put:", v)
+                        results_queue.put(v, timeout=1)
+                except Full as ex:
+                    logger.info(f"summary queue full: {ex}", exc_info=False)
+                    raise ex
+
+                results_queue.put(None)
         logger.info(
             f"study {self.study_id} children: {self.get_leaf_children()}")
         for genotype_study in self.get_leaf_children():
@@ -394,30 +405,34 @@ class GenotypeDataGroup(GenotypeData):
         logger.info(f"study_filters: {study_filters}")
         results_queue = Queue(maxsize=1000)
 
-        def get_variants(genotype_data_study):
-            vs = genotype_data_study.query_variants(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                family_ids=family_ids,
-                person_ids=person_ids,
-                person_set_collection=person_set_collection,
-                inheritance=inheritance,
-                roles=roles,
-                sexes=sexes,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                ultra_rare=ultra_rare,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                limit=limit,
-                study_filters=study_filters,
-                affected_status=affected_status,
-                unique_family_variants=unique_family_variants,
-                **kwargs,)
-            for v in vs:
-                results_queue.put(v)
-            results_queue.put(None)
+        def get_variants(genotype_study):
+            with closing(genotype_study.query_variants(
+                            regions=regions,
+                            genes=genes,
+                            effect_types=effect_types,
+                            family_ids=family_ids,
+                            person_ids=person_ids,
+                            person_set_collection=person_set_collection,
+                            inheritance=inheritance,
+                            roles=roles,
+                            sexes=sexes,
+                            variant_type=variant_type,
+                            real_attr_filter=real_attr_filter,
+                            ultra_rare=ultra_rare,
+                            return_reference=return_reference,
+                            return_unknown=return_unknown,
+                            limit=limit,
+                            study_filters=study_filters,
+                            affected_status=affected_status,
+                            unique_family_variants=unique_family_variants,
+                            **kwargs,)) as vs:
+                try:
+                    for v in vs:
+                        results_queue.put(v, timeout=1)
+                except Full as ex:
+                    logger.info(f"variants queue full: {ex}", exc_info=False)
+                    raise ex
+                results_queue.put(None)
 
         logger.info(
             f"study {self.study_id} children: {self.get_leaf_children()}")
@@ -559,7 +574,7 @@ class GenotypeDataStudy(GenotypeData):
 
     def get_studies_ids(self, leafs=True):
         return [self.study_id]
-        
+
     def query_variants(
             self,
             regions=None,

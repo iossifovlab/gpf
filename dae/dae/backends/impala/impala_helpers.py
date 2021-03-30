@@ -3,10 +3,10 @@ import re
 import itertools
 import logging
 
-from contextlib import closing
+from dae.utils.debug_closing import closing
 
 from impala import dbapi
-from sqlalchemy.pool import SingletonThreadPool
+from sqlalchemy.pool import SingletonThreadPool, QueuePool
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class ImpalaHelpers(object):
         logger.info(
             f"creating impala pool with {pool_size} connections")
 
-        self._connection_pool = SingletonThreadPool(
+        self._connection_pool = QueuePool(
             create_connection, pool_size=10,  # pool_size,
             reset_on_return=False,
             use_threadlocal=True,
@@ -44,9 +44,12 @@ class ImpalaHelpers(object):
             f"connections")
 
     def connection(self):
-        logger.info("going to get impala connection from the pool")
+        logger.info(
+            f"going to get impala connection from the pool; "
+            f"{self._connection_pool.status()}")
         conn = self._connection_pool.connect()
-        logger.info("[DONE] going to get impala connection from the pool")
+        logger.info(
+            f"[DONE] connection pool status: {self._connection_pool.status()}")
         return conn
 
     def _import_single_file(self, cursor, db, table, import_file):
