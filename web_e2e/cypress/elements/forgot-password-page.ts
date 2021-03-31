@@ -1,4 +1,4 @@
-import { BasePage } from "./utils";
+import { BasePage } from './utils';
 
 export class ForgotPasswordPage extends BasePage {
   get window() {

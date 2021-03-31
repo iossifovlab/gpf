@@ -1,5 +1,26 @@
 import { UsersPage } from "./users-page";
 
+export const userData = {
+  'unauthorized': {
+    username: undefined,
+    password: undefined,
+    sidenavElementsCount: 2,
+    sidenavElements: ['Datasets', 'Autism gene profiles']
+  },
+  'normal': {
+    username: 'research@iossifovlab.com',
+    password: 'secret',
+    sidenavElementsCount: 3,
+    sidenavElements: ['Datasets', 'Saved queries', 'Autism gene profiles']
+  },
+  'admin': {
+    username: 'admin@iossifovlab.com',
+    password: 'secret',
+    sidenavElementsCount: 4,
+    sidenavElements: ['Datasets', 'Saved queries', 'Autism gene profiles', 'Management']
+  },
+};
+
 export const datasetIds = {
   compAll: 'comp_all',
   compDenovo: 'comp_denovo',
@@ -80,20 +101,4 @@ export class BasePage {
   findButtonInComponentContainingText(componentSelector: string, text: string) {
     return cy.get(componentSelector).contains(text);
   }
-
-  // listenersCleanup() {
-  //   const exitListeners = process.listeners('exit');
-  //   const exitListenersFn = exitListeners.map((f) => f.toString());
-  //   exitListeners.forEach((listener: any, index: number) => {
-  //     if (exitListenersFn.indexOf(listener.toString()) !== index) {
-  //       process.removeListener('exit', listener);
-  //     }
-  //   });
-  // }
-
-  // prepareBrowser() {
-  //   browser.restart();
-  //   this.listenersCleanup();
-  //   browser.waitForAngularEnabled(false);
-  // }
 }

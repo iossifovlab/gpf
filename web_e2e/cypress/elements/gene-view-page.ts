@@ -1,4 +1,4 @@
-import { BasePage } from "./utils";
+import { BasePage } from './utils';
 
 export class GeneViewPage extends BasePage {
   get window() {
@@ -21,79 +21,79 @@ export class GeneViewPage extends BasePage {
     return cy.get('label').contains('LGDs').first().get('input');
   }
 
-  // get effectTypesMissenseCheckbox() {
-  //   return element.all(by.cssContainingText('label', 'Missense')).get(0).element(by.css('input'));
-  // }
+  get effectTypesMissenseCheckbox() {
+    return cy.get('label').contains('Missense').first().get('input');
+  }
 
-  // get effectTypesSynonymousCheckbox() {
-  //   return element.all(by.cssContainingText('label', 'Synonymous')).get(0).element(by.css('input'));
-  // }
+  get effectTypesSynonymousCheckbox() {
+    return cy.get('label').contains('Synonymous').first().get('input');
+  }
 
-  // get effectTypesCNVPlusCheckbox() {
-  //   return element.all(by.cssContainingText('label', 'CNV+')).get(0).element(by.css('input'));
-  // }
+  get effectTypesCNVPlusCheckbox() {
+    return cy.get('label').contains('CNV+').first().get('input');
+  }
 
-  // get effectTypesCNVMinusCheckbox() {
-  //   return element.all(by.cssContainingText('label', 'CNV-')).get(0).element(by.css('input'));
-  // }
+  get effectTypesCNVMinusCheckbox() {
+    return cy.get('label').contains('CNV-').first().get('input');
+  }
 
-  // get effectTypesOtherCheckbox() {
-  //   return element.all(by.cssContainingText('label', 'Other')).get(0).element(by.css('input'));
-  // }
+  get effectTypesOtherCheckbox() {
+    return cy.get('label').contains('Other').first().get('input');
+  }
 
-  // get inheritanceTypesDenovoCheckbox() {
-  //   return element.all(by.cssContainingText('label', 'Denovo')).get(0).element(by.css('input'));
-  // }
+  get inheritanceTypesDenovoCheckbox() {
+    return cy.get('label').contains('Denovo').first().get('input');
+  }
 
-  // get inheritanceTypesTransmittedCheckbox() {
-  //   return element.all(by.cssContainingText('label', 'Transmitted')).get(0).element(by.css('input'));
-  // }
+  get inheritanceTypesTransmittedCheckbox() {
+    return cy.get('label').contains('Transmitted').first().get('input');
+  }
 
-  // get variantTypesSubCheckbox() {
-  //   return element.all(by.cssContainingText('label', 'sub')).get(0).element(by.css('input'));
-  // }
+  get variantTypesSubCheckbox() {
+    return cy.get('label').contains('sub').first().get('input');
+  }
 
-  // get variantTypesInsCheckbox() {
-  //   return element.all(by.cssContainingText('label', 'ins')).get(0).element(by.css('input'));
-  // }
+  get variantTypesInsCheckbox() {
+    return cy.get('label').contains('ins').first().get('input');
+  }
 
-  // get variantTypesDelCheckbox() {
-  //   return element.all(by.cssContainingText('label', 'del')).get(0).element(by.css('input'));
-  // }
+  get variantTypesDelCheckbox() {
+    return cy.get('label').contains('del').first().get('input');
+  }
 
-  // get variantTypesCNVPlusCheckbox() {
-  //   return element.all(by.cssContainingText('label', 'CNV+')).get(1).element(by.css('input'));
-  // }
+  get variantTypesCNVPlusCheckbox() {
+    return cy.get('label').contains('CNV+').eq(1).get('input');
+  }
 
-  // get variantTypesCNVMinusCheckbox() {
-  //   return element.all(by.cssContainingText('label', 'CNV-')).get(1).element(by.css('input'));
-  // }
+  get variantTypesCNVMinusCheckbox() {
+    return cy.get('label').contains('CNV-').eq(1).get('input');
+  }
 
-  // get undoButton() {
-  //   return element(by.css('button[title="Undo (Ctrl+Z)"]'));
-  // }
+  get undoButton() {
+    return cy.get('button[title="Undo (Ctrl+Z)"]');
+  }
 
-  // get redoButton() {
-  //   return element(by.css('button[title="Redo (Ctrl+Y)"]'));
-  // }
+  get redoButton() {
+    return cy.get('button[title="Redo (Ctrl+Y)"]');
+  }
 
-  // get resetButton() {
-  //   return element(by.css('button[title="Reset (Double-click)"]'));
-  // }
+  get resetButton() {
+    return cy.get('button[title="Reset (Double-click)"]');
+  }
 
-  // get hideTranscriptsCheckbox() {
-  //   return element.all(by.cssContainingText('label', 'Hide transcripts')).get(0).element(by.css('input'));
-  // }
+  get hideTranscriptsCheckbox() {
+    return cy.get('label').contains('Hide transcripts').first().get('input');
+  }
 
-  // get condenseIntronsCheckbox() {
-  //   return element.all(by.cssContainingText('label', 'Condense introns')).get(0).element(by.css('input'));
-  // }
+  get condenseIntronsCheckbox() {
+    return cy.get('label').contains('Condense introns').first().get('input');
+  }
 
-  // get downloadButton() {
-  //   return element(by.cssContainingText('button', /^Download$/));
-  // }
+  get downloadButton() {
+    return cy.get('button').contains(/^Download$/);
+  }
 
-  // get downloadSummaryButton() {
-  //   return element(by.cssContainingText('button', 'Download Summary'));
-  // }
+  get downloadSummaryButton() {
+    return cy.get('button').contains('Download Summary');
+  }
 }
