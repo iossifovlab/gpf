@@ -5,6 +5,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class RESTClientRequestError(Exception):
     def __init__(self, message):
         self.message = message
