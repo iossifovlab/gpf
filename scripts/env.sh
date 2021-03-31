@@ -2,9 +2,6 @@
 
 set -e
 
-echo "WORKSPACE                    2: ${WORKSPACE}"
-echo "WD                           2: ${WD}"
-
 if [ -z ${WORKSPACE} ];
 then
     export WORKSPACE=`pwd`
@@ -19,14 +16,9 @@ then
     export BUILD_NUMBER=0
 fi
 
-echo "WORKSPACE                    3: ${WORKSPACE}"
-echo "WD                           3: ${WD}"
-
-if [ ${BUILD_NUMBER} == "0" ];
+if [ -z ${DOWNLOADS} ];
 then
     export DOWNLOADS=${WD}/downloads
-else
-    export DOWNLOADS=${WD}/downloads/builds
 fi
 
 export SCRIPTS=${WD}/scripts

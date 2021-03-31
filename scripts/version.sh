@@ -25,6 +25,11 @@ then
     export BRANCH_NAME="master"
 fi
 
+if [ -z $BUILD_NUMBER ];
+then
+    export BUILD_NUMBER=0
+fi
+
 echo "JOB_NAME                      : ${JOB_NAME}"
 
 if [ -z ${JOB_NAME} ];
@@ -37,6 +42,15 @@ fi
 echo "JENKINS                       : ${JENKINS}"
 echo "WORKSPACE                    1: ${WORKSPACE}"
 echo "WD                           1: ${WD}"
+
+
+if [ ${BUILD_NUMBER} == "0" ];
+then
+    export DOWNLOADS=${WD}/downloads
+else
+    export DOWNLOADS=${WD}/downloads/builds
+fi
+
 
 export REGISTRY="registry.seqpipe.org:5000"
 export IMAGE_GPF_BUILDER="seqpipe/seqpipe-anaconda-base:latest"
