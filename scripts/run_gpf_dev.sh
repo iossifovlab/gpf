@@ -34,8 +34,18 @@ run_gpf_impala
 run_gpf_remote
 
 
+echo "TERM                      : ${TERM} "
+if [ -z ${TERM} ];
+then
+    DOCKER_TERM_ARG=""
+else
+    DOCKER_TERM_ARG="-t"
+fi
+echo "DOCKER_TERM_ARG           : ${DOCKER_TERM_ARG}"
+
+
 docker run \
-    --rm ${DOCKER_NETWORK_ARG} \
+    --rm ${DOCKER_NETWORK_ARG} ${DOCKER_TERM_ARG} \
     --link ${CONTAINER_GPF_IMPALA}:impala \
     --link ${CONTAINER_GPF_REMOTE}:gpfremote \
     --entrypoint /bin/bash \
