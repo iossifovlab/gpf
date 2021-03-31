@@ -5,10 +5,7 @@ export class GenotypePreviewTablePage extends BasePage {
     return cy.get('gpf-genotype-preview-table');
   }
 
-//   async getCellSpanElementsByRowAndColumn(row: number, column: number): Promise<ElementFinder[]> {
-//     const allCellsInARow: ElementArrayFinder = element.all(by.css('gpf-table gpf-table-view-cell'));
-//     const arrayOfSpans = allCellsInARow.get(column).all(by.css('gpf-genotype-preview-field span'));
-
-//     return arrayOfSpans;
-//   }
+  getCellSpanElementsByIndex(index: number) {
+    return cy.get('gpf-table gpf-table-view-cell').eq(index);
+  }
 }

@@ -1,8 +1,13 @@
+import { FamilyFilterBlockPage } from "cypress/elements/family-filter-block-page";
 import { GenesBlockPage } from "cypress/elements/genes-block-page";
+import { GenomicScoresBlockPage } from "cypress/elements/genomic-scores-block-page";
+import { GenotypeBlockPage } from "cypress/elements/genotype-block-page";
 import { GenotypeBrowserController } from "cypress/elements/genotype-browser-controller";
 import { GenotypeBrowserPage } from "cypress/elements/genotype-browser-page";
 import { GenotypePreviewTablePage } from "cypress/elements/genotype-preview-table-page";
 import { RegionsBlockPage } from "cypress/elements/regions-block-page";
+import { SaveQueryPage } from "cypress/elements/save-query-page";
+import { ShareQueryPage } from "cypress/elements/share-query-page";
 import { datasetIds, toolPageNames } from "cypress/elements/utils";
 
 describe('Genotype browser tests', () => {
@@ -33,6 +38,60 @@ describe('Genotype browser tests', () => {
       const genesBlockPage = new GenesBlockPage();
       genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
       genesBlockPage.window.should('be.visible');
+    });
+  });
+
+  datasetList.forEach((dataset) => {
+    it('should display genotype block panel in genotype browser at /' + dataset + '/browser', () => {
+      const genotypeBlockPage = new GenotypeBlockPage();
+      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
+      genotypeBlockPage.window.should('be.visible');
+    });
+  });
+
+  datasetList.forEach((dataset) => {
+    it('should display genomic scores panel in genotype browser at /' + dataset + '/browser', () => {
+      const genomicScoresBlockPage = new GenomicScoresBlockPage();
+      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
+      genomicScoresBlockPage.block.should('be.visible');
+    });
+  });
+
+  datasetList.forEach((dataset) => {
+    it('should display family filters block panel in genotype browser at /' + dataset + '/browser', () => {
+      const familyFilterBlockPage = new FamilyFilterBlockPage();
+      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
+      familyFilterBlockPage.window.should('be.visible');
+    });
+  });
+
+  datasetList.forEach((dataset) => {
+    it('should display \'Table Preview\' button in genotype browser at /' + dataset + '/browser', () => {
+      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
+      genotypeBrowserPage.tablePreviewButton.should('be.visible');
+    });
+  });
+
+  datasetList.forEach((dataset) => {
+    it('should display \'Share query\' button in genotype browser at /' + dataset + '/browser', () => {
+      const shareQueryPage = new ShareQueryPage();
+      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
+      shareQueryPage.button.should('be.visible');
+    });
+  });
+
+  datasetList.forEach((dataset) => {
+    it('should display \'Save query\' button in genotype browser at /' + dataset + '/browser', () => {
+      const saveQueryPage = new SaveQueryPage();
+      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
+      saveQueryPage.button.should('be.visible');
+    });
+  });
+
+  datasetList.forEach((dataset) => {
+    it('should display \'Download\' button in genotype browser at /' + dataset + '/browser', () => {
+      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
+      genotypeBrowserPage.downloadButton.should('be.visible');
     });
   });
   
@@ -288,27 +347,31 @@ describe('Genotype browser table preview result tests', () => {
     });
   });
 
-  // function truncate (num, places = 3) {
-  //   return Math.trunc(num * Math.pow(10, places)) / Math.pow(10, places);
-  // }
+  function truncate (num, places = 3) {
+    return Math.trunc(num * Math.pow(10, places)) / Math.pow(10, places);
+  }
 
-  // [{familyId: 'f1', values: {age: 166.339, iq: 104.911}},
-  //   {familyId: 'f2', values: {age: 111.538, iq: 66.694}},
-  //   {familyId: 'f3', values: {age: 68.001, iq: 69.333}},
-  //   {familyId: 'f4', values: {age: 157.618, iq: 103.074}},
-  //   {familyId: 'f5', values: {age: 171.890, iq: 38.885}}].forEach((data) => {
-  //   it('should display the correct age and iq values in the measures column for \'' + data.familyId + '\' family', () => {
-  //     const genotypePreviewTablePage = new GenotypePreviewTablePage();
+  [{familyId: 'f1', values: {age: 166.339, iq: 104.911}},
+    {familyId: 'f2', values: {age: 111.538, iq: 66.694}},
+    {familyId: 'f3', values: {age: 68.001, iq: 69.333}},
+    {familyId: 'f4', values: {age: 157.618, iq: 103.074}},
+    {familyId: 'f5', values: {age: 171.890, iq: 38.885}}
+  ].forEach((data) => {
+    it('should display the correct age and iq values in the measures column for \'' + data.familyId + '\' family', () => {
+      const genotypePreviewTablePage = new GenotypePreviewTablePage();
 
-  //     genotypeBrowserController.setStudy(datasetIds.compAll);
-  //     genotypeBrowserController.setEffectTypesGroup('All');
-  //     genotypeBrowserController.setFamilyFilterToId(data.familyId);
-  //     genotypeBrowserController.showTablePreview();
+      genotypeBrowserController.setStudy(datasetIds.compAll);
+      genotypeBrowserController.setEffectTypesGroup('All');
+      genotypeBrowserController.setFamilyFilterToId(data.familyId);
+      genotypeBrowserController.showTablePreview();
 
-  //     const spanEles = genotypePreviewTablePage.getCellSpanElementsByRowAndColumn(0, 7);
+      const spanEles = genotypePreviewTablePage.getCellSpanElementsByIndex(7);
 
-  //     expect(truncate(Number(spanEles[0].getText()))).toBe(data.values.age);
-  //     expect(truncate(Number(spanEles[1].getText()))).toBe(data.values.iq);
-  //   });
-  // });
+      spanEles.invoke('text').then(text => {
+        const result = text.trim().split('  ').map(el => truncate(Number(el)));
+        expect(result[0]).to.equal(data.values.age);
+        expect(result[1]).to.equal(data.values.iq);
+      });
+    });
+  });
 });
