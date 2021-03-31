@@ -38,7 +38,7 @@ describe('Autism gene profiles single view tests', () => {
     autismGeneProfilesSingleViewPage.header.then((headerEle) => {
       const baseUrl = Cypress.config().baseUrl;
       const headerName = headerEle.text();
-      const geneBrowserUrl = `${baseUrl}/datasets/iossifov_2014/geneBrowser/${headerName}`;
+      const geneBrowserUrl = `${baseUrl}datasets/iossifov_2014/geneBrowser/${headerName}`;
 
       autismGeneProfilesSingleViewPage.geneBrowserLink.should('have.prop', 'href')
         .and('equal', geneBrowserUrl)
