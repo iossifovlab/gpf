@@ -139,7 +139,7 @@ def wdae_gpf_instance(
 @pytest.fixture(scope="function")
 def wdae_gpf_instance_agp(
         db, mocker, admin_client, wgpf_instance, sample_agp,
-        global_dae_fixtures_dir, agp_config):
+        global_dae_fixtures_dir, agp_config, temp_filename):
 
     wdae_gpf_instance = wgpf_instance(global_dae_fixtures_dir)
     reload_datasets(wdae_gpf_instance)
@@ -186,7 +186,7 @@ def wdae_gpf_instance_agp(
     wdae_gpf_instance.__autism_gene_profile_db = \
         AutismGeneProfileDB(
             agp_config,
-            os.path.join(wdae_gpf_instance.dae_db_dir, "agpdb"),
+            os.path.join(wdae_gpf_instance.dae_db_dir, temp_filename),
             clear=True
         )
     wdae_gpf_instance._autism_gene_profile_db.clear_all_tables()
