@@ -1,7 +1,7 @@
-import { ErrorsAlertPage } from "cypress/elements/errors-alert-page";
-import { GenotypeBlockPage } from "cypress/elements/genotype-block-page";
-import { PedigreeSelectorPage } from "cypress/elements/pedigree-selector-page";
-import { datasetIds, toolPageNames } from "cypress/elements/utils";
+import { ErrorsAlertPage } from 'cypress/elements/errors-alert-page';
+import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
+import { PedigreeSelectorPage } from 'cypress/elements/pedigree-selector-page';
+import { datasetIds, toolPageNames } from 'cypress/elements/utils';
 
 describe('Pedigree selector tests', () => {
   const pedigreeSelectorPage = new PedigreeSelectorPage();

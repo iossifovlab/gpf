@@ -1,6 +1,6 @@
-import { ErrorsAlertPage } from "cypress/elements/errors-alert-page";
-import { PhenoToolMeasurePage } from "cypress/elements/pheno-tool-measure-page";
-import { datasetIds, toolPageNames } from "cypress/elements/utils";
+import { ErrorsAlertPage } from 'cypress/elements/errors-alert-page';
+import { PhenoToolMeasurePage } from 'cypress/elements/pheno-tool-measure-page';
+import { datasetIds, toolPageNames } from 'cypress/elements/utils';
 
 describe('Pheno tool measure tests', () => {
   const phenoToolMeasurePage = new PhenoToolMeasurePage();

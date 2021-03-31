@@ -1,5 +1,5 @@
-import { PhenoBrowserPage } from "cypress/elements/pheno-browser-page";
-import { datasetIds, toolPageNames } from "cypress/elements/utils";
+import { PhenoBrowserPage } from 'cypress/elements/pheno-browser-page';
+import { datasetIds, toolPageNames } from 'cypress/elements/utils';
 
 describe('Pheno browser tests', () => {
   const phenoBrowserPage = new PhenoBrowserPage();

@@ -1,5 +1,5 @@
-import { GenomicScoresBlockPage } from "cypress/elements/genomic-scores-block-page";
-import { datasetIds, toolPageNames } from "cypress/elements/utils";
+import { GenomicScoresBlockPage } from 'cypress/elements/genomic-scores-block-page';
+import { datasetIds, toolPageNames } from 'cypress/elements/utils';
 
 describe('Genomic scores panel tests', () => {
   const genomicScoresBlockPage = new GenomicScoresBlockPage();

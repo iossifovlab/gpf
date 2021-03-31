@@ -1,4 +1,4 @@
-import { ForgotPasswordPage } from "cypress/elements/forgot-password-page";
+import { ForgotPasswordPage } from 'cypress/elements/forgot-password-page';
 import { UsersPage } from '../elements/users-page';
 
 describe('Forgotten password tests', () => {

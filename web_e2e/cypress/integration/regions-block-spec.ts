@@ -1,6 +1,6 @@
-import { ErrorsAlertPage } from "cypress/elements/errors-alert-page";
-import { RegionsBlockPage } from "cypress/elements/regions-block-page";
-import { datasetIds, toolPageNames } from "cypress/elements/utils";
+import { ErrorsAlertPage } from 'cypress/elements/errors-alert-page';
+import { RegionsBlockPage } from 'cypress/elements/regions-block-page';
+import { datasetIds, toolPageNames } from 'cypress/elements/utils';
 
 describe('Regions block tests', () => {
   const regionsBlockPage = new RegionsBlockPage();

@@ -1,7 +1,7 @@
-import { ErrorsAlertPage } from "cypress/elements/errors-alert-page";
-import { GenderPage } from "cypress/elements/gender-page";
-import { GenotypeBlockPage } from "cypress/elements/genotype-block-page";
-import { datasetIds, toolPageNames } from "cypress/elements/utils";
+import { ErrorsAlertPage } from 'cypress/elements/errors-alert-page';
+import { GenderPage } from 'cypress/elements/gender-page';
+import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
+import { datasetIds, toolPageNames } from 'cypress/elements/utils';
 
 describe('Gender tests', () => {
   const genderPage = new GenderPage();

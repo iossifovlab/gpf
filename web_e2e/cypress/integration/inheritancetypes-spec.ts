@@ -1,7 +1,7 @@
-import { ErrorsAlertPage } from "cypress/elements/errors-alert-page";
-import { GenotypeBlockPage } from "cypress/elements/genotype-block-page";
-import { InheritancetypesPage } from "cypress/elements/inheritancetypes-page";
-import { datasetIds, toolPageNames } from "cypress/elements/utils";
+import { ErrorsAlertPage } from 'cypress/elements/errors-alert-page';
+import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
+import { InheritancetypesPage } from 'cypress/elements/inheritancetypes-page';
+import { datasetIds, toolPageNames } from 'cypress/elements/utils';
 
 describe('Inheritance tests', () => {
   const inheritancetypesPage = new InheritancetypesPage();

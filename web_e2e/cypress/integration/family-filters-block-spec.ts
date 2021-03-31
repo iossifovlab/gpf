@@ -1,6 +1,6 @@
-import { ErrorsAlertPage } from "cypress/elements/errors-alert-page";
-import { FamilyFilterBlockPage } from "cypress/elements/family-filter-block-page";
-import { datasetIds, toolPageNames } from "cypress/elements/utils";
+import { ErrorsAlertPage } from 'cypress/elements/errors-alert-page';
+import { FamilyFilterBlockPage } from 'cypress/elements/family-filter-block-page';
+import { datasetIds, toolPageNames } from 'cypress/elements/utils';
 
 describe('Family filters block tests', () => {
   const familyFilterBlockPage = new FamilyFilterBlockPage();

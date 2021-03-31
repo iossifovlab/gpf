@@ -1,5 +1,5 @@
-import { RegistrationPage } from "cypress/elements/registration-page";
-import { UsersPage } from "cypress/elements/users-page";
+import { RegistrationPage } from 'cypress/elements/registration-page';
+import { UsersPage } from 'cypress/elements/users-page';
 
 describe('Register tests', () => {
   const registrationPage = new RegistrationPage();

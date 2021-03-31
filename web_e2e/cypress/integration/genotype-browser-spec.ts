@@ -1,14 +1,14 @@
-import { FamilyFilterBlockPage } from "cypress/elements/family-filter-block-page";
-import { GenesBlockPage } from "cypress/elements/genes-block-page";
-import { GenomicScoresBlockPage } from "cypress/elements/genomic-scores-block-page";
-import { GenotypeBlockPage } from "cypress/elements/genotype-block-page";
-import { GenotypeBrowserController } from "cypress/elements/genotype-browser-controller";
-import { GenotypeBrowserPage } from "cypress/elements/genotype-browser-page";
-import { GenotypePreviewTablePage } from "cypress/elements/genotype-preview-table-page";
-import { RegionsBlockPage } from "cypress/elements/regions-block-page";
-import { SaveQueryPage } from "cypress/elements/save-query-page";
-import { ShareQueryPage } from "cypress/elements/share-query-page";
-import { datasetIds, toolPageNames } from "cypress/elements/utils";
+import { FamilyFilterBlockPage } from 'cypress/elements/family-filter-block-page';
+import { GenesBlockPage } from 'cypress/elements/genes-block-page';
+import { GenomicScoresBlockPage } from 'cypress/elements/genomic-scores-block-page';
+import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
+import { GenotypeBrowserController } from 'cypress/elements/genotype-browser-controller';
+import { GenotypeBrowserPage } from 'cypress/elements/genotype-browser-page';
+import { GenotypePreviewTablePage } from 'cypress/elements/genotype-preview-table-page';
+import { RegionsBlockPage } from 'cypress/elements/regions-block-page';
+import { SaveQueryPage } from 'cypress/elements/save-query-page';
+import { ShareQueryPage } from 'cypress/elements/share-query-page';
+import { datasetIds, toolPageNames } from 'cypress/elements/utils';
 
 describe('Genotype browser tests', () => {
   const genotypeBrowserPage = new GenotypeBrowserPage();
