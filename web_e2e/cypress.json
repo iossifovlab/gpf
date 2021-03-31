@@ -8,7 +8,7 @@
   "reporterOptions": {
     "reporterEnabled": "spec, mocha-junit-reporter",
     "mochaJunitReporterReporterOptions": {
-      "mochaFile": "results/results.xml"
+      "mochaFile": "results/[hash].xml"
     }
   }
 }
