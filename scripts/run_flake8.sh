@@ -17,25 +17,11 @@ then
 fi
 
 
-if [ -z $1 ]; then
-    export INTERNAL_RUN="internal_run_gpf.sh"
-else
-    export INTERNAL_RUN="${1}"
-fi 
-
-
 . ${WD}/scripts/version.sh
-
-. ${WD}/scripts/utils.sh
-
-
-run_gpf_impala
-
-run_gpf_remote
 
 
 docker run \
-    -t --rm ${DOCKER_NETWORK_ARG} \
+    -it --rm ${DOCKER_NETWORK_ARG} \
     --link ${CONTAINER_GPF_IMPALA}:impala \
     --link ${CONTAINER_GPF_REMOTE}:gpfremote \
     --entrypoint /bin/bash \
@@ -54,5 +40,4 @@ docker run \
     -e TEST_REMOTE_HOST=gpfremote \
     -e DAE_HDFS_HOST="impala" \
     -e DAE_IMPALA_HOST="impala" \
-    -e RUN_WHAT=${2} \
-    ${IMAGE_GPF_DEV} -c "/opt/conda/bin/conda run --no-capture-output -n gpf /scripts/${INTERNAL_RUN}"
+    ${IMAGE_GPF_DEV} -c "/opt/conda/bin/conda run --no-capture-output -n gpf /scripts/internal_run_flake8.sh"

@@ -19,4 +19,5 @@ fi
 
 cd ${WD}
 
-${SCRIPTS}/clean_up.sh
+${SCRIPTS}/clean_up_docker.sh
+${SCRIPTS}/clean_up_directories.sh

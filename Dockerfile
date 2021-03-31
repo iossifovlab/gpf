@@ -18,6 +18,8 @@ ENV JAVA_HOME /opt/conda/envs/gpf
 ENV HADOOP_HOME /opt/conda/envs/gpf
 ENV HADOOP_CONF_DIR /opt/conda/envs/gpf/etc/hadoop
 
+RUN /opt/conda/envs/gpf/bin/pip install flake8-html
+
 RUN mkdir -p /data && mkdir -p /code
 
 

@@ -118,28 +118,47 @@ pipeline {
         }
 
 
-        // stage('Lint') {
-        //     steps {
-        //         sh '''
-        //             docker run --rm \
-        //                 -v ${DAE_DB_DIR}:/data \
-        //                 -v ${WD}:/code \
-        //                 ${GPF_DOCKER_IMAGE} /code/jenkins_flake8.sh
+        stage('Link') {
+            steps {
+                sh '''
+                . ${WD}/scripts/version.sh
+                ${SCRIPTS}/run_flake8.sh
+                '''
+                publishHTML (target: [
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'results/flake8_report/',
+                    reportFiles: 'index.html',
+                    reportName: "flake8 Report"
+                    ])                
+            }
+        }
 
-        //         '''
-        //     }
-        // }
-
-        // stage('Type Check') {
-        //     steps {
-        //         sh '''
-        //             docker run --rm \
-        //                 -v ${DAE_DB_DIR}:/data \
-        //                 -v ${WD}:/code \
-        //                 ${GPF_DOCKER_IMAGE} /code/jenkins_mypy.sh
-        //         '''
-        //     }
-        // }
+        stage('Type Check') {
+            steps {
+                sh '''
+                . ${WD}/scripts/version.sh
+                ${SCRIPTS}/run_mypy.sh
+                '''
+                publishHTML (target: [
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'results/mypy/dae_report',
+                    reportFiles: 'index.html',
+                    reportName: "MyPy DAE Report"
+                    ])                
+                publishHTML (target: [
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'results/mypy/wdae_report',
+                    reportFiles: 'index.html',
+                    reportName: "MyPy WDAE Report"
+                    ])                
+            }
+        }
 
 
         stage('Test') {
