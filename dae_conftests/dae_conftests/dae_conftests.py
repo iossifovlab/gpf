@@ -472,61 +472,17 @@ def iossifov2014_loader(
         variants_loader, annotation_pipeline_internal
     )
 
-    return variants_loader
+    return variants_loader, families_loader
 
 
 @pytest.fixture(scope="session")
 def iossifov2014_raw_denovo(iossifov2014_loader):
 
+    variants_loader, families_loader = iossifov2014_loader
     fvars = RawMemoryVariants(
-        [iossifov2014_loader], iossifov2014_loader.families
+        [variants_loader], families_loader.load()
     )
 
-    return fvars
-
-
-@pytest.fixture(scope="session")
-def iossifov2014_impala(
-        request,
-        iossifov2014_loader,
-        genomes_db_2013,
-        hdfs_host,
-        impala_genotype_storage):
-
-    from dae.backends.impala.hdfs_helpers import HdfsHelpers
-
-    hdfs = HdfsHelpers(hdfs_host, 8020)
-
-    temp_dirname = hdfs.tempdir(prefix="variants_", suffix="_data")
-    hdfs.mkdir(temp_dirname)
-
-    study_id = "iossifov_we2014_test"
-    parquet_filenames = ParquetManager.build_parquet_filenames(
-        temp_dirname, bucket_index=0, study_id=study_id
-    )
-
-    assert parquet_filenames is not None
-    print(parquet_filenames)
-
-    ParquetManager.families_to_parquet(
-        iossifov2014_loader.families, parquet_filenames.pedigree
-    )
-
-    variants_dir = os.path.join(temp_dirname, "variants")
-    partition_description = NoPartitionDescriptor(variants_dir)
-
-    ParquetManager.variants_to_parquet(
-        iossifov2014_loader, partition_description
-    )
-
-    impala_genotype_storage.impala_load_dataset(
-        study_id,
-        variants_dir=parquet_filenames.variants_dirname,
-        pedigree_file=parquet_filenames.pedigree,)
-
-    fvars = impala_genotype_storage.build_backend(
-        FrozenBox({"id": study_id}), genomes_db_2013
-    )
     return fvars
 
 
@@ -901,11 +857,60 @@ def variants_impala(
     return builder
 
 
-@pytest.fixture(scope="function")
-def test_fixture():
-    print("start")
-    yield "works"
-    print("end")
+@pytest.fixture(scope="session")
+def iossifov2014_impala(
+        request,
+        iossifov2014_loader,
+        genomes_db_2013,
+        hdfs_host,
+        impala_host,
+        impala_genotype_storage,
+        reimport):
+
+    study_id = "iossifov_we2014_test"
+
+    from dae.backends.impala.impala_helpers import ImpalaHelpers
+
+    impala_helpers = ImpalaHelpers(
+        impala_hosts=[impala_host], impala_port=21050)
+
+    (variant_table, pedigree_table) = \
+        impala_genotype_storage.study_tables(
+            FrozenBox({"id": study_id}))
+
+    if reimport or \
+            not impala_helpers.check_table(
+                    "impala_test_db", variant_table) or \
+            not impala_helpers.check_table(
+                    "impala_test_db", pedigree_table):
+
+        from dae.backends.impala.hdfs_helpers import HdfsHelpers
+
+        hdfs = HdfsHelpers(hdfs_host, 8020)
+
+        temp_dirname = hdfs.tempdir(prefix="variants_", suffix="_data")
+        hdfs.mkdir(temp_dirname)
+
+        study_temp_dirname = os.path.join(temp_dirname, study_id)
+        variants_loader, families_loader = iossifov2014_loader
+
+        impala_genotype_storage.simple_study_import(
+            study_id,
+            families_loader=families_loader,
+            variant_loaders=[variants_loader],
+            output=study_temp_dirname)
+
+    fvars = impala_genotype_storage.build_backend(
+        FrozenBox({"id": study_id}), genomes_db_2013
+    )
+    return fvars
+
+
+# @pytest.fixture(scope="function")
+# def test_fixture():
+#     print("start")
+#     yield "works"
+#     print("end")
 
 
 # @pytest.fixture(scope="session")
@@ -1027,7 +1032,7 @@ def temp_dbfile(request, cleanup):
 
 
 @pytest.fixture
-def agp_config(data_import):
+def agp_config(data_import, iossifov2014_impala):
     return Box({
         'gene_sets': ['CHD8 target genes'],
         'protection_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],

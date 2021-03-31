@@ -63,51 +63,26 @@ def cnv_impala(
         impala_genotype_storage.study_tables(
             FrozenBox({"id": study_id}))
 
-    if not reimport and \
-            impala_helpers.check_table(
-                "impala_test_db", variant_table) and \
-            impala_helpers.check_table(
+    if reimport or \
+            not impala_helpers.check_table(
+                "impala_test_db", variant_table) or \
+            not impala_helpers.check_table(
                 "impala_test_db", pedigree_table):
-        return impala_genotype_storage.build_backend(
-                    FrozenBox({"id": study_id}), genomes_db_2013)
 
-    from dae.backends.impala.hdfs_helpers import HdfsHelpers
+        from dae.backends.impala.hdfs_helpers import HdfsHelpers
 
-    hdfs = HdfsHelpers(hdfs_host, 8020)
+        hdfs = HdfsHelpers(hdfs_host, 8020)
 
-    temp_dirname = hdfs.tempdir(prefix="variants_", suffix="_data")
-    hdfs.mkdir(temp_dirname)
+        temp_dirname = hdfs.tempdir(prefix="variants_", suffix="_data")
+        hdfs.mkdir(temp_dirname)
 
-    # parquet_filenames = ParquetManager.build_parquet_filenames(
-    #     temp_dirname, bucket_index=2, study_id=study_id
-    # )
-
-    # assert parquet_filenames is not None
-    # print(parquet_filenames)
-
-    # ParquetManager.families_to_parquet(
-    #     cnv_loader.families, parquet_filenames.pedigree
-    # )
-
-    # variants_dir = os.path.join(temp_dirname, "variants")
-    # partition_description = NoPartitionDescriptor(variants_dir)
-
-    # ParquetManager.variants_to_parquet(
-    #     cnv_loader, partition_description
-    # )
-
-    # impala_genotype_storage.impala_load_dataset(
-    #     study_id,
-    #     variants_dir=os.path.dirname(parquet_filenames.variants),
-    #     pedigree_file=parquet_filenames.pedigree,
-    # )
-    families_loader, variants_loader = cnv_loader
-    impala_genotype_storage.simple_study_import(
-        study_id,
-        families_loader=families_loader,
-        variant_loaders=[variants_loader],
-        output=temp_dirname,
-        include_reference=True)
+        families_loader, variants_loader = cnv_loader
+        impala_genotype_storage.simple_study_import(
+            study_id,
+            families_loader=families_loader,
+            variant_loaders=[variants_loader],
+            output=temp_dirname,
+            include_reference=True)
 
     fvars = impala_genotype_storage.build_backend(
         FrozenBox({"id": study_id}), genomes_db_2013
