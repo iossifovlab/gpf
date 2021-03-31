@@ -3,6 +3,7 @@ import re
 import itertools
 import logging
 
+# from dae.utils.debug_closing import closing
 from contextlib import closing
 
 from impala import dbapi
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class ImpalaHelpers(object):
 
-    def __init__(self, impala_hosts, impala_port=21050, pool_size=10):
+    def __init__(self, impala_hosts, impala_port=21050, pool_size=20):
 
         if os.environ.get("DAE_IMPALA_HOST", None) is not None:
             impala_host = os.environ.get("DAE_IMPALA_HOST", None)
@@ -26,18 +27,29 @@ class ImpalaHelpers(object):
 
         host_generator = itertools.cycle(impala_hosts)
 
-        def getconn():
+        def create_connection():
             impala_host = next(host_generator)
+            logger.info(f"creating connection to impala host {impala_host}")
             return dbapi.connect(host=impala_host, port=impala_port)
 
-        logger.info(
-            f"Creating impala pool with {pool_size} connections")
-
         self._connection_pool = QueuePool(
-            getconn, pool_size=pool_size, reset_on_return=False)
+            create_connection, pool_size=20,  # pool_size,
+            reset_on_return=False,
+            use_threadlocal=True,
+        )
+        logger.info(
+            f"created impala pool with {self._connection_pool.status()} "
+            f"connections")
 
     def connection(self):
-        return self._connection_pool.connect()
+        logger.info(
+            f"going to get impala connection from the pool; "
+            f"{self._connection_pool.status()}")
+        conn = self._connection_pool.connect()
+        logger.info(
+            f"[DONE] going to get impala connection from the pool; "
+            f"{self._connection_pool.status()}")
+        return conn
 
     def _import_single_file(self, cursor, db, table, import_file):
 

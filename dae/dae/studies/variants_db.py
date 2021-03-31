@@ -229,16 +229,21 @@ class VariantsDb(object):
         if group_config is None:
             return
 
+        logger.info(f"creating genotype group: {group_config.id}")
         try:
             group_studies = []
             for child_id in group_config.studies:
+                logger.info(f"looking for a child: {child_id}")
                 if child_id in self._genotype_study_cache:
                     child_data = self.get_genotype_study(child_id)
-                    assert child_data is not None
+                    assert child_data is not None, child_id
                 else:
                     child_data = self.get_genotype_group(child_id)
                     if child_data is None:
                         # group not loaded... load it...
+                        logger.info(
+                            f"child genotype data {child_id} not found; "
+                            f"trying to create it...")
                         genotype_group_configs = self._load_group_configs()
                         child_config = genotype_group_configs[child_id]
                         child_data = self._load_genotype_group(child_config)

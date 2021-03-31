@@ -1,4 +1,6 @@
 import logging
+import threading
+# from dae.utils.debug_closing import closing
 from contextlib import closing
 
 from impala.util import as_pandas
@@ -73,7 +75,8 @@ class ImpalaVariants:
     #             return row[0]
 
     def connection(self):
-        return self._impala_helpers.connection()
+        conn = self._impala_helpers.connection()
+        return conn
 
     def _summary_variants_iterator(
             self,
@@ -122,16 +125,14 @@ class ImpalaVariants:
                     limit=None,
                 )
 
-                query = query_builder.product
-
-                logger.debug(f"SUMMARY VARIANTS QUERY: {query}")
-
-                cursor.execute(query)
-
                 deserialize_row = query_builder.create_row_deserializer(
                     self.serializer
                 )
 
+                query = query_builder.product
+                logger.debug(f"SUMMARY VARIANTS QUERY: {query}")
+
+                cursor.execute(query)
                 for row in cursor:
                     try:
                         v = deserialize_row(row)
@@ -204,8 +205,8 @@ class ImpalaVariants:
                 deserialize_row = query_builder.create_row_deserializer(
                     self.serializer
                 )
-
                 cursor.execute(query)
+
                 for row in cursor:
                     try:
                         v = deserialize_row(row)
@@ -245,50 +246,50 @@ class ImpalaVariants:
             count = limit
             limit = 10 * limit
 
-        summary_variants_iterator = self._summary_variants_iterator(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=limit)
+        with closing(self._summary_variants_iterator(
+                regions=regions,
+                genes=genes,
+                effect_types=effect_types,
+                family_ids=family_ids,
+                person_ids=person_ids,
+                inheritance=inheritance,
+                roles=roles,
+                sexes=sexes,
+                variant_type=variant_type,
+                real_attr_filter=real_attr_filter,
+                ultra_rare=ultra_rare,
+                frequency_filter=frequency_filter,
+                return_reference=return_reference,
+                return_unknown=return_unknown,
+                limit=limit)) as summary_variants_iterator:
 
-        raw_variants_iterator = RawSummaryVariantsIterator(
-            summary_variants_iterator, self.families)
+            raw_variants_iterator = RawSummaryVariantsIterator(
+                summary_variants_iterator, self.families)
 
-        result = raw_variants_iterator.query_summary_variants(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=count)
+            with closing(raw_variants_iterator.query_summary_variants(
+                    regions=regions,
+                    genes=genes,
+                    effect_types=effect_types,
+                    family_ids=family_ids,
+                    person_ids=person_ids,
+                    inheritance=inheritance,
+                    roles=roles,
+                    sexes=sexes,
+                    variant_type=variant_type,
+                    real_attr_filter=real_attr_filter,
+                    ultra_rare=ultra_rare,
+                    frequency_filter=frequency_filter,
+                    return_reference=return_reference,
+                    return_unknown=return_unknown,
+                    limit=count)) as result:
 
-        for v in result:
-            if v is None:
-                continue
-            yield v
-            count -= 1
-            if count == 0:
-                break
+                for v in result:
+                    if v is None:
+                        continue
+                    yield v
+                    count -= 1
+                    if count == 0:
+                        break
 
     def query_variants(
             self,
@@ -318,51 +319,51 @@ class ImpalaVariants:
             count = limit
             limit = 10 * limit
 
-        family_variants_iterator = self._family_variants_iterator(
-                    regions=regions,
-                    genes=genes,
-                    effect_types=effect_types,
-                    family_ids=family_ids,
-                    person_ids=person_ids,
-                    inheritance=inheritance,
-                    roles=roles,
-                    sexes=sexes,
-                    variant_type=variant_type,
-                    real_attr_filter=real_attr_filter,
-                    ultra_rare=ultra_rare,
-                    frequency_filter=frequency_filter,
-                    return_reference=return_reference,
-                    return_unknown=return_unknown,
-                    limit=limit,
-                    affected_status=affected_status)
+        with closing(self._family_variants_iterator(
+                        regions=regions,
+                        genes=genes,
+                        effect_types=effect_types,
+                        family_ids=family_ids,
+                        person_ids=person_ids,
+                        inheritance=inheritance,
+                        roles=roles,
+                        sexes=sexes,
+                        variant_type=variant_type,
+                        real_attr_filter=real_attr_filter,
+                        ultra_rare=ultra_rare,
+                        frequency_filter=frequency_filter,
+                        return_reference=return_reference,
+                        return_unknown=return_unknown,
+                        limit=limit,
+                        affected_status=affected_status)) as fv_iterator:
 
-        raw_variants_iterator = RawVariantsIterator(
-            family_variants_iterator, self.families)
+            raw_variants_iterator = RawVariantsIterator(
+                fv_iterator, self.families)
 
-        result = raw_variants_iterator.query_variants(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=count)
+            with closing(raw_variants_iterator.query_variants(
+                            regions=regions,
+                            genes=genes,
+                            effect_types=effect_types,
+                            family_ids=family_ids,
+                            person_ids=person_ids,
+                            inheritance=inheritance,
+                            roles=roles,
+                            sexes=sexes,
+                            variant_type=variant_type,
+                            real_attr_filter=real_attr_filter,
+                            ultra_rare=ultra_rare,
+                            frequency_filter=frequency_filter,
+                            return_reference=return_reference,
+                            return_unknown=return_unknown,
+                            limit=count)) as result:
 
-        for v in result:
-            if v is None:
-                continue
-            yield v
-            count -= 1
-            if count == 0:
-                break
+                for v in result:
+                    if v is None:
+                        continue
+                    yield v
+                    count -= 1
+                    if count == 0:
+                        break
 
     def _fetch_pedigree(self):
         with closing(self.connection()) as conn:
