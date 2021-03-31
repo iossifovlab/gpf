@@ -26,11 +26,11 @@ export class AutismGeneProfilesTable extends BasePage {
   }
 
   get geneSetsCheckUncheckAllButton() {
-    return this.geneSetsDropdown.get('#check-uncheck-all-button');
+    return this.geneSetsDropdown.find('#check-uncheck-all-button');
   }
 
   get geneSetsDropdownSearch() {
-    return this.geneSetsDropdown.get('input[name="search"]');
+    return this.geneSetsDropdown.find('input[name="search"]');
   }
 
   get geneSetsDropdownApplyButton() {

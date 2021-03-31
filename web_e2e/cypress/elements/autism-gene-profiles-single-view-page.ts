@@ -9,10 +9,6 @@ export class AutismGeneProfilesSingleView extends BasePage {
     return cy.get('gpf-autism-gene-profile-single-view h2');
   }
 
-  get headerGeneName() {
-    return this.header.invoke('text');
-  }
-
   get geneBrowserLink() {
     return cy.get('gpf-autism-gene-profile-single-view a');
   }
