@@ -693,7 +693,6 @@ def pytest_addoption(parser):
     )
 
 
-
 def pytest_configure(config):
     logger.info("pytest_configure")
     pass
