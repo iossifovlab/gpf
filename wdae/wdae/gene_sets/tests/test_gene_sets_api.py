@@ -5,7 +5,8 @@ from rest_framework import status
 
 import json
 
-pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
+pytestmark = pytest.mark.usefixtures(
+    "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
 def name_in_gene_sets(gene_sets, name, count=None):

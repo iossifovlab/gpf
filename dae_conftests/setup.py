@@ -15,6 +15,15 @@ setup(
     name="dae_conftests",
     version="0.1.0",
     py_modules=["dae_conftests"],
-    entry_points={"pytest11": ["dae_conftests = dae_conftests",],},
-    classifiers=["Framework :: Pytest",],
+    # scripts=[
+    #     "dae_conftests/tools/tests_setup.py",
+    # ],
+    entry_points={
+        "pytest11": [
+            "dae_conftests = dae_conftests",
+        ],
+    },
+    classifiers=[
+        "Framework :: Pytest",
+    ],
 )

@@ -22,7 +22,7 @@ from dae.utils.regions import Region
         (Region("3", 151176416, 151176416), "3:151176416", "no-frame-shift"),
     ],
 )
-def test_dae2parquet_iossifov2014_variant_coordinates(
+def test_iossifov2014_variant_coordinates(
     variants,
     iossifov2014_impala,
     iossifov2014_raw_denovo,

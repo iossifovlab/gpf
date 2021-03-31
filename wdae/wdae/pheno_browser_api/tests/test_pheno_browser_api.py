@@ -2,7 +2,8 @@ import pytest
 import json
 
 
-pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
+pytestmark = pytest.mark.usefixtures(
+    "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
 URL = "/api/v3/pheno_browser/instruments"

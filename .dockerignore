@@ -10,3 +10,8 @@ comp-data/
 .pytest_cache/
 .mypy_cache/
 test_results/
+data
+downloads
+import
+results
+

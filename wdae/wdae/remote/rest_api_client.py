@@ -1,5 +1,9 @@
 import requests
 import ijson
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class RESTClientRequestError(Exception):
@@ -358,7 +362,10 @@ class RESTClient:
         )
 
         if response.status_code != 200:
-            return None
+            logger.warning(
+                f"error while looking for gene sets collections; "
+                f"{response.status_code}: ({response})")
+            return []
 
         return response.json()
 

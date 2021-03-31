@@ -41,17 +41,17 @@ echo "==============================================="
 echo ""
 
 
-echo ""
-echo "==============================================="
-echo "Installing custom GPF UDAFs.."
-echo "==============================================="
-echo ""
+# echo ""
+# echo "==============================================="
+# echo "Installing custom GPF UDAFs.."
+# echo "==============================================="
+# echo ""
 
-docker exec gpf_impala /upload_udafs_to_hdfs.sh
-docker exec gpf_impala /create_udafs.sh
+# docker exec gpf_impala /upload_udafs_to_hdfs.sh
+# docker exec gpf_impala /create_udafs.sh
 
-echo ""
-echo "==============================================="
-echo "[DONE] Installing custom GPF UDAFs.."
-echo "==============================================="
-echo ""
+# echo ""
+# echo "==============================================="
+# echo "[DONE] Installing custom GPF UDAFs.."
+# echo "==============================================="
+# echo ""

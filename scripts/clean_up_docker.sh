@@ -2,42 +2,44 @@
 
 set -e
 
-
-export HAS_GPF_IMPALA=`docker ps -a | grep ${GPF_IMPALA_DOCKER_CONTAINER} | sed -e "s/\s\{2,\}/\t/g" | cut -f 1`
-export HAS_GPF_REMOTE=`docker ps -a | grep ${GPF_REMOTE_DOCKER_CONTAINER} | sed -e "s/\s\{2,\}/\t/g" | cut -f 1`
-
-
-echo "----------------------------------------------"
-echo "Cleaning up remote container..."
-echo "----------------------------------------------"
-
-if [[ ! -z $HAS_GPF_REMOTE ]]; then
-    docker stop ${GPF_REMOTE_DOCKER_CONTAINER}
-fi
-echo "----------------------------------------------"
-echo "[DONE] Cleaning up remote container"
-echo "----------------------------------------------"
-
-
-
-echo "----------------------------------------------"
-echo "Cleaning up impala docker containers"
-echo "----------------------------------------------"
-if [[ ! -z $HAS_GPF_IMPALA ]]; then
-    docker stop ${GPF_IMPALA_DOCKER_CONTAINER}
-    docker rm ${GPF_IMPALA_DOCKER_CONTAINER}
+if [ -z ${WORKSPACE} ];
+then
+    export WORKSPACE=`pwd`
 fi
 
-echo "----------------------------------------------"
-echo "[DONE] Cleaning up impala docker containers"
-echo "----------------------------------------------"
+if [ -z ${WD} ];
+then
+    export WD=${WORKSPACE}
+fi
 
-echo "----------------------------------------------"
-echo "Cleaning up docker"
-echo "----------------------------------------------"
-docker image rm ${GPF_DOCKER_IMAGE}
-# docker network prune --force
-echo "----------------------------------------------"
-echo "[DONE] Cleaning up docker"
-echo "----------------------------------------------"
+. ${WD}/scripts/version.sh
 
+for container in ${CONTAINER_TESTS} ${CONTAINER_GPF_DEV} ${CONTAINER_GPF_REMOTE} ${CONTAINER_MYSQL} ${CONTAINER_GPF_IMPALA}; do
+
+    export HAS_RUNNING_CONTAINER=`docker ps | grep ${container} | sed -e "s/\s\{2,\}/\t/g" | cut -f 1`
+    if [ $HAS_RUNNING_CONTAINER ];
+    then
+        echo "stopping container ${container}"
+        docker stop ${container}
+    fi
+    sleep 2
+
+
+    export HAS_CONTAINER=`docker ps -a | grep ${container} | sed -e "s/\s\{2,\}/\t/g" | cut -f 1`
+    if [ $HAS_CONTAINER ];
+    then
+        echo "removing container ${container}"
+        docker rm ${container}
+    fi
+    sleep 2
+
+
+done
+
+sleep 2
+
+export HAS_NETWORK=`docker network ls | grep ${NETWORK} | sed -e "s/\s\{2,\}/\t/g" | cut -f 1`
+if [[ $HAS_NETWORK ]]; then
+    echo "removing network ${container}"
+    docker network rm ${NETWORK}
+fi

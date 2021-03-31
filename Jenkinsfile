@@ -2,31 +2,15 @@ pipeline {
     agent {
         label 'dory'
     }
-    options {
-        disableConcurrentBuilds()
-    }
+    // options {
+    //     disableConcurrentBuilds()
+    // }
     triggers {
         pollSCM('* * * * *')
         cron('H 2 * * *')
     }
-    parameters {
-        string(
-            name: 'DATA_HG19_BRANCH', defaultValue: 'master',
-            description: 'data-hg19-startup build number to use for testing')
-    }
-
     environment {
         WD="${env.WORKSPACE}"
-
-        GPF_DOCKER_NETWORK="gpf_base_${env.BRANCH_NAME}_${env.BUILD_NUMBER}"
-        GPF_DOCKER_IMAGE="iossifovlab/gpf_base_${env.BRANCH_NAME}:${env.BUILD_NUMBER}"
-        GPF_IMPALA_DOCKER_CONTAINER="gpf_impala_${env.BRANCH_NAME}_${env.BUILD_NUMBER}"
-        GPF_REMOTE_DOCKER_CONTAINER="gpf_test_remote_${env.BRANCH_NAME}_${env.BUILD_NUMBER}"
-        GPF_TEST_REMOTE_HOSTNAME="gpfremote"
-
-        DAE_DB_DIR="${env.WORKSPACE}/data-hg19-startup"
-
-        // CLEANUP=1
     }
     stages {
         stage ('Start') {
@@ -40,121 +24,179 @@ pipeline {
         stage('Clean up') {
             steps {
                 sh '''
+                    echo "removing GPF data..."
                     docker run -d --rm \
-                        -v ${WD}:/code \
+                        -v ${WD}:/wd \
                         busybox:latest \
-                        /bin/sh -c "rm -rf /code/wdae-*.log && rm -rf /code/wdae_django*.cache"
+                        /bin/sh -c "rm -rf /wd/data/*"
+
+                    echo "removing GPF import..."
                     docker run -d --rm \
-                        -v ${WD}:/code \
+                        -v ${WD}:/wd \
                         busybox:latest \
-                        /bin/sh -c "/code/jenkins_git_clean.sh"
+                        /bin/sh -c "rm -rf /wd/import/*"
+
+                    echo "removing downloaded data..."
                     docker run -d --rm \
-                        -v ${WD}:/code \
+                        -v ${WD}:/wd \
                         busybox:latest \
-                        /bin/sh -c "rm -rf /code/test_results/*"
+                        /bin/sh -c "rm -rf /wd/downloads/*"
+                    
+                    echo "removing results..."
                     docker run -d --rm \
-                        -v ${WD}:/code \
+                        -v ${WD}:/wd \
                         busybox:latest \
-                        /bin/sh -c "rm -rf /code/gpf_remote"
+                        /bin/sh -c "rm -rf /wd/results/*"
+
+                    mkdir -p ${WD}/data
+                    mkdir -p ${WD}/import
+                    mkdir -p ${WD}/downloads
+                    mkdir -p ${WD}/results
                 '''
             }
         }
 
         stage('Docker build') {
             steps {
-                script {
-                    docker.build(
-                        "${GPF_DOCKER_IMAGE}", ". -f ${WD}/Dockerfile")
-                }
-            }
-        }
-
-        stage('Create docker network') {
-            steps {
                 sh '''
-                    ${WD}/create_docker_network.sh
+                . ${WD}/scripts/version.sh
+
+                cd ${WD}
+                docker build . -f ${WD}/Dockerfile -t ${IMAGE_GPF_DEV}
+
                 '''
             }
         }
 
-        stage('Data') {
-            steps {
-                sh '''
-                    rm -f builds/*
-                '''
-                script {
-                    println "DATA_HG19_BRANCH=" + DATA_HG19_BRANCH
 
+        stage('Data Download') {
+            steps {
+                script {
                     copyArtifacts(
-                        projectName: 'seqpipe/data-hg19-startup/' + DATA_HG19_BRANCH,
-                        selector: lastSuccessful()
+                        projectName: 'seqpipe/data-hg19-startup/master',
+                        selector: lastSuccessful(),
+                        target: "${env.WORKSPACE}" + "/downloads"
                     );
                 }
-                sh '''
-                    tar zxf builds/data-hg19-startup-*.tar.gz -C $WD
-                    
-                    mkdir -p $WD/data-hg19-startup/wdae
-
-                    sed -i "s/localhost/impala/" $WD/data-hg19-startup/DAE.conf
-                    docker run -d --rm \
-                        -v ${WD}:/code \
-                        busybox:latest \
-                        /bin/sh -c "sed -i \"s/localhost/impala/\" /code/dae_conftests/dae_conftests/tests/fixtures/DAE.conf"
-                '''
             }
         }
 
-        stage('Start federation remote instance') {
+        stage('Prepare GPF Data') {
             steps {
                 sh '''
-                    ${WD}/scripts/setup_remote_gpf_container.sh
-                    ${WD}/scripts/run_remote_gpf_container.sh
+                . ${WD}/scripts/version.sh
+                ${SCRIPTS}/prepare_gpf_data.sh
                 '''
             }
         }
+
+        stage('Prepare Remote GPF Data') {
+            steps {
+                sh '''
+                . ${WD}/scripts/version.sh
+                ${SCRIPTS}/prepare_gpf_remote.sh
+                '''
+            }
+        }
+
+        stage('Start Remote GPF') {
+            steps {
+                sh '''
+                . ${WD}/scripts/version.sh
+                ${SCRIPTS}/run_gpf_remote.sh
+                '''
+            }
+        }
+
+        stage('Test Data Import') {
+            steps {
+                sh '''
+                . ${WD}/scripts/version.sh
+                ${SCRIPTS}/run_gpf_dev.sh internal_run_test_data_import.sh
+                '''
+            }
+        }
+
 
         stage('Lint') {
             steps {
                 sh '''
-                    docker run --rm \
-                        -v ${DAE_DB_DIR}:/data \
-                        -v ${WD}:/code \
-                        ${GPF_DOCKER_IMAGE} /code/jenkins_flake8.sh
-
+                . ${WD}/scripts/version.sh
+                ${SCRIPTS}/run_flake8.sh
                 '''
+                publishHTML (target: [
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'results/flake8_report/',
+                    reportFiles: 'index.html',
+                    reportName: "flake8 Report"
+                    ])                
             }
         }
 
         stage('Type Check') {
             steps {
                 sh '''
-                    docker run --rm \
-                        -v ${DAE_DB_DIR}:/data \
-                        -v ${WD}:/code \
-                        ${GPF_DOCKER_IMAGE} /code/jenkins_mypy.sh
+                . ${WD}/scripts/version.sh
+                ${SCRIPTS}/run_mypy.sh
                 '''
+                publishHTML (target: [
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'results/mypy/dae_report',
+                    reportFiles: 'index.html',
+                    reportName: "MyPy DAE Report"
+                    ])                
+                publishHTML (target: [
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'results/mypy/wdae_report',
+                    reportFiles: 'index.html',
+                    reportName: "MyPy WDAE Report"
+                    ])                
             }
         }
 
+
         stage('Test') {
-            steps {
-                sh '''
-                    ${WD}/run_tests.sh
-                '''
+            parallel {
+                stage("Run dae Tests") {
+                    steps {
+                        sh '''
+                        . ${WD}/scripts/version.sh
+                        touch ${WD}/results/dae-junit.xml
+                        ${SCRIPTS}/run_gpf_dev.sh internal_run_dae_tests.sh
+                        '''
+                    }
+                }
+                stage("Run wdae Tests") {
+                    steps {
+                        sh '''
+                        . ${WD}/scripts/version.sh
+                        touch ${WD}/results/wdae-junit.xml
+                        ${SCRIPTS}/run_gpf_dev.sh internal_run_wdae_tests.sh
+                        '''    
+                    }
+                }
             }
         }
+
     }
     post {
         always {
+
+            junit 'results/wdae-junit.xml, results/dae-junit.xml'
+
+            // step([
+            //     $class: 'CoberturaPublisher',
+            //     coberturaReportFile: 'test_results/coverage.xml'])
+
             sh '''
-                ${WORKSPACE}/scripts/clean_up_docker.sh
+                ${WORKSPACE}/tests_cleanup.sh
             '''
-
-            junit 'test_results/wdae-junit.xml, test_results/dae-junit.xml'
-
-            step([
-                $class: 'CoberturaPublisher',
-                coberturaReportFile: 'test_results/coverage.xml'])
 
             zulipNotification(
                 topic: "${env.JOB_NAME}"
@@ -165,19 +207,17 @@ pipeline {
             sh '''
                 ${WORKSPACE}/scripts/package.sh
             '''
-
-    	    archiveArtifacts artifacts: 'mypy_report.tar.gz'
             
             archiveArtifacts artifacts: 'builds/*.tar.gz'
             archiveArtifacts artifacts: 'builds/*.yml'
 
-            script {
-                def job_result = build job: 'seqpipe/seqpipe-gpf-containers/master', propagate: true, wait: false, parameters: [
-                    string(name: 'GPF_BRANCH', value: "master"),
-                    string(name: 'GPF_BUILD', value: "$env.BUILD_NUMBER"),
-                    booleanParam(name: "PUBLISH", value: false)
-                ]
-            }
+            // script {
+            //     def job_result = build job: 'seqpipe/seqpipe-gpf-containers/master', propagate: true, wait: false, parameters: [
+            //         string(name: 'GPF_BRANCH', value: "master"),
+            //         string(name: 'GPF_BUILD', value: "$env.BUILD_NUMBER"),
+            //         booleanParam(name: "PUBLISH", value: false)
+            //     ]
+            // }
         }
     }
 }
