@@ -1,0 +1,49 @@
+import { ErrorsAlertPage } from "cypress/elements/errors-alert-page";
+import { GenotypeBlockPage } from "cypress/elements/genotype-block-page";
+import { PedigreeSelectorPage } from "cypress/elements/pedigree-selector-page";
+import { datasetIds, toolPageNames } from "cypress/elements/utils";
+
+describe('Pedigree selector tests', () => {
+  const pedigreeSelectorPage = new PedigreeSelectorPage();
+  const genotypeBlockPage = new GenotypeBlockPage();
+
+  before(() => {
+    pedigreeSelectorPage.navigateToHome();
+    pedigreeSelectorPage.loginAdmin();
+  });
+
+  after(() => {
+    pedigreeSelectorPage.logout();
+  });
+
+  beforeEach(() => {
+    pedigreeSelectorPage.navigateToHome();
+    Cypress.Cookies.preserveOnce('sessionid');
+  });
+
+  it('should display error alert when none of the checkboxes are selected', () => {
+    const errorsAlertPage = new ErrorsAlertPage();
+
+    pedigreeSelectorPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
+    errorsAlertPage.findAlertWindowInComponent('gpf-pedigree-selector').should('not.exist');
+
+    genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'None').click();
+    errorsAlertPage.findAlertWindowInComponent('gpf-pedigree-selector').should('be.visible');
+
+    genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'All').click();
+    errorsAlertPage.findAlertWindowInComponent('gpf-pedigree-selector').should('not.exist');
+  });
+
+  it('should check/uncheck affected status checkboxes using \'All\' and \'None\' buttons', () => {
+    pedigreeSelectorPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
+    genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'None').click();
+    genotypeBlockPage.findAllCheckboxesInComponent('gpf-pedigree-selector').each((element) => {
+      cy.wrap(element).should('not.be.checked');
+    });
+
+    genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'All').click();
+    genotypeBlockPage.findAllCheckboxesInComponent('gpf-pedigree-selector').each((element) => {
+      cy.wrap(element).should('be.checked');
+    });
+  });
+});
