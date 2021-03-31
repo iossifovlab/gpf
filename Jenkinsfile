@@ -69,56 +69,56 @@ pipeline {
         }
 
 
-        stage('Data Download') {
-            steps {
-                script {
-                    copyArtifacts(
-                        projectName: 'seqpipe/data-hg19-startup/master',
-                        selector: lastSuccessful(),
-                        target: "${env.WORKSPACE}" + "/downloads"
-                    );
-                }
-            }
-        }
+        // stage('Data Download') {
+        //     steps {
+        //         script {
+        //             copyArtifacts(
+        //                 projectName: 'seqpipe/data-hg19-startup/master',
+        //                 selector: lastSuccessful(),
+        //                 target: "${env.WORKSPACE}" + "/downloads"
+        //             );
+        //         }
+        //     }
+        // }
 
-        stage('Prepare GPF Data') {
-            steps {
-                sh '''
-                . ${WD}/scripts/version.sh
-                ${SCRIPTS}/prepare_gpf_data.sh
-                '''
-            }
-        }
+        // stage('Prepare GPF Data') {
+        //     steps {
+        //         sh '''
+        //         . ${WD}/scripts/version.sh
+        //         ${SCRIPTS}/prepare_gpf_data.sh
+        //         '''
+        //     }
+        // }
 
-        stage('Prepare Remote GPF Data') {
-            steps {
-                sh '''
-                . ${WD}/scripts/version.sh
-                ${SCRIPTS}/prepare_gpf_remote.sh
-                '''
-            }
-        }
+        // stage('Prepare Remote GPF Data') {
+        //     steps {
+        //         sh '''
+        //         . ${WD}/scripts/version.sh
+        //         ${SCRIPTS}/prepare_gpf_remote.sh
+        //         '''
+        //     }
+        // }
 
-        stage('Start Remote GPF') {
-            steps {
-                sh '''
-                . ${WD}/scripts/version.sh
-                ${SCRIPTS}/run_gpf_remote.sh
-                '''
-            }
-        }
+        // stage('Start Remote GPF') {
+        //     steps {
+        //         sh '''
+        //         . ${WD}/scripts/version.sh
+        //         ${SCRIPTS}/run_gpf_remote.sh
+        //         '''
+        //     }
+        // }
 
-        stage('Test Data Import') {
-            steps {
-                sh '''
-                . ${WD}/scripts/version.sh
-                ${SCRIPTS}/run_gpf_dev.sh internal_run_test_data_import.sh
-                '''
-            }
-        }
+        // stage('Test Data Import') {
+        //     steps {
+        //         sh '''
+        //         . ${WD}/scripts/version.sh
+        //         ${SCRIPTS}/run_gpf_dev.sh internal_run_test_data_import.sh
+        //         '''
+        //     }
+        // }
 
 
-        stage('Link') {
+        stage('Lint') {
             steps {
                 sh '''
                 . ${WD}/scripts/version.sh
@@ -161,34 +161,34 @@ pipeline {
         }
 
 
-        stage('Test') {
-            parallel {
-                stage("Run dae Tests") {
-                    steps {
-                        sh '''
-                        . ${WD}/scripts/version.sh
-                        touch ${WD}/results/dae-junit.xml
-                        ${SCRIPTS}/run_gpf_dev.sh internal_run_dae_tests.sh
-                        '''
-                    }
-                }
-                stage("Run wdae Tests") {
-                    steps {
-                        sh '''
-                        . ${WD}/scripts/version.sh
-                        touch ${WD}/results/wdae-junit.xml
-                        ${SCRIPTS}/run_gpf_dev.sh internal_run_wdae_tests.sh
-                        '''    
-                    }
-                }
-            }
-        }
+        // stage('Test') {
+        //     parallel {
+        //         stage("Run dae Tests") {
+        //             steps {
+        //                 sh '''
+        //                 . ${WD}/scripts/version.sh
+        //                 touch ${WD}/results/dae-junit.xml
+        //                 ${SCRIPTS}/run_gpf_dev.sh internal_run_dae_tests.sh
+        //                 '''
+        //             }
+        //         }
+        //         stage("Run wdae Tests") {
+        //             steps {
+        //                 sh '''
+        //                 . ${WD}/scripts/version.sh
+        //                 touch ${WD}/results/wdae-junit.xml
+        //                 ${SCRIPTS}/run_gpf_dev.sh internal_run_wdae_tests.sh
+        //                 '''    
+        //             }
+        //         }
+        //     }
+        // }
 
     }
     post {
         always {
 
-            junit 'results/wdae-junit.xml, results/dae-junit.xml'
+            // junit 'results/wdae-junit.xml, results/dae-junit.xml'
 
             // step([
             //     $class: 'CoberturaPublisher',
