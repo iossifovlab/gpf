@@ -21,7 +21,7 @@ fi
 
 
 docker run \
-    -it --rm ${DOCKER_NETWORK_ARG} \
+    --rm ${DOCKER_NETWORK_ARG} \
     --link ${CONTAINER_GPF_IMPALA}:impala \
     --link ${CONTAINER_GPF_REMOTE}:gpfremote \
     --entrypoint /bin/bash \

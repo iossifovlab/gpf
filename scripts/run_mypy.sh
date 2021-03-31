@@ -21,7 +21,7 @@ fi
 
 
 docker run \
-    -it --rm \
+    --rm \
     --entrypoint /bin/bash \
     -v ${WD}:/code \
     -v ${SCRIPTS}:/scripts \
