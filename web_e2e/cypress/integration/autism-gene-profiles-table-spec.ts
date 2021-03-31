@@ -1,7 +1,6 @@
 import { AutismGeneProfilesTable } from 'cypress/elements/autism-gene-profiles-table-page';
 
-
-describe.only('Autism gene profiles table tests', () => {
+describe('Autism gene profiles table tests', () => {
   const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
 
   before(() => {
@@ -54,7 +53,7 @@ describe.only('Autism gene profiles table tests', () => {
   });
 });
 
-describe.only('Column filtering dropdown tests', () => {
+describe('Column filtering dropdown tests', () => {
   const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
 
   beforeEach(() => {
