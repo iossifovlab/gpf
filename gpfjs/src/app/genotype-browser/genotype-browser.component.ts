@@ -84,22 +84,21 @@ export class GenotypeBrowserComponent extends QueryStateCollector
         this.loadingService.setLoadingStart();
 
         this.selectedDataset$.subscribe( selectedDataset => {
-            this.genotypePreviewVariantsArray = null;
-            this.genotypeBrowserState = state;
+          this.genotypePreviewVariantsArray = null;
+          this.genotypeBrowserState = state;
 
-            this.queryService.streamingFinishedSubject.subscribe(
-              _ => { this.loadingFinished = true; }
+          this.queryService.streamingFinishedSubject.subscribe(
+            _ => { this.loadingFinished = true; }
+          );
+
+          this.genotypePreviewVariantsArray =
+            this.queryService.getGenotypePreviewVariantsByFilter(
+              state, selectedDataset.genotypeBrowserConfig.previewColumnsSources, this.loadingService
             );
 
-            this.genotypePreviewVariantsArray =
-              this.queryService.getGenotypePreviewVariantsByFilter(
-                state, selectedDataset.genotypeBrowserConfig.previewColumnsSources, this.loadingService
-              );
-
-          }, error => {
-            console.warn(error);
-          }
-        );
+        }, error => {
+          console.warn(error);
+        });
       }, error => {
         console.warn(error);
       });
@@ -109,8 +108,15 @@ export class GenotypeBrowserComponent extends QueryStateCollector
     this.getCurrentState()
     .subscribe(
       state => {
-        event.target.queryData.value = JSON.stringify(state);
-        event.target.submit();
+        this.selectedDataset$.subscribe( selectedDataset => {
+          const args: any = state
+          args.sources = selectedDataset.genotypeBrowserConfig.downloadColumnsSources;
+          args.download = true;
+          event.target.queryData.value = JSON.stringify(args);
+          event.target.submit();
+        }, error => {
+            console.warn(error);
+        });
       },
       error => null
     );

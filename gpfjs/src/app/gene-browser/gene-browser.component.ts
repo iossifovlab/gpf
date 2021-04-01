@@ -129,7 +129,6 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
 
     this.getCurrentState().subscribe(state => {
       const requestParams = this.transformFamilyVariantsQueryParameters(state);
-      requestParams['querySummary'] = true;
       requestParams['maxVariantsCount'] = this.maxFamilyVariants;
       requestParams['summaryVariantIds'] = state['summaryVariantIds'];
       requestParams['uniqueFamilyVariants'] = false;
@@ -263,20 +262,34 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   }
 
   onSubmit(event) {
-    this.getCurrentState()
-      .subscribe(
-        state => {
-          const requestParams = this.transformFamilyVariantsQueryParameters(state);
-          requestParams['summaryVariantIds'] = state['summaryVariantIds'];
-          requestParams['genomicScores'] = [{
-            'metric': this.geneBrowserConfig.frequencyColumn,
-            'rangeStart': state['zoomState'].yMin > 0 ? state['zoomState'].yMin : null,
-            'rangeEnd': state['zoomState'].yMax,
-          }];
-          event.target.queryData.value = JSON.stringify(requestParams);
-          event.target.submit();
-        },
-        error => null
-      );
+    this.getCurrentState().subscribe(state => {
+      this.selectedDataset$.subscribe( selectedDataset => {
+        const requestParams = this.transformFamilyVariantsQueryParameters(state);
+        requestParams['summaryVariantIds'] = state['summaryVariantIds'];
+        requestParams['genomicScores'] = [{
+          'metric': this.geneBrowserConfig.frequencyColumn,
+          'rangeStart': state['zoomState'].yMin > 0 ? state['zoomState'].yMin : null,
+          'rangeEnd': state['zoomState'].yMax,
+        }];
+        requestParams["download"] = true;
+
+        const targetId = event.target.attributes.id.nodeValue;
+        let sources;
+        if (targetId === "summary_download") {
+          sources = selectedDataset.genotypeBrowserConfig.summaryDownloadColumnsSources;
+          requestParams["querySummary"] = true;
+        }
+        else {
+          sources = selectedDataset.genotypeBrowserConfig.downloadColumnsSources;
+        }
+        requestParams["sources"] = sources
+
+        event.target.queryData.value = JSON.stringify(requestParams);
+        event.target.submit();
+      }, error => {
+          console.warn(error);
+      });
+    },
+    error => null);
   }
 }

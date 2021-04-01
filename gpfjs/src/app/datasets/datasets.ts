@@ -176,6 +176,9 @@ export class GenotypeBrowser {
       json['has_study_types'],
       json['has_graphical_preview'],
       json['preview_columns'],
+      json['download_columns'],
+      json['summary_preview_columns'],
+      json['summary_download_columns'],
       allColumns,
       ColumnGroup.fromJson(json['column_groups'], allColumns),
       PersonFilter.fromJson(json['person_filters']),
@@ -185,6 +188,7 @@ export class GenotypeBrowser {
       json['selected_inheritance_type_filter_values'],
       new Set(json['variant_types']),
       new Set(json['selected_variant_types']),
+      json["max_variants_count"],
     );
   }
 
@@ -200,6 +204,9 @@ export class GenotypeBrowser {
     readonly hasStudyTypes: boolean,
     readonly hasGraphicalPreview: boolean,
     readonly previewColumnsIds: string[],
+    readonly downloadColumnsIds: string[],
+    readonly summaryPreviewColumnsIds: string[],
+    readonly summaryDownloadColumnsIds: string[],
     readonly columns: {[id: string] : Column},
     readonly columnGroups: {[id: string] : ColumnGroup},
     readonly personFilters: Array<PersonFilter>,
@@ -209,6 +216,7 @@ export class GenotypeBrowser {
     readonly selectedInheritanceTypeFilterValues: string[],
     readonly variantTypes: Set<string>,
     readonly selectedVariantTypes: Set<string>,
+    readonly maxVariantsCount: number,
   ) { }
 
   get allColumns(): Array<Column | ColumnGroup> {
@@ -219,9 +227,21 @@ export class GenotypeBrowser {
     return this.allColumns.filter(col => this.previewColumnsIds.indexOf(col.id) !== -1);
   }
 
-  get previewColumnsSources(): Array<Column> {
+  get downloadColumns(): Array<Column | ColumnGroup> {
+      return this.allColumns.filter(col => this.downloadColumnsIds.indexOf(col.id) !== -1);
+  }
+
+  get summaryPreviewColumns(): Array<Column | ColumnGroup> {
+    return this.allColumns.filter(col => this.summaryPreviewColumnsIds.indexOf(col.id) !== -1);
+  }
+
+  get summaryDownloadColumns(): Array<Column | ColumnGroup> {
+      return this.allColumns.filter(col => this.summaryDownloadColumnsIds.indexOf(col.id) !== -1);
+  }
+
+  getSources(columnsIdsFilter: Array<string>): Array<Column> {
     let res = [];
-    for (const column_id of this.previewColumnsIds) {
+    for (const column_id of columnsIdsFilter) {
       if (column_id in this.columnGroups) {
         res = res.concat(this.columnGroups[column_id].columns);
       } else {
@@ -229,6 +249,22 @@ export class GenotypeBrowser {
       }
     }
     return res;
+  }
+
+  get previewColumnsSources(): Array<Column> {
+      return this.getSources(this.previewColumnsIds);
+  }
+
+  get downloadColumnsSources(): Array<Column> {
+      return this.getSources(this.downloadColumnsIds);
+  }
+
+  get summaryPreviewColumnsSources(): Array<Column> {
+      return this.getSources(this.summaryPreviewColumnsIds);
+  }
+
+  get summaryDownloadColumnsSources(): Array<Column> {
+      return this.getSources(this.summaryDownloadColumnsIds);
   }
 }
 
