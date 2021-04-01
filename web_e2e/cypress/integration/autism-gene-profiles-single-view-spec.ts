@@ -35,9 +35,9 @@ describe('Autism gene profiles single view tests', () => {
   // review
   // see if you can get header element text as a getter in the elements.ts files
   it('should navigate properly navigate to the gene browser using the gene browser link', () => {
-    autismGeneProfilesSingleViewPage.header.then((headerEle) => {
+    autismGeneProfilesSingleViewPage.header.invoke('text').then((headerText) => {
       const baseUrl = Cypress.config().baseUrl;
-      const headerName = headerEle.text();
+      const headerName = headerText;
       const geneBrowserUrl = `${baseUrl}datasets/iossifov_2014/geneBrowser/${headerName}`;
 
       autismGeneProfilesSingleViewPage.geneBrowserLink.should('have.prop', 'href')
