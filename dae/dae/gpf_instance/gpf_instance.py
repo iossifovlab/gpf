@@ -428,8 +428,12 @@ class GPFInstance(object):
             ps: row[f"protection_{ps}"] for ps in config.protection_scores
         }
         autism_scores = {
-            aus: row[f"autism_{aus}"] for aus in config.autism_scores
+            aus: round(row[f"autism_{aus}"], 5)
+            if row[f"autism_{aus}"] is not None else None
+            for aus in config.autism_scores
         }
+        print(autism_scores)
+
         gene_lists = config.gene_sets
         gene_lists = list(filter(
             lambda x: row[x] == 1,
