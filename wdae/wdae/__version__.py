@@ -1,4 +1,4 @@
-VERSION = "3.5.dev0"
+VERSION = "3.4.rc0"
 
 
 SERIES = '.'.join(VERSION.split('.')[:2])
