@@ -1,5 +1,5 @@
 {
-  "defaultCommandTimeout": 4000,
+  "defaultCommandTimeout": 15000,
   "reporter": "cypress-multi-reporters",
   "reporterOptions": {
     "reporterEnabled": "spec, mocha-junit-reporter",
