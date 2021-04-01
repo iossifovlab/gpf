@@ -176,6 +176,10 @@ genotype_browser_schema = {
             "schema": {"type": "string"},
             "default": ["sub", "ins", "del"],
         },
+        "max_variants_count": {
+            "type": "integer",
+            "default": 1001
+        }
     },
 }
 

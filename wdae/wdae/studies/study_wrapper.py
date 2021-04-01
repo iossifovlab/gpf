@@ -208,7 +208,9 @@ class StudyWrapper(StudyWrapperBase):
                 svid = f"{allele.cshl_location}:{allele.cshl_variant}"
                 return svid in summary_variant_ids
 
-        for v in self.query_variants(**kwargs):
+        variants = list(self.query_variants(**kwargs))
+
+        for v in variants:
             matched = True
             for aa in v.matched_alleles:
                 assert not aa.is_reference_allele
@@ -343,11 +345,8 @@ class StudyWrapper(StudyWrapperBase):
                 self.genotype_data_study.query_summary_variants(**kwargs),
                 limit
             )
-            freq_column = self.config.gene_browser.frequency_column
             for variant in variants_from_studies:
-                yield self.response_transformer.transform_gene_view_summary_variant(
-                    variant, freq_column
-                )
+                yield variant
         else:
             variants_from_studies = itertools.islice(
                 self.genotype_data_study.query_variants(**kwargs), limit

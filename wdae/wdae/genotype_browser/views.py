@@ -5,6 +5,7 @@ from rest_framework.response import Response
 
 import json
 import logging
+import itertools
 
 from utils.logger import LOGGER
 from utils.streaming_response_util import iterator_to_json
@@ -16,6 +17,8 @@ from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 from datasets_api.permissions import \
     get_allowed_genotype_studies
+
+from dae.utils.dae_utils import join_line
 
 
 logger = logging.getLogger(__name__)
@@ -73,12 +76,20 @@ class GenotypeBrowserQueryView(QueryBaseView):
 
     MAX_SHOWN_VARIANTS = 1000
 
+    def _parse_query_params(self, data):
+        res = {str(k): str(v) for k, v in list(data.items())}
+        assert "queryData" in res
+        query = json.loads(res["queryData"])
+        return query
+
     @expand_gene_set
     @request_logging(LOGGER)
     def post(self, request):
         LOGGER.info("query v3 variants request: " + str(request.data))
 
         data = request.data
+        if "queryData" in data:
+            data = self._parse_query_params(data)
         dataset_id = data.pop("datasetId", None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -112,6 +123,9 @@ class GenotypeBrowserQueryView(QueryBaseView):
         )
 
         if is_download:
+            columns = [s["name"] for s in sources]
+            response = map(
+                join_line, itertools.chain([columns], response))
             response = FileResponse(response, content_type="text/tsv")
         else:
             response = StreamingHttpResponse(
