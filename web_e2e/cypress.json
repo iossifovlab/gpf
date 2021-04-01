@@ -1,9 +1,5 @@
 {
-  "retries": {
-    "runMode": 4,
-    "openMode": 0
-  },
-  "defaultCommandTimeout": 10000,
+  "defaultCommandTimeout": 4000,
   "reporter": "cypress-multi-reporters",
   "reporterOptions": {
     "reporterEnabled": "spec, mocha-junit-reporter",
