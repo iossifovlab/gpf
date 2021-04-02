@@ -19,31 +19,104 @@ summary_download_columns = [
 
 
 @pytest.fixture
-def quads_f1_columns(wdae_gpf_instance):
-    quads_f1 = wdae_gpf_instance.get_wdae_wrapper('quads_f1')
-    return (quads_f1.config.genotype_browser.columns, \
-        quads_f1.config.genotype_browser.column_groups)
-
-
-@pytest.fixture
-def preview_sources(quads_f1_columns):
-    cols, col_groups = quads_f1_columns
-    preview_columns = [
-        "family", "variant", "genotype", "effect", "weights", "freq", "effect",
-        "continuous", "categorical", "ordinal", "raw"
+def preview_sources():
+    return [
+        {'source': 'family', 'format': '%s'},
+        {'source': 'studyName', 'format': '%s'},
+        {'source': 'location', 'format': '%s'},
+        {'source': 'variant', 'format': '%s'},
+        {'source': 'pedigree', 'format': '%s'},
+        {'source': 'worstEffect', 'format': '%s'},
+        {'source': 'genes', 'format': '%s'},
+        {'source': 'LGD_rank', 'format': 'LGD %d'},
+        {'source': 'RVIS_rank', 'format': 'RVIS %d'},
+        {'source': 'pLI_rank', 'format': 'pLI %d'},
+        {'source': 'SSC-freq', 'format': 'SSC %.2f %%'},
+        {'source': 'EVS-freq', 'format': 'EVS %.2f %%'},
+        {'source': 'E65-freq', 'format': 'E65 %.2f %%'},
+        {'source': 'worstEffect', 'format': '%s'},
+        {'source': 'genes', 'format': '%s'},
+        {'source': 'instrument1.continuous', 'format': '%s'},
+        {'source': 'instrument1.continuous', 'format': '%s'},
+        {'source': 'instrument1.categorical', 'format': '%s'},
+        {'source': 'instrument1.ordinal', 'format': '%s'},
+        {'source': 'instrument1.raw', 'format': '%s'}
     ]
 
 
 @pytest.fixture
 def download_sources():
-    pass
+    return [
+        {'source': 'family', 'format': '%s'},
+        {'source': 'studyName', 'format': '%s'},
+        {'source': 'phenotype', 'format': '%s'},
+        {'source': 'location', 'format': '%s'},
+        {'source': 'variant', 'format': '%s'},
+        {'source': 'bestSt', 'format': '%s'},
+        {'source': 'fromParentS', 'format': '%s'},
+        {'source': 'inChS', 'format': '%s'},
+        {'source': 'worstEffect', 'format': '%s'},
+        {'source': 'genes', 'format': '%s'},
+        {'source': 'counts', 'format': '%s'},
+        {'source': 'geneEffect', 'format': '%s'},
+        {'source': 'effectDetails', 'format': '%s'},
+        {'source': 'LGD_rank', 'format': 'LGD %d'},
+        {'source': 'RVIS_rank', 'format': 'RVIS %d'},
+        {'source': 'pLI_rank', 'format': 'pLI %d'},
+        {'source': 'SSC-freq', 'format': 'SSC %.2f %%'},
+        {'source': 'EVS-freq', 'format': 'EVS %.2f %%'},
+        {'source': 'E65-freq', 'format': 'E65 %.2f %%'},
+        {'source': 'instrument1.continuous', 'format': '%s'},
+        {'source': 'instrument1.continuous', 'format': '%s'},
+        {'source': 'instrument1.categorical', 'format': '%s'},
+        {'source': 'instrument1.ordinal', 'format': '%s'},
+        {'source': 'instrument1.raw', 'format': '%s'}
+    ]
 
 
 @pytest.fixture
 def summary_preview_sources():
-    pass
+    return [
+        {'source': 'location', 'format': '%s'},
+        {'source': 'variant', 'format': '%s'},
+        {'source': 'worstEffect', 'format': '%s'},
+        {'source': 'genes', 'format': '%s'},
+        {'source': 'LGD_rank', 'format': 'LGD %d'},
+        {'source': 'RVIS_rank', 'format': 'RVIS %d'},
+        {'source': 'pLI_rank', 'format': 'pLI %d'},
+        {'source': 'SSC-freq', 'format': 'SSC %.2f %%'},
+        {'source': 'EVS-freq', 'format': 'EVS %.2f %%'},
+        {'source': 'E65-freq', 'format': 'E65 %.2f %%'},
+        {'source': 'worstEffect', 'format': '%s'},
+        {'source': 'genes', 'format': '%s'},
+        {'source': 'instrument1.continuous', 'format': '%s'},
+        {'source': 'instrument1.continuous', 'format': '%s'},
+        {'source': 'instrument1.categorical', 'format': '%s'},
+        {'source': 'instrument1.ordinal', 'format': '%s'},
+        {'source': 'instrument1.raw', 'format': '%s'}
+    ]
 
 
 @pytest.fixture
 def summary_download_sources():
-    pass
+    return [
+        {'source': 'location', 'format': '%s'},
+        {'source': 'variant', 'format': '%s'},
+        {'source': 'worstEffect', 'format': '%s'},
+        {'source': 'genes', 'format': '%s'},
+        {'source': 'LGD_rank', 'format': 'LGD %d'},
+        {'source': 'RVIS_rank', 'format': 'RVIS %d'},
+        {'source': 'pLI_rank', 'format': 'pLI %d'},
+        {'source': 'SSC-freq', 'format': 'SSC %.2f %%'},
+        {'source': 'EVS-freq', 'format': 'EVS %.2f %%'},
+        {'source': 'E65-freq', 'format': 'E65 %.2f %%'},
+        {'source': 'worstEffect', 'format': '%s'},
+        {'source': 'genes', 'format': '%s'},
+        {'source': 'geneEffect', 'format': '%s'},
+        {'source': 'effectDetails', 'format': '%s'},
+        {'source': 'instrument1.continuous', 'format': '%s'},
+        {'source': 'instrument1.continuous', 'format': '%s'},
+        {'source': 'instrument1.categorical', 'format': '%s'},
+        {'source': 'instrument1.ordinal', 'format': '%s'},
+        {'source': 'instrument1.raw', 'format': '%s'}
+    ]
