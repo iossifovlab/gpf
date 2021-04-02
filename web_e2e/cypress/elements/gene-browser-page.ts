@@ -10,7 +10,7 @@ export class GeneBrowserPage extends BasePage {
   }
 
   get goButton() {
-    return cy.contains('Go');
+    return cy.get('input[value=\'Go\']');
   }
 
   get geneView() {
