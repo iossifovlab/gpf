@@ -35,43 +35,6 @@ def handle_partial_permissions(user, dataset_id: str, request_data: dict):
         get_allowed_genotype_studies(user, dataset_id)
 
 
-class GenotypeBrowserConfigView(QueryBaseView):
-    @request_logging(LOGGER)
-    def get(self, request):
-        data = request.query_params
-        dataset_id = data.get("datasetId", None)
-        if dataset_id is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        study_wrapper = self.gpf_instance.get_wdae_wrapper(dataset_id)
-
-        # preview_info = dict(study_wrapper.get_wdae_preview_info(
-        #     data, GenotypeBrowserQueryView.MAX_SHOWN_VARIANTS
-        # ))
-
-        preview_info = dict()
-
-        config = study_wrapper.config
-
-        preview_info.update(config.genotype_browser)
-
-        result_config = {k: preview_info[k] for k in [
-            # "legend",
-            # "maxVariantsCount",
-            "preview_columns",
-            "download_columns",
-            "summary_preview_columns",
-            "summary_download_columns",
-            "columns",
-            "column_groups"
-        ]}
-
-        # TODO Should we merge genotype and phenotype columns before sending
-        # them to the frontend? Does it care for the distinction?
-
-        return Response(result_config, status=status.HTTP_200_OK)
-
-
 class GenotypeBrowserQueryView(QueryBaseView):
 
     MAX_SHOWN_VARIANTS = 1000
@@ -91,17 +54,16 @@ class GenotypeBrowserQueryView(QueryBaseView):
         if "queryData" in data:
             data = self._parse_query_params(data)
         dataset_id = data.pop("datasetId", None)
+
+        if "sources" not in data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
         if "genomicScores" in data:
             scores = data["genomicScores"]
             for score in scores:
                 if score["rangeStart"] is None and score["rangeEnd"] is None:
                     return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        if "sources" not in data:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         sources = data.pop("sources")
 
@@ -126,7 +88,10 @@ class GenotypeBrowserQueryView(QueryBaseView):
             columns = [s["name"] for s in sources]
             response = map(
                 join_line, itertools.chain([columns], response))
-            response = FileResponse(response, content_type="text/tsv")
+            response = FileResponse(
+                response, filename='variants.tsv',
+                as_attachment=True, content_type="text/tsv"
+            )
         else:
             response = StreamingHttpResponse(
                 iterator_to_json(response),

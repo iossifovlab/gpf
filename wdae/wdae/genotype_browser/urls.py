@@ -8,11 +8,6 @@ from genotype_browser import views
 
 urlpatterns = [
     url(
-        r"^/config/?$",
-        views.GenotypeBrowserConfigView.as_view(),
-        name="genotype_browser_config",
-    ),
-    url(
         r"^/query/?",
         views.GenotypeBrowserQueryView.as_view(),
         name="genotype_browser_query"
