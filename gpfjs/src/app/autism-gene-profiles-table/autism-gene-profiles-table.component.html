@@ -94,7 +94,7 @@
         <ng-container *ngFor="let study of gene.studies">
           <ng-container *ngFor="let personSet of study.personSets">
             <td *ngFor="let effectType of getMapValues(personSet.effectTypes)">
-              {{effectType}}
+              <span *ngIf="effectType !== 0">{{effectType}}</span>
             </td>
           </ng-container>
         </ng-container>
