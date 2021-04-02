@@ -50,7 +50,7 @@ export class UserManagementPage extends BasePage {
   }
 
   get userTableEmailElements() {
-    return cy.get('gpf-table-view-cell a[href*=\'\']');
+    return cy.get('gpf-table-view-cell a[href*=\'/gpf/management/users/\']');
   }
 
   get userTableDeleteNewestUserButton() {
@@ -158,7 +158,7 @@ export class UserManagementPage extends BasePage {
   }
 
   get datasetsTableAddGroupToLastDatasetButton() {
-    return cy.get('gpf-datasets-table button').contains('Add').last();
+    return cy.get('gpf-datasets-table button').filter(':contains(\'Add\')').last();
   }
 
   get datasetsTableRemoveNewestGroupInLastDatasetButton() {
