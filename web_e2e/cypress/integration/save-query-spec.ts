@@ -1,7 +1,7 @@
-import { DatasetsPage } from "cypress/elements/datasets-page";
-import { GenotypeBlockPage } from "cypress/elements/genotype-block-page";
-import { SaveQueryPage } from "cypress/elements/save-query-page";
-import { datasetIds, toolPageNames } from "cypress/elements/utils";
+import { DatasetsPage } from 'cypress/elements/datasets-page';
+import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
+import { SaveQueryPage } from 'cypress/elements/save-query-page';
+import { datasetIds, toolPageNames } from 'cypress/elements/utils';
 
 describe('Save query tests', () => {
   const saveQueryPage = new SaveQueryPage();

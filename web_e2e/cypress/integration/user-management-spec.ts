@@ -1,4 +1,4 @@
-import { UserManagementPage } from "cypress/elements/user-management-page";
+import { UserManagementPage } from 'cypress/elements/user-management-page';
 
 describe('User management tests', () => {
   const userManagementPage = new UserManagementPage();

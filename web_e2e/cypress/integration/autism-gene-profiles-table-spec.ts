@@ -65,7 +65,6 @@ describe('Column filtering dropdown tests', () => {
 
   it('should open gene sets dropdown after clicking on gene sets columns filtering button', () => {
     autismGeneProfilesTablePage.geneSetsDropdown.should('be.visible');
-
     autismGeneProfilesTablePage.geneSetsButton.click();
     autismGeneProfilesTablePage.geneSetsDropdown.should('not.be.visible');
   });
@@ -89,7 +88,6 @@ describe('Column filtering dropdown tests', () => {
     autismGeneProfilesTablePage.geneSetsDropdownApplyButton.should('not.be.enabled');
 
     autismGeneProfilesTablePage.geneSetsCheckUncheckAllButton.click();
-
     autismGeneProfilesTablePage.geneSetsDropdownApplyButton.should('be.enabled');
   });
 

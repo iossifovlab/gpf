@@ -1,5 +1,5 @@
-import { AppPage } from "cypress/elements/app-page";
-import { userData } from "cypress/elements/utils";
+import { AppPage } from 'cypress/elements/app-page';
+import { userData } from 'cypress/elements/utils';
 
 describe('App tests', () => {
   const appPage = new AppPage();

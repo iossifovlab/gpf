@@ -1,10 +1,10 @@
-import { FamilyFilterBlockPage } from "cypress/elements/family-filter-block-page";
-import { GenesBlockPage } from "cypress/elements/genes-block-page";
-import { PhenoToolMeasurePage } from "cypress/elements/pheno-tool-measure-page";
-import { PhenoToolPage } from "cypress/elements/pheno-tool-page";
-import { SaveQueryPage } from "cypress/elements/save-query-page";
-import { ShareQueryPage } from "cypress/elements/share-query-page";
-import { datasetIds, toolPageNames } from "cypress/elements/utils";
+import { FamilyFilterBlockPage } from 'cypress/elements/family-filter-block-page';
+import { GenesBlockPage } from 'cypress/elements/genes-block-page';
+import { PhenoToolMeasurePage } from 'cypress/elements/pheno-tool-measure-page';
+import { PhenoToolPage } from 'cypress/elements/pheno-tool-page';
+import { SaveQueryPage } from 'cypress/elements/save-query-page';
+import { ShareQueryPage } from 'cypress/elements/share-query-page';
+import { datasetIds, toolPageNames } from 'cypress/elements/utils';
 
 describe('Pheno tool tests', () => {
   const phenoToolPage = new PhenoToolPage();

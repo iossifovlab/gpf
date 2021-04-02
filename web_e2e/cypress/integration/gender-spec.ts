@@ -38,7 +38,6 @@ describe('Gender tests', () => {
 
   it('should check/uncheck child gender checkboxes using \'All\' and \'None\' buttons', () => {
     genderPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
-
     genotypeBlockPage.findButtonInComponentContainingText('gpf-gender', 'None').click();
     genotypeBlockPage.findAllCheckboxesInComponent('gpf-gender').each((element) => {
       cy.wrap(element).should('not.be.checked');

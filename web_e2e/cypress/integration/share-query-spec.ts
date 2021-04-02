@@ -1,7 +1,7 @@
-import { DatasetsPage } from "cypress/elements/datasets-page";
-import { GenotypeBlockPage } from "cypress/elements/genotype-block-page";
-import { ShareQueryPage } from "cypress/elements/share-query-page";
-import { datasetIds, toolPageNames } from "cypress/elements/utils";
+import { DatasetsPage } from 'cypress/elements/datasets-page';
+import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
+import { ShareQueryPage } from 'cypress/elements/share-query-page';
+import { datasetIds, toolPageNames } from 'cypress/elements/utils';
 
 describe('Share query tests', () => {
   const shareQueryPage = new ShareQueryPage();

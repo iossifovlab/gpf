@@ -138,7 +138,6 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.filterGenesByGeneSymbol('SAMD11');
       genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.showTablePreview();
-
       genotypeBrowserPage.overviewParagraph.should('have.text', ' ' + data.variantsCount + ' variants selected (' + data.variantsCount + ' shown) ');
     });
   });
@@ -153,7 +152,6 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setRegion(data.region);
       genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.showTablePreview();
-
       genotypeBrowserPage.overviewParagraph.should('have.text', ' 5 variants selected (5 shown) ');
     });
   });
@@ -198,7 +196,6 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setGender(data.childGender);
       genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.showTablePreview();
-
       genotypeBrowserPage.overviewParagraph.should('have.text', ' ' + data.variantsCount + ' variants selected (' + data.variantsCount + ' shown) ');
     });
   });
@@ -212,7 +209,6 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setVariantType(data.variantType);
       genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.showTablePreview();
-
       genotypeBrowserPage.overviewParagraph.should('have.text', ' ' + data.variantsCount + ' variants selected (' + data.variantsCount + ' shown) ');
     });
   });
@@ -226,7 +222,6 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setStudy(datasetIds.compVcf);
       genotypeBrowserController.setEffectTypesGroup(data.effectType);
       genotypeBrowserController.showTablePreview();
-      
       genotypeBrowserPage.overviewParagraph.should('have.text', ' ' + data.variantsCount + ' variants selected (' + data.variantsCount + ' shown) ');
     });
   });
@@ -258,7 +253,6 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.setInheritanceType(data.inheritanceType);
       genotypeBrowserController.showTablePreview();
-
       genotypeBrowserPage.overviewParagraph.should('have.text', ' ' + data.expectedOverviewParagraph + ' ');
     });
   });
@@ -275,7 +269,6 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.setInheritanceType('Denovo');
       genotypeBrowserController.showTablePreview();
-
       genotypeBrowserPage.overviewParagraph.should('have.text', ' ' + data.expectedOverviewParagraph + ' ');
     });
   });
@@ -304,7 +297,6 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setEffectTypesGroup(data.effectType);
       genotypeBrowserController.filterGenesByGeneSymbol(data.geneSymbol);
       genotypeBrowserController.showTablePreview();
-
       genotypeBrowserPage.overviewParagraph.should('have.text', ' ' + data.expectedOverviewParagraph + ' ');
     });
   });
@@ -314,7 +306,6 @@ describe('Genotype browser table preview result tests', () => {
     genotypeBrowserController.setEffectTypesGroup('All');
     genotypeBrowserController.setFamilyFilterToId('11002');
     genotypeBrowserController.showTablePreview();
-
     genotypeBrowserPage.overviewParagraph.should('have.text', ' 2 variants selected (2 shown) ');
   });
 
@@ -324,7 +315,6 @@ describe('Genotype browser table preview result tests', () => {
     genotypeBrowserController.filterGenesByGeneSets('GO Terms', 'GO:0016917');
     genotypeBrowserController.setEffectTypesGroup('LGDs');
     genotypeBrowserController.showTablePreview();
-
     genotypeBrowserPage.overviewParagraph.should('have.text', ' 0 variants selected (0 shown) ');
   });
 
@@ -342,7 +332,6 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.filterGenesByGeneSets('GO Terms', 'GO:0016917');
       genotypeBrowserController.setEffectTypes(data.effectTypes);
       genotypeBrowserController.showTablePreview();
-
       genotypeBrowserPage.overviewParagraph.should('have.text', ' ' + data.expectedOverviewParagraph + ' ');
     });
   });

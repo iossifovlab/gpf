@@ -1,9 +1,9 @@
-import { EnrichmenToolPage } from "cypress/elements/enrichment-tool-page";
-import { ErrorsAlertPage } from "cypress/elements/errors-alert-page";
-import { GenesBlockPage } from "cypress/elements/genes-block-page";
-import { SaveQueryPage } from "cypress/elements/save-query-page";
-import { ShareQueryPage } from "cypress/elements/share-query-page";
-import { datasetIds, toolPageNames } from "cypress/elements/utils";
+import { EnrichmenToolPage } from 'cypress/elements/enrichment-tool-page';
+import { ErrorsAlertPage } from 'cypress/elements/errors-alert-page';
+import { GenesBlockPage } from 'cypress/elements/genes-block-page';
+import { SaveQueryPage } from 'cypress/elements/save-query-page';
+import { ShareQueryPage } from 'cypress/elements/share-query-page';
+import { datasetIds, toolPageNames } from 'cypress/elements/utils';
 
 describe('Enrichment tool tests', () => {
   const enrichmenToolPage = new EnrichmenToolPage();
@@ -103,7 +103,6 @@ describe('Enrichment tool tests', () => {
     genesBlockPage.geneSetsSearchbox.type('FMRP Darnell');
     genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText('FMRP Darnell').click();
     enrichmenToolPage.enrichmentTestButton.click();
-
     enrichmenToolPage.findTableField('affected', 'LGDs', 1).should('have.text', '55');
     enrichmenToolPage.findTableField('affected', 'Missense', 1).should('have.text', '169')
   });
@@ -115,11 +114,9 @@ describe('Enrichment tool tests', () => {
     enrichmenToolPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageNames.enrichmentTool);
     genesBlockPage.geneSetsButton.click();
     genesBlockPage.geneSetsCollectionSelectorDropdownMenu.select('MSigDB Pathways');
-
     genesBlockPage.geneSetsSearchbox.click();
     genesBlockPage.geneSetsSearchbox.type('BIOCARTA_PTEN_PATHWAY');
     genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText('BIOCARTA_PTEN_PATHWAY').click();
-
     enrichmenToolPage.enrichmentTestButton.click();
     enrichmenToolPage.findTableField('affected', 'LGDs', 1).should('have.text', '0');
     enrichmenToolPage.findTableField('affected', 'Missense', 1).should('have.text', '2');

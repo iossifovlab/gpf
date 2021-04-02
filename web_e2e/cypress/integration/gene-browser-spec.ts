@@ -1,5 +1,5 @@
-import { GeneBrowserPage } from "cypress/elements/gene-browser-page";
-import { datasetIds, toolPageNames } from "cypress/elements/utils";
+import { GeneBrowserPage } from 'cypress/elements/gene-browser-page';
+import { datasetIds, toolPageNames } from 'cypress/elements/utils';
 
 describe('Gene browser tests', () => {
   const geneBrowserPage = new GeneBrowserPage();
