@@ -1,6 +1,6 @@
 export class UsersPage {
   get loginDropdownToggleButton() {
-    return cy.get('gpf-users').get('#login-dropdown-toggle-button');
+    return cy.get('gpf-users').find('#login-dropdown-toggle-button');
   }
 
   get loginWindow() {
@@ -8,19 +8,19 @@ export class UsersPage {
   }
 
   get usernameInput() {
-    return cy.get('gpf-users').get('#username');
+    return cy.get('gpf-users').find('#username');
   }
 
   get passwordInput() {
-    return cy.get('gpf-users').get('#password');
+    return cy.get('gpf-users').find('#password');
   }
 
   get loginSubmitButton() {
-    return cy.get('gpf-users').get('#login-button');
+    return cy.get('gpf-users').find('#login-button');
   }
 
   get logoutButton() {
-    return cy.get('gpf-users').get('#logout-button');
+    return cy.get('gpf-users').find('#logout-button');
   }
 
   get forgottenPasswordButton() {
