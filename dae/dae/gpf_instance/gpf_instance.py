@@ -432,7 +432,6 @@ class GPFInstance(object):
             if row[f"autism_{aus}"] is not None else None
             for aus in config.autism_scores
         }
-        print(autism_scores)
 
         gene_lists = config.gene_sets
         gene_lists = list(filter(
