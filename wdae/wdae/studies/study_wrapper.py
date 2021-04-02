@@ -78,6 +78,10 @@ class StudyWrapperBase(GenotypeData):
     ):
         pass
 
+    @abstractmethod
+    def query_variants_wdae(self, kwargs, sources, max_variants_count=10000):
+        pass
+
 
 class StudyWrapper(StudyWrapperBase):
     def __init__(
