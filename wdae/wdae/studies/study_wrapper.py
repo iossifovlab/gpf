@@ -25,19 +25,6 @@ class StudyWrapperBase(GenotypeData):
     # def get_wdae_preview_info(self, query, max_variants_count=10000):
     #     pass
 
-    @abstractmethod
-    def get_variants_wdae_download(self, query, max_variants_count=10000):
-        pass
-
-    @abstractmethod
-    def get_summary_variants_wdae_preview(
-            self, query, max_variants_count=10000):
-        pass
-
-    @abstractmethod
-    def get_summary_variants_wdae_download(
-            self, query, max_variants_count=10000):
-        pass
 
     @abstractmethod
     def build_genotype_data_group_description(self, gpf_instance):
@@ -261,17 +248,6 @@ class StudyWrapper(StudyWrapperBase):
 
         return limited_rows
 
-    def get_variants_wdae_download(self, query, max_variants_count=10000):
-        rows = self.get_variant_web_rows(
-            query, self.download_descs, max_variants_count=max_variants_count
-        )
-
-        wdae_download = map(
-            join_line, itertools.chain([self.download_columns], rows)
-        )
-
-        return wdae_download
-
     # def get_summary_wdae_preview_info(self, query, max_variants_count=10000):
     #     preview_info = {}
 
@@ -281,27 +257,6 @@ class StudyWrapper(StudyWrapperBase):
     #     preview_info["maxVariantsCount"] = max_variants_count
 
     #     return preview_info
-
-    def get_summary_variants_wdae_preview(
-            self, query, max_variants_count=10000):
-        if not self.summary_preview_columns:
-            raise Exception("No summary preview columns specified")
-        query["limit"] = max_variants_count
-        rows = self.query_summary_variants(**query)
-        return rows
-
-    def get_summary_variants_wdae_download(
-            self, query, max_variants_count=10000):
-        if not self.summary_download_columns:
-            raise Exception("No summary download columns specified")
-        query["limit"] = max_variants_count
-        rows = self.query_summary_variants(**query)
-
-        wdae_download = map(
-            join_line, itertools.chain([self.summary_download_columns], rows)
-        )
-
-        return wdae_download
 
     def get_gene_view_summary_variants(self, frequency_column, **kwargs):
         kwargs = self.query_transformer.transform_kwargs(**kwargs)
@@ -517,17 +472,6 @@ class RemoteStudyWrapper(StudyWrapperBase):
                 variants = json.loads(line)
                 for variant in variants:
                     yield variant
-
-    def get_variants_wdae_download(self, query, max_variants_count=10000):
-        raise NotImplementedError
-
-    def get_summary_variants_wdae_preview(
-            self, query, max_variants_count=10000):
-        raise NotImplementedError
-
-    def get_summary_variants_wdae_download(
-            self, query, max_variants_count=10000):
-        raise NotImplementedError
 
     def build_genotype_data_group_description(self, gpf_instance):
         return self.config.to_dict()
