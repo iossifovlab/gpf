@@ -30,25 +30,34 @@ class ImpalaHelpers(object):
         def create_connection():
             impala_host = next(host_generator)
             logger.info(f"creating connection to impala host {impala_host}")
-            return dbapi.connect(host=impala_host, port=impala_port)
+            connection = dbapi.connect(host=impala_host, port=impala_port)
+            connection.host = impala_host
+            return connection
 
         self._connection_pool = QueuePool(
             create_connection, pool_size=20,  # pool_size,
             reset_on_return=False,
-            use_threadlocal=True,
+            # use_threadlocal=True,
         )
         logger.info(
             f"created impala pool with {self._connection_pool.status()} "
             f"connections")
+        connections = []
+        for i in range(20):
+            conn = self.connection()
+            conn.id = i
+            connections.append(conn)
+        for conn in connections:
+            conn.close()
 
     def connection(self):
         logger.info(
             f"going to get impala connection from the pool; "
-            f"{self._connection_pool.status()}")
+            f"{self._connection_pool.status()}; {id(self)}")
         conn = self._connection_pool.connect()
         logger.info(
-            f"[DONE] going to get impala connection from the pool; "
-            f"{self._connection_pool.status()}")
+            f"[DONE] going to get impala connection to host {conn.host} "
+            f"from the pool; {self._connection_pool.status()}; {id(self)}")
         return conn
 
     def _import_single_file(self, cursor, db, table, import_file):
