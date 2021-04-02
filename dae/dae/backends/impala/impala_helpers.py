@@ -42,13 +42,13 @@ class ImpalaHelpers(object):
         logger.info(
             f"created impala pool with {self._connection_pool.status()} "
             f"connections")
-        connections = []
-        for i in range(20):
-            conn = self.connection()
-            conn.id = i
-            connections.append(conn)
-        for conn in connections:
-            conn.close()
+        # connections = []
+        # for i in range(20):
+        #     conn = self.connection()
+        #     conn.id = i
+        #     connections.append(conn)
+        # for conn in connections:
+        #     conn.close()
 
     def connection(self):
         logger.info(
