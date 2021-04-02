@@ -4,7 +4,6 @@ import logging
 
 from abc import abstractmethod
 
-from dae.utils.dae_utils import join_line
 from dae.variants.attributes import Role
 from dae.studies.study import GenotypeData
 from dae.configuration.gpf_config_parser import FrozenBox
@@ -24,7 +23,6 @@ class StudyWrapperBase(GenotypeData):
     # @abstractmethod
     # def get_wdae_preview_info(self, query, max_variants_count=10000):
     #     pass
-
 
     @abstractmethod
     def build_genotype_data_group_description(self, gpf_instance):
