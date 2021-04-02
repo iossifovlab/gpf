@@ -62,11 +62,11 @@ export class GeneViewPage extends BasePage {
   }
 
   get variantTypesCNVPlusCheckbox() {
-    return cy.get('label').contains('CNV+').eq(1).get('input');
+    return cy.get('label').contains('CNV+').eq(0).get('input');
   }
 
   get variantTypesCNVMinusCheckbox() {
-    return cy.get('label').contains('CNV-').eq(1).get('input');
+    return cy.get('label').contains('CNV-').eq(0).get('input');
   }
 
   get undoButton() {
