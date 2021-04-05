@@ -51,8 +51,8 @@
       <gpf-genotype-preview-table
         *ngIf="tablePreview"
         [columns]="dataset?.genotypeBrowserConfig?.previewColumns"
-        [genotypePreviewInfo]="genotypePreviewInfo"
-        [genotypePreviewVariantsArray]="genotypePreviewVariantsArray">
+        [genotypePreviewVariantsArray]="genotypePreviewVariantsArray"
+        [legend]="null">
       </gpf-genotype-preview-table>
       <gpf-genotype-preview-chromosomes
         class="chromosomes-preview"

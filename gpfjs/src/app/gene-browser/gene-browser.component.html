@@ -56,8 +56,10 @@
         </div>
       </div>
 
-      <gpf-genotype-preview-table [columns]="dataset?.genotypeBrowserConfig?.previewColumns"
-        [genotypePreviewInfo]="genotypePreviewInfo" [genotypePreviewVariantsArray]="genotypePreviewVariantsArray">
+      <gpf-genotype-preview-table
+        [columns]="dataset?.genotypeBrowserConfig?.previewColumns"
+        [genotypePreviewVariantsArray]="genotypePreviewVariantsArray"
+        [legend]="null">
       </gpf-genotype-preview-table>
 
     </div>

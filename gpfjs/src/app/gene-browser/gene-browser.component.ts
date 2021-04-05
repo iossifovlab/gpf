@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { GeneService } from 'app/gene-view/gene.service';
 import { Gene, GeneViewSummaryAllelesArray, DomainRange } from 'app/gene-view/gene';
-import { GenotypePreviewVariantsArray, GenotypePreviewInfo } from 'app/genotype-preview-model/genotype-preview';
+import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
 import { Observable } from 'rxjs';
 import { Dataset } from 'app/datasets/datasets';
@@ -31,7 +31,6 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   summaryVariantsArray: GeneViewSummaryAllelesArray;
   selectedDataset$: Observable<Dataset>;
   selectedDatasetId: string;
-  genotypePreviewInfo: GenotypePreviewInfo;
   loadingFinished: boolean;
   familyLoadingFinished: boolean;
   hideResults: boolean;
@@ -192,66 +191,50 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
     this.hideResults = false;
     this.geneViewComponent.clearSvgElement();
     this.geneViewComponent.resetGeneTableValues();
-    this.getCurrentState()
-      .subscribe(state => {
-        this.geneSymbol = state['geneSymbols'][0];
+    this.getCurrentState().subscribe(state => {
+      this.geneSymbol = state['geneSymbols'][0];
 
-        this.geneService.getGene(this.geneSymbol.toUpperCase().trim()).subscribe((gene) => {
-          this.selectedGene = gene;
+      this.geneService.getGene(this.geneSymbol.toUpperCase().trim()).subscribe((gene) => {
+        this.selectedGene = gene;
+      });
+
+      this.loadingFinished = false;
+      this.loadingService.setLoadingStart();
+      this.genotypePreviewVariantsArray = null;
+      this.genotypeBrowserState = state;
+      let summaryLoadingFinished = false;
+
+      this.queryService.summaryStreamingFinishedSubject.subscribe(
+        _ => {
+          summaryLoadingFinished = true;
+          this.loadingFinished = true;
+          this.loadingService.setLoadingStop();
         });
 
-        this.genotypePreviewInfo = null;
-        this.loadingFinished = false;
-        this.loadingService.setLoadingStart();
-        this.queryService.getGenotypePreviewInfo(
-          { datasetId: this.selectedDatasetId, peopleGroup: state['peopleGroup'] }
-        ).subscribe(
-          (genotypePreviewInfo) => {
-            this.genotypePreviewInfo = genotypePreviewInfo;
-            this.genotypePreviewVariantsArray = null;
+      this.queryService.streamingFinishedSubject.subscribe(() => { this.familyLoadingFinished = true; });
 
-            this.genotypeBrowserState = state;
-            let summaryLoadingFinished = false;
+      const requestParams = { ...state };
+      requestParams['maxVariantsCount'] = 10000;
+      delete requestParams['zoomState'];
+      delete requestParams['regions'];
 
-            this.queryService.summaryStreamingFinishedSubject.subscribe(
-              _ => {
-                summaryLoadingFinished = true;
-                this.loadingFinished = true;
-                this.loadingService.setLoadingStop();
-              });
+      if (this.enableCodingOnly) {
+        requestParams['effectTypes'] = this.codingEffectTypes;
+        this.geneViewComponent.enableIntronCondensing();
+      } else {
+        this.geneViewComponent.disableIntronCondensing();
+      }
+      const inheritanceFilters = [
+        'denovo',
+        'mendelian',
+        'omission',
+        'missing'
+      ];
 
-            this.queryService.streamingFinishedSubject.subscribe(() => { this.familyLoadingFinished = true; });
+      requestParams['inheritanceTypeFilter'] = inheritanceFilters;
 
-            const requestParams = { ...state };
-            requestParams['maxVariantsCount'] = 10000;
-            delete requestParams['zoomState'];
-            delete requestParams['regions'];
-
-
-            if (this.enableCodingOnly) {
-              requestParams['effectTypes'] = this.codingEffectTypes;
-              this.geneViewComponent.enableIntronCondensing();
-            } else {
-              this.geneViewComponent.disableIntronCondensing();
-            }
-            const inheritanceFilters = [
-              'denovo',
-              'mendelian',
-              'omission',
-              'missing'
-            ];
-
-            requestParams['inheritanceTypeFilter'] = inheritanceFilters;
-
-            this.summaryVariantsArray = this.queryService.getGeneViewVariants(requestParams);
-
-          }, error => {
-            console.warn(error);
-          }
-        );
-      }, error => {
-        console.error(error);
-      });
+      this.summaryVariantsArray = this.queryService.getGeneViewVariants(requestParams);
+    }, console.error);
   }
 
   getFamilyVariantCounts() {

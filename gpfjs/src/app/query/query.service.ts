@@ -10,7 +10,7 @@ const oboe = require('oboe');
 import { environment } from 'environments/environment';
 import { QueryData } from './query';
 import { ConfigService } from '../config/config.service';
-import { GenotypePreview, GenotypePreviewInfo, GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
+import { GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
 import { GeneViewSummaryAllelesArray } from '../gene-view/gene';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Column } from '../datasets/datasets';
@@ -41,17 +41,6 @@ export class QueryService {
     private config: ConfigService,
     private datasetsService: DatasetsService,
   ) { }
-
-  getGenotypePreviewInfo(data: QueryData): Observable<GenotypePreviewInfo> {
-    let params = new HttpParams().set('datasetId', data['datasetId']);
-    if (data['peopleGroup']) {
-      params = params.set('personSetCollectionId', data['peopleGroup']['id']);
-    }
-    const options = { params: params, headers: this.headers, withCredentials: true };
-
-    return this.http.get(this.config.baseUrl + this.genotypeBrowserConfigUrl, options)
-      .map(GenotypePreviewInfo.fromJson);
-  }
 
   streamPost(url: string, filter: QueryData) {
     if (this.connectionEstablished) {

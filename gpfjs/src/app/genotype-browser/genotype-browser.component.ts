@@ -8,7 +8,7 @@ import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loadi
 import { ConfigService } from '../config/config.service';
 import { DatasetsService } from '../datasets/datasets.service';
 import { Dataset } from '../datasets/datasets';
-import { GenotypePreviewInfo, GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
+import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 
 @Component({
   selector: 'gpf-genotype-browser',
@@ -22,7 +22,6 @@ import { GenotypePreviewInfo, GenotypePreviewVariantsArray } from 'app/genotype-
 export class GenotypeBrowserComponent extends QueryStateCollector
     implements OnInit, OnChanges, AfterViewInit {
   genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
-  genotypePreviewInfo: GenotypePreviewInfo;
   tablePreview: boolean;
 
   private disableQueryButtons = false;
