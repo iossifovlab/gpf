@@ -6,5 +6,7 @@
     "mochaJunitReporterReporterOptions": {
       "mochaFile": "results/test-results/[hash].xml"
     }
-  }
+  },
+  "downloadsFolder": "cypress/downloads",
+  "trashAssetsBeforeRuns": true
 }

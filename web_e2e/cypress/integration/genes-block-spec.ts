@@ -1,5 +1,6 @@
 import { ErrorsAlertPage } from "cypress/elements/errors-alert-page";
 import { GenesBlockPage } from "cypress/elements/genes-block-page";
+import { GenotypeBrowserController } from "cypress/elements/genotype-browser-controller";
 import { datasetIds, toolPageNames } from "cypress/elements/utils";
 
 describe('Genes block panel tests', () => {
@@ -69,195 +70,193 @@ describe('Genes block panel tests', () => {
   });
 });
 
-// describe('Gene sets names and count tests', () => {
-//   const genotypeBrowserController = new GenotypeBrowserController();
-//   const genesBlockPage = new GenesBlockPage();
+describe('Gene sets names and count tests', () => {
+  const genotypeBrowserController = new GenotypeBrowserController();
+  const genesBlockPage = new GenesBlockPage();
 
-//   beforeAll(() => {
-//     browser.restart();
-//     browser.waitForAngularEnabled(false);
-//     genotypeBrowserController.navigateToHome();
-//     genotypeBrowserController.loginAdmin();
-//   });
+  before(() => {
+    genotypeBrowserController.navigateToHome();
+    genotypeBrowserController.loginAdmin();
+  });
 
-//   afterAll(() => {
-//     genotypeBrowserController.logout();
-//   });
+  after(() => {
+    genotypeBrowserController.logout();
+  });
 
-//   beforeEach(() => {
-//     genotypeBrowserController.navigateToHome();
-//   });
+  beforeEach(() => {
+    Cypress.Cookies.preserveOnce('sessionid');
+    genotypeBrowserController.navigateToHome();
+  });
 
-//   using([
-//     {collection: 'Main', expectedConditions: {text: [
-//       'autism candidates from Iossifov PNAS 2015 (239): Iossifov I., et al. Low load for disruptive ' +
-//         'mutations in autism genes and their biased transmission. PNAS (2015)',
-//       'autism candidates from Sanders Neuron 2015 (65): Sanders S., et. al, Insights into Autism Spectrum ' +
-//         'Disorder Genomic Architecture and Biology from 71 Risk Loci. Neuron (2015)',
-//       'brain critical genes (1744): Uddin M, et al. Brain-expressed exons under purifying selection are ' +
-//         'enriched for de novo mutations in autism spectrum disorder. Nat Genetics (2014)'
-//     ]}},
-//     {collection: 'SFARI Genes', expectedConditions: {text: [
-//       'sfari_all (910): SFARI Genes (2017-09): All genes',
-//       'sfari_score_1 (24): SFARI Genes (2017-09): Gene score 1',
-//       'sfari_score_2 (55): SFARI Genes (2017-09): Gene score 2'
-//     ]}},
-//     {collection: 'SPARK Gene Lists', expectedConditions: {text: [
-//       'SPARK_gene_list_2016 (50): SPARK Gene list 2016',
-//       'SPARK_gene_list_2017 (27): SPARK Gene list 2017',
-//       'SPARK_gene_list_all (76): SPARK Gene list ALL (2016, 2017)'
-//     ]}},
-//     {collection: 'GO Terms', expectedConditions: {text: [
-//       'GO:0000002 (7): mitochondrial_genome_maintenance',
-//       'GO:0000003 (10): reproduction',
-//       'GO:0000009 (1): alpha-1,6-mannosyltransferase_activity'
-//     ]}},
-//     {collection: 'Protein domains', expectedConditions: {text: [
-//       '35EXO (9):', 'AAA (132):', 'ABH (18):'
-//     ]}},
-//     {collection: 'miRNA from Darnell', expectedConditions: {text: [
-//       'let-7 (881):', 'miR-101 (510):', 'miR-124 (1018):'
-//     ]}},
-//   ], (data) => {
-//     it('should properly display the gene sets in \'' + data.collection + '\' collection, and the counts should match', () => {
-//       let actualCount;
-//       let expectedCount;
-//       let geneSetName;
-//       let expectedName;
+  [{ collection: 'Main',
+      expectedCondition: 'autism candidates from Iossifov PNAS 2015 (239): Iossifov I., et al. Low load for disruptive ' +
+      'mutations in autism genes and their biased transmission. PNAS (2015)'},
+    { collection: 'Main',
+      expectedCondition: 'autism candidates from Sanders Neuron 2015 (65): Sanders S., et. al, Insights into Autism Spectrum ' +
+      'Disorder Genomic Architecture and Biology from 71 Risk Loci. Neuron (2015)'},
+    { collection: 'Main',
+      expectedCondition: 'brain critical genes (1744): Uddin M, et al. Brain-expressed exons under purifying selection are ' +
+      'enriched for de novo mutations in autism spectrum disorder. Nat Genetics (2014)'},
+    { collection: 'SFARI Genes',
+      expectedCondition: 'sfari_all (910): SFARI Genes (2017-09): All genes'},
+    { collection: 'SFARI Genes',
+      expectedCondition: 'sfari_score_1 (24): SFARI Genes (2017-09): Gene score 1'},
+    { collection: 'SFARI Genes',
+      expectedCondition: 'sfari_score_2 (55): SFARI Genes (2017-09): Gene score 2'},
+    { collection: 'SPARK Gene Lists',
+      expectedCondition: 'SPARK_gene_list_2016 (50): SPARK Gene list 2016'},
+    { collection: 'SPARK Gene Lists',
+      expectedCondition: 'SPARK_gene_list_2017 (27): SPARK Gene list 2017'},
+    { collection: 'SPARK Gene Lists',
+      expectedCondition: 'SPARK_gene_list_all (76): SPARK Gene list ALL (2016, 2017)'},
+    { collection: 'GO Terms',
+      expectedCondition: 'GO:0000002 (7): mitochondrial_genome_maintenance'},
+    { collection: 'GO Terms',
+      expectedCondition: 'GO:0000003 (10): reproduction'},
+    { collection: 'GO Terms',
+      expectedCondition: 'GO:0000009 (1): alpha-1,6-mannosyltransferase_activity'},
+    { collection: 'Protein domains',
+      expectedCondition: '35EXO (9):'},
+    { collection: 'Protein domains',
+      expectedCondition: 'AAA (132):'},
+    { collection: 'Protein domains',
+      expectedCondition: 'ABH (18):'},
+    { collection: 'miRNA from Darnell',
+      expectedCondition: 'let-7 (881):'},
+    { collection: 'miRNA from Darnell',
+      expectedCondition: 'miR-101 (510):'},
+    { collection: 'miRNA from Darnell',
+      expectedCondition: 'miR-124 (1018):'}
+  ].forEach((data) => {
+    it('should properly display \'' + data.expectedCondition + '\' in \'' + data.collection + '\' collection, and the counts should match', () => {
+      let actualCount;
+      let expectedCount;
+      let geneSetName;
+      let expectedName;
 
-//       genotypeBrowserController.setStudy(datasetIds.iossifov2014);
+      genotypeBrowserController.setStudy(datasetIds.iossifov2014);
 
-//       genesBlockPage.geneSetsButton.click();
-//       genesBlockPage.browserWaitForVisibilityOfElement(genesBlockPage.geneSetsPanel);
+      genesBlockPage.geneSetsButton.click();
 
-//       genesBlockPage.geneSetsCollectionSelectorDropdownMenu.click();
-//       genesBlockPage.browserWaitForVisibilityOfElement(genesBlockPage.findGeneSetsCollectionOptionByText(data.collection));
-//       genesBlockPage.findGeneSetsCollectionOptionByText(data.collection).click();
+      genesBlockPage.geneSetsSearchbox.click();
 
-//       genesBlockPage.browserWaitForVisibilityOfElement(genesBlockPage.geneSetsPanel);
-//       genesBlockPage.geneSetsSearchbox.click();
+      expectedName = data.expectedCondition;
+      geneSetName = expectedName.substring(0, expectedName.indexOf('(') - 1);
+      genotypeBrowserController.filterGenesByGeneSets(data.collection, geneSetName);
 
-//       for (let i = 0; i < data.expectedConditions.text.length; i++) {
-//         expectedName = data.expectedConditions.text[i];
-//         geneSetName = expectedName.substring(0, expectedName.indexOf('(') - 1);
-//         genotypeBrowserController.filterGenesByGeneSets(data.collection, geneSetName);
+      genesBlockPage.selectedGeneSet.should('contain.text', expectedName);
 
-//         expect(genesBlockPage.selectedGeneSet.getText()).toBe(expectedName);
+      genesBlockPage.geneSetCountElement.invoke('text').then(actualText => {
+        console.log(actualText);
+        console.log(expectedName);
+        actualCount = actualText.replace('Count: ', '').replace(' (Download)', '').trim();
+        expectedCount = expectedName.substring(expectedName.indexOf('(') + 1, expectedName.indexOf(')'));
+        expect(actualCount).to.eq(expectedCount);
+      });
 
-//         actualCount = genesBlockPage.geneSetCountElement.getText();
-//         expectedCount = expectedName.substring(expectedName.indexOf('(') + 1, expectedName.indexOf(')'));
-//         expect((actualCount).replace('Count: ', '').replace(' (Download)', '')).toBe(expectedCount);
+      genotypeBrowserController.filterGenesByAll();
+    });
+  });
+});
 
-//         genotypeBrowserController.filterGenesByAll();
-//       }
-//     });
-//   });
-// });
+describe('Gene set file length tests', () => {
+  const genesBlockPage = new GenesBlockPage();
+  const genotypeBrowserController = new GenotypeBrowserController();
 
-// describe('Gene set file length tests', () => {
-//   const genesBlockPage = new GenesBlockPage();
-//   const genotypeBrowserController = new GenotypeBrowserController();
+  before(() => {
+    genotypeBrowserController.navigateToHome();
+    genotypeBrowserController.loginAdmin();
+  });
 
-//   beforeAll(() => {
-//     genesBlockPage.prepareBrowser();
-//     genotypeBrowserController.navigateToHome();
-//     genotypeBrowserController.loginAdmin();
+  after(() => {
+    genotypeBrowserController.logout();
+  });
 
-//   });
+  beforeEach(() => {
+    Cypress.Cookies.preserveOnce('sessionid');
+    genotypeBrowserController.navigateToHome();
+  });
 
-//   afterAll(() => {
-//     genotypeBrowserController.logout();
-//   });
+  [{ collection: 'Main',
+      expectedCondition: 'autism candidates from Iossifov PNAS 2015 (239): Iossifov I., et al. Low load for disruptive ' +
+      'mutations in autism genes and their biased transmission. PNAS (2015)'},
+    { collection: 'Main',
+      expectedCondition: 'autism candidates from Sanders Neuron 2015 (65): Sanders S., et. al, Insights into Autism Spectrum ' +
+      'Disorder Genomic Architecture and Biology from 71 Risk Loci. Neuron (2015)'},
+    { collection: 'Main',
+      expectedCondition: 'brain critical genes (1744): Uddin M, et al. Brain-expressed exons under purifying selection are ' +
+      'enriched for de novo mutations in autism spectrum disorder. Nat Genetics (2014)'},
+    { collection: 'SFARI Genes',
+      expectedCondition: 'sfari_all (910): SFARI Genes (2017-09): All genes'},
+    { collection: 'SFARI Genes',
+      expectedCondition: 'sfari_score_1 (24): SFARI Genes (2017-09): Gene score 1'},
+    { collection: 'SFARI Genes',
+      expectedCondition: 'sfari_score_2 (55): SFARI Genes (2017-09): Gene score 2'},
+    { collection: 'SPARK Gene Lists',
+      expectedCondition: 'SPARK_gene_list_2016 (50): SPARK Gene list 2016'},
+    { collection: 'SPARK Gene Lists',
+      expectedCondition: 'SPARK_gene_list_2017 (27): SPARK Gene list 2017'},
+    { collection: 'SPARK Gene Lists',
+      expectedCondition: 'SPARK_gene_list_all (76): SPARK Gene list ALL (2016, 2017)'},
+    { collection: 'GO Terms',
+      expectedCondition: 'GO:0000002 (7): mitochondrial_genome_maintenance'},
+    { collection: 'GO Terms',
+      expectedCondition: 'GO:0000003 (10): reproduction'},
+    { collection: 'GO Terms',
+      expectedCondition: 'GO:0000009 (1): alpha-1,6-mannosyltransferase_activity'},
+    { collection: 'Protein domains',
+      expectedCondition: '35EXO (9):'},
+    { collection: 'Protein domains',
+      expectedCondition: 'AAA (132):'},
+    { collection: 'Protein domains',
+      expectedCondition: 'ABH (18):'},
+    { collection: 'miRNA from Darnell',
+      expectedCondition: 'let-7 (881):'},
+    { collection: 'miRNA from Darnell',
+      expectedCondition: 'miR-101 (510):'},
+    { collection: 'miRNA from Darnell',
+      expectedCondition: 'miR-124 (1018):'}
+  ].forEach((data) => {
+    it('should download \'' + data.expectedCondition + '\' in the \'' + data.collection + '\' collection and check whether the count in the name should matches ' +
+      'the downloaded\'s file length and the gene set\'s name matches the first value of the file', () => {
+      let expectedCount;
+      let expectedName;
+      let geneSetName;
+      const downloadFilePath = Cypress.config('downloadsFolder') + '/geneset.csv';
+      const results = [];
 
-//   beforeEach(() => {
-//     genotypeBrowserController.navigateToHome();
-//   });
+      genotypeBrowserController.setStudy(datasetIds.iossifov2014);
 
-//   using([
-//     {collection: 'Main', expectedConditions: {text: [
-//       'autism candidates from Iossifov PNAS 2015 (239): Iossifov I., et al. Low load for disruptive ' +
-//         'mutations in autism genes and their biased transmission. PNAS (2015)',
-//       'autism candidates from Sanders Neuron 2015 (65): Sanders S., et. al, Insights into Autism Spectrum ' +
-//         'Disorder Genomic Architecture and Biology from 71 Risk Loci. Neuron (2015)',
-//       'brain critical genes (1744): Uddin M, et al. Brain-expressed exons under purifying selection are ' +
-//         'enriched for de novo mutations in autism spectrum disorder. Nat Genetics (2014)'
-//     ]}},
-//     {collection: 'SFARI Genes', expectedConditions: {text: [
-//       'sfari_all (910): SFARI Genes (2017-09): All genes',
-//       'sfari_score_1 (24): SFARI Genes (2017-09): Gene score 1',
-//       'sfari_score_2 (55): SFARI Genes (2017-09): Gene score 2'
-//     ]}},
-//     {collection: 'SPARK Gene Lists', expectedConditions: {text: [
-//       'SPARK_gene_list_2016 (50): SPARK Gene list 2016',
-//       'SPARK_gene_list_2017 (27): SPARK Gene list 2017',
-//       'SPARK_gene_list_all (76): SPARK Gene list ALL (2016, 2017)'
-//     ]}},
-//     {collection: 'GO Terms', expectedConditions: {text: [
-//       'GO:0000002 (7): mitochondrial_genome_maintenance',
-//       'GO:0000003 (10): reproduction',
-//       'GO:0000009 (1): alpha-1,6-mannosyltransferase_activity'
-//     ]}},
-//     {collection: 'Protein domains', expectedConditions: {text: [
-//       '35EXO (9):', 'AAA (132):', 'ABH (18):'
-//     ]}},
-//     {collection: 'miRNA from Darnell', expectedConditions: {text: [
-//       'let-7 (881):', 'miR-101 (510):', 'miR-124 (1018):'
-//     ]}},
-//   ], (data) => {
-//     it('should download gene sets in the \'' + data.collection + '\' collection and check whether the count in the name should matches ' +
-//        'the downloaded\'s file length and the gene set\'s name matches the first value of the file', () => {
-//       let expectedCount;
-//       let expectedName;
-//       let geneSetName;
-//       const filename = browser.params.genesetsDownloadPath + browser.params.genesetsFileName;
-//       const results = [];
+      genesBlockPage.geneSetsButton.click();
+      genesBlockPage.geneSetsCollectionSelectorDropdownMenu.select(data.collection);
+      genesBlockPage.geneSetsSearchbox.click();
 
-//       if (!fs.existsSync(browser.params.genesetsDownloadPath)) {
-//         fs.mkdirSync(browser.params.genesetsDownloadPath);
-//       }
+      results.splice(0, results.length);
+      expectedName = data.expectedCondition;
+      geneSetName = expectedName.substring(0, expectedName.indexOf('(') - 1);
+      expectedCount = Number(expectedName.substring(expectedName.indexOf('(') + 1, expectedName.indexOf(')')));
 
-//       if (fs.existsSync(filename)) {
-//         fs.unlinkSync(filename);
-//       }
+      genotypeBrowserController.filterGenesByGeneSets(data.collection, geneSetName);
+      cy.window().document().then(function (doc) {
+        doc.addEventListener('click', () => {
+          setTimeout(function () { doc.location.reload() }, 5000)
+        })
+        genesBlockPage.downloadButton.click();
+      });
 
-//       genotypeBrowserController.setStudy(datasetIds.iossifov2014);
+      console.log('dawd');
+      cy.readFile(downloadFilePath, { timeout: 5000 }).then(text => {
+        console.log(text);
+        const textLines = text.split(/\r\n|\r|\n/);
+        expect(textLines.length - 2).to.eq(expectedCount);
+        expectedName = expectedName.replace(/\s*\(\d+\)\s*/, '');
+        expect(textLines[0].replace(/^"(.*)"$/, '$1').trim()).to.eq(expectedName);
+      });
 
-//       genesBlockPage.geneSetsButton.click();
-//       genesBlockPage.browserWaitForVisibilityOfElement(genesBlockPage.geneSetsPanel);
-//       genesBlockPage.geneSetsCollectionSelectorDropdownMenu.click();
-//       genesBlockPage.browserWaitForVisibilityOfElement(genesBlockPage.findGeneSetsCollectionOptionByText(data.collection));
-//       genesBlockPage.findGeneSetsCollectionOptionByText(data.collection).click();
-//       genesBlockPage.browserWaitForVisibilityOfElement(genesBlockPage.geneSetsPanel);
-//       genesBlockPage.geneSetsSearchbox.click();
-//       for (let i = 0; i < data.expectedConditions.text.length; i++) {
-//         results.splice(0, results.length);
-//         expectedName = data.expectedConditions.text[i];
-//         geneSetName = expectedName.substring(0, expectedName.indexOf('(') - 1);
-//         expectedCount = Number(expectedName.substring(expectedName.indexOf('(') + 1, expectedName.indexOf(')')));
-
-//         genotypeBrowserController.filterGenesByGeneSets(data.collection, geneSetName);
-
-//         genesBlockPage.downloadButton.click();
-//         browser.driver.wait(() => {
-//           return fs.existsSync(filename);
-//         }, 30000);
-//         new Promise<void>((resolve) => {
-//           fs.createReadStream(filename)
-//           .pipe(csv())
-//           .on('data', (d) => results.push(d))
-//           .on('end', () => {
-//             expect(results.length).toBe(expectedCount);
-//             expectedName = expectedName.replace(/\s*\(\d+\)\s*/, '');
-//             expect(Object.keys(results[0])[0].trim()).toBe(expectedName);
-//             fs.unlinkSync(filename);
-//             resolve();
-//           });
-//         });
-//         genotypeBrowserController.filterGenesByAll();
-//       }
-//     });
-//   });
-// });
+      genotypeBrowserController.filterGenesByAll();
+    });
+  });
+});
 
 // describe('Denovo gene set gene symbols tests', () => {
 //   const genesBlockPage = new GenesBlockPage();
