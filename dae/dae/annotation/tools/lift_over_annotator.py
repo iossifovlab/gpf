@@ -66,8 +66,7 @@ class LiftOverAnnotator(VariantAnnotatorBase):
 
             return result
         except Exception as ex:
-            logger.warning(f"problem in variant liftover: {variant}")
-            logger.exception(ex)
+            logger.warning(f"problem in variant {variant} liftover: {ex}")
 
     def do_annotate(self, _, variant, liftover_variants):
         assert self.liftover_id not in liftover_variants, \
