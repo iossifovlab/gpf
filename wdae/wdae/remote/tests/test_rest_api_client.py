@@ -20,13 +20,6 @@ def test_get_variants_preview(rest_client):
     assert isinstance(variants_response, Response)
 
 
-def test_get_browser_preview_info(rest_client):
-    data = {"datasetId": "iossifov_2014"}
-    preview = rest_client.get_browser_preview_info(data)
-    assert preview is not None
-    assert isinstance(preview, dict)
-
-
 def test_get_common_report(rest_client):
     common_report = rest_client.get_common_report("iossifov_2014")
     assert common_report is not None
