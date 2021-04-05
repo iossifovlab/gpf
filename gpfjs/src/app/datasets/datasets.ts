@@ -11,6 +11,7 @@ export class SelectorValue extends IdName {
     return new SelectorValue(
       json['id'],
       json['name'],
+      json['values'],
       json['color'],
     );
   }
@@ -25,6 +26,7 @@ export class SelectorValue extends IdName {
   constructor(
     readonly id: string,
     readonly name: string,
+    readonly values: Array<string>,
     readonly color: string,
   ) {
     super(id, name);
@@ -293,7 +295,6 @@ export class GeneBrowser {
 }
 
 export class PeopleGroup {
-
   static fromJson(json: any): PeopleGroup {
     return new PeopleGroup(
       PedigreeSelector.fromJson(json)
@@ -303,6 +304,17 @@ export class PeopleGroup {
   constructor(
     readonly pedigreeSelectors: PedigreeSelector[],
   ) { }
+
+  getLegend(collectionId: string): Array<SelectorValue> {
+    let result = [];
+    for (const ps of this.pedigreeSelectors) {
+      if (ps.id === collectionId) {
+        result = result.concat(ps.domain);
+      }
+    }
+    result.push({"color": "#E0E0E0", "id": "missing-person", "name": "missing-person"}); // Default legend value
+    return result;
+  }
 }
 
 export class Dataset extends IdName {

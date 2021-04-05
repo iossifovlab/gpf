@@ -7,7 +7,7 @@ import { QueryService } from '../query/query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { ConfigService } from '../config/config.service';
 import { DatasetsService } from '../datasets/datasets.service';
-import { Dataset } from '../datasets/datasets';
+import { Dataset, SelectorValue } from '../datasets/datasets';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 
 @Component({
@@ -23,6 +23,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector
     implements OnInit, OnChanges, AfterViewInit {
   genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
   tablePreview: boolean;
+  legend: Array<SelectorValue>;
 
   private disableQueryButtons = false;
 
@@ -85,6 +86,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector
         this.selectedDataset$.subscribe( selectedDataset => {
           this.genotypePreviewVariantsArray = null;
           this.genotypeBrowserState = state;
+          this.legend = selectedDataset.peopleGroupConfig.getLegend(state['peopleGroup'].id);
 
           this.queryService.streamingFinishedSubject.subscribe(
             _ => { this.loadingFinished = true; }

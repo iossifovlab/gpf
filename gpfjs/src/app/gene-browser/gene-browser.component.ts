@@ -4,7 +4,7 @@ import { Gene, GeneViewSummaryAllelesArray, DomainRange } from 'app/gene-view/ge
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
 import { Observable } from 'rxjs';
-import { Dataset } from 'app/datasets/datasets';
+import { Dataset, SelectorValue } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { ActivatedRoute, Params } from '@angular/router';
 import { QueryStateCollector } from 'app/query/query-state-provider';
@@ -34,6 +34,8 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   loadingFinished: boolean;
   familyLoadingFinished: boolean;
   hideResults: boolean;
+  legend: Array<SelectorValue>;
+
   codingEffectTypes = [
     'lgds',
     'nonsense',
@@ -196,6 +198,10 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
 
       this.geneService.getGene(this.geneSymbol.toUpperCase().trim()).subscribe((gene) => {
         this.selectedGene = gene;
+      });
+
+      this.selectedDataset$.subscribe( selectedDataset => {
+        this.legend = selectedDataset.peopleGroupConfig.getLegend(state['peopleGroup'].id);
       });
 
       this.loadingFinished = false;
