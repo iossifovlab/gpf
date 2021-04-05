@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        label 'dory'
+        label 'pooh || piglet || dory'
     }
     // options {
     //     disableConcurrentBuilds()
