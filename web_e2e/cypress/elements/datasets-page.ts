@@ -37,51 +37,25 @@ export class DatasetsPage extends BasePage {
     return cy.get('#families-by-number-dropdown-button option').contains(text);
   }
 
-//   async getFamiliesByNumberColumnElementsByRoleId(roleId: string): Promise<ElementFinder[]> {
-//     let columnElementsByRoleId: ElementFinder[];
+  get allFamiliesByNumberHeaderCells() {
+    return cy.get('div#families-by-number-div tbody th');
+  }
 
-//     const allTableTdElements = await element.all(by.css('div#families-by-number-div td'));
-//     const tableHeaderElements = await (element.all(by.css('div#families-by-number-div tbody th'))).getText();
-//     const indexOfRoleId = tableHeaderElements.indexOf(roleId);
+  get allFamiliesByNumberDataCells() {
+    return cy.get('div#families-by-number-div td');
+  }
 
-//     columnElementsByRoleId = [
-//       allTableTdElements[indexOfRoleId * 3],
-//       allTableTdElements[indexOfRoleId * 3 + 1],
-//       allTableTdElements[indexOfRoleId * 3 + 2],
-//     ];
-
-//     return columnElementsByRoleId;
-//   }
-
-//   async getFamiliesByPedigreeValues(): Promise<number[]> {
-//     const tableCellElements: ElementFinder[] = await element.all(by.css('gpf-common-reports-pedigree-cell > div > div'));
-//     const finalValues: number[] = [];
-//     let singleCellValue;
-
-//     for (const cell of tableCellElements) {
-//       singleCellValue = (await cell.getText()).split(',');
-//       if (singleCellValue.length !== 1) {
-//         for (const v of singleCellValue) {
-//           finalValues.push(Number(v));
-//         }
-//       } else {
-//         finalValues.push(Number(singleCellValue));
-//       }
-//     }
-
-//     return finalValues.filter((e) => e !== 0);
-//   }
+  get familiesByPedigreeDivs() {
+    return cy.get('gpf-common-reports-pedigree-cell > div > div');
+  }
 
   getDenovoTableHeaderElements() {
     return cy.get('div#denovo-variants-div thead div');
   }
 
-//   async findDenovoVariantsCountsByRowName(rowName: string): Promise<ElementFinder[]> {
-//     const denovoVariantsCount: ElementFinder[] =
-//       await (element(by.cssContainingText('div#denovo-variants-div th', rowName)).element(by.xpath('..')).all(by.css('div')));
-
-//     return denovoVariantsCount;
-//   }
+  findDenovoVariantsCountsByRowName(rowName: string) {
+    return cy.get('div#denovo-variants-div th').contains(rowName).parent().find('div');
+  }
 
   get denovoVariantsDropdownButton() {
     return cy.get('#denovo-variants-dropdown-button');
