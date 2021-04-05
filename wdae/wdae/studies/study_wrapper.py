@@ -20,10 +20,6 @@ class StudyWrapperBase(GenotypeData):
     def __init__(self, config):
         super(StudyWrapperBase, self).__init__(config, config.get("studies"))
 
-    # @abstractmethod
-    # def get_wdae_preview_info(self, query, max_variants_count=10000):
-    #     pass
-
     @abstractmethod
     def build_genotype_data_group_description(self, gpf_instance):
         pass
@@ -240,23 +236,8 @@ class StudyWrapper(StudyWrapperBase):
 
         return result
 
-    # def get_wdae_preview_info(self, query, max_variants_count=10000):
-    #     preview_info = {}
-
-    #     preview_info["legend"] = self.get_legend(
-    #         query["personSetCollectionId"]
-    #     )
-
-    #     preview_info["maxVariantsCount"] = max_variants_count
-
-    #     return preview_info
-
     def query_variants_wdae(self, kwargs, sources, max_variants_count=10000):
         people_group = kwargs.get("peopleGroup", {})
-        # person_set_collection_id = people_group.get(
-        #     "id",
-        #     list(self.legend.keys())[0] if self.legend else None
-        # )
 
         person_set_collection = self.get_person_set_collection(
             people_group.get("id")  # person_set_collection_id
@@ -272,16 +253,6 @@ class StudyWrapper(StudyWrapperBase):
             limited_rows = rows_iterator
 
         return limited_rows
-
-    # def get_summary_wdae_preview_info(self, query, max_variants_count=10000):
-    #     preview_info = {}
-
-    #     preview_info["cols"] = self.summary_preview_columns
-    #     preview_info["legend"] = self.get_legend(**query)
-
-    #     preview_info["maxVariantsCount"] = max_variants_count
-
-    #     return preview_info
 
     def get_gene_view_summary_variants(self, frequency_column, **kwargs):
         kwargs = self.query_transformer.transform_kwargs(**kwargs)
