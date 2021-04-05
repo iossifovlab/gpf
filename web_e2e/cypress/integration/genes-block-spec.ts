@@ -147,8 +147,6 @@ describe('Gene sets names and count tests', () => {
       genesBlockPage.selectedGeneSet.should('contain.text', expectedName);
 
       genesBlockPage.geneSetCountElement.invoke('text').then(actualText => {
-        console.log(actualText);
-        console.log(expectedName);
         actualCount = actualText.replace('Count: ', '').replace(' (Download)', '').trim();
         expectedCount = expectedName.substring(expectedName.indexOf('(') + 1, expectedName.indexOf(')'));
         expect(actualCount).to.eq(expectedCount);
@@ -244,9 +242,7 @@ describe('Gene set file length tests', () => {
         genesBlockPage.downloadButton.click();
       });
 
-      console.log('dawd');
       cy.readFile(downloadFilePath, { timeout: 5000 }).then(text => {
-        console.log(text);
         const textLines = text.split(/\r\n|\r|\n/);
         expect(textLines.length - 2).to.eq(expectedCount);
         expectedName = expectedName.replace(/\s*\(\d+\)\s*/, '');
@@ -258,122 +254,70 @@ describe('Gene set file length tests', () => {
   });
 });
 
-// describe('Denovo gene set gene symbols tests', () => {
-//   const genesBlockPage = new GenesBlockPage();
-//   const genotypeBrowserController = new GenotypeBrowserController();
+describe('Denovo gene set gene symbols tests', () => {
+  const genesBlockPage = new GenesBlockPage();
+  const genotypeBrowserController = new GenotypeBrowserController();
 
-//   beforeAll(() => {
-//     genesBlockPage.prepareBrowser();
-//     genotypeBrowserController.navigateToHome();
-//     genotypeBrowserController.loginAdmin();
-//   });
+  before(() => {
+    genotypeBrowserController.navigateToHome();
+    genotypeBrowserController.loginAdmin();
+  });
 
-//   afterAll(() => {
-//     genotypeBrowserController.logout();
-//   });
+  after(() => {
+    genotypeBrowserController.logout();
+  });
 
-//   beforeEach(() => {
-//     genotypeBrowserController.navigateToHome();
-//   });
+  beforeEach(() => {
+    Cypress.Cookies.preserveOnce('sessionid');
+    genotypeBrowserController.navigateToHome();
+  });
 
-//   function areSetsEqual(leftSet, rightSet) {
-//     if (leftSet.size !== rightSet.size) {
-//       return false;
-//     }
-//     for (const entry of leftSet) {
-//       if (!rightSet.has(entry)) {
-//         return false;
-//       }
-//     }
-//     return true;
-//   }
+  [{peopleGroup: 'affected',
+    expectedConditions: {
+    effectTypesSearchQueries: ['LGDs', 'Missense', 'Synonymous', 'LGDs.Single', 'LGDs.Triple', 'LGDs.Male'],
+    expectedGeneSymbolsFiles: [
+      'cypress/fixtures/gene_sets/LGDs_iossifov_2014_status_affected.csv', 'cypress/fixtures/gene_sets/Missense_iossifov_2014_status_affected.csv',
+      'cypress/fixtures/gene_sets/Synonymous_iossifov_2014_status_affected.csv', 'cypress/fixtures/gene_sets/LGDs_single_iossifov_2014_affected.csv',
+      'cypress/fixtures/gene_sets/LGDs_triple_iossifov_2014_affected.csv', 'cypress/fixtures/gene_sets/LGDs_male_iossifov_2014_affected.csv',
+      'cypress/fixtures/gene_sets/LGDs_iossifov_2014_unaffected.csv'
+    ]}},
+    {peopleGroup: 'unaffected',
+    expectedConditions: {
+    effectTypesSearchQueries: ['LGDs'],
+    expectedGeneSymbolsFiles: ['cypress/fixtures/gene_sets/LGDs_iossifov_2014_unaffected.csv']}}
+  ].forEach((data) => {
+    it('should download iossifov ' + data.peopleGroup + ' denovo gene sets ' +
+       'and check whether they are equal to the reference data', () => {
+      const downloadedGeneSymbolsFilePath = Cypress.config('downloadsFolder') + '/geneset.csv';
 
-//   using([
-//     {
-//       peopleGroup: 'affected',
-//       expectedConditions: {
-//         effectTypesSearchQueries: ['LGDs', 'Missense', 'Synonymous', 'LGDs.Single', 'LGDs.Triple', 'LGDs.Male'],
-//         expectedGeneSymbolsFiles: [
-//           'gene_sets/LGDs_iossifov_2014_status_affected.csv', 'gene_sets/Missense_iossifov_2014_status_affected.csv',
-//           'gene_sets/Synonymous_iossifov_2014_status_affected.csv', 'gene_sets/LGDs_single_iossifov_2014_affected.csv',
-//           'gene_sets/LGDs_triple_iossifov_2014_affected.csv', 'gene_sets/LGDs_male_iossifov_2014_affected.csv',
-//           'gene_sets/LGDs_iossifov_2014_unaffected.csv'
-//         ]
-//       }
-//     },
-//     {
-//       peopleGroup: 'unaffected',
-//       expectedConditions: {
-//         effectTypesSearchQueries: ['LGDs'],
-//         expectedGeneSymbolsFiles: ['gene_sets/LGDs_iossifov_2014_unaffected.csv']
-//       }
-//     }
-//   ], (data) => {
-//     it('should download iossifov ' + data.peopleGroup + ' denovo gene sets ' +
-//        'and check whether they are equal to the reference data', () => {
-//       const expectedGeneSymbolsSet = new Set();
-//       const downloadedGeneSymbolsSet = new Set();
-//       const downloadedGeneSymbolsFilePath = browser.params.genesetsDownloadPath + browser.params.genesetsFileName;
+      genotypeBrowserController.setStudy(datasetIds.iossifov2014);
 
-//       if (!fs.existsSync(browser.params.genesetsDownloadPath)) {
-//         fs.mkdirSync(browser.params.genesetsDownloadPath);
-//       }
+      for (let i = 0; i < data.expectedConditions.effectTypesSearchQueries.length; i++) {
+        genesBlockPage.geneSetsButton.click();
+        genesBlockPage.geneSetsCollectionSelectorDropdownMenu.select('Denovo');
+        if (data.peopleGroup === 'unaffected') {
+          genesBlockPage.findDenovoGeneSetCollectionCheckbox('iossifov_2014', 'affected').click();
+          genesBlockPage.findDenovoGeneSetCollectionCheckbox('iossifov_2014', 'unaffected').click();
+        }
+        genesBlockPage.geneSetsSearchbox.click();
+        genesBlockPage.geneSetsSearchbox.type(data.expectedConditions.effectTypesSearchQueries[i]);
 
-//       if (fs.existsSync(downloadedGeneSymbolsFilePath)) {
-//         fs.unlinkSync(downloadedGeneSymbolsFilePath);
-//       }
+        genesBlockPage.getFirstGeneSetFromDropdownMenu().click();
+        cy.window().document().then(function (doc) {
+          doc.addEventListener('click', () => {
+            setTimeout(function () { doc.location.reload() }, 5000)
+          })
+          genesBlockPage.downloadButton.click();
+        });
 
-//       genotypeBrowserController.setStudy(datasetIds.iossifov2014);
-
-//       genesBlockPage.geneSetsButton.click();
-//       genesBlockPage.browserWaitForVisibilityOfElement(genesBlockPage.geneSetsPanel);
-//       genesBlockPage.geneSetsCollectionSelectorDropdownMenu.click();
-//       genesBlockPage.browserWaitForVisibilityOfElement(genesBlockPage.findGeneSetsCollectionOptionByText('Denovo'));
-//       genesBlockPage.findGeneSetsCollectionOptionByText('Denovo').click();
-//       genesBlockPage.browserWaitForVisibilityOfElement(genesBlockPage.geneSetsPanel);
-
-//       // By default, the checkbox 'affected' for the current dataset is checked.
-//       // In the case of data.peopleGroup === 'affected', do nothing.
-//       // If the data.peopleGroup is 'unaffected' though, uncheck affected and check unaffected checkbox.
-
-//       if (data.peopleGroup === 'unaffected') {
-//         genesBlockPage.findDenovoGeneSetCollectionCheckbox('iossifov_2014', 'affected').click();
-//         genesBlockPage.findDenovoGeneSetCollectionCheckbox('iossifov_2014', 'unaffected').click();
-//       }
-//       genesBlockPage.geneSetsSearchbox.click();
-
-//       for (let i = 0; i < data.expectedConditions.effectTypesSearchQueries.length; i++) {
-//         expectedGeneSymbolsSet.clear();
-//         downloadedGeneSymbolsSet.clear();
-
-//         genesBlockPage.geneSetsSearchbox.type(data.expectedConditions.effectTypesSearchQueries[i]);
-//         genesBlockPage.browserWaitForVisibilityOfElement(genesBlockPage.getFirstGeneSetFromDropdownMenu());
-
-//         (genesBlockPage.getFirstGeneSetFromDropdownMenu()).click();
-//         genesBlockPage.downloadButton.click();
-//         browser.driver.wait(() => {
-//           return fs.existsSync(downloadedGeneSymbolsFilePath);
-//         }, 30000);
-//         new Promise<void>((resolve) => {
-//           fs.createReadStream(downloadedGeneSymbolsFilePath)
-//           .pipe(csv())
-//           .on('data', (d) => downloadedGeneSymbolsSet.add(Object.values(d)))
-//           .on('end', () => {
-//             fs.unlinkSync(downloadedGeneSymbolsFilePath);
-//             resolve();
-//           });
-//         });
-//         new Promise<void>((resolve) => {
-//           fs.createReadStream(browser.params.fixturesFolderPath + data.expectedConditions.expectedGeneSymbolsFiles[i])
-//           .pipe(csv())
-//           .on('data', (d) => expectedGeneSymbolsSet.add(Object.values(d)))
-//           .on('end', () => {
-//             resolve();
-//           });
-//         });
-//         expect(areSetsEqual(downloadedGeneSymbolsSet, expectedGeneSymbolsSet)).toBe(true);
-//         genesBlockPage.selectedGeneSet.click();
-//       }
-//     });
-//   });
-// });
+        cy.readFile(downloadedGeneSymbolsFilePath, { timeout: 5000 }).then(text => {
+          const textLines = text.split(/\r\n|\r|\n/);
+          cy.readFile(data.expectedConditions.expectedGeneSymbolsFiles[i], { timeout: 5000 }).then(expectedText => {
+            const expectedTextLines = expectedText.split(/\r\n|\r|\n/);
+            expect(textLines.slice(1).sort()).to.deep.eq(expectedTextLines.slice(1).sort());
+          });
+        });
+      }
+    });
+  });
+});
