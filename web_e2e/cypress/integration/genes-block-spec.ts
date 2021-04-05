@@ -16,7 +16,6 @@ describe('Genes block panel tests', () => {
   });
 
   beforeEach(() => {
-    Cypress.Cookies.preserveOnce('sessionid');
     genesBlockPage.navigateToHome();
   });
 
@@ -84,7 +83,6 @@ describe('Gene sets names and count tests', () => {
   });
 
   beforeEach(() => {
-    Cypress.Cookies.preserveOnce('sessionid');
     genotypeBrowserController.navigateToHome();
   });
 
@@ -171,7 +169,6 @@ describe('Gene set file length tests', () => {
   });
 
   beforeEach(() => {
-    Cypress.Cookies.preserveOnce('sessionid');
     genotypeBrowserController.navigateToHome();
   });
 
@@ -268,7 +265,6 @@ describe('Denovo gene set gene symbols tests', () => {
   });
 
   beforeEach(() => {
-    Cypress.Cookies.preserveOnce('sessionid');
     genotypeBrowserController.navigateToHome();
   });
 

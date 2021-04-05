@@ -18,7 +18,6 @@ describe('Inheritance tests', () => {
 
   beforeEach(() => {
     inheritancetypesPage.navigateToHome();
-    Cypress.Cookies.preserveOnce('sessionid');
   });
 
   // review

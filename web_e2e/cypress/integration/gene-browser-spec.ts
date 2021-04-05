@@ -14,7 +14,6 @@ describe('Gene browser tests', () => {
   });
 
   beforeEach(() => {
-    Cypress.Cookies.preserveOnce('sessionid');
     geneBrowserPage.navigateToHome();
   });
 

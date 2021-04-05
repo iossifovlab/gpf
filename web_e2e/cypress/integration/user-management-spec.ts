@@ -13,7 +13,6 @@ describe('User management tests', () => {
   });
 
   beforeEach(() => {
-    Cypress.Cookies.preserveOnce('sessionid');
     userManagementPage.navigateToHome();
     userManagementPage.toggleSidenav();
     userManagementPage.sidenavManagementButton.click();

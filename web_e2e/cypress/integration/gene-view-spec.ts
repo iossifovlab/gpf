@@ -16,7 +16,6 @@ describe('Gene view tests', () => {
   });
 
   beforeEach(() => {
-    Cypress.Cookies.preserveOnce('sessionid');
     geneViewPage.navigateToHome();
 
     geneBrowserPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageNames.geneBrowser);

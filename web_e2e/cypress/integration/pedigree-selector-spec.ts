@@ -18,7 +18,6 @@ describe('Pedigree selector tests', () => {
 
   beforeEach(() => {
     pedigreeSelectorPage.navigateToHome();
-    Cypress.Cookies.preserveOnce('sessionid');
   });
 
   it('should display error alert when none of the checkboxes are selected', () => {

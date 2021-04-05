@@ -19,7 +19,6 @@ describe('Enrichment tool tests', () => {
 
   beforeEach(() => {
     enrichmenToolPage.navigateToHome();
-    Cypress.Cookies.preserveOnce('sessionid');
   });
 
   it('should display genes block panel', () => {

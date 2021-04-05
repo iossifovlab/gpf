@@ -9,7 +9,6 @@ describe('Datasets tests', () => {
 
   beforeEach(() => {
     datasetsPage.navigateToHome();
-    Cypress.Cookies.preserveOnce('sessionid');
   });
 
   afterEach(() => {
@@ -104,7 +103,6 @@ describe('Iossifov dataset count tests', () => {
 
   beforeEach(() => {
     datasetsPage.navigateToHome();
-    Cypress.Cookies.preserveOnce('sessionid');
     datasetsPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageNames.datasetStatistics);
   });
 

@@ -123,7 +123,6 @@ describe('Genotype browser table preview result tests', () => {
 
   beforeEach(() => {
     genotypeBrowserController.navigateToHome();
-    Cypress.Cookies.preserveOnce('sessionid');
   });
 
   [{study: datasetIds.compAll, variantsCount: '35'},

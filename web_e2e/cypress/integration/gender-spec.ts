@@ -18,7 +18,6 @@ describe('Gender tests', () => {
 
   beforeEach(() => {
     genderPage.navigateToHome();
-    Cypress.Cookies.preserveOnce('sessionid');
   });
 
   // review

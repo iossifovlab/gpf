@@ -6,7 +6,6 @@ describe('App tests', () => {
 
   beforeEach(() => {
     appPage.navigateToHome();
-    Cypress.Cookies.preserveOnce('sessionid');
   });
 
   it('should display \'GPF: Genotypes and Phenotypes in Families\' as a title', () => {

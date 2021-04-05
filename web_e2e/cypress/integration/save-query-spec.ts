@@ -17,7 +17,6 @@ describe('Save query tests', () => {
 
   beforeEach(() => {
     saveQueryPage.navigateToHome();
-    Cypress.Cookies.preserveOnce('sessionid');
   });
 
   it('should open save query dropdown menu after save query button click', () => {

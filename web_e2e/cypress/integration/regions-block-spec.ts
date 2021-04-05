@@ -16,7 +16,6 @@ describe('Regions block tests', () => {
 
   beforeEach(() => {
     regionsBlockPage.navigateToHome();
-    Cypress.Cookies.preserveOnce('sessionid');
   });
 
   it('should display regions filter panel', () => {

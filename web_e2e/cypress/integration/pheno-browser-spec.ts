@@ -15,7 +15,6 @@ describe('Pheno browser tests', () => {
 
   beforeEach(() => {
     phenoBrowserPage.navigateToHome();
-    Cypress.Cookies.preserveOnce('sessionid');
   });
 
   [{seachQuery: 'the age'}, {seachQuery: 'the iq'}, {seachQuery: 'measure 1'},

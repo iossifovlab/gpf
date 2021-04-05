@@ -20,7 +20,6 @@ describe('Pheno tool tests', () => {
 
   beforeEach(() => {
     phenoToolPage.navigateToHome();
-    Cypress.Cookies.preserveOnce('sessionid');
   });
 
   it('should display genes block panel', () => {

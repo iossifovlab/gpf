@@ -17,7 +17,6 @@ describe('Share query tests', () => {
 
   beforeEach(() => {
     shareQueryPage.navigateToHome();
-    Cypress.Cookies.preserveOnce('sessionid');
   });
 
   it('should open share query dropdown menu after share query button click', () => {

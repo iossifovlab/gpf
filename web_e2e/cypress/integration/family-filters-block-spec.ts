@@ -16,7 +16,6 @@ describe('Family filters block tests', () => {
 
   beforeEach(() => {
     familyFilterBlockPage.navigateToHome();
-    Cypress.Cookies.preserveOnce('sessionid');
   });
 
   it('should display family ids panel', () => {

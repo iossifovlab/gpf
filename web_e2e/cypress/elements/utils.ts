@@ -42,7 +42,6 @@ export class BasePage {
   private readonly adminUsername = 'admin@iossifovlab.com';
   private readonly adminPassword = 'secret';
 
-
   navigateToHome() {
     const baseUrl = Cypress.config().baseUrl;
     cy.visit(`${baseUrl}/datasets/comp_all/commonReport`);
@@ -62,6 +61,7 @@ export class BasePage {
   }
 
   loginAdmin() {
+    cy.clearCookies();
     this.login(this.adminUsername, this.adminPassword);
     cy.wait(500);
   }

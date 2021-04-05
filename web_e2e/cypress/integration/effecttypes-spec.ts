@@ -8,7 +8,6 @@ describe('Effect types tests', () => {
   const genotypeBlockPage = new GenotypeBlockPage();
 
   before(() => {
-    Cypress.Cookies.preserveOnce('sessionid');
     effecttypesPage.navigateToHome();
     effecttypesPage.loginAdmin();
   });
