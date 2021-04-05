@@ -159,7 +159,7 @@ class StudyWrapper(StudyWrapperBase):
         # PREVIEW AND DOWNLOAD COLUMNS
         self.columns = genotype_browser_config.columns
         self.column_groups = genotype_browser_config.column_groups
-        # TODO Add verification for column groups' validity
+        assert self._validate_column_groups() is True
         self.preview_columns = genotype_browser_config.preview_columns
         self.download_columns = genotype_browser_config.download_columns
         self.summary_preview_columns = \
@@ -173,6 +173,14 @@ class StudyWrapper(StudyWrapperBase):
             self.phenotype_data = pheno_db.get_phenotype_data(
                 self.config.phenotype_data
             )
+
+    def _validate_column_groups(self):
+        for column_group in self.column_groups.values():
+            for column_id in column_group.columns:
+                if column_id not in self.columns.genotype \
+                   and column_id not in self.columns.phenotype:
+                    return False
+        return True
 
     def _query_variants_rows_iterator(
             self, sources, person_set_collection, **kwargs):
