@@ -37,7 +37,6 @@ def preview_sources():
         {'source': 'worstEffect', 'format': '%s'},
         {'source': 'genes', 'format': '%s'},
         {'source': 'instrument1.continuous', 'format': '%s'},
-        {'source': 'instrument1.continuous', 'format': '%s'},
         {'source': 'instrument1.categorical', 'format': '%s'},
         {'source': 'instrument1.ordinal', 'format': '%s'},
         {'source': 'instrument1.raw', 'format': '%s'}
@@ -47,7 +46,7 @@ def preview_sources():
 @pytest.fixture
 def download_sources():
     return [
-        {'source': 'family', 'format': '%s'},
+        {'name': 'family id', 'source': 'family', 'format': '%s'},
         {'source': 'studyName', 'format': '%s'},
         {'source': 'phenotype', 'format': '%s'},
         {'source': 'location', 'format': '%s'},
@@ -66,7 +65,6 @@ def download_sources():
         {'source': 'SSC-freq', 'format': 'SSC %.2f %%'},
         {'source': 'EVS-freq', 'format': 'EVS %.2f %%'},
         {'source': 'E65-freq', 'format': 'E65 %.2f %%'},
-        {'source': 'instrument1.continuous', 'format': '%s'},
         {'source': 'instrument1.continuous', 'format': '%s'},
         {'source': 'instrument1.categorical', 'format': '%s'},
         {'source': 'instrument1.ordinal', 'format': '%s'},
@@ -89,7 +87,6 @@ def summary_preview_sources():
         {'source': 'E65-freq', 'format': 'E65 %.2f %%'},
         {'source': 'worstEffect', 'format': '%s'},
         {'source': 'genes', 'format': '%s'},
-        {'source': 'instrument1.continuous', 'format': '%s'},
         {'source': 'instrument1.continuous', 'format': '%s'},
         {'source': 'instrument1.categorical', 'format': '%s'},
         {'source': 'instrument1.ordinal', 'format': '%s'},
@@ -114,7 +111,6 @@ def summary_download_sources():
         {'source': 'genes', 'format': '%s'},
         {'source': 'geneEffect', 'format': '%s'},
         {'source': 'effectDetails', 'format': '%s'},
-        {'source': 'instrument1.continuous', 'format': '%s'},
         {'source': 'instrument1.continuous', 'format': '%s'},
         {'source': 'instrument1.categorical', 'format': '%s'},
         {'source': 'instrument1.ordinal', 'format': '%s'},

@@ -707,7 +707,7 @@ class GenotypeDataStudy(GenotypeData):
                 limit=limit):
 
             for allele in variant.alleles:
-                allele.update_attributes({"studyName": self.name})
+                allele.update_attributes({"study_name": self.name})
             yield variant
 
     @property

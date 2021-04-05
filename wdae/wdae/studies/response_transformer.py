@@ -145,25 +145,25 @@ class ResponseTransformer:
 
     def _get_all_pheno_values(self, family_ids):
         if not self.study_wrapper.phenotype_data \
-           or not self.study_wrapper.pheno_column_slots:
+           or not self.study_wrapper.config_columns.phenotype:
             return None
 
         pheno_column_names = []
         pheno_column_dfs = []
-        for slot in self.study_wrapper.pheno_column_slots:
-            assert slot.role
+        for column in self.study_wrapper.config_columns.phenotype.values():
+            assert column.role
             persons = self.study_wrapper.families.persons_with_roles(
-                [slot.role], family_ids)
+                [column.role], family_ids)
             person_ids = [p.person_id for p in persons]
 
             kwargs = {
                 "person_ids": list(person_ids),
             }
 
-            pheno_column_names.append(f"{slot.source}.{slot.role}")
+            pheno_column_names.append(f"{column.source}.{column.role}")
             pheno_column_dfs.append(
                 self.study_wrapper.phenotype_data.get_measure_values_df(
-                    slot.source, **kwargs
+                    column.source, **kwargs
                 )
             )
 

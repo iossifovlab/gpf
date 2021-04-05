@@ -18,25 +18,29 @@ EXAMPLE_REQUEST_F1 = {
 QUERY_VARIANTS_URL = "/api/v3/genotype_browser/query"
 
 
-def test_simple_query(db, admin_client, quads_f1_columns):
+def test_simple_query(db, admin_client, preview_sources):
     data = copy.deepcopy(EXAMPLE_REQUEST_F1)
+    data['sources'] = list(preview_sources)
 
     response = admin_client.post(
         QUERY_VARIANTS_URL, json.dumps(data), content_type="application/json"
     )
 
-    print(quads_f1_columns[0].to_dict())
-    print(quads_f1_columns[1].to_dict())
     assert status.HTTP_200_OK == response.status_code
     res = response.streaming_content
     res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
 
-
     assert len(res) == 3
 
 
-def test_simple_query_download(db, admin_client):
-    data = {"queryData": json.dumps(EXAMPLE_REQUEST_F1)}
+def test_simple_query_download(db, admin_client, download_sources):
+    data = {
+        "queryData": json.dumps({
+            **EXAMPLE_REQUEST_F1,
+            "download": True,
+            "sources": download_sources
+        })
+    }
 
     response = admin_client.post(
         QUERY_VARIANTS_URL, json.dumps(data), content_type="application/json"
@@ -51,33 +55,36 @@ def test_simple_query_download(db, admin_client):
 
     assert set(header) == {
         "family id",
-        "study",
+        "studyName",
         "phenotype",
         "location",
         "variant",
-        "family genotype",
-        "from parent",
-        "in child",
-        "worst effect type",
+        "bestSt",
+        "fromParentS",
+        "inChS",
+        "worstEffect",
         "genes",
-        "count",
-        "all effects",
-        "effect details",
-        "LGD rank",
-        "RVIS rank",
-        "pLI rank",
-        "SSC",
-        "EVS",
-        "E65",
-        "categorical.Categorical",
-        "continuous.Continuous",
-        "ordinal.Ordinal",
-        "raw.Raw",
+        "counts",
+        "geneEffect",
+        "effectDetails",
+        "LGD_rank",
+        "RVIS_rank",
+        "pLI_rank",
+        "SSC-freq",
+        "EVS-freq",
+        "E65-freq",
+        "instrument1.categorical",
+        "instrument1.continuous",
+        "instrument1.ordinal",
+        "instrument1.raw",
     }
 
 
-def test_simple_query_summary_variants(db, admin_client):
+def test_simple_query_summary_variants(
+    db, admin_client, summary_preview_sources
+):
     data = copy.deepcopy(EXAMPLE_REQUEST_F1)
+    data['sources'] = list(summary_preview_sources)
 
     response = admin_client.post(
         QUERY_VARIANTS_URL,
@@ -91,8 +98,16 @@ def test_simple_query_summary_variants(db, admin_client):
     assert len(res) == 3
 
 
-def test_simple_query_summary_variants_download(db, admin_client):
-    data = {"queryData": json.dumps(EXAMPLE_REQUEST_F1)}
+def test_simple_query_summary_variants_download(
+    db, admin_client, summary_download_sources
+):
+    data = {
+        "queryData": json.dumps({
+            **EXAMPLE_REQUEST_F1,
+            "download": True,
+            "sources": summary_download_sources
+        })
+    }
 
     response = admin_client.post(
         QUERY_VARIANTS_URL, json.dumps(data), content_type="application/json"
@@ -108,26 +123,27 @@ def test_simple_query_summary_variants_download(db, admin_client):
     assert set(header) == {
         "location",
         "variant",
-        "worst effect type",
+        "worstEffect",
         "genes",
-        "all effects",
-        "effect details",
-        "LGD rank",
-        "RVIS rank",
-        "pLI rank",
-        "SSC",
-        "EVS",
-        "E65",
-        "categorical.Categorical",
-        "continuous.Continuous",
-        "ordinal.Ordinal",
-        "raw.Raw",
+        "geneEffect",
+        "effectDetails",
+        "LGD_rank",
+        "RVIS_rank",
+        "pLI_rank",
+        "SSC-freq",
+        "EVS-freq",
+        "E65-freq",
+        "instrument1.categorical",
+        "instrument1.continuous",
+        "instrument1.ordinal",
+        "instrument1.raw",
     }
 
 
 @pytest.mark.parametrize("url", [QUERY_VARIANTS_URL])
-def test_missing_dataset(db, user_client, url):
+def test_missing_dataset(db, user_client, url, preview_sources):
     data = copy.deepcopy(EXAMPLE_REQUEST_F1)
+    data['sources'] = list(preview_sources)
     del data["datasetId"]
 
     response = user_client.post(
@@ -137,8 +153,9 @@ def test_missing_dataset(db, user_client, url):
 
 
 @pytest.mark.parametrize("url", [QUERY_VARIANTS_URL])
-def test_bad_dataset(db, user_client, url):
+def test_bad_dataset(db, user_client, url, preview_sources):
     data = copy.deepcopy(EXAMPLE_REQUEST_F1)
+    data['sources'] = list(preview_sources)
     data["datasetId"] = "ala bala portokala"
 
     response = user_client.post(
@@ -148,9 +165,10 @@ def test_bad_dataset(db, user_client, url):
 
 
 # START: Adaptive datasets rights
-def test_normal_dataset_rights_query(db, user, user_client):
+def test_normal_dataset_rights_query(db, user, user_client, preview_sources):
     data = {
         "datasetId": "composite_dataset_ds",
+        "sources": list(preview_sources),
     }
 
     add_group_perm_to_user("composite_dataset_ds", user)
@@ -165,9 +183,10 @@ def test_normal_dataset_rights_query(db, user, user_client):
     assert len(res) == 17
 
 
-def test_mixed_dataset_rights_query(db, user, user_client):
+def test_mixed_dataset_rights_query(db, user, user_client, preview_sources):
     data = {
         "datasetId": "composite_dataset_ds",
+        "sources": list(preview_sources),
     }
 
     add_group_perm_to_user("inheritance_trio", user)
@@ -182,9 +201,12 @@ def test_mixed_dataset_rights_query(db, user, user_client):
     assert len(res) == 14
 
 
-def test_mixed_layered_dataset_rights_query(db, user, user_client):
+def test_mixed_layered_dataset_rights_query(
+    db, user, user_client, preview_sources
+):
     data = {
         "datasetId": "composite_dataset_ds",
+        "sources": list(preview_sources),
     }
 
     add_group_perm_to_user("inheritance_trio", user)
@@ -200,9 +222,12 @@ def test_mixed_layered_dataset_rights_query(db, user, user_client):
     assert len(res) == 17
 
 
-def test_mixed_layered_diff_group_dataset_rights_query(db, user, user_client):
+def test_mixed_layered_diff_group_dataset_rights_query(
+    db, user, user_client, preview_sources
+):
     data = {
         "datasetId": "composite_dataset_ds",
+        "sources": list(preview_sources),
     }
 
     add_group_perm_to_dataset("new_custom_group", "composite_dataset_ds")
@@ -219,9 +244,15 @@ def test_mixed_layered_diff_group_dataset_rights_query(db, user, user_client):
     assert len(res) == 17
 
 
-def test_mixed_dataset_rights_download(db, user, user_client):
+def test_mixed_dataset_rights_download(
+    db, user, user_client, download_sources
+):
     data = {
-        "queryData": json.dumps({"datasetId": "composite_dataset_ds"})
+        "queryData": json.dumps({
+            "datasetId": "composite_dataset_ds",
+            "sources": list(download_sources),
+            "download": True,
+        })
     }
 
     add_group_perm_to_dataset("new_custom_group", "inheritance_trio")
@@ -235,9 +266,12 @@ def test_mixed_dataset_rights_download(db, user, user_client):
     assert len(res) == 15
 
 
-def test_mixed_dataset_rights_third_party_group(db, user, user_client):
+def test_mixed_dataset_rights_third_party_group(
+    db, user, user_client, preview_sources
+):
     data = {
         "datasetId": "composite_dataset_ds",
+        "sources": list(preview_sources),
     }
 
     add_group_perm_to_dataset("new_custom_group", "inheritance_trio")
@@ -253,10 +287,13 @@ def test_mixed_dataset_rights_third_party_group(db, user, user_client):
     assert len(res) == 14
 
 
-def test_mixed_dataset_rights_with_study_filters(db, user, user_client):
+def test_mixed_dataset_rights_with_study_filters(
+    db, user, user_client, preview_sources
+):
     data = {
         "datasetId": "composite_dataset_ds",
-        "studyFilters": [{"studyId": "quads_f1"}]
+        "studyFilters": [{"studyId": "quads_f1"}],
+        "sources": list(preview_sources),
     }
 
     add_group_perm_to_dataset("new_custom_group", "inheritance_trio")

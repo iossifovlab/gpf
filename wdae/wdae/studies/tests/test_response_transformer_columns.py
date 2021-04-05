@@ -10,9 +10,10 @@ from studies.response_transformer import ResponseTransformer
 
 def test_special_attrs_formatting(fixtures_wgpf_instance):
     genotype_data = fixtures_wgpf_instance.make_wdae_wrapper("f1_study")
-    vs = genotype_data.get_variant_web_rows(
-        {}, genotype_data.download_descs
+    download_sources = genotype_data.get_columns_as_sources(
+        genotype_data.download_columns
     )
+    vs = genotype_data.query_variants_wdae({}, download_sources)
     row = list(vs)[0]
     assert row == [
         "f1",

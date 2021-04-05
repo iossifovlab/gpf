@@ -174,15 +174,6 @@ class StudyWrapper(StudyWrapperBase):
                 self.config.phenotype_data
             )
 
-    # def _get_columns(self, column_ids: List[str]):
-    #     column_ids = set()
-    #     for col_id in column_ids:
-    #         if col_id in self.column_groups:
-    #             column_ids.add(**self.column_groups[col_id].columns)
-    #         else:
-    #             column_ids.add(col_id)
-    #     return list(map(lambda c_id: self.columns[c_id], column_ids))
-
     def _query_variants_rows_iterator(
             self, sources, person_set_collection, **kwargs):
 
@@ -216,6 +207,30 @@ class StudyWrapper(StudyWrapperBase):
             )
 
             yield row_variant
+
+    @property
+    def config_columns(self):
+        return self.config.genotype_browser.columns
+
+    def get_columns_as_sources(self, column_ids):
+        column_groups = self.config.genotype_browser.column_groups
+        genotype_cols = self.config_columns.get("genotype", {})
+        phenotype_cols = self.config_columns.get("phenotype", {})
+        result = list()
+
+        for column_id in column_ids:
+            if column_id in column_groups:
+                source_cols = column_groups[column_id].columns
+            else:
+                source_cols = [column_id]
+
+            for source_col_id in source_cols:
+                if source_col_id in genotype_cols:
+                    result.append(genotype_cols[source_col_id])
+                elif source_col_id in phenotype_cols:
+                    result.append(phenotype_cols[source_col_id])
+
+        return result
 
     # def get_wdae_preview_info(self, query, max_variants_count=10000):
     #     preview_info = {}
@@ -445,30 +460,20 @@ class RemoteStudyWrapper(StudyWrapperBase):
             return []
         return studies
 
-    # def get_wdae_preview_info(self, query, max_variants_count=10000):
-    #     query["datasetId"] = self._remote_study_id
-    #     return self.rest_client.get_browser_preview_info(query)
-
-    def get_variants_wdae_preview(self, query, max_variants_count=10000):
-
-        study_filters = query.get("study_filters")
+    def query_variants_wdae(self, kwargs, sources, max_variants_count=10000):
+        study_filters = kwargs.get("study_filters")
         logger.debug(
             f"study_id: {self.study_id}; study_filters: {study_filters}")
         if study_filters is not None:
-            del query["study_filters"]
-        if query.get("allowed_studies"):
-            del query["allowed_studies"]
+            del kwargs["study_filters"]
+        if kwargs.get("allowed_studies"):
+            del kwargs["allowed_studies"]
 
-            # if self.study_id not in study_filters:
-            #     return
-            # else:
-            #     del query["study_filters"]
+        kwargs["datasetId"] = self._remote_study_id
+        kwargs["maxVariantsCount"] = max_variants_count
+        kwargs["sources"] = sources
 
-        query["datasetId"] = self._remote_study_id
-        query["maxVariantsCount"] = max_variants_count
-        print("query:", query)
-
-        response = self.rest_client.get_variants_preview(query)
+        response = self.rest_client.post_query_variants(kwargs)
         for line in response.iter_lines():
             if line:
                 variants = json.loads(line)

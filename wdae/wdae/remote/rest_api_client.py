@@ -138,6 +138,14 @@ class RESTClient:
         )
         return response
 
+    def post_query_variants(self, data):
+        response = self._post(
+            "genotype_browser/query",
+            data=data,
+            stream=True
+        )
+        return response
+
     # def get_browser_preview_info(self, data):
     #     response = self._post("genotype_browser/preview", data=data)
     #     return response.json()

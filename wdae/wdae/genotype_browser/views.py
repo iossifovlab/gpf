@@ -85,7 +85,7 @@ class GenotypeBrowserQueryView(QueryBaseView):
         )
 
         if is_download:
-            columns = [s["name"] for s in sources]
+            columns = [s.get("name", s["source"]) for s in sources]
             response = map(
                 join_line, itertools.chain([columns], response))
             response = FileResponse(
