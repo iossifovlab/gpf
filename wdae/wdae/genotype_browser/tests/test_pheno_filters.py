@@ -26,29 +26,55 @@ FILTER_QUERY_CONTINUOUS = {
     "selection": {"min": 3, "max": 4},
 }
 
+SOURCE_CONTINUOUS = {
+    'source': 'instrument1.continuous', 'role': 'prb', 'format': '%s'
+}
+
+SOURCE_CATEGORICAL = {
+    'source': 'instrument1.categorical', 'role': 'prb', 'format': '%s'
+}
+
+SOURCE_ORDINAL = {
+    'source': 'instrument1.ordinal', 'role': 'prb', 'format': '%s'
+}
+
+SOURCE_RAW = {
+    'source': 'instrument1.raw', 'role': 'prb', 'format': '%s'
+}
+
 
 @pytest.mark.parametrize(
-    "pheno_filters,variants_count,pheno_values",
+    "pheno_filters,variants_count,preview_sources,pheno_values",
     [
         (
-            [FILTER_QUERY_CATEGORICAL], 3,
+            [FILTER_QUERY_CATEGORICAL],
+            3,
+            [SOURCE_CATEGORICAL],
             [
                 ["option2"],
                 ["option2"],
-                ["option2"]]),
+                ["option2"]
+            ]
+        ),
         (
-            [FILTER_QUERY_CONTINUOUS], 3,
+            [FILTER_QUERY_CONTINUOUS],
+            3,
+            [SOURCE_CONTINUOUS],
             [
                 ["3.14"],
                 ["3.14"],
-                ["3.14"]]),
+                ["3.14"]
+            ]
+        ),
         (
             [FILTER_QUERY_CATEGORICAL, FILTER_QUERY_CONTINUOUS],
             3,
+            [SOURCE_CATEGORICAL, SOURCE_CONTINUOUS],
             [
                 ["option2", "3.14"],
                 ["option2", "3.14"],
-                ["option2", "3.14"]],
+                ["option2", "3.14"]
+            ],
         ),
     ],
 )
@@ -56,7 +82,6 @@ def test_query_with_pheno_filters(
     db, admin_client, pheno_filters, variants_count,
     pheno_values, preview_sources
 ):
-    pheno_preview_sources = preview_sources[-4:-1]
     data = {
         "datasetId": "quads_f1",
         "familyFilters": pheno_filters,

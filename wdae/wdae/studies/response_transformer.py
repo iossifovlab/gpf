@@ -142,6 +142,7 @@ class ResponseTransformer:
 
     def __init__(self, study_wrapper):
         self.study_wrapper = study_wrapper
+        self._pheno_columns = study_wrapper.config_columns.phenotype
 
     def _get_all_pheno_values(self, family_ids):
         if not self.study_wrapper.phenotype_data \
@@ -282,6 +283,7 @@ class ResponseTransformer:
             try:
                 col_source = col_desc["source"]
                 col_format = col_desc.get("format")
+                col_role = col_desc.get("role")
 
                 if col_format is None:
                     def col_formatter(val):
@@ -300,6 +302,9 @@ class ResponseTransformer:
                                 f'error formatting variant: {v} ({val})',
                                 exc_info=True)
                             return val
+
+                if col_role is not None:
+                    col_source = f"{col_source}.{col_role}"
 
                 if col_source == "pedigree":
                     person_set_collection = \
@@ -323,7 +328,6 @@ class ResponseTransformer:
                     row_variant.append(
                         self.study_wrapper.config.study_phenotype
                     )
-
                 else:
                     if col_source in self.SPECIAL_ATTRS:
                         attribute = self.SPECIAL_ATTRS[col_source](v)
