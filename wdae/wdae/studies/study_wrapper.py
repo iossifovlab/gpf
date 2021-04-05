@@ -292,7 +292,7 @@ class StudyWrapper(StudyWrapperBase):
                 return True
         else:
             summary_variant_ids = set(kwargs.get("summaryVariantIds"))
-            logger.debug(f"sumamry variants ids: {summary_variant_ids}")
+            # logger.debug(f"sumamry variants ids: {summary_variant_ids}")
 
             def filter_allele(allele):
                 svid = f"{allele.cshl_location}:{allele.cshl_variant}"

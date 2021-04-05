@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gpf_dae",
-    version="3.5.dev0",
+    version="3.4.rc0",
     author="Lubomir Chorbadjiev",
     author_email="lubomir.chorbadjiev@gmail.com",
     description="GPF: Genotypes and Phenotypes in Families",
@@ -19,6 +19,7 @@ setuptools.setup(
     scripts=[
         "dae/tools/impala_parquet_loader.py",
         "dae/tools/impala_tables_loader.py",
+        "dae/tools/impala_tables_stats.py",
         "dae/tools/hdfs_parquet_loader.py",
         "dae/tools/generate_common_report.py",
         "dae/tools/generate_denovo_gene_sets.py",
