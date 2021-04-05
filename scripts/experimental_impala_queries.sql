@@ -1,3 +1,17 @@
+ALTER TABLE sfari_ssc_wgs_cshl_variants SET TBLPROPERTIES(
+  "gpf_partitioning_coding_bin_coding_effect_types" = 
+  "splice-site,frame-shift,nonsense,no-frame-shift-newStop,noStart,noEnd,missense,no-frame-shift,CDS,synonymous,coding_unknown,regulatory,3'UTR,5'UTR,CNV+,CNV-")
+
+
+ALTER TABLE data_hg38_seqclust.agre_wg38_859_variants SET TBLPROPERTIES(
+  "gpf_partitioning_coding_bin_coding_effect_types" = 
+  "splice-site,frame-shift,nonsense,no-frame-shift-newStop,noStart,noEnd,missense,no-frame-shift,CDS,synonymous,coding_unknown,regulatory,3'UTR,5'UTR,CNV+,CNV-")
+
+ALTER TABLE data_hg38_seqclust.sfari_spark_wgs_1_variants SET TBLPROPERTIES(
+  "gpf_partitioning_coding_bin_coding_effect_types" = 
+  "splice-site,frame-shift,nonsense,no-frame-shift-newStop,noStart,noEnd,missense,no-frame-shift,CDS,synonymous,coding_unknown,regulatory,3'UTR,5'UTR,CNV+,CNV-");
+
+
 SELECT variants.bucket_index, variants.summary_index, allele_index, COUNT(DISTINCT variants.family_id), gpf_bit_or(pedigree.status), gpf_or(BITAND(inheritance_in_members, 4))
 FROM impala_test_db.summary_stats_variants as variants JOIN impala_test_db.summary_stats_pedigree as pedigree 
 WHERE
