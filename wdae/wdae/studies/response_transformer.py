@@ -73,7 +73,7 @@ class ResponseTransformer:
                 v.alt_alleles
             )),
 
-        "carrier_person_attributes": 
+        "carrier_person_attributes":
         lambda v: list(
             map(
                 lambda aa: members_in_order_get_family_structure(
@@ -322,12 +322,12 @@ class ResponseTransformer:
                     )
 
                 else:
-                    # if col_source in self.SPECIAL_ATTRS:
-                    #     attribute = self.SPECIAL_ATTRS[col_source](v)
-                    # else:
-                    #     attribute = v.get_attribute(col_source)
+                    if col_source in self.SPECIAL_ATTRS:
+                        attribute = self.SPECIAL_ATTRS[col_source](v)
+                    else:
+                        attribute = v.get_attribute(col_source)
 
-                    attribute = v.get_attribute(col_source)
+                    # attribute = v.get_attribute(col_source)
 
                     if all([a == attribute[0] for a in attribute]):
                         attribute = [attribute[0]]
