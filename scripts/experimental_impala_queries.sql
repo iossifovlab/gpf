@@ -1,3 +1,64 @@
+SELECT
+    variants.bucket_index,
+    variants.summary_index,
+    variants.allele_index,
+    variants.effect_types,
+    variants.effect_gene_symbols,
+    MIN(variants.af_allele_count),
+    MAX(variants.af_allele_count),
+    MIN(variants.genome_gnomad_v3_ac),
+    MAX(variants.genome_gnomad_v3_ac),
+    CAST(COUNT(DISTINCT variants.family_id) AS INT),
+    CAST(gpf_bit_or(pedigree.status) AS TINYINT),
+    CAST(gpf_or(BITAND(inheritance_in_members, 4)) AS BOOLEAN)
+FROM data_hg38_seqclust.SFARI_SPARK_WGS_1_variants as variants 
+JOIN data_hg38_seqclust.SFARI_SPARK_WGS_1_pedigree as pedigree
+WHERE
+    variants.allele_index > 0 AND 
+    variants.variant_in_members = pedigree.person_id 
+GROUP BY 
+    bucket_index,
+    summary_index,
+    allele_index,
+    effect_types,
+    effect_gene_symbols,
+    variant_type,
+    transmission_type
+HAVING MIN(variants.af_allele_count) != MAX(variants.af_allele_count) OR MIN(variants.genome_gnomad_v3_ac) != MAX(variants.genome_gnomad_v3_ac)
+LIMIT 50;
+
+SELECT
+    variants.bucket_index,
+    variants.summary_index,
+    variants.allele_index,
+    variants.effect_types,
+    variants.effect_gene_symbols,
+    MIN(variants.af_allele_count),
+    MAX(variants.af_allele_count),
+    MIN(variants.genome_gnomad_v3_ac),
+    MAX(variants.genome_gnomad_v3_ac),
+    CAST(COUNT(DISTINCT variants.family_id) AS INT),
+    CAST(gpf_bit_or(pedigree.status) AS TINYINT),
+    CAST(gpf_or(BITAND(inheritance_in_members, 4)) AS BOOLEAN)
+FROM data_hg38_seqclust.SFARI_SPARK_WGS_1_variants as variants 
+JOIN data_hg38_seqclust.SFARI_SPARK_WGS_1_pedigree as pedigree
+WHERE
+    variants.region_bin = 'chr1_0' AND 
+    variants.frequency_bin = 2 AND
+    variants.allele_index > 0 AND 
+    variants.variant_in_members = pedigree.person_id 
+GROUP BY 
+    bucket_index,
+    summary_index,
+    allele_index,
+    effect_types,
+    effect_gene_symbols,
+    variant_type,
+    transmission_type
+HAVING MIN(variants.af_allele_count) != MAX(variants.af_allele_count) OR MIN(variants.genome_gnomad_v3_ac) != MAX(variants.genome_gnomad_v3_ac)
+LIMIT 50;
+
+
 ALTER TABLE sfari_ssc_wgs_cshl_variants SET TBLPROPERTIES(
   "gpf_partitioning_coding_bin_coding_effect_types" = 
   "splice-site,frame-shift,nonsense,no-frame-shift-newStop,noStart,noEnd,missense,no-frame-shift,CDS,synonymous,coding_unknown,regulatory,3'UTR,5'UTR,CNV+,CNV-")

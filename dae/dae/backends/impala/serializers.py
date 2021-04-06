@@ -396,7 +396,7 @@ class AlleleParquetSerializer:
                 "serializer called without variants schema")
         else:
             logger.debug(
-                f"serializer varints schema {variants_schema.col_names}")
+                f"serializer variants schema {variants_schema.col_names}")
 
         self.summary_prop_serializers = {
             "bucket_index": IntSerializer,
@@ -643,7 +643,9 @@ class AlleleParquetSerializer:
             records.append(allele_data)
 
         sv = SummaryVariantFactory.summary_variant_from_records(
-            records, attr_filter=self.ALLELE_CREATION_PROPERTIES)
+                records, 
+                attr_filter=self.ALLELE_CREATION_PROPERTIES
+            )
 
         extra_attributes = {}
         if extra_blob:
@@ -672,7 +674,9 @@ class AlleleParquetSerializer:
             records.append(allele_data)
 
         sv = SummaryVariantFactory.summary_variant_from_records(
-            records, attr_filter=self.ALLELE_CREATION_PROPERTIES)
+                records, 
+                attr_filter=self.ALLELE_CREATION_PROPERTIES
+            )
         fv = FamilyVariant(
             sv, family, allele_data["gt"], allele_data["best_state"],
             inheritance_in_members=inheritnace_in_members
