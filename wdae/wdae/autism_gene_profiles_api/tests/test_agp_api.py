@@ -1,6 +1,10 @@
 import pytest
 
-pytestmark = pytest.mark.usefixtures("wdae_gpf_instance_agp", "calc_gene_sets")
+pytestmark = pytest.mark.usefixtures(
+    "wdae_gpf_instance_agp",
+    "dae_calc_gene_sets",
+    "agp_gpf_instance",
+)
 
 route_prefix = "/api/v3/autism_gene_tool"
 

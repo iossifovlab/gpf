@@ -2,7 +2,8 @@ import pytest
 
 import json
 
-pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
+pytestmark = pytest.mark.usefixtures(
+    "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
 def test_gene_weights_list_view(user_client):

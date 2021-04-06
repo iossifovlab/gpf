@@ -1,7 +1,8 @@
 import pytest
 
 
-pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
+pytestmark = pytest.mark.usefixtures(
+    "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
 def test_permission_denied_prompt_through_user_client(user_client):

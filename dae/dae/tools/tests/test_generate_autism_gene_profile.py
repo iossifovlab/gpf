@@ -3,7 +3,7 @@ from dae.autism_gene_profile.db import AutismGeneProfileDB
 
 
 def test_generate_autism_gene_profile(
-        agp_gpf_instance, temp_dbfile, calc_gene_sets):
+        agp_gpf_instance, temp_dbfile):
     argv = [
         "--dbfile",
         temp_dbfile,

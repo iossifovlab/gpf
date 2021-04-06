@@ -1,6 +1,7 @@
 import pytest
 
-pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
+pytestmark = pytest.mark.usefixtures(
+    "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
 def test_datasets_api_get_remote_studies(admin_client, remote_settings):

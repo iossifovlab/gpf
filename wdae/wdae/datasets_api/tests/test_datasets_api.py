@@ -1,7 +1,8 @@
 import pytest
 from dae.configuration.gpf_config_parser import FrozenBox
 
-pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
+pytestmark = pytest.mark.usefixtures(
+    "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
 def test_datasets_api_get_all(admin_client):

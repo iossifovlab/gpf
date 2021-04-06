@@ -4,7 +4,8 @@ import json
 
 from rest_framework import status
 
-pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
+pytestmark = pytest.mark.usefixtures(
+    "wdae_gpf_instance", "dae_calc_gene_sets")
 
 QUERY_URL = "/api/v3/genotype_browser/query"
 

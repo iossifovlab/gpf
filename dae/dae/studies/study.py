@@ -295,7 +295,7 @@ class GenotypeDataGroup(GenotypeData):
         variants_futures = list()
         logger.info(f"summary query - study_filters: {study_filters}")
 
-        results_queue = Queue(maxsize=1000)
+        results_queue = Queue(maxsize=5_000)
 
         def get_summary_variants(genotype_data_study):
             with closing(genotype_data_study.query_summary_variants(
@@ -406,7 +406,7 @@ class GenotypeDataGroup(GenotypeData):
 
         variants_futures = list()
         logger.info(f"study_filters: {study_filters}")
-        results_queue = Queue(maxsize=1000)
+        results_queue = Queue(maxsize=20_000)
 
         def get_variants(genotype_study):
             with closing(genotype_study.query_variants(
@@ -431,7 +431,7 @@ class GenotypeDataGroup(GenotypeData):
                             **kwargs,)) as vs:
                 try:
                     for v in vs:
-                        results_queue.put(v, timeout=1)
+                        results_queue.put(v, timeout=3)
                 except Full as ex:
                     logger.info(f"variants queue full: {ex}", exc_info=False)
                     raise ex

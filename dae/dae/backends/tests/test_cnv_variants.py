@@ -1,5 +1,4 @@
 import pytest
-import os
 
 import numpy as np
 
@@ -9,8 +8,6 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 from dae.backends.raw.raw_variants import RawMemoryVariants
 
-from dae.backends.impala.parquet_io import ParquetManager, \
-    NoPartitionDescriptor
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.utils.regions import Region
 
@@ -33,12 +30,13 @@ def cnv_loader(
         variants_loader, annotation_pipeline_internal
     )
 
-    return variants_loader
+    return families_loader, variants_loader
 
 
 @pytest.fixture(scope="session")
 def cnv_raw(cnv_loader):
-    fvars = RawMemoryVariants([cnv_loader], cnv_loader.families)
+    _families_loader, variants_loader = cnv_loader
+    fvars = RawMemoryVariants([variants_loader], variants_loader.families)
     return fvars
 
 
@@ -48,39 +46,43 @@ def cnv_impala(
         cnv_loader,
         genomes_db_2013,
         hdfs_host,
-        impala_genotype_storage):
+        impala_host,
+        impala_genotype_storage,
+        reimport,
+        cleanup,
+        data_import):
 
-    from dae.backends.impala.hdfs_helpers import HdfsHelpers
+    from dae.backends.impala.impala_helpers import ImpalaHelpers
 
-    hdfs = HdfsHelpers(hdfs_host, 8020)
-
-    temp_dirname = hdfs.tempdir(prefix="variants_", suffix="_data")
-    hdfs.mkdir(temp_dirname)
+    impala_helpers = ImpalaHelpers(
+        impala_hosts=[impala_host], impala_port=21050)
 
     study_id = "cnv_test"
-    parquet_filenames = ParquetManager.build_parquet_filenames(
-        temp_dirname, bucket_index=2, study_id=study_id
-    )
 
-    assert parquet_filenames is not None
-    print(parquet_filenames)
+    (variant_table, pedigree_table) = \
+        impala_genotype_storage.study_tables(
+            FrozenBox({"id": study_id}))
 
-    ParquetManager.families_to_parquet(
-        cnv_loader.families, parquet_filenames.pedigree
-    )
+    if reimport or \
+            not impala_helpers.check_table(
+                "impala_test_db", variant_table) or \
+            not impala_helpers.check_table(
+                "impala_test_db", pedigree_table):
 
-    variants_dir = os.path.join(temp_dirname, "variants")
-    partition_description = NoPartitionDescriptor(variants_dir)
+        from dae.backends.impala.hdfs_helpers import HdfsHelpers
 
-    ParquetManager.variants_to_parquet(
-        cnv_loader, partition_description
-    )
+        hdfs = HdfsHelpers(hdfs_host, 8020)
 
-    impala_genotype_storage.impala_load_dataset(
-        study_id,
-        variants_dir=os.path.dirname(parquet_filenames.variants),
-        pedigree_file=parquet_filenames.pedigree,
-    )
+        temp_dirname = hdfs.tempdir(prefix="variants_", suffix="_data")
+        hdfs.mkdir(temp_dirname)
+
+        families_loader, variants_loader = cnv_loader
+        impala_genotype_storage.simple_study_import(
+            study_id,
+            families_loader=families_loader,
+            variant_loaders=[variants_loader],
+            output=temp_dirname,
+            include_reference=True)
 
     fvars = impala_genotype_storage.build_backend(
         FrozenBox({"id": study_id}), genomes_db_2013

@@ -1,5 +1,4 @@
 import logging
-import threading
 # from dae.utils.debug_closing import closing
 from contextlib import closing
 
@@ -76,6 +75,9 @@ class ImpalaVariants:
 
     def connection(self):
         conn = self._impala_helpers.connection()
+        logger.debug(
+            f"getting connection to host {conn.host} from impala helpers "
+            f"{id(self._impala_helpers)}")
         return conn
 
     def _summary_variants_iterator(
@@ -130,7 +132,7 @@ class ImpalaVariants:
                 )
 
                 query = query_builder.product
-                logger.debug(f"SUMMARY VARIANTS QUERY: {query}")
+                logger.debug(f"SUMMARY VARIANTS QUERY ({conn.host}): {query}")
 
                 cursor.execute(query)
                 for row in cursor:
@@ -145,6 +147,7 @@ class ImpalaVariants:
                         logger.error("unable to deserialize summary variant")
                         logger.exception(ex)
                         continue
+                logger.debug(f"[DONE] SUMMARY VARIANTS QUERY ({conn.host})")
 
     def _family_variants_iterator(
             self,
@@ -200,7 +203,7 @@ class ImpalaVariants:
 
                 query = query_builder.product
 
-                logger.debug(f"FAMILY VARIANTS QUERY: {query}")
+                logger.debug(f"FAMILY VARIANTS QUERY ({conn.host}): {query}")
 
                 deserialize_row = query_builder.create_row_deserializer(
                     self.serializer

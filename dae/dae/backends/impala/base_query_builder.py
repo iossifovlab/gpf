@@ -480,11 +480,19 @@ class BaseQueryBuilder(ABC):
             return ""
         effect_types = set(effect_types)
 
+        logger.debug(
+            f"coding bin heuristic: query effect types: {effect_types}; "
+            f"coding_effect_types: "
+            f"{self.table_properties['coding_effect_types']}")
+
         intersection = \
             effect_types & \
             set(self.table_properties["coding_effect_types"])
 
         coding_bin_col = self.where_accessors["coding_bin"]
+        logger.debug(
+            f"effect types intersection: {intersection}; "
+            f"({intersection == effect_types})")
 
         if intersection == effect_types:
             return f"{coding_bin_col} = 1"

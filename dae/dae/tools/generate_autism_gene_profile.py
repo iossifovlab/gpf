@@ -149,12 +149,24 @@ def main(gpf_instance=None, argv=None):
 
     config = gpf_instance._autism_gene_profile_config
 
+    # gpf_instance.gene_sets_db.get_all_gene_sets("main")
+
     gene_sets = gpf_instance.gene_sets_db.get_all_gene_sets("main")
-    gene_sets = list(
+    gene_sets_result = list(
         filter(lambda gs: gs["name"] in config.gene_sets, gene_sets)
     )
+
+    # gene_sets_result = []
+    # for name in config.gene_sets:
+    #     gene_set = gpf_instance.gene_sets_db.get_gene_set("main", name)
+    #     gene_sets_result.append(gene_set)
+    logger.info(f"collected gene sets: {len(gene_sets_result)}")
+
+    # gene_sets = list(
+    #     filter(lambda gs: gs["name"] in config.gene_sets, gene_sets)
+    # )
     gene_symbols = set()
-    for gs in gene_sets:
+    for gs in gene_sets_result:
         gene_symbols = gene_symbols.union(gs["syms"])
     gs_count = len(gene_symbols)
     logger.info(f"Collected {gs_count} gene symbols")
@@ -162,6 +174,7 @@ def main(gpf_instance=None, argv=None):
     person_ids = dict()
     for dataset_id, filters in config.datasets.items():
         genotype_data = gpf_instance.get_genotype_data(dataset_id)
+        assert genotype_data is not None, dataset_id
 
         variants[dataset_id] = list(
             genotype_data.query_variants(
