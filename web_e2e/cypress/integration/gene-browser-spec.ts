@@ -5,15 +5,13 @@ describe('Gene browser tests', () => {
   const geneBrowserPage = new GeneBrowserPage();
 
   before(() => {
+    geneBrowserPage.cleanup();
     geneBrowserPage.navigateToHome();
     geneBrowserPage.loginAdmin();
   });
 
-  after(() => {
-    geneBrowserPage.logout();
-  });
-
   beforeEach(() => {
+    geneBrowserPage.preserveLogin();
     geneBrowserPage.navigateToHome();
   });
 

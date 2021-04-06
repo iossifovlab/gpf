@@ -4,6 +4,7 @@ describe('Autism gene profiles table tests', () => {
   const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
 
   before(() => {
+    autismGeneProfilesTablePage.cleanup();
     autismGeneProfilesTablePage.navigateToHome();
     autismGeneProfilesTablePage.toggleSidenav();
     autismGeneProfilesTablePage.sidenavAutismGeneProfilesButton.click();

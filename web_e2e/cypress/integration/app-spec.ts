@@ -4,6 +4,10 @@ import { userData } from 'cypress/elements/utils';
 describe('App tests', () => {
   const appPage = new AppPage();
 
+  before(() => {
+    appPage.cleanup();
+  });
+
   beforeEach(() => {
     appPage.navigateToHome();
   });

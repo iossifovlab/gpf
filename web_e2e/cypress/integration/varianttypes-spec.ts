@@ -8,15 +8,13 @@ describe('Variant types tests', () => {
   const genotypeBlockPage = new GenotypeBlockPage();
 
   before(() => {
+    varianttypesPage.cleanup();
     varianttypesPage.navigateToHome();
     varianttypesPage.loginAdmin();
   });
 
-  after(() => {
-    varianttypesPage.logout();
-  });
-
   beforeEach(() => {
+    varianttypesPage.preserveLogin();
     varianttypesPage.navigateToHome();
   });
 

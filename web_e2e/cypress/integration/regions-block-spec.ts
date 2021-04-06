@@ -6,15 +6,13 @@ describe('Regions block tests', () => {
   const regionsBlockPage = new RegionsBlockPage();
 
   before(() => {
+    regionsBlockPage.cleanup();
     regionsBlockPage.navigateToHome();
     regionsBlockPage.loginAdmin();
   });
 
-  after(() => {
-    regionsBlockPage.logout();
-  });
-
   beforeEach(() => {
+    regionsBlockPage.preserveLogin();
     regionsBlockPage.navigateToHome();
   });
 

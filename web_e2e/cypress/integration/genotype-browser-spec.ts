@@ -16,6 +16,10 @@ describe('Genotype browser tests', () => {
     datasetIds.compAll, datasetIds.compDenovo, datasetIds.compVcf, datasetIds.iossifov2014, datasetIds.multi
   ];
 
+  before(() => {
+    genotypeBrowserPage.cleanup();
+  });
+
   beforeEach(() => {
     genotypeBrowserPage.navigateToHome();
     genotypeBrowserPage.loginAdmin();
@@ -113,15 +117,13 @@ describe('Genotype browser table preview result tests', () => {
   const genotypeBrowserPage = new GenotypeBrowserPage();
 
   before(() => {
+    genotypeBrowserController.cleanup();
     genotypeBrowserController.navigateToHome();
     genotypeBrowserController.loginAdmin();
   });
 
-  after(() => {
-    genotypeBrowserController.logout();
-  });
-
   beforeEach(() => {
+    genotypeBrowserController.preserveLogin();
     genotypeBrowserController.navigateToHome();
   });
 

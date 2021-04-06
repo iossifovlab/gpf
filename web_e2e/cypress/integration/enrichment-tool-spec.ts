@@ -9,15 +9,13 @@ describe('Enrichment tool tests', () => {
   const enrichmenToolPage = new EnrichmenToolPage();
 
   before(() => {
+    enrichmenToolPage.cleanup();
     enrichmenToolPage.navigateToHome();
     enrichmenToolPage.loginAdmin();
   });
 
-  after(() => {
-    enrichmenToolPage.logout();
-  });
-
   beforeEach(() => {
+    enrichmenToolPage.preserveLogin();
     enrichmenToolPage.navigateToHome();
   });
 

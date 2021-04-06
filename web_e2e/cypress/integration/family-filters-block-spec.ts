@@ -6,15 +6,13 @@ describe('Family filters block tests', () => {
   const familyFilterBlockPage = new FamilyFilterBlockPage();
 
   before(() => {
+    familyFilterBlockPage.cleanup();
     familyFilterBlockPage.navigateToHome();
     familyFilterBlockPage.loginAdmin();
   });
 
-  after(() => {
-    familyFilterBlockPage.logout();
-  });
-
   beforeEach(() => {
+    familyFilterBlockPage.preserveLogin();
     familyFilterBlockPage.navigateToHome();
   });
 

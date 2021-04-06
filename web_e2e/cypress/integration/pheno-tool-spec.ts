@@ -10,15 +10,13 @@ describe('Pheno tool tests', () => {
   const phenoToolPage = new PhenoToolPage();
 
   before(() => {
+    phenoToolPage.cleanup();
     phenoToolPage.navigateToHome();
     phenoToolPage.loginAdmin();
   });
 
-  after(() => {
-    phenoToolPage.logout();
-  });
-
   beforeEach(() => {
+    phenoToolPage.preserveLogin();
     phenoToolPage.navigateToHome();
   });
 

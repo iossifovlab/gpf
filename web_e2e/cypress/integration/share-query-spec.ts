@@ -7,15 +7,13 @@ describe('Share query tests', () => {
   const shareQueryPage = new ShareQueryPage();
 
   before(() => {
+    shareQueryPage.cleanup();
     shareQueryPage.navigateToHome();
     shareQueryPage.loginAdmin();
   });
 
-  after(() => {
-    shareQueryPage.logout();
-  });
-
   beforeEach(() => {
+    shareQueryPage.preserveLogin();
     shareQueryPage.navigateToHome();
   });
 

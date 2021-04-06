@@ -7,15 +7,13 @@ describe('Gene view tests', () => {
   const geneBrowserPage = new GeneBrowserPage();
 
   before(() => {
+    geneViewPage.cleanup();
     geneViewPage.navigateToHome();
     geneViewPage.loginAdmin();
   });
 
-  after(() => {
-    geneViewPage.logout();
-  });
-
   beforeEach(() => {
+    geneViewPage.preserveLogin();
     geneViewPage.navigateToHome();
 
     geneBrowserPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageNames.geneBrowser);

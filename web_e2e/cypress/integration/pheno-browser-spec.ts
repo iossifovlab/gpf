@@ -5,15 +5,13 @@ describe('Pheno browser tests', () => {
   const phenoBrowserPage = new PhenoBrowserPage();
 
   before(() => {
+    phenoBrowserPage.cleanup();
     phenoBrowserPage.navigateToHome();
     phenoBrowserPage.loginAdmin();
   });
 
-  after(() => {
-    phenoBrowserPage.logout();
-  });
-
   beforeEach(() => {
+    phenoBrowserPage.preserveLogin();
     phenoBrowserPage.navigateToHome();
   });
 

@@ -5,6 +5,10 @@ describe('Register tests', () => {
   const registrationPage = new RegistrationPage();
   const usersPage = new UsersPage();
 
+  before(() => {
+    registrationPage.cleanup();
+  });
+
   it('should open register window', () => {
     registrationPage.navigateToHome();
     usersPage.loginDropdownToggleButton.click();

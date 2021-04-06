@@ -7,15 +7,13 @@ describe('Save query tests', () => {
   const saveQueryPage = new SaveQueryPage();
 
   before(() => {
+    saveQueryPage.cleanup();
     saveQueryPage.navigateToHome();
     saveQueryPage.loginAdmin();
   });
 
-  after(() => {
-    saveQueryPage.logout();
-  });
-
   beforeEach(() => {
+    saveQueryPage.preserveLogin();
     saveQueryPage.navigateToHome();
   });
 

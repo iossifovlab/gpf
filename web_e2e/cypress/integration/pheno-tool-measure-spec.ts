@@ -6,15 +6,13 @@ describe('Pheno tool measure tests', () => {
   const phenoToolMeasurePage = new PhenoToolMeasurePage();
 
   before(() => {
+    phenoToolMeasurePage.cleanup();
     phenoToolMeasurePage.navigateToHome();
     phenoToolMeasurePage.loginAdmin();
   });
 
-  after(() => {
-    phenoToolMeasurePage.logout();
-  });
-
   beforeEach(() => {
+    phenoToolMeasurePage.preserveLogin();
     phenoToolMeasurePage.navigateToHome();
   });
 

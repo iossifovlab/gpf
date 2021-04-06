@@ -8,15 +8,13 @@ describe('Inheritance tests', () => {
   const genotypeBlockPage = new GenotypeBlockPage();
 
   before(() => {
+    inheritancetypesPage.cleanup();
     inheritancetypesPage.navigateToHome();
     inheritancetypesPage.loginAdmin();
   });
 
-  after(() => {
-    inheritancetypesPage.logout();
-  });
-
   beforeEach(() => {
+    inheritancetypesPage.preserveLogin();
     inheritancetypesPage.navigateToHome();
   });
 

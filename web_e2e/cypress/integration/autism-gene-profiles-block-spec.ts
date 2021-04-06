@@ -5,6 +5,10 @@ describe('Autism gene profiles table tests', () => {
   const autismGeneProfilesBlockPage = new AutismGeneProfilesBlock();
   const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
 
+  before(() => {
+    autismGeneProfilesBlockPage.cleanup();
+  });
+
   beforeEach(() => {
     autismGeneProfilesBlockPage.navigateToHome();
     autismGeneProfilesBlockPage.toggleSidenav();

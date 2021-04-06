@@ -42,6 +42,14 @@ export class BasePage {
   private readonly adminUsername = 'admin@iossifovlab.com';
   private readonly adminPassword = 'secret';
 
+  cleanup() {
+    cy.clearCookies();
+  }
+
+  preserveLogin() {
+    Cypress.Cookies.preserveOnce('sessionid');
+  }
+
   navigateToHome() {
     const baseUrl = Cypress.config().baseUrl;
     cy.visit(`${baseUrl}/datasets/comp_all/commonReport`);
@@ -61,7 +69,6 @@ export class BasePage {
   }
 
   loginAdmin() {
-    cy.clearCookies();
     this.login(this.adminUsername, this.adminPassword);
     cy.wait(500);
   }
@@ -79,7 +86,6 @@ export class BasePage {
 
   toggleSidenav() {
     cy.get('.navbar-toggler-icon').click();
-    // cy.wait(1000); // Waits for the animation to finish
   }
 
   get sidenavDatasetButton() {

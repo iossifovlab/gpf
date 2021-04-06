@@ -8,15 +8,13 @@ describe('Gender tests', () => {
   const genotypeBlockPage = new GenotypeBlockPage();
 
   before(() => {
+    genderPage.cleanup();
     genderPage.navigateToHome();
     genderPage.loginAdmin();
   });
 
-  after(() => {
-    genderPage.logout();
-  });
-
   beforeEach(() => {
+    genderPage.preserveLogin();
     genderPage.navigateToHome();
   });
 

@@ -8,15 +8,13 @@ describe('Effect types tests', () => {
   const genotypeBlockPage = new GenotypeBlockPage();
 
   before(() => {
+    effecttypesPage.cleanup();
     effecttypesPage.navigateToHome();
     effecttypesPage.loginAdmin();
   });
 
-  after(() => {
-    effecttypesPage.logout();
-  });
-
   beforeEach(() => {
+    effecttypesPage.preserveLogin();
     effecttypesPage.navigateToHome();
   });
 

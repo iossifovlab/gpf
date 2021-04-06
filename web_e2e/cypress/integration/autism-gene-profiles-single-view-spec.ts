@@ -6,6 +6,7 @@ describe('Autism gene profiles single view tests', () => {
   const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
 
   before(() => {
+    autismGeneProfilesSingleViewPage.cleanup();
     autismGeneProfilesSingleViewPage.navigateToHome();
     autismGeneProfilesSingleViewPage.toggleSidenav();
     autismGeneProfilesSingleViewPage.sidenavAutismGeneProfilesButton.click();

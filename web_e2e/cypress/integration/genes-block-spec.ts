@@ -7,15 +7,13 @@ describe('Genes block panel tests', () => {
   const genesBlockPage = new GenesBlockPage();
 
   before(() => {
+    genesBlockPage.cleanup();
     genesBlockPage.navigateToHome();
     genesBlockPage.loginAdmin();
   });
 
-  after(() => {
-    genesBlockPage.logout();
-  });
-
   beforeEach(() => {
+    genesBlockPage.preserveLogin();
     genesBlockPage.navigateToHome();
   });
 
@@ -74,15 +72,13 @@ describe('Gene sets names and count tests', () => {
   const genesBlockPage = new GenesBlockPage();
 
   before(() => {
+    genotypeBrowserController.cleanup();
     genotypeBrowserController.navigateToHome();
     genotypeBrowserController.loginAdmin();
   });
 
-  after(() => {
-    genotypeBrowserController.logout();
-  });
-
   beforeEach(() => {
+    genotypeBrowserController.preserveLogin();
     genotypeBrowserController.navigateToHome();
   });
 
@@ -160,15 +156,13 @@ describe('Gene set file length tests', () => {
   const genotypeBrowserController = new GenotypeBrowserController();
 
   before(() => {
+    genotypeBrowserController.cleanup();
     genotypeBrowserController.navigateToHome();
     genotypeBrowserController.loginAdmin();
   });
 
-  after(() => {
-    genotypeBrowserController.logout();
-  });
-
   beforeEach(() => {
+    genotypeBrowserController.preserveLogin();
     genotypeBrowserController.navigateToHome();
   });
 
@@ -256,15 +250,13 @@ describe('Denovo gene set gene symbols tests', () => {
   const genotypeBrowserController = new GenotypeBrowserController();
 
   before(() => {
+    genotypeBrowserController.cleanup();
     genotypeBrowserController.navigateToHome();
     genotypeBrowserController.loginAdmin();
   });
 
-  after(() => {
-    genotypeBrowserController.logout();
-  });
-
   beforeEach(() => {
+    genotypeBrowserController.preserveLogin();
     genotypeBrowserController.navigateToHome();
   });
 

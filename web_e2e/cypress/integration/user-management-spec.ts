@@ -4,15 +4,13 @@ describe('User management tests', () => {
   const userManagementPage = new UserManagementPage();
 
   before(() => {
+    userManagementPage.cleanup();
     userManagementPage.navigateToHome();
     userManagementPage.loginAdmin();
   });
 
-  after(() => {
-    userManagementPage.logout();
-  });
-
   beforeEach(() => {
+    userManagementPage.preserveLogin();
     userManagementPage.navigateToHome();
     userManagementPage.toggleSidenav();
     userManagementPage.sidenavManagementButton.click();

@@ -5,6 +5,10 @@ describe('Forgotten password tests', () => {
   const forgotPasswordPage = new ForgotPasswordPage();
   const usersPage = new UsersPage();
 
+  before(() => {
+    forgotPasswordPage.cleanup();
+  });
+
   it('should open forgotten password window', () => {
     forgotPasswordPage.navigateToHome();
     usersPage.loginDropdownToggleButton.click();

@@ -19,6 +19,14 @@ export class BaseController {
     this.basePage.logout();
   }
 
+  cleanup() {
+    this.basePage.cleanup();
+  }
+
+  preserveLogin() {
+    this.basePage.preserveLogin();
+  }
+
   // async navigateToDatasets() {
   //   this.basePage.toggleSidenav();
 

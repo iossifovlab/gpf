@@ -7,6 +7,10 @@ import { datasetIds, toolPageNames } from 'cypress/elements/utils';
 describe('Datasets tests', () => {
   const datasetsPage = new DatasetsPage();
 
+  before(() => {
+    datasetsPage.cleanup();
+  });
+
   beforeEach(() => {
     datasetsPage.navigateToHome();
   });
@@ -93,15 +97,13 @@ describe('Iossifov dataset count tests', () => {
   const datasetsPage = new DatasetsPage();
 
   before(() => {
+    datasetsPage.cleanup();
     datasetsPage.navigateToHome();
     datasetsPage.loginAdmin();
   });
 
-  after(() => {
-    datasetsPage.logout();
-  });
-
   beforeEach(() => {
+    datasetsPage.preserveLogin();
     datasetsPage.navigateToHome();
     datasetsPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageNames.datasetStatistics);
   });

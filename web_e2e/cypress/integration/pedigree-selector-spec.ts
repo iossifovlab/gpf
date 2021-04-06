@@ -8,15 +8,13 @@ describe('Pedigree selector tests', () => {
   const genotypeBlockPage = new GenotypeBlockPage();
 
   before(() => {
+    pedigreeSelectorPage.cleanup();
     pedigreeSelectorPage.navigateToHome();
     pedigreeSelectorPage.loginAdmin();
   });
 
-  after(() => {
-    pedigreeSelectorPage.logout();
-  });
-
   beforeEach(() => {
+    pedigreeSelectorPage.preserveLogin();
     pedigreeSelectorPage.navigateToHome();
   });
 

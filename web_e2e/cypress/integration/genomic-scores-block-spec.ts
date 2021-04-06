@@ -5,15 +5,13 @@ describe('Genomic scores panel tests', () => {
   const genomicScoresBlockPage = new GenomicScoresBlockPage();
 
   before(() => {
+    genomicScoresBlockPage.cleanup();
     genomicScoresBlockPage.navigateToHome();
     genomicScoresBlockPage.loginAdmin();
   });
 
-  after(() => {
-    genomicScoresBlockPage.logout();
-  });
-
   beforeEach(() => {
+    genomicScoresBlockPage.preserveLogin();
     genomicScoresBlockPage.navigateToHome();
   });
 
