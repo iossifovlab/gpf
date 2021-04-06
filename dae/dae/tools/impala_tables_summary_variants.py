@@ -306,6 +306,11 @@ def main(argv=sys.argv[1:], gpf_instance=None):
             logger.warning(f"not an impala study: {study_id}; skipping...")
             continue
 
+        if study_backend.variants_table is None:
+            logger.warning(
+                f"study {study_id} has no variants; skipping...")
+            continue
+
         drop_summary_table(study_id, study_backend)
         partitions = create_summary_table(study_id, study_backend)
 
