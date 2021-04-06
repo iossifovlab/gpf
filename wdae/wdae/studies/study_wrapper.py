@@ -171,8 +171,8 @@ class StudyWrapper(StudyWrapperBase):
             )
 
     def _validate_column_groups(self):
-        genotype_cols = self.columns.get("genotype", dict()).keys()
-        phenotype_cols = self.columns.get("phenotype", dict()).keys()
+        genotype_cols = self.columns.get("genotype") or list()
+        phenotype_cols = self.columns.get("phenotype") or list()
         for column_group in self.column_groups.values():
             for column_id in column_group.columns:
                 if column_id not in genotype_cols \
