@@ -111,6 +111,8 @@ def main(argv=sys.argv[1:], gpf_instance=None):
             continue
 
         pedigree_compute_stats(study_backend)
+        if study_backend.variants_table is None:
+            continue
 
         if "region_bin" not in study_backend.schema:
             variants_compute_stats(study_backend, region_bin=None)
