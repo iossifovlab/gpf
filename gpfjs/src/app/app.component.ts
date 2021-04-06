@@ -2,6 +2,9 @@ import { Component } from '@angular/core';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { environment } from '../environments/environment';
 import { AutismGeneProfilesService } from './autism-gene-profiles-block/autism-gene-profiles.service';
+import { BnNgIdleService } from 'bn-ng-idle';
+import { UsersService } from './users/users.service';
+import { AutismGeneToolConfig } from './autism-gene-profiles-table/autism-gene-profile-table';
 
 @Component({
   selector: 'gpf-root',
@@ -47,13 +50,22 @@ import { AutismGeneProfilesService } from './autism-gene-profiles-block/autism-g
 export class AppComponent {
   showSidenav = false;
   title = 'GPF: Genotypes and Phenotypes in Families';
-  private autismGeneProfilesConfig;
+  autismGeneProfilesConfig: AutismGeneToolConfig;
+  private sessionTimeoutInSeconds = 7 * 24 * 60 * 60; // 1 week
 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
+    private bnIdle: BnNgIdleService,
+    private usersService: UsersService,
   ) { }
 
   ngOnInit(): void {
+    this.bnIdle.startWatching(this.sessionTimeoutInSeconds).subscribe(() => {
+      this.usersService.logout().subscribe(() => {
+        this.usersService.getUserInfo().take(1).subscribe(() => {});
+      });
+    });
+
     this.autismGeneProfilesService.getConfig().subscribe(res => {
       this.autismGeneProfilesConfig = res;
     });
