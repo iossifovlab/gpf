@@ -73,7 +73,7 @@ pipeline {
             steps {
                 script {
                     copyArtifacts(
-                        projectName: 'seqpipe/data-hg19-startup/release-3.4',
+                        projectName: 'seqpipe/data-hg19-startup/master',
                         selector: lastSuccessful(),
                         target: "${env.WORKSPACE}" + "/downloads"
                     );
