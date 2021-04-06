@@ -155,7 +155,7 @@ class StudyWrapper(StudyWrapperBase):
         # PREVIEW AND DOWNLOAD COLUMNS
         self.columns = genotype_browser_config.columns
         self.column_groups = genotype_browser_config.column_groups
-        assert self._validate_column_groups() is True
+        self._validate_column_groups()
         self.preview_columns = genotype_browser_config.preview_columns
         self.download_columns = genotype_browser_config.download_columns
         self.summary_preview_columns = \
@@ -171,10 +171,15 @@ class StudyWrapper(StudyWrapperBase):
             )
 
     def _validate_column_groups(self):
+        genotype_cols = self.columns.get("genotype", dict()).keys()
+        phenotype_cols = self.columns.get("phenotype", dict()).keys()
         for column_group in self.column_groups.values():
             for column_id in column_group.columns:
-                if column_id not in self.columns.genotype \
-                   and column_id not in self.columns.phenotype:
+                if column_id not in genotype_cols \
+                   and column_id not in phenotype_cols:
+                    logger.warn(
+                        f"Column {column_id} not defined in configuration"
+                    )
                     return False
         return True
 
