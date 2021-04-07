@@ -27,6 +27,7 @@ echo "GS                            : ${GS}"
 docker pull seqpipe/seqpipe-node-base:latest
 
 docker run --rm \
+    --ipc=host \
     --entrypoint /bin/bash \
     --network ${NETWORK} \
     --name ${CONTAINER_E2E_TESTS} \
