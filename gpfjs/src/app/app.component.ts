@@ -5,6 +5,7 @@ import { AutismGeneProfilesService } from './autism-gene-profiles-block/autism-g
 import { BnNgIdleService } from 'bn-ng-idle';
 import { UsersService } from './users/users.service';
 import { AutismGeneToolConfig } from './autism-gene-profiles-table/autism-gene-profile-table';
+import { switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-root',
@@ -60,11 +61,15 @@ export class AppComponent {
   ) { }
 
   ngOnInit(): void {
-    this.bnIdle.startWatching(this.sessionTimeoutInSeconds).subscribe(() => {
-      this.usersService.logout().subscribe(() => {
-        this.usersService.getUserInfo().take(1).subscribe(() => {});
-      });
-    });
+    this.bnIdle.startWatching(this.sessionTimeoutInSeconds)
+      .pipe(
+        switchMap(() => {
+          return this.usersService.logout();
+        }),
+        switchMap(() => {
+          return this.usersService.getUserInfo();
+        }),
+      ).subscribe();
 
     this.autismGeneProfilesService.getConfig().subscribe(res => {
       this.autismGeneProfilesConfig = res;
