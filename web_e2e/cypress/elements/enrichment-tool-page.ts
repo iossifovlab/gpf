@@ -1,6 +1,6 @@
 import { BasePage } from './utils';
 
-export class EnrichmenToolPage extends BasePage {
+export class EnrichmentToolPage extends BasePage {
   get enrichmentToolWindow() {
     return cy.get('gpf-enrichment-tool');
   }
