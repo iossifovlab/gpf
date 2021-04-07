@@ -43,7 +43,7 @@ export class BasePage {
   private readonly adminPassword = 'secret';
 
   cleanup() {
-    cy.clearCookies();
+    cy.clearCookie('sessionid')
   }
 
   preserveLogin() {
