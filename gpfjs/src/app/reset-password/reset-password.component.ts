@@ -43,6 +43,11 @@ export class ResetPasswordComponent implements AfterViewInit {
       return;
     }
 
+    if (this.password.length < 10) {
+      this.resetPasswordError = 'Password must be at least 10 symbols long';
+      return;
+    }
+
     this.usersService.changePassword(this.password, this.verifPath).subscribe(
       (res) => {
         if (res) {
