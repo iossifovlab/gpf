@@ -1,7 +1,7 @@
 import { ErrorsAlertPage } from 'cypress/elements/errors-alert-page';
 import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
 import { PedigreeSelectorPage } from 'cypress/elements/pedigree-selector-page';
-import { datasetIds, toolPageNames } from 'cypress/elements/utils';
+import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Pedigree selector tests', () => {
   const pedigreeSelectorPage = new PedigreeSelectorPage();
@@ -21,7 +21,7 @@ describe('Pedigree selector tests', () => {
   it('should display error alert when none of the checkboxes are selected', () => {
     const errorsAlertPage = new ErrorsAlertPage();
 
-    pedigreeSelectorPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
+    pedigreeSelectorPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     errorsAlertPage.findAlertWindowInComponent('gpf-pedigree-selector').should('not.exist');
 
     genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'None').click();
@@ -32,7 +32,7 @@ describe('Pedigree selector tests', () => {
   });
 
   it('should check/uncheck affected status checkboxes using \'All\' and \'None\' buttons', () => {
-    pedigreeSelectorPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
+    pedigreeSelectorPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'None').click();
     genotypeBlockPage.findAllCheckboxesInComponent('gpf-pedigree-selector').each((element) => {
       cy.wrap(element).should('not.be.checked');

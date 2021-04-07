@@ -2,7 +2,7 @@ import { DatasetsPage } from 'cypress/elements/datasets-page';
 import { GenotypeBrowserPage } from 'cypress/elements/genotype-browser-page';
 import { PhenoBrowserPage } from 'cypress/elements/pheno-browser-page';
 import { PhenoToolPage } from 'cypress/elements/pheno-tool-page';
-import { datasetIds, toolPageNames } from 'cypress/elements/utils';
+import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Datasets tests', () => {
   const datasetsPage = new DatasetsPage();
@@ -105,7 +105,7 @@ describe('Iossifov dataset count tests', () => {
   beforeEach(() => {
     datasetsPage.preserveLogin();
     datasetsPage.navigateToHome();
-    datasetsPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageNames.datasetStatistics);
+    datasetsPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics);
   });
 
   [{roleId: 'mom', expectedCounts: ['0', '2516', '2516']},
@@ -136,10 +136,6 @@ describe('Iossifov dataset count tests', () => {
 
       familiesByPedigreeValues.sort((a, b) =>  a - b);
       expectedValues.sort((a, b) =>  a - b);
-
-      console.log(familiesByPedigreeValues)
-      console.log(expectedValues)
-
 
       expect(familiesByPedigreeValues).to.deep.equal(expectedValues);
     });

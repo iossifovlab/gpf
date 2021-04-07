@@ -1,5 +1,5 @@
 import { PhenoBrowserPage } from 'cypress/elements/pheno-browser-page';
-import { datasetIds, toolPageNames } from 'cypress/elements/utils';
+import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Pheno browser tests', () => {
   const phenoBrowserPage = new PhenoBrowserPage();
@@ -19,7 +19,7 @@ describe('Pheno browser tests', () => {
    {seachQuery: 'measure 2'}, {seachQuery: 'measure 3'}, {seachQuery: 'measure 4'}
   ].forEach((data) => {
     it('should have working search box when filtering with \'' + data.seachQuery + '\' search query', () => {
-      phenoBrowserPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.phenotypeBrowser);
+      phenoBrowserPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
       phenoBrowserPage.allTableRows.should('have.length', 8)
 
       phenoBrowserPage.searchInputBox.type(data.seachQuery);
@@ -28,7 +28,7 @@ describe('Pheno browser tests', () => {
   });
 
   it('should display the right amount of table rows when the query in the search box is \'1\'', () => {
-    phenoBrowserPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.phenotypeBrowser);
+    phenoBrowserPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
     phenoBrowserPage.searchInputBox.type('1');
     phenoBrowserPage.allTableRows.should('have.length', 7)
   });

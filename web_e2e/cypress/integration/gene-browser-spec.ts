@@ -1,5 +1,5 @@
 import { GeneBrowserPage } from 'cypress/elements/gene-browser-page';
-import { datasetIds, toolPageNames } from 'cypress/elements/utils';
+import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Gene browser tests', () => {
   const geneBrowserPage = new GeneBrowserPage();
@@ -16,7 +16,7 @@ describe('Gene browser tests', () => {
   });
 
   it('should search for gene', () => {
-    geneBrowserPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageNames.geneBrowser);
+    geneBrowserPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.geneBrowser);
     geneBrowserPage.searchInputBox.type('chd8');
     geneBrowserPage.goButton.click();
     geneBrowserPage.geneView.should('be.visible');
@@ -24,7 +24,7 @@ describe('Gene browser tests', () => {
   });
 
   it('should have a Coding only checkbox', () => {
-    geneBrowserPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageNames.geneBrowser);
+    geneBrowserPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.geneBrowser);
     geneBrowserPage.codingOnlyCheckbox.should('be.visible');
   });
 });

@@ -1,7 +1,7 @@
 import { ErrorsAlertPage } from "cypress/elements/errors-alert-page";
 import { GenesBlockPage } from "cypress/elements/genes-block-page";
 import { GenotypeBrowserController } from "cypress/elements/genotype-browser-controller";
-import { datasetIds, toolPageNames } from "cypress/elements/utils";
+import { datasetIds, toolPageLinks } from "cypress/elements/utils";
 
 describe('Genes block panel tests', () => {
   const genesBlockPage = new GenesBlockPage();
@@ -18,7 +18,7 @@ describe('Genes block panel tests', () => {
   });
 
   it('should display gene symbols panel', () => {
-    genesBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
+    genesBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genesBlockPage.geneSymbolsPanel.should('not.exist');
 
     genesBlockPage.geneSymbolsButton.click();
@@ -28,7 +28,7 @@ describe('Genes block panel tests', () => {
   it('should display error alert in gene symbols panel when the textarea is empty', () => {
     const errorsAlertPage = new ErrorsAlertPage();
 
-    genesBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
+    genesBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genesBlockPage.geneSymbolsButton.click();
     errorsAlertPage.findAlertWindowInComponent('gpf-gene-symbols').should('be.visible');
 
@@ -37,7 +37,7 @@ describe('Genes block panel tests', () => {
   });
 
   it('should display gene sets panel', () => {
-    genesBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
+    genesBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genesBlockPage.geneSetsPanel.should('not.exist');
 
     genesBlockPage.geneSetsButton.click();
@@ -47,7 +47,7 @@ describe('Genes block panel tests', () => {
   it('should display error alert in gene sets panel when the textarea is empty', () => {
     const errorsAlertPage = new ErrorsAlertPage();
 
-    genesBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
+    genesBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genesBlockPage.geneSetsButton.click();
     errorsAlertPage.findAlertWindowInComponent('gpf-gene-sets').should('be.visible');
 
@@ -59,7 +59,7 @@ describe('Genes block panel tests', () => {
   });
 
   it('should display gene weights panel', () => {
-    genesBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
+    genesBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genesBlockPage.genesWeightsPanel.should('not.exist');
 
     genesBlockPage.geneWeightsButton.click();

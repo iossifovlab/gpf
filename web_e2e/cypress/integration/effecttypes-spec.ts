@@ -1,7 +1,7 @@
 import { EffecttypesPage } from 'cypress/elements/effectypes-page';
 import { ErrorsAlertPage } from 'cypress/elements/errors-alert-page';
 import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
-import { datasetIds, toolPageNames } from 'cypress/elements/utils';
+import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Effect types tests', () => {
   const effecttypesPage = new EffecttypesPage();
@@ -21,7 +21,7 @@ describe('Effect types tests', () => {
   it('should display error alert when none of the checkboxes are selected', () => {
     const errorsAlertPage = new ErrorsAlertPage();
 
-    effecttypesPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
+    effecttypesPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genotypeBlockPage.findButtonInComponentContainingText('gpf-effecttypes', 'None').click();
     errorsAlertPage.findAlertWindowInComponent('gpf-effecttypes').should('be.visible');
 
@@ -30,7 +30,7 @@ describe('Effect types tests', () => {
   });
 
   it('should check/uncheck effect types checkboxes using \'All\' and \'None\' buttons', () => {
-    effecttypesPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
+    effecttypesPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genotypeBlockPage.findButtonInComponentContainingText('gpf-effecttypes', 'None').click();
     genotypeBlockPage.findAllCheckboxesInComponent('gpf-effecttypes').each((element) => {
       cy.wrap(element).should('not.be.checked');

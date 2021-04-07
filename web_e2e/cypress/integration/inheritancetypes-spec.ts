@@ -1,7 +1,7 @@
 import { ErrorsAlertPage } from 'cypress/elements/errors-alert-page';
 import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
 import { InheritancetypesPage } from 'cypress/elements/inheritancetypes-page';
-import { datasetIds, toolPageNames } from 'cypress/elements/utils';
+import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Inheritance tests', () => {
   const inheritancetypesPage = new InheritancetypesPage();
@@ -23,7 +23,7 @@ describe('Inheritance tests', () => {
   it('should display error alert when none of the checkboxes are selected', () => {
     const errorsAlertPage = new ErrorsAlertPage();
 
-    inheritancetypesPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
+    inheritancetypesPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     errorsAlertPage.findAlertWindowInComponent('gpf-inheritancetypes').should('not.exist');
 
     genotypeBlockPage.findButtonInComponentContainingText('gpf-inheritancetypes', 'None').click();
@@ -34,7 +34,7 @@ describe('Inheritance tests', () => {
   });
 
   it('should check/uncheck effect types checkboxes using \'All\' and \'None\' buttons', () => {
-    inheritancetypesPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
+    inheritancetypesPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genotypeBlockPage.findButtonInComponentContainingText('gpf-inheritancetypes', 'None').click();
     genotypeBlockPage.findAllCheckboxesInComponent('gpf-inheritancetypes').each((element) => {
       cy.wrap(element).should('not.be.checked');

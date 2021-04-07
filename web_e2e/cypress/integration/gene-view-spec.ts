@@ -1,6 +1,6 @@
 import { GeneBrowserPage } from 'cypress/elements/gene-browser-page';
 import { GeneViewPage } from 'cypress/elements/gene-view-page';
-import { datasetIds, toolPageNames } from 'cypress/elements/utils';
+import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Gene view tests', () => {
   const geneViewPage = new GeneViewPage();
@@ -16,7 +16,7 @@ describe('Gene view tests', () => {
     geneViewPage.preserveLogin();
     geneViewPage.navigateToHome();
 
-    geneBrowserPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageNames.geneBrowser);
+    geneBrowserPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.geneBrowser);
     geneBrowserPage.searchInputBox.type('chd8');
     geneBrowserPage.goButton.click();
   });

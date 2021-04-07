@@ -8,7 +8,7 @@ import { GenotypePreviewTablePage } from 'cypress/elements/genotype-preview-tabl
 import { RegionsBlockPage } from 'cypress/elements/regions-block-page';
 import { SaveQueryPage } from 'cypress/elements/save-query-page';
 import { ShareQueryPage } from 'cypress/elements/share-query-page';
-import { datasetIds, toolPageNames } from 'cypress/elements/utils';
+import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Genotype browser tests', () => {
   const genotypeBrowserPage = new GenotypeBrowserPage();
@@ -32,7 +32,7 @@ describe('Genotype browser tests', () => {
   datasetList.forEach(dataset => {
     it('should display regions block panel in genotype browser at /' + dataset + '/browser', () => {
       const regionsBlockPage = new RegionsBlockPage();
-      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
+      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       regionsBlockPage.block.should('be.visible');
     });
   });
@@ -40,7 +40,7 @@ describe('Genotype browser tests', () => {
   datasetList.forEach(dataset => {
     it('should display genes block panel in genotype browser at /' + dataset + '/browser', () => {
       const genesBlockPage = new GenesBlockPage();
-      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
+      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       genesBlockPage.window.should('be.visible');
     });
   });
@@ -48,7 +48,7 @@ describe('Genotype browser tests', () => {
   datasetList.forEach((dataset) => {
     it('should display genotype block panel in genotype browser at /' + dataset + '/browser', () => {
       const genotypeBlockPage = new GenotypeBlockPage();
-      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
+      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       genotypeBlockPage.window.should('be.visible');
     });
   });
@@ -56,7 +56,7 @@ describe('Genotype browser tests', () => {
   datasetList.forEach((dataset) => {
     it('should display genomic scores panel in genotype browser at /' + dataset + '/browser', () => {
       const genomicScoresBlockPage = new GenomicScoresBlockPage();
-      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
+      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       genomicScoresBlockPage.block.should('be.visible');
     });
   });
@@ -64,14 +64,14 @@ describe('Genotype browser tests', () => {
   datasetList.forEach((dataset) => {
     it('should display family filters block panel in genotype browser at /' + dataset + '/browser', () => {
       const familyFilterBlockPage = new FamilyFilterBlockPage();
-      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
+      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       familyFilterBlockPage.window.should('be.visible');
     });
   });
 
   datasetList.forEach((dataset) => {
     it('should display \'Table Preview\' button in genotype browser at /' + dataset + '/browser', () => {
-      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
+      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       genotypeBrowserPage.tablePreviewButton.should('be.visible');
     });
   });
@@ -79,7 +79,7 @@ describe('Genotype browser tests', () => {
   datasetList.forEach((dataset) => {
     it('should display \'Share query\' button in genotype browser at /' + dataset + '/browser', () => {
       const shareQueryPage = new ShareQueryPage();
-      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
+      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       shareQueryPage.button.should('be.visible');
     });
   });
@@ -87,14 +87,14 @@ describe('Genotype browser tests', () => {
   datasetList.forEach((dataset) => {
     it('should display \'Save query\' button in genotype browser at /' + dataset + '/browser', () => {
       const saveQueryPage = new SaveQueryPage();
-      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
+      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       saveQueryPage.button.should('be.visible');
     });
   });
 
   datasetList.forEach((dataset) => {
     it('should display \'Download\' button in genotype browser at /' + dataset + '/browser', () => {
-      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
+      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       genotypeBrowserPage.downloadButton.should('be.visible');
     });
   });
@@ -103,7 +103,7 @@ describe('Genotype browser tests', () => {
     it('should display genotype preview table after table preview button click at /' + dataset + '/browser',  () => {
       const genotypePreviewTablePage = new GenotypePreviewTablePage();
 
-      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageNames.genotypeBrowser);
+      genotypeBrowserPage.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       genotypePreviewTablePage.table.should('not.exist');
 
       genotypeBrowserPage.tablePreviewButton.click();

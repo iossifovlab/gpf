@@ -1,6 +1,6 @@
 import { ErrorsAlertPage } from 'cypress/elements/errors-alert-page';
 import { FamilyFilterBlockPage } from 'cypress/elements/family-filter-block-page';
-import { datasetIds, toolPageNames } from 'cypress/elements/utils';
+import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Family filters block tests', () => {
   const familyFilterBlockPage = new FamilyFilterBlockPage();
@@ -17,7 +17,7 @@ describe('Family filters block tests', () => {
   });
 
   it('should display family ids panel', () => {
-    familyFilterBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
+    familyFilterBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     familyFilterBlockPage.familyIdsPanel.should('not.exist');
 
     familyFilterBlockPage.familyIdsButton.click();
@@ -26,7 +26,7 @@ describe('Family filters block tests', () => {
 
   it('should display error alert in family ids panel when the textarea is empty', () => {
     const errorsAlertPage = new ErrorsAlertPage();
-    familyFilterBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
+    familyFilterBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
 
     familyFilterBlockPage.familyIdsButton.click();
     errorsAlertPage.findAlertWindowInComponent('gpf-family-ids').should('be.visible');
@@ -37,7 +37,7 @@ describe('Family filters block tests', () => {
   });
 
   it('should display pheno filters panel after \'Advanced\' button click', () => {
-    familyFilterBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
+    familyFilterBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     familyFilterBlockPage.phenoFiltersPanel.should('not.exist');
 
     familyFilterBlockPage.advancedButton.click();
@@ -46,7 +46,7 @@ describe('Family filters block tests', () => {
 
 //   Uncomment me when NgbNav no longer always show dropdown menu
 //   it('should stop displaying tab panel after \'All\' button click', () => {
-//     familyFilterBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
+//     familyFilterBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
 //     familyFilterBlockPage.tabPanel.should('not.exist');
 
 //     familyFilterBlockPage.familyIdsButton.click();

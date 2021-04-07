@@ -29,13 +29,13 @@ export const datasetIds = {
   multi: 'multi'
 };
 
-export const toolPageNames = {
-  datasetStatistics: 'Dataset Statistics',
-  genotypeBrowser: 'Genotype Browser',
-  phenotypeBrowser: 'Phenotype Browser',
-  phenotypeTool: 'Phenotype Tool',
-  enrichmentTool: 'Enrichment Tool',
-  geneBrowser: 'Gene Browser'
+export const toolPageLinks = {
+  datasetStatistics: 'commonReport',
+  genotypeBrowser: 'browser',
+  phenotypeBrowser: 'phenotypeBrowser',
+  phenotypeTool: 'phenoTool',
+  enrichmentTool: 'enrichment',
+  geneBrowser: 'geneBrowser'
 };
 
 export class BasePage {
@@ -81,7 +81,8 @@ export class BasePage {
   navigateToDatasetPage(dataset: string, page: string) {
     cy.get('#datasets-dropdown-menu-button').click();
     cy.get('a.dropdown-item').contains(dataset).click();
-    cy.get('a.nav-link').contains(page).click();
+    // cy.wait(500);
+    cy.get(`a.nav-link[routerlink="${page}"]`).click();
   }
 
   toggleSidenav() {

@@ -1,7 +1,7 @@
 import { DatasetsPage } from 'cypress/elements/datasets-page';
 import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
 import { SaveQueryPage } from 'cypress/elements/save-query-page';
-import { datasetIds, toolPageNames } from 'cypress/elements/utils';
+import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Save query tests', () => {
   const saveQueryPage = new SaveQueryPage();
@@ -18,7 +18,7 @@ describe('Save query tests', () => {
   });
 
   it('should open save query dropdown menu after save query button click', () => {
-    saveQueryPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
+    saveQueryPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     saveQueryPage.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu');
 
     saveQueryPage.button.click();
@@ -28,7 +28,7 @@ describe('Save query tests', () => {
   it('should save a query, load it, open all tools tabs and delete the query', () => {
     const datasetsPage = new DatasetsPage();
 
-    saveQueryPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
+    saveQueryPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     saveQueryPage.button.click();
     saveQueryPage.dropdownNameInput.type('Test');
     saveQueryPage.saveButton.click();
@@ -51,7 +51,7 @@ describe('Save query tests', () => {
      'load it and validate that all effect types checkboxes are checked', () => {
     const genotypeBlockPage = new GenotypeBlockPage();
 
-    saveQueryPage.navigateToDatasetPage(datasetIds.compAll, toolPageNames.genotypeBrowser);
+    saveQueryPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genotypeBlockPage.findButtonInComponentContainingText('gpf-effecttypes', 'All').click();
     saveQueryPage.button.click();
     saveQueryPage.dropdownNameInput.type('Test');
