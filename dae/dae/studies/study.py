@@ -1,8 +1,12 @@
 import time
-import functools
 import logging
+import threading
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
+# from dae.utils.debug_closing import closing
+from contextlib import closing
+
+from concurrent.futures import ThreadPoolExecutor
+from queue import Queue, Full
 
 from abc import ABC, abstractmethod, abstractproperty
 
@@ -102,6 +106,26 @@ class GenotypeData(ABC):
     def get_studies_ids(self, leafs=True):
         pass
 
+    def get_leaf_children(self):
+        if not self.is_group:
+            return []
+        result = []
+        seen = set()
+        for study in self.studies:
+            if not study.is_group:
+                if study.study_id in seen:
+                    continue
+                result.append(study)
+                seen.add(study.study_id)
+            else:
+                children = study.get_leaf_children()
+                for child in children:
+                    if child.study_id in seen:
+                        continue
+                    result.append(child)
+                    seen.add(child.study_id)
+        return result
+
     @abstractmethod
     def query_variants(
         self,
@@ -184,6 +208,34 @@ class GenotypeData(ABC):
                 self.person_set_collection_configs[collection_id] = \
                     collection_conf
 
+    def _transform_person_set_collection_query(
+            self, person_set_collection, person_ids):
+
+        if person_set_collection is not None:
+            person_set_collection_id, selected_person_sets = \
+                person_set_collection
+            selected_person_sets = set(selected_person_sets)
+            person_set_collection = self.get_person_set_collection(
+                person_set_collection_id)
+            person_set_ids = set(person_set_collection.person_sets.keys())
+            selected_person_sets = person_set_ids & selected_person_sets
+
+            if selected_person_sets == person_set_ids:
+                # all persons selected
+                pass
+            else:
+                selected_person_ids = set()
+                for set_id in selected_person_sets:
+                    selected_person_ids.update(
+                        person_set_collection.
+                        person_sets[set_id].persons.keys()
+                    )
+                if person_ids is not None:
+                    person_ids = set(person_ids) & selected_person_ids
+                else:
+                    person_ids = selected_person_ids
+        return person_ids
+
     def get_person_set_collection(self, person_set_collection_id):
         if person_set_collection_id is None:
             return None
@@ -191,6 +243,10 @@ class GenotypeData(ABC):
 
 
 class GenotypeDataGroup(GenotypeData):
+
+    _EXECUTOR_LOCK = threading.Lock()
+    EXECUTOR = None
+
     def __init__(self, genotype_data_group_config, studies):
         super(GenotypeDataGroup, self).__init__(
             genotype_data_group_config, studies
@@ -207,9 +263,10 @@ class GenotypeDataGroup(GenotypeData):
 
     @property
     def executor(self):
-        if self._executor is None:
-            self._executor = ThreadPoolExecutor(max_workers=len(self.studies))
-        return self._executor
+        with self._EXECUTOR_LOCK:
+            if self.EXECUTOR is None:
+                self.EXECUTOR = ThreadPoolExecutor(max_workers=20)
+            return self.EXECUTOR
 
     @property
     def families(self):
@@ -238,37 +295,57 @@ class GenotypeDataGroup(GenotypeData):
         variants_futures = list()
         logger.info(f"summary query - study_filters: {study_filters}")
 
-        def get_summary_variants(genotype_data_study):
-            return genotype_data_study.query_summary_variants(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                family_ids=family_ids,
-                person_ids=person_ids,
-                person_set_collection=person_set_collection,
-                inheritance=inheritance,
-                roles=roles,
-                sexes=sexes,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                ultra_rare=ultra_rare,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                limit=limit,
-                study_filters=study_filters,
-                **kwargs,
-            )
+        results_queue = Queue(maxsize=5_000)
 
-        for genotype_data_study in self.studies:
+        def get_summary_variants(genotype_data_study):
+            with closing(genotype_data_study.query_summary_variants(
+                    regions=regions,
+                    genes=genes,
+                    effect_types=effect_types,
+                    family_ids=family_ids,
+                    person_ids=person_ids,
+                    person_set_collection=person_set_collection,
+                    inheritance=inheritance,
+                    roles=roles,
+                    sexes=sexes,
+                    variant_type=variant_type,
+                    real_attr_filter=real_attr_filter,
+                    ultra_rare=ultra_rare,
+                    return_reference=return_reference,
+                    return_unknown=return_unknown,
+                    limit=limit,
+                    study_filters=study_filters,
+                    **kwargs)) as vs:
+
+                try:
+                    for v in vs:
+                        # print("put:", v)
+                        results_queue.put(v, timeout=1)
+                except Full as ex:
+                    logger.info(f"summary queue full: {ex}", exc_info=False)
+                    raise ex
+
+                results_queue.put(None)
+        logger.info(
+            f"study {self.study_id} children: {self.get_leaf_children()}")
+        for genotype_study in self.get_leaf_children():
             future = self.executor.submit(
-                get_summary_variants, genotype_data_study)
-            future.study_id = genotype_data_study.study_id
+                get_summary_variants, genotype_study)
+            future.study_id = genotype_study.study_id
             variants_futures.append(future)
 
         variants = dict()
-        for future in as_completed(variants_futures):
-            started = time.time()
-            for v in future.result():
+        futures_done = 0
+        started = time.time()
+        while futures_done < len(variants_futures):
+            while True:
+                v = results_queue.get()
+                # print("get:", v)
+
+                if v is None:
+                    futures_done += 1
+                    break
+
                 if v.svuid in variants:
                     existing = variants[v.svuid]
                     fv_count = existing.get_attribute(
@@ -295,11 +372,13 @@ class GenotypeDataGroup(GenotypeData):
                 variants[v.svuid] = v
                 if limit and len(variants) >= limit:
                     return
-            elapsed = time.time() - started
-            logger.info(
-                f"Processing study {future.study_id} "
-                f"elapsed: {elapsed:.3f}"
-            )
+            logger.info(f"done {futures_done}/{len(variants_futures)}")
+
+        elapsed = time.time() - started
+        logger.info(
+            f"processing study {self.study_id} "
+            f"elapsed: {elapsed:.3f}"
+        )
         for v in variants.values():
             yield v
 
@@ -327,39 +406,56 @@ class GenotypeDataGroup(GenotypeData):
 
         variants_futures = list()
         logger.info(f"study_filters: {study_filters}")
+        results_queue = Queue(maxsize=20_000)
 
-        def get_variants(genotype_data_study):
-            return genotype_data_study.query_variants(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                family_ids=family_ids,
-                person_ids=person_ids,
-                person_set_collection=person_set_collection,
-                inheritance=inheritance,
-                roles=roles,
-                sexes=sexes,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                ultra_rare=ultra_rare,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                limit=limit,
-                study_filters=study_filters,
-                affected_status=affected_status,
-                unique_family_variants=unique_family_variants,
-                **kwargs,)
+        def get_variants(genotype_study):
+            with closing(genotype_study.query_variants(
+                            regions=regions,
+                            genes=genes,
+                            effect_types=effect_types,
+                            family_ids=family_ids,
+                            person_ids=person_ids,
+                            person_set_collection=person_set_collection,
+                            inheritance=inheritance,
+                            roles=roles,
+                            sexes=sexes,
+                            variant_type=variant_type,
+                            real_attr_filter=real_attr_filter,
+                            ultra_rare=ultra_rare,
+                            return_reference=return_reference,
+                            return_unknown=return_unknown,
+                            limit=limit,
+                            study_filters=study_filters,
+                            affected_status=affected_status,
+                            unique_family_variants=unique_family_variants,
+                            **kwargs,)) as vs:
+                try:
+                    for v in vs:
+                        results_queue.put(v, timeout=3)
+                except Full as ex:
+                    logger.info(f"variants queue full: {ex}", exc_info=False)
+                    raise ex
+                results_queue.put(None)
 
-        for genotype_data_study in self.studies:
-            future = self.executor.submit(get_variants, genotype_data_study)
-            future.study_id = genotype_data_study.study_id
+        logger.info(
+            f"study {self.study_id} children: {self.get_leaf_children()}")
+        for genotype_study in self.get_leaf_children():
+            future = self.executor.submit(get_variants, genotype_study)
+            future.study_id = genotype_study.study_id
 
             variants_futures.append(future)
 
         seen = set()
-        for future in as_completed(variants_futures):
-            started = time.time()
-            for v in future.result():
+        started = time.time()
+        futures_done = 0
+
+        while futures_done < len(variants_futures):
+            while True:
+                v = results_queue.get()
+
+                if v is None:
+                    futures_done += 1
+                    break
                 if v.fvuid in seen:
                     continue
                 if unique_family_variants:
@@ -367,10 +463,10 @@ class GenotypeDataGroup(GenotypeData):
                 yield v
                 if limit and len(seen) >= limit:
                     return
-            elapsed = time.time() - started
-            logger.info(
-                f"processing study {future.study_id} "
-                f"elapsed: {elapsed:.3f}")
+        elapsed = time.time() - started
+        logger.info(
+            f"processing study {self.study_id} "
+            f"elapsed: {elapsed:.3f}")
 
     def get_studies_ids(self, leafs=True):
         if not leafs:
@@ -383,21 +479,38 @@ class GenotypeDataGroup(GenotypeData):
 
     def _build_families(self):
         logger.info(
-            f"combining families in studies: "
+            f"building combined families from studies: "
             f"{[st.study_id for st in self.studies]}")
 
-        return FamiliesData.from_families(
-            functools.reduce(
-                lambda x, y: GenotypeDataGroup._combine_families(x, y),
-                [
-                    genotype_data_study.families
-                    for genotype_data_study in self.studies
-                ],
-            )
-        )
+        if len(self.studies) == 1:
+            return self.studies[0].families
+        elif len(self.studies) >= 2:
+            logger.info(
+                f"combining families from study {self.studies[0].study_id} "
+                f"and from study {self.studies[0].study_id}")
+            result = GenotypeDataGroup._combine_families(
+                self.studies[0].families,
+                self.studies[1].families)
+
+            if len(self.studies) > 2:
+                for si in range(2, len(self.studies)):
+                    logger.debug(
+                        f"processing study ({si}): "
+                        f"{self.studies[si].study_id}")
+                    logger.info(
+                        f"combining families from studies ({si}) "
+                        f"{[st.study_id for st in self.studies[:si]]} "
+                        f"with families from study "
+                        f"{self.studies[si].study_id}")
+                    result = GenotypeDataGroup._combine_families(
+                        result,
+                        self.studies[si].families
+                    )
+
+        return FamiliesData.from_families(result)
 
     @staticmethod
-    def _combine_families(first, second):
+    def _combine_families(first, second, forced=True):
         same_families = set(first.keys()) & set(second.keys())
         combined_dict = {}
         combined_dict.update(first)
@@ -405,13 +518,22 @@ class GenotypeDataGroup(GenotypeData):
         mismatched_families = []
         for sf in same_families:
             try:
-                combined_dict[sf] = Family.merge(first[sf], second[sf])
-            except AssertionError:
+                combined_dict[sf] = Family.merge(
+                    first[sf], second[sf], forced=forced)
+            except AssertionError as ex:
                 import traceback
                 traceback.print_exc()
+                logger.error(f"mismatched families: {first[sf]}, {second[sf]}")
+                logger.exception(ex)
+
                 mismatched_families.append(sf)
 
-        assert len(mismatched_families) == 0, mismatched_families
+        if len(mismatched_families) > 0:
+            logger.warning(f"mismatched families: {mismatched_families}")
+            if not forced:
+                assert len(mismatched_families) == 0, mismatched_families
+            else:
+                logger.warning("second study overwrites family definition")
 
         return combined_dict
 
@@ -444,6 +566,10 @@ class GenotypeDataStudy(GenotypeData):
 
         self._backend = backend
         self._build_person_set_collections()
+
+    @property
+    def study_phenotype(self):
+        return self.config.get("study_phenotype", "-")
 
     @property
     def is_group(self):
@@ -516,7 +642,11 @@ class GenotypeDataStudy(GenotypeData):
 
             for allele in variant.alleles:
                 if allele.get_attribute("study_name") is None:
-                    allele.update_attributes({"study_name": self.name})
+                    allele.update_attributes(
+                        {"study_name": self.name})
+                if allele.get_attribute("study_phenotype") is None:
+                    allele.update_attributes(
+                        {"study_phenotype": self.study_phenotype})
             yield variant
 
     def query_summary_variants(
@@ -577,36 +707,8 @@ class GenotypeDataStudy(GenotypeData):
                 limit=limit):
 
             for allele in variant.alleles:
-                allele.update_attributes({"studyName": self.name})
+                allele.update_attributes({"study_name": self.name})
             yield variant
-
-    def _transform_person_set_collection_query(
-            self, person_set_collection, person_ids):
-
-        if person_set_collection is not None:
-            person_set_collection_id, selected_person_sets = \
-                person_set_collection
-            selected_person_sets = set(selected_person_sets)
-            person_set_collection = self.get_person_set_collection(
-                person_set_collection_id)
-            person_set_ids = set(person_set_collection.person_sets.keys())
-            selected_person_sets = person_set_ids & selected_person_sets
-
-            if selected_person_sets == person_set_ids:
-                # all persons selected
-                pass
-            else:
-                selected_person_ids = set()
-                for set_id in selected_person_sets:
-                    selected_person_ids.update(
-                        person_set_collection.
-                        person_sets[set_id].persons.keys()
-                    )
-                if person_ids is not None:
-                    person_ids = set(person_ids) & selected_person_ids
-                else:
-                    person_ids = selected_person_ids
-        return person_ids
 
     @property
     def families(self):

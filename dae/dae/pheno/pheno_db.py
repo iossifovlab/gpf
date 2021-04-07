@@ -1,6 +1,8 @@
 import math
 import logging
 
+from abc import ABC, abstractmethod
+
 import pandas as pd
 from sqlalchemy.sql import select, text
 from sqlalchemy import not_, desc
@@ -160,54 +162,64 @@ class Measure(object):
         return result
 
 
-class PhenotypeData:
+class PhenotypeData(ABC):
+
+    @abstractmethod
     def get_persons_df(self, roles, person_ids, family_ids):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def get_persons_values_df(
-        self, measure_ids, person_ids, family_ids, roles
-    ):
-        raise NotImplementedError()
+            self, measure_ids, person_ids, family_ids, roles):
+        pass
 
+    @abstractmethod
     def get_persons(self, roles, person_ids, family_ids):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def has_measure(self, measure_id):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def get_measure(self, measure_id):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def get_measures(self, instrument, measure_type):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def get_measure_values_df(self, measure_id, person_ids, family_ids, roles):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def get_measure_values(
             self, measure_id, person_ids, family_ids, roles, default_filter):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def get_values_df(
             self, measure_ids,
             person_ids=None, family_ids=None, roles=None,
             default_filter="apply"):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def get_values(
             self, measure_ids,
             person_ids=None, family_ids=None, roles=None):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def get_instrument_values_df(
-        self, instrument_df, person_ids, family_ids, roles
-    ):
-        raise NotImplementedError()
+            self, instrument_df, person_ids, family_ids, roles):
+        pass
 
+    @abstractmethod
     def get_instrument_values(
-        self, instrument_df, person_ids, family_ids, roles
-    ):
-        raise NotImplementedError()
+            self, instrument_df, person_ids, family_ids, roles):
+        pass
 
 
 class PhenotypeDataStudy(PhenotypeData):

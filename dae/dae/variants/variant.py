@@ -3,6 +3,8 @@ Created on Feb 13, 2018
 
 @author: lubo
 """
+import logging
+
 from abc import ABC, abstractproperty
 from dae.utils.variant_utils import vcf2cshl
 
@@ -10,6 +12,9 @@ from dae.variants.attributes import VariantType, TransmissionType, VariantDesc
 from typing import List, Dict, Set, Any, Optional
 from dae.variants.effects import Effect, EffectGene
 import itertools
+
+
+logger = logging.getLogger(__name__)
 
 
 # class AltAlleleItems:
@@ -111,7 +116,12 @@ class VariantDetails:
         self.variant_desc = variant_desc
 
         self.cshl_position = self.variant_desc.position
-        self.cshl_location = f"{self.chrom}:{self.cshl_position}"
+        if VariantType.is_cnv(self.variant_desc.variant_type):
+            self.cshl_location = f"{self.chrom}:" \
+                f"{self.variant_desc.position}-" \
+                f"{self.variant_desc.end_position}"
+        else:
+            self.cshl_location = f"{self.chrom}:{self.cshl_position}"
         self.cshl_variant = str(variant_desc)
         self.cshl_variant_full = variant_desc.to_cshl_full()
 
@@ -120,6 +130,17 @@ class VariantDetails:
         return VariantDetails(
             chrom, vcf2cshl(position, reference, alternative)
         )
+
+    @staticmethod
+    def from_cnv(variant):
+        assert VariantType.is_cnv(variant._variant_type)
+
+        variant_desc = VariantDesc(
+            variant_type=variant._variant_type,
+            position=variant.position,
+            end_position=variant.end_position)
+        return VariantDetails(
+            variant.chrom, variant_desc)
 
 
 class Allele(ABC):
@@ -216,16 +237,12 @@ class Allele(ABC):
 
     @property
     def cshl_variant(self) -> Optional[str]:
-        if self.alternative is None:
-            return None
         if self.details is None:
             return None
         return self.details.cshl_variant  # type: ignore
 
     @property
     def cshl_variant_full(self) -> Optional[str]:
-        if self.alternative is None:
-            return None
         if self.details is None:
             return None
         return self.details.cshl_variant_full  # type: ignore
@@ -290,7 +307,7 @@ class Allele(ABC):
         return item in self.attributes
 
     def __repr__(self) -> str:
-        if VariantType.is_cnv(self.variant_type):
+        if VariantType.is_cnv(self._variant_type):
             return f"{self.chromosome}:{self.position}-{self.end_position}"
         elif not self.alternative:
             return f"{self.chrom}:{self.position} {self.reference}(ref)"
@@ -302,6 +319,10 @@ class Allele(ABC):
 
 
 class Variant(ABC):
+
+    def __init__(self):
+        self._matched_alleles: List[int] = []
+
     @property
     def chrom(self) -> str:
         return self.chromosome
@@ -326,9 +347,6 @@ class Variant(ABC):
     def alternative(self) -> Optional[str]:
         if not self.alt_alleles:
             return None
-        # if any([aa.alternative is None for aa in self.alt_alleles]):
-        #     assert all([aa.alternative is None for aa in self.alt_alleles])
-        #     return None
         return ",".join(
             [
                 aa.alternative if aa.alternative else ""
@@ -493,6 +511,33 @@ class Variant(ABC):
             and self.position > other.position
         )
 
+    def set_matched_alleles(self, alleles_indexes):
+        self._matched_alleles = sorted(alleles_indexes)
+
+    @property
+    def matched_alleles(self):
+        return [
+            aa
+            for aa in self.alleles
+            if aa.allele_index in self._matched_alleles
+        ]
+
+    @property
+    def matched_alleles_indexes(self):
+        return self._matched_alleles
+
+    @property
+    def matched_gene_effects(self):
+        return set(
+            itertools.chain.from_iterable(
+                [ma.matched_gene_effects for ma in self.matched_alleles]
+            )
+        )
+
+    @property
+    def transmission_type(self):
+        return self.alleles[-1].transmission_type
+
 
 class SummaryAllele(Allele):
     """
@@ -583,15 +628,18 @@ class SummaryAllele(Allele):
 
     @property
     def details(self) -> Optional[VariantDetails]:
-        if self.alternative is None:
-            return None
         if self._details is None:
-            self._details = VariantDetails.from_vcf(
-                self.chromosome,
-                self.position,
-                self.reference,
-                self.alternative,
-            )
+            if VariantType.is_cnv(self._variant_type):
+                self._details = VariantDetails.from_cnv(self)
+            elif self.alternative is None:
+                return None
+            else:
+                self._details = VariantDetails.from_vcf(
+                    self.chromosome,
+                    self.position,
+                    self.reference,
+                    self.alternative,
+                )
         return self._details
 
     @property
@@ -629,6 +677,7 @@ class SummaryAllele(Allele):
         new_attributes = {
             "chrom": allele.attributes.get("chrom"),
             "position": allele.attributes.get("position"),
+            "end_position": allele.attributes.get("end_position"),
             "reference": allele.attributes.get("reference"),
             "summary_variant_index": allele.attributes.get(
                 "summary_variant_index"),
@@ -639,6 +688,7 @@ class SummaryAllele(Allele):
             allele.chromosome,
             allele.position,
             allele.reference,
+            end_position=allele.end_position,
             summary_index=allele.summary_index,
             transmission_type=allele.transmission_type,
             attributes=new_attributes,
@@ -646,7 +696,10 @@ class SummaryAllele(Allele):
 
 
 class SummaryVariant(Variant):
+
     def __init__(self, alleles):
+        super(SummaryVariant, self).__init__()
+
         assert len(alleles) >= 1
         assert len(set([sa.position for sa in alleles])) == 1
 
@@ -661,6 +714,10 @@ class SummaryVariant(Variant):
             self._end_position = alleles[1].end_position
         else:
             self._end_position = None
+
+        for allele_index, allele in enumerate(alleles):
+            if allele.allele_index == 0:
+                allele._allele_index = allele_index
 
         self._svuid: Optional[str] = None
 
@@ -701,7 +758,8 @@ class SummaryVariant(Variant):
     def svuid(self):
         if self._svuid is None:
             self._svuid = \
-                f"{self.location}.{self.reference}.{self.alternative}"
+                f"{self.location}.{self.reference}.{self.alternative}." \
+                f"{self.transmission_type.value}"
 
         return self._svuid
 
@@ -709,10 +767,11 @@ class SummaryVariant(Variant):
 class SummaryVariantFactory(object):
     @staticmethod
     def summary_allele_from_record(
-        record, transmission_type=TransmissionType.transmitted,
-        attr_filter=None
-    ):
-        record["transmission_type"] = transmission_type
+            record, transmission_type=None,
+            attr_filter=None):
+
+        if transmission_type is not None:
+            record["transmission_type"] = transmission_type
         alternative = record["alternative"]
         attributes = record
         if attr_filter:
@@ -736,13 +795,13 @@ class SummaryVariantFactory(object):
             end_position=record.get("end_position", None),
             variant_type=record.get("variant_type", None),
             allele_index=record["allele_index"],
-            transmission_type=transmission_type,
+            transmission_type=record.get("transmission_type"),
             attributes=attributes,
         )
 
     @staticmethod
     def summary_variant_from_records(
-            records, transmission_type=TransmissionType.transmitted,
+            records, transmission_type=None,
             attr_filter=None):
 
         assert len(records) > 0
@@ -750,7 +809,8 @@ class SummaryVariantFactory(object):
         alleles = []
         for record in records:
             sa = SummaryVariantFactory.summary_allele_from_record(
-                record, transmission_type, attr_filter
+                record, transmission_type=transmission_type,
+                attr_filter=attr_filter
             )
             alleles.append(sa)
         if not alleles[0].is_reference_allele:
@@ -764,7 +824,8 @@ class SummaryVariantFactory(object):
         return SummaryVariant(alleles)
 
     @staticmethod
-    def summary_variant_from_vcf(vcf_variant, summary_variant_index):
+    def summary_variant_from_vcf(
+            vcf_variant, summary_variant_index, transmission_type):
         records = []
         allele_count = len(vcf_variant.ALT) + 1
         records.append(
@@ -790,4 +851,5 @@ class SummaryVariantFactory(object):
                     "allele_count": allele_count,
                 }
             )
-        return SummaryVariantFactory.summary_variant_from_records(records)
+        return SummaryVariantFactory.summary_variant_from_records(
+            records, transmission_type=transmission_type)

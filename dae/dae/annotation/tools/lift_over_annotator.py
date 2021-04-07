@@ -1,13 +1,15 @@
 #!/usr/bin/env python
-
-from dae.variants.variant import SummaryAllele
-from dae.utils.variant_utils import liftover_variant
 import gzip
 
 import os
 import logging
 
 from pyliftover import LiftOver
+
+from dae.variants.attributes import VariantType
+from dae.variants.variant import SummaryAllele
+from dae.utils.variant_utils import liftover_variant
+
 from dae.annotation.tools.annotator_base import VariantAnnotatorBase
 from dae.genome.genome_access import open_ref
 
@@ -47,19 +49,24 @@ class LiftOverAnnotator(VariantAnnotatorBase):
 
     def liftover_variant(self, variant):
         assert isinstance(variant, SummaryAllele)
-
-        lo_variant = liftover_variant(
-            variant.chrom, variant.position,
-            variant.reference, variant.alternative,
-            self.liftover, self.target_genome)
-
-        if lo_variant is None:
+        if VariantType.is_cnv(variant.variant_type):
             return
+        try:
+            lo_variant = liftover_variant(
+                variant.chrom, variant.position,
+                variant.reference, variant.alternative,
+                self.liftover, self.target_genome)
 
-        lo_chrom, lo_pos, lo_ref, lo_alt = lo_variant
-        result = SummaryAllele(lo_chrom, lo_pos, lo_ref, lo_alt)
+            if lo_variant is None:
+                return
 
-        return result
+            lo_chrom, lo_pos, lo_ref, lo_alt = lo_variant
+            result = SummaryAllele(lo_chrom, lo_pos, lo_ref, lo_alt)
+            result.variant_type
+
+            return result
+        except Exception as ex:
+            logger.warning(f"problem in variant {variant} liftover: {ex}")
 
     def do_annotate(self, _, variant, liftover_variants):
         assert self.liftover_id not in liftover_variants, \
@@ -69,6 +76,6 @@ class LiftOverAnnotator(VariantAnnotatorBase):
         lo_variant = self.liftover_variant(variant)
         if lo_variant is None:
             logger.info(
-                f"can not liftover variant: {variant}")
+                f"unable to liftover variant: {variant}")
             return
         liftover_variants[self.liftover_id] = lo_variant

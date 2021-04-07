@@ -18,4 +18,9 @@ urlpatterns = [
         views.GeneSetDownloadView.as_view(),
         name="gene_set_download",
     ),
+    url(
+        r"^/has_denovo/?$",
+        views.GeneSetsHasDenovoView.as_view(),
+        name="gene_sets"
+    ),
 ]

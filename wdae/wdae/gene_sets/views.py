@@ -27,7 +27,7 @@ class GeneSetsCollectionsView(QueryBaseView):
             )
         )
 
-        gene_sets_collections[1:1] = [denovo_gene_sets]
+        gene_sets_collections[1:1] = denovo_gene_sets
         return Response(gene_sets_collections, status=status.HTTP_200_OK)
 
 
@@ -50,7 +50,7 @@ class GeneSetsView(QueryBaseView):
     def _build_download_url(query):
         url = "gene_sets/gene_set_download"
 
-        if query["geneSetsCollection"] == "denovo":
+        if "denovo" in query["geneSetsCollection"]:
             query["geneSetsTypes"] = json.dumps(query["geneSetsTypes"])
             query["geneSetsTypes"] = query["geneSetsTypes"].replace(" ", "")
         return "{}?{}".format(url, urlencode(query))
@@ -60,13 +60,15 @@ class GeneSetsView(QueryBaseView):
         if "geneSetsCollection" not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         gene_sets_collection_id = data["geneSetsCollection"]
-        gene_sets_types = data.get("geneSetsTypes", [])
+        gene_sets_types = data.get("geneSetsTypes", dict())
 
-        if gene_sets_collection_id == "denovo":
+        if "denovo" in gene_sets_collection_id:
             if not self.gpf_instance.has_denovo_gene_sets():
                 return Response(status=status.HTTP_404_NOT_FOUND)
             gene_sets = self.gpf_instance.get_all_denovo_gene_sets(
-                gene_sets_types, self.get_permitted_datasets(request.user)
+                gene_sets_types,
+                self.get_permitted_datasets(request.user),
+                gene_sets_collection_id
             )
         else:
             if not self.gpf_instance.has_gene_set_collection(
@@ -132,15 +134,16 @@ class GeneSetDownloadView(QueryBaseView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         gene_sets_collection_id = data["geneSetsCollection"]
         gene_set_id = data["geneSet"]
-        gene_sets_types = data.get("geneSetsTypes", {})
+        gene_sets_types = data.get("geneSetsTypes", dict())
 
         permitted_datasets = self.get_permitted_datasets(user)
 
-        if gene_sets_collection_id == "denovo":
+        if "denovo" in gene_sets_collection_id:
             if not self.gpf_instance.has_denovo_gene_sets():
                 return Response(status=status.HTTP_404_NOT_FOUND)
             gene_set = self.gpf_instance.get_denovo_gene_set(
-                gene_set_id, gene_sets_types, permitted_datasets
+                gene_set_id, gene_sets_types, permitted_datasets,
+                gene_sets_collection_id
             )
         else:
             if not self.gpf_instance.has_gene_set_collection(
@@ -173,9 +176,21 @@ class GeneSetDownloadView(QueryBaseView):
     def _parse_query_params(self, data):
         res = {str(k): str(v) for k, v in list(data.items())}
         if "geneSetsTypes" in res:
+            # FIXME replace usage of literal_eval
             res["geneSetsTypes"] = ast.literal_eval(res["geneSetsTypes"])
         return res
 
     def get(self, request):
         data = self._parse_query_params(request.query_params)
         return self._build_response(data, request.user)
+
+
+class GeneSetsHasDenovoView(QueryBaseView):
+    def __init__(self):
+        super(GeneSetsHasDenovoView, self).__init__()
+
+    def get(self, request):
+        if self.gpf_instance.has_denovo_gene_sets():
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)

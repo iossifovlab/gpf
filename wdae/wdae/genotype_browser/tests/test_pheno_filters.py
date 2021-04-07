@@ -4,10 +4,10 @@ import json
 
 from rest_framework import status
 
-pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
+pytestmark = pytest.mark.usefixtures(
+    "wdae_gpf_instance", "dae_calc_gene_sets")
 
-PREVIEW_URL = "/api/v3/genotype_browser/preview"
-PREVIEW_VARIANTS_URL = "/api/v3/genotype_browser/preview/variants"
+QUERY_URL = "/api/v3/genotype_browser/query"
 
 FILTER_QUERY_CATEGORICAL = {
     "id": "Categorical",
@@ -27,106 +27,75 @@ FILTER_QUERY_CONTINUOUS = {
     "selection": {"min": 3, "max": 4},
 }
 
-FILTER_QUERY_BOGUS = {
-    "id": "some nonexistant measure",
-    "from": "phenodb",
-    "source": "wrontinstrument.wrongmeasure",
-    "sourceType": "continuous",
-    "role": "prb",
-    "selection": {"min": 3, "max": 4},
+SOURCE_CONTINUOUS = {
+    'source': 'instrument1.continuous', 'role': 'prb', 'format': '%s'
 }
 
-FILTER_QUERY_ORDINAL = {
-    "id": "Ordinal",
-    "from": "phenodb",
-    "source": "instrument1.ordinal",
-    "sourceType": "ordinal",
-    "role": "prb",
-    "selection": {"min": 1, "max": 5},
+SOURCE_CATEGORICAL = {
+    'source': 'instrument1.categorical', 'role': 'prb', 'format': '%s'
 }
 
+SOURCE_ORDINAL = {
+    'source': 'instrument1.ordinal', 'role': 'prb', 'format': '%s'
+}
 
-def test_simple_query_passes(db, admin_client):
-    data = {"datasetId": "quads_f1"}
-    response = admin_client.post(
-        PREVIEW_VARIANTS_URL, json.dumps(data), content_type="application/json"
-    )
-    assert status.HTTP_200_OK == response.status_code
-
-
-def test_simple_query(db, admin_client):
-    data = {"datasetId": "quads_f1"}
-    response = admin_client.post(
-        PREVIEW_VARIANTS_URL, json.dumps(data), content_type="application/json"
-    )
-    assert status.HTTP_200_OK == response.status_code
-    res = response.streaming_content
-    res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
-
-    assert len(res) == 3
+SOURCE_RAW = {
+    'source': 'instrument1.raw', 'role': 'prb', 'format': '%s'
+}
 
 
 @pytest.mark.parametrize(
-    "pheno_filters,variants_count,pheno_values",
+    "pheno_filters,variants_count,preview_sources,pheno_values",
     [
         (
-            [FILTER_QUERY_CATEGORICAL], 3,
+            [FILTER_QUERY_CATEGORICAL],
+            3,
+            [SOURCE_CATEGORICAL],
             [
                 ["option2"],
                 ["option2"],
-                ["option2"]]),
+                ["option2"]
+            ]
+        ),
         (
-            [FILTER_QUERY_CONTINUOUS], 3,
+            [FILTER_QUERY_CONTINUOUS],
+            3,
+            [SOURCE_CONTINUOUS],
             [
                 ["3.14"],
                 ["3.14"],
-                ["3.14"]]),
+                ["3.14"]
+            ]
+        ),
         (
             [FILTER_QUERY_CATEGORICAL, FILTER_QUERY_CONTINUOUS],
             3,
+            [SOURCE_CATEGORICAL, SOURCE_CONTINUOUS],
             [
                 ["option2", "3.14"],
                 ["option2", "3.14"],
-                ["option2", "3.14"]],
+                ["option2", "3.14"]
+            ],
         ),
     ],
 )
 def test_query_with_pheno_filters(
-        db, admin_client, pheno_filters, variants_count, pheno_values):
-
-    data = {"datasetId": "quads_f1", "familyFilters": pheno_filters}
+    db, admin_client, pheno_filters, variants_count,
+    pheno_values, preview_sources
+):
+    data = {
+        "datasetId": "quads_f1",
+        "familyFilters": pheno_filters,
+        "sources": preview_sources
+    }
 
     response = admin_client.post(
-        PREVIEW_VARIANTS_URL, json.dumps(data), content_type="application/json"
+        QUERY_URL, json.dumps(data), content_type="application/json"
     )
     assert status.HTTP_200_OK == response.status_code
     variants = response.streaming_content
     variants = json.loads("".join(map(lambda x: x.decode("utf-8"), variants)))
-
-    response = admin_client.post(
-        PREVIEW_URL, json.dumps(data), content_type="application/json"
-    )
-    assert status.HTTP_200_OK == response.status_code
-    cols = response.data["cols"]
-
-    columns = [
-        "{}.{}".format(pf["sourceType"], pf["id"]) for pf in pheno_filters
-    ]
-    columns_idxs = [cols.index(col) for col in columns]
-
     assert variants_count == len(variants)
-    rows_values = []
     variants = list(variants)
-    print("variants:", variants)
-
-    for row in variants:
-        print("row:", row)
-
-        row_values = []
-        for column_idx in columns_idxs:
-            row_values.append(row[column_idx])
-        rows_values.append(row_values)
-    print("rows_values:", rows_values)
-    print("expected:", pheno_values)
-
-    assert rows_values == pheno_values
+    print(variants)
+    assert variants == pheno_values

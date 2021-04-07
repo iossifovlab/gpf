@@ -74,10 +74,10 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
                 variant.position + len(variant.reference),
             )
         else:
-            print(
-                f"Unexpected variant type in score annotation: "
-                f"{variant}, {variant.variant_type}",
-                file=sys.stderr,
+            logger.warning(
+                f"unexpected variant type in score annotation: "
+                f"{variant}, {variant.variant_type}, "
+                f"({variant.variant_type.value})"
             )
         return scores
 
@@ -106,14 +106,17 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             return float(score)
 
     def do_annotate(self, aline, variant, liftover_variants):
+        if VariantType.is_cnv(variant.variant_type):
+            logger.info(
+                f"skip trying to add position score for CNV variant {variant}")
+            self._scores_not_found(aline)
+            return
+
         if self.liftover:
             variant = liftover_variants.get(self.liftover)
 
         if variant is None:
             self._scores_not_found(aline)
-            return
-        elif VariantType.is_cnv(variant.variant_type):
-            self._annotate_cnv(aline, variant)
             return
 
         scores = self._fetch_scores(variant)
@@ -140,19 +143,14 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
                 aline[column_name] = values[0]
             else:
                 values = list(filter(None, values))
-                if VariantType.is_cnv(variant.variant_type):
-                    aline[column_name] = \
-                        max(values) if values \
-                        else self.score_file.no_score_value
-                else:
-                    total_sum = sum(
-                        [c * v for (c, v) in zip(counts, values)]
-                    )
-                    aline[column_name] = \
-                        (total_sum / total_count) if total_sum \
-                        else self.score_file.no_score_value
-                    logger.debug(
-                        f"aline[{column_name}]={aline[column_name]}")
+                total_sum = sum(
+                    [c * v for (c, v) in zip(counts, values)]
+                )
+                aline[column_name] = \
+                    (total_sum / total_count) if total_sum \
+                    else self.score_file.no_score_value
+                logger.debug(
+                    f"aline[{column_name}]={aline[column_name]}")
 
 
 class NPScoreAnnotator(VariantScoreAnnotatorBase):
@@ -180,9 +178,7 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
         return res
 
     def _aggregate_indel(self, variant, scores_df):
-        assert variant.variant_type in set(
-            [VariantType.insertion, VariantType.deletion, VariantType.comp]
-        )
+        assert VariantType.indel & variant.variant_type, variant
 
         aggregate = {sn: "max" for sn in self.score_names}
 
@@ -200,14 +196,18 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
         return res
 
     def do_annotate(self, aline, variant, liftover_variants):
+        if VariantType.is_cnv(variant.variant_type):
+            logger.info(
+                f"skip trying to add NP position score for CNV variant "
+                f"{variant}")
+            self._scores_not_found(aline)
+            return
+
         if self.liftover:
             variant = liftover_variants.get(self.liftover)
 
         if variant is None:
             self._scores_not_found(aline)
-            return
-        elif VariantType.is_cnv(variant.variant_type):
-            self._annotate_cnv(aline, variant)
             return
 
         scores = self._fetch_scores(variant)
@@ -216,18 +216,13 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
             return
         scores_df = self.score_file.scores_to_dataframe(scores)
 
-        if variant.variant_type == VariantType.substitution:
+        if variant.variant_type & VariantType.substitution:
             aline.update(self._aggregate_substitution(variant, scores_df))
-        elif variant.variant_type in set(
-            [VariantType.insertion, VariantType.deletion, VariantType.comp]
-        ):
+        elif variant.variant_type & VariantType.indel:
             aline.update(self._aggregate_indel(variant, scores_df))
         else:
-            print(
-                "Unexpected variant type: {}, {}".format(
-                    variant, variant.variant_type
-                ),
-                file=sys.stderr,
+            logger.warning(
+                f"unexpected variant type: {variant}, {variant.variant_type}"
             )
             self._scores_not_found(aline)
 

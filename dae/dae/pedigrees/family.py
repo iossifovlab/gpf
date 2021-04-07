@@ -28,7 +28,6 @@ PEDIGREE_COLUMN_NAMES = {
     "generated": "generated",
     "proband": "proband",
     "not_sequenced": "not_sequenced",
-    "missing": "missing",
 }
 
 
@@ -100,12 +99,12 @@ class Person(object):
             (self, self._attributes)
         if self._attributes.get("not_sequenced"):
             value = self._attributes.get("not_sequenced")
-            if value == "None":
+            if value == "None" or value == "0" or value == "False":
                 self._attributes["not_sequenced"] = None
-        if self._attributes.get("missing"):
-            value = self._attributes.get("missing")
-            if value == "None":
-                self._attributes["not_sequenced"] = None
+        if self._attributes.get("generated"):
+            value = self._attributes.get("generated")
+            if value == "None" or value == "0" or value == "False":
+                self._attributes["generated"] = None
 
     def __repr__(self):
         decorator = ""
@@ -138,12 +137,13 @@ class Person(object):
 
     @property
     def not_sequenced(self):
-        return self._attributes.get("not_sequenced", None) or \
-            self._attributes.get("generated", None)
+        return self.generated or \
+            self._attributes.get("not_sequenced", None)
 
     @property
     def missing(self):
-        return self.generated or self.not_sequenced
+        return self.generated or self.not_sequenced or\
+            self._attributes.get("missing", False)
 
     @property
     def family_bin(self):
@@ -165,7 +165,7 @@ class Person(object):
     def has_both_parents(self):
         return self.has_dad() and self.has_mom()
 
-    def has_generated_parent(self):
+    def has_missing_parent(self):
         return \
             (self.has_dad() and
              (self.dad.generated or self.dad.not_sequenced)) or \
@@ -234,7 +234,7 @@ class Family(object):
             member.family = self
             member.mom = self.get_member(member.mom_id, None)
             member.dad = self.get_member(member.dad_id, None)
-            if member.generated or member.not_sequenced:
+            if member.missing:
                 member.index = -1
             else:
                 member.index = index
@@ -361,7 +361,7 @@ class Family(object):
         return FamilyType.OTHER
 
     @staticmethod
-    def merge(l_fam: "Family", r_fam: "Family") -> "Family":
+    def merge(l_fam: "Family", r_fam: "Family", forced=True) -> "Family":
         assert l_fam.family_id == r_fam.family_id, \
             ("Merging families is only allowed with matching family IDs!"
              f" ({l_fam.family_id} != {r_fam.family_id})")
@@ -391,17 +391,25 @@ class Family(object):
             elif r_person.role == Role.unknown:
                 merged_persons[person_id] = l_person
 
-            assert (l_person.sex == r_person.sex or
-                    l_person.sex == Sex.unspecified or
-                    r_person.sex == Sex.unspecified) \
-                and (l_person.role == r_person.role or
+            match = (l_person.sex == r_person.sex or
+                     l_person.sex == Sex.unspecified or
+                     r_person.sex == Sex.unspecified) and \
+                    (l_person.role == r_person.role or
                      l_person.role == Role.unknown or
-                     r_person.role == Role.unknown) \
-                and (l_person.family_id == r_person.family_id), \
-                f"Mismatched attributes for person {person_id}; " \
-                f"{l_person.sex} == {r_person.sex}, " \
-                f"{l_person.role} == {r_person.role}, " \
-                f"{l_person.family_id} == {r_person.family_id}"
+                     r_person.role == Role.unknown) and \
+                    (l_person.family_id == r_person.family_id)
+            if not match:
+                message = f"Mismatched attributes for person {person_id}; " \
+                    f"{l_person.sex} == {r_person.sex}, " \
+                    f"{l_person.role} == {r_person.role}, " \
+                    f"{l_person.family_id} == {r_person.family_id}"
+
+                logger.warning(message)
+                if forced:
+                    logger.warning(f"second person overwrites: {r_person}")
+                    merged_persons[person_id] = r_person
+                else:
+                    raise AssertionError(message)
 
         # Construct new instances of Person to avoid
         # modifying the original family's Person instances
@@ -545,9 +553,12 @@ class FamiliesData(Mapping):
                     rec = copy.deepcopy(person._attributes)
                     rec["mom_id"] = person.mom_id if person.mom_id else "0"
                     rec["dad_id"] = person.dad_id if person.dad_id else "0"
+                    rec["generated"] = person.generated \
+                        if person.generated else False
+                    rec["not_sequenced"] = person.not_sequenced \
+                        if person.not_sequenced else False
                     column_names = column_names.union(set(rec.keys()))
                     records.append(rec)
-
             columns = [
                 col
                 for col in PEDIGREE_COLUMN_NAMES.values()
@@ -562,6 +573,9 @@ class FamiliesData(Mapping):
             self._ped_df = ped_df
 
         return self._ped_df
+
+    def copy(self):
+        return FamiliesData.from_pedigree_df(self.ped_df)
 
     def __getitem__(self, family_id):
         return self._families[family_id]
@@ -614,7 +628,7 @@ class FamiliesData(Mapping):
         person = []
         for fam in list(self._families.values()):
             for p in fam.members_in_order:
-                if p.has_both_parents() and (not p.has_generated_parent()):
+                if p.has_both_parents() and (not p.has_missing_parent()):
                     person.append(p)
         return person
 
@@ -623,7 +637,7 @@ class FamiliesData(Mapping):
             self._person_ids_with_parents = set()
             for fam in list(self._families.values()):
                 for p in fam.members_in_order:
-                    if p.has_both_parents() and (not p.has_generated_parent()):
+                    if p.has_both_parents() and (not p.has_missing_parent()):
                         self._person_ids_with_parents.add(p.person_id)
         return self._person_ids_with_parents
 

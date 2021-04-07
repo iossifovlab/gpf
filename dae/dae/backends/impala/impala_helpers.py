@@ -1,9 +1,9 @@
 import os
 import re
-import sys
 import itertools
 import logging
 
+# from dae.utils.debug_closing import closing
 from contextlib import closing
 
 from impala import dbapi
@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 
 class ImpalaHelpers(object):
 
-    def __init__(self, impala_hosts, impala_port=21050, pool_size=10):
+    def __init__(self, impala_hosts, impala_port=21050, pool_size=20):
 
         if os.environ.get("DAE_IMPALA_HOST", None) is not None:
             impala_host = os.environ.get("DAE_IMPALA_HOST", None)
-            print("impala host overwritten:", impala_host)
+            logger.info(f"impala host overwritten: {impala_host}")
             if impala_host is not None:
                 impala_hosts = [impala_host]
         if impala_hosts is None:
@@ -27,19 +27,38 @@ class ImpalaHelpers(object):
 
         host_generator = itertools.cycle(impala_hosts)
 
-        def getconn():
+        def create_connection():
             impala_host = next(host_generator)
-            return dbapi.connect(host=impala_host, port=impala_port)
-
-        print(
-            f"Creating impala pool with {pool_size} connections",
-            file=sys.stderr)
+            logger.info(f"creating connection to impala host {impala_host}")
+            connection = dbapi.connect(host=impala_host, port=impala_port)
+            connection.host = impala_host
+            return connection
 
         self._connection_pool = QueuePool(
-            getconn, pool_size=pool_size, reset_on_return=False)
+            create_connection, pool_size=20,  # pool_size,
+            reset_on_return=False,
+            # use_threadlocal=True,
+        )
+        logger.info(
+            f"created impala pool with {self._connection_pool.status()} "
+            f"connections")
+        # connections = []
+        # for i in range(20):
+        #     conn = self.connection()
+        #     conn.id = i
+        #     connections.append(conn)
+        # for conn in connections:
+        #     conn.close()
 
     def connection(self):
-        return self._connection_pool.connect()
+        logger.info(
+            f"going to get impala connection from the pool; "
+            f"{self._connection_pool.status()}; {id(self)}")
+        conn = self._connection_pool.connect()
+        logger.info(
+            f"[DONE] going to get impala connection to host {conn.host} "
+            f"from the pool; {self._connection_pool.status()}; {id(self)}")
+        return conn
 
     def _import_single_file(self, cursor, db, table, import_file):
 
@@ -238,7 +257,7 @@ class ImpalaHelpers(object):
                     variants_sample=variants_sample,
                     variants_schema=variants_schema)
                 # statement = " ".join(statement)
-                print(statement)
+                logger.info(f"going to execute: {statement}")
                 cursor.execute(statement)
 
                 if partition_description.has_partitions():
@@ -310,7 +329,7 @@ class ImpalaHelpers(object):
                     f"DROP TABLE IF EXISTS {db}.{new_table}"
                 )
 
-                print(create_statement)
+                logger.info(f"going to execute {create_statement}")
                 cursor.execute(create_statement)
 
                 if "PARTITIONED" in create_statement:
@@ -326,7 +345,7 @@ class ImpalaHelpers(object):
             f"ALTER TABLE {db}.{table} RENAME TO {db}.{new_table}"
         ]
         statement = " ".join(statement)
-        print(statement)
+        logger.info(f"going to execute {statement}")
 
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:

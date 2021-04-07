@@ -56,8 +56,13 @@ class CLIArgument:
         self.nargs = nargs
         self.action = action
         self.raw = raw
+        self.arg_type = ArgumentType.OPTION
+
         if destination is None:
             self.destination = self._default_destination()
+
+    def __repr__(self):
+        return f"{self.argument_name} ({self.arg_type})"
 
     def _default_destination(self):
         if self.argument_name.startswith("--"):
@@ -169,9 +174,11 @@ class CLILoader(ABC):
     def build_cli_arguments(cls, params):
         built_arguments = []
         for argument in cls._arguments():
+            logger.info(f"adding to CLI arguments: {argument}")
             built_arguments.append(argument.build_option(params))
         built_arguments = filter(lambda x: x is not None, built_arguments)
         result = " ".join(built_arguments)
+        logger.info(f"result CLI arguments: {result}")
         return result
 
     def build_arguments_dict(self):
@@ -227,12 +234,12 @@ class VariantsLoader(CLILoader):
     @classmethod
     def _arguments(cls):
         arguments = []
-        arguments.append(CLIArgument(
-            "--tandem-repeats-enable",
-            value_type=bool,
-            help_text="enable tandem repeats support",
-            action="store"
-        ))
+        # arguments.append(CLIArgument(
+        #     "--tandem-repeats-enable",
+        #     value_type=bool,
+        #     help_text="enable tandem repeats support",
+        #     action="store"
+        # ))
 
         return arguments
 
@@ -648,8 +655,8 @@ class VariantsGenotypesLoader(VariantsLoader):
                 family_variant.gt, family_variant.allele_count
             )
             male_ids = [
-                person_id
-                for person_id, person in family_variant.family.persons.items()
+                person.person_id
+                for person in family_variant.family.members_in_order
                 if person.sex == Sex.M
             ]
             male_indices = family_variant.family.members_index(male_ids)

@@ -32,20 +32,10 @@ from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.autism_gene_profile.statistic import AGPStatistic
 
 from dae.utils.helpers import isnan
+from dae.utils.dae_utils import cached
 
 
 logger = logging.getLogger(__name__)
-
-
-def cached(prop):
-    cached_val_name = "_" + prop.__name__
-
-    def wrap(self):
-        if getattr(self, cached_val_name, None) is None:
-            setattr(self, cached_val_name, prop(self))
-        return getattr(self, cached_val_name)
-
-    return wrap
 
 
 class GPFInstance(object):
@@ -192,39 +182,32 @@ class GPFInstance(object):
 
     def get_genotype_data_ids(self):
         return (
-            self._variants_db.get_genotype_studies_ids()
-            + self._variants_db.get_genotype_data_groups_ids()
+            self._variants_db.get_all_genotype_study_ids()
+            + self._variants_db.get_all_genotype_group_ids()
         )
 
     def get_genotype_data(self, genotype_data_id):
-        genotype_data_study = self._variants_db.get_study(genotype_data_id)
+        genotype_data_study = self._variants_db.get_genotype_study(
+            genotype_data_id)
         if genotype_data_study:
             return genotype_data_study
-        return self._variants_db.get_genotype_data_group(genotype_data_id)
+        return self._variants_db.get_genotype_group(genotype_data_id)
 
     def get_all_genotype_data(self):
-        genotype_studies = self._variants_db.get_all_studies()
-        genotype_data_groups = self._variants_db.get_all_genotype_data_groups()
+        genotype_studies = self._variants_db.get_all_genotype_studies()
+        genotype_data_groups = self._variants_db.get_all_genotype_groups()
         return genotype_studies + genotype_data_groups
 
     def get_genotype_data_config(self, genotype_data_id):
-        config = self._variants_db.get_study_config(genotype_data_id)
+        config = self._variants_db.get_genotype_study_config(genotype_data_id)
         if config is not None:
             return config
-        return self._variants_db.get_genotype_data_group_config(
+        return self._variants_db.get_genotype_group_config(
             genotype_data_id
         )
 
     def register_genotype_data(self, genotype_data):
-        if genotype_data.study_id in self.get_genotype_data_ids():
-            logger.warning(
-                f"replacing genotype data instance {genotype_data.study_id}")
-
-        self._variants_db\
-            ._genotype_data_group_cache[genotype_data.study_id] = genotype_data
-        self._variants_db\
-            .genotype_data_group_configs[genotype_data.study_id] = \
-            genotype_data.config
+        self._variants_db.register_genotype_data(genotype_data)
 
     # Phenotype data
     def get_phenotype_db_config(self):
@@ -320,7 +303,7 @@ class GPFInstance(object):
 
     def get_regressions(self, study_wrapper):
         dataset_config = self.get_genotype_data_config(
-            study_wrapper.id)
+            study_wrapper.study_id)
 
         pheno_config = self.get_phenotype_db_config()
         browser_dbfile = \
@@ -445,8 +428,11 @@ class GPFInstance(object):
             ps: row[f"protection_{ps}"] for ps in config.protection_scores
         }
         autism_scores = {
-            aus: row[f"autism_{aus}"] for aus in config.autism_scores
+            aus: round(row[f"autism_{aus}"], 5)
+            if row[f"autism_{aus}"] is not None else None
+            for aus in config.autism_scores
         }
+
         gene_lists = config.gene_sets
         gene_lists = list(filter(
             lambda x: row[x] == 1,

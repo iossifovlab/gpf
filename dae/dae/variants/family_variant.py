@@ -1,4 +1,3 @@
-import itertools
 import logging
 
 from typing import Any, List, Optional
@@ -172,6 +171,10 @@ class FamilyAllele(Allele, FamilyDelegate):
         return self.summary_allele.variant_type
 
     @property
+    def _variant_type(self) -> Optional[VariantType]:
+        return self.summary_allele._variant_type
+
+    @property
     def end_position(self) -> Optional[int]:
         return self.summary_allele.end_position
 
@@ -217,11 +220,6 @@ class FamilyAllele(Allele, FamilyDelegate):
                     continue
                 trio = self.family.trios[pid]
                 trio_index = self.family.members_index(trio)
-
-                # logger.debug(
-                #     f"family {self.family} trio {trio} indexes: {trio_index}; "
-                #     f"gt: {self.gt}"
-                # )
 
                 trio_gt = self.gt[:, trio_index]
                 if np.any(trio_gt == -1):
@@ -386,12 +384,14 @@ class FamilyAllele(Allele, FamilyDelegate):
 
 class FamilyVariant(Variant, FamilyDelegate):
     def __init__(
-        self,
-        summary_variant: SummaryVariant,
-        family: Family,
-        genotype: Any,
-        best_state: Any,
-    ):
+            self,
+            summary_variant: SummaryVariant,
+            family: Family,
+            genotype: Any,
+            best_state: Any,
+            inheritance_in_members=None):
+
+        super(FamilyVariant, self).__init__()
 
         assert family is not None
         assert isinstance(family, Family)
@@ -399,14 +399,56 @@ class FamilyVariant(Variant, FamilyDelegate):
 
         self.summary_variant = summary_variant
         self.summary_alleles = self.summary_variant.alleles
-
         self.gt = genotype
         self._genetic_model = None
 
         self._family_alleles: Optional[List[FamilyAllele]] = None
         self._best_state = best_state
-        self._matched_alleles: List[Allele] = []
+
         self._fvuid: Optional[str] = None
+        if inheritance_in_members is None:
+            self._inheritance_in_members = {}
+        else:
+            self._inheritance_in_members = inheritance_in_members
+
+        # self._build_family_alleles()
+
+    def _build_family_alleles(self):
+        assert self._family_alleles is None
+
+        summary_allele = self.summary_variant.alleles[0]
+        alleles = [
+            FamilyAllele(
+                summary_allele,
+                self.family,
+                self.gt,
+                self._best_state,
+                inheritance_in_members=self._inheritance_in_members.get(0)
+            )
+        ]
+
+        for ai in self.calc_alt_alleles(self.gt):
+            summary_allele = None
+            for allele in self.summary_variant.alt_alleles:
+                if allele.allele_index == ai:
+                    summary_allele = allele
+                    break
+            if summary_allele is None:
+                continue
+
+            inheritance = self._inheritance_in_members.get(ai)
+
+            allele = FamilyAllele(
+                summary_allele,
+                self.family,
+                self.gt,
+                self._best_state,
+                inheritance_in_members=inheritance
+            )
+
+            alleles.append(allele)
+
+        self._family_alleles = alleles
 
     @property
     def fvuid(self) -> Optional[str]:
@@ -469,51 +511,9 @@ class FamilyVariant(Variant, FamilyDelegate):
     @property
     def alleles(self):
         if self._family_alleles is None:
-            family_alleles = [
-                FamilyAllele(
-                    sum_allele, self.family, self.gt, self._best_state
-                )
-                for sum_allele in self.summary_variant.alleles
-            ]
-            alleles = [family_alleles[0]]
-            for ai in self.calc_alt_alleles(self.gt):
-                allele = None
-                for fa in family_alleles:
-                    if fa.allele_index == ai:
-                        allele = fa
-                        break
-                if allele is None:
-                    continue
-                assert allele.allele_index == ai, (allele.allele_index, ai)
-
-                alleles.append(allele)
-
-            self._family_alleles = alleles
+            self._build_family_alleles()
 
         return self._family_alleles
-
-    def set_matched_alleles(self, alleles_indexes):
-        self._matched_alleles = sorted(alleles_indexes)
-
-    @property
-    def matched_alleles(self):
-        return [
-            aa
-            for aa in self.alleles
-            if aa.allele_index in self._matched_alleles
-        ]
-
-    @property
-    def matched_alleles_indexes(self):
-        return self._matched_alleles
-
-    @property
-    def matched_gene_effects(self):
-        return set(
-            itertools.chain.from_iterable(
-                [ma.matched_gene_effects for ma in self.matched_alleles]
-            )
-        )
 
     def gt_flatten(self):
         """
@@ -607,6 +607,6 @@ class FamilyVariant(Variant, FamilyDelegate):
     @property
     def variant_in_members(self):
         members = set()
-        for a in self.alleles:
-            members = members.union(a.variant_in_members)
+        for a in self.alt_alleles:
+            members = members.union(filter(None, a.variant_in_members))
         return members

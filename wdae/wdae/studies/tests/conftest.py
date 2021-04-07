@@ -10,7 +10,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 @pytest.fixture(scope="session")
 def remote_dir():
-    return Path(__file__).parents[4].joinpath("gpf_remote")
+    return Path(__file__).parents[4].joinpath("data/data-hg19-remote")
 
 
 @pytest.fixture(scope="session")

@@ -57,9 +57,13 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
                     f"gt_idxs: {len(vcf_variant.gt_idxs)}; "
                     f"{set(vcf_variant.gt_idxs)}")
 
-                if len(vcf_variant.gt_idxs) == samples_count and \
-                        set(vcf_variant.gt_idxs) == set([-1]):
-                    gt_idxs = -1 * np.ones(2 * samples_count, dtype=np.int)
+                if len(vcf_variant.gt_idxs) == samples_count:
+                    gt_idxs = np.stack([
+                        vcf_variant.gt_idxs[:], vcf_variant.gt_idxs[:]
+                    ]).reshape(
+                        [1, 2 * samples_count], order="F")[0].astype(np.int)
+
+                    # gt_idxs = -1 * np.ones(2 * samples_count, dtype=np.int)
                 else:
                     gt_idxs = vcf_variant.gt_idxs
 
@@ -89,7 +93,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
             if gt.shape[1] < len(family):
                 res = -1 * np.ones((gt.shape[0], len(family)), dtype=np.int8)
                 gt_column = 0
-                for family_index, _member in enumerate(family.members_in_order):
+                for family_index, _m in enumerate(family.members_in_order):
                     res[:, family_index] = gt[:, gt_column]
                     gt_column += 1
                 gt = res
@@ -291,23 +295,23 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
             vcf_samples += vcf.samples
 
-        logger.debug(f"vcf samples (all): {vcf_samples}")
+        logger.info(f"vcf samples (all): {len(vcf_samples)}")
 
         vcf_samples_order = [list(vcf.samples) for vcf in self.vcfs]
         vcf_samples = set(vcf_samples)
-        logger.info(f"vcf samples: {len(vcf_samples)}")
+        logger.info(f"vcf samples (set): {len(vcf_samples)}")
         pedigree_samples = set(self.families.pedigree_samples())
-        logger.info(f"pedigree samples: {len(pedigree_samples)}")
+        logger.info(f"pedigree samples (all): {len(pedigree_samples)}")
 
         missing_samples = vcf_samples.difference(pedigree_samples)
         if missing_samples:
             logger.info(
-                f"samples missing in pedigree: {len(missing_samples)}; "
+                f"vcf samples not found in pedigree: {len(missing_samples)}; "
                 f"{missing_samples}")
 
         vcf_samples = vcf_samples.difference(missing_samples)
         assert vcf_samples.issubset(pedigree_samples)
-        logger.debug(f"vcf samples (matched): {vcf_samples}")
+        logger.info(f"vcf samples (matched): {len(vcf_samples)}")
 
         seen = set()
         not_sequenced = set()
@@ -337,13 +341,13 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                     not_sequenced.add(person.person_id)
                     person.set_attr("not_sequenced", True)
                     counters["not_sequenced"] += 1
-                    logger.warning(
+                    logger.info(
                         f"person {person.person_id} marked as "
-                        f"'not_sequenced'")
+                        f"'not_sequenced'; ")
             else:
                 if not person.missing:
                     logger.info(
-                        f"person {person} changed to missing")
+                        f"person {person} marked as missing")
 
                     person.set_attr(
                         "sample_index",
@@ -352,16 +356,16 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                             None
                         )
                     )
-                    person.set_attr("not_sequenced", True)
-                    counters["not_sequenced"] += 1
+                    person.set_attr("missing", True)
+                    counters["missing"] += 1
                 counters["missing"] += 1
 
         logger.warning(f"people stats: {counters}")
 
         self.families.redefine()
         logger.warning(
-            f"persons changed to not_sequenced {len(not_sequenced)}: "
-            f"{not_sequenced} in {self.filenames}")
+            f"persons changed to not_sequenced {len(not_sequenced)} "
+            f"in {self.filenames}")
 
     def _build_family_alleles_indexes(self):
         vcf_offsets = [0] * len(self.vcfs)
@@ -485,18 +489,34 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
             current_vcf = self.vcfs[vcf_index]
             samples_count = len(current_vcf.samples)
-            logger.debug(
-                f"samples len: {samples_count}; "
-                f"gt_idxs: {len(vcf.gt_idxs)}; "
-                f"{set(vcf.gt_idxs)}; "
-                f"allele_index: {allele_index}, "
-                f"{allele_index.dtype}, {[type(v) for v in allele_index]}")
+            # logger.debug(
+            #     f"variant: {vcf.CHROM}:{vcf.POS} {vcf.REF}->{vcf.ALT}; "
+            #     f"({vcf.aaf}); "
+            #     f"genotypes: {vcf.genotypes}; "
+            #     f"gt_phases: {vcf.gt_phases}; "
+            #     f"gt_phases: {vcf.gt_types}; "
+            #     f"gt_phred_ll_homref: {vcf.gt_phred_ll_homref}; "
+            #     f"samples len: {samples_count}; "
+            #     f"gt_idxs: {len(vcf.gt_idxs)}; "
+            #     f"{set(vcf.gt_idxs)}; "
+            #     f"{vcf.gt_idxs}; {vcf.gt_idxs.dtype}; "
+            #     f"allele_index: {allele_index}, "
+            #     f"{allele_index.dtype}, {[type(v) for v in allele_index]}")
 
-            if len(vcf.gt_idxs) == samples_count and \
-                    set(vcf.gt_idxs) == set([-1]):
-                gt_idxs = -1 * np.ones(2 * samples_count, dtype=np.int)
+            if len(vcf.gt_idxs) == samples_count:
+                gt_idxs = np.stack([
+                    vcf.gt_idxs[:], vcf.gt_idxs[:]
+                ]).reshape(
+                    [1, 2 * samples_count], order="F")[0].astype(np.int)
+
+                # gt_idxs = -1 * np.ones(2 * samples_count, dtype=np.int)
             else:
                 gt_idxs = vcf.gt_idxs
+
+            logger.debug(
+                f"max allele index: {np.max(allele_index)}; "
+                f"len(gt_idxs)={len(gt_idxs)}"
+            )
 
             vcf_gt = gt_idxs[allele_index]
             vcf_gt = vcf_gt.reshape([2, len(sample_index)], order="F")
@@ -568,7 +588,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 )
                 current_summary_variant = \
                     SummaryVariantFactory.summary_variant_from_vcf(
-                        current_vcf_variant, summary_variant_index)
+                        current_vcf_variant, summary_variant_index,
+                        transmission_type=self.transmission_type)
 
                 vcf_iterator_idexes_to_advance = list()
                 vcf_gt_variants = list()
@@ -583,18 +604,53 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 self._calc_allele_frequencies(
                     current_summary_variant, vcf_gt_variants
                 )
-                family_genotypes = VcfFamiliesGenotypes(self, vcf_gt_variants)
 
-                family_variants = []
-                for fam, gt, bs in family_genotypes.family_genotype_iterator():
-                    fv = FamilyVariant(current_summary_variant, fam, gt, bs)
-                    if self._denovo_handler(fv):
-                        continue
-                    if self._omission_handler(fv):
-                        continue
-                    family_variants.append(fv)
+                if len(current_summary_variant.alt_alleles) > 127:
+                    logger.warning(
+                        f"more than 127 alternative alleles; "
+                        f"some alleles will be skipped: "
+                        f"{current_summary_variant}")
 
-                yield current_summary_variant, family_variants
+                    # sv = current_summary_variant
+
+                    # allele_counts = np.array(
+                    #     sv.get_attribute('af_allele_count'))
+
+                    # logger.warning(
+                    #     f"alt allele counts: "
+                    #     f"{allele_counts}")
+                    # to_remove = allele_counts == 0
+
+                    # logger.warning(f"going to remove {to_remove}")
+
+                    # assert len(allele_counts) == len(sv.alt_alleles), (
+                    #     len(allele_counts), len(sv.alt_alleles)
+                    # )
+                    # logger.info(f"vcf genotypes: {vcf_gt_variants}")
+
+                else:
+
+                    assert len(current_summary_variant.alt_alleles) < 128, (
+                        len(current_summary_variant.alt_alleles),
+                        current_summary_variant
+                    )
+
+                    family_genotypes = VcfFamiliesGenotypes(
+                        self, vcf_gt_variants)
+                    family_variants = []
+
+                    for fam, gt, bs in family_genotypes \
+                            .family_genotype_iterator():
+
+                        fv = FamilyVariant(
+                            current_summary_variant, fam, gt, bs)
+                        if self._denovo_handler(fv):
+                            continue
+                        if self._omission_handler(fv):
+                            continue
+                        family_variants.append(fv)
+
+                    yield current_summary_variant, family_variants
 
                 for idx in vcf_iterator_idexes_to_advance:
                     vcf_variants[idx] = next(vcf_iterators[idx], None)
@@ -627,11 +683,15 @@ class VcfLoader(VariantsGenotypesLoader):
         logger.debug(f"collected VCF files: {all_filenames}, {filenames}")
 
         self.vcf_files = vcf_files
-        self.vcf_loaders = [
-            SingleVcfLoader(
-                families, vcf_files, genome, regions=regions, params=params)
-            for vcf_files in filenames if vcf_files
-        ]
+        self.vcf_loaders = []
+        if vcf_files:
+            for vcf_files_batch in filenames:
+                if vcf_files_batch:
+                    vcf_families = families.copy()
+                    vcf_loader = SingleVcfLoader(
+                        vcf_families, vcf_files_batch,
+                        genome, regions=regions, params=params)
+                    self.vcf_loaders.append(vcf_loader)
 
         pedigree_mode = params.get("vcf_pedigree_mode", "fixed")
         if pedigree_mode == "intersection":

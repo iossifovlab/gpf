@@ -32,7 +32,7 @@ class EffectCell:
                 self.persons_with_parents
         else:
             self.person_set_children = self.person_set_persons
-        print(
+        logger.info(
             f"DENOVO REPORTS: persons set {self.person_set} children "
             f"{len(self.person_set_children)}")
 
@@ -144,6 +144,9 @@ class EffectRow(object):
 
     def remove_elements(self, indexes):
         for index in sorted(indexes, reverse=True):
+            cell = self.row[index]
+            assert cell.is_empty()
+
             self.row.pop(index)
 
 
@@ -284,16 +287,16 @@ class DenovoReport(object):
         )
         self.denovo_variants = list(denovo_variants)
         elapsed = time.time() - start
-        print(
+        logger.info(
             f"DENOVO REPORTS: denovo variants query in {elapsed:.2f} sec")
-        print(
+        logger.info(
             f"DENOVO REPORTS: denovo variants count is "
             f"{len(self.denovo_variants)}")
 
         start = time.time()
         self.tables = self._build_tables()
         elapsed = time.time() - start
-        print(f"DENOVO REPORTS build " f"in {elapsed:.2f} sec")
+        logger.info(f"DENOVO REPORTS build " f"in {elapsed:.2f} sec")
 
     def to_dict(self):
         return {"tables": [t.to_dict() for t in self.tables]}

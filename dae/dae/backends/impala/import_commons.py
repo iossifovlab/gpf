@@ -189,10 +189,6 @@ class MakefilePartitionHelper:
         targets = defaultdict(list)
         for target_chrom in generated_target_chromosomes:
             if target_chrom not in self.chromosome_lengths:
-                # print(
-                #     f"WARNING: contig {target_chrom} not found in specified "
-                #     f"genome",
-                #     file=sys.stderr)
                 continue
 
             assert target_chrom in self.chromosome_lengths, (
@@ -391,7 +387,7 @@ rule pedigree:
         stderr="logs/pedigree_stderr.log"
     shell:
         '''
-        ped2parquet.py --study-id {{study_id}} \\
+        ped2parquet.py --study-id {{study_id}} {{pedigree.verbose}} \\
 {%- if partition_description %}
             --pd {input.partition_description} \\
 {%- endif %}
@@ -420,7 +416,7 @@ rule {{prefix}}_variants_region_bin:
         stderr="logs/{{prefix}}_{rb}_stderr.log"
     shell:
         '''
-        {{prefix}}2parquet.py --study-id {{study_id}} \\
+        {{prefix}}2parquet.py --study-id {{study_id}} {{context.verbose}} \\
             {{pedigree.params}} {input.pedigree} \\
             {{context.params}} \\
 {%- if partition_description %}
@@ -637,6 +633,7 @@ class BatchImporter:
         variants_filename, variants_params = \
             CNVLoader.parse_cli_arguments(argv)
 
+        logger.info(f"CNV loader parameters: {variants_params}")
         if variants_filename is None:
             return self
         variants_loader = CNVLoader(
@@ -766,6 +763,11 @@ class BatchImporter:
             "outdir": outdir,
             "dae_db_dir": self.gpf_instance.dae_db_dir,
         }
+
+        verbose = ""
+        if argv.verbose > 0:
+            verbose = f"-{'V'*argv.verbose}"
+
         if argv.genotype_storage:
             context["genotype_storage"] = argv.genotype_storage
         if argv.partition_description:
@@ -782,6 +784,7 @@ class BatchImporter:
             "pedigree": pedigree_pedigree,
             "params": pedigree_params,
             "output": pedigree_output,
+            "verbose": verbose,
         }
 
         context["variants"] = {}
@@ -810,6 +813,8 @@ class BatchImporter:
             variants_params_dict = variants_loader.build_arguments_dict()
             variants_context["params"] = variants_loader.build_cli_arguments(
                 variants_params_dict)
+            variants_context["verbose"] = verbose
+
             context["variants"][prefix] = variants_context
 
         context["mirror_of"] = {}
@@ -1189,7 +1194,7 @@ class Variants2ParquetTool:
 
         elif argv.regions is not None:
             regions = argv.regions
-            print("resetting regions (region):", regions)
+            logger.info(f"resetting regions (region): {regions}")
             variants_loader.reset_regions(regions)
 
         variants_loader = cls._build_variants_loader_pipeline(
@@ -1278,7 +1283,10 @@ class DatasetHelpers:
     def find_genotype_data_config_file(self, dataset_id):
         config = self.gpf_instance.get_genotype_data_config(dataset_id)
         if config is None:
-            return None
+            self.gpf_instance._variants_db.reload()
+            config = self.gpf_instance.get_genotype_data_config(dataset_id)
+            if config is None:
+                return None
 
         assert config is not None, dataset_id
 
@@ -1293,7 +1301,7 @@ class DatasetHelpers:
 
     def find_genotype_data_config(self, dataset_id):
         config_file = self.find_genotype_data_config_file(dataset_id)
-        if config_file is None:
+        if config_file is None:            
             return None
         with open(config_file, "r") as infile:
             short_config = toml.load(infile)
@@ -1302,6 +1310,8 @@ class DatasetHelpers:
 
     def get_genotype_storage(self, dataset_id):
         config = self.find_genotype_data_config(dataset_id)
+        if config is None:
+            return None
         gpf_instance = self.gpf_instance
         genotype_storage = gpf_instance \
             .genotype_storage_db \

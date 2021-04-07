@@ -600,3 +600,45 @@ def test_import_study_config_arg(
 
     vs = list(study.query_variants())
     assert len(vs) == 30
+
+
+
+@pytest.mark.parametrize(
+    "genotype_storage_id,storage_type",
+    [
+        ("test_impala", "impala"),
+        ("test_filesystem", "filesystem"),
+    ],
+)
+def test_denovo_db_import(
+        fixture_dirname, temp_dirname,
+        genotype_storage_id, storage_type,
+        gpf_instance_2013,
+        ):
+
+    families_filename = fixture_dirname("backends/denovo-db-person-id.ped")
+    denovo_filename = fixture_dirname("backends/denovo-db-person-id.tsv")
+    study_id = f"test_denovo_db_import_{genotype_storage_id}"
+
+    argv = [
+        "--study-id", study_id,
+        families_filename,
+        "-o", temp_dirname,
+        "--skip-reports",
+        "--denovo-chrom", "Chr",
+        "--denovo-pos", "Position",
+        "--denovo-ref", "Ref",
+        "--denovo-alt", "Alt",
+        "--denovo-person-id", "SampleID",
+        "--denovo-file", denovo_filename,
+        "--genotype-storage", genotype_storage_id,
+    ]
+
+    main(argv, gpf_instance_2013)
+
+    gpf_instance_2013.reload()
+    study = gpf_instance_2013.get_genotype_data(study_id)
+    assert study is not None
+
+    vs = list(study.query_variants(inheritance="denovo"))
+    assert len(vs) == 17

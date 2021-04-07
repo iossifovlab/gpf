@@ -53,12 +53,12 @@ def genotype_storage_factory(local_gpf_instance):
 
 @pytest.fixture(scope="session")
 def genotype_data_study_configs(variants_db_fixture):
-    return variants_db_fixture.genotype_data_study_configs
+    return variants_db_fixture._load_study_configs()
 
 
 @pytest.fixture(scope="session")
 def quads_f1_config(variants_db_fixture):
-    return variants_db_fixture.get_study_config("quads_f1")
+    return variants_db_fixture.get_genotype_study_config("quads_f1")
 
 
 @pytest.fixture(scope="session")
@@ -69,7 +69,7 @@ def quads_f2_config(variants_db_fixture):
 def load_study(variants_db_fixture, genotype_data_study_configs, study_name):
     config = genotype_data_study_configs.get(study_name)
 
-    result = variants_db_fixture.make_genotype_data_study(config)
+    result = variants_db_fixture._make_genotype_study(config)
     assert result is not None
     return result
 
@@ -125,19 +125,19 @@ def quads_in_parent(variants_db_fixture, genotype_data_study_configs):
 
 @pytest.fixture(scope="session")
 def genotype_data_group_configs(variants_db_fixture):
-    return variants_db_fixture.genotype_data_group_configs
+    return variants_db_fixture._load_group_configs()
 
 
 @pytest.fixture(scope="session")
 def quads_composite_genotype_data_group_config(variants_db_fixture):
-    return variants_db_fixture.get_genotype_data_group_config(
+    return variants_db_fixture.get_genotype_group_config(
         "quads_composite_ds"
     )
 
 
 @pytest.fixture(scope="session")
 def composite_dataset_config(variants_db_fixture):
-    return variants_db_fixture.get_genotype_data_group_config(
+    return variants_db_fixture.get_genotype_group_config(
         "composite_dataset_ds"
     )
 
@@ -148,7 +148,7 @@ def load_genotype_data_group(
     config = genotype_data_group_configs.get(genotype_data_group_name)
     assert config is not None, genotype_data_group_name
 
-    result = variants_db_fixture.make_genotype_data_group(config)
+    result = variants_db_fixture._load_genotype_group(config)
     assert result is not None
     return result
 

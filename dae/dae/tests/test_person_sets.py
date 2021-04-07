@@ -149,7 +149,7 @@ def test_genotype_group_person_sets_subset(fixtures_gpf_instance):
     genotype_data_group_config = fixtures_gpf_instance.\
         get_genotype_data_config("person_sets_dataset_1")
     genotype_data_group = \
-        fixtures_gpf_instance._variants_db.make_genotype_data_group(
+        fixtures_gpf_instance._variants_db._load_genotype_group(
             genotype_data_group_config)
 
     # Remove a person to simulate a subset of people being used

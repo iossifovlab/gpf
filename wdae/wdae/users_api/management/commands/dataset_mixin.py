@@ -13,17 +13,16 @@ logger = logging.getLogger(__name__)
 class DatasetBaseMixin(DatasetHelpers):
 
     def get_dataset(self, dataset_id):
-        dataset = None
         try:
             genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
             if genotype_data is None:
                 logger.info(f"genotype data {dataset_id} not found")
                 return None
 
-            dataset = Dataset.objects.get(dataset_id=dataset_id)
+            return Dataset.objects.get(dataset_id=dataset_id)
         except Exception as ex:
             logger.debug(f"dataset {dataset_id} not found: {ex}")
-        return dataset
+        return None
 
     def rename_wdae_dataset_and_groups(
             self, dataset_id, new_id, dry_run=None):
@@ -46,15 +45,20 @@ class DatasetBaseMixin(DatasetHelpers):
         groups = list(Group.objects.filter(
             Q(groupobjectpermission__permission__codename="view"),
             Q(name=dataset_id)))
-        assert len(groups) == 1
-        group = groups[0]
+        if len(groups) == 0:
+            logger.warning(
+                f"wdae group {dataset_id} not found; nothing to rename")
+        else:
+            if len(groups) != 1:
+                logger.warning(f"more than one group found: {groups}")
 
-        logger.info(
-            f"going to rename wdae dataset group name from {dataset_id} "
-            f"to {new_id}")
-        if not dry_run:
-            group.name = new_id
-            group.save()
+            for group in groups:
+                logger.info(
+                    f"going to rename wdae dataset group from {dataset_id} "
+                    f"to {new_id}")
+                if not dry_run:
+                    group.name = new_id
+                    group.save()
 
     def remove_wdae_dataset_and_groups(self, dataset_id, dry_run=None):
         dataset = self.get_dataset(dataset_id)
@@ -66,8 +70,12 @@ class DatasetBaseMixin(DatasetHelpers):
         groups = Group.objects.filter(
             Q(groupobjectpermission__permission__codename="view"),
             Q(name=dataset_id))
-        assert len(groups) == 1
+        if len(groups) == 0:
+            logger.warning(
+                f"wdae group {dataset_id} not found; nothing to remove")
+        else:
+            assert len(groups) == 1
 
-        logger.info(f"going ro remove wdae dataset group {dataset_id}")
-        if not dry_run:
-            groups.delete()
+            logger.info(f"going ro remove wdae dataset group {dataset_id}")
+            if not dry_run:
+                groups.delete()

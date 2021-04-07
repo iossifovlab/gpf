@@ -100,8 +100,8 @@ class CommonReportFacade(object):
                 row = [
                     p.family_id,
                     p.person_id,
-                    p.mom_id if p.mom_id else "0",
                     p.dad_id if p.dad_id else "0",
+                    p.mom_id if p.mom_id else "0",
                     p.sex,
                     p.status,
                     p.role,
@@ -201,7 +201,8 @@ class CommonReportFacade(object):
         common_report_config = self._common_report_config_cache[
             common_report_id
         ]
-        common_report = CommonReport(genotype_data_study, common_report_config)
+        common_report = CommonReport(
+            genotype_data_study, common_report_config)
         denovo_report = common_report.denovo_report
 
         for table in denovo_report.tables:

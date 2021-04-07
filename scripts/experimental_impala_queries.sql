@@ -1,3 +1,127 @@
+SELECT
+    variants.bucket_index,
+    variants.summary_index,
+    variants.allele_index,
+    variants.effect_types,
+    variants.effect_gene_symbols,
+    MIN(variants.af_allele_count),
+    MAX(variants.af_allele_count),
+    MIN(variants.genome_gnomad_v3_ac),
+    MAX(variants.genome_gnomad_v3_ac),
+    CAST(COUNT(DISTINCT variants.family_id) AS INT),
+    CAST(gpf_bit_or(pedigree.status) AS TINYINT),
+    CAST(gpf_or(BITAND(inheritance_in_members, 4)) AS BOOLEAN)
+FROM data_hg38_seqclust.SFARI_SPARK_WGS_1_variants as variants 
+JOIN data_hg38_seqclust.SFARI_SPARK_WGS_1_pedigree as pedigree
+WHERE
+    variants.allele_index > 0 AND 
+    variants.variant_in_members = pedigree.person_id 
+GROUP BY 
+    bucket_index,
+    summary_index,
+    allele_index,
+    effect_types,
+    effect_gene_symbols,
+    variant_type,
+    transmission_type
+HAVING MIN(variants.af_allele_count) != MAX(variants.af_allele_count) OR MIN(variants.genome_gnomad_v3_ac) != MAX(variants.genome_gnomad_v3_ac)
+LIMIT 50;
+
+SELECT
+    variants.bucket_index,
+    variants.summary_index,
+    variants.allele_index,
+    variants.effect_types,
+    variants.effect_gene_symbols,
+    MIN(variants.af_allele_count),
+    MAX(variants.af_allele_count),
+    MIN(variants.genome_gnomad_v3_ac),
+    MAX(variants.genome_gnomad_v3_ac),
+    CAST(COUNT(DISTINCT variants.family_id) AS INT),
+    CAST(gpf_bit_or(pedigree.status) AS TINYINT),
+    CAST(gpf_or(BITAND(inheritance_in_members, 4)) AS BOOLEAN)
+FROM data_hg38_seqclust.SFARI_SPARK_WGS_1_variants as variants 
+JOIN data_hg38_seqclust.SFARI_SPARK_WGS_1_pedigree as pedigree
+WHERE
+    variants.region_bin = 'chr1_0' AND 
+    variants.frequency_bin = 2 AND
+    variants.allele_index > 0 AND 
+    variants.variant_in_members = pedigree.person_id 
+GROUP BY 
+    bucket_index,
+    summary_index,
+    allele_index,
+    effect_types,
+    effect_gene_symbols,
+    variant_type,
+    transmission_type
+HAVING MIN(variants.af_allele_count) != MAX(variants.af_allele_count) OR MIN(variants.genome_gnomad_v3_ac) != MAX(variants.genome_gnomad_v3_ac)
+LIMIT 50;
+
+
+ALTER TABLE sfari_ssc_wgs_cshl_variants SET TBLPROPERTIES(
+  "gpf_partitioning_coding_bin_coding_effect_types" = 
+  "splice-site,frame-shift,nonsense,no-frame-shift-newStop,noStart,noEnd,missense,no-frame-shift,CDS,synonymous,coding_unknown,regulatory,3'UTR,5'UTR,CNV+,CNV-")
+
+
+ALTER TABLE data_hg38_seqclust.agre_wg38_859_variants SET TBLPROPERTIES(
+  "gpf_partitioning_coding_bin_coding_effect_types" = 
+  "splice-site,frame-shift,nonsense,no-frame-shift-newStop,noStart,noEnd,missense,no-frame-shift,CDS,synonymous,coding_unknown,regulatory,3'UTR,5'UTR,CNV+,CNV-")
+
+ALTER TABLE data_hg38_seqclust.sfari_spark_wgs_1_variants SET TBLPROPERTIES(
+  "gpf_partitioning_coding_bin_coding_effect_types" = 
+  "splice-site,frame-shift,nonsense,no-frame-shift-newStop,noStart,noEnd,missense,no-frame-shift,CDS,synonymous,coding_unknown,regulatory,3'UTR,5'UTR,CNV+,CNV-");
+
+
+SELECT variants.bucket_index, variants.summary_index, allele_index, COUNT(DISTINCT variants.family_id), gpf_bit_or(pedigree.status), gpf_or(BITAND(inheritance_in_members, 4))
+FROM impala_test_db.summary_stats_variants as variants JOIN impala_test_db.summary_stats_pedigree as pedigree 
+WHERE
+  ( (`chromosome` = '1' AND ((`position` >= 865581 AND `position` <= 865581) OR (COALESCE(end_position, -1) >= 865581 AND COALESCE(end_position, -1) <= 865581) OR (865581 >= `position` AND 865581 <= COALESCE(end_position, -1)))) ) AND 
+  ( variants.allele_index > 0 ) AND variants.variant_in_members = pedigree.person_id 
+GROUP BY bucket_index, summary_index, allele_index, variant_type
+
+
+SELECT variants.bucket_index, variants.summary_index, allele_index, COUNT(DISTINCT variants.family_id), gpf_bit_or(pedigree.status), gpf_or(BITAND(inheritance_in_members, 4))
+FROM gpf_variant_db.summary_stats_variants as variants JOIN gpf_variant_db.summary_stats_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'SAMD11'  )  ) ) AND ( (`chromosome` = '1' AND ((`position` >= 841121 AND `position` <= 899961) OR (COALESCE(end_position, -1) >= 841121 AND COALESCE(end_position, -1) <= 899961) OR (841121 >= `position` AND 899961 <= COALESCE(end_position, -1)))) ) AND 
+  ( (  variants.effect_types in (  'frame-shift' , 'nonsense' , 'splice-site' , 'no-frame-shift-newStop' , 'nonsense' , 'frame-shift' , 'splice-site' , 'no-frame-shift-newStop' , 'missense' , 'synonymous' , 'noStart' , 'noEnd' , 'no-frame-shift' , 'CDS' , 'CNV+' , 'CNV-'  )  ) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(150, variants.inheritance_in_members) != 0 ) AND ( variants.allele_index > 0 ) AND 
+  variants.variant_in_members = pedigree.person_id 
+GROUP BY bucket_index, summary_index, allele_index, variant_type, transmission_type
+
+SELECT variants.bucket_index, variants.summary_index, COUNT(DISTINCT variants.family_id), gpf_bit_or(pedigree.status), gpf_or(BITAND(inheritance_in_members, 4))
+FROM gpf_variant_db.summary_stats_variants as variants JOIN gpf_variant_db.summary_stats_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'SAMD11'  )  ) ) AND ( (`chromosome` = '1' AND ((`position` >= 841121 AND `position` <= 899961) OR (COALESCE(end_position, -1) >= 841121 AND COALESCE(end_position, -1) <= 899961) OR (841121 >= `position` AND 899961 <= COALESCE(end_position, -1)))) ) AND 
+  ( (  variants.effect_types in (  'frame-shift' , 'nonsense' , 'splice-site' , 'no-frame-shift-newStop' , 'nonsense' , 'frame-shift' , 'splice-site' , 'no-frame-shift-newStop' , 'missense' , 'synonymous' , 'noStart' , 'noEnd' , 'no-frame-shift' , 'CDS' , 'CNV+' , 'CNV-'  )  ) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(150, variants.inheritance_in_members) != 0 ) AND ( variants.allele_index > 0 ) AND 
+  variants.variant_in_members = pedigree.person_id 
+GROUP BY bucket_index, summary_index, allele_index, variant_type, transmission_type
+
+
+SELECT variants.bucket_index, variants.summary_index, allele_index, variant_type, transmission_type, COUNT(DISTINCT variants.family_id), gpf_or(BITAND(inheritance_in_members, 4))
+FROM impala_test_db.summary_stats_variants as variants JOIN impala_test_db.summary_stats_pedigree as pedigree 
+WHERE
+  ( (`chromosome` = '1' AND ((`position` >= 865582 AND `position` <= 865583) OR (COALESCE(end_position, -1) >= 865582 AND COALESCE(end_position, -1) <= 865583) OR (865582 >= `position` AND 865583 <= COALESCE(end_position, -1)))) ) AND 
+  ( variants.allele_index > 0 ) AND variants.variant_in_members = pedigree.person_id 
+GROUP BY bucket_index, summary_index, allele_index, variant_type, transmission_type
+
+
+
+
+
+SELECT variants.bucket_index, variants.summary_index, COUNT(DISTINCT variants.family_id)
+FROM data_hg38_production.SFARI_SSC_WGS_2b_variants as variants JOIN data_hg38_production.SFARI_SSC_WGS_2b_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'DMRTA2'  )  ) ) AND ( (`chromosome` = 'chr1' AND ((`position` >= 50397551 AND `position` <= 50443447) OR (COALESCE(end_position, -1) >= 50397551 AND COALESCE(end_position, -1) <= 50443447) OR (50397551 >= `position` AND 50443447 <= COALESCE(end_position, -1)))) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(150, variants.inheritance_in_members) != 0 ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.region_bin IN ('chr1_1') ) AND 
+  variants.variant_in_members = pedigree.person_id 
+GROUP BY bucket_index, summary_index, allele_index, variant_type
+
+
 SELECT bucket_index, summary_index, variant_type, family_index, family_id, frequency_bin FROM data_hg38_production.SFARI_SPARK_WES_1_temp_variants 
 WHERE
   ( (  effect_types in (  'nonsense' , 'frame-shift' , 'splice-site' , 'no-frame-shift-newStop'  )  ) )

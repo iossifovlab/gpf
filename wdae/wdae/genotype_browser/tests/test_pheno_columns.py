@@ -4,30 +4,21 @@ import json
 
 from rest_framework import status
 
-pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
+pytestmark = pytest.mark.usefixtures(
+    "wdae_gpf_instance", "dae_calc_gene_sets")
 
-PREVIEW_URL = "/api/v3/genotype_browser/preview"
-PREVIEW_VARIANTS_URL = "/api/v3/genotype_browser/preview/variants"
+QUERY_URL = "/api/v3/genotype_browser/query"
 
 
-def test_query_preview_have_pheno_columns(db, admin_client):
-    data = {"datasetId": "quads_f1"}
+def test_query_preview_have_pheno_column_values(
+    db, admin_client, preview_sources
+):
+    data = {
+        "datasetId": "quads_f1",
+        "sources": preview_sources
+    }
     response = admin_client.post(
-        PREVIEW_URL, json.dumps(data), content_type="application/json"
-    )
-    assert status.HTTP_200_OK == response.status_code
-    res = response.data
-
-    assert "continuous.Continuous" in res["cols"]
-    assert "categorical.Categorical" in res["cols"]
-    assert "ordinal.Ordinal" in res["cols"]
-    assert "raw.Raw" in res["cols"]
-
-
-def test_query_preview_have_pheno_column_values(db, admin_client):
-    data = {"datasetId": "quads_f1"}
-    response = admin_client.post(
-        PREVIEW_VARIANTS_URL, json.dumps(data), content_type="application/json"
+        QUERY_URL, json.dumps(data), content_type="application/json"
     )
     assert status.HTTP_200_OK == response.status_code
     res = response.streaming_content

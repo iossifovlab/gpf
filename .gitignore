@@ -58,3 +58,13 @@ phenotype-comp-data-*latest.tar.gz
 comp-data/
 comp
 dae_conftests/dae_conftests/tests/fixtures/agpdb
+builds
+data
+downloads
+results
+dae/dae/gene/tests/fixtures/datasets/f1_group/denovo-cache-phenotype.json
+dae/dae/gene/tests/fixtures/datasets/f2_group/denovo-cache-phenotype.json
+dae/dae/gene/tests/fixtures/datasets/f3_group/denovo-cache-phenotype.json
+dae/dae/gene/tests/fixtures/studies/f4_trio/denovo-cache-phenotype.json
+dae_conftests/dae_conftests/tests/fixtures/datasets/denovo-cache-phenotype.json
+dae_conftests/dae_conftests/tests/fixtures/studies/Study1/common_report.json

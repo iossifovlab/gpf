@@ -36,6 +36,8 @@ def main(gpf_instance=None, argv=None):
     else:
         logging.basicConfig(level=logging.ERROR)
 
+    logging.getLogger("impala").setLevel(logging.WARNING)
+
     if gpf_instance is None:
         gpf_instance = GPFInstance()
     denovo_gene_sets_db = gpf_instance.denovo_gene_sets_db

@@ -3,8 +3,8 @@ from dae.backends.dae.loader import DenovoLoader
 from dae.pedigrees.loader import FamiliesLoader
 
 
-def test_all_properties_in_blob(vcf_variants_loader, impala_genotype_storage):
-    loader = vcf_variants_loader("backends/quads_f1")
+def test_all_properties_in_blob(vcf_variants_loaders, impala_genotype_storage):
+    loader = vcf_variants_loaders("backends/quads_f1")[0]
 
     fv = list(loader.full_variants_iterator())[0][1][0]
     schema = loader.get_attribute("annotation_schema")
@@ -105,8 +105,8 @@ def test_extra_attributes_impala(extra_attrs_impala):
 
 
 def test_build_allele_batch_dict(
-        vcf_variants_loader, impala_genotype_storage, mocker):
-    loader = vcf_variants_loader("backends/effects_trio")
+        vcf_variants_loaders, impala_genotype_storage, mocker):
+    loader = vcf_variants_loaders("backends/effects_trio")[-1]
 
     fv = list(loader.full_variants_iterator())[0][1][0]
     schema = loader.get_attribute("annotation_schema")

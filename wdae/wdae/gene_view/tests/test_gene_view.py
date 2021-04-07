@@ -2,7 +2,8 @@ import pytest
 import json
 from rest_framework import status
 
-pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
+pytestmark = pytest.mark.usefixtures(
+    "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
 def test_gene_view_summary_variants_query(db, admin_client):
@@ -19,8 +20,9 @@ def test_gene_view_summary_variants_query(db, admin_client):
     res = response.streaming_content
     res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
 
-    print(res)
-    assert len(res) == 14
+    assert len(res) == 7
+    for v in res:
+        assert len(v['alleles']) == 2
 
 
 def test_gene_view_config(db, admin_client):

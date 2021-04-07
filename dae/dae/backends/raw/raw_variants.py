@@ -1,4 +1,3 @@
-import sys
 import time
 import logging
 
@@ -55,17 +54,11 @@ class RawFamilyVariants:
                 return False
 
             val = va.get_attribute(key)
-            # if val is None and not is_frequency:
-            #     return False
             rmin, rmax = ranges
             if rmin is None and rmax is None:
                 result.append(True)
             elif rmin is None:
                 result.append(val is None or val <= rmax)
-                # if is_frequency:
-                #     result.append(val is None or val <= rmax)
-                # else:
-                #     result.append(val is not None and val <= rmax)
             elif rmax is None:
                 result.append(val is not None and val >= rmin)
             else:
@@ -137,7 +130,8 @@ class RawFamilyVariants:
                     allele, frequency_filter, is_frequency=True):
                 return False
         if ultra_rare:
-            if not cls.filter_real_attr(allele, [("af_allele_count", (0, 1))]):
+            if not cls.filter_real_attr(
+                    allele, [("af_allele_count", (None, 1))]):
                 return False
 
         if genes is not None or effect_types is not None:
@@ -234,7 +228,6 @@ class RawFamilyVariants:
                 parsed = variant_type_query.transform_query_string_to_tree(
                     parsed
                 )
-            print(parsed)
             kwargs[
                 "variant_type"
             ] = variant_type_query.transform_tree_to_matcher(parsed)
@@ -254,7 +247,7 @@ class RawFamilyVariants:
                         continue
                     alleles_matched.append(allele.allele_index)
             if alleles_matched:
-                # sv.set_matched_alleles(alleles_matched)
+                sv.set_matched_alleles(alleles_matched)
                 yield sv
 
     def query_variants(self, **kwargs):
@@ -336,7 +329,7 @@ class RawMemoryVariants(RawFamilyVariants):
         if len(loaders) > 0:
             self._full_variants = None
         else:
-            print("No variants to load")
+            logger.debug("no variants to load")
             self._full_variants = []
 
     @property
@@ -349,7 +342,7 @@ class RawMemoryVariants(RawFamilyVariants):
                     self._full_variants.append((sv, fvs))
 
             elapsed = time.time() - start
-            print(f"Variants loaded in in {elapsed:.2f} sec", file=sys.stderr)
+            logger.debug(f"variants loaded in in {elapsed:.2f} sec")
         return self._full_variants
 
     def full_variants_iterator(self):
@@ -365,3 +358,26 @@ class RawVariantsIterator(RawFamilyVariants):
     def family_variants_iterator(self):
         for fv in self.family_variants:
             yield fv
+
+    def full_variants_iterator(self):
+        seen = set()
+        for fv in self.family_variants_iterator():
+            sv = fv.summary_variant
+            if sv.svuid in seen:
+                continue
+            yield sv
+            seen.add(sv.svuid)
+
+
+class RawSummaryVariantsIterator(RawFamilyVariants):
+    def __init__(self, summary_variants, families):
+        super(RawSummaryVariantsIterator, self).__init__(families)
+        self.summary_variants = summary_variants
+
+    def full_variants_iterator(self):
+        seen = set()
+        for sv in self.summary_variants:
+            if sv.svuid in seen:
+                continue
+            yield sv, []
+            seen.add(sv.svuid)

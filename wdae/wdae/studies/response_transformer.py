@@ -83,15 +83,16 @@ class ResponseTransformer:
             )),
 
         "inheritance_type":
-        lambda v: list(
-            map(
-                lambda aa:
-                "denovo"
-                if Inheritance.denovo in aa.inheritance_in_members
-                else "mendelian"
-                if Inheritance.mendelian in aa.inheritance_in_members
-                else "-",
-                v.alt_alleles)
+        lambda v: list(map(
+            lambda aa:
+            "denovo"
+            if Inheritance.denovo in aa.inheritance_in_members
+            else "-"
+            if set([
+                Inheritance.possible_denovo, Inheritance.possible_omission]) &
+                set(aa.inheritance_in_members)
+            else "mendelian",
+            v.alt_alleles)
         ),
 
         "is_denovo":
@@ -119,6 +120,7 @@ class ResponseTransformer:
 
         "seen_in_unaffected":
         lambda v: bool(v.get_attribute("seen_in_status") in {1, 3}),
+
     }
 
     PHENOTYPE_ATTRS = {
@@ -140,28 +142,29 @@ class ResponseTransformer:
 
     def __init__(self, study_wrapper):
         self.study_wrapper = study_wrapper
+        self._pheno_columns = study_wrapper.config_columns.phenotype
 
     def _get_all_pheno_values(self, family_ids):
         if not self.study_wrapper.phenotype_data \
-           or not self.study_wrapper.pheno_column_slots:
+           or not self.study_wrapper.config_columns.phenotype:
             return None
 
         pheno_column_names = []
         pheno_column_dfs = []
-        for slot in self.study_wrapper.pheno_column_slots:
-            assert slot.role
+        for column in self.study_wrapper.config_columns.phenotype.values():
+            assert column.role
             persons = self.study_wrapper.families.persons_with_roles(
-                [slot.role], family_ids)
+                [column.role], family_ids)
             person_ids = [p.person_id for p in persons]
 
             kwargs = {
                 "person_ids": list(person_ids),
             }
 
-            pheno_column_names.append(f"{slot.source}.{slot.role}")
+            pheno_column_names.append(f"{column.source}.{column.role}")
             pheno_column_dfs.append(
                 self.study_wrapper.phenotype_data.get_measure_values_df(
-                    slot.source, **kwargs
+                    column.source, **kwargs
                 )
             )
 
@@ -280,6 +283,7 @@ class ResponseTransformer:
             try:
                 col_source = col_desc["source"]
                 col_format = col_desc.get("format")
+                col_role = col_desc.get("role")
 
                 if col_format is None:
                     def col_formatter(val):
@@ -294,9 +298,13 @@ class ResponseTransformer:
                         try:
                             return col_format % val
                         except Exception:
-                            logging.exception(f'error build variant: {v}')
-                            traceback.print_stack()
-                            return "-"
+                            logging.warning(
+                                f'error formatting variant: {v} ({val})',
+                                exc_info=True)
+                            return val
+
+                if col_role is not None:
+                    col_source = f"{col_source}.{col_role}"
 
                 if col_source == "pedigree":
                     person_set_collection = \
@@ -320,7 +328,6 @@ class ResponseTransformer:
                     row_variant.append(
                         self.study_wrapper.config.study_phenotype
                     )
-
                 else:
                     if col_source in self.SPECIAL_ATTRS:
                         attribute = self.SPECIAL_ATTRS[col_source](v)
@@ -363,10 +370,14 @@ class ResponseTransformer:
                 ]
 
     def transform_gene_view_summary_variant(
-        self, variant: SummaryVariant, frequency_column
-    ):
+            self, variant: SummaryVariant, frequency_column):
+
+        out = {
+            "svuid": variant.svuid,
+            "alleles": []
+        }
         for a in variant.alt_alleles:
-            yield {
+            out["alleles"].append({
                 "location": a.cshl_location,
                 "position": a.position,
                 "end_position": a.end_position,
@@ -381,11 +392,29 @@ class ResponseTransformer:
                     a.get_attribute("seen_in_status") in {2, 3},
                 "seen_in_unaffected":
                     a.get_attribute("seen_in_status") in {1, 3},
-            }
+            })
+        yield out
+
+        # for a in variant.alt_alleles:
+        #     yield {
+        #         "location": a.cshl_location,
+        #         "position": a.position,
+        #         "end_position": a.end_position,
+        #         "chrom": a.chrom,
+        #         "frequency": a.get_attribute(frequency_column),
+        #         "effect": gene_effect_get_worst_effect(a.effect),
+        #         "variant": a.cshl_variant,
+        #         "family_variants_count":
+        #             a.get_attribute("family_variants_count"),
+        #         "is_denovo": a.get_attribute("seen_as_denovo"),
+        #         "seen_in_affected":
+        #             a.get_attribute("seen_in_status") in {2, 3},
+        #         "seen_in_unaffected":
+        #             a.get_attribute("seen_in_status") in {1, 3},
+        #     }
 
     def transform_gene_view_summary_variant_download(
-        self, variants: List[SummaryVariant], frequency_column
-    ):
+            self, variants: List[SummaryVariant], frequency_column):
         columns = [
             "location",
             "position",
@@ -399,7 +428,7 @@ class ResponseTransformer:
             "seen_in_affected",
             "seen_in_unaffected"
         ]
-        rows = self.gene_view_summary_download_variants_iterator(
+        rows = self._gene_view_summary_download_variants_iterator(
             variants, frequency_column
         )
         return map(join_line, itertools.chain([columns], rows))

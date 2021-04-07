@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import argparse
+import logging
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
@@ -29,6 +30,8 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
         conflict_handler="resolve",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
+
+    parser.add_argument('--verbose', '-V', action='count', default=0)
 
     FamiliesLoader.cli_arguments(parser)
 
@@ -158,6 +161,16 @@ def main(argv, gpf_instance=None):
     dae_config = gpf_instance.dae_config
 
     argv = cli_arguments(dae_config, argv)
+
+    if argv.verbose == 1:
+        logging.basicConfig(level=logging.WARNING)
+    elif argv.verbose == 2:
+        logging.basicConfig(level=logging.INFO)
+    elif argv.verbose >= 3:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.WARNING)
+    logging.getLogger("impala").setLevel(logging.WARNING)
 
     genotype_storage_factory = gpf_instance.genotype_storage_db
     genomes_db = gpf_instance.genomes_db

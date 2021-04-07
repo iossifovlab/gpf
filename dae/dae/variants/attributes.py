@@ -303,7 +303,7 @@ class VariantType(enum.Enum):
         elif name.lower() in set(["tr", "tandem_repeat"]):
             return VariantType.tandem_repeat
 
-        raise ValueError("unexpected variant type: {}".format(name))
+        raise ValueError(f"unexpected variant type: {name}")
 
     @staticmethod
     def from_cshl_variant(variant):
@@ -327,7 +327,7 @@ class VariantType(enum.Enum):
         elif variant == "CNV-":
             return VariantType.cnv_m
         else:
-            raise ValueError("unexpected variant type: {}".format(variant))
+            raise ValueError(f"unexpected variant type: {variant}")
 
     @staticmethod
     def from_value(value):
@@ -363,11 +363,14 @@ class VariantDesc:
 
     def __init__(
             self, variant_type, position,
+            end_position=None,
             ref=None, alt=None, length=None,
             tr_ref=None, tr_alt=None, tr_unit=None):
 
         self.variant_type = variant_type
         self.position = position
+        self.end_position = end_position
+
         self.ref = ref
         self.alt = alt
         self.length = length
