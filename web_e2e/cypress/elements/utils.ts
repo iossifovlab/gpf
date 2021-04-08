@@ -81,7 +81,7 @@ export class BasePage {
   navigateToDatasetPage(dataset: string, page: string) {
     cy.get('#datasets-dropdown-menu-button').click();
     cy.get('a.dropdown-item').contains(dataset).click();
-    // cy.wait(500);
+    cy.wait(500);
     cy.get(`a.nav-link[routerlink="${page}"]`).click();
   }
 
