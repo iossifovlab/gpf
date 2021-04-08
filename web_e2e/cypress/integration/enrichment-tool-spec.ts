@@ -62,7 +62,6 @@ describe('Enrichment tool tests', () => {
     genesBlockPage.geneSymbolsTextarea.type('CAMSAP1');
     enrichmentToolPage.enrichmentTestButton.click();
     errorsAlertPage.findAlertWindowInComponent('gpf-gene-symbols').should('not.exist');
-    cy.reload();
   });
 
   // review
