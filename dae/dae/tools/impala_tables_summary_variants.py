@@ -201,7 +201,7 @@ def insert_into_summary_table(
         pedigree_table, variants_table, summary_table,
         summary_schema, parition, region_bins):
 
-    region_split = 5_000_000
+    region_split = 1_000_000
 
     grouping_fields = [
         "bucket_index",
