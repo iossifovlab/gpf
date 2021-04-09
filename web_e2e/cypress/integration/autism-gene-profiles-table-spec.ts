@@ -54,6 +54,30 @@ describe('Autism gene profiles table tests', () => {
   });
 });
 
+// describe('Autism gene profiles table data tests', () => {
+//   const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
+
+//   before(() => {
+//     autismGeneProfilesTablePage.cleanup();
+//     autismGeneProfilesTablePage.navigateToHome();
+//     autismGeneProfilesTablePage.toggleSidenav();
+//     autismGeneProfilesTablePage.sidenavAutismGeneProfilesButton.click();
+//   });
+
+//   [{geneSymbol: 'CHD8', expectedRow: ['✓', '', '', '', '1', '193', '-2.34', '1', '193', '-2.34', '7', '', '', '', '', '']}
+//   ].forEach((data) => {
+//     it(`should display correct gene data for ${data.geneSymbol}`, () => {
+//       autismGeneProfilesTablePage.geneSearchInput.type(data.geneSymbol);
+//       autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
+//       autismGeneProfilesTablePage.allTableRows.get('td').eq(0).should('have.text', data.geneSymbol);
+      
+//       for(let cellIndex = 1; cellIndex < data.expectedRow.length; cellIndex++) {
+//         autismGeneProfilesTablePage.allTableRows.get('td').eq(cellIndex).should('have.text', data.expectedRow[cellIndex]);
+//       }
+//     });
+//   });
+// });
+
 describe('Column filtering dropdown tests', () => {
   const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
 
