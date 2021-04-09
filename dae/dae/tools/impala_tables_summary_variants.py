@@ -78,8 +78,12 @@ def collect_summary_schema(impala_variants):
     return schema
 
 
-def build_summary_table_name(study_id, impala_variants):
-    return f"{impala_variants.db}.{study_id.lower()}_summary_variants "
+def summary_table_name(study_id, impala_variants):
+    return f"{impala_variants.db}.{study_id.lower()}_summary_variants"
+
+
+def summary_table_name_temp(study_id, impala_variants):
+    return f"{impala_variants.db}.{study_id.lower()}_temp_summary_variants"
 
 
 PARTITIONS = set([
@@ -95,7 +99,22 @@ def drop_summary_table(study_id, impala_variants):
     with closing(impala.connection()) as connection:
         with connection.cursor() as cursor:
             q = f"DROP TABLE IF EXISTS " \
-                f"{build_summary_table_name(study_id, impala_variants)}"
+                f"{summary_table_name(study_id, impala_variants)}"
+            logger.info(f"drop summary table: {q}")
+            cursor.execute(q)
+
+            q = f"DROP TABLE IF EXISTS " \
+                f"{summary_table_name_temp(study_id, impala_variants)}"
+            logger.info(f"drop summary table: {q}")
+            cursor.execute(q)
+
+
+def rename_summary_table(study_id, impala_variants):
+    impala = impala_variants._impala_helpers
+    q = f"ALTER TABLE {summary_table_name_temp(study_id, impala_variants)} " \
+        f"RENAME TO {summary_table_name(study_id, impala_variants)}"
+    with closing(impala.connection()) as connection:
+        with connection.cursor() as cursor:
             logger.info(f"drop summary table: {q}")
             cursor.execute(q)
 
@@ -125,7 +144,7 @@ def create_summary_table(study_id, impala_variants):
         with connection.cursor() as cursor:
 
             q = f"CREATE TABLE IF NOT EXISTS " \
-                f"{build_summary_table_name(study_id, impala_variants)} " \
+                f"{summary_table_name_temp(study_id, impala_variants)} " \
                 f"({schema_statement}) " \
                 f"{partition_statement}" \
                 f"STORED AS PARQUET"
@@ -134,63 +153,6 @@ def create_summary_table(study_id, impala_variants):
             cursor.execute(q)
 
     return partition_bins
-
-
-VARIANT_ATTRIBUTES = set([
-    "chromosome",
-    "position",
-    "effect_types",
-    "effect_gene_symbols",
-])
-
-ENUM_ATTRIBUTES = set([
-    "variant_type",
-    "transmission_type",
-])
-
-
-def insert_summary_variant(table_name, summary_schema, sa):
-    summary_values = []
-    partition_values = []
-    for field_name, field_type in summary_schema.items():
-        if field_name in VARIANT_ATTRIBUTES:
-            field_value = getattr(sa, field_name)
-        else:
-            field_value = sa.get_attribute(field_name)
-        if field_name in ENUM_ATTRIBUTES:
-            print("\t\t", field_name, type(field_value), field_type)
-            field_value = field_value.value
-
-        print("\t", field_name, "=", field_value)
-
-        if field_name in PARTITIONS:
-            assert field_value is not None, (field_name, field_value)
-
-            if field_type.lower() in set(["string", "binary"]):
-                partition_values.append(
-                    f'{field_name} = "{field_value}"')
-            else:
-                partition_values.append(
-                    f"{field_name} = {field_value}")
-        else:
-            if field_value is None:
-                summary_values.append("null")
-            elif field_name.lower() in set(["variant_data"]):
-                # summary_values.append(field_value.decode("utf8"))
-                summary_values.append("null")
-            elif field_type.lower() in set(["string"]):
-                summary_values.append(f'"{field_value}"')
-            else:
-                summary_values.append(f"{field_value}")
-
-    partition_values = ", ".join(partition_values)
-    summary_values = ", ".join(summary_values)
-    insert_statement = f"INSERT INTO " \
-        f"{table_name} " \
-        f"PARTITION ({partition_values}) " \
-        f"VALUES ({summary_values})"
-    print(insert_statement)
-    return insert_statement
 
 
 class RegionBinsHelper:
@@ -373,7 +335,7 @@ def main(argv=sys.argv[1:], gpf_instance=None):
         partitions = create_summary_table(study_id, study_backend)
 
         summary_schema = collect_summary_schema(study_backend)
-        summary_table = build_summary_table_name(study_id, study_backend)
+        summary_table = summary_table_name_temp(study_id, study_backend)
         pedigree_table = f"{study_backend.db}.{study_backend.pedigree_table}"
         variants_table = f"{study_backend.db}.{study_backend.variants_table}"
 
@@ -406,8 +368,8 @@ def main(argv=sys.argv[1:], gpf_instance=None):
 
         print(region_bin_helpers.region_bins)
 
-        assert set(partition_bins["region_bin"]) == \
-            set(region_bin_helpers.region_bins.keys())
+        assert set(partition_bins["region_bin"]).issubset(
+            set(region_bin_helpers.region_bins.keys()))
 
         all_partitions = list(itertools.product(*partition_bins.values()))
         for index, partition in enumerate(all_partitions):
@@ -447,6 +409,8 @@ def main(argv=sys.argv[1:], gpf_instance=None):
                 f"{index}/{len(all_partitions)}; "
                 f"total time {elapsed:.2f} secs"
             )
+
+        rename_summary_table(study_id, study_backend)
 
 
 if __name__ == "__main__":
