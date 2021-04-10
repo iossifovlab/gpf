@@ -2,6 +2,40 @@ from typing import List
 
 from dae.variants.variant import SummaryAllele, SummaryVariant
 
+SUMMARY_QUERY_SOURCES = [
+    {"source": "chromosome"},
+    {"source": "position"},
+    {"source": "end_position"},
+    {"source": "reference"},
+    {"source": "alternative"},
+    {"source": "summary_index"},
+    {"source": "allele_index"},
+    {"source": "transmission_type"},
+    {"source": "effect"},
+    {"source": "effect_types"},
+    {"source": "effect_genes"},
+    {"source": "effect_gene_symbols"},
+    {"source": "frequency"},
+]
+
+SUMMARY_COLUMNS = [s["source"] for s in SUMMARY_QUERY_SOURCES]
+
+FAMILY_QUERY_SOURCES = [
+    {"source": "family_id"},
+]
+
+FAMILY_COLUMNS = [s["source"] for s in FAMILY_QUERY_SOURCES]
+
+QUERY_SOURCES = [
+    *SUMMARY_QUERY_SOURCES,
+    *FAMILY_QUERY_SOURCES
+]
+
+COLUMNS = [
+    *SUMMARY_COLUMNS,
+    *FAMILY_COLUMNS
+]
+
 
 class RemoteAllele(SummaryAllele):
 
@@ -23,6 +57,8 @@ class RemoteAllele(SummaryAllele):
             self._find_attribute("reference"),
             alternative=self._find_attribute("alternative"),
             end_position=end_position,
+            summary_index=self._find_attribute("summary_index"),
+            allele_index=self._find_attribute("allele_index"),
             attributes=dict(zip(self.columns, self.attributes_list))
         )
 
@@ -48,8 +84,3 @@ class RemoteVariant(SummaryVariant):
         ref_allele = RemoteAllele.create_reference_allele(remote_alleles[0])
         remote_alleles.insert(0, ref_allele)
         super(RemoteVariant, self).__init__(remote_alleles)
-
-    def _find_attribute(self, source: str):
-        if source not in self.columns:
-            return None
-        return self.attributes_list[self.columns.index(source)]
