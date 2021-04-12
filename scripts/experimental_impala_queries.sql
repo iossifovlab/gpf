@@ -1,3 +1,13 @@
+SELECT variants.bucket_index, variants.summary_index, variants.family_variants_count, variants.seen_in_status, variants.seen_as_denovo 
+FROM data_hg38_production_202005.sfari_spark_wgs_1_summary_variants as variants 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'CHD8'  )  ) ) AND 
+  ( (`chromosome` = 'chr14' AND ((`position` >= 21365194 AND `position` <= 21457298) OR (COALESCE(end_position, -1) >= 21365194 AND COALESCE(end_position, -1) <= 21457298) OR (21365194 >= `position` AND 21457298 <= COALESCE(end_position, -1)))) ) AND 
+  ( (  variants.effect_types in (  'frame-shift' , 'nonsense' , 'splice-site' , 'no-frame-shift-newStop' , 'nonsense' , 'frame-shift' , 'splice-site' , 'no-frame-shift-newStop' , 'missense' , 'synonymous' , 'noStart' , 'noEnd' , 'no-frame-shift' , 'CDS' , 'CNV+' , 'CNV-'  )  ) ) AND 
+  ( variants.allele_index > 0 ) AND ( variants.coding_bin = 1 ) AND ( variants.region_bin IN ('chr14_0') )
+
+
+
 SELECT
     variants.bucket_index,
     variants.summary_index,
