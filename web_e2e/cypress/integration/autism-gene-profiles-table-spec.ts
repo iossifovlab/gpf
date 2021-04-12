@@ -146,4 +146,10 @@ describe('Column filtering dropdown tests', () => {
     autismGeneProfilesTablePage.geneSetsDropdownSearch.type('autism');
     autismGeneProfilesTablePage.allGeneSetsDropdownCheckboxes.should('have.length', 1);
   });
+
+  // apply should actually work and make columns disappear/add
+
+  // sorting should work
+
+  // sorting arrow should change the image when clicked
 });

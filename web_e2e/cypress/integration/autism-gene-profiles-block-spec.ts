@@ -40,4 +40,27 @@ describe('Autism gene profiles table tests', () => {
     cy.get('body').type('w');
     autismGeneProfilesBlockPage.allTabs.should('have.length', 1);
   });
+
+  // more tabs tests
 });
+
+
+// describe('general tests', () => {
+//   const autismGeneProfilesBlockPage = new AutismGeneProfilesBlock();
+//   const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
+
+//   before(() => {
+//     autismGeneProfilesBlockPage.cleanup();
+//   });
+
+//   beforeEach(() => {
+//     autismGeneProfilesBlockPage.navigateToHome();
+//     autismGeneProfilesBlockPage.toggleSidenav();
+//     autismGeneProfilesBlockPage.sidenavAutismGeneProfilesButton.click();
+//   });
+
+//  // red lines tests - check the values also check the difference between 0 and undefind
+//  // gene sets check in the table should match the one in the single view
+//  // protection/autism scores in the table should match the ones in the single view
+
+// });

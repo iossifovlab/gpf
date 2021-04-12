@@ -43,4 +43,6 @@ describe('Autism gene profiles single view tests', () => {
         .and('equal', geneBrowserUrl)
     });
   });
+
+  // red market number indicator test
 });
