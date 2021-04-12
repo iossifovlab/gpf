@@ -145,10 +145,10 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   transformFamilyVariantsQueryParameters(state) {
     const inheritanceFilters = [];
     if (state.showDenovo && state.showTransmitted) {
-      // inheritanceFilters.push('denovo');
-      // inheritanceFilters.push('mendelian');
-      // inheritanceFilters.push('omission');
-      // inheritanceFilters.push('missing');
+      inheritanceFilters.push('denovo');
+      inheritanceFilters.push('mendelian');
+      inheritanceFilters.push('omission');
+      inheritanceFilters.push('missing');
     } else if (state.showDenovo) {
       inheritanceFilters.push('denovo');
     } else if (state.showTransmitted) {
