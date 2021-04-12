@@ -115,6 +115,23 @@ class Person(object):
         return f"Person({decorator}{self.person_id} ({self.family_id}); " \
             f"{self.role}; {self.sex}, {self.status})"
 
+    def to_json(self):
+        return {
+            "person_id": self.person_id,
+            "dad_id": self.dad_id,
+            "mom_id": self.mom_id,
+            "sample_id": self.sample_id,
+            "index": self.index,
+            "sex": self.sex,
+            "role": self.role,
+            "status": self.status,
+            "layout": self.layout,
+            "generated": self.generated,
+            "family_bin": self.family_bin,
+            "not_sequenced": self.not_sequenced,
+            "missing": self.missing,
+        }
+
     @property
     def role(self):
         return self._role
@@ -261,6 +278,13 @@ class Family(object):
 
     def __repr__(self):
         return f"Family({self.family_id}, {list(self.persons.values())})"
+
+    def to_json(self):
+        return {
+            "family_id": self.family_id,
+            "person_ids": self.members_ids,
+            "samples_index": self._samples_index
+        }
 
     def add_members(self, persons):
         assert all([isinstance(p, Person) for p in persons])
