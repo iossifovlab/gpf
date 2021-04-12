@@ -31,6 +31,12 @@ def parse_cli_arguments(argv, gpf_instance):
         metavar="<studies IDs>",
         help="comma separated list of study IDs",
     )
+    parser.add_argument(
+        "--split-size",
+        type=int,
+        metavar="<region split size>",
+        default=0,
+        help="region bin split size in base pairs")
 
     argv = parser.parse_args(argv)
     return argv
@@ -44,11 +50,11 @@ def variants_parition_bins(study_backend, partition):
         with connection.cursor() as cursor:
             q = f"SELECT DISTINCT({partition}) FROM " \
                 f"{study_backend.db}.{study_backend.variants_table}"
-            print(q)
+            logger.info(f"collecting patitions: {q}")
             cursor.execute(q)
             for row in cursor:
                 partition_bins.append(row[0])
-    print(partition_bins)
+    logger.info(f"partitions found: {partition_bins}")
     return partition_bins
 
 
@@ -199,12 +205,11 @@ class RegionBinsHelper:
 
 def insert_into_summary_table(
         pedigree_table, variants_table, summary_table,
-        summary_schema, parition, region_bins):
-
-    region_split = 1_000_000
+        summary_schema, parition, region_bins, region_split=0):
 
     grouping_fields = [
         "bucket_index",
+        "position",
         "summary_index",
         "allele_index",
         "effect_types",
@@ -265,11 +270,17 @@ def insert_into_summary_table(
     region = region_bins[region_bin]
     select_partition_statement = " AND ".join(select_partition_statement)
 
-    queries = []
-    for region_begin in range(region.begin, region.end, region_split):
-        region_statement = f"variants.`position` >= {region_begin} AND " \
-            f"variants.`position` <= {region_begin + region_split}"
+    region_statements = []
+    if region_split == 0:
+        region_statements.append("")
+    else:
+        for region_begin in range(region.begin, region.end, region_split):
+            region_statement = f"variants.`position` >= {region_begin} AND " \
+                f"variants.`position` <= {region_begin + region_split} AND"
+            region_statements.append(region_statement)
 
+    queries = []
+    for region_statement in region_statements:
         q = f"INSERT INTO {summary_table} ( " \
             f"{grouping_statement}, " \
             f"{insert_other_statement}, " \
@@ -283,8 +294,9 @@ def insert_into_summary_table(
             f"FROM {variants_table} as variants " \
             f"JOIN {pedigree_table} as pedigree " \
             f"WHERE {select_partition_statement} AND " \
-            f"{region_statement} AND " \
+            f"{region_statement} " \
             f"variants.allele_index > 0 AND " \
+            f"BITAND(134, variants.inheritance_in_members) != 0 AND " \
             f"variants.variant_in_members = pedigree.person_id "\
             f"GROUP BY {grouping_statement}"
         queries.append(q)
@@ -340,12 +352,6 @@ def main(argv=sys.argv[1:], gpf_instance=None):
         variants_table = f"{study_backend.db}.{study_backend.variants_table}"
 
         partition_bins = {}
-        # partition_bins = {
-        #     'region_bin': [
-        #         'chr1_0', 'chr3_0',
-        #     ],
-        #     'frequency_bin': [3, ],
-        # }
 
         logger.info(
             f"collecting partitions {partitions} from "
@@ -366,7 +372,8 @@ def main(argv=sys.argv[1:], gpf_instance=None):
         )
         region_bin_helpers._build_region_bins()
 
-        print(region_bin_helpers.region_bins)
+        logger.info(
+            f"region bins calculated: {region_bin_helpers.region_bins}")
 
         assert set(partition_bins["region_bin"]).issubset(
             set(region_bin_helpers.region_bins.keys()))
@@ -380,13 +387,14 @@ def main(argv=sys.argv[1:], gpf_instance=None):
             logger.info(
                 f"building summary table for partition: "
                 f"{index}/{len(all_partitions)}; "
-                f"{partition}")
+                f"{partition} of {study_id}")
 
             part_started = time.time()
             for q in insert_into_summary_table(
                         pedigree_table, variants_table, summary_table,
                         summary_schema, partition,
-                        region_bin_helpers.region_bins
+                        region_bin_helpers.region_bins,
+                        argv.split_size
                     ):
 
                 with closing(impala.connection()) as connection:
@@ -399,14 +407,14 @@ def main(argv=sys.argv[1:], gpf_instance=None):
 
             logger.info(
                 f"processing partition "
-                f"{index}/{len(all_partitions)} "
+                f"{index}/{len(all_partitions)} of {study_id} "
                 f"took {part_elapsed:.2f} secs; "
                 f"{partition} "
             )
             elapsed = time.time() - started
             logger.info(
                 f"processing partition "
-                f"{index}/{len(all_partitions)}; "
+                f"{index}/{len(all_partitions)} of {study_id}; "
                 f"total time {elapsed:.2f} secs"
             )
 
