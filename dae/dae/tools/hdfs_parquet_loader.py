@@ -5,7 +5,8 @@ import argparse
 import logging
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.backends.impala.parquet_io import NoPartitionDescriptor, ParquetPartitionDescriptor
+from dae.backends.impala.parquet_io import NoPartitionDescriptor, \
+    ParquetPartitionDescriptor
 
 
 logger = logging.getLogger(__name__)
