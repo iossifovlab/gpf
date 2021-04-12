@@ -155,7 +155,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
       inheritanceFilters.push('mendelian');
       inheritanceFilters.push('omission');
       inheritanceFilters.push('missing');
-      inheritanceFilters.push('unknown');
+      // inheritanceFilters.push('unknown');
     }
     let effects: string[] = state.selectedEffectTypes;
     if (effects.indexOf('other') >= 0) {
