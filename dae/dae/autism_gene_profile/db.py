@@ -2,7 +2,7 @@ import logging
 from copy import copy
 
 from dae.autism_gene_profile.statistic import AGPStatistic
-from sqlalchemy import MetaData, create_engine, inspect
+from sqlalchemy import MetaData, create_engine, inspect, nullslast
 from sqlalchemy import Table, Column, Integer, String, Float, ForeignKey
 from sqlalchemy.sql import select, insert, join, delete, and_, desc, asc
 from sqlalchemy.orm import aliased
@@ -226,7 +226,7 @@ class AutismGeneProfileDB:
                 order = "desc"
             sort_by = self._transform_sort_by(sort_by)
             query_order_func = desc if order == "desc" else asc
-            s = s.order_by(query_order_func(sort_by))
+            s = s.order_by(nullslast(query_order_func(sort_by)))
 
         if page is not None:
             s = s.limit(self.PAGE_SIZE).offset(self.PAGE_SIZE*(page-1))
