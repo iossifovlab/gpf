@@ -44,27 +44,17 @@ class AutismGeneProfileDB:
             ]
         return configuration
 
-    def _get_autism_scores(self, gene_symbol_id):
+    def _get_genomic_scores(self, gene_symbol_id):
         s = select([
-            self.autism_scores.c.score_name,
-            self.autism_scores.c.score_value,
+            self.genomic_scores.c.score_name,
+            self.genomic_scores.c.score_value,
+            self.genomic_scores.c.score_category
         ]).where(
-            self.autism_scores.c.symbol_id == gene_symbol_id,
+            self.genomic_scores.c.symbol_id == gene_symbol_id,
         )
         with self.engine.connect() as connection:
-            autism_scores = connection.execute(s).fetchall()
-        return autism_scores
-
-    def _get_protection_scores(self, gene_symbol_id):
-        s = select([
-            self.protection_scores.c.score_name,
-            self.protection_scores.c.score_value,
-        ]).where(
-            self.protection_scores.c.symbol_id == gene_symbol_id,
-        )
-        with self.engine.connect() as connection:
-            protection_scores = connection.execute(s).fetchall()
-        return protection_scores
+            genomic_scores = connection.execute(s).fetchall()
+        return genomic_scores
 
     def _get_studies(self):
         s = select(self.studies.c)
@@ -101,9 +91,9 @@ class AutismGeneProfileDB:
             variant_counts = connection.execute(s).fetchall()
         return variant_counts
 
-    def _get_gene_set(self, gene_set_name):
-        s = select([self.gene_sets.c.id, self.gene_sets.c.set_name]).where(
-            self.gene_sets.c.set_name == gene_set_name
+    def _get_gene_set(self, gene_set_id):
+        s = select([self.gene_sets.c.id, self.gene_sets.c.set_id]).where(
+            self.gene_sets.c.set_id == gene_set_id
         )
         with self.engine.connect() as connection:
             gene_sets = connection.execute(s).fetchall()
@@ -121,7 +111,7 @@ class AutismGeneProfileDB:
         s = select(self.gene_sets.c)
         with self.engine.connect() as connection:
             sets = connection.execute(s).fetchall()
-        return {gs.set_name: gs.id for gs in sets}
+        return {gs.set_id: gs.id for gs in sets}
 
     def _get_gene_symbol_sets(self, gene_symbol_id):
         j = join(
@@ -130,7 +120,7 @@ class AutismGeneProfileDB:
         )
         s = select(
             [
-                self.gene_sets.c.set_name,
+                self.gene_sets.c.set_id,
                 self.gene_symbol_sets.c.present
             ]
         ).select_from(j).where(
@@ -167,10 +157,23 @@ class AutismGeneProfileDB:
             row[0] for row in
             filter(lambda row: row["present"] == 1, sets_in)
         ]
-        protection_scores = self._get_protection_scores(symbol_id)
-        protection_scores = {row[0]: row[1] for row in protection_scores}
-        autism_scores = self._get_autism_scores(symbol_id)
-        autism_scores = {row[0]: row[1] for row in autism_scores}
+
+        db_genomic_scores = self._get_genomic_scores(symbol_id)
+        config_scores = self.configuration["genomic_scores"]
+
+        genomic_scores = {sc["category"]: dict() for sc in config_scores}
+
+        for score in db_genomic_scores:
+            score_name = score["score_name"]
+            score_value = score["score_value"]
+            fmt = config_scores[score_name]["format"]
+            category = score["score_category"]
+
+            genomic_scores[category][score_name] = {
+                "value": score_value,
+                "format": fmt
+            }
+
         variant_counts_rows = self._get_variant_counts(symbol_id)
         variant_counts = dict()
         for row in variant_counts_rows:
@@ -188,8 +191,8 @@ class AutismGeneProfileDB:
             variant_counts[study_name][person_set][effect_type] = count
 
         return AGPStatistic(
-            gene_symbol, sets_in, protection_scores,
-            autism_scores, variant_counts
+            gene_symbol, sets_in,
+            genomic_scores, variant_counts
         )
 
     def get_all_agps(self):
@@ -250,12 +253,13 @@ class AutismGeneProfileDB:
             self.metadata,
             Column("id", Integer(), primary_key=True),
             Column(
-                "set_name",
+                "set_id",
                 String(64),
                 nullable=False,
                 unique=True,
                 index=True,
-            )
+            ),
+            Column("collection_id", String(64), nullable=False)
         )
 
     def _build_gene_symbol_sets_table(self):
@@ -272,7 +276,13 @@ class AutismGeneProfileDB:
         with self.engine.connect() as connection:
             connection.execute(
                 insert(self.gene_sets).values(
-                    [{'set_name': s} for s in sets]
+                    [
+                        {
+                            'set_id': s["set_id"],
+                            'collection_id': s["collection_id"]
+                        }
+                        for s in sets
+                    ]
                 )
             )
 
@@ -284,24 +294,15 @@ class AutismGeneProfileDB:
                 )
             )
 
-    def _build_autism_scores_table(self):
-        self.autism_scores = Table(
-            "autism_scores",
+    def _build_genomic_scores_table(self):
+        self.genomic_scores = Table(
+            "genomic_scores",
             self.metadata,
             Column("id", Integer(), primary_key=True),
             Column("symbol_id", ForeignKey("gene_symbols.id")),
             Column("score_name", String(64), nullable=False),
-            Column("score_value", Float())
-        )
-
-    def _build_protection_scores_table(self):
-        self.protection_scores = Table(
-            "protection_scores",
-            self.metadata,
-            Column("id", Integer(), primary_key=True),
-            Column("symbol_id", ForeignKey("gene_symbols.id")),
-            Column("score_name", String(64), nullable=False),
-            Column("score_value", Float())
+            Column("score_value", Float()),
+            Column("score_category", String(64))
         )
 
     def _build_variant_counts_table(self):
@@ -346,16 +347,19 @@ class AutismGeneProfileDB:
         columns = {}
         columns["symbol_name"] = \
             Column("symbol_name", String(64), primary_key=True)
-        for gs in self.configuration["gene_sets"]:
-            columns[gs] = Column(gs, Integer())
+        for category in self.configuration["gene_sets"]:
+            for gs in category["sets"]:
+                set_id = gs["set_id"]
+                collection_id = gs["collection_id"]
+                full_set_id = f"{collection_id}_{set_id}"
+                columns[full_set_id] = Column(full_set_id, Integer())
 
-        for ps in self.configuration["protection_scores"]:
-            col = f"protection_{ps}"
-            columns[col] = Column(col, Float())
-
-        for aus in self.configuration["autism_scores"]:
-            col = f"autism_{aus}"
-            columns[col] = Column(col, Float())
+        for category in self.configuration["genomic_scores"]:
+            category_name = category["category"]
+            for score in category["scores"]:
+                score_name = score["score_name"]
+                col = f"{category_name}_{score_name}"
+                columns[col] = Column(col, Float())
 
         for dataset_id, dataset in self.configuration["datasets"].items():
             config_section = self.configuration["datasets"][dataset_id]
@@ -399,66 +403,54 @@ class AutismGeneProfileDB:
         current_join = None
         select_cols = [self.gene_symbols.c.symbol_name]
 
-        for gs in self.configuration["gene_sets"]:
-            set_alias = gs
-            table_alias = aliased(
-                self.gene_symbol_sets,
-                set_alias
-            )
-            left = current_join
-            if left is None:
-                left = self.gene_symbols
-
-            current_join = join(
-                left, table_alias,
-                and_(
-                    self.gene_symbols.c.id == table_alias.c.symbol_id,
-                    table_alias.c.set_id == gene_set_ids[gs]
-                ),
-                isouter=True
-            )
-
-            select_cols.append(table_alias.c.present.label(set_alias))
-
-        for ps in self.configuration["protection_scores"]:
-            score_alias = f"protection_{ps}"
-            table_alias = aliased(
-                self.protection_scores,
-                score_alias
-            )
-            left = current_join
-            if left is None:
-                left = self.gene_symbols
-
-            current_join = join(
-                left, table_alias,
-                and_(
-                    self.gene_symbols.c.id == table_alias.c.symbol_id,
-                    table_alias.c.score_name == ps
+        for category in self.configuration["gene_sets"]:
+            for gs in category.sets:
+                set_id = gs["set_id"]
+                collection_id = gs["collection_id"]
+                set_alias = f"{collection_id}_{set_id}"
+                table_alias = aliased(
+                    self.gene_symbol_sets,
+                    set_alias
                 )
-            )
+                left = current_join
+                if left is None:
+                    left = self.gene_symbols
 
-            select_cols.append(table_alias.c.score_value.label(score_alias))
-
-        for aus in self.configuration["autism_scores"]:
-            score_alias = f"autism_{aus}"
-            table_alias = aliased(
-                self.autism_scores,
-                score_alias
-            )
-            left = current_join
-            if left is None:
-                left = self.gene_symbols
-
-            current_join = join(
-                left, table_alias,
-                and_(
-                    self.gene_symbols.c.id == table_alias.c.symbol_id,
-                    table_alias.c.score_name == aus
+                current_join = join(
+                    left, table_alias,
+                    and_(
+                        self.gene_symbols.c.id == table_alias.c.symbol_id,
+                        table_alias.c.set_id == gene_set_ids[set_id]
+                    ),
+                    isouter=True
                 )
-            )
 
-            select_cols.append(table_alias.c.score_value.label(score_alias))
+                select_cols.append(table_alias.c.present.label(set_alias))
+
+        for category in self.configuration["genomic_scores"]:
+            category_name = category["category"]
+            for score in category["scores"]:
+                score_name = score["score_name"]
+                score_alias = f"{category_name}_{score_name}"
+                table_alias = aliased(
+                    self.genomic_scores,
+                    score_alias
+                )
+                left = current_join
+                if left is None:
+                    left = self.gene_symbols
+
+                current_join = join(
+                    left, table_alias,
+                    and_(
+                        self.gene_symbols.c.id == table_alias.c.symbol_id,
+                        table_alias.c.score_name == score_name
+                    )
+                )
+
+                select_cols.append(
+                    table_alias.c.score_value.label(score_alias)
+                )
 
         for dataset_id, dataset in self.configuration["datasets"].items():
             config_section = self.configuration["datasets"][dataset_id]
@@ -501,8 +493,7 @@ class AutismGeneProfileDB:
         self._build_gene_sets_table()
         self._build_gene_symbol_sets_table()
         self._build_studies_table()
-        self._build_autism_scores_table()
-        self._build_protection_scores_table()
+        self._build_genomic_scores_table()
         self._build_variant_counts_table()
         if clear:
             self.metadata.drop_all()
@@ -512,14 +503,17 @@ class AutismGeneProfileDB:
         with self.engine.connect() as connection:
             connection.execute(delete(self.variant_counts))
             connection.execute(delete(self.gene_symbol_sets))
-            connection.execute(delete(self.protection_scores))
-            connection.execute(delete(self.autism_scores))
+            connection.execute(delete(self.genomic_scores))
             connection.execute(delete(self.studies))
             connection.execute(delete(self.gene_symbols))
             connection.execute(delete(self.gene_sets))
 
     def populate_data_tables(self, studies):
-        gene_sets = self.configuration["gene_sets"]
+        gene_sets_config = self.configuration["gene_sets"]
+        gene_sets = []
+        for category in gene_sets_config:
+            for gene_set in category.sets:
+                gene_sets.append(gene_set)
         self._populate_gene_sets_table(gene_sets)
         self._populate_studies_table(studies)
 
@@ -529,33 +523,30 @@ class AutismGeneProfileDB:
                 insert(self.gene_symbols).values(symbol_name=agp.gene_symbol)
             )
             symbol_id = self._get_gene_symbol_id(agp.gene_symbol)
-            for name, value in agp.protection_scores.items():
-                connection.execute(
-                    insert(self.protection_scores).values(
-                        symbol_id=symbol_id,
-                        score_name=name,
-                        score_value=value
+            for category, scores in agp.genomic_scores.items():
+                for name, value in scores.items():
+                    connection.execute(
+                        insert(self.genomic_scores).values(
+                            symbol_id=symbol_id,
+                            score_name=name,
+                            score_value=value,
+                            score_category=category
+                        )
                     )
-                )
-            for name, value in agp.autism_scores.items():
-                connection.execute(
-                    insert(self.autism_scores).values(
-                        symbol_id=symbol_id,
-                        score_name=name,
-                        score_value=value
-                    )
-                )
             gene_sets = self._get_gene_sets()
             for gs_row in gene_sets:
-                if gs_row["set_name"] in agp.gene_sets:
+                set_id = gs_row["set_id"]
+                collection_id = gs_row["collection_id"]
+                full_set_id = f"{collection_id}_{set_id}"
+                if full_set_id in agp.gene_sets:
                     present = 1
                 else:
                     present = 0
-                set_id = gs_row["id"]
+                db_set_id = gs_row["id"]
                 connection.execute(
                     insert(self.gene_symbol_sets).values(
                         symbol_id=symbol_id,
-                        set_id=set_id,
+                        set_id=db_set_id,
                         present=present
                     )
                 )
@@ -588,22 +579,18 @@ class AutismGeneProfileDB:
                         )
                     )
                     symbol_id = result.inserted_primary_key[0]
-                    for name, value in agp.protection_scores.items():
-                        connection.execute(
-                            insert(self.protection_scores).values(
-                                symbol_id=symbol_id,
-                                score_name=name,
-                                score_value=value
+
+                    for category, scores in agp.genomic_scores.items():
+                        for name, value in scores.items():
+                            connection.execute(
+                                insert(self.genomic_scores).values(
+                                    symbol_id=symbol_id,
+                                    score_name=name,
+                                    score_value=value,
+                                    score_category=category
+                                )
                             )
-                        )
-                    for name, value in agp.autism_scores.items():
-                        connection.execute(
-                            insert(self.autism_scores).values(
-                                symbol_id=symbol_id,
-                                score_name=name,
-                                score_value=value
-                            )
-                        )
+
                     for gene_set, set_id in gene_set_ids.items():
                         set_id = gene_set_ids[gene_set]
                         present = 0
