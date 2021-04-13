@@ -220,7 +220,7 @@ const appRoutes: Routes = [
     component: AutismGeneProfilesBlockComponent
   },
   {
-    path: 'autismGeneProfiles/:gene',
+    path: 'autism-gene-profiles/:gene',
     component: AutismGeneProfilesBlockComponent
   },
   {
