@@ -170,10 +170,6 @@ import { SortingButtonsComponent } from './sorting-buttons/sorting-buttons.compo
 
 const appRoutes: Routes = [
   {
-    path: 'pedigrees',
-    component: NonPdpPedigreesComponent
-  },
-  {
     path: 'datasets',
     component: DatasetsComponent
   },
@@ -186,41 +182,41 @@ const appRoutes: Routes = [
     canLoad: [DatasetPermissionGuard],
     children: [
       {
-        path: 'browser',
+        path: 'genotype-browser',
         component: GenotypeBrowserSingleViewComponent
       },
       {
-        path: 'enrichment',
+        path: 'enrichment-tool',
         component: EnrichmentToolComponent
       },
       {
-        path: 'phenoTool',
+        path: 'phenotype-tool',
         component: PhenoToolComponent
       },
       {
-        path: 'phenotypeBrowser',
+        path: 'phenotype-browser',
         component: PhenoBrowserComponent
       },
       {
-        path: 'description',
+        path: 'dataset-description',
         component: DatasetDescriptionComponent
       },
       {
-        path: 'commonReport',
+        path: 'dataset-statistics',
         component: VariantReportsComponent
       },
       {
-        path: 'geneBrowser',
+        path: 'gene-browser',
         component: GeneBrowserComponent
       },
       {
-        path: 'geneBrowser/:gene',
+        path: 'gene-browser/:gene',
         component: GeneBrowserComponent
       }
     ]
   },
   {
-    path: 'autismGeneProfiles',
+    path: 'autism-gene-profiles',
     component: AutismGeneProfilesBlockComponent
   },
   {
@@ -263,7 +259,7 @@ const appRoutes: Routes = [
     component: LoadQueryComponent
   },
   {
-    path: 'queries',
+    path: 'saved-queries',
     component: SavedQueriesComponent
   },
   {

@@ -24,25 +24,25 @@
         </div>
       </li>
       <li *ngIf="selectedDataset.description" class="nav-item">
-        <a class="nav-link" routerLink="description" routerLinkActive="active">Dataset Description</a>
+        <a class="nav-link" routerLink="dataset-description" routerLinkActive="active">Dataset Description</a>
       </li>
       <li *ngIf="selectedDataset.commonReport['enabled']" class="nav-item">
-        <a class="nav-link" routerLink="commonReport" routerLinkActive="active">Dataset Statistics</a>
+        <a class="nav-link" routerLink="dataset-statistics" routerLinkActive="active">Dataset Statistics</a>
       </li>
       <li *ngIf="selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig" class="nav-item">
-        <a class="nav-link" routerLink="browser" routerLinkActive="active">Genotype Browser</a>
+        <a class="nav-link" routerLink="genotype-browser" routerLinkActive="active">Genotype Browser</a>
       </li>
       <li *ngIf="selectedDataset.phenotypeBrowser" class="nav-item">
-        <a class="nav-link" routerLink="phenotypeBrowser" routerLinkActive="active">Phenotype Browser</a>
+        <a class="nav-link" routerLink="phenotype-browser" routerLinkActive="active">Phenotype Browser</a>
       </li>
       <li *ngIf="selectedDataset.enrichmentTool" class="nav-item">
-        <a class="nav-link" routerLink="enrichment" routerLinkActive="active">Enrichment Tool</a>
+        <a class="nav-link" routerLink="enrichment-tool" routerLinkActive="active">Enrichment Tool</a>
       </li>
       <li *ngIf="selectedDataset.phenotypeTool" class="nav-item">
-        <a class="nav-link" routerLink="phenoTool" routerLinkActive="active">Phenotype Tool</a>
+        <a class="nav-link" routerLink="phenotype-tool" routerLinkActive="active">Phenotype Tool</a>
       </li>
       <li *ngIf="selectedDataset.geneBrowser?.enabled" class="nav-item">
-        <a class="nav-link" routerLink="geneBrowser" routerLinkActive="active">Gene Browser</a>
+        <a class="nav-link" routerLink="gene-browser" routerLinkActive="active">Gene Browser</a>
       </li>
     </ul>
   </nav>

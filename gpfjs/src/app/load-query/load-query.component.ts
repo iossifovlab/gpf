@@ -6,10 +6,10 @@ import { StateRestoreService } from '../store/state-restore.service';
 import { DatasetsService } from '../datasets/datasets.service';
 
 const PAGE_TYPE_TO_NAVIGATE = {
-    genotype: datasetId => ['datasets', datasetId, 'browser'],
-    phenotype: datasetId => ['datasets', datasetId, 'phenotypeBrowser'],
-    enrichment: datasetId => ['datasets', datasetId, 'enrichment'],
-    phenotool: datasetId => ['datasets', datasetId, 'phenoTool']
+    genotype: datasetId => ['datasets', datasetId, 'genotype-browser'],
+    phenotype: datasetId => ['datasets', datasetId, 'phenotype-browser'],
+    enrichment: datasetId => ['datasets', datasetId, 'enrichment-tool'],
+    phenotool: datasetId => ['datasets', datasetId, 'phenotype-tool']
 };
 
 @Component({
