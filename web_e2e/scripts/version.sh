@@ -40,7 +40,7 @@ export IMAGE_GPF_BUILDER="registry.seqpipe.org:5000/seqpipe-builder:${GPF_TAG}"
 docker pull ${IMAGE_GPF_DEV}
 docker pull ${IMAGE_GPF_BUILDER}
 
-export GPF_VERSION=$(docker run --entrypoint /bin/cat ${IMAGE_GPF_DEV} /code/VERSION)
+export GPF_VERSION=$(docker run --rm --entrypoint /bin/cat ${IMAGE_GPF_DEV} /code/VERSION)
 echo "IMAGE_GPF_DEV                 : ${IMAGE_GPF_DEV}"
 echo "GPF_VERSION                   : ${GPF_VERSION}"
 echo "BUILD_NUMBER                  : ${GPF_VERSION}"
