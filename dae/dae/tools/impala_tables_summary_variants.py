@@ -396,12 +396,19 @@ def main(argv=sys.argv[1:], gpf_instance=None):
                         region_bin_helpers.region_bins,
                         argv.split_size
                     ):
-
-                with closing(impala.connection()) as connection:
-                    with connection.cursor() as cursor:
-                        logger.debug(
-                            f"going to run summary query: {q}")
-                        cursor.execute(q)
+                repeat = 5
+                while repeat > 0:
+                    try:
+                        with closing(impala.connection()) as connection:
+                            with connection.cursor() as cursor:
+                                logger.debug(
+                                    f"going to run summary query: {q}")
+                                cursor.execute(q)
+                                repeat = 0
+                    except Exception:
+                        logger.exception(f"error executing {q}")
+                        time.sleep(2)
+                        repeat -= 1
 
             part_elapsed = time.time() - part_started
 
