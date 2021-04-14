@@ -30,10 +30,10 @@ export const datasetIds = {
 };
 
 export const toolPageLinks = {
-  datasetStatistics: 'commonReport',
+  datasetStatistics: 'dataset-statistics',
   genotypeBrowser: 'genotype-browser',
   phenotypeBrowser: 'phenotype-browser',
-  phenotypeTool: 'phenotyoe-tool',
+  phenotypeTool: 'phenotype-tool',
   enrichmentTool: 'enrichment-tool',
   geneBrowser: 'gene-browser'
 };

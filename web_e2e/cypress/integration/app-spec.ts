@@ -1,5 +1,5 @@
 import { AppPage } from 'cypress/elements/app-page';
-import { userData } from 'cypress/elements/utils';
+import { toolPageLinks, userData } from 'cypress/elements/utils';
 
 describe('App tests', () => {
   const appPage = new AppPage();
@@ -35,9 +35,9 @@ describe('App tests', () => {
     });
   });
 
-  it('should toggle sidenav, click on the \'Datasets\' button and navigate to /datasets/comp_all/commonReport', () => {
+  it('should toggle sidenav, click on the \'Datasets\' button and navigate to /datasets/comp_all/dataset-statistics', () => {
     const baseUrl = Cypress.config().baseUrl;
-    const datasetsUrl = `${baseUrl}datasets/comp_all/commonReport`;
+    const datasetsUrl = `${baseUrl}datasets/comp_all/${toolPageLinks.datasetStatistics}`;
 
     appPage.loginAdmin();
     appPage.toggleSidenav();
