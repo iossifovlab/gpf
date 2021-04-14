@@ -24,7 +24,7 @@ export class AutismGeneProfilesService {
       if (Object.keys(res).length === 0) {
         return;
       }
-
+      console.log(AutismGeneToolConfig.fromJson(res));
       return AutismGeneToolConfig.fromJson(res);
     });
   }
