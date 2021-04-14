@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { AutismGeneToolConfig, AutismGeneToolGene } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import { AutismGeneToolConfig, AutismGeneToolGene, AutismGeneToolGeneSetsCategory, AutismGeneToolGenomicScoresCategory } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { Observable, zip } from 'rxjs';
 import { GeneWeightsService } from '../gene-weights/gene-weights.service';
 import { GeneWeights } from 'app/gene-weights/gene-weights';
@@ -18,9 +18,8 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   @Input() config: AutismGeneToolConfig;
 
   gene$: Observable<AutismGeneToolGene>;
-  autismScoreGeneWeights: GeneWeights[];
-  protectionScoreGeneWeights: GeneWeights[];
-  geneSets: string[];
+  genomicScores: AutismGeneToolGenomicScoresCategory[];
+  geneSets: AutismGeneToolGeneSetsCategory[];
 
   private _histogramOptions = {
     width: 525,
