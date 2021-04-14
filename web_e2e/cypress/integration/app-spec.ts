@@ -80,9 +80,9 @@ describe('App tests', () => {
     appPage.logout();
   });
 
-  it('should toggle sidenav, click on the \'Autism gene profiles\' button and navigate to /autismGeneProfiles', () => {
+  it('should toggle sidenav, click on the \'Autism gene profiles\' button and navigate to /autism-gene-profiles', () => {
     const baseUrl = Cypress.config().baseUrl;
-    const autismGeneProfilesUrl = `${baseUrl}autismGeneProfiles`;
+    const autismGeneProfilesUrl = `${baseUrl}autism-gene-profiles`;
 
     appPage.loginAdmin();
     appPage.toggleSidenav();
