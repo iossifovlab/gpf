@@ -17,6 +17,7 @@ export class UsersComponent implements OnInit {
   private loginError = false;
   hideDropdown = true;
   userInfo$: Observable<any>;
+  showPasswordField = false;
 
 
   @ViewChild('dropdownButton') dropdownButton: ElementRef;
@@ -44,6 +45,14 @@ export class UsersComponent implements OnInit {
       });
   }
 
+  back() {
+    this.showPasswordField = false;
+  }
+
+  next() {
+    this.showPasswordField = true;
+  }
+
   login() {
     this.usersService.login(this.username, this.password).subscribe(
       (res) => {
@@ -52,6 +61,7 @@ export class UsersComponent implements OnInit {
           this.username = null;
           this.password = null;
           this.loginError = false;
+          this.showPasswordField = false;
         } else {
           this.loginError = true;
         }
@@ -66,7 +76,6 @@ export class UsersComponent implements OnInit {
     });
   }
 
-
   showRegister() {
     this.modalService.open(RegistrationComponent);
   }
@@ -77,7 +86,10 @@ export class UsersComponent implements OnInit {
 
   @HostListener('document:click', ['$event'])
   onClick(event) {
-    if (this.dialog && this.dropdownButton) {
+    console.log();
+    if (this.dialog && this.dropdownButton
+      && event.path[0]['id'] !== 'next-button'
+      && event.path[0]['id'] !== 'back-button') {
       if (!this.dialog.nativeElement.contains(event.target) &&
       !this.dropdownButton.nativeElement.contains(event.target)) {
         this.hideDropdown = true;
