@@ -50,9 +50,9 @@ describe('App tests', () => {
     appPage.logout();
   });
 
-  it('should toggle sidenav, click on the \'Saved queries\' button and navigate to /queries', () => {
+  it('should toggle sidenav, click on the \'Saved queries\' button and navigate to /saved-queries', () => {
     const baseUrl = Cypress.config().baseUrl;
-    const savedQueriesUrl = `${baseUrl}queries`;
+    const savedQueriesUrl = `${baseUrl}saved-queries`;
 
     appPage.loginAdmin();
     appPage.toggleSidenav();
