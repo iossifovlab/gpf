@@ -61,7 +61,7 @@ class GeneSetCollection(object):
         for key, value in gene_terms.tDesc.items():
             syms = list(gene_terms.t2G[key].keys())
             gene_sets.append(GeneSet(key, value, syms))
-        keys = [gs.name for gs in gene_sets[:max(len(gene_sets), 7)]]
+        keys = [gs.name for gs in gene_sets[:min(len(gene_sets), 7)]]
         logger.debug(
             f"gene set collection loaded: {keys}...")
         return GeneSetCollection(collection_id, gene_sets)
