@@ -11,6 +11,6 @@ class AGPStatistic:
         return {
             "gene_symbol": self.gene_symbol,
             "gene_sets": self.gene_sets,
-            "genomic-scores": self.genomic_scores,
+            "genomic_scores": self.genomic_scores,
             "studies": self.variant_counts
         }
