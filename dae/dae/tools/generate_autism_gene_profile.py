@@ -156,7 +156,7 @@ def main(gpf_instance=None, argv=None):
 
             collections_gene_sets.append(
                 (
-                    gs_category.category,
+                    collection_id,
                     gpf_instance.gene_sets_db.get_gene_set(
                         collection_id, gs_id
                     )

@@ -111,7 +111,7 @@ class AutismGeneProfileDB:
         s = select(self.gene_sets.c)
         with self.engine.connect() as connection:
             sets = connection.execute(s).fetchall()
-        return {gs.set_id: gs.id for gs in sets}
+        return {f"{gs.collection_id}_{gs.set_id}": gs.id for gs in sets}
 
     def _get_gene_symbol_sets(self, gene_symbol_id):
         j = join(
@@ -407,7 +407,8 @@ class AutismGeneProfileDB:
             for gs in category.sets:
                 set_id = gs["set_id"]
                 collection_id = gs["collection_id"]
-                set_alias = f"{collection_id}_{set_id}"
+                full_set_id = f"{collection_id}_{set_id}"
+                set_alias = full_set_id
                 table_alias = aliased(
                     self.gene_symbol_sets,
                     set_alias
@@ -420,7 +421,7 @@ class AutismGeneProfileDB:
                     left, table_alias,
                     and_(
                         self.gene_symbols.c.id == table_alias.c.symbol_id,
-                        table_alias.c.set_id == gene_set_ids[set_id]
+                        table_alias.c.set_id == gene_set_ids[full_set_id]
                     ),
                     isouter=True
                 )
@@ -444,6 +445,7 @@ class AutismGeneProfileDB:
                     left, table_alias,
                     and_(
                         self.gene_symbols.c.id == table_alias.c.symbol_id,
+                        table_alias.c.score_category == category_name,
                         table_alias.c.score_name == score_name
                     )
                 )
