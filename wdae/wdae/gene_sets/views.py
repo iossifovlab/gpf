@@ -1,6 +1,8 @@
 import ast
 import json
 import itertools
+import logging
+
 from copy import deepcopy
 
 from rest_framework import status
@@ -10,6 +12,9 @@ from django.http.response import StreamingHttpResponse
 from django.utils.http import urlencode
 
 from query_base.query_base import QueryBaseView
+
+
+logger = logging.getLogger(__name__)
 
 
 class GeneSetsCollectionsView(QueryBaseView):
@@ -79,8 +84,10 @@ class GeneSetsView(QueryBaseView):
             gene_sets = self.gpf_instance.get_all_gene_sets(
                 gene_sets_collection_id
             )
+        logger.debug(f"gene set collection: {gene_sets_collection_id}")
+        logger.debug(f"gene sets: {len(gene_sets)}")
 
-        response = gene_sets
+        response = gene_sets[:]
         if "filter" in data:
             f = data["filter"].lower()
             response = [
@@ -108,7 +115,8 @@ class GeneSetsView(QueryBaseView):
             }
             for gs in response
         ]
-
+        logger.debug(
+            f"gene sets response: {[r['name'] for r in response]}")
         return Response(response, status=status.HTTP_200_OK)
 
 

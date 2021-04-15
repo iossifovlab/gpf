@@ -7,7 +7,7 @@ from dae.gene.utils import getGeneTerms, getGeneTermAtt, rename_gene_terms
 from dae.gene.gene_term import loadGeneTerm
 from dae.utils.dae_utils import cached
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class GeneSet:
@@ -39,12 +39,14 @@ class GeneSet:
 
 class GeneSetCollection(object):
     collection_id: str
-    gene_sets: Dict[str, GeneSet] = dict()
+    gene_sets: Dict[str, GeneSet]
 
     def __init__(self, collection_id: str, gene_sets: List[GeneSet]):
         assert collection_id != "denovo"
 
         self.collection_id = collection_id
+        self.gene_sets = dict()
+
         for gene_set in gene_sets:
             self.gene_sets[gene_set.name] = gene_set
 
@@ -53,10 +55,15 @@ class GeneSetCollection(object):
     @staticmethod
     def from_config(collection_id: str, config) -> "GeneSetCollection":
         gene_sets = list()
+        logger.debug(f"loading {collection_id}: {config}")
+
         gene_terms = getGeneTerms(config, collection_id, inNS="sym")
         for key, value in gene_terms.tDesc.items():
             syms = list(gene_terms.t2G[key].keys())
             gene_sets.append(GeneSet(key, value, syms))
+        keys = [gs.name for gs in gene_sets[:max(len(gene_sets), 7)]]
+        logger.debug(
+            f"gene set collection loaded: {keys}...")
         return GeneSetCollection(collection_id, gene_sets)
 
     def get_gene_set(self, gene_set_id: str) -> Optional[GeneSet]:
@@ -73,14 +80,14 @@ class GeneSetsDb(object):
         self.gene_set_collections: Dict[str, GeneSetCollection] = dict()
         self.load_eagerly = load_eagerly
         if load_eagerly:
-            LOGGER.info(
+            logger.info(
                 f"GeneSetsDb created with load_eagerly={load_eagerly}")
 
             for collection_id in self.get_gene_set_collection_ids():
-                LOGGER.debug(
+                logger.debug(
                     f"loading gene set collection <{collection_id}>")
                 self._load_gene_set_collection(collection_id)
-            LOGGER.info(
+            logger.info(
                 f"gene set collections <{self.get_gene_set_collection_ids()}> "
                 f"loaded")
 
@@ -115,14 +122,14 @@ class GeneSetsDb(object):
 
     def _load_gene_set_collection(self, gene_sets_collection_id):
         if gene_sets_collection_id not in self.gene_set_collections:
-            LOGGER.info(
+            logger.info(
                 f"gene set collection <{gene_sets_collection_id}> "
                 f"not found in GeneSetDb cache")
             self.gene_set_collections[gene_sets_collection_id] = \
                 GeneSetCollection.from_config(
                     gene_sets_collection_id, self.config
                 )
-            LOGGER.info(
+            logger.info(
                 f"gene set collection <{gene_sets_collection_id}> "
                 f"loaded into GeneSetsDb cache")
         return self.gene_set_collections[gene_sets_collection_id]
@@ -145,6 +152,8 @@ class GeneSetsDb(object):
 
     def get_all_gene_sets(self, collection_id):
         gsc = self._load_gene_set_collection(collection_id)
+        logger.debug(
+            f"gene sets from {collection_id}: {len(gsc.gene_sets.keys())}")
         return list(gsc.gene_sets.values())
 
     def get_gene_set(self, collection_id, gene_set_id):
