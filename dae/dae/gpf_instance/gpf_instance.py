@@ -432,8 +432,8 @@ class GPFInstance(object):
                 score_name = score["score_name"]
                 full_score_id = f"{category_name}_{score_name}"
                 genomic_scores[category_name][score_name] = {
-                    row[full_score_id],
-                    score["format"]
+                    "value": row[full_score_id],
+                    "format": score["format"]
                 }
 
         gene_sets_categories = config.gene_sets
