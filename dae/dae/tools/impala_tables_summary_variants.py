@@ -4,13 +4,13 @@ import argparse
 import logging
 import time
 import itertools
+import math
 
 from contextlib import closing
 
-from dae.utils.regions import Region
-
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.backends.impala.impala_variants import ImpalaVariants
+from dae.utils.regions import Region
 
 
 logger = logging.getLogger("impala_tables_summary_variants")
@@ -31,6 +31,12 @@ def parse_cli_arguments(argv, gpf_instance):
         metavar="<studies IDs>",
         help="comma separated list of study IDs",
     )
+    parser.add_argument(
+        "--split-size",
+        type=int,
+        metavar="<region split size>",
+        default=0,
+        help="region bin split size in base pairs")
 
     argv = parser.parse_args(argv)
     return argv
@@ -44,11 +50,11 @@ def variants_parition_bins(study_backend, partition):
         with connection.cursor() as cursor:
             q = f"SELECT DISTINCT({partition}) FROM " \
                 f"{study_backend.db}.{study_backend.variants_table}"
-            print(q)
+            logger.info(f"collecting patitions: {q}")
             cursor.execute(q)
             for row in cursor:
                 partition_bins.append(row[0])
-    print(partition_bins)
+    logger.info(f"partitions found: {partition_bins}")
     return partition_bins
 
 
@@ -78,8 +84,12 @@ def collect_summary_schema(impala_variants):
     return schema
 
 
-def build_summary_table_name(study_id, impala_variants):
-    return f"{impala_variants.db}.{study_id.lower()}_summary_variants "    
+def summary_table_name(study_id, impala_variants):
+    return f"{impala_variants.db}.{study_id.lower()}_summary_variants"
+
+
+def summary_table_name_temp(study_id, impala_variants):
+    return f"{impala_variants.db}.{study_id.lower()}_temp_summary_variants"
 
 
 PARTITIONS = set([
@@ -95,7 +105,22 @@ def drop_summary_table(study_id, impala_variants):
     with closing(impala.connection()) as connection:
         with connection.cursor() as cursor:
             q = f"DROP TABLE IF EXISTS " \
-                f"{build_summary_table_name(study_id, impala_variants)}"
+                f"{summary_table_name(study_id, impala_variants)}"
+            logger.info(f"drop summary table: {q}")
+            cursor.execute(q)
+
+            q = f"DROP TABLE IF EXISTS " \
+                f"{summary_table_name_temp(study_id, impala_variants)}"
+            logger.info(f"drop summary table: {q}")
+            cursor.execute(q)
+
+
+def rename_summary_table(study_id, impala_variants):
+    impala = impala_variants._impala_helpers
+    q = f"ALTER TABLE {summary_table_name_temp(study_id, impala_variants)} " \
+        f"RENAME TO {summary_table_name(study_id, impala_variants)}"
+    with closing(impala.connection()) as connection:
+        with connection.cursor() as cursor:
             logger.info(f"drop summary table: {q}")
             cursor.execute(q)
 
@@ -114,16 +139,20 @@ def create_summary_table(study_id, impala_variants):
             schema_statement.append(f"`{field_name}` {field_type}")
 
     schema_statement = ", ".join(schema_statement)
-    partition_statement = ", ".join(partition_statement)
+    if not partition_statement:
+        partition_statement = ""
+    else:
+        partition_statement = ", ".join(partition_statement)
+        partition_statement = f"PARTITIONED BY ({partition_statement}) "
 
     impala = impala_variants._impala_helpers
     with closing(impala.connection()) as connection:
         with connection.cursor() as cursor:
 
             q = f"CREATE TABLE IF NOT EXISTS " \
-                f"{build_summary_table_name(study_id, impala_variants)} " \
+                f"{summary_table_name_temp(study_id, impala_variants)} " \
                 f"({schema_statement}) " \
-                f"PARTITIONED BY ({partition_statement}) " \
+                f"{partition_statement}" \
                 f"STORED AS PARQUET"
 
             logger.info(f"create summary table: {q}")
@@ -132,69 +161,55 @@ def create_summary_table(study_id, impala_variants):
     return partition_bins
 
 
-VARIANT_ATTRIBUTES = set([
-    "chromosome",
-    "position",
-    "effect_types",
-    "effect_gene_symbols",
-])
+class RegionBinsHelper:
 
-ENUM_ATTRIBUTES = set([
-    "variant_type",
-    "transmission_type",
-])
+    def __init__(self, table_properties, genome):
+        self.table_properties = table_properties
+        self.chromosomes = self.table_properties["chromosomes"]
+        self.region_length = self.table_properties["region_length"]
 
+        self.chromosome_lengths = dict(
+            genome.get_genomic_sequence().get_all_chrom_lengths())
 
-def insert_summary_variant(table_name, summary_schema, sa):
-    summary_values = []
-    partition_values = []
-    for field_name, field_type in summary_schema.items():
-        if field_name in VARIANT_ATTRIBUTES:
-            field_value = getattr(sa, field_name)
-        else:
-            field_value = sa.get_attribute(field_name)
-        if field_name in ENUM_ATTRIBUTES:
-            print("\t\t", field_name, type(field_value), field_type)
-            field_value = field_value.value
+        self.region_bins = {}
 
-        print("\t", field_name, "=", field_value)
+    def _build_region_bins(self):
+        if not self.chromosomes or self.region_length == 0:
+            return []
 
-        if field_name in PARTITIONS:
-            assert field_value is not None, (field_name, field_value)
-
-            if field_type.lower() in set(["string", "binary"]):
-                partition_values.append(
-                    f'{field_name} = "{field_value}"')
-            else:
-                partition_values.append(
-                    f"{field_name} = {field_value}")
-        else:
-            if field_value is None:
-                summary_values.append("null")
-            elif field_name.lower() in set(["variant_data"]):
-                # summary_values.append(field_value.decode("utf8"))
-                summary_values.append("null")
-            elif field_type.lower() in set(["string"]):
-                summary_values.append(f'"{field_value}"')
-            else:
-                summary_values.append(f"{field_value}")
-
-    partition_values = ", ".join(partition_values)
-    summary_values = ", ".join(summary_values)
-    insert_statement = f"INSERT INTO " \
-        f"{table_name} " \
-        f"PARTITION ({partition_values}) " \
-        f"VALUES ({summary_values})"
-    print(insert_statement)
-    return insert_statement
+        for chrom in self.chromosome_lengths:
+            target_chrom = chrom
+            if target_chrom not in self.chromosomes:
+                target_chrom = "other"
+            region_bins_count = math.ceil(
+                self.chromosome_lengths[chrom]
+                / self.region_length
+            )
+            for region_index in range(region_bins_count):
+                region_bin = f"{target_chrom}_{region_index}"
+                region_begin = region_index * self.region_length + 1
+                region_end = min(
+                    (region_index + 1) * self.region_length,
+                    self.chromosome_lengths[chrom])
+                region = Region(region_bin, region_begin, region_end)
+                if region_bin not in self.region_bins:
+                    self.region_bins[region_bin] = region
+                else:
+                    prev_region = self.region_bins[region_bin]
+                    assert prev_region.chrom == region_bin
+                    assert prev_region.begin == region.begin
+                    region = Region(
+                        region_bin, 1, max(region.end, prev_region.end))
+                    self.region_bins[region_bin] = region
 
 
 def insert_into_summary_table(
         pedigree_table, variants_table, summary_table,
-        summary_schema, parition):
+        summary_schema, parition, region_bins, region_split=0):
 
     grouping_fields = [
         "bucket_index",
+        "position",
         "summary_index",
         "allele_index",
         "effect_types",
@@ -250,25 +265,42 @@ def insert_into_summary_table(
             select_partition_statement.append(
                 f"variants.`{bin_name}` = {bin_value}")
     insert_partition_statement = ", ".join(insert_partition_statement)
+
+    region_bin = parition["region_bin"]
+    region = region_bins[region_bin]
     select_partition_statement = " AND ".join(select_partition_statement)
 
-    q = f"INSERT INTO {summary_table} ( " \
-        f"{grouping_statement}, " \
-        f"{insert_other_statement}, " \
-        f"{insert_family_summary_fields}) " \
-        f"PARTITION ({insert_partition_statement}) "\
-        f"SELECT {grouping_statement}, "\
-        f"{select_other_statement}, " \
-        f"CAST(COUNT(DISTINCT variants.family_id) AS INT), "\
-        f"CAST(gpf_bit_or(pedigree.status) AS TINYINT), "\
-        f"CAST(gpf_or(BITAND(inheritance_in_members, 4)) AS BOOLEAN) " \
-        f"FROM {variants_table} as variants " \
-        f"JOIN {pedigree_table} as pedigree " \
-        f"WHERE {select_partition_statement} AND " \
-        f"variants.allele_index > 0 AND " \
-        f"variants.variant_in_members = pedigree.person_id "\
-        f"GROUP BY {grouping_statement}"
-    return q
+    region_statements = []
+    if region_split == 0:
+        region_statements.append("")
+    else:
+        for region_begin in range(region.begin, region.end, region_split):
+            region_statement = f"variants.`position` >= {region_begin} AND " \
+                f"variants.`position` <= {region_begin + region_split} AND"
+            region_statements.append(region_statement)
+
+    queries = []
+    for region_statement in region_statements:
+        q = f"INSERT INTO {summary_table} ( " \
+            f"{grouping_statement}, " \
+            f"{insert_other_statement}, " \
+            f"{insert_family_summary_fields}) " \
+            f"PARTITION ({insert_partition_statement}) "\
+            f"SELECT {grouping_statement}, "\
+            f"{select_other_statement}, " \
+            f"CAST(COUNT(DISTINCT variants.family_id) AS INT), "\
+            f"CAST(gpf_bit_or(pedigree.status) AS TINYINT), "\
+            f"CAST(gpf_or(BITAND(inheritance_in_members, 4)) AS BOOLEAN) " \
+            f"FROM {variants_table} as variants " \
+            f"JOIN {pedigree_table} as pedigree " \
+            f"WHERE {select_partition_statement} AND " \
+            f"{region_statement} " \
+            f"variants.allele_index > 0 AND " \
+            f"BITAND(134, variants.inheritance_in_members) != 0 AND " \
+            f"variants.variant_in_members = pedigree.person_id "\
+            f"GROUP BY {grouping_statement}"
+        queries.append(q)
+    return queries
 
 
 def main(argv=sys.argv[1:], gpf_instance=None):
@@ -315,21 +347,11 @@ def main(argv=sys.argv[1:], gpf_instance=None):
         partitions = create_summary_table(study_id, study_backend)
 
         summary_schema = collect_summary_schema(study_backend)
-        summary_table = build_summary_table_name(study_id, study_backend)
+        summary_table = summary_table_name_temp(study_id, study_backend)
         pedigree_table = f"{study_backend.db}.{study_backend.pedigree_table}"
         variants_table = f"{study_backend.db}.{study_backend.variants_table}"
 
         partition_bins = {}
-        # {
-        #     'region_bin': [
-        #         'chr16_0', 'chrX_0', 'chr2_0', 'chr13_0', 'chr19_0',
-        #         'chr7_0', 'chr22_0', 'chr20_0', 'chr5_0', 'chr14_0',
-        #         'chr15_0', 'chr6_0', 'other_0', 'chr11_0', 'chr18_0',
-        #         'chr8_0', 'chr4_0', 'chr1_0', 'chr3_0', 'chr21_0',
-        #         'chr9_0', 'chr10_0', 'chr17_0', 'chr12_0'],
-        #     'frequency_bin': [1, 3, 2, 0],
-        #     'coding_bin': [1, 0]
-        # }
 
         logger.info(
             f"collecting partitions {partitions} from "
@@ -344,42 +366,68 @@ def main(argv=sys.argv[1:], gpf_instance=None):
         impala = study_backend._impala_helpers
         started = time.time()
 
+        region_bin_helpers = RegionBinsHelper(
+            study_backend.table_properties,
+            gpf_instance.get_genome()
+        )
+        region_bin_helpers._build_region_bins()
+
+        logger.info(
+            f"region bins calculated: {region_bin_helpers.region_bins}")
+
+        assert set(partition_bins["region_bin"]).issubset(
+            set(region_bin_helpers.region_bins.keys()))
+
         all_partitions = list(itertools.product(*partition_bins.values()))
-        with closing(impala.connection()) as connection:
-            with connection.cursor() as cursor:
-                for index, partition in enumerate(all_partitions):
-                    partition = {
-                        key: value
-                        for key, value in zip(partition_bins.keys(), partition)
-                    }
-                    logger.info(
-                        f"building summary table for partition: "
-                        f"{index}/{len(all_partitions)}; "
-                        f"{partition}")
+        for index, partition in enumerate(all_partitions):
+            partition = {
+                key: value
+                for key, value in zip(partition_bins.keys(), partition)
+            }
+            logger.info(
+                f"building summary table for partition: "
+                f"{index}/{len(all_partitions)}; "
+                f"{partition} of {study_id}")
 
-                    q = insert_into_summary_table(
+            part_started = time.time()
+            for q in insert_into_summary_table(
                         pedigree_table, variants_table, summary_table,
-                        summary_schema, partition
-                    )
-                    logger.debug(
-                        f"going to run summary query: {q}")
-                    part_started = time.time()
-                    cursor.execute(q)
+                        summary_schema, partition,
+                        region_bin_helpers.region_bins,
+                        argv.split_size
+                    ):
+                repeat = 10
+                while repeat > 0:
+                    try:
+                        with closing(impala.connection()) as connection:
+                            with connection.cursor() as cursor:
+                                logger.debug(
+                                    f"going to run summary query: {q}")
+                                cursor.execute(q)
+                                break
+                    except Exception as ex:
+                        logger.exception(f"error executing {q}")
+                        time.sleep(6)
+                        repeat -= 1
+                        if repeat == 0:
+                            raise ex
 
-                    part_elapsed = time.time() - part_started
-                    logger.info(
-                        f"processing partition "
-                        f"{index}/{len(all_partitions)} "
-                        f"took {part_elapsed:.2f} secs; "
-                        f"{partition} "
-                    )
-                    elapsed = time.time() - started
-                    logger.info(
-                        f"processing partition "
-                        f"{index}/{len(all_partitions)}; "
-                        f"total time {elapsed:.2f} secs"
-                    )
+            part_elapsed = time.time() - part_started
 
+            logger.info(
+                f"processing partition "
+                f"{index}/{len(all_partitions)} of {study_id} "
+                f"took {part_elapsed:.2f} secs; "
+                f"{partition} "
+            )
+            elapsed = time.time() - started
+            logger.info(
+                f"processing partition "
+                f"{index}/{len(all_partitions)} of {study_id}; "
+                f"total time {elapsed:.2f} secs"
+            )
+
+        rename_summary_table(study_id, study_backend)
 
 
 if __name__ == "__main__":

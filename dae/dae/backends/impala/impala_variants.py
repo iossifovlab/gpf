@@ -49,6 +49,10 @@ class ImpalaVariants:
 
         self.schema = self._fetch_variant_schema()
         if self.variants_table:
+            study_id = variants_table.replace("_variants", "").lower()
+            self.summary_variants_table = f"{study_id}_summary_variants"
+            self.has_summary_variants_table = \
+                self._check_summary_variants_table()
             self.serializer = AlleleParquetSerializer(self.schema)
 
         assert gene_models is not None
@@ -102,11 +106,14 @@ class ImpalaVariants:
         with closing(self.connection()) as conn:
 
             with conn.cursor() as cursor:
+                sv_table = None
+                if self.has_summary_variants_table:
+                    sv_table = self.summary_variants_table
                 query_builder = SummaryVariantsQueryBuilder(
                     self.db, self.variants_table, self.pedigree_table,
                     self.schema, self.table_properties,
                     self.pedigree_schema, self.ped_df,
-                    self.gene_models
+                    self.gene_models, summary_variants_table=sv_table
                 )
                 director = ImpalaQueryDirector(query_builder)
                 director.build_query(
@@ -496,6 +503,14 @@ class ImpalaVariants:
                             "gpf_partitioning_frequency_bin_rare_boundary":
                         self.table_properties["rare_boundary"] = \
                             int(prop_value)
+
+    def _check_summary_variants_table(self):
+        with closing(self.connection()) as conn:
+            with conn.cursor() as cursor:
+                q = f"SHOW TABLES IN {self.db} " \
+                    f"LIKE '{self.summary_variants_table}'"
+                cursor.execute(q)
+                return len(cursor.fetchall()) == 1
 
     def build_count_query(
         self,
