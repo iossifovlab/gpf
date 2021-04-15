@@ -568,13 +568,6 @@ class RemoteStudyWrapper(StudyWrapperBase):
         config["name"] = self.rest_client.prefix_remote_name(config["name"])
         del config["access_rights"]
         del config["groups"]
-        if config["parents"]:
-            config["parents"] = list(
-                map(
-                    self.rest_client.prefix_remote_identifier,
-                    config["parents"]
-                )
-            )
 
         if config.get("studies"):
             config["studies"] = list(
@@ -585,6 +578,15 @@ class RemoteStudyWrapper(StudyWrapperBase):
             )
 
         super(RemoteStudyWrapper, self).__init__(FrozenBox(config))
+
+        if config["parents"]:
+            config["parents"] = list(
+                map(
+                    self.rest_client.prefix_remote_identifier,
+                    config["parents"]
+                )
+            )
+            self._parents = list(config["parents"])
 
         self.phenotype_data = RemotePhenotypeData(
             self._remote_study_id,
@@ -626,7 +628,8 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
         query["datasetId"] = self._remote_study_id
         query["maxVariantsCount"] = max_variants_count
-        print("query:", query)
+
+        del query["geneSet"]
 
         response = self.rest_client.get_variants_preview(query)
         for line in response.iter_lines():
