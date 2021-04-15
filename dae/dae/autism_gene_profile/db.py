@@ -121,6 +121,7 @@ class AutismGeneProfileDB:
         s = select(
             [
                 self.gene_sets.c.set_id,
+                self.gene_sets.c.collection_id,
                 self.gene_symbol_sets.c.present
             ]
         ).select_from(j).where(
@@ -159,20 +160,27 @@ class AutismGeneProfileDB:
         ]
 
         db_genomic_scores = self._get_genomic_scores(symbol_id)
-        config_scores = self.configuration["genomic_scores"]
+        score_categories = self.configuration["genomic_scores"]
 
-        genomic_scores = {sc["category"]: dict() for sc in config_scores}
+        genomic_scores = dict()
 
         for score in db_genomic_scores:
             score_name = score["score_name"]
             score_value = score["score_value"]
-            fmt = config_scores[score_name]["format"]
             category = score["score_category"]
+            if category not in genomic_scores:
+                genomic_scores[category] = dict()
 
             genomic_scores[category][score_name] = {
-                "value": score_value,
-                "format": fmt
+                "value": score_value
             }
+
+        for category in score_categories:
+            category_name = category["category"]
+            for score in category["scores"]:
+                score_name = score["score_name"]
+                fmt = score["format"]
+                genomic_scores[category_name][score_name]["format"] = fmt
 
         variant_counts_rows = self._get_variant_counts(symbol_id)
         variant_counts = dict()
