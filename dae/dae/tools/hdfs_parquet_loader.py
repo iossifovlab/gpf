@@ -5,10 +5,11 @@ import argparse
 import logging
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.backends.impala.parquet_io import NoPartitionDescriptor, ParquetPartitionDescriptor
+from dae.backends.impala.parquet_io import NoPartitionDescriptor, \
+    ParquetPartitionDescriptor
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("hdfs_parquet_loader")
 
 
 def parse_cli_arguments(argv, gpf_instance):
@@ -17,6 +18,8 @@ def parse_cli_arguments(argv, gpf_instance):
         conflict_handler="resolve",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
+
+    parser.add_argument('--verbose', '-V', action='count', default=0)
 
     parser.add_argument(
         "study_id",
@@ -64,6 +67,17 @@ def main(argv=sys.argv[1:], gpf_instance=None):
 
     argv = parse_cli_arguments(argv, gpf_instance)
 
+    if argv.verbose == 1:
+        logging.basicConfig(level=logging.WARNING)
+    elif argv.verbose == 2:
+        logging.basicConfig(level=logging.INFO)
+    elif argv.verbose >= 3:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.ERROR)
+
+    logging.getLogger("impala").setLevel(logging.WARNING)
+
     genotype_storage_db = gpf_instance.genotype_storage_db
     genotype_storage = genotype_storage_db.get_genotype_storage(
         argv.genotype_storage
@@ -94,8 +108,4 @@ def main(argv=sys.argv[1:], gpf_instance=None):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-
-    logger.info("Started")
     main(sys.argv[1:])
-    logger.info("Done")

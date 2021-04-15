@@ -8,7 +8,8 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
     def __init__(
             self, db, variants_table, pedigree_table,
             variants_schema, table_properties, pedigree_schema,
-            pedigree_df, gene_models=None):
+            pedigree_df, gene_models=None, summary_variants_table=None):
+        self.summary_variants_table = summary_variants_table
         super().__init__(
             db, variants_table, pedigree_table,
             variants_schema, table_properties, pedigree_schema,
@@ -22,31 +23,53 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
         return accessors
 
     def _query_columns(self):
-        self.select_accessors = {
-            "bucket_index": "variants.bucket_index",
-            "summary_index": "variants.summary_index",
-            "variant_data": "MIN(variants.variant_data)",
-            "family_variants_count": "COUNT(DISTINCT variants.family_id)",
-            "seen_in_status": "gpf_bit_or(pedigree.status)",
-            "seen_as_denovo":
-                "gpf_or(BITAND(inheritance_in_members, 4))",
-        }
-        if self.has_extra_attributes:
-            self.select_accessors["extra_attributes"] = \
-                "MIN(variants.extra_attributes)"
+        if self.summary_variants_table:
+            self.select_accessors = {
+                "bucket_index": "variants.bucket_index",
+                "summary_index": "variants.summary_index",
+                "variant_data": "variants.variant_data",
+                "family_variants_count": "variants.family_variants_count",
+                "seen_in_status": "variants.seen_in_status",
+                "seen_as_denovo": "variants.seen_as_denovo",
+            }
+            # if self.has_extra_attributes:
+            #     self.select_accessors["extra_attributes"] = \
+            #         "MIN(variants.extra_attributes)"
+        else:
+            self.select_accessors = {
+                "bucket_index": "variants.bucket_index",
+                "summary_index": "variants.summary_index",
+                "variant_data": "MIN(variants.variant_data)",
+                "family_variants_count": "COUNT(DISTINCT variants.family_id)",
+                "seen_in_status": "gpf_bit_or(pedigree.status)",
+                "seen_as_denovo":
+                    "gpf_or(BITAND(inheritance_in_members, 4))",
+            }
+            if self.has_extra_attributes:
+                self.select_accessors["extra_attributes"] = \
+                    "MIN(variants.extra_attributes)"
+
         columns = list(self.select_accessors.values())
 
         return columns
 
     def build_from(self):
-        from_clause = f"FROM {self.db}.{self.variants_table} as variants"
+        table = self.summary_variants_table \
+                if self.summary_variants_table is not None \
+                else self.variants_table
+        from_clause = f"FROM {self.db}.{table} as variants"
         self._add_to_product(from_clause)
 
     def build_join(self):
+        if self.summary_variants_table is not None:
+            return
         join_clause = f"JOIN {self.db}.{self.pedigree_table} as pedigree"
         self._add_to_product(join_clause)
 
     def build_group_by(self):
+        if self.summary_variants_table is not None:
+            return
+
         self._add_to_product(
             "GROUP BY bucket_index, summary_index, "
             "allele_index, variant_type, transmission_type")
@@ -71,6 +94,8 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
             return_reference=None,
             return_unknown=None,
             **kwargs):
+        if self.summary_variants_table:
+            inheritance = None
         where_clause = self._base_build_where(
             regions=regions,
             genes=genes,
@@ -87,8 +112,12 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
             return_reference=return_reference,
             return_unknown=return_unknown,
         )
+        self._add_to_product(where_clause)
+
+        if self.summary_variants_table is not None:
+            return
+
         if where_clause:
-            self._add_to_product(where_clause)
             in_members = "AND variants.variant_in_members = pedigree.person_id"
         else:
             in_members = \

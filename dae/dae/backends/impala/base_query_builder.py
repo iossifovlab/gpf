@@ -235,6 +235,8 @@ class BaseQueryBuilder(ABC):
         pass
 
     def _add_to_product(self, string):
+        if string is None or string == "":
+            return
         if self._product == "":
             self._product += string
         else:

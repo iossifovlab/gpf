@@ -297,8 +297,9 @@ class GenotypeDataGroup(GenotypeData):
 
         results_queue = Queue(maxsize=5_000)
 
-        def get_summary_variants(genotype_data_study):
-            with closing(genotype_data_study.query_summary_variants(
+        def get_summary_variants(genotype_study):
+            start = time.time()
+            with closing(genotype_study.query_summary_variants(
                     regions=regions,
                     genes=genes,
                     effect_types=effect_types,
@@ -326,6 +327,12 @@ class GenotypeDataGroup(GenotypeData):
                     raise ex
 
                 results_queue.put(None)
+            elapsed = time.time() - start
+            logger.info(
+                f"summary variants for genotype study "
+                f"{genotype_study.study_id} process in {elapsed:.2f} secs"
+            )
+
         logger.info(
             f"study {self.study_id} children: {self.get_leaf_children()}")
         for genotype_study in self.get_leaf_children():
