@@ -42,7 +42,7 @@
             <span class="vertical-text">
               {{geneSet['setId']}}
             </span>
-            <!-- <gpf-sorting-buttons [id]="geneSet" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons> -->
+            <gpf-sorting-buttons [id]="geneSet['collectionId'] + '_' + geneSet['setId']" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
           </th>
         </ng-container>
 
@@ -51,7 +51,7 @@
             <span class="vertical-text">
               {{genomicScore['scoreName']}}
             </span>
-            <!-- <gpf-sorting-buttons [id]="'autism_' + autismScore" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons> -->
+            <gpf-sorting-buttons [id]="genomicScoresCategory['category'] + '_' + genomicScore['scoreName']" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
           </th>
         </ng-container>
 
@@ -64,7 +64,7 @@
           <ng-container *ngFor="let personSet of dataset.personSets">
             <td *ngFor="let effectType of dataset.effects" class="effect-type-header">
               {{effectType}}
-              <!-- <gpf-sorting-buttons [id]="dataset.name + '_' + personSet + '_' + effectType" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons> -->
+              <gpf-sorting-buttons [id]="dataset.name + '_' + personSet + '_' + effectType" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
             </td>
           </ng-container>
         </ng-container>
@@ -81,20 +81,22 @@
 
         <ng-container *ngFor="let geneSetCategory of shownGeneSetsCategories">
           <td *ngFor="let geneSet of geneSetCategory['sets']">
-            <span *ngIf="gene.geneSets.indexOf('main_' + geneSet['setId']) !== -1">&#10003;</span>
+            <ng-container *ngIf="gene.geneSets.indexOf('main_' + geneSet['setId']) !== -1">&#10003;</ng-container>
           </td>
         </ng-container>
 
         <ng-container *ngFor="let genomicScoresCategory of shownGenomicScoresCategories">
           <td *ngFor="let genomicScore of genomicScoresCategory['scores']">
-            {{getGeneScoreValue(gene, genomicScoresCategory['category'], genomicScore['scoreName'])}}
+            <ng-container *ngIf="getGeneScoreValue(gene, genomicScoresCategory['category'], genomicScore['scoreName']) !== 'null'">
+              {{getGeneScoreValue(gene, genomicScoresCategory['category'], genomicScore['scoreName'])}}
+            </ng-container>
           </td>
         </ng-container>
 
         <ng-container *ngFor="let study of gene.studies">
           <ng-container *ngFor="let personSet of study.personSets">
             <td *ngFor="let effectType of getMapValues(personSet.effectTypes)">
-              <span *ngIf="effectType !== 0">{{effectType}}</span>
+              <ng-container *ngIf="effectType !== 0">{{effectType}}</ng-container>
             </td>
           </ng-container>
         </ng-container>

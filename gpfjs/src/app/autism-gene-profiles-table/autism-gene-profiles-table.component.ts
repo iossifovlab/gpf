@@ -182,7 +182,9 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
   resetSortButtons(sortBy: string) {
     if (this.currentSortingColumnId !== undefined) {
       this.sortingButtonsComponents.find(
-        sortingButtonsComponent => sortingButtonsComponent.id === this.currentSortingColumnId
+        sortingButtonsComponent => {
+          return sortingButtonsComponent.id === this.currentSortingColumnId;
+        }
       ).resetHideState();
     }
     this.currentSortingColumnId = sortBy;
@@ -225,11 +227,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
   }
 
   getGeneScoreValue(gene, scoreCategory: string, scoreName: string) {
-    console.log(gene.genomicScores.find(score => score['category'] === scoreCategory)['scores'].get(scoreName));
     return gene.genomicScores.find(score => score['category'] === scoreCategory)['scores'].get(scoreName);
-  }
-
-  log(value) {
-    console.log(value);
   }
 }
