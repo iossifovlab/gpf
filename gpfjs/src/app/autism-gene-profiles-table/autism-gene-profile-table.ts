@@ -1,3 +1,5 @@
+const util = require('util');
+
 export class AutismGeneToolConfig {
   constructor(
     private defaultDataset: string,
@@ -115,18 +117,27 @@ export class AutismGeneToolGene {
   constructor (
     private geneSymbol: string,
     private geneSets: string[],
-    private autismScores: Map<string, number>,
-    private protectionScores: Map<string, number>,
+    private genomicScores: {category: string, scores: Map<string, any>}[],
     private studies: AutismGeneToolGeneStudy[]
   ) { }
 
   static fromJson(json) {
+    const newGenomicScores = [];
+    Object.entries(json['genomic_scores']).forEach(([key, value]) => {
+      newGenomicScores.push({
+        category: key,
+        scores: new Map((Object.entries(value)).map(score => {
+          score[1] = util.format('%s', score[1]['value']);
+          return score;
+        }))
+      });
+    });
+
     return new AutismGeneToolGene(
       json['gene_symbol'],
       json['gene_sets'],
-      new Map(Object.entries(json['autism_scores'])),
-      new Map(Object.entries(json['protection_scores'])),
-      this.geneStudiesFromJson(json['studies']),
+      newGenomicScores,
+      this.geneStudiesFromJson(json['studies'])
     );
   }
 
