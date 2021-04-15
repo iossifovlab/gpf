@@ -32,10 +32,11 @@ _gpf_instance_lock = Lock()
 class WGPFInstance(GPFInstance):
     def __init__(self, *args, **kwargs):
         self._remote_clients = None
-        super(WGPFInstance, self).__init__(*args, **kwargs)
         self._remote_study_clients = dict()
         self._remote_study_ids = dict()
         self._study_wrappers = dict()
+
+        super(WGPFInstance, self).__init__(*args, **kwargs)
         self._load_remotes()
 
     def _load_remotes(self):
