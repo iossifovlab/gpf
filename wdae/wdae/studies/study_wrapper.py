@@ -629,7 +629,8 @@ class RemoteStudyWrapper(StudyWrapperBase):
         query["datasetId"] = self._remote_study_id
         query["maxVariantsCount"] = max_variants_count
 
-        del query["geneSet"]
+        if "geneSet" in query:
+            del query["geneSet"]
 
         response = self.rest_client.get_variants_preview(query)
         for line in response.iter_lines():
