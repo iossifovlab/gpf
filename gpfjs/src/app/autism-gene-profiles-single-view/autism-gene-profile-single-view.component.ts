@@ -50,8 +50,8 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
         );
       }),
     ).subscribe(res => {
-      this.autismScoreGeneWeights = res[0];
-      this.protectionScoreGeneWeights = res[1];
+      // this.autismScoreGeneWeights = res[0];
+      // this.protectionScoreGeneWeights = res[1];
     });
   }
 
@@ -59,13 +59,13 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     return score.split('_').join(' ');
   }
 
-  getAutismScoreGeneWeight(autismScoreKey: string): GeneWeights {
-    return this.autismScoreGeneWeights.find(weight => weight.weight === autismScoreKey);
-  }
+  // getAutismScoreGeneWeight(autismScoreKey: string): GeneWeights {
+  //   return this.autismScoreGeneWeights.find(weight => weight.weight === autismScoreKey);
+  // }
 
-  getProtectionScoreGeneWeight(protectionScoreKey: string): GeneWeights {
-    return this.protectionScoreGeneWeights.find(weight => weight.weight === protectionScoreKey);
-  }
+  // getProtectionScoreGeneWeight(protectionScoreKey: string): GeneWeights {
+  //   return this.protectionScoreGeneWeights.find(weight => weight.weight === protectionScoreKey);
+  // }
 
   get histogramOptions() {
     return this._histogramOptions;

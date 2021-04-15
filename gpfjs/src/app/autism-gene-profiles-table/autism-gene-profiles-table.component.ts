@@ -52,13 +52,13 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
       this.updateGenes();
     }
 
-    this.updateModalBottom();
+    // this.updateModalBottom();
   }
 
-  @HostListener('window:resize', ['$event'])
-  onResize() {
-    this.updateModalBottom();
-  }
+  // @HostListener('window:resize', ['$event'])
+  // onResize() {
+  //   this.updateModalBottom();
+  // }
 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
@@ -86,18 +86,18 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     this.focusGeneSearch();
 
     this.columnFilteringButtons.changes.take(1).subscribe(() => {
-      this.updateModalBottom();
+      // this.updateModalBottom();
       this.cdr.detectChanges();
     });
   }
 
-  updateModalBottom() {
-    this.modalBottom = this.calculateModalBottom();
-  }
+  // updateModalBottom() {
+  //   this.modalBottom = this.calculateModalBottom();
+  // }
 
-  calculateModalBottom(): number {
-    return window.innerHeight - this.columnFilteringButtons.first.nativeElement.getBoundingClientRect().bottom;
-  }
+  // calculateModalBottom(): number {
+  //   return window.innerHeight - this.columnFilteringButtons.first.nativeElement.getBoundingClientRect().bottom;
+  // }
 
   calculateDatasetColspan(datasetConfig) {
     return datasetConfig.effects.length * datasetConfig.personSets.length;
@@ -107,17 +107,17 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     return Array.from(map.values());
   }
 
-  handleMultipleSelectMenuApplyEvent($event) {
-    // if ($event.id === 'geneSets') {
-    //   this.shownGeneSetsCategories = $event.data;
-    // } else if ($event.id === 'autismScores') {
-    //   this.shownAutismScores = $event.data;
-    // } else if ($event.id === 'protectionScores') {
-    //   this.shownProtectionScores = $event.data;
-    // }
+  // handleMultipleSelectMenuApplyEvent($event) {
+  //   if ($event.id === 'geneSets') {
+  //     this.shownGeneSetsCategories = $event.data;
+  //   } else if ($event.id === 'autismScores') {
+  //     this.shownAutismScores = $event.data;
+  //   } else if ($event.id === 'protectionScores') {
+  //     this.shownProtectionScores = $event.data;
+  //   }
 
-    this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
-  }
+  //   this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
+  // }
 
   emitCreateTabEvent(geneSymbol: string, openTab: boolean): void {
     this.createTabEvent.emit({geneSymbol: geneSymbol, openTab: openTab});
@@ -222,5 +222,14 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     }
 
     return result + 'px';
+  }
+
+  getGeneScoreValue(gene, scoreCategory: string, scoreName: string) {
+    console.log(gene.genomicScores.find(score => score['category'] === scoreCategory)['scores'].get(scoreName));
+    return gene.genomicScores.find(score => score['category'] === scoreCategory)['scores'].get(scoreName);
+  }
+
+  log(value) {
+    console.log(value);
   }
 }
