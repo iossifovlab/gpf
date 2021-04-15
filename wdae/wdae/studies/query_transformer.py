@@ -310,10 +310,10 @@ class QueryTransformer:
     # TMM_ALL
     def transform_kwargs(self, **kwargs):
         logger.debug(f"kwargs in study wrapper: {kwargs}")
-        self._add_inheritance_to_query(
-            "not possible_denovo and not possible_omission",
-            kwargs
-        )
+        # self._add_inheritance_to_query(
+        #     "not possible_denovo and not possible_omission",
+        #     kwargs
+        # )
 
         kwargs = self._add_people_with_people_group(kwargs)
 
@@ -483,10 +483,13 @@ class QueryTransformer:
                 )
             kwargs["familyIds"] = family_ids_with_types
 
-        if "inheritanceTypeFilter" in kwargs:
-            kwargs["inheritance"].append(
+        if kwargs.get("inheritanceTypeFilter"):
+            inheritance = kwargs.get("inheritance", [])
+            inheritance.append(
                 "any({})".format(
                     ",".join(kwargs["inheritanceTypeFilter"])))
+            kwargs["inheritance"] = inheritance
+
             kwargs.pop("inheritanceTypeFilter")
         if "affectedStatus" in kwargs:
             statuses = kwargs.pop("affectedStatus")

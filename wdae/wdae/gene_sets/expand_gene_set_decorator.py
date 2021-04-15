@@ -15,20 +15,24 @@ def expand_gene_set(request_function):
             ) = GeneSymsMixin.get_gene_set_query(**request.data)
             gpf_instance = get_gpf_instance()
 
-            if gene_sets_collection_id == "denovo":
+            if gene_sets_collection_id.endswith("denovo"):
                 denovo_gene_sets_db = gpf_instance.denovo_gene_sets_db
+
                 gene_set = denovo_gene_sets_db.get_gene_set(
                     gene_set_id,
                     denovo_gene_set_spec,
-                    IsDatasetAllowed.permitted_datasets(request.user),
+                    permitted_datasets=IsDatasetAllowed.permitted_datasets(
+                        request.user),
+                    collection_id=gene_sets_collection_id
                 )
+
             else:
                 gene_sets_db = gpf_instance.gene_sets_db
                 gene_set = gene_sets_db.get_gene_set(
                     gene_sets_collection_id, gene_set_id
                 )
 
-            request.data["geneSymbols"] = gene_set["syms"]
+            request.data["geneSymbols"] = list(gene_set["syms"])
             request.data["geneSet"] = gene_set["desc"]
         return request_function(self, request)
 

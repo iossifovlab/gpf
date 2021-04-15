@@ -36,8 +36,9 @@ class RemoteDenovoGeneSetsCollection:
     ):
         # TODO FIXME Utilise permitted datasets
         raw_gene_set = self.rest_client.get_denovo_gene_set(
-            gene_set_id, denovo_gene_set_spec
-        ).split("\n\r")
+            gene_set_id, denovo_gene_set_spec).split("\n")
+
+        raw_gene_set = [gs.strip() for gs in raw_gene_set]
 
         description = raw_gene_set.pop(0)
         gene_set = GeneSet(gene_set_id, description, raw_gene_set)
