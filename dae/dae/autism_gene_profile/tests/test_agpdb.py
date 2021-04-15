@@ -23,7 +23,7 @@ def test_agpdb_tables_building(temp_dbfile, agp_config):
     ) == set()
     assert set(table_columns["gene_sets"]).difference(
         set([
-            "id", "set_name"
+            "id", "set_id", "collection_id"
         ])
     ) == set()
     assert set(table_columns["gene_symbol_sets"]).difference(
@@ -31,14 +31,9 @@ def test_agpdb_tables_building(temp_dbfile, agp_config):
             "id", "symbol_id", "set_id", "present"
         ])
     ) == set()
-    assert set(table_columns["autism_scores"]).difference(
+    assert set(table_columns["genomic_scores"]).difference(
         set([
-            "id", "symbol_id", "score_name", "score_value"
-        ])
-    ) == set()
-    assert set(table_columns["protection_scores"]).difference(
-        set([
-            "id", "symbol_id", "score_name", "score_value"
+            "id", "symbol_id", "score_name", "score_value", "score_category"
         ])
     ) == set()
     assert set(table_columns["variant_counts"]).difference(
@@ -69,21 +64,8 @@ def test_agpdb_get_gene_sets(temp_dbfile, agp_config, agp_gpf_instance):
     gene_sets = set([gs[1] for gs in agpdb._get_gene_sets()])
     expected = {
         'CHD8 target genes',
-        'FMRP Darnell',
-        'FMRP Tuschl',
-        'PSD',
-        'autism candidates from Iossifov PNAS 2015',
-        'autism candidates from Sanders Neuron 2015',
-        'brain critical genes',
-        'brain embryonically expressed',
-        'chromatin modifiers',
-        'essential genes',
-        'non-essential genes',
-        'postsynaptic inhibition',
-        'synaptic clefts excitatory',
-        'synaptic clefts inhibitory',
-        'topotecan downreg genes'
     }
+    assert expected.difference(gene_sets) == set()
     assert gene_sets.difference(expected) == set()
 
 
@@ -97,12 +79,16 @@ def test_agpdb_insert_and_get_agp(
         'CHD8 target genes'
     ]
 
-    assert agp.protection_scores == {
-        'SFARI_gene_score': 1, 'RVIS_rank': 193.0, 'RVIS': -2.34
+    assert agp.genomic_scores["autism_scores"] == {
+        'SFARI_gene_score': {'value': 1.0, 'format': '%s'},
+        'RVIS_rank': {'value': 193.0, 'format': '%s'},
+        'RVIS': {'value': -2.34, 'format': '%s'}
     }
 
-    assert agp.autism_scores == {
-        'SFARI_gene_score': 1, 'RVIS_rank': 193.0, 'RVIS': -2.34
+    assert agp.genomic_scores["protection_scores"] == {
+        'SFARI_gene_score': {'value': 1.0, 'format': '%s'},
+        'RVIS_rank': {'value': 193.0, 'format': '%s'},
+        'RVIS': {'value': -2.34, 'format': '%s'}
     }
 
     assert agp.variant_counts == {
@@ -115,11 +101,12 @@ def test_agpdb_insert_and_get_agp(
 
 def test_agpdb_sort(agp_gpf_instance, sample_agp):
     sample_agp.gene_symbol = "CHD7"
-    sample_agp.protection_scores["SFARI_gene_score"] = -11
+    sample_scores = sample_agp.genomic_scores
+    sample_scores["protection_scores"]["SFARI_gene_score"] = -11
     agp_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
     stats_unsorted = agp_gpf_instance.query_agp_statistics(1)
     stats_sorted = agp_gpf_instance.query_agp_statistics(
-        1, sort_by="protection_SFARI_gene_score", order="asc"
+        1, sort_by="protection_scores_SFARI_gene_score", order="asc"
     )
     assert stats_unsorted[0].gene_symbol == "CHD8"
     assert stats_unsorted[1].gene_symbol == "CHD7"
@@ -128,11 +115,11 @@ def test_agpdb_sort(agp_gpf_instance, sample_agp):
     assert stats_sorted[1].gene_symbol == "CHD8"
 
     stats_sorted = agp_gpf_instance.query_agp_statistics(
-        1, sort_by="autism_SFARI_gene_score", order="desc"
+        1, sort_by="autism_scores_SFARI_gene_score", order="desc"
     )
     stats_sorted = agp_gpf_instance.query_agp_statistics(
         1, sort_by="iossifov_we2014_test_unknown_synonymous", order="desc"
     )
     stats_sorted = agp_gpf_instance.query_agp_statistics(
-        1, sort_by="CHD8 target genes", order="desc"
+        1, sort_by="main_CHD8 target genes", order="desc"
     )

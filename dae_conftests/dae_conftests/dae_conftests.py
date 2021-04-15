@@ -1034,9 +1034,35 @@ def temp_dbfile(request, cleanup):
 @pytest.fixture
 def agp_config(data_import, iossifov2014_impala):
     return Box({
-        'gene_sets': ['CHD8 target genes'],
-        'protection_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
-        'autism_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
+        'gene_sets': [
+            {
+                'category': 'relevant_gene_sets',
+                'display_name': 'Relevant Gene Sets',
+                'sets': [
+                    {'set_id': 'CHD8 target genes', 'collection_id': 'main'},
+                ]
+            },
+        ],
+        'genomic_scores': [
+            {
+                'category': 'protection_scores',
+                'display_name': 'Protection scores',
+                'scores': [
+                    {'score_name': 'SFARI_gene_score', 'format': '%s'},
+                    {'score_name': 'RVIS_rank', 'format': '%s'},
+                    {'score_name': 'RVIS', 'format': '%s'}
+                ]
+            },
+            {
+                'category': 'autism_scores',
+                'display_name': 'Autism scores',
+                'scores': [
+                    {'score_name': 'SFARI_gene_score', 'format': '%s'},
+                    {'score_name': 'RVIS_rank', 'format': '%s'},
+                    {'score_name': 'RVIS', 'format': '%s'}
+                ]
+            },
+        ],
         'datasets': Box({
             'iossifov_we2014_test': Box({
                 'effects': ['synonymous', 'missense'],
@@ -1109,12 +1135,14 @@ def agp_gpf_instance(
 
 @pytest.fixture(scope="session")
 def sample_agp():
-    gene_sets = ['CHD8 target genes']
-    protection_scores = {
-        'SFARI_gene_score': 1, 'RVIS_rank': 193.0, 'RVIS': -2.34
-    }
-    autism_scores = {
-        'SFARI_gene_score': 1, 'RVIS_rank': 193.0, 'RVIS': -2.34
+    gene_sets = ['main_CHD8 target genes']
+    genomic_scores = {
+        'protection_scores': {
+            'SFARI_gene_score': 1, 'RVIS_rank': 193.0, 'RVIS': -2.34
+        },
+        'autism_scores': {
+            'SFARI_gene_score': 1, 'RVIS_rank': 193.0, 'RVIS': -2.34
+        },
     }
     variant_counts = {
         'iossifov_we2014_test': {
@@ -1123,5 +1151,5 @@ def sample_agp():
         }
     }
     return AGPStatistic(
-        "CHD8", gene_sets, protection_scores, autism_scores, variant_counts
+        "CHD8", gene_sets, genomic_scores, variant_counts
     )
