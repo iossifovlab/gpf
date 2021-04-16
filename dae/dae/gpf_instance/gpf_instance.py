@@ -90,6 +90,10 @@ class GPFInstance(object):
     @property  # type: ignore
     @cached
     def _gene_info_config(self):
+        logger.debug(
+            f"loading gene info config file: "
+            f"{self.dae_config.gene_info_db.conf_file}")
+
         return GPFConfigParser.load_config(
             self.dae_config.gene_info_db.conf_file, gene_info_conf
         )
@@ -424,20 +428,29 @@ class GPFInstance(object):
     def _agp_from_table_row(self, row):
         config = self._autism_gene_profile_config
         gene_symbol = row["symbol_name"]
-        protection_scores = {
-            ps: row[f"protection_{ps}"] for ps in config.protection_scores
-        }
-        autism_scores = {
-            aus: round(row[f"autism_{aus}"], 5)
-            if row[f"autism_{aus}"] is not None else None
-            for aus in config.autism_scores
-        }
+        genomic_scores = dict()
+        for gs_category in config.genomic_scores:
+            category_name = gs_category["category"]
+            genomic_scores[category_name] = dict()
+            for score in gs_category["scores"]:
+                score_name = score["score_name"]
+                full_score_id = f"{category_name}_{score_name}"
+                genomic_scores[category_name][score_name] = {
+                    "value": row[full_score_id],
+                    "format": score["format"]
+                }
 
-        gene_lists = config.gene_sets
-        gene_lists = list(filter(
-            lambda x: row[x] == 1,
-            gene_lists
-        ))
+        gene_sets_categories = config.gene_sets
+        gene_sets = []
+        for gs_category in gene_sets_categories:
+            category_name = gs_category["category"]
+            for gene_set in gs_category["sets"]:
+                set_id = gene_set["set_id"]
+                collection_id = gene_set["collection_id"]
+                full_gs_id = f"{collection_id}_{set_id}"
+                if row[full_gs_id] == 1:
+                    gene_sets.append(full_gs_id)
+
         variant_counts = {}
         for dataset_id, filters in config.datasets.items():
             current_counts = dict()
@@ -453,9 +466,10 @@ class GPFInstance(object):
                         f"{dataset_id}_{person_set}_{effect}"
                     ]
             variant_counts[dataset_id] = current_counts
+
         return AGPStatistic(
-            gene_symbol, gene_lists, protection_scores,
-            autism_scores, variant_counts
+            gene_symbol, gene_sets,
+            genomic_scores, variant_counts
         )
 
     def query_all_agp_statistics(
