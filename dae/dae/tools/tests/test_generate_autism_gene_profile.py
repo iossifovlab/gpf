@@ -17,8 +17,9 @@ def test_generate_autism_gene_profile(
         temp_dbfile,
         clear=False
     )
-    agp = agpdb.get_agp("C2orf42")
+    agp = agpdb.get_agp("AES")
 
+    print(agp.variant_counts)
     unknown = agp.variant_counts["iossifov_we2014_test"]["unknown"]
     assert unknown["synonymous"] == 0
     assert unknown["missense"] == 2
