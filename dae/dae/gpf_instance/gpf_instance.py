@@ -90,6 +90,10 @@ class GPFInstance(object):
     @property  # type: ignore
     @cached
     def _gene_info_config(self):
+        logger.debug(
+            f"loading gene info config file: "
+            f"{self.dae_config.gene_info_db.conf_file}")
+
         return GPFConfigParser.load_config(
             self.dae_config.gene_info_db.conf_file, gene_info_conf
         )
