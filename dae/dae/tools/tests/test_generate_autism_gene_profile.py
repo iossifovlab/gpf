@@ -17,13 +17,12 @@ def test_generate_autism_gene_profile(
         temp_dbfile,
         clear=False
     )
-    agp = agpdb.get_agp("AES")
+    agp = agpdb.get_agp("PCDHA4")
 
-    print(agp.variant_counts)
     unknown = agp.variant_counts["iossifov_we2014_test"]["unknown"]
-    assert unknown["synonymous"] == 0
-    assert unknown["missense"] == 2
+    assert unknown["noncoding"] == 1
+    assert unknown["missense"] == 0
 
     unaffected = agp.variant_counts["iossifov_we2014_test"]["unaffected"]
-    assert unaffected["synonymous"] == 0
+    assert unaffected["noncoding"] == 0
     assert unaffected["missense"] == 0
