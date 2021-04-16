@@ -39,9 +39,6 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     this.gene$ = this.autismGeneProfilesService.getGene(this.geneSymbol);
 
     this.gene$.subscribe(res => {
-      console.log(res);
-      console.log(this.config);
-
       for (let i = 0; i < res['genomicScores'].length; i++) {
         this.geneWeightsService.getGeneWeights([...res['genomicScores'][i].scores.keys()].join(',')).subscribe(kek => {
           this.genomicScoresCategories.push({category: res['genomicScores'][i].category, scores: kek});
