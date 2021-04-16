@@ -87,7 +87,8 @@
 
         <ng-container *ngFor="let genomicScoresCategory of shownGenomicScoresCategories">
           <td *ngFor="let genomicScore of genomicScoresCategory['scores']">
-            <ng-container *ngIf="getGeneScoreValue(gene, genomicScoresCategory['category'], genomicScore['scoreName']) !== 'null'">
+            <ng-container *ngIf="getGeneScoreValue(gene, genomicScoresCategory['category'], genomicScore['scoreName']) !== 'null' &&
+                                 getGeneScoreValue(gene, genomicScoresCategory['category'], genomicScore['scoreName']) !== 'NaN'">
               {{getGeneScoreValue(gene, genomicScoresCategory['category'], genomicScore['scoreName'])}}
             </ng-container>
           </td>
