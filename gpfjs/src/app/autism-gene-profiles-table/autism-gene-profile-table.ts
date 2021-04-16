@@ -1,4 +1,4 @@
-const util = require('util');
+import { sprintf } from 'sprintf-js';
 
 export class AutismGeneToolConfig {
   constructor(
@@ -127,7 +127,7 @@ export class AutismGeneToolGene {
       newGenomicScores.push({
         category: key,
         scores: new Map((Object.entries(value)).map(score => {
-          score[1] = util.format('%s', score[1]['value']);
+          score[1] = Number(sprintf(score[1]['format'], score[1]['value'])).toString();
           return score;
         }))
       });

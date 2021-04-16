@@ -70,9 +70,12 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     this.shownGeneSetsCategories = this.config['geneSets'];
     this.shownGenomicScoresCategories = this.config['genomicScores'];
 
-    this.autismGeneProfilesService.getGenes(this.pageIndex).take(1).subscribe(res => {
+    this.autismGeneProfilesService.getGenes(
+      this.pageIndex, undefined, `${this.shownGeneSetsCategories[0]['category']}_rank`, 'desc'
+    ).take(1).subscribe(res => {
       this.genes = this.genes.concat(res);
     });
+    this.currentSortingColumnId = `${this.shownGeneSetsCategories[0]['category']}_rank`;
 
     this.searchKeystrokes$
       .debounceTime(250)
@@ -89,6 +92,11 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
       // this.updateModalBottom();
       this.cdr.detectChanges();
     });
+
+    const firstSortingButton = this.sortingButtonsComponents.find(sortingButtonsComponent => {
+      return sortingButtonsComponent.id === `${this.shownGeneSetsCategories[0]['category']}_rank`;
+    });
+    firstSortingButton.hideState = 1;
   }
 
   // updateModalBottom() {
