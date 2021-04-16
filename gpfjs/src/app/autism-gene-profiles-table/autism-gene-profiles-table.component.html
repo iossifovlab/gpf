@@ -6,32 +6,27 @@
           <span>Gene</span>
         </th>
 
-        <th class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="shownGeneSets.length" [style.width]="calculateColumnSize(shownGeneSets.length)">
-          <span>
-            Gene sets
-          </span>
-          <button #columnFilteringButton id="gene-sets-button" (click)="openDropdown('gene-sets')" class="dropdown-toggle btn navbar-toggler" style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
-            <span style="font-size: 14px;">&#9776;</span>
-          </button>
-        </th>
+        <ng-container *ngFor="let geneSetCategory of shownGeneSetsCategories">
+          <th class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="geneSetCategory['sets'].length" [style.width]="calculateColumnSize(geneSetCategory['sets'].length)">
+            <span>
+              {{geneSetCategory['displayName']}}
+            </span>
+            <!-- <button #columnFilteringButton id="gene-sets-button" (click)="openDropdown('gene-sets')" class="dropdown-toggle btn navbar-toggler" style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
+              <span style="font-size: 14px;">&#9776;</span>
+            </button> -->
+          </th>
+        </ng-container>
 
-        <th class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="shownAutismScores.length" [style.width]="calculateColumnSize(shownAutismScores.length)">
-          <span>
-            Autism scores
-          </span>
-          <button #columnFilteringButton id="autism-scores-button" (click)="openDropdown('autism-scores')" class="dropdown-toggle btn navbar-toggler" style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
-            <span style="font-size: 14px;">&#9776;</span>
-          </button>
-        </th>
-
-        <th class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="shownProtectionScores.length" [style.width]="calculateColumnSize(shownProtectionScores.length)">
-          <span>
-            Protection scores
-          </span>
-          <button #columnFilteringButton id="protection-scores-button" (click)="openDropdown('protection-scores')" class="dropdown-toggle btn navbar-toggler" style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
-            <span style="font-size: 14px;">&#9776;</span>
-          </button>
-        </th>
+        <ng-container *ngFor="let genomicScoresCategory of shownGenomicScoresCategories">
+          <th class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="genomicScoresCategory['scores'].length" [style.width]="calculateColumnSize(genomicScoresCategory['scores'].length)">
+            <span>
+              {{genomicScoresCategory['displayName']}}
+            </span>
+            <!-- <button #columnFilteringButton id="autism-scores-button" (click)="openDropdown('autism-scores')" class="dropdown-toggle btn navbar-toggler" style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
+              <span style="font-size: 14px;">&#9776;</span>
+            </button> -->
+          </th>
+        </ng-container>
 
         <th class="table-main-header" style="position: sticky; top: 0px" *ngFor="let dataset of config.datasets" [attr.colspan]="calculateDatasetColspan(dataset)">{{dataset.name}}</th>
       </tr>
@@ -41,26 +36,24 @@
           <input #geneSearchInput (keyup)="sendKeystrokes(geneSearchInput.value)" id="gene-search-input"
             class="form-control" autocomplete="off" type="text" placeholder="Search gene" aria-label="Search gene">
         </th>
-        <th class="table-subheader" rowspan="2" *ngFor="let geneSet of shownGeneSets">
-          <span class="vertical-text">
-            {{geneSet}}
-          </span>
-          <gpf-sorting-buttons [id]="geneSet" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
-        </th>
 
-        <th class="table-subheader" rowspan="2" *ngFor="let autismScore of shownAutismScores">
-          <span class="vertical-text">
-            {{autismScore}}
-          </span>
-          <gpf-sorting-buttons [id]="'autism_' + autismScore" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
-        </th>
+        <ng-container *ngFor="let geneSetCategory of shownGeneSetsCategories">
+          <th class="table-subheader" rowspan="2" *ngFor="let geneSet of geneSetCategory['sets']">
+            <span class="vertical-text">
+              {{geneSet['setId']}}
+            </span>
+            <gpf-sorting-buttons [id]="geneSet['collectionId'] + '_' + geneSet['setId']" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
+          </th>
+        </ng-container>
 
-        <th class="table-subheader" rowspan="2" *ngFor="let protectionScore of shownProtectionScores">
-          <span class="vertical-text">
-            {{protectionScore}}
-          </span>
-          <gpf-sorting-buttons [id]="'protection_' + protectionScore" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
-        </th>
+        <ng-container *ngFor="let genomicScoresCategory of shownGenomicScoresCategories">
+          <th class="table-subheader" rowspan="2" *ngFor="let genomicScore of genomicScoresCategory['scores']">
+            <span class="vertical-text">
+              {{genomicScore['scoreName']}}
+            </span>
+            <gpf-sorting-buttons [id]="genomicScoresCategory['category'] + '_' + genomicScore['scoreName']" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
+          </th>
+        </ng-container>
 
         <ng-container *ngFor="let dataset of config.datasets">
           <th class="table-subheader" colspan="3" *ngFor="let personSet of dataset.personSets">{{personSet}}</th>
@@ -77,6 +70,8 @@
         </ng-container>
       </tr>
     </thead>
+   
+
 
     <tbody *ngIf="genes">
       <tr *ngFor="let gene of genes">
@@ -84,29 +79,38 @@
           {{gene.geneSymbol}}
         </td>
 
-        <td *ngFor="let geneSet of shownGeneSets">
-          <span *ngIf="gene.geneSets.indexOf(geneSet) !== -1">&#10003;</span>
-        </td>
-        
-        <td *ngFor="let autismScore of shownAutismScores"> {{gene.autismScores.get(autismScore)}}</td>
-        <td *ngFor="let protectionScore of shownProtectionScores"> {{gene.protectionScores.get(protectionScore)}}</td>
+        <ng-container *ngFor="let geneSetCategory of shownGeneSetsCategories">
+          <td *ngFor="let geneSet of geneSetCategory['sets']">
+            <ng-container *ngIf="gene.geneSets.indexOf('main_' + geneSet['setId']) !== -1">&#10003;</ng-container>
+          </td>
+        </ng-container>
+
+        <ng-container *ngFor="let genomicScoresCategory of shownGenomicScoresCategories">
+          <td *ngFor="let genomicScore of genomicScoresCategory['scores']">
+            <ng-container *ngIf="getGeneScoreValue(gene, genomicScoresCategory['category'], genomicScore['scoreName']) !== 'null'">
+              {{getGeneScoreValue(gene, genomicScoresCategory['category'], genomicScore['scoreName'])}}
+            </ng-container>
+          </td>
+        </ng-container>
 
         <ng-container *ngFor="let study of gene.studies">
           <ng-container *ngFor="let personSet of study.personSets">
             <td *ngFor="let effectType of getMapValues(personSet.effectTypes)">
-              <span *ngIf="effectType !== 0">{{effectType}}</span>
+              <ng-container *ngIf="effectType !== 0">{{effectType}}</ng-container>
             </td>
           </ng-container>
         </ng-container>
       </tr>
     </tbody>
 
+
+
   </table>
 </div>
 
 <!-- Added ngbDropdownToggle buttons with display: none because bootstrap crashes on escape without an ngbDropdownToggle
 Described in GPF-546 -->
-<div *ngIf="config" style="position: sticky;" [style.bottom.px]="modalBottom">
+<!-- <div *ngIf="config" style="position: sticky;" [style.bottom.px]="modalBottom">
   <span #dropdownSpan id="gene-sets-span" ngbDropdown (openChange)="focusGeneSetsInput = $event;">
     <button ngbDropdownToggle style="display: none;"></button>
     <gpf-multiple-select-menu ngbDropdownMenu id="gene-sets-dropdown" [focusInput]="focusGeneSetsInput" [id]="'geneSets'" [allItems]="config.geneSets" [selectedItems]="shownGeneSets" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
@@ -125,4 +129,4 @@ Described in GPF-546 -->
     <button ngbDropdownToggle style="display: none;"></button>
     <gpf-multiple-select-menu ngbDropdownMenu id="protection-scores-dropdown" [focusInput]="focusProtectionScoresInput" [id]="'protectionScores'" [allItems]="config.protectionScores" [selectedItems]="shownProtectionScores" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
   </span>
-</div>
+</div> -->

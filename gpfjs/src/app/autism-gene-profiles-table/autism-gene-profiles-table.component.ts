@@ -3,7 +3,7 @@ import {
   Input, OnInit, Output, QueryList, Renderer2, ViewChild, ViewChildren
 } from '@angular/core';
 import { Subject } from 'rxjs';
-import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile-table';
+import { AutismGeneToolConfig, AutismGeneToolGene, AutismGeneToolGeneSetsCategory, AutismGeneToolGenomicScoresCategory } from './autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
@@ -19,17 +19,16 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
   @ViewChildren(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu[];
 
   private genes: AutismGeneToolGene[] = [];
-  private shownGeneSets: string[];
-  private shownAutismScores: string[];
-  private shownProtectionScores: string[];
+  private shownGeneSetsCategories: AutismGeneToolGeneSetsCategory[];
+  private shownGenomicScoresCategories: AutismGeneToolGenomicScoresCategory[];
 
   private pageIndex = 1;
   private loadMoreGenes = true;
   private scrollLoadThreshold = 1000;
 
-  private focusGeneSetsInput: boolean;
-  private focusAutismScoresInput: boolean;
-  private focusProtectionScoresInput: boolean;
+  // private focusGeneSetsInput: boolean;
+  // private focusAutismScoresInput: boolean;
+  // private focusProtectionScoresInput: boolean;
 
   geneInput: string;
   searchKeystrokes$: Subject<string> = new Subject();
@@ -53,13 +52,13 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
       this.updateGenes();
     }
 
-    this.updateModalBottom();
+    // this.updateModalBottom();
   }
 
-  @HostListener('window:resize', ['$event'])
-  onResize() {
-    this.updateModalBottom();
-  }
+  // @HostListener('window:resize', ['$event'])
+  // onResize() {
+  //   this.updateModalBottom();
+  // }
 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
@@ -68,9 +67,8 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
   ) { }
 
   ngOnInit(): void {
-    this.shownGeneSets = this.config['geneSets'];
-    this.shownAutismScores = this.config['autismScores'];
-    this.shownProtectionScores = this.config['protectionScores'];
+    this.shownGeneSetsCategories = this.config['geneSets'];
+    this.shownGenomicScoresCategories = this.config['genomicScores'];
 
     this.autismGeneProfilesService.getGenes(this.pageIndex).take(1).subscribe(res => {
       this.genes = this.genes.concat(res);
@@ -88,18 +86,18 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     this.focusGeneSearch();
 
     this.columnFilteringButtons.changes.take(1).subscribe(() => {
-      this.updateModalBottom();
+      // this.updateModalBottom();
       this.cdr.detectChanges();
     });
   }
 
-  updateModalBottom() {
-    this.modalBottom = this.calculateModalBottom();
-  }
+  // updateModalBottom() {
+  //   this.modalBottom = this.calculateModalBottom();
+  // }
 
-  calculateModalBottom(): number {
-    return window.innerHeight - this.columnFilteringButtons.first.nativeElement.getBoundingClientRect().bottom;
-  }
+  // calculateModalBottom(): number {
+  //   return window.innerHeight - this.columnFilteringButtons.first.nativeElement.getBoundingClientRect().bottom;
+  // }
 
   calculateDatasetColspan(datasetConfig) {
     return datasetConfig.effects.length * datasetConfig.personSets.length;
@@ -109,17 +107,17 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     return Array.from(map.values());
   }
 
-  handleMultipleSelectMenuApplyEvent($event) {
-    if ($event.id === 'geneSets') {
-      this.shownGeneSets = $event.data;
-    } else if ($event.id === 'autismScores') {
-      this.shownAutismScores = $event.data;
-    } else if ($event.id === 'protectionScores') {
-      this.shownProtectionScores = $event.data;
-    }
+  // handleMultipleSelectMenuApplyEvent($event) {
+  //   if ($event.id === 'geneSets') {
+  //     this.shownGeneSetsCategories = $event.data;
+  //   } else if ($event.id === 'autismScores') {
+  //     this.shownAutismScores = $event.data;
+  //   } else if ($event.id === 'protectionScores') {
+  //     this.shownProtectionScores = $event.data;
+  //   }
 
-    this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
-  }
+  //   this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
+  // }
 
   emitCreateTabEvent(geneSymbol: string, openTab: boolean): void {
     this.createTabEvent.emit({geneSymbol: geneSymbol, openTab: openTab});
@@ -184,7 +182,9 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
   resetSortButtons(sortBy: string) {
     if (this.currentSortingColumnId !== undefined) {
       this.sortingButtonsComponents.find(
-        sortingButtonsComponent => sortingButtonsComponent.id === this.currentSortingColumnId
+        sortingButtonsComponent => {
+          return sortingButtonsComponent.id === this.currentSortingColumnId;
+        }
       ).resetHideState();
     }
     this.currentSortingColumnId = sortBy;
@@ -224,5 +224,9 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     }
 
     return result + 'px';
+  }
+
+  getGeneScoreValue(gene, scoreCategory: string, scoreName: string) {
+    return gene.genomicScores.find(score => score['category'] === scoreCategory)['scores'].get(scoreName);
   }
 }
