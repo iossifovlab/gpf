@@ -5,8 +5,9 @@
   margin-bottom: 15px;
 }
 
-#gene-sets-table {
+.gene-sets-table, .genomic-scores-table {
   width: 20%;
   margin-right: 15px;
-  margin-bottom: 0px;
+  margin-bottom: 15px;
+  float: left;
 }
