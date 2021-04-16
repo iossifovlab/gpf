@@ -11,9 +11,9 @@
             <span>
               {{geneSetCategory['displayName']}}
             </span>
-            <!-- <button #columnFilteringButton id="gene-sets-button" (click)="openDropdown('gene-sets')" class="dropdown-toggle btn navbar-toggler" style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
+            <button #columnFilteringButton disabled [attr.id]="geneSetCategory['displayName'] + '-button'" (click)="openDropdown('gene-sets')" class="dropdown-toggle btn navbar-toggler" style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
               <span style="font-size: 14px;">&#9776;</span>
-            </button> -->
+            </button>
           </th>
         </ng-container>
 
@@ -22,9 +22,9 @@
             <span>
               {{genomicScoresCategory['displayName']}}
             </span>
-            <!-- <button #columnFilteringButton id="autism-scores-button" (click)="openDropdown('autism-scores')" class="dropdown-toggle btn navbar-toggler" style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
+            <button #columnFilteringButton disabled id="autism-scores-button" (click)="openDropdown('autism-scores')" class="dropdown-toggle btn navbar-toggler" style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
               <span style="font-size: 14px;">&#9776;</span>
-            </button> -->
+            </button>
           </th>
         </ng-container>
 
