@@ -377,6 +377,11 @@ class AutismGeneProfileDB:
         columns["symbol_name"] = \
             Column("symbol_name", String(64), primary_key=True)
         for category in self.configuration["gene_sets"]:
+            category_name = category["category"]
+
+            rank_col = f"{category_name}_rank"
+
+            columns[rank_col] = Column(rank_col, String(32))
             for gs in category["sets"]:
                 set_id = gs["set_id"]
                 collection_id = gs["collection_id"]
