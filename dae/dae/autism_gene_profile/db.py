@@ -24,6 +24,14 @@ class AutismGeneProfileDB:
         self._agp_view = None
         if self.cache_table_exists():
             self.cache_table = self._create_db_cache_table(autoload=True)
+        self.gene_sets_categories = dict()
+        for category in self.configuration["gene_sets"]:
+            category_name = category["category"]
+            for gene_set in category["sets"]:
+                collection_id = gene_set["collection_id"]
+                set_id = gene_set["set_id"]
+                full_gene_set_id = f"{collection_id}_{set_id}"
+                self.gene_sets_categories[full_gene_set_id] = category_name
 
     @property
     def agp_view(self):
@@ -339,6 +347,19 @@ class AutismGeneProfileDB:
             ),
         )
 
+    def _build_categories_ranks_table(self):
+        self.categories_ranks = Table(
+            "categories_ranks",
+            self.metadata,
+            Column(
+                "symbol_id",
+                ForeignKey("gene_symbols.id"),
+                primary_key=True
+            ),
+            Column("category_id", String(32), primary_key=True),
+            Column("count", Integer())
+        )
+
     def drop_cache_table(self):
         with self.engine.connect() as connection:
             connection.execute("DROP TABLE IF EXISTS agp_view_cache")
@@ -412,6 +433,27 @@ class AutismGeneProfileDB:
         select_cols = [self.gene_symbols.c.symbol_name]
 
         for category in self.configuration["gene_sets"]:
+            category_id = category["category"]
+            table_alias = aliased(
+                self.categories_ranks,
+                f"{category_id}_rank"
+            )
+            left = current_join
+            if left is None:
+                left = self.gene_symbols
+
+            current_join = join(
+                left, table_alias,
+                and_(
+                    self.gene_symbols.c.id == table_alias.c.symbol_id,
+                    table_alias.c.category_id == category_id
+                )
+            )
+
+            select_cols.append(
+                table_alias.c.count.label(f"{category_id}_rank")
+            )
+
             for gs in category.sets:
                 set_id = gs["set_id"]
                 collection_id = gs["collection_id"]
@@ -505,6 +547,7 @@ class AutismGeneProfileDB:
         self._build_studies_table()
         self._build_genomic_scores_table()
         self._build_variant_counts_table()
+        self._build_categories_ranks_table()
         if clear:
             self.metadata.drop_all()
         self.metadata.create_all()
@@ -544,6 +587,9 @@ class AutismGeneProfileDB:
                         )
                     )
             gene_sets = self._get_gene_sets()
+            gs_categories_count = {
+                c["category"]: 0 for c in self.configuration["gene_sets"]
+            }
             for gs_row in gene_sets:
                 set_id = gs_row["set_id"]
                 collection_id = gs_row["collection_id"]
@@ -558,6 +604,19 @@ class AutismGeneProfileDB:
                         symbol_id=symbol_id,
                         set_id=db_set_id,
                         present=present
+                    )
+                )
+
+                if present == 1:
+                    category = self.gene_sets_categories[full_set_id]
+                    gs_categories_count[category] += 1
+
+            for category, count in gs_categories_count.items():
+                connection.execute(
+                    insert(self.categories_ranks).values(
+                        symbol_id=symbol_id,
+                        category_id=category,
+                        count=count
                     )
                 )
 
@@ -601,8 +660,11 @@ class AutismGeneProfileDB:
                                 )
                             )
 
+                    gs_categories_count = {
+                        c["category"]: 0
+                        for c in self.configuration["gene_sets"]
+                    }
                     for gene_set, set_id in gene_set_ids.items():
-                        set_id = gene_set_ids[gene_set]
                         present = 0
                         if gene_set in agp.gene_sets:
                             present = 1
@@ -611,6 +673,18 @@ class AutismGeneProfileDB:
                                 symbol_id=symbol_id,
                                 set_id=set_id,
                                 present=present
+                            )
+                        )
+                        if present == 1:
+                            category = self.gene_sets_categories[gene_set]
+                            gs_categories_count[category] += 1
+
+                    for category, count in gs_categories_count.items():
+                        connection.execute(
+                            insert(self.categories_ranks).values(
+                                symbol_id=symbol_id,
+                                category_id=category,
+                                count=count
                             )
                         )
 
