@@ -25,13 +25,14 @@ class AutismGeneProfileDB:
         if self.cache_table_exists():
             self.cache_table = self._create_db_cache_table(autoload=True)
         self.gene_sets_categories = dict()
-        for category in self.configuration["gene_sets"]:
-            category_name = category["category"]
-            for gene_set in category["sets"]:
-                collection_id = gene_set["collection_id"]
-                set_id = gene_set["set_id"]
-                full_gene_set_id = f"{collection_id}_{set_id}"
-                self.gene_sets_categories[full_gene_set_id] = category_name
+        if len(self.configuration.keys()):
+            for category in self.configuration["gene_sets"]:
+                category_name = category["category"]
+                for gene_set in category["sets"]:
+                    collection_id = gene_set["collection_id"]
+                    set_id = gene_set["set_id"]
+                    full_gene_set_id = f"{collection_id}_{set_id}"
+                    self.gene_sets_categories[full_gene_set_id] = category_name
 
     @property
     def agp_view(self):

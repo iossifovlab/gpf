@@ -1038,6 +1038,10 @@ def agp_config(data_import, iossifov2014_impala):
                 'display_name': 'Relevant Gene Sets',
                 'sets': [
                     {'set_id': 'CHD8 target genes', 'collection_id': 'main'},
+                    {
+                        'set_id': 'FMRP Darnell',
+                        'collection_id': 'main'
+                    }
                 ]
             },
         ],
@@ -1063,7 +1067,7 @@ def agp_config(data_import, iossifov2014_impala):
         ],
         'datasets': Box({
             'iossifov_we2014_test': Box({
-                'effects': ['synonymous', 'missense'],
+                'effects': ['noncoding', 'missense'],
                 'person_sets': [
                     Box({
                         'set_name': 'unknown',
@@ -1110,12 +1114,6 @@ def agp_gpf_instance(
         "get_gene_set_ids",
         return_value=main_gene_sets
     )
-    all_gene_sets = [GeneSet(gs, "", ["C2orf42"]) for gs in main_gene_sets]
-    mocker.patch.object(
-        fixtures_gpf_instance.gene_sets_db,
-        "get_all_gene_sets",
-        return_value=all_gene_sets
-    )
     fixtures_gpf_instance.__autism_gene_profile_db = \
         AutismGeneProfileDB(
             fixtures_gpf_instance._autism_gene_profile_config,
@@ -1144,8 +1142,8 @@ def sample_agp():
     }
     variant_counts = {
         'iossifov_we2014_test': {
-            'unknown': {'synonymous': 53, 'missense': 21},
-            'unaffected': {'synonymous': 43, 'missense': 51},
+            'unknown': {'noncoding': 53, 'missense': 21},
+            'unaffected': {'noncoding': 43, 'missense': 51},
         }
     }
     return AGPStatistic(
