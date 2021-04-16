@@ -89,6 +89,14 @@ class WGPFInstance(GPFInstance):
     def _fetch_remote_studies(self, rest_client):
         studies = rest_client.get_datasets()
         for study in studies["data"]:
+            logger.debug(
+                f"study {study['id']} access rights are: "
+                f"{study.get('access_rights', False)}")
+            if not study.get("access_rights", None):
+                logger.info(
+                    f"skipping creation of remote study {study['id']}")
+                continue
+
             logger.info(f"creating remote genotype data: {study['id']}")
             study_wrapper = RemoteStudyWrapper(study["id"], rest_client)
             study_id = study_wrapper.study_id
