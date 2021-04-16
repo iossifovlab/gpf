@@ -454,7 +454,7 @@ class AutismGeneProfileDB:
                 table_alias.c.count.label(f"{category_id}_rank")
             )
 
-            for gs in category.sets:
+            for gs in category["sets"]:
                 set_id = gs["set_id"]
                 collection_id = gs["collection_id"]
                 full_set_id = f"{collection_id}_{set_id}"
@@ -565,7 +565,7 @@ class AutismGeneProfileDB:
         gene_sets_config = self.configuration["gene_sets"]
         gene_sets = []
         for category in gene_sets_config:
-            for gene_set in category.sets:
+            for gene_set in category["sets"]:
                 gene_sets.append(gene_set)
         self._populate_gene_sets_table(gene_sets)
         self._populate_studies_table(studies)
