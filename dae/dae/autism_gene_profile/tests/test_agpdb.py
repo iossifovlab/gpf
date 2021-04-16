@@ -64,6 +64,7 @@ def test_agpdb_get_gene_sets(temp_dbfile, agp_config, agp_gpf_instance):
     gene_sets = set([gs[1] for gs in agpdb._get_gene_sets()])
     expected = {
         'CHD8 target genes',
+        'FMRP Darnell',
     }
     assert expected.difference(gene_sets) == set()
     assert gene_sets.difference(expected) == set()
@@ -93,8 +94,8 @@ def test_agpdb_insert_and_get_agp(
 
     assert agp.variant_counts == {
         'iossifov_we2014_test': {
-            'unknown': {'synonymous': 53, 'missense': 21},
-            'unaffected': {'synonymous': 43, 'missense': 51},
+            'unknown': {'noncoding': 53, 'missense': 21},
+            'unaffected': {'noncoding': 43, 'missense': 51},
         }
     }
 
@@ -118,7 +119,7 @@ def test_agpdb_sort(agp_gpf_instance, sample_agp):
         1, sort_by="autism_scores_SFARI_gene_score", order="desc"
     )
     stats_sorted = agp_gpf_instance.query_agp_statistics(
-        1, sort_by="iossifov_we2014_test_unknown_synonymous", order="desc"
+        1, sort_by="iossifov_we2014_test_unknown_noncoding", order="desc"
     )
     stats_sorted = agp_gpf_instance.query_agp_statistics(
         1, sort_by="main_CHD8 target genes", order="desc"
