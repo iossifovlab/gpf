@@ -74,7 +74,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     }
 
     const dataset = this.config['defaultDataset'];
-    let pathname = this.router.createUrlTree(['datasets', dataset, 'geneBrowser', this.geneSymbol]).toString();
+    let pathname = this.router.createUrlTree(['datasets', dataset, 'gene-browser', this.geneSymbol]).toString();
 
     pathname = this.location.prepareExternalUrl(pathname);
 
