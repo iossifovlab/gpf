@@ -21,19 +21,19 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework import permissions
 from rest_framework import filters
 
+from utils.logger import log_filter, LOGGER, request_logging
+from utils.logger import request_logging_function_view
+from utils.email_regex import is_email_valid
+from utils.password_requirements import is_password_valid
+from utils.streaming_response_util import convert
+
 from .authentication import SessionAuthenticationWithUnauthenticatedCSRF
 from .models import VerificationPath
 from .serializers import UserSerializer
 from .serializers import UserWithoutEmailSerializer
 from .serializers import BulkGroupOperationSerializer
 
-from utils.logger import log_filter, LOGGER, request_logging
-from utils.logger import request_logging_function_view
-from utils.email_regex import is_email_valid
-
 from django.utils.decorators import available_attrs
-
-from utils.streaming_response_util import convert
 
 
 def csrf_clear(view_func):
@@ -200,8 +200,18 @@ def change_password(request):
     password = request.data["password"]
     verif_path = request.data["verifPath"]
 
-    get_user_model().change_password(verif_path, password)
+    if not is_password_valid(password):
+        LOGGER.error(log_filter(
+            request,
+            f"Password change failed: Invalid password: '{str(password)}'"
+        ))
+        return Response(
+            {"error_msg": ("Invalid password entered. Password is either too"
+                           " short (<10 symbols) or too weak.")},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
+    get_user_model().change_password(verif_path, password)
     return Response({}, status.HTTP_201_CREATED)
 
 
