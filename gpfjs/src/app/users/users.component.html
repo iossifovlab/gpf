@@ -54,10 +54,10 @@
               </button>
           </div>
         </div>
-        <div *ngIf="loginError" class="row mt-1">
+        <div *ngIf="errorMessage" class="row mt-1">
             <div class="col-12">
-              <div class="alert alert-danger">
-                Wrong username or password
+              <div class="alert alert-danger" style="text-align: center;">
+                {{errorMessage}}
               </div>
           </div>
         </div>

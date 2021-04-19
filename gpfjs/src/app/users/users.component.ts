@@ -14,7 +14,7 @@ import { ForgotPasswordComponent } from '../forgot-password/forgot-password.comp
 export class UsersComponent implements OnInit {
   private username;
   private password;
-  private loginError = false;
+  errorMessage: string;
   hideDropdown = true;
   userInfo$: Observable<any>;
   showPasswordField = false;
@@ -50,20 +50,42 @@ export class UsersComponent implements OnInit {
   }
 
   next() {
-    this.showPasswordField = true;
+    this.usersService.login(this.username).subscribe(
+      (res) => {
+        console.log(res);
+
+        if (res === true) {
+          this.reloadUserData();
+          this.showPasswordField = true;
+          this.errorMessage = undefined;
+        } else {
+          this.showPasswordField = false;
+          if (res['status'] === 404) {
+            this.errorMessage = 'Wrong username!';
+          } else if (res['status'] === 403) {
+            this.errorMessage = `Too many incorrect attempts! Please wait ${res['error']['lockout_time']} seconds!`;
+          }
+        }
+    });
   }
 
   login() {
     this.usersService.login(this.username, this.password).subscribe(
       (res) => {
-        if (res) {
+        if (res === true) {
           this.reloadUserData();
           this.username = null;
           this.password = null;
-          this.loginError = false;
           this.showPasswordField = false;
+          this.errorMessage = undefined;
         } else {
-          this.loginError = true;
+          if (res['status'] === 401) {
+            this.showPasswordField = true;
+            this.errorMessage = 'Wrong password!';
+          } else if (res['status'] === 403) {
+            this.showPasswordField = false;
+            this.errorMessage = `Too many incorrect attempts! Please wait ${res['error']['lockout_time']} seconds!`;
+          }
         }
 
     });
