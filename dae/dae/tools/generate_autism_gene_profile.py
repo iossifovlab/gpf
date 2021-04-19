@@ -126,6 +126,11 @@ def main(gpf_instance=None, argv=None):
     parser.add_argument('--verbose', '-V', '-v', action='count', default=0)
     default_dbfile = os.path.join(os.getenv("DAE_DB_DIR", "./"), "agpdb")
     parser.add_argument("--dbfile", default=default_dbfile)
+    parser.add_argument(
+        "--config_genes",
+        action="store_true",
+        help="Generate AGPs only for genes contained in the config's gene sets"
+    )
 
     args = parser.parse_args(argv)
     if args.verbose == 1:
@@ -148,7 +153,6 @@ def main(gpf_instance=None, argv=None):
 
     collections_gene_sets = []
 
-    print(config)
     for gs_category in config.gene_sets:
         for gs in gs_category.sets:
             gs_id = gs["set_id"]
@@ -173,8 +177,17 @@ def main(gpf_instance=None, argv=None):
     #     filter(lambda gs: gs["name"] in config.gene_sets, gene_sets)
     # )
     gene_symbols = set()
-    for _, gs in collections_gene_sets:
-        gene_symbols = gene_symbols.union(gs["syms"])
+    if args.config_genes:
+        for _, gs in collections_gene_sets:
+            gene_symbols = gene_symbols.union(gs["syms"])
+    else:
+        collections = gpf_instance.gene_sets_db.get_gene_set_collection_ids()
+        gene_sets = []
+        for col_id in collections:
+            gene_sets += gpf_instance.gene_sets_db.get_all_gene_sets(col_id)
+        gene_symbols = set()
+        for gs in gene_sets:
+            gene_symbols = gene_symbols.union(gs["syms"])
     gs_count = len(gene_symbols)
     logger.info(f"Collected {gs_count} gene symbols")
     variants = dict()
