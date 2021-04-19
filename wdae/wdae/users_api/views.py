@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta
 from functools import wraps
 
 from django.db import IntegrityError, transaction
@@ -22,7 +23,7 @@ from rest_framework import permissions
 from rest_framework import filters
 
 from .authentication import SessionAuthenticationWithUnauthenticatedCSRF
-from .models import VerificationPath
+from .models import VerificationPath, AuthenticationLog
 from .serializers import UserSerializer
 from .serializers import UserWithoutEmailSerializer
 from .serializers import BulkGroupOperationSerializer
@@ -31,9 +32,13 @@ from utils.logger import log_filter, LOGGER, request_logging
 from utils.logger import request_logging_function_view
 from utils.email_regex import is_email_valid
 
+from django.utils import timezone
 from django.utils.decorators import available_attrs
 
 from utils.streaming_response_util import convert
+
+
+LOCKOUT_THRESHOLD = 4
 
 
 def csrf_clear(view_func):
@@ -285,20 +290,73 @@ def register(request):
 @api_view(["POST"])
 @authentication_classes((SessionAuthenticationWithUnauthenticatedCSRF,))
 def login(request):
+    """Supports a two-step login procedure where only an email
+    is given at first.
+    """
     username = request.data["username"]
-    password = request.data["password"]
+    password = request.data.get("password")
     user_model = get_user_model()
     userfound = user_model.objects.filter(email__iexact=username)
 
     if userfound:
         assert len(userfound) == 1
+        last_login = AuthenticationLog.get_last_login_for(userfound[0].email)
+        if last_login is not None \
+           and last_login.failed_attempt > LOCKOUT_THRESHOLD:
+            # check if still locked out
+            current_time = timezone.now().replace(microsecond=0)
+            remaining_time = (
+                - (current_time - last_login.time)
+                + timedelta(minutes=pow(
+                    2, last_login.failed_attempt - LOCKOUT_THRESHOLD
+                ))
+            ).total_seconds()
+            if remaining_time > 0:
+                return Response(
+                    {"lockout_time": remaining_time},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+        if password is None:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
         user = django.contrib.auth.authenticate(
             username=userfound[0].email, password=password
         )
-        if user is not None and user.is_active:
-            django.contrib.auth.login(request, user)
-            LOGGER.info(log_filter(request, "login success: " + str(username)))
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        if user is None or not user.is_active:
+            last_login = AuthenticationLog.get_last_login_for(
+                userfound[0].email
+            )
+            failed_attempt = last_login.failed_attempt if last_login else 0
+            failed_attempt += 1
+
+            login_attempt = AuthenticationLog(
+                email=userfound[0].email,
+                time=timezone.now().replace(microsecond=0),
+                failed_attempt=failed_attempt
+            )
+            login_attempt.save()
+
+            if failed_attempt > LOCKOUT_THRESHOLD:
+                # in seconds
+                lockout_time = pow(2, failed_attempt - LOCKOUT_THRESHOLD) * 60
+                print("LOCKOUT TIME")
+                print(lockout_time)
+                return Response(
+                    {"lockout_time": lockout_time},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+        django.contrib.auth.login(request, user)
+        LOGGER.info(log_filter(request, "login success: " + str(username)))
+        login_attempt = AuthenticationLog(
+                email=userfound[0].email,
+                time=timezone.now().replace(microsecond=0),
+                failed_attempt=0
+        )
+        login_attempt.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     LOGGER.info(log_filter(request, "login failure: " + str(username)))
     return Response(status=status.HTTP_404_NOT_FOUND)
