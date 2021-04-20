@@ -30,12 +30,12 @@ export const datasetIds = {
 };
 
 export const toolPageLinks = {
-  datasetStatistics: 'commonReport',
-  genotypeBrowser: 'browser',
-  phenotypeBrowser: 'phenotypeBrowser',
-  phenotypeTool: 'phenoTool',
-  enrichmentTool: 'enrichment',
-  geneBrowser: 'geneBrowser'
+  datasetStatistics: 'dataset-statistics',
+  genotypeBrowser: 'genotype-browser',
+  phenotypeBrowser: 'phenotype-browser',
+  phenotypeTool: 'phenotype-tool',
+  enrichmentTool: 'enrichment-tool',
+  geneBrowser: 'gene-browser'
 };
 
 export class BasePage {
@@ -52,7 +52,7 @@ export class BasePage {
 
   navigateToHome() {
     const baseUrl = Cypress.config().baseUrl;
-    cy.visit(`${baseUrl}/datasets/comp_all/commonReport`);
+    cy.visit(`${baseUrl}/datasets/comp_all/${toolPageLinks.datasetStatistics}`);
   }
 
   login(username: string, password: string) {
@@ -94,11 +94,11 @@ export class BasePage {
   }
 
   get sidenavSavedQueriesButton() {
-    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/queries"]');
+    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/saved-queries"]');
   }
 
   get sidenavAutismGeneProfilesButton() {
-    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/autismGeneProfiles"]');
+    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/autism-gene-profiles"]');
   }
 
   get sidenavManagementButton() {
