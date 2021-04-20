@@ -163,17 +163,45 @@ EOT
 
 cat << EOT >> ${DAE_DB_DIR}/autismGeneTool.conf
 
-gene_sets = [
-    "autism candidates from Sanders Neuron 2015",
-    "synaptic clefts inhibitory",
-    "topotecan downreg genes",
-    "postsynaptic inhibition",
-]
 
 default_dataset = "iossifov_2014"
 
-protection_scores = ["SFARI_gene_score", "RVIS_rank", "RVIS"]
-autism_scores = ["SFARI_gene_score", "RVIS_rank", "RVIS"]
+[[gene_sets]]
+category = "autism_gene_sets"
+display_name = "Autism Gene Sets"
+sets = [
+    { set_id="autism candidates from Iossifov PNAS 2015", collection_id = "main" },
+    { set_id="autism candidates from Sanders Neuron 2015", collection_id = "main" },
+]
+
+[[gene_sets]]
+category = "relevent_gene_sets"
+display_name = "Relevant Gene Sets"
+
+sets = [
+    { set_id="CHD8 target genes", collection_id="main" },
+    { set_id="chromatin modifiers", collection_id="main" },
+    { set_id="essential genes", collection_id="main" },
+    { set_id="FMRP Darnell", collection_id="main" },
+]
+
+[[genomic_scores]]
+category = "autism_scores"
+display_name = "Autism Scores"
+scores = [
+    {score_name="SFARI_gene_score", format="%%s"},
+]
+
+[[genomic_scores]]
+category = "protection_scores"
+display_name = "Protection Scores"
+scores = [
+    {score_name="RVIS_rank", format="%%s"},
+    {score_name="LGD_rank", format="%%s"},
+    {score_name="pLI_rank", format="%%s"},
+    {score_name="pRec_rank", format="%%s"},
+]
+
 
 [datasets.iossifov_2014]
 effects = ["LGDS", "missense", "intron"]
@@ -186,7 +214,7 @@ collection_name="status"
 
 EOT
 
-generate_autism_gene_profile.py -VV
+generate_autism_gene_profile.py -VV --config-genes
 generate_agp_cache_table.py -VV
 
 
