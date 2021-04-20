@@ -127,7 +127,7 @@ def main(gpf_instance=None, argv=None):
     default_dbfile = os.path.join(os.getenv("DAE_DB_DIR", "./"), "agpdb")
     parser.add_argument("--dbfile", default=default_dbfile)
     parser.add_argument(
-        "--config_genes",
+        "--config-genes",
         action="store_true",
         help="Generate AGPs only for genes contained in the config's gene sets"
     )
@@ -190,10 +190,14 @@ def main(gpf_instance=None, argv=None):
     for dataset_id, filters in config.datasets.items():
         genotype_data = gpf_instance.get_genotype_data(dataset_id)
         assert genotype_data is not None, dataset_id
+        if argv.config_genes:
+            genes = gene_symbols
+        else:
+            genes = None
 
         variants[dataset_id] = list(
             genotype_data.query_variants(
-                effect_types=filters.effects, genes=gene_symbols,
+                effect_types=filters.effects, genes=genes,
                 inheritance="denovo")
         )
         person_ids[dataset_id] = dict()
