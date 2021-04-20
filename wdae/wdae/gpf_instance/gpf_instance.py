@@ -299,6 +299,10 @@ class WGPFInstance(GPFInstance):
         background = self.get_study_background(
             dataset_id, background_name
         )
+
+        if background is None:
+            logger.warning(f"Background {background_name} not found!")
+
         counter = CounterBase.counters()[counting_name]()
         enrichment_tool = EnrichmentTool(
             enrichment_config, background, counter
@@ -331,6 +335,14 @@ class WGPFInstance(GPFInstance):
             dataset_id, background_name, counting_name, gene_syms)
         if not builder:
             dataset = self.get_wdae_wrapper(dataset_id)
+            if dataset.is_remote is False:
+                logger.warning("WARNING: Using is_remote")
+                logger.warning(
+                    "WARNING: Failed to create local enrichment builder!\n"
+                    f"dataset: {dataset_id}, "
+                    f"requested background: {background_name}, "
+                    f"requested counting name: {counting_name}"
+                )
             builder = RemoteEnrichmentBuilder(
                 dataset, dataset.rest_client,
                 background_name, counting_name,
