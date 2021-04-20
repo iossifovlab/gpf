@@ -1,5 +1,5 @@
 import { Component, OnInit, HostListener, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+// import { Router, ActivatedRoute } from '@angular/router';
 import { UsersService } from './users.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Observable } from 'rxjs';
@@ -19,16 +19,16 @@ export class UsersComponent implements OnInit {
   userInfo$: Observable<any>;
   showPasswordField = false;
 
-
   @ViewChild('dropdownButton') dropdownButton: ElementRef;
   @ViewChild('dialog') dialog: ElementRef;
   @ViewChild('emailInput') emailInput: ElementRef;
+  @ViewChild('passwordInput') passwordInput: ElementRef;
 
   constructor(
     private modalService: NgbModal,
     private usersService: UsersService,
-    private router: Router,
-    private currentRoute: ActivatedRoute,
+    // private router: Router,
+    // private currentRoute: ActivatedRoute,
     private changeDetectorRef: ChangeDetectorRef
   ) { }
 
@@ -52,8 +52,6 @@ export class UsersComponent implements OnInit {
   next() {
     this.usersService.login(this.username).subscribe(
       (res) => {
-        console.log(res);
-
         if (res === true) {
           this.reloadUserData();
           this.showPasswordField = true;
@@ -122,5 +120,22 @@ export class UsersComponent implements OnInit {
   focusEmailInput() {
     this.changeDetectorRef.detectChanges();
     this.emailInput.nativeElement.focus();
+  }
+
+  focusPasswordInput() {
+    this.waitForPasswordInput().then(() => {
+      this.passwordInput.nativeElement.focus();
+    });
+  }
+
+  async waitForPasswordInput() {
+    return new Promise<void>(resolve => {
+      const timer = setInterval(() => {
+        if (this.passwordInput !== undefined) {
+          resolve();
+          clearInterval(timer);
+        }
+      }, 100);
+    });
   }
 }

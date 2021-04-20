@@ -21,7 +21,7 @@
             </div>
           </div>
           <div *ngIf="!showPasswordField" class="col-12">
-            <button class="btn btn-primary" id="next-button" style="width: 100%" (click)="next()">
+            <button class="btn btn-primary" id="next-button" style="width: 100%" (click)="next(); focusPasswordInput()">
               Next
             </button>
           </div>
@@ -31,7 +31,7 @@
           <div class="col-12">
             <div class="form-group">
               <label for="password">Password</label>
-              <input name="password" id="password" class="form-control" [(ngModel)]="password" type="password" autocomplete="off">
+              <input #passwordInput name="password" id="password" class="form-control" [(ngModel)]="password" type="password" autocomplete="off">
             </div>
           </div>
           <div class="col-12">
