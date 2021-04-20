@@ -1,8 +1,12 @@
+import logging
 from typing import List, Dict
 
 from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
 from dae.gene.gene_sets_db import GeneSet
 from remote.rest_api_client import RESTClient
+
+
+logger = logging.getLogger(__name__)
 
 
 class RemoteDenovoGeneSetsCollection:
@@ -13,6 +17,7 @@ class RemoteDenovoGeneSetsCollection:
     collection_types: List[Dict[str, str]]
 
     def __init__(self, rest_client: RESTClient):
+
         self.rest_client = rest_client
         self.denovo_collection = next(filter(
             lambda c: c["name"] == "denovo",
@@ -32,8 +37,10 @@ class RemoteDenovoGeneSetsCollection:
         )
 
     def get_gene_set(
-        self, gene_set_id, denovo_gene_set_spec, permitted_datasets=None
-    ):
+            self, gene_set_id, denovo_gene_set_spec, permitted_datasets=None):
+        logger.debug(
+            f"going to ged remote gene set: "
+            f"{gene_set_id}; {denovo_gene_set_spec}")
         # TODO FIXME Utilise permitted datasets
         raw_gene_set = self.rest_client.get_denovo_gene_set(
             gene_set_id, denovo_gene_set_spec).split("\n")

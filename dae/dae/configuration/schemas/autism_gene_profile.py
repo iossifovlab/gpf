@@ -3,12 +3,51 @@ from dae.configuration.gpf_config_parser import (
     validate_path,
 )
 
+gene_set_schema = {
+    "type": "dict",
+    "schema": {
+        "collection_id": {"type": "string", "default": "main"},
+        "set_id": {"type": "string"}
+    }
+}
+
+genomic_score_schema = {
+    "type": "dict",
+    "schema": {
+        "score_name": {"type": "string"},
+        "format": {"type": "string", "default": "%s"}
+    }
+}
+
 autism_gene_tool_config = {
-    "gene_sets": {"type": "list", "schema": {"type": "string"}},
-    "autism_scores": {"type": "list", "schema": {"type": "string"}},
-    "protection_scores": {"type": "list", "schema": {"type": "string"}},
+    "gene_sets": {
+        "type": "list",
+        "required": True,
+        "schema": {
+            "type": "dict",
+            "schema": {
+                "category": {"type": "string"},
+                "display_name": {"type": "string"},
+                "sets": {"type": "list", "schema": gene_set_schema}
+            },
+        }
+    },
+    "genomic_scores": {
+        "type": "list",
+        "required": True,
+        "schema": {
+            "type": "dict",
+            "schema": {
+                "category": {"type": "string"},
+                "display_name": {"type": "string"},
+                "scores": {"type": "list", "schema": genomic_score_schema}
+            },
+        }
+    },
     "datasets": {
-        "type": "dict", "valuesrules": {
+        "required": True,
+        "type": "dict",
+        "valuesrules": {
             "type": "dict", "schema": {
                 "person_sets": {"type": "list", "schema": {
                         "type": "dict",
