@@ -190,7 +190,7 @@ def main(gpf_instance=None, argv=None):
     for dataset_id, filters in config.datasets.items():
         genotype_data = gpf_instance.get_genotype_data(dataset_id)
         assert genotype_data is not None, dataset_id
-        if argv.config_genes:
+        if args.config_genes:
             genes = gene_symbols
         else:
             genes = None
