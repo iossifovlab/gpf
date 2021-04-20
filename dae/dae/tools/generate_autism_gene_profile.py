@@ -181,13 +181,8 @@ def main(gpf_instance=None, argv=None):
         for _, gs in collections_gene_sets:
             gene_symbols = gene_symbols.union(gs["syms"])
     else:
-        collections = gpf_instance.gene_sets_db.get_gene_set_collection_ids()
-        gene_sets = []
-        for col_id in collections:
-            gene_sets += gpf_instance.gene_sets_db.get_all_gene_sets(col_id)
-        gene_symbols = set()
-        for gs in gene_sets:
-            gene_symbols = gene_symbols.union(gs["syms"])
+        gene_models = gpf_instance.get_genome().get_gene_models().gene_models
+        gene_symbols = set(gene_models.keys())
     gs_count = len(gene_symbols)
     logger.info(f"Collected {gs_count} gene symbols")
     variants = dict()
