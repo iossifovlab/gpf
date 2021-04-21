@@ -481,20 +481,18 @@ class BaseQueryBuilder(ABC):
         if "coding_bin" not in self.variants_columns:
             return ""
         effect_types = set(effect_types)
-
-        logger.debug(
-            f"coding bin heuristic: query effect types: {effect_types}; "
-            f"coding_effect_types: "
-            f"{self.table_properties['coding_effect_types']}")
-
         intersection = \
             effect_types & \
             set(self.table_properties["coding_effect_types"])
 
-        coding_bin_col = self.where_accessors["coding_bin"]
         logger.debug(
-            f"effect types intersection: {intersection}; "
-            f"({intersection == effect_types})")
+            f"coding bin heuristic for {self.variants_table}: "
+            f"query effect types: {effect_types}; "
+            f"coding_effect_types: "
+            f"{self.table_properties['coding_effect_types']}; "
+            f"=> {intersection == effect_types}")
+
+        coding_bin_col = self.where_accessors["coding_bin"]
 
         if intersection == effect_types:
             return f"{coding_bin_col} = 1"
