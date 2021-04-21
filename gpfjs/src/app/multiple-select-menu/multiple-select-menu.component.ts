@@ -1,17 +1,17 @@
-import { Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
 import {cloneDeep} from 'lodash';
 
 @Component({
   selector: 'gpf-multiple-select-menu',
   templateUrl: './multiple-select-menu.component.html',
-  styleUrls: ['./multiple-select-menu.component.css']
+  styleUrls: ['./multiple-select-menu.component.css'],
 })
 export class MultipleSelectMenuComponent implements OnInit, OnChanges {
-  @Input() id: string;
+  @Input() id: [string, string];
   @Input() selectedItems: string[];
   @Input() allItems: string[];
   @Input() readonly minSelectCount = 0;
-  @Output() applyEvent = new EventEmitter<{id: string, data: string[]}>();
+  @Output() applyEvent = new EventEmitter<{id: [string, string], data: string[]}>();
   @Input() focusInput: boolean;
   @ViewChild('searchInput') searchInput: ElementRef;
 
