@@ -535,7 +535,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     const result = new GeneViewSummaryAllelesArray();
 
     for (const summaryAllele of summaryVariantsArray.summaryAlleles) {
-      if(this.filterSummaryAllele(summaryAllele, startPos, endPos)) {
+      if (this.filterSummaryAllele(summaryAllele, startPos, endPos)) {
         result.addSummaryAllele(summaryAllele);
       }
     }
@@ -610,6 +610,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
     if (this.gene !== undefined) {
       this.x_axis = d3.axisBottom(this.x).tickValues(this.calculateXAxisTicks());
+      this.drawXAxisLength(this.svgElement);
       this.y_axis = d3.axisLeft(this.y).tickValues(this.calculateYAxisTicks()).tickFormat(d3.format('1'));
       this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([]);
       this.y_axis_zero = d3.axisLeft(this.y_zero).tickSizeInner(0).tickPadding(9);
@@ -963,6 +964,21 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       }
     }
     return selectedChromosomes;
+  }
+
+  drawXAxisLength(element) {
+    const domain = this.x.domain();
+    const domainMin = domain[0];
+    const domainMax = domain[domain.length - 1];
+    const xAxisLength = this.formatExonsLength(domainMax - domainMin);
+
+    draw.hoverText(
+      element,
+      -50, this.svgHeightFreqRaw - 3,
+      xAxisLength,
+      `X axis length: ${xAxisLength}`,
+      this.fontSize
+    );
   }
 
   drawChromosomeLabels(element, yPos: number, geneViewTranscript: GeneViewTranscript) {
