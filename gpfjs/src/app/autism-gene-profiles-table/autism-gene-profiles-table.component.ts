@@ -7,6 +7,7 @@ import { AutismGeneToolConfig, AutismGeneToolGene, AutismGeneToolGeneSetsCategor
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-table',
@@ -19,16 +20,21 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
   @ViewChildren(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu[];
 
   private genes: AutismGeneToolGene[] = [];
+
   private shownGeneSetsCategories: AutismGeneToolGeneSetsCategory[];
+  allGeneSetNames = new Map<string, string[]>();
+  shownGeneSetNames = new Map<string, string[]>();
+
   private shownGenomicScoresCategories: AutismGeneToolGenomicScoresCategory[];
+  allGenomicScoresNames = new Map<string, string[]>();
+  shownGenomicScoresNames = new Map<string, string[]>();
 
   private pageIndex = 1;
   private loadMoreGenes = true;
   private scrollLoadThreshold = 1000;
 
-  // private focusGeneSetsInput: boolean;
-  // private focusAutismScoresInput: boolean;
-  // private focusProtectionScoresInput: boolean;
+  // private focusGeneSetsInputs: boolean[];
+  // private focusGenomicScoresInputs: boolean[];
 
   geneInput: string;
   searchKeystrokes$: Subject<string> = new Subject();
@@ -52,13 +58,13 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
       this.updateGenes();
     }
 
-    // this.updateModalBottom();
+    this.updateModalBottom();
   }
 
-  // @HostListener('window:resize', ['$event'])
-  // onResize() {
-  //   this.updateModalBottom();
-  // }
+  @HostListener('window:resize', ['$event'])
+  onResize() {
+    this.updateModalBottom();
+  }
 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
@@ -67,8 +73,8 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
   ) { }
 
   ngOnInit(): void {
-    this.shownGeneSetsCategories = this.config['geneSets'];
-    this.shownGenomicScoresCategories = this.config['genomicScores'];
+    this.shownGeneSetsCategories = cloneDeep(this.config['geneSets']);
+    this.shownGenomicScoresCategories = cloneDeep(this.config['genomicScores']);
 
     this.autismGeneProfilesService.getGenes(
       this.pageIndex, undefined, `${this.shownGeneSetsCategories[0]['category']}_rank`, 'desc'
@@ -89,7 +95,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     this.focusGeneSearch();
 
     this.columnFilteringButtons.changes.take(1).subscribe(() => {
-      // this.updateModalBottom();
+      this.updateModalBottom();
       this.cdr.detectChanges();
     });
 
@@ -99,13 +105,13 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     firstSortingButton.hideState = 1;
   }
 
-  // updateModalBottom() {
-  //   this.modalBottom = this.calculateModalBottom();
-  // }
+  updateModalBottom() {
+    this.modalBottom = this.calculateModalBottom();
+  }
 
-  // calculateModalBottom(): number {
-  //   return window.innerHeight - this.columnFilteringButtons.first.nativeElement.getBoundingClientRect().bottom;
-  // }
+  calculateModalBottom(): number {
+    return window.innerHeight - this.columnFilteringButtons.first.nativeElement.getBoundingClientRect().bottom;
+  }
 
   calculateDatasetColspan(datasetConfig) {
     return datasetConfig.effects.length * datasetConfig.personSets.length;
@@ -115,17 +121,24 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     return Array.from(map.values());
   }
 
-  // handleMultipleSelectMenuApplyEvent($event) {
-  //   if ($event.id === 'geneSets') {
-  //     this.shownGeneSetsCategories = $event.data;
-  //   } else if ($event.id === 'autismScores') {
-  //     this.shownAutismScores = $event.data;
-  //   } else if ($event.id === 'protectionScores') {
-  //     this.shownProtectionScores = $event.data;
-  //   }
+  handleMultipleSelectMenuApplyEvent($event) {
+    const menuId = $event.menuId.split(':', 2);
+    if (menuId[0] === 'gene_set_category') {
+      const categoryIndex = this.shownGeneSetsCategories.findIndex(category => category['category'] === menuId[1]);
 
-  //   this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
-  // }
+      this.shownGeneSetsCategories[categoryIndex]['sets'] = this.config['geneSets']
+        .find(category => category['category'] === menuId[1])['sets']
+        .filter(set => $event.data.includes(set['setId']));
+    } else if (menuId[0] === 'genomic_scores_category') {
+      const categoryIndex = this.shownGenomicScoresCategories.findIndex(category => category['category'] === menuId[1]);
+
+      this.shownGenomicScoresCategories[categoryIndex]['scores'] = this.config['genomicScores']
+        .find(category => category['category'] === menuId[1])['scores']
+        .filter(set => $event.data.includes(set['scoreName']));
+    }
+
+    this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
+  }
 
   emitCreateTabEvent(geneSymbol: string, openTab: boolean): void {
     this.createTabEvent.emit({geneSymbol: geneSymbol, openTab: openTab});
@@ -189,20 +202,57 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
 
   resetSortButtons(sortBy: string) {
     if (this.currentSortingColumnId !== undefined) {
-      this.sortingButtonsComponents.find(
+      const sortButton = this.sortingButtonsComponents.find(
         sortingButtonsComponent => {
           return sortingButtonsComponent.id === this.currentSortingColumnId;
         }
-      ).resetHideState();
+      );
+
+      if (sortButton) {
+        sortButton.resetHideState();
+      }
     }
     this.currentSortingColumnId = sortBy;
+  }
+
+  updateGeneSetNamesListInCategory(geneSetCategory) {
+    this.allGeneSetNames.set(geneSetCategory['category'], this.config['geneSets']
+      .find(category => geneSetCategory['displayName'] === category['displayName'])['sets']
+      .map(set => set['setId']));
+    this.shownGeneSetNames.set(geneSetCategory['category'], geneSetCategory['sets']
+      .map(set => set['setId']));
+
+    this.openDropdown(geneSetCategory['category']);
+  }
+
+  updateGenomicScoresNamesListInCategory(genomicScoresCategory) {
+    this.allGenomicScoresNames.set(genomicScoresCategory['category'], this.config['genomicScores']
+      .find(category => genomicScoresCategory['displayName'] === category['displayName'])['scores']
+      .map(score => score['scoreName']));
+    this.shownGenomicScoresNames.set(genomicScoresCategory['category'], genomicScoresCategory['scores']
+      .map(score => score['scoreName']));
+
+    this.openDropdown(genomicScoresCategory['category']);
+  }
+
+  async waitForDropdown() {
+    return new Promise<void>(resolve => {
+      const timer = setInterval(() => {
+        if (this.ngbDropdownMenu !== undefined) {
+          resolve();
+          clearInterval(timer);
+        }
+      }, 50);
+    });
   }
 
   openDropdown(columnId: string) {
     const dropdownId = columnId + '-dropdown';
 
-    this.updateDropdownPosition(columnId);
-    this.ngbDropdownMenu.find(ele => ele.nativeElement.id === dropdownId).dropdown.open();
+    this.waitForDropdown().then(() => {
+      this.updateDropdownPosition(columnId);
+      this.ngbDropdownMenu.find(ele => ele.nativeElement.id === dropdownId).dropdown.open();
+    });
   }
 
   updateDropdownPosition(id: string) {
@@ -223,10 +273,10 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
 
   calculateColumnSize(columnsCount: number): string {
     let result: number;
-    const singleColumnSize = 80;
+    const singleColumnSize = 125;
 
     if (columnsCount === 1) {
-      result = 200;
+      result = 250;
     } else {
       result = columnsCount * singleColumnSize;
     }

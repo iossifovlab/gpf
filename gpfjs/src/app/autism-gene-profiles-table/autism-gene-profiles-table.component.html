@@ -11,7 +11,11 @@
             <span>
               {{geneSetCategory['displayName']}}
             </span>
-            <button #columnFilteringButton disabled [attr.id]="geneSetCategory['displayName'] + '-button'" (click)="openDropdown('gene-sets')" class="dropdown-toggle btn navbar-toggler" style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
+            <button #columnFilteringButton
+            [attr.id]="geneSetCategory['category'] + '-button'"
+            (click)="updateGeneSetNamesListInCategory(geneSetCategory)"
+            class="dropdown-toggle btn navbar-toggler"
+            style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
               <span style="font-size: 14px;">&#9776;</span>
             </button>
             <gpf-sorting-buttons [id]="geneSetCategory['category'] + '_rank'" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
@@ -23,7 +27,11 @@
             <span>
               {{genomicScoresCategory['displayName']}}
             </span>
-            <button #columnFilteringButton disabled id="autism-scores-button" (click)="openDropdown('autism-scores')" class="dropdown-toggle btn navbar-toggler" style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
+            <button #columnFilteringButton
+            [attr.id]="genomicScoresCategory['category'] + '-button'"
+            (click)="updateGenomicScoresNamesListInCategory(genomicScoresCategory)"
+            class="dropdown-toggle btn navbar-toggler"
+            style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
               <span style="font-size: 14px;">&#9776;</span>
             </button>
           </th>
@@ -71,8 +79,6 @@
         </ng-container>
       </tr>
     </thead>
-   
-
 
     <tbody *ngIf="genes">
       <tr *ngFor="let gene of genes">
@@ -105,30 +111,25 @@
       </tr>
     </tbody>
 
-
-
   </table>
 </div>
 
 <!-- Added ngbDropdownToggle buttons with display: none because bootstrap crashes on escape without an ngbDropdownToggle
 Described in GPF-546 -->
-<!-- <div *ngIf="config" style="position: sticky;" [style.bottom.px]="modalBottom">
-  <span #dropdownSpan id="gene-sets-span" ngbDropdown (openChange)="focusGeneSetsInput = $event;">
-    <button ngbDropdownToggle style="display: none;"></button>
-    <gpf-multiple-select-menu ngbDropdownMenu id="gene-sets-dropdown" [focusInput]="focusGeneSetsInput" [id]="'geneSets'" [allItems]="config.geneSets" [selectedItems]="shownGeneSets" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
-  </span>
-</div>
+<ng-container *ngFor="let geneSetCategory of shownGeneSetsCategories; let i = index">
+  <div *ngIf="allGeneSetNames.get(geneSetCategory['category']) && shownGeneSetNames.get(geneSetCategory['category'])" style="position: sticky;" [style.bottom.px]="modalBottom">
+    <span #dropdownSpan [attr.id]="geneSetCategory['category'] + '-span'" ngbDropdown>
+      <button ngbDropdownToggle style="display: none;"></button>
+      <gpf-multiple-select-menu ngbDropdownMenu [attr.id]="geneSetCategory['category']  + '-dropdown'" [menuId]="'gene_set_category:' + geneSetCategory['category']" [allItems]="allGeneSetNames.get(geneSetCategory['category'])" [selectedItems]="shownGeneSetNames.get(geneSetCategory['category'])" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
+    </span>
+  </div>
+</ng-container>
 
-<div *ngIf="config" style="position: sticky;" [style.bottom.px]="modalBottom">
-  <span #dropdownSpan id="autism-scores-span" ngbDropdown (openChange)="focusAutismScoresInput = $event;">
-    <button ngbDropdownToggle style="display: none;"></button>
-    <gpf-multiple-select-menu ngbDropdownMenu id="autism-scores-dropdown" [focusInput]="focusAutismScoresInput" [id]="'autismScores'" [allItems]="config.autismScores" [selectedItems]="shownAutismScores" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
-  </span>
-</div>
-
-<div *ngIf="config" style="position: sticky;" [style.bottom.px]="modalBottom">
-  <span #dropdownSpan id="protection-scores-span" ngbDropdown (openChange)="focusProtectionScoresInput = $event;">
-    <button ngbDropdownToggle style="display: none;"></button>
-    <gpf-multiple-select-menu ngbDropdownMenu id="protection-scores-dropdown" [focusInput]="focusProtectionScoresInput" [id]="'protectionScores'" [allItems]="config.protectionScores" [selectedItems]="shownProtectionScores" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
-  </span>
-</div> -->
+<ng-container *ngFor="let genomicScoresCategory of shownGenomicScoresCategories">
+  <div *ngIf="allGenomicScoresNames.get(genomicScoresCategory['category']) && shownGenomicScoresNames.get(genomicScoresCategory['category'])" style="position: sticky;" [style.bottom.px]="modalBottom">
+    <span #dropdownSpan [attr.id]="genomicScoresCategory['category'] + '-span'" ngbDropdown>
+      <button ngbDropdownToggle style="display: none;"></button>
+      <gpf-multiple-select-menu ngbDropdownMenu [attr.id]="genomicScoresCategory['category'] + '-dropdown'" [menuId]="'genomic_scores_category:' + genomicScoresCategory['category']" [allItems]="allGenomicScoresNames.get(genomicScoresCategory['category'])" [selectedItems]="shownGenomicScoresNames.get(genomicScoresCategory['category'])" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
+    </span>
+  </div>
+</ng-container>

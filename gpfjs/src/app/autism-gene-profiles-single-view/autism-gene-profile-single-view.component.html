@@ -7,7 +7,7 @@
     View {{geneSymbol}} in the Gene Browser
   </a>
 
-  <table *ngFor="let genomicScoreCategory of config.genomicScores" id="genomicScoreCategory.category" class="table table-bordered table-centered genomic-scores-table">
+  <table *ngFor="let genomicScoreCategory of config.genomicScores" [attr.id]="genomicScoreCategory.category" class="table table-bordered table-centered genomic-scores-table">
     <th [attr.colspan]="2" style="text-align: center;">{{genomicScoreCategory.displayName}}</th>
     <tr *ngFor="let score of genomicScoreCategory.scores" class="card-block">
       <td style="vertical-align: middle;">{{score.scoreName}}</td>
@@ -31,7 +31,7 @@
     </tr>
   </table>
 
-  <table *ngFor="let geneSetCategory of config.geneSets" id="geneSetCategory.category" class="table table-bordered table-centered gene-sets-table">
+  <table *ngFor="let geneSetCategory of config.geneSets" [attr.id]="geneSetCategory.category" class="table table-bordered table-centered gene-sets-table">
     <th [attr.colspan]="2" style="text-align: center;">{{geneSetCategory.displayName}}</th>
     <tr *ngFor="let set of geneSetCategory.sets" class="card-block">
       <td>{{set.setId}}</td>
