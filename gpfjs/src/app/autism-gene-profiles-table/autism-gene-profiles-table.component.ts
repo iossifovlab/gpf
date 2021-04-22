@@ -272,10 +272,10 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
 
   calculateColumnSize(columnsCount: number): string {
     let result: number;
-    const singleColumnSize = 80;
+    const singleColumnSize = 125;
 
     if (columnsCount === 1) {
-      result = 200;
+      result = 250;
     } else {
       result = columnsCount * singleColumnSize;
     }
