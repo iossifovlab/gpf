@@ -15,6 +15,12 @@ def test_list_families_view(admin_client):
     ]
 
 
+def test_list_families_view_nonexistent(admin_client):
+    url = "/api/v3/families/Study123123123"
+    response = admin_client.get(url)
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
 def test_family_details_view(admin_client):
     url = "/api/v3/families/Study1/f6"
     response = admin_client.get(url)
@@ -26,6 +32,12 @@ def test_family_details_view(admin_client):
     }
 
 
+def test_family_details_view_nonexistent(admin_client):
+    url = "/api/v3/families/Study1/f654654654"
+    response = admin_client.get(url)
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
 def test_list_members_view(admin_client):
     url = "/api/v3/families/Study1/f6/members"
     response = admin_client.get(url)
@@ -33,10 +45,15 @@ def test_list_members_view(admin_client):
     assert response.data == ["mom6", "dad6", "ch6"]
 
 
+def test_list_members_view_nonexistent(admin_client):
+    url = "/api/v3/families/Study1/f654654654/members"
+    response = admin_client.get(url)
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
 def test_member_details_view(admin_client):
     url = "/api/v3/families/Study1/f6/members/ch6"
     response = admin_client.get(url)
-    print(response.data)
     assert response.status_code == status.HTTP_200_OK
     assert response.data == {
         "person_id": "ch6",
@@ -53,3 +70,9 @@ def test_member_details_view(admin_client):
         "not_sequenced": None,
         "missing": False,
     }
+
+
+def test_member_details_view_nonexistent(admin_client):
+    url = "/api/v3/families/Study1/f6/members/ch456456"
+    response = admin_client.get(url)
+    assert response.status_code == status.HTTP_404_NOT_FOUND
