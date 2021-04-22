@@ -35,7 +35,7 @@ class ImpalaHelpers(object):
             return connection
 
         self._connection_pool = QueuePool(
-            create_connection, pool_size=20,  # pool_size,
+            create_connection, pool_size=6,  # pool_size,
             reset_on_return=False,
             # use_threadlocal=True,
         )

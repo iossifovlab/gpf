@@ -265,7 +265,7 @@ class GenotypeDataGroup(GenotypeData):
     def executor(self):
         with self._EXECUTOR_LOCK:
             if self.EXECUTOR is None:
-                self.EXECUTOR = ThreadPoolExecutor(max_workers=20)
+                self.EXECUTOR = ThreadPoolExecutor(max_workers=6)
             return self.EXECUTOR
 
     @property
