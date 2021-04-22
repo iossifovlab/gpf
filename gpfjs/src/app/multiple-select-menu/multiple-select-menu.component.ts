@@ -7,11 +7,11 @@ import {cloneDeep} from 'lodash';
   styleUrls: ['./multiple-select-menu.component.css'],
 })
 export class MultipleSelectMenuComponent implements OnInit, OnChanges {
-  @Input() id: [string, string];
+  @Input() menuId: string;
   @Input() selectedItems: string[];
   @Input() allItems: string[];
   @Input() readonly minSelectCount = 0;
-  @Output() applyEvent = new EventEmitter<{id: [string, string], data: string[]}>();
+  @Output() applyEvent = new EventEmitter<{menuId: string, data: string[]}>();
   @Input() focusInput: boolean;
   @ViewChild('searchInput') searchInput: ElementRef;
 
@@ -76,7 +76,7 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
     this.updateSavedState();
 
     this.applyEvent.emit({
-      id: this.id,
+      menuId: this.menuId,
       data: this.checkboxDataArray.filter(item => item.isChecked).map(item => item.id)
     });
   }

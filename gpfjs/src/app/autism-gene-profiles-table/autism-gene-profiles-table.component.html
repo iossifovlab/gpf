@@ -120,7 +120,7 @@ Described in GPF-546 -->
   <div *ngIf="allGeneSetNames.get(geneSetCategory['category']) && shownGeneSetNames.get(geneSetCategory['category'])" style="position: sticky;" [style.bottom.px]="modalBottom">
     <span #dropdownSpan [attr.id]="geneSetCategory['category'] + '-span'" ngbDropdown>
       <button ngbDropdownToggle style="display: none;"></button>
-      <gpf-multiple-select-menu ngbDropdownMenu [attr.id]="geneSetCategory['category']  + '-dropdown'" [id]="['gene_set_category', geneSetCategory['category']]" [allItems]="allGeneSetNames.get(geneSetCategory['category'])" [selectedItems]="shownGeneSetNames.get(geneSetCategory['category'])" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
+      <gpf-multiple-select-menu ngbDropdownMenu [attr.id]="geneSetCategory['category']  + '-dropdown'" [menuId]="'gene_set_category:' + geneSetCategory['category']" [allItems]="allGeneSetNames.get(geneSetCategory['category'])" [selectedItems]="shownGeneSetNames.get(geneSetCategory['category'])" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
     </span>
   </div>
 </ng-container>
@@ -129,7 +129,7 @@ Described in GPF-546 -->
   <div *ngIf="allGenomicScoresNames.get(genomicScoresCategory['category']) && shownGenomicScoresNames.get(genomicScoresCategory['category'])" style="position: sticky;" [style.bottom.px]="modalBottom">
     <span #dropdownSpan [attr.id]="genomicScoresCategory['category'] + '-span'" ngbDropdown>
       <button ngbDropdownToggle style="display: none;"></button>
-      <gpf-multiple-select-menu ngbDropdownMenu [attr.id]="genomicScoresCategory['category'] + '-dropdown'" [id]="['genomic_scores_category', genomicScoresCategory['category']]" [allItems]="allGenomicScoresNames.get(genomicScoresCategory['category'])" [selectedItems]="shownGenomicScoresNames.get(genomicScoresCategory['category'])" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
+      <gpf-multiple-select-menu ngbDropdownMenu [attr.id]="genomicScoresCategory['category'] + '-dropdown'" [menuId]="'genomic_scores_category:' + genomicScoresCategory['category']" [allItems]="allGenomicScoresNames.get(genomicScoresCategory['category'])" [selectedItems]="shownGenomicScoresNames.get(genomicScoresCategory['category'])" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
     </span>
   </div>
 </ng-container>

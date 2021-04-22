@@ -122,17 +122,18 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
   }
 
   handleMultipleSelectMenuApplyEvent($event) {
-    if ($event.id[0] === 'gene_set_category') {
-      const categoryIndex = this.shownGeneSetsCategories.findIndex(category => category['category'] === $event.id[1]);
+    const menuId = $event.menuId.split(':', 2);
+    if (menuId[0] === 'gene_set_category') {
+      const categoryIndex = this.shownGeneSetsCategories.findIndex(category => category['category'] === menuId[1]);
 
       this.shownGeneSetsCategories[categoryIndex]['sets'] = this.config['geneSets']
-        .find(category => category['category'] === $event.id[1])['sets']
+        .find(category => category['category'] === menuId[1])['sets']
         .filter(set => $event.data.includes(set['setId']));
-    } else if ($event.id[0] === 'genomic_scores_category') {
-      const categoryIndex = this.shownGenomicScoresCategories.findIndex(category => category['category'] === $event.id[1]);
+    } else if (menuId[0] === 'genomic_scores_category') {
+      const categoryIndex = this.shownGenomicScoresCategories.findIndex(category => category['category'] === menuId[1]);
 
       this.shownGenomicScoresCategories[categoryIndex]['scores'] = this.config['genomicScores']
-        .find(category => category['category'] === $event.id[1])['scores']
+        .find(category => category['category'] === menuId[1])['scores']
         .filter(set => $event.data.includes(set['scoreName']));
     }
 
