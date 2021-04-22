@@ -153,6 +153,75 @@ enabled = true
 
 EOT
 
+mkdir -p ${DAE_DB_DIR}/datasets/COMP_genotypes
+mkdir -p ${DAE_DB_DIR}/datasets/ALL_genotypes
+
+cat <<EOT >> ${DAE_DB_DIR}/datasets/COMP_genotypes/COMP_genotypes.conf
+
+id = "COMP_genotypes"
+name = "COMP Genotypes"
+
+studies = [
+	"comp_denovo", 
+	"comp_vcf", 
+]
+
+study_type = ["WG"]
+has_complex = true
+enabled = true
+
+[genotype_browser]
+
+has_present_in_child = true
+has_present_in_parent = true
+has_pedigree_selector = false
+
+variant_types = ["sub", "ins", "del", "complex"]
+selected_variant_types = ["sub", "ins", "del", "complex"]
+
+[denovo_gene_sets]
+enabled = false
+
+[common_report]
+enabled = false
+
+
+EOT
+
+cat <<EOT >> ${DAE_DB_DIR}/datasets/ALL_genotypes/ALL_genotypes.conf
+
+id = "ALL_genotypes"
+name = "ALL Genotypes"
+
+studies = [
+	"comp_all", 
+	"COMP_genotypes",
+	"multi", 
+	"iossifov_2014",
+]
+
+study_type = ["WG"]
+has_complex = true
+enabled = true
+
+[genotype_browser]
+
+has_present_in_child = true
+has_present_in_parent = true
+has_pedigree_selector = false
+
+variant_types = ["sub", "ins", "del", "complex"]
+selected_variant_types = ["sub", "ins", "del", "complex"]
+
+[denovo_gene_sets]
+enabled = false
+
+[common_report]
+enabled = false
+
+
+EOT
+
 
 cat <<EOT >> ${DAE_DB_DIR}/DAE.conf
 
@@ -164,7 +233,7 @@ EOT
 cat << EOT >> ${DAE_DB_DIR}/autismGeneTool.conf
 
 
-default_dataset = "iossifov_2014"
+default_dataset = "ALL_genotypes"
 
 [[gene_sets]]
 category = "autism_gene_sets"
