@@ -24,34 +24,10 @@ describe('Autism gene profiles table tests', () => {
   });
 
   it('should display gene sets columns filtering button', () => {
-    autismGeneProfilesTablePage.geneSetsButton.should('be.visible');
+    autismGeneProfilesTablePage.autismGeneSetsButton.should('be.visible');
   });
 
-  it('should open gene sets dropdown after clicking on gene sets columns filtering button', () => {
-    autismGeneProfilesTablePage.geneSetsDropdown.should('not.be.visible');
-    autismGeneProfilesTablePage.geneSetsButton.click();
-    autismGeneProfilesTablePage.geneSetsDropdown.should('be.visible');
-  });
-
-  it('should display autism scores columns filtering button', () => {
-    autismGeneProfilesTablePage.autismScoresButton.should('be.visible');
-  });
-
-  it('should open autism scores dropdown after clicking on autism scores columns filtering button', () => {
-    autismGeneProfilesTablePage.autismScoresDropdown.should('not.be.visible');
-    autismGeneProfilesTablePage.autismScoresButton.click();
-    autismGeneProfilesTablePage.autismScoresDropdown.should('be.visible');
-  });
-
-  it('should display protection scores columns filtering button', () => {
-    autismGeneProfilesTablePage.protectionScoresButton.should('be.visible');
-  });
-
-  it('should open protection scores dropdown after clicking on protection scores columns filtering button', () => {
-    autismGeneProfilesTablePage.protectionScoresDropdown.should('not.be.visible');
-    autismGeneProfilesTablePage.protectionScoresButton.click();
-    autismGeneProfilesTablePage.protectionScoresDropdown.should('be.visible');
-  });
+  // tests for the other columns filtering buttons
 });
 
 describe('Autism gene profiles table data tests', () => {
@@ -86,64 +62,62 @@ describe('Column filtering dropdown tests', () => {
     autismGeneProfilesTablePage.navigateToHome();
     autismGeneProfilesTablePage.toggleSidenav();
     autismGeneProfilesTablePage.sidenavAutismGeneProfilesButton.click();
-    autismGeneProfilesTablePage.geneSetsButton.click();
+    autismGeneProfilesTablePage.autismGeneSetsButton.click();
   });
 
-  it('should open gene sets dropdown after clicking on gene sets columns filtering button', () => {
-    autismGeneProfilesTablePage.geneSetsDropdown.should('be.visible');
-    autismGeneProfilesTablePage.geneSetsButton.click();
-    autismGeneProfilesTablePage.geneSetsDropdown.should('not.be.visible');
+  it('should open autism gene sets dropdown after clicking on the autism gene sets columns filtering button', () => {
+    autismGeneProfilesTablePage.autismGeneSetsDropdown.should('be.visible');
   });
 
   it('should open gene sets dropdown and display the check/uncheck all button', () => {
-    autismGeneProfilesTablePage.geneSetsCheckUncheckAllButton.should('be.visible');
+    autismGeneProfilesTablePage.autismGeneSetsCheckUncheckAllButton.should('be.visible');
   });
 
   it('should open gene sets dropdown and display the search input box', () => {
-    autismGeneProfilesTablePage.geneSetsDropdownSearch.should('be.visible');
+    autismGeneProfilesTablePage.autismGeneSetsDropdownSearch.should('be.visible');
   });
 
   it('should open gene sets dropdown and display the appply button', () => {
-    autismGeneProfilesTablePage.geneSetsDropdownApplyButton.should('be.visible');
+    autismGeneProfilesTablePage.autismGeneSetsDropdownApplyButton.should('be.visible');
   });
 
   it('should open gene sets dropdown, check/uncheck all checkboxes and disable the apply button accordingly', () => {
-    autismGeneProfilesTablePage.geneSetsDropdownApplyButton.should('be.enabled');
+    autismGeneProfilesTablePage.autismGeneSetsDropdownApplyButton.should('be.enabled');
 
-    autismGeneProfilesTablePage.geneSetsCheckUncheckAllButton.click();
-    autismGeneProfilesTablePage.geneSetsDropdownApplyButton.should('not.be.enabled');
+    autismGeneProfilesTablePage.autismGeneSetsCheckUncheckAllButton.click();
+    autismGeneProfilesTablePage.autismGeneSetsDropdownApplyButton.should('not.be.enabled');
 
-    autismGeneProfilesTablePage.geneSetsCheckUncheckAllButton.click();
-    autismGeneProfilesTablePage.geneSetsDropdownApplyButton.should('be.enabled');
+    autismGeneProfilesTablePage.autismGeneSetsCheckUncheckAllButton.click();
+    autismGeneProfilesTablePage.autismGeneSetsDropdownApplyButton.should('be.enabled');
   });
 
   it('should check/uncheck all gene sets column filtering options using the check/uncheck all button', () => {
     autismGeneProfilesTablePage.allGeneSetsDropdownCheckboxes.each((element) => {
       cy.wrap(element).should('be.checked');
     });
-    autismGeneProfilesTablePage.geneSetsCheckUncheckAllButton.click();
+    autismGeneProfilesTablePage.autismGeneSetsCheckUncheckAllButton.click();
     autismGeneProfilesTablePage.allGeneSetsDropdownCheckboxes.each((element) => {
       cy.wrap(element).should('not.be.checked');
     });
-    autismGeneProfilesTablePage.geneSetsCheckUncheckAllButton.click();
+    autismGeneProfilesTablePage.autismGeneSetsCheckUncheckAllButton.click();
     autismGeneProfilesTablePage.allGeneSetsDropdownCheckboxes.each((element) => {
       cy.wrap(element).should('be.checked');
     });
   });
 
   it('should change the check/uncheck button text', () => {
-    autismGeneProfilesTablePage.geneSetsCheckUncheckAllButton.should('have.text', 'Uncheck all');
+    autismGeneProfilesTablePage.autismGeneSetsCheckUncheckAllButton.should('have.text', 'Uncheck all');
 
-    autismGeneProfilesTablePage.geneSetsCheckUncheckAllButton.click();
-    autismGeneProfilesTablePage.geneSetsCheckUncheckAllButton.should('have.text', 'Check all');
+    autismGeneProfilesTablePage.autismGeneSetsCheckUncheckAllButton.click();
+    autismGeneProfilesTablePage.autismGeneSetsCheckUncheckAllButton.should('have.text', 'Check all');
 
-    autismGeneProfilesTablePage.geneSetsCheckUncheckAllButton.click();
-    autismGeneProfilesTablePage.geneSetsCheckUncheckAllButton.should('have.text', 'Uncheck all');
+    autismGeneProfilesTablePage.autismGeneSetsCheckUncheckAllButton.click();
+    autismGeneProfilesTablePage.autismGeneSetsCheckUncheckAllButton.should('have.text', 'Uncheck all');
   });
 
   it('should filter gene sets dropdown options using the search', () => {
     autismGeneProfilesTablePage.allGeneSetsDropdownCheckboxes.should('have.length', 4);
-    autismGeneProfilesTablePage.geneSetsDropdownSearch.type('autism');
+    autismGeneProfilesTablePage.autismGeneSetsDropdownSearch.type('autism');
     autismGeneProfilesTablePage.allGeneSetsDropdownCheckboxes.should('have.length', 1);
   });
 

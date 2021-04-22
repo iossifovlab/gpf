@@ -21,16 +21,20 @@ describe('Autism gene profiles single view tests', () => {
     autismGeneProfilesSingleViewPage.geneBrowserLink.should('be.visible');
   });
 
-  it('should display autism scores table', () => {
+  it('should display the autism scores table', () => {
     autismGeneProfilesSingleViewPage.autismScoresTable.should('be.visible');
   });
 
-  it('should display protection scores table', () => {
+  it('should display the protection scores table', () => {
     autismGeneProfilesSingleViewPage.protectionScoresTable.should('be.visible');
   });
 
-  it('should display gene sets table', () => {
-    autismGeneProfilesSingleViewPage.geneSetsTable.should('be.visible');
+  it('should display the autism gene sets table', () => {
+    autismGeneProfilesSingleViewPage.geneAutismGeneSetsTable.should('be.visible');
+  });
+
+  it('should display the relevant gene sets table', () => {
+    autismGeneProfilesSingleViewPage.geneRelevantGeneSetsTable.should('be.visible');
   });
 
   it('should have the correct href on the gene browser link', () => {
