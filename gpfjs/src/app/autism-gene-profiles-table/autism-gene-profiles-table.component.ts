@@ -21,11 +21,11 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
 
   private genes: AutismGeneToolGene[] = [];
 
-  private shownGeneSetsCategories: AutismGeneToolGeneSetsCategory[];
+  public shownGeneSetsCategories: AutismGeneToolGeneSetsCategory[];
   allGeneSetNames = new Map<string, string[]>();
   shownGeneSetNames = new Map<string, string[]>();
 
-  private shownGenomicScoresCategories: AutismGeneToolGenomicScoresCategory[];
+  public shownGenomicScoresCategories: AutismGeneToolGenomicScoresCategory[];
   allGenomicScoresNames = new Map<string, string[]>();
   shownGenomicScoresNames = new Map<string, string[]>();
 
