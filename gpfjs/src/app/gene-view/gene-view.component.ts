@@ -94,6 +94,8 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   @ViewChild('transmittedCheckbox') transmittedCheckbox;
   @ViewChildren('variantTypeCheckbox') variantTypeCheckboxes;
 
+  tablePreviewDebouncer: Subject<DomainRange> = new Subject<DomainRange>();
+
   geneBrowserConfig;
   frequencyDomainMin: number;
   frequencyDomainMax: number;
@@ -161,6 +163,9 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     private loadingService: FullscreenLoadingService,
   ) {
     super();
+    this.tablePreviewDebouncer
+      .debounceTime(1000)
+      .subscribe(domains => this.updateShownTablePreviewVariantsArrayEvent.emit(domains));
   }
 
   ngOnInit() {
@@ -572,8 +577,10 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     const start = this.zoomHistory.currentState.yMin;
     const end = this.zoomHistory.currentState.yMax;
     const domains = new DomainRange(start, end);
-    this.updateShownTablePreviewVariantsArrayEvent.emit(domains);
+    this.tablePreviewDebouncer.next(domains);
   }
+
+
 
   doAllelesIntersect(allele1: GeneViewSummaryAllele, allele2: GeneViewSummaryAllele): boolean {
     let result: boolean;
