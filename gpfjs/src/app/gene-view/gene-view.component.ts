@@ -976,7 +976,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       element,
       -50, this.svgHeightFreqRaw - 3,
       xAxisLength,
-      `X axis length: ${xAxisLength}`,
+      `X axis length: ${this.commaSeparateNumber(domainMax - domainMin)}`,
       this.fontSize
     );
   }
@@ -1108,7 +1108,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   }
 
   commaSeparateNumber(number: number): string {
-    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' bp';
   }
 
   formatExonsLength(exonsLength: number): string {
@@ -1119,10 +1119,10 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
      result = `${exonsLength} bp`;
     } else if (numLen < 7) {
       result = `${Math.round(exonsLength / 100 + Number.EPSILON) / 10} kbp`;
-    } else if (numLen < 10) {
+    } else {
       result = `${Math.round(exonsLength / 10000 + Number.EPSILON) / 10} mbp`;
     }
 
-    return result;
+    return '~' + result;
   }
 }
