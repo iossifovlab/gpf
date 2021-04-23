@@ -1,3 +1,19 @@
+SELECT variants.bucket_index, variants.summary_index, MIN(variants.chromosome), MIN(variants.`position`), variants.family_id  
+FROM data_hg38_seqclust.sfari_spark_wes_1_consortium_variants as variants JOIN data_hg38_seqclust.sfari_spark_wes_1_consortium_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'POGZ'  )  ) ) AND 
+  ( (`chromosome` = 'chr1' AND ((`position` >= 151424919 AND `position` <= 151424967) OR (COALESCE(end_position, -1) >= 151424919 AND COALESCE(end_position, -1) <= 151424967) OR (151424919 >= `position` AND 151424967 <= COALESCE(end_position, -1)))) ) AND 
+  ( (  variants.effect_types in (  'frame-shift' , 'nonsense' , 'splice-site' , 'no-frame-shift-newStop'  )  ) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND 
+  ( BITAND(134, variants.inheritance_in_members) != 0 ) AND
+  ( variants.allele_index > 0 ) AND 
+  ( variants.region_bin IN ('chr1_5') ) AND 
+  variants.variant_in_members = pedigree.person_id 
+GROUP BY variants.bucket_index, variants.summary_index, variants.family_id HAVING gpf_bit_or(pedigree.status) IN (1, 2, 3);
+
+
+
+
 SELECT variants.bucket_index, variants.summary_index, variants.family_variants_count, variants.seen_in_status, variants.seen_as_denovo 
 FROM data_hg38_production_202005.sfari_spark_wgs_1_summary_variants as variants 
 WHERE
