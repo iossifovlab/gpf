@@ -93,6 +93,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   @ViewChild('denovoCheckbox') denovoCheckbox;
   @ViewChild('transmittedCheckbox') transmittedCheckbox;
   @ViewChildren('variantTypeCheckbox') variantTypeCheckboxes;
+  @Output() startLoadingSpinnerEvent = new EventEmitter<boolean>();
 
   tablePreviewDebouncer: Subject<DomainRange> = new Subject<DomainRange>();
 
@@ -577,6 +578,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     const start = this.zoomHistory.currentState.yMin;
     const end = this.zoomHistory.currentState.yMax;
     const domains = new DomainRange(start, end);
+    this.startLoadingSpinnerEvent.emit();
     this.tablePreviewDebouncer.next(domains);
   }
 
