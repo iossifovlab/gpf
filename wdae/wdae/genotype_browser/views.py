@@ -15,21 +15,10 @@ from query_base.query_base import QueryBaseView
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 from datasets_api.permissions import \
-    get_allowed_genotype_studies
+    handle_partial_permissions
 
 
 logger = logging.getLogger(__name__)
-
-
-def handle_partial_permissions(user, dataset_id: str, request_data: dict):
-    """A user may have only partial access to a dataset based
-    on which of its constituent studies he has rights to access.
-    This method attaches these rights to the request as study filters
-    in order to filter variants from studies the user cannot access.
-    """
-
-    request_data["allowed_studies"] = \
-        get_allowed_genotype_studies(user, dataset_id)
 
 
 class QueryPreviewView(QueryBaseView):

@@ -256,3 +256,14 @@ def get_dataset_groups(dataset):
     if not isinstance(dataset, Dataset):
         dataset = Dataset.objects.get(dataset_id=force_str(dataset))
     return {g.name for g in get_groups_with_perms(dataset)}
+
+
+def handle_partial_permissions(user, dataset_id: str, request_data: dict):
+    """A user may have only partial access to a dataset based
+    on which of its constituent studies he has rights to access.
+    This method attaches these rights to the request as study filters
+    in order to filter variants from studies the user cannot access.
+    """
+
+    request_data["allowed_studies"] = \
+        get_allowed_genotype_studies(user, dataset_id)
