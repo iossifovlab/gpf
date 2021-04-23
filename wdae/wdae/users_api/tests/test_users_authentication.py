@@ -298,7 +298,7 @@ def test_password_reset_resets_lockouts(user, client):
         "/api/v3/users/change_password",
         json.dumps({
             "verifPath": user.verificationpath.path,
-            "password": "newpass"
+            "password": "samplenewpassword"
         }),
         content_type="application/json",
         format="json"
@@ -313,7 +313,7 @@ def test_password_reset_resets_lockouts(user, client):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     # Try properly logging in
-    data["password"] = "newpass"
+    data["password"] = "samplenewpassword"
     response = client.post(
         url, json.dumps(data),
         content_type="application/json", format="json"
