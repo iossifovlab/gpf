@@ -175,7 +175,7 @@ def test_registration_all_steps(client, researcher_without_password):
     assert response.status_code == status.HTTP_200_OK
 
     url = "/api/v3/users/change_password"
-    data = {"verifPath": verifPath, "password": "testpas"}
+    data = {"verifPath": verifPath, "password": "testpassword"}
     response = client.post(
         url, json.dumps(data), content_type="application/json", format="json"
     )
@@ -184,7 +184,7 @@ def test_registration_all_steps(client, researcher_without_password):
     url = "/api/v3/users/login"
     data = {
         "username": researcher_without_password.email,
-        "password": "testpas",
+        "password": "testpassword",
     }
 
     response = client.post(
