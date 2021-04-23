@@ -6,10 +6,17 @@ import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-s
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 // tslint:disable-next-line:import-blacklist
-import { of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { AutismGeneToolConfig } from './autism-gene-profile-table';
 
 import { AutismGeneProfilesTableComponent } from './autism-gene-profiles-table.component';
+
+const mockConfig = new AutismGeneToolConfig(
+  'fakeDefaultDataset',
+  [{category: 'fakeGeneSets', sets: ['fakeGeneSet']}] as any,
+  [{category: 'fakeGenomicScores', scores: ['fakeGenomicScore']}] as any,
+  [{name: 'fakeDataset', effects: ['fakeEffect'], personSets: ['fakePersonSets']}] as any
+);
 
 describe('AutismGeneProfilesTableComponent', () => {
   let component: AutismGeneProfilesTableComponent;
@@ -27,14 +34,7 @@ describe('AutismGeneProfilesTableComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(AutismGeneProfilesTableComponent);
     component = fixture.componentInstance;
-    component.config = new AutismGeneToolConfig(
-      ['fakeAutismScores'],
-      undefined,
-      ['fakeGeneList'],
-      ['fakeProtectionScores'],
-      'fakeDefaultDataset'
-    );
-    fixture.detectChanges();
+    component.config = mockConfig;
   });
 
   it('should create', () => {
@@ -68,25 +68,19 @@ describe('AutismGeneProfilesTableComponent', () => {
   });
 
   it('should get genes on initialization', () => {
+    component['shownGeneSetsCategories'] = undefined;
+    component['shownGenomicScoresCategories'] = undefined;
     component['genes'] = ['mockGene1', 'mockGene2', 'mockGene3'] as any;
-    const getGenesSpy = spyOn(component['autismGeneProfilesService'], 'getGenes')
+    spyOn(component['autismGeneProfilesService'], 'getGenes')
       .and.returnValue(of(['mockGene4', 'mockGene5', 'mockGene6'] as any));
 
     component.ngOnInit();
-    expect(component['shownGeneSets']).toEqual(['fakeGeneList']);
-    expect(component['shownAutismScores']).toEqual(['fakeAutismScores']);
-    expect(component['shownProtectionScores']).toEqual(['fakeProtectionScores']);
-    expect(getGenesSpy).toHaveBeenCalledTimes(1);
+
+    expect(component['shownGeneSetsCategories']).toEqual([{category: 'fakeGeneSets', sets: ['fakeGeneSet']}]);
+    expect(component['shownGenomicScoresCategories']).toEqual([{category: 'fakeGenomicScores', scores: ['fakeGenomicScore']}]);
     expect((component['genes'])).toEqual([
       'mockGene1', 'mockGene2', 'mockGene3', 'mockGene4', 'mockGene5', 'mockGene6'
     ]);
-  });
-
-  it('should focus on gene search after view initialization', () => {
-    const focuseGeneSearchSpy = spyOn(component, 'focusGeneSearch');
-    expect(focuseGeneSearchSpy).not.toHaveBeenCalled();
-    component.ngAfterViewInit();
-    expect(focuseGeneSearchSpy).toHaveBeenCalledTimes(1);
   });
 
   it('should calculate dataset colspan', () => {
@@ -114,23 +108,47 @@ describe('AutismGeneProfilesTableComponent', () => {
     ] as any;
     component.ngbDropdownMenu.forEach(menu => dropDownMenuSpies.push(spyOn(menu.dropdown, 'close')));
 
-    component.handleMultipleSelectMenuApplyEvent({id: 'geneSets', data: ['fakeGeneSetsNew']});
-    expect(component['shownGeneSets']).toEqual(['fakeGeneSetsNew']);
-    expect(component['shownAutismScores']).toEqual((['fakeAutismScores']));
-    expect(component['shownProtectionScores']).toEqual(['fakeProtectionScores']);
+    const geneSetsArray = [
+      {category: 'fakeGeneSets1', sets: [{setId: 'fakeGeneSet11'}, {setId: 'fakeGeneSet12'}]},
+      {category: 'fakeGeneSets2', sets: [{setId: 'fakeGeneSet21'}, {setId: 'fakeGeneSet22'}]}
+    ] as any;
+    component.config['geneSets'] = geneSetsArray;
+    component['shownGeneSetsCategories'] = geneSetsArray;
+
+    const genomicScoresArray = [
+      {category: 'fakeGenomicScores1', scores: [{scoreName: 'fakeGenomicScore11'}, {scoreName: 'fakeGenomicScore12'}]},
+      {category: 'fakeGenomicScores2', scores: [{scoreName: 'fakeGenomicScore21'}, {scoreName: 'fakeGenomicScore22'}]}
+    ] as any;
+    component.config['genomicScores'] = genomicScoresArray;
+    component['shownGenomicScoresCategories'] = genomicScoresArray;
+
+    component.handleMultipleSelectMenuApplyEvent({
+      menuId: 'gene_set_category:fakeGeneSets1',
+      data: ['fakeGeneSet12']
+    });
+    expect(component['shownGeneSetsCategories']).toEqual([
+      {category: 'fakeGeneSets1', sets: [{setId: 'fakeGeneSet12'}]},
+      {category: 'fakeGeneSets2', sets: [{setId: 'fakeGeneSet21'}, {setId: 'fakeGeneSet22'}]}
+    ]);
+    expect(component['shownGenomicScoresCategories']).toEqual([
+      {category: 'fakeGenomicScores1', scores: [{scoreName: 'fakeGenomicScore11'}, {scoreName: 'fakeGenomicScore12'}]},
+      {category: 'fakeGenomicScores2', scores: [{scoreName: 'fakeGenomicScore21'}, {scoreName: 'fakeGenomicScore22'}]}
+    ]);
     dropDownMenuSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(1));
 
-    component.handleMultipleSelectMenuApplyEvent({id: 'autismScores', data: ['fakeAutismScoresNew']});
-    expect(component['shownGeneSets']).toEqual(['fakeGeneSetsNew']);
-    expect(component['shownAutismScores']).toEqual((['fakeAutismScoresNew']));
-    expect(component['shownProtectionScores']).toEqual(['fakeProtectionScores']);
+    component.handleMultipleSelectMenuApplyEvent({
+      menuId: 'genomic_scores_category:fakeGenomicScores1',
+      data: ['fakeGenomicScore12']
+    });
+    expect(component['shownGeneSetsCategories']).toEqual([
+      {category: 'fakeGeneSets1', sets: [{setId: 'fakeGeneSet12'}]},
+      {category: 'fakeGeneSets2', sets: [{setId: 'fakeGeneSet21'}, {setId: 'fakeGeneSet22'}]}
+    ]);
+    expect(component['shownGenomicScoresCategories']).toEqual([
+      {category: 'fakeGenomicScores1', scores: [{scoreName: 'fakeGenomicScore12'}]},
+      {category: 'fakeGenomicScores2', scores: [{scoreName: 'fakeGenomicScore21'}, {scoreName: 'fakeGenomicScore22'}]}
+    ]);
     dropDownMenuSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(2));
-
-    component.handleMultipleSelectMenuApplyEvent({id: 'protectionScores', data: ['fakeProtectionScoresNew']});
-    expect(component['shownGeneSets']).toEqual(['fakeGeneSetsNew']);
-    expect(component['shownAutismScores']).toEqual((['fakeAutismScoresNew']));
-    expect(component['shownProtectionScores']).toEqual(['fakeProtectionScoresNew']);
-    dropDownMenuSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(3));
   });
 
   it('should emit create tab event', () => {
