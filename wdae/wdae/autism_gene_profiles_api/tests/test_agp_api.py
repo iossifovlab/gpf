@@ -14,8 +14,16 @@ def test_configuration(admin_client):
 
     assert response.status_code == 200
     print(response.data)
-    assert len(response.data["autism_scores"]) == 3
-    assert len(response.data["protection_scores"]) == 3
+
+    assert len(response.data["genomic_scores"]) == 2
+
+    assert len(response.data["genomic_scores"][0]["scores"]) == 3
+    assert response.data["genomic_scores"][0]["category"] == \
+        "protection_scores"
+
+    assert len(response.data["genomic_scores"][1]["scores"]) == 3
+    assert response.data["genomic_scores"][1]["category"] == "autism_scores"
+
     assert len(response.data["datasets"].keys()) == 1
 
     datasets = response.data["datasets"]

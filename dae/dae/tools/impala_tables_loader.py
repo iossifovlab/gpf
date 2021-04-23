@@ -168,7 +168,4 @@ def main(argv=sys.argv[1:], gpf_instance=None):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    logger.info('Started')
-
     main(sys.argv[1:])

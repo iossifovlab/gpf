@@ -38,7 +38,7 @@ class IsDatasetAllowed(permissions.BasePermission):
 
         return list(
             filter(
-                lambda dataset_id: _user_has_permission_strict(
+                lambda dataset_id: user_has_permission(
                     user, dataset_id
                 ),
                 dataset_ids,

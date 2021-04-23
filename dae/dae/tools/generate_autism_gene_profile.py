@@ -12,33 +12,28 @@ from dae.utils.effect_utils import expand_effect_types
 logger = logging.getLogger(__name__)
 
 
-def generate_agp(gpf_instance, gene_symbol, variants):
+def generate_agp(gpf_instance, gene_symbol, variants, collections_gene_sets):
     gene_weights_db = gpf_instance.gene_weights_db
     config = gpf_instance._autism_gene_profile_config
-    autism_scores = dict()
-    protection_scores = dict()
+    scores = dict()
 
-    gene_sets = gpf_instance.gene_sets_db.get_all_gene_sets("main")
     sets_in = []
-    for gs in gene_sets:
+    for collection_id, gs in collections_gene_sets:
         if gene_symbol in gs["syms"]:
-            sets_in.append(gs["name"])
+            gs_name = gs["name"]
+            sets_in.append(f"{collection_id}_{gs_name}")
 
-    for score in config.autism_scores:
-        gw = gene_weights_db.get_gene_weight(score)
-        if gene_symbol in gw.get_genes():
-            value = gw.get_gene_value(gene_symbol)
-        else:
-            value = None
-        autism_scores[score] = value
-
-    for score in config.protection_scores:
-        gw = gene_weights_db.get_gene_weight(score)
-        if gene_symbol in gw.get_genes():
-            value = gw.get_gene_value(gene_symbol)
-        else:
-            value = None
-        protection_scores[score] = value
+    for category in config.genomic_scores:
+        category_name = category["category"]
+        scores[category_name] = dict()
+        for score in category["scores"]:
+            score_name = score["score_name"]
+            gw = gene_weights_db.get_gene_weight(score["score_name"])
+            if gene_symbol in gw.get_genes():
+                value = gw.get_gene_value(gene_symbol)
+            else:
+                value = None
+            scores[category_name][score_name] = value
 
     variant_counts = dict()
 
@@ -56,8 +51,8 @@ def generate_agp(gpf_instance, gene_symbol, variants):
         variant_counts[dataset_id] = current_counts
 
     return gene_symbol, AGPStatistic(
-        gene_symbol, sets_in, protection_scores,
-        autism_scores, variant_counts
+        gene_symbol, sets_in,
+        scores, variant_counts
     )
 
 
@@ -131,6 +126,11 @@ def main(gpf_instance=None, argv=None):
     parser.add_argument('--verbose', '-V', '-v', action='count', default=0)
     default_dbfile = os.path.join(os.getenv("DAE_DB_DIR", "./"), "agpdb")
     parser.add_argument("--dbfile", default=default_dbfile)
+    parser.add_argument(
+        "--config-genes",
+        action="store_true",
+        help="Generate AGPs only for genes contained in the config's gene sets"
+    )
 
     args = parser.parse_args(argv)
     if args.verbose == 1:
@@ -151,23 +151,38 @@ def main(gpf_instance=None, argv=None):
 
     # gpf_instance.gene_sets_db.get_all_gene_sets("main")
 
-    gene_sets = gpf_instance.gene_sets_db.get_all_gene_sets("main")
-    gene_sets_result = list(
-        filter(lambda gs: gs["name"] in config.gene_sets, gene_sets)
-    )
+    collections_gene_sets = []
 
-    # gene_sets_result = []
+    for gs_category in config.gene_sets:
+        for gs in gs_category.sets:
+            gs_id = gs["set_id"]
+            collection_id = gs["collection_id"]
+
+            collections_gene_sets.append(
+                (
+                    collection_id,
+                    gpf_instance.gene_sets_db.get_gene_set(
+                        collection_id, gs_id
+                    )
+                )
+            )
+
+    # collections_gene_sets = []
     # for name in config.gene_sets:
     #     gene_set = gpf_instance.gene_sets_db.get_gene_set("main", name)
-    #     gene_sets_result.append(gene_set)
-    logger.info(f"collected gene sets: {len(gene_sets_result)}")
+    #     collections_gene_sets.append(gene_set)
+    logger.info(f"collected gene sets: {len(collections_gene_sets)}")
 
     # gene_sets = list(
     #     filter(lambda gs: gs["name"] in config.gene_sets, gene_sets)
     # )
     gene_symbols = set()
-    for gs in gene_sets_result:
-        gene_symbols = gene_symbols.union(gs["syms"])
+    if args.config_genes:
+        for _, gs in collections_gene_sets:
+            gene_symbols = gene_symbols.union(gs["syms"])
+    else:
+        gene_models = gpf_instance.get_genome().get_gene_models().gene_models
+        gene_symbols = set(gene_models.keys())
     gs_count = len(gene_symbols)
     logger.info(f"Collected {gs_count} gene symbols")
     variants = dict()
@@ -175,10 +190,14 @@ def main(gpf_instance=None, argv=None):
     for dataset_id, filters in config.datasets.items():
         genotype_data = gpf_instance.get_genotype_data(dataset_id)
         assert genotype_data is not None, dataset_id
+        if args.config_genes:
+            genes = gene_symbols
+        else:
+            genes = None
 
         variants[dataset_id] = list(
             genotype_data.query_variants(
-                effect_types=filters.effects, genes=gene_symbols,
+                effect_types=filters.effects, genes=genes,
                 inheritance="denovo")
         )
         person_ids[dataset_id] = dict()
@@ -200,7 +219,9 @@ def main(gpf_instance=None, argv=None):
 
     start = time.time()
     for idx, sym in enumerate(gene_symbols, 1):
-        gs, agp = generate_agp(gpf_instance, sym, variants)
+        gs, agp = generate_agp(
+            gpf_instance, sym, variants, collections_gene_sets
+        )
         agps[gs] = agp
         if idx % 25 == 0:
             elapsed = time.time() - start
