@@ -23,7 +23,8 @@
           [gene]="selectedGene"
           [variantsArray]="summaryVariantsArray"
           (updateShownTablePreviewVariantsArrayEvent)="updateShownTablePreviewVariantsArray($event)"
-          [streamingFinished$]="queryService.summaryStreamingFinishedSubject">
+          [streamingFinished$]="queryService.summaryStreamingFinishedSubject"
+          (startLoadingSpinnerEvent)="startLoadingSpinner()">
         </gpf-gene-view>
       </div>
 

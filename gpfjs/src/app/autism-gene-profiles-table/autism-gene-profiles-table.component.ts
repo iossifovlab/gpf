@@ -21,11 +21,11 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
 
   private genes: AutismGeneToolGene[] = [];
 
-  private shownGeneSetsCategories: AutismGeneToolGeneSetsCategory[];
+  public shownGeneSetsCategories: AutismGeneToolGeneSetsCategory[];
   allGeneSetNames = new Map<string, string[]>();
   shownGeneSetNames = new Map<string, string[]>();
 
-  private shownGenomicScoresCategories: AutismGeneToolGenomicScoresCategory[];
+  public shownGenomicScoresCategories: AutismGeneToolGenomicScoresCategory[];
   allGenomicScoresNames = new Map<string, string[]>();
   shownGenomicScoresNames = new Map<string, string[]>();
 
@@ -273,10 +273,10 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
 
   calculateColumnSize(columnsCount: number): string {
     let result: number;
-    const singleColumnSize = 125;
+    const singleColumnSize = 80;
 
     if (columnsCount === 1) {
-      result = 250;
+      result = 160;
     } else {
       result = columnsCount * singleColumnSize;
     }

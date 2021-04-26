@@ -188,6 +188,10 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
     return params;
   }
 
+  startLoadingSpinner(): void {
+    this.familyLoadingFinished = false;
+  }
+
   submitGeneRequest() {
     this.hideResults = false;
     this.geneViewComponent.clearSvgElement();
