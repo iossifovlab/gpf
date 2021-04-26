@@ -35,6 +35,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   loadingFinished: boolean;
   familyLoadingFinished: boolean;
   hideResults: boolean;
+  hideDropdown: boolean;
   codingEffectTypes = [
     'lgds',
     'nonsense',
@@ -83,7 +84,6 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
     readonly configService: ConfigService,
     private loadingService: FullscreenLoadingService,
     private stateRestoreService: StateRestoreService
-
   ) {
     super();
   }
@@ -198,6 +198,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   }
 
   submitGeneRequest() {
+    this.hideDropdown = true;
     this.hideResults = false;
     this.geneViewComponent.clearSvgElement();
     this.geneViewComponent.resetGeneTableValues();
@@ -253,7 +254,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
             requestParams['inheritanceTypeFilter'] = inheritanceFilters;
 
             this.summaryVariantsArray = this.queryService.getGeneViewVariants(requestParams);
-
+            this.hideDropdown = false;
           }, error => {
             console.warn(error);
           }
