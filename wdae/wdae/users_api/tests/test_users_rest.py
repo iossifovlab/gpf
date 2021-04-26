@@ -612,3 +612,26 @@ def test_bulk_remove_unknown_group_fails(admin_client, three_users_in_a_group):
         url, json.dumps(data), content_type="application/json", format="json"
     )
     assert response.status_code is status.HTTP_404_NOT_FOUND
+
+
+def test_user_email_case_insensitive(admin_client, user_model):
+    url = "/api/v3/users"
+    data = {
+        "email": "CaseInsensitive@test.com",
+    }
+    response = admin_client.post(
+        url, json.dumps(data), content_type="application/json", format="json"
+    )
+
+    print(response)
+    assert response.status_code is status.HTTP_201_CREATED
+    user = user_model.objects.get(email="caseinsensitive@test.com")
+
+    assert user is not None
+    print(response.data)
+    data = response.data
+    groups = data["groups"]
+    print(groups)
+
+    assert "caseinsensitive@test.com" in groups
+    assert "CaseInsensitive@test.com" not in groups
