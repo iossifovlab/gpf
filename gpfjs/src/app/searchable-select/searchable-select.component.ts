@@ -16,6 +16,14 @@ export class SearchableSelectComponent implements AfterViewInit {
   @ViewChild(NgbDropdown) dropdown: NgbDropdown;
   @ViewChild('searchBox') searchBox: any;
   @ContentChild(SearchableSelectTemplateDirective) template: SearchableSelectTemplateDirective;
+
+  onEnterPress() {
+    if (this.isInGeneBrowser) {
+      this.onSelect(this.searchBox.nativeElement.value);
+      this.dropdown.close();
+    }
+  }
+
   constructor(
     private ngZone: NgZone
   ) {}

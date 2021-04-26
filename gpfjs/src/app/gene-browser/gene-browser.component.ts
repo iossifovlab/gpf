@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { GeneService } from 'app/gene-view/gene.service';
 import { Gene, GeneViewSummaryAllelesArray, DomainRange } from 'app/gene-view/gene';
 import { GenotypePreviewVariantsArray, GenotypePreviewInfo } from 'app/genotype-preview-model/genotype-preview';
@@ -69,6 +69,11 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
 
   enableCodingOnly = true;
   private genotypeBrowserState: Object;
+
+  @HostListener('document:keydown.enter', ['$event'])
+  onEnterPress() {
+    this.submitGeneRequest();
+  }
 
   constructor(
     public queryService: QueryService,

@@ -1,8 +1,7 @@
 <div style="padding: 30px;" *ngIf="selectedDataset$ | async as dataset">
   <div *ngIf="dataset.accessRights">
     <div class="effect-card card">
-      <div style="font-family: Roboto; font-weight: 500; border-bottom: none;" class="card-header card-title">Gene
-        Symbols</div>
+      <div style="font-family: Roboto; font-weight: 500; border-bottom: none;" class="card-header card-title">Gene Symbols</div>
       <div class="card-block">
         <gpf-gene-symbol-with-search (inputClickEvent)="hideResults = true"></gpf-gene-symbol-with-search>
 
