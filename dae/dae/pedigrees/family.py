@@ -283,7 +283,8 @@ class Family(object):
         return {
             "family_id": self.family_id,
             "person_ids": self.members_ids,
-            "samples_index": self._samples_index
+            "samples_index": self._samples_index,
+            "family_type": self.family_type.name
         }
 
     def add_members(self, persons):

@@ -143,12 +143,22 @@ class RESTClient:
         return response
 
     def post_query_variants(self, data):
+        assert data.get("download", False) is False
         response = self._post(
             "genotype_browser/query",
             data=data,
             stream=True
         )
-        return response
+        return self._read_json_list_stream(response)
+
+    def post_query_variants_download(self, data):
+        data["download"] = True
+        response = self._post(
+            "genotype_browser/query",
+            data=data,
+            stream=True
+        )
+        return self._read_json_list_stream(response)
 
     # def get_browser_preview_info(self, data):
     #     response = self._post("genotype_browser/preview", data=data)
@@ -436,3 +446,43 @@ class RESTClient:
             return None
 
         return response.content.decode()
+
+    def get_member_details(self, dataset_id, family_id, member_id):
+        response = self._get(
+            f"families/{dataset_id}/{family_id}/members/{member_id}"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_members(self, dataset_id, family_id):
+        response = self._get(
+            f"families/{dataset_id}/{family_id}/members"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_family_details(self, dataset_id, family_id):
+        response = self._get(
+            f"families/{dataset_id}/{family_id}"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_families(self, dataset_id):
+        response = self._get(
+            f"families/{dataset_id}"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()

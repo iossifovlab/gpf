@@ -8,6 +8,8 @@ from dae.variants.attributes import Role
 from dae.studies.study import GenotypeData
 from dae.configuration.gpf_config_parser import FrozenBox
 from remote.remote_phenotype_data import RemotePhenotypeData
+from remote.remote_variant import RemoteFamilyVariant, QUERY_SOURCES
+from remote.family import RemoteFamily, RemotePerson
 from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
 
@@ -430,11 +432,31 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
         self.is_remote = True
 
+        self._families = dict()
+
+        self._load_families()
+
+    def load_families(self):
+        family_ids = self.rest_client.get_families(self._remote_study_id)
+        for family_id in family_ids:
+            family_json = self.rest_client.get_family_details(
+                self._remote_study_id, family_id
+            )
+            members = family_json["person_ids"]
+            self._families[family_id] = RemoteFamily(family_json)
+            family_members = []
+            for mid in members:
+                person_json = self.rest_client.get_member_details(
+                    self._remote_study_id, family_id, mid
+                )
+                family_members.append(RemotePerson(person_json))
+            self._families[family_id].add_members(family_members)
+
     def is_group(self):
         pass
 
     def families(self):
-        pass
+        return self._families
 
     def get_studies_ids(self, leafs=True):
         studies = self.config["studies"]
@@ -453,14 +475,23 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
         kwargs["datasetId"] = self._remote_study_id
         kwargs["maxVariantsCount"] = max_variants_count
+        sources.update(QUERY_SOURCES)
         kwargs["sources"] = sources
 
+        fam_id_idx = -1
+        for idx, s in enumerate(sources):
+            if s["source"] == "family_id":
+                fam_id_idx = idx
+                break
+
+        assert fam_id_idx >= 0, fam_id_idx
+
         response = self.rest_client.post_query_variants(kwargs)
-        for line in response.iter_lines():
+        for line in response:
             if line:
-                variants = json.loads(line)
-                for variant in variants:
-                    yield variant
+                variant = json.loads(line)
+                fam_id = variant[0][fam_id_idx]
+                yield RemoteFamilyVariant(variant, self.families.get(fam_id))
 
     def build_genotype_data_group_description(self, gpf_instance):
         return self.config.to_dict()
