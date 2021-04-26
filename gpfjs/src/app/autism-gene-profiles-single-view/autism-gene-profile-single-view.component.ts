@@ -16,7 +16,7 @@ import { Location } from '@angular/common';
 export class AutismGeneProfileSingleViewComponent implements OnInit {
   @Input() readonly geneSymbol: string;
   @Input() config: AutismGeneToolConfig;
-  genomicScoresCategories = [];
+  genomicScoresGeneWeights = [];
 
   gene$: Observable<AutismGeneToolGene>;
   genomicScores: AutismGeneToolGenomicScoresCategory[];
@@ -39,9 +39,11 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     this.gene$ = this.autismGeneProfilesService.getGene(this.geneSymbol);
 
     this.gene$.subscribe(res => {
+      let scores: string;
       for (let i = 0; i < res['genomicScores'].length; i++) {
-        this.geneWeightsService.getGeneWeights([...res['genomicScores'][i].scores.keys()].join(',')).subscribe(kek => {
-          this.genomicScoresCategories.push({category: res['genomicScores'][i].category, scores: kek});
+        scores = [...res['genomicScores'][i].scores.keys()].join(',');
+        this.geneWeightsService.getGeneWeights(scores).subscribe(geneWeights => {
+          this.genomicScoresGeneWeights.push({category: res['genomicScores'][i].category, scores: geneWeights});
         });
       }
     });
@@ -52,9 +54,9 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   }
 
   getGeneWeightByKey(category: string, key: string): GeneWeights {
-    return this.genomicScoresCategories.find(
-      genomicScoresCategory => genomicScoresCategory.category === category
-    ).scores.find(weight => weight.weight === key);
+    return this.genomicScoresGeneWeights
+      .find(genomicScoresCategory => genomicScoresCategory.category === category).scores
+      .find(score => score.weight === key);
   }
 
   getSingleScoreValue(genomicScores, category: string, score: string) {
