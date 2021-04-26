@@ -4,7 +4,7 @@
 set -e
 
 
-export HAS_GPF_MYSQL=`docker ps -a | grep gpf_mysql | sed -e "s/\s\{2,\}/\t/g" | cut -f 1`
+export HAS_GPF_MYSQL=`docker ps -a | grep gpf-mysql | sed -e "s/\s\{2,\}/\t/g" | cut -f 1`
 
 
 if [[ -z $HAS_GPF_MYSQL ]]; then
@@ -13,8 +13,8 @@ if [[ -z $HAS_GPF_MYSQL ]]; then
     docker pull mysql:5.7
 
     docker create \
-        --name gpf_mysql \
-        --hostname gpf_mysql \
+        --name gpf-mysql \
+        --hostname gpf-mysql \
         -p 3306:3306 \
         -e "MYSQL_DATABASE=gpf" \
         -e "MYSQL_USER=seqpipe" \
@@ -30,7 +30,7 @@ export HAS_RUNNING_GPF_MYSQL=`docker ps | grep gpf_mysql | sed -e "s/\s\{2,\}/\t
 echo "Has running GPF MySQL: <${HAS_RUNNING_GPF_MYSQL}>"
 if [[ -z $HAS_RUNNING_GPF_MYSQL ]]; then
     echo "starting gpf_mysql container..."
-    docker start gpf_mysql
+    docker start gpf-mysql
 fi
 
 echo "waiting gpf_mysql container..."
@@ -47,7 +47,10 @@ echo ""
 
 
 
-mysql -u root -psecret -h 127.0.0.1 -e "CREATE DATABASE IF NOT EXISTS test_gpf" 
-# character set UTF8 collate utf8_bin"
+mysql -u root -psecret -h 127.0.0.1 \
+    -e "CREATE DATABASE IF NOT EXISTS test_gpf" 
 
-mysql -u root -psecret -h 127.0.0.1 -e "GRANT ALL PRIVILEGES ON test_gpf.* TO 'seqpipe'@'%' IDENTIFIED BY 'secret' WITH GRANT OPTION"
+sleep 2
+
+mysql -u root -psecret -h 127.0.0.1 \
+    -e "GRANT ALL PRIVILEGES ON test_gpf.* TO 'seqpipe'@'%' IDENTIFIED BY 'secret' WITH GRANT OPTION"

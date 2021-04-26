@@ -42,7 +42,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = get_user_model()
-        fields = ("id", "email", "name", "hasPassword", "groups", "allowedDatasets",)
+        fields = (
+            "id", "email", "name",
+            "hasPassword", "groups", "allowedDatasets",)
 
     def validate(self, data):
         unknown_keys = set(self.initial_data.keys()) - set(self.fields.keys())
