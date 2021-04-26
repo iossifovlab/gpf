@@ -97,7 +97,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   }
 
   ngAfterViewInit(): void {
-    this.selectedDataset$.subscribe(dataset => {
+    this.datasetsService.getDataset(this.selectedDatasetId).subscribe(dataset => {
       if (dataset.accessRights && this.route.snapshot.params.gene) {
         this.waitForGeneViewComponent().then(() => {
           this.stateRestoreService.pushNewState({'geneSymbols': [this.route.snapshot.params.gene]});
