@@ -39,7 +39,6 @@ class FamilyDetailsView(QueryBaseView):
         family = families.get(family_id)
 
         if family is None:
-            print("chungudfngudnfgufdngundfugndfu")
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         return Response(
