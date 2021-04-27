@@ -931,7 +931,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       return;
     }
 
-    if (this.gene !== undefined) {
+    if (this.gene !== undefined && this.x !== undefined) {
       const windowWidth = $event.currentTarget.innerWidth;
       const domainMin = this.x.domain()[0];
       const domainMax = this.x.domain()[this.x.domain().length - 1];
