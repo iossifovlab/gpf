@@ -36,7 +36,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   familyLoadingFinished: boolean;
   hideResults: boolean;
   hideDropdown: boolean;
-  errors: Array<String> = [];
+  showError = false;
   codingEffectTypes = [
     'lgds',
     'nonsense',
@@ -201,7 +201,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   }
 
   submitGeneRequest() {
-    this.errors = [];
+    this.showError = false;
     this.hideDropdown = true;
     this.geneViewComponent.clearSvgElement();
     this.geneViewComponent.resetGeneTableValues();
@@ -266,7 +266,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
             }
           );
         }, error => {
-          this.errors = ['No such gene found!'];
+          this.showError = true;
         });
       }, error => {
         console.error(error);
