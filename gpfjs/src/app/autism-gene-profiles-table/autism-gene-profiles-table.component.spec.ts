@@ -108,19 +108,28 @@ describe('AutismGeneProfilesTableComponent', () => {
     ] as any;
     component.ngbDropdownMenu.forEach(menu => dropDownMenuSpies.push(spyOn(menu.dropdown, 'close')));
 
+    component.config = new AutismGeneToolConfig(
+      'fakeDefaultDataset',
+      [{category: 'fakeGeneSets', sets: ['fakeGeneSet']}] as any,
+      [{category: 'fakeGenomicScores', scores: ['fakeGenomicScore']}] as any,
+      [{name: 'fakeDataset', effects: ['fakeEffect'], personSets: ['fakePersonSets']}] as any
+    );
+
     const geneSetsArray = [
       {category: 'fakeGeneSets1', sets: [{setId: 'fakeGeneSet11'}, {setId: 'fakeGeneSet12'}]},
-      {category: 'fakeGeneSets2', sets: [{setId: 'fakeGeneSet21'}, {setId: 'fakeGeneSet22'}]}
-    ] as any;
-    component.config['geneSets'] = geneSetsArray;
-    component['shownGeneSetsCategories'] = geneSetsArray;
-
+      {category: 'fakeGeneSets2', sets: [{setId: 'fakeGeneSet21'}, {setId: 'fakeGeneSet22'}]}];
     const genomicScoresArray = [
       {category: 'fakeGenomicScores1', scores: [{scoreName: 'fakeGenomicScore11'}, {scoreName: 'fakeGenomicScore12'}]},
-      {category: 'fakeGenomicScores2', scores: [{scoreName: 'fakeGenomicScore21'}, {scoreName: 'fakeGenomicScore22'}]}
-    ] as any;
-    component.config['genomicScores'] = genomicScoresArray;
-    component['shownGenomicScoresCategories'] = genomicScoresArray;
+      {category: 'fakeGenomicScores2', scores: [{scoreName: 'fakeGenomicScore21'}, {scoreName: 'fakeGenomicScore22'}]}];
+    component.config = new AutismGeneToolConfig(
+      'fakeDefaultDataset',
+      geneSetsArray as any,
+      genomicScoresArray as any,
+      [{name: 'fakeDataset', effects: ['fakeEffect'], personSets: ['fakePersonSets']}] as any
+    );
+    component['shownGeneSetsCategories'] = geneSetsArray as any;
+
+    component['shownGenomicScoresCategories'] = genomicScoresArray as any;
 
     component.handleMultipleSelectMenuApplyEvent({
       menuId: 'gene_set_category:fakeGeneSets1',
