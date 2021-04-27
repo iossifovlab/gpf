@@ -3,6 +3,7 @@ import logging
 from django.db.models import Q
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group
+from django.contrib.auth import get_user_model
 
 from datasets_api.models import Dataset
 
@@ -49,7 +50,6 @@ class Command(BaseCommand, DatasetBaseMixin):
             logger.debug(f"group {group.name} has no attached users")
 
             permissions = list(group.groupobjectpermission_set.all())
-            logger.debug(f"clean up permissions: {permissions};")
             for permission in permissions:
                 if permission.content_object is None:
                     logger.debug(f"removing permission: {permission}")
@@ -62,7 +62,33 @@ class Command(BaseCommand, DatasetBaseMixin):
                 if not dry_run:
                     group.delete()
 
+    def cleanup_users(self, dry_run):
+        User = get_user_model()
+        users = User.objects.all()
+
+        for user in users:
+            email = user.email
+            assert email == email.lower()
+
+            groups = list(user.groups.all())
+            group_names = [g.name for g in groups]
+            # print(groups)
+            # print(group_names)
+            if email not in group_names:
+                logger.warning(
+                    f"a group for user {email} needs renaming {group_names}")
+                for group in groups:
+                    if email != group.name.strip().lower():
+                        continue
+                    logger.warning(
+                        f"the group that should be renamed is: {group}")
+                    if not dry_run:
+                        group.name = email
+                        group.save()
+                    break
+
     def handle(self, *args, **options):
         dry_run = options["dry_run"]
         self.cleanup_wdae_datasets(dry_run)
         self.cleanup_groups(dry_run)
+        self.cleanup_users(dry_run)
