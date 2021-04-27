@@ -614,10 +614,15 @@ def test_bulk_remove_unknown_group_fails(admin_client, three_users_in_a_group):
     assert response.status_code is status.HTTP_404_NOT_FOUND
 
 
-def test_user_email_case_insensitive(admin_client, user_model):
+def test_user_create_email_case_insensitive(admin_client, user_model):
     url = "/api/v3/users"
+
     data = {
-        "email": "CaseInsensitive@test.com",
+        "id": 0,
+        "email": "ExAmPlE1@iossifovlab.com",
+        "name": "Example User",
+        "hasPassword": False,
+        "groups": ["test_group", "SSC_TEST_GROUP"]
     }
     response = admin_client.post(
         url, json.dumps(data), content_type="application/json", format="json"
@@ -625,7 +630,7 @@ def test_user_email_case_insensitive(admin_client, user_model):
 
     print(response)
     assert response.status_code is status.HTTP_201_CREATED
-    user = user_model.objects.get(email="caseinsensitive@test.com")
+    user = user_model.objects.get(email="example1@iossifovlab.com")
 
     assert user is not None
     print(response.data)
@@ -633,5 +638,35 @@ def test_user_email_case_insensitive(admin_client, user_model):
     groups = data["groups"]
     print(groups)
 
-    assert "caseinsensitive@test.com" in groups
-    assert "CaseInsensitive@test.com" not in groups
+    assert "example1@iossifovlab.com" in groups
+    assert "ExAmPlE1@iossifovlab.com" not in groups
+
+
+def test_user_create_email_case_insensitive_with_groups(
+        admin_client, user_model):
+
+    url = "/api/v3/users"
+
+    data = {
+        "id": 0,
+        "email": "ExAmPlE1@iossifovlab.com",
+        "name": "Example User",
+        "hasPassword": False,
+        "groups": ["test_group", "ExAmPlE1@iossifovlab.com", "SSC_TEST_GROUP"]
+    }
+    response = admin_client.post(
+        url, json.dumps(data), content_type="application/json", format="json"
+    )
+
+    print(response)
+    assert response.status_code is status.HTTP_201_CREATED
+    user = user_model.objects.get(email="example1@iossifovlab.com")
+
+    assert user is not None
+    print(response.data)
+    data = response.data
+    groups = data["groups"]
+    print(groups)
+
+    assert "example1@iossifovlab.com" in groups
+    assert "ExAmPlE1@iossifovlab.com" not in groups

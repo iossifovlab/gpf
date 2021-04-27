@@ -10,6 +10,9 @@ RUN /opt/conda/bin/conda create \
     --name gpf --file /conda-environment.yml
 # RUN echo "conda activate gpf" >> ~/.bashrc
 
+RUN conda install -n gpf -c defaults -c conda-forge gunicorn mysqlclient
+RUN conda install -n gpf -c defaults -c conda-forge -c anaconda mysql-connector-python
+
 # GPF ENV
 ENV PATH /opt/conda/envs/gpf/bin:$PATH
 
