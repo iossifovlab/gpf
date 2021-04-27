@@ -36,6 +36,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   familyLoadingFinished: boolean;
   hideResults: boolean;
   hideDropdown: boolean;
+  errors: Array<String> = [];
   codingEffectTypes = [
     'lgds',
     'nonsense',
@@ -200,70 +201,76 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   }
 
   submitGeneRequest() {
+    this.errors = [];
     this.hideDropdown = true;
-    this.hideResults = false;
     this.geneViewComponent.clearSvgElement();
     this.geneViewComponent.resetGeneTableValues();
+    // FIXME! Solve usage of nested subscribe
     this.getCurrentState()
       .subscribe(state => {
         this.geneSymbol = state['geneSymbols'][0];
 
         this.geneService.getGene(this.geneSymbol.toUpperCase().trim()).subscribe((gene) => {
-          this.selectedGene = gene;
-        });
-
-        this.genotypePreviewInfo = null;
-        this.loadingFinished = false;
-        this.loadingService.setLoadingStart();
-        this.queryService.getGenotypePreviewInfo(
-          { datasetId: this.selectedDatasetId, peopleGroup: state['peopleGroup'] }
-        ).subscribe(
-          (genotypePreviewInfo) => {
-            this.genotypePreviewInfo = genotypePreviewInfo;
-            this.genotypePreviewVariantsArray = null;
-
-            this.genotypeBrowserState = state;
-            let summaryLoadingFinished = false;
-
-            this.queryService.summaryStreamingFinishedSubject.subscribe(
-              _ => {
-                summaryLoadingFinished = true;
-                this.loadingFinished = true;
-                this.loadingService.setLoadingStop();
-              });
-
-            this.queryService.streamingFinishedSubject.subscribe(() => { this.familyLoadingFinished = true; });
-
-            const requestParams = { ...state };
-            requestParams['maxVariantsCount'] = 10000;
-            delete requestParams['zoomState'];
-            delete requestParams['regions'];
-
-
-            if (this.enableCodingOnly) {
-              requestParams['effectTypes'] = this.codingEffectTypes;
-              this.geneViewComponent.enableIntronCondensing();
-            } else {
-              this.geneViewComponent.disableIntronCondensing();
-            }
-            const inheritanceFilters = [
-              'denovo',
-              'mendelian',
-              'omission',
-              'missing'
-            ];
-
-            requestParams['inheritanceTypeFilter'] = inheritanceFilters;
-
-            this.summaryVariantsArray = this.queryService.getGeneViewVariants(requestParams);
-            this.hideDropdown = false;
-          }, error => {
-            console.warn(error);
+          if (gene === undefined) {
+            return;
           }
-        );
+
+          this.selectedGene = gene;
+          this.genotypePreviewInfo = null;
+          this.hideResults = false;
+          this.loadingFinished = false;
+          this.loadingService.setLoadingStart();
+          this.queryService.getGenotypePreviewInfo(
+            { datasetId: this.selectedDatasetId, peopleGroup: state['peopleGroup'] }
+          ).subscribe(
+            (genotypePreviewInfo) => {
+              this.genotypePreviewInfo = genotypePreviewInfo;
+              this.genotypePreviewVariantsArray = null;
+
+              this.genotypeBrowserState = state;
+              let summaryLoadingFinished = false;
+
+              this.queryService.summaryStreamingFinishedSubject.subscribe(
+                _ => {
+                  summaryLoadingFinished = true;
+                  this.loadingFinished = true;
+                  this.loadingService.setLoadingStop();
+                });
+
+              this.queryService.streamingFinishedSubject.subscribe(() => { this.familyLoadingFinished = true; });
+
+              const requestParams = { ...state };
+              requestParams['maxVariantsCount'] = 10000;
+              delete requestParams['zoomState'];
+              delete requestParams['regions'];
+
+
+              if (this.enableCodingOnly) {
+                requestParams['effectTypes'] = this.codingEffectTypes;
+                this.geneViewComponent.enableIntronCondensing();
+              } else {
+                this.geneViewComponent.disableIntronCondensing();
+              }
+              const inheritanceFilters = [
+                'denovo',
+                'mendelian',
+                'omission',
+                'missing'
+              ];
+
+              requestParams['inheritanceTypeFilter'] = inheritanceFilters;
+
+              this.summaryVariantsArray = this.queryService.getGeneViewVariants(requestParams);
+            }, error => {
+              console.warn(error);
+            }
+          );
+        }, error => {
+          this.errors = ['No such gene found!'];
+        });
       }, error => {
         console.error(error);
-      });
+      }, () => { this.hideDropdown = false; });
   }
 
   getFamilyVariantCounts() {
