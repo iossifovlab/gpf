@@ -72,8 +72,10 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   private genotypeBrowserState: Object;
 
   @HostListener('document:keydown.enter', ['$event'])
-  onEnterPress() {
-    this.submitGeneRequest();
+  onEnterPress($event) {
+    if ($event.target.id === 'search-box') {
+      this.submitGeneRequest();
+    }
   }
 
   constructor(
