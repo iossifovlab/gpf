@@ -1,10 +1,12 @@
 <div style="padding: 30px;" *ngIf="selectedDataset$ | async as dataset">
   <div *ngIf="dataset.accessRights">
     <div class="effect-card card">
-      <div style="font-family: Roboto; font-weight: 500; border-bottom: none;" class="card-header card-title">Gene
-        Symbols</div>
+      <div style="font-family: Roboto; font-weight: 500; border-bottom: none;" class="card-header card-title">Gene Symbols</div>
       <div class="card-block">
-        <gpf-gene-symbol-with-search (inputClickEvent)="hideResults = true"></gpf-gene-symbol-with-search>
+        <gpf-gene-symbol-with-search (inputClickEvent)="hideResults = true" [hideDropdown]="hideDropdown"></gpf-gene-symbol-with-search>
+        <div [hidden]="!showError" class="alert alert-danger" role="alert" style="display: inline-block; margin: 20px; margin-top: 0px; width: 45%">
+          No such gene found!
+        </div>
 
         <div style="padding: 0px 10px 10px 20px">
           <input (click)="hideResults = true" style="margin-right: 10px;" type="checkbox" id="coding-only-checkbox" [(ngModel)]="enableCodingOnly">

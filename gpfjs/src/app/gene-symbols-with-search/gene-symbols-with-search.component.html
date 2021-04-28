@@ -6,7 +6,7 @@
         [data]="matchingGeneSymbols"
         caption="{{ geneSymbols?.geneSymbols }}"
         [isInGeneBrowser]="true"
-    >
+        [hideDropdown]="hideDropdown">
         <div *gpf-searchable-select-template="let geneSymbol">
         <span
             data-toggle="tooltip"

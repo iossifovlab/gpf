@@ -1,5 +1,6 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { AutismGeneProfilesTableComponent } from 'app/autism-gene-profiles-table/autism-gene-profiles-table.component';
 import { ConfigService } from 'app/config/config.service';
@@ -8,6 +9,13 @@ import { of } from 'rxjs';
 
 import { AutismGeneProfilesBlockComponent } from './autism-gene-profiles-block.component';
 
+class MockActivatedRoute {
+  params = {dataset: 'testDatasetId', get: () => ''};
+  parent = {params: of(this.params)};
+  queryParamMap = of(this.params);
+  snapshot = {params: {gene: 'mockGeneSymbol'}};
+}
+
 describe('AutismGeneProfilesBlockComponent', () => {
   let component: AutismGeneProfilesBlockComponent;
   let fixture: ComponentFixture<AutismGeneProfilesBlockComponent>;
@@ -15,7 +23,10 @@ describe('AutismGeneProfilesBlockComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [ AutismGeneProfilesBlockComponent, AutismGeneProfilesTableComponent ],
-      providers: [ConfigService],
+      providers: [
+        ConfigService,
+        {provide: ActivatedRoute, useValue: new MockActivatedRoute()}
+      ],
       imports: [HttpClientTestingModule, NgbNavModule]
     })
     .compileComponents();

@@ -134,7 +134,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
 
       this.shownGenomicScoresCategories[categoryIndex]['scores'] = this.config['genomicScores']
         .find(category => category['category'] === menuId[1])['scores']
-        .filter(set => $event.data.includes(set['scoreName']));
+        .filter(score => $event.data.includes(score['scoreName']));
     }
 
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());

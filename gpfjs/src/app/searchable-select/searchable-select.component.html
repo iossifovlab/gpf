@@ -5,7 +5,8 @@
       (focusout)="isInGeneBrowser === true && onSelect(searchBox.value)"
       (keyup)="searchBoxChange(searchBox.value)"
       placeholder="Select or start typing to search"
-      (click)="searchBox.value=''; onFocus($event)" />
+      (click)="searchBox.value=''; onFocus($event)"
+      (keydown.enter)="onEnterPress()"/>
     <span style="width: 100%"
       [hidden]="!caption" id="selected-value"
       class="clickable"
