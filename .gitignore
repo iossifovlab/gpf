@@ -58,3 +58,7 @@ phenotype-comp-data-*latest.tar.gz
 comp-data/
 comp
 dae_conftests/dae_conftests/tests/fixtures/agpdb
+results
+data
+builds
+downloads

@@ -342,11 +342,11 @@ def reload_datasets(gpf_instance):
         if not genotype_data.studies:
             continue
 
-        for study_id in genotype_data.studies:
-            if study_id is None:
+        for study in genotype_data.studies:
+            if study is None:
                 continue
             Dataset.recreate_dataset_perm(
-                study_id,  # study_wrapper.config.studies
+                study.study_id,  # study_wrapper.config.studies
             )
 
 
