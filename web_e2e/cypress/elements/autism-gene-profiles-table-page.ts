@@ -37,7 +37,7 @@ export class AutismGeneProfilesTable extends BasePage {
     return this.autismGeneSetsDropdown.contains('Apply');
   }
 
-  get allGeneSetsDropdownCheckboxes() {
+  get allAutismGeneSetsDropdownCheckboxes() {
     return cy.get('gpf-multiple-select-menu#autism_gene_sets-dropdown label input');
   }
 

@@ -92,15 +92,15 @@ describe('Column filtering dropdown tests', () => {
   });
 
   it('should check/uncheck all gene sets column filtering options using the check/uncheck all button', () => {
-    autismGeneProfilesTablePage.allGeneSetsDropdownCheckboxes.each((element) => {
+    autismGeneProfilesTablePage.allAutismGeneSetsDropdownCheckboxes.each((element) => {
       cy.wrap(element).should('be.checked');
     });
     autismGeneProfilesTablePage.autismGeneSetsCheckUncheckAllButton.click();
-    autismGeneProfilesTablePage.allGeneSetsDropdownCheckboxes.each((element) => {
+    autismGeneProfilesTablePage.allAutismGeneSetsDropdownCheckboxes.each((element) => {
       cy.wrap(element).should('not.be.checked');
     });
     autismGeneProfilesTablePage.autismGeneSetsCheckUncheckAllButton.click();
-    autismGeneProfilesTablePage.allGeneSetsDropdownCheckboxes.each((element) => {
+    autismGeneProfilesTablePage.allAutismGeneSetsDropdownCheckboxes.each((element) => {
       cy.wrap(element).should('be.checked');
     });
   });
@@ -116,9 +116,9 @@ describe('Column filtering dropdown tests', () => {
   });
 
   it('should filter gene sets dropdown options using the search', () => {
-    autismGeneProfilesTablePage.allGeneSetsDropdownCheckboxes.should('have.length', 4);
-    autismGeneProfilesTablePage.autismGeneSetsDropdownSearch.type('autism');
-    autismGeneProfilesTablePage.allGeneSetsDropdownCheckboxes.should('have.length', 1);
+    autismGeneProfilesTablePage.allAutismGeneSetsDropdownCheckboxes.should('have.length', 2);
+    autismGeneProfilesTablePage.autismGeneSetsDropdownSearch.type('iossifov');
+    autismGeneProfilesTablePage.allAutismGeneSetsDropdownCheckboxes.should('have.length', 1);
   });
 
   // apply should actually work and make columns disappear/add
