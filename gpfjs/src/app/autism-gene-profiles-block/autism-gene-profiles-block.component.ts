@@ -1,15 +1,14 @@
-import { AfterViewInit, Component, HostListener, OnInit, ViewChild } from '@angular/core';
+import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { AutismGeneToolConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
-import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-block',
   templateUrl: './autism-gene-profiles-block.component.html',
   styleUrls: ['./autism-gene-profiles-block.component.css']
 })
-export class AutismGeneProfilesBlockComponent implements OnInit, AfterViewInit {
+export class AutismGeneProfilesBlockComponent implements OnInit {
   @ViewChild('nav') nav: NgbNav;
   geneTabs = new Set<string>();
   autismGeneToolConfig: AutismGeneToolConfig;
@@ -36,32 +35,11 @@ export class AutismGeneProfilesBlockComponent implements OnInit, AfterViewInit {
 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
-    private route: ActivatedRoute,
   ) { }
 
   ngOnInit(): void {
     this.autismGeneProfilesService.getConfig().take(1).subscribe(config => {
       this.autismGeneToolConfig = config;
-    });
-  }
-
-  ngAfterViewInit(): void {
-    const geneSymbol: string = this.route.snapshot.params.gene;
-    if (geneSymbol) {
-      this.waitForNav().then(() => {
-        this.createTabEventHandler({geneSymbol: geneSymbol.toUpperCase(), openTab: true});
-      });
-    }
-  }
-
-  async waitForNav() {
-    return new Promise<void>(resolve => {
-      const timer = setInterval(() => {
-        if (this.nav !== undefined) {
-          resolve();
-          clearInterval(timer);
-        }
-      }, 100);
     });
   }
 
