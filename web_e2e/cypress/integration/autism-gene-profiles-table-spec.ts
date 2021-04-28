@@ -40,7 +40,7 @@ describe('Autism gene profiles table data tests', () => {
     autismGeneProfilesTablePage.sidenavAutismGeneProfilesButton.click();
   });
 
-  [{geneSymbol: 'CHD8', expectedRow: ['CHD8', '✓', '', '', '', '1', '193', '-2.34', '1', '193', '-2.34', '7', '', '', '', '', '']}
+  [{geneSymbol: 'CHD8', expectedRow: ['CHD8', '✓', '✓', '', '✓', '✓', '✓', '1', '193', '83', '31.5', '18178', '7', '', '', '', '', '']}
   ].forEach((data) => {
     it(`should display correct gene data for ${data.geneSymbol}`, () => {
       autismGeneProfilesTablePage.geneSearchInput.type(data.geneSymbol);
