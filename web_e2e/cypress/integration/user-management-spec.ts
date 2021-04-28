@@ -103,7 +103,7 @@ describe('User management tests', () => {
     userManagementPage.datasetsTableRows.last().should('include.text', 'test_group');
 
     userManagementPage.groupsButton.click();
-    userManagementPage.groupsTableRows.should('have.length', 9);
+    userManagementPage.groupsTableRows.should('have.length', 11);
     userManagementPage.groupsTableRows.last().should('include.text', 'test_group');
 
     userManagementPage.datasetsButton.click();
@@ -113,7 +113,7 @@ describe('User management tests', () => {
     userManagementPage.datasetsTableRows.last().should('not.include.text', 'test_group');
 
     userManagementPage.groupsButton.click();
-    userManagementPage.groupsTableRows.should('have.length', 8);
+    userManagementPage.groupsTableRows.should('have.length', 10);
     userManagementPage.groupsTableRows.last().should('not.include.text', 'test_group');
   });
 
@@ -172,6 +172,7 @@ describe('User management tests', () => {
     userManagementPage.userBulkEditAddGroupButton.click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
+    userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.usersEditorAddGroupButton.click();
 
     userManagementPage.usersTableRows.each(row => {
@@ -192,6 +193,7 @@ describe('User management tests', () => {
     userManagementPage.userBulkEditRemoveGroupButton.click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
+    userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.usersEditorRemoveGroupButton.click();
 
     userManagementPage.usersTableRows.each(row => {
