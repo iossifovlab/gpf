@@ -26,6 +26,6 @@ export class AutismGeneProfilesSingleView extends BasePage {
   }
 
   get geneRelevantGeneSetsTable() {
-    return cy.get('#relevant_gene_sets');
+    return cy.get('#relevent_gene_sets');
   }
 }

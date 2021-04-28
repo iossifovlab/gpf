@@ -1,7 +1,7 @@
 import { AutismGeneProfilesSingleView } from 'cypress/elements/autism-gene-profiles-single-view-page';
 import { AutismGeneProfilesTable } from 'cypress/elements/autism-gene-profiles-table-page';
 
-describe('Autism gene profiles single view tests', () => {
+describe.only('Autism gene profiles single view tests', () => {
   const autismGeneProfilesSingleViewPage = new AutismGeneProfilesSingleView();
   const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
 
@@ -41,7 +41,7 @@ describe('Autism gene profiles single view tests', () => {
     autismGeneProfilesSingleViewPage.header.invoke('text').then((headerText) => {
       const baseUrl = Cypress.config().baseUrl;
       const headerName = headerText;
-      const geneBrowserUrl = `${baseUrl}datasets/iossifov_2014/geneBrowser/${headerName}`;
+      const geneBrowserUrl = `${baseUrl}datasets/ALL_genotypes/gene-browser/${headerName}`;
 
       autismGeneProfilesSingleViewPage.geneBrowserLink.should('have.prop', 'href')
         .and('equal', geneBrowserUrl)
