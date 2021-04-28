@@ -167,6 +167,7 @@ import { PersonFiltersBlockComponent } from './person-filters-block/person-filte
 import { PersonIdsComponent } from './person-ids/person-ids.component';
 import { FamilyTypeFilterComponent } from './family-type-filter/family-type-filter.component';
 import { SortingButtonsComponent } from './sorting-buttons/sorting-buttons.component';
+import { AutismGeneProfileSingleViewWrapperComponent } from './autism-gene-profile-single-view-wrapper/autism-gene-profile-single-view-wrapper.component';
 
 const appRoutes: Routes = [
   {
@@ -221,7 +222,7 @@ const appRoutes: Routes = [
   },
   {
     path: 'autism-gene-profiles/:gene',
-    component: AutismGeneProfilesBlockComponent
+    component: AutismGeneProfileSingleViewWrapperComponent
   },
   {
     path: 'management',
@@ -379,6 +380,7 @@ const appRoutes: Routes = [
     PersonIdsComponent,
     FamilyTypeFilterComponent,
     SortingButtonsComponent,
+    AutismGeneProfileSingleViewWrapperComponent,
   ],
   imports: [
     BrowserModule,
