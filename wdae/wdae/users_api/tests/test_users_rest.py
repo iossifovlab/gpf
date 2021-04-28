@@ -670,3 +670,54 @@ def test_user_create_email_case_insensitive_with_groups(
 
     assert "example1@iossifovlab.com" in groups
     assert "ExAmPlE1@iossifovlab.com" not in groups
+
+
+def test_user_create_update_case_sensitive_groups(
+        admin_client, user_model):
+
+    url = "/api/v3/users"
+
+    data = {
+        "id": 0,
+        "email": "user1@iossifovlab.com",
+        "name": "Example User1",
+        "hasPassword": False,
+        "groups": ["test_group", "Test_GrouP", "tEsT_gRoUp"]
+    }
+    response = admin_client.post(
+        url, json.dumps(data), content_type="application/json", format="json"
+    )
+
+    assert response.status_code is status.HTTP_201_CREATED
+    user = user_model.objects.get(email="user1@iossifovlab.com")
+
+    assert user is not None
+    print(response.data)
+    data = response.data
+    groups = data["groups"]
+    print(groups)
+
+    assert "test_group" in groups
+    assert "Test_GrouP" in groups
+    assert "tEsT_gRoUp" in groups
+
+    url = f"/api/v3/users/{user.pk}"
+    data = {"groups": [
+        "test_group", "Test_GrouP",
+        "any_user", "user1@iossifovlab.com"
+    ]}
+
+    response = admin_client.patch(
+        url, json.dumps(data), content_type="application/json", format="json"
+    )
+    print(response)
+    print(response.data)
+    assert response.status_code is status.HTTP_200_OK
+
+    print(response.data)
+    groups = response.data["groups"]
+    print(groups)
+
+    assert "test_group" in groups
+    assert "Test_GrouP" in groups
+    assert "tEsT_gRoUp" not in groups
