@@ -124,7 +124,9 @@ class PhenoToolDownload(PhenoToolView):
     @expand_gene_set
     def post(self, request):
         data = self._parse_query_params(request.data)
-        helper, tool = self.prepare_pheno_tool(data)
+        adapter = self.prepare_pheno_tool_adapter(data)
+        helper = adapter.helper
+        tool = adapter.pheno_tool
 
         result_df = tool.pheno_df.copy()
         variants = helper.genotype_data_variants(data)
