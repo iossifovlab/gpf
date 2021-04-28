@@ -53,7 +53,8 @@ describe('Enrichment tool tests', () => {
     enrichmentToolPage.table.should('be.visible');
   });
 
-  it('should display alert window after \'Enrichment Test\' button click when the gene symbols textarea is empty', () => {
+  // this is no longer the alert window behaviour
+  it.skip('should display alert window after \'Enrichment Test\' button click when the gene symbols textarea is empty', () => {
     const errorsAlertPage = new ErrorsAlertPage();
     const genesBlockPage = new GenesBlockPage();
 

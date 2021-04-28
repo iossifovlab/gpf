@@ -25,7 +25,8 @@ describe('Genes block panel tests', () => {
     genesBlockPage.geneSymbolsPanel.should('be.visible');
   });
 
-  it('should display error alert in gene symbols panel when the textarea is empty', () => {
+  // this is no longer the alert window behaviour
+  it.skip('should display error alert in gene symbols panel when the textarea is empty', () => {
     const errorsAlertPage = new ErrorsAlertPage();
 
     genesBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
