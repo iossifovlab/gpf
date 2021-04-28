@@ -35,22 +35,22 @@ describe('App tests', () => {
     });
   });
 
-  it('should toggle sidenav, click on the \'Datasets\' button and navigate to /datasets/comp_all/dataset-statistics', () => {
+  it('should toggle sidenav, click on the \'Datasets\' button and navigate to \'/datasets/ALL_genotypes/genotype-browser\'', () => {
     const baseUrl = Cypress.config().baseUrl;
-    const datasetsUrl = `${baseUrl}datasets/comp_all/${toolPageLinks.datasetStatistics}`;
+    const expectedUrl = `${baseUrl}datasets/ALL_genotypes/${toolPageLinks.genotypeBrowser}`;
 
     appPage.loginAdmin();
     appPage.toggleSidenav();
     appPage.sidenavDatasetButton.click();
 
     cy.url().then(currentUrl => {
-      expect(currentUrl).to.eq(datasetsUrl);
+      expect(currentUrl).to.eq(expectedUrl);
     });
 
     appPage.logout();
   });
 
-  it('should toggle sidenav, click on the \'Saved queries\' button and navigate to /saved-queries', () => {
+  it('should toggle sidenav, click on the \'Saved queries\' button and navigate to \'/saved-queries\'', () => {
     const baseUrl = Cypress.config().baseUrl;
     const savedQueriesUrl = `${baseUrl}saved-queries`;
 
@@ -65,7 +65,7 @@ describe('App tests', () => {
     appPage.logout();
   });
 
-  it('should toggle sidenav, click on the \'Management\' button and navigate to /management', () => {
+  it('should toggle sidenav, click on the \'Management\' button and navigate to \'/management\'', () => {
     const baseUrl = Cypress.config().baseUrl;
     const managementUrl = `${baseUrl}management`;
 
@@ -80,7 +80,7 @@ describe('App tests', () => {
     appPage.logout();
   });
 
-  it('should toggle sidenav, click on the \'Autism gene profiles\' button and navigate to /autism-gene-profiles', () => {
+  it('should toggle sidenav, click on the \'Autism gene profiles\' button and navigate to \'/autism-gene-profiles\'', () => {
     const baseUrl = Cypress.config().baseUrl;
     const autismGeneProfilesUrl = `${baseUrl}autism-gene-profiles`;
 
