@@ -72,6 +72,10 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     private cdr: ChangeDetectorRef,
   ) { }
 
+  /**
+   * Initializes component. Prepares shown categories, genes, gene search field
+   * and sets the first table column as current for sorting.
+   */
   ngOnInit(): void {
     this.shownGeneSetsCategories = cloneDeep(this.config['geneSets']);
     this.shownGenomicScoresCategories = cloneDeep(this.config['genomicScores']);
@@ -91,6 +95,10 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
       });
   }
 
+  /**
+   * After component initialization - focuses gene search field,
+   * initializes column filtering modals position update logic, updates first table column sorting buttons.
+   */
   ngAfterViewInit(): void {
     this.focusGeneSearch();
 
@@ -105,22 +113,43 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     firstSortingButton.hideState = 1;
   }
 
+  /**
+   * Updates column filtering modals position value.
+   */
   updateModalBottom() {
     this.modalBottom = this.calculateModalBottom();
   }
 
+  /**
+   * Calculates column filtering modals position.
+   * @returns modals position
+   */
   calculateModalBottom(): number {
     return window.innerHeight - this.columnFilteringButtons.first.nativeElement.getBoundingClientRect().bottom;
   }
 
+  /**
+   * Calculates dataset table header colspan.
+   * @param datasetConfig dataset configuration needed for calculation
+   * @returns colspan
+   */
   calculateDatasetColspan(datasetConfig) {
     return datasetConfig.effects.length * datasetConfig.personSets.length;
   }
 
+  /**
+   * Extracts map values.
+   * @param map map containing the values
+   * @returns values array
+   */
   getMapValues(map: Map<string, number>) {
     return Array.from(map.values());
   }
 
+  /**
+   * Handles column filtering menu apply events. Updates shown columns to match the one in the event.
+   * @param $event event containing menu id and filtered columns
+   */
   handleMultipleSelectMenuApplyEvent($event) {
     const menuId = $event.menuId.split(':', 2);
     if (menuId[0] === 'gene_set_category') {
@@ -140,10 +169,18 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
+  /**
+   * Emits create tab event.
+   * @param geneSymbol gene symbol specifying which gene tab needs to open/close
+   * @param openTab condition specifying to open or close the tab
+   */
   emitCreateTabEvent(geneSymbol: string, openTab: boolean): void {
     this.createTabEvent.emit({geneSymbol: geneSymbol, openTab: openTab});
   }
 
+  /**
+   * Updates genes. Can load the next set of genes, load only searched genes, load genes sorted and ordered by.
+   */
   updateGenes() {
     this.loadMoreGenes = false;
     this.pageIndex++;
@@ -156,6 +193,10 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     });
   }
 
+  /**
+   * Sets gene input to be searched, resets currently loaded genes and triggers genes update.
+   * @param value value used to filter matching genes
+   */
   search(value: string) {
     this.geneInput = value;
     this.genes = [];
@@ -164,10 +205,18 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     this.updateGenes();
   }
 
+  /**
+   * Updates search value to the input value.
+   * @param value input value
+   */
   sendKeystrokes(value: string) {
     this.searchKeystrokes$.next(value);
   }
 
+  /**
+   * Waits gene search element to load.
+   * @returns promise
+   */
   async waitForGeneSearchToLoad() {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
@@ -179,12 +228,20 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     });
   }
 
+  /**
+   * Waits gene search input element to load and focuses it.
+   */
   focusGeneSearch() {
     this.waitForGeneSearchToLoad().then(() => {
       this.geneSearchInput.nativeElement.focus();
     });
   }
 
+  /**
+   * Sets genes sorting conditions, resets currently loaded genes and triggers genes update.
+   * @param sortBy what column to sort by
+   * @param orderBy in what order to sort by
+   */
   sort(sortBy: string, orderBy?: string) {
     if (this.currentSortingColumnId !== sortBy) {
       this.resetSortButtons(sortBy);
@@ -200,6 +257,10 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     this.updateGenes();
   }
 
+  /**
+   * Resets sorting button on current sorting column.
+   * @param sortBy the new current column
+   */
   resetSortButtons(sortBy: string) {
     if (this.currentSortingColumnId !== undefined) {
       const sortButton = this.sortingButtonsComponents.find(
@@ -215,6 +276,10 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     this.currentSortingColumnId = sortBy;
   }
 
+  /**
+   * Updates all and shown gene sets names in certain category.
+   * @param geneSetCategory in what category to update the names
+   */
   updateGeneSetNamesListInCategory(geneSetCategory) {
     this.allGeneSetNames.set(geneSetCategory['category'], this.config['geneSets']
       .find(category => geneSetCategory['displayName'] === category['displayName'])['sets']
@@ -225,6 +290,10 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     this.openDropdown(geneSetCategory['category']);
   }
 
+  /**
+   * Updates all and shown genomic scores names in certain category.
+   * @param genomicScoresCategory in what category to update the names
+   */
   updateGenomicScoresNamesListInCategory(genomicScoresCategory) {
     this.allGenomicScoresNames.set(genomicScoresCategory['category'], this.config['genomicScores']
       .find(category => genomicScoresCategory['displayName'] === category['displayName'])['scores']
@@ -235,6 +304,10 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     this.openDropdown(genomicScoresCategory['category']);
   }
 
+  /**
+   * Waits dropdown to initialize.
+   * @returns promise
+   */
   async waitForDropdown() {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
@@ -246,6 +319,10 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     });
   }
 
+  /**
+   * Opens column filtering dropdown.
+   * @param columnId id specifying which dropdown to open
+   */
   openDropdown(columnId: string) {
     const dropdownId = columnId + '-dropdown';
 
@@ -255,6 +332,10 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     });
   }
 
+  /**
+   * Updates dropdown horizontal position.
+   * @param id id specifying which dropdown to open
+   */
   updateDropdownPosition(id: string) {
     this.renderer.setStyle(
       this.dropdownSpans.find(ele => ele.nativeElement.id === `${id}-span`).nativeElement,
@@ -263,6 +344,11 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     );
   }
 
+  /**
+   * Calculates dropdown horizontal position.
+   * @param columnFilteringButton column filtering button element
+   * @returns position
+   */
   calculateModalLeftPosition(columnFilteringButton: HTMLElement): string {
     const modalWidth = 400;
     const leftCap = 30;
@@ -271,6 +357,11 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     return (modalLeft >= leftCap ? modalLeft : leftCap) + 'px';
   }
 
+  /**
+   * Calculates column size.
+   * @param columnsCount number of columns
+   * @returns size
+   */
   calculateColumnSize(columnsCount: number): string {
     let result: number;
     const singleColumnSize = 80;
@@ -284,6 +375,13 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     return result + 'px';
   }
 
+  /**
+   * Extracts gene score value from certain score in category
+   * @param gene gene containing the score
+   * @param scoreCategory score category
+   * @param scoreName score name
+   * @returns gene score value
+   */
   getGeneScoreValue(gene, scoreCategory: string, scoreName: string) {
     return gene.genomicScores.find(score => score['category'] === scoreCategory)['scores'].get(scoreName);
   }

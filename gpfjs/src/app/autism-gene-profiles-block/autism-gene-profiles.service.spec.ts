@@ -1,13 +1,11 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
-import { compact } from 'lodash';
 // tslint:disable-next-line:import-blacklist
 import { of } from 'rxjs';
 
 import { AutismGeneProfilesService } from './autism-gene-profiles.service';
 import * as deepEqual from 'deep-equal';
-import { AutismGeneToolConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 const util = require('util');
 
 const configurationMockJson = {
@@ -173,7 +171,7 @@ const geneMockJson2 = {
 };
 
 const geneMock2 = {
-  geneSymbol: 'mockGene1',
+  geneSymbol: 'mockGene2',
   geneSets: [ 'set21' ],
   genomicScores: [ { category: 'second_genomic_scores', scores: {} } ],
   studies: [
@@ -214,10 +212,10 @@ describe('AutismGeneProfilesService', () => {
 
   it('should get single gene', () => {
     const getGeneSpy = spyOn(service['http'], 'get');
-
     getGeneSpy.and.returnValue(of(geneMockJson1));
-    const resultGene = service.getGene('mockGene');
-    expect(getGeneSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['genesUrl'] + 'mockGene');
+
+    const resultGene = service.getGene('geneMock1');
+    expect(getGeneSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['genesUrl'] + 'geneMock1');
     resultGene.take(1).subscribe(res => {
       expect(deepEqual(res, geneMock1)).toBeTrue();
       expect(res['genomicScores'][0]['scores'].get('score11')).toBe('11');
@@ -238,7 +236,7 @@ describe('AutismGeneProfilesService', () => {
       [service['config'].baseUrl + service['genesUrl'] + '?page=1' + '&symbol=mockSearch' + '&sortBy=mockSort&order=desc']
     ]);
 
-    getGenesSpy.and.returnValue(of([geneMock1, geneMock2]));
+    getGenesSpy.and.returnValue(of([geneMockJson1, geneMockJson2]));
     const resultGenes = service.getGenes(1);
     resultGenes.take(1).subscribe(res => {
       expect(deepEqual(res[0], geneMock1)).toBeTrue();
