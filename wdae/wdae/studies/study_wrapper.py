@@ -315,7 +315,11 @@ class StudyWrapper(StudyWrapperBase):
 
             yield row_variant
 
-    def get_variant_web_rows(self, query, sources, max_variants_count=10000):
+    def get_variant_web_rows(
+            self, query, sources,
+            max_variants_count=10000,
+            max_variants_message=False):
+
         person_set_collection_id = query.get("peopleGroup", {}).get(
             "id", list(self.legend.keys())[0] if self.legend else None
         )
@@ -331,11 +335,22 @@ class StudyWrapper(StudyWrapperBase):
         )
 
         if max_variants_count is not None:
-            limited_rows = itertools.islice(rows_iterator, max_variants_count)
+            for index, row in enumerate(rows_iterator):
+                if index >= max_variants_count:
+                    if max_variants_message:
+                        yield [
+                            f"# limit of {max_variants_count} variants "
+                            f"reached"
+                        ]
+                    break
+                yield row
+            # limited_rows = itertools.islice(
+            #   rows_iterator, max_variants_count)
         else:
-            limited_rows = rows_iterator
-
-        return limited_rows
+            for row in rows_iterator:
+                yield row
+            # limited_rows = rows_iterator
+            # return limited_rows
 
     def get_wdae_preview_info(self, query, max_variants_count=10000):
         preview_info = {}
@@ -358,8 +373,9 @@ class StudyWrapper(StudyWrapperBase):
 
     def get_variants_wdae_download(self, query, max_variants_count=10000):
         rows = self.get_variant_web_rows(
-            query, self.download_descs, max_variants_count=max_variants_count
-        )
+            query, self.download_descs, 
+            max_variants_count=max_variants_count,
+            max_variants_message=True)
 
         wdae_download = map(
             join_line, itertools.chain([self.download_columns], rows)

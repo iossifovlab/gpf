@@ -297,6 +297,8 @@ def insert_into_summary_table(
             f"{region_statement} " \
             f"variants.allele_index > 0 AND " \
             f"BITAND(134, variants.inheritance_in_members) != 0 AND " \
+            f"( BITAND(8, variants.inheritance_in_members) = 0 AND " \
+            f"BITAND(32, variants.inheritance_in_members) = 0 ) AND " \
             f"variants.variant_in_members = pedigree.person_id "\
             f"GROUP BY {grouping_statement}"
         queries.append(q)

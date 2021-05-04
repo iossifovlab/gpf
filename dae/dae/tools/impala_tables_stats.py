@@ -11,7 +11,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.backends.impala.impala_variants import ImpalaVariants
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("impala_tables_stats")
 
 
 def parse_cli_arguments(argv, gpf_instance):

@@ -265,7 +265,7 @@ class GenotypeDataGroup(GenotypeData):
     def executor(self):
         with self._EXECUTOR_LOCK:
             if self.EXECUTOR is None:
-                self.EXECUTOR = ThreadPoolExecutor(max_workers=20)
+                self.EXECUTOR = ThreadPoolExecutor(max_workers=6)
             return self.EXECUTOR
 
     @property
@@ -330,8 +330,7 @@ class GenotypeDataGroup(GenotypeData):
             elapsed = time.time() - start
             logger.info(
                 f"summary variants for genotype study "
-                f"{genotype_study.study_id} process in {elapsed:.2f} secs"
-            )
+                f"{genotype_study.study_id} process in {elapsed:.2f} secs")
 
         logger.info(
             f"study {self.study_id} children: {self.get_leaf_children()}")
@@ -416,6 +415,7 @@ class GenotypeDataGroup(GenotypeData):
         results_queue = Queue(maxsize=20_000)
 
         def get_variants(genotype_study):
+            start = time.time()
             with closing(genotype_study.query_variants(
                             regions=regions,
                             genes=genes,
@@ -441,8 +441,17 @@ class GenotypeDataGroup(GenotypeData):
                         results_queue.put(v, timeout=3)
                 except Full as ex:
                     logger.info(f"variants queue full: {ex}", exc_info=False)
+                    elapsed = time.time() - start
+                    logger.info(
+                        f"family variants queue full for genotype study "
+                        f"{genotype_study.study_id} process in "
+                        f"{elapsed:.2f} secs")
                     raise ex
                 results_queue.put(None)
+            elapsed = time.time() - start
+            logger.info(
+                f"family variants for genotype study "
+                f"{genotype_study.study_id} process in {elapsed:.2f} secs")
 
         logger.info(
             f"study {self.study_id} children: {self.get_leaf_children()}")

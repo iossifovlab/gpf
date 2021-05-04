@@ -49,7 +49,9 @@ class RemoteGeneSetCollection(GeneSetCollection):
         if gene_set is None:
             raw_gene_set = self.rest_client.get_gene_set_download(
                 self._remote_collection_id, gene_set_id
-            ).split("\n\r")
+            ).split("\n")
+            raw_gene_set = [gs.strip() for gs in raw_gene_set]
+
             description = raw_gene_set.pop(0)
             gene_set = GeneSet(gene_set_id, description, raw_gene_set)
             self.gene_sets[gene_set_id] = gene_set

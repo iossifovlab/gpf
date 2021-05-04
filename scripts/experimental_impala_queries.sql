@@ -1,3 +1,83 @@
+SELECT bucket_index, summary_index, chromosome, `position`, effect_gene_symbols, effect_types, variant_type, family_id FROM data_hg38_seqclust.SFARI_SSC_WGS_CSHL_variants 
+WHERE
+  ( (  effect_gene_symbols in (  'SNORD141A'  )  ) ) AND 
+  ( (`chromosome` = 'chr5' AND ((`position` >= 14632278 AND `position` <= 14672382) OR (COALESCE(end_position, -1) >= 14632278 AND COALESCE(end_position, -1) <= 14672382) OR (14632278 >= `position` AND 14672382 <= COALESCE(end_position, -1)))) OR 
+    (`chromosome` = 'chr6' AND ((`position` >= 73498245 AND `position` <= 73538438) OR (COALESCE(end_position, -1) >= 73498245 AND COALESCE(end_position, -1) <= 73538438) OR (73498245 >= `position` AND 73538438 <= COALESCE(end_position, -1)))) OR 
+    (`chromosome` = 'chr9' AND ((`position` >= 133000430 AND `position` <= 133040534) OR (COALESCE(end_position, -1) >= 133000430 AND COALESCE(end_position, -1) <= 133040534) OR (133000430 >= `position` AND 133040534 <= COALESCE(end_position, -1)))) ) AND 
+  ( (  effect_types in (  'nonsense' , 'frame-shift' , 'splice-site' , 'no-frame-shift-newStop' , 'missense' , 'no-frame-shift' , 'noStart' , 'noEnd' , 'synonymous'  )  ) ) AND 
+  ( BITAND(8, inheritance_in_members) = 0 AND BITAND(32, inheritance_in_members) = 0 ) AND ( BITAND(150, inheritance_in_members) != 0 ) AND 
+  ( (((BITAND(variant_type, 4) != 0)) OR ((BITAND(variant_type, 2) != 0))) OR ((BITAND(variant_type, 1) != 0)) ) AND 
+  ( allele_index > 0 ) AND 
+  ( coding_bin = 1 ) AND 
+  ( region_bin IN ('chr5_0','chr6_2','chr9_4') )
+
+
+SELECT variants.bucket_index, variants.summary_index, MIN(variants.chromosome), MIN(variants.`position`), MIN(variants.effect_types), MIN(variants.effect_gene_symbols), variants.family_id, MIN(variants.inheritance_in_members), MAX(variants.inheritance_in_members)
+FROM data_hg38_seqclust.SFARI_SSC_WGS_CSHL_variants as variants JOIN data_hg38_seqclust.SFARI_SSC_WGS_CSHL_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'SNORD141A'  )  ) ) AND 
+  ( (`chromosome` = 'chr5' AND ((`position` >= 14652278 AND `position` <= 14652382) OR (COALESCE(end_position, -1) >= 14652278 AND COALESCE(end_position, -1) <= 14652382) OR (14652278 >= `position` AND 14652382 <= COALESCE(end_position, -1)))) OR 
+    (`chromosome` = 'chr6' AND ((`position` >= 73518245 AND `position` <= 73518438) OR (COALESCE(end_position, -1) >= 73518245 AND COALESCE(end_position, -1) <= 73518438) OR (73518245 >= `position` AND 73518438 <= COALESCE(end_position, -1)))) OR 
+    (`chromosome` = 'chr9' AND ((`position` >= 133020430 AND `position` <= 133020534) OR (COALESCE(end_position, -1) >= 133020430 AND COALESCE(end_position, -1) <= 133020534) OR (133020430 >= `position` AND 133020534 <= COALESCE(end_position, -1)))) ) AND 
+  ( (  variants.effect_types in (  'frame-shift' , 'nonsense' , 'splice-site' , 'no-frame-shift-newStop' , 'missense' , 'synonymous' , 'noStart' , 'noEnd' , 'no-frame-shift' , 'CDS' , 'CNV+' , 'CNV-'  )  ) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(134, variants.inheritance_in_members) != 0 ) AND 
+  ( (variants.genome_gnomad_v3_af_percent <= 100 or variants.genome_gnomad_v3_af_percent is null) ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.coding_bin = 1 ) AND 
+  ( variants.region_bin IN ('chr5_0','chr6_2','chr9_4') ) AND 
+  variants.variant_in_members = pedigree.person_id 
+GROUP BY variants.bucket_index, variants.summary_index, variants.family_id 
+HAVING gpf_bit_or(pedigree.status) IN (3, 1, 2)
+
+
+SELECT variants.bucket_index, variants.summary_index, MIN(variants.chromosome), MIN(variants.`position`), MIN(variants.end_position), MIN(variants.variant_type), variants.family_id
+FROM data_hg38_seqclust.SFARI_SSC_WGS_CSHL_variants as variants JOIN data_hg38_seqclust.SFARI_SSC_WGS_CSHL_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'SNORD141A'  )  ) ) AND 
+  ( (`chromosome` = 'chr5' AND ((`position` >= 14652278 AND `position` <= 14652382) OR (COALESCE(end_position, -1) >= 14652278 AND COALESCE(end_position, -1) <= 14652382) OR (14652278 >= `position` AND 14652382 <= COALESCE(end_position, -1)))) OR 
+    (`chromosome` = 'chr6' AND ((`position` >= 73518245 AND `position` <= 73518438) OR (COALESCE(end_position, -1) >= 73518245 AND COALESCE(end_position, -1) <= 73518438) OR (73518245 >= `position` AND 73518438 <= COALESCE(end_position, -1)))) OR 
+    (`chromosome` = 'chr9' AND ((`position` >= 133020430 AND `position` <= 133020534) OR (COALESCE(end_position, -1) >= 133020430 AND COALESCE(end_position, -1) <= 133020534) OR (133020430 >= `position` AND 133020534 <= COALESCE(end_position, -1)))) ) AND 
+  ( (  variants.effect_types in (  'frame-shift' , 'nonsense' , 'splice-site' , 'no-frame-shift-newStop' , 'missense' , 'synonymous' , 'cnv+' , 'cnv-' , 'noStart' , 'noEnd' , 'no-frame-shift' , 'non-coding' , 'intron' , 'intergenic' , '3\'UTR' , '3\'UTR-intron' , '5\'UTR' , '5\'UTR-intron' , 'CDS' , 'CNV+' , 'CNV-'  )  ) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(150, variants.inheritance_in_members) != 0 ) AND 
+  ( (variants.genome_gnomad_v3_af_percent <= 100 or variants.genome_gnomad_v3_af_percent is null) ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.region_bin IN ('chr5_0','chr6_2','chr9_4') ) AND variants.variant_in_members = pedigree.person_id 
+GROUP BY variants.bucket_index, variants.summary_index, variants.family_id 
+HAVING gpf_bit_or(pedigree.status) IN (3, 1, 2)
+
+
+SELECT variants.bucket_index, variants.summary_index, variants.family_id, MIN(variants.effect_types)
+FROM data_hg38_seqclust.SFARI_SSC_WGS_CSHL_variants as variants JOIN data_hg38_seqclust.SFARI_SSC_WGS_CSHL_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'SNORD15A'  )  ) ) AND 
+  ( (`chromosome` = 'chr11' AND ((`position` >= 75400391 AND `position` <= 75400538) OR (COALESCE(end_position, -1) >= 75400391 AND COALESCE(end_position, -1) <= 75400538) OR (75400391 >= `position` AND 75400538 <= COALESCE(end_position, -1)))) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(150, variants.inheritance_in_members) != 0 ) AND 
+  ( (variants.genome_gnomad_v3_af_percent <= 100 or variants.genome_gnomad_v3_af_percent is null) ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.region_bin IN ('chr11_2') ) AND 
+  variants.variant_in_members = pedigree.person_id 
+GROUP BY variants.bucket_index, variants.summary_index, variants.family_id 
+HAVING gpf_bit_or(pedigree.status) IN (3, 1, 2)
+
+
+
+
+SELECT variants.bucket_index, variants.summary_index, MIN(variants.chromosome), MIN(variants.`position`), variants.family_id  
+FROM data_hg38_seqclust.sfari_spark_wes_1_consortium_variants as variants JOIN data_hg38_seqclust.sfari_spark_wes_1_consortium_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'POGZ'  )  ) ) AND 
+  ( (`chromosome` = 'chr1' AND ((`position` >= 151424919 AND `position` <= 151424967) OR (COALESCE(end_position, -1) >= 151424919 AND COALESCE(end_position, -1) <= 151424967) OR (151424919 >= `position` AND 151424967 <= COALESCE(end_position, -1)))) ) AND 
+  ( (  variants.effect_types in (  'frame-shift' , 'nonsense' , 'splice-site' , 'no-frame-shift-newStop'  )  ) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND 
+  ( BITAND(134, variants.inheritance_in_members) != 0 ) AND
+  ( variants.allele_index > 0 ) AND 
+  ( variants.region_bin IN ('chr1_5') ) AND 
+  variants.variant_in_members = pedigree.person_id 
+GROUP BY variants.bucket_index, variants.summary_index, variants.family_id HAVING gpf_bit_or(pedigree.status) IN (1, 2, 3);
+
+
+
+
 SELECT variants.bucket_index, variants.summary_index, variants.family_variants_count, variants.seen_in_status, variants.seen_as_denovo 
 FROM data_hg38_production_202005.sfari_spark_wgs_1_summary_variants as variants 
 WHERE

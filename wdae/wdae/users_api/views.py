@@ -118,8 +118,8 @@ class UserViewSet(viewsets.ModelViewSet):
         search_param = request.GET.get("search", None)
         if search_param:
             queryset = queryset.filter(
-                Q(name__contains=search_param)
-                | Q(email__contains=search_param)
+                Q(name__icontains=search_param)
+                | Q(email__icontains=search_param)
             )
         return StreamingHttpResponse(
             iterator_to_json(queryset.iterator()),

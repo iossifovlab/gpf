@@ -89,6 +89,10 @@ export CONTAINER_GPF_IMPALA="gpf-dev-impala-${TAG}"
 export CONTAINER_GPF_IMPALA=$(tr '_' '-' <<<"${CONTAINER_GPF_IMPALA}")
 export CONTAINER_GPF_IMPALA=$(tr '.' '-' <<<"${CONTAINER_GPF_IMPALA}")
 
+export CONTAINER_GPF_MYSQL="gpf-mysql-${TAG}"
+export CONTAINER_GPF_MYSQL=$(tr '_' '-' <<<"${CONTAINER_GPF_MYSQL}")
+export CONTAINER_GPF_MYSQL=$(tr '.' '-' <<<"${CONTAINER_GPF_MYSQL}")
+
 export IMAGE_GPF_DEV="gpf-dev-image-${TAG}"
 export IMAGE_GPF_DEV=$(tr '_' '-' <<<"${IMAGE_GPF_DEV}")
 export IMAGE_GPF_DEV=$(tr '.' '-' <<<"${IMAGE_GPF_DEV}")
@@ -109,6 +113,7 @@ export CONTAINER_TESTS=$(tr '.' '-' <<<"${CONTAINER_TESTS}")
 
 echo "CONTAINER_GPF_IMPALA          : ${CONTAINER_GPF_IMPALA}"
 echo "IMAGE_GPF_DEV                 : ${IMAGE_GPF_DEV}"
+echo "CONTAINER_GPF_MYSQL           : ${CONTAINER_GPF_MYSQL}"
 echo "CONTAINER_GPF_DEV             : ${CONTAINER_GPF_DEV}"
 echo "CONTAINER_GPF_REMOTE          : ${CONTAINER_GPF_REMOTE}"
 echo "CONTAINER_TESTS               : ${CONTAINER_TESTS}"

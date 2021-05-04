@@ -2,7 +2,6 @@ import logging
 
 from django.core.management.base import BaseCommand
 
-from gpf_instance.gpf_instance import get_gpf_instance
 from .dataset_mixin import DatasetBaseMixin
 
 
