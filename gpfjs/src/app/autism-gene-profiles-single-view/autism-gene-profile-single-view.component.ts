@@ -36,7 +36,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.gene$ = this.autismGeneProfilesService.getGene(this.geneSymbol)
+    this.gene$ = this.autismGeneProfilesService.getGene(this.geneSymbol);
 
     this.gene$.pipe(
       switchMap(gene => {
