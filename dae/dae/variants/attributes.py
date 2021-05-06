@@ -190,7 +190,7 @@ class Status(enum.Enum):
             return Status.unaffected
         elif name in set(["affected", "2", "true"]):
             return Status.affected
-        elif name in set(["unspecified", "-", "0"]):
+        elif name in set(["unspecified", "-", "0", "unknown"]):
             return Status.unspecified
         raise ValueError("unexpected status type: " + name)
 

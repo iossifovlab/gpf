@@ -1,12 +1,15 @@
 import sys
 import re
-
+import logging
 from collections import defaultdict, namedtuple
 from functools import reduce
 
 from dae.pedigrees.family import Family
 from dae.pedigrees.pedigrees import FamilyConnections, Individual
 from dae.pedigrees.interval_sandwich import SandwichSolver
+
+
+logger = logging.getLogger(__name__)
 
 
 _LAYOUT_REGEX = re.compile(r"(?P<rank>\d):(?P<x>\d*\.?\d+),(?P<y>\d*\.?\d+)")
@@ -166,10 +169,8 @@ class Layout(object):
             family: Family, family_connections: FamilyConnections):
 
         if family_connections is None:
-            # print(
-            #     f"Missing family connections for family: {family.family_id}",
-            #     file=sys.stderr,
-            # )
+            logger.warning(
+                f"missing family connections for family: {family.family_id}")
             return Layout._handle_broken_family_connections(family)
 
         assert family_connections.is_connected()
@@ -177,9 +178,7 @@ class Layout(object):
         intervals = SandwichSolver.solve(sandwich_instance)
 
         if intervals is None:
-            # print(
-            #     f"No intervals for family: {family.family_id}", file=sys.stderr
-            # )
+            logger.warning(f"no intervals for family: {family.family_id}")
             return Layout._handle_broken_family_connections(family)
 
         individuals_intervals = [
@@ -201,6 +200,8 @@ class Layout(object):
             return [Layout._handle_broken_family_connections(family)]
 
         if family_connections.is_connected():
+            logger.debug(
+                f"building layout for connected family: {family.family_id}")
             return [Layout._build_family_layout(family, family_connections)]
 
         layouts = []
@@ -365,7 +366,7 @@ class Layout(object):
                         )
                     )
 
-                for i, other_individual in enumerate(level[start + 1 :]):
+                for i, other_individual in enumerate(level[start + 1:]):
                     are_next_to_eachother = i == 0
                     if individual.individual.are_mates(
                         other_individual.individual
@@ -576,7 +577,7 @@ class Layout(object):
         for level in self._individuals_by_rank:
             level_with_positions = [self._id_to_position[i] for i in level]
             for index, individual1 in enumerate(level_with_positions):
-                for individual2 in level_with_positions[index + 1 : index + 2]:
+                for individual2 in level_with_positions[index + 1: index + 2]:
                     diff = individual2.x - individual1.x
                     if min_gap - diff > 1:
                         moved += self._move([individual2], min_gap - diff)
@@ -663,7 +664,7 @@ class Layout(object):
         level = self._get_level_of_individual(min_individual.individual)
 
         individuals = level[
-            level.index(min_individual.individual) : level.index(
+            level.index(min_individual.individual): level.index(
                 max_individual.individual
             )
             + 1

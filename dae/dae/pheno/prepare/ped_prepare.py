@@ -406,7 +406,7 @@ class PrepareVariables(PreparePersons):
             connection.execute(ins, list(values.values()))
 
     def _collect_instruments(self, dirname):
-        regexp = re.compile("(?P<instrument>.*)(?P<ext>\.csv.*)")
+        regexp = re.compile("(?P<instrument>.*)(?P<ext>\\.csv.*)")
         instruments = defaultdict(list)
         for root, _dirnames, filenames in os.walk(dirname):
             for filename in filenames:
