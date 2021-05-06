@@ -4,7 +4,7 @@ import { Observable, zip } from 'rxjs';
 import { GeneWeightsService } from '../gene-weights/gene-weights.service';
 import { GeneWeights } from 'app/gene-weights/gene-weights';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
-import { mergeMap } from 'rxjs/operators';
+import { mergeMap, switchMap, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 
@@ -38,15 +38,28 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   ngOnInit(): void {
     this.gene$ = this.autismGeneProfilesService.getGene(this.geneSymbol);
 
-    this.gene$.subscribe(res => {
-      let scores: string;
-      for (let i = 0; i < res['genomicScores'].length; i++) {
-        scores = [...res['genomicScores'][i].scores.keys()].join(',');
-        this.geneWeightsService.getGeneWeights(scores).subscribe(geneWeights => {
-          this.genomicScoresGeneWeights.push({category: res['genomicScores'][i].category, scores: geneWeights});
-        });
-      }
-    });
+    this.gene$.pipe(
+      switchMap(gene => {
+        let scores: string;
+        const geneWeightsObservables = [];
+        for (let i = 0; i < gene['genomicScores'].length; i++) {
+          scores = [...gene['genomicScores'][i].scores.keys()].join(',');
+          geneWeightsObservables.push(
+            this.geneWeightsService.getGeneWeights(scores)
+          );
+        }
+        return Observable.zip(...geneWeightsObservables).pipe(
+          tap(geneWeightsArray => {
+            for (let k = 0; k < geneWeightsArray.length; k++) {
+              this.genomicScoresGeneWeights.push({
+                category: gene['genomicScores'][k].category,
+                scores: geneWeightsArray[k]
+              });
+            }
+          })
+        );
+      })
+    ).subscribe();
   }
 
   formatScoreName(score: string) {

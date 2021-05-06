@@ -205,6 +205,9 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     });
 
     this.streamingFinished$.subscribe(() => {
+      if (this.gene === undefined) {
+        return;
+      }
       this.geneViewModel = new GeneViewModel(this.gene, this.svgWidth);
       this.geneViewTranscript = new GeneViewTranscript(this.gene.transcripts[0]);
       this.setDefaultScale();
