@@ -88,7 +88,7 @@
 
         <ng-container *ngFor="let geneSetCategory of shownGeneSetsCategories">
           <td *ngFor="let geneSet of geneSetCategory['sets']">
-            <ng-container *ngIf="gene.geneSets.indexOf('main_' + geneSet['setId']) !== -1">&#10003;</ng-container>
+            <ng-container *ngIf="gene.geneSets.indexOf(geneSet['collectionId'] + '_' + geneSet['setId']) !== -1">&#10003;</ng-container>
           </td>
         </ng-container>
 
