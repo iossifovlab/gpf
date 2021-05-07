@@ -107,16 +107,16 @@ class RESTClient:
     def _delete(self, url, data=None):
         pass
 
-    def _read_json_list_stream(self, response):
-        stream = response.iter_content(chunk_size=64)
+    def _read_json_list_stream(self, response, multiple_values=False):
         objects = ijson.sendable_list()
-        coro = ijson.items_coro(objects, "item", use_float=True)
-        for chunk in stream:
-            coro.send(chunk)
-            if len(objects):
-                for o in objects:
-                    yield o
-                del objects[:]
+        coro = ijson.items_coro(
+            objects, "item", use_float=True, multiple_values=False
+        )
+        coro.send(response.content)
+        if len(objects):
+            for o in objects:
+                yield o
+            del objects[:]
 
     def prefix_remote_identifier(self, value):
         return f"{self.remote_id}_{value}"
@@ -142,8 +142,9 @@ class RESTClient:
         )
         return response
 
-    def post_query_variants(self, data):
+    def post_query_variants(self, data, reduceAlleles=False):
         assert data.get("download", False) is False
+        data["reduceAlleles"] = reduceAlleles
         response = self._post(
             "genotype_browser/query",
             data=data,
@@ -450,6 +451,16 @@ class RESTClient:
     def get_member_details(self, dataset_id, family_id, member_id):
         response = self._get(
             f"families/{dataset_id}/{family_id}/members/{member_id}"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_all_member_details(self, dataset_id, family_id):
+        response = self._get(
+            f"families/{dataset_id}/{family_id}/members/all"
         )
 
         if response.status_code != 200:

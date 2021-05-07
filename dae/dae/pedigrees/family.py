@@ -117,6 +117,7 @@ class Person(object):
 
     def to_json(self):
         return {
+            "family_id": self.family_id,
             "person_id": self.person_id,
             "dad_id": self.dad_id,
             "mom_id": self.mom_id,

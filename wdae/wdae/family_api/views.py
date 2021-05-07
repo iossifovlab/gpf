@@ -105,3 +105,34 @@ class MemberDetailsView(QueryBaseView):
             member.to_json(),
             status=status.HTTP_200_OK
         )
+
+
+class AllMemberDetailsView(QueryBaseView):
+    def get(self, request, dataset_id, family_id):
+        if dataset_id is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        if family_id is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+
+        if dataset is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        families = dataset.families
+
+        family = families.get(family_id)
+
+        if family is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        members = family.members_in_order
+
+        if members is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        return Response(
+            [m.to_json() for m in members],
+            status=status.HTTP_200_OK
+        )

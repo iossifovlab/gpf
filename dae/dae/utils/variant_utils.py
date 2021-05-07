@@ -73,6 +73,28 @@ def fgt2str(fgt, sep=";"):
     return sep.join(result)
 
 
+def str2fgt(fgt, split=";"):
+    cols = fgt.split(";")
+    result = np.zeros([2, len(cols)])
+    for idx, col in enumerate(cols):
+        sp = col.split("/")
+
+        if sp[0] == ".":
+            v0 = -1
+        else:
+            v0 = int(sp[0])
+
+        if sp[1] == ".":
+            v1 = -1
+        else:
+            v1 = int(sp[1])
+
+        result[0][idx] = v0
+        result[1][idx] = v1
+
+    return result
+
+
 def gt2str(gt):
     assert gt.shape[0] == 2
     result = []

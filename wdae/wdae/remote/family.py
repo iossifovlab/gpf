@@ -3,7 +3,7 @@ from dae.pedigrees.family import FamilyType, Person
 
 class RemoteFamily:
     def __init__(self, json):
-        self.family_id = json["family_id"]
+        self._family_id = json["family_id"]
         self._person_ids = json["person_ids"]
         self._samples_index = json["samples_index"]
         self._family_type = FamilyType.from_name(json["family_type"])
