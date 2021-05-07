@@ -15,10 +15,12 @@ class ConfigurationView(QueryBaseView):
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # Attach dataset display name to configuration
-        for dataset_id, dataset in configuration["datasets"].items():
-            dataset["name"] = self.gpf_instance.get_genotype_data_config(
-                dataset_id
-            )["name"]
+        if "datasets" in configuration:
+            for dataset_id, dataset in configuration["datasets"].items():
+                dataset_conf = self.gpf_instance.get_genotype_data_config(
+                    dataset_id
+                )
+                dataset["name"] = dataset_conf.get("name", dataset_id)
 
         return Response(configuration)
 
