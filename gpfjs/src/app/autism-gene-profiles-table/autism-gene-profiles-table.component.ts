@@ -85,12 +85,14 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     this.shownGeneSetsCategories = cloneDeep(this.config['geneSets']);
     this.shownGenomicScoresCategories = cloneDeep(this.config['genomicScores']);
 
+    this.sortBy = `${this.shownGeneSetsCategories[0]['category']}_rank`;
+    this.orderBy = 'desc';
+    this.currentSortingColumnId = this.sortBy
     this.autismGeneProfilesService.getGenes(
-      this.pageIndex, undefined, `${this.shownGeneSetsCategories[0]['category']}_rank`, 'desc'
+      this.pageIndex, undefined, this.sortBy, this.orderBy
     ).take(1).subscribe(res => {
       this.genes = this.genes.concat(res);
     });
-    this.currentSortingColumnId = `${this.shownGeneSetsCategories[0]['category']}_rank`;
 
     this.searchKeystrokes$
       .debounceTime(250)
