@@ -342,12 +342,17 @@ class PrepareVariables(PreparePersons):
             df = pd.concat(dataframes, ignore_index=True)
 
         assert df is not None
+        if len(df) == 0:
+            return df
 
         df = self._augment_person_ids(df)
         df = self._adjust_instrument_measure_names(instrument_name, df)
         return df
 
     def _adjust_instrument_measure_names(self, instrument_name, df):
+        if len(df) == 0:
+            return df
+
         columns = {}
         for index in range(1, len(df.columns)):
             name = df.columns[index]
@@ -460,7 +465,8 @@ class PrepareVariables(PreparePersons):
                 pid[index] = p.id
 
         df[self.PID_COLUMN] = pid
-        df = df[np.logical_not(np.isnan(df[self.PID_COLUMN]))].copy()
+        if len(df) > 0:
+            df = df[np.logical_not(np.isnan(df[self.PID_COLUMN]))].copy()
         return df
 
     def build_pheno_common(self):
