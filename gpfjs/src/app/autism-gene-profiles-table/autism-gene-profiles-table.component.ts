@@ -51,25 +51,30 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
 
   @HostListener('window:scroll', ['$event'])
   onWindowScroll() {
-    const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
-    const totalScrollHeight = document.documentElement.scrollHeight;
+    if (this.isTableVisible) {
+      const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
+      const totalScrollHeight = document.documentElement.scrollHeight;
 
-    if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
-      this.updateGenes();
+      if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
+        this.updateGenes();
+      }
+
+      this.updateModalBottom();
     }
-
-    this.updateModalBottom();
   }
 
   @HostListener('window:resize', ['$event'])
   onResize() {
-    this.updateModalBottom();
+    if (this.isTableVisible) {
+      this.updateModalBottom();
+    }
   }
 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
     private renderer: Renderer2,
     private cdr: ChangeDetectorRef,
+    private ref: ElementRef,
   ) { }
 
   /**
@@ -111,6 +116,10 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
       return sortingButtonsComponent.id === `${this.shownGeneSetsCategories[0]['category']}_rank`;
     });
     firstSortingButton.hideState = 1;
+  }
+
+  get isTableVisible(): boolean {
+    return !this.ref.nativeElement.hidden;
   }
 
   /**
