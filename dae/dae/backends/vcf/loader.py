@@ -821,7 +821,7 @@ class VcfLoader(VariantsGenotypesLoader):
             value_type=str,
             help_text="specifies a list of filename template "
             "substitutions; then specified variant filename(s) are treated "
-            "as templates and each occurent of `{vc}` is replaced "
+            "as templates and each occurent of `[vc]` is replaced "
             "consecutively by elements of VCF wildcards list; "
             "by default the list is empty and no substitution "
             "takes place. "

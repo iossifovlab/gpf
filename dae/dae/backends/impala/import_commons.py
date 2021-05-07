@@ -1301,7 +1301,7 @@ class DatasetHelpers:
 
     def find_genotype_data_config(self, dataset_id):
         config_file = self.find_genotype_data_config_file(dataset_id)
-        if config_file is None:            
+        if config_file is None:
             return None
         with open(config_file, "r") as infile:
             short_config = toml.load(infile)
