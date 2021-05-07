@@ -1,6 +1,7 @@
 import os
 import re
 import traceback
+import logging
 from collections import defaultdict, OrderedDict
 
 import numpy as np
@@ -18,6 +19,9 @@ from dae.pheno.prepare.measure_classifier import (
     convert_to_numeric,
     ClassifierReport,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class PrepareCommon(object):
@@ -431,6 +435,10 @@ class PrepareVariables(PreparePersons):
         for instrument_name, instrument_filenames in list(instruments.items()):
             assert instrument_name is not None
             df = self.load_instrument(instrument_name, instrument_filenames)
+            if len(df) == 0:
+                logger.info(
+                    f"instrument {instrument_name} is empty; skipping")
+                continue
             self.build_instrument(instrument_name, df, descriptions)
 
     def _augment_person_ids(self, df):
