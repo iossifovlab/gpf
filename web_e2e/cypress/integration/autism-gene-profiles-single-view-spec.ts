@@ -1,7 +1,7 @@
 import { AutismGeneProfilesSingleView } from 'cypress/elements/autism-gene-profiles-single-view-page';
 import { AutismGeneProfilesTable } from 'cypress/elements/autism-gene-profiles-table-page';
 
-describe.only('Autism gene profiles single view tests', () => {
+describe('Autism gene profiles single view tests', () => {
   const autismGeneProfilesSingleViewPage = new AutismGeneProfilesSingleView();
   const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
 
