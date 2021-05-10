@@ -999,4 +999,16 @@ describe('GeneViewComponent', () => {
     component.drawIntron(null, 11, 12, 10, 'title', {coding: 1, nonCoding: 2});
     expect(drawLineSpy).toHaveBeenCalled();
   });
+
+  it('should format exons length', () => {
+    expect(component.formatExonsLength(1)).toEqual('~1 bp');
+    expect(component.formatExonsLength(22)).toEqual('~22 bp');
+    expect(component.formatExonsLength(333)).toEqual('~333 bp');
+    expect(component.formatExonsLength(4444)).toEqual('~4.4 kbp');
+    expect(component.formatExonsLength(55555)).toEqual('~55.6 kbp');
+    expect(component.formatExonsLength(666666)).toEqual('~666.7 kbp');
+    expect(component.formatExonsLength(7777777)).toEqual('~7.8 mbp');
+    expect(component.formatExonsLength(88888888)).toEqual('~88.9 mbp');
+    expect(component.formatExonsLength(999999999)).toEqual('~1000 mbp');
+  });
 });
