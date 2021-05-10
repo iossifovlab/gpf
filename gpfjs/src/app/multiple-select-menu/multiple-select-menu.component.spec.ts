@@ -136,7 +136,7 @@ describe('MultipleSelectMenuComponent', () => {
   });
 
   it('should emit on apply event', () => {
-    component.id = 'mockId';
+    component.menuId = 'mockId';
     component['checkboxDataArray'] = [
       {id: 'item1', isChecked: true},
       {id: 'item2', isChecked: true},
@@ -148,7 +148,7 @@ describe('MultipleSelectMenuComponent', () => {
 
     component.apply();
     expect(emitSpy).toHaveBeenCalledWith({
-      id: 'mockId',
+      menuId: 'mockId',
       data: ['item1', 'item2', 'item4']
     });
   });

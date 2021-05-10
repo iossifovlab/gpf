@@ -1,10 +1,12 @@
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { GeneService } from 'app/gene-view/gene.service';
 import { Gene, GeneViewSummaryAllelesArray, DomainRange } from 'app/gene-view/gene';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
-import { Observable } from 'rxjs';
-import { Dataset, SelectorValue } from 'app/datasets/datasets';
+// tslint:disable-next-line:import-blacklist
+import { Observable, of, combineLatest } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { ActivatedRoute, Params } from '@angular/router';
 import { QueryStateCollector } from 'app/query/query-state-provider';
@@ -34,8 +36,9 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   loadingFinished: boolean;
   familyLoadingFinished: boolean;
   hideResults: boolean;
-  legend: Array<SelectorValue>;
-
+  hideDropdown: boolean;
+  showError = false;
+  
   codingEffectTypes = [
     'lgds',
     'nonsense',
@@ -71,6 +74,13 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   enableCodingOnly = true;
   private genotypeBrowserState: Object;
 
+  @HostListener('document:keydown.enter', ['$event'])
+  onEnterPress($event) {
+    if ($event.target.id === 'search-box') {
+      this.submitGeneRequest();
+    }
+  }
+
   constructor(
     public queryService: QueryService,
     private geneService: GeneService,
@@ -79,7 +89,6 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
     readonly configService: ConfigService,
     private loadingService: FullscreenLoadingService,
     private stateRestoreService: StateRestoreService
-
   ) {
     super();
   }
@@ -98,12 +107,14 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   }
 
   ngAfterViewInit(): void {
-    if (this.route.snapshot.params.gene) {
-      this.waitForGeneViewComponent().then(() => {
-        this.stateRestoreService.pushNewState({'geneSymbols': [this.route.snapshot.params.gene]});
-        this.submitGeneRequest();
-      })
-    }
+    this.datasetsService.getDataset(this.selectedDatasetId).subscribe(dataset => {
+      if (dataset.accessRights && this.route.snapshot.params.gene) {
+        this.waitForGeneViewComponent().then(() => {
+          this.stateRestoreService.pushNewState({'geneSymbols': [this.route.snapshot.params.gene]});
+          this.submitGeneRequest();
+        });
+      }
+    });
   }
 
   async waitForGeneViewComponent() {
@@ -159,6 +170,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
       inheritanceFilters.push('mendelian');
       inheritanceFilters.push('omission');
       inheritanceFilters.push('missing');
+      // inheritanceFilters.push('unknown');
     }
     let effects: string[] = state.selectedEffectTypes;
     if (effects.indexOf('other') >= 0) {
@@ -189,35 +201,60 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
     return params;
   }
 
+  startLoadingSpinner(): void {
+    this.familyLoadingFinished = false;
+  }
+
   submitGeneRequest() {
-    this.hideResults = false;
+    this.showError = false;
+    this.hideDropdown = true;
     this.geneViewComponent.clearSvgElement();
     this.geneViewComponent.resetGeneTableValues();
-    this.getCurrentState().subscribe(state => {
-      this.geneSymbol = state['geneSymbols'][0];
 
-      this.geneService.getGene(this.geneSymbol.toUpperCase().trim()).subscribe((gene) => {
+    this.queryService.summaryStreamingFinishedSubject.subscribe(_ => {
+      this.loadingFinished = true;
+      this.loadingService.setLoadingStop();
+    });
+
+    this.queryService.streamingFinishedSubject.subscribe(() => {
+      this.familyLoadingFinished = true;
+    });
+
+    this.getCurrentState().pipe(
+      switchMap(state => {
+        let geneObservable: Observable<Gene>;
+        if (state['geneSymbols']) {
+          this.geneSymbol = state['geneSymbols'][0];
+          geneObservable = this.geneService.getGene(this.geneSymbol.toUpperCase().trim());
+        } else {
+          this.geneSymbol = undefined;
+          geneObservable = of();
+        }
+        return combineLatest(
+          of(state), geneObservable
+        );
+      }),
+      switchMap(([state, gene]) => {
+        if (gene === undefined) {
+          return;
+        }
         this.selectedGene = gene;
-      });
-
-      this.selectedDataset$.subscribe( selectedDataset => {
-        this.legend = selectedDataset.peopleGroupConfig.getLegend(state['peopleGroup'].id);
-      });
-
-      this.loadingFinished = false;
-      this.loadingService.setLoadingStart();
+        this.genotypePreviewInfo = null;
+        this.hideResults = false;
+        this.loadingFinished = false;
+        this.loadingService.setLoadingStart();
+        return combineLatest(
+          of(state),
+          this.queryService.getGenotypePreviewInfo(
+            { datasetId: this.selectedDatasetId, peopleGroup: state['peopleGroup'] }
+          )
+        );
+      })
+    ).subscribe(([state, genotypePreviewInfo]) => {
+      this.genotypePreviewInfo = genotypePreviewInfo;
       this.genotypePreviewVariantsArray = null;
+
       this.genotypeBrowserState = state;
-      let summaryLoadingFinished = false;
-
-      this.queryService.summaryStreamingFinishedSubject.subscribe(
-        _ => {
-          summaryLoadingFinished = true;
-          this.loadingFinished = true;
-          this.loadingService.setLoadingStop();
-        });
-
-      this.queryService.streamingFinishedSubject.subscribe(() => { this.familyLoadingFinished = true; });
 
       const requestParams = { ...state };
       requestParams['maxVariantsCount'] = 10000;
@@ -240,7 +277,13 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
       requestParams['inheritanceTypeFilter'] = inheritanceFilters;
 
       this.summaryVariantsArray = this.queryService.getGeneViewVariants(requestParams);
-    }, console.error);
+    }, error => {
+      console.error(error);
+      this.showError = true;
+      this.hideDropdown = false;
+    }, () => {
+      this.hideDropdown = false;
+    });
   }
 
   getFamilyVariantCounts() {

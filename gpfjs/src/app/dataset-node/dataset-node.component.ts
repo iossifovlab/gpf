@@ -31,17 +31,17 @@ export class DatasetNodeComponent implements OnInit {
 
   findFirstTool(selectedDataset: Dataset) {
     if (selectedDataset.description) {
-      return 'description';
+      return 'dataset-description';
     } else if (selectedDataset.commonReport['enabled']) {
-      return 'commonReport';
+      return 'dataset-statistics';
     } else if (selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig) {
-      return 'browser';
+      return 'genotype-browser';
     } else if (selectedDataset.phenotypeBrowser) {
-      return 'phenotypeBrowser';
+      return 'phenotype-browser';
     } else if (selectedDataset.enrichmentTool) {
-      return 'enrichment';
+      return 'enrichment-tool';
     } else if (selectedDataset.phenotypeTool) {
-      return 'phenoTool';
+      return 'phenotype-tool';
     } else {
       return '';
     }

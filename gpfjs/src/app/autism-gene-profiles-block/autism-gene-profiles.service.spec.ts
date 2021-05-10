@@ -1,26 +1,50 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
-import { compact } from 'lodash';
 // tslint:disable-next-line:import-blacklist
 import { of } from 'rxjs';
 
 import { AutismGeneProfilesService } from './autism-gene-profiles.service';
+import * as deepEqual from 'deep-equal';
+const util = require('util');
 
-const configurationMock = {
+const configurationMockJson = {
+  'default_dataset': 'defaultDataset',
   'gene_sets': [
-    'mockSet'
+    {'category': 'first_gene_sets',
+      'display_name': 'First_Gene_Sets',
+      'sets': [
+        {'set_id': 'set11', 'collection_id': 'main11'},
+        {'set_id': 'set12', 'collection_id': 'main12'}
+      ]
+    },
+    {'category': 'second_gene_sets',
+      'display_name': 'Second_Gene_Sets',
+      'sets': [
+        {'set_id': 'set21', 'collection_id': 'main21'},
+        {'set_id': 'set22', 'collection_id': 'main22'}
+      ]
+    }
   ],
-  'protection_scores': [
-    'protectionScore1',
-    'protectionScore2',
-  ],
-  'autism_scores': [
-    'autismScore1',
-    'autismScore2',
+  'genomic_scores': [
+    {'category': 'first_genomic_scores',
+      'display_name': 'First_Genomic_Scores',
+      'scores': [
+        {'score_name': 'score11', 'format': '%s'},
+        {'score_name': 'score12', 'format': '%s'}
+      ]
+    },
+    {'category': 'second_genomic_scores',
+      'display_name': 'Second_Genomic_Scores',
+      'scores': [
+        {'score_name': 'score21', 'format': '%s'},
+        {'score_name': 'score22', 'format': '%s'}
+      ]
+    }
   ],
   'datasets': {
     'mockDataset': {
+      'name': 'Mock Dataset',
       'effects': [
         'effect1',
         'effect2',
@@ -34,18 +58,106 @@ const configurationMock = {
   }
 };
 
-const geneMock = {
-  'gene_symbol': 'mockGene',
-  'gene_sets': [
-    'mockSet'
+const configurationMock = {
+  defaultDataset : 'defaultDataset',
+  geneSets : [
+    {category : 'first_gene_sets',
+      displayName : 'First_Gene_Sets',
+      sets : [
+        {setId : 'set11', collectionId : 'main11'},
+        {setId : 'set12', collectionId : 'main12'}
+      ]
+    },
+    {category : 'second_gene_sets',
+      displayName : 'Second_Gene_Sets',
+      sets : [
+        {setId : 'set21', collectionId : 'main21'},
+        {setId : 'set22', collectionId : 'main22'}
+      ]
+    }
   ],
-  'protection_scores': {
-    'protectionScore1': 1,
-    'protectionScore2': 2,
+  genomicScores : [
+    {category : 'first_genomic_scores',
+      displayName : 'First_Genomic_Scores',
+      scores : [
+        {scoreName : 'score11', format : '%s'},
+        {scoreName : 'score12', format : '%s'}
+      ]
+    },
+    {category : 'second_genomic_scores',
+      displayName : 'Second_Genomic_Scores',
+      scores : [
+        {scoreName : 'score21', format : '%s'},
+        {scoreName : 'score22', format : '%s'}
+      ]
+    }
+  ],
+  datasets : [
+    {
+      id: 'mockDataset',
+      name: 'Mock Dataset',
+      effects : [
+        'effect1',
+        'effect2',
+        'effect3'
+      ],
+      personSets : [
+        'personSet1',
+        'personSet2'
+      ]
+    }
+  ]
+};
+
+const geneMockJson1 = {
+  'gene_symbol': 'mockGene1',
+  'gene_sets': [
+    'set11'
+  ],
+  'genomic_scores': {
+    'first_genomic_scores': {
+      'score11': { 'value': 11, 'format': '%s'},
+      'score12': { 'value': 12, 'format': '%s'},
+    }
   },
-  'autism_scores': {
-    'autismScore1': 3,
-    'autismScore2': 4,
+  'studies': {
+    'mockDataset': {
+      'personSet1': {
+        'effect1': 1,
+        'effect2': 2,
+      },
+      'personSet2': {
+        'effect3': 3,
+        'effect4': 4,
+      }
+    }
+  }
+};
+
+const geneMock1 = {
+  geneSymbol: 'mockGene1',
+  geneSets: [ 'set11' ],
+  genomicScores: [ { category: 'first_genomic_scores', scores: {} } ],
+  studies: [
+    {name: 'mockDataset',
+      personSets: [
+        { name: 'personSet1', effectTypes: {} },
+        { name: 'personSet2', effectTypes: {} }
+      ]
+    }
+  ]
+};
+
+const geneMockJson2 = {
+  'gene_symbol': 'mockGene2',
+  'gene_sets': [
+    'set21'
+  ],
+  'genomic_scores': {
+    'second_genomic_scores': {
+      'score21': { 'value': 21, 'format': '%s'},
+      'score22': { 'value': 22, 'format': '%s'},
+    }
   },
   'studies': {
     'mockDataset': {
@@ -62,30 +174,17 @@ const geneMock = {
 };
 
 const geneMock2 = {
-  'gene_symbol': 'mockGene2',
-  'gene_sets': [
-    'mockSet'
-  ],
-  'protection_scores': {
-    'protectionScore1': 9,
-    'protectionScore2': 10,
-  },
-  'autism_scores': {
-    'autismScore1': 11,
-    'autismScore2': 12,
-  },
-  'studies': {
-    'mockDataset': {
-      'personSet1': {
-        'effect1': 13,
-        'effect2': 14,
-      },
-      'personSet2': {
-        'effect3': 15,
-        'effect4': 16,
-      }
+  geneSymbol: 'mockGene2',
+  geneSets: [ 'set21' ],
+  genomicScores: [ { category: 'second_genomic_scores', scores: {} } ],
+  studies: [
+    {name: 'mockDataset',
+      personSets: [
+        { name: 'personSet1', effectTypes: {} },
+        { name: 'personSet2', effectTypes: {} }
+      ]
     }
-  }
+  ]
 };
 
 describe('AutismGeneProfilesService', () => {
@@ -106,35 +205,24 @@ describe('AutismGeneProfilesService', () => {
   it('should get config', () => {
     const getConfigSpy = spyOn(service['http'], 'get');
 
-    getConfigSpy.and.returnValue(of(configurationMock));
+    getConfigSpy.and.returnValue(of(configurationMockJson));
     const resultConfig = service.getConfig();
     expect(getConfigSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['configUrl']);
     resultConfig.take(1).subscribe(res => {
-      expect(res['geneSets']).toEqual(['mockSet']);
-      expect(res['autismScores']).toEqual(['autismScore1', 'autismScore2']);
-      expect(res['protectionScores']).toEqual( [ 'protectionScore1', 'protectionScore2' ]);
-      expect(res['datasets'][0]['effects']).toEqual(['effect1', 'effect2', 'effect3']);
-      expect(res['datasets'][0]['personSets']).toEqual(['personSet1', 'personSet2']);
+      expect(deepEqual(res, configurationMock)).toBeTrue();
     });
   });
 
   it('should get single gene', () => {
     const getGeneSpy = spyOn(service['http'], 'get');
+    getGeneSpy.and.returnValue(of(geneMockJson1));
 
-    getGeneSpy.and.returnValue(of(geneMock));
-    const resultGene = service.getGene('mockGene');
-    expect(getGeneSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['genesUrl'] + 'mockGene');
+    const resultGene = service.getGene('geneMock1');
+    expect(getGeneSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['genesUrl'] + 'geneMock1');
     resultGene.take(1).subscribe(res => {
-      expect(res['geneSymbol']).toEqual('mockGene');
-      expect(res['geneSets']).toEqual(['mockSet']);
-      expect(res['protectionScores'].get('protectionScore1')).toBe(1);
-      expect(res['protectionScores'].get('protectionScore2')).toBe(2);
-      expect(res['autismScores'].get('autismScore1')).toBe(3);
-      expect(res['autismScores'].get('autismScore2')).toBe(4);
-      expect(Number(res['studies'][0]['personSets'][0]['effectTypes'].get('effect1'))).toBe(5);
-      expect(Number(res['studies'][0]['personSets'][0]['effectTypes'].get('effect2'))).toBe(6);
-      expect(Number(res['studies'][0]['personSets'][1]['effectTypes'].get('effect3'))).toBe(7);
-      expect(Number(res['studies'][0]['personSets'][1]['effectTypes'].get('effect4'))).toBe(8);
+      expect(deepEqual(res, geneMock1)).toBeTrue();
+      expect(res['genomicScores'][0]['scores'].get('score11')).toBe('11');
+      expect(res['genomicScores'][0]['scores'].get('score12')).toBe('12');
     });
   });
 
@@ -151,29 +239,15 @@ describe('AutismGeneProfilesService', () => {
       [service['config'].baseUrl + service['genesUrl'] + '?page=1' + '&symbol=mockSearch' + '&sortBy=mockSort&order=desc']
     ]);
 
-    getGenesSpy.and.returnValue(of([geneMock, geneMock2]));
+    getGenesSpy.and.returnValue(of([geneMockJson1, geneMockJson2]));
     const resultGenes = service.getGenes(1);
     resultGenes.take(1).subscribe(res => {
-      expect(res[0]['geneSymbol']).toEqual('mockGene');
-      expect(res[0]['geneSets']).toEqual(['mockSet']);
-      expect(res[0]['protectionScores'].get('protectionScore1')).toBe(1);
-      expect(res[0]['protectionScores'].get('protectionScore2')).toBe(2);
-      expect(res[0]['autismScores'].get('autismScore1')).toBe(3);
-      expect(res[0]['autismScores'].get('autismScore2')).toBe(4);
-      expect(Number(res[0]['studies'][0]['personSets'][0]['effectTypes'].get('effect1'))).toBe(5);
-      expect(Number(res[0]['studies'][0]['personSets'][0]['effectTypes'].get('effect2'))).toBe(6);
-      expect(Number(res[0]['studies'][0]['personSets'][1]['effectTypes'].get('effect3'))).toBe(7);
-      expect(Number(res[0]['studies'][0]['personSets'][1]['effectTypes'].get('effect4'))).toBe(8);
-      expect(res[1]['geneSymbol']).toEqual('mockGene2');
-      expect(res[1]['geneSets']).toEqual(['mockSet']);
-      expect(res[1]['protectionScores'].get('protectionScore1')).toBe(9);
-      expect(res[1]['protectionScores'].get('protectionScore2')).toBe(10);
-      expect(res[1]['autismScores'].get('autismScore1')).toBe(11);
-      expect(res[1]['autismScores'].get('autismScore2')).toBe(12);
-      expect(Number(res[1]['studies'][0]['personSets'][0]['effectTypes'].get('effect1'))).toBe(13);
-      expect(Number(res[1]['studies'][0]['personSets'][0]['effectTypes'].get('effect2'))).toBe(14);
-      expect(Number(res[1]['studies'][0]['personSets'][1]['effectTypes'].get('effect3'))).toBe(15);
-      expect(Number(res[1]['studies'][0]['personSets'][1]['effectTypes'].get('effect4'))).toBe(16);
+      expect(deepEqual(res[0], geneMock1)).toBeTrue();
+      expect(res[0]['genomicScores'][0]['scores'].get('score11')).toBe('11');
+      expect(res[0]['genomicScores'][0]['scores'].get('score12')).toBe('12');
+      expect(deepEqual(res[1], geneMock2)).toBeTrue();
+      expect(res[1]['genomicScores'][0]['scores'].get('score21')).toBe('21');
+      expect(res[1]['genomicScores'][0]['scores'].get('score22')).toBe('22');
     });
   });
 });

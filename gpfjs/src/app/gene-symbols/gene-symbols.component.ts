@@ -11,9 +11,6 @@ import { StateRestoreService } from '../store/state-restore.service';
 })
 export class GeneSymbolsComponent extends QueryStateWithErrorsProvider implements OnInit {
   geneSymbols = new GeneSymbols();
-  matchingGeneSymbols: string[] = [];
-  searchString = '';
-  searchKeystrokes$: Subject<string> = new Subject();
 
   constructor(
     private stateRestoreService: StateRestoreService,
@@ -41,12 +38,7 @@ export class GeneSymbolsComponent extends QueryStateWithErrorsProvider implement
         if (result.length === 0) {
           return {};
         }
-
         return { geneSymbols: result };
       });
-  }
-
-  searchBoxChange(searchTerm: string) {
-    this.searchKeystrokes$.next(searchTerm.toUpperCase());
   }
 }

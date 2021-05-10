@@ -1,10 +1,10 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { AutismGeneToolConfig, AutismGeneToolGene } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import { AutismGeneToolConfig, AutismGeneToolGene, AutismGeneToolGeneSetsCategory, AutismGeneToolGenomicScoresCategory } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { Observable, zip } from 'rxjs';
 import { GeneWeightsService } from '../gene-weights/gene-weights.service';
 import { GeneWeights } from 'app/gene-weights/gene-weights';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
-import { mergeMap } from 'rxjs/operators';
+import { mergeMap, switchMap, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 
@@ -16,11 +16,10 @@ import { Location } from '@angular/common';
 export class AutismGeneProfileSingleViewComponent implements OnInit {
   @Input() readonly geneSymbol: string;
   @Input() config: AutismGeneToolConfig;
+  genomicScoresGeneWeights = [];
 
   gene$: Observable<AutismGeneToolGene>;
-  autismScoreGeneWeights: GeneWeights[];
-  protectionScoreGeneWeights: GeneWeights[];
-  geneSets: string[];
+  genomicScores: AutismGeneToolGenomicScoresCategory[];
 
   private _histogramOptions = {
     width: 525,
@@ -37,35 +36,44 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.geneSets = this.config['geneSets'];
     this.gene$ = this.autismGeneProfilesService.getGene(this.geneSymbol);
-    let autismScores: string;
-    let protectionScores: string;
+
     this.gene$.pipe(
-      mergeMap((res) => {
-        autismScores = [...res['autismScores'].keys()].join(',');
-        protectionScores = [...res['protectionScores'].keys()].join(',');
-        return zip(
-          this.geneWeightsService.getGeneWeights(autismScores),
-          this.geneWeightsService.getGeneWeights(protectionScores)
+      switchMap(gene => {
+        let scores: string;
+        const geneWeightsObservables = [];
+        for (let i = 0; i < gene['genomicScores'].length; i++) {
+          scores = [...gene['genomicScores'][i].scores.keys()].join(',');
+          geneWeightsObservables.push(
+            this.geneWeightsService.getGeneWeights(scores)
+          );
+        }
+        return Observable.zip(...geneWeightsObservables).pipe(
+          tap(geneWeightsArray => {
+            for (let k = 0; k < geneWeightsArray.length; k++) {
+              this.genomicScoresGeneWeights.push({
+                category: gene['genomicScores'][k].category,
+                scores: geneWeightsArray[k]
+              });
+            }
+          })
         );
-      }),
-    ).subscribe(res => {
-      this.autismScoreGeneWeights = res[0];
-      this.protectionScoreGeneWeights = res[1];
-    });
+      })
+    ).subscribe();
   }
 
   formatScoreName(score: string) {
     return score.split('_').join(' ');
   }
 
-  getAutismScoreGeneWeight(autismScoreKey: string): GeneWeights {
-    return this.autismScoreGeneWeights.find(weight => weight.weight === autismScoreKey);
+  getGeneWeightByKey(category: string, key: string): GeneWeights {
+    return this.genomicScoresGeneWeights
+      .find(genomicScoresCategory => genomicScoresCategory.category === category).scores
+      .find(score => score.weight === key);
   }
 
-  getProtectionScoreGeneWeight(protectionScoreKey: string): GeneWeights {
-    return this.protectionScoreGeneWeights.find(weight => weight.weight === protectionScoreKey);
+  getSingleScoreValue(genomicScores, category: string, score: string) {
+    return genomicScores.find(cat => cat['category'] === category)['scores'].get(score);
   }
 
   get histogramOptions() {
@@ -78,7 +86,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     }
 
     const dataset = this.config['defaultDataset'];
-    let pathname = this.router.createUrlTree(['datasets', dataset, 'geneBrowser', this.geneSymbol]).toString();
+    let pathname = this.router.createUrlTree(['datasets', dataset, 'gene-browser', this.geneSymbol]).toString();
 
     pathname = this.location.prepareExternalUrl(pathname);
 

@@ -32,16 +32,18 @@ describe('AutismGeneProfileSingleViewComponent', () => {
 
   it('should initialize', () => {
     (component as any).geneSymbol = 'mockGeneSymbol';
-    component.config = {geneSets: ['mockGeneSet']} as any;
     const getGeneSpy = spyOn(component['autismGeneProfilesService'], 'getGene');
-    const mockAutismScores = new Map();
-    mockAutismScores.set('fakeAutismScore', 1);
-    const mockProtectionScores = new Map();
-    mockProtectionScores.set('fakeProtectionScore', 2);
+    const fakeScores1 = new Map();
+    fakeScores1.set('fakeScore1', 1);
+    const fakeScores2 = new Map();
+    fakeScores2.set('fakeScore2', 1);
+    const mockGenomicScores = [
+      {category: 'fakeGenomicScore1', scores: fakeScores1},
+      {category: 'fakeGenomicScore2', scores: fakeScores2}
+    ];
 
     const geneMock = of({
-      autismScores: mockAutismScores,
-      protectionScores: mockProtectionScores
+      genomicScores: mockGenomicScores
     } as any);
     getGeneSpy.and.returnValue(geneMock);
 
@@ -49,15 +51,16 @@ describe('AutismGeneProfileSingleViewComponent', () => {
     getGeneWeightsSpy.and.returnValue(of('fakeWeight' as any));
 
     component.ngOnInit();
-    expect(component.geneSets).toEqual(['mockGeneSet']);
     expect(component['gene$']).toEqual(geneMock);
     expect(getGeneSpy).toHaveBeenCalledWith('mockGeneSymbol');
     expect(getGeneWeightsSpy.calls.allArgs()).toEqual([
-      ['fakeAutismScore'],
-      ['fakeProtectionScore']
+      ['fakeScore1'],
+      ['fakeScore2']
     ]);
-    expect(component['autismScoreGeneWeights']).toEqual('fakeWeight' as any);
-    expect(component['protectionScoreGeneWeights']).toEqual('fakeWeight' as any);
+    expect(component['genomicScoresGeneWeights']).toEqual([
+      {category: 'fakeGenomicScore1', scores: 'fakeWeight'},
+      {category: 'fakeGenomicScore2', scores: 'fakeWeight' }
+    ] as any);
   });
 
   it('should format score name', () => {
@@ -65,29 +68,15 @@ describe('AutismGeneProfileSingleViewComponent', () => {
   });
 
   it('should get autism score gene weight', () => {
-    component['autismScoreGeneWeights'] = [
-      {weight: 'weight1'},
-      {weight: 'weight2'},
-      {weight: 'weight3'},
-      {weight: 'weight4'},
-    ] as any;
-    expect(component.getAutismScoreGeneWeight('weight1')).toEqual({weight: 'weight1'} as any);
-    expect(component.getAutismScoreGeneWeight('weight2')).toEqual({weight: 'weight2'} as any);
-    expect(component.getAutismScoreGeneWeight('weight3')).toEqual({weight: 'weight3'} as any);
-    expect(component.getAutismScoreGeneWeight('weight4')).toEqual({weight: 'weight4'} as any);
-  });
-
-  it('should get protection score gene weight', () => {
-    component['protectionScoreGeneWeights'] = [
-      {weight: 'weight1'},
-      {weight: 'weight2'},
-      {weight: 'weight3'},
-      {weight: 'weight4'},
-    ] as any;
-    expect(component.getProtectionScoreGeneWeight('weight1')).toEqual({weight: 'weight1'} as any);
-    expect(component.getProtectionScoreGeneWeight('weight2')).toEqual({weight: 'weight2'} as any);
-    expect(component.getProtectionScoreGeneWeight('weight3')).toEqual({weight: 'weight3'} as any);
-    expect(component.getProtectionScoreGeneWeight('weight4')).toEqual({weight: 'weight4'} as any);
+    const mocksWeights = [
+      {category: 'autismScore', scores: [{weight: 'weight1'}, {weight: 'weight2'}]},
+      {category: 'protectionScore', scores: [{weight: 'weight3'}, {weight: 'weight4'}]},
+    ];
+    component['genomicScoresGeneWeights'] = mocksWeights as any;
+    expect(component.getGeneWeightByKey('autismScore', 'weight1')).toEqual({weight: 'weight1'} as any);
+    expect(component.getGeneWeightByKey('autismScore', 'weight2')).toEqual({weight: 'weight2'}as any);
+    expect(component.getGeneWeightByKey('protectionScore', 'weight3')).toEqual({weight: 'weight3'} as any);
+    expect(component.getGeneWeightByKey('protectionScore', 'weight4')).toEqual({weight: 'weight4'} as any);
   });
 
   it('should get histogram options', () => {
@@ -102,7 +91,7 @@ describe('AutismGeneProfileSingleViewComponent', () => {
     component.config = {defaultDataset: 'fakeDataset'} as any;
     (component as any).geneSymbol = 'fakeGeneSymbol';
     expect(component.geneBrowserUrl.substring(component.geneBrowserUrl.indexOf('/datasets'))).toEqual(
-      '/datasets/fakeDataset/geneBrowser/fakeGeneSymbol'
+      '/datasets/fakeDataset/gene-browser/fakeGeneSymbol'
     );
   });
 });

@@ -167,12 +167,9 @@ import { PersonFiltersBlockComponent } from './person-filters-block/person-filte
 import { PersonIdsComponent } from './person-ids/person-ids.component';
 import { FamilyTypeFilterComponent } from './family-type-filter/family-type-filter.component';
 import { SortingButtonsComponent } from './sorting-buttons/sorting-buttons.component';
+import { AutismGeneProfileSingleViewWrapperComponent } from './autism-gene-profile-single-view-wrapper/autism-gene-profile-single-view-wrapper.component';
 
 const appRoutes: Routes = [
-  {
-    path: 'pedigrees',
-    component: NonPdpPedigreesComponent
-  },
   {
     path: 'datasets',
     component: DatasetsComponent
@@ -186,42 +183,46 @@ const appRoutes: Routes = [
     canLoad: [DatasetPermissionGuard],
     children: [
       {
-        path: 'browser',
+        path: 'genotype-browser',
         component: GenotypeBrowserSingleViewComponent
       },
       {
-        path: 'enrichment',
+        path: 'enrichment-tool',
         component: EnrichmentToolComponent
       },
       {
-        path: 'phenoTool',
+        path: 'phenotype-tool',
         component: PhenoToolComponent
       },
       {
-        path: 'phenotypeBrowser',
+        path: 'phenotype-browser',
         component: PhenoBrowserComponent
       },
       {
-        path: 'description',
+        path: 'dataset-description',
         component: DatasetDescriptionComponent
       },
       {
-        path: 'commonReport',
+        path: 'dataset-statistics',
         component: VariantReportsComponent
       },
       {
-        path: 'geneBrowser',
+        path: 'gene-browser',
         component: GeneBrowserComponent
       },
       {
-        path: 'geneBrowser/:gene',
+        path: 'gene-browser/:gene',
         component: GeneBrowserComponent
       }
     ]
   },
   {
-    path: 'autismGeneProfiles',
+    path: 'autism-gene-profiles',
     component: AutismGeneProfilesBlockComponent
+  },
+  {
+    path: 'autism-gene-profiles/:gene',
+    component: AutismGeneProfileSingleViewWrapperComponent
   },
   {
     path: 'management',
@@ -259,7 +260,7 @@ const appRoutes: Routes = [
     component: LoadQueryComponent
   },
   {
-    path: 'queries',
+    path: 'saved-queries',
     component: SavedQueriesComponent
   },
   {
@@ -379,6 +380,7 @@ const appRoutes: Routes = [
     PersonIdsComponent,
     FamilyTypeFilterComponent,
     SortingButtonsComponent,
+    AutismGeneProfileSingleViewWrapperComponent,
   ],
   imports: [
     BrowserModule,
