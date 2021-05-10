@@ -22,9 +22,11 @@ export const userData = {
 };
 
 export const datasetIds = {
-  compAll: 'comp_all',
+  allGenotypes: 'ALL Genotypes',
+  compGenotypes: 'COMP Genotypes',
   compDenovo: 'comp_denovo',
   compVcf: 'comp_vcf',
+  compAll: 'comp_all',
   iossifov2014: 'iossifov_2014',
   multi: 'multi'
 };
@@ -70,7 +72,7 @@ export class BasePage {
 
   loginAdmin() {
     this.login(this.adminUsername, this.adminPassword);
-    cy.wait(500);
+    cy.get('#logout-button').should('be.visible');
   }
 
   logout() {
@@ -80,8 +82,9 @@ export class BasePage {
 
   navigateToDatasetPage(dataset: string, page: string) {
     cy.get('#datasets-dropdown-menu-button').click();
-    cy.get('a.dropdown-item').contains(dataset).click();
-    cy.wait(500);
+    cy.get('a.dropdown-item[style="opacity: 1;"]').should('have.length', Object.keys(datasetIds).length);
+    cy.get('a.dropdown-item[style="opacity: 1;"]').contains(dataset).click();
+    cy.get('#datasets-dropdown-menu-button').should('have.text', dataset + ' ');
     cy.get(`a.nav-link[routerlink="${page}"]`).click();
   }
 
