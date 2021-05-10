@@ -41,9 +41,9 @@ function main() {
   build_run echo ng test -- --no-watch --no-progress --code-coverage --browsers=ChromeHeadlessCI || true
   build_stage "Clean and package"
   build_run echo rm -rf dist/
-	build_run echo ng build --prod --aot --configuration 'default' --base-href '/gpf_prefix/' --deploy-url '/gpf_prefix/'
-	build_stage "ppindex"
-	build_run echo ppindex.py
+  build_run echo ng build --prod --aot --configuration 'default' --base-href '/gpf_prefix/' --deploy-url '/gpf_prefix/'
+  build_stage "ppindex"
+  build_run echo ppindex.py
 
 }
 
