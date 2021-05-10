@@ -3,6 +3,11 @@ from . import views
 
 urlpatterns = [
     url(
+        r"^/(?P<dataset_id>.+)/all/?$",
+        views.ListAllDetailsView.as_view(),
+        name="list_all_details",
+    ),
+    url(
         r"^/(?P<dataset_id>.+)/(?P<family_id>.+)/members/all/?$",
         views.AllMemberDetailsView.as_view(),
         name="all_member_details",

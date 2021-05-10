@@ -442,12 +442,13 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
     def _load_families(self):
         families = dict()
-        family_ids = self.rest_client.get_families(self._remote_study_id)
-        for family_id in family_ids:
+        families_details = self.rest_client.get_all_family_details(
+            self._remote_study_id
+        )
+        for family in families_details:
+            family_id = family["family_id"]
+            person_jsons = family["members"]
             family_members = []
-            person_jsons = self.rest_client.get_all_member_details(
-                self._remote_study_id, family_id
-            )
             for person_json in person_jsons:
                 family_members.append(Person(**person_json))
             families[family_id] = Family.from_persons(family_members)

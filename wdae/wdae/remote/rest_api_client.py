@@ -497,3 +497,13 @@ class RESTClient:
             return None
 
         return response.json()
+
+    def get_all_family_details(self, dataset_id):
+        response = self._get(
+            f"families/{dataset_id}/all"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
