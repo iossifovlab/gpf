@@ -61,9 +61,9 @@ class FamilyType(Enum):
 class Person(object):
     def __init__(self, **attributes):
         self._attributes = attributes
-        self.rebuild()
+        self.redefine()
 
-    def rebuild(self):
+    def redefine(self):
         assert "person_id" in self._attributes
         self.family_id = self._attributes["family_id"]
         self.family = None
@@ -255,6 +255,14 @@ class Family(object):
         assert all([p.family is not None for p in family.persons.values()])
 
         return family
+
+    @staticmethod
+    def from_records(records):
+        persons = []
+        for rec in records:
+            person = Person(**rec)
+            persons.append(person)
+        return Family.from_persons(persons)
 
     def __len__(self):
         return len(self.members_in_order)
