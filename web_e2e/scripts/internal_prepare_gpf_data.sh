@@ -244,7 +244,7 @@ sets = [
 ]
 
 [[gene_sets]]
-category = "relevent_gene_sets"
+category = "relevant_gene_sets"
 display_name = "Relevant Gene Sets"
 
 sets = [
