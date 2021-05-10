@@ -231,8 +231,13 @@ export class GenotypeBrowser {
     if (this.previewCols === undefined) {
       this.previewCols = [];
       for (const previewColumn of this.previewColumnsIds) {
-        const column: any = this.allColumns.filter(col => col.id === previewColumn)[0];
-        this.previewCols.push(column);
+        const columnResult: any = Object.values(this.columns).filter(col => col.id === previewColumn);
+        const columnGroupsResult: any = Object.values(this.columnGroups).filter(col => col.id === previewColumn);
+        if (columnGroupsResult.length !== 0) {
+          this.previewCols.push(columnGroupsResult[0]);
+        } else {
+          this.previewCols.push(columnResult[0]);
+        }
       }
       console.log(this.previewCols);
     }
