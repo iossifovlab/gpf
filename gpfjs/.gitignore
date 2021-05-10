@@ -46,3 +46,6 @@ Thumbs.db
 
 # npm package-lock
 package-lock.json
+
+# build scripts
+/build-env
