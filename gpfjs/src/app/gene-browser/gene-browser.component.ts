@@ -239,19 +239,14 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
           return;
         }
         this.selectedGene = gene;
-        this.genotypePreviewInfo = null;
         this.hideResults = false;
         this.loadingFinished = false;
         this.loadingService.setLoadingStart();
         return combineLatest(
           of(state),
-          this.queryService.getGenotypePreviewInfo(
-            { datasetId: this.selectedDatasetId, peopleGroup: state['peopleGroup'] }
-          )
         );
       })
-    ).subscribe(([state, genotypePreviewInfo]) => {
-      this.genotypePreviewInfo = genotypePreviewInfo;
+    ).subscribe(([state]) => {
       this.genotypePreviewVariantsArray = null;
 
       this.genotypeBrowserState = state;
