@@ -510,7 +510,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
         assert fam_id_idx >= 0, fam_id_idx
 
         response = self.rest_client.post_query_variants(
-            kwargs, reduceAlleles=True
+            kwargs, reduceAlleles=False
         )
         for variant in response:
             fam_id = variant[fam_id_idx][0]
