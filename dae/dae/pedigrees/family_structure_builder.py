@@ -1,6 +1,6 @@
 import logging
 
-from dae.variants.attributes import Role
+from dae.variants.attributes import Role, Sex
 
 
 logger = logging.getLogger(__name__)
@@ -33,6 +33,12 @@ class FamilyStructureBuilder:
         children = self._get_persons_with_role(set([Role.prb, Role.sib]))
         mom = self._get_person_with_role(Role.mom)
         dad = self._get_person_with_role(Role.dad)
+
+        if mom:
+            assert mom.sex == Sex.F
+        if dad:
+            assert dad.sex == Sex.M
+
         for child in children:
             child._attributes["mom_id"] = \
                 mom.person_id if mom is not None else None
