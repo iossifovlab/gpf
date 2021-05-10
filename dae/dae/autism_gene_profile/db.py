@@ -22,7 +22,7 @@ class AutismGeneProfileDB:
         self.configuration = self._build_configuration(configuration)
         self.build_gene_profile_db(clear)
         self._agp_view = None
-        if self.cache_table_exists():
+        if self.cache_table_exists() and False:
             self.cache_table = self._create_db_cache_table(autoload=True)
 
     @property

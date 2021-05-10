@@ -1,6 +1,6 @@
 import math
 from copy import copy, deepcopy
-from typing import List
+from typing import List, Dict
 
 from dae.variants.variant import SummaryAllele, SummaryVariant
 
@@ -55,8 +55,6 @@ class RemoteAllele(SummaryAllele):
         self.columns = SUMMARY_COLUMNS
         self.attributes_list = attributes_list
         self.idx = idx
-        print(self.attributes_list)
-        print(self._find_attribute("alternative"))
 
         end_position = self._find_attribute("end_position")
         end_position = int(end_position) \
@@ -128,9 +126,13 @@ class RemoteVariant(SummaryVariant):
 
 class RemoteFamilyVariant(FamilyVariant):
     def __init__(
-        self, attributes_list: List, family: Family
+        self, attributes_list: List, family: Family,
+        additional_columns: List[Dict[str, str]] = []
     ):
-        self.columns = COLUMNS
+        self.columns = [
+            c["source"] for c in additional_columns
+        ] if additional_columns else COLUMNS
+
         self.attributes_list = attributes_list
         allele_count = len(self.attributes_list[0])
         remote_alleles = []
@@ -143,6 +145,9 @@ class RemoteFamilyVariant(FamilyVariant):
         self.summary_variant = RemoteVariant(copy(self.attributes_list))
         ref_allele = RemoteAllele.create_reference_allele(remote_alleles[0])
         remote_alleles.insert(0, ref_allele)
+
+        self._remote_alleles = remote_alleles
+
         super().__init__(
             self.summary_variant, family,
             str2fgt(genotype), str2mat(best_state)
@@ -150,4 +155,4 @@ class RemoteFamilyVariant(FamilyVariant):
 
     @property
     def alt_alleles(self):
-        return self.summary_variant.alt_alleles
+        return self._remote_alleles[1:]

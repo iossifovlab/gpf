@@ -479,7 +479,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
         people_group = kwargs.get("peopleGroup", {})
 
         # person_set_collection = self.get_person_set_collection(
-            # people_group.get("id")  # person_set_collection_id
+        #   people_group.get("id")  # person_set_collection_id
         # )
 
         if study_filters is not None:
@@ -515,12 +515,11 @@ class RemoteStudyWrapper(StudyWrapperBase):
         for variant in response:
             fam_id = variant[fam_id_idx][0]
             family = self.families.get(fam_id)
-            fv = RemoteFamilyVariant(variant, family)
+            fv = RemoteFamilyVariant(variant, family, new_sources)
 
             row_variant = self.response_transformer._build_variant_row(
-                fv, new_sources
+                fv, sources
             )
-
             yield row_variant
 
     def build_genotype_data_group_description(self, gpf_instance):
