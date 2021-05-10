@@ -19,7 +19,9 @@ export class AutismGeneToolConfig {
 
   static datasetsFromJson(datasetsJson): Array<AutismGeneToolDataset> {
     const datasetKeys = Object.keys(datasetsJson);
-    return datasetKeys.map(dataset => new AutismGeneToolDataset(dataset, datasetsJson[dataset]['effects'], datasetsJson[dataset]['person_sets']));
+    return datasetKeys.map(dataset => new AutismGeneToolDataset(
+      dataset, datasetsJson[dataset]['name'], datasetsJson[dataset]['effects'], datasetsJson[dataset]['person_sets'])
+    );
   }
 
   static geneSetsCategoriesFromJson(geneSetsCategoriesJson): Array<AutismGeneToolGeneSetsCategory> {
@@ -107,6 +109,7 @@ export class AutismGeneToolScore {
 
 export class AutismGeneToolDataset {
   constructor(
+    private id: string,
     private name: string,
     private effects: string[],
     private personSets: string[],

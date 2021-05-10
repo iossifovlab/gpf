@@ -3,7 +3,9 @@ import { GeneService } from 'app/gene-view/gene.service';
 import { Gene, GeneViewSummaryAllelesArray, DomainRange } from 'app/gene-view/gene';
 import { GenotypePreviewVariantsArray, GenotypePreviewInfo } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
+// tslint:disable-next-line:import-blacklist
 import { Observable, of, combineLatest } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { ActivatedRoute, Params } from '@angular/router';
@@ -105,7 +107,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   }
 
   ngAfterViewInit(): void {
-    this.selectedDataset$.subscribe(dataset => {
+    this.datasetsService.getDataset(this.selectedDatasetId).subscribe(dataset => {
       if (dataset.accessRights && this.route.snapshot.params.gene) {
         this.waitForGeneViewComponent().then(() => {
           this.stateRestoreService.pushNewState({'geneSymbols': [this.route.snapshot.params.gene]});
@@ -215,34 +217,37 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
       this.familyLoadingFinished = true;
     });
 
-    this.getCurrentState().switchMap(state => {
-      let geneObservable: Observable<Gene>;
-      if (state['geneSymbols']) {
-        this.geneSymbol = state['geneSymbols'][0];
-        geneObservable = this.geneService.getGene(this.geneSymbol.toUpperCase().trim());
-      } else {
-        this.geneSymbol = undefined;
-        geneObservable = of();
-      }
-      return combineLatest(
-        of(state), geneObservable
-      )
-    }).switchMap(([state, gene]) => {
-      if (gene === undefined) {
-        return;
-      }
-      this.selectedGene = gene;
-      this.genotypePreviewInfo = null;
-      this.hideResults = false;
-      this.loadingFinished = false;
-      this.loadingService.setLoadingStart();
-      return combineLatest(
-        of(state),
-        this.queryService.getGenotypePreviewInfo(
-          { datasetId: this.selectedDatasetId, peopleGroup: state['peopleGroup'] }
-        )
-      )
-    }).subscribe(([state, genotypePreviewInfo]) => {
+    this.getCurrentState().pipe(
+      switchMap(state => {
+        let geneObservable: Observable<Gene>;
+        if (state['geneSymbols']) {
+          this.geneSymbol = state['geneSymbols'][0];
+          geneObservable = this.geneService.getGene(this.geneSymbol.toUpperCase().trim());
+        } else {
+          this.geneSymbol = undefined;
+          geneObservable = of();
+        }
+        return combineLatest(
+          of(state), geneObservable
+        );
+      }),
+      switchMap(([state, gene]) => {
+        if (gene === undefined) {
+          return;
+        }
+        this.selectedGene = gene;
+        this.genotypePreviewInfo = null;
+        this.hideResults = false;
+        this.loadingFinished = false;
+        this.loadingService.setLoadingStart();
+        return combineLatest(
+          of(state),
+          this.queryService.getGenotypePreviewInfo(
+            { datasetId: this.selectedDatasetId, peopleGroup: state['peopleGroup'] }
+          )
+        );
+      })
+    ).subscribe(([state, genotypePreviewInfo]) => {
       this.genotypePreviewInfo = genotypePreviewInfo;
       this.genotypePreviewVariantsArray = null;
 

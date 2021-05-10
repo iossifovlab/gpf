@@ -30,35 +30,38 @@ describe('AutismGeneProfileSingleViewComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  // it('should initialize', () => {
-  //   (component as any).geneSymbol = 'mockGeneSymbol';
-  //   component.config = {geneSets: ['mockGeneSet']} as any;
-  //   const getGeneSpy = spyOn(component['autismGeneProfilesService'], 'getGene');
-  //   const mockAutismScores = new Map();
-  //   mockAutismScores.set('fakeAutismScore', 1);
-  //   const mockProtectionScores = new Map();
-  //   mockProtectionScores.set('fakeProtectionScore', 2);
+  it('should initialize', () => {
+    (component as any).geneSymbol = 'mockGeneSymbol';
+    const getGeneSpy = spyOn(component['autismGeneProfilesService'], 'getGene');
+    const fakeScores1 = new Map();
+    fakeScores1.set('fakeScore1', 1);
+    const fakeScores2 = new Map();
+    fakeScores2.set('fakeScore2', 1);
+    const mockGenomicScores = [
+      {category: 'fakeGenomicScore1', scores: fakeScores1},
+      {category: 'fakeGenomicScore2', scores: fakeScores2}
+    ];
 
-  //   const geneMock = of({
-  //     autismScores: mockAutismScores,
-  //     protectionScores: mockProtectionScores
-  //   } as any);
-  //   getGeneSpy.and.returnValue(geneMock);
+    const geneMock = of({
+      genomicScores: mockGenomicScores
+    } as any);
+    getGeneSpy.and.returnValue(geneMock);
 
-  //   const getGeneWeightsSpy = spyOn(component['geneWeightsService'], 'getGeneWeights');
-  //   getGeneWeightsSpy.and.returnValue(of('fakeWeight' as any));
+    const getGeneWeightsSpy = spyOn(component['geneWeightsService'], 'getGeneWeights');
+    getGeneWeightsSpy.and.returnValue(of('fakeWeight' as any));
 
-  //   component.ngOnInit();
-  //   expect(component.geneSets).toEqual(['mockGeneSet']);
-  //   expect(component['gene$']).toEqual(geneMock);
-  //   expect(getGeneSpy).toHaveBeenCalledWith('mockGeneSymbol');
-  //   expect(getGeneWeightsSpy.calls.allArgs()).toEqual([
-  //     ['fakeAutismScore'],
-  //     ['fakeProtectionScore']
-  //   ]);
-  //   expect(component['autismScoreGeneWeights']).toEqual('fakeWeight' as any);
-  //   expect(component['protectionScoreGeneWeights']).toEqual('fakeWeight' as any);
-  // });
+    component.ngOnInit();
+    expect(component['gene$']).toEqual(geneMock);
+    expect(getGeneSpy).toHaveBeenCalledWith('mockGeneSymbol');
+    expect(getGeneWeightsSpy.calls.allArgs()).toEqual([
+      ['fakeScore1'],
+      ['fakeScore2']
+    ]);
+    expect(component['genomicScoresGeneWeights']).toEqual([
+      {category: 'fakeGenomicScore1', scores: 'fakeWeight'},
+      {category: 'fakeGenomicScore2', scores: 'fakeWeight' }
+    ] as any);
+  });
 
   it('should format score name', () => {
     expect(component.formatScoreName('fake_score_name')).toEqual('fake score name');

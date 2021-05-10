@@ -205,6 +205,9 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     });
 
     this.streamingFinished$.subscribe(() => {
+      if (this.gene === undefined) {
+        return;
+      }
       this.geneViewModel = new GeneViewModel(this.gene, this.svgWidth);
       this.geneViewTranscript = new GeneViewTranscript(this.gene.transcripts[0]);
       this.setDefaultScale();
@@ -1129,7 +1132,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     } else if (numLen < 7) {
       result = `${Math.round(exonsLength / 100 + Number.EPSILON) / 10} kbp`;
     } else {
-      result = `${Math.round(exonsLength / 10000 + Number.EPSILON) / 10} mbp`;
+      result = `${Math.round(exonsLength / 100000 + Number.EPSILON) / 10} mbp`;
     }
 
     return '~' + result;

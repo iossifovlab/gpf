@@ -51,25 +51,30 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
 
   @HostListener('window:scroll', ['$event'])
   onWindowScroll() {
-    const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
-    const totalScrollHeight = document.documentElement.scrollHeight;
+    if (this.isTableVisible) {
+      const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
+      const totalScrollHeight = document.documentElement.scrollHeight;
 
-    if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
-      this.updateGenes();
+      if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
+        this.updateGenes();
+      }
+
+      this.updateModalBottom();
     }
-
-    this.updateModalBottom();
   }
 
   @HostListener('window:resize', ['$event'])
   onResize() {
-    this.updateModalBottom();
+    if (this.isTableVisible) {
+      this.updateModalBottom();
+    }
   }
 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
     private renderer: Renderer2,
     private cdr: ChangeDetectorRef,
+    private ref: ElementRef,
   ) { }
 
   /**
@@ -80,12 +85,14 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     this.shownGeneSetsCategories = cloneDeep(this.config['geneSets']);
     this.shownGenomicScoresCategories = cloneDeep(this.config['genomicScores']);
 
+    this.sortBy = `${this.shownGeneSetsCategories[0]['category']}_rank`;
+    this.orderBy = 'desc';
+    this.currentSortingColumnId = this.sortBy
     this.autismGeneProfilesService.getGenes(
-      this.pageIndex, undefined, `${this.shownGeneSetsCategories[0]['category']}_rank`, 'desc'
+      this.pageIndex, undefined, this.sortBy, this.orderBy
     ).take(1).subscribe(res => {
       this.genes = this.genes.concat(res);
     });
-    this.currentSortingColumnId = `${this.shownGeneSetsCategories[0]['category']}_rank`;
 
     this.searchKeystrokes$
       .debounceTime(250)
@@ -111,6 +118,10 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
       return sortingButtonsComponent.id === `${this.shownGeneSetsCategories[0]['category']}_rank`;
     });
     firstSortingButton.hideState = 1;
+  }
+
+  get isTableVisible(): boolean {
+    return !this.ref.nativeElement.hidden;
   }
 
   /**

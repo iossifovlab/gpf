@@ -44,6 +44,7 @@ const configurationMockJson = {
   ],
   'datasets': {
     'mockDataset': {
+      'name': 'Mock Dataset',
       'effects': [
         'effect1',
         'effect2',
@@ -92,7 +93,9 @@ const configurationMock = {
     }
   ],
   datasets : [
-    {name: 'mockDataset',
+    {
+      id: 'mockDataset',
+      name: 'Mock Dataset',
       effects : [
         'effect1',
         'effect2',

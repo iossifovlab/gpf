@@ -73,7 +73,7 @@
           <ng-container *ngFor="let personSet of dataset.personSets">
             <td *ngFor="let effectType of dataset.effects" class="effect-type-header">
               {{effectType}}
-              <gpf-sorting-buttons [id]="dataset.name + '_' + personSet + '_' + effectType" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
+              <gpf-sorting-buttons [id]="dataset.id + '_' + personSet + '_' + effectType" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
             </td>
           </ng-container>
         </ng-container>
@@ -88,7 +88,7 @@
 
         <ng-container *ngFor="let geneSetCategory of shownGeneSetsCategories">
           <td *ngFor="let geneSet of geneSetCategory['sets']">
-            <ng-container *ngIf="gene.geneSets.indexOf('main_' + geneSet['setId']) !== -1">&#10003;</ng-container>
+            <ng-container *ngIf="gene.geneSets.indexOf(geneSet['collectionId'] + '_' + geneSet['setId']) !== -1">&#10003;</ng-container>
           </td>
         </ng-container>
 
