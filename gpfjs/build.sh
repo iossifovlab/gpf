@@ -32,16 +32,16 @@ function main() {
   defer_ret build_run_reset ctx
 
   build_stage "Clean and fetch fresh dependencies"
-  build_run echo rm -rf node_modules package-lock.json
-  build_run echo npm install
+  build_run rm -rf node_modules package-lock.json
+  build_run npm install
   build_stage "Lint"
-  build_run echo ng lint --format checkstyle > ts-lint-report.xml || echo "tslint exited with $?"
-  build_run echo sed -i '$ d' ts-lint-report.xml
+  build_run ng lint --format checkstyle > ts-lint-report.xml || echo "tslint exited with $?"
+  build_run sed -i '$ d' ts-lint-report.xml
   build_stage "Tests"
-  build_run echo ng test -- --no-watch --no-progress --code-coverage --browsers=ChromeHeadlessCI || true
+  build_run ng test -- --no-watch --no-progress --code-coverage --browsers=ChromeHeadlessCI || true
   build_stage "Clean and package"
-  build_run echo rm -rf dist/
-  build_run echo ng build --prod --aot --configuration 'default' --base-href '/gpf_prefix/' --deploy-url '/gpf_prefix/'
+  build_run rm -rf dist/
+  build_run ng build --prod --aot --configuration 'default' --base-href '/gpf_prefix/' --deploy-url '/gpf_prefix/'
   build_stage "ppindex"
   build_run echo ppindex.py
 
