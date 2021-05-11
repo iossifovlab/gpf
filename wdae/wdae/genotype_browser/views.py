@@ -1,4 +1,4 @@
-from django.http.response import StreamingHttpResponse, FileResponse, HttpResponse
+from django.http.response import StreamingHttpResponse, FileResponse
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -14,6 +14,8 @@ from utils.logger import request_logging
 from query_base.query_base import QueryBaseView
 
 from gene_sets.expand_gene_set_decorator import expand_gene_set
+
+from studies.study_wrapper import StudyWrapperBase
 
 from datasets_api.permissions import \
     get_allowed_genotype_studies
@@ -55,8 +57,6 @@ class GenotypeBrowserQueryView(QueryBaseView):
             data = self._parse_query_params(data)
         dataset_id = data.pop("datasetId", None)
 
-        if "sources" not in data:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if "genomicScores" in data:
@@ -64,8 +64,6 @@ class GenotypeBrowserQueryView(QueryBaseView):
             for score in scores:
                 if score["rangeStart"] is None and score["rangeEnd"] is None:
                     return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        sources = data.pop("sources")
 
         is_download = data.pop("download", False)
 
@@ -77,6 +75,18 @@ class GenotypeBrowserQueryView(QueryBaseView):
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         user = request.user
+
+        if "sources" in data:
+            sources = data.pop("sources")
+        else:
+            # TODO Handle summary variant preview and download sources
+            if is_download:
+                cols = dataset.config.genotype_browser.download_columns
+            else:
+                cols = dataset.config.genotype_browser.preview_columns
+            sources = StudyWrapperBase.get_columns_as_sources(
+                dataset.config, cols
+            )
 
         handle_partial_permissions(user, dataset_id, data)
 

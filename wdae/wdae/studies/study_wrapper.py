@@ -24,6 +24,27 @@ class StudyWrapperBase(GenotypeData):
         super(StudyWrapperBase, self).__init__(config, config.get("studies"))
 
     @staticmethod
+    def get_columns_as_sources(config, column_ids):
+        column_groups = config.genotype_browser.column_groups
+        genotype_cols = config.genotype_browser.columns.get("genotype", {})
+        phenotype_cols = config.genotype_browser.columns.get("phenotype", {})
+        result = list()
+
+        for column_id in column_ids:
+            if column_id in column_groups:
+                source_cols = column_groups[column_id].columns
+            else:
+                source_cols = [column_id]
+
+            for source_col_id in source_cols:
+                if source_col_id in genotype_cols:
+                    result.append(dict(genotype_cols[source_col_id]))
+                elif source_col_id in phenotype_cols:
+                    result.append(dict(phenotype_cols[source_col_id]))
+
+        return result
+
+    @staticmethod
     def build_genotype_data_group_description(
         gpf_instance, config, description, person_set_collection_configs
     ):
@@ -66,16 +87,25 @@ class StudyWrapperBase(GenotypeData):
                 "present_in_role",
             ]
         }
+
+        # TODO Code below could be made a bit leaner and separated
         table_columns = list()
         for column in config.genotype_browser.preview_columns:
             if column in config.genotype_browser.column_groups:
-                table_columns.append(
-                    config.genotype_browser.column_groups[column]
+                new_col = dict(config.genotype_browser.column_groups[column])
+                new_col['columns'] = StudyWrapperBase.get_columns_as_sources(
+                    config, [column]  # FIXME Hacky way of using that method
                 )
+                table_columns.append(new_col)
             else:
-                table_columns.append(
-                    config.genotype_browser.columns[column]
-                )
+                if column in config.genotype_browser.columns.genotype:
+                    table_columns.append(
+                        dict(config.genotype_browser.columns.genotype[column])
+                    )
+                else:
+                    table_columns.append(
+                        dict(config.genotype_browser.columns.phenotype[column])
+                    )
         result["genotype_browser_config"]["table_columns"] = table_columns
 
         result["study_types"] = result["study_type"]
@@ -296,26 +326,6 @@ class StudyWrapper(StudyWrapperBase):
     def config_columns(self):
         return self.config.genotype_browser.columns
 
-    def get_columns_as_sources(self, column_ids):
-        column_groups = self.config.genotype_browser.column_groups
-        genotype_cols = self.config_columns.get("genotype", {})
-        phenotype_cols = self.config_columns.get("phenotype", {})
-        result = list()
-
-        for column_id in column_ids:
-            if column_id in column_groups:
-                source_cols = column_groups[column_id].columns
-            else:
-                source_cols = [column_id]
-
-            for source_col_id in source_cols:
-                if source_col_id in genotype_cols:
-                    result.append(genotype_cols[source_col_id])
-                elif source_col_id in phenotype_cols:
-                    result.append(phenotype_cols[source_col_id])
-
-        return result
-
     def query_variants_wdae(self, kwargs, sources, max_variants_count=10000):
         people_group = kwargs.get("peopleGroup", {})
 
@@ -430,8 +440,12 @@ class RemoteStudyWrapper(StudyWrapperBase):
         config = self.rest_client.get_dataset_config(self._remote_study_id)
         config["id"] = self.rest_client.prefix_remote_identifier(study_id)
         config["name"] = self.rest_client.prefix_remote_name(
-            config.get("name")
+            config.get("name", config["id"])
         )
+
+        # TODO FIXME Remove this once remote person sets are implemented
+        config["genotype_browser"]["has_pedigree_selector"] = False
+
         if config["parents"]:
             config["parents"] = list(
                 map(
@@ -479,6 +493,11 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
     def is_group(self):
         pass
+
+    @property
+    def person_set_collection_configs(self):
+        # TODO Implement me
+        return {}
 
     @property
     def config_columns(self):
