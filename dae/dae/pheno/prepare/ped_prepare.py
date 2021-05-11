@@ -1,6 +1,5 @@
 import os
 import re
-import traceback
 import logging
 from collections import defaultdict, OrderedDict
 
@@ -92,7 +91,7 @@ class PreparePersons(PrepareBase):
         assert set(self.PED_COLUMNS_REQUIRED) <= set(ped_df.columns)
         ped_df = self._prepare_families(ped_df)
         ped_df = self._prepare_persons(ped_df)
-        print(ped_df.columns)
+        logger.info(f"pedigree columns: {ped_df.columns}")
         return ped_df
 
     def _save_families(self, ped_df):
@@ -205,7 +204,7 @@ class ClassifyMeasureTask(Task):
 
     def run(self):
         try:
-            print("classifying measure {}".format(self.measure.measure_id))
+            logging.info("classifying measure {self.measure.measure_id}")
             values = self.mdf["value"]
             classifier = MeasureClassifier(self.config)
             self.classifier_report = classifier.meta_measures(values)
@@ -215,12 +214,8 @@ class ClassifyMeasureTask(Task):
             )
             self.build_meta_measure()
         except Exception:
-            print(
-                "problem processing measure: {}".format(
-                    self.measure.measure_id
-                )
-            )
-            traceback.print_exc()
+            logger.exception(
+                f"problem processing measure: {self.measure.measure_id}")
         return self
 
     def done(self):
@@ -257,15 +252,11 @@ class MeasureValuesTask(Task):
             v = {self.PERSON_ID: pid, "measure_id": measure_id, "value": value}
 
             if k in values:
-                print(
-                    "updating measure {} for person {} value {} "
-                    "with {}".format(
-                        measure.measure_id,
-                        record["person_id"],
-                        values[k]["value"],
-                        value,
-                    )
-                )
+                logger.info(
+                    f"updating measure {measure.measure_id} "
+                    f"for person {record['person_id']} value "
+                    f"{values[k]['value']} "
+                    f"with {value}")
             values[k] = v
         self.values = values
         return self
@@ -301,7 +292,7 @@ class PrepareVariables(PreparePersons):
             person_id = self.config.person.column
         else:
             person_id = df.columns[0]
-        print(f"Person ID: {person_id}")
+        logger.debug(f"Person ID: {person_id}")
         return person_id
 
     def load_instrument(self, instrument_name, filenames):
@@ -321,12 +312,12 @@ class PrepareVariables(PreparePersons):
             sep = "\t"
 
         for filename in filenames:
-            print("reading instrument:", filename)
+            logger.info(f"reading instrument: {filename}")
             df = pd.read_csv(
                 filename, sep=sep, low_memory=False, encoding="ISO-8859-1"
             )
             person_id = self._get_person_column_name(df)
-            print(
+            logging.info(
                 f"renaming column '{person_id}' to '{self.PERSON_ID}' "
                 f"in instrument: {instrument_name}"
             )
@@ -381,7 +372,7 @@ class PrepareVariables(PreparePersons):
 
     def log_measure(self, measure, classifier_report):
         classifier_report.set_measure(measure)
-        print(classifier_report.log_line(short=True))
+        logging.info(classifier_report.log_line(short=True))
 
         with open(self.log_filename, "a") as log:
             log.write(classifier_report.log_line())
@@ -399,15 +390,12 @@ class PrepareVariables(PreparePersons):
 
     def save_measure_values(self, measure, values):
         if len(values) == 0:
-            print(
-                "skiping measure {} without values".format(measure.measure_id)
+            logging.warning(
+                f"skiping measure {measure.measure_id} without values"
             )
             return
-        print(
-            "saving measure {} values {}".format(
-                measure.measure_id, len(values)
-            )
-        )
+        logging.info(
+            f"saving measure {measure.measure_id} values {len(values)}")
         value_table = self.db.get_value_table(measure.measure_type)
         ins = value_table.insert()
 
@@ -423,8 +411,13 @@ class PrepareVariables(PreparePersons):
                 basename = basename.lower()
                 res = regexp.match(basename)
                 if not res:
+                    logger.debug(
+                        f"filename {basename} is not an instrument; "
+                        f"skipping...")
                     continue
-                print(res.group("instrument"), res.group("ext"))
+                logger.debug(
+                    f"instrument matched: {res.group('instrument')}; "
+                    f"file extension: {res.group('ext')}")
                 instruments[res.group("instrument")].append(
                     os.path.abspath(os.path.join(root, filename))
                 )
@@ -448,17 +441,13 @@ class PrepareVariables(PreparePersons):
 
     def _augment_person_ids(self, df):
         persons = self.get_persons()
-        print(df.columns)
         pid = pd.Series(df.index)
         for index, row in df.iterrows():
             p = persons.get(row[self.PERSON_ID])
             if p is None:
                 pid[index] = np.nan
-                print(
-                    "measure for missing person: {}".format(
-                        row[self.PERSON_ID]
-                    )
-                )
+                logging.info(
+                    f"measure for missing person: {row[self.PERSON_ID]}")
             else:
                 assert p is not None
                 assert p.person_id == row[self.PERSON_ID]
@@ -517,11 +506,9 @@ class PrepareVariables(PreparePersons):
             measure, classifier_report, _mdf = task.done()
             self.log_measure(measure, classifier_report)
             if measure.measure_type == MeasureType.skipped:
-                print(
-                    "skip saving measure: {}; measurings: {}".format(
-                        measure.measure_id, classifier_report.count_with_values
-                    )
-                )
+                logging.info(
+                    f"skip saving measure: {measure.measure_id}; "
+                    f"measurings: {classifier_report.count_with_values}")
                 continue
             save_queue.put(task)
 

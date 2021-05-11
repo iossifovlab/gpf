@@ -6,6 +6,7 @@ pheno2dae -- prepares a DAE pheno DB cache
 """
 import sys
 import os
+import logging
 
 from argparse import ArgumentParser
 
@@ -17,6 +18,9 @@ from dae.pheno.common import (
     default_config,
 )
 from dae.pheno.prepare.ped_prepare import PrepareVariables
+
+
+logger = logging.getLogger(__name__)
 
 
 class CLIError(Exception):
@@ -116,11 +120,12 @@ USAGE
         # formatter_class=RawDescriptionHelpFormatter
         # formatter_class=ArgumentDefaultsHelpFormatter)
         parser.add_argument(
-            "-v",
+            "-V",
             "--verbose",
             dest="verbose",
             action="count",
             help="set verbosity level",
+            default=0
         )
         parser.add_argument(
             "-i",
@@ -264,6 +269,15 @@ USAGE
 
         # Process arguments
         args = parser.parse_args()
+
+        if args.verbose == 1:
+            logging.basicConfig(level=logging.WARNING)
+        elif args.verbose == 2:
+            logging.basicConfig(level=logging.INFO)
+        elif args.verbose >= 3:
+            logging.basicConfig(level=logging.DEBUG)
+        else:
+            logging.basicConfig(level=logging.ERROR)
 
         if not args.output and not args.report_only:
             raise CLIError("output filename should be specified")
