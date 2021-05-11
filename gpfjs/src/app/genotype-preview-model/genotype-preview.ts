@@ -43,7 +43,7 @@ export class PedigreeData {
 }
 
 const KEY_TO_MAPPER: Map<string, any> = new Map([
-  ['genotype', (arr: Array<Array<any>>) => arr.map((elem) => PedigreeData.fromArray(elem))]
+  ['pedigree', (arr: Array<Array<any>>) => arr.map((elem) => PedigreeData.fromArray(elem))]
 ]);
 
 export class GenotypePreview {
