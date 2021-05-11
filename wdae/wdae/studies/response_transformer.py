@@ -106,6 +106,9 @@ class ResponseTransformer:
         "effects":
         lambda v: [ge2str(e) for e in v.effects],
 
+        "raw_effects":
+        lambda v: [repr(e) for e in v.effects],
+
         "genes":
         lambda v: [gene_effect_get_genes(e) for e in v.effects],
 

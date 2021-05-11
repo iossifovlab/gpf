@@ -19,7 +19,7 @@ SUMMARY_QUERY_SOURCES = [
     {"source": "summary_index"},
     {"source": "allele_index"},
     {"source": "transmission_type"},
-    {"source": "effect"},
+    {"source": "raw_effects"},
     {"source": "effect_types"},
     {"source": "effect_genes"},
     {"source": "effect_gene_symbols"},
@@ -70,6 +70,7 @@ class RemoteAllele(SummaryAllele):
             end_position=end_position,
             summary_index=self._find_attribute("summary_index"),
             allele_index=self._find_attribute("allele_index"),
+            effect=self._find_attribute("raw_effects"),
             attributes=dict(zip(self.columns, self.attributes_list))
         )
 
@@ -105,6 +106,11 @@ class RemoteFamilyAllele(FamilyAllele):
         if source not in self.columns:
             return None
         return self.attributes_list[self.columns.index(source)][self.idx]
+
+    @property
+    def inheritance_in_members(self):
+        # TODO Implement this
+        return []
 
 
 class RemoteVariant(SummaryVariant):
