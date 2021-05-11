@@ -5,3 +5,4 @@ import
 package-lock.json
 cypress/screenshots
 cypress/videos
+results
