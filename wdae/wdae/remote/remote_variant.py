@@ -162,3 +162,7 @@ class RemoteFamilyVariant(FamilyVariant):
     @property
     def alt_alleles(self):
         return self._remote_alleles[1:]
+
+    @property
+    def family_genotype(self):
+        return self.gt.transpose()
