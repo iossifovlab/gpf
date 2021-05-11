@@ -440,11 +440,11 @@ class RemoteStudyWrapper(StudyWrapperBase):
         config = self.rest_client.get_dataset_config(self._remote_study_id)
         config["id"] = self.rest_client.prefix_remote_identifier(study_id)
         config["name"] = self.rest_client.prefix_remote_name(
-            config.get("name", config["id"])
+            config.get("name", self._remote_study_id)
         )
 
         # TODO FIXME Remove this once remote person sets are implemented
-        config["genotype_browser"]["has_pedigree_selector"] = False
+        # config["genotype_browser"]["has_pedigree_selector"] = False
 
         if config["parents"]:
             config["parents"] = list(
@@ -475,6 +475,10 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
         self._load_families()
 
+        self._person_set_collections = None
+
+        self._load_person_set_collections()
+
         self.response_transformer = ResponseTransformer(self)
 
     def _load_families(self):
@@ -491,13 +495,28 @@ class RemoteStudyWrapper(StudyWrapperBase):
             families[family_id] = Family.from_persons(family_members)
         self._families = FamiliesData.from_families(families)
 
+    def _load_person_set_collections(self):
+        person_set_collections = dict()
+
+        collections_json = self.rest_client.get_all_person_set_collections(
+            self._remote_study_id
+        )
+
+        for coll_json in collections_json:
+            psc = PersonSetCollection.from_json(coll_json, self._families)
+            print(repr(psc))
+            person_set_collections[psc.id] = psc
+
+        self._person_set_collections = person_set_collections
+
     def is_group(self):
         pass
 
     @property
     def person_set_collection_configs(self):
-        # TODO Implement me
-        return {}
+        return self.rest_client.get_person_set_collection_configs(
+            self._remote_study_id
+        )
 
     @property
     def config_columns(self):
@@ -520,9 +539,9 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
         people_group = kwargs.get("peopleGroup", {})
 
-        # person_set_collection = self.get_person_set_collection(
-        #   people_group.get("id")  # person_set_collection_id
-        # )
+        person_set_collection = self.get_person_set_collection(
+          people_group.get("id")  # person_set_collection_id
+        )
 
         if study_filters is not None:
             del kwargs["study_filters"]
@@ -563,3 +582,8 @@ class RemoteStudyWrapper(StudyWrapperBase):
                 fv, sources
             )
             yield row_variant
+
+    def get_person_set_collection(self, person_set_collection_id):
+        if person_set_collection_id is None:
+            return None
+        return self._person_set_collections[person_set_collection_id]

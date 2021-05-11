@@ -24,4 +24,5 @@ urlpatterns = [
     url(r"^api/v3/gene_view", include("gene_view.urls")),
     url(r"^api/v3/autism_gene_tool", include("autism_gene_profiles_api.urls")),
     url(r"^api/v3/families", include("family_api.urls")),
+    url(r"^api/v3/person_sets", include("person_sets_api.urls")),
 ]
