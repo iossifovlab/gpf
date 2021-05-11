@@ -1,4 +1,3 @@
-import { ErrorsAlertPage } from 'cypress/elements/errors-alert-page';
 import { FamilyFilterBlockPage } from 'cypress/elements/family-filter-block-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
@@ -25,14 +24,13 @@ describe('Family filters block tests', () => {
   });
 
   it('should display error alert in family ids panel when the textarea is empty', () => {
-    const errorsAlertPage = new ErrorsAlertPage();
     familyFilterBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
 
     familyFilterBlockPage.familyIdsButton.click();
-    errorsAlertPage.findAlertWindowInComponent('gpf-family-ids').should('be.visible');
+    familyFilterBlockPage.findErrorAlertInComponent('gpf-family-ids').should('be.visible');
 
     familyFilterBlockPage.familyIdsTextarea.type('f1');
-    errorsAlertPage.findAlertWindowInComponent('gpf-family-ids').should('not.exist');
+    familyFilterBlockPage.findErrorAlertInComponent('gpf-family-ids').should('not.exist');
 
   });
 

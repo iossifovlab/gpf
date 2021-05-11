@@ -1,4 +1,3 @@
-import { ErrorsAlertPage } from 'cypress/elements/errors-alert-page';
 import { RegionsBlockPage } from 'cypress/elements/regions-block-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
@@ -25,12 +24,11 @@ describe('Regions block tests', () => {
   });
 
   it('should display error alert in regions panel when the textarea is empty', () => {
-    const errorsAlertPage = new ErrorsAlertPage();
     regionsBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     regionsBlockPage.regionsFilterButton.click();
-    errorsAlertPage.findAlertWindowInComponent('gpf-regions-filter').should('be.visible');
+    regionsBlockPage.findErrorAlertInComponent('gpf-regions-filter').should('be.visible');
 
     regionsBlockPage.regionsFilterTextarea.type('1:865582');
-    errorsAlertPage.findAlertWindowInComponent('gpf-regions-filter').should('not.exist');
+    regionsBlockPage.findErrorAlertInComponent('gpf-regions-filter').should('not.exist');
   });
 });

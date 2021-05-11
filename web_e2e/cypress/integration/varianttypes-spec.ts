@@ -1,4 +1,3 @@
-import { ErrorsAlertPage } from 'cypress/elements/errors-alert-page';
 import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 import { VarianttypesPage } from 'cypress/elements/varianttypes-page';
@@ -19,15 +18,14 @@ describe('Variant types tests', () => {
   });
 
   it('should display error alert when none of the checkboxes are selected', () => {
-    const errorsAlertPage = new ErrorsAlertPage();
     varianttypesPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    errorsAlertPage.findAlertWindowInComponent('gpf-varianttypes').should('not.exist');
+    varianttypesPage.findErrorAlertInComponent('gpf-varianttypes').should('not.exist');
 
     genotypeBlockPage.findButtonInComponentContainingText('gpf-varianttypes', 'None').click();
-    errorsAlertPage.findAlertWindowInComponent('gpf-varianttypes').should('be.visible');
+    varianttypesPage.findErrorAlertInComponent('gpf-varianttypes').should('be.visible');
 
     genotypeBlockPage.findButtonInComponentContainingText('gpf-varianttypes', 'All').click();
-    errorsAlertPage.findAlertWindowInComponent('gpf-varianttypes').should('not.exist');
+    varianttypesPage.findErrorAlertInComponent('gpf-varianttypes').should('not.exist');
   });
 
   it('should check/uncheck variant types checkboxes using \'All\' and \'None\' buttons', () => {

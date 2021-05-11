@@ -1,4 +1,3 @@
-import { ErrorsAlertPage } from 'cypress/elements/errors-alert-page';
 import { GenderPage } from 'cypress/elements/gender-page';
 import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
@@ -21,16 +20,14 @@ describe('Gender tests', () => {
   // review
   // see if u can add error alert window as a var before everything
   it('should display error alert when none of the checkboxes are selected', () => {
-    const errorsAlertPage = new ErrorsAlertPage();
-
     genderPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    errorsAlertPage.findAlertWindowInComponent('gpf-gender').should('not.exist');
+    genderPage.findErrorAlertInComponent('gpf-gender').should('not.exist');
 
     genotypeBlockPage.findButtonInComponentContainingText('gpf-gender', 'None').click();
-    errorsAlertPage.findAlertWindowInComponent('gpf-gender').should('be.visible');
+    genderPage.findErrorAlertInComponent('gpf-gender').should('be.visible');
 
     genotypeBlockPage.findButtonInComponentContainingText('gpf-gender', 'All').click();
-    errorsAlertPage.findAlertWindowInComponent('gpf-gender').should('not.exist');
+    genderPage.findErrorAlertInComponent('gpf-gender').should('not.exist');
   });
 
   it('should check/uncheck child gender checkboxes using \'All\' and \'None\' buttons', () => {

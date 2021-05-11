@@ -111,4 +111,12 @@ export class BasePage {
   findButtonInComponentContainingText(componentSelector: string, text: string) {
     return cy.get(componentSelector).contains(text);
   }
+  
+  findErrorAlertInComponent(componentSelector: string) {
+    return cy.get(`${componentSelector} gpf-errors-alert .alert-danger`);
+  }
+
+  findWarningAlertInComponent(componentSelector: string) {
+    return cy.get(`${componentSelector} .alert-warning`);
+  }
 }

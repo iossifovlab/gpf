@@ -1,4 +1,3 @@
-import { ErrorsAlertPage } from "cypress/elements/errors-alert-page";
 import { GenesBlockPage } from "cypress/elements/genes-block-page";
 import { GenotypeBrowserController } from "cypress/elements/genotype-browser-controller";
 import { datasetIds, toolPageLinks } from "cypress/elements/utils";
@@ -27,14 +26,12 @@ describe('Genes block panel tests', () => {
 
   // this is no longer the alert window behaviour
   it.skip('should display error alert in gene symbols panel when the textarea is empty', () => {
-    const errorsAlertPage = new ErrorsAlertPage();
-
     genesBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genesBlockPage.geneSymbolsButton.click();
-    errorsAlertPage.findAlertWindowInComponent('gpf-gene-symbols').should('be.visible');
+    genesBlockPage.findErrorAlertInComponent('gpf-gene-symbols').should('be.visible');
 
     genesBlockPage.geneSymbolsTextarea.type('SAMD11');
-    errorsAlertPage.findAlertWindowInComponent('gpf-gene-symbols').should('not.exist');
+    genesBlockPage.findErrorAlertInComponent('gpf-gene-symbols').should('not.exist');
   });
 
   it('should display gene sets panel', () => {
@@ -46,17 +43,15 @@ describe('Genes block panel tests', () => {
   });
 
   it('should display error alert in gene sets panel when the textarea is empty', () => {
-    const errorsAlertPage = new ErrorsAlertPage();
-
     genesBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genesBlockPage.geneSetsButton.click();
-    errorsAlertPage.findAlertWindowInComponent('gpf-gene-sets').should('be.visible');
+    genesBlockPage.findErrorAlertInComponent('gpf-gene-sets').should('be.visible');
 
     genesBlockPage.geneSetsSearchbox.click();
     genesBlockPage.geneSetsSearchbox.type('non-essential genes');
 
     genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText('non-essential genes').click();
-    errorsAlertPage.findAlertWindowInComponent('gpf-gene-sets').should('not.exist');
+    genesBlockPage.findErrorAlertInComponent('gpf-gene-sets').should('not.exist');
   });
 
   it('should display gene weights panel', () => {

@@ -1,5 +1,4 @@
 import { EnrichmentToolPage } from 'cypress/elements/enrichment-tool-page';
-import { ErrorsAlertPage } from 'cypress/elements/errors-alert-page';
 import { GenesBlockPage } from 'cypress/elements/genes-block-page';
 import { SaveQueryPage } from 'cypress/elements/save-query-page';
 import { ShareQueryPage } from 'cypress/elements/share-query-page';
@@ -55,33 +54,31 @@ describe('Enrichment tool tests', () => {
 
   // this is no longer the alert window behaviour
   it.skip('should display alert window after \'Enrichment Test\' button click when the gene symbols textarea is empty', () => {
-    const errorsAlertPage = new ErrorsAlertPage();
     const genesBlockPage = new GenesBlockPage();
 
-    errorsAlertPage.findAlertWindowInComponent('gpf-gene-symbols').should('be.visible');
+    enrichmentToolPage.findErrorAlertInComponent('gpf-gene-symbols').should('be.visible');
 
     genesBlockPage.geneSymbolsTextarea.type('CAMSAP1');
     enrichmentToolPage.enrichmentTestButton.click();
-    errorsAlertPage.findAlertWindowInComponent('gpf-gene-symbols').should('not.exist');
+    enrichmentToolPage.findErrorAlertInComponent('gpf-gene-symbols').should('not.exist');
   });
 
   // review
   // investigate consitency issues when running all enrichment tool tests
   // works fine when ran by itself though
   it('should display alert window when the gene sets textarea is empty', () => {
-    const errorsAlertPage = new ErrorsAlertPage();
     const genesBlockPage = new GenesBlockPage();
     
-    errorsAlertPage.findAlertWindowInComponent('gpf-gene-sets').should('not.exist');
+    enrichmentToolPage.findErrorAlertInComponent('gpf-gene-sets').should('not.exist');
 
     genesBlockPage.geneSetsButton.click();
-    errorsAlertPage.findAlertWindowInComponent('gpf-gene-sets').should('be.visible');
+    enrichmentToolPage.findErrorAlertInComponent('gpf-gene-sets').should('be.visible');
 
     genesBlockPage.geneSetsSearchbox.click();
     genesBlockPage.geneSetsSearchbox.type('synaptic clefts inhibitory');
     genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText('synaptic clefts inhibitory').click();
     enrichmentToolPage.enrichmentTestButton.click();
-    errorsAlertPage.findAlertWindowInComponent('gpf-gene-sets').should('not.exist');
+    enrichmentToolPage.findErrorAlertInComponent('gpf-gene-sets').should('not.exist');
   });
 
   it('should display \'55\' and \'169\' in the affected person\'s observed column of LGDs and missense\'s rows respectively ' +
