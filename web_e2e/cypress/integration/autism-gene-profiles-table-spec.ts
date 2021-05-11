@@ -35,12 +35,19 @@ describe('Autism gene profiles table data tests', () => {
 
   before(() => {
     autismGeneProfilesTablePage.cleanup();
+  });
+
+  beforeEach(() => {
     autismGeneProfilesTablePage.navigateToHome();
     autismGeneProfilesTablePage.toggleSidenav();
     autismGeneProfilesTablePage.sidenavAutismGeneProfilesButton.click();
   });
 
-  [{geneSymbol: 'CHD8', expectedRow: ['CHD8', '✓', '✓', '', '✓', '✓', '✓', '1', '193', '83', '31.5', '18178', '7', '', '', '', '', '']}
+  [ {geneSymbol: 'CHD8', expectedRow: ['CHD8', '✓', '✓', '', '✓', '✓', '✓', '1', '193', '83', '31.5', '18178', '7', '', '', '', '', '']},
+    {geneSymbol: 'SHANK2', expectedRow: ['SHANK2', '✓', '✓', '', '', '', '✓', '2', '', '43', '649', '17517', '1', '', '', '', '1', '']},
+    {geneSymbol: 'FLG', expectedRow: ['FLG', '', '', '', '', '✓', '', '', '16640', '18394.5', '', '', '1', '', '', '', '', '']},
+    {geneSymbol: 'CMIP', expectedRow: ['CMIP', '', '', '✓', '', '', '', '7', '558', '2494', '694', '17467', '', '', '', '', '', '']},
+    {geneSymbol: 'TBCD', expectedRow: ['TBCD', '', '', '✓', '', '', '', '', '646', '9111.5', '13275.5', '222', '', '', '', '', '1', '2']},
   ].forEach((data) => {
     it(`should display correct gene data for ${data.geneSymbol}`, () => {
       autismGeneProfilesTablePage.geneSearchInput.type(data.geneSymbol);
