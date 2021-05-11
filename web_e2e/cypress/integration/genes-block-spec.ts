@@ -24,14 +24,13 @@ describe('Genes block panel tests', () => {
     genesBlockPage.geneSymbolsPanel.should('be.visible');
   });
 
-  // this is no longer the alert window behaviour
-  it.skip('should display error alert in gene symbols panel when the textarea is empty', () => {
+  it('should display error alert in gene symbols panel when the textarea is empty', () => {
     genesBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genesBlockPage.geneSymbolsButton.click();
-    genesBlockPage.findErrorAlertInComponent('gpf-gene-symbols').should('be.visible');
+    genesBlockPage.findWarningAlertInComponent('gpf-gene-symbols').should('be.visible');
 
     genesBlockPage.geneSymbolsTextarea.type('SAMD11');
-    genesBlockPage.findErrorAlertInComponent('gpf-gene-symbols').should('not.exist');
+    genesBlockPage.findWarningAlertInComponent('gpf-gene-symbols').should('be.hidden');
   });
 
   it('should display gene sets panel', () => {

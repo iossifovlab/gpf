@@ -52,15 +52,13 @@ describe('Enrichment tool tests', () => {
     enrichmentToolPage.table.should('be.visible');
   });
 
-  // this is no longer the alert window behaviour
-  it.skip('should display alert window after \'Enrichment Test\' button click when the gene symbols textarea is empty', () => {
+  it('should display alert window after \'Enrichment Test\' button click when the gene symbols textarea is empty', () => {
     const genesBlockPage = new GenesBlockPage();
 
-    enrichmentToolPage.findErrorAlertInComponent('gpf-gene-symbols').should('be.visible');
+    enrichmentToolPage.findWarningAlertInComponent('gpf-gene-symbols').should('be.visible');
 
     genesBlockPage.geneSymbolsTextarea.type('CAMSAP1');
-    enrichmentToolPage.enrichmentTestButton.click();
-    enrichmentToolPage.findErrorAlertInComponent('gpf-gene-symbols').should('not.exist');
+    enrichmentToolPage.findWarningAlertInComponent('gpf-gene-symbols').should('be.hidden');
   });
 
   // review
