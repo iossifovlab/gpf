@@ -23,7 +23,7 @@ class FamilyStructureBuilder:
 
     def _get_person_with_role(self, role):
         result = self._get_persons_with_role(set([role]))
-        assert len(result) <= 1
+        assert len(result) <= 1, result
         if result:
             return result[0]
         else:
