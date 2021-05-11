@@ -1,5 +1,4 @@
 import itertools
-import json
 import logging
 
 from copy import copy
@@ -24,9 +23,83 @@ class StudyWrapperBase(GenotypeData):
     def __init__(self, config):
         super(StudyWrapperBase, self).__init__(config, config.get("studies"))
 
-    @abstractmethod
-    def build_genotype_data_group_description(self, gpf_instance):
-        pass
+    @staticmethod
+    def build_genotype_data_group_description(
+        gpf_instance, config, description, person_set_collection_configs
+    ):
+        keys = [
+            "id",
+            "name",
+            "phenotype_browser",
+            "phenotype_tool",
+            "phenotype_data",
+            "common_report",
+            "study_type",
+            "studies",
+            "has_present_in_child",
+            "has_present_in_parent",
+            "has_denovo",
+            "genome",
+            "chr_prefix",
+            "gene_browser",
+        ]
+        result = {
+            key: config.get(key, None) for key in keys
+        }
+
+        result["description"] = description
+
+        result["genotype_browser"] = config.genotype_browser.enabled
+        result["genotype_browser_config"] = {
+            key: config.genotype_browser.get(key, None) for key in [
+                "has_family_filters",
+                "has_study_filters",
+                "has_present_in_child",
+                "has_present_in_parent",
+                "has_pedigree_selector",
+                "variant_types",
+                "selected_variant_types",
+                "max_variants_count",
+                "person_filters",
+                "family_filters",
+                "genotype",
+                "present_in_role",
+            ]
+        }
+        table_columns = list()
+        for column in config.genotype_browser.preview_columns:
+            if column in config.genotype_browser.column_groups:
+                table_columns.append(
+                    config.genotype_browser.column_groups[column]
+                )
+            else:
+                table_columns.append(
+                    config.genotype_browser.columns[column]
+                )
+        result["genotype_browser_config"]["table_columns"] = table_columns
+
+        result["study_types"] = result["study_type"]
+        result["enrichment_tool"] = config.enrichment.enabled
+        result["person_set_collections"] = person_set_collection_configs
+        result["name"] = result["name"] or result["id"]
+
+        result["enrichment"] = config.enrichment.to_dict()
+
+        result["study_names"] = None
+        if result["studies"] is not None:
+            logger.debug(f"found studies in {config.id}")
+            study_names = []
+            for studyId in result["studies"]:
+                wrapper = gpf_instance.get_wdae_wrapper(studyId)
+                name = (
+                    wrapper.config.name
+                    if wrapper.config.name is not None
+                    else wrapper.config.id
+                )
+                study_names.append(name)
+                result["study_names"] = study_names
+
+        return result
 
     def _build_person_set_collection(self):
         pass
@@ -347,56 +420,6 @@ class StudyWrapper(StudyWrapperBase):
 
         return self.present_in_role.get(present_in_role_id, {})
 
-    def build_genotype_data_group_description(self, gpf_instance):
-        keys = [
-            "id",
-            "name",
-            "phenotype_browser",
-            "phenotype_tool",
-            "phenotype_data",
-            "common_report",
-            "study_type",
-            "studies",
-            "has_present_in_child",
-            "has_present_in_parent",
-            "has_denovo",
-            "genome",
-            "chr_prefix",
-            "gene_browser",
-        ]
-        result = {
-            key: self.config.get(key, None) for key in keys
-        }
-
-        result["description"] = self.description
-
-        result["genotype_browser_config"] = self.config.genotype_browser
-        result["genotype_browser"] = self.config.genotype_browser.enabled
-
-        result["study_types"] = result["study_type"]
-        result["enrichment_tool"] = self.config.enrichment.enabled
-        result["person_set_collections"] = \
-            self.genotype_data_study.person_set_collection_configs
-        result["name"] = result["name"] or result["id"]
-
-        result["enrichment"] = self.config.enrichment.to_dict()
-
-        result["study_names"] = None
-        if result["studies"] is not None:
-            logger.debug(f"found studies in {self.config.id}")
-            study_names = []
-            for studyId in result["studies"]:
-                wrapper = gpf_instance.get_wdae_wrapper(studyId)
-                name = (
-                    wrapper.config.name
-                    if wrapper.config.name is not None
-                    else wrapper.config.id
-                )
-                study_names.append(name)
-                result["study_names"] = study_names
-
-        return result
-
 
 class RemoteStudyWrapper(StudyWrapperBase):
 
@@ -406,9 +429,9 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
         config = self.rest_client.get_dataset_config(self._remote_study_id)
         config["id"] = self.rest_client.prefix_remote_identifier(study_id)
-        config["name"] = self.rest_client.prefix_remote_name(config["name"])
-        del config["access_rights"]
-        del config["groups"]
+        config["name"] = self.rest_client.prefix_remote_name(
+            config.get("name")
+        )
         if config["parents"]:
             config["parents"] = list(
                 map(
@@ -459,7 +482,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
     @property
     def config_columns(self):
-        return self.config.genotype_browser_config.columns
+        return self.config.genotype_browser.columns
 
     @property
     def families(self):
@@ -521,6 +544,3 @@ class RemoteStudyWrapper(StudyWrapperBase):
                 fv, sources
             )
             yield row_variant
-
-    def build_genotype_data_group_description(self, gpf_instance):
-        return self.config.to_dict()

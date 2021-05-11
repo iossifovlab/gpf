@@ -130,9 +130,9 @@ class RESTClient:
             return response.json()
 
     def get_dataset_config(self, study_id):
-        response = self._get(f"datasets/{study_id}")
+        response = self._get(f"datasets/config/{study_id}")
         if response.status_code == 200:
-            return response.json()["data"]
+            return response.json()
 
     def get_variants_preview(self, data):
         response = self._post(
