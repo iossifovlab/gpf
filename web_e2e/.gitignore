@@ -3,4 +3,5 @@ data
 downloads
 import
 package-lock.json
-cypress
+cypress/screenshots
+cypress/videos
