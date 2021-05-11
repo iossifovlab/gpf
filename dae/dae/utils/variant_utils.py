@@ -75,7 +75,7 @@ def fgt2str(fgt, sep=";"):
 
 def str2fgt(fgt, split=";"):
     cols = fgt.split(";")
-    result = np.zeros([2, len(cols)])
+    result = np.zeros(shape=(2, len(cols)), dtype=GENOTYPE_TYPE)
     for idx, col in enumerate(cols):
         sp = col.split("/")
 
