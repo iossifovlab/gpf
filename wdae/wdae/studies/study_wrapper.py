@@ -8,6 +8,7 @@ from abc import abstractmethod
 from dae.variants.attributes import Role
 from dae.studies.study import GenotypeData
 from dae.configuration.gpf_config_parser import FrozenBox
+from dae.person_sets import PersonSetCollection
 from remote.remote_phenotype_data import RemotePhenotypeData
 from remote.remote_variant import RemoteFamilyVariant, QUERY_SOURCES
 from dae.pedigrees.family import Family, Person, FamiliesData
@@ -573,14 +574,16 @@ class RemoteStudyWrapper(StudyWrapperBase):
         response = self.rest_client.post_query_variants(
             kwargs, reduceAlleles=False
         )
+
         for variant in response:
             fam_id = variant[fam_id_idx][0]
             family = self.families.get(fam_id)
             fv = RemoteFamilyVariant(variant, family, new_sources)
 
             row_variant = self.response_transformer._build_variant_row(
-                fv, sources
+                fv, sources, person_set_collection=person_set_collection
             )
+
             yield row_variant
 
     def get_person_set_collection(self, person_set_collection_id):
