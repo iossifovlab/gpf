@@ -95,42 +95,6 @@ export class PresentInRole {
   }
 }
 
-export class Column {
-  static fromJson(json: any): {[id: string] : Column} {
-    const res = {};
-    for (const column_id of Object.keys(json)) {
-      const column = json[column_id];
-      res[column_id] = new Column(column_id, column['name'], column['source'], column['format']);
-    }
-    return res;
-  }
-
-  constructor(
-    readonly id: string,
-    readonly name: string,
-    readonly source: string,
-    readonly format: string,
-  ) {}
-}
-
-export class ColumnGroup {
-  static fromJson(json: any, allColumns: {[id: string] : Column}): {[id: string] : ColumnGroup} {
-    const res = {};
-    for (const column_group_id of Object.keys(json)) {
-      const columnGroup = json[column_group_id];
-      const columns = columnGroup['columns'].map(c_id => allColumns[c_id]);
-      res[column_group_id] = new ColumnGroup(column_group_id, columnGroup['name'], columns);
-    }
-    return res;
-  }
-
-  constructor(
-    readonly id: string,
-    readonly name: string,
-    readonly columns: Array<Column>
-  ) {}
-}
-
 export class PersonFilter {
   static fromJson(json: any): Array<PersonFilter> {
     const filters = [];
@@ -164,10 +128,7 @@ export class PersonFilter {
 
 export class GenotypeBrowser {
 
-  previewCols;
-
   static fromJson(json: any): GenotypeBrowser {
-    const allColumns = Column.fromJson({...json['columns']['genotype'], ...json['columns']['phenotype']});
     return new GenotypeBrowser(
       json['has_pedigree_selector'],
       json['has_present_in_child'],
@@ -179,12 +140,7 @@ export class GenotypeBrowser {
       json['has_study_filters'],
       json['has_study_types'],
       json['has_graphical_preview'],
-      json['preview_columns'],
-      json['download_columns'],
-      json['summary_preview_columns'],
-      json['summary_download_columns'],
-      allColumns,
-      ColumnGroup.fromJson(json['column_groups'], allColumns),
+      json['table_columns'],
       PersonFilter.fromJson(json['person_filters']),
       PersonFilter.fromJson(json['family_filters']),
       PresentInRole.fromJsonArray(json['present_in_role']),
@@ -207,12 +163,7 @@ export class GenotypeBrowser {
     readonly hasStudyFilters: boolean,
     readonly hasStudyTypes: boolean,
     readonly hasGraphicalPreview: boolean,
-    readonly previewColumnsIds: string[],
-    readonly downloadColumnsIds: string[],
-    readonly summaryPreviewColumnsIds: string[],
-    readonly summaryDownloadColumnsIds: string[],
-    readonly columns: {[id: string]: Column},
-    readonly columnGroups: {[id: string]: ColumnGroup},
+    readonly tableColumns: Array<any>, // FIXME Add proper typing
     readonly personFilters: Array<PersonFilter>,
     readonly familyFilters: Array<PersonFilter>,
     readonly presentInRole: PresentInRole[],
@@ -223,65 +174,16 @@ export class GenotypeBrowser {
     readonly maxVariantsCount: number,
   ) { }
 
-  get allColumns(): Array<Column | ColumnGroup> {
-    return [...Object.values(this.columns), ...Object.values(this.columnGroups)];
-  }
-
-  get previewColumns(): Array<Column | ColumnGroup> {
-    if (this.previewCols === undefined) {
-      this.previewCols = [];
-      for (const previewColumn of this.previewColumnsIds) {
-        const columnResult: any = Object.values(this.columns).filter(col => col.id === previewColumn);
-        const columnGroupsResult: any = Object.values(this.columnGroups).filter(col => col.id === previewColumn);
-        if (columnGroupsResult.length !== 0) {
-          this.previewCols.push(columnGroupsResult[0]);
-        } else {
-          this.previewCols.push(columnResult[0]);
-        }
-      }
-      console.log(this.previewCols);
-    }
-    return this.previewCols;
-  }
-
-  get downloadColumns(): Array<Column | ColumnGroup> {
-      return this.allColumns.filter(col => this.downloadColumnsIds.indexOf(col.id) !== -1);
-  }
-
-  get summaryPreviewColumns(): Array<Column | ColumnGroup> {
-    return this.allColumns.filter(col => this.summaryPreviewColumnsIds.indexOf(col.id) !== -1);
-  }
-
-  get summaryDownloadColumns(): Array<Column | ColumnGroup> {
-      return this.allColumns.filter(col => this.summaryDownloadColumnsIds.indexOf(col.id) !== -1);
-  }
-
-  getSources(columnsIdsFilter: Array<string>): Array<Column> {
-    const res = [];
-    for (const column_id of columnsIdsFilter) {
-      if (column_id in this.columnGroups) {
-        res.push(...this.columnGroups[column_id].columns);
+  get columnIds(): Array<string> {
+    const result: Array<string> = [];
+    for (const column of this.tableColumns) {
+      if ('columns' in column) {
+        result.push(...column['columns'].map(col => col['source']));
       } else {
-        res.push(this.columns[column_id]);
+        result.push(column['source']);
       }
     }
-    return res;
-  }
-
-  get previewColumnsSources(): Array<Column> {
-    return this.getSources(this.previewColumnsIds);
-  }
-
-  get downloadColumnsSources(): Array<Column> {
-      return this.getSources(this.downloadColumnsIds);
-  }
-
-  get summaryPreviewColumnsSources(): Array<Column> {
-      return this.getSources(this.summaryPreviewColumnsIds);
-  }
-
-  get summaryDownloadColumnsSources(): Array<Column> {
-      return this.getSources(this.summaryDownloadColumnsIds);
+    return result;
   }
 }
 

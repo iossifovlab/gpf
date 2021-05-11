@@ -86,7 +86,12 @@ export class GenotypeBrowserComponent extends QueryStateCollector
         this.selectedDataset$.subscribe( selectedDataset => {
           this.genotypePreviewVariantsArray = null;
           this.genotypeBrowserState = state;
-          this.legend = selectedDataset.peopleGroupConfig.getLegend(state['peopleGroup'].id);
+          if ('peopleGroup' in state) {
+            // FIXME This seems hacky, added it since datasets with
+            // 'has_pedigree_selector' set to False would break on querying
+            // (no 'peopleGroup' in the state, so undefined)
+            this.legend = selectedDataset.peopleGroupConfig.getLegend(state['peopleGroup'].id);
+          }
 
           this.queryService.streamingFinishedSubject.subscribe(
             _ => { this.loadingFinished = true; }
@@ -94,7 +99,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector
 
           this.genotypePreviewVariantsArray =
             this.queryService.getGenotypePreviewVariantsByFilter(
-              state, selectedDataset.genotypeBrowserConfig.previewColumnsSources, this.loadingService
+              state, selectedDataset.genotypeBrowserConfig.columnIds, this.loadingService
             );
 
         }, error => {
@@ -111,7 +116,6 @@ export class GenotypeBrowserComponent extends QueryStateCollector
       state => {
         this.selectedDataset$.subscribe( selectedDataset => {
           const args: any = state
-          args.sources = selectedDataset.genotypeBrowserConfig.downloadColumnsSources;
           args.download = true;
           event.target.queryData.value = JSON.stringify(args);
           event.target.submit();

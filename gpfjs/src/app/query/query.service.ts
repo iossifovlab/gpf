@@ -13,7 +13,6 @@ import { ConfigService } from '../config/config.service';
 import { GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
 import { GeneViewSummaryAllelesArray } from '../gene-view/gene';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { Column } from '../datasets/datasets';
 
 @Injectable()
 export class QueryService {
@@ -105,13 +104,11 @@ export class QueryService {
   }
 
   getGenotypePreviewVariantsByFilter(
-    filter: QueryData, sources: Array<Column>, loadingService?: any, maxVariantsCount: number = 1001
+    filter: QueryData, columnIds: Array<string>, loadingService?: any, maxVariantsCount: number = 1001
   ): GenotypePreviewVariantsArray {
     const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
     const queryFilter = { ...filter };
-    const columnIds = sources.map(c => c.id);
     queryFilter['maxVariantsCount'] = maxVariantsCount;
-    queryFilter['sources'] = sources;
 
     this.datasetsService.getDatasetDetails(filter['datasetId']).subscribe(datasetDetails => {
       this.streamPost(this.genotypePreviewVariantsUrl, queryFilter).subscribe(variant => {

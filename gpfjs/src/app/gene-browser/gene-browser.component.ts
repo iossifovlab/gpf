@@ -151,7 +151,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
       }];
       this.selectedDataset$.subscribe( selectedDataset => {
         this.genotypePreviewVariantsArray = this.queryService.getGenotypePreviewVariantsByFilter(
-          requestParams, selectedDataset.genotypeBrowserConfig.previewColumnsSources
+          requestParams, selectedDataset.genotypeBrowserConfig.columnIds
         );
       });
     });
@@ -298,18 +298,12 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
           'rangeStart': state['zoomState'].yMin > 0 ? state['zoomState'].yMin : null,
           'rangeEnd': state['zoomState'].yMax,
         }];
-        requestParams["download"] = true;
+        requestParams['download'] = true;
 
         const targetId = event.target.attributes.id.nodeValue;
-        let sources;
-        if (targetId === "summary_download") {
-          sources = selectedDataset.genotypeBrowserConfig.summaryDownloadColumnsSources;
-          requestParams["querySummary"] = true;
+        if (targetId === 'summary_download') {
+          requestParams['querySummary'] = true;
         }
-        else {
-          sources = selectedDataset.genotypeBrowserConfig.downloadColumnsSources;
-        }
-        requestParams["sources"] = sources
 
         event.target.queryData.value = JSON.stringify(requestParams);
         event.target.submit();
