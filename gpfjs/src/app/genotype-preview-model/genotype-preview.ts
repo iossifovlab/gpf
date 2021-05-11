@@ -29,8 +29,8 @@ export class PedigreeData {
   constructor(
     readonly pedigreeIdentifier: string,
     readonly id: string,
-    readonly father: string,
     readonly mother: string,
+    readonly father: string,
     readonly gender: string,
     readonly role: string,
     readonly color: string,
