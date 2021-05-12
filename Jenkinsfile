@@ -11,7 +11,7 @@ pipeline {
     }
     parameters {
         string(
-            name: 'DATA_HG19_BRANCH', defaultValue: 'master',
+            name: 'DATA_HG19_BRANCH', defaultValue: 'remote-variant',
             description: 'data-hg19-startup build number to use for testing')
     }
     environment {
