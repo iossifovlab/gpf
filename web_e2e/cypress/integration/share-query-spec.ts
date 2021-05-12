@@ -15,10 +15,10 @@ describe('Share query tests', () => {
   beforeEach(() => {
     shareQueryPage.preserveLogin();
     shareQueryPage.navigateToHome();
+    shareQueryPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
   });
 
   it('should open share query dropdown menu after share query button click', () => {
-    shareQueryPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     shareQueryPage.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu');
 
     shareQueryPage.button.click();
@@ -28,7 +28,6 @@ describe('Share query tests', () => {
   it('should share a query, load it and open all tools tabs', () => {
     const datasetsPage = new DatasetsPage();
 
-    shareQueryPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     shareQueryPage.button.click();
     shareQueryPage.input.invoke('val').then((url) => {
       cy.visit(String(url));
@@ -43,7 +42,6 @@ describe('Share query tests', () => {
      'load it and validate that all effect types checkboxes are checked', () => {
     const genotypeBlockPage = new GenotypeBlockPage();
 
-    shareQueryPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genotypeBlockPage.findButtonInComponentContainingText('gpf-effecttypes', 'All').click();
 
     shareQueryPage.button.click();
