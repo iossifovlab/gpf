@@ -1,4 +1,5 @@
 import warnings
+import logging
 import pandas as pd
 
 from functools import partial
@@ -11,6 +12,9 @@ from dae.backends.raw.loader import CLILoader, CLIArgument
 from dae.pedigrees.family import FamiliesData, Person, PEDIGREE_COLUMN_NAMES
 from dae.pedigrees.family_role_builder import FamilyRoleBuilder
 from dae.pedigrees.layout import Layout
+
+
+logger = logging.getLogger(__name__)
 
 
 PED_COLUMNS_REQUIRED = (
@@ -56,6 +60,9 @@ class FamiliesLoader(CLILoader):
         ped_layout_mode = pedigree_format.get("ped_layout_mode", "load")
         if ped_layout_mode == "generate":
             for family in families.values():
+                logger.debug(
+                    f"building layout for family: {family.family_id}; "
+                    f"{family}")
                 layouts = Layout.from_family(family)
                 for layout in layouts:
                     layout.apply_to_family(family)
@@ -78,6 +85,7 @@ class FamiliesLoader(CLILoader):
 
         if has_unknown_roles or pedigree_format.get("ped_no_role"):
             for family in families.values():
+                logger.debug(f"building family roles: {family.family_id}")
                 role_build = FamilyRoleBuilder(family)
                 role_build.build_roles()
             families._ped_df = None

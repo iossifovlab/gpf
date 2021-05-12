@@ -14,7 +14,7 @@ fi
 
 . ${WD}/scripts/version.sh
 
-for container in ${CONTAINER_TESTS} ${CONTAINER_GPF_DEV} ${CONTAINER_GPF_REMOTE} ${CONTAINER_MYSQL} ${CONTAINER_GPF_IMPALA}; do
+for container in ${CONTAINER_TESTS} ${CONTAINER_GPF_DEV} ${CONTAINER_GPF_REMOTE} ${CONTAINER_GPF_MYSQL} ${CONTAINER_GPF_IMPALA}; do
 
     export HAS_RUNNING_CONTAINER=`docker ps | grep ${container} | sed -e "s/\s\{2,\}/\t/g" | cut -f 1`
     if [ $HAS_RUNNING_CONTAINER ];

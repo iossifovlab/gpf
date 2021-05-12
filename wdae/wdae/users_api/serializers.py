@@ -42,7 +42,28 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = get_user_model()
-        fields = ("id", "email", "name", "hasPassword", "groups", "allowedDatasets",)
+        fields = (
+            "id", "email", "name",
+            "hasPassword", "groups", "allowedDatasets",)
+
+    def run_validation(self, data):
+        email = data.get("email")
+        if email:
+            email = get_user_model().objects.normalize_email(email)
+            email = email.lower()
+            data["email"] = email
+
+        groups = data.get("groups")
+        if groups:
+            new_groups = []
+            for group in groups:
+                if group.lower() == email:
+                    new_groups.append(email)
+                else:
+                    new_groups.append(group)
+            data["groups"] = new_groups
+
+        return super().run_validation(data=data)
 
     def validate(self, data):
         unknown_keys = set(self.initial_data.keys()) - set(self.fields.keys())
@@ -62,17 +83,23 @@ class UserSerializer(serializers.ModelSerializer):
     @staticmethod
     def _update_groups(user, new_groups):
         with transaction.atomic():
-            to_add = []
-            old_ids = set([x.id for x in user.groups.all()])
+            protected_groups = set([
+                group.id for group in user.protected_groups])
 
+            to_remove = set()
+            for group in user.groups.all():
+                if group.id not in protected_groups:
+                    to_remove.add(group.id)
+
+            to_add = set()
             for group in new_groups:
-                if group.id in old_ids:
-                    old_ids.remove(group.id)
+                if group.id in to_remove:
+                    to_remove.remove(group.id)
                 else:
-                    to_add.append(group.id)
+                    to_add.add(group.id)
 
             user.groups.add(*to_add)
-            user.groups.remove(*old_ids)
+            user.groups.remove(*to_remove)
 
     def update(self, instance, validated_data):
         groups = validated_data.pop("groups", None)
@@ -90,7 +117,6 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         groups = validated_data.pop("groups", None)
-
         self._check_groups_exist(groups)
 
         with transaction.atomic():

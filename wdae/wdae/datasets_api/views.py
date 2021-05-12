@@ -7,7 +7,8 @@ from studies.study_wrapper import StudyWrapperBase
 
 from .models import Dataset
 from groups_api.serializers import GroupSerializer
-from datasets_api.permissions import get_wdae_parents, get_genotype_data
+from datasets_api.permissions import get_wdae_parents, \
+    user_has_permission
 
 
 class DatasetView(QueryBaseView):
@@ -15,24 +16,8 @@ class DatasetView(QueryBaseView):
     def augment_accessibility(self, dataset, user):
         dataset_object = Dataset.objects.get(dataset_id=dataset["id"])
 
-        # check normal rights
-        dataset["access_rights"] = user.has_perm(
-            "datasets_api.view", dataset_object
-        )
-
-        genotype_data = get_genotype_data(dataset["id"])
-        # if the dataset is a data group, access to at least one
-        # of its studies grants access to the group as well (although limited)
-        if not dataset["access_rights"] and dataset.get("studies"):
-
-            for study_id in genotype_data.get_studies_ids(leafs=False):
-                study_perm = user.has_perm(
-                    "datasets_api.view",
-                    Dataset.objects.get(dataset_id=study_id)
-                )
-                if study_perm:
-                    dataset["access_rights"] = study_perm
-                    break
+        dataset["access_rights"] = user_has_permission(
+            user, dataset_object)
 
         return dataset
 

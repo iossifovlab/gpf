@@ -10,6 +10,10 @@ from utils.logger import request_logging
 from utils.streaming_response_util import iterator_to_json
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
+from datasets_api.permissions import \
+    handle_partial_permissions
+
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +51,9 @@ class QueryVariantsView(QueryBaseView):
 
         if dataset is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        user = request.user
+        handle_partial_permissions(user, dataset_id, data)
 
         config = dataset.config.gene_browser
         freq_col = config.frequency_column
@@ -87,6 +94,9 @@ class DownloadSummaryVariantsView(QueryBaseView):
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         user = request.user
+        user = request.user
+        handle_partial_permissions(user, dataset_id, data)
+
         download_limit = None
         if not (user.is_authenticated and user.has_unlimitted_download):
             download_limit = self.DOWNLOAD_LIMIT

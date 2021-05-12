@@ -487,10 +487,13 @@ class QueryTransformer:
                 )
             kwargs["familyIds"] = family_ids_with_types
 
-        if "inheritanceTypeFilter" in kwargs:
-            kwargs["inheritance"].append(
+        if kwargs.get("inheritanceTypeFilter"):
+            inheritance = kwargs.get("inheritance", [])
+            inheritance.append(
                 "any({})".format(
                     ",".join(kwargs["inheritanceTypeFilter"])))
+            kwargs["inheritance"] = inheritance
+
             kwargs.pop("inheritanceTypeFilter")
         if "affectedStatus" in kwargs:
             statuses = kwargs.pop("affectedStatus")

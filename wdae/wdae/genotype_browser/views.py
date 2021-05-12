@@ -18,23 +18,12 @@ from gene_sets.expand_gene_set_decorator import expand_gene_set
 from studies.study_wrapper import StudyWrapperBase
 
 from datasets_api.permissions import \
-    get_allowed_genotype_studies
+    handle_partial_permissions
 
 from dae.utils.dae_utils import join_line
 
 
 logger = logging.getLogger(__name__)
-
-
-def handle_partial_permissions(user, dataset_id: str, request_data: dict):
-    """A user may have only partial access to a dataset based
-    on which of its constituent studies he has rights to access.
-    This method attaches these rights to the request as study filters
-    in order to filter variants from studies the user cannot access.
-    """
-
-    request_data["allowed_studies"] = \
-        get_allowed_genotype_studies(user, dataset_id)
 
 
 class GenotypeBrowserQueryView(QueryBaseView):
@@ -91,7 +80,9 @@ class GenotypeBrowserQueryView(QueryBaseView):
         handle_partial_permissions(user, dataset_id, data)
 
         response = dataset.query_variants_wdae(
-            data, sources, max_variants_count=max_variants
+            data, sources,
+            max_variants_count=max_variants,
+            max_variants_message=is_download
         )
 
         if is_download:

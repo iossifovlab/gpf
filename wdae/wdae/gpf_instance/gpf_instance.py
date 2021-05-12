@@ -32,10 +32,11 @@ _gpf_instance_lock = Lock()
 class WGPFInstance(GPFInstance):
     def __init__(self, *args, **kwargs):
         self._remote_clients = None
-        super(WGPFInstance, self).__init__(*args, **kwargs)
         self._remote_study_clients = dict()
         self._remote_study_ids = dict()
         self._study_wrappers = dict()
+
+        super(WGPFInstance, self).__init__(*args, **kwargs)
         self._load_remotes()
 
     def _load_remotes(self):
@@ -88,6 +89,14 @@ class WGPFInstance(GPFInstance):
     def _fetch_remote_studies(self, rest_client):
         studies = rest_client.get_datasets()
         for study in studies["data"]:
+            logger.debug(
+                f"study {study['id']} access rights are: "
+                f"{study.get('access_rights', False)}")
+            if not study.get("access_rights", None):
+                logger.info(
+                    f"skipping creation of remote study {study['id']}")
+                continue
+
             logger.info(f"creating remote genotype data: {study['id']}")
             study_wrapper = RemoteStudyWrapper(study["id"], rest_client)
             study_id = study_wrapper.study_id
@@ -290,6 +299,10 @@ class WGPFInstance(GPFInstance):
         background = self.get_study_background(
             dataset_id, background_name
         )
+
+        if background is None:
+            logger.warning(f"Background {background_name} not found!")
+
         counter = CounterBase.counters()[counting_name]()
         enrichment_tool = EnrichmentTool(
             enrichment_config, background, counter
@@ -322,6 +335,14 @@ class WGPFInstance(GPFInstance):
             dataset_id, background_name, counting_name, gene_syms)
         if not builder:
             dataset = self.get_wdae_wrapper(dataset_id)
+            if dataset.is_remote is False:
+                logger.warning("WARNING: Using is_remote")
+                logger.warning(
+                    "WARNING: Failed to create local enrichment builder!\n"
+                    f"dataset: {dataset_id}, "
+                    f"requested background: {background_name}, "
+                    f"requested counting name: {counting_name}"
+                )
             builder = RemoteEnrichmentBuilder(
                 dataset, dataset.rest_client,
                 background_name, counting_name,

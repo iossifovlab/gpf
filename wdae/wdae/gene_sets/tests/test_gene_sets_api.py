@@ -29,14 +29,16 @@ def test_gene_sets_collections(db, admin_client):
     assert status.HTTP_200_OK == response.status_code, repr(response.content)
 
     data = response.data
-    assert len(data) == 9
+    assert len(data) == 10
 
-    remote_main = data[0]
-    assert "TEST_REMOTE_main" == remote_main["name"]
+    local_main = data[0]
+    assert "main" == local_main["name"]
     denovo = data[1]
     assert "denovo" == denovo["name"]
     remote_denovo = data[2]
     assert "TEST_REMOTE_denovo" == remote_denovo["name"]
+    remote_main = data[3]
+    assert "TEST_REMOTE_main" == remote_main["name"]
     # self.assertEquals(8, len(denovo['types']))
 
 

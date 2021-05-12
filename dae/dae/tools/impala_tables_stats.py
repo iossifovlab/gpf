@@ -11,7 +11,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.backends.impala.impala_variants import ImpalaVariants
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("impala_tables_stats")
 
 
 def parse_cli_arguments(argv, gpf_instance):
@@ -61,6 +61,23 @@ def variants_compute_stats(study_backend, region_bin=None):
             else:
                 q = f"COMPUTE STATS " \
                     f"{study_backend.db}.{study_backend.variants_table}"
+            logger.info(f"compute stats for variants table: {q}")
+            cursor.execute(q)
+
+
+def summary_variants_compute_stats(study_backend, region_bin=None):
+    impala = study_backend._impala_helpers
+    with closing(impala.connection()) as connection:
+        with connection.cursor() as cursor:
+            if region_bin is not None:
+                q = f"COMPUTE INCREMENTAL STATS " \
+                    f"{study_backend.db}." \
+                    f"{study_backend.summary_variants_table} " \
+                    f"PARTITION (region_bin='{region_bin}')"
+            else:
+                q = f"COMPUTE STATS " \
+                    f"{study_backend.db}." \
+                    f"{study_backend.summary_variants_table}"
             logger.info(f"compute stats for variants table: {q}")
             cursor.execute(q)
 
@@ -116,6 +133,8 @@ def main(argv=sys.argv[1:], gpf_instance=None):
 
         if "region_bin" not in study_backend.schema:
             variants_compute_stats(study_backend, region_bin=None)
+            if study_backend.has_summary_variants_table:
+                summary_variants_compute_stats(study_backend, region_bin=None)
         else:
             assert "region_bin" in study_backend.schema
             region_bins = variants_region_bins(study_backend)
@@ -125,6 +144,10 @@ def main(argv=sys.argv[1:], gpf_instance=None):
             for index, region_bin in enumerate(region_bins):
                 start = time.time()
                 variants_compute_stats(study_backend, region_bin)
+
+                if study_backend.has_summary_variants_table:
+                    summary_variants_compute_stats(study_backend, region_bin)
+
                 elapsed = time.time() - start
                 logger.info(
                     f"computing stats {index}/{len(region_bins)} "

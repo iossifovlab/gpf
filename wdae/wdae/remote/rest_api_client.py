@@ -420,6 +420,9 @@ class RESTClient:
         return True
 
     def get_denovo_gene_sets(self, gene_set_types):
+        logger.debug(
+            f"getting denovo gene sets for: {gene_set_types}")
+
         response = self._post(
             "gene_sets/gene_sets",
             data={

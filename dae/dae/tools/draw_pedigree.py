@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 import argparse
+import logging
 
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -110,6 +111,8 @@ def main(argv=sys.argv[1:]):
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
+    parser.add_argument('--verbose', '-V', action='count', default=0)
+
     FamiliesLoader.cli_arguments(parser)
 
     parser.add_argument(
@@ -130,6 +133,14 @@ def main(argv=sys.argv[1:]):
     )
 
     argv = parser.parse_args(argv)
+    if argv.verbose == 1:
+        logging.basicConfig(level=logging.WARNING)
+    elif argv.verbose == 2:
+        logging.basicConfig(level=logging.INFO)
+    elif argv.verbose >= 3:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.WARNING)
 
     filename, params = FamiliesLoader.parse_cli_arguments(argv)
     families_loader = FamiliesLoader(filename, **params)

@@ -327,7 +327,10 @@ class StudyWrapper(StudyWrapperBase):
     def config_columns(self):
         return self.config.genotype_browser.columns
 
-    def query_variants_wdae(self, kwargs, sources, max_variants_count=10000):
+    def query_variants_wdae(
+            self, kwargs, sources,
+            max_variants_count=10000,
+            max_variants_message=False):
         people_group = kwargs.get("peopleGroup", {})
 
         person_set_collection = self.get_person_set_collection(
@@ -339,11 +342,22 @@ class StudyWrapper(StudyWrapperBase):
         )
 
         if max_variants_count is not None:
-            limited_rows = itertools.islice(rows_iterator, max_variants_count)
+            for index, row in enumerate(rows_iterator):
+                if index >= max_variants_count:
+                    if max_variants_message:
+                        yield [
+                            f"# limit of {max_variants_count} variants "
+                            f"reached"
+                        ]
+                    break
+                yield row
+            # limited_rows = itertools.islice(
+            #   rows_iterator, max_variants_count)
         else:
-            limited_rows = rows_iterator
-
-        return limited_rows
+            for row in rows_iterator:
+                yield row
+            # limited_rows = rows_iterator
+            # return limited_rows
 
     def get_gene_view_summary_variants(self, frequency_column, **kwargs):
         kwargs = self.query_transformer.transform_kwargs(**kwargs)
@@ -465,6 +479,15 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
         super(RemoteStudyWrapper, self).__init__(FrozenBox(config))
 
+        if config["parents"]:
+            config["parents"] = list(
+                map(
+                    self.rest_client.prefix_remote_identifier,
+                    config["parents"]
+                )
+            )
+            self._parents = list(config["parents"])
+
         self.phenotype_data = RemotePhenotypeData(
             self._remote_study_id,
             self.rest_client
@@ -533,7 +556,10 @@ class RemoteStudyWrapper(StudyWrapperBase):
             return []
         return studies
 
-    def query_variants_wdae(self, kwargs, sources, max_variants_count=10000):
+    def query_variants_wdae(
+            self, kwargs, sources,
+            max_variants_count=10000,
+            max_variants_message=False):
         study_filters = kwargs.get("study_filters")
         logger.debug(
             f"study_id: {self.study_id}; study_filters: {study_filters}")

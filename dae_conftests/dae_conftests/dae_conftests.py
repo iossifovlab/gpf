@@ -37,8 +37,6 @@ from dae.backends.impala.import_commons import (
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.helpers import study_id_from_path
 
-from dae.backends.impala.parquet_io import ParquetManager, \
-    NoPartitionDescriptor
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
 from dae.gene.gene_sets_db import GeneSet
 from dae.gene.denovo_gene_set_collection_factory import \
@@ -1034,12 +1032,42 @@ def temp_dbfile(request, cleanup):
 @pytest.fixture
 def agp_config(data_import, iossifov2014_impala):
     return Box({
-        'gene_sets': ['CHD8 target genes'],
-        'protection_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
-        'autism_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
+        'gene_sets': [
+            {
+                'category': 'relevant_gene_sets',
+                'display_name': 'Relevant Gene Sets',
+                'sets': [
+                    {'set_id': 'CHD8 target genes', 'collection_id': 'main'},
+                    {
+                        'set_id': 'FMRP Darnell',
+                        'collection_id': 'main'
+                    }
+                ]
+            },
+        ],
+        'genomic_scores': [
+            {
+                'category': 'protection_scores',
+                'display_name': 'Protection scores',
+                'scores': [
+                    {'score_name': 'SFARI_gene_score', 'format': '%s'},
+                    {'score_name': 'RVIS_rank', 'format': '%s'},
+                    {'score_name': 'RVIS', 'format': '%s'}
+                ]
+            },
+            {
+                'category': 'autism_scores',
+                'display_name': 'Autism scores',
+                'scores': [
+                    {'score_name': 'SFARI_gene_score', 'format': '%s'},
+                    {'score_name': 'RVIS_rank', 'format': '%s'},
+                    {'score_name': 'RVIS', 'format': '%s'}
+                ]
+            },
+        ],
         'datasets': Box({
             'iossifov_we2014_test': Box({
-                'effects': ['synonymous', 'missense'],
+                'effects': ['noncoding', 'missense'],
                 'person_sets': [
                     Box({
                         'set_name': 'unknown',
@@ -1086,12 +1114,6 @@ def agp_gpf_instance(
         "get_gene_set_ids",
         return_value=main_gene_sets
     )
-    all_gene_sets = [GeneSet(gs, "", ["C2orf42"]) for gs in main_gene_sets]
-    mocker.patch.object(
-        fixtures_gpf_instance.gene_sets_db,
-        "get_all_gene_sets",
-        return_value=all_gene_sets
-    )
     fixtures_gpf_instance.__autism_gene_profile_db = \
         AutismGeneProfileDB(
             fixtures_gpf_instance._autism_gene_profile_config,
@@ -1109,19 +1131,21 @@ def agp_gpf_instance(
 
 @pytest.fixture(scope="session")
 def sample_agp():
-    gene_sets = ['CHD8 target genes']
-    protection_scores = {
-        'SFARI_gene_score': 1, 'RVIS_rank': 193.0, 'RVIS': -2.34
-    }
-    autism_scores = {
-        'SFARI_gene_score': 1, 'RVIS_rank': 193.0, 'RVIS': -2.34
+    gene_sets = ['main_CHD8 target genes']
+    genomic_scores = {
+        'protection_scores': {
+            'SFARI_gene_score': 1, 'RVIS_rank': 193.0, 'RVIS': -2.34
+        },
+        'autism_scores': {
+            'SFARI_gene_score': 1, 'RVIS_rank': 193.0, 'RVIS': -2.34
+        },
     }
     variant_counts = {
         'iossifov_we2014_test': {
-            'unknown': {'synonymous': 53, 'missense': 21},
-            'unaffected': {'synonymous': 43, 'missense': 51},
+            'unknown': {'noncoding': 53, 'missense': 21},
+            'unaffected': {'noncoding': 43, 'missense': 51},
         }
     }
     return AGPStatistic(
-        "CHD8", gene_sets, protection_scores, autism_scores, variant_counts
+        "CHD8", gene_sets, genomic_scores, variant_counts
     )

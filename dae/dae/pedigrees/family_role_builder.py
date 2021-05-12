@@ -1,4 +1,3 @@
-import sys
 import logging
 
 from collections import defaultdict
@@ -8,6 +7,7 @@ from dae.pedigrees.family import Person
 
 
 logger = logging.getLogger(__name__)
+
 
 class Mating:
     def __init__(self, mom_id, dad_id):

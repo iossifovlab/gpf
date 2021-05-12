@@ -11,7 +11,7 @@ class Command(ImportUsersBase, BaseCommand):
         "Required column names for the csv file - Email."
         "Optional column names - Groups, Name, Password"
     )
-    
+
     def add_arguments(self, parser):
         parser.add_argument("file", type=str)
 
@@ -26,7 +26,10 @@ class Command(ImportUsersBase, BaseCommand):
                         print("User {} already exists".format(email))
                     else:
                         self.handle_user(user)
-            print("\033[92m" + "Successfully added the users from the file!" + "\033[0m")
+            print(
+                "\033[92m"
+                "Successfully added the users from the file!"
+                "\033[0m")
         except csv.Error:
             raise CommandError(
                 'There was a problem while reading "%s"' % options["file"]

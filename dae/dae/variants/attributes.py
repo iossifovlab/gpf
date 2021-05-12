@@ -44,12 +44,13 @@ _ROLE_SYNONYMS = {
     "mother": "mom",
     "father": "dad",
     "proband": "prb",
+    "initially identified proband": "prb",
     "sibling": "sib",
     "younger sibling": "sib",
     "older sibling": "sib",
     "maternal half sibling": "maternal_half_sibling",
     "paternal half sibling": "paternal_half_sibling",
-    "half sibling": "half_sibling",
+    # "half sibling": "half_sibling",
     "maternal aunt": "maternal_aunt",
     "maternal uncle": "maternal_uncle",
     "paternal aunt": "paternal_aunt",
@@ -190,7 +191,7 @@ class Status(enum.Enum):
             return Status.unaffected
         elif name in set(["affected", "2", "true"]):
             return Status.affected
-        elif name in set(["unspecified", "-", "0"]):
+        elif name in set(["unspecified", "-", "0", "unknown"]):
             return Status.unspecified
         raise ValueError("unexpected status type: " + name)
 
