@@ -1,3 +1,130 @@
+CREATE TABLE IF NOT EXISTS gpf_variant_db.sparkv3_pilot_summary_alleles (
+  `bucket_index` int, 
+  `chromosome` string, 
+  `position` int, 
+  `end_position` int, 
+  `effect_types` string, 
+  `effect_gene_symbols` string, 
+  `summary_index` int, 
+  `allele_index` int, 
+  `variant_type` tinyint, 
+  `transmission_type` tinyint, 
+  `reference` string, 
+  `af_allele_freq` float, 
+  `af_allele_count` int, 
+  `af_parents_called_percent` float, 
+  `af_parents_called_count` int
+) 
+PARTITIONED BY (
+  `region_bin` string, 
+  `frequency_bin` tinyint
+) 
+STORED AS PARQUET
+
+
+INSERT INTO gpf_variant_db.sparkv3_pilot_summary_alleles 
+( 
+  `bucket_index`,
+  `position`,
+  `summary_index`,
+  `allele_index`,
+  `effect_types`,
+  `effect_gene_symbols`,
+  `variant_type`,
+  `transmission_type`,
+  `chromosome`,
+  `end_position`,
+  `reference`,
+  `af_allele_freq`,
+  `af_allele_count`,
+  `af_parents_called_percent`,
+  `af_parents_called_count`
+) 
+PARTITION (`region_bin`, `frequency_bin`)
+SELECT 
+  `bucket_index`, 
+  `position`, 
+  `summary_index`, 
+  `allele_index`, 
+  `effect_types`, 
+  `effect_gene_symbols`, 
+  `variant_type`, 
+  `transmission_type`, 
+  MIN(`chromosome`), 
+  MIN(`end_position`), 
+  MIN(`reference`), 
+  MIN(`af_allele_freq`), 
+  MIN(`af_allele_count`), 
+  MIN(`af_parents_called_percent`), 
+  MIN(`af_parents_called_count`),
+  `region_bin`,
+  `frequency_bin`
+FROM gpf_variant_db.sparkv3_pilot_variants as variants 
+GROUP BY `bucket_index`, `position`, `summary_index`, `allele_index`, `effect_types`, `effect_gene_symbols`, `variant_type`, `transmission_type`, `region_bin`, `frequency_bin`
+
+
+CREATE EXTERNAL TABLE gpf_variant_db.sparkv3_pilot_family_allele (
+  `bucket_index` INT,  
+  `summary_index` INT,
+  `family_index` INT,  
+  `transmission_type` TINYINT,  
+  `family_id` STRING,  
+  `is_denovo` TINYINT,  
+  `variant_in_sexes` TINYINT,  
+  `variant_in_roles` INT,  
+  `inheritance_in_members` SMALLINT,  
+  `variant_in_members` STRING  
+) 
+PARTITIONED BY (
+  region_bin string, 
+  frequency_bin tinyint, 
+  family_bin tinyint
+) 
+STORED AS PARQUET 
+
+
+INSERT INTO gpf_variant_db.sparkv3_pilot_family_allele 
+PARTITION (region_bin, frequency_bin, family_bin) 
+SELECT  
+  `bucket_index`,
+  `summary_index`,  
+  `family_index`,
+  `transmission_type`,
+  `family_id`,  
+  `is_denovo`,  
+  `variant_in_sexes`,  
+  `variant_in_roles`,  
+  `inheritance_in_members`,  
+  `variant_in_members`, 
+  `region_bin`, 
+  `frequency_bin`, 
+  `family_bin` 
+FROM gpf_variant_db.sparkv3_pilot_variants;
+
+
+SELECT 
+  `bucket_index`, 
+  `position`, 
+  `summary_index`, 
+  `allele_index`, 
+  `effect_types`, 
+  `effect_gene_symbols`, 
+  `variant_type`, 
+  `transmission_type`, 
+  COUNT(DISTINCT `chromosome`), 
+  COUNT(DISTINCT `end_position`), 
+  COUNT(DISTINCT `reference`), 
+  COUNT(DISTINCT `af_allele_freq`), 
+  COUNT(DISTINCT `af_allele_count`), 
+  COUNT(DISTINCT `af_parents_called_percent`), 
+  COUNT(DISTINCT `af_parents_called_count`),
+  `region_bin`,
+  `frequency_bin`
+FROM gpf_variant_db.sparkv3_pilot_variants as variants 
+GROUP BY `bucket_index`, `position`, `summary_index`, `allele_index`, `effect_types`, `effect_gene_symbols`, `variant_type`, `transmission_type`, `region_bin`, `frequency_bin`
+
+
+
 SELECT bucket_index, summary_index, chromosome, `position`, effect_gene_symbols, effect_types, variant_type, family_id FROM data_hg38_seqclust.SFARI_SSC_WGS_CSHL_variants 
 WHERE
   ( (  effect_gene_symbols in (  'SNORD141A'  )  ) ) AND 
