@@ -61,12 +61,9 @@ describe('Enrichment tool tests', () => {
     enrichmentToolPage.findWarningAlertInComponent('gpf-gene-symbols').should('be.hidden');
   });
 
-  // review
-  // investigate consitency issues when running all enrichment tool tests
-  // works fine when ran by itself though
   it('should display alert window when the gene sets textarea is empty', () => {
     const genesBlockPage = new GenesBlockPage();
-    
+
     enrichmentToolPage.findErrorAlertInComponent('gpf-gene-sets').should('not.exist');
 
     genesBlockPage.geneSetsButton.click();

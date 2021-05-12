@@ -17,8 +17,6 @@ describe('Inheritance tests', () => {
     inheritancetypesPage.navigateToHome();
   });
 
-  // review
-  // add error alert to var?
   it('should display error alert when none of the checkboxes are selected', () => {
     inheritancetypesPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     inheritancetypesPage.findErrorAlertInComponent('gpf-inheritancetypes').should('not.exist');

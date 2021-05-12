@@ -80,7 +80,6 @@ describe('User management tests', () => {
     userManagementPage.usersTableRows.last().should('include.text', 'admin');
   });
 
-  // Review: cy.reload()
   it('should search and find user', () => {
     createTestUser(userManagementPage, 'test_email@email.com', 'test_name');
     userManagementPage.userSearchField.type('test_name');

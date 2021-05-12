@@ -17,8 +17,6 @@ describe('Gender tests', () => {
     genderPage.navigateToHome();
   });
 
-  // review
-  // see if u can add error alert window as a var before everything
   it('should display error alert when none of the checkboxes are selected', () => {
     genderPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genderPage.findErrorAlertInComponent('gpf-gender').should('not.exist');
