@@ -76,7 +76,7 @@ describe('User management tests', () => {
 
   it('should search and filter a specific user', () => {
     userManagementPage.userSearchField.type('admin');
-    cy.wait(500);
+    userManagementPage.usersTableRows.should('have.length', 1);
     userManagementPage.usersTableRows.last().should('include.text', 'admin');
   });
 
@@ -99,7 +99,7 @@ describe('User management tests', () => {
 
     userManagementPage.datasetsTableAddGroupToLastDatasetInputField.type('test_group');
     userManagementPage.datasetsTableAddGroupToLastDatasetButton.click();
-    cy.wait(500);
+    userManagementPage.datasetsTableRows.should('include.text', 'test_group');
     userManagementPage.datasetsTableRows.last().should('include.text', 'test_group');
 
     userManagementPage.groupsButton.click();
@@ -109,8 +109,7 @@ describe('User management tests', () => {
     userManagementPage.datasetsButton.click();
     userManagementPage.datasetsTableRemoveNewestGroupInLastDatasetButton.click();
     userManagementPage.datasetsTableRemoveGroupConfirmButton.click();
-    cy.wait(500);
-    userManagementPage.datasetsTableRows.last().should('not.include.text', 'test_group');
+    userManagementPage.datasetsTableRows.should('not.include.text', 'test_group');
 
     userManagementPage.groupsButton.click();
     userManagementPage.groupsTableRows.should('have.length', 10);
