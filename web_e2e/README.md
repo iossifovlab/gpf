@@ -20,7 +20,7 @@ Update `/etc/docker/daemon.json` to include:
 
 ```
 {
-        "insecure-registries" : ["registry.seqpipe.org:5000"]
+    "insecure-registries" : ["registry.seqpipe.org:5000"]
 }
 ```
 
@@ -38,6 +38,13 @@ docker pull registry.seqpipe.org:5000/seqpipe-gpf-full:latest
 
 ## Setup GPF e2e tests
 
+Clear the previous e2e test instance:
+
+```
+./test_cleanup.sh
+```
+
+Setup a fresh one:
 
 ```
 ./tests_setup.sh
@@ -53,6 +60,7 @@ docker inspect \
 
 ## Run GPF e2e tests
 
+
 ```
 sudo rm -rf node_modules
 sudo rm -rf reports_new
@@ -61,7 +69,7 @@ npm install .
 ```
 
 ```
-ng e2e --baseUrl http://<instance ip>/gpf/
+./node_modules/.bin/cypress open --config baseUrl=http://<instance ip>/gpf/
 ```
 
 where `<instance ip>` is the IP address reported from `docker inspect` command.
@@ -79,12 +87,4 @@ to:
 
 ```
 const basePath = 'http://<instance ip>:9001;
-```
-
-
-## Run tests clean up 
-
-
-```
-./tests_cleanup.sh
 ```
