@@ -38,7 +38,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   hideResults: boolean;
   hideDropdown: boolean;
   showError = false;
-  
+
   codingEffectTypes = [
     'lgds',
     'nonsense',

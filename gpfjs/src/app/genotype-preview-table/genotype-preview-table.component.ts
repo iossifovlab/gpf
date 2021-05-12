@@ -1,6 +1,7 @@
 import { Input, Component, HostListener, OnInit } from '@angular/core';
 import { GenotypePreview, GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
 import { SelectorValue } from '../datasets/datasets';
+import { Column, ColumnGroup } from 'app/datasets/datasets';
 
 @Component({
   selector: 'gpf-genotype-preview-table',
@@ -9,7 +10,7 @@ import { SelectorValue } from '../datasets/datasets';
 })
 export class GenotypePreviewTableComponent implements OnInit {
   @Input() genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
-  @Input() columns: Array<any>;
+  @Input() columns: Array<Column | ColumnGroup>;
   @Input() legend: Array<SelectorValue>;
   private singleColumnWidth: string;
 

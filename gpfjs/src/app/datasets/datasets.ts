@@ -126,7 +126,49 @@ export class PersonFilter {
   ) {}
 }
 
+export class Column {
+  constructor(
+    readonly name: string,
+    readonly source: string,
+    readonly format: string,
+  ) {}
+
+  static fromJson(json: any): Column {
+    return new Column(
+      json['name'],
+      json['source'],
+      json['format'],
+    );
+  }
+}
+
+export class ColumnGroup {
+  constructor(
+    readonly name: string,
+    readonly columns: Array<Column>,
+  ) {}
+
+  static fromJson(json: any): ColumnGroup {
+    return new ColumnGroup(
+      json['name'],
+      json['columns'].map(col => Column.fromJson(col)),
+    );
+  }
+}
+
 export class GenotypeBrowser {
+
+  static tableColumnsFromJson(json: Array<any>): Array<Column | ColumnGroup> {
+    const result = [];
+    for (const column of json) {
+      if ('columns' in column) {
+        result.push(ColumnGroup.fromJson(column));
+      } else {
+        result.push(Column.fromJson(column));
+      }
+    }
+    return result;
+  }
 
   static fromJson(json: any): GenotypeBrowser {
     return new GenotypeBrowser(
@@ -140,7 +182,7 @@ export class GenotypeBrowser {
       json['has_study_filters'],
       json['has_study_types'],
       json['has_graphical_preview'],
-      json['table_columns'],
+      GenotypeBrowser.tableColumnsFromJson(json['table_columns']),
       PersonFilter.fromJson(json['person_filters']),
       PersonFilter.fromJson(json['family_filters']),
       PresentInRole.fromJsonArray(json['present_in_role']),
@@ -163,7 +205,7 @@ export class GenotypeBrowser {
     readonly hasStudyFilters: boolean,
     readonly hasStudyTypes: boolean,
     readonly hasGraphicalPreview: boolean,
-    readonly tableColumns: Array<any>, // FIXME Add proper typing
+    readonly tableColumns: Array<Column | ColumnGroup>,
     readonly personFilters: Array<PersonFilter>,
     readonly familyFilters: Array<PersonFilter>,
     readonly presentInRole: PresentInRole[],
@@ -229,7 +271,7 @@ export class PeopleGroup {
         result = result.concat(ps.domain);
       }
     }
-    result.push({"color": "#E0E0E0", "id": "missing-person", "name": "missing-person"}); // Default legend value
+    result.push({'color': '#E0E0E0', 'id': 'missing-person', 'name': 'missing-person'}); // Default legend value
     return result;
   }
 }
