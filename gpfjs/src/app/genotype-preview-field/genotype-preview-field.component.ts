@@ -24,8 +24,7 @@ export class GenotypePreviewFieldComponent implements OnChanges {
       if (this.value) {
         if (this.format) {
           if (this.value.constructor === Array) {
-            // TODO FIXME Re-enable formatting, disabled because too much errors being logged
-            return this.value.map(x => x) // sprintf(this.format, x));
+            return this.value.map(x => sprintf(this.format, x));
           }
           if (typeof this.value === 'string') {
             return this.value;

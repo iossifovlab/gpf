@@ -242,11 +242,9 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
         this.hideResults = false;
         this.loadingFinished = false;
         this.loadingService.setLoadingStart();
-        return combineLatest(
-          of(state),
-        );
+        return of(state);
       })
-    ).subscribe(([state]) => {
+    ).subscribe(state => {
       this.genotypePreviewVariantsArray = null;
 
       this.genotypeBrowserState = state;

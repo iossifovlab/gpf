@@ -47,6 +47,9 @@ describe('GeneBrowserComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(GeneBrowserComponent);
     component = fixture.componentInstance;
+    spyOn((<any>component).datasetsService, 'getSelectedDataset').and.returnValue(
+      of({'genotypeBrowserConfig': {'columnIds': ['bla']}})
+    );
     fixture.detectChanges();
   });
 
@@ -220,7 +223,7 @@ describe('GeneBrowserComponent', () => {
     // accesing private property - bad, needs to be refactored
     (component as any).geneBrowserConfig = {frequencyColumn: 'testMetric'};
     const event = {
-      target: {queryData: {value: ''}, submit() {}}
+      target: {queryData: {value: ''}, submit() {}, attributes: {id: {nodeValue: 'bla'}}}
     };
     const getCurrentStateSpy = spyOn(component, 'getCurrentState').and.returnValue(of(testState));
     const submitSpy = spyOn(event.target, 'submit').and.callFake(() => {
@@ -231,7 +234,8 @@ describe('GeneBrowserComponent', () => {
         '"affectedStatus":["Affected and unaffected","Affected only","Unaffected only"],' +
         '"variantType":["sub","ins","del","cnv+","cnv-"],' +
         '"geneSymbols":["testSymbol"],"datasetId":"testDatasetId",' +
-        '"regions":[1,10],"summaryVariantIds":[5,10,15]}');
+        '"regions":[1,10],"summaryVariantIds":[5,10,15],' +
+        '"download":true}');
     });
 
     component.onSubmit(event);
