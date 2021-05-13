@@ -28,7 +28,11 @@ class StudyWrapperBase(GenotypeData):
     def get_columns_as_sources(config, column_ids):
         column_groups = config.genotype_browser.column_groups
         genotype_cols = config.genotype_browser.columns.get("genotype", {})
+        if genotype_cols is None:
+            genotype_cols = {}
         phenotype_cols = config.genotype_browser.columns.get("phenotype", {})
+        if phenotype_cols is None:
+            phenotype_cols = {}
         result = list()
 
         for column_id in column_ids:
