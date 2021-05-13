@@ -138,7 +138,10 @@ class WGPFInstance(GPFInstance):
 
         return wrapper
 
-    def get_genotype_data_ids(self):
+    def get_genotype_data_ids(self, local_only=False):
+        if local_only:
+            return list(super(WGPFInstance, self).get_genotype_data_ids())
+
         return (
             list(super(WGPFInstance, self).get_genotype_data_ids())
             + self.remote_studies
