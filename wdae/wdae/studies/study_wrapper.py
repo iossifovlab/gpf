@@ -574,20 +574,18 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
         kwargs["datasetId"] = self._remote_study_id
         kwargs["maxVariantsCount"] = max_variants_count
-        new_sources = copy(QUERY_SOURCES)
+        new_sources = []
+        for qs in QUERY_SOURCES:
+            if not any([qs["source"] == s["source"] for s in sources]):
+                new_sources.append(qs)
+        sources.extend(new_sources)
         for source in sources:
-            seen = False
-            if source["source"] == "pedigree":
-                continue
-            for qs in QUERY_SOURCES:
-                if qs["source"] == source["source"]:
-                    seen = True
-            if not seen:
-                new_sources.append(source)
-        kwargs["sources"] = new_sources
+            if "format" in source:
+                del source["format"]
+        kwargs["sources"] = sources
 
         fam_id_idx = -1
-        for idx, s in enumerate(new_sources):
+        for idx, s in enumerate(sources):
             if s["source"] == "family":
                 fam_id_idx = idx
                 break
@@ -601,7 +599,9 @@ class RemoteStudyWrapper(StudyWrapperBase):
         for variant in response:
             fam_id = variant[fam_id_idx][0]
             family = self.families.get(fam_id)
-            fv = RemoteFamilyVariant(variant, family, new_sources)
+            fv = RemoteFamilyVariant(
+                variant, family, list(map(lambda s: s['source'], sources))
+            )
 
             row_variant = self.response_transformer._build_variant_row(
                 fv, sources, person_set_collection=person_set_collection

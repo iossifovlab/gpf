@@ -1,6 +1,6 @@
 import math
-from copy import copy, deepcopy
-from typing import List, Dict
+from copy import copy
+from typing import List, Optional
 
 from dae.variants.variant import SummaryAllele, SummaryVariant
 
@@ -24,10 +24,6 @@ SUMMARY_QUERY_SOURCES = [
     {"source": "effect_genes"},
     {"source": "effect_gene_symbols"},
     {"source": "frequency"},
-    {"source": "study_name"},
-    {"source": "LGD_rank"},
-    {"source": "RVIS_rank"},
-    {"source": "pLI_rank"},
 ]
 
 SUMMARY_COLUMNS = [s["source"] for s in SUMMARY_QUERY_SOURCES]
@@ -54,9 +50,14 @@ COLUMNS = [
 
 class RemoteAllele(SummaryAllele):
 
-    def __init__(self, attributes_list: List, idx: int):
+    def __init__(
+        self,
+        attributes_list: List,
+        idx: int,
+        columns: Optional[List[str]] = None
+    ):
         # columns is an ordered list of columns by their source name
-        self.columns = SUMMARY_COLUMNS
+        self.columns = columns if columns else SUMMARY_COLUMNS
         self.attributes_list = attributes_list
         self.idx = idx
 
@@ -81,24 +82,29 @@ class RemoteAllele(SummaryAllele):
     def _find_attribute(self, source: str):
         if source not in self.columns:
             return None
-        return self.attributes_list[self.columns.index(source)][self.idx]
+        attr = self.attributes_list[self.columns.index(source)][self.idx]
+        return attr if attr != "-" else None
 
     @staticmethod
     def create_reference_allele(allele) -> "RemoteAllele":
         new_attributes = copy(allele.attributes_list)
         new_attributes[allele.columns.index("allele_index")][0] = 0
         new_attributes[allele.columns.index("alternative")][0] = None
-        return RemoteAllele(new_attributes, 0)
+        return RemoteAllele(new_attributes, 0, allele.columns)
 
 
 class RemoteFamilyAllele(FamilyAllele):
     def __init__(
-        self, attributes_list: List, idx: int, family: Family
+        self,
+        attributes_list: List,
+        idx: int,
+        family: Family,
+        columns: Optional[List[str]] = None
     ):
-        self.columns = COLUMNS
+        self.columns = columns if columns else SUMMARY_COLUMNS
         self.attributes_list = attributes_list
         self.idx = idx
-        summary_allele = RemoteAllele(attributes_list, idx)
+        summary_allele = RemoteAllele(attributes_list, idx, self.columns)
         genotype = self._find_attribute("genotype")
         best_state = self._find_attribute("best_st")
         genetic_model = self._find_attribute("genetic_model")
@@ -119,15 +125,19 @@ class RemoteFamilyAllele(FamilyAllele):
 
 class RemoteVariant(SummaryVariant):
 
-    def __init__(self, attributes_list: List):
+    def __init__(
+        self,
+        attributes_list: List,
+        columns: Optional[List[str]] = None,
+    ):
         # columns is an ordered list of columns by their source name
-        self.columns = SUMMARY_COLUMNS
+        self.columns = columns if columns else SUMMARY_COLUMNS
         self.attributes_list = attributes_list
         allele_count = len(self.attributes_list[0])
         remote_alleles = []
         for idx in range(allele_count):
             remote_alleles.append(
-                RemoteAllele(self.attributes_list, idx)
+                RemoteAllele(self.attributes_list, idx, self.columns)
             )
         ref_allele = RemoteAllele.create_reference_allele(remote_alleles[0])
         remote_alleles.insert(0, ref_allele)
@@ -136,23 +146,25 @@ class RemoteVariant(SummaryVariant):
 
 class RemoteFamilyVariant(FamilyVariant):
     def __init__(
-        self, attributes_list: List, family: Family,
-        additional_columns: List[Dict[str, str]] = []
+        self,
+        attributes_list: List,
+        family: Family,
+        columns: Optional[List[str]] = None,
     ):
-        self.columns = [
-            c["source"] for c in additional_columns
-        ] if additional_columns else COLUMNS
+        self.columns = columns if columns else SUMMARY_COLUMNS
 
         self.attributes_list = attributes_list
         allele_count = len(self.attributes_list[0])
         remote_alleles = []
         for idx in range(allele_count):
-            remote_alleles.append(
-                RemoteFamilyAllele(self.attributes_list, idx, family)
-            )
+            remote_alleles.append(RemoteFamilyAllele(
+                self.attributes_list, idx, family, self.columns
+            ))
         genotype = remote_alleles[0]._find_attribute("genotype")
         best_state = remote_alleles[0]._find_attribute("best_st")
-        self.summary_variant = RemoteVariant(copy(self.attributes_list))
+        self.summary_variant = RemoteVariant(
+            copy(self.attributes_list), self.columns
+        )
         ref_allele = RemoteAllele.create_reference_allele(remote_alleles[0])
         remote_alleles.insert(0, ref_allele)
 
