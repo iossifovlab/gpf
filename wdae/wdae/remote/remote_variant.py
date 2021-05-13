@@ -24,6 +24,10 @@ SUMMARY_QUERY_SOURCES = [
     {"source": "effect_genes"},
     {"source": "effect_gene_symbols"},
     {"source": "frequency"},
+    {"source": "study_name"},
+    {"source": "LGD_rank"},
+    {"source": "RVIS_rank"},
+    {"source": "pLI_rank"},
 ]
 
 SUMMARY_COLUMNS = [s["source"] for s in SUMMARY_QUERY_SOURCES]
@@ -71,7 +75,7 @@ class RemoteAllele(SummaryAllele):
             summary_index=self._find_attribute("summary_index"),
             allele_index=self._find_attribute("allele_index"),
             effect=self._find_attribute("raw_effects"),
-            attributes=dict(zip(self.columns, self.attributes_list))
+            attributes={col: self._find_attribute(col) for col in self.columns}
         )
 
     def _find_attribute(self, source: str):

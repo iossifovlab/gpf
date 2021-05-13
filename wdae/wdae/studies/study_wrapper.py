@@ -236,11 +236,11 @@ class StudyWrapper(StudyWrapperBase):
         self.family_filters = genotype_browser_config.family_filters or None
 
         # GENE WEIGHTS
-        if genotype_browser_config.genotype:
+        if genotype_browser_config.column_groups:
             self.gene_weight_column_sources = [
-                slot.source
+                genotype_browser_config.columns.genotype[slot].source
                 for slot in (
-                    genotype_browser_config.genotype.weights.slots or []
+                    genotype_browser_config.column_groups.weights.columns or []
                 )
             ]
         else:
@@ -457,9 +457,6 @@ class RemoteStudyWrapper(StudyWrapperBase):
         config["name"] = self.rest_client.prefix_remote_name(
             config.get("name", self._remote_study_id)
         )
-
-        # TODO FIXME Remove this once remote person sets are implemented
-        # config["genotype_browser"]["has_pedigree_selector"] = False
 
         if config["parents"]:
             config["parents"] = list(

@@ -123,7 +123,6 @@ class ResponseTransformer:
 
         "seen_in_unaffected":
         lambda v: bool(v.get_attribute("seen_in_status") in {1, 3}),
-
     }
 
     PHENOTYPE_ATTRS = {
@@ -326,7 +325,6 @@ class ResponseTransformer:
                         fn = self.PHENOTYPE_ATTRS[col_source]
                         row_variant.append(
                             ",".join(fn(v, phenotype_person_sets)))
-
                 elif col_source == "study_phenotype":
                     row_variant.append(
                         self.study_wrapper.config.study_phenotype
@@ -337,14 +335,11 @@ class ResponseTransformer:
                     else:
                         attribute = v.get_attribute(col_source)
 
-                    # attribute = v.get_attribute(col_source)
-
                     if kwargs.get("reduceAlleles", True):
                         if all([a == attribute[0] for a in attribute]):
                             attribute = [attribute[0]]
                     attribute = list(map(col_formatter, attribute))
                     row_variant.append(attribute)
-                    # row_variant.append(",".join([str(a) for a in attribute]))
 
             except (AttributeError, KeyError, Exception):
                 logging.exception(f'error build variant: {v}')
@@ -451,8 +446,11 @@ class ResponseTransformer:
                 )
 
                 for allele in variant.alt_alleles:
-                    gene_weights_values = self._get_gene_weights_values(allele)
-                    allele.update_attributes(gene_weights_values)
+                    if not self.study_wrapper.is_remote:
+                        gene_weights_values = self._get_gene_weights_values(
+                            allele
+                        )
+                        allele.update_attributes(gene_weights_values)
 
                     if pheno_values:
                         allele.update_attributes(pheno_values)
