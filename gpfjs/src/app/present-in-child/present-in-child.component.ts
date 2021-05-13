@@ -33,7 +33,6 @@ export class PresentInChildComponent extends QueryStateWithErrorsProvider implem
           this.presentInChild.selected = new Set(state['presentInChild'] as string[]);
         }
       });
-
   }
 
   selectAll(): void {

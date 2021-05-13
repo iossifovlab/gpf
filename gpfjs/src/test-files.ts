@@ -101,3 +101,4 @@ import './app/autism-gene-profiles-block/autism-gene-profiles-block.component.sp
 import './app/autism-gene-profiles-single-view/autism-gene-profile-single-view.component.spec';
 import './app/multiple-select-menu/multiple-select-menu.component.spec';
 import './app/autism-gene-profile-single-view-wrapper/autism-gene-profile-single-view-wrapper.component.spec';
+import './app/present-in-child/present-in-child.component.spec';
