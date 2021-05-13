@@ -11,25 +11,25 @@ from studies.response_transformer import ResponseTransformer
 def test_special_attrs_formatting(fixtures_wgpf_instance):
     genotype_data = fixtures_wgpf_instance.make_wdae_wrapper("f1_study")
     download_sources = genotype_data.get_columns_as_sources(
-        genotype_data.download_columns
+        genotype_data.config, genotype_data.download_columns
     )
     vs = genotype_data.query_variants_wdae({}, download_sources)
     row = list(vs)[0]
     assert row == [
-        "f1",
-        "f1_study",
-        '1:878152',
-        'sub(C->T,A)',
-        '1',
-        '878152',
-        'C',
-        'T,A',
-        '2111/0110/0001',
-        'mom1;dad1;ch1;ch2',
-        'mom:F:unaffected;dad:M:unaffected;prb:F:affected;sib:M:unaffected',
-        "dad1;ch1,ch2",
-        "dad:M:unaffected;prb:F:affected,sib:M:unaffected",
-        "mendelian,denovo",
+        ["f1"],
+        ["f1_study"],
+        ['1:878152'],
+        ['sub(C->T,A)'],
+        ['1'],
+        ['878152'],
+        ['C'],
+        ['T', 'A'],
+        ['2111/0110/0001'],
+        ['mom1;dad1;ch1;ch2'],
+        ['mom:F:unaffected;dad:M:unaffected;prb:F:affected;sib:M:unaffected'],
+        ["dad1;ch1", "ch2"],
+        ["dad:M:unaffected;prb:F:affected", "sib:M:unaffected"],
+        ["mendelian", "denovo"],
         'phenotype 1:unaffected:phenotype 1:unaffected',
         "unaffected:phenotype 1,unaffected",
         "test_phenotype"
@@ -91,7 +91,6 @@ def phenotype_person_sets(variants_impl):
         person_sets_config, families)
     assert person_sets is not None
     return person_sets
-
 
 
 @pytest.mark.parametrize(
