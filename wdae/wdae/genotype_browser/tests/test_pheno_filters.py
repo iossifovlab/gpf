@@ -52,9 +52,9 @@ SOURCE_RAW = {
             3,
             [SOURCE_CATEGORICAL],
             [
-                ["option2"],
-                ["option2"],
-                ["option2"]
+                [["option2"]],
+                [["option2"]],
+                [["option2"]]
             ]
         ),
         (
@@ -62,9 +62,9 @@ SOURCE_RAW = {
             3,
             [SOURCE_CONTINUOUS],
             [
-                ["3.14"],
-                ["3.14"],
-                ["3.14"]
+                [["3.14"]],
+                [["3.14"]],
+                [["3.14"]]
             ]
         ),
         (
@@ -72,9 +72,9 @@ SOURCE_RAW = {
             3,
             [SOURCE_CATEGORICAL, SOURCE_CONTINUOUS],
             [
-                ["option2", "3.14"],
-                ["option2", "3.14"],
-                ["option2", "3.14"]
+                [["option2"], ["3.14"]],
+                [["option2"], ["3.14"]],
+                [["option2"], ["3.14"]]
             ],
         ),
     ],
