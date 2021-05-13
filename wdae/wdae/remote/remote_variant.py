@@ -115,7 +115,8 @@ class RemoteFamilyAllele(FamilyAllele):
     def _find_attribute(self, source: str):
         if source not in self.columns:
             return None
-        return self.attributes_list[self.columns.index(source)][self.idx]
+        attr = self.attributes_list[self.columns.index(source)][self.idx]
+        return attr if attr != "-" else None
 
     @property
     def inheritance_in_members(self):

@@ -290,7 +290,10 @@ class ResponseTransformer:
                 if col_source in ("LGD_rank", "RVIS_rank", "pLI_rank"):
                     # FIXME Temp fix for double-formatting error
                     def col_formatter(val):
-                        return val
+                        if val is None:
+                            return "-"
+                        else:
+                            return val
                 elif col_format is None:
                     def col_formatter(val):
                         if val is None:
