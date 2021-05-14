@@ -17,7 +17,7 @@ include libdefer.sh
 
 function main() {
   libmain_init
-  libmain_init_build_env seqpipe-containers data-hg38
+  libmain_init_build_env seqpipe-containers
   libmain_save_build_env_on_exit gpfjs
 
   libbuild_init gpfjs registry.seqpipe.org
