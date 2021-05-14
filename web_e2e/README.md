@@ -68,13 +68,27 @@ sudo rm -rf reports_new
 npm install .
 ```
 
+`<instance ip>` is the IP address reported from the `docker inspect` command.
+
+To run the tests in the terminal:
+
+```
+./node_modules/.bin/cypress run --config baseUrl=http://<instance ip>/gpf/
+```
+
+To run the tests using the cypress UI:
+
 ```
 ./node_modules/.bin/cypress open --config baseUrl=http://<instance ip>/gpf/
 ```
 
-where `<instance ip>` is the IP address reported from `docker inspect` command.
+To run a specific spec:
 
-## Run GPF e2e tests with live GPFJS ng serve
+```
+./node_modules/.bin/cypress open --config baseUrl=http://<instance ip>/gpf/ --spec <path to the spec>
+```
+
+## Run GPF e2e instance on live GPFJS ng serve
 
 
 Change `gpfjs/src/environments/environment.ts` line:
