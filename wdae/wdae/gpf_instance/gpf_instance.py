@@ -1,17 +1,15 @@
 import logging
 from threading import Lock
 
-from requests.exceptions import ConnectionError
-
 from django.conf import settings
 
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper
 
-from remote.rest_api_client import RESTClient, RESTClientRequestError
 from remote.gene_sets_db import RemoteGeneSetsDb
 from remote.denovo_gene_sets_db import RemoteDenovoGeneSetsDb
+from studies.remote_study_db import RemoteStudyDB
 
 from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.event_counters import CounterBase
@@ -31,43 +29,24 @@ _gpf_instance_lock = Lock()
 
 class WGPFInstance(GPFInstance):
     def __init__(self, *args, **kwargs):
-        self._remote_clients = None
         self._remote_study_clients = dict()
         self._remote_study_ids = dict()
-        self._study_wrappers = dict()
+        self._remote_study_db = None
 
         super(WGPFInstance, self).__init__(*args, **kwargs)
         self._load_remotes()
 
     def _load_remotes(self):
-        if self._remote_clients is not None:
+        if self._remote_study_db is not None:
             return
-
-        self._remote_clients = []
 
         remotes = self.dae_config.remotes
 
-        if remotes is not None:
-            for remote in remotes:
-                logger.info(f"Creating remote {remote}")
-                try:
-                    client = RESTClient(
-                        remote["id"],
-                        remote["host"],
-                        remote["user"],
-                        remote["password"],
-                        base_url=remote["base_url"],
-                        port=remote.get("port", None),
-                        protocol=remote.get("protocol", None),
-                        gpf_prefix=remote.get("gpf_prefix", None)
-                    )
-                    self._fetch_remote_studies(client)
-                    self._remote_clients.append(client)
-                except ConnectionError as err:
-                    logger.error(err)
-                    logger.error(f"Failed to create remote {remote['id']}")
-                except RESTClientRequestError as err:
-                    logger.error(err.message)
+        self._remote_study_db = RemoteStudyDB(remotes)
+
+        self._remotes = list(
+            self._remote_study_db._remote_study_clients.values()
+        )
 
     @property  # type: ignore
     @cached
@@ -75,16 +54,18 @@ class WGPFInstance(GPFInstance):
         logger.debug("creating new instance of GeneSetsDb")
         self._load_remotes()
         gene_sets_db = super().gene_sets_db
+        remote_clients = self._remote_study_db._remote_study_clients
         return RemoteGeneSetsDb(
-            self._remote_clients, gene_sets_db)
+            remote_clients, gene_sets_db)
 
     @property  # type: ignore
     @cached
     def denovo_gene_sets_db(self):
         self._load_remotes()
         denovo_gene_sets_db = super().denovo_gene_sets_db
+        remote_clients = self._remote_study_db._remote_study_clients
         return RemoteDenovoGeneSetsDb(
-            self._remote_clients, denovo_gene_sets_db)
+            remote_clients, denovo_gene_sets_db)
 
     def _fetch_remote_studies(self, rest_client):
         studies = rest_client.get_datasets()
@@ -154,23 +135,15 @@ class WGPFInstance(GPFInstance):
         if genotype_data is not None:
             return genotype_data
 
-        wrapper = self.get_wdae_wrapper(dataset_id)
-
-        if wrapper is None:
-            return None
-
-        # genotype_data = wrapper.config
-        return wrapper
+        genotype_data = self._remote_study_db.get_genotype_data(dataset_id)
+        return genotype_data
 
     def get_genotype_data_config(self, dataset_id):
         genotype_data_config = \
             super(WGPFInstance, self).get_genotype_data_config(dataset_id)
         if genotype_data_config is not None:
             return genotype_data_config
-        genotype_data = self.get_genotype_data(dataset_id)
-        if genotype_data:
-            return genotype_data.config
-        return None
+        return self._remote_study_db.get_genotype_data_config(dataset_id)
 
     def get_common_report(self, common_report_id):
         common_report = \
@@ -355,7 +328,7 @@ class WGPFInstance(GPFInstance):
 
     @property
     def remote_studies(self):
-        return list(self._remote_study_clients.keys())
+        return list(self._remote_study_db.get_genotype_data_ids())
 
     def get_all_denovo_gene_sets(self, types, datasets, collection_id):
         return self.denovo_gene_sets_db.get_all_gene_sets(
