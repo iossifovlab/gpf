@@ -254,6 +254,7 @@ class GenotypeDataGroup(GenotypeData):
         self._families = self._build_families()
         self._build_person_set_collections()
         self._executor = None
+        self.is_remote = False
         for study in self.studies:
             study._add_parent(self.study_id)
 
@@ -582,6 +583,8 @@ class GenotypeDataStudy(GenotypeData):
 
         self._backend = backend
         self._build_person_set_collections()
+
+        self.is_remote = False
 
     @property
     def study_phenotype(self):
