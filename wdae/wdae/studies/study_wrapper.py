@@ -600,11 +600,17 @@ class RemoteStudyWrapper(StudyWrapperBase):
             kwargs, reduceAlleles=False
         )
 
+        def get_source(col):
+            res = col['source']
+            if 'role' in col:
+                res = f"{res}.{col['role']}"
+            return res
+
         for variant in response:
             fam_id = variant[fam_id_idx][0]
             family = self.families.get(fam_id)
             fv = RemoteFamilyVariant(
-                variant, family, list(map(lambda s: s['source'], sources))
+                variant, family, list(map(get_source, sources))
             )
 
             row_variant = self.response_transformer._build_variant_row(
