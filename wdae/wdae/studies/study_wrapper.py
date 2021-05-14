@@ -1,17 +1,13 @@
 import itertools
 import logging
 
-from copy import copy
-
 from abc import abstractmethod
 
 from dae.variants.attributes import Role
 from dae.studies.study import GenotypeData
 from dae.configuration.gpf_config_parser import FrozenBox
-from dae.person_sets import PersonSetCollection
 from remote.remote_phenotype_data import RemotePhenotypeData
 from remote.remote_variant import RemoteFamilyVariant, QUERY_SOURCES
-from dae.pedigrees.family import Family, Person, FamiliesData
 from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
 
@@ -136,54 +132,6 @@ class StudyWrapperBase(GenotypeData):
 
         return result
 
-    def _build_person_set_collection(self):
-        pass
-
-    def query_variants(
-        self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        person_set_collection=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-        study_filters=None,
-        affected_status=None,
-        **kwargs,
-    ):
-        pass
-
-    def query_summary_variants(
-        self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        person_set_collection=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-        study_filters=None,
-        **kwargs,
-    ):
-        pass
-
     @abstractmethod
     def query_variants_wdae(self, kwargs, sources, max_variants_count=10000):
         pass
@@ -227,8 +175,8 @@ class StudyWrapper(StudyWrapperBase):
     def person_set_collection_configs(self):
         return self.genotype_data_study._person_set_collection_configs
 
-    def get_studies_ids(self, leafs=True):
-        return self.genotype_data_study.get_studies_ids(leafs=leafs)
+    def get_studies_ids(self, leaves=True):
+        return self.genotype_data_study.get_studies_ids(leaves=leaves)
 
     def _init_wdae_config(self):
         genotype_browser_config = self.config.genotype_browser
@@ -452,42 +400,13 @@ class StudyWrapper(StudyWrapperBase):
 
 class RemoteStudyWrapper(StudyWrapperBase):
 
-    def __init__(self, study_id, rest_client):
-        self._remote_study_id = study_id
-        self.rest_client = rest_client
-
-        config = self.rest_client.get_dataset_config(self._remote_study_id)
-        config["id"] = self.rest_client.prefix_remote_identifier(study_id)
-        config["name"] = self.rest_client.prefix_remote_name(
-            config.get("name", self._remote_study_id)
-        )
-
-        if config["parents"]:
-            config["parents"] = list(
-                map(
-                    self.rest_client.prefix_remote_identifier,
-                    config["parents"]
-                )
-            )
-
-        if config.get("studies"):
-            config["studies"] = list(
-                map(
-                    self.rest_client.prefix_remote_identifier,
-                    config["studies"]
-                )
-            )
+    def __init__(self, remote_genotype_data):
+        self.remote_genotype_data = remote_genotype_data
+        self._remote_study_id = remote_genotype_data._remote_study_id
+        self.rest_client = remote_genotype_data.rest_client
+        config = self.remote_genotype_data.config
 
         super(RemoteStudyWrapper, self).__init__(FrozenBox(config))
-
-        if config["parents"]:
-            config["parents"] = list(
-                map(
-                    self.rest_client.prefix_remote_identifier,
-                    config["parents"]
-                )
-            )
-            self._parents = list(config["parents"])
 
         self.phenotype_data = RemotePhenotypeData(
             self._remote_study_id,
@@ -496,52 +415,14 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
         self.is_remote = True
 
-        self._families = None
-
-        self._load_families()
-
         self._person_set_collections = None
-
-        self._load_person_set_collections()
+        self._person_set_collection_configs = None
 
         self.response_transformer = ResponseTransformer(self)
 
-    def _load_families(self):
-        families = dict()
-        families_details = self.rest_client.get_all_family_details(
-            self._remote_study_id
-        )
-        for family in families_details:
-            family_id = family["family_id"]
-            person_jsons = family["members"]
-            family_members = []
-            for person_json in person_jsons:
-                family_members.append(Person(**person_json))
-            families[family_id] = Family.from_persons(family_members)
-        self._families = FamiliesData.from_families(families)
-
-    def _load_person_set_collections(self):
-        person_set_collections = dict()
-
-        collections_json = self.rest_client.get_all_person_set_collections(
-            self._remote_study_id
-        )
-
-        for coll_json in collections_json:
-            psc = PersonSetCollection.from_json(coll_json, self._families)
-            print(repr(psc))
-            person_set_collections[psc.id] = psc
-
-        self._person_set_collections = person_set_collections
-
-    def is_group(self):
-        pass
-
     @property
-    def person_set_collection_configs(self):
-        return self.rest_client.get_person_set_collection_configs(
-            self._remote_study_id
-        )
+    def is_group(self):
+        self.remote_genotype_data.is_group
 
     @property
     def config_columns(self):
@@ -549,13 +430,10 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
     @property
     def families(self):
-        return self._families
+        return self.remote_genotype_data._families
 
-    def get_studies_ids(self, leafs=True):
-        studies = self.config["studies"]
-        if not studies:
-            return []
-        return studies
+    def get_studies_ids(self, leaves=True):
+        return self.remote_genotype_data.get_studies_ids(leaves=leaves)
 
     def query_variants_wdae(
             self, kwargs, sources,
@@ -614,6 +492,6 @@ class RemoteStudyWrapper(StudyWrapperBase):
             yield row_variant
 
     def get_person_set_collection(self, person_set_collection_id):
-        if person_set_collection_id is None:
-            return None
-        return self._person_set_collections[person_set_collection_id]
+        return self.remote_genotype_data.get_person_set_collection(
+            person_set_collection_id
+        )

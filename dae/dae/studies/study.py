@@ -103,7 +103,7 @@ class GenotypeData(ABC):
         pass
 
     @abstractmethod
-    def get_studies_ids(self, leafs=True):
+    def get_studies_ids(self, leaves=True):
         pass
 
     def get_leaf_children(self):
@@ -485,8 +485,8 @@ class GenotypeDataGroup(GenotypeData):
             f"processing study {self.study_id} "
             f"elapsed: {elapsed:.3f}")
 
-    def get_studies_ids(self, leafs=True):
-        if not leafs:
+    def get_studies_ids(self, leaves=True):
+        if not leaves:
             return [st.study_id for st in self.studies]
         else:
             result = []
@@ -594,7 +594,7 @@ class GenotypeDataStudy(GenotypeData):
     def is_group(self):
         return False
 
-    def get_studies_ids(self, leafs=True):
+    def get_studies_ids(self, leaves=True):
         return [self.study_id]
 
     def query_variants(

@@ -77,6 +77,15 @@ class RemoteGenotypeData(GenotypeData):
 
         self._person_set_collections = person_set_collections
 
+    def get_studies_ids(self, leaves=True):
+        if not leaves:
+            return [st.study_id for st in self.studies]
+        else:
+            result = []
+            for st in self.studies:
+                result.extend(st.get_studies_ids())
+            return result
+
     @property
     def description(self):
         pass
@@ -132,3 +141,14 @@ class RemoteGenotypeData(GenotypeData):
             study_filters=None,
             **kwargs):
         raise NotImplementedError()
+
+    @property
+    def person_set_collection_configs(self):
+        return self.rest_client.get_person_set_collection_configs(
+            self._remote_study_id
+        )
+
+    def get_person_set_collection(self, person_set_collection_id):
+        if person_set_collection_id is None:
+            return None
+        return self._person_set_collections[person_set_collection_id]
