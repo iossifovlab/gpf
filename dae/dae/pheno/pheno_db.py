@@ -222,7 +222,7 @@ class PhenotypeData(ABC):
         pass
 
 
-class PhenotypeDataStudy(PhenotypeData):
+class PhenotypeStudy(PhenotypeData):
     """
     Main class for accessing phenotype database in DAE.
 
@@ -873,7 +873,7 @@ class PhenotypeDataStudy(PhenotypeData):
         return measure_id in self.measures
 
 
-class PhenotypeDataGroup(PhenotypeData):
+class PhenotypeGroup(PhenotypeData):
     # TODO Implement
     pass
 
@@ -914,7 +914,7 @@ class PhenoDb(object):
             phenotype_data = self.pheno_cache[pheno_data_id]
         else:
             LOGGER.info("loading pheno db <{}>".format(pheno_data_id))
-            phenotype_data = PhenotypeDataStudy(
+            phenotype_data = PhenotypeStudy(
                 dbfile=self.get_dbfile(pheno_data_id)
             )
             self.pheno_cache[pheno_data_id] = phenotype_data
