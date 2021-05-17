@@ -7,7 +7,7 @@ def test_generate_autism_gene_profile(
     argv = [
         "--dbfile",
         temp_dbfile,
-        "-vv", 
+        "-vv",
         "--config-genes",
     ]
 
