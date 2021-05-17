@@ -17,7 +17,7 @@ export class EffecttypesColumnComponent implements OnInit {
   }
 
   checkEffectType(index: number, value: any) {
-    if (index < 0 || index > this.effectTypesLabels.length) {
+    if (index < 0 || index >= this.effectTypesLabels.length) {
       return;
     }
 
