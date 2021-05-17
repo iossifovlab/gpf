@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import copy
 import logging
 
-from typing import Dict, Set
+from typing import Dict, Iterator, Optional, Set, List
 from enum import Enum, auto
 from collections import defaultdict
 from collections.abc import Mapping
@@ -511,7 +513,8 @@ class FamiliesData(Mapping):
         return self._families_by_type
 
     @staticmethod
-    def from_family_persons(family_persons):
+    def from_family_persons(
+            family_persons: Dict[str, List[Person]]) -> FamiliesData:
         families_data = FamiliesData()
         for family_id, persons in family_persons.items():
             assert all([isinstance(p, Person) for p in persons]), persons
@@ -523,7 +526,7 @@ class FamiliesData(Mapping):
         return families_data
 
     @staticmethod
-    def from_pedigree_df(ped_df):
+    def from_pedigree_df(ped_df: pd.DataFrame) -> FamiliesData:
         persons = defaultdict(list)
         for rec in ped_df.to_dict(orient="records"):
             person = Person(**rec)
@@ -533,7 +536,7 @@ class FamiliesData(Mapping):
         return fams
 
     @staticmethod
-    def from_families(families):
+    def from_families(families: Dict[str, Family]) -> FamiliesData:
         return FamiliesData.from_family_persons(
             {fam.family_id: fam.full_members for fam in families.values()}
         )
@@ -546,7 +549,7 @@ class FamiliesData(Mapping):
         return result
 
     @property
-    def ped_df(self):
+    def ped_df(self) -> pd.DataFrame:
         if self._ped_df is None:
             # build ped_df
             column_names = set()
@@ -577,22 +580,22 @@ class FamiliesData(Mapping):
 
         return self._ped_df
 
-    def copy(self):
+    def copy(self) -> FamiliesData:
         return FamiliesData.from_pedigree_df(self.ped_df)
 
-    def __getitem__(self, family_id):
+    def __getitem__(self, family_id) -> Family:
         return self._families[family_id]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._families)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Family]:
         return iter(self._families)
 
-    def __contains__(self, family_id):
+    def __contains__(self, family_id) -> bool:
         return family_id in self._families
 
-    def __delitem__(self, family_id):
+    def __delitem__(self, family_id) -> None:
         del self._families[family_id]
 
     def keys(self):
@@ -604,7 +607,7 @@ class FamiliesData(Mapping):
     def items(self):
         return self._families.items()
 
-    def get(self, family_id, default=None):
+    def get(self, family_id, default=None) -> Optional[Family]:
         return self._families.get(family_id, default)
 
     def families_query_by_person_ids(self, person_ids):
