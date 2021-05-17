@@ -4,8 +4,6 @@ import logging
 from abc import abstractmethod
 
 from dae.variants.attributes import Role
-from dae.studies.study import GenotypeData
-from dae.configuration.gpf_config_parser import FrozenBox
 from remote.remote_phenotype_data import RemotePhenotypeData
 from remote.remote_variant import RemoteFamilyVariant, QUERY_SOURCES
 from studies.query_transformer import QueryTransformer
@@ -15,10 +13,23 @@ from studies.response_transformer import ResponseTransformer
 logger = logging.getLogger(__name__)
 
 
-class StudyWrapperBase(GenotypeData):
+class StudyWrapperBase:
 
-    def __init__(self, config):
-        super(StudyWrapperBase, self).__init__(config, config.get("studies"))
+    def __init__(self, genotype_data):
+        self.genotype_data = genotype_data
+        self.config = self.genotype_data.config
+
+    @property
+    def study_id(self):
+        return self.genotype_data.study_id
+
+    @property
+    def description(self):
+        return self.genotype_data.description
+
+    @property
+    def person_set_collection_configs(self):
+        return self.genotype_data.person_set_collection_configs
 
     @staticmethod
     def get_columns_as_sources(config, column_ids):
@@ -138,12 +149,11 @@ class StudyWrapperBase(GenotypeData):
 
 
 class StudyWrapper(StudyWrapperBase):
-    def __init__(
-            self, genotype_data_study, pheno_db, gene_weights_db):
+    def __init__(self, genotype_data_study, pheno_db, gene_weights_db):
 
         assert genotype_data_study is not None
 
-        super(StudyWrapper, self).__init__(genotype_data_study.config)
+        super().__init__(genotype_data_study)
 
         self.genotype_data_study = genotype_data_study
 
@@ -404,9 +414,8 @@ class RemoteStudyWrapper(StudyWrapperBase):
         self.remote_genotype_data = remote_genotype_data
         self._remote_study_id = remote_genotype_data._remote_study_id
         self.rest_client = remote_genotype_data.rest_client
-        config = self.remote_genotype_data.config
 
-        super(RemoteStudyWrapper, self).__init__(FrozenBox(config))
+        super().__init__(remote_genotype_data)
 
         self.phenotype_data = RemotePhenotypeData(
             self._remote_study_id,

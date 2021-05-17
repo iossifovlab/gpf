@@ -1,19 +1,20 @@
 import logging
+from typing import Optional, List, Dict
 from threading import Lock
 
 from django.conf import settings
 
-
-from dae.gpf_instance.gpf_instance import GPFInstance
-from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper
+from dae.gpf_instance.gpf_instance import GPFInstance, cached
+from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper, \
+    StudyWrapperBase
+from studies.remote_study_db import RemoteStudyDB
 
 from remote.gene_sets_db import RemoteGeneSetsDb
 from remote.denovo_gene_sets_db import RemoteDenovoGeneSetsDb
-from studies.remote_study_db import RemoteStudyDB
+from remote.rest_api_client import RESTClient
 
 from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.event_counters import CounterBase
-from dae.gpf_instance.gpf_instance import cached
 from enrichment_api.enrichment_builder import \
     EnrichmentBuilder, RemoteEnrichmentBuilder
 
@@ -29,11 +30,10 @@ _gpf_instance_lock = Lock()
 
 class WGPFInstance(GPFInstance):
     def __init__(self, *args, **kwargs):
-        self._remote_study_clients = dict()
-        self._remote_study_ids = dict()
         self._remote_study_db = None
-
-        super(WGPFInstance, self).__init__(*args, **kwargs)
+        self._clients: List[RESTClient] = list()
+        self._study_wrappers: Dict[str, StudyWrapperBase] = dict()
+        super().__init__(*args, **kwargs)
         self._load_remotes()
 
     def _load_remotes(self):
@@ -42,11 +42,38 @@ class WGPFInstance(GPFInstance):
 
         remotes = self.dae_config.remotes
 
-        self._remote_study_db = RemoteStudyDB(remotes)
+        if remotes is not None:
+            for remote in remotes:
+                logger.info(f"Creating remote {remote}")
+                try:
+                    client = RESTClient(
+                        remote["id"],
+                        remote["host"],
+                        remote["user"],
+                        remote["password"],
+                        base_url=remote["base_url"],
+                        port=remote.get("port", None),
+                        protocol=remote.get("protocol", None),
+                        gpf_prefix=remote.get("gpf_prefix", None)
+                    )
+                    self._clients.append(client)
+                except ConnectionError as err:
+                    logger.error(err)
+                    logger.error(f"Failed to create remote {remote['id']}")
 
-        self._remotes = list(
-            self._remote_study_db._remote_study_clients.values()
-        )
+        self._remote_study_db = RemoteStudyDB(self._clients)
+
+    @property
+    def remote_study_clients(self) -> Dict[str, RESTClient]:
+        return self._remote_study_db._remote_study_clients
+
+    @property
+    def remote_study_ids(self) -> Dict[str, str]:
+        """
+        Returns a dictionary mapping local prefixed remote study ids
+        to their real ids on the remote.
+        """
+        return self._remote_study_db._remote_study_ids
 
     @property  # type: ignore
     @cached
@@ -54,7 +81,7 @@ class WGPFInstance(GPFInstance):
         logger.debug("creating new instance of GeneSetsDb")
         self._load_remotes()
         gene_sets_db = super().gene_sets_db
-        remote_clients = self._remote_study_db._remote_study_clients
+        remote_clients = self.remote_study_clients
         return RemoteGeneSetsDb(
             remote_clients, gene_sets_db)
 
@@ -63,30 +90,12 @@ class WGPFInstance(GPFInstance):
     def denovo_gene_sets_db(self):
         self._load_remotes()
         denovo_gene_sets_db = super().denovo_gene_sets_db
-        remote_clients = self._remote_study_db._remote_study_clients
+        remote_clients = self.remote_study_clients
         return RemoteDenovoGeneSetsDb(
             remote_clients, denovo_gene_sets_db)
 
-    def _fetch_remote_studies(self, rest_client):
-        studies = rest_client.get_datasets()
-        for study in studies["data"]:
-            logger.debug(
-                f"study {study['id']} access rights are: "
-                f"{study.get('access_rights', False)}")
-            if not study.get("access_rights", None):
-                logger.info(
-                    f"skipping creation of remote study {study['id']}")
-                continue
-
-            logger.info(f"creating remote genotype data: {study['id']}")
-            study_wrapper = RemoteStudyWrapper(study["id"], rest_client)
-            study_id = study_wrapper.study_id
-            self._remote_study_ids[study_id] = study["id"]
-            self._remote_study_clients[study_id] = rest_client
-            self._study_wrappers[study_id] = study_wrapper
-
     def register_genotype_data(self, genotype_data):
-        super(WGPFInstance, self).register_genotype_data(genotype_data)
+        super().register_genotype_data(genotype_data)
 
         logger.debug(f"genotype data config; {genotype_data.study_id}")
 
@@ -97,17 +106,17 @@ class WGPFInstance(GPFInstance):
         )
         return study_wrapper
 
-    def make_wdae_wrapper(self, dataset_id):
-        genotype_data = self.get_dataset(dataset_id)
+    def make_wdae_wrapper(self, dataset_id: str) -> Optional[StudyWrapperBase]:
+        genotype_data = self.get_genotype_data(dataset_id)
         if genotype_data is None:
             return None
 
-        study_wrapper = StudyWrapper(
-            genotype_data,
-            self._pheno_db,
-            self.gene_weights_db
-        )
-        return study_wrapper
+        if genotype_data.is_remote:
+            return RemoteStudyWrapper(genotype_data)
+        else:
+            return StudyWrapper(
+                genotype_data, self._pheno_db, self.gene_weights_db
+            )
 
     def get_wdae_wrapper(self, dataset_id):
         if dataset_id not in self._study_wrappers.keys():
@@ -121,17 +130,14 @@ class WGPFInstance(GPFInstance):
 
     def get_genotype_data_ids(self, local_only=False):
         if local_only:
-            return list(super(WGPFInstance, self).get_genotype_data_ids())
+            return list(super().get_genotype_data_ids())
 
         return (
-            list(super(WGPFInstance, self).get_genotype_data_ids())
-            + self.remote_studies
+            list(super().get_genotype_data_ids()) + self.remote_studies
         )
 
     def get_genotype_data(self, dataset_id):
-        # TODO: Avoid returning different types of data when remote
-        # Returns an instance GenotypeData when local, a Box config when remote
-        genotype_data = super(WGPFInstance, self).get_genotype_data(dataset_id)
+        genotype_data = super().get_genotype_data(dataset_id)
         if genotype_data is not None:
             return genotype_data
 
@@ -140,36 +146,36 @@ class WGPFInstance(GPFInstance):
 
     def get_genotype_data_config(self, dataset_id):
         genotype_data_config = \
-            super(WGPFInstance, self).get_genotype_data_config(dataset_id)
+            super().get_genotype_data_config(dataset_id)
         if genotype_data_config is not None:
             return genotype_data_config
         return self._remote_study_db.get_genotype_data_config(dataset_id)
 
     def get_common_report(self, common_report_id):
         common_report = \
-            super(WGPFInstance, self).get_common_report(common_report_id)
+            super().get_common_report(common_report_id)
 
         if common_report is not None:
             return common_report
 
-        if common_report_id not in self._remote_study_clients:
+        if common_report_id not in self.remote_study_clients:
             return None
 
-        client = self._remote_study_clients[common_report_id]
-        common_report_id = self._remote_study_ids[common_report_id]
+        client = self.remote_study_clients[common_report_id]
+        common_report_id = self.remote_study_ids[common_report_id]
         common_report = client.get_common_report(common_report_id)
         return common_report
 
     def get_common_report_families_data(self, common_report_id):
         families_data = \
-            super(WGPFInstance, self).get_common_report_families_data(
+            super().get_common_report_families_data(
                 common_report_id)
         if families_data:
             for family_data in families_data:
                 yield family_data
         else:
-            client = self._remote_study_clients[common_report_id]
-            common_report_id = self._remote_study_ids[common_report_id]
+            client = self.remote_study_clients[common_report_id]
+            common_report_id = self.remote_study_ids[common_report_id]
             response = client.get_common_report_families_data(
                 common_report_id)
 
@@ -181,7 +187,7 @@ class WGPFInstance(GPFInstance):
     def get_pheno_config(self, study_wrapper):
         logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
-            return super(WGPFInstance, self).get_pheno_config(study_wrapper)
+            return super().get_pheno_config(study_wrapper)
 
         client = study_wrapper.rest_client
         return client.get_pheno_browser_config(
@@ -190,14 +196,14 @@ class WGPFInstance(GPFInstance):
     def has_pheno_data(self, study_wrapper):
         logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
-            return super(WGPFInstance, self).has_pheno_data(study_wrapper)
+            return super().has_pheno_data(study_wrapper)
 
         return "phenotype_data" in study_wrapper.config
 
     def get_measure_description(self, study_wrapper, measure_id):
         logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
-            return super(WGPFInstance, self).get_measure_description(
+            return super().get_measure_description(
                 study_wrapper, measure_id)
 
         return study_wrapper.phenotype_data.get_measure_description(measure_id)
@@ -205,7 +211,7 @@ class WGPFInstance(GPFInstance):
     def get_instruments(self, study_wrapper):
         logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
-            return super(WGPFInstance, self).get_instruments(study_wrapper)
+            return super().get_instruments(study_wrapper)
 
         return study_wrapper.rest_client.get_instruments(
             study_wrapper._remote_study_id)
@@ -213,7 +219,7 @@ class WGPFInstance(GPFInstance):
     def get_regressions(self, study_wrapper):
         logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
-            return super(WGPFInstance, self).get_regressions(study_wrapper)
+            return super().get_regressions(study_wrapper)
 
         return study_wrapper.rest_client.get_regressions(
             study_wrapper._remote_study_id)
@@ -221,7 +227,7 @@ class WGPFInstance(GPFInstance):
     def get_measures_info(self, study_wrapper):
         logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
-            return super(WGPFInstance, self).get_measures_info(study_wrapper)
+            return super().get_measures_info(study_wrapper)
 
         client = study_wrapper.rest_client
         return client.get_browser_measures_info(study_wrapper._remote_study_id)
@@ -229,7 +235,7 @@ class WGPFInstance(GPFInstance):
     def search_measures(self, study_wrapper, instrument, search_term):
         logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
-            measures = super(WGPFInstance, self).search_measures(
+            measures = super().search_measures(
                 study_wrapper, instrument, search_term)
             for m in measures:
                 yield m
@@ -248,7 +254,7 @@ class WGPFInstance(GPFInstance):
 
     def get_study_enrichment_config(self, dataset_id):
         result = \
-            super(WGPFInstance, self).get_study_enrichment_config(dataset_id)
+            super().get_study_enrichment_config(dataset_id)
 
         if not result:
             study_wrapper = self.get_wdae_wrapper(dataset_id)
@@ -380,7 +386,7 @@ def reload_datasets(gpf_instance):
         if not genotype_data.studies:
             continue
 
-        for study_id in genotype_data.get_studies_ids(leafs=False):
+        for study_id in genotype_data.get_studies_ids(leaves=False):
             if study_id is None:
                 continue
             Dataset.recreate_dataset_perm(

@@ -41,7 +41,7 @@ class RemoteGenotypeData(GenotypeData):
 
         self._families = None
 
-        self._load_families()
+        self._build_families()
 
         self._person_set_collections = None
 
@@ -88,7 +88,8 @@ class RemoteGenotypeData(GenotypeData):
 
     @property
     def description(self):
-        pass
+        # FIXME
+        return ""
 
     @property
     def is_group(self):
