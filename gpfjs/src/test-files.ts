@@ -69,6 +69,7 @@ import './app/genotype-browser-single-view/genotype-browser-single-view.componen
 import './app/genes-block/genes-block.component.spec.ts';
 import './app/histogram/histogram.component.spec.ts';
 import './app/effecttypes/effecttypes.component.spec.ts';
+import './app/effecttypes/effecttypes-column.component.spec.ts';
 import './app/effecttypes/effecttypes.spec.ts';
 import './app/groups-bulk-add/groups-bulk-add.component.spec.ts';
 import './app/inheritancetypes/inheritancetypes.spec.ts';
