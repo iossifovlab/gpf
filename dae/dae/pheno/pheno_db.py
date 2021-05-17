@@ -7,7 +7,7 @@ import pandas as pd
 from sqlalchemy.sql import select, text
 from sqlalchemy import not_, desc
 
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 
 import csv
 from io import StringIO
@@ -39,7 +39,7 @@ class Instrument(object):
 
     def __init__(self, name):
         self.instrument_name = name
-        self.measures = OrderedDict()
+        self.measures = {}
 
     def __repr__(self):
         return "Instrument({}, {})".format(
@@ -335,14 +335,14 @@ class PhenotypeStudy(PhenotypeData):
         """
         df = self._get_measures_df(instrument, measure_type)
 
-        res = OrderedDict()
+        res = {}
         for row in df.to_dict("records"):
             m = Measure._from_dict(row)
             res[m.measure_id] = m
         return res
 
     def _load_instruments(self):
-        instruments = OrderedDict()
+        instruments = {}
 
         df = self._get_measures_df()
         instrument_names = list(df.instrument_name.unique())
@@ -350,7 +350,7 @@ class PhenotypeStudy(PhenotypeData):
 
         for instrument_name in instrument_names:
             instrument = Instrument(instrument_name)
-            measures = OrderedDict()
+            measures = {}
             measures_df = df[df.instrument_name == instrument_name]
 
             for row in measures_df.to_dict("records"):
@@ -877,10 +877,55 @@ class PhenotypeStudy(PhenotypeData):
 
 class PhenotypeGroup(PhenotypeData):
 
-    def __init__(self, pheno_id, pheno_studies):
+    def __init__(self, pheno_id, phenotype_data):
         super(PhenotypeGroup, self).__init__(pheno_id)
-        self.pheno_studies = pheno_studies
-        self.families = FamiliesData.combine_studies(pheno_studies)
+        self.phenotype_data = phenotype_data
+        self.families = FamiliesData.combine_studies(self.phenotype_data)
+
+    def get_persons_df(self, roles, person_ids, family_ids):
+        pass
+
+    def get_persons_values_df(
+            self, measure_ids, person_ids, family_ids, roles):
+        pass
+
+    def get_persons(self, roles, person_ids, family_ids):
+        pass
+
+    def has_measure(self, measure_id):
+        pass
+
+    def get_measure(self, measure_id):
+        pass
+
+    def get_measures(self, instrument, measure_type):
+        pass
+
+    def get_measure_values_df(self, measure_id, person_ids, family_ids, roles):
+        pass
+
+    def get_measure_values(
+            self, measure_id, person_ids, family_ids, roles, default_filter):
+        pass
+
+    def get_values_df(
+            self, measure_ids,
+            person_ids=None, family_ids=None, roles=None,
+            default_filter="apply"):
+        pass
+
+    def get_values(
+            self, measure_ids,
+            person_ids=None, family_ids=None, roles=None):
+        pass
+
+    def get_instrument_values_df(
+            self, instrument_df, person_ids, family_ids, roles):
+        pass
+
+    def get_instrument_values(
+            self, instrument_df, person_ids, family_ids, roles):
+        pass
 
 
 class PhenoDb(object):

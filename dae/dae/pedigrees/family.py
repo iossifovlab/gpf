@@ -396,6 +396,10 @@ class Family(object):
                 merged_persons[person_id] = r_person
             elif r_person.sex == Sex.unspecified:
                 merged_persons[person_id] = l_person
+            elif l_person.status == Status.unspecified:
+                merged_persons[person_id] = r_person
+            elif r_person.status == Status.unspecified:
+                merged_persons[person_id] = l_person
             elif l_person.role == Role.unknown:
                 merged_persons[person_id] = r_person
             elif r_person.role == Role.unknown:
@@ -404,15 +408,19 @@ class Family(object):
             match = (l_person.sex == r_person.sex or
                      l_person.sex == Sex.unspecified or
                      r_person.sex == Sex.unspecified) and \
+                    (l_person.status == r_person.status or
+                     l_person.status == Status.unspecified or
+                     r_person.status == Status.unspecified) and \
                     (l_person.role == r_person.role or
                      l_person.role == Role.unknown or
                      r_person.role == Role.unknown) and \
                     (l_person.family_id == r_person.family_id)
             if not match:
-                message = f"Mismatched attributes for person {person_id}; " \
-                    f"{l_person.sex} == {r_person.sex}, " \
-                    f"{l_person.role} == {r_person.role}, " \
-                    f"{l_person.family_id} == {r_person.family_id}"
+                message = f"mismatched attributes for person {person_id}; " \
+                    f"sex[{l_person.sex} == {r_person.sex}], " \
+                    f"status[{l_person.status} == {r_person.status}], " \
+                    f"role[{l_person.role} == {r_person.role}], " \
+                    f"family[{l_person.family_id} == {r_person.family_id}]"
 
                 logger.warning(message)
                 if forced:
@@ -712,8 +720,8 @@ class FamiliesData(Mapping):
             return FamiliesData.copy(studies[0].families)
 
         logger.info(
-            f"combining families from study {studies[0].study_id} "
-            f"and from study {studies[1].study_id}")
+            f"combining families from study {studies[0].id} "
+            f"and from study {studies[1].id}")
         result = FamiliesData.combine(
             studies[0].families,
             studies[1].families)
@@ -727,7 +735,7 @@ class FamiliesData(Mapping):
                     f"combining families from studies ({si}) "
                     f"{[st.study_id for st in studies[:si]]} "
                     f"with families from study "
-                    f"{studies[si].study_id}")
+                    f"{studies[si].id}")
                 result = FamiliesData.combine(
                     result,
                     studies[si].families
