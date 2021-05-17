@@ -1,7 +1,7 @@
 import math
 import logging
 
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 
 import pandas as pd
 from sqlalchemy.sql import select, text
@@ -164,13 +164,16 @@ class Measure(object):
 
 class PhenotypeData(ABC):
 
-    @abstractproperty
-    def id(self):
-        pass
+    def __init__(self, pheno_id):
+        self._pheno_id = pheno_id
 
-    @abstractproperty
+    @property
     def pheno_id(self):
-        pass
+        return self._pheno_id
+
+    @property
+    def id(self):
+        return self.pheno_id
 
     @abstractmethod
     def get_persons_df(self, roles, person_ids, family_ids):
@@ -249,22 +252,14 @@ class PhenotypeStudy(PhenotypeData):
     """
 
     def __init__(self, pheno_id: str, dbfile: str):
+        super(PhenotypeStudy, self).__init__(pheno_id)
 
-        self._pheno_id = pheno_id
         self.families = None
         self.instruments = None
         self.measures = {}
         self.db = DbManager(dbfile=dbfile)
         self.db.build()
         self._load()
-
-    @property
-    def pheno_id(self):
-        return self._pheno_id
-
-    @property
-    def id(self):
-        return self.pheno_id
 
     def _get_measures_df(self, instrument=None, measure_type=None):
         """
@@ -881,8 +876,11 @@ class PhenotypeStudy(PhenotypeData):
 
 
 class PhenotypeGroup(PhenotypeData):
-    # TODO Implement
-    pass
+
+    def __init__(self, pheno_id, pheno_studies):
+        super(PhenotypeGroup, self).__init__(pheno_id)
+        self.pheno_studies = pheno_studies
+        self.families = FamiliesData.combine_studies(pheno_studies)
 
 
 class PhenoDb(object):
