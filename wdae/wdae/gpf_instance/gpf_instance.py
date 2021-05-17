@@ -81,18 +81,14 @@ class WGPFInstance(GPFInstance):
         logger.debug("creating new instance of GeneSetsDb")
         self._load_remotes()
         gene_sets_db = super().gene_sets_db
-        remote_clients = self.remote_study_clients
-        return RemoteGeneSetsDb(
-            remote_clients, gene_sets_db)
+        return RemoteGeneSetsDb(self._clients, gene_sets_db)
 
     @property  # type: ignore
     @cached
     def denovo_gene_sets_db(self):
         self._load_remotes()
         denovo_gene_sets_db = super().denovo_gene_sets_db
-        remote_clients = self.remote_study_clients
-        return RemoteDenovoGeneSetsDb(
-            remote_clients, denovo_gene_sets_db)
+        return RemoteDenovoGeneSetsDb(self._clients, denovo_gene_sets_db)
 
     def register_genotype_data(self, genotype_data):
         super().register_genotype_data(genotype_data)
