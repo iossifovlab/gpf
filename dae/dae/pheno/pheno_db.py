@@ -1,7 +1,7 @@
 import math
 import logging
 
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 
 import pandas as pd
 from sqlalchemy.sql import select, text
@@ -164,6 +164,14 @@ class Measure(object):
 
 class PhenotypeData(ABC):
 
+    @abstractproperty
+    def id(self):
+        pass
+
+    @abstractproperty
+    def pheno_id(self):
+        pass
+
     @abstractmethod
     def get_persons_df(self, roles, person_ids, family_ids):
         pass
@@ -240,8 +248,9 @@ class PhenotypeStudy(PhenotypeData):
     * `measures` -- dictionary of all measures
     """
 
-    def __init__(self, dbfile):
+    def __init__(self, pheno_id: str, dbfile: str):
 
+        self._pheno_id = pheno_id
         self.families = None
         self.persons = None
         self.instruments = None
@@ -249,6 +258,14 @@ class PhenotypeStudy(PhenotypeData):
         self.db = DbManager(dbfile=dbfile)
         self.db.build()
         self._load()
+
+    @property
+    def pheno_id(self):
+        return self._pheno_id
+
+    @property
+    def id(self):
+        return self.pheno_id
 
     def _get_measures_df(self, instrument=None, measure_type=None):
         """
@@ -888,29 +905,30 @@ class PhenoDb(object):
 
         self.pheno_cache = {}
 
-    def get_dbfile(self, pheno_data_id):
-        return self.config[pheno_data_id].dbfile
+    def get_dbfile(self, pheno_id):
+        return self.config[pheno_id].dbfile
 
-    def get_dbconfig(self, pheno_data_id):
-        return self.config[pheno_data_id]
+    def get_dbconfig(self, pheno_id):
+        return self.config[pheno_id]
 
-    def has_phenotype_data(self, pheno_data_id):
-        return pheno_data_id in self.config
+    def has_phenotype_data(self, pheno_id):
+        return pheno_id in self.config
 
     def get_phenotype_data_ids(self):
         return list(self.config.keys())
 
-    def get_phenotype_data(self, pheno_data_id):
-        if not self.has_phenotype_data(pheno_data_id):
+    def get_phenotype_data(self, pheno_id):
+        if not self.has_phenotype_data(pheno_id):
             return None
-        if pheno_data_id in self.pheno_cache:
-            phenotype_data = self.pheno_cache[pheno_data_id]
+        if pheno_id in self.pheno_cache:
+            phenotype_data = self.pheno_cache[pheno_id]
         else:
-            LOGGER.info("loading pheno db <{}>".format(pheno_data_id))
+            LOGGER.info("loading pheno db <{}>".format(pheno_id))
             phenotype_data = PhenotypeStudy(
-                dbfile=self.get_dbfile(pheno_data_id)
+                pheno_id,
+                dbfile=self.get_dbfile(pheno_id)
             )
-            self.pheno_cache[pheno_data_id] = phenotype_data
+            self.pheno_cache[pheno_id] = phenotype_data
         return phenotype_data
 
     def get_all_phenotype_data(self):
@@ -919,5 +937,5 @@ class PhenoDb(object):
             for pheno_id in self.get_phenotype_data_ids()
         ]
 
-    def get_phenotype_data_config(self, pheno_data_id):
-        return self.config.get(pheno_data_id)
+    def get_phenotype_data_config(self, pheno_id):
+        return self.config.get(pheno_id)

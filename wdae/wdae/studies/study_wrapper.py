@@ -373,7 +373,7 @@ class StudyWrapper(StudyWrapperBase):
 
     def get_variants_wdae_download(self, query, max_variants_count=10000):
         rows = self.get_variant_web_rows(
-            query, self.download_descs, 
+            query, self.download_descs,
             max_variants_count=max_variants_count,
             max_variants_message=True)
 
@@ -604,10 +604,14 @@ class RemoteStudyWrapper(StudyWrapperBase):
             )
             self._parents = list(config["parents"])
 
-        self.phenotype_data = RemotePhenotypeData(
-            self._remote_study_id,
-            self.rest_client
-        )
+        self.phenotype_data = None
+        pheno_id = config.get("pheotype_data")
+        if pheno_id:
+            self.phenotype_data = RemotePhenotypeData(
+                self.rest_client.prefix_remote_identifier(pheno_id),
+                self._remote_study_id,
+                self.rest_client
+            )
 
         self.is_remote = True
 

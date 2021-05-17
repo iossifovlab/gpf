@@ -86,7 +86,7 @@ def test_ped_prepare_variable_with_descriptions(
     assert df is not None
     assert len(df) == 195
 
-    temp_db = PhenotypeStudy(temp_dbfile)
+    temp_db = PhenotypeStudy("temp_db", temp_dbfile)
     measures = temp_db.get_measures()
     assert measures["i1.m1"].description == "Measure number one"
     assert measures["i1.m2"].description == "Measure number two"

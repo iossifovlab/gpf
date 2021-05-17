@@ -669,3 +669,68 @@ class FamiliesData(Mapping):
         for person_id in person_ids:
             family_ids.add(self.persons[person_id].family_id)
         return family_ids
+
+    @staticmethod
+    def combine(first: FamiliesData, second: FamiliesData, forced=True):
+
+        same_families = set(first.keys()) & \
+            set(second.keys())
+        combined_dict = {}
+        combined_dict.update(first)
+        combined_dict.update(second)
+        mismatched_families = []
+        for sf in same_families:
+            try:
+                combined_dict[sf] = Family.merge(
+                    first[sf], second[sf], forced=forced)
+            except AssertionError as ex:
+                import traceback
+                traceback.print_exc()
+                logger.error(f"mismatched families: {first[sf]}, {second[sf]}")
+                logger.exception(ex)
+
+                mismatched_families.append(sf)
+
+        if len(mismatched_families) > 0:
+            logger.warning(f"mismatched families: {mismatched_families}")
+            if not forced:
+                assert len(mismatched_families) == 0, mismatched_families
+            else:
+                logger.warning("second family overwrites family definition")
+
+        return FamiliesData.from_families(combined_dict)
+
+    @staticmethod
+    def combine_studies(studies, forced=True) -> FamiliesData:
+        assert len(studies) > 0, studies
+
+        logger.info(
+            f"building combined families from studies: "
+            f"{[st.id for st in studies]}")
+
+        if len(studies) == 1:
+            return FamiliesData.copy(studies[0].families)
+
+        logger.info(
+            f"combining families from study {studies[0].study_id} "
+            f"and from study {studies[1].study_id}")
+        result = FamiliesData.combine(
+            studies[0].families,
+            studies[1].families)
+
+        if len(studies) > 2:
+            for si in range(2, len(studies)):
+                logger.debug(
+                    f"processing study ({si}): "
+                    f"{studies[si].id}")
+                logger.info(
+                    f"combining families from studies ({si}) "
+                    f"{[st.study_id for st in studies[:si]]} "
+                    f"with families from study "
+                    f"{studies[si].study_id}")
+                result = FamiliesData.combine(
+                    result,
+                    studies[si].families
+                )
+
+        return result
