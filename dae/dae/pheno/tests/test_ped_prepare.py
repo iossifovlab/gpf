@@ -46,7 +46,7 @@ def test_ped_prepare_variable(
     ped_df = prep.build_pedigree(fake_ped_file)
     assert ped_df is not None
 
-    instruments = instrument_files[instrument_sel[0] : instrument_sel[1] + 1]
+    instruments = instrument_files[instrument_sel[0]: instrument_sel[1] + 1]
 
     df = prep.load_instrument("i1", instruments)
     df = prep.build_instrument("i1", df)
