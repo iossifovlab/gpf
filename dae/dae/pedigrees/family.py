@@ -513,7 +513,7 @@ class FamiliesData(Mapping):
     @staticmethod
     def from_family_persons(family_persons):
         families_data = FamiliesData()
-        for family_id, persons in family_persons:
+        for family_id, persons in family_persons.items():
             assert all([isinstance(p, Person) for p in persons]), persons
 
             family = Family.from_persons(persons)
@@ -529,18 +529,13 @@ class FamiliesData(Mapping):
             person = Person(**rec)
             persons[person.family_id].append(person)
 
-        fams = FamiliesData.from_family_persons(
-            [
-                (family_id, family_persons)
-                for family_id, family_persons in persons.items()
-            ]
-        )
+        fams = FamiliesData.from_family_persons(persons)
         return fams
 
     @staticmethod
     def from_families(families):
         return FamiliesData.from_family_persons(
-            [(fam.family_id, fam.full_members) for fam in families.values()]
+            {fam.family_id: fam.full_members for fam in families.values()}
         )
 
     def pedigree_samples(self):

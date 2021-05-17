@@ -12,7 +12,7 @@ from collections import defaultdict, OrderedDict
 import csv
 from io import StringIO
 
-from dae.pedigrees.family import Person, Family
+from dae.pedigrees.family import Person, FamiliesData
 from dae.pheno.db import DbManager
 from dae.pheno.common import MeasureType
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -354,18 +354,11 @@ class PhenotypeStudy(PhenotypeData):
     def _load_families(self):
         families = defaultdict(list)
         persons = self.get_persons()
-
         for p in list(persons.values()):
             families[p.family_id].append(p)
+        self.families = FamiliesData.from_family_persons(families)
 
         self.persons = persons
-        self.families = {}
-
-        for family_id, members in list(families.items()):
-            f = Family(family_id)
-            f.memberInOrder = members
-            f.familyId = family_id
-            self.families[family_id] = f
 
     def _load(self):
         """
