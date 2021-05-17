@@ -252,7 +252,6 @@ class PhenotypeStudy(PhenotypeData):
 
         self._pheno_id = pheno_id
         self.families = None
-        self.persons = None
         self.instruments = None
         self.measures = {}
         self.db = DbManager(dbfile=dbfile)
@@ -374,8 +373,6 @@ class PhenotypeStudy(PhenotypeData):
         for p in list(persons.values()):
             families[p.family_id].append(p)
         self.families = FamiliesData.from_family_persons(families)
-
-        self.persons = persons
 
     def _load(self):
         """
