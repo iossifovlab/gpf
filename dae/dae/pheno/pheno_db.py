@@ -250,13 +250,56 @@ class PhenotypeData(ABC):
         pass
 
     @abstractmethod
-    def get_measure_values_df(self, measure_id, person_ids, family_ids, roles):
+    def get_measure_values_df(
+            self, measure_id,
+            person_ids=None,
+            family_ids=None,
+            roles=None,
+            default_filter="apply"):
         pass
 
-    @abstractmethod
     def get_measure_values(
-            self, measure_id, person_ids, family_ids, roles, default_filter):
-        pass
+            self,
+            measure_id,
+            person_ids=None,
+            family_ids=None,
+            roles=None,
+            default_filter="apply"):
+
+        """
+        Returns a dictionary with values for the specified `measure_id`.
+
+        `measure_id` -- a measure ID which values should be returned.
+
+        `person_ids` -- list of person IDs to filter result. Only data for
+        individuals with person_id in the list `person_ids` are returned.
+
+        `family_ids` -- list of family IDs to filter result. Only data for
+        individuals that are members of any of the specified `family_ids`
+        are returned.
+
+        `roles` -- list of roles of individuals to select measure value for.
+        If not specified value for individuals in all roles are returned.
+
+        `default_filter` -- one of ('`skip`', '`apply`', '`invert`'). When
+        the measure has a `default_filter` this argument specifies whether
+        the filter should be applied or skipped or inverted.
+
+        The returned dictionary contains values of the measure for
+        each individual. The person_id is used as key in the dictionary.
+        """
+
+        df = self.get_measure_values_df(
+            measure_id, 
+            person_ids=person_ids,
+            family_ids=family_ids,
+            roles=roles,
+            default_filter=default_filter)
+
+        res = {}
+        for row in df.to_dict("records"):
+            res[row["person_id"]] = row[measure_id]
+        return res
 
     @abstractmethod
     def get_values_df(
@@ -653,45 +696,6 @@ class PhenotypeStudy(PhenotypeData):
         )
         return df[["person_id", measure_id]]
 
-    def get_measure_values(
-        self,
-        measure_id,
-        person_ids=None,
-        family_ids=None,
-        roles=None,
-        default_filter="apply",
-    ):
-        """
-        Returns a dictionary with values for the specified `measure_id`.
-
-        `measure_id` -- a measure ID which values should be returned.
-
-        `person_ids` -- list of person IDs to filter result. Only data for
-        individuals with person_id in the list `person_ids` are returned.
-
-        `family_ids` -- list of family IDs to filter result. Only data for
-        individuals that are members of any of the specified `family_ids`
-        are returned.
-
-        `roles` -- list of roles of individuals to select measure value for.
-        If not specified value for individuals in all roles are returned.
-
-        `default_filter` -- one of ('`skip`', '`apply`', '`invert`'). When
-        the measure has a `default_filter` this argument specifies whether
-        the filter should be applied or skipped or inverted.
-
-        The returned dictionary contains values of the measure for
-        each individual. The person_id is used as key in the dictionary.
-        """
-
-        df = self.get_measure_values_df(
-            measure_id, person_ids, family_ids, roles, default_filter
-        )
-        res = {}
-        for row in df.to_dict("records"):
-            res[row["person_id"]] = row[measure_id]
-        return res
-
     def get_values_df(
         self,
         measure_ids,
@@ -935,6 +939,29 @@ class PhenotypeGroup(PhenotypeData):
             ped_df = ped_df[ped_df.family_id.isin(family_ids)]
         return ped_df
 
+    def get_measure_values_df(
+            self, measure_id, 
+            person_ids=None,
+            family_ids=None,
+            roles=None,
+            default_filter="apply"):
+
+        assert self.has_measure(measure_id), measure_id
+        for pheno in self.phenotype_data:
+            if pheno.has_measure(measure_id):
+                return pheno.get_measure_values_df(
+                    measure_id,
+                    person_ids=person_ids,
+                    family_ids=family_ids,
+                    roles=roles,
+                    default_filter=default_filter
+                )
+
+        # We should never get here
+        msg = f"measure {measure_id} not found in phenotype group {self.id}"
+        logger.error(msg)
+        raise ValueError(msg)
+
     def get_persons_values_df(
             self, measure_ids, person_ids, family_ids, roles):
         pass
@@ -942,12 +969,6 @@ class PhenotypeGroup(PhenotypeData):
     def get_measures(self, instrument, measure_type):
         pass
 
-    def get_measure_values_df(self, measure_id, person_ids, family_ids, roles):
-        pass
-
-    def get_measure_values(
-            self, measure_id, person_ids, family_ids, roles, default_filter):
-        pass
 
     def get_values_df(
             self, measure_ids,

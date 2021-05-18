@@ -1,4 +1,5 @@
 import pytest
+import pandas as pd
 
 from dae.pheno.pheno_db import PhenotypeGroup
 from dae.variants.attributes import Role
@@ -87,3 +88,49 @@ def test_pheno_group_instruments_and_measures(fake_group):
 
     m2 = fake_group.get_measure("i2.iq")
     assert m2.measure_id == "i2.iq"
+
+
+@pytest.mark.parametrize(
+    "roles,family_ids,person_ids",
+    [
+        (None, None, {"f1.p1"}),
+        ({Role.prb}, {"f1"}, None),
+        ({Role.prb, Role.sib}, {"f1"}, {"f1.p1"}),
+        ({Role.prb}, {"f1", "f2"}, {"f1.p1"}),
+    ],
+)
+def test_pheno_group_get_measure_values_df(
+        fake_group, roles, family_ids, person_ids):
+    df = fake_group.get_measure_values_df(
+        "i1.iq", person_ids=person_ids,
+        family_ids=family_ids, roles=roles)
+    print(df)
+
+    expected = pd.DataFrame({
+        "person_id": ["f1.p1"],
+        "i1.iq": [86.41]
+        })
+    pd.testing.assert_frame_equal(df, expected, atol=1e-2)
+
+
+
+@pytest.mark.parametrize(
+    "roles,family_ids,person_ids",
+    [
+        (None, None, None),
+        (None, None, {"f1.p1"}),
+        ({Role.prb}, {"f1"}, None),
+        ({Role.prb, Role.sib}, {"f1"}, {"f1.p1"}),
+        ({Role.prb}, {"f1", "f2"}, {"f1.p1"}),
+    ],
+)
+def test_pheno_group_get_measure_values(
+        fake_group, roles, family_ids, person_ids):
+    res = fake_group.get_measure_values(
+        "i1.iq", person_ids=person_ids,
+        family_ids=family_ids, roles=roles)
+    print(res)
+
+    assert "f1.p1" in res
+
+    assert res["f1.p1"] == pytest.approx(86.41, abs=1e-2)
