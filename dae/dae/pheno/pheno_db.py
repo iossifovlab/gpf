@@ -71,7 +71,7 @@ class Measure(object):
 
     """
 
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.name = name
         self.measure_name = name
         self.measure_type = MeasureType.other
@@ -164,8 +164,10 @@ class Measure(object):
 
 class PhenotypeData(ABC):
 
-    def __init__(self, pheno_id):
+    def __init__(self, pheno_id: str):
         self._pheno_id = pheno_id
+        self._measures = {}
+        self._instruments = {}
 
     @property
     def pheno_id(self):
@@ -174,6 +176,14 @@ class PhenotypeData(ABC):
     @property
     def id(self):
         return self.pheno_id
+
+    @property
+    def measures(self):
+        return self._measures
+
+    @property
+    def instruments(self):
+        return self._instruments
 
     @abstractmethod
     def get_persons_df(self, roles, person_ids, family_ids):
@@ -222,13 +232,18 @@ class PhenotypeData(ABC):
             self, measure_ids, person_ids, family_ids, roles):
         pass
 
-    @abstractmethod
     def has_measure(self, measure_id):
-        pass
+        """
+        Checks is `measure_id` is value ID for measure in our phenotype DB.
+        """
+        return measure_id in self._measures
 
-    @abstractmethod
     def get_measure(self, measure_id):
-        pass
+        """
+        Returns a measure by measure_id.
+        """
+        assert measure_id in self._measures, measure_id
+        return self._measures[measure_id]
 
     @abstractmethod
     def get_measures(self, instrument, measure_type):
@@ -289,8 +304,6 @@ class PhenotypeStudy(PhenotypeData):
         super(PhenotypeStudy, self).__init__(pheno_id)
 
         self.families = None
-        self.instruments = None
-        self.measures = {}
         self.db = DbManager(dbfile=dbfile)
         self.db.build()
         self._load()
@@ -390,11 +403,11 @@ class PhenotypeStudy(PhenotypeData):
             for row in measures_df.to_dict("records"):
                 m = Measure._from_dict(row)
                 measures[m.measure_name] = m
-                self.measures[m.measure_id] = m
+                self._measures[m.measure_id] = m
             instrument.measures = measures
             instruments[instrument.instrument_name] = instrument
 
-        self.instruments = instruments
+        self._instruments = instruments
 
     def _load_families(self):
         families = defaultdict(list)
@@ -408,9 +421,9 @@ class PhenotypeStudy(PhenotypeData):
         Loads basic families, instruments and measures data from
         the phenotype database.
         """
-        if self.families is None:
+        if not self.families:
             self._load_families()
-        if self.instruments is None:
+        if not self.instruments:
             self._load_instruments()
 
     def get_persons_df(self, roles=None, person_ids=None, family_ids=None):
@@ -452,13 +465,6 @@ class PhenotypeStudy(PhenotypeData):
         df = pd.read_sql(s, self.db.engine)
         # df.rename(columns={'sex': 'sex'}, inplace=True)
         return df[["person_id", "family_id", "role", "sex", "status"]]
-
-    def get_measure(self, measure_id):
-        """
-        Returns a measure by measure_id.
-        """
-        assert measure_id in self.measures, measure_id
-        return self.measures[measure_id]
 
     def _build_default_filter_clause(self, m, default_filter):
         if default_filter == "skip" or m.default_filter is None:
@@ -864,12 +870,6 @@ class PhenotypeStudy(PhenotypeData):
         df = self.get_values_df(measure_ids, person_ids, family_ids, role)
         return self._values_df_to_dict(df)
 
-    def has_measure(self, measure_id):
-        """
-        Checks is `measure_id` is value ID for measure in our phenotype DB.
-        """
-        return measure_id in self.measures
-
 
 class PhenotypeGroup(PhenotypeData):
 
@@ -877,8 +877,13 @@ class PhenotypeGroup(PhenotypeData):
         super(PhenotypeGroup, self).__init__(pheno_id)
         self.phenotype_data = phenotype_data
         self.families = FamiliesData.combine_studies(self.phenotype_data)
-        self.instruments, self.measures = self._merge_instruments(
+        instruments, measures = self._merge_instruments(
             [ph.instruments for ph in self.phenotype_data])
+        print(instruments)
+        self._instruments.update(instruments)
+        print(self._instruments)
+
+        self._measures.update(measures)
 
     @staticmethod
     def _merge_instruments(
