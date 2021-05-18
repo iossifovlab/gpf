@@ -1,6 +1,6 @@
 import math
 import logging
-
+from typing import Dict, Iterable
 from abc import ABC, abstractmethod
 
 import pandas as pd
@@ -23,7 +23,7 @@ from dae.variants.attributes import Sex, Status, Role
 from typing import Optional, Sequence, Union
 
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class Instrument(object):
@@ -843,24 +843,24 @@ class PhenotypeStudy(PhenotypeData):
         return measure_ids
 
     def get_instrument_values_df(
-        self, instrument_id, person_ids=None, family_ids=None, role=None
+        self, instrument_name, person_ids=None, family_ids=None, role=None
     ):
         """
         Returns a dataframe with values for all measures in given
         instrument (see **get_values_df**).
         """
-        measure_ids = self._get_instrument_measures(instrument_id)
+        measure_ids = self._get_instrument_measures(instrument_name)
         res = self.get_values_df(measure_ids, person_ids, family_ids, role)
         return res
 
     def get_instrument_values(
-        self, instrument_id, person_ids=None, family_ids=None, role=None
+        self, instrument_name, person_ids=None, family_ids=None, role=None
     ):
         """
         Returns a dictionary with values for all measures in given
         instrument (see :func:`get_values`).
         """
-        measure_ids = self._get_instrument_measures(instrument_id)
+        measure_ids = self._get_instrument_measures(instrument_name)
         df = self.get_values_df(measure_ids, person_ids, family_ids, role)
         return self._values_df_to_dict(df)
 
@@ -873,10 +873,50 @@ class PhenotypeStudy(PhenotypeData):
 
 class PhenotypeGroup(PhenotypeData):
 
-    def __init__(self, pheno_id, phenotype_data):
+    def __init__(self, pheno_id: str, phenotype_data: Iterable[PhenotypeData]):
         super(PhenotypeGroup, self).__init__(pheno_id)
         self.phenotype_data = phenotype_data
         self.families = FamiliesData.combine_studies(self.phenotype_data)
+        self.instruments, self.measures = self._merge_instruments(
+            [ph.instruments for ph in self.phenotype_data])
+
+    @staticmethod
+    def _merge_instruments(
+            phenos_instruments: Iterable[Dict[str, Instrument]]):
+
+        group_instruments = {}
+        group_measures = {}
+        for pheno_instruments in phenos_instruments:
+            for instrument_name, instrument in pheno_instruments.items():
+                if instrument_name not in group_instruments:
+                    group_instruments[instrument_name] = instrument
+                    group_measures.update({
+                        f"{instrument_name}.{name}": measure
+                        for name, measure in instrument.measures.items()
+                    })
+                else:
+                    # try to merge instrument
+                    logger.info(
+                        f"trying to merge instrument {instrument_name}")
+
+                    group_instrument = group_instruments[instrument_name]
+                    assert group_instrument.instrument_name == instrument_name
+
+                    measure_ids = set(instrument.keys())
+                    group_measure_ids = set(group_instrument.measures.keys())
+
+                    if measure_ids & group_measure_ids:
+                        msg = f"can't merge instruments because of measures " \
+                            f"{measure_ids & group_measure_ids}"
+                        logger.error(msg)
+                        raise ValueError(msg)
+                    group_instrument.measures.update(instrument.measures)
+                    group_measures.update({
+                        f"{instrument_name}.{name}": measure
+                        for name, measure in instrument.measures.items()
+                    })
+
+        return group_instruments, group_measures
 
     def get_persons_df(self, roles=None, person_ids=None, family_ids=None):
         ped_df = self.families.ped_df[[
@@ -965,7 +1005,7 @@ class PhenoDb(object):
         if pheno_id in self.pheno_cache:
             phenotype_data = self.pheno_cache[pheno_id]
         else:
-            LOGGER.info("loading pheno db <{}>".format(pheno_id))
+            logger.info(f"loading pheno db <{pheno_id}>")
             phenotype_data = PhenotypeStudy(
                 pheno_id,
                 dbfile=self.get_dbfile(pheno_id)

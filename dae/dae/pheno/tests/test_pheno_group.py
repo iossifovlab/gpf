@@ -70,3 +70,11 @@ def test_pheno_group_get_persons(fake_group, roles, family_ids, person_ids):
     p = persons["f1.p1"]
     assert p is not None
     assert p.person_id == "f1.p1"
+
+
+def test_pheno_group_instruments_and_measures(fake_group):
+    assert "i1" in fake_group.instruments
+    assert "i2" in fake_group.instruments
+
+    assert "i1.age" in fake_group.measures
+    assert "i2.iq" in fake_group.measures
