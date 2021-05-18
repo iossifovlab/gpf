@@ -1,12 +1,10 @@
 import os
-from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 
 
 def test_pheno_config_loading(fake_pheno_config):
     assert all(
         [
-            db.phenotype_data.name in ("fake", "dummy_1", "dummy_2")
+            db.phenotype_data.name in ("fake", "fake2", "dummy_1", "dummy_2")
             for db in fake_pheno_config
         ]
     )
