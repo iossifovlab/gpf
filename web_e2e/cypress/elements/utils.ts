@@ -4,18 +4,21 @@ export const userData = {
   'unauthorized': {
     username: undefined,
     password: undefined,
+    hasDatasetRights: false,
     sidenavElementsCount: 2,
     sidenavElements: ['Datasets', 'Autism gene profiles']
   },
   'normal': {
     username: 'research@iossifovlab.com',
     password: 'secret',
+    hasDatasetRights: false,
     sidenavElementsCount: 3,
     sidenavElements: ['Datasets', 'Saved queries', 'Autism gene profiles']
   },
   'admin': {
     username: 'admin@iossifovlab.com',
     password: 'secret',
+    hasDatasetRights: true,
     sidenavElementsCount: 4,
     sidenavElements: ['Datasets', 'Saved queries', 'Autism gene profiles', 'Management']
   },

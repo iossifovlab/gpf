@@ -28,25 +28,6 @@ describe('Datasets tests', () => {
     datasetsPage.datasetsDropdownMenuButton.invoke('attr', 'aria-expanded').should('contain', 'false');
   });
 
-  it('should display permission denied prompt on all pages when not logged in', () => {
-    datasetsPage.permissionDeniedPrompt.should('be.visible');
-
-    datasetsPage.phenotypeToolButton.click();
-    datasetsPage.permissionDeniedPrompt.should('be.visible');
-
-    datasetsPage.phenotypeBrowserButton.click();
-    datasetsPage.permissionDeniedPrompt.should('be.visible');
-
-    datasetsPage.genotypeBrowserButton.click();
-    datasetsPage.permissionDeniedPrompt.should('be.visible');
-
-    datasetsPage.datasetStatisticsButton.click();
-    datasetsPage.permissionDeniedPrompt.should('be.visible');
-
-    datasetsPage.loginAdmin();
-    datasetsPage.permissionDeniedPrompt.should('not.exist');
-  });
-
   it('should display genotype browser', () => {
     const genotypeBrowserPage = new GenotypeBrowserPage();
 

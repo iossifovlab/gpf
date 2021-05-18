@@ -1,4 +1,5 @@
 import { AppPage } from 'cypress/elements/app-page';
+import { DatasetsPage } from 'cypress/elements/datasets-page';
 import { toolPageLinks, userData } from 'cypress/elements/utils';
 
 describe('App tests', () => {
@@ -16,23 +17,6 @@ describe('App tests', () => {
     appPage.loginAdmin();
     appPage.title.should('have.text', 'GPF: Genotypes and Phenotypes in Families');
     appPage.logout();
-  });
-
-  Object.values(userData).forEach((data) => {
-    it('should toggle sidenav bar with the right elements inside', () => {
-      appPage.login(data['username'], data['password']);
-      appPage.sidenavElements.should('not.exist');
-
-      appPage.toggleSidenav();
-      appPage.sidenavElements.should('have.length', data['sidenavElementsCount']);
-
-      appPage.toggleSidenav();
-      appPage.sidenavElements.should('not.exist');
-
-      if (data['username'] || data['password'] !== undefined) {
-        appPage.logout();
-      }
-    });
   });
 
   it('should toggle sidenav, click on the \'Datasets\' button and navigate to \'/datasets/ALL_genotypes/genotype-browser\'', () => {
@@ -93,5 +77,89 @@ describe('App tests', () => {
     });
 
     appPage.logout();
+  });
+});
+
+describe('User access rights tests', () => {
+  const appPage = new AppPage();
+  const datasetsPage = new DatasetsPage();
+
+  before(() => {
+    appPage.cleanup();
+  });
+
+  beforeEach(() => {
+    appPage.navigateToHome();
+  });
+
+  Object.values(userData).forEach((data) => {
+    it('should toggle sidenav bar with the right elements inside', () => {
+      appPage.login(data['username'], data['password']);
+      appPage.sidenavElements.should('not.exist');
+
+      appPage.toggleSidenav();
+      appPage.sidenavElements.should('have.length', data['sidenavElementsCount']);
+
+      appPage.toggleSidenav();
+      appPage.sidenavElements.should('not.exist');
+
+      if (data['username'] || data['password'] !== undefined) {
+        appPage.logout();
+      }
+    });
+  });
+
+  it('should go through all tools and check whether the permission denied prompt ' +
+     'is displayed when not logged in and not displayed when logged in with admin account', () => {
+    datasetsPage.permissionDeniedPrompt.should('be.visible');
+
+    datasetsPage.geneBrowserButton.click();
+    datasetsPage.permissionDeniedPrompt.should('be.visible');
+
+    datasetsPage.phenotypeToolButton.click();
+    datasetsPage.permissionDeniedPrompt.should('be.visible');
+
+    datasetsPage.phenotypeBrowserButton.click();
+    datasetsPage.permissionDeniedPrompt.should('be.visible');
+
+    datasetsPage.genotypeBrowserButton.click();
+    datasetsPage.permissionDeniedPrompt.should('be.visible');
+
+    datasetsPage.datasetStatisticsButton.click();
+    datasetsPage.permissionDeniedPrompt.should('be.visible');
+
+    datasetsPage.loginAdmin();
+    datasetsPage.permissionDeniedPrompt.should('not.exist');
+
+    datasetsPage.geneBrowserButton.click();
+    datasetsPage.permissionDeniedPrompt.should('not.exist');
+
+    datasetsPage.phenotypeToolButton.click();
+    datasetsPage.permissionDeniedPrompt.should('not.exist');
+
+    datasetsPage.phenotypeBrowserButton.click();
+    datasetsPage.permissionDeniedPrompt.should('not.exist');
+
+    datasetsPage.genotypeBrowserButton.click();
+    datasetsPage.permissionDeniedPrompt.should('not.exist');
+
+    datasetsPage.datasetStatisticsButton.click();
+    datasetsPage.permissionDeniedPrompt.should('not.exist');
+  });
+
+  Object.values(userData).forEach((data) => {
+    it('should login with accounts with different access rights and check whether the datasets ' +
+       'in the dropdown have the correct opacity value', () => {
+      const expectedOpacity = data['hasDatasetRights'] ? '1' : '0.3';
+
+      appPage.login(data['username'], data['password']);
+      datasetsPage.datasetsDropdownMenuButton.click();
+      cy.wait(500);
+      datasetsPage.datasetsDropdownMenuElements.each(ele => cy.wrap(ele).should('have.css', 'opacity', expectedOpacity));
+
+      if (data['username'] || data['password'] !== undefined) {
+        appPage.logout();
+      }
+    });
   });
 });
