@@ -338,21 +338,74 @@ class PhenotypeData(ABC):
             default_filter="apply"):
         pass
 
-    @abstractmethod
     def get_values(
             self, measure_ids,
-            person_ids=None, family_ids=None, roles=None):
-        pass
+            person_ids=None,
+            family_ids=None,
+            roles=None):
+        """
+        Returns dictionary dictionaries with values for all `measure_ids`.
 
-    @abstractmethod
+        The returned dictionary uses `person_id` as key. The value for each key
+        is a dictionary of measurement values for each ID in `measure_ids`
+        keyed measure_id.
+
+        `measure_ids` -- list of measure IDs which values should be returned.
+
+        `person_ids` -- list of person IDs to filter result. Only data for
+        individuals with person_id in the list `person_ids` are returned.
+
+        `family_ids` -- list of family IDs to filter result. Only data for
+        individuals that are members of any of the specified `family_ids`
+        are returned.
+
+        `roles` -- list of roles of individuals to select measure value for.
+        If not specified value for individuals in all roles are returned.
+
+        """
+        df = self.get_values_df(measure_ids, person_ids, family_ids, roles)
+        res = {}
+        for row in df.to_dict("records"):
+            person_id = row["person_id"]
+            res[person_id] = row
+
+        return res
+
+    def _get_instrument_measures(self, instrument_name):
+        """
+        Returns measures for given instrument.
+        """
+        assert instrument_name in self.instruments
+        instrument = self.instruments[instrument_name]
+        measure_ids = [
+            m.measure_id for m in list(instrument.measures.values())
+        ]
+        return measure_ids
+
     def get_instrument_values_df(
-            self, instrument_df, person_ids, family_ids, roles):
-        pass
+            self, instrument_name,
+            person_ids=None,
+            family_ids=None,
+            role=None):
+        """
+        Returns a dataframe with values for all measures in given
+        instrument (see **get_values_df**).
+        """
+        measure_ids = self._get_instrument_measures(instrument_name)
+        res = self.get_values_df(measure_ids, person_ids, family_ids, role)
+        return res
 
-    @abstractmethod
     def get_instrument_values(
-            self, instrument_df, person_ids, family_ids, roles):
-        pass
+            self, instrument_name,
+            person_ids=None,
+            family_ids=None,
+            role=None):
+        """
+        Returns a dictionary with values for all measures in given
+        instrument (see :func:`get_values`).
+        """
+        measure_ids = self._get_instrument_measures(instrument_name)
+        return self.get_values(measure_ids, person_ids, family_ids, role)
 
 
 class PhenotypeStudy(PhenotypeData):
@@ -790,40 +843,6 @@ class PhenotypeStudy(PhenotypeData):
             measure_ids, person_ids, family_ids, roles, default_filter
         )
 
-    def _values_df_to_dict(self, df):
-        res = {}
-        for row in df.to_dict("records"):
-            person_id = row["person_id"]
-            res[person_id] = row
-
-        return res
-
-    def get_values(
-        self, measure_ids, person_ids=None, family_ids=None, roles=None
-    ):
-        """
-        Returns dictionary dictionaries with values for all `measure_ids`.
-
-        The returned dictionary uses `person_id` as key. The value for each key
-        is a dictionary of measurement values for each ID in `measure_ids`
-        keyed measure_id.
-
-        `measure_ids` -- list of measure IDs which values should be returned.
-
-        `person_ids` -- list of person IDs to filter result. Only data for
-        individuals with person_id in the list `person_ids` are returned.
-
-        `family_ids` -- list of family IDs to filter result. Only data for
-        individuals that are members of any of the specified `family_ids`
-        are returned.
-
-        `roles` -- list of roles of individuals to select measure value for.
-        If not specified value for individuals in all roles are returned.
-
-        """
-        df = self.get_values_df(measure_ids, person_ids, family_ids, roles)
-        return self._values_df_to_dict(df)
-
     def get_persons_values_df(
         self, measure_ids, person_ids=None, family_ids=None, roles=None
     ):
@@ -850,39 +869,6 @@ class PhenotypeStudy(PhenotypeData):
         )
 
         return df
-
-    def _get_instrument_measures(self, instrument_name):
-        """
-        Returns measures for given instrument.
-        """
-        assert instrument_name in self.instruments
-        instrument = self.instruments[instrument_name]
-        measure_ids = [
-            m.measure_id for m in list(instrument.measures.values())
-        ]
-        return measure_ids
-
-    def get_instrument_values_df(
-        self, instrument_name, person_ids=None, family_ids=None, role=None
-    ):
-        """
-        Returns a dataframe with values for all measures in given
-        instrument (see **get_values_df**).
-        """
-        measure_ids = self._get_instrument_measures(instrument_name)
-        res = self.get_values_df(measure_ids, person_ids, family_ids, role)
-        return res
-
-    def get_instrument_values(
-        self, instrument_name, person_ids=None, family_ids=None, role=None
-    ):
-        """
-        Returns a dictionary with values for all measures in given
-        instrument (see :func:`get_values`).
-        """
-        measure_ids = self._get_instrument_measures(instrument_name)
-        df = self.get_values_df(measure_ids, person_ids, family_ids, role)
-        return self._values_df_to_dict(df)
 
 
 class PhenotypeGroup(PhenotypeData):
@@ -972,27 +958,47 @@ class PhenotypeGroup(PhenotypeData):
         logger.error(msg)
         raise ValueError(msg)
 
+    def get_values_df(
+            self,
+            measure_ids,
+            person_ids=None,
+            family_ids=None,
+            roles=None,
+            default_filter="apply"):
+
+        assert all([self.has_measure(mid) for mid in measure_ids]), measure_ids
+
+        dfs = []
+        for pheno in self.phenotype_data:
+            pheno_measure_ids = []
+            for mid in measure_ids:
+                if pheno.has_measure(mid):
+                    pheno_measure_ids.append(mid)
+            if pheno_measure_ids:
+                df = pheno.get_values_df(
+                    pheno_measure_ids,
+                    person_ids=person_ids,
+                    family_ids=family_ids,
+                    roles=roles,
+                    default_filter=default_filter)
+                dfs.append(df)
+        assert len(dfs) > 0
+        if len(dfs) == 1:
+            return dfs[0]
+
+        res_df = dfs[0]
+        for i, df in enumerate(dfs[1:]):
+            res_df = res_df.join(
+                df.set_index("person_id"),
+                on="person_id",
+                how="outer",
+                rsuffix="_val_{}".format(i),
+            )
+
+        return res_df
+
     def get_persons_values_df(
             self, measure_ids, person_ids, family_ids, roles):
-        pass
-
-    def get_values_df(
-            self, measure_ids,
-            person_ids=None, family_ids=None, roles=None,
-            default_filter="apply"):
-        pass
-
-    def get_values(
-            self, measure_ids,
-            person_ids=None, family_ids=None, roles=None):
-        pass
-
-    def get_instrument_values_df(
-            self, instrument_df, person_ids, family_ids, roles):
-        pass
-
-    def get_instrument_values(
-            self, instrument_df, person_ids, family_ids, roles):
         pass
 
 

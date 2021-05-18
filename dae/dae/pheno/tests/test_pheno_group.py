@@ -158,3 +158,99 @@ def test_pheno_group_get_measures(fake_group):
     print(measures)
 
     assert len(measures) == 2, measures
+
+
+@pytest.mark.parametrize(
+    "roles,family_ids,person_ids",
+    [
+        (None, None, {"f1.p1"}),
+        ({Role.prb}, {"f1"}, None),
+        ({Role.prb, Role.sib}, {"f1"}, {"f1.p1"}),
+        ({Role.prb}, {"f1", "f2"}, {"f1.p1"}),
+    ],
+)
+def test_pheno_group_i1_get_values_df(
+        fake_group, roles, family_ids, person_ids):
+
+    df = fake_group.get_values_df(
+        ["i1.iq"], person_ids=person_ids,
+        family_ids=family_ids, roles=roles)
+    print(df)
+
+    expected = pd.DataFrame({
+        "person_id": ["f1.p1"],
+        "i1.iq": [86.41]
+        })
+    pd.testing.assert_frame_equal(df, expected, atol=1e-2)
+
+
+@pytest.mark.parametrize(
+    "roles,family_ids,person_ids",
+    [
+        (None, None, {"f1.p1"}),
+        ({Role.prb}, {"f1"}, None),
+        ({Role.prb, Role.sib}, {"f1"}, {"f1.p1"}),
+        ({Role.prb}, {"f1", "f2"}, {"f1.p1"}),
+    ],
+)
+def test_pheno_group_i2_get_values_df(
+        fake_group, roles, family_ids, person_ids):
+
+    df = fake_group.get_values_df(
+        ["i2.iq"], person_ids=person_ids,
+        family_ids=family_ids, roles=roles)
+    print(df)
+
+    expected = pd.DataFrame({
+        "person_id": ["f1.p1"],
+        "i2.iq": [86.41]
+        })
+    pd.testing.assert_frame_equal(df, expected, atol=1e-2)
+
+
+@pytest.mark.parametrize(
+    "roles,family_ids,person_ids",
+    [
+        (None, None, {"f1.p1"}),
+        ({Role.prb}, {"f1"}, None),
+        ({Role.prb, Role.sib}, {"f1"}, {"f1.p1"}),
+        ({Role.prb}, {"f1", "f2"}, {"f1.p1"}),
+    ],
+)
+def test_pheno_group_i1_i2_get_values_df(
+        fake_group, roles, family_ids, person_ids):
+
+    df = fake_group.get_values_df(
+        ["i1.iq", "i2.iq"], person_ids=person_ids,
+        family_ids=family_ids, roles=roles)
+    print(df)
+
+    expected = pd.DataFrame({
+        "person_id": ["f1.p1"],
+        "i1.iq": [86.41],
+        "i2.iq": [86.41]
+        })
+    pd.testing.assert_frame_equal(df, expected, atol=1e-2)
+
+
+@pytest.mark.parametrize(
+    "roles,family_ids,person_ids",
+    [
+        (None, None, {"f1.p1"}),
+        ({Role.prb}, {"f1"}, None),
+        ({Role.prb, Role.sib}, {"f1"}, {"f1.p1"}),
+        ({Role.prb}, {"f1", "f2"}, {"f1.p1"}),
+    ],
+)
+def test_pheno_group_i1_i2_get_values(
+        fake_group, roles, family_ids, person_ids):
+
+    res = fake_group.get_values(
+        ["i1.iq", "i2.iq"], person_ids=person_ids,
+        family_ids=family_ids, roles=roles)
+    print(res)
+
+    assert "f1.p1" in res
+
+    assert res["f1.p1"]["i1.iq"] == pytest.approx(86.41, abs=1e-2)
+    assert res["f1.p1"]["i2.iq"] == pytest.approx(86.41, abs=1e-2)
