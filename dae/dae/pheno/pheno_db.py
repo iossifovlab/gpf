@@ -290,7 +290,7 @@ class PhenotypeData(ABC):
         """
 
         df = self.get_measure_values_df(
-            measure_id, 
+            measure_id,
             person_ids=person_ids,
             family_ids=family_ids,
             roles=roles,
@@ -940,7 +940,7 @@ class PhenotypeGroup(PhenotypeData):
         return ped_df
 
     def get_measure_values_df(
-            self, measure_id, 
+            self, measure_id,
             person_ids=None,
             family_ids=None,
             roles=None,
@@ -968,7 +968,6 @@ class PhenotypeGroup(PhenotypeData):
 
     def get_measures(self, instrument, measure_type):
         pass
-
 
     def get_values_df(
             self, measure_ids,

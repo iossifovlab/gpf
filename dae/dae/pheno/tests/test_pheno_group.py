@@ -113,7 +113,6 @@ def test_pheno_group_get_measure_values_df(
     pd.testing.assert_frame_equal(df, expected, atol=1e-2)
 
 
-
 @pytest.mark.parametrize(
     "roles,family_ids,person_ids",
     [
