@@ -12,10 +12,14 @@ def test_get_all_common_report_ids(common_report_facade):
 
 def test_generate_common_report(common_report_facade):
     common_report_facade.generate_common_report("Study1")
-    assert len(common_report_facade._common_report_cache) == 1
+    print(common_report_facade._common_report_cache.keys())
+    assert len(common_report_facade._common_report_cache) == 1, \
+        common_report_facade._common_report_cache.keys()
 
     common_report_facade.generate_common_reports(["Study4", "Dataset1"])
-    assert len(common_report_facade._common_report_cache) == 3
+    print(common_report_facade._common_report_cache.keys())
+    assert len(common_report_facade._common_report_cache) == 3, \
+        common_report_facade._common_report_cache.keys()
 
 
 def test_generate_all_common_reports(common_report_facade):
