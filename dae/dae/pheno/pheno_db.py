@@ -179,13 +179,47 @@ class PhenotypeData(ABC):
     def get_persons_df(self, roles, person_ids, family_ids):
         pass
 
+    def get_persons(self, roles=None, person_ids=None, family_ids=None):
+        """Returns individuals data from phenotype database.
+
+        `roles` -- specifies persons of which role should be returned. If not
+        specified returns all individuals from phenotype database.
+
+        `person_ids` -- list of person IDs to filter result. Only data for
+        individuals with person_id in the list `person_ids` are returned.
+
+        `family_ids` -- list of family IDs to filter result. Only data for
+        individuals that are members of any of the specified `family_ids`
+        are returned.
+
+        Returns a dictionary of (`personId`, `Person()`) where
+        the `Person` object is the same object used into `VariantDB` families.
+        """
+        persons = {}
+        df = self.get_persons_df(
+            roles=roles, person_ids=person_ids, family_ids=family_ids
+        )
+
+        for row in df.to_dict("records"):
+            person_id = row["person_id"]
+
+            p = Person(**row)
+            # p.person_id = person_id
+            # p.family_id = family_id
+            assert row["role"] in Role, "{} not a valid role".format(
+                row["role"]
+            )
+            assert row["sex"] in Sex, "{} not a valid sex".format(row["sex"])
+            assert row["status"] in Status, "{} not a valid status".format(
+                row["status"]
+            )
+
+            persons[person_id] = p
+        return persons
+
     @abstractmethod
     def get_persons_values_df(
             self, measure_ids, person_ids, family_ids, roles):
-        pass
-
-    @abstractmethod
-    def get_persons(self, roles, person_ids, family_ids):
         pass
 
     @abstractmethod
@@ -418,44 +452,6 @@ class PhenotypeStudy(PhenotypeData):
         df = pd.read_sql(s, self.db.engine)
         # df.rename(columns={'sex': 'sex'}, inplace=True)
         return df[["person_id", "family_id", "role", "sex", "status"]]
-
-    def get_persons(self, roles=None, person_ids=None, family_ids=None):
-        """Returns individuals data from phenotype database.
-
-        `roles` -- specifies persons of which role should be returned. If not
-        specified returns all individuals from phenotype database.
-
-        `person_ids` -- list of person IDs to filter result. Only data for
-        individuals with person_id in the list `person_ids` are returned.
-
-        `family_ids` -- list of family IDs to filter result. Only data for
-        individuals that are members of any of the specified `family_ids`
-        are returned.
-
-        Returns a dictionary of (`personId`, `Person()`) where
-        the `Person` object is the same object used into `VariantDB` families.
-        """
-        persons = {}
-        df = self.get_persons_df(
-            roles=roles, person_ids=person_ids, family_ids=family_ids
-        )
-
-        for row in df.to_dict("records"):
-            person_id = row["person_id"]
-
-            p = Person(**row)
-            # p.person_id = person_id
-            # p.family_id = family_id
-            assert row["role"] in Role, "{} not a valid role".format(
-                row["role"]
-            )
-            assert row["sex"] in Sex, "{} not a valid sex".format(row["sex"])
-            assert row["status"] in Status, "{} not a valid status".format(
-                row["status"]
-            )
-
-            persons[person_id] = p
-        return persons
 
     def get_measure(self, measure_id):
         """
@@ -882,14 +878,20 @@ class PhenotypeGroup(PhenotypeData):
         self.phenotype_data = phenotype_data
         self.families = FamiliesData.combine_studies(self.phenotype_data)
 
-    def get_persons_df(self, roles, person_ids, family_ids):
-        pass
+    def get_persons_df(self, roles=None, person_ids=None, family_ids=None):
+        ped_df = self.families.ped_df[[
+            "person_id", "family_id", "role", "sex", "status"]]
+
+        if roles is not None:
+            ped_df = ped_df[ped_df.role.isin(roles)]
+        if person_ids is not None:
+            ped_df = ped_df[ped_df.person_id.isin(person_ids)]
+        if family_ids is not None:
+            ped_df = ped_df[ped_df.family_id.isin(family_ids)]
+        return ped_df
 
     def get_persons_values_df(
             self, measure_ids, person_ids, family_ids, roles):
-        pass
-
-    def get_persons(self, roles, person_ids, family_ids):
         pass
 
     def has_measure(self, measure_id):

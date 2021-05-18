@@ -1,6 +1,7 @@
 import pytest
 
 from dae.pheno.pheno_db import PhenotypeGroup
+from dae.variants.attributes import Role
 
 
 @pytest.fixture(scope="session")
@@ -20,3 +21,29 @@ def test_pheno_group_families(fake_group):
     assert all(
         fake_group.families.ped_df ==
         fake_group.phenotype_data[0].families.ped_df)
+
+
+@pytest.mark.parametrize(
+    "roles,family_ids,person_ids",
+    [
+        (None, None, {"f1.p1"}),
+        ({Role.prb}, {"f1"}, None),
+        ({Role.prb, Role.sib}, {"f1"}, {"f1.p1"}),
+        ({Role.prb}, {"f1", "f2"}, {"f1.p1"}),
+    ],
+)
+def test_pheno_group_get_persons(fake_group, roles, family_ids, person_ids):
+    fake = fake_group.phenotype_data[0]
+    ped_df = fake.get_persons_df(
+        roles=roles,
+        family_ids=family_ids,
+        person_ids=person_ids)
+    print(ped_df)
+
+    ped_df = fake_group.get_persons_df(
+        roles=roles,
+        family_ids=family_ids,
+        person_ids=person_ids)
+    print(ped_df)
+    assert len(ped_df) == 1
+    assert all(ped_df["person_id"] == "f1.p1"), ped_df
