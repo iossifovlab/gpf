@@ -32,7 +32,7 @@ def test_pheno_group_families(fake_group):
         ({Role.prb}, {"f1", "f2"}, {"f1.p1"}),
     ],
 )
-def test_pheno_group_get_persons(fake_group, roles, family_ids, person_ids):
+def test_pheno_group_get_persons_df(fake_group, roles, family_ids, person_ids):
     fake = fake_group.phenotype_data[0]
     ped_df = fake.get_persons_df(
         roles=roles,
@@ -47,3 +47,26 @@ def test_pheno_group_get_persons(fake_group, roles, family_ids, person_ids):
     print(ped_df)
     assert len(ped_df) == 1
     assert all(ped_df["person_id"] == "f1.p1"), ped_df
+
+
+@pytest.mark.parametrize(
+    "roles,family_ids,person_ids",
+    [
+        (None, None, {"f1.p1"}),
+        ({Role.prb}, {"f1"}, None),
+        ({Role.prb, Role.sib}, {"f1"}, {"f1.p1"}),
+        ({Role.prb}, {"f1", "f2"}, {"f1.p1"}),
+    ],
+)
+def test_pheno_group_get_persons(fake_group, roles, family_ids, person_ids):
+
+    persons = fake_group.get_persons(
+        roles=roles,
+        family_ids=family_ids,
+        person_ids=person_ids)
+    print(persons)
+    assert len(persons) == 1
+    assert "f1.p1" in persons
+    p = persons["f1.p1"]
+    assert p is not None
+    assert p.person_id == "f1.p1"
