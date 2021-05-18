@@ -939,12 +939,6 @@ class PhenotypeGroup(PhenotypeData):
             self, measure_ids, person_ids, family_ids, roles):
         pass
 
-    def has_measure(self, measure_id):
-        pass
-
-    def get_measure(self, measure_id):
-        pass
-
     def get_measures(self, instrument, measure_type):
         pass
 

@@ -78,3 +78,12 @@ def test_pheno_group_instruments_and_measures(fake_group):
 
     assert "i1.age" in fake_group.measures
     assert "i2.iq" in fake_group.measures
+
+    assert fake_group.has_measure("i1.iq")
+    assert fake_group.has_measure("i2.iq")
+
+    m1 = fake_group.get_measure("i1.iq")
+    assert m1.measure_id == "i1.iq"
+
+    m2 = fake_group.get_measure("i2.iq")
+    assert m2.measure_id == "i2.iq"
