@@ -245,9 +245,39 @@ class PhenotypeData(ABC):
         assert measure_id in self._measures, measure_id
         return self._measures[measure_id]
 
-    @abstractmethod
-    def get_measures(self, instrument, measure_type):
-        pass
+    def get_measures(self, instrument_name=None, measure_type=None):
+        """
+        Returns a dictionary of measures objects.
+
+        `instrument_name` -- an instrument name which measures should be
+        returned. If not specified all type of measures are returned.
+
+        `measure_type` -- a type ('continuous', 'ordinal' or 'categorical')
+        of measures that should be returned. If not specified all
+        type of measures are returned.
+
+        """
+        result = {}
+
+        instruments = self.instruments
+        if instrument_name is not None:
+            assert instrument_name in self.instruments
+            instruments = {
+                instrument_name: self.instruments[instrument_name]
+            }
+
+        if measure_type is not None:
+            measure_type = MeasureType.from_str(measure_type)
+
+        for instrument_name, instrument in instruments.items():
+            for measure in instrument.measures.values():
+                print(measure, measure.measure_type)
+                if measure_type is not None and \
+                        measure.measure_type != measure_type:
+                    continue
+                result[measure.measure_id] = measure
+
+        return result
 
     @abstractmethod
     def get_measure_values_df(
@@ -410,26 +440,6 @@ class PhenotypeStudy(PhenotypeData):
         ]
         res_df = df[df_columns]
         return res_df
-
-    def get_measures(self, instrument=None, measure_type=None):
-        """
-        Returns a dictionary of measures objects.
-
-        `instrument` -- an instrument name which measures should be
-        returned. If not specified all type of measures are returned.
-
-        `measure_type` -- a type ('continuous', 'ordinal' or 'categorical')
-        of measures that should be returned. If not specified all
-        type of measures are returned.
-
-        """
-        df = self._get_measures_df(instrument, measure_type)
-
-        res = {}
-        for row in df.to_dict("records"):
-            m = Measure._from_dict(row)
-            res[m.measure_id] = m
-        return res
 
     def _load_instruments(self):
         instruments = {}
@@ -964,9 +974,6 @@ class PhenotypeGroup(PhenotypeData):
 
     def get_persons_values_df(
             self, measure_ids, person_ids, family_ids, roles):
-        pass
-
-    def get_measures(self, instrument, measure_type):
         pass
 
     def get_values_df(

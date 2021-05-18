@@ -133,3 +133,28 @@ def test_pheno_group_get_measure_values(
     assert "f1.p1" in res
 
     assert res["f1.p1"] == pytest.approx(86.41, abs=1e-2)
+
+
+def test_pheno_group_get_measures(fake_group):
+
+    measures = fake_group.get_measures(measure_type="continuous")
+    print(measures)
+
+    assert len(measures) == 14, measures
+
+    measures = fake_group.get_measures(
+        instrument_name="i1", measure_type="continuous")
+    print(measures)
+
+    assert len(measures) == 7, measures
+
+    measures = fake_group.get_measures(measure_type="ordinal")
+    print(measures)
+
+    assert len(measures) == 4, measures
+
+    measures = fake_group.get_measures(
+        instrument_name="i1", measure_type="ordinal")
+    print(measures)
+
+    assert len(measures) == 2, measures
