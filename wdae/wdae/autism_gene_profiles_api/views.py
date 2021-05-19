@@ -2,6 +2,7 @@ import logging
 from rest_framework import status
 from rest_framework.response import Response
 
+from dae.utils.helpers import to_response_json
 from query_base.query_base import QueryBaseView
 
 
@@ -14,15 +15,20 @@ class ConfigurationView(QueryBaseView):
         if configuration is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # Attach dataset display name to configuration
+        # Camelize snake_cased keys, excluding "datasets"
+        # since its keys are dataset IDs
+        response = to_response_json(configuration)
         if "datasets" in configuration:
-            for dataset_id, dataset in configuration["datasets"].items():
+            response["datasets"] = dict()
+            for dataset_id, conf in configuration["datasets"].items():
+                response["datasets"][dataset_id] = to_response_json(conf)
+                # Attach dataset display name to response
                 dataset_conf = self.gpf_instance.get_genotype_data_config(
                     dataset_id
                 )
-                dataset["name"] = dataset_conf.get("name", dataset_id)
+                conf["name"] = dataset_conf.get("name", dataset_id)
 
-        return Response(configuration)
+        return Response(response)
 
 
 class ProfileView(QueryBaseView):
