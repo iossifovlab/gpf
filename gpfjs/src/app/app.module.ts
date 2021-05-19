@@ -169,9 +169,6 @@ import { FamilyTypeFilterComponent } from './family-type-filter/family-type-filt
 import { SortingButtonsComponent } from './sorting-buttons/sorting-buttons.component';
 import { AutismGeneProfileSingleViewWrapperComponent } from './autism-gene-profile-single-view-wrapper/autism-gene-profile-single-view-wrapper.component';
 
-import 'reflect-metadata';
-import 'es6-shim';
-
 const appRoutes: Routes = [
   {
     path: 'datasets',
