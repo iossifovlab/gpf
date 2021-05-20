@@ -27,6 +27,11 @@ class PersonSet(NamedTuple):
     def __repr__(self):
         return f"PersonSet({self.id}: {self.name}, {len(self.persons)})"
 
+    def get_persons_with_roles(self, *roles):
+        for person in self.persons.values():
+            if person.role in roles:
+                yield person
+
     def to_json(self):
         return {
             "id": self.id,

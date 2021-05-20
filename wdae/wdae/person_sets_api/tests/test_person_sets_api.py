@@ -118,3 +118,45 @@ def test_collection_configs_view(admin_client):
             'name': 'Phenotype'
         },
     }
+
+
+def test_get_person_sets_collection_stats(admin_client):
+    url = "/api/v3/person_sets/Study1/stats/phenotype"
+    response = admin_client.get(url)
+    assert response.status_code == 200
+    assert response.data == {
+        "phenotype1": {
+            "parents": 4,
+            "children": 12,
+        },
+        "phenotype2": {
+            "parents": 0,
+            "children": 4,
+        },
+        "unaffected": {
+            "parents": 8,
+            "children": 1,
+        },
+        "unknown": {
+            "parents": 4,
+            "children": 0,
+        }
+    }
+
+
+def test_get_person_sets_collection_stats_nonexistent(admin_client):
+    response = admin_client.get(
+        "/api/v3/person_sets/nonexistentstudy/stats/status"
+    )
+    assert response.status_code == 404
+    response = admin_client.get(
+        "/api/v3/person_sets/Study1/stats/nonexistentcollection"
+    )
+    assert response.status_code == 404
+
+
+def test_get_person_sets_collection_stats_no_id(admin_client):
+    response = admin_client.get(
+        "/api/v3/person_sets/Study1/stats"
+    )
+    assert response.status_code == 404
