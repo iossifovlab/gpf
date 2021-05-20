@@ -71,11 +71,11 @@ export class BasePage {
     usersPage.usernameInput.type(username);
     usersPage.passwordInput.type(password);
     usersPage.loginSubmitButton.click();
+    cy.get('#logout-button').should('be.visible');
   }
 
   loginAdmin() {
     this.login(this.adminUsername, this.adminPassword);
-    cy.get('#logout-button').should('be.visible');
   }
 
   logout() {
