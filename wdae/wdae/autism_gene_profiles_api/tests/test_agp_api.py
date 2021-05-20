@@ -24,14 +24,12 @@ def test_configuration(admin_client):
     assert len(response.data["genomicScores"][1]["scores"]) == 3
     assert response.data["genomicScores"][1]["category"] == "autism_scores"
 
-    assert len(response.data["datasets"].keys()) == 1
-
     datasets = response.data["datasets"]
-    assert len(datasets["iossifov_we2014_test"]["effects"]) == 2
-    assert len(datasets["iossifov_we2014_test"]["personSets"]) == 2
-    assert datasets["iossifov_we2014_test"]["personSets"] == [
-        "unknown", "unaffected"
-    ]
+    assert len(datasets) == 1
+    assert len(datasets[0]["id"]) == "iossifov_we2014_test"
+    assert len(datasets[0]["effects"]) == 2
+    assert len(datasets[0]["personSets"]) == 2
+    assert datasets[0]["personSets"] == ["unknown", "unaffected"]
 
 
 def test_get_statistics(admin_client):

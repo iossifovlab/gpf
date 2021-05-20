@@ -19,14 +19,16 @@ class ConfigurationView(QueryBaseView):
         # since its keys are dataset IDs
         response = to_response_json(configuration)
         if "datasets" in configuration:
-            response["datasets"] = dict()
+            response["datasets"] = list()
             for dataset_id, conf in configuration["datasets"].items():
-                response["datasets"][dataset_id] = to_response_json(conf)
-                # Attach dataset display name to response
                 dataset_conf = self.gpf_instance.get_genotype_data_config(
                     dataset_id
                 )
-                conf["name"] = dataset_conf.get("name", dataset_id)
+                response["datasets"].append({
+                    "id": dataset_id,
+                    "name": dataset_conf.get("name", dataset_id),
+                    **to_response_json(conf)
+                })
 
         return Response(response)
 
