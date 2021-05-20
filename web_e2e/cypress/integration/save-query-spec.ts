@@ -41,6 +41,7 @@ describe('Save query tests', () => {
     datasetsPage.genotypeBrowserButton.click();
     datasetsPage.phenotypeBrowserButton.click();
     datasetsPage.phenotypeToolButton.click();
+    datasetsPage.geneBrowserButton.click();
 
     saveQueryPage.toggleSidenav();
     saveQueryPage.sidenavSavedQueriesButton.click();

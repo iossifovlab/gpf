@@ -30,11 +30,13 @@ describe('Share query tests', () => {
 
     shareQueryPage.button.click();
     shareQueryPage.input.invoke('val').then((url) => {
-      cy.visit(String(url));
-      datasetsPage.datasetStatisticsButton.click();
-      datasetsPage.genotypeBrowserButton.click();
-      datasetsPage.phenotypeBrowserButton.click();
-      datasetsPage.phenotypeToolButton.click();
+      cy.visit(String(url)).then(() => {
+        datasetsPage.datasetStatisticsButton.click();
+        datasetsPage.genotypeBrowserButton.click();
+        datasetsPage.phenotypeBrowserButton.click();
+        datasetsPage.phenotypeToolButton.click();
+        datasetsPage.geneBrowserButton.click();
+      });
     })
   });
 
@@ -46,10 +48,11 @@ describe('Share query tests', () => {
 
     shareQueryPage.button.click();
     shareQueryPage.input.invoke('val').then((url) => {
-      cy.visit(String(url));
-      genotypeBlockPage.findAllCheckboxesInComponent('gpf-effecttypes').each((element) => {
-        cy.wrap(element).should('be.checked');
-      });
+      cy.visit(String(url)).then(() => {
+        genotypeBlockPage.findAllCheckboxesInComponent('gpf-effecttypes').each((element) => {
+          cy.wrap(element).should('be.checked');
+        });
+      })
     })
   });
 });
