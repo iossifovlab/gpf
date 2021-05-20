@@ -44,7 +44,7 @@ def write_float(stream, num):
 def write_string(stream, string):
     length = len(string)
     stream.write(length.to_bytes(4, "big", signed=False))
-    stream.write(string.encode("ascii"))
+    stream.write(string.encode("utf8"))
 
 
 def write_string_list(stream, li):
@@ -148,7 +148,7 @@ def read_float(stream):
 
 def read_string(stream):
     length = read_int32(stream)
-    return stream.read(length).decode("ascii")
+    return stream.read(length).decode("utf8")
 
 
 def read_string_list(stream):
@@ -603,16 +603,29 @@ class AlleleParquetSerializer:
         return scores_blobs
 
     def serialize_extra_attributes(self, variant):
-        stream = io.BytesIO()
-        write_int8(stream, len(self.extra_attributes))
-        for prop in self.extra_attributes:
-            write_string(stream, prop)
-            write_string(stream, variant.get_attribute(prop)[0])
+        try:
+            stream = io.BytesIO()
+            write_int8(stream, len(self.extra_attributes))
+            for prop in self.extra_attributes:
+                try:
+                    write_string(stream, prop)
+                    write_string(stream, variant.get_attribute(prop)[0])
+                except Exception:
+                    logger.exception(
+                        f"cant serialize property {prop} value for variant: "
+                        f"{variant}; "
+                        f"{variant.get_attribute(prop)[0]}")
+                    return None
 
-        stream.seek(0)
-        output = stream.read()
-        stream.close()
-        return output
+            stream.seek(0)
+            output = stream.read()
+            stream.close()
+            return output
+        except Exception:
+            logger.exception(
+                f"problem storing extra attributes for variant "
+                f"{variant}: {self.extra_attributes}")
+            return None
 
     def write_property(self, stream, value, serializer):
         if value is None:
@@ -643,7 +656,7 @@ class AlleleParquetSerializer:
             records.append(allele_data)
 
         sv = SummaryVariantFactory.summary_variant_from_records(
-                records, 
+                records,
                 attr_filter=self.ALLELE_CREATION_PROPERTIES
             )
 
@@ -674,7 +687,7 @@ class AlleleParquetSerializer:
             records.append(allele_data)
 
         sv = SummaryVariantFactory.summary_variant_from_records(
-                records, 
+                records,
                 attr_filter=self.ALLELE_CREATION_PROPERTIES
             )
         fv = FamilyVariant(
