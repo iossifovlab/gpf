@@ -145,6 +145,7 @@ describe('User access rights tests', () => {
 
     datasetsPage.datasetStatisticsButton.click();
     datasetsPage.permissionDeniedPrompt.should('not.exist');
+    appPage.logout();
   });
 
   Object.values(userData).forEach((data) => {
