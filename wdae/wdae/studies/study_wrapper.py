@@ -464,15 +464,19 @@ class RemoteStudyWrapper(StudyWrapperBase):
             max_variants_count=10000,
             max_variants_message=False):
         study_filters = kwargs.get("study_filters")
-        logger.debug(
-            f"study_id: {self.study_id}; study_filters: {study_filters}")
-
         people_group = kwargs.get("peopleGroup", {})
-        logger.debug(f"people group requested: {people_group}")
 
-        person_set_collection = self.get_person_set_collection(
-          people_group.get("id")  # person_set_collection_id
-        )
+        if people_group:
+            people_group = people_group.get("id")
+        else:
+            people_group = None
+            selected_person_set_collections = self.genotype_data\
+                .config\
+                .person_set_collections\
+                .selected_person_set_collections
+            if selected_person_set_collections:
+                people_group = selected_person_set_collections[0]
+        person_set_collection = self.get_person_set_collection(people_group)
 
         if study_filters is not None:
             del kwargs["study_filters"]
