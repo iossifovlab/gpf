@@ -32,8 +32,9 @@ genomic_score_schema = {
 variant_statistic_schema = {
     "type": "dict",
     "schema": {
-        "id": {"type": "string"},
-        "display_name": {"type": "string"},
+        "id": {"type": "string", "required": True},
+        "display_name": {"type": "string", "required": True},
+        "description": {"type": "string"},
         "effects": {"type": "list", "schema": {"type": "string"}},
         "category": {"type": "string", "allowed": ["denovo", "rare"]},
         "score": {
