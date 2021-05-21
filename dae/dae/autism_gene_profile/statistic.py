@@ -27,9 +27,13 @@ class AGPStatistic:
         for study_id, counts in variant_counts.items():
             subresult = {"id": study_id, "personSets": list()}
             for person_set_id, count in counts.items():
-                subresult["personSets"].append(
-                    {"id": person_set_id, **count}
-                )
+                subresult["personSets"].append({
+                    "id": person_set_id,
+                    "effectTypes": [
+                        {"id": efftype, "value": value}
+                        for efftype, value in count.items()
+                    ],
+                })
             result.append(subresult)
         return result
 
