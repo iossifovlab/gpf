@@ -302,10 +302,14 @@ class StudyWrapper(StudyWrapperBase):
         if people_group:
             people_group = people_group.get("id")
         else:
-            people_group = self.genotype_data\
+            people_group = None
+            selected_person_set_collections = self.genotype_data\
                 .config\
                 .person_set_collections\
-                .selected_person_set_collections[0]
+                .selected_person_set_collections
+            if selected_person_set_collections:
+                people_group = selected_person_set_collections[0]
+
         logger.debug(f"people group selected: {people_group}")
 
         person_set_collection = self.get_person_set_collection(people_group)
