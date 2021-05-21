@@ -266,6 +266,11 @@ export class PeopleGroup {
 
   getLegend(collectionId: string): Array<SelectorValue> {
     let result = [];
+
+    if (!collectionId) {
+      collectionId = this.pedigreeSelectors[0].id;
+    }
+
     for (const ps of this.pedigreeSelectors) {
       if (ps.id === collectionId) {
         result = result.concat(ps.domain);
