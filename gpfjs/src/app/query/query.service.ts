@@ -104,7 +104,7 @@ export class QueryService {
   }
 
   getGenotypePreviewVariantsByFilter(
-    filter: QueryData, columnIds: Array<string>, loadingService?: any, maxVariantsCount: number = 1001
+    filter: QueryData, columnIds: Array<string>, loadingService?: any, maxVariantsCount: number = 1000
   ): GenotypePreviewVariantsArray {
     const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
     const queryFilter = { ...filter };
