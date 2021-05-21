@@ -1,4 +1,4 @@
-<div *ngIf="field == 'genotype'" style="max-height: 93px; height: 93px; overflow: hidden;">
+<div *ngIf="field == 'pedigree'" style="max-height: 93px; height: 93px; overflow: hidden;">
     <gpf-pedigree-chart style="width: 100%; height: 100%; display: block;"
       *ngIf="value"
       [family]="value">
@@ -7,6 +7,6 @@
  <span *ngIf="field == 'variant.location'">
    <a target="_blank" href="{{getUCSCLink()}}">{{ formattedValue }}</a>
  </span>
- <span *ngIf="field != 'genotype' && field != 'variant.location'">
+ <span *ngIf="field != 'pedigree' && field != 'variant.location'">
     {{ formattedValue }}
  </span>

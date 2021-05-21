@@ -11,6 +11,7 @@ export class SelectorValue extends IdName {
     return new SelectorValue(
       json['id'],
       json['name'],
+      json['values'],
       json['color'],
     );
   }
@@ -25,6 +26,7 @@ export class SelectorValue extends IdName {
   constructor(
     readonly id: string,
     readonly name: string,
+    readonly values: Array<string>,
     readonly color: string,
   ) {
     super(id, name);
@@ -93,42 +95,6 @@ export class PresentInRole {
   }
 }
 
-export class AdditionalColumnSlot {
-  static fromJson(json: any): Array<AdditionalColumnSlot> {
-    const res = [];
-    for (const column_id of Object.keys(json)) {
-      const column = json[column_id];
-      res.push(new AdditionalColumnSlot(column_id, column['name'], column['source'], column['format']));
-    }
-    return res;
-  }
-
-  constructor(
-    readonly id: string,
-    readonly name: string,
-    readonly source: string,
-    readonly format: string,
-  ) {}
-}
-
-export class AdditionalColumn {
-  static fromJson(json: any): Array<AdditionalColumn> {
-    const res = [];
-    for (const column_id of Object.keys(json)) {
-      const column = json[column_id];
-      res.push(new AdditionalColumn(column_id, column['name'], column['source'], AdditionalColumnSlot.fromJson(column['slots'])));
-    }
-    return res;
-  }
-
-  constructor(
-    readonly id: string,
-    readonly name: string,
-    readonly source: string,
-    readonly slots: Array<AdditionalColumnSlot>
-  ) {}
-}
-
 export class PersonFilter {
   static fromJson(json: any): Array<PersonFilter> {
     const filters = [];
@@ -160,9 +126,49 @@ export class PersonFilter {
   ) {}
 }
 
+export class Column {
+  constructor(
+    readonly name: string,
+    readonly source: string,
+    readonly format: string,
+  ) {}
+
+  static fromJson(json: any): Column {
+    return new Column(
+      json['name'],
+      json['source'],
+      json['format'],
+    );
+  }
+}
+
+export class ColumnGroup {
+  constructor(
+    readonly name: string,
+    readonly columns: Array<Column>,
+  ) {}
+
+  static fromJson(json: any): ColumnGroup {
+    return new ColumnGroup(
+      json['name'],
+      json['columns'].map(col => Column.fromJson(col)),
+    );
+  }
+}
+
 export class GenotypeBrowser {
 
-  readonly columns: Array<AdditionalColumn>;
+  static tableColumnsFromJson(json: Array<any>): Array<Column | ColumnGroup> {
+    const result = [];
+    for (const column of json) {
+      if ('columns' in column) {
+        result.push(ColumnGroup.fromJson(column));
+      } else {
+        result.push(Column.fromJson(column));
+      }
+    }
+    return result;
+  }
 
   static fromJson(json: any): GenotypeBrowser {
     return new GenotypeBrowser(
@@ -176,8 +182,7 @@ export class GenotypeBrowser {
       json['has_study_filters'],
       json['has_study_types'],
       json['has_graphical_preview'],
-      json['preview_columns'],
-      [...AdditionalColumn.fromJson(json['columns'])],
+      GenotypeBrowser.tableColumnsFromJson(json['table_columns']),
       PersonFilter.fromJson(json['person_filters']),
       PersonFilter.fromJson(json['family_filters']),
       PresentInRole.fromJsonArray(json['present_in_role']),
@@ -185,6 +190,7 @@ export class GenotypeBrowser {
       json['selected_inheritance_type_filter_values'],
       new Set(json['variant_types']),
       new Set(json['selected_variant_types']),
+      json['max_variants_count'],
     );
   }
 
@@ -199,8 +205,7 @@ export class GenotypeBrowser {
     readonly hasStudyFilters: boolean,
     readonly hasStudyTypes: boolean,
     readonly hasGraphicalPreview: boolean,
-    readonly previewColumnsIds: string[],
-    readonly allColumns: Array<AdditionalColumn>,
+    readonly tableColumns: Array<Column | ColumnGroup>,
     readonly personFilters: Array<PersonFilter>,
     readonly familyFilters: Array<PersonFilter>,
     readonly presentInRole: PresentInRole[],
@@ -208,9 +213,19 @@ export class GenotypeBrowser {
     readonly selectedInheritanceTypeFilterValues: string[],
     readonly variantTypes: Set<string>,
     readonly selectedVariantTypes: Set<string>,
-  ) {
-    this.columns = _.filter(this.allColumns,
-      (column: AdditionalColumn) => this.previewColumnsIds.indexOf(column.id) > -1);
+    readonly maxVariantsCount: number,
+  ) { }
+
+  get columnIds(): Array<string> {
+    const result: Array<string> = [];
+    for (const column of this.tableColumns) {
+      if ('columns' in column) {
+        result.push(...column['columns'].map(col => col['source']));
+      } else {
+        result.push(column['source']);
+      }
+    }
+    return result;
   }
 }
 
@@ -239,7 +254,6 @@ export class GeneBrowser {
 }
 
 export class PeopleGroup {
-
   static fromJson(json: any): PeopleGroup {
     return new PeopleGroup(
       PedigreeSelector.fromJson(json)
@@ -249,6 +263,19 @@ export class PeopleGroup {
   constructor(
     readonly pedigreeSelectors: PedigreeSelector[],
   ) { }
+
+  getLegend(collection: PedigreeSelector): Array<SelectorValue> {
+    let result = [];
+    const collectionId = collection ? collection.id : this.pedigreeSelectors[0].id;
+
+    for (const ps of this.pedigreeSelectors) {
+      if (ps.id === collectionId) {
+        result = result.concat(ps.domain);
+      }
+    }
+    result.push({'color': '#E0E0E0', 'id': 'missing-person', 'name': 'missing-person'}); // Default legend value
+    return result;
+  }
 }
 
 export class Dataset extends IdName {
