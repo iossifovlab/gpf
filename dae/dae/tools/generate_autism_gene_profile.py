@@ -126,12 +126,12 @@ def fill_variant_counts(
 
                     do_count = do_count and in_members
 
-                    if statistic.effects:
+                    if statistic.get("effects"):
                         ets = set(expand_effect_types(statistic.effects))
                         in_effect_types = len(
                             ets.intersection(v.effect_types)) > 0
                         do_count = do_count and in_effect_types
-                    if statistic.score:
+                    if statistic.get("score"):
                         score_name = statistic.score["name"]
                         score_min = statistic.score.get("min")
                         score_max = statistic.score.get("max")
@@ -142,14 +142,14 @@ def fill_variant_counts(
                         if score_max:
                             do_count = do_count and score_value < score_max
 
-                    if statistic.variant_types:
+                    if statistic.get("variant_types"):
                         variant_types = {
                             VariantType.from_name(t)
                             for t in statistic.variant_types
                         }
                         do_count = do_count and \
                             len(variant_types.intersection(v.variant_types))
-                    if statistic.roles:
+                    if statistic.get("roles"):
                         roles = {
                             Role.from_name(r)
                             for r in statistic.roles

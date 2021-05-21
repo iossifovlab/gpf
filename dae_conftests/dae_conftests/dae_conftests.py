@@ -1067,7 +1067,20 @@ def agp_config(data_import, iossifov2014_impala):
         ],
         'datasets': Box({
             'iossifov_we2014_test': Box({
-                'effects': ['noncoding', 'missense'],
+                'statistics': [
+                    {
+                        'id': 'denovo_noncoding',
+                        'display_name': 'Noncoding',
+                        'effects': ['noncoding'],
+                        'category': 'denovo'
+                    },
+                    {
+                        'id': 'denovo_missense',
+                        'display_name': 'Missense',
+                        'effects': ['missense'],
+                        'category': 'denovo'
+                    }
+                ],
                 'person_sets': [
                     Box({
                         'set_name': 'unknown',
@@ -1142,8 +1155,8 @@ def sample_agp():
     }
     variant_counts = {
         'iossifov_we2014_test': {
-            'unknown': {'noncoding': 53, 'missense': 21},
-            'unaffected': {'noncoding': 43, 'missense': 51},
+            'unknown': {'denovo_noncoding': 53, 'denovo_missense': 21},
+            'unaffected': {'denovo_noncoding': 43, 'denovo_missense': 51},
         }
     }
     return AGPStatistic(
