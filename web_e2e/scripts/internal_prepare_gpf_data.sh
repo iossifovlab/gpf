@@ -133,16 +133,22 @@ family_filters.sample_continuous_filter.from = "phenodb"
 family_filters.sample_continuous_filter.filter_type = "multi"
 family_filters.sample_continuous_filter.role = "prb"
 
-
-selected_pheno_column_values = ["pheno"]
-
-pheno.pheno.name = "Measures"
-pheno.pheno.slots = [
-    {role = "prb", source = "i1.age", name = "Age"},
-    {role = "prb", source = "i1.iq", name = "Iq"}
-]
-
 preview_columns = ["family", "variant", "genotype", "effect", "weights", "mpc_cadd", "freq", "pheno"]
+
+[genotype_browser.column_groups]
+pheno.name = "Measures"
+pheno.columns = ["pheno_age", "pheno_viq"]
+
+
+[genotype_browser.columns.phenotype]
+pheno_age.role = "prb"
+pheno_age.source = "i1.age"
+pheno_age.name = "Age"
+
+pheno_iq.role = "prb"
+pheno_iq.source = "i1.iq"
+pheno_iq.name = "Iq"
+
 
 EOT
 
