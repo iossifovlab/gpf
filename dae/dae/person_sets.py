@@ -27,6 +27,28 @@ class PersonSet(NamedTuple):
     def __repr__(self):
         return f"PersonSet({self.id}: {self.name}, {len(self.persons)})"
 
+    def to_json(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "values": self.values,
+            "color": self.color,
+            "person_ids": list(self.persons.keys())
+        }
+
+    @staticmethod
+    def from_json(json, families):
+        persons = {
+            pid: families.persons.get(pid) for pid in json["person_ids"]
+        }
+        return PersonSet(
+            json["id"],
+            json["name"],
+            set(json["values"]),
+            json["color"],
+            persons
+        )
+
 
 class PersonSetCollection(NamedTuple):
     """The collection of all possible person sets in a given source."""
@@ -166,6 +188,19 @@ class PersonSetCollection(NamedTuple):
             person_set_collection)
 
     @staticmethod
+    def from_json(json, families):
+        person_sets = {
+            ps_json["id"]: PersonSet.from_json(ps_json, families)
+            for ps_json in json["person_sets"]
+        }
+        return PersonSetCollection(
+            json["id"],
+            json["name"],
+            person_sets,
+            families
+        )
+
+    @staticmethod
     def merge(person_set_collections, families, id, name):
 
         new_collection = PersonSetCollection(
@@ -202,3 +237,10 @@ class PersonSetCollection(NamedTuple):
             if person_id in person_set.persons:
                 return person_set
         return None
+
+    def to_json(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "person_sets": [ps.to_json() for ps in self.person_sets.values()]
+        }

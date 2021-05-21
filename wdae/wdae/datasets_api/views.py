@@ -3,6 +3,7 @@ from rest_framework import status
 from guardian.shortcuts import get_groups_with_perms
 
 from query_base.query_base import QueryBaseView
+from studies.study_wrapper import StudyWrapperBase
 
 from .models import Dataset
 from groups_api.serializers import GroupSerializer
@@ -32,7 +33,6 @@ class DatasetView(QueryBaseView):
         parents = get_wdae_parents(dataset["id"])
         parents = [ds.dataset_id for ds in parents]
         dataset["parents"] = parents
-
         return dataset
 
     def get(self, request, dataset_id=None):
@@ -51,9 +51,14 @@ class DatasetView(QueryBaseView):
             #     selected_genotype_data
 
             res = [
-                dataset.build_genotype_data_group_description(
-                    self.gpf_instance)
-                for dataset in datasets]
+                StudyWrapperBase.build_genotype_data_group_description(
+                    self.gpf_instance,
+                    dataset.config,
+                    dataset.description,
+                    dataset.person_set_collection_configs
+                )
+                for dataset in datasets
+            ]
             if not self.gpf_instance.get_selected_genotype_data():
                 res = sorted(
                     res,
@@ -67,8 +72,12 @@ class DatasetView(QueryBaseView):
         else:
             dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
             if dataset:
-                res = dataset.build_genotype_data_group_description(
-                    self.gpf_instance)
+                res = StudyWrapperBase.build_genotype_data_group_description(
+                    self.gpf_instance,
+                    dataset.config,
+                    dataset.description,
+                    dataset.person_set_collection_configs
+                )
                 res = self.augment_accessibility(res, user)
                 res = self.augment_with_groups(res)
                 res = self.augment_with_parents(res)
@@ -145,4 +154,24 @@ class DatasetPedigreeView(QueryBaseView):
 
         return Response(
             {"column_name": column, "values_domain": values_domain}
+        )
+
+
+class DatasetConfigView(DatasetView):
+    def get(self, request, dataset_id):
+        if dataset_id is None:
+            return Response(
+                {"error": "No dataset ID given"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
+
+        if genotype_data is None:
+            return Response(
+                {"error": f"No such dataset {dataset_id}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(
+            self.augment_with_parents(genotype_data.config.to_dict())
         )

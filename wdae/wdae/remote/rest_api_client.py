@@ -107,10 +107,12 @@ class RESTClient:
     def _delete(self, url, data=None):
         pass
 
-    def _read_json_list_stream(self, response):
-        stream = response.iter_content(chunk_size=64)
+    def _read_json_list_stream(self, response, multiple_values=False):
+        stream = response.iter_content()
         objects = ijson.sendable_list()
-        coro = ijson.items_coro(objects, "item", use_float=True)
+        coro = ijson.items_coro(
+            objects, "item", use_float=True, multiple_values=False
+        )
         for chunk in stream:
             coro.send(chunk)
             if len(objects):
@@ -130,9 +132,9 @@ class RESTClient:
             return response.json()
 
     def get_dataset_config(self, study_id):
-        response = self._get(f"datasets/{study_id}")
+        response = self._get(f"datasets/config/{study_id}")
         if response.status_code == 200:
-            return response.json()["data"]
+            return response.json()
 
     def get_variants_preview(self, data):
         response = self._post(
@@ -142,9 +144,28 @@ class RESTClient:
         )
         return response
 
-    def get_browser_preview_info(self, data):
-        response = self._post("genotype_browser/preview", data=data)
-        return response.json()
+    def post_query_variants(self, data, reduceAlleles=False):
+        assert data.get("download", False) is False
+        data["reduceAlleles"] = reduceAlleles
+        response = self._post(
+            "genotype_browser/query",
+            data=data,
+            stream=True
+        )
+        return self._read_json_list_stream(response)
+
+    def post_query_variants_download(self, data):
+        data["download"] = True
+        response = self._post(
+            "genotype_browser/query",
+            data=data,
+            stream=True
+        )
+        return self._read_json_list_stream(response)
+
+    # def get_browser_preview_info(self, data):
+    #     response = self._post("genotype_browser/preview", data=data)
+    #     return response.json()
 
     def get_common_report(self, common_report_id):
         response = self._get(f"common_reports/studies/{common_report_id}")
@@ -431,3 +452,79 @@ class RESTClient:
             return None
 
         return response.content.decode()
+
+    def get_member_details(self, dataset_id, family_id, member_id):
+        response = self._get(
+            f"families/{dataset_id}/{family_id}/members/{member_id}"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_all_member_details(self, dataset_id, family_id):
+        response = self._get(
+            f"families/{dataset_id}/{family_id}/members/all"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_members(self, dataset_id, family_id):
+        response = self._get(
+            f"families/{dataset_id}/{family_id}/members"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_family_details(self, dataset_id, family_id):
+        response = self._get(
+            f"families/{dataset_id}/{family_id}"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_families(self, dataset_id):
+        response = self._get(
+            f"families/{dataset_id}"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_all_family_details(self, dataset_id):
+        response = self._get(
+            f"families/{dataset_id}/all"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_all_person_set_collections(self, dataset_id):
+        response = self._get(f"person_sets/{dataset_id}/all")
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_person_set_collection_configs(self, dataset_id):
+        response = self._get(f"person_sets/{dataset_id}/configs")
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()

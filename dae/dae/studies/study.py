@@ -103,7 +103,7 @@ class GenotypeData(ABC):
         pass
 
     @abstractmethod
-    def get_studies_ids(self, leafs=True):
+    def get_studies_ids(self, leaves=True):
         pass
 
     def get_leaf_children(self):
@@ -254,6 +254,7 @@ class GenotypeDataGroup(GenotypeData):
         self._families = self._build_families()
         self._build_person_set_collections()
         self._executor = None
+        self.is_remote = False
         for study in self.studies:
             study._add_parent(self.study_id)
 
@@ -484,8 +485,8 @@ class GenotypeDataGroup(GenotypeData):
             f"processing study {self.study_id} "
             f"elapsed: {elapsed:.3f}")
 
-    def get_studies_ids(self, leafs=True):
-        if not leafs:
+    def get_studies_ids(self, leaves=True):
+        if not leaves:
             return [st.study_id for st in self.studies]
         else:
             result = []
@@ -583,6 +584,8 @@ class GenotypeDataStudy(GenotypeData):
         self._backend = backend
         self._build_person_set_collections()
 
+        self.is_remote = False
+
     @property
     def study_phenotype(self):
         return self.config.get("study_phenotype", "-")
@@ -591,7 +594,7 @@ class GenotypeDataStudy(GenotypeData):
     def is_group(self):
         return False
 
-    def get_studies_ids(self, leafs=True):
+    def get_studies_ids(self, leaves=True):
         return [self.study_id]
 
     def query_variants(
@@ -723,7 +726,7 @@ class GenotypeDataStudy(GenotypeData):
                 limit=limit):
 
             for allele in variant.alleles:
-                allele.update_attributes({"studyName": self.name})
+                allele.update_attributes({"study_name": self.name})
             yield variant
 
     @property

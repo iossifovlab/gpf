@@ -2,6 +2,7 @@ import pytest
 import toml
 from pathlib import Path
 from studies.study_wrapper import RemoteStudyWrapper, StudyWrapper
+from studies.remote_study import RemoteGenotypeData
 from dae.studies.study import GenotypeDataStudy
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.utils.dict_utils import recursive_dict_update
@@ -78,7 +79,9 @@ def iossifov_2014_local(
 
 @pytest.fixture(scope="function")
 def iossifov_2014_remote(rest_client):
-    return RemoteStudyWrapper("iossifov_2014", rest_client)
+    return RemoteStudyWrapper(
+        RemoteGenotypeData("iossifov_2014", rest_client)
+    )
 
 
 @pytest.fixture(scope="function")
