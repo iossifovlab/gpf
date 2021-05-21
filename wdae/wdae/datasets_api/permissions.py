@@ -86,11 +86,11 @@ def get_wdae_parents(dataset):
     return [get_wdae_dataset(pid) for pid in genotype_data.parents]
 
 
-def get_wdae_children(dataset, leafs=False):
+def get_wdae_children(dataset, leaves=False):
     """Given a dataset ID or DAE genotype data object or WDAE dataset object,
-    returns list of direct childrens as WDAE dataset object (if 'leafs'
-    parameter is 'False'). If 'leafs' parameter is 'True', returns list
-    of leafs of the datasets tree."""
+    returns list of direct childrens as WDAE dataset object (if 'leaves'
+    parameter is 'False'). If 'leaves' parameter is 'True', returns list
+    of leaves of the datasets tree."""
     genotype_data = get_genotype_data(dataset)
     if genotype_data is None:
         return []
@@ -100,7 +100,7 @@ def get_wdae_children(dataset, leafs=False):
 
     return [
         get_wdae_dataset(sid)
-        for sid in genotype_data.get_studies_ids(leafs=leafs)
+        for sid in genotype_data.get_studies_ids(leaves=leaves)
     ]
 
 
@@ -179,8 +179,8 @@ def user_has_permission(user, dataset):
     if dataset is None:
         return False
 
-    allowed_dataset_leafs = get_allowed_genotype_studies(user, dataset)
-    return bool(allowed_dataset_leafs)
+    allowed_dataset_leaves = get_allowed_genotype_studies(user, dataset)
+    return bool(allowed_dataset_leaves)
 
 
 def _get_allowed_datasets_for_user(user, dataset, collect=None):
@@ -209,7 +209,7 @@ def _get_allowed_datasets_for_user(user, dataset, collect=None):
 
 
 def get_allowed_genotype_studies(user, dataset):
-    """Finds the leafs of the dataset sub-tree with root `dataset`,
+    """Finds the leaves of the dataset sub-tree with root `dataset`,
     such that user has access to and returns a set of dataset IDs
     of those datasets."""
 
@@ -217,7 +217,7 @@ def get_allowed_genotype_studies(user, dataset):
 
     result = []
     for dataset in allowed_datasets:
-        children = get_wdae_children(dataset, leafs=True)
+        children = get_wdae_children(dataset, leaves=True)
         if not children:
             result.append(dataset)
         result.extend([child.dataset_id for child in children])

@@ -93,7 +93,7 @@ def test_datasets_studies_ids(
     study_ids = dataset_wrapper.get_studies_ids()
     assert set(study_ids) == set(["Study1", "Study2", "Study3"])
 
-    study_ids = dataset_wrapper.get_studies_ids(leafs=False)
+    study_ids = dataset_wrapper.get_studies_ids(leaves=False)
     assert set(study_ids) == set(["Dataset1", "Dataset2"])
 
 

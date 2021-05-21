@@ -106,6 +106,9 @@ class ResponseTransformer:
         "effects":
         lambda v: [ge2str(e) for e in v.effects],
 
+        "raw_effects":
+        lambda v: [repr(e) for e in v.effects],
+
         "genes":
         lambda v: [gene_effect_get_genes(e) for e in v.effects],
 
@@ -120,7 +123,6 @@ class ResponseTransformer:
 
         "seen_in_unaffected":
         lambda v: bool(v.get_attribute("seen_in_status") in {1, 3}),
-
     }
 
     PHENOTYPE_ATTRS = {
@@ -142,28 +144,29 @@ class ResponseTransformer:
 
     def __init__(self, study_wrapper):
         self.study_wrapper = study_wrapper
+        self._pheno_columns = study_wrapper.config_columns.phenotype
 
     def _get_all_pheno_values(self, family_ids):
         if not self.study_wrapper.phenotype_data \
-           or not self.study_wrapper.pheno_column_slots:
+           or not self.study_wrapper.config_columns.phenotype:
             return None
 
         pheno_column_names = []
         pheno_column_dfs = []
-        for slot in self.study_wrapper.pheno_column_slots:
-            assert slot.role
+        for column in self.study_wrapper.config_columns.phenotype.values():
+            assert column.role
             persons = self.study_wrapper.families.persons_with_roles(
-                [slot.role], family_ids)
+                [column.role], family_ids)
             person_ids = [p.person_id for p in persons]
 
             kwargs = {
                 "person_ids": list(person_ids),
             }
 
-            pheno_column_names.append(f"{slot.source}.{slot.role}")
+            pheno_column_names.append(f"{column.source}.{column.role}")
             pheno_column_dfs.append(
                 self.study_wrapper.phenotype_data.get_measure_values_df(
-                    slot.source, **kwargs
+                    column.source, **kwargs
                 )
             )
 
@@ -282,13 +285,13 @@ class ResponseTransformer:
             try:
                 col_source = col_desc["source"]
                 col_format = col_desc.get("format")
+                col_role = col_desc.get("role")
 
                 if col_format is None:
                     def col_formatter(val):
                         if val is None:
                             return "-"
-                        else:
-                            return str(val)
+                        return str(val)
                 else:
                     def col_formatter(val):
                         if val is None:
@@ -301,6 +304,9 @@ class ResponseTransformer:
                                 f"({col_format}) ({val})",
                                 exc_info=True)
                             return val
+
+                if col_role is not None:
+                    col_source = f"{col_source}.{col_role}"
 
                 if col_source == "pedigree":
                     person_set_collection = \
@@ -319,23 +325,21 @@ class ResponseTransformer:
                         fn = self.PHENOTYPE_ATTRS[col_source]
                         row_variant.append(
                             ",".join(fn(v, phenotype_person_sets)))
-
                 elif col_source == "study_phenotype":
                     row_variant.append(
                         self.study_wrapper.config.study_phenotype
                     )
-
                 else:
                     if col_source in self.SPECIAL_ATTRS:
                         attribute = self.SPECIAL_ATTRS[col_source](v)
                     else:
                         attribute = v.get_attribute(col_source)
 
-                    if all([a == attribute[0] for a in attribute]):
-                        attribute = [attribute[0]]
+                    if kwargs.get("reduceAlleles", True):
+                        if all([a == attribute[0] for a in attribute]):
+                            attribute = [attribute[0]]
                     attribute = list(map(col_formatter, attribute))
-
-                    row_variant.append(",".join([str(a) for a in attribute]))
+                    row_variant.append(attribute)
 
             except (AttributeError, KeyError, Exception):
                 logging.exception(f'error build variant: {v}')
@@ -442,8 +446,11 @@ class ResponseTransformer:
                 )
 
                 for allele in variant.alt_alleles:
-                    gene_weights_values = self._get_gene_weights_values(allele)
-                    allele.update_attributes(gene_weights_values)
+                    if not self.study_wrapper.is_remote:
+                        gene_weights_values = self._get_gene_weights_values(
+                            allele
+                        )
+                        allele.update_attributes(gene_weights_values)
 
                     if pheno_values:
                         allele.update_attributes(pheno_values)

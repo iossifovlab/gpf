@@ -317,6 +317,10 @@ class QueryTransformer:
 
         kwargs = self._add_people_with_people_group(kwargs)
 
+        if "querySummary" in kwargs:
+            kwargs["query_summary"] = kwargs["querySummary"]
+            del kwargs["querySummary"]
+
         if "uniqueFamilyVariants" in kwargs:
             kwargs["unique_family_variants"] = kwargs["uniqueFamilyVariants"]
             del kwargs["uniqueFamilyVariants"]

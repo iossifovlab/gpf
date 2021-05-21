@@ -1,6 +1,6 @@
 from dae.studies.study import GenotypeDataStudy
-from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper, \
-    StudyWrapperBase
+from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper
+from studies.remote_study import RemoteGenotypeData
 from collections import KeysView
 from box import Box
 
@@ -38,7 +38,7 @@ def test_get_genotype_data(wgpf_instance_fixture):
 def test_get_genotype_data_remote(wgpf_instance_fixture):
     data_study = wgpf_instance_fixture.get_genotype_data(
         "TEST_REMOTE_iossifov_2014")
-    assert isinstance(data_study, StudyWrapperBase)
+    assert isinstance(data_study, RemoteGenotypeData)
 
 
 def test_get_genotype_data_nonexistant(wgpf_instance_fixture):

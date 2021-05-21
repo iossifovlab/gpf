@@ -13,35 +13,31 @@ phenotype_schema = {
     },
 }
 
-genotype_slot_schema = {
+genotype_column_schema = {
     "type": "dict",
     "schema": {
         "name": {"type": "string"},
         "source": {"type": "string"},
         "format": {"type": "string", "default": "%s"},
-    },
+    }
 }
 
-pheno_slot_schema = {
+phenotype_column_schema = {
     "type": "dict",
     "schema": {
+        "name": {"type": "string"},
+        "source": {"type": "string"},
+        "format": {"type": "string", "default": "%s"},
         "role": {"type": "string"},
+    }
+}
+
+column_group_schema = {
+    "type": "dict",
+    "schema": {
         "name": {"type": "string"},
-        "source": {"type": "string"},
-        "format": {"type": "string", "default": "%s"},
-    },
-}
-
-genotype_schema = {
-    "name": {"type": "string"},
-    "source": {"type": "string"},
-    "slots": {"type": "list", "schema": genotype_slot_schema},
-}
-
-pheno_schema = {
-    "name": {"type": "string"},
-    "source": {"type": "string"},
-    "slots": {"type": "list", "schema": pheno_slot_schema},
+        "columns": {"type": "list", "schema": {"type": "string"}},
+    }
 }
 
 standard_criteria_schema = {
@@ -92,6 +88,100 @@ family_filters_schema = dict(
     **person_filters_schema,
     role={"type": "string"},
 )
+
+genotype_browser_schema = {
+    "type": "dict",
+    "schema": {
+        "enabled": {"type": "boolean", "required": True},
+        "has_family_filters": {"type": "boolean"},
+        "has_family_structure_filter": {
+            "type": "boolean",
+            "dependencies": {
+                "has_family_filters": [True]
+            }
+        },
+        "has_person_filters": {"type": "boolean"},
+        "has_study_filters": {"type": "boolean"},
+        "has_present_in_child": {"type": "boolean"},
+        "has_present_in_parent": {"type": "boolean"},
+        "has_pedigree_selector": {"type": "boolean"},
+        "has_study_types": {"type": "boolean"},
+        "has_graphical_preview": {"type": "boolean"},
+        "inheritance_type_filter": {
+            "type": "list",
+            "schema": {"type": "string"},
+        },
+        "selected_inheritance_type_filter_values": {
+            "type": "list",
+            "schema": {"type": "string"},
+            "dependencies": ["inheritance_type_filter"],
+        },
+        "columns": {
+            "type": "dict",
+            "schema": {
+                "genotype": {
+                    "type": "dict",
+                    "valuesrules": genotype_column_schema,
+                },
+                "phenotype":  {
+                    "type": "dict",
+                    "valuesrules": phenotype_column_schema,
+                },
+            }
+        },
+        "column_groups": {
+            "type": "dict",
+            "valuesrules": column_group_schema,
+        },
+        "preview_columns": {
+            "type": "list", "schema": {"type": "string"}
+        },
+        "download_columns": {
+            "type": "list", "schema": {"type": "string"}
+        },
+        "summary_preview_columns": {
+            "type": "list", "schema": {"type": "string"}
+        },
+        "summary_download_columns": {
+            "type": "list", "schema": {"type": "string"}
+        },
+        "present_in_role": {
+            "type": "dict",
+            "valuesrules": {
+                "type": "dict",
+                "schema": present_in_role_schema,
+            },
+        },
+        "person_filters": {
+            "type": "dict",
+            "valuesrules": {
+                "type": "dict",
+                "schema": person_filters_schema,
+            },
+        },
+        "family_filters": {
+            "type": "dict",
+            "valuesrules": {
+                "type": "dict",
+                "schema": family_filters_schema,
+            },
+        },
+        "variant_types": {
+            "type": "list",
+            "schema": {"type": "string"},
+            "default": ["sub", "ins", "del"],
+        },
+        "selected_variant_types": {
+            "type": "list",
+            "schema": {"type": "string"},
+            "default": ["sub", "ins", "del"],
+        },
+        "max_variants_count": {
+            "type": "integer",
+            "default": 1000
+        }
+    },
+}
 
 family_schema = {
     "path": {
@@ -237,92 +327,7 @@ study_config_schema = {
         "schema": {"type": "string"},
         "excludes": "genotype_storage",
     },
-    "genotype_browser": {
-        "type": "dict",
-        "schema": {
-            "enabled": {"type": "boolean", "required": True},
-            "has_family_filters": {"type": "boolean"},
-            "has_family_structure_filter": {
-                "type": "boolean", 
-                "dependencies": {
-                    "has_family_filters": [True]
-                }
-            },
-            "has_person_filters": {"type": "boolean"},
-            "has_study_filters": {"type": "boolean"},
-            "has_present_in_child": {"type": "boolean"},
-            "has_present_in_parent": {"type": "boolean"},
-            "has_pedigree_selector": {"type": "boolean"},
-            "has_study_types": {"type": "boolean"},
-            "has_graphical_preview": {"type": "boolean"},
-            "selected_pheno_column_values": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "default": [],
-            },
-            "inheritance_type_filter": {
-                "type": "list",
-                "schema": {"type": "string"},
-            },
-            "selected_inheritance_type_filter_values": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "dependencies": ["inheritance_type_filter"],
-            },
-            "genotype": {
-                "type": "dict",
-                "valuesrules": {"type": "dict", "schema": genotype_schema},
-            },
-            "pheno": {
-                "type": "dict",
-                "valuesrules": {"type": "dict", "schema": pheno_schema},
-            },
-            "selected_genotype_column_values": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "default": [],
-            },
-            "preview_columns": {"type": "list", "schema": {"type": "string"}},
-            "download_columns": {"type": "list", "schema": {"type": "string"}},
-            "summary_preview_columns": {
-                "type": "list", "schema": {"type": "string"}
-            },
-            "summary_download_columns": {
-                "type": "list", "schema": {"type": "string"}
-            },
-            "present_in_role": {
-                "type": "dict",
-                "valuesrules": {
-                    "type": "dict",
-                    "schema": present_in_role_schema,
-                },
-            },
-            "person_filters": {
-                "type": "dict",
-                "valuesrules": {
-                    "type": "dict",
-                    "schema": person_filters_schema,
-                },
-            },
-            "family_filters": {
-                "type": "dict",
-                "valuesrules": {
-                    "type": "dict",
-                    "schema": family_filters_schema,
-                },
-            },
-            "variant_types": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "default": ["sub", "ins", "del"],
-            },
-            "selected_variant_types": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "default": ["sub", "ins", "del"],
-            },
-        },
-    },
+    "genotype_browser": genotype_browser_schema,
     "common_report": {
         "type": "dict",
         "schema": {
