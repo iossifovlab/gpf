@@ -21,6 +21,7 @@
                     </gpf-table-subcontent>
                     <ng-template #columns>
                         <gpf-table-subcontent *ngFor="let slot of column.columns">
+                          <ng-container *ngIf="column.name !== 'genotype' || slot.source === 'pedigree'">
                             <gpf-genotype-preview-field
                                 *gpfTableCellContent="let data"
                                 [field]="slot.source"
@@ -28,6 +29,7 @@
                                 [format]="slot.format"
                                 [genome]="data.get('genome')">
                             </gpf-genotype-preview-field>
+                          </ng-container>
                         </gpf-table-subcontent>
                     </ng-template>
                 </gpf-table-content>
