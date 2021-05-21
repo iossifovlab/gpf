@@ -2,11 +2,20 @@ from dae.configuration.gpf_config_parser import (
     validate_existing_path,
     validate_path,
 )
+from dae.variants.attributes import _VARIANT_TYPE_DISPLAY_NAME, \
+    _ROLE_DISPLAY_NAME
+
+variant_types = list(_VARIANT_TYPE_DISPLAY_NAME.keys()) + \
+    list(_VARIANT_TYPE_DISPLAY_NAME.values())
+
+roles = list(_ROLE_DISPLAY_NAME.keys()) + \
+    list(_ROLE_DISPLAY_NAME.values())
 
 gene_set_schema = {
     "type": "dict",
     "schema": {
         "collection_id": {"type": "string", "default": "main"},
+        "display_name": {"type": "string"},
         "set_id": {"type": "string"}
     }
 }
@@ -15,7 +24,40 @@ genomic_score_schema = {
     "type": "dict",
     "schema": {
         "score_name": {"type": "string"},
+        "display_name": {"type": "string"},
         "format": {"type": "string", "default": "%s"}
+    }
+}
+
+variant_statistic_schema = {
+    "type": "dict",
+    "schema": {
+        "id": {"type": "string"},
+        "display_name": {"type": "string"},
+        "effects": {"type": "list", "schema": {"type": "string"}},
+        "category": {"type": "string", "allowed": ["denovo", "rare"]},
+        "score": {
+            "type": "dict",
+            "schema": {
+                "name": {"type": "string"},
+                "min": {"type": "float", "default": None},
+                "max": {"type": "float", "default": None}
+            }
+        },
+        "variant_types": {
+            "type": "list",
+            "schema": {
+                "type": "string",
+                "allowed": variant_types
+            }
+        },
+        "roles": {
+            "type": "list",
+            "schema": {
+                "type": "string",
+                "allowed": roles
+            }
+        }
     }
 }
 
@@ -57,7 +99,9 @@ autism_gene_tool_config = {
                         }
                     }
                 },
-                "effects": {"type": "list", "schema": {"type": "string"}}
+                "statistics": {
+                    "type": "list", "schema": variant_statistic_schema
+                }
             }
         }
     },
