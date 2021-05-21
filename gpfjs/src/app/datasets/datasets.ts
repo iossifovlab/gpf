@@ -264,12 +264,9 @@ export class PeopleGroup {
     readonly pedigreeSelectors: PedigreeSelector[],
   ) { }
 
-  getLegend(collectionId: string): Array<SelectorValue> {
+  getLegend(collection: PedigreeSelector): Array<SelectorValue> {
     let result = [];
-
-    if (!collectionId) {
-      collectionId = this.pedigreeSelectors[0].id;
-    }
+    const collectionId = collection ? collection.id : this.pedigreeSelectors[0].id;
 
     for (const ps of this.pedigreeSelectors) {
       if (ps.id === collectionId) {

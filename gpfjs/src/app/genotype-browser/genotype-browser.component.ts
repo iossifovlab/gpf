@@ -86,7 +86,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector
         this.selectedDataset$.subscribe( selectedDataset => {
           this.genotypePreviewVariantsArray = null;
           this.genotypeBrowserState = state;
-          this.legend = selectedDataset.peopleGroupConfig.getLegend(state['peopleGroup'].id);
+          this.legend = selectedDataset.peopleGroupConfig.getLegend(state['peopleGroup']);
 
           this.queryService.streamingFinishedSubject.subscribe(
             _ => { this.loadingFinished = true; }
