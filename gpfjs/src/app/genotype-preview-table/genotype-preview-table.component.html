@@ -5,9 +5,17 @@
                 <gpf-table-header caption="{{ column.name }}">
                 </gpf-table-header>
                 <gpf-table-header *ngIf="'columns' in column">
-                    <gpf-table-subheader *ngFor="let slot of column.columns" caption="{{ slot.name }}"
-                    [comparator]="comparator(slot.source)">
+                  <ng-container *ngFor="let slot of column.columns">
+                    <gpf-table-subheader
+                      *ngIf="slot.source === 'pedigree'"
+                      caption="{{ slot.name }}">
                     </gpf-table-subheader>
+                    <gpf-table-subheader
+                      *ngIf="slot.source !== 'pedigree'"
+                      caption="{{ slot.name }}"
+                      [comparator]="comparator(slot.source)">
+                    </gpf-table-subheader>
+                  </ng-container>
                 </gpf-table-header>
                 <gpf-table-content>
                     <gpf-table-subcontent *ngIf="column.source; else columns">
