@@ -103,6 +103,10 @@ class StudyWrapperBase:
         # TODO Code below could be made a bit leaner and separated
         table_columns = list()
         for column in config.genotype_browser.preview_columns:
+            logger.info(
+                f"processing preview column {column} "
+                f"for study {config.id}")
+
             if column in config.genotype_browser.column_groups:
                 new_col = dict(config.genotype_browser.column_groups[column])
                 new_col['columns'] = StudyWrapperBase.get_columns_as_sources(
@@ -294,10 +298,17 @@ class StudyWrapper(StudyWrapperBase):
             max_variants_count=10000,
             max_variants_message=False):
         people_group = kwargs.get("peopleGroup", {})
+        logger.debug(f"people group requested: {people_group}")
+        if people_group:
+            people_group = people_group.get("id")
+        else:
+            people_group = self.genotype_data\
+                .config\
+                .person_set_collections\
+                .selected_person_set_collections[0]
+        logger.debug(f"people group selected: {people_group}")
 
-        person_set_collection = self.get_person_set_collection(
-            people_group.get("id")  # person_set_collection_id
-        )
+        person_set_collection = self.get_person_set_collection(people_group)
 
         rows_iterator = self._query_variants_rows_iterator(
             sources, person_set_collection, **kwargs
@@ -453,6 +464,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
             f"study_id: {self.study_id}; study_filters: {study_filters}")
 
         people_group = kwargs.get("peopleGroup", {})
+        logger.debug(f"people group requested: {people_group}")
 
         person_set_collection = self.get_person_set_collection(
           people_group.get("id")  # person_set_collection_id
