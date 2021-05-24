@@ -1,5 +1,6 @@
 import pytest
 import pandas as pd
+import numpy as np
 
 from dae.pheno.pheno_db import PhenotypeGroup
 from dae.variants.attributes import Role, Status, Sex
@@ -271,8 +272,11 @@ def test_pheno_group_i1_i2_get_person_values_df(
     df = fake_group.get_persons_values_df(
         ["i1.iq", "i2.iq"], person_ids=person_ids,
         family_ids=family_ids, roles=roles)
+    print(" ")
+    print(df)
+    print(df.index)
 
-    expected = pd.DataFrame({
+    expected = pd.DataFrame(index=np.array([1]), data={
         "person_id": ["f1.p1"],
         "family_id": ["f1"],
         "role": [Role.prb],
@@ -281,7 +285,11 @@ def test_pheno_group_i1_i2_get_person_values_df(
         "i1.iq": [86.41],
         "i2.iq": [86.41]
         })
-    expected = expected.set_index("person_id")
+    expected = expected.set_index("person_id").reset_index()
+
+    print(" ")
+    print(expected)
+    print(expected.index)
 
     pd.testing.assert_frame_equal(
         df, expected, atol=1e-2,

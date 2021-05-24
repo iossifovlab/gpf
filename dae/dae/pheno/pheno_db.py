@@ -1,6 +1,6 @@
 import math
 import logging
-from typing import Dict, Iterable, Any
+from typing import Dict, Iterable, Any, List
 from abc import ABC, abstractmethod
 
 import pandas as pd
@@ -18,7 +18,7 @@ from dae.pheno.common import MeasureType
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 
-from dae.variants.attributes import Sex, Status, Role, Status
+from dae.variants.attributes import Sex, Status, Role
 
 from typing import Optional, Sequence, Union
 
@@ -215,8 +215,7 @@ class PhenotypeData(ABC):
         """
         persons = {}
         df = self.get_persons_df(
-            roles=roles, person_ids=person_ids, family_ids=family_ids
-        )
+            roles=roles, person_ids=person_ids, family_ids=family_ids)
 
         for row in df.to_dict("records"):
             person_id = row["person_id"]
@@ -251,7 +250,7 @@ class PhenotypeData(ABC):
     def get_measures(
             self,
             instrument_name: str = None,
-            measure_type: str = None):
+            measure_type: str = None) -> Dict[str, Measure]:
         """
         Returns a dictionary of measures objects.
 
@@ -395,8 +394,7 @@ class PhenotypeData(ABC):
         joined with a data frame returned by `get_persons_df`.
         """
         persons_df = self.get_persons_df(
-            roles=roles, person_ids=person_ids, family_ids=family_ids
-        )
+            roles=roles, person_ids=person_ids, family_ids=family_ids)
 
         value_df = self.get_values_df(
             measure_ids,
@@ -411,10 +409,11 @@ class PhenotypeData(ABC):
             how="right",
             rsuffix="_val")
         df = df.set_index("person_id")
+        df = df.reset_index()
 
         return df
 
-    def _get_instrument_measures(self, instrument_name):
+    def _get_instrument_measures(self, instrument_name: str) -> List[str]:
         """
         Returns measures for given instrument.
         """
