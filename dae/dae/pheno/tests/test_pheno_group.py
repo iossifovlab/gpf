@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 
 from dae.pheno.pheno_db import PhenotypeGroup
-from dae.variants.attributes import Role
+from dae.variants.attributes import Role, Status, Sex
 
 
 @pytest.fixture(scope="session")
@@ -254,3 +254,37 @@ def test_pheno_group_i1_i2_get_values(
 
     assert res["f1.p1"]["i1.iq"] == pytest.approx(86.41, abs=1e-2)
     assert res["f1.p1"]["i2.iq"] == pytest.approx(86.41, abs=1e-2)
+
+
+@pytest.mark.parametrize(
+    "roles,family_ids,person_ids",
+    [
+        (None, None, {"f1.p1"}),
+        ({Role.prb}, {"f1"}, None),
+        ({Role.prb, Role.sib}, {"f1"}, {"f1.p1"}),
+        ({Role.prb}, {"f1", "f2"}, {"f1.p1"}),
+    ],
+)
+def test_pheno_group_i1_i2_get_person_values_df(
+        fake_group, roles, family_ids, person_ids):
+
+    df = fake_group.get_persons_values_df(
+        ["i1.iq", "i2.iq"], person_ids=person_ids,
+        family_ids=family_ids, roles=roles)
+
+    expected = pd.DataFrame({
+        "person_id": ["f1.p1"],
+        "family_id": ["f1"],
+        "role": [Role.prb],
+        "sex": [Sex.M],
+        "status": [Status.affected],
+        "i1.iq": [86.41],
+        "i2.iq": [86.41]
+        })
+    expected = expected.set_index("person_id")
+
+    pd.testing.assert_frame_equal(
+        df, expected, atol=1e-2,
+        check_index_type=False,
+        check_names=False,
+    )
