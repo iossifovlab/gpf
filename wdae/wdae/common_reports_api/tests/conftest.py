@@ -24,8 +24,8 @@ def use_common_reports(common_report_facade):
     common_report_facade.generate_common_report("Study1")
     common_report_facade.generate_common_report("study4")
 
-    yield
+    # yield
 
-    for temp_file in temp_files:
-        if os.path.exists(temp_file):
-            os.remove(temp_file)
+    # for temp_file in temp_files:
+    #     if os.path.exists(temp_file):
+    #         os.remove(temp_file)
