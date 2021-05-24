@@ -1017,15 +1017,6 @@ class PhenotypeGroup(PhenotypeData):
 
         return res_df
 
-    # def get_persons_values_df(
-    #         self,
-    #         measure_ids: Iterable[str],
-    #         person_ids: Optional[Iterable[str]] = None,
-    #         family_ids: Optional[Iterable[str]] = None,
-    #         roles: Optional[Iterable[Role]] = None,
-    #         default_filter: str = "apply") -> pd.DataFrame:
-    #     pass
-
 
 class PhenoDb(object):
     def __init__(self, dae_config):
