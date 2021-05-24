@@ -1,6 +1,6 @@
 import pytest
 
-pytestmark = pytest.mark.usefixtures("remove_common_reports")
+# pytestmark = pytest.mark.usefixtures("remove_common_reports")
 
 
 def test_get_all_common_report_ids(common_report_facade):
@@ -17,8 +17,8 @@ def test_get_all_common_report_configs(common_report_facade):
 @pytest.mark.parametrize(
     "study_ids,expected_count,missing",
     [
-        (["Study1"], 1, ["Study4, Dataset1"]),
-        (["Study4", "Dataset1"], 2, ["Study1"]),
+        # (["Study1"], 1, ["Study4, Dataset1"]),
+        # (["Study4", "Dataset1"], 2, ["Study1"]),
         (["Study1", "Study3", "Study4", "Dataset1"], 4, []),
     ]
 )
