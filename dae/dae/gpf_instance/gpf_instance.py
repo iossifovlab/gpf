@@ -184,7 +184,7 @@ class GPFInstance(object):
     def _background_facade(self):
         return BackgroundFacade(self._variants_db)
 
-    def get_genotype_data_ids(self):
+    def get_genotype_data_ids(self, local_only=False):
         return (
             self._variants_db.get_all_genotype_study_ids()
             + self._variants_db.get_all_genotype_group_ids()

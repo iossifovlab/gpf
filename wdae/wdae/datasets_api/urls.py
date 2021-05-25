@@ -1,8 +1,3 @@
-"""
-Created on Jan 20, 2017
-
-@author: lubo
-"""
 from django.conf.urls import url
 from . import views
 
@@ -21,7 +16,12 @@ urlpatterns = [
     url(
         r"^/pedigree/(?P<dataset_id>.+)/(?P<column>.+)$",
         views.DatasetPedigreeView.as_view(),
-        name="dataset_details",
+        name="pedigree",
+    ),
+    url(
+        r"^/config/(?P<dataset_id>.+)$",
+        views.DatasetConfigView.as_view(),
+        name="dataset_config",
     ),
     url(r"^/(?P<dataset_id>.+)$", views.DatasetView.as_view(), name="dataset"),
     url(r"^/?$", views.DatasetView.as_view(), name="dataset_all"),

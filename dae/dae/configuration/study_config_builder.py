@@ -388,38 +388,6 @@ variant_types = {{ genotype_browser.variant_types }}
 selected_variant_types = {{ genotype_browser.selected_variant_types }}
 {%- endif %}
 
-{%- if genotype_browser.genotype %}
-{%- for k, v in genotype_browser.genotype.items() %}
-genotype.{{ k }}.name = "{{ v.name }}"
-{%- if v.source %}
-genotype.{{ k }}.source = "{{ v.source }}"
-{%- endif %}
-
-{%- if v.slots %}
-genotype.{{ k }}.slots = {{ v.slots }}
-{%- endif %}
-{%- endfor %}
-{%- endif %}
-
-
-{%- if genotype_browser.pheno %}
-{%- for k, v in genotype_browser.pheno.items() %}
-pheno.{{ k }}.name = "{{ v.name }}"
-{%- if v.source %}
-pheno.{{ k }}.source = "{{ v.source }}"
-{%- endif %}
-
-{%- if v.slots %}
-pheno.{{ k }}.slots = {{ v.slots }}
-{%- endif %}
-{%- endfor %}
-{%- endif %}
-
-{%- if genotype_browser.selected_genotype_column_values %}
-selected_genotype_column_values = \
-"{{ genotype_browser.selected_genotype_column_values }}"
-{%- endif %}
-
 {%- if genotype_browser.preview_columns %}
 preview_columns = {{ genotype_browser.preview_columns }}
 {%- endif %}
@@ -428,12 +396,53 @@ preview_columns = {{ genotype_browser.preview_columns }}
 download_columns = {{ genotype_browser.download_columns }}
 {%- endif %}
 
+{%- if genotype_browser.summary_preview_columns %}
+summary_preview_columns = {{ genotype_browser.summary_preview_columns }}
+{%- endif %}
+
+{%- if genotype_browser.summary_download_columns %}
+summary_download_columns = {{ genotype_browser.summary_download_columns }}
+{%- endif %}
+
 {%- if genotype_browser.person_filters %}
 person_filters = {{ genotype_browser.person_filters }}
 {%- endif %}
 
 {%- if genotype_browser.family_filters %}
 family_filters = {{ genotype_browser.family_filters }}
+{%- endif %}
+
+{%- if genotype_browser.columns %}
+{%- if genotype_browser.columns.genotype %}
+[genotype_browser.columns.genotype]
+{%- for k, v in genotype_browser.columns.genotype.items() %}
+{{ k }}.name = "{{ v.name }}"
+{{ k }}.source = "{{ v.source }}"
+{%- if v.format %}
+{{ k }}.format = "{{ v.format }}"
+{%- endif %}
+{%- endfor %}
+{%- endif %}
+
+{%- if genotype_browser.columns.phenotype %}
+[genotype_browser.columns.phenotype]
+{%- for k, v in genotype_browser.columns.phenotype.items() %}
+{{ k }}.name = "{{ v.name }}"
+{{ k }}.source = "{{ v.source }}"
+{{ k }}.role = "{{ v.role }}"
+{%- if v.format %}
+{{ k }}.format = "{{ v.format }}"
+{%- endif %}
+{%- endfor %}
+{%- endif %}
+{%- endif %}
+
+{%- if genotype_browser.column_groups %}
+[genotype_browser.column_groups]
+{%- for k, v in genotype_browser.column_groups.items() %}
+{{ k }}.name = "{{ v.name }}"
+{{ k }}.columns = {{ v.columns }}
+{%- endfor %}
 {%- endif %}
 
 {%- endif %}
