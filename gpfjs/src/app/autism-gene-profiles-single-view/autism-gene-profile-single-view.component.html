@@ -11,7 +11,7 @@
     <th [attr.colspan]="2" style="text-align: center;">{{genomicScoreCategory.displayName}}</th>
     <tr *ngFor="let score of genomicScoreCategory.scores" class="card-block">
       <td style="vertical-align: middle;">{{score.scoreName}}</td>
-      <ng-container *ngIf="genomicScoresGeneWeights.length === gene['genomicScores'].length">
+      <ng-container *ngIf="genomicScoresGeneWeights.length === gene.genomicScores.length">
         <td>
           <gpf-histogram *ngIf="genomicScoresGeneWeights && getGeneWeightByKey(genomicScoreCategory.category, score.scoreName) as geneWeight"
             [style.width]="histogramOptions.width" [style.height]="histogramOptions.height"
@@ -22,7 +22,7 @@
             [logScaleY]="geneWeight.logScaleY"
             [showMinMaxInput]="false"
             [isInteractive]="false"
-            [singleScoreValue]="getSingleScoreValue(gene['genomicScores'], genomicScoreCategory.category, score.scoreName)"
+            [singleScoreValue]="getSingleScoreValue(gene.genomicScores, genomicScoreCategory.category, score.scoreName)"
             [marginLeft]="histogramOptions.marginLeft"
             [marginTop]="histogramOptions.marginTop">
           </gpf-histogram>
