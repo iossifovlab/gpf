@@ -97,6 +97,8 @@ class StudyWrapperBase:
                 "family_filters",
                 "genotype",
                 "present_in_role",
+                "inheritance_type_filter",
+                "selected_inheritance_type_filter_values",
             ]
         }
 
