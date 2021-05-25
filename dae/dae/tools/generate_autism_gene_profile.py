@@ -8,6 +8,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.autism_gene_profile.statistic import AGPStatistic
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.utils.effect_utils import expand_effect_types
+from dae.variants.attributes import Role
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,10 @@ def generate_agp(gpf_instance, gene_symbol, variants, collections_gene_sets):
                     current_counts[person_set] = dict()
                     counts = current_counts[person_set]
 
-                counts[effect] = 0
+                counts[effect] = {
+                    "count": 0,
+                    "rate": 0
+                }
         variant_counts[dataset_id] = current_counts
 
     return gene_symbol, AGPStatistic(
@@ -85,7 +89,29 @@ def add_variant_count(variant, agps, dataset_id, person_set, effect):
         if gs not in agps:
             continue
 
-        agps[gs].variant_counts[dataset_id][person_set][effect] += 1
+        agps[gs].variant_counts[dataset_id][person_set][effect]["count"] += 1
+
+
+def calculate_rates(instance, agps, config):
+    for gs in agps.keys():
+        agp = agps[gs]
+        for dataset_id, filters in config.datasets.items():
+            genotype_data = instance.get_genotype_data(dataset_id)
+            for ps in filters.person_sets:
+                psc = genotype_data.get_person_set_collection(
+                    ps.collection_name
+                )
+                set_name = ps.set_name
+                person_set = psc.person_sets[set_name]
+
+                children_count = person_set.get_persons_with_roles(
+                    Role.prb, Role.sib
+                )
+
+                for effect in filters.effects:
+                    stat = agp.variant_counts[dataset_id][set_name][effect]
+                    count = stat["count"]
+                    stat["rate"] = (count / children_count) * 1000
 
 
 def fill_variant_counts(variants_datasets, agps, config, person_ids):

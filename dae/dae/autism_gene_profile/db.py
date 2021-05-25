@@ -92,7 +92,8 @@ class AutismGeneProfileDB:
             self.studies.c.study_id,
             self.variant_counts.c.people_group,
             self.variant_counts.c.effect_type,
-            self.variant_counts.c.count
+            self.variant_counts.c.count,
+            self.variant_counts.c.rate
         ]).select_from(j).where(
             self.variant_counts.c.symbol_id == gene_symbol_id,
         )
@@ -198,6 +199,7 @@ class AutismGeneProfileDB:
             person_set = row[1]
             effect_type = row[2]
             count = row[3]
+            rate = row[4]
 
             if study_name not in variant_counts:
                 variant_counts[study_name] = dict()
@@ -205,7 +207,9 @@ class AutismGeneProfileDB:
             if person_set not in variant_counts[study_name]:
                 variant_counts[study_name][person_set] = dict()
 
-            variant_counts[study_name][person_set][effect_type] = count
+            variant_counts[study_name][person_set][effect_type]["count"] = \
+                count
+            variant_counts[study_name][person_set][effect_type]["rate"] = rate
 
         return AGPStatistic(
             gene_symbol, sets_in,
@@ -331,7 +335,8 @@ class AutismGeneProfileDB:
             Column("study_id", ForeignKey("studies.study_id")),
             Column("people_group", String(64), nullable=False),
             Column("effect_type", String(64), nullable=False),
-            Column("count", Integer())
+            Column("count", Integer()),
+            Column("rate", Float())
         )
 
     def _build_studies_table(self):
@@ -516,6 +521,7 @@ class AutismGeneProfileDB:
             for person_set in config_section["person_sets"]:
                 for effect_type in config_section["effects"]:
                     count_alias = f"{dataset_id}_{person_set}_{effect_type}"
+                    rate_alias = f"{count_alias}_rate"
                     table_alias = aliased(
                         self.variant_counts,
                         count_alias
@@ -534,7 +540,8 @@ class AutismGeneProfileDB:
                         )
                     )
                     select_cols.append(
-                        table_alias.c.count.label(count_alias)
+                        table_alias.c.count.label(count_alias),
+                        table_alias.c.rate.label(rate_alias)
                     )
 
         view_query = select(select_cols).select_from(current_join)
@@ -630,14 +637,17 @@ class AutismGeneProfileDB:
             for study, counts in agp.variant_counts.items():
                 study_id = study_ids[study]
                 for people_group, effects in counts.items():
-                    for effect_type, count in effects.items():
+                    for effect_type, stat in effects.items():
+                        count = stat["count"]
+                        rate = stat["rate"]
                         connection.execute(
                             insert(self.variant_counts).values(
                                 symbol_id=symbol_id,
                                 study_id=study_id,
                                 people_group=people_group,
                                 effect_type=effect_type,
-                                count=count
+                                count=count,
+                                rate=rate
                             )
                         )
 
@@ -697,14 +707,17 @@ class AutismGeneProfileDB:
                     for study, counts in agp.variant_counts.items():
                         study_id = study_ids[study]
                         for people_group, effects in counts.items():
-                            for effect_type, count in effects.items():
+                            for effect_type, stat in effects.items():
+                                count = stat["count"]
+                                rate = stat["rate"]
                                 connection.execute(
                                     insert(self.variant_counts).values(
                                         symbol_id=symbol_id,
                                         study_id=study_id,
                                         people_group=people_group,
                                         effect_type=effect_type,
-                                        count=count
+                                        count=count,
+                                        rate=rate
                                     )
                                 )
 

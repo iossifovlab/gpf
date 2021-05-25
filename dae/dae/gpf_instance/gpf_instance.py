@@ -462,9 +462,16 @@ class GPFInstance(object):
                         current_counts[person_set] = dict()
                         counts = current_counts[person_set]
 
-                    counts[effect] = row[
+                    count = row[
                         f"{dataset_id}_{person_set}_{effect}"
                     ]
+                    rate = row[
+                        f"{dataset_id}_{person_set}_{effect}_rate"
+                    ]
+                    counts[effect] = {
+                        "count": count,
+                        "rate": rate
+                    }
             variant_counts[dataset_id] = current_counts
 
         return AGPStatistic(
