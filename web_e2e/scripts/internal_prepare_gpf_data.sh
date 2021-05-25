@@ -137,7 +137,7 @@ preview_columns = ["family", "variant", "genotype", "effect", "weights", "mpc_ca
 
 [genotype_browser.column_groups]
 pheno.name = "Measures"
-pheno.columns = ["pheno_age", "pheno_viq"]
+pheno.columns = ["pheno_age", "pheno_iq"]
 
 
 [genotype_browser.columns.phenotype]
