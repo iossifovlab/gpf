@@ -19,7 +19,7 @@
       <input type="button" style="width: 75px" class="btn btn-md btn-primary" value="Go" (click)="submitGeneRequest()">
     </div>
 
-    <div [hidden]="hideResults">
+    <div *ngIf="!hideResults">
       <div class="row" style="margin-left: 0px; margin-right: 0px">
         <gpf-gene-view style="width: 100%; min-width: 1300px;"
           [gene]="selectedGene"

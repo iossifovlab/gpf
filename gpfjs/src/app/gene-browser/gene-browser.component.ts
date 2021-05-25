@@ -208,8 +208,6 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   submitGeneRequest() {
     this.showError = false;
     this.hideDropdown = true;
-    this.geneViewComponent.clearSvgElement();
-    this.geneViewComponent.resetGeneTableValues();
 
     this.queryService.summaryStreamingFinishedSubject.subscribe(_ => {
       this.loadingFinished = true;
@@ -256,9 +254,6 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
 
       if (this.enableCodingOnly) {
         requestParams['effectTypes'] = this.codingEffectTypes;
-        this.geneViewComponent.enableIntronCondensing();
-      } else {
-        this.geneViewComponent.disableIntronCondensing();
       }
       const inheritanceFilters = [
         'denovo',
@@ -274,8 +269,14 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
       console.error(error);
       this.showError = true;
       this.hideDropdown = false;
-    }, () => {
+    }, async () => {
       this.hideDropdown = false;
+      await this.waitForGeneViewComponent();
+      if (this.enableCodingOnly) {
+        this.geneViewComponent.enableIntronCondensing();
+      } else {
+        this.geneViewComponent.disableIntronCondensing();
+      }
     });
   }
 
