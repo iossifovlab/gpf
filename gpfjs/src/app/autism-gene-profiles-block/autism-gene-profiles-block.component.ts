@@ -1,6 +1,6 @@
 import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
-import { AutismGeneToolConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import { AgpConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 
 @Component({
@@ -11,7 +11,7 @@ import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism
 export class AutismGeneProfilesBlockComponent implements OnInit {
   @ViewChild('nav') nav: NgbNav;
   geneTabs = new Set<string>();
-  autismGeneToolConfig: AutismGeneToolConfig;
+  autismGeneToolConfig: AgpConfig;
 
   @HostListener('window:keydown', ['$event'])
   keyEvent($event: KeyboardEvent) {

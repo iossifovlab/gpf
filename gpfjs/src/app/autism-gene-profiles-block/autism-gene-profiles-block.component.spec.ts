@@ -64,7 +64,7 @@ describe('AutismGeneProfilesBlockComponent', () => {
 
     expect(component['autismGeneToolConfig']).toEqual(undefined);
     component.ngOnInit();
-    expect(component['autismGeneToolConfig']).toEqual('fakeConfig');
+    expect(component['autismGeneToolConfig']).toEqual('fakeConfig' as any);
   });
 
   it('should create tab event handler', () => {
