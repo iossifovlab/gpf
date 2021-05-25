@@ -299,8 +299,12 @@ class CompositeVariantAnnotator(VariantAnnotatorBase):
         self.annotators.append(annotator)
 
     def do_annotate(self, aline, variant, liftover_variants):
-        for annotator in self.annotators:
-            annotator.do_annotate(aline, variant, liftover_variants)
+        try:
+            for annotator in self.annotators:
+                annotator.do_annotate(aline, variant, liftover_variants)
+        except Exception:
+            logger.exception(
+                f"cant annotate variant {variant}; source line {aline}")
 
     def collect_annotator_schema(self, schema):
         super(CompositeVariantAnnotator, self).collect_annotator_schema(schema)

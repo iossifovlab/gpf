@@ -178,7 +178,7 @@ genotype_browser_schema = {
         },
         "max_variants_count": {
             "type": "integer",
-            "default": 1001
+            "default": 1000
         }
     },
 }

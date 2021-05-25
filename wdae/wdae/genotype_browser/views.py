@@ -93,6 +93,9 @@ class GenotypeBrowserQueryView(QueryBaseView):
                 response, filename='variants.tsv',
                 as_attachment=True, content_type="text/tsv"
             )
+            response["Content-Disposition"] = \
+                "attachment; filename=variants.tsv"
+            response["Expires"] = "0"
         else:
             response = StreamingHttpResponse(
                 iterator_to_json(response),
