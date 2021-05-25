@@ -834,12 +834,22 @@ class VcfLoader(VariantsGenotypesLoader):
             vcf_chromosomes = [
                 wc.strip() for wc in params.get("vcf_chromosomes").split(";")
             ]
-
-            glob_filenames = [
-                [vcf_file.replace("[vc]", vc) for vcf_file in vcf_files]
-                for vc in vcf_chromosomes
-            ]
-
+            if all(["[vc]" in vcf_file for vcf_file in vcf_files]):
+                glob_filenames = [
+                    [vcf_file.replace("[vc]", vc) for vcf_file in vcf_files]
+                    for vc in vcf_chromosomes
+                ]
+            elif all(["[vc]" not in vcf_file for vcf_file in vcf_files]):
+                logger.warning(
+                    f"VCF files {vcf_files} does not contain '[vc]' pattern, "
+                    f"but '--vcf-chromosomes' argument is passed; skipping...")
+                glob_filenames = [vcf_files]
+            else:
+                logger.error(
+                    f"some VCF files contain '[vc]' pattern, some not: "
+                    f"{vcf_files}; can't continue...")
+                raise ValueError(
+                    f"some VCF files does not have '[vc]': {vcf_files}")
         else:
             glob_filenames = [vcf_files]
 
