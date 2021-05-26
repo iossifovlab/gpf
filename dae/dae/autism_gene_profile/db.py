@@ -43,15 +43,7 @@ class AutismGeneProfileDB:
     def _build_configuration(self, configuration):
         if configuration is None:
             return dict()
-        configuration = copy(configuration)
-
-        for dataset in configuration["datasets"]:
-            dataset_dict = configuration["datasets"][dataset]
-            person_sets = dataset_dict["person_sets"]
-            dataset_dict["person_sets"] = [
-                ps["set_name"] for ps in person_sets
-            ]
-        return configuration
+        return copy(configuration)
 
     def _get_genomic_scores(self, gene_symbol_id):
         s = select([
