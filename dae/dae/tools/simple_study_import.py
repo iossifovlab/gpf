@@ -25,7 +25,10 @@ logger = logging.getLogger("simple_study_import")
 
 
 def cli_arguments(dae_config, argv=sys.argv[1:]):
-    default_genotype_storage_id = dae_config.genotype_storage.default
+    if dae_config:
+        default_genotype_storage_id = dae_config.genotype_storage.default
+    else:
+        default_genotype_storage_id = None
 
     parser = argparse.ArgumentParser(
         description="simple import of new study data",
@@ -157,10 +160,16 @@ def generate_denovo_gene_sets(gpf_instance, study_id):
 
 
 def main(argv, gpf_instance=None):
-    if gpf_instance is None:
-        gpf_instance = GPFInstance()
+    dae_config = None
+    if gpf_instance is not None:
+        dae_config = gpf_instance.dae_config
+    else:
+        try:
+            gpf_instance = GPFInstance()
+            dae_config = gpf_instance.dae_config
 
-    dae_config = gpf_instance.dae_config
+        except Exception:
+            logger.warning("GPF not configured correctly")
 
     argv = cli_arguments(dae_config, argv)
 

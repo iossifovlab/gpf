@@ -564,6 +564,7 @@ rule setup_remote:
 class BatchImporter:
     def __init__(self, gpf_instance):
         self.gpf_instance = gpf_instance
+        assert self.gpf_instance is not None
 
         self.study_id = None
         self.partition_helper = None
@@ -949,9 +950,11 @@ class BatchImporter:
             help="Path to an annotation config file to use when annotating",
         )
 
-        default_genotype_storage_id = (
-            gpf_instance.dae_config.genotype_storage.default
-        )
+        default_genotype_storage_id = None
+        if gpf_instance is not None:
+            default_genotype_storage_id = gpf_instance\
+                .dae_config\
+                .genotype_storage.default
 
         parser.add_argument(
             "--genotype-storage",
@@ -996,9 +999,11 @@ class BatchImporter:
 
     @staticmethod
     def main(argv=sys.argv[1:], gpf_instance=None):
-
         if gpf_instance is None:
-            gpf_instance = GPFInstance()
+            try:
+                gpf_instance = GPFInstance()
+            except Exception:
+                logger.warning("GPF not configured properly...")
 
         parser = BatchImporter.cli_arguments_parser(gpf_instance)
         argv = parser.parse_args(argv)
