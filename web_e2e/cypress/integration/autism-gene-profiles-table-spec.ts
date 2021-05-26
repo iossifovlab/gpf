@@ -62,7 +62,7 @@ describe('Autism gene profiles table data tests', () => {
   });
 });
 
-describe('Column filtering dropdown tests', () => {
+describe.skip('Column filtering dropdown tests', () => {
   const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
 
   beforeEach(() => {
