@@ -1142,8 +1142,14 @@ def sample_agp():
     }
     variant_counts = {
         'iossifov_we2014_test': {
-            'unknown': {'noncoding': 53, 'missense': 21},
-            'unaffected': {'noncoding': 43, 'missense': 51},
+            'unknown': {
+                'noncoding': {"count": 53, "rate": 1},
+                'missense': {"count": 21, "rate": 2}
+            },
+            'unaffected': {
+                'noncoding': {"count": 43, "rate": 3},
+                'missense': {"count": 51, "rate": 4}
+            },
         }
     }
     return AGPStatistic(
