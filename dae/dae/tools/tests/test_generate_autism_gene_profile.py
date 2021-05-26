@@ -7,9 +7,9 @@ def test_generate_autism_gene_profile(
     argv = [
         "--dbfile",
         temp_dbfile,
-        "-vv"
+        "-vv",
+        "--config-genes",
     ]
-    import time
 
     main(agp_gpf_instance, argv)
     agpdb = AutismGeneProfileDB(

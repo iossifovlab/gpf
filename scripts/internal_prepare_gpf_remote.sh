@@ -78,6 +78,7 @@ EOT
 
 # Import comp pheno
 cd ${IMPORT}
+rm -rf comp-data
 
 tar zxvf ${DOWNLOADS}/phenotype-comp-data-*.tar.gz
 cd comp-data

@@ -28,6 +28,7 @@ done
 cd /code/dae
 
 PYTHONHASHSEED=0 py.test -v --no-cleanup -n 10 \
+    --durations 15 \
     --cov-config /code/coveragerc \
     --junitxml=/code/results/dae-junit.xml \
     --cov-report=html:/code/results/dae-coverage.html \

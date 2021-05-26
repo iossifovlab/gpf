@@ -556,6 +556,7 @@ class SummaryAllele(Allele):
         transmission_type: TransmissionType = TransmissionType.transmitted,
         variant_type=None,
         attributes: Dict[str, Any] = None,
+        effect: str = None,
     ):
 
         self._chromosome: str = chromosome
@@ -571,7 +572,7 @@ class SummaryAllele(Allele):
 
         self._details = None
 
-        self._effect = None
+        self._effect = Effect.from_string(effect) if effect else None
 
         self._attributes: Dict[str, Any] = {
             "allele_index": allele_index,

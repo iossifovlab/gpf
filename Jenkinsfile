@@ -2,12 +2,8 @@ pipeline {
     agent {
         label 'pooh || piglet || dory'
     }
-    // options {
-    //     disableConcurrentBuilds()
-    // }
     triggers {
         pollSCM('* * * * *')
-        cron('H 2 * * *')
     }
     environment {
         WD="${env.WORKSPACE}"
@@ -211,13 +207,13 @@ pipeline {
             archiveArtifacts artifacts: 'builds/*.tar.gz'
             archiveArtifacts artifacts: 'builds/*.yml'
 
-            script {
-                def job_result = build job: 'seqpipe/seqpipe-gpf-containers/master', propagate: true, wait: false, parameters: [
-                    string(name: 'GPF_BRANCH', value: "master"),
-                    string(name: 'GPF_BUILD', value: "$env.BUILD_NUMBER"),
-                    booleanParam(name: "PUBLISH", value: false)
-                ]
-            }
+            // script {
+            //     def job_result = build job: 'seqpipe/seqpipe-gpf-containers/master', propagate: true, wait: false, parameters: [
+            //         string(name: 'GPF_BRANCH', value: "master"),
+            //         string(name: 'GPF_BUILD', value: "$env.BUILD_NUMBER"),
+            //         booleanParam(name: "PUBLISH", value: false)
+            //     ]
+            // }
         }
     }
 }

@@ -28,6 +28,6 @@ done
 
 cd /code/
 
-PYTHONHASHSEED=0 py.test -v -n 10 --no-cleanup \
+PYTHONHASHSEED=0 py.test -v -n 10 --no-cleanup --durations 15 \
     ${RUN_WHAT}
 

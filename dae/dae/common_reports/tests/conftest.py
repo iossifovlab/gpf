@@ -120,12 +120,14 @@ def remove_common_reports(common_report_facade):
     temp_files = [config.file_path for config in all_configs]
 
     for temp_file in temp_files:
+        print(f"removing common report: {temp_file}")
         if os.path.exists(temp_file):
             os.remove(temp_file)
 
     yield
 
     for temp_file in temp_files:
+        print(f"removing common report: {temp_file}")
         if os.path.exists(temp_file):
             os.remove(temp_file)
 

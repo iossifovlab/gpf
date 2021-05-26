@@ -11,7 +11,7 @@ from queue import Queue, Full
 from abc import ABC, abstractmethod, abstractproperty
 
 from typing import Dict
-from dae.pedigrees.family import Family, FamiliesData
+from dae.pedigrees.family import FamiliesData
 from dae.person_sets import PersonSetCollection
 from dae.utils.effect_utils import expand_effect_types
 
@@ -33,6 +33,10 @@ class GenotypeData(ABC):
     @property
     def study_id(self):
         return self.config["id"]
+
+    @property
+    def id(self):
+        return self.study_id
 
     @property
     def name(self):
@@ -103,7 +107,7 @@ class GenotypeData(ABC):
         pass
 
     @abstractmethod
-    def get_studies_ids(self, leafs=True):
+    def get_studies_ids(self, leaves=True):
         pass
 
     def get_leaf_children(self):
@@ -254,6 +258,7 @@ class GenotypeDataGroup(GenotypeData):
         self._families = self._build_families()
         self._build_person_set_collections()
         self._executor = None
+        self.is_remote = False
         for study in self.studies:
             study._add_parent(self.study_id)
 
@@ -484,8 +489,8 @@ class GenotypeDataGroup(GenotypeData):
             f"processing study {self.study_id} "
             f"elapsed: {elapsed:.3f}")
 
-    def get_studies_ids(self, leafs=True):
-        if not leafs:
+    def get_studies_ids(self, leaves=True):
+        if not leaves:
             return [st.study_id for st in self.studies]
         else:
             result = []
@@ -494,64 +499,7 @@ class GenotypeDataGroup(GenotypeData):
             return result
 
     def _build_families(self):
-        logger.info(
-            f"building combined families from studies: "
-            f"{[st.study_id for st in self.studies]}")
-
-        if len(self.studies) == 1:
-            return self.studies[0].families
-        elif len(self.studies) >= 2:
-            logger.info(
-                f"combining families from study {self.studies[0].study_id} "
-                f"and from study {self.studies[0].study_id}")
-            result = GenotypeDataGroup._combine_families(
-                self.studies[0].families,
-                self.studies[1].families)
-
-            if len(self.studies) > 2:
-                for si in range(2, len(self.studies)):
-                    logger.debug(
-                        f"processing study ({si}): "
-                        f"{self.studies[si].study_id}")
-                    logger.info(
-                        f"combining families from studies ({si}) "
-                        f"{[st.study_id for st in self.studies[:si]]} "
-                        f"with families from study "
-                        f"{self.studies[si].study_id}")
-                    result = GenotypeDataGroup._combine_families(
-                        result,
-                        self.studies[si].families
-                    )
-
-        return FamiliesData.from_families(result)
-
-    @staticmethod
-    def _combine_families(first, second, forced=True):
-        same_families = set(first.keys()) & set(second.keys())
-        combined_dict = {}
-        combined_dict.update(first)
-        combined_dict.update(second)
-        mismatched_families = []
-        for sf in same_families:
-            try:
-                combined_dict[sf] = Family.merge(
-                    first[sf], second[sf], forced=forced)
-            except AssertionError as ex:
-                import traceback
-                traceback.print_exc()
-                logger.error(f"mismatched families: {first[sf]}, {second[sf]}")
-                logger.exception(ex)
-
-                mismatched_families.append(sf)
-
-        if len(mismatched_families) > 0:
-            logger.warning(f"mismatched families: {mismatched_families}")
-            if not forced:
-                assert len(mismatched_families) == 0, mismatched_families
-            else:
-                logger.warning("second study overwrites family definition")
-
-        return combined_dict
+        return FamiliesData.combine_studies(self.studies)
 
     def _build_person_set_collection(self, person_set_collection_id):
         assert person_set_collection_id in \
@@ -583,6 +531,8 @@ class GenotypeDataStudy(GenotypeData):
         self._backend = backend
         self._build_person_set_collections()
 
+        self.is_remote = False
+
     @property
     def study_phenotype(self):
         return self.config.get("study_phenotype", "-")
@@ -591,7 +541,7 @@ class GenotypeDataStudy(GenotypeData):
     def is_group(self):
         return False
 
-    def get_studies_ids(self, leafs=True):
+    def get_studies_ids(self, leaves=True):
         return [self.study_id]
 
     def query_variants(
@@ -723,7 +673,7 @@ class GenotypeDataStudy(GenotypeData):
                 limit=limit):
 
             for allele in variant.alleles:
-                allele.update_attributes({"studyName": self.name})
+                allele.update_attributes({"study_name": self.name})
             yield variant
 
     @property

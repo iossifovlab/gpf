@@ -5,6 +5,7 @@ from rest_framework.response import Response
 
 import json
 import logging
+import itertools
 
 from utils.logger import LOGGER
 from utils.streaming_response_util import iterator_to_json
@@ -14,54 +15,46 @@ from query_base.query_base import QueryBaseView
 
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
+from studies.study_wrapper import StudyWrapperBase
+
 from datasets_api.permissions import \
     handle_partial_permissions
+
+from dae.utils.dae_utils import join_line
 
 
 logger = logging.getLogger(__name__)
 
 
-class QueryPreviewView(QueryBaseView):
-    @expand_gene_set
-    @request_logging(LOGGER)
-    def post(self, request):
-        LOGGER.info("query v3 preview request: " + str(request.data))
-
-        data = request.data
-        dataset_id = data.pop("datasetId", None)
-        if dataset_id is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-
-        # LOGGER.info('dataset ' + str(dataset))
-        response = dataset.get_wdae_preview_info(
-            data,
-            max_variants_count=QueryPreviewVariantsView.MAX_SHOWN_VARIANTS,
-        )
-
-        return Response(response, status=status.HTTP_200_OK)
-
-
-class QueryPreviewVariantsView(QueryBaseView):
+class GenotypeBrowserQueryView(QueryBaseView):
 
     MAX_SHOWN_VARIANTS = 1000
 
+    def _parse_query_params(self, data):
+        res = {str(k): str(v) for k, v in list(data.items())}
+        assert "queryData" in res
+        query = json.loads(res["queryData"])
+        return query
+
     @expand_gene_set
     @request_logging(LOGGER)
     def post(self, request):
-        LOGGER.info("query v3 preview request: " + str(request.data))
+        LOGGER.info("query v3 variants request: " + str(request.data))
 
         data = request.data
+        if "queryData" in data:
+            data = self._parse_query_params(data)
         dataset_id = data.pop("datasetId", None)
+
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
         if "genomicScores" in data:
             scores = data["genomicScores"]
             for score in scores:
                 if score["rangeStart"] is None and score["rangeEnd"] is None:
                     return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        is_download = data.pop("download", False)
 
         max_variants = data.pop(
             "maxVariantsCount", self.MAX_SHOWN_VARIANTS + 1)
@@ -72,161 +65,43 @@ class QueryPreviewVariantsView(QueryBaseView):
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         user = request.user
 
+        if "sources" in data:
+            sources = data.pop("sources")
+        else:
+            # TODO Handle summary variant preview and download sources
+            if is_download:
+                cols = dataset.config.genotype_browser.download_columns
+            else:
+                cols = dataset.config.genotype_browser.preview_columns
+            sources = StudyWrapperBase.get_columns_as_sources(
+                dataset.config, cols
+            )
+
         handle_partial_permissions(user, dataset_id, data)
 
-        response = dataset.get_variants_wdae_preview(
-            data, max_variants_count=max_variants
+        response = dataset.query_variants_wdae(
+            data, sources,
+            max_variants_count=max_variants,
+            max_variants_message=is_download
         )
 
-        response = StreamingHttpResponse(
-            iterator_to_json(response),
-            status=status.HTTP_200_OK,
-            content_type="text/event-stream",
-        )
+        if is_download:
+            columns = [s.get("name", s["source"]) for s in sources]
+            response = map(
+                join_line, itertools.chain([columns], response))
+            response = FileResponse(
+                response, filename='variants.tsv',
+                as_attachment=True, content_type="text/tsv"
+            )
+            response["Content-Disposition"] = \
+                "attachment; filename=variants.tsv"
+            response["Expires"] = "0"
+        else:
+            response = StreamingHttpResponse(
+                iterator_to_json(response),
+                status=status.HTTP_200_OK,
+                content_type="text/event-stream",
+            )
+
         response["Cache-Control"] = "no-cache"
-        return response
-
-
-class QueryDownloadView(QueryBaseView):
-
-    DOWNLOAD_LIMIT = 10000
-
-    def _parse_query_params(self, data):
-        res = {str(k): str(v) for k, v in list(data.items())}
-        assert "queryData" in res
-        query = json.loads(res["queryData"])
-        return query
-
-    @expand_gene_set
-    @request_logging(LOGGER)
-    def post(self, request):
-        LOGGER.info("query v3 download request: " + str(request.data))
-
-        data = self._parse_query_params(request.data)
-        user = request.user
-
-        dataset_id = data.pop("datasetId")
-
-        handle_partial_permissions(user, dataset_id, data)
-
-        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-
-        download_limit = None
-        if not (user.is_authenticated and user.has_unlimitted_download):
-            download_limit = self.DOWNLOAD_LIMIT
-
-        variants_data = dataset.get_variants_wdae_download(
-            data, max_variants_count=download_limit
-        )
-
-        response = FileResponse(variants_data, content_type="text/tsv")
-
-        response["Content-Disposition"] = "attachment; filename=variants.tsv"
-        response["Expires"] = "0"
-        return response
-
-
-class QuerySummaryVariantsView(QueryBaseView):
-    MAX_SHOWN_VARIANTS = 1000
-
-    @expand_gene_set
-    @request_logging(LOGGER)
-    def post(self, request):
-        data = request.data
-        dataset_id = data.pop("datasetId", None)
-        if dataset_id is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        max_variants = data.pop(
-            "maxVariantsCount", self.MAX_SHOWN_VARIANTS + 1)
-
-        if max_variants == -1:
-            max_variants = None
-
-        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        user = request.user
-
-        handle_partial_permissions(user, dataset_id, data)
-
-        response = dataset.get_summary_variants_wdae_preview(
-            data, max_variants)
-
-        response = StreamingHttpResponse(
-            iterator_to_json(response),
-            status=status.HTTP_200_OK,
-            content_type="text/event-stream"
-        )
-        response["Cache-Control"] = "no-cache"
-        return response
-
-
-class QueryPreviewSummaryVariantsView(QueryBaseView):
-    @expand_gene_set
-    @request_logging(LOGGER)
-    def post(self, request):
-        LOGGER.info("query v3 preview request: " + str(request.data))
-
-        data = request.data
-        dataset_id = data.pop("datasetId", None)
-        if dataset_id is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-
-        # LOGGER.info('dataset ' + str(dataset))
-        try:
-            response = dataset.get_summary_wdae_preview_info(
-                data,
-                max_variants_count=QuerySummaryVariantsView.MAX_SHOWN_VARIANTS,
-            )
-        except(Exception):
-            return Response(
-                {"error": "Summary preview columns are not configured"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-        return Response(response, status=status.HTTP_200_OK)
-
-
-class QuerySummaryVariantsDownloadView(QueryBaseView):
-    DOWNLOAD_LIMIT = 10000
-
-    def _parse_query_params(self, data):
-        res = {str(k): str(v) for k, v in list(data.items())}
-        assert "queryData" in res
-        query = json.loads(res["queryData"])
-        return query
-
-    @expand_gene_set
-    @request_logging(LOGGER)
-    def post(self, request):
-        LOGGER.info("query v3 download request: " + str(request.data))
-
-        data = self._parse_query_params(request.data)
-        user = request.user
-
-        dataset_id = data.pop("datasetId")
-
-        handle_partial_permissions(user, dataset_id, data)
-
-        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-
-        download_limit = None
-        if not (user.is_authenticated and user.has_unlimitted_download):
-            download_limit = self.DOWNLOAD_LIMIT
-
-        try:
-            variants_data = dataset.get_summary_variants_wdae_download(
-                data, max_variants_count=download_limit
-            )
-        except(Exception):
-            return Response(
-                {"error": "Summary download columns are not configured"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-        response = FileResponse(variants_data, content_type="text/tsv")
-
-        response["Content-Disposition"] = "attachment; filename=variants.tsv"
-        response["Expires"] = "0"
         return response

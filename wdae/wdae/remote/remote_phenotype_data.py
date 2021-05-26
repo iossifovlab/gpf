@@ -5,7 +5,9 @@ from dae.pedigrees.family import Person
 
 
 class RemotePhenotypeData(PhenotypeData):
-    def __init__(self, dataset_id, rest_client):
+    def __init__(self, pheno_id, dataset_id, rest_client):
+        super(RemotePhenotypeData, self).__init__(pheno_id)
+
         self.dataset_id = dataset_id
         self.rest_client = rest_client
         self._instruments = None

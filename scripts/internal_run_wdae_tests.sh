@@ -29,6 +29,7 @@ done
 cd /code/wdae
 
 PYTHONHASHSEED=0 py.test --no-cleanup -v -n 10 \
+    --durations 15 \
     --cov-config /code/coveragerc \
     --junitxml=/code/results/wdae-junit.xml \
     --cov-report=html:/code/results/wdae-coverage.html \

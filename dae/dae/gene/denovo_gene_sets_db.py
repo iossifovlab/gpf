@@ -79,7 +79,9 @@ class DenovoGeneSetsDb:
 
     @cached
     def get_genotype_data_ids(self):
-        genotype_data_ids = set(self.gpf_instance.get_genotype_data_ids())
+        genotype_data_ids = set(
+            self.gpf_instance.get_genotype_data_ids(local_only=True)
+        )
         result = set()
         for genotype_data_id in genotype_data_ids:
             gtd_config = \
