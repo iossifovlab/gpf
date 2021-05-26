@@ -151,8 +151,7 @@ describe('GeneBrowserComponent', () => {
       .toEqual(['missense', 'synonymous']);
   });
 
-  it('should submit gene request', () => {
-    component.hideResults = true;
+  it('should submit gene request', async () => {
     component.enableCodingOnly = true;
     const getCurrentStateSpy = spyOn(component, 'getCurrentState').and.returnValue(of(testState));
     // accesing private property - bad, needs to be refactored
@@ -181,27 +180,27 @@ describe('GeneBrowserComponent', () => {
 
       return 'testSummaryVariantsArray' as any;
     });
+
+    // we need 'svgElement' in order for waitForGeneViewComponent() to work
     component.geneViewComponent = {
-      enableIntronCondensing() {}, disableIntronCondensing() {}, clearSvgElement() {}, resetGeneTableValues() {}
+      enableIntronCondensing() {}, disableIntronCondensing() {}, svgElement: true
     } as any;
     const enableIntronCondensingSpy = spyOn(component.geneViewComponent, 'enableIntronCondensing');
     const disableIntronCondensingSpy = spyOn(component.geneViewComponent, 'disableIntronCondensing');
-    const clearSvgElementSpy = spyOn(component.geneViewComponent, 'clearSvgElement');
-    const resetGeneTableValuesSpy = spyOn(component.geneViewComponent, 'resetGeneTableValues');
 
     component.submitGeneRequest();
     expect(component.hideResults).toBeFalse();
     expect(component.geneSymbol).toBe('testSymbol');
     expect(component.selectedGene).toBe('testGene' as any);
     expect(component.genotypePreviewVariantsArray).toBe(null);
+    expect(component.summaryVariantsArray).toBe('testSummaryVariantsArray' as any);
+    await component.waitForGeneViewComponent();
     expect(enableIntronCondensingSpy).toHaveBeenCalled();
     expect(disableIntronCondensingSpy).not.toHaveBeenCalled();
-    expect(clearSvgElementSpy).toHaveBeenCalled();
-    expect(resetGeneTableValuesSpy).toHaveBeenCalled();
-    expect(component.summaryVariantsArray).toBe('testSummaryVariantsArray' as any);
 
     component.enableCodingOnly = false;
     component.submitGeneRequest();
+    await component.waitForGeneViewComponent();
     expect(disableIntronCondensingSpy).toHaveBeenCalled();
   });
 
