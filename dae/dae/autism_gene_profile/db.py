@@ -199,9 +199,10 @@ class AutismGeneProfileDB:
             if person_set not in variant_counts[study_name]:
                 variant_counts[study_name][person_set] = dict()
 
-            variant_counts[study_name][person_set][effect_type]["count"] = \
-                count
-            variant_counts[study_name][person_set][effect_type]["rate"] = rate
+            variant_counts[study_name][person_set][effect_type] = {
+                "count": count,
+                "rate": rate
+            }
 
         return AGPStatistic(
             gene_symbol, sets_in,

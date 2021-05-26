@@ -39,7 +39,7 @@ def test_agpdb_tables_building(temp_dbfile, agp_config):
     assert set(table_columns["variant_counts"]).difference(
         set([
             "id", "symbol_id", "study_id", "people_group",
-            "effect_type", "count"
+            "effect_type", "count", "rate"
         ])
     ) == set()
     assert set(table_columns["studies"]).difference(
@@ -94,8 +94,14 @@ def test_agpdb_insert_and_get_agp(
 
     assert agp.variant_counts == {
         'iossifov_we2014_test': {
-            'unknown': {'noncoding': 53, 'missense': 21},
-            'unaffected': {'noncoding': 43, 'missense': 51},
+            'unknown': {
+                'noncoding': {"count": 53, "rate": 1},
+                'missense': {"count": 21, "rate": 2}
+            },
+            'unaffected': {
+                'noncoding': {"count": 43, "rate": 3},
+                'missense': {"count": 51, "rate": 4}
+            },
         }
     }
 

@@ -104,9 +104,9 @@ def calculate_rates(instance, agps, config):
                 set_name = ps.set_name
                 person_set = psc.person_sets[set_name]
 
-                children_count = person_set.get_persons_with_roles(
+                children_count = len(list(person_set.get_persons_with_roles(
                     Role.prb, Role.sib
-                )
+                )))
 
                 for effect in filters.effects:
                     stat = agp.variant_counts[dataset_id][set_name][effect]
@@ -263,6 +263,9 @@ def main(gpf_instance=None, argv=None):
     logger.info("Counting variants...")
     fill_variant_counts(variants, agps, config, person_ids)
     logger.info("Done counting variants")
+    logger.info("Calculating rates...")
+    calculate_rates(gpf_instance, agps, config)
+    logger.info("Done calculating rates")
     elapsed = time.time() - generate_end
     logger.info(f"Took {elapsed:.2f} secs")
 

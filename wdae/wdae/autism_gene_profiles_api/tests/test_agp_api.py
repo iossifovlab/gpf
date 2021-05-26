@@ -30,7 +30,8 @@ def test_configuration(admin_client):
     assert len(datasets["iossifov_we2014_test"]["effects"]) == 2
     assert len(datasets["iossifov_we2014_test"]["person_sets"]) == 2
     assert datasets["iossifov_we2014_test"]["person_sets"] == [
-        "unknown", "unaffected"
+        {"set_name": "unknown", "collection_name": "phenotype"},
+        {"set_name": "unaffected", "collection_name": "phenotype"}
     ]
 
 
