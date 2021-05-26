@@ -791,7 +791,7 @@ class VcfLoader(VariantsGenotypesLoader):
         ))
         arguments.append(CLIArgument(
             "--vcf-denovo-mode",
-            default_value="possible_denovo",
+            default_value="ignore",
             help_text="used for handling family variants "
             "with denovo inheritance; "
             "supported values are: `denovo`, `possible_denovo`, `ignore`; "
@@ -799,7 +799,7 @@ class VcfLoader(VariantsGenotypesLoader):
         ))
         arguments.append(CLIArgument(
             "--vcf-omission-mode",
-            default_value="possible_omission",
+            default_value="ignore",
             help_text="used for handling family variants with omission "
             "inheritance; "
             "supported values are: `omission`, `possible_omission`, `ignore`; "
