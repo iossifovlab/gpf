@@ -189,6 +189,8 @@ class CLILoader(ABC):
             if argument.destination in self.params:
                 result[argument.destination] = \
                     self.params[argument.destination]
+        logger.debug(
+            f"building arguments from {self.params} into dict: {result}")
         return result
 
     @classmethod

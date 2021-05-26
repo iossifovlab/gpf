@@ -78,6 +78,8 @@ class DenovoLoader(VariantsGenotypesLoader):
 
         self.genome = genome
         self.set_attribute("source_type", "denovo")
+        logger.debug(
+            f"loading denovo variants: {denovo_filename}; {self.params}")
 
         self.denovo_df, extra_attributes = self._flexible_denovo_load_internal(
             denovo_filename,
@@ -329,6 +331,7 @@ class DenovoLoader(VariantsGenotypesLoader):
 
     @classmethod
     def parse_cli_arguments(cls, argv):
+        logger.debug(f"CLI arguments: {argv}")
 
         if argv.denovo_location and (argv.denovo_chrom or argv.denovo_pos):
             logger.error(

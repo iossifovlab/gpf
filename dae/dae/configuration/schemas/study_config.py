@@ -238,6 +238,7 @@ variants_file = {
             "denovo_person_id": {"type": "string"},
             "denovo_family_id": {"type": "string"},
             "denovo_best_state": {"type": "string"},
+            "denovo_genotype": {"type": "string"},
             "denovo_sep": {"type": "string"},
             "vcf_include_reference_genotypes": {"type": "boolean"},
             "vcf_include_unknown_family_genotypes": {"type": "boolean"},

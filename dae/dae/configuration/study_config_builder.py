@@ -282,6 +282,9 @@ params.denovo_family_id = "{{ variant.params.denovo_family_id }}"
 {%- if variant.params.denovo_best_state %}
 params.denovo_best_state = "{{ variant.params.denovo_best_state }}"
 {%- endif %}
+{%- if variant.params.denovo_genotype %}
+params.denovo_genotype = "{{ variant.params.denovo_genotype }}"
+{%- endif %}
 {%- if variant.params.denovo_sep %}
 params.denovo_sep = "{{ variant.params.denovo_sep }}"
 {%- endif %}

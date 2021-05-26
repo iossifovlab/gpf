@@ -2,6 +2,7 @@ import os
 import shutil
 import time
 import glob
+import logging
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.study_config_builder import StudyConfigBuilder
@@ -17,6 +18,8 @@ from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.cnv.loader import CNVLoader
 
 from dae.utils.dict_utils import recursive_dict_update
+
+logger = logging.getLogger(__name__)
 
 
 class FilesystemGenotypeStorage(GenotypeStorage):
@@ -57,19 +60,23 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             start = time.time()
             ped_params = \
                 study_config.genotype_storage.files.pedigree.params.to_dict()
-            families_loader = FamiliesLoader(
-                study_config.genotype_storage.files.pedigree.path,
-                **ped_params,
-            )
+            ped_filename = study_config.genotype_storage.files.pedigree.path
+            logger.debug(f"pedigree params: {ped_filename}; {ped_params}")
+
+            families_loader = FamiliesLoader(ped_filename, **ped_params)
             families = families_loader.load()
             elapsed = time.time() - start
-            print(f"Families loaded in in {elapsed:.2f} sec")
+            logger.info(f"families loaded in in {elapsed:.2f} sec")
+            logger.debug(f"{families.ped_df.head()}")
 
             loaders = []
             for file_conf in study_config.genotype_storage.files.variants:
                 start = time.time()
                 variants_filename = file_conf.path
                 variants_params = file_conf.params.to_dict()
+                logger.debug(
+                    f"variant params: {variants_filename}; {variants_params}")
+
                 annotation_filename = variants_filename
                 if file_conf.format == "vcf":
                     variants_filenames = [
@@ -145,15 +152,15 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             variant_loaders[0].get_attribute("source_type")
             if any(
                 [
-                    l.get_attribute("source_type") == "denovo"
-                    for l in variant_loaders
+                    loader.get_attribute("source_type") == "denovo"
+                    for loader in variant_loaders
                 ]
             ):
                 config_dict["has_denovo"] = True
             if any(
                 [
-                    l.get_attribute("source_type") == "cnv"
-                    for l in variant_loaders
+                    loader.get_attribute("source_type") == "cnv"
+                    for loader in variant_loaders
                 ]
             ):
                 config_dict["has_denovo"] = True
@@ -173,6 +180,12 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         )
 
         params = families_loader.build_arguments_dict()
+        for key, value in params.items():
+            if isinstance(value, bool):
+                params[key] = "true" if value else "false"
+            if isinstance(value, str) and '\t' in value:
+                value = value.replace("\t", "\\t")
+                params[key] = value
 
         config = {"path": destination_filename, "params": params}
 
@@ -201,13 +214,15 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             for key, value in params.items():
                 if isinstance(value, bool):
                     params[key] = "true" if value else "false"
-
+                if isinstance(value, str) and '\t' in value:
+                    value = value.replace("\t", "\\t")
+                    params[key] = value
             config = {
                 "path": " ".join(destination_filenames),
                 "params": params,
                 "format": source_type,
             }
-
+            logger.debug(f"config prepared: {config}")
             result_config.append(config)
 
             os.makedirs(destination_dirname, exist_ok=True)
@@ -221,9 +236,11 @@ class FilesystemGenotypeStorage(GenotypeStorage):
 
             for filename in variants_loader.filenames:
                 source_filenames = glob.glob(f"{filename}*")
-                print("source filenames:", source_filenames)
+                logger.debug(f"source filenames: {source_filenames}")
                 for fn in source_filenames:
-                    print("copying:", fn, construct_destination_filename(fn))
+                    logger.debug(
+                        f"copying: {fn} -> "
+                        f"{construct_destination_filename(fn)}")
                     shutil.copyfile(fn, construct_destination_filename(fn))
 
         return result_config

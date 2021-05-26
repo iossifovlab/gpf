@@ -21,6 +21,8 @@ from dae.backends.raw.loader import AnnotationPipelineDecorator
 
 from dae.pedigrees.loader import FamiliesLoader
 
+logger = logging.getLogger("simple_study_import")
+
 
 def cli_arguments(dae_config, argv=sys.argv[1:]):
     default_genotype_storage_id = dae_config.genotype_storage.default
@@ -179,7 +181,8 @@ def main(argv, gpf_instance=None):
     genotype_storage = genotype_storage_factory.get_genotype_storage(
         argv.genotype_storage
     )
-    print("genotype storage:", argv.genotype_storage, genotype_storage)
+    logger.debug(
+        f"genotype storage: {argv.genotype_storage}, {genotype_storage}")
     assert genotype_storage is not None, argv.genotype_storage
 
     annotation_pipeline = construct_import_annotation_pipeline(
@@ -196,11 +199,10 @@ def main(argv, gpf_instance=None):
     else:
         output = argv.output
 
-    print("storing results into: ", output, file=sys.stderr)
+    logger.info(f"storing results into: {output}")
     os.makedirs(output, exist_ok=True)
 
     assert output is not None
-    # assert argv.vcf_files is not None or argv.denovo_file is not None
 
     start = time.time()
     families_filename, families_params = FamiliesLoader.parse_cli_arguments(
@@ -209,7 +211,8 @@ def main(argv, gpf_instance=None):
     families_loader = FamiliesLoader(families_filename, **families_params)
     families = families_loader.load()
     elapsed = time.time() - start
-    print(f"Families loaded in in {elapsed:.2f} sec", file=sys.stderr)
+    logger.info(f"Families loaded in {elapsed:.2f} sec")
+    logger.debug(f"{families.ped_df.head()}")
 
     variant_loaders = []
     if argv.denovo_file is not None:

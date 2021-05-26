@@ -41,15 +41,15 @@ class VariantsDb(object):
                 f"{overlap}")
             raise ValueError(
                 f"overlapping configurations for studies and groups: "
-                        f"{overlap}"
-                )
+                f"{overlap}")
+
         self._load_all_genotype_studies(genotype_study_configs)
         self._load_all_genotype_groups(genotype_group_configs)
 
     def _load_study_configs(self):
         default_config_filename = None
         if self.dae_config.default_study_config and \
-            self.dae_config.default_study_config.conf_file:
+                self.dae_config.default_study_config.conf_file:
             default_config_filename = \
                 self.dae_config.default_study_config.conf_file
 
@@ -58,7 +58,7 @@ class VariantsDb(object):
             study_config_schema,
             default_config_filename=default_config_filename,
         )
-        
+
         genotype_study_configs = {}
         for study_config in study_configs:
             assert study_config.id is not None, study_config
@@ -71,7 +71,7 @@ class VariantsDb(object):
     def _load_group_configs(self):
         default_config_filename = None
         if self.dae_config.default_study_config and \
-            self.dae_config.default_study_config.conf_file:
+                self.dae_config.default_study_config.conf_file:
             default_config_filename = \
                 self.dae_config.default_study_config.conf_file
 
