@@ -5,7 +5,7 @@ Created on Jul 25, 2017
 """
 import os
 from dae.pheno.prepare.ped_prepare import PreparePersons, PrepareVariables
-from dae.pheno.pheno_db import PhenotypeDataStudy
+from dae.pheno.pheno_db import PhenotypeStudy
 from dae.pedigrees.loader import FamiliesLoader
 import pytest
 
@@ -46,7 +46,7 @@ def test_ped_prepare_variable(
     ped_df = prep.build_pedigree(fake_ped_file)
     assert ped_df is not None
 
-    instruments = instrument_files[instrument_sel[0] : instrument_sel[1] + 1]
+    instruments = instrument_files[instrument_sel[0]: instrument_sel[1] + 1]
 
     df = prep.load_instrument("i1", instruments)
     df = prep.build_instrument("i1", df)
@@ -86,7 +86,7 @@ def test_ped_prepare_variable_with_descriptions(
     assert df is not None
     assert len(df) == 195
 
-    temp_db = PhenotypeDataStudy(temp_dbfile)
+    temp_db = PhenotypeStudy("temp_db", temp_dbfile)
     measures = temp_db.get_measures()
     assert measures["i1.m1"].description == "Measure number one"
     assert measures["i1.m2"].description == "Measure number two"

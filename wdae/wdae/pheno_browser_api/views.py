@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework.response import Response
 from rest_framework import status
 from django.http.response import StreamingHttpResponse
@@ -9,10 +11,14 @@ from query_base.query_base import QueryBaseView
 from utils.streaming_response_util import iterator_to_json
 
 
+logger = logging.getLogger(__name__)
+
+
 class PhenoBrowserBaseView(QueryBaseView):
     def __init__(self):
         super(PhenoBrowserBaseView, self).__init__()
         self.pheno_config = self.gpf_instance.get_phenotype_db_config()
+        print(self.pheno_config)
 
     def get_browser_dbfile(self, dataset):
         browser_dbfile = self.gpf_instance.get_pheno_dbfile(dataset)
@@ -30,12 +36,17 @@ class PhenoConfigView(PhenoBrowserBaseView):
         super(PhenoConfigView, self).__init__()
 
     def get(self, request):
+        logger.debug(f"pheno_config: {self.pheno_config}")
+
         if "db_name" not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        logger.debug(f"self.pheno_config: {self.pheno_config}")
+
         if not self.pheno_config:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         dbname = request.query_params["db_name"]
+        logger.debug(f"dbname: {dbname}")
 
         return Response(self.pheno_config[dbname])
 

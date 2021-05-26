@@ -119,8 +119,8 @@ def default_config():
     config = {
         "report_only": False,
         "parallel": 4,
-        "family": {"composite_key": False,},
-        "instruments": {"tab_separated": False, "dir": ".",},
+        "family": {"composite_key": False},
+        "instruments": {"tab_separated": False, "dir": "."},
         "person": {
             "role": {
                 "type": "column",
@@ -135,9 +135,9 @@ def default_config():
             "min_individuals": 1,
             "non_numeric_cutoff": 0.06,
             "value_max_len": 32,
-            "continuous": {"min_rank": 10,},
+            "continuous": {"min_rank": 10},
             "ordinal": {"min_rank": 1},
-            "categorical": {"min_rank": 1, "max_rank": 15,},
+            "categorical": {"min_rank": 1, "max_rank": 15},
         },
     }
 

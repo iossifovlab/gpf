@@ -38,7 +38,6 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.helpers import study_id_from_path
 
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
-from dae.gene.gene_sets_db import GeneSet
 from dae.gene.denovo_gene_set_collection_factory import \
     DenovoGeneSetCollectionFactory
 from dae.autism_gene_profile.statistic import AGPStatistic

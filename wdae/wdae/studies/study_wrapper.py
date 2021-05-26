@@ -434,10 +434,14 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
         super().__init__(remote_genotype_data)
 
-        self.phenotype_data = RemotePhenotypeData(
-            self._remote_study_id,
-            self.rest_client
-        )
+        self.phenotype_data = None
+        pheno_id = self.config.get("pheotype_data")
+        if pheno_id:
+            self.phenotype_data = RemotePhenotypeData(
+                self.rest_client.prefix_remote_identifier(pheno_id),
+                self._remote_study_id,
+                self.rest_client
+            )
 
         self.is_remote = True
 

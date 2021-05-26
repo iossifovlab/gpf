@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import copy
 import logging
 
-from typing import Dict, Set
+from typing import Dict, Iterator, Optional, Set, List
 from enum import Enum, auto
 from collections import defaultdict
 from collections.abc import Mapping
@@ -420,6 +422,10 @@ class Family(object):
                 merged_persons[person_id] = r_person
             elif r_person.sex == Sex.unspecified:
                 merged_persons[person_id] = l_person
+            elif l_person.status == Status.unspecified:
+                merged_persons[person_id] = r_person
+            elif r_person.status == Status.unspecified:
+                merged_persons[person_id] = l_person
             elif l_person.role == Role.unknown:
                 merged_persons[person_id] = r_person
             elif r_person.role == Role.unknown:
@@ -428,15 +434,19 @@ class Family(object):
             match = (l_person.sex == r_person.sex or
                      l_person.sex == Sex.unspecified or
                      r_person.sex == Sex.unspecified) and \
+                    (l_person.status == r_person.status or
+                     l_person.status == Status.unspecified or
+                     r_person.status == Status.unspecified) and \
                     (l_person.role == r_person.role or
                      l_person.role == Role.unknown or
                      r_person.role == Role.unknown) and \
                     (l_person.family_id == r_person.family_id)
             if not match:
-                message = f"Mismatched attributes for person {person_id}; " \
-                    f"{l_person.sex} == {r_person.sex}, " \
-                    f"{l_person.role} == {r_person.role}, " \
-                    f"{l_person.family_id} == {r_person.family_id}"
+                message = f"mismatched attributes for person {person_id}; " \
+                    f"sex[{l_person.sex} == {r_person.sex}], " \
+                    f"status[{l_person.status} == {r_person.status}], " \
+                    f"role[{l_person.role} == {r_person.role}], " \
+                    f"family[{l_person.family_id} == {r_person.family_id}]"
 
                 logger.warning(message)
                 if forced:
@@ -537,9 +547,10 @@ class FamiliesData(Mapping):
         return self._families_by_type
 
     @staticmethod
-    def from_family_persons(family_persons):
+    def from_family_persons(
+            family_persons: Dict[str, List[Person]]) -> FamiliesData:
         families_data = FamiliesData()
-        for family_id, persons in family_persons:
+        for family_id, persons in family_persons.items():
             assert all([isinstance(p, Person) for p in persons]), persons
 
             family = Family.from_persons(persons)
@@ -549,24 +560,19 @@ class FamiliesData(Mapping):
         return families_data
 
     @staticmethod
-    def from_pedigree_df(ped_df):
+    def from_pedigree_df(ped_df: pd.DataFrame) -> FamiliesData:
         persons = defaultdict(list)
         for rec in ped_df.to_dict(orient="records"):
             person = Person(**rec)
             persons[person.family_id].append(person)
 
-        fams = FamiliesData.from_family_persons(
-            [
-                (family_id, family_persons)
-                for family_id, family_persons in persons.items()
-            ]
-        )
+        fams = FamiliesData.from_family_persons(persons)
         return fams
 
     @staticmethod
-    def from_families(families):
+    def from_families(families: Dict[str, Family]) -> FamiliesData:
         return FamiliesData.from_family_persons(
-            [(fam.family_id, fam.full_members) for fam in families.values()]
+            {fam.family_id: fam.full_members for fam in families.values()}
         )
 
     def pedigree_samples(self):
@@ -577,7 +583,7 @@ class FamiliesData(Mapping):
         return result
 
     @property
-    def ped_df(self):
+    def ped_df(self) -> pd.DataFrame:
         if self._ped_df is None:
             # build ped_df
             column_names = set()
@@ -608,22 +614,22 @@ class FamiliesData(Mapping):
 
         return self._ped_df
 
-    def copy(self):
+    def copy(self) -> FamiliesData:
         return FamiliesData.from_pedigree_df(self.ped_df)
 
-    def __getitem__(self, family_id):
+    def __getitem__(self, family_id) -> Family:
         return self._families[family_id]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._families)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Family]:
         return iter(self._families)
 
-    def __contains__(self, family_id):
+    def __contains__(self, family_id) -> bool:
         return family_id in self._families
 
-    def __delitem__(self, family_id):
+    def __delitem__(self, family_id) -> None:
         del self._families[family_id]
 
     def keys(self):
@@ -635,7 +641,7 @@ class FamiliesData(Mapping):
     def items(self):
         return self._families.items()
 
-    def get(self, family_id, default=None):
+    def get(self, family_id, default=None) -> Optional[Family]:
         return self._families.get(family_id, default)
 
     def families_query_by_person_ids(self, person_ids):
@@ -697,3 +703,68 @@ class FamiliesData(Mapping):
         for person_id in person_ids:
             family_ids.add(self.persons[person_id].family_id)
         return family_ids
+
+    @staticmethod
+    def combine(first: FamiliesData, second: FamiliesData, forced=True):
+
+        same_families = set(first.keys()) & \
+            set(second.keys())
+        combined_dict = {}
+        combined_dict.update(first)
+        combined_dict.update(second)
+        mismatched_families = []
+        for sf in same_families:
+            try:
+                combined_dict[sf] = Family.merge(
+                    first[sf], second[sf], forced=forced)
+            except AssertionError as ex:
+                import traceback
+                traceback.print_exc()
+                logger.error(f"mismatched families: {first[sf]}, {second[sf]}")
+                logger.exception(ex)
+
+                mismatched_families.append(sf)
+
+        if len(mismatched_families) > 0:
+            logger.warning(f"mismatched families: {mismatched_families}")
+            if not forced:
+                assert len(mismatched_families) == 0, mismatched_families
+            else:
+                logger.warning("second family overwrites family definition")
+
+        return FamiliesData.from_families(combined_dict)
+
+    @staticmethod
+    def combine_studies(studies, forced=True) -> FamiliesData:
+        assert len(studies) > 0, studies
+
+        logger.info(
+            f"building combined families from studies: "
+            f"{[st.id for st in studies]}")
+
+        if len(studies) == 1:
+            return FamiliesData.copy(studies[0].families)
+
+        logger.info(
+            f"combining families from study {studies[0].id} "
+            f"and from study {studies[1].id}")
+        result = FamiliesData.combine(
+            studies[0].families,
+            studies[1].families)
+
+        if len(studies) > 2:
+            for si in range(2, len(studies)):
+                logger.debug(
+                    f"processing study ({si}): "
+                    f"{studies[si].id}")
+                logger.info(
+                    f"combining families from studies ({si}) "
+                    f"{[st.study_id for st in studies[:si]]} "
+                    f"with families from study "
+                    f"{studies[si].id}")
+                result = FamiliesData.combine(
+                    result,
+                    studies[si].families
+                )
+
+        return result

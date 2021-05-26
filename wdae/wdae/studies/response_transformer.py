@@ -300,7 +300,8 @@ class ResponseTransformer:
                             return col_format % val
                         except Exception:
                             logging.warning(
-                                f'error formatting variant: {v} ({val})',
+                                f"error formatting variant: {v} "
+                                f"({col_format}) ({val})",
                                 exc_info=True)
                             return val
 

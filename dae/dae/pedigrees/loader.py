@@ -506,7 +506,7 @@ class FamiliesLoader(CLILoader):
 
             result[fam_id] = [Person(**member) for member in members]
 
-        return FamiliesData.from_family_persons(result.items())
+        return FamiliesData.from_family_persons(result)
 
     @staticmethod
     def save_pedigree(families, filename):

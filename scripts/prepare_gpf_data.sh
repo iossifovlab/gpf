@@ -54,6 +54,6 @@ then
         -e WORKSPACE="/" \
         -e WD="/" \
         -e DAE_DB_DIR="/data" \
-        ${IMAGE_GPF_DEV}  -c "/opt/conda/bin/conda run --no-capture-output -n gpf /scripts/internal_prepare_gpf_data.sh"
+        ${IMAGE_GPF_DEV} -c "/opt/conda/bin/conda run --no-capture-output -n gpf /scripts/internal_prepare_gpf_data.sh"
 
 fi

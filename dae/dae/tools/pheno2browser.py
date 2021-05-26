@@ -56,7 +56,7 @@ def calc_dbfile_hashsum(dbfilename):
 def build_pheno_browser(
     dbfile, pheno_name, output_dir, pheno_regressions=None
 ):
-    phenodb = pheno_db.PhenotypeDataStudy(dbfile=dbfile)
+    phenodb = pheno_db.PhenotypeStudy(pheno_name, dbfile=dbfile)
 
     prep = PreparePhenoBrowserBase(
         pheno_name, phenodb, output_dir, pheno_regressions

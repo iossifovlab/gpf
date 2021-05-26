@@ -1,7 +1,7 @@
 import os
 import pytest
 from dae.pedigrees.loader import FamiliesLoader
-from dae.studies.study import GenotypeDataGroup
+from dae.pedigrees.family import FamiliesData
 
 
 def relative_to_this_test_folder(path):
@@ -29,7 +29,7 @@ def test_combine_families():
     families_B = FamiliesLoader.load_pedigree_file(
         relative_to_this_test_folder("fixtures/pedigree_B.ped")
     )
-    new_families = GenotypeDataGroup._combine_families(
+    new_families = FamiliesData.combine(
         families_A,
         families_B,
         forced=False
@@ -53,7 +53,7 @@ def test_combine_families_role_mismatch():
         relative_to_this_test_folder("fixtures/pedigree_C.ped")
     )
     with pytest.raises(AssertionError):
-        GenotypeDataGroup._combine_families(
+        FamiliesData.combine(
             families_A,
             families_C,
             forced=False
@@ -68,7 +68,7 @@ def test_combine_families_sex_mismatch():
         relative_to_this_test_folder("fixtures/pedigree_D.ped")
     )
     with pytest.raises(AssertionError):
-        GenotypeDataGroup._combine_families(
+        FamiliesData.combine(
             families_A,
             families_D,
             forced=False
@@ -83,7 +83,7 @@ def test_combine_families_sex_unspecified_mismatch():
         relative_to_this_test_folder("fixtures/pedigree_E.ped")
     )
 
-    new_families = GenotypeDataGroup._combine_families(
+    new_families = FamiliesData.combine(
             families_A,
             families_E,
             forced=False,

@@ -2,12 +2,8 @@ pipeline {
     agent {
         label 'pooh || piglet || dory'
     }
-    // options {
-    //     disableConcurrentBuilds()
-    // }
     triggers {
         pollSCM('* * * * *')
-        cron('H 2 * * *')
     }
     environment {
         WD="${env.WORKSPACE}"

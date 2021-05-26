@@ -1,18 +1,18 @@
 import math
 import logging
-
+from typing import Dict, Iterable, Any, List
 from abc import ABC, abstractmethod
 
 import pandas as pd
 from sqlalchemy.sql import select, text
 from sqlalchemy import not_, desc
 
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 
 import csv
 from io import StringIO
 
-from dae.pedigrees.family import Person, Family
+from dae.pedigrees.family import Person, FamiliesData
 from dae.pheno.db import DbManager
 from dae.pheno.common import MeasureType
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -23,7 +23,7 @@ from dae.variants.attributes import Sex, Status, Role
 from typing import Optional, Sequence, Union
 
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class Instrument(object):
@@ -37,9 +37,9 @@ class Instrument(object):
     * `measures` -- dictionary of all measures in the instrument
     """
 
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.instrument_name = name
-        self.measures = OrderedDict()
+        self.measures: Dict[str, Measure] = {}
 
     def __repr__(self):
         return "Instrument({}, {})".format(
@@ -71,10 +71,10 @@ class Measure(object):
 
     """
 
-    def __init__(self, name):
-        self.name = name
-        self.measure_name = name
-        self.measure_type = MeasureType.other
+    def __init__(self, name: str):
+        self.name: str = name
+        self.measure_name: str = name
+        self.measure_type: MeasureType = MeasureType.other
         self.values_domain: Optional[str] = None
 
     def __repr__(self):
@@ -164,65 +164,293 @@ class Measure(object):
 
 class PhenotypeData(ABC):
 
-    @abstractmethod
-    def get_persons_df(self, roles, person_ids, family_ids):
-        pass
+    def __init__(self, pheno_id: str):
+        self._pheno_id: str = pheno_id
+        self._measures: Dict[str, Measure] = {}
+        self._instruments: Dict[str, Instrument] = {}
+
+    @property
+    def pheno_id(self) -> str:
+        return self._pheno_id
+
+    @property
+    def id(self) -> str:
+        return self.pheno_id
+
+    @property
+    def measures(self) -> Dict[str, Measure]:
+        return self._measures
+
+    @property
+    def instruments(self) -> Dict[str, Instrument]:
+        return self._instruments
 
     @abstractmethod
-    def get_persons_values_df(
-            self, measure_ids, person_ids, family_ids, roles):
+    def get_persons_df(
+            self, roles: Optional[Iterable[Role]] = None,
+            person_ids: Optional[Iterable[str]] = None,
+            family_ids: Optional[Iterable[str]] = None) -> pd.DataFrame:
         pass
 
-    @abstractmethod
-    def get_persons(self, roles, person_ids, family_ids):
-        pass
+    def get_persons(
+            self,
+            roles: Optional[Iterable[Role]] = None,
+            person_ids: Optional[Iterable[str]] = None,
+            family_ids: Optional[Iterable[str]] = None) -> Dict[str, Person]:
+
+        """Returns individuals data from phenotype database.
+
+        `roles` -- specifies persons of which role should be returned. If not
+        specified returns all individuals from phenotype database.
+
+        `person_ids` -- list of person IDs to filter result. Only data for
+        individuals with person_id in the list `person_ids` are returned.
+
+        `family_ids` -- list of family IDs to filter result. Only data for
+        individuals that are members of any of the specified `family_ids`
+        are returned.
+
+        Returns a dictionary of (`personId`, `Person()`) where
+        the `Person` object is the same object used into `VariantDB` families.
+        """
+        persons = {}
+        df = self.get_persons_df(
+            roles=roles, person_ids=person_ids, family_ids=family_ids)
+
+        for row in df.to_dict("records"):
+            person_id = row["person_id"]
+
+            p = Person(**row)
+            # p.person_id = person_id
+            # p.family_id = family_id
+            assert row["role"] in Role, "{} not a valid role".format(
+                row["role"]
+            )
+            assert row["sex"] in Sex, "{} not a valid sex".format(row["sex"])
+            assert row["status"] in Status, "{} not a valid status".format(
+                row["status"]
+            )
+
+            persons[person_id] = p
+        return persons
+
+    def has_measure(self, measure_id: str) -> bool:
+        """
+        Checks is `measure_id` is value ID for measure in our phenotype DB.
+        """
+        return measure_id in self._measures
+
+    def get_measure(self, measure_id: str) -> Measure:
+        """
+        Returns a measure by measure_id.
+        """
+        assert measure_id in self._measures, measure_id
+        return self._measures[measure_id]
+
+    def get_measures(
+            self,
+            instrument_name: str = None,
+            measure_type: str = None) -> Dict[str, Measure]:
+        """
+        Returns a dictionary of measures objects.
+
+        `instrument_name` -- an instrument name which measures should be
+        returned. If not specified all type of measures are returned.
+
+        `measure_type` -- a type ('continuous', 'ordinal' or 'categorical')
+        of measures that should be returned. If not specified all
+        type of measures are returned.
+
+        """
+        result = {}
+
+        instruments = self.instruments
+        if instrument_name is not None:
+            assert instrument_name in self.instruments
+            instruments = {
+                instrument_name: self.instruments[instrument_name]
+            }
+
+        if measure_type is not None:
+            measure_type = MeasureType.from_str(measure_type)
+
+        for instrument_name, instrument in instruments.items():
+            for measure in instrument.measures.values():
+                print(measure, measure.measure_type)
+                if measure_type is not None and \
+                        measure.measure_type != measure_type:
+                    continue
+                result[measure.measure_id] = measure
+
+        return result
 
     @abstractmethod
-    def has_measure(self, measure_id):
+    def get_measure_values_df(
+            self,
+            measure_id: str,
+            person_ids: Optional[Iterable[str]] = None,
+            family_ids: Optional[Iterable[str]] = None,
+            roles: Optional[Iterable[Role]] = None,
+            default_filter: str = "apply") -> pd.DataFrame:
         pass
 
-    @abstractmethod
-    def get_measure(self, measure_id):
-        pass
-
-    @abstractmethod
-    def get_measures(self, instrument, measure_type):
-        pass
-
-    @abstractmethod
-    def get_measure_values_df(self, measure_id, person_ids, family_ids, roles):
-        pass
-
-    @abstractmethod
     def get_measure_values(
-            self, measure_id, person_ids, family_ids, roles, default_filter):
-        pass
+            self,
+            measure_id: str,
+            person_ids: Optional[Iterable[str]] = None,
+            family_ids: Optional[Iterable[str]] = None,
+            roles: Optional[Iterable[Role]] = None,
+            default_filter: str = "apply") -> Dict[str, Any]:
+
+        """
+        Returns a dictionary with values for the specified `measure_id`.
+
+        `measure_id` -- a measure ID which values should be returned.
+
+        `person_ids` -- list of person IDs to filter result. Only data for
+        individuals with person_id in the list `person_ids` are returned.
+
+        `family_ids` -- list of family IDs to filter result. Only data for
+        individuals that are members of any of the specified `family_ids`
+        are returned.
+
+        `roles` -- list of roles of individuals to select measure value for.
+        If not specified value for individuals in all roles are returned.
+
+        `default_filter` -- one of ('`skip`', '`apply`', '`invert`'). When
+        the measure has a `default_filter` this argument specifies whether
+        the filter should be applied or skipped or inverted.
+
+        The returned dictionary contains values of the measure for
+        each individual. The person_id is used as key in the dictionary.
+        """
+
+        df = self.get_measure_values_df(
+            measure_id,
+            person_ids=person_ids,
+            family_ids=family_ids,
+            roles=roles,
+            default_filter=default_filter)
+
+        res = {}
+        for row in df.to_dict("records"):
+            res[row["person_id"]] = row[measure_id]
+        return res
 
     @abstractmethod
     def get_values_df(
-            self, measure_ids,
-            person_ids=None, family_ids=None, roles=None,
-            default_filter="apply"):
+            self,
+            measure_ids: Iterable[str],
+            person_ids: Optional[Iterable[str]] = None,
+            family_ids: Optional[Iterable[str]] = None,
+            roles: Optional[Iterable[Role]] = None,
+            default_filter: str = "apply") -> pd.DataFrame:
         pass
 
-    @abstractmethod
     def get_values(
-            self, measure_ids,
-            person_ids=None, family_ids=None, roles=None):
-        pass
+            self,
+            measure_ids: Iterable[str],
+            person_ids: Optional[Iterable[str]] = None,
+            family_ids: Optional[Iterable[str]] = None,
+            roles: Optional[Iterable[Role]] = None,
+            default_filter: str = "apply") -> Dict[str, Dict[str, Any]]:
+        """
+        Returns dictionary dictionaries with values for all `measure_ids`.
 
-    @abstractmethod
+        The returned dictionary uses `person_id` as key. The value for each key
+        is a dictionary of measurement values for each ID in `measure_ids`
+        keyed measure_id.
+
+        `measure_ids` -- list of measure IDs which values should be returned.
+
+        `person_ids` -- list of person IDs to filter result. Only data for
+        individuals with person_id in the list `person_ids` are returned.
+
+        `family_ids` -- list of family IDs to filter result. Only data for
+        individuals that are members of any of the specified `family_ids`
+        are returned.
+
+        `roles` -- list of roles of individuals to select measure value for.
+        If not specified value for individuals in all roles are returned.
+
+        """
+        df = self.get_values_df(measure_ids, person_ids, family_ids, roles)
+        res = {}
+        for row in df.to_dict("records"):
+            person_id = row["person_id"]
+            res[person_id] = row
+
+        return res
+
+    def get_persons_values_df(
+            self,
+            measure_ids: Iterable[str],
+            person_ids: Optional[Iterable[str]] = None,
+            family_ids: Optional[Iterable[str]] = None,
+            roles: Optional[Iterable[Role]] = None,
+            default_filter: str = "apply") -> pd.DataFrame:
+        """
+        Returns a data frame with values for all measures in `measure_ids`
+        joined with a data frame returned by `get_persons_df`.
+        """
+        persons_df = self.get_persons_df(
+            roles=roles, person_ids=person_ids, family_ids=family_ids)
+
+        value_df = self.get_values_df(
+            measure_ids,
+            person_ids=person_ids,
+            family_ids=family_ids,
+            roles=roles,
+            default_filter=default_filter)
+
+        df = persons_df.join(
+            value_df.set_index("person_id"),
+            on="person_id",
+            how="right",
+            rsuffix="_val")
+        df = df.set_index("person_id")
+        df = df.reset_index()
+
+        return df
+
+    def _get_instrument_measures(self, instrument_name: str) -> List[str]:
+        """
+        Returns measures for given instrument.
+        """
+        assert instrument_name in self.instruments
+        instrument = self.instruments[instrument_name]
+        measure_ids = [
+            m.measure_id for m in list(instrument.measures.values())
+        ]
+        return measure_ids
+
     def get_instrument_values_df(
-            self, instrument_df, person_ids, family_ids, roles):
-        pass
+            self, instrument_name,
+            person_ids=None,
+            family_ids=None,
+            role=None):
+        """
+        Returns a dataframe with values for all measures in given
+        instrument (see **get_values_df**).
+        """
+        measure_ids = self._get_instrument_measures(instrument_name)
+        res = self.get_values_df(measure_ids, person_ids, family_ids, role)
+        return res
 
-    @abstractmethod
     def get_instrument_values(
-            self, instrument_df, person_ids, family_ids, roles):
-        pass
+            self, instrument_name,
+            person_ids=None,
+            family_ids=None,
+            role=None):
+        """
+        Returns a dictionary with values for all measures in given
+        instrument (see :func:`get_values`).
+        """
+        measure_ids = self._get_instrument_measures(instrument_name)
+        return self.get_values(measure_ids, person_ids, family_ids, role)
 
 
-class PhenotypeDataStudy(PhenotypeData):
+class PhenotypeStudy(PhenotypeData):
     """
     Main class for accessing phenotype database in DAE.
 
@@ -240,12 +468,10 @@ class PhenotypeDataStudy(PhenotypeData):
     * `measures` -- dictionary of all measures
     """
 
-    def __init__(self, dbfile):
+    def __init__(self, pheno_id: str, dbfile: str):
+        super(PhenotypeStudy, self).__init__(pheno_id)
 
         self.families = None
-        self.persons = None
-        self.instruments = None
-        self.measures = {}
         self.db = DbManager(dbfile=dbfile)
         self.db.build()
         self._load()
@@ -310,28 +536,8 @@ class PhenotypeDataStudy(PhenotypeData):
         res_df = df[df_columns]
         return res_df
 
-    def get_measures(self, instrument=None, measure_type=None):
-        """
-        Returns a dictionary of measures objects.
-
-        `instrument` -- an instrument name which measures should be
-        returned. If not specified all type of measures are returned.
-
-        `measure_type` -- a type ('continuous', 'ordinal' or 'categorical')
-        of measures that should be returned. If not specified all
-        type of measures are returned.
-
-        """
-        df = self._get_measures_df(instrument, measure_type)
-
-        res = OrderedDict()
-        for row in df.to_dict("records"):
-            m = Measure._from_dict(row)
-            res[m.measure_id] = m
-        return res
-
     def _load_instruments(self):
-        instruments = OrderedDict()
+        instruments = {}
 
         df = self._get_measures_df()
         instrument_names = list(df.instrument_name.unique())
@@ -339,42 +545,33 @@ class PhenotypeDataStudy(PhenotypeData):
 
         for instrument_name in instrument_names:
             instrument = Instrument(instrument_name)
-            measures = OrderedDict()
+            measures = {}
             measures_df = df[df.instrument_name == instrument_name]
 
             for row in measures_df.to_dict("records"):
                 m = Measure._from_dict(row)
                 measures[m.measure_name] = m
-                self.measures[m.measure_id] = m
+                self._measures[m.measure_id] = m
             instrument.measures = measures
             instruments[instrument.instrument_name] = instrument
 
-        self.instruments = instruments
+        self._instruments = instruments
 
     def _load_families(self):
         families = defaultdict(list)
         persons = self.get_persons()
-
         for p in list(persons.values()):
             families[p.family_id].append(p)
-
-        self.persons = persons
-        self.families = {}
-
-        for family_id, members in list(families.items()):
-            f = Family(family_id)
-            f.memberInOrder = members
-            f.familyId = family_id
-            self.families[family_id] = f
+        self.families = FamiliesData.from_family_persons(families)
 
     def _load(self):
         """
         Loads basic families, instruments and measures data from
         the phenotype database.
         """
-        if self.families is None:
+        if not self.families:
             self._load_families()
-        if self.instruments is None:
+        if not self.instruments:
             self._load_instruments()
 
     def get_persons_df(self, roles=None, person_ids=None, family_ids=None):
@@ -416,51 +613,6 @@ class PhenotypeDataStudy(PhenotypeData):
         df = pd.read_sql(s, self.db.engine)
         # df.rename(columns={'sex': 'sex'}, inplace=True)
         return df[["person_id", "family_id", "role", "sex", "status"]]
-
-    def get_persons(self, roles=None, person_ids=None, family_ids=None):
-        """Returns individuals data from phenotype database.
-
-        `roles` -- specifies persons of which role should be returned. If not
-        specified returns all individuals from phenotype database.
-
-        `person_ids` -- list of person IDs to filter result. Only data for
-        individuals with person_id in the list `person_ids` are returned.
-
-        `family_ids` -- list of family IDs to filter result. Only data for
-        individuals that are members of any of the specified `family_ids`
-        are returned.
-
-        Returns a dictionary of (`personId`, `Person()`) where
-        the `Person` object is the same object used into `VariantDB` families.
-        """
-        persons = {}
-        df = self.get_persons_df(
-            roles=roles, person_ids=person_ids, family_ids=family_ids
-        )
-
-        for row in df.to_dict("records"):
-            person_id = row["person_id"]
-
-            p = Person(**row)
-            # p.person_id = person_id
-            # p.family_id = family_id
-            assert row["role"] in Role, "{} not a valid role".format(
-                row["role"]
-            )
-            assert row["sex"] in Sex, "{} not a valid sex".format(row["sex"])
-            assert row["status"] in Status, "{} not a valid status".format(
-                row["status"]
-            )
-
-            persons[person_id] = p
-        return persons
-
-    def get_measure(self, measure_id):
-        """
-        Returns a measure by measure_id.
-        """
-        assert measure_id in self.measures, measure_id
-        return self.measures[measure_id]
 
     def _build_default_filter_clause(self, m, default_filter):
         if default_filter == "skip" or m.default_filter is None:
@@ -649,45 +801,6 @@ class PhenotypeDataStudy(PhenotypeData):
         )
         return df[["person_id", measure_id]]
 
-    def get_measure_values(
-        self,
-        measure_id,
-        person_ids=None,
-        family_ids=None,
-        roles=None,
-        default_filter="apply",
-    ):
-        """
-        Returns a dictionary with values for the specified `measure_id`.
-
-        `measure_id` -- a measure ID which values should be returned.
-
-        `person_ids` -- list of person IDs to filter result. Only data for
-        individuals with person_id in the list `person_ids` are returned.
-
-        `family_ids` -- list of family IDs to filter result. Only data for
-        individuals that are members of any of the specified `family_ids`
-        are returned.
-
-        `roles` -- list of roles of individuals to select measure value for.
-        If not specified value for individuals in all roles are returned.
-
-        `default_filter` -- one of ('`skip`', '`apply`', '`invert`'). When
-        the measure has a `default_filter` this argument specifies whether
-        the filter should be applied or skipped or inverted.
-
-        The returned dictionary contains values of the measure for
-        each individual. The person_id is used as key in the dictionary.
-        """
-
-        df = self.get_measure_values_df(
-            measure_id, person_ids, family_ids, roles, default_filter
-        )
-        res = {}
-        for row in df.to_dict("records"):
-            res[row["person_id"]] = row[measure_id]
-        return res
-
     def get_values_df(
         self,
         measure_ids,
@@ -772,110 +885,137 @@ class PhenotypeDataStudy(PhenotypeData):
             measure_ids, person_ids, family_ids, roles, default_filter
         )
 
-    def _values_df_to_dict(self, df):
-        res = {}
-        for row in df.to_dict("records"):
-            person_id = row["person_id"]
-            res[person_id] = row
 
-        return res
+class PhenotypeGroup(PhenotypeData):
 
-    def get_values(
-        self, measure_ids, person_ids=None, family_ids=None, roles=None
-    ):
-        """
-        Returns dictionary dictionaries with values for all `measure_ids`.
+    def __init__(self, pheno_id: str, phenotype_data: Iterable[PhenotypeData]):
+        super(PhenotypeGroup, self).__init__(pheno_id)
+        self.phenotype_data = phenotype_data
+        self.families = FamiliesData.combine_studies(self.phenotype_data)
+        instruments, measures = self._merge_instruments(
+            [ph.instruments for ph in self.phenotype_data])
+        print(instruments)
+        self._instruments.update(instruments)
+        print(self._instruments)
 
-        The returned dictionary uses `person_id` as key. The value for each key
-        is a dictionary of measurement values for each ID in `measure_ids`
-        keyed measure_id.
+        self._measures.update(measures)
 
-        `measure_ids` -- list of measure IDs which values should be returned.
+    @staticmethod
+    def _merge_instruments(
+            phenos_instruments: Iterable[Dict[str, Instrument]]):
 
-        `person_ids` -- list of person IDs to filter result. Only data for
-        individuals with person_id in the list `person_ids` are returned.
+        group_instruments = {}
+        group_measures = {}
+        for pheno_instruments in phenos_instruments:
+            for instrument_name, instrument in pheno_instruments.items():
+                if instrument_name not in group_instruments:
+                    group_instruments[instrument_name] = instrument
+                    group_measures.update({
+                        f"{instrument_name}.{name}": measure
+                        for name, measure in instrument.measures.items()
+                    })
+                else:
+                    # try to merge instrument
+                    logger.info(
+                        f"trying to merge instrument {instrument_name}")
 
-        `family_ids` -- list of family IDs to filter result. Only data for
-        individuals that are members of any of the specified `family_ids`
-        are returned.
+                    group_instrument = group_instruments[instrument_name]
+                    assert group_instrument.instrument_name == instrument_name
 
-        `roles` -- list of roles of individuals to select measure value for.
-        If not specified value for individuals in all roles are returned.
+                    measure_ids = set(instrument.keys())
+                    group_measure_ids = set(group_instrument.measures.keys())
 
-        """
-        df = self.get_values_df(measure_ids, person_ids, family_ids, roles)
-        return self._values_df_to_dict(df)
+                    if measure_ids & group_measure_ids:
+                        msg = f"can't merge instruments because of measures " \
+                            f"{measure_ids & group_measure_ids}"
+                        logger.error(msg)
+                        raise ValueError(msg)
+                    group_instrument.measures.update(instrument.measures)
+                    group_measures.update({
+                        f"{instrument_name}.{name}": measure
+                        for name, measure in instrument.measures.items()
+                    })
 
-    def get_persons_values_df(
-        self, measure_ids, person_ids=None, family_ids=None, roles=None
-    ):
-        """
-        Returns a data frame with values for all measures in `measure_ids`
-        joined with a data frame returned by `get_persons_df`.
-        """
-        persons_df = self.get_persons_df(
-            roles=roles, person_ids=person_ids, family_ids=family_ids
-        )
+        return group_instruments, group_measures
 
-        value_df = self.get_values_df(
-            measure_ids,
-            person_ids=person_ids,
-            family_ids=family_ids,
-            roles=roles,
-        )
+    def get_persons_df(
+            self, roles: Optional[Iterable[Role]] = None,
+            person_ids: Optional[Iterable[str]] = None,
+            family_ids: Optional[Iterable[str]] = None) -> pd.DataFrame:
 
-        df = persons_df.join(
-            value_df.set_index("person_id"),
-            on="person_id",
-            how="right",
-            rsuffix="_val",
-        )
+        ped_df = self.families.ped_df[[
+            "person_id", "family_id", "role", "sex", "status"]]
 
-        return df
+        if roles is not None:
+            ped_df = ped_df[ped_df.role.isin(roles)]
+        if person_ids is not None:
+            ped_df = ped_df[ped_df.person_id.isin(person_ids)]
+        if family_ids is not None:
+            ped_df = ped_df[ped_df.family_id.isin(family_ids)]
+        return ped_df
 
-    def _get_instrument_measures(self, instrument_name):
-        """
-        Returns measures for given instrument.
-        """
-        assert instrument_name in self.instruments
-        instrument = self.instruments[instrument_name]
-        measure_ids = [
-            m.measure_id for m in list(instrument.measures.values())
-        ]
-        return measure_ids
+    def get_measure_values_df(
+            self,
+            measure_id: str,
+            person_ids: Optional[Iterable[str]] = None,
+            family_ids: Optional[Iterable[str]] = None,
+            roles: Optional[Iterable[Role]] = None,
+            default_filter: str = "apply") -> pd.DataFrame:
 
-    def get_instrument_values_df(
-        self, instrument_id, person_ids=None, family_ids=None, role=None
-    ):
-        """
-        Returns a dataframe with values for all measures in given
-        instrument (see **get_values_df**).
-        """
-        measure_ids = self._get_instrument_measures(instrument_id)
-        res = self.get_values_df(measure_ids, person_ids, family_ids, role)
-        return res
+        assert self.has_measure(measure_id), measure_id
+        for pheno in self.phenotype_data:
+            if pheno.has_measure(measure_id):
+                return pheno.get_measure_values_df(
+                    measure_id,
+                    person_ids=person_ids,
+                    family_ids=family_ids,
+                    roles=roles,
+                    default_filter=default_filter
+                )
 
-    def get_instrument_values(
-        self, instrument_id, person_ids=None, family_ids=None, role=None
-    ):
-        """
-        Returns a dictionary with values for all measures in given
-        instrument (see :func:`get_values`).
-        """
-        measure_ids = self._get_instrument_measures(instrument_id)
-        df = self.get_values_df(measure_ids, person_ids, family_ids, role)
-        return self._values_df_to_dict(df)
+        # We should never get here
+        msg = f"measure {measure_id} not found in phenotype group {self.id}"
+        logger.error(msg)
+        raise ValueError(msg)
 
-    def has_measure(self, measure_id):
-        """
-        Checks is `measure_id` is value ID for measure in our phenotype DB.
-        """
-        return measure_id in self.measures
+    def get_values_df(
+            self,
+            measure_ids: Iterable[str],
+            person_ids: Optional[Iterable[str]] = None,
+            family_ids: Optional[Iterable[str]] = None,
+            roles: Optional[Iterable[Role]] = None,
+            default_filter: str = "apply") -> pd.DataFrame:
 
+        assert all([self.has_measure(mid) for mid in measure_ids]), measure_ids
 
-class PhenotypeDataGroup(PhenotypeData):
-    # TODO Implement
-    pass
+        dfs = []
+        for pheno in self.phenotype_data:
+            pheno_measure_ids = []
+            for mid in measure_ids:
+                if pheno.has_measure(mid):
+                    pheno_measure_ids.append(mid)
+            if pheno_measure_ids:
+                df = pheno.get_values_df(
+                    pheno_measure_ids,
+                    person_ids=person_ids,
+                    family_ids=family_ids,
+                    roles=roles,
+                    default_filter=default_filter)
+                dfs.append(df)
+        assert len(dfs) > 0
+        if len(dfs) == 1:
+            return dfs[0]
+
+        res_df = dfs[0]
+        for i, df in enumerate(dfs[1:]):
+            res_df = res_df.join(
+                df.set_index("person_id"),
+                on="person_id",
+                how="outer",
+                rsuffix="_val_{}".format(i),
+            )
+
+        return res_df
 
 
 class PhenoDb(object):
@@ -895,29 +1035,30 @@ class PhenoDb(object):
 
         self.pheno_cache = {}
 
-    def get_dbfile(self, pheno_data_id):
-        return self.config[pheno_data_id].dbfile
+    def get_dbfile(self, pheno_id):
+        return self.config[pheno_id].dbfile
 
-    def get_dbconfig(self, pheno_data_id):
-        return self.config[pheno_data_id]
+    def get_dbconfig(self, pheno_id):
+        return self.config[pheno_id]
 
-    def has_phenotype_data(self, pheno_data_id):
-        return pheno_data_id in self.config
+    def has_phenotype_data(self, pheno_id):
+        return pheno_id in self.config
 
     def get_phenotype_data_ids(self):
         return list(self.config.keys())
 
-    def get_phenotype_data(self, pheno_data_id):
-        if not self.has_phenotype_data(pheno_data_id):
+    def get_phenotype_data(self, pheno_id):
+        if not self.has_phenotype_data(pheno_id):
             return None
-        if pheno_data_id in self.pheno_cache:
-            phenotype_data = self.pheno_cache[pheno_data_id]
+        if pheno_id in self.pheno_cache:
+            phenotype_data = self.pheno_cache[pheno_id]
         else:
-            LOGGER.info("loading pheno db <{}>".format(pheno_data_id))
-            phenotype_data = PhenotypeDataStudy(
-                dbfile=self.get_dbfile(pheno_data_id)
+            logger.info(f"loading pheno db <{pheno_id}>")
+            phenotype_data = PhenotypeStudy(
+                pheno_id,
+                dbfile=self.get_dbfile(pheno_id)
             )
-            self.pheno_cache[pheno_data_id] = phenotype_data
+            self.pheno_cache[pheno_id] = phenotype_data
         return phenotype_data
 
     def get_all_phenotype_data(self):
@@ -926,5 +1067,5 @@ class PhenoDb(object):
             for pheno_id in self.get_phenotype_data_ids()
         ]
 
-    def get_phenotype_data_config(self, pheno_data_id):
-        return self.config.get(pheno_data_id)
+    def get_phenotype_data_config(self, pheno_id):
+        return self.config.get(pheno_id)

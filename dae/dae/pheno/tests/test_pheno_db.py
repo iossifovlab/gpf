@@ -7,7 +7,7 @@ import pytest
 import pandas as pd
 import numpy as np
 from dae.pheno.common import MeasureType
-from dae.pheno.pheno_db import Measure, PhenotypeDataStudy
+from dae.pheno.pheno_db import Measure, PhenotypeStudy
 
 
 def df_check(df, expected_count, expected_cols):
@@ -51,8 +51,8 @@ def test_get_measure_type(fake_phenotype_data):
 @pytest.mark.parametrize(
     "get,check",
     [
-        (PhenotypeDataStudy.get_values, dict_check),
-        (PhenotypeDataStudy.get_values_df, df_check),
+        (PhenotypeStudy.get_values, dict_check),
+        (PhenotypeStudy.get_values_df, df_check),
     ],
 )
 def test_get_values(fake_phenotype_data, query_cols, get, check):
@@ -94,8 +94,8 @@ def test_get_values_streaming_csv(fake_phenotype_data, query_cols):
 @pytest.mark.parametrize(
     "get,check",
     [
-        (PhenotypeDataStudy.get_instrument_values, dict_check),
-        (PhenotypeDataStudy.get_instrument_values_df, df_check),
+        (PhenotypeStudy.get_instrument_values, dict_check),
+        (PhenotypeStudy.get_instrument_values_df, df_check),
     ],
 )
 def test_get_instrument_values(fake_phenotype_data, get, check):
@@ -137,8 +137,8 @@ def test_has_measure(fake_phenotype_data):
 @pytest.mark.parametrize(
     "get,check",
     [
-        (PhenotypeDataStudy.get_measures, dict_check_measure),
-        (PhenotypeDataStudy._get_measures_df, df_check),
+        (PhenotypeStudy.get_measures, dict_check_measure),
+        (PhenotypeStudy._get_measures_df, df_check),
     ],
 )
 def test_get_measures(fake_phenotype_data, get, check):
