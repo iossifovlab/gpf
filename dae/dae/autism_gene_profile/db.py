@@ -396,8 +396,9 @@ class AutismGeneProfileDB:
         for dataset_id, dataset in self.configuration["datasets"].items():
             config_section = self.configuration["datasets"][dataset_id]
             for person_set in config_section["person_sets"]:
+                set_name = person_set["set_name"]
                 for effect_type in config_section["effects"]:
-                    column_name = f"{dataset_id}_{person_set}_{effect_type}"
+                    column_name = f"{dataset_id}_{set_name}_{effect_type}"
                     columns[column_name] = Column(column_name, Float())
         return columns
 
@@ -511,8 +512,9 @@ class AutismGeneProfileDB:
             config_section = self.configuration["datasets"][dataset_id]
             db_study_id = study_ids[dataset_id]
             for person_set in config_section["person_sets"]:
+                set_name = person_set["set_name"]
                 for effect_type in config_section["effects"]:
-                    count_alias = f"{dataset_id}_{person_set}_{effect_type}"
+                    count_alias = f"{dataset_id}_{set_name}_{effect_type}"
                     rate_alias = f"{count_alias}_rate"
                     table_alias = aliased(
                         self.variant_counts,
@@ -527,14 +529,14 @@ class AutismGeneProfileDB:
                         and_(
                             self.gene_symbols.c.id == table_alias.c.symbol_id,
                             table_alias.c.study_id == db_study_id,
-                            table_alias.c.people_group == person_set,
+                            table_alias.c.people_group == set_name,
                             table_alias.c.effect_type == effect_type
                         )
                     )
-                    select_cols.append(
+                    select_cols.extend([
                         table_alias.c.count.label(count_alias),
                         table_alias.c.rate.label(rate_alias)
-                    )
+                    ])
 
         view_query = select(select_cols).select_from(current_join)
 
