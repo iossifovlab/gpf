@@ -145,6 +145,8 @@ def test_import_comp_vcf_into_genotype_storage(
         "--skip-reports",
         "--vcf-files",
         vcf_filename,
+        "--vcf-denovo-mode", "possible_denovo",
+        "--vcf-omission-mode", "possible_omission",
         "--genotype-storage",
         genotype_storage_id,
         "-o",
@@ -239,24 +241,17 @@ def test_import_comp_all_into_genotype_storage(
 
     argv = [
         pedigree_filename,
-        "--id",
-        study_id,
-        "--vcf-files",
-        vcf_filename,
-        "--denovo-file",
-        denovo_filename,
-        "--denovo-location",
-        "location",
-        "--denovo-variant",
-        "variant",
-        "--denovo-family-id",
-        "familyId",
-        "--denovo-best-state",
-        "bestState",
-        "--genotype-storage",
-        genotype_storage_id,
-        "-o",
-        temp_dirname,
+        "--id", study_id,
+        "--vcf-denovo-mode", "possible_denovo",
+        "--vcf-omission-mode", "possible_omission",
+        "--vcf-files", vcf_filename,
+        "--denovo-file", denovo_filename,
+        "--denovo-location", "location",
+        "--denovo-variant", "variant",
+        "--denovo-family-id", "familyId",
+        "--denovo-best-state", "bestState",
+        "--genotype-storage", genotype_storage_id,
+        "-o", temp_dirname,
     ]
 
     main(argv, gpf_instance_2013)
@@ -361,6 +356,8 @@ def test_add_chrom_prefix_simple(
         "--id",
         study_id,
         "--skip-reports",
+        "--vcf-denovo-mode", "possible_denovo",
+        "--vcf-omission-mode", "possible_omission",
         "--vcf-files",
         vcf_filename,
         "--denovo-file",
@@ -429,6 +426,8 @@ def test_import_comp_all_del_chrom_prefix(
         "--id",
         study_id,
         # '--skip-reports',
+        "--vcf-denovo-mode", "possible_denovo",
+        "--vcf-omission-mode", "possible_omission",
         "--vcf-files",
         vcf_filename,
         "--denovo-file",
@@ -534,18 +533,14 @@ def test_import_wild_multivcf_into_genotype_storage(
 
     argv = [
         ped_file,
-        "--id",
-        study_id,
+        "--id", study_id,
         "--skip-reports",
-        "--vcf-files",
-        vcf_file1,
-        vcf_file2,
-        "--vcf-chromosomes",
-        "chr1;chr2",
-        "--genotype-storage",
-        genotype_storage_id,
-        "-o",
-        temp_dirname,
+        "--vcf-denovo-mode", "possible_denovo",
+        "--vcf-omission-mode", "possible_omission",
+        "--vcf-files", vcf_file1, vcf_file2,
+        "--vcf-chromosomes", "chr1;chr2",
+        "--genotype-storage", genotype_storage_id,
+        "-o", temp_dirname,
     ]
 
     main(argv, gpf_instance_2013)
@@ -575,18 +570,15 @@ def test_import_study_config_arg(
 
     argv = [
         pedigree_filename,
-        "--id",
-        study_id,
+        "--id", study_id,
         "--skip-reports",
-        "--vcf-files",
-        vcf_filename,
-        "--genotype-storage",
-        genotype_storage_id,
-        "--study-config",
-        study_config,
+        "--vcf-denovo-mode", "possible_denovo",
+        "--vcf-omission-mode", "possible_omission",
+        "--vcf-files", vcf_filename,
+        "--genotype-storage", genotype_storage_id,
+        "--study-config", study_config,
         "-F",
-        "-o",
-        temp_dirname,
+        "-o", temp_dirname,
     ]
 
     main(argv, gpf_instance_2013)
@@ -600,7 +592,6 @@ def test_import_study_config_arg(
 
     vs = list(study.query_variants())
     assert len(vs) == 30
-
 
 
 @pytest.mark.parametrize(
