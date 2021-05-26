@@ -31,7 +31,7 @@ class RsyncHelpers:
         self.rsync_remote_shell = None
         if parsed_remote.port and parsed_remote.port != 22:
             self.rsync_remote_shell = f"ssh -p {parsed_remote.port}"
-        
+
         logger.debug(f"parsed_remote: {parsed_remote}")
 
     def hosturl(self):
@@ -104,12 +104,12 @@ class RsyncHelpers:
 
         if self.rsync_remote_shell is None:
             cmds.append(
-                f"rsync -avPHt {exclude_options} "
+                f"/usr/bin/rsync -avPHt {exclude_options} "
                 f"{ignore_existing_option} "
                 f"{local_path} {rsync_remote}")
         else:
             cmds.append(
-                f'rsync -e "{self.rsync_remote_shell}" '
+                f'/usr/bin/rsync -e "{self.rsync_remote_shell}" '
                 f'-avPHt {exclude_options} '
                 f"{ignore_existing_option} "
                 f'{local_path} {rsync_remote}')
@@ -132,21 +132,33 @@ class RsyncHelpers:
 
         if self.rsync_remote_shell is None:
             cmds.append(
-                f"rsync -avPHt {exclude_options} "
+                f"/usr/bin/rsync -avPHt {exclude_options} "
                 f"{rsync_remote} {local_path}")
         else:
             cmds.append(
-                f'rsync -e "{self.rsync_remote_shell}" '
+                f'/usr/bin/rsync -e "{self.rsync_remote_shell}" '
                 f'-avPHt {exclude_options} {local_path}')
         return cmds
 
     def _cmd_execute(self, commands):
         for cmd in commands:
             logger.info(f"executing command: {cmd}")
-            result = subprocess.run(
-                cmd, shell=True, text=True, capture_output=True)
+            argv = [c.strip() for c in cmd.split(" ")]
+            argv = list(filter(lambda c: len(c) > 0, argv))
+            logger.debug(f"executing command: {argv}")
 
-            assert result.returncode == 0, result
+            with subprocess.Popen(
+                    argv,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    universal_newlines=True) as proc:
+
+                while True:
+                    line = proc.stdout.readline()
+                    if not line:
+                        break
+                    line = line.strip()
+                    logger.debug(line)
 
     def copy_to_remote(self, local_path, remote_subdir=None, exclude=[]):
         cmd = self._copy_to_remote_cmd(

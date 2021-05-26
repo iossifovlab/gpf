@@ -9,7 +9,7 @@ import subprocess
 import logging
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("remote_instance_mirror")
 
 
 def parse_cli_arguments(argv):
@@ -18,6 +18,7 @@ def parse_cli_arguments(argv):
         conflict_handler="resolve",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
+    parser.add_argument('--verbose', '-V', action='count', default=0)
 
     parser.add_argument(
         "remote_instance",
@@ -122,7 +123,8 @@ def get_active_conda_environment():
 
     stdout = result.stdout
 
-    regexp = re.compile("^(?P<env>.+?)\s+(?P<active>\\*)\s+(?P<path>\\/.+$)")
+    regexp = re.compile(
+        "^(?P<env>.+?)\\s+(?P<active>\\*)\\s+(?P<path>\\/.+$)")
 
     lines = [ln.strip() for ln in stdout.split("\n")]
     for line in lines:
@@ -192,6 +194,16 @@ def run_wdae_bootstrap(work_dir):
 def main(argv=sys.argv[1:]):
     argv = parse_cli_arguments(argv)
 
+    if argv.verbose == 1:
+        logging.basicConfig(level=logging.WARNING)
+    elif argv.verbose == 2:
+        logging.basicConfig(level=logging.INFO)
+    elif argv.verbose >= 3:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.WARNING)
+    logging.getLogger("impala").setLevel(logging.WARNING)
+
     rsync_helpers = RsyncHelpers(argv.remote_instance)
 
     output = argv.output
@@ -214,8 +226,4 @@ def main(argv=sys.argv[1:]):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-
-    logger.info("Started")
     main(sys.argv[1:])
-    logger.info("Done")
