@@ -277,15 +277,31 @@ scores = [
     {score_name="pRec_rank", format="%%s"},
 ]
 
-
 [datasets.iossifov_2014]
-effects = ["LGDS", "missense", "intron"]
 [[datasets.iossifov_2014.person_sets]]
 set_name="affected"
 collection_name="status"
 [[datasets.iossifov_2014.person_sets]]
 set_name="unaffected"
 collection_name="status"
+
+[[datasets.iossifov_2014.statistics]]
+id = "denovo_lgds"
+display_name = "LGDs"
+effects = ["LGDS"]
+category = "denovo"
+
+[[datasets.iossifov_2014.statistics]]
+id = "denovo_missense"
+display_name = "missense"
+effects = ["missense"]
+category = "denovo"
+
+[[datasets.iossifov_2014.statistics]]
+id = "denovo_intron"
+display_name = "intron"
+effects = ["intron"]
+category = "denovo"
 
 EOT
 
