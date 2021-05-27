@@ -1,8 +1,6 @@
 from rest_framework.response import Response
 from rest_framework import status
 
-from dae.variants.attributes import Role
-
 from query_base.query_base import QueryBaseView
 
 
@@ -52,20 +50,7 @@ class CollectionStatsView(QueryBaseView):
             or collection_id not in dataset.person_set_collections
         ):
             return Response(status=status.HTTP_404_NOT_FOUND)
-
         person_set_collection = dataset.person_set_collections[collection_id]
-
-        result = dict()
-        for set_id, person_set in person_set_collection.person_sets.items():
-            parents = len(list(
-                person_set.get_persons_with_roles(Role.dad, Role.mom)
-            ))
-            children = len(list(
-                person_set.get_persons_with_roles(Role.prb, Role.sib)
-            ))
-            result[set_id] = {
-                "parents": parents,
-                "children": children,
-            }
-
-        return Response(result, status=status.HTTP_200_OK)
+        return Response(
+            person_set_collection.get_stats(), status=status.HTTP_200_OK
+        )
