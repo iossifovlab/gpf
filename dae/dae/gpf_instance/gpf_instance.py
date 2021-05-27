@@ -456,14 +456,15 @@ class GPFInstance(object):
             current_counts = dict()
             for ps in filters.person_sets:
                 person_set = ps.set_name
-                for effect in filters.effects:
+                for statistic in filters.statistics:
+                    statistic_id = statistic["id"]
                     counts = current_counts.get(person_set)
                     if not counts:
                         current_counts[person_set] = dict()
                         counts = current_counts[person_set]
 
-                    counts[effect] = row[
-                        f"{dataset_id}_{person_set}_{effect}"
+                    counts[statistic_id] = row[
+                        f"{dataset_id}_{person_set}_{statistic_id}"
                     ]
             variant_counts[dataset_id] = current_counts
 

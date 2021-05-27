@@ -39,7 +39,7 @@ def test_agpdb_tables_building(temp_dbfile, agp_config):
     assert set(table_columns["variant_counts"]).difference(
         set([
             "id", "symbol_id", "study_id", "people_group",
-            "effect_type", "count"
+            "statistic_id", "count"
         ])
     ) == set()
     assert set(table_columns["studies"]).difference(
@@ -94,8 +94,8 @@ def test_agpdb_insert_and_get_agp(
 
     assert agp.variant_counts == {
         'iossifov_we2014_test': {
-            'unknown': {'noncoding': 53, 'missense': 21},
-            'unaffected': {'noncoding': 43, 'missense': 51},
+            'unknown': {'denovo_noncoding': 53, 'denovo_missense': 21},
+            'unaffected': {'denovo_noncoding': 43, 'denovo_missense': 51},
         }
     }
 
@@ -119,7 +119,8 @@ def test_agpdb_sort(agp_gpf_instance, sample_agp):
         1, sort_by="autism_scores_SFARI_gene_score", order="desc"
     )
     stats_sorted = agp_gpf_instance.query_agp_statistics(
-        1, sort_by="iossifov_we2014_test_unknown_noncoding", order="desc"
+        1, 
+        sort_by="iossifov_we2014_test_unknown_denovo_noncoding", order="desc"
     )
     stats_sorted = agp_gpf_instance.query_agp_statistics(
         1, sort_by="main_CHD8 target genes", order="desc"

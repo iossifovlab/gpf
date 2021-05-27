@@ -20,9 +20,9 @@ def test_generate_autism_gene_profile(
     agp = agpdb.get_agp("PCDHA4")
 
     unknown = agp.variant_counts["iossifov_we2014_test"]["unknown"]
-    assert unknown["noncoding"] == 1
-    assert unknown["missense"] == 0
+    assert unknown["denovo_noncoding"] == 1
+    assert unknown["denovo_missense"] == 0
 
     unaffected = agp.variant_counts["iossifov_we2014_test"]["unaffected"]
-    assert unaffected["noncoding"] == 0
-    assert unaffected["missense"] == 0
+    assert unaffected["denovo_noncoding"] == 0
+    assert unaffected["denovo_missense"] == 0
