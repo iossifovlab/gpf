@@ -109,8 +109,9 @@ def calculate_rates(instance, agps, config):
                     Role.prb, Role.sib
                 )))
 
-                for effect in filters.effects:
-                    stat = agp.variant_counts[dataset_id][set_name][effect]
+                for statistic in filters.statistics:
+                    stat_id = statistic["id"]
+                    stat = agp.variant_counts[dataset_id][set_name][stat_id]
                     count = stat["count"]
                     stat["rate"] = (count / children_count) * 1000
 

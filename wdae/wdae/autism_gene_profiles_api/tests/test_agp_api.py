@@ -26,7 +26,7 @@ def test_configuration(admin_client):
 
     datasets = response.data["datasets"]
     assert len(datasets) == 1
-    assert len(datasets[0]["id"]) == "iossifov_we2014_test"
+    assert datasets[0]["id"] == "iossifov_we2014_test"
     assert len(datasets[0]["statistics"]) == 2
     assert len(datasets[0]["personSets"]) == 2
     assert datasets[0]["personSets"] == [
