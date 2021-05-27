@@ -412,6 +412,8 @@ class AutismGeneProfileDB:
                     stat_id = stat["id"]
                     column_name = f"{dataset_id}_{set_name}_{stat_id}"
                     columns[column_name] = Column(column_name, Float())
+                    rate_col_name = f"{column_name}_rate"
+                    columns[rate_col_name] = Column(rate_col_name, Float())
         return columns
 
     def _create_db_cache_table(self, autoload=False):
