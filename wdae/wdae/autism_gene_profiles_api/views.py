@@ -1,4 +1,5 @@
 import logging
+from box import Box
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -24,8 +25,11 @@ class ConfigurationView(QueryBaseView):
                 study_wrapper = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
                 if "person_sets" in dataset:
-                    # Attach person set counts
-                    dataset["person_sets"] = list(dataset["person_sets"])
+                    # De-box and attach person set counts
+                    dataset["person_sets"] = [
+                        ps.to_dict() if isinstance(ps, Box) else dict(ps)
+                        for ps in dataset["person_sets"]
+                    ]
                     for person_set in dataset["person_sets"]:
                         set_id = person_set['set_name']
                         collection_id = person_set['collection_name']
