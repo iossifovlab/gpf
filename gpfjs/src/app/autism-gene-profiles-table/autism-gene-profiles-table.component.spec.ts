@@ -16,7 +16,7 @@ const mockConfig = {
   defaultDataset: 'fakeDefaultDataset',
   geneSets: [{category: 'fakeGeneSets', sets: ['fakeGeneSet']}] as any,
   genomicScores: [{category: 'fakeGenomicScores', scores: ['fakeGenomicScore']}] as any,
-  datasets: [{name: 'fakeDataset', effects: ['fakeEffect'], personSets: ['fakePersonSets']}] as any
+  datasets: [{name: 'fakeDataset', statistics: ['fakeEffect'], personSets: ['fakePersonSets']}] as any
 } as AgpConfig;
 
 describe('AutismGeneProfilesTableComponent', () => {
@@ -87,16 +87,16 @@ describe('AutismGeneProfilesTableComponent', () => {
   it('should calculate dataset colspan', () => {
     let mockDatasetConfig;
 
-    mockDatasetConfig = {effects: [1, 2], personSets: [1, 2]};
+    mockDatasetConfig = {statistics: [1, 2], personSets: [1, 2]};
     expect(component.calculateDatasetColspan(mockDatasetConfig)).toBe(4);
 
-    mockDatasetConfig = {effects: [1, 2, 3], personSets: [1, 2]};
+    mockDatasetConfig = {statistics: [1, 2, 3], personSets: [1, 2]};
     expect(component.calculateDatasetColspan(mockDatasetConfig)).toBe(6);
 
-    mockDatasetConfig = {effects: [1, 2, 3, 4], personSets: [1, 2, 3, 4, 6, 7]};
+    mockDatasetConfig = {statistics: [1, 2, 3, 4], personSets: [1, 2, 3, 4, 6, 7]};
     expect(component.calculateDatasetColspan(mockDatasetConfig)).toBe(24);
 
-    mockDatasetConfig = {effects: [1, 2, 3, 4, 5], personSets: [1, 2, 3, 4, 6, 7, 8]};
+    mockDatasetConfig = {statistics: [1, 2, 3, 4, 5], personSets: [1, 2, 3, 4, 6, 7, 8]};
     expect(component.calculateDatasetColspan(mockDatasetConfig)).toBe(35);
   });
 
@@ -122,7 +122,7 @@ describe('AutismGeneProfilesTableComponent', () => {
       defaultDataset: 'fakeDefaultDataset',
       geneSets: geneSetsArray as any,
       genomicScores: genomicScoresArray as any,
-      datasets: [{name: 'fakeDataset', effects: ['fakeEffect'], personSets: ['fakePersonSets']}] as any
+      datasets: [{name: 'fakeDataset', statistics: ['fakeEffect'], personSets: ['fakePersonSets']}] as any
     } as AgpConfig;
 
     component['shownGeneSetsCategories'] = geneSetsArray as any;
