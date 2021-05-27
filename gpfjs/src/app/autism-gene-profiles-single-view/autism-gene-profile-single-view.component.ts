@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { AutismGeneToolConfig, AutismGeneToolGene, AutismGeneToolGeneSetsCategory, AutismGeneToolGenomicScoresCategory } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import { AgpConfig, AgpGene, AgpGeneSetsCategory, AgpGenomicScores, AgpGenomicScoresCategory } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { Observable, zip } from 'rxjs';
 import { GeneWeightsService } from '../gene-weights/gene-weights.service';
 import { GeneWeights } from 'app/gene-weights/gene-weights';
@@ -15,11 +15,11 @@ import { Location } from '@angular/common';
 })
 export class AutismGeneProfileSingleViewComponent implements OnInit {
   @Input() readonly geneSymbol: string;
-  @Input() config: AutismGeneToolConfig;
+  @Input() config: AgpConfig;
   genomicScoresGeneWeights = [];
 
-  gene$: Observable<AutismGeneToolGene>;
-  genomicScores: AutismGeneToolGenomicScoresCategory[];
+  gene$: Observable<AgpGene>;
+  genomicScores: AgpGenomicScoresCategory[];
 
   private _histogramOptions = {
     width: 525,
@@ -42,8 +42,8 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
       switchMap(gene => {
         let scores: string;
         const geneWeightsObservables = [];
-        for (let i = 0; i < gene['genomicScores'].length; i++) {
-          scores = [...gene['genomicScores'][i].scores.keys()].join(',');
+        for (let i = 0; i < gene.genomicScores.length; i++) {
+          scores = [...gene.genomicScores[i].scores.map(score => score.id)].join(',');
           geneWeightsObservables.push(
             this.geneWeightsService.getGeneWeights(scores)
           );
@@ -52,7 +52,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
           tap(geneWeightsArray => {
             for (let k = 0; k < geneWeightsArray.length; k++) {
               this.genomicScoresGeneWeights.push({
-                category: gene['genomicScores'][k].category,
+                category: gene.genomicScores[k].id,
                 scores: geneWeightsArray[k]
               });
             }
@@ -72,8 +72,8 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
       .find(score => score.weight === key);
   }
 
-  getSingleScoreValue(genomicScores, category: string, score: string) {
-    return genomicScores.find(cat => cat['category'] === category)['scores'].get(score);
+  getSingleScoreValue(genomicScores: AgpGenomicScores[], categoryId: string, scoreId: string) {
+    return genomicScores.find(category => category.id === categoryId).scores.find(score => score.id = scoreId).value;
   }
 
   get histogramOptions() {
@@ -85,7 +85,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
       return;
     }
 
-    const dataset = this.config['defaultDataset'];
+    const dataset = this.config.defaultDataset;
     let pathname = this.router.createUrlTree(['datasets', dataset, 'gene-browser', this.geneSymbol]).toString();
 
     pathname = this.location.prepareExternalUrl(pathname);
