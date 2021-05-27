@@ -3,6 +3,8 @@
     <li class="nav-tabs" [ngbNavItem]="'autismGenesTool'" [destroyOnHide]="false">
       <a ngbNavLink>Autism genes tool</a>
       <ng-template ngbNavContent>
+        <!--
+        Temporarily disabled until properly implemented
         <button #columnFilteringButton
           (click)="openDropdown();"
           class="dropdown-toggle btn navbar-toggler"
@@ -16,6 +18,7 @@
             [selectedItems]="shownCategories"
             (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
         </span>
+        -->
         <gpf-autism-gene-profiles-table [hidden]="nav.activeId !== 'autismGenesTool'" [config]="testConfig" (createTabEvent)="createTabEventHandler($event)"></gpf-autism-gene-profiles-table>
       </ng-template>
     </li>
