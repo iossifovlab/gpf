@@ -45,10 +45,6 @@ pipeline {
 
             junit 'test-results/wdae-junit.xml, test-results/dae-junit.xml'
 
-            sh '''
-                ${WORKSPACE}/tests_cleanup.sh
-            '''
-
             zulipNotification(
                 topic: "${env.JOB_NAME}"
             )      
