@@ -147,7 +147,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
    * @returns colspan
    */
   calculateDatasetColspan(datasetConfig: AgpDataset) {
-    return datasetConfig.effects.length * datasetConfig.personSets.length;
+    return datasetConfig.statistics.length * datasetConfig.personSets.length;
   }
 
   /**

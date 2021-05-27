@@ -68,16 +68,16 @@
 
         <ng-container *ngFor="let dataset of config.datasets">
           <th class="table-subheader" colspan="3" *ngFor="let personSet of dataset.personSets">
-            {{personSet['set_name']}} ({{personSet['children_count']}})
+            {{personSet.setName}} ({{personSet.childrenCount}})
           </th>
         </ng-container>
       </tr>
       <tr>
         <ng-container *ngFor="let dataset of config.datasets">
           <ng-container *ngFor="let personSet of dataset.personSets">
-            <td *ngFor="let effectType of dataset.effects" class="effect-type-header">
-              {{effectType}}
-              <gpf-sorting-buttons [id]="dataset.id + '_' + personSet['set_name'] + '_' + effectType" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
+            <td *ngFor="let statistic of dataset.statistics" class="effect-type-header">
+              {{statistic.displayName}}
+              <gpf-sorting-buttons [id]="dataset.id + '_' + personSet.setName + '_' + statistic.id" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
             </td>
           </ng-container>
         </ng-container>
@@ -108,7 +108,7 @@
         <ng-container *ngFor="let study of gene.studies">
           <ng-container *ngFor="let personSet of study.personSets">
             <td *ngFor="let effectType of personSet.effectTypes">
-              <ng-container *ngIf="effectType.value !== 0">{{effectType.value}}</ng-container>
+              <ng-container *ngIf="effectType.value.count !== 0">{{effectType.value.count}} ({{effectType.value.rate | number : '1.0-3' }})</ng-container>
             </td> 
           </ng-container>
         </ng-container>

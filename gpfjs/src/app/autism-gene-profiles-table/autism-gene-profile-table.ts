@@ -42,8 +42,26 @@ export class AgpGenomicScore {
 export class AgpDataset {
   id: string;
   name: string;
+
+  @Type(() => AgpDatasetStatistic)
+  statistics: AgpDatasetStatistic[];
+
+  @Type(() => AgpDatasetPersonSet)
+  personSets: AgpDatasetPersonSet[];
+}
+
+export class AgpDatasetStatistic {
+  id: string;
+  displayName: string;
   effects: string[];
-  personSets: string[];
+  category: string;
+}
+
+export class AgpDatasetPersonSet {
+  setName: string;
+  collectionName: string;
+  parentsCount: number;
+  childrenCount: number;
 }
 
 export class AgpGene {
