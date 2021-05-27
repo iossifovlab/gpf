@@ -33,13 +33,11 @@ describe('AutismGeneProfileSingleViewComponent', () => {
   it('should initialize', () => {
     (component as any).geneSymbol = 'mockGeneSymbol';
     const getGeneSpy = spyOn(component['autismGeneProfilesService'], 'getGene');
-    const fakeScores1 = new Map();
-    fakeScores1.set('fakeScore1', 1);
-    const fakeScores2 = new Map();
-    fakeScores2.set('fakeScore2', 1);
+    const fakeScores1 = [{id: 'fakeScore1', value: 1, format: ''}];
+    const fakeScores2 = [{id: 'fakeScore2', value: 1, format: ''}];
     const mockGenomicScores = [
-      {category: 'fakeGenomicScore1', scores: fakeScores1},
-      {category: 'fakeGenomicScore2', scores: fakeScores2}
+      {id: 'fakeGenomicScore1', scores: fakeScores1},
+      {id: 'fakeGenomicScore2', scores: fakeScores2}
     ];
 
     const geneMock = of({
