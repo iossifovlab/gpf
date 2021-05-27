@@ -112,7 +112,7 @@ export class AutismGeneToolDataset {
     private id: string,
     private name: string,
     private effects: string[],
-    private personSets: string[],
+    private personSets: object[],
   ) { }
 }
 

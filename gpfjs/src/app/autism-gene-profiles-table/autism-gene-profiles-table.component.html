@@ -67,7 +67,9 @@
         </ng-container>
 
         <ng-container *ngFor="let dataset of config.datasets">
-          <th class="table-subheader" colspan="3" *ngFor="let personSet of dataset.personSets">{{personSet}}</th>
+          <th class="table-subheader" colspan="3" *ngFor="let personSet of dataset.personSets">
+            {{personSet['set_name']}} ({{personSet['children_count']}})
+          </th>
         </ng-container>
       </tr>
       <tr>
@@ -75,7 +77,7 @@
           <ng-container *ngFor="let personSet of dataset.personSets">
             <td *ngFor="let effectType of dataset.effects" class="effect-type-header">
               {{effectType}}
-              <gpf-sorting-buttons [id]="dataset.id + '_' + personSet + '_' + effectType" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
+              <gpf-sorting-buttons [id]="dataset.id + '_' + personSet['set_name'] + '_' + effectType" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
             </td>
           </ng-container>
         </ng-container>
