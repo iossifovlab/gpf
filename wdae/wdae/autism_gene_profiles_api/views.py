@@ -24,10 +24,8 @@ class ConfigurationView(QueryBaseView):
                 study_wrapper = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
                 if "person_sets" in dataset:
-                    # De-box and attach person set counts
-                    dataset["person_sets"] = list(map(
-                        lambda ps: ps.to_dict(), dataset["person_sets"]
-                    ))
+                    # Attach person set counts
+                    dataset["person_sets"] = list(dataset["person_sets"])
                     for person_set in dataset["person_sets"]:
                         set_id = person_set['set_name']
                         collection_id = person_set['collection_name']

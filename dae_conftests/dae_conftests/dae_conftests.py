@@ -1081,14 +1081,14 @@ def agp_config(data_import, iossifov2014_impala):
                     }
                 ],
                 'person_sets': [
-                    Box({
+                    {
                         'set_name': 'unknown',
                         'collection_name': 'phenotype'
-                    }),
-                    Box({
+                    },
+                    {
                         'set_name': 'unaffected',
                         'collection_name': 'phenotype'
-                    }),
+                    },
                 ]
             })
         })
