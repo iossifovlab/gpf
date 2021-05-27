@@ -105,7 +105,7 @@ function main() {
   local gpf_dev_image="gpf-dev"
 
   # create gpf docker image
-  build_stage "Create '$gpf_dev_image' docker image"
+  build_stage "Create $gpf_dev_image docker image"
   {
     build_docker_image_create "$gpf_dev_image" . ./Dockerfile
   }
