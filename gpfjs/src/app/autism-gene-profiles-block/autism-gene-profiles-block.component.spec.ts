@@ -85,11 +85,7 @@ describe('AutismGeneProfilesBlockComponent', () => {
   });
 
   it('should get active tab index', () => {
-    const mockSet = new Set();
-    mockSet.add('id1');
-    mockSet.add('id2');
-    mockSet.add('id3');
-    mockSet.add('id4');
+    const mockSet = new Array('id1', 'id2', 'id3', 'id4');
     component['geneTabs'] = mockSet as any;
 
     component['nav'] = {activeId: 'id1'} as any;
