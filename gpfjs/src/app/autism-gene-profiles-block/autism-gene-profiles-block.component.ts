@@ -150,8 +150,14 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   }
 
   getAllCategories() {
-    return this.autismGeneToolConfig.geneSets.map(obj => obj.category)
-      .concat(this.autismGeneToolConfig.genomicScores.map(obj => obj.category));
+    const allCategories = [];
+    if (this.autismGeneToolConfig.geneSets) {
+      allCategories.push(...this.autismGeneToolConfig.geneSets.map(obj => obj.category));
+    }
+    if (this.autismGeneToolConfig.genomicScores) {
+      allCategories.push(...this.autismGeneToolConfig.genomicScores.map(obj => obj.category));
+    }
+    return allCategories;
   }
 
   openDropdown() {
