@@ -17,10 +17,24 @@ class ConfigurationView(QueryBaseView):
         # Attach dataset display name to configuration
         if "datasets" in configuration:
             for dataset_id, dataset in configuration["datasets"].items():
-                dataset_conf = self.gpf_instance.get_genotype_data_config(
-                    dataset_id
-                )
-                dataset["name"] = dataset_conf.get("name", dataset_id)
+                study_wrapper = self.gpf_instance.get_wdae_wrapper(dataset_id)
+                dataset["name"] = study_wrapper.config.get("name", dataset_id)
+
+                if "person_sets" in dataset:
+                    # De-box and attach person set counts
+                    dataset["person_sets"] = list(map(
+                        lambda ps: ps.to_dict(), dataset["person_sets"]
+                    ))
+                    for person_set in dataset["person_sets"]:
+                        set_id = person_set['set_name']
+                        collection_id = person_set['collection_name']
+                        person_set_collection = \
+                            study_wrapper.genotype_data.person_set_collections[
+                                collection_id
+                            ]
+                        stats = person_set_collection.get_stats()[set_id]
+                        person_set['parents_count'] = stats['parents']
+                        person_set['children_count'] = stats['children']
 
         return Response(configuration)
 

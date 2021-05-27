@@ -8,6 +8,7 @@ from typing import Dict, NamedTuple, Set
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.pedigrees.family import Person, FamiliesData
 from dae.pheno.pheno_db import PhenotypeData, MeasureType
+from dae.variants.attributes import Role
 
 
 logger = logging.getLogger(__name__)
@@ -26,6 +27,11 @@ class PersonSet(NamedTuple):
 
     def __repr__(self):
         return f"PersonSet({self.id}: {self.name}, {len(self.persons)})"
+
+    def get_persons_with_roles(self, *roles):
+        for person in self.persons.values():
+            if person.role in roles:
+                yield person
 
     def to_json(self):
         return {
@@ -244,3 +250,18 @@ class PersonSetCollection(NamedTuple):
             "name": self.name,
             "person_sets": [ps.to_json() for ps in self.person_sets.values()]
         }
+
+    def get_stats(self):
+        result = dict()
+        for set_id, person_set in self.person_sets.items():
+            parents = len(list(
+                person_set.get_persons_with_roles(Role.dad, Role.mom)
+            ))
+            children = len(list(
+                person_set.get_persons_with_roles(Role.prb, Role.sib)
+            ))
+            result[set_id] = {
+                "parents": parents,
+                "children": children,
+            }
+        return result

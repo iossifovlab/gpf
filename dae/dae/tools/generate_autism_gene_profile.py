@@ -49,7 +49,10 @@ def generate_agp(gpf_instance, gene_symbol, collections_gene_sets):
                     current_counts[person_set] = dict()
                     counts = current_counts[person_set]
 
-                counts[stat_id] = 0
+                counts[stat_id] = {
+                    "count": 0,
+                    "rate": 0
+                }
         variant_counts[dataset_id] = current_counts
 
     return gene_symbol, AGPStatistic(
@@ -86,8 +89,30 @@ def add_variant_count(variant, agps, dataset_id, person_set, statistic_id):
     for gs in variant.effect_gene_symbols:
         if gs not in agps:
             continue
+        vc = agps[gs].variant_counts
+        vc[dataset_id][person_set][statistic_id]["count"] += 1
 
-        agps[gs].variant_counts[dataset_id][person_set][statistic_id] += 1
+
+def calculate_rates(instance, agps, config):
+    for gs in agps.keys():
+        agp = agps[gs]
+        for dataset_id, filters in config.datasets.items():
+            genotype_data = instance.get_genotype_data(dataset_id)
+            for ps in filters.person_sets:
+                psc = genotype_data.get_person_set_collection(
+                    ps.collection_name
+                )
+                set_name = ps.set_name
+                person_set = psc.person_sets[set_name]
+
+                children_count = len(list(person_set.get_persons_with_roles(
+                    Role.prb, Role.sib
+                )))
+
+                for effect in filters.effects:
+                    stat = agp.variant_counts[dataset_id][set_name][effect]
+                    count = stat["count"]
+                    stat["rate"] = (count / children_count) * 1000
 
 
 def fill_variant_counts(
@@ -304,6 +329,9 @@ def main(gpf_instance=None, argv=None):
     logger.info("Counting rare variants...")
     fill_variant_counts(rare_variants, agps, config, person_ids, False)
     logger.info("Done counting rare variants")
+    logger.info("Calculating rates...")
+    calculate_rates(gpf_instance, agps, config)
+    logger.info("Done calculating rates")
     elapsed = time.time() - generate_end
     logger.info(f"Took {elapsed:.2f} secs")
 
