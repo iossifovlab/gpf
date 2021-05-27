@@ -1,5 +1,5 @@
-import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
-import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
+import { ChangeDetectorRef, Component, HostListener, OnInit, ViewChild } from '@angular/core';
+import { NgbDropdownMenu, NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { AgpConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 
@@ -10,8 +10,14 @@ import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism
 })
 export class AutismGeneProfilesBlockComponent implements OnInit {
   @ViewChild('nav') nav: NgbNav;
+  @ViewChild(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu;
+
   geneTabs = new Set<string>();
   autismGeneToolConfig: AgpConfig;
+  testConfig: AgpConfig;
+
+  allCategories: string[];
+  shownCategories: string[];
 
   @HostListener('window:keydown', ['$event'])
   keyEvent($event: KeyboardEvent) {
@@ -35,11 +41,17 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
+    private ref: ChangeDetectorRef,
   ) { }
 
   ngOnInit(): void {
     this.autismGeneProfilesService.getConfig().take(1).subscribe(config => {
+      console.log(config);
+
       this.autismGeneToolConfig = config;
+      this.testConfig = config;
+      this.allCategories = this.getAllCategories();
+      this.shownCategories = this.getAllCategories();
     });
   }
 
@@ -135,5 +147,22 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     } else if (key === 'n') {
       this.openNextTab();
     }
+  }
+
+  getAllCategories() {
+    return this.autismGeneToolConfig.geneSets.map(obj => obj.category)
+      .concat(this.autismGeneToolConfig.genomicScores.map(obj => obj.category));
+  }
+
+  openDropdown() {
+    this.ngbDropdownMenu.dropdown.open();
+  }
+
+  handleMultipleSelectMenuApplyEvent($event) {
+    this.shownCategories = $event.data;
+    this.testConfig.geneSets = this.autismGeneToolConfig.geneSets.filter(obj => this.shownCategories.includes(obj.category));
+    this.testConfig.genomicScores = this.autismGeneToolConfig.genomicScores.filter(obj => this.shownCategories.includes(obj.category));
+    console.log(this.testConfig);
+    this.ngbDropdownMenu.dropdown.close();
   }
 }
