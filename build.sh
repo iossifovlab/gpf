@@ -126,11 +126,17 @@ function main() {
       -e s/"^hdfs\.host.*$/hdfs.host = \"impala\"/"g \
       ./data/data-hg19-startup/DAE.conf
 
+    build_run_init "container" "busybox"
+
     # cleanup
-    build_run_local rm -rf \
+    build_run_container rm -rf \
       ./data/data-hg19-startup/studies/* \
       ./data/data-hg19-startup/pheno/* \
       ./data/data-hg19-startup/wdae/wdae.sql
+
+    build_run_reset
+
+    build_run_init "local"
 
     # setup directory structure
     build_run_local mkdir -p \
@@ -156,11 +162,18 @@ function main() {
         -e s/"^hdfs\.host.*$/hdfs.host = \"impala\"/"g \
         ./data/data-hg19-remote/DAE.conf
 
+      build_run_init "container" "busybox"
+
       # cleanup
-      build_run_local rm -rf \
-        ./data/data-hg19-remote/studies/* \
-        ./data/data-hg19-remote/pheno/* \
-        ./data/data-hg19-remote/wdae/wdae.sql
+      build_run_container rm -rf \
+        ./data/data-hg19-startup/studies/* \
+        ./data/data-hg19-startup/pheno/* \
+        ./data/data-hg19-startup/wdae/wdae.sql
+
+      build_run_reset
+
+      build_run_init "local"
+      defer_ret build_run_reset
 
       # setup directory structure
       build_run_local mkdir -p \
