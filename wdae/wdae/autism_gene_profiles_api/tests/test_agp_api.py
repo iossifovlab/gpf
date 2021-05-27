@@ -15,22 +15,33 @@ def test_configuration(admin_client):
     assert response.status_code == 200
     print(response.data)
 
-    assert len(response.data["genomic_scores"]) == 2
+    assert len(response.data["genomicScores"]) == 2
 
-    assert len(response.data["genomic_scores"][0]["scores"]) == 3
-    assert response.data["genomic_scores"][0]["category"] == \
+    assert len(response.data["genomicScores"][0]["scores"]) == 3
+    assert response.data["genomicScores"][0]["category"] == \
         "protection_scores"
 
-    assert len(response.data["genomic_scores"][1]["scores"]) == 3
-    assert response.data["genomic_scores"][1]["category"] == "autism_scores"
-
-    assert len(response.data["datasets"].keys()) == 1
+    assert len(response.data["genomicScores"][1]["scores"]) == 3
+    assert response.data["genomicScores"][1]["category"] == "autism_scores"
 
     datasets = response.data["datasets"]
-    assert len(datasets["iossifov_we2014_test"]["effects"]) == 2
-    assert len(datasets["iossifov_we2014_test"]["person_sets"]) == 2
-    assert datasets["iossifov_we2014_test"]["person_sets"] == [
-        "unknown", "unaffected"
+    assert len(datasets) == 1
+    assert datasets[0]["id"] == "iossifov_we2014_test"
+    assert len(datasets[0]["statistics"]) == 2
+    assert len(datasets[0]["personSets"]) == 2
+    assert datasets[0]["personSets"] == [
+        {
+            "setName": "unknown",
+            "collectionName": "phenotype",
+            "parentsCount": 0,
+            "childrenCount": 11,
+        },
+        {
+            "setName": "unaffected",
+            "collectionName": "phenotype",
+            "parentsCount": 22,
+            "childrenCount": 10,
+        }
     ]
 
 

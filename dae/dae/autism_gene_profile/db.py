@@ -43,15 +43,17 @@ class AutismGeneProfileDB:
     def _build_configuration(self, configuration):
         if configuration is None:
             return dict()
-        configuration = copy(configuration)
+        return copy(configuration)
 
-        for dataset in configuration["datasets"]:
-            dataset_dict = configuration["datasets"][dataset]
-            person_sets = dataset_dict["person_sets"]
-            dataset_dict["person_sets"] = [
-                ps["set_name"] for ps in person_sets
-            ]
-        return configuration
+    def _add_study_display_names(self, gpf_instance):
+        if "datasets" not in self.configuration:
+            return
+
+        for dataset_id in self.configuration["datasets"]:
+            dataset = gpf_instance.get_genotype_data(dataset_id)
+            study_name = dataset.name
+            self.configuration["datasets"][dataset_id]["display_name"] = \
+                study_name
 
     def _get_genomic_scores(self, gene_symbol_id):
         s = select([
@@ -91,8 +93,9 @@ class AutismGeneProfileDB:
         s = select([
             self.studies.c.study_id,
             self.variant_counts.c.people_group,
-            self.variant_counts.c.effect_type,
-            self.variant_counts.c.count
+            self.variant_counts.c.statistic_id,
+            self.variant_counts.c.count,
+            self.variant_counts.c.rate
         ]).select_from(j).where(
             self.variant_counts.c.symbol_id == gene_symbol_id,
         )
@@ -196,8 +199,9 @@ class AutismGeneProfileDB:
         for row in variant_counts_rows:
             study_name = row[0]
             person_set = row[1]
-            effect_type = row[2]
+            statistic_id = row[2]
             count = row[3]
+            rate = row[4]
 
             if study_name not in variant_counts:
                 variant_counts[study_name] = dict()
@@ -205,7 +209,10 @@ class AutismGeneProfileDB:
             if person_set not in variant_counts[study_name]:
                 variant_counts[study_name][person_set] = dict()
 
-            variant_counts[study_name][person_set][effect_type] = count
+            variant_counts[study_name][person_set][statistic_id] = {
+                "count": count,
+                "rate": rate
+            }
 
         return AGPStatistic(
             gene_symbol, sets_in,
@@ -330,8 +337,9 @@ class AutismGeneProfileDB:
             Column("symbol_id", ForeignKey("gene_symbols.id")),
             Column("study_id", ForeignKey("studies.study_id")),
             Column("people_group", String(64), nullable=False),
-            Column("effect_type", String(64), nullable=False),
-            Column("count", Integer())
+            Column("statistic_id", String(64), nullable=False),
+            Column("count", Integer()),
+            Column("rate", Float())
         )
 
     def _build_studies_table(self):
@@ -399,8 +407,10 @@ class AutismGeneProfileDB:
         for dataset_id, dataset in self.configuration["datasets"].items():
             config_section = self.configuration["datasets"][dataset_id]
             for person_set in config_section["person_sets"]:
-                for effect_type in config_section["effects"]:
-                    column_name = f"{dataset_id}_{person_set}_{effect_type}"
+                set_name = person_set["set_name"]
+                for stat in config_section["statistics"]:
+                    stat_id = stat["id"]
+                    column_name = f"{dataset_id}_{set_name}_{stat_id}"
                     columns[column_name] = Column(column_name, Float())
         return columns
 
@@ -514,8 +524,11 @@ class AutismGeneProfileDB:
             config_section = self.configuration["datasets"][dataset_id]
             db_study_id = study_ids[dataset_id]
             for person_set in config_section["person_sets"]:
-                for effect_type in config_section["effects"]:
-                    count_alias = f"{dataset_id}_{person_set}_{effect_type}"
+                set_name = person_set["set_name"]
+                for stat in config_section["statistics"]:
+                    stat_id = stat["id"]
+                    count_alias = f"{dataset_id}_{set_name}_{stat_id}"
+                    rate_alias = f"{count_alias}_rate"
                     table_alias = aliased(
                         self.variant_counts,
                         count_alias
@@ -529,13 +542,14 @@ class AutismGeneProfileDB:
                         and_(
                             self.gene_symbols.c.id == table_alias.c.symbol_id,
                             table_alias.c.study_id == db_study_id,
-                            table_alias.c.people_group == person_set,
-                            table_alias.c.effect_type == effect_type
+                            table_alias.c.people_group == set_name,
+                            table_alias.c.statistic_id == stat_id
                         )
                     )
-                    select_cols.append(
-                        table_alias.c.count.label(count_alias)
-                    )
+                    select_cols.extend([
+                        table_alias.c.count.label(count_alias),
+                        table_alias.c.rate.label(rate_alias)
+                    ])
 
         view_query = select(select_cols).select_from(current_join)
 
@@ -629,15 +643,18 @@ class AutismGeneProfileDB:
             study_ids = self._get_study_ids()
             for study, counts in agp.variant_counts.items():
                 study_id = study_ids[study]
-                for people_group, effects in counts.items():
-                    for effect_type, count in effects.items():
+                for people_group, statistics in counts.items():
+                    for statistic_id, stat in statistics.items():
+                        count = stat["count"]
+                        rate = stat["rate"]
                         connection.execute(
                             insert(self.variant_counts).values(
                                 symbol_id=symbol_id,
                                 study_id=study_id,
                                 people_group=people_group,
-                                effect_type=effect_type,
-                                count=count
+                                statistic_id=statistic_id,
+                                count=count,
+                                rate=rate
                             )
                         )
 
@@ -696,15 +713,18 @@ class AutismGeneProfileDB:
 
                     for study, counts in agp.variant_counts.items():
                         study_id = study_ids[study]
-                        for people_group, effects in counts.items():
-                            for effect_type, count in effects.items():
+                        for people_group, statistics in counts.items():
+                            for statistic_id, stat in statistics.items():
+                                count = stat["count"]
+                                rate = stat["rate"]
                                 connection.execute(
                                     insert(self.variant_counts).values(
                                         symbol_id=symbol_id,
                                         study_id=study_id,
                                         people_group=people_group,
-                                        effect_type=effect_type,
-                                        count=count
+                                        statistic_id=statistic_id,
+                                        count=count,
+                                        rate=rate
                                     )
                                 )
 

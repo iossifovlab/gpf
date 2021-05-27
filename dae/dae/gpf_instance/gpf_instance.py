@@ -135,10 +135,12 @@ class GPFInstance(object):
         config = None if self._autism_gene_profile_config is None else\
             self._autism_gene_profile_config.to_dict()
 
-        return AutismGeneProfileDB(
+        agpdb = AutismGeneProfileDB(
             config,
             os.path.join(self.dae_db_dir, "agpdb")
         )
+        agpdb._add_study_display_names(self)
+        return agpdb
 
     def reload(self):
         reload_properties = [
@@ -456,15 +458,23 @@ class GPFInstance(object):
             current_counts = dict()
             for ps in filters.person_sets:
                 person_set = ps.set_name
-                for effect in filters.effects:
+                for statistic in filters.statistics:
+                    statistic_id = statistic["id"]
                     counts = current_counts.get(person_set)
                     if not counts:
                         current_counts[person_set] = dict()
                         counts = current_counts[person_set]
 
-                    counts[effect] = row[
-                        f"{dataset_id}_{person_set}_{effect}"
+                    count = row[
+                        f"{dataset_id}_{person_set}_{statistic_id}"
                     ]
+                    rate = row[
+                        f"{dataset_id}_{person_set}_{statistic_id}_rate"
+                    ]
+                    counts[statistic_id] = {
+                        "count": count,
+                        "rate": rate
+                    }
             variant_counts[dataset_id] = current_counts
 
         return AGPStatistic(

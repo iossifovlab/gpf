@@ -12,4 +12,9 @@ urlpatterns = [
         views.CollectionConfigsView.as_view(),
         name="collection_configs",
     ),
+    url(
+        r"^/(?P<dataset_id>.+)/stats/(?P<collection_id>.+)?$",
+        views.CollectionStatsView.as_view(),
+        name="collection_stats",
+    ),
 ]
