@@ -45,6 +45,16 @@ class AutismGeneProfileDB:
             return dict()
         return copy(configuration)
 
+    def _add_study_display_names(self, gpf_instance):
+        if "datasets" not in self.configuration:
+            return
+
+        for dataset_id in self.configuration["datasets"]:
+            dataset = gpf_instance.get_genotype_data(dataset_id)
+            study_name = dataset.name
+            self.configuration["datasets"][dataset_id]["display_name"] = \
+                study_name
+
     def _get_genomic_scores(self, gene_symbol_id):
         s = select([
             self.genomic_scores.c.score_name,

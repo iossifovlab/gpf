@@ -1,7 +1,3 @@
-from dae.configuration.gpf_config_parser import (
-    validate_existing_path,
-    validate_path,
-)
 from dae.variants.attributes import _VARIANT_TYPE_DISPLAY_NAME, \
     _ROLE_DISPLAY_NAME
 
@@ -71,6 +67,8 @@ autism_gene_tool_config = {
             "schema": {
                 "category": {"type": "string"},
                 "display_name": {"type": "string"},
+                "meta": {"type": "string"},
+                "default_visible": {"type": "boolean", "default": True},
                 "sets": {"type": "list", "schema": gene_set_schema}
             },
         }
@@ -83,6 +81,8 @@ autism_gene_tool_config = {
             "schema": {
                 "category": {"type": "string"},
                 "display_name": {"type": "string"},
+                "meta": {"type": "string"},
+                "default_visible": {"type": "boolean", "default": True},
                 "scores": {"type": "list", "schema": genomic_score_schema}
             },
         }
@@ -102,7 +102,9 @@ autism_gene_tool_config = {
                 },
                 "statistics": {
                     "type": "list", "schema": variant_statistic_schema
-                }
+                },
+                "default_visible": {"type": "boolean", "default": True},
+                "display_name": {"type": "string"},
             }
         }
     },
