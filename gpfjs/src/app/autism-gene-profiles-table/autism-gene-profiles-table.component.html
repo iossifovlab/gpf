@@ -37,8 +37,8 @@
           </th>
         </ng-container>
 
-        <th class="table-main-header" style="position: sticky; top: 0px" *ngFor="let dataset of config.datasets" [attr.colspan]="calculateDatasetColspan(dataset)" [title]="dataset.name">
-          {{dataset.name}}
+        <th class="table-main-header" style="position: sticky; top: 0px" *ngFor="let dataset of config.datasets" [attr.colspan]="calculateDatasetColspan(dataset)" [title]="dataset.displayName">
+          {{dataset.displayName}}
         </th>
       </tr>
 
@@ -68,7 +68,7 @@
 
         <ng-container *ngFor="let dataset of config.datasets">
           <th class="table-subheader" colspan="3" *ngFor="let personSet of dataset.personSets">
-            {{personSet.setName}} ({{personSet.childrenCount}})
+            {{personSet.displayName}} ({{personSet.childrenCount}})
           </th>
         </ng-container>
       </tr>
@@ -77,7 +77,7 @@
           <ng-container *ngFor="let personSet of dataset.personSets">
             <td *ngFor="let statistic of dataset.statistics" class="effect-type-header">
               {{statistic.displayName}}
-              <gpf-sorting-buttons [id]="dataset.id + '_' + personSet.setName + '_' + statistic.id" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
+              <gpf-sorting-buttons [id]="dataset.id + '_' + personSet.id + '_' + statistic.id" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
             </td>
           </ng-container>
         </ng-container>
