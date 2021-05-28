@@ -1,5 +1,4 @@
 import logging
-from box import Box
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -25,11 +24,8 @@ class ConfigurationView(QueryBaseView):
                 study_wrapper = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
                 if "person_sets" in dataset:
-                    # De-box and attach person set counts
-                    dataset["person_sets"] = [
-                        ps.to_dict() if isinstance(ps, Box) else dict(ps)
-                        for ps in dataset["person_sets"]
-                    ]
+                    # Attach person set counts
+                    person_sets_config = list()
                     for person_set in dataset["person_sets"]:
                         set_id = person_set['set_name']
                         collection_id = person_set['collection_name']
@@ -38,12 +34,21 @@ class ConfigurationView(QueryBaseView):
                                 collection_id
                             ]
                         stats = person_set_collection.get_stats()[set_id]
-                        person_set['parents_count'] = stats['parents']
-                        person_set['children_count'] = stats['children']
+                        set_name = \
+                            person_set_collection.person_sets[set_id].name
+                        person_sets_config.append({
+                            'id': set_id,
+                            'displayName': set_name,
+                            'parentsCount': stats['parents'],
+                            'childrenCount': stats['children'],
+                        })
                 response["datasets"].append({
                     "id": dataset_id,
-                    "name": study_wrapper.config.get("name", dataset_id),
-                    **to_response_json(dataset)
+                    "displayName": study_wrapper.config.get(
+                        "name", dataset_id
+                    ),
+                    **to_response_json(dataset),
+                    "personSets": person_sets_config,  # overwrite person_sets
                 })
 
         return Response(response)
