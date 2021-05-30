@@ -139,7 +139,6 @@ class GPFInstance(object):
             config,
             os.path.join(self.dae_db_dir, "agpdb")
         )
-        agpdb._add_study_display_names(self)
         return agpdb
 
     def reload(self):

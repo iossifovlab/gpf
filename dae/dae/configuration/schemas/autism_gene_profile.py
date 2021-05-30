@@ -12,6 +12,8 @@ gene_set_schema = {
     "schema": {
         "collection_id": {"type": "string", "default": "main"},
         "display_name": {"type": "string"},
+        "meta": {"type": "string"},
+        "default_visible": {"type": "boolean", "default": True},
         "set_id": {"type": "string"}
     }
 }
@@ -21,6 +23,8 @@ genomic_score_schema = {
     "schema": {
         "score_name": {"type": "string"},
         "display_name": {"type": "string"},
+        "meta": {"type": "string"},
+        "default_visible": {"type": "boolean", "default": True},
         "format": {"type": "string", "default": "%s"}
     }
 }
@@ -67,8 +71,6 @@ autism_gene_tool_config = {
             "schema": {
                 "category": {"type": "string"},
                 "display_name": {"type": "string"},
-                "meta": {"type": "string"},
-                "default_visible": {"type": "boolean", "default": True},
                 "sets": {"type": "list", "schema": gene_set_schema}
             },
         }
@@ -81,8 +83,6 @@ autism_gene_tool_config = {
             "schema": {
                 "category": {"type": "string"},
                 "display_name": {"type": "string"},
-                "meta": {"type": "string"},
-                "default_visible": {"type": "boolean", "default": True},
                 "scores": {"type": "list", "schema": genomic_score_schema}
             },
         }
