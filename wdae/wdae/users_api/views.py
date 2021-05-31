@@ -75,6 +75,39 @@ def iterator_to_json(users):
     return 0
 
 
+def is_user_locked_out(email: str):
+    last_login = AuthenticationLog.get_last_login_for(email)
+    return (last_login is not None
+            and last_login.failed_attempt > LOCKOUT_THRESHOLD)
+
+
+def get_remaining_lockout_time(email: str):
+    last_login = AuthenticationLog.get_last_login_for(email)
+    current_time = timezone.now().replace(microsecond=0)
+    lockout_time = pow(2, last_login.failed_attempt - LOCKOUT_THRESHOLD)
+    return (
+        - (current_time - last_login.time)
+        + timedelta(minutes=lockout_time)
+    ).total_seconds()
+
+
+def log_authentication_attempt(email: str, failed: bool):
+    last_login = AuthenticationLog.get_last_login_for(email)
+
+    if failed:
+        failed_attempt = last_login.failed_attempt if last_login else 0
+        failed_attempt += 1
+    else:
+        failed_attempt = 0
+
+    login_attempt = AuthenticationLog(
+        email=email,
+        time=timezone.now().replace(microsecond=0),
+        failed_attempt=failed_attempt
+    )
+    login_attempt.save()
+
+
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = get_user_model().objects.all()
@@ -310,17 +343,10 @@ def login(request):
 
     if userfound:
         assert len(userfound) == 1
-        last_login = AuthenticationLog.get_last_login_for(userfound[0].email)
-        if last_login is not None \
-           and last_login.failed_attempt > LOCKOUT_THRESHOLD:
+        user_email = userfound[0].email
+        if is_user_locked_out(user_email):
             # check if still locked out
-            current_time = timezone.now().replace(microsecond=0)
-            remaining_time = (
-                - (current_time - last_login.time)
-                + timedelta(minutes=pow(
-                    2, last_login.failed_attempt - LOCKOUT_THRESHOLD
-                ))
-            ).total_seconds()
+            remaining_time = get_remaining_lockout_time(user_email)
             if remaining_time > 0:
                 return Response(
                     {"lockout_time": remaining_time},
@@ -331,41 +357,24 @@ def login(request):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         user = django.contrib.auth.authenticate(
-            username=userfound[0].email, password=password
+            username=user_email, password=password
         )
         if user is None or not user.is_active:
-            last_login = AuthenticationLog.get_last_login_for(
-                userfound[0].email
-            )
-            failed_attempt = last_login.failed_attempt if last_login else 0
-            failed_attempt += 1
-
-            login_attempt = AuthenticationLog(
-                email=userfound[0].email,
-                time=timezone.now().replace(microsecond=0),
-                failed_attempt=failed_attempt
-            )
-            login_attempt.save()
+            log_authentication_attempt(user_email, failed=True)
+            last_login = AuthenticationLog.get_last_login_for(user_email)
+            failed_attempt = last_login.failed_attempt
 
             if failed_attempt > LOCKOUT_THRESHOLD:
-                # in seconds
                 lockout_time = pow(2, failed_attempt - LOCKOUT_THRESHOLD) * 60
-                print("LOCKOUT TIME")
-                print(lockout_time)
                 return Response(
-                    {"lockout_time": lockout_time},
+                    {"lockout_time": lockout_time},  # in seconds
                     status=status.HTTP_403_FORBIDDEN
                 )
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
         django.contrib.auth.login(request, user)
         LOGGER.info(log_filter(request, "login success: " + str(username)))
-        login_attempt = AuthenticationLog(
-                email=userfound[0].email,
-                time=timezone.now().replace(microsecond=0),
-                failed_attempt=0
-        )
-        login_attempt.save()
+        log_authentication_attempt(user_email, failed=False)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     LOGGER.info(log_filter(request, "login failure: " + str(username)))
