@@ -120,10 +120,12 @@ class StudyWrapperBase:
                     table_columns.append(
                         dict(config.genotype_browser.columns.genotype[column])
                     )
-                else:
+                elif column in config.genotype_browser.columns.phenotype:
                     table_columns.append(
                         dict(config.genotype_browser.columns.phenotype[column])
                     )
+                else:
+                    raise KeyError(f"No such column {column} configured!")
         result["genotype_browser_config"]["table_columns"] = table_columns
 
         result["study_types"] = result["study_type"]
