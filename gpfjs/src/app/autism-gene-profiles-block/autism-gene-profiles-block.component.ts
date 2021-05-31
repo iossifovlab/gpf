@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, HostListener, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, OnChanges, OnInit, SimpleChanges, ViewChild } from '@angular/core';
 import { NgbDropdownMenu, NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { AgpConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
@@ -44,14 +44,18 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     private ref: ChangeDetectorRef,
   ) { }
 
+  testConfigChangeEvent($event) {
+    this.testConfig = $event;
+    this.shownCategories = this.getAllCategories(this.testConfig);
+  }
+
   ngOnInit(): void {
     this.autismGeneProfilesService.getConfig().take(1).subscribe(config => {
-      console.log(config);
 
       this.autismGeneToolConfig = config;
       this.testConfig = config;
-      this.allCategories = this.getAllCategories();
-      this.shownCategories = this.getAllCategories();
+      this.allCategories = this.getAllCategories(this.autismGeneToolConfig);
+      this.shownCategories = this.getAllCategories(this.autismGeneToolConfig);
     });
   }
 
@@ -149,13 +153,13 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  getAllCategories() {
+  getAllCategories(config: AgpConfig) {
     const allCategories = [];
-    if (this.autismGeneToolConfig.geneSets) {
-      allCategories.push(...this.autismGeneToolConfig.geneSets.map(obj => obj.category));
+    if (config.geneSets) {
+      allCategories.push(...config.geneSets.map(obj => obj.category));
     }
-    if (this.autismGeneToolConfig.genomicScores) {
-      allCategories.push(...this.autismGeneToolConfig.genomicScores.map(obj => obj.category));
+    if (config.genomicScores) {
+      allCategories.push(...config.genomicScores.map(obj => obj.category));
     }
     return allCategories;
   }
@@ -168,7 +172,6 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     this.shownCategories = $event.data;
     this.testConfig.geneSets = this.autismGeneToolConfig.geneSets.filter(obj => this.shownCategories.includes(obj.category));
     this.testConfig.genomicScores = this.autismGeneToolConfig.genomicScores.filter(obj => this.shownCategories.includes(obj.category));
-    console.log(this.testConfig);
     this.ngbDropdownMenu.dropdown.close();
   }
 }

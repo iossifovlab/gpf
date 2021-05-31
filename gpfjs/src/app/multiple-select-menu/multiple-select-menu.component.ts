@@ -23,6 +23,7 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
   constructor() { }
 
   ngOnChanges(): void {
+    this.checkboxDataArraySavedState = this.toCheckboxDataArray(this.allItems);
     this.applySavedState();
     this.searchText = '';
 

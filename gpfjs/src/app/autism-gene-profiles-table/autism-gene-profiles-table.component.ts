@@ -18,6 +18,8 @@ import { sprintf } from 'sprintf-js';
 })
 export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
   @Input() config: AgpConfig;
+  @Output() configChange: EventEmitter<AgpConfig> = new EventEmitter<AgpConfig>();
+
   @Output() createTabEvent = new EventEmitter();
   @ViewChildren(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu[];
 
@@ -162,12 +164,26 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
       this.shownGeneSetsCategories[categoryIndex].sets = this.config.geneSets
         .find(category => category.category === menuId[1]).sets
         .filter(set => $event.data.includes(set['setId']));
+
+      if (this.shownGeneSetsCategories[categoryIndex].sets.length === 0) {
+        this.config.geneSets.splice(categoryIndex, 1);
+        this.shownGeneSetsCategories = cloneDeep(this.config.geneSets);
+
+        this.configChange.emit(this.config);
+      }
     } else if (menuId[0] === 'genomic_scores_category') {
       const categoryIndex = this.shownGenomicScoresCategories.findIndex(category => category['category'] === menuId[1]);
 
       this.shownGenomicScoresCategories[categoryIndex].scores = this.config.genomicScores
         .find(category => category.category === menuId[1]).scores
         .filter(score => $event.data.includes(score.scoreName));
+
+      if (this.shownGenomicScoresCategories[categoryIndex].scores.length === 0) {
+        this.config.genomicScores.splice(categoryIndex, 1);
+        this.shownGenomicScoresCategories = cloneDeep(this.config.genomicScores);
+
+        this.configChange.emit(this.config);
+      }
     }
 
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
