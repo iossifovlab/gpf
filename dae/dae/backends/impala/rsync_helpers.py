@@ -80,13 +80,14 @@ class RsyncHelpers:
 
         logger.debug(f"rsync remote: <{self.rsync_remote}>")
 
-        rsync_remote = self.rsync_remote
         rsync_path = ""
+        rsync_remote = self.rsync_remote
+
         if remote_subdir is not None:
             if remote_subdir.startswith("/"):
                 remote_subdir = remote_subdir[1:]
-            rsync_remote = os.path.join(self.rsync_remote, remote_subdir)
             rsync_path = os.path.join(self.parsed_remote.path, remote_subdir)
+            rsync_remote = os.path.join(self.rsync_remote, remote_subdir)
 
             if clear_remote:
                 if self.hosturl():
@@ -115,7 +116,7 @@ class RsyncHelpers:
             rsync_cmd.append("--ignore-existing")
         if self.rsync_remote_shell:
             rsync_cmd.extend(["-e", self.rsync_remote_shell])
-        rsync_cmd.extend([local_path, rsync_path])
+        rsync_cmd.extend([local_path, rsync_remote])
         logger.debug(f"rsync command: {rsync_cmd}")
         cmds.append(rsync_cmd)
 
