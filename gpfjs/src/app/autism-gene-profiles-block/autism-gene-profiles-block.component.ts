@@ -1,7 +1,8 @@
-import { ChangeDetectorRef, Component, HostListener, OnChanges, OnInit, SimpleChanges, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { NgbDropdownMenu, NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { AgpConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-block',
@@ -44,16 +45,10 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     private ref: ChangeDetectorRef,
   ) { }
 
-  testConfigChangeEvent($event) {
-    this.testConfig = $event;
-    this.shownCategories = this.getAllCategories(this.testConfig);
-  }
-
   ngOnInit(): void {
     this.autismGeneProfilesService.getConfig().take(1).subscribe(config => {
-
-      this.autismGeneToolConfig = config;
-      this.testConfig = config;
+      this.autismGeneToolConfig = cloneDeep(config);
+      this.testConfig = cloneDeep(config);
       this.allCategories = this.getAllCategories(this.autismGeneToolConfig);
       this.shownCategories = this.getAllCategories(this.autismGeneToolConfig);
     });
@@ -172,6 +167,12 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     this.shownCategories = $event.data;
     this.testConfig.geneSets = this.autismGeneToolConfig.geneSets.filter(obj => this.shownCategories.includes(obj.category));
     this.testConfig.genomicScores = this.autismGeneToolConfig.genomicScores.filter(obj => this.shownCategories.includes(obj.category));
+    this.testConfig = cloneDeep(this.testConfig);
     this.ngbDropdownMenu.dropdown.close();
+  }
+
+  testConfigChangeEvent($event) {
+    this.testConfig = $event;
+    this.shownCategories = this.getAllCategories(this.testConfig);
   }
 }

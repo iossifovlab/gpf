@@ -1,6 +1,6 @@
 import {
   AfterViewInit, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostListener,
-  Input, OnInit, Output, QueryList, Renderer2, ViewChild, ViewChildren
+  Input, OnChanges, OnInit, Output, QueryList, Renderer2, ViewChild, ViewChildren
 } from '@angular/core';
 // tslint:disable-next-line:import-blacklist
 import { Subject } from 'rxjs';
@@ -16,7 +16,7 @@ import { sprintf } from 'sprintf-js';
   templateUrl: './autism-gene-profiles-table.component.html',
   styleUrls: ['./autism-gene-profiles-table.component.css'],
 })
-export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
+export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, OnChanges {
   @Input() config: AgpConfig;
   @Output() configChange: EventEmitter<AgpConfig> = new EventEmitter<AgpConfig>();
 
@@ -80,6 +80,11 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     private cdr: ChangeDetectorRef,
     private ref: ElementRef,
   ) { }
+
+  ngOnChanges(): void {
+    this.shownGeneSetsCategories = cloneDeep(this.config.geneSets);
+    this.shownGenomicScoresCategories = cloneDeep(this.config.genomicScores);
+  }
 
   /**
    * Initializes component. Prepares shown categories, genes, gene search field

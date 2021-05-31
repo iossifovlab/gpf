@@ -16,7 +16,7 @@
             [selectedItems]="shownCategories"
             (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
         </span>
-        <gpf-autism-gene-profiles-table [hidden]="nav.activeId !== 'autismGenesTool'" [config]="testConfig" (createTabEvent)="createTabEventHandler($event)" (configChange)="testConfigChangeEvent($event)"></gpf-autism-gene-profiles-table>
+        <gpf-autism-gene-profiles-table [hidden]="nav.activeId !== 'autismGenesTool'" (createTabEvent)="createTabEventHandler($event)" [config]="testConfig" (configChange)="testConfigChangeEvent($event)"></gpf-autism-gene-profiles-table>
       </ng-template>
     </li>
 
