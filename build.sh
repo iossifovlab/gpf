@@ -426,7 +426,7 @@ EOT'
           --cov-report=html:/code/results/dae-coverage.html \
           --cov-report=xml:/code/results/dae-coverage.xml \
           --cov /code/dae/ \
-          dae/'
+          dae/ || true'
   }
 
   # Tests - wdae
@@ -458,9 +458,9 @@ EOT'
           --cov-report=html:/code/results/wdae-coverage.html \
           --cov-report=xml:/code/results/wdae-coverage.xml \
           --cov /code/wdae/ \
-          wdae'
+          wdae || true'
 
-    build_run_local rm -r ./test-results/
+    build_run_local rm -rf ./test-results/
     build_run_local mkdir -p ./test-results/
     build_run_local cp ./results/wdae-junit.xml ./results/dae-junit.xml ./test-results/
   }
