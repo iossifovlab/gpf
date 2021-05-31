@@ -86,17 +86,20 @@ class RsyncHelpers:
             rsync_remote = os.path.join(self.rsync_remote, remote_subdir)
             rsync_path = os.path.join(self.parsed_remote.path, remote_subdir)
 
-            clear_remote_option = ""
             if clear_remote:
-                clear_remote_option = f"rm -rf {rsync_path} && "
+                if self.hosturl():
+                    cmds.append(
+                        f'ssh {self.parsed_remote.netloc} '
+                        f'"rm -rf {rsync_path}"')
+                else:
+                    cmds.append(f"rm -rf {rsync_path}")
 
             if self.hosturl():
                 cmds.append(
-                    f'ssh {self.parsed_remote.netloc} "{clear_remote_option}'
-                    f'mkdir -p {rsync_path}"')
+                    f'ssh {self.parsed_remote.netloc} '
+                    f'"mkdir -p {rsync_path}"')
             else:
-                cmds.append(
-                    f'{clear_remote_option} mkdir -p {rsync_path}')
+                cmds.append(f"mkdir -p {rsync_path}")
 
         ignore_existing_option = ""
         if ignore_existing:
@@ -165,9 +168,37 @@ class RsyncHelpers:
                 logger.error(f"command {cmd} finished with {proc.returncode}")
                 raise ValueError(f"error in {cmd}")
 
-    def copy_to_remote(self, local_path, remote_subdir=None, exclude=[]):
+    def clear_remote(self, remote_subdir):
+        cmds = []
+        rsync_path = ""
+        assert remote_subdir is not None
+
+        if remote_subdir.startswith("/"):
+            remote_subdir = remote_subdir[1:]
+        rsync_path = os.path.join(self.parsed_remote.path, remote_subdir)
+
+        if self.hosturl():
+            cmds.append(
+                f'ssh {self.parsed_remote.netloc} '
+                f'"rm -rf {rsync_path}"')
+            cmds.append(
+                f'ssh {self.parsed_remote.netloc} '
+                f'"mkdir -p {rsync_path}"')
+        else:
+            cmds.append(f"rm -rf {rsync_path}")
+            cmds.append(f"mkdir -p {rsync_path}")
+        self._cmd_execute(cmds)
+
+    def copy_to_remote(
+            self, local_path, remote_subdir=None, exclude=[],
+            clear_remote=True):
+        logger.debug(
+            f"copying {local_path} to {remote_subdir}")
+
         cmd = self._copy_to_remote_cmd(
-            local_path, remote_subdir=remote_subdir, exclude=exclude)
+            local_path, remote_subdir=remote_subdir, exclude=exclude,
+            clear_remote=clear_remote)
+
         self._cmd_execute(cmd)
 
     def copy_to_local(self, local_path, remote_subdir=None, exclude=[]):
