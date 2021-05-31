@@ -92,7 +92,7 @@ function main() {
   # cleanup
   build_stage "Cleanup"
   {
-    build_run_init "container" "busybox"
+    build_run_init "container" "ubuntu:18.04"
     defer_ret build_run_reset
 
     build_run rm -rf ./data/ ./import/ ./downloads ./results
@@ -126,7 +126,7 @@ function main() {
       -e s/"^hdfs\.host.*$/hdfs.host = \"impala\"/"g \
       ./data/data-hg19-startup/DAE.conf
 
-    build_run_init "container" "busybox"
+    build_run_init "container" "ubuntu:18.04"
 
     # cleanup
     build_run_container rm -rf \
@@ -162,7 +162,7 @@ function main() {
         -e s/"^hdfs\.host.*$/hdfs.host = \"impala\"/"g \
         ./data/data-hg19-remote/DAE.conf
 
-      build_run_init "container" "busybox"
+      build_run_init "container" "ubuntu:18.04"
 
       # cleanup
       build_run_container rm -rf \
@@ -189,12 +189,13 @@ function main() {
         ./data/data-hg19-remote/DAE.conf
     }
 
-    local gpf_dev_image_ref
-    gpf_dev_image_ref="$(e docker_img_gpf_dev)"
-    build_run_init "container" "$gpf_dev_image_ref"
-    defer_ret build_run_reset
-
+    # import data for gpf remote
     {
+      local gpf_dev_image_ref
+      gpf_dev_image_ref="$(e docker_img_gpf_dev)"
+      build_run_init "container" "$gpf_dev_image_ref"
+      defer_ret build_run_reset
+
       # fixup /code to point to /wd
       {
         build_run_container bash -c 'rmdir /code && ln -s /wd /code'
@@ -207,38 +208,46 @@ function main() {
         build_run bash -c 'cd /code/dae_conftests && /opt/conda/bin/conda run --no-capture-output -n gpf pip install .'
       }
 
-      local docker_data_img_genotype_iossifov_2014
-      docker_data_img_genotype_iossifov_2014="$(e docker_data_img_genotype_iossifov_2014)"
+      # import genotype data
+      {
+        local docker_data_img_genotype_iossifov_2014
+        docker_data_img_genotype_iossifov_2014="$(e docker_data_img_genotype_iossifov_2014)"
 
-      # copy data
-      build_run_local mkdir -p ./import
-      build_docker_image_cp_from "$docker_data_img_genotype_iossifov_2014" ./import /
+        # copy data
+        build_run_local mkdir -p ./import
+        build_docker_image_cp_from "$docker_data_img_genotype_iossifov_2014" ./import /
 
-      build_run bash -c 'export DAE_DB_DIR="/wd/data/data-hg19-remote"; cd ./import/iossifov_2014 && /opt/conda/bin/conda run --no-capture-output -n gpf simple_study_import.py --id iossifov_2014 \
+        build_run bash -c 'export DAE_DB_DIR="/wd/data/data-hg19-remote"; cd ./import/iossifov_2014 && /opt/conda/bin/conda run --no-capture-output -n gpf simple_study_import.py --id iossifov_2014 \
           -o ./data_iossifov_2014 \
           --denovo-file IossifovWE2014.tsv \
           IossifovWE2014.ped'
 
-      build_run_container bash -c 'cat >> ./data/data-hg19-remote/studies/iossifov_2014/iossifov_2014.conf << EOT
+        build_run_container bash -c 'cat >> ./data/data-hg19-remote/studies/iossifov_2014/iossifov_2014.conf << EOT
 
       [enrichment]
       enabled = true
 EOT'
+      }
 
-      local docker_data_img_phenotype_comp_data
-      docker_data_img_phenotype_comp_data="$(e docker_data_img_phenotype_comp_data)"
+      # import phenotype data
+      {
+        local docker_data_img_phenotype_comp_data
+        docker_data_img_phenotype_comp_data="$(e docker_data_img_phenotype_comp_data)"
 
-      # copy data
-      build_docker_image_cp_from "$docker_data_img_phenotype_comp_data" ./import /
+        # copy data
+        build_docker_image_cp_from "$docker_data_img_phenotype_comp_data" ./import /
 
-      build_run bash -c 'export DAE_DB_DIR="/wd/data/data-hg19-remote"; cd ./import/comp-data && /opt/conda/bin/conda run --no-capture-output -n gpf simple_pheno_import.py -p comp_pheno.ped \
+        build_run bash -c 'export DAE_DB_DIR="/wd/data/data-hg19-remote"; cd ./import/comp-data && /opt/conda/bin/conda run --no-capture-output -n gpf simple_pheno_import.py -p comp_pheno.ped \
           -i instruments/ -d comp_pheno_data_dictionary.tsv -o comp_pheno \
           --regression comp_pheno_regressions.conf'
 
-      build_run_container sed -i '5i\\nphenotype_data="comp_pheno"' /wd/data/data-hg19-remote/studies/iossifov_2014/iossifov_2014.conf
+        build_run_container sed -i '5i\\nphenotype_data="comp_pheno"' /wd/data/data-hg19-remote/studies/iossifov_2014/iossifov_2014.conf
+      }
 
       # generate denovo gene sets
-      build_run_container bash -c 'export DAE_DB_DIR="/wd/data/data-hg19-remote"; /opt/conda/bin/conda run --no-capture-output -n gpf generate_denovo_gene_sets.py'
+      {
+        build_run_container bash -c 'export DAE_DB_DIR="/wd/data/data-hg19-remote"; /opt/conda/bin/conda run --no-capture-output -n gpf generate_denovo_gene_sets.py'
+      }
 
       build_run_reset
     }
@@ -250,30 +259,30 @@ EOT'
       docker network create -d bridge hr_temp
       defer_ret docker network rm hr_temp
 
-      # setup mysql
-      {
-        local -A ctx_mysql
-        build_run_init ctx:ctx_mysql "container" "mysql:5.7" "cmd-from-image" \
-          --hostname=mysql \
-          --network=hr_temp \
-          --env MYSQL_DATABASE=gpf \
-          --env MYSQL_USER=seqpipe \
-          --env MYSQL_PASSWORD=secret \
-          --env MYSQL_ROOT_PASSWORD=secret \
-          --env MYSQL_PORT=3306 \
-          -- \
-          --character-set-server=utf8 --collation-server=utf8_bin
-
-        defer_ret build_run_reset ctx:ctx_mysql
-
-        build_run_container ctx:ctx_mysql /wd/scripts/wait-for-it.sh -h mysql -p 3306 -t 300
-
-        build_run_container ctx:ctx_mysql mysql -u root -psecret -h mysql \
-          -e "CREATE DATABASE IF NOT EXISTS test_gpf"
-
-        build_run_container ctx:ctx_mysql mysql -u root -psecret -h mysql \
-          -e "GRANT ALL PRIVILEGES ON test_gpf.* TO 'seqpipe'@'%' IDENTIFIED BY 'secret' WITH GRANT OPTION"
-      }
+#      # setup mysql
+#      {
+#        local -A ctx_mysql
+#        build_run_init ctx:ctx_mysql "container" "mysql:5.7" "cmd-from-image" \
+#          --hostname=mysql \
+#          --network=hr_temp \
+#          --env MYSQL_DATABASE=gpf \
+#          --env MYSQL_USER=seqpipe \
+#          --env MYSQL_PASSWORD=secret \
+#          --env MYSQL_ROOT_PASSWORD=secret \
+#          --env MYSQL_PORT=3306 \
+#          -- \
+#          --character-set-server=utf8 --collation-server=utf8_bin
+#
+#        defer_ret build_run_reset ctx:ctx_mysql
+#
+#        build_run_container ctx:ctx_mysql /wd/scripts/wait-for-it.sh -h mysql -p 3306 -t 300
+#
+#        build_run_container ctx:ctx_mysql mysql -u root -psecret -h mysql \
+#          -e "CREATE DATABASE IF NOT EXISTS test_gpf"
+#
+#        build_run_container ctx:ctx_mysql mysql -u root -psecret -h mysql \
+#          -e "GRANT ALL PRIVILEGES ON test_gpf.* TO 'seqpipe'@'%' IDENTIFIED BY 'secret' WITH GRANT OPTION"
+#      }
 
       # setup impala
       {
@@ -290,9 +299,7 @@ EOT'
         build_run_init ctx:ctx_gpf_remote "container" "${gpf_dev_image_ref}" \
           --hostname=gpfremote \
           --network=hr_temp \
-          --env DAE_DB_DIR="/data/data-hg19-remote/" \
-          --env TEST_REMOTE_HOST="gpfremote" \
-          --env MYSQL_DB_HOST="mysql"
+          --env DAE_DB_DIR="/data/data-hg19-remote/"
         defer_ret build_run_reset ctx:ctx_gpf_remote
 
         # fixup /code to point to /wd
@@ -306,7 +313,7 @@ EOT'
         done
 
         build_run_container ctx:ctx_gpf_remote /opt/conda/bin/conda run --no-capture-output -n gpf /code/wdae/wdae/wdaemanage.py migrate
-        build_run_container ctx:ctx_gpf_remote /opt/conda/bin/conda run --no-capture-output -n gpf  /code/wdae/wdae/wdae_create_dev_users.sh
+        build_run_container ctx:ctx_gpf_remote /opt/conda/bin/conda run --no-capture-output -n gpf /code/wdae/wdae/wdae_create_dev_users.sh
 
         build_run_container_detached ctx:ctx_gpf_remote /opt/conda/bin/conda run --no-capture-output -n gpf /code/wdae/wdae/wdaemanage.py runserver 0.0.0.0:21010
 
@@ -344,39 +351,29 @@ EOT'
   # lint
   build_stage "Lint"
   {
-      build_run_init "container" "${gpf_dev_image_ref}" \
-        --network=hr_temp \
-        --env DAE_DB_DIR="/data/data-hg19-remote/" \
-        --env TEST_REMOTE_HOST="gpfremote" \
-        --env DAE_HDFS_HOST="impala" \
-        --env DAE_IMPALA_HOST="impala"
-      defer_ret build_run_reset
+    build_run_init "container" "${gpf_dev_image_ref}"
+    defer_ret build_run_reset
 
-      # fixup /code to point to /wd
-      {
-        build_run_container bash -c 'rmdir /code && ln -s /wd /code'
-      }
+    # fixup /code to point to /wd
+    {
+      build_run_container bash -c 'rmdir /code && ln -s /wd /code'
+    }
 
-      build_run_container bash -c 'cd /code; flake8 --format=html --htmldir=/code/results/flake8_report --exclude "--exclude \"*old*,*tmp*,*temp*,data-hg19*,gpf*\"" . || true'
+    build_run_container bash -c 'cd /code; flake8 --format=html --htmldir=/code/results/flake8_report --exclude "--exclude \"*old*,*tmp*,*temp*,data-hg19*,gpf*\"" . || true'
   }
 
   # mypy
   build_stage "Type Check"
   {
-      build_run_init "container" "${gpf_dev_image_ref}" \
-        --network=hr_temp \
-        --env DAE_DB_DIR="/data/data-hg19-remote/" \
-        --env TEST_REMOTE_HOST="gpfremote" \
-        --env DAE_HDFS_HOST="impala" \
-        --env DAE_IMPALA_HOST="impala"
-      defer_ret build_run_reset
+    build_run_init "container" "${gpf_dev_image_ref}"
+    defer_ret build_run_reset
 
-      # fixup /code to point to /wd
-      {
-        build_run_container bash -c 'rmdir /code && ln -s /wd /code'
-      }
+    # fixup /code to point to /wd
+    {
+      build_run_container bash -c 'rmdir /code && ln -s /wd /code'
+    }
 
-      build_run_container bash -c '
+    build_run_container bash -c '
       cd /code/dae;
       /opt/conda/bin/conda run --no-capture-output -n gpf mypy dae \
           --exclude dae/docs/ \
@@ -387,7 +384,7 @@ EOT'
           --warn-redundant-casts \
           --html-report /code/results/mypy/dae_report || true'
 
-      build_run_container bash -c '
+    build_run_container bash -c '
       cd /code/wdae;
       /opt/conda/bin/conda run --no-capture-output -n gpf mypy wdae \
           --exclude wdae/docs/ \
@@ -404,23 +401,23 @@ EOT'
   build_stage "Tests - dae"
   {
     build_run_init "container" "${gpf_dev_image_ref}" \
-        --network=hr_temp \
-        --env DAE_DB_DIR="/data/data-hg19-startup/" \
-        --env TEST_REMOTE_HOST="gpfremote" \
-        --env DAE_HDFS_HOST="impala" \
-        --env DAE_IMPALA_HOST="impala"
-      defer_ret build_run_reset
+      --network=hr_temp \
+      --env DAE_DB_DIR="/data/data-hg19-startup/" \
+      --env TEST_REMOTE_HOST="gpfremote" \
+      --env DAE_HDFS_HOST="impala" \
+      --env DAE_IMPALA_HOST="impala"
+    defer_ret build_run_reset
 
-      # fixup /code to point to /wd
-      {
-        build_run_container bash -c 'rmdir /code && ln -s /wd /code'
-      }
+    # fixup /code to point to /wd
+    {
+      build_run_container bash -c 'rmdir /code && ln -s /wd /code'
+    }
 
-      for d in /code/dae /code/wdae /code/dae_conftests; do
-        build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .'
-      done
+    for d in /code/dae /code/wdae /code/dae_conftests; do
+      build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .'
+    done
 
-      build_run_container bash -c '
+    build_run_container bash -c '
         cd /code/dae;
         export PYTHONHASHSEED=0;
         /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup -n 10 \
@@ -436,23 +433,23 @@ EOT'
   build_stage "Tests - wdae"
   {
     build_run_init "container" "${gpf_dev_image_ref}" \
-        --network=hr_temp \
-        --env DAE_DB_DIR="/data/data-hg19-startup/" \
-        --env TEST_REMOTE_HOST="gpfremote" \
-        --env DAE_HDFS_HOST="impala" \
-        --env DAE_IMPALA_HOST="impala"
-      defer_ret build_run_reset
+      --network=hr_temp \
+      --env DAE_DB_DIR="/data/data-hg19-startup/" \
+      --env TEST_REMOTE_HOST="gpfremote" \
+      --env DAE_HDFS_HOST="impala" \
+      --env DAE_IMPALA_HOST="impala"
+    defer_ret build_run_reset
 
-      # fixup /code to point to /wd
-      {
-        build_run_container bash -c 'rmdir /code && ln -s /wd /code'
-      }
+    # fixup /code to point to /wd
+    {
+      build_run_container bash -c 'rmdir /code && ln -s /wd /code'
+    }
 
-      for d in /code/dae /code/wdae /code/dae_conftests; do
-        build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .'
-      done
+    for d in /code/dae /code/wdae /code/dae_conftests; do
+      build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .'
+    done
 
-      build_run_container bash -c '
+    build_run_container bash -c '
         cd /code/wdae;
         export PYTHONHASHSEED=0;
         /opt/conda/bin/conda run --no-capture-output -n gpf py.test --no-cleanup -v -n 10 \
@@ -463,15 +460,15 @@ EOT'
           --cov /code/wdae/ \
           wdae'
 
-      build_run_local rm -r ./test-results/
-      build_run_local mkdir -p ./test-results/
-      build_run_local cp ./results/wdae-junit.xml ./results/dae-junit.xml ./test-results/
+    build_run_local rm -r ./test-results/
+    build_run_local mkdir -p ./test-results/
+    build_run_local cp ./results/wdae-junit.xml ./results/dae-junit.xml ./test-results/
   }
 
   # post cleanup
   build_stage "Post Cleanup"
   {
-    build_run_init "container" "busybox"
+    build_run_init "container" "ubuntu:18.04"
     build_run rm -rf ./data/ ./import/ ./downloads ./results
   }
 }
