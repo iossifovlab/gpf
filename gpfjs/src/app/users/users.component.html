@@ -5,7 +5,7 @@
   </div>
 </div>
 
-<div *ngIf="!(userInfo$ | async)?.email" class="row justify-content-end dropdown">
+<div *ngIf="!(userInfo$ | async)?.email" class="row justify-content-end dropdown" data-backdrop="static">
   <div>
     <button #dropdownButton (click)="hideDropdown = !hideDropdown; focusEmailInput()"
       class="btn btn-secondary dropdown-toggle" id="login-dropdown-toggle-button" type="button">
@@ -15,28 +15,35 @@
       <form>
         <div class="row">
           <div class="col-12">
-
             <div class="form-group">
               <label for="username">Email</label>
-              <input #emailInput name="username" id="username" class="form-control" [(ngModel)]="username" type="text">
+              <input #emailInput name="username" id="username" class="form-control" [(ngModel)]="username" [style.opacity.%]="showPasswordField ? 50 : 100" [disabled]="showPasswordField" type="text">
             </div>
           </div>
+          <div *ngIf="!showPasswordField" class="col-12">
+            <button class="btn btn-primary" id="next-button" style="width: 100%" (click)="next(); focusPasswordInput()">
+              Next
+            </button>
+          </div>
         </div>
-        <div class="row mt-1">
+
+        <div *ngIf="showPasswordField" class="row mt-1">
           <div class="col-12">
             <div class="form-group">
               <label for="password">Password</label>
-              <input name="password" id="password" class="form-control" [(ngModel)]="password" type="password" autocomplete="off">
+              <input #passwordInput name="password" id="password" class="form-control" [(ngModel)]="password" type="password" autocomplete="off">
             </div>
           </div>
-        </div>
-        <div class="row mt-1">
           <div class="col-12">
-            <button class="btn btn-primary" id="login-button" style="width: 100%" (click)="login()">
+            <button type="button" class="btn btn-light col-3" id="back-button" style="width: 100%; border: 1px solid #ced4da; opacity: 85%;" (click)="back()">
+              Back
+            </button>
+            <button type="submit" class="btn btn-primary col-8" id="login-button" style="width: 100%; float:right" (click)="login()">
               Login
             </button>
           </div>
         </div>
+
         <div class="row mt-1 justify-content-center">
           <div>
               <button class="btn btn-sm btn-link" (click)="showRegister()">
@@ -47,10 +54,10 @@
               </button>
           </div>
         </div>
-        <div *ngIf="loginError" class="row mt-1">
+        <div *ngIf="errorMessage" class="row mt-1">
             <div class="col-12">
-              <div class="alert alert-danger">
-                Wrong username or password
+              <div class="alert alert-danger" style="text-align: center;">
+                {{errorMessage}}
               </div>
           </div>
         </div>
