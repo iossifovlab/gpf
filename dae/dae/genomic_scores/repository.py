@@ -38,7 +38,7 @@ class FilesystemGenomicScoreRepository(BaseGenomicScoreRepository):
     """
 
     def __init__(self, path: str):
-        super(FilesystemGenomicScoreRepository).__init__()
+        super().__init__()
         self.path = path
         # TODO Implement discovery
 
@@ -56,7 +56,7 @@ class HTTPGenomicScoreRepository(BaseGenomicScoreRepository):
     """
 
     def __init__(self, url: str):
-        super(HTTPGenomicScoreRepository).__init__()
+        super().__init__()
         self.url = url
         # TODO Implement discovery
 
