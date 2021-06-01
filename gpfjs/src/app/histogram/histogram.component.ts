@@ -116,6 +116,10 @@ export class HistogramComponent implements OnInit, OnChanges {
     }
   }
 
+  singleScoreValueIsValid(): boolean {
+    return this.singleScoreValue !== undefined && this.singleScoreValue !== null && !isNaN(this.singleScoreValue);
+  }
+
   get showMinMaxInputWithDefaultValue() {
     if (this.showMinMaxInput === undefined) {
       if (this.bins.length < 10) {

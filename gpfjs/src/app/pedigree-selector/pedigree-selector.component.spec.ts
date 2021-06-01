@@ -4,7 +4,7 @@ import { PedigreeSelectorComponent } from './pedigree-selector.component';
 import { StateRestoreService } from 'app/store/state-restore.service';
 
 
-describe('PedigreeselectorComponent', () => {
+describe('PedigreeSelectorComponent', () => {
   let component: PedigreeSelectorComponent;
   let fixture: ComponentFixture<PedigreeSelectorComponent>;
 

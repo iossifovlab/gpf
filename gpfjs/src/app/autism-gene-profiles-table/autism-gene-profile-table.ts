@@ -1,77 +1,108 @@
-export class AutismGeneToolConfig {
-  constructor(
-    private autismScores: string[],
-    private datasets: AutismGeneToolDataset[],
-    private geneSets: string[],
-    private protectionScores: string[],
-    private defaultDataset: string,
-  ) { }
+import { Type } from 'class-transformer';
 
-  static fromJson(json: any) {
-    return new AutismGeneToolConfig(
-      json['autism_scores'],
-      this.datasetsFromJson(json['datasets']),
-      json['gene_sets'],
-      json['protection_scores'],
-      json['default_dataset']
-    );
-  }
+export class AgpConfig {
+  defaultDataset: string;
 
-  static datasetsFromJson(datasetsJson: any): Array<AutismGeneToolDataset> {
-    const datasetKeys = Object.keys(datasetsJson);
-    return datasetKeys.map(dataset => new AutismGeneToolDataset(dataset, datasetsJson[dataset]['effects'], datasetsJson[dataset]['person_sets']));
-  }
+  @Type(() => AgpGeneSetsCategory)
+  geneSets: AgpGeneSetsCategory[];
+
+  @Type(() => AgpGenomicScoresCategory)
+  genomicScores: AgpGenomicScoresCategory[];
+
+  @Type(() => AgpDataset)
+  datasets: AgpDataset[];
 }
 
-export class AutismGeneToolDataset {
-  constructor(
-    private name: string,
-    private effects: string[],
-    private personSets: string[],
-  ) { }
+export class AgpGeneSetsCategory {
+  category: string;
+  displayName: string;
+
+  @Type(() => AgpGeneSet)
+  sets: AgpGeneSet[];
 }
 
-export class AutismGeneToolGene {
-  constructor (
-    private geneSymbol: string,
-    private geneSets: string[],
-    private autismScores: Map<string, number>,
-    private protectionScores: Map<string, number>,
-    private studies: AutismGeneToolGeneStudy[]
-  ) { }
-
-  static fromJson(json: any) {
-    return new AutismGeneToolGene(
-      json['gene_symbol'],
-      json['gene_sets'],
-      new Map(Object.entries(json['autism_scores'])),
-      new Map(Object.entries(json['protection_scores'])),
-      this.geneStudiesFromJson(json['studies']),
-    );
-  }
-
-  static geneStudiesFromJson(geneStudiesJson: any): Array<AutismGeneToolGeneStudy> {
-    const geneStudyKeys = Object.keys(geneStudiesJson);
-    return geneStudyKeys.map(geneStudy => new AutismGeneToolGeneStudy(geneStudy, this.personSetsFromJson(geneStudiesJson[geneStudy])));
-  }
-
-  static personSetsFromJson(personSetsJson: any): Array<AutismGeneToolPersonSet> {
-    const personSetsKeys = Object.keys(personSetsJson);
-    return personSetsKeys.map(personSet => new AutismGeneToolPersonSet(personSet, new Map(Object.entries(personSetsJson[personSet]))));
-  }
+export class AgpGeneSet {
+  setId: string;
+  collectionId: string;
 }
 
-export class AutismGeneToolGeneStudy {
-  constructor (
-    private name: string,
-    private personSets: AutismGeneToolPersonSet[],
+export class AgpGenomicScoresCategory {
+  category: string;
+  displayName: string;
 
-  ) { }
+  @Type(() => AgpGenomicScore)
+  scores: AgpGenomicScore[];
 }
 
-export class AutismGeneToolPersonSet {
-  constructor (
-    private name: string,
-    private effectTypes: Map<String, String>,
-  ) { }
+export class AgpGenomicScore {
+  scoreName: string;
+  format: string;
+}
+
+export class AgpDataset {
+  id: string;
+  displayName: string;
+
+  @Type(() => AgpDatasetStatistic)
+  statistics: AgpDatasetStatistic[];
+
+  @Type(() => AgpDatasetPersonSet)
+  personSets: AgpDatasetPersonSet[];
+}
+
+export class AgpDatasetStatistic {
+  id: string;
+  displayName: string;
+  effects: string[];
+  category: string;
+}
+
+export class AgpDatasetPersonSet {
+  id: string;
+  displayName: string;
+  parentsCount: number;
+  childrenCount: number;
+}
+
+export class AgpGene {
+  geneSymbol: string;
+  geneSets: string[];
+
+  @Type(() => AgpGenomicScores)
+  genomicScores: AgpGenomicScores[];
+
+  @Type(() => AgpStudy)
+  studies: AgpStudy[];
+}
+
+export class AgpGenomicScores {
+  id: string;
+
+  @Type(() => AgpGenomicScoreWithValue)
+  scores: AgpGenomicScoreWithValue[];
+}
+
+export class AgpGenomicScoreWithValue {
+  id: string;
+  value: number;
+  format: string;
+}
+
+export class AgpStudy {
+  id: string;
+
+  @Type(() => AgpPersonSet)
+  personSets: AgpPersonSet[];
+}
+
+export class AgpPersonSet {
+  id: string;
+
+  @Type(() => AgpEffectType)
+  effectTypes: AgpEffectType[];
+}
+
+export class AgpEffectType {
+  id: string;
+  value: number;
 }

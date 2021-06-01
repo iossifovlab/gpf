@@ -1,6 +1,6 @@
 <div class="panel" id="gene-symbols-panel">
-    <textarea type="text" [(ngModel)]="geneSymbols.geneSymbols" class="form-control">
-    </textarea>
-
-    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+    <textarea type="text" [(ngModel)]="geneSymbols.geneSymbols" class="form-control"></textarea>
+    <div [hidden]="geneSymbols.geneSymbols" class="alert alert-warning" role="alert">
+      Please insert at least one gene symbol.
+    </div>
 </div>

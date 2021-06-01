@@ -1,9 +1,11 @@
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { GeneService } from 'app/gene-view/gene.service';
 import { Gene, GeneViewSummaryAllelesArray, DomainRange } from 'app/gene-view/gene';
-import { GenotypePreviewVariantsArray, GenotypePreviewInfo } from 'app/genotype-preview-model/genotype-preview';
+import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
-import { Observable } from 'rxjs';
+// tslint:disable-next-line:import-blacklist
+import { Observable, of, combineLatest } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { ActivatedRoute, Params } from '@angular/router';
@@ -31,10 +33,12 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   summaryVariantsArray: GeneViewSummaryAllelesArray;
   selectedDataset$: Observable<Dataset>;
   selectedDatasetId: string;
-  genotypePreviewInfo: GenotypePreviewInfo;
   loadingFinished: boolean;
   familyLoadingFinished: boolean;
   hideResults: boolean;
+  hideDropdown: boolean;
+  showError = false;
+
   codingEffectTypes = [
     'lgds',
     'nonsense',
@@ -70,6 +74,13 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   enableCodingOnly = true;
   private genotypeBrowserState: Object;
 
+  @HostListener('document:keydown.enter', ['$event'])
+  onEnterPress($event) {
+    if ($event.target.id === 'search-box') {
+      this.submitGeneRequest();
+    }
+  }
+
   constructor(
     public queryService: QueryService,
     private geneService: GeneService,
@@ -78,7 +89,6 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
     readonly configService: ConfigService,
     private loadingService: FullscreenLoadingService,
     private stateRestoreService: StateRestoreService
-
   ) {
     super();
   }
@@ -97,12 +107,14 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   }
 
   ngAfterViewInit(): void {
-    if (this.route.snapshot.params.gene) {
-      this.waitForGeneViewComponent().then(() => {
-        this.stateRestoreService.pushNewState({'geneSymbols': [this.route.snapshot.params.gene]});
-        this.submitGeneRequest();
-      })
-    }
+    this.datasetsService.getDataset(this.selectedDatasetId).subscribe(dataset => {
+      if (dataset.accessRights && this.route.snapshot.params.gene) {
+        this.waitForGeneViewComponent().then(() => {
+          this.stateRestoreService.pushNewState({'geneSymbols': [this.route.snapshot.params.gene]});
+          this.submitGeneRequest();
+        });
+      }
+    });
   }
 
   async waitForGeneViewComponent() {
@@ -137,8 +149,11 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
         'rangeStart': $event.start > 0 ? $event.start : null,
         'rangeEnd': $event.end,
       }];
-      this.genotypePreviewVariantsArray =
-        this.queryService.getGenotypePreviewVariantsByFilter(requestParams, this.genotypePreviewInfo);
+      this.selectedDataset$.subscribe( selectedDataset => {
+        this.genotypePreviewVariantsArray = this.queryService.getGenotypePreviewVariantsByFilter(
+          requestParams, selectedDataset.genotypeBrowserConfig.columnIds
+        );
+      });
     });
   }
 
@@ -155,6 +170,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
       inheritanceFilters.push('mendelian');
       inheritanceFilters.push('omission');
       inheritanceFilters.push('missing');
+      // inheritanceFilters.push('unknown');
     }
     let effects: string[] = state.selectedEffectTypes;
     if (effects.indexOf('other') >= 0) {
@@ -185,70 +201,83 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
     return params;
   }
 
+  startLoadingSpinner(): void {
+    this.familyLoadingFinished = false;
+  }
+
   submitGeneRequest() {
-    this.hideResults = false;
-    this.geneViewComponent.clearSvgElement();
-    this.geneViewComponent.resetGeneTableValues();
-    this.getCurrentState()
-      .subscribe(state => {
-        this.geneSymbol = state['geneSymbols'][0];
+    this.showError = false;
+    this.hideDropdown = true;
 
-        this.geneService.getGene(this.geneSymbol.toUpperCase().trim()).subscribe((gene) => {
-          this.selectedGene = gene;
-        });
+    this.queryService.summaryStreamingFinishedSubject.subscribe(_ => {
+      this.loadingFinished = true;
+      this.loadingService.setLoadingStop();
+    });
 
-        this.genotypePreviewInfo = null;
+    this.queryService.streamingFinishedSubject.subscribe(() => {
+      this.familyLoadingFinished = true;
+    });
+
+    this.getCurrentState().pipe(
+      switchMap(state => {
+        let geneObservable: Observable<Gene>;
+        if (state['geneSymbols']) {
+          this.geneSymbol = state['geneSymbols'][0];
+          geneObservable = this.geneService.getGene(this.geneSymbol.toUpperCase().trim());
+        } else {
+          this.geneSymbol = undefined;
+          geneObservable = of();
+        }
+        return combineLatest(
+          of(state), geneObservable
+        );
+      }),
+      switchMap(([state, gene]) => {
+        if (gene === undefined) {
+          return;
+        }
+        this.selectedGene = gene;
+        this.hideResults = false;
         this.loadingFinished = false;
         this.loadingService.setLoadingStart();
-        this.queryService.getGenotypePreviewInfo(
-          { datasetId: this.selectedDatasetId, peopleGroup: state['peopleGroup'] }
-        ).subscribe(
-          (genotypePreviewInfo) => {
-            this.genotypePreviewInfo = genotypePreviewInfo;
-            this.genotypePreviewVariantsArray = null;
+        return of(state);
+      })
+    ).subscribe(state => {
+      this.genotypePreviewVariantsArray = null;
 
-            this.genotypeBrowserState = state;
-            let summaryLoadingFinished = false;
+      this.genotypeBrowserState = state;
 
-            this.queryService.summaryStreamingFinishedSubject.subscribe(
-              _ => {
-                summaryLoadingFinished = true;
-                this.loadingFinished = true;
-                this.loadingService.setLoadingStop();
-              });
+      const requestParams = { ...state };
+      requestParams['maxVariantsCount'] = 10000;
+      delete requestParams['zoomState'];
+      delete requestParams['regions'];
 
-            this.queryService.streamingFinishedSubject.subscribe(() => { this.familyLoadingFinished = true; });
+      if (this.enableCodingOnly) {
+        requestParams['effectTypes'] = this.codingEffectTypes;
+      }
+      const inheritanceFilters = [
+        'denovo',
+        'mendelian',
+        'omission',
+        'missing'
+      ];
 
-            const requestParams = { ...state };
-            requestParams['maxVariantsCount'] = 10000;
-            delete requestParams['zoomState'];
-            delete requestParams['regions'];
+      requestParams['inheritanceTypeFilter'] = inheritanceFilters;
 
-
-            if (this.enableCodingOnly) {
-              requestParams['effectTypes'] = this.codingEffectTypes;
-              this.geneViewComponent.enableIntronCondensing();
-            } else {
-              this.geneViewComponent.disableIntronCondensing();
-            }
-            const inheritanceFilters = [
-              'denovo',
-              'mendelian',
-              'omission',
-              'missing'
-            ];
-
-            requestParams['inheritanceTypeFilter'] = inheritanceFilters;
-
-            this.summaryVariantsArray = this.queryService.getGeneViewVariants(requestParams);
-
-          }, error => {
-            console.warn(error);
-          }
-        );
-      }, error => {
-        console.error(error);
-      });
+      this.summaryVariantsArray = this.queryService.getGeneViewVariants(requestParams);
+    }, error => {
+      console.error(error);
+      this.showError = true;
+      this.hideDropdown = false;
+    }, async () => {
+      this.hideDropdown = false;
+      await this.waitForGeneViewComponent();
+      if (this.enableCodingOnly) {
+        this.geneViewComponent.enableIntronCondensing();
+      } else {
+        this.geneViewComponent.disableIntronCondensing();
+      }
+    });
   }
 
   getFamilyVariantCounts() {
@@ -259,20 +288,28 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   }
 
   onSubmit(event) {
-    this.getCurrentState()
-      .subscribe(
-        state => {
-          const requestParams = this.transformFamilyVariantsQueryParameters(state);
-          requestParams['summaryVariantIds'] = state['summaryVariantIds'];
-          requestParams['genomicScores'] = [{
-            'metric': this.geneBrowserConfig.frequencyColumn,
-            'rangeStart': state['zoomState'].yMin > 0 ? state['zoomState'].yMin : null,
-            'rangeEnd': state['zoomState'].yMax,
-          }];
-          event.target.queryData.value = JSON.stringify(requestParams);
-          event.target.submit();
-        },
-        error => null
-      );
+    this.getCurrentState().subscribe(state => {
+      this.selectedDataset$.subscribe( selectedDataset => {
+        const requestParams = this.transformFamilyVariantsQueryParameters(state);
+        requestParams['summaryVariantIds'] = state['summaryVariantIds'];
+        requestParams['genomicScores'] = [{
+          'metric': this.geneBrowserConfig.frequencyColumn,
+          'rangeStart': state['zoomState'].yMin > 0 ? state['zoomState'].yMin : null,
+          'rangeEnd': state['zoomState'].yMax,
+        }];
+        requestParams['download'] = true;
+
+        const targetId = event.target.attributes.id.nodeValue;
+        if (targetId === 'summary_download') {
+          requestParams['querySummary'] = true;
+        }
+
+        event.target.queryData.value = JSON.stringify(requestParams);
+        event.target.submit();
+      }, error => {
+          console.warn(error);
+      });
+    },
+    error => null);
   }
 }

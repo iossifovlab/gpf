@@ -10,7 +10,7 @@
           dy=".35em" text-anchor="middle" class="partitions-text">{{ insideRangeText }}
         </text>
       </g>
-      <g *ngIf="!isInteractive && singleScoreValue !== undefined">
+      <g *ngIf="!isInteractive && singleScoreValueIsValid()">
         <text [attr.x]="scaleXAxis(singleScoreValue)" [attr.y]="-10" class="small" text-anchor="middle">{{ singleScoreValue }}</text>
         <line 
           [attr.x1]="scaleXAxis(singleScoreValue)" [attr.y1]="scaleYAxis(1)"

@@ -4,7 +4,7 @@ import { environment } from '../environments/environment';
 import { AutismGeneProfilesService } from './autism-gene-profiles-block/autism-gene-profiles.service';
 import { BnNgIdleService } from 'bn-ng-idle';
 import { UsersService } from './users/users.service';
-import { AutismGeneToolConfig } from './autism-gene-profiles-table/autism-gene-profile-table';
+import { AgpConfig } from './autism-gene-profiles-table/autism-gene-profile-table';
 import { switchMap } from 'rxjs/operators';
 
 @Component({
@@ -51,7 +51,7 @@ import { switchMap } from 'rxjs/operators';
 export class AppComponent {
   showSidenav = false;
   title = 'GPF: Genotypes and Phenotypes in Families';
-  autismGeneProfilesConfig: AutismGeneToolConfig;
+  agpConfig: AgpConfig;
   private sessionTimeoutInSeconds = 7 * 24 * 60 * 60; // 1 week
 
   constructor(
@@ -72,7 +72,7 @@ export class AppComponent {
       ).subscribe();
 
     this.autismGeneProfilesService.getConfig().subscribe(res => {
-      this.autismGeneProfilesConfig = res;
+      this.agpConfig = res;
     });
   }
 

@@ -93,6 +93,9 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   @ViewChild('denovoCheckbox') denovoCheckbox;
   @ViewChild('transmittedCheckbox') transmittedCheckbox;
   @ViewChildren('variantTypeCheckbox') variantTypeCheckboxes;
+  @Output() startLoadingSpinnerEvent = new EventEmitter<boolean>();
+
+  tablePreviewDebouncer: Subject<DomainRange> = new Subject<DomainRange>();
 
   geneBrowserConfig;
   frequencyDomainMin: number;
@@ -161,6 +164,9 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     private loadingService: FullscreenLoadingService,
   ) {
     super();
+    this.tablePreviewDebouncer
+      .debounceTime(1000)
+      .subscribe(domains => this.updateShownTablePreviewVariantsArrayEvent.emit(domains));
   }
 
   ngOnInit() {
@@ -199,6 +205,9 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     });
 
     this.streamingFinished$.subscribe(() => {
+      if (this.gene === undefined) {
+        return;
+      }
       this.geneViewModel = new GeneViewModel(this.gene, this.svgWidth);
       this.geneViewTranscript = new GeneViewTranscript(this.gene.transcripts[0]);
       this.setDefaultScale();
@@ -535,7 +544,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     const result = new GeneViewSummaryAllelesArray();
 
     for (const summaryAllele of summaryVariantsArray.summaryAlleles) {
-      if(this.filterSummaryAllele(summaryAllele, startPos, endPos)) {
+      if (this.filterSummaryAllele(summaryAllele, startPos, endPos)) {
         result.addSummaryAllele(summaryAllele);
       }
     }
@@ -572,8 +581,11 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     const start = this.zoomHistory.currentState.yMin;
     const end = this.zoomHistory.currentState.yMax;
     const domains = new DomainRange(start, end);
-    this.updateShownTablePreviewVariantsArrayEvent.emit(domains);
+    this.startLoadingSpinnerEvent.emit();
+    this.tablePreviewDebouncer.next(domains);
   }
+
+
 
   doAllelesIntersect(allele1: GeneViewSummaryAllele, allele2: GeneViewSummaryAllele): boolean {
     let result: boolean;
@@ -610,6 +622,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
     if (this.gene !== undefined) {
       this.x_axis = d3.axisBottom(this.x).tickValues(this.calculateXAxisTicks());
+      this.drawXAxisLength(this.svgElement);
       this.y_axis = d3.axisLeft(this.y).tickValues(this.calculateYAxisTicks()).tickFormat(d3.format('1'));
       this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([]);
       this.y_axis_zero = d3.axisLeft(this.y_zero).tickSizeInner(0).tickPadding(9);
@@ -921,7 +934,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       return;
     }
 
-    if (this.gene !== undefined) {
+    if (this.gene !== undefined && this.x !== undefined) {
       const windowWidth = $event.currentTarget.innerWidth;
       const domainMin = this.x.domain()[0];
       const domainMax = this.x.domain()[this.x.domain().length - 1];
@@ -963,6 +976,21 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       }
     }
     return selectedChromosomes;
+  }
+
+  drawXAxisLength(element) {
+    const domain = this.x.domain();
+    const domainMin = domain[0];
+    const domainMax = domain[domain.length - 1];
+    const xAxisLength = this.formatExonsLength(domainMax - domainMin);
+
+    draw.hoverText(
+      element,
+      -50, this.svgHeightFreqRaw - 3,
+      xAxisLength,
+      `X axis length: ${this.commaSeparateNumber(domainMax - domainMin)}`,
+      this.fontSize
+    );
   }
 
   drawChromosomeLabels(element, yPos: number, geneViewTranscript: GeneViewTranscript) {
@@ -1092,7 +1120,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   }
 
   commaSeparateNumber(number: number): string {
-    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' bp';
   }
 
   formatExonsLength(exonsLength: number): string {
@@ -1103,10 +1131,10 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
      result = `${exonsLength} bp`;
     } else if (numLen < 7) {
       result = `${Math.round(exonsLength / 100 + Number.EPSILON) / 10} kbp`;
-    } else if (numLen < 10) {
-      result = `${Math.round(exonsLength / 10000 + Number.EPSILON) / 10} mbp`;
+    } else {
+      result = `${Math.round(exonsLength / 100000 + Number.EPSILON) / 10} mbp`;
     }
 
-    return result;
+    return '~' + result;
   }
 }

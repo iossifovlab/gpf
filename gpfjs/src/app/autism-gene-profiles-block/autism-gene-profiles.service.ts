@@ -1,7 +1,8 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { AutismGeneToolConfig, AutismGeneToolGene } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import { AgpConfig, AgpGene } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { ConfigService } from 'app/config/config.service';
+import { plainToClass } from 'class-transformer';
 // tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
 
@@ -17,27 +18,26 @@ export class AutismGeneProfilesService {
     private config: ConfigService,
   ) {}
 
-  getConfig(): Observable<AutismGeneToolConfig> {
+  getConfig(): Observable<AgpConfig> {
     return this.http
     .get(this.config.baseUrl + this.configUrl)
     .map(res => {
       if (Object.keys(res).length === 0) {
         return;
       }
-
-      return AutismGeneToolConfig.fromJson(res);
+      return plainToClass(AgpConfig, res);
     });
   }
 
-  getGene(geneSymbol: string): Observable<AutismGeneToolGene> {
+  getGene(geneSymbol: string): Observable<AgpGene> {
     return this.http
     .get(this.config.baseUrl + this.genesUrl + geneSymbol)
     .map(res => {
-      return AutismGeneToolGene.fromJson(res);
+      return plainToClass(AgpGene, res);
     });
   }
 
-  getGenes(page: number, searchString?: string, sortBy?: string, order?: string): Observable<AutismGeneToolGene[]> {
+  getGenes(page: number, searchString?: string, sortBy?: string, order?: string): Observable<AgpGene[]> {
     let url = this.config.baseUrl + this.genesUrl;
     let params = new HttpParams().set('page', page.toString());
 
@@ -59,7 +59,7 @@ export class AutismGeneProfilesService {
       .get(url)
       .map(res => {
         return (res as Array<Object>)
-          .map(gene => AutismGeneToolGene.fromJson(gene));
+          .map(gene => plainToClass(AgpGene, gene));
       });
   }
 }

@@ -1,10 +1,12 @@
 <div style="padding: 30px;" *ngIf="selectedDataset$ | async as dataset">
   <div *ngIf="dataset.accessRights">
     <div class="effect-card card">
-      <div style="font-family: Roboto; font-weight: 500; border-bottom: none;" class="card-header card-title">Gene
-        Symbols</div>
+      <div style="font-family: Roboto; font-weight: 500; border-bottom: none;" class="card-header card-title">Gene Symbols</div>
       <div class="card-block">
-        <gpf-gene-symbol-with-search (inputClickEvent)="hideResults = true"></gpf-gene-symbol-with-search>
+        <gpf-gene-symbol-with-search (inputClickEvent)="hideResults = true" [hideDropdown]="hideDropdown"></gpf-gene-symbol-with-search>
+        <div [hidden]="!showError" class="alert alert-danger" role="alert" style="display: inline-block; margin: 20px; margin-top: 0px; width: 45%">
+          No such gene found!
+        </div>
 
         <div style="padding: 0px 10px 10px 20px">
           <input (click)="hideResults = true" style="margin-right: 10px;" type="checkbox" id="coding-only-checkbox" [(ngModel)]="enableCodingOnly">
@@ -17,19 +19,20 @@
       <input type="button" style="width: 75px" class="btn btn-md btn-primary" value="Go" (click)="submitGeneRequest()">
     </div>
 
-    <div [hidden]="hideResults">
+    <div *ngIf="!hideResults">
       <div class="row" style="margin-left: 0px; margin-right: 0px">
         <gpf-gene-view style="width: 100%; min-width: 1300px;"
           [gene]="selectedGene"
           [variantsArray]="summaryVariantsArray"
           (updateShownTablePreviewVariantsArrayEvent)="updateShownTablePreviewVariantsArray($event)"
-          [streamingFinished$]="queryService.summaryStreamingFinishedSubject">
+          [streamingFinished$]="queryService.summaryStreamingFinishedSubject"
+          (startLoadingSpinnerEvent)="startLoadingSpinner()">
         </gpf-gene-view>
       </div>
 
       <div class="row">
         <div class="col-12" *ngIf="selectedGene">
-          <form (ngSubmit)="onSubmit($event)" action="{{ configService.baseUrl }}gene_view/download_summary_variants"
+          <form id="summary_download" (ngSubmit)="onSubmit($event)" action="{{ configService.baseUrl }}genotype_browser/query"
             method="post">
             <input name="queryData" type="hidden">
             <button class="btn btn-md btn-primary btn-right" id="download-summary-button" [disabled]="disableQueryButtons"
@@ -47,7 +50,7 @@
           </gpf-loading-spinner>
         </div>
         <div class="col-6" *ngIf="selectedGene">
-          <form (ngSubmit)="onSubmit($event)" action="{{ configService.baseUrl }}genotype_browser/download"
+          <form id="family_download" (ngSubmit)="onSubmit($event)" action="{{ configService.baseUrl }}genotype_browser/query"
             method="post">
             <input name="queryData" type="hidden">
             <button class="btn btn-md btn-primary btn-right" id="download-button" [disabled]="disableQueryButtons"
@@ -56,8 +59,10 @@
         </div>
       </div>
 
-      <gpf-genotype-preview-table [columns]="dataset?.genotypeBrowserConfig?.columns"
-        [genotypePreviewInfo]="genotypePreviewInfo" [genotypePreviewVariantsArray]="genotypePreviewVariantsArray">
+      <gpf-genotype-preview-table
+        [columns]="dataset?.genotypeBrowserConfig?.tableColumns"
+        [genotypePreviewVariantsArray]="genotypePreviewVariantsArray"
+        [legend]="legend">
       </gpf-genotype-preview-table>
 
     </div>

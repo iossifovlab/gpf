@@ -69,6 +69,7 @@ import './app/genotype-browser-single-view/genotype-browser-single-view.componen
 import './app/genes-block/genes-block.component.spec.ts';
 import './app/histogram/histogram.component.spec.ts';
 import './app/effecttypes/effecttypes.component.spec.ts';
+import './app/effecttypes/effecttypes-column.component.spec.ts';
 import './app/effecttypes/effecttypes.spec.ts';
 import './app/groups-bulk-add/groups-bulk-add.component.spec.ts';
 import './app/inheritancetypes/inheritancetypes.spec.ts';
@@ -100,3 +101,6 @@ import './app/autism-gene-profiles-table/middle-click.directive.spec';
 import './app/autism-gene-profiles-block/autism-gene-profiles-block.component.spec';
 import './app/autism-gene-profiles-single-view/autism-gene-profile-single-view.component.spec';
 import './app/multiple-select-menu/multiple-select-menu.component.spec';
+import './app/autism-gene-profile-single-view-wrapper/autism-gene-profile-single-view-wrapper.component.spec';
+import './app/present-in-child/present-in-child.component.spec';
+import './app/present-in-parent/present-in-parent.component.spec';

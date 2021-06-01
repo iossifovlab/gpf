@@ -1,11 +1,9 @@
 <div [hidden]="!this.gene" class="row" style="margin-left: 0px;">
   <div class="effect-card card" style="margin-top: 40px; margin-bottom: 40px;">
     <div class="card-header card-title" style="font-family: Roboto; font-weight: 500;">Affected Status</div>
-    <div class="card-block" style="padding: 20px;">
-      <div style="display: inline; margin-right: 20px;"
-        *ngFor="let affectedStatus of ['Affected only', 'Unaffected only', 'Affected and unaffected']; let i=index"
-        class="checkbox">
-        <label>
+    <div class="card-block">
+      <div style="display: inline" *ngFor="let affectedStatus of ['Affected only', 'Unaffected only', 'Affected and unaffected']; let i=index" class="checkbox">
+        <label style="padding: 15px; user-select: none">
           <input #affectedStatusCheckbox checked type="checkbox"
             (change)="checkAffectedStatus(affectedStatus, affectedStatusCheckbox.checked)"
             id="affectedStatus{{affectedStatus}}-checkbox">
@@ -24,10 +22,9 @@
 
   <div class="effect-card card" style="margin-top: 40px; margin-bottom: 40px; margin-left: 30px">
     <div class="card-header card-title" style="font-family: Roboto; font-weight: 500;">Effect Types</div>
-    <div class="card-block" style="padding: 20px;padding-top: 22.75px; padding-bottom: 22.75px;">
-      <div style="display: inline; margin-right: 20px;"
-        *ngFor="let effect of ['LGDs', 'Missense', 'Synonymous', 'CNV+', 'CNV-', 'Other']; let i=index" class="checkbox">
-        <label>
+    <div class="card-block">
+      <div style="display: inline" *ngFor="let effect of ['LGDs', 'Missense', 'Synonymous', 'CNV+', 'CNV-', 'Other']; let i=index" class="checkbox">
+        <label style="padding: 15px; user-select: none">
           <input #effectTypeCheckbox checked type="checkbox"
             (change)="checkEffectType(effect, effectTypeCheckbox.checked)">
           <svg id={{effect}}></svg>
@@ -39,17 +36,17 @@
 
   <div class="effect-card card" style="margin-top: 40px; margin-bottom: 40px; margin-left: 30px">
     <div class="card-header card-title" style="font-family: Roboto; font-weight: 500;">Inheritance Types</div>
-    <div class="card-block" style="padding: 20px;padding-top: 22.75px; padding-bottom: 22.75px;">
-      <div style="display: inline; margin-right: 20px">
-        <label>
+    <div class="card-block">
+      <div style="display: inline">
+        <label style="padding: 15px; user-select: none">
           <input style="margin-right: 5px;" #denovoCheckbox checked type="checkbox"
             (click)="checkShowDenovo(denovoCheckbox.checked)">
           <svg id="denovo"></svg>
           <span style="margin-left: 10px">Denovo</span>
         </label>
       </div>
-      <div style="display: inline; margin-right: 20px">
-        <label>
+      <div style="display: inline">
+        <label style="padding: 15px; user-select: none">
           <input #transmittedCheckbox checked type="checkbox"
             (click)="checkShowTransmitted(transmittedCheckbox.checked)">
           <svg id="transmitted"></svg>
@@ -61,10 +58,9 @@
 
   <div class="effect-card card" style="margin-top: 40px; margin-bottom: 40px; margin-left: 30px">
     <div class="card-header card-title" style="font-family: Roboto; font-weight: 500;">Variant Types</div>
-    <div class="card-block" style="padding: 20px;padding-top: 22.75px; padding-bottom: 22.75px;">
-      <div style="display: inline; margin-right: 20px;"
-        *ngFor="let variantType of ['sub', 'ins', 'del', 'CNV+', 'CNV-']; let i=index" class="checkbox">
-        <label>
+    <div class="card-block">
+      <div style="display: inline" *ngFor="let variantType of ['sub', 'ins', 'del', 'CNV+', 'CNV-']; let i=index" class="checkbox">
+        <label style="padding: 15px; user-select: none">
           <input #variantTypeCheckbox checked type="checkbox"
             (change)="checkVariantType(variantType, variantTypeCheckbox.checked)">
           {{ variantType }}
