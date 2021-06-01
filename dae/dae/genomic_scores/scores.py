@@ -16,6 +16,7 @@ class Attributes(NamedTuple):
 class GenomicScore:
     def __init__(self, config):
         self.config = config
+        self.id: str = config.id
         self.full_name: str = config.score_file.filename  # ?
         self.description: str = config.meta
         self.identification: List[Field] = [
@@ -61,4 +62,6 @@ class GenomicScoreGroup:
         return result
 
     def get_genomic_score(self, genomic_score_id: str) -> GenomicScore:
-        pass
+        return next(filter(
+            lambda gs: gs.id == genomic_score_id, self.score_children
+        ))
