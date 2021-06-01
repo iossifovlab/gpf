@@ -41,11 +41,24 @@ class GenomicScoreGroup:
         raise NotImplementedError()
 
     @property
+    def score_children(self) -> List[GenomicScore]:
+        result = list()
+        for child in self.children.values():
+            if isinstance(child, GenomicScore):
+                result.append(child)
+            else:
+                result.extend(child.score_children)
+        return result
+
+    @property
     def attributes(self) -> List[Attributes]:
         """
         Union of the constituent GenomicScore instances' attributes.
         """
         result = list()
-        for gs in self.children:
+        for gs in self.score_children:
             result.extend(gs.attributes)
         return result
+
+    def get_genomic_score(self, genomic_score_id: str) -> GenomicScore:
+        pass
