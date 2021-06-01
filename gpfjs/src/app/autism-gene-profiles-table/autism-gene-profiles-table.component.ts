@@ -145,7 +145,11 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
    * @returns modals position
    */
   calculateModalBottom(): number {
-    return window.innerHeight - this.columnFilteringButtons.first.nativeElement.getBoundingClientRect().bottom;
+    const columnFilteringButton = this.columnFilteringButtons.first;
+    if (columnFilteringButton) {
+      return window.innerHeight - columnFilteringButton.nativeElement.getBoundingClientRect().bottom;
+    }
+    return 0;
   }
 
   /**
