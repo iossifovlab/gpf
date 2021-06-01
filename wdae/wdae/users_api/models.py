@@ -187,6 +187,13 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         user.set_password(new_password)
         user.save()
 
+        # Reset account lockout
+        AuthenticationLog(
+            email=user.email,
+            time=timezone.now(),
+            failed_attempt=0
+        ).save()
+
         verif_path.delete()
 
         return user
@@ -385,3 +392,30 @@ class VerificationPath(models.Model):
 
     class Meta(object):
         db_table = "verification_paths"
+
+
+class AuthenticationLog(models.Model):
+    """A model to keep track of all requests for
+    authentication: which email was used, when they were
+    made and what number of consecutive failed attempts have
+    been made on this email. The failed attempt counter is reset
+    on a succesful login or a changed password.
+    """
+    email = models.EmailField()
+    time = models.DateTimeField()
+    failed_attempt = models.IntegerField()
+
+    class Meta():
+        db_table = "authentication_log"
+
+    @staticmethod
+    def get_last_login_for(email: str):
+        """Get the latest authentication attempt for a specified email."""
+        query = AuthenticationLog.objects.filter(
+            email__iexact=email
+        ).order_by("-time", "-failed_attempt")
+        try:
+            result = query[0]
+        except IndexError:
+            result = None
+        return result

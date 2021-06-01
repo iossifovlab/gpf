@@ -4,6 +4,7 @@ from pprint import pprint
 from rest_framework import status
 
 from utils.email_regex import email_regex, is_email_valid
+from utils.password_requirements import is_password_valid
 
 
 def test_invalid_verif_path(client, researcher):
@@ -64,3 +65,18 @@ def test_email_validaiton():
     assert not is_email_valid("@bla.com")
     assert not is_email_valid("invalid@UpperCaseDomain.com")
     assert not is_email_valid("invalid@uppercasedomain.Com")
+
+
+def test_password_validation():
+    generic_password = "esg09dusfd"
+
+    # Don't accept passwords shorter than 10 symbols
+    for i in range(0, 10):
+        assert not is_password_valid(generic_password[:i])
+
+    # Check if common password blacklist is used
+    assert not is_password_valid("1234567890")
+    assert not is_password_valid("qwertyuiop")
+    assert not is_password_valid("qwerty123456")
+
+    assert is_password_valid(generic_password)
