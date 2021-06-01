@@ -69,6 +69,7 @@ export class BasePage {
 
     usersPage.loginDropdownToggleButton.click();
     usersPage.usernameInput.type(username);
+    usersPage.nextButton.click();
     usersPage.passwordInput.type(password);
     usersPage.loginSubmitButton.click();
     cy.get('#logout-button').should('be.visible');
