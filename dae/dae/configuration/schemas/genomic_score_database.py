@@ -4,6 +4,8 @@ file_schema = {
         "filename": {"type": "string"},
         "format": {"type": "string"},
         "sha256": {"type": "string"},
+        "has_header": {"type": "boolean"},
+        "add_chrom_prefix": {"type": "string"},
     }
 }
 
@@ -27,13 +29,6 @@ genomic_score = {
     },
     "score_file": file_schema,
     "index_file": file_schema,
-    "common": {
-        "type": "dict",
-        "schema": {
-            "has_header": {"type": "boolean"},
-            "add_chrom_prefix": {"type": "string"},
-        }
-    },
     "identification": {
         "type": "list",
         "schema": {
