@@ -15,7 +15,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   geneTabs = new Set<string>();
   autismGeneToolConfig: AgpConfig;
-  testConfig: AgpConfig;
+  tableConfig: AgpConfig;
 
   allCategories: string[];
   shownCategories: string[];
@@ -48,7 +48,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   ngOnInit(): void {
     this.autismGeneProfilesService.getConfig().take(1).subscribe(config => {
       this.autismGeneToolConfig = cloneDeep(config);
-      this.testConfig = cloneDeep(config);
+      this.tableConfig = cloneDeep(config);
       this.allCategories = this.getAllCategories(this.autismGeneToolConfig);
       this.shownCategories = this.getAllCategories(this.autismGeneToolConfig);
     });
@@ -165,14 +165,14 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   handleMultipleSelectMenuApplyEvent($event) {
     this.shownCategories = $event.data;
-    this.testConfig.geneSets = this.autismGeneToolConfig.geneSets.filter(obj => this.shownCategories.includes(obj.category));
-    this.testConfig.genomicScores = this.autismGeneToolConfig.genomicScores.filter(obj => this.shownCategories.includes(obj.category));
-    this.testConfig = cloneDeep(this.testConfig);
+    this.tableConfig.geneSets = this.autismGeneToolConfig.geneSets.filter(obj => this.shownCategories.includes(obj.category));
+    this.tableConfig.genomicScores = this.autismGeneToolConfig.genomicScores.filter(obj => this.shownCategories.includes(obj.category));
+    this.tableConfig = cloneDeep(this.tableConfig);
     this.ngbDropdownMenu.dropdown.close();
   }
 
   testConfigChangeEvent($event) {
-    this.testConfig = $event;
-    this.shownCategories = this.getAllCategories(this.testConfig);
+    this.tableConfig = $event;
+    this.shownCategories = this.getAllCategories(this.tableConfig);
   }
 }
