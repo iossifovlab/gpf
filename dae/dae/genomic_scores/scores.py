@@ -1,0 +1,51 @@
+from typing import Dict, List, Union, NamedTuple
+
+
+class Field(NamedTuple):
+    id: str
+    type: str
+    desc: str
+    idx: int
+
+
+class Attributes(NamedTuple):
+    source: str
+    dest: str
+
+
+class GenomicScore:
+    def __init__(self, config):
+        self.config = config
+        self.full_name: str = config.score_file.filename  # ?
+        self.description: str = config.meta
+        self.identification: List[Field] = [
+            Field(idf) for idf in config.identification
+        ]
+        self.scores: List[Field] = [Field(idf) for idf in config.scores]
+        self.annotator: str = config.default_annotation.annotator
+        self.attributes: List[Attributes] = [
+            Attributes(attr) for attr in config.default_annotation.attributes
+        ]
+
+    @property
+    def fields(self) -> List[Field]:
+        return self.identification + self.scores
+
+
+class GenomicScoreGroup:
+    def __init__(self):
+        self.children: Dict[str, Union[GenomicScore, "GenomicScoreGroup"]] = {}
+
+    @property
+    def description(self):
+        raise NotImplementedError()
+
+    @property
+    def attributes(self) -> List[Attributes]:
+        """
+        Union of the constituent GenomicScore instances' attributes.
+        """
+        result = list()
+        for gs in self.children:
+            result.extend(gs.attributes)
+        return result

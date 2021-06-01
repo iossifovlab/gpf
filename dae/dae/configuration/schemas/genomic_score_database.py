@@ -33,14 +33,14 @@ genomic_score = {
         "type": "list",
         "schema": {
             "type": "dict",
-            "schema": file_schema,
+            "schema": identification_schema,
         }
     },
     "scores": {
         "type": "list",
         "schema": {
             "type": "dict",
-            "schema": file_schema,
+            "schema": identification_schema,
         }
     },
     "default_annotation": {
