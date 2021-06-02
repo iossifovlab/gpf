@@ -86,8 +86,9 @@ export class BasePage {
 
   navigateToDatasetPage(dataset: string, page: string) {
     cy.get('#datasets-dropdown-menu-button').click();
-    cy.get('a.dropdown-item[style="opacity: 1;"]').should('have.length', Object.keys(datasetIds).length);
-    cy.get('a.dropdown-item[style="opacity: 1;"]').contains(dataset).click();
+    cy.wait(1000);
+    // cy.get('a.dropdown-item').should('have.length', Object.keys(datasetIds).length);
+    cy.get('a.dropdown-item').contains(dataset).click();
     cy.get('#datasets-dropdown-menu-button').should('have.text', dataset + ' ');
     cy.get(`a.nav-link[routerlink="${page}"]`).click();
   }

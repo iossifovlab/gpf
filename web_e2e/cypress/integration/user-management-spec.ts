@@ -119,7 +119,7 @@ describe('User management tests', () => {
     createTestGroup(userManagementPage, 'test_group');
     createTestUser(userManagementPage, 'test_email@email.com', 'test_name');
 
-    userManagementPage.testUserEditorButton.click();
+    userManagementPage.getUserEditorButtonByEmail('test_email@email.com').click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
@@ -208,7 +208,7 @@ describe('User management tests', () => {
     createTestGroup(userManagementPage, 'test_group');
     createTestUser(userManagementPage, 'test_email@email.com', 'test_name');
 
-    userManagementPage.testUserEditorButton.click();
+    userManagementPage.getUserEditorButtonByEmail('test_email@email.com').click();
 
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();

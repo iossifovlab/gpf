@@ -61,8 +61,12 @@ export class UserManagementPage extends BasePage {
     return cy.get('mwl-confirmation-popover-window button').contains('Delete');
   }
 
-  get testUserEditorButton() {
-    return cy.get('gpf-table a').contains('test_email@email.com');
+  getUserEditorButtonByEmail(email: string) {
+    return cy.get('gpf-table a').contains(email);
+  }
+
+  get allUserEditGroupRemoveButtons() {
+    return cy.get('ng-multiselect-dropdown a');
   }
 
   get userEditWindow() {
