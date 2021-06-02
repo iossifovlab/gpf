@@ -12,10 +12,6 @@ class BaseGenomicScoreRepository:
         self.top_level_group: GenomicScoreGroup = GenomicScoreGroup()
 
     @property
-    def is_local(self) -> bool:
-        raise NotImplementedError()
-
-    @property
     def genomic_scores(self) -> List[GenomicScore]:
         """
         Returns all constituent genomic scores of this repository.
@@ -42,10 +38,6 @@ class FilesystemGenomicScoreRepository(BaseGenomicScoreRepository):
         self.path = path
         # TODO Implement discovery
 
-    @property
-    def is_local(self) -> bool:
-        return True
-
     def cache(self, genomic_score_id: str):
         raise NotImplementedError()
 
@@ -59,10 +51,6 @@ class HTTPGenomicScoreRepository(BaseGenomicScoreRepository):
         super().__init__()
         self.url = url
         # TODO Implement discovery
-
-    @property
-    def is_local(self) -> bool:
-        return False
 
     def cache(self, genomic_score_id: str):
         raise NotImplementedError()

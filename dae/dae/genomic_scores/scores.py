@@ -17,7 +17,7 @@ class GenomicScore:
     def __init__(self, config):
         self.config = config
         self.id: str = config.id
-        self.full_name: str = config.score_file.filename  # ?
+        self.name: str = config.score_file.name
         self.description: str = config.meta
         self.identification: List[Field] = [
             Field(idf) for idf in config.identification
@@ -38,10 +38,6 @@ class GenomicScoreGroup:
         self.children: Dict[str, Union[GenomicScore, "GenomicScoreGroup"]] = {}
 
     @property
-    def description(self):
-        raise NotImplementedError()
-
-    @property
     def score_children(self) -> List[GenomicScore]:
         result = list()
         for child in self.children.values():
@@ -49,16 +45,6 @@ class GenomicScoreGroup:
                 result.append(child)
             else:
                 result.extend(child.score_children)
-        return result
-
-    @property
-    def attributes(self) -> List[Attributes]:
-        """
-        Union of the constituent GenomicScore instances' attributes.
-        """
-        result = list()
-        for gs in self.score_children:
-            result.extend(gs.attributes)
         return result
 
     def get_genomic_score(self, genomic_score_id: str) -> GenomicScore:
