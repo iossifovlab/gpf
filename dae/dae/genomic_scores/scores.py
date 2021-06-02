@@ -34,7 +34,8 @@ class GenomicScore:
 
 
 class GenomicScoreGroup:
-    def __init__(self):
+    def __init__(self, id: str):
+        self.id = id
         self.children: Dict[str, Union[GenomicScore, "GenomicScoreGroup"]] = {}
 
     @property

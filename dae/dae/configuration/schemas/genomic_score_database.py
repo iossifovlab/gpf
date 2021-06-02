@@ -6,7 +6,7 @@ attr_schema = {
     }
 }
 
-genomic_score = {
+genomic_score_schema = {
     "id": {"type": "string"},
     "name": {"type": "string"},
     "score_type": {"type": "string"},
