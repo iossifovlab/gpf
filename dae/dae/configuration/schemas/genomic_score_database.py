@@ -1,52 +1,50 @@
-file_schema = {
+attr_schema = {
     "type": "dict",
     "schema": {
-        "filename": {"type": "string"},
-        "format": {"type": "string"},
-        "sha256": {"type": "string"},
-        "has_header": {"type": "boolean"},
-        "add_chrom_prefix": {"type": "string"},
-    }
-}
-
-identification_schema = {
-    "type": "dict",
-    "schema": {
-        "id": {"type": "string"},
-        "type": {"type": "string"},
-        "desc": {"type": "string"},
-        "index": {"type": "integer"},
+        "name": {"type": "string"},
+        "index": {"type": "string"},
     }
 }
 
 genomic_score = {
     "id": {"type": "string"},
+    "name": {"type": "string"},
+    "score_type": {"type": "string"},
+    "filename": {"type": "string"},
+    "format": {"type": "string"},
+    "has_header": {"type": "boolean"},
+    "add_chrom_prefix": {"type": "string"},
+    "index_file": {
+        "type": "dict",
+        "schema": {
+            "filename": {"type": "string"},
+            "format": {"type": "string"},
+        },
+    },
     "version": {
         "type": "dict",
         "schema": {
             "score_version": {"type": "string"}
         },
     },
-    "score_file": file_schema,
-    "index_file": file_schema,
-    "identification": {
-        "type": "list",
-        "schema": {
-            "type": "dict",
-            "schema": identification_schema,
-        }
-    },
+    "chrom": attr_schema,
+    "pos_begin": attr_schema,
+    "pos_end": attr_schema,
     "scores": {
         "type": "list",
         "schema": {
             "type": "dict",
-            "schema": identification_schema,
+            "schema": {
+                "id": {"type": "string"},
+                "type": {"type": "string"},
+                "desc": {"type": "string"},
+                "index": {"type": "integer"},
+            }
         }
     },
     "default_annotation": {
         "type": "dict",
         "schema": {
-            "annotator": {"type": "string"},
             "attributes": {
                 "type": "dict",
                 "schema": {
