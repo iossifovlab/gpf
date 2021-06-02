@@ -54,3 +54,4 @@ sphinx>=2.4.0
 sphinx_rtd_theme
 sphinx-copybutton
 sphinxcontrib-httpdomain
+beautifulsoup4
