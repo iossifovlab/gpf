@@ -1,36 +1,22 @@
-from typing import Dict, List, Union, NamedTuple
-
-
-class Field(NamedTuple):
-    id: str
-    type: str
-    desc: str
-    idx: int
-
-
-class Attributes(NamedTuple):
-    source: str
-    dest: str
+from typing import Dict, List, Union
 
 
 class GenomicScore:
     def __init__(self, config):
         self.config = config
         self.id: str = config.id
-        self.name: str = config.score_file.name
+        self.name: str = config.name
         self.description: str = config.meta
-        self.identification: List[Field] = [
-            Field(idf) for idf in config.identification
-        ]
-        self.scores: List[Field] = [Field(idf) for idf in config.scores]
+        self.chrom = config.chrom
+        self.pos_begin = config.pos_begin
+        self.pos_end = config.pos_end
+        self.scores = config.scores
         self.annotator: str = config.default_annotation.annotator
-        self.attributes: List[Attributes] = [
-            Attributes(attr) for attr in config.default_annotation.attributes
-        ]
+        self.attributes = config.default_annotation.attributes
 
     @property
-    def fields(self) -> List[Field]:
-        return self.identification + self.scores
+    def fields(self):
+        return [self.chrom, self.pos_begin, self.pos_end, *self.scores]
 
 
 class GenomicScoreGroup:

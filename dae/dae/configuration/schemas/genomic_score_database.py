@@ -2,7 +2,7 @@ attr_schema = {
     "type": "dict",
     "schema": {
         "name": {"type": "string"},
-        "index": {"type": "string"},
+        "index": {"type": "integer"},
     }
 }
 
@@ -46,10 +46,13 @@ genomic_score_schema = {
         "type": "dict",
         "schema": {
             "attributes": {
-                "type": "dict",
+                "type": "list",
                 "schema": {
-                    "source": {"type": "string"},
-                    "dest": {"type": "string"},
+                    "type": "dict",
+                    "schema": {
+                        "source": {"type": "string"},
+                        "dest": {"type": "string"},
+                    }
                 }
             },
         }

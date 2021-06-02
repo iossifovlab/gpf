@@ -57,7 +57,7 @@ class FilesystemGenomicScoreRepository(BaseGenomicScoreRepository):
                 curr_group.children[group] = GenomicScoreGroup(group)
                 curr_group = curr_group.children[group]
             curr_group.children[score_path_tokens[-2]] = GenomicScore(
-                GPFConfigParser.load_config(score_path, genomic_score_schema)
+                GPFConfigParser.load_config(conf_path, genomic_score_schema)
             )
 
     def cache(self, genomic_score_id: str):
