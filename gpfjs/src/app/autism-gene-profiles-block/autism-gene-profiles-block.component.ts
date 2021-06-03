@@ -46,8 +46,6 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   ngOnInit(): void {
     this.autismGeneProfilesService.getConfig().take(1).subscribe(config => {
-      console.log(config);
-
       this.autismGeneToolConfig = config;
       this.testConfig = config;
       this.allCategories = this.getAllCategories();
