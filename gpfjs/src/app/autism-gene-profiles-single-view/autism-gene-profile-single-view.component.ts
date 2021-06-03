@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { AgpConfig, AgpGene, AgpGeneSetsCategory, AgpGenomicScores, AgpGenomicScoresCategory } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import { AgpConfig, AgpDatasetStatistic, AgpGene, AgpGeneSetsCategory, AgpGenomicScores, AgpGenomicScoresCategory, AgpPersonSet } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { Observable, zip } from 'rxjs';
 import { GeneWeightsService } from '../gene-weights/gene-weights.service';
 import { GeneWeights } from 'app/gene-weights/gene-weights';
@@ -74,6 +74,12 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
 
   getSingleScoreValue(genomicScores: AgpGenomicScores[], categoryId: string, scoreId: string) {
     return genomicScores.find(category => category.id === categoryId).scores.find(score => score.id === scoreId).value;
+  }
+
+  getGeneDatasetValue(gene: AgpGene, studyId: string, personSet: AgpPersonSet, statistic: AgpDatasetStatistic) {
+    return gene.studies.find(study => study.id === studyId).personSets
+    .find(genePersonSet => genePersonSet.id === personSet.id).effectTypes
+    .find(effectType => effectType.id === statistic.id);
   }
 
   get histogramOptions() {

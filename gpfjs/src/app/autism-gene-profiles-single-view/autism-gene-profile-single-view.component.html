@@ -40,4 +40,40 @@
       </td>
     </tr>
   </table>
+
+  <ng-container *ngFor="let dataset of config.datasets">
+    <table class="table table-bordered table-centered datasets-table">
+      <thead>
+        <tr class="card-block">
+          <th style="text-align: center;" [attr.colspan]="dataset.personSets.length + 1">
+            {{dataset.displayName}}
+          </th>
+        </tr>
+        <tr class="card-block">
+          <th style="text-align: center;">
+            Statistics
+          </th>
+          <th *ngFor="let personSet of dataset.personSets" style="text-align: center;">
+            {{personSet.displayName}} ({{personSet.childrenCount}})
+          </th>
+        </tr>
+      </thead>
+  
+      <tbody>
+        <tr class="card-block" *ngFor="let statistic of dataset.statistics">
+          <td>
+            {{statistic.displayName}}
+          </td>
+          <td style="text-align: center;" *ngFor="let personSet of dataset.personSets">
+            <ng-container *ngIf="getGeneDatasetValue(gene, dataset.id, personSet, statistic) as effectType">
+              <ng-container *ngIf="effectType.value.count !== 0">
+                {{effectType.value.count}} ({{effectType.value.rate | number : '1.0-3'}})
+              </ng-container>
+            </ng-container>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </ng-container>
+
 </div>
