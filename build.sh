@@ -92,15 +92,15 @@ function main() {
   # cleanup
   build_stage "Cleanup"
   {
-    build_run_init "container" "ubuntu:18.04"
-    defer_ret build_run_reset
+    build_run_ctx_init "container" "ubuntu:18.04"
+    defer_ret build_run_ctx_reset
 
     build_run rm -rf ./data/ ./import/ ./downloads ./results
     build_run_local mkdir ./data/ ./import/ ./downloads ./results
   }
 
-  build_run_init "local"
-  defer_ret build_run_reset
+  build_run_ctx_init "local"
+  defer_ret build_run_ctx_reset
 
   local gpf_dev_image="gpf-dev"
 
@@ -126,7 +126,7 @@ function main() {
       -e s/"^hdfs\.host.*$/hdfs.host = \"impala\"/"g \
       ./data/data-hg19-startup/DAE.conf
 
-    build_run_init "container" "ubuntu:18.04"
+    build_run_ctx_init "container" "ubuntu:18.04"
 
     # cleanup
     build_run_container rm -rf \
@@ -134,9 +134,9 @@ function main() {
       ./data/data-hg19-startup/pheno/* \
       ./data/data-hg19-startup/wdae/wdae.sql
 
-    build_run_reset
+    build_run_ctx_reset
 
-    build_run_init "local"
+    build_run_ctx_init "local"
 
     # setup directory structure
     build_run_local mkdir -p \
@@ -162,7 +162,7 @@ function main() {
         -e s/"^hdfs\.host.*$/hdfs.host = \"impala\"/"g \
         ./data/data-hg19-remote/DAE.conf
 
-      build_run_init "container" "ubuntu:18.04"
+      build_run_ctx_init "container" "ubuntu:18.04"
 
       # cleanup
       build_run_container rm -rf \
@@ -170,10 +170,10 @@ function main() {
         ./data/data-hg19-startup/pheno/* \
         ./data/data-hg19-startup/wdae/wdae.sql
 
-      build_run_reset
+      build_run_ctx_reset
 
-      build_run_init "local"
-      defer_ret build_run_reset
+      build_run_ctx_init "local"
+      defer_ret build_run_ctx_reset
 
       # setup directory structure
       build_run_local mkdir -p \
@@ -193,8 +193,8 @@ function main() {
     {
       local gpf_dev_image_ref
       gpf_dev_image_ref="$(e docker_img_gpf_dev)"
-      build_run_init "container" "$gpf_dev_image_ref"
-      defer_ret build_run_reset
+      build_run_ctx_init "container" "$gpf_dev_image_ref"
+      defer_ret build_run_ctx_reset
 
       # fixup /code to point to /wd
       {
@@ -249,7 +249,7 @@ EOT'
         build_run_container bash -c 'export DAE_DB_DIR="/wd/data/data-hg19-remote"; /opt/conda/bin/conda run --no-capture-output -n gpf generate_denovo_gene_sets.py'
       }
 
-      build_run_reset
+      build_run_ctx_reset
     }
 
     # run cluster
@@ -273,7 +273,7 @@ EOT'
 #          -- \
 #          --character-set-server=utf8 --collation-server=utf8_bin
 #
-#        defer_ret build_run_reset ctx:ctx_mysql
+#        defer_ret build_run_ctx_reset ctx:ctx_mysql
 #
 #        build_run_container ctx:ctx_mysql /wd/scripts/wait-for-it.sh -h mysql -p 3306 -t 300
 #
@@ -287,8 +287,8 @@ EOT'
       # setup impala
       {
         local -A ctx_impala
-        build_run_init ctx:ctx_impala "container" "seqpipe/seqpipe-docker-impala:latest" "cmd-from-image" --hostname=impala --network=hr_temp
-        defer_ret build_run_reset ctx:ctx_impala
+        build_run_ctx_init ctx:ctx_impala "container" "seqpipe/seqpipe-docker-impala:latest" "cmd-from-image" --hostname=impala --network=hr_temp
+        defer_ret build_run_ctx_reset ctx:ctx_impala
 
         build_run_container ctx:ctx_impala /wd/scripts/wait-for-it.sh -h localhost -p 21050 -t 300
       }
@@ -296,11 +296,11 @@ EOT'
       # setup gpf remote
       {
         local -A ctx_gpf_remote
-        build_run_init ctx:ctx_gpf_remote "container" "${gpf_dev_image_ref}" \
+        build_run_ctx_init ctx:ctx_gpf_remote "container" "${gpf_dev_image_ref}" \
           --hostname=gpfremote \
           --network=hr_temp \
           --env DAE_DB_DIR="/data/data-hg19-remote/"
-        defer_ret build_run_reset ctx:ctx_gpf_remote
+        defer_ret build_run_ctx_reset ctx:ctx_gpf_remote
 
         # fixup /code to point to /wd
         {
@@ -324,13 +324,13 @@ EOT'
     # import test data to impala
     build_stage "Import test data to impala"
     {
-      build_run_init "container" "${gpf_dev_image_ref}" \
+      build_run_ctx_init "container" "${gpf_dev_image_ref}" \
         --network=hr_temp \
         --env DAE_DB_DIR="/data/data-hg19-remote/" \
         --env TEST_REMOTE_HOST="gpfremote" \
         --env DAE_HDFS_HOST="impala" \
         --env DAE_IMPALA_HOST="impala"
-      defer_ret build_run_reset
+      defer_ret build_run_ctx_reset
 
       # fixup /code to point to /wd
       {
@@ -351,8 +351,8 @@ EOT'
   # lint
   build_stage "Lint"
   {
-    build_run_init "container" "${gpf_dev_image_ref}"
-    defer_ret build_run_reset
+    build_run_ctx_init "container" "${gpf_dev_image_ref}"
+    defer_ret build_run_ctx_reset
 
     # fixup /code to point to /wd
     {
@@ -365,8 +365,8 @@ EOT'
   # mypy
   build_stage "Type Check"
   {
-    build_run_init "container" "${gpf_dev_image_ref}"
-    defer_ret build_run_reset
+    build_run_ctx_init "container" "${gpf_dev_image_ref}"
+    defer_ret build_run_ctx_reset
 
     # fixup /code to point to /wd
     {
@@ -400,13 +400,13 @@ EOT'
   # Tests - dae
   build_stage "Tests - dae"
   {
-    build_run_init "container" "${gpf_dev_image_ref}" \
+    build_run_ctx_init "container" "${gpf_dev_image_ref}" \
       --network=hr_temp \
       --env DAE_DB_DIR="/data/data-hg19-startup/" \
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
       --env DAE_IMPALA_HOST="impala"
-    defer_ret build_run_reset
+    defer_ret build_run_ctx_reset
 
     # fixup /code to point to /wd
     {
@@ -432,13 +432,13 @@ EOT'
   # Tests - wdae
   build_stage "Tests - wdae"
   {
-    build_run_init "container" "${gpf_dev_image_ref}" \
+    build_run_ctx_init "container" "${gpf_dev_image_ref}" \
       --network=hr_temp \
       --env DAE_DB_DIR="/data/data-hg19-startup/" \
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
       --env DAE_IMPALA_HOST="impala"
-    defer_ret build_run_reset
+    defer_ret build_run_ctx_reset
 
     # fixup /code to point to /wd
     {
@@ -468,7 +468,7 @@ EOT'
   # post cleanup
   build_stage "Post Cleanup"
   {
-    build_run_init "container" "ubuntu:18.04"
+    build_run_ctx_init "container" "ubuntu:18.04"
     build_run rm -rf ./data/ ./import/ ./downloads ./results
   }
 }
