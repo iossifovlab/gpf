@@ -33,12 +33,14 @@ def test_configuration(admin_client):
         {
             "id": "unknown",
             "displayName": "unknown",
+            "description": "",
             "parentsCount": 0,
             "childrenCount": 11,
         },
         {
             "id": "unaffected",
             "displayName": "unaffected",
+            "description": "",
             "parentsCount": 22,
             "childrenCount": 10,
         }
