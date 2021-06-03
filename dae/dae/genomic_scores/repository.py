@@ -17,7 +17,7 @@ class BaseGenomicScoreRepository:
     Describes a collection of genomic scores and genomic score groups.
     """
 
-    def __init__(self, top_level_id: str):
+    def __init__(self, gsd_id: str, top_level_id: str):
         self.top_level_group: GenomicScoreGroup = GenomicScoreGroup(
             top_level_id
         )
@@ -44,8 +44,8 @@ class FilesystemGenomicScoreRepository(BaseGenomicScoreRepository):
     A genomic score repository on a local or remote filesystem.
     """
 
-    def __init__(self, path: str):
-        super().__init__(path.rstrip('/').split('/')[-1])
+    def __init__(self, gsd_id: str, path: str):
+        super().__init__(gsd_id, path.rstrip('/').split('/')[-1])
         self.path = path
         self._traverse_gsd_dir(self.path)
 
@@ -82,8 +82,8 @@ class HTTPGenomicScoreRepository(BaseGenomicScoreRepository):
         "Parent Directory",
     ]
 
-    def __init__(self, url: str):
-        super().__init__(url.rstrip('/').split('/')[-1])
+    def __init__(self, gsd_id: str, url: str):
+        super().__init__(gsd_id, url.rstrip('/').split('/')[-1])
         self.url = url
         self.top_level_group.children = self._collect_gsd_children(self.url)
 

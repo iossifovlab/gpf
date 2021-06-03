@@ -50,6 +50,11 @@ remote_schema = {
     "password": {"type": "string"},
 }
 
+gsd_schema = {
+    "id": {"type": "string"},
+    "url": {"type": "string"}
+}
+
 storage_schema = {
     "storage_type": {"type": "string", "allowed": ["impala", "filesystem"]},
     "dir": {
@@ -121,6 +126,15 @@ dae_conf_schema = {
     "remotes": {
         "type": "list",
         "valuesrules": {"type": "dict", "schema": remote_schema}
+    },
+    "genomic_score_cache_location": {
+        "type": "string",
+        "check_with": validate_path,
+        "coerce": "abspath"
+    },
+    "genomic_score_databases": {
+        "type": "list",
+        "valuesrules": {"type": "dict", "schema": gsd_schema}
     },
     "gene_info_db": {"type": "dict", "schema": config_reference_schema},
     "default_study_config": {
