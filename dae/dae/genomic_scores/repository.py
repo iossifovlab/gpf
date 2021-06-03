@@ -45,7 +45,7 @@ class FilesystemGenomicScoreRepository(BaseGenomicScoreRepository):
     """
 
     def __init__(self, gsd_id: str, path: str):
-        super().__init__(gsd_id, path.rstrip('/').split('/')[-1])
+        super().__init__(gsd_id, os.path.split(path)[1])
         self.path = path
         self._traverse_gsd_dir(self.path)
 
@@ -54,14 +54,13 @@ class FilesystemGenomicScoreRepository(BaseGenomicScoreRepository):
             os.path.join(root_path, "**", "*.gs.yaml"), recursive=True
         )
         for conf_path in conf_files:
-            score_path = conf_path[len(root_path):]
-            score_path_tokens = score_path.split('/')
-            assert len(score_path_tokens) >= 2, score_path_tokens
+            score_path = conf_path[len(root_path):].strip('/').split('/')
+            assert len(score_path) >= 2, score_path
             curr_group = self.top_level_group
-            for group in score_path_tokens[:-2]:
+            for group in score_path[:-2]:
                 curr_group.children[group] = GenomicScoreGroup(group)
                 curr_group = curr_group.children[group]
-            curr_group.children[score_path_tokens[-2]] = GenomicScore(
+            curr_group.children[score_path[-2]] = GenomicScore(
                 GPFConfigParser.load_config(conf_path, genomic_score_schema)
             )
 

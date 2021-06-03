@@ -127,10 +127,15 @@ dae_conf_schema = {
         "type": "list",
         "valuesrules": {"type": "dict", "schema": remote_schema}
     },
-    "genomic_score_cache_location": {
-        "type": "string",
-        "check_with": validate_path,
-        "coerce": "abspath"
+    "genomic_score_cache": {
+        "type": "dict",
+        "schema": {
+            "location": {
+                "type": "string",
+                "check_with": validate_path,
+                "coerce": "abspath",
+            },
+        },
     },
     "genomic_score_databases": {
         "type": "list",

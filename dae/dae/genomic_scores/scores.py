@@ -11,8 +11,11 @@ class GenomicScore:
         self.pos_begin = config.pos_begin
         self.pos_end = config.pos_end
         self.scores = config.scores
-        self.annotator: str = config.default_annotation.annotator
-        self.attributes = config.default_annotation.attributes
+        self.score_type: str = config.score_type
+        if config.default_annotation:
+            self.attributes = config.default_annotation.attributes
+        else:
+            self.attributes = None
 
     @property
     def fields(self):
@@ -30,8 +33,12 @@ class GenomicScoreGroup:
         for child in self.children.values():
             if isinstance(child, GenomicScore):
                 result.append(child)
-            else:
+            elif isinstance(child, GenomicScoreGroup):
                 result.extend(child.score_children)
+            else:
+                # TODO should raise error, disabled temporarily
+                # raise TypeError
+                result.append(child)
         return result
 
     def get_genomic_score(self, genomic_score_id: str) -> GenomicScore:

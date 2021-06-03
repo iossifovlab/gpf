@@ -67,7 +67,7 @@ class GPFInstance(object):
         self._genomic_scores_dbs = []
         self._load_genomic_scores_repositories()
         self._cache_gsd = FilesystemGenomicScoreRepository(
-            self.dae_config.genomic_score_cache_location
+            "cache", self.dae_config.genomic_score_cache.location
         )
 
         if load_eagerly:
@@ -200,9 +200,9 @@ class GPFInstance(object):
             gsd_url = urlparse(gsd_conf["url"])
             is_filesystem = gsd_url.scheme == "file"
             if is_filesystem:
-                gsd = FilesystemGenomicScoreRepository(gsd_url.path)
+                gsd = FilesystemGenomicScoreRepository(gsd_id, gsd_url.path)
             else:
-                gsd = HTTPGenomicScoreRepository(gsd_url.geturl())
+                gsd = HTTPGenomicScoreRepository(gsd_id, gsd_url.geturl())
             self._genomic_scores_dbs.append(gsd)
 
     def get_genotype_data_ids(self, local_only=False):
