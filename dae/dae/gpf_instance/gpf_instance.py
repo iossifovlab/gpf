@@ -1,4 +1,5 @@
 import os
+import shutil
 import logging
 import pandas as pd
 import math
@@ -526,3 +527,34 @@ class GPFInstance(object):
     # DAE config
     def get_selected_genotype_data(self):
         return self.dae_config.gpfjs.selected_genotype_data
+
+    # GSD
+    def cache_genomic_score(self, genomic_score_id: str):
+        repo, parents, score = None, None, None
+        for curr_repo in self._genomic_scores_dbs:
+            repo = curr_repo
+            parents, score = repo.get_genomic_score(genomic_score_id)
+            if score is not None:
+                break
+
+        if score is None:
+            raise KeyError
+
+        cache_group = self._cache_gsd.top_level_group
+        for parent in parents:
+            cache_group.children[parent.id] = parent
+            cache_group = cache_group.children[parent.id]
+
+        cache_group.children[score.id] = score
+
+        def copy_file(filename: str):
+            with repo.provide_file(score.id, filename) as source_file:
+                output_path = os.path.join(
+                    self._cache_gsd.abspath(score.id), filename
+                )
+                with open(output_path, "w") as destination_file:
+                    shutil.copyfileobj(source_file, destination_file)
+
+        copy_file(repo.config_files[score.id])
+        copy_file(score.config.filename)
+        copy_file(score.config.index_file.filename)
