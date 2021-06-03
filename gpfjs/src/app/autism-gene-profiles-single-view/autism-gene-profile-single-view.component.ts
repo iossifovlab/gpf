@@ -76,10 +76,10 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     return genomicScores.find(category => category.id === categoryId).scores.find(score => score.id === scoreId).value;
   }
 
-  getGeneDatasetValue(gene: AgpGene, studyId: string, personSet: AgpPersonSet, statistic: AgpDatasetStatistic) {
+  getGeneDatasetValue(gene: AgpGene, studyId: string, personSetId: string, statisticId: string) {
     return gene.studies.find(study => study.id === studyId).personSets
-    .find(genePersonSet => genePersonSet.id === personSet.id).effectTypes
-    .find(effectType => effectType.id === statistic.id);
+    .find(genePersonSet => genePersonSet.id === personSetId).effectTypes
+    .find(effectType => effectType.id === statisticId);
   }
 
   get histogramOptions() {
