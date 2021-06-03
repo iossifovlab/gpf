@@ -73,7 +73,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   }
 
   getSingleScoreValue(genomicScores: AgpGenomicScores[], categoryId: string, scoreId: string) {
-    return genomicScores.find(category => category.id === categoryId).scores.find(score => score.id = scoreId).value;
+    return genomicScores.find(category => category.id === categoryId).scores.find(score => score.id === scoreId).value;
   }
 
   get histogramOptions() {

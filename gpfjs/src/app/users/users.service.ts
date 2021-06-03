@@ -54,18 +54,23 @@ export class UsersService {
       });
   }
 
-  login(username: string, password: string): Observable<boolean> {
+  login(username: string, password?: string): Observable<boolean> {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
+    const request = { username: username };
 
-    return this.http.post(this.config.baseUrl + this.loginUrl, { username: username, password: password }, options)
+    if (password) {
+      request['password'] = password;
+    }
+
+    return this.http.post(this.config.baseUrl + this.loginUrl, request, options)
       .map(res => {
         this.router.navigate([this.location.path()]);
         return true;
       })
       .catch(error => {
-        return Observable.of(false);
+        return Observable.of(error);
       });
   }
 
