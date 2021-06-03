@@ -45,15 +45,15 @@
     <table class="table table-bordered table-centered datasets-table">
       <thead>
         <tr class="card-block">
-          <th style="text-align: center;" [attr.colspan]="dataset.personSets.length + 1">
+          <th style="text-align: center; border-bottom: none;" [attr.colspan]="dataset.personSets.length + 1">
             {{dataset.displayName}}
           </th>
         </tr>
         <tr class="card-block">
-          <th style="text-align: center;">
+          <th style="text-align: center; border-bottom: none;">
             Statistics
           </th>
-          <th *ngFor="let personSet of dataset.personSets" style="text-align: center;">
+          <th *ngFor="let personSet of dataset.personSets" style="text-align: center; border-bottom: none;">
             {{personSet.displayName}} ({{personSet.childrenCount}})
           </th>
         </tr>
