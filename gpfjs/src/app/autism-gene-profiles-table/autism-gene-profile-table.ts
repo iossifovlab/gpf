@@ -24,6 +24,8 @@ export class AgpGeneSetsCategory {
 export class AgpGeneSet {
   setId: string;
   collectionId: string;
+  meta: string;
+  defaultVisible: boolean;
 }
 
 export class AgpGenomicScoresCategory {
@@ -37,11 +39,15 @@ export class AgpGenomicScoresCategory {
 export class AgpGenomicScore {
   scoreName: string;
   format: string;
+  meta: string;
+  defaultVisible: boolean;
 }
 
 export class AgpDataset {
   id: string;
   displayName: string;
+  meta: string;
+  defaultVisible: boolean;
 
   @Type(() => AgpDatasetStatistic)
   statistics: AgpDatasetStatistic[];
@@ -55,11 +61,13 @@ export class AgpDatasetStatistic {
   displayName: string;
   effects: string[];
   category: string;
+  description: string;
 }
 
 export class AgpDatasetPersonSet {
   id: string;
   displayName: string;
+  description: string;
   parentsCount: number;
   childrenCount: number;
 }
