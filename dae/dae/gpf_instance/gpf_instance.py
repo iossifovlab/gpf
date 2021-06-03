@@ -2,6 +2,7 @@ import os
 import logging
 import pandas as pd
 import math
+from urllib.parse import urlparse
 from dae.genome.genomes_db import GenomesDB
 
 from dae.common_reports.common_report_facade import CommonReportFacade
@@ -30,6 +31,8 @@ from dae.configuration.schemas.autism_gene_profile import (
 )
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.autism_gene_profile.statistic import AGPStatistic
+from dae.genomic_scores.repository import FilesystemGenomicScoreRepository, \
+    HTTPGenomicScoreRepository
 
 from dae.utils.helpers import isnan
 from dae.utils.dae_utils import cached
@@ -60,6 +63,12 @@ class GPFInstance(object):
         self.dae_db_dir = work_dir
         self.__autism_gene_profile_config = None
         self.load_eagerly = load_eagerly
+
+        self._genomic_scores_dbs = []
+        self._load_genomic_scores_repositories()
+        self._cache_gsd = FilesystemGenomicScoreRepository(
+            self.dae_config.genomic_score_cache_location
+        )
 
         if load_eagerly:
             self.genomes_db
@@ -184,6 +193,17 @@ class GPFInstance(object):
     @cached
     def _background_facade(self):
         return BackgroundFacade(self._variants_db)
+
+    def _load_genomic_scores_repositories(self):
+        for gsd_conf in self.dae_config.genomic_score_databases:
+            gsd_id = gsd_conf["id"]
+            gsd_url = urlparse(gsd_conf["url"])
+            is_filesystem = gsd_url.scheme == "file"
+            if is_filesystem:
+                gsd = FilesystemGenomicScoreRepository(gsd_url.path)
+            else:
+                gsd = HTTPGenomicScoreRepository(gsd_url.geturl())
+            self._genomic_scores_dbs.append(gsd)
 
     def get_genotype_data_ids(self, local_only=False):
         return (
