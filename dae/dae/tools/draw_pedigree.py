@@ -17,6 +17,9 @@ mpl.use("PS")  # noqa
 plt.ioff()  # noqa
 
 
+logger = logging.getLogger("__name__")
+
+
 def build_families_report(families):
     status_collection_config = {
         "id": "status",
@@ -70,11 +73,15 @@ def draw_families_report(families):
     families_report = build_families_report(families)
     assert len(families_report.families_counters) == 1
     family_counters = families_report.families_counters[0]
-    print("total number:", len(family_counters.counters))
+    logger.info(f"total number family types: {len(family_counters.counters)}")
 
-    for index, family_counter in enumerate(family_counters.counters.values()):
+    for family_counter in family_counters.counters.values():
         family = family_counter.family
         layout = build_family_layout(family)
+        logger.warning(
+            f"drawing {family}; list of families in this category: "
+            f"{','.join([f.family_id for f in family_counter.families])}")
+
         if len(family_counter.families) > 5:
             count = len(family_counter.families)
             title = f"Number of families: {count}"
@@ -83,14 +90,6 @@ def draw_families_report(families):
 
         figure = draw_pedigree(layout, title=title)
         yield figure
-        remainder = (index + 1) % 10
-        if remainder == 0:
-            print(".", end="", file=sys.stderr)
-        remainder = (index + 1) % 100
-        if remainder == 0:
-            print("", file=sys.stderr)
-
-    print("", file=sys.stderr)
 
 
 def draw_families(families):
