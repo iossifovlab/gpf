@@ -27,8 +27,11 @@ class ConfigurationView(QueryBaseView):
                     # Attach person set counts
                     person_sets_config = list()
                     for person_set in dataset["person_sets"]:
-                        set_id = person_set['set_name']
-                        collection_id = person_set['collection_name']
+                        set_id = person_set["set_name"]
+                        collection_id = person_set["collection_name"]
+                        description = ""
+                        if "description" in person_set:
+                            description = person_set["description"]
                         person_set_collection = \
                             study_wrapper.genotype_data.person_set_collections[
                                 collection_id
@@ -37,10 +40,11 @@ class ConfigurationView(QueryBaseView):
                         set_name = \
                             person_set_collection.person_sets[set_id].name
                         person_sets_config.append({
-                            'id': set_id,
-                            'displayName': set_name,
-                            'parentsCount': stats['parents'],
-                            'childrenCount': stats['children'],
+                            "id": set_id,
+                            "displayName": set_name,
+                            "description": description,
+                            "parentsCount": stats["parents"],
+                            "childrenCount": stats["children"],
                         })
                 response["datasets"].append({
                     "id": dataset_id,
