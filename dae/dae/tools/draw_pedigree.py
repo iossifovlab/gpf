@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 import argparse
+import logging
 
 from dae.pedigrees.loader import FamiliesLoader
 
