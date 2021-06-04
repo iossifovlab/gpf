@@ -540,21 +540,19 @@ class GPFInstance(object):
         if score is None:
             raise KeyError
 
-        cache_group = self._cache_gsd.top_level_group
-        for parent in parents:
-            cache_group.children[parent.id] = parent
-            cache_group = cache_group.children[parent.id]
-
-        cache_group.children[score.id] = score
+        cache_path = os.path.join(
+            self._cache_gsd.path, *list(map(lambda p: p.id, parents))
+        )
+        os.makedirs(cache_path, exist_ok=True)
 
         def copy_file(filename: str):
             with repo.provide_file(score.id, filename) as source_file:
-                output_path = os.path.join(
-                    self._cache_gsd.abspath(score.id), filename
-                )
-                with open(output_path, "w") as destination_file:
+                output_path = os.path.join(cache_path, filename)
+                with open(output_path, "wb") as destination_file:
                     shutil.copyfileobj(source_file, destination_file)
 
         copy_file(repo.config_files[score.id])
         copy_file(score.config.filename)
         copy_file(score.config.index_file.filename)
+
+        self._cache_gsd.reload()

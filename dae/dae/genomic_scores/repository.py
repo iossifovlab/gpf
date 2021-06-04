@@ -30,22 +30,19 @@ class BaseGenomicScoreRepository:
         """
         Returns all constituent genomic scores of this repository.
         """
-        return self.top_level_group.score_children
+        return self.top_level_group.score_children()
+
+    def reload(self):
+        raise NotImplementedError
 
     def get_genomic_score(self, genomic_score_id: str) -> ParentsScoreTuple:
         return self.top_level_group.get_genomic_score(genomic_score_id)
 
-    def abspath(self, genomic_score_id: str) -> str:
+    def provide_file(self, genomic_score_id: str, filename: str):
         """
-        Returns the absolute path to a genomic score's location.
+        Returns a file object related to a given genomic score.
         """
         raise NotImplementedError
-
-    def provide_file(self, genomic_score_id: str, path: str):
-        raise NotImplementedError
-
-    def add_score(self, genomic_score_id):
-        pass
 
 
 class FilesystemGenomicScoreRepository(BaseGenomicScoreRepository):
@@ -64,9 +61,9 @@ class FilesystemGenomicScoreRepository(BaseGenomicScoreRepository):
         )
         for conf_path in conf_files:
             score_path = conf_path[len(root_path):].strip('/').split('/')
-            assert len(score_path) >= 2, score_path
+            assert len(score_path) >= 1, score_path
             curr_group = self.top_level_group
-            for group in score_path[:-2]:
+            for group in score_path[:-1]:
                 curr_group = curr_group.children.setdefault(
                     group, GenomicScoreGroup(group)
                 )
@@ -74,19 +71,17 @@ class FilesystemGenomicScoreRepository(BaseGenomicScoreRepository):
                 GPFConfigParser.load_config(conf_path, genomic_score_schema)
             )
             curr_group.children[score.id] = score
-            self.config_files[score.id] = conf_path[len(root_path):]
+            self.config_files[score.id] = score_path[-1]
 
-    def abspath(self, genomic_score_id: str) -> str:
-        # parents, score = self.get_genomic_score(genomic_score_id)
-        # return os.path.join(
-        #     *list(map(lambda p: p.id, parents)), score.id
-        # )
-        print(self.gsd_id)
-        print("conffiles - ", self.config_files)
-        return os.path.split(self.config_files[genomic_score_id])[0]
+    def reload(self):
+        self.__init__(self.gsd_id, self.path)
 
-    def provide_file(self, genomic_score_id: str, path: str):
-        return open(os.path.join(self.abspath(genomic_score_id), path), "r")
+    def provide_file(self, genomic_score_id: str, filename: str):
+        parents, _ = self.get_genomic_score(genomic_score_id)
+        abspath = os.path.join(
+            self.path, *list(map(lambda p: p.id, parents[1:]))
+        )
+        return open(os.path.join(abspath, filename), "rb")
 
 
 class HTTPGenomicScoreRepository(BaseGenomicScoreRepository):
