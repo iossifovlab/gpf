@@ -1,11 +1,4 @@
-#autism-scores-table, #protection-scores-table {
-  width: 25%;
-  float: left;
-  margin-right: 15px;
-  margin-bottom: 15px;
-}
-
-.gene-sets-table, .genomic-scores-table {
+.gene-sets-table, .genomic-scores-table, .datasets-table {
   width: 20%;
   margin-right: 15px;
   margin-bottom: 15px;
