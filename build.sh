@@ -99,20 +99,22 @@ function main() {
     build_run_local mkdir ./data/ ./import/ ./downloads ./results
   }
 
-  build_run_ctx_init "local"
-  defer_ret build_run_ctx_reset
-
   local gpf_dev_image="gpf-dev"
-
+  local gpf_dev_image_ref
   # create gpf docker image
   build_stage "Create $gpf_dev_image docker image"
   {
     build_docker_image_create "$gpf_dev_image" . ./Dockerfile
+    gpf_dev_image_ref="$(e docker_img_gpf_dev)"
   }
 
   # prepare gpf data
   build_stage "Prepare GPF data"
   {
+    build_run_ctx_init "local"
+    defer_ret build_run_ctx_reset
+
+    # find image
     local data_hg19_startup_image_ref
     data_hg19_startup_image_ref="$(e docker_data_img_data_hg19_startup)"
 
@@ -127,6 +129,7 @@ function main() {
       ./data/data-hg19-startup/DAE.conf
 
     build_run_ctx_init "container" "ubuntu:18.04"
+    defer_ret build_run_ctx_reset
 
     # cleanup
     build_run_container rm -rf \
@@ -134,9 +137,8 @@ function main() {
       ./data/data-hg19-startup/pheno/* \
       ./data/data-hg19-startup/wdae/wdae.sql
 
-    build_run_ctx_reset
-
     build_run_ctx_init "local"
+    defer_ret build_run_ctx_reset
 
     # setup directory structure
     build_run_local mkdir -p \
@@ -147,11 +149,16 @@ function main() {
 
   build_stage "Prepare GPF remote data"
   {
-    local data_hg19_startup_image_ref
-    data_hg19_startup_image_ref="$(e docker_data_img_data_hg19_startup)"
 
     # same as GPF data but in different dir
     {
+      build_run_ctx_init "local"
+      defer_ret build_run_ctx_reset
+
+      # find image
+      local data_hg19_startup_image_ref
+      data_hg19_startup_image_ref="$(e docker_data_img_data_hg19_startup)"
+
       # copy data
       build_run_local mkdir -p ./data/data-hg19-remote
       build_docker_image_cp_from "$data_hg19_startup_image_ref" ./data/data-hg19-remote /
@@ -163,14 +170,13 @@ function main() {
         ./data/data-hg19-remote/DAE.conf
 
       build_run_ctx_init "container" "ubuntu:18.04"
+      defer_ret build_run_ctx_reset
 
       # cleanup
       build_run_container rm -rf \
         ./data/data-hg19-startup/studies/* \
         ./data/data-hg19-startup/pheno/* \
         ./data/data-hg19-startup/wdae/wdae.sql
-
-      build_run_ctx_reset
 
       build_run_ctx_init "local"
       defer_ret build_run_ctx_reset
@@ -180,19 +186,18 @@ function main() {
         ./data/data-hg19-remote/genomic-scores-hg19 \
         ./data/data-hg19-remote/genomic-scores-hg38 \
         ./data/data-hg19-remote/wdae
-    }
 
-    # GPF remote specific fixup
-    {
-      build_run_local sed -i \
-        -e s/"^instance_id.*$/instance_id = \"data_hg19_remote\"/"g \
-        ./data/data-hg19-remote/DAE.conf
+      # GPF remote specific fixup
+      {
+        build_run_local sed -i \
+          -e s/"^instance_id.*$/instance_id = \"data_hg19_remote\"/"g \
+          ./data/data-hg19-remote/DAE.conf
+      }
     }
 
     # import data for gpf remote
     {
-      local gpf_dev_image_ref
-      gpf_dev_image_ref="$(e docker_img_gpf_dev)"
+      # use the freshly built gpf image
       build_run_ctx_init "container" "$gpf_dev_image_ref"
       defer_ret build_run_ctx_reset
 
@@ -248,57 +253,58 @@ EOT'
       {
         build_run_container bash -c 'export DAE_DB_DIR="/wd/data/data-hg19-remote"; /opt/conda/bin/conda run --no-capture-output -n gpf generate_denovo_gene_sets.py'
       }
-
-      build_run_ctx_reset
     }
 
     # run cluster
     build_stage "Run cluster"
     {
       # create network
-      docker network create -d bridge hr_temp
-      defer_ret docker network rm hr_temp
+      local -A ctx_network
+      build_run_ctx_init ctx:ctx_network "persistent" "network"
+      build_run_ctx_reset ctx:ctx_network
 
-#      # setup mysql
-#      {
-#        local -A ctx_mysql
-#        build_run_init ctx:ctx_mysql "container" "mysql:5.7" "cmd-from-image" \
-#          --hostname=mysql \
-#          --network=hr_temp \
-#          --env MYSQL_DATABASE=gpf \
-#          --env MYSQL_USER=seqpipe \
-#          --env MYSQL_PASSWORD=secret \
-#          --env MYSQL_ROOT_PASSWORD=secret \
-#          --env MYSQL_PORT=3306 \
-#          -- \
-#          --character-set-server=utf8 --collation-server=utf8_bin
-#
-#        defer_ret build_run_ctx_reset ctx:ctx_mysql
-#
-#        build_run_container ctx:ctx_mysql /wd/scripts/wait-for-it.sh -h mysql -p 3306 -t 300
-#
-#        build_run_container ctx:ctx_mysql mysql -u root -psecret -h mysql \
-#          -e "CREATE DATABASE IF NOT EXISTS test_gpf"
-#
-#        build_run_container ctx:ctx_mysql mysql -u root -psecret -h mysql \
-#          -e "GRANT ALL PRIVILEGES ON test_gpf.* TO 'seqpipe'@'%' IDENTIFIED BY 'secret' WITH GRANT OPTION"
-#      }
+      #      # setup mysql
+      #      {
+      #        local -A ctx_mysql
+      #        build_run_init ctx:ctx_mysql "container" "mysql:5.7" "cmd-from-image" \
+      #          --hostname=mysql \
+      #          --network="${ctx_network["network_id"]}" \
+      #          --env MYSQL_DATABASE=gpf \
+      #          --env MYSQL_USER=seqpipe \
+      #          --env MYSQL_PASSWORD=secret \
+      #          --env MYSQL_ROOT_PASSWORD=secret \
+      #          --env MYSQL_PORT=3306 \
+      #          -- \
+      #          --character-set-server=utf8 --collation-server=utf8_bin
+      #
+      #        defer_ret build_run_ctx_reset ctx:ctx_mysql
+      #
+      #        build_run_container ctx:ctx_mysql /wd/scripts/wait-for-it.sh -h mysql -p 3306 -t 300
+      #
+      #        build_run_container ctx:ctx_mysql mysql -u root -psecret -h mysql \
+      #          -e "CREATE DATABASE IF NOT EXISTS test_gpf"
+      #
+      #        build_run_container ctx:ctx_mysql mysql -u root -psecret -h mysql \
+      #          -e "GRANT ALL PRIVILEGES ON test_gpf.* TO 'seqpipe'@'%' IDENTIFIED BY 'secret' WITH GRANT OPTION"
+      #      }
 
       # setup impala
       {
         local -A ctx_impala
-        build_run_ctx_init ctx:ctx_impala "container" "seqpipe/seqpipe-docker-impala:latest" "cmd-from-image" --hostname=impala --network=hr_temp
+        build_run_ctx_init ctx:ctx_impala "persistent" "container" "seqpipe/seqpipe-docker-impala:latest" "cmd-from-image" --hostname=impala --network="${ctx_network["network_id"]}"
         defer_ret build_run_ctx_reset ctx:ctx_impala
 
         build_run_container ctx:ctx_impala /wd/scripts/wait-for-it.sh -h localhost -p 21050 -t 300
+
+        build_run_ctx_reset ctx:ctx_impala
       }
 
       # setup gpf remote
       {
         local -A ctx_gpf_remote
-        build_run_ctx_init ctx:ctx_gpf_remote "container" "${gpf_dev_image_ref}" \
+        build_run_ctx_init ctx:ctx_gpf_remote "persistent" "container" "${gpf_dev_image_ref}" \
           --hostname=gpfremote \
-          --network=hr_temp \
+          --network="${ctx_network["network_id"]}" \
           --env DAE_DB_DIR="/data/data-hg19-remote/"
         defer_ret build_run_ctx_reset ctx:ctx_gpf_remote
 
@@ -318,6 +324,8 @@ EOT'
         build_run_container_detached ctx:ctx_gpf_remote /opt/conda/bin/conda run --no-capture-output -n gpf /code/wdae/wdae/wdaemanage.py runserver 0.0.0.0:21010
 
         build_run_container ctx:ctx_gpf_remote /opt/conda/bin/conda run --no-capture-output -n gpf /code/scripts/wait-for-it.sh -h localhost -p 21010 -t 300
+
+        build_run_ctx_reset ctx:ctx_gpf_remote
       }
     }
 
@@ -325,7 +333,7 @@ EOT'
     build_stage "Import test data to impala"
     {
       build_run_ctx_init "container" "${gpf_dev_image_ref}" \
-        --network=hr_temp \
+        --network="${ctx_network["network_id"]}" \
         --env DAE_DB_DIR="/data/data-hg19-remote/" \
         --env TEST_REMOTE_HOST="gpfremote" \
         --env DAE_HDFS_HOST="impala" \
@@ -401,7 +409,7 @@ EOT'
   build_stage "Tests - dae"
   {
     build_run_ctx_init "container" "${gpf_dev_image_ref}" \
-      --network=hr_temp \
+      --network="${ctx_network["network_id"]}" \
       --env DAE_DB_DIR="/data/data-hg19-startup/" \
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
@@ -433,7 +441,7 @@ EOT'
   build_stage "Tests - wdae"
   {
     build_run_ctx_init "container" "${gpf_dev_image_ref}" \
-      --network=hr_temp \
+      --network="${ctx_network["network_id"]}" \
       --env DAE_DB_DIR="/data/data-hg19-startup/" \
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
@@ -468,7 +476,10 @@ EOT'
   # post cleanup
   build_stage "Post Cleanup"
   {
+    build_run_ctx_reset_all_persistent
+
     build_run_ctx_init "container" "ubuntu:18.04"
+    defer_ret build_run_ctx_reset
     build_run rm -rf ./data/ ./import/ ./downloads ./results
   }
 }
