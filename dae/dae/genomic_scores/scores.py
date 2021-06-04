@@ -45,9 +45,9 @@ class GenomicScoreGroup:
             elif isinstance(child, GenomicScoreGroup):
                 result.extend(child.score_children([*parents, child]))
             else:
-                # TODO should raise error, disabled temporarily
+                # TODO should raise error, disabled temporarily for HTTP repos
                 # raise TypeError
-                result.append(child)
+                result.append((parents, child))
         return result
 
     def get_genomic_score(

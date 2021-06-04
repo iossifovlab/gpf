@@ -3,6 +3,7 @@ import yaml
 from glob import glob
 from typing import List, Dict
 
+import requests
 import urllib.request
 from bs4 import BeautifulSoup
 
@@ -77,11 +78,13 @@ class FilesystemGenomicScoreRepository(BaseGenomicScoreRepository):
         self.__init__(self.gsd_id, self.path)
 
     def provide_file(self, genomic_score_id: str, filename: str):
+        # TODO Implement progress bar and interruptible download
         parents, _ = self.get_genomic_score(genomic_score_id)
         abspath = os.path.join(
             self.path, *list(map(lambda p: p.id, parents[1:]))
         )
-        return open(os.path.join(abspath, filename), "rb")
+        with open(os.path.join(abspath, filename), "rb") as f:
+            yield f.read(8192)
 
 
 class HTTPGenomicScoreRepository(BaseGenomicScoreRepository):
@@ -103,6 +106,11 @@ class HTTPGenomicScoreRepository(BaseGenomicScoreRepository):
         self.top_level_group.children = self._collect_gsd_children(self.url)
 
     def _collect_gsd_children(self, root_url: str):
+        # FIXME
+        # This method uses a couple of hacks in order to read an
+        # outdated remote GS repository, it should be cleaned up
+        # when the remote repo is updated
+
         opener = urllib.request.FancyURLopener({})
         content = opener.open(root_url).read()
         soup = BeautifulSoup(content, 'html.parser')
@@ -112,6 +120,7 @@ class HTTPGenomicScoreRepository(BaseGenomicScoreRepository):
             soup.find_all("a")
         ))
 
+        # FIXME change to ".gs.yaml" when remote repo is updated
         conf_file_tag = next(
             filter(lambda link: ".yaml" in link.text, links), None
         )
@@ -127,8 +136,20 @@ class HTTPGenomicScoreRepository(BaseGenomicScoreRepository):
             # children[root_url] = GenomicScore(
             #     GPFConfigParser.process_config(raw_conf, genomic_score_schema)
             # )
-            children[score_name] = raw_conf
-            self.config_files[score_name] = full_conf_url
+            # code below should be deleted and replaced with snippet above
+            from box import Box
+            raw_conf = Box(
+                {
+                    "id": raw_conf["id"],
+                    "filename": raw_conf["score_file"]["filename"],
+                    "index_file": raw_conf["index_file"],
+                    "config": {"filename": raw_conf["score_file"]["filename"], **raw_conf}
+                }
+            )
+            children[raw_conf.id] = raw_conf
+            # FIXME hardcoded gnomad.exomes.yaml for testing purposes
+            # self.config_files[raw_conf.id] = score_name
+            self.config_files[raw_conf.id] = "gnomad.exomes.yaml"
         else:
             subdirectories = filter(
                 lambda entry: entry[-1] == '/',
@@ -137,9 +158,26 @@ class HTTPGenomicScoreRepository(BaseGenomicScoreRepository):
             for subdir in subdirectories:
                 # FIXME genomic score group's id is saved with a trailing '/'
                 full_url = os.path.join(root_url, subdir)
-                genomic_score_group = GenomicScoreGroup(subdir)
+                genomic_score_group = children.setdefault(
+                    subdir, GenomicScoreGroup(subdir)
+                )
                 genomic_score_group.children = \
-                    HTTPGenomicScoreRepository._collect_gsd_children(full_url)
-                children[subdir] = genomic_score_group
+                    self._collect_gsd_children(full_url)
 
         return children
+
+    def reload(self):
+        self.__init__(self.gsd_id, self.url)
+
+    def provide_file(self, genomic_score_id: str, filename: str):
+        # TODO Implement progress bar and interruptible download
+        parents, _ = self.get_genomic_score(genomic_score_id)
+        url = os.path.join(
+            self.url, *list(map(lambda p: p.id, parents[1:])), filename
+        )
+        print("Providing: ", url)
+        with requests.get(url, stream=True) as response:
+            assert response.status_code == requests.codes.ok, \
+                response.status_code
+            for chunk in response.iter_content(chunk_size=8192):
+                yield chunk

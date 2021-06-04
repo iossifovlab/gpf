@@ -1,5 +1,4 @@
 import os
-import shutil
 import logging
 import pandas as pd
 import math
@@ -546,10 +545,10 @@ class GPFInstance(object):
         os.makedirs(cache_path, exist_ok=True)
 
         def copy_file(filename: str):
-            with repo.provide_file(score.id, filename) as source_file:
-                output_path = os.path.join(cache_path, filename)
-                with open(output_path, "wb") as destination_file:
-                    shutil.copyfileobj(source_file, destination_file)
+            output_path = os.path.join(cache_path, filename)
+            with open(output_path, "wb") as destination_file:
+                for chunk in repo.provide_file(score.id, filename):
+                    destination_file.write(chunk)
 
         copy_file(repo.config_files[score.id])
         copy_file(score.config.filename)
