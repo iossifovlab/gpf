@@ -47,7 +47,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   ngOnInit(): void {
     this.autismGeneProfilesService.getConfig().take(1).subscribe(config => {
-      this.autismGeneToolConfig = cloneDeep(config);
+      this.autismGeneToolConfig = config;
       this.tableConfig = cloneDeep(config);
       this.allCategories = this.getAllCategories(this.autismGeneToolConfig);
       this.shownCategories = this.getAllCategories(this.autismGeneToolConfig);
@@ -171,7 +171,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     this.ngbDropdownMenu.dropdown.close();
   }
 
-  testConfigChangeEvent($event) {
+  tableConfigChangeEvent($event) {
     this.tableConfig = $event;
     this.shownCategories = this.getAllCategories(this.tableConfig);
   }

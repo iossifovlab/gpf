@@ -82,8 +82,8 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   ) { }
 
   ngOnChanges(): void {
-    this.shownGeneSetsCategories = cloneDeep(this.config.geneSets);
-    this.shownGenomicScoresCategories = cloneDeep(this.config.genomicScores);
+    this.shownGeneSetsCategories = this.config.geneSets;
+    this.shownGenomicScoresCategories = this.config.genomicScores;
   }
 
   /**
