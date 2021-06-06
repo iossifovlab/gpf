@@ -31,14 +31,16 @@ def test_configuration(admin_client):
     assert len(datasets[0]["personSets"]) == 2
     assert datasets[0]["personSets"] == [
         {
-            "setName": "unknown",
-            "collectionName": "phenotype",
+            "id": "unknown",
+            "displayName": "unknown",
+            "description": "",
             "parentsCount": 0,
             "childrenCount": 11,
         },
         {
-            "setName": "unaffected",
-            "collectionName": "phenotype",
+            "id": "unaffected",
+            "displayName": "unaffected",
+            "description": "",
             "parentsCount": 22,
             "childrenCount": 10,
         }

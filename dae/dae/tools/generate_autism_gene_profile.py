@@ -200,6 +200,7 @@ def main(gpf_instance=None, argv=None):
         action="store_true",
         help="Generate AGPs only for genes contained in the config's gene sets"
     )
+    parser.add_argument("--drop", action="store_true")
 
     args = parser.parse_args(argv)
     if args.verbose == 1:
@@ -348,6 +349,15 @@ def main(gpf_instance=None, argv=None):
     agpdb.insert_agps(agps.values())
     logger.info("Building AGP output view")
     agpdb.build_agp_view()
+    if args.drop:
+        agpdb.drop_cache_table()
+    else:
+        if agpdb.cache_table_exists():
+            logger.info("Regenerating cache table")
+            agpdb.generate_cache_table(regenerate=True)
+        else:
+            logger.info("Generating cache table")
+            agpdb.generate_cache_table(regenerate=False)
     logger.info("Done")
 
 

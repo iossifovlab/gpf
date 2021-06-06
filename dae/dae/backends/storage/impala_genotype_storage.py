@@ -245,7 +245,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         files_glob = partition_description.generate_file_access_glob()
         files_glob = os.path.join(variants_dir, files_glob)
         local_variants_files = glob.glob(files_glob)
-        logger.debug(f"{variants_dir}, {files_glob}, {local_variants_files}")
+        # logger.debug(f"{variants_dir}, {files_glob}, {local_variants_files}")
 
         local_basedir = partition_description.variants_filename_basedir(
             local_variants_files[0])
@@ -256,7 +256,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             assert lvf.startswith(local_basedir)
             hdfs_variants_files.append(
                 os.path.join(hdfs_variants_dir, lvf[len(local_basedir):]))
-        logger.debug(f"{local_variants_files}, {hdfs_variants_files}")
+        # logger.debug(f"{local_variants_files}, {hdfs_variants_files}")
 
         return local_variants_files, hdfs_variants_dir, hdfs_variants_files
 
@@ -316,6 +316,21 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             self.storage_config.hdfs.base_dir, study_id)
         if not study_path.endswith("/"):
             study_path += "/"
+        self.rsync_helpers.clear_remote(study_path)
+
+        partition_filename = os.path.join(
+            variants_dir, "_PARTITION_DESCRIPTION")
+        if os.path.exists(partition_filename):
+            self.rsync_helpers.copy_to_remote(
+                partition_filename, remote_subdir=study_path,
+                clear_remote=False)
+
+        schema_filename = os.path.join(
+            variants_dir, "_VARIANTS_SCHEMA")
+        if os.path.exists(schema_filename):
+            self.rsync_helpers.copy_to_remote(
+                schema_filename, remote_subdir=study_path,
+                clear_remote=False)
 
         pedigree_rsync_path = os.path.join(
             study_path, "pedigree")
@@ -332,26 +347,15 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         if not variants_dir.endswith("/"):
             variants_dir += "/"
 
-        partition_filename = os.path.join(
-            variants_dir, "_PARTITION_DESCRIPTION")
-        if os.path.exists(partition_filename):
-            self.rsync_helpers.copy_to_remote(
-                partition_filename, remote_subdir=study_path)
-
-        schema_filename = os.path.join(
-            variants_dir, "_VARIANTS_SCHEMA")
-        if os.path.exists(schema_filename):
-            self.rsync_helpers.copy_to_remote(
-                schema_filename, remote_subdir=study_path)
-
         self.rsync_helpers.copy_to_remote(
             variants_dir, remote_subdir=variants_rsync_path,
             exclude=["_*"])
 
         _, hdfs_variants_dir, hdfs_variants_files = self._build_hdfs_variants(
             study_id, variants_dir, partition_description)
-        logger.debug(
-            f"HDFS_VARIANTS_FILES: {hdfs_variants_dir}, {hdfs_variants_files}")
+        # logger.debug(
+        #     f"HDFS_VARIANTS_FILES: {hdfs_variants_dir}, "
+        #     f"{hdfs_variants_files}")
 
         return (
             hdfs_variants_dir, hdfs_variants_files[0],

@@ -49,11 +49,14 @@ class RsyncHelpers:
 
     def _exclude_options(self, exclude=[]):
         if not exclude:
-            return ""
-        result = [f"--exclude {ex}" for ex in exclude if ex]
-        if not result:
-            return ""
-        return " ".join(result)
+            return []
+        result = []
+        for ex in exclude:
+            if not ex:
+                continue
+
+            result.extend(["--exclude", f"{ex}"])
+        return result
 
     def _copy_to_remote_cmd(
             self, local_path, remote_subdir=None,
@@ -75,50 +78,52 @@ class RsyncHelpers:
         if not local_dir.endswith("/"):
             local_dir += "/"
 
-        exclude_options = self._exclude_options(exclude)
-        logger.debug(f"rsync remote: {self.rsync_remote}")
+        logger.debug(f"rsync remote: <{self.rsync_remote}>")
 
-        rsync_remote = self.rsync_remote
         rsync_path = ""
+        rsync_remote = self.rsync_remote
+
         if remote_subdir is not None:
             if remote_subdir.startswith("/"):
                 remote_subdir = remote_subdir[1:]
-            rsync_remote = os.path.join(self.rsync_remote, remote_subdir)
             rsync_path = os.path.join(self.parsed_remote.path, remote_subdir)
+            rsync_remote = os.path.join(self.rsync_remote, remote_subdir)
 
-            clear_remote_option = ""
             if clear_remote:
-                clear_remote_option = f"rm -rf {rsync_path} && "
+                if self.hosturl():
+                    cmds.append(
+                        [
+                            "ssh", f"{self.parsed_remote.netloc}",
+                            f"rm -rf {rsync_path}"
+                        ])
+                else:
+                    cmds.append(["rm", "-rf", "{rsync_path}"])
 
             if self.hosturl():
                 cmds.append(
-                    f'ssh {self.parsed_remote.netloc} "{clear_remote_option}'
-                    f'mkdir -p {rsync_path}"')
+                    [
+                        "ssh", f"{self.parsed_remote.netloc}",
+                        f"mkdir -p {rsync_path}"
+                    ])
             else:
-                cmds.append(
-                    f'{clear_remote_option} mkdir -p {rsync_path}')
+                cmds.append(["mkdir", "-p", f"{rsync_path}"])
 
-        ignore_existing_option = ""
+        rsync_cmd = ["/usr/bin/rsync", "-avPHt"]
+        exclude_options = self._exclude_options(exclude)
+        rsync_cmd.extend(exclude_options)
+
         if ignore_existing:
-            ignore_existing_option = "--ignore-existing"
+            rsync_cmd.append("--ignore-existing")
+        if self.rsync_remote_shell:
+            rsync_cmd.extend(["-e", self.rsync_remote_shell])
+        rsync_cmd.extend([local_path, rsync_remote])
+        logger.debug(f"rsync command: {rsync_cmd}")
+        cmds.append(rsync_cmd)
 
-        if self.rsync_remote_shell is None:
-            cmds.append(
-                f"/usr/bin/rsync -avPHt {exclude_options} "
-                f"{ignore_existing_option} "
-                f"{local_path} {rsync_remote}")
-        else:
-            cmds.append(
-                f'/usr/bin/rsync -e "{self.rsync_remote_shell}" '
-                f'-avPHt {exclude_options} '
-                f"{ignore_existing_option} "
-                f'{local_path} {rsync_remote}')
         return cmds
 
     def _copy_to_local_cmd(self, local_path, remote_subdir=None, exclude=[]):
         os.makedirs(local_path, exist_ok=True)
-        exclude_options = self._exclude_options(exclude)
-
         cmds = []
 
         if not local_path.endswith("/"):
@@ -130,25 +135,25 @@ class RsyncHelpers:
                 remote_subdir = remote_subdir[1:]
             rsync_remote = os.path.join(self.rsync_remote, remote_subdir)
 
-        if self.rsync_remote_shell is None:
-            cmds.append(
-                f"/usr/bin/rsync -avPHt {exclude_options} "
-                f"{rsync_remote} {local_path}")
-        else:
-            cmds.append(
-                f'/usr/bin/rsync -e "{self.rsync_remote_shell}" '
-                f'-avPHt {exclude_options} {local_path}')
+        rsync_cmd = ["/usr/bin/rsync", "-avPHt"]
+        if self.rsync_remote_shell:
+            rsync_cmd.extend(["-e", self.rsync_remote_shell])
+        exclude_options = self._exclude_options(exclude)
+        rsync_cmd.extend(exclude_options)
+        rsync_cmd.extend([rsync_remote, local_path])
+        cmds.append(rsync_cmd)
+
         return cmds
 
     def _cmd_execute(self, commands):
         for cmd in commands:
             logger.info(f"executing command: {cmd}")
-            argv = [c.strip() for c in cmd.split(" ")]
-            argv = list(filter(lambda c: len(c) > 0, argv))
-            logger.debug(f"executing command: {argv}")
+            # argv = [c.strip() for c in cmd.split(" ")]
+            # argv = list(filter(lambda c: len(c) > 0, argv))
+            logger.debug(f"executing command: {cmd}")
 
             with subprocess.Popen(
-                    argv,
+                    cmd,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                     universal_newlines=True) as proc:
@@ -160,9 +165,46 @@ class RsyncHelpers:
                     line = line.strip()
                     logger.debug(line)
 
-    def copy_to_remote(self, local_path, remote_subdir=None, exclude=[]):
+            logger.debug(f"command {cmd} finished")
+            if proc.returncode:
+                logger.error(f"command {cmd} finished with {proc.returncode}")
+                raise ValueError(f"error in {cmd}")
+
+    def clear_remote(self, remote_subdir):
+        cmds = []
+        rsync_path = ""
+        assert remote_subdir is not None
+
+        if remote_subdir.startswith("/"):
+            remote_subdir = remote_subdir[1:]
+        rsync_path = os.path.join(self.parsed_remote.path, remote_subdir)
+
+        if self.hosturl():
+            cmds.append(
+                [
+                    "ssh", f"{self.parsed_remote.netloc}",
+                    f"rm -rf {rsync_path}"
+                ])
+            cmds.append(
+                [
+                    "ssh", f"{self.parsed_remote.netloc}",
+                    f"mkdir -p {rsync_path}"
+                ])
+        else:
+            cmds.append(["rm", "-rf", f"{rsync_path}"])
+            cmds.append(["mkdir", "-p", f"{rsync_path}"])
+        self._cmd_execute(cmds)
+
+    def copy_to_remote(
+            self, local_path, remote_subdir=None, exclude=[],
+            clear_remote=True):
+        logger.debug(
+            f"copying {local_path} to {remote_subdir}")
+
         cmd = self._copy_to_remote_cmd(
-            local_path, remote_subdir=remote_subdir, exclude=exclude)
+            local_path, remote_subdir=remote_subdir, exclude=exclude,
+            clear_remote=clear_remote)
+
         self._cmd_execute(cmd)
 
     def copy_to_local(self, local_path, remote_subdir=None, exclude=[]):

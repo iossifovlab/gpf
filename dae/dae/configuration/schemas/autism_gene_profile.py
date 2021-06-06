@@ -92,11 +92,13 @@ autism_gene_tool_config = {
         "type": "dict",
         "valuesrules": {
             "type": "dict", "schema": {
+                "meta": {"type": "string"},
                 "person_sets": {"type": "list", "schema": {
                         "type": "dict",
                         "schema": {
                             "set_name": {"type": "string"},
                             "collection_name": {"type": "string"},
+                            "description": {"type": "string"},
                         }
                     }
                 },

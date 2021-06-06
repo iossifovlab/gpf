@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gpf_dae",
-    version="3.5.dev9",
+    version="3.5.dev11",
     author="Lubomir Chorbadjiev",
     author_email="lubomir.chorbadjiev@gmail.com",
     description="GPF: Genotypes and Phenotypes in Families",
@@ -42,7 +42,6 @@ setuptools.setup(
         "dae/tools/genotype_data_tool.py",
         "dae/tools/vcfinfo_extractor.py",
         "dae/tools/generate_autism_gene_profile.py",
-        "dae/tools/generate_agp_cache_table.py",
     ],
     entry_points="""
     [console_scripts]
