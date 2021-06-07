@@ -82,8 +82,24 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   ) { }
 
   ngOnChanges(): void {
-    this.shownGeneSetsCategories = this.config.geneSets;
-    this.shownGenomicScoresCategories = this.config.genomicScores;
+    this.shownGeneSetsCategories = this.mergeCategories(this.shownGeneSetsCategories, this.config.geneSets);
+    this.shownGenomicScoresCategories = this.mergeCategories(this.shownGenomicScoresCategories, this.config.genomicScores);
+  }
+
+  /**
+   * Merges categories from one array onto another, without updating already existing categories
+   * @param oldCategories category array that needs to be updated
+   * @param newCategories category array used to update the other
+   * @returns updated category array
+   */
+  mergeCategories(oldCategories, newCategories) {
+    return newCategories.map(category => {
+      if (oldCategories) {
+        const oldCategory = oldCategories.find(cat => category.category === cat.category);
+        category = oldCategory ? oldCategory : category;
+      }
+      return category;
+    });
   }
 
   /**
@@ -176,7 +192,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
 
       if (this.shownGeneSetsCategories[categoryIndex].sets.length === 0) {
         this.config.geneSets.splice(categoryIndex, 1);
-        this.shownGeneSetsCategories = cloneDeep(this.config.geneSets);
+        this.shownGeneSetsCategories = this.mergeCategories(this.shownGeneSetsCategories, cloneDeep(this.config.geneSets));
 
         this.configChange.emit(this.config);
       }
@@ -189,7 +205,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
 
       if (this.shownGenomicScoresCategories[categoryIndex].scores.length === 0) {
         this.config.genomicScores.splice(categoryIndex, 1);
-        this.shownGenomicScoresCategories = cloneDeep(this.config.genomicScores);
+        this.shownGenomicScoresCategories = this.mergeCategories(this.shownGenomicScoresCategories, cloneDeep(this.config.genomicScores));
 
         this.configChange.emit(this.config);
       }
