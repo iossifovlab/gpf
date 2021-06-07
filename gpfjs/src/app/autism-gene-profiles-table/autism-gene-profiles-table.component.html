@@ -10,10 +10,10 @@
           <th class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="geneSetCategory.sets.length" [style.width]="calculateColumnSize(geneSetCategory.sets.length)">
             <span [title]="geneSetCategory.displayName">{{geneSetCategory.displayName}}</span>
             <button #columnFilteringButton
-            [attr.id]="geneSetCategory.category + '-button'"
-            (click)="updateGeneSetNamesListInCategory(geneSetCategory)"
-            class="dropdown-toggle btn navbar-toggler"
-            style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
+              [attr.id]="geneSetCategory.category + '-button'"
+              (click)="updateGeneSetNamesListInCategory(geneSetCategory)"
+              class="dropdown-toggle btn navbar-toggler"
+              style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
               <span style="font-size: 14px;">&#9776;</span>
             </button>
             <gpf-sorting-buttons [id]="geneSetCategory.category + '_rank'" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
@@ -24,10 +24,10 @@
           <th class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="genomicScoresCategory.scores.length" [style.width]="calculateColumnSize(genomicScoresCategory.scores.length)">
             <span [title]="genomicScoresCategory.displayName">{{genomicScoresCategory.displayName}}</span>
             <button #columnFilteringButton
-            [attr.id]="genomicScoresCategory.category + '-button'"
-            (click)="updateGenomicScoresNamesListInCategory(genomicScoresCategory)"
-            class="dropdown-toggle btn navbar-toggler"
-            style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
+              [attr.id]="genomicScoresCategory.category + '-button'"
+              (click)="updateGenomicScoresNamesListInCategory(genomicScoresCategory)"
+              class="dropdown-toggle btn navbar-toggler"
+              style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
               <span style="font-size: 14px;">&#9776;</span>
             </button>
           </th>
