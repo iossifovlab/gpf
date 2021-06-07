@@ -41,29 +41,26 @@
     </tr>
   </table>
 
-  <table id="external-links" class="table table-bordered table-centered">
+  <table *ngIf="links" id="external-links" class="table table-bordered table-centered">
     <th style="text-align: center;">External links</th>
     <tr>
       <td>
-        <a class="link" [attr.href]="'https://gene.sfari.org/database/human-gene/' + geneSymbol" target="_blank">SFARI gene</a>
+        <a class="link" [attr.href]="links.SFARIgene" target="_blank">SFARI gene</a>
       </td>
     </tr>
-
     <tr>
       <td>
-        <a class="link" href="google.com" target="_blank">UCSC genome browser</a>
+        <a class="link" [attr.href]="links.UCSC" target="_blank">UCSC genome browser</a>
       </td>
     </tr>
-
     <tr>
       <td>
-        <a class="link" [attr.href]="'https://www.genecards.org/cgi-bin/carddisp.pl?gene=' + geneSymbol" target="_blank">GeneCards</a>
+        <a class="link" [attr.href]="links.GeneCards" target="_blank">GeneCards</a>
       </td>
     </tr>
-
     <tr>
       <td>
-        <a class="link" [attr.href]="'https://pubmed.ncbi.nlm.nih.gov/?term=' + geneSymbol + '%20AND%20(autism%20OR%20asd)'" target="_blank">Pubmed</a>
+        <a class="link" [attr.href]="links.Pubmed" target="_blank">Pubmed</a>
       </td>
     </tr>
   </table>

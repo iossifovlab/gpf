@@ -1,12 +1,16 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { AgpConfig, AgpDatasetStatistic, AgpGene, AgpGeneSetsCategory, AgpGenomicScores, AgpGenomicScoresCategory, AgpPersonSet } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
-import { Observable, zip } from 'rxjs';
+import { AgpConfig, AgpGene, AgpGenomicScores, AgpGenomicScoresCategory } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import { Observable } from 'rxjs';
 import { GeneWeightsService } from '../gene-weights/gene-weights.service';
 import { GeneWeights } from 'app/gene-weights/gene-weights';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
-import { mergeMap, switchMap, tap } from 'rxjs/operators';
+import { switchMap, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
+import { GeneService } from 'app/gene-view/gene.service';
+import { Gene } from 'app/gene-view/gene';
+import { DatasetsService } from 'app/datasets/datasets.service';
+import { DatasetDetails } from 'app/datasets/datasets';
 
 @Component({
   selector: 'gpf-autism-gene-profile-single-view',
@@ -28,9 +32,18 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     marginTop: 25,
   };
 
+  links = {
+    SFARIgene: '',
+    UCSC: '',
+    GeneCards: '',
+    Pubmed: ''
+  };
+
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
     private geneWeightsService: GeneWeightsService,
+    private geneService: GeneService,
+    private datasetsService: DatasetsService,
     private location: Location,
     private router: Router,
   ) { }
@@ -60,6 +73,27 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
         );
       })
     ).subscribe();
+
+    this.geneService.getGene(this.geneSymbol).subscribe(gene => {
+      this.datasetsService.getDatasetDetails(this.config.defaultDataset).subscribe(datasetDetails => {
+        this.setLinks(this.geneSymbol, gene, datasetDetails);
+      });
+    });
+  }
+
+  setLinks(geneSymbol: string, gene: Gene, datasetDetails: DatasetDetails): void {
+    this.links.SFARIgene = 'https://gene.sfari.org/database/human-gene/' + geneSymbol;
+    this.links.UCSC = this.getUCSCLink(gene, datasetDetails);
+    this.links.GeneCards = 'https://www.genecards.org/cgi-bin/carddisp.pl?gene=' + geneSymbol;
+    this.links.Pubmed = 'https://pubmed.ncbi.nlm.nih.gov/?term=' + geneSymbol + '%20AND%20(autism%20OR%20asd)';
+  }
+
+  getUCSCLink(gene: Gene, datasetDetails: DatasetDetails): string {
+    return 'https://genome.ucsc.edu/cgi-bin/hgTracks?db=' + datasetDetails.genome + '&lastVirtModeType=default'
+      + '&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=chr'
+      + gene.transcripts[0].chrom + '%3A' + gene.transcripts[0].start + '-'
+      + gene.transcripts[gene.transcripts.length - 1].stop
+      + '&hgsid=1120191263_9kJvHXmsIQajgm163GA7k8YV4ay4';
   }
 
   formatScoreName(score: string) {
