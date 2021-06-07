@@ -32,6 +32,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     marginTop: 25,
   };
 
+  isGeneInSFARI = false;
   links = {
     SFARIgene: '',
     UCSC: '',
@@ -50,9 +51,14 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
 
   ngOnInit(): void {
     this.gene$ = this.autismGeneProfilesService.getGene(this.geneSymbol);
-
     this.gene$.pipe(
       switchMap(gene => {
+        gene.geneSets.forEach(element => {
+          if (element.match(/sfari/i)) {
+            this.isGeneInSFARI =  true;
+          }
+        });
+
         let scores: string;
         const geneWeightsObservables = [];
         for (let i = 0; i < gene.genomicScores.length; i++) {
@@ -82,7 +88,10 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   }
 
   setLinks(geneSymbol: string, gene: Gene, datasetDetails: DatasetDetails): void {
-    this.links.SFARIgene = 'https://gene.sfari.org/database/human-gene/' + geneSymbol;
+    if (this.isGeneInSFARI) {
+      this.links.SFARIgene = 'https://gene.sfari.org/database/human-gene/' + geneSymbol;
+    }
+
     this.links.UCSC = this.getUCSCLink(gene, datasetDetails);
     this.links.GeneCards = 'https://www.genecards.org/cgi-bin/carddisp.pl?gene=' + geneSymbol;
     this.links.Pubmed = 'https://pubmed.ncbi.nlm.nih.gov/?term=' + geneSymbol + '%20AND%20(autism%20OR%20asd)';

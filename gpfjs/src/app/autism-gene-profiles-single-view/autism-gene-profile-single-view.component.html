@@ -43,7 +43,7 @@
 
   <table *ngIf="links" id="external-links" class="table table-bordered table-centered">
     <th style="text-align: center;">External links</th>
-    <tr>
+    <tr *ngIf="links.SFARIgene !== ''">
       <td>
         <a class="link" [attr.href]="links.SFARIgene" target="_blank">SFARI gene</a>
       </td>
