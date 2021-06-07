@@ -34,7 +34,7 @@
         </ng-container>
 
         <th *ngFor="let dataset of config.datasets" class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="calculateDatasetColspan(dataset)">
-          <span [title]="dataset.meta">{{dataset.displayName}}</span>
+          <span [title]="dataset.meta ? dataset.meta : ''">{{dataset.displayName}}</span>
         </th>
       </tr>
 
@@ -46,21 +46,21 @@
 
         <ng-container *ngFor="let geneSetCategory of shownGeneSetsCategories">
           <th class="table-subheader" rowspan="2" *ngFor="let geneSet of geneSetCategory.sets">
-            <span class="vertical-text" [title]="geneSet.meta">{{geneSet.setId}}</span>
+            <span class="vertical-text" [title]="geneSet.meta ? geneSet.meta : ''">{{geneSet.setId}}</span>
             <gpf-sorting-buttons [id]="geneSet.collectionId + '_' + geneSet.setId" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
           </th>
         </ng-container>
 
         <ng-container *ngFor="let genomicScoresCategory of shownGenomicScoresCategories">
           <th class="table-subheader" rowspan="2" *ngFor="let genomicScore of genomicScoresCategory.scores">
-            <span class="vertical-text" [title]="genomicScore.meta">{{genomicScore.scoreName}}</span>
+            <span class="vertical-text" [title]="genomicScore.meta ? genomicScore.meta : ''">{{genomicScore.scoreName}}</span>
             <gpf-sorting-buttons [id]="genomicScoresCategory.category + '_' + genomicScore.scoreName" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
           </th>
         </ng-container>
 
         <ng-container *ngFor="let dataset of config.datasets">
           <th class="table-subheader" colspan="3" *ngFor="let personSet of dataset.personSets">
-            <span [title]="personSet.description">{{personSet.displayName}} ({{personSet.childrenCount}})</span>
+            <span [title]="personSet.description ? personSet.description : ''">{{personSet.displayName}} ({{personSet.childrenCount}})</span>
           </th>
         </ng-container>
       </tr>
@@ -68,7 +68,7 @@
         <ng-container *ngFor="let dataset of config.datasets">
           <ng-container *ngFor="let personSet of dataset.personSets">
             <td *ngFor="let statistic of dataset.statistics" class="effect-type-header">
-              <span [title]="statistic.description">{{statistic.displayName}}</span>
+              <span [title]="statistic.description ? statistic.description : ''">{{statistic.displayName}}</span>
               <gpf-sorting-buttons [id]="dataset.id + '_' + personSet.id + '_' + statistic.id" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
             </td>
           </ng-container>
