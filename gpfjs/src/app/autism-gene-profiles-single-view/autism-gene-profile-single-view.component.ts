@@ -55,7 +55,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
       switchMap(gene => {
         gene.geneSets.forEach(element => {
           if (element.match(/sfari/i)) {
-            this.isGeneInSFARI =  true;
+            this.isGeneInSFARI = true;
           }
         });
 

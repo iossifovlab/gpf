@@ -42,16 +42,19 @@ describe('AutismGeneProfileSingleViewComponent', () => {
       {id: 'fakeGenomicScore2', scores: fakeScores2}
     ];
 
-    const geneMock = of({
-      genomicScores: mockGenomicScores
+    let geneMock = of({
+      genomicScores: mockGenomicScores,
+      geneSets: ['test1', 'test2', 'test3_sfari']
     } as any);
     getGeneSpy.and.returnValue(geneMock);
 
     const getGeneWeightsSpy = spyOn(component['geneWeightsService'], 'getGeneWeights');
     getGeneWeightsSpy.and.returnValue(of('fakeWeight' as any));
 
+    expect(component.isGeneInSFARI).toBeFalse();
     component.ngOnInit();
     expect(component['gene$']).toEqual(geneMock);
+    expect(component.isGeneInSFARI).toBeTrue();
     expect(getGeneSpy).toHaveBeenCalledWith('mockGeneSymbol');
     expect(getGeneWeightsSpy.calls.allArgs()).toEqual([
       ['fakeScore1'],
@@ -61,6 +64,16 @@ describe('AutismGeneProfileSingleViewComponent', () => {
       {category: 'fakeGenomicScore1', scores: 'fakeWeight'},
       {category: 'fakeGenomicScore2', scores: 'fakeWeight' }
     ] as any);
+
+    geneMock = of({
+      genomicScores: mockGenomicScores,
+      geneSets: ['test1', 'test2', 'test3']
+    } as any);
+    component.isGeneInSFARI = false;
+    getGeneSpy.and.returnValue(geneMock);
+    component.ngOnInit();
+    expect(component['gene$']).toEqual(geneMock);
+    expect(component.isGeneInSFARI).toBeFalse();
   });
 
   it('should format score name', () => {
