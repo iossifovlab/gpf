@@ -164,6 +164,9 @@ def fill_variant_counts(
                             score_max = score.get("max")
                             score_value = v.get_attribute(score_name)[0]
 
+                            if score_value is None:
+                                do_count = False
+
                             if score_min:
                                 do_count = do_count and score_value > score_min
                             if score_max:
