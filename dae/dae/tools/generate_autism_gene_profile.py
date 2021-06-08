@@ -157,16 +157,17 @@ def fill_variant_counts(
                         in_effect_types = len(
                             ets.intersection(v.effect_types)) > 0
                         do_count = do_count and in_effect_types
-                    if statistic.get("score"):
-                        score_name = statistic.score["name"]
-                        score_min = statistic.score.get("min")
-                        score_max = statistic.score.get("max")
-                        score_value = v.get_attribute(score_name)[0]
+                    if statistic.get("scores"):
+                        for score in statistic.scores:
+                            score_name = statistic.score["name"]
+                            score_min = statistic.score.get("min")
+                            score_max = statistic.score.get("max")
+                            score_value = v.get_attribute(score_name)[0]
 
-                        if score_min:
-                            do_count = do_count and score_value > score_min
-                        if score_max:
-                            do_count = do_count and score_value < score_max
+                            if score_min:
+                                do_count = do_count and score_value > score_min
+                            if score_max:
+                                do_count = do_count and score_value < score_max
 
                     if statistic.get("variant_types"):
                         variant_types = {
