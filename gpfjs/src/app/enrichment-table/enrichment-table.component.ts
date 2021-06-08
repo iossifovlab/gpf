@@ -1,7 +1,5 @@
-import { Component, Input, Directive } from '@angular/core';
-import { EnrichmentResults, EnrichmentEffectResult } from '../enrichment-query/enrichment-result';
-
-
+import { Component, Input } from '@angular/core';
+import { EnrichmentResults } from '../enrichment-query/enrichment-result';
 
 @Component({
   selector: 'gpf-enrichment-table',
