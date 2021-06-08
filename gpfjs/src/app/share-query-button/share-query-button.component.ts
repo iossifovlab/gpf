@@ -9,15 +9,10 @@ import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
   styleUrls: ['./share-query-button.component.css']
 })
 export class ShareQueryButtonComponent implements OnInit {
-
-  @Input()
-  queryType: string;
-
+  @Input() queryType: string;
   @Input() disabled: boolean;
-
   @ViewChild(NgbDropdown)
   dropdown: NgbDropdown;
-
 
   private urlUUID: string;
   private url: string;
@@ -38,11 +33,11 @@ export class ShareQueryButtonComponent implements OnInit {
       this.parentComponent.getCurrentState()
         .take(1)
         .subscribe(state => {
-            this.queryService.saveQuery(state, this.queryType)
-                .take(1)
-                .subscribe(response => {
-                    this.urlUUID = response['uuid'];
-                });
+          this.queryService.saveQuery(state, this.queryType)
+            .take(1)
+            .subscribe(response => {
+              this.urlUUID = response['uuid'];
+            });
         },
         error => {
           this.resetState();
@@ -54,17 +49,17 @@ export class ShareQueryButtonComponent implements OnInit {
   }
 
   private resetState() {
-      this.savedUrlUUID = null;
-      this.url = null;
+    this.savedUrlUUID = null;
+    this.url = null;
   }
 
   createUrl() {
     if (!this.urlUUID) {
-        return '';
+      return '';
     }
     if (this.savedUrlUUID !== this.urlUUID) {
-        this.url = this.queryService.getLoadUrl(this.urlUUID);
-        this.savedUrlUUID = this.urlUUID;
+      this.url = this.queryService.getLoadUrl(this.urlUUID);
+      this.savedUrlUUID = this.urlUUID;
     }
     return this.url;
   }
