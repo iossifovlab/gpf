@@ -41,8 +41,8 @@ variant_statistic_schema = {
             "type": "dict",
             "schema": {
                 "name": {"type": "string"},
-                "min": {"type": "float", "default": None},
-                "max": {"type": "float", "default": None}
+                "min": {"type": "float", "default": None, "nullable": True},
+                "max": {"type": "float", "default": None, "nullable": True}
             }
         }},
         "variant_types": {

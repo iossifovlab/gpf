@@ -159,9 +159,9 @@ def fill_variant_counts(
                         do_count = do_count and in_effect_types
                     if statistic.get("scores"):
                         for score in statistic.scores:
-                            score_name = statistic.score["name"]
-                            score_min = statistic.score.get("min")
-                            score_max = statistic.score.get("max")
+                            score_name = score["name"]
+                            score_min = score.get("min")
+                            score_max = score.get("max")
                             score_value = v.get_attribute(score_name)[0]
 
                             if score_min:
