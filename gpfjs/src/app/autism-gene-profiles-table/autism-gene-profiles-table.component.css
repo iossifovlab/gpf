@@ -82,3 +82,8 @@ thead th {
 thead th, .effect-type-header {
   background-color: #eeeeee;
 }
+
+a, a:hover {
+  color: #0056b3;
+  cursor: pointer;
+}

@@ -100,7 +100,11 @@
         <ng-container *ngFor="let study of gene.studies">
           <ng-container *ngFor="let personSet of study.personSets">
             <td *ngFor="let effectType of personSet.effectTypes">
-              <ng-container *ngIf="effectType.value.count !== 0">{{effectType.value.count}} ({{effectType.value.rate | number : '1.0-3' }})</ng-container>
+              <ng-container *ngIf="effectType.value.count !== 0">
+                <a (click)="goToQuery(gene.geneSymbol, personSet.id)">
+                  {{effectType.value.count}} ({{effectType.value.rate | number : '1.0-3' }})
+                </a>
+              </ng-container>
             </td> 
           </ng-container>
         </ng-container>
