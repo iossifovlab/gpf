@@ -15,8 +15,6 @@ export class GeneService {
     private config: ConfigService,
   ) {}
 
-  // http://localhost:8000/api/v3/genome/gene_models/default/CHD8
-  // CHD8, FMR1, BRCA1
   getGene(geneSymbol: string) {
     return this.http
     .get(this.config.baseUrl + this.geneVisualizationUrl + geneSymbol)

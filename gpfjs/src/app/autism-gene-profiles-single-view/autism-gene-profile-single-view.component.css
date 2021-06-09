@@ -4,3 +4,11 @@
   margin-bottom: 15px;
   float: left;
 }
+
+#external-links {
+  width: 200px;
+}
+
+.link {
+  text-decoration: underline;
+}

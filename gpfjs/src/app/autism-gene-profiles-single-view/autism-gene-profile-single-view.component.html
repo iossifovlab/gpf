@@ -41,6 +41,30 @@
     </tr>
   </table>
 
+  <table *ngIf="links" id="external-links" class="table table-bordered table-centered">
+    <th style="text-align: center;">External links</th>
+    <tr *ngIf="links.SFARIgene !== ''">
+      <td>
+        <a class="link" [attr.href]="links.SFARIgene" target="_blank">SFARI gene</a>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <a class="link" [attr.href]="links.UCSC" target="_blank">UCSC genome browser</a>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <a class="link" [attr.href]="links.GeneCards" target="_blank">GeneCards</a>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <a class="link" [attr.href]="links.Pubmed" target="_blank">Pubmed</a>
+      </td>
+    </tr>
+  </table>
+
   <ng-container *ngFor="let dataset of config.datasets">
     <table class="table table-bordered table-centered datasets-table">
       <thead>
@@ -78,5 +102,4 @@
       </tbody>
     </table>
   </ng-container>
-
 </div>
