@@ -37,14 +37,14 @@ variant_statistic_schema = {
         "description": {"type": "string"},
         "effects": {"type": "list", "schema": {"type": "string"}},
         "category": {"type": "string", "allowed": ["denovo", "rare"]},
-        "score": {
+        "scores": {"type": "list", "schema": {
             "type": "dict",
             "schema": {
                 "name": {"type": "string"},
-                "min": {"type": "float", "default": None},
-                "max": {"type": "float", "default": None}
+                "min": {"type": "float", "default": None, "nullable": True},
+                "max": {"type": "float", "default": None, "nullable": True}
             }
-        },
+        }},
         "variant_types": {
             "type": "list",
             "schema": {

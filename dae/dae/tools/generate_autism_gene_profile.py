@@ -157,16 +157,20 @@ def fill_variant_counts(
                         in_effect_types = len(
                             ets.intersection(v.effect_types)) > 0
                         do_count = do_count and in_effect_types
-                    if statistic.get("score"):
-                        score_name = statistic.score["name"]
-                        score_min = statistic.score.get("min")
-                        score_max = statistic.score.get("max")
-                        score_value = v.get_attribute(score_name)[0]
+                    if statistic.get("scores"):
+                        for score in statistic.scores:
+                            score_name = score["name"]
+                            score_min = score.get("min")
+                            score_max = score.get("max")
+                            score_value = v.get_attribute(score_name)[0]
 
-                        if score_min:
-                            do_count = do_count and score_value > score_min
-                        if score_max:
-                            do_count = do_count and score_value < score_max
+                            if score_value is None:
+                                do_count = False
+
+                            if score_min:
+                                do_count = do_count and score_value > score_min
+                            if score_max:
+                                do_count = do_count and score_value < score_max
 
                     if statistic.get("variant_types"):
                         variant_types = {
@@ -349,15 +353,8 @@ def main(gpf_instance=None, argv=None):
     agpdb.insert_agps(agps.values())
     logger.info("Building AGP output view")
     agpdb.build_agp_view()
-    if args.drop:
-        agpdb.drop_cache_table()
-    else:
-        if agpdb.cache_table_exists():
-            logger.info("Regenerating cache table")
-            agpdb.generate_cache_table(regenerate=True)
-        else:
-            logger.info("Generating cache table")
-            agpdb.generate_cache_table(regenerate=False)
+    logger.info("Generating cache table")
+    agpdb.generate_cache_table()
     logger.info("Done")
 
 

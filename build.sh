@@ -176,9 +176,9 @@ function main() {
 
       # cleanup
       build_run_container rm -rf \
-        ./data/data-hg19-startup/studies/* \
-        ./data/data-hg19-startup/pheno/* \
-        ./data/data-hg19-startup/wdae/wdae.sql
+        ./data/data-hg19-remote/studies/* \
+        ./data/data-hg19-remote/pheno/* \
+        ./data/data-hg19-remote/wdae/wdae.sql
 
       build_run_ctx_init "local"
       defer_ret build_run_ctx_reset
