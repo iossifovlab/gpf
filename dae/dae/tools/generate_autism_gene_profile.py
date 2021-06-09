@@ -329,7 +329,8 @@ def main(gpf_instance=None, argv=None):
             genotype_data.query_variants(
                 genes=genes,
                 inheritance=["mendelian", "missing"],
-                roles="prb and sib")
+                roles="prb and sib",
+                frequency_filter=[("af_allele_freq", (None, 1.0))])
         )
     logger.info("Done collecting rare variants")
     logger.info("Counting rare variants...")
