@@ -1,6 +1,6 @@
 import {
   AfterViewInit, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostListener,
-  Input, OnInit, Output, QueryList, Renderer2, ViewChild, ViewChildren
+  Input, OnChanges, OnInit, Output, QueryList, Renderer2, ViewChild, ViewChildren
 } from '@angular/core';
 // tslint:disable-next-line:import-blacklist
 import { Subject } from 'rxjs';
@@ -16,8 +16,10 @@ import { sprintf } from 'sprintf-js';
   templateUrl: './autism-gene-profiles-table.component.html',
   styleUrls: ['./autism-gene-profiles-table.component.css'],
 })
-export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
+export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, OnChanges {
   @Input() config: AgpConfig;
+  @Output() configChange: EventEmitter<AgpConfig> = new EventEmitter<AgpConfig>();
+
   @Output() createTabEvent = new EventEmitter();
   @ViewChildren(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu[];
 
@@ -79,6 +81,27 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     private ref: ElementRef,
   ) { }
 
+  ngOnChanges(): void {
+    this.shownGeneSetsCategories = this.mergeCategories(this.shownGeneSetsCategories, this.config.geneSets);
+    this.shownGenomicScoresCategories = this.mergeCategories(this.shownGenomicScoresCategories, this.config.genomicScores);
+  }
+
+  /**
+   * Merges categories from one array onto another, without updating already existing categories
+   * @param oldCategories category array that needs to be updated
+   * @param newCategories category array used to update the other
+   * @returns updated category array
+   */
+  mergeCategories(oldCategories, newCategories) {
+    return newCategories.map(category => {
+      if (oldCategories) {
+        const oldCategory = oldCategories.find(cat => category.category === cat.category);
+        category = oldCategory ? oldCategory : category;
+      }
+      return category;
+    });
+  }
+
   /**
    * Initializes component. Prepares shown categories, genes, gene search field
    * and sets the first table column as current for sorting.
@@ -138,7 +161,11 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
    * @returns modals position
    */
   calculateModalBottom(): number {
-    return window.innerHeight - this.columnFilteringButtons.first.nativeElement.getBoundingClientRect().bottom;
+    const columnFilteringButton = this.columnFilteringButtons.first;
+    if (columnFilteringButton) {
+      return window.innerHeight - columnFilteringButton.nativeElement.getBoundingClientRect().bottom;
+    }
+    return 0;
   }
 
   /**
@@ -162,12 +189,26 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
       this.shownGeneSetsCategories[categoryIndex].sets = this.config.geneSets
         .find(category => category.category === menuId[1]).sets
         .filter(set => $event.data.includes(set['setId']));
+
+      if (this.shownGeneSetsCategories[categoryIndex].sets.length === 0) {
+        this.config.geneSets.splice(categoryIndex, 1);
+        this.shownGeneSetsCategories = this.mergeCategories(this.shownGeneSetsCategories, cloneDeep(this.config.geneSets));
+
+        this.configChange.emit(this.config);
+      }
     } else if (menuId[0] === 'genomic_scores_category') {
       const categoryIndex = this.shownGenomicScoresCategories.findIndex(category => category['category'] === menuId[1]);
 
       this.shownGenomicScoresCategories[categoryIndex].scores = this.config.genomicScores
         .find(category => category.category === menuId[1]).scores
         .filter(score => $event.data.includes(score.scoreName));
+
+      if (this.shownGenomicScoresCategories[categoryIndex].scores.length === 0) {
+        this.config.genomicScores.splice(categoryIndex, 1);
+        this.shownGenomicScoresCategories = this.mergeCategories(this.shownGenomicScoresCategories, cloneDeep(this.config.genomicScores));
+
+        this.configChange.emit(this.config);
+      }
     }
 
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());

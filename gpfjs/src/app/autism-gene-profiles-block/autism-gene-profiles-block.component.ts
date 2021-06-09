@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, HostListener, OnInit, ViewChild } from '@
 import { NgbDropdownMenu, NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { AgpConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-block',
@@ -14,7 +15,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   geneTabs = new Set<string>();
   autismGeneToolConfig: AgpConfig;
-  testConfig: AgpConfig;
+  tableConfig: AgpConfig;
 
   allCategories: string[];
   shownCategories: string[];
@@ -47,9 +48,9 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   ngOnInit(): void {
     this.autismGeneProfilesService.getConfig().take(1).subscribe(config => {
       this.autismGeneToolConfig = config;
-      this.testConfig = config;
-      this.allCategories = this.getAllCategories();
-      this.shownCategories = this.getAllCategories();
+      this.tableConfig = cloneDeep(config);
+      this.allCategories = this.getAllCategories(this.autismGeneToolConfig);
+      this.shownCategories = this.getAllCategories(this.autismGeneToolConfig);
     });
   }
 
@@ -147,13 +148,13 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  getAllCategories() {
+  getAllCategories(config: AgpConfig) {
     const allCategories = [];
-    if (this.autismGeneToolConfig.geneSets) {
-      allCategories.push(...this.autismGeneToolConfig.geneSets.map(obj => obj.category));
+    if (config.geneSets) {
+      allCategories.push(...config.geneSets.map(obj => obj.category));
     }
-    if (this.autismGeneToolConfig.genomicScores) {
-      allCategories.push(...this.autismGeneToolConfig.genomicScores.map(obj => obj.category));
+    if (config.genomicScores) {
+      allCategories.push(...config.genomicScores.map(obj => obj.category));
     }
     return allCategories;
   }
@@ -164,9 +165,14 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   handleMultipleSelectMenuApplyEvent($event) {
     this.shownCategories = $event.data;
-    this.testConfig.geneSets = this.autismGeneToolConfig.geneSets.filter(obj => this.shownCategories.includes(obj.category));
-    this.testConfig.genomicScores = this.autismGeneToolConfig.genomicScores.filter(obj => this.shownCategories.includes(obj.category));
-    console.log(this.testConfig);
+    this.tableConfig.geneSets = this.autismGeneToolConfig.geneSets.filter(obj => this.shownCategories.includes(obj.category));
+    this.tableConfig.genomicScores = this.autismGeneToolConfig.genomicScores.filter(obj => this.shownCategories.includes(obj.category));
+    this.tableConfig = cloneDeep(this.tableConfig);
     this.ngbDropdownMenu.dropdown.close();
+  }
+
+  tableConfigChangeEvent($event) {
+    this.tableConfig = $event;
+    this.shownCategories = this.getAllCategories(this.tableConfig);
   }
 }
