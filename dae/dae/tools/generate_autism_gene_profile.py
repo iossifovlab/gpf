@@ -393,7 +393,8 @@ def main(gpf_instance=None, argv=None):
                 rare_variants[dataset_id].extend(list(
                     genotype_data.query_variants(
                         genes=genes,
-                        inheritance=["mendelian", "missing"],
+                        inheritance=["mendelian", "missing", "unknown"],
+                        frequency_filter=[("af_allele_freq", (None, 1.0))],
                         **kwargs)
                 ))
         logger.info("Done collecting rare variants")
