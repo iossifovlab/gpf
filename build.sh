@@ -296,7 +296,7 @@ EOT'
         build_run_ctx_init ctx:ctx_impala "persistent" "container" "seqpipe/seqpipe-docker-impala:latest" "cmd-from-image" "no-def-mounts" --hostname impala --network "${ctx_network["network_id"]}"
         defer_ret build_run_ctx_reset ctx:ctx_impala
 
-        build_run_container ctx:ctx_impala /wd/scripts/wait-for-it.sh -h localhost -p 21050 -t 300
+        build_run_container ctx:ctx_impala /wait-for-it.sh -h localhost -p 21050 -t 300
 
         build_run_ctx_persist ctx:ctx_impala
       }
