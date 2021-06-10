@@ -97,7 +97,7 @@ function main() {
     build_run_ctx_init "container" "ubuntu:18.04"
     defer_ret build_run_ctx_reset
 
-    build_run rm -rf ./data/ ./import/ ./downloads ./results
+    build_run rm -rvf ./data/ ./import/ ./downloads ./results
     build_run_local mkdir ./data/ ./import/ ./downloads ./results
   }
 
@@ -134,7 +134,7 @@ function main() {
     defer_ret build_run_ctx_reset
 
     # cleanup
-    build_run_container rm -rf \
+    build_run_container rm -rvf \
       ./data/data-hg19-startup/studies/* \
       ./data/data-hg19-startup/pheno/* \
       ./data/data-hg19-startup/wdae/wdae.sql
@@ -175,7 +175,7 @@ function main() {
       defer_ret build_run_ctx_reset
 
       # cleanup
-      build_run_container rm -rf \
+      build_run_container rm -rvf \
         ./data/data-hg19-remote/studies/* \
         ./data/data-hg19-remote/pheno/* \
         ./data/data-hg19-remote/wdae/wdae.sql
@@ -293,10 +293,10 @@ EOT'
       # setup impala
       {
         local -A ctx_impala
-        build_run_ctx_init ctx:ctx_impala "persistent" "container" "seqpipe/seqpipe-docker-impala:latest" "cmd-from-image" --hostname impala --network "${ctx_network["network_id"]}"
+        build_run_ctx_init ctx:ctx_impala "persistent" "container" "seqpipe/seqpipe-docker-impala:latest" "cmd-from-image" "no-def-mounts" --hostname impala --network "${ctx_network["network_id"]}"
         defer_ret build_run_ctx_reset ctx:ctx_impala
 
-        build_run_container ctx:ctx_impala /wd/scripts/wait-for-it.sh -h localhost -p 21050 -t 300
+        build_run_container ctx:ctx_impala /wait-for-it.sh -h localhost -p 21050 -t 300
 
         build_run_ctx_persist ctx:ctx_impala
       }
@@ -470,7 +470,7 @@ EOT'
           --cov /code/wdae/ \
           wdae || true'
 
-    build_run_local rm -rf ./test-results/
+    build_run_local rm -rvf ./test-results/
     build_run_local mkdir -p ./test-results/
     build_run_local cp ./results/wdae-junit.xml ./results/dae-junit.xml ./test-results/
   }
@@ -481,7 +481,7 @@ EOT'
 
     build_run_ctx_init "container" "ubuntu:18.04"
     defer_ret build_run_ctx_reset
-    build_run rm -rf ./data/ ./import/ ./downloads ./results
+    build_run rm -rvf ./data/ ./import/ ./downloads ./results
   }
 }
 
