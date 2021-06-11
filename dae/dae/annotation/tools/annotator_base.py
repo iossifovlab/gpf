@@ -23,7 +23,7 @@ class AnnotatorBase(object):
     `AnnotatorBase` is base class of all `Annotators`.
     """
 
-    def __init__(self, config, genomes_db):
+    def __init__(self, config, genomes_db, liftover=None):
         self.config = config
         self.genomes_db = genomes_db
         self.genomic_sequence = self.genomes_db.load_genomic_sequence(
@@ -44,9 +44,7 @@ class AnnotatorBase(object):
         elif self.config.options.mode == "overwrite":
             self.mode = "overwrite"
 
-        self.liftover = None
-        if self.config.options.liftover:
-            self.liftover = self.config.options.liftover
+        self.liftover = liftover
 
     def build_output_line(self, annotation_line):
         output_columns = self.config.output_columns
@@ -135,118 +133,9 @@ class CopyAnnotator(AnnotatorBase):
         annotation_line.update(data)
 
 
-class VariantBuilder(object):
-    def __init__(self, config, genomic_sequence):
-        self.config = config
-        self.genomic_sequence = genomic_sequence
-
-    def build_variant(self, annotation_line):
-        raise NotImplementedError()
-
-    def fill_variant_coordinates(self, aline, variant):
-        if variant is None:
-            data = {
-                "CSHL_location": None,
-                "CSHL_chr": None,
-                "CSHL_position": None,
-                "CSHL_variant": None,
-                "VCF_chr": None,
-                "VCF_position": None,
-                "VCF_ref": None,
-                "VCF_alt": None,
-            }
-        else:
-            data = {
-                "CSHL_location": variant.cshl_location,
-                "CSHL_chr": variant.chromosome,
-                "CSHL_position": variant.cshl_position,
-                "CSHL_variant": variant.cshl_variant,
-                "VCF_chr": variant.chromosome,
-                "VCF_position": variant.position,
-                "VCF_ref": variant.reference,
-                "VCF_alt": variant.alternative,
-            }
-        aline.update(data)
-
-    def check_variant_coordiantes(self, aline):
-        return "CSHL_location" in aline
-
-    def build(self, annotation_line):
-        summary = self.build_variant(annotation_line)
-        self.fill_variant_coordinates(annotation_line, summary)
-        return summary
-
-
-class DAEBuilder(VariantBuilder):
-    def __init__(self, config, genome):
-        super(DAEBuilder, self).__init__(config, genome)
-        self.variant = self.config.options.v or "variant"
-        self.chrom = self.config.options.c or "chr"
-        self.position = self.config.options.p or "position"
-        self.location = self.config.options.x or "location"
-        logger.debug(
-            f"DAEBuilder: {self.variant}; "
-            f"{self.chrom}, {self.position} ({self.location})")
-
-    def build_variant(self, aline):
-        # logger.debug(f"DAEBuilder: build_variant({aline}")
-        variant = aline[self.variant]
-        if self.location in aline:
-            location = aline[self.location]
-            chrom, position = location.split(":")
-        else:
-            assert self.chrom in aline
-            assert self.position in aline
-            chrom = aline[self.chrom]
-            position = aline[self.position]
-
-        vcf_position, ref, alt = dae2vcf_variant(
-            chrom, int(position), variant, self.genomic_sequence
-        )
-        summary = SummaryAllele(chrom, vcf_position, ref, alt)
-        return summary
-
-
-class VCFBuilder(VariantBuilder):
-    def __init__(self, config, genomic_sequence):
-        super(VCFBuilder, self).__init__(config, genomic_sequence)
-        self.chrom = self.config.options.c
-        self.position = self.config.options.p
-        self.ref = self.config.options.r
-        self.alt = self.config.options.a
-
-        logger.debug(
-            f"VCFBuilder: {self.ref} -> {self.alt}; "
-            f"{self.chrom}, {self.position}")
-
-    def build_variant(self, aline):
-        assert self.chrom, self.chrom
-        chrom = aline[self.chrom]
-        position = aline[self.position]
-        ref = aline[self.ref]
-        alt = aline[self.alt]
-
-        if chrom is None or position is None:
-            return None
-        if not alt:
-            return None
-
-        summary = SummaryAllele(chrom, int(position), ref, alt)
-        return summary
-
-
 class VariantAnnotatorBase(AnnotatorBase):
     def __init__(self, config, genomes_db):
         super(VariantAnnotatorBase, self).__init__(config, genomes_db)
-
-        if self.config.options.vcf:
-            self.variant_builder = VCFBuilder(
-                self.config, self.genomic_sequence
-            )
-        else:
-            self.variant_builder = DAEBuilder(
-                self.config, self.genomic_sequence
-            )
 
         if not self.config.virtual_columns:
             self.config = GPFConfigParser.modify_tuple(

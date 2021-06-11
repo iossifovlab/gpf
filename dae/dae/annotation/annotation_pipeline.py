@@ -80,18 +80,21 @@ class PipelineAnnotator(CompositeVariantAnnotator):
         self.virtual_columns: List[str] = list(config.virtual_columns)
 
     @staticmethod
-    def build(options, config_file, genomes_db):
+    def build(config_file, gpf_instance):
+        genomes_db = gpf_instance.genomes_db
         pipeline_config = \
             AnnotationConfigParser.read_and_parse_file_configuration(
-                options, config_file
+                config_file
             )
-        assert pipeline_config.sections
 
         pipeline = PipelineAnnotator(pipeline_config, genomes_db)
         output_columns = list(pipeline.config.output_columns)
-        for section_config in pipeline_config.sections:
+        for score in pipeline_config.genomic_scores:
+            score_id = score["id"]
+            liftover = score["liftover"]
+            gs = gpf_instance.find_genomic_score(score_id)
             annotator = AnnotatorFactory.make_annotator(
-                section_config, genomes_db
+                gs.config, genomes_db, liftover
             )
             pipeline.add_annotator(annotator)
             output_columns.extend([

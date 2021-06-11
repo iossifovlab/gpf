@@ -73,30 +73,18 @@ def annotation_config_cli_options(gpf_instance):
 
 class AnnotationConfigParser:
     @classmethod
-    def read_and_parse_file_configuration(cls, options, config_file):
+    def read_and_parse_file_configuration(cls, config_file):
 
         config = GPFConfigParser.load_config(
             config_file, annotation_conf_schema
         ).to_dict()
 
-        config["options"] = options
         config["columns"] = {}
         config["native_columns"] = []
         config["virtual_columns"] = []
         config["output_columns"] = []
 
         config = cls._setup_defaults(DefaultBox(config))
-
-        parsed_sections = list()
-        for config_section in config.sections:
-            if config_section.annotator is None:
-                continue
-            config_section_dict = recursive_dict_update(
-                {"options": options}, config_section.to_dict()
-            )
-            parsed_sections.append(cls.parse_section(config_section_dict))
-
-        config["sections"] = parsed_sections
 
         return FrozenBox(config)
 

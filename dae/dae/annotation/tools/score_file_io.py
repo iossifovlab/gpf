@@ -74,28 +74,27 @@ class NoLine(object):
 
 
 class ScoreFile(object):
-    def __init__(self, score_filename, config_filename=None):
+    def __init__(self, score_filename, config, id_attrs):
         self.score_filename = score_filename
         assert os.path.exists(self.score_filename), self.score_filename
 
-        if config_filename is None:
-            config_filename = "{}.conf".format(self.score_filename)
+        self.config = config
 
-        self.config = GPFConfigParser.load_config(
-            config_filename, score_file_conf_schema
-        )
-
-        assert self.config.general.header is not None
-        assert self.config.columns.score is not None
-        self.header = self.config.general.header
+        assert self.config.scores is not None
+        self.has_header = self.config.has_header
         logger.debug(
             f"score file {os.path.basename(self.score_filename)} "
-            f"header {self.header}")
-        self.score_names = self.config.columns.score
+            f"has header {self.has_header}")
+        self.score_names = [lambda sc: sc["id"] for sc in self.config.scores]
 
         self.schema = Schema.from_dict(
-            self.config.score_schema
-        ).order_as(self.header)
+            self.config
+        )
+        if self.has_header is False:
+            header = {
+                self.config[id_attr].index: id_attr for id_attr in id_attrs
+            }
+            self.schema = self.schema.order_as(self.header)
         logger.debug(
             f"score file {os.path.basename(self.score_filename)} "
             f"schema {self.schema.col_names}")
@@ -119,12 +118,10 @@ class ScoreFile(object):
         self._init_access()
 
     def _init_access(self):
-        score_format = (
-            self.config.misc.format.lower() if self.config.misc else "tsv"
-        )
+        score_format = self.config.index_file.format.lower()
         assert score_format in ["bedgraph", "tsv", "bigwig", "bw", "vcf"], (
             score_format,
-            self.config.options.scores_config_file,
+            self.config.index_file,
         )
 
         if score_format == "bigwig" or score_format == "bw":

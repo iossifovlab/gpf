@@ -37,13 +37,13 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
         )
 
     def _init_score_file(self):
-        assert self.config.options.scores_file, self.config.annotator
+        assert self.config.filename, self.config.score_type
 
-        scores_filename = os.path.abspath(self.config.options.scores_file)
+        scores_filename = os.path.abspath(self.config.filename)
         assert os.path.exists(scores_filename), scores_filename
 
         self.score_file = ScoreFile(
-            scores_filename, self.config.options.scores_config_file
+            scores_filename, self.config
         )
 
     def collect_annotator_schema(self, schema):
@@ -105,18 +105,18 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         else:
             return float(score)
 
-    def do_annotate(self, aline, variant, liftover_variants):
+    def do_annotate(self, attributes, variant, liftover_variants):
         if VariantType.is_cnv(variant.variant_type):
             logger.info(
                 f"skip trying to add position score for CNV variant {variant}")
-            self._scores_not_found(aline)
+            self._scores_not_found(attributes)
             return
 
         if self.liftover:
             variant = liftover_variants.get(self.liftover)
 
         if variant is None:
-            self._scores_not_found(aline)
+            self._scores_not_found(attributes)
             return
 
         scores = self._fetch_scores(variant)
@@ -127,7 +127,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             logger.debug(
                 f"{self.score_file.score_filename} score not found"
             )
-            self._scores_not_found(aline)
+            self._scores_not_found(attributes)
             return
 
         counts = scores["COUNT"]
@@ -140,17 +140,17 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             )
             assert len(values) > 0
             if len(values) == 1:
-                aline[column_name] = values[0]
+                attributes[column_name] = values[0]
             else:
                 values = list(filter(None, values))
                 total_sum = sum(
                     [c * v for (c, v) in zip(counts, values)]
                 )
-                aline[column_name] = \
+                attributes[column_name] = \
                     (total_sum / total_count) if total_sum \
                     else self.score_file.no_score_value
                 logger.debug(
-                    f"aline[{column_name}]={aline[column_name]}")
+                    f"attributes[{column_name}]={attributes[column_name]}")
 
 
 class NPScoreAnnotator(VariantScoreAnnotatorBase):
