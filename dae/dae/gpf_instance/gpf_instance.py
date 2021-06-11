@@ -203,7 +203,7 @@ class GPFInstance(object):
                 gsd = FilesystemGenomicScoreRepository(gsd_id, gsd_url.path)
             else:
                 gsd = HTTPGenomicScoreRepository(gsd_id, gsd_url.geturl())
-            self._genomic_scores_dbs.append(gsd)
+            self._genomic_resources_dbs.append(gsd)
 
     def get_genotype_data_ids(self, local_only=False):
         return (
@@ -528,6 +528,19 @@ class GPFInstance(object):
         return self.dae_config.gpfjs.selected_genotype_data
 
     # GSD
+
+    def find_genomic_score(self, genomic_score_id):
+        _, gs = self._cache_gsd.find_genomic_score(genomic_score_id)
+        if gs is not None:
+            return gs
+
+        try:
+            self.cache_genomic_score(genomic_score_id)
+        except KeyError:
+            return None
+
+        return self.find_genomic_score(genomic_score_id)
+
     def cache_genomic_score(self, genomic_score_id: str):
         repo, parents, score = None, None, None
         for curr_repo in self._genomic_scores_dbs:

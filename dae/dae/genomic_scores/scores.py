@@ -10,6 +10,7 @@ class GenomicScore:
         self.config = config
         self.id: str = config.id
         self.name: str = config.name
+        self.score_type = config.score_type
         self.filename: str = config.filename
         self.index_file = config.index_file
         self.description: str = config.meta
