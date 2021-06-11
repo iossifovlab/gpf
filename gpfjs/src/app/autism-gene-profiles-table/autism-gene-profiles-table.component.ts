@@ -12,6 +12,7 @@ import { cloneDeep } from 'lodash';
 import { sprintf } from 'sprintf-js';
 import { QueryService } from 'app/query/query.service';
 import { BrowserQueryFilter, PeopleGroup } from 'app/genotype-browser/genotype-browser';
+import { EffectTypes } from 'app/effecttypes/effecttypes';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-table',
@@ -52,6 +53,12 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
   @ViewChildren('columnFilteringButton') columnFilteringButtons: QueryList<ElementRef>;
   @ViewChildren('dropdownSpan') dropdownSpans: QueryList<ElementRef>;
   modalBottom: number;
+
+  effectTypes = {
+    lgds: EffectTypes['LGDS'],
+    intron: ['Intron'],
+    missense: ['Missense'],
+  };
 
   @HostListener('window:scroll', ['$event'])
   onWindowScroll() {
@@ -397,15 +404,18 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     return Number(sprintf(genomicScore.format, genomicScore.value)).toString();
   }
 
-  goToQuery(geneSymbol: string, personSetId: string) {
+  goToQuery(geneSymbol: string, personSetId: string, effectType: string) {
     const newWindow = window.open('', '_blank');
-    // const lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
     const peopleGroup = new PeopleGroup('status', [personSetId]);
     const browserQueryFilter = new BrowserQueryFilter(
-      this.config.defaultDataset, [geneSymbol], undefined, undefined, peopleGroup, ['we'], undefined
+      this.config.defaultDataset,
+      [geneSymbol],
+      this.effectTypes[effectType.replace('denovo_', '')],
+      undefined,
+      peopleGroup,
+      ['we'],
+      undefined
     );
-
-    console.log(browserQueryFilter);
 
     this.queryService.saveQuery(browserQueryFilter, 'genotype')
       .take(1)
