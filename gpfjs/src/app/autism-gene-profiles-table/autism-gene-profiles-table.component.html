@@ -59,7 +59,7 @@
         </ng-container>
 
         <ng-container *ngFor="let dataset of config.datasets">
-          <th class="table-subheader" colspan="3" *ngFor="let personSet of dataset.personSets">
+          <th class="table-subheader" [attr.colspan]="dataset.statistics.length" *ngFor="let personSet of dataset.personSets">
             <span [title]="personSet.description ? personSet.description : ''">{{personSet.displayName}} ({{personSet.childrenCount}})</span>
           </th>
         </ng-container>
