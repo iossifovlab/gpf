@@ -41,6 +41,16 @@ def handle_header(source_header):
     return header
 
 
+def handle_chrom_prefix(expect_prefix, data):
+    if data is None:
+        return data
+    if expect_prefix and not data.startswith("chr"):
+        return "chr{}".format(data)
+    if not expect_prefix and data.startswith("chr"):
+        return data[3:]
+    return data
+
+
 class LineMapper(object):
     def __init__(self, source_header):
         self.source_header = handle_header(source_header)
