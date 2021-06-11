@@ -1,18 +1,9 @@
 from builtins import NotImplementedError
-import sys
-import traceback
 import logging
-
-import pandas as pd
 
 from copy import deepcopy
 
-from dae.configuration.gpf_config_parser import GPFConfigParser, FrozenBox
-from dae.annotation.tools.utils import LineMapper
-
-from dae.utils.dae_utils import dae2vcf_variant
-from dae.variants.variant import SummaryAllele
-
+from dae.configuration.gpf_config_parser import GPFConfigParser
 
 logger = logging.getLogger(__name__)
 
@@ -46,75 +37,12 @@ class AnnotatorBase(object):
 
         self.liftover = liftover
 
-    def build_output_line(self, annotation_line):
-        output_columns = self.config.output_columns
-        return [annotation_line.get(key, "") for key in output_columns]
+    def do_annotate(self, aline, variant, liftover_variants):
+        raise NotImplementedError()
 
     def collect_annotator_schema(self, schema):
         # raise NotImplementedError()
         pass
-
-    def annotate_file(self, file_io_manager):
-        """
-            Method for annotating file from `Annotator`.
-        """
-        self.schema = deepcopy(file_io_manager.reader.schema)
-        self.collect_annotator_schema(self.schema)
-
-        file_io_manager.writer.schema = self.schema
-
-        line_mapper = LineMapper(file_io_manager.header)
-        if self.mode == "replace":
-            output_columns = [
-                col
-                for col in self.schema.columns
-                if col not in self.config.virtual_columns
-            ]
-
-            # FIXME
-            # Using this hack to change the output_columns
-            # since the FrozenBox instances in "sections"
-            # don't allow changing attributes via the standard
-            # way with the usage of recusrive_dict_update
-            self.config = self.config.to_dict()
-            self.config["output_columns"] = output_columns
-            self.config = FrozenBox(self.config)
-
-        file_io_manager.header_write(self.config.output_columns)
-
-        for line in file_io_manager.lines_read_iterator():
-            # TODO How will additional headers behave
-            # with column type support (and coercion)?
-            if "#" in line[0]:
-                file_io_manager.line_write(line)
-                continue
-            annotation_line = line_mapper.map(line)
-
-            try:
-                self.line_annotation(annotation_line)
-            except Exception as ex:
-                logger.error(f"problems annotating line: {line}")
-                logger.error(f"{annotation_line}")
-                logger.error(f"{ex}")
-                traceback.print_exc(file=sys.stderr)
-
-            file_io_manager.line_write(self.build_output_line(annotation_line))
-
-    def annotate_df(self, df):
-        result = []
-        for line in df.to_dict(orient="records"):
-            self.line_annotation(line)
-            result.append(line)
-
-        res_df = pd.DataFrame.from_records(result)
-        return res_df
-
-    def line_annotation(self, annotation_line):
-        """
-            Method returning annotations for the given line
-            in the order from new_columns parameter.
-        """
-        raise NotImplementedError()
 
 
 class CopyAnnotator(AnnotatorBase):
@@ -125,12 +53,6 @@ class CopyAnnotator(AnnotatorBase):
         for key, value in self.config.columns.items():
             assert key in schema.columns, [key, schema.columns]
             schema.columns[value] = schema.columns[key]
-
-    def line_annotation(self, annotation_line, variant=None):
-        data = {}
-        for key, value in self.config.columns.items():
-            data[value] = annotation_line[key]
-        annotation_line.update(data)
 
 
 class VariantAnnotatorBase(AnnotatorBase):
@@ -160,15 +82,6 @@ class VariantAnnotatorBase(AnnotatorBase):
                 schema.create_column(vcol, "int")
             else:
                 schema.create_column(vcol, "str")
-
-    def line_annotation(self, aline):
-        variant = self.variant_builder.build(aline)
-        logger.debug(f"line_annotation calls do_annotate({variant}")
-        liftover_variants = {}
-        self.do_annotate(aline, variant, liftover_variants)
-
-    def do_annotate(self, aline, variant, liftover_variants):
-        raise NotImplementedError()
 
     def annotate_summary_variant(self, summary_variant, liftover_variants):
         for alt_allele in summary_variant.alt_alleles:

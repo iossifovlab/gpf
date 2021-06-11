@@ -1,16 +1,9 @@
 #!/usr/bin/env python
 
-import os
-import sys
 import logging
-import time
-import datetime
-import argparse
-import subprocess
 
 from typing import List
 
-from box import Box
 
 from dae.annotation.tools.annotator_base import (
     AnnotatorBase,
@@ -18,37 +11,12 @@ from dae.annotation.tools.annotator_base import (
 )
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
-from dae.annotation.tools.file_io import IOType, IOManager
 from dae.annotation.tools.file_io_parquet import ParquetSchema
 
-from dae.annotation.tools.annotator_config import annotation_config_cli_options
 from dae.annotation.tools.utils import AnnotatorFactory
-
-from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 logger = logging.getLogger(__name__)
-
-
-def run_tabix(filename):
-    def run_command(cmd):
-        logger.info(f"executing {cmd}")
-        try:
-            subprocess.check_output(cmd, shell=True)
-        except subprocess.CalledProcessError as ex:
-            status = ex.returncode
-            output = ex.output
-
-            logger.info(f"{status}, {output}")
-            raise Exception("FAILURE AT: " + cmd)
-
-    cmd = "bgzip -c {filename} > {filename}.bgz".format(filename=filename)
-    run_command(cmd)
-
-    cmd = "tabix -s 1 -b 2 -e 2 -S 1 -f {filename}.bgz".format(
-        filename=filename
-    )
-    run_command(cmd)
 
 
 class PipelineAnnotator(CompositeVariantAnnotator):
@@ -118,160 +86,8 @@ class PipelineAnnotator(CompositeVariantAnnotator):
         self.virtual_columns.extend(annotator.config.virtual_columns)
         self.annotators.append(annotator)
 
-    def line_annotation(self, aline):
-        self.variant_builder.build(aline)
-        for annotator in self.annotators:
-            annotator.line_annotation(aline)
-
     def collect_annotator_schema(self, schema):
         super(PipelineAnnotator, self).collect_annotator_schema(schema)
         if self.virtual_columns:
             for vcol in self.virtual_columns:
                 schema.remove_column(vcol)
-
-
-def main_cli_options(gpf_instance):
-    options = annotation_config_cli_options(gpf_instance)
-    options.extend(
-        [
-            (
-                "infile",
-                {
-                    "nargs": "?",
-                    "action": "store",
-                    "default": "-",
-                    "help": "path to input file; defaults to stdin "
-                    "[default: %(default)s]",
-                },
-            ),
-            (
-                "outfile",
-                {
-                    "nargs": "?",
-                    "action": "store",
-                    "default": "-",
-                    "help": "path to output file; defaults to stdout "
-                    "[default: %(default)s]",
-                },
-            ),
-            (
-                "--region",
-                {
-                    "help": "work only in the specified region "
-                    "[default: %(default)s]",
-                    "default": None,
-                    "action": "store",
-                },
-            ),
-            (
-                "--read-parquet",
-                {
-                    "help": "read from a parquet file [default: %(default)s]",
-                    "action": "store_true",
-                    "default": False,
-                },
-            ),
-            (
-                "--write-parquet",
-                {
-                    "help": "write to a parquet file [default: %(default)s]",
-                    "action": "store_true",
-                    "default": False,
-                },
-            ),
-            (
-                "--tabix",
-                {
-                    "help": "skip running bgzip and tabix on the annotated "
-                    "files "
-                    "[default: %(default)s]",
-                    "default": False,
-                    "action": "store_true",
-                },
-            ),
-            (
-                "--mode",
-                {
-                    "help": "annotator mode; available modes are "
-                    "`replace` and `append` [default: %(default)s]",
-                    "default": '"replace"',
-                    "action": "store",
-                },
-            ),
-        ]
-    )
-    return options
-
-
-def pipeline_main(argv):
-    gpf_instance = GPFInstance()
-    dae_config = gpf_instance.dae_config
-    genomes_db = gpf_instance.genomes_db
-
-    desc = "Program to annotate variants combining multiple annotating tools"
-    parser = argparse.ArgumentParser(
-        description=desc,
-        conflict_handler="resolve",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    parser.add_argument('--verbose', '-V', action='count', default=0)
-
-    for name, args in main_cli_options(gpf_instance):
-        parser.add_argument(name, **args)
-
-    options = parser.parse_args()
-
-    if options.verbose == 1:
-        logging.basicConfig(level=logging.WARNING)
-    elif options.verbose == 2:
-        logging.basicConfig(level=logging.INFO)
-    elif options.verbose >= 3:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.ERROR)
-
-    if options.annotation_config is not None:
-        config_filename = options.annotation_config
-    else:
-        config_filename = dae_config.annotation.conf_file
-
-    assert os.path.exists(config_filename), config_filename
-
-    options = Box(
-        {k: v for k, v in options._get_kwargs()},
-        default_box=True,
-        default_box_attr=None,
-    )
-
-    # File IO format specification
-    reader_type = IOType.TSV
-    writer_type = IOType.TSV
-    if options.read_parquet:
-        reader_type = IOType.Parquet
-    if options.write_parquet:
-        writer_type = IOType.Parquet
-
-    start = time.time()
-
-    pipeline = PipelineAnnotator.build(options, config_filename, genomes_db,)
-    assert pipeline is not None
-
-    with IOManager(options, reader_type, writer_type) as io_manager:
-        pipeline.annotate_file(io_manager)
-
-    print("# PROCESSING DETAILS:", file=sys.stderr)
-    print("#", time.asctime(), file=sys.stderr)
-    print("#", " ".join(sys.argv[1:]), file=sys.stderr)
-
-    print(
-        "The program was running for [h:m:s]:",
-        str(datetime.timedelta(seconds=round(time.time() - start, 0))),
-        file=sys.stderr,
-    )
-
-    if options.tabix:
-        run_tabix(options.outfile)
-
-
-if __name__ == "__main__":
-    pipeline_main(sys.argv)
