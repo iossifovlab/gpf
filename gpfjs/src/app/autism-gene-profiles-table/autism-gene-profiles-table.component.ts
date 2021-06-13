@@ -1,31 +1,35 @@
 import {
   AfterViewInit, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostListener,
-  Input, OnInit, Output, QueryList, Renderer2, ViewChild, ViewChildren
+  Input, OnChanges, OnInit, Output, QueryList, Renderer2, ViewChild, ViewChildren
 } from '@angular/core';
+// tslint:disable-next-line:import-blacklist
 import { Subject } from 'rxjs';
-import { AutismGeneToolConfig, AutismGeneToolGene, AutismGeneToolGeneSetsCategory, AutismGeneToolGenomicScoresCategory } from './autism-gene-profile-table';
+import { AgpConfig, AgpDataset, AgpGene, AgpGeneSetsCategory, AgpGenomicScoresCategory } from './autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 import { cloneDeep } from 'lodash';
+import { sprintf } from 'sprintf-js';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-table',
   templateUrl: './autism-gene-profiles-table.component.html',
   styleUrls: ['./autism-gene-profiles-table.component.css'],
 })
-export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
-  @Input() config: AutismGeneToolConfig;
+export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, OnChanges {
+  @Input() config: AgpConfig;
+  @Output() configChange: EventEmitter<AgpConfig> = new EventEmitter<AgpConfig>();
+
   @Output() createTabEvent = new EventEmitter();
   @ViewChildren(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu[];
 
-  private genes: AutismGeneToolGene[] = [];
+  private genes: AgpGene[] = [];
 
-  public shownGeneSetsCategories: AutismGeneToolGeneSetsCategory[];
+  public shownGeneSetsCategories: AgpGeneSetsCategory[];
   allGeneSetNames = new Map<string, string[]>();
   shownGeneSetNames = new Map<string, string[]>();
 
-  public shownGenomicScoresCategories: AutismGeneToolGenomicScoresCategory[];
+  public shownGenomicScoresCategories: AgpGenomicScoresCategory[];
   allGenomicScoresNames = new Map<string, string[]>();
   shownGenomicScoresNames = new Map<string, string[]>();
 
@@ -77,17 +81,38 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     private ref: ElementRef,
   ) { }
 
+  ngOnChanges(): void {
+    this.shownGeneSetsCategories = this.mergeCategories(this.shownGeneSetsCategories, this.config.geneSets);
+    this.shownGenomicScoresCategories = this.mergeCategories(this.shownGenomicScoresCategories, this.config.genomicScores);
+  }
+
+  /**
+   * Merges categories from one array onto another, without updating already existing categories
+   * @param oldCategories category array that needs to be updated
+   * @param newCategories category array used to update the other
+   * @returns updated category array
+   */
+  mergeCategories(oldCategories, newCategories) {
+    return newCategories.map(category => {
+      if (oldCategories) {
+        const oldCategory = oldCategories.find(cat => category.category === cat.category);
+        category = oldCategory ? oldCategory : category;
+      }
+      return category;
+    });
+  }
+
   /**
    * Initializes component. Prepares shown categories, genes, gene search field
    * and sets the first table column as current for sorting.
    */
   ngOnInit(): void {
-    this.shownGeneSetsCategories = cloneDeep(this.config['geneSets']);
-    this.shownGenomicScoresCategories = cloneDeep(this.config['genomicScores']);
+    this.shownGeneSetsCategories = cloneDeep(this.config.geneSets);
+    this.shownGenomicScoresCategories = cloneDeep(this.config.genomicScores);
 
-    this.sortBy = `${this.shownGeneSetsCategories[0]['category']}_rank`;
+    this.sortBy = `${this.shownGeneSetsCategories[0].category}_rank`;
     this.orderBy = 'desc';
-    this.currentSortingColumnId = this.sortBy
+    this.currentSortingColumnId = this.sortBy;
     this.autismGeneProfilesService.getGenes(
       this.pageIndex, undefined, this.sortBy, this.orderBy
     ).take(1).subscribe(res => {
@@ -115,7 +140,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     });
 
     const firstSortingButton = this.sortingButtonsComponents.find(sortingButtonsComponent => {
-      return sortingButtonsComponent.id === `${this.shownGeneSetsCategories[0]['category']}_rank`;
+      return sortingButtonsComponent.id === `${this.shownGeneSetsCategories[0].category}_rank`;
     });
     firstSortingButton.hideState = 1;
   }
@@ -136,25 +161,11 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
    * @returns modals position
    */
   calculateModalBottom(): number {
-    return window.innerHeight - this.columnFilteringButtons.first.nativeElement.getBoundingClientRect().bottom;
-  }
-
-  /**
-   * Calculates dataset table header colspan.
-   * @param datasetConfig dataset configuration needed for calculation
-   * @returns colspan
-   */
-  calculateDatasetColspan(datasetConfig) {
-    return datasetConfig.effects.length * datasetConfig.personSets.length;
-  }
-
-  /**
-   * Extracts map values.
-   * @param map map containing the values
-   * @returns values array
-   */
-  getMapValues(map: Map<string, number>) {
-    return Array.from(map.values());
+    const columnFilteringButton = this.columnFilteringButtons.first;
+    if (columnFilteringButton) {
+      return window.innerHeight - columnFilteringButton.nativeElement.getBoundingClientRect().bottom;
+    }
+    return 0;
   }
 
   /**
@@ -164,17 +175,31 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
   handleMultipleSelectMenuApplyEvent($event) {
     const menuId = $event.menuId.split(':', 2);
     if (menuId[0] === 'gene_set_category') {
-      const categoryIndex = this.shownGeneSetsCategories.findIndex(category => category['category'] === menuId[1]);
+      const categoryIndex = this.shownGeneSetsCategories.findIndex(category => category.category === menuId[1]);
 
-      this.shownGeneSetsCategories[categoryIndex]['sets'] = this.config['geneSets']
-        .find(category => category['category'] === menuId[1])['sets']
+      this.shownGeneSetsCategories[categoryIndex].sets = this.config.geneSets
+        .find(category => category.category === menuId[1]).sets
         .filter(set => $event.data.includes(set['setId']));
+
+      if (this.shownGeneSetsCategories[categoryIndex].sets.length === 0) {
+        this.config.geneSets.splice(categoryIndex, 1);
+        this.shownGeneSetsCategories = this.mergeCategories(this.shownGeneSetsCategories, cloneDeep(this.config.geneSets));
+
+        this.configChange.emit(this.config);
+      }
     } else if (menuId[0] === 'genomic_scores_category') {
       const categoryIndex = this.shownGenomicScoresCategories.findIndex(category => category['category'] === menuId[1]);
 
-      this.shownGenomicScoresCategories[categoryIndex]['scores'] = this.config['genomicScores']
-        .find(category => category['category'] === menuId[1])['scores']
-        .filter(score => $event.data.includes(score['scoreName']));
+      this.shownGenomicScoresCategories[categoryIndex].scores = this.config.genomicScores
+        .find(category => category.category === menuId[1]).scores
+        .filter(score => $event.data.includes(score.scoreName));
+
+      if (this.shownGenomicScoresCategories[categoryIndex].scores.length === 0) {
+        this.config.genomicScores.splice(categoryIndex, 1);
+        this.shownGenomicScoresCategories = this.mergeCategories(this.shownGenomicScoresCategories, cloneDeep(this.config.genomicScores));
+
+        this.configChange.emit(this.config);
+      }
     }
 
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
@@ -291,21 +316,21 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
    * Updates all and shown gene sets names in certain category.
    * @param geneSetCategory in what category to update the names
    */
-  updateGeneSetNamesListInCategory(geneSetCategory) {
-    this.allGeneSetNames.set(geneSetCategory['category'], this.config['geneSets']
-      .find(category => geneSetCategory['displayName'] === category['displayName'])['sets']
-      .map(set => set['setId']));
-    this.shownGeneSetNames.set(geneSetCategory['category'], geneSetCategory['sets']
-      .map(set => set['setId']));
+  updateGeneSetNamesListInCategory(geneSetCategory: AgpGeneSetsCategory) {
+    this.allGeneSetNames.set(geneSetCategory.category, this.config.geneSets
+      .find(category => geneSetCategory.displayName === category.displayName).sets
+      .map(set => set.setId));
+    this.shownGeneSetNames.set(geneSetCategory.category, geneSetCategory.sets
+      .map(set => set.setId));
 
-    this.openDropdown(geneSetCategory['category']);
+    this.openDropdown(geneSetCategory.category);
   }
 
   /**
    * Updates all and shown genomic scores names in certain category.
    * @param genomicScoresCategory in what category to update the names
    */
-  updateGenomicScoresNamesListInCategory(genomicScoresCategory) {
+  updateGenomicScoresNamesListInCategory(genomicScoresCategory: AgpGenomicScoresCategory) {
     this.allGenomicScoresNames.set(genomicScoresCategory['category'], this.config['genomicScores']
       .find(category => genomicScoresCategory['displayName'] === category['displayName'])['scores']
       .map(score => score['scoreName']));
@@ -393,7 +418,11 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
    * @param scoreName score name
    * @returns gene score value
    */
-  getGeneScoreValue(gene, scoreCategory: string, scoreName: string) {
-    return gene.genomicScores.find(score => score['category'] === scoreCategory)['scores'].get(scoreName);
+  getGeneScoreValue(gene: AgpGene, scoreCategory: string, scoreId: string) {
+    const genomicScore = gene.genomicScores
+      .find(score => score.id === scoreCategory).scores
+      .find(score => score.id === scoreId);
+
+    return Number(sprintf(genomicScore.format, genomicScore.value)).toString();
   }
 }

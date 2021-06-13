@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 // tslint:disable-next-line:import-blacklist
@@ -10,14 +10,14 @@ const oboe = require('oboe');
 import { environment } from 'environments/environment';
 import { QueryData } from './query';
 import { ConfigService } from '../config/config.service';
-import { GenotypePreview, GenotypePreviewInfo, GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
+import { GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
 import { GeneViewSummaryAllelesArray } from '../gene-view/gene';
 import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Injectable()
 export class QueryService {
-  private readonly genotypePreviewUrl = 'genotype_browser/preview';
-  private readonly genotypePreviewVariantsUrl = 'genotype_browser/preview/variants';
+  private readonly genotypeBrowserConfigUrl = 'genotype_browser/config';
+  private readonly genotypePreviewVariantsUrl = 'genotype_browser/query';
   private readonly geneViewVariants = 'gene_view/query_summary_variants';
   private readonly saveQueryEndpoint = 'query_state/save';
   private readonly loadQueryEndpoint = 'query_state/load';
@@ -40,26 +40,6 @@ export class QueryService {
     private config: ConfigService,
     private datasetsService: DatasetsService,
   ) { }
-
-  private parseGenotypePreviewInfoResponse(response: Response): GenotypePreviewInfo {
-    const data = response;
-    const genotypePreviewInfoArray = GenotypePreviewInfo.fromJson(data);
-
-    return genotypePreviewInfoArray;
-  }
-
-  private parseGenotypePreviewVariantsResponse(
-    response: any, genotypePreviewInfo: GenotypePreviewInfo,
-    genotypePreviewVariantsArray: GenotypePreviewVariantsArray) {
-    genotypePreviewVariantsArray.addPreviewVariant(response, genotypePreviewInfo);
-  }
-
-  getGenotypePreviewInfo(filter: QueryData): Observable<GenotypePreviewInfo> {
-    const options = { headers: this.headers, withCredentials: true };
-
-    return this.http.post(this.config.baseUrl + this.genotypePreviewUrl, filter, options)
-      .map(this.parseGenotypePreviewInfoResponse);
-  }
 
   streamPost(url: string, filter: QueryData) {
     if (this.connectionEstablished) {
@@ -124,14 +104,15 @@ export class QueryService {
   }
 
   getGenotypePreviewVariantsByFilter(
-    filter: QueryData, genotypePreviewInfo: GenotypePreviewInfo, loadingService?: any, maxVariantsCount: number = 1001
+    filter: QueryData, columnIds: Array<string>, loadingService?: any, maxVariantsCount: number = 1001
   ): GenotypePreviewVariantsArray {
     const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
     const queryFilter = { ...filter };
     queryFilter['maxVariantsCount'] = maxVariantsCount;
+
     this.datasetsService.getDatasetDetails(filter['datasetId']).subscribe(datasetDetails => {
       this.streamPost(this.genotypePreviewVariantsUrl, queryFilter).subscribe(variant => {
-        this.parseGenotypePreviewVariantsResponse(variant, genotypePreviewInfo, genotypePreviewVariantsArray);
+        genotypePreviewVariantsArray.addPreviewVariant(<Array<string>> variant, columnIds);
         if (variant) {
           // Attach the genome version to each variant
           // This is done so that the table can construct the correct UCSC link for the variant

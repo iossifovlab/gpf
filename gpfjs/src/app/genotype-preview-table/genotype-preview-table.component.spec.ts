@@ -7,7 +7,7 @@ import { GpfTableHeaderComponent } from 'app/table/view/header/header.component'
 import { GpfTableCellComponent } from 'app/table/view/cell.component';
 import { GpfTableEmptyCellComponent } from 'app/table/view/empty-cell.component';
 import { GpfTableSubheaderComponent } from 'app/table/component/subheader.component';
-import { AdditionalColumn } from 'app/datasets/datasets';
+import { Column, ColumnGroup, GenotypeBrowser } from 'app/datasets/datasets';
 import { GenotypePreview, GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 
 describe('GenotypePreviewTableComponent', () => {
@@ -33,35 +33,12 @@ describe('GenotypePreviewTableComponent', () => {
     fixture = TestBed.createComponent(GenotypePreviewTableComponent);
     component = fixture.componentInstance;
 
-    component.genotypePreviewInfo = {
-      columns: ['column1', 'column2'],
-      legend: [
-        {
-          color: '#E35252',
-          id: 'id1',
-          name: 'name1'
-        },
-        {
-          color: '#AAAAAA',
-          id: 'id2',
-          name: 'name2'
-        }
-      ],
-      maxVariantsCount: 1000
-    };
-    component.genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
-    component.genotypePreviewVariantsArray.
-      addPreviewVariant(['value11', 'value12'], component.genotypePreviewInfo);
-    component.genotypePreviewVariantsArray.
-      addPreviewVariant(['value21', 'value22'], component.genotypePreviewInfo);
-    component.genotypePreviewVariantsArray.
-      addPreviewVariant(['value31', 'value32'], component.genotypePreviewInfo);
-    component.columns = AdditionalColumn.fromJson([
+    component.columns = GenotypeBrowser.tableColumnsFromJson([
       {
         id: 'column1',
         name: 'column1',
         source: 'column1',
-        slots: [
+        columns: [
           {
             id: 'slot1',
             name: 'slot1',
@@ -74,9 +51,18 @@ describe('GenotypePreviewTableComponent', () => {
         id: 'column2',
         name: 'column2',
         source: 'column2',
-        slots: [ ]
       }
     ]);
+
+    const columnIds = ['slot1', 'column2'];
+
+    component.genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
+    component.genotypePreviewVariantsArray.
+      addPreviewVariant(['value11', 'value12'], columnIds);
+    component.genotypePreviewVariantsArray.
+      addPreviewVariant(['value21', 'value22'], columnIds);
+    component.genotypePreviewVariantsArray.
+      addPreviewVariant(['value31', 'value32'], columnIds);
 
     fixture.detectChanges();
   });
@@ -128,30 +114,30 @@ describe('GenotypePreviewTableComponent', () => {
     const windowSpy = spyOnProperty(window, 'innerWidth');
 
     windowSpy.and.returnValue(85);
-    component.columns = new Array<AdditionalColumn>(1);
+    component.columns = new Array<Column | ColumnGroup>(1);
     component.onResize();
     expect((component as any).singleColumnWidth).toEqual('10px');
 
     windowSpy.and.returnValue(2075);
-    component.columns = new Array<AdditionalColumn>(10);
+    component.columns = new Array<Column | ColumnGroup>(10);
     component.onResize();
     expect((component as any).singleColumnWidth).toEqual('200px');
 
-    component.columns = new Array<AdditionalColumn>(25);
+    component.columns = new Array<Column | ColumnGroup>(25);
     component.onResize();
     expect((component as any).singleColumnWidth).toEqual('80px');
 
     windowSpy.and.returnValue(1920);
-    component.columns = new Array<AdditionalColumn>(12);
+    component.columns = new Array<Column | ColumnGroup>(12);
     component.onResize();
     expect((component as any).singleColumnWidth).toEqual('153.75px');
 
-    component.columns = new Array<AdditionalColumn>(15);
+    component.columns = new Array<Column | ColumnGroup>(15);
     component.onResize();
     expect((component as any).singleColumnWidth).toEqual('123px');
 
     windowSpy.and.returnValue(1366);
-    component.columns = new Array<AdditionalColumn>(8);
+    component.columns = new Array<Column | ColumnGroup>(8);
     component.onResize();
     expect((component as any).singleColumnWidth).toEqual('161.375px');
    });

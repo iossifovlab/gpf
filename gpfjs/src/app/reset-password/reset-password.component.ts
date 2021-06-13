@@ -2,6 +2,7 @@ import { Component, ViewChild, AfterViewInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ConfigService } from 'app/config/config.service';
 import { UsersService } from '../users/users.service';
+import { passwordBlackList } from './blackList';
 
 @Component({
   selector: 'gpf-reset-password',
@@ -40,6 +41,16 @@ export class ResetPasswordComponent implements AfterViewInit {
   resetPassword() {
     if (this.password !== this.confirmPassword) {
       this.resetPasswordError = 'Passwords don\'t match';
+      return;
+    }
+
+    if (this.password.length < 10) {
+      this.resetPasswordError = 'Password must be at least 10 symbols long';
+      return;
+    }
+
+    if (passwordBlackList.includes(this.password)) {
+      this.resetPasswordError = 'Password is too weak';
       return;
     }
 

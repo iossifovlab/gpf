@@ -63,8 +63,10 @@ describe('AutismGeneProfilesBlockComponent', () => {
      .and.returnValue( of('fakeConfig' as any));
 
     expect(component['autismGeneToolConfig']).toEqual(undefined);
+    expect(component['tableConfig']).toEqual(undefined);
     component.ngOnInit();
-    expect(component['autismGeneToolConfig']).toEqual('fakeConfig');
+    expect(component['autismGeneToolConfig']).toEqual('fakeConfig' as any);
+    expect(component['tableConfig']).toEqual('fakeConfig' as any);
   });
 
   it('should create tab event handler', () => {
@@ -330,5 +332,28 @@ describe('AutismGeneProfilesBlockComponent', () => {
     expect(openLastTabSpy).toHaveBeenCalledTimes(1);
     expect(openHomeTabSpy).toHaveBeenCalledTimes(1);
     expect(openTabAtIndexSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('should get all categories', () => {
+    const mockConfig = {
+      geneSets: [
+        { category: 'geneSetCategory1' },
+        { category: 'geneSetCategory2' },
+        { category: 'geneSetCategory3' },
+      ],
+      genomicScores: [
+        { category: 'genomicScoreCategory1' },
+        { category: 'genomicScoreCategory2' },
+        { category: 'genomicScoreCategory3' },
+      ],
+    };
+    expect(component.getAllCategories(mockConfig as any)).toEqual([
+      'geneSetCategory1',
+      'geneSetCategory2',
+      'geneSetCategory3',
+      'genomicScoreCategory1',
+      'genomicScoreCategory2',
+      'genomicScoreCategory3'
+    ]);
   });
 });

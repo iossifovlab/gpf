@@ -1,12 +1,16 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { AutismGeneToolConfig, AutismGeneToolGene, AutismGeneToolGeneSetsCategory, AutismGeneToolGenomicScoresCategory } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
-import { Observable, zip } from 'rxjs';
+import { AgpConfig, AgpGene, AgpGenomicScores, AgpGenomicScoresCategory } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import { Observable } from 'rxjs';
 import { GeneWeightsService } from '../gene-weights/gene-weights.service';
 import { GeneWeights } from 'app/gene-weights/gene-weights';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
-import { mergeMap, switchMap, tap } from 'rxjs/operators';
+import { switchMap, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
+import { GeneService } from 'app/gene-view/gene.service';
+import { Gene } from 'app/gene-view/gene';
+import { DatasetsService } from 'app/datasets/datasets.service';
+import { DatasetDetails } from 'app/datasets/datasets';
 
 @Component({
   selector: 'gpf-autism-gene-profile-single-view',
@@ -15,11 +19,11 @@ import { Location } from '@angular/common';
 })
 export class AutismGeneProfileSingleViewComponent implements OnInit {
   @Input() readonly geneSymbol: string;
-  @Input() config: AutismGeneToolConfig;
+  @Input() config: AgpConfig;
   genomicScoresGeneWeights = [];
 
-  gene$: Observable<AutismGeneToolGene>;
-  genomicScores: AutismGeneToolGenomicScoresCategory[];
+  gene$: Observable<AgpGene>;
+  genomicScores: AgpGenomicScoresCategory[];
 
   private _histogramOptions = {
     width: 525,
@@ -28,22 +32,37 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     marginTop: 25,
   };
 
+  isGeneInSFARI = false;
+  links = {
+    SFARIgene: '',
+    UCSC: '',
+    GeneCards: '',
+    Pubmed: ''
+  };
+
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
     private geneWeightsService: GeneWeightsService,
+    private geneService: GeneService,
+    private datasetsService: DatasetsService,
     private location: Location,
     private router: Router,
   ) { }
 
   ngOnInit(): void {
     this.gene$ = this.autismGeneProfilesService.getGene(this.geneSymbol);
-
     this.gene$.pipe(
       switchMap(gene => {
+        gene.geneSets.forEach(element => {
+          if (element.match(/sfari/i)) {
+            this.isGeneInSFARI = true;
+          }
+        });
+
         let scores: string;
         const geneWeightsObservables = [];
-        for (let i = 0; i < gene['genomicScores'].length; i++) {
-          scores = [...gene['genomicScores'][i].scores.keys()].join(',');
+        for (let i = 0; i < gene.genomicScores.length; i++) {
+          scores = [...gene.genomicScores[i].scores.map(score => score.id)].join(',');
           geneWeightsObservables.push(
             this.geneWeightsService.getGeneWeights(scores)
           );
@@ -52,7 +71,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
           tap(geneWeightsArray => {
             for (let k = 0; k < geneWeightsArray.length; k++) {
               this.genomicScoresGeneWeights.push({
-                category: gene['genomicScores'][k].category,
+                category: gene.genomicScores[k].id,
                 scores: geneWeightsArray[k]
               });
             }
@@ -60,6 +79,30 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
         );
       })
     ).subscribe();
+
+    this.geneService.getGene(this.geneSymbol).subscribe(gene => {
+      this.datasetsService.getDatasetDetails(this.config.defaultDataset).subscribe(datasetDetails => {
+        this.setLinks(this.geneSymbol, gene, datasetDetails);
+      });
+    });
+  }
+
+  setLinks(geneSymbol: string, gene: Gene, datasetDetails: DatasetDetails): void {
+    if (this.isGeneInSFARI) {
+      this.links.SFARIgene = 'https://gene.sfari.org/database/human-gene/' + geneSymbol;
+    }
+
+    this.links.UCSC = this.getUCSCLink(gene, datasetDetails);
+    this.links.GeneCards = 'https://www.genecards.org/cgi-bin/carddisp.pl?gene=' + geneSymbol;
+    this.links.Pubmed = 'https://pubmed.ncbi.nlm.nih.gov/?term=' + geneSymbol + '%20AND%20(autism%20OR%20asd)';
+  }
+
+  getUCSCLink(gene: Gene, datasetDetails: DatasetDetails): string {
+    return 'https://genome.ucsc.edu/cgi-bin/hgTracks?db=' + datasetDetails.genome + '&lastVirtModeType=default'
+      + '&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=chr'
+      + gene.transcripts[0].chrom + '%3A' + gene.transcripts[0].start + '-'
+      + gene.transcripts[gene.transcripts.length - 1].stop
+      + '&hgsid=1120191263_9kJvHXmsIQajgm163GA7k8YV4ay4';
   }
 
   formatScoreName(score: string) {
@@ -72,8 +115,14 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
       .find(score => score.weight === key);
   }
 
-  getSingleScoreValue(genomicScores, category: string, score: string) {
-    return genomicScores.find(cat => cat['category'] === category)['scores'].get(score);
+  getSingleScoreValue(genomicScores: AgpGenomicScores[], categoryId: string, scoreId: string) {
+    return genomicScores.find(category => category.id === categoryId).scores.find(score => score.id === scoreId).value;
+  }
+
+  getGeneDatasetValue(gene: AgpGene, studyId: string, personSetId: string, statisticId: string) {
+    return gene.studies.find(study => study.id === studyId).personSets
+    .find(genePersonSet => genePersonSet.id === personSetId).effectTypes
+    .find(effectType => effectType.id === statisticId);
   }
 
   get histogramOptions() {
@@ -85,7 +134,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
       return;
     }
 
-    const dataset = this.config['defaultDataset'];
+    const dataset = this.config.defaultDataset;
     let pathname = this.router.createUrlTree(['datasets', dataset, 'gene-browser', this.geneSymbol]).toString();
 
     pathname = this.location.prepareExternalUrl(pathname);

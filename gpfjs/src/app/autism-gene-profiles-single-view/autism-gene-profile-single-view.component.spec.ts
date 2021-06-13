@@ -2,7 +2,9 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ConfigService } from 'app/config/config.service';
+import { DatasetsService } from 'app/datasets/datasets.service';
 import { GeneWeightsService } from 'app/gene-weights/gene-weights.service';
+import { UsersService } from 'app/users/users.service';
 import { of } from 'rxjs';
 import { AutismGeneProfileSingleViewComponent } from './autism-gene-profile-single-view.component';
 
@@ -13,7 +15,7 @@ describe('AutismGeneProfileSingleViewComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [ AutismGeneProfileSingleViewComponent ],
-      providers: [ConfigService, GeneWeightsService],
+      providers: [ConfigService, GeneWeightsService, DatasetsService, UsersService],
       imports: [HttpClientTestingModule, RouterTestingModule]
     })
     .compileComponents();
@@ -33,25 +35,26 @@ describe('AutismGeneProfileSingleViewComponent', () => {
   it('should initialize', () => {
     (component as any).geneSymbol = 'mockGeneSymbol';
     const getGeneSpy = spyOn(component['autismGeneProfilesService'], 'getGene');
-    const fakeScores1 = new Map();
-    fakeScores1.set('fakeScore1', 1);
-    const fakeScores2 = new Map();
-    fakeScores2.set('fakeScore2', 1);
+    const fakeScores1 = [{id: 'fakeScore1', value: 1, format: ''}];
+    const fakeScores2 = [{id: 'fakeScore2', value: 1, format: ''}];
     const mockGenomicScores = [
-      {category: 'fakeGenomicScore1', scores: fakeScores1},
-      {category: 'fakeGenomicScore2', scores: fakeScores2}
+      {id: 'fakeGenomicScore1', scores: fakeScores1},
+      {id: 'fakeGenomicScore2', scores: fakeScores2}
     ];
 
-    const geneMock = of({
-      genomicScores: mockGenomicScores
+    let geneMock = of({
+      genomicScores: mockGenomicScores,
+      geneSets: ['test1', 'test2', 'test3_sfari']
     } as any);
     getGeneSpy.and.returnValue(geneMock);
 
     const getGeneWeightsSpy = spyOn(component['geneWeightsService'], 'getGeneWeights');
     getGeneWeightsSpy.and.returnValue(of('fakeWeight' as any));
 
+    expect(component.isGeneInSFARI).toBeFalse();
     component.ngOnInit();
     expect(component['gene$']).toEqual(geneMock);
+    expect(component.isGeneInSFARI).toBeTrue();
     expect(getGeneSpy).toHaveBeenCalledWith('mockGeneSymbol');
     expect(getGeneWeightsSpy.calls.allArgs()).toEqual([
       ['fakeScore1'],
@@ -61,6 +64,16 @@ describe('AutismGeneProfileSingleViewComponent', () => {
       {category: 'fakeGenomicScore1', scores: 'fakeWeight'},
       {category: 'fakeGenomicScore2', scores: 'fakeWeight' }
     ] as any);
+
+    geneMock = of({
+      genomicScores: mockGenomicScores,
+      geneSets: ['test1', 'test2', 'test3']
+    } as any);
+    component.isGeneInSFARI = false;
+    getGeneSpy.and.returnValue(geneMock);
+    component.ngOnInit();
+    expect(component['gene$']).toEqual(geneMock);
+    expect(component.isGeneInSFARI).toBeFalse();
   });
 
   it('should format score name', () => {
@@ -77,6 +90,83 @@ describe('AutismGeneProfileSingleViewComponent', () => {
     expect(component.getGeneWeightByKey('autismScore', 'weight2')).toEqual({weight: 'weight2'}as any);
     expect(component.getGeneWeightByKey('protectionScore', 'weight3')).toEqual({weight: 'weight3'} as any);
     expect(component.getGeneWeightByKey('protectionScore', 'weight4')).toEqual({weight: 'weight4'} as any);
+  });
+
+  it('should get gene dataset value', () => {
+    const mockGene = {
+      studies: [
+        {
+          id: 'studyId1',
+          personSets: [
+            {
+              id: 'personSetId1',
+              effectTypes: [
+                {
+                  id: 'effectTypeId1'
+                },
+                {
+                  id: 'effectTypeId2'
+                }
+              ]
+            },
+            {
+              id: 'personSetId2',
+              effectTypes: [
+                {
+                  id: 'effectTypeId3'
+                },
+                {
+                  id: 'effectTypeId4'
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'studyId2',
+          personSets: [
+            {
+              id: 'personSetId3',
+              effectTypes: [
+                {
+                  id: 'effectTypeId5'
+                },
+                {
+                  id: 'effectTypeId6'
+                }
+              ]
+            },
+            {
+              id: 'personSetId4',
+              effectTypes: [
+                {
+                  id: 'effectTypeId7'
+                },
+                {
+                  id: 'effectTypeId8'
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    };
+    expect(component.getGeneDatasetValue(mockGene as any, 'studyId1', 'personSetId1', 'effectTypeId1'))
+      .toEqual({id: 'effectTypeId1'} as any);
+    expect(component.getGeneDatasetValue(mockGene as any, 'studyId1', 'personSetId1', 'effectTypeId2'))
+      .toEqual({id: 'effectTypeId2'} as any);
+    expect(component.getGeneDatasetValue(mockGene as any, 'studyId1', 'personSetId2', 'effectTypeId3'))
+      .toEqual({id: 'effectTypeId3'} as any);
+    expect(component.getGeneDatasetValue(mockGene as any, 'studyId1', 'personSetId2', 'effectTypeId4'))
+      .toEqual({id: 'effectTypeId4'} as any);
+    expect(component.getGeneDatasetValue(mockGene as any, 'studyId2', 'personSetId3', 'effectTypeId5'))
+      .toEqual({id: 'effectTypeId5'} as any);
+    expect(component.getGeneDatasetValue(mockGene as any, 'studyId2', 'personSetId3', 'effectTypeId6'))
+      .toEqual({id: 'effectTypeId6'} as any);
+    expect(component.getGeneDatasetValue(mockGene as any, 'studyId2', 'personSetId4', 'effectTypeId7'))
+      .toEqual({id: 'effectTypeId7'} as any);
+    expect(component.getGeneDatasetValue(mockGene as any, 'studyId2', 'personSetId4', 'effectTypeId8'))
+      .toEqual({id: 'effectTypeId8'} as any);
   });
 
   it('should get histogram options', () => {

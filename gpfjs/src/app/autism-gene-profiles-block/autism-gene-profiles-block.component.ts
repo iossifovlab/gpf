@@ -1,7 +1,8 @@
-import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
-import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
-import { AutismGeneToolConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import { ChangeDetectorRef, Component, HostListener, OnInit, ViewChild } from '@angular/core';
+import { NgbDropdownMenu, NgbNav } from '@ng-bootstrap/ng-bootstrap';
+import { AgpConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-block',
@@ -10,8 +11,14 @@ import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism
 })
 export class AutismGeneProfilesBlockComponent implements OnInit {
   @ViewChild('nav') nav: NgbNav;
+  @ViewChild(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu;
+
   geneTabs = new Set<string>();
-  autismGeneToolConfig: AutismGeneToolConfig;
+  autismGeneToolConfig: AgpConfig;
+  tableConfig: AgpConfig;
+
+  allCategories: string[];
+  shownCategories: string[];
 
   @HostListener('window:keydown', ['$event'])
   keyEvent($event: KeyboardEvent) {
@@ -35,11 +42,15 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
+    private ref: ChangeDetectorRef,
   ) { }
 
   ngOnInit(): void {
     this.autismGeneProfilesService.getConfig().take(1).subscribe(config => {
       this.autismGeneToolConfig = config;
+      this.tableConfig = cloneDeep(config);
+      this.allCategories = this.getAllCategories(this.autismGeneToolConfig);
+      this.shownCategories = this.getAllCategories(this.autismGeneToolConfig);
     });
   }
 
@@ -135,5 +146,33 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     } else if (key === 'n') {
       this.openNextTab();
     }
+  }
+
+  getAllCategories(config: AgpConfig) {
+    const allCategories = [];
+    if (config.geneSets) {
+      allCategories.push(...config.geneSets.map(obj => obj.category));
+    }
+    if (config.genomicScores) {
+      allCategories.push(...config.genomicScores.map(obj => obj.category));
+    }
+    return allCategories;
+  }
+
+  openDropdown() {
+    this.ngbDropdownMenu.dropdown.open();
+  }
+
+  handleMultipleSelectMenuApplyEvent($event) {
+    this.shownCategories = $event.data;
+    this.tableConfig.geneSets = this.autismGeneToolConfig.geneSets.filter(obj => this.shownCategories.includes(obj.category));
+    this.tableConfig.genomicScores = this.autismGeneToolConfig.genomicScores.filter(obj => this.shownCategories.includes(obj.category));
+    this.tableConfig = cloneDeep(this.tableConfig);
+    this.ngbDropdownMenu.dropdown.close();
+  }
+
+  tableConfigChangeEvent($event) {
+    this.tableConfig = $event;
+    this.shownCategories = this.getAllCategories(this.tableConfig);
   }
 }

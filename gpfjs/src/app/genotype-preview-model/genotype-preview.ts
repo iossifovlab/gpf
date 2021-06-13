@@ -29,8 +29,8 @@ export class PedigreeData {
   constructor(
     readonly pedigreeIdentifier: string,
     readonly id: string,
-    readonly father: string,
     readonly mother: string,
+    readonly father: string,
     readonly gender: string,
     readonly role: string,
     readonly color: string,
@@ -43,7 +43,7 @@ export class PedigreeData {
 }
 
 const KEY_TO_MAPPER: Map<string, any> = new Map([
-  ['genotype', (arr: Array<Array<any>>) => arr.map((elem) => PedigreeData.fromArray(elem))]
+  ['pedigree', (arr: Array<Array<any>>) => arr.map((elem) => PedigreeData.fromArray(elem))]
 ]);
 
 export class GenotypePreview {
@@ -63,7 +63,6 @@ export class GenotypePreview {
         }
       }
     }
-
     return result;
   }
 
@@ -73,30 +72,13 @@ export class GenotypePreview {
 
 }
 
-export class GenotypePreviewInfo {
-
-  static fromJson(json: any): GenotypePreviewInfo {
-    const genotypePreviewInfo = new GenotypePreviewInfo(
-      json.cols, json.legend, json.maxVariantsCount
-    );
-
-    return genotypePreviewInfo;
-  }
-
-  constructor(
-    readonly columns: Array<string>,
-    readonly legend: Array<any>,
-    readonly maxVariantsCount: number
-  ) { }
-}
-
 export class GenotypePreviewVariantsArray {
   genotypePreviews: GenotypePreview[] = [];
 
   constructor() { }
 
-  addPreviewVariant(row: Array<string>, genotypePreviewInfo: GenotypePreviewInfo) {
-    const genotypePreview = GenotypePreview.fromJson(row, genotypePreviewInfo.columns);
+  addPreviewVariant(row: Array<string>, column_ids: Array<string>) {
+    const genotypePreview = GenotypePreview.fromJson(row, column_ids);
     if (genotypePreview.data.size) {
       this.genotypePreviews.push(genotypePreview);
     }

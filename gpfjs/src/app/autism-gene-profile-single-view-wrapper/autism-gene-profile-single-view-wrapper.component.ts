@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
-import { AutismGeneToolConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import { AgpConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -10,7 +10,7 @@ import { Observable } from 'rxjs';
   styleUrls: ['./autism-gene-profile-single-view-wrapper.component.css']
 })
 export class AutismGeneProfileSingleViewWrapperComponent implements OnInit, AfterViewInit {
-  $autismGeneToolConfig: Observable<AutismGeneToolConfig>;
+  $autismGeneToolConfig: Observable<AgpConfig>;
   geneSymbol: string;
 
   constructor(

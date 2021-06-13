@@ -7,8 +7,8 @@ import { QueryService } from '../query/query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { ConfigService } from '../config/config.service';
 import { DatasetsService } from '../datasets/datasets.service';
-import { Dataset } from '../datasets/datasets';
-import { GenotypePreviewInfo, GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
+import { Dataset, SelectorValue } from '../datasets/datasets';
+import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 
 @Component({
   selector: 'gpf-genotype-browser',
@@ -22,8 +22,8 @@ import { GenotypePreviewInfo, GenotypePreviewVariantsArray } from 'app/genotype-
 export class GenotypeBrowserComponent extends QueryStateCollector
     implements OnInit, OnChanges, AfterViewInit {
   genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
-  genotypePreviewInfo: GenotypePreviewInfo;
   tablePreview: boolean;
+  legend: Array<SelectorValue>;
 
   private disableQueryButtons = false;
 
@@ -83,28 +83,23 @@ export class GenotypeBrowserComponent extends QueryStateCollector
         this.loadingFinished = false;
         this.loadingService.setLoadingStart();
 
-        this.queryService.getGenotypePreviewInfo(
-          { datasetId: this.selectedDatasetId, peopleGroup: state['peopleGroup'] }
-        ).subscribe(
-          (genotypePreviewInfo) => {
-            this.genotypePreviewInfo = genotypePreviewInfo;
-            this.genotypePreviewVariantsArray = null;
+        this.selectedDataset$.subscribe( selectedDataset => {
+          this.genotypePreviewVariantsArray = null;
+          this.genotypeBrowserState = state;
+          this.legend = selectedDataset.peopleGroupConfig.getLegend(state['peopleGroup']);
 
-            this.genotypeBrowserState = state;
+          this.queryService.streamingFinishedSubject.subscribe(
+            _ => { this.loadingFinished = true; }
+          );
 
-            this.queryService.streamingFinishedSubject.subscribe(
-              _ => { this.loadingFinished = true; }
+          this.genotypePreviewVariantsArray =
+            this.queryService.getGenotypePreviewVariantsByFilter(
+              state, selectedDataset.genotypeBrowserConfig.columnIds, this.loadingService
             );
 
-            this.genotypePreviewVariantsArray =
-              this.queryService.getGenotypePreviewVariantsByFilter(
-                state, this.genotypePreviewInfo, this.loadingService
-              );
-
-          }, error => {
-            console.warn(error);
-          }
-        );
+        }, error => {
+          console.warn(error);
+        });
       }, error => {
         console.warn(error);
       });
@@ -114,8 +109,14 @@ export class GenotypeBrowserComponent extends QueryStateCollector
     this.getCurrentState()
     .subscribe(
       state => {
-        event.target.queryData.value = JSON.stringify(state);
-        event.target.submit();
+        this.selectedDataset$.subscribe( selectedDataset => {
+          const args: any = state
+          args.download = true;
+          event.target.queryData.value = JSON.stringify(args);
+          event.target.submit();
+        }, error => {
+            console.warn(error);
+        });
       },
       error => null
     );

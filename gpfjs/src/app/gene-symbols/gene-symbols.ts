@@ -1,6 +1,6 @@
-import { IsDefined } from 'class-validator';
+import { IsNotEmpty } from 'class-validator';
 
 export class GeneSymbols {
-  @IsDefined()
+  @IsNotEmpty()
   geneSymbols = '';
 }

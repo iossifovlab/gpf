@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { GeneService } from 'app/gene-view/gene.service';
 import { Gene, GeneViewSummaryAllelesArray, DomainRange } from 'app/gene-view/gene';
-import { GenotypePreviewVariantsArray, GenotypePreviewInfo } from 'app/genotype-preview-model/genotype-preview';
+import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
 // tslint:disable-next-line:import-blacklist
 import { Observable, of, combineLatest } from 'rxjs';
@@ -33,12 +33,12 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   summaryVariantsArray: GeneViewSummaryAllelesArray;
   selectedDataset$: Observable<Dataset>;
   selectedDatasetId: string;
-  genotypePreviewInfo: GenotypePreviewInfo;
   loadingFinished: boolean;
   familyLoadingFinished: boolean;
   hideResults: boolean;
   hideDropdown: boolean;
   showError = false;
+
   codingEffectTypes = [
     'lgds',
     'nonsense',
@@ -149,8 +149,11 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
         'rangeStart': $event.start > 0 ? $event.start : null,
         'rangeEnd': $event.end,
       }];
-      this.genotypePreviewVariantsArray =
-        this.queryService.getGenotypePreviewVariantsByFilter(requestParams, this.genotypePreviewInfo);
+      this.selectedDataset$.subscribe( selectedDataset => {
+        this.genotypePreviewVariantsArray = this.queryService.getGenotypePreviewVariantsByFilter(
+          requestParams, selectedDataset.genotypeBrowserConfig.columnIds
+        );
+      });
     });
   }
 
@@ -205,8 +208,6 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   submitGeneRequest() {
     this.showError = false;
     this.hideDropdown = true;
-    this.geneViewComponent.clearSvgElement();
-    this.geneViewComponent.resetGeneTableValues();
 
     this.queryService.summaryStreamingFinishedSubject.subscribe(_ => {
       this.loadingFinished = true;
@@ -236,19 +237,12 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
           return;
         }
         this.selectedGene = gene;
-        this.genotypePreviewInfo = null;
         this.hideResults = false;
         this.loadingFinished = false;
         this.loadingService.setLoadingStart();
-        return combineLatest(
-          of(state),
-          this.queryService.getGenotypePreviewInfo(
-            { datasetId: this.selectedDatasetId, peopleGroup: state['peopleGroup'] }
-          )
-        );
+        return of(state);
       })
-    ).subscribe(([state, genotypePreviewInfo]) => {
-      this.genotypePreviewInfo = genotypePreviewInfo;
+    ).subscribe(state => {
       this.genotypePreviewVariantsArray = null;
 
       this.genotypeBrowserState = state;
@@ -258,12 +252,8 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
       delete requestParams['zoomState'];
       delete requestParams['regions'];
 
-
       if (this.enableCodingOnly) {
         requestParams['effectTypes'] = this.codingEffectTypes;
-        this.geneViewComponent.enableIntronCondensing();
-      } else {
-        this.geneViewComponent.disableIntronCondensing();
       }
       const inheritanceFilters = [
         'denovo',
@@ -279,8 +269,14 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
       console.error(error);
       this.showError = true;
       this.hideDropdown = false;
-    }, () => {
+    }, async () => {
       this.hideDropdown = false;
+      await this.waitForGeneViewComponent();
+      if (this.enableCodingOnly) {
+        this.geneViewComponent.enableIntronCondensing();
+      } else {
+        this.geneViewComponent.disableIntronCondensing();
+      }
     });
   }
 
@@ -292,20 +288,28 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   }
 
   onSubmit(event) {
-    this.getCurrentState()
-      .subscribe(
-        state => {
-          const requestParams = this.transformFamilyVariantsQueryParameters(state);
-          requestParams['summaryVariantIds'] = state['summaryVariantIds'];
-          requestParams['genomicScores'] = [{
-            'metric': this.geneBrowserConfig.frequencyColumn,
-            'rangeStart': state['zoomState'].yMin > 0 ? state['zoomState'].yMin : null,
-            'rangeEnd': state['zoomState'].yMax,
-          }];
-          event.target.queryData.value = JSON.stringify(requestParams);
-          event.target.submit();
-        },
-        error => null
-      );
+    this.getCurrentState().subscribe(state => {
+      this.selectedDataset$.subscribe( selectedDataset => {
+        const requestParams = this.transformFamilyVariantsQueryParameters(state);
+        requestParams['summaryVariantIds'] = state['summaryVariantIds'];
+        requestParams['genomicScores'] = [{
+          'metric': this.geneBrowserConfig.frequencyColumn,
+          'rangeStart': state['zoomState'].yMin > 0 ? state['zoomState'].yMin : null,
+          'rangeEnd': state['zoomState'].yMax,
+        }];
+        requestParams['download'] = true;
+
+        const targetId = event.target.attributes.id.nodeValue;
+        if (targetId === 'summary_download') {
+          requestParams['querySummary'] = true;
+        }
+
+        event.target.queryData.value = JSON.stringify(requestParams);
+        event.target.submit();
+      }, error => {
+          console.warn(error);
+      });
+    },
+    error => null);
   }
 }

@@ -1,13 +1,18 @@
-#autism-scores-table, #protection-scores-table {
-  width: 25%;
-  float: left;
+.table-wrapper {
+  display: flex;
+  align-items: flex-start;
+}
+
+table {
+  width: 20%;
   margin-right: 15px;
   margin-bottom: 15px;
 }
 
-.gene-sets-table, .genomic-scores-table {
-  width: 20%;
-  margin-right: 15px;
-  margin-bottom: 15px;
-  float: left;
+#external-links {
+  width: 200px;
+}
+
+.link {
+  text-decoration: underline;
 }

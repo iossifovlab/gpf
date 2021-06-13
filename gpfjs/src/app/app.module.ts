@@ -167,6 +167,7 @@ import { PersonFiltersBlockComponent } from './person-filters-block/person-filte
 import { PersonIdsComponent } from './person-ids/person-ids.component';
 import { FamilyTypeFilterComponent } from './family-type-filter/family-type-filter.component';
 import { SortingButtonsComponent } from './sorting-buttons/sorting-buttons.component';
+import { BnNgIdleService } from 'bn-ng-idle';
 import { AutismGeneProfileSingleViewWrapperComponent } from './autism-gene-profile-single-view-wrapper/autism-gene-profile-single-view-wrapper.component';
 
 const appRoutes: Routes = [
@@ -429,7 +430,8 @@ const appRoutes: Routes = [
     {
       provide: RouteReuseStrategy,
       useClass: TaggingRouteReuseStrategy
-    }
+    },
+    BnNgIdleService
   ],
 
   bootstrap: [AppComponent]

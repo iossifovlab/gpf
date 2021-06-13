@@ -1,5 +1,10 @@
 td {
-	text-align: right;
+  text-align: right;
   padding: 5px;
   border: 1px solid #dddddd;
+}
+
+a, a:hover {
+  color: #0056b3;
+  cursor: pointer;
 }

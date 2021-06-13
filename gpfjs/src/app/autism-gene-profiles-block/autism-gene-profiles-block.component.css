@@ -25,3 +25,11 @@ span.close {
   top: 3px;
   left: 6px;
 }
+
+button::after {
+  display: none;
+}
+
+button:click{
+  outline-color: #000000
+}
