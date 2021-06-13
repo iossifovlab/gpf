@@ -1,12 +1,8 @@
-.table-wrapper {
-  display: flex;
-  align-items: flex-start;
-}
-
-table {
+.gene-sets-table, .genomic-scores-table, .datasets-table {
   width: 20%;
   margin-right: 15px;
   margin-bottom: 15px;
+  float: left;
 }
 
 #external-links {
