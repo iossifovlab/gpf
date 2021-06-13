@@ -33,7 +33,7 @@
           </th>
         </ng-container>
 
-        <th *ngFor="let dataset of config.datasets" class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="dataset.statistics.length * dataset.personSets.length">
+        <th *ngFor="let dataset of config.datasets" class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="calculateDatasetColspan(dataset)">
           <span [title]="dataset.meta ? dataset.meta : ''">{{dataset.displayName}}</span>
         </th>
       </tr>
