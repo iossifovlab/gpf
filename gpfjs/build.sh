@@ -29,8 +29,8 @@ function main() {
 
   local node_base_image_ref
   node_base_image_ref="$(e docker_img_seqpipe_node_base)"
-  build_run_init "container" "$node_base_image_ref"
-  defer_ret build_run_reset
+  build_run_ctx_init "container" "$node_base_image_ref"
+  defer_ret build_run_ctx_reset
 
   build_stage "Clean and fetch fresh dependencies"
   {
