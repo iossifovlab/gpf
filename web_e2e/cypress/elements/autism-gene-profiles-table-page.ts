@@ -17,44 +17,28 @@ export class AutismGeneProfilesTable extends BasePage {
     return cy.get('table tbody tr');
   }
 
-  get geneSetsButton() {
-    return cy.get('#gene-sets-button');
+  get autismGeneSetsButton() {
+    return cy.get('#autism_gene_sets-button');
   }
 
-  get geneSetsDropdown() {
-    return cy.get('#gene-sets-dropdown');
+  get autismGeneSetsDropdown() {
+    return cy.get('#autism_gene_sets-dropdown');
   }
 
-  get geneSetsCheckUncheckAllButton() {
-    return this.geneSetsDropdown.find('#check-uncheck-all-button');
+  get autismGeneSetsCheckUncheckAllButton() {
+    return this.autismGeneSetsDropdown.find('#check-uncheck-all-button');
   }
 
-  get geneSetsDropdownSearch() {
-    return this.geneSetsDropdown.find('input[name="search"]');
+  get autismGeneSetsDropdownSearch() {
+    return this.autismGeneSetsDropdown.find('input[name="search"]');
   }
 
-  get geneSetsDropdownApplyButton() {
-    return this.geneSetsDropdown.contains('Apply');
+  get autismGeneSetsDropdownApplyButton() {
+    return this.autismGeneSetsDropdown.contains('Apply');
   }
 
-  get allGeneSetsDropdownCheckboxes() {
-    return cy.get('gpf-multiple-select-menu#gene-sets-dropdown label input');
-  }
-
-  get autismScoresButton() {
-    return cy.get('#autism-scores-button');
-  }
-
-  get autismScoresDropdown() {
-    return cy.get('#autism-scores-dropdown');
-  }
-
-  get protectionScoresButton() {
-    return cy.get('#protection-scores-button');
-  }
-
-  get protectionScoresDropdown() {
-    return cy.get('#protection-scores-dropdown');
+  get allAutismGeneSetsDropdownCheckboxes() {
+    return cy.get('gpf-multiple-select-menu#autism_gene_sets-dropdown label input');
   }
 
   get firstGeneLink() {

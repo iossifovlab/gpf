@@ -365,3 +365,43 @@ describe('Genotype browser table preview result tests', () => {
     });
   });
 });
+
+describe('Genotype browser family variants download tests', () => {
+  const genotypeBrowserController = new GenotypeBrowserController();
+  const genotypeBrowserPage = new GenotypeBrowserPage();
+
+  before(() => {
+    genotypeBrowserController.cleanup();
+    genotypeBrowserController.navigateToHome();
+    genotypeBrowserController.loginAdmin();
+  });
+
+  beforeEach(() => {
+    genotypeBrowserController.preserveLogin();
+    genotypeBrowserController.navigateToHome();
+  });
+
+  it('should download all effect types CHD8 iossifov variants and validate whether they are equal to the reference data', () => {
+    const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/variants.tsv';
+    const expectedVariantsPath = 'cypress/fixtures/variants.tsv';
+
+    genotypeBrowserController.setStudy(datasetIds.iossifov2014);
+    genotypeBrowserController.setEffectTypesGroup('All');
+    genotypeBrowserController.filterGenesByGeneSymbol('CHD8');
+
+    cy.window().document().then(function (doc) {
+      doc.addEventListener('click', () => {
+        setTimeout(function () { doc.location.reload() }, 5000)
+      })
+      genotypeBrowserPage.downloadButton.click();
+    });
+
+    cy.readFile(downloadedVariantsPath, { timeout: 5000 }).then(downloadedFile => {
+      cy.readFile(expectedVariantsPath, { timeout: 5000 }).then(expectedFile => {
+        const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
+        const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
+        expect(downloadedFileLines).to.deep.eq(expectedFileLines);
+      });
+    });
+  });
+});

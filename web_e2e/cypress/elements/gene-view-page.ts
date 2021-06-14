@@ -5,68 +5,23 @@ export class GeneViewPage extends BasePage {
     return cy.get('gpf-gene-view');
   }
 
-  get affectedStatusAffectedOnlyCheckbox() {
-    return cy.get('input[id="affectedStatusAffected only-checkbox"]');
+  getAffectedStatusCheckbox(affectedStatus: string) {
+    return cy.get('label').contains(affectedStatus).siblings('input');
   }
 
-  get affectedStatusUnaffectedOnlyCheckbox() {
-    return cy.get('input[id="affectedStatusUnaffected only-checkbox"]');
+  getEffectTypesCheckbox(effectType: string) {
+    effectType = effectType.replace('+', '\\+');
+    return cy.get(`svg#${effectType}`).siblings('input');
   }
 
-  get affectedStatusAffectedAndUnaffectedCheckbox() {
-    return cy.get('input[id="affectedStatusAffected and unaffected-checkbox"]');
+  getInheritanceTypes(inheritanceType: string) {
+    inheritanceType = inheritanceType.toLowerCase();
+    return cy.get(`svg#${inheritanceType}`).siblings('input');
   }
 
-  get effectTypesLGDsCheckbox() {
-    return cy.get('label').contains('LGDs').first().get('input');
-  }
-
-  get effectTypesMissenseCheckbox() {
-    return cy.get('label').contains('Missense').first().get('input');
-  }
-
-  get effectTypesSynonymousCheckbox() {
-    return cy.get('label').contains('Synonymous').first().get('input');
-  }
-
-  get effectTypesCNVPlusCheckbox() {
-    return cy.get('label').contains('CNV+').first().get('input');
-  }
-
-  get effectTypesCNVMinusCheckbox() {
-    return cy.get('label').contains('CNV-').first().get('input');
-  }
-
-  get effectTypesOtherCheckbox() {
-    return cy.get('label').contains('Other').first().get('input');
-  }
-
-  get inheritanceTypesDenovoCheckbox() {
-    return cy.get('label').contains('Denovo').first().get('input');
-  }
-
-  get inheritanceTypesTransmittedCheckbox() {
-    return cy.get('label').contains('Transmitted').first().get('input');
-  }
-
-  get variantTypesSubCheckbox() {
-    return cy.get('label').contains('sub').first().get('input');
-  }
-
-  get variantTypesInsCheckbox() {
-    return cy.get('label').contains('ins').first().get('input');
-  }
-
-  get variantTypesDelCheckbox() {
-    return cy.get('label').contains('del').first().get('input');
-  }
-
-  get variantTypesCNVPlusCheckbox() {
-    return cy.get('label').contains('CNV+').eq(0).get('input');
-  }
-
-  get variantTypesCNVMinusCheckbox() {
-    return cy.get('label').contains('CNV-').eq(0).get('input');
+  getVariantTypes(variantType: string) {
+    return cy.get('div.card-header').contains('Variant Types')
+    .siblings('div').find('label').contains(variantType).find('input').first();
   }
 
   get undoButton() {

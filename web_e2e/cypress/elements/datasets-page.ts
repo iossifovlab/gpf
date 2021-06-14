@@ -13,6 +13,10 @@ export class DatasetsPage extends BasePage {
     return cy.get('#datasets-dropdown-menu-button');
   }
 
+  get datasetsDropdownMenuElements() {
+    return cy.get('.dataset-selector a');
+  }
+
   get datasetStatisticsButton() {
     return cy.get('a.nav-link').contains('Dataset Statistics');
   }
@@ -27,6 +31,10 @@ export class DatasetsPage extends BasePage {
 
   get phenotypeToolButton() {
     return cy.get('a.nav-link').contains('Phenotype Tool');
+  }
+
+  get geneBrowserButton() {
+    return cy.get('a.nav-link').contains('Gene Browser');
   }
 
   get familiesByNumberDropdownButton() {

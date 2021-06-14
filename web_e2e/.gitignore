@@ -2,4 +2,8 @@ node_modules
 data
 downloads
 import
+package-lock.json
+cypress/screenshots
+cypress/videos
+results
 /build-env/*

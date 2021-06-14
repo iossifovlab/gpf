@@ -76,11 +76,10 @@ describe('User management tests', () => {
 
   it('should search and filter a specific user', () => {
     userManagementPage.userSearchField.type('admin');
-    cy.wait(500);
+    userManagementPage.usersTableRows.should('have.length', 1);
     userManagementPage.usersTableRows.last().should('include.text', 'admin');
   });
 
-  // Review: cy.reload()
   it('should search and find user', () => {
     createTestUser(userManagementPage, 'test_email@email.com', 'test_name');
     userManagementPage.userSearchField.type('test_name');
@@ -99,21 +98,20 @@ describe('User management tests', () => {
 
     userManagementPage.datasetsTableAddGroupToLastDatasetInputField.type('test_group');
     userManagementPage.datasetsTableAddGroupToLastDatasetButton.click();
-    cy.wait(500);
+    userManagementPage.datasetsTableRows.should('include.text', 'test_group');
     userManagementPage.datasetsTableRows.last().should('include.text', 'test_group');
 
     userManagementPage.groupsButton.click();
-    userManagementPage.groupsTableRows.should('have.length', 9);
+    userManagementPage.groupsTableRows.should('have.length', 11);
     userManagementPage.groupsTableRows.last().should('include.text', 'test_group');
 
     userManagementPage.datasetsButton.click();
     userManagementPage.datasetsTableRemoveNewestGroupInLastDatasetButton.click();
     userManagementPage.datasetsTableRemoveGroupConfirmButton.click();
-    cy.wait(500);
-    userManagementPage.datasetsTableRows.last().should('not.include.text', 'test_group');
+    userManagementPage.datasetsTableRows.should('not.include.text', 'test_group');
 
     userManagementPage.groupsButton.click();
-    userManagementPage.groupsTableRows.should('have.length', 8);
+    userManagementPage.groupsTableRows.should('have.length', 10);
     userManagementPage.groupsTableRows.last().should('not.include.text', 'test_group');
   });
 
@@ -121,7 +119,7 @@ describe('User management tests', () => {
     createTestGroup(userManagementPage, 'test_group');
     createTestUser(userManagementPage, 'test_email@email.com', 'test_name');
 
-    userManagementPage.testUserEditorButton.click();
+    userManagementPage.getUserEditorButtonByEmail('test_email@email.com').click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
@@ -172,6 +170,7 @@ describe('User management tests', () => {
     userManagementPage.userBulkEditAddGroupButton.click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
+    userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.usersEditorAddGroupButton.click();
 
     userManagementPage.usersTableRows.each(row => {
@@ -192,6 +191,7 @@ describe('User management tests', () => {
     userManagementPage.userBulkEditRemoveGroupButton.click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
+    userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.usersEditorRemoveGroupButton.click();
 
     userManagementPage.usersTableRows.each(row => {
@@ -208,7 +208,7 @@ describe('User management tests', () => {
     createTestGroup(userManagementPage, 'test_group');
     createTestUser(userManagementPage, 'test_email@email.com', 'test_name');
 
-    userManagementPage.testUserEditorButton.click();
+    userManagementPage.getUserEditorButtonByEmail('test_email@email.com').click();
 
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();

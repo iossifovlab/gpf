@@ -14,14 +14,18 @@ export class AutismGeneProfilesSingleView extends BasePage {
   }
 
   get autismScoresTable() {
-    return cy.get('#autism-scores-table');
+    return cy.get('#autism_scores');
   }
 
   get protectionScoresTable() {
-    return cy.get('#protection-scores-table');
+    return cy.get('#protection_scores');
   }
 
-  get geneSetsTable() {
-    return cy.get('#gene-sets-table');
+  get geneAutismGeneSetsTable() {
+    return cy.get('#autism_gene_sets');
+  }
+
+  get geneRelevantGeneSetsTable() {
+    return cy.get('#relevant_gene_sets');
   }
 }

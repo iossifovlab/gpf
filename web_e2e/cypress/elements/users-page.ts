@@ -15,6 +15,10 @@ export class UsersPage {
     return cy.get('gpf-users').find('#password');
   }
 
+  get nextButton() {
+    return cy.get('gpf-users').find('#next-button');
+  }
+
   get loginSubmitButton() {
     return cy.get('gpf-users').find('#login-button');
   }

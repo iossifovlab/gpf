@@ -4,27 +4,32 @@ export const userData = {
   'unauthorized': {
     username: undefined,
     password: undefined,
+    hasDatasetRights: false,
     sidenavElementsCount: 2,
     sidenavElements: ['Datasets', 'Autism gene profiles']
   },
   'normal': {
     username: 'research@iossifovlab.com',
     password: 'secret',
+    hasDatasetRights: false,
     sidenavElementsCount: 3,
     sidenavElements: ['Datasets', 'Saved queries', 'Autism gene profiles']
   },
   'admin': {
     username: 'admin@iossifovlab.com',
     password: 'secret',
+    hasDatasetRights: true,
     sidenavElementsCount: 4,
     sidenavElements: ['Datasets', 'Saved queries', 'Autism gene profiles', 'Management']
   },
 };
 
 export const datasetIds = {
-  compAll: 'comp_all',
+  allGenotypes: 'ALL Genotypes',
+  compGenotypes: 'COMP Genotypes',
   compDenovo: 'comp_denovo',
   compVcf: 'comp_vcf',
+  compAll: 'comp_all',
   iossifov2014: 'iossifov_2014',
   multi: 'multi'
 };
@@ -64,13 +69,14 @@ export class BasePage {
 
     usersPage.loginDropdownToggleButton.click();
     usersPage.usernameInput.type(username);
+    usersPage.nextButton.click();
     usersPage.passwordInput.type(password);
     usersPage.loginSubmitButton.click();
+    cy.get('#logout-button').should('be.visible');
   }
 
   loginAdmin() {
     this.login(this.adminUsername, this.adminPassword);
-    cy.wait(500);
   }
 
   logout() {
@@ -80,8 +86,10 @@ export class BasePage {
 
   navigateToDatasetPage(dataset: string, page: string) {
     cy.get('#datasets-dropdown-menu-button').click();
+    cy.wait(1000);
+    // cy.get('a.dropdown-item').should('have.length', Object.keys(datasetIds).length);
     cy.get('a.dropdown-item').contains(dataset).click();
-    cy.wait(500);
+    cy.get('#datasets-dropdown-menu-button').should('have.text', dataset + ' ');
     cy.get(`a.nav-link[routerlink="${page}"]`).click();
   }
 
@@ -107,5 +115,13 @@ export class BasePage {
 
   findButtonInComponentContainingText(componentSelector: string, text: string) {
     return cy.get(componentSelector).contains(text);
+  }
+  
+  findErrorAlertInComponent(componentSelector: string) {
+    return cy.get(`${componentSelector} gpf-errors-alert .alert-danger`);
+  }
+
+  findWarningAlertInComponent(componentSelector: string) {
+    return cy.get(`${componentSelector} .alert-warning`);
   }
 }

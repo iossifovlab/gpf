@@ -15,10 +15,10 @@ describe('Share query tests', () => {
   beforeEach(() => {
     shareQueryPage.preserveLogin();
     shareQueryPage.navigateToHome();
+    shareQueryPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
   });
 
   it('should open share query dropdown menu after share query button click', () => {
-    shareQueryPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     shareQueryPage.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu');
 
     shareQueryPage.button.click();
@@ -28,14 +28,15 @@ describe('Share query tests', () => {
   it('should share a query, load it and open all tools tabs', () => {
     const datasetsPage = new DatasetsPage();
 
-    shareQueryPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     shareQueryPage.button.click();
     shareQueryPage.input.invoke('val').then((url) => {
-      cy.visit(String(url));
-      datasetsPage.datasetStatisticsButton.click();
-      datasetsPage.genotypeBrowserButton.click();
-      datasetsPage.phenotypeBrowserButton.click();
-      datasetsPage.phenotypeToolButton.click();
+      cy.visit(String(url)).then(() => {
+        datasetsPage.datasetStatisticsButton.click();
+        datasetsPage.genotypeBrowserButton.click();
+        datasetsPage.phenotypeBrowserButton.click();
+        datasetsPage.phenotypeToolButton.click();
+        datasetsPage.geneBrowserButton.click();
+      });
     })
   });
 
@@ -43,15 +44,15 @@ describe('Share query tests', () => {
      'load it and validate that all effect types checkboxes are checked', () => {
     const genotypeBlockPage = new GenotypeBlockPage();
 
-    shareQueryPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genotypeBlockPage.findButtonInComponentContainingText('gpf-effecttypes', 'All').click();
 
     shareQueryPage.button.click();
     shareQueryPage.input.invoke('val').then((url) => {
-      cy.visit(String(url));
-      genotypeBlockPage.findAllCheckboxesInComponent('gpf-effecttypes').each((element) => {
-        cy.wrap(element).should('be.checked');
-      });
+      cy.visit(String(url)).then(() => {
+        genotypeBlockPage.findAllCheckboxesInComponent('gpf-effecttypes').each((element) => {
+          cy.wrap(element).should('be.checked');
+        });
+      })
     })
   });
 });

@@ -70,6 +70,7 @@ describe('Pheno tool tests', () => {
 
     phenoToolPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
     phenoToolPage.resultsChart.should('not.exist');
+    phenoToolPage.findErrorAlertInComponent('gpf-pheno-tool-measure').should('be.visible');
 
     phenoToolMeasurePage.searchbox.click();
     phenoToolPage.findButtonInComponentContainingText('gpf-searchable-select', 'i1.age').click();
