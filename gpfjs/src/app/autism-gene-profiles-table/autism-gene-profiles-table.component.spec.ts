@@ -1,13 +1,17 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
+import { RouterTestingModule } from '@angular/router/testing';
 import { ConfigService } from 'app/config/config.service';
+import { DatasetsService } from 'app/datasets/datasets.service';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
+import { QueryService } from 'app/query/query.service';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
+import { UsersService } from 'app/users/users.service';
 import { cloneDeep } from 'lodash';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 // tslint:disable-next-line:import-blacklist
-import { Observable, of } from 'rxjs';
+import { of } from 'rxjs';
 import { AgpConfig } from './autism-gene-profile-table';
 
 import { AutismGeneProfilesTableComponent } from './autism-gene-profiles-table.component';
@@ -26,8 +30,8 @@ describe('AutismGeneProfilesTableComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [ AutismGeneProfilesTableComponent, MultipleSelectMenuComponent, SortingButtonsComponent],
-      providers: [ConfigService],
-      imports: [Ng2SearchPipeModule, HttpClientTestingModule, FormsModule]
+      providers: [ConfigService, QueryService, DatasetsService, UsersService],
+      imports: [Ng2SearchPipeModule, HttpClientTestingModule, FormsModule, RouterTestingModule]
     })
     .compileComponents();
   }));

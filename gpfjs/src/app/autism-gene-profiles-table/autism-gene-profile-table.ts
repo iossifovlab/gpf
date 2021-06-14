@@ -62,6 +62,7 @@ export class AgpDatasetStatistic {
   effects: string[];
   category: string;
   description: string;
+  variantTypes: string[];
 }
 
 export class AgpDatasetPersonSet {
