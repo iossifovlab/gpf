@@ -116,22 +116,6 @@ describe('AutismGeneProfilesTableComponent', () => {
     expect(component.calculateModalBottom()).toBe(1);
   });
 
-  it('should calculate dataset colspan', () => {
-    let mockDatasetConfig;
-
-    mockDatasetConfig = {statistics: [1, 2], personSets: [1, 2]};
-    expect(component.calculateDatasetColspan(mockDatasetConfig)).toBe(4);
-
-    mockDatasetConfig = {statistics: [1, 2, 3], personSets: [1, 2]};
-    expect(component.calculateDatasetColspan(mockDatasetConfig)).toBe(6);
-
-    mockDatasetConfig = {statistics: [1, 2, 3, 4], personSets: [1, 2, 3, 4, 6, 7]};
-    expect(component.calculateDatasetColspan(mockDatasetConfig)).toBe(24);
-
-    mockDatasetConfig = {statistics: [1, 2, 3, 4, 5], personSets: [1, 2, 3, 4, 6, 7, 8]};
-    expect(component.calculateDatasetColspan(mockDatasetConfig)).toBe(35);
-  });
-
   it('should handle multiple select apply event', () => {
     const dropDownMenuSpies = [];
     component.ngbDropdownMenu = [
