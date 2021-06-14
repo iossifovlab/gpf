@@ -404,17 +404,26 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit {
     return Number(sprintf(genomicScore.format, genomicScore.value)).toString();
   }
 
-  goToQuery(geneSymbol: string, personSetId: string, effectType: string) {
+  goToQuery(geneSymbol: string, personSetId: string, effectTypeId: string, datasetId: string) {
     const newWindow = window.open('', '_blank');
     const peopleGroup = new PeopleGroup('status', [personSetId]);
+    let variantTypes = this.config.datasets
+      .find((dataset) => (dataset.id = datasetId))
+      .statistics.find((datasetStatistic) => datasetStatistic.id === effectTypeId)
+      .variantTypes;
+
+    if (variantTypes === undefined && effectTypeId.replace('denovo_', '') === 'intron') {
+      variantTypes = ['ins', 'del'];
+    }
+
     const browserQueryFilter = new BrowserQueryFilter(
       this.config.defaultDataset,
       [geneSymbol],
-      this.effectTypes[effectType.replace('denovo_', '')],
+      this.effectTypes[effectTypeId.replace('denovo_', '')],
       undefined,
       peopleGroup,
       ['we'],
-      undefined
+      variantTypes
     );
 
     this.queryService.saveQuery(browserQueryFilter, 'genotype')
