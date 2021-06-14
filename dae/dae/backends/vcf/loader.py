@@ -74,7 +74,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
                 fill_value = self.loader._fill_missing_value
                 samples_count = len(self.loader.vcfs[vcf_index].samples)
                 genotypes.append(
-                    [[fill_value, fill_value, False]] * samples_count)               
+                    [[fill_value, fill_value, False]] * samples_count)
                 # samples_count = len(self.loader.vcfs[vcf_index].samples)
                 # genotypes.append(
                 #     fill_value * np.ones(2 * samples_count, dtype=np.int16)
