@@ -1,5 +1,5 @@
 import logging
-import cyvcf2
+import pysam
 
 
 logger = logging.getLogger(__name__)
@@ -13,33 +13,35 @@ class VcfInfoLineAdapter:
 
     @property
     def pos_begin(self):
-        return self.variant.POS
+        return self.variant.pos
 
     @property
     def pos_end(self):
-        return self.variant.POS
+        return self.variant.pos
 
     @property
     def chrom(self):
-        return self.variant.CHROM
+        return self.variant.chrom
 
     def __repr__(self):
-        return f"{self.variant.CHROM}:{self.variant.POS} " \
-            f"{self.variant.REF} -> {self.variant.ALT}"
+        return f"{self.variant.chrom}:{self.variant.pos} " \
+            f"{self.variant.ref} -> {self.variant.alts}"
 
     def get(self, name):
+        print(self.variant, dir(self.variant))
+
         if name == "ID":
-            return self.variant.ID
+            return self.variant.id
         elif name == "CHROM":
-            return self.variant.CHROM
+            return self.variant.chrom
         elif name == "POS":
-            return self.variant.POS
+            return self.variant.pos
         elif name == "REF":
-            return self.variant.REF
+            return self.variant.ref
         elif name == "ALT":
-            return self.variant.ALT[0]
+            return self.variant.alts[0]
         elif name in self.accessor.info:
-            return self.variant.INFO.get(name)
+            return self.variant.info.get(name)
         elif name in self.accessor.extra:
             # logger.debug(f"accessor: {self.accessor.extra[name]}")
             return self.accessor.extra[name](name, self.variant)
@@ -66,18 +68,19 @@ class VcfInfoAccess:
 
         self.score_filename = filename
         logger.debug(f"going to access VCF file {self.score_filename}")
-        self.vcf = cyvcf2.VCF(self.score_filename)
+        self.vcf = pysam.VariantFile(self.score_filename)
         self.info = {}
-        for h in self.vcf.header_iter():
-            if h["HeaderType"] == "INFO":
-                score_id = h["ID"]
-                score_desc = h["Description"]
-                score_type = h["Type"]
-                self.info[score_id] = {
-                    "id": score_id,
-                    "desc": score_desc,
-                    "type": score_type
-                }
+        print(dir(self.vcf.header))
+        print(dir(self.vcf.header.info))
+        print(list(self.vcf.header.info.keys()))
+
+        for meta in self.vcf.header.info.values():
+
+            self.info[meta.name] = {
+                "id": meta.name,
+                "desc": meta.description,
+                "type": meta.type,
+            }
         self.extra = {}
 
         logger.debug(f"score names: {self.score_file.score_names}")
@@ -91,7 +94,8 @@ class VcfInfoAccess:
                 if base_col_name in self.info:
                     def percent(name, v):
                         # logger.debug(f"getting percents for {name}")
-                        base_val = v.INFO.get(name[:suffix_len])
+                        base_val = v.info.get(name[:suffix_len])
+                        base_val = float(base_val[0])
                         if base_val is None:
                             return None
                         else:
@@ -117,13 +121,13 @@ class VcfInfoAccess:
         region = f"{chrom}:{pos_begin}-{pos_end}"
         logger.debug(
             f"fetching region VCF  {region} from {self.score_filename}")
-        vcf_variants = list(self.vcf(region))
+        vcf_variants = list(self.vcf.fetch(region=region))
         logger.debug(
             f"fetched variants from region VCF {region}: {vcf_variants}")
 
         result = []
         for v in vcf_variants:
-            logger.debug(f"vcf variant: {v.CHROM}, {v.POS}")
+            logger.debug(f"vcf variant: {v.chrom}, {v.pos}")
             result.append(VcfInfoLineAdapter(self, v))
 
         return result

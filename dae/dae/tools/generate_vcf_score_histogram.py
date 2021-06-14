@@ -9,7 +9,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import yaml
-import cyvcf2
+import pysam
 
 import numpy as np
 import pandas as pd
@@ -65,10 +65,10 @@ def collect_range(vcf, region, scores):
     result = {s: Range() for s in scores}
     for count, v in enumerate(vcf(region)):
         for score in scores:
-            val = v.INFO.get(score)
-            if val is None:
+            val = v.info.get(score)
+            if not val:
                 continue
-
+            val = float(val[0])
             score_range = result[score]
             if val > score_range.max:
                 score_range.max = val
@@ -78,7 +78,7 @@ def collect_range(vcf, region, scores):
             elapsed = time.time() - start
             logger.debug(
                 f"progress {region}: {count}; "
-                f"{v.CHROM}:{v.POS}; {elapsed:.2f} sec")
+                f"{v.chrom}:{v.pos}; {elapsed:.2f} sec")
     return result
 
 
@@ -141,9 +141,10 @@ def collect_histograms(vcf, region, scores):
 
     for count, v in enumerate(vcf(region)):
         for score, hist in result.items():
-            val = v.INFO.get(score)
-            if val is None:
+            val = v.info.get(score)
+            if not val:
                 continue
+            val = float(val[0])
             hist.update_histogram(val)
 
         if (count) % 100_000 == 0:
@@ -177,7 +178,7 @@ def build_scores_domains(scores_filename, scores, regions, threads=20):
     for count, region in enumerate(regions):
         logger.info(f"starting range processing for region {region}")
 
-        vcf = cyvcf2.VCF(scores_filename)
+        vcf = pysam.VariantFile(scores_filename)
         future = executor.submit(collect_range, vcf, region, scores)
         futures.append(future)
 
@@ -200,7 +201,7 @@ def build_histograms(scores_filename, scores, regions, threads=20):
     for count, region in enumerate(regions):
         logger.info(f"starting range processing for region {region}")
 
-        vcf = cyvcf2.VCF(scores_filename)
+        vcf = pysam.VariantFile(scores_filename)
         future = executor.submit(collect_histograms, vcf, region, scores)
         futures.append(future)
 

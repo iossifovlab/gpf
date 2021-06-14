@@ -5,7 +5,7 @@ import sys
 import logging
 import os
 
-import cyvcf2
+import pysam
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.variants.variant import SummaryVariantFactory
@@ -55,7 +55,7 @@ def main(argv, gpf_instance=None):
         gpf_instance = GPFInstance()
 
     assert os.path.exists(argv.vcf_filename)
-    vcf = cyvcf2.VCF(argv.vcf_filename)
+    vcf = pysam.VariantFile(argv.vcf_filename)
 
     assert argv.columns is not None
     info_columns = [c.strip() for c in argv.columns.split(",")]
@@ -81,26 +81,30 @@ def main(argv, gpf_instance=None):
                 vcf_variant, summary_index)
             sa = sv.alt_alleles[0]
 
-            assert len(vcf_variant.ALT) == 1
+            assert len(vcf_variant.alts) == 1
             line = [
-                vcf_variant.CHROM,
-                vcf_variant.POS,
+                vcf_variant.chrom,
+                vcf_variant.pos,
                 sa.chromosome,
                 sa.cshl_position,
                 sa.cshl_location,
                 sa.cshl_variant,
-                vcf_variant.REF,
-                vcf_variant.ALT[0],
-                vcf_variant.ID,
+                vcf_variant.ref,
+                vcf_variant.alts[0],
+                vcf_variant.id,
             ]
             for info_id in info_columns:
+                value = None
                 if info_id.endswith("_percent"):
                     iid = info_id[:-8]
-                    value = vcf_variant.INFO.get(iid)
-                    if value is not None:
+                    ivalue = vcf_variant.info.get(iid)
+                    if ivalue:
+                        value = float(ivalue[0])
                         value = value*100.0
                 else:
-                    value = vcf_variant.INFO.get(info_id)
+                    ivalue = vcf_variant.info.get(info_id)
+                    if ivalue:
+                        value = float(ivalue[0])
                 line.append(value)
 
             outline = []
