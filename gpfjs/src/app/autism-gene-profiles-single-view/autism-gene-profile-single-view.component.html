@@ -7,76 +7,91 @@
     View {{geneSymbol}} in the Gene Browser
   </a>
 
-  <table *ngFor="let genomicScoreCategory of config.genomicScores" [attr.id]="genomicScoreCategory.category" class="table table-bordered table-centered genomic-scores-table">
-    <th [attr.colspan]="2" style="text-align: center;">{{genomicScoreCategory.displayName}}</th>
-    <tr *ngFor="let score of genomicScoreCategory.scores" class="card-block">
-      <td style="vertical-align: middle;">{{score.scoreName}}</td>
-      <ng-container *ngIf="genomicScoresGeneWeights.length === gene.genomicScores.length">
-        <td>
-          <gpf-histogram *ngIf="genomicScoresGeneWeights && getGeneWeightByKey(genomicScoreCategory.category, score.scoreName) as geneWeight"
-            [style.width]="histogramOptions.width" [style.height]="histogramOptions.height"
-            [width]="histogramOptions.width" [height]="histogramOptions.height"
-            [bins]="geneWeight.bins"
-            [bars]="geneWeight.bars"
-            [logScaleX]="geneWeight.logScaleX"
-            [logScaleY]="geneWeight.logScaleY"
-            [showMinMaxInput]="false"
-            [isInteractive]="false"
-            [singleScoreValue]="getSingleScoreValue(gene.genomicScores, genomicScoreCategory.category, score.scoreName)"
-            [marginLeft]="histogramOptions.marginLeft"
-            [marginTop]="histogramOptions.marginTop">
-          </gpf-histogram>
-        </td>
-      </ng-container>
-    </tr>
-  </table>
-
-  <table *ngFor="let geneSetCategory of config.geneSets" [attr.id]="geneSetCategory.category" class="table table-bordered table-centered gene-sets-table">
-    <th [attr.colspan]="2" style="text-align: center;">{{geneSetCategory.displayName}}</th>
-    <tr *ngFor="let set of geneSetCategory.sets" class="card-block">
-      <td>{{set.setId}}</td>
-      <td style="text-align: center;">
-        <span *ngIf="gene.geneSets.indexOf(set.setId) !== -1">&#10003;</span>
-      </td>
-    </tr>
-  </table>
-
-  <ng-container *ngFor="let dataset of config.datasets">
-    <table class="table table-bordered table-centered datasets-table">
-      <thead>
-        <tr class="card-block">
-          <th style="text-align: center; border-bottom: none;" [attr.colspan]="dataset.personSets.length + 1">
-            {{dataset.displayName}}
-          </th>
-        </tr>
-        <tr class="card-block">
-          <th style="text-align: center; border-bottom: none;">
-            Variant Statistics
-          </th>
-          <th *ngFor="let personSet of dataset.personSets" style="text-align: center; border-bottom: none;">
-            {{personSet.displayName}} ({{personSet.childrenCount}})
-          </th>
-        </tr>
-      </thead>
-  
-      <tbody>
-        <tr class="card-block" *ngFor="let statistic of dataset.statistics">
+  <div class="table-wrapper">
+    <table *ngFor="let genomicScoreCategory of config.genomicScores" [attr.id]="genomicScoreCategory.category" class="table table-bordered table-centered genomic-scores-table">
+      <th [attr.colspan]="2" style="text-align: center;">{{genomicScoreCategory.displayName}}</th>
+      <tr *ngFor="let score of genomicScoreCategory.scores" class="card-block">
+        <td style="vertical-align: middle;">{{score.scoreName}}</td>
+        <ng-container *ngIf="genomicScoresGeneWeights.length === gene.genomicScores.length">
           <td>
-            {{statistic.displayName}}
+            <gpf-histogram *ngIf="genomicScoresGeneWeights && getGeneWeightByKey(genomicScoreCategory.category, score.scoreName) as geneWeight"
+              [style.width]="histogramOptions.width" [style.height]="histogramOptions.height"
+              [width]="histogramOptions.width" [height]="histogramOptions.height"
+              [bins]="geneWeight.bins"
+              [bars]="geneWeight.bars"
+              [logScaleX]="geneWeight.logScaleX"
+              [logScaleY]="geneWeight.logScaleY"
+              [showMinMaxInput]="false"
+              [isInteractive]="false"
+              [singleScoreValue]="getSingleScoreValue(gene.genomicScores, genomicScoreCategory.category, score.scoreName)"
+              [marginLeft]="histogramOptions.marginLeft"
+              [marginTop]="histogramOptions.marginTop">
+            </gpf-histogram>
           </td>
-          <td style="text-align: center;" *ngFor="let personSet of dataset.personSets">
-            <ng-container *ngIf="getGeneDatasetValue(gene, dataset.id, personSet.id, statistic.id) as effectType">
-              <ng-container *ngIf="effectType.value.count !== 0">
-                {{effectType.value.count}} ({{effectType.value.rate | number : '1.0-3'}})
-              </ng-container>
-              <ng-container *ngIf="effectType.value.count === 0">
-                &#8212;
-              </ng-container>
-            </ng-container>
-          </td>
-        </tr>
-      </tbody>
+        </ng-container>
+      </tr>
     </table>
-  </ng-container>
+  </div>
 
+  <div class="table-wrapper">
+    <table *ngFor="let geneSetCategory of config.geneSets" [attr.id]="geneSetCategory.category" class="table table-bordered table-centered gene-sets-table">
+      <th [attr.colspan]="2" style="text-align: center;">{{geneSetCategory.displayName}}</th>
+      <tr *ngFor="let set of geneSetCategory.sets" class="card-block">
+        <td>{{set.setId}}</td>
+        <td style="text-align: center;">
+          <span *ngIf="gene.geneSets.indexOf(set.setId) !== -1">&#10003;</span>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="table-wrapper">
+    <table *ngIf="links" id="external-links" class="table table-bordered table-centered">
+      <th style="text-align: center;">External links</th>
+      <tr *ngIf="links.SFARIgene !== ''">
+        <td><a class="link" [attr.href]="links.SFARIgene" target="_blank">SFARI gene</a></td>
+      </tr>
+      <tr>
+        <td><a class="link" [attr.href]="links.UCSC" target="_blank">UCSC genome browser</a></td>
+      </tr>
+      <tr>
+        <td><a class="link" [attr.href]="links.GeneCards" target="_blank">GeneCards</a></td>
+      </tr>
+      <tr>
+        <td><a class="link" [attr.href]="links.Pubmed" target="_blank">Pubmed</a></td>
+      </tr>
+    </table>
+
+    <ng-container *ngFor="let dataset of config.datasets">
+      <table class="table table-bordered table-centered datasets-table">
+        <thead>
+          <tr class="card-block">
+            <th style="text-align: center; border-bottom: none;" [attr.colspan]="dataset.personSets.length + 1">
+              {{dataset.displayName}}
+            </th>
+          </tr>
+          <tr class="card-block">
+            <th style="text-align: center; border-bottom: none;">Variant Statistics</th>
+            <th *ngFor="let personSet of dataset.personSets" style="text-align: center; border-bottom: none;">
+              {{personSet.displayName}} ({{personSet.childrenCount}})
+            </th>
+          </tr>
+        </thead>
+    
+        <tbody>
+          <tr class="card-block" *ngFor="let statistic of dataset.statistics">
+            <td>{{statistic.displayName}}</td>
+            <td style="text-align: center;" *ngFor="let personSet of dataset.personSets">
+              <ng-container *ngIf="getGeneDatasetValue(gene, dataset.id, personSet.id, statistic.id) as effectType">
+                <ng-container *ngIf="effectType.value.count !== 0">
+                  {{effectType.value.count}} ({{effectType.value.rate | number : '1.0-3'}})
+                </ng-container>
+                <ng-container *ngIf="effectType.value.count === 0">&ndash;</ng-container>
+              </ng-container>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </ng-container>
+  </div>
 </div>

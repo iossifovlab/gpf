@@ -72,6 +72,21 @@ describe('AutismGeneProfilesTableComponent', () => {
     expect(component.modalBottom).toBe(1);
   });
 
+  it('should update shown categories on config change', () => {
+    component.shownGeneSetsCategories = undefined;
+    component.shownGenomicScoresCategories = undefined;
+
+    component.config = cloneDeep(mockConfig);
+
+    component.ngOnChanges();
+    expect(component.shownGeneSetsCategories).toEqual([
+      {category: 'fakeGeneSets', sets: ['fakeGeneSet']}
+    ] as any);
+    expect(component.shownGenomicScoresCategories).toEqual([
+      {category: 'fakeGenomicScores', scores: ['fakeGenomicScore']}
+    ] as any);
+  });
+
   it('should get genes on initialization', () => {
     component['shownGeneSetsCategories'] = undefined;
     component['shownGenomicScoresCategories'] = undefined;
@@ -88,20 +103,21 @@ describe('AutismGeneProfilesTableComponent', () => {
     ] as any);
   });
 
-  it('should calculate dataset colspan', () => {
-    let mockDatasetConfig;
+  it('should calculate modal bottom', () => {
+    component.columnFilteringButtons = {
+      first: undefined
+    } as any;
+    expect(component.calculateModalBottom()).toBe(0);
 
-    mockDatasetConfig = {statistics: [1, 2], personSets: [1, 2]};
-    expect(component.calculateDatasetColspan(mockDatasetConfig)).toBe(4);
-
-    mockDatasetConfig = {statistics: [1, 2, 3], personSets: [1, 2]};
-    expect(component.calculateDatasetColspan(mockDatasetConfig)).toBe(6);
-
-    mockDatasetConfig = {statistics: [1, 2, 3, 4], personSets: [1, 2, 3, 4, 6, 7]};
-    expect(component.calculateDatasetColspan(mockDatasetConfig)).toBe(24);
-
-    mockDatasetConfig = {statistics: [1, 2, 3, 4, 5], personSets: [1, 2, 3, 4, 6, 7, 8]};
-    expect(component.calculateDatasetColspan(mockDatasetConfig)).toBe(35);
+    component.columnFilteringButtons = {
+      first: {
+        nativeElement: {
+          getBoundingClientRect() { return {bottom: 10}; }
+        }
+      }
+    } as any;
+    spyOnProperty(window, 'innerHeight').and.returnValue(11);
+    expect(component.calculateModalBottom()).toBe(1);
   });
 
   it('should handle multiple select apply event', () => {
@@ -112,6 +128,7 @@ describe('AutismGeneProfilesTableComponent', () => {
       {dropdown: {close() {}}}
     ] as any;
     component.ngbDropdownMenu.forEach(menu => dropDownMenuSpies.push(spyOn(menu.dropdown, 'close')));
+    const emitSpy = spyOn(component.configChange, 'emit');
 
     component.config = cloneDeep(mockConfig);
 
@@ -146,6 +163,7 @@ describe('AutismGeneProfilesTableComponent', () => {
       {category: 'fakeGenomicScores2', scores: [{scoreName: 'fakeGenomicScore21'}, {scoreName: 'fakeGenomicScore22'}]} as any
     ]);
     dropDownMenuSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(1));
+    expect(emitSpy).not.toHaveBeenCalled();
 
     component.handleMultipleSelectMenuApplyEvent({
       menuId: 'genomic_scores_category:fakeGenomicScores1',
@@ -160,6 +178,53 @@ describe('AutismGeneProfilesTableComponent', () => {
       {category: 'fakeGenomicScores2', scores: [{scoreName: 'fakeGenomicScore21'}, {scoreName: 'fakeGenomicScore22'}]} as any
     ]);
     dropDownMenuSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(2));
+    expect(emitSpy).not.toHaveBeenCalled();
+
+    component.handleMultipleSelectMenuApplyEvent({
+      menuId: 'gene_set_category:fakeGeneSets1',
+      data: []
+    });
+    expect(component['shownGeneSetsCategories']).toEqual([
+      {category: 'fakeGeneSets2', sets: [{setId: 'fakeGeneSet21'}, {setId: 'fakeGeneSet22'}]}  as any
+    ]);
+    expect(component['shownGenomicScoresCategories']).toEqual([
+      {category: 'fakeGenomicScores1', scores: [{scoreName: 'fakeGenomicScore12'}]} as any,
+      {category: 'fakeGenomicScores2', scores: [{scoreName: 'fakeGenomicScore21'}, {scoreName: 'fakeGenomicScore22'}]} as any
+    ]);
+    dropDownMenuSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(3));
+    expect(emitSpy).toHaveBeenCalledTimes(1);
+
+    component.handleMultipleSelectMenuApplyEvent({
+      menuId: 'genomic_scores_category:fakeGenomicScores1',
+      data: []
+    });
+    expect(component['shownGeneSetsCategories']).toEqual([
+      {category: 'fakeGeneSets2', sets: [{setId: 'fakeGeneSet21'}, {setId: 'fakeGeneSet22'}]}  as any
+    ]);
+    expect(component['shownGenomicScoresCategories']).toEqual([
+      {category: 'fakeGenomicScores2', scores: [{scoreName: 'fakeGenomicScore21'}, {scoreName: 'fakeGenomicScore22'}]} as any
+    ]);
+    dropDownMenuSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(4));
+    expect(emitSpy).toHaveBeenCalledTimes(2);
+
+    expect(emitSpy.calls.allArgs()[0][0].geneSets).toEqual([
+      {
+          category: 'fakeGeneSets2',
+          sets: [
+              { setId: 'fakeGeneSet21' },
+              { setId: 'fakeGeneSet22' }
+          ]
+      } as any
+    ]);
+    expect(emitSpy.calls.allArgs()[1][0].genomicScores).toEqual([
+      {
+          category: 'fakeGenomicScores2',
+          scores: [
+              { scoreName: 'fakeGenomicScore21' },
+              { scoreName: 'fakeGenomicScore22' }
+          ]
+      } as any
+    ]);
   });
 
   it('should emit create tab event', () => {

@@ -93,7 +93,7 @@ export class DatasetsService {
   }
 
   getSelectedDatasetId() {
-    return this.selectedDatasetId$.value
+    return this.selectedDatasetId$.value;
   }
 
   getDatasetsObservable() {
