@@ -481,6 +481,9 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         ref_n_alleles = 0
         ref_allele_freq = 0.0
 
+        independent_persons = self.families.persons_without_parents()
+        print(independent_persons)
+
         for allele in summary_variant.alleles:
             allele_index = allele["allele_index"]
             n_alleles = 0  # np.sum(gt == allele_index)
@@ -492,7 +495,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 independent_indexes = list()
 
                 for idx, person in enumerate(fv.members_in_order):
-                    if person in self.independent:
+                    if person in independent_persons:
                         independent_indexes.append(idx)
                         n_parents_called += 1
                 for idx in independent_indexes:
