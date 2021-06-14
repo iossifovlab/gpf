@@ -444,10 +444,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
       .statistics.find((datasetStatistic) => datasetStatistic.id === effectTypeId)
       .variantTypes;
 
-    if (variantTypes === undefined && effectTypeId.replace('denovo_', '') === 'intron') {
-      variantTypes = ['ins', 'del'];
-    }
-
     const browserQueryFilter = new BrowserQueryFilter(
       this.config.defaultDataset,
       [geneSymbol],

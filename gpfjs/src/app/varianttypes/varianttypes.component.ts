@@ -36,6 +36,10 @@ export class VarianttypesComponent extends QueryStateWithErrorsProvider
   }
 
   ngOnInit() {
+    this.selectedVariantTypes = new Set();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
     this.stateRestoreService.getState(this.constructor.name)
       .take(1)
       .subscribe(state => {
@@ -44,8 +48,6 @@ export class VarianttypesComponent extends QueryStateWithErrorsProvider
         }
       });
   }
-
-  ngOnChanges(changes: SimpleChanges) { }
 
   selectAll(): void {
     this.selectedVariantTypes = new Set(this.variantTypes);

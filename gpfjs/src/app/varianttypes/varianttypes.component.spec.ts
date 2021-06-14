@@ -39,18 +39,15 @@ describe('VarianttypesComponent', () => {
     const getStateSpy = spyOn(component['stateRestoreService'], 'getState');
 
     getStateSpy.and.returnValue(of({}));
-    component.selectedVariantTypes = undefined;
     component.ngOnInit();
-    expect(component.selectedVariantTypes).toEqual(undefined);
+    expect(component.selectedVariantTypes).toEqual(new Set());
 
     getStateSpy.and.returnValue(of({variantTypes: ['fakeVariantTypes']}));
-    component.selectedVariantTypes = undefined;
-    component.ngOnInit();
+    component.ngOnChanges({});
     expect(component.selectedVariantTypes).toEqual(new Set(['fakeVariantTypes']));
   });
 
   it('should select all', () => {
-    component.selectedVariantTypes = undefined;
     const mockVariantTypes = new Set(['fakeVariantType1', 'fakeVariantType2']);
     component.variantTypes = mockVariantTypes;
 
@@ -59,8 +56,6 @@ describe('VarianttypesComponent', () => {
   });
 
   it('should select none', () => {
-    component.selectedVariantTypes = undefined;
-
     component.selectNone();
     expect(component.selectedVariantTypes).toEqual(new Set());
   });
