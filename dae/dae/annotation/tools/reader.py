@@ -8,7 +8,7 @@ import pandas as pd
 from collections import defaultdict
 
 from dae.annotation.tools.utils import AnnotatorFactory, \
-    handle_chrom_prefix, is_gzip, is_tabix, regions_intersect
+    handle_chrom_prefix, is_gzip, regions_intersect
 
 logger = logging.getLogger(__name__)
 
@@ -27,14 +27,13 @@ class ScoreFile:
         self.buffer = []
         self.last_pos = 0
 
-        assert os.path.exists(self.filename)
-        assert os.path.exists(self.tabix_filename)
+        assert os.path.exists(self.filename), self.filename
+        assert os.path.exists(self.tabix_filename), self.tabix_filename
         assert is_gzip(self.filename)
-        assert is_tabix(self.tabix_filename)
 
         required_columns = AnnotatorFactory.name_to_class(
             self.config.score_type
-        ).required_columns
+        ).required_columns()
 
         file_columns = {rc: self.config[rc] for rc in required_columns}
         file_columns = file_columns.update({

@@ -534,9 +534,8 @@ class GPFInstance(object):
         return self.dae_config.gpfjs.selected_genotype_data
 
     # GSD
-
     def find_genomic_score(self, genomic_score_id):
-        _, gs = self._cache_gsd.find_genomic_score(genomic_score_id)
+        _, gs = self._cache_gsd.get_genomic_score(genomic_score_id)
         if gs is not None:
             return gs
 

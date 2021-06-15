@@ -84,16 +84,12 @@ class AnnotationConfigParser:
         config["virtual_columns"] = []
         config["output_columns"] = []
 
-        config = cls._setup_defaults(DefaultBox(config))
-
         return FrozenBox(config)
 
     @classmethod
     def parse_section(cls, config_section):
 
         config_section = DefaultBox(config_section)
-
-        config_section = cls._setup_defaults(config_section)
 
         config_section["sections"] = list()
         config_section["native_columns"] = list(config_section.columns.keys())
@@ -110,24 +106,3 @@ class AnnotationConfigParser:
         ]
 
         return config_section
-
-    @staticmethod
-    def _setup_defaults(config):
-        if config.options.vcf:
-            assert not config.options.v, [config.annotator, config.options.v]
-
-            if config.options.c is None:
-                config.options.c = "CHROM"
-            if config.options.p is None:
-                config.options.p = "POS"
-            if config.options.r is None:
-                config.options.r = "REF"
-            if config.options.a is None:
-                config.options.a = "ALT"
-        else:
-            if config.options.x is None and config.options.c is None:
-                config.options.x = "location"
-            if config.options.v is None:
-                config.options.v = "variant"
-
-        return config

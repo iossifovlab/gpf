@@ -991,8 +991,9 @@ class BatchImporter:
         if gpf_instance is None:
             try:
                 gpf_instance = GPFInstance()
-            except Exception:
+            except Exception as e:
                 logger.warning("GPF not configured properly...")
+                logger.exception(e)
 
         parser = BatchImporter.cli_arguments_parser(gpf_instance)
         argv = parser.parse_args(argv)

@@ -28,7 +28,7 @@ class AnnotatorFactory:
 
     @classmethod
     def make_annotator(cls, annotator_config, genomes_db, liftover=None):
-        clazz = cls.name_to_class(annotator_config.annotator)
+        clazz = cls.name_to_class(annotator_config.score_type)
         assert clazz is not None
         return clazz(annotator_config, genomes_db, liftover)
 
@@ -52,10 +52,6 @@ def is_gzip(filename):
         return True
     except Exception:
         return False
-
-
-def is_tabix(filename):
-    return is_gzip(filename) and os.path.exists("{}.tbi".format(filename))
 
 
 def regions_intersect(b1: int, e1: int, b2: int, e2: int) -> bool:

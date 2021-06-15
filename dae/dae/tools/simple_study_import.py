@@ -167,9 +167,9 @@ def main(argv, gpf_instance=None):
         try:
             gpf_instance = GPFInstance()
             dae_config = gpf_instance.dae_config
-
-        except Exception:
+        except Exception as e:
             logger.warning("GPF not configured correctly")
+            logger.exception(e)
 
     argv = cli_arguments(dae_config, argv)
 

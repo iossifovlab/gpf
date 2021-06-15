@@ -1,6 +1,7 @@
 import logging
 
 from copy import deepcopy
+from itertools import chain
 
 logger = logging.getLogger(__name__)
 
@@ -10,11 +11,15 @@ class Annotator:
     def __init__(self, config, genomes_db, liftover=None):
         self.config = config
         self.genomes_db = genomes_db
+
+        # FIXME Reintroduce Graw, Traw and TrawFormat?
+
         self.genomic_sequence = self.genomes_db.load_genomic_sequence(
-            config.options.Graw
+            # config.options.Graw
         )
         self.gene_models = self.genomes_db.load_gene_models(
-            config.options.Traw, config.options.TrawFormat)
+            # config.options.Traw, config.options.TrawFormat
+        )
 
         assert self.genomes_db is not None
         assert self.genomic_sequence is not None
@@ -22,8 +27,12 @@ class Annotator:
 
         self.liftover = liftover
 
+    @staticmethod
+    def required_columns():
+        raise NotImplementedError()
+
     @property
-    def required_columns(self):
+    def output_columns(self):
         raise NotImplementedError()
 
     def do_annotate(self, attributes, variant, liftover_variants):
@@ -41,6 +50,10 @@ class CompositeAnnotator(Annotator):
     def __init__(self, config, genomes_db, liftover=None):
         super().__init__(config, genomes_db, liftover)
         self.annotators = []
+
+    @property
+    def output_columns(self):
+        return chain(annotator.output_columns for annotator in self.annotators)
 
     def add_annotator(self, annotator):
         assert isinstance(annotator, Annotator)

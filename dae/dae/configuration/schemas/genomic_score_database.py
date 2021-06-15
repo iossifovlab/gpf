@@ -1,3 +1,5 @@
+from dae.configuration.gpf_config_parser import validate_existing_path
+
 attr_schema = {
     "type": "dict",
     "schema": {
@@ -25,15 +27,25 @@ target_genome_schema = {
 genomic_score_schema = {
     "id": {"type": "string"},
     "name": {"type": "string"},
-    "score_type": {"type": "string"},
-    "filename": {"type": "string"},
+    "score_type": {"type": "string", "required": True},
+    "filename": {
+        "type": "string",
+        "required": True,
+        "check_with": validate_existing_path,
+        "coerce": "abspath",
+    },
     "format": {"type": "string"},
     "has_header": {"type": "boolean"},
     "add_chrom_prefix": {"type": "string"},
     "index_file": {
         "type": "dict",
         "schema": {
-            "filename": {"type": "string"},
+            "filename": {
+                "type": "string",
+                "required": True,
+                "check_with": validate_existing_path,
+                "coerce": "abspath",
+            },
             "format": {"type": "string"},
         },
     },

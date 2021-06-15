@@ -1,50 +1,25 @@
-import sys
-import os
-import glob
 import logging
-# import time
-
-from dae.configuration.gpf_config_parser import GPFConfigParser
 
 from dae.variants.attributes import VariantType
 
-from dae.annotation.tools.annotator_base import (
-    Annotator,
-    CompositeVariantAnnotator,
-)
-from dae.annotation.tools.annotator_config import AnnotationConfigParser
-from dae.annotation.tools.score_file_io import ScoreFile
+from dae.annotation.tools.annotator_base import Annotator, CompositeAnnotator
+from dae.annotation.tools.reader import ScoreFile
 
 
 logger = logging.getLogger(__name__)
 
 
 class VariantScoreAnnotatorBase(Annotator):
-    def __init__(self, config, genomes_db):
-        super(VariantScoreAnnotatorBase, self).__init__(config, genomes_db)
+    def __init__(self, config, genomes_db, liftover=None):
+        super().__init__(config, genomes_db, liftover=None)
+        self.score_file = ScoreFile(self.config)
 
-        self._init_score_file()
-
-        assert len(self.config.native_columns) >= 1
-        self.score_names = self.config.native_columns
-
-        assert all(
-            [sn in self.score_file.score_names for sn in self.score_names]
-        ), (
-            self.score_names,
-            self.score_file.score_names,
-            self.score_file.score_filename,
-        )
-
-    def _init_score_file(self):
-        assert self.config.filename, self.config.score_type
-
-        scores_filename = os.path.abspath(self.config.filename)
-        assert os.path.exists(scores_filename), scores_filename
-
-        self.score_file = ScoreFile(
-            scores_filename, self.config
-        )
+    @property
+    def output_columns(self):
+        return [
+            dest for src, dest
+            in self.score_file.config.default_annotation.attributes
+        ]
 
     def collect_annotator_schema(self, schema):
         super(VariantScoreAnnotatorBase, self).collect_annotator_schema(schema)
@@ -96,8 +71,12 @@ class VariantScoreAnnotatorBase(Annotator):
 
 
 class PositionScoreAnnotator(VariantScoreAnnotatorBase):
-    def __init__(self, config, genomes_db):
-        super(PositionScoreAnnotator, self).__init__(config, genomes_db)
+    def __init__(self, config, genomes_db, liftover=None):
+        super().__init__(config, genomes_db, liftover=None)
+
+    @staticmethod
+    def required_columns():
+        return ("chrom", "pos_begin", "pos_end")
 
     def _convert_score(self, score):
         if score == "NA":
@@ -154,8 +133,8 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
 
 
 class NPScoreAnnotator(VariantScoreAnnotatorBase):
-    def __init__(self, config, genomes_db):
-        super(NPScoreAnnotator, self).__init__(config, genomes_db)
+    def __init__(self, config, genomes_db, liftover=None):
+        super().__init__(config, genomes_db, liftover=None)
         self.ref_name = self.score_file.ref_name
         self.alt_name = self.score_file.alt_name
         self.chr_name = self.score_file.chr_name
@@ -227,43 +206,11 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(aline)
 
 
-class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
-    def __init__(self, config, genomes_db):
-        super(PositionMultiScoreAnnotator, self).__init__(config, genomes_db)
-        assert self.config.options.scores_directory is not None
-
-        for score_name in self.config.columns:
-            annotator = self._build_annotator_for(score_name)
-            self.add_annotator(annotator)
-
-    def _get_score_file(self, score_name):
-        dirname = "{}/{}".format(
-            os.path.abspath(self.config.options.scores_directory), score_name
-        )
-        globname = "{}/{}*gz".format(dirname, score_name)
-        filenames = glob.glob(globname)
-        assert len(filenames) == 1
-        return filenames[0]
+class PositionMultiScoreAnnotator(CompositeAnnotator):
+    # TODO Re-implement this annotator
+    def __init__(self, config, genomes_db, liftover=None):
+        super().__init__(config, genomes_db, liftover)
+        raise NotImplementedError()
 
     def _build_annotator_for(self, score_name):
-        assert os.path.exists(
-            self.config.options.scores_directory
-        ), self.config.options.scores_directory
-
-        score_filename = self._get_score_file(score_name)
-
-        options = GPFConfigParser.modify_tuple(
-            self.config.options, {"scores_file": score_filename}
-        )
-        columns = {score_name: getattr(self.config.columns, score_name)}
-
-        variant_config = AnnotationConfigParser.parse_section({
-                "options": options,
-                "columns": columns,
-                "annotator": "score_annotator.VariantScoreAnnotator",
-                "virtual_columns": [],
-            }
-        )
-
-        annotator = PositionScoreAnnotator(variant_config, self.genomes_db)
-        return annotator
+        raise NotImplementedError()
