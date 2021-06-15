@@ -494,7 +494,6 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         ref_allele_freq = 0.0
 
         independent_persons = self.families.persons_without_parents()
-        print(independent_persons)
 
         for allele in summary_variant.alleles:
             allele_index = allele["allele_index"]
