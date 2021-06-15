@@ -10,14 +10,14 @@ from dae.variants.attributes import VariantType
 from dae.variants.variant import SummaryAllele
 from dae.utils.variant_utils import liftover_variant
 
-from dae.annotation.tools.annotator_base import VariantAnnotatorBase
+from dae.annotation.tools.annotator_base import Annotator
 from dae.genome.genome_access import open_ref
 
 
 logger = logging.getLogger(__name__)
 
 
-class LiftOverAnnotator(VariantAnnotatorBase):
+class LiftOverAnnotator(Annotator):
     def __init__(self, config, genomes_db):
         super(LiftOverAnnotator, self).__init__(config, genomes_db)
 

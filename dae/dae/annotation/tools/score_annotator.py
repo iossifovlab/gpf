@@ -9,7 +9,7 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.variants.attributes import VariantType
 
 from dae.annotation.tools.annotator_base import (
-    VariantAnnotatorBase,
+    Annotator,
     CompositeVariantAnnotator,
 )
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
@@ -19,7 +19,7 @@ from dae.annotation.tools.score_file_io import ScoreFile
 logger = logging.getLogger(__name__)
 
 
-class VariantScoreAnnotatorBase(VariantAnnotatorBase):
+class VariantScoreAnnotatorBase(Annotator):
     def __init__(self, config, genomes_db):
         super(VariantScoreAnnotatorBase, self).__init__(config, genomes_db)
 

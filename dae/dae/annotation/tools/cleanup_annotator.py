@@ -1,7 +1,7 @@
-from dae.annotation.tools.annotator_base import VariantAnnotatorBase
+from dae.annotation.tools.annotator_base import Annotator
 
 
-class CleanupAnnotator(VariantAnnotatorBase):
+class CleanupAnnotator(Annotator):
     def __init__(self, config, genomes_db):
         super(CleanupAnnotator, self).__init__(config, genomes_db)
         # TODO Fix this - should be split in the configuration schema!

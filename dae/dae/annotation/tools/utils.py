@@ -1,7 +1,7 @@
 from importlib import import_module
 
 
-class AnnotatorFactory(object):
+class AnnotatorFactory:
     @staticmethod
     def _split_class_name(class_fullname):
         splitted = class_fullname.split(".")
@@ -18,7 +18,7 @@ class AnnotatorFactory(object):
         return module_name, class_name
 
     @classmethod
-    def _name_to_class(cls, class_fullname):
+    def name_to_class(cls, class_fullname):
         module_name, class_name = cls._split_class_name(class_fullname)
         module = import_module(module_name)
         clazz = getattr(module, class_name)
@@ -26,7 +26,7 @@ class AnnotatorFactory(object):
 
     @classmethod
     def make_annotator(cls, annotator_config, genomes_db, liftover=None):
-        clazz = cls._name_to_class(annotator_config.annotator)
+        clazz = cls.name_to_class(annotator_config.annotator)
         assert clazz is not None
         return clazz(annotator_config, genomes_db, liftover)
 

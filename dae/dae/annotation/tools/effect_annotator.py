@@ -8,10 +8,10 @@ from collections import OrderedDict
 from dae.variants.attributes import VariantType
 
 from dae.variant_annotation.annotator import VariantAnnotator
-from dae.annotation.tools.annotator_base import VariantAnnotatorBase
+from dae.annotation.tools.annotator_base import Annotator
 
 
-class EffectAnnotatorBase(VariantAnnotatorBase):
+class EffectAnnotatorBase(Annotator):
     COLUMNS_SCHEMA: List[Tuple[str, str]] = []
 
     def __init__(self, config, genomes_db, **kwargs):
