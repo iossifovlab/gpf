@@ -256,10 +256,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             ]
         else:
             return [
-                vcf.fetch(
-                    contig=region.chrom,
-                    start=region.begin,
-                    stop=region.end)
+                vcf.fetch(region=region)
                 for vcf in self.vcfs]
 
     def _init_chromosome_order(self):
