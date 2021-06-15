@@ -5,10 +5,7 @@ import logging
 from typing import List
 
 
-from dae.annotation.tools.annotator_base import (
-    AnnotatorBase,
-    CompositeVariantAnnotator,
-)
+from dae.annotation.tools.annotator_base import Annotator, CompositeAnnotator
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.file_io_parquet import ParquetSchema
@@ -19,7 +16,7 @@ from dae.annotation.tools.utils import AnnotatorFactory
 logger = logging.getLogger(__name__)
 
 
-class PipelineAnnotator(CompositeVariantAnnotator):
+class PipelineAnnotator(CompositeAnnotator):
 
     ANNOTATION_SCHEMA_EXCLUDE = [
         "effect_gene_genes",
@@ -82,7 +79,7 @@ class PipelineAnnotator(CompositeVariantAnnotator):
         return pipeline
 
     def add_annotator(self, annotator):
-        assert isinstance(annotator, AnnotatorBase)
+        assert isinstance(annotator, Annotator)
         self.virtual_columns.extend(annotator.config.virtual_columns)
         self.annotators.append(annotator)
 

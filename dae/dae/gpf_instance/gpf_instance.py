@@ -64,11 +64,15 @@ class GPFInstance(object):
         self.__autism_gene_profile_config = None
         self.load_eagerly = load_eagerly
 
-        self._genomic_scores_dbs = []
+        self._genomic_resources_dbs = []
         self._load_genomic_scores_repositories()
-        self._cache_gsd = FilesystemGenomicScoreRepository(
-            "cache", self.dae_config.genomic_score_cache.location
-        )
+
+        if len(self._genomic_resources_dbs) > 0:
+            assert self.dae_config.genomic_score_cache
+        if self.dae_config.genomic_score_cache:
+            self._cache_gsd = FilesystemGenomicScoreRepository(
+                "cache", self.dae_config.genomic_score_cache.location
+            )
 
         if load_eagerly:
             self.genomes_db
@@ -195,6 +199,8 @@ class GPFInstance(object):
         return BackgroundFacade(self._variants_db)
 
     def _load_genomic_scores_repositories(self):
+        if self.dae_config.genomic_score_databases is None:
+            return
         for gsd_conf in self.dae_config.genomic_score_databases:
             gsd_id = gsd_conf["id"]
             gsd_url = urlparse(gsd_conf["url"])
@@ -543,7 +549,7 @@ class GPFInstance(object):
 
     def cache_genomic_score(self, genomic_score_id: str):
         repo, parents, score = None, None, None
-        for curr_repo in self._genomic_scores_dbs:
+        for curr_repo in self._genomic_resources_dbs:
             repo = curr_repo
             parents, score = repo.get_genomic_score(genomic_score_id)
             if score is not None:
