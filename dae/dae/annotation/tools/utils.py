@@ -1,3 +1,5 @@
+import gzip
+import os
 from importlib import import_module
 
 
@@ -39,3 +41,27 @@ def handle_chrom_prefix(expect_prefix, data):
     if not expect_prefix and data.startswith("chr"):
         return data[3:]
     return data
+
+
+def is_gzip(filename):
+    try:
+        if filename == "-" or not os.path.exists(filename):
+            return False
+        with gzip.open(filename, "rt") as infile:
+            infile.readline()
+        return True
+    except Exception:
+        return False
+
+
+def is_tabix(filename):
+    return is_gzip(filename) and os.path.exists("{}.tbi".format(filename))
+
+
+def regions_intersect(b1: int, e1: int, b2: int, e2: int) -> bool:
+    return (
+        b2 <= b1 <= e2
+        or b2 <= e1 <= e2
+        or b1 <= b2 <= e1
+        or b1 <= e2 <= e1
+    )

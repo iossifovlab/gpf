@@ -1,47 +1,16 @@
 import sys
 import os
 import logging
-import gzip
 
 import pysam
 import numpy as np
 import pandas as pd
 from collections import defaultdict
 
-from dae.annotation.tools.utils import handle_chrom_prefix, AnnotatorFactory
+from dae.annotation.tools.utils import AnnotatorFactory, \
+    handle_chrom_prefix, is_gzip, is_tabix, regions_intersect
 
 logger = logging.getLogger(__name__)
-
-
-def is_gzip(filename):
-    try:
-        if filename == "-":
-            return False
-        if not os.path.exists(filename):
-            return False
-
-        with gzip.open(filename, "rt") as infile:
-            infile.readline()
-        return True
-    except Exception:
-        return False
-
-
-def is_tabix(filename):
-    if not is_gzip(filename):
-        return False
-    if not os.path.exists("{}.tbi".format(filename)):
-        return False
-    return True
-
-
-def regions_intersect(b1: int, e1: int, b2: int, e2: int) -> bool:
-    return (
-        b2 <= b1 <= e2
-        or b2 <= e1 <= e2
-        or b1 <= b2 <= e1
-        or b1 <= e2 <= e1
-    )
 
 
 class ScoreFile:
