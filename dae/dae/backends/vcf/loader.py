@@ -148,6 +148,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         self._match_pedigree_to_samples()
 
         self._build_samples_vcf_index()
+        self.independent_persons = self.families.persons_without_parents()
 
         # self._build_family_alleles_indexes()
         # self._build_independent_persons_indexes()
@@ -489,11 +490,9 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         return vcf_variants[min_index]
 
     def _calc_allele_frequencies(self, summary_variant, family_variants):
-        n_independent_parents = len(self.families.persons_without_parents())
+        n_independent_parents = len(self.independent_persons)
         ref_n_alleles = 0
         ref_allele_freq = 0.0
-
-        independent_persons = self.families.persons_without_parents()
 
         for allele in summary_variant.alleles:
             allele_index = allele["allele_index"]
@@ -506,7 +505,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 independent_indexes = list()
 
                 for idx, person in enumerate(fv.members_in_order):
-                    if person in independent_persons:
+                    if person in self.independent_persons:
                         independent_indexes.append(idx)
                         n_parents_called += 1
                 for idx in independent_indexes:
