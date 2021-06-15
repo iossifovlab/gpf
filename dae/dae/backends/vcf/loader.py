@@ -148,7 +148,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         self._match_pedigree_to_samples()
 
         self._build_samples_vcf_index()
-        self.independent_persons = self.families.persons_without_parents()
+        self.independent_persons = set([
+            p.person_id for p in self.families.persons_without_parents()])
 
         # self._build_family_alleles_indexes()
         # self._build_independent_persons_indexes()
@@ -505,7 +506,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 independent_indexes = list()
 
                 for idx, person in enumerate(fv.members_in_order):
-                    if person in self.independent_persons:
+                    if person.person_id in self.independent_persons:
                         independent_indexes.append(idx)
                         n_parents_called += 1
                 for idx in independent_indexes:
