@@ -8,9 +8,7 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 
-from dae.annotation.tools.schema import Schema
-from dae.annotation.tools.utils import handle_header, handle_chrom_prefix, \
-    AnnotatorFactory
+from dae.annotation.tools.utils import handle_chrom_prefix, AnnotatorFactory
 
 logger = logging.getLogger(__name__)
 
@@ -37,94 +35,13 @@ def is_tabix(filename):
     return True
 
 
-def regions_intersect(b1, e1, b2, e2):
-    if b1 >= b2 and b1 <= e2:
-        return True
-    if e1 >= b2 and e1 <= e2:
-        return True
-    if b2 >= b1 and b2 <= e1:
-        return True
-    if e2 >= b1 and e2 <= e1:
-        return True
-    return False
-
-
-class FileReader:
-    def __init__(self):
-        self.linecount = 0
-        self.linecount_threshold = 1000
-
-    def _setup(self):
-        raise NotImplementedError()
-
-    def _cleanup(self):
-        raise NotImplementedError()
-
-    def lines_read_iterator(self):
-        raise NotImplementedError()
-
-    def __enter__(self):
-        self._setup()
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self._cleanup()
-
-    def _progress_step(self):
-        self.linecount += 1
-        if self.linecount % self.linecount_threshold == 0:
-            logger.log(f"{self.linecount} lines read")
-
-
-class TSVReader(FileReader):
-    def __init__(
-        self, filename, col_order=None,
-        separator=None
-    ):
-        super.__init__()
-
-        self.filename = filename
-        self.separator = "\t" if separator is None else separator
-
-        assert os.path.exists(self.filename)
-
-    def _header_read(self):
-        if self.schema:
-            return self.schema.col_names
-
-        if self.col_order:
-            return self.col_order
-
-        line = self.infile.readline()
-        header_str = line.strip()
-        if header_str.startswith("#"):
-            header_str = header_str[1:]
-        return handle_header(header_str.split(self.separator))
-
-    def _setup(self):
-        if is_gzip(self.filename):
-            self.infile = gzip.open(self.filename, "rt")
-        else:
-            self.infile = open(self.filename, "r")
-
-        self.schema = Schema.from_dict({"str": self._header_read()})
-
-    def _cleanup(self):
-        self.infile.close()
-
-    def line_read(self):
-        line = self.infile.readline().rstrip("\n")
-
-        if not line:
-            return None
-        self._progress_step()
-        return line.split(self.separator)
-
-    def lines_read_iterator(self):
-        line = self.line_read()
-        while line:
-            yield line
-            line = self.line_read()
+def regions_intersect(b1: int, e1: int, b2: int, e2: int) -> bool:
+    return (
+        b2 <= b1 <= e2
+        or b2 <= e1 <= e2
+        or b1 <= b2 <= e1
+        or b1 <= e2 <= e1
+    )
 
 
 class ScoreFile:
@@ -170,6 +87,18 @@ class ScoreFile:
         self.col_indexes = col_indexes
 
     @property
+    def _chrom_idx(self):
+        return self.col_indexes["chrom"]
+
+    @property
+    def _pos_begin_idx(self):
+        return self.col_indexes["pos_begin"]
+
+    @property
+    def _pos_end_idx(self):
+        return self.col_indexes["pos_end"]
+
+    @property
     def _buffer_chrom(self):
         if len(self.buffer) == 0:
             return None
@@ -191,12 +120,10 @@ class ScoreFile:
         return self.buffer[0][self._pos_end_idx]
 
     def fetch_lines(self, chrom, pos_begin, pos_end):
+        self.last_pos = pos_end
         if abs(pos_begin - self.last_pos) > self.ACCESS_SWITCH_THRESHOLD:
-            self.last_pos = pos_end
             return self._fetch_direct(chrom, pos_begin, pos_end)
-        else:
-            self.last_pos = pos_end
-            return self._fetch_sequential(chrom, pos_begin, pos_end)
+        return self._fetch_sequential(chrom, pos_begin, pos_end)
 
     def close(self):
         self.infile.close()
@@ -215,24 +142,11 @@ class ScoreFile:
         )
         contig_name = self.infile.contigs[-1]
         self._has_chrom_prefix = contig_name.startswith("chr")
-
-        self._region_reset(self.region)
+        self._lines_iterator = self.infile.fetch(parser=pysam.asTuple())
 
     @property
     def header(self):
-        return self.infile.header
-
-    def _region_reset(self, region):
-        region = handle_chrom_prefix(self._has_chrom_prefix, region)
-        try:
-            self._lines_iterator = self.infile.fetch(
-                region=region, parser=pysam.asTuple()
-            )
-        except ValueError as ex:
-            print(
-                f"could not find region {region} in {self.filename}:",
-                ex, file=sys.stderr)
-            self._lines_iterator = None
+        return self.infile.header.strip("#").split(self.separator)
 
     def _purge_buffer(self, chrom, pos_begin, pos_end):
         # purge start of line buffer
@@ -259,12 +173,12 @@ class ScoreFile:
         if not line:
             return
 
-        self.append(line)
+        self.buffer.append(line)
 
-        for line in self.access.lines_iterator:
+        for line in self._lines_iterator:
             chrom = line[self._chrom_idx]
             assert chrom == self._buffer_chrom, (chrom, self._buffer_chrom)
-            self.append(line)
+            self.buffer.append(line)
             if line[self._pos_end_idx] > pos_end:
                 break
 
@@ -274,9 +188,12 @@ class ScoreFile:
             or pos_begin < self._buffer_pos_begin
             or (pos_begin - self._buffer_pos_end) > self.LONG_JUMP_THRESHOLD
         ):
-            self._reset(chrom, pos_begin)
+            self.buffer = list()
+            self._lines_iterator = self.infile.fetch(
+                f"{chrom}:{pos_begin}", parser=pysam.asTuple()
+            )
 
-        if self.lines_iterator is None:
+        if self._lines_iterator is None:
             return []
 
         self._purge_buffer(chrom, pos_begin, pos_end)
@@ -318,21 +235,20 @@ class ScoreFile:
 
     def scores_to_dataframe(self, scores):
         df = pd.DataFrame(scores)
-        for score_name in self.score_names:
-            df[score_name] = df[score_name].replace(["NA"], np.nan)
-            df[score_name] = df[score_name].astype("float32")
+        for score in self.config.scores:
+            score_id = score.id
+            df[score_id] = df[score_id].replace(["NA"], np.nan)
+            df[score_id] = df[score_id].astype("float32")
         return df
 
     def fetch_scores_iterator(self, chrom, pos_begin, pos_end):
-        stripped_chrom = handle_chrom_prefix(self.chr_prefix, chrom)
-
-        for line in self.fetch_lines(stripped_chrom, pos_begin, pos_end):
+        chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
+        for line in self.fetch_lines(chrom, pos_begin, pos_end):
             yield line
 
     def fetch_scores(self, chrom, pos_begin, pos_end):
-        stripped_chrom = handle_chrom_prefix(self.chr_prefix, chrom)
-
-        score_lines = self.fetch_lines(stripped_chrom, pos_begin, pos_end)
+        chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
+        score_lines = self.fetch_lines(chrom, pos_begin, pos_end)
         logger.debug(f"score lines found: {score_lines}")
         result = defaultdict(list)
 
@@ -358,12 +274,8 @@ class ScoreFile:
 
     def fetch_highest_scores(self, chrom, pos_begin, pos_end):
         result = dict()
-
-        stripped_chrom = handle_chrom_prefix(self.chr_prefix, chrom)
-
-        for line in self._fetch_direct(
-                stripped_chrom, pos_begin - 1, pos_end,
-                parser=pysam.asTuple()):
+        chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
+        for line in self._fetch_direct(chrom, pos_begin - 1, pos_end):
             for score in self.config.scores:
                 score_id = score.id
                 score_value = float(line[score_id]) \
