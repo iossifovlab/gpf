@@ -13,7 +13,7 @@
               [attr.id]="geneSetCategory.category + '-button'"
               (click)="updateGeneSetNamesListInCategory(geneSetCategory)"
               class="dropdown-toggle btn navbar-toggler"
-              style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
+              style="float: right; outline: none; font-size: 18px; white-space: nowrap; border: 0; padding: 0; width: 18px; vertical-align: unset;">
               <span style="font-size: 14px;">&#9776;</span>
             </button>
             <gpf-sorting-buttons [id]="geneSetCategory.category + '_rank'" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
@@ -27,7 +27,7 @@
               [attr.id]="genomicScoresCategory.category + '-button'"
               (click)="updateGenomicScoresNamesListInCategory(genomicScoresCategory)"
               class="dropdown-toggle btn navbar-toggler"
-              style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
+              style="float: right; outline: none; font-size: 18px; white-space: nowrap; border: 0; padding: 0; width: 18px; vertical-align: unset;">
               <span style="font-size: 14px;">&#9776;</span>
             </button>
           </th>
