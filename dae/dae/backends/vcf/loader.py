@@ -44,22 +44,22 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
     def get_family_genotype(self, family):
         raise NotImplementedError()
 
-    def _build_samples_index(self):
-        samples_index = {}
-        vcf_samples = [
-            set(vcf.header.samples)
-            for vcf in self.loader.vcfs]
+    # def _build_samples_index(self):
+    #     samples_index = {}
+    #     vcf_samples = [
+    #         set(vcf.header.samples)
+    #         for vcf in self.loader.vcfs]
 
-        for person in self.loader.families.real_persons.values():
-            for index, samples in enumerate(vcf_samples):
-                if person.sample_id in samples:
-                    samples_index[person.sample_id] = index
-                    break
-        return samples_index
+    #     for person in self.loader.families.real_persons.values():
+    #         for index, samples in enumerate(vcf_samples):
+    #             if person.sample_id in samples:
+    #                 samples_index[person.sample_id] = index
+    #                 break
+    #     return samples_index
 
     def family_genotype_iterator(self):
         fill_value = self.loader._fill_missing_value
-        samples_index = self._build_samples_index()
+        samples_index = self.loader.samples_vcf_index
 
         for family in self.loader.families.values():
 
@@ -146,6 +146,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
         self._init_vcf_readers()
         self._match_pedigree_to_samples()
+
+        self._build_samples_vcf_index()
 
         # self._build_family_alleles_indexes()
         # self._build_independent_persons_indexes()
@@ -379,6 +381,19 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             (family, family.samples_index)
             for family in self.families.values()
         ]
+
+    def _build_samples_vcf_index(self):
+        samples_index = {}
+        vcf_samples = [
+            set(vcf.header.samples)
+            for vcf in self.vcfs]
+
+        for person in self.families.real_persons.values():
+            for index, samples in enumerate(vcf_samples):
+                if person.sample_id in samples:
+                    samples_index[person.sample_id] = index
+                    break
+        self.samples_vcf_index = samples_index
 
     # def _build_family_alleles_indexes(self):
     #     vcf_offsets = [0] * len(self.vcfs)
