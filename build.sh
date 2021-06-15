@@ -460,7 +460,6 @@ EOT'
     done
 
     build_run_container bash -c '
-        sleep 1000000;
         cd /code/wdae;
         export PYTHONHASHSEED=0;
         /opt/conda/bin/conda run --no-capture-output -n gpf py.test --no-cleanup -v \
