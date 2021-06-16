@@ -13,6 +13,36 @@ from dae.annotation.tools.utils import AnnotatorFactory, \
 logger = logging.getLogger(__name__)
 
 
+class ScoreLine:
+    def __init__(self, values: dict, score_ids: list):
+        self.values = values
+        self.scores = {
+            score_id: float(self.values[score_id])
+            if self.values[score_id] not in (None, "") else None
+            for score_id in score_ids
+        }
+
+    def __getitem__(self, key):
+        return self.values[key]
+
+    def __setitem__(self, key, value):
+        self.values[key] = value
+
+    @property
+    def chrom(self):
+        return self.values["chrom"]
+
+    @property
+    def pos_begin(self):
+        return int(self.values["pos_begin"])
+
+    @property
+    def pos_end(self):
+        if "pos_end" not in self.values:
+            return None
+        return int(self.values["pos_end"])
+
+
 class ScoreFile:
 
     LONG_JUMP_THRESHOLD = 5000
@@ -36,7 +66,7 @@ class ScoreFile:
         ).required_columns()
 
         file_columns = {rc: self.config[rc] for rc in required_columns}
-        file_columns = file_columns.update({
+        file_columns.update({
             sc.id: sc for sc in self.config.scores
         })
 
@@ -77,15 +107,13 @@ class ScoreFile:
     def _buffer_pos_begin(self):
         if len(self.buffer) == 0:
             return -1
-
-        return self.buffer[0][self._pos_begin_idx]
+        return self.buffer[0].pos_begin
 
     @property
     def _buffer_pos_end(self):
         if len(self.buffer) == 0:
             return -1
-
-        return self.buffer[0][self._pos_end_idx]
+        return self.buffer[0].pos_end
 
     def fetch_lines(self, chrom, pos_begin, pos_end):
         self.last_pos = pos_end
@@ -98,9 +126,9 @@ class ScoreFile:
         self.direct_infile.close()
 
     def _parse_line(self, line):
-        return {
-            col: line[idx] for col, idx in self.col_indexes
-        }
+        return ScoreLine({
+            col: line[idx] for col, idx in self.col_indexes.items()
+        })
 
     def _setup(self):
         self.infile = pysam.TabixFile(self.filename, index=self.tabix_filename)
@@ -120,10 +148,7 @@ class ScoreFile:
         # purge start of line buffer
         while len(self.buffer) > 0:
             line = self.buffer[0]
-            if (
-                line[self._chrom_idx] == chrom and
-                line[self._pos_end_idx] >= pos_begin
-            ):
+            if line.chrom == chrom and line.pos_end >= pos_begin:
                 break
             self.buffer.pop(0)
 
@@ -135,7 +160,7 @@ class ScoreFile:
 
         line = None
         for line in self._lines_iterator:
-            if line[self._pos_end_idx] >= pos_begin:
+            if line.pos_end >= pos_begin:
                 break
 
         if not line:
@@ -144,10 +169,10 @@ class ScoreFile:
         self.buffer.append(line)
 
         for line in self._lines_iterator:
-            chrom = line[self._chrom_idx]
-            assert chrom == self._buffer_chrom, (chrom, self._buffer_chrom)
+            assert line.chrom == self._buffer_chrom, \
+                (line.chrom, self._buffer_chrom)
             self.buffer.append(line)
-            if line[self._pos_end_idx] > pos_end:
+            if line.pos_end > pos_end:
                 break
 
     def _fetch_sequential(self, chrom, pos_begin, pos_end):
@@ -171,13 +196,13 @@ class ScoreFile:
     def _select_lines(self, chrom, pos_begin, pos_end):
         result = []
         for line in self.buffer:
-            if line[self._chrom_idx] != chrom:
+            line = self._parse_line(line)
+            if line.chrom != chrom:
                 continue
             if regions_intersect(
-                pos_begin, pos_end,
-                line[self._pos_begin_idx], line[self._pos_end_idx]
+                pos_begin, pos_end, line.pos_begin, line.pos_end
             ):
-                result.append(self._parse_line(line))
+                result.append(line)
         return result
 
     def _fetch_direct(self, chrom, pos_begin, pos_end):
@@ -222,20 +247,20 @@ class ScoreFile:
 
         for line in score_lines:
             logger.debug(
-                f"pos_end: {pos_end}; line.pos_end: {line.get(pos_end)}; "
-                f"pos_begin: {pos_begin}; "
-                f"line.pos_begin: {line.get(pos_begin)}"
+                f"pos_end: {pos_end}; line.pos_end: {line.pos_end}; "
+                f"pos_begin: {pos_begin}; line.pos_begin: {line.pos_begin}"
             )
             count = (
-                min(pos_end, line.get(pos_end)) -
-                max(line.get(pos_begin), pos_begin) + 1
+                min(pos_end, line.pos_end)
+                - max(line.pos_begin, pos_begin)
+                + 1
             )
             if count <= 0:
                 continue
 
             assert count >= 1, count
             result["COUNT"].append(count)
-            for col, val in line:
+            for col, val in line.items():
                 result[col].append(val)
         logger.debug(f"fetch scores: {result}")
         return result
@@ -246,7 +271,7 @@ class ScoreFile:
         for line in self._fetch_direct(chrom, pos_begin - 1, pos_end):
             for score in self.config.scores:
                 score_id = score.id
-                score_value = float(line[score_id]) \
+                score_value = line.scores[score_id] \
                     if line.get(score_id) not in (None, "") else None
                 result[score_id] = max(
                     score_value, result.get(score_id, np.nan))

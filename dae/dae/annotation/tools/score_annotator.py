@@ -28,12 +28,7 @@ class VariantScoreAnnotatorBase(Annotator):
             schema.create_column(output, type_name)
 
     def _scores_not_found(self, aline):
-        values = {
-            getattr(
-                self.config.columns, score_name
-            ): self.score_file.no_score_value
-            for score_name in self.score_names
-        }
+        values = {score.id: None for score in self.score_file.config.scores}
         aline.update(values)
 
     def _fetch_scores(self, variant):
@@ -101,10 +96,10 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         scores = self._fetch_scores(variant)
 
         logger.debug(
-            f"{self.score_file.score_filename} looking for score of {variant}")
+            f"{self.score_file.filename} looking for score of {variant}")
         if not scores:
             logger.debug(
-                f"{self.score_file.score_filename} score not found"
+                f"{self.score_file.filename} score not found"
             )
             self._scores_not_found(attributes)
             return
@@ -112,24 +107,23 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         counts = scores["COUNT"]
         total_count = sum(counts)
 
-        for score_name in self.score_names:
-            column_name = getattr(self.config.columns, score_name)
+        for score in self.score_file.config.scores:
             values = list(
-                map(lambda x: self._convert_score(x), scores[score_name])
+                map(lambda x: self._convert_score(x), scores[score.id])
             )
             assert len(values) > 0
             if len(values) == 1:
-                attributes[column_name] = values[0]
+                attributes[score.id] = values[0]
             else:
                 values = list(filter(None, values))
                 total_sum = sum(
                     [c * v for (c, v) in zip(counts, values)]
                 )
-                attributes[column_name] = \
+                attributes[score.id] = \
                     (total_sum / total_count) if total_sum \
                     else self.score_file.no_score_value
                 logger.debug(
-                    f"attributes[{column_name}]={attributes[column_name]}")
+                    f"attributes[{score.id}]={attributes[score.id]}")
 
 
 class NPScoreAnnotator(VariantScoreAnnotatorBase):
