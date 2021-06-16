@@ -9,42 +9,40 @@ from dae.annotation.tools.schema import Schema
 
 class ParquetSchema(Schema):
 
-    BASE_SCHEMA = pa.schema(
-        [
-            pa.field("bucket_index", pa.int32()),
-            pa.field("summary_variant_index", pa.int64()),
-            pa.field("allele_index", pa.int8()),
-            pa.field("chrom", pa.string()),
-            pa.field("position", pa.int32()),
-            pa.field("end_position", pa.int32()),
-            pa.field("reference", pa.string()),
-            pa.field("alternative", pa.string()),
-            pa.field("variant_type", pa.int8()),
-            pa.field("transmission_type", pa.int8()),
-            # pa.field("worst_effect", pa.string()),
-            pa.field("alternatives_data", pa.string()),
-            pa.field("effect_type", pa.string()),
-            pa.field("effect_gene", pa.string()),
-            pa.field("effect_data", pa.string()),
-            pa.field("family_variant_index", pa.int64()),
-            pa.field("family_id", pa.string()),
-            pa.field("is_denovo", pa.bool_()),
-            pa.field("variant_sexes", pa.int8()),
-            pa.field("variant_roles", pa.int32()),
-            pa.field("variant_inheritance", pa.int16()),
-            pa.field("variant_in_member", pa.string()),
-            pa.field("genotype_data", pa.string()),
-            pa.field("best_state_data", pa.string()),
-            pa.field("genetic_model_data", pa.int8()),
-            pa.field("inheritance_data", pa.string()),
-            pa.field("af_parents_called_count", pa.int32()),
-            pa.field("af_parents_called_percent", pa.float32()),
-            pa.field("af_allele_count", pa.int32()),
-            pa.field("af_allele_freq", pa.float32()),
-            pa.field("frequency_data", pa.string()),
-            pa.field("genomic_scores_data", pa.string()),
-        ]
-    )
+    BASE_SCHEMA_FIELDS = [
+        pa.field("bucket_index", pa.int32()),
+        pa.field("summary_variant_index", pa.int64()),
+        pa.field("allele_index", pa.int8()),
+        pa.field("chrom", pa.string()),
+        pa.field("position", pa.int32()),
+        pa.field("end_position", pa.int32()),
+        pa.field("reference", pa.string()),
+        pa.field("alternative", pa.string()),
+        pa.field("variant_type", pa.int8()),
+        pa.field("transmission_type", pa.int8()),
+        # pa.field("worst_effect", pa.string()),
+        pa.field("alternatives_data", pa.string()),
+        pa.field("effect_type", pa.string()),
+        pa.field("effect_gene", pa.string()),
+        pa.field("effect_data", pa.string()),
+        pa.field("family_variant_index", pa.int64()),
+        pa.field("family_id", pa.string()),
+        pa.field("is_denovo", pa.bool_()),
+        pa.field("variant_sexes", pa.int8()),
+        pa.field("variant_roles", pa.int32()),
+        pa.field("variant_inheritance", pa.int16()),
+        pa.field("variant_in_member", pa.string()),
+        pa.field("genotype_data", pa.string()),
+        pa.field("best_state_data", pa.string()),
+        pa.field("genetic_model_data", pa.int8()),
+        pa.field("inheritance_data", pa.string()),
+        pa.field("af_parents_called_count", pa.int32()),
+        pa.field("af_parents_called_percent", pa.float32()),
+        pa.field("af_allele_count", pa.int32()),
+        pa.field("af_allele_freq", pa.float32()),
+        pa.field("frequency_data", pa.string()),
+        pa.field("genomic_scores_data", pa.string()),
+    ]
 
     # New types only need to be added here.
     type_map: Dict[str, Any] = OrderedDict(
@@ -141,6 +139,10 @@ class ParquetSchema(Schema):
                 for col, col_type in self.columns.items()
             ]
         )
+
+    @classmethod
+    def produce_base_schema(cls):
+        return pa.schema(cls.BASE_SCHEMA_FIELDS)
 
     def __str__(self):
         ret_str = ""

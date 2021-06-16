@@ -18,14 +18,8 @@ class VariantScoreAnnotatorBase(Annotator):
     def output_columns(self):
         return [
             dest for src, dest
-            in self.score_file.config.default_annotation.attributes
+            in self.config.default_annotation.attributes
         ]
-
-    def collect_annotator_schema(self, schema):
-        super(VariantScoreAnnotatorBase, self).collect_annotator_schema(schema)
-        for native, output in self.config.columns.items():
-            type_name = self.score_file.schema.columns[native].type_name
-            schema.create_column(output, type_name)
 
     def _scores_not_found(self, aline):
         values = {score.id: None for score in self.score_file.config.scores}

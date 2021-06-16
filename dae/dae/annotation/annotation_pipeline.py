@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import logging
+import pyarrow as pa
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.annotation_conf import annotation_conf_schema
@@ -34,3 +35,10 @@ class PipelineAnnotator(CompositeAnnotator):
     def add_annotator(self, annotator):
         assert isinstance(annotator, Annotator)
         self.annotators.append(annotator)
+
+    def produce_annotation_schema(self):
+        cols = set()
+        for annotator in self.annotators:
+            cols.update(annotator.output_columns)
+
+        return pa.schema([pa.field(col, pa.float32()) for col in cols])

@@ -25,6 +25,8 @@ from dae.variants.attributes import TransmissionType
 
 from dae.utils.variant_utils import get_locus_ploidy, best2gt
 
+from dae.annotation.tools.file_io_parquet import ParquetSchema
+
 
 logger = logging.getLogger(__name__)
 
@@ -223,6 +225,8 @@ class VariantsLoader(CLILoader):
             self._attributes = copy.deepcopy(attributes)
         self.arguments = []
 
+        self._variants_schema = ParquetSchema.produce_base_schema()
+
     def get_attribute(self, key: str) -> Any:
         return self._attributes.get(key, None)
 
@@ -232,6 +236,14 @@ class VariantsLoader(CLILoader):
     # @property
     # def variants_filenames(self):
     #     return self.filenames
+
+    @property
+    def variants_schema(self):
+        return self._variants_schema
+
+    @property
+    def annotation_schema(self):
+        return None
 
     @classmethod
     def _arguments(cls):
@@ -276,6 +288,10 @@ class VariantsLoaderDecorator(VariantsLoader):
 
     def __getattr__(self, attr):
         return getattr(self.variants_loader, attr, None)
+
+    @property
+    def variants_schema(self):
+        return self.variants_loader.variants_schema
 
     @classmethod
     def build_cli_params(cls, params):
@@ -409,6 +425,14 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
             "extra_attributes",
             variants_loader.get_attribute("extra_attributes")
         )
+        for field_name in self.annotation_schema.names:
+            self.variants_schema.append(
+                self.annotation_schema.field(field_name)
+            )
+
+    @property
+    def annotation_schema(self):
+        return self.annotation_pipeline.produce_annotation_schema()
 
     def full_variants_iterator(self):
         for (summary_variant, family_variants) in \
