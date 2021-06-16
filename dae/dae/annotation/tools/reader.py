@@ -70,6 +70,8 @@ class ScoreFile:
             sc.id: sc for sc in self.config.scores
         })
 
+        self.score_ids = [score.id for score in self.config.scores]
+
         self._setup()
 
         if self.config.has_header:
@@ -101,7 +103,7 @@ class ScoreFile:
         if len(self.buffer) == 0:
             return None
 
-        return self.buffer[0][self._chrom_idx]
+        return self.buffer[0].chrom
 
     @property
     def _buffer_pos_begin(self):
@@ -128,7 +130,7 @@ class ScoreFile:
     def _parse_line(self, line):
         return ScoreLine({
             col: line[idx] for col, idx in self.col_indexes.items()
-        })
+        }, self.score_ids)
 
     def _setup(self):
         self.infile = pysam.TabixFile(self.filename, index=self.tabix_filename)
@@ -138,7 +140,9 @@ class ScoreFile:
         )
         contig_name = self.infile.contigs[-1]
         self._has_chrom_prefix = contig_name.startswith("chr")
-        self._lines_iterator = self.infile.fetch(parser=pysam.asTuple())
+        self._lines_iterator = map(
+            self._parse_line, self.infile.fetch(parser=pysam.asTuple())
+        )
 
     @property
     def header(self):
@@ -182,8 +186,11 @@ class ScoreFile:
             or (pos_begin - self._buffer_pos_end) > self.LONG_JUMP_THRESHOLD
         ):
             self.buffer = list()
-            self._lines_iterator = self.infile.fetch(
-                f"{chrom}:{pos_begin}", parser=pysam.asTuple()
+            self._lines_iterator = map(
+                self._parse_line,
+                self.infile.fetch(
+                    f"{chrom}:{pos_begin}", parser=pysam.asTuple()
+                )
             )
 
         if self._lines_iterator is None:
@@ -196,7 +203,6 @@ class ScoreFile:
     def _select_lines(self, chrom, pos_begin, pos_end):
         result = []
         for line in self.buffer:
-            line = self._parse_line(line)
             if line.chrom != chrom:
                 continue
             if regions_intersect(
@@ -260,7 +266,7 @@ class ScoreFile:
 
             assert count >= 1, count
             result["COUNT"].append(count)
-            for col, val in line.items():
+            for col, val in line.scores.items():
                 result[col].append(val)
         logger.debug(f"fetch scores: {result}")
         return result

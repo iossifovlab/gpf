@@ -419,16 +419,17 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
         super(AnnotationPipelineDecorator, self).__init__(variants_loader)
 
         self.annotation_pipeline = annotation_pipeline
-        self.annotation_schema = annotation_pipeline.build_annotation_schema()
         self.set_attribute("annotation_schema", self.annotation_schema)
         self.set_attribute(
             "extra_attributes",
             variants_loader.get_attribute("extra_attributes")
         )
-        for field_name in self.annotation_schema.names:
-            self.variants_schema.append(
-                self.annotation_schema.field(field_name)
-            )
+
+    @property
+    def variants_schema(self):
+        return ParquetSchema.merge_schemas(
+            super().variants_schema, self.annotation_schema
+        )
 
     @property
     def annotation_schema(self):

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 import logging
-import pyarrow as pa
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.annotation_conf import annotation_conf_schema
 from dae.annotation.tools.annotator_base import Annotator, CompositeAnnotator
+from dae.annotation.tools.file_io_parquet import ParquetSchema
 from dae.annotation.tools.utils import AnnotatorFactory
 
 
@@ -40,5 +40,4 @@ class PipelineAnnotator(CompositeAnnotator):
         cols = set()
         for annotator in self.annotators:
             cols.update(annotator.output_columns)
-
-        return pa.schema([pa.field(col, pa.float32()) for col in cols])
+        return ParquetSchema.from_dict({"float": cols})

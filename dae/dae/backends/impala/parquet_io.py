@@ -370,10 +370,10 @@ class ContinuousParquetFileWriter:
             self, filepath, variant_loader, filesystem=None, rows=100_000):
 
         self.filepath = filepath
-        annotation_schema = variant_loader.get_attribute("annotation_schema")
         extra_attributes = variant_loader.get_attribute("extra_attributes")
         self.serializer = AlleleParquetSerializer(
-            annotation_schema, extra_attributes)
+            variant_loader.variants_schema, extra_attributes
+        )
         self.schema = self.serializer.schema
 
         dirname = os.path.dirname(filepath)
@@ -456,12 +456,10 @@ class VariantsParquetWriter:
         assert isinstance(partition_descriptor, PartitionDescriptor)
         self.partition_descriptor = partition_descriptor
 
-        annotation_schema = self.variants_loader.get_attribute(
-            "annotation_schema")
         extra_attributes = self.variants_loader.get_attribute(
             "extra_attributes")
         self.serializer = AlleleParquetSerializer(
-            annotation_schema, extra_attributes)
+            self.variants_loader.variants_schema, extra_attributes)
 
     def _setup_reference_allele(self, summary_variant, family):
         genotype = -1 * np.ones(shape=(2, len(family)), dtype=GENOTYPE_TYPE)

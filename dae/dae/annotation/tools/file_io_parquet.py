@@ -142,7 +142,7 @@ class ParquetSchema(Schema):
 
     @classmethod
     def produce_base_schema(cls):
-        return pa.schema(cls.BASE_SCHEMA_FIELDS)
+        return cls.from_arrow(pa.schema(cls.BASE_SCHEMA_FIELDS))
 
     def __str__(self):
         ret_str = ""

@@ -17,8 +17,7 @@ class VariantScoreAnnotatorBase(Annotator):
     @property
     def output_columns(self):
         return [
-            dest for src, dest
-            in self.config.default_annotation.attributes
+            attr.dest for attr in self.config.default_annotation.attributes
         ]
 
     def _scores_not_found(self, aline):
