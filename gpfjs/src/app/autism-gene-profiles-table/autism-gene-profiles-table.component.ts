@@ -439,13 +439,13 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   goToQuery(geneSymbol: string, personSetId: string, effectTypeId: string, datasetId: string) {
     const newWindow = window.open('', '_blank');
     const peopleGroup = new PeopleGroup('status', [personSetId]);
-    let variantTypes = this.config.datasets
+    const variantTypes = this.config.datasets
       .find((dataset) => (dataset.id = datasetId))
       .statistics.find((datasetStatistic) => datasetStatistic.id === effectTypeId)
       .variantTypes;
 
     const browserQueryFilter = new BrowserQueryFilter(
-      this.config.defaultDataset,
+      datasetId,
       [geneSymbol],
       this.effectTypes[effectTypeId.replace('denovo_', '')],
       undefined,
