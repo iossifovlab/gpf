@@ -46,6 +46,6 @@ export class AutismGeneProfilesTable extends BasePage {
   }
 
   get firstTabCloseButton() {
-    return cy.get('nav span').first();
+    return cy.get('nav span').contains('×').first();
   }
 }

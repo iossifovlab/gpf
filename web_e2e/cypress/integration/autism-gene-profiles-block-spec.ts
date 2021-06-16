@@ -1,7 +1,7 @@
 import { AutismGeneProfilesBlock } from 'cypress/elements/autism-gene-profiles-block-page';
 import { AutismGeneProfilesTable } from 'cypress/elements/autism-gene-profiles-table-page';
 
-describe('Autism gene profiles table tests', () => {
+describe('Autism gene profiles block tests', () => {
   const autismGeneProfilesBlockPage = new AutismGeneProfilesBlock();
   const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
 
@@ -31,6 +31,7 @@ describe('Autism gene profiles table tests', () => {
 
   it('should close the tab after clicking on the x button', () => {
     autismGeneProfilesTablePage.firstGeneLink.click();
+    autismGeneProfilesBlockPage.allTabs.should('have.length', 2);
     autismGeneProfilesTablePage.firstTabCloseButton.click();
     autismGeneProfilesBlockPage.allTabs.should('have.length', 1);
   });
