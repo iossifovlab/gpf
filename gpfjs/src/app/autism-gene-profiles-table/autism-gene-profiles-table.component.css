@@ -27,8 +27,9 @@ td {
 }
 
 .effect-type-header gpf-sorting-buttons {
+  margin-left: 5px;
   position: relative;
-  top: 5px;
+  top: 5.5px;
   /* white-space: nowrap; */
 }
 
@@ -78,6 +79,34 @@ thead th {
 .table-main-header {
   position: sticky;
   top: 0px;
+  max-width: 100px;
+}
+
+.table-main-header-text {
+  top: 0px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.sorting-buttons {
+  right: 30px;
+  display: inline-block;
+  position: absolute;
+  bottom: 5px
+}
+
+button.dropdown-toggle {
+  display: inline-block;
+  position:absolute;
+  right: 10px;
+  outline: none;
+  font-size: 18px;
+  border: 0;
+  padding: 0;
+  width: 20px;
+  vertical-align: unset;
+  bottom: 9px;
 }
 
 thead th, .effect-type-header {
