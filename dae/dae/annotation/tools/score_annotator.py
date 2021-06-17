@@ -20,9 +20,9 @@ class VariantScoreAnnotatorBase(Annotator):
             attr.dest for attr in self.config.default_annotation.attributes
         ]
 
-    def _scores_not_found(self, aline):
+    def _scores_not_found(self, attributes):
         values = {score.id: None for score in self.score_file.config.scores}
-        aline.update(values)
+        attributes.update(values)
 
     def _fetch_scores(self, variant, extra_cols=None):
         scores = None
@@ -46,7 +46,7 @@ class VariantScoreAnnotatorBase(Annotator):
             )
         return scores
 
-    def _annotate_cnv(self, aline, variant):
+    def _annotate_cnv(self, attributes, variant):
         scores = self.score_file.fetch_highest_scores(
             variant.chromosome,
             variant.position,
@@ -55,7 +55,7 @@ class VariantScoreAnnotatorBase(Annotator):
 
         for score_name in self.score_names:
             column_name = getattr(self.config.columns, score_name)
-            aline[column_name] = scores.get(
+            attributes[column_name] = scores.get(
                 score_name, self.score_file.no_score_value
             )
 
@@ -159,35 +159,35 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
 
         return res
 
-    def _do_annotate(self, aline, variant, liftover_variants):
+    def _do_annotate(self, attributes, variant, liftover_variants):
         if VariantType.is_cnv(variant.variant_type):
             logger.info(
                 f"skip trying to add NP position score for CNV variant "
                 f"{variant}")
-            self._scores_not_found(aline)
+            self._scores_not_found(attributes)
             return
 
         if self.liftover:
             variant = liftover_variants.get(self.liftover)
 
         if variant is None:
-            self._scores_not_found(aline)
+            self._scores_not_found(attributes)
             return
 
         scores = self._fetch_scores(
             variant, ["chrom", "pos_begin", "reference", "alternative"]
         )
         if not scores:
-            self._scores_not_found(aline)
+            self._scores_not_found(attributes)
             return
         scores_df = self.score_file.scores_to_dataframe(scores)
 
         if variant.variant_type & VariantType.substitution:
-            aline.update(self._aggregate_substitution(variant, scores_df))
+            attributes.update(self._aggregate_substitution(variant, scores_df))
         elif variant.variant_type & VariantType.indel:
-            aline.update(self._aggregate_indel(variant, scores_df))
+            attributes.update(self._aggregate_indel(variant, scores_df))
         else:
             logger.warning(
                 f"unexpected variant type: {variant}, {variant.variant_type}"
             )
-            self._scores_not_found(aline)
+            self._scores_not_found(attributes)
