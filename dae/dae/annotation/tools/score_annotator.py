@@ -2,7 +2,7 @@ import logging
 
 from dae.variants.attributes import VariantType
 
-from dae.annotation.tools.annotator_base import Annotator, CompositeAnnotator
+from dae.annotation.tools.annotator_base import Annotator
 from dae.annotation.tools.reader import ScoreFile
 
 
@@ -24,17 +24,19 @@ class VariantScoreAnnotatorBase(Annotator):
         values = {score.id: None for score in self.score_file.config.scores}
         aline.update(values)
 
-    def _fetch_scores(self, variant):
+    def _fetch_scores(self, variant, extra_cols=None):
         scores = None
         if variant.variant_type & VariantType.substitution:
             scores = self.score_file.fetch_scores(
-                variant.chromosome, variant.position, variant.position
+                variant.chromosome, variant.position, variant.position,
+                extra_cols
             )
         elif variant.variant_type & VariantType.indel:
             scores = self.score_file.fetch_scores(
                 variant.chromosome,
                 variant.position,
                 variant.position + len(variant.reference),
+                extra_cols,
             )
         else:
             logger.warning(
@@ -72,7 +74,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         else:
             return float(score)
 
-    def do_annotate(self, attributes, variant, liftover_variants):
+    def _do_annotate(self, attributes, variant, liftover_variants):
         if VariantType.is_cnv(variant.variant_type):
             logger.info(
                 f"skip trying to add position score for CNV variant {variant}")
@@ -122,46 +124,42 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
 class NPScoreAnnotator(VariantScoreAnnotatorBase):
     def __init__(self, config, genomes_db, liftover=None):
         super().__init__(config, genomes_db, liftover=None)
-        self.ref_name = self.score_file.ref_name
-        self.alt_name = self.score_file.alt_name
-        self.chr_name = self.score_file.chr_name
-        self.pos_begin_name = self.score_file.pos_begin_name
+
+    @staticmethod
+    def required_columns():
+        return ("chrom", "pos_begin", "pos_end", "reference", "alternative")
 
     def _aggregate_substitution(self, variant, scores_df):
         assert variant.variant_type == VariantType.substitution
 
         res = {}
-        matched = (scores_df[self.ref_name] == variant.reference) & (
-            scores_df[self.alt_name] == variant.alternative
+        matched = (scores_df["reference"] == variant.reference) & (
+                scores_df["alternative"] == variant.alternative
         )
         matched_df = scores_df[matched]
         if len(matched_df) == 0:
             self._scores_not_found(res)
         else:
-            for score_name in self.score_names:
-                column_name = getattr(self.config.columns, score_name)
-                res[column_name] = matched_df[score_name].mean()
+            for score_id in self.score_file.score_ids:
+                res[score_id] = matched_df[score_id].mean()
         return res
 
     def _aggregate_indel(self, variant, scores_df):
         assert VariantType.indel & variant.variant_type, variant
 
-        aggregate = {sn: "max" for sn in self.score_names}
+        aggregate = {sn: "max" for sn in self.score_file.score_ids}
 
         aggregate["COUNT"] = "max"
-        group_df = scores_df.groupby(
-            by=[self.chr_name, self.pos_begin_name]
-        ).agg(aggregate)
+        group_df = scores_df.groupby(by=["chrom", "pos_begin"]).agg(aggregate)
         count = group_df["COUNT"].sum()
         res = {}
-        for score_name in self.score_names:
-            column_name = getattr(self.config.columns, score_name)
-            total_df = group_df[score_name] * group_df["COUNT"]
-            res[column_name] = total_df.sum() / count
+        for score_id in self.score_file.score_ids:
+            total_df = group_df[score_id] * group_df["COUNT"]
+            res[score_id] = total_df.sum() / count
 
         return res
 
-    def do_annotate(self, aline, variant, liftover_variants):
+    def _do_annotate(self, aline, variant, liftover_variants):
         if VariantType.is_cnv(variant.variant_type):
             logger.info(
                 f"skip trying to add NP position score for CNV variant "
@@ -176,7 +174,9 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(aline)
             return
 
-        scores = self._fetch_scores(variant)
+        scores = self._fetch_scores(
+            variant, ["chrom", "pos_begin", "reference", "alternative"]
+        )
         if not scores:
             self._scores_not_found(aline)
             return
@@ -191,13 +191,3 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
                 f"unexpected variant type: {variant}, {variant.variant_type}"
             )
             self._scores_not_found(aline)
-
-
-class PositionMultiScoreAnnotator(CompositeAnnotator):
-    # TODO Re-implement this annotator
-    def __init__(self, config, genomes_db, liftover=None):
-        super().__init__(config, genomes_db, liftover)
-        raise NotImplementedError()
-
-    def _build_annotator_for(self, score_name):
-        raise NotImplementedError()

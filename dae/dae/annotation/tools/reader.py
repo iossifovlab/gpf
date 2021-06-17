@@ -77,7 +77,7 @@ class ScoreFile:
         if self.config.has_header:
             header = self.header
             col_indexes = dict()
-            for col_name, desc in file_columns:
+            for col_name, desc in file_columns.items():
                 col_indexes[col_name] = header.index(desc.name)
         else:
             col_indexes = {
@@ -146,7 +146,7 @@ class ScoreFile:
 
     @property
     def header(self):
-        return self.infile.header.strip("#").split(self.separator)
+        return self.infile.header[-1].strip("#").split(self.separator)
 
     def _purge_buffer(self, chrom, pos_begin, pos_end):
         # purge start of line buffer
@@ -229,13 +229,13 @@ class ScoreFile:
             return []
 
     def fetch_scores_df(self, chrom, pos_begin, pos_end):
-        scores = self.fetch_scores(chrom, pos_begin, pos_end)
-        return self.scores_to_dataframe(scores)
+        return self.scores_to_dataframe(
+            self.fetch_scores(chrom, pos_begin, pos_end)
+        )
 
     def scores_to_dataframe(self, scores):
         df = pd.DataFrame(scores)
-        for score in self.config.scores:
-            score_id = score.id
+        for score_id in self.score_ids:
             df[score_id] = df[score_id].replace(["NA"], np.nan)
             df[score_id] = df[score_id].astype("float32")
         return df
@@ -245,7 +245,7 @@ class ScoreFile:
         for line in self.fetch_lines(chrom, pos_begin, pos_end):
             yield line
 
-    def fetch_scores(self, chrom, pos_begin, pos_end):
+    def fetch_scores(self, chrom, pos_begin, pos_end, extra_cols=None):
         chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
         score_lines = self.fetch_lines(chrom, pos_begin, pos_end)
         logger.debug(f"score lines found: {score_lines}")
@@ -268,6 +268,9 @@ class ScoreFile:
             result["COUNT"].append(count)
             for col, val in line.scores.items():
                 result[col].append(val)
+            if extra_cols:
+                for col in extra_cols:
+                    result[col].append(line.values[col])
         logger.debug(f"fetch scores: {result}")
         return result
 

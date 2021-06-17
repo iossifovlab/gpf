@@ -66,6 +66,7 @@ genomic_score_schema = {
             "type": "dict",
             "schema": {
                 "id": {"type": "string"},
+                "name": {"type": "string"},
                 "type": {"type": "string"},
                 "desc": {"type": "string"},
                 "index": {"type": "integer"},

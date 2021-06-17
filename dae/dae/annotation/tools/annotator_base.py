@@ -1,8 +1,5 @@
 import logging
 
-from copy import deepcopy
-from itertools import chain
-
 logger = logging.getLogger(__name__)
 
 
@@ -35,34 +32,19 @@ class Annotator:
     def output_columns(self):
         raise NotImplementedError()
 
-    def do_annotate(self, attributes, variant, liftover_variants):
+    def _do_annotate(self, attributes, variant, liftover_variants):
+        """
+        Internal abstract method used for annotation.
+        """
         raise NotImplementedError()
 
-    def annotate_summary_variant(self, summary_variant, liftover_variants):
-        for alt_allele in summary_variant.alt_alleles:
-            attributes = deepcopy(alt_allele.attributes)
-            liftover_variants = {}
-            self.do_annotate(attributes, alt_allele, liftover_variants)
-            alt_allele.update_attributes(attributes)
-
-
-class CompositeAnnotator(Annotator):
-    def __init__(self, config, genomes_db, liftover=None):
-        super().__init__(config, genomes_db, liftover)
-        self.annotators = []
-
-    @property
-    def output_columns(self):
-        return chain(annotator.output_columns for annotator in self.annotators)
-
-    def add_annotator(self, annotator):
-        assert isinstance(annotator, Annotator)
-        self.annotators.append(annotator)
-
-    def do_annotate(self, aline, variant, liftover_variants):
-        try:
-            for annotator in self.annotators:
-                annotator.do_annotate(aline, variant, liftover_variants)
-        except Exception:
-            logger.exception(
-                f"cant annotate variant {variant}; source line {aline}")
+    def annotate(self, attributes, variant, liftover_variants):
+        """
+        Carry out the annotation and then relabel results as configured.
+        """
+        self._do_annotate(attributes, variant, liftover_variants)
+        for attr in self.config.default_annotation.attributes:
+            if attr.dest == attr.source:
+                continue
+            attributes[attr.dest] = attributes[attr.source]
+            del attributes[attr.source]

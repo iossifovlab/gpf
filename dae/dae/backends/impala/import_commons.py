@@ -16,7 +16,7 @@ from collections import defaultdict
 
 from jinja2 import Template
 
-from dae.annotation.annotation_pipeline import PipelineAnnotator
+from dae.annotation.annotation_pipeline import AnnotationPipeline
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
@@ -70,7 +70,7 @@ def construct_import_annotation_pipeline(
         config_filename = gpf_instance.dae_config.annotation.conf_file
 
     assert os.path.exists(config_filename), config_filename
-    return PipelineAnnotator.build(config_filename, gpf_instance)
+    return AnnotationPipeline.build(config_filename, gpf_instance)
 
 
 class MakefilePartitionHelper:
