@@ -14,9 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class AnnotationPipeline():
-    def __init__(self, config, genomes_db):
-        self.config = config
-        self.genomes_db = genomes_db
+    def __init__(self):
         self.annotators = []
 
     @staticmethod
@@ -50,7 +48,7 @@ class AnnotationPipeline():
             cols.update(annotator.output_columns)
         return ParquetSchema.from_dict({"float": cols})
 
-    def annotate_summary_variant(self, summary_variant, liftover_variants):
+    def annotate_summary_variant(self, summary_variant):
         for alt_allele in summary_variant.alt_alleles:
             attributes = deepcopy(alt_allele.attributes)
             liftover_variants = {}

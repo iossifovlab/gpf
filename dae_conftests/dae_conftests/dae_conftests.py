@@ -18,8 +18,10 @@ from dae.gpf_instance.gpf_instance import GPFInstance, cached
 
 from dae.configuration.gpf_config_parser import GPFConfigParser, FrozenBox
 from dae.configuration.schemas.dae_conf import dae_conf_schema
+from dae.configuration.schemas.genomic_score_database import \
+    genomic_score_schema
 
-from dae.annotation.annotation_pipeline import PipelineAnnotator
+from dae.annotation.annotation_pipeline import AnnotationPipeline
 
 from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.variants.family_variant import FamilyVariant
@@ -280,7 +282,7 @@ def default_annotation_pipeline(default_dae_config, genomes_db_2013):
         "p": "position",
     }
 
-    pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013)
+    pipeline = AnnotationPipeline.build(options, filename, genomes_db_2013)
 
     return pipeline
 
@@ -306,7 +308,7 @@ def annotation_pipeline_vcf(genomes_db_2013):
         # 'mode': 'overwrite',
     }
 
-    pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013,)
+    pipeline = AnnotationPipeline.build(options, filename, genomes_db_2013,)
     return pipeline
 
 
@@ -330,7 +332,7 @@ def annotation_pipeline_internal(genomes_db_2013):
         ),
     }
 
-    pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013,)
+    pipeline = AnnotationPipeline.build(options, filename, genomes_db_2013,)
     return pipeline
 
 
@@ -1167,3 +1169,13 @@ def sample_agp():
     return AGPStatistic(
         "CHD8", gene_sets, genomic_scores, variant_counts
     )
+
+
+@pytest.fixture(scope="session")
+def get_score_config(fixture_dirname):
+    def internal(score_name):
+        config = fixture_dirname(
+            f"genomic_scores/hg38/{score_name}/{score_name}.gs.yaml"
+        )
+        return GPFConfigParser.load_config(config, genomic_score_schema)
+    return internal

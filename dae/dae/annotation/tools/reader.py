@@ -78,7 +78,8 @@ class ScoreFile:
             header = self.header
             col_indexes = dict()
             for col_name, desc in file_columns.items():
-                col_indexes[col_name] = header.index(desc.name)
+                if desc is not None:
+                    col_indexes[col_name] = header.index(desc.name)
         else:
             col_indexes = {
                 k: file_columns[k].index for k in file_columns.keys()
@@ -96,7 +97,7 @@ class ScoreFile:
 
     @property
     def _pos_end_idx(self):
-        return self.col_indexes["pos_end"]
+        return self.col_indexes.get("pos_end")
 
     @property
     def _buffer_chrom(self):
@@ -115,7 +116,10 @@ class ScoreFile:
     def _buffer_pos_end(self):
         if len(self.buffer) == 0:
             return -1
-        return self.buffer[0].pos_end
+        if self._pos_end_idx is not None:
+            return self.buffer[0].pos_end
+        else:
+            return self.buffer[0].pos_begin
 
     def fetch_lines(self, chrom, pos_begin, pos_end):
         self.last_pos = pos_end
@@ -152,7 +156,8 @@ class ScoreFile:
         # purge start of line buffer
         while len(self.buffer) > 0:
             line = self.buffer[0]
-            if line.chrom == chrom and line.pos_end >= pos_begin:
+            if self._pos_end_idx is not None and \
+                    line.chrom == chrom and line.pos_end >= pos_begin:
                 break
             self.buffer.pop(0)
 
@@ -164,7 +169,7 @@ class ScoreFile:
 
         line = None
         for line in self._lines_iterator:
-            if line.pos_end >= pos_begin:
+            if self._pos_end_idx is not None and line.pos_end >= pos_begin:
                 break
 
         if not line:
@@ -176,7 +181,7 @@ class ScoreFile:
             assert line.chrom == self._buffer_chrom, \
                 (line.chrom, self._buffer_chrom)
             self.buffer.append(line)
-            if line.pos_end > pos_end:
+            if self._pos_end_idx is not None and line.pos_end > pos_end:
                 break
 
     def _fetch_sequential(self, chrom, pos_begin, pos_end):
@@ -186,12 +191,13 @@ class ScoreFile:
             or (pos_begin - self._buffer_pos_end) > self.LONG_JUMP_THRESHOLD
         ):
             self.buffer = list()
-            self._lines_iterator = map(
+            lines = list(self.infile.fetch(
+                f"{chrom}:{pos_begin}", parser=pysam.asTuple()
+            ))
+            self._lines_iterator = list(map(
                 self._parse_line,
-                self.infile.fetch(
-                    f"{chrom}:{pos_begin}", parser=pysam.asTuple()
-                )
-            )
+                lines
+            ))
 
         if self._lines_iterator is None:
             return []
@@ -205,8 +211,13 @@ class ScoreFile:
         for line in self.buffer:
             if line.chrom != chrom:
                 continue
+            line_pos_begin = line.pos_begin
+            if self._pos_end_idx is not None:
+                line_pos_end = line.pos_end
+            else:
+                line_pos_end = line.pos_begin
             if regions_intersect(
-                pos_begin, pos_end, line.pos_begin, line.pos_end
+                pos_begin, pos_end, line_pos_begin, line_pos_end
             ):
                 result.append(line)
         return result
@@ -256,11 +267,12 @@ class ScoreFile:
                 f"pos_end: {pos_end}; line.pos_end: {line.pos_end}; "
                 f"pos_begin: {pos_begin}; line.pos_begin: {line.pos_begin}"
             )
-            count = (
-                min(pos_end, line.pos_end)
-                - max(line.pos_begin, pos_begin)
-                + 1
-            )
+            max_pos_begin = max(line.pos_begin, pos_begin)
+            if self._pos_end_idx is not None:
+                min_pos_end = min(pos_end, line.pos_end)
+            else:
+                min_pos_end = pos_end
+            count = min_pos_end - max_pos_begin + 1
             if count <= 0:
                 continue
 

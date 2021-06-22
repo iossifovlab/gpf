@@ -825,6 +825,53 @@ class SummaryVariantFactory(object):
         return SummaryVariant(alleles)
 
     @staticmethod
+    def blank_summary_allele_from_record(record):
+        attributes = record
+
+        chrom = record.get("chrom", "1")
+        position = record.get("position", 1000)
+        reference = record.get("reference", "G")
+        alternative = record.get("alternative", "C")
+        summary_index = record.get("summary_index", -1)
+        end_position = record.get("end_position", None)
+        variant_type = record.get("variant_type", None)
+        allele_index = record.get("allele_index", 1)
+        transmission_type = record.get(
+            "transmission_type", TransmissionType.transmitted
+        )
+
+        return SummaryAllele(
+            chrom,
+            position,
+            reference,
+            alternative=alternative,
+            summary_index=summary_index,
+            end_position=end_position,
+            variant_type=variant_type,
+            allele_index=allele_index,
+            transmission_type=transmission_type,
+            attributes=attributes,
+        )
+
+    @staticmethod
+    def blank_summary_variant_from_records(records):
+        assert len(records) > 0
+
+        alleles = []
+        for record in records:
+            sa = SummaryVariantFactory.blank_summary_allele_from_record(record)
+            alleles.append(sa)
+        if not alleles[0].is_reference_allele:
+            ref_allele = SummaryAllele.create_reference_allele(alleles[0])
+            alleles.insert(0, ref_allele)
+
+        allele_count = {"allele_count": len(alleles)}
+        for allele in alleles:
+            allele.update_attributes(allele_count)
+
+        return SummaryVariant(alleles)
+
+    @staticmethod
     def summary_variant_from_vcf(
             vcf_variant, summary_variant_index, transmission_type):
         records = []
