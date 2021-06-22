@@ -39,7 +39,7 @@ class ScoreLine:
     @property
     def pos_end(self):
         if "pos_end" not in self.values:
-            return None
+            return self.pos_begin
         return int(self.values["pos_end"])
 
 
@@ -116,10 +116,7 @@ class ScoreFile:
     def _buffer_pos_end(self):
         if len(self.buffer) == 0:
             return -1
-        if self._pos_end_idx is not None:
-            return self.buffer[0].pos_end
-        else:
-            return self.buffer[0].pos_begin
+        return self.buffer[0].pos_end
 
     def fetch_lines(self, chrom, pos_begin, pos_end):
         self.last_pos = pos_end
@@ -156,8 +153,7 @@ class ScoreFile:
         # purge start of line buffer
         while len(self.buffer) > 0:
             line = self.buffer[0]
-            if self._pos_end_idx is not None and \
-                    line.chrom == chrom and line.pos_end >= pos_begin:
+            if line.chrom == chrom and line.pos_end >= pos_begin:
                 break
             self.buffer.pop(0)
 
@@ -169,7 +165,7 @@ class ScoreFile:
 
         line = None
         for line in self._lines_iterator:
-            if self._pos_end_idx is not None and line.pos_end >= pos_begin:
+            if line.pos_end >= pos_begin:
                 break
 
         if not line:
@@ -181,7 +177,7 @@ class ScoreFile:
             assert line.chrom == self._buffer_chrom, \
                 (line.chrom, self._buffer_chrom)
             self.buffer.append(line)
-            if self._pos_end_idx is not None and line.pos_end > pos_end:
+            if line.pos_end > pos_end:
                 break
 
     def _fetch_sequential(self, chrom, pos_begin, pos_end):
@@ -211,13 +207,8 @@ class ScoreFile:
         for line in self.buffer:
             if line.chrom != chrom:
                 continue
-            line_pos_begin = line.pos_begin
-            if self._pos_end_idx is not None:
-                line_pos_end = line.pos_end
-            else:
-                line_pos_end = line.pos_begin
             if regions_intersect(
-                pos_begin, pos_end, line_pos_begin, line_pos_end
+                pos_begin, pos_end, line.pos_begin, line.pos_end
             ):
                 result.append(line)
         return result
@@ -268,10 +259,7 @@ class ScoreFile:
                 f"pos_begin: {pos_begin}; line.pos_begin: {line.pos_begin}"
             )
             max_pos_begin = max(line.pos_begin, pos_begin)
-            if self._pos_end_idx is not None:
-                min_pos_end = min(pos_end, line.pos_end)
-            else:
-                min_pos_end = pos_end
+            min_pos_end = min(pos_end, line.pos_end)
             count = min_pos_end - max_pos_begin + 1
             if count <= 0:
                 continue
