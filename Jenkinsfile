@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        label 'dory' | 'piglet' | 'pooh'
+        label 'dory | piglet | pooh'
     }
     options { 
         copyArtifactPermission('/iossifovlab/gpf/*,/iossifovlab/gpfjs/*,/iossifovlab/gpf/master,/seqpipe/gpf_documentation/*');
