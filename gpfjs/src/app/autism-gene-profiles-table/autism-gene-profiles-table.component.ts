@@ -10,6 +10,9 @@ import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 import { cloneDeep } from 'lodash';
 import { sprintf } from 'sprintf-js';
+import { QueryService } from 'app/query/query.service';
+import { BrowserQueryFilter, PeopleGroup } from 'app/genotype-browser/genotype-browser';
+import { EffectTypes } from 'app/effecttypes/effecttypes';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-table',
@@ -53,6 +56,12 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   @ViewChildren('dropdownSpan') dropdownSpans: QueryList<ElementRef>;
   modalBottom: number;
 
+  effectTypes = {
+    lgds: EffectTypes['LGDS'],
+    intron: ['Intron'],
+    missense: ['Missense'],
+  };
+
   @HostListener('window:scroll', ['$event'])
   onWindowScroll() {
     if (this.isTableVisible) {
@@ -79,6 +88,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     private renderer: Renderer2,
     private cdr: ChangeDetectorRef,
     private ref: ElementRef,
+    private queryService: QueryService,
   ) { }
 
   ngOnChanges(): void {
@@ -433,5 +443,31 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
       .find(score => score.id === scoreId);
 
     return Number(sprintf(genomicScore.format, genomicScore.value)).toString();
+  }
+
+  goToQuery(geneSymbol: string, personSetId: string, effectTypeId: string, datasetId: string) {
+    const newWindow = window.open('', '_blank');
+    const peopleGroup = new PeopleGroup('status', [personSetId]);
+    const variantTypes = this.config.datasets
+      .find((dataset) => (dataset.id = datasetId))
+      .statistics.find((datasetStatistic) => datasetStatistic.id === effectTypeId)
+      .variantTypes;
+
+    const browserQueryFilter = new BrowserQueryFilter(
+      datasetId,
+      [geneSymbol],
+      this.effectTypes[effectTypeId.replace('denovo_', '')],
+      undefined,
+      peopleGroup,
+      ['we'],
+      variantTypes
+    );
+
+    this.queryService.saveQuery(browserQueryFilter, 'genotype')
+      .take(1)
+      .subscribe(urlObject => {
+        const url = this.queryService.getLoadUrlFromResponse(urlObject);
+        newWindow.location.assign(url);
+      });
   }
 }

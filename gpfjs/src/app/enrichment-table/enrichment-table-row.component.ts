@@ -1,9 +1,8 @@
 import { Component, Input } from '@angular/core';
-import {
-  EnrichmentEffectResult, EnrichmentTestResult, GenotypePreviewWithDatasetId
-} from '../enrichment-query/enrichment-result';
+import { EnrichmentEffectResult, EnrichmentTestResult } from '../enrichment-query/enrichment-result';
 import { PValueIntensityPipe } from '../utils/p-value-intensity.pipe';
 import { QueryService } from '../query/query.service';
+import { BrowserQueryFilter } from 'app/genotype-browser/genotype-browser';
 
 @Component({
   selector: '[gpf-enrichment-table-row]',
@@ -19,13 +18,14 @@ export class EnrichmentTableRowComponent {
     private queryService: QueryService
   ) {}
 
-  goToQuery(genotypePreview: GenotypePreviewWithDatasetId) {
+  goToQuery(browserQueryFilter: BrowserQueryFilter) {
     // Create new window now because we are in a 'click' event callback, update
     // it's url later. Otherwise this window.open is treated as a pop-up and
     // being blocked by most browsers.
     // https://stackoverflow.com/a/22470171/2316754
     const newWindow = window.open('', '_blank');
-    this.queryService.saveQuery(genotypePreview, 'genotype')
+
+    this.queryService.saveQuery(browserQueryFilter, 'genotype')
       .take(1)
       .subscribe(urlObject => {
         const url = this.queryService.getLoadUrlFromResponse(urlObject);
