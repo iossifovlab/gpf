@@ -1,0 +1,3 @@
+[submodule "build-scripts"]
+	path = build-scripts
+	url = ../../seqpipe/build-scripts
