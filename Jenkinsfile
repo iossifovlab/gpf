@@ -7,7 +7,6 @@ pipeline {
     }
     triggers {
         pollSCM('* * * * *')
-        cron('H * * * *')
     }
     environment {
         BUILD_SCRIPTS_BUILD_DOCKER_REGISTRY_USERNAME = credentials('jenkins-registry.seqpipe.org.user')
