@@ -1,8 +1,7 @@
-<div ngbDropdown *ngIf="(userInfo$ | async)?.email" class="d-inline-block" autoClose="outside" placement="top">
+<div ngbDropdown *ngIf="(userInfo$ | async)?.email" autoClose="outside" placement="top">
     <button (click)="focusNameInput()" [disabled]="disabled" id="save-query-dropdown-button" class="btn btn-default" ngbDropdownToggle>Save query</button>
     <div id="save-query-dropdown" ngbDropdownMenu aria-labelledby="dropdownQuerySave">
-        <form (ngSubmit)="saveUserQuery(nameInput.value, descInput.value)" #queryStorageForm="ngForm"
-         style="margin:10px">
+        <form (ngSubmit)="saveUserQuery(nameInput.value, descInput.value)" #queryStorageForm="ngForm" style="margin:10px">
           <div class="form-group">
             <label for="name">Query name</label>
             <input #nameInput type="text" class="form-control" id="name" required autocomplete="off" maxlength=256 style="width:300px">

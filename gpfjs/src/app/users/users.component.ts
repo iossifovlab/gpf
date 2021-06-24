@@ -106,14 +106,16 @@ export class UsersComponent implements OnInit {
 
   @HostListener('document:click', ['$event'])
   onClick(event) {
-    console.log();
-    if (this.dialog && this.dropdownButton
-      && event.path[0]['id'] !== 'next-button'
-      && event.path[0]['id'] !== 'back-button') {
-      if (!this.dialog.nativeElement.contains(event.target) &&
-      !this.dropdownButton.nativeElement.contains(event.target)) {
-        this.hideDropdown = true;
-      }
+    if (
+      !event
+        .composedPath()
+        .find(
+          element =>
+            element.id === 'login-window' ||
+            element.id === 'login-dropdown-toggle-button'
+        )
+    ) {
+      this.hideDropdown = true;
     }
   }
 

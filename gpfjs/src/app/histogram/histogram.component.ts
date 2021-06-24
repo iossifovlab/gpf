@@ -75,8 +75,8 @@ export class HistogramComponent implements OnInit, OnChanges {
     .subscribe((end) => {
       this.rangeEndChange.emit(end);
     });
-    this.rangeStartSubject.next(this.min_value);
-    this.rangeEndSubject.next(this.max_value);
+    this.rangeStartSubject.next(this.rangeStart !== null ? this.rangeStart : this.min_value);
+    this.rangeEndSubject.next(this.rangeEnd !== null ? this.rangeEnd : this.max_value);
 
     if (!this.isInteractive) {
       this.rangeStart = this.bins[0];

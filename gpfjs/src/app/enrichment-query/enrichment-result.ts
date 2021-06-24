@@ -1,16 +1,4 @@
-import { GenotypePreview } from '../genotype-preview-model/genotype-preview';
-
-export class GenotypePreviewWithDatasetId extends GenotypePreview {
-  datasetId: string;
-
-  static withoutDatasetId(genotypePreview: GenotypePreviewWithDatasetId): GenotypePreview {
-   let result = Object.assign({}, genotypePreview);
-   delete result.datasetId;
-   return result;
-  }
-
-
-}
+import { BrowserQueryFilter } from 'app/genotype-browser/genotype-browser';
 
 export class ChildrenStats {
 
@@ -38,8 +26,8 @@ export class EnrichmentTestResult {
       json['expected'],
       json['overlapped'],
       json['pvalue'],
-      json['countFilter'] as GenotypePreviewWithDatasetId,
-      json['overlapFilter'] as GenotypePreviewWithDatasetId,
+      json['countFilter'] as BrowserQueryFilter,
+      json['overlapFilter'] as BrowserQueryFilter,
     );
   }
 
@@ -49,8 +37,8 @@ export class EnrichmentTestResult {
     readonly expected: number,
     readonly overlapped: number,
     readonly pvalue: number,
-    readonly countFilter: GenotypePreviewWithDatasetId,
-    readonly overlapFilter: GenotypePreviewWithDatasetId,
+    readonly countFilter: BrowserQueryFilter,
+    readonly overlapFilter: BrowserQueryFilter,
   ) { }
 }
 
@@ -72,7 +60,6 @@ export class EnrichmentEffectResult {
     readonly female: EnrichmentTestResult,
     readonly rec: EnrichmentTestResult
   ) { }
-
 }
 
 export class EnrichmentResult {
@@ -112,5 +99,4 @@ export class EnrichmentResults {
     readonly description: string,
     readonly results: Array<EnrichmentResult>
   ) { }
-
 }
