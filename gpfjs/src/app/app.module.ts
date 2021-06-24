@@ -123,9 +123,6 @@ import { GroupsBulkRemoveComponent } from './groups-bulk-remove/groups-bulk-remo
 import { UserGroupsSelectorComponent } from './user-groups-selector/user-groups-selector.component';
 import { UsersActionsComponent } from './users-actions/users-actions.component';
 import { DatasetsTableComponent } from './datasets-table/datasets-table.component';
-import { GenotypePreviewChromosomesComponent } from './genotype-preview-chromosomes/genotype-preview-chromosomes.component';
-import { ChromosomeService } from './chromosome-service/chromosome.service';
-import { ChromosomeComponent } from './chromosome/chromosome.component';
 import { GenotypeBrowserSingleViewComponent } from './genotype-browser-single-view/genotype-browser-single-view.component';
 import { GenotypePreviewFieldComponent } from './genotype-preview-field/genotype-preview-field.component';
 import { ErrorsAlertComponent } from './errors-alert/errors-alert.component';
@@ -344,8 +341,6 @@ const appRoutes: Routes = [
     UserGroupsSelectorComponent,
     UsersActionsComponent,
     DatasetsTableComponent,
-    GenotypePreviewChromosomesComponent,
-    ChromosomeComponent,
     GenotypeBrowserSingleViewComponent,
     GenotypePreviewFieldComponent,
     ErrorsAlertComponent,
@@ -420,7 +415,6 @@ const appRoutes: Routes = [
     VariantReportsService,
     GenomicScoresBlockService,
     UsersGroupsService,
-    ChromosomeService,
     PedigreeMockService,
     PerfectlyDrawablePedigreeService,
     {
