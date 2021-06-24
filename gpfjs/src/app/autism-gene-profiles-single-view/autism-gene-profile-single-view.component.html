@@ -49,24 +49,16 @@
     <table *ngIf="links" id="external-links" class="table table-bordered table-centered">
       <th style="text-align: center;">External links</th>
       <tr *ngIf="links.SFARIgene !== ''">
-        <td>
-          <a class="link" [attr.href]="links.SFARIgene" target="_blank">SFARI gene</a>
-        </td>
+        <td><a class="link" [attr.href]="links.SFARIgene" target="_blank">SFARI gene</a></td>
       </tr>
       <tr>
-        <td>
-          <a class="link" [attr.href]="links.UCSC" target="_blank">UCSC genome browser</a>
-        </td>
+        <td><a class="link" [attr.href]="links.UCSC" target="_blank">UCSC genome browser</a></td>
       </tr>
       <tr>
-        <td>
-          <a class="link" [attr.href]="links.GeneCards" target="_blank">GeneCards</a>
-        </td>
+        <td><a class="link" [attr.href]="links.GeneCards" target="_blank">GeneCards</a></td>
       </tr>
       <tr>
-        <td>
-          <a class="link" [attr.href]="links.Pubmed" target="_blank">Pubmed</a>
-        </td>
+        <td><a class="link" [attr.href]="links.Pubmed" target="_blank">Pubmed</a></td>
       </tr>
     </table>
 
@@ -79,9 +71,7 @@
             </th>
           </tr>
           <tr class="card-block">
-            <th style="text-align: center; border-bottom: none;">
-              Variant Statistics
-            </th>
+            <th style="text-align: center; border-bottom: none;">Variant Statistics</th>
             <th *ngFor="let personSet of dataset.personSets" style="text-align: center; border-bottom: none;">
               {{personSet.displayName}} ({{personSet.childrenCount}})
             </th>
@@ -90,17 +80,13 @@
     
         <tbody>
           <tr class="card-block" *ngFor="let statistic of dataset.statistics">
-            <td>
-              {{statistic.displayName}}
-            </td>
+            <td>{{statistic.displayName}}</td>
             <td style="text-align: center;" *ngFor="let personSet of dataset.personSets">
               <ng-container *ngIf="getGeneDatasetValue(gene, dataset.id, personSet.id, statistic.id) as effectType">
                 <ng-container *ngIf="effectType.value.count !== 0">
                   {{effectType.value.count}} ({{effectType.value.rate | number : '1.0-3'}})
                 </ng-container>
-                <ng-container *ngIf="effectType.value.count === 0">
-                  &ndash;
-                </ng-container>
+                <ng-container *ngIf="effectType.value.count === 0">&ndash;</ng-container>
               </ng-container>
             </td>
           </tr>
