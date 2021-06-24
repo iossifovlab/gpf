@@ -25,6 +25,7 @@
     "@angular/platform-browser-dynamic": "^9.1.11",
     "@angular/router": "^9.1.11",
     "@ng-bootstrap/ng-bootstrap": "~6.2.0",
+    "@ngxs/store": "^3.7.2",
     "@types/d3": "^5.7.2",
     "@types/lodash": "^4.14.156",
     "@types/sprintf": "^0.1.0",
