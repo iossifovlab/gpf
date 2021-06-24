@@ -179,15 +179,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   }
 
   /**
-   * Calculates dataset table header colspan.
-   * @param datasetConfig dataset configuration needed for calculation
-   * @returns colspan
-   */
-  calculateDatasetColspan(datasetConfig: AgpDataset) {
-    return datasetConfig.statistics.length * datasetConfig.personSets.length;
-  }
-
-  /**
    * Handles column filtering menu apply events. Updates shown columns to match the one in the event.
    * @param $event event containing menu id and filtered columns
    */
