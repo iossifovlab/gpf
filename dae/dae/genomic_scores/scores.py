@@ -1,4 +1,5 @@
 from typing import Dict, List, Tuple, Union
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
 
 
 GenomicScoreChild = Union["GenomicScore", "GenomicScoreGroup"]
@@ -6,8 +7,10 @@ ParentsScoreTuple = Tuple[List["GenomicScoreGroup"], "GenomicScore"]
 
 
 class GenomicScore:
-    def __init__(self, config):
+    def __init__(self, conf_path):
+        config = AnnotationConfigParser.load_annotation_config(conf_path)
         self.config = config
+        self.conf_path = conf_path
         self.id: str = config.id
         self.name: str = config.name
         self.score_type = config.score_type

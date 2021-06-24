@@ -9,9 +9,6 @@ from bs4 import BeautifulSoup
 
 from dae.genomic_scores.scores import ParentsScoreTuple, GenomicScore, \
     GenomicScoreGroup
-from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.configuration.schemas.genomic_score_database import \
-    genomic_score_schema
 
 
 class BaseGenomicScoreRepository:
@@ -68,9 +65,7 @@ class FilesystemGenomicScoreRepository(BaseGenomicScoreRepository):
                 curr_group = curr_group.children.setdefault(
                     group, GenomicScoreGroup(group)
                 )
-            score = GenomicScore(
-                GPFConfigParser.load_config(conf_path, genomic_score_schema)
-            )
+            score = GenomicScore(conf_path)
             curr_group.children[score.id] = score
             self.config_files[score.id] = score_path[-1]
 

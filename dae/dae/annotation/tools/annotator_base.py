@@ -1,4 +1,7 @@
 import logging
+from copy import deepcopy
+from dae.configuration.schemas.genomic_score_database import attr_schema, \
+    genomic_score_schema
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +34,15 @@ class Annotator:
     @property
     def output_columns(self):
         raise NotImplementedError()
+
+    @classmethod
+    def get_config_schema(cls):
+        attributes_schemas = {
+            attr_name: attr_schema for attr_name in cls.required_columns()
+        }
+        schema = deepcopy(genomic_score_schema)
+        schema.update(attributes_schemas)
+        return schema
 
     def _do_annotate(self, attributes, variant, liftover_variants):
         """

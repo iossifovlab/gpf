@@ -24,12 +24,13 @@ class AnnotationPipeline():
             pipeline_config_path, annotation_conf_schema
         )
         pipeline = AnnotationPipeline(pipeline_config, genomes_db)
-        for score in pipeline_config.genomic_scores:
+        for score in pipeline_config.resources:
             score_id = score["id"]
             liftover = score["liftover"]
+            override = score.get("override")
             gs = gpf_instance.find_genomic_score(score_id)
             annotator = AnnotatorFactory.make_annotator(
-                gs.config, genomes_db, liftover
+                gs.conf_path, genomes_db, liftover, override
             )
             pipeline.add_annotator(annotator)
         return pipeline

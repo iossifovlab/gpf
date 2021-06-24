@@ -8,17 +8,6 @@ attr_schema = {
     }
 }
 
-attributes = {
-    "chrom": attr_schema,
-    "pos_begin": attr_schema,
-    "pos_end": attr_schema,
-    "position": attr_schema,
-    "reference": attr_schema,
-    "alternative": attr_schema,
-    "variant": attr_schema,
-    "location": attr_schema,
-}
-
 target_genome_schema = {
     "filename": {"type": "string"},
     "del_chrom_prefix": {"type": "string"},
@@ -59,7 +48,6 @@ genomic_score_schema = {
         "type": "dict",
         "schema": target_genome_schema,
     },
-    **attributes,
     "scores": {
         "type": "list",
         "schema": {

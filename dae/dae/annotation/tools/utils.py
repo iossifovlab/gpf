@@ -1,6 +1,7 @@
 import gzip
 import os
 from importlib import import_module
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
 
 
 class AnnotatorFactory:
@@ -27,7 +28,11 @@ class AnnotatorFactory:
         return clazz
 
     @classmethod
-    def make_annotator(cls, annotator_config, genomes_db, liftover=None):
+    def make_annotator(
+            cls, config_path, genomes_db, liftover=None, override=None):
+        annotator_config = AnnotationConfigParser.load_annotation_config(
+            config_path, override
+        )
         clazz = cls.name_to_class(annotator_config.score_type)
         assert clazz is not None
         return clazz(annotator_config, genomes_db, liftover)
