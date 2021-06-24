@@ -17,8 +17,8 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   autismGeneToolConfig: AgpConfig;
   tableConfig: AgpConfig;
 
-  allCategories: string[];
-  shownCategories: string[];
+  allColumns: string[];
+  shownColumns: string[];
 
   @HostListener('window:keydown', ['$event'])
   keyEvent($event: KeyboardEvent) {
@@ -49,8 +49,8 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     this.autismGeneProfilesService.getConfig().take(1).subscribe(config => {
       this.autismGeneToolConfig = config;
       this.tableConfig = cloneDeep(config);
-      this.allCategories = this.getAllCategories(this.autismGeneToolConfig);
-      this.shownCategories = this.getAllCategories(this.autismGeneToolConfig);
+      this.allColumns = this.getAllCategories(this.autismGeneToolConfig);
+      this.shownColumns = this.getAllCategories(this.autismGeneToolConfig);
     });
   }
 
@@ -149,14 +149,17 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   }
 
   getAllCategories(config: AgpConfig) {
-    const allCategories = [];
+    const allColumns = [];
     if (config.geneSets) {
-      allCategories.push(...config.geneSets.map(obj => obj.category));
+      allColumns.push(...config.geneSets.map(obj => obj.category));
     }
     if (config.genomicScores) {
-      allCategories.push(...config.genomicScores.map(obj => obj.category));
+      allColumns.push(...config.genomicScores.map(obj => obj.category));
     }
-    return allCategories;
+    if (config.datasets) {
+      allColumns.push(...config.datasets.map(obj => obj.id));
+    }
+    return allColumns;
   }
 
   openDropdown() {
@@ -164,15 +167,16 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   }
 
   handleMultipleSelectMenuApplyEvent($event) {
-    this.shownCategories = $event.data;
-    this.tableConfig.geneSets = this.autismGeneToolConfig.geneSets.filter(obj => this.shownCategories.includes(obj.category));
-    this.tableConfig.genomicScores = this.autismGeneToolConfig.genomicScores.filter(obj => this.shownCategories.includes(obj.category));
+    this.shownColumns = $event.data;
+    this.tableConfig.geneSets = this.autismGeneToolConfig.geneSets.filter(obj => this.shownColumns.includes(obj.category));
+    this.tableConfig.genomicScores = this.autismGeneToolConfig.genomicScores.filter(obj => this.shownColumns.includes(obj.category));
+    this.tableConfig.datasets = this.autismGeneToolConfig.datasets.filter(obj => this.shownColumns.includes(obj.id));
     this.tableConfig = cloneDeep(this.tableConfig);
     this.ngbDropdownMenu.dropdown.close();
   }
 
   tableConfigChangeEvent($event) {
     this.tableConfig = $event;
-    this.shownCategories = this.getAllCategories(this.tableConfig);
+    this.shownColumns = this.getAllCategories(this.tableConfig);
   }
 }
