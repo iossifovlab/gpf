@@ -1,66 +1,62 @@
 import { Gender } from './gender';
-import { Component, OnInit, forwardRef } from '@angular/core';
-
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { QueryData } from '../query/query';
-import { StateRestoreService } from '../store/state-restore.service';
+import { Component, OnInit } from '@angular/core';
+import { Select, Store } from '@ngxs/store';
+import { Observable } from 'rxjs';
+import { AddGender, GenderModel, GenderState, RemoveGender } from './gender.state';
+import { validate } from 'class-validator';
 
 @Component({
   selector: 'gpf-gender',
   templateUrl: './gender.component.html',
   styleUrls: ['./gender.component.css'],
-  providers: [{
-    provide: QueryStateProvider,
-    useExisting: forwardRef(() => GenderComponent)
-  }]
 })
-export class GenderComponent extends QueryStateWithErrorsProvider implements OnInit {
+export class GenderComponent implements OnInit {
 
   gender = new Gender();
+  supportedGenders = ['male', 'female', 'unspecified'];
+  errors: string[] = [];
+  @Select(GenderState) state$: Observable<GenderModel>;
 
-  constructor(
-    private stateRestoreService: StateRestoreService
-  ) {
-    super();
-  }
+  constructor(private store: Store) { }
 
   ngOnInit() {
-    this.stateRestoreService.getState(this.constructor.name)
-      .take(1)
-      .subscribe((state) => {
-        if (state['gender']) {
-          this.selectNone();
-          for (const gender of state['gender']) {
-            if (gender === 'female' || gender === 'male' || gender === 'unspecified') {
-             this.gender[gender] = true;
-            }
-          }
-        }
-      });
+    this.selectAll();
+    // this.store.selectOnce(state => state.genderState).subscribe(state => {
+    //   for (const gender of state.genders) {
+    //     this.genderCheckValue(gender, true);
+    //   }
+    // });
+
+    this.state$.subscribe(() => {
+      validate(this).then(errors => this.errors = errors.map(err => String(err)));
+    });
   }
 
   selectAll() {
-    this.gender.male = true;
-    this.gender.female = true;
-    this.gender.unspecified = true;
-  }
-
-  selectNone() {
-    this.gender.male = false;
-    this.gender.female = false;
-    this.gender.unspecified = false;
-  }
-
-  genderCheckValue(gender: string, value: boolean): void {
-    if (gender === 'female' || gender === 'male' || gender === 'unspecified') {
-      this.gender[gender] = value;
+    for (const gender of this.supportedGenders) {
+      this.gender[gender] = true;
+      this.store.selectOnce(state => state.genderState).subscribe(state => {
+        if (!state.genders.includes(gender)) {
+          this.store.dispatch(new AddGender(gender));
+        }
+      });
     }
   }
 
-  getState() {
-    return this.validateAndGetState(this.gender)
-      .map(genderState => ({
-        gender: QueryData.trueFalseToStringArray(genderState)
-      }));
+  selectNone() {
+    for (const gender of this.supportedGenders) {
+      this.gender[gender] = false;
+      this.store.dispatch(new RemoveGender(gender));
+    }
+  }
+
+  genderCheckValue(gender: string, value: boolean): void {
+    this.gender[gender] = value;
+
+    if (value) {
+      this.store.dispatch(new AddGender(gender));
+    } else {
+      this.store.dispatch(new RemoveGender(gender));
+    }
   }
 }
