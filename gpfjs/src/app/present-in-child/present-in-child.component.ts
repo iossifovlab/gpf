@@ -1,62 +1,68 @@
-import { PresentInChild, ALL_STATES } from './present-in-child';
 import { Component, OnInit, forwardRef } from '@angular/core';
-
+import { validate } from 'class-validator';
 import { Observable } from 'rxjs';
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { QueryData } from '../query/query';
-import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
-import { ValidationError } from 'class-validator';
-import { StateRestoreService } from '../store/state-restore.service';
+import { Store, Select } from '@ngxs/store';
+
+import { PresentInChild, ALL_STATES } from './present-in-child';
+import { AddPresentInChildValue, RemovePresentInChildValue, PresentInChildModel, PresentInChildState } from './present-in-child.state';
 
 // TODO: rewrite template
 @Component({
   selector: 'gpf-present-in-child',
   templateUrl: './present-in-child.component.html',
-  providers: [{
-    provide: QueryStateProvider, useExisting: forwardRef(() => PresentInChildComponent) }]
 })
-export class PresentInChildComponent extends QueryStateWithErrorsProvider implements OnInit {
+export class PresentInChildComponent implements OnInit {
 
   presentInChild = new PresentInChild();
+  @Select(PresentInChildState) state$: Observable<PresentInChildModel>;
+  errors: Array<string> = [];
 
   constructor(
-    private stateRestoreService: StateRestoreService
-  ) {
-    super();
-  }
+    private store: Store
+  ) { }
 
   ngOnInit() {
-    this.stateRestoreService.getState(this.constructor.name)
-      .take(1)
-      .subscribe(state => {
-        if (state['presentInChild']) {
-          this.presentInChild.selected = new Set(state['presentInChild'] as string[]);
-        }
-      });
+    this.store.selectOnce(state => state.presentInChildState).subscribe(state => {
+      // restore state
+      this.presentInChild.selected.clear();
+      for (const inh of state.presentInChild) {
+        this.addPresentInChildValue(inh);
+      }
+    });
+
+    this.state$.subscribe(state => {
+      // validate for errors
+      validate(this.presentInChild).then(errors => this.errors = errors.map(err => String(err)));
+    });
   }
 
-  selectAll(): void {
-    this.presentInChild.selected = new Set(ALL_STATES);
+  addPresentInChildValue(presentInChild: string) {
+    this.presentInChild.selected.add(presentInChild);
+    this.store.dispatch(new AddPresentInChildValue(presentInChild));
   }
 
-  selectNone(): void {
-    this.presentInChild.selected = new Set();
+  removePresentInChildValue(presentInChild: string) {
+    this.presentInChild.selected.delete(presentInChild);
+    this.store.dispatch(new RemovePresentInChildValue(presentInChild));
   }
 
   presentInChildCheckValue(key: string, value: boolean): void {
     if (value) {
-      this.presentInChild.selected.add(key);
+      this.addPresentInChildValue(key);
     } else {
-      this.presentInChild.selected.delete(key);
+      this.removePresentInChildValue(key);
     }
   }
 
-  getState() {
-    return this.validateAndGetState(this.presentInChild)
-      .map(state => {
-        return {
-          presentInChild: Array.from(state.selected)
-        };
-      });
+  selectAll() {
+    for (const pic of ALL_STATES) {
+      this.addPresentInChildValue(pic);
+    }
+  }
+
+  selectNone() {
+    for (const inh of ALL_STATES) {
+      this.removePresentInChildValue(inh);
+    }
   }
 }
