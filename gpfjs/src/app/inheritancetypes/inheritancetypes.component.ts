@@ -16,6 +16,7 @@ export class InheritancetypesComponent implements OnInit, OnChanges {
   @Input() selectedInheritanceTypeFilterValues: Array<string>;
   @Select(InheritancetypesState) state$: Observable<InheritancetypesModel>;
   inheritanceTypes: InheritanceTypes;
+  errors: Array<string> = [];
 
   constructor(
     private store: Store
@@ -33,9 +34,8 @@ export class InheritancetypesComponent implements OnInit, OnChanges {
     });
 
     this.state$.subscribe(state => {
-      console.log(state);
       // validate for errors
-      validate(this.inheritanceTypes).then(errors => console.log(errors));
+      validate(this.inheritanceTypes).then(errors => this.errors = errors.map(err => String(err)));
     });
   }
 
