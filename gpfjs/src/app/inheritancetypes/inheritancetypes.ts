@@ -13,16 +13,15 @@ export const inheritanceTypeDisplayNames = {
  'unknown': 'Unknown'
 };
 
-export class InheritanceTypes { 
-  available: Set<string> = new Set(['']);
+export class InheritanceTypes {
+  available: Set<string>;
 
   @Validate(SetNotEmpty, {
     message: 'select at least one'
   })
-  selected: Set<string> = new Set(['']);
+  selected: Set<string> = new Set();
 
-  constructor(available: Array<string>, selected: Array<string>) {
+  constructor(available: Array<string>) {
     this.available = new Set(available);
-    this.selected = new Set(selected);
   }
 }

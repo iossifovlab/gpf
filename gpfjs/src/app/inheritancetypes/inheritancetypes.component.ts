@@ -1,63 +1,64 @@
 import { Component, Input, OnInit, OnChanges, forwardRef } from '@angular/core';
 import { InheritanceTypes, inheritanceTypeDisplayNames  } from './inheritancetypes';
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { StateRestoreService } from '../store/state-restore.service';
+import { validate } from 'class-validator';
+import { Observable } from 'rxjs';
+import { Store, Select } from '@ngxs/store';
+import { AddInheritanceType, RemoveInheritanceType, InheritancetypesModel, InheritancetypesState } from './inheritancetypes.state';
 
 @Component({
   selector: 'gpf-inheritancetypes',
   templateUrl: './inheritancetypes.component.html',
   styleUrls: ['./inheritancetypes.component.css'],
-  providers: [{
-    provide: QueryStateProvider,
-    useExisting: forwardRef(() => InheritancetypesComponent )
-  }]
 })
-export class InheritancetypesComponent extends QueryStateWithErrorsProvider
-    implements OnInit, OnChanges {
+export class InheritancetypesComponent implements OnInit, OnChanges {
 
-  @Input()
-  inheritanceTypeFilter: Array<string>;
-
-  @Input()
-  selectedInheritanceTypeFilterValues: Array<string>;
-
+  @Input() inheritanceTypeFilter: Array<string>;
+  @Input() selectedInheritanceTypeFilterValues: Array<string>;
+  @Select(InheritancetypesState) state$: Observable<InheritancetypesModel>;
   inheritanceTypes: InheritanceTypes;
 
   constructor(
-    private stateRestoreService: StateRestoreService
-  ) { 
-    super();
+    private store: Store
+  ) {
+    this.inheritanceTypes = new InheritanceTypes([]);
   }
 
-  ngOnInit() { 
-    this.stateRestoreService.getState(this.constructor.name)
-      .take(1)
-      .subscribe(state => {
-        if (state['inheritanceTypeFilter']) {
-          this.inheritanceTypes.selected = new Set(state['inheritanceTypeFilter'] as string[]);
-        }
-      });
+  ngOnInit() {
+    this.store.selectOnce(state => state.inheritancetypesState).subscribe(state => {
+      // restore state
+      this.inheritanceTypes.selected.clear();
+      for (const inh of state.inheritanceTypes) {
+        this.toggleInheritanceType(inh);
+      }
+    });
+
+    this.state$.subscribe(state => {
+      console.log(state);
+      // validate for errors
+      validate(this.inheritanceTypes).then(errors => console.log(errors));
+    });
   }
 
   ngOnChanges() {
-    this.inheritanceTypes = new InheritanceTypes(
-      this.inheritanceTypeFilter, this.selectedInheritanceTypeFilterValues
-    );
+    this.inheritanceTypeFilter.map(inh => this.inheritanceTypes.available.add(inh));
+    this.selectedInheritanceTypeFilterValues.map(inh => this.addInheritanceType(inh));
   }
 
-  getState() {
-    return this.validateAndGetState(this.inheritanceTypes)
-      .map(inheritanceTypes => ({
-        inheritanceTypeFilter: Array.from(inheritanceTypes.selected)
-      }));
+  addInheritanceType(inheritanceType: string) {
+    this.inheritanceTypes.selected.add(inheritanceType);
+    this.store.dispatch(new AddInheritanceType(inheritanceType));
   }
 
-  checkInheritanceType(inheritanceType: string) {
-    if (this.inheritanceTypes.selected.has(inheritanceType)){
-      this.inheritanceTypes.selected.delete(inheritanceType);
-    }
-    else {
-      this.inheritanceTypes.selected.add(inheritanceType);
+  removeInheritanceType(inheritanceType: string) {
+    this.inheritanceTypes.selected.delete(inheritanceType);
+    this.store.dispatch(new RemoveInheritanceType(inheritanceType));
+  }
+
+  toggleInheritanceType(inheritanceType: string) {
+    if (this.inheritanceTypes.selected.has(inheritanceType)) {
+      this.removeInheritanceType(inheritanceType);
+    } else {
+      this.addInheritanceType(inheritanceType);
     }
   }
 
@@ -66,10 +67,14 @@ export class InheritancetypesComponent extends QueryStateWithErrorsProvider
   }
 
   selectAll() {
-    this.inheritanceTypes.selected = new Set(this.inheritanceTypes.available);
+    for (const inh of this.inheritanceTypes.available) {
+      this.addInheritanceType(inh);
+    }
   }
 
   selectNone() {
-    this.inheritanceTypes.selected = new Set();
+    for (const inh of this.inheritanceTypes.available) {
+      this.removeInheritanceType(inh);
+    }
   }
 }

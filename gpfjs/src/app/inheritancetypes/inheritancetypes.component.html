@@ -14,7 +14,7 @@
           <label> <input
             type="checkbox"
             [checked]="inheritanceTypes.selected.has(inheritanceType)"
-            (change)="checkInheritanceType(inheritanceType)">
+            (change)="toggleInheritanceType(inheritanceType)">
             {{ getDisplayName(inheritanceType) }}
           </label>
       </div>
