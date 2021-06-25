@@ -1,7 +1,9 @@
 import { Component, OnInit, forwardRef } from '@angular/core';
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { StateRestoreService } from '../store/state-restore.service';
 import { IsNotEmpty } from 'class-validator';
+import { validate } from 'class-validator';
+import { Observable } from 'rxjs';
+import { Store, Select } from '@ngxs/store';
+import { SetPersonIds, PersonIdsModel, PersonIdsState } from './person-ids.state';
 
 export class PersonIds {
   @IsNotEmpty()
@@ -12,44 +14,33 @@ export class PersonIds {
   selector: 'gpf-person-ids',
   templateUrl: './person-ids.component.html',
   styleUrls: ['./person-ids.component.css'],
-  providers: [{
-    provide: QueryStateProvider,
-    useExisting: forwardRef(() => PersonIdsComponent)
-  }]
 })
-export class PersonIdsComponent extends QueryStateWithErrorsProvider implements OnInit {
+export class PersonIdsComponent implements OnInit {
 
   personIds = new PersonIds();
+  errors: Array<string> = [];
+
+  @Select(PersonIdsState) state$: Observable<PersonIdsModel>;
 
   constructor(
-    private stateRestoreService: StateRestoreService
-  ) {
-    super();
-  }
+    private store: Store
+  ) { }
 
   ngOnInit() {
-    this.stateRestoreService
-      .getState(this.constructor.name)
-      .take(1)
-      .subscribe(
-      (state) => {
-        if (state['personIds']) {
-          this.personIds.personIds = state['personIds'].join('\n');
-        }
-      }
-    );
+    this.store.selectOnce(state => state.personIdsState).subscribe(state => {
+      // restore state
+      this.personIds.personIds = state.personIds;
+    });
+
+    this.state$.subscribe(state => {
+      // validate for errors
+      validate(this.personIds).then(errors => { this.errors = errors.map(err => String(err)); });
+    });
   }
 
-  getState() {
-    return this.validateAndGetState(this.personIds).map(personIds => {
-      const result = personIds.personIds
-          .split(/[,\s]/)
-          .filter(s => s !== '');
-        if (result.length === 0) {
-          return {};
-        }
-        return { personIds: result };
-      });
+  setPersonIds(personIds: string) {
+    this.personIds.personIds = personIds;
+    this.store.dispatch(new SetPersonIds(personIds));
   }
 
 }
