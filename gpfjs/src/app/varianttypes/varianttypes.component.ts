@@ -63,7 +63,7 @@ export class VarianttypesComponent implements OnInit, OnChanges {
   }
 
   variantTypesCheckValue(variantType: string, value: boolean): void {
-    if (!this.variantTypes.has(variantType)) {
+    if (this.variantTypes && !this.variantTypes.has(variantType)) {
       return;
     }
 
