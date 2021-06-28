@@ -1,6 +1,7 @@
 import { Component, OnInit, Input, Output, EventEmitter, forwardRef } from '@angular/core';
 
 import { Observable } from 'rxjs';
+import { Store } from '@ngxs/store';
 
 import {
   PHENO_TOOL_ALL, PHENO_TOOL_OTHERS, PHENO_TOOL_CNV, PHENO_TOOL_LGDS,
@@ -14,23 +15,16 @@ import { EffecttypesComponent } from '../effecttypes/effecttypes.component';
   selector: 'gpf-pheno-tool-effect-types',
   templateUrl: './pheno-tool-effect-types.component.html',
   providers: [{
-    provide: QueryStateProvider,
+    provide: Store,
     useExisting: forwardRef(() => PhenoToolEffectTypesComponent)
   }]
 })
 export class PhenoToolEffectTypesComponent extends EffecttypesComponent  {
-  phenoToolOthers: string[] = PHENO_TOOL_OTHERS;
-  phenoToolCNV: string[] = PHENO_TOOL_CNV;
-  phenoToolLGDs: string[] = PHENO_TOOL_LGDS;
-
-  // constructor(
-  //   stateRestoreService: StateRestoreService
-  // ) {
-  //   super(stateRestoreService);
-  //   this.effectTypesButtons.set('PHENO_TOOL_ALL', PHENO_TOOL_ALL);
-  // }
+  phenoToolOthers: Set<string> = PHENO_TOOL_OTHERS;
+  phenoToolCNV: Set<string> = PHENO_TOOL_CNV;
+  phenoToolLGDs: Set<string> = PHENO_TOOL_LGDS;
 
   selectInitialValues() {
-    this.selectEffectTypesSet(PHENO_TOOL_INITIAL_VALUES);
+    this.setEffectTypes(PHENO_TOOL_INITIAL_VALUES);
   }
 }

@@ -37,8 +37,6 @@ export class EffecttypesComponent implements OnInit {
     });
 
     this.state$.subscribe(state => {
-      console.log(state);
-      console.log(this.effectTypes);
       validate(this.effectTypes).then(errors => this.errors = errors.map(err => String(err)));
     });
   }
@@ -59,12 +57,15 @@ export class EffecttypesComponent implements OnInit {
 
   selectButtonGroup(groupId: string): void {
     const effectTypes: Set<string> = this.effectTypesButtons.get(groupId);
+    this.setEffectTypes(effectTypes);
+  }
+
+  setEffectTypes(effectTypes: Set<string>) {
     this.effectTypes.selected = effectTypes;
     this.store.dispatch(new SetEffectTypes(effectTypes));
   }
 
   onEffectTypeChange(value: any): void {
-    console.log(value);
     if (value.checked && !this.effectTypes.selected.has(value.effectType)) {
       this.effectTypes.selected.add(value.effectType);
       this.store.dispatch(new AddEffectType(value.effectType));
