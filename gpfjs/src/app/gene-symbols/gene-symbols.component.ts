@@ -1,44 +1,47 @@
-import { GeneSymbols } from './gene-symbols';
 import { Component, OnInit, forwardRef, Input } from '@angular/core';
-import { Subject } from 'rxjs';
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { StateRestoreService } from '../store/state-restore.service';
+import { IsNotEmpty, validate } from 'class-validator';
+import { Observable } from 'rxjs';
+import { Store, Select } from '@ngxs/store';
+import { SetGeneSymbols, GeneSymbolsModel, GeneSymbolsState } from './gene-symbols.state';
+
+export class GeneSymbols {
+  @IsNotEmpty()
+  geneSymbols = '';
+}
 
 @Component({
   selector: 'gpf-gene-symbols',
   templateUrl: './gene-symbols.component.html',
-  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => GeneSymbolsComponent) }]
 })
-export class GeneSymbolsComponent extends QueryStateWithErrorsProvider implements OnInit {
+export class GeneSymbolsComponent implements OnInit {
   geneSymbols = new GeneSymbols();
+  errors: Array<string> = [];
+
+  @Select(GeneSymbolsState) state$: Observable<GeneSymbolsModel>;
 
   constructor(
-    private stateRestoreService: StateRestoreService,
-  ) {
-    super();
-  }
+    private store: Store,
+  ) { }
 
   ngOnInit() {
-    this.stateRestoreService.getState(this.constructor.name)
-      .take(1)
-      .subscribe(state => {
-        if (state['geneSymbols']) {
-          this.geneSymbols.geneSymbols = state['geneSymbols'].join('\n');
-        }
-      });
+    this.store.selectOnce(state => state.geneSymbolsState).subscribe(state => {
+      // restore state
+      this.geneSymbols.geneSymbols = state.geneSymbols.join('\n');
+    });
+
+    this.state$.subscribe(state => {
+      // validate for errors
+      console.log(state);
+      validate(this.geneSymbols).then(errors => { this.errors = errors.map(err => String(err)); });
+    });
   }
 
-  getState() {
-    return this.validateAndGetState(this.geneSymbols)
-      .map(state => {
-        const result = state.geneSymbols
-          .split(/[,\s]/)
-          .filter(s => s !== '')
-          .map(s => s.toUpperCase());
-        if (result.length === 0) {
-          return {};
-        }
-        return { geneSymbols: result };
-      });
+  setGeneSymbols(geneSymbols: string) {
+    const result = geneSymbols
+      .split(/[,\s]/)
+      .filter(s => s !== '')
+      .map(s => s.toUpperCase());
+    this.geneSymbols.geneSymbols = geneSymbols;
+    this.store.dispatch(new SetGeneSymbols(result));
   }
 }
