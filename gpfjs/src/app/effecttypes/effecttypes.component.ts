@@ -36,7 +36,7 @@ export class EffecttypesComponent implements OnInit {
       }
     });
 
-    this.state$.subscribe(state => {
+    this.state$.subscribe(() => {
       validate(this.effectTypes).then(errors => this.errors = errors.map(err => String(err)));
     });
   }
