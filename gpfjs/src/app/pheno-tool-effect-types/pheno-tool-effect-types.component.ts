@@ -23,12 +23,12 @@ export class PhenoToolEffectTypesComponent extends EffecttypesComponent  {
   phenoToolCNV: string[] = PHENO_TOOL_CNV;
   phenoToolLGDs: string[] = PHENO_TOOL_LGDS;
 
-  constructor(
-    stateRestoreService: StateRestoreService
-  ) {
-    super(stateRestoreService);
-    this.effectTypesButtons.set('PHENO_TOOL_ALL', PHENO_TOOL_ALL);
-  }
+  // constructor(
+  //   stateRestoreService: StateRestoreService
+  // ) {
+  //   super(stateRestoreService);
+  //   this.effectTypesButtons.set('PHENO_TOOL_ALL', PHENO_TOOL_ALL);
+  // }
 
   selectInitialValues() {
     this.selectEffectTypesSet(PHENO_TOOL_INITIAL_VALUES);
