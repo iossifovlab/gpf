@@ -11,6 +11,11 @@ export class RemoveEffectType {
   constructor(public effectType: string) {}
 }
 
+export class SetEffectTypes {
+  static readonly type = '[Genotype] Set effect types';
+  constructor(public effectTypes: Set<string>) {}
+}
+
 export interface EffectTypeModel {
   effectTypes: string[];
 }
@@ -36,6 +41,14 @@ export class EffecttypesState {
     const state = ctx.getState();
     ctx.patchState({
       effectTypes: state.effectTypes.filter(eff => eff !== action.effectType)
+    });
+  }
+
+  @Action(SetEffectTypes)
+  setEffectTypes(ctx: StateContext<EffectTypeModel>, action: SetEffectTypes) {
+    const state = ctx.getState();
+    ctx.patchState({
+      effectTypes: Array.from(action.effectTypes)
     });
   }
 }

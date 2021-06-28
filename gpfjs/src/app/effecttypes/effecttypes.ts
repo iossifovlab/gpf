@@ -1,13 +1,12 @@
-import { ArrayNotEmpty } from 'class-validator';
+import { Validate } from 'class-validator';
+import { SetNotEmpty } from '../utils/set.validators';
 
 export class EffectTypes {
-  @ArrayNotEmpty({
-    message: 'select at least one'
-  })
-  selected: Array<string> = [];
+  @Validate(SetNotEmpty, {message: 'select at least one'})
+  selected: Set<string> = new Set();
 }
 
-export const ALL: string[] = [
+export const ALL: Set<string> = new Set([
   'Nonsense',
   'Frame-shift',
   'Splice-site',
@@ -24,9 +23,9 @@ export const ALL: string[] = [
   '5\'-UTR',
   'CNV+',
   'CNV-'
-];
+]);
 
-export const CODING: string[] = [
+export const CODING: Set<string> = new Set([
   'Nonsense',
   'Frame-shift',
   'Splice-site',
@@ -36,29 +35,29 @@ export const CODING: string[] = [
   'noStart',
   'noEnd',
   'Synonymous',
-];
+]);
 
-export const NONCODING: string[] = [
+export const NONCODING: Set<string> = new Set([
   'Non coding',
   'Intron',
   'Intergenic',
   '3\'-UTR',
   '5\'-UTR',
-];
+]);
 
-export const CNV: string[] = [
+export const CNV: Set<string> = new Set([
   'CNV+',
   'CNV-'
-];
+]);
 
-export const LGDS: string[] = [
+export const LGDS: Set<string> = new Set([
   'Nonsense',
   'Frame-shift',
   'Splice-site',
   'No-frame-shift-newStop',
-];
+]);
 
-export const NONSYNONYMOUS: string[] = [
+export const NONSYNONYMOUS: Set<string> = new Set([
   'Nonsense',
   'Frame-shift',
   'Splice-site',
@@ -67,9 +66,9 @@ export const NONSYNONYMOUS: string[] = [
   'No-frame-shift',
   'noStart',
   'noEnd',
-];
+]);
 
-export const UTRS: string[] = [
+export const UTRS: Set<string> = new Set([
   '3\'-UTR',
   '5\'-UTR',
-];
+]);
