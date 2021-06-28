@@ -29,7 +29,7 @@ export class InheritancetypesComponent implements OnInit, OnChanges {
       // restore state
       this.inheritanceTypes.selected.clear();
       for (const inh of state.inheritanceTypes) {
-        this.toggleInheritanceType(inh);
+        this.addInheritanceType(inh);
       }
     });
 
