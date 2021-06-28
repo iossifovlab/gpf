@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 
 import { GeneSetsState } from '../gene-sets/gene-sets-state';
-import { GeneSymbols } from '../gene-symbols/gene-symbols';
+import { GeneSymbols } from '../gene-symbols/gene-symbols.component';
 import { GeneWeightsState } from '../gene-weights/gene-weights-store';
 
 export interface GeneSetState {

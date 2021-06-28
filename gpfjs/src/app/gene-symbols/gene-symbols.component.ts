@@ -31,7 +31,6 @@ export class GeneSymbolsComponent implements OnInit {
 
     this.state$.subscribe(state => {
       // validate for errors
-      console.log(state);
       validate(this.geneSymbols).then(errors => { this.errors = errors.map(err => String(err)); });
     });
   }

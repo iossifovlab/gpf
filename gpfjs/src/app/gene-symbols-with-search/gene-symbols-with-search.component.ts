@@ -1,5 +1,5 @@
 import { Component, OnInit, forwardRef, EventEmitter, Output, Input } from '@angular/core';
-import { GeneSymbols } from 'app/gene-symbols/gene-symbols';
+import { GeneSymbols } from 'app/gene-symbols/gene-symbols.component';
 import { Subject } from 'rxjs';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { GeneService } from '../gene-view/gene.service';
