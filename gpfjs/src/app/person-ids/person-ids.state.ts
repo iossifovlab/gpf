@@ -3,17 +3,17 @@ import { State, Action, StateContext } from '@ngxs/store';
 
 export class SetPersonIds {
   static readonly type = '[Genotype] Set person ids';
-  constructor(public personIds: string) {}
+  constructor(public personIds: string[]) {}
 }
 
 export interface PersonIdsModel {
-  personIds: string;
+  personIds: string[];
 }
 
 @State<PersonIdsModel>({
   name: 'personIdsState',
   defaults: {
-    personIds: ''
+    personIds: []
   },
 })
 @Injectable()

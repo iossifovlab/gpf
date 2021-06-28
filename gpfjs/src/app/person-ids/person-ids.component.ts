@@ -29,7 +29,7 @@ export class PersonIdsComponent implements OnInit {
   ngOnInit() {
     this.store.selectOnce(state => state.personIdsState).subscribe(state => {
       // restore state
-      this.personIds.personIds = state.personIds;
+      this.personIds.personIds = state.personIds.join('\n');
     });
 
     this.state$.subscribe(state => {
@@ -39,8 +39,11 @@ export class PersonIdsComponent implements OnInit {
   }
 
   setPersonIds(personIds: string) {
+    const result = personIds
+      .split(/[,\s]/)
+      .filter(s => s !== '');
     this.personIds.personIds = personIds;
-    this.store.dispatch(new SetPersonIds(personIds));
+    this.store.dispatch(new SetPersonIds(result));
   }
 
 }
