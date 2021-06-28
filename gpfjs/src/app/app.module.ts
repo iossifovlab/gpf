@@ -11,6 +11,7 @@ import { DatasetsService } from './datasets/datasets.service';
 import { ConfigService } from './config/config.service';
 import { GenderComponent } from './gender/gender.component';
 import { PresentInChildComponent } from './present-in-child/present-in-child.component';
+import { PresentInChildState } from './present-in-child/present-in-child.state';
 import { PresentInParentComponent } from './present-in-parent/present-in-parent.component';
 import { VarianttypesComponent } from './varianttypes/varianttypes.component';
 import { EffecttypesComponent } from './effecttypes/effecttypes.component';
@@ -24,6 +25,7 @@ import { PedigreeSelectorComponent } from './pedigree-selector/pedigree-selector
 import { GenotypeBlockComponent } from './genotype-block/genotype-block.component';
 import { GenesBlockComponent } from './genes-block/genes-block.component';
 import { GeneSymbolsComponent } from './gene-symbols/gene-symbols.component';
+import { GeneSymbolsState } from './gene-symbols/gene-symbols.state';
 import { RegionsFilterComponent } from './regions-filter/regions-filter.component';
 import { RegionsBlockComponent } from './regions-block/regions-block.component';
 import { PedigreeChartModule } from './pedigree-chart/pedigree-chart.module';
@@ -143,6 +145,7 @@ import { SaveQueryComponent } from './save-query/save-query.component';
 import { SavedQueriesTableComponent } from './saved-queries-table/saved-queries-table.component';
 import { SavedQueriesComponent } from './saved-queries/saved-queries.component';
 import { InheritancetypesComponent } from './inheritancetypes/inheritancetypes.component';
+import { InheritancetypesState } from './inheritancetypes/inheritancetypes.state';
 import { GeneBrowserComponent } from './gene-browser/gene-browser.component';
 import { GlobalErrorHandler } from './global-error-handler/global-error-handler';
 import { GlobalErrorDisplayComponent } from './global-error-display/global-error-display.component';
@@ -162,6 +165,7 @@ import { AutismGeneProfileSingleViewComponent } from './autism-gene-profiles-sin
 import { MiddleClickDirective } from './autism-gene-profiles-table/middle-click.directive';
 import { PersonFiltersBlockComponent } from './person-filters-block/person-filters-block.component';
 import { PersonIdsComponent } from './person-ids/person-ids.component';
+import { PersonIdsState } from './person-ids/person-ids.state';
 import { FamilyTypeFilterComponent } from './family-type-filter/family-type-filter.component';
 import { SortingButtonsComponent } from './sorting-buttons/sorting-buttons.component';
 import { BnNgIdleService } from 'bn-ng-idle';
@@ -398,7 +402,11 @@ const appRoutes: Routes = [
     }),
     NgMultiSelectDropDownModule.forRoot(),
     Ng2SearchPipeModule,
-    NgxsModule.forRoot([VarianttypesState, EffecttypesState, GenderState]),
+    NgxsModule.forRoot([
+      VarianttypesState, EffecttypesState, GenderState,
+      InheritancetypesState, PersonIdsState, PresentInChildState,
+      GeneSymbolsState
+    ]),
   ],
   providers: [
     CookieService,
