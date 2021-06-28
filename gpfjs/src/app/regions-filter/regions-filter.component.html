@@ -1,6 +1,11 @@
 <div class="panel" id="regions-filter-panel">
-    <textarea #regionsFilterInput="ngModel" type="text" [(ngModel)]="regionsFilter.regionsFilter" class="form-control">
-    </textarea>
+  <textarea
+    #regionsFilterInput="ngModel"
+    class="form-control"
+    type="text"
+    [(ngModel)]="regionsFilter.regionsFilter"
+    (ngModelChange)="setRegionsFilter($event)">
+  </textarea>
 
-    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+  <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
 </div>

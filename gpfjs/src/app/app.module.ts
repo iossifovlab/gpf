@@ -175,6 +175,7 @@ import { NgxsModule } from '@ngxs/store';
 import { VarianttypesState } from './varianttypes/varianttypes.state';
 import { EffecttypesState } from './effecttypes/effecttypes.state';
 import { GenderState } from './gender/gender.state';
+import { RegionsFilterState } from './regions-filter/regions-filter.state';
 
 const appRoutes: Routes = [
   {
@@ -406,7 +407,7 @@ const appRoutes: Routes = [
     NgxsModule.forRoot([
       VarianttypesState, EffecttypesState, GenderState,
       InheritancetypesState, PersonIdsState, PresentInChildState,
-      GeneSymbolsState, FamilyIdsState
+      GeneSymbolsState, FamilyIdsState, RegionsFilterState
     ]),
   ],
   providers: [
