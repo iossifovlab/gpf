@@ -166,6 +166,10 @@ import { FamilyTypeFilterComponent } from './family-type-filter/family-type-filt
 import { SortingButtonsComponent } from './sorting-buttons/sorting-buttons.component';
 import { BnNgIdleService } from 'bn-ng-idle';
 import { AutismGeneProfileSingleViewWrapperComponent } from './autism-gene-profile-single-view-wrapper/autism-gene-profile-single-view-wrapper.component';
+import { NgxsModule } from '@ngxs/store';
+import { VarianttypesState } from './varianttypes/varianttypes.state';
+import { EffecttypesState } from './effecttypes/effecttypes.state';
+import { GenderState } from './gender/gender.state';
 
 const appRoutes: Routes = [
   {
@@ -393,7 +397,8 @@ const appRoutes: Routes = [
       confirmButtonType: 'danger'
     }),
     NgMultiSelectDropDownModule.forRoot(),
-    Ng2SearchPipeModule
+    Ng2SearchPipeModule,
+    NgxsModule.forRoot([VarianttypesState, EffecttypesState, GenderState]),
   ],
   providers: [
     CookieService,
