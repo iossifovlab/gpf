@@ -10,5 +10,8 @@ export class GenotypeBlockComponent {
   @Input()
   dataset: Dataset;
 
+  items = new Set(['1', '2', '3']);
+  selectedItems = new Set(['2']);
+
   constructor() { }
 }

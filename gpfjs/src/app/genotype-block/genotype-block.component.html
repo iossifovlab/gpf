@@ -1,17 +1,17 @@
 <div class="genotype-block form-block">
 	<div class="row row-eq-height">
 
-		<!-- 
     <div *ngIf="dataset.genotypeBrowserConfig.hasPedigreeSelector" class="col-lg-3">
-			<gpf-pedigree-selector [pedigrees]="dataset.genotypeBrowserConfig.pedigrees"></gpf-pedigree-selector>
+			<gpf-pedigree-selector [pedigrees]="dataset.peopleGroupConfig.pedigreeSelectors"></gpf-pedigree-selector>
 		</div>
-    -->
 
-		<div *ngIf="dataset.genotypeBrowserConfig.hasPresentInChild" class="col-lg-3">
+		<div *ngIf="true" class="col-lg-3">
 			<gpf-present-in-child></gpf-present-in-child>
 		</div>
 
-		<div *ngIf="hasPresentInParent | async" class="col-lg-3">
+    <gpf-checkbox-list [title]="'Yakou'" [items]="items" [stateName]="'yakouState'"></gpf-checkbox-list>
+
+		<div *ngIf="true" class="col-lg-3">
 			<gpf-present-in-parent></gpf-present-in-parent>
 		</div>
 
@@ -21,8 +21,7 @@
       </gpf-effecttypes>
 		</div>
 
-    <!--
-		<div *ngIf="dataset.genotypeBrowserConfig.hasPresentInRole" class="col-lg-3 panel-row">
+		<div *ngIf="true" class="col-lg-3 panel-row">
 			<div>
 				<gpf-present-in-role
           *ngFor="let pir of dataset.genotypeBrowserConfig.presentInRole"
@@ -30,7 +29,6 @@
 				</gpf-present-in-role>
 			</div>
 		</div>
-    -->
 
 		<div class="col-lg-3 panel-row">
 			<gpf-gender></gpf-gender>
@@ -43,11 +41,9 @@
       </gpf-varianttypes>
 		</div>
 
-    <!--
-		<div *ngIf="dataset.genotypeBrowserConfig.hasStudyTypes" class="col-lg-3">
+		<div *ngIf="true" class="col-lg-3">
 			<gpf-study-types></gpf-study-types>
     </div>
-    -->
 
 		<div class="col-lg-3 panel-row">
 			<gpf-inheritancetypes
