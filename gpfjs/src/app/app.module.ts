@@ -76,6 +76,7 @@ import { MultiContinuousFilterComponent } from './multi-continuous-filter/multi-
 import { CategoricalFilterComponent } from './categorical-filter/categorical-filter.component';
 import { MeasuresService } from './measures/measures.service';
 import { FamilyIdsComponent } from './family-ids/family-ids.component';
+import { FamilyIdsState } from './family-ids/family-ids.state';
 
 import { NumberWithExpPipe } from './utils/number-with-exp.pipe';
 import { PhenoToolComponent } from './pheno-tool/pheno-tool.component';
@@ -405,7 +406,7 @@ const appRoutes: Routes = [
     NgxsModule.forRoot([
       VarianttypesState, EffecttypesState, GenderState,
       InheritancetypesState, PersonIdsState, PresentInChildState,
-      GeneSymbolsState
+      GeneSymbolsState, FamilyIdsState
     ]),
   ],
   providers: [

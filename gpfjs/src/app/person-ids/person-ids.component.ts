@@ -1,4 +1,4 @@
-import { Component, OnInit, forwardRef } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { IsNotEmpty } from 'class-validator';
 import { validate } from 'class-validator';
 import { Observable } from 'rxjs';

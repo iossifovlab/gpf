@@ -13,11 +13,13 @@
       </gpf-study-filters-block>
       <gpf-genomic-scores-block>
       </gpf-genomic-scores-block>
+      -->
       <gpf-family-filters-block
         *ngIf="dataset?.genotypeBrowserConfig?.hasFamilyFilters"
         [dataset]="dataset"
         [genotypeBrowserState]="genotypeBrowserState">
       </gpf-family-filters-block>
+      <!--
       <gpf-person-filters-block
         *ngIf="dataset?.genotypeBrowserConfig?.hasPersonFilters"
         [dataset]="dataset"

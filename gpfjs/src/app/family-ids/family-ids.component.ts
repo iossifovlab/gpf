@@ -1,51 +1,43 @@
-import { Component, OnInit, forwardRef } from '@angular/core';
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
+import { Component, OnInit } from '@angular/core';
 import { FamilyIds } from './family-ids';
-import { StateRestoreService } from '../store/state-restore.service';
+import { validate } from 'class-validator';
+import { Observable } from 'rxjs';
+import { Store, Select } from '@ngxs/store';
+import { SetFamilyIds, FamilyIdsModel, FamilyIdsState} from './family-ids.state';
 
 @Component({
   selector: 'gpf-family-ids',
   templateUrl: './family-ids.component.html',
   styleUrls: ['./family-ids.component.css'],
-  providers: [{
-    provide: QueryStateProvider,
-    useExisting: forwardRef(() => FamilyIdsComponent)
-  }]
 })
-export class FamilyIdsComponent extends QueryStateWithErrorsProvider implements OnInit {
+export class FamilyIdsComponent implements OnInit {
 
   familyIds = new FamilyIds();
+  errors: Array<string> = [];
+
+  @Select(FamilyIdsState) state$: Observable<FamilyIdsModel>;
 
   constructor(
-    private stateRestoreService: StateRestoreService
-  ) {
-    super();
-  }
+    private store: Store
+  ) { }
 
   ngOnInit() {
-    this.stateRestoreService
-      .getState(this.constructor.name)
-      .take(1)
-      .subscribe(
-      (state) => {
-        if (state['familyIds']) {
-          this.familyIds.familyIds = state['familyIds'].join('\n');
-        }
-      }
-    );
+    this.store.selectOnce(state => state.familyIdsState).subscribe(state => {
+      // restore state
+      this.familyIds.familyIds = state.familyIds.join('\n');
+    });
+
+    this.state$.subscribe(state => {
+      // validate for errors
+      validate(this.familyIds).then(errors => { this.errors = errors.map(err => String(err)); });
+    });
   }
 
-  getState() {
-    return this.validateAndGetState(this.familyIds).map(familyIds => {
-      const result = familyIds.familyIds
-          .split(/[,\s]/)
-          .filter(s => s !== '');
-        if (result.length === 0) {
-          return {};
-        }
-
-        return { familyIds: result };
-      });
+  setFamilyIds(familyIds: string) {
+    const result = familyIds
+      .split(/[,\s]/)
+      .filter(s => s !== '');
+    this.familyIds.familyIds = familyIds;
+    this.store.dispatch(new SetFamilyIds(result));
   }
-
 }
