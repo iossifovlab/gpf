@@ -176,6 +176,7 @@ import { VarianttypesState } from './varianttypes/varianttypes.state';
 import { EffecttypesState } from './effecttypes/effecttypes.state';
 import { GenderState } from './gender/gender.state';
 import { RegionsFilterState } from './regions-filter/regions-filter.state';
+import { CheckboxListComponent } from './checkbox-list/checkbox-list.component';
 
 const appRoutes: Routes = [
   {
@@ -387,6 +388,7 @@ const appRoutes: Routes = [
     FamilyTypeFilterComponent,
     SortingButtonsComponent,
     AutismGeneProfileSingleViewWrapperComponent,
+    CheckboxListComponent,
   ],
   imports: [
     BrowserModule,
