@@ -29,8 +29,7 @@ export class GenderComponent implements OnInit {
       }
     });
 
-    this.state$.subscribe(state => {
-      console.log(state);
+    this.state$.subscribe(() => {
       validate(this.gender).then(errors => this.errors = errors.map(err => String(err)));
     });
   }
