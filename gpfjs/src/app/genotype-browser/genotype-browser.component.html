@@ -2,8 +2,11 @@
   <div *ngIf="dataset.accessRights">
     <div class="container" style="margin-bottom: 20px;">
       <gpf-genes-block></gpf-genes-block>
+      <!--
       <gpf-regions-block></gpf-regions-block>
-      <gpf-genotype-block></gpf-genotype-block>
+      -->
+      <gpf-genotype-block [dataset]="dataset"></gpf-genotype-block>
+      <!--
       <gpf-study-filters-block
         *ngIf="dataset?.genotypeBrowserConfig?.hasStudyFilters"
         [dataset]="dataset">
@@ -20,6 +23,7 @@
         [dataset]="dataset"
         [genotypeBrowserState]="genotypeBrowserState">
       </gpf-person-filters-block>
+      -->
 
       <div class="form-block">
         <form
@@ -34,8 +38,10 @@
             type="button" class="btn btn-md btn-primary"
             value="Graphical Preview"
             (click)="tablePreview = false; submitQuery()">
+          <!--
           <gpf-share-query-button [disabled]="disableQueryButtons" queryType="genotype"></gpf-share-query-button>
           <gpf-save-query [disabled]="disableQueryButtons" queryType="genotype"></gpf-save-query>
+          -->
         </div>
       </div>
     </div>
