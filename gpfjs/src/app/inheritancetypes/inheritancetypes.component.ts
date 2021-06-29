@@ -32,7 +32,7 @@ export class InheritancetypesComponent implements OnInit, OnChanges {
 
     this.state$.subscribe(state => {
       // validate for errors
-      validate(this.inheritanceTypes).then(errors => this.errors = errors.map(err => String(err)));
+      validate(this).then(errors => this.errors = errors.map(err => String(err)));
     });
   }
 
