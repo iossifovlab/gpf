@@ -35,7 +35,7 @@
           </th>
         </ng-container>
 
-        <th *ngFor="let dataset of shownDatasets" class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="calculateDatasetColspan(dataset.displayName)">
+        <th *ngFor="let dataset of shownDatasets" class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="calculateDatasetColspan(dataset)">
           <div class="table-main-header-text" style="margin-right: 30px"> 
             <span [title]="dataset.meta ? dataset.meta : ''">{{dataset.displayName}}</span>
           </div>
@@ -71,7 +71,7 @@
 
         <ng-container *ngFor="let dataset of shownDatasets">
           <ng-container *ngFor="let personSet of dataset.personSets">
-            <th class="table-subheader" [attr.colspan]="shownDatasetNames.get(dataset.displayName).get(personSet.displayName).length">
+            <th class="table-subheader" [attr.colspan]="personSet.statistics.length">
               <div class="table-main-header-text" style="margin-right: 30px">
                 <span [title]="personSet.description ? personSet.description : ''">{{personSet.displayName}} ({{personSet.childrenCount}})</span>
               </div>
@@ -90,11 +90,9 @@
       <tr>
         <ng-container *ngFor="let dataset of shownDatasets">
           <ng-container *ngFor="let personSet of dataset.personSets">
-            <td *ngFor="let statisticName of shownDatasetNames.get(dataset.displayName).get(personSet.displayName)" class="effect-type-header">
-              <ng-container *ngIf="getStatisticByName(dataset, statisticName) as statistic">
-                <span [title]="statistic.description ? statistic.description : ''">{{statistic.displayName}}</span>
-                <gpf-sorting-buttons [id]="dataset.id + '_' + personSet.id + '_' + statistic.id" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
-              </ng-container>
+            <td *ngFor="let statistic of personSet.statistics" class="effect-type-header">
+              <span [title]="statistic.description ? statistic.description : ''">{{statistic.displayName}}</span>
+              <gpf-sorting-buttons [id]="dataset.id + '_' + personSet.id + '_' + statistic.id" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
             </td>
           </ng-container>
         </ng-container>
@@ -124,14 +122,12 @@
 
         <ng-container *ngFor="let dataset of shownDatasets">
           <ng-container *ngFor="let personSet of dataset.personSets">
-            <td style="min-width: 70px" *ngFor="let statisticName of shownDatasetNames.get(dataset.displayName).get(personSet.displayName)">
-              <ng-container *ngIf="getStatisticByName(dataset, statisticName) as statistic">
-                <ng-container *ngIf="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id) as value">
-                  <ng-container *ngIf="value.count !== 0">
-                    <a (click)="goToQuery(gene.geneSymbol, personSet.id, statistic.id, dataset.id)" (middleclick)="goToQuery(gene.geneSymbol, personSet.id, statistic.id, dataset.id)">
-                      {{value.count}} ({{value.rate | number : '1.0-3' }})
-                    </a>
-                  </ng-container>
+            <td style="min-width: 70px" *ngFor="let statistic of personSet.statistics">
+              <ng-container *ngIf="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id) as value">
+                <ng-container *ngIf="value.count !== 0">
+                  <a (click)="goToQuery(gene.geneSymbol, personSet.id, statistic.id, dataset.id)" (middleclick)="goToQuery(gene.geneSymbol, personSet.id, statistic.id, dataset.id)">
+                    {{value.count}} ({{value.rate | number : '1.0-3' }})
+                  </a>
                 </ng-container>
               </ng-container>
             </td> 
@@ -183,7 +179,7 @@ Described in GPF-546 -->
     </span>
   </div>
   <ng-container *ngFor="let personSet of dataset.personSets">
-    <div *ngIf="allDatasetNames.get(dataset.displayName) && allDatasetNames.get(dataset.displayName).get(personSet.displayName) && shownDatasetNames.get(dataset.displayName) && shownDatasetNames.get(dataset.displayName).get(personSet.displayName)" style="position: sticky;" [style.bottom.px]="modalBottom">
+    <div *ngIf="allDatasetNames.get(dataset.displayName) && allDatasetNames.get(dataset.displayName).get(personSet.displayName) && shownDatasetNames.get(dataset.displayName) && shownDatasetNames.get(dataset.displayName).get(personSet.displayName)" style="position: sticky;" [style.bottom.px]="modalBottom - 150">
       <span #dropdownSpan [attr.id]="dataset.id + '-' + personSet.id + '-span'" ngbDropdown>
         <button ngbDropdownToggle style="display: none;"></button>
         <gpf-multiple-select-menu ngbDropdownMenu [attr.id]="dataset.id + '-' + personSet.id + '-dropdown'"
