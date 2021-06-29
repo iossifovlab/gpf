@@ -47,6 +47,7 @@ import { BoldMatchingPipe } from './utils/bold-matching.pipe';
 import { MinValidatorDirective, MaxValidatorDirective } from './utils/min-max.validator';
 
 import { StudyTypesComponent } from './study-types/study-types.component';
+import { StudyTypesState } from './study-types/study-types.state';
 
 import { CookieService} from 'ngx-cookie-service';
 
@@ -409,7 +410,7 @@ const appRoutes: Routes = [
     NgxsModule.forRoot([
       VarianttypesState, EffecttypesState, GenderState,
       InheritancetypesState, PersonIdsState, PresentInChildState,
-      GeneSymbolsState, FamilyIdsState, RegionsFilterState
+      GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState,
     ]),
   ],
   providers: [

@@ -1,74 +1,46 @@
-import { StudyTypes } from './study-types';
-import { Component, OnInit, forwardRef } from '@angular/core';
-
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { QueryData } from '../query/query';
-import { StateRestoreService } from '../store/state-restore.service';
+import { Input, Component, OnInit, forwardRef } from '@angular/core';
+import { Observable } from 'rxjs';
+import { Store, Select } from '@ngxs/store';
+import { validate, Validate } from 'class-validator';
+import { SetNotEmpty } from '../utils/set.validators';
+import { SetStudyTypes, StudyTypesModel, StudyTypesState } from './study-types.state';
 
 @Component({
   selector: 'gpf-study-types',
   templateUrl: './study-types.component.html',
-  styleUrls: ['./study-types.component.css'],
-  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => StudyTypesComponent) }]
-
 })
-export class StudyTypesComponent extends QueryStateWithErrorsProvider implements OnInit {
+export class StudyTypesComponent implements OnInit {
 
-  studyTypes = new StudyTypes();
+  /*
+   * we: Whole Exome
+   * tg: Targeted Genome
+   * wg: Whole Genome
+   */
+  studyTypes: Set<string> = new Set(['we', 'tg', 'wg']);
 
-  constructor(
-    private stateRestoreService: StateRestoreService
-  ) {
-    super();
-  }
+  @Input()
+  @Validate(SetNotEmpty, {message: 'select at least one'})
+  selectedValues: Set<string> = new Set([]);
+
+  @Select(StudyTypesState) state$: Observable<StudyTypesModel>;
+  errors: Array<string> = [];
+
+  constructor(private store: Store) { }
 
   ngOnInit() {
-    this.stateRestoreService.getState(this.constructor.name)
-      .take(1)
-      .subscribe(state => {
-        if (state['studyTypes']) {
-          this.selectNone();
-          for (const studyType of state['studyTypes']) {
-            if (studyType === 'we') {
-              this.studyTypes.we = true;
-            }
-            if (studyType === 'tg') {
-              this.studyTypes.tg = true;
-            }
-            if (studyType === 'wg') {
-              this.studyTypes.wg = true;
-            }
-          }
-        }
-      });
+    this.store.selectOnce(state => state.studyTypesState).subscribe(state => {
+      // restore state
+      this.selectedValues = state.studyTypes;
+    });
+
+    this.state$.subscribe(state => {
+      // validate for errors
+      validate(this).then(errors => this.errors = errors.map(err => String(err)));
+    });
   }
 
-  selectAll(): void {
-    this.studyTypes.tg = true;
-    this.studyTypes.we = true;
-    this.studyTypes.wg = true;
+  updateStudyTypes(newValues: Set<string>): void {
+    this.selectedValues = newValues;
+    this.store.dispatch(new SetStudyTypes(newValues));
   }
-
-  selectNone(): void {
-    this.studyTypes.tg = false;
-    this.studyTypes.we = false;
-    this.studyTypes.wg = false;
-  }
-
-  studyTypesCheckValue(studyType: string, value: boolean): void {
-    if (studyType === 'we') {
-      this.studyTypes.we = value;
-    } else if (studyType === 'tg') {
-      this.studyTypes.tg = value;
-    } else if (studyType === 'wg') {
-      this.studyTypes.wg = value;
-    }
-  }
-
-  getState() {
-    return this.validateAndGetState(this.studyTypes)
-      .map(statue =>
-        ({ studyTypes: QueryData.trueFalseToStringArray(this.studyTypes) }));
-  }
-
 }

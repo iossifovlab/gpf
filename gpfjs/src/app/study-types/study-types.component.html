@@ -1,42 +1,8 @@
-<div class="study-types-card card">
-    <div class="card-header card-title">Study Types</div>
-    <div class="card-block">
-        <div class="btn-group btn-group-sm">
-            <button (click)="selectAll()"
-                class="btn btn-default">All</button>
-            <button (click)="selectNone()"
-                class="btn btn-default">None</button>
-        </div>
-        <div class="checkbox">
-          <label>
-            <input #weCheckbox
-                type="checkbox"
-                [checked]="studyTypes.we"
-                (change)="studyTypesCheckValue('we',weCheckbox.checked)">
-            <span>WE</span>
-          </label>
-        </div>
-        <div class="checkbox">
-          <label>
-            <input
-                #tgCheckbox
-                type="checkbox"
-                [checked]="studyTypes.tg"
-                (change)="studyTypesCheckValue('tg',tgCheckbox.checked)">
-            <span>TG</span>
-          </label>
-        </div>
-        <div class="checkbox">
-          <label>
-            <input
-                #wgCheckbox
-                type="checkbox"
-                [checked]="studyTypes.wg"
-                (change)="studyTypesCheckValue('wg',wgCheckbox.checked)">
-            <span>WG</span>
-          </label>
-        </div>
-    </div>
-
-    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+<div>
+  <gpf-checkbox-list
+    [title]="'Study Types'"
+    [items]="studyTypes"
+    (itemsUpdateEvent)="updateStudyTypes($event)">
+  </gpf-checkbox-list>
+  <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
 </div>
