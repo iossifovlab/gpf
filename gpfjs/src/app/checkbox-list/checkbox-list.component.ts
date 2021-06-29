@@ -1,5 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
-import { AddItem, RemoveItem, SetItems, CheckboxListModel, CheckboxListState } from './checkbox-list.state';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 
 @Component({
   selector: 'gpf-checkbox-list',
@@ -9,31 +8,33 @@ import { AddItem, RemoveItem, SetItems, CheckboxListModel, CheckboxListState } f
 export class CheckboxListComponent implements OnInit {
 
   @Input() title: string;
-  @Input() stateName: string;
   @Input() items: Set<string>;
   @Input() selectedItems: Set<string>;
-  errors: string[];
-
-  constructor() { }
+  @Output() itemsUpdateEvent = new EventEmitter<Set<string>>();
 
   ngOnInit(): void {
-    console.log(this.stateName);
     if (!this.selectedItems) {
       this.selectAll();
     }
   }
 
+  emit(): void {
+    this.itemsUpdateEvent.emit(this.selectedItems);
+  }
+
   selectNone(): void {
     this.selectedItems.clear();
+    this.emit();
   }
 
   selectAll(): void {
     this.selectedItems = new Set([...this.items]);
+    this.emit();
   }
 
-  toggleItem(item: string) {
+  toggleItem(item: string): void {
     this.selectedItems.has(item) ? this.selectedItems.delete(item) : this.selectedItems.add(item);
-    console.log(this.selectedItems);
+    this.emit();
   }
 
 }

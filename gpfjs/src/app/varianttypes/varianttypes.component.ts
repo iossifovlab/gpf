@@ -2,7 +2,7 @@ import { Input, Component, OnInit, OnChanges } from '@angular/core';
 import { validate, Validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
 import { Select, Store } from '@ngxs/store';
-import { VarianttypesState, VarianttypeModel, AddVariantType, RemoveVariantType } from './varianttypes.state';
+import { VarianttypesState, VarianttypeModel, SetVariantTypes } from './varianttypes.state';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -21,56 +21,23 @@ export class VarianttypesComponent implements OnInit, OnChanges {
 
   ngOnChanges(): void {
     if (this.selectedVariantTypes) {
-      this.selectedVariantTypes.forEach(variantType => {
-        this.variantTypesCheckValue(variantType, false);
-      });
+      this.store.dispatch(new SetVariantTypes(this.selectedVariantTypes));
     }
   }
 
   ngOnInit() {
     this.selectedVariantTypes = new Set();
     this.store.selectOnce(state => state.varianttypesState).subscribe(state => {
-      for (const variantType of state.variantTypes) {
-        this.variantTypesCheckValue(variantType, false);
-      }
+      this.selectedVariantTypes = state.variantTypes;
     });
 
-    this.state$.subscribe(() => {
+    this.state$.subscribe(state => {
       validate(this).then(errors => this.errors = errors.map(err => String(err)));
     });
   }
 
-  addVariantType(variantType: string): void {
-    this.selectedVariantTypes.add(variantType);
-    this.store.dispatch(new AddVariantType(variantType));
-  }
-
-  removeVariantType(variantType: string): void {
-    this.selectedVariantTypes.delete(variantType);
-    this.store.dispatch(new RemoveVariantType(variantType));
-  }
-
-  selectAll(): void {
-    for (const variantType of this.variantTypes) {
-      this.addVariantType(variantType);
-    }
-  }
-
-  selectNone(): void {
-    for (const variantType of this.variantTypes) {
-      this.removeVariantType(variantType);
-    }
-  }
-
-  variantTypesCheckValue(variantType: string, value: boolean): void {
-    if (this.variantTypes && !this.variantTypes.has(variantType)) {
-      return;
-    }
-
-    if (!value) {
-      this.addVariantType(variantType);
-    } else {
-      this.removeVariantType(variantType);
-    }
+  updateVariantTypes(newValues: Set<string>): void {
+    this.selectedVariantTypes = newValues;
+    this.store.dispatch(new SetVariantTypes(newValues));
   }
 }
