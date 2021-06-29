@@ -1,14 +1,9 @@
 import { Injectable } from '@angular/core';
 import { State, Action, StateContext } from '@ngxs/store';
 
-export class AddInheritanceType {
-  static readonly type = '[Genotype] Add inheritance type';
-  constructor(public inheritanceType: string) {}
-}
-
-export class RemoveInheritanceType {
-  static readonly type = '[Genotype] Remove inheritance type';
-  constructor(public inheritanceType: string) {}
+export class SetInheritanceTypes {
+  static readonly type = '[Genotype] Set inheritanceType values';
+  constructor(public inheritanceTypes: Set<string>) {}
 }
 
 export interface InheritancetypesModel {
@@ -23,19 +18,10 @@ export interface InheritancetypesModel {
 })
 @Injectable()
 export class InheritancetypesState {
-  @Action(AddInheritanceType)
-  addInheritanceType(ctx: StateContext<InheritancetypesModel>, action: AddInheritanceType) {
-    const state = ctx.getState();
+  @Action(SetInheritanceTypes)
+  setInheritanceTypes(ctx: StateContext<InheritancetypesModel>, action: SetInheritanceTypes) {
     ctx.patchState({
-      inheritanceTypes: [...state.inheritanceTypes, action.inheritanceType]
-    });
-  }
-
-  @Action(RemoveInheritanceType)
-  removeInheritanceType(ctx: StateContext<InheritancetypesModel>, action: RemoveInheritanceType) {
-    const state = ctx.getState();
-    ctx.patchState({
-      inheritanceTypes: state.inheritanceTypes.filter(inh => inh !== action.inheritanceType)
+      inheritanceTypes: [...action.inheritanceTypes]
     });
   }
 }

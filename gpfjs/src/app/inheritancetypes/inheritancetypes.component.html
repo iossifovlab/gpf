@@ -1,25 +1,9 @@
-<div class="inheritancetypes-card card">
-  <div class="card-header card-title">Inheritance Types</div>
-  <div class="card-block">
-    <div class="btn-group btn-group-sm">
-      <button
-        (click)="selectAll()"
-        class="btn btn-default">All</button>
-      <button
-        (click)="selectNone()"
-        class="btn btn-default">None</button>
-    </div>
-    <div class="checkbox">
-      <div *ngFor="let inheritanceType of inheritanceTypes.available">
-          <label> <input
-            type="checkbox"
-            [checked]="inheritanceTypes.selected.has(inheritanceType)"
-            (change)="toggleInheritanceType(inheritanceType)">
-            {{ getDisplayName(inheritanceType) }}
-          </label>
-      </div>
-    </div>
-  </div>
-
+<div>
+  <gpf-checkbox-list
+    [title]="'Inheritance Types'"
+    [items]="inheritanceTypes"
+    [displayNames]="inheritanceTypeDisplayNames"
+    (itemsUpdateEvent)="updateInheritanceTypes($event)">
+  </gpf-checkbox-list>
   <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
 </div>

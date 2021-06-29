@@ -33,7 +33,6 @@ export class PresentInChildComponent implements OnInit {
 
     this.state$.subscribe(state => {
       // validate for errors
-      console.log(state);
       validate(this).then(errors => this.errors = errors.map(err => String(err)));
     });
   }

@@ -1,9 +1,9 @@
 import { Component, Input, OnInit, OnChanges, forwardRef } from '@angular/core';
-import { InheritanceTypes, inheritanceTypeDisplayNames  } from './inheritancetypes';
-import { validate } from 'class-validator';
+import { Validate, validate } from 'class-validator';
+import { SetNotEmpty } from '../utils/set.validators';
 import { Observable } from 'rxjs';
 import { Store, Select } from '@ngxs/store';
-import { AddInheritanceType, RemoveInheritanceType, InheritancetypesModel, InheritancetypesState } from './inheritancetypes.state';
+import { SetInheritanceTypes, InheritancetypesModel, InheritancetypesState } from './inheritancetypes.state';
 
 @Component({
   selector: 'gpf-inheritancetypes',
@@ -12,25 +12,22 @@ import { AddInheritanceType, RemoveInheritanceType, InheritancetypesModel, Inher
 })
 export class InheritancetypesComponent implements OnInit, OnChanges {
 
-  @Input() inheritanceTypeFilter: Array<string>;
-  @Input() selectedInheritanceTypeFilterValues: Array<string>;
+  @Input()
+  inheritanceTypes: Set<string>;
+
+  @Input()
+  @Validate(SetNotEmpty, { message: 'select at least one' })
+  selectedValues: Set<string> = new Set();
+
   @Select(InheritancetypesState) state$: Observable<InheritancetypesModel>;
-  inheritanceTypes: InheritanceTypes;
   errors: Array<string> = [];
 
-  constructor(
-    private store: Store
-  ) {
-    this.inheritanceTypes = new InheritanceTypes([]);
-  }
+  constructor(private store: Store) { }
 
   ngOnInit() {
     this.store.selectOnce(state => state.inheritancetypesState).subscribe(state => {
       // restore state
-      this.inheritanceTypes.selected.clear();
-      for (const inh of state.inheritanceTypes) {
-        this.addInheritanceType(inh);
-      }
+      this.selectedValues = state.inheritanceTypes;
     });
 
     this.state$.subscribe(state => {
@@ -40,41 +37,27 @@ export class InheritancetypesComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges() {
-    this.inheritanceTypeFilter.map(inh => this.inheritanceTypes.available.add(inh));
-    this.selectedInheritanceTypeFilterValues.map(inh => this.addInheritanceType(inh));
-  }
-
-  addInheritanceType(inheritanceType: string) {
-    this.inheritanceTypes.selected.add(inheritanceType);
-    this.store.dispatch(new AddInheritanceType(inheritanceType));
-  }
-
-  removeInheritanceType(inheritanceType: string) {
-    this.inheritanceTypes.selected.delete(inheritanceType);
-    this.store.dispatch(new RemoveInheritanceType(inheritanceType));
-  }
-
-  toggleInheritanceType(inheritanceType: string) {
-    if (this.inheritanceTypes.selected.has(inheritanceType)) {
-      this.removeInheritanceType(inheritanceType);
-    } else {
-      this.addInheritanceType(inheritanceType);
+    if (this.selectedValues) {
+      this.store.dispatch(new SetInheritanceTypes(this.selectedValues));
     }
   }
 
-  getDisplayName(inheritanceType: string) {
-    return inheritanceTypeDisplayNames[inheritanceType] || inheritanceType;
+  updateInheritanceTypes(newValues: Set<string>): void {
+    this.selectedValues = newValues;
+    this.store.dispatch(new SetInheritanceTypes(newValues));
   }
 
-  selectAll() {
-    for (const inh of this.inheritanceTypes.available) {
-      this.addInheritanceType(inh);
-    }
-  }
-
-  selectNone() {
-    for (const inh of this.inheritanceTypes.available) {
-      this.removeInheritanceType(inh);
-    }
+  get inheritanceTypeDisplayNames() {
+    return {
+     'reference': 'Reference',
+     'mendelian': 'Mendelian',
+     'denovo': 'Denovo',
+     'possible_denovo': 'Possible denovo',
+     'omission': 'Omission',
+     'possible_omission': 'Possible omission',
+     'other': 'Other',
+     'missing': 'Missing',
+     'unknown': 'Unknown'
+    };
   }
 }

@@ -45,9 +45,9 @@
 
 		<div class="col-lg-3 panel-row">
 			<gpf-inheritancetypes
-        *ngIf="dataset.genotypeBrowserConfig.inheritanceTypeFilter"
-				[inheritanceTypeFilter]="dataset.genotypeBrowserConfig.inheritanceTypeFilter"
-				[selectedInheritanceTypeFilterValues]="dataset.genotypeBrowserConfig.selectedInheritanceTypeFilterValues">
+        *ngIf="inheritanceTypes"
+				[inheritanceTypes]="inheritanceTypes"
+				[selectedValues]="selectedInheritanceTypes">
 			</gpf-inheritancetypes>
 		</div>
 	</div>
