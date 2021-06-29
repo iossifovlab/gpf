@@ -12,7 +12,7 @@
             <input type="checkbox"
               [checked]="selectedItems.has(item)"
               (change)="toggleItem(item)">
-            {{item}}
+            {{item | displayName: displayNames}}
           </label>
         </div>
     </ng-container>
