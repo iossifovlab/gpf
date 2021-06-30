@@ -15,7 +15,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   geneTabs = new Set<string>();
   autismGeneToolConfig: AgpConfig;
-  fullTableConfig: AgpTableConfig;
+  tableConfig: AgpTableConfig;
   shownTableConfig: AgpTableConfig;
 
   allColumns: string[];
@@ -49,10 +49,10 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   ngOnInit(): void {
     this.autismGeneProfilesService.getConfig().take(1).subscribe(config => {
       this.autismGeneToolConfig = config;
-      this.fullTableConfig = this.getTableConfig(config);
+      this.tableConfig = this.getTableConfig(config);
       this.shownTableConfig = this.getTableConfig(config);
-      this.allColumns = this.getAllCategories(this.fullTableConfig);
-      this.shownColumns = this.getAllCategories(this.fullTableConfig);
+      this.allColumns = this.getAllCategories(this.tableConfig);
+      this.shownColumns = this.getAllCategories(this.tableConfig);
     });
   }
 
@@ -189,10 +189,10 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   handleMultipleSelectMenuApplyEvent($event) {
     this.shownColumns = $event.data;
-    this.shownTableConfig.geneSets = this.fullTableConfig.geneSets.filter(obj => this.shownColumns.includes(obj.displayName));
-    this.shownTableConfig.genomicScores = this.fullTableConfig.genomicScores.filter(obj => this.shownColumns.includes(obj.displayName));
-    this.shownTableConfig.datasets = this.fullTableConfig.datasets.filter(obj => this.shownColumns.includes(obj.displayName));
-    this.shownTableConfig = cloneDeep(this.shownTableConfig);
+    this.shownTableConfig.geneSets = this.tableConfig.geneSets.filter(obj => this.shownColumns.includes(obj.displayName));
+    this.shownTableConfig.genomicScores = this.tableConfig.genomicScores.filter(obj => this.shownColumns.includes(obj.displayName));
+    this.shownTableConfig.datasets = this.tableConfig.datasets.filter(obj => this.shownColumns.includes(obj.displayName));
+    this.shownTableConfig = {...this.shownTableConfig};
 
     this.ngbDropdownMenu.dropdown.close();
   }

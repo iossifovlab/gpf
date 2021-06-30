@@ -179,7 +179,7 @@ Described in GPF-546 -->
     </span>
   </div>
   <ng-container *ngFor="let personSet of dataset.personSets">
-    <div *ngIf="allDatasetNames.get(dataset.displayName) && allDatasetNames.get(dataset.displayName).get(personSet.displayName) && shownDatasetNames.get(dataset.displayName) && shownDatasetNames.get(dataset.displayName).get(personSet.displayName)" style="position: sticky;" [style.bottom.px]="modalBottom - 150">
+    <div *ngIf="allDatasetNames.get(dataset.displayName)?.get(personSet.displayName) && shownDatasetNames.get(dataset.displayName)?.get(personSet.displayName)" style="position: sticky;" [style.bottom.px]="modalBottom - 150">
       <span #dropdownSpan [attr.id]="dataset.id + '-' + personSet.id + '-span'" ngbDropdown>
         <button ngbDropdownToggle style="display: none;"></button>
         <gpf-multiple-select-menu ngbDropdownMenu [attr.id]="dataset.id + '-' + personSet.id + '-dropdown'"
