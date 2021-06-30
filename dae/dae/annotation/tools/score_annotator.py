@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 class VariantScoreAnnotatorBase(Annotator):
-    def __init__(self, config, genomes_db, liftover=None):
-        super().__init__(config, genomes_db, liftover=None)
+    def __init__(self, config, genomes_db, liftover=None, override=None):
+        super().__init__(config, genomes_db, liftover, override)
         self.score_file = ScoreFile(self.config)
 
     @property
@@ -61,8 +61,8 @@ class VariantScoreAnnotatorBase(Annotator):
 
 
 class PositionScoreAnnotator(VariantScoreAnnotatorBase):
-    def __init__(self, config, genomes_db, liftover=None):
-        super().__init__(config, genomes_db, liftover=None)
+    def __init__(self, config, genomes_db, liftover=None, override=None):
+        super().__init__(config, genomes_db, liftover, override)
 
     @staticmethod
     def required_columns():
@@ -122,8 +122,8 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
 
 
 class NPScoreAnnotator(VariantScoreAnnotatorBase):
-    def __init__(self, config, genomes_db, liftover=None):
-        super().__init__(config, genomes_db, liftover=None)
+    def __init__(self, config, genomes_db, liftover=None, override=None):
+        super().__init__(config, genomes_db, liftover, override)
 
     @staticmethod
     def required_columns():

@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class Annotator:
 
-    def __init__(self, config, genomes_db, liftover=None):
+    def __init__(self, config, genomes_db, liftover=None, override=None):
         self.config = config
         self.genomes_db = genomes_db
 
@@ -26,6 +26,7 @@ class Annotator:
         assert self.gene_models is not None
 
         self.liftover = liftover
+        self.override = override
 
     @staticmethod
     def required_columns():
@@ -55,7 +56,10 @@ class Annotator:
         Carry out the annotation and then relabel results as configured.
         """
         self._do_annotate(attributes, variant, liftover_variants)
-        for attr in self.config.default_annotation.attributes:
+        attributes = self.config.default_annotation.attributes
+        if self.override is not None:
+            attributes = self.override.attributes
+        for attr in attributes:
             if attr.dest == attr.source:
                 continue
             attributes[attr.dest] = attributes[attr.source]

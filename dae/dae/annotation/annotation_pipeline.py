@@ -30,7 +30,7 @@ class AnnotationPipeline():
             override = score.get("override")
             gs = gpf_instance.find_genomic_score(score_id)
             annotator = AnnotatorFactory.make_annotator(
-                gs.conf_path, genomes_db, liftover, override
+                gs.get_config(), genomes_db, liftover, override
             )
             pipeline.add_annotator(annotator)
         return pipeline

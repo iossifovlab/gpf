@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 class FrequencyAnnotator(VariantScoreAnnotatorBase):
-    def __init__(self, config, genomes_db, liftover_variants=None):
-        super().__init__(config, genomes_db, liftover_variants)
+    def __init__(self, config, genomes_db, liftover=None, override=None):
+        super().__init__(config, genomes_db, liftover, override)
 
     @staticmethod
     def required_columns():
