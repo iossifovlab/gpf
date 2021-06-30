@@ -36,6 +36,7 @@ import { GeneWeightsComponent } from './gene-weights/gene-weights.component';
 import { GeneWeightsService } from './gene-weights/gene-weights.service';
 
 import { GeneSetsComponent } from './gene-sets/gene-sets.component';
+import { GeneSetsState } from './gene-sets/gene-sets.state';
 import { GeneSetsService } from './gene-sets/gene-sets.service';
 
 import { SearchableSelectComponent } from './searchable-select/searchable-select.component';
@@ -410,7 +411,7 @@ const appRoutes: Routes = [
     NgxsModule.forRoot([
       VarianttypesState, EffecttypesState, GenderState,
       InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,
-      GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState,
+      GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState, GeneSetsState,
     ]),
   ],
   providers: [

@@ -1,7 +1,7 @@
 import { GeneSetsCollection, GeneSet } from './gene-sets';
 import { IsNotEmpty } from 'class-validator';
 
-export class GeneSetsState {
+export class GeneSetsLocalState {
   geneSetsCollection: GeneSetsCollection;
   geneSetsTypes = Object.create(null);
 

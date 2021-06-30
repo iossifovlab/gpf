@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { GeneSetsState } from '../gene-sets/gene-sets-state';
+import { GeneSetsLocalState } from '../gene-sets/gene-sets-state';
 import { GeneSymbols } from '../gene-symbols/gene-symbols.component';
 import { GeneWeightsState } from '../gene-weights/gene-weights-store';
 
@@ -42,7 +42,7 @@ export class CommonQueryData {
   }
 
   protected static prepareGeneSet(state: any): GeneSetState {
-    const geneSetsState: GeneSetsState = state.geneSets;
+    const geneSetsState: GeneSetsLocalState = state.geneSets;
 
     if (geneSetsState === null) {
       return null;

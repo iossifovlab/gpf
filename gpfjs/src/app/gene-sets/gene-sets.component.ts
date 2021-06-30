@@ -1,27 +1,24 @@
 import { ConfigService } from '../config/config.service';
-import { GeneSetsState } from './gene-sets-state';
-import { Component, OnInit, forwardRef } from '@angular/core';
+import { GeneSetsLocalState } from './gene-sets-state';
+import { Component, OnInit } from '@angular/core';
 import { GeneSetsService } from './gene-sets.service';
 import { GeneSetsCollection, GeneSet, GeneSetType } from './gene-sets';
-import { Subject ,  Observable } from 'rxjs';
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
+import { Subject, Observable } from 'rxjs';
 import { StateRestoreService } from '../store/state-restore.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { validate } from 'class-validator';
+import { Store, Select } from '@ngxs/store';
+import { SetGeneSetsValues, GeneSetsModel, GeneSetsState } from './gene-sets.state';
 
 @Component({
   selector: 'gpf-gene-sets',
   templateUrl: './gene-sets.component.html',
   styleUrls: ['./gene-sets.component.css'],
-  providers: [{
-    provide: QueryStateProvider,
-    useExisting: forwardRef(() => GeneSetsComponent)
-  }]
 })
-export class GeneSetsComponent extends QueryStateWithErrorsProvider implements OnInit {
+export class GeneSetsComponent implements OnInit {
   geneSetsCollections: Array<GeneSetsCollection>;
   geneSets: Array<GeneSet>;
   private searchQuery: string;
-  private geneSetsState = new GeneSetsState();
 
   private geneSetsQueryChange = new Subject<[string, string, Object]>();
   private geneSetsResult: Observable<GeneSet[]>;
@@ -29,55 +26,26 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
   private selectedDatasetId: string;
   private defaultSelectedDenovoGeneSetId: string;
 
+  private geneSetsLocalState = new GeneSetsLocalState();
+  @Select(GeneSetsState) state$: Observable<GeneSetsModel>;
+  errors: string[] = [];
+
   constructor(
-    private geneSetsService: GeneSetsService,
+    private store: Store,
     private config: ConfigService,
-    private stateRestoreService: StateRestoreService,
-    private datasetService: DatasetsService
-  ) {
-    super();
-  }
-
-  restoreStateSubscribe() {
-    this.stateRestoreService.getState(this.constructor.name)
-      .take(1)
-      .subscribe(state => {
-        if (state['geneSet'] && state['geneSet']['geneSetsCollection']) {
-          for (const geneSetCollection of this.geneSetsCollections) {
-            if (geneSetCollection.name === state['geneSet']['geneSetsCollection']) {
-              this.geneSetsState.geneSetsCollection = geneSetCollection;
-
-              if (state['geneSet']['geneSetsTypes']) {
-                this.restoreGeneTypes(state['geneSet']['geneSetsTypes'], geneSetCollection);
-              }
-              this.onSearch();
-            }
-          }
-        } else {
-           this.onSearch();
-        }
-      });
-  }
-
-  restoreGeneTypes(geneSetsTypes, geneSetCollection: GeneSetsCollection) {
-    const geneTypes = geneSetCollection.types
-      .filter(geneType => geneType.datasetId in geneSetsTypes &&
-              geneType.peopleGroupId in geneSetsTypes[geneType.datasetId]);
-    if (geneTypes.length !== 0) {
-      this.geneSetsState.geneSetsTypes = Object.create(null);
-      for (const geneType of geneTypes) {
-        const datasetId = geneType.datasetId;
-        const peopleGroupId = geneType.peopleGroupId;
-        for (const peopleGroup of geneType.peopleGroupLegend) {
-          if (geneSetsTypes[datasetId][peopleGroupId].indexOf(peopleGroup.id) > -1) {
-            this.geneSetsState.select(datasetId, peopleGroupId, peopleGroup.id);
-          }
-        }
-      }
-    }
-  }
+    private geneSetsService: GeneSetsService,
+    private datasetService: DatasetsService,
+  ) { }
 
   ngOnInit() {
+    this.store.selectOnce(state => state.geneSetsState).subscribe(state => {
+      this.restoreState(state);
+    });
+
+    this.state$.subscribe(state => {
+      validate(this.geneSetsLocalState).then(errors => this.errors = errors.map(err => String(err)));
+    });
+
     this.geneSetsService.getGeneSetsCollections().subscribe(
       (geneSetsCollections) => {
         const dataset$ = this.datasetService.getSelectedDataset();
@@ -106,7 +74,6 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
           }
           this.geneSetsCollections = geneSetsCollections;
           this.selectedGeneSetsCollection = geneSetsCollections[0];
-          this.restoreStateSubscribe();
         });
       }
     );
@@ -122,22 +89,54 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
         return Observable.of(null);
       });
 
-    this.geneSetsResult.subscribe(
-      (geneSets) => {
-        this.geneSets = geneSets.sort((a, b) => a.name.localeCompare(b.name));
-        this.stateRestoreService.getState(this.constructor.name + 'geneSet').subscribe(
-          (state) => {
-            if (!state['geneSet'] || !state['geneSet']['geneSet']) {
-              return;
-            }
-            for (const geneSet of this.geneSets) {
-              if (geneSet.name === state['geneSet']['geneSet']) {
-                this.geneSetsState.geneSet = geneSet;
-              }
-            }
+    this.geneSetsResult.subscribe(geneSets => {
+      this.geneSets = geneSets.sort((a, b) => a.name.localeCompare(b.name));
+      this.store.selectOnce(state => state.geneSetsState).subscribe((state) => {
+        if (!state['geneSet'] || !state['geneSet']['geneSet']) {
+          return;
+        }
+        for (const geneSet of this.geneSets) {
+          if (geneSet.name === state['geneSet']['geneSet']) {
+            this.geneSetsLocalState.geneSet = geneSet;
           }
-        );
+        }
       });
+    });
+  }
+
+  restoreState(state: object) {
+    if (state['geneSet'] && state['geneSet']['geneSetsCollection']) {
+      for (const geneSetCollection of this.geneSetsCollections) {
+        if (geneSetCollection.name === state['geneSet']['geneSetsCollection']) {
+          this.geneSetsLocalState.geneSetsCollection = geneSetCollection;
+
+          if (state['geneSet']['geneSetsTypes']) {
+            this.restoreGeneTypes(state['geneSet']['geneSetsTypes'], geneSetCollection);
+          }
+          this.onSearch();
+        }
+      }
+    } else {
+       this.onSearch();
+    }
+  }
+
+  restoreGeneTypes(geneSetsTypes, geneSetCollection: GeneSetsCollection) {
+    const geneTypes = geneSetCollection.types
+      .filter(geneType => geneType.datasetId in geneSetsTypes &&
+              geneType.peopleGroupId in geneSetsTypes[geneType.datasetId]);
+    if (geneTypes.length !== 0) {
+      this.geneSetsLocalState.geneSetsTypes = Object.create(null);
+      for (const geneType of geneTypes) {
+        const datasetId = geneType.datasetId;
+        const peopleGroupId = geneType.peopleGroupId;
+        for (const peopleGroup of geneType.peopleGroupLegend) {
+          if (geneSetsTypes[datasetId][peopleGroupId].indexOf(peopleGroup.id) > -1) {
+            this.geneSetsLocalState.select(datasetId, peopleGroupId, peopleGroup.id);
+          }
+        }
+      }
+    }
   }
 
   onSearch(searchTerm = '') {
@@ -157,38 +156,40 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
     }
 
     this.geneSetsQueryChange.next(
-      [this.selectedGeneSetsCollection.name, searchTerm, this.geneSetsState.geneSetsTypes]);
+      [this.selectedGeneSetsCollection.name, searchTerm, this.geneSetsLocalState.geneSetsTypes]);
   }
 
   onSelect(event: GeneSet) {
-    this.geneSetsState.geneSet = event;
+    this.geneSetsLocalState.geneSet = event;
 
     if (event == null) {
       this.onSearch();
     }
+
+    this.store.dispatch(new SetGeneSetsValues(this.geneSetsLocalState));
   }
 
   isSelectedGeneType(datasetId: string, peopleGroupId: string, geneType: string): boolean {
-    return this.geneSetsState.isSelected(datasetId, peopleGroupId, geneType);
+    return this.geneSetsLocalState.isSelected(datasetId, peopleGroupId, geneType);
   }
 
   setSelectedGeneType(datasetId: string, peopleGroupId: string, geneType: string, value: boolean) {
     this.selectedGeneSet = null;
     if (value) {
-      this.geneSetsState.select(datasetId, peopleGroupId, geneType);
+      this.geneSetsLocalState.select(datasetId, peopleGroupId, geneType);
     } else {
-      this.geneSetsState.deselect(datasetId, peopleGroupId, geneType);
+      this.geneSetsLocalState.deselect(datasetId, peopleGroupId, geneType);
     }
   }
 
   get selectedGeneSetsCollection(): GeneSetsCollection {
-    return this.geneSetsState.geneSetsCollection;
+    return this.geneSetsLocalState.geneSetsCollection;
   }
 
   set selectedGeneSetsCollection(selectedGeneSetsCollection: GeneSetsCollection) {
-    this.geneSetsState.geneSetsCollection = selectedGeneSetsCollection;
-    this.geneSetsState.geneSet = null;
-    this.geneSetsState.geneSetsTypes = Object.create(null);
+    this.geneSetsLocalState.geneSetsCollection = selectedGeneSetsCollection;
+    this.geneSetsLocalState.geneSet = null;
+    this.geneSetsLocalState.geneSetsTypes = Object.create(null);
     this.geneSets = [];
 
     if (selectedGeneSetsCollection.types.length > 0) {
@@ -204,11 +205,11 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
   }
 
   get selectedGeneSet(): GeneSet {
-    return this.geneSetsState.geneSet;
+    return this.geneSetsLocalState.geneSet;
   }
 
   set selectedGeneSet(geneSet) {
-    this.geneSetsState.geneSet = geneSet;
+    this.geneSetsLocalState.geneSet = geneSet;
   }
 
   getDownloadLink(selectedGeneSet: GeneSet): string {
@@ -217,18 +218,5 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
 
   getGeneSetName(geneType: GeneSetType): string {
     return `${geneType.datasetName}: ${geneType.peopleGroupName}`;
-  }
-
-  getState() {
-    return this.validateAndGetState(this.geneSetsState)
-      .map(geneSetsState => {
-        return {
-          geneSet : {
-            geneSetsCollection: geneSetsState.geneSetsCollection.name,
-            geneSet: geneSetsState.geneSet.name,
-            geneSetsTypes: geneSetsState.geneSetsTypes
-          }
-        };
-      });
   }
 }
