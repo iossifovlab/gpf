@@ -13,6 +13,7 @@ import { GenderComponent } from './gender/gender.component';
 import { PresentInChildComponent } from './present-in-child/present-in-child.component';
 import { PresentInChildState } from './present-in-child/present-in-child.state';
 import { PresentInParentComponent } from './present-in-parent/present-in-parent.component';
+import { PresentInParentState } from './present-in-parent/present-in-parent.state';
 import { VarianttypesComponent } from './varianttypes/varianttypes.component';
 import { EffecttypesComponent } from './effecttypes/effecttypes.component';
 import { EffecttypesColumnComponent } from './effecttypes/effecttypes-column.component';
@@ -410,7 +411,7 @@ const appRoutes: Routes = [
     Ng2SearchPipeModule,
     NgxsModule.forRoot([
       VarianttypesState, EffecttypesState, GenderState,
-      InheritancetypesState, PersonIdsState, PresentInChildState,
+      InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,
       GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState,
     ]),
   ],

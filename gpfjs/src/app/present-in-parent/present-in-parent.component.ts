@@ -1,204 +1,94 @@
-import {
-  PresentInParent, RARITY_ULTRARARE, RARITY_INTERVAL, RARITY_RARE, RARITY_ALL
-} from './present-in-parent';
-import { Component, OnInit, forwardRef } from '@angular/core';
-
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { Rarity } from '../query/query';
-import { StateRestoreService } from '../store/state-restore.service';
+import { Component, OnInit } from '@angular/core';
+import { Store, Select } from '@ngxs/store';
+import { Equals, ValidateIf, Min, Max } from 'class-validator';
+import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
+import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
+import { Validate, validate } from 'class-validator';
+import { SetNotEmpty } from '../utils/set.validators';
+import { Observable } from 'rxjs';
+import { SetPresentInParentValues, PresentInParentModel, PresentInParentState } from './present-in-parent.state';
 
 @Component({
   selector: 'gpf-present-in-parent',
   templateUrl: './present-in-parent.component.html',
-  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => PresentInParentComponent) }]
 })
-export class PresentInParentComponent extends QueryStateWithErrorsProvider implements OnInit {
-  ultraRare: boolean;
+export class PresentInParentComponent implements OnInit {
 
-  rarityRadio: string;
+  @ValidateIf(o => o.selectedRarityType !== 'ultraRare')
+  @Min(0) @Max(100)
+  @IsLessThanOrEqual('rarityIntervalEnd')
+  rarityIntervalStart = 0;
 
-  presentInParent = new PresentInParent();
+  @ValidateIf(o => o.selectedRarityType !== 'ultraRare')
+  @Min(0) @Max(100)
+  rarityIntervalEnd = 100;
 
-  constructor(
-    private stateRestoreService: StateRestoreService
-  ) {
-    super();
-  }
+  presentInParentValues: Set<string> = new Set([
+    'mother only', 'father only', 'mother and father', 'neither'
+  ]);
 
-  restoreCheckedState(state) {
-    for (const key of state) {
-      if (key === 'father only') {
-        this.presentInParent.fatherOnly = true;
-      }
-      if (key === 'mother only') {
-        this.presentInParent.motherOnly = true;
-      }
-      if (key === 'mother and father') {
-        this.presentInParent.motherFather = true;
-      }
-      if (key === 'neither') {
-        this.presentInParent.neither = true;
-      }
-    }
-  }
+  @Validate(SetNotEmpty, { message: 'select at least one' })
+  selectedValues: Set<string> = new Set();
 
-  restoreRarity(state) {
-    if (state['ultraRare']) {
-      this.presentInParent.ultraRare = true;
-      this.presentInParent.rarityType = RARITY_ULTRARARE;
-    } else {
-      this.presentInParent.ultraRare = false;
+  rarityTypes: Set<string> = new Set([
+    'ultraRare', 'interval', 'rare', 'all'
+  ]);
+  selectedRarityType = '';
 
-      if (state['minFreq']) {
-        this.presentInParent.rarityIntervalStart = state['minFreq'];
-      }
+  @Select(PresentInParentState) state$: Observable<PresentInParentModel>;
+  errors: Array<string> = [];
 
-      if (state['maxFreq']) {
-        this.presentInParent.rarityIntervalEnd = state['maxFreq'];
-      }
-
-      this.restoreRadioButtonState(state);
-    }
-  }
-
-  restoreRadioButtonState(state) {
-    this.setFrequenciesState(
-      state['ultraRare'], state['minFreq'], state['maxFreq']);
-  }
-
-  setFrequenciesState(ultraRare, minFrequency, maxFrequency) {
-    if (ultraRare) {
-      this.ultraRareValueChange(true);
-    } else {
-      if (minFrequency && minFrequency > 0) {
-        this.rarityTypeChange(RARITY_INTERVAL);
-      } else {
-        if (maxFrequency && maxFrequency < 100) {
-          this.rarityTypeChange(RARITY_RARE);
-        } else {
-          this.rarityTypeChange(RARITY_ALL);
-        }
-      }
-    }
-  }
-
-  restoreState() {
-    this.stateRestoreService.getState(this.constructor.name)
-      .take(1)
-      .subscribe(state => {
-        if (state['presentInParent'] && state['presentInParent']['presentInParent']) {
-          this.restoreCheckedState(state['presentInParent']['presentInParent']);
-        }
-
-        if (state['presentInParent'] && state['presentInParent']['rarity']) {
-          this.restoreRarity(state['presentInParent']['rarity']);
-        }
-      }
-    );
-  }
+  constructor(private store: Store) { }
 
   ngOnInit() {
-    this.restoreState();
+    this.store.selectOnce(state => state.presentInParentState).subscribe(state => {
+      // restore state
+      this.selectedValues = new Set([...state.presentInParent]);
+      this.selectedRarityType = state.rarityType;
+      this.rarityIntervalStart = state.rarityIntervalStart;
+      this.rarityIntervalEnd = state.rarityIntervalEnd;
+    });
+
+    this.state$.subscribe(state => {
+      // validate for errors
+      validate(this).then(errors => this.errors = errors.map(err => String(err)));
+    });
   }
 
-  selectAll(): void {
-    this.presentInParent.fatherOnly = true;
-    this.presentInParent.motherOnly = true;
-    this.presentInParent.motherFather = true;
-    this.presentInParent.neither = true;
-  }
-
-  selectNone(): void {
-    this.presentInParent.fatherOnly = false;
-    this.presentInParent.motherOnly = false;
-    this.presentInParent.motherFather = false;
-    this.presentInParent.neither = false;
-  }
-
-  presentInChildCheckValue(key: string, value: boolean): void {
-    if (key === 'motherOnly' || key === 'fatherOnly'
-        || key === 'motherFather' || key === 'neither') {
-      this.presentInParent[key] = value;
+  updatePresentInParent(newValues: Set<string>): void {
+    this.selectedValues = newValues;
+    if (this.selectedValues.size === 1 && this.selectedValues.has('neither')) {
+      // 'neither' does not allow for selecting a rarity type
+      this.selectedRarityType = '';
+    } else if (this.selectedRarityType === '') {
+      // otherwise, set 'all' as default rarity type
+      this.selectedRarityType = 'all';
     }
+    this.updateState();
   }
 
-  rarityChangeValue(start: number, end: number) {
-    this.presentInParent.rarityIntervalStart = start;
-    this.presentInParent.rarityIntervalEnd = end;
+  updateRarityIntervalStart(newValue: number): void {
+    this.rarityIntervalStart = newValue;
+    this.updateState();
   }
 
-  rarityTypeChange(rarityType: string) {
-    this.presentInParent.rarityType = rarityType;
+  updateRarityIntervalEnd(newValue: number): void {
+    this.rarityIntervalEnd = newValue;
+    this.updateState();
   }
 
-  ultraRareValueChange(ultraRare: boolean) {
-    this.presentInParent.ultraRare = ultraRare;
-    if (ultraRare) {
-      this.presentInParent.rarityType = RARITY_ULTRARARE;
+  updateRarityType(newValue: string): void {
+    this.selectedRarityType = newValue;
+    if (this.selectedRarityType === 'rare') {
+      this.rarityIntervalStart = 0;
     }
+    this.updateState();
   }
 
-  rarityRadioChange(rarity: string): void {
-    this.ultraRareValueChange(false);
-    switch (rarity) {
-      case 'all':
-        this.rarityTypeChange(RARITY_ALL);
-        this.rarityChangeValue(0, 100);
-        break;
-      case 'rare':
-        this.rarityTypeChange(RARITY_RARE);
-        this.rarityChangeValue(0, 1);
-        break;
-      case 'interval':
-        this.rarityTypeChange(RARITY_INTERVAL);
-        this.rarityChangeValue(0, 1);
-        break;
-      default:
-        console.log('unexpected rarity: ', rarity);
-    }
-  }
-
-  getState() {
-    return this.validateAndGetState(this.presentInParent)
-      .map(presentInParent => {
-        const result = new Array<string>();
-        if (presentInParent.fatherOnly) {
-          result.push('father only');
-        }
-        if (presentInParent.motherOnly) {
-          result.push('mother only');
-        }
-        if (presentInParent.motherFather) {
-          result.push('mother and father');
-        }
-        if (presentInParent.neither) {
-          result.push('neither');
-        }
-
-        const rarity: Rarity = {
-          ultraRare: presentInParent.ultraRare,
-          minFreq: presentInParent.rarityIntervalStart,
-          maxFreq: presentInParent.rarityIntervalEnd
-        };
-        if (rarity.ultraRare) {
-          rarity.minFreq = null;
-          rarity.maxFreq = null;
-        } else {
-          rarity.ultraRare = null;
-          if (rarity.minFreq <= 0.0) {
-            rarity.minFreq = null;
-          }
-          if (rarity.maxFreq >= 100.0) {
-            rarity.maxFreq = null;
-          }
-        }
-
-        return {
-          presentInParent: {
-            presentInParent: result,
-            rarity: rarity
-          }
-        };
-      });
+  updateState(): void {
+    this.store.dispatch(new SetPresentInParentValues(
+      this.selectedValues, this.selectedRarityType,
+      this.rarityIntervalStart, this.rarityIntervalEnd
+    ));
   }
 }
