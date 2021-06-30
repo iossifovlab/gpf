@@ -2,6 +2,7 @@
   <gpf-checkbox-list
     [title]="'Present in Child'"
     [items]="presentInChildValues"
+    [selectedItems]="selectedValues"
     (itemsUpdateEvent)="updatePresentInChild($event)">
   </gpf-checkbox-list>
   <gpf-errors-alert [errors]="errors"></gpf-errors-alert>

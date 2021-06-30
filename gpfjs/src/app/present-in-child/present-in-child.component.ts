@@ -16,7 +16,7 @@ export class PresentInChildComponent implements OnInit {
   ]);
 
   @Validate(SetNotEmpty, { message: 'select at least one' })
-  selectedValues = new Set(['proband only', 'proband and sibling' ]);
+  selectedValues = new Set();
 
   @Select(PresentInChildState) state$: Observable<PresentInChildModel>;
   errors: Array<string> = [];
@@ -28,7 +28,7 @@ export class PresentInChildComponent implements OnInit {
   ngOnInit() {
     this.store.selectOnce(state => state.presentInChildState).subscribe(state => {
       // restore state
-      this.selectedValues = state.presentInChild;
+      this.selectedValues = new Set([...state.presentInChild]);
     });
 
     this.state$.subscribe(state => {

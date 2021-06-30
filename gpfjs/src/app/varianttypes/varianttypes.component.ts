@@ -13,7 +13,7 @@ import { Observable } from 'rxjs';
 export class VarianttypesComponent implements OnInit, OnChanges {
 
   @Input() variantTypes: Set<string> = new Set([]);
-  @Input() @Validate(SetNotEmpty, {message: 'select at least one'}) selectedVariantTypes: Set<string> = new Set([]);
+  @Input() @Validate(SetNotEmpty, {message: 'select at least one'}) selectedVariantTypes: Set<string> = new Set();
   @Select(VarianttypesState) state$: Observable<VarianttypeModel>;
   errors: string[] = [];
 
@@ -28,7 +28,7 @@ export class VarianttypesComponent implements OnInit, OnChanges {
   ngOnInit() {
     this.selectedVariantTypes = new Set();
     this.store.selectOnce(state => state.varianttypesState).subscribe(state => {
-      this.selectedVariantTypes = state.variantTypes;
+      this.selectedVariantTypes = new Set([...state.variantTypes]);
     });
 
     this.state$.subscribe(state => {

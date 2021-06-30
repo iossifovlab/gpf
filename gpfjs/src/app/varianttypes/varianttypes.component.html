@@ -2,6 +2,7 @@
   <gpf-checkbox-list
     [title]="'Variant Types'"
     [items]="variantTypes"
+    [selectedItems]="selectedVariantTypes"
     (itemsUpdateEvent)="updateVariantTypes($event)">
   </gpf-checkbox-list>
   <gpf-errors-alert [errors]="errors"></gpf-errors-alert>

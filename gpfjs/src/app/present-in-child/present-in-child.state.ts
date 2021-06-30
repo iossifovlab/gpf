@@ -13,7 +13,7 @@ export interface PresentInChildModel {
 @State<PresentInChildModel>({
   name: 'presentInChildState',
   defaults: {
-    presentInChild: []
+    presentInChild: ['proband only', 'proband and sibling']
   },
 })
 @Injectable()
