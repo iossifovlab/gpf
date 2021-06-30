@@ -20,7 +20,6 @@ genomic_score_schema = {
     "filename": {
         "type": "string",
         "required": True,
-        "check_with": validate_existing_path,
         "coerce": "abspath",
     },
     "format": {"type": "string"},
@@ -32,7 +31,6 @@ genomic_score_schema = {
             "filename": {
                 "type": "string",
                 "required": True,
-                "check_with": validate_existing_path,
                 "coerce": "abspath",
             },
             "format": {"type": "string"},

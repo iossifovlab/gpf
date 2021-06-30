@@ -242,6 +242,15 @@ def temp_dirname(request, cleanup):
         request.addfinalizer(fin)
     return dirname
 
+@pytest.fixture
+def temp_dirname_grdb(request, cleanup):
+    dirname = tempfile.mkdtemp(suffix="_data", prefix="grdb_")
+
+    def fin():
+        shutil.rmtree(dirname)
+    if cleanup:
+        request.addfinalizer(fin)
+    return dirname
 
 @pytest.fixture
 def temp_filename(request, cleanup):

@@ -2,7 +2,6 @@ import os
 import logging
 import pandas as pd
 import math
-from urllib.parse import urlparse
 from dae.genome.genomes_db import GenomesDB
 
 from dae.common_reports.common_report_facade import CommonReportFacade
@@ -31,9 +30,7 @@ from dae.configuration.schemas.autism_gene_profile import (
 )
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.autism_gene_profile.statistic import AGPStatistic
-from dae.genomic_scores.repository import FilesystemGenomicScoreRepository, \
-    HTTPGenomicScoreRepository
-
+from dae.genomic_resources.resource_db import GenomicResourceDB
 from dae.utils.helpers import isnan
 from dae.utils.dae_utils import cached
 
@@ -64,14 +61,9 @@ class GPFInstance(object):
         self.__autism_gene_profile_config = None
         self.load_eagerly = load_eagerly
 
-        self._genomic_resources_dbs = []
-        self._load_genomic_scores_repositories()
-
-        if len(self._genomic_resources_dbs) > 0:
-            assert self.dae_config.genomic_score_cache
-        if self.dae_config.genomic_score_cache:
-            self._cache_gsd = FilesystemGenomicScoreRepository(
-                "cache", self.dae_config.genomic_score_cache.location
+        if self.dae_config.genomic_resources:
+            self.genomic_resource_db = GenomicResourceDB(
+                self.dae_config.genomic_resources
             )
 
         if load_eagerly:
@@ -197,19 +189,6 @@ class GPFInstance(object):
     @cached
     def _background_facade(self):
         return BackgroundFacade(self._variants_db)
-
-    def _load_genomic_scores_repositories(self):
-        if self.dae_config.genomic_score_databases is None:
-            return
-        for gsd_conf in self.dae_config.genomic_score_databases:
-            gsd_id = gsd_conf["id"]
-            gsd_url = urlparse(gsd_conf["url"])
-            is_filesystem = gsd_url.scheme == "file"
-            if is_filesystem:
-                gsd = FilesystemGenomicScoreRepository(gsd_id, gsd_url.path)
-            else:
-                gsd = HTTPGenomicScoreRepository(gsd_id, gsd_url.geturl())
-            self._genomic_resources_dbs.append(gsd)
 
     def get_genotype_data_ids(self, local_only=False):
         return (
@@ -532,44 +511,3 @@ class GPFInstance(object):
     # DAE config
     def get_selected_genotype_data(self):
         return self.dae_config.gpfjs.selected_genotype_data
-
-    # GSD
-    def find_genomic_score(self, genomic_score_id):
-        _, gs = self._cache_gsd.get_genomic_score(genomic_score_id)
-        if gs is not None:
-            return gs
-
-        try:
-            self.cache_genomic_score(genomic_score_id)
-        except KeyError:
-            return None
-
-        return self.find_genomic_score(genomic_score_id)
-
-    def cache_genomic_score(self, genomic_score_id: str):
-        repo, parents, score = None, None, None
-        for curr_repo in self._genomic_resources_dbs:
-            repo = curr_repo
-            parents, score = repo.get_genomic_score(genomic_score_id)
-            if score is not None:
-                break
-
-        if score is None:
-            raise KeyError
-
-        cache_path = os.path.join(
-            self._cache_gsd.path, *list(map(lambda p: p.id, parents))
-        )
-        os.makedirs(cache_path, exist_ok=True)
-
-        def copy_file(filename: str):
-            output_path = os.path.join(cache_path, filename)
-            with open(output_path, "wb") as destination_file:
-                for chunk in repo.provide_file(score.id, filename):
-                    destination_file.write(chunk)
-
-        copy_file(repo.config_files[score.id])
-        copy_file(score.config.filename)
-        copy_file(score.config.index_file.filename)
-
-        self._cache_gsd.reload()

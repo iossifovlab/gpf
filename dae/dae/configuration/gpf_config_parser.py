@@ -45,6 +45,8 @@ class FrozenBox(DefaultBox):
 class GPFConfigValidator(Validator):
     def _normalize_coerce_abspath(self, value: str) -> str:
         directory = self._config["conf_dir"]
+        if directory is None:
+            return value
         if not os.path.isabs(value):
             value = os.path.join(directory, value)
         return os.path.normpath(value)
@@ -74,6 +76,22 @@ class GPFConfigParser:
             return infile.read()
 
     @classmethod
+    def interpolate_contents(cls, file_contents, ext):
+        env_vars = {f"${key}": val for key, val in os.environ.items()}
+        interpol_vars = cls.filetype_parsers[ext](file_contents).get(
+            "vars", {}
+        )
+        interpol_vars = {
+            key: value % env_vars for key, value in interpol_vars.items()
+        }
+        interpol_vars.update(env_vars)
+
+        interpolated_text = file_contents % interpol_vars
+        config = cls.filetype_parsers[ext](interpolated_text)
+        config.pop("vars", None)
+        return config
+
+    @classmethod
     def parse_config(cls, filename: str) -> dict:
         try:
             ext = os.path.splitext(filename)[1]
@@ -81,20 +99,7 @@ class GPFConfigParser:
                 f"Unsupported filetype {filename}!"
             file_contents = cls._get_file_contents(filename)
 
-            env_vars = {f"${key}": val for key, val in os.environ.items()}
-
-            interpol_vars = cls.filetype_parsers[ext](file_contents).get(
-                "vars", {}
-            )
-            interpol_vars = {
-                key: value % env_vars for key, value in interpol_vars.items()
-            }
-            interpol_vars.update(env_vars)
-
-            interpolated_text = file_contents % interpol_vars
-            config = cls.filetype_parsers[ext](interpolated_text)
-            config.pop("vars", None)
-            return config  # type: ignore
+            return cls.interpolate_contents(file_contents, ext)
 
         except Exception as ex:
             logger.error(f"problems parsing config file <{filename}>")
@@ -109,8 +114,10 @@ class GPFConfigParser:
         default_config: Dict[str, Any] = None,
         config_filename: str = None,
     ) -> FrozenBox:
+        conf_dir = os.path.dirname(config_filename) \
+            if config_filename else None
         validator = GPFConfigValidator(
-            schema, conf_dir=os.path.dirname(config_filename)
+            schema, conf_dir=conf_dir
         )
         if default_config is not None:
             config = recursive_dict_update(default_config, config)

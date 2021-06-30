@@ -14,3 +14,16 @@ class AnnotationConfigParser:
             config = GPFConfigParser.modify_tuple(config, override)
 
         return config
+
+    @classmethod
+    def load_annotation_config_from_stream(cls, stream):
+        file_contents = ""
+        for chunk_raw in stream:
+            file_contents += chunk_raw.decode("ascii")
+        parsed_config = GPFConfigParser.interpolate_contents(
+            file_contents, ".yaml"
+        )
+        annotator_type = parsed_config["score_type"]
+        annotator_class = AnnotatorFactory.name_to_class(annotator_type)
+        schema = annotator_class.get_config_schema()
+        return GPFConfigParser.process_config(parsed_config, schema)
