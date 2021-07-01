@@ -2,7 +2,7 @@ import { Observable } from 'rxjs';
 
 import { GeneSetsLocalState } from '../gene-sets/gene-sets-state';
 import { GeneSymbols } from '../gene-symbols/gene-symbols.component';
-import { GeneWeightsState } from '../gene-weights/gene-weights-store';
+import { GeneWeightsLocalState } from '../gene-weights/gene-weights';
 
 export interface GeneSetState {
   geneSetsCollection: string;
@@ -16,7 +16,7 @@ export interface SaveQuery {
 
 export class CommonQueryData {
   geneSymbols: string[];
-  geneWeights: GeneWeightsState;
+  geneWeights: GeneWeightsLocalState;
   geneSet: GeneSetState;
   datasetId: string;
 
@@ -59,8 +59,8 @@ export class CommonQueryData {
     };
   }
 
-  protected static prepareGeneWeights(state: any): GeneWeightsState {
-    const weightsState: GeneWeightsState = state.geneWeights;
+  protected static prepareGeneWeights(state: any): GeneWeightsLocalState {
+    const weightsState: GeneWeightsLocalState = state.geneWeights;
 
     if (weightsState === null) {
       return null;

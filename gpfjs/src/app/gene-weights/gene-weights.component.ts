@@ -1,41 +1,36 @@
-import { Component, OnInit, ViewEncapsulation, ChangeDetectorRef, forwardRef, Input } from '@angular/core';
-import { GeneWeights, Partitions } from './gene-weights';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { GeneWeights, Partitions, GeneWeightsLocalState } from './gene-weights';
 import { GeneWeightsService } from './gene-weights.service';
 // tslint:disable-next-line:import-blacklist
 import { ReplaySubject ,  Observable } from 'rxjs';
 
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { StateRestoreService } from '../store/state-restore.service';
+import { Store, Select } from '@ngxs/store';
 import { ConfigService } from '../config/config.service';
 
-import { GeneWeightsState } from './gene-weights-store';
+import { SetGeneWeight, SetHistogramValues, GeneWeightsState, GeneWeightsModel } from './gene-weights.state';
+import { validate } from 'class-validator';
 
 @Component({
-  encapsulation: ViewEncapsulation.None,
+  encapsulation: ViewEncapsulation.None, // TODO: What is this?
   selector: 'gpf-gene-weights',
   templateUrl: './gene-weights.component.html',
-  providers: [{
-    provide: QueryStateProvider,
-    useExisting: forwardRef(() => GeneWeightsComponent)
-  }]
 })
-export class GeneWeightsComponent extends QueryStateWithErrorsProvider implements OnInit {
+export class GeneWeightsComponent implements OnInit {
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
   private partitions: Observable<Partitions>;
 
   geneWeightsArray: GeneWeights[];
-
   rangesCounts: Observable<Array<number>>;
-  private geneWeightsState = new GeneWeightsState();
+  geneWeightsLocalState = new GeneWeightsLocalState();
+
+  @Select(GeneWeightsState) state$: Observable<GeneWeightsModel>;
+  errors: Array<string> = [];
 
   constructor(
+    private store: Store,
     private geneWeightsService: GeneWeightsService,
-    private changeDetectorRef: ChangeDetectorRef,
-    private stateRestoreService: StateRestoreService,
-    private config: ConfigService
+    private config: ConfigService,
   ) {
-    super();
-
     this.partitions = this.rangeChanges
       .debounceTime(100)
       .distinctUntilChanged()
@@ -47,60 +42,9 @@ export class GeneWeightsComponent extends QueryStateWithErrorsProvider implement
         return Observable.of(null);
       });
 
-    this.rangesCounts = this.partitions.map(
-      (partitions) => {
-         return [partitions.leftCount, partitions.midCount, partitions.rightCount];
+    this.rangesCounts = this.partitions.map((partitions) => {
+       return [partitions.leftCount, partitions.midCount, partitions.rightCount];
     });
-  }
-
-  private updateLabels() {
-    this.rangeChanges.next([
-      this.geneWeightsState.weight.weight,
-      this.geneWeightsState.rangeStart,
-      this.geneWeightsState.rangeEnd
-    ]);
-  }
-
-  set selectedGeneWeights(selectedGeneWeights: GeneWeights) {
-    this.geneWeightsState.weight = selectedGeneWeights;
-    this.geneWeightsState.rangeStart = null;
-    this.geneWeightsState.rangeEnd = null;
-    this.geneWeightsState.changeDomain(selectedGeneWeights);
-    this.updateLabels();
-  }
-
-  get selectedGeneWeights() {
-    return this.geneWeightsState.weight;
-  }
-
-  get domainMin() {
-    return this.geneWeightsState.domainMin;
-  }
-
-  get domainMax() {
-    return this.geneWeightsState.domainMax;
-  }
-
-  restoreStateSubscribe() {
-    this.stateRestoreService.getState(this.constructor.name)
-      .take(1)
-      .subscribe(state => {
-        if (state['geneWeights'] && state['geneWeights']['weight']) {
-          for (const geneWeight of this.geneWeightsArray) {
-            if (geneWeight.weight === state['geneWeights']['weight']) {
-              this.selectedGeneWeights = geneWeight;
-            }
-          }
-        }
-
-        if (state['geneWeights'] && state['geneWeights']['rangeStart']) {
-          this.rangeStart = state['geneWeights']['rangeStart'];
-        }
-
-        if (state['geneWeights'] && state['geneWeights']['rangeEnd']) {
-          this.rangeEnd = state['geneWeights']['rangeEnd'];
-        }
-      });
   }
 
   ngOnInit() {
@@ -108,43 +52,91 @@ export class GeneWeightsComponent extends QueryStateWithErrorsProvider implement
       .subscribe(geneWeights => {
         this.geneWeightsArray = geneWeights;
         this.selectedGeneWeights = geneWeights[0];
-        this.restoreStateSubscribe();
       });
+
+    this.store.selectOnce(state => state.geneWeightsState).subscribe(state => {
+      // restore state
+      if (state.weight) {
+        for (const geneWeight of this.geneWeightsArray) {
+          if (geneWeight.weight === state.weight) {
+            this.selectedGeneWeights = geneWeight;
+          }
+        }
+      }
+
+      if (state.rangeStart) {
+        this.rangeStart = state.rangeStart;
+      }
+
+      if (state.rangeEnd) {
+        this.rangeEnd = state.rangeEnd;
+      }
+    });
+
+    this.state$.subscribe(state => {
+      // validate for errors
+      validate(this).then(errors => this.errors = errors.map(err => String(err)));
+    });
+  }
+
+  private updateLabels() {
+    this.rangeChanges.next([
+      this.geneWeightsLocalState.weight.weight,
+      this.rangeStart,
+      this.rangeEnd
+    ]);
+  }
+
+  updateHistogramState() {
+    this.updateLabels();
+    this.store.dispatch(new SetHistogramValues(
+      this.geneWeightsLocalState.rangeStart,
+      this.geneWeightsLocalState.rangeEnd,
+    ));
+  }
+
+  get selectedGeneWeights() {
+    return this.geneWeightsLocalState.weight;
+  }
+
+  set selectedGeneWeights(selectedGeneWeights: GeneWeights) {
+    this.geneWeightsLocalState.weight = selectedGeneWeights;
+    this.rangeStart = null;
+    this.rangeEnd = null;
+    this.changeDomain(selectedGeneWeights);
+    this.updateLabels();
+    this.store.dispatch(new SetGeneWeight(this.geneWeightsLocalState.weight));
   }
 
   set rangeStart(range: number) {
-    this.geneWeightsState.rangeStart = range;
-    this.updateLabels();
+    this.geneWeightsLocalState.rangeStart = range;
+    this.updateHistogramState();
   }
 
   get rangeStart() {
-    return this.geneWeightsState.rangeStart;
+    return this.geneWeightsLocalState.rangeStart;
   }
 
   set rangeEnd(range: number) {
-    this.geneWeightsState.rangeEnd = range;
-    this.updateLabels();
+    this.geneWeightsLocalState.rangeEnd = range;
+    this.updateHistogramState();
   }
 
   get rangeEnd() {
-    return this.geneWeightsState.rangeEnd;
-  }
-
-  getState() {
-    return this.validateAndGetState(this.geneWeightsState)
-      .map(geneWeightsState => {
-
-        return {
-          geneWeights: {
-            weight: geneWeightsState.weight.weight,
-            rangeStart: geneWeightsState.rangeStart,
-            rangeEnd: geneWeightsState.rangeEnd
-          }
-        };
-      });
+    return this.geneWeightsLocalState.rangeEnd;
   }
 
   getDownloadLink(): string {
     return `${this.config.baseUrl}gene_weights/download/${this.selectedGeneWeights.weight}`;
+  }
+
+  changeDomain(weights: GeneWeights) {
+    if (weights.domain !== null) {
+      this.geneWeightsLocalState.domainMin = weights.domain[0];
+      this.geneWeightsLocalState.domainMax = weights.domain[1];
+    } else {
+      this.geneWeightsLocalState.domainMin = weights.bins[0];
+      this.geneWeightsLocalState.domainMax = weights.bins[weights.bins.length - 1];
+    }
   }
 }

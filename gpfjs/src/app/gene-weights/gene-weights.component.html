@@ -19,7 +19,8 @@
         [logScaleX]="selectedGeneWeights.logScaleX"
 		  	[logScaleY]="selectedGeneWeights.logScaleY"
 		    [rangesCounts]="rangesCounts | async"
-		    [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
+		    [(rangeStart)]="rangeStart"
+        [(rangeEnd)]="rangeEnd">
 		  </gpf-histogram>
       <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
     </div>

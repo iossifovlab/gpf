@@ -34,6 +34,7 @@ import { PedigreeChartModule } from './pedigree-chart/pedigree-chart.module';
 import { HistogramModule } from './histogram/histogram.module';
 import { GeneWeightsComponent } from './gene-weights/gene-weights.component';
 import { GeneWeightsService } from './gene-weights/gene-weights.service';
+import { GeneWeightsState } from './gene-weights/gene-weights.state';
 
 import { GeneSetsComponent } from './gene-sets/gene-sets.component';
 import { GeneSetsState } from './gene-sets/gene-sets.state';
@@ -412,6 +413,7 @@ const appRoutes: Routes = [
       VarianttypesState, EffecttypesState, GenderState,
       InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,
       GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState, GeneSetsState,
+      GeneWeightsState,
     ]),
   ],
   providers: [
