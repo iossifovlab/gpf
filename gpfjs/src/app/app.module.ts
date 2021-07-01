@@ -23,6 +23,7 @@ import { QueryService } from './query/query.service';
 import { GpfTableModule } from './table/table.module';
 import { DatasetsComponent } from './datasets/datasets.component';
 import { PedigreeSelectorComponent } from './pedigree-selector/pedigree-selector.component';
+import { PedigreeSelectorState } from './pedigree-selector/pedigree-selector.state';
 import { GenotypeBlockComponent } from './genotype-block/genotype-block.component';
 import { GenesBlockComponent } from './genes-block/genes-block.component';
 import { GeneSymbolsComponent } from './gene-symbols/gene-symbols.component';
@@ -414,7 +415,7 @@ const appRoutes: Routes = [
       VarianttypesState, EffecttypesState, GenderState,
       InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,
       GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState, GeneSetsState,
-      GeneWeightsState, EnrichmentModelsState,
+      GeneWeightsState, EnrichmentModelsState, PedigreeSelectorState,
     ]),
   ],
   providers: [
