@@ -1,6 +1,7 @@
 <div *ngIf="gene$ | async as gene" style="padding: 25px;">
   <h2 style="margin-right: 15px">{{geneSymbol}}</h2>
-  <a class="nav-link"
+  <a id="gene-browser-link"
+    class="nav-link"
     target="_blank"
     style="text-decoration: underline; padding-left: 0px; width: fit-content;"
     [attr.href]="geneBrowserUrl">
