@@ -173,6 +173,7 @@ import { PersonFiltersBlockComponent } from './person-filters-block/person-filte
 import { PersonIdsComponent } from './person-ids/person-ids.component';
 import { PersonIdsState } from './person-ids/person-ids.state';
 import { FamilyTypeFilterComponent } from './family-type-filter/family-type-filter.component';
+import { FamilyTypeFilterState } from './family-type-filter/family-type-filter.state';
 import { SortingButtonsComponent } from './sorting-buttons/sorting-buttons.component';
 import { BnNgIdleService } from 'bn-ng-idle';
 import { AutismGeneProfileSingleViewWrapperComponent } from './autism-gene-profile-single-view-wrapper/autism-gene-profile-single-view-wrapper.component';
@@ -415,7 +416,7 @@ const appRoutes: Routes = [
       VarianttypesState, EffecttypesState, GenderState,
       InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,
       GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState, GeneSetsState,
-      GeneWeightsState, EnrichmentModelsState, PedigreeSelectorState,
+      GeneWeightsState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState
     ]),
   ],
   providers: [

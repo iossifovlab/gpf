@@ -4,8 +4,8 @@
         <div *ngFor="let item of allFamilyTypes" style="padding-right: 30px;">
             <label style="width:100%">
                 <input type="checkbox"
-                [checked]="familyTypes.familyTypes.indexOf(item) !== -1"
-                (change)="checkFamilyType(item, familyTypes.familyTypes.indexOf(item) !== -1)">
+                [checked]="selectedFamilyTypes.has(item)"
+                (change)="toggleFamilyType(item)">
                 <span style="padding-left: 3px;">{{item}}</span>
             </label>
         </div>

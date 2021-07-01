@@ -1,53 +1,40 @@
-import { Component, OnInit, forwardRef } from '@angular/core';
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { StateRestoreService } from '../store/state-restore.service';
-import { FamilyTypes } from './family-type';
+import { Component, OnInit } from '@angular/core';
+import { FamilyTypeFilterState, FamilyTypeFilterModel, SetFamilyTypeFilter } from './family-type-filter.state';
+import { SetNotEmpty } from 'app/utils/set.validators';
+import { Validate, validate } from 'class-validator';
+import { Store, Select } from '@ngxs/store';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'gpf-family-type-filter',
   templateUrl: './family-type-filter.component.html',
   styleUrls: ['./family-type-filter.component.css'],
-  providers: [{
-    provide: QueryStateProvider,
-    useExisting: forwardRef(() => FamilyTypeFilterComponent)
-  }]
 })
-export class FamilyTypeFilterComponent extends QueryStateWithErrorsProvider implements OnInit {
+export class FamilyTypeFilterComponent implements OnInit {
 
-  familyTypes = new FamilyTypes();
-  allFamilyTypes = ['trio', 'quad', 'multigenerational', 'simplex', 'multiplex'];
+  allFamilyTypes: Set<string> = new Set(['trio', 'quad', 'multigenerational', 'simplex', 'multiplex']);
+  @Validate(SetNotEmpty, {message: 'select at least one'}) selectedFamilyTypes: Set<string> = new Set();
+  @Select(FamilyTypeFilterState) state$: Observable<FamilyTypeFilterModel>;
+  errors: string[] = [];
 
-  constructor(
-    private stateRestoreService: StateRestoreService
-  ) {
-    super();
-  }
+  constructor(private store: Store) {}
 
   ngOnInit(): void {
-    this.stateRestoreService.getState(this.constructor.name).take(1).subscribe((state) => {
-        if (state['familyTypes']) {
-          this.familyTypes.familyTypes = state['familyTypes'];
-        }
-      }
-    );
-  }
+    this.store.selectOnce(state => state.familyTypeFilterState).subscribe(state => {
+      this.selectedFamilyTypes = new Set(state.familyTypes);
+    });
 
-  getState() {
-    return this.validateAndGetState(this.familyTypes).map(familyTypes => {
-      if (familyTypes.familyTypes.length === 0) {
-        return;
-      }
-      return { familyTypes: familyTypes.familyTypes };
+    this.state$.subscribe(state => {
+      validate(this).then(errors => this.errors = errors.map(err => String(err)));
     });
   }
 
-  checkFamilyType(familyType: string, value: boolean): void {
-    if (this.allFamilyTypes.indexOf(familyType) !== -1) {
-      if (!value) {
-        this.familyTypes.familyTypes.push(familyType);
-      } else {
-        this.familyTypes.familyTypes.splice(this.familyTypes.familyTypes.indexOf(familyType), 1);
-      }
+  toggleFamilyType(familyType: string): void {
+    if (this.selectedFamilyTypes.has(familyType)) {
+      this.selectedFamilyTypes.delete(familyType);
+    } else {
+      this.selectedFamilyTypes.add(familyType);
     }
+    this.store.dispatch(new SetFamilyTypeFilter(this.selectedFamilyTypes));
   }
 }
