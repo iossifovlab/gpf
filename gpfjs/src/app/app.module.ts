@@ -60,6 +60,7 @@ import { EnrichmentToolComponent } from './enrichment-tool/enrichment-tool.compo
 import { EnrichmentModelsBlockComponent } from './enrichment-models-block/enrichment-models-block.component';
 import { EnrichmentModelsComponent } from './enrichment-models/enrichment-models.component';
 import { EnrichmentModelsService } from './enrichment-models/enrichment-models.service';
+import { EnrichmentModelsState } from './enrichment-models/enrichment-models.state';
 import { EnrichmentQueryService } from './enrichment-query/enrichment-query.service';
 import { EnrichmentTableComponent } from './enrichment-table/enrichment-table.component';
 import { EnrichmentTableRowComponent } from './enrichment-table/enrichment-table-row.component';
@@ -413,7 +414,7 @@ const appRoutes: Routes = [
       VarianttypesState, EffecttypesState, GenderState,
       InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,
       GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState, GeneSetsState,
-      GeneWeightsState,
+      GeneWeightsState, EnrichmentModelsState,
     ]),
   ],
   providers: [

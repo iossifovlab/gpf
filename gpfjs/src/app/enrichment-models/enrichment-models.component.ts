@@ -1,55 +1,72 @@
-import { Component, OnInit, forwardRef, Input } from '@angular/core';
+import { Component, OnInit, Input, OnDestroy } from '@angular/core';
 import { EnrichmentModelsService } from './enrichment-models.service';
-import { EnrichmentModels, EnrichmentModel } from './enrichment-models';
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
+import { IdDescription } from '../common/iddescription';
+import { Observable, Subscription } from 'rxjs';
+import { IsNotEmpty, validate } from 'class-validator';
+import { Store, Select } from '@ngxs/store';
+import { SetEnrichmentModels, EnrichmentModelsModel, EnrichmentModelsState } from './enrichment-models.state';
 
 @Component({
   selector: 'gpf-enrichment-models',
   templateUrl: './enrichment-models.component.html',
-  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => EnrichmentModelsComponent) }]
 })
-export class EnrichmentModelsComponent extends QueryStateWithErrorsProvider implements OnInit {
+export class EnrichmentModelsComponent implements OnInit {
+
   @Input()
   private selectedDatasetId: string;
 
-  enrichmentModels: EnrichmentModels;
-  selectedEnrichmentModel = new EnrichmentModel();
+  @IsNotEmpty()
+  background: IdDescription;
+
+  @IsNotEmpty()
+  counting: IdDescription;
+
+  countings: Array<IdDescription>
+  backgrounds: Array<IdDescription>
+
+  stateSubscription: Subscription;
+  @Select(EnrichmentModelsState) state$: Observable<EnrichmentModelsModel>;
+  errors: Array<string> = [];
 
   constructor(
+    private store: Store,
     private enrichmentModelsService: EnrichmentModelsService,
-  ) {
-    super();
-  }
+  ) { }
 
   ngOnInit() {
+    this.store.selectOnce(state => state.enrichmentModelsState).subscribe(state => {
+      // restore state
+      this.background = state.enrichmentBackgroundModel;
+      this.counting = state.enrichmentCountingModel;
+    });
+
+    this.stateSubscription = this.state$.subscribe(state => {
+      // validate for errors
+      validate(this).then(errors => this.errors = errors.map(err => String(err)));
+    });
+
     this.enrichmentModelsService.getBackgroundModels(this.selectedDatasetId)
       .take(1)
       .subscribe(res => {
-        this.enrichmentModels = res;
-
-        this.selectedEnrichmentModel.background = res.backgrounds[0];
-        this.selectedEnrichmentModel.counting = res.countings[0];
+        this.backgrounds = res.backgrounds;
+        this.countings = res.countings;
+        this.background = res.backgrounds[0];
+        this.counting = res.countings[0];
+        this.store.dispatch(new SetEnrichmentModels(this.background, this.counting));
       });
   }
 
-  getState() {
-    return this.validateAndGetState(this.selectedEnrichmentModel)
-      .map(enrichmentModel => {
-        let enrichmentBackgroundModel = null;
-        let enrichmentCountingModel = null;
+  ngOnDestroy() {
+    this.stateSubscription.unsubscribe();
+  }
 
-        if (enrichmentModel && enrichmentModel.background) {
-          enrichmentBackgroundModel = enrichmentModel.background.id;
-        }
+  changeBackground(newValue: IdDescription) {
+    this.background = newValue;
+    this.store.dispatch(new SetEnrichmentModels(this.background, this.counting));
+  }
 
-        if (enrichmentModel && enrichmentModel.counting) {
-          enrichmentCountingModel = enrichmentModel.counting.id;
-        }
-
-        return {
-          enrichmentBackgroundModel: enrichmentBackgroundModel,
-          enrichmentCountingModel: enrichmentCountingModel,
-        };
-      });
+  changeCounting(newValue: IdDescription) {
+    this.counting = newValue;
+    this.store.dispatch(new SetEnrichmentModels(this.background, this.counting));
   }
 }
