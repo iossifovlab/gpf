@@ -8,7 +8,10 @@ from dae.utils.regions import Region
 from dae.utils.variant_utils import mat2str
 
 
-@pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
+@pytest.mark.parametrize("variants", [
+    "variants_impala",
+    "variants_vcf",
+])
 @pytest.mark.parametrize(
     "region,count,freq0,freq1",
     [

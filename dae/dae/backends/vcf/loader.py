@@ -34,6 +34,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
 
         self.loader = loader
         self.vcf_variants = vcf_variants
+        self.known_independent_genotypes = None
 
     def full_families_genotypes(self):
         raise NotImplementedError()
@@ -44,20 +45,9 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
     def get_family_genotype(self, family):
         raise NotImplementedError()
 
-    # def _build_samples_index(self):
-    #     samples_index = {}
-    #     vcf_samples = [
-    #         set(vcf.header.samples)
-    #         for vcf in self.loader.vcfs]
-
-    #     for person in self.loader.families.real_persons.values():
-    #         for index, samples in enumerate(vcf_samples):
-    #             if person.sample_id in samples:
-    #                 samples_index[person.sample_id] = index
-    #                 break
-    #     return samples_index
-
     def family_genotype_iterator(self):
+        self.known_independent_genotypes = []
+
         fill_value = self.loader._fill_missing_value
         samples_index = self.loader.samples_vcf_index
 
@@ -93,14 +83,23 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
             assert len(gt.shape) == 2, (gt, family)
             assert gt.shape[0] == 2
 
-            if is_all_reference_genotype(gt) and \
-                    not self.loader.include_reference_genotypes:
-                continue
-            if is_unknown_genotype(gt) and \
-                    not self.loader.include_unknown_person_genotypes:
-                continue
+            if is_unknown_genotype(gt):
+                if not self.loader.include_unknown_person_genotypes:
+                    continue
+            else:
+                for index, person in enumerate(family.members_in_order):
+                    if person.person_id not in self.loader.independent_persons:
+                        continue
+                    self.known_independent_genotypes.append(
+                        gt[:, index]
+                    )
+
             if is_all_unknown_genotype(gt) and \
                     not self.loader.include_unknown_family_genotypes:
+                continue
+
+            if is_all_reference_genotype(gt) and \
+                    not self.loader.include_reference_genotypes:
                 continue
 
             yield family, gt, None
@@ -490,31 +489,21 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 min_index = index
         return vcf_variants[min_index]
 
-    def _calc_allele_frequencies(self, summary_variant, family_variants):
-        n_independent_parents = 0   # len(self.independent_persons)
+    def _calc_allele_frequencies(
+            self, summary_variant, known_independent_genotypes):
+
+        n_independent_parents = len(self.independent_persons)
+        n_parents_called = 0
+        if len(known_independent_genotypes) > 0:
+            n_parents_called = known_independent_genotypes.shape[1]
+
         ref_n_alleles = 0
         ref_allele_freq = 0.0
 
         for allele in summary_variant.alleles:
             allele_index = allele["allele_index"]
-            n_alleles = 0  # np.sum(gt == allele_index)
+            n_alleles = np.sum(known_independent_genotypes == allele_index)
             allele_freq = 0.0
-            n_parents_called = 0
-            percent_parents_called = 0.0
-
-            for fv in family_variants:
-                independent_indexes = list()
-                if np.sum(fv.gt < 0) > 0:
-                    continue
-
-                for idx, person in enumerate(fv.members_in_order):
-                    if person.person_id in self.independent_persons:
-                        n_independent_parents += 1
-                        independent_indexes.append(idx)
-                        n_parents_called += 1
-                for idx in independent_indexes:
-                    person_gt = fv.gt[:, idx]
-                    n_alleles += np.sum(person_gt == allele_index)
 
             if n_independent_parents > 0:
                 percent_parents_called = (
@@ -573,23 +562,6 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                         f"some alleles will be skipped: "
                         f"{current_summary_variant}")
 
-                    # sv = current_summary_variant
-
-                    # allele_counts = np.array(
-                    #     sv.get_attribute('af_allele_count'))
-
-                    # logger.warning(
-                    #     f"alt allele counts: "
-                    #     f"{allele_counts}")
-                    # to_remove = allele_counts == 0
-
-                    # logger.warning(f"going to remove {to_remove}")
-
-                    # assert len(allele_counts) == len(sv.alt_alleles), (
-                    #     len(allele_counts), len(sv.alt_alleles)
-                    # )
-                    # logger.info(f"vcf genotypes: {vcf_gt_variants}")
-
                 else:
 
                     assert len(current_summary_variant.alt_alleles) < 128, (
@@ -612,8 +584,16 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                             continue
                         family_variants.append(fv)
 
+                    known_independent_genotypes = \
+                        family_genotypes.known_independent_genotypes
+                    assert known_independent_genotypes is not None
+
+                    known_independent_genotypes = np.array(
+                        known_independent_genotypes, np.int8).T
+
                     self._calc_allele_frequencies(
-                        current_summary_variant, family_variants)
+                        current_summary_variant,
+                        known_independent_genotypes)
 
                     yield current_summary_variant, family_variants
 
