@@ -4,38 +4,38 @@ import { SaveQueryPage } from 'cypress/elements/save-query-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Save query tests', () => {
-  const saveQueryPage = new SaveQueryPage();
+  const page = new SaveQueryPage();
 
   before(() => {
-    saveQueryPage.cleanup();
-    saveQueryPage.navigateToHome();
-    saveQueryPage.loginAdmin();
+    page.cleanup();
+    page.navigateToHome();
+    page.loginAdmin();
   });
 
   beforeEach(() => {
-    saveQueryPage.preserveLogin();
-    saveQueryPage.navigateToHome();
+    page.preserveLogin();
+    page.navigateToHome();
   });
 
   it('should open save query dropdown menu after save query button click', () => {
-    saveQueryPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    saveQueryPage.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu');
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    page.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu');
 
-    saveQueryPage.button.click();
-    saveQueryPage.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu show');
+    page.button.click();
+    page.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu show');
   });
 
   it('should save a query, load it, open all tools tabs and delete the query', () => {
     const datasetsPage = new DatasetsPage();
 
-    saveQueryPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    saveQueryPage.button.click();
-    saveQueryPage.dropdownNameInput.type('Test');
-    saveQueryPage.saveButton.click();
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    page.button.click();
+    page.dropdownNameInput.type('Test');
+    page.saveButton.click();
 
-    saveQueryPage.toggleSidenav();
-    saveQueryPage.sidenavSavedQueriesButton.click();
-    saveQueryPage.tableFirstLoadButton.click();
+    page.toggleSidenav();
+    page.sidenavSavedQueriesButton.click();
+    page.tableFirstLoadButton.click();
 
     datasetsPage.datasetStatisticsButton.click();
     datasetsPage.genotypeBrowserButton.click();
@@ -43,30 +43,30 @@ describe('Save query tests', () => {
     datasetsPage.phenotypeToolButton.click();
     datasetsPage.geneBrowserButton.click();
 
-    saveQueryPage.toggleSidenav();
-    saveQueryPage.sidenavSavedQueriesButton.click();
-    saveQueryPage.tableFirstDeleteButton.click();
+    page.toggleSidenav();
+    page.sidenavSavedQueriesButton.click();
+    page.tableFirstDeleteButton.click();
   });
 
   it('should navigate to genotype browser, check all effect types checkboxes, save a query, ' +
      'load it and validate that all effect types checkboxes are checked', () => {
     const genotypeBlockPage = new GenotypeBlockPage();
 
-    saveQueryPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genotypeBlockPage.findButtonInComponentContainingText('gpf-effecttypes', 'All').click();
-    saveQueryPage.button.click();
-    saveQueryPage.dropdownNameInput.type('Test');
-    saveQueryPage.saveButton.click();
+    page.button.click();
+    page.dropdownNameInput.type('Test');
+    page.saveButton.click();
 
-    saveQueryPage.toggleSidenav();
-    saveQueryPage.sidenavSavedQueriesButton.click();
-    saveQueryPage.tableFirstLoadButton.click();
+    page.toggleSidenav();
+    page.sidenavSavedQueriesButton.click();
+    page.tableFirstLoadButton.click();
     genotypeBlockPage.findAllCheckboxesInComponent('gpf-effecttypes').each((element) => {
       cy.wrap(element).should('be.checked');
     });
 
-    saveQueryPage.toggleSidenav();
-    saveQueryPage.sidenavSavedQueriesButton.click();
-    saveQueryPage.tableFirstDeleteButton.click();
+    page.toggleSidenav();
+    page.sidenavSavedQueriesButton.click();
+    page.tableFirstDeleteButton.click();
   });
 });

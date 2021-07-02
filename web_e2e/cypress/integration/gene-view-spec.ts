@@ -3,63 +3,63 @@ import { GeneViewPage } from 'cypress/elements/gene-view-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Gene view tests', () => {
-  const geneViewPage = new GeneViewPage();
+  const page = new GeneViewPage();
   const geneBrowserPage = new GeneBrowserPage();
 
   before(() => {
-    geneViewPage.cleanup();
-    geneViewPage.navigateToHome();
-    geneViewPage.loginAdmin();
+    page.cleanup();
+    page.navigateToHome();
+    page.loginAdmin();
     geneBrowserPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.geneBrowser);
     geneBrowserPage.searchInputBox.type('chd8');
     geneBrowserPage.goButton.click();
   });
 
   it('should have Affected status checkboxes', () => {
-    geneViewPage.getAffectedStatusCheckbox('Affected only').should('be.visible');
-    geneViewPage.getAffectedStatusCheckbox('Unaffected only').should('be.visible');
-    geneViewPage.getAffectedStatusCheckbox('Affected and unaffected').should('be.visible');
+    page.getAffectedStatusCheckbox('Affected only').should('be.visible');
+    page.getAffectedStatusCheckbox('Unaffected only').should('be.visible');
+    page.getAffectedStatusCheckbox('Affected and unaffected').should('be.visible');
   });
 
   it('should have effect types checkboxes', () => {
-    geneViewPage.getEffectTypesCheckbox('LGDs').should('be.visible');
-    geneViewPage.getEffectTypesCheckbox('Missense').should('be.visible');
-    geneViewPage.getEffectTypesCheckbox('Synonymous').should('be.visible');
-    geneViewPage.getEffectTypesCheckbox('CNV+').should('be.visible');
-    geneViewPage.getEffectTypesCheckbox('CNV-').should('be.visible');
-    geneViewPage.getEffectTypesCheckbox('Other').should('be.visible');
+    page.getEffectTypesCheckbox('LGDs').should('be.visible');
+    page.getEffectTypesCheckbox('Missense').should('be.visible');
+    page.getEffectTypesCheckbox('Synonymous').should('be.visible');
+    page.getEffectTypesCheckbox('CNV+').should('be.visible');
+    page.getEffectTypesCheckbox('CNV-').should('be.visible');
+    page.getEffectTypesCheckbox('Other').should('be.visible');
   });
 
   it('should have effect types checkboxes', () => {
-    geneViewPage.getInheritanceTypes('Denovo').should('be.visible');
-    geneViewPage.getInheritanceTypes('Transmitted').should('be.visible');
+    page.getInheritanceTypes('Denovo').should('be.visible');
+    page.getInheritanceTypes('Transmitted').should('be.visible');
   });
 
   it('should have variant types checkboxes', () => {
-    geneViewPage.getVariantTypes('del').should('be.visible');
-    geneViewPage.getVariantTypes('ins').should('be.visible');
-    geneViewPage.getVariantTypes('del').should('be.visible');
-    geneViewPage.getVariantTypes('CNV+').should('be.visible');
-    geneViewPage.getVariantTypes('CNV-').should('be.visible');
+    page.getVariantTypes('del').should('be.visible');
+    page.getVariantTypes('ins').should('be.visible');
+    page.getVariantTypes('del').should('be.visible');
+    page.getVariantTypes('CNV+').should('be.visible');
+    page.getVariantTypes('CNV-').should('be.visible');
   });
 
   it('should have undo button', () => {
-    geneViewPage.undoButton.should('be.visible');
+    page.undoButton.should('be.visible');
   });
 
   it('should have redo button', () => {
-    geneViewPage.redoButton.should('be.visible');
+    page.redoButton.should('be.visible');
   });
 
   it('should have reset button', () => {
-    geneViewPage.resetButton.should('be.visible');
+    page.resetButton.should('be.visible');
   });
 
   it('should have download button', () => {
-    geneViewPage.downloadButton.should('be.visible');
+    page.downloadButton.should('be.visible');
   });
 
   it('should have download summary button', () => {
-    geneViewPage.downloadSummaryButton.should('be.visible');
+    page.downloadSummaryButton.should('be.visible');
   });
 });

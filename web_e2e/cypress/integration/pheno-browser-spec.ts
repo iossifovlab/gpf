@@ -2,34 +2,34 @@ import { PhenoBrowserPage } from 'cypress/elements/pheno-browser-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Pheno browser tests', () => {
-  const phenoBrowserPage = new PhenoBrowserPage();
+  const page = new PhenoBrowserPage();
 
   before(() => {
-    phenoBrowserPage.cleanup();
-    phenoBrowserPage.navigateToHome();
-    phenoBrowserPage.loginAdmin();
+    page.cleanup();
+    page.navigateToHome();
+    page.loginAdmin();
   });
 
   beforeEach(() => {
-    phenoBrowserPage.preserveLogin();
-    phenoBrowserPage.navigateToHome();
+    page.preserveLogin();
+    page.navigateToHome();
   });
 
   [{seachQuery: 'the age'}, {seachQuery: 'the iq'}, {seachQuery: 'measure 1'},
    {seachQuery: 'measure 2'}, {seachQuery: 'measure 3'}, {seachQuery: 'measure 4'}
   ].forEach((data) => {
     it('should have working search box when filtering with \'' + data.seachQuery + '\' search query', () => {
-      phenoBrowserPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
-      phenoBrowserPage.allTableRows.should('have.length', 8)
+      page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
+      page.allTableRows.should('have.length', 8)
 
-      phenoBrowserPage.searchInputBox.type(data.seachQuery);
-      phenoBrowserPage.allTableRows.should('have.length', 1)
+      page.searchInputBox.type(data.seachQuery);
+      page.allTableRows.should('have.length', 1)
     });
   });
 
   it('should display the right amount of table rows when the query in the search box is \'1\'', () => {
-    phenoBrowserPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
-    phenoBrowserPage.searchInputBox.type('1');
-    phenoBrowserPage.allTableRows.should('have.length', 7)
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
+    page.searchInputBox.type('1');
+    page.allTableRows.should('have.length', 7)
   });
 });

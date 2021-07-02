@@ -2,55 +2,55 @@ import { FamilyFilterBlockPage } from 'cypress/elements/family-filter-block-page
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Family filters block tests', () => {
-  const familyFilterBlockPage = new FamilyFilterBlockPage();
+  const page = new FamilyFilterBlockPage();
 
   before(() => {
-    familyFilterBlockPage.cleanup();
-    familyFilterBlockPage.navigateToHome();
-    familyFilterBlockPage.loginAdmin();
+    page.cleanup();
+    page.navigateToHome();
+    page.loginAdmin();
   });
 
   beforeEach(() => {
-    familyFilterBlockPage.preserveLogin();
-    familyFilterBlockPage.navigateToHome();
+    page.preserveLogin();
+    page.navigateToHome();
   });
 
   it('should display family ids panel', () => {
-    familyFilterBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    familyFilterBlockPage.familyIdsPanel.should('not.exist');
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    page.familyIdsPanel.should('not.exist');
 
-    familyFilterBlockPage.familyIdsButton.click();
-    familyFilterBlockPage.familyIdsPanel.should('be.visible');
+    page.familyIdsButton.click();
+    page.familyIdsPanel.should('be.visible');
   });
 
   it('should display error alert in family ids panel when the textarea is empty', () => {
-    familyFilterBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
 
-    familyFilterBlockPage.familyIdsButton.click();
-    familyFilterBlockPage.findErrorAlertInComponent('gpf-family-ids').should('be.visible');
+    page.familyIdsButton.click();
+    page.findErrorAlertInComponent('gpf-family-ids').should('be.visible');
 
-    familyFilterBlockPage.familyIdsTextarea.type('f1');
-    familyFilterBlockPage.findErrorAlertInComponent('gpf-family-ids').should('not.exist');
+    page.familyIdsTextarea.type('f1');
+    page.findErrorAlertInComponent('gpf-family-ids').should('not.exist');
 
   });
 
   it('should display pheno filters panel after \'Advanced\' button click', () => {
-    familyFilterBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    familyFilterBlockPage.phenoFiltersPanel.should('not.exist');
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    page.phenoFiltersPanel.should('not.exist');
 
-    familyFilterBlockPage.advancedButton.click();
-    familyFilterBlockPage.phenoFiltersPanel.should('be.visible');
+    page.advancedButton.click();
+    page.phenoFiltersPanel.should('be.visible');
   });
 
 //   Uncomment me when NgbNav no longer always show dropdown menu
 //   it('should stop displaying tab panel after \'All\' button click', () => {
-//     familyFilterBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-//     familyFilterBlockPage.tabPanel.should('not.exist');
+//     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+//     page.tabPanel.should('not.exist');
 
-//     familyFilterBlockPage.familyIdsButton.click();
-//     familyFilterBlockPage.tabPanel.should('be.visible');
+//     page.familyIdsButton.click();
+//     page.tabPanel.should('be.visible');
 
-//     familyFilterBlockPage.allButton.click();
-//     familyFilterBlockPage.tabPanel.should('not.exist');
+//     page.allButton.click();
+//     page.tabPanel.should('not.exist');
 //   });
 });

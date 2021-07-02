@@ -5,108 +5,108 @@ import { datasetIds, toolPageLinks, userData } from 'cypress/elements/utils';
 import { GenotypeBrowserPage } from 'cypress/elements/genotype-browser-page';
 
 describe('App tests', () => {
-  const appPage = new AppPage();
+  const page = new AppPage();
 
   before(() => {
-    appPage.cleanup();
+    page.cleanup();
   });
 
   beforeEach(() => {
-    appPage.navigateToHome();
+    page.navigateToHome();
   });
 
   it('should display \'GPF: Genotypes and Phenotypes in Families\' as a title', () => {
-    appPage.loginAdmin();
-    appPage.title.should('have.text', 'GPF: Genotypes and Phenotypes in Families');
-    appPage.logout();
+    page.loginAdmin();
+    page.title.should('have.text', 'GPF: Genotypes and Phenotypes in Families');
+    page.logout();
   });
 
   it('should toggle sidenav, click on the \'Datasets\' button and navigate to \'/datasets/ALL_genotypes/genotype-browser\'', () => {
     const baseUrl = Cypress.config().baseUrl;
     const expectedUrl = `${baseUrl}datasets/ALL_genotypes/${toolPageLinks.genotypeBrowser}`;
 
-    appPage.loginAdmin();
-    appPage.toggleSidenav();
-    appPage.sidenavDatasetButton.click();
+    page.loginAdmin();
+    page.toggleSidenav();
+    page.sidenavDatasetButton.click();
 
     cy.url().then(currentUrl => {
       expect(currentUrl).to.eq(expectedUrl);
     });
 
-    appPage.logout();
+    page.logout();
   });
 
   it('should toggle sidenav, click on the \'Saved queries\' button and navigate to \'/saved-queries\'', () => {
     const baseUrl = Cypress.config().baseUrl;
     const savedQueriesUrl = `${baseUrl}saved-queries`;
 
-    appPage.loginAdmin();
-    appPage.toggleSidenav();
-    appPage.sidenavSavedQueriesButton.click();
+    page.loginAdmin();
+    page.toggleSidenav();
+    page.sidenavSavedQueriesButton.click();
 
     cy.url().then(currentUrl => {
       expect(currentUrl).to.eq(savedQueriesUrl);
     });
 
-    appPage.logout();
+    page.logout();
   });
 
   it('should toggle sidenav, click on the \'Management\' button and navigate to \'/management\'', () => {
     const baseUrl = Cypress.config().baseUrl;
     const managementUrl = `${baseUrl}management`;
 
-    appPage.loginAdmin();
-    appPage.toggleSidenav();
-    appPage.sidenavManagementButton.click();
+    page.loginAdmin();
+    page.toggleSidenav();
+    page.sidenavManagementButton.click();
 
     cy.url().then(currentUrl => {
       expect(currentUrl).to.eq(managementUrl);
     });
 
-    appPage.logout();
+    page.logout();
   });
 
   it('should toggle sidenav, click on the \'Autism gene profiles\' button and navigate to \'/autism-gene-profiles\'', () => {
     const baseUrl = Cypress.config().baseUrl;
     const autismGeneProfilesUrl = `${baseUrl}autism-gene-profiles`;
 
-    appPage.loginAdmin();
-    appPage.toggleSidenav();
-    appPage.sidenavAutismGeneProfilesButton.click();
+    page.loginAdmin();
+    page.toggleSidenav();
+    page.sidenavAutismGeneProfilesButton.click();
 
     cy.url().then(currentUrl => {
       expect(currentUrl).to.eq(autismGeneProfilesUrl);
     });
 
-    appPage.logout();
+    page.logout();
   });
 });
 
 describe('User access rights tests', () => {
-  const appPage = new AppPage();
+  const page = new AppPage();
   const datasetsPage = new DatasetsPage();
 
   before(() => {
-    appPage.cleanup();
+    page.cleanup();
   });
 
   beforeEach(() => {
-    appPage.navigateToHome();
+    page.navigateToHome();
   });
 
   Object.values(userData).forEach((data) => {
     it('should toggle sidenav bar with the right elements inside', () => {
-      appPage.login(data.username, data.password);
-      appPage.sidenavElements.should('not.exist');
+      page.login(data.username, data.password);
+      page.sidenavElements.should('not.exist');
 
-      appPage.toggleSidenav();
-      appPage.sidenavElements.should('have.length', data.sidenavElementsCount);
+      page.toggleSidenav();
+      page.sidenavElements.should('have.length', data.sidenavElementsCount);
 
-      appPage.toggleSidenav();
-      appPage.sidenavElements.should('not.exist');
+      page.toggleSidenav();
+      page.sidenavElements.should('not.exist');
 
       if (data.username || data.password !== undefined) {
-        appPage.logout();
+        page.logout();
       }
     });
   });
@@ -147,7 +147,7 @@ describe('User access rights tests', () => {
 
     datasetsPage.datasetStatisticsButton.click();
     datasetsPage.permissionDeniedPrompt.should('not.exist');
-    appPage.logout();
+    page.logout();
   });
 
   Object.values(userData).forEach((data) => {
@@ -155,53 +155,53 @@ describe('User access rights tests', () => {
        'in the dropdown have the correct opacity value', () => {
       const expectedOpacity = data.hasDatasetRights ? '1' : '0.3';
 
-      appPage.login(data.username, data.password);
+      page.login(data.username, data.password);
       datasetsPage.datasetsDropdownMenuButton.click();
       cy.wait(1000);
       datasetsPage.datasetsDropdownMenuElements.each(ele => cy.wrap(ele).should('have.css', 'opacity', expectedOpacity));
 
       if (data.username || data.password !== undefined) {
-        appPage.logout();
+        page.logout();
       }
     });
   });
 
   it('should validate that researcher has no rights', () => {
-    appPage.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics);
-    appPage.login(userData.normal.username, userData.normal.password);
+    page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics);
+    page.login(userData.normal.username, userData.normal.password);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
-    appPage.logout();
+    page.logout();
   });
 
   it('should login admin and give researcher access rights for comp_vcf, then login researcher and verify his rights ', () => {
     const userManagementPage = new UserManagementPage();
 
-    appPage.loginAdmin();
-    appPage.toggleSidenav();
-    appPage.sidenavManagementButton.click();
+    page.loginAdmin();
+    page.toggleSidenav();
+    page.sidenavManagementButton.click();
     userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowGroupDropdownSearch.type('comp_vcf');
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowSubmitButton.click();
-    appPage.logout();
+    page.logout();
 
-    appPage.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics);
-    appPage.login(userData.normal.username, userData.normal.password);
+    page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics);
+    page.login(userData.normal.username, userData.normal.password);
     datasetsPage.permissionDeniedPrompt.should('not.exist');
     datasetsPage.datasetStatisticsWindow.should('be.visible');
 
-    appPage.logout();
+    page.logout();
   });
 
   it('should login admin and give researcher access rights for COMP_genotypes, then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
     const genotypeBrowserPage = new GenotypeBrowserPage();
 
-    appPage.loginAdmin();
-    appPage.toggleSidenav();
-    appPage.sidenavManagementButton.click();
+    page.loginAdmin();
+    page.toggleSidenav();
+    page.sidenavManagementButton.click();
     userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
     userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true});
     userManagementPage.userWindowGroupDropDownMenuButton.click();
@@ -209,51 +209,51 @@ describe('User access rights tests', () => {
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowSubmitButton.click();
-    appPage.logout();
+    page.logout();
 
-    appPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics);
-    appPage.login(userData.normal.username, userData.normal.password);
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics);
+    page.login(userData.normal.username, userData.normal.password);
     datasetsPage.permissionDeniedPrompt.should('exist');
     datasetsPage.datasetStatisticsWindow.should('not.be.visible');
 
-    appPage.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.genotypeBrowser);
+    page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.genotypeBrowser);
     datasetsPage.permissionDeniedPrompt.should('not.exist');
     genotypeBrowserPage.window.should('be.visible');
 
-    appPage.navigateToDatasetPage(datasetIds.compGenotypes, toolPageLinks.genotypeBrowser);
+    page.navigateToDatasetPage(datasetIds.compGenotypes, toolPageLinks.genotypeBrowser);
     datasetsPage.permissionDeniedPrompt.should('not.exist');
     genotypeBrowserPage.window.should('be.visible');
 
-    appPage.navigateToDatasetPage(datasetIds.compDenovo, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.compDenovo, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('not.exist');
     datasetsPage.datasetStatisticsWindow.should('be.visible');
 
-    appPage.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('not.exist');
     datasetsPage.datasetStatisticsWindow.should('be.visible');
 
-    appPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     datasetsPage.datasetStatisticsWindow.should('not.be.visible');
 
-    appPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     datasetsPage.datasetStatisticsWindow.should('not.be.visible');
 
-    appPage.navigateToDatasetPage(datasetIds.multi, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.multi, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     datasetsPage.datasetStatisticsWindow.should('not.be.visible');
 
-    appPage.logout();
+    page.logout();
   });
 
   it('should login admin and give researcher access rights for ALL Genotypes, then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
     const genotypeBrowserPage = new GenotypeBrowserPage();
 
-    appPage.loginAdmin();
-    appPage.toggleSidenav();
-    appPage.sidenavManagementButton.click();
+    page.loginAdmin();
+    page.toggleSidenav();
+    page.sidenavManagementButton.click();
     userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
     userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true});
     userManagementPage.userWindowGroupDropDownMenuButton.click();
@@ -261,81 +261,81 @@ describe('User access rights tests', () => {
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowSubmitButton.click();
-    appPage.logout();
+    page.logout();
 
-    appPage.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.genotypeBrowser);
-    appPage.login(userData.normal.username, userData.normal.password);
+    page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.genotypeBrowser);
+    page.login(userData.normal.username, userData.normal.password);
     datasetsPage.permissionDeniedPrompt.should('not.exist');
     genotypeBrowserPage.window.should('be.visible');
 
-    appPage.navigateToDatasetPage(datasetIds.compGenotypes, toolPageLinks.genotypeBrowser);
+    page.navigateToDatasetPage(datasetIds.compGenotypes, toolPageLinks.genotypeBrowser);
     datasetsPage.permissionDeniedPrompt.should('not.exist');
     genotypeBrowserPage.window.should('be.visible');
 
-    appPage.navigateToDatasetPage(datasetIds.compDenovo, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.compDenovo, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('not.exist');
     datasetsPage.datasetStatisticsWindow.should('be.visible');
 
-    appPage.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('not.exist');
     datasetsPage.datasetStatisticsWindow.should('be.visible');
 
-    appPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('not.exist');
     datasetsPage.datasetStatisticsWindow.should('be.visible');
 
-    appPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('not.exist');
     datasetsPage.datasetStatisticsWindow.should('be.visible');
 
-    appPage.navigateToDatasetPage(datasetIds.multi, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.multi, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('not.exist');
     datasetsPage.datasetStatisticsWindow.should('be.visible');
 
-    appPage.logout();
+    page.logout();
   });
 
   it('should login admin and remove all researcher access rights, then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
     const genotypeBrowserPage = new GenotypeBrowserPage();
 
-    appPage.loginAdmin();
-    appPage.toggleSidenav();
-    appPage.sidenavManagementButton.click();
+    page.loginAdmin();
+    page.toggleSidenav();
+    page.sidenavManagementButton.click();
     userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
     userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true});
     userManagementPage.userWindowSubmitButton.click();
-    appPage.logout();
+    page.logout();
 
-    appPage.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.genotypeBrowser);
-    appPage.login(userData.normal.username, userData.normal.password);
+    page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.genotypeBrowser);
+    page.login(userData.normal.username, userData.normal.password);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     genotypeBrowserPage.window.should('not.be.visible');
 
-    appPage.navigateToDatasetPage(datasetIds.compGenotypes, toolPageLinks.genotypeBrowser);
+    page.navigateToDatasetPage(datasetIds.compGenotypes, toolPageLinks.genotypeBrowser);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     genotypeBrowserPage.window.should('not.be.visible');
 
-    appPage.navigateToDatasetPage(datasetIds.compDenovo, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.compDenovo, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     datasetsPage.datasetStatisticsWindow.should('not.be.visible');
 
-    appPage.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     datasetsPage.datasetStatisticsWindow.should('not.be.visible');
 
-    appPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     datasetsPage.datasetStatisticsWindow.should('not.be.visible');
 
-    appPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     datasetsPage.datasetStatisticsWindow.should('not.be.visible');
 
-    appPage.navigateToDatasetPage(datasetIds.multi, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.multi, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     datasetsPage.datasetStatisticsWindow.should('not.be.visible');
 
-    appPage.logout();
+    page.logout();
   });
 });

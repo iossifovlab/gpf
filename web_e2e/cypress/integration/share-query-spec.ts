@@ -4,32 +4,32 @@ import { ShareQueryPage } from 'cypress/elements/share-query-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Share query tests', () => {
-  const shareQueryPage = new ShareQueryPage();
+  const page = new ShareQueryPage();
 
   before(() => {
-    shareQueryPage.cleanup();
-    shareQueryPage.navigateToHome();
-    shareQueryPage.loginAdmin();
+    page.cleanup();
+    page.navigateToHome();
+    page.loginAdmin();
   });
 
   beforeEach(() => {
-    shareQueryPage.preserveLogin();
-    shareQueryPage.navigateToHome();
-    shareQueryPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    page.preserveLogin();
+    page.navigateToHome();
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
   });
 
   it('should open share query dropdown menu after share query button click', () => {
-    shareQueryPage.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu');
+    page.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu');
 
-    shareQueryPage.button.click();
-    shareQueryPage.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu');
+    page.button.click();
+    page.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu');
   });
 
   it('should share a query, load it and open all tools tabs', () => {
     const datasetsPage = new DatasetsPage();
 
-    shareQueryPage.button.click();
-    shareQueryPage.input.invoke('val').then((url) => {
+    page.button.click();
+    page.input.invoke('val').then((url) => {
       cy.visit(String(url)).then(() => {
         datasetsPage.datasetStatisticsButton.click();
         datasetsPage.genotypeBrowserButton.click();
@@ -46,8 +46,8 @@ describe('Share query tests', () => {
 
     genotypeBlockPage.findButtonInComponentContainingText('gpf-effecttypes', 'All').click();
 
-    shareQueryPage.button.click();
-    shareQueryPage.input.invoke('val').then((url) => {
+    page.button.click();
+    page.input.invoke('val').then((url) => {
       cy.visit(String(url)).then(() => {
         genotypeBlockPage.findAllCheckboxesInComponent('gpf-effecttypes').each((element) => {
           cy.wrap(element).should('be.checked');
