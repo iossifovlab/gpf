@@ -15,9 +15,9 @@
         <gpf-autism-gene-profiles-table [hidden]="nav.activeId !== 'autismGenesTool'" (createTabEvent)="createTabEventHandler($event)" [config]="shownTableConfig" (configChange)="tableConfigChangeEvent($event)"></gpf-autism-gene-profiles-table>
       </ng-template>
 
-      <span #dropdownSpan ngbDropdown>
+      <span #dropdownSpan ngbDropdown style="display: table; margin:auto" >
         <button ngbDropdownToggle style="display: none;"></button>
-        <gpf-multiple-select-menu ngbDropdownMenu
+        <gpf-multiple-select-menu ngbDropdownMenu 
           [allItems]="allColumns"
           [selectedItems]="shownColumns"
           (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
