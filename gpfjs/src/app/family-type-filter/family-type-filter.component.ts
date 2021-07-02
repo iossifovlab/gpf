@@ -29,12 +29,8 @@ export class FamilyTypeFilterComponent implements OnInit {
     });
   }
 
-  toggleFamilyType(familyType: string): void {
-    if (this.selectedFamilyTypes.has(familyType)) {
-      this.selectedFamilyTypes.delete(familyType);
-    } else {
-      this.selectedFamilyTypes.add(familyType);
-    }
-    this.store.dispatch(new SetFamilyTypeFilter(this.selectedFamilyTypes));
+  updateFamilyTypes(newValues: Set<string>): void {
+    this.selectedFamilyTypes = newValues;
+    this.store.dispatch(new SetFamilyTypeFilter(newValues));
   }
 }
