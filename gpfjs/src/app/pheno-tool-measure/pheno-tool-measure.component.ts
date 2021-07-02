@@ -1,71 +1,89 @@
-import { Component, OnInit, forwardRef, ElementRef, QueryList, ViewChildren } from '@angular/core';
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
+import { Component, OnInit, ElementRef, QueryList, ViewChildren } from '@angular/core';
 // tslint:disable-next-line:import-blacklist
 import { Observable, ReplaySubject } from 'rxjs';
-import { PhenoToolMeasure, Regression } from './pheno-tool-measure';
-import { StateRestoreService } from '../store/state-restore.service';
 import { ContinuousMeasure } from '../measures/measures';
 import { MeasuresService } from '../measures/measures.service';
 import { DatasetsService } from '../datasets/datasets.service';
+import { IsNotEmpty, validate } from 'class-validator';
+import { Store, Select } from '@ngxs/store';
+import {
+  SetPhenoToolMeasure, PhenoToolMeasureModel, PhenoToolMeasureState
+} from './pheno-tool-measure.state';
+
+interface Regression {
+  display_name: string;
+  instrument_name: string;
+  measure_name: string;
+}
 
 @Component({
   selector: 'gpf-pheno-tool-measure',
   templateUrl: './pheno-tool-measure.component.html',
   styleUrls: ['./pheno-tool-measure.component.css'],
-  providers: [{
-    provide: QueryStateProvider,
-    useExisting: forwardRef(() => PhenoToolMeasureComponent)
-  }]
 })
-export class PhenoToolMeasureComponent extends QueryStateWithErrorsProvider implements OnInit {
+export class PhenoToolMeasureComponent implements OnInit {
   @ViewChildren('checkboxes') inputs: QueryList<ElementRef>;
 
-  phenoToolMeasure = new PhenoToolMeasure();
+  @IsNotEmpty()
+  selectedMeasure: ContinuousMeasure = null;
+  normalizeBy: Regression[] = new Array<Regression>();
 
   measuresLoaded$ = new ReplaySubject<Array<ContinuousMeasure>>();
 
   regressions: Object = {};
 
+  @Select(PhenoToolMeasureState) state$: Observable<PhenoToolMeasureModel>;
+  errors: Array<string> = [];
+
   constructor(
-    private stateRestoreService: StateRestoreService,
+    private store: Store,
     private measuresService: MeasuresService,
-    private datasetsService: DatasetsService
-  ) {
-    super();
-  }
+    private datasetsService: DatasetsService,
+  ) { }
 
   ngOnInit() {
     Observable.combineLatest(
-      this.stateRestoreService.getState(this.constructor.name),
+      this.store.selectOnce(state => state.inheritancetypesState),
       this.measuresLoaded$)
       .take(1)
       .subscribe(([state, measures]) => {
-        if (state['measureId'] && state['normalizeBy']) {
-          this.phenoToolMeasure.measure =
-            measures.find(m => m.name === state['measureId']);
-
-          this.phenoToolMeasure.normalizeBy = state['normalizeBy'];
+        if (state.measureId && state.normalizeBy) {
+          this.selectedMeasure = measures.find(m => m.name === state.measureId);
+          this.normalizeBy = state.normalizeBy
         }
       });
 
-    this.datasetsService.getSelectedDataset().subscribe(
-      dataset => {
-        if (dataset.phenotypeData) {
-          this.measuresService.getRegressions(dataset.id).subscribe(
-            res => { this.regressions = res; });
-        } else {
-          this.regressions = {};
-        }
+    this.state$.subscribe(state => {
+      // validate for errors
+      validate(this).then(errors => this.errors = errors.map(err => String(err)));
+    });
+
+    this.datasetsService.getSelectedDataset().subscribe(dataset => {
+      if (dataset.phenotypeData) {
+        this.measuresService.getRegressions(dataset.id).subscribe(
+          res => { this.regressions = res });
+      } else {
+        this.regressions = {};
       }
-    );
+    });
   }
 
-  getState() {
-    return this.validateAndGetState(this.phenoToolMeasure)
-      .map(state => ({
-        measureId: state.measure.name,
-        normalizeBy: state.normalizeBy
-      }));
+  get measure() {
+    return this.selectedMeasure;
+  }
+
+  set measure(value) {
+    this.selectedMeasure = value;
+    this.normalizeBy = [];
+    this.updateState();
+  }
+
+  updateState() {
+    if (this.selectedMeasure !== null) {
+      this.store.dispatch(new SetPhenoToolMeasure(
+        this.selectedMeasure.name, this.normalizeBy,
+      ))
+    }
   }
 
   measuresUpdate(measures: Array<ContinuousMeasure>) {
@@ -74,30 +92,22 @@ export class PhenoToolMeasureComponent extends QueryStateWithErrorsProvider impl
 
   onNormalizeByChange(value: Regression, event): void {
     if (event.target.checked) {
-      if (!this.phenoToolMeasure.normalizeBy.some((reg) => reg.measure_name === value.measure_name)) {
-        this.phenoToolMeasure.normalizeBy.push(value);
+      if (!this.normalizeBy.some((reg) => reg.measure_name === value.measure_name)) {
+        this.normalizeBy.push(value);
       }
     } else {
-       this.clearNormalizedByFilter(value.measure_name);
+      this.normalizeBy = this.normalizeBy.filter(
+        reg => reg.measure_name !== value.measure_name
+      );
     }
-  }
-
-  clearNormalizedByFilter(value: string): void {
-    this.phenoToolMeasure.normalizeBy =
-    this.phenoToolMeasure.normalizeBy.filter(reg => reg.measure_name !== value);
+    this.updateState();
   }
 
   getRegressionNames() {
     return Object.getOwnPropertyNames(this.regressions);
   }
 
-  uncheckCheckboxes(event) {
-    // this.inputs.forEach((directive, index) => {
-    //   this.clearNormalizedByFilter(directive.nativeElement.id);
-    // });
-  }
-
   isNormalizedBy(reg: string): boolean {
-    return this.phenoToolMeasure.normalizeBy.some(norm => norm.measure_name === reg);
+    return this.normalizeBy.some(norm => norm.measure_name === reg);
   }
 }
