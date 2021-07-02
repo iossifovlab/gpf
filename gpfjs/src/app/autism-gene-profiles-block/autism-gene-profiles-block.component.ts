@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { NgbDropdownMenu, NgbNav } from '@ng-bootstrap/ng-bootstrap';
-import { AgpConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import { AgpConfig, AgpTableConfig, AgpTableDataset, AgpTableDatasetPersonSet } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { cloneDeep } from 'lodash';
 
@@ -15,10 +15,11 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   geneTabs = new Set<string>();
   autismGeneToolConfig: AgpConfig;
-  tableConfig: AgpConfig;
+  tableConfig: AgpTableConfig;
+  shownTableConfig: AgpTableConfig;
 
-  allCategories: string[];
-  shownCategories: string[];
+  allColumns: string[];
+  shownColumns: string[];
 
   @HostListener('window:keydown', ['$event'])
   keyEvent($event: KeyboardEvent) {
@@ -48,9 +49,10 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   ngOnInit(): void {
     this.autismGeneProfilesService.getConfig().take(1).subscribe(config => {
       this.autismGeneToolConfig = config;
-      this.tableConfig = cloneDeep(config);
-      this.allCategories = this.getAllCategories(this.autismGeneToolConfig);
-      this.shownCategories = this.getAllCategories(this.autismGeneToolConfig);
+      this.tableConfig = this.getTableConfig(config);
+      this.shownTableConfig = this.getTableConfig(config);
+      this.allColumns = this.getAllCategories(this.tableConfig);
+      this.shownColumns = this.getAllCategories(this.tableConfig);
     });
   }
 
@@ -148,15 +150,37 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  getAllCategories(config: AgpConfig) {
-    const allCategories = [];
+  getAllCategories(config: AgpTableConfig) {
+    const allColumns = [];
     if (config.geneSets) {
-      allCategories.push(...config.geneSets.map(obj => obj.category));
+      allColumns.push(...config.geneSets.map(obj => obj.displayName));
     }
     if (config.genomicScores) {
-      allCategories.push(...config.genomicScores.map(obj => obj.category));
+      allColumns.push(...config.genomicScores.map(obj => obj.displayName));
     }
-    return allCategories;
+    if (config.datasets) {
+      allColumns.push(...config.datasets.map(obj => obj.displayName));
+    }
+    return allColumns;
+  }
+
+  getTableConfig(agpConfig: AgpConfig): AgpTableConfig {
+    return new AgpTableConfig(
+      agpConfig.defaultDataset,
+      cloneDeep(agpConfig.geneSets),
+      cloneDeep(agpConfig.genomicScores),
+      agpConfig.datasets.map(dataset => {
+        const personSets = dataset.personSets.map(personSet => new AgpTableDatasetPersonSet(
+          personSet.id,
+          personSet.displayName,
+          personSet.description,
+          personSet.parentsCount,
+          personSet.childrenCount,
+          cloneDeep(dataset.statistics)
+        ));
+        return new AgpTableDataset(dataset.id, dataset.displayName, dataset.meta, dataset.defaultVisible, personSets);
+      })
+    );
   }
 
   openDropdown() {
@@ -164,15 +188,17 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   }
 
   handleMultipleSelectMenuApplyEvent($event) {
-    this.shownCategories = $event.data;
-    this.tableConfig.geneSets = this.autismGeneToolConfig.geneSets.filter(obj => this.shownCategories.includes(obj.category));
-    this.tableConfig.genomicScores = this.autismGeneToolConfig.genomicScores.filter(obj => this.shownCategories.includes(obj.category));
-    this.tableConfig = cloneDeep(this.tableConfig);
+    this.shownColumns = $event.data;
+    this.shownTableConfig.geneSets = this.tableConfig.geneSets.filter(obj => this.shownColumns.includes(obj.displayName));
+    this.shownTableConfig.genomicScores = this.tableConfig.genomicScores.filter(obj => this.shownColumns.includes(obj.displayName));
+    this.shownTableConfig.datasets = this.tableConfig.datasets.filter(obj => this.shownColumns.includes(obj.displayName));
+    this.shownTableConfig = {...this.shownTableConfig};
+
     this.ngbDropdownMenu.dropdown.close();
   }
 
   tableConfigChangeEvent($event) {
-    this.tableConfig = $event;
-    this.shownCategories = this.getAllCategories(this.tableConfig);
+    this.shownTableConfig = $event;
+    this.shownColumns = this.getAllCategories(this.shownTableConfig);
   }
 }

@@ -14,7 +14,7 @@
             </div>
             <button #columnFilteringButton
               [attr.id]="geneSetCategory.category + '-button'"
-              (click)="updateGeneSetNamesListInCategory(geneSetCategory)"
+              (click)="openGeneSetCategoryDropdown(geneSetCategory)"
               class="dropdown-toggle btn navbar-toggler">
               <span style="font-size: 14px;">&#9776;</span>
             </button>
@@ -28,15 +28,24 @@
             </div>
             <button #columnFilteringButton
               [attr.id]="genomicScoresCategory.category + '-button'"
-              (click)="updateGenomicScoresNamesListInCategory(genomicScoresCategory)"
+              (click)="openGenomicScoresCategoryDropdown(genomicScoresCategory)"
               class="dropdown-toggle btn navbar-toggler">
               <span style="font-size: 14px;">&#9776;</span>
             </button>
           </th>
         </ng-container>
 
-        <th *ngFor="let dataset of config.datasets" class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="dataset.statistics.length * dataset.personSets.length">
-          <span [title]="dataset.meta ? dataset.meta : ''">{{dataset.displayName}}</span>
+        <th *ngFor="let dataset of shownDatasets" class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="calculateDatasetColspan(dataset)">
+          <div class="table-main-header-text" style="margin-right: 30px"> 
+            <span [title]="dataset.meta ? dataset.meta : ''">{{dataset.displayName}}</span>
+          </div>
+          <button #columnFilteringButton
+              [attr.id]="dataset.id + '-button'"
+              (click)="openDatasetDropdown(dataset, dataset.id)"
+              class="dropdown-toggle btn navbar-toggler"
+              style="float: right; outline: none; font-size: 18px; white-space: nowrap; border: 0; padding: 0; width: 18px; vertical-align: unset;">
+              <span style="font-size: 14px;">&#9776;</span>
+          </button>
         </th>
       </tr>
 
@@ -60,16 +69,28 @@
           </th>
         </ng-container>
 
-        <ng-container *ngFor="let dataset of config.datasets">
-          <th class="table-subheader" [attr.colspan]="dataset.statistics.length" *ngFor="let personSet of dataset.personSets">
-            <span [title]="personSet.description ? personSet.description : ''">{{personSet.displayName}} ({{personSet.childrenCount}})</span>
-          </th>
+        <ng-container *ngFor="let dataset of shownDatasets">
+          <ng-container *ngFor="let personSet of dataset.personSets">
+            <th class="table-subheader" [attr.colspan]="personSet.statistics.length">
+              <div class="table-main-header-text" style="margin-right: 30px">
+                <span [title]="personSet.description ? personSet.description : ''">{{personSet.displayName}} ({{personSet.childrenCount}})</span>
+              </div>
+              <button #columnFilteringButton
+              [attr.id]="dataset.id + '-' + personSet.id + '-button'"
+              (click)="openDatasetDropdown(dataset, dataset.id + '-' + personSet.id)"
+              class="dropdown-toggle btn navbar-toggler"
+              style="float: right; outline: none; font-size: 18px; white-space: nowrap; border: 0; padding: 0; width: 18px; vertical-align: unset;">
+                <span style="font-size: 14px;">&#9776;</span>
+              </button>
+            </th>
+          </ng-container>
+
         </ng-container>
       </tr>
       <tr>
-        <ng-container *ngFor="let dataset of config.datasets">
+        <ng-container *ngFor="let dataset of shownDatasets">
           <ng-container *ngFor="let personSet of dataset.personSets">
-            <td *ngFor="let statistic of dataset.statistics" class="effect-type-header">
+            <td *ngFor="let statistic of personSet.statistics" class="effect-type-header">
               <span [title]="statistic.description ? statistic.description : ''">{{statistic.displayName}}</span>
               <gpf-sorting-buttons [id]="dataset.id + '_' + personSet.id + '_' + statistic.id" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
             </td>
@@ -99,13 +120,15 @@
           </td>
         </ng-container>
 
-        <ng-container *ngFor="let study of gene.studies">
-          <ng-container *ngFor="let personSet of study.personSets">
-            <td style="min-width: 70px" *ngFor="let effectType of personSet.effectTypes">
-              <ng-container *ngIf="effectType.value.count !== 0">
-                <a (click)="goToQuery(gene.geneSymbol, personSet.id, effectType.id, study.id)" (middleclick)="goToQuery(gene.geneSymbol, personSet.id, effectType.id, study.id)">
-                  {{effectType.value.count}} ({{effectType.value.rate | number : '1.0-3' }})
-                </a>
+        <ng-container *ngFor="let dataset of shownDatasets">
+          <ng-container *ngFor="let personSet of dataset.personSets">
+            <td style="min-width: 70px" *ngFor="let statistic of personSet.statistics">
+              <ng-container *ngIf="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id) as value">
+                <ng-container *ngIf="value.count !== 0">
+                  <a (click)="goToQuery(gene.geneSymbol, personSet.id, statistic.id, dataset.id)" (middleclick)="goToQuery(gene.geneSymbol, personSet.id, statistic.id, dataset.id)">
+                    {{value.count}} ({{value.rate | number : '1.0-3' }})
+                  </a>
+                </ng-container>
               </ng-container>
             </td> 
           </ng-container>
@@ -142,4 +165,29 @@ Described in GPF-546 -->
         (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
     </span>
   </div>
+</ng-container>
+
+<ng-container *ngFor="let dataset of shownDatasets">
+  <div *ngIf="allDatasetNames.get(dataset.displayName) && shownDatasetNames.get(dataset.displayName)" style="position: sticky;" [style.bottom.px]="modalBottom">
+    <span #dropdownSpan [attr.id]="dataset.id + '-span'" ngbDropdown>
+      <button ngbDropdownToggle style="display: none;"></button>
+      <gpf-multiple-select-menu ngbDropdownMenu [attr.id]="dataset.id + '-dropdown'"
+        [menuId]="'dataset:' + dataset.id"
+        [allItems]="allPersonSetNames"
+        [selectedItems]="shownPersonSetNames"
+        (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
+    </span>
+  </div>
+  <ng-container *ngFor="let personSet of dataset.personSets">
+    <div *ngIf="allDatasetNames.get(dataset.displayName)?.get(personSet.displayName) && shownDatasetNames.get(dataset.displayName)?.get(personSet.displayName)" style="position: sticky;" [style.bottom.px]="modalBottom - 150">
+      <span #dropdownSpan [attr.id]="dataset.id + '-' + personSet.id + '-span'" ngbDropdown>
+        <button ngbDropdownToggle style="display: none;"></button>
+        <gpf-multiple-select-menu ngbDropdownMenu [attr.id]="dataset.id + '-' + personSet.id + '-dropdown'"
+          [menuId]="'dataset:' + dataset.id + ':' + personSet.id"
+          [allItems]="allDatasetNames.get(dataset.displayName).get(personSet.displayName)"
+          [selectedItems]="shownDatasetNames.get(dataset.displayName).get(personSet.displayName)"
+          (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
+      </span>
+    </div>
+  </ng-container>
 </ng-container>

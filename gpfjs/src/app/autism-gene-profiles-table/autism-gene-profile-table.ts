@@ -73,6 +73,81 @@ export class AgpDatasetPersonSet {
   childrenCount: number;
 }
 
+export class AgpTableConfig {
+  constructor(
+    public defaultDataset: string,
+    public geneSets: AgpTableGeneSetsCategory[],
+    public genomicScores: AgpTableGenomicScoresCategory[],
+    public datasets: AgpTableDataset[]
+  ) {}
+}
+
+export class AgpTableGeneSetsCategory {
+  constructor(
+    public category: string,
+    public displayName: string,
+    public sets: AgpTableGeneSet[]
+  ) {}
+}
+
+export class AgpTableGeneSet {
+  constructor(
+    public setId: string,
+    public collectionId: string,
+    public meta: string,
+    public defaultVisible: boolean
+  ) {}
+}
+
+export class AgpTableGenomicScoresCategory {
+  constructor(
+    public category: string,
+    public displayName: string,
+    public scores: AgpTableGenomicScore[]
+  ) {}
+}
+
+export class AgpTableGenomicScore {
+  constructor(
+    public scoreName: string,
+    public format: string,
+    public meta: string,
+    public defaultVisible: boolean
+  ) {}
+}
+
+export class AgpTableDataset {
+  constructor(
+    public id: string,
+    public displayName: string,
+    public meta: string,
+    public defaultVisible: boolean,
+    public personSets: AgpTableDatasetPersonSet[]
+  ) {}
+}
+
+export class AgpTableDatasetPersonSet {
+  constructor(
+    public id: string,
+    public displayName: string,
+    public description: string,
+    public parentsCount: number,
+    public childrenCount: number,
+    public statistics: AgpTableDatasetStatistic[]
+  ) {}
+}
+
+export class AgpTableDatasetStatistic {
+  constructor(
+    public id: string,
+    public displayName: string,
+    public effects: string[],
+    public category: string,
+    public description: string,
+    public variantTypes: string[]
+  ) {}
+}
+
 export class AgpGene {
   geneSymbol: string;
   geneSets: string[];
