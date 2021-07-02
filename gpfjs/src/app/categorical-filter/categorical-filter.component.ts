@@ -1,4 +1,4 @@
-import { Component, OnChanges, SimpleChanges, Input, OnInit } from '@angular/core';
+import { Component, OnChanges, SimpleChanges, Input, OnInit, Output, EventEmitter } from '@angular/core';
 import { CategoricalFilterState, CategoricalSelection } from '../person-filters/person-filters';
 import { PersonFilter } from '../datasets/datasets';
 import { StateRestoreService } from '../store/state-restore.service';
@@ -14,6 +14,7 @@ import { Observable } from 'rxjs';
 export class CategoricalFilterComponent implements OnInit, OnChanges {
   @Input() categoricalFilter: PersonFilter;
   @Input() categoricalFilterState: CategoricalFilterState;
+  @Output() updateFilterEvent = new EventEmitter();
   sourceDescription$: Observable<Object>;
   valuesDomain: any = [];
 
@@ -62,6 +63,7 @@ export class CategoricalFilterComponent implements OnInit, OnChanges {
 
   set selectedValue(value) {
     (this.categoricalFilterState.selection as CategoricalSelection).selection = [value];
+    this.updateFilterEvent.emit();
   }
 
   get selectedValue(): string {

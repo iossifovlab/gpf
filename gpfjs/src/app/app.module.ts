@@ -76,6 +76,7 @@ import { TaggingRouteReuseStrategy } from 'app/route-reuse.strategy';
 
 import { StateRestoreService } from './store/state-restore.service';
 import { PersonFiltersComponent } from './person-filters/person-filters.component';
+import { PersonFiltersState } from './person-filters/person-filters.state';
 import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
 import { ContinuousFilterComponent } from './continuous-filter/continuous-filter.component';
 import { MultiContinuousFilterComponent } from './multi-continuous-filter/multi-continuous-filter.component';
@@ -418,7 +419,7 @@ const appRoutes: Routes = [
       InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,
       GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState, GeneSetsState,
       GeneWeightsState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
-      StudyFiltersBlockState,
+      StudyFiltersBlockState, PersonFiltersState,
     ]),
   ],
   providers: [

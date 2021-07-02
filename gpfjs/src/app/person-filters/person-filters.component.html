@@ -4,7 +4,8 @@
       <div *ngFor="let categoricalFilter of categoricalFilters" class="categorical-filter">
         <gpf-categorical-filter
           [categoricalFilter]="categoricalFilter[0]"
-          [categoricalFilterState]="categoricalFilter[1]">
+          [categoricalFilterState]="categoricalFilter[1]"
+          (updateFilterEvent)="updateFilters()">
         </gpf-categorical-filter>
       </div>
     </div>
@@ -14,12 +15,12 @@
           <gpf-multi-continuous-filter
             [continuousFilter]="continuousFilter[0]"
             [continuousFilterState]="continuousFilter[1]"
-            [datasetId]="dataset.id">
+            [datasetId]="dataset.id"
+            (updateFilterEvent)="updateFilters()">
           </gpf-multi-continuous-filter>
         </div>
       </div>
     </div>
   </div>
-
   <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
 </div>

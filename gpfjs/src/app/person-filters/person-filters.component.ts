@@ -1,46 +1,52 @@
-import { Component, OnChanges, Input, forwardRef } from '@angular/core';
+import { Component, OnChanges, Input, OnInit } from '@angular/core';
 import { Dataset, PersonFilter } from '../datasets/datasets';
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { PersonFilterState, CategoricalFilterState, ContinuousFilterState } from './person-filters';
+import { validate } from 'class-validator';
+import { Observable } from 'rxjs';
+import { Store, Select } from '@ngxs/store';
+import { SetPersonFilters, PersonFiltersModel, PersonFiltersState } from './person-filters.state';
 
 @Component({
   selector: 'gpf-person-filters',
   templateUrl: './person-filters.component.html',
   styleUrls: ['./person-filters.component.css'],
-  providers: [{
-    provide: QueryStateProvider,
-    useExisting: forwardRef(() => PersonFiltersComponent)
-  }]
 })
-export class PersonFiltersComponent extends QueryStateWithErrorsProvider implements OnChanges {
+export class PersonFiltersComponent implements OnChanges, OnInit {
   @Input() dataset: Dataset;
   @Input() filters: PersonFilter[];
   @Input() isFamilyFilters: boolean;
 
   private personFiltersState = new Array<[PersonFilter, PersonFilterState]>();
 
-  constructor() {
-    super();
-  }
+  @Select(PersonFiltersState) state$: Observable<PersonFiltersModel>;
+  errors: Array<string> = [];
+
+  constructor(private store: Store) { }
 
   ngOnChanges(changes) {
-    this.personFiltersState =
-      this.filters.map(personFilter => {
-        let filterState = null;
-        if (personFilter.sourceType === 'continuous') {
-          if (personFilter.from === 'pedigree') {
-            throw new Error('Continuous filters with pedigree sources are not supported!');
-          }
-          filterState = new ContinuousFilterState(
-            personFilter.name, personFilter.sourceType, personFilter.role, personFilter.source, personFilter.from,
-          );
-        } else if (personFilter.sourceType === 'categorical') {
-          filterState = new CategoricalFilterState(
-            personFilter.name, personFilter.sourceType, personFilter.role, personFilter.source, personFilter.from,
-          );
+    this.personFiltersState = this.filters.map(personFilter => {
+      let filterState = null;
+      if (personFilter.sourceType === 'continuous') {
+        if (personFilter.from === 'pedigree') {
+          throw new Error('Continuous filters with pedigree sources are not supported!');
         }
-        return [personFilter, filterState] as [PersonFilter, PersonFilterState];
-      });
+        filterState = new ContinuousFilterState(
+          personFilter.name, personFilter.sourceType, personFilter.role, personFilter.source, personFilter.from,
+        );
+      } else if (personFilter.sourceType === 'categorical') {
+        filterState = new CategoricalFilterState(
+          personFilter.name, personFilter.sourceType, personFilter.role, personFilter.source, personFilter.from,
+        );
+      }
+      return [personFilter, filterState] as [PersonFilter, PersonFilterState];
+    });
+  }
+
+  ngOnInit() {
+    this.state$.subscribe(state => {
+      // validate for errors
+      validate(this).then(errors => this.errors = errors.map(err => String(err)));
+    });
   }
 
   get categoricalFilters() {
@@ -55,12 +61,10 @@ export class PersonFiltersComponent extends QueryStateWithErrorsProvider impleme
     );
   }
 
-  getState() {
+  updateFilters() {
     const keyName = this.isFamilyFilters ? 'familyFilters' : 'personFilters';
-    return this.validateAndGetState(this.personFiltersState).map(personFiltersState => {
-      const result = {};
-      result[keyName] = personFiltersState.map(x => x[1]).filter(f => f && !f.isEmpty());
-      return result;
-    });
+    this.store.dispatch(new SetPersonFilters(
+      keyName, this.personFiltersState.map(f => f[1]).filter(f => f && !f.isEmpty())
+    ));
   }
 }

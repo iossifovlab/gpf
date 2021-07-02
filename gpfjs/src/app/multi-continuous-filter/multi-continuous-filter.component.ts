@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, forwardRef } from '@angular/core';
+import { Component, OnInit, Input, forwardRef, EventEmitter, Output } from '@angular/core';
 import { ContinuousMeasure } from '../measures/measures';
 import { QueryStateCollector } from '../query/query-state-provider';
 import { ContinuousFilterState, ContinuousSelection } from '../person-filters/person-filters';
@@ -18,6 +18,7 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
   @Input() datasetId: string;
   @Input() continuousFilter: PersonFilter;
   @Input() continuousFilterState: ContinuousFilterState;
+  @Output() updateFilterEvent = new EventEmitter();
 
   measures: Array<ContinuousMeasure>;
   internalSelectedMeasure: ContinuousMeasure;
@@ -55,6 +56,7 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
     selection.domainMin = measure ? measure.min : 0;
     selection.domainMax = measure ? measure.max : 0;
     this.internalSelectedMeasure = measure;
+    this.updateFilterEvent.emit();
   }
 
   get selectedMeasure(): ContinuousMeasure {

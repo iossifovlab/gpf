@@ -1,8 +1,7 @@
-import { Component, OnInit, OnChanges, SimpleChanges, Input } from '@angular/core';
+import { Component, OnInit, OnChanges, SimpleChanges, Input, Output, EventEmitter } from '@angular/core';
 import { MeasuresService } from '../measures/measures.service';
 import { HistogramData } from '../measures/measures';
 import { ContinuousFilterState, ContinuousSelection } from '../person-filters/person-filters';
-import { StateRestoreService } from '../store/state-restore.service';
 // tslint:disable-next-line:import-blacklist
 import { Observable, Subject } from 'rxjs';
 import { Partitions } from '../gene-weights/gene-weights';
@@ -20,16 +19,12 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
   @Input() datasetId: string;
   @Input() measureName: string;
   @Input() continuousFilterState: ContinuousFilterState;
+  @Output() updateFilterEvent = new EventEmitter();
   histogramData: HistogramData;
 
   rangesCounts: Array<number>;
 
-
-  constructor(
-    private measuresService: MeasuresService,
-    private stateRestoreService: StateRestoreService
-  ) {
-  }
+  constructor(private measuresService: MeasuresService) { }
 
   ngOnInit() {
     this.partitions = this.rangeChanges
@@ -65,6 +60,7 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
   set rangeStart(value) {
     const selection = (this.continuousFilterState.selection as ContinuousSelection);
     selection.min = value;
+    this.updateFilterEvent.emit();
     this.rangeChanges.next([
       this.datasetId,
       this.measureName,
@@ -80,6 +76,7 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
   set rangeEnd(value) {
     const selection = (this.continuousFilterState.selection as ContinuousSelection);
     selection.max = value;
+    this.updateFilterEvent.emit();
     this.rangeChanges.next([
       this.datasetId,
       this.measureName,
