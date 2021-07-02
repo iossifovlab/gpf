@@ -410,13 +410,17 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
    * @returns promise
    */
   async waitForDropdown() {
+    if (this.ngbDropdownMenu !== undefined) {
+      return;
+    }
+
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
         if (this.ngbDropdownMenu !== undefined) {
           resolve();
           clearInterval(timer);
         }
-      }, 50);
+      }, 15);
     });
   }
 
