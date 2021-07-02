@@ -17,6 +17,10 @@ export class AutismGeneProfilesTable extends BasePage {
     return cy.get('tbody tr');
   }
 
+  get firstGeneInTable() {
+    return cy.get('tbody td').first();
+  }
+
   get geneSearchInput() {
     return cy.get('#gene-search-input');
   }
