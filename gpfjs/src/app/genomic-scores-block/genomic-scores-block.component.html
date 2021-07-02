@@ -21,7 +21,8 @@
           <gpf-genomic-scores
             [genomicScoreState]="score"
             [errors]="errors && errors[i]"
-            [genomicScoresArray]="genomicScoresArray">
+            [genomicScoresArray]="genomicScoresArray"
+            (updateGenomicScoreEvent)="updateState()">
           </gpf-genomic-scores>
         </span>
       </div>

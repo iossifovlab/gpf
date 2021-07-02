@@ -1,26 +1,61 @@
-import { Component, OnInit, forwardRef } from '@angular/core';
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
+import { Component, OnInit } from '@angular/core';
 import { environment } from '../../environments/environment';
 
 import { GenomicScoreState, GenomicScoresState } from '../genomic-scores/genomic-scores-store';
 import { GenomicScoresBlockService } from './genomic-scores-block.service';
-import { StateRestoreService } from '../store/state-restore.service';
 import { GenomicScores } from './genomic-scores-block';
-
+import { Store, Select } from '@ngxs/store';
+import { SetGenomicScores, GenomicScoresBlockModel, GenomicScoresBlockState } from './genomic-scores-block.state';
+import { Observable } from 'rxjs';
+import { validate } from 'class-validator';
 
 @Component({
   selector: 'gpf-genomic-scores-block',
   templateUrl: './genomic-scores-block.component.html',
   styleUrls: ['./genomic-scores-block.component.css'],
-  providers: [{
-    provide: QueryStateProvider,
-    useExisting: forwardRef(() => GenomicScoresBlockComponent)
-  }]
 })
-export class GenomicScoresBlockComponent extends QueryStateWithErrorsProvider implements OnInit {
+export class GenomicScoresBlockComponent implements OnInit {
   genomicScoresState = new GenomicScoresState();
   scores = [];
   genomicScoresArray: GenomicScores[];
+
+  @Select(GenomicScoresBlockState) state$: Observable<GenomicScoresBlockModel>;
+  errors: Array<string> = [];
+
+  constructor(
+    private genomicScoresBlockService: GenomicScoresBlockService,
+    private store: Store,
+  ) { }
+
+  ngOnInit() {
+    this.genomicScoresBlockService.getGenomicScores()
+    .take(1)
+    .subscribe(genomicScores => {
+      this.genomicScoresArray = genomicScores;
+    });
+
+    this.store.selectOnce(state => state.genomicScoresBlockState).subscribe(state => {
+      // restore state
+      if (state['genomicScores'] && state['genomicScores'].length > 0) {
+        for (const score of state['genomicScores']) {
+          const genomicScore = new GenomicScoreState();
+          genomicScore.score = this.genomicScoresArray
+                                   .find(el => el['score'] === score['metric']);
+          genomicScore.rangeStart = score['rangeStart'];
+          genomicScore.rangeEnd = score['rangeEnd'];
+          genomicScore.domainMin = genomicScore.score.bins[0];
+          genomicScore.domainMax =
+            genomicScore.score.bins[genomicScore.score.bins.length - 1];
+          this.addFilter(genomicScore);
+        }
+      }
+    });
+
+    this.state$.subscribe(state => {
+      // validate for errors
+      validate(this.genomicScoresState).then(errors => this.errors = errors.map(err => String(err)));
+    });
+  }
 
   get imgPathPrefix() {
     return environment.imgPathPrefix;
@@ -42,57 +77,16 @@ export class GenomicScoresBlockComponent extends QueryStateWithErrorsProvider im
         .genomicScoresState.filter(gs => gs !== genomicScore);
   }
 
-  constructor(
-    private genomicScoresBlockService: GenomicScoresBlockService,
-    private stateRestoreService: StateRestoreService
-  ) {
-    super();
-  }
-
-  restoreStateSubscribe() {
-    this.stateRestoreService.getState(this.constructor.name)
-        .take(1)
-        .subscribe(state => {
-          if (state['genomicScores'] && state['genomicScores'].length > 0) {
-            for (const score of state['genomicScores']) {
-              const genomicScore = new GenomicScoreState();
-              genomicScore.score = this.genomicScoresArray
-                                       .find(el => el['score'] === score['metric']);
-              genomicScore.rangeStart = score['rangeStart'];
-              genomicScore.rangeEnd = score['rangeEnd'];
-              genomicScore.domainMin = genomicScore.score.bins[0];
-              genomicScore.domainMax =
-                genomicScore.score.bins[genomicScore.score.bins.length - 1];
-              this.addFilter(genomicScore);
-            }
-          }
-        });
-  }
-
-  ngOnInit() {
-    this.genomicScoresBlockService.getGenomicScores()
-    .take(1)
-    .subscribe(genomicScores => {
-      this.genomicScoresArray = genomicScores;
-
-      this.restoreStateSubscribe();
-    });
-  }
-
-  getState() {
-    return this.validateAndGetState(this.genomicScoresState)
-      .map(genomicScoresState => {
+  updateState() {
+    const newState = this.genomicScoresState.genomicScoresState
+      .filter(el => el.score)
+      .map(el => {
         return {
-          genomicScores: genomicScoresState.genomicScoresState
-            .filter(el => el.score)
-            .map(el => {
-              return {
-                metric: el.score.score,
-                rangeStart: el.rangeStart,
-                rangeEnd: el.rangeEnd
-              };
-            })
+          metric: el.score.score,
+          rangeStart: el.rangeStart,
+          rangeEnd: el.rangeEnd
         };
-      });
+    });
+    this.store.dispatch(new SetGenomicScores(newState));
   }
 }

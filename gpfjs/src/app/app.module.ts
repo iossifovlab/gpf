@@ -115,6 +115,7 @@ import { DatasetDescriptionComponent } from './dataset-description/dataset-descr
 
 import { GenomicScoresComponent } from './genomic-scores/genomic-scores.component';
 import { GenomicScoresBlockComponent } from './genomic-scores-block/genomic-scores-block.component';
+import { GenomicScoresBlockState } from './genomic-scores-block/genomic-scores-block.state';
 import { GenomicScoresBlockService } from './genomic-scores-block/genomic-scores-block.service';
 
 import { MarkdownModule } from 'ngx-markdown';
@@ -419,7 +420,7 @@ const appRoutes: Routes = [
       InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,
       GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState, GeneSetsState,
       GeneWeightsState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
-      StudyFiltersBlockState, PersonFiltersState,
+      StudyFiltersBlockState, PersonFiltersState, GenomicScoresBlockState,
     ]),
   ],
   providers: [
