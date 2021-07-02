@@ -143,6 +143,7 @@ import { PedigreeMockService } from './perfectly-drawable-pedigree/pedigree-mock
 import { NonPdpPedigreesComponent } from './non-pdp-pedigrees/non-pdp-pedigrees.component';
 import { PerfectlyDrawablePedigreeService } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 import { StudyFiltersBlockComponent } from './study-filters-block/study-filters-block.component';
+import { StudyFiltersBlockState } from './study-filters-block/study-filters-block.state';
 import { StudyFilterComponent } from './study-filter/study-filter.component';
 import { AddButtonComponent } from './add-button/add-button.component';
 import { RemoveButtonComponent } from './remove-button/remove-button.component';
@@ -416,7 +417,8 @@ const appRoutes: Routes = [
       VarianttypesState, EffecttypesState, GenderState,
       InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,
       GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState, GeneSetsState,
-      GeneWeightsState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState
+      GeneWeightsState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
+      StudyFiltersBlockState,
     ]),
   ],
   providers: [

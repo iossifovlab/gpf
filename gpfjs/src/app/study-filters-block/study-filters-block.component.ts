@@ -1,76 +1,34 @@
-import { Component, OnInit, OnChanges, Input, forwardRef, SimpleChanges } from '@angular/core';
+import { Component, OnInit, OnChanges, Input, SimpleChanges } from '@angular/core';
 
 import { Dataset } from '../datasets/datasets';
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { StateRestoreService } from '../store/state-restore.service';
-
-import { StudyFiltersState, StudyFilterState, StudyDescriptor } from '../study-filter/study-filter-store';
+import { validate } from 'class-validator';
+import { Store, Select } from '@ngxs/store';
+import { Study } from '../study-filter/study-filter.component';
+import { SetStudyFilters, StudyFiltersBlockState, StudyFiltersBlockModel } from './study-filters-block.state';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'gpf-study-filters-block',
   templateUrl: './study-filters-block.component.html',
   styleUrls: ['./study-filters-block.component.css'],
-  providers: [{
-        provide: QueryStateProvider,
-        useExisting: forwardRef(() => StudyFiltersBlockComponent)
-    }]
 })
-export class StudyFiltersBlockComponent extends QueryStateWithErrorsProvider implements OnInit, OnChanges {
+export class StudyFiltersBlockComponent implements OnInit, OnChanges {
   @Input() dataset: Dataset;
-  studyFiltersState = new StudyFiltersState();
-  studies: StudyDescriptor[];
 
-  addFilter(studyFilterState: StudyFilterState = null) {
-    if (!studyFilterState) {
-        studyFilterState = new StudyFilterState();
-        studyFilterState.study = this.studies[0];
-    }
-    this.studyFiltersState.studyFiltersState.push(studyFilterState);
-  }
+  studies: Study[] = [];
+  selectedStudies: Study[] = [];
 
-  removeFilter(studyFilter: StudyFilterState) {
-     this.studyFiltersState.studyFiltersState = this.studyFiltersState
-         .studyFiltersState.filter(sf => sf !== studyFilter);
-  }
+  @Select(StudyFiltersBlockState) state$: Observable<StudyFiltersBlockModel>;
+  errors: Array<string> = [];
 
-  trackById(index: number, data: any) {
-    return data.id;
-  }
-
-  constructor(
-    private stateRestoreService: StateRestoreService
-  ) {
-    super();
-  }
-
-  restoreStateSubscribe() {
-    this.stateRestoreService.getState(this.constructor.name)
-        .take(1)
-        .subscribe(state => {
-          if (state['studyFilters'] && state['studyFilters'].length > 0) {
-            for (let study of state['studyFilters']) {
-              let studyFilter = new StudyFilterState();
-              for(let studyDesc of this.studies) {
-                  if(studyDesc.studyId === study.studyId) {
-                      studyFilter.study = studyDesc;
-                  }
-              }
-              this.addFilter(studyFilter);
-            }
-          }
-        });
-  }
-
-  ngOnInit() {
-    this.restoreStateSubscribe();
-  }
+  constructor(private store: Store) { }
 
   ngOnChanges(changes: SimpleChanges) {
     let ids: string[] = changes.dataset.currentValue.studies;
     let names: string[] = changes.dataset.currentValue.studyNames;
     this.studies = [];
-    for(let i = 0; i < ids.length; i++) {
-        let study: StudyDescriptor = {
+    for (let i = 0; i < ids.length; i++) {
+        let study: Study = {
             "studyId": ids[i],
             "studyName": names[i]
         }
@@ -78,18 +36,63 @@ export class StudyFiltersBlockComponent extends QueryStateWithErrorsProvider imp
     }
   }
 
-  getState() {
-    return this.validateAndGetState(this.studyFiltersState)
-               .map(studyFiltersState => {
-                   return {
-                     studyFilters: studyFiltersState.studyFiltersState
-                       .map(el => {
-                         return {
-                           studyId: el.study.studyId
-                         };
-                       })
-                   };
-               });
-    }
+  ngOnInit() {
+    this.store.selectOnce(state => state.studyFiltersBlockState).subscribe(state => {
+      // restore state
+      for (const study of state.studyFilters) {
+        for (const studyDesc of this.studies) {
+          if (studyDesc.studyId === study.studyId) {
+            this.addFilter(new Study(studyDesc.studyId, studyDesc.studyName));
+          }
+        }
+      }
+    });
 
+    this.state$.subscribe(state => {
+      // validate for errors
+      validate(this).then(errors => this.errors = errors.map(err => String(err)));
+    });
+  }
+
+  updateState() {
+    this.store.dispatch(new SetStudyFilters(
+      this.selectedStudies.map(st => st.studyId)
+    ));
+  }
+
+  addFilter(studyFilter: Study = null) {
+    if (studyFilter === null) {
+      this.selectedStudies.push(new Study(
+        this.studies[0].studyId,
+        this.studies[0].studyName,
+      ));
+    } else {
+      this.selectedStudies.push(studyFilter);
+    }
+    this.updateState();
+  }
+
+  removeFilter(studyFilter: Study) {
+    this.selectedStudies = this.selectedStudies.filter(
+      sf => sf.studyId !== studyFilter.studyId
+    );
+    this.updateState();
+  }
+
+  changeSelectedStudy(event: object) {
+    const selectedStudy = event['selectedStudy'];
+    const selectedStudyId = event['selectedStudyId'];
+    for (const study of this.studies) {
+      if (study.studyId === selectedStudyId) {
+        selectedStudy.studyId = study.studyId;
+        selectedStudy.studyName = study.studyName;
+        break;
+      }
+    }
+    this.updateState();
+  }
+
+  trackById(index: number, data: any) {
+    return data.id;
+  }
 }
