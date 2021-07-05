@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnChanges, AfterViewInit, SimpleChanges } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 
 import { Observable } from 'rxjs';
 
@@ -8,7 +8,8 @@ import { ConfigService } from '../config/config.service';
 import { DatasetsService } from '../datasets/datasets.service';
 import { Dataset, SelectorValue } from '../datasets/datasets';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
-import { Store } from '@ngxs/store';
+import { Store, Select } from '@ngxs/store';
+import { GenotypeBlockState } from '../genotype-block/genotype-block.component';
 
 @Component({
   selector: 'gpf-genotype-browser',
@@ -28,6 +29,8 @@ export class GenotypeBrowserComponent implements OnInit, OnChanges {
   private genotypeBrowserState: Object;
   private loadingFinished: boolean;
 
+  @Select(GenotypeBlockState.genotypeBlockState) state$: Observable<any[]>;
+
   constructor(
     private store: Store,
     private queryService: QueryService,
@@ -37,35 +40,13 @@ export class GenotypeBrowserComponent implements OnInit, OnChanges {
   ) {
   }
 
-  // getCurrentState() {
-  //   const state = super.getCurrentState();
-
-  //   return state.map(current_state => {
-  //       const stateObject = Object.assign({ datasetId: this.selectedDatasetId }, current_state);
-  //       return stateObject;
-  //     });
-  // }
-
-  // ngAfterViewInit() {
-  //   this.detectNextStateChange(() => {
-  //       this.getCurrentState()
-  //       .take(1)
-  //       .subscribe(
-  //         state => {
-  //           this.genotypePreviewVariantsArray = null;
-  //           this.genotypeBrowserState = state;
-  //           this.disableQueryButtons = false;
-  //         },
-  //         error => {
-  //           this.genotypePreviewVariantsArray = null;
-  //           this.disableQueryButtons = true;
-  //           console.warn(error);
-  //         });
-  //     });
-  // }
-
   ngOnInit() {
+    this.genotypeBrowserState = {};
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
+    this.state$.subscribe(state => {
+      this.genotypeBrowserState = state;
+      this.genotypePreviewVariantsArray = null;
+    });
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -73,14 +54,13 @@ export class GenotypeBrowserComponent implements OnInit, OnChanges {
   }
 
   submitQuery() {
-    const state = {};
     this.loadingFinished = false;
     this.loadingService.setLoadingStart();
 
     this.selectedDataset$.subscribe( selectedDataset => {
       this.genotypePreviewVariantsArray = null;
-      this.genotypeBrowserState = state;
-      this.legend = selectedDataset.peopleGroupConfig.getLegend(state['peopleGroup']);
+      this.genotypeBrowserState['datasetId'] = selectedDataset.id;
+      this.legend = selectedDataset.peopleGroupConfig.getLegend(this.genotypeBrowserState['peopleGroup']);
 
       this.queryService.streamingFinishedSubject.subscribe(
         _ => { this.loadingFinished = true; }
@@ -88,7 +68,7 @@ export class GenotypeBrowserComponent implements OnInit, OnChanges {
 
       this.genotypePreviewVariantsArray =
         this.queryService.getGenotypePreviewVariantsByFilter(
-          state, selectedDataset.genotypeBrowserConfig.columnIds, this.loadingService
+          this.genotypeBrowserState, selectedDataset.genotypeBrowserConfig.columnIds, this.loadingService
         );
 
     }, error => {
@@ -97,19 +77,14 @@ export class GenotypeBrowserComponent implements OnInit, OnChanges {
   }
 
   onSubmit(event) {
-    // this.getCurrentState()
-    // .subscribe(
-    //   state => {
-    //     this.selectedDataset$.subscribe( selectedDataset => {
-    //       const args: any = state
-    //       args.download = true;
-    //       event.target.queryData.value = JSON.stringify(args);
-    //       event.target.submit();
-    //     }, error => {
-    //         console.warn(error);
-    //     });
-    //   },
-    //   error => null
-    // );
+    this.selectedDataset$.subscribe( selectedDataset => {
+      const args: any = this.genotypeBrowserState
+      this.genotypeBrowserState['datasetId'] = selectedDataset.id;
+      args.download = true;
+      event.target.queryData.value = JSON.stringify(args);
+      event.target.submit();
+    }, error => {
+        console.warn(error);
+    });
   }
 }
