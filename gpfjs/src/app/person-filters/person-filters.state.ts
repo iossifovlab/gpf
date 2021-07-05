@@ -1,30 +1,41 @@
 import { Injectable } from '@angular/core';
 import { State, Action, StateContext } from '@ngxs/store';
 
+export class SetFamilyFilters {
+  static readonly type = '[Genotype] Set familyFiltes values';
+  constructor(public filters: object[]) {}
+}
+
 export class SetPersonFilters {
   static readonly type = '[Genotype] Set personFilters values';
-  constructor(public filterType: string, public filters: object[]) {}
+  constructor(public filters: object[]) {}
 }
 
 export interface PersonFiltersModel {
-  filterType: string; // Whether this is a family or person filter
-  filters: object[];
+  familyFilters: object[];
+  personFilters: object[];
 }
 
 @State<PersonFiltersModel>({
   name: 'personFiltersState',
   defaults: {
-    filterType: '',
-    filters: []
+    familyFilters: [],
+    personFilters: [],
   },
 })
 @Injectable()
 export class PersonFiltersState {
-  @Action(SetPersonFilters)
-  setInheritanceTypes(ctx: StateContext<PersonFiltersModel>, action: SetPersonFilters) {
+  @Action(SetFamilyFilters)
+  setFamilyFilters(ctx: StateContext<PersonFiltersModel>, action: SetFamilyFilters) {
     ctx.patchState({
-      filterType: action.filterType,
-      filters: {...action.filters}
+      familyFilters: [...action.filters],
+    });
+  }
+
+  @Action(SetPersonFilters)
+  setPersonFilters(ctx: StateContext<PersonFiltersModel>, action: SetPersonFilters) {
+    ctx.patchState({
+      personFilters: [...action.filters],
     });
   }
 }

@@ -4,7 +4,7 @@ import { PersonFilterState, CategoricalFilterState, ContinuousFilterState } from
 import { validate } from 'class-validator';
 import { Observable } from 'rxjs';
 import { Store, Select } from '@ngxs/store';
-import { SetPersonFilters, PersonFiltersModel, PersonFiltersState } from './person-filters.state';
+import { SetFamilyFilters, SetPersonFilters, PersonFiltersModel, PersonFiltersState } from './person-filters.state';
 
 @Component({
   selector: 'gpf-person-filters',
@@ -45,6 +45,7 @@ export class PersonFiltersComponent implements OnChanges, OnInit {
   ngOnInit() {
     this.state$.subscribe(state => {
       // validate for errors
+      console.log(state);
       validate(this).then(errors => this.errors = errors.map(err => String(err)));
     });
   }
@@ -62,9 +63,11 @@ export class PersonFiltersComponent implements OnChanges, OnInit {
   }
 
   updateFilters() {
-    const keyName = this.isFamilyFilters ? 'familyFilters' : 'personFilters';
-    this.store.dispatch(new SetPersonFilters(
-      keyName, this.personFiltersState.map(f => f[1]).filter(f => f && !f.isEmpty())
-    ));
+    const filters = this.personFiltersState.map(f => f[1]).filter(f => f && !f.isEmpty());
+    if (this.isFamilyFilters) {
+      this.store.dispatch(new SetFamilyFilters(filters));
+    } else {
+      this.store.dispatch(new SetPersonFilters(filters));
+    }
   }
 }
