@@ -13,7 +13,7 @@ export interface StudyTypesModel {
 @State<StudyTypesModel>({
   name: 'studyTypesState',
   defaults: {
-    studyTypes: []
+    studyTypes: ['we', 'wg', 'tg']
   },
 })
 @Injectable()

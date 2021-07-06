@@ -2,6 +2,7 @@
   <gpf-checkbox-list
     [title]="'Family Types'"
     [items]="allFamilyTypes"
+    [selectedItems]="selectedFamilyTypes"
     (itemsUpdateEvent)="updateFamilyTypes($event)">
   </gpf-checkbox-list>
   <gpf-errors-alert [errors]="errors"></gpf-errors-alert>

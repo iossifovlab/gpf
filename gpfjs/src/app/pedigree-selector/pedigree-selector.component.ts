@@ -29,16 +29,24 @@ export class PedigreeSelectorComponent implements OnInit, OnChanges {
     if (!changes['pedigrees']) {
       return;
     }
-    if (changes['pedigrees'].currentValue && changes['pedigrees'].currentValue.length !== 0) {
-      this.selectPedigree(0);
-    }
+    this.store.selectOnce(state => state.pedigreeSelectorState).subscribe(state => {
+      // handle selected values input and/or restore state
+      if (state.id && state.checkedValues.length) {
+        this.selectedPedigree = this.pedigrees.filter(p => p.id === state.id)[0];
+        this.selectedValues = new Set(state.checkedValues);
+      } else {
+        if (changes['pedigrees'].currentValue && changes['pedigrees'].currentValue.length !== 0) {
+          this.selectPedigree(0);
+        }
+      }
+    });
   }
 
   ngOnInit() {
     this.store.selectOnce(state => state.pedigreeSelectorState).subscribe(state => {
       // restore state
       this.selectedPedigree = this.pedigrees.filter(p => p.id === state.id)[0];
-      this.selectedValues = new Set(state.selectedValues);
+      this.selectedValues = new Set(state.checkedValues);
     });
 
     this.state$.subscribe(state => {

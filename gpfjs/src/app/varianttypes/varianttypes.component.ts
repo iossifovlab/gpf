@@ -20,17 +20,17 @@ export class VarianttypesComponent implements OnInit, OnChanges {
   constructor(private store: Store) { }
 
   ngOnChanges(): void {
-    if (this.selectedVariantTypes) {
-      this.store.dispatch(new SetVariantTypes(this.selectedVariantTypes));
-    }
+    this.store.selectOnce(state => state.varianttypesState).subscribe(state => {
+      // handle selected values input and/or restore state
+      if (state.variantTypes.length) {
+        this.selectedVariantTypes = new Set(state.variantTypes);
+      } else {
+        this.store.dispatch(new SetVariantTypes(this.selectedVariantTypes));
+      }
+    });
   }
 
   ngOnInit() {
-    this.selectedVariantTypes = new Set();
-    this.store.selectOnce(state => state.varianttypesState).subscribe(state => {
-      this.selectedVariantTypes = new Set([...state.variantTypes]);
-    });
-
     this.state$.subscribe(state => {
       validate(this).then(errors => this.errors = errors.map(err => String(err)));
     });
