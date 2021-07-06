@@ -39,6 +39,8 @@ class MeanAggregator(AbstractAggregator):
         return None
 
 
+class ConcatAggregator(AbstractAggregator):
+    pass
 
 
 
@@ -123,14 +125,22 @@ class NPScoreResource(GenomicScoreResource):
     # The first aggregator type will be used to aggregate scores accross nucleotides at each position.
     # The second  aggregator type will be used to aggregate scores accross position.
     def fetch_scores_agg(
-            chrom : str, pos_begin : int, pos_end: int, 
-            scores : Dict[
-                str,Tuple[type(AbstractAggregator), type(AbstractAggregatorT)]]) -> 
-                    Dict[str,Any]: pass
+            chrom: str, pos_begin: int, pos_end: int, 
+            scores: Dict[
+                str,Tuple[
+                    type(AbstractAggregator),
+                    type(AbstractAggregator)]]) -> Dict[str,Any]: pass
+
+
+class NPScoreResource(GenomicScoreResource):
+
+    def fetch_scores(
+            chrom: str, position: int, ref: str, alt: str,
+            scores: List[str] = None) -> Dict[str, Any]: pass
 
 
 DEFAULT_AGGREGATIONS = {
-    str: ConcatenateAggregator,
+    str: ConcatAggregator,
     float: MaxAggregator,
     int: MaxAggregator,
 }
@@ -196,3 +206,5 @@ class PositionScoreAnnotator:
             if R:
                 for a,s in zip(self.attributes,self.scores):
                     allele.set_atts(a,R[s])
+
+
