@@ -509,6 +509,14 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     return count;
   }
 
+  parseEffectTypeId(effectTypeId: string): string {
+    for (const effectType of Object.keys(this.effectTypes)) {
+      if (effectTypeId.includes(effectType)) {
+        return effectType;
+      }
+    }
+  }
+
   goToQuery(geneSymbol: string, personSetId: string, effectTypeId: string, datasetId: string) {
     const newWindow = window.open('', '_blank');
     const peopleGroup = new PeopleGroup('status', [personSetId]);
@@ -521,7 +529,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     const browserQueryFilter = new BrowserQueryFilter(
       datasetId,
       [geneSymbol],
-      this.effectTypes[effectTypeId.replace('denovo_', '')],
+      this.effectTypes[this.parseEffectTypeId(effectTypeId)],
       undefined,
       peopleGroup,
       ['we'],
