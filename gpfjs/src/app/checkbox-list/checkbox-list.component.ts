@@ -44,5 +44,4 @@ export class CheckboxListComponent implements OnInit {
     this.selectedItems.has(item) ? this.selectedItems.delete(item) : this.selectedItems.add(item);
     this.emit();
   }
-
 }
