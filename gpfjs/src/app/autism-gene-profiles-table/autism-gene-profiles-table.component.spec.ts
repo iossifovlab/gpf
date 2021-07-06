@@ -23,13 +23,17 @@ const mockConfig = {
   datasets: [{name: 'fakeDataset', personSets: ['fakePersonSets']}] as any
 } as AgpTableConfig;
 
-fdescribe('AutismGeneProfilesTableComponent', () => {
+describe('AutismGeneProfilesTableComponent', () => {
   let component: AutismGeneProfilesTableComponent;
   let fixture: ComponentFixture<AutismGeneProfilesTableComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ AutismGeneProfilesTableComponent, MultipleSelectMenuComponent, SortingButtonsComponent],
+      declarations: [
+        AutismGeneProfilesTableComponent,
+        MultipleSelectMenuComponent,
+        SortingButtonsComponent
+      ],
       providers: [ConfigService, QueryService, DatasetsService, UsersService],
       imports: [Ng2SearchPipeModule, HttpClientTestingModule, FormsModule, RouterTestingModule]
     })
