@@ -29,7 +29,11 @@ describe('AutismGeneProfilesTableComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ AutismGeneProfilesTableComponent, MultipleSelectMenuComponent, SortingButtonsComponent],
+      declarations: [
+        AutismGeneProfilesTableComponent,
+        MultipleSelectMenuComponent,
+        SortingButtonsComponent
+      ],
       providers: [ConfigService, QueryService, DatasetsService, UsersService],
       imports: [Ng2SearchPipeModule, HttpClientTestingModule, FormsModule, RouterTestingModule]
     })
