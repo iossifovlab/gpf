@@ -19,7 +19,6 @@ export class RegionsFilterComponent implements OnInit {
 
   ngOnInit() {
     this.store.selectOnce(state => state.regionsFiltersState).subscribe(state => {
-      console.log(state);
       this.regionsFilter.regionsFilter = state.regionsFilters.join('\n');
     });
 
