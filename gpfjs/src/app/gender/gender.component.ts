@@ -20,12 +20,12 @@ export class GenderComponent implements OnInit {
   constructor(private store: Store) { }
 
   ngOnInit() {
-    this.selectAll();
-
     this.store.selectOnce(state => state.genderState).subscribe(state => {
-      this.selectNone();
-      for (const gender of state.genders) {
-        this.genderCheckValue(gender, true);
+      if (state.genders) {
+        this.selectNone();
+        for (const gender of state.genders) {
+          this.genderCheckValue(gender, true);
+        }
       }
     });
 

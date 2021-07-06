@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { QueryService } from '../query/query.service';
-import { StateRestoreService } from '../store/state-restore.service';
 import { DatasetsService } from '../datasets/datasets.service';
+import { Store } from '@ngxs/store';
 
 const PAGE_TYPE_TO_NAVIGATE = {
     genotype: datasetId => ['datasets', datasetId, 'genotype-browser'],
@@ -20,8 +20,8 @@ const PAGE_TYPE_TO_NAVIGATE = {
 export class LoadQueryComponent implements OnInit {
 
   constructor(
+    private store: Store,
     private queryService: QueryService,
-    private stateRestoreService: StateRestoreService,
     private datasetsService: DatasetsService,
     private route: ActivatedRoute,
     private router: Router
@@ -42,18 +42,17 @@ export class LoadQueryComponent implements OnInit {
       this.queryService.loadQuery(uuid)
           .take(1)
           .subscribe(response => {
-              let queryData = response['data'];
-              let page = response['page'];
-
+              const queryData = response['data'];
+              const page = response['page'];
               this.restoreQuery(queryData, page);
           });
   }
 
-  private restoreQuery(queryData: {}, page: string) {
+  private restoreQuery(state: {}, page: string) {
       if (page in PAGE_TYPE_TO_NAVIGATE) {
-          let navigationParams = 
-              PAGE_TYPE_TO_NAVIGATE[page](queryData['datasetId']);
-          this.stateRestoreService.pushNewState(queryData);
+          const navigationParams = PAGE_TYPE_TO_NAVIGATE[page](state['datasetId']);
+          console.log(state);
+          this.store.reset(state);
           this.router.navigate(navigationParams);
       }
   }

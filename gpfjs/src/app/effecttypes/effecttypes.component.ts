@@ -28,11 +28,14 @@ export class EffecttypesComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.selectInitialValues();
 
     this.store.selectOnce(state => state.effecttypesState).subscribe(state => {
-      for (const effectType of state.effectTypes) {
-        this.onEffectTypeChange({checked: true, effectType: effectType});
+      if (state.effectTypes.length) {
+        for (const effectType of state.effectTypes) {
+          this.onEffectTypeChange({checked: true, effectType: effectType});
+        }
+      } else {
+        this.selectInitialValues();
       }
     });
 

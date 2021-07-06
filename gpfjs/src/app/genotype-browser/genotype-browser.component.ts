@@ -29,7 +29,7 @@ export class GenotypeBrowserComponent implements OnInit, OnChanges {
   private genotypeBrowserState: Object;
   private loadingFinished: boolean;
 
-  @Select(GenotypeBlockState.genotypeBlockState) state$: Observable<any[]>;
+  @Select(GenotypeBlockState.genotypeBlockQueryState) state$: Observable<any[]>;
 
   constructor(
     private store: Store,
@@ -51,6 +51,10 @@ export class GenotypeBrowserComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     this.datasetsService.setSelectedDatasetById(this.selectedDatasetId);
+  }
+
+  getStateSelector() {
+    return GenotypeBlockState.genotypeBlockQueryState;
   }
 
   submitQuery() {

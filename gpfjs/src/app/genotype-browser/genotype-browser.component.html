@@ -34,8 +34,8 @@
             type="button" class="btn btn-md btn-primary"
             value="Graphical Preview"
             (click)="tablePreview = false; submitQuery()">
-          <gpf-share-query-button [disabled]="disableQueryButtons" queryType="genotype"></gpf-share-query-button>
-          <gpf-save-query [disabled]="disableQueryButtons" queryType="genotype"></gpf-save-query>
+          <gpf-share-query-button [stateSelector]="getStateSelector()" [disabled]="disableQueryButtons" queryType="genotype"></gpf-share-query-button>
+          <gpf-save-query [stateSelector]="getStateSelector()" [disabled]="disableQueryButtons" queryType="genotype"></gpf-save-query>
         </div>
       </div>
     </div>

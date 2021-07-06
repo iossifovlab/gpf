@@ -18,7 +18,7 @@ export interface GenderModel {
 @State<GenderModel>({
   name: 'genderState',
   defaults: {
-    genders: []
+    genders: ['male', 'female', 'unspecified']
   },
 })
 @Injectable()

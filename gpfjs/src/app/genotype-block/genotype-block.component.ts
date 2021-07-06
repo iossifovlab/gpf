@@ -13,13 +13,12 @@ import { PedigreeSelectorState } from 'app/pedigree-selector/pedigree-selector.s
 import { FamilyTypeFilterState } from 'app/family-type-filter/family-type-filter.state';
 
 export class GenotypeBlockState {
-
   @Selector([
     VarianttypesState, EffecttypesState, GenderState,
     InheritancetypesState, PresentInChildState, PresentInParentState,
     StudyTypesState, PedigreeSelectorState, FamilyTypeFilterState,
   ])
-  static genotypeBlockState(
+  static genotypeBlockQueryState(
     variantTypesState, effectTypesState,
     genderState, inheritanceTypesState,
     presentInChildState, presentInParentState,
@@ -28,7 +27,7 @@ export class GenotypeBlockState {
     return {
       'variantTypes': variantTypesState['variantTypes'],
       'effectTypes': effectTypesState['effectTypes'],
-      'gender': genderState['gender'],
+      'gender': genderState['genders'],
       'inheritanceTypes': inheritanceTypesState['inheritanceTypes'],
       'presentInChild': presentInChildState['presentInChild'],
       'presentInParent': presentInParentState,

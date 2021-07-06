@@ -2,6 +2,7 @@
   <gpf-checkbox-list
     [title]="'Inheritance Types'"
     [items]="inheritanceTypes"
+    [selectedItems]="selectedValues"
     [displayNames]="inheritanceTypeDisplayNames"
     (itemsUpdateEvent)="updateInheritanceTypes($event)">
   </gpf-checkbox-list>

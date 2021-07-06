@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnChanges, forwardRef } from '@angular/core';
+import { Component, Input, OnInit, OnChanges } from '@angular/core';
 import { Validate, validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
 import { Observable } from 'rxjs';
@@ -25,11 +25,6 @@ export class InheritancetypesComponent implements OnInit, OnChanges {
   constructor(private store: Store) { }
 
   ngOnInit() {
-    this.store.selectOnce(state => state.inheritancetypesState).subscribe(state => {
-      // restore state
-      this.selectedValues = state.inheritanceTypes;
-    });
-
     this.state$.subscribe(state => {
       // validate for errors
       validate(this).then(errors => this.errors = errors.map(err => String(err)));
@@ -37,9 +32,14 @@ export class InheritancetypesComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges() {
-    if (this.selectedValues) {
-      this.store.dispatch(new SetInheritanceTypes(this.selectedValues));
-    }
+    this.store.selectOnce(state => state.inheritancetypesState).subscribe(state => {
+      // handle selected values input and/or restore state
+      if (state.inheritanceTypes.length) {
+        this.selectedValues = new Set(state.inheritanceTypes);
+      } else {
+        this.store.dispatch(new SetInheritanceTypes(this.selectedValues));
+      }
+    });
   }
 
   updateInheritanceTypes(newValues: Set<string>): void {
