@@ -23,7 +23,7 @@ const mockConfig = {
   datasets: [{name: 'fakeDataset', personSets: ['fakePersonSets']}] as any
 } as AgpTableConfig;
 
-fdescribe('AutismGeneProfilesTableComponent', () => {
+describe('AutismGeneProfilesTableComponent', () => {
   let component: AutismGeneProfilesTableComponent;
   let fixture: ComponentFixture<AutismGeneProfilesTableComponent>;
 
