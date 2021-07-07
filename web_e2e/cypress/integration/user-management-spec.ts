@@ -1,4 +1,5 @@
 import { UserManagementPage } from 'cypress/elements/user-management-page';
+import { sidenavPageLinks } from 'cypress/elements/utils';
 
 describe('User management tests', () => {
   const page = new UserManagementPage();
@@ -12,8 +13,7 @@ describe('User management tests', () => {
   beforeEach(() => {
     page.preserveLogin();
     page.navigateToHome();
-    page.toggleSidenav();
-    page.sidenavManagementButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.management);
   });
 
   it('should navigate through all user management tabs', () => {

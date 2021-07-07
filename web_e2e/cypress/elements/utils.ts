@@ -43,6 +43,13 @@ export const toolPageLinks = {
   geneBrowser: 'gene-browser'
 };
 
+export const sidenavPageLinks = {
+  datasets: 'datasets',
+  savedQueries: 'saved-queries',
+  autismGeneProfiles: 'autism-gene-profiles',
+  management: 'management'
+};
+
 export class BasePage {
   private readonly adminUsername = 'admin@iossifovlab.com';
   private readonly adminPassword = 'secret';
@@ -93,8 +100,13 @@ export class BasePage {
     cy.get(`a.nav-link[routerlink="${page}"]`).click();
   }
 
-  toggleSidenav() {
-    cy.get('.navbar-toggler-icon').click();
+  get sidenavTogglerButton() {
+    return cy.get('.navbar-toggler-icon');
+  }
+
+  navigateToSidenavPage(sidenavPageLink: string): void {
+    this.sidenavTogglerButton.click();
+    cy.get(`div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/${sidenavPageLink}"]`).click({scrollBehavior: false});
   }
 
   get sidenavDatasetButton() {

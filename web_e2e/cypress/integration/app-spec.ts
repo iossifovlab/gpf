@@ -1,7 +1,7 @@
 import { AppPage } from 'cypress/elements/app-page';
 import { DatasetsPage } from 'cypress/elements/datasets-page';
 import { UserManagementPage } from 'cypress/elements/user-management-page';
-import { datasetIds, toolPageLinks, userData } from 'cypress/elements/utils';
+import { datasetIds, sidenavPageLinks, toolPageLinks, userData } from 'cypress/elements/utils';
 import { GenotypeBrowserPage } from 'cypress/elements/genotype-browser-page';
 
 describe('App tests', () => {
@@ -26,8 +26,7 @@ describe('App tests', () => {
     const expectedUrl = `${baseUrl}datasets/ALL_genotypes/${toolPageLinks.genotypeBrowser}`;
 
     page.loginAdmin();
-    page.toggleSidenav();
-    page.sidenavDatasetButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.datasets);
 
     cy.url().then(currentUrl => {
       expect(currentUrl).to.eq(expectedUrl);
@@ -41,7 +40,7 @@ describe('App tests', () => {
     const savedQueriesUrl = `${baseUrl}saved-queries`;
 
     page.loginAdmin();
-    page.toggleSidenav();
+    page.navigateToSidenavPage(sidenavPageLinks.savedQueries);
     page.sidenavSavedQueriesButton.click();
 
     cy.url().then(currentUrl => {
@@ -56,8 +55,7 @@ describe('App tests', () => {
     const managementUrl = `${baseUrl}management`;
 
     page.loginAdmin();
-    page.toggleSidenav();
-    page.sidenavManagementButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.management);
 
     cy.url().then(currentUrl => {
       expect(currentUrl).to.eq(managementUrl);
@@ -71,8 +69,7 @@ describe('App tests', () => {
     const autismGeneProfilesUrl = `${baseUrl}autism-gene-profiles`;
 
     page.loginAdmin();
-    page.toggleSidenav();
-    page.sidenavAutismGeneProfilesButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
 
     cy.url().then(currentUrl => {
       expect(currentUrl).to.eq(autismGeneProfilesUrl);
@@ -99,10 +96,11 @@ describe('User access rights tests', () => {
       page.login(data.username, data.password);
       page.sidenavElements.should('not.exist');
 
-      page.toggleSidenav();
+      // EXCEPTION
+      page.sidenavTogglerButton.click();
       page.sidenavElements.should('have.length', data.sidenavElementsCount);
 
-      page.toggleSidenav();
+      page.sidenavTogglerButton.click();
       page.sidenavElements.should('not.exist');
 
       if (data.username || data.password !== undefined) {
@@ -177,8 +175,7 @@ describe('User access rights tests', () => {
     const userManagementPage = new UserManagementPage();
 
     page.loginAdmin();
-    page.toggleSidenav();
-    page.sidenavManagementButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.management);
     userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowGroupDropdownSearch.type('comp_vcf');
@@ -200,8 +197,7 @@ describe('User access rights tests', () => {
     const genotypeBrowserPage = new GenotypeBrowserPage();
 
     page.loginAdmin();
-    page.toggleSidenav();
-    page.sidenavManagementButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.management);
     userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
     userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true});
     userManagementPage.userWindowGroupDropDownMenuButton.click();
@@ -252,8 +248,7 @@ describe('User access rights tests', () => {
     const genotypeBrowserPage = new GenotypeBrowserPage();
 
     page.loginAdmin();
-    page.toggleSidenav();
-    page.sidenavManagementButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.management);
     userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
     userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true});
     userManagementPage.userWindowGroupDropDownMenuButton.click();
@@ -300,8 +295,7 @@ describe('User access rights tests', () => {
     const genotypeBrowserPage = new GenotypeBrowserPage();
 
     page.loginAdmin();
-    page.toggleSidenav();
-    page.sidenavManagementButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.management);
     userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
     userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true});
     userManagementPage.userWindowSubmitButton.click();
