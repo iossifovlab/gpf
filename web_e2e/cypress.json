@@ -8,6 +8,5 @@
     }
   },
   "downloadsFolder": "cypress/downloads",
-  "trashAssetsBeforeRuns": true,
-  "scrollBehavior": false
+  "trashAssetsBeforeRuns": true
 }
