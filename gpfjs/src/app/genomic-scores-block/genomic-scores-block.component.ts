@@ -6,8 +6,9 @@ import { GenomicScoresBlockService } from './genomic-scores-block.service';
 import { GenomicScores } from './genomic-scores-block';
 import { Store, Select } from '@ngxs/store';
 import { SetGenomicScores, GenomicScoresBlockModel, GenomicScoresBlockState } from './genomic-scores-block.state';
-import { Observable } from 'rxjs';
+import { Observable, combineLatest, of } from 'rxjs';
 import { validate } from 'class-validator';
+import { switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-genomic-scores-block',
@@ -28,16 +29,18 @@ export class GenomicScoresBlockComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.genomicScoresBlockService.getGenomicScores()
-    .take(1)
-    .subscribe(genomicScores => {
+    this.genomicScoresBlockService.getGenomicScores().take(1).pipe(
+      switchMap(genomicScores => {
+        return combineLatest(
+          of(genomicScores),
+          this.store.selectOnce(state => state.genomicScoresBlockState)
+        )
+      })
+    ).subscribe(([genomicScores, state]) => {
       this.genomicScoresArray = genomicScores;
-    });
-
-    this.store.selectOnce(state => state.genomicScoresBlockState).subscribe(state => {
-      // restore state
-      if (state['genomicScores'] && state['genomicScores'].length > 0) {
-        for (const score of state['genomicScores']) {
+      if (state.genomicScores.length > 0) {
+        // restore state
+        for (const score of state.genomicScores) {
           const genomicScore = new GenomicScoreState();
           genomicScore.score = this.genomicScoresArray
                                    .find(el => el['score'] === score['metric']);

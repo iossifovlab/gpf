@@ -21,7 +21,7 @@ export class GenomicScoresBlockState {
   @Action(SetGenomicScores)
   setInheritanceTypes(ctx: StateContext<GenomicScoresBlockModel>, action: SetGenomicScores) {
     ctx.patchState({
-      genomicScores: {...action.genomicScores}
+      genomicScores: [...action.genomicScores]
     });
   }
 }
