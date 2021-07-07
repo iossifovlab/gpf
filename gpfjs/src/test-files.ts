@@ -60,7 +60,6 @@ import './app/non-pdp-pedigrees/non-pdp-pedigrees.component.spec.ts';
 import './app/multi-continuous-filter/multi-continuous-filter.component.spec.ts';
 import './app/genomic-scores-block/genomic-scores-block.component.spec.ts';
 import './app/genotype-preview-table/genotype-preview-table.component.spec.ts';
-import './app/family-counters/family-counters.component.spec.ts';
 import './app/varianttypes/varianttypes.component.spec.ts';
 import './app/study-types/study-types.component.spec.ts';
 import './app/share-query-button/share-query-button.component.spec.ts';

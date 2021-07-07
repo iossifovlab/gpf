@@ -86,8 +86,6 @@ import { PhenoToolResultsChartPerEffectComponent } from './pheno-tool-results-ch
 import { PhenoToolResultsChartPerResultComponent } from './pheno-tool-results-chart/pheno-tool-results-chart-per-result.component';
 import { PhenoToolEffectTypesComponent } from './pheno-tool-effect-types/pheno-tool-effect-types.component';
 
-import { FamilyCountersComponent } from './family-counters/family-counters.component';
-import { FamilyCountersService } from './family-counters/family-counters.service';
 import { RegistrationComponent } from './registration/registration.component';
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
 import { PhenoBrowserComponent } from './pheno-browser/pheno-browser.component';
@@ -317,7 +315,6 @@ const appRoutes: Routes = [
     PhenoToolResultsChartPerEffectComponent,
     PhenoToolResultsChartPerResultComponent,
     PhenoToolEffectTypesComponent,
-    FamilyCountersComponent,
     RegistrationComponent,
     ForgotPasswordComponent,
     PhenoBrowserComponent,
@@ -409,7 +406,6 @@ const appRoutes: Routes = [
     StateRestoreService,
     MeasuresService,
     PhenoToolService,
-    FamilyCountersService,
     PhenoBrowserService,
     PValueIntensityPipe,
     VariantReportsService,
