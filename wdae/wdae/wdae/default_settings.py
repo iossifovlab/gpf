@@ -164,7 +164,6 @@ INSTALLED_APPS = [
     "genotype_browser",
     "enrichment_api",
     "measures_api",
-    "family_counters_api",
     "pheno_browser_api",
     "common_reports_api",
     "pheno_tool_api",
