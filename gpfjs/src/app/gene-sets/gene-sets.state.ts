@@ -15,9 +15,9 @@ export interface GeneSetsModel {
 @State<GeneSetsModel>({
   name: 'geneSetsState',
   defaults: {
-    geneSetsTypes: {},
-    geneSetsCollection: {},
-    geneSet: {},
+    geneSetsTypes: null,
+    geneSetsCollection: null,
+    geneSet: null,
   },
 })
 @Injectable()

@@ -3,12 +3,12 @@ import { GeneSetsLocalState } from './gene-sets-state';
 import { Component, OnInit } from '@angular/core';
 import { GeneSetsService } from './gene-sets.service';
 import { GeneSetsCollection, GeneSet, GeneSetType } from './gene-sets';
-import { Subject, Observable } from 'rxjs';
-import { StateRestoreService } from '../store/state-restore.service';
+import { Subject, Observable, combineLatest, of } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { validate } from 'class-validator';
 import { Store, Select } from '@ngxs/store';
 import { SetGeneSetsValues, GeneSetsModel, GeneSetsState } from './gene-sets.state';
+import { switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-gene-sets',
@@ -38,45 +38,46 @@ export class GeneSetsComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.store.selectOnce(state => state.geneSetsState).subscribe(state => {
+    this.geneSetsService.getGeneSetsCollections().pipe(
+      switchMap(geneSetsCollections => {
+        return combineLatest(
+          of(geneSetsCollections),
+          this.datasetService.getSelectedDataset().take(1)
+        )
+      }),
+      switchMap(([geneSetsCollections, dataset]) => {
+        return combineLatest(
+          of(geneSetsCollections),
+          of(dataset),
+          this.store.selectOnce(state => state.geneSetsState),
+        )
+      })
+    ).subscribe(([geneSetsCollections, dataset, state]) => {
+      this.selectedDatasetId = dataset.id;
+      const denovoGeneSetTypes = geneSetsCollections.filter(
+        geneSetCollection => geneSetCollection.name === 'denovo'
+      )[0].types;
+
+      if (!denovoGeneSetTypes.length) {
+        geneSetsCollections = geneSetsCollections.filter(
+          (geneSet) => geneSet.name.toLowerCase().trim() !== 'denovo'
+        );
+      } else {
+        denovoGeneSetTypes.sort((a, b) => (a.datasetName > b.datasetName) ? 1 : ((b.datasetName > a.datasetName) ? -1 : 0));
+
+        const selectedStudyTypes = denovoGeneSetTypes.find(
+          type => type.datasetId === this.selectedDatasetId
+        ) || denovoGeneSetTypes[0];
+
+        if (selectedStudyTypes) {
+          this.defaultSelectedDenovoGeneSetId = selectedStudyTypes.datasetId +
+            '-' + selectedStudyTypes.peopleGroupId + '-denovo-geneset';
+        }
+      }
+      this.geneSetsCollections = geneSetsCollections;
+      this.selectedGeneSetsCollection = geneSetsCollections[0];
       this.restoreState(state);
     });
-
-    this.state$.subscribe(state => {
-      validate(this.geneSetsLocalState).then(errors => this.errors = errors.map(err => String(err)));
-    });
-
-    this.geneSetsService.getGeneSetsCollections().subscribe(
-      (geneSetsCollections) => {
-        const dataset$ = this.datasetService.getSelectedDataset();
-        dataset$.take(1).subscribe(dataset => {
-          this.selectedDatasetId = dataset.id;
-
-          const denovoGeneSetTypes = geneSetsCollections.filter(
-            geneSetCollection => geneSetCollection.name === 'denovo'
-          )[0].types;
-
-          if (!denovoGeneSetTypes.length) {
-            geneSetsCollections = geneSetsCollections.filter(
-              (geneSet) => geneSet.name.toLowerCase().trim() !== 'denovo'
-            );
-          } else {
-            denovoGeneSetTypes.sort((a, b) => (a.datasetName > b.datasetName) ? 1 : ((b.datasetName > a.datasetName) ? -1 : 0));
-
-            const selectedStudyTypes = denovoGeneSetTypes.find(
-              type => type.datasetId === this.selectedDatasetId
-            ) || denovoGeneSetTypes[0];
-
-            if (selectedStudyTypes) {
-              this.defaultSelectedDenovoGeneSetId = selectedStudyTypes.datasetId +
-                '-' + selectedStudyTypes.peopleGroupId + '-denovo-geneset';
-            }
-          }
-          this.geneSetsCollections = geneSetsCollections;
-          this.selectedGeneSetsCollection = geneSetsCollections[0];
-        });
-      }
-    );
 
     this.geneSetsResult = this.geneSetsQueryChange
       .distinctUntilChanged()
@@ -92,26 +93,30 @@ export class GeneSetsComponent implements OnInit {
     this.geneSetsResult.subscribe(geneSets => {
       this.geneSets = geneSets.sort((a, b) => a.name.localeCompare(b.name));
       this.store.selectOnce(state => state.geneSetsState).subscribe((state) => {
-        if (!state['geneSet'] || !state['geneSet']['geneSet']) {
+        if (!state.geneSet || !state.geneSet.geneSet) {
           return;
         }
         for (const geneSet of this.geneSets) {
-          if (geneSet.name === state['geneSet']['geneSet']) {
+          if (geneSet.name === state.geneSet.geneSet) {
             this.geneSetsLocalState.geneSet = geneSet;
           }
         }
       });
     });
+
+    this.state$.subscribe(state => {
+      validate(this.geneSetsLocalState).then(errors => this.errors = errors.map(err => String(err)));
+    });
   }
 
-  restoreState(state: object) {
-    if (state['geneSet'] && state['geneSet']['geneSetsCollection']) {
+  restoreState(state) {
+    if (state.geneSet && state.geneSetsCollection) {
       for (const geneSetCollection of this.geneSetsCollections) {
-        if (geneSetCollection.name === state['geneSet']['geneSetsCollection']) {
-          this.geneSetsLocalState.geneSetsCollection = geneSetCollection;
-
-          if (state['geneSet']['geneSetsTypes']) {
-            this.restoreGeneTypes(state['geneSet']['geneSetsTypes'], geneSetCollection);
+        if (geneSetCollection.name === state.geneSetsCollection.name) {
+          this.selectedGeneSetsCollection = geneSetCollection;
+          this.selectedGeneSet = state.geneSet;
+          if (state.geneSetsTypes) {
+            this.restoreGeneTypes(state.geneSetsTypes, geneSetCollection);
           }
           this.onSearch();
         }
@@ -160,13 +165,10 @@ export class GeneSetsComponent implements OnInit {
   }
 
   onSelect(event: GeneSet) {
-    this.geneSetsLocalState.geneSet = event;
-
-    if (event == null) {
+    this.selectedGeneSet = event;
+    if (event === null) {
       this.onSearch();
     }
-
-    this.store.dispatch(new SetGeneSetsValues(this.geneSetsLocalState));
   }
 
   isSelectedGeneType(datasetId: string, peopleGroupId: string, geneType: string): boolean {
@@ -210,6 +212,7 @@ export class GeneSetsComponent implements OnInit {
 
   set selectedGeneSet(geneSet) {
     this.geneSetsLocalState.geneSet = geneSet;
+    this.store.dispatch(new SetGeneSetsValues(this.geneSetsLocalState));
   }
 
   getDownloadLink(selectedGeneSet: GeneSet): string {

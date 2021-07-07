@@ -2,13 +2,14 @@ import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { GeneWeights, Partitions, GeneWeightsLocalState } from './gene-weights';
 import { GeneWeightsService } from './gene-weights.service';
 // tslint:disable-next-line:import-blacklist
-import { ReplaySubject ,  Observable } from 'rxjs';
+import { ReplaySubject ,  Observable, combineLatest, of } from 'rxjs';
 
 import { Store, Select } from '@ngxs/store';
 import { ConfigService } from '../config/config.service';
 
 import { SetGeneWeight, SetHistogramValues, GeneWeightsState, GeneWeightsModel } from './gene-weights.state';
 import { validate } from 'class-validator';
+import { switchMap } from 'rxjs/operators';
 
 @Component({
   encapsulation: ViewEncapsulation.None, // TODO: What is this?
@@ -48,28 +49,27 @@ export class GeneWeightsComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.geneWeightsService.getGeneWeights()
-      .subscribe(geneWeights => {
-        this.geneWeightsArray = geneWeights;
-        this.selectedGeneWeights = geneWeights[0];
-      });
-
-    this.store.selectOnce(state => state.geneWeightsState).subscribe(state => {
+    this.geneWeightsService.getGeneWeights().pipe(
+      switchMap(geneWeights => {
+        return combineLatest(
+          of(geneWeights),
+          this.store.selectOnce(state => state.geneWeightsState)
+        );
+      })
+    ).subscribe(([geneWeights, state]) => {
+      this.geneWeightsArray = geneWeights;
       // restore state
-      if (state.weight) {
+      if (state.geneWeight !== null) {
         for (const geneWeight of this.geneWeightsArray) {
-          if (geneWeight.weight === state.weight) {
+          if (geneWeight.weight === state.geneWeight.weight) {
             this.selectedGeneWeights = geneWeight;
+            this.rangeStart = state.rangeStart;
+            this.rangeEnd = state.rangeEnd;
+            break;
           }
         }
-      }
-
-      if (state.rangeStart) {
-        this.rangeStart = state.rangeStart;
-      }
-
-      if (state.rangeEnd) {
-        this.rangeEnd = state.rangeEnd;
+      } else {
+        this.selectedGeneWeights = this.geneWeightsArray[0];
       }
     });
 
