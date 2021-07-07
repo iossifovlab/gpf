@@ -109,22 +109,6 @@ export class BasePage {
     cy.get(`div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/${sidenavPageLink}"]`).click({scrollBehavior: false});
   }
 
-  get sidenavDatasetButton() {
-    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/datasets"]');
-  }
-
-  get sidenavSavedQueriesButton() {
-    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/saved-queries"]');
-  }
-
-  get sidenavAutismGeneProfilesButton() {
-    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/autism-gene-profiles"]');
-  }
-
-  get sidenavManagementButton() {
-    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/management"]');
-  }
-
   findButtonInComponentContainingText(componentSelector: string, text: string) {
     return cy.get(componentSelector).contains(text);
   }

@@ -41,7 +41,6 @@ describe('App tests', () => {
 
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.savedQueries);
-    page.sidenavSavedQueriesButton.click();
 
     cy.url().then(currentUrl => {
       expect(currentUrl).to.eq(savedQueriesUrl);
