@@ -11,7 +11,7 @@ import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.com
 import { cloneDeep } from 'lodash';
 import { sprintf } from 'sprintf-js';
 import { QueryService } from 'app/query/query.service';
-import { BrowserQueryFilter, GenomicScore, PeopleGroup } from 'app/genotype-browser/genotype-browser';
+import { BrowserQueryFilter, GenomicScore, PeopleGroup, PresentInParent, PresentInParentRarity } from 'app/genotype-browser/genotype-browser';
 import { EffectTypes } from 'app/effecttypes/effecttypes';
 
 @Component({
@@ -67,6 +67,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     intron: ['Intron'],
     missense: ['Missense'],
   };
+  presentInParentValues = ['father only', 'mother only', 'mother and father', 'neither'];
 
   @HostListener('window:scroll', ['$event'])
   onWindowScroll() {
@@ -509,16 +510,9 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     return count;
   }
 
-  parseEffectTypeId(effectTypeId: string): string {
-    for (const effectType of Object.keys(this.effectTypes)) {
-      if (effectTypeId.includes(effectType)) {
-        return effectType;
-      }
-    }
-  }
-
   goToQuery(geneSymbol: string, personSetId: string, effectTypeId: string, datasetId: string, statistic: AgpDatasetStatistic) {
     const newWindow = window.open('', '_blank');
+
     const peopleGroup = new PeopleGroup('status', [personSetId]);
     const variantTypes = this.config.datasets
       .find(dataset => dataset.id === datasetId).personSets
@@ -535,6 +529,14 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
       );
     }
 
+    let presentInParent: PresentInParent;
+    if (statistic.category === 'rare') {
+      presentInParent = new PresentInParent(
+        this.presentInParentValues,
+        new PresentInParentRarity(undefined, 1, undefined),
+      );
+    }
+
     const browserQueryFilter = new BrowserQueryFilter(
       datasetId,
       [geneSymbol],
@@ -543,7 +545,8 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
       peopleGroup,
       ['we'],
       variantTypes,
-      genomicScores
+      genomicScores,
+      presentInParent
     );
 
     this.queryService.saveQuery(browserQueryFilter, 'genotype')
