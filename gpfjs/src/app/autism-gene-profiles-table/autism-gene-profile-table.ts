@@ -1,3 +1,4 @@
+import { GenomicScore } from 'app/genotype-browser/genotype-browser';
 import { Type } from 'class-transformer';
 
 export class AgpConfig {
@@ -63,6 +64,7 @@ export class AgpDatasetStatistic {
   category: string;
   description: string;
   variantTypes: string[];
+  scores: GenomicScore[];
 }
 
 export class AgpDatasetPersonSet {

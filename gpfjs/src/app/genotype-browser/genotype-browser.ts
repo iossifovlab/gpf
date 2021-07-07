@@ -7,6 +7,7 @@ export class BrowserQueryFilter {
     private peopleGroup: PeopleGroup,
     private studyTypes: string[],
     private variantTypes: string[],
+    private genomicScores: GenomicScore[],
   ) { }
 }
 
@@ -15,4 +16,12 @@ export class PeopleGroup {
     private id: string,
     private checkedValues: string[],
   ) { }
+}
+
+export class GenomicScore {
+  constructor(
+    private metric: string,
+    private rangeStart: number,
+    private rangeEnd: number,
+  ) {}
 }

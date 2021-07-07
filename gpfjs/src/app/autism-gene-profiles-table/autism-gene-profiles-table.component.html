@@ -125,7 +125,7 @@
             <td style="min-width: 70px" *ngFor="let statistic of personSet.statistics">
               <ng-container *ngIf="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id) as value">
                 <ng-container *ngIf="value.count !== 0">
-                  <a (click)="goToQuery(gene.geneSymbol, personSet.id, statistic.id, dataset.id)" (middleclick)="goToQuery(gene.geneSymbol, personSet.id, statistic.id, dataset.id)">
+                  <a (click)="goToQuery(gene.geneSymbol, personSet.id, statistic.id, dataset.id, statistic)" (middleclick)="goToQuery(gene.geneSymbol, personSet.id, statistic.id, dataset.id, statistic)">
                     {{value.count}} ({{value.rate | number : '1.0-3' }})
                   </a>
                 </ng-container>
