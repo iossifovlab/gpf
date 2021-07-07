@@ -52,7 +52,7 @@
       <tr style="height: 110px;">
         <th class="table-subheader" rowspan="2">
           <input #geneSearchInput (keyup)="sendKeystrokes(geneSearchInput.value)" id="gene-search-input"
-            class="form-control" autocomplete="off" type="text" placeholder="Search gene" aria-label="Search gene">
+            class="form-control" autocomplete="off" type="text" placeholder="Search">
         </th>
 
         <ng-container *ngFor="let geneSetCategory of shownGeneSetsCategories">
@@ -125,7 +125,7 @@
             <td style="min-width: 70px" *ngFor="let statistic of personSet.statistics">
               <ng-container *ngIf="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id) as value">
                 <ng-container *ngIf="value.count !== 0">
-                  <a (click)="goToQuery(gene.geneSymbol, personSet.id, statistic.id, dataset.id)" (middleclick)="goToQuery(gene.geneSymbol, personSet.id, statistic.id, dataset.id)">
+                  <a (click)="goToQuery(gene.geneSymbol, personSet.id, statistic.id, dataset.id, statistic)" (middleclick)="goToQuery(gene.geneSymbol, personSet.id, statistic.id, dataset.id, statistic)">
                     {{value.count}} ({{value.rate | number : '1.0-3' }})
                   </a>
                 </ng-container>

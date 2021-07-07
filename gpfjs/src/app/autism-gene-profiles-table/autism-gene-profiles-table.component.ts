@@ -4,14 +4,14 @@ import {
 } from '@angular/core';
 // tslint:disable-next-line:import-blacklist
 import { Subject } from 'rxjs';
-import { AgpTableConfig, AgpTableDataset, AgpGene, AgpGeneSetsCategory, AgpGenomicScoresCategory } from './autism-gene-profile-table';
+import { AgpTableConfig, AgpTableDataset, AgpGene, AgpGeneSetsCategory, AgpGenomicScoresCategory, AgpDatasetStatistic } from './autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 import { cloneDeep } from 'lodash';
 import { sprintf } from 'sprintf-js';
 import { QueryService } from 'app/query/query.service';
-import { BrowserQueryFilter, PeopleGroup } from 'app/genotype-browser/genotype-browser';
+import { BrowserQueryFilter, GenomicScore, PeopleGroup, PresentInParent, PresentInParentRarity } from 'app/genotype-browser/genotype-browser';
 import { EffectTypes } from 'app/effecttypes/effecttypes';
 
 @Component({
@@ -67,6 +67,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     intron: ['Intron'],
     missense: ['Missense'],
   };
+  presentInParentValues = ['father only', 'mother only', 'mother and father', 'neither'];
 
   @HostListener('window:scroll', ['$event'])
   onWindowScroll() {
@@ -509,8 +510,9 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     return count;
   }
 
-  goToQuery(geneSymbol: string, personSetId: string, effectTypeId: string, datasetId: string) {
+  goToQuery(geneSymbol: string, personSetId: string, effectTypeId: string, datasetId: string, statistic: AgpDatasetStatistic) {
     const newWindow = window.open('', '_blank');
+
     const peopleGroup = new PeopleGroup('status', [personSetId]);
     const variantTypes = this.config.datasets
       .find(dataset => dataset.id === datasetId).personSets
@@ -518,14 +520,33 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
       .statistics.find((datasetStatistic) => datasetStatistic.id === effectTypeId)
       .variantTypes;
 
+    const genomicScores: GenomicScore[] = [];
+    if (statistic.scores) {
+      genomicScores[0] = new GenomicScore(
+        statistic.scores[0]['name'],
+        statistic.scores[0]['min'],
+        statistic.scores[0]['max'],
+      );
+    }
+
+    let presentInParent: PresentInParent;
+    if (statistic.category === 'rare') {
+      presentInParent = new PresentInParent(
+        this.presentInParentValues,
+        new PresentInParentRarity(undefined, 1, undefined),
+      );
+    }
+
     const browserQueryFilter = new BrowserQueryFilter(
       datasetId,
       [geneSymbol],
-      this.effectTypes[effectTypeId.replace('denovo_', '')],
+      this.effectTypes[statistic['effects'][0]],
       undefined,
       peopleGroup,
       ['we'],
-      variantTypes
+      variantTypes,
+      genomicScores,
+      presentInParent
     );
 
     this.queryService.saveQuery(browserQueryFilter, 'genotype')
