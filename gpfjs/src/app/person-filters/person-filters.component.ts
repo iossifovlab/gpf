@@ -1,6 +1,6 @@
 import { Component, OnChanges, Input, OnInit } from '@angular/core';
 import { Dataset, PersonFilter } from '../datasets/datasets';
-import { PersonFilterState, CategoricalFilterState, ContinuousFilterState } from './person-filters';
+import { PersonFilterState, CategoricalFilterState, ContinuousFilterState, ContinuousSelection, CategoricalSelection } from './person-filters';
 import { validate } from 'class-validator';
 import { Observable } from 'rxjs';
 import { Store, Select } from '@ngxs/store';
@@ -16,7 +16,7 @@ export class PersonFiltersComponent implements OnChanges, OnInit {
   @Input() filters: PersonFilter[];
   @Input() isFamilyFilters: boolean;
 
-  private personFiltersState = new Array<[PersonFilter, PersonFilterState]>();
+  private personFiltersState = new Map<string, PersonFilterState>();
 
   @Select(PersonFiltersState) state$: Observable<PersonFiltersModel>;
   errors: Array<string> = [];
@@ -24,21 +24,48 @@ export class PersonFiltersComponent implements OnChanges, OnInit {
   constructor(private store: Store) { }
 
   ngOnChanges(changes) {
-    this.personFiltersState = this.filters.map(personFilter => {
-      let filterState = null;
-      if (personFilter.sourceType === 'continuous') {
-        if (personFilter.from === 'pedigree') {
-          throw new Error('Continuous filters with pedigree sources are not supported!');
+    this.store.selectOnce(state => state.personFiltersState).subscribe(state => {
+      // set default state
+      for (const filter of this.filters) {
+        let filterState = null;
+        if (filter.sourceType === 'continuous') {
+          if (filter.from === 'pedigree') {
+            throw new Error('Continuous filters with pedigree sources are not supported!');
+          }
+          filterState = new ContinuousFilterState(
+            filter.name, filter.sourceType, filter.role, filter.source, filter.from,
+          );
+        } else if (filter.sourceType === 'categorical') {
+          filterState = new CategoricalFilterState(
+            filter.name, filter.sourceType, filter.role, filter.source, filter.from,
+          );
         }
-        filterState = new ContinuousFilterState(
-          personFilter.name, personFilter.sourceType, personFilter.role, personFilter.source, personFilter.from,
-        );
-      } else if (personFilter.sourceType === 'categorical') {
-        filterState = new CategoricalFilterState(
-          personFilter.name, personFilter.sourceType, personFilter.role, personFilter.source, personFilter.from,
-        );
+        this.personFiltersState.set(filter.name, filterState);
       }
-      return [personFilter, filterState] as [PersonFilter, PersonFilterState];
+
+      // restore state
+      const filterStates = this.isFamilyFilters ? state.familyFilters : state.personFilters;
+      if (filterStates.length) {
+        for (const filterState of filterStates) {
+          const filterType = filterState.sourceType === 'continuous' ? ContinuousFilterState : CategoricalFilterState;
+          let selection = null;
+          if (filterState.sourceType === 'continuous') {
+            selection = new ContinuousSelection(
+              filterState.selection.min,
+              filterState.selection.max,
+              filterState.selection.domainMin,
+              filterState.selection.domainMax,
+            )
+          } else {
+            selection = new CategoricalSelection(filterState.selection.selection)
+          }
+          const newFilter = new filterType(
+            filterState.id, filterState.sourceType, filterState.role,
+            filterState.source, filterState.from, selection
+          )
+          this.personFiltersState.set(filterState.id, newFilter);
+        }
+      }
     });
   }
 
@@ -50,19 +77,26 @@ export class PersonFiltersComponent implements OnChanges, OnInit {
   }
 
   get categoricalFilters() {
-    return this.personFiltersState.filter(
-      ([_, personFilter]) => personFilter && personFilter.sourceType === 'categorical'
-    );
+    return [...this.personFiltersState]
+      .map(([_, personFilter]) => personFilter)
+      .filter(personFilter => personFilter && personFilter.sourceType === 'categorical');
   }
 
   get continuousFilters() {
-    return this.personFiltersState.filter(
-      ([_, personFilter]) => personFilter && personFilter.sourceType === 'continuous'
-    );
+    const res = [...this.personFiltersState]
+      .map(([_, personFilter]) => personFilter)
+      .filter(personFilter => personFilter && personFilter.sourceType === 'continuous');
+    return res;
+  }
+
+  getFilter(filterName: string) {
+    return this.filters.find(f => f.name === filterName);
   }
 
   updateFilters() {
-    const filters = this.personFiltersState.map(f => f[1]).filter(f => f && !f.isEmpty());
+    const filters = [...this.personFiltersState]
+      .map(([_, personFilter]) => personFilter)
+      .filter(personFilter => personFilter && !personFilter.isEmpty());
     if (this.isFamilyFilters) {
       this.store.dispatch(new SetFamilyFilters(filters));
     } else {

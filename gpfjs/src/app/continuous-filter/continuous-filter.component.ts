@@ -35,10 +35,9 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
           .getMeasurePartitions(datasetId, measureName, internalRangeStart, internalRangeEnd);
       });
 
-    this.partitions
-      .subscribe(partitions => {
-        this.rangesCounts = [partitions.leftCount, partitions.midCount, partitions.rightCount];
-      });
+    this.partitions.subscribe(partitions => {
+      this.rangesCounts = [partitions.leftCount, partitions.midCount, partitions.rightCount];
+    });
   }
 
   ngOnChanges(changes: SimpleChanges) {
