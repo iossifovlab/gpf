@@ -1,7 +1,6 @@
 /* tslint:disable:no-unused-variable */
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { GenderComponent } from './gender.component';
-import { StateRestoreService } from 'app/store/state-restore.service';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 
 
@@ -12,7 +11,6 @@ describe('GenderComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [GenderComponent, ErrorsAlertComponent],
-      providers: [StateRestoreService],
       imports: []
     })
       .compileComponents();

@@ -5,7 +5,6 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { PhenoBrowserService } from 'app/pheno-browser/pheno-browser.service';
-import { StateRestoreService } from 'app/store/state-restore.service';
 import { UsersService } from 'app/users/users.service';
 import { CategoricalFilterComponent } from './categorical-filter.component';
 
@@ -16,7 +15,7 @@ describe('CategoricalFilterComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [CategoricalFilterComponent],
-      providers: [DatasetsService, PhenoBrowserService, StateRestoreService, ConfigService, UsersService],
+      providers: [DatasetsService, PhenoBrowserService, ConfigService, UsersService],
       imports: [HttpClientTestingModule, RouterTestingModule, FormsModule]
     })
     .compileComponents();

@@ -1,6 +1,5 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { StateRestoreService } from 'app/store/state-restore.service';
 import { of } from 'rxjs';
 import { RARITY_ALL, RARITY_INTERVAL, RARITY_RARE, RARITY_ULTRARARE } from './present-in-parent';
 
@@ -13,7 +12,6 @@ describe('PresentInParentComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [ PresentInParentComponent ],
-      providers: [StateRestoreService],
       schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();

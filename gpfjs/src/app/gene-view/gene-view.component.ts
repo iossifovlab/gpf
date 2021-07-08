@@ -6,7 +6,6 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import * as draw from 'app/utils/svg-drawing';
 import { GeneViewTranscript, GeneViewModel } from 'app/gene-view/gene-view';
-import { QueryStateProvider, QueryStateWithErrorsProvider } from 'app/query/query-state-provider';
 
 export class GeneViewScaleState {
   constructor(
@@ -81,9 +80,8 @@ export class GeneViewZoomHistory {
     '(document:keydown)': 'handleKeyboardEvent($event)',
     '(window:resize)': 'handleWindowResizeEvent($event)'
   },
-  providers: [{ provide: QueryStateProvider, useExisting: forwardRef(() => GeneViewComponent) }]
 })
-export class GeneViewComponent extends QueryStateWithErrorsProvider implements OnInit {
+export class GeneViewComponent implements OnInit {
   @Input() gene: Gene;
   @Input() variantsArray: GeneViewSummaryAllelesArray;
   @Input() streamingFinished$: Subject<boolean>;
@@ -163,7 +161,6 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     private datasetsService: DatasetsService,
     private loadingService: FullscreenLoadingService,
   ) {
-    super();
     this.tablePreviewDebouncer
       .debounceTime(1000)
       .subscribe(domains => this.updateShownTablePreviewVariantsArrayEvent.emit(domains));
@@ -254,7 +251,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   }
 
   getState(): Observable<object> {
-    const state = {
+    /* FIXME const state = {
       'affectedStatus': Array.from(this.selectedAffectedStatus),
       'selectedEffectTypes': Array.from(this.selectedEffectTypes),
       'selectedVariantTypes': Array.from(this.selectedVariantTypes),
@@ -270,7 +267,8 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         [this.x.domain()[0], this.x.domain()[this.x.domain().length - 1]]
       );
     }
-    return this.validateAndGetState(state);
+    return this.validateAndGetState(state); */
+    return null;
   }
 
   enableIntronCondensing() {

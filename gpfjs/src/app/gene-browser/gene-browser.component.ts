@@ -9,22 +9,16 @@ import { switchMap } from 'rxjs/operators';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { ActivatedRoute, Params } from '@angular/router';
-import { QueryStateCollector } from 'app/query/query-state-provider';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { GeneViewComponent } from 'app/gene-view/gene-view.component';
-import { StateRestoreService } from 'app/store/state-restore.service';
 import { ConfigService } from 'app/config/config.service';
 
 @Component({
   selector: 'gpf-gene-browser',
   templateUrl: './gene-browser.component.html',
   styleUrls: ['./gene-browser.component.css'],
-  providers: [{
-    provide: QueryStateCollector,
-    useExisting: GeneBrowserComponent
-  }]
 })
-export class GeneBrowserComponent extends QueryStateCollector implements OnInit, AfterViewInit {
+export class GeneBrowserComponent implements OnInit, AfterViewInit {
   @ViewChild(GeneViewComponent) geneViewComponent: GeneViewComponent;
   selectedGene: Gene;
   geneSymbol = '';
@@ -88,10 +82,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
     private route: ActivatedRoute,
     readonly configService: ConfigService,
     private loadingService: FullscreenLoadingService,
-    private stateRestoreService: StateRestoreService
-  ) {
-    super();
-  }
+  ) { }
 
   ngOnInit() {
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
@@ -110,7 +101,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
     this.datasetsService.getDataset(this.selectedDatasetId).subscribe(dataset => {
       if (dataset.accessRights && this.route.snapshot.params.gene) {
         this.waitForGeneViewComponent().then(() => {
-          this.stateRestoreService.pushNewState({'geneSymbols': [this.route.snapshot.params.gene]});
+          // FIXME this.stateRestoreService.pushNewState({'geneSymbols': [this.route.snapshot.params.gene]});
           this.submitGeneRequest();
         });
       }
@@ -129,17 +120,17 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   }
 
   getCurrentState() {
-    const state = super.getCurrentState();
+    /* FIXME const state = super.getCurrentState();
     return state.map(current_state => {
       const stateObject = Object.assign({ datasetId: this.selectedDatasetId }, current_state);
       return stateObject;
-    });
+    }); */
   }
 
   updateShownTablePreviewVariantsArray($event: DomainRange) {
     this.familyLoadingFinished = false;
 
-    this.getCurrentState().subscribe(state => {
+    /* this.getCurrentState().subscribe(state => {
       const requestParams = this.transformFamilyVariantsQueryParameters(state);
       requestParams['maxVariantsCount'] = this.maxFamilyVariants;
       requestParams['summaryVariantIds'] = state['summaryVariantIds'];
@@ -154,7 +145,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
           requestParams, selectedDataset.genotypeBrowserConfig.columnIds
         );
       });
-    });
+    }); */
   }
 
   transformFamilyVariantsQueryParameters(state) {
@@ -218,7 +209,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
       this.familyLoadingFinished = true;
     });
 
-    this.getCurrentState().pipe(
+    /* FIXME this.getCurrentState().pipe(
       switchMap(state => {
         let geneObservable: Observable<Gene>;
         if (state['geneSymbols']) {
@@ -277,7 +268,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
       } else {
         this.geneViewComponent.disableIntronCondensing();
       }
-    });
+    }); */
   }
 
   getFamilyVariantCounts() {
@@ -288,7 +279,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
   }
 
   onSubmit(event) {
-    this.getCurrentState().subscribe(state => {
+    /* FIXME this.getCurrentState().subscribe(state => {
       this.selectedDataset$.subscribe( selectedDataset => {
         const requestParams = this.transformFamilyVariantsQueryParameters(state);
         requestParams['summaryVariantIds'] = state['summaryVariantIds'];
@@ -310,6 +301,6 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit,
           console.warn(error);
       });
     },
-    error => null);
+    error => null); */
   }
 }

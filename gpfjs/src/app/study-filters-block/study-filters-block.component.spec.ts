@@ -2,7 +2,6 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { Observable, of } from 'rxjs';
 import { StudyFiltersBlockComponent } from './study-filters-block.component';
 import { By } from '@angular/platform-browser';
-import { StateRestoreService } from 'app/store/state-restore.service';
 import { NgbNavModule, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { SimpleChange } from '@angular/core';
 import { StudyFilterComponent } from 'app/study-filter/study-filter.component';
@@ -29,7 +28,7 @@ describe('StudyFiltersBlockComponent', () => {
         AddButtonComponent,
         ErrorsAlertComponent
       ],
-      providers: [StateRestoreService, NgbNavModule, NgbModule, FormsModule],
+      providers: [NgbNavModule, NgbModule, FormsModule],
       imports: [NgbNavModule, NgbModule, FormsModule],
     })
     .compileComponents();

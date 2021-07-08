@@ -4,7 +4,6 @@ import { By } from '@angular/platform-browser';
 import { DebugElement, NO_ERRORS_SCHEMA } from '@angular/core';
 
 import { EffecttypesColumnComponent } from './effecttypes-column.component';
-import { StateRestoreService } from 'app/store/state-restore.service';
 import { of } from 'rxjs';
 import { ALL, CODING, LGDS, NONSYNONYMOUS, UTRS } from './effecttypes';
 
@@ -16,9 +15,6 @@ describe('EffecttypesColumnComponent', () => {
     TestBed.configureTestingModule({
       declarations: [
         EffecttypesColumnComponent,
-      ],
-      providers: [
-        StateRestoreService
       ],
       schemas: [NO_ERRORS_SCHEMA]
     })

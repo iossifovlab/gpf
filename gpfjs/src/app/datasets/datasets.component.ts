@@ -10,7 +10,6 @@ import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import * as _ from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
-import { StateRestoreService } from 'app/store/state-restore.service';
 
 @Component({
   selector: 'gpf-datasets',
@@ -27,7 +26,6 @@ export class DatasetsComponent implements OnInit {
 
   constructor(
     private usersService: UsersService,
-    private stateRestoreService: StateRestoreService,
     private datasetsService: DatasetsService,
     private route: ActivatedRoute,
     private router: Router,
@@ -117,7 +115,7 @@ export class DatasetsComponent implements OnInit {
     /* In order to have state separation between the dataset tools,
     we clear the state if the previous url is from a different dataset tool */
     if (DatasetsComponent.previousUrl !== this.router.url && DatasetsComponent.previousUrl.startsWith('/datasets')) {
-      this.stateRestoreService.pushNewState({});
+      // FIXME this.stateRestoreService.pushNewState({});
     }
     DatasetsComponent.previousUrl = this.router.url;
   }

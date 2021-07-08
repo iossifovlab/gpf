@@ -1,7 +1,6 @@
 /* tslint:disable:no-unused-variable */
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { StudyTypesComponent } from './study-types.component';
-import { StateRestoreService } from 'app/store/state-restore.service';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { of } from 'rxjs';
 
@@ -12,7 +11,6 @@ describe('StudyTypesComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [StudyTypesComponent, ErrorsAlertComponent],
-      providers: [StateRestoreService]
     })
     .compileComponents();
   }));

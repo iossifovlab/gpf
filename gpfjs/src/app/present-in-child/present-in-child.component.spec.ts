@@ -1,6 +1,5 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { StateRestoreService } from 'app/store/state-restore.service';
 import { of } from 'rxjs';
 import { ALL_STATES } from './present-in-child';
 
@@ -13,7 +12,6 @@ describe('PresentInChildComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [ PresentInChildComponent ],
-      providers: [StateRestoreService],
       schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();

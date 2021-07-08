@@ -74,7 +74,6 @@ import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
 import { RouteReuseStrategy, RouterModule, Routes } from '@angular/router';
 import { TaggingRouteReuseStrategy } from 'app/route-reuse.strategy';
 
-import { StateRestoreService } from './store/state-restore.service';
 import { PersonFiltersComponent } from './person-filters/person-filters.component';
 import { PersonFiltersState } from './person-filters/person-filters.state';
 import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
@@ -432,7 +431,6 @@ const appRoutes: Routes = [
     EnrichmentModelsService,
     EnrichmentQueryService,
     FullscreenLoadingService,
-    StateRestoreService,
     MeasuresService,
     PhenoToolService,
     PhenoBrowserService,

@@ -19,7 +19,6 @@ import { HistogramRangeSelectorLineComponent } from 'app/histogram/histogram-ran
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { AddButtonComponent } from 'app/add-button/add-button.component';
 import { RemoveButtonComponent } from 'app/remove-button/remove-button.component';
-import { StateRestoreService } from 'app/store/state-restore.service';
 
 const GENOMIC_SCORES_OBJECTS: GenomicScores[] = [GenomicScores.fromJson({
   bars: [1, 2, 3], score: 'GenomicScores', bins: [4, 5, 6], range: [1, 3],
@@ -40,13 +39,6 @@ const STATE_RESTORE_OBJECT: any = {
     rangeEnd: 2
   }]
 };
-
-class MockStateRestoreService {
-
-  getState(key: string): Observable<any> {
-    return Observable.of(STATE_RESTORE_OBJECT);
-  }
-}
 
 describe('GenomicScoresBlockComponent', () => {
   let component: GenomicScoresBlockComponent;
@@ -71,7 +63,6 @@ describe('GenomicScoresBlockComponent', () => {
       ],
       providers: [
         { provide: GenomicScoresBlockService, useClass: MockGenomicScoresBlockService },
-        { provide: StateRestoreService, useClass: MockStateRestoreService },
       ]
     })
     .compileComponents();

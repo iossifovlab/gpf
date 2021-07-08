@@ -3,7 +3,6 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 
 import { ErrorsAlertComponent } from '../errors-alert/errors-alert.component';
-import { StateRestoreService } from '../store/state-restore.service';
 import { InheritancetypesComponent } from './inheritancetypes.component';
 
 
@@ -28,12 +27,6 @@ describe('InheritancetypesComponent', () => {
   let hostComponent: InheritancetypesHostComponent;
   let hostFixture: ComponentFixture<InheritancetypesHostComponent>;
 
-  let stateRestoreServiceStub: Partial<StateRestoreService> = {
-    getState(stateName: string) {
-      return of({'inheritanceTypes': false});
-    }
-  };
-
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [
@@ -41,9 +34,6 @@ describe('InheritancetypesComponent', () => {
         InheritancetypesComponent,
         InheritancetypesHostComponent,
       ],
-      providers: [
-        { provide: StateRestoreService, useValue: stateRestoreServiceStub }
-      ]
     })
     .compileComponents();
   }));

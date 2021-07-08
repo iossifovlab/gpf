@@ -3,7 +3,6 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { RegionsBlockComponent } from './regions-block.component';
-import { StateRestoreService } from 'app/store/state-restore.service';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 
 describe('RegionsBlockComponent', () => {
@@ -13,7 +12,6 @@ describe('RegionsBlockComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [RegionsBlockComponent],
-      providers: [StateRestoreService],
       imports: [NgbModule, RouterTestingModule],
     })
       .compileComponents();

@@ -5,7 +5,6 @@ import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { MeasuresService } from 'app/measures/measures.service';
 import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
-import { StateRestoreService } from 'app/store/state-restore.service';
 import { UsersService } from 'app/users/users.service';
 import { MultiContinuousFilterComponent } from './multi-continuous-filter.component';
 import { Component, Input, Output } from '@angular/core';
@@ -60,7 +59,6 @@ describe('MultiContinuousFilterComponent', () => {
       ],
       providers: [
         MultiContinuousFilterComponent,
-        StateRestoreService,
         MeasuresService,
         HttpClient,
         HttpHandler,

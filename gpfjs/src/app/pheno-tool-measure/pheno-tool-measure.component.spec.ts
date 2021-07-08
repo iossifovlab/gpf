@@ -8,7 +8,6 @@ import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { MeasuresService } from 'app/measures/measures.service';
 import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
 import { SearchableSelectComponent } from 'app/searchable-select/searchable-select.component';
-import { StateRestoreService } from 'app/store/state-restore.service';
 import { UsersService } from 'app/users/users.service';
 
 import { PhenoToolMeasureComponent } from './pheno-tool-measure.component';
@@ -23,7 +22,6 @@ describe('PhenoToolMeasureComponent', () => {
         PhenoToolMeasureComponent,
       ],
       providers: [
-        StateRestoreService,
         MeasuresService,
         HttpClient,
         HttpHandler,

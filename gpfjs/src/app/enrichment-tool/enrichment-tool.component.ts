@@ -5,7 +5,6 @@ import { Observable } from 'rxjs';
 
 import { EnrichmentResults } from '../enrichment-query/enrichment-result';
 import { EnrichmentQueryService } from '../enrichment-query/enrichment-query.service';
-import { QueryStateCollector } from '../query/query-state-provider';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -14,12 +13,8 @@ import { DatasetsService } from 'app/datasets/datasets.service';
   selector: 'gpf-enrichment-tool',
   templateUrl: './enrichment-tool.component.html',
   styleUrls: ['./enrichment-tool.component.css'],
-  providers: [{
-    provide: QueryStateCollector,
-    useExisting: EnrichmentToolComponent
-  }]
 })
-export class EnrichmentToolComponent extends QueryStateCollector implements OnInit, AfterViewInit {
+export class EnrichmentToolComponent implements OnInit, AfterViewInit {
   enrichmentResults: EnrichmentResults;
   public selectedDatasetId: string;
   selectedDataset$: Observable<Dataset>;
@@ -30,9 +25,7 @@ export class EnrichmentToolComponent extends QueryStateCollector implements OnIn
     private loadingService: FullscreenLoadingService,
     private route: ActivatedRoute,
     private datasetsService: DatasetsService,
-  ) {
-    super();
-  }
+  ) { }
 
   ngOnInit() {
     this.route.parent.params.subscribe(
@@ -44,7 +37,7 @@ export class EnrichmentToolComponent extends QueryStateCollector implements OnIn
   }
 
   ngAfterViewInit() {
-    this.detectNextStateChange(() => {
+    /* FIXME this.detectNextStateChange(() => {
         this.getCurrentState()
         .take(1)
         .subscribe(
@@ -56,21 +49,23 @@ export class EnrichmentToolComponent extends QueryStateCollector implements OnIn
             console.warn(error);
           });
       });
+    */
   }
 
   getCurrentState() {
-    const state = super.getCurrentState();
+    /* FIXME const state = super.getCurrentState();
 
     return state
       .map(state => {
         const stateObject = Object.assign({ datasetId: this.selectedDatasetId }, state);
         return stateObject;
       });
+    */
   }
 
   submitQuery() {
     this.loadingService.setLoadingStart();
-    this.getCurrentState().subscribe(
+    /* FIXME this.getCurrentState().subscribe(
       state => {
         this.enrichmentResults = null;
         this.enrichmentQueryService.getEnrichmentTest(state).subscribe(
@@ -90,6 +85,6 @@ export class EnrichmentToolComponent extends QueryStateCollector implements OnIn
         console.error(error);
         this.loadingService.setLoadingStop();
       }
-    );
+    ); */
   }
 }

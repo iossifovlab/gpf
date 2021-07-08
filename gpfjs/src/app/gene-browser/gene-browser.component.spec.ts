@@ -6,9 +6,7 @@ import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { DomainRange } from 'app/gene-view/gene';
-import { QueryStateCollector } from 'app/query/query-state-provider';
 import { QueryService } from 'app/query/query.service';
-import { StateRestoreService } from 'app/store/state-restore.service';
 import { UsersService } from 'app/users/users.service';
 import { of } from 'rxjs/internal/observable/of';
 import { GeneBrowserComponent } from './gene-browser.component';
@@ -36,7 +34,6 @@ describe('GeneBrowserComponent', () => {
         ConfigService,
         FullscreenLoadingService,
         QueryService,
-        StateRestoreService,
         {provide: ActivatedRoute, useValue: activatedRoute},
       ],
       imports: [HttpClientTestingModule, RouterTestingModule]
@@ -72,15 +69,6 @@ describe('GeneBrowserComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
-  });
-
-  it('should get current state with assigned dataset id', () => {
-    const getCurrentStateSpy = spyOn(QueryStateCollector.prototype, 'getCurrentState').and.returnValue(
-      [0] as any
-    );
-    component.selectedDatasetId = 'testId';
-    const state = component.getCurrentState();
-    expect(state).toEqual([{datasetId: 'testId'}] as any);
   });
 
   it('should update shown table preview variants array', () => {

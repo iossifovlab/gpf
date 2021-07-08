@@ -5,7 +5,6 @@ import { DebugElement, NO_ERRORS_SCHEMA } from '@angular/core';
 
 import { EffecttypesComponent } from './effecttypes.component';
 import { EffecttypesColumnComponent } from './effecttypes-column.component';
-import { StateRestoreService } from 'app/store/state-restore.service';
 import { of } from 'rxjs';
 import { ALL, CODING, LGDS, NONSYNONYMOUS, UTRS } from './effecttypes';
 
@@ -18,9 +17,6 @@ describe('EffecttypesComponent', () => {
       declarations: [
         EffecttypesComponent,
         EffecttypesColumnComponent,
-      ],
-      providers: [
-        StateRestoreService
       ],
       schemas: [NO_ERRORS_SCHEMA]
     })

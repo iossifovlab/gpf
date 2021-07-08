@@ -2,7 +2,6 @@ import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { DatasetsService } from '../datasets/datasets.service';
 import { ActivatedRoute } from '@angular/router';
 import { Dataset } from '../datasets/datasets';
-import { QueryStateCollector } from '../query/query-state-provider';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { PhenoToolService } from './pheno-tool.service';
 import { PhenoToolResults } from './pheno-tool-results';
@@ -10,16 +9,10 @@ import { ConfigService } from '../config/config.service';
 
 @Component({
   selector: 'gpf-pheno-tool',
-
   templateUrl: './pheno-tool.component.html',
   styleUrls: ['./pheno-tool.component.css'],
-  providers: [{
-    provide: QueryStateCollector,
-    useExisting: PhenoToolComponent
-  }]
 })
-export class PhenoToolComponent extends QueryStateCollector
-    implements OnInit, AfterViewInit {
+export class PhenoToolComponent implements OnInit, AfterViewInit {
   selectedDatasetId: string;
   selectedDataset: Dataset;
 
@@ -34,21 +27,19 @@ export class PhenoToolComponent extends QueryStateCollector
     private loadingService: FullscreenLoadingService,
     private phenoToolService: PhenoToolService,
     readonly configService: ConfigService,
-  ) {
-    super();
-  }
+  ) { }
 
   getCurrentState() {
-    const state = super.getCurrentState();
+    /* FIXME const state = super.getCurrentState();
 
     return state.map(state => {
         const stateObject = Object.assign({ datasetId: this.selectedDatasetId }, state);
         return stateObject;
-      });
+      }); */
   }
 
   ngAfterViewInit() {
-    this.detectNextStateChange(() => {
+    /* FIXME this.detectNextStateChange(() => {
       this.getCurrentState()
         .subscribe(state => {
           this.phenoToolState = state;
@@ -58,7 +49,7 @@ export class PhenoToolComponent extends QueryStateCollector
           this.disableQueryButtons = true;
           console.warn(error);
         });
-    });
+    }); */
   }
 
   ngOnInit() {
@@ -71,7 +62,7 @@ export class PhenoToolComponent extends QueryStateCollector
 
   submitQuery() {
     this.loadingService.setLoadingStart();
-    this.getCurrentState().subscribe(
+    /* FIXME this.getCurrentState().subscribe(
       state => {
         this.phenoToolService.getPhenoToolResults(state).subscribe(
           (phenoToolResults) => {
@@ -89,17 +80,17 @@ export class PhenoToolComponent extends QueryStateCollector
       error => {
         this.loadingService.setLoadingStop();
       }
-    );
+    ); */
   }
 
   onDownload(event) {
-    this.getCurrentState()
+    /* FIXME this.getCurrentState()
       .subscribe(state => {
         event.target.queryData.value = JSON.stringify(state);
         event.target.submit();
       },
       error => null
-    );
+    ); */
   }
 
 }

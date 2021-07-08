@@ -8,7 +8,6 @@ import { GenderComponent } from '../gender/gender.component';
 import { VarianttypesComponent } from '../varianttypes/varianttypes.component';
 import { EffecttypesComponent } from '../effecttypes/effecttypes.component';
 import { PedigreeSelectorComponent } from '../pedigree-selector/pedigree-selector.component';
-import { StateRestoreService } from 'app/store/state-restore.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { UsersService } from 'app/users/users.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
@@ -37,11 +36,9 @@ describe('GenotypeBlockComponent', () => {
         EffecttypesColumnComponent
       ],
       providers: [
-        StateRestoreService,
         DatasetsService,
         UsersService,
         ConfigService,
-
       ],
       imports: [
         NgbModule,
