@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
 
 import { Observable } from 'rxjs';
@@ -8,17 +8,23 @@ import { EnrichmentQueryService } from '../enrichment-query/enrichment-query.ser
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { Select, Selector } from '@ngxs/store';
+import { GenesBlockComponent } from 'app/genes-block/genes-block.component';
+import { EnrichmentModelsState } from 'app/enrichment-models/enrichment-models.state';
 
 @Component({
   selector: 'gpf-enrichment-tool',
   templateUrl: './enrichment-tool.component.html',
   styleUrls: ['./enrichment-tool.component.css'],
 })
-export class EnrichmentToolComponent implements OnInit, AfterViewInit {
+export class EnrichmentToolComponent implements OnInit {
   enrichmentResults: EnrichmentResults;
   public selectedDatasetId: string;
   selectedDataset$: Observable<Dataset>;
   private disableQueryButtons = false;
+
+  @Select(EnrichmentToolComponent.enrichmentToolStateSelector) state$: Observable<any[]>;
+  private enrichmentToolState = {};
 
   constructor(
     private enrichmentQueryService: EnrichmentQueryService,
@@ -34,57 +40,36 @@ export class EnrichmentToolComponent implements OnInit, AfterViewInit {
       }
     );
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
+
+    this.state$.subscribe(state => {
+      this.enrichmentToolState = {
+        'datasetId': this.selectedDatasetId,
+        ...state
+      };
+      this.enrichmentResults = null;
+    });
   }
 
-  ngAfterViewInit() {
-    /* FIXME this.detectNextStateChange(() => {
-        this.getCurrentState()
-        .take(1)
-        .subscribe(
-          state => {
-            this.disableQueryButtons = false;
-          },
-          error => {
-            this.disableQueryButtons = true;
-            console.warn(error);
-          });
-      });
-    */
-  }
-
-  getCurrentState() {
-    /* FIXME const state = super.getCurrentState();
-
-    return state
-      .map(state => {
-        const stateObject = Object.assign({ datasetId: this.selectedDatasetId }, state);
-        return stateObject;
-      });
-    */
+  @Selector([GenesBlockComponent.genesBlockState, EnrichmentModelsState])
+  static enrichmentToolStateSelector(genesBlockState, enrichmentModelsState) {
+    return {
+      ...genesBlockState, ...enrichmentModelsState,
+    };
   }
 
   submitQuery() {
     this.loadingService.setLoadingStart();
-    /* FIXME this.getCurrentState().subscribe(
-      state => {
-        this.enrichmentResults = null;
-        this.enrichmentQueryService.getEnrichmentTest(state).subscribe(
-          (enrichmentResults) => {
-            this.enrichmentResults = enrichmentResults;
-            this.loadingService.setLoadingStop();
-          },
-          error => {
-            console.error(error);
-            this.loadingService.setLoadingStop();
-          },
-          () => {
-            this.loadingService.setLoadingStop();
-          });
+    this.enrichmentQueryService.getEnrichmentTest(this.enrichmentToolState).subscribe(
+      (enrichmentResults) => {
+        this.enrichmentResults = enrichmentResults;
+        this.loadingService.setLoadingStop();
       },
       error => {
         console.error(error);
         this.loadingService.setLoadingStop();
-      }
-    ); */
+      },
+      () => {
+        this.loadingService.setLoadingStop();
+    });
   }
 }

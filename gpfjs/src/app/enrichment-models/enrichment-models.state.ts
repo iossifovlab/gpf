@@ -4,21 +4,21 @@ import { State, Action, StateContext } from '@ngxs/store';
 export class SetEnrichmentModels {
   static readonly type = '[Genotype] Set enrichmentModel values';
   constructor(
-    public enrichmentBackgroundModel: object,
-    public enrichmentCountingModel: object,
+    public enrichmentBackgroundModel: string,
+    public enrichmentCountingModel: string,
   ) {}
 }
 
 export interface EnrichmentModelsModel {
-  enrichmentBackgroundModel: object,
-  enrichmentCountingModel: object,
+  enrichmentBackgroundModel: string,
+  enrichmentCountingModel: string,
 }
 
 @State<EnrichmentModelsModel>({
   name: 'enrichmentModelsState',
   defaults: {
-    enrichmentBackgroundModel: {},
-    enrichmentCountingModel: {},
+    enrichmentBackgroundModel: '',
+    enrichmentCountingModel: '',
   },
 })
 @Injectable()

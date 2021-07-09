@@ -20,9 +20,9 @@ export class GenesBlockComponent implements AfterViewInit {
     this.store.selectOnce(GenesBlockComponent.genesBlockState).subscribe(state => {
       if (state.geneSymbols.length) {
         setTimeout(() => this.ngbNav.select('geneSymbols'));
-      } else if (state.geneSets.geneSet !== null) {
+      } else if (state.geneSet !== null) {
         setTimeout(() => this.ngbNav.select('geneSets'));
-      } else if (state.geneWeights.geneWeight !== null) {
+      } else if (state.geneWeights !== null) {
         setTimeout(() => this.ngbNav.select('geneWeights'));
       }
     });
@@ -32,15 +32,15 @@ export class GenesBlockComponent implements AfterViewInit {
     this.store.dispatch(new StateReset(GeneSymbolsState, GeneSetsState, GeneWeightsState));
   }
 
-  @Selector([GeneSymbolsState, GeneSetsState, GeneWeightsState])
+  @Selector([GeneSymbolsState, GeneSetsState.queryStateSelector, GeneWeightsState.queryStateSelector])
   static genesBlockState(
     geneSymbolsState: GeneSymbolsModel,
-    geneSetsState: GeneSetsModel,
-    geneWeightsState: GeneWeightsModel,
+    geneSetsQueryState,
+    geneWeightsState,
   ) {
     return {
       ...geneSymbolsState,
-      'geneSets': geneSetsState,
+      'geneSet': geneSetsQueryState,
       'geneWeights': geneWeightsState,
     }
   }

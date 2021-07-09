@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
+import { State, Action, StateContext, Selector } from '@ngxs/store';
 
 export class SetHistogramValues {
   static readonly type = '[Genotype] Set geneWeights histogram values';
@@ -38,5 +38,17 @@ export class GeneWeightsState {
   @Action(SetGeneWeight)
   setGeneWeight(ctx: StateContext<GeneWeightsModel>, action: SetGeneWeight) {
     ctx.patchState({ geneWeight: action.geneWeight });
+  }
+
+  @Selector([GeneWeightsState])
+  static queryStateSelector(geneWeightsState: GeneWeightsModel) {
+    if (geneWeightsState.geneWeight) {
+      return {
+        'weight': geneWeightsState.geneWeight['weight'],
+        'rangeStart': geneWeightsState.rangeStart,
+        'rangeEnd': geneWeightsState.rangeEnd,
+      }
+    }
+    return null;
   }
 }

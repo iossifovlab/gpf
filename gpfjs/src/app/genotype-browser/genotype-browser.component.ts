@@ -37,7 +37,6 @@ export class GenotypeBrowserComponent implements OnInit, OnChanges {
   @Select(GenotypeBrowserComponent.genotypeBrowserStateSelector) state$: Observable<any[]>;
 
   constructor(
-    private store: Store,
     private queryService: QueryService,
     readonly configService: ConfigService,
     private loadingService: FullscreenLoadingService,

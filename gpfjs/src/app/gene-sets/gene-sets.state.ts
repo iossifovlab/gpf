@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
+import { State, Action, StateContext, Selector } from '@ngxs/store';
 
 export class SetGeneSetsValues {
   static readonly type = '[Genotype] Set geneSets values';
@@ -29,5 +29,17 @@ export class GeneSetsState {
       geneSetsCollection: action.geneSetsValues['geneSetsCollection'],
       geneSet: action.geneSetsValues['geneSet'],
     });
+  }
+
+  @Selector([GeneSetsState])
+  static queryStateSelector(geneSetsState: GeneSetsModel) {
+    if (geneSetsState.geneSet) {
+      return {
+        'geneSet': geneSetsState.geneSet['name'],
+        'geneSetsCollection': geneSetsState.geneSetsCollection['name'],
+        'geneSetsTypes': geneSetsState.geneSetsTypes,
+      }
+    }
+    return null;
   }
 }
