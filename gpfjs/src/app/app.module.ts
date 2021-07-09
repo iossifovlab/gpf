@@ -179,6 +179,7 @@ import { SortingButtonsComponent } from './sorting-buttons/sorting-buttons.compo
 import { BnNgIdleService } from 'bn-ng-idle';
 import { AutismGeneProfileSingleViewWrapperComponent } from './autism-gene-profile-single-view-wrapper/autism-gene-profile-single-view-wrapper.component';
 import { NgxsModule } from '@ngxs/store';
+import { NgxsResetPluginModule } from 'ngxs-reset-plugin';
 import { VarianttypesState } from './varianttypes/varianttypes.state';
 import { EffecttypesState } from './effecttypes/effecttypes.state';
 import { GenderState } from './gender/gender.state';
@@ -419,6 +420,7 @@ const appRoutes: Routes = [
       GeneWeightsState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
       StudyFiltersBlockState, PersonFiltersState, GenomicScoresBlockState, PhenoToolMeasureState,
     ]),
+    NgxsResetPluginModule.forRoot(),
   ],
   providers: [
     CookieService,

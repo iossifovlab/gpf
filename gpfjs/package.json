@@ -47,6 +47,7 @@
     "ng2-search-filter": "^0.5.1",
     "ngx-cookie-service": "^3.0.4",
     "ngx-markdown": "^9.1.1",
+    "ngxs-reset-plugin": "^1.4.0",
     "oboe": "^2.1.5",
     "popper.js": "^1.16.1",
     "reflect-metadata": "^0.1.13",
