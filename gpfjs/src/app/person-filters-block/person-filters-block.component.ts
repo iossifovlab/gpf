@@ -3,6 +3,7 @@ import { Dataset } from '../datasets/datasets';
 import { Store, Selector } from '@ngxs/store';
 import { PersonIdsState } from 'app/person-ids/person-ids.state';
 import { PersonFiltersState } from 'app/person-filters/person-filters.state';
+import { StateReset } from 'ngxs-reset-plugin';
 
 
 @Component({
@@ -30,6 +31,10 @@ export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
         setTimeout(() => this.ngbNav.select('advanced'));
       }
     });
+  }
+
+  onNavChange() {
+    this.store.dispatch(new StateReset(PersonIdsState, PersonFiltersState));
   }
 
   @Selector([PersonIdsState, PersonFiltersState])

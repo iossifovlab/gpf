@@ -4,6 +4,7 @@ import { Dataset } from '../datasets/datasets';
 import { Store, Selector } from '@ngxs/store';
 import { FamilyIdsState } from 'app/family-ids/family-ids.state';
 import { PersonFiltersState } from 'app/person-filters/person-filters.state';
+import { StateReset } from 'ngxs-reset-plugin';
 
 @Component({
   selector: 'gpf-family-filters-block',
@@ -37,6 +38,10 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
         setTimeout(() => this.ngbNav.select('advanced'));
       }
     });
+  }
+
+  onNavChange() {
+    this.store.dispatch(new StateReset(FamilyIdsState, PersonFiltersState));
   }
 
   @Selector([FamilyIdsState, PersonFiltersState])

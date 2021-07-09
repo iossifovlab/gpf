@@ -1,8 +1,9 @@
 import { Component, Input, ViewChild, AfterViewInit } from '@angular/core';
 import { Store, Selector } from '@ngxs/store';
-import { GeneSymbolsState } from 'app/gene-symbols/gene-symbols.state';
-import { GeneSetsState } from 'app/gene-sets/gene-sets.state';
-import { GeneWeightsState } from 'app/gene-weights/gene-weights.state';
+import { GeneSymbolsState, GeneSymbolsModel } from 'app/gene-symbols/gene-symbols.state';
+import { GeneSetsState, GeneSetsModel } from 'app/gene-sets/gene-sets.state';
+import { GeneWeightsState, GeneWeightsModel } from 'app/gene-weights/gene-weights.state';
+import { StateReset } from 'ngxs-reset-plugin';
 
 @Component({
   selector: 'gpf-genes-block',
@@ -19,18 +20,28 @@ export class GenesBlockComponent implements AfterViewInit {
     this.store.selectOnce(GenesBlockComponent.genesBlockState).subscribe(state => {
       if (state.geneSymbols.length) {
         setTimeout(() => this.ngbNav.select('geneSymbols'));
-      } else if (state.geneSet !== null) {
+      } else if (state.geneSets.geneSet !== null) {
         setTimeout(() => this.ngbNav.select('geneSets'));
-      } else if (state.geneWeight !== null) {
+      } else if (state.geneWeights.geneWeight !== null) {
         setTimeout(() => this.ngbNav.select('geneWeights'));
       }
     });
   }
 
+  onNavChange() {
+    this.store.dispatch(new StateReset(GeneSymbolsState, GeneSetsState, GeneWeightsState));
+  }
+
   @Selector([GeneSymbolsState, GeneSetsState, GeneWeightsState])
   static genesBlockState(
-    geneSymbolsState, geneSetsState, geneWeightsState
+    geneSymbolsState: GeneSymbolsModel,
+    geneSetsState: GeneSetsModel,
+    geneWeightsState: GeneWeightsModel,
   ) {
-    return {...geneSymbolsState, ...geneSetsState, ...geneWeightsState};
+    return {
+      ...geneSymbolsState,
+      'geneSets': geneSetsState,
+      'geneWeights': geneWeightsState,
+    }
   }
 }

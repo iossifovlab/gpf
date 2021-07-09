@@ -25,6 +25,7 @@ export class VarianttypesComponent implements OnInit, OnChanges {
       if (state.variantTypes.length) {
         this.selectedVariantTypes = new Set(state.variantTypes);
       } else {
+        // save the default selected variant types to the state
         this.store.dispatch(new SetVariantTypes(this.selectedVariantTypes));
       }
     });

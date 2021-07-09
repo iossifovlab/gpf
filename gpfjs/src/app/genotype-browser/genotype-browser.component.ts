@@ -8,8 +8,13 @@ import { ConfigService } from '../config/config.service';
 import { DatasetsService } from '../datasets/datasets.service';
 import { Dataset, SelectorValue } from '../datasets/datasets';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
-import { Store, Select } from '@ngxs/store';
-import { GenotypeBlockState } from '../genotype-block/genotype-block.component';
+import { Store, Select, Selector } from '@ngxs/store';
+import { GenotypeBlockComponent } from '../genotype-block/genotype-block.component';
+import { GenesBlockComponent } from '../genes-block/genes-block.component';
+import { RegionsFilterState } from 'app/regions-filter/regions-filter.state';
+import { GenomicScoresBlockState } from 'app/genomic-scores-block/genomic-scores-block.state';
+import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-filters-block.component';
+import { PersonFiltersBlockComponent } from 'app/person-filters-block/person-filters-block.component';
 
 @Component({
   selector: 'gpf-genotype-browser',
@@ -29,7 +34,7 @@ export class GenotypeBrowserComponent implements OnInit, OnChanges {
   private genotypeBrowserState: Object;
   private loadingFinished: boolean;
 
-  @Select(GenotypeBlockState.genotypeBlockQueryState) state$: Observable<any[]>;
+  @Select(GenotypeBrowserComponent.genotypeBrowserStateSelector) state$: Observable<any[]>;
 
   constructor(
     private store: Store,
@@ -53,15 +58,37 @@ export class GenotypeBrowserComponent implements OnInit, OnChanges {
     this.datasetsService.setSelectedDatasetById(this.selectedDatasetId);
   }
 
-  getStateSelector() {
-    return GenotypeBlockState.genotypeBlockQueryState;
+  @Selector([
+    GenotypeBlockComponent.genotypeBlockQueryState,
+    GenesBlockComponent.genesBlockState,
+    RegionsFilterState,
+    GenomicScoresBlockState,
+    FamilyFiltersBlockComponent.familyFiltersBlockState,
+    PersonFiltersBlockComponent.personFiltersBlockState,
+  ])
+  static genotypeBrowserStateSelector(
+    genotypeBlockState,
+    genesBlockState,
+    regionsFilterState,
+    genomicScoresBlockState,
+    familyFiltersBlockState,
+    personFiltersBlockState,
+  ) {
+    return {
+      ...genotypeBlockState,
+      ...genesBlockState,
+      'regions': regionsFilterState['regionsFilters'],
+      ...genomicScoresBlockState,
+      ...familyFiltersBlockState,
+      ...personFiltersBlockState,
+    };
   }
 
   submitQuery() {
     this.loadingFinished = false;
     this.loadingService.setLoadingStart();
 
-    this.selectedDataset$.subscribe( selectedDataset => {
+    this.selectedDataset$.subscribe(selectedDataset => {
       this.genotypePreviewVariantsArray = null;
       this.genotypeBrowserState['datasetId'] = selectedDataset.id;
       this.legend = selectedDataset.peopleGroupConfig.getLegend(this.genotypeBrowserState['peopleGroup']);

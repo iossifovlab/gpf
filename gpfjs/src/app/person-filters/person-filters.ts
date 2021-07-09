@@ -56,7 +56,7 @@ export class PersonFilterState {
   ) {}
 
   isEmpty() {
-    return this.source === null || this.source.length === 0;
+    return this.source && this.source.length === 0;
   }
 }
 
