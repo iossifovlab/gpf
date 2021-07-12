@@ -50,6 +50,7 @@ def generate_agp(gpf_instance, gene_symbol, collections_gene_sets):
                     counts = current_counts[person_set]
 
                 counts[stat_id] = {
+                    "variants": {},
                     "count": 0,
                     "rate": 0
                 }
@@ -89,11 +90,16 @@ def add_variant_count(variant, agps, dataset_id, person_set, statistic_id):
     for gs in variant.effect_gene_symbols:
         if gs not in agps:
             continue
-        if statistic_id == "rare_lgds":
-            print("rare_lgds", variant)
 
         vc = agps[gs].variant_counts
-        vc[dataset_id][person_set][statistic_id]["count"] += 1
+        variants_stats = vc[dataset_id][person_set][statistic_id]["variants"]
+        variants_stats[variant.fvuid] = variant
+
+        # v = variant
+        # if v.position == 152171343:
+        #     print(100*"^")
+        #     print(person_set, statistic_id, v)
+        #     print(100*"^")
 
 
 def calculate_rates(instance, agps, config):
@@ -114,9 +120,25 @@ def calculate_rates(instance, agps, config):
 
                 for statistic in filters.statistics:
                     stat_id = statistic["id"]
+
                     stat = agp.variant_counts[dataset_id][set_name][stat_id]
-                    count = stat["count"]
+                    count = len(stat["variants"])
+                    stat["count"] = count
                     stat["rate"] = (count / children_count) * 1000
+                    # if stat_id == "rare_lgds":
+                    #     from pprint import pprint
+                    #     print(100*"=")
+                    #     print(stat_id)
+                    #     print(set_name)
+
+                    #     pprint(sorted(
+                    #         list(stat["variants"].values()),
+                    #         key=lambda v:
+                    #         f"{v.position:030d}:{v.family_id}"))
+                    #     print(80*"~")
+                    #     pprint(stat["variants"])
+
+                    #     print(100*"=")
 
 
 def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
@@ -131,6 +153,7 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
     for ps in filters.person_sets:
         pids = set(person_ids[dataset_id][ps.set_name])
         for statistic in filters.statistics:
+            dump = {}
             if statistic.category == "denovo" and not denovo_flag:
                 continue
             if statistic.category == "rare" and denovo_flag:
@@ -142,12 +165,15 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
             in_members = len(pids.intersection(members)) > 0
 
             do_count = do_count and in_members
+            dump[1] = do_count
 
             if statistic.get("effects"):
                 ets = set(expand_effect_types(statistic.effects))
                 in_effect_types = len(
                     ets.intersection(v.effect_types)) > 0
                 do_count = do_count and in_effect_types
+                dump[2] = do_count
+
             if statistic.get("scores"):
                 for score in statistic.scores:
                     score_name = score["name"]
@@ -163,12 +189,15 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
                     if score_max:
                         do_count = do_count and score_value <= score_max
 
+                dump[3] = do_count
+
             if statistic.get("category") == "rare":
                 aa = v.alt_alleles[0]
                 freq = aa.get_attribute("af_allele_freq")
 
                 if freq:
                     do_count = do_count and freq <= 1.0
+                dump[4] = do_count
 
             if statistic.get("variant_types"):
                 variant_types = {
@@ -177,6 +206,8 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
                 }
                 do_count = do_count and \
                     len(variant_types.intersection(v.variant_types))
+                dump[5] = do_count
+
             if statistic.get("roles"):
                 roles = {
                     Role.from_name(r)
@@ -185,6 +216,16 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
                 v_roles = set(v.alt_alleles[0].variant_in_roles)
                 do_count = do_count and \
                     len(v_roles.intersection(roles))
+                dump[6] = do_count
+
+            # if v.position == 152171343:
+            #     from pprint import pprint
+            #     print(100*"+")
+            #     print(ps.set_name, stat_id, do_count, v)
+            #     # for aa in v.alt_alleles:
+            #     #     print(aa.attributes)
+            #     pprint(dump)
+            #     print(100*"+")
             if do_count:
                 add_variant_count(
                     v, agps, dataset_id, ps.set_name, stat_id
@@ -419,6 +460,7 @@ def main(gpf_instance=None, argv=None):
                     genotype_data.query_variants(
                         genes=genes,
                         inheritance=[
+                            "not denovo and "
                             "not possible_denovo and not possible_omission",
                             "mendelian or missing"
                         ],
