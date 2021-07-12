@@ -9,6 +9,7 @@ import { Store, Select } from '@ngxs/store';
 import {
   SetPhenoToolMeasure, PhenoToolMeasureModel, PhenoToolMeasureState
 } from './pheno-tool-measure.state';
+import { switchMap } from 'rxjs/operators';
 
 interface Regression {
   display_name: string;
@@ -43,20 +44,13 @@ export class PhenoToolMeasureComponent implements OnInit {
 
   ngOnInit() {
     Observable.combineLatest(
-      this.store.selectOnce(state => state.inheritancetypesState),
-      this.measuresLoaded$)
-      .take(1)
+      this.store.selectOnce(PhenoToolMeasureState), this.measuresLoaded$).take(1)
       .subscribe(([state, measures]) => {
-        if (state.measureId && state.normalizeBy) {
+        if (state.measureId) {
           this.selectedMeasure = measures.find(m => m.name === state.measureId);
-          this.normalizeBy = state.normalizeBy
         }
+        this.normalizeBy = state.normalizeBy.length ? state.normalizeBy : [];
       });
-
-    this.state$.subscribe(state => {
-      // validate for errors
-      validate(this).then(errors => this.errors = errors.map(err => String(err)));
-    });
 
     this.datasetsService.getSelectedDataset().subscribe(dataset => {
       if (dataset.phenotypeData) {
@@ -66,6 +60,11 @@ export class PhenoToolMeasureComponent implements OnInit {
         this.regressions = {};
       }
     });
+
+    this.state$.subscribe(state => {
+      // validate for errors
+      validate(this).then(errors => this.errors = errors.map(err => String(err)));
+    });
   }
 
   get measure() {
@@ -74,16 +73,18 @@ export class PhenoToolMeasureComponent implements OnInit {
 
   set measure(value) {
     this.selectedMeasure = value;
-    this.normalizeBy = [];
+    if (this.selectedMeasure) {
+      this.normalizeBy = this.normalizeBy.filter(
+        (reg) => `${reg.instrument_name}.${reg.measure_name}` !== this.selectedMeasure?.name
+      );
+    }
     this.updateState();
   }
 
   updateState() {
-    if (this.selectedMeasure !== null) {
-      this.store.dispatch(new SetPhenoToolMeasure(
-        this.selectedMeasure.name, this.normalizeBy,
-      ))
-    }
+    this.store.dispatch(new SetPhenoToolMeasure(
+      this.selectedMeasure?.name, this.normalizeBy,
+    ))
   }
 
   measuresUpdate(measures: Array<ContinuousMeasure>) {

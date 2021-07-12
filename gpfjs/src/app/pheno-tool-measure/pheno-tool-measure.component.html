@@ -10,10 +10,9 @@
     <div class="col-lg-6">
       Normalized by:
       <div *ngFor="let reg of getRegressionNames()">
-          <label>
+          <label style="user-select: none">
               <input
                 #checkboxes
-                id = "{{ reg }}"
                 type="checkbox"
                 [checked]="isNormalizedBy(regressions[reg].measure_name)"
                 (change)="onNormalizeByChange(regressions[reg], $event);"
