@@ -7,8 +7,8 @@
 
       <div class="form-block" style="display: inline-flex;">
         <input [disabled]="disableQueryButtons" class="btn btn-md btn-primary" type="button" value="Enrichment Test" (click)="submitQuery()">
-        <gpf-share-query-button [stateSelector]="enrichmentToolStateSelector" [disabled]="disableQueryButtons" queryType="enrichment"></gpf-share-query-button>
-        <gpf-save-query [stateSelector]="enrichmentToolStateSelector" [disabled]="disableQueryButtons" queryType="enrichment"></gpf-save-query>
+        <gpf-share-query-button [disabled]="disableQueryButtons" queryType="enrichment"></gpf-share-query-button>
+        <gpf-save-query [disabled]="disableQueryButtons" queryType="enrichment"></gpf-save-query>
       </div>
       <gpf-enrichment-table [enrichmentResults]="enrichmentResults"></gpf-enrichment-table>
     </div>

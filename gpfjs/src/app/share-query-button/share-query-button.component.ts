@@ -12,7 +12,6 @@ import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 export class ShareQueryButtonComponent implements OnInit {
   @Input() queryType: string;
   @Input() disabled: boolean;
-  @Input() stateSelector;
   @ViewChild(NgbDropdown)
   dropdown: NgbDropdown;
 
@@ -38,10 +37,6 @@ export class ShareQueryButtonComponent implements OnInit {
     const datasetId = this.datasetsService.getSelectedDatasetId();
 
     this.buttonValue = 'Copy';
-    /* FIXME: Temporarily taking the whole state instead
-       of using the state selector until we find a way to
-       use a selector and keep the top-level state keys
-    */
     this.store.selectOnce(state => state).subscribe(state => {
       state['datasetId'] = datasetId;
       this.queryService.saveQuery(state, this.queryType)

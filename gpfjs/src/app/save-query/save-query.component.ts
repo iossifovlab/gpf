@@ -4,6 +4,7 @@ import { QueryService } from '../query/query.service';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { UsersService } from '../users/users.service';
 import { Store } from '@ngxs/store';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Component({
   selector: 'gpf-save-query',
@@ -14,7 +15,6 @@ export class SaveQueryComponent implements OnInit {
 
   @Input() queryType: string;
   @Input() disabled: boolean;
-  @Input() stateSelector;
 
   @ViewChild('nameInput') nameInputRef: ElementRef;
   @ViewChild('descInput') descInputRef: ElementRef;
@@ -25,6 +25,7 @@ export class SaveQueryComponent implements OnInit {
     private store: Store,
     private queryService: QueryService,
     private usersService: UsersService,
+    private datasetsService: DatasetsService,
     private changeDetectorRef: ChangeDetectorRef
   ) { }
 
@@ -33,7 +34,9 @@ export class SaveQueryComponent implements OnInit {
   }
 
   saveUserQuery(name: string, description: string) {
-    this.store.selectOnce(this.stateSelector).subscribe(state => {
+    const datasetId = this.datasetsService.getSelectedDatasetId();
+    this.store.selectOnce(state => state).subscribe(state => {
+    state['datasetId'] = datasetId;
      this.queryService.saveQuery(state, this.queryType)
        .take(1)
        .subscribe(response => {
