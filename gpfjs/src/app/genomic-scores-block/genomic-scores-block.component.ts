@@ -65,7 +65,7 @@ export class GenomicScoresBlockComponent implements OnInit {
   }
 
   trackById(index: number, data: any) {
-    return data.id;
+    return data.score.score;
   }
 
   addFilter(genomicScoreState: GenomicScoreState = null) {
