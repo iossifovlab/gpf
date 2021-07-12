@@ -250,8 +250,8 @@ export class GeneViewComponent implements OnInit {
     this.showTransmitted = true;
   }
 
-  getState(): Observable<object> {
-    /* FIXME const state = {
+  getState(): object {
+    const state = {
       'affectedStatus': Array.from(this.selectedAffectedStatus),
       'selectedEffectTypes': Array.from(this.selectedEffectTypes),
       'selectedVariantTypes': Array.from(this.selectedVariantTypes),
@@ -267,8 +267,7 @@ export class GeneViewComponent implements OnInit {
         [this.x.domain()[0], this.x.domain()[this.x.domain().length - 1]]
       );
     }
-    return this.validateAndGetState(state); */
-    return null;
+    return state;
   }
 
   enableIntronCondensing() {
