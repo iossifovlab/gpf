@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 import { Selector } from '@ngxs/store';
 
@@ -17,19 +17,11 @@ import { FamilyTypeFilterState, FamilyTypeFilterModel } from 'app/family-type-fi
   templateUrl: './genotype-block.component.html',
   styleUrls: ['./genotype-block.component.css'],
 })
-export class GenotypeBlockComponent implements OnChanges {
+export class GenotypeBlockComponent {
   @Input()
   dataset: Dataset;
 
-  inheritanceTypes: Set<string>;
-  selectedInheritanceTypes: Set<string>;
-
   constructor() { }
-
-  ngOnChanges() {
-    this.inheritanceTypes = new Set(this.dataset.genotypeBrowserConfig.inheritanceTypeFilter);
-    this.selectedInheritanceTypes = new Set(this.dataset.genotypeBrowserConfig.selectedInheritanceTypeFilterValues);
-  }
 
   @Selector([
     VarianttypesState, EffecttypesState, GenderState,

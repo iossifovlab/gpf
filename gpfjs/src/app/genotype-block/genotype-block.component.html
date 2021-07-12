@@ -5,11 +5,11 @@
 			<gpf-pedigree-selector [pedigrees]="dataset.peopleGroupConfig.pedigreeSelectors"></gpf-pedigree-selector>
 		</div>
 
-		<div *ngIf="true" class="col-lg-3">
+		<div *ngIf="dataset.genotypeBrowserConfig.hasPresentInChild" class="col-lg-3">
 			<gpf-present-in-child></gpf-present-in-child>
 		</div>
 
-		<div *ngIf="true" class="col-lg-3">
+		<div *ngIf="dataset.genotypeBrowserConfig.hasPresentInParent" class="col-lg-3">
 			<gpf-present-in-parent></gpf-present-in-parent>
 		</div>
 
@@ -30,17 +30,15 @@
       </gpf-varianttypes>
 		</div>
 
-		<div *ngIf="true" class="col-lg-3">
+		<div *ngIf="dataset.genotypeBrowserConfig.hasStudyTypes" class="col-lg-3">
 			<gpf-study-types></gpf-study-types>
     </div>
 
-		<gpf-family-type-filter></gpf-family-type-filter>
-
 		<div class="col-lg-3 panel-row">
 			<gpf-inheritancetypes
-        *ngIf="inheritanceTypes"
-				[inheritanceTypes]="inheritanceTypes"
-				[selectedValues]="selectedInheritanceTypes">
+        *ngIf="dataset.genotypeBrowserConfig.inheritanceTypeFilter.length"
+				[inheritanceTypes]="dataset.genotypeBrowserConfig.inheritanceTypeFilter"
+				[selectedValues]="dataset.genotypeBrowserConfig.selectedInheritanceTypeFilterValues">
 			</gpf-inheritancetypes>
 		</div>
 	</div>

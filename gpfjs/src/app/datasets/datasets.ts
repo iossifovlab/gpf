@@ -157,8 +157,8 @@ export class GenotypeBrowser {
       GenotypeBrowser.tableColumnsFromJson(json['table_columns']),
       PersonFilter.fromJson(json['person_filters']),
       PersonFilter.fromJson(json['family_filters']),
-      json['inheritance_type_filter'],
-      json['selected_inheritance_type_filter_values'],
+      new Set(json['inheritance_type_filter']),
+      new Set(json['selected_inheritance_type_filter_values']),
       new Set(json['variant_types']),
       new Set(json['selected_variant_types']),
       json['max_variants_count'],
@@ -179,8 +179,8 @@ export class GenotypeBrowser {
     readonly tableColumns: Array<Column | ColumnGroup>,
     readonly personFilters: Array<PersonFilter>,
     readonly familyFilters: Array<PersonFilter>,
-    readonly inheritanceTypeFilter: string[],
-    readonly selectedInheritanceTypeFilterValues: string[],
+    readonly inheritanceTypeFilter: Set<string>,
+    readonly selectedInheritanceTypeFilterValues: Set<string>,
     readonly variantTypes: Set<string>,
     readonly selectedVariantTypes: Set<string>,
     readonly maxVariantsCount: number,
@@ -323,4 +323,3 @@ export class DatasetDetails {
     readonly genome: string,
   ) { }
 }
-
