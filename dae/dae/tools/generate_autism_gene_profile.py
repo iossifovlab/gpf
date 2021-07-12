@@ -89,6 +89,9 @@ def add_variant_count(variant, agps, dataset_id, person_set, statistic_id):
     for gs in variant.effect_gene_symbols:
         if gs not in agps:
             continue
+        if statistic_id == "rare_lgds":
+            print("rare_lgds", variant)
+
         vc = agps[gs].variant_counts
         vc[dataset_id][person_set][statistic_id]["count"] += 1
 
@@ -116,7 +119,7 @@ def calculate_rates(instance, agps, config):
                     stat["rate"] = (count / children_count) * 1000
 
 
-def count_variant(v, dataset_id, agps, config, person_ids, variants_denovo):
+def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
     filters = config.datasets[dataset_id]
     members = set()
 
@@ -128,9 +131,9 @@ def count_variant(v, dataset_id, agps, config, person_ids, variants_denovo):
     for ps in filters.person_sets:
         pids = set(person_ids[dataset_id][ps.set_name])
         for statistic in filters.statistics:
-            if statistic.category == "denovo" and not variants_denovo:
+            if statistic.category == "denovo" and not denovo_flag:
                 continue
-            if statistic.category == "rare" and variants_denovo:
+            if statistic.category == "rare" and denovo_flag:
                 continue
 
             stat_id = statistic.id
@@ -156,9 +159,16 @@ def count_variant(v, dataset_id, agps, config, person_ids, variants_denovo):
                         do_count = False
 
                     if score_min:
-                        do_count = do_count and score_value > score_min
+                        do_count = do_count and score_value >= score_min
                     if score_max:
-                        do_count = do_count and score_value < score_max
+                        do_count = do_count and score_value <= score_max
+
+            if statistic.get("category") == "rare":
+                aa = v.alt_alleles[0]
+                freq = aa.get_attribute("af_allele_freq")
+
+                if freq:
+                    do_count = do_count and freq <= 1.0
 
             if statistic.get("variant_types"):
                 variant_types = {
@@ -182,7 +192,9 @@ def count_variant(v, dataset_id, agps, config, person_ids, variants_denovo):
 
 
 def fill_variant_counts(
-        variants_datasets, agps, config, person_ids, variants_denovo):
+        variants_datasets, agps, config, person_ids, denovo_flag):
+
+    seen = set()
     for dataset_id, variants in variants_datasets.items():
         logger.info(f"Counting variants in {dataset_id}")
 
@@ -193,28 +205,35 @@ def fill_variant_counts(
                 logger.info(
                     f"Counted {idx}/{variants_count} variants"
                 )
-
+            if v.fvuid in seen:
+                continue
             count_variant(
-                v, dataset_id, agps, config, person_ids, variants_denovo
+                v, dataset_id, agps, config, person_ids, denovo_flag
             )
+            seen.add(v.fvuid)
 
 
-def fill_variant_counts_rare(
-        variants_datasets, agps, config, person_ids):
-    for dataset_id, variants in variants_datasets.items():
-        logger.info(f"Counting variants in {dataset_id}")
+# def fill_variant_counts_rare(
+#         variants_datasets, agps, config, person_ids):
 
-        variants_count = len(variants)
+#     seen = set()
+#     for dataset_id, variants in variants_datasets.items():
+#         logger.info(f"Counting variants in {dataset_id}")
 
-        for idx, v in enumerate(variants, 1):
-            if idx % 25 == 0:
-                logger.info(
-                    f"Counted {idx}/{variants_count} variants"
-                )
+#         variants_count = len(variants)
 
-            count_variant(
-                v, dataset_id, agps, config, person_ids, True
-            )
+#         for idx, v in enumerate(variants, 1):
+#             if idx % 25 == 0:
+#                 logger.info(
+#                     f"Counted {idx}/{variants_count} variants"
+#                 )
+
+#             if v.fvuid in seen:
+#                 continue
+#             count_variant(
+#                 v, dataset_id, agps, config, person_ids, False
+#             )
+#             seen.add(v.fvuid)
 
 
 def main(gpf_instance=None, argv=None):
@@ -227,6 +246,10 @@ def main(gpf_instance=None, argv=None):
         "--gene-sets-genes",
         action="store_true",
         help="Generate AGPs only for genes contained in the config's gene sets"
+    )
+    parser.add_argument(
+        "--genes",
+        help="Comma separated list of genes to generate statistics for"
     )
     parser.add_argument("--drop", action="store_true")
 
@@ -275,7 +298,10 @@ def main(gpf_instance=None, argv=None):
     #     filter(lambda gs: gs["name"] in config.gene_sets, gene_sets)
     # )
     gene_symbols = set()
-    if args.gene_sets_genes:
+    if args.genes:
+        gene_symbols = [gs.strip() for gs in args.genes.split(",")]
+        gene_symbols = set(gene_symbols)
+    elif args.gene_sets_genes:
         for _, gs in collections_gene_sets:
             gene_symbols = gene_symbols.union(gs["syms"])
     else:
@@ -334,7 +360,7 @@ def main(gpf_instance=None, argv=None):
         for dataset_id, filters in config.datasets.items():
             genotype_data = gpf_instance.get_genotype_data(dataset_id)
             assert genotype_data is not None, dataset_id
-            if args.config_genes:
+            if args.gene_sets_genes or args.genes:
                 genes = gene_symbols
             else:
                 genes = None
@@ -353,7 +379,7 @@ def main(gpf_instance=None, argv=None):
         for dataset_id, filters in config.datasets.items():
             genotype_data = gpf_instance.get_genotype_data(dataset_id)
             assert genotype_data is not None, dataset_id
-            if args.config_genes:
+            if args.gene_sets_genes or args.genes:
                 genes = gene_symbols
             else:
                 genes = None
@@ -362,9 +388,8 @@ def main(gpf_instance=None, argv=None):
             for statistic in filters.statistics:
                 if statistic.category == "denovo":
                     continue
-                kwargs = {
-                    "roles": "prb and sib"
-                }
+                kwargs = dict()
+                kwargs["roles"] = "prb or sib"
 
                 if statistic.effects is not None:
                     kwargs["effect_types"] = \
@@ -393,7 +418,10 @@ def main(gpf_instance=None, argv=None):
                 rare_variants[dataset_id].extend(list(
                     genotype_data.query_variants(
                         genes=genes,
-                        inheritance=["mendelian", "missing", "unknown"],
+                        inheritance=[
+                            "not possible_denovo and not possible_omission",
+                            "mendelian or missing"
+                        ],
                         frequency_filter=[("af_allele_freq", (None, 1.0))],
                         **kwargs)
                 ))
