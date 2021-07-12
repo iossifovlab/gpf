@@ -108,7 +108,6 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     this.datasetsService.getDataset(this.selectedDatasetId).subscribe(dataset => {
       if (dataset.accessRights && this.route.snapshot.params.gene) {
         this.waitForGeneViewComponent().then(() => {
-          // this.stateRestoreService.pushNewState({'geneSymbols': [this.route.snapshot.params.gene]});
           this.submitGeneRequest([this.route.snapshot.params.gene]);
         });
       }

@@ -272,10 +272,14 @@ export class GeneViewComponent implements OnInit {
 
   enableIntronCondensing() {
     this.condenseIntrons = true;
+    this.setDefaultScale();
+    this.redraw();
   }
 
   disableIntronCondensing() {
     this.condenseIntrons = false;
+    this.setDefaultScale();
+    this.redraw();
   }
 
   drawDenovoIcons() {
