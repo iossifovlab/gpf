@@ -224,7 +224,7 @@ def main(gpf_instance=None, argv=None):
     default_dbfile = os.path.join(os.getenv("DAE_DB_DIR", "./"), "agpdb")
     parser.add_argument("--dbfile", default=default_dbfile)
     parser.add_argument(
-        "--config-genes",
+        "--gene-sets-genes",
         action="store_true",
         help="Generate AGPs only for genes contained in the config's gene sets"
     )
@@ -275,7 +275,7 @@ def main(gpf_instance=None, argv=None):
     #     filter(lambda gs: gs["name"] in config.gene_sets, gene_sets)
     # )
     gene_symbols = set()
-    if args.config_genes:
+    if args.gene_sets_genes:
         for _, gs in collections_gene_sets:
             gene_symbols = gene_symbols.union(gs["syms"])
     else:
