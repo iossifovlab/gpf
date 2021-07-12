@@ -26,8 +26,8 @@ function main() {
   local clobber="${options["clobber"]}"
   local build_no="${options["build_no"]}"
 
-  libmain_init gpfjs gpfjs
-  libmain_init_build_env clobber:"$clobber" preset:"$preset" build_no:"$build_no" seqpipe-containers
+  libmain_init iossifovlab.gpfjs gpfjs
+  libmain_init_build_env clobber:"$clobber" preset:"$preset" build_no:"$build_no" seqpipe.seqpipe-containers
   libmain_save_build_env_on_exit
   libbuild_init stage:"$stage" registry.seqpipe.org
 
