@@ -25,9 +25,9 @@ export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     this.store.selectOnce(PersonFiltersBlockComponent.personFiltersBlockState).subscribe(state => {
-      if (state.personIds.length) {
+      if (state['personIds']) {
         setTimeout(() => this.ngbNav.select('personIds'));
-      } else if (state.personFilters.length) {
+      } else if (state['personFilters']) {
         setTimeout(() => this.ngbNav.select('advanced'));
       }
     });
@@ -39,6 +39,13 @@ export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
 
   @Selector([PersonIdsState, PersonFiltersState])
   static personFiltersBlockState(personIdsState, personFiltersState) {
-    return {...personIdsState, ...personFiltersState};
+    const res = {};
+    if (personIdsState.personIds.length) {
+      res['personIds'] = personIdsState.personIds;
+    }
+    if (personFiltersState.personFilters.length) {
+      res['personFilters'] = personFiltersState.personFilters;
+    }
+    return res;
   }
 }

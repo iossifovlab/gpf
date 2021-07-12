@@ -32,9 +32,9 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     this.store.selectOnce(FamilyFiltersBlockComponent.familyFiltersBlockState).subscribe(state => {
-      if (state.familyIds.length) {
+      if (state['familyIds']) {
         setTimeout(() => this.ngbNav.select('familyIds'));
-      } else if (state.familyFilters.length) {
+      } else if (state['familyFilters']) {
         setTimeout(() => this.ngbNav.select('advanced'));
       }
     });
@@ -46,6 +46,13 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
 
   @Selector([FamilyIdsState, PersonFiltersState])
   static familyFiltersBlockState(familyIdsState, personFiltersState) {
-    return {...familyIdsState, ...personFiltersState};
+    const res = {};
+    if (familyIdsState.familyIds.length) {
+      res['familyIds'] = familyIdsState.familyIds;
+    }
+    if (personFiltersState.familyFilters.length) {
+      res['familyFilters'] = personFiltersState.familyFilters;
+    }
+    return res;
   }
 }

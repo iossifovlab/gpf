@@ -73,14 +73,17 @@ export class GenotypeBrowserComponent implements OnInit, OnChanges {
     familyFiltersBlockState,
     personFiltersBlockState,
   ) {
-    return {
+    const res = {
       ...genotypeBlockState,
       ...genesBlockState,
-      'regions': regionsFilterState['regionsFilters'],
       ...genomicScoresBlockState,
       ...familyFiltersBlockState,
       ...personFiltersBlockState,
     };
+    if (regionsFilterState['regionsFilters'].length) {
+      res['regions'] = regionsFilterState['regionsFilters'];
+    }
+    return res;
   }
 
   submitQuery() {
