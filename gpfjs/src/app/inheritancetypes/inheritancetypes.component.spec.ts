@@ -1,85 +1,77 @@
+import { NO_ERRORS_SCHEMA } from '@angular/compiler';
 import { Component, ViewChild } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { NgxsModule } from '@ngxs/store';
+import { CheckboxListComponent } from 'app/checkbox-list/checkbox-list.component';
 import { of } from 'rxjs';
 
 import { ErrorsAlertComponent } from '../errors-alert/errors-alert.component';
 import { InheritancetypesComponent } from './inheritancetypes.component';
-
-
-@Component({
-  template: `
-    <gpf-inheritancetypes #inheritancetypesdom
-      [inheritanceTypeFilter]="inheritanceTypesSample"
-      [selectedInheritanceTypeFilterValues]="selectedInheritanceTypesSample"
-    >
-    </gpf-inheritancetypes>`
-})
-class InheritancetypesHostComponent {
-  @ViewChild('inheritancetypesdom')
-  public inheritanceTypesComponent: InheritancetypesComponent;
-
-  inheritanceTypesSample: Array<string> = ['mendelian', 'denovo', 'reference', '1234nonexistent'];
-  selectedInheritanceTypesSample: Array<string> = ['denovo'];
-}
-
+import { SetInheritanceTypes } from './inheritancetypes.state';
 
 describe('InheritancetypesComponent', () => {
-  let hostComponent: InheritancetypesHostComponent;
-  let hostFixture: ComponentFixture<InheritancetypesHostComponent>;
+  let component: InheritancetypesComponent;
+  let fixture: ComponentFixture<InheritancetypesComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [
         ErrorsAlertComponent,
         InheritancetypesComponent,
-        InheritancetypesHostComponent,
+        CheckboxListComponent
       ],
+      imports: [NgxsModule.forRoot([]) ],
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    hostFixture = TestBed.createComponent(InheritancetypesHostComponent);
-    hostComponent = hostFixture.componentInstance;
-    hostFixture.detectChanges();
+    fixture = TestBed.createComponent(InheritancetypesComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
   });
 
   it('should create', () => {
-    expect(hostComponent).toBeTruthy();
+    expect(component).toBeTruthy();
   });
 
-  it('should fill the inheritance type sets correctly', () => {
-    let available = hostComponent.inheritanceTypesComponent.inheritanceTypes.available;
-    let selected = hostComponent.inheritanceTypesComponent.inheritanceTypes.selected;
-    expect(available).toEqual(new Set(['mendelian', 'denovo', 'reference', '1234nonexistent']));
-    expect(selected).toEqual(new Set(['denovo']));
+  it('should handle selected values input and/or restore state', () => {
+    let dispatchSpy;
+
+    component['store'] = {
+      selectOnce(f) {
+        return of({inheritanceTypes: ['value1', 'value2']});
+      },
+      dispatch(set) {}
+    } as any;
+    dispatchSpy = spyOn(component['store'], 'dispatch');
+    component.ngOnChanges();
+    expect(component.selectedValues).toEqual(new Set(['value1', 'value2']));
+    expect(dispatchSpy).not.toHaveBeenCalled();
+
+    component.selectedValues = new Set(['value3']);
+    component['store'] = {
+      selectOnce(f) {
+        return of({inheritanceTypes: []});
+      },
+      dispatch(set) {}
+    } as any;
+    dispatchSpy = spyOn(component['store'], 'dispatch');
+    component.ngOnChanges();
+    expect(component.selectedValues).toEqual(new Set(['value3']));
+    expect(dispatchSpy).toHaveBeenCalled();
+
   });
 
-  it('should create the appropriate checkboxes with appropriate display names', () => {
-      const textSelect = hostFixture.nativeElement.innerText;
-      const checkboxes = hostFixture.debugElement.children[0].queryAll((el) => el.nativeElement.type == 'checkbox');
-      expect(checkboxes.length).toBe(4);
-      expect(textSelect).toEqual(jasmine.stringMatching('Mendelian'));
-      expect(textSelect).toEqual(jasmine.stringMatching('Denovo'));
-      expect(textSelect).toEqual(jasmine.stringMatching('Reference'));
-      expect(textSelect).toEqual(jasmine.stringMatching('1234nonexistent'));
-  });
+  it('should update variant types', () => {
+    component.selectedValues = undefined;
+    component['store'] = { dispatch(set) {} } as any;
+    const dispatchSpy = spyOn(component['store'], 'dispatch');
+    const mockSet = new Set(['value1', 'value2', 'value3']);
 
-  it('should select the checkboxes for the default selected inheritance types', () => {
-      const labels = hostFixture.debugElement.children[0].nativeElement.getElementsByTagName('label');
+    component.updateInheritanceTypes(mockSet);
 
-      let denovoLabel = null;
-      for (let label of labels) {
-        if (label.innerText.indexOf('Denovo') != -1) {
-          denovoLabel = label;
-          break;
-        }
-      }
-
-      expect(denovoLabel).toBeTruthy();
-      expect(denovoLabel.children.length).toEqual(1);
-      expect(denovoLabel.children[0]).toBeTruthy();
-      expect(denovoLabel.children[0].type).toEqual('checkbox');
-      expect(denovoLabel.children[0].checked).toBe(true);
+    expect(component.selectedValues).toEqual(mockSet);
+    expect(dispatchSpy).toHaveBeenCalledOnceWith(new SetInheritanceTypes(mockSet));
   });
 });

@@ -2,7 +2,11 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { StudyTypesComponent } from './study-types.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
+// tslint:disable-next-line:import-blacklist
 import { of } from 'rxjs';
+import { NgxsModule } from '@ngxs/store';
+import { SetStudyTypes } from './study-types.state';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 describe('StudyTypesComponent', () => {
   let component: StudyTypesComponent;
@@ -11,6 +15,9 @@ describe('StudyTypesComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [StudyTypesComponent, ErrorsAlertComponent],
+      providers: [],
+      imports: [ NgxsModule.forRoot([]) ],
+      schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();
   }));
@@ -18,6 +25,12 @@ describe('StudyTypesComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(StudyTypesComponent);
     component = fixture.componentInstance;
+    component['store'] = {
+      selectOnce(f) {
+        return of({studyTypes: ['value1', 'value2']});
+      },
+      dispatch(set) {}
+    } as any;
     fixture.detectChanges();
   });
 
@@ -25,95 +38,20 @@ describe('StudyTypesComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should initialize', () => {
-    const getStateSpy = spyOn(component['stateRestoreService'], 'getState');
-    const selectNoneSpy = spyOn(component, 'selectNone').and.callThrough();
-
-    getStateSpy.and.returnValue(of({studyTypes: undefined}));
+  it('should restore state on initialization', () => {
     component.ngOnInit();
-    expect(selectNoneSpy).toHaveBeenCalledTimes(0);
-
-    getStateSpy.and.returnValue(of({studyTypes: ['we']}));
-    component.ngOnInit();
-    expect(selectNoneSpy).toHaveBeenCalledTimes(1);
-    expect(component.studyTypes.we).toBeTrue();
-    expect(component.studyTypes.tg).toBeFalse();
-    expect(component.studyTypes.wg).toBeFalse();
-
-    getStateSpy.and.returnValue(of({studyTypes: ['tg']}));
-    component.ngOnInit();
-    expect(selectNoneSpy).toHaveBeenCalledTimes(2);
-    expect(component.studyTypes.we).toBeFalse();
-    expect(component.studyTypes.tg).toBeTrue();
-    expect(component.studyTypes.wg).toBeFalse();
-
-    getStateSpy.and.returnValue(of({studyTypes: ['wg']}));
-    component.ngOnInit();
-    expect(selectNoneSpy).toHaveBeenCalledTimes(3);
-    expect(component.studyTypes.we).toBeFalse();
-    expect(component.studyTypes.tg).toBeFalse();
-    expect(component.studyTypes.wg).toBeTrue();
-
-    getStateSpy.and.returnValue(of({studyTypes: ['we', 'tg', 'wg']}));
-    component.ngOnInit();
-    expect(selectNoneSpy).toHaveBeenCalledTimes(4);
-    expect(component.studyTypes.we).toBeTrue();
-    expect(component.studyTypes.tg).toBeTrue();
-    expect(component.studyTypes.wg).toBeTrue();
+    expect(component.selectedValues).toEqual(new Set(['value1', 'value2']));
   });
 
-  it('should select all', () => {
-    component.studyTypes.tg = false;
-    component.studyTypes.we = false;
-    component.studyTypes.wg = false;
+  it('should update variant types', () => {
+    component.selectedValues = undefined;
+    component['store'] = { dispatch(set) {} } as any;
+    const dispatchSpy = spyOn(component['store'], 'dispatch');
+    const mockSet = new Set(['value1', 'value2', 'value3']);
 
-    component.selectAll();
+    component.updateStudyTypes(mockSet);
 
-    expect(component.studyTypes.we).toBeTrue();
-    expect(component.studyTypes.tg).toBeTrue();
-    expect(component.studyTypes.wg).toBeTrue();
-  });
-
-  it('should select none', () => {
-    component.studyTypes.tg = true;
-    component.studyTypes.we = true;
-    component.studyTypes.wg = true;
-
-    component.selectNone();
-
-    expect(component.studyTypes.we).toBeFalse();
-    expect(component.studyTypes.tg).toBeFalse();
-    expect(component.studyTypes.wg).toBeFalse();
-  });
-
-  it('should check study types value', () => {
-    component.selectNone();
-
-    component.studyTypesCheckValue('abcd', true);
-    expect(component.studyTypes.we).toBeFalse();
-    expect(component.studyTypes.tg).toBeFalse();
-    expect(component.studyTypes.wg).toBeFalse();
-
-    component.studyTypesCheckValue('we', true);
-    expect(component.studyTypes.we).toBeTrue();
-    component.studyTypesCheckValue('we', false);
-    expect(component.studyTypes.we).toBeFalse();
-
-    component.studyTypesCheckValue('tg', true);
-    expect(component.studyTypes.tg).toBeTrue();
-    component.studyTypesCheckValue('tg', false);
-    expect(component.studyTypes.tg).toBeFalse();
-
-    component.studyTypesCheckValue('wg', true);
-    expect(component.studyTypes.wg).toBeTrue();
-    component.studyTypesCheckValue('wg', false);
-    expect(component.studyTypes.wg).toBeFalse();
-  });
-
-  it('should get state', () => {
-    component.studyTypes = {we: true, tg: true, wg: true};
-    component.getState().take(1).subscribe(state => expect(state).toEqual({
-      studyTypes: [ 'we', 'tg', 'wg' ]
-    }));
+    expect(component.selectedValues).toEqual(mockSet);
+    expect(dispatchSpy).toHaveBeenCalledOnceWith(new SetStudyTypes(mockSet));
   });
 });

@@ -9,7 +9,9 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 // tslint:disable-next-line:import-blacklist
 import { of } from 'rxjs';
-
+import { NgxsModule, StateStream, Store } from '@ngxs/store';
+import { CheckboxListComponent } from 'app/checkbox-list/checkbox-list.component';
+import { SetVariantTypes } from './varianttypes.state';
 
 describe('VarianttypesComponent', () => {
   let component: VarianttypesComponent;
@@ -17,9 +19,13 @@ describe('VarianttypesComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [VarianttypesComponent, ErrorsAlertComponent],
-      providers: [DatasetsService, ConfigService, UsersService],
-      imports: [HttpClientTestingModule, RouterTestingModule]
+      declarations: [VarianttypesComponent, ErrorsAlertComponent, CheckboxListComponent],
+      providers: [
+        DatasetsService,
+        ConfigService,
+        UsersService,
+      ],
+      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([])]
     })
       .compileComponents();
   }));
@@ -34,69 +40,43 @@ describe('VarianttypesComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should initialize', () => {
-    const getStateSpy = spyOn(component['stateRestoreService'], 'getState');
+  it('should handle selected values input and/or restore state', () => {
+    let dispatchSpy;
 
-    getStateSpy.and.returnValue(of({}));
-    component.ngOnInit();
-    expect(component.selectedVariantTypes).toEqual(new Set());
+    component['store'] = {
+      selectOnce(f) {
+        return of({variantTypes: ['value1', 'value2']});
+      },
+      dispatch(set) {}
+    } as any;
+    dispatchSpy = spyOn(component['store'], 'dispatch');
+    component.ngOnChanges();
+    expect(component.selectedVariantTypes).toEqual(new Set(['value1', 'value2']));
+    expect(dispatchSpy).not.toHaveBeenCalled();
 
-    getStateSpy.and.returnValue(of({variantTypes: ['fakeVariantTypes']}));
-    component.ngOnChanges({});
-    expect(component.selectedVariantTypes).toEqual(new Set(['fakeVariantTypes']));
+    component.selectedVariantTypes = new Set(['value3']);
+    component['store'] = {
+      selectOnce(f) {
+        return of({variantTypes: []});
+      },
+      dispatch(set) {}
+    } as any;
+    dispatchSpy = spyOn(component['store'], 'dispatch');
+    component.ngOnChanges();
+    expect(component.selectedVariantTypes).toEqual(new Set(['value3']));
+    expect(dispatchSpy).toHaveBeenCalled();
+
   });
 
-  it('should select all', () => {
-    const mockVariantTypes = new Set(['fakeVariantType1', 'fakeVariantType2']);
-    component.variantTypes = mockVariantTypes;
+  it('should update variant types', () => {
+    component.selectedVariantTypes = undefined;
+    component['store'] = { dispatch(set) {} } as any;
+    const dispatchSpy = spyOn(component['store'], 'dispatch');
+    const mockSet = new Set(['value1', 'value2', 'value3']);
 
-    component.selectAll();
-    expect(component.selectedVariantTypes).toEqual(mockVariantTypes);
-  });
+    component.updateVariantTypes(mockSet);
 
-  it('should select none', () => {
-    component.selectNone();
-    expect(component.selectedVariantTypes).toEqual(new Set());
-  });
-
-
-  it('should check variant types value', () => {
-    component.selectedVariantTypes = new Set();
-
-    component.variantTypesCheckValue('abcd', false);
-    expect(component.selectedVariantTypes).toEqual(new Set([]));
-
-    component.variantTypesCheckValue('sub', false);
-    expect(component.selectedVariantTypes).toEqual(new Set(['sub']));
-    component.variantTypesCheckValue('ins', false);
-    expect(component.selectedVariantTypes).toEqual(new Set(['sub', 'ins']));
-    component.variantTypesCheckValue('del', false);
-    expect(component.selectedVariantTypes).toEqual(new Set(['sub', 'ins', 'del']));
-    component.variantTypesCheckValue('CNV', false);
-    expect(component.selectedVariantTypes).toEqual(new Set(['sub', 'ins', 'del', 'CNV']));
-    component.variantTypesCheckValue('complex', false);
-    expect(component.selectedVariantTypes).toEqual(new Set(['sub', 'ins', 'del', 'CNV', 'complex']));
-    component.variantTypesCheckValue('TR', false);
-    expect(component.selectedVariantTypes).toEqual(new Set(['sub', 'ins', 'del', 'CNV', 'complex', 'TR']));
-
-    component.variantTypesCheckValue('sub', true);
-    expect(component.selectedVariantTypes).toEqual(new Set(['ins', 'del', 'CNV', 'complex', 'TR']));
-    component.variantTypesCheckValue('ins', true);
-    expect(component.selectedVariantTypes).toEqual(new Set(['del', 'CNV', 'complex', 'TR']));
-    component.variantTypesCheckValue('del', true);
-    expect(component.selectedVariantTypes).toEqual(new Set(['CNV', 'complex', 'TR']));
-    component.variantTypesCheckValue('CNV', true);
-    expect(component.selectedVariantTypes).toEqual(new Set(['complex', 'TR']));
-    component.variantTypesCheckValue('complex', true);
-    expect(component.selectedVariantTypes).toEqual(new Set(['TR']));
-    component.variantTypesCheckValue('TR', true);
-    expect(component.selectedVariantTypes).toEqual(new Set([]));
-  });
-
-  it('should get state', () => {
-    component.selectedVariantTypes = new Set(['fakeVariantType1', 'fakeVariantType2']);
-    component.getState().take(1).subscribe(state =>
-      expect(state).toEqual({ variantTypes: [ 'fakeVariantType1', 'fakeVariantType2' ] })
-    );
+    expect(component.selectedVariantTypes).toEqual(mockSet);
+    expect(dispatchSpy).toHaveBeenCalledOnceWith(new SetVariantTypes(mockSet));
   });
 });
