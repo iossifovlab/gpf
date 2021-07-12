@@ -27,7 +27,7 @@ export class GenomicScoresBlockComponent extends QueryStateWithErrorsProvider im
   }
 
   trackById(index: number, data: any) {
-    return data.id;
+    return data.score.score;
   }
 
   addFilter(genomicScoreState: GenomicScoreState = null) {
