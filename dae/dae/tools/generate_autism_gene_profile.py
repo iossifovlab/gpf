@@ -242,7 +242,7 @@ def fill_variant_counts(
         variants_count = len(variants)
 
         for idx, v in enumerate(variants, 1):
-            if idx % 25 == 0:
+            if idx % 100 == 0:
                 logger.info(
                     f"Counted {idx}/{variants_count} variants"
                 )
