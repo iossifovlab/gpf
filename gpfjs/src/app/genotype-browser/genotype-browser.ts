@@ -9,6 +9,7 @@ export class BrowserQueryFilter {
     private variantTypes: string[],
     private genomicScores: GenomicScore[],
     private presentInParent: PresentInParent,
+    private presentInChild: string[],
   ) { }
 }
 

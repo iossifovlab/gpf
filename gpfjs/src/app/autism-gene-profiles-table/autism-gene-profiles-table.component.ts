@@ -67,7 +67,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     intron: ['Intron'],
     missense: ['Missense'],
   };
-  presentInParentValues = ['father only', 'mother only', 'mother and father', 'neither'];
 
   @HostListener('window:scroll', ['$event'])
   onWindowScroll() {
@@ -529,12 +528,16 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
       );
     }
 
+    const presentInParentRareValues = ['father only', 'mother only', 'mother and father'];
+    const presentInChildRareValues = ['proband only', 'proband and sibling', 'sibling only'];
     let presentInParent: PresentInParent;
+    let presentInChild: string[];
     if (statistic.category === 'rare') {
       presentInParent = new PresentInParent(
-        this.presentInParentValues,
+        presentInParentRareValues,
         new PresentInParentRarity(undefined, 1, undefined),
       );
+      presentInChild = presentInChildRareValues;
     }
 
     const browserQueryFilter = new BrowserQueryFilter(
@@ -546,7 +549,8 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
       ['we'],
       variantTypes,
       genomicScores,
-      presentInParent
+      presentInParent,
+      presentInChild,
     );
 
     this.queryService.saveQuery(browserQueryFilter, 'genotype')
