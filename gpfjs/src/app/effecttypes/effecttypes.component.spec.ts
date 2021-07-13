@@ -1,12 +1,13 @@
 /* tslint:disable:no-unused-variable */
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
-import { DebugElement, NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 import { EffecttypesComponent } from './effecttypes.component';
 import { EffecttypesColumnComponent } from './effecttypes-column.component';
-import { of } from 'rxjs';
 import { ALL, CODING, LGDS, NONSYNONYMOUS, UTRS } from './effecttypes';
+import { NgxsModule } from '@ngxs/store';
+import { of } from 'rxjs';
+import { AddEffectType, RemoveEffectType, SetEffectTypes } from './effecttypes.state';
 
 describe('EffecttypesComponent', () => {
   let component: EffecttypesComponent;
@@ -18,6 +19,7 @@ describe('EffecttypesComponent', () => {
         EffecttypesComponent,
         EffecttypesColumnComponent,
       ],
+      imports: [NgxsModule.forRoot([]) ],
       schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();
@@ -26,6 +28,12 @@ describe('EffecttypesComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(EffecttypesComponent);
     component = fixture.componentInstance;
+    component['store'] = {
+      selectOnce(f) {
+        return of({effectTypes: ['value1', 'value2', 'value3']});
+      },
+      dispatch(set) {}
+    } as any;
     fixture.detectChanges();
   });
 
@@ -34,37 +42,26 @@ describe('EffecttypesComponent', () => {
   });
 
   it('should initialize', () => {
-    component.effectTypes.selected = undefined;
-    const selectInitialValuesSpy = spyOn(component, 'selectInitialValues').and.callThrough();
-    const getStateSpy = spyOn(component['stateRestoreService'], 'getState');
-    const selectEffectTypesSetSpy = spyOn(component, 'selectEffectTypesSet').and.callThrough();
+    const onEffectTypeChangeSpy = spyOn(component, 'onEffectTypeChange');
+    const selectInitialValuesSpy = spyOn(component, 'selectInitialValues');
 
-    getStateSpy.and.returnValue(of({effectTypes: undefined}));
     component.ngOnInit();
+    expect(onEffectTypeChangeSpy.calls.allArgs()).toEqual([
+      [{ checked: true, effectType: 'value1' }],
+      [{ checked: true, effectType: 'value2' }],
+      [{ checked: true, effectType: 'value3' }]
+    ]);
+    expect(selectInitialValuesSpy).not.toHaveBeenCalled();
+
+    component['store'] = {
+      selectOnce(f) {
+        return of({effectTypes: []});
+      },
+      dispatch(set) {}
+    } as any;
+    component.ngOnInit();
+    expect(onEffectTypeChangeSpy).toHaveBeenCalledTimes(3);
     expect(selectInitialValuesSpy).toHaveBeenCalledTimes(1);
-    expect(getStateSpy).toHaveBeenCalledTimes(1);
-    expect(selectEffectTypesSetSpy.calls.allArgs()).toEqual([
-      [['Nonsense', 'Frame-shift', 'Splice-site', 'No-frame-shift-newStop' ]],
-    ]);
-    expect(component.effectTypes.selected).toEqual([
-      'Nonsense',
-      'Frame-shift',
-      'Splice-site',
-      'No-frame-shift-newStop'
-    ]);
-
-    getStateSpy.and.returnValue(of({effectTypes: ['fakeEffectType']}));
-    component.ngOnInit();
-    expect(selectInitialValuesSpy).toHaveBeenCalledTimes(2);
-    expect(getStateSpy).toHaveBeenCalledTimes(2);
-    expect(selectEffectTypesSetSpy.calls.allArgs()).toEqual([
-      [['Nonsense', 'Frame-shift', 'Splice-site', 'No-frame-shift-newStop']],
-      [['Nonsense', 'Frame-shift', 'Splice-site', 'No-frame-shift-newStop']],
-      [['fakeEffectType']]
-    ]);
-    expect(component.effectTypes.selected).toEqual([
-      'fakeEffectType'
-    ]);
   });
 
   it('should initialize button groups', () => {
@@ -73,7 +70,7 @@ describe('EffecttypesComponent', () => {
     const expectedMap = new Map();
     expectedMap
       .set('ALL', ALL)
-      .set('NONE', [])
+      .set('NONE', new Set())
       .set('LGDS', LGDS)
       .set('CODING', CODING)
       .set('NONSYNONYMOUS', NONSYNONYMOUS)
@@ -81,34 +78,48 @@ describe('EffecttypesComponent', () => {
     expect(component.effectTypesButtons).toEqual(expectedMap);
   });
 
-  it('should effect type change', () => {
-    component.effectTypes.selected = [];
-    component.onEffectTypeChange({checked: true, effectType: 'effectType1'});
-    expect(component.effectTypes.selected).toEqual(['effectType1']);
+  it('should update variant types', () => {
+    component.effectTypes.selected = undefined;
+    component['store'] = { dispatch(set) {} } as any;
+    const dispatchSpy = spyOn(component['store'], 'dispatch');
+    const mockSet = new Set(['value1', 'value2', 'value3']);
 
-    component.onEffectTypeChange({checked: true, effectType: 'effectType2'});
-    expect(component.effectTypes.selected).toEqual(['effectType1', 'effectType2']);
+    component.setEffectTypes(mockSet);
 
-    component.onEffectTypeChange({checked: false, effectType: 'effectType1'});
-    expect(component.effectTypes.selected).toEqual(['effectType2']);
-
-    component.onEffectTypeChange({checked: false, effectType: 'effectType1'});
-    expect(component.effectTypes.selected).toEqual(['effectType2']);
-
-    component.onEffectTypeChange({checked: true, effectType: 'effectType2'});
-    expect(component.effectTypes.selected).toEqual(['effectType2']);
-
-    component.onEffectTypeChange({checked: false, effectType: 'effectType2'});
-    expect(component.effectTypes.selected).toEqual([]);
-
-    component.onEffectTypeChange({checked: false, effectType: 'effectType2'});
-    expect(component.effectTypes.selected).toEqual([]);
+    expect(component.effectTypes.selected).toEqual(mockSet);
+    expect(dispatchSpy).toHaveBeenCalledOnceWith(new SetEffectTypes(mockSet));
   });
 
-  it('should get state', () => {
-    component.effectTypes = {selected: ['fakeEffectType1', 'fakeEffectType2']};
-    component.getState().take(1).subscribe(state => expect(state).toEqual(
-      {effectTypes: [ 'fakeEffectType1', 'fakeEffectType2' ]}
-    ));
+  it('should effect type change', () => {
+    const dispatchSpy = spyOn(component['store'], 'dispatch');
+    component.effectTypes.selected = new Set();
+
+    component.onEffectTypeChange({checked: true, effectType: 'effectType1'});
+    expect(component.effectTypes.selected).toEqual(new Set(['effectType1']));
+
+    component.onEffectTypeChange({checked: true, effectType: 'effectType2'});
+    expect(component.effectTypes.selected).toEqual(new Set(['effectType1', 'effectType2']));
+
+    component.onEffectTypeChange({checked: false, effectType: 'effectType1'});
+    expect(component.effectTypes.selected).toEqual(new Set(['effectType2']));
+
+    component.onEffectTypeChange({checked: false, effectType: 'effectType1'});
+    expect(component.effectTypes.selected).toEqual(new Set(['effectType2']));
+
+    component.onEffectTypeChange({checked: true, effectType: 'effectType2'});
+    expect(component.effectTypes.selected).toEqual(new Set(['effectType2']));
+
+    component.onEffectTypeChange({checked: false, effectType: 'effectType2'});
+    expect(component.effectTypes.selected).toEqual(new Set([]));
+
+    component.onEffectTypeChange({checked: false, effectType: 'effectType2'});
+    expect(component.effectTypes.selected).toEqual(new Set([]));
+
+    expect(dispatchSpy.calls.allArgs()).toEqual([
+      [new AddEffectType('effectType1')],
+      [new AddEffectType('effectType2')],
+      [new RemoveEffectType('effectType1')],
+      [new RemoveEffectType('effectType2')]
+    ]);
   });
 });

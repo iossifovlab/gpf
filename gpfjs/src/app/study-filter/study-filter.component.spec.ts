@@ -1,16 +1,12 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { FormsModule, NgModel } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 
 import { StudyFilterComponent } from './study-filter.component';
 
-const StudyDescriptorMock: any = {
+const studyDescriptorMock: any = {
   studyId: 'id',
   studyName: 'name',
-};
-
-const StudyFilterStateMock: any = {
-  study: StudyDescriptorMock,
 };
 
 describe('StudyFilterComponent', () => {
@@ -28,7 +24,7 @@ describe('StudyFilterComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(StudyFilterComponent);
     component = fixture.componentInstance;
-    component.studyFilterState = StudyFilterStateMock;
+    component.selectedStudy = studyDescriptorMock;
     fixture.detectChanges();
   });
 
