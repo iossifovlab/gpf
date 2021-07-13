@@ -23,7 +23,7 @@ export interface PedigreeSelectorModel {
 @Injectable()
 export class PedigreeSelectorState {
   @Action(SetPedigreeSelector)
-  setInheritanceTypes(ctx: StateContext<PedigreeSelectorModel>, action: SetPedigreeSelector) {
+  setPedigreeSelector(ctx: StateContext<PedigreeSelectorModel>, action: SetPedigreeSelector) {
     ctx.patchState({
       id: action.id,
       checkedValues: [...action.checkedValues],
