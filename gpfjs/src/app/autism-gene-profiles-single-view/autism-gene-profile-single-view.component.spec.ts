@@ -1,6 +1,7 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { GeneWeightsService } from 'app/gene-weights/gene-weights.service';
@@ -16,7 +17,7 @@ describe('AutismGeneProfileSingleViewComponent', () => {
     TestBed.configureTestingModule({
       declarations: [ AutismGeneProfileSingleViewComponent ],
       providers: [ConfigService, GeneWeightsService, DatasetsService, UsersService],
-      imports: [HttpClientTestingModule, RouterTestingModule]
+      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([])]
     })
     .compileComponents();
   }));

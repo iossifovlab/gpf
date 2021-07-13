@@ -2,8 +2,8 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgxsModule } from '@ngxs/store';
 import { RegionsBlockComponent } from './regions-block.component';
-import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 
 describe('RegionsBlockComponent', () => {
   let component: RegionsBlockComponent;
@@ -12,7 +12,7 @@ describe('RegionsBlockComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [RegionsBlockComponent],
-      imports: [NgbModule, RouterTestingModule],
+      imports: [NgbModule, RouterTestingModule, NgxsModule.forRoot([])],
     })
       .compileComponents();
   }));

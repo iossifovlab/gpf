@@ -2,6 +2,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { QueryService } from 'app/query/query.service';
@@ -39,7 +40,7 @@ describe('SavedQueriesComponent', () => {
       providers: [
         QueryService, ConfigService, UsersService, ResizeService, DatasetsService
       ],
-      imports: [RouterTestingModule, HttpClientTestingModule, NgbNavModule]
+      imports: [RouterTestingModule, HttpClientTestingModule, NgbNavModule, NgxsModule.forRoot([])]
     })
     .compileComponents();
   }));

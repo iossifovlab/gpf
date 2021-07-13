@@ -1,6 +1,7 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { UsersService } from 'app/users/users.service';
@@ -15,7 +16,7 @@ describe('UserEditComponent', () => {
     TestBed.configureTestingModule({
       declarations: [UserEditComponent],
       providers: [UsersService, ConfigService, UsersGroupsService],
-      imports: [RouterTestingModule, HttpClientTestingModule]
+      imports: [RouterTestingModule, HttpClientTestingModule, NgxsModule.forRoot([])]
     })
     .compileComponents();
   }));
