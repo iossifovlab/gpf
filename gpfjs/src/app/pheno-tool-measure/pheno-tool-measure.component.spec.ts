@@ -2,6 +2,7 @@ import { HttpClient, HttpHandler } from '@angular/common/http';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
@@ -29,7 +30,7 @@ describe('PhenoToolMeasureComponent', () => {
         DatasetsService,
         UsersService
       ],
-      imports: [RouterTestingModule],
+      imports: [RouterTestingModule, NgxsModule.forRoot([])],
       schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();
