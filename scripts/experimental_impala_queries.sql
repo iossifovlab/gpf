@@ -1,3 +1,42 @@
+--- AGP
+SELECT 
+  COUNT(DISTINCT bucket_index, summary_index, family_index)
+FROM data_hg38_seqclust.sfari_spark_wes_1_consortium_variants 
+WHERE                         
+  ( (  effect_gene_symbols in (  'KMT2C'  )  ) ) AND 
+  ( (`chromosome` = 'chr7' AND ((`position` >= 152114925 AND `position` <= 152456005) OR (COALESCE(end_position, -1) >= 152114925 AND COALESCE(end_position, -1) <= 152456005) OR (152114925 >= `position` AND 152456005 <= COALESCE(end_position, -1)))) ) AND 
+  ( (  effect_types in (  'frame-shift' , 'nonsense' , 'splice-site' , 'no-frame-shift-newStop'  )  ) ) AND 
+  ( BITAND(8, inheritance_in_members) = 0 AND BITAND(32, inheritance_in_members) = 0 ) AND ( BITAND(134, inheritance_in_members) != 0 ) AND 
+  ( (af_allele_freq <= 1.0 or af_allele_freq is null) ) AND 
+  ( allele_index > 0 ) AND 
+  ( frequency_bin = 1 OR frequency_bin = 2 OR frequency_bin = 0 ) AND 
+  ( region_bin IN ('chr7_5') ) ;
+
+
+--- genotype browser
+
+SELECT 
+  COUNT(DISTINCT bucket_index, summary_index, family_index)
+FROM data_hg38_seqclust.sfari_spark_wes_1_consortium_variants                                                                      
+WHERE                                                                                                                                                                                                                                                                                                                                                                            
+  ( (  effect_gene_symbols in (  'KMT2C'  )  ) ) AND 
+  ( (`chromosome` = 'chr7' AND ((`position` >= 152114925 AND `position` <= 152456005) OR (COALESCE(end_position, -1) >= 152114925 AND COALESCE(end_position, -1) <= 152456005) OR (152114925 >= `position` AND 152456005 <= COALESCE(end_position, -1)))) ) AND 
+  ( (  effect_types in (  'nonsense' , 'frame-shift' , 'splice-site' , 'no-frame-shift-newStop'  )  ) ) AND 
+  ( BITAND(8, inheritance_in_members) = 0 AND BITAND(32, inheritance_in_members) = 0 ) AND ( BITAND(134, inheritance_in_members) != 0 ) AND 
+  ( ((((BITAND(variant_in_roles, 128) != 0)) AND ((NOT ((BITAND(variant_in_roles, 256) != 0))))) OR (((NOT ((BITAND(variant_in_roles, 128) != 0)))) AND ((BITAND(variant_in_roles, 256) != 0)))) OR (((BITAND(variant_in_roles, 128) != 0)) AND ((BITAND(variant_in_roles, 256) != 0))) ) AND 
+  ( (af_allele_freq <= 1 or af_allele_freq is null) ) AND 
+  ( allele_index > 0 ) AND 
+  ( frequency_bin = 2 OR frequency_bin = 0 OR frequency_bin = 1 ) AND 
+  ( region_bin IN ('chr7_5') );
+
+
+
+
+
+
+
+
+
 CREATE TABLE IF NOT EXISTS gpf_variant_db.sparkv3_pilot_summary_alleles (
   `bucket_index` int, 
   `chromosome` string, 
