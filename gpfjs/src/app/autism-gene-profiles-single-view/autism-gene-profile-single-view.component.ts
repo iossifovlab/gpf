@@ -98,9 +98,10 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   }
 
   getUCSCLink(gene: Gene, datasetDetails: DatasetDetails): string {
+    const chrPrefix = datasetDetails.genome === 'hg38' ? '' : 'chr';
     return 'https://genome.ucsc.edu/cgi-bin/hgTracks?db=' + datasetDetails.genome + '&lastVirtModeType=default'
-      + '&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=chr'
-      + gene.transcripts[0].chrom + '%3A' + gene.transcripts[0].start + '-'
+      + '&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position='
+      + chrPrefix + gene.transcripts[0].chrom + '%3A' + gene.transcripts[0].start + '-'
       + gene.transcripts[gene.transcripts.length - 1].stop
       + '&hgsid=1120191263_9kJvHXmsIQajgm163GA7k8YV4ay4';
   }
