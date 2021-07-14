@@ -1,7 +1,9 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
+import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { UsersService } from 'app/users/users.service';
@@ -17,7 +19,14 @@ describe('UserCreateComponent', () => {
     TestBed.configureTestingModule({
       providers: [UsersService, ConfigService, UsersGroupsService],
       declarations: [ UserCreateComponent ],
-      imports: [HttpClientTestingModule, RouterTestingModule, FormsModule, NgMultiSelectDropDownModule]
+      imports: [
+        HttpClientTestingModule,
+        RouterTestingModule,
+        FormsModule,
+        NgMultiSelectDropDownModule,
+        NgxsModule.forRoot([])
+      ],
+      schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();
   }));

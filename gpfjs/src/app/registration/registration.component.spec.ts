@@ -3,6 +3,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { UsersService } from 'app/users/users.service';
 
@@ -16,7 +17,7 @@ describe('RegistrationComponent', () => {
     TestBed.configureTestingModule({
       declarations: [RegistrationComponent],
       providers: [NgbActiveModal, UsersService, HttpClient, HttpHandler, ConfigService],
-      imports: [RouterTestingModule, FormsModule],
+      imports: [RouterTestingModule, FormsModule, NgxsModule.forRoot([])],
     })
     .compileComponents();
   }));

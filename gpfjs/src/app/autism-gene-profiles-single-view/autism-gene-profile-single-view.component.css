@@ -1,18 +1,15 @@
-.table-wrapper {
-  display: flex;
-  align-items: flex-start;
-}
-
 table {
   max-width: 750px;
   margin-right: 15px;
   margin-bottom: 15px;
 }
 
-#external-links {
-  width: 200px;
+.wrapper {
+  display: flex;
+  align-items: flex-start;
 }
 
-.link {
+a {
   text-decoration: underline;
+  padding-right: 25px;
 }
