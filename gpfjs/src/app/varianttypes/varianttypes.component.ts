@@ -1,26 +1,26 @@
 import { Input, Component, OnInit, OnChanges } from '@angular/core';
-import { validate, Validate } from 'class-validator';
+import { Validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
-import { Select, Store } from '@ngxs/store';
-import { VarianttypesState, VarianttypeModel, SetVariantTypes } from './varianttypes.state';
-import { Observable } from 'rxjs';
+import { Store } from '@ngxs/store';
+import { VarianttypesState, SetVariantTypes } from './varianttypes.state';
+import { StatefulComponent } from '../common/stateful-component';
 
 @Component({
   selector: 'gpf-varianttypes',
   templateUrl: './varianttypes.component.html',
   styleUrls: ['./varianttypes.component.css'],
 })
-export class VarianttypesComponent implements OnInit, OnChanges {
+export class VarianttypesComponent extends StatefulComponent implements OnInit, OnChanges {
 
   @Input() variantTypes: Set<string> = new Set([]);
-  @Input() @Validate(SetNotEmpty, {message: 'select at least one'}) selectedVariantTypes: Set<string> = new Set();
-  @Select(VarianttypesState) state$: Observable<VarianttypeModel>;
-  errors: string[] = [];
+  @Input() @Validate(SetNotEmpty, {message: 'Select at least one'}) selectedVariantTypes: Set<string> = new Set();
 
-  constructor(private store: Store) { }
+  constructor(protected store: Store) {
+    super(store, VarianttypesState, 'variantTypes');
+  }
 
   ngOnChanges(): void {
-    this.store.selectOnce(state => state.varianttypesState).subscribe(state => {
+    this.store.selectOnce(VarianttypesState).subscribe(state => {
       // handle selected values input and/or restore state
       if (state.variantTypes.length) {
         this.selectedVariantTypes = new Set(state.variantTypes);
@@ -28,12 +28,6 @@ export class VarianttypesComponent implements OnInit, OnChanges {
         // save the default selected variant types to the state
         this.store.dispatch(new SetVariantTypes(this.selectedVariantTypes));
       }
-    });
-  }
-
-  ngOnInit() {
-    this.state$.subscribe(state => {
-      validate(this).then(errors => this.errors = errors.map(err => String(err)));
     });
   }
 

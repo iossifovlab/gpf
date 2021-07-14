@@ -1,16 +1,16 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { EffectTypes, CODING, NONCODING, CNV, ALL, LGDS, NONSYNONYMOUS, UTRS } from './effecttypes';
-import { Observable } from 'rxjs';
-import { validate } from 'class-validator';
-import { Select, Store } from '@ngxs/store';
-import { EffecttypesState, EffectTypeModel, AddEffectType, RemoveEffectType, SetEffectTypes } from './effecttypes.state';
+import { ValidateNested } from 'class-validator';
+import { Store } from '@ngxs/store';
+import { EffecttypesState, AddEffectType, RemoveEffectType, SetEffectTypes } from './effecttypes.state';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
   selector: 'gpf-effecttypes',
   templateUrl: './effecttypes.component.html',
   styleUrls: ['./effecttypes.component.css'],
 })
-export class EffecttypesComponent implements OnInit {
+export class EffecttypesComponent extends StatefulComponent implements OnInit {
 
   @Input() variantTypes: Set<string> = new Set([]);
 
@@ -18,17 +18,17 @@ export class EffecttypesComponent implements OnInit {
   nonCodingColumn: Set<string> = NONCODING;
   cnvColumn: Set<string> = CNV;
 
-  effectTypesButtons: Map<string, Set<string>>;
-  errors: string[] = [];
+  @ValidateNested()
   effectTypes = new EffectTypes();
-  @Select(EffecttypesState) state$: Observable<EffectTypeModel>;
+  effectTypesButtons: Map<string, Set<string>>;
 
-  constructor(private store: Store) {
+  constructor(protected store: Store) {
+    super(store, EffecttypesState, 'effectTypes');
     this.initButtonGroups();
   }
 
   ngOnInit() {
-
+    super.ngOnInit();
     this.store.selectOnce(state => state.effecttypesState).subscribe(state => {
       if (state.effectTypes.length) {
         for (const effectType of state.effectTypes) {
@@ -37,10 +37,6 @@ export class EffecttypesComponent implements OnInit {
       } else {
         this.selectInitialValues();
       }
-    });
-
-    this.state$.subscribe(() => {
-      validate(this.effectTypes).then(errors => this.errors = errors.map(err => String(err)));
     });
   }
 

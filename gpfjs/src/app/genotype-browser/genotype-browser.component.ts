@@ -15,6 +15,7 @@ import { RegionsFilterState } from 'app/regions-filter/regions-filter.state';
 import { GenomicScoresBlockState } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-filters-block.component';
 import { PersonFiltersBlockComponent } from 'app/person-filters-block/person-filters-block.component';
+import { ErrorsState, ErrorsModel } from '../common/errors.state';
 
 @Component({
   selector: 'gpf-genotype-browser',
@@ -35,6 +36,7 @@ export class GenotypeBrowserComponent implements OnInit, OnChanges {
   private loadingFinished: boolean;
 
   @Select(GenotypeBrowserComponent.genotypeBrowserStateSelector) state$: Observable<any[]>;
+  @Select(ErrorsState) errorsState$: Observable<ErrorsModel>;
 
   constructor(
     private queryService: QueryService,
@@ -50,6 +52,9 @@ export class GenotypeBrowserComponent implements OnInit, OnChanges {
     this.state$.subscribe(state => {
       this.genotypeBrowserState = state;
       this.genotypePreviewVariantsArray = null;
+    });
+    this.errorsState$.subscribe(state => {
+      setTimeout(() => this.disableQueryButtons = state.componentErrors.size > 0);
     });
   }
 

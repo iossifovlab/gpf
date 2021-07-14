@@ -1,41 +1,36 @@
-import { Component, OnInit, forwardRef, EventEmitter, Output, Input } from '@angular/core';
-import { Observable, Subject } from 'rxjs';
-import { IsNotEmpty, validate } from 'class-validator';
-import { Store, Select } from '@ngxs/store';
+import { Component, OnInit, EventEmitter, Output, Input } from '@angular/core';
+import { Subject } from 'rxjs';
+import { ValidateNested } from 'class-validator';
+import { Store } from '@ngxs/store';
 import { GeneService } from '../gene-view/gene.service';
 import { GeneSymbols } from 'app/gene-symbols/gene-symbols.component';
-import { SetGeneSymbols, GeneSymbolsModel, GeneSymbolsState } from 'app/gene-symbols/gene-symbols.state';
+import { SetGeneSymbols, GeneSymbolsState } from 'app/gene-symbols/gene-symbols.state';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
   selector: 'gpf-gene-symbol-with-search',
   templateUrl: './gene-symbols-with-search.component.html',
 })
-export class GeneSymbolsWithSearchComponent implements OnInit {
+export class GeneSymbolsWithSearchComponent extends StatefulComponent implements OnInit {
   @Input() hideDropdown: boolean;
   @Output() inputClickEvent  = new EventEmitter();
-  @Select(GeneSymbolsState) state$: Observable<GeneSymbolsModel>;
 
+  @ValidateNested()
   geneSymbols = new GeneSymbols();
-  errors: Array<string> = [];
 
   matchingGeneSymbols: string[] = [];
   searchString = '';
   searchKeystrokes$: Subject<string> = new Subject();
 
-  constructor(
-    private store: Store,
-    private geneService: GeneService
-  ) { }
+  constructor(protected store: Store, private geneService: GeneService) {
+    super(store, GeneSymbolsState, 'geneSymbols');
+  }
 
   ngOnInit() {
+    super.ngOnInit();
     this.store.selectOnce(state => state.geneSymbolsState).subscribe(state => {
       // restore state
       this.geneSymbols.geneSymbols = state.geneSymbols.join('\n');
-    });
-
-    this.state$.subscribe(state => {
-      // validate for errors
-      validate(this.geneSymbols).then(errors => { this.errors = errors.map(err => String(err)); });
     });
 
     this.searchKeystrokes$

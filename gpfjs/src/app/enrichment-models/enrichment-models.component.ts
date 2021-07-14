@@ -1,17 +1,18 @@
-import { Component, OnInit, Input, OnDestroy } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { EnrichmentModelsService } from './enrichment-models.service';
 import { IdDescription } from '../common/iddescription';
-import { Observable, Subscription, combineLatest, of } from 'rxjs';
-import { IsNotEmpty, validate } from 'class-validator';
-import { Store, Select } from '@ngxs/store';
-import { SetEnrichmentModels, EnrichmentModelsModel, EnrichmentModelsState } from './enrichment-models.state';
+import { combineLatest, of } from 'rxjs';
+import { IsNotEmpty } from 'class-validator';
+import { Store } from '@ngxs/store';
+import { SetEnrichmentModels, EnrichmentModelsState } from './enrichment-models.state';
 import { switchMap } from 'rxjs/operators';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
   selector: 'gpf-enrichment-models',
   templateUrl: './enrichment-models.component.html',
 })
-export class EnrichmentModelsComponent implements OnInit {
+export class EnrichmentModelsComponent extends StatefulComponent implements OnInit {
 
   @Input()
   private selectedDatasetId: string;
@@ -25,16 +26,15 @@ export class EnrichmentModelsComponent implements OnInit {
   countings: Array<IdDescription>
   backgrounds: Array<IdDescription>
 
-  stateSubscription: Subscription;
-  @Select(EnrichmentModelsState) state$: Observable<EnrichmentModelsModel>;
-  errors: Array<string> = [];
-
   constructor(
-    private store: Store,
+    protected store: Store,
     private enrichmentModelsService: EnrichmentModelsService,
-  ) { }
+  ) {
+    super(store, EnrichmentModelsState, 'enrichmentModels');
+  }
 
   ngOnInit() {
+    super.ngOnInit();
     this.enrichmentModelsService.getBackgroundModels(this.selectedDatasetId)
       .take(1).pipe(
         switchMap(res => {
@@ -53,16 +53,7 @@ export class EnrichmentModelsComponent implements OnInit {
           this.counting = res.countings[0];
           this.store.dispatch(new SetEnrichmentModels(this.background.id, this.counting.id));
         }
-
-        this.stateSubscription = this.state$.subscribe(state => {
-          // validate for errors
-          validate(this).then(errors => this.errors = errors.map(err => String(err)));
-        });
     });
-  }
-
-  ngOnDestroy() {
-    this.stateSubscription.unsubscribe();
   }
 
   changeBackground(newValue: IdDescription) {

@@ -185,6 +185,7 @@ import { EffecttypesState } from './effecttypes/effecttypes.state';
 import { GenderState } from './gender/gender.state';
 import { RegionsFilterState } from './regions-filter/regions-filter.state';
 import { CheckboxListComponent, DisplayNamePipe } from './checkbox-list/checkbox-list.component';
+import { ErrorsState } from './common/errors.state';
 
 const appRoutes: Routes = [
   {
@@ -419,6 +420,7 @@ const appRoutes: Routes = [
       GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState, GeneSetsState,
       GeneWeightsState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
       StudyFiltersBlockState, PersonFiltersState, GenomicScoresBlockState, PhenoToolMeasureState,
+      ErrorsState,
     ]),
     NgxsResetPluginModule.forRoot(),
   ],

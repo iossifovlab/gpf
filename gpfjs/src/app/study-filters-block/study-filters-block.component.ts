@@ -1,27 +1,28 @@
 import { Component, OnInit, OnChanges, Input, SimpleChanges } from '@angular/core';
-
+import { Store } from '@ngxs/store';
 import { Dataset } from '../datasets/datasets';
-import { validate } from 'class-validator';
-import { Store, Select } from '@ngxs/store';
 import { Study } from '../study-filter/study-filter.component';
-import { SetStudyFilters, StudyFiltersBlockState, StudyFiltersBlockModel } from './study-filters-block.state';
-import { Observable } from 'rxjs';
+import { SetStudyFilters, StudyFiltersBlockState } from './study-filters-block.state';
+import { StatefulComponent } from 'app/common/stateful-component';
+import { ValidateNested } from 'class-validator';
 
 @Component({
   selector: 'gpf-study-filters-block',
   templateUrl: './study-filters-block.component.html',
   styleUrls: ['./study-filters-block.component.css'],
 })
-export class StudyFiltersBlockComponent implements OnInit, OnChanges {
+export class StudyFiltersBlockComponent extends StatefulComponent implements OnInit, OnChanges {
   @Input() dataset: Dataset;
 
+  @ValidateNested({each: true})
   studies: Study[] = [];
+
+  @ValidateNested({each: true})
   selectedStudies: Study[] = [];
 
-  @Select(StudyFiltersBlockState) state$: Observable<StudyFiltersBlockModel>;
-  errors: Array<string> = [];
-
-  constructor(private store: Store) { }
+  constructor(protected store: Store) {
+    super(store, StudyFiltersBlockState, 'studyFiltersBlock');
+  }
 
   ngOnChanges(changes: SimpleChanges) {
     let ids: string[] = changes.dataset.currentValue.studies;
@@ -37,6 +38,7 @@ export class StudyFiltersBlockComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
+    super.ngOnInit();
     this.store.selectOnce(state => state.studyFiltersBlockState).subscribe(state => {
       // restore state
       for (const study of state.studyFilters) {
@@ -46,11 +48,6 @@ export class StudyFiltersBlockComponent implements OnInit, OnChanges {
           }
         }
       }
-    });
-
-    this.state$.subscribe(state => {
-      // validate for errors
-      validate(this).then(errors => this.errors = errors.map(err => String(err)));
     });
   }
 

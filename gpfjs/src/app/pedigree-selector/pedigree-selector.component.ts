@@ -1,17 +1,17 @@
 import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
-import { Observable } from 'rxjs';
-import { Validate, validate } from 'class-validator';
+import { Validate } from 'class-validator';
 import { PedigreeSelector } from '../datasets/datasets';
 import { SetNotEmpty } from '../utils/set.validators';
-import { Store, Select } from '@ngxs/store';
-import { SetPedigreeSelector, PedigreeSelectorState, PedigreeSelectorModel } from './pedigree-selector.state';
+import { Store } from '@ngxs/store';
+import { SetPedigreeSelector, PedigreeSelectorState } from './pedigree-selector.state';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
   selector: 'gpf-pedigree-selector',
   templateUrl: './pedigree-selector.component.html',
   styleUrls: ['./pedigree-selector.component.css'],
 })
-export class PedigreeSelectorComponent implements OnInit, OnChanges {
+export class PedigreeSelectorComponent extends StatefulComponent implements OnInit, OnChanges {
   @Input() pedigrees: PedigreeSelector[];
   selectedPedigree: PedigreeSelector = null;
 
@@ -20,10 +20,9 @@ export class PedigreeSelectorComponent implements OnInit, OnChanges {
   })
   selectedValues: Set<string> = new Set();
 
-  @Select(PedigreeSelectorState) state$: Observable<PedigreeSelectorModel>;
-  errors: Array<string> = [];
-
-  constructor(private store: Store) { }
+  constructor(protected store: Store) {
+    super(store, PedigreeSelectorState, 'pedigreeSelector');
+  }
 
   ngOnChanges(changes: SimpleChanges) {
     if (!changes['pedigrees']) {
@@ -43,15 +42,11 @@ export class PedigreeSelectorComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
+    super.ngOnInit();
     this.store.selectOnce(state => state.pedigreeSelectorState).subscribe(state => {
       // restore state
       this.selectedPedigree = this.pedigrees.filter(p => p.id === state.id)[0];
       this.selectedValues = new Set(state.checkedValues);
-    });
-
-    this.state$.subscribe(state => {
-      // validate for errors
-      validate(this).then(errors => this.errors = errors.map(err => String(err)));
     });
   }
 

@@ -1,27 +1,27 @@
-import { Component, OnChanges, Input, OnInit } from '@angular/core';
+import { Component, OnChanges, Input } from '@angular/core';
 import { Dataset, PersonFilter } from '../datasets/datasets';
 import { PersonFilterState, CategoricalFilterState, ContinuousFilterState, ContinuousSelection, CategoricalSelection } from './person-filters';
-import { validate } from 'class-validator';
-import { Observable } from 'rxjs';
-import { Store, Select } from '@ngxs/store';
-import { SetFamilyFilters, SetPersonFilters, PersonFiltersModel, PersonFiltersState } from './person-filters.state';
+import { Store } from '@ngxs/store';
+import { SetFamilyFilters, SetPersonFilters, PersonFiltersState } from './person-filters.state';
+import { StatefulComponent } from 'app/common/stateful-component';
+import { ValidateNested } from 'class-validator';
 
 @Component({
   selector: 'gpf-person-filters',
   templateUrl: './person-filters.component.html',
   styleUrls: ['./person-filters.component.css'],
 })
-export class PersonFiltersComponent implements OnChanges, OnInit {
+export class PersonFiltersComponent extends StatefulComponent implements OnChanges {
   @Input() dataset: Dataset;
   @Input() filters: PersonFilter[];
   @Input() isFamilyFilters: boolean;
 
+  @ValidateNested({each: true})
   private personFiltersState = new Map<string, PersonFilterState>();
 
-  @Select(PersonFiltersState) state$: Observable<PersonFiltersModel>;
-  errors: Array<string> = [];
-
-  constructor(private store: Store) { }
+  constructor(protected store: Store) {
+    super(store, PersonFiltersState, 'personFilters');
+  }
 
   ngOnChanges(changes) {
     this.store.selectOnce(state => state.personFiltersState).subscribe(state => {
@@ -66,13 +66,6 @@ export class PersonFiltersComponent implements OnChanges, OnInit {
           this.personFiltersState.set(filterState.id, newFilter);
         }
       }
-    });
-  }
-
-  ngOnInit() {
-    this.state$.subscribe(state => {
-      // validate for errors
-      validate(this).then(errors => this.errors = errors.map(err => String(err)));
     });
   }
 

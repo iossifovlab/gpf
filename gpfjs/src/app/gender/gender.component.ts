@@ -1,25 +1,27 @@
 import { Gender } from './gender';
 import { Component, OnInit } from '@angular/core';
-import { Select, Store } from '@ngxs/store';
-import { Observable } from 'rxjs';
-import { AddGender, GenderModel, GenderState, RemoveGender } from './gender.state';
-import { validate } from 'class-validator';
+import { Store } from '@ngxs/store';
+import { AddGender, GenderState, RemoveGender } from './gender.state';
+import { StatefulComponent } from 'app/common/stateful-component';
+import { ValidateNested } from 'class-validator';
 
 @Component({
   selector: 'gpf-gender',
   templateUrl: './gender.component.html',
   styleUrls: ['./gender.component.css'],
 })
-export class GenderComponent implements OnInit {
+export class GenderComponent extends StatefulComponent implements OnInit {
 
+  @ValidateNested()
   gender = new Gender();
   supportedGenders = ['male', 'female', 'unspecified'];
-  errors: string[] = [];
-  @Select(GenderState) state$: Observable<GenderModel>;
 
-  constructor(private store: Store) { }
+  constructor(protected store: Store) {
+    super(store, GenderState, 'gender');
+  }
 
   ngOnInit() {
+    super.ngOnInit();
     this.store.selectOnce(state => state.genderState).subscribe(state => {
       if (state.genders) {
         this.selectNone();
@@ -27,10 +29,6 @@ export class GenderComponent implements OnInit {
           this.genderCheckValue(gender, true);
         }
       }
-    });
-
-    this.state$.subscribe(() => {
-      validate(this.gender).then(errors => this.errors = errors.map(err => String(err)));
     });
   }
 

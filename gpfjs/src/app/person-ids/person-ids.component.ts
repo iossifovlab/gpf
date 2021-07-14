@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { IsNotEmpty } from 'class-validator';
-import { validate } from 'class-validator';
-import { Observable } from 'rxjs';
-import { Store, Select } from '@ngxs/store';
-import { SetPersonIds, PersonIdsModel, PersonIdsState } from './person-ids.state';
+import { IsNotEmpty, ValidateNested } from 'class-validator';
+import { Store } from '@ngxs/store';
+import { SetPersonIds, PersonIdsState } from './person-ids.state';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 export class PersonIds {
   @IsNotEmpty()
@@ -15,26 +14,20 @@ export class PersonIds {
   templateUrl: './person-ids.component.html',
   styleUrls: ['./person-ids.component.css'],
 })
-export class PersonIdsComponent implements OnInit {
+export class PersonIdsComponent extends StatefulComponent implements OnInit {
 
+  @ValidateNested()
   personIds = new PersonIds();
-  errors: Array<string> = [];
 
-  @Select(PersonIdsState) state$: Observable<PersonIdsModel>;
-
-  constructor(
-    private store: Store
-  ) { }
+  constructor(protected store: Store) {
+    super(store, PersonIdsState, 'personIds')
+  }
 
   ngOnInit() {
+    super.ngOnInit();
     this.store.selectOnce(state => state.personIdsState).subscribe(state => {
       // restore state
       this.personIds.personIds = state.personIds.join('\n');
-    });
-
-    this.state$.subscribe(state => {
-      // validate for errors
-      validate(this.personIds).then(errors => { this.errors = errors.map(err => String(err)); });
     });
   }
 
@@ -45,5 +38,4 @@ export class PersonIdsComponent implements OnInit {
     this.personIds.personIds = personIds;
     this.store.dispatch(new SetPersonIds(result));
   }
-
 }

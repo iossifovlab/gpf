@@ -138,6 +138,9 @@ export class QueryService {
 
   saveQuery(queryData: {}, page: string) {
     const options = { headers: this.headers };
+
+    delete queryData['errorsState'];
+
     const data = {
       data: queryData,
       page: page

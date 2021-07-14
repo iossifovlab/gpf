@@ -4,34 +4,35 @@ import { GeneWeightsService } from './gene-weights.service';
 // tslint:disable-next-line:import-blacklist
 import { ReplaySubject ,  Observable, combineLatest, of } from 'rxjs';
 
-import { Store, Select } from '@ngxs/store';
+import { Store } from '@ngxs/store';
 import { ConfigService } from '../config/config.service';
 
-import { SetGeneWeight, SetHistogramValues, GeneWeightsState, GeneWeightsModel } from './gene-weights.state';
-import { validate } from 'class-validator';
+import { SetGeneWeight, SetHistogramValues, GeneWeightsState } from './gene-weights.state';
 import { switchMap } from 'rxjs/operators';
+import { StatefulComponent } from 'app/common/stateful-component';
+import { ValidateNested } from 'class-validator';
 
 @Component({
   encapsulation: ViewEncapsulation.None, // TODO: What is this?
   selector: 'gpf-gene-weights',
   templateUrl: './gene-weights.component.html',
 })
-export class GeneWeightsComponent implements OnInit {
+export class GeneWeightsComponent extends StatefulComponent implements OnInit {
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
   private partitions: Observable<Partitions>;
 
   geneWeightsArray: GeneWeights[];
   rangesCounts: Observable<Array<number>>;
+
+  @ValidateNested()
   geneWeightsLocalState = new GeneWeightsLocalState();
 
-  @Select(GeneWeightsState) state$: Observable<GeneWeightsModel>;
-  errors: Array<string> = [];
-
   constructor(
-    private store: Store,
+    protected store: Store,
     private geneWeightsService: GeneWeightsService,
     private config: ConfigService,
   ) {
+    super(store, GeneWeightsState, 'geneWeights');
     this.partitions = this.rangeChanges
       .debounceTime(100)
       .distinctUntilChanged()
@@ -49,6 +50,7 @@ export class GeneWeightsComponent implements OnInit {
   }
 
   ngOnInit() {
+    super.ngOnInit();
     this.geneWeightsService.getGeneWeights().pipe(
       switchMap(geneWeights => {
         return combineLatest(
@@ -72,12 +74,7 @@ export class GeneWeightsComponent implements OnInit {
         this.selectedGeneWeights = this.geneWeightsArray[0];
       }
     });
-
-    this.state$.subscribe(state => {
-      // validate for errors
-      validate(this).then(errors => this.errors = errors.map(err => String(err)));
-    });
-  }
+}
 
   private updateLabels() {
     this.rangeChanges.next([

@@ -4,31 +4,33 @@ import { environment } from '../../environments/environment';
 import { GenomicScoreState, GenomicScoresState } from '../genomic-scores/genomic-scores-store';
 import { GenomicScoresBlockService } from './genomic-scores-block.service';
 import { GenomicScores } from './genomic-scores-block';
-import { Store, Select } from '@ngxs/store';
-import { SetGenomicScores, GenomicScoresBlockModel, GenomicScoresBlockState } from './genomic-scores-block.state';
-import { Observable, combineLatest, of } from 'rxjs';
-import { validate } from 'class-validator';
+import { Store} from '@ngxs/store';
+import { SetGenomicScores, GenomicScoresBlockState } from './genomic-scores-block.state';
+import { combineLatest, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { StatefulComponent } from 'app/common/stateful-component';
+import { ValidateNested } from 'class-validator';
 
 @Component({
   selector: 'gpf-genomic-scores-block',
   templateUrl: './genomic-scores-block.component.html',
   styleUrls: ['./genomic-scores-block.component.css'],
 })
-export class GenomicScoresBlockComponent implements OnInit {
+export class GenomicScoresBlockComponent extends StatefulComponent implements OnInit {
+  @ValidateNested()
   genomicScoresState = new GenomicScoresState();
   scores = [];
   genomicScoresArray: GenomicScores[];
 
-  @Select(GenomicScoresBlockState) state$: Observable<GenomicScoresBlockModel>;
-  errors: Array<string> = [];
-
   constructor(
+    protected store: Store,
     private genomicScoresBlockService: GenomicScoresBlockService,
-    private store: Store,
-  ) { }
+  ) {
+    super(store, GenomicScoresBlockState, 'genomicScores');
+  }
 
   ngOnInit() {
+    super.ngOnInit();
     this.genomicScoresBlockService.getGenomicScores().take(1).pipe(
       switchMap(genomicScores => {
         return combineLatest(
@@ -52,11 +54,6 @@ export class GenomicScoresBlockComponent implements OnInit {
           this.addFilter(genomicScore);
         }
       }
-    });
-
-    this.state$.subscribe(state => {
-      // validate for errors
-      validate(this.genomicScoresState).then(errors => this.errors = errors.map(err => String(err)));
     });
   }
 

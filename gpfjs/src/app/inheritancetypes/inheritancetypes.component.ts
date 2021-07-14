@@ -1,16 +1,16 @@
-import { Component, Input, OnInit, OnChanges } from '@angular/core';
-import { Validate, validate } from 'class-validator';
+import { Component, Input, OnChanges } from '@angular/core';
+import { Validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
-import { Observable } from 'rxjs';
-import { Store, Select } from '@ngxs/store';
-import { SetInheritanceTypes, InheritancetypesModel, InheritancetypesState } from './inheritancetypes.state';
+import { Store } from '@ngxs/store';
+import { SetInheritanceTypes, InheritancetypesState } from './inheritancetypes.state';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
   selector: 'gpf-inheritancetypes',
   templateUrl: './inheritancetypes.component.html',
   styleUrls: ['./inheritancetypes.component.css'],
 })
-export class InheritancetypesComponent implements OnInit, OnChanges {
+export class InheritancetypesComponent extends StatefulComponent implements OnChanges {
 
   @Input()
   inheritanceTypes: Set<string>;
@@ -19,16 +19,8 @@ export class InheritancetypesComponent implements OnInit, OnChanges {
   @Validate(SetNotEmpty, { message: 'select at least one' })
   selectedValues: Set<string> = new Set();
 
-  @Select(InheritancetypesState) state$: Observable<InheritancetypesModel>;
-  errors: Array<string> = [];
-
-  constructor(private store: Store) { }
-
-  ngOnInit() {
-    this.state$.subscribe(state => {
-      // validate for errors
-      validate(this).then(errors => this.errors = errors.map(err => String(err)));
-    });
+  constructor(protected store: Store) {
+    super(store, InheritancetypesState, 'inheritanceTypes');
   }
 
   ngOnChanges() {

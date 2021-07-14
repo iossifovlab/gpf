@@ -5,17 +5,18 @@ import { GeneSetsService } from './gene-sets.service';
 import { GeneSetsCollection, GeneSet, GeneSetType } from './gene-sets';
 import { Subject, Observable, combineLatest, of } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { validate } from 'class-validator';
-import { Store, Select } from '@ngxs/store';
-import { SetGeneSetsValues, GeneSetsModel, GeneSetsState } from './gene-sets.state';
+import { ValidateNested } from 'class-validator';
+import { Store } from '@ngxs/store';
+import { SetGeneSetsValues, GeneSetsState } from './gene-sets.state';
 import { switchMap } from 'rxjs/operators';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
   selector: 'gpf-gene-sets',
   templateUrl: './gene-sets.component.html',
   styleUrls: ['./gene-sets.component.css'],
 })
-export class GeneSetsComponent implements OnInit {
+export class GeneSetsComponent extends StatefulComponent implements OnInit {
   geneSetsCollections: Array<GeneSetsCollection>;
   geneSets: Array<GeneSet>;
   private searchQuery: string;
@@ -26,18 +27,20 @@ export class GeneSetsComponent implements OnInit {
   private selectedDatasetId: string;
   private defaultSelectedDenovoGeneSetId: string;
 
+  @ValidateNested()
   private geneSetsLocalState = new GeneSetsLocalState();
-  @Select(GeneSetsState) state$: Observable<GeneSetsModel>;
-  errors: string[] = [];
 
   constructor(
-    private store: Store,
+    protected store: Store,
     private config: ConfigService,
     private geneSetsService: GeneSetsService,
     private datasetService: DatasetsService,
-  ) { }
+  ) {
+    super(store, GeneSetsState, 'geneSets')
+  }
 
   ngOnInit() {
+    super.ngOnInit();
     this.geneSetsService.getGeneSetsCollections().pipe(
       switchMap(geneSetsCollections => {
         return combineLatest(
@@ -102,10 +105,6 @@ export class GeneSetsComponent implements OnInit {
           }
         }
       });
-    });
-
-    this.state$.subscribe(state => {
-      validate(this.geneSetsLocalState).then(errors => this.errors = errors.map(err => String(err)));
     });
   }
 

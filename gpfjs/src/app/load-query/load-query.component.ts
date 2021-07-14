@@ -4,6 +4,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { QueryService } from '../query/query.service';
 import { DatasetsService } from '../datasets/datasets.service';
 import { Store } from '@ngxs/store';
+import { StateReset } from 'ngxs-reset-plugin';
+import { ErrorsState } from 'app/common/errors.state';
 
 const PAGE_TYPE_TO_NAVIGATE = {
     genotype: datasetId => ['datasets', datasetId, 'genotype-browser'],
@@ -52,6 +54,7 @@ export class LoadQueryComponent implements OnInit {
       if (page in PAGE_TYPE_TO_NAVIGATE) {
           const navigationParams = PAGE_TYPE_TO_NAVIGATE[page](state['datasetId']);
           this.store.reset(state);
+          this.store.dispatch(new StateReset(ErrorsState));
           this.router.navigate(navigationParams);
       }
   }

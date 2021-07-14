@@ -1,29 +1,26 @@
 import { RegionsFilter } from './regions-filter';
 import { Component, OnInit } from '@angular/core';
-import { Select, Store } from '@ngxs/store';
-import { Observable } from 'rxjs';
-import { RegionsFilterModel, RegionsFilterState, SetRegionsFilter } from './regions-filter.state';
-import { validate } from 'class-validator';
+import { Store } from '@ngxs/store';
+import { RegionsFilterState, SetRegionsFilter } from './regions-filter.state';
+import { ValidateNested } from 'class-validator';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
   selector: 'gpf-regions-filter',
   templateUrl: './regions-filter.component.html',
 })
-export class RegionsFilterComponent implements OnInit {
+export class RegionsFilterComponent extends StatefulComponent implements OnInit {
+  @ValidateNested()
   regionsFilter = new RegionsFilter();
-  errors: string[] = [];
 
-  @Select(RegionsFilterState) state$: Observable<RegionsFilterModel>;
-
-  constructor(private store: Store) { }
+  constructor(protected store: Store) {
+    super(store, RegionsFilterState, 'regionsFilter');
+  }
 
   ngOnInit() {
+    super.ngOnInit();
     this.store.selectOnce(state => state.regionsFiltersState).subscribe(state => {
       this.regionsFilter.regionsFilter = state.regionsFilters.join('\n');
-    });
-
-    this.state$.subscribe(() => {
-      validate(this.regionsFilter).then(errors => { this.errors = errors.map(err => String(err)); });
     });
   }
 

@@ -1,18 +1,18 @@
 import { Component, OnInit } from '@angular/core';
-import { Store, Select } from '@ngxs/store';
-import { Equals, ValidateIf, Min, Max } from 'class-validator';
+import { Store } from '@ngxs/store';
+import { ValidateIf, Min, Max } from 'class-validator';
 import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
 import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
-import { Validate, validate } from 'class-validator';
+import { Validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
-import { Observable } from 'rxjs';
-import { SetPresentInParentValues, PresentInParentModel, PresentInParentState } from './present-in-parent.state';
+import { SetPresentInParentValues, PresentInParentState } from './present-in-parent.state';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
   selector: 'gpf-present-in-parent',
   templateUrl: './present-in-parent.component.html',
 })
-export class PresentInParentComponent implements OnInit {
+export class PresentInParentComponent extends StatefulComponent implements OnInit {
 
   @ValidateIf(o => o.selectedRarityType !== 'ultraRare')
   @Min(0) @Max(100)
@@ -21,6 +21,7 @@ export class PresentInParentComponent implements OnInit {
 
   @ValidateIf(o => o.selectedRarityType !== 'ultraRare')
   @Min(0) @Max(100)
+  @IsMoreThanOrEqual('rarityIntervalStart')
   rarityIntervalEnd = 100;
 
   presentInParentValues: Set<string> = new Set([
@@ -35,23 +36,18 @@ export class PresentInParentComponent implements OnInit {
   ]);
   selectedRarityType = '';
 
-  @Select(PresentInParentState) state$: Observable<PresentInParentModel>;
-  errors: Array<string> = [];
-
-  constructor(private store: Store) { }
+  constructor(protected store: Store) {
+    super(store, PresentInParentState, 'presentInParent');
+  }
 
   ngOnInit() {
+    super.ngOnInit();
     this.store.selectOnce(state => state.presentInParentState).subscribe(state => {
       // restore state
       this.selectedValues = new Set([...state.presentInParent]);
       this.selectedRarityType = state.rarityType;
       this.rarityIntervalStart = state.rarityIntervalStart;
       this.rarityIntervalEnd = state.rarityIntervalEnd;
-    });
-
-    this.state$.subscribe(state => {
-      // validate for errors
-      validate(this).then(errors => this.errors = errors.map(err => String(err)));
     });
   }
 

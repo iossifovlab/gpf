@@ -1,8 +1,8 @@
-import { Component, OnInit, forwardRef, Input } from '@angular/core';
-import { IsNotEmpty, validate } from 'class-validator';
-import { Observable } from 'rxjs';
-import { Store, Select } from '@ngxs/store';
-import { SetGeneSymbols, GeneSymbolsModel, GeneSymbolsState } from './gene-symbols.state';
+import { Component, OnInit } from '@angular/core';
+import { IsNotEmpty, ValidateNested } from 'class-validator';
+import { Store } from '@ngxs/store';
+import { SetGeneSymbols, GeneSymbolsState } from './gene-symbols.state';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 export class GeneSymbols {
   @IsNotEmpty()
@@ -13,25 +13,20 @@ export class GeneSymbols {
   selector: 'gpf-gene-symbols',
   templateUrl: './gene-symbols.component.html',
 })
-export class GeneSymbolsComponent implements OnInit {
-  geneSymbols = new GeneSymbols();
-  errors: Array<string> = [];
+export class GeneSymbolsComponent extends StatefulComponent implements OnInit {
 
-  @Select(GeneSymbolsState) state$: Observable<GeneSymbolsModel>;
+  @ValidateNested()
+  geneSymbols: GeneSymbols = new GeneSymbols();
 
-  constructor(
-    private store: Store,
-  ) { }
+  constructor(protected store: Store) {
+    super(store, GeneSymbolsState, 'geneSymbols');
+  }
 
   ngOnInit() {
+    super.ngOnInit();
     this.store.selectOnce(state => state.geneSymbolsState).subscribe(state => {
       // restore state
       this.geneSymbols.geneSymbols = state.geneSymbols.join('\n');
-    });
-
-    this.state$.subscribe(state => {
-      // validate for errors
-      validate(this.geneSymbols).then(errors => { this.errors = errors.map(err => String(err)); });
     });
   }
 

@@ -4,12 +4,10 @@ import { Observable, ReplaySubject } from 'rxjs';
 import { ContinuousMeasure } from '../measures/measures';
 import { MeasuresService } from '../measures/measures.service';
 import { DatasetsService } from '../datasets/datasets.service';
-import { IsNotEmpty, validate } from 'class-validator';
-import { Store, Select } from '@ngxs/store';
-import {
-  SetPhenoToolMeasure, PhenoToolMeasureModel, PhenoToolMeasureState
-} from './pheno-tool-measure.state';
-import { switchMap } from 'rxjs/operators';
+import { IsNotEmpty } from 'class-validator';
+import { Store } from '@ngxs/store';
+import { SetPhenoToolMeasure, PhenoToolMeasureState } from './pheno-tool-measure.state';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 interface Regression {
   display_name: string;
@@ -22,7 +20,7 @@ interface Regression {
   templateUrl: './pheno-tool-measure.component.html',
   styleUrls: ['./pheno-tool-measure.component.css'],
 })
-export class PhenoToolMeasureComponent implements OnInit {
+export class PhenoToolMeasureComponent extends StatefulComponent implements OnInit {
   @ViewChildren('checkboxes') inputs: QueryList<ElementRef>;
 
   @IsNotEmpty()
@@ -33,16 +31,16 @@ export class PhenoToolMeasureComponent implements OnInit {
 
   regressions: Object = {};
 
-  @Select(PhenoToolMeasureState) state$: Observable<PhenoToolMeasureModel>;
-  errors: Array<string> = [];
-
   constructor(
-    private store: Store,
+    protected store: Store,
     private measuresService: MeasuresService,
     private datasetsService: DatasetsService,
-  ) { }
+  ) {
+    super(store, PhenoToolMeasureState, 'phenoToolMeasure');
+  }
 
   ngOnInit() {
+    super.ngOnInit();
     Observable.combineLatest(
       this.store.selectOnce(PhenoToolMeasureState), this.measuresLoaded$).take(1)
       .subscribe(([state, measures]) => {
@@ -59,11 +57,6 @@ export class PhenoToolMeasureComponent implements OnInit {
       } else {
         this.regressions = {};
       }
-    });
-
-    this.state$.subscribe(state => {
-      // validate for errors
-      validate(this).then(errors => this.errors = errors.map(err => String(err)));
     });
   }
 

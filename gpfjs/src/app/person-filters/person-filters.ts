@@ -1,4 +1,4 @@
-import { ValidateIf } from 'class-validator';
+import { ValidateIf, ValidateNested } from 'class-validator';
 import { IsNumber } from 'class-validator';
 import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
 import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
@@ -16,15 +16,15 @@ export class CategoricalSelection implements Selection {
 }
 
 export class ContinuousSelection implements Selection {
-  @ValidateIf(o => o.mmin !== null)
+  @ValidateIf(o => o.min !== null)
   @IsNumber()
-  @IsLessThanOrEqual('mmax')
+  @IsLessThanOrEqual('max')
   @IsMoreThanOrEqual('domainMin')
   min: number;
 
-  @ValidateIf(o => o.mmax !== null)
+  @ValidateIf(o => o.max !== null)
   @IsNumber()
-  @IsMoreThanOrEqual('mmin')
+  @IsMoreThanOrEqual('min')
   @IsLessThanOrEqual('domainMax')
   max: number;
 
@@ -46,14 +46,20 @@ export class ContinuousSelection implements Selection {
 }
 
 export class PersonFilterState {
+
+  @ValidateNested()
+  selection: Selection
+
   constructor(
     readonly id: string,
     readonly sourceType: string,
     readonly role: string,
     public source: string,
     public from: string,
-    public selection: Selection
-  ) {}
+    selection: Selection
+  ) {
+    this.selection = selection;
+  }
 
   isEmpty() {
     return this.source && this.source.length === 0;
