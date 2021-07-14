@@ -18,3 +18,7 @@ table {
   color: #0056b3;
   cursor: pointer;
 }
+
+.link-genotype-browser:hover {
+  text-decoration: underline;
+}
