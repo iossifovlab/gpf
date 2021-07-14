@@ -519,13 +519,13 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     return count;
   }
 
-  goToQuery(geneSymbol: string, personSetId: string, effectTypeId: string, datasetId: string, statistic: AgpDatasetStatistic) {
+  goToQuery(geneSymbol: string, personSetId: string, datasetId: string, statistic: AgpDatasetStatistic) {
     const newWindow = window.open('', '_blank');
 
     const variantTypes = this.config.datasets
       .find(dataset => dataset.id === datasetId).personSets
       .find(personSet => personSet.id === personSetId)
-      .statistics.find((datasetStatistic) => datasetStatistic.id === effectTypeId)
+      .statistics.find((datasetStatistic) => datasetStatistic.id === statistic.id)
       .variantTypes;
 
     const genomicScores: GenomicScore[] = [];

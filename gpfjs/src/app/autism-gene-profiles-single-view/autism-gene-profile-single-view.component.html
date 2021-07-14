@@ -70,7 +70,10 @@
             <td style="text-align: center;" *ngFor="let personSet of dataset.personSets">
               <ng-container *ngIf="getGeneDatasetValue(gene, dataset.id, personSet.id, statistic.id) as effectType">
                 <ng-container *ngIf="effectType.value.count !== 0">
-                  <a class="link-genotype-browser">{{effectType.value.count}} ({{effectType.value.rate | number : '1.0-3'}})</a>
+                  <a class="link-genotype-browser"
+                    (click)="goToQuery(gene.geneSymbol, personSet.id, dataset.id, statistic)"
+                    (middleclick)="goToQuery(gene.geneSymbol, personSet.id, dataset.id, statistic)">
+                    {{effectType.value.count}} ({{effectType.value.rate | number : '1.0-3'}})</a>
                 </ng-container>
                 <ng-container *ngIf="effectType.value.count === 0">&ndash;</ng-container>
               </ng-container>

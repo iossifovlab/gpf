@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { AgpConfig, AgpGene, AgpGenomicScores, AgpGenomicScoresCategory } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import { AgpConfig, AgpDatasetStatistic, AgpGene, AgpGenomicScores, AgpGenomicScoresCategory, AgpTableConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { Observable } from 'rxjs';
 import { GeneWeightsService } from '../gene-weights/gene-weights.service';
 import { GeneWeights } from 'app/gene-weights/gene-weights';
@@ -11,6 +11,18 @@ import { GeneService } from 'app/gene-view/gene.service';
 import { Gene } from 'app/gene-view/gene';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { DatasetDetails } from 'app/datasets/datasets';
+import { Store } from '@ngxs/store';
+import { QueryService } from 'app/query/query.service';
+import { GenomicScore } from 'app/genotype-browser/genotype-browser';
+import { SetEffectTypes } from 'app/effecttypes/effecttypes.state';
+import { SetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
+import { SetGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
+import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
+import { SetPresentInChildValues } from 'app/present-in-child/present-in-child.state';
+import { SetPresentInParentValues } from 'app/present-in-parent/present-in-parent.state';
+import { SetStudyTypes } from 'app/study-types/study-types.state';
+import { SetVariantTypes } from 'app/varianttypes/varianttypes.state';
+import { EffectTypes } from 'app/effecttypes/effecttypes';
 
 @Component({
   selector: 'gpf-autism-gene-profile-single-view',
@@ -19,7 +31,7 @@ import { DatasetDetails } from 'app/datasets/datasets';
 })
 export class AutismGeneProfileSingleViewComponent implements OnInit {
   @Input() readonly geneSymbol: string;
-  @Input() config: AgpConfig;
+  @Input() config: AgpTableConfig;
   genomicScoresGeneWeights = [];
 
   gene$: Observable<AgpGene>;
@@ -41,6 +53,12 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     Pubmed: ''
   };
 
+  effectTypes = {
+    lgds: EffectTypes['LGDS'],
+    intron: ['Intron'],
+    missense: ['Missense'],
+  };
+
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
     private geneWeightsService: GeneWeightsService,
@@ -48,6 +66,8 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     private datasetsService: DatasetsService,
     private location: Location,
     private router: Router,
+    private queryService: QueryService,
+    private store: Store,
   ) { }
 
   ngOnInit(): void {
@@ -141,5 +161,65 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
 
   get histogramOptions() {
     return this._histogramOptions;
+  }
+
+  goToQuery(geneSymbol: string, personSetId: string, datasetId: string, statistic: AgpDatasetStatistic) {
+    const newWindow = window.open('', '_blank');
+
+    console.log(this.config.datasets);
+    console.log(datasetId);
+    console.log(personSetId);
+
+    console.log(this.config.datasets
+      .find(dataset => dataset.id === datasetId).personSets
+      .find(personSet => personSet.id === personSetId))
+
+    const variantTypes = this.config.datasets
+      .find(dataset => dataset.id === datasetId).personSets
+      .find(personSet => personSet.id === personSetId)
+      .statistics.find((datasetStatistic) => datasetStatistic.id === statistic.id)
+      .variantTypes;
+
+
+
+    const genomicScores: GenomicScore[] = [];
+    if (statistic.scores) {
+      genomicScores[0] = new GenomicScore(
+        statistic.scores[0]['name'],
+        statistic.scores[0]['min'],
+        statistic.scores[0]['max'],
+      );
+    }
+
+    const presentInChildValues = ['proband only', 'proband and sibling', 'sibling only'];
+    const presentInParentRareValues = ['father only', 'mother only', 'mother and father'];
+
+    let presentInParent: string[] = ['neither'];
+    let rarityType = 'all';
+    if (statistic.category === 'rare') {
+      rarityType = 'rare';
+      presentInParent = presentInParentRareValues;
+    }
+
+    this.store.dispatch([
+      new SetGeneSymbols([geneSymbol]),
+      new SetEffectTypes(new Set(this.effectTypes[statistic['effects'][0]])),
+      new SetStudyTypes(new Set(['we'])),
+      // new SetVariantTypes(new Set(variantTypes)),
+      new SetGenomicScores(genomicScores),
+      new SetPresentInChildValues(new Set(presentInChildValues)),
+      new SetPresentInParentValues(new Set(presentInParent), rarityType, 0, 1),
+      new SetPedigreeSelector('phenotype', new Set([personSetId])),
+    ]);
+
+    this.store.selectOnce(state => state).subscribe(state => {
+      state['datasetId'] = this.config.defaultDataset;
+      this.queryService.saveQuery(state, 'genotype')
+      .take(1)
+      .subscribe(urlObject => {
+        const url = this.queryService.getLoadUrlFromResponse(urlObject);
+        newWindow.location.assign(url);
+      });
+    });
   }
 }
