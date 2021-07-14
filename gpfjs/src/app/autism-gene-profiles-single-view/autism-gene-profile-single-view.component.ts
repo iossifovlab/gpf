@@ -166,21 +166,11 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   goToQuery(geneSymbol: string, personSetId: string, datasetId: string, statistic: AgpDatasetStatistic) {
     const newWindow = window.open('', '_blank');
 
-    console.log(this.config.datasets);
-    console.log(datasetId);
-    console.log(personSetId);
-
-    console.log(this.config.datasets
-      .find(dataset => dataset.id === datasetId).personSets
-      .find(personSet => personSet.id === personSetId))
-
-    const variantTypes = this.config.datasets
-      .find(dataset => dataset.id === datasetId).personSets
-      .find(personSet => personSet.id === personSetId)
-      .statistics.find((datasetStatistic) => datasetStatistic.id === statistic.id)
-      .variantTypes;
-
-
+    // const variantTypes = this.config.datasets
+    //   .find(dataset => dataset.id === datasetId).personSets
+    //   .find(personSet => personSet.id === personSetId)
+    //   .statistics.find((datasetStatistic) => datasetStatistic.id === statistic.id)
+    //   .variantTypes;
 
     const genomicScores: GenomicScore[] = [];
     if (statistic.scores) {
