@@ -560,7 +560,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
 
     this.store.selectOnce(state => state).subscribe(state => {
       state['datasetId'] = datasetId;
-      console.log(state);
       this.queryService.saveQuery(state, 'genotype')
       .take(1)
       .subscribe(urlObject => {
