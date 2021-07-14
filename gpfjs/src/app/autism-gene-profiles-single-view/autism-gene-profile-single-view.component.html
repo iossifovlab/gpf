@@ -65,7 +65,7 @@
     
         <tbody>
           <tr class="card-block" *ngFor="let statistic of dataset.statistics">
-            <td>{{statistic.displayName}}</td>
+            <td>{{statistic.description}}</td>
             <td style="text-align: center;" *ngFor="let personSet of dataset.personSets">
               <ng-container *ngIf="getGeneDatasetValue(gene, dataset.id, personSet.id, statistic.id) as effectType">
                 <ng-container *ngIf="effectType.value.count !== 0">
