@@ -2,11 +2,11 @@
   <h2 style="margin-right: 15px">{{geneSymbol}}</h2>
 
   <div class="wrapper" style="margin-bottom: 18px">
-    <a [attr.href]="links.GeneBrowser" id="gene-browser-link" target="_blank" >View {{geneSymbol}} in the Gene Browser</a>
-    <a *ngIf="links.SFARIgene !== ''" [attr.href]="links.SFARIgene" target="_blank">SFARI gene</a>
-    <a [attr.href]="links.UCSC" target="_blank">UCSC genome browser</a>
-    <a [attr.href]="links.GeneCards" target="_blank">GeneCards</a>
-    <a [attr.href]="links.Pubmed" target="_blank">Pubmed</a>
+    <a class="link-external-page" [attr.href]="links.GeneBrowser" id="gene-browser-link" target="_blank" >View {{geneSymbol}} in the Gene Browser</a>
+    <a *ngIf="links.SFARIgene !== ''" class="link-external-page" [attr.href]="links.SFARIgene" target="_blank">SFARI gene</a>
+    <a class="link-external-page" [attr.href]="links.UCSC" target="_blank">UCSC genome browser</a>
+    <a class="link-external-page" [attr.href]="links.GeneCards" target="_blank">GeneCards</a>
+    <a class="link-external-page" [attr.href]="links.Pubmed" target="_blank">Pubmed</a>
   </div>
 
   <div class="wrapper">
@@ -70,7 +70,7 @@
             <td style="text-align: center;" *ngFor="let personSet of dataset.personSets">
               <ng-container *ngIf="getGeneDatasetValue(gene, dataset.id, personSet.id, statistic.id) as effectType">
                 <ng-container *ngIf="effectType.value.count !== 0">
-                  {{effectType.value.count}} ({{effectType.value.rate | number : '1.0-3'}})
+                  <a class="link-genotype-browser">{{effectType.value.count}} ({{effectType.value.rate | number : '1.0-3'}})</a>
                 </ng-container>
                 <ng-container *ngIf="effectType.value.count === 0">&ndash;</ng-container>
               </ng-container>

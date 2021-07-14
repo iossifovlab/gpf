@@ -9,7 +9,12 @@ table {
   align-items: flex-start;
 }
 
-a {
+.link-external-page {
   text-decoration: underline;
   padding-right: 25px;
+}
+
+.link-genotype-browser, .link-genotype-browser:hover {
+  color: #0056b3;
+  cursor: pointer;
 }
