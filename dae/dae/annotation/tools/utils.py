@@ -1,9 +1,14 @@
 import gzip
 import os
 from importlib import import_module
+from dae.annotation.tools.score_annotator import PositionScoreAnnotator
 
 
 class AnnotatorFactory:
+    ANNOTATOR_NAMES = {
+        "position_score": PositionScoreAnnotator
+    }
+
     @staticmethod
     def _split_class_name(class_fullname):
         splitted = class_fullname.split(".")
@@ -28,8 +33,9 @@ class AnnotatorFactory:
 
     @classmethod
     def make_annotator(
-            cls, config, genomes_db, liftover=None, override=None):
-        clazz = cls.name_to_class(config.score_type)
+            cls, annotator_type, config,
+            genomes_db, liftover=None, override=None):
+        clazz = cls.ANNOTATOR_NAMES.get(annotator_type)
         assert clazz is not None
         return clazz(config, genomes_db, liftover, override)
 

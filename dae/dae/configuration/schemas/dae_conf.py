@@ -135,7 +135,7 @@ dae_conf_schema = {
                 "check_with": validate_path,
                 "coerce": "abspath",
             },
-            "genomic_resource_repositories": {
+            "repositories": {
                 "type": "list",
                 "valuesrules": {"type": "dict", "schema": grr_schema}
             },

@@ -1,3 +1,7 @@
+import os
+import pysam
+
+from urllib.parse import urlparse
 from typing import Dict, List, Tuple, Union
 
 
@@ -16,7 +20,7 @@ class GenomicResourceBase:
         raise NotImplementedError
 
     def get_repo(self):
-        return self
+        return self._repo
 
 
 class GenomicResource(GenomicResourceBase):
@@ -40,6 +44,30 @@ class GenomicResource(GenomicResourceBase):
 
     def get_manifest(self):
         return self._manifest
+
+    def binary_stream(self, filename, offset=None, size=None):
+        return self._repo.stream_resource_file(
+            self._id, filename, offset, size
+        )
+
+    def tabix_access(self, filename, index_filename=None):
+        parse_result = urlparse(self._url)
+        if parse_result.scheme == "file":
+            filename = os.path.join(parse_result.path, filename)
+            if index_filename is not None:
+                index_filename = \
+                    os.path.join(parse_result.path, index_filename)
+        else:
+            filename = f"{self._url}/{filename}"
+            if index_filename is not None:
+                index_filename = f"{self._url}/{filename}"
+        return pysam.TabixFile(filename, index=index_filename)
+
+    def open(self):
+        raise NotImplementedError
+
+    def close(self):
+        raise NotImplementedError
 
 
 class GenomicResourceGroup(GenomicResourceBase):

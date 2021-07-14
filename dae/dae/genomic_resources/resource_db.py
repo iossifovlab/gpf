@@ -1,18 +1,14 @@
 import os
 from urllib.parse import urlparse
 from dae.genomic_resources.repository import FSGenomicResourcesRepo, \
-    HTTPGenomicResourcesRepo
-from dae.genomic_resources.resources import GenomicResourceBase
+    HTTPGenomicResourcesRepo, GenomicResourcesRepo
+from dae.genomic_resources.resources import GenomicResource
 
 
 class GenomicResourceDB:
-    def __init__(self, resources_config):
-        self.config = resources_config
-        self._cache = FSGenomicResourcesRepo(
-            "cache", self.config.cache_location
-        )
+    def __init__(self, repositories):
         self.repositories = []
-        for gsd_conf in self.config.genomic_resource_repositories:
+        for gsd_conf in repositories:
             gsd_id = gsd_conf["id"]
             gsd_url = urlparse(gsd_conf["url"])
             is_filesystem = gsd_url.scheme == "file"
@@ -22,26 +18,36 @@ class GenomicResourceDB:
                 gsd = HTTPGenomicResourcesRepo(gsd_id, gsd_url.geturl())
             self.repositories.append(gsd)
 
-    def get_resource(self, resource_id: str):
-        resource = self.cache.get_resource(resource_id)
-        if resource is not None:
-            return resource
+    def get_resource(self, resource_id: str, repo_id: str = None):
+        if repo_id is not None:
+            raise NotImplementedError
+        # resource = self.cache.get_resource(resource_id)
+        # if resource is not None:
+            # return resource
 
         for repository in self.repositories:
             resource = repository.get_resource(resource_id)
-            if resource is not None:
-                self._do_cache(resource)
-                return self.get_resource(resource_id)
+            return resource
+            # if resource is not None:
+                # self._do_cache(resource)
+                # return self.get_resource(resource_id)
 
         return None
 
-    def get_cache(self):
+
+class CachedGenomicResourceDB(GenomicResourceDB):
+    def __init__(self, repositories, cache_location):
+        self._cache = FSGenomicResourcesRepo(
+            "cache", cache_location
+        )
+        super(repositories)
+
+    def get_cache_repo(self):
         return self._cache
 
-    def _do_cache(self, resource: GenomicResourceBase):
-        cache_path = os.path.join(
-            self._cache.get_url(), resource.get_url()
-        )
+    def _do_cache(self, resource: GenomicResource):
+        cache_base_path = urlparse(self._cache.get_url()).path
+        cache_path = os.path.join(cache_base_path, resource.get_id())
         os.makedirs(cache_path, exist_ok=True)
 
         def copy_file(filename: str):
@@ -54,7 +60,11 @@ class GenomicResourceDB:
         for file in resource.get_manifest().keys():
             copy_file(file)
 
-        self._cache_gsd.reload()
+        GenomicResourcesRepo.create_genomic_resource_repository(
+            cache_base_path
+        )
+
+        self._cache.reload()
 
     def cache_resource(self, resource_id: str):
         for repository in self.repositories:

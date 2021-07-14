@@ -8,9 +8,12 @@ logger = logging.getLogger(__name__)
 
 class Annotator:
 
-    def __init__(self, config, genomes_db, liftover=None, override=None):
+    def __init__(
+        self, config, genomes_db, resource_db, liftover=None, override=None
+    ):
         self.config = config
         self.genomes_db = genomes_db
+        self.resource_db = resource_db
 
         # FIXME Reintroduce Graw, Traw and TrawFormat?
 
@@ -56,7 +59,7 @@ class Annotator:
         Carry out the annotation and then relabel results as configured.
         """
         self._do_annotate(attributes, variant, liftover_variants)
-        attributes = self.config.default_annotation.attributes
+        attributes = self.resource._config.default_annotation.attributes
         if self.override is not None:
             attributes = self.override.attributes
         for attr in attributes:

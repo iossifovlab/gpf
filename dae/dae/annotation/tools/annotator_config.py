@@ -1,14 +1,14 @@
 from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.annotation.tools.utils import AnnotatorFactory
+from dae.genomic_resources.utils import resource_type_to_class
 
 
 class AnnotationConfigParser:
     @classmethod
     def load_annotation_config(cls, filename, override=None):
         raw_config = GPFConfigParser.load_config_raw(filename)
-        annotator_type = raw_config["score_type"]
-        annotator_class = AnnotatorFactory.name_to_class(annotator_type)
-        schema = annotator_class.get_config_schema()
+        resource_type = raw_config["resource_type"]
+        resource_class = resource_type_to_class(resource_type)
+        schema = resource_class.get_config_schema()
         config = GPFConfigParser.load_config(filename, schema)
         if override is not None:
             config = GPFConfigParser.modify_tuple(config, override)
@@ -23,7 +23,7 @@ class AnnotationConfigParser:
         parsed_config = GPFConfigParser.interpolate_contents(
             file_contents, ".yaml"
         )
-        annotator_type = parsed_config["score_type"]
-        annotator_class = AnnotatorFactory.name_to_class(annotator_type)
-        schema = annotator_class.get_config_schema()
+        resource_type = parsed_config["resource_type"]
+        resource_class = resource_type_to_class(resource_type)
+        schema = resource_class.get_config_schema()
         return GPFConfigParser.process_config(parsed_config, schema)

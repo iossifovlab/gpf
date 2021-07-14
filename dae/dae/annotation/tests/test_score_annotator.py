@@ -8,9 +8,13 @@ from dae.annotation.tools.score_annotator import (
 
 def test_position_score_annotator(
         phastcons100way_variants_expected,
-        get_score_config, genomes_db_2013):
-    config = get_score_config("TESTphastCons100way")
-    annotator = PositionScoreAnnotator(config, genomes_db_2013)
+        anno_grdb, genomes_db_2013):
+    from dae.configuration.gpf_config_parser import FrozenBox
+    config = FrozenBox({
+        "annotator": "position_score",
+        "resource": "hg38/TESTphastCons100way",
+    })
+    annotator = PositionScoreAnnotator(config, genomes_db_2013, anno_grdb)
     pipeline = AnnotationPipeline()
     pipeline.add_annotator(annotator)
 

@@ -1,14 +1,18 @@
-import sys
 import os
+import sys
+import pysam
 import logging
 
-import pysam
-import numpy as np
-import pandas as pd
-from collections import defaultdict
+from copy import deepcopy
+from typing import List
 
-from dae.annotation.tools.utils import AnnotatorFactory, \
-    handle_chrom_prefix, is_gzip, regions_intersect
+from urllib.parse import urlparse
+
+from dae.genomic_resources.resources import GenomicResource
+from dae.annotation.tools.utils import is_gzip, regions_intersect, \
+    handle_chrom_prefix
+from dae.configuration.schemas.genomic_score_database import attr_schema, \
+    genomic_score_schema
 
 logger = logging.getLogger(__name__)
 
@@ -43,37 +47,40 @@ class ScoreLine:
         return int(self.values["pos_end"])
 
 
-class ScoreFile:
+class GenomicScoresResource(GenomicResource):
 
     LONG_JUMP_THRESHOLD = 5000
     ACCESS_SWITCH_THRESHOLD = 1500
 
-    def __init__(
-        self, tabix_file, direct_tabix_file, config, required_columns
-    ):
-
-        self.config = config
-        self.infile = tabix_file
-        self.direct_infile = direct_tabix_file
-        self.separator = "\t" if config.separator is None else config.separator
+    def open(self):
+        scores_filename = self._url + "/" + self._config.filename
+        index_filename = self._url + "/" + self._config.index_file.filename
+        if urlparse(self._url).scheme == "file":
+            scores_filename = urlparse(scores_filename).path
+            index_filename = urlparse(index_filename).path
+            assert os.path.exists(scores_filename), scores_filename
+            assert os.path.exists(index_filename), index_filename
+            assert is_gzip(scores_filename)
+        self.infile = self.tabix_access(scores_filename, index_filename)
+        self.direct_infile = self.tabix_access(scores_filename, index_filename)
+        self.separator = "\t" if self._config.separator is None \
+            else self._config.separator
         self.buffer = []
         self.last_pos = 0
 
-        # assert os.path.exists(self.filename), self.filename
-        # assert os.path.exists(self.tabix_filename), self.tabix_filename
-        # assert is_gzip(self.filename)
-
-        file_columns = {rc: self.config[rc] for rc in required_columns}
+        file_columns = {rc: self._config[rc] for rc in self.required_columns()}
         file_columns.update({
-            sc.id: sc for sc in self.config.scores
+            sc.id: sc for sc in self._config.scores
         })
 
-        self.score_ids = [score.id for score in self.config.scores]
+        contig_name = self.infile.contigs[-1]
+        self._has_chrom_prefix = contig_name.startswith("chr")
+        self._lines_iterator = map(
+            self._parse_line, self.infile.fetch(parser=pysam.asTuple())
+        )
 
-        self._setup()
-
-        if self.config.has_header:
-            header = self.header
+        if self._config.has_header:
+            header = self._get_header()
             col_indexes = dict()
             for col_name, desc in file_columns.items():
                 if desc is not None:
@@ -85,17 +92,23 @@ class ScoreFile:
 
         self.col_indexes = col_indexes
 
-    @property
-    def _chrom_idx(self):
-        return self.col_indexes["chrom"]
+    def close(self):
+        self.infile.close()
+        self.direct_infile.close()
 
-    @property
-    def _pos_begin_idx(self):
-        return self.col_indexes["pos_begin"]
+    @classmethod
+    def required_columns(cls):
+        raise NotImplementedError
 
-    @property
-    def _pos_end_idx(self):
-        return self.col_indexes.get("pos_end")
+    @classmethod
+    def get_config_schema(cls):
+        cols = cls.required_columns()
+        attributes_schemas = {
+            attr_name: attr_schema for attr_name in cols
+        }
+        schema = deepcopy(genomic_score_schema)
+        schema.update(attributes_schemas)
+        return schema
 
     @property
     def _buffer_chrom(self):
@@ -116,36 +129,13 @@ class ScoreFile:
             return -1
         return self.buffer[0].pos_end
 
-    def fetch_lines(self, chrom, pos_begin, pos_end):
-        self.last_pos = pos_end
-        if abs(pos_begin - self.last_pos) > self.ACCESS_SWITCH_THRESHOLD:
-            return self._fetch_direct(chrom, pos_begin, pos_end)
-        return self._fetch_sequential(chrom, pos_begin, pos_end)
-
-    def close(self):
-        self.infile.close()
-        self.direct_infile.close()
+    def _get_header(self):
+        return self.infile.header[-1].strip("#").split(self.separator)
 
     def _parse_line(self, line):
         return ScoreLine({
             col: line[idx] for col, idx in self.col_indexes.items()
-        }, self.score_ids)
-
-    def _setup(self):
-        self.infile = pysam.TabixFile(self.filename, index=self.tabix_filename)
-        self.direct_infile = pysam.TabixFile(
-            self.filename,
-            index=self.tabix_filename
-        )
-        contig_name = self.infile.contigs[-1]
-        self._has_chrom_prefix = contig_name.startswith("chr")
-        self._lines_iterator = map(
-            self._parse_line, self.infile.fetch(parser=pysam.asTuple())
-        )
-
-    @property
-    def header(self):
-        return self.infile.header[-1].strip("#").split(self.separator)
+        }, self.get_all_scores())
 
     def _purge_buffer(self, chrom, pos_begin, pos_end):
         # purge start of line buffer
@@ -177,6 +167,12 @@ class ScoreFile:
             self.buffer.append(line)
             if line.pos_end > pos_end:
                 break
+
+    def _fetch_lines(self, chrom, pos_begin, pos_end):
+        self.last_pos = pos_end
+        if abs(pos_begin - self.last_pos) > self.ACCESS_SWITCH_THRESHOLD:
+            return self._fetch_direct(chrom, pos_begin, pos_end)
+        return self._fetch_sequential(chrom, pos_begin, pos_end)
 
     def _fetch_sequential(self, chrom, pos_begin, pos_end):
         if (
@@ -228,28 +224,45 @@ class ScoreFile:
             )
             return []
 
-    def fetch_scores_df(self, chrom, pos_begin, pos_end):
-        return self.scores_to_dataframe(
-            self.fetch_scores(chrom, pos_begin, pos_end)
-        )
+    def get_all_chromosomes(self):
+        return self.infile.contigs
 
-    def scores_to_dataframe(self, scores):
-        df = pd.DataFrame(scores)
-        for score_id in self.score_ids:
-            df[score_id] = df[score_id].replace(["NA"], np.nan)
-            df[score_id] = df[score_id].astype("float32")
-        return df
+    def get_all_scores(self):
+        return [s.id for s in self._config.scores]
 
-    def fetch_scores_iterator(self, chrom, pos_begin, pos_end):
+    def get_default_scores(self):
+        return [s.source for s in self._config.default_annotation.attributes]
+
+    def get_default_annotation(self):
+        return self._config.default_annotation
+
+
+class PositionScoreResource(GenomicScoresResource):
+
+    @classmethod
+    def required_columns(cls):
+        return ("chrom", "pos_begin", "pos_end")
+
+    def fetch_scores(
+            self, chrom: str, position: int, scores: List[str] = None):
         chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
-        for line in self.fetch_lines(chrom, pos_begin, pos_end):
-            yield line
+        assert chrom in self.get_all_chromosomes()
+        line = self._fetch_lines(chrom, position, position)[0]
 
-    def fetch_scores(self, chrom, pos_begin, pos_end, extra_cols=None):
+        scores = dict()
+        for col, val in line.scores.items():
+            scores[col] = val
+
+        return scores
+
+    def fetch_scores_agg(
+        self, chrom: str, pos_begin: int, pos_end: int,
+        scores_aggregators
+    ):
         chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
+        assert chrom in self.get_all_chromosomes()
         score_lines = self.fetch_lines(chrom, pos_begin, pos_end)
         logger.debug(f"score lines found: {score_lines}")
-        result = defaultdict(list)
 
         for line in score_lines:
             logger.debug(
@@ -263,23 +276,38 @@ class ScoreFile:
                 continue
 
             assert count >= 1, count
-            result["COUNT"].append(count)
+            scores = dict()
             for col, val in line.scores.items():
-                result[col].append(val)
-            if extra_cols:
-                for col in extra_cols:
-                    result[col].append(line.values[col])
-        logger.debug(f"fetch scores: {result}")
-        return result
+                if scores is not None and col not in scores:
+                    continue
+                scores[col] = val
 
-    def fetch_highest_scores(self, chrom, pos_begin, pos_end):
-        result = dict()
-        chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
-        for line in self._fetch_direct(chrom, pos_begin - 1, pos_end):
-            for score in self.config.scores:
-                score_id = score.id
-                score_value = line.scores[score_id] \
-                    if line.get(score_id) not in (None, "") else None
-                result[score_id] = max(
-                    score_value, result.get(score_id, np.nan))
-        return result
+
+class NPScoreResource(GenomicScoresResource):
+    def open(self):
+        pass
+
+    def close(self):
+        pass
+
+    def fetch_scores(chrom: str, position: int, nt: str, scores: List[str]):
+        pass
+
+    def fetch_scores_agg(
+        chrom: str, pos_begin: int, pos_end: int,
+        scores_aggregators
+    ):
+        pass
+
+
+class FrequencyScoreResource(GenomicScoresResource):
+    def open(self):
+        pass
+
+    def close(self):
+        pass
+
+    def fetch_scores(
+        chrom: str, position: int, ref: str, alt: str, scores: List[str]
+    ):
+        pass

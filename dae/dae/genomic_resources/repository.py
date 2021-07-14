@@ -1,7 +1,10 @@
 import os
 import yaml
 from typing import List, Dict
+from glob import glob
+from subprocess import call
 import pathlib
+import logging
 
 import requests
 import urllib.request
@@ -12,6 +15,10 @@ from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.genomic_resources.resources import ParentsScoreTuple, \
     GenomicResourceBase, GenomicResource, GenomicResourceGroup
 from dae.genomic_resources.manifest import Manifest
+from dae.genomic_resources.http_file import HTTPFile
+from dae.genomic_resources.utils import resource_type_to_class
+
+logger = logging.getLogger(__name__)
 
 
 class GenomicResourcesRepo:
@@ -25,6 +32,80 @@ class GenomicResourcesRepo:
         self.resources: Dict[str, GenomicResourceBase] = dict()
 
         self._load_genomic_resources(repo_content)
+
+    @staticmethod
+    def create_genomic_resource_repository(repository_path):
+        logger.info("Gathering genomic resources")
+
+        root_path = pathlib.Path(repository_path).absolute()
+        conf_files = glob(
+            os.path.join(root_path, "**", "genomic_resource.yaml"),
+            recursive=True
+        )
+        root_url = root_path.as_uri()
+        root = GenomicResourceGroup("root", root_url)
+        for conf_path in conf_files:
+            score_path = conf_path[len(root_path.as_posix()):]
+            score_path = score_path.strip('/').split('/')
+            assert len(score_path) >= 1, score_path
+            curr_group = root
+            curr_path = root_path.as_posix()
+            group_name = ""
+            for group in score_path[:-2]:
+                group_name += f"/{group}"
+                curr_path += group_name
+                group_name = group_name.strip("/")
+                if group_name not in curr_group.children:
+                    url = pathlib.Path(curr_path).absolute().as_uri()
+                    print(curr_path)
+                    resource = GenomicResourceGroup(group_name, url)
+                    curr_group.add_child(resource)
+                curr_group = curr_group.children[group_name]
+            curr_path += f"/{score_path[-2]}"
+            config = AnnotationConfigParser.load_annotation_config(
+                conf_path
+            )
+            score_url = pathlib.Path(curr_path).absolute().as_uri()
+            score = GenomicResource(config, score_url, None, None)
+            curr_group.add_child(score)
+
+        repo_content = dict()
+
+        logger.info("Writing resources to CONTENT metadata")
+
+        def add_resource_to_content_dict(resource, section):
+            section["id"] = resource.get_id()
+            if isinstance(resource, GenomicResourceGroup):
+                section["type"] = "group"
+                section["children"] = []
+                for child in resource.get_children():
+                    child_section = dict()
+                    add_resource_to_content_dict(child, child_section)
+                    section["children"].append(child_section)
+            else:
+                section["type"] = "resource"
+
+        add_resource_to_content_dict(root, repo_content)
+
+        content_filepath = os.path.join(root_path.as_posix(), "CONTENT.yaml")
+
+        with open(content_filepath, "w") as out:
+            yaml.dump(
+                repo_content, out, default_flow_style=False, sort_keys=False
+            )
+
+        logger.info("Generating MANIFEST files")
+
+        for resource in root.get_resources():
+            cwd = urlparse(resource.get_url()).path
+            print(resource.get_url())
+            call(
+                "find . -type f \\( ! -iname \"MANIFEST\" \\)  "
+                "-exec sha256sum {} \\; | sed \"s|\\s\\./||\""
+                "> MANIFEST",
+                cwd=cwd,
+                shell=True
+            )
 
     def _load_genomic_resources(self, content_section, parent=None):
         if content_section is None:
@@ -58,7 +139,8 @@ class GenomicResourcesRepo:
             config = AnnotationConfigParser.load_annotation_config_from_stream(
                 self._stream_resource_file_internal(config_uri, None, None)
             )
-            resource = GenomicResource(
+            resource_class = resource_type_to_class(config["resource_type"])
+            resource = resource_class(
                 config,
                 url,
                 manifest,
@@ -99,7 +181,7 @@ class GenomicResourcesRepo:
         Returns a file object related to a given genomic score.
         """
         resource = self.get_resource(resource_id)
-        file_url = urljoin(resource.get_url(), filename)
+        file_url = os.path.join(resource.get_url(), filename)
         return self._stream_resource_file_internal(file_url, offset, size)
 
     def get_genomic_score(self, genomic_score_id: str) -> ParentsScoreTuple:
@@ -111,6 +193,9 @@ class GenomicResourcesRepo:
         Returns all constituent genomic scores of this repository.
         """
         return self.top_level_group.score_children()
+
+    def open_file(self, resource_id: str, filename: str):
+        raise NotImplementedError
 
 
 class FSGenomicResourcesRepo(GenomicResourcesRepo):
@@ -132,13 +217,20 @@ class FSGenomicResourcesRepo(GenomicResourcesRepo):
         self.resources[resource.get_id()] = resource
 
     def reload(self):
-        self.__init__(self.gsd_id, self.path)
+        path = urlparse(self._url).path
+        self.__init__(self.gsd_id, path)
 
     def _stream_resource_file_internal(self, file_uri, offset, size):
         # TODO Implement progress bar and interruptible download
         abspath = urlparse(file_uri).path
         with open(abspath, "rb") as f:
             yield f.read(8192)
+
+    def open_file(self, resource_id: str, filename: str):
+        resource = self.get_resource(resource_id)
+        file_url = os.path.join(resource.get_url(), filename)
+        filepath = urlparse(file_url).path
+        return open(filepath, "r")
 
 
 class HTTPGenomicResourcesRepo(GenomicResourcesRepo):
@@ -168,7 +260,7 @@ class HTTPGenomicResourcesRepo(GenomicResourcesRepo):
         super().__init__(gsd_id, repo_content)
 
     def reload(self):
-        self.__init__(self.gsd_id, self.url)
+        self.__init__(self.gsd_id, self._url)
 
     def _stream_resource_file_internal(self, file_uri, offset, size):
         # TODO Implement progress bar and interruptible download
@@ -178,3 +270,8 @@ class HTTPGenomicResourcesRepo(GenomicResourcesRepo):
                 response.status_code
             for chunk in response.iter_content(chunk_size=8192):
                 yield chunk
+
+    def open_file(self, resource_id: str, filename: str):
+        resource = self.get_resource(resource_id)
+        file_url = os.path.join(resource.get_url(), filename)
+        return HTTPFile(file_url)

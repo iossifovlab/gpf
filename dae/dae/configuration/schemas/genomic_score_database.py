@@ -16,7 +16,7 @@ target_genome_schema = {
 genomic_score_schema = {
     "id": {"type": "string"},
     "name": {"type": "string"},
-    "score_type": {"type": "string", "required": True},
+    "resource_type": {"type": "string", "required": True},
     "filename": {
         "type": "string",
         "required": True,
@@ -46,6 +46,14 @@ genomic_score_schema = {
         "type": "dict",
         "schema": target_genome_schema,
     },
+    "type_aggregators": {
+        "type": "list", "schema": {
+            "type": "dict", "schema": {
+                "type": {"type": "string"},
+                "aggregator": {"type": "string"}
+            }
+        }
+    },
     "scores": {
         "type": "list",
         "schema": {
@@ -69,6 +77,12 @@ genomic_score_schema = {
                     "schema": {
                         "source": {"type": "string"},
                         "dest": {"type": "string"},
+                        "aggregator": {
+                            "type": "dict", "schema": {
+                                "position": {"type": "string"},
+                                "nucleotide": {"type": "string"}
+                            }
+                        }
                     }
                 }
             },

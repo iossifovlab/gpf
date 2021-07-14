@@ -36,7 +36,7 @@ def resources_http_server(fixture_dirname, http_port):
     server = Popen(
         [
             "python",
-            "-m", "http.server",
+            "-m", "RangeHTTPServer",
             http_port,
             "--directory", fixture_dirname("genomic_scores"),
         ],

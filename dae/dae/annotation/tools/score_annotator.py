@@ -3,16 +3,33 @@ import logging
 from dae.variants.attributes import VariantType
 
 from dae.annotation.tools.annotator_base import Annotator
-from dae.annotation.tools.reader import ScoreFile
+
+from dae.genomic_resources.utils import aggregator_name_to_class
 
 
 logger = logging.getLogger(__name__)
 
 
 class VariantScoreAnnotatorBase(Annotator):
-    def __init__(self, config, genomes_db, liftover=None, override=None):
-        super().__init__(config, genomes_db, liftover, override)
-        self.score_file = ScoreFile(self.config)
+    def __init__(
+            self, config, genomes_db, resource_db,
+            liftover=None, override=None):
+        super().__init__(config, genomes_db, resource_db, liftover, override)
+
+        resource = self.resource_db.get_resource(config.resource)
+        self._resource = resource
+
+        self.score_types = dict()
+        for score in self.resource._config.scores:
+            self.score_types[score.id] = score.type
+
+        self.type_aggregators = dict()
+        for agg in self.resource._config.type_aggregators:
+            self.type_aggregators[agg.type] = agg.aggregator
+
+    @property
+    def resource(self):
+        raise NotImplementedError
 
     @property
     def output_columns(self):
@@ -27,16 +44,13 @@ class VariantScoreAnnotatorBase(Annotator):
     def _fetch_scores(self, variant, extra_cols=None):
         scores = None
         if variant.variant_type & VariantType.substitution:
-            scores = self.score_file.fetch_scores(
-                variant.chromosome, variant.position, variant.position,
-                extra_cols
+            scores = self.resource.fetch_scores(
+                variant.chromosome, variant.position,
             )
         elif variant.variant_type & VariantType.indel:
-            scores = self.score_file.fetch_scores(
+            scores = self.resource.fetch_scores(
                 variant.chromosome,
                 variant.position,
-                variant.position + len(variant.reference),
-                extra_cols,
             )
         else:
             logger.warning(
@@ -44,13 +58,24 @@ class VariantScoreAnnotatorBase(Annotator):
                 f"{variant}, {variant.variant_type}, "
                 f"({variant.variant_type.value})"
             )
+            raise Exception
         return scores
 
     def _annotate_cnv(self, attributes, variant):
-        scores = self.score_file.fetch_highest_scores(
+        aggregators = dict()
+        for attr in self.config.default_annotation.attributes:
+            aggr_name = attr.aggregator
+            if aggr_name is None:
+                score_type = self.score_types[attr.source]
+                aggr_name = self.type_aggregators[score_type]
+            aggregators[attr.source] = aggregator_name_to_class(
+                aggr_name
+            )
+        scores = self.resource.fetch_scores_agg(
             variant.chromosome,
             variant.position,
             variant.end_position,
+            aggregators
         )
 
         for score_name in self.score_names:
@@ -61,26 +86,17 @@ class VariantScoreAnnotatorBase(Annotator):
 
 
 class PositionScoreAnnotator(VariantScoreAnnotatorBase):
-    def __init__(self, config, genomes_db, liftover=None, override=None):
-        super().__init__(config, genomes_db, liftover, override)
+    def __init__(
+            self, config, genomes_db, resource_db,
+            liftover=None, override=None):
+        super().__init__(config, genomes_db, resource_db, liftover, override)
 
-    @staticmethod
-    def required_columns():
-        return ("chrom", "pos_begin", "pos_end")
-
-    def _convert_score(self, score):
-        if score == "NA":
-            return self.score_file.no_score_value
-        else:
-            return float(score)
+    @property
+    def resource(self):
+        return self._resource
 
     def _do_annotate(self, attributes, variant, liftover_variants):
-        if VariantType.is_cnv(variant.variant_type):
-            logger.info(
-                f"skip trying to add position score for CNV variant {variant}")
-            self._scores_not_found(attributes)
-            return
-
+        self._resource.open()
         if self.liftover:
             variant = liftover_variants.get(self.liftover)
 
@@ -88,37 +104,49 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(attributes)
             return
 
-        scores = self._fetch_scores(variant)
-
-        logger.debug(
-            f"{self.score_file.filename} looking for score of {variant}")
-        if not scores:
-            logger.debug(
-                f"{self.score_file.filename} score not found"
+        if variant.variant_type & VariantType.substitution:
+            scores = self.resource.fetch_scores(
+                variant.chromosome, variant.position,
+                self.resource.get_default_scores()
             )
+        else:
+            if variant.variant_type & VariantType.indel:
+                first_position = variant.position-1
+                last_position = variant.position + len(variant.reference)
+            elif variant.is_cnv():
+                first_position = variant.position
+                last_position = variant.end_position
+            else:
+                logger.warning(
+                    f"unexpected variant type in score annotation: "
+                    f"{variant}, {variant.variant_type}, "
+                    f"({variant.variant_type.value})"
+                )
+                raise Exception
+            aggregators = dict()
+            for attr in self.resource._config.default_annotation.attributes:
+                aggr_name = attr.aggregator.position
+                if aggr_name is None:
+                    score_type = self.score_types[attr.source]
+                    aggr_name = self.type_aggregators[score_type]
+                aggregators[attr.source] = aggregator_name_to_class(
+                    aggr_name
+                )
+            scores = self.resource.fetch_scores_agg(
+                variant.chromosome,
+                first_position,
+                last_position,
+                aggregators
+            )
+
+        if not scores:
             self._scores_not_found(attributes)
             return
 
-        counts = scores["COUNT"]
-        total_count = sum(counts)
-
-        for score in self.score_file.config.scores:
-            values = list(
-                map(lambda x: self._convert_score(x), scores[score.id])
-            )
-            assert len(values) > 0
-            if len(values) == 1:
-                attributes[score.id] = values[0]
-            else:
-                values = list(filter(None, values))
-                total_sum = sum(
-                    [c * v for (c, v) in zip(counts, values)]
-                )
-                attributes[score.id] = \
-                    (total_sum / total_count) if total_sum \
-                    else self.score_file.no_score_value
-                logger.debug(
-                    f"attributes[{score.id}]={attributes[score.id]}")
+        for score in self.resource._config.scores:
+            value = scores[score.id]
+            attributes[score.id] = value
+        self._resource.close()
 
 
 class NPScoreAnnotator(VariantScoreAnnotatorBase):
