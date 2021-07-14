@@ -146,7 +146,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
       this.pageIndex, undefined, this.sortBy, this.orderBy
     ).take(1).subscribe(res => {
       this.genes = this.genes.concat(res);
-      this.genes.length = 1;
     });
 
     this.searchKeystrokes$
