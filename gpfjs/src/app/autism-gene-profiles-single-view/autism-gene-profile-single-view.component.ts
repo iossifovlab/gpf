@@ -79,11 +79,11 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
           })
         );
       })
-    ).subscribe();
-
-    this.geneService.getGene(this.geneSymbol).subscribe(gene => {
-      this.datasetsService.getDatasetDetails(this.config.defaultDataset).subscribe(datasetDetails => {
-        this.setLinks(this.geneSymbol, gene, datasetDetails);
+    ).subscribe(() => {
+      this.geneService.getGene(this.geneSymbol).subscribe(gene => {
+        this.datasetsService.getDatasetDetails(this.config.defaultDataset).subscribe(datasetDetails => {
+          this.setLinks(this.geneSymbol, gene, datasetDetails);
+        });
       });
     });
   }
