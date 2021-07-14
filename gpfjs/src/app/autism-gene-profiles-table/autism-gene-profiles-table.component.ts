@@ -522,7 +522,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   goToQuery(geneSymbol: string, personSetId: string, effectTypeId: string, datasetId: string, statistic: AgpDatasetStatistic) {
     const newWindow = window.open('', '_blank');
 
-    // const peopleGroup = new PeopleGroup('status', [personSetId]);
     const variantTypes = this.config.datasets
       .find(dataset => dataset.id === datasetId).personSets
       .find(personSet => personSet.id === personSetId)
@@ -556,7 +555,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
       new SetGenomicScores(genomicScores),
       new SetPresentInChildValues(new Set(presentInChildValues)),
       new SetPresentInParentValues(new Set(presentInParent), rarityType, 0, 1),
-      // new SetPedigreeSelector(undefined, new Set([personSetId])),
+      new SetPedigreeSelector('phenotype', new Set([personSetId])),
     ]);
 
     this.store.selectOnce(state => state).subscribe(state => {
