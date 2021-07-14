@@ -1,6 +1,7 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
+import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 import { GenotypeBrowserSingleViewComponent } from './genotype-browser-single-view.component';
 
@@ -23,6 +24,7 @@ describe('GenotypeBrowserSingleViewComponent', () => {
       providers: [
         {provide: ActivatedRoute, useValue: activatedRoute},
       ],
+      imports: [NgxsModule.forRoot([])],
       schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();

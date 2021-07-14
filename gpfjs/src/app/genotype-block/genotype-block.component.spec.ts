@@ -15,8 +15,8 @@ import { ConfigService } from 'app/config/config.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { EffecttypesColumnComponent } from 'app/effecttypes/effecttypes-column.component';
-
-
+import { NgxsModule } from '@ngxs/store';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 describe('GenotypeBlockComponent', () => {
   let component: GenotypeBlockComponent;
@@ -44,6 +44,10 @@ describe('GenotypeBlockComponent', () => {
         NgbModule,
         HttpClientTestingModule,
         RouterTestingModule,
+        NgxsModule.forRoot([])
+      ],
+      schemas: [
+        NO_ERRORS_SCHEMA
       ]
     })
       .compileComponents();

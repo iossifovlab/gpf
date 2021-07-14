@@ -1,4 +1,5 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { NgxsModule } from '@ngxs/store';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 
 import { PersonFiltersComponent } from './person-filters.component';
@@ -9,7 +10,8 @@ describe('PersonFiltersComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PersonFiltersComponent, ErrorsAlertComponent ]
+      declarations: [ PersonFiltersComponent, ErrorsAlertComponent ],
+      imports: [NgxsModule.forRoot([])],
     })
     .compileComponents();
   }));

@@ -8,6 +8,7 @@ import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-
 import { UsersService } from 'app/users/users.service';
 import { MultiContinuousFilterComponent } from './multi-continuous-filter.component';
 import { Component, Input, Output } from '@angular/core';
+import { NgxsModule } from '@ngxs/store';
 
 @Component({
   selector: 'gpf-searchable-select',
@@ -45,7 +46,7 @@ const PersonFilterMock = {
   filterType: '',
   domain: ['']
 };
-
+// done
 describe('MultiContinuousFilterComponent', () => {
   let component: MultiContinuousFilterComponent;
   let fixture: ComponentFixture<MultiContinuousFilterComponent>;
@@ -68,6 +69,7 @@ describe('MultiContinuousFilterComponent', () => {
       ],
       imports: [
         RouterTestingModule,
+        NgxsModule.forRoot([])
       ]
     })
     .compileComponents();

@@ -2,7 +2,8 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { GenderComponent } from './gender.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
-
+import { NgxsModule } from '@ngxs/store';
+import { of } from 'rxjs';
 
 describe('GenderComponent', () => {
   let component: GenderComponent;
@@ -11,7 +12,7 @@ describe('GenderComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [GenderComponent, ErrorsAlertComponent],
-      imports: []
+      imports: [NgxsModule.forRoot([])]
     })
       .compileComponents();
   }));
@@ -19,6 +20,12 @@ describe('GenderComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(GenderComponent);
     component = fixture.componentInstance;
+    component['store'] = {
+      selectOnce(f) {
+        return of({genders: ['male', 'female']});
+      },
+      dispatch(set) {}
+    } as any;
     fixture.detectChanges();
   });
 

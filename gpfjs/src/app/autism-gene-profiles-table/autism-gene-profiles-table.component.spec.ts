@@ -2,6 +2,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
+import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
@@ -35,7 +36,13 @@ describe('AutismGeneProfilesTableComponent', () => {
         SortingButtonsComponent
       ],
       providers: [ConfigService, QueryService, DatasetsService, UsersService],
-      imports: [Ng2SearchPipeModule, HttpClientTestingModule, FormsModule, RouterTestingModule]
+      imports: [
+        Ng2SearchPipeModule,
+        HttpClientTestingModule,
+        FormsModule,
+        RouterTestingModule,
+        NgxsModule.forRoot([])
+      ]
     })
     .compileComponents();
   }));

@@ -9,6 +9,7 @@ import { RemoveButtonComponent } from 'app/remove-button/remove-button.component
 import { AddButtonComponent } from 'app/add-button/add-button.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { FormsModule } from '@angular/forms';
+import { NgxsModule } from '@ngxs/store';
 
 const datasetConfigMock: any = {
   studies: ['test_id1', 'test_id2'],
@@ -29,7 +30,7 @@ describe('StudyFiltersBlockComponent', () => {
         ErrorsAlertComponent
       ],
       providers: [NgbNavModule, NgbModule, FormsModule],
-      imports: [NgbNavModule, NgbModule, FormsModule],
+      imports: [NgbNavModule, NgbModule, FormsModule, NgxsModule.forRoot([])],
     })
     .compileComponents();
   }));
@@ -37,6 +38,12 @@ describe('StudyFiltersBlockComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(StudyFiltersBlockComponent);
     component = fixture.componentInstance;
+    component['store'] = {
+      selectOnce(f) {
+        return of({studyFilters: ['value1', 'value2']});
+      },
+      dispatch(set) {}
+    } as any;
     fixture.detectChanges();
     component.dataset = datasetConfigMock;
     component.ngOnChanges({'dataset': new SimpleChange(null, datasetConfigMock, true)});
