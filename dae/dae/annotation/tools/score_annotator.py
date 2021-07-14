@@ -11,13 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class VariantScoreAnnotatorBase(Annotator):
-    def __init__(
-            self, config, genomes_db, resource_db,
-            liftover=None, override=None):
-        super().__init__(config, genomes_db, resource_db, liftover, override)
-
-        resource = self.resource_db.get_resource(config.resource)
-        self._resource = resource
+    def __init__(self, resource, genomes_db, liftover=None, override=None):
+        super().__init__(resource, genomes_db, liftover, override)
 
         self.score_types = dict()
         for score in self.resource._config.scores:
@@ -28,17 +23,13 @@ class VariantScoreAnnotatorBase(Annotator):
             self.type_aggregators[agg.type] = agg.aggregator
 
     @property
-    def resource(self):
-        raise NotImplementedError
-
-    @property
     def output_columns(self):
         return [
-            attr.dest for attr in self.config.default_annotation.attributes
+            attr.dest for attr in self.config.attributes
         ]
 
     def _scores_not_found(self, attributes):
-        values = {score.id: None for score in self.score_file.config.scores}
+        values = {score_id: None for score_id in self.resource.get_default_scores()}
         attributes.update(values)
 
     def _fetch_scores(self, variant, extra_cols=None):
@@ -86,17 +77,12 @@ class VariantScoreAnnotatorBase(Annotator):
 
 
 class PositionScoreAnnotator(VariantScoreAnnotatorBase):
-    def __init__(
-            self, config, genomes_db, resource_db,
-            liftover=None, override=None):
-        super().__init__(config, genomes_db, resource_db, liftover, override)
-
-    @property
-    def resource(self):
-        return self._resource
+    def __init__(self, resource, genomes_db, liftover=None, override=None):
+        super().__init__(resource, genomes_db, liftover, override)
+        # FIXME This should be closed somewhere
+        self.resource.open()
 
     def _do_annotate(self, attributes, variant, liftover_variants):
-        self._resource.open()
         if self.liftover:
             variant = liftover_variants.get(self.liftover)
 
@@ -146,7 +132,6 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         for score in self.resource._config.scores:
             value = scores[score.id]
             attributes[score.id] = value
-        self._resource.close()
 
 
 class NPScoreAnnotator(VariantScoreAnnotatorBase):

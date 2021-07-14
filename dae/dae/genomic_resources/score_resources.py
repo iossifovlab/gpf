@@ -181,13 +181,13 @@ class GenomicScoresResource(GenomicResource):
             or (pos_begin - self._buffer_pos_end) > self.LONG_JUMP_THRESHOLD
         ):
             self.buffer = list()
-            lines = list(self.infile.fetch(
+            lines = self.infile.fetch(
                 f"{chrom}:{pos_begin}", parser=pysam.asTuple()
-            ))
-            self._lines_iterator = list(map(
+            )
+            self._lines_iterator = map(
                 self._parse_line,
                 lines
-            ))
+            )
 
         if self._lines_iterator is None:
             return []
@@ -245,12 +245,17 @@ class PositionScoreResource(GenomicScoresResource):
 
     def fetch_scores(
             self, chrom: str, position: int, scores: List[str] = None):
+
         chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
         assert chrom in self.get_all_chromosomes()
-        line = self._fetch_lines(chrom, position, position)[0]
+
+        line = self._fetch_lines(chrom, position, position) or None
+        if line is None:
+            return None
 
         scores = dict()
-        for col, val in line.scores.items():
+
+        for col, val in line[0].scores.items():
             scores[col] = val
 
         return scores
@@ -261,7 +266,7 @@ class PositionScoreResource(GenomicScoresResource):
     ):
         chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
         assert chrom in self.get_all_chromosomes()
-        score_lines = self.fetch_lines(chrom, pos_begin, pos_end)
+        score_lines = self._fetch_lines(chrom, pos_begin, pos_end)
         logger.debug(f"score lines found: {score_lines}")
 
         for line in score_lines:

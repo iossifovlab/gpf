@@ -14,23 +14,28 @@ logger = logging.getLogger(__name__)
 
 
 class AnnotationPipeline():
-    def __init__(self):
+    def __init__(self, config, genomes_db, resource_db):
         self.annotators = []
+        self.config = config
+        self.genomes_db = genomes_db
+        self.resource_db = resource_db
 
     @staticmethod
     def build(pipeline_config_path, gpf_instance):
         genomes_db = gpf_instance.genomes_db
+        resource_db = gpf_instance.genomic_resource_db
         pipeline_config = GPFConfigParser.load_config(
             pipeline_config_path, annotation_conf_schema
         )
-        pipeline = AnnotationPipeline(pipeline_config, genomes_db)
-        for score in pipeline_config.resources:
-            score_id = score["id"]
-            liftover = score["liftover"]
-            override = score.get("override")
-            gs = gpf_instance.find_genomic_score(score_id)
+        pipeline = AnnotationPipeline(pipeline_config, genomes_db, resource_db)
+        for annotator in pipeline_config.annotators:
+            score_id = annotator["resource"]
+            liftover = annotator["liftover"]
+            annotator_type = annotator["annotator"]
+            override = annotator.get("override")
+            gs = resource_db.get_resource(score_id)
             annotator = AnnotatorFactory.make_annotator(
-                gs.get_config(), genomes_db, liftover, override
+                annotator_type, gs, genomes_db, liftover, override
             )
             pipeline.add_annotator(annotator)
         return pipeline
@@ -52,7 +57,7 @@ class AnnotationPipeline():
     def annotate_summary_variant(self, summary_variant):
         for alt_allele in summary_variant.alt_alleles:
             attributes = deepcopy(alt_allele.attributes)
-            liftover_variants = {}
+            liftover_variants = dict()
             for annotator in self.annotators:
                 annotator.annotate(attributes, alt_allele, liftover_variants)
             alt_allele.update_attributes(attributes)

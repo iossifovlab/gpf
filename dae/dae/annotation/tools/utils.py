@@ -33,11 +33,11 @@ class AnnotatorFactory:
 
     @classmethod
     def make_annotator(
-            cls, annotator_type, config,
+            cls, annotator_type, gs,
             genomes_db, liftover=None, override=None):
         clazz = cls.ANNOTATOR_NAMES.get(annotator_type)
         assert clazz is not None
-        return clazz(config, genomes_db, liftover, override)
+        return clazz(gs, genomes_db, liftover, override)
 
 
 def handle_chrom_prefix(expect_prefix, data):

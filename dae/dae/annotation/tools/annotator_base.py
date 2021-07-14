@@ -8,12 +8,11 @@ logger = logging.getLogger(__name__)
 
 class Annotator:
 
-    def __init__(
-        self, config, genomes_db, resource_db, liftover=None, override=None
-    ):
-        self.config = config
+    def __init__(self, resource, genomes_db, liftover=None, override=None):
+        self.resource = resource
         self.genomes_db = genomes_db
-        self.resource_db = resource_db
+        self.config = override if override \
+            else resource.get_default_annotation()
 
         # FIXME Reintroduce Graw, Traw and TrawFormat?
 

@@ -13,6 +13,25 @@ target_genome_schema = {
     "del_chrom_prefix": {"type": "string"},
 }
 
+default_annotation_schema = {
+    "attributes": {
+        "type": "list",
+        "schema": {
+            "type": "dict",
+            "schema": {
+                "source": {"type": "string"},
+                "dest": {"type": "string"},
+                "aggregator": {
+                    "type": "dict", "schema": {
+                        "position": {"type": "string"},
+                        "nucleotide": {"type": "string"}
+                    }
+                }
+            }
+        }
+    }
+}
+
 genomic_score_schema = {
     "id": {"type": "string"},
     "name": {"type": "string"},
@@ -69,24 +88,7 @@ genomic_score_schema = {
     },
     "default_annotation": {
         "type": "dict",
-        "schema": {
-            "attributes": {
-                "type": "list",
-                "schema": {
-                    "type": "dict",
-                    "schema": {
-                        "source": {"type": "string"},
-                        "dest": {"type": "string"},
-                        "aggregator": {
-                            "type": "dict", "schema": {
-                                "position": {"type": "string"},
-                                "nucleotide": {"type": "string"}
-                            }
-                        }
-                    }
-                }
-            },
-        }
+        "schema": default_annotation_schema,
     },
     "meta": {"type": "string"},
 }

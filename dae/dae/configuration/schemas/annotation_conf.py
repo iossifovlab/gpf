@@ -1,5 +1,5 @@
 from dae.configuration.schemas.genomic_score_database import \
-    genomic_score_schema
+    default_annotation_schema
 
 annotator_schema = {
     "type": "dict",
@@ -9,7 +9,7 @@ annotator_schema = {
         "genome": {"type": "string"},
         "gene_models": {"type": "string"},
         "liftover": {"type": "string"},
-        "override": {"type": "dict", "schema": genomic_score_schema}
+        "override": {"type": "dict", "schema": default_annotation_schema}
     }
 }
 

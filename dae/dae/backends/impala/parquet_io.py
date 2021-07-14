@@ -524,10 +524,8 @@ class VariantsParquetWriter:
     def _write_internal(self):
         family_variant_index = 0
         report = False
-
         for summary_variant_index, (summary_variant, family_variants) in \
                 enumerate(self.full_variants_iterator):
-
             summary_alleles = summary_variant.alleles
 
             summary_blobs = self.serializer.serialize_summary_data(
