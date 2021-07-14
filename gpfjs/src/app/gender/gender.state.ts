@@ -11,6 +11,11 @@ export class RemoveGender {
   constructor(public gender: string) {}
 }
 
+export class SetGender {
+  static readonly type = '[Genotype] Set Gender';
+  constructor(public gender: string[]) {}
+}
+
 export interface GenderModel {
   genders: string[];
 }
@@ -36,6 +41,13 @@ export class GenderState {
     const state = ctx.getState();
     ctx.patchState({
       genders: state.genders.filter(gender => gender !== action.gender)
+    });
+  }
+
+  @Action(SetGender)
+  setEffectTypes(ctx: StateContext<GenderModel>, action: SetGender) {
+    ctx.patchState({
+      genders: Array.from(action.gender)
     });
   }
 }
