@@ -12,6 +12,7 @@ import { PhenoToolGenotypeBlockComponent } from 'app/pheno-tool-genotype-block/p
 import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-filters-block.component';
 import { PhenoToolMeasureState } from 'app/pheno-tool-measure/pheno-tool-measure.state';
 import { Select, Selector } from '@ngxs/store';
+import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
 
 @Component({
   selector: 'gpf-pheno-tool',
@@ -23,6 +24,7 @@ export class PhenoToolComponent implements OnInit {
   selectedDataset: Dataset;
 
   @Select(PhenoToolComponent.phenoToolStateSelector) state$: Observable<any[]>;
+  @Select(ErrorsState) errorsState$: Observable<ErrorsModel>;
 
   phenoToolResults: PhenoToolResults;
   private phenoToolState: Object;
@@ -47,6 +49,10 @@ export class PhenoToolComponent implements OnInit {
       this.phenoToolState = state;
       this.phenoToolResults = null;
     })
+
+    this.errorsState$.subscribe(state => {
+      setTimeout(() => this.disableQueryButtons = state.componentErrors.size > 0);
+    });
   }
 
   submitQuery() {

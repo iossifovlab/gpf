@@ -53,6 +53,7 @@ export class GenotypeBrowserComponent implements OnInit, OnChanges {
       this.genotypeBrowserState = state;
       this.genotypePreviewVariantsArray = null;
     });
+    
     this.errorsState$.subscribe(state => {
       setTimeout(() => this.disableQueryButtons = state.componentErrors.size > 0);
     });

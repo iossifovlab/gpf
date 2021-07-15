@@ -11,6 +11,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { Select, Selector } from '@ngxs/store';
 import { GenesBlockComponent } from 'app/genes-block/genes-block.component';
 import { EnrichmentModelsState } from 'app/enrichment-models/enrichment-models.state';
+import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
 
 @Component({
   selector: 'gpf-enrichment-tool',
@@ -24,6 +25,7 @@ export class EnrichmentToolComponent implements OnInit {
   private disableQueryButtons = false;
 
   @Select(EnrichmentToolComponent.enrichmentToolStateSelector) state$: Observable<any[]>;
+  @Select(ErrorsState) errorsState$: Observable<ErrorsModel>;
   private enrichmentToolState = {};
 
   constructor(
@@ -47,6 +49,10 @@ export class EnrichmentToolComponent implements OnInit {
         ...state
       };
       this.enrichmentResults = null;
+    });
+
+    this.errorsState$.subscribe(state => {
+      setTimeout(() => this.disableQueryButtons = state.componentErrors.size > 0);
     });
   }
 

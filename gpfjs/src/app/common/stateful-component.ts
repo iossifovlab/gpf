@@ -28,6 +28,11 @@ export abstract class StatefulComponent implements OnInit, OnDestroy {
     });
   }
 
+  ngOnDestroy() {
+    this.store.dispatch(new SetComponentErrors(this.componentId, new Array()));
+    this.stateSubscription.unsubscribe();
+  }
+
   private errorsToMessages(errors: Array<ValidationError>): Array<string> {
     let messages = new Array<string>();
     for (const error of errors) {
@@ -43,10 +48,5 @@ export abstract class StatefulComponent implements OnInit, OnDestroy {
 
   private errorToMessage(error: ValidationError): string {
     return Object.values(error.constraints).join('\n');
-  }
-
-  ngOnDestroy() {
-    this.store.dispatch(new SetComponentErrors(this.componentId, new Array()));
-    this.stateSubscription.unsubscribe();
   }
 }

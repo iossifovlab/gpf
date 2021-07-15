@@ -42,12 +42,13 @@ export class PresentInParentComponent extends StatefulComponent implements OnIni
 
   ngOnInit() {
     super.ngOnInit();
-    this.store.selectOnce(state => state.presentInParentState).subscribe(state => {
+    this.store.selectOnce(PresentInParentState).subscribe(state => {
       // restore state
       this.selectedValues = new Set([...state.presentInParent]);
       this.selectedRarityType = state.rarityType;
       this.rarityIntervalStart = state.rarityIntervalStart;
       this.rarityIntervalEnd = state.rarityIntervalEnd;
+      this.updateState();
     });
   }
 

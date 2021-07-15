@@ -26,7 +26,7 @@ export class PresentInChildComponent extends StatefulComponent implements OnInit
     super.ngOnInit();
     this.store.selectOnce(state => state.presentInChildState).subscribe(state => {
       // restore state
-      this.selectedValues = new Set([...state.presentInChild]);
+      this.updatePresentInChild(new Set([...state.presentInChild]));
     });
   }
 
