@@ -1,11 +1,10 @@
 import { UsersService } from '../users/users.service';
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { DatasetsService } from './datasets.service';
-import { Dataset } from './datasets';
+import { Dataset, toolPageLinks } from './datasets';
 // tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { Location } from '@angular/common';
 import * as _ from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { StateRestoreService } from 'app/store/state-restore.service';
@@ -22,6 +21,7 @@ export class DatasetsComponent implements OnInit {
   datasetTrees: DatasetNode[];
   selectedDataset$: Observable<Dataset>;
   permissionDeniedPrompt: string;
+  public toolPageLinks = toolPageLinks;
 
   constructor(
     private usersService: UsersService,
@@ -77,23 +77,22 @@ export class DatasetsComponent implements OnInit {
 
 
   isToolSelected(): boolean {
-    const tools = ['dataset-description', 'dataset-statistics', 'genotype-browser', 'phenotype-browser', 'enrichment-tool', 'phenotype-tool'];
-    return this.router.url.split('/').some(str => tools.includes(str));
+    return this.router.url.split('/').some(str => Object.values(toolPageLinks).includes(str));
   }
 
   findFirstTool(selectedDataset: Dataset) {
     if (selectedDataset.description) {
-      return 'dataset-description';
+      return toolPageLinks.datasetDescription;
     } else if (selectedDataset.commonReport['enabled']) {
-      return 'dataset-statistics';
+      return toolPageLinks.datasetStatistics;
     } else if (selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig) {
-      return 'genotype-browser';
+      return toolPageLinks.genotypeBrowser;
     } else if (selectedDataset.phenotypeBrowser) {
-      return 'phenotype-browser';
+      return toolPageLinks.phenotypeBrowser;
     } else if (selectedDataset.enrichmentTool) {
-      return 'enrichment-tool';
+      return toolPageLinks.enrichmentTool;
     } else if (selectedDataset.phenotypeTool) {
-      return 'phenotype-tool';
+      return toolPageLinks.phenotypeTool;
     } else {
       return '';
     }

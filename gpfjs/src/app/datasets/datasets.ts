@@ -2,6 +2,16 @@ import { IdName } from '../common/idname';
 import { UserGroup } from '../users-groups/users-groups';
 import * as _ from 'lodash';
 
+export const toolPageLinks = {
+  datasetDescription: 'dataset-description',
+  datasetStatistics: 'dataset-statistics',
+  genotypeBrowser: 'genotype-browser',
+  phenotypeBrowser: 'phenotype-browser',
+  phenotypeTool: 'phenotype-tool',
+  enrichmentTool: 'enrichment-tool',
+  geneBrowser: 'gene-browser'
+};
+
 export class SelectorValue extends IdName {
   static fromJson(json: any): SelectorValue {
     if (!json) {

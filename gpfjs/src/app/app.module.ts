@@ -164,6 +164,7 @@ import { FamilyTypeFilterComponent } from './family-type-filter/family-type-filt
 import { SortingButtonsComponent } from './sorting-buttons/sorting-buttons.component';
 import { BnNgIdleService } from 'bn-ng-idle';
 import { AutismGeneProfileSingleViewWrapperComponent } from './autism-gene-profile-single-view-wrapper/autism-gene-profile-single-view-wrapper.component';
+import { toolPageLinks } from './datasets/datasets';
 
 const appRoutes: Routes = [
   {
@@ -179,35 +180,35 @@ const appRoutes: Routes = [
     canLoad: [DatasetPermissionGuard],
     children: [
       {
-        path: 'genotype-browser',
+        path: toolPageLinks.genotypeBrowser,
         component: GenotypeBrowserSingleViewComponent
       },
       {
-        path: 'enrichment-tool',
+        path: toolPageLinks.enrichmentTool,
         component: EnrichmentToolComponent
       },
       {
-        path: 'phenotype-tool',
+        path: toolPageLinks.phenotypeTool,
         component: PhenoToolComponent
       },
       {
-        path: 'phenotype-browser',
+        path: toolPageLinks.phenotypeBrowser,
         component: PhenoBrowserComponent
       },
       {
-        path: 'dataset-description',
+        path: toolPageLinks.datasetDescription,
         component: DatasetDescriptionComponent
       },
       {
-        path: 'dataset-statistics',
+        path: toolPageLinks.datasetStatistics,
         component: VariantReportsComponent
       },
       {
-        path: 'gene-browser',
+        path: toolPageLinks.geneBrowser,
         component: GeneBrowserComponent
       },
       {
-        path: 'gene-browser/:gene',
+        path: toolPageLinks.geneBrowser + '/:gene',
         component: GeneBrowserComponent
       }
     ]
