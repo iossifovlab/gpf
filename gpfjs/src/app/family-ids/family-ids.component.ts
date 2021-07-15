@@ -23,7 +23,7 @@ export class FamilyIdsComponent extends StatefulComponent implements OnInit {
     super.ngOnInit();
     this.store.selectOnce(state => state.familyIdsState).subscribe(state => {
       // restore state
-      this.familyIds.familyIds = state.familyIds.join('\n');
+      this.setFamilyIds(state.familyIds.join('\n'));
     });
   }
 

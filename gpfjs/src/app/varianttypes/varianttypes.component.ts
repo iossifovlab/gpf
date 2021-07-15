@@ -1,4 +1,4 @@
-import { Input, Component, OnInit, OnChanges } from '@angular/core';
+import { Input, Component, OnChanges } from '@angular/core';
 import { Validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
 import { Store } from '@ngxs/store';
@@ -10,7 +10,7 @@ import { StatefulComponent } from '../common/stateful-component';
   templateUrl: './varianttypes.component.html',
   styleUrls: ['./varianttypes.component.css'],
 })
-export class VarianttypesComponent extends StatefulComponent implements OnInit, OnChanges {
+export class VarianttypesComponent extends StatefulComponent implements OnChanges {
 
   @Input() variantTypes: Set<string> = new Set([]);
   @Input() @Validate(SetNotEmpty, {message: 'Select at least one'}) selectedVariantTypes: Set<string> = new Set();

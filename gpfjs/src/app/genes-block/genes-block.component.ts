@@ -22,7 +22,7 @@ export class GenesBlockComponent implements AfterViewInit {
         setTimeout(() => this.ngbNav.select('geneSymbols'));
       } else if (state['geneSet']) {
         setTimeout(() => this.ngbNav.select('geneSets'));
-      } else if (state['geneWeight']) {
+      } else if (state['weight']) {
         setTimeout(() => this.ngbNav.select('geneWeights'));
       }
     });
@@ -41,10 +41,10 @@ export class GenesBlockComponent implements AfterViewInit {
       result['geneSymbols'] = geneSymbolsState.geneSymbols;
     }
     if (geneSetsQueryState) {
-      result = {...result, geneSetsQueryState};
+      result = {...result, ...geneSetsQueryState};
     }
     if (geneWeightsState) {
-      result = {...result, geneWeightsState};
+      result = {...result, ...geneWeightsState};
     }
     return result;
   }

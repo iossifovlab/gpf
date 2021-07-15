@@ -27,7 +27,7 @@ export class PersonIdsComponent extends StatefulComponent implements OnInit {
     super.ngOnInit();
     this.store.selectOnce(state => state.personIdsState).subscribe(state => {
       // restore state
-      this.personIds.personIds = state.personIds.join('\n');
+      this.setPersonIds(state.personIds.join('\n'));
     });
   }
 

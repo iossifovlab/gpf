@@ -20,7 +20,7 @@ export class RegionsFilterComponent extends StatefulComponent implements OnInit 
   ngOnInit() {
     super.ngOnInit();
     this.store.selectOnce(state => state.regionsFiltersState).subscribe(state => {
-      this.regionsFilter.regionsFilter = state.regionsFilters.join('\n');
+      this.setRegionsFilter(state.regionsFilters.join('\n'));
     });
   }
 
