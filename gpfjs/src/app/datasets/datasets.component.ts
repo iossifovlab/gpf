@@ -56,6 +56,12 @@ export class DatasetsComponent implements OnInit {
       .subscribe(datasets => {
         if (!this.datasetsService.hasSelectedDataset()) {
           this.selectDataset(datasets[0]);
+        } else {
+          if (!this.isToolSelected()) {
+            this.datasetsService.getSelectedDataset().take(1).subscribe(dataset => {
+              this.router.navigate(['/', 'datasets', dataset.id, this.findFirstTool(dataset)]);
+            });
+          }
         }
       });
 
@@ -67,6 +73,12 @@ export class DatasetsComponent implements OnInit {
     this.datasetsService.getPermissionDeniedPrompt().subscribe(
       aprompt => this.permissionDeniedPrompt = aprompt
     );
+  }
+
+
+  isToolSelected(): boolean {
+    const tools = ['dataset-description', 'dataset-statistics', 'genotype-browser', 'phenotype-browser', 'enrichment-tool', 'phenotype-tool'];
+    return this.router.url.split('/').some(str => tools.includes(str));
   }
 
   findFirstTool(selectedDataset: Dataset) {
