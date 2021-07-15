@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, forwardRef, ViewChild, ViewChildren } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, forwardRef, ViewChild, ViewChildren, ElementRef } from '@angular/core';
 import * as d3 from 'd3';
 import { Gene, GeneViewSummaryAllelesArray, GeneViewSummaryAllele, DomainRange } from 'app/gene-view/gene';
 import { Subject, Observable } from 'rxjs';
@@ -92,6 +92,7 @@ export class GeneViewComponent implements OnInit {
   @ViewChild('transmittedCheckbox') transmittedCheckbox;
   @ViewChildren('variantTypeCheckbox') variantTypeCheckboxes;
   @Output() startLoadingSpinnerEvent = new EventEmitter<boolean>();
+  @ViewChild('hideTranscriptsCheckbox') hideTranscriptsCheckbox: ElementRef;
 
   tablePreviewDebouncer: Subject<DomainRange> = new Subject<DomainRange>();
 
@@ -833,10 +834,16 @@ export class GeneViewComponent implements OnInit {
       this.svgHeight = this.svgHeightFreqRaw + (this.gene.transcripts.length + 1) * 25 + 70;
       d3.select('#svg-container').selectAll('svg').remove();
 
+      let viewBoxValue = '0 0 ' + (this.svgWidth + this.options.margin.left + this.options.margin.right).toString() + ' ';
+      if (this.hideTranscriptsCheckbox.nativeElement.checked) {
+        viewBoxValue += this.svgHeightFreqRaw + 85;
+      } else {
+        viewBoxValue += this.svgHeightFreqRaw + 85 + (this.gene.transcripts.length + 1) * 25;
+      }
+
       this.svgElement = d3.select('#svg-container')
         .append('svg')
-        .attr('viewBox', '0 0 ' + (this.svgWidth + this.options.margin.left + this.options.margin.right).toString() +
-            ' ' + (this.svgHeightFreqRaw + 85 + (this.gene.transcripts.length + 1) * 25).toString())
+        .attr('viewBox', viewBoxValue)
         .append('g')
         .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
 
