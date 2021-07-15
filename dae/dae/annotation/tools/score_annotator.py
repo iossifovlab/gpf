@@ -22,6 +22,13 @@ class VariantScoreAnnotatorBase(Annotator):
         for agg in self.resource._config.type_aggregators:
             self.type_aggregators[agg.type] = agg.aggregator
 
+        self.aggregators = dict()
+        for attr in self.resource._config.default_annotation.attributes:
+            self.aggregators[attr.source] = self._collect_aggregators(attr)
+
+    def _collect_aggregators(self, attr):
+        raise NotImplementedError()
+
     @property
     def output_columns(self):
         return [
@@ -82,6 +89,13 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         # FIXME This should be closed somewhere
         self.resource.open()
 
+    def _collect_aggregators(self, attr):
+        aggr_name = attr.aggregator.position
+        if aggr_name is None:
+            score_type = self.score_types[attr.source]
+            aggr_name = self.type_aggregators[score_type]
+        return aggregator_name_to_class(aggr_name)
+
     def _do_annotate(self, attributes, variant, liftover_variants):
         if self.liftover:
             variant = liftover_variants.get(self.liftover)
@@ -109,20 +123,11 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
                     f"({variant.variant_type.value})"
                 )
                 raise Exception
-            aggregators = dict()
-            for attr in self.resource._config.default_annotation.attributes:
-                aggr_name = attr.aggregator.position
-                if aggr_name is None:
-                    score_type = self.score_types[attr.source]
-                    aggr_name = self.type_aggregators[score_type]
-                aggregators[attr.source] = aggregator_name_to_class(
-                    aggr_name
-                )
             scores = self.resource.fetch_scores_agg(
                 variant.chromosome,
                 first_position,
                 last_position,
-                aggregators
+                self.aggregators,
             )
 
         if not scores:
@@ -134,73 +139,21 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             attributes[score.id] = value
 
 
-class NPScoreAnnotator(VariantScoreAnnotatorBase):
+class NPScoreAnnotator(PositionScoreAnnotator):
     def __init__(self, config, genomes_db, liftover=None, override=None):
         super().__init__(config, genomes_db, liftover, override)
 
-    @staticmethod
-    def required_columns():
-        return ("chrom", "pos_begin", "pos_end", "reference", "alternative")
+    def _collect_aggregators(self, attr):
+        aggr_name = attr.aggregator.position
+        if aggr_name is None:
+            score_type = self.score_types[attr.source]
+            aggr_name = self.type_aggregators[score_type]
+        pos_aggr = aggregator_name_to_class(aggr_name)
 
-    def _aggregate_substitution(self, variant, scores_df):
-        assert variant.variant_type == VariantType.substitution
+        aggr_name = attr.aggregator.nucleotide
+        if aggr_name is None:
+            score_type = self.score_types[attr.source]
+            aggr_name = self.type_aggregators[score_type]
+        nuc_aggr = aggregator_name_to_class(aggr_name)
 
-        res = {}
-        matched = (scores_df["reference"] == variant.reference) & (
-                scores_df["alternative"] == variant.alternative
-        )
-        matched_df = scores_df[matched]
-        if len(matched_df) == 0:
-            self._scores_not_found(res)
-        else:
-            for score_id in self.score_file.score_ids:
-                res[score_id] = matched_df[score_id].mean()
-        return res
-
-    def _aggregate_indel(self, variant, scores_df):
-        assert VariantType.indel & variant.variant_type, variant
-
-        aggregate = {sn: "max" for sn in self.score_file.score_ids}
-
-        aggregate["COUNT"] = "max"
-        group_df = scores_df.groupby(by=["chrom", "pos_begin"]).agg(aggregate)
-        count = group_df["COUNT"].sum()
-        res = {}
-        for score_id in self.score_file.score_ids:
-            total_df = group_df[score_id] * group_df["COUNT"]
-            res[score_id] = total_df.sum() / count
-
-        return res
-
-    def _do_annotate(self, attributes, variant, liftover_variants):
-        if VariantType.is_cnv(variant.variant_type):
-            logger.info(
-                f"skip trying to add NP position score for CNV variant "
-                f"{variant}")
-            self._scores_not_found(attributes)
-            return
-
-        if self.liftover:
-            variant = liftover_variants.get(self.liftover)
-
-        if variant is None:
-            self._scores_not_found(attributes)
-            return
-
-        scores = self._fetch_scores(
-            variant, ["chrom", "pos_begin", "reference", "alternative"]
-        )
-        if not scores:
-            self._scores_not_found(attributes)
-            return
-        scores_df = self.score_file.scores_to_dataframe(scores)
-
-        if variant.variant_type & VariantType.substitution:
-            attributes.update(self._aggregate_substitution(variant, scores_df))
-        elif variant.variant_type & VariantType.indel:
-            attributes.update(self._aggregate_indel(variant, scores_df))
-        else:
-            logger.warning(
-                f"unexpected variant type: {variant}, {variant.variant_type}"
-            )
-            self._scores_not_found(attributes)
+        return (pos_aggr, nuc_aggr)

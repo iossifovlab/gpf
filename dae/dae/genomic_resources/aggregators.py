@@ -1,41 +1,51 @@
 class AbstractAggregator:
-    def add(v):
-        pass
-
-    def get_final():
-        pass
-
     def __call__(self):
         return self.get_final()
+
+    def add(self, v):
+        raise NotImplementedError()
+
+    def clear(self):
+        raise NotImplementedError()
+
+    def get_final(self):
+        raise NotImplementedError()
 
 
 class MaxAggregator(AbstractAggregator):
     def __init__(self):
-        self.cM = None
+        self.current_max = None
 
     def add(self, v):
-        if self.cM and v:
-            self.cM = max(self.cM, v)
+        if self.current_max and v:
+            self.current_max = max(self.current_max, v)
         elif v:
-            self.cM = v
+            self.current_max = v
+
+    def clear(self):
+        self.current_max = None
 
     def get_final(self):
-        return self.cM
+        return self.current_max
 
 
 class MeanAggregator(AbstractAggregator):
     def __init__(self):
-        self.sm = 0
-        self.n = 0
+        self.sum = 0
+        self.count = 0
 
     def add(self, v):
         if v:
-            self.sm += v
-            self.n += 1
+            self.sum += v
+            self.count += 1
+
+    def clear(self):
+        self.sum = 0
+        self.count = 0
 
     def get_final(self):
-        if self.n:
-            return float(self.sm)/self.n
+        if self.count:
+            return float(self.sum)/self.count
         return None
 
 
@@ -46,6 +56,9 @@ class ConcatAggregator(AbstractAggregator):
     def add(self, v):
         if v:
             self.out += v
+
+    def clear(self):
+        self.out = ""
 
     def get_final(self):
         if self.out == "":

@@ -244,68 +244,106 @@ class PositionScoreResource(GenomicScoresResource):
         return ("chrom", "pos_begin", "pos_end")
 
     def fetch_scores(
-            self, chrom: str, position: int, scores: List[str] = None):
-
+        self, chrom: str, position: int, scores: List[str] = None
+    ):
         chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
         assert chrom in self.get_all_chromosomes()
 
-        line = self._fetch_lines(chrom, position, position) or None
-        if line is None:
+        line = self._fetch_lines(chrom, position, position)
+        if not line:
             return None
 
-        scores = dict()
+        result = dict()
 
         for col, val in line[0].scores.items():
-            scores[col] = val
+            if scores is None or col in scores:
+                result[col] = val
 
-        return scores
+        return result
 
     def fetch_scores_agg(
-        self, chrom: str, pos_begin: int, pos_end: int,
-        scores_aggregators
+        self, chrom: str, pos_begin: int, pos_end: int, scores_aggregators
     ):
         chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
         assert chrom in self.get_all_chromosomes()
         score_lines = self._fetch_lines(chrom, pos_begin, pos_end)
         logger.debug(f"score lines found: {score_lines}")
 
+        aggregators = {
+            score_id: aggregator_type()
+            for score_id, aggregator_type
+            in scores_aggregators.items()
+        }
+
         for line in score_lines:
             logger.debug(
                 f"pos_end: {pos_end}; line.pos_end: {line.pos_end}; "
                 f"pos_begin: {pos_begin}; line.pos_begin: {line.pos_begin}"
             )
-            max_pos_begin = max(line.pos_begin, pos_begin)
-            min_pos_end = min(pos_end, line.pos_end)
-            count = min_pos_end - max_pos_begin + 1
-            if count <= 0:
-                continue
 
-            assert count >= 1, count
-            scores = dict()
             for col, val in line.scores.items():
-                if scores is not None and col not in scores:
+                if col not in aggregators:
                     continue
-                scores[col] = val
+                aggregators[col].add(val)
+
+        return {
+            score_id: aggregator.get_final()
+            for score_id, aggregator
+            in aggregators.items()
+        }
 
 
-class NPScoreResource(GenomicScoresResource):
-    def open(self):
-        pass
+class NPScoreResource(PositionScoreResource):
 
-    def close(self):
-        pass
-
-    def fetch_scores(chrom: str, position: int, nt: str, scores: List[str]):
-        pass
+    @classmethod
+    def required_columns(cls):
+        return ("chrom", "pos_begin", "pos_end", "reference", "alternative")
 
     def fetch_scores_agg(
-        chrom: str, pos_begin: int, pos_end: int,
-        scores_aggregators
+        self, chrom: str, pos_begin: int, pos_end: int, scores_aggregators
     ):
-        pass
+        chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
+        assert chrom in self.get_all_chromosomes()
+        score_lines = self._fetch_lines(chrom, pos_begin, pos_end)
+        logger.debug(f"score lines found: {score_lines}")
+
+        pos_aggregators = {
+            score_id: aggregator_types[0]()
+            for score_id, aggregator_types
+            in scores_aggregators.items()
+        }
+
+        nuc_aggregators = {
+            score_id: aggregator_types[1]()
+            for score_id, aggregator_types
+            in scores_aggregators.items()
+        }
+
+        if not score_lines:
+            return None
+
+        last_pos: int = score_lines[0].pos_begin
+        for line in score_lines:
+            if line.pos_begin == last_pos:
+                for col, val in line.scores.items():
+                    if col not in nuc_aggregators:
+                        continue
+                    nuc_aggregators[col].add(val)
+            else:
+                for col, nuc_agg in nuc_aggregators.items():
+                    pos_aggregators[col].add(nuc_agg.get_final())
+                    nuc_agg.clear()
+
+            last_pos = line.pos_begin
+
+        return {
+            score_id: aggregator.get_final()
+            for score_id, aggregator
+            in pos_aggregators.items()
+        }
 
 
-class FrequencyScoreResource(GenomicScoresResource):
+class AlleleScoreResource(GenomicScoresResource):
     def open(self):
         pass
 

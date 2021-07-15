@@ -1,12 +1,14 @@
 import gzip
 import os
 from importlib import import_module
-from dae.annotation.tools.score_annotator import PositionScoreAnnotator
+from dae.annotation.tools.score_annotator import PositionScoreAnnotator, \
+    NPScoreAnnotator
 
 
 class AnnotatorFactory:
     ANNOTATOR_NAMES = {
-        "position_score": PositionScoreAnnotator
+        "position_score": PositionScoreAnnotator,
+        "np_score": NPScoreAnnotator,
     }
 
     @staticmethod
