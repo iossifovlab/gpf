@@ -2,10 +2,8 @@ import { UsersService } from '../users/users.service';
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset } from './datasets';
-
 // tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
-
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import * as _ from 'lodash';
@@ -31,7 +29,6 @@ export class DatasetsComponent implements OnInit {
     private datasetsService: DatasetsService,
     private route: ActivatedRoute,
     private router: Router,
-    private location: Location,
   ) { }
 
   ngOnInit() {
@@ -63,7 +60,7 @@ export class DatasetsComponent implements OnInit {
       });
 
     this.usersService.getUserInfoObservable()
-      .subscribe(_ => {
+      .subscribe(() => {
         this.datasetsService.reloadSelectedDataset();
       });
 
@@ -102,9 +99,13 @@ export class DatasetsComponent implements OnInit {
   }
 
   filterHiddenGroups(datasets: Observable<Dataset[]>): Observable<Dataset[]> {
-    return datasets.map(datasets =>
-      datasets.filter(dataset =>
-        dataset.groups.find(g => g.name === 'hidden') == null || dataset.accessRights));
+    return datasets.map((d) =>
+      d.filter(
+        (dataset) =>
+          dataset.groups.find((g) => g.name === 'hidden') == null ||
+          dataset.accessRights
+      )
+    );
   }
 
   selectDataset(dataset: Dataset) {
