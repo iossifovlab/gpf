@@ -1,0 +1,42 @@
+---
+
+id: hg38/TESTCADD
+
+score_type: score_annotator.NPScoreAnnotator
+
+filename: TESTCADD.tsv.gz
+format: tsv/bgz
+
+index_file:
+  filename: TESTCADD.tsv.gz.tbi
+  format: tabix
+
+has_header: true
+
+# defined by score_type
+chrom: 
+  name: Chrom
+pos_begin:
+  name:  Pos
+reference:
+  name: Ref
+alternative:
+  name: Alt
+
+# score values
+scores:
+    - id: cadd_raw
+      type: float
+      desc: ""
+      name: RawScore
+    - id: cadd_phred
+      type: float
+      desc: ""
+      name: PHRED
+
+default_annotation:
+  attributes:
+    - source: cadd_raw
+      dest: cadd_raw
+    - source: cadd_phred
+      dest: cadd_phred

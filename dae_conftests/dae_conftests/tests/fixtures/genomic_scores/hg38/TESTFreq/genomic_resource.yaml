@@ -1,0 +1,40 @@
+---
+
+id: hg38/TESTFreq
+
+score_type: frequency_annotator.FrequencyAnnotator
+
+filename: TESTFreq.tsv.gz
+format: tsv/bgz
+
+index_file:
+  filename: TESTFreq.tsv.gz.tbi
+  format: tabix
+
+has_header: true
+
+# defined by score_type
+chrom: 
+  name: chr
+pos_begin:
+  name: position
+variant:
+  name: variantColumn
+
+# score values
+scores:
+    - id: altFreq
+      type: float
+      desc: ""
+      name: all.altFreq
+    - id: altFreq2
+      type: float
+      desc: ""
+      name: all.altFreq2
+
+default_annotation:
+  attributes:
+    - source: altFreq
+      dest: alt_freq
+    - source: altFreq2
+      dest: alt_freq2

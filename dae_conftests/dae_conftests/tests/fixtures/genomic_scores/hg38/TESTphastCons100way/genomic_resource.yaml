@@ -1,0 +1,44 @@
+---
+
+id: hg38/TESTphastCons100way
+
+resource_type: position_score
+
+filename: TESTphastCons100way.bedGraph.gz
+format: tsv/bgz
+
+index_file:
+  filename: TESTphastCons100way.bedGraph.gz.tbi
+  format: tabix
+
+has_header: false
+
+type_aggregators:
+  - type: float
+    aggregator: dae.genomic_resource.aggregators.MaxAggregator
+  - type: int
+    aggregator: dae.genomic_resource.aggregators.MaxAggregator
+  - type: str
+    aggregator: dae.genomic_resource.aggregators.ConcatAggregator
+
+# defined by score_type
+chrom: 
+  index: 0
+pos_begin:
+  index: 1
+pos_end: 
+  index: 2
+
+# score values
+scores:
+    - id: phastCons100way
+      type: float
+      desc: "phastCons100way"
+      index: 3
+
+default_annotation:
+  attributes:
+    - source: phastCons100way
+      dest: phastCons100way
+      aggregator:
+        position: MaxAggregator

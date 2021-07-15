@@ -1,0 +1,8 @@
+id: root
+type: group
+children:
+- id: hg38
+  type: group
+  children:
+  - id: hg38/TESTphastCons100way
+    type: resource
