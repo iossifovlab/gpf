@@ -4,6 +4,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgxsModule } from '@ngxs/store';
 import { RegionsBlockComponent } from './regions-block.component';
+import { RegionsFilterState } from 'app/regions-filter/regions-filter.state';
 
 describe('RegionsBlockComponent', () => {
   let component: RegionsBlockComponent;
@@ -12,7 +13,7 @@ describe('RegionsBlockComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [RegionsBlockComponent],
-      imports: [NgbModule, RouterTestingModule, NgxsModule.forRoot([])],
+      imports: [NgbModule, RouterTestingModule, NgxsModule.forRoot([RegionsFilterState])],
     })
       .compileComponents();
   }));

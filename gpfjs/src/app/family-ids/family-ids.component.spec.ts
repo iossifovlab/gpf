@@ -4,6 +4,7 @@ import { NgxsModule } from '@ngxs/store';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 
 import { FamilyIdsComponent } from './family-ids.component';
+import { FamilyIdsState } from './family-ids.state';
 
 describe('FamilyIdsComponent', () => {
   let component: FamilyIdsComponent;
@@ -12,7 +13,7 @@ describe('FamilyIdsComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [FamilyIdsComponent, ErrorsAlertComponent],
-      imports: [FormsModule, NgxsModule.forRoot([])]
+      imports: [FormsModule, NgxsModule.forRoot([FamilyIdsState])]
     })
     .compileComponents();
   }));
