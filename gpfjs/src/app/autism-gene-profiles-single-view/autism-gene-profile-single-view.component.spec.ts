@@ -8,6 +8,7 @@ import { GeneWeightsService } from 'app/gene-weights/gene-weights.service';
 import { UsersService } from 'app/users/users.service';
 import { of } from 'rxjs';
 import { AutismGeneProfileSingleViewComponent } from './autism-gene-profile-single-view.component';
+import { QueryService } from 'app/query/query.service';
 
 describe('AutismGeneProfileSingleViewComponent', () => {
   let component: AutismGeneProfileSingleViewComponent;
@@ -16,7 +17,7 @@ describe('AutismGeneProfileSingleViewComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [ AutismGeneProfileSingleViewComponent ],
-      providers: [ConfigService, GeneWeightsService, DatasetsService, UsersService],
+      providers: [ConfigService, GeneWeightsService, DatasetsService, UsersService, QueryService],
       imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([])]
     })
     .compileComponents();
