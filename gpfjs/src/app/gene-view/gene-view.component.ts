@@ -834,16 +834,15 @@ export class GeneViewComponent implements OnInit {
       this.svgHeight = this.svgHeightFreqRaw + (this.gene.transcripts.length + 1) * 25 + 70;
       d3.select('#svg-container').selectAll('svg').remove();
 
-      let viewBoxValue = '0 0 ' + (this.svgWidth + this.options.margin.left + this.options.margin.right).toString() + ' ';
-      if (this.hideTranscriptsCheckbox.nativeElement.checked) {
-        viewBoxValue += this.svgHeightFreqRaw + 85;
-      } else {
-        viewBoxValue += this.svgHeightFreqRaw + 85 + (this.gene.transcripts.length + 1) * 25;
+      let width = this.svgWidth + this.options.margin.left + this.options.margin.right;
+      let height = this.svgHeightFreqRaw + 85;
+      if (!this.hideTranscriptsCheckbox.nativeElement.checked) {
+        height += (this.gene.transcripts.length + 1) * 25;
       }
 
       this.svgElement = d3.select('#svg-container')
         .append('svg')
-        .attr('viewBox', viewBoxValue)
+        .attr('viewBox', `0 0 ${width} ${height}`)
         .append('g')
         .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
 
