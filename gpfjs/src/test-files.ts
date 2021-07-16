@@ -69,7 +69,6 @@ import './app/effecttypes/effecttypes.component.spec.ts';
 import './app/effecttypes/effecttypes-column.component.spec.ts';
 import './app/effecttypes/effecttypes.spec.ts';
 import './app/groups-bulk-add/groups-bulk-add.component.spec.ts';
-import './app/inheritancetypes/inheritancetypes.spec.ts';
 import './app/inheritancetypes/inheritancetypes.component.spec.ts';
 import './app/datasets/datasets.component.spec.ts';
 import './app/datasets/datasets.service.spec.ts';

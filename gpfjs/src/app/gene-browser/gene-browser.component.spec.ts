@@ -90,14 +90,12 @@ describe('GeneBrowserComponent', () => {
         });
         return 'testPreviewVariantsArray' as any;
       });
-    const getCurrentStateSpy = spyOn(component, 'getCurrentState').and.returnValue(of(testState));
     // accesing private property - bad, needs to be refactored
     (component as any).geneBrowserConfig = {frequencyColumn: 'testMetric'};
     component.maxFamilyVariants = 1;
 
     component.updateShownTablePreviewVariantsArray(new DomainRange(1, 11));
     expect(getGenotypePreviewVariantsByFilterSpy).toHaveBeenCalled();
-    expect(getCurrentStateSpy).toHaveBeenCalled();
     expect(component.genotypePreviewVariantsArray).toEqual('testPreviewVariantsArray' as any);
     expect(component.familyLoadingFinished).toBeFalse();
   });
@@ -141,7 +139,6 @@ describe('GeneBrowserComponent', () => {
 
   it('should submit gene request', async () => {
     component.enableCodingOnly = true;
-    const getCurrentStateSpy = spyOn(component, 'getCurrentState').and.returnValue(of(testState));
     // accesing private property - bad, needs to be refactored
     (component as any).geneService = {
       getGene(gene) { return of('testGene'); },
@@ -212,7 +209,6 @@ describe('GeneBrowserComponent', () => {
     const event = {
       target: {queryData: {value: ''}, submit() {}, attributes: {id: {nodeValue: 'bla'}}}
     };
-    const getCurrentStateSpy = spyOn(component, 'getCurrentState').and.returnValue(of(testState));
     const submitSpy = spyOn(event.target, 'submit').and.callFake(() => {
       expect(event.target.queryData.value).toEqual('{' +
         '"effectTypes":["lgds","missense","synonymous","noStart","noEnd","no-frame-shift","CDS","CNV+","CNV-"],' +
@@ -226,7 +222,6 @@ describe('GeneBrowserComponent', () => {
     });
 
     component.onSubmit(event);
-    expect(getCurrentStateSpy).toHaveBeenCalled();
     expect(submitSpy).toHaveBeenCalled();
   });
 });

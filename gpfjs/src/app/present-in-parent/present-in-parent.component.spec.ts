@@ -7,7 +7,7 @@ import { of } from 'rxjs';
 import { PresentInParentComponent } from './present-in-parent.component';
 import { SetPresentInParentValues } from './present-in-parent.state';
 
-fdescribe('PresentInParentComponent', () => {
+describe('PresentInParentComponent', () => {
   let component: PresentInParentComponent;
   let fixture: ComponentFixture<PresentInParentComponent>;
 

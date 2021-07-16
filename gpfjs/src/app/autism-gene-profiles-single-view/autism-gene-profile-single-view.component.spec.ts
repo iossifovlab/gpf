@@ -177,11 +177,11 @@ describe('AutismGeneProfileSingleViewComponent', () => {
 
   it('should get browser url', () => {
     component.config = undefined;
-    expect(component.geneBrowserUrl).toEqual(undefined);
+    expect(component.links.GeneBrowser).toEqual(undefined);
 
     component.config = {defaultDataset: 'fakeDataset'} as any;
     (component as any).geneSymbol = 'fakeGeneSymbol';
-    expect(component.geneBrowserUrl.substring(component.geneBrowserUrl.indexOf('/datasets'))).toEqual(
+    expect(component.links.GeneBrowser.substring(component.links.GeneBrowser.indexOf('/datasets'))).toEqual(
       '/datasets/fakeDataset/gene-browser/fakeGeneSymbol'
     );
   });

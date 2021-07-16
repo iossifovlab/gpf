@@ -149,11 +149,7 @@ describe('GeneViewComponent', () => {
       'summaryVariantIds': [],
       'selectedVariantTypes': [ 'sub', 'ins', 'del', 'cnv+', 'cnv-' ]
     };
-
-    state.subscribe(result => {
-      expect(result).toEqual(expectedState);
-      done();
-    });
+    expect(state).toEqual(expectedState);
   });
 
   it('should enable and disable intro condensing', () => {
