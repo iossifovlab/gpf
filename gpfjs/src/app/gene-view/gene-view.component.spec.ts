@@ -132,7 +132,7 @@ describe('GeneViewComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should get current state', (done) => {
+  it('should get current state', () => {
     component.zoomHistory.resetToDefaultState(new GeneViewScaleState([1, 10], 1, 10, false));
     component.x = {'_domain': [1, 10], domain() {return this._domain; }};
     const resolveRegionChromosomesSpy = spyOn(component.geneViewModel.collapsedGeneViewTranscript, 'resolveRegionChromosomes')
@@ -154,10 +154,16 @@ describe('GeneViewComponent', () => {
   });
 
   it('should enable and disable intro condensing', () => {
+    const setDefaultScaleSpy = spyOn(component, 'setDefaultScale');
+    const redrawSpy = spyOn(component, 'redraw');
+
     component.enableIntronCondensing();
     expect(component.condenseIntrons).toBeTrue();
     component.disableIntronCondensing();
     expect(component.condenseIntrons).toBeFalse();
+
+    expect(setDefaultScaleSpy).toHaveBeenCalledTimes(2);
+    expect(redrawSpy).toHaveBeenCalledTimes(2);
   });
 
   it('should draw transmitted icons with correct shapes and titles', () => {
