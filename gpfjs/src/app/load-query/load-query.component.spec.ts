@@ -8,6 +8,7 @@ import { QueryService } from 'app/query/query.service';
 import { UsersService } from 'app/users/users.service';
 
 import { LoadQueryComponent } from './load-query.component';
+import { ErrorsState } from 'app/common/errors.state';
 
 describe('LoadQueryComponent', () => {
   let component: LoadQueryComponent;
@@ -26,7 +27,7 @@ describe('LoadQueryComponent', () => {
       ],
       imports: [
         RouterTestingModule,
-        NgxsModule.forRoot([])
+        NgxsModule.forRoot([ErrorsState])
       ],
     })
     .compileComponents();

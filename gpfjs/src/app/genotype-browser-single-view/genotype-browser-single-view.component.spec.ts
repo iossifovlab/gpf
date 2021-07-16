@@ -4,6 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 import { GenotypeBrowserSingleViewComponent } from './genotype-browser-single-view.component';
+import { ErrorsState } from 'app/common/errors.state';
 
 class MockActivatedRoute {
   params = {dataset: 'testDatasetId', get: () => ''};
@@ -24,7 +25,7 @@ describe('GenotypeBrowserSingleViewComponent', () => {
       providers: [
         {provide: ActivatedRoute, useValue: activatedRoute},
       ],
-      imports: [NgxsModule.forRoot([])],
+      imports: [NgxsModule.forRoot([ErrorsState])],
       schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();

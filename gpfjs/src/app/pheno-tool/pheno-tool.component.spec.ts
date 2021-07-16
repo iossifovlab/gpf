@@ -10,6 +10,7 @@ import { UsersService } from 'app/users/users.service';
 
 import { PhenoToolComponent } from './pheno-tool.component';
 import { PhenoToolService } from './pheno-tool.service';
+import { ErrorsState } from 'app/common/errors.state';
 
 describe('PhenoToolComponent', () => {
   let component: PhenoToolComponent;
@@ -26,7 +27,7 @@ describe('PhenoToolComponent', () => {
         FullscreenLoadingService,
         PhenoToolService
       ],
-      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([])]
+      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([ErrorsState])]
     })
     .compileComponents();
   }));
