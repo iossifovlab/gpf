@@ -7,7 +7,7 @@ import { EffecttypesColumnComponent } from './effecttypes-column.component';
 import { ALL, CODING, LGDS, NONSYNONYMOUS, UTRS } from './effecttypes';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
-import { AddEffectType, RemoveEffectType, SetEffectTypes } from './effecttypes.state';
+import { AddEffectType, RemoveEffectType, SetEffectTypes, EffecttypesState } from './effecttypes.state';
 
 describe('EffecttypesComponent', () => {
   let component: EffecttypesComponent;
@@ -19,7 +19,7 @@ describe('EffecttypesComponent', () => {
         EffecttypesComponent,
         EffecttypesColumnComponent,
       ],
-      imports: [NgxsModule.forRoot([]) ],
+      imports: [NgxsModule.forRoot([EffecttypesState])],
       schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();

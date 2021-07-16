@@ -17,13 +17,15 @@ import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { EffecttypesColumnComponent } from 'app/effecttypes/effecttypes-column.component';
 import { NgxsModule } from '@ngxs/store';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { EffecttypesState } from 'app/effecttypes/effecttypes.state';
+import { GenderState } from 'app/gender/gender.state';
+import { VarianttypesState } from 'app/varianttypes/varianttypes.state';
 
 describe('GenotypeBlockComponent', () => {
   let component: GenotypeBlockComponent;
   let fixture: ComponentFixture<GenotypeBlockComponent>;
 
   beforeEach(async(() => {
-    const storeSpy = jasmine.createSpyObj('Store', ['dispatch', 'subscribe', 'select', 'let']);
     TestBed.configureTestingModule({
       declarations: [
         GenderComponent,
@@ -44,22 +46,26 @@ describe('GenotypeBlockComponent', () => {
         NgbModule,
         HttpClientTestingModule,
         RouterTestingModule,
-        NgxsModule.forRoot([])
+        NgxsModule.forRoot([EffecttypesState, GenderState, VarianttypesState])
       ],
       schemas: [
         NO_ERRORS_SCHEMA
       ]
-    })
-      .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(GenotypeBlockComponent);
     component = fixture.componentInstance;
+    component.dataset = {'genotypeBrowserConfig': {
+      'inheritanceTypeFilter': new Set(),
+      'variantTypes': new Set(),
+      'selectedVariantTypes': new Set(),
+    } as any} as any;
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it('should create', () =>   {
     expect(component).toBeTruthy();
   });
 });
