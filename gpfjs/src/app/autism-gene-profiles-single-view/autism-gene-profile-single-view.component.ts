@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { AgpConfig, AgpDatasetStatistic, AgpGene, AgpGenomicScores, AgpGenomicScoresCategory, AgpTableConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
-import { Observable } from 'rxjs';
+import { AgpDatasetStatistic, AgpGene, AgpGenomicScores, AgpGenomicScoresCategory, AgpTableConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import { Observable, of } from 'rxjs';
 import { GeneWeightsService } from '../gene-weights/gene-weights.service';
 import { GeneWeights } from 'app/gene-weights/gene-weights';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
@@ -88,7 +88,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
             this.geneWeightsService.getGeneWeights(scores)
           );
         }
-        return Observable.zip(...geneWeightsObservables).pipe(
+        Observable.zip(...geneWeightsObservables).pipe(
           tap(geneWeightsArray => {
             for (let k = 0; k < geneWeightsArray.length; k++) {
               this.genomicScoresGeneWeights.push({
@@ -98,13 +98,13 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
             }
           })
         );
+        return this.geneService.getGene(this.geneSymbol);
+      }),
+      switchMap(gene => {
+        return Observable.zip(of(gene), this.datasetsService.getDatasetDetails(this.config.defaultDataset));
       })
-    ).subscribe(() => {
-      this.geneService.getGene(this.geneSymbol).subscribe(gene => {
-        this.datasetsService.getDatasetDetails(this.config.defaultDataset).subscribe(datasetDetails => {
-          this.setLinks(this.geneSymbol, gene, datasetDetails);
-        });
-      });
+    ).subscribe(([gene, datasetDetails]) => {
+      this.setLinks(this.geneSymbol, gene, datasetDetails);
     });
   }
 
