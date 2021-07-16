@@ -237,20 +237,14 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
       'datasetId': this.selectedDatasetId,
       'geneSymbols': [this.geneSymbol],
       'maxVariantsCount': 10000,
+      'inheritanceTypeFilter': [
+        'denovo', 'mendelian', 'omission', 'missing'
+      ],
     }
 
     if (this.enableCodingOnly) {
       requestParams['effectTypes'] = this.codingEffectTypes;
     }
-
-    const inheritanceFilters = [
-      'denovo',
-      'mendelian',
-      'omission',
-      'missing'
-    ];
-
-    requestParams['inheritanceTypeFilter'] = inheritanceFilters;
 
     this.summaryVariantsArray = this.queryService.getGeneViewVariants(requestParams);
     this.hideDropdown = false;
@@ -270,25 +264,21 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
   }
 
   onSubmit(event) {
-    this.selectedDataset$.subscribe( selectedDataset => {
-      const requestParams = this.transformFamilyVariantsQueryParameters(this.state);
-      requestParams['summaryVariantIds'] = this.state['summaryVariantIds'];
-      requestParams['genomicScores'] = [{
-        'metric': this.geneBrowserConfig.frequencyColumn,
-        'rangeStart': this.state['zoomState'].yMin > 0 ? this.state['zoomState'].yMin : null,
-        'rangeEnd': this.state['zoomState'].yMax,
-      }];
-      requestParams['download'] = true;
+    const requestParams = this.transformFamilyVariantsQueryParameters(this.state);
+    requestParams['summaryVariantIds'] = this.state['summaryVariantIds'];
+    requestParams['genomicScores'] = [{
+      'metric': this.geneBrowserConfig.frequencyColumn,
+      'rangeStart': this.state['zoomState'].yMin > 0 ? this.state['zoomState'].yMin : null,
+      'rangeEnd': this.state['zoomState'].yMax,
+    }];
+    requestParams['download'] = true;
 
-      const targetId = event.target.attributes.id.nodeValue;
-      if (targetId === 'summary_download') {
-        requestParams['querySummary'] = true;
-      }
+    const targetId = event.target.attributes.id.nodeValue;
+    if (targetId === 'summary_download') {
+      requestParams['querySummary'] = true;
+    }
 
-      event.target.queryData.value = JSON.stringify(requestParams);
-      event.target.submit();
-    }, error => {
-        console.warn(error);
-    });
+    event.target.queryData.value = JSON.stringify(requestParams);
+    event.target.submit();
   }
 }

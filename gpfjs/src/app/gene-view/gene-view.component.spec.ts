@@ -15,6 +15,7 @@ import { Gene, GeneViewSummaryAllele, GeneViewSummaryAllelesArray, Transcript } 
 import { GeneViewModel, GeneViewTranscript } from './gene-view';
 
 import { GeneViewComponent, GeneViewZoomHistory, GeneViewScaleState } from './gene-view.component';
+import { NgxsModule } from '@ngxs/store';
 
 describe('GeneViewScaleState', () => {
   it('should have working getters', () => {
@@ -109,7 +110,7 @@ describe('GeneViewComponent', () => {
         UsersService,
         ConfigService,
         FullscreenLoadingService],
-      imports: [HttpClientTestingModule, RouterTestingModule]
+      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([])]
     })
     .compileComponents();
   }));
