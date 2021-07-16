@@ -2,6 +2,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgxsModule } from '@ngxs/store';
 import { PedigreeSelectorComponent } from './pedigree-selector.component';
+import { PedigreeSelectorState } from './pedigree-selector.state';
 
 describe('PedigreeSelectorComponent', () => {
   let component: PedigreeSelectorComponent;
@@ -10,7 +11,7 @@ describe('PedigreeSelectorComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [PedigreeSelectorComponent],
-      imports: [NgxsModule.forRoot([])],
+      imports: [NgxsModule.forRoot([PedigreeSelectorState])],
     })
       .compileComponents();
   }));
