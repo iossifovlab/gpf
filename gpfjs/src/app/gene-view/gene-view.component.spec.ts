@@ -743,6 +743,10 @@ describe('GeneViewComponent', () => {
     component.transcriptsElement = component.svgElement
       .append('g');
 
+    component.hideTranscriptsCheckbox = {
+      'nativeElement': { 'checked': true }
+    } as any;
+
     const drawTranscriptSpy = spyOn(component, 'drawTranscript')
       .withArgs(component.summedTranscriptElement, component.svgHeightFreqRaw + 30, component.geneViewModel.collapsedGeneViewTranscript)
       .and.stub()
