@@ -24,7 +24,7 @@ export class PersonFiltersComponent extends StatefulComponent implements OnChang
   }
 
   ngOnChanges(changes) {
-    this.store.selectOnce(state => state.personFiltersState).subscribe(state => {
+    this.store.selectOnce(PersonFiltersState).subscribe(state => {
       // set default state
       for (const filter of this.filters) {
         let filterState = null;
