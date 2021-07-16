@@ -197,7 +197,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     ]);
 
     this.store.selectOnce(state => state).subscribe(state => {
-      state['datasetId'] = this.config.defaultDataset;
+      state['datasetId'] = datasetId;
       this.queryService.saveQuery(state, 'genotype')
       .take(1)
       .subscribe(urlObject => {
