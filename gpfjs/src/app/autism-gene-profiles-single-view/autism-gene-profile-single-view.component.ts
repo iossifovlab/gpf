@@ -88,16 +88,14 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
             this.geneWeightsService.getGeneWeights(scores)
           );
         }
-        Observable.zip(...geneWeightsObservables).pipe(
-          tap(geneWeightsArray => {
-            for (let k = 0; k < geneWeightsArray.length; k++) {
-              this.genomicScoresGeneWeights.push({
-                category: gene.genomicScores[k].id,
-                scores: geneWeightsArray[k]
-              });
-            }
-          })
-        );
+        Observable.zip(...geneWeightsObservables).subscribe(geneWeightsArray => {
+          for (let k = 0; k < geneWeightsArray.length; k++) {
+            this.genomicScoresGeneWeights.push({
+              category: gene.genomicScores[k].id,
+              scores: geneWeightsArray[k]
+            });
+          }
+        });
         return this.geneService.getGene(this.geneSymbol);
       }),
       switchMap(gene => {
