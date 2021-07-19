@@ -1,4 +1,5 @@
 import { AutismGeneProfilesTable } from 'cypress/elements/autism-gene-profiles-table-page';
+import { sidenavPageLinks } from 'cypress/elements/utils';
 
 describe('Autism gene profiles table tests', () => {
   const page = new AutismGeneProfilesTable();
@@ -6,8 +7,7 @@ describe('Autism gene profiles table tests', () => {
   before(() => {
     page.cleanup();
     page.navigateToHome();
-    page.toggleSidenav();
-    page.sidenavAutismGeneProfilesButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
   it('should display table', () => {
@@ -39,8 +39,7 @@ describe('Autism gene profiles table data tests', () => {
 
   beforeEach(() => {
     page.navigateToHome();
-    page.toggleSidenav();
-    page.sidenavAutismGeneProfilesButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
   [{geneSymbol: 'CHD8', expectedRow: ['CHD8', '✓', '✓', '', '✓', '✓', '✓', '1', '193', '83', '31.5', '18178', '7 (2.792)', '', '', '', '', '']},
@@ -53,7 +52,7 @@ describe('Autism gene profiles table data tests', () => {
       page.geneSearchInput.type(data.geneSymbol);
       page.allTableRows.should('have.length', 1);
       
-      for(let cellIndex = 0; cellIndex < data.expectedRow.length; cellIndex++) {
+      for (let cellIndex = 0; cellIndex < data.expectedRow.length; cellIndex++) {
         page.allTableRows.find('td').eq(cellIndex).invoke('text').then(text => {
           expect(text.trim()).to.eq(data.expectedRow[cellIndex]);
         });
@@ -67,8 +66,7 @@ describe.skip('Column filtering dropdown tests', () => {
 
   beforeEach(() => {
     page.navigateToHome();
-    page.toggleSidenav();
-    page.sidenavAutismGeneProfilesButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
     page.autismGeneSetsButton.click();
   });
 

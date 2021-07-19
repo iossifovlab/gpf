@@ -1,5 +1,6 @@
 import { AutismGeneProfilesBlock } from 'cypress/elements/autism-gene-profiles-block-page';
 import { AutismGeneProfilesTable } from 'cypress/elements/autism-gene-profiles-table-page';
+import { sidenavPageLinks } from 'cypress/elements/utils';
 
 describe('Autism gene profiles block tests', () => {
   const page = new AutismGeneProfilesBlock();
@@ -11,8 +12,7 @@ describe('Autism gene profiles block tests', () => {
 
   beforeEach(() => {
     page.navigateToHome();
-    page.toggleSidenav();
-    page.sidenavAutismGeneProfilesButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
   it('should display tabs navbar', () => {
@@ -56,8 +56,8 @@ describe('Autism gene profiles block tests', () => {
 
 //   beforeEach(() => {
 //     page.navigateToHome();
-//     page.toggleSidenav();
-//     page.sidenavAutismGeneProfilesButton.click();
+//     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+
 //   });
 
 //  // red lines tests - check the values also check the difference between 0 and undefind

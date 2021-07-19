@@ -1,5 +1,6 @@
 import { AutismGeneProfilesSingleView } from 'cypress/elements/autism-gene-profiles-single-view-page';
 import { AutismGeneProfilesTable } from 'cypress/elements/autism-gene-profiles-table-page';
+import { sidenavPageLinks } from 'cypress/elements/utils';
 
 describe('Autism gene profiles single view tests', () => {
   const page = new AutismGeneProfilesSingleView();
@@ -8,8 +9,7 @@ describe('Autism gene profiles single view tests', () => {
   before(() => {
     page.cleanup();
     page.navigateToHome();
-    page.toggleSidenav();
-    page.sidenavAutismGeneProfilesButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
     autismGeneProfilesTablePage.geneSearchInput.type('CHD8');
     autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
     autismGeneProfilesTablePage.allTableCells.first().click();

@@ -43,6 +43,13 @@ export const toolPageLinks = {
   geneBrowser: 'gene-browser'
 };
 
+export const sidenavPageLinks = {
+  datasets: 'datasets',
+  savedQueries: 'saved-queries',
+  autismGeneProfiles: 'autism-gene-profiles',
+  management: 'management'
+};
+
 export class BasePage {
   private readonly adminUsername = 'admin@iossifovlab.com';
   private readonly adminPassword = 'secret';
@@ -90,27 +97,21 @@ export class BasePage {
     // cy.get('a.dropdown-item').should('have.length', Object.keys(datasetIds).length);
     cy.get('a.dropdown-item').contains(dataset).click();
     cy.get('#datasets-dropdown-menu-button').should('have.text', dataset + ' ');
-    cy.get(`a.nav-link[routerlink="${page}"]`).click();
+    cy.get(`a.nav-link[href*="${page}"]`).click();
+  }
+
+  get sidenavTogglerButton() {
+    return cy.get('.navbar-toggler-icon');
   }
 
   toggleSidenav() {
-    cy.get('.navbar-toggler-icon').click();
+    this.sidenavTogglerButton.click({scrollBehavior: false});
   }
 
-  get sidenavDatasetButton() {
-    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/datasets"]');
-  }
-
-  get sidenavSavedQueriesButton() {
-    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/saved-queries"]');
-  }
-
-  get sidenavAutismGeneProfilesButton() {
-    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/autism-gene-profiles"]');
-  }
-
-  get sidenavManagementButton() {
-    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/management"]');
+  navigateToSidenavPage(sidenavPageLink: string): void {
+    this.sidenavTogglerButton.scrollIntoView();
+    this.toggleSidenav();
+    cy.get(`div.sidenav a[routerlink="/${sidenavPageLink}"]`).click({scrollBehavior: false});
   }
 
   findButtonInComponentContainingText(componentSelector: string, text: string) {

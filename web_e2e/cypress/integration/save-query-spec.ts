@@ -1,7 +1,7 @@
 import { DatasetsPage } from 'cypress/elements/datasets-page';
 import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
 import { SaveQueryPage } from 'cypress/elements/save-query-page';
-import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
+import { datasetIds, sidenavPageLinks, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Save query tests', () => {
   const page = new SaveQueryPage();
@@ -33,8 +33,7 @@ describe('Save query tests', () => {
     page.dropdownNameInput.type('Test');
     page.saveButton.click();
 
-    page.toggleSidenav();
-    page.sidenavSavedQueriesButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.savedQueries);
     page.tableFirstLoadButton.click();
 
     datasetsPage.datasetStatisticsButton.click();
@@ -43,8 +42,7 @@ describe('Save query tests', () => {
     datasetsPage.phenotypeToolButton.click();
     datasetsPage.geneBrowserButton.click();
 
-    page.toggleSidenav();
-    page.sidenavSavedQueriesButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.savedQueries);
     page.tableFirstDeleteButton.click();
   });
 
@@ -58,15 +56,13 @@ describe('Save query tests', () => {
     page.dropdownNameInput.type('Test');
     page.saveButton.click();
 
-    page.toggleSidenav();
-    page.sidenavSavedQueriesButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.savedQueries);
     page.tableFirstLoadButton.click();
     genotypeBlockPage.findAllCheckboxesInComponent('gpf-effecttypes').each((element) => {
       cy.wrap(element).should('be.checked');
     });
 
-    page.toggleSidenav();
-    page.sidenavSavedQueriesButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.savedQueries);
     page.tableFirstDeleteButton.click();
   });
 });
