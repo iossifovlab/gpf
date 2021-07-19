@@ -19,6 +19,7 @@ describe('PedigreeSelectorComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(PedigreeSelectorComponent);
     component = fixture.componentInstance;
+    component.pedigrees = [];
     fixture.detectChanges();
   });
 
