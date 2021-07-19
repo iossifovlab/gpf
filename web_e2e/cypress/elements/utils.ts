@@ -79,7 +79,7 @@ export class BasePage {
     usersPage.nextButton.click();
     usersPage.passwordInput.type(password);
     usersPage.loginSubmitButton.click();
-    cy.get('#logout-button').should('be.visible');
+    usersPage.logoutButton.should('be.visible');
   }
 
   loginAdmin() {
@@ -89,12 +89,14 @@ export class BasePage {
   logout() {
     const usersPage = new UsersPage();
     usersPage.logoutButton.click();
+    usersPage.loginDropdownToggleButton.should('be.visible');
+    // cy.wait(1000);
   }
 
   navigateToDatasetPage(dataset: string, page: string) {
     cy.get('#datasets-dropdown-menu-button').click();
-    cy.wait(1000);
-    // cy.get('a.dropdown-item').should('have.length', Object.keys(datasetIds).length);
+    // cy.wait(1000);
+    cy.get('a.dropdown-item').should('have.length', Object.keys(datasetIds).length);
     cy.get('a.dropdown-item').contains(dataset).click();
     cy.get('#datasets-dropdown-menu-button').should('have.text', dataset + ' ');
     cy.get(`a.nav-link[href*="${page}"]`).click();
