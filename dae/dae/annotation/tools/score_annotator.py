@@ -96,6 +96,12 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             aggr_name = self.type_aggregators[score_type]
         return aggregator_name_to_class(aggr_name)
 
+    def _fetch_substition(self, variant):
+        return self.resource.fetch_scores(
+            variant.chromosome, variant.position,
+            self.resource.get_default_scores()
+        )
+
     def _do_annotate(self, attributes, variant, liftover_variants):
         if self.liftover:
             variant = liftover_variants.get(self.liftover)
@@ -105,10 +111,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             return
 
         if variant.variant_type & VariantType.substitution:
-            scores = self.resource.fetch_scores(
-                variant.chromosome, variant.position,
-                self.resource.get_default_scores()
-            )
+            scores = self._fetch_substition(variant)
         else:
             if variant.variant_type & VariantType.indel:
                 first_position = variant.position-1
@@ -157,3 +160,10 @@ class NPScoreAnnotator(PositionScoreAnnotator):
         nuc_aggr = aggregator_name_to_class(aggr_name)
 
         return (pos_aggr, nuc_aggr)
+
+    def _fetch_substition(self, variant):
+        return self.resource.fetch_scores(
+            variant.chromosome, variant.position,
+            variant.reference, variant.alternative,
+            self.resource.get_default_scores()
+        )
