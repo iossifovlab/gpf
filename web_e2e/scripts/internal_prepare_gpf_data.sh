@@ -305,7 +305,7 @@ category = "denovo"
 
 EOT
 
-generate_autism_gene_profile.py -VV --config-genes
+generate_autism_gene_profile.py -VV --gene-sets-genes
 
 
 echo "done prepartion of DAE_DB_DIR (${DAE_DB_DIR})..."
