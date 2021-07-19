@@ -97,16 +97,21 @@ export class BasePage {
     // cy.get('a.dropdown-item').should('have.length', Object.keys(datasetIds).length);
     cy.get('a.dropdown-item').contains(dataset).click();
     cy.get('#datasets-dropdown-menu-button').should('have.text', dataset + ' ');
-    cy.get(`a.nav-link[routerlink="${page}"]`).click();
+    cy.get(`a.nav-link[href*="${page}"]`).click();
   }
 
   get sidenavTogglerButton() {
     return cy.get('.navbar-toggler-icon');
   }
 
+  toggleSidenav() {
+    this.sidenavTogglerButton.click({scrollBehavior: false});
+  }
+
   navigateToSidenavPage(sidenavPageLink: string): void {
-    this.sidenavTogglerButton.click();
-    cy.get(`div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/${sidenavPageLink}"]`).click({scrollBehavior: false});
+    this.sidenavTogglerButton.scrollIntoView();
+    this.toggleSidenav();
+    cy.get(`div.sidenav a[routerlink="/${sidenavPageLink}"]`).click({scrollBehavior: false});
   }
 
   findButtonInComponentContainingText(componentSelector: string, text: string) {

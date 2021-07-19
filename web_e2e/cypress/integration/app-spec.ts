@@ -95,11 +95,10 @@ describe('User access rights tests', () => {
       page.login(data.username, data.password);
       page.sidenavElements.should('not.exist');
 
-      // EXCEPTION
-      page.sidenavTogglerButton.click();
+      page.toggleSidenav();
       page.sidenavElements.should('have.length', data.sidenavElementsCount);
 
-      page.sidenavTogglerButton.click();
+      page.toggleSidenav();
       page.sidenavElements.should('not.exist');
 
       if (data.username || data.password !== undefined) {

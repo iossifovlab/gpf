@@ -6,6 +6,6 @@ export class AppPage extends BasePage {
   }
 
   get sidenavElements() {
-    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a.nav-link');
+    return cy.get('div.sidenav a.nav-link');
   }
 }
