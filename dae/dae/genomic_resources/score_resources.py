@@ -32,6 +32,9 @@ class ScoreLine:
     def __setitem__(self, key, value):
         self.values[key] = value
 
+    def __repr__(self):
+        return f"{self.chrom}:{self.pos_begin}-{self.pos_end} {self.scores}"
+
     @property
     def chrom(self):
         return self.values["chrom"]
@@ -350,19 +353,21 @@ class NPScoreResource(PositionScoreResource):
         if not score_lines:
             return None
 
+        def aggregate_nucleotides():
+            for col, nuc_agg in nuc_aggregators.items():
+                pos_aggregators[col].add(nuc_agg.get_final())
+                nuc_agg.clear()
+
         last_pos: int = score_lines[0].pos_begin
         for line in score_lines:
-            if line.pos_begin == last_pos:
-                for col, val in line.scores.items():
-                    if col not in nuc_aggregators:
-                        continue
-                    nuc_aggregators[col].add(val)
-            else:
-                for col, nuc_agg in nuc_aggregators.items():
-                    pos_aggregators[col].add(nuc_agg.get_final())
-                    nuc_agg.clear()
-
+            if line.pos_begin != last_pos:
+                aggregate_nucleotides()
+            for col, val in line.scores.items():
+                if col not in nuc_aggregators:
+                    continue
+                nuc_aggregators[col].add(val)
             last_pos = line.pos_begin
+        aggregate_nucleotides()
 
         return {
             score_id: aggregator.get_final()

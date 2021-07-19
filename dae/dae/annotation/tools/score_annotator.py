@@ -23,7 +23,7 @@ class VariantScoreAnnotatorBase(Annotator):
             self.type_aggregators[agg.type] = agg.aggregator
 
         self.aggregators = dict()
-        for attr in self.resource._config.default_annotation.attributes:
+        for attr in self.config.attributes:
             self.aggregators[attr.source] = self._collect_aggregators(attr)
 
     def _collect_aggregators(self, attr):

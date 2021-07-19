@@ -1,6 +1,8 @@
 import pytest
 import os
 
+from dae.configuration.gpf_config_parser import FrozenBox
+
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.attributes import VariantType
 from dae.genomic_resources.resource_db import GenomicResourceDB
@@ -60,6 +62,33 @@ def phastcons100way_variants_expected():
 
 
 @pytest.fixture
+def phastcons100way_indel_variants_expected():
+    variants_records = [
+        [{"chrom": "1", "position": 10919,
+         "reference": "A", "alternative": "ATG"}],
+        [{"chrom": "1", "position": 10920,
+         "reference": "G", "alternative": "GAT"}],
+        [{"chrom": "1", "position": 10930,
+         "reference": "GATA", "alternative": "GAT"}],
+        [{"chrom": "1", "position": 10930,
+         "reference": "GATA", "alternative": "G"}],
+        [{"chrom": "1", "position": 10933,
+         "reference": "GATA", "alternative": "GTAA"}],
+        [{"chrom": "1", "position": 10933,
+         "reference": "GATA", "alternative": "GCC"}],
+    ]
+    variants = [
+        SummaryVariantFactory.blank_summary_variant_from_records(rec)
+        for rec in variants_records
+    ]
+    expected = [
+        0.251, 0.249, 0.2145, 0.2145, 0.2011666666666667, 0.2011666666666667
+    ]
+
+    return list(zip(variants, expected))
+
+
+@pytest.fixture
 def cadd_variants_expected():
     variants_records = [
         [{
@@ -110,6 +139,42 @@ def cadd_variants_expected():
         },
         {
             "cadd_raw": 0.433087, "cadd_phred": 6.962
+        },
+    ]
+
+    return list(zip(variants, expected))
+
+
+@pytest.fixture
+def cadd_indel_variants_expected():
+    variants_records = [
+        [{
+            "chrom": "1", "position": 10915,
+            "reference": "G", "alternative": "GTA"
+        }],
+        [{
+            "chrom": "1", "position": 10920,
+            "reference": "GAG", "alternative": "G"
+        }],
+        [{
+            "chrom": "1", "position": 10920,
+            "reference": "GAG", "alternative": "GTAG"
+        }],
+    ]
+    variants = [
+        SummaryVariantFactory.blank_summary_variant_from_records(rec)
+        for rec in variants_records
+    ]
+
+    expected = [
+        {
+            "cadd_raw": 0.412572, "cadd_phred": 6.745333333333334
+        },
+        {
+            "cadd_raw": 0.5376293333333334, "cadd_phred": 7.984333333333335
+        },
+        {
+            "cadd_raw": 0.5376293333333334, "cadd_phred": 7.984333333333335
         },
     ]
 
@@ -182,3 +247,31 @@ def frequency_variants_expected():
 @pytest.fixture
 def annotation_config(fixture_dirname):
     return fixture_dirname("annotation.yaml")
+
+
+@pytest.fixture
+def mean_override_phastcons(fixture_dirname):
+    return FrozenBox({
+        'attributes': [{
+            'source': 'phastCons100way',
+            'dest': 'phastCons100way',
+            'aggregator': {'position': 'MeanAggregator'}
+        }]
+    })
+
+
+@pytest.fixture
+def mean_override_cadd(fixture_dirname):
+    return FrozenBox({
+        'attributes': [{
+            'source': 'cadd_raw',
+            'dest': 'cadd_raw',
+            'aggregator': {'position': 'MaxAggregator',
+                           'nucleotide': 'MeanAggregator'}
+        }, {
+            'source': 'cadd_phred',
+            'dest': 'cadd_phred',
+            'aggregator': {'position': 'MaxAggregator',
+                           'nucleotide': 'MeanAggregator'}
+        }]
+    })
