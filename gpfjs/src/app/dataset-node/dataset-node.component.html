@@ -1,10 +1,12 @@
-<a class="dataset-dropdown-item dropdown-item"
-  *ngIf="(selectedDataset$ | async) as selectedDataset"
-  [class.active]="selectedDataset.id === datasetNode.dataset.id"
-  (click)="select()"
-  [style.opacity]="datasetNode.dataset.accessRights ? 1.0 : 0.3">
-  {{ datasetNode.dataset.name }}
-</a>
+<ng-countainer *ngIf="datasetNode.dataset.accessRights !== undefined">
+  <a *ngIf="(selectedDataset$ | async) as selectedDataset"
+    class="dataset-dropdown-item dropdown-item"
+    [class.active]="selectedDataset.id === datasetNode.dataset.id"
+    (click)="select()"
+    [style.opacity]="datasetNode.dataset.accessRights ? 1.0 : 0.3">
+    {{ datasetNode.dataset.name }}
+  </a>
+</ng-countainer>
 
 <div class="children-container">
   <gpf-dataset-node *ngFor="let child of datasetNode.children" [datasetNode] = "child"></gpf-dataset-node>
