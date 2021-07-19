@@ -9,13 +9,9 @@ from dae.annotation.tools.score_annotator import (
 def test_position_score_annotator(
         phastcons100way_variants_expected,
         anno_grdb, genomes_db_2013):
-    from dae.configuration.gpf_config_parser import FrozenBox
-    config = FrozenBox({
-        "annotator": "position_score",
-        "resource": "hg38/TESTphastCons100way",
-    })
-    annotator = PositionScoreAnnotator(config, genomes_db_2013, anno_grdb)
-    pipeline = AnnotationPipeline()
+    resource = anno_grdb.get_resource("hg38/TESTphastCons100way")
+    annotator = PositionScoreAnnotator(resource, genomes_db_2013)
+    pipeline = AnnotationPipeline(None, None, None)
     pipeline.add_annotator(annotator)
 
     for sv, e in phastcons100way_variants_expected:
@@ -25,10 +21,10 @@ def test_position_score_annotator(
 
 
 def test_np_score_annotator(
-        cadd_variants_expected, get_score_config, genomes_db_2013):
-    config = get_score_config("TESTCADD")
-    annotator = NPScoreAnnotator(config, genomes_db_2013)
-    pipeline = AnnotationPipeline()
+        cadd_variants_expected, anno_grdb, genomes_db_2013):
+    resource = anno_grdb.get_resource("hg38/TESTCADD")
+    annotator = NPScoreAnnotator(resource, genomes_db_2013)
+    pipeline = AnnotationPipeline(None, None, None)
     pipeline.add_annotator(annotator)
 
     for sv, e in cadd_variants_expected:

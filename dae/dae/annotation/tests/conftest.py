@@ -177,3 +177,8 @@ def frequency_variants_expected():
     ]
 
     return list(zip(variants, expected))
+
+
+@pytest.fixture
+def annotation_config(fixture_dirname):
+    return fixture_dirname("annotation.yaml")

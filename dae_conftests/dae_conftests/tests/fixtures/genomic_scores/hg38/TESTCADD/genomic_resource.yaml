@@ -2,7 +2,7 @@
 
 id: hg38/TESTCADD
 
-score_type: score_annotator.NPScoreAnnotator
+resource_type: score_resources.NPScoreResource
 
 filename: TESTCADD.tsv.gz
 format: tsv/bgz
@@ -13,11 +13,19 @@ index_file:
 
 has_header: true
 
+type_aggregators:
+  - type: float
+    aggregator: dae.genomic_resource.aggregators.MaxAggregator
+  - type: int
+    aggregator: dae.genomic_resource.aggregators.MaxAggregator
+  - type: str
+    aggregator: dae.genomic_resource.aggregators.ConcatAggregator
+
 # defined by score_type
-chrom: 
+chrom:
   name: Chrom
 pos_begin:
-  name:  Pos
+  name: Pos
 reference:
   name: Ref
 alternative:
@@ -38,5 +46,11 @@ default_annotation:
   attributes:
     - source: cadd_raw
       dest: cadd_raw
+      aggregator:
+        position: MaxAggregator
+        nucleotide: MaxAggregator
     - source: cadd_phred
       dest: cadd_phred
+      aggregator:
+        position: MaxAggregator
+        nucleotide: MaxAggregator

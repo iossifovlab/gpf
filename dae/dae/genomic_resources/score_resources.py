@@ -299,6 +299,34 @@ class NPScoreResource(PositionScoreResource):
     def required_columns(cls):
         return ("chrom", "pos_begin", "pos_end", "reference", "alternative")
 
+    def fetch_scores(
+        self, chrom: str, position: int, ref: str, alt: str,
+        scores: List[str] = None
+    ):
+        chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
+        assert chrom in self.get_all_chromosomes()
+
+        lines = self._fetch_lines(chrom, position, position)
+        if not lines:
+            return None
+
+        line = None
+        for li in lines:
+            if li["reference"] == ref and li["alternative"] == alt:
+                line = li
+                break
+
+        if not line:
+            return None
+
+        result = dict()
+
+        for col, val in line.scores.items():
+            if scores is None or col in scores:
+                result[col] = val
+
+        return result
+
     def fetch_scores_agg(
         self, chrom: str, pos_begin: int, pos_end: int, scores_aggregators
     ):

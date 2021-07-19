@@ -2,7 +2,7 @@
 
 id: hg38/TESTphastCons100way
 
-resource_type: position_score
+resource_type: score_resources.PositionScoreResource
 
 filename: TESTphastCons100way.bedGraph.gz
 format: tsv/bgz

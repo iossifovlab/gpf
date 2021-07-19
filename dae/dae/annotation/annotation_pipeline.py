@@ -21,9 +21,7 @@ class AnnotationPipeline():
         self.resource_db = resource_db
 
     @staticmethod
-    def build(pipeline_config_path, gpf_instance):
-        genomes_db = gpf_instance.genomes_db
-        resource_db = gpf_instance.genomic_resource_db
+    def build(pipeline_config_path, genomes_db, resource_db):
         pipeline_config = GPFConfigParser.load_config(
             pipeline_config_path, annotation_conf_schema
         )
