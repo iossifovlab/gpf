@@ -14,7 +14,8 @@
           type="radio"
           (change)="updateRarityType(rarityType)"
           value="rarityType"
-          [checked]="selectedRarityType === rarityType">{{rarityType}}<br/>
+          [checked]="selectedRarityType === rarityType">{{rarityType}}
+        <br *ngIf="rarityType === 'ultraRare'">
       </ng-container>
     </div>
     <div class="row" style="padding-left: 15px; padding-right: 15px;">
