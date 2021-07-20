@@ -25,8 +25,9 @@ export class GenotypeBlockComponent {
 
   @Selector([
     VarianttypesState, EffecttypesState, GenderState,
-    InheritancetypesState, PresentInChildState, PresentInParentState,
-    StudyTypesState, PedigreeSelectorState, FamilyTypeFilterState,
+    InheritancetypesState, PresentInChildState,
+    PresentInParentState.queryStateSelector, StudyTypesState,
+    PedigreeSelectorState, FamilyTypeFilterState,
   ])
   static genotypeBlockQueryState(
     variantTypesState: VarianttypeModel,
@@ -34,7 +35,7 @@ export class GenotypeBlockComponent {
     genderState: GenderModel,
     inheritanceTypesState: InheritancetypesModel,
     presentInChildState: PresentInChildModel,
-    presentInParentState: PresentInParentModel,
+    presentInParentState,
     studyTypesState: StudyTypesModel,
     pedigreeSelectorState: PedigreeSelectorModel,
     familyTypeFilterState: FamilyTypeFilterModel,

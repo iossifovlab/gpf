@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
+import { State, Action, StateContext, Selector } from '@ngxs/store';
 
 export class SetPresentInParentValues {
   static readonly type = '[Genotype] Set presentInParent values';
@@ -39,5 +39,17 @@ export class PresentInParentState {
       rarityIntervalEnd: action.rarityIntervalEnd,
     });
   }
-}
 
+  @Selector([PresentInParentState])
+  static queryStateSelector(state: PresentInParentModel) {
+    const res = {
+      'presentInParent': state.presentInParent,
+      'rarity': { 'ultraRare': state.rarityType === 'ultraRare' }
+    };
+    if (state.rarityType !== 'ultraRare' && state.rarityType !== 'all') {
+      res['rarity']['minFreq'] = state.rarityIntervalStart;
+      res['rarity']['maxFreq'] = state.rarityIntervalEnd;
+    }
+    return res;
+  }
+}
