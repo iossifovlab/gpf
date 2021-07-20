@@ -90,16 +90,32 @@ export class BasePage {
     const usersPage = new UsersPage();
     usersPage.logoutButton.click();
     usersPage.loginDropdownToggleButton.should('be.visible');
-    // cy.wait(1000);
   }
 
   navigateToDatasetPage(dataset: string, page: string) {
-    cy.get('#datasets-dropdown-menu-button').click();
-    // cy.wait(1000);
-    cy.get('a.dropdown-item').should('have.length', Object.keys(datasetIds).length);
-    cy.get('a.dropdown-item').contains(dataset).click();
-    cy.get('#datasets-dropdown-menu-button').should('have.text', dataset + ' ');
+    this.openDatasetsDropdownMenu();
+    this.datasetsDropdownMenuElements.contains(dataset).click();
+    this.datasetsDropdownMenuButton.should('have.text', dataset + ' ');
     cy.get(`a.nav-link[href*="${page}"]`).click();
+  }
+
+  get datasetsDropdownMenuButton() {
+    return cy.get('#datasets-dropdown-menu-button');
+  }
+
+  get datasetsDropdownMenuElements() {
+    return cy.get('.dataset-selector a');
+  }
+
+  openDatasetsDropdownMenu() {
+    this.datasetsDropdownMenuButton.click();
+    this.waitForDatasetsDropdownItems();
+  }
+
+  waitForDatasetsDropdownItems() {
+    this.datasetsDropdownMenuElements.should('have.length', Object.keys(datasetIds).length);
+    this.datasetsDropdownMenuElements.should('have.css', 'opacity');
+    cy.wait(150);
   }
 
   get sidenavTogglerButton() {

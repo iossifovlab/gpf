@@ -152,9 +152,8 @@ describe('User access rights tests', () => {
       const expectedOpacity = data.hasDatasetRights ? '1' : '0.3';
 
       page.login(data.username, data.password);
-      datasetsPage.datasetsDropdownMenuButton.click();
-      // cy.wait(1000);
-      datasetsPage.datasetsDropdownMenuElements.each(ele => cy.wrap(ele).should('have.css', 'opacity', expectedOpacity));
+      page.openDatasetsDropdownMenu();
+      page.datasetsDropdownMenuElements.each(ele => cy.wrap(ele).should('have.css', 'opacity', expectedOpacity));
 
       if (data.username || data.password !== undefined) {
         page.logout();
