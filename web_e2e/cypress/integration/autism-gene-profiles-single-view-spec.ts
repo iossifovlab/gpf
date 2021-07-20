@@ -20,11 +20,6 @@ describe('Autism gene profiles single view tests', () => {
     page.header.should('have.text', 'CHD8');
   });
 
-  it('should display gene browser link', () => {
-    page.geneBrowserLink.should('be.visible');
-    page.geneBrowserLink.should('have.text', ' View CHD8 in the Gene Browser ');
-  });
-
   it('should have the correct href on the gene browser link', () => {
     page.header.invoke('text').then((headerText) => {
       const baseUrl = Cypress.config().baseUrl;
@@ -71,15 +66,17 @@ describe('Autism gene profiles single view tests', () => {
 
   it('should display the datasets table', () => {
     page.datasetsTable.should('be.visible');
-    page.datasetsTable.find('th').first().should('have.text', 'IossifovWE2014');
+    page.datasetsTable.find('th').first().should('have.text', ' iossifov_2014 ');
     page.datasetsTable.find('tr').should('have.length', 3);
   });
 
-  it('should display the external links table', () => {
-    page.externalLinksTable.should('be.visible');
-    page.externalLinksTable.find('th').should('have.text', 'External links');
-    page.externalLinksTable.find('tr').should('have.length', 3);
+  it('should display gene browser link', () => {
+    page.geneBrowserLink.should('be.visible');
+    page.geneBrowserLink.should('have.text', 'View CHD8 in the Gene Browser');
   });
+
+  // add tests for the other links as well - see if you can test the actual navigation - is this an e2e test?
+
 });
 
 // add data tests describe
