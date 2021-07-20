@@ -7,7 +7,7 @@ import { Store } from "@ngxs/store";
 export abstract class StatefulComponent implements OnInit, OnDestroy {
   protected stateSubscription: Subscription;
   protected state$: Observable<object>;
-  protected errors: Array<string>;
+  public errors: Array<string>;
 
   constructor(
     protected store: Store,
