@@ -43,6 +43,13 @@ export const toolPageLinks = {
   geneBrowser: 'gene-browser'
 };
 
+export const sidenavPageLinks = {
+  datasets: 'datasets',
+  savedQueries: 'saved-queries',
+  autismGeneProfiles: 'autism-gene-profiles',
+  management: 'management'
+};
+
 export class BasePage {
   private readonly adminUsername = 'admin@iossifovlab.com';
   private readonly adminPassword = 'secret';
@@ -72,7 +79,7 @@ export class BasePage {
     usersPage.nextButton.click();
     usersPage.passwordInput.type(password);
     usersPage.loginSubmitButton.click();
-    cy.get('#logout-button').should('be.visible');
+    usersPage.logoutButton.should('be.visible');
   }
 
   loginAdmin() {
@@ -82,35 +89,47 @@ export class BasePage {
   logout() {
     const usersPage = new UsersPage();
     usersPage.logoutButton.click();
+    usersPage.loginDropdownToggleButton.should('be.visible');
   }
 
   navigateToDatasetPage(dataset: string, page: string) {
-    cy.get('#datasets-dropdown-menu-button').click();
-    cy.wait(1000);
-    // cy.get('a.dropdown-item').should('have.length', Object.keys(datasetIds).length);
-    cy.get('a.dropdown-item').contains(dataset).click();
-    cy.get('#datasets-dropdown-menu-button').should('have.text', dataset + ' ');
-    cy.get(`a.nav-link[routerlink="${page}"]`).click();
+    this.openDatasetsDropdownMenu();
+    this.datasetsDropdownMenuElements.contains(dataset).click();
+    this.datasetsDropdownMenuButton.should('have.text', dataset + ' ');
+    cy.get(`a.nav-link[href*="${page}"]`).click();
+  }
+
+  get datasetsDropdownMenuButton() {
+    return cy.get('#datasets-dropdown-menu-button');
+  }
+
+  get datasetsDropdownMenuElements() {
+    return cy.get('.dataset-selector a');
+  }
+
+  openDatasetsDropdownMenu() {
+    this.datasetsDropdownMenuButton.click();
+    this.waitForDatasetsDropdownItems();
+  }
+
+  waitForDatasetsDropdownItems() {
+    this.datasetsDropdownMenuElements.should('have.length', Object.keys(datasetIds).length);
+    this.datasetsDropdownMenuElements.should('have.css', 'opacity');
+    cy.wait(150);
+  }
+
+  get sidenavTogglerButton() {
+    return cy.get('.navbar-toggler-icon');
   }
 
   toggleSidenav() {
-    cy.get('.navbar-toggler-icon').click();
+    this.sidenavTogglerButton.click({scrollBehavior: false});
   }
 
-  get sidenavDatasetButton() {
-    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/datasets"]');
-  }
-
-  get sidenavSavedQueriesButton() {
-    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/saved-queries"]');
-  }
-
-  get sidenavAutismGeneProfilesButton() {
-    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/autism-gene-profiles"]');
-  }
-
-  get sidenavManagementButton() {
-    return cy.get('div > .sidenav-container > .sidenav  > .nav > .nav-item > a[routerlink="/management"]');
+  navigateToSidenavPage(sidenavPageLink: string): void {
+    this.sidenavTogglerButton.scrollIntoView();
+    this.toggleSidenav();
+    cy.get(`div.sidenav a[routerlink="/${sidenavPageLink}"]`).click({scrollBehavior: false});
   }
 
   findButtonInComponentContainingText(componentSelector: string, text: string) {

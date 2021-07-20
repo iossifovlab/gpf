@@ -3,68 +3,68 @@ import { GenotypeBrowserController } from "cypress/elements/genotype-browser-con
 import { datasetIds, toolPageLinks } from "cypress/elements/utils";
 
 describe('Genes block panel tests', () => {
-  const genesBlockPage = new GenesBlockPage();
+  const page = new GenesBlockPage();
 
   before(() => {
-    genesBlockPage.cleanup();
-    genesBlockPage.navigateToHome();
-    genesBlockPage.loginAdmin();
+    page.cleanup();
+    page.navigateToHome();
+    page.loginAdmin();
   });
 
   beforeEach(() => {
-    genesBlockPage.preserveLogin();
-    genesBlockPage.navigateToHome();
+    page.preserveLogin();
+    page.navigateToHome();
   });
 
   it('should display gene symbols panel', () => {
-    genesBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    genesBlockPage.geneSymbolsPanel.should('not.exist');
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    page.geneSymbolsPanel.should('not.exist');
 
-    genesBlockPage.geneSymbolsButton.click();
-    genesBlockPage.geneSymbolsPanel.should('be.visible');
+    page.geneSymbolsButton.click();
+    page.geneSymbolsPanel.should('be.visible');
   });
 
   it('should display error alert in gene symbols panel when the textarea is empty', () => {
-    genesBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    genesBlockPage.geneSymbolsButton.click();
-    genesBlockPage.findWarningAlertInComponent('gpf-gene-symbols').should('be.visible');
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    page.geneSymbolsButton.click();
+    page.findWarningAlertInComponent('gpf-gene-symbols').should('be.visible');
 
-    genesBlockPage.geneSymbolsTextarea.type('SAMD11');
-    genesBlockPage.findWarningAlertInComponent('gpf-gene-symbols').should('be.hidden');
+    page.geneSymbolsTextarea.type('SAMD11');
+    page.findWarningAlertInComponent('gpf-gene-symbols').should('be.hidden');
   });
 
   it('should display gene sets panel', () => {
-    genesBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    genesBlockPage.geneSetsPanel.should('not.exist');
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    page.geneSetsPanel.should('not.exist');
 
-    genesBlockPage.geneSetsButton.click();
-    genesBlockPage.geneSetsPanel.should('be.visible');
+    page.geneSetsButton.click();
+    page.geneSetsPanel.should('be.visible');
   });
 
   it('should display error alert in gene sets panel when the textarea is empty', () => {
-    genesBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    genesBlockPage.geneSetsButton.click();
-    genesBlockPage.findErrorAlertInComponent('gpf-gene-sets').should('be.visible');
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    page.geneSetsButton.click();
+    page.findErrorAlertInComponent('gpf-gene-sets').should('be.visible');
 
-    genesBlockPage.geneSetsSearchbox.click();
-    genesBlockPage.geneSetsSearchbox.type('non-essential genes');
+    page.geneSetsSearchbox.click();
+    page.geneSetsSearchbox.type('non-essential genes');
 
-    genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText('non-essential genes').click();
-    genesBlockPage.findErrorAlertInComponent('gpf-gene-sets').should('not.exist');
+    page.findGeneSetsSearchboxDropdownOptionsByText('non-essential genes').click();
+    page.findErrorAlertInComponent('gpf-gene-sets').should('not.exist');
   });
 
   it('should display gene weights panel', () => {
-    genesBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    genesBlockPage.genesWeightsPanel.should('not.exist');
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    page.genesWeightsPanel.should('not.exist');
 
-    genesBlockPage.geneWeightsButton.click();
-    genesBlockPage.genesWeightsPanel.should('be.visible');
+    page.geneWeightsButton.click();
+    page.genesWeightsPanel.should('be.visible');
   });
 });
 
 describe('Gene sets names and count tests', () => {
   const genotypeBrowserController = new GenotypeBrowserController();
-  const genesBlockPage = new GenesBlockPage();
+  const page = new GenesBlockPage();
 
   before(() => {
     genotypeBrowserController.cleanup();
@@ -125,17 +125,17 @@ describe('Gene sets names and count tests', () => {
 
       genotypeBrowserController.setStudy(datasetIds.iossifov2014);
 
-      genesBlockPage.geneSetsButton.click();
+      page.geneSetsButton.click();
 
-      genesBlockPage.geneSetsSearchbox.click();
+      page.geneSetsSearchbox.click();
 
       expectedName = data.expectedCondition;
       geneSetName = expectedName.substring(0, expectedName.indexOf('(') - 1);
       genotypeBrowserController.filterGenesByGeneSets(data.collection, geneSetName);
 
-      genesBlockPage.selectedGeneSet.should('contain.text', expectedName);
+      page.selectedGeneSet.should('contain.text', expectedName);
 
-      genesBlockPage.geneSetCountElement.invoke('text').then(actualText => {
+      page.geneSetCountElement.invoke('text').then(actualText => {
         actualCount = actualText.replace('Count: ', '').replace(' (Download)', '').trim();
         expectedCount = expectedName.substring(expectedName.indexOf('(') + 1, expectedName.indexOf(')'));
         expect(actualCount).to.eq(expectedCount);
@@ -147,7 +147,7 @@ describe('Gene sets names and count tests', () => {
 });
 
 describe('Gene set file length tests', () => {
-  const genesBlockPage = new GenesBlockPage();
+  const page = new GenesBlockPage();
   const genotypeBrowserController = new GenotypeBrowserController();
 
   before(() => {
@@ -211,9 +211,9 @@ describe('Gene set file length tests', () => {
 
       genotypeBrowserController.setStudy(datasetIds.iossifov2014);
 
-      genesBlockPage.geneSetsButton.click();
-      genesBlockPage.geneSetsCollectionSelectorDropdownMenu.select(data.collection);
-      genesBlockPage.geneSetsSearchbox.click();
+      page.geneSetsButton.click();
+      page.geneSetsCollectionSelectorDropdownMenu.select(data.collection);
+      page.geneSetsSearchbox.click();
 
       results.splice(0, results.length);
       expectedName = data.expectedCondition;
@@ -225,7 +225,7 @@ describe('Gene set file length tests', () => {
         doc.addEventListener('click', () => {
           setTimeout(function () { doc.location.reload() }, 5000)
         })
-        genesBlockPage.downloadButton.click();
+        page.downloadButton.click();
       });
 
       cy.readFile(downloadFilePath, { timeout: 5000 }).then(text => {
@@ -241,7 +241,7 @@ describe('Gene set file length tests', () => {
 });
 
 describe('Denovo gene set gene symbols tests', () => {
-  const genesBlockPage = new GenesBlockPage();
+  const page = new GenesBlockPage();
   const genotypeBrowserController = new GenotypeBrowserController();
 
   before(() => {
@@ -276,21 +276,21 @@ describe('Denovo gene set gene symbols tests', () => {
       genotypeBrowserController.setStudy(datasetIds.iossifov2014);
 
       for (let i = 0; i < data.expectedConditions.effectTypesSearchQueries.length; i++) {
-        genesBlockPage.geneSetsButton.click();
-        genesBlockPage.geneSetsCollectionSelectorDropdownMenu.select('Denovo');
+        page.geneSetsButton.click();
+        page.geneSetsCollectionSelectorDropdownMenu.select('Denovo');
         if (data.peopleGroup === 'unaffected') {
-          genesBlockPage.findDenovoGeneSetCollectionCheckbox('iossifov_2014', 'affected').click();
-          genesBlockPage.findDenovoGeneSetCollectionCheckbox('iossifov_2014', 'unaffected').click();
+          page.findDenovoGeneSetCollectionCheckbox('iossifov_2014', 'affected').click();
+          page.findDenovoGeneSetCollectionCheckbox('iossifov_2014', 'unaffected').click();
         }
-        genesBlockPage.geneSetsSearchbox.click();
-        genesBlockPage.geneSetsSearchbox.type(data.expectedConditions.effectTypesSearchQueries[i]);
+        page.geneSetsSearchbox.click();
+        page.geneSetsSearchbox.type(data.expectedConditions.effectTypesSearchQueries[i]);
 
-        genesBlockPage.getFirstGeneSetFromDropdownMenu().click();
+        page.getFirstGeneSetFromDropdownMenu().click();
         cy.window().document().then(function (doc) {
           doc.addEventListener('click', () => {
             setTimeout(function () { doc.location.reload() }, 5000)
           })
-          genesBlockPage.downloadButton.click();
+          page.downloadButton.click();
         });
 
         cy.readFile(downloadedGeneSymbolsFilePath, { timeout: 5000 }).then(text => {

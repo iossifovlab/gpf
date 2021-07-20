@@ -5,18 +5,18 @@ import { ShareQueryPage } from 'cypress/elements/share-query-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Enrichment tool tests', () => {
-  const enrichmentToolPage = new EnrichmentToolPage();
+  const page = new EnrichmentToolPage();
 
   before(() => {
-    enrichmentToolPage.cleanup();
-    enrichmentToolPage.navigateToHome();
-    enrichmentToolPage.loginAdmin();
+    page.cleanup();
+    page.navigateToHome();
+    page.loginAdmin();
   });
 
   beforeEach(() => {
-    enrichmentToolPage.preserveLogin();
-    enrichmentToolPage.navigateToHome();
-    enrichmentToolPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.enrichmentTool);
+    page.preserveLogin();
+    page.navigateToHome();
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.enrichmentTool);
   });
 
   it('should display genes block panel', () => {
@@ -25,11 +25,11 @@ describe('Enrichment tool tests', () => {
   });
 
   it('should display enrichment models block', () => {
-    enrichmentToolPage.enrichmentModelsBlock.should('be.visible');
+    page.enrichmentModelsBlock.should('be.visible');
   });
 
   it('should display \'Enrichment Test\' button', () => {
-    enrichmentToolPage.enrichmentTestButton.should('be.visible');
+    page.enrichmentTestButton.should('be.visible');
   });
 
   it('should display \'Share query\' button', () => {
@@ -45,35 +45,35 @@ describe('Enrichment tool tests', () => {
   it('should display enrichment table after \'Enrichment Test\' button click', () => {
     const genesBlockPage = new GenesBlockPage();
 
-    enrichmentToolPage.table.should('not.exist');
+    page.table.should('not.exist');
 
     genesBlockPage.geneSymbolsTextarea.type('CAMSAP1');
-    enrichmentToolPage.enrichmentTestButton.click();
-    enrichmentToolPage.table.should('be.visible');
+    page.enrichmentTestButton.click();
+    page.table.should('be.visible');
   });
 
   it('should display alert window after \'Enrichment Test\' button click when the gene symbols textarea is empty', () => {
     const genesBlockPage = new GenesBlockPage();
 
-    enrichmentToolPage.findWarningAlertInComponent('gpf-gene-symbols').should('be.visible');
+    page.findWarningAlertInComponent('gpf-gene-symbols').should('be.visible');
 
     genesBlockPage.geneSymbolsTextarea.type('CAMSAP1');
-    enrichmentToolPage.findWarningAlertInComponent('gpf-gene-symbols').should('be.hidden');
+    page.findWarningAlertInComponent('gpf-gene-symbols').should('be.hidden');
   });
 
   it('should display alert window when the gene sets textarea is empty', () => {
     const genesBlockPage = new GenesBlockPage();
 
-    enrichmentToolPage.findErrorAlertInComponent('gpf-gene-sets').should('not.exist');
+    page.findErrorAlertInComponent('gpf-gene-sets').should('not.exist');
 
     genesBlockPage.geneSetsButton.click();
-    enrichmentToolPage.findErrorAlertInComponent('gpf-gene-sets').should('be.visible');
+    page.findErrorAlertInComponent('gpf-gene-sets').should('be.visible');
 
     genesBlockPage.geneSetsSearchbox.click();
     genesBlockPage.geneSetsSearchbox.type('synaptic clefts inhibitory');
     genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText('synaptic clefts inhibitory').click();
-    enrichmentToolPage.enrichmentTestButton.click();
-    enrichmentToolPage.findErrorAlertInComponent('gpf-gene-sets').should('not.exist');
+    page.enrichmentTestButton.click();
+    page.findErrorAlertInComponent('gpf-gene-sets').should('not.exist');
   });
 
   it('should display \'55\' and \'169\' in the affected person\'s observed column of LGDs and missense\'s rows respectively ' +
@@ -84,9 +84,9 @@ describe('Enrichment tool tests', () => {
     genesBlockPage.geneSetsSearchbox.click();
     genesBlockPage.geneSetsSearchbox.type('FMRP Darnell');
     genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText('FMRP Darnell').click();
-    enrichmentToolPage.enrichmentTestButton.click();
-    enrichmentToolPage.findTableField('affected', 'LGDs', 1).should('have.text', '55');
-    enrichmentToolPage.findTableField('affected', 'Missense', 1).should('have.text', '169')
+    page.enrichmentTestButton.click();
+    page.findTableField('affected', 'LGDs', 1).should('have.text', '55');
+    page.findTableField('affected', 'Missense', 1).should('have.text', '169')
   });
 
   it('should display \'0\' and \'2\' in the affected person\'s observed column of LGDs and missense\'s rows respectively ' +
@@ -98,8 +98,8 @@ describe('Enrichment tool tests', () => {
     genesBlockPage.geneSetsSearchbox.click();
     genesBlockPage.geneSetsSearchbox.type('BIOCARTA_PTEN_PATHWAY');
     genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText('BIOCARTA_PTEN_PATHWAY').click();
-    enrichmentToolPage.enrichmentTestButton.click();
-    enrichmentToolPage.findTableField('affected', 'LGDs', 1).should('have.text', '0');
-    enrichmentToolPage.findTableField('affected', 'Missense', 1).should('have.text', '2');
+    page.enrichmentTestButton.click();
+    page.findTableField('affected', 'LGDs', 1).should('have.text', '0');
+    page.findTableField('affected', 'Missense', 1).should('have.text', '2');
   });
 });

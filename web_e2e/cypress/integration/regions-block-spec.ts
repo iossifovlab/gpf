@@ -2,33 +2,33 @@ import { RegionsBlockPage } from 'cypress/elements/regions-block-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Regions block tests', () => {
-  const regionsBlockPage = new RegionsBlockPage();
+  const page = new RegionsBlockPage();
 
   before(() => {
-    regionsBlockPage.cleanup();
-    regionsBlockPage.navigateToHome();
-    regionsBlockPage.loginAdmin();
+    page.cleanup();
+    page.navigateToHome();
+    page.loginAdmin();
   });
 
   beforeEach(() => {
-    regionsBlockPage.preserveLogin();
-    regionsBlockPage.navigateToHome();
+    page.preserveLogin();
+    page.navigateToHome();
   });
 
   it('should display regions filter panel', () => {
-    regionsBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    regionsBlockPage.regionsFilterPanel.should('not.exist');
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    page.regionsFilterPanel.should('not.exist');
 
-    regionsBlockPage.regionsFilterButton.click();
-    regionsBlockPage.regionsFilterPanel.should('be.visible');
+    page.regionsFilterButton.click();
+    page.regionsFilterPanel.should('be.visible');
   });
 
   it('should display error alert in regions panel when the textarea is empty', () => {
-    regionsBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    regionsBlockPage.regionsFilterButton.click();
-    regionsBlockPage.findErrorAlertInComponent('gpf-regions-filter').should('be.visible');
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    page.regionsFilterButton.click();
+    page.findErrorAlertInComponent('gpf-regions-filter').should('be.visible');
 
-    regionsBlockPage.regionsFilterTextarea.type('1:865582');
-    regionsBlockPage.findErrorAlertInComponent('gpf-regions-filter').should('not.exist');
+    page.regionsFilterTextarea.type('1:865582');
+    page.findErrorAlertInComponent('gpf-regions-filter').should('not.exist');
   });
 });

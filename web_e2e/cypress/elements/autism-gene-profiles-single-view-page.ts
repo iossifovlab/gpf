@@ -10,7 +10,7 @@ export class AutismGeneProfilesSingleView extends BasePage {
   }
 
   get geneBrowserLink() {
-    return cy.get('gpf-autism-gene-profile-single-view a');
+    return cy.get('#gene-browser-link');
   }
 
   get autismScoresTable() {
@@ -21,11 +21,23 @@ export class AutismGeneProfilesSingleView extends BasePage {
     return cy.get('#protection_scores');
   }
 
+  get singleScoreMarkers() {
+    return cy.get('.single-score-marker');
+  }
+
   get geneAutismGeneSetsTable() {
     return cy.get('#autism_gene_sets');
   }
 
   get geneRelevantGeneSetsTable() {
     return cy.get('#relevant_gene_sets');
+  }
+
+  get datasetsTable() {
+    return cy.get('.datasets-table');
+  }
+
+  get externalLinksTable() {
+    return cy.get('#external-links');
   }
 }

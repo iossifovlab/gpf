@@ -2,29 +2,29 @@ import { GenomicScoresBlockPage } from 'cypress/elements/genomic-scores-block-pa
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Genomic scores panel tests', () => {
-  const genomicScoresBlockPage = new GenomicScoresBlockPage();
+  const page = new GenomicScoresBlockPage();
 
   before(() => {
-    genomicScoresBlockPage.cleanup();
-    genomicScoresBlockPage.navigateToHome();
-    genomicScoresBlockPage.loginAdmin();
+    page.cleanup();
+    page.navigateToHome();
+    page.loginAdmin();
   });
 
   beforeEach(() => {
-    genomicScoresBlockPage.preserveLogin();
-    genomicScoresBlockPage.navigateToHome();
+    page.preserveLogin();
+    page.navigateToHome();
   });
 
   it('should display genomic scores panel after \'add filter\' button click ' +
      'and remove it after \'remove filter\' button click', () => {
-    genomicScoresBlockPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    genomicScoresBlockPage.panel.should('not.exist');
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    page.panel.should('not.exist');
 
-    genomicScoresBlockPage.addFilterButton.click();
-    genomicScoresBlockPage.panel.should('be.visible');
+    page.addFilterButton.click();
+    page.panel.should('be.visible');
 
-    genomicScoresBlockPage.removeFilterButton.click();
-    genomicScoresBlockPage.panel.should('not.exist');
+    page.removeFilterButton.click();
+    page.panel.should('not.exist');
   });
 });
 

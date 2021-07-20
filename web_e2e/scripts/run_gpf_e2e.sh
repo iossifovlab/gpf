@@ -33,7 +33,6 @@ docker run --rm \
     --name ${CONTAINER_E2E_TESTS} \
     --link ${CONTAINER_GPF_IMPALA}:impala \
     --link ${CONTAINER_GPF_DEV}:${CONTAINER_GPF_DEV} \
-    -v ${DATA}:/data \
     -v ${DOWNLOADS}:/downloads \
     -v ${SCRIPTS}:/scripts \
     -v ${WD}:/e2e \

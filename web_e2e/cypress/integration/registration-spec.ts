@@ -2,19 +2,19 @@ import { RegistrationPage } from 'cypress/elements/registration-page';
 import { UsersPage } from 'cypress/elements/users-page';
 
 describe('Register tests', () => {
-  const registrationPage = new RegistrationPage();
+  const page = new RegistrationPage();
   const usersPage = new UsersPage();
 
   before(() => {
-    registrationPage.cleanup();
+    page.cleanup();
   });
 
   it('should open register window', () => {
-    registrationPage.navigateToHome();
+    page.navigateToHome();
     usersPage.loginDropdownToggleButton.click();
-    registrationPage.window.should('not.exist');
+    page.window.should('not.exist');
 
     usersPage.registerButton.click();
-    registrationPage.window.should('be.visible');
+    page.window.should('be.visible');
   });
 });

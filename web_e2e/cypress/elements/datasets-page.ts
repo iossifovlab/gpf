@@ -9,14 +9,6 @@ export class DatasetsPage extends BasePage {
     return cy.get('#permission-denied-prompt');
   }
 
-  get datasetsDropdownMenuButton() {
-    return cy.get('#datasets-dropdown-menu-button');
-  }
-
-  get datasetsDropdownMenuElements() {
-    return cy.get('.dataset-selector a');
-  }
-
   get datasetStatisticsButton() {
     return cy.get('a.nav-link').contains('Dataset Statistics');
   }

@@ -1,233 +1,233 @@
 import { UserManagementPage } from 'cypress/elements/user-management-page';
+import { sidenavPageLinks } from 'cypress/elements/utils';
 
 describe('User management tests', () => {
-  const userManagementPage = new UserManagementPage();
+  const page = new UserManagementPage();
 
   before(() => {
-    userManagementPage.cleanup();
-    userManagementPage.navigateToHome();
-    userManagementPage.loginAdmin();
+    page.cleanup();
+    page.navigateToHome();
+    page.loginAdmin();
   });
 
   beforeEach(() => {
-    userManagementPage.preserveLogin();
-    userManagementPage.navigateToHome();
-    userManagementPage.toggleSidenav();
-    userManagementPage.sidenavManagementButton.click();
+    page.preserveLogin();
+    page.navigateToHome();
+    page.navigateToSidenavPage(sidenavPageLinks.management);
   });
 
   it('should navigate through all user management tabs', () => {
-    userManagementPage.groupsButton.click();
-    userManagementPage.groupsTable.should('be.visible');
+    page.groupsButton.click();
+    page.groupsTable.should('be.visible');
     
-    userManagementPage.datasetsButton.click();
-    userManagementPage.datasetsTable.should('be.visible');
+    page.datasetsButton.click();
+    page.datasetsTable.should('be.visible');
   });
 
   it('should create and delete user', () => {
-    userManagementPage.usersTableRows.should('have.length', 3);
+    page.usersTableRows.should('have.length', 3);
 
-    userManagementPage.createUserButton.click();
+    page.createUserButton.click();
 
-    userManagementPage.emailInputField.type('test_email@email.com');
-    userManagementPage.nameInputField.type('test_name');
-    userManagementPage.submitUserButton.click();
+    page.emailInputField.type('test_email@email.com');
+    page.nameInputField.type('test_name');
+    page.submitUserButton.click();
 
-    userManagementPage.usersTableRows.should('have.length', 4);
-    userManagementPage.usersTableRows.last().should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
+    page.usersTableRows.should('have.length', 4);
+    page.usersTableRows.last().should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
 
-    userManagementPage.userTableDeleteNewestUserButton.click();
-    userManagementPage.userTableDeleteUserConfirmButton.click();
+    page.userTableDeleteNewestUserButton.click();
+    page.userTableDeleteUserConfirmButton.click();
 
-    userManagementPage.usersTableRows.should('have.length', 3);
+    page.usersTableRows.should('have.length', 3);
   });
 
   it('should fail to create user with already used email', () => {
-    userManagementPage.usersTableRows.should('have.length', 3);
+    page.usersTableRows.should('have.length', 3);
 
-    createTestUser(userManagementPage, 'test_email@email.com', 'test_name');
-    userManagementPage.usersTableRows.should('have.length', 4);
+    createTestUser(page, 'test_email@email.com', 'test_name');
+    page.usersTableRows.should('have.length', 4);
 
-    userManagementPage.createUserButton.click();
+    page.createUserButton.click();
 
-    userManagementPage.emailInputField.type('test_email@email.com');
-    userManagementPage.nameInputField.type('other_test_name');
-    userManagementPage.submitUserButton.click();
+    page.emailInputField.type('test_email@email.com');
+    page.nameInputField.type('other_test_name');
+    page.submitUserButton.click();
 
-    userManagementPage.alertElement.should('have.text', ' Error: wdae user with this email already exists. ');
-    userManagementPage.backUserButton.click();
-    userManagementPage.backUserConfirmationButton.click();
+    page.alertElement.should('have.text', ' Error: wdae user with this email already exists. ');
+    page.backUserButton.click();
+    page.backUserConfirmationButton.click();
 
-    userManagementPage.usersTableRows.should('have.length', 4);
-    userManagementPage.usersTableRows.last().should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
+    page.usersTableRows.should('have.length', 4);
+    page.usersTableRows.last().should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
 
-    deleteTestUser(userManagementPage);
+    deleteTestUser(page);
   });
 
   it('should search and filter users', () => {
-    userManagementPage.usersTableRows.should('have.length', 3);
-    userManagementPage.userSearchField.type('admin');
-    userManagementPage.usersTableRows.should('have.length', 1);
-    userManagementPage.userSearchField.clear();
+    page.usersTableRows.should('have.length', 3);
+    page.userSearchField.type('admin');
+    page.usersTableRows.should('have.length', 1);
+    page.userSearchField.clear();
     // triggers search event
-    userManagementPage.userSearchField.type(' ');
-    userManagementPage.usersTableRows.should('have.length', 3);
+    page.userSearchField.type(' ');
+    page.usersTableRows.should('have.length', 3);
   });
 
   it('should search and filter a specific user', () => {
-    userManagementPage.userSearchField.type('admin');
-    userManagementPage.usersTableRows.should('have.length', 1);
-    userManagementPage.usersTableRows.last().should('include.text', 'admin');
+    page.userSearchField.type('admin');
+    page.usersTableRows.should('have.length', 1);
+    page.usersTableRows.last().should('include.text', 'admin');
   });
 
   it('should search and find user', () => {
-    createTestUser(userManagementPage, 'test_email@email.com', 'test_name');
-    userManagementPage.userSearchField.type('test_name');
-    userManagementPage.usersTableRows.last().should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
+    createTestUser(page, 'test_email@email.com', 'test_name');
+    page.userSearchField.type('test_name');
+    page.usersTableRows.last().should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
 
-    userManagementPage.userSearchField.clear();
-    userManagementPage.userSearchField.type('test_email@email.com');
-    userManagementPage.usersTableRows.last().should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
+    page.userSearchField.clear();
+    page.userSearchField.type('test_email@email.com');
+    page.usersTableRows.last().should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
     cy.reload();
 
-    deleteTestUser(userManagementPage);
+    deleteTestUser(page);
   });
 
   it('should create and delete group', () => {
-    userManagementPage.datasetsButton.click();
+    page.datasetsButton.click();
 
-    userManagementPage.datasetsTableAddGroupToLastDatasetInputField.type('test_group');
-    userManagementPage.datasetsTableAddGroupToLastDatasetButton.click();
-    userManagementPage.datasetsTableRows.should('include.text', 'test_group');
-    userManagementPage.datasetsTableRows.last().should('include.text', 'test_group');
+    page.datasetsTableAddGroupToLastDatasetInputField.type('test_group');
+    page.datasetsTableAddGroupToLastDatasetButton.click();
+    page.datasetsTableRows.should('include.text', 'test_group');
+    page.datasetsTableRows.last().should('include.text', 'test_group');
 
-    userManagementPage.groupsButton.click();
-    userManagementPage.groupsTableRows.should('have.length', 11);
-    userManagementPage.groupsTableRows.last().should('include.text', 'test_group');
+    page.groupsButton.click();
+    page.groupsTableRows.should('have.length', 11);
+    page.groupsTableRows.last().should('include.text', 'test_group');
 
-    userManagementPage.datasetsButton.click();
-    userManagementPage.datasetsTableRemoveNewestGroupInLastDatasetButton.click();
-    userManagementPage.datasetsTableRemoveGroupConfirmButton.click();
-    userManagementPage.datasetsTableRows.should('not.include.text', 'test_group');
+    page.datasetsButton.click();
+    page.datasetsTableRemoveNewestGroupInLastDatasetButton.click();
+    page.datasetsTableRemoveGroupConfirmButton.click();
+    page.datasetsTableRows.should('not.include.text', 'test_group');
 
-    userManagementPage.groupsButton.click();
-    userManagementPage.groupsTableRows.should('have.length', 10);
-    userManagementPage.groupsTableRows.last().should('not.include.text', 'test_group');
+    page.groupsButton.click();
+    page.groupsTableRows.should('have.length', 10);
+    page.groupsTableRows.last().should('not.include.text', 'test_group');
   });
 
   it('should add and remove user from group', () => {
-    createTestGroup(userManagementPage, 'test_group');
-    createTestUser(userManagementPage, 'test_email@email.com', 'test_name');
+    createTestGroup(page, 'test_group');
+    createTestUser(page, 'test_email@email.com', 'test_name');
 
-    userManagementPage.getUserEditorButtonByEmail('test_email@email.com').click();
-    userManagementPage.userWindowGroupDropDownMenuButton.click();
-    userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
-    userManagementPage.userWindowGroupDropDownMenuButton.click();
-    userManagementPage.userWindowSubmitButton.click();
-    userManagementPage.usersTableRows.last()
+    page.getUserEditorButtonByEmail('test_email@email.com').click();
+    page.userWindowGroupDropDownMenuButton.click();
+    page.userWindowGroupDropdownListCheckboxes.last().click();
+    page.userWindowGroupDropDownMenuButton.click();
+    page.userWindowSubmitButton.click();
+    page.usersTableRows.last()
       .should('have.text', ' test_name test_email@email.comany_user test_email@email.com test_group × multi ');
 
-    userManagementPage.groupsButton.click();
-    userManagementPage.groupsTableRows.last().should('contain.text', 'test_email@email.com');
+    page.groupsButton.click();
+    page.groupsTableRows.last().should('contain.text', 'test_email@email.com');
 
-    userManagementPage.usersButton.click();
-    userManagementPage.userTableRemoveUserGroupButton.click();
-    userManagementPage.userTableRemoveUserGroupConfirmButton.click();
+    page.usersButton.click();
+    page.userTableRemoveUserGroupButton.click();
+    page.userTableRemoveUserGroupConfirmButton.click();
     cy.reload();
-    userManagementPage.usersTableRows.last()
+    page.usersTableRows.last()
       .should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
 
-    deleteTestGroup(userManagementPage);
-    deleteTestUser(userManagementPage);
+    deleteTestGroup(page);
+    deleteTestUser(page);
   });
 
   it('should go in user creation and search and find specific group', () => {
-    createTestGroup(userManagementPage, 'test_group');
+    createTestGroup(page, 'test_group');
 
-    userManagementPage.usersButton.click();
+    page.usersButton.click();
 
-    userManagementPage.createUserButton.click();
+    page.createUserButton.click();
 
-    userManagementPage.userWindowGroupDropDownMenuButton.click();
-    userManagementPage.userWindowGroupDropdownSearch.type('test_group');
+    page.userWindowGroupDropDownMenuButton.click();
+    page.userWindowGroupDropdownSearch.type('test_group');
 
-    userManagementPage.userWindowGroupDropdownListCheckboxes.should('have.length', 1);
-    userManagementPage.userWindowGroupDropdownListCheckboxes.last().should('have.text', 'test_group');
+    page.userWindowGroupDropdownListCheckboxes.should('have.length', 1);
+    page.userWindowGroupDropdownListCheckboxes.last().should('have.text', 'test_group');
 
-    userManagementPage.backUserButton.click();
-    userManagementPage.backUserConfirmationButton.click();
+    page.backUserButton.click();
+    page.backUserConfirmationButton.click();
 
-    deleteTestGroup(userManagementPage);
+    deleteTestGroup(page);
   });
 
   it('should bulk add and remove users to group', () => {
-    createTestGroup(userManagementPage, 'test_group');
+    createTestGroup(page, 'test_group');
 
-    userManagementPage.usersButton.click();
-    userManagementPage.userTableEmailElements;
+    page.usersButton.click();
+    page.userTableEmailElements;
 
-    userManagementPage.userBulkEditButton.click();
-    userManagementPage.userBulkEditAddGroupButton.click();
-    userManagementPage.userWindowGroupDropDownMenuButton.click();
-    userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
-    userManagementPage.userWindowGroupDropDownMenuButton.click();
-    userManagementPage.usersEditorAddGroupButton.click();
+    page.userBulkEditButton.click();
+    page.userBulkEditAddGroupButton.click();
+    page.userWindowGroupDropDownMenuButton.click();
+    page.userWindowGroupDropdownListCheckboxes.last().click();
+    page.userWindowGroupDropDownMenuButton.click();
+    page.usersEditorAddGroupButton.click();
 
-    userManagementPage.usersTableRows.each(row => {
-      userManagementPage.usersTableRows.should('contain.text', 'test_group');
+    page.usersTableRows.each(row => {
+      page.usersTableRows.should('contain.text', 'test_group');
     });
 
-    userManagementPage.groupsButton.click();
-    userManagementPage.groupsTableRows.last().then((row) => {
-      userManagementPage.usersButton.click();
-      userManagementPage.userTableEmailElements.each(el => {
+    page.groupsButton.click();
+    page.groupsTableRows.last().then((row) => {
+      page.usersButton.click();
+      page.userTableEmailElements.each(el => {
         expect(row.text()).to.contain(el.text());
       });
     });
 
-    userManagementPage.usersButton.click();
+    page.usersButton.click();
 
-    userManagementPage.userBulkEditButton.click();
-    userManagementPage.userBulkEditRemoveGroupButton.click();
-    userManagementPage.userWindowGroupDropDownMenuButton.click();
-    userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
-    userManagementPage.userWindowGroupDropDownMenuButton.click();
-    userManagementPage.usersEditorRemoveGroupButton.click();
+    page.userBulkEditButton.click();
+    page.userBulkEditRemoveGroupButton.click();
+    page.userWindowGroupDropDownMenuButton.click();
+    page.userWindowGroupDropdownListCheckboxes.last().click();
+    page.userWindowGroupDropDownMenuButton.click();
+    page.usersEditorRemoveGroupButton.click();
 
-    userManagementPage.usersTableRows.each(row => {
-      userManagementPage.usersTableRows.should('not.contain.text', 'test_group');
+    page.usersTableRows.each(row => {
+      page.usersTableRows.should('not.contain.text', 'test_group');
     });
 
-    userManagementPage.groupsButton.click();
-    userManagementPage.groupsTableRows.last().should('not.contain.text', 'test_group\nmulti');
+    page.groupsButton.click();
+    page.groupsTableRows.last().should('not.contain.text', 'test_group\nmulti');
 
-    deleteTestGroup(userManagementPage);
+    deleteTestGroup(page);
   });
 
   it('should give dataset access to user', () => {
-    createTestGroup(userManagementPage, 'test_group');
-    createTestUser(userManagementPage, 'test_email@email.com', 'test_name');
+    createTestGroup(page, 'test_group');
+    createTestUser(page, 'test_email@email.com', 'test_name');
 
-    userManagementPage.getUserEditorButtonByEmail('test_email@email.com').click();
+    page.getUserEditorButtonByEmail('test_email@email.com').click();
 
-    userManagementPage.userWindowGroupDropDownMenuButton.click();
-    userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
-    userManagementPage.userWindowGroupDropDownMenuButton.click();
-    userManagementPage.userWindowSubmitButton.click();
+    page.userWindowGroupDropDownMenuButton.click();
+    page.userWindowGroupDropdownListCheckboxes.last().click();
+    page.userWindowGroupDropDownMenuButton.click();
+    page.userWindowSubmitButton.click();
 
-    userManagementPage.datasetsButton.click();
-    userManagementPage.datasetsTableRows.last().should('contain.text', 'test_email@email.com');
+    page.datasetsButton.click();
+    page.datasetsTableRows.last().should('contain.text', 'test_email@email.com');
 
-    userManagementPage.usersButton.click();
-    userManagementPage.userTableRemoveUserGroupButton.click();
-    userManagementPage.userTableRemoveUserGroupConfirmButton.click();
+    page.usersButton.click();
+    page.userTableRemoveUserGroupButton.click();
+    page.userTableRemoveUserGroupConfirmButton.click();
     cy.reload();
 
-    userManagementPage.datasetsButton.click();
-    userManagementPage.datasetsTableRows.last().should('not.contain.text', 'test_email@email.com');
+    page.datasetsButton.click();
+    page.datasetsTableRows.last().should('not.contain.text', 'test_email@email.com');
 
-    deleteTestGroup(userManagementPage);
-    deleteTestUser(userManagementPage);
+    deleteTestGroup(page);
+    deleteTestUser(page);
   });
 });
 

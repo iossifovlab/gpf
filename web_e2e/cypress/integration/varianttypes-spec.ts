@@ -3,33 +3,33 @@ import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 import { VarianttypesPage } from 'cypress/elements/varianttypes-page';
 
 describe('Variant types tests', () => {
-  const varianttypesPage = new VarianttypesPage();
+  const page = new VarianttypesPage();
   const genotypeBlockPage = new GenotypeBlockPage();
 
   before(() => {
-    varianttypesPage.cleanup();
-    varianttypesPage.navigateToHome();
-    varianttypesPage.loginAdmin();
+    page.cleanup();
+    page.navigateToHome();
+    page.loginAdmin();
   });
 
   beforeEach(() => {
-    varianttypesPage.preserveLogin();
-    varianttypesPage.navigateToHome();
+    page.preserveLogin();
+    page.navigateToHome();
   });
 
   it('should display error alert when none of the checkboxes are selected', () => {
-    varianttypesPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    varianttypesPage.findErrorAlertInComponent('gpf-varianttypes').should('not.exist');
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    page.findErrorAlertInComponent('gpf-varianttypes').should('not.exist');
 
     genotypeBlockPage.findButtonInComponentContainingText('gpf-varianttypes', 'None').click();
-    varianttypesPage.findErrorAlertInComponent('gpf-varianttypes').should('be.visible');
+    page.findErrorAlertInComponent('gpf-varianttypes').should('be.visible');
 
     genotypeBlockPage.findButtonInComponentContainingText('gpf-varianttypes', 'All').click();
-    varianttypesPage.findErrorAlertInComponent('gpf-varianttypes').should('not.exist');
+    page.findErrorAlertInComponent('gpf-varianttypes').should('not.exist');
   });
 
   it('should check/uncheck variant types checkboxes using \'All\' and \'None\' buttons', () => {
-    varianttypesPage.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genotypeBlockPage.findButtonInComponentContainingText('gpf-varianttypes', 'None').click();
     genotypeBlockPage.findAllCheckboxesInComponent('gpf-varianttypes').each((element) => {
       cy.wrap(element).should('not.be.checked');

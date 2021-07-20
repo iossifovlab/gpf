@@ -1,52 +1,85 @@
 import { AutismGeneProfilesSingleView } from 'cypress/elements/autism-gene-profiles-single-view-page';
 import { AutismGeneProfilesTable } from 'cypress/elements/autism-gene-profiles-table-page';
+import { sidenavPageLinks } from 'cypress/elements/utils';
 
 describe('Autism gene profiles single view tests', () => {
-  const autismGeneProfilesSingleViewPage = new AutismGeneProfilesSingleView();
+  const page = new AutismGeneProfilesSingleView();
   const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
 
   before(() => {
-    autismGeneProfilesSingleViewPage.cleanup();
-    autismGeneProfilesSingleViewPage.navigateToHome();
-    autismGeneProfilesSingleViewPage.toggleSidenav();
-    autismGeneProfilesSingleViewPage.sidenavAutismGeneProfilesButton.click();
-    autismGeneProfilesTablePage.firstGeneLink.click();
+    page.cleanup();
+    page.navigateToHome();
+    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+    autismGeneProfilesTablePage.geneSearchInput.type('CHD8');
+    autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
+    autismGeneProfilesTablePage.allTableCells.first().click();
   });
 
   it('should display header', () => {
-    autismGeneProfilesSingleViewPage.header.should('be.visible');
+    page.header.should('be.visible');
+    page.header.should('have.text', 'CHD8');
   });
 
   it('should display gene browser link', () => {
-    autismGeneProfilesSingleViewPage.geneBrowserLink.should('be.visible');
-  });
-
-  it('should display the autism scores table', () => {
-    autismGeneProfilesSingleViewPage.autismScoresTable.should('be.visible');
-  });
-
-  it('should display the protection scores table', () => {
-    autismGeneProfilesSingleViewPage.protectionScoresTable.should('be.visible');
-  });
-
-  it('should display the autism gene sets table', () => {
-    autismGeneProfilesSingleViewPage.geneAutismGeneSetsTable.should('be.visible');
-  });
-
-  it('should display the relevant gene sets table', () => {
-    autismGeneProfilesSingleViewPage.geneRelevantGeneSetsTable.should('be.visible');
+    page.geneBrowserLink.should('be.visible');
+    page.geneBrowserLink.should('have.text', ' View CHD8 in the Gene Browser ');
   });
 
   it('should have the correct href on the gene browser link', () => {
-    autismGeneProfilesSingleViewPage.header.invoke('text').then((headerText) => {
+    page.header.invoke('text').then((headerText) => {
       const baseUrl = Cypress.config().baseUrl;
       const headerName = headerText;
       const geneBrowserUrl = `${baseUrl}datasets/ALL_genotypes/gene-browser/${headerName}`;
-
-      autismGeneProfilesSingleViewPage.geneBrowserLink.should('have.prop', 'href')
+      page.geneBrowserLink.should('have.prop', 'href')
         .and('equal', geneBrowserUrl)
     });
   });
 
-  // red market number indicator test
+  it('should display the autism scores table', () => {
+    page.autismScoresTable.should('be.visible');
+    page.autismScoresTable.find('th').should('have.text', 'Autism Scores');
+    page.autismScoresTable.find('tr').should('have.length', 1);
+  });
+
+  it('should display the protection scores table', () => {
+    page.protectionScoresTable.should('be.visible');
+    page.protectionScoresTable.find('th').should('have.text', 'Protection Scores');
+    page.protectionScoresTable.find('tr').should('have.length', 4);
+  });
+
+  it('should display the single scores markers', () => {
+    page.singleScoreMarkers.should('have.length', 5);
+  });
+
+  it('should display the autism gene sets table', () => {
+    page.geneAutismGeneSetsTable.should('be.visible');
+    page.geneAutismGeneSetsTable.find('th').should('have.text', 'Autism Gene Sets');
+    page.geneAutismGeneSetsTable.find('tr').should('have.length', 2);
+  });
+
+  it('should display the relevant gene sets table', () => {
+    page.geneRelevantGeneSetsTable.should('be.visible');
+    page.geneRelevantGeneSetsTable.find('th').should('have.text', 'Relevant Gene Sets');
+    page.geneRelevantGeneSetsTable.find('tr').should('have.length', 4);
+  });
+
+  it('should display the relevant gene sets table', () => {
+    page.geneRelevantGeneSetsTable.should('be.visible');
+    page.geneRelevantGeneSetsTable.find('th').should('have.text', 'Relevant Gene Sets');
+    page.geneRelevantGeneSetsTable.find('tr').should('have.length', 4);
+  });
+
+  it('should display the datasets table', () => {
+    page.datasetsTable.should('be.visible');
+    page.datasetsTable.find('th').first().should('have.text', 'IossifovWE2014');
+    page.datasetsTable.find('tr').should('have.length', 3);
+  });
+
+  it('should display the external links table', () => {
+    page.externalLinksTable.should('be.visible');
+    page.externalLinksTable.find('th').should('have.text', 'External links');
+    page.externalLinksTable.find('tr').should('have.length', 3);
+  });
 });
+
+// add data tests describe
