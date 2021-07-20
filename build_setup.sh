@@ -1,4 +1,3 @@
-./build.sh preset:"fast" generate_jenkins_init:"yes"
 ./build.sh preset:"fast" stage:"Jenkinsfile.generated-stages.all"
 ./build.sh preset:"fast" clobber:"allow_if_matching_values" build_no:"0" stage:"Cleanup"
 ./build.sh preset:"fast" clobber:"allow_if_matching_values" build_no:"0" stage:"Create gpf-dev docker image"
