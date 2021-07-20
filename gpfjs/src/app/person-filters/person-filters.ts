@@ -1,4 +1,4 @@
-import { ValidateIf } from 'class-validator';
+import { ValidateIf, ValidateNested } from 'class-validator';
 import { IsNumber } from 'class-validator';
 import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
 import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
@@ -8,7 +8,7 @@ export interface Selection {
 }
 
 export class CategoricalSelection implements Selection {
-  selection: string[] = [];
+  constructor(public selection: string[] = []) {}
 
   isEmpty() {
     return this.selection.length === 0;
@@ -16,20 +16,29 @@ export class CategoricalSelection implements Selection {
 }
 
 export class ContinuousSelection implements Selection {
-  @ValidateIf(o => o.mmin !== null)
+  @ValidateIf(o => o.min !== null)
   @IsNumber()
-  @IsLessThanOrEqual('mmax')
+  @IsLessThanOrEqual('max')
   @IsMoreThanOrEqual('domainMin')
   min: number;
 
-  @ValidateIf(o => o.mmax !== null)
+  @ValidateIf(o => o.max !== null)
   @IsNumber()
-  @IsMoreThanOrEqual('mmin')
+  @IsMoreThanOrEqual('min')
   @IsLessThanOrEqual('domainMax')
   max: number;
 
   domainMin: number;
   domainMax: number;
+
+  constructor(
+    min: number, max: number, domainMin: number, domainMax: number,
+  ) {
+    this.min = min;
+    this.max = max;
+    this.domainMin = domainMin;
+    this.domainMax = domainMax;
+  }
 
   isEmpty() {
     return this.min === this.max === null;
@@ -37,17 +46,23 @@ export class ContinuousSelection implements Selection {
 }
 
 export class PersonFilterState {
+
+  @ValidateNested()
+  selection: Selection
+
   constructor(
     readonly id: string,
     readonly sourceType: string,
     readonly role: string,
     public source: string,
     public from: string,
-    public selection: Selection
-  ) {}
+    selection: Selection
+  ) {
+    this.selection = selection;
+  }
 
   isEmpty() {
-    return this.source == null || this.source.length === 0;
+    return this.source && this.source.length === 0;
   }
 }
 
@@ -58,9 +73,10 @@ export class CategoricalFilterState extends PersonFilterState {
     type: string,
     role: string,
     source: string,
-    from: string
+    from: string,
+    selection: CategoricalSelection = new CategoricalSelection(),
   ) {
-    super(id, type, role, source, from, new CategoricalSelection());
+    super(id, type, role, source, from, selection);
   }
 
   isEmpty() {
@@ -75,8 +91,9 @@ export class ContinuousFilterState extends PersonFilterState {
     type: string,
     role: string,
     source: string,
-    from: string
+    from: string,
+    selection: ContinuousSelection = new ContinuousSelection(0,0,0,0),
   ) {
-    super(id, type, role, source, from, new ContinuousSelection());
+    super(id, type, role, source, from, selection);
   }
 }

@@ -1,74 +1,45 @@
-import { StudyTypes } from './study-types';
-import { Component, OnInit, forwardRef } from '@angular/core';
-
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { QueryData } from '../query/query';
-import { StateRestoreService } from '../store/state-restore.service';
+import { Component, OnInit } from '@angular/core';
+import { Store } from '@ngxs/store';
+import { Validate } from 'class-validator';
+import { SetNotEmpty } from '../utils/set.validators';
+import { SetStudyTypes, StudyTypesState } from './study-types.state';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
   selector: 'gpf-study-types',
   templateUrl: './study-types.component.html',
-  styleUrls: ['./study-types.component.css'],
-  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => StudyTypesComponent) }]
-
 })
-export class StudyTypesComponent extends QueryStateWithErrorsProvider implements OnInit {
+export class StudyTypesComponent extends StatefulComponent implements OnInit {
 
-  studyTypes = new StudyTypes();
+  studyTypes: Set<string> = new Set(['we', 'wg', 'tg']);
 
-  constructor(
-    private stateRestoreService: StateRestoreService
-  ) {
-    super();
+  @Validate(SetNotEmpty, {message: 'select at least one'})
+  selectedValues: Set<string> = new Set([]);
+
+  constructor(protected store: Store) {
+    super(store, StudyTypesState, 'studyTypes');
   }
 
   ngOnInit() {
-    this.stateRestoreService.getState(this.constructor.name)
-      .take(1)
-      .subscribe(state => {
-        if (state['studyTypes']) {
-          this.selectNone();
-          for (const studyType of state['studyTypes']) {
-            if (studyType === 'we') {
-              this.studyTypes.we = true;
-            }
-            if (studyType === 'tg') {
-              this.studyTypes.tg = true;
-            }
-            if (studyType === 'wg') {
-              this.studyTypes.wg = true;
-            }
-          }
-        }
-      });
+    super.ngOnInit();
+    this.store.selectOnce(state => state.studyTypesState).subscribe(state => {
+      // restore state
+      if (state.studyTypes.length) {
+        this.selectedValues = new Set(state.studyTypes);
+      }
+    });
   }
 
-  selectAll(): void {
-    this.studyTypes.tg = true;
-    this.studyTypes.we = true;
-    this.studyTypes.wg = true;
+  updateStudyTypes(newValues: Set<string>): void {
+    this.selectedValues = newValues;
+    this.store.dispatch(new SetStudyTypes(newValues));
   }
 
-  selectNone(): void {
-    this.studyTypes.tg = false;
-    this.studyTypes.we = false;
-    this.studyTypes.wg = false;
+  get studyTypesDisplayNames() {
+    return {
+     'we': 'Whole exome',
+     'tg': 'Targeted genome',
+     'wg': 'Whole genome',
+    };
   }
-
-  studyTypesCheckValue(studyType: string, value: boolean): void {
-    if (studyType === 'we') {
-      this.studyTypes.we = value;
-    } else if (studyType === 'tg') {
-      this.studyTypes.tg = value;
-    } else if (studyType === 'wg') {
-      this.studyTypes.wg = value;
-    }
-  }
-
-  getState() {
-    return this.validateAndGetState(this.studyTypes)
-      .map(statue =>
-        ({ studyTypes: QueryData.trueFalseToStringArray(this.studyTypes) }));
-  }
-
 }

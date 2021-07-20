@@ -1,32 +1,28 @@
-import { Component, OnInit, forwardRef, ViewChild, AfterViewInit } from '@angular/core';
-import { QueryStateCollector } from '../query/query-state-provider';
-import { StateRestoreService } from '../store/state-restore.service';
+import { Component, ViewChild, AfterViewInit } from '@angular/core';
+
+import { Store } from '@ngxs/store';
+import { RegionsFilterState } from 'app/regions-filter/regions-filter.state';
+import { StateReset } from 'ngxs-reset-plugin';
 
 @Component({
   selector: 'gpf-regions-block',
   templateUrl: './regions-block.component.html',
   styleUrls: ['./regions-block.component.css'],
-  providers: [{
-    provide: QueryStateCollector,
-    useExisting: forwardRef(() => RegionsBlockComponent)
-  }]
 })
-export class RegionsBlockComponent extends QueryStateCollector implements AfterViewInit {
+export class RegionsBlockComponent implements AfterViewInit {
   @ViewChild('nav') ngbNav;
 
-  constructor(
-    private stateRestoreService: StateRestoreService
-  ) {
-    super();
-  }
+  constructor(private store: Store) { }
 
   ngAfterViewInit() {
-    this.stateRestoreService.getState(this.constructor.name)
-      .take(1)
-      .subscribe(state => {
-        if ('regions' in state) {
-          this.ngbNav.select('regionsFilter');
-        }
-      });
+    this.store.selectOnce(RegionsFilterState).subscribe(state => {
+      if (state.regionsFilters.length) {
+        setTimeout(() => this.ngbNav.select('regionsFilter'));
+      }
+    });
+  }
+
+  onNavChange() {
+    this.store.dispatch(new StateReset(RegionsFilterState));
   }
 }

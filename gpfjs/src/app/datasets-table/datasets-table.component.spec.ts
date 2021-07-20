@@ -16,6 +16,7 @@ import { GpfTableEmptyCellComponent } from 'app/table/view/empty-cell.component'
 import { ResizeService } from 'app/table/resize.service';
 import { GpfTableContentHeaderComponent } from 'app/table/component/header.component';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { NgxsModule } from '@ngxs/store';
 
 describe('DatasetsTableComponent', () => {
   let component: DatasetsTableComponent;
@@ -43,7 +44,11 @@ describe('DatasetsTableComponent', () => {
         UsersGroupsService,
         ResizeService
       ],
-      imports: [RouterTestingModule, HttpClientTestingModule],
+      imports: [
+        RouterTestingModule,
+        HttpClientTestingModule,
+        NgxsModule.forRoot([])
+      ],
     })
     .compileComponents();
   }));

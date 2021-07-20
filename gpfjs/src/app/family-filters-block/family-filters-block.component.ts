@@ -1,19 +1,17 @@
-import { Component, AfterViewInit, Input, forwardRef, ViewChild, OnInit } from '@angular/core';
+import { Component, AfterViewInit, Input, ViewChild, OnInit } from '@angular/core';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Dataset } from '../datasets/datasets';
-import { QueryStateCollector } from '../query/query-state-provider';
-import { StateRestoreService } from '../store/state-restore.service';
+import { Store, Selector } from '@ngxs/store';
+import { FamilyIdsState } from 'app/family-ids/family-ids.state';
+import { PersonFiltersState } from 'app/person-filters/person-filters.state';
+import { StateReset } from 'ngxs-reset-plugin';
 
 @Component({
   selector: 'gpf-family-filters-block',
   templateUrl: './family-filters-block.component.html',
   styleUrls: ['./family-filters-block.component.css'],
-  providers: [{
-    provide: QueryStateCollector,
-    useExisting: forwardRef(() => FamilyFiltersBlockComponent)
-  }]
 })
-export class FamilyFiltersBlockComponent extends QueryStateCollector implements OnInit, AfterViewInit {
+export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   @Input() dataset: Dataset;
   @Input() genotypeBrowserState: Object;
   @ViewChild('nav') ngbNav;
@@ -21,11 +19,9 @@ export class FamilyFiltersBlockComponent extends QueryStateCollector implements 
   showAdvancedButton: boolean;
 
   constructor(
-    private stateRestoreService: StateRestoreService,
+    private store: Store,
     private datasetsService: DatasetsService,
-  ) {
-    super();
-  }
+  ) { }
 
   ngOnInit(): void {
     this.showFamilyTypeFilter = this.dataset.genotypeBrowserConfig.hasFamilyStructureFilter;
@@ -35,17 +31,28 @@ export class FamilyFiltersBlockComponent extends QueryStateCollector implements 
   }
 
   ngAfterViewInit() {
-    this.stateRestoreService.getState(this.constructor.name)
-      .take(1)
-      .subscribe(state => {
+    this.store.selectOnce(FamilyFiltersBlockComponent.familyFiltersBlockState).subscribe(state => {
+      if (state['familyIds']) {
+        setTimeout(() => this.ngbNav.select('familyIds'));
+      } else if (state['familyFilters']) {
+        setTimeout(() => this.ngbNav.select('advanced'));
+      }
+    });
+  }
 
-          if ('familyIds' in state) {
-            this.ngbNav.select('familyIds');
-          } else if ('personFilters' in state) {
-            this.ngbNav.select('advanced');
-          }
+  onNavChange() {
+    this.store.dispatch(new StateReset(FamilyIdsState, PersonFiltersState));
+  }
 
-        }
-      );
+  @Selector([FamilyIdsState, PersonFiltersState])
+  static familyFiltersBlockState(familyIdsState, personFiltersState) {
+    const res = {};
+    if (familyIdsState.familyIds.length) {
+      res['familyIds'] = familyIdsState.familyIds;
+    }
+    if (personFiltersState.familyFilters.length) {
+      res['familyFilters'] = personFiltersState.familyFilters;
+    }
+    return res;
   }
 }

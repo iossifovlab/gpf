@@ -1,13 +1,14 @@
 import { HttpClient, HttpHandler } from '@angular/common/http';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { QueryService } from 'app/query/query.service';
-import { StateRestoreService } from 'app/store/state-restore.service';
 import { UsersService } from 'app/users/users.service';
 
 import { LoadQueryComponent } from './load-query.component';
+import { ErrorsState } from 'app/common/errors.state';
 
 describe('LoadQueryComponent', () => {
   let component: LoadQueryComponent;
@@ -21,11 +22,13 @@ describe('LoadQueryComponent', () => {
         HttpClient,
         HttpHandler,
         ConfigService,
-        StateRestoreService,
         DatasetsService,
         UsersService
       ],
-      imports: [RouterTestingModule],
+      imports: [
+        RouterTestingModule,
+        NgxsModule.forRoot([ErrorsState])
+      ],
     })
     .compileComponents();
   }));

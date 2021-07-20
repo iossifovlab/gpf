@@ -3,6 +3,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { GpfTableColumnComponent } from 'app/table/component/column.component';
 import { GpfTableContentComponent } from 'app/table/component/content.component';
@@ -39,7 +40,13 @@ describe('UserManagementComponent', () => {
         GpfTableEmptyCellComponent
       ],
       providers: [UsersService, ConfigService, ResizeService],
-      imports: [HttpClientTestingModule, RouterTestingModule, NgbNavModule, FormsModule]
+      imports: [
+        HttpClientTestingModule,
+        RouterTestingModule,
+        NgbNavModule,
+        FormsModule,
+        NgxsModule.forRoot([])
+      ]
     })
     .compileComponents();
   }));

@@ -1,6 +1,15 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
 
-import { StudyFilterState, StudyDescriptor } from './study-filter-store';
+import { IsNotEmpty } from 'class-validator';
+
+export class Study {
+  @IsNotEmpty() studyId: string;
+  @IsNotEmpty() studyName: string;
+  constructor(studyId: string, studyName: string) {
+    this.studyId = studyId;
+    this.studyName = studyName;
+  };
+}
 
 @Component({
   selector: 'gpf-study-filter',
@@ -8,22 +17,21 @@ import { StudyFilterState, StudyDescriptor } from './study-filter-store';
   styleUrls: ['./study-filter.component.css']
 })
 export class StudyFilterComponent {
-  @Input() studyFilterState: StudyFilterState;
+  @Input() studies: Study[];
+  @Input() selectedStudy: Study;
   @Input() errors: string[];
-  @Input() studies: StudyDescriptor[];
+  @Output() changeSelectedStudyEvent = new EventEmitter<object>();
 
   constructor() { }
 
   set selectedStudyNames(selectedStudyId: string) {
-    for(let study of this.studies) {
-      if (study.studyId === selectedStudyId) {
-        this.studyFilterState.study = study;
-        break;
-      }
-    }
+    this.changeSelectedStudyEvent.emit({
+      selectedStudy: this.selectedStudy,
+      selectedStudyId: selectedStudyId
+    });
   }
 
   get selectedStudyNames() {
-    return this.studyFilterState.study.studyId;
+    return this.selectedStudy.studyId;
   }
 }

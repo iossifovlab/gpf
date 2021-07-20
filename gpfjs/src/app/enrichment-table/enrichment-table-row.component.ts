@@ -3,6 +3,12 @@ import { EnrichmentEffectResult, EnrichmentTestResult } from '../enrichment-quer
 import { PValueIntensityPipe } from '../utils/p-value-intensity.pipe';
 import { QueryService } from '../query/query.service';
 import { BrowserQueryFilter } from 'app/genotype-browser/genotype-browser';
+import { Store } from '@ngxs/store';
+import { SetEffectTypes } from 'app/effecttypes/effecttypes.state';
+import { SetGender } from 'app/gender/gender.state';
+import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
+import { SetStudyTypes } from 'app/study-types/study-types.state';
+import { SetVariantTypes } from 'app/varianttypes/varianttypes.state';
 
 @Component({
   selector: '[gpf-enrichment-table-row]',
@@ -15,7 +21,8 @@ export class EnrichmentTableRowComponent {
 
   constructor(
     private pValueIntensityPipe: PValueIntensityPipe,
-    private queryService: QueryService
+    private queryService: QueryService,
+    private store: Store,
   ) {}
 
   goToQuery(browserQueryFilter: BrowserQueryFilter) {
@@ -25,12 +32,23 @@ export class EnrichmentTableRowComponent {
     // https://stackoverflow.com/a/22470171/2316754
     const newWindow = window.open('', '_blank');
 
-    this.queryService.saveQuery(browserQueryFilter, 'genotype')
+    this.store.dispatch([
+      new SetEffectTypes(new Set(browserQueryFilter['effectTypes'])),
+      new SetGender(browserQueryFilter['gender']),
+      new SetPedigreeSelector('phenotype', new Set(browserQueryFilter['peopleGroup']['checkedValues'])),
+      new SetStudyTypes(new Set(browserQueryFilter['studyTypes'])),
+      new SetVariantTypes(new Set(browserQueryFilter['variantTypes'])),
+    ]);
+
+    this.store.selectOnce(state => state).subscribe(state => {
+      state['datasetId'] = browserQueryFilter['datasetId'];
+      this.queryService.saveQuery(state, 'genotype')
       .take(1)
       .subscribe(urlObject => {
         const url = this.queryService.getLoadUrlFromResponse(urlObject);
         newWindow.location.assign(url);
       });
+    });
   }
 
   getBackgroundColor(testResult: EnrichmentTestResult) {

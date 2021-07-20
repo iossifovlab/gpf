@@ -1,9 +1,10 @@
 /* tslint:disable:no-unused-variable */
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgxsModule } from '@ngxs/store';
+import { of } from 'rxjs';
 
 import { GenesBlockComponent } from './genes-block.component';
-import { StateRestoreService } from 'app/store/state-restore.service';
 
 describe('GenesBlockComponent', () => {
   let component: GenesBlockComponent;
@@ -12,15 +13,20 @@ describe('GenesBlockComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [GenesBlockComponent],
-      providers: [StateRestoreService],
-      imports: [NgbModule],
+      imports: [NgbModule, NgxsModule.forRoot([])],
     })
-      .compileComponents();
+    .compileComponents();
   }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(GenesBlockComponent);
     component = fixture.componentInstance;
+    component['store'] = {
+      selectOnce(f) {
+        return of({geneSymbols: ['value1', 'value2']});
+      },
+      dispatch(set) {}
+    } as any;
     fixture.detectChanges();
   });
 

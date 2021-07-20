@@ -1,53 +1,33 @@
-import { Component, OnInit, forwardRef } from '@angular/core';
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { StateRestoreService } from '../store/state-restore.service';
-import { FamilyTypes } from './family-type';
+import { Component, OnInit } from '@angular/core';
+import { FamilyTypeFilterState, SetFamilyTypeFilter } from './family-type-filter.state';
+import { SetNotEmpty } from 'app/utils/set.validators';
+import { Validate } from 'class-validator';
+import { Store } from '@ngxs/store';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
   selector: 'gpf-family-type-filter',
   templateUrl: './family-type-filter.component.html',
   styleUrls: ['./family-type-filter.component.css'],
-  providers: [{
-    provide: QueryStateProvider,
-    useExisting: forwardRef(() => FamilyTypeFilterComponent)
-  }]
 })
-export class FamilyTypeFilterComponent extends QueryStateWithErrorsProvider implements OnInit {
+export class FamilyTypeFilterComponent extends StatefulComponent implements OnInit {
 
-  familyTypes = new FamilyTypes();
-  allFamilyTypes = ['trio', 'quad', 'multigenerational', 'simplex', 'multiplex'];
+  allFamilyTypes: Set<string> = new Set(['trio', 'quad', 'multigenerational', 'simplex', 'multiplex']);
+  @Validate(SetNotEmpty, {message: 'select at least one'}) selectedFamilyTypes: Set<string> = new Set();
 
-  constructor(
-    private stateRestoreService: StateRestoreService
-  ) {
-    super();
+  constructor(protected store: Store) {
+    super(store, FamilyTypeFilterState, 'familyTypeFilter');
   }
 
   ngOnInit(): void {
-    this.stateRestoreService.getState(this.constructor.name).take(1).subscribe((state) => {
-        if (state['familyTypes']) {
-          this.familyTypes.familyTypes = state['familyTypes'];
-        }
-      }
-    );
-  }
-
-  getState() {
-    return this.validateAndGetState(this.familyTypes).map(familyTypes => {
-      if (familyTypes.familyTypes.length === 0) {
-        return;
-      }
-      return { familyTypes: familyTypes.familyTypes };
+    super.ngOnInit();
+    this.store.selectOnce(state => state.familyTypeFilterState).subscribe(state => {
+      this.selectedFamilyTypes = new Set(state.familyTypes);
     });
   }
 
-  checkFamilyType(familyType: string, value: boolean): void {
-    if (this.allFamilyTypes.indexOf(familyType) !== -1) {
-      if (!value) {
-        this.familyTypes.familyTypes.push(familyType);
-      } else {
-        this.familyTypes.familyTypes.splice(this.familyTypes.familyTypes.indexOf(familyType), 1);
-      }
-    }
+  updateFamilyTypes(newValues: Set<string>): void {
+    this.selectedFamilyTypes = newValues;
+    this.store.dispatch(new SetFamilyTypeFilter(newValues));
   }
 }

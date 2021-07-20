@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { AgpConfig, AgpGene, AgpGenomicScores, AgpGenomicScoresCategory } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
-import { Observable } from 'rxjs';
+import { AgpDatasetStatistic, AgpGene, AgpGenomicScores, AgpGenomicScoresCategory, AgpTableConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import { Observable, of } from 'rxjs';
 import { GeneWeightsService } from '../gene-weights/gene-weights.service';
 import { GeneWeights } from 'app/gene-weights/gene-weights';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
@@ -11,6 +11,18 @@ import { GeneService } from 'app/gene-view/gene.service';
 import { Gene } from 'app/gene-view/gene';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { DatasetDetails } from 'app/datasets/datasets';
+import { Store } from '@ngxs/store';
+import { QueryService } from 'app/query/query.service';
+import { GenomicScore } from 'app/genotype-browser/genotype-browser';
+import { SetEffectTypes } from 'app/effecttypes/effecttypes.state';
+import { SetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
+import { SetGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
+import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
+import { SetPresentInChildValues } from 'app/present-in-child/present-in-child.state';
+import { SetPresentInParentValues } from 'app/present-in-parent/present-in-parent.state';
+import { SetStudyTypes } from 'app/study-types/study-types.state';
+import { SetVariantTypes } from 'app/varianttypes/varianttypes.state';
+import { EffectTypes } from 'app/effecttypes/effecttypes';
 
 @Component({
   selector: 'gpf-autism-gene-profile-single-view',
@@ -19,7 +31,7 @@ import { DatasetDetails } from 'app/datasets/datasets';
 })
 export class AutismGeneProfileSingleViewComponent implements OnInit {
   @Input() readonly geneSymbol: string;
-  @Input() config: AgpConfig;
+  @Input() config: AgpTableConfig;
   genomicScoresGeneWeights = [];
 
   gene$: Observable<AgpGene>;
@@ -34,10 +46,17 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
 
   isGeneInSFARI = false;
   links = {
+    GeneBrowser: '',
     SFARIgene: '',
     UCSC: '',
     GeneCards: '',
     Pubmed: ''
+  };
+
+  effectTypes = {
+    lgds: EffectTypes['LGDS'],
+    intron: ['Intron'],
+    missense: ['Missense'],
   };
 
   constructor(
@@ -47,6 +66,8 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     private datasetsService: DatasetsService,
     private location: Location,
     private router: Router,
+    private queryService: QueryService,
+    private store: Store,
   ) { }
 
   ngOnInit(): void {
@@ -67,23 +88,21 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
             this.geneWeightsService.getGeneWeights(scores)
           );
         }
-        return Observable.zip(...geneWeightsObservables).pipe(
-          tap(geneWeightsArray => {
-            for (let k = 0; k < geneWeightsArray.length; k++) {
-              this.genomicScoresGeneWeights.push({
-                category: gene.genomicScores[k].id,
-                scores: geneWeightsArray[k]
-              });
-            }
-          })
-        );
+        Observable.zip(...geneWeightsObservables).subscribe(geneWeightsArray => {
+          for (let k = 0; k < geneWeightsArray.length; k++) {
+            this.genomicScoresGeneWeights.push({
+              category: gene.genomicScores[k].id,
+              scores: geneWeightsArray[k]
+            });
+          }
+        });
+        return this.geneService.getGene(this.geneSymbol);
+      }),
+      switchMap(gene => {
+        return Observable.zip(of(gene), this.datasetsService.getDatasetDetails(this.config.defaultDataset));
       })
-    ).subscribe();
-
-    this.geneService.getGene(this.geneSymbol).subscribe(gene => {
-      this.datasetsService.getDatasetDetails(this.config.defaultDataset).subscribe(datasetDetails => {
-        this.setLinks(this.geneSymbol, gene, datasetDetails);
-      });
+    ).subscribe(([gene, datasetDetails]) => {
+      this.setLinks(this.geneSymbol, gene, datasetDetails);
     });
   }
 
@@ -92,6 +111,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
       this.links.SFARIgene = 'https://gene.sfari.org/database/human-gene/' + geneSymbol;
     }
 
+    this.links.GeneBrowser = this.getGeneBrowserLink();
     this.links.UCSC = this.getUCSCLink(gene, datasetDetails);
     this.links.GeneCards = 'https://www.genecards.org/cgi-bin/carddisp.pl?gene=' + geneSymbol;
     this.links.Pubmed = 'https://pubmed.ncbi.nlm.nih.gov/?term=' + geneSymbol + '%20AND%20(autism%20OR%20asd)';
@@ -104,6 +124,17 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
       + chrPrefix + gene.transcripts[0].chrom + '%3A' + gene.transcripts[0].start + '-'
       + gene.transcripts[gene.transcripts.length - 1].stop
       + '&hgsid=1120191263_9kJvHXmsIQajgm163GA7k8YV4ay4';
+  }
+
+  getGeneBrowserLink(): string {
+    if (!this.config) {
+      return;
+    }
+
+    const dataset = this.config.defaultDataset;
+    let pathname = this.router.createUrlTree(['datasets', dataset, 'gene-browser', this.geneSymbol]).toString();
+    pathname = this.location.prepareExternalUrl(pathname);
+    return window.location.origin + pathname;
   }
 
   formatScoreName(score: string) {
@@ -130,16 +161,47 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     return this._histogramOptions;
   }
 
-  get geneBrowserUrl(): string {
-    if (!this.config) {
-      return;
+  goToQuery(geneSymbol: string, personSetId: string, datasetId: string, statistic: AgpDatasetStatistic) {
+    const newWindow = window.open('', '_blank');
+
+    const genomicScores: GenomicScore[] = [];
+    if (statistic.scores) {
+      genomicScores[0] = new GenomicScore(
+        statistic.scores[0]['name'],
+        statistic.scores[0]['min'],
+        statistic.scores[0]['max'],
+      );
     }
 
-    const dataset = this.config.defaultDataset;
-    let pathname = this.router.createUrlTree(['datasets', dataset, 'gene-browser', this.geneSymbol]).toString();
+    const presentInChildValues = ['proband only', 'proband and sibling', 'sibling only'];
+    const presentInParentRareValues = ['father only', 'mother only', 'mother and father'];
 
-    pathname = this.location.prepareExternalUrl(pathname);
+    let presentInParent: string[] = ['neither'];
+    let rarityType = 'all';
+    if (statistic.category === 'rare') {
+      rarityType = 'rare';
+      presentInParent = presentInParentRareValues;
+    }
 
-    return window.location.origin + pathname;
+    this.store.dispatch([
+      new SetGeneSymbols([geneSymbol]),
+      new SetEffectTypes(new Set(this.effectTypes[statistic['effects'][0]])),
+      new SetStudyTypes(new Set(['we'])),
+      new SetVariantTypes(new Set(statistic['variantTypes'])),
+      new SetGenomicScores(genomicScores),
+      new SetPresentInChildValues(new Set(presentInChildValues)),
+      new SetPresentInParentValues(new Set(presentInParent), rarityType, 0, 1),
+      new SetPedigreeSelector('phenotype', new Set([personSetId])),
+    ]);
+
+    this.store.selectOnce(state => state).subscribe(state => {
+      state['datasetId'] = datasetId;
+      this.queryService.saveQuery(state, 'genotype')
+      .take(1)
+      .subscribe(urlObject => {
+        const url = this.queryService.getLoadUrlFromResponse(urlObject);
+        newWindow.location.assign(url);
+      });
+    });
   }
 }

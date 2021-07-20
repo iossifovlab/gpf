@@ -9,20 +9,20 @@ import { EffectTypes } from './effecttypes';
 export class EffecttypesColumnComponent implements OnInit {
   @Input() effectTypes: EffectTypes;
   @Input() columnName: string;
-  @Input() effectTypesLabels: string[];
+  @Input() effectTypesLabels: Set<string>;
 
   @Output('effectTypeEvent') effectTypeEvent = new EventEmitter<any>();
 
   ngOnInit() {
   }
 
-  checkEffectType(index: number, value: any) {
-    if (index < 0 || index >= this.effectTypesLabels.length) {
+  checkEffectType(effectType: string, value: any) {
+    if (!this.effectTypesLabels.has(effectType)) {
       return;
     }
 
     this.effectTypeEvent.emit({
-      'effectType': this.effectTypesLabels[index],
+      'effectType': effectType,
       'checked': value
     });
   }

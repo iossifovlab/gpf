@@ -1,46 +1,43 @@
-import { Component, OnInit, Input, forwardRef } from '@angular/core';
-
+import { Component, OnInit, Input } from '@angular/core';
 import { EffectTypes, CODING, NONCODING, CNV, ALL, LGDS, NONSYNONYMOUS, UTRS } from './effecttypes';
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { StateRestoreService } from '../store/state-restore.service';
-
+import { ValidateNested } from 'class-validator';
+import { Store } from '@ngxs/store';
+import { EffecttypesState, AddEffectType, RemoveEffectType, SetEffectTypes } from './effecttypes.state';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
   selector: 'gpf-effecttypes',
   templateUrl: './effecttypes.component.html',
   styleUrls: ['./effecttypes.component.css'],
-  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => EffecttypesComponent) }]
 })
-export class EffecttypesComponent extends QueryStateWithErrorsProvider implements OnInit {
-  @Input()
-  variantTypes: Set<string> = new Set([]);
+export class EffecttypesComponent extends StatefulComponent implements OnInit {
 
-  codingColumn: string[] = CODING;
-  nonCodingColumn: string[] = NONCODING;
-  cnvColumn: string[] = CNV;
+  @Input() variantTypes: Set<string> = new Set([]);
 
-  effectTypesButtons: Map<string, string[]>;
-  private selectedEffectTypes = new Map<string, boolean>();
+  codingColumn: Set<string> = CODING;
+  nonCodingColumn: Set<string> = NONCODING;
+  cnvColumn: Set<string> = CNV;
 
+  @ValidateNested()
   effectTypes = new EffectTypes();
+  effectTypesButtons: Map<string, Set<string>>;
 
-  constructor(
-    private stateRestoreService: StateRestoreService
-  ) {
-    super();
+  constructor(protected store: Store) {
+    super(store, EffecttypesState, 'effectTypes');
     this.initButtonGroups();
   }
 
   ngOnInit() {
-    this.selectInitialValues();
-
-    this.stateRestoreService.getState(this.constructor.name)
-      .take(1)
-      .subscribe(state => {
-        if (state['effectTypes']) {
-          this.selectEffectTypesSet(state['effectTypes']);
+    super.ngOnInit();
+    this.store.selectOnce(state => state.effecttypesState).subscribe(state => {
+      if (state.effectTypes.length) {
+        for (const effectType of state.effectTypes) {
+          this.onEffectTypeChange({checked: true, effectType: effectType});
         }
-      });
+      } else {
+        this.selectInitialValues();
+      }
+    });
   }
 
   selectInitialValues() {
@@ -48,10 +45,9 @@ export class EffecttypesComponent extends QueryStateWithErrorsProvider implement
   }
 
   private initButtonGroups(): void {
-    this.effectTypesButtons = new Map<string, string[]>();
-
+    this.effectTypesButtons = new Map<string, Set<string>>();
     this.effectTypesButtons.set('ALL', ALL);
-    this.effectTypesButtons.set('NONE', []);
+    this.effectTypesButtons.set('NONE', new Set());
     this.effectTypesButtons.set('LGDS', LGDS);
     this.effectTypesButtons.set('CODING', CODING);
     this.effectTypesButtons.set('NONSYNONYMOUS', NONSYNONYMOUS);
@@ -59,29 +55,22 @@ export class EffecttypesComponent extends QueryStateWithErrorsProvider implement
   }
 
   selectButtonGroup(groupId: string): void {
-    const effectTypes: string[] = this.effectTypesButtons.get(groupId);
-    this.selectEffectTypesSet(effectTypes);
+    const effectTypes: Set<string> = this.effectTypesButtons.get(groupId);
+    this.setEffectTypes(effectTypes);
   }
 
-  selectEffectTypesSet(effectTypes): void {
-    if (effectTypes) {
-      this.effectTypes.selected = effectTypes.slice();
-    }
+  setEffectTypes(effectTypes: Set<string>) {
+    this.effectTypes.selected = effectTypes;
+    this.store.dispatch(new SetEffectTypes(effectTypes));
   }
 
   onEffectTypeChange(value: any): void {
-    if (value.checked && this.effectTypes.selected.indexOf(value.effectType) === -1) {
-      this.effectTypes.selected.push(value.effectType);
-    } else if (!value.checked && this.effectTypes.selected.indexOf(value.effectType) !== -1) {
-      this.effectTypes.selected = this.effectTypes.selected.filter(v => v !== value.effectType);
+    if (value.checked && !this.effectTypes.selected.has(value.effectType)) {
+      this.effectTypes.selected.add(value.effectType);
+      this.store.dispatch(new AddEffectType(value.effectType));
+    } else if (!value.checked && this.effectTypes.selected.has(value.effectType)) {
+      this.effectTypes.selected.delete(value.effectType);
+      this.store.dispatch(new RemoveEffectType(value.effectType));
     }
   }
-
-  getState() {
-    return this.validateAndGetState(this.effectTypes)
-      .map(effectTypes => ({
-        effectTypes: effectTypes.selected
-      }));
-  }
-
 }

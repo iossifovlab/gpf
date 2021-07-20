@@ -1,27 +1,22 @@
 <div class="genotype-block form-block">
 	<div class="row row-eq-height">
 
-		<div *ngIf="hasPedigreeSelector | async" class="col-lg-3">
-			<gpf-pedigree-selector [pedigrees]="pedigrees | async"></gpf-pedigree-selector>
+    <div *ngIf="dataset.genotypeBrowserConfig.hasPedigreeSelector" class="col-lg-3">
+			<gpf-pedigree-selector [pedigrees]="dataset.peopleGroupConfig.pedigreeSelectors"></gpf-pedigree-selector>
 		</div>
 
-		<div *ngIf="hasPresentInChild | async" class="col-lg-3">
+		<div *ngIf="dataset.genotypeBrowserConfig.hasPresentInChild" class="col-lg-3">
 			<gpf-present-in-child></gpf-present-in-child>
 		</div>
 
-		<div *ngIf="hasPresentInParent | async" class="col-lg-3">
+		<div *ngIf="dataset.genotypeBrowserConfig.hasPresentInParent" class="col-lg-3">
 			<gpf-present-in-parent></gpf-present-in-parent>
 		</div>
 
 		<div class="col-lg-6 panel-row">
-			<gpf-effecttypes [variantTypes]="variantTypes | async"> </gpf-effecttypes>
-		</div>
-
-		<div *ngIf="hasPresentInRole | async" class="col-lg-3 panel-row">
-			<div>
-				<gpf-present-in-role *ngFor="let pir of presentInRole | async" [presentInRole]="pir">
-				</gpf-present-in-role>
-			</div>
+			<gpf-effecttypes
+        [variantTypes]="dataset.genotypeBrowserConfig.variantTypes">
+      </gpf-effecttypes>
 		</div>
 
 		<div class="col-lg-3 panel-row">
@@ -29,17 +24,21 @@
 		</div>
 
 		<div class="col-lg-3 panel-row">
-			<gpf-varianttypes [variantTypes]="variantTypes | async" [selectedVariantTypes]="selectedVariantTypes | async"></gpf-varianttypes>
+			<gpf-varianttypes
+        [variantTypes]="dataset.genotypeBrowserConfig.variantTypes"
+        [selectedVariantTypes]="dataset.genotypeBrowserConfig.selectedVariantTypes">
+      </gpf-varianttypes>
 		</div>
 
-		<div *ngIf="hasStudyTypes | async" class="col-lg-3">
+		<div *ngIf="dataset.genotypeBrowserConfig.hasStudyTypes" class="col-lg-3">
 			<gpf-study-types></gpf-study-types>
-		</div>
+    </div>
 
 		<div class="col-lg-3 panel-row">
-			<gpf-inheritancetypes *ngIf="inheritanceTypeFilter | async"
-				[inheritanceTypeFilter]="inheritanceTypeFilter | async"
-				[selectedInheritanceTypeFilterValues]="selectedInheritanceTypeFilterValues | async">
+			<gpf-inheritancetypes
+        *ngIf="dataset.genotypeBrowserConfig.inheritanceTypeFilter.length"
+				[inheritanceTypes]="dataset.genotypeBrowserConfig.inheritanceTypeFilter"
+				[selectedValues]="dataset.genotypeBrowserConfig.selectedInheritanceTypeFilterValues">
 			</gpf-inheritancetypes>
 		</div>
 	</div>
