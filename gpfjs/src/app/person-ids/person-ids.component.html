@@ -1,4 +1,4 @@
 <div class="panel" id="person-ids-panel">
-    <textarea type="text" [(ngModel)]="personIds.personIds" class="form-control"></textarea>
+    <textarea type="text" [ngModel]="personIds.personIds" (ngModelChange)="setPersonIds($event)" class="form-control"></textarea>
     <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
 </div>

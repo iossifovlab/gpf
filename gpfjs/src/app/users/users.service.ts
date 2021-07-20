@@ -10,6 +10,8 @@ import { User } from './users';
 
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
+import { Store } from '@ngxs/store';
+import { StateResetAll } from 'ngxs-reset-plugin';
 
 const oboe = require('oboe');
 
@@ -40,6 +42,7 @@ export class UsersService {
     private cookieService: CookieService,
     private router: Router,
     private location: Location,
+    private store: Store,
   ) {}
 
   logout(): Observable<boolean> {
@@ -50,6 +53,7 @@ export class UsersService {
     return this.http.post(this.config.baseUrl + this.logoutUrl, {}, options)
       .map(res => {
         this.router.navigate([this.location.path()]);
+        this.store.dispatch(new StateResetAll());
         return true;
       });
   }

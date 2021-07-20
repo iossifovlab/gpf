@@ -1,6 +1,7 @@
 import { Component, OnInit, Input, ViewChild } from '@angular/core';
-import { QueryStateCollector } from '../query/query-state-provider';
 import { QueryService } from '../query/query.service';
+import { DatasetsService } from '../datasets/datasets.service';
+import { Store } from '@ngxs/store';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
@@ -20,32 +21,35 @@ export class ShareQueryButtonComponent implements OnInit {
   buttonValue = 'Copy';
 
   constructor(
+    private store: Store,
     private queryService: QueryService,
-    // should be provided by a parent component..
-    private parentComponent: QueryStateCollector
+    private datasetsService: DatasetsService,
   ) { }
 
   ngOnInit() { }
 
   saveIfOpened(opened: boolean) {
-    if (opened) {
-      this.buttonValue = 'Copy';
-      this.parentComponent.getCurrentState()
-        .take(1)
-        .subscribe(state => {
-          this.queryService.saveQuery(state, this.queryType)
-            .take(1)
-            .subscribe(response => {
-              this.urlUUID = response['uuid'];
-            });
-        },
-        error => {
-          this.resetState();
-          this.dropdown.close();
-        });
-    } else {
+    if (!opened) {
       this.resetState();
+      return;
     }
+
+    const datasetId = this.datasetsService.getSelectedDatasetId();
+
+    this.buttonValue = 'Copy';
+    this.store.selectOnce(state => state).subscribe(state => {
+      state['datasetId'] = datasetId;
+      this.queryService.saveQuery(state, this.queryType)
+        .take(1)
+        .subscribe(response => {
+          this.urlUUID = response['uuid'];
+        });
+      },
+      error => {
+        this.resetState();
+        this.dropdown.close();
+      }
+    );
   }
 
   private resetState() {

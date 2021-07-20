@@ -1,7 +1,8 @@
-import { Component, OnInit, forwardRef } from '@angular/core';
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { StateRestoreService } from '../store/state-restore.service';
-import { IsNotEmpty } from 'class-validator';
+import { Component, OnInit } from '@angular/core';
+import { IsNotEmpty, ValidateNested } from 'class-validator';
+import { Store } from '@ngxs/store';
+import { SetPersonIds, PersonIdsState } from './person-ids.state';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 export class PersonIds {
   @IsNotEmpty()
@@ -12,44 +13,29 @@ export class PersonIds {
   selector: 'gpf-person-ids',
   templateUrl: './person-ids.component.html',
   styleUrls: ['./person-ids.component.css'],
-  providers: [{
-    provide: QueryStateProvider,
-    useExisting: forwardRef(() => PersonIdsComponent)
-  }]
 })
-export class PersonIdsComponent extends QueryStateWithErrorsProvider implements OnInit {
+export class PersonIdsComponent extends StatefulComponent implements OnInit {
 
+  @ValidateNested()
   personIds = new PersonIds();
 
-  constructor(
-    private stateRestoreService: StateRestoreService
-  ) {
-    super();
+  constructor(protected store: Store) {
+    super(store, PersonIdsState, 'personIds')
   }
 
   ngOnInit() {
-    this.stateRestoreService
-      .getState(this.constructor.name)
-      .take(1)
-      .subscribe(
-      (state) => {
-        if (state['personIds']) {
-          this.personIds.personIds = state['personIds'].join('\n');
-        }
-      }
-    );
+    super.ngOnInit();
+    this.store.selectOnce(state => state.personIdsState).subscribe(state => {
+      // restore state
+      this.setPersonIds(state.personIds.join('\n'));
+    });
   }
 
-  getState() {
-    return this.validateAndGetState(this.personIds).map(personIds => {
-      const result = personIds.personIds
-          .split(/[,\s]/)
-          .filter(s => s !== '');
-        if (result.length === 0) {
-          return {};
-        }
-        return { personIds: result };
-      });
+  setPersonIds(personIds: string) {
+    const result = personIds
+      .split(/[,\s]/)
+      .filter(s => s !== '');
+    this.personIds.personIds = personIds;
+    this.store.dispatch(new SetPersonIds(result));
   }
-
 }

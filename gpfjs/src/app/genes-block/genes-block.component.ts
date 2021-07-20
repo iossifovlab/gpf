@@ -1,35 +1,51 @@
-import { Component, Input, forwardRef, ViewChild, AfterViewInit } from '@angular/core';
-import { QueryStateCollector } from '../query/query-state-provider';
-import { StateRestoreService } from '../store/state-restore.service';
+import { Component, Input, ViewChild, AfterViewInit } from '@angular/core';
+import { Store, Selector } from '@ngxs/store';
+import { GeneSymbolsState, GeneSymbolsModel } from 'app/gene-symbols/gene-symbols.state';
+import { GeneSetsState, GeneSetsModel } from 'app/gene-sets/gene-sets.state';
+import { GeneWeightsState, GeneWeightsModel } from 'app/gene-weights/gene-weights.state';
+import { StateReset } from 'ngxs-reset-plugin';
 
 @Component({
   selector: 'gpf-genes-block',
   templateUrl: './genes-block.component.html',
   styleUrls: ['./genes-block.component.css'],
-  providers: [{provide: QueryStateCollector, useExisting: forwardRef(() => GenesBlockComponent) }]
 })
-export class GenesBlockComponent extends QueryStateCollector implements AfterViewInit {
+export class GenesBlockComponent implements AfterViewInit {
   @Input() showAllTab = true;
   @ViewChild('nav') ngbNav;
 
-  constructor(
-    private stateRestoreService: StateRestoreService
-  ) {
-    super();
-  }
+  constructor(private store: Store) { }
 
   ngAfterViewInit() {
-    this.stateRestoreService.getState(this.constructor.name)
-      .take(1)
-      .subscribe(state => {
-        if ('geneSymbols' in state) {
-          this.ngbNav.select('geneSymbols');
-        } else if ('geneSet' in state) {
-          this.ngbNav.select('geneSets');
-        } else if ('geneWeights' in state) {
-          this.ngbNav.select('geneWeights');
-        }
+    this.store.selectOnce(GenesBlockComponent.genesBlockState).subscribe(state => {
+      if (state['geneSymbols']) {
+        setTimeout(() => this.ngbNav.select('geneSymbols'));
+      } else if (state['geneSet']) {
+        setTimeout(() => this.ngbNav.select('geneSets'));
+      } else if (state['weight']) {
+        setTimeout(() => this.ngbNav.select('geneWeights'));
       }
-    );
+    });
+  }
+
+  onNavChange() {
+    this.store.dispatch(new StateReset(GeneSymbolsState, GeneSetsState, GeneWeightsState));
+  }
+
+  @Selector([GeneSymbolsState, GeneSetsState.queryStateSelector, GeneWeightsState.queryStateSelector])
+  static genesBlockState(
+    geneSymbolsState: GeneSymbolsModel, geneSetsQueryState, geneWeightsState,
+  ) {
+    let result = {};
+    if (geneSymbolsState.geneSymbols.length) {
+      result['geneSymbols'] = geneSymbolsState.geneSymbols;
+    }
+    if (geneSetsQueryState) {
+      result = {...result, ...geneSetsQueryState};
+    }
+    if (geneWeightsState) {
+      result = {...result, ...geneWeightsState};
+    }
+    return result;
   }
 }

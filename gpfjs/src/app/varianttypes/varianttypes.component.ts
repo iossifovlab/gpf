@@ -1,75 +1,38 @@
-import {
-  Input, Component, OnInit, OnChanges, SimpleChanges, forwardRef
-} from '@angular/core';
-
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { StateRestoreService } from '../store/state-restore.service';
-import { DatasetsService } from '../datasets/datasets.service';
-
+import { Input, Component, OnChanges } from '@angular/core';
 import { Validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
+import { Store } from '@ngxs/store';
+import { VarianttypesState, SetVariantTypes } from './varianttypes.state';
+import { StatefulComponent } from '../common/stateful-component';
 
 @Component({
   selector: 'gpf-varianttypes',
   templateUrl: './varianttypes.component.html',
   styleUrls: ['./varianttypes.component.css'],
-  providers: [{
-    provide: QueryStateProvider,
-    useExisting: forwardRef(() => VarianttypesComponent)
-  }]
 })
-export class VarianttypesComponent extends QueryStateWithErrorsProvider
-    implements OnInit, OnChanges {
+export class VarianttypesComponent extends StatefulComponent implements OnChanges {
 
-  @Input()
-  variantTypes: Set<string> = new Set([]);
+  @Input() variantTypes: Set<string> = new Set([]);
+  @Input() @Validate(SetNotEmpty, {message: 'Select at least one'}) selectedVariantTypes: Set<string> = new Set();
 
-  @Input()
-  @Validate(SetNotEmpty, {message: 'select at least one'})
-  selectedVariantTypes: Set<string> = new Set([]);
-
-  constructor(
-    private stateRestoreService: StateRestoreService,
-    private datasetsService: DatasetsService
-  ) {
-    super();
+  constructor(protected store: Store) {
+    super(store, VarianttypesState, 'variantTypes');
   }
 
-  ngOnInit() {
-    this.selectedVariantTypes = new Set();
-  }
-
-  ngOnChanges(changes: SimpleChanges) {
-    this.stateRestoreService.getState(this.constructor.name)
-      .take(1)
-      .subscribe(state => {
-        if (state['variantTypes']) {
-          this.selectedVariantTypes = new Set(state['variantTypes'] as string[]);
-        }
-      });
-  }
-
-  selectAll(): void {
-    this.selectedVariantTypes = new Set(this.variantTypes);
-  }
-
-  selectNone(): void {
-    this.selectedVariantTypes = new Set();
-  }
-
-  variantTypesCheckValue(variantType: string, value: boolean): void {
-    if (variantType === 'sub' || variantType === 'ins' || variantType === 'del' ||
-        variantType === 'CNV' || variantType === 'complex' || variantType === 'TR') {
-      if (!value) {
-        this.selectedVariantTypes.add(variantType);
+  ngOnChanges(): void {
+    this.store.selectOnce(VarianttypesState).subscribe(state => {
+      // handle selected values input and/or restore state
+      if (state.variantTypes.length) {
+        this.selectedVariantTypes = new Set(state.variantTypes);
       } else {
-        this.selectedVariantTypes.delete(variantType);
+        // save the default selected variant types to the state
+        this.store.dispatch(new SetVariantTypes(this.selectedVariantTypes));
       }
-    }
+    });
   }
 
-  getState() {
-    return this.validateAndGetState(this)
-      .map(_ => ({ 'variantTypes': Array.from(this.selectedVariantTypes) }));
+  updateVariantTypes(newValues: Set<string>): void {
+    this.selectedVariantTypes = newValues;
+    this.store.dispatch(new SetVariantTypes(newValues));
   }
 }

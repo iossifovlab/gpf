@@ -1,28 +1,9 @@
-<div
-  class="varianttypes-card card">
-  <div class="card-header card-title">Variant Types</div>
-  <div class="card-block">
-    <div class="btn-group btn-group-sm">
-      <button
-        (click)="selectAll()"
-        class="btn btn-default">All</button>
-      <button
-        (click)="selectNone()"
-        class="btn btn-default">None</button>
-    </div>
-
-    <ng-container *ngIf="variantTypes && selectedVariantTypes !== null">
-        <ng-container *ngFor="let vtype of variantTypes">
-            <div *ngIf="variantTypes.has(vtype)" class="checkbox">
-              <label> <input
-                [id]="vtype + 'Checkbox'"
-                type="checkbox"
-                [checked]="selectedVariantTypes.has(vtype)"
-                (change)="variantTypesCheckValue(vtype, selectedVariantTypes.has(vtype))"> {{vtype}}
-              </label>
-            </div>
-        </ng-container>
-    </ng-container>
-
+<div>
+  <gpf-checkbox-list
+    [title]="'Variant Types'"
+    [items]="variantTypes"
+    [selectedItems]="selectedVariantTypes"
+    (itemsUpdateEvent)="updateVariantTypes($event)">
+  </gpf-checkbox-list>
   <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
 </div>

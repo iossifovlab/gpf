@@ -1,9 +1,10 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
+import { NgxsModule } from '@ngxs/store';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
-import { StateRestoreService } from 'app/store/state-restore.service';
 
 import { FamilyIdsComponent } from './family-ids.component';
+import { FamilyIdsState } from './family-ids.state';
 
 describe('FamilyIdsComponent', () => {
   let component: FamilyIdsComponent;
@@ -12,8 +13,7 @@ describe('FamilyIdsComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [FamilyIdsComponent, ErrorsAlertComponent],
-      providers: [StateRestoreService],
-      imports: [FormsModule]
+      imports: [FormsModule, NgxsModule.forRoot([FamilyIdsState])]
     })
     .compileComponents();
   }));

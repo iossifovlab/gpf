@@ -11,14 +11,15 @@
       </li>
     </ul>
     <div class="card-block">
-      <div style="padding: 5px" *ngFor="let study of studyFiltersState.studyFiltersState; trackBy: trackById; let i = index">
+      <div style="padding: 5px" *ngFor="let study of selectedStudies; trackBy: trackById; let i = index">
         <span style="padding: 5px; display: block; overflow: hidden">
           <gpf-remove-button
             [field]="study"
             (removeFilter)="removeFilter($event)">
           </gpf-remove-button>
           <gpf-study-filter
-            [studyFilterState]="study"
+            [selectedStudy]="study"
+            (changeSelectedStudyEvent) = "changeSelectedStudy($event)"
             [errors]="errors && errors[i]"
             [studies]="studies">
           </gpf-study-filter>

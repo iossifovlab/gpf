@@ -1,13 +1,13 @@
-<div *ngIf="enrichmentModels?.backgrounds" style="display:inline-block; width: 300px; padding: 15px">
+<div *ngIf="backgrounds" style="display:inline-block; width: 300px; padding: 15px">
   Background Models:
-  <select class="form-control" style="width: 100%" [(ngModel)]="selectedEnrichmentModel.background">
-    <option *ngFor="let background of enrichmentModels.backgrounds" [ngValue]="background">{{ background.id }}</option>
+  <select class="form-control" style="width: 100%" [ngModel]="background" (ngModelChange)='changeBackground($event)'>
+    <option *ngFor="let background of backgrounds" [ngValue]="background">{{ background.id }}</option>
   </select>
 </div>
-<div *ngIf="enrichmentModels?.countings" style="display:inline-block; width: 300px; padding: 15px">
+<div *ngIf="countings" style="display:inline-block; width: 300px; padding: 15px">
   Counting Models:
-  <select class="form-control" style="width: 100%" [(ngModel)]="selectedEnrichmentModel.counting">
-    <option *ngFor="let counting of enrichmentModels.countings" [ngValue]="counting">{{ counting.id }}</option>
+  <select class="form-control" style="width: 100%" [ngModel]="counting" (ngModelChange)='changeCounting($event)'>
+    <option *ngFor="let counting of countings" [ngValue]="counting">{{ counting.id }}</option>
   </select>
 </div>
 

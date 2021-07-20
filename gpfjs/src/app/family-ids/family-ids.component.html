@@ -1,5 +1,5 @@
 <div class="panel" id="family-ids-panel">
-    <textarea type="text" [(ngModel)]="familyIds.familyIds" class="form-control">
+    <textarea type="text" [ngModel]="familyIds.familyIds" (ngModelChange)="setFamilyIds($event)" class="form-control">
     </textarea>
 
     <gpf-errors-alert [errors]="errors"></gpf-errors-alert>

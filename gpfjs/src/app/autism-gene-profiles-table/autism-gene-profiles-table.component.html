@@ -2,7 +2,7 @@
   <table *ngIf="config" class="table table-hover table-sm table-centered table-header-rotate">
     <thead>
       <tr>
-        <th class="table-main-header" style="width: 160px; position: sticky; top: 0px">
+        <th class="table-main-header" style="width: 160px; min-width: 100px; position: sticky; top: 0px">
           <span>Gene</span>
         </th>
 
@@ -101,7 +101,7 @@
 
     <tbody *ngIf="genes">
       <tr *ngFor="let gene of genes">
-        <td (click)="emitCreateTabEvent(gene.geneSymbol, true)" (middleclick)="emitCreateTabEvent(gene.geneSymbol, false)" style="cursor:pointer;color:#1a6393;">
+        <td (click)="emitCreateTabEvent(gene.geneSymbol, true)" (middleclick)="emitCreateTabEvent(gene.geneSymbol, false)" style="cursor: pointer; color: #1a6393">
           {{gene.geneSymbol}}
         </td>
 
@@ -125,9 +125,9 @@
             <td style="min-width: 70px" *ngFor="let statistic of personSet.statistics">
               <ng-container *ngIf="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id) as value">
                 <ng-container *ngIf="value.count !== 0">
-                  <a (click)="goToQuery(gene.geneSymbol, personSet.id, statistic.id, dataset.id, statistic)" (middleclick)="goToQuery(gene.geneSymbol, personSet.id, statistic.id, dataset.id, statistic)">
-                    {{value.count}} ({{value.rate | number : '1.0-3' }})
-                  </a>
+                  <a (click)="goToQuery(gene.geneSymbol, personSet.id, dataset.id, statistic)"
+                    (middleclick)="goToQuery(gene.geneSymbol, personSet.id, dataset.id, statistic)">
+                    {{value.count}} ({{value.rate | number : '1.0-3' }})</a>
                 </ng-container>
               </ng-container>
             </td> 

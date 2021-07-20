@@ -1,9 +1,10 @@
 import { Observable } from 'rxjs';
 import { Component, OnInit, Input, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
-import { QueryStateCollector } from '../query/query-state-provider';
 import { QueryService } from '../query/query.service';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { UsersService } from '../users/users.service';
+import { Store } from '@ngxs/store';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Component({
   selector: 'gpf-save-query',
@@ -21,9 +22,10 @@ export class SaveQueryComponent implements OnInit {
   userInfo$: Observable<any>;
 
   constructor(
+    private store: Store,
     private queryService: QueryService,
-    private parentComponent: QueryStateCollector,
     private usersService: UsersService,
+    private datasetsService: DatasetsService,
     private changeDetectorRef: ChangeDetectorRef
   ) { }
 
@@ -32,25 +34,23 @@ export class SaveQueryComponent implements OnInit {
   }
 
   saveUserQuery(name: string, description: string) {
-     this.parentComponent.getCurrentState()
+    const datasetId = this.datasetsService.getSelectedDatasetId();
+    this.store.selectOnce(state => state).subscribe(state => {
+    state['datasetId'] = datasetId;
+     this.queryService.saveQuery(state, this.queryType)
        .take(1)
-       .subscribe(state => {
-           this.queryService.saveQuery(state, this.queryType)
-               .take(1)
-               .subscribe(response => {
-                   this.queryService.saveUserQuery(response['uuid'], name, description)
-                    .take(1)
-                    .subscribe(response => {
-                      if (response.hasOwnProperty('uuid')) {
-                        this.nameInputRef.nativeElement.value = '';
-                        this.descInputRef.nativeElement.value = '';
-                      }
-                    });
-               });
-       },
-       error => {});
-
-    this.ngbDropdownMenu.dropdown.close();
+       .subscribe(response => {
+         this.queryService.saveUserQuery(response['uuid'], name, description)
+          .take(1)
+          .subscribe(response => {
+            if (response.hasOwnProperty('uuid')) {
+              this.nameInputRef.nativeElement.value = '';
+              this.descInputRef.nativeElement.value = '';
+            }
+          });
+       });
+   });
+   this.ngbDropdownMenu.dropdown.close();
   }
 
   focusNameInput() {

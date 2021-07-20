@@ -11,8 +11,17 @@ import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.com
 import { cloneDeep } from 'lodash';
 import { sprintf } from 'sprintf-js';
 import { QueryService } from 'app/query/query.service';
-import { BrowserQueryFilter, GenomicScore, PeopleGroup, PresentInParent, PresentInParentRarity } from 'app/genotype-browser/genotype-browser';
+import { GenomicScore, PeopleGroup } from 'app/genotype-browser/genotype-browser';
 import { EffectTypes } from 'app/effecttypes/effecttypes';
+import { Store } from '@ngxs/store';
+import { SetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
+import { SetEffectTypes } from 'app/effecttypes/effecttypes.state';
+import { SetStudyTypes } from 'app/study-types/study-types.state';
+import { SetVariantTypes } from 'app/varianttypes/varianttypes.state';
+import { SetGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
+import { SetPresentInParentValues } from 'app/present-in-parent/present-in-parent.state';
+import { SetPresentInChildValues } from 'app/present-in-child/present-in-child.state';
+import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-table',
@@ -95,6 +104,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     private cdr: ChangeDetectorRef,
     private ref: ElementRef,
     private queryService: QueryService,
+    private store: Store,
   ) { }
 
   ngOnChanges(): void {
@@ -509,15 +519,8 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     return count;
   }
 
-  goToQuery(geneSymbol: string, personSetId: string, effectTypeId: string, datasetId: string, statistic: AgpDatasetStatistic) {
+  goToQuery(geneSymbol: string, personSetId: string, datasetId: string, statistic: AgpDatasetStatistic) {
     const newWindow = window.open('', '_blank');
-
-    const peopleGroup = new PeopleGroup('status', [personSetId]);
-    const variantTypes = this.config.datasets
-      .find(dataset => dataset.id === datasetId).personSets
-      .find(personSet => personSet.id === personSetId)
-      .statistics.find((datasetStatistic) => datasetStatistic.id === effectTypeId)
-      .variantTypes;
 
     const genomicScores: GenomicScore[] = [];
     if (statistic.scores) {
@@ -528,36 +531,35 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
       );
     }
 
+    const presentInChildValues = ['proband only', 'proband and sibling', 'sibling only'];
     const presentInParentRareValues = ['father only', 'mother only', 'mother and father'];
-    const presentInChildRareValues = ['proband only', 'proband and sibling', 'sibling only'];
-    let presentInParent: PresentInParent;
-    let presentInChild: string[];
+
+    let presentInParent: string[] = ['neither'];
+    let rarityType = 'all';
     if (statistic.category === 'rare') {
-      presentInParent = new PresentInParent(
-        presentInParentRareValues,
-        new PresentInParentRarity(undefined, 1, undefined),
-      );
-      presentInChild = presentInChildRareValues;
+      rarityType = 'rare';
+      presentInParent = presentInParentRareValues;
     }
 
-    const browserQueryFilter = new BrowserQueryFilter(
-      datasetId,
-      [geneSymbol],
-      this.effectTypes[statistic['effects'][0]],
-      undefined,
-      peopleGroup,
-      ['we'],
-      variantTypes,
-      genomicScores,
-      presentInParent,
-      presentInChild,
-    );
+    this.store.dispatch([
+      new SetGeneSymbols([geneSymbol]),
+      new SetEffectTypes(new Set(this.effectTypes[statistic['effects'][0]])),
+      new SetStudyTypes(new Set(['we'])),
+      new SetVariantTypes(new Set(statistic['variantTypes'])),
+      new SetGenomicScores(genomicScores),
+      new SetPresentInChildValues(new Set(presentInChildValues)),
+      new SetPresentInParentValues(new Set(presentInParent), rarityType, 0, 1),
+      new SetPedigreeSelector('phenotype', new Set([personSetId])),
+    ]);
 
-    this.queryService.saveQuery(browserQueryFilter, 'genotype')
+    this.store.selectOnce(state => state).subscribe(state => {
+      state['datasetId'] = datasetId;
+      this.queryService.saveQuery(state, 'genotype')
       .take(1)
       .subscribe(urlObject => {
         const url = this.queryService.getLoadUrlFromResponse(urlObject);
         newWindow.location.assign(url);
       });
+    });
   }
 }

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { UsersService } from 'app/users/users.service';
 
@@ -21,7 +22,7 @@ describe('ForgotPasswordComponent', () => {
         UsersService,
         ConfigService,
       ],
-      imports: [HttpClientTestingModule, RouterTestingModule, FormsModule]
+      imports: [HttpClientTestingModule, RouterTestingModule, FormsModule, NgxsModule.forRoot([])]
     })
     .compileComponents();
   }));

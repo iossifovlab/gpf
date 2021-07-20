@@ -1,32 +1,23 @@
-import { Component, OnInit, Input, forwardRef } from '@angular/core';
+import { Component, OnInit, Input, EventEmitter, Output } from '@angular/core';
 import { ContinuousMeasure } from '../measures/measures';
-import { QueryStateCollector } from '../query/query-state-provider';
 import { ContinuousFilterState, ContinuousSelection } from '../person-filters/person-filters';
 import { PersonFilter } from '../datasets/datasets';
-import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
   selector: 'gpf-multi-continuous-filter',
   templateUrl: './multi-continuous-filter.component.html',
   styleUrls: ['./multi-continuous-filter.component.css'],
-  providers: [{
-    provide: QueryStateCollector,
-    useExisting: forwardRef(() => MultiContinuousFilterComponent)
-  }]
 })
-export class MultiContinuousFilterComponent extends QueryStateCollector implements OnInit {
+export class MultiContinuousFilterComponent implements OnInit {
   @Input() datasetId: string;
   @Input() continuousFilter: PersonFilter;
   @Input() continuousFilterState: ContinuousFilterState;
+  @Output() updateFilterEvent = new EventEmitter();
 
   measures: Array<ContinuousMeasure>;
   internalSelectedMeasure: ContinuousMeasure;
 
-  constructor(
-    private stateRestoreService: StateRestoreService
-  ) {
-    super();
-  }
+  constructor() { }
 
   ngOnInit() {
   }
@@ -50,28 +41,17 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
   }
 
   set selectedMeasure(measure) {
-    const selection = this.continuousFilterState.selection as ContinuousSelection;
-    this.continuousFilterState.source = measure ? measure.name : null;
-    selection.domainMin = measure ? measure.min : 0;
-    selection.domainMax = measure ? measure.max : 0;
-    this.internalSelectedMeasure = measure;
+    if (measure)  {
+      const selection = this.continuousFilterState.selection as ContinuousSelection;
+      this.continuousFilterState.source = measure.name;
+      selection.domainMin = measure.min;
+      selection.domainMax = measure.max;
+      this.internalSelectedMeasure = measure;
+      this.updateFilterEvent.emit();
+    }
   }
 
   get selectedMeasure(): ContinuousMeasure {
     return this.internalSelectedMeasure;
   }
-
-  updateMeasures(measures) {
-    this.measures = measures;
-
-    this.stateRestoreService
-      .getState(this.constructor.name)
-      .take(1)
-      .subscribe(state => {
-        if (state['personFilters']) {
-          this.restoreContinuousFilter(state['personFilters']);
-        }
-      });
-  }
-
 }

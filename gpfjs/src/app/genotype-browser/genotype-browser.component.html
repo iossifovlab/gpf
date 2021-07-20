@@ -3,7 +3,7 @@
     <div class="container" style="margin-bottom: 20px;">
       <gpf-genes-block></gpf-genes-block>
       <gpf-regions-block></gpf-regions-block>
-      <gpf-genotype-block></gpf-genotype-block>
+      <gpf-genotype-block [dataset]="dataset"></gpf-genotype-block>
       <gpf-study-filters-block
         *ngIf="dataset?.genotypeBrowserConfig?.hasStudyFilters"
         [dataset]="dataset">

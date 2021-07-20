@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, forwardRef, ViewChild, ViewChildren } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, forwardRef, ViewChild, ViewChildren, ElementRef } from '@angular/core';
 import * as d3 from 'd3';
 import { Gene, GeneViewSummaryAllelesArray, GeneViewSummaryAllele, DomainRange } from 'app/gene-view/gene';
 import { Subject, Observable } from 'rxjs';
@@ -6,7 +6,6 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import * as draw from 'app/utils/svg-drawing';
 import { GeneViewTranscript, GeneViewModel } from 'app/gene-view/gene-view';
-import { QueryStateProvider, QueryStateWithErrorsProvider } from 'app/query/query-state-provider';
 
 export class GeneViewScaleState {
   constructor(
@@ -81,9 +80,8 @@ export class GeneViewZoomHistory {
     '(document:keydown)': 'handleKeyboardEvent($event)',
     '(window:resize)': 'handleWindowResizeEvent($event)'
   },
-  providers: [{ provide: QueryStateProvider, useExisting: forwardRef(() => GeneViewComponent) }]
 })
-export class GeneViewComponent extends QueryStateWithErrorsProvider implements OnInit {
+export class GeneViewComponent implements OnInit {
   @Input() gene: Gene;
   @Input() variantsArray: GeneViewSummaryAllelesArray;
   @Input() streamingFinished$: Subject<boolean>;
@@ -94,6 +92,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   @ViewChild('transmittedCheckbox') transmittedCheckbox;
   @ViewChildren('variantTypeCheckbox') variantTypeCheckboxes;
   @Output() startLoadingSpinnerEvent = new EventEmitter<boolean>();
+  @ViewChild('hideTranscriptsCheckbox') hideTranscriptsCheckbox: ElementRef;
 
   tablePreviewDebouncer: Subject<DomainRange> = new Subject<DomainRange>();
 
@@ -163,7 +162,6 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     private datasetsService: DatasetsService,
     private loadingService: FullscreenLoadingService,
   ) {
-    super();
     this.tablePreviewDebouncer
       .debounceTime(1000)
       .subscribe(domains => this.updateShownTablePreviewVariantsArrayEvent.emit(domains));
@@ -253,7 +251,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.showTransmitted = true;
   }
 
-  getState(): Observable<object> {
+  getState(): object {
     const state = {
       'affectedStatus': Array.from(this.selectedAffectedStatus),
       'selectedEffectTypes': Array.from(this.selectedEffectTypes),
@@ -270,15 +268,19 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         [this.x.domain()[0], this.x.domain()[this.x.domain().length - 1]]
       );
     }
-    return this.validateAndGetState(state);
+    return state;
   }
 
   enableIntronCondensing() {
     this.condenseIntrons = true;
+    this.setDefaultScale();
+    this.redraw();
   }
 
   disableIntronCondensing() {
     this.condenseIntrons = false;
+    this.setDefaultScale();
+    this.redraw();
   }
 
   drawDenovoIcons() {
@@ -832,10 +834,15 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       this.svgHeight = this.svgHeightFreqRaw + (this.gene.transcripts.length + 1) * 25 + 70;
       d3.select('#svg-container').selectAll('svg').remove();
 
+      let width = this.svgWidth + this.options.margin.left + this.options.margin.right;
+      let height = this.svgHeightFreqRaw + 85;
+      if (!this.hideTranscriptsCheckbox.nativeElement.checked) {
+        height += (this.gene.transcripts.length + 1) * 25;
+      }
+
       this.svgElement = d3.select('#svg-container')
         .append('svg')
-        .attr('viewBox', '0 0 ' + (this.svgWidth + this.options.margin.left + this.options.margin.right).toString() +
-            ' ' + (this.svgHeightFreqRaw + 85 + (this.gene.transcripts.length + 1) * 25).toString())
+        .attr('viewBox', `0 0 ${width} ${height}`)
         .append('g')
         .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
 

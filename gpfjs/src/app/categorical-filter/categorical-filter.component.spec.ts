@@ -2,10 +2,10 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
+import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { PhenoBrowserService } from 'app/pheno-browser/pheno-browser.service';
-import { StateRestoreService } from 'app/store/state-restore.service';
 import { UsersService } from 'app/users/users.service';
 import { CategoricalFilterComponent } from './categorical-filter.component';
 
@@ -16,8 +16,8 @@ describe('CategoricalFilterComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [CategoricalFilterComponent],
-      providers: [DatasetsService, PhenoBrowserService, StateRestoreService, ConfigService, UsersService],
-      imports: [HttpClientTestingModule, RouterTestingModule, FormsModule]
+      providers: [DatasetsService, PhenoBrowserService, ConfigService, UsersService],
+      imports: [HttpClientTestingModule, RouterTestingModule, FormsModule, NgxsModule.forRoot([])]
     })
     .compileComponents();
   }));

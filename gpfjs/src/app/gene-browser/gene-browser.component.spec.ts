@@ -6,12 +6,12 @@ import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { DomainRange } from 'app/gene-view/gene';
-import { QueryStateCollector } from 'app/query/query-state-provider';
 import { QueryService } from 'app/query/query.service';
-import { StateRestoreService } from 'app/store/state-restore.service';
 import { UsersService } from 'app/users/users.service';
 import { of } from 'rxjs/internal/observable/of';
 import { GeneBrowserComponent } from './gene-browser.component';
+import { GeneSymbolsState } from 'app/gene-symbols/gene-symbols.state';
+import { NgxsModule } from '@ngxs/store';
 
 class MockActivatedRoute {
   params = {dataset: 'testDatasetId', get: () => ''};
@@ -25,7 +25,7 @@ describe('GeneBrowserComponent', () => {
   let fixture: ComponentFixture<GeneBrowserComponent>;
 
   const activatedRoute = new MockActivatedRoute();
-  let testState;
+  let testState: object;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
@@ -36,10 +36,9 @@ describe('GeneBrowserComponent', () => {
         ConfigService,
         FullscreenLoadingService,
         QueryService,
-        StateRestoreService,
         {provide: ActivatedRoute, useValue: activatedRoute},
       ],
-      imports: [HttpClientTestingModule, RouterTestingModule]
+      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([GeneSymbolsState])]
     })
     .compileComponents();
   }));
@@ -74,17 +73,9 @@ describe('GeneBrowserComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should get current state with assigned dataset id', () => {
-    const getCurrentStateSpy = spyOn(QueryStateCollector.prototype, 'getCurrentState').and.returnValue(
-      [0] as any
-    );
-    component.selectedDatasetId = 'testId';
-    const state = component.getCurrentState();
-    expect(state).toEqual([{datasetId: 'testId'}] as any);
-  });
-
   it('should update shown table preview variants array', () => {
     component.familyLoadingFinished = true;
+    const stateGetterSpy = spyOnProperty(component, 'state').and.returnValue(testState);
     const getGenotypePreviewVariantsByFilterSpy = spyOn(component.queryService, 'getGenotypePreviewVariantsByFilter')
       .and.callFake((requestParams, previewInfo) => {
         expect(requestParams).toEqual({
@@ -102,20 +93,19 @@ describe('GeneBrowserComponent', () => {
         });
         return 'testPreviewVariantsArray' as any;
       });
-    const getCurrentStateSpy = spyOn(component, 'getCurrentState').and.returnValue(of(testState));
     // accesing private property - bad, needs to be refactored
     (component as any).geneBrowserConfig = {frequencyColumn: 'testMetric'};
     component.maxFamilyVariants = 1;
 
     component.updateShownTablePreviewVariantsArray(new DomainRange(1, 11));
     expect(getGenotypePreviewVariantsByFilterSpy).toHaveBeenCalled();
-    expect(getCurrentStateSpy).toHaveBeenCalled();
+    expect(stateGetterSpy).toHaveBeenCalled();
     expect(component.genotypePreviewVariantsArray).toEqual('testPreviewVariantsArray' as any);
     expect(component.familyLoadingFinished).toBeFalse();
   });
 
   it('should transform family variants query parameters', () => {
-    testState.affectedStatus = ['Affected only'];
+    testState['affectedStatus'] = ['Affected only'];
     expect(component.transformFamilyVariantsQueryParameters(testState)).toEqual({
       effectTypes: ['lgds', 'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift', 'CDS', 'CNV+', 'CNV-'],
       genomicScores: 'testGenomicScores',
@@ -127,57 +117,47 @@ describe('GeneBrowserComponent', () => {
       variantType: ['sub', 'ins', 'del', 'cnv+', 'cnv-']
     });
 
-    testState.affectedStatus = ['Affected and unaffected'];
+    testState['affectedStatus'] = ['Affected and unaffected'];
     expect(component.transformFamilyVariantsQueryParameters(testState).affectedStatus)
       .toEqual(['Affected and unaffected', 'Affected only', 'Unaffected only']);
 
-    testState.showDenovo = false;
+    testState['showDenovo'] = false;
     expect(component.transformFamilyVariantsQueryParameters(testState).inheritanceTypeFilter)
       .toEqual(['mendelian', 'omission', 'missing']);
 
-    testState.showDenovo = true;
-    testState.showTransmitted = false;
+    testState['showDenovo'] = true;
+    testState['showTransmitted'] = false;
     expect(component.transformFamilyVariantsQueryParameters(testState).inheritanceTypeFilter)
       .toEqual(['denovo']);
 
-    component.enableCodingOnly = false;
+    component['enableCodingOnly'] = false;
     expect(component.transformFamilyVariantsQueryParameters(testState).effectTypes).toEqual([
       'lgds', 'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift', 'non-coding', 'intron',
       'intergenic', '3\'UTR', '3\'UTR-intron', '5\'UTR', '5\'UTR-intron', 'CDS', 'CNV+', 'CNV-'
     ]);
 
-    testState.selectedEffectTypes = ['missense', 'synonymous'];
+    testState['selectedEffectTypes'] = ['missense', 'synonymous'];
     expect(component.transformFamilyVariantsQueryParameters(testState).effectTypes)
       .toEqual(['missense', 'synonymous']);
   });
 
   it('should submit gene request', async () => {
     component.enableCodingOnly = true;
-    const getCurrentStateSpy = spyOn(component, 'getCurrentState').and.returnValue(of(testState));
     // accesing private property - bad, needs to be refactored
     (component as any).geneService = {
       getGene(gene) { return of('testGene'); },
     };
     spyOn(component.queryService, 'getGeneViewVariants').and.callFake((requestParams) => {
-      expect(requestParams['showDenovo']).toBeTrue();
-      expect(requestParams['showTransmitted']).toBeTrue();
-      expect(requestParams['selectedEffectTypes']).toEqual([ 'lgds', 'missense', 'synonymous', 'other' ]);
-      expect(requestParams['affectedStatus']).toEqual([ 'Affected and unaffected' ]);
-      expect(requestParams['genomicScores']).toEqual('testGenomicScores');
-      expect(requestParams['geneSymbols']).toEqual([ 'testSymbol' ]);
-      expect(requestParams['peopleGroup']).toEqual('testPeopleGroup');
       expect(requestParams['datasetId']).toEqual('testDatasetId');
-      expect(requestParams['summaryVariantIds']).toEqual([ 5, 10, 15 ]);
+      expect(requestParams['geneSymbols']).toEqual(['testSymbol']);
       expect(requestParams['maxVariantsCount']).toEqual(10000);
       expect(requestParams['inheritanceTypeFilter']).toEqual([ 'denovo', 'mendelian', 'omission', 'missing' ]);
-      expect(requestParams['selectedVariantTypes']).toEqual([ 'sub', 'ins', 'del', 'cnv+', 'cnv-' ]);
       if (component.enableCodingOnly) {
         expect(requestParams['effectTypes']).toEqual([ 'lgds', 'nonsense', 'frame-shift', 'splice-site', 'no-frame-shift-newStop',
             'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift', 'CDS', 'CNV+', 'CNV-']);
       } else {
         expect(requestParams['effectTypes']).toEqual(undefined);
       }
-
       return 'testSummaryVariantsArray' as any;
     });
 
@@ -188,7 +168,7 @@ describe('GeneBrowserComponent', () => {
     const enableIntronCondensingSpy = spyOn(component.geneViewComponent, 'enableIntronCondensing');
     const disableIntronCondensingSpy = spyOn(component.geneViewComponent, 'disableIntronCondensing');
 
-    component.submitGeneRequest();
+    component.submitGeneRequest(['testSymbol']);
     expect(component.hideResults).toBeFalse();
     expect(component.geneSymbol).toBe('testSymbol');
     expect(component.selectedGene).toBe('testGene' as any);
@@ -221,10 +201,10 @@ describe('GeneBrowserComponent', () => {
   it('should set on submit event query data to the requested parameters', () => {
     // accesing private property - bad, needs to be refactored
     (component as any).geneBrowserConfig = {frequencyColumn: 'testMetric'};
+    const stateGetterSpy = spyOnProperty(component, 'state').and.returnValue(testState);
     const event = {
       target: {queryData: {value: ''}, submit() {}, attributes: {id: {nodeValue: 'bla'}}}
     };
-    const getCurrentStateSpy = spyOn(component, 'getCurrentState').and.returnValue(of(testState));
     const submitSpy = spyOn(event.target, 'submit').and.callFake(() => {
       expect(event.target.queryData.value).toEqual('{' +
         '"effectTypes":["lgds","missense","synonymous","noStart","noEnd","no-frame-shift","CDS","CNV+","CNV-"],' +
@@ -238,7 +218,7 @@ describe('GeneBrowserComponent', () => {
     });
 
     component.onSubmit(event);
-    expect(getCurrentStateSpy).toHaveBeenCalled();
+    expect(stateGetterSpy).toHaveBeenCalled();
     expect(submitSpy).toHaveBeenCalled();
   });
 });

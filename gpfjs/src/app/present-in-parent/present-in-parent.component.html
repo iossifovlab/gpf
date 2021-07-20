@@ -1,101 +1,47 @@
-<div class="card">
-    <div class="card-header card-title">Present in Parent</div>
-    <div class="card-block">
-        <div class="btn-group btn-group-sm">
-            <button (click)="selectAll()"
-                class="btn btn-default">All</button>
-            <button (click)="selectNone()"
-                class="btn btn-default">None</button>
-        </div>
-        <div class="checkbox">
-          <label>
-            <input #motherOnlyCheckbox
-                type="checkbox"
-                [checked]="presentInParent.motherOnly"
-                (change)="presentInChildCheckValue('motherOnly', motherOnlyCheckbox.checked)">
-            mother only
-          </label>
-        </div>
-        <div class="checkbox">
-          <label>
-            <input
-                #fatherOnlyCheckbox
-                type="checkbox"
-                [checked]="presentInParent.fatherOnly"
-                (change)="presentInChildCheckValue('fatherOnly', fatherOnlyCheckbox.checked)">
-            father only
-          </label>
-        </div>
-        <div class="checkbox">
-          <label>
-            <input
-                #motherFatherCheckbox
-                type="checkbox"
-                [checked]="presentInParent.motherFather"
-                (change)="presentInChildCheckValue('motherFather', motherFatherCheckbox.checked)">
-            mother and father
-          </label>
-        </div>
-        <div class="checkbox">
-          <label>
-            <input
-                #neitherCheckbox
-                type="checkbox"
-                [checked]="presentInParent.neither"
-                (change)="presentInChildCheckValue('neither', neitherCheckbox.checked)">
-            neither
-          </label>
-        </div>
+<div>
+  <gpf-checkbox-list
+    [title]="'Present in Parent'"
+    [items]="presentInParentValues"
+    [selectedItems]="selectedValues"
+    (itemsUpdateEvent)="updatePresentInParent($event)">
+  </gpf-checkbox-list>
 
-        <div *ngIf="presentInParent.motherOnly || presentInParent.fatherOnly || presentInParent.motherFather">
-          <div>Rarity:</div>
-          <div>
-            <input #ultraRareRadio
-                type="radio"
-                name="rarity"
-                (change)="ultraRareValueChange(ultraRareRadio.checked)"
-                value="ultraRare" [checked]="presentInParent.rarityType == 'ultraRare'">Ultra Rare<br/>
-            <input #allRadio
-                type="radio"
-                name="rarity"
-                (change)="rarityRadioChange('all')"
-                value="all" [checked]="presentInParent.rarityType == 'all'">All
-            <input #rareRadio
-                type="radio"
-                name="rarity"
-                (change)="rarityRadioChange('rare')"
-                value="rare" [checked]="presentInParent.rarityType == 'rare'">Rare
-            <input #intervalRadio
-                type="radio"
-                name="rarity"
-                (change)="rarityRadioChange('interval')"
-                value="interval" [checked]="presentInParent.rarityType == 'interval'">Interval
-          </div>
-          <div class="row" style="padding-left: 15px; padding-right: 15px;">
-            <div *ngIf="presentInParent.rarityType == 'interval'">
-                <input
-                    #inputRangeStart="ngModel"
-                    type="number"
-                    step="0.01"
-                    min=0
-                    max="{{ presentInParent.rarityIntervalEnd }}"
-                    style="width: 63px"
-                    [(ngModel)]="presentInParent.rarityIntervalStart">%-
-            </div>
-            <div *ngIf="presentInParent.rarityType == 'rare' || presentInParent.rarityType == 'interval'">
-                <span *ngIf="presentInParent.rarityType == 'rare'">Max: </span>
-                <input
-                    #inputRangeEnd="ngModel"
-                    type="number"
-                    step="0.01"
-                    min="{{ presentInParent.rarityIntervalStart }}"
-                    max=100
-                    style="width: 63px"
-                    [(ngModel)]="presentInParent.rarityIntervalEnd">%
-            </div>
-          </div>
-        </div>
+  <div *ngIf="selectedValues.has('mother only') || selectedValues.has('father only') || selectedValues.has('mother and father')">
+    <div>Rarity:</div>
+    <div>
+      <ng-container *ngFor="let rarityType of rarityTypes">
+        <input
+          type="radio"
+          (change)="updateRarityType(rarityType)"
+          value="rarityType"
+          [checked]="selectedRarityType === rarityType">{{rarityType}}
+        <br *ngIf="rarityType === 'ultraRare'">
+      </ng-container>
     </div>
+    <div class="row" style="padding-left: 15px; padding-right: 15px;">
+      <div *ngIf="selectedRarityType === 'interval'">
+          <input
+              type="number"
+              step="0.01"
+              min=0
+              max="{{ rarityIntervalEnd }}"
+              style="width: 63px"
+              [ngModel]="rarityIntervalStart"
+              (ngModelChange)="updateRarityIntervalStart($event)">%-
+      </div>
+      <div *ngIf="selectedRarityType === 'rare' || selectedRarityType === 'interval'">
+          <span *ngIf="selectedRarityType === 'rare'">Max: </span>
+          <input
+              type="number"
+              step="0.01"
+              min="{{ rarityIntervalStart }}"
+              max=100
+              style="width: 63px"
+              [ngModel]="rarityIntervalEnd"
+              (ngModelChange)="updateRarityIntervalEnd($event)">%
+      </div>
+    </div>
+  </div>
 
-    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+  <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
 </div>

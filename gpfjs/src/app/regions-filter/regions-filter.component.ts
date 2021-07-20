@@ -1,49 +1,35 @@
 import { RegionsFilter } from './regions-filter';
-import { Component, OnInit, forwardRef } from '@angular/core';
-
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { StateRestoreService } from '../store/state-restore.service';
+import { Component, OnInit } from '@angular/core';
+import { Store } from '@ngxs/store';
+import { RegionsFilterState, SetRegionsFilter } from './regions-filter.state';
+import { ValidateNested } from 'class-validator';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
   selector: 'gpf-regions-filter',
   templateUrl: './regions-filter.component.html',
-  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => RegionsFilterComponent) }]
 })
-export class RegionsFilterComponent extends QueryStateWithErrorsProvider implements OnInit {
-
+export class RegionsFilterComponent extends StatefulComponent implements OnInit {
+  @ValidateNested()
   regionsFilter = new RegionsFilter();
 
-  constructor(
-    private stateRestoreService: StateRestoreService
-  ) {
-    super();
+  constructor(protected store: Store) {
+    super(store, RegionsFilterState, 'regionsFilter');
   }
 
   ngOnInit() {
-    this.stateRestoreService.getState(this.constructor.name)
-      .take(1)
-      .subscribe(state => {
-        if (state['regions']) {
-          this.regionsFilter.regionsFilter = state['regions'].join('\n');
-        }
-      });
+    super.ngOnInit();
+    this.store.selectOnce(state => state.regionsFiltersState).subscribe(state => {
+      this.setRegionsFilter(state.regionsFilters.join('\n'));
+    });
   }
 
-
-  getState() {
-    return this.validateAndGetState(this.regionsFilter)
-      .map(state => {
-        const regionsFilter: string = state.regionsFilter;
-        const result = regionsFilter
-          .split(/[\s]/)
-          .map(s => s.replace(/[,]/g, ''))
-          .filter(s => s !== '');
-        if (result.length === 0) {
-          return {};
-        }
-
-        return { regions: result };
-      });
+  setRegionsFilter(regionsFilter: string) {
+    const result = regionsFilter
+      .split(/[\s]/)
+      .map(s => s.replace(/[,]/g, ''))
+      .filter(s => s !== '');
+    this.regionsFilter.regionsFilter = regionsFilter;
+    this.store.dispatch(new SetRegionsFilter(result));
   }
-
 }

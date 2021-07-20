@@ -1,67 +1,53 @@
-import { Component, Input, OnChanges, SimpleChanges, forwardRef } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Validate } from 'class-validator';
 import { PedigreeSelector } from '../datasets/datasets';
-import { PedigreeSelectorState } from './pedigree-selector';
-
-import { Observable } from 'rxjs';
-import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
-import { ValidationError } from 'class-validator';
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { StateRestoreService } from '../store/state-restore.service';
+import { SetNotEmpty } from '../utils/set.validators';
+import { Store } from '@ngxs/store';
+import { SetPedigreeSelector, PedigreeSelectorState } from './pedigree-selector.state';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
   selector: 'gpf-pedigree-selector',
   templateUrl: './pedigree-selector.component.html',
   styleUrls: ['./pedigree-selector.component.css'],
-  providers: [{
-    provide: QueryStateProvider,
-    useExisting: forwardRef(() => PedigreeSelectorComponent)
-  }]
 })
-export class PedigreeSelectorComponent extends QueryStateWithErrorsProvider implements OnChanges {
-  @Input()
-  pedigrees: PedigreeSelector[];
+export class PedigreeSelectorComponent extends StatefulComponent implements OnInit, OnChanges {
+  @Input() pedigrees: PedigreeSelector[];
+  selectedPedigree: PedigreeSelector = null;
 
-  pedigreeState = new PedigreeSelectorState();
+  @Validate(SetNotEmpty, {
+    message: 'select at least one'
+  })
+  selectedValues: Set<string> = new Set();
 
-  constructor(
-    private stateRestoreService: StateRestoreService
-  ) {
-    super();
-  }
-
-  restoreStateSubscribe() {
-    this.stateRestoreService.getState(this.constructor.name)
-      .take(1)
-      .subscribe(state => {
-        if (state['peopleGroup'] && state['peopleGroup']['id']) {
-          for (const pedigree of  this.pedigrees) {
-            if (pedigree.id === state['peopleGroup']['id']
-                  && (!this.pedigreeState.pedigree || this.pedigreeState.pedigree.id !== pedigree.id)) {
-              this.pedigreeState.pedigree = pedigree;
-              this.pedigreeState.checkedValues =
-                new Set(pedigree.domain.map(sv => sv.id));
-            }
-          }
-        }
-        if (state['peopleGroup'] && state['peopleGroup']['checkedValues']) {
-          const checkedValues = new Set(state['peopleGroup']['checkedValues']);
-          if (checkedValues.size !== this.pedigreeState.checkedValues.size ||
-              Array.from(this.pedigreeState.checkedValues).filter(v => checkedValues.has(v)).length !== 0) {
-            this.pedigreeState.checkedValues = checkedValues;
-          }
-        }
-      });
+  constructor(protected store: Store) {
+    super(store, PedigreeSelectorState, 'pedigreeSelector');
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (!changes['pedigrees']) {
       return;
     }
-    if (changes['pedigrees'].currentValue
-        && changes['pedigrees'].currentValue.length !== 0) {
-      this.selectPedigree(0);
-      this.restoreStateSubscribe();
-    }
+    this.store.selectOnce(state => state.pedigreeSelectorState).subscribe(state => {
+      // handle selected values input and/or restore state
+      if (state.id && state.checkedValues.length) {
+        this.selectedPedigree = this.pedigrees.filter(p => p.id === state.id)[0];
+        this.selectedValues = new Set(state.checkedValues);
+      } else {
+        if (changes['pedigrees'].currentValue && changes['pedigrees'].currentValue.length !== 0) {
+          this.selectPedigree(0);
+        }
+      }
+    });
+  }
+
+  ngOnInit() {
+    super.ngOnInit();
+    this.store.selectOnce(state => state.pedigreeSelectorState).subscribe(state => {
+      // restore state
+      this.selectedPedigree = this.pedigrees.filter(p => p.id === state.id)[0];
+      this.selectedValues = new Set(state.checkedValues);
+    });
   }
 
   pedigreeSelectorSwitch(): string {
@@ -74,42 +60,34 @@ export class PedigreeSelectorComponent extends QueryStateWithErrorsProvider impl
     return 'multi';
   }
 
-  selectPedigreeClicked(index: number, event): void {
+  selectPedigreeClicked(index: number, event: any): void {
     event.preventDefault();
     this.selectPedigree(index);
   }
 
-  selectPedigree(index): void {
-    if (index >= 0 && index < this.pedigrees.length
-        && this.pedigreeState.pedigree !== this.pedigrees[index]) {
-      this.pedigreeState.pedigree = this.pedigrees[index];
+  selectPedigree(index: number): void {
+    if (index >= 0 && index < this.pedigrees.length && this.selectedPedigree !== this.pedigrees[index]) {
+      this.selectedPedigree = this.pedigrees[index];
       this.selectAll();
     }
   }
 
   selectAll() {
-    this.pedigreeState.checkedValues = new Set(this.pedigreeState.pedigree.domain.map(sv => sv.id));
+    this.selectedValues = new Set(this.selectedPedigree.domain.map(sv => sv.id));
+    this.store.dispatch(new SetPedigreeSelector(this.selectedPedigree.id, this.selectedValues));
   }
 
   selectNone() {
-    this.pedigreeState.checkedValues = new Set();
+    this.selectedValues = new Set();
+    this.store.dispatch(new SetPedigreeSelector(this.selectedPedigree.id, this.selectedValues));
   }
 
   pedigreeCheckValue(pedigreeSelector: PedigreeSelector, value: boolean): void {
     if (value) {
-      this.pedigreeState.checkedValues.add(pedigreeSelector.id);
+      this.selectedValues.add(pedigreeSelector.id);
     } else {
-      this.pedigreeState.checkedValues.delete(pedigreeSelector.id);
+      this.selectedValues.delete(pedigreeSelector.id);
     }
-  }
-
-  getState() {
-    return this.validateAndGetState(this.pedigreeState)
-      .map(pedigreeState => ({
-        peopleGroup: {
-          id: pedigreeState.pedigree.id,
-          checkedValues: Array.from(pedigreeState.checkedValues)
-        }
-      }));
+    this.store.dispatch(new SetPedigreeSelector(this.selectedPedigree.id, this.selectedValues));
   }
 }
