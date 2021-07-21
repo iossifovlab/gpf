@@ -24,25 +24,25 @@
         </div>
       </li>
       <li *ngIf="selectedDataset.description" class="nav-item">
-        <a class="nav-link" routerLink="dataset-description" routerLinkActive="active">Dataset Description</a>
+        <a class="nav-link" routerLink="{{toolPageLinks.datasetDescription}}" routerLinkActive="active">Dataset Description</a>
       </li>
       <li *ngIf="selectedDataset.commonReport['enabled']" class="nav-item">
-        <a class="nav-link" routerLink="dataset-statistics" routerLinkActive="active">Dataset Statistics</a>
+        <a class="nav-link" routerLink="{{toolPageLinks.datasetStatistics}}" routerLinkActive="active">Dataset Statistics</a>
       </li>
       <li *ngIf="selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig" class="nav-item">
-        <a class="nav-link" routerLink="genotype-browser" routerLinkActive="active">Genotype Browser</a>
+        <a class="nav-link" routerLink="{{toolPageLinks.genotypeBrowser}}" routerLinkActive="active">Genotype Browser</a>
       </li>
       <li *ngIf="selectedDataset.phenotypeBrowser" class="nav-item">
-        <a class="nav-link" routerLink="phenotype-browser" routerLinkActive="active">Phenotype Browser</a>
+        <a class="nav-link" routerLink="{{toolPageLinks.phenotypeBrowser}}" routerLinkActive="active">Phenotype Browser</a>
       </li>
       <li *ngIf="selectedDataset.enrichmentTool" class="nav-item">
-        <a class="nav-link" routerLink="enrichment-tool" routerLinkActive="active">Enrichment Tool</a>
+        <a class="nav-link" routerLink="{{toolPageLinks.enrichmentTool}}" routerLinkActive="active">Enrichment Tool</a>
       </li>
       <li *ngIf="selectedDataset.phenotypeTool" class="nav-item">
-        <a class="nav-link" routerLink="phenotype-tool" routerLinkActive="active">Phenotype Tool</a>
+        <a class="nav-link" routerLink="{{toolPageLinks.phenotypeTool}}" routerLinkActive="active">Phenotype Tool</a>
       </li>
       <li *ngIf="selectedDataset.geneBrowser?.enabled" class="nav-item">
-        <a class="nav-link" routerLink="gene-browser" routerLinkActive="active">Gene Browser</a>
+        <a class="nav-link" routerLink="{{toolPageLinks.geneBrowser}}" routerLinkActive="active">Gene Browser</a>
       </li>
     </ul>
   </nav>

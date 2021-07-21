@@ -1,13 +1,15 @@
 <div *ngIf="gene$ | async as gene" style="padding: 25px;">
   <h2 style="margin-right: 15px">{{geneSymbol}}</h2>
-  <a class="nav-link"
-    target="_blank"
-    style="text-decoration: underline; padding-left: 0px; width: fit-content;"
-    [attr.href]="geneBrowserUrl">
-    View {{geneSymbol}} in the Gene Browser
-  </a>
 
-  <div class="table-wrapper">
+  <div class="wrapper" style="margin-bottom: 18px">
+    <a class="link-external-page" [attr.href]="links.GeneBrowser" id="gene-browser-link" target="_blank" >View {{geneSymbol}} in the Gene Browser</a>
+    <a *ngIf="links.SFARIgene !== ''" class="link-external-page" [attr.href]="links.SFARIgene" target="_blank">SFARI gene</a>
+    <a class="link-external-page" [attr.href]="links.UCSC" target="_blank">UCSC genome browser</a>
+    <a class="link-external-page" [attr.href]="links.GeneCards" target="_blank">GeneCards</a>
+    <a class="link-external-page" [attr.href]="links.Pubmed" target="_blank">Pubmed</a>
+  </div>
+
+  <div class="wrapper">
     <table *ngFor="let genomicScoreCategory of config.genomicScores" [attr.id]="genomicScoreCategory.category" class="table table-bordered table-centered genomic-scores-table">
       <th [attr.colspan]="2" style="text-align: center;">{{genomicScoreCategory.displayName}}</th>
       <tr *ngFor="let score of genomicScoreCategory.scores" class="card-block">
@@ -33,7 +35,7 @@
     </table>
   </div>
 
-  <div class="table-wrapper">
+  <div class="wrapper">
     <table *ngFor="let geneSetCategory of config.geneSets" [attr.id]="geneSetCategory.category" class="table table-bordered table-centered gene-sets-table">
       <th [attr.colspan]="2" style="text-align: center;">{{geneSetCategory.displayName}}</th>
       <tr *ngFor="let set of geneSetCategory.sets" class="card-block">
@@ -45,23 +47,7 @@
     </table>
   </div>
 
-  <div class="table-wrapper">
-    <table *ngIf="links" id="external-links" class="table table-bordered table-centered">
-      <th style="text-align: center;">External links</th>
-      <tr *ngIf="links.SFARIgene !== ''">
-        <td><a class="link" [attr.href]="links.SFARIgene" target="_blank">SFARI gene</a></td>
-      </tr>
-      <tr>
-        <td><a class="link" [attr.href]="links.UCSC" target="_blank">UCSC genome browser</a></td>
-      </tr>
-      <tr>
-        <td><a class="link" [attr.href]="links.GeneCards" target="_blank">GeneCards</a></td>
-      </tr>
-      <tr>
-        <td><a class="link" [attr.href]="links.Pubmed" target="_blank">Pubmed</a></td>
-      </tr>
-    </table>
-
+  <div class="wrapper">
     <ng-container *ngFor="let dataset of config.datasets">
       <table class="table table-bordered table-centered datasets-table">
         <thead>
@@ -80,11 +66,14 @@
     
         <tbody>
           <tr class="card-block" *ngFor="let statistic of dataset.statistics">
-            <td>{{statistic.displayName}}</td>
+            <td>{{statistic.description}}</td>
             <td style="text-align: center;" *ngFor="let personSet of dataset.personSets">
               <ng-container *ngIf="getGeneDatasetValue(gene, dataset.id, personSet.id, statistic.id) as effectType">
                 <ng-container *ngIf="effectType.value.count !== 0">
-                  {{effectType.value.count}} ({{effectType.value.rate | number : '1.0-3'}})
+                  <a class="link-genotype-browser"
+                    (click)="goToQuery(gene.geneSymbol, personSet.id, dataset.id, statistic)"
+                    (middleclick)="goToQuery(gene.geneSymbol, personSet.id, dataset.id, statistic)">
+                    {{effectType.value.count}} ({{effectType.value.rate | number : '1.0-3'}})</a>
                 </ng-container>
                 <ng-container *ngIf="effectType.value.count === 0">&ndash;</ng-container>
               </ng-container>

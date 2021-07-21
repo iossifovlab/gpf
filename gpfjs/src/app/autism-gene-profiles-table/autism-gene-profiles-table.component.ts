@@ -4,15 +4,24 @@ import {
 } from '@angular/core';
 // tslint:disable-next-line:import-blacklist
 import { Subject } from 'rxjs';
-import { AgpConfig, AgpDataset, AgpGene, AgpGeneSetsCategory, AgpGenomicScoresCategory } from './autism-gene-profile-table';
+import { AgpTableConfig, AgpTableDataset, AgpGene, AgpGeneSetsCategory, AgpGenomicScoresCategory, AgpDatasetStatistic } from './autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 import { cloneDeep } from 'lodash';
 import { sprintf } from 'sprintf-js';
 import { QueryService } from 'app/query/query.service';
-import { BrowserQueryFilter, PeopleGroup } from 'app/genotype-browser/genotype-browser';
+import { GenomicScore, PeopleGroup } from 'app/genotype-browser/genotype-browser';
 import { EffectTypes } from 'app/effecttypes/effecttypes';
+import { Store } from '@ngxs/store';
+import { SetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
+import { SetEffectTypes } from 'app/effecttypes/effecttypes.state';
+import { SetStudyTypes } from 'app/study-types/study-types.state';
+import { SetVariantTypes } from 'app/varianttypes/varianttypes.state';
+import { SetGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
+import { SetPresentInParentValues } from 'app/present-in-parent/present-in-parent.state';
+import { SetPresentInChildValues } from 'app/present-in-child/present-in-child.state';
+import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-table',
@@ -20,8 +29,8 @@ import { EffectTypes } from 'app/effecttypes/effecttypes';
   styleUrls: ['./autism-gene-profiles-table.component.css'],
 })
 export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, OnChanges {
-  @Input() config: AgpConfig;
-  @Output() configChange: EventEmitter<AgpConfig> = new EventEmitter<AgpConfig>();
+  @Input() config: AgpTableConfig;
+  @Output() configChange: EventEmitter<AgpTableConfig> = new EventEmitter<AgpTableConfig>();
 
   @Output() createTabEvent = new EventEmitter();
   @ViewChildren(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu[];
@@ -35,6 +44,12 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   public shownGenomicScoresCategories: AgpGenomicScoresCategory[];
   allGenomicScoresNames = new Map<string, string[]>();
   shownGenomicScoresNames = new Map<string, string[]>();
+
+  public shownDatasets: AgpTableDataset[];
+  allDatasetNames = new Map<string, Map<string, string[]>>();
+  shownDatasetNames = new Map<string, Map<string, string[]>>();
+  allPersonSetNames: string[] = [];
+  shownPersonSetNames: string[] = [];
 
   private pageIndex = 1;
   private loadMoreGenes = true;
@@ -89,26 +104,29 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     private cdr: ChangeDetectorRef,
     private ref: ElementRef,
     private queryService: QueryService,
+    private store: Store,
   ) { }
 
   ngOnChanges(): void {
-    this.shownGeneSetsCategories = this.mergeCategories(this.shownGeneSetsCategories, this.config.geneSets);
-    this.shownGenomicScoresCategories = this.mergeCategories(this.shownGenomicScoresCategories, this.config.genomicScores);
+    this.shownGeneSetsCategories = this.mergeArrays(this.shownGeneSetsCategories, this.config.geneSets, 'category');
+    this.shownGenomicScoresCategories = this.mergeArrays(this.shownGenomicScoresCategories, this.config.genomicScores, 'category');
+    this.shownDatasets = this.mergeArrays(this.shownDatasets, cloneDeep(this.config.datasets), 'id');
   }
 
   /**
-   * Merges categories from one array onto another, without updating already existing categories
-   * @param oldCategories category array that needs to be updated
-   * @param newCategories category array used to update the other
+   * Merges objects from one array onto another, without updating already existing objects
+   * @param oldArray array that needs to be updated
+   * @param newArray array used to update the other
+   * @param matchingProperty object property used to check if object already exists when adding it
    * @returns updated category array
    */
-  mergeCategories(oldCategories, newCategories) {
-    return newCategories.map(category => {
-      if (oldCategories) {
-        const oldCategory = oldCategories.find(cat => category.category === cat.category);
-        category = oldCategory ? oldCategory : category;
+  mergeArrays(oldArray, newArray, matchingProperty) {
+    return newArray.map(newObject => {
+      if (oldArray) {
+        const oldObject = oldArray.find(obj => newObject[matchingProperty] === obj[matchingProperty]);
+        newObject = oldObject ? oldObject : newObject;
       }
-      return category;
+      return newObject;
     });
   }
 
@@ -119,6 +137,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   ngOnInit(): void {
     this.shownGeneSetsCategories = cloneDeep(this.config.geneSets);
     this.shownGenomicScoresCategories = cloneDeep(this.config.genomicScores);
+    this.shownDatasets = cloneDeep(this.config.datasets);
 
     this.sortBy = `${this.shownGeneSetsCategories[0].category}_rank`;
     this.orderBy = 'desc';
@@ -183,17 +202,17 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
    * @param $event event containing menu id and filtered columns
    */
   handleMultipleSelectMenuApplyEvent($event) {
-    const menuId = $event.menuId.split(':', 2);
+    const menuId = $event.menuId.split(':');
     if (menuId[0] === 'gene_set_category') {
       const categoryIndex = this.shownGeneSetsCategories.findIndex(category => category.category === menuId[1]);
 
       this.shownGeneSetsCategories[categoryIndex].sets = this.config.geneSets
         .find(category => category.category === menuId[1]).sets
-        .filter(set => $event.data.includes(set['setId']));
+        .filter(set => $event.data.includes(set.setId));
 
       if (this.shownGeneSetsCategories[categoryIndex].sets.length === 0) {
         this.config.geneSets.splice(categoryIndex, 1);
-        this.shownGeneSetsCategories = this.mergeCategories(this.shownGeneSetsCategories, cloneDeep(this.config.geneSets));
+        this.shownGeneSetsCategories = this.mergeArrays(this.shownGeneSetsCategories, cloneDeep(this.config.geneSets), 'category');
 
         this.configChange.emit(this.config);
       }
@@ -206,7 +225,33 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
 
       if (this.shownGenomicScoresCategories[categoryIndex].scores.length === 0) {
         this.config.genomicScores.splice(categoryIndex, 1);
-        this.shownGenomicScoresCategories = this.mergeCategories(this.shownGenomicScoresCategories, cloneDeep(this.config.genomicScores));
+        this.shownGenomicScoresCategories = this.mergeArrays(this.shownGenomicScoresCategories, cloneDeep(this.config.genomicScores), 'category');
+
+        this.configChange.emit(this.config);
+      }
+    } else if (menuId[0] === 'dataset') {
+      const datasetIndex = this.shownDatasets.findIndex(dataset => dataset.id === menuId[1]);
+
+      if (menuId.length === 2) {
+        this.shownDatasets[datasetIndex].personSets = this.mergeArrays(
+          this.shownDatasets[datasetIndex].personSets,
+          cloneDeep(this.config.datasets[datasetIndex].personSets.filter(personSet => $event.data.includes(personSet.displayName))),
+          'id'
+        );
+      } else {
+        const currentPersonSetRef = this.shownDatasets[datasetIndex].personSets.find(personSet => personSet.id === menuId[2]);
+        currentPersonSetRef.statistics = this.config.datasets[datasetIndex].personSets
+          .find(personSet => personSet.id === menuId[2]).statistics
+          .filter(statistic => $event.data.includes(statistic.displayName));
+
+        if (currentPersonSetRef.statistics.length === 0) {
+          this.shownDatasets[datasetIndex].personSets
+            .splice(this.shownDatasets[datasetIndex].personSets.findIndex(personSet => personSet.id === menuId[2]), 1);
+        }
+      }
+      if (this.shownDatasets[datasetIndex].personSets.length === 0) {
+        this.config.datasets.splice(datasetIndex, 1);
+        this.shownDatasets = this.mergeArrays(this.shownDatasets, cloneDeep(this.config.datasets), 'id');
 
         this.configChange.emit(this.config);
       }
@@ -326,7 +371,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
    * Updates all and shown gene sets names in certain category.
    * @param geneSetCategory in what category to update the names
    */
-  updateGeneSetNamesListInCategory(geneSetCategory: AgpGeneSetsCategory) {
+  openGeneSetCategoryDropdown(geneSetCategory: AgpGeneSetsCategory) {
     this.allGeneSetNames.set(geneSetCategory.category, this.config.geneSets
       .find(category => geneSetCategory.displayName === category.displayName).sets
       .map(set => set.setId));
@@ -340,14 +385,34 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
    * Updates all and shown genomic scores names in certain category.
    * @param genomicScoresCategory in what category to update the names
    */
-  updateGenomicScoresNamesListInCategory(genomicScoresCategory: AgpGenomicScoresCategory) {
-    this.allGenomicScoresNames.set(genomicScoresCategory['category'], this.config['genomicScores']
-      .find(category => genomicScoresCategory['displayName'] === category['displayName'])['scores']
-      .map(score => score['scoreName']));
-    this.shownGenomicScoresNames.set(genomicScoresCategory['category'], genomicScoresCategory['scores']
-      .map(score => score['scoreName']));
+  openGenomicScoresCategoryDropdown(genomicScoresCategory: AgpGenomicScoresCategory) {
+    this.allGenomicScoresNames.set(genomicScoresCategory.category, this.config.genomicScores
+      .find(category => genomicScoresCategory.displayName === category.displayName).scores
+      .map(score => score.scoreName));
+    this.shownGenomicScoresNames.set(genomicScoresCategory.category, genomicScoresCategory.scores
+      .map(score => score.scoreName));
 
-    this.openDropdown(genomicScoresCategory['category']);
+    this.openDropdown(genomicScoresCategory.category);
+  }
+
+  openDatasetDropdown(dataset: AgpTableDataset, menuToOpen: string) {
+    this.allDatasetNames.set(
+      dataset.displayName,
+      new Map(this.config.datasets.find(set => set.id === dataset.id).personSets.map(personSet =>
+          [personSet.displayName, personSet.statistics.map(statistic => statistic.displayName)])
+      )
+    );
+    this.allPersonSetNames = Array.from(this.allDatasetNames.get(dataset.displayName).keys());
+
+    this.shownDatasetNames.set(
+      dataset.displayName,
+      new Map(dataset.personSets.map(personSet =>
+          [personSet.displayName, personSet.statistics.map(statistic => statistic.displayName)])
+      )
+    );
+    this.shownPersonSetNames = Array.from(this.shownDatasetNames.get(dataset.displayName).keys());
+
+    this.openDropdown(menuToOpen);
   }
 
   /**
@@ -355,13 +420,17 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
    * @returns promise
    */
   async waitForDropdown() {
+    if (this.ngbDropdownMenu !== undefined) {
+      return;
+    }
+
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
         if (this.ngbDropdownMenu !== undefined) {
           resolve();
           clearInterval(timer);
         }
-      }, 50);
+      }, 15);
     });
   }
 
@@ -436,29 +505,61 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     return Number(sprintf(genomicScore.format, genomicScore.value)).toString();
   }
 
-  goToQuery(geneSymbol: string, personSetId: string, effectTypeId: string, datasetId: string) {
+  getEffectTypeValue(gene, datasetId, personSetId, statisticId) {
+    return gene.studies.find(study => study.id === datasetId)
+      .personSets.find(personSet => personSet.id === personSetId)
+      .effectTypes.find(effectType => effectType.id === statisticId)
+      .value;
+  }
+
+
+  calculateDatasetColspan(dataset: AgpTableDataset) {
+    let count = 0;
+    dataset.personSets.forEach(personSet => count += personSet.statistics.length);
+    return count;
+  }
+
+  goToQuery(geneSymbol: string, personSetId: string, datasetId: string, statistic: AgpDatasetStatistic) {
     const newWindow = window.open('', '_blank');
-    const peopleGroup = new PeopleGroup('status', [personSetId]);
-    const variantTypes = this.config.datasets
-      .find((dataset) => (dataset.id = datasetId))
-      .statistics.find((datasetStatistic) => datasetStatistic.id === effectTypeId)
-      .variantTypes;
 
-    const browserQueryFilter = new BrowserQueryFilter(
-      datasetId,
-      [geneSymbol],
-      this.effectTypes[effectTypeId.replace('denovo_', '')],
-      undefined,
-      peopleGroup,
-      ['we'],
-      variantTypes
-    );
+    const genomicScores: GenomicScore[] = [];
+    if (statistic.scores) {
+      genomicScores[0] = new GenomicScore(
+        statistic.scores[0]['name'],
+        statistic.scores[0]['min'],
+        statistic.scores[0]['max'],
+      );
+    }
 
-    this.queryService.saveQuery(browserQueryFilter, 'genotype')
+    const presentInChildValues = ['proband only', 'proband and sibling', 'sibling only'];
+    const presentInParentRareValues = ['father only', 'mother only', 'mother and father'];
+
+    let presentInParent: string[] = ['neither'];
+    let rarityType = 'all';
+    if (statistic.category === 'rare') {
+      rarityType = 'rare';
+      presentInParent = presentInParentRareValues;
+    }
+
+    this.store.dispatch([
+      new SetGeneSymbols([geneSymbol]),
+      new SetEffectTypes(new Set(this.effectTypes[statistic['effects'][0]])),
+      new SetStudyTypes(new Set(['we'])),
+      new SetVariantTypes(new Set(statistic['variantTypes'])),
+      new SetGenomicScores(genomicScores),
+      new SetPresentInChildValues(new Set(presentInChildValues)),
+      new SetPresentInParentValues(new Set(presentInParent), rarityType, 0, 1),
+      new SetPedigreeSelector('phenotype', new Set([personSetId])),
+    ]);
+
+    this.store.selectOnce(state => state).subscribe(state => {
+      state['datasetId'] = datasetId;
+      this.queryService.saveQuery(state, 'genotype')
       .take(1)
       .subscribe(urlObject => {
         const url = this.queryService.getLoadUrlFromResponse(urlObject);
         newWindow.location.assign(url);
       });
+    });
   }
 }

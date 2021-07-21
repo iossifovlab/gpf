@@ -12,10 +12,9 @@
       </g>
       <g *ngIf="!isInteractive && singleScoreValueIsValid()">
         <text [attr.x]="scaleXAxis(singleScoreValue)" [attr.y]="-10" class="small" text-anchor="middle">{{ singleScoreValue }}</text>
-        <line 
+        <line class="single-score-marker" style="stroke:rgb(255,0,0); stroke-width: 2"
           [attr.x1]="scaleXAxis(singleScoreValue)" [attr.y1]="scaleYAxis(1)"
-          [attr.x2]="scaleXAxis(singleScoreValue)" [attr.y2]="-5"
-          style="stroke:rgb(255,0,0); stroke-width: 2"/>
+          [attr.x2]="scaleXAxis(singleScoreValue)" [attr.y2]="-5"/>
       </g>
     </g>
   </svg>

@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Dataset } from 'app/datasets/datasets';
+import { Dataset, toolPageLinks } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Observable } from 'rxjs/internal/Observable';
 import { DatasetNode } from './dataset-node';
@@ -31,17 +31,17 @@ export class DatasetNodeComponent implements OnInit {
 
   findFirstTool(selectedDataset: Dataset) {
     if (selectedDataset.description) {
-      return 'dataset-description';
+      return toolPageLinks.datasetDescription;
     } else if (selectedDataset.commonReport['enabled']) {
-      return 'dataset-statistics';
+      return toolPageLinks.datasetStatistics;
     } else if (selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig) {
-      return 'genotype-browser';
+      return toolPageLinks.genotypeBrowser;
     } else if (selectedDataset.phenotypeBrowser) {
-      return 'phenotype-browser';
+      return toolPageLinks.phenotypeBrowser;
     } else if (selectedDataset.enrichmentTool) {
-      return 'enrichment-tool';
+      return toolPageLinks.enrichmentTool;
     } else if (selectedDataset.phenotypeTool) {
-      return 'phenotype-tool';
+      return toolPageLinks.phenotypeTool;
     } else {
       return '';
     }

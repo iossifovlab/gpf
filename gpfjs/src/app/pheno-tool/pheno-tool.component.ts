@@ -1,27 +1,30 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { DatasetsService } from '../datasets/datasets.service';
 import { ActivatedRoute } from '@angular/router';
 import { Dataset } from '../datasets/datasets';
-import { QueryStateCollector } from '../query/query-state-provider';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { PhenoToolService } from './pheno-tool.service';
 import { PhenoToolResults } from './pheno-tool-results';
 import { ConfigService } from '../config/config.service';
+import { Observable } from 'rxjs';
+import { GenesBlockComponent } from 'app/genes-block/genes-block.component';
+import { PhenoToolGenotypeBlockComponent } from 'app/pheno-tool-genotype-block/pheno-tool-genotype-block.component';
+import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-filters-block.component';
+import { PhenoToolMeasureState } from 'app/pheno-tool-measure/pheno-tool-measure.state';
+import { Select, Selector } from '@ngxs/store';
+import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
 
 @Component({
   selector: 'gpf-pheno-tool',
-
   templateUrl: './pheno-tool.component.html',
   styleUrls: ['./pheno-tool.component.css'],
-  providers: [{
-    provide: QueryStateCollector,
-    useExisting: PhenoToolComponent
-  }]
 })
-export class PhenoToolComponent extends QueryStateCollector
-    implements OnInit, AfterViewInit {
+export class PhenoToolComponent implements OnInit {
   selectedDatasetId: string;
   selectedDataset: Dataset;
+
+  @Select(PhenoToolComponent.phenoToolStateSelector) state$: Observable<any[]>;
+  @Select(ErrorsState) errorsState$: Observable<ErrorsModel>;
 
   phenoToolResults: PhenoToolResults;
   private phenoToolState: Object;
@@ -29,37 +32,11 @@ export class PhenoToolComponent extends QueryStateCollector
   private disableQueryButtons = false;
 
   constructor(
-    private route: ActivatedRoute,
     private datasetsService: DatasetsService,
     private loadingService: FullscreenLoadingService,
     private phenoToolService: PhenoToolService,
     readonly configService: ConfigService,
-  ) {
-    super();
-  }
-
-  getCurrentState() {
-    const state = super.getCurrentState();
-
-    return state.map(state => {
-        const stateObject = Object.assign({ datasetId: this.selectedDatasetId }, state);
-        return stateObject;
-      });
-  }
-
-  ngAfterViewInit() {
-    this.detectNextStateChange(() => {
-      this.getCurrentState()
-        .subscribe(state => {
-          this.phenoToolState = state;
-          this.disableQueryButtons = false;
-        },
-        error => {
-          this.disableQueryButtons = true;
-          console.warn(error);
-        });
-    });
-  }
+  ) { }
 
   ngOnInit() {
     this.datasetsService.getSelectedDataset()
@@ -67,39 +44,50 @@ export class PhenoToolComponent extends QueryStateCollector
         this.selectedDatasetId = dataset.id;
         this.selectedDataset = dataset;
       });
+
+    this.state$.subscribe(state => {
+      this.phenoToolState = state;
+      this.phenoToolResults = null;
+    })
+
+    this.errorsState$.subscribe(state => {
+      setTimeout(() => this.disableQueryButtons = state.componentErrors.size > 0);
+    });
   }
 
   submitQuery() {
     this.loadingService.setLoadingStart();
-    this.getCurrentState().subscribe(
-      state => {
-        this.phenoToolService.getPhenoToolResults(state).subscribe(
-          (phenoToolResults) => {
-            this.phenoToolResults = phenoToolResults;
-            this.loadingService.setLoadingStop();
-          },
-          error => {
-            this.loadingService.setLoadingStop();
-          },
-          () => {
-            this.loadingService.setLoadingStop();
-          });
-
-      },
-      error => {
-        this.loadingService.setLoadingStop();
-      }
-    );
+    this.phenoToolService.getPhenoToolResults(
+      {'datasetId': this.selectedDatasetId, ...this.phenoToolState}
+    ).subscribe((phenoToolResults) => {
+      this.phenoToolResults = phenoToolResults;
+      this.loadingService.setLoadingStop();
+    }, error => {
+      this.loadingService.setLoadingStop();
+    }, () => {
+      this.loadingService.setLoadingStop();
+    });
   }
 
   onDownload(event) {
-    this.getCurrentState()
-      .subscribe(state => {
-        event.target.queryData.value = JSON.stringify(state);
-        event.target.submit();
-      },
-      error => null
-    );
+    event.target.queryData.value = JSON.stringify(this.phenoToolState);
+    event.target.submit();
   }
 
+  @Selector([
+    GenesBlockComponent.genesBlockState,
+    PhenoToolMeasureState,
+    PhenoToolGenotypeBlockComponent.phenoToolGenotypeBlockQueryState,
+    FamilyFiltersBlockComponent.familyFiltersBlockState,
+  ])
+  static phenoToolStateSelector(
+    genesBlockState, measureState, genotypeState, familyFiltersState
+  ) {
+    return {
+      ...genesBlockState,
+      ...measureState,
+      ...genotypeState,
+      ...familyFiltersState,
+    }
+  }
 }

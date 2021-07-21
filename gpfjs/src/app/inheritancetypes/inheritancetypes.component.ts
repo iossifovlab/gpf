@@ -1,75 +1,55 @@
-import { Component, Input, OnInit, OnChanges, forwardRef } from '@angular/core';
-import { InheritanceTypes, inheritanceTypeDisplayNames  } from './inheritancetypes';
-import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { StateRestoreService } from '../store/state-restore.service';
+import { Component, Input, OnChanges } from '@angular/core';
+import { Validate } from 'class-validator';
+import { SetNotEmpty } from '../utils/set.validators';
+import { Store } from '@ngxs/store';
+import { SetInheritanceTypes, InheritancetypesState } from './inheritancetypes.state';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
   selector: 'gpf-inheritancetypes',
   templateUrl: './inheritancetypes.component.html',
   styleUrls: ['./inheritancetypes.component.css'],
-  providers: [{
-    provide: QueryStateProvider,
-    useExisting: forwardRef(() => InheritancetypesComponent )
-  }]
 })
-export class InheritancetypesComponent extends QueryStateWithErrorsProvider
-    implements OnInit, OnChanges {
+export class InheritancetypesComponent extends StatefulComponent implements OnChanges {
 
   @Input()
-  inheritanceTypeFilter: Array<string>;
+  inheritanceTypes: Set<string>;
 
   @Input()
-  selectedInheritanceTypeFilterValues: Array<string>;
+  @Validate(SetNotEmpty, { message: 'select at least one' })
+  selectedValues: Set<string> = new Set();
 
-  inheritanceTypes: InheritanceTypes;
-
-  constructor(
-    private stateRestoreService: StateRestoreService
-  ) { 
-    super();
-  }
-
-  ngOnInit() { 
-    this.stateRestoreService.getState(this.constructor.name)
-      .take(1)
-      .subscribe(state => {
-        if (state['inheritanceTypeFilter']) {
-          this.inheritanceTypes.selected = new Set(state['inheritanceTypeFilter'] as string[]);
-        }
-      });
+  constructor(protected store: Store) {
+    super(store, InheritancetypesState, 'inheritanceTypes');
   }
 
   ngOnChanges() {
-    this.inheritanceTypes = new InheritanceTypes(
-      this.inheritanceTypeFilter, this.selectedInheritanceTypeFilterValues
-    );
+    this.store.selectOnce(state => state.inheritancetypesState).subscribe(state => {
+      // handle selected values input and/or restore state
+      if (state.inheritanceTypes.length) {
+        this.selectedValues = new Set(state.inheritanceTypes);
+      } else {
+        this.store.dispatch(new SetInheritanceTypes(this.selectedValues));
+      }
+    });
   }
 
-  getState() {
-    return this.validateAndGetState(this.inheritanceTypes)
-      .map(inheritanceTypes => ({
-        inheritanceTypeFilter: Array.from(inheritanceTypes.selected)
-      }));
+  updateInheritanceTypes(newValues: Set<string>): void {
+    this.selectedValues = newValues;
+    this.store.dispatch(new SetInheritanceTypes(newValues));
   }
 
-  checkInheritanceType(inheritanceType: string) {
-    if (this.inheritanceTypes.selected.has(inheritanceType)){
-      this.inheritanceTypes.selected.delete(inheritanceType);
-    }
-    else {
-      this.inheritanceTypes.selected.add(inheritanceType);
-    }
-  }
-
-  getDisplayName(inheritanceType: string) {
-    return inheritanceTypeDisplayNames[inheritanceType] || inheritanceType;
-  }
-
-  selectAll() {
-    this.inheritanceTypes.selected = new Set(this.inheritanceTypes.available);
-  }
-
-  selectNone() {
-    this.inheritanceTypes.selected = new Set();
+  get inheritanceTypeDisplayNames() {
+    return {
+     'reference': 'Reference',
+     'mendelian': 'Mendelian',
+     'denovo': 'Denovo',
+     'possible_denovo': 'Possible denovo',
+     'omission': 'Omission',
+     'possible_omission': 'Possible omission',
+     'other': 'Other',
+     'missing': 'Missing',
+     'unknown': 'Unknown'
+    };
   }
 }

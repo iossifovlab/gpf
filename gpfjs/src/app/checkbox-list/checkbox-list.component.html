@@ -1,0 +1,19 @@
+<div class="card">
+  <div class="card-header card-title">{{title}}</div>
+  <div class="card-block">
+    <div class="btn-group btn-group-sm">
+      <button (click)="selectAll()" class="btn btn-default">All</button>
+      <button (click)="selectNone()" class="btn btn-default">None</button>
+    </div>
+
+    <ng-container *ngFor="let item of items">
+        <div class="checkbox">
+          <label style="user-select: none">
+            <input type="checkbox"
+              [checked]="selectedItems.has(item)"
+              (change)="toggleItem(item)">
+            {{item | displayName: displayNames}}
+          </label>
+        </div>
+    </ng-container>
+</div>

@@ -1,12 +1,8 @@
 /* tslint:disable:no-unused-variable */
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
-import { DebugElement, NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 import { EffecttypesColumnComponent } from './effecttypes-column.component';
-import { StateRestoreService } from 'app/store/state-restore.service';
-import { of } from 'rxjs';
-import { ALL, CODING, LGDS, NONSYNONYMOUS, UTRS } from './effecttypes';
 
 describe('EffecttypesColumnComponent', () => {
   let component: EffecttypesColumnComponent;
@@ -16,9 +12,6 @@ describe('EffecttypesColumnComponent', () => {
     TestBed.configureTestingModule({
       declarations: [
         EffecttypesColumnComponent,
-      ],
-      providers: [
-        StateRestoreService
       ],
       schemas: [NO_ERRORS_SCHEMA]
     })
@@ -37,20 +30,20 @@ describe('EffecttypesColumnComponent', () => {
 
   it('should check effect type', () => {
     const emitSpy = spyOn(component.effectTypeEvent, 'emit');
-    component.effectTypesLabels = ['label1', 'label2', 'label3'];
+    component.effectTypesLabels = new Set(['label1', 'label2', 'label3']);
 
-    component.checkEffectType(-1, true);
-    component.checkEffectType(-1, false);
-    component.checkEffectType(4, true);
-    component.checkEffectType(4, false);
+    component.checkEffectType('label0', true);
+    component.checkEffectType('label0', false);
+    component.checkEffectType('label4', true);
+    component.checkEffectType('label4', false);
     expect(emitSpy).not.toHaveBeenCalled();
 
-    component.checkEffectType(0, true);
-    component.checkEffectType(0, false);
-    component.checkEffectType(1, true);
-    component.checkEffectType(1, false);
-    component.checkEffectType(2, true);
-    component.checkEffectType(2, false);
+    component.checkEffectType('label1', true);
+    component.checkEffectType('label1', false);
+    component.checkEffectType('label2', true);
+    component.checkEffectType('label2', false);
+    component.checkEffectType('label3', true);
+    component.checkEffectType('label3', false);
     expect(emitSpy.calls.allArgs()).toEqual([
       [{ effectType: 'label1', checked: true }],
       [{ effectType: 'label1', checked: false }],

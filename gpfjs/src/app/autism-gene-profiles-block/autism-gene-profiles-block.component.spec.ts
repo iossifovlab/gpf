@@ -60,13 +60,23 @@ describe('AutismGeneProfilesBlockComponent', () => {
 
   it('should get config on initialization', () => {
     spyOn(component['autismGeneProfilesService'], 'getConfig')
-     .and.returnValue( of('fakeConfig' as any));
+     .and.returnValue(of('fakeConfig' as any));
+    spyOn(component, 'getTableConfig')
+     .and.returnValue('fakeTableConfig' as any);
+    spyOn(component, 'getAllCategories')
+     .and.returnValue('fakeCategories' as any);
 
-    expect(component['autismGeneToolConfig']).toEqual(undefined);
-    expect(component['tableConfig']).toEqual(undefined);
+    expect(component.autismGeneToolConfig).toEqual(undefined);
+    expect(component.tableConfig).toEqual(undefined);
+    expect(component.shownTableConfig).toEqual(undefined);
+    expect(component.allColumns).toEqual(undefined);
+    expect(component.shownColumns).toEqual(undefined);
     component.ngOnInit();
-    expect(component['autismGeneToolConfig']).toEqual('fakeConfig' as any);
-    expect(component['tableConfig']).toEqual('fakeConfig' as any);
+    expect(component.autismGeneToolConfig).toEqual('fakeConfig' as any);
+    expect(component.tableConfig).toEqual('fakeTableConfig' as any);
+    expect(component.shownTableConfig).toEqual('fakeTableConfig' as any);
+    expect(component.allColumns).toEqual('fakeCategories' as any);
+    expect(component.shownColumns).toEqual('fakeCategories' as any);
   });
 
   it('should create tab event handler', () => {
@@ -337,14 +347,19 @@ describe('AutismGeneProfilesBlockComponent', () => {
   it('should get all categories', () => {
     const mockConfig = {
       geneSets: [
-        { category: 'geneSetCategory1' },
-        { category: 'geneSetCategory2' },
-        { category: 'geneSetCategory3' },
+        { displayName: 'geneSetCategory1' },
+        { displayName: 'geneSetCategory2' },
+        { displayName: 'geneSetCategory3' },
       ],
       genomicScores: [
-        { category: 'genomicScoreCategory1' },
-        { category: 'genomicScoreCategory2' },
-        { category: 'genomicScoreCategory3' },
+        { displayName: 'genomicScoreCategory1' },
+        { displayName: 'genomicScoreCategory2' },
+        { displayName: 'genomicScoreCategory3' },
+      ],
+      datasets: [
+        { displayName: 'dataset1' },
+        { displayName: 'dataset2' },
+        { displayName: 'dataset3' },
       ],
     };
     expect(component.getAllCategories(mockConfig as any)).toEqual([
@@ -353,7 +368,96 @@ describe('AutismGeneProfilesBlockComponent', () => {
       'geneSetCategory3',
       'genomicScoreCategory1',
       'genomicScoreCategory2',
-      'genomicScoreCategory3'
+      'genomicScoreCategory3',
+      'dataset1',
+      'dataset2',
+      'dataset3'
     ]);
+  });
+
+  it('should handle multiple select menu apply event', () => {
+    component.ngbDropdownMenu = {dropdown: {close() {}}} as any;
+    expect(component.shownTableConfig).toEqual(undefined);
+    expect(component.shownColumns).toEqual(undefined);
+    component.shownTableConfig = {
+      geneSets: [],
+      genomicScores: [],
+      datasets: [],
+    } as any;
+    component.tableConfig = {
+      geneSets: [
+        { displayName: 'geneSetCategory1' },
+        { displayName: 'geneSetCategory2' },
+        { displayName: 'geneSetCategory3' },
+      ],
+      genomicScores: [
+        { displayName: 'genomicScoreCategory1' },
+        { displayName: 'genomicScoreCategory2' },
+        { displayName: 'genomicScoreCategory3' },
+      ],
+      datasets: [
+        { displayName: 'dataset1' },
+        { displayName: 'dataset2' },
+        { displayName: 'dataset3' },
+      ],
+    } as any;
+
+    component.handleMultipleSelectMenuApplyEvent({
+      data: [
+        'geneSetCategory1',
+        'genomicScoreCategory2',
+        'dataset3'
+      ]
+    });
+    expect(component.shownColumns).toEqual([
+      'geneSetCategory1',
+      'genomicScoreCategory2',
+      'dataset3'
+    ]);
+    expect(component.shownTableConfig).toEqual({
+      geneSets: [
+        { displayName: 'geneSetCategory1' },
+      ],
+      genomicScores: [
+        { displayName: 'genomicScoreCategory2' },
+      ],
+      datasets: [
+        { displayName: 'dataset3' },
+      ],
+    } as any);
+
+    component.handleMultipleSelectMenuApplyEvent({
+      data: [
+        'geneSetCategory1',
+        'geneSetCategory3',
+        'genomicScoreCategory1',
+        'genomicScoreCategory2',
+        'dataset2',
+        'dataset3'
+      ]
+    });
+    expect(component.shownColumns).toEqual([
+      'geneSetCategory1',
+      'geneSetCategory3',
+      'genomicScoreCategory1',
+      'genomicScoreCategory2',
+      'dataset2',
+      'dataset3'
+    ]);
+    expect(component.shownTableConfig).toEqual({
+      geneSets: [
+        { displayName: 'geneSetCategory1' },
+        { displayName: 'geneSetCategory3' },
+      ],
+      genomicScores: [
+        { displayName: 'genomicScoreCategory1' },
+        { displayName: 'genomicScoreCategory2' },
+      ],
+      datasets: [
+        { displayName: 'dataset2' },
+        { displayName: 'dataset3' },
+      ],
+    } as any);
+
   });
 });

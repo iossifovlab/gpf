@@ -1,6 +1,7 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { GpfTableColumnComponent } from 'app/table/component/column.component';
 import { GpfTableContentComponent } from 'app/table/component/content.component';
@@ -37,7 +38,7 @@ describe('UsersTableComponent', () => {
         GpfTableSubcontentComponent
       ],
       providers: [UsersService, ConfigService, ResizeService],
-      imports: [HttpClientTestingModule, RouterTestingModule]
+      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([])]
     })
     .compileComponents();
   }));

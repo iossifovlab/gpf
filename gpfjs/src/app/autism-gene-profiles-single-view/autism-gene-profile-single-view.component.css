@@ -1,18 +1,24 @@
-.table-wrapper {
-  display: flex;
-  align-items: flex-start;
-}
-
 table {
-  width: 20%;
+  max-width: 750px;
   margin-right: 15px;
   margin-bottom: 15px;
 }
 
-#external-links {
-  width: 200px;
+.wrapper {
+  display: flex;
+  align-items: flex-start;
 }
 
-.link {
+.link-external-page {
+  text-decoration: underline;
+  padding-right: 25px;
+}
+
+.link-genotype-browser, .link-genotype-browser:hover {
+  color: #0056b3;
+  cursor: pointer;
+}
+
+.link-genotype-browser:hover {
   text-decoration: underline;
 }

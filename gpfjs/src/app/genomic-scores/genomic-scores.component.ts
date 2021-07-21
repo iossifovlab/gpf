@@ -1,7 +1,5 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-
-
 // tslint:disable-next-line:import-blacklist
 import { ReplaySubject } from 'rxjs';
 
@@ -18,6 +16,7 @@ export class GenomicScoresComponent {
   @Input() genomicScoreState: GenomicScoreState;
   @Input() errors: string[];
   @Input() genomicScoresArray: GenomicScores[];
+  @Output() updateGenomicScoreEvent = new EventEmitter();
 
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
 
@@ -32,6 +31,7 @@ export class GenomicScoresComponent {
 
   set rangeStart(range: number) {
     this.genomicScoreState.rangeStart = range;
+    this.updateGenomicScoreEvent.emit();
   }
 
   get rangeStart() {
@@ -40,6 +40,7 @@ export class GenomicScoresComponent {
 
   set rangeEnd(range: number) {
     this.genomicScoreState.rangeEnd = range;
+    this.updateGenomicScoreEvent.emit();
   }
 
   get rangeEnd() {
@@ -68,6 +69,7 @@ export class GenomicScoresComponent {
     this.genomicScoreState.rangeEnd = null;
     this.genomicScoreState.changeDomain(selectedGenomicScores);
     this.updateLabels();
+    this.updateGenomicScoreEvent.emit();
   }
 
   get selectedGenomicScores() {

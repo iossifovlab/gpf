@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { environment } from '../environments/environment';
 import { AutismGeneProfilesService } from './autism-gene-profiles-block/autism-gene-profiles.service';
@@ -53,6 +53,13 @@ export class AppComponent {
   title = 'GPF: Genotypes and Phenotypes in Families';
   agpConfig: AgpConfig;
   private sessionTimeoutInSeconds = 7 * 24 * 60 * 60; // 1 week
+
+  @HostListener('window:scroll', ['$event'])
+  onWindowScroll() {
+    if (this.showSidenav) {
+      this.showSidenav = false;
+    }
+  }
 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,

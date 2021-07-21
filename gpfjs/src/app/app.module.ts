@@ -11,7 +11,9 @@ import { DatasetsService } from './datasets/datasets.service';
 import { ConfigService } from './config/config.service';
 import { GenderComponent } from './gender/gender.component';
 import { PresentInChildComponent } from './present-in-child/present-in-child.component';
+import { PresentInChildState } from './present-in-child/present-in-child.state';
 import { PresentInParentComponent } from './present-in-parent/present-in-parent.component';
+import { PresentInParentState } from './present-in-parent/present-in-parent.state';
 import { VarianttypesComponent } from './varianttypes/varianttypes.component';
 import { EffecttypesComponent } from './effecttypes/effecttypes.component';
 import { EffecttypesColumnComponent } from './effecttypes/effecttypes-column.component';
@@ -21,9 +23,11 @@ import { QueryService } from './query/query.service';
 import { GpfTableModule } from './table/table.module';
 import { DatasetsComponent } from './datasets/datasets.component';
 import { PedigreeSelectorComponent } from './pedigree-selector/pedigree-selector.component';
+import { PedigreeSelectorState } from './pedigree-selector/pedigree-selector.state';
 import { GenotypeBlockComponent } from './genotype-block/genotype-block.component';
 import { GenesBlockComponent } from './genes-block/genes-block.component';
 import { GeneSymbolsComponent } from './gene-symbols/gene-symbols.component';
+import { GeneSymbolsState } from './gene-symbols/gene-symbols.state';
 import { RegionsFilterComponent } from './regions-filter/regions-filter.component';
 import { RegionsBlockComponent } from './regions-block/regions-block.component';
 import { PedigreeChartModule } from './pedigree-chart/pedigree-chart.module';
@@ -31,8 +35,10 @@ import { PedigreeChartModule } from './pedigree-chart/pedigree-chart.module';
 import { HistogramModule } from './histogram/histogram.module';
 import { GeneWeightsComponent } from './gene-weights/gene-weights.component';
 import { GeneWeightsService } from './gene-weights/gene-weights.service';
+import { GeneWeightsState } from './gene-weights/gene-weights.state';
 
 import { GeneSetsComponent } from './gene-sets/gene-sets.component';
+import { GeneSetsState } from './gene-sets/gene-sets.state';
 import { GeneSetsService } from './gene-sets/gene-sets.service';
 
 import { SearchableSelectComponent } from './searchable-select/searchable-select.component';
@@ -45,6 +51,7 @@ import { BoldMatchingPipe } from './utils/bold-matching.pipe';
 import { MinValidatorDirective, MaxValidatorDirective } from './utils/min-max.validator';
 
 import { StudyTypesComponent } from './study-types/study-types.component';
+import { StudyTypesState } from './study-types/study-types.state';
 
 import { CookieService} from 'ngx-cookie-service';
 
@@ -54,6 +61,7 @@ import { EnrichmentToolComponent } from './enrichment-tool/enrichment-tool.compo
 import { EnrichmentModelsBlockComponent } from './enrichment-models-block/enrichment-models-block.component';
 import { EnrichmentModelsComponent } from './enrichment-models/enrichment-models.component';
 import { EnrichmentModelsService } from './enrichment-models/enrichment-models.service';
+import { EnrichmentModelsState } from './enrichment-models/enrichment-models.state';
 import { EnrichmentQueryService } from './enrichment-query/enrichment-query.service';
 import { EnrichmentTableComponent } from './enrichment-table/enrichment-table.component';
 import { EnrichmentTableRowComponent } from './enrichment-table/enrichment-table-row.component';
@@ -66,19 +74,21 @@ import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
 import { RouteReuseStrategy, RouterModule, Routes } from '@angular/router';
 import { TaggingRouteReuseStrategy } from 'app/route-reuse.strategy';
 
-import { StateRestoreService } from './store/state-restore.service';
 import { PersonFiltersComponent } from './person-filters/person-filters.component';
+import { PersonFiltersState } from './person-filters/person-filters.state';
 import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
 import { ContinuousFilterComponent } from './continuous-filter/continuous-filter.component';
 import { MultiContinuousFilterComponent } from './multi-continuous-filter/multi-continuous-filter.component';
 import { CategoricalFilterComponent } from './categorical-filter/categorical-filter.component';
 import { MeasuresService } from './measures/measures.service';
 import { FamilyIdsComponent } from './family-ids/family-ids.component';
+import { FamilyIdsState } from './family-ids/family-ids.state';
 
 import { NumberWithExpPipe } from './utils/number-with-exp.pipe';
 import { PhenoToolComponent } from './pheno-tool/pheno-tool.component';
 import { PhenoMeasureSelectorComponent } from './pheno-measure-selector/pheno-measure-selector.component';
 import { PhenoToolMeasureComponent } from './pheno-tool-measure/pheno-tool-measure.component';
+import { PhenoToolMeasureState } from './pheno-tool-measure/pheno-tool-measure.state';
 import { PhenoToolGenotypeBlockComponent } from './pheno-tool-genotype-block/pheno-tool-genotype-block.component';
 import { PhenoToolService } from './pheno-tool/pheno-tool.service';
 import { PhenoToolResultsChartComponent } from './pheno-tool-results-chart/pheno-tool-results-chart.component';
@@ -86,8 +96,6 @@ import { PhenoToolResultsChartPerEffectComponent } from './pheno-tool-results-ch
 import { PhenoToolResultsChartPerResultComponent } from './pheno-tool-results-chart/pheno-tool-results-chart-per-result.component';
 import { PhenoToolEffectTypesComponent } from './pheno-tool-effect-types/pheno-tool-effect-types.component';
 
-import { FamilyCountersComponent } from './family-counters/family-counters.component';
-import { FamilyCountersService } from './family-counters/family-counters.service';
 import { RegistrationComponent } from './registration/registration.component';
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
 import { PhenoBrowserComponent } from './pheno-browser/pheno-browser.component';
@@ -105,6 +113,7 @@ import { DatasetDescriptionComponent } from './dataset-description/dataset-descr
 
 import { GenomicScoresComponent } from './genomic-scores/genomic-scores.component';
 import { GenomicScoresBlockComponent } from './genomic-scores-block/genomic-scores-block.component';
+import { GenomicScoresBlockState } from './genomic-scores-block/genomic-scores-block.state';
 import { GenomicScoresBlockService } from './genomic-scores-block/genomic-scores-block.service';
 
 import { MarkdownModule } from 'ngx-markdown';
@@ -134,15 +143,16 @@ import { PedigreeMockService } from './perfectly-drawable-pedigree/pedigree-mock
 import { NonPdpPedigreesComponent } from './non-pdp-pedigrees/non-pdp-pedigrees.component';
 import { PerfectlyDrawablePedigreeService } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 import { StudyFiltersBlockComponent } from './study-filters-block/study-filters-block.component';
+import { StudyFiltersBlockState } from './study-filters-block/study-filters-block.state';
 import { StudyFilterComponent } from './study-filter/study-filter.component';
 import { AddButtonComponent } from './add-button/add-button.component';
 import { RemoveButtonComponent } from './remove-button/remove-button.component';
 import { PopupComponent } from './popup/popup.component';
-import { PresentInRoleComponent } from './present-in-role/present-in-role.component';
 import { SaveQueryComponent } from './save-query/save-query.component';
 import { SavedQueriesTableComponent } from './saved-queries-table/saved-queries-table.component';
 import { SavedQueriesComponent } from './saved-queries/saved-queries.component';
 import { InheritancetypesComponent } from './inheritancetypes/inheritancetypes.component';
+import { InheritancetypesState } from './inheritancetypes/inheritancetypes.state';
 import { GeneBrowserComponent } from './gene-browser/gene-browser.component';
 import { GlobalErrorHandler } from './global-error-handler/global-error-handler';
 import { GlobalErrorDisplayComponent } from './global-error-display/global-error-display.component';
@@ -162,10 +172,21 @@ import { AutismGeneProfileSingleViewComponent } from './autism-gene-profiles-sin
 import { MiddleClickDirective } from './autism-gene-profiles-table/middle-click.directive';
 import { PersonFiltersBlockComponent } from './person-filters-block/person-filters-block.component';
 import { PersonIdsComponent } from './person-ids/person-ids.component';
+import { PersonIdsState } from './person-ids/person-ids.state';
 import { FamilyTypeFilterComponent } from './family-type-filter/family-type-filter.component';
+import { FamilyTypeFilterState } from './family-type-filter/family-type-filter.state';
 import { SortingButtonsComponent } from './sorting-buttons/sorting-buttons.component';
 import { BnNgIdleService } from 'bn-ng-idle';
 import { AutismGeneProfileSingleViewWrapperComponent } from './autism-gene-profile-single-view-wrapper/autism-gene-profile-single-view-wrapper.component';
+import { NgxsModule } from '@ngxs/store';
+import { NgxsResetPluginModule } from 'ngxs-reset-plugin';
+import { VarianttypesState } from './varianttypes/varianttypes.state';
+import { EffecttypesState } from './effecttypes/effecttypes.state';
+import { GenderState } from './gender/gender.state';
+import { RegionsFilterState } from './regions-filter/regions-filter.state';
+import { CheckboxListComponent, DisplayNamePipe } from './checkbox-list/checkbox-list.component';
+import { ErrorsState } from './common/errors.state';
+import { toolPageLinks } from './datasets/datasets';
 
 const appRoutes: Routes = [
   {
@@ -181,35 +202,35 @@ const appRoutes: Routes = [
     canLoad: [DatasetPermissionGuard],
     children: [
       {
-        path: 'genotype-browser',
+        path: toolPageLinks.genotypeBrowser,
         component: GenotypeBrowserSingleViewComponent
       },
       {
-        path: 'enrichment-tool',
+        path: toolPageLinks.enrichmentTool,
         component: EnrichmentToolComponent
       },
       {
-        path: 'phenotype-tool',
+        path: toolPageLinks.phenotypeTool,
         component: PhenoToolComponent
       },
       {
-        path: 'phenotype-browser',
+        path: toolPageLinks.phenotypeBrowser,
         component: PhenoBrowserComponent
       },
       {
-        path: 'dataset-description',
+        path: toolPageLinks.datasetDescription,
         component: DatasetDescriptionComponent
       },
       {
-        path: 'dataset-statistics',
+        path: toolPageLinks.datasetStatistics,
         component: VariantReportsComponent
       },
       {
-        path: 'gene-browser',
+        path: toolPageLinks.geneBrowser,
         component: GeneBrowserComponent
       },
       {
-        path: 'gene-browser/:gene',
+        path: toolPageLinks.geneBrowser + '/:gene',
         component: GeneBrowserComponent
       }
     ]
@@ -317,7 +338,6 @@ const appRoutes: Routes = [
     PhenoToolResultsChartPerEffectComponent,
     PhenoToolResultsChartPerResultComponent,
     PhenoToolEffectTypesComponent,
-    FamilyCountersComponent,
     RegistrationComponent,
     ForgotPasswordComponent,
     PhenoBrowserComponent,
@@ -354,7 +374,6 @@ const appRoutes: Routes = [
     AddButtonComponent,
     RemoveButtonComponent,
     PopupComponent,
-    PresentInRoleComponent,
     SaveQueryComponent,
     SavedQueriesTableComponent,
     SavedQueriesComponent,
@@ -377,6 +396,8 @@ const appRoutes: Routes = [
     FamilyTypeFilterComponent,
     SortingButtonsComponent,
     AutismGeneProfileSingleViewWrapperComponent,
+    CheckboxListComponent,
+    DisplayNamePipe,
   ],
   imports: [
     BrowserModule,
@@ -393,7 +414,16 @@ const appRoutes: Routes = [
       confirmButtonType: 'danger'
     }),
     NgMultiSelectDropDownModule.forRoot(),
-    Ng2SearchPipeModule
+    Ng2SearchPipeModule,
+    NgxsModule.forRoot([
+      VarianttypesState, EffecttypesState, GenderState,
+      InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,
+      GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState, GeneSetsState,
+      GeneWeightsState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
+      StudyFiltersBlockState, PersonFiltersState, GenomicScoresBlockState, PhenoToolMeasureState,
+      ErrorsState,
+    ]),
+    NgxsResetPluginModule.forRoot(),
   ],
   providers: [
     CookieService,
@@ -406,10 +436,8 @@ const appRoutes: Routes = [
     EnrichmentModelsService,
     EnrichmentQueryService,
     FullscreenLoadingService,
-    StateRestoreService,
     MeasuresService,
     PhenoToolService,
-    FamilyCountersService,
     PhenoBrowserService,
     PValueIntensityPipe,
     VariantReportsService,

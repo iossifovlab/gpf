@@ -8,7 +8,6 @@ import { Observable, Subject } from 'rxjs';
 const oboe = require('oboe');
 
 import { environment } from 'environments/environment';
-import { QueryData } from './query';
 import { ConfigService } from '../config/config.service';
 import { GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
 import { GeneViewSummaryAllelesArray } from '../gene-view/gene';
@@ -41,7 +40,7 @@ export class QueryService {
     private datasetsService: DatasetsService,
   ) { }
 
-  streamPost(url: string, filter: QueryData) {
+  streamPost(url: string, filter) {
     if (this.connectionEstablished) {
       this.oboeInstance.abort();
     }
@@ -71,7 +70,7 @@ export class QueryService {
     return streamingSubject;
   }
 
-  summaryStreamPost(url: string, filter: QueryData) {
+  summaryStreamPost(url: string, filter) {
     if (this.summaryConnectionEstablished) {
       console.log('Aborted');
       this.oboeInstance.abort();
@@ -104,7 +103,7 @@ export class QueryService {
   }
 
   getGenotypePreviewVariantsByFilter(
-    filter: QueryData, columnIds: Array<string>, loadingService?: any, maxVariantsCount: number = 1001
+    filter, columnIds: Array<string>, loadingService?: any, maxVariantsCount: number = 1001
   ): GenotypePreviewVariantsArray {
     const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
     const queryFilter = { ...filter };
@@ -129,7 +128,7 @@ export class QueryService {
     return genotypePreviewVariantsArray;
   }
 
-  getGeneViewVariants(filter: QueryData, loadingService?: any) {
+  getGeneViewVariants(filter, loadingService?: any) {
     const summaryVariantsArray = new GeneViewSummaryAllelesArray();
     this.summaryStreamPost(this.geneViewVariants, filter).subscribe((variant: string[]) => {
       summaryVariantsArray.addSummaryRow(variant);
@@ -139,6 +138,10 @@ export class QueryService {
 
   saveQuery(queryData: {}, page: string) {
     const options = { headers: this.headers };
+
+    queryData = {...queryData};
+    delete queryData['errorsState'];
+
     const data = {
       data: queryData,
       page: page

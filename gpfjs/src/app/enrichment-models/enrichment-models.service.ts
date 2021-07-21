@@ -4,7 +4,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { ConfigService } from '../config/config.service';
-import { EnrichmentModels } from './enrichment-models';
+import { IdDescription } from 'app/common/iddescription';
+
+export interface EnrichmentModels {
+  countings: IdDescription[];
+  backgrounds: IdDescription[];
+}
 
 @Injectable()
 export class EnrichmentModelsService {
@@ -21,7 +26,10 @@ export class EnrichmentModelsService {
     return this.http
       .get(url)
       .map(res => {
-        return EnrichmentModels.fromJson(res);
+        return {
+          countings: res['counting'].map((j) => new IdDescription(j.name, j.desc)),
+          backgrounds: res['background'].map((j) => new IdDescription(j.name, j.desc)),
+        }
       });
   }
 }
