@@ -453,7 +453,7 @@ To enable the :ref:`phenotype_browser_ui`, add this line:
 
     phenotype_browser = true
 
-After this, the configuration file should look like this:
+After this, the beginning of the configuration file should look like this:
 
 .. code::
 
@@ -462,26 +462,6 @@ After this, the configuration file should look like this:
     has_denovo = true
     phenotype_browser = true
     phenotype_data = "comp_pheno"
-
-    [genotype_storage]
-    id = "genotype_filesystem"
-
-    [genotype_storage.files]
-    pedigree.path = "data/comp.ped"
-    pedigree.params = {}
-
-    [[genotype_storage.files.variants]]
-    path = "data/comp.tsv"
-    format = "denovo"
-    params = {}
-
-    [[genotype_storage.files.variants]]
-    path = "data/comp.vcf"
-    format = "vcf"
-    params = {}
-
-    [genotype_browser]
-    enabled = true
 
 When you restart the server, you should be
 able to see the 'Phenotype Browser' tab in the `comp_all` study.
@@ -532,7 +512,7 @@ in the genotype browser section:
 
 For the phenotype columns to be in the Genotype Browser table preview or download file, 
 they have to be present in the ``preview_columns`` or the ``download_columns`` in the Genotype Browser
-configuration. Add this in the genotype section:
+configuration. Add this in the genotype_browser section:
 
 .. code::
 
