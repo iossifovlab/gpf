@@ -202,8 +202,14 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     this.showError = false;
     this.hideDropdown = true;
 
-    this.queryService.summaryStreamingFinishedSubject.subscribe(_ => {
+    this.queryService.summaryStreamingFinishedSubject.subscribe(async () => {
       this.loadingFinished = true;
+      await this.waitForGeneViewComponent();
+      if (this.enableCodingOnly) {
+        this.geneViewComponent.enableIntronCondensing();
+      } else {
+        this.geneViewComponent.disableIntronCondensing();
+      }
       this.loadingService.setLoadingStop();
     });
 
@@ -248,12 +254,6 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
 
     this.summaryVariantsArray = this.queryService.getGeneViewVariants(requestParams);
     this.hideDropdown = false;
-    await this.waitForGeneViewComponent();
-    if (this.enableCodingOnly) {
-      this.geneViewComponent.enableIntronCondensing();
-    } else {
-      this.geneViewComponent.disableIntronCondensing();
-    }
   }
 
   getFamilyVariantCounts() {
