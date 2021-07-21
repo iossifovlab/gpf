@@ -27,6 +27,8 @@ pipeline {
   }
   post {
     always {
+      junit 'test-results/wdae-junit.xml, test-results/dae-junit.xml'
+
       zulipNotification(
         topic: "${env.JOB_NAME}"
       )
