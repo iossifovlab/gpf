@@ -18,6 +18,9 @@
       "rxjs",
       "rxjs/Rx"
     ],
+    "deprecation": {
+      "severity": "warning"
+    },
     "import-spacing": true,
     "indent": [
       true,
@@ -70,7 +73,6 @@
     "no-trailing-whitespace": true,
     "no-unnecessary-initializer": true,
     "no-unused-expression": true,
-    "no-use-before-declare": true,
     "no-var-keyword": true,
     "object-literal-sort-keys": false,
     "one-line": [

@@ -6,7 +6,7 @@
       "jasmine",
       "node"
     ],
-    "module": "commonjs",
+    "module": "commonjs"
   },
   "files": [
     "test-files.ts",
