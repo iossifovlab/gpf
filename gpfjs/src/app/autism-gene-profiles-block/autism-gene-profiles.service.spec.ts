@@ -3,10 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 // tslint:disable-next-line:import-blacklist
 import { of } from 'rxjs';
-
 import { AutismGeneProfilesService } from './autism-gene-profiles.service';
 import { AgpConfig, AgpGene } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
-const util = require('util');
 
 describe('AutismGeneProfilesService', () => {
   let service: AutismGeneProfilesService;
