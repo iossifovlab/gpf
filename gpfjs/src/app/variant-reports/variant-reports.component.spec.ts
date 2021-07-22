@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { VariantReportsComponent } from './variant-reports.component';
 import { PedigreeChartModule } from '../pedigree-chart/pedigree-chart.module'

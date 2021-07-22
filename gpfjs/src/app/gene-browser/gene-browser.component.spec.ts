@@ -1,5 +1,5 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ConfigService } from 'app/config/config.service';
@@ -27,7 +27,7 @@ describe('GeneBrowserComponent', () => {
   const activatedRoute = new MockActivatedRoute();
   let testState: object;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [GeneBrowserComponent],
       providers: [

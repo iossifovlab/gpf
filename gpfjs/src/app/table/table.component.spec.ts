@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ViewContainerRef, ChangeDetectorRef, NO_ERRORS_SCHEMA, Component } from '@angular/core';
 
 import { GpfTableComponent, SortInfo } from './table.component';
@@ -24,7 +24,7 @@ describe('GpfTableComponent', () => {
   let testComponent: GpfTableSubheaderComponent;
   let testFixture: ComponentFixture<TestGpfTableSubheaderComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       schemas: [ NO_ERRORS_SCHEMA ],
       declarations: [

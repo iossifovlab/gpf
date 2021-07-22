@@ -1,5 +1,5 @@
 /* tslint:disable:no-unused-variable */
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 import { EffecttypesColumnComponent } from './effecttypes-column.component';
@@ -8,7 +8,7 @@ describe('EffecttypesColumnComponent', () => {
   let component: EffecttypesColumnComponent;
   let fixture: ComponentFixture<EffecttypesColumnComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         EffecttypesColumnComponent,

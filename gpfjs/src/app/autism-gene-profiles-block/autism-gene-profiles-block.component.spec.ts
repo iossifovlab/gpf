@@ -1,5 +1,5 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { AutismGeneProfilesTableComponent } from 'app/autism-gene-profiles-table/autism-gene-profiles-table.component';
 import { ConfigService } from 'app/config/config.service';
@@ -12,7 +12,7 @@ describe('AutismGeneProfilesBlockComponent', () => {
   let component: AutismGeneProfilesBlockComponent;
   let fixture: ComponentFixture<AutismGeneProfilesBlockComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ AutismGeneProfilesBlockComponent, AutismGeneProfilesTableComponent ],
       providers: [ConfigService],

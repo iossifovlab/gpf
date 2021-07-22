@@ -1,5 +1,5 @@
 /* tslint:disable:no-unused-variable */
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { GenderComponent } from './gender.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { NgxsModule } from '@ngxs/store';
@@ -9,7 +9,7 @@ describe('GenderComponent', () => {
   let component: GenderComponent;
   let fixture: ComponentFixture<GenderComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [GenderComponent, ErrorsAlertComponent],
       imports: [NgxsModule.forRoot([])]

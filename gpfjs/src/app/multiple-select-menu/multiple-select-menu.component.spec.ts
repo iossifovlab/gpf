@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 
@@ -21,7 +21,7 @@ describe('MultipleSelectMenuComponent', () => {
   let component: MultipleSelectMenuComponent;
   let fixture: ComponentFixture<MultipleSelectMenuComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [MultipleSelectMenuComponent],
       imports: [Ng2SearchPipeModule, FormsModule]

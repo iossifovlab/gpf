@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { PhenoBrowserComponent } from './pheno-browser.component';
 import { DatasetsService } from '../datasets/datasets.service';
 import { PhenoBrowserService } from './pheno-browser.service';
@@ -111,7 +111,7 @@ describe('PhenoBrowserComponent', () => {
   let locationSpy: jasmine.SpyObj<Location>;
   const resizeSpy = jasmine.createSpyObj('ResizeService', ['addResizeEventListener']);
 
-  beforeEach(async(() => { 
+  beforeEach(waitForAsync(() => { 
     locationSpy = jasmine.createSpyObj('Location', ['go']);
 
     TestBed.configureTestingModule({
@@ -151,7 +151,7 @@ describe('PhenoBrowserComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should list all instruments', async(() => {
+  it('should list all instruments', waitForAsync(() => {
     const expectedInstruments = ['All instruments', 'i1', 'i2', 'i3'];
     const selectElem = fixture.nativeElement.querySelector('select');
     const selectElemOptions = fixture.debugElement.queryAll(By.css('option'));
@@ -163,7 +163,7 @@ describe('PhenoBrowserComponent', () => {
     expect(receivedInstruments).toEqual(jasmine.arrayContaining(expectedInstruments));
   }));
 
-  it('should set the selected instrument to all instruments by default', async(() => {
+  it('should set the selected instrument to all instruments by default', waitForAsync(() => {
     const selectElem = fixture.nativeElement.querySelector('select');
     fixture.whenStable().then(() => {
       component.selectedInstrument$.subscribe(
@@ -173,7 +173,7 @@ describe('PhenoBrowserComponent', () => {
     });
   }));
 
-  it('should set the selected instrument in the component correctly', async(() => {
+  it('should set the selected instrument in the component correctly', waitForAsync(() => {
     setQuery(fixture, 2, '');
     fixture.whenStable().then(() => {
       component.selectedInstrument$.subscribe(
@@ -183,7 +183,7 @@ describe('PhenoBrowserComponent', () => {
     });
   }));
 
-  it('should set the download link to the selected instrument', async(() => {
+  it('should set the download link to the selected instrument', waitForAsync(() => {
     const expectedDownloadLink = `${environment.apiPath}pheno_browser/download`
                                  + `?dataset_id=testDatasetId&instrument=i3`;
     setQuery(fixture, 3, '');
@@ -195,7 +195,7 @@ describe('PhenoBrowserComponent', () => {
     });
   }));
 
-  it('should pass search terms to the service correctly', async(() => {
+  it('should pass search terms to the service correctly', waitForAsync(() => {
     spyOn(phenoBrowserServiceMock, 'getMeasures').and.callThrough();
     setQuery(fixture, 1, 'q10');
     fixture.whenStable().then(() => {
@@ -205,7 +205,7 @@ describe('PhenoBrowserComponent', () => {
     });
   }));
 
-  it('should set the url with the selected instrument and search term', async(() => {
+  it('should set the url with the selected instrument and search term', waitForAsync(() => {
     spyOn(router, 'createUrlTree').and.callThrough();
     setQuery(fixture, 2, 'q12');
     fixture.whenStable().then(() => {
@@ -218,7 +218,7 @@ describe('PhenoBrowserComponent', () => {
     });
   }));
 
-  it('should set the selected instrument and search term from the url', async(() => {
+  it('should set the selected instrument and search term from the url', waitForAsync(() => {
     setQuery(fixture, 3, 'q20');
     fixture.whenStable().then(() => {
       // 2 (+1) calls since location is a jasmine spy obj
@@ -227,7 +227,7 @@ describe('PhenoBrowserComponent', () => {
     });
   }));
 
-  it('should fetch and display all fields of a measure', async(() => {
+  it('should fetch and display all fields of a measure', waitForAsync(() => {
     fixture.detectChanges();
     fixture.whenStable().then(() => {
       expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('i1'));
@@ -239,7 +239,7 @@ describe('PhenoBrowserComponent', () => {
     });
   }));
 
-  it('should color p values appropriately', async(() => {
+  it('should color p values appropriately', waitForAsync(() => {
     fixture.detectChanges();
     fixture.whenStable().then(() => {
       const lowPValueElement = fixture.debugElement.queryAll((dE) => dE.nativeElement.innerText == '1.00e-6')[0].children[0];

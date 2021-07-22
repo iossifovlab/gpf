@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component, NO_ERRORS_SCHEMA, ViewContainerRef } from '@angular/core';
 
 import { GpfTableHeaderCellComponent } from './header-cell.component';
@@ -28,7 +28,7 @@ describe('GpfTableHeaderCellComponent', () => {
   let testComponent: GpfTableContentHeaderComponent;
   let testFixture: ComponentFixture<TestGpfTableContentHeaderComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       schemas: [ NO_ERRORS_SCHEMA ],
       declarations: [

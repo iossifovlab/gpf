@@ -1,5 +1,5 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 import { MeasuresService } from 'app/measures/measures.service';
 
@@ -9,7 +9,7 @@ describe('ContinuousFilterComponent', () => {
   let component: ContinuousFilterComponent;
   let fixture: ComponentFixture<ContinuousFilterComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ContinuousFilterComponent],
       providers: [MeasuresService, ConfigService],

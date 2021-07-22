@@ -1,6 +1,6 @@
 import { NO_ERRORS_SCHEMA } from '@angular/compiler';
 import { Component, ViewChild } from '@angular/core';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NgxsModule } from '@ngxs/store';
 import { CheckboxListComponent } from 'app/checkbox-list/checkbox-list.component';
 import { of } from 'rxjs';
@@ -13,7 +13,7 @@ describe('InheritancetypesComponent', () => {
   let component: InheritancetypesComponent;
   let fixture: ComponentFixture<InheritancetypesComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         ErrorsAlertComponent,

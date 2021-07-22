@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
 
@@ -8,7 +8,7 @@ describe('UserGroupsSelectorComponent', () => {
   let component: UserGroupsSelectorComponent;
   let fixture: ComponentFixture<UserGroupsSelectorComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ UserGroupsSelectorComponent ],
       imports: [FormsModule, NgMultiSelectDropDownModule]

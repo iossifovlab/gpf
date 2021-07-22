@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
@@ -46,7 +46,7 @@ describe('GenomicScoresBlockComponent', () => {
   let component: GenomicScoresBlockComponent;
   let fixture: ComponentFixture<GenomicScoresBlockComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         GenomicScoresBlockComponent,

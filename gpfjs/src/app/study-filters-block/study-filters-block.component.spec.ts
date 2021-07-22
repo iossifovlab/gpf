@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Observable, of } from 'rxjs';
 import { StudyFiltersBlockComponent } from './study-filters-block.component';
 import { By } from '@angular/platform-browser';
@@ -20,7 +20,7 @@ describe('StudyFiltersBlockComponent', () => {
   let component: StudyFiltersBlockComponent;
   let fixture: ComponentFixture<StudyFiltersBlockComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         StudyFiltersBlockComponent,

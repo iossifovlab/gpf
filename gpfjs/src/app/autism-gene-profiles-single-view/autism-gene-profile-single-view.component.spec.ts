@@ -1,5 +1,5 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
@@ -14,7 +14,7 @@ describe('AutismGeneProfileSingleViewComponent', () => {
   let component: AutismGeneProfileSingleViewComponent;
   let fixture: ComponentFixture<AutismGeneProfileSingleViewComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ AutismGeneProfileSingleViewComponent ],
       providers: [ConfigService, GeneWeightsService, DatasetsService, UsersService, QueryService],

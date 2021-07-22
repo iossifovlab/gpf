@@ -77,11 +77,8 @@ export class PhenoBrowserComponent implements OnInit {
         if (searchTerm) {
           queryParamsObject.search = searchTerm;
         }
-        const url = this.router.createUrlTree(['.'], {
-          relativeTo: this.route,
-          replaceUrl: true,
-          queryParams: queryParamsObject
-        }).toString();
+        const url = this.router.createUrlTree(['.'], { /* Removed unsupported properties by Angular migration: replaceUrl. */ relativeTo: this.route,
+    queryParams: queryParamsObject }).toString();
         this.location.go(url);
       })
       .switchMap(([searchTerm, newSelection, datasetId]) => {

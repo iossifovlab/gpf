@@ -1,6 +1,6 @@
 import { HttpClient, HttpHandler } from '@angular/common/http';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
@@ -17,7 +17,7 @@ describe('PhenoToolMeasureComponent', () => {
   let component: PhenoToolMeasureComponent;
   let fixture: ComponentFixture<PhenoToolMeasureComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         PhenoToolMeasureComponent,

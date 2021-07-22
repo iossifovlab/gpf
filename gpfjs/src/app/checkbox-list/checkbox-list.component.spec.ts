@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { CheckboxListComponent, DisplayNamePipe } from './checkbox-list.component';
 
@@ -6,7 +6,7 @@ describe('CheckboxListComponent', () => {
   let component: CheckboxListComponent;
   let fixture: ComponentFixture<CheckboxListComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ CheckboxListComponent, DisplayNamePipe ]
     })
