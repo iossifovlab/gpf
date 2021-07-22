@@ -8,6 +8,7 @@ const oboe = require('oboe');
 
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure } from './pheno-browser';
 import { ConfigService } from '../config/config.service';
+import { map } from 'rxjs/operators';
 
 @Injectable()
 export class PhenoBrowserService {
@@ -31,7 +32,7 @@ export class PhenoBrowserService {
     const headers = this.getHeaders();
     const searchParams = new HttpParams().set('dataset_id', datasetId).set('measure_id', measureId);
     const options = { headers: headers, withCredentials: true,  params: searchParams };
-    return this.http.get(this.config.baseUrl + this.measureDescription, options).map(res => res);
+    return this.http.get(this.config.baseUrl + this.measureDescription, options).pipe(map(res => res));
   }
 
   private getHeaders() {
@@ -48,7 +49,7 @@ export class PhenoBrowserService {
 
     return this.http
       .get(this.config.baseUrl + this.instrumentsUrl, options)
-      .map(response => response as PhenoInstruments);
+      .pipe(map(response => response as PhenoInstruments));
   }
 
   getMeasures(datasetId: string, instrument: PhenoInstrument, search: string): Observable<PhenoMeasure> {
@@ -74,9 +75,9 @@ export class PhenoBrowserService {
       console.warn('oboejs encountered a fail event while streaming');
     });
 
-    return measuresSubject.map(data => {
+    return measuresSubject.pipe(map(data => {
         return PhenoMeasure.fromJson(data['measure']);
-    });
+    }));
   }
 
   getMeasuresInfo(datasetId: string): Observable<PhenoMeasures> {
@@ -86,7 +87,7 @@ export class PhenoBrowserService {
 
     return this.http
       .get(this.config.baseUrl + this.measuresInfoUrl, options)
-      .map(response => PhenoMeasures.fromJson(response));
+      .pipe(map(response => PhenoMeasures.fromJson(response)));
 
   }
 

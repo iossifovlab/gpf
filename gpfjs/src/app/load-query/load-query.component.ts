@@ -6,6 +6,7 @@ import { DatasetsService } from '../datasets/datasets.service';
 import { Store } from '@ngxs/store';
 import { StateReset } from 'ngxs-reset-plugin';
 import { ErrorsState } from 'app/common/errors.state';
+import { take } from 'rxjs/operators';
 
 const PAGE_TYPE_TO_NAVIGATE = {
     genotype: datasetId => ['datasets', datasetId, 'genotype-browser'],
@@ -24,7 +25,6 @@ export class LoadQueryComponent implements OnInit {
   constructor(
     private store: Store,
     private queryService: QueryService,
-    private datasetsService: DatasetsService,
     private route: ActivatedRoute,
     private router: Router
   ) { }
@@ -42,7 +42,7 @@ export class LoadQueryComponent implements OnInit {
 
   private loadQuery(uuid: string) {
       this.queryService.loadQuery(uuid)
-          .take(1)
+          .pipe(take(1))
           .subscribe(response => {
               const queryData = response['data'];
               const page = response['page'];

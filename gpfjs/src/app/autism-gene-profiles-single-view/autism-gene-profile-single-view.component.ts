@@ -1,10 +1,10 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { AgpDatasetStatistic, AgpGene, AgpGenomicScores, AgpGenomicScoresCategory, AgpTableConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
-import { Observable, of } from 'rxjs';
+import { Observable, of, zip } from 'rxjs';
 import { GeneWeightsService } from '../gene-weights/gene-weights.service';
 import { GeneWeights } from 'app/gene-weights/gene-weights';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
-import { switchMap, tap } from 'rxjs/operators';
+import { switchMap, take, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { GeneService } from 'app/gene-view/gene.service';
@@ -88,7 +88,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
             this.geneWeightsService.getGeneWeights(scores)
           );
         }
-        Observable.zip(...geneWeightsObservables).subscribe(geneWeightsArray => {
+        zip(...geneWeightsObservables).subscribe(geneWeightsArray => {
           for (let k = 0; k < geneWeightsArray.length; k++) {
             this.genomicScoresGeneWeights.push({
               category: gene.genomicScores[k].id,
@@ -99,7 +99,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
         return this.geneService.getGene(this.geneSymbol);
       }),
       switchMap(gene => {
-        return Observable.zip(of(gene), this.datasetsService.getDatasetDetails(this.config.defaultDataset));
+        return zip(of(gene), this.datasetsService.getDatasetDetails(this.config.defaultDataset));
       })
     ).subscribe(([gene, datasetDetails]) => {
       this.setLinks(this.geneSymbol, gene, datasetDetails);
@@ -198,7 +198,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     this.store.selectOnce(state => state).subscribe(state => {
       state['datasetId'] = datasetId;
       this.queryService.saveQuery(state, 'genotype')
-      .take(1)
+      .pipe(take(1))
       .subscribe(urlObject => {
         const url = this.queryService.getLoadUrlFromResponse(urlObject);
         newWindow.location.assign(url);

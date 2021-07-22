@@ -3,6 +3,7 @@ import { NgbDropdownMenu, NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { AgpConfig, AgpTableConfig, AgpTableDataset, AgpTableDatasetPersonSet } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { cloneDeep } from 'lodash';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-block',
@@ -47,7 +48,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.autismGeneProfilesService.getConfig().take(1).subscribe(config => {
+    this.autismGeneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
       this.autismGeneToolConfig = config;
       this.tableConfig = this.getTableConfig(config);
       this.shownTableConfig = this.getTableConfig(config);

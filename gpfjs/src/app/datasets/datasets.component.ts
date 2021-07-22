@@ -9,6 +9,7 @@ import * as _ from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
+import { map, take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-datasets',
@@ -52,24 +53,21 @@ export class DatasetsComponent implements OnInit {
       this.registerAlertVisible = !selectedDataset.accessRights;
     });
 
-    this.datasets$
-      .take(1)
-      .subscribe(datasets => {
-        if (!this.datasetsService.hasSelectedDataset()) {
-          this.selectDataset(datasets[0]);
-        } else {
-          if (!this.isToolSelected()) {
-            this.datasetsService.getSelectedDataset().take(1).subscribe(dataset => {
-              this.router.navigate(['/', 'datasets', dataset.id, this.findFirstTool(dataset)]);
-            });
-          }
+    this.datasets$.pipe(take(1)).subscribe(datasets => {
+      if (!this.datasetsService.hasSelectedDataset()) {
+        this.selectDataset(datasets[0]);
+      } else {
+        if (!this.isToolSelected()) {
+          this.datasetsService.getSelectedDataset().take(1).subscribe(dataset => {
+            this.router.navigate(['/', 'datasets', dataset.id, this.findFirstTool(dataset)]);
+          });
         }
-      });
+      }
+    });
 
-    this.usersService.getUserInfoObservable()
-      .subscribe(() => {
-        this.datasetsService.reloadSelectedDataset();
-      });
+    this.usersService.getUserInfoObservable().subscribe(() => {
+      this.datasetsService.reloadSelectedDataset();
+    });
 
     this.datasetsService.getPermissionDeniedPrompt().subscribe(
       aprompt => this.permissionDeniedPrompt = aprompt
@@ -111,13 +109,13 @@ export class DatasetsComponent implements OnInit {
   }
 
   filterHiddenGroups(datasets: Observable<Dataset[]>): Observable<Dataset[]> {
-    return datasets.map((d) =>
+    return datasets.pipe(map((d) =>
       d.filter(
         (dataset) =>
           dataset.groups.find((g) => g.name === 'hidden') == null ||
           dataset.accessRights
       )
-    );
+    ));
   }
 
   selectDataset(dataset: Dataset) {

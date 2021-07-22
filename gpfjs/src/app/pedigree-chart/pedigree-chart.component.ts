@@ -1,7 +1,7 @@
 import { Input, Component, OnInit, ChangeDetectionStrategy,  AfterViewInit, ViewChild, ChangeDetectorRef, OnDestroy } from '@angular/core';
 
 // tslint:disable-next-line:import-blacklist
-import { Observable, BehaviorSubject, Subject, Subscription } from 'rxjs';
+import { Observable, BehaviorSubject, Subject, Subscription, of } from 'rxjs';
 // tslint:disable-next-line:import-blacklist
 import 'rxjs/Rx';
 import { difference } from '../utils/sets-helper';
@@ -14,6 +14,7 @@ import {
 
 import { IndividualWithPosition, Line, IndividualSet, Individual, MatingUnit } from './pedigree-data';
 import { ResizeService } from '../table/resize.service';
+import { filter, map, switchMap, take } from 'rxjs/operators';
 
 type OrderedIndividuals = Array<Individual>;
 
@@ -71,51 +72,48 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
     this.pedigreeDataWithLayout = [];
     this.lines = [];
 
-    const familyData = this.family$
-      .filter(f => !!f);
+    const familyData = this.family$.pipe(filter(f => !!f));
 
-    const sandwichResults$ = familyData
-      .switchMap(family => {
+    const sandwichResults$ = familyData.pipe(
+      switchMap(family => {
         if (family.map(member => member.position).some(p => !!p)) {
           this.positionedIndividuals = this.loadPositions(family);
           return Observable.of<void>(null);
         }
 
-        return Observable
-          .of(this.perfectlyDrawablePedigreeService.isPDP(family))
-          .map(([, intervals]) => intervals)
-          .filter(i => !!i)
-          .map(i => this.onlyInidividuals(i))
-          .map(i => this.getIndividualsByRank(i))
-          .map(individuals => {
+        return of(this.perfectlyDrawablePedigreeService.isPDP(family)).pipe(
+          map(([, intervals]) => intervals),
+          filter(i => !!i),
+          map(i => this.onlyInidividuals(i)),
+          map(i => this.getIndividualsByRank(i)),
+          map(individuals => {
             for (let i = 0; i < individuals.length; i++) {
               this.positionedIndividuals.push(
                 this.generateLayout(individuals[i], i));
             }
             this.optimizeDrawing(this.positionedIndividuals);
-          });
-      });
+          })
+        );
+      })
+    );
 
-    sandwichResults$
-      .take(1)
-      .subscribe(_ => {
-        for (const individual of this.positionedIndividuals) {
-          this.lines = this.lines.concat(
-            this.generateLines(individual));
-        }
+    sandwichResults$.pipe(take(1)).subscribe(_ => {
+      for (const individual of this.positionedIndividuals) {
+        this.lines = this.lines.concat(
+          this.generateLines(individual));
+      }
 
-        this.pedigreeDataWithLayout = this.positionedIndividuals
-          .reduce((acc, individuals) => acc.concat(individuals), []);
+      this.pedigreeDataWithLayout = this.positionedIndividuals
+        .reduce((acc, individuals) => acc.concat(individuals), []);
 
-        this.width = this.pedigreeDataWithLayout
-          .map(i => i.xUpperLeftCorner + i.size + 1)
-          .reduce((acc, current) => Math.max(acc, current), 0);
+      this.width = this.pedigreeDataWithLayout
+        .map(i => i.xUpperLeftCorner + i.size + 1)
+        .reduce((acc, current) => Math.max(acc, current), 0);
 
-        this.height = this.pedigreeDataWithLayout
-          .map(i => i.yUpperLeftCorner + i.size + 1)
-          .reduce((acc, current) => Math.max(acc, current), 0);
-
-        });
+      this.height = this.pedigreeDataWithLayout
+        .map(i => i.yUpperLeftCorner + i.size + 1)
+        .reduce((acc, current) => Math.max(acc, current), 0);
+    });
   }
 
   ngOnDestroy() {

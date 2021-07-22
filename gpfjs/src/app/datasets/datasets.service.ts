@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 // tslint:disable-next-line:import-blacklist
-import { Observable, ReplaySubject, BehaviorSubject, asyncScheduler } from 'rxjs';
+import { Observable, ReplaySubject, BehaviorSubject, asyncScheduler, of } from 'rxjs';
 
 import { Dataset, DatasetDetails } from '../datasets/datasets';
 import { UsersService } from '../users/users.service';
 import { ConfigService } from '../config/config.service';
+import { catchError, distinctUntilChanged, filter, map, mergeMap, subscribeOn, switchMap, take } from 'rxjs/operators';
 
 @Injectable()
 export class DatasetsService {
@@ -25,51 +26,53 @@ export class DatasetsService {
     private config: ConfigService,
     private usersService: UsersService
   ) {
-    this.selectedDatasetId$.asObservable()
-      .switchMap(selectedDatasetId => {
+    this.selectedDatasetId$.asObservable().pipe(
+      switchMap(selectedDatasetId => {
         if (!selectedDatasetId) {
-          return Observable.of(null);
+          return of(null);
         }
 
         return this.getDataset(selectedDatasetId);
-      })
-      .catch(errors => Observable.of(null))
-      .filter(a => !!a)
-      .mergeMap((dataset: Dataset) => {
+      }),
+      catchError(() => of(null)),
+      filter(a => !!a),
+      mergeMap((dataset: Dataset) => {
         this.selectedDataset$.next(dataset);
         return this.getDatasetDetails(dataset.id);
       })
-      .subscribe((datasetDetails: DatasetDetails) => {
-        this.selectedDatasetDetails$.next(datasetDetails);
-      });
+    ).subscribe((datasetDetails: DatasetDetails) => {
+      this.selectedDatasetDetails$.next(datasetDetails);
+    });
 
-    this.usersService.getUserInfoObservable()
-      .map(user => user.email || '')
-      .distinctUntilChanged()
-      .subscribe(() => {
-        this.reloadAllDatasets();
-      });
+    this.usersService.getUserInfoObservable().pipe(
+      map(user => user.email || ''),
+      distinctUntilChanged()
+    ).subscribe(() => {
+      this.reloadAllDatasets();
+    });
   }
 
   getDatasets(): Observable<Dataset[]> {
     const options = { withCredentials: true };
 
-    return this.http.get(this.config.baseUrl + this.datasetUrl, options)
-      .map(res => {
+    return this.http.get(this.config.baseUrl + this.datasetUrl, options).pipe(
+      map(res => {
         const datasets = Dataset.fromJsonArray(res['data']);
         this.datasets$.next(datasets);
         return datasets;
-      });
+      })
+    );
   }
 
   getDataset(datasetId: string): Observable<Dataset> {
     const url = `${this.datasetUrl}/${datasetId}`;
     const options = { withCredentials: true };
 
-    return this.http.get(this.config.baseUrl + url, options)
-      .map(res => {
+    return this.http.get(this.config.baseUrl + url, options).pipe(
+      map(res => {
         return Dataset.fromJson(res['data']);
-      });
+      })
+    );
   }
 
   setSelectedDataset(dataset: Dataset): void {
@@ -89,7 +92,9 @@ export class DatasetsService {
   }
 
   getSelectedDataset() {
-    return this.selectedDataset$.asObservable().subscribeOn(asyncScheduler);
+    return this.selectedDataset$.asObservable().pipe(
+      subscribeOn(asyncScheduler)
+    );
   }
 
   getSelectedDatasetId() {
@@ -109,24 +114,25 @@ export class DatasetsService {
   }
 
   private reloadAllDatasets() {
-    this.getDatasets().take(1).subscribe(() => {});
+    this.getDatasets().pipe(take(1)).subscribe(() => {});
   }
 
   getPermissionDeniedPrompt() {
     const options = { withCredentials: true };
 
-    return this.http.get(this.config.baseUrl + this.permissionDeniedPromptUrl, options)
-      .map(res => res['data']);
+    return this.http.get(this.config.baseUrl + this.permissionDeniedPromptUrl, options).pipe(
+      map(res => res['data'])
+    );
   }
 
   getDatasetDetails(datasetId: string): Observable<DatasetDetails> {
     const options = { headers: this.headers, withCredentials: true };
 
-    return this.http
-      .get(`${this.config.baseUrl}${this.datasetsDetailsUrl}/${datasetId}`, options)
-      .map(res => {
+    return this.http.get(`${this.config.baseUrl}${this.datasetsDetailsUrl}/${datasetId}`, options).pipe(
+      map(res => {
         return DatasetDetails.fromJson(res);
-      });
+      })
+    );
   }
 
   getDatasetPedigreeColumnDetails(datasetId: string, column: string): Observable<Object> {

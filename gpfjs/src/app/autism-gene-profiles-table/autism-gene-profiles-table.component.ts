@@ -22,6 +22,7 @@ import { SetGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.
 import { SetPresentInParentValues } from 'app/present-in-parent/present-in-parent.state';
 import { SetPresentInChildValues } from 'app/present-in-child/present-in-child.state';
 import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
+import { debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-table',
@@ -144,16 +145,16 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     this.currentSortingColumnId = this.sortBy;
     this.autismGeneProfilesService.getGenes(
       this.pageIndex, undefined, this.sortBy, this.orderBy
-    ).take(1).subscribe(res => {
+    ).pipe(take(1)).subscribe(res => {
       this.genes = this.genes.concat(res);
     });
 
-    this.searchKeystrokes$
-      .debounceTime(250)
-      .distinctUntilChanged()
-      .subscribe(searchTerm => {
-        this.search(searchTerm);
-      });
+    this.searchKeystrokes$.pipe(
+      debounceTime(250),
+      distinctUntilChanged()
+    ).subscribe(searchTerm => {
+      this.search(searchTerm);
+    });
   }
 
   /**
@@ -163,7 +164,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   ngAfterViewInit(): void {
     this.focusGeneSearch();
 
-    this.columnFilteringButtons.changes.take(1).subscribe(() => {
+    this.columnFilteringButtons.changes.pipe(take(1)).subscribe(() => {
       this.updateModalBottom();
       this.cdr.detectChanges();
     });
@@ -555,7 +556,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     this.store.selectOnce(state => state).subscribe(state => {
       state['datasetId'] = datasetId;
       this.queryService.saveQuery(state, 'genotype')
-      .take(1)
+      .pipe(take(1))
       .subscribe(urlObject => {
         const url = this.queryService.getLoadUrlFromResponse(urlObject);
         newWindow.location.assign(url);

@@ -5,6 +5,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Observable } from 'rxjs';
 import { RegistrationComponent } from '../registration/registration.component';
 import { ForgotPasswordComponent } from '../forgot-password/forgot-password.component';
+import { share, take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-users',
@@ -34,15 +35,13 @@ export class UsersComponent implements OnInit {
 
   ngOnInit() {
     this.reloadUserData();
-    this.userInfo$ = this.usersService.getUserInfoObservable().share();
+    this.userInfo$ = this.usersService.getUserInfoObservable().pipe(share());
   }
 
   reloadUserData() {
-    this.usersService.getUserInfo()
-      .take(1)
-      .subscribe(() => {
-        // this.router.navigate(['.'], { relativeTo: this.currentRoute });
-      });
+    this.usersService.getUserInfo().pipe(take(1)).subscribe(() => {
+      // this.router.navigate(['.'], { relativeTo: this.currentRoute });
+    });
   }
 
   back() {
@@ -90,10 +89,7 @@ export class UsersComponent implements OnInit {
   }
 
   logout() {
-    this.usersService.logout().subscribe(
-      (res) => {
-        this.reloadUserData();
-    });
+    this.usersService.logout().subscribe( () => { this.reloadUserData(); });
   }
 
   showRegister() {

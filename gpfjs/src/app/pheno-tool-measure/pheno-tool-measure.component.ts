@@ -1,6 +1,6 @@
 import { Component, OnInit, ElementRef, QueryList, ViewChildren } from '@angular/core';
 // tslint:disable-next-line:import-blacklist
-import { Observable, ReplaySubject } from 'rxjs';
+import { combineLatest, Observable, ReplaySubject } from 'rxjs';
 import { ContinuousMeasure } from '../measures/measures';
 import { MeasuresService } from '../measures/measures.service';
 import { DatasetsService } from '../datasets/datasets.service';
@@ -8,6 +8,7 @@ import { IsNotEmpty } from 'class-validator';
 import { Store } from '@ngxs/store';
 import { SetPhenoToolMeasure, PhenoToolMeasureState } from './pheno-tool-measure.state';
 import { StatefulComponent } from 'app/common/stateful-component';
+import { take } from 'rxjs/operators';
 
 interface Regression {
   display_name: string;
@@ -41,8 +42,7 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
 
   ngOnInit() {
     super.ngOnInit();
-    Observable.combineLatest(
-      this.store.selectOnce(PhenoToolMeasureState), this.measuresLoaded$).take(1)
+    combineLatest([this.store.selectOnce(PhenoToolMeasureState), this.measuresLoaded$]).pipe(take(1))
       .subscribe(([state, measures]) => {
         if (state.measureId) {
           this.selectedMeasure = measures.find(m => m.name === state.measureId);

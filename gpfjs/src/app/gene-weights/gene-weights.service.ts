@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 
 import { GeneWeights, Partitions } from './gene-weights';
 import { ConfigService } from '../config/config.service';
+import { map } from 'rxjs/operators';
 
 @Injectable()
 export class GeneWeightsService {
@@ -24,9 +25,9 @@ export class GeneWeightsService {
       url += `?${searchParams.toString()}`;
     }
 
-    return this.http.get(url).map((res: any) => {
+    return this.http.get(url).pipe(map((res: any) => {
       return GeneWeights.fromJsonArray(res);
-    });
+    }));
   }
 
   getPartitions(weight: string, min: number, max: number): Observable<Partitions> {
@@ -35,8 +36,8 @@ export class GeneWeightsService {
 
     return this.http
       .post(this.config.baseUrl + this.geneWeightsPartitionsUrl, {weight: weight, min: min, max: max}, options)
-      .map((res: any) => {
+      .pipe(map((res: any) => {
         return Partitions.fromJson(res);
-      });
+      }));
   }
 }
