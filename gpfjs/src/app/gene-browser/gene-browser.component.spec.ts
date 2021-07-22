@@ -174,14 +174,13 @@ describe('GeneBrowserComponent', () => {
     expect(component.selectedGene).toBe('testGene' as any);
     expect(component.genotypePreviewVariantsArray).toBe(null);
     expect(component.summaryVariantsArray).toBe('testSummaryVariantsArray' as any);
-    await component.waitForGeneViewComponent();
-    expect(enableIntronCondensingSpy).toHaveBeenCalled();
-    expect(disableIntronCondensingSpy).not.toHaveBeenCalled();
 
     component.enableCodingOnly = false;
     component.submitGeneRequest();
-    await component.waitForGeneViewComponent();
-    expect(disableIntronCondensingSpy).toHaveBeenCalled();
+    component.queryService.summaryStreamingFinishedSubject.subscribe(() => {
+      expect(enableIntronCondensingSpy).toHaveBeenCalled();
+      expect(disableIntronCondensingSpy).not.toHaveBeenCalled();
+    });
   });
 
   it('should get family variant counts', () => {

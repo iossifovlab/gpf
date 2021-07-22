@@ -212,7 +212,6 @@ describe('PhenoBrowserComponent', () => {
       expect(router.createUrlTree).toHaveBeenCalledTimes(2);
       expect(router.createUrlTree).toHaveBeenCalledWith(['.'], {
         relativeTo: activatedRoute,
-        replaceUrl: true,
         queryParams: {instrument: 'i2', search: 'q12'}
       });
     });
