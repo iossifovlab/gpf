@@ -285,7 +285,7 @@ export class UsersService {
     return this.updateUser(clone);
   }
 
-  searchUsersByGroup(searchTerm: string) {
+  searchUsersByGroup(searchTerm: string): Observable<User> {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
     const usersSubject: Subject<User> = new Subject()
@@ -317,7 +317,7 @@ export class UsersService {
       console.warn('oboejs encountered a fail event while streaming');
     });
 
-    return usersSubject.map(data => { return User.fromJson(data); });
+    return usersSubject.pipe(map(data => { return User.fromJson(data); }));
   }
 
   bulkAddGroups(users: User[], groups: string[]) {

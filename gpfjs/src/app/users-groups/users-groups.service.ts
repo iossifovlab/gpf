@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { UserGroup } from './users-groups';
 import { Dataset } from '../datasets/datasets';
 import { ConfigService } from '../config/config.service';
+import { map } from 'rxjs/operators';
 
 @Injectable()
 export class UsersGroupsService {
@@ -19,14 +20,14 @@ export class UsersGroupsService {
     const options = { withCredentials: true };
 
     return this.http.get(this.config.baseUrl + this.groupsUrl, options)
-      .map((response: any) => UserGroup.fromJsonArray(response));
+      .pipe(map((response: any) => UserGroup.fromJsonArray(response)));
   }
 
   getGroup(groupId: number) {
     const options = { withCredentials: true };
 
     return this.http.get(`${this.config.baseUrl}${this.groupsUrl}/${groupId}`, options)
-      .map((response: any) => UserGroup.fromJson(response));
+      .pipe(map((response: any) => UserGroup.fromJson(response)));
   }
 
   grantPermission(groupName: string, dataset: Dataset) {

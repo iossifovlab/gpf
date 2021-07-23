@@ -8,7 +8,7 @@ import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-load
 import { DomainRange } from 'app/gene-view/gene';
 import { QueryService } from 'app/query/query.service';
 import { UsersService } from 'app/users/users.service';
-import { of } from 'rxjs/internal/observable/of';
+import { of } from 'rxjs';
 import { GeneBrowserComponent } from './gene-browser.component';
 import { GeneSymbolsState } from 'app/gene-symbols/gene-symbols.state';
 import { NgxsModule } from '@ngxs/store';

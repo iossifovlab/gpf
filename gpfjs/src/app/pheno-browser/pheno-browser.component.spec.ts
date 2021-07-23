@@ -27,15 +27,15 @@ import { Location } from '@angular/common';
 import { Observable, of } from 'rxjs';
 import { ResizeService } from '../table/resize.service';
 import { By } from '@angular/platform-browser';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/take';
-import 'rxjs/add/operator/share';
-import 'rxjs/add/operator/debounceTime';
-import 'rxjs/add/operator/distinctUntilChanged';
-import 'rxjs/add/operator/combineLatest';
-import 'rxjs/add/operator/do';
-import 'rxjs/add/operator/switchMap';
-import 'rxjs/add/observable/combineLatest';
+
+
+
+
+
+
+
+
+
     
 
 let fakeJsonMeasurei1 = JSON.parse(JSON.stringify(fakeJsonMeasureOneRegression));

@@ -5,6 +5,7 @@ import { ConfigService } from 'app/config/config.service';
 import { of } from 'rxjs';
 import { AutismGeneProfilesService } from './autism-gene-profiles.service';
 import { AgpConfig, AgpGene } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import { take } from 'rxjs/operators';
 
 describe('AutismGeneProfilesService', () => {
   let service: AutismGeneProfilesService;
@@ -28,7 +29,7 @@ describe('AutismGeneProfilesService', () => {
     const resultConfig = service.getConfig();
 
     expect(getConfigSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['configUrl']);
-    resultConfig.take(1).subscribe(res => {
+    resultConfig.pipe(take(1)).subscribe(res => {
       expect(res['mockConfigProperty']).toEqual('mockConfigValue');
       expect(res).toBeInstanceOf(AgpConfig);
     });
@@ -41,7 +42,7 @@ describe('AutismGeneProfilesService', () => {
     const resultGene = service.getGene('geneMock1');
 
     expect(getGeneSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['genesUrl'] + 'geneMock1');
-    resultGene.take(1).subscribe(res => {
+    resultGene.pipe(take(1)).subscribe(res => {
       expect(res['mockGeneProperty']).toEqual('mockGeneValue');
       expect(res).toBeInstanceOf(AgpGene);
     });
@@ -62,7 +63,7 @@ describe('AutismGeneProfilesService', () => {
 
     getGenesSpy.and.returnValue(of([{ mockGeneOneProperty: 'mockGeneOneValue' }, { mockGeneTwoProperty: 'mockGeneTwoValue' }]));
     const resultGenes = service.getGenes(1);
-    resultGenes.take(1).subscribe(res => {
+    resultGenes.pipe(take(1)).subscribe(res => {
       expect(res[0]['mockGeneOneProperty']).toEqual('mockGeneOneValue');
       expect(res[0]).toBeInstanceOf(AgpGene);
       expect(res[1]['mockGeneTwoProperty']).toEqual('mockGeneTwoValue');

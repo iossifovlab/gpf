@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 
 import { DatasetsService } from '../datasets/datasets.service';
 import { Dataset } from '../datasets/datasets';
+import { filter, map, switchMap, take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-dataset-description',
@@ -22,13 +23,13 @@ export class DatasetDescriptionComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.dataset$ = this.route.parent.params
-      .map((params: Params) => params['dataset'])
-      .filter(datasetId => !!datasetId)
-      .switchMap(datasetId =>
-        this.datasetsService.getDataset(datasetId));
+    this.dataset$ = this.route.parent.params.pipe(
+      map((params: Params) => params['dataset']),
+      filter(datasetId => !!datasetId),
+      switchMap(datasetId => this.datasetsService.getDataset(datasetId))
+    );
 
-    this.dataset$.take(1).subscribe(dataset => {
+    this.dataset$.pipe(take(1)).subscribe(dataset => {
         if (!dataset.description) {
             this.router.navigate(['..', 'browser'], {
                 relativeTo: this.route

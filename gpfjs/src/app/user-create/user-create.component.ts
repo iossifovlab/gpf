@@ -8,6 +8,7 @@ import { UsersService } from '../users/users.service';
 import { UsersGroupsService } from '../users-groups/users-groups.service';
 import { UserGroup } from '../users-groups/users-groups';
 import { UserGroupsSelectorComponent } from 'app/user-groups-selector/user-groups-selector.component';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-users-create',
@@ -46,7 +47,7 @@ export class UserCreateComponent implements OnInit {
   ngOnInit() {
     this.usersGroupsService
       .getAllGroups()
-      .take(1)
+      .pipe(take(1))
       .subscribe(groups => this.groups$.next(groups));
   }
 

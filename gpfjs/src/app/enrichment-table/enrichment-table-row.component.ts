@@ -9,6 +9,7 @@ import { SetGender } from 'app/gender/gender.state';
 import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 import { SetStudyTypes } from 'app/study-types/study-types.state';
 import { SetVariantTypes } from 'app/varianttypes/varianttypes.state';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: '[gpf-enrichment-table-row]',
@@ -43,7 +44,7 @@ export class EnrichmentTableRowComponent {
     this.store.selectOnce(state => state).subscribe(state => {
       state['datasetId'] = browserQueryFilter['datasetId'];
       this.queryService.saveQuery(state, 'genotype')
-      .take(1)
+      .pipe(take(1))
       .subscribe(urlObject => {
         const url = this.queryService.getLoadUrlFromResponse(urlObject);
         newWindow.location.assign(url);

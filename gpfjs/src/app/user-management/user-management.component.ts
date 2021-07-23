@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
 import { Observable, ReplaySubject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } from 'rxjs/operators';
 
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
@@ -28,11 +29,11 @@ export class UserManagementComponent implements OnInit {
 
   ngOnInit() {
 
-    this.usersToShow$ = this.input$
-      .map(searchTerm => searchTerm.trim())
-      .debounceTime(300)
-      .distinctUntilChanged()
-      .do(searchTerm => {
+    this.usersToShow$ = this.input$.pipe(
+      map(searchTerm => searchTerm.trim()),
+      debounceTime(300),
+      distinctUntilChanged(),
+      tap(searchTerm => {
         this.users = [];
         let queryParamsObject: any = {};
         if (searchTerm) {
@@ -43,22 +44,21 @@ export class UserManagementComponent implements OnInit {
           replaceUrl: true,
           queryParams: queryParamsObject
         });
-      })
-      .switchMap(searchTerm =>
-        this.usersService.searchUsersByGroup(searchTerm))
-      .map(user => this.sortGroups(user))
-      .map(user => {
-        this.users.push(new SelectableUser(user))
+      }),
+      switchMap(searchTerm => this.usersService.searchUsersByGroup(searchTerm)),
+      map(user => {
+        this.users.push(new SelectableUser(this.sortGroups(user)))
         return this.users;
-      })
-      .share();
+      }),
+      share()
+    );
 
-    this.route.queryParamMap
-      .map(params => params.get('search') || '')
-      .take(1)
-      .subscribe(searchTerm => {
-        this.search(searchTerm);
-      });
+    this.route.queryParamMap.pipe(
+      map(params => params.get('search') || ''),
+      take(1)
+    ).subscribe(searchTerm => {
+      this.search(searchTerm);
+    });
   }
 
   selectedUsers(users: SelectableUser[]) {
@@ -83,7 +83,7 @@ export class UserManagementComponent implements OnInit {
     return selectedUsers.map(u => u.id).join(',');
   }
 
-  sortGroups(user: User) {
+  sortGroups(user: User): User {
     if (!user || !user.groups) {
       return user;
     }

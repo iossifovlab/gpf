@@ -52,7 +52,6 @@
     "popper.js": "^1.16.1",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^6.5.5",
-    "rxjs-compat": "^6.5.5",
     "sprintf-js": "^1.1.2",
     "tether": "^1.4.7",
     "ts-helpers": "^1.1.2",
