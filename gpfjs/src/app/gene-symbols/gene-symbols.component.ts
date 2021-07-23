@@ -24,7 +24,7 @@ export class GeneSymbolsComponent extends StatefulComponent implements OnInit {
 
   ngOnInit() {
     super.ngOnInit();
-    this.store.selectOnce(state => state.geneSymbolsState).subscribe(state => {
+    this.store.selectOnce(GeneSymbolsState).subscribe(state => {
       // restore state
       this.setGeneSymbols(state.geneSymbols.join('\n'));
     });
