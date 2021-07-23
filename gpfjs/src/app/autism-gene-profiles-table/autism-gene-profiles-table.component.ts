@@ -279,7 +279,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
 
     this.autismGeneProfilesService
     .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
-    .take(1).subscribe(res => {
+    .pipe(take(1)).subscribe(res => {
         this.genes = this.genes.concat(res);
         this.loadMoreGenes = Object.keys(res).length !== 0 ? true : false;
     });
