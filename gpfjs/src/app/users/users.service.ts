@@ -1,6 +1,6 @@
 
 // tslint:disable-next-line:import-blacklist
-import {throwError as observableThrowError, Observable, Subject, ReplaySubject } from 'rxjs';
+import {throwError as observableThrowError, Observable, Subject, ReplaySubject, of } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
@@ -76,7 +76,7 @@ export class UsersService {
         return true;
       }),
       catchError(error => {
-        return Observable.of(error);
+        return of(error);
       })
     )
   }
@@ -173,7 +173,7 @@ export class UsersService {
         return true;
       }),
       catchError(() => {
-        return Observable.of(false);
+        return of(false);
       })
     );
   }
@@ -190,7 +190,7 @@ export class UsersService {
         return true;
       }),
       catchError(() => {
-        return Observable.of(false);
+        return of(false);
       })
     );
   }
