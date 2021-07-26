@@ -172,7 +172,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     const firstSortingButton = this.sortingButtonsComponents.find(sortingButtonsComponent => {
       return sortingButtonsComponent.id === `${this.shownGeneSetsCategories[0].category}_rank`;
     });
-    firstSortingButton.hideState = 1;
+    setTimeout(() => firstSortingButton.hideState = 1);
   }
 
   get isTableVisible(): boolean {
