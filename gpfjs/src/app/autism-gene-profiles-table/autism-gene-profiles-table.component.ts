@@ -1,5 +1,5 @@
 import {
-  AfterViewInit, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostListener,
+  AfterViewInit, Component, ElementRef, EventEmitter, HostListener,
   Input, OnChanges, OnInit, Output, QueryList, Renderer2, ViewChild, ViewChildren
 } from '@angular/core';
 // tslint:disable-next-line:import-blacklist
@@ -11,7 +11,7 @@ import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.com
 import { cloneDeep } from 'lodash';
 import { sprintf } from 'sprintf-js';
 import { QueryService } from 'app/query/query.service';
-import { GenomicScore, PeopleGroup } from 'app/genotype-browser/genotype-browser';
+import { GenomicScore } from 'app/genotype-browser/genotype-browser';
 import { EffectTypes } from 'app/effecttypes/effecttypes';
 import { Store } from '@ngxs/store';
 import { SetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
@@ -102,7 +102,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
     private renderer: Renderer2,
-    private cdr: ChangeDetectorRef,
     private ref: ElementRef,
     private queryService: QueryService,
     private store: Store,
@@ -164,15 +163,13 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   ngAfterViewInit(): void {
     this.focusGeneSearch();
 
-    this.columnFilteringButtons.changes.pipe(take(1)).subscribe(() => {
-      this.updateModalBottom();
-      this.cdr.detectChanges();
-    });
-
     const firstSortingButton = this.sortingButtonsComponents.find(sortingButtonsComponent => {
       return sortingButtonsComponent.id === `${this.shownGeneSetsCategories[0].category}_rank`;
     });
-    setTimeout(() => firstSortingButton.hideState = 1);
+    setTimeout(() => {
+      firstSortingButton.hideState = 1;
+      this.updateModalBottom()
+    });
   }
 
   get isTableVisible(): boolean {
@@ -257,7 +254,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
         this.configChange.emit(this.config);
       }
     }
-
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
@@ -421,10 +417,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
    * @returns promise
    */
   async waitForDropdown() {
-    if (this.ngbDropdownMenu !== undefined) {
-      return;
-    }
-
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
         if (this.ngbDropdownMenu !== undefined) {
@@ -440,24 +432,14 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
    * @param columnId id specifying which dropdown to open
    */
   openDropdown(columnId: string) {
-    const dropdownId = columnId + '-dropdown';
-
     this.waitForDropdown().then(() => {
-      this.updateDropdownPosition(columnId);
-      this.ngbDropdownMenu.find(ele => ele.nativeElement.id === dropdownId).dropdown.open();
+      this.renderer.setStyle(
+        this.dropdownSpans.find(ele => ele.nativeElement.id === `${columnId}-span`).nativeElement,
+        'left',
+        this.calculateModalLeftPosition(this.columnFilteringButtons.find(ele => ele.nativeElement.id === `${columnId}-button`).nativeElement)
+      );
+      this.ngbDropdownMenu.find(ele => ele.nativeElement.id === `${columnId}-dropdown`).dropdown.open();
     });
-  }
-
-  /**
-   * Updates dropdown horizontal position.
-   * @param id id specifying which dropdown to open
-   */
-  updateDropdownPosition(id: string) {
-    this.renderer.setStyle(
-      this.dropdownSpans.find(ele => ele.nativeElement.id === `${id}-span`).nativeElement,
-      'left',
-      this.calculateModalLeftPosition(this.columnFilteringButtons.find(ele => ele.nativeElement.id === `${id}-button`).nativeElement)
-    );
   }
 
   /**

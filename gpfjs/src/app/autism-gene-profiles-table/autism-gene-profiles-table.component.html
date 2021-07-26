@@ -36,7 +36,7 @@
         </ng-container>
 
         <th *ngFor="let dataset of shownDatasets" class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="calculateDatasetColspan(dataset)">
-          <div class="table-main-header-text" style="margin-right: 30px"> 
+          <div class="table-main-header-text" style="margin-right: 30px">
             <span [title]="dataset.meta ? dataset.meta : ''">{{dataset.displayName}}</span>
           </div>
           <button #columnFilteringButton
@@ -130,7 +130,7 @@
                     {{value.count}} ({{value.rate | number : '1.0-3' }})</a>
                 </ng-container>
               </ng-container>
-            </td> 
+            </td>
           </ng-container>
         </ng-container>
       </tr>
