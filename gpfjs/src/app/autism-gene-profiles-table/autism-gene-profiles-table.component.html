@@ -35,7 +35,7 @@
           </th>
         </ng-container>
 
-        <th *ngFor="let dataset of shownDatasets" class="table-main-header" style="position: sticky; top: 0px" [attr.colspan]="calculateDatasetColspan(dataset)">
+        <th *ngFor="let dataset of shownDatasets" class="table-main-header-end" style="position: sticky; top: 0px" [attr.colspan]="calculateDatasetColspan(dataset)">
           <div class="table-main-header-text" style="margin-right: 30px"> 
             <span [title]="dataset.meta ? dataset.meta : ''">{{dataset.displayName}}</span>
           </div>
@@ -56,10 +56,14 @@
         </th>
 
         <ng-container *ngFor="let geneSetCategory of shownGeneSetsCategories">
-          <th class="table-subheader" style="white-space: normal;" rowspan="2" *ngFor="let geneSet of geneSetCategory.sets">
-            <span class="vertical-text" [title]="geneSet.meta ? geneSet.meta : ''">{{geneSet.setId}}</span>
-            <gpf-sorting-buttons [id]="geneSet.collectionId + '_' + geneSet.setId" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
-          </th>
+            <th class="table-subheader" style="white-space: normal; --index: i;" rowspan="2" *ngFor="let geneSet of geneSetCategory.sets; let i = index">
+              <ng-container *ngIf="i != geneSetCategory.sets.length - 1">
+                {{i}}
+              </ng-container>
+
+              <span class="vertical-text" [title]="geneSet.meta ? geneSet.meta : ''">{{geneSet.setId}}</span>
+              <gpf-sorting-buttons [id]="geneSet.collectionId + '_' + geneSet.setId" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
+            </th>
         </ng-container>
 
         <ng-container *ngFor="let genomicScoresCategory of shownGenomicScoresCategories">
@@ -71,7 +75,7 @@
 
         <ng-container *ngFor="let dataset of shownDatasets">
           <ng-container *ngFor="let personSet of dataset.personSets">
-            <th class="table-subheader" [attr.colspan]="personSet.statistics.length">
+            <th class="table-subheader-end" [attr.colspan]="personSet.statistics.length">
               <div class="table-main-header-text" style="margin-right: 30px">
                 <span [title]="personSet.description ? personSet.description : ''">{{personSet.displayName}} ({{personSet.childrenCount}})</span>
               </div>
@@ -122,12 +126,21 @@
 
         <ng-container *ngFor="let dataset of shownDatasets">
           <ng-container *ngFor="let personSet of dataset.personSets">
-            <td style="min-width: 70px" *ngFor="let statistic of personSet.statistics">
+            <td (click)="goToQuery(gene.geneSymbol, personSet.id, dataset.id, statistic)"
+            (middleclick)="goToQuery(gene.geneSymbol, personSet.id, dataset.id, statistic)" style="min-width: 70px; cursor: pointer; color: #1a6393" *ngFor="let statistic of personSet.statistics">
               <ng-container *ngIf="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id) as value">
                 <ng-container *ngIf="value.count !== 0">
-                  <a (click)="goToQuery(gene.geneSymbol, personSet.id, dataset.id, statistic)"
-                    (middleclick)="goToQuery(gene.geneSymbol, personSet.id, dataset.id, statistic)">
-                    {{value.count}} ({{value.rate | number : '1.0-3' }})</a>
+                  <!-- <a (click)="goToQuery(gene.geneSymbol, personSet.id, dataset.id, statistic)"
+                    (middleclick)="goToQuery(gene.geneSymbol, personSet.id, dataset.id, statistic)"> -->
+                  <!-- <script>
+                    function addAttribute() {
+                      document.getElementsByTagName("TD")[12].removeAttribute("(click)");
+                      document.getElementsByTagName("TD")[12].removeAttribute("(middleclick)");
+                    }
+
+                    window.onload = addAttribute();
+                  </script> -->
+                    {{value.count}} ({{value.rate | number : '1.0-3' }})<!-- </a> -->
                 </ng-container>
               </ng-container>
             </td> 
