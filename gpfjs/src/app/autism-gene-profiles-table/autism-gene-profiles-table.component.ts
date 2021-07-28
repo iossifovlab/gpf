@@ -4,7 +4,7 @@ import {
 } from '@angular/core';
 // tslint:disable-next-line:import-blacklist
 import { Subject } from 'rxjs';
-import { AgpTableConfig, AgpTableDataset, AgpGene, AgpGeneSetsCategory, AgpGenomicScoresCategory, AgpDatasetStatistic } from './autism-gene-profile-table';
+import { AgpTableConfig, AgpTableDataset, AgpGene, AgpGeneSetsCategory, AgpGenomicScoresCategory, AgpDatasetStatistic, AgpDatasetPersonSet } from './autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { AutismGeneProfileSingleViewComponent } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view.component';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
@@ -503,9 +503,9 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     return count;
   }
 
-  goToQuery(geneSymbol: string, personSetId: string, datasetId: string, statistic: AgpDatasetStatistic) {
+  goToQuery(geneSymbol: string, personSet: AgpDatasetPersonSet, datasetId: string, statistic: AgpDatasetStatistic) {
     AutismGeneProfileSingleViewComponent.goToQuery(
-      this.store, this.queryService, geneSymbol, personSetId, datasetId, statistic
+      this.store, this.queryService, geneSymbol, personSet, datasetId, statistic
     );
   }
 }

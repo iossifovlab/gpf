@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { AgpDatasetStatistic, AgpGene, AgpGenomicScores, AgpGenomicScoresCategory, AgpTableConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import { AgpDatasetPersonSet, AgpDatasetStatistic, AgpGene, AgpGenomicScores, AgpGenomicScoresCategory, AgpTableConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { Observable, of, zip } from 'rxjs';
 import { GeneWeightsService } from '../gene-weights/gene-weights.service';
 import { GeneWeights } from 'app/gene-weights/gene-weights';
@@ -156,14 +156,14 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     return this._histogramOptions;
   }
 
-  goToQuery(geneSymbol: string, personSetId: string, datasetId: string, statistic: AgpDatasetStatistic) {
+  goToQuery(geneSymbol: string, personSet: AgpDatasetPersonSet, datasetId: string, statistic: AgpDatasetStatistic) {
     AutismGeneProfileSingleViewComponent.goToQuery(
-      this.store, this.queryService, geneSymbol, personSetId, datasetId, statistic
+      this.store, this.queryService, geneSymbol, personSet, datasetId, statistic
     );
   }
 
   static goToQuery(
-    store: Store, queryService: QueryService, geneSymbol: string, personSetId: string, datasetId: string, statistic: AgpDatasetStatistic
+    store: Store, queryService: QueryService, geneSymbol: string, personSet: AgpDatasetPersonSet, datasetId: string, statistic: AgpDatasetStatistic
   ) {
     const effectTypes = {
       lgds: EffectTypes['LGDS'],
@@ -199,7 +199,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
       new SetGenomicScores(genomicScores),
       new SetPresentInChildValues(new Set(presentInChildValues)),
       new SetPresentInParentValues(new Set(presentInParent), rarityType, 0, 1),
-      new SetPedigreeSelector('phenotype', new Set([personSetId])),
+      new SetPedigreeSelector(personSet.collectionId, new Set([personSet.id])),
     ]);
 
     store.selectOnce(state => state).subscribe(state => {
