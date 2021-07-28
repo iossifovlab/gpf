@@ -6,6 +6,7 @@ import {
 import { Subject } from 'rxjs';
 import { AgpTableConfig, AgpTableDataset, AgpGene, AgpGeneSetsCategory, AgpGenomicScoresCategory, AgpDatasetStatistic } from './autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
+import { AutismGeneProfileSingleViewComponent } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view.component';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 import { cloneDeep } from 'lodash';
@@ -503,46 +504,8 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   }
 
   goToQuery(geneSymbol: string, personSetId: string, datasetId: string, statistic: AgpDatasetStatistic) {
-    const newWindow = window.open('', '_blank');
-
-    const genomicScores: GenomicScore[] = [];
-    if (statistic.scores) {
-      genomicScores[0] = new GenomicScore(
-        statistic.scores[0]['name'],
-        statistic.scores[0]['min'],
-        statistic.scores[0]['max'],
-      );
-    }
-
-    const presentInChildValues = ['proband only', 'proband and sibling', 'sibling only'];
-    const presentInParentRareValues = ['father only', 'mother only', 'mother and father'];
-
-    let presentInParent: string[] = ['neither'];
-    let rarityType = 'all';
-    if (statistic.category === 'rare') {
-      rarityType = 'rare';
-      presentInParent = presentInParentRareValues;
-    }
-
-    this.store.dispatch([
-      new SetGeneSymbols([geneSymbol]),
-      new SetEffectTypes(new Set(this.effectTypes[statistic['effects'][0]])),
-      new SetStudyTypes(new Set(['we'])),
-      new SetVariantTypes(new Set(statistic['variantTypes'])),
-      new SetGenomicScores(genomicScores),
-      new SetPresentInChildValues(new Set(presentInChildValues)),
-      new SetPresentInParentValues(new Set(presentInParent), rarityType, 0, 1),
-      new SetPedigreeSelector('phenotype', new Set([personSetId])),
-    ]);
-
-    this.store.selectOnce(state => state).subscribe(state => {
-      state['datasetId'] = datasetId;
-      this.queryService.saveQuery(state, 'genotype')
-      .pipe(take(1))
-      .subscribe(urlObject => {
-        const url = this.queryService.getLoadUrlFromResponse(urlObject);
-        newWindow.location.assign(url);
-      });
-    });
+    AutismGeneProfileSingleViewComponent.goToQuery(
+      this.store, this.queryService, geneSymbol, personSetId, datasetId, statistic
+    );
   }
 }
