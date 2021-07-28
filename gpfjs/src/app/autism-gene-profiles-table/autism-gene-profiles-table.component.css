@@ -1,3 +1,7 @@
+tr:nth-child(even) {
+  background-color: #FAFAFA;
+}
+
 td {
   text-align: center;
   vertical-align: middle;
