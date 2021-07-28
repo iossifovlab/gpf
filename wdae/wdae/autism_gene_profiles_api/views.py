@@ -42,6 +42,7 @@ class ConfigurationView(QueryBaseView):
                         person_sets_config.append({
                             "id": set_id,
                             "displayName": set_name,
+                            "collectionId": collection_id,
                             "description": description,
                             "parentsCount": stats["parents"],
                             "childrenCount": stats["children"],
