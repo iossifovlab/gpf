@@ -59,6 +59,10 @@ td, th, .table-subheader, .table-main-header {
   border-right: none;
 }
 
+.test {
+  border-left: 3px solid #dddddd;
+}
+
 .dropdown-toggle::after {
   content: none;
 }
