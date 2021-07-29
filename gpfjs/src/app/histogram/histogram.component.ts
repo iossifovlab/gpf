@@ -449,6 +449,9 @@ export class HistogramComponent implements OnInit, OnChanges {
   }
 
   get viewBox(): string {
-    return `0 0 ${this.width} ${this.height}`;
+    if (this.showMinMaxInputWithDefaultValue)
+      return `0 0 ${this.width} ${this.height}`;
+    
+    return `-10 -10 ${this.width} ${this.height}`;
   }
 }

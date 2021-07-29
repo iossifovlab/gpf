@@ -60,7 +60,6 @@
               <ng-container *ngIf="i != geneSetCategory.sets.length - 1">
                 {{i}}
               </ng-container>
-
               <span class="vertical-text" [title]="geneSet.meta ? geneSet.meta : ''">{{geneSet.setId}}</span>
               <gpf-sorting-buttons [id]="geneSet.collectionId + '_' + geneSet.setId" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
             </th>
