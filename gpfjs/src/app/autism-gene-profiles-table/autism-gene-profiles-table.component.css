@@ -2,6 +2,10 @@ tr:nth-child(even) {
   background-color: #FAFAFA;
 }
 
+tr:hover td {
+  background: #edf3ff
+}
+
 td {
   text-align: center;
   vertical-align: middle;
@@ -60,7 +64,7 @@ td, th, .table-subheader, .table-main-header {
 }
 
 .category-border {
-  border-left: 3px solid #dddddd;
+  border-left: 2px solid #d9d9d9;
 }
 
 .dropdown-toggle::after {
