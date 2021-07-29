@@ -101,7 +101,7 @@
 
     <tbody *ngIf="genes">
       <tr *ngFor="let gene of genes">
-        <td class="gene" (click)="emitCreateTabEvent(gene.geneSymbol, true)" (middleclick)="emitCreateTabEvent(gene.geneSymbol, false)">
+        <td class="link-td" (click)="emitCreateTabEvent(gene.geneSymbol, true)" (middleclick)="emitCreateTabEvent(gene.geneSymbol, false)">
           {{gene.geneSymbol}}
         </td>
 
@@ -122,7 +122,7 @@
 
         <ng-container *ngFor="let dataset of shownDatasets">
           <ng-container *ngFor="let personSet of dataset.personSets; let i = index">
-            <td style="min-width: 70px" *ngFor="let statistic of personSet.statistics; let j = index" [ngClass] = "{'category-border': i === 0 && j === 0}">
+            <td [class.link-td]="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id).count" style="min-width: 70px" *ngFor="let statistic of personSet.statistics; let j = index" [ngClass] = "{'category-border': i === 0 && j === 0}">
               <ng-container *ngIf="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id) as value">
                 <ng-container *ngIf="value.count !== 0">
                   <a (click)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)"
