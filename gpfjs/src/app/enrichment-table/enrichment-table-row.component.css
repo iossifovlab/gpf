@@ -4,7 +4,7 @@ td {
   border: 1px solid #dddddd;
 }
 
-a, a:hover {
+.link, .link:hover {
   color: #0056b3;
   cursor: pointer;
 }
