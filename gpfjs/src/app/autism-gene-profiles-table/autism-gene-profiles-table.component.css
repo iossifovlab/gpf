@@ -126,11 +126,11 @@ thead th, .effect-type-header {
   background-color: #eeeeee;
 }
 
-a, a:hover {
+a, .gene, a:hover, .gene:hover {
   color: #0056b3;
   cursor: pointer;
 }
 
-a:hover {
+a:hover, .gene:hover {
   text-decoration: underline;
 }
