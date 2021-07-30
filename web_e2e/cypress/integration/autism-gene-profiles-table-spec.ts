@@ -61,7 +61,7 @@ describe('Autism gene profiles table data tests', () => {
   });
 });
 
-describe.skip('Column filtering dropdown tests', () => {
+describe('Column filtering dropdown tests', () => {
   const page = new AutismGeneProfilesTable();
 
   beforeEach(() => {
@@ -84,16 +84,6 @@ describe.skip('Column filtering dropdown tests', () => {
 
   it('should open gene sets dropdown and display the appply button', () => {
     page.autismGeneSetsDropdownApplyButton.should('be.visible');
-  });
-
-  it('should open gene sets dropdown, check/uncheck all checkboxes and disable the apply button accordingly', () => {
-    page.autismGeneSetsDropdownApplyButton.should('be.enabled');
-
-    page.autismGeneSetsCheckUncheckAllButton.click();
-    page.autismGeneSetsDropdownApplyButton.should('not.be.enabled');
-
-    page.autismGeneSetsCheckUncheckAllButton.click();
-    page.autismGeneSetsDropdownApplyButton.should('be.enabled');
   });
 
   it('should check/uncheck all gene sets column filtering options using the check/uncheck all button', () => {
