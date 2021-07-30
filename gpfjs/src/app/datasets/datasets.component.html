@@ -29,6 +29,9 @@
       <li *ngIf="selectedDataset.commonReport['enabled']" class="nav-item">
         <a class="nav-link" routerLink="{{toolPageLinks.datasetStatistics}}" routerLinkActive="active">Dataset Statistics</a>
       </li>
+      <li *ngIf="selectedDataset.geneBrowser?.enabled" class="nav-item">
+        <a class="nav-link" routerLink="{{toolPageLinks.geneBrowser}}" routerLinkActive="active">Gene Browser</a>
+      </li>
       <li *ngIf="selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig" class="nav-item">
         <a class="nav-link" routerLink="{{toolPageLinks.genotypeBrowser}}" routerLinkActive="active">Genotype Browser</a>
       </li>
@@ -40,9 +43,6 @@
       </li>
       <li *ngIf="selectedDataset.phenotypeTool" class="nav-item">
         <a class="nav-link" routerLink="{{toolPageLinks.phenotypeTool}}" routerLinkActive="active">Phenotype Tool</a>
-      </li>
-      <li *ngIf="selectedDataset.geneBrowser?.enabled" class="nav-item">
-        <a class="nav-link" routerLink="{{toolPageLinks.geneBrowser}}" routerLinkActive="active">Gene Browser</a>
       </li>
     </ul>
   </nav>
