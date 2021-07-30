@@ -67,7 +67,7 @@ describe('Autism gene profiles single view tests', () => {
   it('should display the datasets table', () => {
     page.datasetsTable.should('be.visible');
     page.datasetsTable.find('th').first().should('have.text', ' iossifov_2014 ');
-    page.datasetsTable.find('tr').should('have.length', 3);
+    page.datasetsTable.find('tr').should('have.length', 5);
   });
 
   it('should display gene browser link', () => {
