@@ -33,6 +33,7 @@ def test_configuration(admin_client):
         {
             "id": "unknown",
             "displayName": "unknown",
+            "collectionId": "phenotype",
             "description": "",
             "parentsCount": 0,
             "childrenCount": 11,
@@ -40,6 +41,7 @@ def test_configuration(admin_client):
         {
             "id": "unaffected",
             "displayName": "unaffected",
+            "collectionId": "phenotype",
             "description": "",
             "parentsCount": 22,
             "childrenCount": 10,
