@@ -58,7 +58,7 @@ export class DatasetsComponent implements OnInit {
         this.selectDataset(datasets[0]);
       } else {
         if (!this.isToolSelected()) {
-          this.datasetsService.getSelectedDataset().take(1).subscribe(dataset => {
+          this.datasetsService.getSelectedDataset().pipe(take(1)).subscribe(dataset => {
             this.router.navigate(['/', 'datasets', dataset.id, this.findFirstTool(dataset)]);
           });
         }

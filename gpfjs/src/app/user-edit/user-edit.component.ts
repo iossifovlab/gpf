@@ -10,6 +10,7 @@ import { UserGroup } from '../users-groups/users-groups';
 import { UsersGroupsService } from '../users-groups/users-groups.service';
 import { IDropdownSettings } from 'ng-multiselect-dropdown';
 import { UserGroupsSelectorComponent } from 'app/user-groups-selector/user-groups-selector.component';
+import { map, switchMap, take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-user-edit',
@@ -50,13 +51,14 @@ export class UserEditComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.route.params.take(1)
-      .map(params => +params['id'])
-      .switchMap(userId => this.usersService.getUser(userId))
-      .subscribe(user => {
-        this.emailValue = user.email;
-        this.user$.next(user);
-      });
+    this.route.params.pipe(
+      take(1),
+      map(params => +params['id']),
+      switchMap(userId => this.usersService.getUser(userId))
+    ).subscribe(user => {
+      this.emailValue = user.email;
+      this.user$.next(user);
+    })
 
       this.usersGroupsService
       .getAllGroups()
@@ -87,7 +89,7 @@ export class UserEditComponent implements OnInit {
 
     delete user.email;
     this.usersService.updateUser(user)
-      .take(1)
+      .pipe(take(1))
       .subscribe(() => this.router.navigate(['/management']));
   }
 

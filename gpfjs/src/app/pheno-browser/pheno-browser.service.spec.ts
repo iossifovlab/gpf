@@ -6,7 +6,7 @@ import { CookieService } from 'ngx-cookie-service';
 // tslint:disable-next-line:import-blacklist
 import { Observable, of } from 'rxjs';
 import { fakeJsonMeasure } from './pheno-browser.spec';
-import 'rxjs/add/operator/map';
+
 import { HttpClient } from '@angular/common/http';
 
 describe('pheno browser service', () => {

@@ -44,7 +44,7 @@ export class GenotypeBlockComponent {
       'variantTypes': variantTypesState.variantTypes,
       'effectTypes': effectTypesState.effectTypes,
       'gender': genderState.genders,
-      'inheritanceTypes': inheritanceTypesState.inheritanceTypes,
+      'inheritanceTypeFilter': inheritanceTypesState.inheritanceTypes,
       'presentInChild': presentInChildState.presentInChild,
       'presentInParent': presentInParentState,
       'studyTypes': studyTypesState.studyTypes,

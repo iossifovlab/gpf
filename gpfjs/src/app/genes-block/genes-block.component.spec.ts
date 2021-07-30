@@ -4,7 +4,9 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 
+import { GeneSymbolsComponent } from 'app/gene-symbols/gene-symbols.component';
 import { GenesBlockComponent } from './genes-block.component';
+import { GeneSymbolsState } from 'app/gene-symbols/gene-symbols.state';
 
 describe('GenesBlockComponent', () => {
   let component: GenesBlockComponent;
@@ -12,8 +14,8 @@ describe('GenesBlockComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [GenesBlockComponent],
-      imports: [NgbModule, NgxsModule.forRoot([])],
+      declarations: [GeneSymbolsComponent, GenesBlockComponent],
+      imports: [NgbModule, NgxsModule.forRoot([GeneSymbolsState])],
     })
     .compileComponents();
   }));

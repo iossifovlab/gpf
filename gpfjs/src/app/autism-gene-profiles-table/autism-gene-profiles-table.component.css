@@ -1,3 +1,11 @@
+tr:nth-child(even) {
+  background-color: #FAFAFA;
+}
+
+tr:hover td {
+  background: #edf3ff
+}
+
 td {
   text-align: center;
   vertical-align: middle;
@@ -100,6 +108,10 @@ td, th {
   border-right: none;
 }
 
+.category-border {
+  border-left: 2px solid #d9d9d9;
+}
+
 .dropdown-toggle::after {
   content: none;
 }
@@ -159,11 +171,11 @@ thead th, .effect-type-header {
   background-color: #eeeeee;
 }
 
-a, a:hover {
-  color: #0056b3;
+a, a:hover, .link-td, .link-td:hover {
+  color: #2372c6;
   cursor: pointer;
 }
 
-a:hover {
+a:hover, .link-td:hover {
   text-decoration: underline;
 }

@@ -70,6 +70,7 @@ export class AgpDatasetStatistic {
 export class AgpDatasetPersonSet {
   id: string;
   displayName: string;
+  collectionId: string;
   description: string;
   parentsCount: number;
   childrenCount: number;
@@ -132,6 +133,7 @@ export class AgpTableDatasetPersonSet {
   constructor(
     public id: string,
     public displayName: string,
+    public collectionId: string,
     public description: string,
     public parentsCount: number,
     public childrenCount: number,

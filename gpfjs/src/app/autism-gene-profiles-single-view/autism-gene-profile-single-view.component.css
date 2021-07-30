@@ -15,8 +15,9 @@ table {
 }
 
 .link-genotype-browser, .link-genotype-browser:hover {
-  color: #0056b3;
+  color: #2372c6;
   cursor: pointer;
+  padding: 15px;
 }
 
 .link-genotype-browser:hover {

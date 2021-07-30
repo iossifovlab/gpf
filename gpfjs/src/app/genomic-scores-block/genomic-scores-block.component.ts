@@ -76,6 +76,7 @@ export class GenomicScoresBlockComponent extends StatefulComponent implements On
   removeFilter(genomicScore: GenomicScoreState) {
     this.genomicScoresState.genomicScoresState = this.genomicScoresState
         .genomicScoresState.filter(gs => gs !== genomicScore);
+    this.updateState();
   }
 
   updateState() {

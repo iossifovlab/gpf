@@ -3,7 +3,6 @@ import { Input, Component, OnInit, ChangeDetectionStrategy,  AfterViewInit, View
 // tslint:disable-next-line:import-blacklist
 import { Observable, BehaviorSubject, Subject, Subscription, of } from 'rxjs';
 // tslint:disable-next-line:import-blacklist
-import 'rxjs/Rx';
 import { difference } from '../utils/sets-helper';
 
 import { IntervalForVertex } from '../utils/interval-sandwich';
@@ -78,7 +77,7 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
       switchMap(family => {
         if (family.map(member => member.position).some(p => !!p)) {
           this.positionedIndividuals = this.loadPositions(family);
-          return Observable.of<void>(null);
+          return of<void>(null);
         }
 
         return of(this.perfectlyDrawablePedigreeService.isPDP(family)).pipe(

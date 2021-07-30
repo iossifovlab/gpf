@@ -174,6 +174,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
         const personSets = dataset.personSets.map(personSet => new AgpTableDatasetPersonSet(
           personSet.id,
           personSet.displayName,
+          personSet.collectionId,
           personSet.description,
           personSet.parentsCount,
           personSet.childrenCount,

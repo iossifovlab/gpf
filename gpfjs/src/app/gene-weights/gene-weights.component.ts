@@ -41,7 +41,7 @@ export class GeneWeightsComponent extends StatefulComponent implements OnInit {
       }),
       catchError(error => {
         console.warn(error);
-        return Observable.of(null);
+        return of(null);
       })
     )
 

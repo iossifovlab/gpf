@@ -50,10 +50,10 @@ export class GenotypeBrowserComponent implements OnInit, OnChanges {
     this.genotypeBrowserState = {};
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
     this.state$.subscribe(state => {
-      this.genotypeBrowserState = state;
+      this.genotypeBrowserState = {...state};
       this.genotypePreviewVariantsArray = null;
     });
-    
+
     this.errorsState$.subscribe(state => {
       setTimeout(() => this.disableQueryButtons = state.componentErrors.size > 0);
     });
@@ -100,6 +100,17 @@ export class GenotypeBrowserComponent implements OnInit, OnChanges {
       this.genotypePreviewVariantsArray = null;
       this.genotypeBrowserState['datasetId'] = selectedDataset.id;
       this.legend = selectedDataset.peopleGroupConfig.getLegend(this.genotypeBrowserState['peopleGroup']);
+
+      /* FIXME: Hack to remove presentInChild and presentInParent from
+      query arguments if they are not enabled (would interfere with results).
+      This should be removed when a central converter from state to query args
+      is implemented. */
+      if (!selectedDataset.genotypeBrowserConfig.hasPresentInChild) {
+        delete this.genotypeBrowserState['presentInChild'];
+      }
+      if (!selectedDataset.genotypeBrowserConfig.hasPresentInParent) {
+        delete this.genotypeBrowserState['presentInParent'];
+      }
 
       this.queryService.streamingFinishedSubject.subscribe(
         _ => { this.loadingFinished = true; }
