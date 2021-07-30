@@ -450,7 +450,7 @@ export class HistogramComponent implements OnInit, OnChanges {
   }
 
   get viewBox(): string {
-    const pos = this.showMinMaxInputWithDefaultValue ? '0 0' : '-12 -12';
+    const pos = this.showMinMaxInputWithDefaultValue ? '0 0' : '-8 -8';
     return `${pos} ${this.width} ${this.height}`;
   }
 }
