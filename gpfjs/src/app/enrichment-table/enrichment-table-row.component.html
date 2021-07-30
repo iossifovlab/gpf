@@ -1,10 +1,9 @@
 <td>{{ label }}</td>
-<td (click)="goToQuery(effectResult.all.countFilter)" (middleclick)="goToQuery(effectResult.all.countFilter)" style="cursor: pointer; color: #1a6393" [style.background-color]="getBackgroundColor(effectResult.all)">
-  <a class="link">{{ effectResult.all.count | numberWithExp: "1.0-2" }}</a>
+<td class="link-td" (click)="goToQuery(effectResult.all.countFilter)" (middleclick)="goToQuery(effectResult.all.countFilter)" [style.background-color]="getBackgroundColor(effectResult.all)">
+  <a class="link">eeee</a>
 </td>
-<td (click)="goToQuery(effectResult.all.overlapFilter)" (middleclick)="goToQuery(effectResult.all.overlapFilter)" style="cursor: pointer; color: #1a6393" [style.background-color]="getBackgroundColor(effectResult.all)">
+<td class="link-td" (click)="goToQuery(effectResult.all.overlapFilter)" (middleclick)="goToQuery(effectResult.all.overlapFilter)" [style.background-color]="getBackgroundColor(effectResult.all)">
   <a class="link">{{ effectResult.all.overlapped | numberWithExp: "1.0-2" }}</a>
-
 </td>
 <td [style.background-color]="getBackgroundColor(effectResult.all)">
   {{ effectResult.all.expected | numberWithExp: "1.2-2" }}
@@ -12,10 +11,10 @@
 <td [style.background-color]="getBackgroundColor(effectResult.all)">
   {{ effectResult.all.pvalue | numberWithExp: "1.2-4" }}
 </td> 
-<td (click)="goToQuery(effectResult.rec.countFilter)" (middleclick)="goToQuery(effectResult.rec.countFilter)" style="cursor: pointer; color: #1a6393" [style.background-color]="getBackgroundColor(effectResult.rec)">
+<td class="link-td" (click)="goToQuery(effectResult.rec.countFilter)" (middleclick)="goToQuery(effectResult.rec.countFilter)" [style.background-color]="getBackgroundColor(effectResult.rec)">
   <a class="link">{{ effectResult.rec.count | numberWithExp: "1.0-2" }}</a>
 </td>
-<td (click)="goToQuery(effectResult.rec.overlapFilter)" (middleclick)="goToQuery(effectResult.rec.overlapFilter)" style="cursor: pointer; color: #1a6393" [style.background-color]="getBackgroundColor(effectResult.rec)">
+<td class="link-td" (click)="goToQuery(effectResult.rec.overlapFilter)" (middleclick)="goToQuery(effectResult.rec.overlapFilter)" [style.background-color]="getBackgroundColor(effectResult.rec)">
   <a class="link">{{ effectResult.rec.overlapped | numberWithExp: "1.0-2" }}</a>
 </td>
 <td [style.background-color]="getBackgroundColor(effectResult.rec)">
@@ -24,10 +23,10 @@
 <td [style.background-color]="getBackgroundColor(effectResult.rec)">
   {{ effectResult.rec.pvalue | numberWithExp: "1.2-4" }}
 </td>
-<td (click)="goToQuery(effectResult.male.countFilter)" (middleclick)="goToQuery(effectResult.male.countFilter)" style="cursor: pointer; color: #1a6393" [style.background-color]="getBackgroundColor(effectResult.male)">
+<td class="link-td" (click)="goToQuery(effectResult.male.countFilter)" (middleclick)="goToQuery(effectResult.male.countFilter)" [style.background-color]="getBackgroundColor(effectResult.male)">
   <a class="link">{{ effectResult.male.count | numberWithExp: "1.0-2" }}</a>
 </td>
-<td (click)="goToQuery(effectResult.male.overlapFilter)" (middleclick)="goToQuery(effectResult.male.overlapFilter)" style="cursor: pointer; color: #1a6393" [style.background-color]="getBackgroundColor(effectResult.male)">
+<td class="link-td" (click)="goToQuery(effectResult.male.overlapFilter)" (middleclick)="goToQuery(effectResult.male.overlapFilter)" [style.background-color]="getBackgroundColor(effectResult.male)">
   <a class="link">{{ effectResult.male.overlapped | numberWithExp: "1.0-2" }}</a>
 </td>
 <td [style.background-color]="getBackgroundColor(effectResult.male)">
@@ -36,10 +35,10 @@
 <td [style.background-color]="getBackgroundColor(effectResult.male)">
   {{ effectResult.male.pvalue | numberWithExp: "1.2-4" }}
 </td>
-<td (click)="goToQuery(effectResult.female.countFilter)" (middleclick)="goToQuery(effectResult.female.countFilter)" style="cursor: pointer; color: #1a6393" [style.background-color]="getBackgroundColor(effectResult.female)">
+<td class="link-td" (click)="goToQuery(effectResult.female.countFilter)" (middleclick)="goToQuery(effectResult.female.countFilter)" [style.background-color]="getBackgroundColor(effectResult.female)">
   <a class="link">{{ effectResult.female.count | numberWithExp: "1.0-2" }}</a>
 </td>
-<td (click)="goToQuery(effectResult.female.overlapFilter)" (middleclick)="goToQuery(effectResult.female.overlapFilter)" style="cursor: pointer; color: #1a6393" [style.background-color]="getBackgroundColor(effectResult.female)">
+<td class="link-td" (click)="goToQuery(effectResult.female.overlapFilter)" (middleclick)="goToQuery(effectResult.female.overlapFilter)" [style.background-color]="getBackgroundColor(effectResult.female)">
   <a class="link">{{ effectResult.female.overlapped | numberWithExp: "1.0-2" }}</a>
 </td>
 <td [style.background-color]="getBackgroundColor(effectResult.female)">
