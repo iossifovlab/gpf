@@ -18,10 +18,8 @@ td {
 .table {
   border-collapse: separate;
   border-spacing: 0;
-  border-bottom: 1px solid #808080;
-  border-top: 1px solid #808080; 
-  border-left: 1px solid #808080;
-  border-right: 1px solid #808080;
+  border-right: 1px solid #dddddd;
+  border-bottom: 1px solid #dddddd;
 }
 
 .vertical-text {
@@ -58,53 +56,10 @@ thead {
   background-color: #eeeeee;
 }
 
-td, th {
-  border-bottom: 1px solid #dddddd;
-  border-top: none;
-  border-left: none;
-  border-right: 1px solid #dddddd;
-}
-
-.table-subheader {
-  border-bottom: 1px solid #dddddd;
-  border-top: none;
-  border-left: none;
-  border-right: 1px solid #dddddd;
-}
-
-.table-subheader:nth-child(1) {
-  border-bottom: 1px solid #dddddd;
-  border-top: none;
-  border-left: none;
-  border-right: 1px solid #808080;
-}
-
-.table-subheader-end {
-  border-bottom: 1px solid #dddddd;
-  border-top: none;
-  border-left: none;
-  border-right: 1px solid #dddddd;
-}
-
-.table-subheader-end:last-child {
-  border-bottom: 1px solid #dddddd;
-  border-top: none;
-  border-left: none;
-  border-right: none;
-}
-
-.table-main-header {
-  border-bottom: 1px solid #dddddd;
-  border-top: none;
-  border-left: none;
-  border-right: 1px solid #808080;
-}
-
-.table-main-header-end {
-  text-align: center;
-  border-bottom: 1px solid #dddddd;
-  border-top: none;
-  border-left: none;
+td, th, .table-subheader, .table-main-header {
+  border-bottom: none;
+  border-top: 1px solid #dddddd;
+  border-left: 1px solid #dddddd;
   border-right: none;
 }
 
