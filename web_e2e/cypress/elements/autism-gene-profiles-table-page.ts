@@ -6,19 +6,19 @@ export class AutismGeneProfilesTable extends BasePage {
   }
 
   get table() {
-    return cy.get('table');
+    return cy.get('gpf-autism-gene-profiles-table table');
   }
 
   get allTableCells() {
-    return cy.get('tbody td');
+    return this.table.find('tbody td');
   }
 
   get allTableRows() {
-    return cy.get('tbody tr');
+    return this.table.find('tbody tr');
   }
 
   get firstGeneInTable() {
-    return cy.get('tbody td').first();
+    return this.allTableCells.first();
   }
 
   get geneSearchInput() {
@@ -46,7 +46,7 @@ export class AutismGeneProfilesTable extends BasePage {
   }
 
   get allAutismGeneSetsDropdownCheckboxes() {
-    return cy.get('gpf-multiple-select-menu#autism_gene_sets-dropdown label input');
+    return this.autismGeneSetsDropdown.find('label input');
   }
 
   get firstTabCloseButton() {

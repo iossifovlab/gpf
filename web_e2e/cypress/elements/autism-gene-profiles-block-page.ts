@@ -12,4 +12,8 @@ export class AutismGeneProfilesBlock extends BasePage {
   get allTabs() {
     return cy.get('nav li');
   }
+
+  get homeTab() {
+    return cy.get('nav li').first();
+  }
 }
