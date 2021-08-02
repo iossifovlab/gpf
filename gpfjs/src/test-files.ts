@@ -44,7 +44,7 @@ import './app/table/view/empty-cell.component.spec.ts';
 import './app/user-groups-selector/user-groups-selector.component.spec.ts';
 import './app/continuous-filter/continuous-filter.component.spec.ts';
 import './app/genotype-block/genotype-block.component.spec.ts';
-import './app/genomic-scores/genomic-scores.component.spec.ts';
+import './app/-scores/genomic-scores.component.spec.ts';
 import './app/categorical-filter/categorical-filter.component.spec.ts';
 import './app/pedigree-selector/pedigree-selector.component.spec.ts';
 import './app/management/management.component.spec.ts';
