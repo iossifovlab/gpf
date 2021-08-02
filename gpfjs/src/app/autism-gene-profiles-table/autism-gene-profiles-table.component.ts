@@ -157,7 +157,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
             .filter(score => score.defaultVisible === true).map(score => score.scoreName)
         });
       });
-      this.shownDatasets[0].personSets[0].statistics[0].defaultVisible = false;
       this.shownDatasets.forEach(dataset => {
         dataset.personSets.forEach(personSet => {
           this.multipleSelectMenuApplyData({
