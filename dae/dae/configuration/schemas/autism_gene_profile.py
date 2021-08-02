@@ -45,6 +45,7 @@ variant_statistic_schema = {
                 "max": {"type": "float", "default": None, "nullable": True}
             }
         }},
+        "default_visible": {"type": "boolean", "default": True},
         "variant_types": {
             "type": "list",
             "schema": {
