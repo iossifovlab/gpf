@@ -35,7 +35,7 @@
   margin-top: -10px;
   margin-left: -10px;
   border-radius: 50%;
-  border: 2px solid green;
+  border: 2px solid #00FF00;
   border-top-color: #000000;
   animation: spinner .8s linear infinite;
 }
