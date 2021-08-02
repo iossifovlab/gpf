@@ -72,6 +72,7 @@ autism_gene_tool_config = {
             "schema": {
                 "category": {"type": "string"},
                 "display_name": {"type": "string"},
+                "default_visible": {"type": "boolean", "default": True},
                 "sets": {"type": "list", "schema": gene_set_schema}
             },
         }
@@ -84,6 +85,7 @@ autism_gene_tool_config = {
             "schema": {
                 "category": {"type": "string"},
                 "display_name": {"type": "string"},
+                "default_visible": {"type": "boolean", "default": True},
                 "scores": {"type": "list", "schema": genomic_score_schema}
             },
         }
