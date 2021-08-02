@@ -233,48 +233,22 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
 
 
 def fill_variant_counts(
-        variants_datasets, agps, config, person_ids, denovo_flag):
+        variants, dataset_id, agps, config, person_ids, denovo_flag):
 
     seen = set()
-    for dataset_id, variants in variants_datasets.items():
-        logger.info(f"Counting variants in {dataset_id}")
+    logger.info(f"Counting variants in {dataset_id}")
 
-        variants_count = len(variants)
-
-        for idx, v in enumerate(variants, 1):
-            if idx % 100 == 0:
-                logger.info(
-                    f"Counted {idx}/{variants_count} variants"
-                )
-            if v.fvuid in seen:
-                continue
-            count_variant(
-                v, dataset_id, agps, config, person_ids, denovo_flag
+    for idx, v in enumerate(variants, 1):
+        if idx % 100 == 0:
+            logger.info(
+                f"Counted {idx} variants"
             )
-            seen.add(v.fvuid)
-
-
-# def fill_variant_counts_rare(
-#         variants_datasets, agps, config, person_ids):
-
-#     seen = set()
-#     for dataset_id, variants in variants_datasets.items():
-#         logger.info(f"Counting variants in {dataset_id}")
-
-#         variants_count = len(variants)
-
-#         for idx, v in enumerate(variants, 1):
-#             if idx % 25 == 0:
-#                 logger.info(
-#                     f"Counted {idx}/{variants_count} variants"
-#                 )
-
-#             if v.fvuid in seen:
-#                 continue
-#             count_variant(
-#                 v, dataset_id, agps, config, person_ids, False
-#             )
-#             seen.add(v.fvuid)
+        if v.fvuid in seen:
+            continue
+        count_variant(
+            v, dataset_id, agps, config, person_ids, denovo_flag
+        )
+        seen.add(v.fvuid)
 
 
 def main(gpf_instance=None, argv=None):
@@ -397,7 +371,7 @@ def main(gpf_instance=None, argv=None):
 
     if has_denovo:
         logger.info("Collecting denovo variants")
-        denovo_variants = dict()
+        # denovo_variants = dict()
         for dataset_id, filters in config.datasets.items():
             genotype_data = gpf_instance.get_genotype_data(dataset_id)
             assert genotype_data is not None, dataset_id
@@ -406,17 +380,19 @@ def main(gpf_instance=None, argv=None):
             else:
                 genes = None
 
-            denovo_variants[dataset_id] = list(
+            denovo_variants = \
                 genotype_data.query_variants(genes=genes, inheritance="denovo")
-            )
+    
+            fill_variant_counts(
+                denovo_variants, dataset_id, agps, config, person_ids, True)
+
         logger.info("Done collecting denovo variants")
         logger.info("Counting denovo variants...")
-        fill_variant_counts(denovo_variants, agps, config, person_ids, True)
         logger.info("Done counting denovo variants")
 
     if has_rare:
-        logger.info("Collecting rare variants")
-        rare_variants = dict()
+        logger.info("Counting rare variants")
+
         for dataset_id, filters in config.datasets.items():
             genotype_data = gpf_instance.get_genotype_data(dataset_id)
             assert genotype_data is not None, dataset_id
@@ -425,7 +401,6 @@ def main(gpf_instance=None, argv=None):
             else:
                 genes = None
 
-            rare_variants[dataset_id] = []
             for statistic in filters.statistics:
                 if statistic.category == "denovo":
                     continue
@@ -456,7 +431,7 @@ def main(gpf_instance=None, argv=None):
                     ]
                     kwargs["roles"] = " or ".join(roles)
 
-                rare_variants[dataset_id].extend(list(
+                rare_variants = \
                     genotype_data.query_variants(
                         genes=genes,
                         inheritance=[
@@ -466,10 +441,10 @@ def main(gpf_instance=None, argv=None):
                         ],
                         frequency_filter=[("af_allele_freq", (None, 1.0))],
                         **kwargs)
-                ))
-        logger.info("Done collecting rare variants")
-        logger.info("Counting rare variants...")
-        fill_variant_counts(rare_variants, agps, config, person_ids, False)
+
+                fill_variant_counts(
+                    rare_variants, dataset_id, agps, config, person_ids, False)
+
         logger.info("Done counting rare variants")
 
     logger.info("Calculating rates...")
