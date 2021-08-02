@@ -140,6 +140,36 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     this.shownGenomicScoresCategories = cloneDeep(this.config.genomicScores);
     this.shownDatasets = cloneDeep(this.config.datasets);
 
+    // to avoid ExpressionChangedAfterItHasBeenCheckedError
+    // trigger new detection cycle with setTimeout
+    setTimeout(() => {
+      this.shownGeneSetsCategories.forEach(category => {
+        this.multipleSelectMenuApplyData({
+          menuId: 'gene_set_category:' + category.category,
+          data: category.sets
+            .filter(set => set.defaultVisible === true).map(set => set.setId)
+        });
+      });
+      this.shownGenomicScoresCategories.forEach(category => {
+        this.multipleSelectMenuApplyData({
+          menuId: 'genomic_scores_category:' + category.category,
+          data: category.scores
+            .filter(score => score.defaultVisible === true).map(score => score.scoreName)
+        });
+      });
+      this.shownDatasets[0].personSets[0].statistics[0].defaultVisible = false;
+      this.shownDatasets.forEach(dataset => {
+        dataset.personSets.forEach(personSet => {
+          this.multipleSelectMenuApplyData({
+            menuId: 'dataset:' + dataset.id + ':' + personSet.id,
+            data: personSet.statistics
+              .filter(statistic => statistic.defaultVisible === true)
+              .map(statistic => statistic.displayName)
+          });
+        });
+      });
+    }, 0);
+
     this.sortBy = `${this.shownGeneSetsCategories[0].category}_rank`;
     this.orderBy = 'desc';
     this.currentSortingColumnId = this.sortBy;
@@ -201,6 +231,11 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
    * @param $event event containing menu id and filtered columns
    */
   handleMultipleSelectMenuApplyEvent($event) {
+    this.multipleSelectMenuApplyData($event);
+    this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
+  }
+
+  private multipleSelectMenuApplyData($event) {
     const menuId = $event.menuId.split(':');
     if (menuId[0] === 'gene_set_category') {
       const categoryIndex = this.shownGeneSetsCategories.findIndex(category => category.category === menuId[1]);
@@ -255,7 +290,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
         this.configChange.emit(this.config);
       }
     }
-    this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
   /**

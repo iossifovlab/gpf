@@ -52,8 +52,16 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
       this.autismGeneToolConfig = config;
       this.tableConfig = this.getTableConfig(config);
       this.shownTableConfig = this.getTableConfig(config);
+
+      this.shownTableConfig.geneSets = this.shownTableConfig.geneSets
+      .filter(geneSet => geneSet.defaultVisible === true);
+      this.shownTableConfig.genomicScores = this.shownTableConfig.genomicScores
+      .filter(genomicScore => genomicScore.defaultVisible === true);
+      this.shownTableConfig.datasets = this.shownTableConfig.datasets
+      .filter(dataset => dataset.defaultVisible === true);
+
       this.allColumns = this.getAllCategories(this.tableConfig);
-      this.shownColumns = this.getAllCategories(this.tableConfig);
+      this.shownColumns = this.getAllCategories(this.shownTableConfig);
     });
   }
 
