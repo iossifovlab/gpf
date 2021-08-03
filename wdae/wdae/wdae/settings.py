@@ -1,10 +1,7 @@
 # flake8: noqa
 from .default_settings import *
 
-SITE_URL = "http://127.0.0.1:8000"
-
 ALLOWED_HOSTS += ["localhost"]
-
 
 INSTALLED_APPS += [
     "corsheaders",

@@ -3,6 +3,7 @@ import os
 
 DEBUG = True
 
+
 STUDIES_EAGER_LOADING = False
 
 OPEN_REGISTRATION = True
@@ -11,6 +12,8 @@ GUARDIAN_GET_INIT_ANONYMOUS_USER = (
     "users_api.models.get_anonymous_user_instance"
 )
 ANONYMOUS_USER_NAME = "anonymous@seqpipe.org"
+
+SITE_URL = "localhost"
 
 BASE_DIR = os.path.dirname(__file__)
 
