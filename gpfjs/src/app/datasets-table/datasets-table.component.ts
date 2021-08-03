@@ -1,6 +1,6 @@
 import { Component, ElementRef, OnInit, ViewChildren } from '@angular/core';
 
-import { Observable, ReplaySubject } from 'rxjs';
+import { combineLatest, Observable, ReplaySubject } from 'rxjs';
 
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
@@ -9,6 +9,7 @@ import { DatasetsService } from '../datasets/datasets.service';
 import { DatasetTableRow } from './datasets-table';
 import { UsersGroupsService } from '../users-groups/users-groups.service';
 import { UserGroup } from '../users-groups/users-groups';
+import { debounceTime, distinctUntilChanged, map, share, switchMap, take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-datasets-table',
@@ -32,11 +33,12 @@ export class DatasetsTableComponent implements OnInit {
     private usersService: UsersService,
     private userGroupsService: UsersGroupsService
   ) {
-    this.datasets$ = this.datasetsRefresh$
-      .switchMap(() => this.datasetsService.getDatasets())
-      .share();
+    this.datasets$ = this.datasetsRefresh$.pipe(
+      switchMap(() => this.datasetsService.getDatasets()),
+      share()
+    );
 
-    this.datasets$.take(1).subscribe(datasets => {
+    this.datasets$.pipe(take(1)).subscribe(datasets => {
       datasets.forEach(dataset => {
         this.errorDisplayStyles[dataset.id] = 'none';
       })
@@ -45,18 +47,19 @@ export class DatasetsTableComponent implements OnInit {
 
   ngOnInit() {
     this.usersToShow = [];
-    this.users$ = this.usersService.searchUsersByGroup(null)
-      .map(user => {
+    this.users$ = this.usersService.searchUsersByGroup(null).pipe(
+      map(user => {
         this.usersToShow.push(user);
         return this.usersToShow;
-      })
-      .share();
+      }),
+      share()
+    );
 
-    this.tableData$ = Observable.combineLatest(this.datasets$, this.users$)
-      .map(([datasets, users]) => this.toDatasetTableRow(datasets, users));
+    this.tableData$ = combineLatest(this.datasets$, this.users$)
+      .pipe(map(([datasets, users]) => this.toDatasetTableRow(datasets, users)));
 
     this.userGroupsService.getAllGroups()
-      .take(1)
+      .pipe(take(1))
       .subscribe(groups => {
         this.groups = groups;
       });
@@ -113,18 +116,17 @@ export class DatasetsTableComponent implements OnInit {
       return;
     }
 
-    this.userGroupsService.grantPermission(groupName, dataset)
-      .take(1)
+    this.userGroupsService.grantPermission(groupName, dataset).pipe(take(1))
       .subscribe(() => {
         this.datasetsRefresh$.next(true);
       });
   }
 
   private search = (datasetGroups: string[], text$: Observable<string>) => {
-    return text$
-      .debounceTime(200)
-      .distinctUntilChanged()
-      .map(groupName => {
+    return text$.pipe(
+      debounceTime(200),
+      distinctUntilChanged(),
+      map(groupName => {
         if (groupName === '') {
           return [];
         }
@@ -134,7 +136,8 @@ export class DatasetsTableComponent implements OnInit {
           .filter(g => datasetGroups.indexOf(g) === -1)
           .filter(g => g.toLowerCase().indexOf(groupName.toLowerCase()) !== -1)
             .slice(0, 10);
-      });
+      })
+    );
   }
 
   searchGroups = (groups: string[]) => {
@@ -151,7 +154,7 @@ export class DatasetsTableComponent implements OnInit {
       return;
     }
     this.userGroupsService.revokePermission(group, dataset)
-      .take(1)
+      .pipe(take(1))
       .subscribe(() => {
         this.datasetsRefresh$.next(true);
       });

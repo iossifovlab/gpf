@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 
 import { GeneSetsCollection, GeneSet } from './gene-sets';
 import { ConfigService } from '../config/config.service';
+import { map } from 'rxjs/operators';
 
 @Injectable()
 export class GeneSetsService {
@@ -22,9 +23,9 @@ export class GeneSetsService {
 
     return this.http
       .get(this.config.baseUrl + this.geneSetsCollectionsUrl, options)
-      .map((res: any) => {
+      .pipe(map((res: any) => {
         return GeneSetsCollection.fromJsonArray(res);
-      });
+      }));
   }
 
   getGeneSets(selectedGeneSetsCollection: string, searchTerm: string, geneSetsTypes: Object): Observable<GeneSet[]> {
@@ -38,8 +39,8 @@ export class GeneSetsService {
         geneSetsTypes: geneSetsTypes,
         limit: 100
       }, options)
-      .map((res: any) => {
+      .pipe(map((res: any) => {
         return GeneSet.fromJsonArray(res);
-      });
+      }));
   }
 }

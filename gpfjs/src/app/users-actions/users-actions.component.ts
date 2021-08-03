@@ -1,4 +1,5 @@
 import { Component, OnInit, NgZone, Input, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { take } from 'rxjs/operators';
 
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
@@ -30,14 +31,14 @@ export class UsersActionsComponent implements OnInit, OnDestroy {
   }
 
   deleteUser(user: User) {
-    this.usersService.deleteUser(user).take(1)
+    this.usersService.deleteUser(user).pipe(take(1))
       .subscribe(() => {
         this.reloadPage();
       });
   }
 
   resetPassword(user: User) {
-    this.usersService.resetUserPassword(user).take(1)
+    this.usersService.resetUserPassword(user).pipe(take(1))
       .subscribe(() => {
         this.reloadPage();
       });

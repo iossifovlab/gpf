@@ -1,5 +1,5 @@
 /* tslint:disable:no-unused-variable */
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { VarianttypesComponent } from './varianttypes.component';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
@@ -17,7 +17,7 @@ describe('VarianttypesComponent', () => {
   let component: VarianttypesComponent;
   let fixture: ComponentFixture<VarianttypesComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [VarianttypesComponent, ErrorsAlertComponent, CheckboxListComponent],
       providers: [

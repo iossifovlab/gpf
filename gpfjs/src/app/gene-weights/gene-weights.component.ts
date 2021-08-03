@@ -8,7 +8,7 @@ import { Store } from '@ngxs/store';
 import { ConfigService } from '../config/config.service';
 
 import { SetGeneWeight, SetHistogramValues, GeneWeightsState } from './gene-weights.state';
-import { switchMap } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { StatefulComponent } from 'app/common/stateful-component';
 import { ValidateNested } from 'class-validator';
 
@@ -33,20 +33,21 @@ export class GeneWeightsComponent extends StatefulComponent implements OnInit {
     private config: ConfigService,
   ) {
     super(store, GeneWeightsState, 'geneWeights');
-    this.partitions = this.rangeChanges
-      .debounceTime(100)
-      .distinctUntilChanged()
-      .switchMap(([weight, internalRangeStart, internalRangeEnd]) => {
+    this.partitions = this.rangeChanges.pipe(
+      debounceTime(100),
+      distinctUntilChanged(),
+      switchMap(([weight, internalRangeStart, internalRangeEnd]) => {
         return this.geneWeightsService.getPartitions(weight, internalRangeStart, internalRangeEnd);
-      })
-      .catch(error => {
+      }),
+      catchError(error => {
         console.warn(error);
-        return Observable.of(null);
-      });
+        return of(null);
+      })
+    )
 
-    this.rangesCounts = this.partitions.map((partitions) => {
+    this.rangesCounts = this.partitions.pipe(map((partitions) => {
        return [partitions.leftCount, partitions.midCount, partitions.rightCount];
-    });
+    }));
   }
 
   ngOnInit() {

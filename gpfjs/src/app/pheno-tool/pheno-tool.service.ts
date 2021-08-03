@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 
 import { ConfigService } from '../config/config.service';
 import { PhenoToolResults } from './pheno-tool-results';
+import { map } from 'rxjs/operators';
 
 @Injectable()
 export class PhenoToolService {
@@ -21,8 +22,8 @@ export class PhenoToolService {
     const options = { headers: headers, withCredentials: true };
 
     return this.http.post(this.config.baseUrl + this.phenoToolUrl, filter, options)
-      .map(res => {
+      .pipe(map(res => {
         return PhenoToolResults.fromJson(res);
-      });
+      }));
   }
 }

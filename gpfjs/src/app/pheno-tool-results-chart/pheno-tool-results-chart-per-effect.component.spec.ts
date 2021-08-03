@@ -1,5 +1,5 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { PhenoToolEffectTypesComponent } from 'app/pheno-tool-effect-types/pheno-tool-effect-types.component';
 import { PhenoToolResultsPerEffect } from 'app/pheno-tool/pheno-tool-results';
@@ -33,7 +33,7 @@ describe('PhenoToolResultsChartPerEffectComponent', () => {
   let component: PhenoToolResultsChartPerEffectComponent;
   let fixture: ComponentFixture<PhenoToolResultsChartPerEffectComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         PhenoToolResultsChartPerEffectComponent,

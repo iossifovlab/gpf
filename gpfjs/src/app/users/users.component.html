@@ -38,7 +38,7 @@
             <button type="button" class="btn btn-light col-3" id="back-button" style="width: 100%; border: 1px solid #ced4da; opacity: 85%;" (click)="back()">
               Back
             </button>
-            <button type="submit" class="btn btn-primary col-8" id="login-button" style="width: 100%; float:right" (click)="login()">
+            <button type="submit" class="btn btn-primary col-8" id="login-button" style="width: 100%; float:right" (click)="login()" [class.spinner] = "loading" [disabled] = "loading">
               Login
             </button>
           </div>

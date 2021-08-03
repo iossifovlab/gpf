@@ -1,4 +1,5 @@
 import { RouteReuseStrategy, DetachedRouteHandle, ActivatedRouteSnapshot } from '@angular/router';
+import { Injectable } from "@angular/core";
 
 // Copied from Angular 7.2 internals, default behavior
 export class DefaultRouteReuseStrategy implements RouteReuseStrategy {
@@ -11,6 +12,7 @@ export class DefaultRouteReuseStrategy implements RouteReuseStrategy {
   }
 }
 
+@Injectable()
 export class TaggingRouteReuseStrategy extends DefaultRouteReuseStrategy {
 
   shouldReuseRoute(future: ActivatedRouteSnapshot, curr: ActivatedRouteSnapshot): boolean {

@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { fakeJsonMeasure, fakeJsonMeasureOneRegression, fakeJsonMeasureTwoRegressions } from '../pheno-browser/pheno-browser.spec'
@@ -44,7 +44,7 @@ describe('PhenoBrowserTableComponent; no regressions', () => {
   let component: HostComponentNoRegressions;
   let fixture: ComponentFixture<HostComponentNoRegressions>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       imports: [ NgbModule ],
       declarations: [
@@ -105,7 +105,7 @@ describe('PhenoBrowserTableComponent; one regression', () => {
   let component: HostComponentOneRegression;
   let fixture: ComponentFixture<HostComponentOneRegression>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       imports: [ NgbModule ],
       declarations: [
@@ -170,7 +170,7 @@ describe('PhenoBrowserTableComponent; two regressions', () => {
   let component: HostComponentTwoRegressions;
   let fixture: ComponentFixture<HostComponentTwoRegressions>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       imports: [ NgbModule ],
       declarations: [

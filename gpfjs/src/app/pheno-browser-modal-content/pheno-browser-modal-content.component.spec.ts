@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
 import { PhenoBrowserModalContentComponent } from './pheno-browser-modal-content.component';
@@ -7,7 +7,7 @@ describe('PhenoBrowserModalContentComponent', () => {
   let component: PhenoBrowserModalContentComponent;
   let fixture: ComponentFixture<PhenoBrowserModalContentComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ PhenoBrowserModalContentComponent ],
       providers: [NgbActiveModal],

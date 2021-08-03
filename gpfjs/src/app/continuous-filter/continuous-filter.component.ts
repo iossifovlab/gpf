@@ -5,6 +5,7 @@ import { ContinuousFilterState, ContinuousSelection } from '../person-filters/pe
 // tslint:disable-next-line:import-blacklist
 import { Observable, Subject } from 'rxjs';
 import { Partitions } from '../gene-weights/gene-weights';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-continuous-filter',
@@ -27,13 +28,14 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
   constructor(private measuresService: MeasuresService) { }
 
   ngOnInit() {
-    this.partitions = this.rangeChanges
-      .debounceTime(100)
-      .distinctUntilChanged()
-      .switchMap(([datasetId, measureName, internalRangeStart, internalRangeEnd]) => {
+    this.partitions = this.rangeChanges.pipe(
+      debounceTime(100),
+      distinctUntilChanged(),
+      switchMap(([datasetId, measureName, internalRangeStart, internalRangeEnd]) => {
         return this.measuresService
           .getMeasurePartitions(datasetId, measureName, internalRangeStart, internalRangeEnd);
-      });
+      })
+    );
 
     this.partitions.subscribe(partitions => {
       this.rangesCounts = [partitions.leftCount, partitions.midCount, partitions.rightCount];

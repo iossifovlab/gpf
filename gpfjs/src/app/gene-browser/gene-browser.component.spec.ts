@@ -1,5 +1,5 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ConfigService } from 'app/config/config.service';
@@ -8,7 +8,7 @@ import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-load
 import { DomainRange } from 'app/gene-view/gene';
 import { QueryService } from 'app/query/query.service';
 import { UsersService } from 'app/users/users.service';
-import { of } from 'rxjs/internal/observable/of';
+import { of } from 'rxjs';
 import { GeneBrowserComponent } from './gene-browser.component';
 import { GeneSymbolsState } from 'app/gene-symbols/gene-symbols.state';
 import { NgxsModule } from '@ngxs/store';
@@ -27,7 +27,7 @@ describe('GeneBrowserComponent', () => {
   const activatedRoute = new MockActivatedRoute();
   let testState: object;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [GeneBrowserComponent],
       providers: [
@@ -174,14 +174,13 @@ describe('GeneBrowserComponent', () => {
     expect(component.selectedGene).toBe('testGene' as any);
     expect(component.genotypePreviewVariantsArray).toBe(null);
     expect(component.summaryVariantsArray).toBe('testSummaryVariantsArray' as any);
-    await component.waitForGeneViewComponent();
-    expect(enableIntronCondensingSpy).toHaveBeenCalled();
-    expect(disableIntronCondensingSpy).not.toHaveBeenCalled();
 
     component.enableCodingOnly = false;
     component.submitGeneRequest();
-    await component.waitForGeneViewComponent();
-    expect(disableIntronCondensingSpy).toHaveBeenCalled();
+    component.queryService.summaryStreamingFinishedSubject.subscribe(() => {
+      expect(enableIntronCondensingSpy).toHaveBeenCalled();
+      expect(disableIntronCondensingSpy).not.toHaveBeenCalled();
+    });
   });
 
   it('should get family variant counts', () => {

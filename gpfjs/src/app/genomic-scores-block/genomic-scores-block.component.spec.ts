@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
@@ -6,7 +6,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { MarkdownModule } from 'ngx-markdown';
 
 // tslint:disable-next-line:import-blacklist
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 
 import { GenomicScoresBlockComponent } from './genomic-scores-block.component';
 import { GenomicScoresBlockService } from './genomic-scores-block.service';
@@ -30,7 +30,7 @@ const GENOMIC_SCORES_OBJECTS: GenomicScores[] = [GenomicScores.fromJson({
 class MockGenomicScoresBlockService {
 
   getGenomicScores(): Observable<GenomicScores[]> {
-    return Observable.of(GENOMIC_SCORES_OBJECTS);
+    return of(GENOMIC_SCORES_OBJECTS);
   }
 }
 
@@ -46,7 +46,7 @@ describe('GenomicScoresBlockComponent', () => {
   let component: GenomicScoresBlockComponent;
   let fixture: ComponentFixture<GenomicScoresBlockComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         GenomicScoresBlockComponent,

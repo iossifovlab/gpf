@@ -20,7 +20,6 @@ export interface GeneSymbolsModel {
 export class GeneSymbolsState {
   @Action(SetGeneSymbols)
   setGeneSymbols(ctx: StateContext<GeneSymbolsModel>, action: SetGeneSymbols) {
-    const state = ctx.getState();
     ctx.patchState({
       geneSymbols: action.geneSymbols
     });

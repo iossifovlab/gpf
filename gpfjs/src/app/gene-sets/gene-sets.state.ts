@@ -22,6 +22,20 @@ export interface GeneSetsModel {
 })
 @Injectable()
 export class GeneSetsState {
+  @Selector([GeneSetsState])
+  static queryStateSelector(geneSetsState: GeneSetsModel) {
+    if (geneSetsState.geneSet) {
+      return {
+        'geneSet': {
+          'geneSet': geneSetsState.geneSet['name'],
+          'geneSetsCollection': geneSetsState.geneSetsCollection['name'],
+          'geneSetsTypes': geneSetsState.geneSetsTypes,
+        }
+      };
+    }
+    return null;
+  }
+
   @Action(SetGeneSetsValues)
   setGeneSets(ctx: StateContext<GeneSetsModel>, action: SetGeneSetsValues) {
     ctx.patchState({
@@ -29,17 +43,5 @@ export class GeneSetsState {
       geneSetsCollection: action.geneSetsValues['geneSetsCollection'],
       geneSet: action.geneSetsValues['geneSet'],
     });
-  }
-
-  @Selector([GeneSetsState])
-  static queryStateSelector(geneSetsState: GeneSetsModel) {
-    if (geneSetsState.geneSet) {
-      return {
-        'geneSet': geneSetsState.geneSet['name'],
-        'geneSetsCollection': geneSetsState.geneSetsCollection['name'],
-        'geneSetsTypes': geneSetsState.geneSetsTypes,
-      }
-    }
-    return null;
   }
 }

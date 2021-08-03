@@ -1,9 +1,10 @@
-import { OnDestroy, OnInit } from "@angular/core";
+import { OnDestroy, OnInit, Directive } from "@angular/core";
 import { Observable, Subscription } from "rxjs";
 import { SetComponentErrors } from "./errors.state";
 import { validate, ValidationError } from "class-validator";
 import { Store } from "@ngxs/store";
 
+@Directive()
 export abstract class StatefulComponent implements OnInit, OnDestroy {
   protected stateSubscription: Subscription;
   protected state$: Observable<object>;

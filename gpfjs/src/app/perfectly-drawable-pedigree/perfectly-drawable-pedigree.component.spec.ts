@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { PerfectlyDrawablePedigreeComponent } from './perfectly-drawable-pedigree.component';
 
@@ -6,7 +6,7 @@ describe('PerfectlyDrawablePedigreeComponent', () => {
   let component: PerfectlyDrawablePedigreeComponent;
   let fixture: ComponentFixture<PerfectlyDrawablePedigreeComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ PerfectlyDrawablePedigreeComponent ]
     })

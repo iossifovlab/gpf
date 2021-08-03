@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 
@@ -13,7 +13,7 @@ describe('StudyFilterComponent', () => {
   let component: StudyFilterComponent;
   let fixture: ComponentFixture<StudyFilterComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [StudyFilterComponent, ErrorsAlertComponent],
       imports: [FormsModule]

@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { GenotypePreviewFieldComponent } from './genotype-preview-field.component';
 import { PedigreeChartComponent } from 'app/pedigree-chart/pedigree-chart.component';
@@ -13,7 +13,7 @@ describe('GenotypePreviewFieldComponent', () => {
   let component: GenotypePreviewFieldComponent;
   let fixture: ComponentFixture<GenotypePreviewFieldComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         GenotypePreviewFieldComponent,

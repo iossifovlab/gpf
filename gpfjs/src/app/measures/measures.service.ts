@@ -5,6 +5,7 @@ import { ConfigService } from '../config/config.service';
 import { Observable } from 'rxjs';
 import { ContinuousMeasure, HistogramData } from './measures';
 import { Partitions } from '../gene-weights/gene-weights';
+import { map } from 'rxjs/operators';
 
 @Injectable()
 export class MeasuresService {
@@ -24,9 +25,9 @@ export class MeasuresService {
 
     return this.http
       .get(this.config.baseUrl + this.continuousMeasuresUrl, requestOptions)
-      .map((res: any) => {
+      .pipe(map((res: any) => {
         return ContinuousMeasure.fromJsonArray(res);
-      });
+      }));
   }
 
   getMeasureHistogram(datasetId: string, measureName: string) {
@@ -35,9 +36,9 @@ export class MeasuresService {
 
     return this.http
       .post(this.config.baseUrl + this.measureHistogramUrl, { datasetId: datasetId, measure: measureName }, options)
-      .map(res => {
+      .pipe(map(res => {
         return HistogramData.fromJson(res);
-      });
+      }));
   }
 
   getMeasurePartitions(datasetId: string, measureName: string, rangeStart: number, rangeEnd: number) {
@@ -51,9 +52,9 @@ export class MeasuresService {
         min: rangeStart,
         max: rangeEnd
       }, options)
-      .map(res => {
+      .pipe(map(res => {
         return Partitions.fromJson(res);
-      });
+      }));
   }
 
   getRegressions(datasetId: string) {

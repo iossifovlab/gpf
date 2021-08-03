@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 
 import { ConfigService } from '../config/config.service';
 import { IdDescription } from 'app/common/iddescription';
+import { map } from 'rxjs/operators';
 
 export interface EnrichmentModels {
   countings: IdDescription[];
@@ -25,11 +26,11 @@ export class EnrichmentModelsService {
 
     return this.http
       .get(url)
-      .map(res => {
+      .pipe(map(res => {
         return {
           countings: res['counting'].map((j) => new IdDescription(j.name, j.desc)),
           backgrounds: res['background'].map((j) => new IdDescription(j.name, j.desc)),
         }
-      });
+      }));
   }
 }

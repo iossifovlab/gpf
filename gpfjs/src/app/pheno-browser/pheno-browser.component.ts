@@ -6,10 +6,11 @@ import { Location } from '@angular/common';
 import { Observable, BehaviorSubject, ReplaySubject, combineLatest, of } from 'rxjs';
 
 import { PhenoBrowserService } from './pheno-browser.service';
-import { PhenoInstruments, PhenoInstrument, PhenoMeasures } from './pheno-browser';
+import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure } from './pheno-browser';
 
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from '../datasets/datasets.service';
+import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-pheno-browser',
@@ -39,9 +40,10 @@ export class PhenoBrowserComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    const datasetId$ = this.route.parent.params
-      .take(1)
-      .map(params => <string>params['dataset']);
+    const datasetId$ = this.route.parent.params.pipe(
+      take(1),
+      map(params => <string>params['dataset'])
+    );
 
       this.route.parent.params.subscribe(
         (params: Params) => {
@@ -63,12 +65,14 @@ export class PhenoBrowserComponent implements OnInit {
   }
 
   initMeasuresToShow(datasetId$: Observable<string>) {
-    this.measuresToShow$ = this.input$
-      .map(searchTerm => searchTerm.trim())
-      .debounceTime(300)
-      .distinctUntilChanged()
-      .combineLatest(this.selectedInstrument$, datasetId$)
-      .do(([searchTerm, newSelection, datasetId]) => {
+    const searchTermObs$ = this.input$.pipe(
+      map((searchTerm: string) => searchTerm.trim()),
+      debounceTime(300),
+      distinctUntilChanged()
+    );
+
+    this.measuresToShow$ = combineLatest([searchTermObs$, this.selectedInstrument$, datasetId$]).pipe(
+      tap(([searchTerm, newSelection, datasetId]) => {
         this.measuresToShow = null;
         const queryParamsObject: any = {};
         if (newSelection) {
@@ -77,47 +81,47 @@ export class PhenoBrowserComponent implements OnInit {
         if (searchTerm) {
           queryParamsObject.search = searchTerm;
         }
-        const url = this.router.createUrlTree(['.'], {
-          relativeTo: this.route,
-          replaceUrl: true,
-          queryParams: queryParamsObject
-        }).toString();
+        const url = this.router.createUrlTree(['.'], { /* Removed unsupported properties by Angular migration: replaceUrl. */ relativeTo: this.route,
+    queryParams: queryParamsObject }).toString();
         this.location.go(url);
-      })
-      .switchMap(([searchTerm, newSelection, datasetId]) => {
+      }),
+      switchMap(([searchTerm, newSelection, datasetId]) => {
         this.measuresToShow = null;
-        return combineLatest(
+        return combineLatest([
             of(searchTerm),
             of(newSelection),
             of(datasetId),
             this.phenoBrowserService.getMeasuresInfo(datasetId)
-        );
-      })
-      .switchMap(([searchTerm, newSelection, datasetId, measuresInfo]) => {
+        ]);
+      }),
+      switchMap(([searchTerm, newSelection, datasetId, measuresInfo]) => {
         this.measuresToShow = measuresInfo;
         return this.phenoBrowserService.getMeasures(datasetId, newSelection, searchTerm);
-      })
-      .map(measure => {
+      }),
+      map((measure: PhenoMeasure) => {
           if(this.measuresToShow === null) {
             return null;
           }
           this.measuresToShow._addMeasure(measure)
           return this.measuresToShow;
-      })
-      .share();
+      }),
+      share()
+    );
 
-    this.route.queryParamMap
-      .map(params => [params.get('instrument') || '',  params.get('search') || ''])
-      .take(1)
-      .subscribe(([instrument, queryTerm]) => {
-        this.search(queryTerm);
-        this.emitInstrument(instrument);
-      });
+    this.route.queryParamMap.pipe(
+      map(params => [params.get('instrument') || '',  params.get('search') || '']),
+      take(1)
+    ).subscribe(([instrument, queryTerm]) => {
+      this.search(queryTerm);
+      this.emitInstrument(instrument);
+    });
   }
 
   initInstruments(datasetId$: Observable<string>): void {
-    this.instruments = datasetId$.switchMap(datasetId =>
-      this.phenoBrowserService.getInstruments(datasetId)).share();
+    this.instruments = datasetId$.pipe(
+      switchMap(datasetId => this.phenoBrowserService.getInstruments(datasetId)),
+      share()
+    );
   }
 
   emitInstrument(instrument: PhenoInstrument) {
@@ -125,11 +129,11 @@ export class PhenoBrowserComponent implements OnInit {
   }
 
   initDownloadLink(datasetId$: Observable<string>) {
-    this.downloadLink$ = Observable
-      .combineLatest([this.selectedInstrument$, datasetId$])
-      .map(([instrument, datasetId]) =>
+    this.downloadLink$ = combineLatest([this.selectedInstrument$, datasetId$]).pipe(
+      map(([instrument, datasetId]) =>
         this.phenoBrowserService.getDownloadLink(instrument, datasetId)
-      );
+      )
+    );
   }
 
   search(value: string) {
