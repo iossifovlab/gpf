@@ -9,7 +9,6 @@ import logging
 from xml.etree.ElementTree import Element, tostring
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.variants.attributes import Sex
 
 
 class TestResult:
@@ -65,154 +64,173 @@ class TestSuite:
         self.study = study
         self.name = name
         self.target = target
-        self.results = list()
+        self.cases = list()
 
-    def append(self, result):
-        self.results.append(result)
+    def append(self, case):
+        self.cases.append(case)
 
     def to_xml_element(self):
         testsuite = Element("testsuite")
         testsuite.set("name", f"{self.study} {self.target}: {self.name}")
-        testsuite.set("tests", str(len(self.results)))
+        testsuite.set("tests", str(len(self.cases)))
         failures = \
-            len(list(filter(lambda x: x.success is False, self.results)))
+            len(list(filter(lambda x: x.success is False, self.cases)))
         testsuite.set("failures", str(failures))
-        for result in self.results:
-            testsuite.append(result.to_xml_element())
+        for case in self.cases:
+            testsuite.append(case.to_xml_element())
         return testsuite
 
 
-class Runner:
+class AbstractRunner:
 
-    def __init__(
-            self, 
-            expectations):
+    def __init__(self, expectations, gpf_instance):
 
         self.expectations = expectations
-        self.instance = GPFInstance()
-        self.failed_case_count = 0
-        self.passed_case_count = 0
+        self.gpf_instance = gpf_instance
+        # self.failed_case_count = 0
+        # self.passed_case_count = 0
         self.test_suites = []
-        assert self.instance
+        assert self.gpf_instance
 
-    def _collect_expectations(self):
-        for filename in glob.glob(self.expectations):
-            assert os.path.exists(filename), filename
-            with open(filename, "r") as infile:
-                res = yaml.load(infile, Loader=yaml.FullLoader)
-                for expectation in res:
-                    expectation["file"] = filename
-                    yield expectation
+    def _counter(self, status):
+        count = 0
+        for suite in self.test_suites:
+            for case in suite.cases:
+                if case.success is status:
+                    count += 1
+        return count
 
-    def _validate_families_report(self, expectation):
-        study_id = expectation["study"]
-        cases = expectation["cases"]
-        file = expectation["file"]
-        target = expectation["target"]
+    @property
+    def failed_case_count(self):
+        return self._counter(False)
 
-        test_suite = TestSuite(study_id, target)
-        self.test_suites.append(test_suite)
+    @property
+    def passed_case_count(self):
+        return self._counter(True)
 
-        for case_number, case in enumerate(cases):
-            start = time.time()
-            params = case["params"]
-            sex = None
-            collection = params["collection_id"]
-            value = params["collection_value"]
-            if "sex" in params:
-                sex = Sex.from_name(params["sex"])
-            print("--------------------------------")
-            print(f"Querying with params {params}")
+    # def get_xml(self):
+    #     root = Element("testsuites")
+    #     for suite in self.test_suites:
+    #         root.append(suite.to_xml_element())
+    #     return tostring(root, encoding="utf8", method="xml")
 
-            expected = case["expected"]
 
-            if "count" in expected:
-                count = expected["count"]
+class GenotypeBrowserRunner(AbstractRunner):
 
-                facade = self.instance._common_report_facade
-                persons = facade.query_person_counters(
-                    study_id, collection, value, sex=sex
-                )
+    def __init__(self, expectations, gpf_instance):
 
-                person_count = len(persons)
+        super(GenotypeBrowserRunner, self).__init__(
+            expectations, gpf_instance)
 
-                test_result = TestResult(
-                        study_id,
-                        file,
-                        target,
-                        "count",
-                        case_number,
-                        params,
-                        expected,
-                        person_count
-                )
+    # def _validate_families_report(self, expectation):
+    #     study_id = expectation["study"]
+    #     cases = expectation["cases"]
+    #     file = expectation["file"]
+    #     target = expectation["target"]
 
-                print(f"Expected {count} persons")
-                if person_count == count:
-                    test_result.success = True
-                    print("PASSED")
-                else:
-                    test_result.success = False
-                    print(f"Got: {person_count}")
-                    self.failed_case_count += 1
+    #     test_suite = TestSuite(study_id, target)
+    #     self.test_suites.append(test_suite)
 
-                end = time.time()
-                test_result.time = (end-start)
-                test_suite.append(test_result)
+    #     for case_number, case in enumerate(cases):
+    #         start = time.time()
+    #         params = case["params"]
+    #         sex = None
+    #         collection = params["collection_id"]
+    #         value = params["collection_value"]
+    #         if "sex" in params:
+    #             sex = Sex.from_name(params["sex"])
+    #         print("--------------------------------")
+    #         print(f"Querying with params {params}")
 
-    def _validate_denovo_reports(self, expectation):
-        study_id = expectation["study"]
-        cases = expectation["cases"]
-        file = expectation["file"]
-        target = expectation["target"]
+    #         expected = case["expected"]
 
-        test_suite = TestSuite(study_id, target)
+    #         if "count" in expected:
+    #             count = expected["count"]
 
-        for case_number, case in enumerate(cases):
-            start = time.time()
-            params = case["params"]
-            collection = params["collection_id"]
-            value = params["collection_value"]
-            effect_type = params["effect_type"]
-            print("--------------------------------")
-            print(f"Querying with params {params}")
+    #             facade = self.instance._common_report_facade
+    #             persons = facade.query_person_counters(
+    #                 study_id, collection, value, sex=sex
+    #             )
 
-            expected = case["expected"]
+    #             person_count = len(persons)
 
-            if "count" in expected:
-                count = expected["count"]
+    #             test_result = TestResult(
+    #                     study_id,
+    #                     file,
+    #                     target,
+    #                     "count",
+    #                     case_number,
+    #                     params,
+    #                     expected,
+    #                     person_count
+    #             )
 
-                facade = self.instance._common_report_facade
-                results = facade.query_denovo_reports(
-                    study_id, collection, value, effect_type
-                )
+    #             print(f"Expected {count} persons")
+    #             if person_count == count:
+    #                 test_result.success = True
+    #                 print("PASSED")
+    #             else:
+    #                 test_result.success = False
+    #                 print(f"Got: {person_count}")
+    #                 self.failed_case_count += 1
 
-                person_count = results["number_of_observed_events"]
+    #             end = time.time()
+    #             test_result.time = (end-start)
+    #             test_suite.append(test_result)
 
-                test_result = TestResult(
-                        study_id,
-                        file,
-                        target,
-                        "count",
-                        case_number,
-                        params,
-                        expected,
-                        person_count
-                )
+    # def _validate_denovo_reports(self, expectation):
+    #     study_id = expectation["study"]
+    #     cases = expectation["cases"]
+    #     file = expectation["file"]
+    #     target = expectation["target"]
 
-                print(f"Expected {count} persons")
-                if person_count == count:
-                    test_result.success = True
-                    print("PASSED")
-                else:
-                    test_result.success = False
-                    print(f"Got: {person_count}")
-                    self.failed_case_count += 1
-                end = time.time()
-                test_result.time = (end-start)
-                test_suite.append(test_result)
+    #     test_suite = TestSuite(study_id, target)
 
-        self.test_suites.append(test_suite)
+    #     for case_number, case in enumerate(cases):
+    #         start = time.time()
+    #         params = case["params"]
+    #         collection = params["collection_id"]
+    #         value = params["collection_value"]
+    #         effect_type = params["effect_type"]
+    #         print("--------------------------------")
+    #         print(f"Querying with params {params}")
+
+    #         expected = case["expected"]
+
+    #         if "count" in expected:
+    #             count = expected["count"]
+
+    #             facade = self.instance._common_report_facade
+    #             results = facade.query_denovo_reports(
+    #                 study_id, collection, value, effect_type
+    #             )
+
+    #             person_count = results["number_of_observed_events"]
+
+    #             test_result = TestResult(
+    #                     study_id,
+    #                     file,
+    #                     target,
+    #                     "count",
+    #                     case_number,
+    #                     params,
+    #                     expected,
+    #                     person_count
+    #             )
+
+    #             print(f"Expected {count} persons")
+    #             if person_count == count:
+    #                 test_result.success = True
+    #                 print("PASSED")
+    #             else:
+    #                 test_result.success = False
+    #                 print(f"Got: {person_count}")
+    #                 self.failed_case_count += 1
+    #             end = time.time()
+    #             test_result.time = (end-start)
+    #             test_suite.append(test_result)
+
+    #     self.test_suites.append(test_suite)
 
     def _parse_frequency(self, params):
         if "frequency" not in params:
@@ -224,7 +242,7 @@ class Runner:
             assert "min" not in freq
             assert "max" not in freq
             return params
-        
+
         assert "max" in freq or "min" in freq, freq
         freq_min = freq.get("min")
         freq_max = freq.get("max")
@@ -242,7 +260,7 @@ class Runner:
 
         result = []
         for score in scores:
-            assert "score" in score          
+            assert "score" in score
             assert "max" in score or "min" in score, score
             score_min = score.get("min")
             score_max = score.get("max")
@@ -264,7 +282,7 @@ class Runner:
         test_suite = TestSuite(study_id, target, name)
         self.test_suites.append(test_suite)
 
-        study = self.instance.get_genotype_data(study_id)
+        study = self.gpf_instance.get_genotype_data(study_id)
         if study is None:
             test_result = TestResult(
                     study_id,
@@ -310,50 +328,120 @@ class Runner:
 
                 if variants_count == count:
                     test_result.success = True
-                    self.passed_case_count += 1
+                    # self.passed_case_count += 1
                     print("\t\t\tPASSED")
                 else:
                     test_result.success = False
                     print(
                         f"\t\t\tFAILED: expected {count}; "
                         f"got {variants_count} variants")
-                    self.failed_case_count += 1
+                    # self.failed_case_count += 1
                 end = time.time()
                 test_result.time = (end-start)
                 test_suite.append(test_result)
 
-    def get_xml(self):
+    def run(self):
+        target = self.expectations["target"]
+        study_id = self.expectations["study"]
+        name = self.expectations["name"]
+        assert target == "genotype_browser"
+
+        print("==================================================")
+        print(f"validating {study_id} {target}: {name}")
+        self._validate_genotype_browser(self.expectations)
+
+    # def run_validations(self):
+    #     print("VALIDATION START")
+    #     for expectation in self.expectations:
+    #         target = expectation["target"]
+    #         study_id = expectation["study"]
+    #         name = expectation["name"]
+    #         assert target == "genotype_browser"
+
+    #         print("==================================================")
+    #         print(f"validating {study_id} {target}: {name}")
+    #         if target == "genotype_browser":
+    #             self._validate_genotype_browser(expectation)
+    #         elif target == "families_report":
+    #             self._validate_families_report(expectation)
+    #         elif target == "denovo_reports":
+    #             self._validate_denovo_reports(expectation)
+    #         else:
+    #             pass
+
+    #     print("VALIDATION END")
+    #     print(
+    #         f"passed: {self.passed_case_count}; "
+    #         f"failed: {self.failed_case_count}")
+    #     with open("results.xml", "w") as outfile:
+    #         outfile.write(self.get_xml().decode("utf8"))
+
+
+class MainRunner:
+
+    def __init__(self, gpf_instance, outfilename):
+        self.gpf_instance = gpf_instance
+        self.outfilename = outfilename
+        self.runners = []
+
+    @staticmethod
+    def collect_expectations(expectations):
+        for filename in glob.glob(expectations):
+            assert os.path.exists(filename), filename
+            with open(filename, "r") as infile:
+                res = yaml.load(infile, Loader=yaml.FullLoader)
+                for expectation in res:
+                    expectation["file"] = filename
+                    yield expectation
+
+    def make_validation_runner(self, expectations):
+        target = expectations["target"]
+        if target == "genotype_browser":
+            return GenotypeBrowserRunner(expectations, self.gpf_instance)
+        else:
+            raise NotImplementedError(
+                f"not supported expectations target: {target}")
+
+    @staticmethod
+    def store_junit_results(runners, outfilename):
         root = Element("testsuites")
-        for suite in self.test_suites:
-            root.append(suite.to_xml_element())
-        return tostring(root, encoding="utf8", method="xml")
+        for runner in runners:
+            for suite in runner.test_suites:
+                root.append(suite.to_xml_element())
+        with open(outfilename, "w") as outfile:
+            outfile.write(
+                tostring(root, encoding="utf8", method="xml").decode("utf8"))
 
-    def run_validations(self):
-        self.failed_case_count = 0
-        expectations = self._collect_expectations()
-        print("VALIDATION START")
-        for expectation in expectations:
-            target = expectation["target"]
-            study_id = expectation["study"]
-            name = expectation["name"]
+    def main(self, expectations_iterator):
+        self.runners = []
+        for expectations in expectations_iterator:
+            runner = self.make_validation_runner(expectations)
+            runner.run()
+            self.runners.append(runner)
 
-            print("==================================================")
-            print(f"validating {study_id} {target}: {name}")
-            if target == "genotype_browser":
-                self._validate_genotype_browser(expectation)
-            elif target == "families_report":
-                self._validate_families_report(expectation)
-            elif target == "denovo_reports":
-                self._validate_denovo_reports(expectation)
-            else:
-                pass
+        self.store_junit_results(self.runners, self.outfilename)
 
-        print("VALIDATION END")
+    def _counter(self, status):
+        count = 0
+        for runner in self.runners:
+            count += runner._counter(status)
+        return count
+
+    @property
+    def failed_case_count(self):
+        return self._counter(False)
+
+    @property
+    def passed_case_count(self):
+        return self._counter(True)
+
+    def summary(self):
+        print(100*"=")
         print(
-            f"passed: {self.passed_case_count}; "
-            f"failed: {self.failed_case_count}")
-        with open("results.xml", "w") as outfile:
-            outfile.write(self.get_xml().decode("utf8"))
+            f"FAILED: {self.failed_case_count}; "
+            f"PASSED: {self.passed_case_count}; "
+            f"TOTAL: {self.failed_case_count + self.passed_case_count}")
+        print(100*"=")
 
 
 def main(argv=sys.argv[1:]):
@@ -363,6 +451,9 @@ def main(argv=sys.argv[1:]):
         help='expectation filename or glob'
     )
     parser.add_argument('--verbose', '-V', action='count', default=0)
+    parser.add_argument(
+        "--output", "-o", type=str, default="validation-result.xml",
+        help="output filename for JUnit result XML file")
 
     args = parser.parse_args(argv)
     if args.verbose == 1:
@@ -375,9 +466,12 @@ def main(argv=sys.argv[1:]):
         logging.basicConfig(level=logging.ERROR)
     logging.getLogger("impala").setLevel(logging.WARNING)
 
-    runner = Runner(args.expectations)
-    assert runner is not None
-    runner.run_validations()
+    gpf_instance = GPFInstance()
+    main_runner = MainRunner(gpf_instance, args.output)
+
+    expectations_iterator = MainRunner.collect_expectations(args.expectations)
+    main_runner.main(expectations_iterator)
+    main_runner.summary()
 
 
 if __name__ == "__main__":
