@@ -1,6 +1,6 @@
 <td>{{ label }}</td>
 <td class="link-td" (click)="goToQuery(effectResult.all.countFilter)" (middleclick)="goToQuery(effectResult.all.countFilter)" [style.background-color]="getBackgroundColor(effectResult.all)">
-  <a class="link">eeee</a>
+  <a class="link">{{ effectResult.all.count | numberWithExp: "1.0-2"}}</a>
 </td>
 <td class="link-td" (click)="goToQuery(effectResult.all.overlapFilter)" (middleclick)="goToQuery(effectResult.all.overlapFilter)" [style.background-color]="getBackgroundColor(effectResult.all)">
   <a class="link">{{ effectResult.all.overlapped | numberWithExp: "1.0-2" }}</a>
