@@ -21,12 +21,13 @@ const mockConfig = {
   defaultDataset: 'fakeDefaultDataset',
   geneSets: [{category: 'fakeGeneSets', sets: ['fakeGeneSet']}] as any,
   genomicScores: [{category: 'fakeGenomicScores', scores: ['fakeGenomicScore']}] as any,
-  datasets: [{name: 'fakeDataset', personSets: ['fakePersonSets']}] as any
+  datasets: [{id: 'fakeDataset', personSets: [{id: 'fakePersonSets', statistics: ['fakeStatistic']}]}] as any
 } as AgpTableConfig;
 
 describe('AutismGeneProfilesTableComponent', () => {
   let component: AutismGeneProfilesTableComponent;
   let fixture: ComponentFixture<AutismGeneProfilesTableComponent>;
+  let applyDataSpy: jasmine.Spy<any>;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
@@ -51,6 +52,7 @@ describe('AutismGeneProfilesTableComponent', () => {
     fixture = TestBed.createComponent(AutismGeneProfilesTableComponent);
     component = fixture.componentInstance;
     component.config = mockConfig;
+    applyDataSpy = spyOn(component as any, 'multipleSelectMenuApplyData');
   });
 
   it('should create', () => {
@@ -88,18 +90,12 @@ describe('AutismGeneProfilesTableComponent', () => {
     component.shownGenomicScoresCategories = undefined;
     component.shownDatasets = undefined;
 
-    component.config = cloneDeep(mockConfig);
+    const mergerArraysSpy = spyOn(component, 'mergeArrays').and.returnValue('fakeArray' as any);
 
     component.ngOnChanges();
-    expect(component.shownGeneSetsCategories).toEqual([
-      {category: 'fakeGeneSets', sets: ['fakeGeneSet']}
-    ] as any);
-    expect(component.shownGenomicScoresCategories).toEqual([
-      {category: 'fakeGenomicScores', scores: ['fakeGenomicScore']}
-    ] as any);
-    expect(component.shownDatasets).toEqual([
-      {name: 'fakeDataset', personSets: ['fakePersonSets']}
-    ] as any);
+    expect(component.shownGeneSetsCategories).toEqual('fakeArray' as any);
+    expect(component.shownGenomicScoresCategories).toEqual('fakeArray' as any);
+    expect(component.shownDatasets).toEqual('fakeArray' as any);
   });
 
   it('should get genes on initialization', () => {
@@ -114,7 +110,7 @@ describe('AutismGeneProfilesTableComponent', () => {
 
     expect(component.shownGeneSetsCategories).toEqual([{category: 'fakeGeneSets', sets: ['fakeGeneSet']} as any]);
     expect(component.shownGenomicScoresCategories).toEqual([{category: 'fakeGenomicScores', scores: ['fakeGenomicScore']} as any]);
-    expect(component.shownDatasets).toEqual([{name: 'fakeDataset', personSets: ['fakePersonSets']} as any]);
+    expect(component.shownDatasets).toEqual([{id: 'fakeDataset', personSets: [{id: 'fakePersonSets', statistics: ['fakeStatistic']}]} as any]);
     expect((component['genes'])).toEqual([
       'mockGene1', 'mockGene2', 'mockGene3', 'mockGene4', 'mockGene5', 'mockGene6'
     ] as any);
@@ -138,6 +134,7 @@ describe('AutismGeneProfilesTableComponent', () => {
   });
 
   it('should handle multiple select apply event for gene sets', () => {
+    applyDataSpy.and.callThrough();
     component.ngbDropdownMenu = [{dropdown: {close() {}}}] as any;
     const emitSpy = spyOn(component.configChange, 'emit');
     const geneSetsArray = [
@@ -184,6 +181,7 @@ describe('AutismGeneProfilesTableComponent', () => {
   });
 
   it('should handle multiple select apply event for genomic scores', () => {
+    applyDataSpy.and.callThrough();
     component.ngbDropdownMenu = [{dropdown: {close() {}}}] as any;
     const emitSpy = spyOn(component.configChange, 'emit');
 
@@ -232,6 +230,7 @@ describe('AutismGeneProfilesTableComponent', () => {
   });
 
   it('should handle multiple select apply event for datasets', () => {
+    applyDataSpy.and.callThrough();
     component.ngbDropdownMenu = [{dropdown: {close() {}}}] as any;
     const emitSpy = spyOn(component.configChange, 'emit');
     component.config = cloneDeep(mockConfig);

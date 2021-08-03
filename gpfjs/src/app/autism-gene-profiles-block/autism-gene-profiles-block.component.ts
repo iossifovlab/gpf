@@ -51,7 +51,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     this.autismGeneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
       this.autismGeneToolConfig = config;
       this.tableConfig = this.getTableConfig(config);
-      this.shownTableConfig = this.getTableConfig(config);
+      this.shownTableConfig = cloneDeep(this.getTableConfig(config));
 
       this.shownTableConfig.geneSets = this.shownTableConfig.geneSets
       .filter(geneSet => geneSet.defaultVisible === true);
