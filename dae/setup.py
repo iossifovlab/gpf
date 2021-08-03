@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="gpf_dae",
+    name="gpf-dae",
     version="3.4.4",
     author="Lubomir Chorbadjiev",
     author_email="lubomir.chorbadjiev@gmail.com",
@@ -53,6 +53,7 @@ setuptools.setup(
     denovo2parquet.py=dae.tools.denovo2parquet:main
     cnv2parquet.py=dae.tools.cnv2parquet:main
     generate_vcf_score_histogram.py=dae.tools.generate_vcf_score_histogram:main
+    gpf_validation_runner=gpf_validation.gpf_validation_runner:main
     """,
     classifiers=[
         "Development Status :: 4 - Beta",
