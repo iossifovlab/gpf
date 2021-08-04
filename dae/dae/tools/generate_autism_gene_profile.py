@@ -153,7 +153,6 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
     for ps in filters.person_sets:
         pids = set(person_ids[dataset_id][ps.set_name])
         for statistic in filters.statistics:
-            # dump = {}
             if statistic.category == "denovo" and not denovo_flag:
                 continue
             if statistic.category == "rare" and denovo_flag:
@@ -165,14 +164,12 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
             in_members = len(pids.intersection(members)) > 0
 
             do_count = do_count and in_members
-            # dump[1] = do_count
 
             if statistic.get("effects"):
                 ets = set(expand_effect_types(statistic.effects))
                 in_effect_types = len(
                     ets.intersection(v.effect_types)) > 0
                 do_count = do_count and in_effect_types
-                # dump[2] = do_count
 
             if statistic.get("scores"):
                 for score in statistic.scores:
@@ -189,15 +186,14 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
                     if score_max:
                         do_count = do_count and score_value <= score_max
 
-                # dump[3] = do_count
-
             if statistic.get("category") == "rare":
-                aa = v.alt_alleles[0]
-                freq = aa.get_attribute("af_allele_freq")
+                match = False
+                for aa in v.alt_alleles:
+                    freq = aa.get_attribute("af_allele_freq")
 
-                if freq:
-                    do_count = do_count and freq <= 1.0
-                # dump[4] = do_count
+                    if freq is not None and freq <= 1.0:
+                        match = True
+                do_count = do_count and match
 
             if statistic.get("variant_types"):
                 variant_types = {
@@ -206,7 +202,6 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
                 }
                 do_count = do_count and \
                     len(variant_types.intersection(v.variant_types))
-                # dump[5] = do_count
 
             if statistic.get("roles"):
                 roles = {
@@ -216,16 +211,7 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
                 v_roles = set(v.alt_alleles[0].variant_in_roles)
                 do_count = do_count and \
                     len(v_roles.intersection(roles))
-                # dump[6] = do_count
 
-            # if v.position == 152171343:
-            #     from pprint import pprint
-            #     print(100*"+")
-            #     print(ps.set_name, stat_id, do_count, v)
-            #     # for aa in v.alt_alleles:
-            #     #     print(aa.attributes)
-            #     pprint(dump)
-            #     print(100*"+")
             if do_count:
                 add_variant_count(
                     v, agps, dataset_id, ps.set_name, stat_id
