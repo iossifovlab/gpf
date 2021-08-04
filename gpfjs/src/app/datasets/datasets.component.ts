@@ -56,12 +56,19 @@ export class DatasetsComponent implements OnInit {
     this.datasets$.pipe(take(1)).subscribe(datasets => {
       if (!this.datasetsService.hasSelectedDataset()) {
         this.selectDataset(datasets[0]);
+      } else if (!this.isToolSelected()) {
+        this.datasetsService.getSelectedDataset().pipe(take(1)).subscribe(dataset => {
+          this.router.navigate(['/', 'datasets', dataset.id, this.findFirstTool(dataset)]);
+        });
       } else {
-        if (!this.isToolSelected()) {
-          this.datasetsService.getSelectedDataset().pipe(take(1)).subscribe(dataset => {
+        this.datasetsService.getSelectedDataset().pipe(take(1)).subscribe(dataset => {
+          const url = this.router.url.split('/');
+          const toolName = url[url.indexOf(dataset.id) + 1];
+
+          if (!this.isToolEnabled(dataset, toolName)) {
             this.router.navigate(['/', 'datasets', dataset.id, this.findFirstTool(dataset)]);
-          });
-        }
+          }
+        });
       }
     });
 
@@ -74,6 +81,24 @@ export class DatasetsComponent implements OnInit {
     );
   }
 
+  private isToolEnabled(dataset, toolName) {
+    switch (toolName) {
+      case 'dataset-description':
+        return dataset.description;
+      case 'dataset-statistics':
+        return dataset.commonReport['enabled'];
+      case 'genotype-browser':
+        return dataset.genotypeBrowser && dataset.genotypeBrowserConfig;
+      case 'phenotype-browser':
+        return dataset.phenotypeBrowser;
+      case 'phenotype-tool':
+        return dataset.phenotypeTool;
+      case 'enrichment-tool':
+        return dataset.enrichmentTool;
+      case 'gene-browser':
+        return dataset.geneBrowser?.enabled;
+    }
+  }
 
   isToolSelected(): boolean {
     return this.router.url.split('/').some(str => Object.values(toolPageLinks).includes(str));
