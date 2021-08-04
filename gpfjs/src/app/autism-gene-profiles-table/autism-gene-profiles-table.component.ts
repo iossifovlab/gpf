@@ -12,17 +12,8 @@ import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.com
 import { cloneDeep } from 'lodash';
 import { sprintf } from 'sprintf-js';
 import { QueryService } from 'app/query/query.service';
-import { GenomicScore } from 'app/genotype-browser/genotype-browser';
 import { EffectTypes } from 'app/effecttypes/effecttypes';
 import { Store } from '@ngxs/store';
-import { SetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
-import { SetEffectTypes } from 'app/effecttypes/effecttypes.state';
-import { SetStudyTypes } from 'app/study-types/study-types.state';
-import { SetVariantTypes } from 'app/varianttypes/varianttypes.state';
-import { SetGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
-import { SetPresentInParentValues } from 'app/present-in-parent/present-in-parent.state';
-import { SetPresentInChildValues } from 'app/present-in-child/present-in-child.state';
-import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 import { debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
 
 @Component({
@@ -140,9 +131,8 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     this.shownGenomicScoresCategories = cloneDeep(this.config.genomicScores);
     this.shownDatasets = cloneDeep(this.config.datasets);
 
-    // to avoid ExpressionChangedAfterItHasBeenCheckedError
-    // trigger new detection cycle with setTimeout
-    setTimeout(() => {
+    // trigger new detection cycle to avoid ExpressionChangedAfterItHasBeenCheckedError
+    Promise.resolve().then(() => {
       this.shownGeneSetsCategories.forEach(category => {
         this.multipleSelectMenuApplyData({
           menuId: 'gene_set_category:' + category.category,
@@ -150,6 +140,8 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
             .filter(set => set.defaultVisible === true).map(set => set.setId)
         });
       });
+      this.shownGenomicScoresCategories[0].scores[0].defaultVisible = false;
+      this.shownGenomicScoresCategories[0].scores[2].defaultVisible = false;
       this.shownGenomicScoresCategories.forEach(category => {
         this.multipleSelectMenuApplyData({
           menuId: 'genomic_scores_category:' + category.category,
@@ -167,7 +159,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
           });
         });
       });
-    }, 0);
+    });
 
     this.sortBy = `${this.shownGeneSetsCategories[0].category}_rank`;
     this.orderBy = 'desc';
@@ -528,7 +520,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
       .effectTypes.find(effectType => effectType.id === statisticId)
       .value;
   }
-
 
   calculateDatasetColspan(dataset: AgpTableDataset) {
     let count = 0;
