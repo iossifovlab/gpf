@@ -62,9 +62,20 @@ describe('AutismGeneProfilesBlockComponent', () => {
     spyOn(component['autismGeneProfilesService'], 'getConfig')
      .and.returnValue(of('fakeConfig' as any));
     spyOn(component, 'getTableConfig')
-     .and.returnValue('fakeTableConfig' as any);
-    spyOn(component, 'getAllCategories')
-     .and.returnValue('fakeCategories' as any);
+     .and.returnValue({
+      geneSets: [
+        {displayName: 'geneSet1', defaultVisible: true},
+        {displayName: 'geneSet2', defaultVisible: false}
+      ],
+      genomicScores: [
+        {displayName: 'genomicScore1', defaultVisible: true},
+        {displayName: 'genomicScore2', defaultVisible: false}
+      ],
+      datasets: [
+        {displayName: 'dataset1', defaultVisible: true},
+        {displayName: 'dataset2', defaultVisible: false}
+      ]
+    } as any);
 
     expect(component.autismGeneToolConfig).toEqual(undefined);
     expect(component.tableConfig).toEqual(undefined);
@@ -73,10 +84,44 @@ describe('AutismGeneProfilesBlockComponent', () => {
     expect(component.shownColumns).toEqual(undefined);
     component.ngOnInit();
     expect(component.autismGeneToolConfig).toEqual('fakeConfig' as any);
-    expect(component.tableConfig).toEqual('fakeTableConfig' as any);
-    expect(component.shownTableConfig).toEqual('fakeTableConfig' as any);
-    expect(component.allColumns).toEqual('fakeCategories' as any);
-    expect(component.shownColumns).toEqual('fakeCategories' as any);
+    expect(component.tableConfig).toEqual({
+      geneSets: [
+        {displayName: 'geneSet1', defaultVisible: true},
+        {displayName: 'geneSet2', defaultVisible: false}
+      ],
+      genomicScores: [
+        {displayName: 'genomicScore1', defaultVisible: true},
+        {displayName: 'genomicScore2', defaultVisible: false}
+      ],
+      datasets: [
+        {displayName: 'dataset1', defaultVisible: true},
+        {displayName: 'dataset2', defaultVisible: false}
+      ]
+    } as any);
+    expect(component.shownTableConfig).toEqual({
+      geneSets: [
+        {displayName: 'geneSet1', defaultVisible: true},
+      ],
+      genomicScores: [
+        {displayName: 'genomicScore1', defaultVisible: true},
+      ],
+      datasets: [
+        {displayName: 'dataset1', defaultVisible: true},
+      ]
+    } as any);
+    expect(component.allColumns).toEqual([
+      'geneSet1',
+      'geneSet2',
+      'genomicScore1',
+      'genomicScore2',
+      'dataset1',
+      'dataset2'
+    ] as any);
+    expect(component.shownColumns).toEqual([
+      'geneSet1',
+      'genomicScore1',
+      'dataset1',
+    ] as any);
   });
 
   it('should create tab event handler', () => {
