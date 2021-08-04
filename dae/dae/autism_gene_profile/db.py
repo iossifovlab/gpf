@@ -717,6 +717,6 @@ class AutismGeneProfileDB:
                                     )
                                 )
 
-                    if idx % 25 == 0:
+                    if idx % 1000 == 0:
                         logger.info(f"Inserted {idx}/{agp_count} AGPs into DB")
                 logger.info("Done!")
