@@ -21,17 +21,20 @@ include libopt.sh
 
 function main() {
   local -A options
-  libopt_parse options stage:all preset:fast clobber:allow_if_matching_values build_no:0 generate_jenkins_init:no -- "$@"
+  libopt_parse options \
+    stage:all preset:fast clobber:allow_if_matching_values build_no:0 generate_jenkins_init:no expose_ports:no -- "$@"
 
   local preset="${options["preset"]}"
   local stage="${options["stage"]}"
   local clobber="${options["clobber"]}"
   local build_no="${options["build_no"]}"
   local generate_jenkins_init="${options["generate_jenkins_init"]}"
+  local expose_ports="${options["expose_ports"]}"
 
   libmain_init iossifovlab.gpf gpf
-  libmain_init_build_env clobber:"$clobber" preset:"$preset" build_no:"$build_no" generate_jenkins_init:"$generate_jenkins_init" \
-	seqpipe.seqpipe-containers seqpipe.data-hg19-startup
+  libmain_init_build_env \
+    clobber:"$clobber" preset:"$preset" build_no:"$build_no" generate_jenkins_init:"$generate_jenkins_init" expose_ports:"$expose_ports" \
+	  seqpipe.seqpipe-containers seqpipe.data-hg19-startup
   libmain_save_build_env_on_exit
   libbuild_init stage:"$stage" registry.seqpipe.org
 
