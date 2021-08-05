@@ -5,6 +5,9 @@ import glob
 import yaml
 import time
 import logging
+import copy
+
+import pandas as pd
 
 from xml.etree.ElementTree import Element, tostring
 
@@ -115,7 +118,55 @@ class AbstractRunner:
     #     return tostring(root, encoding="utf8", method="xml")
 
 
-class GenotypeBrowserRunner(AbstractRunner):
+class BaseGenotypeBrowserRunner(AbstractRunner):
+
+    def __init__(self, expectations, gpf_instance):
+
+        super(BaseGenotypeBrowserRunner, self).__init__(
+            expectations, gpf_instance)
+
+    def _parse_frequency(self, params):
+        if "frequency" not in params:
+            return params
+        freq = params.pop("frequency")
+        assert "frequency" not in params, params
+        if freq.get("ultra_rare"):
+            params["ultra_rare"] = True
+            assert "min" not in freq
+            assert "max" not in freq
+            return params
+
+        assert "max" in freq or "min" in freq, freq
+        freq_min = freq.get("min")
+        freq_max = freq.get("max")
+
+        params["frequency_filter"] = [
+            ("af_allele_freq", (freq_min, freq_max))]
+
+        return params
+
+    def _parse_genomic_scores(self, params):
+        if "genomic_scores" not in params:
+            return params
+        scores = params.pop("genomic_scores")
+        assert "genomic_scores" not in params, params
+
+        result = []
+        for score in scores:
+            assert "score" in score
+            assert "max" in score or "min" in score, score
+            score_min = score.get("min")
+            score_max = score.get("max")
+
+            result.append((score.get("score"), (score_min, score_max)))
+        if len(result) == 0:
+            return params
+
+        params["real_attr_filter"] = result
+        return params
+
+
+class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
     def __init__(self, expectations, gpf_instance):
 
@@ -232,45 +283,51 @@ class GenotypeBrowserRunner(AbstractRunner):
 
     #     self.test_suites.append(test_suite)
 
-    def _parse_frequency(self, params):
-        if "frequency" not in params:
-            return params
-        freq = params.pop("frequency")
-        assert "frequency" not in params, params
-        if freq.get("ultra_rare"):
-            params["ultra_rare"] = True
-            assert "min" not in freq
-            assert "max" not in freq
-            return params
+    def _build_case_expections_filename(self, case):
+        dirname, _ = os.path.splitext(self.expectations["file"])
+        print(dirname)
+        os.makedirs(dirname, exist_ok=True)
+        return os.path.join(dirname, f"{case['id']}.tsv")
 
-        assert "max" in freq or "min" in freq, freq
-        freq_min = freq.get("min")
-        freq_max = freq.get("max")
+    def _build_variants_df(self, variants):
+        records = []
+        for v in variants:
+            for aa in v.alt_alleles:
+                vprops = copy.deepcopy(aa.attributes)
+                if "transmission_type" in vprops:
+                    del vprops["transmission_type"]
+                vprops["fvuid"] = v.fvuid
+                vprops["effect_gene_genes"] = \
+                    ",".join(vprops["effect_gene_genes"])
+                vprops["effect_gene_types"] = \
+                    ",".join(vprops["effect_gene_types"])
+                vprops["effect_details_transcript_ids"] = \
+                    ",".join(vprops["effect_details_transcript_ids"])
+                vprops["effect_details_details"] = \
+                    ",".join(vprops["effect_details_details"])
+                
+                vprops["chromosome"] = aa.chromosome
+                vprops["position"] = aa.position
+                vprops["reference"] = aa.reference
+                vprops["alternative"] = aa.alternative
+                vprops["family_id"] = aa.family_id
+                vprops["cshl_location"] = aa.details.cshl_location
+                vprops["cshl_variant"] = aa.details.cshl_variant
 
-        params["frequency_filter"] = [
-            ("af_allele_freq", (freq_min, freq_max))]
+                records.append(vprops)
+        # from pprint import pprint
+        # pprint(records)
 
-        return params
+        df = pd.DataFrame.from_records(records)
+        print(list(df.columns))
+        print(df.head())
 
-    def _parse_genomic_scores(self, params):
-        if "genomic_scores" not in params:
-            return params
-        scores = params.pop("genomic_scores")
-        assert "genomic_scores" not in params, params
-
-        result = []
-        for score in scores:
-            assert "score" in score
-            assert "max" in score or "min" in score, score
-            score_min = score.get("min")
-            score_max = score.get("max")
-
-            result.append((score.get("score"), (score_min, score_max)))
-        if len(result) == 0:
-            return params
-
-        params["real_attr_filter"] = result
-        return params
+        if len(df) > 1:
+            df = df.sort_values(
+                by=["chromosome", "position", "fvuid", "allele_index"])
+        print(df.head())
+        print(self.expectations)
+        return df
 
     def _validate_genotype_browser(self, expectation):
         study_id = expectation["study"]
@@ -296,7 +353,6 @@ class GenotypeBrowserRunner(AbstractRunner):
             )
             test_result.success = False
             test_suite.append(test_result)
-            self.failed_case_count += 1
             self.test_suites.append(test_suite)
             return
 
@@ -310,7 +366,10 @@ class GenotypeBrowserRunner(AbstractRunner):
             case_name = case["name"]
             print(f"\ttesting {case_name}: {params}")
 
-            variants = study.query_variants(**params)
+            variants = list(study.query_variants(**params))
+            df = self._build_variants_df(variants)
+            expect_filename = self._build_case_expections_filename(case)
+            df.to_csv(expect_filename, sep="\t", index=False)
 
             if "count" in expected:
                 count = expected["count"]
@@ -392,6 +451,26 @@ class MainRunner:
                 res = yaml.load(infile, Loader=yaml.FullLoader)
                 for expectation in res:
                     expectation["file"] = filename
+                    for case in expectation["cases"]:
+                        print(case)
+                        assert "name" in case
+                        case_id = case["name"]\
+                            .replace(" ", "_")\
+                            .replace("-", "_")\
+                            .replace("<", "") \
+                            .replace(">", "") \
+                            .replace("=", "") \
+                            .replace("%", "") \
+                            .replace("(", "") \
+                            .replace(")", "") \
+                            .lower()
+                        case["id"] = case_id
+                    seen = set()
+                    for case in expectation["cases"]:
+                        assert case["id"] not in seen
+                        seen.add(case["id"])
+                        print(case["id"])
+
                     yield expectation
 
     def make_validation_runner(self, expectations):
