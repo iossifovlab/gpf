@@ -63,7 +63,7 @@ export class DatasetsComponent implements OnInit {
       } else {
         this.datasetsService.getSelectedDataset().pipe(take(1)).subscribe(dataset => {
           const url = this.router.url.split('/');
-          const toolName = url[url.indexOf(dataset.id) + 1];
+          const toolName = url[url.indexOf('datasets') + 2];
 
           if (!this.isToolEnabled(dataset, toolName)) {
             this.router.navigate(['/', 'datasets', dataset.id, this.findFirstTool(dataset)]);
