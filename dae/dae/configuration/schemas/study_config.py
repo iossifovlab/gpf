@@ -68,11 +68,6 @@ counting_schema = {
     "desc": {"type": "string"},
 }
 
-present_in_role_schema = {
-    "name": {"type": "string"},
-    "roles": {"type": "list", "schema": {"type": "string"}},
-}
-
 person_filters_schema = {
     "name": {"type": "string"},
     "from": {"type": "string", "allowed": ["pedigree", "phenodb"]},
@@ -144,13 +139,6 @@ genotype_browser_schema = {
         },
         "summary_download_columns": {
             "type": "list", "schema": {"type": "string"}
-        },
-        "present_in_role": {
-            "type": "dict",
-            "valuesrules": {
-                "type": "dict",
-                "schema": present_in_role_schema,
-            },
         },
         "person_filters": {
             "type": "dict",

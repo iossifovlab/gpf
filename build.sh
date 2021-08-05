@@ -21,17 +21,20 @@ include libopt.sh
 
 function main() {
   local -A options
-  libopt_parse options stage:all preset:fast clobber:allow_if_matching_values build_no:0 generate_jenkins_init:no -- "$@"
+  libopt_parse options \
+    stage:all preset:fast clobber:allow_if_matching_values build_no:0 generate_jenkins_init:no expose_ports:no -- "$@"
 
   local preset="${options["preset"]}"
   local stage="${options["stage"]}"
   local clobber="${options["clobber"]}"
   local build_no="${options["build_no"]}"
   local generate_jenkins_init="${options["generate_jenkins_init"]}"
+  local expose_ports="${options["expose_ports"]}"
 
   libmain_init iossifovlab.gpf gpf
-  libmain_init_build_env clobber:"$clobber" preset:"$preset" build_no:"$build_no" generate_jenkins_init:"$generate_jenkins_init" \
-	seqpipe.seqpipe-containers seqpipe.data-hg19-startup
+  libmain_init_build_env \
+    clobber:"$clobber" preset:"$preset" build_no:"$build_no" generate_jenkins_init:"$generate_jenkins_init" expose_ports:"$expose_ports" \
+	  seqpipe.seqpipe-containers seqpipe.data-hg19-startup
   libmain_save_build_env_on_exit
   libbuild_init stage:"$stage" registry.seqpipe.org
 
@@ -303,7 +306,7 @@ EOT'
       # setup impala
       {
         local -A ctx_impala
-        build_run_ctx_init ctx:ctx_impala "persistent" "container" "seqpipe/seqpipe-docker-impala:latest" "cmd-from-image" "no-def-mounts" --hostname impala --network "${ctx_network["network_id"]}"
+        build_run_ctx_init ctx:ctx_impala "persistent" "container" "seqpipe/seqpipe-docker-impala:latest" "cmd-from-image" "no-def-mounts" ports:21050,8020 --hostname impala --network "${ctx_network["network_id"]}"
         defer_ret build_run_ctx_reset ctx:ctx_impala
 
         build_run_container ctx:ctx_impala /wait-for-it.sh -h localhost -p 21050 -t 300

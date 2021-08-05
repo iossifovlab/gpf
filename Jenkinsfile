@@ -1,5 +1,8 @@
 pipeline {
   agent { label 'piglet || pooh || dory' }
+  options {
+    copyArtifactPermission('iossifovlab/*,seqpipe/*');
+  }
   environment {
     BUILD_SCRIPTS_BUILD_DOCKER_REGISTRY_USERNAME = credentials('jenkins-registry.seqpipe.org.user')
     BUILD_SCRIPTS_BUILD_DOCKER_REGISTRY_PASSWORD_FILE = credentials('jenkins-registry.seqpipe.org.passwd')
@@ -24,6 +27,8 @@ pipeline {
   }
   post {
     always {
+      junit 'test-results/wdae-junit.xml, test-results/dae-junit.xml'
+
       zulipNotification(
         topic: "${env.JOB_NAME}"
       )
