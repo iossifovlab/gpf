@@ -424,7 +424,48 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
             'zygosity',
             'period',
             'repeats',
-            'unit'
+            'unit',
+            'spidex_gene', 'spidex_location', 'spidex_ss_dist',
+            'spidex_strand',
+            'spidex_transcript', 'status', 'syn', 'syn_z', 'v_id', 'var_type',
+            'GENCODE.SFARIscore', 'GENCODE.isBrainCriticalGene',
+            'GENCODE.isEmbryonicallyExpressedGene',
+            'GENDER (1=male, 2=female)',
+            'Gene.GENCODE', 'IGV viewed?', 'REVEL_ALTaa', 'REVEL_REFaa',
+            'REVEL_score', 'Sanger confirmed?',
+            'pRec', 'pop_freq', 'pred_prob', 'ref_DP', 'sort_cat',
+            'spark_genes',
+            'spidex_cds_type', 'spidex_dpsi_max_tissue', 'spidex_dpsi_zscore',
+            'spidex_exon_number',
+            'impact_lof', 'in_fb', 'in_hc', 'in_pl', 'lab_id', 'lof', 'lof_z',
+            'mis_z', 'missense', 'pNull',
+            'ANN.DDD category', 'ANN.DDD disease',
+            'ANN.DDD mutation consequences',
+            'ANN.DDD organ specificity list', 'ANN.DDD pmids',
+            'ANN.DDD: is Brain/Cognition', 'ANN.EFFECT', 'ANN.GENE',
+            'ANN.GENEID',
+            'ANN.IMPACT', 'ANN.SFARIscore', 'ANN.isBrainCriticalGene',
+            'ANN.isEmbryonicallyExpressedGene', 'Alias', 'BrainExpr',
+            'Conseq.GENCODE', 'Effect.GENCODE',
+            'GENCODE.DDD allelic requirements',
+            'GENCODE.DDD category', 'GENCODE.DDD disease',
+            'GENCODE.DDD mutation consequences',
+            'GENCODE.DDD organ specificity list', 'GENCODE.DDD pmids',
+            'GENCODE.DDD: is Brain/Cognition',
+            'asd_gene_score', 'batch', 'cohort_freq', 'dbNSFP_1000Gp3_AF',
+            'dbNSFP_Uniprot_aapos_Polyphen2', 'dbNSFP_Uniprot_acPolyphen2',
+            'dbNSFP_Uniprot_id_Polyphen2', 'dbNSFP_rs_dbSNP146', 'dmg_miss',
+            'effect_cat.1',
+            'ANN.DDD allelic requirements',
+            'ANN[*].EFFECT', 'ANN[*].FEATUREID', 'ANN[*].GENE',
+            'ANN[*].GENEID',
+            'ANN[*].IMPACT', 'BCM', 'Cdfd', 'Clmb', 'DP', 'DP_father',
+            'DP_mother',
+            'DP_offspring', 'ID', 'LDGscore', 'LGDrank', 'RVIS',
+            'RVIS_LGDrank',
+            'RVISrank', 'SFARIscore', 'Unnamed: 0', 'allele_frac.1', 'alt_DP',
+            'ANN[*].BIOTYPE',
+
         ]
 
         for name in cleanup_names:
@@ -449,14 +490,14 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
                     ",".join(vprops["effect_gene_genes"])
                 vprops["effect_gene_types"] = \
                     ",".join(vprops["effect_gene_types"])
-                
+
                 effect_details = filter(
-                    lambda x: x is not None, 
+                    lambda x: x is not None,
                     vprops["effect_details_transcript_ids"])
                 vprops["effect_details_transcript_ids"] = \
                     ",".join(effect_details)
                 effect_details = filter(
-                    lambda x: x is not None, 
+                    lambda x: x is not None,
                     vprops["effect_details_details"])
                 vprops["effect_details_details"] = \
                     ",".join(effect_details)
@@ -665,6 +706,9 @@ class MainRunner:
                             .replace("%", "") \
                             .replace("(", "") \
                             .replace(")", "") \
+                            .replace("/", "_") \
+                            .replace("+", "_p_") \
+                            .replace("'", "") \
                             .lower()
                         case["id"] = case_id
                     seen = set()
@@ -744,7 +788,7 @@ def main(argv=sys.argv[1:]):
     parser.add_argument(
         "--output", "-o", type=str, default="validation-result.xml",
         help="output filename for JUnit result XML file")
-    
+
     parser.add_argument(
         "--store-results", type=str,
         help="a directory where to store genotype variants into TSV files")
