@@ -123,16 +123,16 @@
 
         <ng-container *ngFor="let dataset of shownDatasets">
           <ng-container *ngFor="let personSet of dataset.personSets; let i = index">
-            <td (click)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)"
-            (middleclick)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)"
-            [class.link-td]="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id).count"
+            <td [class.link-td]="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id).count"
             style="min-width: 70px;"
             *ngFor="let statistic of personSet.statistics; let j = index"
             [ngClass] = "{'category-border': i === 0 && j === 0}">
               <ng-container *ngIf="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id) as value">
-                <ng-container *ngIf="value.count !== 0">
+                <div *ngIf="value.count !== 0"
+                (click)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)"
+                (middleclick)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)">
                     {{value.count}} ({{value.rate | number : '1.0-3' }})
-                </ng-container>
+                </div>
               </ng-container>
             </td>
           </ng-container>
