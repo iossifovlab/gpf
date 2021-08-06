@@ -1,5 +1,5 @@
 ARG BASE_IMAGE_VERSION=latest
-FROM seqpipe/seqpipe-anaconda-base:${BASE_IMAGE_VERSION}
+FROM seqpipe-anaconda-base:${BASE_IMAGE_VERSION}
 
 ARG SOURCE_DIR="."
 
