@@ -319,13 +319,9 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
     def _build_case_expections_filename(self, case, dirname=None):
         case_dirname, _ = os.path.splitext(self.expectations["file"])
-        print(
-            "expectation filename:", self.expectations["file"], 
-            "case_dirname:", case_dirname)
         if dirname is not None:
             case_dirname = os.path.join(dirname, case_dirname)
 
-        print(f"creating directory: {case_dirname}")
         os.makedirs(case_dirname, exist_ok=True)
 
         return os.path.join(case_dirname, f"{case['id']}.tsv")
@@ -453,10 +449,17 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
                     ",".join(vprops["effect_gene_genes"])
                 vprops["effect_gene_types"] = \
                     ",".join(vprops["effect_gene_types"])
+                
+                effect_details = filter(
+                    lambda x: x is not None, 
+                    vprops["effect_details_transcript_ids"])
                 vprops["effect_details_transcript_ids"] = \
-                    ",".join(vprops["effect_details_transcript_ids"])
+                    ",".join(effect_details)
+                effect_details = filter(
+                    lambda x: x is not None, 
+                    vprops["effect_details_details"])
                 vprops["effect_details_details"] = \
-                    ",".join(vprops["effect_details_details"])
+                    ",".join(effect_details)
 
                 self._cleanup_allele_attributes(vprops)
 
@@ -601,7 +604,8 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
         for case in cases:
             for test_result in self._execute_test_case(case, study):
-
+                if test_result is None:
+                    continue
                 print("\t", test_result)
                 test_suite.append(test_result)
 
