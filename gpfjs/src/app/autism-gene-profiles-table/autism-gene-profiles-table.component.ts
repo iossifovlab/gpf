@@ -140,8 +140,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
             .filter(set => set.defaultVisible === true).map(set => set.setId)
         });
       });
-      /*this.shownGenomicScoresCategories[0].scores[0].defaultVisible = false;
-      this.shownGenomicScoresCategories[0].scores[2].defaultVisible = false;*/
       this.shownGenomicScoresCategories.forEach(category => {
         this.multipleSelectMenuApplyData({
           menuId: 'genomic_scores_category:' + category.category,
