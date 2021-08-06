@@ -42,15 +42,21 @@ class ConfigurationView(QueryBaseView):
                         person_sets_config.append({
                             "id": set_id,
                             "displayName": set_name,
+                            "collectionId": collection_id,
                             "description": description,
                             "parentsCount": stats["parents"],
                             "childrenCount": stats["children"],
                         })
+
+                display_name = dataset.get("display_name")
+                if display_name is None:
+                    display_name = study_wrapper.config.get("name")
+                if display_name is None:
+                    display_name = dataset_id
+
                 response["datasets"].append({
                     "id": dataset_id,
-                    "displayName": study_wrapper.config.get(
-                        "name", dataset_id
-                    ),
+                    "displayName": display_name,
                     **to_response_json(dataset),
                     "personSets": person_sets_config,  # overwrite person_sets
                 })

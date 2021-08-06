@@ -86,6 +86,7 @@ class StudyWrapperBase:
         result["genotype_browser_config"] = {
             key: config.genotype_browser.get(key, None) for key in [
                 "has_family_filters",
+                "has_person_filters",
                 "has_study_filters",
                 "has_present_in_child",
                 "has_present_in_parent",
@@ -96,7 +97,6 @@ class StudyWrapperBase:
                 "person_filters",
                 "family_filters",
                 "genotype",
-                "present_in_role",
                 "inheritance_type_filter",
                 "selected_inheritance_type_filter_values",
             ]
@@ -215,9 +215,6 @@ class StudyWrapper(StudyWrapperBase):
             ]
         else:
             self.gene_weight_column_sources = []
-
-        # PRESENT IN ROLE
-        self.present_in_role = genotype_browser_config.present_in_role or []
 
         # LEGEND
         # self.legend = {}
@@ -419,12 +416,6 @@ class StudyWrapper(StudyWrapperBase):
     #     else:
     #         legend = self.legend.get(person_set_collection_id, [])
     #     return legend + self._get_legend_default_values()
-
-    def get_present_in_role(self, present_in_role_id):
-        if not present_in_role_id:
-            return {}
-
-        return self.present_in_role.get(present_in_role_id, {})
 
 
 class RemoteStudyWrapper(StudyWrapperBase):
