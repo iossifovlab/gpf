@@ -7,7 +7,7 @@
       placeholder="Select or start typing to search"
       (click)="searchBox.value=''; onFocus($event)"
       (keydown.enter)="onEnterPress()" />
-    {{ searchBox.focus() }}
+    {{ searchBox.focus({preventScroll: true}) }}
     <span style="width: 100%"
       [hidden]="!caption" id="selected-value"
       class="clickable"

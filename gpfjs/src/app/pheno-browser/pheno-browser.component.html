@@ -14,7 +14,7 @@
 
                 <div class="col-4">
                   <input #searchTerm id="search-term" (input)="search(searchTerm.value)" type="text" class="form-control" placeholder="Search phenotypes" [ngModel]="input$ | async"/>
-                  {{ searchTerm.focus() }}
+                  {{ searchTerm.focus({preventScroll: true}) }}
                   <select class="form-control" [ngModel]="selectedInstrument$ | async" (ngModelChange)="emitInstrument($event)">
                     <option value="">All instruments</option>
                     <option *ngFor="let instrument of (instruments | async)?.instruments"
