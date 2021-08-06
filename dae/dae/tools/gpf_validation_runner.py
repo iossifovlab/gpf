@@ -4,7 +4,6 @@ import io
 import sys
 import glob
 import yaml
-import time
 import logging
 import copy
 import enum
@@ -29,27 +28,28 @@ class TestResult:
             case=None,
             test_for=None,
             params=None,
-            result=None,
-            expected=None):
+            result=None):
 
         self.expectation = expectation
         self.case = case
         self.test_for = test_for
         self.params = params
         self.status = TestStatus.NOTSET
-        self.expected = expected
         self.result = result
         self.message = None
         self.time = None
 
     def __str__(self):
-        out = f"{self.study} {self.test_for} test {self.case_number} "
+        case_name = self.case["name"]
+        filename = self.expectation["file"]
+
+        out = f"{filename}: {case_name}: {self.test_for} "
         if self.status == TestStatus.PASSED:
             out += "PASSED"
         elif self.status == TestStatus.FAIL:
-            out += f"FAILED: expected {self.expected},"
+            out += f"FAILED: {self.message},"
         elif self.status == TestStatus.ERROR:
-            out += "ERROR"
+            out += f"ERROR: {self.message},"
         return out
 
     def to_xml_element(self):
@@ -79,13 +79,13 @@ class TestResult:
             failure = Element("failure")
             failure.set(
                 "message",
-                f"Expected {self.expected}, Got {self.result}")
+                f"{self.message}")
             testcase.append(failure)
         elif self.status == TestStatus.ERROR:
             error = Element("error")
             error.set(
                 "message",
-                f"Expected {self.expected}, Got {self.result}")
+                f"{self.message}")
             testcase.append(error)
         return testcase
 
@@ -105,7 +105,8 @@ class TestSuite:
         testsuite.set("name", f"{self.study} {self.target}: {self.name}")
         testsuite.set("tests", str(len(self.cases)))
         failures = \
-            len(list(filter(lambda x: x.status == TestStatus.FAIL, self.cases)))
+            len(list(
+                filter(lambda x: x.status == TestStatus.FAIL, self.cases)))
         testsuite.set("failures", str(failures))
 
         for case in self.cases:
@@ -316,109 +317,120 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
     #     self.test_suites.append(test_suite)
 
-    def _build_case_expections_filename(self, case):
-        dirname, _ = os.path.splitext(self.expectations["file"])
-        print(dirname)
-        os.makedirs(dirname, exist_ok=True)
-        return os.path.join(dirname, f"{case['id']}.tsv")
+    def _build_case_expections_filename(self, case, dirname=None):
+        case_dirname, _ = os.path.splitext(self.expectations["file"])
+        print(
+            "expectation filename:", self.expectations["file"], 
+            "case_dirname:", case_dirname)
+        if dirname is not None:
+            case_dirname = os.path.join(dirname, case_dirname)
+
+        print(f"creating directory: {case_dirname}")
+        os.makedirs(case_dirname, exist_ok=True)
+
+        return os.path.join(case_dirname, f"{case['id']}.tsv")
 
     @staticmethod
     def _cleanup_allele_attributes(vprops):
         cleanup_names = [
-            'ACMG_v2', 'ASC', 'BrainCriticalGene', 'CUMC', 
-            'CUMC_Autism_Dmis_CADD25_Rate', 'CUMC_Autism_Dmis_REVEL0.5_Rate', 
-            'CUMC_Autism_LoF_Rate', 'CUMC_DenovoWEST_tada', 'CUMC_HGNC', 
-            'CUMC_NDD_Dmis_CADD25_Rate', 'CUMC_NDD_Dmis_REVEL0.5_Rate', 
-            'CUMC_NDD_LoF_Rate', 'CUMC_SPARK_Dmis_CADD25', 
-            'CUMC_SPARK_Dmis_REVEL0.5', 'CUMC_SPARK_LoF', 'CUMC_called_by', 
-            'CUMC_pDenovoWEST', 'CUMC_pDenovoWEST_cat', 
-            'CUMC_tadaDmis_predProb', 'CUMC_tadaDmis_predProb_cat', 
-            'CUMC_tada_predProb', 'CUMC_tada_predProb_cat', 
-            'ChromatinModifiers', 'Coe2019', 'DDD_category', 
-            'DP_alt', 'DP_ref', 'EssentialGenes', 'FILTER', 
-            'FMRPTargets_fragileXprotein', 'HI_interactions', 
-            'LOF.GENE', 'LOF.GENEID', 'LOF.NUMTR', 'LOF.PERC', 'MPC', 
-            'MendelianDiseaseGenes', 'NMD.GENE', 'NMD.GENEID', 'NMD.NUMTR', 
-            'NMD.PERC', 'PreferentialEmbryonicExpressed', 'RSID', 
-            'Round1_prelim', 'Round2_prelim', 'Round3_prelim', 
-            'Ruzzo2019', 'SF', 'SFARIscore_2019q1', 'SF_called_by', 
-            'SF_comment', 'Sanders2015', 'Stessman2017', 'UW', 'UW_called_by', 
-            'VEP_amino_acids', 'VEP_canonical', 'VEP_codons', 
-            'VEP_consequence', 'VEP_exon', 'VEP_impact', 'VEP_intron', 
-            'Xregion', 'aa_len', 'aa_pos', 'allele_frac', 
-            'allelic_requirement', 'asd', 'asd_score', 'biotype', 
-            'brain_expression', 'cdna_len', 'cdna_pos', 'cds_len', 
-            'cds_pos', 'clinvar_allele_origin', 'clinvar_clnsig', 
-            'clinvar_clnsig_includedVar', 'clinvar_conflicting_clnsig', 
-            'clinvar_consequence', 'clinvar_gene', 'clinvar_hgvs', 
-            'clinvar_prevalence', 'clinvar_review', 'clinvar_source', 
-            'clinvar_suspectReasonCode', 'clinvar_trait', 
-            'clinvar_trait_includedVar', 'clinvar_vartype', 'coding_var', 
-            'cohort_freq_comment_perFamily(ALT_DP>1)', 
-            'cohort_freq_variant_perFamily(ALT_DP>1)', 'consistent_with_PG', 
-            'dbNSFP_Aloft_Confidence', 
-            'dbNSFP_Aloft_Fraction_transcripts_affected', 
-            'dbNSFP_Aloft_pred', 'dbNSFP_Aloft_prob_Dominant', 
-            'dbNSFP_Aloft_prob_Recessive', 'dbNSFP_Aloft_prob_Tolerant', 
-            'dbNSFP_CADD_phred', 'dbNSFP_ExAC_AF', 'dbNSFP_ExAC_Adj_AF', 
-            'dbNSFP_ExAC_nonTCGA_AF', 'dbNSFP_ExAC_nonTCGA_Adj_AF', 
-            'dbNSFP_ExAC_nonpsych_AF', 'dbNSFP_ExAC_nonpsych_Adj_AF', 
-            'dbNSFP_HGVSc_ANNOVAR', 'dbNSFP_HGVSp_ANNOVAR', 'dbNSFP_MVP', 
-            'dbNSFP_M_CAP_pred', 'dbNSFP_MetaLR_pred', 'dbNSFP_MetaSVM_pred', 
-            'dbNSFP_Polyphen2_HDIV_pred', 'dbNSFP_Polyphen2_HVAR_pred', 
-            'dbNSFP_REVEL', 'dbNSFP_SIFT4G_pred', 'dbNSFP_SIFT_pred', 
-            'dbNSFP_aaalt', 'dbNSFP_aapos', 'dbNSFP_aaref', 
-            'dbNSFP_cds_strand', 'dbNSFP_gnomAD_exomes_AF', 
-            'dbNSFP_gnomAD_exomes_AFR_AF', 'dbNSFP_gnomAD_exomes_AMR_AF', 
-            'dbNSFP_gnomAD_exomes_ASJ_AF', 'dbNSFP_gnomAD_exomes_EAS_AF', 
-            'dbNSFP_gnomAD_exomes_FIN_AF', 'dbNSFP_gnomAD_exomes_NFE_AF', 
-            'dbNSFP_gnomAD_exomes_POPMAX_AF', 'dbNSFP_gnomAD_exomes_SAS_AF', 
-            'dbNSFP_gnomAD_exomes_controls_AF', 
-            'dbNSFP_gnomAD_exomes_controls_AFR_AF', 
-            'dbNSFP_gnomAD_exomes_controls_AMR_AF', 
-            'dbNSFP_gnomAD_exomes_controls_ASJ_AF', 
-            'dbNSFP_gnomAD_exomes_controls_EAS_AF', 
-            'dbNSFP_gnomAD_exomes_controls_FIN_AF', 
-            'dbNSFP_gnomAD_exomes_controls_NFE_AF', 
-            'dbNSFP_gnomAD_exomes_controls_POPMAX_AF', 
-            'dbNSFP_gnomAD_exomes_controls_SAS_AF', 
-            'dbNSFP_gnomAD_exomes_flag', 
-            'dbNSFP_gnomAD_genomes_AF', 
-            'dbNSFP_gnomAD_genomes_AFR_AF', 
-            'dbNSFP_gnomAD_genomes_AMR_AF', 
-            'dbNSFP_gnomAD_genomes_ASJ_AF', 'dbNSFP_gnomAD_genomes_EAS_AF', 
-            'dbNSFP_gnomAD_genomes_FIN_AF', 'dbNSFP_gnomAD_genomes_NFE_AF', 
-            'dbNSFP_gnomAD_genomes_POPMAX_AF', 
-            'dbNSFP_gnomAD_genomes_controls_AF', 
-            'dbNSFP_gnomAD_genomes_controls_AFR_AF', 
-            'dbNSFP_gnomAD_genomes_controls_AMR_AF', 
-            'dbNSFP_gnomAD_genomes_controls_ASJ_AF', 
-            'dbNSFP_gnomAD_genomes_controls_EAS_AF', 
-            'dbNSFP_gnomAD_genomes_controls_FIN_AF', 
-            'dbNSFP_gnomAD_genomes_controls_NFE_AF', 
-            'dbNSFP_gnomAD_genomes_controls_POPMAX_AF', 
-            'dbNSFP_gnomAD_genomes_flag', 
-            'difference_with_MZ_twin', 'distance', 'dmg_miss_wMPC_MVP', 
-            'dv_alt', 'dv_child_gq', 'dv_child_gt', 'dv_confirmed', 
-            'dv_confirmed_binary', 'dv_father_gq', 'dv_father_gt', 
-            'dv_mother_gq', 'dv_mother_gt', 'dv_qual', 'dv_ref', 
-            'effect_cat', 'effect_cat_PG', 'exon/intron', 'father', 
-            'feature', 'gene_blacklisted', 'gene_symbol', 'geneid', 
-            'hgvsc', 'hgvsp', 'high_confidence', 'igv', 'impact', 
-            'inheritance', 'lab_validation', 'mother', 'mutation_consequence', 
-            'mutation_type', 'mutation_type_extended', 'n_callers', 
-            'n_centers', 'numResiduesFromEnd', 'num_rare_LGD', 
-            'num_rare_SparkLGD', 'observed_counts_vartype_perFamily(ALT_DP>1)', 
-            'order_reason', 'organ_specificity_list', 'pLI', 
-            'pg_transcript_effect', 'pg_transcript_errors', 
-            'pg_transcript_hgvsc', 'pg_transcript_hgvsp', 'pg_transcript_id', 
-            'pg_transcript_impact', 'posMultipleVariantsPerFamily', 
-            'possibleMNV', 'postsynapticDensityProteins', 
-            'protein_id_ensembl', 'role', 'sex', 'sfid', 'sparkGenes', 
-            'spid_outliers', 'transcript_id_ensembl', 'transcript_id_refseq', 
-            'twin_mz', 'variant_id', 'warnings_errors', 'watchGeneList', 
-            'zygosity'
+            'ACMG_v2', 'ASC', 'BrainCriticalGene', 'CUMC',
+            'CUMC_Autism_Dmis_CADD25_Rate', 'CUMC_Autism_Dmis_REVEL0.5_Rate',
+            'CUMC_Autism_LoF_Rate', 'CUMC_DenovoWEST_tada', 'CUMC_HGNC',
+            'CUMC_NDD_Dmis_CADD25_Rate', 'CUMC_NDD_Dmis_REVEL0.5_Rate',
+            'CUMC_NDD_LoF_Rate', 'CUMC_SPARK_Dmis_CADD25',
+            'CUMC_SPARK_Dmis_REVEL0.5', 'CUMC_SPARK_LoF', 'CUMC_called_by',
+            'CUMC_pDenovoWEST', 'CUMC_pDenovoWEST_cat',
+            'CUMC_tadaDmis_predProb', 'CUMC_tadaDmis_predProb_cat',
+            'CUMC_tada_predProb', 'CUMC_tada_predProb_cat',
+            'ChromatinModifiers', 'Coe2019', 'DDD_category',
+            'DP_alt', 'DP_ref', 'EssentialGenes', 'FILTER',
+            'FMRPTargets_fragileXprotein', 'HI_interactions',
+            'LOF.GENE', 'LOF.GENEID', 'LOF.NUMTR', 'LOF.PERC', 'MPC',
+            'MendelianDiseaseGenes', 'NMD.GENE', 'NMD.GENEID', 'NMD.NUMTR',
+            'NMD.PERC', 'PreferentialEmbryonicExpressed', 'RSID',
+            'Round1_prelim', 'Round2_prelim', 'Round3_prelim',
+            'Ruzzo2019', 'SF', 'SFARIscore_2019q1', 'SF_called_by',
+            'SF_comment', 'Sanders2015', 'Stessman2017', 'UW', 'UW_called_by',
+            'VEP_amino_acids', 'VEP_canonical', 'VEP_codons',
+            'VEP_consequence', 'VEP_exon', 'VEP_impact', 'VEP_intron',
+            'Xregion', 'aa_len', 'aa_pos', 'allele_frac',
+            'allelic_requirement', 'asd', 'asd_score', 'biotype',
+            'brain_expression', 'cdna_len', 'cdna_pos', 'cds_len',
+            'cds_pos', 'clinvar_allele_origin', 'clinvar_clnsig',
+            'clinvar_clnsig_includedVar', 'clinvar_conflicting_clnsig',
+            'clinvar_consequence', 'clinvar_gene', 'clinvar_hgvs',
+            'clinvar_prevalence', 'clinvar_review', 'clinvar_source',
+            'clinvar_suspectReasonCode', 'clinvar_trait',
+            'clinvar_trait_includedVar', 'clinvar_vartype', 'coding_var',
+            'cohort_freq_comment_perFamily(ALT_DP>1)',
+            'cohort_freq_variant_perFamily(ALT_DP>1)', 'consistent_with_PG',
+            'dbNSFP_Aloft_Confidence',
+            'dbNSFP_Aloft_Fraction_transcripts_affected',
+            'dbNSFP_Aloft_pred', 'dbNSFP_Aloft_prob_Dominant',
+            'dbNSFP_Aloft_prob_Recessive', 'dbNSFP_Aloft_prob_Tolerant',
+            'dbNSFP_CADD_phred', 'dbNSFP_ExAC_AF', 'dbNSFP_ExAC_Adj_AF',
+            'dbNSFP_ExAC_nonTCGA_AF', 'dbNSFP_ExAC_nonTCGA_Adj_AF',
+            'dbNSFP_ExAC_nonpsych_AF', 'dbNSFP_ExAC_nonpsych_Adj_AF',
+            'dbNSFP_HGVSc_ANNOVAR', 'dbNSFP_HGVSp_ANNOVAR', 'dbNSFP_MVP',
+            'dbNSFP_M_CAP_pred', 'dbNSFP_MetaLR_pred', 'dbNSFP_MetaSVM_pred',
+            'dbNSFP_Polyphen2_HDIV_pred', 'dbNSFP_Polyphen2_HVAR_pred',
+            'dbNSFP_REVEL', 'dbNSFP_SIFT4G_pred', 'dbNSFP_SIFT_pred',
+            'dbNSFP_aaalt', 'dbNSFP_aapos', 'dbNSFP_aaref',
+            'dbNSFP_cds_strand', 'dbNSFP_gnomAD_exomes_AF',
+            'dbNSFP_gnomAD_exomes_AFR_AF', 'dbNSFP_gnomAD_exomes_AMR_AF',
+            'dbNSFP_gnomAD_exomes_ASJ_AF', 'dbNSFP_gnomAD_exomes_EAS_AF',
+            'dbNSFP_gnomAD_exomes_FIN_AF', 'dbNSFP_gnomAD_exomes_NFE_AF',
+            'dbNSFP_gnomAD_exomes_POPMAX_AF', 'dbNSFP_gnomAD_exomes_SAS_AF',
+            'dbNSFP_gnomAD_exomes_controls_AF',
+            'dbNSFP_gnomAD_exomes_controls_AFR_AF',
+            'dbNSFP_gnomAD_exomes_controls_AMR_AF',
+            'dbNSFP_gnomAD_exomes_controls_ASJ_AF',
+            'dbNSFP_gnomAD_exomes_controls_EAS_AF',
+            'dbNSFP_gnomAD_exomes_controls_FIN_AF',
+            'dbNSFP_gnomAD_exomes_controls_NFE_AF',
+            'dbNSFP_gnomAD_exomes_controls_POPMAX_AF',
+            'dbNSFP_gnomAD_exomes_controls_SAS_AF',
+            'dbNSFP_gnomAD_exomes_flag',
+            'dbNSFP_gnomAD_genomes_AF',
+            'dbNSFP_gnomAD_genomes_AFR_AF',
+            'dbNSFP_gnomAD_genomes_AMR_AF',
+            'dbNSFP_gnomAD_genomes_ASJ_AF', 'dbNSFP_gnomAD_genomes_EAS_AF',
+            'dbNSFP_gnomAD_genomes_FIN_AF', 'dbNSFP_gnomAD_genomes_NFE_AF',
+            'dbNSFP_gnomAD_genomes_POPMAX_AF',
+            'dbNSFP_gnomAD_genomes_controls_AF',
+            'dbNSFP_gnomAD_genomes_controls_AFR_AF',
+            'dbNSFP_gnomAD_genomes_controls_AMR_AF',
+            'dbNSFP_gnomAD_genomes_controls_ASJ_AF',
+            'dbNSFP_gnomAD_genomes_controls_EAS_AF',
+            'dbNSFP_gnomAD_genomes_controls_FIN_AF',
+            'dbNSFP_gnomAD_genomes_controls_NFE_AF',
+            'dbNSFP_gnomAD_genomes_controls_POPMAX_AF',
+            'dbNSFP_gnomAD_genomes_flag',
+            'difference_with_MZ_twin', 'distance', 'dmg_miss_wMPC_MVP',
+            'dv_alt', 'dv_child_gq', 'dv_child_gt', 'dv_confirmed',
+            'dv_confirmed_binary', 'dv_father_gq', 'dv_father_gt',
+            'dv_mother_gq', 'dv_mother_gt', 'dv_qual', 'dv_ref',
+            'effect_cat', 'effect_cat_PG', 'exon/intron', 'father',
+            'feature', 'gene_blacklisted', 'gene_symbol', 'geneid',
+            'hgvsc', 'hgvsp', 'high_confidence', 'igv', 'impact',
+            'inheritance', 'lab_validation', 'mother', 'mutation_consequence',
+            'mutation_type', 'mutation_type_extended', 'n_callers',
+            'n_centers', 'numResiduesFromEnd', 'num_rare_LGD',
+            'num_rare_SparkLGD', 'observed_counts_vartype_perFamily(ALT_DP>1)',
+            'order_reason', 'organ_specificity_list', 'pLI',
+            'pg_transcript_effect', 'pg_transcript_errors',
+            'pg_transcript_hgvsc', 'pg_transcript_hgvsp', 'pg_transcript_id',
+            'pg_transcript_impact', 'posMultipleVariantsPerFamily',
+            'possibleMNV', 'postsynapticDensityProteins',
+            'protein_id_ensembl', 'role', 'sex', 'sfid', 'sparkGenes',
+            'spid_outliers', 'transcript_id_ensembl', 'transcript_id_refseq',
+            'twin_mz', 'variant_id', 'warnings_errors', 'watchGeneList',
+            'zygosity',
+            'period',
+            'repeats',
+            'unit'
         ]
+
         for name in cleanup_names:
             if name in vprops:
                 del vprops[name]
@@ -460,11 +472,10 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
         df = pd.DataFrame.from_records(records)
 
-        if len(df) > 1:
+        if len(df) > 0:
             df = df.sort_values(
                 by=["chromosome", "position", "fvuid", "allele_index"])
             df = df.reset_index(drop=True)
-            print("variants df:", df.head())
             with io.StringIO() as inout:
                 df.to_csv(inout, sep="\t", index=False)
                 inout.seek(0, io.SEEK_SET)
@@ -474,94 +485,114 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
         return df
 
     def _variants_diff(self, variants_df, expected_df):
-        if len(variants_df) == len(expected_df) == 0:
-            print("match")
-            return
 
-        if len(variants_df) > 0 and len(expected_df) > 0:
-            if all(variants_df.index != expected_df.index):
-                print("DIFF: indecies differ")
-            if all(variants_df.columns != expected_df.columns):
-                print("DIFF: columns differ")
+        try:
+            assert set(variants_df.columns) == set(expected_df.columns), (
+                variants_df.columns, expected_df.columns)
 
-            diff_df = variants_df.compare(
-                expected_df, keep_shape=False, align_axis=0)
-            print("diff:", diff_df.head())
+            pd.testing.assert_frame_equal(variants_df, expected_df)
 
-    def _execute_test_case(self, expectation, case, study):
-        study_id = expectation["study"]
+        except AssertionError as ex:
+            with io.StringIO() as out:
+                print("expected:\n", expected_df.head(), file=out)
+                print("actual:\n", variants_df.head(), file=out)
+                print(ex, file=out)
+                return out.getvalue()
 
-        params = case["params"]
-        params = self._parse_frequency(params)
-        params = self._parse_genomic_scores(params)
+        return None
 
-        expected = case["expected"]
-        case_name = case["name"]
-        print(f"\ttesting {case_name}: {params}")
-
-        start = time.time()
-
-        if study is None:
-            test_result = TestResult(
-                expectation=expectation,
-                case=case,
-                test_for="count",
-                params=params,
-                expected=expected,
-                result=None,
-            )
-            test_result.message = f"can't find study {study_id}",
-            test_result.status = TestStatus.ERROR
-            return test_result
-
-        variants = list(study.query_variants(**params))
+    def _execute_variants_test_case(self, case, params, variants):
         df = self._build_variants_df(variants)
         variants_filename = self._build_case_expections_filename(case)
-        assert os.path.exists(variants_filename)
+        if not os.path.exists(variants_filename):
+            return None
 
-        print("variants file size:", os.path.getsize(variants_filename))
         try:
             expect_df = pd.read_csv(variants_filename, sep="\t")
         except pd.errors.EmptyDataError:
             expect_df = pd.DataFrame({})
             assert len(expect_df) == 0
 
-        print("expect_df:", expect_df.head())
         # df.to_csv(variants_filename, sep="\t", index=False)
-        test_result = self._variants_diff(df, expect_df)
+        diff = self._variants_diff(df, expect_df)
+
+        test_result = TestResult(
+            expectation=self.expectations,
+            case=case,
+            test_for="variants",
+            params=params,
+        )
+
+        if diff is None:
+            test_result.status = TestStatus.PASSED
+        else:
+            test_result.status = TestStatus.FAIL
+            test_result.message = f"\n" \
+                f"reading expected variants from {variants_filename};\n" \
+                f"{diff}"
+        return test_result
+
+    def _execute_count_test_case(self, case, params, variants):
+        expected = case["expected"]
 
         assert "count" in expected
         count = expected["count"]
 
         variants_count = sum(1 for v in variants)
         test_result = TestResult(
-            expectation=expectation,
+            expectation=self.expectations,
             case=case,
             test_for="count",
             params=params,
-            expected=expected,
-            result=variants_count
         )
 
         if variants_count == count:
             test_result.status = TestStatus.PASSED
             test_result.message = "PASSED"
-            print("\t\t\tPASSED")
         else:
             test_result.status = TestStatus.FAIL
             test_result.message = f"FAILED: expected {count}; " \
                 f"got {variants_count} variants"
-            print(
-                f"\t\t\t{test_result.message}")
-        end = time.time()
-        test_result.time = (end-start)
         return test_result
 
-    def _validate_genotype_browser(self, expectation):
-        study_id = expectation["study"]
-        cases = expectation["cases"]
-        target = expectation["target"]
-        name = expectation["name"]
+    def _case_query_params(self, case):
+        params = copy.deepcopy(case["params"])
+        params = self._parse_frequency(params)
+        params = self._parse_genomic_scores(params)
+
+        return params
+
+    def _execute_test_case(self, case, study):
+        study_id = self.expectations["study"]
+        params = self._case_query_params(case)
+
+        if study is None:
+            test_result = TestResult(
+                expectation=self.expectations,
+                case=case,
+                test_for="count",
+                params=params,
+                result=None,
+            )
+            test_result.message = f"can't find study {study_id}",
+            test_result.status = TestStatus.ERROR
+            return (test_result, )
+
+        variants = list(study.query_variants(**params))
+
+        count_result = self._execute_count_test_case(
+            case, params, variants)
+
+        variants_result = self._execute_variants_test_case(
+            case, params, variants)
+
+        return (count_result, variants_result)
+
+    def _validate_genotype_browser(self):
+        study_id = self.expectations["study"]
+        cases = self.expectations["cases"]
+        target = self.expectations["target"]
+        name = self.expectations["name"]
 
         test_suite = TestSuite(study_id, target, name)
         self.test_suites.append(test_suite)
@@ -569,8 +600,29 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
         study = self.gpf_instance.get_genotype_data(study_id)
 
         for case in cases:
-            test_result = self._execute_test_case(expectation, case, study)
-            test_suite.append(test_result)
+            for test_result in self._execute_test_case(case, study):
+
+                print("\t", test_result)
+                test_suite.append(test_result)
+
+    def store_results(self, dirname):
+        study_id = self.expectations["study"]
+        cases = self.expectations["cases"]
+        target = self.expectations["target"]
+        name = self.expectations["name"]
+
+        test_suite = TestSuite(study_id, target, name)
+        self.test_suites.append(test_suite)
+
+        study = self.gpf_instance.get_genotype_data(study_id)
+        for case in cases:
+            params = self._case_query_params(case)
+            variants = list(study.query_variants(**params))
+            df = self._build_variants_df(variants)
+            variants_filename = \
+                self._build_case_expections_filename(case, dirname)
+            print(f"stroring to: {variants_filename}")
+            df.to_csv(variants_filename, index=False, sep="\t")
 
     def run(self):
         target = self.expectations["target"]
@@ -580,33 +632,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
         print("==================================================")
         print(f"validating {study_id} {target}: {name}")
-        self._validate_genotype_browser(self.expectations)
-
-    # def run_validations(self):
-    #     print("VALIDATION START")
-    #     for expectation in self.expectations:
-    #         target = expectation["target"]
-    #         study_id = expectation["study"]
-    #         name = expectation["name"]
-    #         assert target == "genotype_browser"
-
-    #         print("==================================================")
-    #         print(f"validating {study_id} {target}: {name}")
-    #         if target == "genotype_browser":
-    #             self._validate_genotype_browser(expectation)
-    #         elif target == "families_report":
-    #             self._validate_families_report(expectation)
-    #         elif target == "denovo_reports":
-    #             self._validate_denovo_reports(expectation)
-    #         else:
-    #             pass
-
-    #     print("VALIDATION END")
-    #     print(
-    #         f"passed: {self.passed_case_count}; "
-    #         f"failed: {self.failed_case_count}")
-    #     with open("results.xml", "w") as outfile:
-    #         outfile.write(self.get_xml().decode("utf8"))
+        self._validate_genotype_browser()
 
 
 class MainRunner:
@@ -625,7 +651,6 @@ class MainRunner:
                 for expectation in res:
                     expectation["file"] = filename
                     for case in expectation["cases"]:
-                        print(case)
                         assert "name" in case
                         case_id = case["name"]\
                             .replace(" ", "_")\
@@ -642,7 +667,6 @@ class MainRunner:
                     for case in expectation["cases"]:
                         assert case["id"] not in seen
                         seen.add(case["id"])
-                        print(case["id"])
 
                     yield expectation
 
@@ -672,6 +696,11 @@ class MainRunner:
             self.runners.append(runner)
 
         self.store_junit_results(self.runners, self.outfilename)
+
+    def store_results(self, expectations_iterator, dirname):
+        for expectations in expectations_iterator:
+            runner = self.make_validation_runner(expectations)
+            runner.store_results(dirname)
 
     def _counter(self, status):
         count = 0
@@ -711,6 +740,10 @@ def main(argv=sys.argv[1:]):
     parser.add_argument(
         "--output", "-o", type=str, default="validation-result.xml",
         help="output filename for JUnit result XML file")
+    
+    parser.add_argument(
+        "--store-results", type=str,
+        help="a directory where to store genotype variants into TSV files")
 
     args = parser.parse_args(argv)
     if args.verbose == 1:
@@ -725,10 +758,14 @@ def main(argv=sys.argv[1:]):
 
     gpf_instance = GPFInstance()
     main_runner = MainRunner(gpf_instance, args.output)
-
     expectations_iterator = MainRunner.collect_expectations(args.expectations)
-    main_runner.main(expectations_iterator)
-    main_runner.summary()
+
+    if args.store_results is not None:
+        os.makedirs(args.store_results, exist_ok=True)
+        main_runner.store_results(expectations_iterator, args.store_results)
+    else:
+        main_runner.main(expectations_iterator)
+        main_runner.summary()
 
 
 if __name__ == "__main__":
