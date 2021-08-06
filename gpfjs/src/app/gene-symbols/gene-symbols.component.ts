@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ViewChild, OnInit, ElementRef, AfterViewInit } from '@angular/core';
 import { IsNotEmpty, ValidateNested } from 'class-validator';
 import { Store } from '@ngxs/store';
 import { SetGeneSymbols, GeneSymbolsState } from './gene-symbols.state';
@@ -13,7 +13,9 @@ export class GeneSymbols {
   selector: 'gpf-gene-symbols',
   templateUrl: './gene-symbols.component.html',
 })
-export class GeneSymbolsComponent extends StatefulComponent implements OnInit {
+export class GeneSymbolsComponent extends StatefulComponent implements AfterViewInit, OnInit {
+
+  @ViewChild('textArea') textArea: ElementRef;
 
   @ValidateNested()
   geneSymbols: GeneSymbols = new GeneSymbols();
@@ -28,6 +30,10 @@ export class GeneSymbolsComponent extends StatefulComponent implements OnInit {
       // restore state
       this.setGeneSymbols(state.geneSymbols.join('\n'));
     });
+  }
+
+  ngAfterViewInit(): void {
+    Promise.resolve().then(() => this.textArea.nativeElement.focus());
   }
 
   setGeneSymbols(geneSymbols: string) {

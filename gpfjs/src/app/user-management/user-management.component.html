@@ -22,6 +22,7 @@
                   type="text" placeholder="Search" aria-label="Search"
                   [ngModel]="input$ | async"
                 >
+                {{ searchTerm.focus() }}
               </div>
               <div class="btn-group pull-right" role="group">
                 <button
