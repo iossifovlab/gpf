@@ -10,7 +10,7 @@ from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.utils.effect_utils import expand_effect_types
 from dae.variants.attributes import VariantType, Role
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__file__)
 
 
 def generate_agp(gpf_instance, gene_symbol, collections_gene_sets):
@@ -153,7 +153,6 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
     for ps in filters.person_sets:
         pids = set(person_ids[dataset_id][ps.set_name])
         for statistic in filters.statistics:
-            dump = {}
             if statistic.category == "denovo" and not denovo_flag:
                 continue
             if statistic.category == "rare" and denovo_flag:
@@ -165,14 +164,12 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
             in_members = len(pids.intersection(members)) > 0
 
             do_count = do_count and in_members
-            dump[1] = do_count
 
             if statistic.get("effects"):
                 ets = set(expand_effect_types(statistic.effects))
                 in_effect_types = len(
                     ets.intersection(v.effect_types)) > 0
                 do_count = do_count and in_effect_types
-                dump[2] = do_count
 
             if statistic.get("scores"):
                 for score in statistic.scores:
@@ -189,15 +186,14 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
                     if score_max:
                         do_count = do_count and score_value <= score_max
 
-                dump[3] = do_count
-
             if statistic.get("category") == "rare":
-                aa = v.alt_alleles[0]
-                freq = aa.get_attribute("af_allele_freq")
+                match = False
+                for aa in v.alt_alleles:
+                    freq = aa.get_attribute("af_allele_freq")
 
-                if freq:
-                    do_count = do_count and freq <= 1.0
-                dump[4] = do_count
+                    if freq is not None and freq <= 1.0:
+                        match = True
+                do_count = do_count and match
 
             if statistic.get("variant_types"):
                 variant_types = {
@@ -206,7 +202,6 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
                 }
                 do_count = do_count and \
                     len(variant_types.intersection(v.variant_types))
-                dump[5] = do_count
 
             if statistic.get("roles"):
                 roles = {
@@ -216,16 +211,7 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
                 v_roles = set(v.alt_alleles[0].variant_in_roles)
                 do_count = do_count and \
                     len(v_roles.intersection(roles))
-                dump[6] = do_count
 
-            # if v.position == 152171343:
-            #     from pprint import pprint
-            #     print(100*"+")
-            #     print(ps.set_name, stat_id, do_count, v)
-            #     # for aa in v.alt_alleles:
-            #     #     print(aa.attributes)
-            #     pprint(dump)
-            #     print(100*"+")
             if do_count:
                 add_variant_count(
                     v, agps, dataset_id, ps.set_name, stat_id
@@ -233,48 +219,22 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
 
 
 def fill_variant_counts(
-        variants_datasets, agps, config, person_ids, denovo_flag):
+        variants, dataset_id, agps, config, person_ids, denovo_flag):
 
     seen = set()
-    for dataset_id, variants in variants_datasets.items():
-        logger.info(f"Counting variants in {dataset_id}")
+    logger.info(f"Counting variants in {dataset_id}")
 
-        variants_count = len(variants)
-
-        for idx, v in enumerate(variants, 1):
-            if idx % 100 == 0:
-                logger.info(
-                    f"Counted {idx}/{variants_count} variants"
-                )
-            if v.fvuid in seen:
-                continue
-            count_variant(
-                v, dataset_id, agps, config, person_ids, denovo_flag
+    for idx, v in enumerate(variants, 1):
+        if idx % 1000 == 0:
+            logger.info(
+                f"Counted {idx} variants from {dataset_id}"
             )
-            seen.add(v.fvuid)
-
-
-# def fill_variant_counts_rare(
-#         variants_datasets, agps, config, person_ids):
-
-#     seen = set()
-#     for dataset_id, variants in variants_datasets.items():
-#         logger.info(f"Counting variants in {dataset_id}")
-
-#         variants_count = len(variants)
-
-#         for idx, v in enumerate(variants, 1):
-#             if idx % 25 == 0:
-#                 logger.info(
-#                     f"Counted {idx}/{variants_count} variants"
-#                 )
-
-#             if v.fvuid in seen:
-#                 continue
-#             count_variant(
-#                 v, dataset_id, agps, config, person_ids, False
-#             )
-#             seen.add(v.fvuid)
+        if v.fvuid in seen:
+            continue
+        count_variant(
+            v, dataset_id, agps, config, person_ids, denovo_flag
+        )
+        seen.add(v.fvuid)
 
 
 def main(gpf_instance=None, argv=None):
@@ -384,7 +344,7 @@ def main(gpf_instance=None, argv=None):
             gpf_instance, sym, collections_gene_sets
         )
         agps[gs] = agp
-        if idx % 25 == 0:
+        if idx % 1000 == 0:
             elapsed = time.time() - start
             logger.info(
                 f"Generated {idx}/{gs_count} AGP statistics "
@@ -397,7 +357,7 @@ def main(gpf_instance=None, argv=None):
 
     if has_denovo:
         logger.info("Collecting denovo variants")
-        denovo_variants = dict()
+        # denovo_variants = dict()
         for dataset_id, filters in config.datasets.items():
             genotype_data = gpf_instance.get_genotype_data(dataset_id)
             assert genotype_data is not None, dataset_id
@@ -406,17 +366,19 @@ def main(gpf_instance=None, argv=None):
             else:
                 genes = None
 
-            denovo_variants[dataset_id] = list(
+            denovo_variants = \
                 genotype_data.query_variants(genes=genes, inheritance="denovo")
-            )
+
+            fill_variant_counts(
+                denovo_variants, dataset_id, agps, config, person_ids, True)
+
         logger.info("Done collecting denovo variants")
         logger.info("Counting denovo variants...")
-        fill_variant_counts(denovo_variants, agps, config, person_ids, True)
         logger.info("Done counting denovo variants")
 
     if has_rare:
-        logger.info("Collecting rare variants")
-        rare_variants = dict()
+        logger.info("Counting rare variants")
+
         for dataset_id, filters in config.datasets.items():
             genotype_data = gpf_instance.get_genotype_data(dataset_id)
             assert genotype_data is not None, dataset_id
@@ -425,7 +387,6 @@ def main(gpf_instance=None, argv=None):
             else:
                 genes = None
 
-            rare_variants[dataset_id] = []
             for statistic in filters.statistics:
                 if statistic.category == "denovo":
                     continue
@@ -456,7 +417,7 @@ def main(gpf_instance=None, argv=None):
                     ]
                     kwargs["roles"] = " or ".join(roles)
 
-                rare_variants[dataset_id].extend(list(
+                rare_variants = \
                     genotype_data.query_variants(
                         genes=genes,
                         inheritance=[
@@ -466,10 +427,10 @@ def main(gpf_instance=None, argv=None):
                         ],
                         frequency_filter=[("af_allele_freq", (None, 1.0))],
                         **kwargs)
-                ))
-        logger.info("Done collecting rare variants")
-        logger.info("Counting rare variants...")
-        fill_variant_counts(rare_variants, agps, config, person_ids, False)
+
+                fill_variant_counts(
+                    rare_variants, dataset_id, agps, config, person_ids, False)
+
         logger.info("Done counting rare variants")
 
     logger.info("Calculating rates...")

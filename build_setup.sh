@@ -1,3 +1,7 @@
+#!/bin/bash
+
+set -e
+
 ./build.sh preset:"fast" expose_ports:"yes" stage:"Jenkinsfile.generated-stages.all"
 ./build.sh preset:"fast" clobber:"allow_if_matching_values" expose_ports:"yes" build_no:"0" stage:"Cleanup"
 ./build.sh preset:"fast" clobber:"allow_if_matching_values" expose_ports:"yes" build_no:"0" stage:"Create gpf-dev docker image"
