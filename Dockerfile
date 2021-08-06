@@ -1,5 +1,6 @@
-ARG BASE_IMAGE_VERSION=latest
-FROM seqpipe-anaconda-base:${BASE_IMAGE_VERSION}
+ARG REGISTRY=""
+ARG BASE_IMAGE_TAG=latest
+FROM ${REGISTRY}seqpipe-anaconda-base:${BASE_IMAGE_TAG}
 
 ARG SOURCE_DIR="."
 
