@@ -123,8 +123,8 @@
 
         <ng-container *ngFor="let dataset of shownDatasets">
           <ng-container *ngFor="let personSet of dataset.personSets; let i = index">
-            <td (click)="goToQuery(gene.geneSymbol, personSet.id, dataset.id, statistic)"
-            (middleclick)="goToQuery(gene.geneSymbol, personSet.id, dataset.id, statistic)"
+            <td (click)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)"
+            (middleclick)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)"
             [class.link-td]="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id).count"
             style="min-width: 70px;"
             *ngFor="let statistic of personSet.statistics; let j = index"
