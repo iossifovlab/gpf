@@ -52,7 +52,8 @@
       <tr style="height: 110px;">
         <th class="table-subheader" rowspan="2">
           <input #geneSearchInput (keyup)="sendKeystrokes(geneSearchInput.value)" id="gene-search-input"
-            class="form-control" autocomplete="off" type="text" placeholder="Search" autofocus>
+            class="form-control" autocomplete="off" type="text" placeholder="Search">
+            {{ geneSearchInput.focus() }}
         </th>
 
         <ng-container *ngFor="let geneSetCategory of shownGeneSetsCategories">
