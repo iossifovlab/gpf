@@ -14,16 +14,29 @@ include libmain.sh
 include libbuild.sh
 # shellcheck source=build-scripts/libdefer.sh
 include libdefer.sh
-# shellcheck source=build-scripts/libdefer.sh
+# shellcheck source=build-scripts/liblog.sh
 include liblog.sh
+# shellcheck source=build-scripts/libopt.sh
+include libopt.sh
 
 function main() {
-  local stage="${1-all}"
+  local -A options
+  libopt_parse options \
+    stage:all preset:fast clobber:allow_if_matching_values build_no:0 generate_jenkins_init:no expose_ports:no -- "$@"
 
-  libmain_init gpf gpf
-  libmain_init_build_env seqpipe-containers data-hg19-startup
+  local preset="${options["preset"]}"
+  local stage="${options["stage"]}"
+  local clobber="${options["clobber"]}"
+  local build_no="${options["build_no"]}"
+  local generate_jenkins_init="${options["generate_jenkins_init"]}"
+  local expose_ports="${options["expose_ports"]}"
+
+  libmain_init iossifovlab.gpf gpf
+  libmain_init_build_env \
+    clobber:"$clobber" preset:"$preset" build_no:"$build_no" generate_jenkins_init:"$generate_jenkins_init" expose_ports:"$expose_ports" \
+    seqpipe.seqpipe-containers seqpipe.data-hg19-startup
   libmain_save_build_env_on_exit
-  libbuild_init "$stage" registry.seqpipe.org
+  libbuild_init stage:"$stage" registry.seqpipe.org
 
   # parse version and run validation checks
   {
@@ -106,7 +119,9 @@ function main() {
   # create gpf docker image
   build_stage "Create $gpf_dev_image docker image"
   {
-    build_docker_image_create "$gpf_dev_image" . ./Dockerfile
+    local docker_img_seqpipe_anaconda_base_tag
+    docker_img_seqpipe_anaconda_base_tag="$(e docker_img_seqpipe_anaconda_base_tag)"
+    build_docker_image_create "$gpf_dev_image" . ./Dockerfile "$docker_img_seqpipe_anaconda_base_tag"
     gpf_dev_image_ref="$(e docker_img_gpf_dev)"
   }
 
@@ -293,7 +308,10 @@ EOT'
       # setup impala
       {
         local -A ctx_impala
-        build_run_ctx_init ctx:ctx_impala "persistent" "container" "seqpipe/seqpipe-docker-impala:latest" "cmd-from-image" "no-def-mounts" --hostname impala --network "${ctx_network["network_id"]}"
+        build_run_ctx_init ctx:ctx_impala "persistent" "container" "seqpipe/seqpipe-docker-impala:latest" \
+           "cmd-from-image" "no-def-mounts" \
+           ports:21050,8020 --hostname impala --network "${ctx_network["network_id"]}"
+
         defer_ret build_run_ctx_reset ctx:ctx_impala
 
         build_run_container ctx:ctx_impala /wait-for-it.sh -h localhost -p 21050 -t 300
@@ -305,6 +323,7 @@ EOT'
       {
         local -A ctx_gpf_remote
         build_run_ctx_init ctx:ctx_gpf_remote "persistent" "container" "${gpf_dev_image_ref}" \
+          ports:21010 \
           --hostname gpfremote \
           --network "${ctx_network["network_id"]}" \
           --env DAE_DB_DIR="/data/data-hg19-remote/"
