@@ -12,6 +12,7 @@ import pandas as pd
 from xml.etree.ElementTree import Element, tostring
 
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.utils.regions import Region
 
 
 class TestStatus(enum.Enum):
@@ -160,6 +161,8 @@ class BaseGenotypeBrowserRunner(AbstractRunner):
             expectations, gpf_instance)
 
     def _parse_frequency(self, params):
+        if params is None:
+            return params
         if "frequency" not in params:
             return params
         freq = params.pop("frequency")
@@ -180,6 +183,8 @@ class BaseGenotypeBrowserRunner(AbstractRunner):
         return params
 
     def _parse_genomic_scores(self, params):
+        if params is None:
+            return params
         if "genomic_scores" not in params:
             return params
         scores = params.pop("genomic_scores")
@@ -197,6 +202,18 @@ class BaseGenotypeBrowserRunner(AbstractRunner):
             return params
 
         params["real_attr_filter"] = result
+        return params
+
+    def _parse_regions(self, params):
+        if params is None:
+            return None
+
+        if "regions" in params:
+            regions = []
+            for region in params["regions"]:
+                r = Region.from_str(region)
+                regions.append(r)
+            params["regions"] = regions
         return params
 
 
@@ -476,7 +493,10 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
         if len(df) > 0:
             df = df.sort_values(
-                by=["chromosome", "position", "fvuid", "allele_index"])
+                by=[
+                    "chromosome", "position", "family_id",
+                    "fvuid", "allele_index"
+                ])
             df = df.reset_index(drop=True)
             with io.StringIO() as inout:
                 df.to_csv(inout, sep="\t", index=False)
@@ -558,9 +578,13 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
         return test_result
 
     def _case_query_params(self, case):
+        if case["params"] is None:
+            return {}
+
         params = copy.deepcopy(case["params"])
         params = self._parse_frequency(params)
         params = self._parse_genomic_scores(params)
+        params = self._parse_regions(params)
 
         return params
 
