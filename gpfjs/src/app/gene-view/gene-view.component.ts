@@ -863,8 +863,8 @@ export class GeneViewComponent implements OnInit {
     }
   }
 
-  brushEndEvent = (event) => {
-    this.updateBrush(event.selection);
+  brushEndEvent = () => {
+    this.updateBrush(d3.event.selection);
   }
 
   updateBrush(selection) {
