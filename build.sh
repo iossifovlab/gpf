@@ -388,7 +388,9 @@ EOT'
       build_run_container bash -c 'rmdir /code && ln -s /wd /code'
     }
 
-    build_run_container bash -c 'cd /code; flake8 --format=html --htmldir=/code/results/flake8_report --exclude "--exclude \"*old*,*tmp*,*temp*,data-hg19*,gpf*\"" . || true'
+    build_run_container bash -c 'cd /code; flake8 --format=pylint --output-file=/code/results/flake8_report --exclude "*old*,*tmp*,*temp*,data-hg19*,gpf*" . || true'
+
+    build_run_local cp ./results/flake8_report ./test-results/
   }
 
   # mypy
@@ -411,7 +413,7 @@ EOT'
           --ignore-missing-imports \
           --warn-return-any \
           --warn-redundant-casts \
-          --html-report /code/results/mypy/dae_report || true'
+          > /code/results/mypy_dae_report || true'
 
     build_run_container bash -c '
       cd /code/wdae;
@@ -423,7 +425,9 @@ EOT'
           --ignore-missing-imports \
           --warn-return-any \
           --warn-redundant-casts \
-          --html-report /code/results/mypy/wdae_report || true'
+          > /code/results/mypy_wdae_report || true'
+
+      build_run_local cp ./results/mypy_dae_report ./results/mypy_wdae_report ./test-results/
   }
 
   # Tests - dae
@@ -497,7 +501,6 @@ EOT'
   # post cleanup
   build_stage "Post Cleanup"
   {
-
     build_run_ctx_init "container" "ubuntu:18.04"
     defer_ret build_run_ctx_reset
     build_run rm -rvf ./data/ ./import/ ./downloads ./results
