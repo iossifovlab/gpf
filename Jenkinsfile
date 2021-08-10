@@ -33,8 +33,8 @@ pipeline {
           enabledForFailure: true, aggregatingResults: false,
           tools: [
             flake8(pattern: 'test-results/flake8_report', reportEncoding: 'UTF-8'),
-            mypy(pattern: 'test-results/mypy_dae_report', reportEncoding: 'UTF-8'),
-            mypy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8')
+            myPy(pattern: 'test-results/mypy_dae_report', reportEncoding: 'UTF-8'),
+            myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8')
           ]
         )
       }
