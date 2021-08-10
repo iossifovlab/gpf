@@ -12,6 +12,7 @@ import pandas as pd
 from xml.etree.ElementTree import Element, tostring
 
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.utils.regions import Region
 
 
 class TestStatus(enum.Enum):
@@ -160,6 +161,8 @@ class BaseGenotypeBrowserRunner(AbstractRunner):
             expectations, gpf_instance)
 
     def _parse_frequency(self, params):
+        if params is None:
+            return params
         if "frequency" not in params:
             return params
         freq = params.pop("frequency")
@@ -180,6 +183,8 @@ class BaseGenotypeBrowserRunner(AbstractRunner):
         return params
 
     def _parse_genomic_scores(self, params):
+        if params is None:
+            return params
         if "genomic_scores" not in params:
             return params
         scores = params.pop("genomic_scores")
@@ -197,6 +202,18 @@ class BaseGenotypeBrowserRunner(AbstractRunner):
             return params
 
         params["real_attr_filter"] = result
+        return params
+
+    def _parse_regions(self, params):
+        if params is None:
+            return None
+
+        if "regions" in params:
+            regions = []
+            for region in params["regions"]:
+                r = Region.from_str(region)
+                regions.append(r)
+            params["regions"] = regions
         return params
 
 
@@ -328,154 +345,112 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
     @staticmethod
     def _cleanup_allele_attributes(vprops):
-        cleanup_names = [
-            'ACMG_v2', 'ASC', 'BrainCriticalGene', 'CUMC',
-            'CUMC_Autism_Dmis_CADD25_Rate', 'CUMC_Autism_Dmis_REVEL0.5_Rate',
-            'CUMC_Autism_LoF_Rate', 'CUMC_DenovoWEST_tada', 'CUMC_HGNC',
-            'CUMC_NDD_Dmis_CADD25_Rate', 'CUMC_NDD_Dmis_REVEL0.5_Rate',
-            'CUMC_NDD_LoF_Rate', 'CUMC_SPARK_Dmis_CADD25',
-            'CUMC_SPARK_Dmis_REVEL0.5', 'CUMC_SPARK_LoF', 'CUMC_called_by',
-            'CUMC_pDenovoWEST', 'CUMC_pDenovoWEST_cat',
-            'CUMC_tadaDmis_predProb', 'CUMC_tadaDmis_predProb_cat',
-            'CUMC_tada_predProb', 'CUMC_tada_predProb_cat',
-            'ChromatinModifiers', 'Coe2019', 'DDD_category',
-            'DP_alt', 'DP_ref', 'EssentialGenes', 'FILTER',
-            'FMRPTargets_fragileXprotein', 'HI_interactions',
-            'LOF.GENE', 'LOF.GENEID', 'LOF.NUMTR', 'LOF.PERC', 'MPC',
-            'MendelianDiseaseGenes', 'NMD.GENE', 'NMD.GENEID', 'NMD.NUMTR',
-            'NMD.PERC', 'PreferentialEmbryonicExpressed', 'RSID',
-            'Round1_prelim', 'Round2_prelim', 'Round3_prelim',
-            'Ruzzo2019', 'SF', 'SFARIscore_2019q1', 'SF_called_by',
-            'SF_comment', 'Sanders2015', 'Stessman2017', 'UW', 'UW_called_by',
-            'VEP_amino_acids', 'VEP_canonical', 'VEP_codons',
-            'VEP_consequence', 'VEP_exon', 'VEP_impact', 'VEP_intron',
-            'Xregion', 'aa_len', 'aa_pos', 'allele_frac',
-            'allelic_requirement', 'asd', 'asd_score', 'biotype',
-            'brain_expression', 'cdna_len', 'cdna_pos', 'cds_len',
-            'cds_pos', 'clinvar_allele_origin', 'clinvar_clnsig',
-            'clinvar_clnsig_includedVar', 'clinvar_conflicting_clnsig',
-            'clinvar_consequence', 'clinvar_gene', 'clinvar_hgvs',
-            'clinvar_prevalence', 'clinvar_review', 'clinvar_source',
-            'clinvar_suspectReasonCode', 'clinvar_trait',
-            'clinvar_trait_includedVar', 'clinvar_vartype', 'coding_var',
-            'cohort_freq_comment_perFamily(ALT_DP>1)',
-            'cohort_freq_variant_perFamily(ALT_DP>1)', 'consistent_with_PG',
-            'dbNSFP_Aloft_Confidence',
-            'dbNSFP_Aloft_Fraction_transcripts_affected',
-            'dbNSFP_Aloft_pred', 'dbNSFP_Aloft_prob_Dominant',
-            'dbNSFP_Aloft_prob_Recessive', 'dbNSFP_Aloft_prob_Tolerant',
-            'dbNSFP_CADD_phred', 'dbNSFP_ExAC_AF', 'dbNSFP_ExAC_Adj_AF',
-            'dbNSFP_ExAC_nonTCGA_AF', 'dbNSFP_ExAC_nonTCGA_Adj_AF',
-            'dbNSFP_ExAC_nonpsych_AF', 'dbNSFP_ExAC_nonpsych_Adj_AF',
-            'dbNSFP_HGVSc_ANNOVAR', 'dbNSFP_HGVSp_ANNOVAR', 'dbNSFP_MVP',
-            'dbNSFP_M_CAP_pred', 'dbNSFP_MetaLR_pred', 'dbNSFP_MetaSVM_pred',
-            'dbNSFP_Polyphen2_HDIV_pred', 'dbNSFP_Polyphen2_HVAR_pred',
-            'dbNSFP_REVEL', 'dbNSFP_SIFT4G_pred', 'dbNSFP_SIFT_pred',
-            'dbNSFP_aaalt', 'dbNSFP_aapos', 'dbNSFP_aaref',
-            'dbNSFP_cds_strand', 'dbNSFP_gnomAD_exomes_AF',
-            'dbNSFP_gnomAD_exomes_AFR_AF', 'dbNSFP_gnomAD_exomes_AMR_AF',
-            'dbNSFP_gnomAD_exomes_ASJ_AF', 'dbNSFP_gnomAD_exomes_EAS_AF',
-            'dbNSFP_gnomAD_exomes_FIN_AF', 'dbNSFP_gnomAD_exomes_NFE_AF',
-            'dbNSFP_gnomAD_exomes_POPMAX_AF', 'dbNSFP_gnomAD_exomes_SAS_AF',
-            'dbNSFP_gnomAD_exomes_controls_AF',
-            'dbNSFP_gnomAD_exomes_controls_AFR_AF',
-            'dbNSFP_gnomAD_exomes_controls_AMR_AF',
-            'dbNSFP_gnomAD_exomes_controls_ASJ_AF',
-            'dbNSFP_gnomAD_exomes_controls_EAS_AF',
-            'dbNSFP_gnomAD_exomes_controls_FIN_AF',
-            'dbNSFP_gnomAD_exomes_controls_NFE_AF',
-            'dbNSFP_gnomAD_exomes_controls_POPMAX_AF',
-            'dbNSFP_gnomAD_exomes_controls_SAS_AF',
-            'dbNSFP_gnomAD_exomes_flag',
-            'dbNSFP_gnomAD_genomes_AF',
-            'dbNSFP_gnomAD_genomes_AFR_AF',
-            'dbNSFP_gnomAD_genomes_AMR_AF',
-            'dbNSFP_gnomAD_genomes_ASJ_AF', 'dbNSFP_gnomAD_genomes_EAS_AF',
-            'dbNSFP_gnomAD_genomes_FIN_AF', 'dbNSFP_gnomAD_genomes_NFE_AF',
-            'dbNSFP_gnomAD_genomes_POPMAX_AF',
-            'dbNSFP_gnomAD_genomes_controls_AF',
-            'dbNSFP_gnomAD_genomes_controls_AFR_AF',
-            'dbNSFP_gnomAD_genomes_controls_AMR_AF',
-            'dbNSFP_gnomAD_genomes_controls_ASJ_AF',
-            'dbNSFP_gnomAD_genomes_controls_EAS_AF',
-            'dbNSFP_gnomAD_genomes_controls_FIN_AF',
-            'dbNSFP_gnomAD_genomes_controls_NFE_AF',
-            'dbNSFP_gnomAD_genomes_controls_POPMAX_AF',
-            'dbNSFP_gnomAD_genomes_flag',
-            'difference_with_MZ_twin', 'distance', 'dmg_miss_wMPC_MVP',
-            'dv_alt', 'dv_child_gq', 'dv_child_gt', 'dv_confirmed',
-            'dv_confirmed_binary', 'dv_father_gq', 'dv_father_gt',
-            'dv_mother_gq', 'dv_mother_gt', 'dv_qual', 'dv_ref',
-            'effect_cat', 'effect_cat_PG', 'exon/intron', 'father',
-            'feature', 'gene_blacklisted', 'gene_symbol', 'geneid',
-            'hgvsc', 'hgvsp', 'high_confidence', 'igv', 'impact',
-            'inheritance', 'lab_validation', 'mother', 'mutation_consequence',
-            'mutation_type', 'mutation_type_extended', 'n_callers',
-            'n_centers', 'numResiduesFromEnd', 'num_rare_LGD',
-            'num_rare_SparkLGD', 'observed_counts_vartype_perFamily(ALT_DP>1)',
-            'order_reason', 'organ_specificity_list', 'pLI',
-            'pg_transcript_effect', 'pg_transcript_errors',
-            'pg_transcript_hgvsc', 'pg_transcript_hgvsp', 'pg_transcript_id',
-            'pg_transcript_impact', 'posMultipleVariantsPerFamily',
-            'possibleMNV', 'postsynapticDensityProteins',
-            'protein_id_ensembl', 'role', 'sex', 'sfid', 'sparkGenes',
-            'spid_outliers', 'transcript_id_ensembl', 'transcript_id_refseq',
-            'twin_mz', 'variant_id', 'warnings_errors', 'watchGeneList',
-            'zygosity',
-            'period',
-            'repeats',
-            'unit',
-            'spidex_gene', 'spidex_location', 'spidex_ss_dist',
-            'spidex_strand',
-            'spidex_transcript', 'status', 'syn', 'syn_z', 'v_id', 'var_type',
-            'GENCODE.SFARIscore', 'GENCODE.isBrainCriticalGene',
-            'GENCODE.isEmbryonicallyExpressedGene',
-            'GENDER (1=male, 2=female)',
-            'Gene.GENCODE', 'IGV viewed?', 'REVEL_ALTaa', 'REVEL_REFaa',
-            'REVEL_score', 'Sanger confirmed?',
-            'pRec', 'pop_freq', 'pred_prob', 'ref_DP', 'sort_cat',
-            'spark_genes',
-            'spidex_cds_type', 'spidex_dpsi_max_tissue', 'spidex_dpsi_zscore',
-            'spidex_exon_number',
-            'impact_lof', 'in_fb', 'in_hc', 'in_pl', 'lab_id', 'lof', 'lof_z',
-            'mis_z', 'missense', 'pNull',
-            'ANN.DDD category', 'ANN.DDD disease',
-            'ANN.DDD mutation consequences',
-            'ANN.DDD organ specificity list', 'ANN.DDD pmids',
-            'ANN.DDD: is Brain/Cognition', 'ANN.EFFECT', 'ANN.GENE',
-            'ANN.GENEID',
-            'ANN.IMPACT', 'ANN.SFARIscore', 'ANN.isBrainCriticalGene',
-            'ANN.isEmbryonicallyExpressedGene', 'Alias', 'BrainExpr',
-            'Conseq.GENCODE', 'Effect.GENCODE',
-            'GENCODE.DDD allelic requirements',
-            'GENCODE.DDD category', 'GENCODE.DDD disease',
-            'GENCODE.DDD mutation consequences',
-            'GENCODE.DDD organ specificity list', 'GENCODE.DDD pmids',
-            'GENCODE.DDD: is Brain/Cognition',
-            'asd_gene_score', 'batch', 'cohort_freq', 'dbNSFP_1000Gp3_AF',
-            'dbNSFP_Uniprot_aapos_Polyphen2', 'dbNSFP_Uniprot_acPolyphen2',
-            'dbNSFP_Uniprot_id_Polyphen2', 'dbNSFP_rs_dbSNP146', 'dmg_miss',
-            'effect_cat.1',
-            'ANN.DDD allelic requirements',
-            'ANN[*].EFFECT', 'ANN[*].FEATUREID', 'ANN[*].GENE',
-            'ANN[*].GENEID',
-            'ANN[*].IMPACT', 'BCM', 'Cdfd', 'Clmb', 'DP', 'DP_father',
-            'DP_mother',
-            'DP_offspring', 'ID', 'LDGscore', 'LGDrank', 'RVIS',
-            'RVIS_LGDrank',
-            'RVISrank', 'SFARIscore', 'Unnamed: 0', 'allele_frac.1', 'alt_DP',
-            'ANN[*].BIOTYPE',
+        keep = {
+            'af_allele_count',
+            'af_allele_freq',
+            'af_parents_called_count',
+            'af_parents_called_percent',
+            'allele_count',
+            'allele_index',
+            'alternative',
+            'bucket_index',
+            'cadd_phred',
+            'cadd_raw',
+            'chrom',
+            'chromosome',
+            'cshl_location',
+            'cshl_variant',
+            'effect_details_details',
+            'effect_details_transcript_ids',
+            'effect_gene_genes',
+            'effect_gene_types',
+            'effect_type',
+            'exome_gnomad_ac',
+            'exome_gnomad_af',
+            'exome_gnomad_af_percent',
+            'exome_gnomad_an',
+            'exome_gnomad_controls_ac',
+            'exome_gnomad_controls_af',
+            'exome_gnomad_controls_af_percent',
+            'exome_gnomad_controls_an',
+            'exome_gnomad_non_neuro_ac',
+            'exome_gnomad_non_neuro_af',
+            'exome_gnomad_non_neuro_af_percent',
+            'exome_gnomad_non_neuro_an',
+            'exome_gnomad_v2_1_1_ac',
+            'exome_gnomad_v2_1_1_af_percent',
+            'exome_gnomad_v2_1_1_an',
+            'exome_gnomad_v2_1_1_controls_ac',
+            'exome_gnomad_v2_1_1_controls_af_percent',
+            'exome_gnomad_v2_1_1_controls_an',
+            'exome_gnomad_v2_1_1_non_neuro_ac',
+            'exome_gnomad_v2_1_1_non_neuro_af_percent',
+            'exome_gnomad_v2_1_1_non_neuro_an',
+            'family_id',
+            'family_variant_index',
+            'fitcons2_e067',
+            'fitcons2_e068',
+            'fitcons2_e069',
+            'fitcons2_e070',
+            'fitcons2_e071',
+            'fitcons2_e072',
+            'fitcons2_e073',
+            'fitcons2_e074',
+            'fitcons2_e081',
+            'fitcons2_e082',
+            'fitcons_i6_merged',
+            'fvuid',
+            'genome_gnomad_ac',
+            'genome_gnomad_af',
+            'genome_gnomad_af_percent',
+            'genome_gnomad_an',
+            'genome_gnomad_controls_ac',
+            'genome_gnomad_controls_af',
+            'genome_gnomad_controls_af_percent',
+            'genome_gnomad_controls_an',
+            'genome_gnomad_non_neuro_ac',
+            'genome_gnomad_non_neuro_af',
+            'genome_gnomad_non_neuro_af_percent',
+            'genome_gnomad_non_neuro_an',
+            'genome_gnomad_v2_1_1_ac',
+            'genome_gnomad_v2_1_1_af_percent',
+            'genome_gnomad_v2_1_1_an',
+            'genome_gnomad_v2_1_1_controls_ac',
+            'genome_gnomad_v2_1_1_controls_af_percent',
+            'genome_gnomad_v2_1_1_controls_an',
+            'genome_gnomad_v2_1_1_non_neuro_ac',
+            'genome_gnomad_v2_1_1_non_neuro_af_percent',
+            'genome_gnomad_v2_1_1_non_neuro_an',
+            'genome_gnomad_v3_ac',
+            'genome_gnomad_v3_af_percent',
+            'genome_gnomad_v3_an',
+            'linsight',
+            'mpc',
+            'phastcons100',
+            'phastcons100way',
+            'phastcons20way',
+            'phastcons30way',
+            'phastcons46_placentals',
+            'phastcons46_primates',
+            'phastcons46_vertebrates',
+            'phastcons7way',
+            'phylop100',
+            'phylop100way',
+            'phylop20way',
+            'phylop30way',
+            'phylop46_placentals',
+            'phylop46_primates',
+            'phylop46_vertebrates',
+            'phylop7way',
+            'position',
+            'reference',
+            'ssc_freq',
+            'study_name',
+            'study_phenotype'}
 
-        ]
-
-        for name in cleanup_names:
-            if name in vprops:
-                del vprops[name]
         keys = list(vprops.keys())
         for key in keys:
-            if key == "":
-                del vprops[key]
-            elif "\\" in key:
+            if key not in keep:
                 del vprops[key]
 
     def _build_variants_df(self, variants):
@@ -518,7 +493,10 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
         if len(df) > 0:
             df = df.sort_values(
-                by=["chromosome", "position", "fvuid", "allele_index"])
+                by=[
+                    "chromosome", "position", "family_id",
+                    "fvuid", "allele_index"
+                ])
             df = df.reset_index(drop=True)
             with io.StringIO() as inout:
                 df.to_csv(inout, sep="\t", index=False)
@@ -600,9 +578,13 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
         return test_result
 
     def _case_query_params(self, case):
+        if case["params"] is None:
+            return {}
+
         params = copy.deepcopy(case["params"])
         params = self._parse_frequency(params)
         params = self._parse_genomic_scores(params)
+        params = self._parse_regions(params)
 
         return params
 
