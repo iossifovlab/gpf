@@ -73,3 +73,6 @@ common_report.json
 test-results/
 Jenkinsfile.generated-stages
 /import
+/test-results
+Jenkinsfile.generated-stages.all
+/.build-scripts-tmp-sessions

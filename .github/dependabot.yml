@@ -1,12 +1,13 @@
-# Basic dependabot.yml file with
-# minimum configuration for two package managers
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
 
 version: 2
 updates:
-  # Enable version updates for python
-  - package-ecosystem: "pip"
-    # Look for `environment.yml` file in the `root` directory
-    directory: "/"
-    # Check the npm registry for updates every day (weekdays)
+  - package-ecosystem: "pip" # See documentation for possible values
+    directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+
+    open-pull-requests-limit: 0
