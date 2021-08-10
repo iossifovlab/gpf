@@ -72,3 +72,4 @@ common_report.json
 Jenkinsfile.generated-stages
 build-env/
 /import
+/test-results
