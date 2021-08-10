@@ -8,7 +8,10 @@ from dae.utils.regions import Region
 from dae.utils.variant_utils import mat2str
 
 
-@pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
+@pytest.mark.parametrize("variants", [
+    "variants_impala",
+    "variants_vcf",
+])
 @pytest.mark.parametrize(
     "region,count,freq0,freq1",
     [
@@ -78,3 +81,72 @@ def test_variant_frequency_multi_alleles(
         elif len(v.frequencies) > 2:
             assert freq1 == pytest.approx(v.frequencies[1], 1e-2)
             assert freq2 == pytest.approx(v.frequencies[2], 1e-2)
+
+
+@pytest.mark.parametrize("variants", [
+    "variants_impala",
+    "variants_vcf"
+])
+@pytest.mark.parametrize(
+    "region,count,freq0,freq1",
+    [
+        (Region("1", 865582, 865582), 5, 50.0, 50.0),
+        (Region("1", 865583, 865583), 5, 50.0, 50.0),
+        (Region("1", 865624, 865624), 5, 75.0, 25.0),
+        (Region("1", 865627, 865627), 5, 60.0, 40.0),
+        (Region("1", 865664, 865664), 5, 75.0, 25.0),
+        (Region("1", 865691, 865691), 5, 35.0, 65.0),
+    ],
+)
+def test_variant_frequency_multivcf(
+        variants, variants_impl, region, count, freq0, freq1):
+
+    fvars = variants_impl(variants)("backends/multivcf_original")
+    vs = list(
+        fvars.query_variants(
+            regions=[region], return_reference=False, return_unknown=False
+        )
+    )
+    assert len(vs) == count
+    for v in vs:
+        print(v, mat2str(v.best_state))
+        print(v.frequencies)
+        assert len(v.frequencies) == 2
+
+        assert freq0 == pytest.approx(v.frequencies[0], 1e-2)
+        if len(v.frequencies) == 2:
+            assert freq1 == pytest.approx(v.frequencies[1], 1e-2)
+
+
+@pytest.mark.parametrize("variants", [
+    "variants_impala",
+    "variants_vcf"
+])
+@pytest.mark.parametrize(
+    "region,count,freq0,freq1",
+    [
+        (Region("1", 865582, 865582), 5, 50.0, 50.0),
+        (Region("1", 865624, 865624), 2, 50.0, 50.0),
+        (Region("1", 865627, 865627), 5, 70.0, 30.0),
+        (Region("1", 865664, 865664), 5, 65.0, 35.0),
+        (Region("1", 865691, 865691), 5, 55.0, 45.0),
+    ],
+)
+def test_variant_frequency_multivcf_unknown(
+        variants, variants_impl, region, count, freq0, freq1):
+
+    fvars = variants_impl(variants)("backends/multivcf_unknown")
+    vs = list(
+        fvars.query_variants(
+            regions=[region], return_reference=False, return_unknown=False
+        )
+    )
+    assert len(vs) == count
+    for v in vs:
+        print(v, mat2str(v.best_state))
+        print(v.frequencies)
+        assert len(v.frequencies) == 2
+
+        assert freq0 == pytest.approx(v.frequencies[0], 1e-2)
+        if len(v.frequencies) == 2:
+            assert freq1 == pytest.approx(v.frequencies[1], 1e-2)

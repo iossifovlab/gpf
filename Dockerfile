@@ -5,11 +5,11 @@ FROM ${REGISTRY}seqpipe-anaconda-base:${BASE_IMAGE_TAG}
 ARG SOURCE_DIR="."
 
 
-ADD ${SOURCE_DIR}/conda-environment.yml /
+ADD ${SOURCE_DIR}/environment.yml /
+ADD ${SOURCE_DIR}/dev-environment.yml /
 
-RUN /opt/conda/bin/conda create \
-    -c defaults -c conda-forge -c iossifovlab -c bioconda \
-    --name gpf --file /conda-environment.yml
+RUN /opt/conda/bin/conda env create --name gpf --file /environment.yml
+RUN /opt/conda/bin/conda env update --name gpf --file /dev-environment.yml --prune
 # RUN echo "conda activate gpf" >> ~/.bashrc
 
 # GPF ENV
