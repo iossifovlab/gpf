@@ -12,9 +12,6 @@ RUN /opt/conda/bin/conda create \
     --name gpf --file /conda-environment.yml
 # RUN echo "conda activate gpf" >> ~/.bashrc
 
-RUN conda install -n gpf -c defaults -c conda-forge gunicorn mysqlclient
-RUN conda install -n gpf -c defaults -c conda-forge -c anaconda mysql-connector-python
-
 # GPF ENV
 ENV PATH /opt/conda/envs/gpf/bin:$PATH
 
@@ -23,10 +20,7 @@ ENV JAVA_HOME /opt/conda/envs/gpf
 ENV HADOOP_HOME /opt/conda/envs/gpf
 ENV HADOOP_CONF_DIR /opt/conda/envs/gpf/etc/hadoop
 
-RUN /opt/conda/envs/gpf/bin/pip install flake8-html
-
 RUN mkdir -p /data && mkdir -p /code
-
 
 ENV DAE_DB_DIR "/data"
 

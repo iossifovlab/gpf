@@ -73,3 +73,5 @@ Jenkinsfile.generated-stages
 build-env/
 /import
 /test-results
+Jenkinsfile.generated-stages.all
+/.build-scripts-tmp-sessions
