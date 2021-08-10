@@ -11,8 +11,8 @@ import * as d3 from 'd3';
 const d3Selection = require('d3-selection');
 // tslint:disable-next-line:import-blacklist
 import { Subject, Observable } from 'rxjs';
-import { Gene, GeneViewSummaryAllele, GeneViewSummaryAllelesArray, Transcript } from './gene';
-import { GeneViewModel, GeneViewTranscript } from './gene-view';
+import { Gene, GeneViewSummaryAllele, GeneViewSummaryAllelesArray, Transcript, GeneViewTranscript } from './gene';
+import { GeneViewModel} from './gene-view';
 
 import { GeneViewComponent, GeneViewZoomHistory, GeneViewScaleState } from './gene-view.component';
 import { NgxsModule } from '@ngxs/store';
