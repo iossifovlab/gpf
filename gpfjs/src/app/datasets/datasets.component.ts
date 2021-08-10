@@ -57,11 +57,11 @@ export class DatasetsComponent implements OnInit {
       if (!this.datasetsService.hasSelectedDataset()) {
         this.selectDataset(datasets[0]);
       } else if (!this.isToolSelected()) {
-        this.datasetsService.getSelectedDataset().pipe(take(1)).subscribe(dataset => {
+        this.selectedDataset$.pipe(take(1)).subscribe(dataset => {
           this.router.navigate(['/', 'datasets', dataset.id, this.findFirstTool(dataset)]);
         });
       } else {
-        this.datasetsService.getSelectedDataset().pipe(take(1)).subscribe(dataset => {
+        this.selectedDataset$.pipe(take(1)).subscribe(dataset => {
           const url = this.router.url.split('/');
           const toolName = url[url.indexOf('datasets') + 2];
 
@@ -81,50 +81,63 @@ export class DatasetsComponent implements OnInit {
     );
   }
 
-  private isToolEnabled(dataset, toolName) {
+  private isToolEnabled(dataset: Dataset, toolName: string): boolean {
+    let result: boolean;
+
     switch (toolName) {
       case 'dataset-description':
-        return dataset.description;
+        result = dataset.description !== undefined ? true : false;
+        break;
       case 'dataset-statistics':
-        return dataset.commonReport['enabled'];
+        result = dataset.commonReport['enabled'];
+        break;
       case 'genotype-browser':
-        return dataset.genotypeBrowser && dataset.genotypeBrowserConfig;
+        result = (dataset.genotypeBrowser && dataset.genotypeBrowserConfig) !== undefined ? true : false;
+        break;
       case 'phenotype-browser':
-        return dataset.phenotypeBrowser;
+        result = dataset.phenotypeBrowser;
+        break;
       case 'phenotype-tool':
-        return dataset.phenotypeTool;
+        result = dataset.phenotypeTool;
+        break;
       case 'enrichment-tool':
-        return dataset.enrichmentTool;
+        result = dataset.enrichmentTool;
+        break;
       case 'gene-browser':
-        return dataset.geneBrowser?.enabled;
+        result = dataset.geneBrowser?.enabled;
+        break;
     }
+
+    return result;
   }
 
   isToolSelected(): boolean {
     return this.router.url.split('/').some(str => Object.values(toolPageLinks).includes(str));
   }
 
-  findFirstTool(selectedDataset: Dataset) {
+  findFirstTool(selectedDataset: Dataset): string {
+    let firstTool = '';
+
     if (selectedDataset.description) {
-      return toolPageLinks.datasetDescription;
+      firstTool = toolPageLinks.datasetDescription;
     } else if (selectedDataset.commonReport['enabled']) {
-      return toolPageLinks.datasetStatistics;
+      firstTool = toolPageLinks.datasetStatistics;
     } else if (selectedDataset.geneBrowser) {
-      return toolPageLinks.geneBrowser;
+      firstTool = toolPageLinks.geneBrowser;
     } else if (selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig) {
-      return toolPageLinks.genotypeBrowser;
+      firstTool = toolPageLinks.genotypeBrowser;
     } else if (selectedDataset.phenotypeBrowser) {
-      return toolPageLinks.phenotypeBrowser;
+      firstTool = toolPageLinks.phenotypeBrowser;
     } else if (selectedDataset.enrichmentTool) {
-      return toolPageLinks.enrichmentTool;
+      firstTool = toolPageLinks.enrichmentTool;
     } else if (selectedDataset.phenotypeTool) {
-      return toolPageLinks.phenotypeTool;
-    } else {
-      return '';
+      firstTool = toolPageLinks.phenotypeTool;
     }
+
+    return firstTool;
   }
 
-  createDatasetHierarchy() {
+  createDatasetHierarchy(): void {
     this.datasets$.subscribe((datasets) => {
       this.datasetTrees = new Array<DatasetNode>();
       datasets.forEach(d => {
@@ -145,13 +158,13 @@ export class DatasetsComponent implements OnInit {
     ));
   }
 
-  selectDataset(dataset: Dataset) {
+  selectDataset(dataset: Dataset): void {
     if (dataset !== undefined) {
       this.router.navigate(['/', 'datasets', dataset.id, this.findFirstTool(dataset)]);
     }
   }
 
-  routeChange() {
+  routeChange(): void {
     /* In order to have state separation between the dataset tools,
     we clear the state if the previous url is from a different dataset tool */
     if (DatasetsComponent.previousUrl !== this.router.url && DatasetsComponent.previousUrl.startsWith('/datasets')) {
