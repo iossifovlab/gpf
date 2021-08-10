@@ -35,7 +35,6 @@ from .serializers import UserWithoutEmailSerializer
 from .serializers import BulkGroupOperationSerializer
 
 from django.utils import timezone
-from django.utils.decorators import available_attrs
 
 
 LOCKOUT_THRESHOLD = 4
@@ -51,7 +50,7 @@ def csrf_clear(view_func):
         request.csrf_processing_done = True
         return view_func(*args, **kwargs)
 
-    return wraps(view_func, assigned=available_attrs(view_func))(wrapped_view)
+    return wraps(view_func)(wrapped_view)
 
 
 def iterator_to_json(users):
