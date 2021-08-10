@@ -28,16 +28,14 @@ pipeline {
   post {
     always {
       junit 'test-results/wdae-junit.xml, test-results/dae-junit.xml'
-      script {
-        recordIssues(
-          enabledForFailure: true, aggregatingResults: false,
-          tools: [
-            flake8(pattern: 'test-results/flake8_report', reportEncoding: 'UTF-8'),
-            myPy(pattern: 'test-results/mypy_dae_report', reportEncoding: 'UTF-8'),
-            myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8')
-          ]
-        )
-      }
+      recordIssues(
+        enabledForFailure: true, aggregatingResults: false,
+        tools: [
+          flake8(pattern: 'test-results/flake8_report', reportEncoding: 'UTF-8'),
+          myPy(pattern: 'test-results/mypy_dae_report', reportEncoding: 'UTF-8', id: 'mypy-dae', name: 'MyPy - dae'),
+          myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8', id: 'mypy-wdae', name: 'MyPy - wdae')
+        ]
+      )
 
       zulipNotification(
         topic: "${env.JOB_NAME}"
