@@ -17,12 +17,10 @@
                   </span>
                 </div>
                 <input
-                  #searchTerm (keyup)="search(searchTerm.value)"
+                  #searchBox (keyup)="search(searchBox.value)"
                   id="search-field" class="form-control my-0 py-1"
                   type="text" placeholder="Search" aria-label="Search"
-                  [ngModel]="input$ | async"
-                >
-                {{ searchTerm.focus({preventScroll: true}) }}
+                  [ngModel]="input$ | async">
               </div>
               <div class="btn-group pull-right" role="group">
                 <button
