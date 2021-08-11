@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, ViewChild, ContentChild, AfterViewInit, OnChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChild, ContentChild, AfterViewInit, OnChanges, ElementRef } from '@angular/core';
 import { SearchableSelectTemplateDirective } from './searchable-select-template.directive';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 import { NgZone } from '@angular/core';
@@ -8,17 +8,17 @@ import { NgZone } from '@angular/core';
   templateUrl: './searchable-select.component.html',
 })
 export class SearchableSelectComponent implements AfterViewInit, OnChanges {
-  @Input() data: Array<any>;
-  @Input() caption: string;
-  @Input() isInGeneBrowser = false;
-  @Input() hideDropdown: boolean;
-  @Output() search  = new EventEmitter();
-  @Output() selectItem  = new EventEmitter();
-  @ViewChild(NgbDropdown) dropdown: NgbDropdown;
-  @ViewChild('searchBox') searchBox: any;
-  @ContentChild(SearchableSelectTemplateDirective) template: SearchableSelectTemplateDirective;
+  @Input() public data: Array<any>;
+  @Input() public caption: string;
+  @Input() public isInGeneBrowser = false;
+  @Input() private hideDropdown: boolean;
+  @Output() private search  = new EventEmitter();
+  @Output() private selectItem  = new EventEmitter();
+  @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
+  @ViewChild('searchBox') private searchBox: ElementRef;
+  @ContentChild(SearchableSelectTemplateDirective) public template: SearchableSelectTemplateDirective;
 
-  onEnterPress() {
+  public onEnterPress() {
     if (this.isInGeneBrowser) {
       this.onSelect(this.searchBox.nativeElement.value);
       this.dropdown.close();
@@ -29,21 +29,22 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
     private ngZone: NgZone
   ) {}
 
-  ngOnChanges(): void {
+  public ngOnChanges(): void {
     if (this.hideDropdown) {
       this.dropdown.close();
     }
   }
 
-  ngAfterViewInit(): void {
+  public ngAfterViewInit(): void {
+    this.focusSearchBox();
     this.dropdown.autoClose = 'inside';
   }
 
-  searchBoxChange(searchFieldValue) {
+  public searchBoxChange(searchFieldValue) {
     this.search.emit(searchFieldValue);
   }
 
-  onFocus(event) {
+  public onFocus(event) {
     this.searchBoxChange('');
     event.stopPropagation();
 
@@ -58,7 +59,28 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
     this.onSelect(null);
   }
 
-  onSelect(value) {
+  public onSelect(value) {
     this.selectItem.emit(value);
+  }
+
+  /**
+  * Waits search box element to load.
+  * @returns promise
+  */
+  private async waitForSearchBoxToLoad(): Promise<void> {
+    return new Promise<void>(resolve => {
+      const timer = setInterval(() => {
+        if (this.searchBox !== undefined) {
+          resolve();
+          clearInterval(timer);
+        }
+      }, 200);
+    });
+  }
+
+  private focusSearchBox() {
+    this.waitForSearchBoxToLoad().then(() => {
+      this.searchBox.nativeElement.focus();
+    });
   }
 }
