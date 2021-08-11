@@ -166,6 +166,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
       this.pageIndex, undefined, this.sortBy, this.orderBy
     ).pipe(take(1)).subscribe(res => {
       this.genes = this.genes.concat(res);
+      this.geneSearchInput.nativeElement.focus();
     });
 
     this.searchKeystrokes$.pipe(
@@ -177,12 +178,10 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   }
 
   /**
-   * After component initialization - focuses gene search field,
-   * initializes column filtering modals position update logic, updates first table column sorting buttons.
+   * After component initialization - initializes column filtering modals position update logic,
+   * updates first table column sorting buttons.
    */
   ngAfterViewInit(): void {
-    this.focusGeneSearch();
-
     const firstSortingButton = this.sortingButtonsComponents.find(sortingButtonsComponent => {
       return sortingButtonsComponent.id === `${this.shownGeneSetsCategories[0].category}_rank`;
     });
@@ -323,30 +322,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
    */
   sendKeystrokes(value: string) {
     this.searchKeystrokes$.next(value);
-  }
-
-  /**
-   * Waits gene search element to load.
-   * @returns promise
-   */
-  async waitForGeneSearchToLoad() {
-    return new Promise<void>(resolve => {
-      const timer = setInterval(() => {
-        if (this.geneSearchInput !== undefined) {
-          resolve();
-          clearInterval(timer);
-        }
-      }, 100);
-    });
-  }
-
-  /**
-   * Waits gene search input element to load and focuses it.
-   */
-  focusGeneSearch() {
-    this.waitForGeneSearchToLoad().then(() => {
-      this.geneSearchInput.nativeElement.focus();
-    });
   }
 
   /**
