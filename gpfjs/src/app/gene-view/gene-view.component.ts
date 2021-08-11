@@ -5,7 +5,8 @@ import { Subject, Observable } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import * as draw from 'app/utils/svg-drawing';
-import { GeneViewTranscript, GeneViewModel } from 'app/gene-view/gene-view';
+import { GeneViewModel } from 'app/gene-view/gene-view';
+import { GeneViewTranscript } from 'app/gene-view/gene';
 import { debounceTime } from 'rxjs/operators';
 
 export class GeneViewScaleState {
@@ -863,8 +864,8 @@ export class GeneViewComponent implements OnInit {
     }
   }
 
-  brushEndEvent = (event) => {
-    this.updateBrush(event.selection);
+  brushEndEvent = () => {
+    this.updateBrush(d3.event.selection);
   }
 
   updateBrush(selection) {

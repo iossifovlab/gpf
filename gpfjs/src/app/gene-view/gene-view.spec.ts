@@ -1,5 +1,5 @@
-import { GeneViewTranscriptSegment, GeneViewTranscript, GeneViewModel } from './gene-view';
-import { Transcript, Exon, Gene } from 'app/gene-view/gene';
+import { Transcript, Exon, Gene, GeneViewTranscriptSegment, GeneViewTranscript } from 'app/gene-view/gene';
+import { GeneViewModel } from './gene-view';
 
 describe('GeneViewTranscriptSegment', () => {
   it('should have working getters', () => {
