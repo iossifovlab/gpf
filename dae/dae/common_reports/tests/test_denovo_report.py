@@ -67,26 +67,74 @@ def test_effect_row(denovo_variants_ds1, phenotype_role_sets):
     )
     out_dict = effect_row.to_dict()
     assert out_dict["effect_type"] == "Missense"
-    assert out_dict["row"][0]["column"] == "phenotype 1 (6)"
-    assert out_dict["row"][1]["column"] == "phenotype 2 (2)"
-    assert out_dict["row"][2]["column"] == "unaffected (1)"
-    assert out_dict["row"][3]["column"] == "unknown (4)"
+    assert out_dict["row"][0] == {
+        'number_of_observed_events': 3,
+        'number_of_children_with_event': 3,
+        'observed_rate_per_child': 0.5,
+        'percent_of_children_with_events': 0.5,
+        'column': 'phenotype 1 (6)'
+    }
+    assert out_dict["row"][1] == {
+        'number_of_observed_events': 2,
+        'number_of_children_with_event': 1,
+        'observed_rate_per_child': 1.0,
+        'percent_of_children_with_events': 0.5,
+        'column': 'phenotype 2 (2)'
+    }
+    assert out_dict["row"][2] == {
+        'number_of_observed_events': 0,
+        'number_of_children_with_event': 0,
+        'observed_rate_per_child': 0,
+        'percent_of_children_with_events': 0,
+        'column': 'unaffected (1)'
+    }
+    assert out_dict["row"][3] == {
+        'number_of_observed_events': 0,
+        'number_of_children_with_event': 0,
+        'observed_rate_per_child': 0,
+        'percent_of_children_with_events': 0,
+        'column': 'unknown (4)'
+    }
 
 
 def test_effect_cell(denovo_variants_ds1, phenotype_role_sets):
     effect_cell1 = EffectCell(
         denovo_variants_ds1, phenotype_role_sets[0], "Missense"
     )
-    assert effect_cell1.to_dict()["column"] == "phenotype 1 (6)"
+    assert effect_cell1.to_dict() == {
+        'number_of_observed_events': 3,
+        'number_of_children_with_event': 3,
+        'observed_rate_per_child': 0.5,
+        'percent_of_children_with_events': 0.5,
+        'column': 'phenotype 1 (6)'
+    }
     effect_cell2 = EffectCell(
         denovo_variants_ds1, phenotype_role_sets[1], "Missense"
     )
-    assert effect_cell2.to_dict()["column"] == "phenotype 2 (2)"
+    assert effect_cell2.to_dict() == {
+        'number_of_observed_events': 2,
+        'number_of_children_with_event': 1,
+        'observed_rate_per_child': 1.0,
+        'percent_of_children_with_events': 0.5,
+        'column': 'phenotype 2 (2)'
+    }
     effect_cell3 = EffectCell(
         denovo_variants_ds1, phenotype_role_sets[2], "Missense"
     )
-    assert effect_cell3.to_dict()["column"] == "unaffected (1)"
+    assert effect_cell3.to_dict() == {
+        'number_of_observed_events': 0,
+        'number_of_children_with_event': 0,
+        'observed_rate_per_child': 0,
+        'percent_of_children_with_events': 0,
+        'column': 'unaffected (1)'
+    }
     effect_cell4 = EffectCell(
         denovo_variants_ds1, phenotype_role_sets[3], "Missense"
     )
-    assert effect_cell4.to_dict()["column"] == "unknown (4)"
+    assert effect_cell4.to_dict() == {
+        'number_of_observed_events': 0,
+        'number_of_children_with_event': 0,
+        'observed_rate_per_child': 0,
+        'percent_of_children_with_events': 0,
+        'column': 'unknown (4)'
+    }
