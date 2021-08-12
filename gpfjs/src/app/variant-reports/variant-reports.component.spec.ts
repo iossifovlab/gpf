@@ -96,6 +96,9 @@ class VariantReportsServiceMock {
             }
           }
         ],
+        familiesTotal: 1
+      },
+      peopleReport: {
         peopleCounters: [
           {
             groupCounters: [
@@ -186,7 +189,6 @@ class VariantReportsServiceMock {
             getChildrenCounter: function() {return 0}
           }
         ],
-        familiesTotal: 1
       },
       denovoReport: null
     };
