@@ -18,14 +18,10 @@ import { map, switchMap, take } from 'rxjs/operators';
   styleUrls: ['./user-edit.component.css']
 })
 export class UserEditComponent implements OnInit {
-  @HostListener('window:popstate', [ '$event' ])
-  unloadHandler() {
-    this.closeConfirmnationModal();
-  }
-
   @ViewChild(UserGroupsSelectorComponent)
   private userGroupsSelectorComponent: UserGroupsSelectorComponent;
   @ViewChild('ele') ele: ElementRef;
+  @ViewChild('nameInput') nameInput: ElementRef;
 
   dropdownSettings: IDropdownSettings = {};
 
@@ -50,7 +46,14 @@ export class UserEditComponent implements OnInit {
     private usersGroupsService: UsersGroupsService
   ) { }
 
+  @HostListener('window:popstate', [ '$event' ])
+  unloadHandler() {
+    this.closeConfirmnationModal();
+  }
+
   ngOnInit() {
+    this.focusNameInputArea();
+
     this.route.params.pipe(
       take(1),
       map(params => +params['id']),
@@ -58,18 +61,18 @@ export class UserEditComponent implements OnInit {
     ).subscribe(user => {
       this.emailValue = user.email;
       this.user$.next(user);
-    })
+    });
 
-      this.usersGroupsService
-      .getAllGroups()
-      .subscribe(groups => this.groups$.next(groups));
+    this.usersGroupsService
+    .getAllGroups()
+    .subscribe(groups => this.groups$.next(groups));
 
-      this.dropdownSettings = {
-        singleSelection: true,
-        idField: 'id',
-        textField: 'text',
-        allowSearchFilter: true,
-      };
+    this.dropdownSettings = {
+      singleSelection: true,
+      idField: 'id',
+      textField: 'text',
+      allowSearchFilter: true,
+    };
   }
 
   closeConfirmnationModal() {
@@ -95,5 +98,26 @@ export class UserEditComponent implements OnInit {
 
   goBack() {
     this.router.navigate(['/management']);
+  }
+
+  /**
+  * Waits name input area element to load.
+  * @returns promise
+  */
+   private async waitForNameInputAreaToLoad(): Promise<void> {
+    return new Promise<void>(resolve => {
+      const timer = setInterval(() => {
+        if (this.nameInput !== undefined) {
+          resolve();
+          clearInterval(timer);
+        }
+      }, 200);
+    });
+  }
+
+  private focusNameInputArea() {
+    this.waitForNameInputAreaToLoad().then(() => {
+      this.nameInput.nativeElement.focus();
+    });
   }
 }
