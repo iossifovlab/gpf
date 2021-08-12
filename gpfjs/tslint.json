@@ -6,7 +6,6 @@
     "max-file-line-count": [true, 500],
     "no-consecutive-blank-lines": true,
     "space-before-function-paren": [true, "never"],
-    "increment-decrement": true,
     "binary-expression-operand-order": true,
     "use-isnan": true,
     "unnecessary-constructor": true,
