@@ -15,6 +15,7 @@ import { QueryService } from 'app/query/query.service';
 import { EffectTypes } from 'app/effecttypes/effecttypes';
 import { Store } from '@ngxs/store';
 import { debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
+import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-table',
@@ -62,6 +63,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
 
   @ViewChildren('columnFilteringButton') columnFilteringButtons: QueryList<ElementRef>;
   @ViewChildren('dropdownSpan') dropdownSpans: QueryList<ElementRef>;
+  @ViewChildren(MultipleSelectMenuComponent) multipleSelectMenuComponents: QueryList<MultipleSelectMenuComponent>;
   modalBottom: number;
 
   effectTypes = {
@@ -439,6 +441,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
         this.calculateModalLeftPosition(this.columnFilteringButtons.find(ele => ele.nativeElement.id === `${columnId}-button`).nativeElement)
       );
       this.ngbDropdownMenu.find(ele => ele.nativeElement.id === `${columnId}-dropdown`).dropdown.open();
+      this.multipleSelectMenuComponents.find(menu => menu.menuId.includes(columnId)).focusSearchInput();
     });
   }
 
@@ -522,7 +525,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     });
   }
 
-  private focusGeneSearchInput() {
+  public focusGeneSearchInput() {
     this.waitForGeneSearchInputToLoad().then(() => {
       this.geneSearchInput.nativeElement.focus();
     });

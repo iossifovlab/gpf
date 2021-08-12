@@ -28,8 +28,6 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
   }
 
   ngOnInit(): void {
-    this.focusSearchInput();
-
     this.checkboxDataArraySavedState = this.toCheckboxDataArray(this.allItems);
     this.applySavedState();
 
@@ -90,11 +88,11 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
           resolve();
           clearInterval(timer);
         }
-      }, 150);
+      }, 100);
     });
   }
 
-  private focusSearchInput() {
+  focusSearchInput() {
     this.waitForSearchInputToLoad().then(() => {
       this.searchInput.nativeElement.focus();
     });
