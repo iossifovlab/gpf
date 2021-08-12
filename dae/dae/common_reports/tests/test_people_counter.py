@@ -1,4 +1,4 @@
-from dae.common_reports.people_counter import PeopleCounter, PeopleCounters
+from dae.common_reports.people_counter import PeopleCounter, PeopleReport
 
 
 def test_people_counter(study1, phenotype_role_collection):
@@ -40,8 +40,8 @@ def test_people_counter_empty(study1, phenotype_role_collection):
     assert len(people_counter.to_dict([]).keys()) == 1
 
 
-def test_people_counters(study1, phenotype_role_collection):
-    people_counters = PeopleCounters(
+def test_people_report(study1, phenotype_role_collection):
+    people_counters = PeopleReport(
         study1.families, phenotype_role_collection
     )
 

@@ -135,3 +135,12 @@ def remove_common_reports(common_report_facade):
 @pytest.fixture
 def phenotype_role_collection(study1):
     return study1.get_person_set_collection("phenotype")
+
+
+@pytest.fixture
+def phenotype_role_sets(phenotype_role_collection):
+    person_sets = []
+    for person_set in phenotype_role_collection.person_sets.values():
+        if len(person_set.persons) > 0:
+            person_sets.append(person_set)
+    return person_sets
