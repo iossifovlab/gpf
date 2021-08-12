@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync, tick } from '@angular/core/testing';
 
 import { VariantReportsComponent } from './variant-reports.component';
 import { PedigreeChartModule } from '../pedigree-chart/pedigree-chart.module'
@@ -293,7 +293,7 @@ describe('VariantReportsComponent', () => {
   })
 });
 
-describe('VariantReportsComponent Denovo', () => {
+fdescribe('VariantReportsComponent Denovo', () => {
   let component: VariantReportsComponent;
   let fixture: ComponentFixture<VariantReportsComponent>;
 
@@ -323,14 +323,18 @@ describe('VariantReportsComponent Denovo', () => {
 
     component.ngOnInit();
     fixture.detectChanges();
+    component.ngAfterViewInit();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should have denovo', () => {
+  it('should have denovo', (done) => {
     expect(component).toBeTruthy();
-    expect(component.currentDenovoReport).toBeDefined();
+    setTimeout(() => {
+      expect(component.currentDenovoReport).toBeDefined();
+      done();
+    }, 0)
   })
 });

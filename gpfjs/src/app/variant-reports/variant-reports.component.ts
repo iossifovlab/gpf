@@ -84,7 +84,7 @@ export class VariantReportsComponent implements OnInit, OnChanges, AfterViewInit
           }
         }
       );
-    })
+    }, 0)
   }
 
   ngOnChanges(changes: SimpleChanges) {
