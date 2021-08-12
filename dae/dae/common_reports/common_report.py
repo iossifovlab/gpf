@@ -6,6 +6,7 @@ from collections import OrderedDict
 from dae.variants.attributes import Role
 
 from dae.common_reports.family_report import FamiliesReport
+from dae.common_reports.people_counter import PeopleReport
 from dae.common_reports.denovo_report import DenovoReport
 
 
@@ -38,6 +39,12 @@ class CommonReport(object):
             config.draw_all_families,
             config.families_count_show_id,
         )
+
+        self.people_report = PeopleReport(
+            genotype_data_study.families,
+            families_report_collections
+        )
+
         elapsed = time.time() - start
         logger.info(
             f"COMMON REPORTS family report " f"build in {elapsed:.2f} sec")
@@ -89,6 +96,7 @@ class CommonReport(object):
         return OrderedDict(
             [
                 ("id", self.id),
+                ("people_report", self.people_report.to_dict()),
                 ("families_report", self.families_report.to_dict()),
                 (
                     "denovo_report",
