@@ -22,7 +22,6 @@ setuptools.setup(
         "dae/tools/impala_tables_stats.py",
         "dae/tools/impala_tables_summary_variants.py",
         "dae/tools/hdfs_parquet_loader.py",
-        "dae/tools/generate_common_report.py",
         "dae/tools/generate_denovo_gene_sets.py",
         "dae/tools/pheno2dae.py",
         "dae/tools/pheno2browser.py",
