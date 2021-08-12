@@ -131,6 +131,8 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     this.shownGenomicScoresCategories = cloneDeep(this.config.genomicScores);
     this.shownDatasets = cloneDeep(this.config.datasets);
 
+    this.focusGeneSearchInput();
+
     // trigger new detection cycle to avoid ExpressionChangedAfterItHasBeenCheckedError
     Promise.resolve().then(() => {
       this.shownGeneSetsCategories.forEach(category => {
@@ -166,7 +168,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
       this.pageIndex, undefined, this.sortBy, this.orderBy
     ).pipe(take(1)).subscribe(res => {
       this.genes = this.genes.concat(res);
-      this.geneSearchInput.nativeElement.focus();
     });
 
     this.searchKeystrokes$.pipe(
@@ -187,7 +188,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     });
     setTimeout(() => {
       firstSortingButton.hideState = 1;
-      this.updateModalBottom()
+      this.updateModalBottom();
     });
   }
 
@@ -504,5 +505,26 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     AutismGeneProfileSingleViewComponent.goToQuery(
       this.store, this.queryService, geneSymbol, personSet, datasetId, statistic
     );
+  }
+
+  /**
+  * Waits search box element to load.
+  * @returns promise
+  */
+   private async waitForGeneSearchInputToLoad(): Promise<void> {
+    return new Promise<void>(resolve => {
+      const timer = setInterval(() => {
+        if (this.geneSearchInput !== undefined) {
+          resolve();
+          clearInterval(timer);
+        }
+      }, 200);
+    });
+  }
+
+  private focusGeneSearchInput() {
+    this.waitForGeneSearchInputToLoad().then(() => {
+      this.geneSearchInput.nativeElement.focus();
+    });
   }
 }
