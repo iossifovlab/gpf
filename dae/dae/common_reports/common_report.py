@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 
 
 class CommonReport(object):
-    def __init__(self, genotype_data_study, config):
+    def __init__(self, genotype_data_study):
+        config = genotype_data_study.config.common_report
         effect_groups = config.effect_groups
         effect_types = config.effect_types
 

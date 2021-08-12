@@ -29,6 +29,10 @@ class EffectCell:
         if len(self.person_set_children) == 0:
             self.person_set_children = set(self.person_set.persons.keys())
 
+        for fv in self.denovo_variants:
+            for fa in fv.alt_alleles:
+                self.count_variant(fv, fa)
+
         logger.info(
             f"DENOVO REPORTS: persons set {self.person_set} children "
             f"{len(self.person_set_children)}")
@@ -117,10 +121,6 @@ class EffectRow(object):
             "effect_type": self.effect_type,
             "row": [r.to_dict() for r in self.row],
         }
-
-    def count_variant(self, family_variant, family_allele):
-        for effect_cell in self.row:
-            effect_cell.count_variant(family_variant, family_allele)
 
     def _build_row(self):
         return [
@@ -227,11 +227,6 @@ class DenovoReportTable(object):
             )
             for effect in self.effects
         ]
-
-        for fv in self.denovo_variants:
-            for fa in fv.alt_alleles:
-                for effect_row in effect_rows:
-                    effect_row.count_variant(fv, fa)
 
         effect_rows_empty_columns = list(
             map(
