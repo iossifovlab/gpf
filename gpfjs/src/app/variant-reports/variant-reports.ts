@@ -61,6 +61,17 @@ export class PeopleCounter {
   }
 }
 
+export class PeopleReport {
+  static fromJson(json: any) {
+    return new PeopleReport(
+      json['people_counters'].map(peopleCounter => PeopleCounter.fromJson(peopleCounter)));
+  }
+
+  constructor(
+    readonly peopleCounters: PeopleCounter[],
+  ) {}
+}
+
 export class PedigreeCounter {
 
   static fromArray(data: any) {
@@ -115,8 +126,6 @@ export class FamilyReport {
 
   static fromJson(json: any) {
     return new FamilyReport(
-      json['people_counters'].map(
-        peopleCounter => PeopleCounter.fromJson(peopleCounter)),
       json['families_counters'].map(
         familyCounters => FamilyCounters.fromJson(familyCounters)),
       json['families_total'],
@@ -124,7 +133,6 @@ export class FamilyReport {
   }
 
   constructor(
-    readonly peopleCounters: PeopleCounter[],
     readonly familiesCounters: FamilyCounters[],
     readonly familiesTotal: number,
   ) {}
@@ -212,6 +220,7 @@ export class VariantReport {
       json['id'],
       json['study_name'],
       json['study_description'],
+      PeopleReport.fromJson(json['people_report']),
       FamilyReport.fromJson(json['families_report']),
       DenovoReport.fromJson(json['denovo_report'])
     );
@@ -221,6 +230,7 @@ export class VariantReport {
     readonly id: string,
     readonly studyName: string,
     readonly studyDescription: string,
+    readonly peopleReport: PeopleReport,
     readonly familyReport: FamilyReport,
     readonly denovoReport: DenovoReport
   ) {}

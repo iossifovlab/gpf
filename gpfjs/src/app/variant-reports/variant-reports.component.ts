@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, HostListener, OnChanges, SimpleChanges, AfterViewInit } from '@angular/core';
 import { Router, ActivatedRoute, Params } from '@angular/router';
 
 import { Observable } from 'rxjs';
@@ -15,7 +15,7 @@ import { map, share, switchMap, take } from 'rxjs/operators';
   templateUrl: './variant-reports.component.html',
   styleUrls: ['./variant-reports.component.css']
 })
-export class VariantReportsComponent implements OnInit, OnChanges {
+export class VariantReportsComponent implements OnInit, OnChanges, AfterViewInit {
   @ViewChild('families_pedigree') familiesPedigree: ElementRef;
   @ViewChild('legend') legend: ElementRef;
   familiesPedigreeTop: number;
@@ -40,11 +40,6 @@ export class VariantReportsComponent implements OnInit, OnChanges {
   ) { }
 
   ngOnInit() {
-    let datasetId$ = this.route.parent.params.pipe(
-      take(1),
-      map(params => <string>params['dataset'])
-    );
-
     this.route.parent.params.subscribe(
       (params: Params) => {
         this.selectedDatasetId = params['dataset'];
@@ -53,32 +48,43 @@ export class VariantReportsComponent implements OnInit, OnChanges {
 
     this.selectedDataset$ = this.datasetsService.getDataset(this.selectedDatasetId);
 
-    this.selectedDataset$.subscribe(
-      dataset => {
-        if (dataset.accessRights) {
-          this.variantReport$ = datasetId$.pipe(
-            switchMap(datasetId => this.variantReportsService.getVariantReport(datasetId)),
-            share()
-          );
+  }
 
-          this.variantReport$.pipe(take(1)).subscribe(params => {
-            this.pedigreeTables = params.familyReport.familiesCounters.map(
-              familiesCounters => new PedigreeTable(
-                  this.chunkPedigrees(familiesCounters.familyCounter),
-                  familiesCounters.phenotypes, familiesCounters.groupName,
-                  familiesCounters.legend
-                )
-              );
+  ngAfterViewInit() {
+    //Done to avoid expression change after check
+    setTimeout(() => {
+      let datasetId$ = this.route.parent.params.pipe(
+        take(1),
+        map(params => <string>params['dataset'])
+      );
 
-            this.currentPeopleCounter = params.familyReport.peopleCounters[0];
-            this.currentPedigreeTable = this.pedigreeTables[0];
-            if(params.denovoReport !== null) {
-              this.currentDenovoReport = params.denovoReport.tables[0];
-            }
-          });
+      this.selectedDataset$.subscribe(
+        dataset => {
+          if (dataset.accessRights) {
+            this.variantReport$ = datasetId$.pipe(
+              switchMap(datasetId => this.variantReportsService.getVariantReport(datasetId)),
+              share()
+            );
+
+            this.variantReport$.pipe(take(1)).subscribe(params => {
+              this.pedigreeTables = params.familyReport.familiesCounters.map(
+                familiesCounters => new PedigreeTable(
+                    this.chunkPedigrees(familiesCounters.familyCounter),
+                    familiesCounters.phenotypes, familiesCounters.groupName,
+                    familiesCounters.legend
+                  )
+                );
+
+              this.currentPeopleCounter = params.peopleReport.peopleCounters[0];
+              this.currentPedigreeTable = this.pedigreeTables[0];
+              if(params.denovoReport !== null) {
+                this.currentDenovoReport = params.denovoReport.tables[0];
+              }
+            });
+          }
         }
-      }
-    );
+      );
+    })
   }
 
   ngOnChanges(changes: SimpleChanges) {
