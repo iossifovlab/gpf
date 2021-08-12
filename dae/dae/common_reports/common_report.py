@@ -19,6 +19,8 @@ class CommonReport(object):
         effect_groups = config.effect_groups
         effect_types = config.effect_types
 
+        assert config.enabled
+
         self.genotype_data_study = genotype_data_study
         self.id = genotype_data_study.study_id
 
@@ -123,6 +125,7 @@ class CommonReport(object):
 
     def _get_phenotype(self):
         config = self.genotype_data_study.config.person_set_collections
+        assert config.selected_person_set_collections is not None
         collection = self.genotype_data_study.get_person_set_collection(
             config.selected_person_set_collections[0]
         )

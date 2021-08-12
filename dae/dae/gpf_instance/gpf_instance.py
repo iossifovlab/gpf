@@ -32,7 +32,7 @@ from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.autism_gene_profile.statistic import AGPStatistic
 
 from dae.utils.helpers import isnan
-from dae.utils.dae_utils import cached
+from dae.utils.dae_utils import cached, join_line
 
 
 logger = logging.getLogger(__name__)
@@ -364,7 +364,11 @@ class GPFInstance(object):
         genotype_data_study = self.get_genotype_data(study_id)
         if genotype_data_study.is_remote:
             return None
-        return CommonReport(genotype_data_study).to_dict()
+        try:
+            common_report = CommonReport(genotype_data_study)
+        except AssertionError:
+            return None
+        return common_report.to_dict()
 
     def get_common_report_families_data(self, common_report_id):
         genotype_data = GPFInstance.get_genotype_data(self, common_report_id)
