@@ -104,9 +104,10 @@ class PeopleReport:
         self.families = families
         self.person_set_collections = person_set_collections
 
-        self.people_counters = self._create_people_counters()
+        self.people_counters_collection = \
+            self._create_people_counters_collection()
 
-    def _create_people_counters(self):
+    def _create_people_counters_collection(self):
         return [
             PeopleCounters(self.families, person_set_collection)
             for person_set_collection in self.person_set_collections
@@ -117,7 +118,7 @@ class PeopleReport:
             [
                 (
                     "people_counters",
-                    [pc.to_dict() for pc in self.people_counters],
+                    [pc.to_dict() for pc in self.people_counters_collection],
                 ),
             ]
         )

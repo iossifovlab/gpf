@@ -41,10 +41,12 @@ def test_people_counter_empty(study1, phenotype_role_collection):
 
 
 def test_people_report(study1, phenotype_role_collection):
-    people_counters = PeopleReport(
-        study1.families, phenotype_role_collection
+    people_report = PeopleReport(
+        study1.families, [phenotype_role_collection]
     )
 
+    assert len(people_report.people_counters_collection) == 1
+    people_counters = people_report.people_counters_collection[0]
     assert len(people_counters.counters) == 4
     assert people_counters.group_name == "Diagnosis"
     assert people_counters.rows == [
