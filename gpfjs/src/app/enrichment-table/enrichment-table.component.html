@@ -1,7 +1,4 @@
 <div id="enrichment-tool-results">
-  <!-- <div *ngFor="let enrichmentResult of enrichmentResults?.results">
-    {{ enrichmentResult }}
-  </div> -->
   <div class="description">
     {{ enrichmentResults?.description }}
   </div>
@@ -10,52 +7,64 @@
     <tr>
       <th>&nbsp;</th>
       <th>&nbsp;</th>
-      <th colspan="4">All</th>
-      <th colspan="4">Rec</th>
-      <th colspan="4">Male</th>
-      <th colspan="4">Female</th>
+      <th colspan="4" title="All">All</th>
+      <th colspan="4" title="Recurrent">Rec</th>
+      <th colspan="4" title="Male">Male</th>
+      <th colspan="4" title="Female">Female</th>
     </tr>
     <tr>
       <th class="selector-cell">&nbsp;</th>
       <th>&nbsp;</th>
-      <th class="value-cell">N</th>
-      <th class="value-cell">O</th>
-      <th class="value-cell">E</th>
-      <th class="value-cell">pV</th>
-      <th class="value-cell">N</th>
-      <th class="value-cell">O</th>
-      <th class="value-cell">E</th>
-      <th class="value-cell">pV</th>
-      <th class="value-cell">N</th>
-      <th class="value-cell">O</th>
-      <th class="value-cell">E</th>
-      <th class="value-cell">pV</th>
-      <th class="value-cell">N</th>
-      <th class="value-cell">O</th>
-      <th class="value-cell">E</th>
-      <th class="value-cell">pV</th>
+      <th class="value-cell" title="Total number of events">N</th>
+      <th class="value-cell" title="Observed number of events">O</th>
+      <th class="value-cell" title="Expected number of events">E</th>
+      <th class="value-cell" title="p-value">pV</th>
+
+      <th class="value-cell" title="Total number of events">N</th>
+      <th class="value-cell" title="Observed number of events">O</th>
+      <th class="value-cell" title="Expected number of events">E</th>
+      <th class="value-cell" title="p-value">pV</th>
+
+      <th class="value-cell" title="Total number of events">N</th>
+      <th class="value-cell" title="Observed number of events">O</th>
+      <th class="value-cell" title="Expected number of events">E</th>
+      <th class="value-cell" title="p-value">pV</th>
+
+      <th class="value-cell" title="Total number of events">N</th>
+      <th class="value-cell" title="Observed number of events">O</th>
+      <th class="value-cell" title="Expected number of events">E</th>
+      <th class="value-cell" title="p-value">pV</th>
     </tr>
     <ng-container *ngFor="let enrichmentResult of enrichmentResults.results">
       <tr>
         <td rowspan="4" class="selector-cell">
-          <div>
-            {{ enrichmentResult.selector }}
-          </div>
+          <div [attr.title]="enrichmentResult.selector">{{ enrichmentResult.selector }}</div>
           <div class="children-stats">
-            F:{{ enrichmentResult?.childrenStats?.female }}
-            M:{{ enrichmentResult?.childrenStats?.male }}
-            U:{{ enrichmentResult?.childrenStats?.unspecified }}
+            <span [attr.title]="enrichmentResult?.childrenStats?.female !== undefined ? 'Female: ' + enrichmentResult?.childrenStats?.female : 'Female: -'">
+              F:{{ enrichmentResult?.childrenStats?.female }}
+            </span>
+            <span *ngIf="enrichmentResult?.childrenStats?.female === undefined">-</span>
+            <br>
+
+            <span [attr.title]="enrichmentResult?.childrenStats?.male !== undefined ? 'Male: ' + enrichmentResult?.childrenStats?.male : 'Male: -'">
+              M:{{ enrichmentResult?.childrenStats?.male }}
+            </span>
+            <span *ngIf="enrichmentResult?.childrenStats?.male === undefined">-</span>
+            <br>
+
+            <span [attr.title]="enrichmentResult?.childrenStats?.unspecified !== undefined ? 'Unspecified: ' + enrichmentResult?.childrenStats?.unspecified : 'Unspecified: -'">
+              U:{{ enrichmentResult?.childrenStats?.unspecified }}
+            </span>
+            <span *ngIf="enrichmentResult?.childrenStats?.unspecified === undefined">-</span>
           </div>
         </td>
       </tr>
-      <tr gpf-enrichment-table-row label="LGDs" [effectResult]="enrichmentResult.LGDs">
+      <tr gpf-enrichment-table-row label="LGDs" [effectResult]="enrichmentResult.LGDs" title="LGDs">
       </tr>
-      <tr gpf-enrichment-table-row label="Missense" [effectResult]="enrichmentResult.missense">
+      <tr gpf-enrichment-table-row label="Missense" [effectResult]="enrichmentResult.missense" title="Missense">
       </tr>
-      <tr gpf-enrichment-table-row label="Synonymous" [effectResult]="enrichmentResult.synonymous">
+      <tr gpf-enrichment-table-row label="Synonymous" [effectResult]="enrichmentResult.synonymous" title="Synonymous">
       </tr>
     </ng-container>
-
-
   </table>
 </div>
