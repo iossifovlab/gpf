@@ -28,10 +28,8 @@ Create a conda `gpf` environment with all of the conda package dependencies
 from `conda-environment.yml` file:
 
 ```bash
-conda create \
-    -c defaults -c conda-forge  -c iossifovlab -c bioconda \
-    -n gpf_dev \
-    --file conda-environment.yml
+conda env create --name gpf --file ./environment.yml
+conda env update --name gpf --file ./dev-environment.yml
 ```
 
 To use this environment, you need to activate it using the following command:
