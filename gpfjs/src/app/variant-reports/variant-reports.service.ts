@@ -7,6 +7,7 @@ import { Observable } from 'rxjs';
 import { VariantReport } from './variant-reports';
 import { environment } from '../../environments/environment';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { map } from 'rxjs/operators';
 
 @Injectable()
 export class VariantReportsService {
@@ -23,11 +24,11 @@ export class VariantReportsService {
     const options = { withCredentials: true };
     const url = `${this.config.baseUrl}${this.variantsUrl}${datasetId}`;
 
-    return this.http
-      .get(url, options)
-      .map(response => {
+    return this.http.get(url, options).pipe(
+      map(response => {
         return VariantReport.fromJson(response);
-      });
+      })
+    );
   }
 
   getDownloadLink() {

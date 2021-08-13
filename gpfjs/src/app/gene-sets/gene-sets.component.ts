@@ -8,7 +8,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { ValidateNested } from 'class-validator';
 import { Store } from '@ngxs/store';
 import { SetGeneSetsValues, GeneSetsState } from './gene-sets.state';
-import { switchMap } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, switchMap, take } from 'rxjs/operators';
 import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
@@ -45,7 +45,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
       switchMap(geneSetsCollections => {
         return combineLatest(
           of(geneSetsCollections),
-          this.datasetService.getSelectedDataset().take(1)
+          this.datasetService.getSelectedDataset().pipe(take(1))
         )
       }),
       switchMap(([geneSetsCollections, dataset]) => {
@@ -82,16 +82,17 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
       this.restoreState(state);
     });
 
-    this.geneSetsResult = this.geneSetsQueryChange
-      .distinctUntilChanged()
-      .debounceTime(300)
-      .switchMap(term => {
+    this.geneSetsResult = this.geneSetsQueryChange.pipe(
+      distinctUntilChanged(),
+      debounceTime(300),
+      switchMap(term => {
         return this.geneSetsService.getGeneSets(term[0], term[1], term[2]);
-      })
-      .catch(error => {
+      }),
+      catchError(error => {
         console.warn(error);
-        return Observable.of(null);
-      });
+        return of(null);
+      })
+    );
 
     this.geneSetsResult.subscribe(geneSets => {
       this.geneSets = geneSets.sort((a, b) => a.name.localeCompare(b.name));

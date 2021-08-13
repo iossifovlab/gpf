@@ -5,7 +5,9 @@ import { Subject, Observable } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import * as draw from 'app/utils/svg-drawing';
-import { GeneViewTranscript, GeneViewModel } from 'app/gene-view/gene-view';
+import { GeneViewModel } from 'app/gene-view/gene-view';
+import { GeneViewTranscript } from 'app/gene-view/gene';
+import { debounceTime } from 'rxjs/operators';
 
 export class GeneViewScaleState {
   constructor(
@@ -163,7 +165,7 @@ export class GeneViewComponent implements OnInit {
     private loadingService: FullscreenLoadingService,
   ) {
     this.tablePreviewDebouncer
-      .debounceTime(1000)
+      .pipe(debounceTime(1000))
       .subscribe(domains => this.updateShownTablePreviewVariantsArrayEvent.emit(domains));
   }
 

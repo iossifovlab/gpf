@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ConfigService } from 'app/config/config.service';
 import { Gene } from './gene';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -18,7 +19,7 @@ export class GeneService {
   getGene(geneSymbol: string) {
     return this.http
     .get(this.config.baseUrl + this.geneVisualizationUrl + geneSymbol)
-    .map((response: any) => Gene.fromJson(response));
+    .pipe(map((response: any) => Gene.fromJson(response)));
   }
 
   searchGenes(searchTerm: string) {

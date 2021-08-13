@@ -1,10 +1,10 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { AgpDatasetStatistic, AgpGene, AgpGenomicScores, AgpGenomicScoresCategory, AgpTableConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
-import { Observable, of } from 'rxjs';
+import { AgpDatasetPersonSet, AgpDatasetStatistic, AgpGene, AgpGenomicScores, AgpGenomicScoresCategory, AgpTableConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import { Observable, of, zip } from 'rxjs';
 import { GeneWeightsService } from '../gene-weights/gene-weights.service';
 import { GeneWeights } from 'app/gene-weights/gene-weights';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
-import { switchMap, tap } from 'rxjs/operators';
+import { switchMap, take, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { GeneService } from 'app/gene-view/gene.service';
@@ -53,12 +53,6 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     Pubmed: ''
   };
 
-  effectTypes = {
-    lgds: EffectTypes['LGDS'],
-    intron: ['Intron'],
-    missense: ['Missense'],
-  };
-
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
     private geneWeightsService: GeneWeightsService,
@@ -88,7 +82,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
             this.geneWeightsService.getGeneWeights(scores)
           );
         }
-        Observable.zip(...geneWeightsObservables).subscribe(geneWeightsArray => {
+        zip(...geneWeightsObservables).subscribe(geneWeightsArray => {
           for (let k = 0; k < geneWeightsArray.length; k++) {
             this.genomicScoresGeneWeights.push({
               category: gene.genomicScores[k].id,
@@ -99,7 +93,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
         return this.geneService.getGene(this.geneSymbol);
       }),
       switchMap(gene => {
-        return Observable.zip(of(gene), this.datasetsService.getDatasetDetails(this.config.defaultDataset));
+        return zip(of(gene), this.datasetsService.getDatasetDetails(this.config.defaultDataset));
       })
     ).subscribe(([gene, datasetDetails]) => {
       this.setLinks(this.geneSymbol, gene, datasetDetails);
@@ -162,7 +156,20 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     return this._histogramOptions;
   }
 
-  goToQuery(geneSymbol: string, personSetId: string, datasetId: string, statistic: AgpDatasetStatistic) {
+  goToQuery(geneSymbol: string, personSet: AgpDatasetPersonSet, datasetId: string, statistic: AgpDatasetStatistic) {
+    AutismGeneProfileSingleViewComponent.goToQuery(
+      this.store, this.queryService, geneSymbol, personSet, datasetId, statistic
+    );
+  }
+
+  static goToQuery(
+    store: Store, queryService: QueryService, geneSymbol: string, personSet: AgpDatasetPersonSet, datasetId: string, statistic: AgpDatasetStatistic
+  ) {
+    const effectTypes = {
+      lgds: EffectTypes['LGDS'],
+      intron: ['Intron'],
+      missense: ['Missense'],
+    };
     const newWindow = window.open('', '_blank');
 
     const genomicScores: GenomicScore[] = [];
@@ -184,23 +191,23 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
       presentInParent = presentInParentRareValues;
     }
 
-    this.store.dispatch([
+    store.dispatch([
       new SetGeneSymbols([geneSymbol]),
-      new SetEffectTypes(new Set(this.effectTypes[statistic['effects'][0]])),
+      new SetEffectTypes(new Set(effectTypes[statistic['effects'][0]])),
       new SetStudyTypes(new Set(['we'])),
       new SetVariantTypes(new Set(statistic['variantTypes'])),
       new SetGenomicScores(genomicScores),
       new SetPresentInChildValues(new Set(presentInChildValues)),
       new SetPresentInParentValues(new Set(presentInParent), rarityType, 0, 1),
-      new SetPedigreeSelector('phenotype', new Set([personSetId])),
+      new SetPedigreeSelector(personSet.collectionId, new Set([personSet.id])),
     ]);
 
-    this.store.selectOnce(state => state).subscribe(state => {
+    store.selectOnce(state => state).subscribe(state => {
       state['datasetId'] = datasetId;
-      this.queryService.saveQuery(state, 'genotype')
-      .take(1)
+      queryService.saveQuery(state, 'genotype')
+      .pipe(take(1))
       .subscribe(urlObject => {
-        const url = this.queryService.getLoadUrlFromResponse(urlObject);
+        const url = queryService.getLoadUrlFromResponse(urlObject);
         newWindow.location.assign(url);
       });
     });

@@ -8,6 +8,7 @@ import { UsersService } from '../users/users.service';
 import { UsersGroupsService } from '../users-groups/users-groups.service';
 import { UserGroup } from '../users-groups/users-groups';
 import { UserGroupsSelectorComponent } from 'app/user-groups-selector/user-groups-selector.component';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-users-create',
@@ -15,14 +16,11 @@ import { UserGroupsSelectorComponent } from 'app/user-groups-selector/user-group
   styleUrls: ['../user-edit/user-edit.component.css']
 })
 export class UserCreateComponent implements OnInit {
-  @HostListener('window:popstate', [ '$event' ])
-  unloadHandler() {
-    this.closeConfirmnationModal();
-  }
 
   @ViewChild(UserGroupsSelectorComponent)
   private userGroupsSelectorComponent: UserGroupsSelectorComponent;
   @ViewChild('ele') ele: ElementRef;
+  @ViewChild('emailInput') emailInput: ElementRef;
 
   lockedOptions = {
     width: 'style',
@@ -43,10 +41,16 @@ export class UserCreateComponent implements OnInit {
     private usersGroupsService: UsersGroupsService
   ) { }
 
+  @HostListener('window:popstate', [ '$event' ])
+  unloadHandler() {
+    this.closeConfirmnationModal();
+  }
+
   ngOnInit() {
+    this.focusEmailInputArea();
     this.usersGroupsService
       .getAllGroups()
-      .take(1)
+      .pipe(take(1))
       .subscribe(groups => this.groups$.next(groups));
   }
 
@@ -79,5 +83,26 @@ export class UserCreateComponent implements OnInit {
 
   goBack() {
     this.router.navigate(['/management']);
+  }
+
+  /**
+  * Waits email input area element to load.
+  * @returns promise
+  */
+   private async waitForEmailInputAreaToLoad(): Promise<void> {
+    return new Promise<void>(resolve => {
+      const timer = setInterval(() => {
+        if (this.emailInput !== undefined) {
+          resolve();
+          clearInterval(timer);
+        }
+      }, 200);
+    });
+  }
+
+  private focusEmailInputArea() {
+    this.waitForEmailInputAreaToLoad().then(() => {
+      this.emailInput.nativeElement.focus();
+    });
   }
 }

@@ -4,7 +4,8 @@ import { DecimalPipe } from '@angular/common';
 @Pipe({name: 'numberWithExp'})
 export class NumberWithExpPipe extends DecimalPipe implements PipeTransform {
 
-  transform(value: any, digits: string = null): string {
+  transform(value: string | number, digits?: string): null;
+  transform(value: string | number, digits?: string): string {
     if (typeof value !== 'number') {
       return value;
     }

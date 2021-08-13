@@ -10,6 +10,7 @@ import { UserGroup } from '../users-groups/users-groups';
 import { UsersGroupsService } from '../users-groups/users-groups.service';
 import { IDropdownSettings } from 'ng-multiselect-dropdown';
 import { UserGroupsSelectorComponent } from 'app/user-groups-selector/user-groups-selector.component';
+import { map, switchMap, take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-user-edit',
@@ -17,14 +18,10 @@ import { UserGroupsSelectorComponent } from 'app/user-groups-selector/user-group
   styleUrls: ['./user-edit.component.css']
 })
 export class UserEditComponent implements OnInit {
-  @HostListener('window:popstate', [ '$event' ])
-  unloadHandler() {
-    this.closeConfirmnationModal();
-  }
-
   @ViewChild(UserGroupsSelectorComponent)
   private userGroupsSelectorComponent: UserGroupsSelectorComponent;
   @ViewChild('ele') ele: ElementRef;
+  @ViewChild('nameInput') nameInput: ElementRef;
 
   dropdownSettings: IDropdownSettings = {};
 
@@ -49,25 +46,33 @@ export class UserEditComponent implements OnInit {
     private usersGroupsService: UsersGroupsService
   ) { }
 
+  @HostListener('window:popstate', [ '$event' ])
+  unloadHandler() {
+    this.closeConfirmnationModal();
+  }
+
   ngOnInit() {
-    this.route.params.take(1)
-      .map(params => +params['id'])
-      .switchMap(userId => this.usersService.getUser(userId))
-      .subscribe(user => {
-        this.emailValue = user.email;
-        this.user$.next(user);
-      });
+    this.focusNameInputArea();
 
-      this.usersGroupsService
-      .getAllGroups()
-      .subscribe(groups => this.groups$.next(groups));
+    this.route.params.pipe(
+      take(1),
+      map(params => +params['id']),
+      switchMap(userId => this.usersService.getUser(userId))
+    ).subscribe(user => {
+      this.emailValue = user.email;
+      this.user$.next(user);
+    });
 
-      this.dropdownSettings = {
-        singleSelection: true,
-        idField: 'id',
-        textField: 'text',
-        allowSearchFilter: true,
-      };
+    this.usersGroupsService
+    .getAllGroups()
+    .subscribe(groups => this.groups$.next(groups));
+
+    this.dropdownSettings = {
+      singleSelection: true,
+      idField: 'id',
+      textField: 'text',
+      allowSearchFilter: true,
+    };
   }
 
   closeConfirmnationModal() {
@@ -87,11 +92,32 @@ export class UserEditComponent implements OnInit {
 
     delete user.email;
     this.usersService.updateUser(user)
-      .take(1)
+      .pipe(take(1))
       .subscribe(() => this.router.navigate(['/management']));
   }
 
   goBack() {
     this.router.navigate(['/management']);
+  }
+
+  /**
+  * Waits name input area element to load.
+  * @returns promise
+  */
+   private async waitForNameInputAreaToLoad(): Promise<void> {
+    return new Promise<void>(resolve => {
+      const timer = setInterval(() => {
+        if (this.nameInput !== undefined) {
+          resolve();
+          clearInterval(timer);
+        }
+      }, 200);
+    });
+  }
+
+  private focusNameInputArea() {
+    this.waitForNameInputAreaToLoad().then(() => {
+      this.nameInput.nativeElement.focus();
+    });
   }
 }

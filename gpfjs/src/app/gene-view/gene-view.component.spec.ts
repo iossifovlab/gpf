@@ -1,5 +1,5 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -11,8 +11,8 @@ import * as d3 from 'd3';
 const d3Selection = require('d3-selection');
 // tslint:disable-next-line:import-blacklist
 import { Subject, Observable } from 'rxjs';
-import { Gene, GeneViewSummaryAllele, GeneViewSummaryAllelesArray, Transcript } from './gene';
-import { GeneViewModel, GeneViewTranscript } from './gene-view';
+import { Gene, GeneViewSummaryAllele, GeneViewSummaryAllelesArray, Transcript, GeneViewTranscript } from './gene';
+import { GeneViewModel} from './gene-view';
 
 import { GeneViewComponent, GeneViewZoomHistory, GeneViewScaleState } from './gene-view.component';
 import { NgxsModule } from '@ngxs/store';
@@ -102,7 +102,7 @@ describe('GeneViewComponent', () => {
       }]
   });
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [GeneViewComponent],
       providers: [

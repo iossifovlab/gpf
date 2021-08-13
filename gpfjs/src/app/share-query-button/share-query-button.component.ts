@@ -3,6 +3,7 @@ import { QueryService } from '../query/query.service';
 import { DatasetsService } from '../datasets/datasets.service';
 import { Store } from '@ngxs/store';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-share-query-button',
@@ -40,7 +41,7 @@ export class ShareQueryButtonComponent implements OnInit {
     this.store.selectOnce(state => state).subscribe(state => {
       state['datasetId'] = datasetId;
       this.queryService.saveQuery(state, this.queryType)
-        .take(1)
+        .pipe(take(1))
         .subscribe(response => {
           this.urlUUID = response['uuid'];
         });

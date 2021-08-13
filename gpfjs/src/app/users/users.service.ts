@@ -1,6 +1,6 @@
 
 // tslint:disable-next-line:import-blacklist
-import {throwError as observableThrowError, Observable, Subject, ReplaySubject } from 'rxjs';
+import {throwError as observableThrowError, Observable, Subject, ReplaySubject, of } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
@@ -12,6 +12,7 @@ import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
+import { catchError, map, tap } from 'rxjs/operators';
 
 const oboe = require('oboe');
 
@@ -50,12 +51,13 @@ export class UsersService {
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
 
-    return this.http.post(this.config.baseUrl + this.logoutUrl, {}, options)
-      .map(res => {
+    return this.http.post(this.config.baseUrl + this.logoutUrl, {}, options).pipe(
+      map(() => {
         this.router.navigate([this.location.path()]);
         this.store.dispatch(new StateResetAll());
         return true;
-      });
+      })
+    );
   }
 
   login(username: string, password?: string): Observable<boolean> {
@@ -68,14 +70,15 @@ export class UsersService {
       request['password'] = password;
     }
 
-    return this.http.post(this.config.baseUrl + this.loginUrl, request, options)
-      .map(res => {
+    return this.http.post(this.config.baseUrl + this.loginUrl, request, options).pipe(
+      map(() => {
         this.router.navigate([this.location.path()]);
         return true;
+      }),
+      catchError(error => {
+        return of(error);
       })
-      .catch(error => {
-        return Observable.of(error);
-      });
+    )
   }
 
   cachedUserInfo() {
@@ -89,15 +92,15 @@ export class UsersService {
   getUserInfo(): Observable<any> {
     const options = { withCredentials: true };
 
-    return this.http
-      .get(this.config.baseUrl + this.userInfoUrl, options)
-      .map(res => {
+    return this.http.get(this.config.baseUrl + this.userInfoUrl, options).pipe(
+      map(res => {
         return res;
-      })
-      .do(userInfo => {
+      }),
+      tap(userInfo => {
         this.userInfo$.next(userInfo);
         this.lastUserInfo = userInfo;
-      });
+      })
+    );
   }
 
   isEmailValid(email: string): boolean {
@@ -133,13 +136,14 @@ export class UsersService {
     return this.http.post(this.config.baseUrl + this.registerUrl, {
       email: email,
       name: name,
-    }, options)
-      .map(res => {
+    }, options).pipe(
+      map(() => {
         return true;
-      })
-      .catch(error => {
+      }),
+      catchError(error => {
         return observableThrowError(new Error(error.error.error_msg));
-      });
+      })
+    );
   }
 
   resetPassword(email: string): Observable<boolean> {
@@ -147,13 +151,14 @@ export class UsersService {
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
 
-    return this.http.post(this.config.baseUrl + this.resetPasswordUrl, { email: email }, options)
-      .map(res => {
+    return this.http.post(this.config.baseUrl + this.resetPasswordUrl, { email: email }, options).pipe(
+      map(() => {
         return true;
-      })
-      .catch(error => {
+      }),
+      catchError(error => {
         return observableThrowError(new Error(error.error.error_msg));
-      });
+      })
+    );
   }
 
   changePassword(password: string, verifPath: string): Observable<boolean> {
@@ -163,13 +168,14 @@ export class UsersService {
 
     return this.http.post(this.config.baseUrl + this.changePasswordUrl, {
       password: password, verifPath: verifPath
-    }, options)
-      .map(res => {
+    }, options).pipe(
+      map(() => {
         return true;
+      }),
+      catchError(() => {
+        return of(false);
       })
-      .catch(error => {
-        return Observable.of(false);
-      });
+    );
   }
 
   checkVerification(verifPath: string): Observable<boolean> {
@@ -179,28 +185,31 @@ export class UsersService {
 
     return this.http.post(this.config.baseUrl + this.checkVerificationUrl, {
       verifPath: verifPath
-    }, options)
-      .map(res => {
+    }, options).pipe(
+      map(() => {
         return true;
+      }),
+      catchError(() => {
+        return of(false);
       })
-      .catch(error => {
-        return Observable.of(false);
-      });
+    );
   }
 
   getAllUsers() {
     const options = { withCredentials: true };
 
-    return this.http.get(this.config.baseUrl + this.usersUrl, options)
-      .map(response => User.fromJsonArray(response));
+    return this.http.get(this.config.baseUrl + this.usersUrl, options).pipe(
+      map(response => User.fromJsonArray(response))
+    );
   }
 
   getUser(id: number) {
     const options = { withCredentials: true };
     const url = `${this.config.baseUrl}${this.usersUrl}/${id}`;
 
-    return this.http.get(url, options)
-      .map(response => User.fromJson(response));
+    return this.http.get(url, options).pipe(
+      map(response => User.fromJson(response))
+    );
   }
 
   updateUser(user: User) {
@@ -242,11 +251,12 @@ export class UsersService {
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
 
-    return this.http.post(this.config.baseUrl + this.usersUrl, user, options)
-      .map(response => User.fromJson(response))
-      .catch(error => {
+    return this.http.post(this.config.baseUrl + this.usersUrl, user, options).pipe(
+      map(response => User.fromJson(response)),
+      catchError(error => {
         return observableThrowError(new Error(error.error.email));
-      });
+      })
+    );
   }
 
   deleteUser(user: User) {
@@ -275,7 +285,7 @@ export class UsersService {
     return this.updateUser(clone);
   }
 
-  searchUsersByGroup(searchTerm: string) {
+  searchUsersByGroup(searchTerm: string): Observable<User> {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
     const usersSubject: Subject<User> = new Subject()
@@ -307,7 +317,7 @@ export class UsersService {
       console.warn('oboejs encountered a fail event while streaming');
     });
 
-    return usersSubject.map(data => { return User.fromJson(data); });
+    return usersSubject.pipe(map(data => { return User.fromJson(data); }));
   }
 
   bulkAddGroups(users: User[], groups: string[]) {

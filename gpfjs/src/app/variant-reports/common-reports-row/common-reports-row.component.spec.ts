@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { SearchableSelectComponent } from 'app/searchable-select/searchable-select.component';
 
 import { CommonReportsRowComponent } from './common-reports-row.component';
@@ -7,7 +7,7 @@ describe('CommonReportsRowComponent', () => {
   let component: CommonReportsRowComponent;
   let fixture: ComponentFixture<CommonReportsRowComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [CommonReportsRowComponent, SearchableSelectComponent]
     })

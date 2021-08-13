@@ -4,7 +4,14 @@ td {
   border: 1px solid #dddddd;
 }
 
-a, a:hover {
-  color: #0056b3;
+.link-td {
   cursor: pointer;
+}
+
+.link-td:hover {
+  text-decoration: underline;
+}
+
+.link {
+  color: #0056b3;
 }

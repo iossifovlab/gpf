@@ -17,6 +17,7 @@ export class AgpConfig {
 export class AgpGeneSetsCategory {
   category: string;
   displayName: string;
+  defaultVisible: boolean;
 
   @Type(() => AgpGeneSet)
   sets: AgpGeneSet[];
@@ -32,6 +33,7 @@ export class AgpGeneSet {
 export class AgpGenomicScoresCategory {
   category: string;
   displayName: string;
+  defaultVisible: boolean;
 
   @Type(() => AgpGenomicScore)
   scores: AgpGenomicScore[];
@@ -65,11 +67,13 @@ export class AgpDatasetStatistic {
   description: string;
   variantTypes: string[];
   scores: GenomicScore[];
+  defaultVisible: boolean;
 }
 
 export class AgpDatasetPersonSet {
   id: string;
   displayName: string;
+  collectionId: string;
   description: string;
   parentsCount: number;
   childrenCount: number;
@@ -88,6 +92,7 @@ export class AgpTableGeneSetsCategory {
   constructor(
     public category: string,
     public displayName: string,
+    public defaultVisible: boolean,
     public sets: AgpTableGeneSet[]
   ) {}
 }
@@ -105,6 +110,7 @@ export class AgpTableGenomicScoresCategory {
   constructor(
     public category: string,
     public displayName: string,
+    public defaultVisible: boolean,
     public scores: AgpTableGenomicScore[]
   ) {}
 }
@@ -132,6 +138,7 @@ export class AgpTableDatasetPersonSet {
   constructor(
     public id: string,
     public displayName: string,
+    public collectionId: string,
     public description: string,
     public parentsCount: number,
     public childrenCount: number,
@@ -146,6 +153,7 @@ export class AgpTableDatasetStatistic {
     public effects: string[],
     public category: string,
     public description: string,
+    public defaultVisible: boolean,
     public variantTypes: string[]
   ) {}
 }

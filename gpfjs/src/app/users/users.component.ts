@@ -5,6 +5,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Observable } from 'rxjs';
 import { RegistrationComponent } from '../registration/registration.component';
 import { ForgotPasswordComponent } from '../forgot-password/forgot-password.component';
+import { share, take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-users',
@@ -18,6 +19,7 @@ export class UsersComponent implements OnInit {
   hideDropdown = true;
   userInfo$: Observable<any>;
   showPasswordField = false;
+  loading = false;
 
   @ViewChild('dropdownButton') dropdownButton: ElementRef;
   @ViewChild('dialog') dialog: ElementRef;
@@ -34,15 +36,13 @@ export class UsersComponent implements OnInit {
 
   ngOnInit() {
     this.reloadUserData();
-    this.userInfo$ = this.usersService.getUserInfoObservable().share();
+    this.userInfo$ = this.usersService.getUserInfoObservable().pipe(share());
   }
 
   reloadUserData() {
-    this.usersService.getUserInfo()
-      .take(1)
-      .subscribe(() => {
-        // this.router.navigate(['.'], { relativeTo: this.currentRoute });
-      });
+    this.usersService.getUserInfo().pipe(take(1)).subscribe(() => {
+      // this.router.navigate(['.'], { relativeTo: this.currentRoute });
+    });
   }
 
   back() {
@@ -78,8 +78,12 @@ export class UsersComponent implements OnInit {
           this.errorMessage = undefined;
         } else {
           if (res['status'] === 401) {
-            this.showPasswordField = true;
-            this.errorMessage = 'Wrong password!';
+            this.loading = true;
+            setTimeout(() => {
+              this.loading = false;
+              this.showPasswordField = true;
+              this.errorMessage = 'Wrong password!';
+            }, 1000);
           } else if (res['status'] === 403) {
             this.showPasswordField = false;
             this.errorMessage = `Too many incorrect attempts! Please wait ${res['error']['lockout_time']} seconds!`;
@@ -90,10 +94,7 @@ export class UsersComponent implements OnInit {
   }
 
   logout() {
-    this.usersService.logout().subscribe(
-      (res) => {
-        this.reloadUserData();
-    });
+    this.usersService.logout().subscribe( () => { this.reloadUserData(); });
   }
 
   showRegister() {

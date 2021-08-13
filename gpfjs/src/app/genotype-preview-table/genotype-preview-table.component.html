@@ -4,7 +4,7 @@
             <gpf-table-column *ngFor="let column of columns" [columnWidth]="singleColumnWidth">
                 <gpf-table-header caption="{{ column.name }}">
                 </gpf-table-header>
-                <gpf-table-header *ngIf="'columns' in column">
+                <gpf-table-header>
                   <ng-container *ngFor="let slot of column.columns">
                     <gpf-table-subheader
                       *ngIf="slot.source !== 'pedigree'"

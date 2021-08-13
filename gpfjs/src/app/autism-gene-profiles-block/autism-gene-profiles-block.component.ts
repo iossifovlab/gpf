@@ -3,6 +3,8 @@ import { NgbDropdownMenu, NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { AgpConfig, AgpTableConfig, AgpTableDataset, AgpTableDatasetPersonSet } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { cloneDeep } from 'lodash';
+import { take } from 'rxjs/operators';
+import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-block',
@@ -12,6 +14,7 @@ import { cloneDeep } from 'lodash';
 export class AutismGeneProfilesBlockComponent implements OnInit {
   @ViewChild('nav') nav: NgbNav;
   @ViewChild(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu;
+  @ViewChild(MultipleSelectMenuComponent) multipleSelectMenuComponent: MultipleSelectMenuComponent; 
 
   geneTabs = new Set<string>();
   autismGeneToolConfig: AgpConfig;
@@ -47,12 +50,20 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.autismGeneProfilesService.getConfig().take(1).subscribe(config => {
+    this.autismGeneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
       this.autismGeneToolConfig = config;
       this.tableConfig = this.getTableConfig(config);
-      this.shownTableConfig = this.getTableConfig(config);
+      this.shownTableConfig = cloneDeep(this.getTableConfig(config));
+
+      this.shownTableConfig.geneSets = this.shownTableConfig.geneSets
+      .filter(geneSet => geneSet.defaultVisible === true);
+      this.shownTableConfig.genomicScores = this.shownTableConfig.genomicScores
+      .filter(genomicScore => genomicScore.defaultVisible === true);
+      this.shownTableConfig.datasets = this.shownTableConfig.datasets
+      .filter(dataset => dataset.defaultVisible === true);
+
       this.allColumns = this.getAllCategories(this.tableConfig);
-      this.shownColumns = this.getAllCategories(this.tableConfig);
+      this.shownColumns = this.getAllCategories(this.shownTableConfig);
     });
   }
 
@@ -173,6 +184,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
         const personSets = dataset.personSets.map(personSet => new AgpTableDatasetPersonSet(
           personSet.id,
           personSet.displayName,
+          personSet.collectionId,
           personSet.description,
           personSet.parentsCount,
           personSet.childrenCount,
@@ -185,6 +197,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   openDropdown() {
     this.ngbDropdownMenu.dropdown.open();
+    this.multipleSelectMenuComponent.focusSearchInput();
   }
 
   handleMultipleSelectMenuApplyEvent($event) {

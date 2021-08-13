@@ -7,7 +7,7 @@ import { GenomicScores } from './genomic-scores-block';
 import { Store} from '@ngxs/store';
 import { SetGenomicScores, GenomicScoresBlockState } from './genomic-scores-block.state';
 import { combineLatest, of } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, take } from 'rxjs/operators';
 import { StatefulComponent } from 'app/common/stateful-component';
 import { ValidateNested } from 'class-validator';
 
@@ -31,7 +31,8 @@ export class GenomicScoresBlockComponent extends StatefulComponent implements On
 
   ngOnInit() {
     super.ngOnInit();
-    this.genomicScoresBlockService.getGenomicScores().take(1).pipe(
+    this.genomicScoresBlockService.getGenomicScores().pipe(
+      take(1),
       switchMap(genomicScores => {
         return combineLatest(
           of(genomicScores),
@@ -75,6 +76,7 @@ export class GenomicScoresBlockComponent extends StatefulComponent implements On
   removeFilter(genomicScore: GenomicScoreState) {
     this.genomicScoresState.genomicScoresState = this.genomicScoresState
         .genomicScoresState.filter(gs => gs !== genomicScore);
+    this.updateState();
   }
 
   updateState() {

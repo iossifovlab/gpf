@@ -1,5 +1,5 @@
 import { HttpClientTestingModule} from '@angular/common/http/testing';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 import { GpfTableColumnComponent } from 'app/table/component/column.component';
 import { GpfTableContentComponent } from 'app/table/component/content.component';
@@ -18,7 +18,7 @@ describe('GroupsTableComponent', () => {
   let component: GroupsTableComponent;
   let fixture: ComponentFixture<GroupsTableComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         GroupsTableComponent,

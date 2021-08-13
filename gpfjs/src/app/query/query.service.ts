@@ -12,6 +12,7 @@ import { ConfigService } from '../config/config.service';
 import { GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
 import { GeneViewSummaryAllelesArray } from '../gene-view/gene';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { map } from 'rxjs/operators';
 
 @Injectable()
 export class QueryService {
@@ -149,7 +150,7 @@ export class QueryService {
 
     return this.http
       .post(this.config.baseUrl + this.saveQueryEndpoint, data, options)
-      .map(response => response);
+      .pipe(map(response => response));
   }
 
   loadQuery(uuid: string) {
@@ -157,7 +158,7 @@ export class QueryService {
 
     return this.http
       .post(this.config.baseUrl + this.loadQueryEndpoint, { uuid: uuid }, options)
-      .map(response => response);
+      .pipe(map(response => response));
   }
 
   deleteQuery(uuid: string) {
@@ -165,7 +166,7 @@ export class QueryService {
 
     return this.http
       .post(this.config.baseUrl + this.deleteQueryEndpoint, { uuid: uuid }, options)
-      .map(response => response);
+      .pipe(map(response => response));
   }
 
   getLoadUrl(uuid: string) {
@@ -191,13 +192,13 @@ export class QueryService {
 
     return this.http
       .post(this.config.baseUrl + this.userSaveQueryEndpoint, data, options)
-      .map(response => response);
+      .pipe(map(response => response));
   }
 
   collectUserSavedQueries() {
     const options = { withCredentials: true };
     return this.http
       .get(this.config.baseUrl + this.userCollectQueriesEndpoint, options)
-      .map(response => response);
+      .pipe(map(response => response));
   }
 }

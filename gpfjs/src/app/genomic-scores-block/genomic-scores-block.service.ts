@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 
 import { GenomicScores } from './genomic-scores-block';
 import { ConfigService } from '../config/config.service';
+import { map } from 'rxjs/operators';
 
 @Injectable()
 export class GenomicScoresBlockService {
@@ -17,9 +18,10 @@ export class GenomicScoresBlockService {
 
   getGenomicScores(): Observable<GenomicScores[]> {
     return this.http
-      .get(this.config.baseUrl + this.genomicScoresUrl)
-      .map((res: any) => {
-        return GenomicScores.fromJsonArray(res);
-      });
+      .get(this.config.baseUrl + this.genomicScoresUrl).pipe(
+        map((res: any) => {
+          return GenomicScores.fromJsonArray(res);
+        })
+      );
   }
 }

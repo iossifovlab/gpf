@@ -2,7 +2,8 @@ import { Input, Component, OnInit, OnChanges, ViewChild, Output, EventEmitter, S
 import * as d3 from 'd3';
 // tslint:disable-next-line:import-blacklist
 import { Subject } from 'rxjs';
-import 'rxjs/add/operator/debounceTime';
+import { debounceTime } from 'rxjs/operators';
+
 
 @Component({
   selector: 'gpf-histogram',
@@ -65,13 +66,13 @@ export class HistogramComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     this.rangeStartSubject
-    .debounceTime(100)
+    .pipe(debounceTime(100))
     .subscribe((start) => {
       this.rangeStartChange.emit(start);
     });
 
     this.rangeEndSubject
-    .debounceTime(100)
+    .pipe(debounceTime(100))
     .subscribe((end) => {
       this.rangeEndChange.emit(end);
     });
@@ -449,6 +450,7 @@ export class HistogramComponent implements OnInit, OnChanges {
   }
 
   get viewBox(): string {
-    return `0 0 ${this.width} ${this.height}`;
+    const pos = this.showMinMaxInputWithDefaultValue ? '0 0' : '-8 -8';
+    return `${pos} ${this.width} ${this.height}`;
   }
 }

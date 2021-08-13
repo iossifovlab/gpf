@@ -8,6 +8,7 @@ import { VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable,
          DeNovoData, PedigreeTable, PeopleCounter, PeopleSex } from './variant-reports';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { map, share, switchMap, take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-variant-reports',
@@ -39,9 +40,10 @@ export class VariantReportsComponent implements OnInit, OnChanges {
   ) { }
 
   ngOnInit() {
-    let datasetId$ = this.route.parent.params
-      .take(1)
-      .map(params => <string>params['dataset']);
+    let datasetId$ = this.route.parent.params.pipe(
+      take(1),
+      map(params => <string>params['dataset'])
+    );
 
     this.route.parent.params.subscribe(
       (params: Params) => {
@@ -54,10 +56,12 @@ export class VariantReportsComponent implements OnInit, OnChanges {
     this.selectedDataset$.subscribe(
       dataset => {
         if (dataset.accessRights) {
-          this.variantReport$ = datasetId$.switchMap(datasetId =>
-            this.variantReportsService.getVariantReport(datasetId)).share();
+          this.variantReport$ = datasetId$.pipe(
+            switchMap(datasetId => this.variantReportsService.getVariantReport(datasetId)),
+            share()
+          );
 
-          this.variantReport$.take(1).subscribe(params => {
+          this.variantReport$.pipe(take(1)).subscribe(params => {
             this.pedigreeTables = params.familyReport.familiesCounters.map(
               familiesCounters => new PedigreeTable(
                   this.chunkPedigrees(familiesCounters.familyCounter),

@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { SmallRemoveButtonComponent } from './small-remove-button.component';
 
@@ -6,7 +6,7 @@ describe('SmallRemoveButtonComponent', () => {
   let component: SmallRemoveButtonComponent;
   let fixture: ComponentFixture<SmallRemoveButtonComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ SmallRemoveButtonComponent ]
     })

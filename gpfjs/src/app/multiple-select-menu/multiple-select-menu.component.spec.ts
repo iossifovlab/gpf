@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 
@@ -21,7 +21,7 @@ describe('MultipleSelectMenuComponent', () => {
   let component: MultipleSelectMenuComponent;
   let fixture: ComponentFixture<MultipleSelectMenuComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [MultipleSelectMenuComponent],
       imports: [Ng2SearchPipeModule, FormsModule]
@@ -42,23 +42,12 @@ describe('MultipleSelectMenuComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should focus search on changes', () => {
-    const focusSearchInputSpy = spyOn(component, 'focusSearchInput');
-    component.focusInput = false;
-
-    component.ngOnChanges();
-    expect(focusSearchInputSpy).not.toHaveBeenCalled();
-
-    component.focusInput = true;
-    component.ngOnChanges();
-    expect(focusSearchInputSpy).toHaveBeenCalledTimes(1);
-  });
-
   it('should initialize', () => {
     component['checkboxDataArray'] = undefined;
     component['checkUncheckAllButtonName'] = 'Uncheck all';
 
     const areAllUncheckedSpy = spyOn(component, 'areAllUnchecked');
+
     areAllUncheckedSpy.and.returnValue(false);
 
     component.ngOnInit();

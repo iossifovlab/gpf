@@ -5,6 +5,7 @@ import { ConfigService } from 'app/config/config.service';
 import { plainToClass } from 'class-transformer';
 // tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -20,21 +21,23 @@ export class AutismGeneProfilesService {
 
   getConfig(): Observable<AgpConfig> {
     return this.http
-    .get(this.config.baseUrl + this.configUrl)
-    .map(res => {
-      if (Object.keys(res).length === 0) {
-        return;
-      }
-      return plainToClass(AgpConfig, res);
-    });
+    .get(this.config.baseUrl + this.configUrl).pipe(
+      map(res => {
+        if (Object.keys(res).length === 0) {
+          return;
+        }
+        return plainToClass(AgpConfig, res);
+      })
+    );
   }
 
   getGene(geneSymbol: string): Observable<AgpGene> {
     return this.http
-    .get(this.config.baseUrl + this.genesUrl + geneSymbol)
-    .map(res => {
-      return plainToClass(AgpGene, res);
-    });
+    .get(this.config.baseUrl + this.genesUrl + geneSymbol).pipe(
+      map(res => {
+        return plainToClass(AgpGene, res);
+      })
+    );
   }
 
   getGenes(page: number, searchString?: string, sortBy?: string, order?: string): Observable<AgpGene[]> {
@@ -55,11 +58,11 @@ export class AutismGeneProfilesService {
 
     url += `?${params}`;
 
-    return this.http
-      .get(url)
-      .map(res => {
+    return this.http.get(url).pipe(
+      map(res => {
         return (res as Array<Object>)
           .map(gene => plainToClass(AgpGene, gene));
-      });
+      })
+    );
   }
 }

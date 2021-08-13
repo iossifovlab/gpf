@@ -9,6 +9,7 @@ import * as _ from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
+import { map, take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-datasets',
@@ -52,54 +53,91 @@ export class DatasetsComponent implements OnInit {
       this.registerAlertVisible = !selectedDataset.accessRights;
     });
 
-    this.datasets$
-      .take(1)
-      .subscribe(datasets => {
-        if (!this.datasetsService.hasSelectedDataset()) {
-          this.selectDataset(datasets[0]);
-        } else {
-          if (!this.isToolSelected()) {
-            this.datasetsService.getSelectedDataset().take(1).subscribe(dataset => {
-              this.router.navigate(['/', 'datasets', dataset.id, this.findFirstTool(dataset)]);
-            });
-          }
-        }
-      });
+    this.datasets$.pipe(take(1)).subscribe(datasets => {
+      if (!this.datasetsService.hasSelectedDataset()) {
+        this.selectDataset(datasets[0]);
+      } else if (!this.isToolSelected()) {
+        this.selectedDataset$.pipe(take(1)).subscribe(dataset => {
+          this.router.navigate(['/', 'datasets', dataset.id, this.findFirstTool(dataset)]);
+        });
+      } else {
+        this.selectedDataset$.pipe(take(1)).subscribe(dataset => {
+          const url = this.router.url.split('/');
+          const toolName = url[url.indexOf('datasets') + 2];
 
-    this.usersService.getUserInfoObservable()
-      .subscribe(() => {
-        this.datasetsService.reloadSelectedDataset();
-      });
+          if (!this.isToolEnabled(dataset, toolName)) {
+            this.router.navigate(['/', 'datasets', dataset.id, this.findFirstTool(dataset)]);
+          }
+        });
+      }
+    });
+
+    this.usersService.getUserInfoObservable().subscribe(() => {
+      this.datasetsService.reloadSelectedDataset();
+    });
 
     this.datasetsService.getPermissionDeniedPrompt().subscribe(
       aprompt => this.permissionDeniedPrompt = aprompt
     );
   }
 
+  private isToolEnabled(dataset: Dataset, toolName: string): boolean {
+    let result: boolean;
+
+    switch (toolName) {
+      case 'dataset-description':
+        result = dataset.description !== undefined ? true : false;
+        break;
+      case 'dataset-statistics':
+        result = dataset.commonReport['enabled'];
+        break;
+      case 'genotype-browser':
+        result = (dataset.genotypeBrowser && dataset.genotypeBrowserConfig) !== undefined ? true : false;
+        break;
+      case 'phenotype-browser':
+        result = dataset.phenotypeBrowser;
+        break;
+      case 'phenotype-tool':
+        result = dataset.phenotypeTool;
+        break;
+      case 'enrichment-tool':
+        result = dataset.enrichmentTool;
+        break;
+      case 'gene-browser':
+        result = dataset.geneBrowser?.enabled;
+        break;
+    }
+
+    return result;
+  }
 
   isToolSelected(): boolean {
     return this.router.url.split('/').some(str => Object.values(toolPageLinks).includes(str));
   }
 
-  findFirstTool(selectedDataset: Dataset) {
+  findFirstTool(selectedDataset: Dataset): string {
+    let firstTool = '';
+
     if (selectedDataset.description) {
-      return toolPageLinks.datasetDescription;
+      firstTool = toolPageLinks.datasetDescription;
     } else if (selectedDataset.commonReport['enabled']) {
-      return toolPageLinks.datasetStatistics;
+      firstTool = toolPageLinks.datasetStatistics;
+    } else if (selectedDataset.geneBrowser) {
+      firstTool = toolPageLinks.geneBrowser;
     } else if (selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig) {
-      return toolPageLinks.genotypeBrowser;
+      firstTool = toolPageLinks.genotypeBrowser;
     } else if (selectedDataset.phenotypeBrowser) {
-      return toolPageLinks.phenotypeBrowser;
+      firstTool = toolPageLinks.phenotypeBrowser;
     } else if (selectedDataset.enrichmentTool) {
-      return toolPageLinks.enrichmentTool;
+      firstTool = toolPageLinks.enrichmentTool;
     } else if (selectedDataset.phenotypeTool) {
-      return toolPageLinks.phenotypeTool;
-    } else {
-      return '';
+      firstTool = toolPageLinks.phenotypeTool;
     }
+
+    return firstTool;
   }
 
-  createDatasetHierarchy() {
+  createDatasetHierarchy(): void {
     this.datasets$.subscribe((datasets) => {
       this.datasetTrees = new Array<DatasetNode>();
       datasets.forEach(d => {
@@ -111,22 +149,22 @@ export class DatasetsComponent implements OnInit {
   }
 
   filterHiddenGroups(datasets: Observable<Dataset[]>): Observable<Dataset[]> {
-    return datasets.map((d) =>
+    return datasets.pipe(map((d) =>
       d.filter(
         (dataset) =>
           dataset.groups.find((g) => g.name === 'hidden') == null ||
           dataset.accessRights
       )
-    );
+    ));
   }
 
-  selectDataset(dataset: Dataset) {
+  selectDataset(dataset: Dataset): void {
     if (dataset !== undefined) {
       this.router.navigate(['/', 'datasets', dataset.id, this.findFirstTool(dataset)]);
     }
   }
 
-  routeChange() {
+  routeChange(): void {
     /* In order to have state separation between the dataset tools,
     we clear the state if the previous url is from a different dataset tool */
     if (DatasetsComponent.previousUrl !== this.router.url && DatasetsComponent.previousUrl.startsWith('/datasets')) {

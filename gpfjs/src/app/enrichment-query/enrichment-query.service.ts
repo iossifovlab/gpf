@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 
 import { ConfigService } from '../config/config.service';
 import { EnrichmentResults } from './enrichment-result';
+import { map } from 'rxjs/operators';
 
 @Injectable()
 export class EnrichmentQueryService {
@@ -20,8 +21,8 @@ export class EnrichmentQueryService {
     const options = { headers: this.headers, withCredentials: true };
 
     return this.http.post(this.config.baseUrl + this.genotypePreviewUrl, filter, options)
-      .map(res => {
+      .pipe(map(res => {
         return EnrichmentResults.fromJson(res);
-      });
+      }));
   }
 }

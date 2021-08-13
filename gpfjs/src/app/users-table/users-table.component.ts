@@ -7,6 +7,7 @@ import { Observable, ReplaySubject } from 'rxjs';
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 import { SelectableUser } from '../user-management/user-management';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-users-table',
@@ -39,7 +40,7 @@ export class UsersTableComponent implements OnInit, OnChanges {
   }
 
   removeGroup(user: User, group: string) {
-    this.usersService.removeUserGroup(user, group).take(1)
+    this.usersService.removeUserGroup(user, group).pipe(take(1))
       .subscribe(() => {
         this.zone.runOutsideAngular(() => {
           window.location.reload();

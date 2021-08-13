@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NgxsModule } from '@ngxs/store';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 
@@ -9,7 +9,7 @@ describe('PersonFiltersComponent', () => {
   let component: PersonFiltersComponent;
   let fixture: ComponentFixture<PersonFiltersComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ PersonFiltersComponent, ErrorsAlertComponent ],
       imports: [NgxsModule.forRoot([PersonFiltersState])],

@@ -1,6 +1,6 @@
 import { Component, ViewChild, SimpleChanges, SimpleChange } from '@angular/core';
 import { By } from '@angular/platform-browser';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Observable, ReplaySubject, of } from 'rxjs';
 import * as d3 from 'd3';
 
@@ -63,7 +63,7 @@ describe('HistogramComponent', () => {
   let component: TestHostComponent;
   let fixture: ComponentFixture<TestHostComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       imports: [ FormsModule ],
       declarations: [
@@ -93,13 +93,13 @@ describe('HistogramComponent', () => {
     expect(d3.select('svg').attr('height')).toEqual('145');
   });
 
-  it('should render the correct amount of bars', async(() => {
+  it('should render the correct amount of bars', waitForAsync(() => {
     fixture.whenStable().then(() => {
       expect(d3.select('svg').selectAll('rect').nodes().length).toEqual(4);
     });
   }));
 
-  it('should redraw the histogram on changes', async(() => {
+  it('should redraw the histogram on changes', waitForAsync(() => {
     spyOn(component.histogramEl, 'redrawHistogram').and.callThrough();
     const bins = [7, 8, 9, 10];
     const bars = [8, 9, 10, 11];
@@ -113,7 +113,7 @@ describe('HistogramComponent', () => {
     });
   }));
 
-  it('should render a correct label with the sum of bars within the range', async(() => {
+  it('should render a correct label with the sum of bars within the range', waitForAsync(() => {
     fixture.whenStable().then(() => {
       const sumOfBarsLabelEl = fixture.debugElement.query(By.css('#sumOfBarsLabel'));
       expect(sumOfBarsLabelEl).not.toBeNull();
@@ -121,7 +121,7 @@ describe('HistogramComponent', () => {
     });
   }));
 
-  it('should render sliders', async(() => {
+  it('should render sliders', waitForAsync(() => {
     const sliderEls = fixture.debugElement.queryAll((el) => el.nativeElement.attributes.getNamedItem('gpf-histogram-range-selector-line'));
     expect(sliderEls.length).toBe(2);
   }));
@@ -134,7 +134,7 @@ describe('HistogramComponent', () => {
     expect(sliderLabelsText).toEqual(['2 (14.29%)', '5 (35.71%)', '7 (50.00%)']);
   });
 
-  it('should not render range input fields if less than 10 bins', async(() => {
+  it('should not render range input fields if less than 10 bins', waitForAsync(() => {
     const rangeInputElFrom = fixture.debugElement.query(By.css('.histogram-from'));
     const rangeInputElTo = fixture.debugElement.query(By.css('.histogram-to'));
     expect(rangeInputElFrom).toBeNull();
@@ -146,7 +146,7 @@ describe('HistogramComponentManyBins', () => {
   let component: TestHostComponentManyBins;
   let fixture: ComponentFixture<TestHostComponentManyBins>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       imports: [ FormsModule ],
       declarations: [

@@ -5,7 +5,7 @@ import { combineLatest, of } from 'rxjs';
 import { IsNotEmpty } from 'class-validator';
 import { Store } from '@ngxs/store';
 import { SetEnrichmentModels, EnrichmentModelsState } from './enrichment-models.state';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, take } from 'rxjs/operators';
 import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
@@ -35,24 +35,22 @@ export class EnrichmentModelsComponent extends StatefulComponent implements OnIn
 
   ngOnInit() {
     super.ngOnInit();
-    this.enrichmentModelsService.getBackgroundModels(this.selectedDatasetId)
-      .take(1).pipe(
-        switchMap(res => {
-          return combineLatest(
-            of(res), this.store.selectOnce(EnrichmentModelsState)
-          );
-        })
-      ).subscribe(([res, state]) => {
-        this.backgrounds = res.backgrounds;
-        this.countings = res.countings;
-        if (state.enrichmentBackgroundModel || state.enrichmentCountingModel) {
-          this.background = res.backgrounds.find(bg => bg.id === state.enrichmentBackgroundModel);
-          this.counting = res.countings.find(ct => ct.id === state.enrichmentCountingModel);
-        } else {
-          this.background = res.backgrounds[0];
-          this.counting = res.countings[0];
-          this.store.dispatch(new SetEnrichmentModels(this.background.id, this.counting.id));
-        }
+    this.enrichmentModelsService.getBackgroundModels(this.selectedDatasetId).pipe(
+      take(1),
+      switchMap(res => {
+        return combineLatest([of(res), this.store.selectOnce(EnrichmentModelsState)]);
+      })
+    ).subscribe(([res, state]) => {
+      this.backgrounds = res.backgrounds;
+      this.countings = res.countings;
+      if (state.enrichmentBackgroundModel || state.enrichmentCountingModel) {
+        this.background = res.backgrounds.find(bg => bg.id === state.enrichmentBackgroundModel);
+        this.counting = res.countings.find(ct => ct.id === state.enrichmentCountingModel);
+      } else {
+        this.background = res.backgrounds[0];
+        this.counting = res.countings[0];
+        this.store.dispatch(new SetEnrichmentModels(this.background.id, this.counting.id));
+      }
     });
   }
 

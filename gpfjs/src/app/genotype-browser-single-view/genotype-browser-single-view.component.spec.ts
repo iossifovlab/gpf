@@ -1,5 +1,5 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
@@ -19,7 +19,7 @@ describe('GenotypeBrowserSingleViewComponent', () => {
 
   const activatedRoute = new MockActivatedRoute();
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [GenotypeBrowserSingleViewComponent],
       providers: [

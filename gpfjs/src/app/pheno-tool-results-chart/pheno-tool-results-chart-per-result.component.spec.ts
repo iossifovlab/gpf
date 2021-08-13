@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { PhenoToolResultsChartPerResultComponent } from './pheno-tool-results-chart-per-result.component';
 
@@ -6,7 +6,7 @@ describe('PhenoToolResultsChartPerResultComponent', () => {
   let component: PhenoToolResultsChartPerResultComponent;
   let fixture: ComponentFixture<PhenoToolResultsChartPerResultComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [PhenoToolResultsChartPerResultComponent]
     })
