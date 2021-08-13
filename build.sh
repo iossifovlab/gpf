@@ -112,6 +112,10 @@ function main() {
 
     build_run rm -rvf ./data/ ./import/ ./downloads ./results
     build_run_local mkdir ./data/ ./import/ ./downloads ./results
+
+    build_run_local rm -rvf ./test-results/
+    build_run_local mkdir -p ./test-results/
+
   }
 
   local gpf_dev_image="gpf-dev"
@@ -493,8 +497,6 @@ EOT'
           --cov /code/wdae/ \
           wdae || true'
 
-    build_run_local rm -rvf ./test-results/
-    build_run_local mkdir -p ./test-results/
     build_run_local cp ./results/wdae-junit.xml ./results/dae-junit.xml ./test-results/
   }
 
