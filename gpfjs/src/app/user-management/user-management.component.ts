@@ -119,7 +119,7 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
-  private focusSearchBox() {
+  public focusSearchBox() {
     this.waitForSearchBoxToLoad().then(() => {
       this.searchBox.nativeElement.focus();
     });
