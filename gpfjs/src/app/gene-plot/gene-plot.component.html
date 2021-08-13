@@ -1,0 +1,37 @@
+<div id="controls-bar">
+  <span>
+    <button type="button" title="Undo (Ctrl+Z)"
+      [disabled]="false" (click)="null">&#x021FD;</button>
+    <button type="button" title="Redo (Ctrl+Y)"
+      [disabled]="false" (click)="null">&#x021FE;</button>
+    <button type="button" title="Reset (Double-click)"
+      (click)="null">&#x021BB;</button>
+  </span>
+
+  <span>
+    <label style="user-select: none">
+      <input type="checkbox" [checked]="!drawTranscripts" (change)="drawTranscripts = !drawTranscripts; redraw()">
+      Hide transcripts
+    </label>
+    <label style="user-select: none">
+      <input type="checkbox" [checked]="condenseIntrons" (change)="null">
+      Condense introns
+    </label>
+  </span>
+
+  <span>
+    {{ gene?.gene }}
+  </span>
+
+  <span>
+    <span>
+      Summary alleles: ? / {{ this.variantsArray?.totalSummaryAllelesCount }}
+    </span>
+    <span>
+      Family variants: ? / {{ this.variantsArray?.totalFamilyVariantsCount }}
+    </span>
+  </span>
+</div>
+
+<div id="svg-container">
+</div>

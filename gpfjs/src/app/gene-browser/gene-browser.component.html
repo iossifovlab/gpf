@@ -3,7 +3,7 @@
     <div class="effect-card card">
       <div style="font-family: Roboto; font-weight: 500; border-bottom: none;" class="card-header card-title">Gene Symbols</div>
       <div class="card-block">
-        <gpf-gene-symbol-with-search (inputClickEvent)="hideResults = true" [hideDropdown]="hideDropdown"></gpf-gene-symbol-with-search>
+        <gpf-gene-symbol-with-search [hideDropdown]="hideDropdown"></gpf-gene-symbol-with-search>
         <div [hidden]="!showError" class="alert alert-danger" role="alert" style="display: inline-block; margin: 20px; margin-top: 0px; width: 45%">
           No such gene found!
         </div>
@@ -18,6 +18,13 @@
     <div style="margin-top: 15px">
       <input type="button" style="width: 75px" class="btn btn-md btn-primary" value="Go" (click)="submitGeneRequest()">
     </div>
+
+    <gpf-gene-plot
+      [gene]="selectedGene"
+      [variantsArray]="summaryVariantsArray"
+      [frequencyDomain]="[0.001, 100]"
+      [yAxisLabel]="PLACEHOLDER">
+    </gpf-gene-plot>
 
     <div *ngIf="!hideResults">
       <div class="row" style="margin-left: 0px; margin-right: 0px">

@@ -187,6 +187,7 @@ import { RegionsFilterState } from './regions-filter/regions-filter.state';
 import { CheckboxListComponent, DisplayNamePipe } from './checkbox-list/checkbox-list.component';
 import { ErrorsState } from './common/errors.state';
 import { toolPageLinks } from './datasets/datasets';
+import { GenePlotComponent } from './gene-plot/gene-plot.component';
 
 const appRoutes: Routes = [
   {
@@ -398,6 +399,7 @@ const appRoutes: Routes = [
     AutismGeneProfileSingleViewWrapperComponent,
     CheckboxListComponent,
     DisplayNamePipe,
+    GenePlotComponent,
   ],
   imports: [
     BrowserModule,

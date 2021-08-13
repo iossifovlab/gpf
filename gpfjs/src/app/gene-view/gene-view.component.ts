@@ -183,7 +183,7 @@ export class GeneViewComponent implements OnInit {
       this.drawTransmittedIcons();
       this.drawDenovoIcons();
 
-      this.svgElement = d3.select('#svg-container')
+      this.svgElement = d3.select('#svg-container1')
         .append('svg')
         .append('g')
         .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
@@ -413,18 +413,20 @@ export class GeneViewComponent implements OnInit {
     this.redrawAndUpdateTable();
   }
 
+
+
   checkHideTranscripts(checked: boolean) {
     const height = this.svgHeightFreqRaw + 85;
     const heightWithTranscripts = height + (this.gene.transcripts.length + 1) * 25;
 
     if (checked) {
       this.transcriptsElement.attr('display', 'none');
-      d3.select('#svg-container svg')
+      d3.select('#svg-container1 svg')
       .attr('viewBox', '0 0 ' + (this.svgWidth + this.options.margin.left + this.options.margin.right).toString() +
       ' ' + height.toString());
     } else {
       this.transcriptsElement.attr('display', 'block');
-      d3.select('#svg-container svg')
+      d3.select('#svg-container1 svg')
       .attr('viewBox', '0 0 ' + (this.svgWidth + this.options.margin.left + this.options.margin.right).toString() +
       ' ' + heightWithTranscripts.toString());
     }
@@ -834,7 +836,7 @@ export class GeneViewComponent implements OnInit {
   drawGene() {
     if (this.additionalZeroAxisHeight !== undefined) {
       this.svgHeight = this.svgHeightFreqRaw + (this.gene.transcripts.length + 1) * 25 + 70;
-      d3.select('#svg-container').selectAll('svg').remove();
+      d3.select('#svg-container1').selectAll('svg').remove();
 
       let width = this.svgWidth + this.options.margin.left + this.options.margin.right;
       let height = this.svgHeightFreqRaw + 85;
@@ -842,7 +844,7 @@ export class GeneViewComponent implements OnInit {
         height += (this.gene.transcripts.length + 1) * 25;
       }
 
-      this.svgElement = d3.select('#svg-container')
+      this.svgElement = d3.select('#svg-container1')
         .append('svg')
         .attr('viewBox', `0 0 ${width} ${height}`)
         .append('g')
