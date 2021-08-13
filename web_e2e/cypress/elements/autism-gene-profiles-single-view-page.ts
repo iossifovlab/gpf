@@ -13,6 +13,18 @@ export class AutismGeneProfilesSingleView extends BasePage {
     return cy.get('#gene-browser-link');
   }
 
+  get UCSCLink() {
+    return cy.get('a.link-external-page').contains('UCSC genome browser');
+  }
+
+  get geneCardsLink() {
+    return cy.get('a.link-external-page').contains('GeneCards');
+  }
+
+  get pubmedLink() {
+    return cy.get('a.link-external-page').contains('Pubmed');
+  }
+
   get autismScoresTable() {
     return cy.get('#autism_scores');
   }

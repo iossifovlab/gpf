@@ -21,9 +21,9 @@ describe('App tests', () => {
     page.logout();
   });
 
-  it('should toggle sidenav, click on the \'Datasets\' button and navigate to \'/datasets/ALL_genotypes/genotype-browser\'', () => {
+  it('should toggle sidenav, click on the \'Datasets\' button and navigate to \'/datasets/ALL_genotypes/gene-browser\'', () => {
     const baseUrl = Cypress.config().baseUrl;
-    const expectedUrl = `${baseUrl}datasets/ALL_genotypes/${toolPageLinks.genotypeBrowser}`;
+    const expectedUrl = `${baseUrl}datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`;
 
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.datasets);
