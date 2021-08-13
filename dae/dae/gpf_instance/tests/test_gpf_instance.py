@@ -24,7 +24,6 @@ def test_init(local_gpf_instance):
     assert local_gpf_instance._score_config
     assert local_gpf_instance._scores_factory
     assert local_gpf_instance._variants_db
-    assert local_gpf_instance._common_report_facade
     assert local_gpf_instance.gene_sets_db
     assert local_gpf_instance.denovo_gene_sets_db is not None
     assert local_gpf_instance._background_facade
@@ -44,7 +43,6 @@ def test_eager_init(gpf_instance):
     assert local_gpf_instance._score_config
     assert local_gpf_instance._scores_factory
     assert local_gpf_instance._variants_db
-    assert local_gpf_instance._common_report_facade
     assert local_gpf_instance.gene_sets_db
     assert local_gpf_instance.denovo_gene_sets_db is not None
     assert local_gpf_instance._background_facade

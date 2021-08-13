@@ -30,11 +30,6 @@ def local_gpf_instance(gpf_instance):
 
 
 @pytest.fixture(scope="session")
-def common_report_facade(local_gpf_instance):
-    return local_gpf_instance._common_report_facade
-
-
-@pytest.fixture(scope="session")
 def study1(local_gpf_instance):
     return local_gpf_instance.get_genotype_data("Study1")
 
@@ -102,16 +97,6 @@ def denovo_variants_ds1(genotype_data_group1):
 
     assert len(denovo_variants) == 8
     return denovo_variants
-
-
-@pytest.fixture(scope="session")
-def common_reports_config(common_report_facade):
-    return common_report_facade.get_common_report_config("Study1")
-
-
-@pytest.fixture(scope="session")
-def generate_common_reports(common_report_facade):
-    common_report_facade.generate_all_common_reports()
 
 
 @pytest.fixture(scope="session")
