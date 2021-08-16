@@ -59,7 +59,7 @@ function main() {
   local gpf_dev_image="gpf-dev"
   local gpf_dev_image_ref
   # create gpf docker image
-  build_stage "Create $gpf_dev_image docker image"
+  build_stage "Create gpf-dev docker image"
   {
     local docker_img_seqpipe_anaconda_base_tag
     docker_img_seqpipe_anaconda_base_tag="$(e docker_img_seqpipe_anaconda_base_tag)"
