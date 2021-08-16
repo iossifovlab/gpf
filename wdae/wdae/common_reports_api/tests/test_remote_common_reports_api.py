@@ -17,6 +17,7 @@ def test_remote_variant_reports(admin_client, remote_settings):
     assert data
 
 
+@pytest.mark.xfail(reason="unstable test (maybe depends on other tests if it will fail)")
 def test_remote_families_data_download(admin_client, remote_settings):
     url = "/api/v3/common_reports/families_data/TEST_REMOTE_iossifov_2014"
     response = admin_client.get(url)

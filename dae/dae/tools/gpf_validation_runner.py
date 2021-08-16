@@ -589,30 +589,42 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
         return params
 
     def _execute_test_case(self, case, study):
-        study_id = self.expectations["study"]
-        params = self._case_query_params(case)
+        try:
+            study_id = self.expectations["study"]
+            params = self._case_query_params(case)
 
-        if study is None:
+            if study is None:
+                test_result = TestResult(
+                    expectation=self.expectations,
+                    case=case,
+                    test_for="count",
+                    params=params,
+                    result=None,
+                )
+                test_result.message = f"can't find study {study_id}",
+                test_result.status = TestStatus.ERROR
+                return (test_result, )
+
+            variants = list(study.query_variants(**params))
+
+            count_result = self._execute_count_test_case(
+                case, params, variants)
+
+            variants_result = self._execute_variants_test_case(
+                case, params, variants)
+
+            return (count_result, variants_result)
+        except Exception as ex:
             test_result = TestResult(
                 expectation=self.expectations,
                 case=case,
-                test_for="count",
+                test_for="count/variants",
                 params=params,
                 result=None,
             )
-            test_result.message = f"can't find study {study_id}",
+            test_result.message = f"unexpected error {study_id}: {ex}",
             test_result.status = TestStatus.ERROR
             return (test_result, )
-
-        variants = list(study.query_variants(**params))
-
-        count_result = self._execute_count_test_case(
-            case, params, variants)
-
-        variants_result = self._execute_variants_test_case(
-            case, params, variants)
-
-        return (count_result, variants_result)
 
     def _validate_genotype_browser(self):
         study_id = self.expectations["study"]

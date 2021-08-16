@@ -3,37 +3,37 @@ Created on Apr 21, 2017
 
 @author: lubo
 """
-from django.conf.urls import url
+from django.urls import re_path
 from pheno_browser_api import views
 
 
 urlpatterns = [
-    url(
+    re_path(
         r"^/config/?$",
         views.PhenoConfigView.as_view(),
         name="pheno_browser_config",
     ),
-    url(
+    re_path(
         r"^/instruments/?$",
         views.PhenoInstrumentsView.as_view(),
         name="pheno_browser_instruments",
     ),
-    url(
+    re_path(
         r"^/measures_info/?$",
         views.PhenoMeasuresInfoView.as_view(),
         name="pheno_browser_measures_info",
     ),
-    url(
+    re_path(
         r"^/measures/?$",
         views.PhenoMeasuresView.as_view(),
         name="pheno_browser_measures",
     ),
-    url(
+    re_path(
         r"^/measure_description/?$",
         views.PhenoMeasureDescriptionView.as_view(),
         name="pheno_browser_measure_description",
     ),
-    url(
+    re_path(
         r"^/download/?$",
         views.PhenoMeasuresDownload.as_view(),
         name="pheno_browser_download",
