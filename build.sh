@@ -38,69 +38,7 @@ function main() {
   libmain_save_build_env_on_exit
   libbuild_init stage:"$stage" registry.seqpipe.org
 
-  # parse version and run validation checks
-  {
-
-    function main_parse_major() {
-      local major
-      major="$(sed -e 's/^\([^.]\+\).\([^.]\+\).*$/\1/' <<<"$1")"
-
-      if ! check_digits "$major"; then
-        crit "failed to extract major version: got: '$major' from '$1'"
-        return 1
-      fi
-    }
-
-    function main_parse_minor() {
-      local minor
-      minor="$(sed -e 's/^\([^.]\+\).\([^.]\+\).*$/\2/' <<<"$1")"
-
-      if ! check_digits "$minor"; then
-        crit "failed to extract minor version: got: '$minor' from '$1'"
-        return 1
-      fi
-    }
-
-    # parse the defined version in the repo
-    {
-      local version
-      version="$(cat VERSION)"
-      notify "local version is: $version"
-
-      local version_major
-      version_major="$(main_parse_major "$version")"
-
-      local version_minor
-      version_minor="$(main_parse_minor "$version")"
-    }
-
-    # parse the version according to git
-    {
-      local git_version
-      git_version="$(ee git_describe)"
-
-      notify "git version is: $git_version"
-
-      local git_version_major
-      git_version_major="$(main_parse_major "${git_version#v}")"
-
-      local git_version_minor
-      git_version_minor="$(main_parse_minor "${git_version#v}")"
-    }
-
-    # error out if there's difference between the major and the minor versions of the two differently obtained versions
-    {
-      if [ "$version_major" != "$git_version_major" ]; then
-        crit "difference in major version between VERSION file and latest git tag: $version_major vs $git_version_major"
-        return 1
-      fi
-
-      if [ "$version_minor" != "$git_version_minor" ]; then
-        crit "difference in minor version between VERSION file and latest git tag: $version_minor vs $git_version_minor"
-        return 1
-      fi
-    }
-  }
+  libmain_validate_bumped_and_git_versions
 
   defer_ret build_run_ctx_reset_all_persistent
 
