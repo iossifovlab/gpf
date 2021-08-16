@@ -3,53 +3,53 @@ Created on Nov 16, 2015
 
 @author: lubo
 """
-from django.conf.urls import url
+from django.urls import re_path
 from pheno_tool_api import views
 
 
 urlpatterns = [
-    url(r"^/?$", views.PhenoToolView.as_view(), name="pheno_tool"),
-    url(
+    re_path(r"^/?$", views.PhenoToolView.as_view(), name="pheno_tool"),
+    re_path(
         r"^/download/?$",
         views.PhenoToolDownload.as_view(),
         name="pheno_tool_download",
     ),
-    url(
+    re_path(
         r"^/persons/?$",
         views.PhenoToolPersons.as_view(),
         name="pheno_tool_persons"
     ),
-    url(
+    re_path(
         r"^/persons_values/?$",
         views.PhenoToolPersonsValues.as_view(),
         name="pheno_tool_persons_values"
     ),
-    url(
+    re_path(
         r"^/measure/?$",
         views.PhenoToolMeasure.as_view(),
         name="pheno_tool_measure"
     ),
-    url(
+    re_path(
         r"^/measures.*",
         views.PhenoToolMeasures.as_view(),
         name="pheno_tool_measures"
     ),
-    url(
+    re_path(
         r"^/measure_values/?$",
         views.PhenoToolMeasureValues.as_view(),
         name="pheno_tool_measure_values"
     ),
-    url(
+    re_path(
         r"^/values/?$",
         views.PhenoToolValues.as_view(),
         name="pheno_tool_values"
     ),
-    url(
+    re_path(
         r"^/instruments/?$",
         views.PhenoToolInstruments.as_view(),
         name="pheno_tool_instruments"
     ),
-    url(
+    re_path(
         r"^/instrument_values/?$",
         views.PhenoToolInstrumentValues.as_view(),
         name="pheno_tool_instrument_values"

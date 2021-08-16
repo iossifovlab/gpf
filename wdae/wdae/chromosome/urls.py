@@ -1,8 +1,8 @@
-from django.conf.urls import url
+from django.urls import re_path
 
 from chromosome.views import ChromosomeView
 
 
 urlpatterns = [
-    url(r"^/?$", ChromosomeView.as_view()),
+    re_path(r"^/?$", ChromosomeView.as_view()),
 ]
