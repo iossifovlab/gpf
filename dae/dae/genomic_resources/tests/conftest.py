@@ -7,7 +7,7 @@ from http.client import HTTPConnection
 
 @pytest.fixture
 def test_grdb_config(fixture_dirname, temp_dirname_grdb):
-    test_grr_location = fixture_dirname("genomic_scores")
+    test_grr_location = fixture_dirname("genomic_resources")
     return FrozenBox({
         "cache_location": temp_dirname_grdb,
         "genomic_resource_repositories": [
@@ -39,7 +39,7 @@ def resources_http_server(fixture_dirname, http_port):
             "-m", "RangeHTTPServer",
             http_port,
             "--bind", "localhost",
-            "--directory", fixture_dirname("genomic_scores"),
+            "--directory", fixture_dirname("genomic_resources"),
         ],
         stdout=PIPE,
         encoding="utf-8",

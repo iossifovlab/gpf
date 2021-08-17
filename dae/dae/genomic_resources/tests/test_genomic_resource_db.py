@@ -16,17 +16,17 @@ def test_fs_repository(test_grdb_config, fixture_dirname):
     resource = repo.get_resource("hg38/TESTCADD")
     assert resource.get_id() == "hg38/TESTCADD"
     assert resource.get_url() == \
-        f"file://{fixture_dirname('genomic_scores/hg38/TESTCADD')}"
+        f"file://{fixture_dirname('genomic_resources/hg38/TESTCADD')}"
 
     # resource = repo.get_resource("hg38/TESTFreq")
     # assert resource.get_id() == "hg38/TESTFreq"
     # assert resource.get_url() == \
-    #     f"file://{fixture_dirname('genomic_scores/hg38/TESTFreq')}"
+    #     f"file://{fixture_dirname('genomic_resources/hg38/TESTFreq')}"
 
     resource = repo.get_resource("hg38/TESTphastCons100way")
     assert resource.get_id() == "hg38/TESTphastCons100way"
     assert resource.get_url() == \
-        f"file://{fixture_dirname('genomic_scores/hg38/TESTphastCons100way')}"
+        f"file://{fixture_dirname('genomic_resources/hg38/TESTphastCons100way')}"
 
 
 def test_cache_filesystem(test_grdb_config):
