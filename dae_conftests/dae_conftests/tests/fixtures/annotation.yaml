@@ -1,0 +1,5 @@
+annotators:
+ - annotator: position_score
+   resource: hg38/TESTphastCons100way
+ - annotator: np_score
+   resource: hg38/TESTCADD
