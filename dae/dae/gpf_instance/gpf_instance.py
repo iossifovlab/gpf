@@ -362,7 +362,7 @@ class GPFInstance(object):
     # Common reports
     def get_common_report(self, study_id):
         genotype_data_study = self.get_genotype_data(study_id)
-        if genotype_data_study.is_remote:
+        if genotype_data_study is None or genotype_data_study.is_remote:
             return None
         try:
             common_report = CommonReport(genotype_data_study)
