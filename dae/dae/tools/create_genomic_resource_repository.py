@@ -27,7 +27,6 @@ def main(argv=None):
 
     GenomicResourcesRepo.create_genomic_resource_repository(".")
 
-
     logger.info("Done")
 
 
