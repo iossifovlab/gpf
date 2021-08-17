@@ -25,6 +25,11 @@ class GenomicResourceBase:
 
 class GenomicResource(GenomicResourceBase):
     def __init__(self, config, url, manifest, repo):
+        # import traceback as tb
+        # tb.print_stack()
+        print("\n", 80*"=", sep="")
+        print("\nconfig\t:", config, "\nurl\t:", url)
+
         self._config = config
         self._url = url
         self._repo = repo
@@ -67,6 +72,10 @@ class GenomicResource(GenomicResourceBase):
         raise NotImplementedError
 
     def close(self):
+        raise NotImplementedError
+
+    @classmethod
+    def get_config_schema(cls):
         raise NotImplementedError
 
 

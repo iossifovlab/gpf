@@ -92,3 +92,30 @@ genomic_score_schema = {
     },
     "meta": {"type": "string"},
 }
+
+genomic_sequence_schema = {
+    "id": {"type": "string"},
+    "name": {"type": "string"},
+    "resource_type": {"type": "string", "required": True},
+    "filename": {
+        "type": "string",
+        "required": True,
+        "coerce": "abspath",
+    },
+    "format": {"type": "string"},
+    "chrom_prefix": {"type": "string"},
+
+    "index_file": {
+        "type": "dict",
+        "schema": {
+            "filename": {
+                "type": "string",
+                "required": True,
+                "coerce": "abspath",
+            },
+            "format": {"type": "string"},
+        },
+    },
+
+    "meta": {"type": "string"},
+}

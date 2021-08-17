@@ -21,6 +21,22 @@ from dae.genomic_resources.utils import resource_type_to_class
 logger = logging.getLogger(__name__)
 
 
+def create_genomic_resources_repository(repository_path):
+    pass
+
+
+def walk_genomic_resources_repository(repository_path):
+    for root, dirs, files in os.walk(repository_path):
+        print("root:", root)
+        print("dirs:", dirs)
+        print("files:", files)
+
+        print(root, "consumes", end=" ")
+        print(sum(
+            os.path.getsize(os.path.join(root, name)) 
+            for name in files), end=" ")
+        print("bytes in", len(files), "non-directory files")
+
 class GenomicResourcesRepo:
     """
     Describes a collection of genomic scores and genomic score groups.
@@ -44,6 +60,7 @@ class GenomicResourcesRepo:
         )
         root_url = root_path.as_uri()
         root = GenomicResourceGroup("root", root_url)
+        print("conf_files:", conf_files)
         for conf_path in conf_files:
             score_path = conf_path[len(root_path.as_posix()):]
             score_path = score_path.strip('/').split('/')
@@ -51,17 +68,23 @@ class GenomicResourcesRepo:
             curr_group = root
             curr_path = root_path.as_posix()
             group_name = ""
+            print("score_path:", score_path)
             for group in score_path[:-2]:
                 group_name += f"/{group}"
-                curr_path += group_name
+                curr_path = f"{root_path.as_posix()}/{group_name}"
                 group_name = group_name.strip("/")
+                print("group_name:", group_name)
                 if group_name not in curr_group.children:
                     url = pathlib.Path(curr_path).absolute().as_uri()
-                    print(curr_path)
+                    print("curr_path:", curr_path)
                     resource = GenomicResourceGroup(group_name, url)
                     curr_group.add_child(resource)
                 curr_group = curr_group.children[group_name]
+                print("curr_group:", curr_group)
+
             curr_path += f"/{score_path[-2]}"
+            print("curr_path:", curr_path)
+
             config = AnnotationConfigParser.load_annotation_config(
                 conf_path
             )
@@ -98,6 +121,8 @@ class GenomicResourcesRepo:
 
         for resource in root.get_resources():
             cwd = urlparse(resource.get_url()).path
+            print("manifest in:", cwd)
+
             print(resource.get_url())
             call(
                 "find . -type f \\( ! -iname \"MANIFEST\" \\)  "

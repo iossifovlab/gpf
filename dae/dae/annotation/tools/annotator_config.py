@@ -9,6 +9,7 @@ class AnnotationConfigParser:
         resource_type = raw_config["resource_type"]
         resource_class = resource_type_to_class(resource_type)
         schema = resource_class.get_config_schema()
+
         config = GPFConfigParser.load_config(filename, schema)
         if override is not None:
             config = GPFConfigParser.modify_tuple(config, override)
@@ -26,4 +27,5 @@ class AnnotationConfigParser:
         resource_type = parsed_config["resource_type"]
         resource_class = resource_type_to_class(resource_type)
         schema = resource_class.get_config_schema()
+
         return GPFConfigParser.process_config(parsed_config, schema)
