@@ -38,6 +38,7 @@ def resources_http_server(fixture_dirname, http_port):
             "python",
             "-m", "RangeHTTPServer",
             http_port,
+            "--bind", "localhost",
             "--directory", fixture_dirname("genomic_scores"),
         ],
         stdout=PIPE,
