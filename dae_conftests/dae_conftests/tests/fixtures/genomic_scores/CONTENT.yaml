@@ -1,10 +1,19 @@
 id: root
 type: group
 children:
+- id: hg19
+  type: group
+  children:
+  - id: hg19/MPC
+    type: resource
+  - id: hg19/phastCons100
+    type: resource
+  - id: hg19/CADD
+    type: resource
 - id: hg38
   type: group
   children:
-  - id: hg38/TESTphastCons100way
-    type: resource
   - id: hg38/TESTCADD
+    type: resource
+  - id: hg38/TESTphastCons100way
     type: resource

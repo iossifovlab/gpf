@@ -2,7 +2,7 @@
 
 id: hg38/TESTFreq
 
-score_type: frequency_annotator.FrequencyAnnotator
+resource_type: score_resources.AlleleScoreResource
 
 filename: TESTFreq.tsv.gz
 format: tsv/bgz

@@ -1,0 +1,47 @@
+---
+
+id: hg19/MPC
+
+resource_type: score_resources.NPScoreResource
+
+filename: CADD.bedgraph.gz
+format: tsv/bgz
+
+index_file:
+  filename: CADD.bedgraph.gz.tbi
+  format: tabix
+
+has_header: false
+
+type_aggregators:
+  - type: float
+    aggregator: dae.genomic_resource.aggregators.MaxAggregator
+  - type: int
+    aggregator: dae.genomic_resource.aggregators.MaxAggregator
+  - type: str
+    aggregator: dae.genomic_resource.aggregators.ConcatAggregator
+
+# defined by score_type
+chrom:
+  name: chrom
+pos_begin:
+  name: ps
+reference:
+  name: ref
+alternative:
+  name: alt
+
+# score values
+scores:
+    - id: MPC
+      type: float
+      desc: ""
+      name: MPC
+
+default_annotation:
+  attributes:
+    - source: MPC
+      dest: mpc
+      aggregator:
+        position: MaxAggregator
+        nucleotide: MaxAggregator
