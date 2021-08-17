@@ -38,6 +38,12 @@ To use this environment, you need to activate it using the following command:
 conda activate gpf
 ```
 
+Install patched HTTP Range server into your environment:
+
+```
+pip install git+https://github.com/seqpipe/RangeHTTPServer
+```
+
 The following commands are going to install GPF dae and wdae packages for development
 usage. (You need to install GPF packages in the conda environment.)
 

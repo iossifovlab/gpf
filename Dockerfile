@@ -10,6 +10,10 @@ ADD ${SOURCE_DIR}/dev-environment.yml /
 
 RUN /opt/conda/bin/conda env create --name gpf --file /environment.yml
 RUN /opt/conda/bin/conda env update --name gpf --file /dev-environment.yml --prune
+
+# http range server for testing
+RUN /opt/conda/envs/gpf/bin/pip install git+https://github.com/seqpipe/RangeHTTPServer
+
 # RUN echo "conda activate gpf" >> ~/.bashrc
 
 # GPF ENV

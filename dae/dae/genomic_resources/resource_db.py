@@ -7,10 +7,18 @@ from dae.genomic_resources.resources import GenomicResource
 
 class GenomicResourceDB:
     def __init__(self, repositories):
+        print(repositories)
+
         self.repositories = []
         for gsd_conf in repositories:
+            print("gsd_conf:", gsd_conf)
+
             gsd_id = gsd_conf["id"]
+            print("url:", gsd_conf["url"])
+
             gsd_url = urlparse(gsd_conf["url"])
+            print("id:", gsd_id, "url:", gsd_url)
+
             is_filesystem = gsd_url.scheme == "file"
             if is_filesystem:
                 gsd = FSGenomicResourcesRepo(gsd_id, gsd_url.path)
@@ -23,14 +31,14 @@ class GenomicResourceDB:
             raise NotImplementedError
         # resource = self.cache.get_resource(resource_id)
         # if resource is not None:
-            # return resource
+        #   return resource
 
         for repository in self.repositories:
             resource = repository.get_resource(resource_id)
             return resource
             # if resource is not None:
-                # self._do_cache(resource)
-                # return self.get_resource(resource_id)
+            #   self._do_cache(resource)
+            #   return self.get_resource(resource_id)
 
         return None
 
@@ -40,7 +48,7 @@ class CachedGenomicResourceDB(GenomicResourceDB):
         self._cache = FSGenomicResourcesRepo(
             "cache", cache_location
         )
-        super(repositories)
+        super(CachedGenomicResourceDB, self).__init__(repositories)
 
     def get_cache_repo(self):
         return self._cache

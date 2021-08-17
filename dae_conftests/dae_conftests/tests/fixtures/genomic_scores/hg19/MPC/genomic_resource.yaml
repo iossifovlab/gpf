@@ -11,7 +11,7 @@ index_file:
   filename: CADD.bedgraph.gz.tbi
   format: tabix
 
-has_header: false
+has_header: true
 
 type_aggregators:
   - type: float
