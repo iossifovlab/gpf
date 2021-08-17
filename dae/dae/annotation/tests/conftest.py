@@ -14,7 +14,7 @@ def relative_to_this_test_folder(path):
 
 @pytest.fixture
 def anno_grdb(fixture_dirname):
-    test_grr_location = fixture_dirname("genomic_scores")
+    test_grr_location = fixture_dirname("genomic_resources")
     repositories = [
         {"id": "test_grr", "url": f"file://{test_grr_location}"}
     ]

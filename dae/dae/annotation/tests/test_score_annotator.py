@@ -53,7 +53,9 @@ def test_np_score_annotator_indels(
         cadd_indel_variants_expected,
         anno_grdb, mean_override_cadd, genomes_db_2013):
     resource = anno_grdb.get_resource("hg38/TESTCADD")
-    annotator = NPScoreAnnotator(resource, genomes_db_2013, override=mean_override_cadd)
+    annotator = NPScoreAnnotator(
+        resource, genomes_db_2013,
+        override=mean_override_cadd)
     pipeline = AnnotationPipeline(None, None, None)
     pipeline.add_annotator(annotator)
 

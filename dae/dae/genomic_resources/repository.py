@@ -192,7 +192,7 @@ class GenomicResourcesRepo:
         """
         Returns all constituent genomic scores of this repository.
         """
-        return self.top_level_group.score_children()
+        return self.top_level_group.resource_children()
 
     def open_file(self, resource_id: str, filename: str):
         raise NotImplementedError

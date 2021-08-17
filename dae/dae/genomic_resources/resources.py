@@ -91,7 +91,7 @@ class GenomicResourceGroup(GenomicResourceBase):
     def add_child(self, resource):
         self.children[resource.get_id()] = resource
 
-    def score_children(
+    def resource_children(
         self, parents: List["GenomicResourceGroup"] = None
     ) -> List[ParentsScoreTuple]:
         result = list()
@@ -101,17 +101,17 @@ class GenomicResourceGroup(GenomicResourceBase):
             if isinstance(child, GenomicResource):
                 result.append((parents, child))
             elif isinstance(child, GenomicResourceGroup):
-                result.extend(child.score_children([*parents, child]))
+                result.extend(child.resource_children([*parents, child]))
             else:
                 # TODO should raise error, disabled temporarily for HTTP repos
                 # raise TypeError
                 result.append((parents, child))
         return result
 
-    def get_genomic_score(
-        self, genomic_score_id: str
+    def get_genomic_resource(
+        self, genomic_resource_id: str
     ) -> Union[ParentsScoreTuple, Tuple[None, None]]:
-        for parents, genomic_score in self.score_children():
-            if genomic_score.id == genomic_score_id:
-                return parents, genomic_score
+        for parents, genomic_resource in self.resource_children():
+            if genomic_resource.id == genomic_resource_id:
+                return parents, genomic_resource
         return None, None
