@@ -421,13 +421,10 @@ class AutismGeneProfileDB:
         with self.engine.connect() as connection:
             connection.execute(d)
 
-    def generate_cache_table(self, regenerate=False):
-        if not regenerate:
-            self.drop_cache_table()
-            self.cache_table = self._create_db_cache_table()
-            self.metadata.create_all(tables=[self.cache_table])
-        else:
-            self._clear_cache_table()
+    def generate_cache_table(self):
+        self.drop_cache_table()
+        self.cache_table = self._create_db_cache_table()
+        self.metadata.create_all(tables=[self.cache_table])
         columns = list(self._cache_table_columns().keys())
         s = self.agp_view.select()
         ins = self.cache_table.insert().from_select(columns, s)
@@ -720,6 +717,6 @@ class AutismGeneProfileDB:
                                     )
                                 )
 
-                    if idx % 25 == 0:
+                    if idx % 1000 == 0:
                         logger.info(f"Inserted {idx}/{agp_count} AGPs into DB")
                 logger.info("Done!")

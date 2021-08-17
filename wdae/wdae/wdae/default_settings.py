@@ -3,6 +3,7 @@ import os
 
 DEBUG = True
 
+
 STUDIES_EAGER_LOADING = False
 
 OPEN_REGISTRATION = True
@@ -11,6 +12,8 @@ GUARDIAN_GET_INIT_ANONYMOUS_USER = (
     "users_api.models.get_anonymous_user_instance"
 )
 ANONYMOUS_USER_NAME = "anonymous@seqpipe.org"
+
+SITE_URL = "localhost"
 
 BASE_DIR = os.path.dirname(__file__)
 
@@ -51,6 +54,8 @@ DATABASES = {
         "PORT": "",
     }
 }
+
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
@@ -164,7 +169,6 @@ INSTALLED_APPS = [
     "genotype_browser",
     "enrichment_api",
     "measures_api",
-    "family_counters_api",
     "pheno_browser_api",
     "common_reports_api",
     "pheno_tool_api",
@@ -190,6 +194,10 @@ REST_FRAMEWORK = {
 }
 
 SESSION_SERIALIZER = "django.contrib.sessions.serializers.JSONSerializer"
+
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True
+
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to

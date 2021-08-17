@@ -296,34 +296,6 @@ def test_query_present_in_parent(
     ]
 )
 @pytest.mark.parametrize(
-    "roles,count",
-    [
-        ({"prb": ["Proband"]}, 3401),
-        ({"prb": ["Sibling"]}, 2287),
-        ({"prb": ["Proband", "Sibling"]}, 5645),
-    ],
-)
-def test_query_present_in_role(
-        iossifov_2014_wrappers, wrapper_type, roles, count):
-    study_wrapper = iossifov_2014_wrappers[wrapper_type]
-    query = {
-        "presentInRole": roles
-    }
-    variants = list(study_wrapper.query_variants_wdae(
-        query, [{"source": "location"}])
-    )
-
-    assert len(variants) == count
-
-
-@pytest.mark.parametrize(
-    "wrapper_type",
-    [
-        "local",
-        "remote"
-    ]
-)
-@pytest.mark.parametrize(
     "option,count",
     [
         (None, 5645),

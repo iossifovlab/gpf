@@ -205,30 +205,6 @@ class QueryTransformer:
             return roles_query[0]
         return OrNode(roles_query)
 
-    def _transform_present_in_role(self, present_in_role):
-        roles_query = []
-
-        for pir_id, filter_options in present_in_role.items():
-
-            for filter_option in filter_options:
-                new_roles = None
-
-                if filter_option != "neither":
-                    new_roles = ContainsNode(Role.from_name(filter_option))
-
-                if filter_option == "neither":
-                    new_roles = AndNode(
-                        [
-                            NotNode(ContainsNode(Role.from_name(role)))
-                            for role in self.get_present_in_role(pir_id).roles
-                        ]
-                    )
-
-                if new_roles:
-                    roles_query.append(new_roles)
-
-        return OrNode(roles_query)
-
     def _transform_filters_to_ids(self, filters: List[dict]) -> Set[str]:
         result = list()
         for filter_conf in filters:
@@ -364,11 +340,6 @@ class QueryTransformer:
                     )
                 if arg is not None:
                     kwargs[arg] = val
-
-        if "presentInRole" in kwargs:
-            present_in_role = kwargs.pop("presentInRole")
-            roles_query = self._transform_present_in_role(present_in_role)
-            self._add_roles_to_query(roles_query, kwargs)
 
         if (
             "minAltFrequencyPercent" in kwargs

@@ -10,7 +10,7 @@ from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.utils.effect_utils import expand_effect_types
 from dae.variants.attributes import VariantType, Role
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__file__)
 
 
 def generate_agp(gpf_instance, gene_symbol, collections_gene_sets):
@@ -50,6 +50,7 @@ def generate_agp(gpf_instance, gene_symbol, collections_gene_sets):
                     counts = current_counts[person_set]
 
                 counts[stat_id] = {
+                    "variants": {},
                     "count": 0,
                     "rate": 0
                 }
@@ -89,8 +90,16 @@ def add_variant_count(variant, agps, dataset_id, person_set, statistic_id):
     for gs in variant.effect_gene_symbols:
         if gs not in agps:
             continue
+
         vc = agps[gs].variant_counts
-        vc[dataset_id][person_set][statistic_id]["count"] += 1
+        variants_stats = vc[dataset_id][person_set][statistic_id]["variants"]
+        variants_stats[variant.fvuid] = variant
+
+        # v = variant
+        # if v.position == 152171343:
+        #     print(100*"^")
+        #     print(person_set, statistic_id, v)
+        #     print(100*"^")
 
 
 def calculate_rates(instance, agps, config):
@@ -111,82 +120,121 @@ def calculate_rates(instance, agps, config):
 
                 for statistic in filters.statistics:
                     stat_id = statistic["id"]
+
                     stat = agp.variant_counts[dataset_id][set_name][stat_id]
-                    count = stat["count"]
+                    count = len(stat["variants"])
+                    stat["count"] = count
                     stat["rate"] = (count / children_count) * 1000
+                    # if stat_id == "rare_lgds":
+                    #     from pprint import pprint
+                    #     print(100*"=")
+                    #     print(stat_id)
+                    #     print(set_name)
+
+                    #     pprint(sorted(
+                    #         list(stat["variants"].values()),
+                    #         key=lambda v:
+                    #         f"{v.position:030d}:{v.family_id}"))
+                    #     print(80*"~")
+                    #     pprint(stat["variants"])
+
+                    #     print(100*"=")
+
+
+def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
+    filters = config.datasets[dataset_id]
+    members = set()
+
+    for aa in v.alt_alleles:
+        for member in aa.variant_in_members:
+            if member is not None:
+                members.add(member)
+
+    for ps in filters.person_sets:
+        pids = set(person_ids[dataset_id][ps.set_name])
+        for statistic in filters.statistics:
+            if statistic.category == "denovo" and not denovo_flag:
+                continue
+            if statistic.category == "rare" and denovo_flag:
+                continue
+
+            stat_id = statistic.id
+            do_count = True
+
+            in_members = len(pids.intersection(members)) > 0
+
+            do_count = do_count and in_members
+
+            if statistic.get("effects"):
+                ets = set(expand_effect_types(statistic.effects))
+                in_effect_types = len(
+                    ets.intersection(v.effect_types)) > 0
+                do_count = do_count and in_effect_types
+
+            if statistic.get("scores"):
+                for score in statistic.scores:
+                    score_name = score["name"]
+                    score_min = score.get("min")
+                    score_max = score.get("max")
+                    score_value = v.get_attribute(score_name)[0]
+
+                    if score_value is None:
+                        do_count = False
+
+                    if score_min:
+                        do_count = do_count and score_value >= score_min
+                    if score_max:
+                        do_count = do_count and score_value <= score_max
+
+            if statistic.get("category") == "rare":
+                match = False
+                for aa in v.alt_alleles:
+                    freq = aa.get_attribute("af_allele_freq")
+
+                    if freq is not None and freq <= 1.0:
+                        match = True
+                do_count = do_count and match
+
+            if statistic.get("variant_types"):
+                variant_types = {
+                    VariantType.from_name(t)
+                    for t in statistic.variant_types
+                }
+                do_count = do_count and \
+                    len(variant_types.intersection(v.variant_types))
+
+            if statistic.get("roles"):
+                roles = {
+                    Role.from_name(r)
+                    for r in statistic.roles
+                }
+                v_roles = set(v.alt_alleles[0].variant_in_roles)
+                do_count = do_count and \
+                    len(v_roles.intersection(roles))
+
+            if do_count:
+                add_variant_count(
+                    v, agps, dataset_id, ps.set_name, stat_id
+                )
 
 
 def fill_variant_counts(
-        variants_datasets, agps, config, person_ids, variants_denovo):
-    for dataset_id, variants in variants_datasets.items():
-        logger.info(f"Counting variants in {dataset_id}")
+        variants, dataset_id, agps, config, person_ids, denovo_flag):
 
-        filters = config.datasets[dataset_id]
+    seen = set()
+    logger.info(f"Counting variants in {dataset_id}")
 
-        variants_count = len(variants)
-
-        for idx, v in enumerate(variants, 1):
-            if idx % 25 == 0:
-                logger.info(
-                    f"Counted {idx}/{variants_count} variants"
-                )
-            members = set()
-
-            for aa in v.alt_alleles:
-                for member in aa.variant_in_members:
-                    if member is not None:
-                        members.add(member)
-
-            for ps in filters.person_sets:
-                pids = set(person_ids[dataset_id][ps.set_name])
-                for statistic in filters.statistics:
-                    if statistic.category == "denovo" and not variants_denovo:
-                        continue
-                    if statistic.category == "rare" and variants_denovo:
-                        continue
-
-                    stat_id = statistic.id
-                    do_count = True
-
-                    in_members = len(pids.intersection(members)) > 0
-
-                    do_count = do_count and in_members
-
-                    if statistic.get("effects"):
-                        ets = set(expand_effect_types(statistic.effects))
-                        in_effect_types = len(
-                            ets.intersection(v.effect_types)) > 0
-                        do_count = do_count and in_effect_types
-                    if statistic.get("score"):
-                        score_name = statistic.score["name"]
-                        score_min = statistic.score.get("min")
-                        score_max = statistic.score.get("max")
-                        score_value = v.get_attribute(score_name)[0]
-
-                        if score_min:
-                            do_count = do_count and score_value > score_min
-                        if score_max:
-                            do_count = do_count and score_value < score_max
-
-                    if statistic.get("variant_types"):
-                        variant_types = {
-                            VariantType.from_name(t)
-                            for t in statistic.variant_types
-                        }
-                        do_count = do_count and \
-                            len(variant_types.intersection(v.variant_types))
-                    if statistic.get("roles"):
-                        roles = {
-                            Role.from_name(r)
-                            for r in statistic.roles
-                        }
-                        v_roles = set(v.alt_alleles[0].variant_in_roles)
-                        do_count = do_count and \
-                            len(v_roles.intersection(roles))
-                    if do_count:
-                        add_variant_count(
-                            v, agps, dataset_id, ps.set_name, stat_id
-                        )
+    for idx, v in enumerate(variants, 1):
+        if idx % 1000 == 0:
+            logger.info(
+                f"Counted {idx} variants from {dataset_id}"
+            )
+        if v.fvuid in seen:
+            continue
+        count_variant(
+            v, dataset_id, agps, config, person_ids, denovo_flag
+        )
+        seen.add(v.fvuid)
 
 
 def main(gpf_instance=None, argv=None):
@@ -196,9 +244,13 @@ def main(gpf_instance=None, argv=None):
     default_dbfile = os.path.join(os.getenv("DAE_DB_DIR", "./"), "agpdb")
     parser.add_argument("--dbfile", default=default_dbfile)
     parser.add_argument(
-        "--config-genes",
+        "--gene-sets-genes",
         action="store_true",
         help="Generate AGPs only for genes contained in the config's gene sets"
+    )
+    parser.add_argument(
+        "--genes",
+        help="Comma separated list of genes to generate statistics for"
     )
     parser.add_argument("--drop", action="store_true")
 
@@ -247,7 +299,10 @@ def main(gpf_instance=None, argv=None):
     #     filter(lambda gs: gs["name"] in config.gene_sets, gene_sets)
     # )
     gene_symbols = set()
-    if args.config_genes:
+    if args.genes:
+        gene_symbols = [gs.strip() for gs in args.genes.split(",")]
+        gene_symbols = set(gene_symbols)
+    elif args.gene_sets_genes:
         for _, gs in collections_gene_sets:
             gene_symbols = gene_symbols.union(gs["syms"])
     else:
@@ -255,6 +310,8 @@ def main(gpf_instance=None, argv=None):
         gene_symbols = set(gene_models.keys())
     gs_count = len(gene_symbols)
     logger.info(f"Collected {gs_count} gene symbols")
+    has_denovo = False
+    has_rare = False
     person_ids = dict()
     for dataset_id, filters in config.datasets.items():
         genotype_data = gpf_instance.get_genotype_data(dataset_id)
@@ -269,6 +326,11 @@ def main(gpf_instance=None, argv=None):
                 genotype_data._transform_person_set_collection_query(
                     person_set_query, None
                 )
+        for stat in filters.statistics:
+            if stat.category == "denovo":
+                has_denovo = True
+            elif stat.category == "rare":
+                has_rare = True
 
     agps = dict()
     gene_symbols = list(gene_symbols)
@@ -282,7 +344,7 @@ def main(gpf_instance=None, argv=None):
             gpf_instance, sym, collections_gene_sets
         )
         agps[gs] = agp
-        if idx % 25 == 0:
+        if idx % 1000 == 0:
             elapsed = time.time() - start
             logger.info(
                 f"Generated {idx}/{gs_count} AGP statistics "
@@ -293,44 +355,84 @@ def main(gpf_instance=None, argv=None):
     elapsed = generate_end - start
     logger.info(f"Took {elapsed:.2f} secs")
 
-    logger.info("Collecting denovo variants")
-    denovo_variants = dict()
-    for dataset_id, filters in config.datasets.items():
-        genotype_data = gpf_instance.get_genotype_data(dataset_id)
-        assert genotype_data is not None, dataset_id
-        if args.config_genes:
-            genes = gene_symbols
-        else:
-            genes = None
+    if has_denovo:
+        logger.info("Collecting denovo variants")
+        # denovo_variants = dict()
+        for dataset_id, filters in config.datasets.items():
+            genotype_data = gpf_instance.get_genotype_data(dataset_id)
+            assert genotype_data is not None, dataset_id
+            if args.gene_sets_genes or args.genes:
+                genes = gene_symbols
+            else:
+                genes = None
 
-        denovo_variants[dataset_id] = list(
-            genotype_data.query_variants(genes=genes, inheritance="denovo")
-        )
-    logger.info("Done collecting denovo variants")
-    logger.info("Counting denovo variants...")
-    fill_variant_counts(denovo_variants, agps, config, person_ids, True)
-    logger.info("Done counting denovo variants")
+            denovo_variants = \
+                genotype_data.query_variants(genes=genes, inheritance="denovo")
 
-    logger.info("Collecting rare variants")
-    rare_variants = dict()
-    for dataset_id, filters in config.datasets.items():
-        genotype_data = gpf_instance.get_genotype_data(dataset_id)
-        assert genotype_data is not None, dataset_id
-        if args.config_genes:
-            genes = gene_symbols
-        else:
-            genes = None
+            fill_variant_counts(
+                denovo_variants, dataset_id, agps, config, person_ids, True)
 
-        rare_variants[dataset_id] = list(
-            genotype_data.query_variants(
-                genes=genes,
-                inheritance=["mendelian", "missing"],
-                roles="prb and sib")
-        )
-    logger.info("Done collecting rare variants")
-    logger.info("Counting rare variants...")
-    fill_variant_counts(rare_variants, agps, config, person_ids, False)
-    logger.info("Done counting rare variants")
+        logger.info("Done collecting denovo variants")
+        logger.info("Counting denovo variants...")
+        logger.info("Done counting denovo variants")
+
+    if has_rare:
+        logger.info("Counting rare variants")
+
+        for dataset_id, filters in config.datasets.items():
+            genotype_data = gpf_instance.get_genotype_data(dataset_id)
+            assert genotype_data is not None, dataset_id
+            if args.gene_sets_genes or args.genes:
+                genes = gene_symbols
+            else:
+                genes = None
+
+            for statistic in filters.statistics:
+                if statistic.category == "denovo":
+                    continue
+                kwargs = dict()
+                kwargs["roles"] = "prb or sib"
+
+                if statistic.effects is not None:
+                    kwargs["effect_types"] = \
+                        expand_effect_types(statistic.effects)
+
+                if statistic.variant_types:
+                    variant_types = [
+                        VariantType.from_name(statistic.variant_types).repr()
+                    ]
+                    kwargs["variant_type"] = " or ".join(variant_types)
+
+                if statistic.scores:
+                    scores = []
+                    for score in statistic.scores:
+                        min_max = (score.min, score.max)
+                        score_filter = (score.name, min_max)
+                        scores.append(score_filter)
+                    kwargs["real_attr_filter"] = scores
+
+                if statistic.variant_types:
+                    roles = [
+                        Role.from_name(statistic.roles).repr()
+                    ]
+                    kwargs["roles"] = " or ".join(roles)
+
+                rare_variants = \
+                    genotype_data.query_variants(
+                        genes=genes,
+                        inheritance=[
+                            "not denovo and "
+                            "not possible_denovo and not possible_omission",
+                            "mendelian or missing"
+                        ],
+                        frequency_filter=[("af_allele_freq", (None, 1.0))],
+                        **kwargs)
+
+                fill_variant_counts(
+                    rare_variants, dataset_id, agps, config, person_ids, False)
+
+        logger.info("Done counting rare variants")
+
     logger.info("Calculating rates...")
     calculate_rates(gpf_instance, agps, config)
     logger.info("Done calculating rates")
@@ -349,15 +451,8 @@ def main(gpf_instance=None, argv=None):
     agpdb.insert_agps(agps.values())
     logger.info("Building AGP output view")
     agpdb.build_agp_view()
-    if args.drop:
-        agpdb.drop_cache_table()
-    else:
-        if agpdb.cache_table_exists():
-            logger.info("Regenerating cache table")
-            agpdb.generate_cache_table(regenerate=True)
-        else:
-            logger.info("Generating cache table")
-            agpdb.generate_cache_table(regenerate=False)
+    logger.info("Generating cache table")
+    agpdb.generate_cache_table()
     logger.info("Done")
 
 

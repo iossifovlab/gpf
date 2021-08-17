@@ -37,14 +37,15 @@ variant_statistic_schema = {
         "description": {"type": "string"},
         "effects": {"type": "list", "schema": {"type": "string"}},
         "category": {"type": "string", "allowed": ["denovo", "rare"]},
-        "score": {
+        "scores": {"type": "list", "schema": {
             "type": "dict",
             "schema": {
                 "name": {"type": "string"},
-                "min": {"type": "float", "default": None},
-                "max": {"type": "float", "default": None}
+                "min": {"type": "float", "default": None, "nullable": True},
+                "max": {"type": "float", "default": None, "nullable": True}
             }
-        },
+        }},
+        "default_visible": {"type": "boolean", "default": True},
         "variant_types": {
             "type": "list",
             "schema": {
@@ -71,6 +72,7 @@ autism_gene_tool_config = {
             "schema": {
                 "category": {"type": "string"},
                 "display_name": {"type": "string"},
+                "default_visible": {"type": "boolean", "default": True},
                 "sets": {"type": "list", "schema": gene_set_schema}
             },
         }
@@ -83,6 +85,7 @@ autism_gene_tool_config = {
             "schema": {
                 "category": {"type": "string"},
                 "display_name": {"type": "string"},
+                "default_visible": {"type": "boolean", "default": True},
                 "scores": {"type": "list", "schema": genomic_score_schema}
             },
         }
@@ -92,11 +95,13 @@ autism_gene_tool_config = {
         "type": "dict",
         "valuesrules": {
             "type": "dict", "schema": {
+                "meta": {"type": "string"},
                 "person_sets": {"type": "list", "schema": {
                         "type": "dict",
                         "schema": {
                             "set_name": {"type": "string"},
                             "collection_name": {"type": "string"},
+                            "description": {"type": "string"},
                         }
                     }
                 },

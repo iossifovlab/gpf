@@ -875,24 +875,28 @@ class SummaryVariantFactory(object):
     def summary_variant_from_vcf(
             vcf_variant, summary_variant_index, transmission_type):
         records = []
-        allele_count = len(vcf_variant.ALT) + 1
+        alts = vcf_variant.alts \
+            if vcf_variant.alts is not None else ["."]
+        allele_count = (len(alts) + 1)
+
         records.append(
             {
-                "chrom": vcf_variant.CHROM,
-                "position": vcf_variant.start + 1,
-                "reference": vcf_variant.REF,
+                "chrom": vcf_variant.chrom,
+                "position": vcf_variant.pos,
+                "reference": vcf_variant.ref,
                 "alternative": None,
                 "summary_variant_index": summary_variant_index,
                 "allele_index": 0,
                 "allele_count": allele_count,
             }
         )
-        for allele_index, alt in enumerate(vcf_variant.ALT):
+
+        for allele_index, alt in enumerate(alts):
             records.append(
                 {
-                    "chrom": vcf_variant.CHROM,
-                    "position": vcf_variant.start + 1,
-                    "reference": vcf_variant.REF,
+                    "chrom": vcf_variant.chrom,
+                    "position": vcf_variant.pos,
+                    "reference": vcf_variant.ref,
                     "alternative": alt,
                     "summary_variant_index": summary_variant_index,
                     "allele_index": allele_index + 1,

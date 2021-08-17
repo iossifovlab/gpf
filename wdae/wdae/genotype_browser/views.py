@@ -42,6 +42,8 @@ class GenotypeBrowserQueryView(QueryBaseView):
         LOGGER.info("query v3 variants request: " + str(request.data))
 
         data = request.data
+        user = request.user
+
         if "queryData" in data:
             data = self._parse_query_params(data)
         dataset_id = data.pop("datasetId", None)
@@ -56,14 +58,21 @@ class GenotypeBrowserQueryView(QueryBaseView):
 
         is_download = data.pop("download", False)
 
-        max_variants = data.pop(
-            "maxVariantsCount", self.MAX_SHOWN_VARIANTS + 1)
+        if "maxVariantsCount" in data:
+            max_variants = data["maxVariantsCount"]
+        else:
+            if is_download:
+                max_variants = \
+                    None if user.has_unlimitted_download or user.is_staff \
+                    else 10000
+            else:
+                max_variants = self.MAX_SHOWN_VARIANTS + 1
+
         if max_variants == -1:
             # unlimitted variants preview
             max_variants = None
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        user = request.user
 
         if "sources" in data:
             sources = data.pop("sources")

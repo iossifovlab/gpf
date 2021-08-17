@@ -445,8 +445,8 @@ class BaseQueryBuilder(ABC):
 
             if ultra_rare:
                 frequency_bin.update([
-                    # "frequency_bin = 0",
-                    f"{frequency_bin_col} = 1"
+                    f"{frequency_bin_col} = 0",
+                    f"{frequency_bin_col} = 1",
                 ])
             elif real_attr_filter:
                 for name, (begin, end) in real_attr_filter:
@@ -454,12 +454,14 @@ class BaseQueryBuilder(ABC):
 
                         if end and end < rare_boundary:
                             frequency_bin.update([
+                                f"{frequency_bin_col} = 0",
                                 f"{frequency_bin_col} = 1",
                                 f"{frequency_bin_col} = 2"])
                         elif begin and begin >= rare_boundary:
                             frequency_bin.add(f"{frequency_bin_col} = 3")
                         elif end is not None and end >= rare_boundary:
                             frequency_bin.update([
+                                f"{frequency_bin_col} = 0",
                                 f"{frequency_bin_col} = 1",
                                 f"{frequency_bin_col} = 2",
                                 f"{frequency_bin_col} = 3",
