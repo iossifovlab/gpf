@@ -1,5 +1,5 @@
-<div style="padding: 30px;" *ngIf="selectedDataset$ | async as dataset">
-  <div *ngIf="dataset.accessRights">
+<div style="padding: 30px;" *ngIf="selectedDataset">
+  <div *ngIf="selectedDataset.accessRights">
     <div class="effect-card card">
       <div style="font-family: Roboto; font-weight: 500; border-bottom: none;" class="card-header card-title">Gene Symbols</div>
       <div class="card-block">
@@ -60,7 +60,7 @@
       </div>
 
       <gpf-genotype-preview-table
-        [columns]="dataset?.genotypeBrowserConfig?.tableColumns"
+        [columns]="selectedDataset?.genotypeBrowserConfig?.tableColumns"
         [genotypePreviewVariantsArray]="genotypePreviewVariantsArray"
         [legend]="legend">
       </gpf-genotype-preview-table>

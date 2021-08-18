@@ -172,12 +172,8 @@ export class GeneViewComponent implements OnInit {
   ngOnInit() {
     this.setSvgScale(window.innerWidth);
 
-    this.setupPlot();
-    this.datasetsService.getDatasetsLoadedObservable().subscribe(() => {
-      this.setupPlot();
-    });
-
     this.streamingFinished$.subscribe(() => {
+      this.setupPlot();
       if (this.gene === undefined) {
         return;
       }
@@ -335,7 +331,7 @@ export class GeneViewComponent implements OnInit {
       this.svgElement = d3.select(effect)
         .attr('width', 20)
         .attr('height', 20);
-        drawIcon(this.svgElement, 10, 8, '#000000', effect);
+      drawIcon(this.svgElement, 10, 8, '#000000', effect);
     }
 
     this.svgElement = d3.select('#CNV\\+')
