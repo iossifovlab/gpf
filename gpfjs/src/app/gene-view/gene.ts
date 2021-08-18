@@ -3,84 +3,49 @@ import { GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
 export class Exon {
   constructor(
     public chrom: string,
-    private _start: number,
-    private _stop: number
+    public start: number,
+    public stop: number
   ) { }
 
-  get start() {
-    return this._start;
-  }
-
-  get stop() {
-    return this._stop;
-  }
-
-  set start(start: number) {
-    this._start = start;
-  }
-
-  set stop(stop: number) {
-    this._stop = stop;
-  }
-
   get length() {
-    return this._stop - this._start;
+    return this.stop - this.start;
   }
 
-  static fromJson(chrom: string, json: any): Exon {
+  public static fromJson(chrom: string, json: object): Exon {
     return new Exon(chrom, json['start'], json['stop']);
   }
 
-  static fromJsonArray(chrom: string, jsonArray: Array<Object>): Array<Exon> {
+  public static fromJsonArray(chrom: string, jsonArray: Array<Object>): Array<Exon> {
     return jsonArray.map(json => Exon.fromJson(chrom, json));
   }
 }
 
 export class Transcript {
   constructor(
-    private _transcript_id: string,
-    private _strand: string,
-    private _chrom: string,
-    private _cds: number[],
-    private _exons: Exon[]
+    readonly transcript_id: string,
+    readonly strand: string,
+    readonly chrom: string,
+    readonly cds: number[],
+    readonly exons: Exon[]
   ) { }
 
-  static fromJson(json: any): Transcript {
+  public static fromJson(json: object): Transcript {
     return new Transcript(
       json['transcript_id'], json['strand'], json['chrom'],
-      json['cds'], Exon.fromJsonArray(json['chrom'], json['exons']));
+      json['cds'], Exon.fromJsonArray(json['chrom'], json['exons'])
+    );
   }
 
-  static fromJsonArray(jsonArray: Array<Object>): Array<Transcript> {
+  public static fromJsonArray(jsonArray: Array<Object>): Array<Transcript> {
     return jsonArray.map(json => Transcript.fromJson(json));
   }
 
-  get transcript_id() {
-    return this._transcript_id;
-  }
-
-  get exons() {
-    return this._exons;
-  }
-
-  get strand() {
-    return this._strand;
-  }
-
-  get cds() {
-    return this._cds;
-  }
-
-  get chrom() {
-    return this._chrom;
-  }
-
   get start() {
-    return this._exons[0].start;
+    return this.exons[0].start;
   }
 
   get stop() {
-    return this._exons[this._exons.length - 1].stop;
+    return this.exons[this.exons.length - 1].stop;
   }
 
   get length() {
@@ -92,7 +57,7 @@ export class Transcript {
     return this.exons[middle].length;
   }
 
-  isAreaInCDS(start: number, stop: number) {
+  public isAreaInCDS(start: number, stop: number) {
     for (let i = 0; i < this.cds.length; i += 2) {
       if ((start >= this.cds[i]) && (stop <= this.cds[i + 1])) {
         return true;
@@ -104,27 +69,19 @@ export class Transcript {
 
 export class Gene {
   constructor(
-    private _gene: string,
-    private _transcripts: Transcript[]
+    readonly gene: string,
+    readonly transcripts: Transcript[]
   ) { }
 
-  static fromJson(json: any): Gene {
+  public static fromJson(json: object): Gene {
     return new Gene(json['gene'], Transcript.fromJsonArray(json['transcripts']));
   }
 
-  static fromJsonArray(jsonArray: Array<Object>): Array<Gene> {
+  public static fromJsonArray(jsonArray: Array<Object>): Array<Gene> {
     return jsonArray.map(json => Gene.fromJson(json));
   }
 
-  get transcripts() {
-    return this._transcripts;
-  }
-
-  get gene() {
-    return this._gene;
-  }
-
-  mergeExons(exons: Exon[]): Exon[] {
+  private mergeExons(exons: Exon[]): Exon[] {
     const sortedExons: Exon[] = exons.sort(
       (e1, e2) => e1.start > e2.start ? 1 : -1
     );
@@ -147,7 +104,7 @@ export class Gene {
     return result;
   }
 
-  collapsedTranscript(): Transcript {
+  public collapsedTranscript(): Transcript {
     const allExons: Exon[] = [];
     const cds: number[] = [];
     const codingSegments: Exon[] = [];
@@ -202,7 +159,7 @@ export class GeneViewSummaryAllele {
 
   lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
 
-  static comparator(a: GeneViewSummaryAllele, b: GeneViewSummaryAllele) {
+  public static comparator(a: GeneViewSummaryAllele, b: GeneViewSummaryAllele) {
     if (a.comparisonValue > b.comparisonValue) {
       return 1;
     } else if (a.comparisonValue < b.comparisonValue) {
@@ -212,7 +169,7 @@ export class GeneViewSummaryAllele {
     }
   }
 
-  static fromRow(row: any, svuid?: string): GeneViewSummaryAllele {
+  public static fromRow(row: any, svuid?: string): GeneViewSummaryAllele {
     const result = new GeneViewSummaryAllele();
     result.location = row.location;
     result.position = row.position;
@@ -230,27 +187,27 @@ export class GeneViewSummaryAllele {
     return result;
   }
 
-  isLGDs(): boolean {
+  public isLGDs(): boolean {
     return (this.lgds.indexOf(this.effect) !== -1 || this.effect === 'lgds');
   }
 
-  isMissense(): boolean {
+  public isMissense(): boolean {
     return (this.effect === 'missense');
   }
 
-  isSynonymous(): boolean {
+  public isSynonymous(): boolean {
     return (this.effect === 'synonymous');
   }
 
-  isCNVPlus(): boolean {
+  public isCNVPlus(): boolean {
     return (this.effect === 'CNV+');
   }
 
-  isCNVPMinus(): boolean {
+  public isCNVPMinus(): boolean {
     return (this.effect === 'CNV-');
   }
 
-  isCNV(): boolean {
+  public isCNV(): boolean {
     return this.isCNVPlus() || this.isCNVPMinus();
   }
 
@@ -263,13 +220,10 @@ export class GeneViewSummaryAllele {
   }
 }
 
-
 export class GeneViewSummaryAllelesArray {
 
   summaryAlleles: GeneViewSummaryAllele[] = [];
   summaryAlleleIds: string[] = [];
-
-  constructor() {}
 
   addSummaryRow(row: any) {
     if (!row) {
@@ -317,13 +271,10 @@ export class GeneViewSummaryAllelesArray {
 }
 
 export class DomainRange {
-  start: Number;
-  end: Number;
-
-  constructor(start: Number, end: Number) {
-    this.start = start;
-    this.end = end;
-  }
+  constructor(
+    public start: Number,
+    public end: Number,
+  ) {}
 }
 
 export class GeneViewTranscriptSegment {
