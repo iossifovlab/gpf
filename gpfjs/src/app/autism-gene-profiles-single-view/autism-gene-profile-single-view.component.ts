@@ -10,7 +10,6 @@ import { Location } from '@angular/common';
 import { GeneService } from 'app/gene-view/gene.service';
 import { Gene } from 'app/gene-view/gene';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { DatasetDetails } from 'app/datasets/datasets';
 import { Store } from '@ngxs/store';
 import { QueryService } from 'app/query/query.service';
 import { GenomicScore } from 'app/genotype-browser/genotype-browser';
@@ -93,26 +92,26 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
         return this.geneService.getGene(this.geneSymbol);
       }),
       switchMap(gene => {
-        return zip(of(gene), this.datasetsService.getDatasetDetails(this.config.defaultDataset));
+        return zip(of(gene), this.datasetsService.getDataset(this.config.defaultDataset));
       })
-    ).subscribe(([gene, datasetDetails]) => {
-      this.setLinks(this.geneSymbol, gene, datasetDetails);
+    ).subscribe(([gene, dataset]) => {
+      this.setLinks(this.geneSymbol, gene, dataset.genome);
     });
   }
 
-  setLinks(geneSymbol: string, gene: Gene, datasetDetails: DatasetDetails): void {
+  setLinks(geneSymbol: string, gene: Gene, datasetGenome): void {
     if (this.isGeneInSFARI) {
       this.links.SFARIgene = 'https://gene.sfari.org/database/human-gene/' + geneSymbol;
     }
 
     this.links.GeneBrowser = this.getGeneBrowserLink();
-    this.links.UCSC = this.getUCSCLink(gene, datasetDetails);
+    this.links.UCSC = this.getUCSCLink(gene, datasetGenome);
     this.links.GeneCards = 'https://www.genecards.org/cgi-bin/carddisp.pl?gene=' + geneSymbol;
     this.links.Pubmed = 'https://pubmed.ncbi.nlm.nih.gov/?term=' + geneSymbol + '%20AND%20(autism%20OR%20asd)';
   }
 
-  getUCSCLink(gene: Gene, datasetDetails: DatasetDetails): string {
-    const genome: string = datasetDetails.genome;
+  getUCSCLink(gene: Gene, datasetGenome): string {
+    const genome: string = datasetGenome;
     const chromosomePrefix: string = genome === 'hg38' ? '' : 'chr';
     const chromosome: string = gene.transcripts[0].chrom;
     const geneStartPosition: number = gene.transcripts[0].start;
