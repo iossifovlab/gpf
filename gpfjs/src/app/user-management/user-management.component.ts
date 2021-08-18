@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
 import { Observable, ReplaySubject } from 'rxjs';
@@ -7,7 +7,6 @@ import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } 
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 import { SelectableUser } from './user-management';
-
 
 @Component({
   selector: 'gpf-user-management',
@@ -19,7 +18,7 @@ export class UserManagementComponent implements OnInit {
   input$ = new ReplaySubject<string>(1);
   users: SelectableUser[] = [];
   usersToShow$: Observable<SelectableUser[]>;
-
+  @ViewChild('searchBox') private searchBox: ElementRef;
 
   constructor(
     private usersService: UsersService,
@@ -28,7 +27,7 @@ export class UserManagementComponent implements OnInit {
     ) { }
 
   ngOnInit() {
-
+    this.focusSearchBox();
     this.usersToShow$ = this.input$.pipe(
       map(searchTerm => searchTerm.trim()),
       debounceTime(300),
@@ -103,5 +102,26 @@ export class UserManagementComponent implements OnInit {
 
     user.groups = defaultGroups.concat(otherGroups);
     return user;
+  }
+
+  /**
+  * Waits search box element to load.
+  * @returns promise
+  */
+   private async waitForSearchBoxToLoad(): Promise<void> {
+    return new Promise<void>(resolve => {
+      const timer = setInterval(() => {
+        if (this.searchBox !== undefined) {
+          resolve();
+          clearInterval(timer);
+        }
+      }, 200);
+    });
+  }
+
+  public focusSearchBox() {
+    this.waitForSearchBoxToLoad().then(() => {
+      this.searchBox.nativeElement.focus();
+    });
   }
 }

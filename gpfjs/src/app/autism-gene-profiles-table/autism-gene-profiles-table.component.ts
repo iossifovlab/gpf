@@ -15,6 +15,7 @@ import { QueryService } from 'app/query/query.service';
 import { EffectTypes } from 'app/effecttypes/effecttypes';
 import { Store } from '@ngxs/store';
 import { debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
+import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-table',
@@ -62,6 +63,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
 
   @ViewChildren('columnFilteringButton') columnFilteringButtons: QueryList<ElementRef>;
   @ViewChildren('dropdownSpan') dropdownSpans: QueryList<ElementRef>;
+  @ViewChildren(MultipleSelectMenuComponent) multipleSelectMenuComponents: QueryList<MultipleSelectMenuComponent>;
   modalBottom: number;
 
   effectTypes = {
@@ -131,6 +133,8 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     this.shownGenomicScoresCategories = cloneDeep(this.config.genomicScores);
     this.shownDatasets = cloneDeep(this.config.datasets);
 
+    this.focusGeneSearchInput();
+
     // trigger new detection cycle to avoid ExpressionChangedAfterItHasBeenCheckedError
     Promise.resolve().then(() => {
       this.shownGeneSetsCategories.forEach(category => {
@@ -177,18 +181,16 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   }
 
   /**
-   * After component initialization - focuses gene search field,
-   * initializes column filtering modals position update logic, updates first table column sorting buttons.
+   * After component initialization - initializes column filtering modals position update logic,
+   * updates first table column sorting buttons.
    */
   ngAfterViewInit(): void {
-    this.focusGeneSearch();
-
     const firstSortingButton = this.sortingButtonsComponents.find(sortingButtonsComponent => {
       return sortingButtonsComponent.id === `${this.shownGeneSetsCategories[0].category}_rank`;
     });
     setTimeout(() => {
       firstSortingButton.hideState = 1;
-      this.updateModalBottom()
+      this.updateModalBottom();
     });
   }
 
@@ -326,30 +328,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   }
 
   /**
-   * Waits gene search element to load.
-   * @returns promise
-   */
-  async waitForGeneSearchToLoad() {
-    return new Promise<void>(resolve => {
-      const timer = setInterval(() => {
-        if (this.geneSearchInput !== undefined) {
-          resolve();
-          clearInterval(timer);
-        }
-      }, 100);
-    });
-  }
-
-  /**
-   * Waits gene search input element to load and focuses it.
-   */
-  focusGeneSearch() {
-    this.waitForGeneSearchToLoad().then(() => {
-      this.geneSearchInput.nativeElement.focus();
-    });
-  }
-
-  /**
    * Sets genes sorting conditions, resets currently loaded genes and triggers genes update.
    * @param sortBy what column to sort by
    * @param orderBy in what order to sort by
@@ -463,6 +441,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
         this.calculateModalLeftPosition(this.columnFilteringButtons.find(ele => ele.nativeElement.id === `${columnId}-button`).nativeElement)
       );
       this.ngbDropdownMenu.find(ele => ele.nativeElement.id === `${columnId}-dropdown`).dropdown.open();
+      this.multipleSelectMenuComponents.find(menu => menu.menuId.includes(columnId)).focusSearchInput();
     });
   }
 
@@ -529,5 +508,26 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     AutismGeneProfileSingleViewComponent.goToQuery(
       this.store, this.queryService, geneSymbol, personSet, datasetId, statistic
     );
+  }
+
+  /**
+  * Waits search box element to load.
+  * @returns promise
+  */
+   private async waitForGeneSearchInputToLoad(): Promise<void> {
+    return new Promise<void>(resolve => {
+      const timer = setInterval(() => {
+        if (this.geneSearchInput !== undefined) {
+          resolve();
+          clearInterval(timer);
+        }
+      }, 200);
+    });
+  }
+
+  public focusGeneSearchInput() {
+    this.waitForGeneSearchInputToLoad().then(() => {
+      this.geneSearchInput.nativeElement.focus();
+    });
   }
 }

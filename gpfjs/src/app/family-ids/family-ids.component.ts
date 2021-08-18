@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FamilyIds } from './family-ids';
 import { ValidateNested } from 'class-validator';
 import { Store } from '@ngxs/store';
@@ -11,9 +11,9 @@ import { StatefulComponent } from 'app/common/stateful-component';
   styleUrls: ['./family-ids.component.css'],
 })
 export class FamilyIdsComponent extends StatefulComponent implements OnInit {
-
   @ValidateNested()
   familyIds = new FamilyIds();
+  @ViewChild('textArea') private textArea: ElementRef;
 
   constructor(protected store: Store) {
     super(store, FamilyIdsState, 'familyIds');
@@ -21,6 +21,7 @@ export class FamilyIdsComponent extends StatefulComponent implements OnInit {
 
   ngOnInit() {
     super.ngOnInit();
+    this.focusTextInputArea();
     this.store.selectOnce(state => state.familyIdsState).subscribe(state => {
       // restore state
       this.setFamilyIds(state.familyIds.join('\n'));
@@ -33,5 +34,26 @@ export class FamilyIdsComponent extends StatefulComponent implements OnInit {
       .filter(s => s !== '');
     this.familyIds.familyIds = familyIds;
     this.store.dispatch(new SetFamilyIds(result));
+  }
+
+  /**
+  * Waits text input area element to load.
+  * @returns promise
+  */
+  private async waitForTextInputAreaToLoad(): Promise<void> {
+    return new Promise<void>(resolve => {
+      const timer = setInterval(() => {
+        if (this.textArea !== undefined) {
+          resolve();
+          clearInterval(timer);
+        }
+      }, 200);
+    });
+  }
+
+  private focusTextInputArea() {
+    this.waitForTextInputAreaToLoad().then(() => {
+      this.textArea.nativeElement.focus();
+    });
   }
 }
