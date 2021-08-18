@@ -288,8 +288,6 @@ export class Dataset extends IdName {
   }
 
   static fromDatasetAndDetailsJson(datasetJson, detailsJson): Dataset {
-    console.log(datasetJson);
-    console.log(detailsJson);
     if (!datasetJson || !detailsJson) {
       return undefined;
     }

@@ -37,7 +37,6 @@ export class DatasetsComponent implements OnInit {
   ngOnInit() {
     this.route.params.subscribe(
       (params: Params) => {
-        console.log('route');
         this.datasetsService.setSelectedDatasetById(params['dataset']);
       });
 
@@ -54,6 +53,7 @@ export class DatasetsComponent implements OnInit {
       if (!this.selectedDataset) {
         return;
       }
+
       this.registerAlertVisible = !this.selectedDataset.accessRights;
 
       if (!this.isToolSelected()) {
@@ -69,13 +69,12 @@ export class DatasetsComponent implements OnInit {
     });
 
     this.datasets$.pipe(take(1)).subscribe(datasets => {
-      if (!this.datasetsService.hasSelectedDataset()) {
+      if (!this.datasetsService.hasLoadedAnyDataset() && !this.datasetsService.hasSelectedDataset()) {
         this.datasetsService.setSelectedDataset(datasets[0]);
       }
     });
 
     this.usersService.getUserInfoObservable().subscribe(() => {
-      console.log('users');
       this.datasetsService.reloadSelectedDataset();
     });
 

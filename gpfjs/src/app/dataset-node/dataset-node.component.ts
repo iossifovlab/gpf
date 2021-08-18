@@ -20,7 +20,7 @@ export class DatasetNodeComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.selectedDataset$ = this.datasetsService.getSelectedDataset();
+    this.selectedDataset$ = this.datasetsService.getSelectedDatasetObservable();
   }
 
   select() {

@@ -19,6 +19,7 @@ export class DatasetsService {
   private datasets$ = new ReplaySubject<Array<Dataset>>(1);
   private selectedDataset$ = new BehaviorSubject<Dataset>(null);
   private datasetLoaded$ = new Subject<void>();
+  private _hasLoadedAnyDataset = false;
 
   constructor(
     private http: HttpClient,
@@ -46,7 +47,6 @@ export class DatasetsService {
   }
 
   getDataset(datasetId: string): Observable<Dataset> {
-    console.log('zaqvk');
     const url = `${this.datasetUrl}/${datasetId}`;
     const options = { headers: this.headers, withCredentials: true };
 
@@ -68,8 +68,8 @@ export class DatasetsService {
     this.selectedDataset$.next(null);
 
     this.getDataset(datasetId).pipe(take(1)).subscribe(dataset => {
-      console.log(dataset);
       this.selectedDataset$.next(dataset);
+      this._hasLoadedAnyDataset = true;
       this.datasetLoaded$.next();
     });
   }
@@ -100,6 +100,10 @@ export class DatasetsService {
 
   hasSelectedDataset() {
     return !!this.selectedDataset$.getValue();
+  }
+
+  hasLoadedAnyDataset() {
+    return this._hasLoadedAnyDataset;
   }
 
   private reloadAllDatasets() {
