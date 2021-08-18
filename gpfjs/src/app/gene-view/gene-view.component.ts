@@ -172,36 +172,9 @@ export class GeneViewComponent implements OnInit {
   ngOnInit() {
     this.setSvgScale(window.innerWidth);
 
-    this.datasetsService.getSelectedDataset().subscribe(dataset => {
-      this.geneBrowserConfig = dataset.geneBrowser;
-      this.frequencyDomainMin = this.geneBrowserConfig.domainMin;
-      this.frequencyDomainMax = this.geneBrowserConfig.domainMax;
-      this.selectedFrequencies = [0, this.frequencyDomainMax];
-      this.yAxisLabel = this.geneBrowserConfig.frequencyName || this.geneBrowserConfig.frequencyColumn;
-
-      this.drawEffectTypesIcons();
-      this.drawTransmittedIcons();
-      this.drawDenovoIcons();
-
-      this.svgElement = d3.select('#svg-container')
-        .append('svg')
-        .append('g')
-        .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
-
-      this.summedTranscriptElement = this.svgElement
-        .append('g');
-
-      this.transcriptsElement = this.svgElement
-        .append('g');
-
-      this.y = d3.scaleLog()
-        .domain([this.frequencyDomainMin, this.frequencyDomainMax])
-        .range([this.subdomainAxisY, 0]);
-
-      this.y_subdomain = d3.scaleLinear()
-        .domain([0, this.frequencyDomainMin])
-        .range([this.zeroAxisY, this.subdomainAxisY]);
-
+    this.setupPlot();
+    this.datasetsService.getDatasetsLoadedObservable().subscribe(() => {
+      this.setupPlot();
     });
 
     this.streamingFinished$.subscribe(() => {
@@ -231,6 +204,42 @@ export class GeneViewComponent implements OnInit {
     });
 
     this.zoomHistory = new GeneViewZoomHistory();
+  }
+
+  setupPlot() {
+    const dataset = this.datasetsService.getSelectedDataset();
+    if (!dataset) {
+      return;
+    }
+
+    this.geneBrowserConfig = dataset.geneBrowser;
+    this.frequencyDomainMin = this.geneBrowserConfig.domainMin;
+    this.frequencyDomainMax = this.geneBrowserConfig.domainMax;
+    this.selectedFrequencies = [0, this.frequencyDomainMax];
+    this.yAxisLabel = this.geneBrowserConfig.frequencyName || this.geneBrowserConfig.frequencyColumn;
+
+    this.drawEffectTypesIcons();
+    this.drawTransmittedIcons();
+    this.drawDenovoIcons();
+
+    this.svgElement = d3.select('#svg-container')
+      .append('svg')
+      .append('g')
+      .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
+
+    this.summedTranscriptElement = this.svgElement
+      .append('g');
+
+    this.transcriptsElement = this.svgElement
+      .append('g');
+
+    this.y = d3.scaleLog()
+      .domain([this.frequencyDomainMin, this.frequencyDomainMax])
+      .range([this.subdomainAxisY, 0]);
+
+    this.y_subdomain = d3.scaleLinear()
+      .domain([0, this.frequencyDomainMin])
+      .range([this.zeroAxisY, this.subdomainAxisY]);
   }
 
   resetCheckboxes() {
