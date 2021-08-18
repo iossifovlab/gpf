@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { DatasetsService } from '../datasets/datasets.service';
-import { ActivatedRoute } from '@angular/router';
 import { Dataset } from '../datasets/datasets';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { PhenoToolService } from './pheno-tool.service';
@@ -39,11 +38,16 @@ export class PhenoToolComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.datasetsService.getSelectedDataset()
-      .subscribe(dataset => {
-        this.selectedDatasetId = dataset.id;
-        this.selectedDataset = dataset;
-      });
+    this.selectedDataset = this.datasetsService.getSelectedDataset();
+    if (this.selectedDataset) {
+      this.selectedDatasetId = this.selectedDataset.id;
+    }
+
+    this.datasetsService.getDatasetsLoadedObservable()
+    .subscribe(datasetsLoaded => {
+      this.selectedDataset = this.datasetsService.getSelectedDataset();
+      this.selectedDatasetId = this.selectedDataset.id;
+    });
 
     this.state$.subscribe(state => {
       this.phenoToolState = state;
