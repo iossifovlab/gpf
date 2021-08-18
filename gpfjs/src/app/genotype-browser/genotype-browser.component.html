@@ -1,23 +1,23 @@
-<div *ngIf="selectedDataset$ | async as dataset">
-  <div *ngIf="dataset.accessRights">
+<div *ngIf="selectedDataset">
+  <div *ngIf="selectedDataset.accessRights">
     <div class="container" style="margin-bottom: 20px;">
       <gpf-genes-block></gpf-genes-block>
       <gpf-regions-block></gpf-regions-block>
-      <gpf-genotype-block [dataset]="dataset"></gpf-genotype-block>
+      <gpf-genotype-block [dataset]="selectedDataset"></gpf-genotype-block>
       <gpf-study-filters-block
-        *ngIf="dataset?.genotypeBrowserConfig?.hasStudyFilters"
-        [dataset]="dataset">
+        *ngIf="selectedDataset?.genotypeBrowserConfig?.hasStudyFilters"
+        [dataset]="selectedDataset">
       </gpf-study-filters-block>
       <gpf-genomic-scores-block>
       </gpf-genomic-scores-block>
       <gpf-family-filters-block
-        *ngIf="dataset?.genotypeBrowserConfig?.hasFamilyFilters"
-        [dataset]="dataset"
+        *ngIf="selectedDataset?.genotypeBrowserConfig?.hasFamilyFilters"
+        [dataset]="selectedDataset"
         [genotypeBrowserState]="genotypeBrowserState">
       </gpf-family-filters-block>
       <gpf-person-filters-block
-        *ngIf="dataset?.genotypeBrowserConfig?.hasPersonFilters"
-        [dataset]="dataset"
+        *ngIf="selectedDataset?.genotypeBrowserConfig?.hasPersonFilters"
+        [dataset]="selectedDataset"
         [genotypeBrowserState]="genotypeBrowserState">
       </gpf-person-filters-block>
 
@@ -30,7 +30,7 @@
         </form>
         <div class="button">
           <input type="button" [disabled]="disableQueryButtons" class="btn btn-md btn-primary" id="table-preview-button" value="Table Preview" (click)="tablePreview = true; submitQuery()">
-          <input *ngIf="dataset?.genotypeBrowserConfig?.hasGraphicalPreview"
+          <input *ngIf="selectedDataset?.genotypeBrowserConfig?.hasGraphicalPreview"
             type="button" class="btn btn-md btn-primary"
             value="Graphical Preview"
             (click)="tablePreview = false; submitQuery()">
@@ -44,13 +44,13 @@
       <hr>
       <gpf-loading-spinner
         [loadingFinished]="loadingFinished"
-        [count]="genotypePreviewVariantsArray.getVariantsCount(dataset?.genotypeBrowserConfig?.maxVariantsCount)"
+        [count]="genotypePreviewVariantsArray.getVariantsCount(selectedDataset?.genotypeBrowserConfig?.maxVariantsCount)"
         [displayText]="'Loading variants...'">
       </gpf-loading-spinner>
 
       <gpf-genotype-preview-table
         *ngIf="tablePreview"
-        [columns]="dataset?.genotypeBrowserConfig?.tableColumns"
+        [columns]="selectedDataset?.genotypeBrowserConfig?.tableColumns"
         [genotypePreviewVariantsArray]="genotypePreviewVariantsArray"
         [legend]="legend">
       </gpf-genotype-preview-table>
