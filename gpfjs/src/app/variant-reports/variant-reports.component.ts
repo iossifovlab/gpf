@@ -15,7 +15,7 @@ import { map, share, switchMap, take } from 'rxjs/operators';
   templateUrl: './variant-reports.component.html',
   styleUrls: ['./variant-reports.component.css']
 })
-export class VariantReportsComponent implements OnInit, OnChanges {
+export class VariantReportsComponent implements OnInit {
   @ViewChild('families_pedigree') familiesPedigree: ElementRef;
   @ViewChild('legend') legend: ElementRef;
   familiesPedigreeTop: number;
@@ -51,11 +51,11 @@ export class VariantReportsComponent implements OnInit, OnChanges {
       }
     );
 
-    this.selectedDataset$ = this.datasetsService.getDataset(this.selectedDatasetId);
+    this.selectedDataset$ = this.datasetsService.getSelectedDatasetObservable();
 
     this.selectedDataset$.subscribe(
       dataset => {
-        if (dataset.accessRights) {
+        if (dataset && dataset.accessRights) {
           this.variantReport$ = datasetId$.pipe(
             switchMap(datasetId => this.variantReportsService.getVariantReport(datasetId)),
             share()
@@ -79,10 +79,6 @@ export class VariantReportsComponent implements OnInit, OnChanges {
         }
       }
     );
-  }
-
-  ngOnChanges(changes: SimpleChanges) {
-    this.datasetsService.setSelectedDatasetById(this.selectedDatasetId);
   }
 
   @HostListener('window:scroll', ['$event'])
