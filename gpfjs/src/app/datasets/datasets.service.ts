@@ -75,7 +75,9 @@ export class DatasetsService {
   }
 
   reloadSelectedDataset() {
-    this.datasetLoaded$.next();
+    if (this.hasSelectedDataset()) {
+      this.datasetLoaded$.next();
+    }
   }
 
   getSelectedDatasetObservable(): Observable<Dataset> {
