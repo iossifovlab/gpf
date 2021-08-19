@@ -1,7 +1,7 @@
 pipeline {
   agent { label 'piglet || pooh || dory' }
   options {
-    copyArtifactPermission('iossifovlab/*,seqpipe/*');
+    copyArtifactPermission('/iossifovlab/*,/seqpipe/*');
   }
   environment {
     BUILD_SCRIPTS_BUILD_DOCKER_REGISTRY_USERNAME = credentials('jenkins-registry.seqpipe.org.user')

@@ -4,7 +4,7 @@ import pandas as pd
 import math
 from dae.genome.genomes_db import GenomesDB
 
-from dae.common_reports.common_report_facade import CommonReportFacade
+from dae.common_reports.common_report import CommonReport
 
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
@@ -32,7 +32,7 @@ from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.autism_gene_profile.statistic import AGPStatistic
 
 from dae.utils.helpers import isnan
-from dae.utils.dae_utils import cached
+from dae.utils.dae_utils import cached, join_line
 
 
 logger = logging.getLogger(__name__)
@@ -72,7 +72,6 @@ class GPFInstance(object):
             self._score_config
             self._scores_factory
             self.genotype_storage_db
-            self._common_report_facade
             self._background_facade
 
     @property  # type: ignore
@@ -144,17 +143,11 @@ class GPFInstance(object):
     def reload(self):
         reload_properties = [
             "__variants_db",
-            "__common_report_facade",
             "_denovo_gene_sets_db",
             "_gene_sets_db",
         ]
         for cached_val_name in reload_properties:
             setattr(self, cached_val_name, None)
-
-    @property  # type: ignore
-    @cached
-    def _common_report_facade(self):
-        return CommonReportFacade(self)
 
     @property  # type: ignore
     @cached
@@ -367,12 +360,54 @@ class GPFInstance(object):
         return self.genomes_db.get_genome()
 
     # Common reports
-    def get_common_report(self, common_report_id):
-        return self._common_report_facade.get_common_report(common_report_id)
+    def get_common_report(self, study_id):
+        genotype_data_study = self.get_genotype_data(study_id)
+        if genotype_data_study is None or genotype_data_study.is_remote:
+            return None
+        try:
+            common_report = CommonReport(genotype_data_study)
+        except AssertionError:
+            return None
+        return common_report.to_dict()
 
     def get_common_report_families_data(self, common_report_id):
         genotype_data = GPFInstance.get_genotype_data(self, common_report_id)
-        return self._common_report_facade.get_families_data(genotype_data)
+        if not genotype_data:
+            return None
+
+        data = []
+        data.append(
+            [
+                "familyId",
+                "personId",
+                "dadId",
+                "momId",
+                "sex",
+                "status",
+                "role",
+                "genotype_data_study",
+            ]
+        )
+
+        families = list(genotype_data.families.values())
+        families.sort(key=lambda f: f.family_id)
+        for f in families:
+            for p in f.members_in_order:
+
+                row = [
+                    p.family_id,
+                    p.person_id,
+                    p.dad_id if p.dad_id else "0",
+                    p.mom_id if p.mom_id else "0",
+                    p.sex,
+                    p.status,
+                    p.role,
+                    genotype_data.name,
+                ]
+
+                data.append(row)
+
+        return map(join_line, data)
 
     # Gene sets
     def get_gene_sets_collections(self):

@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from dae.variants.attributes import Sex
 
 
@@ -95,3 +97,28 @@ class PeopleCounters(object):
             "people_total",
         ]
         return [row for row in rows if not self._is_row_empty(row)]
+
+
+class PeopleReport:
+    def __init__(self, families, person_set_collections):
+        self.families = families
+        self.person_set_collections = person_set_collections
+
+        self.people_counters_collection = \
+            self._create_people_counters_collection()
+
+    def _create_people_counters_collection(self):
+        return [
+            PeopleCounters(self.families, person_set_collection)
+            for person_set_collection in self.person_set_collections
+        ]
+
+    def to_dict(self):
+        return OrderedDict(
+            [
+                (
+                    "people_counters",
+                    [pc.to_dict() for pc in self.people_counters_collection],
+                ),
+            ]
+        )
