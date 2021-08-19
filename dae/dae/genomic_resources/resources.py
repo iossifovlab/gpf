@@ -2,11 +2,10 @@ import os
 import pysam
 
 from urllib.parse import urlparse
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 
-GenomicScoreChild = Union["GenomicResource", "GenomicResourceGroup"]
-ParentsScoreTuple = Tuple[List["GenomicResourceGroup"], "GenomicResource"]
+ParentsResourceTuple = Tuple[List["GenomicResourceGroup"], "GenomicResource"]
 
 
 class GenomicResourceBase:
@@ -16,7 +15,7 @@ class GenomicResourceBase:
     def get_url(self):
         raise NotImplementedError
 
-    def get_children(self):
+    def get_children(self, deep=False):
         raise NotImplementedError
 
     def get_repo(self):
@@ -24,25 +23,26 @@ class GenomicResourceBase:
 
 
 class GenomicResource(GenomicResourceBase):
-    def __init__(self, config, url, manifest, repo):
+    def __init__(self, config, url=None, manifest=None, repo=None):
         # import traceback as tb
         # tb.print_stack()
         print("\n", 80*"=", sep="")
         print("\nconfig\t:", config, "\nurl\t:", url)
 
         self._config = config
-        self._url = url
         self._repo = repo
+        self._id: str = config["id"]
         self._manifest = manifest
-        self._id: str = config.id
-        self._score_type = config.score_type
-        self._description: str = config.meta
+        self._url = url
+
+    def __repr__(self):
+        return f"GR({self._id})"
 
     def get_url(self):
         return self._url
 
-    def get_children(self):
-        return [self]
+    def get_children(self, deep=False):
+        return []
 
     def get_config(self):
         return self._config
@@ -80,10 +80,13 @@ class GenomicResource(GenomicResourceBase):
 
 
 class GenomicResourceGroup(GenomicResourceBase):
-    def __init__(self, id: str, url: str):
+    def __init__(self, id: str, url=None, repo=None):
         self._id = id
         self._url = url
         self.children: Dict[str, GenomicResourceBase] = {}
+
+    def __repr__(self):
+        return f"GRGroup({self._id})"
 
     def get_url(self):
         return self._url
@@ -94,15 +97,33 @@ class GenomicResourceGroup(GenomicResourceBase):
             result.extend(child.get_children())
         return result
 
-    def get_children(self):
-        return list(self.children.values())
+    def get_resource(
+        self, resource_id: str, deep=True
+    ) -> Optional[GenomicResourceBase]:
+
+        if not deep:
+            return self.children.get(resource_id)
+
+        for child in self.get_children(deep=deep):
+            if child.get_id() == resource_id:
+                return child
+        return None
+
+    def get_children(self, deep=False) -> List[GenomicResourceBase]:
+        if not deep:
+            return list(self.children.values())
+        result = []
+        for child in self.children.values():
+            result.append(child)
+            result.extend(child.get_children(deep=True))
+        return result
 
     def add_child(self, resource):
         self.children[resource.get_id()] = resource
 
     def resource_children(
         self, parents: List["GenomicResourceGroup"] = None
-    ) -> List[ParentsScoreTuple]:
+    ) -> List[ParentsResourceTuple]:
         result = list()
         if parents is None:
             parents = [self]
@@ -119,8 +140,8 @@ class GenomicResourceGroup(GenomicResourceBase):
 
     def get_genomic_resource(
         self, genomic_resource_id: str
-    ) -> Union[ParentsScoreTuple, Tuple[None, None]]:
+    ) -> Union[ParentsResourceTuple, Tuple[None, None]]:
         for parents, genomic_resource in self.resource_children():
-            if genomic_resource.id == genomic_resource_id:
+            if genomic_resource.get_id() == genomic_resource_id:
                 return parents, genomic_resource
         return None, None

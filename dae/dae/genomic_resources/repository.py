@@ -12,7 +12,7 @@ from urllib.parse import urlparse, urljoin
 
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 
-from dae.genomic_resources.resources import ParentsScoreTuple, \
+from dae.genomic_resources.resources import ParentsResourceTuple, \
     GenomicResourceBase, GenomicResource, GenomicResourceGroup
 from dae.genomic_resources.manifest import Manifest
 from dae.genomic_resources.http_file import HTTPFile
@@ -21,33 +21,74 @@ from dae.genomic_resources.utils import resource_type_to_class
 logger = logging.getLogger(__name__)
 
 
-def create_genomic_resources_repository(repository_path):
-    pass
+def _create_genomic_resources_hierarchy(repo, parents_resource_iterator):
+    root_group = GenomicResourceGroup("", repo=repo)
+
+    for parents, child in parents_resource_iterator:
+        group_id = ""
+        current_group = root_group
+        for group_part in parents:
+            group_id = f"{group_id}/{group_part}" if group_id else group_part
+
+            group = current_group.get_resource(group_id, deep=False)
+            if group is None:
+                group = GenomicResourceGroup(group_id, repo=repo)
+                current_group.add_child(group)
+            assert isinstance(group, GenomicResourceGroup)
+
+            current_group = group
+
+        resource_id = f"{group_id}/{child[0]}"
+        assert current_group.get_resource(resource_id, deep=False) is None
+
+        child = repo.create_resource(resource_id, child[1])
+        current_group.add_child(child)
+
+    return root_group
 
 
-def walk_genomic_resources_repository(repository_path):
-    for root, dirs, files in os.walk(repository_path):
-        print("root:", root)
-        print("dirs:", dirs)
-        print("files:", files)
+def _walk_genomic_resources_repository(repository_path):
+    print(repository_path)
 
-        print(root, "consumes", end=" ")
-        print(sum(
-            os.path.getsize(os.path.join(root, name)) 
-            for name in files), end=" ")
-        print("bytes in", len(files), "non-directory files")
+    root_path = pathlib.Path(repository_path).absolute()
+    root_dirname = str(root_path)
+    resource_files = glob(
+        os.path.join(root_path, "**", "genomic_resource.yaml"),
+        recursive=True
+    )
+    root_url = root_path.as_uri()
+    print(root_url)
+
+    for resource_file in resource_files:
+        assert resource_file.startswith(root_dirname)
+        print(resource_file)
+        resource_path = resource_file[len(root_dirname) + 1:]
+        print(resource_path)
+        parts = resource_path.split(os.path.sep)
+        print(parts)
+        assert len(parts) >= 2
+
+        parents = parts[:-2]
+        child = parts[-2:]
+        print(parents, child)
+        assert len(child) == 2
+        child[1] = resource_file
+        print(parents, child)
+        yield tuple(parents), tuple(child)
+
 
 class GenomicResourcesRepo:
     """
     Describes a collection of genomic scores and genomic score groups.
     """
 
-    def __init__(self, gsd_id: str, repo_content):
+    def __init__(self, gsd_id: str, repo_content=None):
         self.gsd_id = gsd_id
 
         self.resources: Dict[str, GenomicResourceBase] = dict()
 
-        self._load_genomic_resources(repo_content)
+        if repo_content is not None:
+            self._load_genomic_resources(repo_content)
 
     @staticmethod
     def create_genomic_resource_repository(repository_path):
@@ -209,11 +250,11 @@ class GenomicResourcesRepo:
         file_url = os.path.join(resource.get_url(), filename)
         return self._stream_resource_file_internal(file_url, offset, size)
 
-    def get_genomic_score(self, genomic_score_id: str) -> ParentsScoreTuple:
+    def get_genomic_score(self, genomic_score_id: str) -> ParentsResourceTuple:
         return self.top_level_group.get_genomic_score(genomic_score_id)
 
     @property
-    def genomic_scores(self) -> List[ParentsScoreTuple]:
+    def genomic_scores(self) -> List[ParentsResourceTuple]:
         """
         Returns all constituent genomic scores of this repository.
         """
