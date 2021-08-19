@@ -32,8 +32,6 @@ pipeline {
         enabledForFailure: true, aggregatingResults: false,
         tools: [
           flake8(pattern: 'test-results/flake8_report', reportEncoding: 'UTF-8'),
-          junitParser(pattern: 'test-results/dae-junit.xml', reportEncoding: 'UTF-8', id: 'junit-dae', name: 'JUnit - dae'),
-          junitParser(pattern: 'test-results/wdae-junit.xml', reportEncoding: 'UTF-8', id: 'junit-wdae', name: 'JUnit - wdae'),
           myPy(pattern: 'test-results/mypy_dae_report', reportEncoding: 'UTF-8', id: 'mypy-dae', name: 'MyPy - dae'),
           myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8', id: 'mypy-wdae', name: 'MyPy - wdae')
         ]
