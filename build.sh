@@ -402,6 +402,8 @@ EOT'
           --cov-report=xml:/code/results/dae-coverage.xml \
           --cov /code/dae/ \
           dae/ || true'
+
+    build_run_local cp ./results/dae-junit.xml ./results/dae-coverage.xml ./test-results/
   }
 
   # Tests - wdae
@@ -435,7 +437,7 @@ EOT'
           --cov /code/wdae/ \
           wdae || true'
 
-    build_run_local cp ./results/wdae-junit.xml ./results/dae-junit.xml ./test-results/
+    build_run_local cp ./results/wdae-junit.xml ./results/wdae-coverage.xml ./test-results/
   }
 
   # post cleanup
