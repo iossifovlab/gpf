@@ -9,14 +9,21 @@ ParentsResourceTuple = Tuple[List["GenomicResourceGroup"], "GenomicResource"]
 
 
 class GenomicResourceBase:
+    def __init__(self, resource_id, repo):
+        self.resource_id = resource_id
+        self.repo = repo
+
     def get_id(self):
-        return self._id
+        return self.resource_id
 
     def get_url(self):
-        raise NotImplementedError
+        return os.path.join(self.repo.get_url(), self.get_id())
+
+    def get_path(self):
+        return os.path.join(self.repo.get_path(), self.get_id())
 
     def get_children(self, deep=False):
-        raise NotImplementedError
+        return []
 
     def get_repo(self):
         return self._repo
@@ -30,19 +37,12 @@ class GenomicResource(GenomicResourceBase):
         print("\nconfig\t:", config, "\nurl\t:", url)
 
         self._config = config
-        self._repo = repo
+        super(GenomicResource, self).__init__(config["id"], repo)
+
         self._id: str = config["id"]
-        self._manifest = manifest
-        self._url = url
 
     def __repr__(self):
         return f"GR({self._id})"
-
-    def get_url(self):
-        return self._url
-
-    def get_children(self, deep=False):
-        return []
 
     def get_config(self):
         return self._config
@@ -80,16 +80,13 @@ class GenomicResource(GenomicResourceBase):
 
 
 class GenomicResourceGroup(GenomicResourceBase):
-    def __init__(self, id: str, url=None, repo=None):
-        self._id = id
-        self._url = url
+    def __init__(self, resource_id: str, url=None, repo=None):
+        super(GenomicResourceGroup, self).__init__(resource_id, repo)
+
         self.children: Dict[str, GenomicResourceBase] = {}
 
     def __repr__(self):
-        return f"GRGroup({self._id})"
-
-    def get_url(self):
-        return self._url
+        return f"GRGroup({self.get_id()})"
 
     def get_resources(self):
         result = []
@@ -145,3 +142,8 @@ class GenomicResourceGroup(GenomicResourceBase):
             if genomic_resource.get_id() == genomic_resource_id:
                 return parents, genomic_resource
         return None, None
+
+    def get_genomic_resources(self):
+        for child in self.get_children(deep=True):
+            if isinstance(child, GenomicResource):
+                yield child

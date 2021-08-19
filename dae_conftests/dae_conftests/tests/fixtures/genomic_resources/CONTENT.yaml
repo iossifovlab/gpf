@@ -1,4 +1,4 @@
-id: root
+id: ''
 type: group
 children:
 - id: hg19

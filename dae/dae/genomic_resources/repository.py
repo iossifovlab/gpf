@@ -10,7 +10,7 @@ import requests
 import urllib.request
 from urllib.parse import urlparse, urljoin
 
-from dae.annotation.tools.annotator_config import AnnotationConfigParser
+from dae.genomic_resources.resources_config import ResourcesConfigParser
 
 from dae.genomic_resources.resources import ParentsResourceTuple, \
     GenomicResourceBase, GenomicResource, GenomicResourceGroup
@@ -77,18 +77,55 @@ def _walk_genomic_resources_repository(repository_path):
         yield tuple(parents), tuple(child)
 
 
+def _create_resource_content_dict(resource: GenomicResourceBase):
+    section = dict()
+    section["id"] = resource.get_id()
+    if isinstance(resource, GenomicResourceGroup):
+        section["type"] = "group"
+        section["children"] = []
+        for child in resource.get_children():
+            child_section = _create_resource_content_dict(child)
+            section["children"].append(child_section)
+    else:
+        section["type"] = "resource"
+    return section
+
+
+def create_fs_genomic_resource_repository(repository_id, repository_path):
+    repo = FSGenomicResourcesRepo(repository_id, repository_path)
+
+    # walk filesystem for genomic resources
+    root_group = _create_genomic_resources_hierarchy(
+        repo,
+        _walk_genomic_resources_repository(repository_path))
+    assert root_group is not None
+
+    repo.set_root(root_group)
+    repo.build_repository_content()
+
+    for resource in root_group.get_genomic_resources():
+        repo.build_resource_manifest(resource.get_id())
+
+    return repo
+
+
 class GenomicResourcesRepo:
     """
     Describes a collection of genomic scores and genomic score groups.
     """
 
-    def __init__(self, gsd_id: str, repo_content=None):
+    def __init__(self, gsd_id: str, path: str):
         self.gsd_id = gsd_id
+        self.path = path
 
         self.resources: Dict[str, GenomicResourceBase] = dict()
 
-        if repo_content is not None:
-            self._load_genomic_resources(repo_content)
+    def get_path(self):
+        return self.path
+
+    def load(self):
+        repo_content = self.load_content()
+        self.resource = self._load_genomic_resources(repo_content)
 
     @staticmethod
     def create_genomic_resource_repository(repository_path):
@@ -126,7 +163,7 @@ class GenomicResourcesRepo:
             curr_path += f"/{score_path[-2]}"
             print("curr_path:", curr_path)
 
-            config = AnnotationConfigParser.load_annotation_config(
+            config = ResourcesConfigParser.load_resource_config(
                 conf_path
             )
             score_url = pathlib.Path(curr_path).absolute().as_uri()
@@ -173,6 +210,15 @@ class GenomicResourcesRepo:
                 shell=True
             )
 
+    def create_resource(self, resource_id, config_path):
+        config = ResourcesConfigParser.load_resource_config_from_stream(
+            self._stream_resource_file_internal(config_path, None, None)
+        )
+        assert config["id"] == resource_id
+        resource_class = resource_type_to_class(config["resource_type"])
+        resource = resource_class(config, repo=self)
+        return resource
+
     def _load_genomic_resources(self, content_section, parent=None):
         if content_section is None:
             return
@@ -202,7 +248,7 @@ class GenomicResourcesRepo:
             config_uri = os.path.join(
                 url, "genomic_resource.yaml"
             )
-            config = AnnotationConfigParser.load_annotation_config_from_stream(
+            config = ResourcesConfigParser.load_resource_config_from_stream(
                 self._stream_resource_file_internal(config_uri, None, None)
             )
             resource_class = resource_type_to_class(config["resource_type"])
@@ -270,16 +316,25 @@ class FSGenomicResourcesRepo(GenomicResourcesRepo):
     """
 
     def __init__(self, gsd_id: str, path: str):
-        repo_content = None
-        content_path = os.path.join(path, "CONTENT.yaml")
+        super().__init__(gsd_id, path)
+        print(self.path)
+
+        self._url = pathlib.Path(self.path).absolute().as_uri()
+        self.root_group = None
+
+    def set_root(self, root_group):
+        self.root_group = root_group
+        for resource in self.root_group.get_genomic_resources():
+            self._add_genomic_resource(resource)
+
+    def load_content(self):
+        content_path = os.path.join(self.path, "CONTENT.yaml")
         if os.path.exists(content_path):
             with open(content_path, "r") as content:
-                repo_content = yaml.safe_load(content)
-        self._url = pathlib.Path(path).absolute().as_uri()
-        super().__init__(gsd_id, repo_content)
+                return yaml.safe_load(content)
+        return None
 
-    def _add_genomic_resource(self, resource, parent):
-        parent.children[resource.get_id()] = resource
+    def _add_genomic_resource(self, resource):
         self.resources[resource.get_id()] = resource
 
     def reload(self):
@@ -297,6 +352,32 @@ class FSGenomicResourcesRepo(GenomicResourcesRepo):
         file_url = os.path.join(resource.get_url(), filename)
         filepath = urlparse(file_url).path
         return open(filepath, "r")
+
+    def build_repository_content(self):
+        content = _create_resource_content_dict(self.root_group)
+        content_filepath = os.path.join(self.path, "CONTENT.yaml")
+
+        with open(content_filepath, "w") as out:
+            yaml.dump(
+                content, out, default_flow_style=False, sort_keys=False
+                )
+
+    def build_resource_manifest(self, resource_id):
+        logger.info(f"generating MANIFEST files for {resource_id}")
+
+        resource = self.get_resource(resource_id)
+        assert resource is not None
+        assert isinstance(resource, GenomicResource)
+
+        cwd = urlparse(resource.get_url()).path
+
+        command = \
+            "find . -type f \\( ! -iname \"MANIFEST\" \\)  " \
+            "-exec sha256sum {} \\; | sed \"s|\\s\\./||\"" \
+            "> MANIFEST"
+
+        logger.info(f"going to execute <{command}> in wd <{cwd}>")        
+        call(command, cwd=cwd, shell=True)
 
 
 class HTTPGenomicResourcesRepo(GenomicResourcesRepo):
