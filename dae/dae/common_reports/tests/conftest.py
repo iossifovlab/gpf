@@ -30,11 +30,6 @@ def local_gpf_instance(gpf_instance):
 
 
 @pytest.fixture(scope="session")
-def common_report_facade(local_gpf_instance):
-    return local_gpf_instance._common_report_facade
-
-
-@pytest.fixture(scope="session")
 def study1(local_gpf_instance):
     return local_gpf_instance.get_genotype_data("Study1")
 
@@ -105,16 +100,6 @@ def denovo_variants_ds1(genotype_data_group1):
 
 
 @pytest.fixture(scope="session")
-def common_reports_config(common_report_facade):
-    return common_report_facade.get_common_report_config("Study1")
-
-
-@pytest.fixture(scope="session")
-def generate_common_reports(common_report_facade):
-    common_report_facade.generate_all_common_reports()
-
-
-@pytest.fixture(scope="session")
 def remove_common_reports(common_report_facade):
     all_configs = common_report_facade.get_all_common_report_configs()
     temp_files = [config.file_path for config in all_configs]
@@ -135,3 +120,12 @@ def remove_common_reports(common_report_facade):
 @pytest.fixture
 def phenotype_role_collection(study1):
     return study1.get_person_set_collection("phenotype")
+
+
+@pytest.fixture
+def phenotype_role_sets(phenotype_role_collection):
+    person_sets = []
+    for person_set in phenotype_role_collection.person_sets.values():
+        if len(person_set.persons) > 0:
+            person_sets.append(person_set)
+    return person_sets

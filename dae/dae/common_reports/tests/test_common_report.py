@@ -1,8 +1,8 @@
 from dae.common_reports.common_report import CommonReport
 
 
-def test_common_report(study4, common_reports_config):
-    common_report = CommonReport(study4, common_reports_config)
+def test_common_report(study4):
+    common_report = CommonReport(study4)
 
     assert common_report.id == "Study4"
     assert common_report.families_report
@@ -19,4 +19,4 @@ def test_common_report(study4, common_reports_config):
     assert common_report.transmitted is False
     assert common_report.study_description == "Study 4"
 
-    assert len(common_report.to_dict()) == 14
+    assert len(common_report.to_dict()) == 15
