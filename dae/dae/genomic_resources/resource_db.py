@@ -1,8 +1,14 @@
 import os
+import logging
+
 from urllib.parse import urlparse
 from dae.genomic_resources.repository import FSGenomicResourcesRepo, \
-    HTTPGenomicResourcesRepo, GenomicResourcesRepo
+    HTTPGenomicResourcesRepo, \
+    create_fs_genomic_resource_repository
 from dae.genomic_resources.resources import GenomicResource
+
+
+logger = logging.getLogger(__name__)
 
 
 class GenomicResourceDB:
@@ -12,11 +18,15 @@ class GenomicResourceDB:
             gsd_id = gsd_conf["id"]
             gsd_url = urlparse(gsd_conf["url"])
 
+            logger.info(f"going to create repository from: {gsd_url}")
             is_filesystem = gsd_url.scheme == "file"
             if is_filesystem:
                 gsd = FSGenomicResourcesRepo(gsd_id, gsd_url.path)
+                gsd.load()
             else:
                 gsd = HTTPGenomicResourcesRepo(gsd_id, gsd_url.geturl())
+                gsd.load()
+
             self.repositories.append(gsd)
 
     def get_resource(self, resource_id: str, repo_id: str = None):
@@ -56,9 +66,8 @@ class CachedGenomicResourceDB(GenomicResourceDB):
         for file in resource.get_manifest().keys():
             copy_file(file)
 
-        GenomicResourcesRepo.create_genomic_resource_repository(
-            cache_base_path
-        )
+        create_fs_genomic_resource_repository(
+            "cache", cache_base_path)
 
         self._cache.reload()
 

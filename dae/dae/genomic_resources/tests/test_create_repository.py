@@ -1,5 +1,6 @@
 import pytest
 import os
+import yaml
 
 from urllib.parse import urlparse
 from box import Box
@@ -8,6 +9,7 @@ from dae.genomic_resources.resources import GenomicResource, \
     GenomicResourceGroup
 from dae.genomic_resources.repository import \
     _walk_genomic_resources_repository, \
+    _walk_genomic_repository_content, \
     _create_genomic_resources_hierarchy, \
     _create_resource_content_dict, \
     create_fs_genomic_resource_repository, \
@@ -267,3 +269,19 @@ def test_build_manifests(fixture_dirname):
     assert repo is not None
     for resource in repo.root_group.get_genomic_resources():
         repo.build_resource_manifest(resource.get_id())
+
+
+def test_walk_genomic_resources_repository_content(fixture_dirname, fake_repo):
+    repo_dirname = fixture_dirname("genomic_resources")
+    print(repo_dirname)
+
+    content_path = os.path.join(repo_dirname, "CONTENT.yaml")
+    if os.path.exists(content_path):
+        with open(content_path, "r") as content:
+            repo_content = yaml.safe_load(content)
+
+    print(repo_content)
+
+    for parents, child, in _walk_genomic_repository_content(
+            fake_repo, repo_content):
+        print(parents, child)

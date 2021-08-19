@@ -4,6 +4,8 @@ import pysam
 from urllib.parse import urlparse
 from typing import Dict, List, Optional, Tuple, Union
 
+from dae.genomic_resources.manifest import Manifest
+
 
 ParentsResourceTuple = Tuple[List["GenomicResourceGroup"], "GenomicResource"]
 
@@ -26,7 +28,7 @@ class GenomicResourceBase:
         return []
 
     def get_repo(self):
-        return self._repo
+        return self.repo
 
 
 class GenomicResource(GenomicResourceBase):
@@ -40,6 +42,7 @@ class GenomicResource(GenomicResourceBase):
         super(GenomicResource, self).__init__(config["id"], repo)
 
         self._id: str = config["id"]
+        self._manifest = None
 
     def __repr__(self):
         return f"GR({self._id})"
@@ -48,6 +51,13 @@ class GenomicResource(GenomicResourceBase):
         return self._config
 
     def get_manifest(self):
+        if self._manifest is None:
+            manifest_uri = os.path.join(self.get_url(), "MANIFEST")
+
+            self._manifest = Manifest(
+                self.repo._stream_resource_file_internal(
+                    manifest_uri, None, None))
+
         return self._manifest
 
     def binary_stream(self, filename, offset=None, size=None):
@@ -56,7 +66,7 @@ class GenomicResource(GenomicResourceBase):
         )
 
     def tabix_access(self, filename, index_filename=None):
-        parse_result = urlparse(self._url)
+        parse_result = urlparse(self.get_url())
         if parse_result.scheme == "file":
             filename = os.path.join(parse_result.path, filename)
             if index_filename is not None:

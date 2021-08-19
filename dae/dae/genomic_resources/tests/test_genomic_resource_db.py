@@ -3,13 +3,15 @@ from dae.genomic_resources.resource_db import GenomicResourceDB, \
 
 
 def test_fs_repository(test_grdb_config, fixture_dirname):
+    print(test_grdb_config)
+
     grdb = GenomicResourceDB(
         test_grdb_config["genomic_resource_repositories"])
     assert len(grdb.repositories) == 1
     repo = grdb.repositories[0]
     print(repo.get_name())
     print(repo.get_url())
-    resources = list(repo.top_level_group.get_resources())
+    resources = list(repo.root_group.get_resources())
     resources.sort(key=lambda x: x.get_id())
     print(resources)
 
@@ -57,7 +59,7 @@ def test_http_repository(resources_http_server, test_grdb_http_config):
     print(repo.get_name())
     print(repo.get_url())
 
-    resources = list(repo.top_level_group.get_resources())
+    resources = list(repo.root_group.get_resources())
     resources.sort(key=lambda x: x.get_id())
 
     resource = repo.get_resource("hg38/TESTCADD")
