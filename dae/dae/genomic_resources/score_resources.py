@@ -56,8 +56,8 @@ class GenomicScoresResource(GenomicResource):
     ACCESS_SWITCH_THRESHOLD = 1500
 
     def open(self):
-        scores_filename = self.get_url() + "/" + self._config.filename
-        index_filename = self.get_url() + "/" + self._config.index_file.filename
+        scores_filename = f"{self.get_url()}/{self._config.filename}"
+        index_filename = f"{self.get_url()}/{self._config.index_file.filename}"
         if urlparse(self.get_url()).scheme == "file":
             scores_filename = urlparse(scores_filename).path
             index_filename = urlparse(index_filename).path

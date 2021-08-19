@@ -251,7 +251,7 @@ class FSGenomicResourcesRepo(GenomicResourcesRepo):
             "-exec sha256sum {} \\; | sed \"s|\\s\\./||\"" \
             "> MANIFEST"
 
-        logger.info(f"going to execute <{command}> in wd <{cwd}>")        
+        logger.info(f"going to execute <{command}> in wd <{cwd}>")
         call(command, cwd=cwd, shell=True)
 
 

@@ -233,7 +233,7 @@ def test_create_resource_content_dict_resource(root_group):
 
 def test_create_fs_genomic_resource_repository(fixture_dirname):
     repo = create_fs_genomic_resource_repository(
-        "test_repo", fixture_dirname("genomic_resources")) 
+        "test_repo", fixture_dirname("genomic_resources"))
     assert repo is not None
 
 
@@ -253,7 +253,7 @@ def test_get_resources(root_group):
 
 def test_resource_paths(fixture_dirname):
     repo = create_fs_genomic_resource_repository(
-        "test_repo", fixture_dirname("genomic_resources")) 
+        "test_repo", fixture_dirname("genomic_resources"))
     assert repo is not None
     for resource in repo.root_group.get_genomic_resources():
         print(resource, resource.get_path())
@@ -265,7 +265,7 @@ def test_resource_paths(fixture_dirname):
 
 def test_build_manifests(fixture_dirname):
     repo = create_fs_genomic_resource_repository(
-        "test_repo", fixture_dirname("genomic_resources")) 
+        "test_repo", fixture_dirname("genomic_resources"))
     assert repo is not None
     for resource in repo.root_group.get_genomic_resources():
         repo.build_resource_manifest(resource.get_id())
