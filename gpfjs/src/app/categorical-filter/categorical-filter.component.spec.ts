@@ -9,14 +9,26 @@ import { PhenoBrowserService } from 'app/pheno-browser/pheno-browser.service';
 import { UsersService } from 'app/users/users.service';
 import { CategoricalFilterComponent } from './categorical-filter.component';
 
+class MockDatasetsService {
+  getSelectedDatasetId() {
+    return 'fakeDatasetId';
+  }
+}
+
 describe('CategoricalFilterComponent', () => {
   let component: CategoricalFilterComponent;
   let fixture: ComponentFixture<CategoricalFilterComponent>;
+  const datasetsServiceMock = new MockDatasetsService();
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [CategoricalFilterComponent],
-      providers: [DatasetsService, PhenoBrowserService, ConfigService, UsersService],
+      providers: [
+        { provide: DatasetsService, useValue: datasetsServiceMock },
+        PhenoBrowserService,
+        ConfigService,
+        UsersService
+      ],
       imports: [HttpClientTestingModule, RouterTestingModule, FormsModule, NgxsModule.forRoot([])]
     })
     .compileComponents();
