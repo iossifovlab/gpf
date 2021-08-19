@@ -14,6 +14,8 @@ import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-load
 import { GeneViewComponent } from 'app/gene-view/gene-view.component';
 import { ConfigService } from 'app/config/config.service';
 
+import { CODING, CNV, LGDS } from 'app/effecttypes/effecttypes';
+
 @Component({
   selector: 'gpf-gene-browser',
   templateUrl: './gene-browser.component.html',
@@ -50,12 +52,14 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     // LGDs
     'lgds',
     // CODING
-    'nonsense', 'frame-shift', 'splice-site', 'no-frame-shift-newStop',
-    'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift',
+    // 'nonsense', 'frame-shift', 'splice-site', 'no-frame-shift-newStop',
+    // 'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift',
+    ...CODING,
     // ???
     'CDS',
     // CNV
-    'CNV+', 'CNV-'
+    ...CNV,
+    // 'CNV+', 'CNV-'
   ];
   private readonly otherEffectTypes = [
     // ???
@@ -67,7 +71,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     // CNV
     'CNV+', 'CNV-'
   ];
-  private readonly lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
+  private readonly lgds = [...LGDS];
   private readonly affectedStatusValues = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
   private readonly effectTypeValues = ['lgds', 'missense', 'synonymous', 'cnv+', 'cnv-', 'other'];
   private readonly variantTypeValues = ['sub', 'ins', 'del', 'cnv+', 'cnv-'];
@@ -116,7 +120,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     this.datasetsService.getDataset(this.selectedDatasetId).subscribe(dataset => {
       if (dataset.accessRights && this.route.snapshot.params.gene) {
         this.waitForGeneViewComponent().then(() => {
-          this.submitGeneRequest([this.route.snapshot.params.gene]);
+          this.submitGeneRequest(this.route.snapshot.params.gene);
         });
       }
     });
@@ -197,9 +201,36 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     return params;
   }
 
-  private async submitGeneRequest(geneSymbols?: string[]) {
+  private async submitGeneRequest(geneSymbol?: string) {
     this.showError = false;
     this.hideDropdown = true;
+
+    this.loadingFinished = false;
+    this.loadingService.setLoadingStart();
+    this.hideResults = false;
+
+    // COLLECT GENE
+    if (geneSymbol) {
+      this.geneSymbol = geneSymbol;
+    }
+    try {
+      this.selectedGene = await this.geneService.getGene(
+        this.geneSymbol.toUpperCase().trim()
+      ).pipe(first()).toPromise();
+    } catch(error) {
+      console.error(error);
+      this.showError = true;
+      this.hideDropdown = false;
+    }
+
+    if (this.selectedGene === undefined) {
+      return;
+    }
+
+    this.selectedRegion = [
+      this.selectedGene.transcripts[0].start,
+      this.selectedGene.transcripts[this.selectedGene.transcripts.length - 1].stop
+    ];
 
     this.queryService.summaryStreamingFinishedSubject.subscribe(async() => {
       this.loadingFinished = true;
@@ -215,32 +246,6 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     this.queryService.streamingFinishedSubject.subscribe(() => {
       this.familyLoadingFinished = true;
     });
-
-    if (geneSymbols) {
-      this.geneSymbol = geneSymbols[0];
-    }
-
-    try {
-      this.selectedGene = await this.geneService.getGene(
-        this.geneSymbol.toUpperCase().trim()
-      ).pipe(first()).toPromise();
-    } catch(error) {
-      console.error(error);
-      this.showError = true;
-      this.hideDropdown = false;
-    }
-
-    if (this.selectedGene === undefined) {
-      return;
-    }
-    this.hideResults = false;
-    this.loadingFinished = false;
-    this.loadingService.setLoadingStart();
-    this.selectedRegion = [
-      this.selectedGene.transcripts[0].start,
-      this.selectedGene.transcripts[this.selectedGene.transcripts.length - 1].stop
-    ];
-
     this.genotypePreviewVariantsArray = null;
 
     const requestParams = {
@@ -251,24 +256,15 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
         'denovo', 'mendelian', 'omission', 'missing'
       ],
     };
+    if (this.enableCodingOnly) {
+      requestParams['effectTypes'] = this.codingEffectTypes;
+    }
 
     this.summaryVariantsArray = this.queryService.getGeneViewVariants(requestParams);
     await this.queryService.summaryStreamingFinishedSubject.pipe(first()).toPromise();
     this.summaryVariantsArrayFiltered = this.filterSummaryVariantsArray(
       this.summaryVariantsArray, ...this.selectedRegion
     );
-    if (this.enableCodingOnly) {
-      requestParams['effectTypes'] = this.codingEffectTypes;
-    }
-
-    this.hideDropdown = false;
-  }
-
-  private getFamilyVariantCounts() {
-    if (this.genotypePreviewVariantsArray) {
-      return this.genotypePreviewVariantsArray.getVariantsCount(this.maxFamilyVariants);
-    }
-    return '';
   }
 
   private onSubmit(event) {

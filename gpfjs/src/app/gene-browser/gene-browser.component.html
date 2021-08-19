@@ -10,7 +10,7 @@
 
         <div style="padding: 0px 10px 10px 20px">
           <input (click)="hideResults = true" style="margin-right: 10px;" type="checkbox" id="coding-only-checkbox" [(ngModel)]="enableCodingOnly">
-          <label for="coding-only-checkbox">Coding only</label>
+          <label for="coding-only-checkbox" style="user-select: none">Coding only</label>
         </div>
       </div>
     </div>
@@ -121,8 +121,11 @@
 
       <div class="row">
         <div class="col-6">
-          <gpf-loading-spinner *ngIf="selectedGene" [loadingFinished]="familyLoadingFinished"
-            [count]="getFamilyVariantCounts()" [displayText]="'Loading variants...'">
+          <gpf-loading-spinner
+            *ngIf="selectedGene"
+            [loadingFinished]="familyLoadingFinished"
+            [displayText]="'Loading variants...'"
+            [count]="genotypePreviewVariantsArray?.getVariantsCount(this.maxFamilyVariants)">
           </gpf-loading-spinner>
         </div>
         <div class="col-6" *ngIf="selectedGene">
