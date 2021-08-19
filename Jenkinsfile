@@ -28,6 +28,10 @@ pipeline {
   post {
     always {
       junit 'test-results/wdae-junit.xml, test-results/dae-junit.xml'
+
+      cobertura coberturaReportFile: 'test-results/dae-coverage.xml', enableNewApi: true
+      cobertura coberturaReportFile: 'test-results/wdae-coverage.xml', enableNewApi: true
+
       recordIssues(
         enabledForFailure: true, aggregatingResults: false,
         tools: [
