@@ -53,7 +53,7 @@ def test_walk_genomic_resources_repository(fixture_dirname):
         print(parents, child)
 
     all_resources = list(_walk_genomic_resources_repository(repo_dirname))
-    assert len(all_resources) == 6
+    assert len(all_resources) == 7
 
     all_resources_ids = set([
         (*parents, child[0]) for parents, child in all_resources
@@ -83,7 +83,7 @@ def test_walk_genomic_resources_repository_content(fixture_dirname, fake_repo):
 
     all_resources = list(_walk_genomic_repository_content(
             fake_repo, repo_content))
-    assert len(all_resources) == 6
+    assert len(all_resources) == 7
 
     all_resources_ids = set([
         (*parents, child[0]) for parents, child in all_resources

@@ -1,0 +1,13 @@
+id: hg19/GATK_ResourceBundle_5777_b37_phiX174/gene_models/refGene_201309
+
+resource_type: gene_models_resource.GeneModelsResource
+
+filename: refGene201309.txt
+
+format: "refseq"
+
+
+meta: |
+  ## refGene gene models from 2013-09
+
+  Old gene models used by GPF up to 2019-02.

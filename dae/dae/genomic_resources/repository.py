@@ -177,7 +177,7 @@ class GenomicResourcesRepo:
         config = ResourcesConfigParser.load_resource_config_from_stream(
             self._stream_resource_file_internal(config_path, None, None)
         )
-        assert config["id"] == resource_id
+        assert config["id"] == resource_id, (config["id"], resource_id)
         resource_class = resource_type_to_class(config["resource_type"])
         resource = resource_class(config, repo=self)
         return resource
