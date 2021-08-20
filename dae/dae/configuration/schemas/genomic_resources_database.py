@@ -1,4 +1,3 @@
-from dae.configuration.gpf_config_parser import validate_existing_path
 
 attr_schema = {
     "type": "dict",

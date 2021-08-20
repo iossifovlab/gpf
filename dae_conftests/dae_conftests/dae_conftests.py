@@ -18,7 +18,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance, cached
 
 from dae.configuration.gpf_config_parser import GPFConfigParser, FrozenBox
 from dae.configuration.schemas.dae_conf import dae_conf_schema
-from dae.configuration.schemas.genomic_score_database import \
+from dae.configuration.schemas.genomic_resources_database import \
     genomic_score_schema
 
 from dae.annotation.annotation_pipeline import AnnotationPipeline
@@ -242,6 +242,7 @@ def temp_dirname(request, cleanup):
         request.addfinalizer(fin)
     return dirname
 
+
 @pytest.fixture
 def temp_dirname_grdb(request, cleanup):
     dirname = tempfile.mkdtemp(suffix="_data", prefix="grdb_")
@@ -251,6 +252,7 @@ def temp_dirname_grdb(request, cleanup):
     if cleanup:
         request.addfinalizer(fin)
     return dirname
+
 
 @pytest.fixture
 def temp_filename(request, cleanup):

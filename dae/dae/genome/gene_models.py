@@ -1,11 +1,14 @@
 import gzip
 import os
-import sys
 import logging
+import copy
 
 from collections import defaultdict
+from contextlib import contextmanager
 
 import pandas as pd
+
+from typing import Optional, Dict, TextIO
 
 from dae.utils.regions import Region
 
@@ -389,11 +392,10 @@ class TranscriptModel:
 # GeneModel's
 #
 class GeneModels:
-    def __init__(self, name=None, location=None):
+    def __init__(self, name=None):
         self.name = name
-        self.location = location
         self._shift = None
-        self._alternative_names = None
+        self.alternative_names = None
 
         self.utr_models = defaultdict(lambda: defaultdict(list))
         self.transcript_models = {}
@@ -417,11 +419,7 @@ class GeneModels:
 
     def gene_names(self):
         if self.gene_models is None:
-            print(
-                "Gene Models haven't been created/uploaded yet! "
-                "Use either loadGeneModels function or "
-                "self.createGeneModelDict function"
-            )
+            logger.warning(f"gene models {self.name} are empty")
             return None
 
         return list(self.gene_models.keys())
@@ -534,11 +532,15 @@ class GeneModels:
                 self._save_gene_models(outfile)
 
 
-def load_default_gene_models_format(
-    filename, gene_mapping_file=None, nrows=None
-):
+def _parse_default_gene_models_format(
+    gm: GeneModels, infile: TextIO,
+    gene_mapping: Optional[Dict[str, str]] = None,
+    nrows: Optional[int] = None
+) -> GeneModels:
+
+    infile.seek(0)
     df = pd.read_csv(
-        filename,
+        infile,
         sep="\t",
         nrows=nrows,
         dtype={
@@ -573,8 +575,6 @@ def load_default_gene_models_format(
     if "trOrigId" not in df.columns:
         tr_names = pd.Series(data=df["trID"].values)
         df["trOrigId"] = tr_names
-
-    gm = GeneModels(location=filename)
 
     records = df.to_dict(orient="records")
     for line in records:
@@ -612,9 +612,11 @@ def load_default_gene_models_format(
     return gm
 
 
-def load_ref_flat_gene_models_format(
-    filename, gene_mapping_file=None, nrows=None
-):
+def _parse_ref_flat_gene_models_format(
+    gm: GeneModels, infile: TextIO,
+    gene_mapping: Optional[Dict[str, str]] = None,
+    nrows: Optional[int] = None
+) -> GeneModels:
     expected_columns = [
         "#geneName",
         "name",
@@ -629,11 +631,11 @@ def load_ref_flat_gene_models_format(
         "exonEnds",
     ]
 
-    df = parse_raw(filename, expected_columns, nrows=nrows)
+    infile.seek(0)
+    df = _parse_raw(infile, expected_columns, nrows=nrows)
     if df is None:
         return None
 
-    gm = GeneModels(location=filename)
     records = df.to_dict(orient="records")
 
     transcript_ids_counter = defaultdict(int)
@@ -673,9 +675,11 @@ def load_ref_flat_gene_models_format(
     return gm
 
 
-def load_ref_seq_gene_models_format(
-    filename, gene_mapping_file=None, nrows=None
-):
+def _parse_ref_seq_gene_models_format(
+    gm: GeneModels, infile: TextIO,
+    gene_mapping: Optional[Dict[str, str]] = None,
+    nrows: Optional[int] = None
+) -> GeneModels:
     expected_columns = [
         "#bin",
         "name",
@@ -695,11 +699,11 @@ def load_ref_seq_gene_models_format(
         "exonFrames",
     ]
 
-    df = parse_raw(filename, expected_columns, nrows=nrows)
+    infile.seek(0)
+    df = _parse_raw(infile, expected_columns, nrows=nrows)
     if df is None:
         return None
 
-    gm = GeneModels(location=filename)
     records = df.to_dict(orient="records")
 
     transcript_ids_counter = defaultdict(int)
@@ -751,25 +755,29 @@ def load_ref_seq_gene_models_format(
     return gm
 
 
-def probe_header(filename, expected_columns, comment=None):
-    df = pd.read_csv(filename, sep="\t", nrows=1, header=None, comment=comment)
+def _probe_header(infile, expected_columns, comment=None):
+    infile.seek(0)
+    df = pd.read_csv(infile, sep="\t", nrows=1, header=None, comment=comment)
     return list(df.iloc[0, :]) == expected_columns
 
 
-def probe_columns(filename, expected_columns, comment=None):
-    df = pd.read_csv(filename, sep="\t", nrows=1, header=None, comment=comment)
+def _probe_columns(infile, expected_columns, comment=None):
+    infile.seek(0)
+    df = pd.read_csv(infile, sep="\t", nrows=1, header=None, comment=comment)
     return list(df.columns) == list(range(0, len(expected_columns)))
 
 
-def parse_raw(filename, expected_columns, nrows=None, comment=None):
-    if probe_header(filename, expected_columns, comment=comment):
-        df = pd.read_csv(filename, sep="\t", nrows=nrows, comment=comment)
+def _parse_raw(infile, expected_columns, nrows=None, comment=None):
+    if _probe_header(infile, expected_columns, comment=comment):
+        infile.seek(0)
+        df = pd.read_csv(infile, sep="\t", nrows=nrows, comment=comment)
         assert list(df.columns) == expected_columns
 
         return df
-    elif probe_columns(filename, expected_columns, comment=comment):
+    elif _probe_columns(infile, expected_columns, comment=comment):
+        infile.seek(0)
         df = pd.read_csv(
-            filename,
+            infile,
             sep="\t",
             nrows=nrows,
             header=None,
@@ -780,7 +788,11 @@ def parse_raw(filename, expected_columns, nrows=None, comment=None):
         return df
 
 
-def load_ccds_gene_models_format(filename, gene_mapping_file=None, nrows=None):
+def _parse_ccds_gene_models_format(
+    gm: GeneModels, infile: TextIO,
+    gene_mapping: Optional[Dict[str, str]] = None,
+    nrows: Optional[int] = None
+) -> GeneModels:
     expected_columns = [
         # CCDS is identical with RefSeq
         "#bin",
@@ -801,21 +813,21 @@ def load_ccds_gene_models_format(filename, gene_mapping_file=None, nrows=None):
         "exonFrames",
     ]
 
-    df = parse_raw(filename, expected_columns, nrows=nrows)
+    infile.seek(0)
+    df = _parse_raw(infile, expected_columns, nrows=nrows)
     if df is None:
         return None
 
-    gm = GeneModels(location=filename)
     records = df.to_dict(orient="records")
 
     transcript_ids_counter = defaultdict(int)
-    gm._alternative_names = {}
-    if gene_mapping_file is not None:
-        gm._alternative_names = gene_mapping(gene_mapping_file)
+    gm.alternative_names = {}
+    if gene_mapping is not None:
+        gm.alternative_names = copy.deepcopy(gene_mapping)
 
     for rec in records:
         gene = rec["name"]
-        gene = gm._alternative_names.get(gene, gene)
+        gene = gm.alternative_names.get(gene, gene)
 
         tr_name = rec["name"]
         chrom = rec["chrom"]
@@ -862,8 +874,11 @@ def load_ccds_gene_models_format(filename, gene_mapping_file=None, nrows=None):
     return gm
 
 
-def load_known_gene_models_format(
-        filename, gene_mapping_file=None, nrows=None):
+def _parse_known_gene_models_format(
+    gm: GeneModels, infile: TextIO,
+    gene_mapping: Optional[Dict[str, str]] = None,
+    nrows: Optional[int] = None
+) -> GeneModels:
 
     expected_columns = [
         "name",
@@ -880,21 +895,21 @@ def load_known_gene_models_format(
         "alignID",
     ]
 
-    df = parse_raw(filename, expected_columns, nrows=nrows)
+    infile.seek(0)
+    df = _parse_raw(infile, expected_columns, nrows=nrows)
     if df is None:
         return None
 
-    gm = GeneModels(location=filename)
     records = df.to_dict(orient="records")
 
     transcript_ids_counter = defaultdict(int)
-    gm._alternative_names = {}
-    if gene_mapping_file is not None:
-        gm._alternative_names = gene_mapping(gene_mapping_file)
+    gm.alternative_names = {}
+    if gene_mapping is not None:
+        gm.alternative_names = copy.deepcopy(gene_mapping)
 
     for rec in records:
         gene = rec["name"]
-        gene = gm._alternative_names.get(gene, gene)
+        gene = gm.alternative_names.get(gene, gene)
 
         tr_name = rec["name"]
         chrom = rec["chrom"]
@@ -931,8 +946,11 @@ def load_known_gene_models_format(
     return gm
 
 
-def load_ucscgenepred_models_format(
-        filename, gene_mapping_file=None, nrows=None):
+def _parse_ucscgenepred_models_format(
+    gm: GeneModels, infile: str,
+    gene_mapping: Optional[Dict[str, str]] = None,
+    nrows: Optional[int] = None
+) -> GeneModels:
     """
     table genePred
     "A gene prediction."
@@ -990,25 +1008,26 @@ def load_ucscgenepred_models_format(
         "exonFrames",
     ]
 
-    df = parse_raw(filename, expected_columns[:10], nrows=nrows)
+    infile.seek(0)
+    df = _parse_raw(infile, expected_columns[:10], nrows=nrows)
     if df is None:
-        df = parse_raw(filename, expected_columns, nrows=nrows)
+        infile.seek(0)
+        df = _parse_raw(infile, expected_columns, nrows=nrows)
         if df is None:
             return None
 
-    gm = GeneModels(location=filename)
     records = df.to_dict(orient="records")
 
     transcript_ids_counter = defaultdict(int)
-    gm._alternative_names = {}
-    if gene_mapping_file is not None:
-        gm._alternative_names = gene_mapping(gene_mapping_file)
+    gm.alternative_names = {}
+    if gene_mapping is not None:
+        gm.alternative_names = copy.deepcopy(gene_mapping)
 
     for rec in records:
         gene = rec.get("name2")
         if not gene:
             gene = rec["name"]
-        gene = gm._alternative_names.get(gene, gene)
+        gene = gm.alternative_names.get(gene, gene)
 
         tr_name = rec["name"]
         chrom = rec["chrom"]
@@ -1048,7 +1067,12 @@ def load_ucscgenepred_models_format(
     return gm
 
 
-def load_gtf_gene_models_format(filename, gene_mapping_file=None, nrows=None):
+def _parse_gtf_gene_models_format(
+    gm: GeneModels, infile: TextIO,
+    gene_mapping: Optional[Dict[str, str]] = None,
+    nrows: Optional[int] = None
+) -> GeneModels:
+
     expected_columns = [
         "seqname",
         "source",
@@ -1061,11 +1085,14 @@ def load_gtf_gene_models_format(filename, gene_mapping_file=None, nrows=None):
         "attributes",
         # "comments",
     ]
-    df = parse_raw(filename, expected_columns, nrows=nrows, comment="#",)
+
+    infile.seek(0)
+    df = _parse_raw(infile, expected_columns, nrows=nrows, comment="#",)
 
     if df is None:
         expected_columns.append("comment")
-        df = parse_raw(filename, expected_columns, nrows=nrows, comment="#")
+        infile.seek(0)
+        df = _parse_raw(infile, expected_columns, nrows=nrows, comment="#")
         if df is None:
             return None
 
@@ -1078,8 +1105,6 @@ def load_gtf_gene_models_format(filename, gene_mapping_file=None, nrows=None):
             key, value = attr.split(" ")
             result[key.strip()] = value.strip('"').strip()
         return result
-
-    gm = GeneModels(location=filename)
 
     records = df.to_dict(orient="records")
     for rec in records:
@@ -1147,7 +1172,7 @@ def load_gtf_gene_models_format(filename, gene_mapping_file=None, nrows=None):
             tm.cds = (min(cds[0], rec["start"]), max(cds[1], rec["end"]))
             continue
 
-        raise ValueError(f"unknown feature {feature} found in {filename}")
+        raise ValueError(f"unknown feature {feature} found in gtf gene models")
 
     for tm in gm.transcript_models.values():
         tm.exons = sorted(tm.exons, key=lambda x: x.start)
@@ -1157,7 +1182,7 @@ def load_gtf_gene_models_format(filename, gene_mapping_file=None, nrows=None):
     return gm
 
 
-def gene_mapping(filename):
+def _gene_mapping(filename: str) -> Dict[str, str]:
     """
       alternative names for genes
       assume that its first line has two column names
@@ -1178,21 +1203,22 @@ def gene_mapping(filename):
 
 
 SUPPORTED_GENE_MODELS_FILE_FORMATS = {
-    "default": load_default_gene_models_format,
-    "refflat": load_ref_flat_gene_models_format,
-    "refseq": load_ref_seq_gene_models_format,
-    "ccds": load_ccds_gene_models_format,
-    "knowngene": load_known_gene_models_format,
-    "gtf": load_gtf_gene_models_format,
-    "ucscgenepred": load_ucscgenepred_models_format,
+    "default": _parse_default_gene_models_format,
+    "refflat": _parse_ref_flat_gene_models_format,
+    "refseq": _parse_ref_seq_gene_models_format,
+    "ccds": _parse_ccds_gene_models_format,
+    "knowngene": _parse_known_gene_models_format,
+    "gtf": _parse_gtf_gene_models_format,
+    "ucscgenepred": _parse_ucscgenepred_models_format,
 }
 
 
-def infer_gene_model_parser(filename, fileformat=None):
+def _infer_gene_model_parser(infile, fileformat=None):
 
     parser = SUPPORTED_GENE_MODELS_FILE_FORMATS.get(fileformat, None)
     if parser is not None:
         return fileformat
+    logger.warning("going to infer gene models file format...")
 
     inferred_formats = []
     for fileformat, parser in SUPPORTED_GENE_MODELS_FILE_FORMATS.items():
@@ -1200,42 +1226,71 @@ def infer_gene_model_parser(filename, fileformat=None):
             continue
         try:
             logger.debug(f"trying file format: {fileformat}...")
-            gm = parser(filename, nrows=50)
+            gm = GeneModels()
+            infile.seek(0)
+            gm = parser(gm, infile, nrows=50)
             if gm is not None:
                 inferred_formats.append(fileformat)
-        except Exception:
+                logger.debug(f"gene models format {fileformat} matches input")
+        except Exception as ex:
+            logger.warning(
+                f"file format {fileformat} does not match; {ex}")
             pass
 
-    logger.debug(f"inferred file formats: {inferred_formats}")
+    logger.info(f"inferred file formats: {inferred_formats}")
     if len(inferred_formats) == 1:
         return inferred_formats[0]
 
     logger.error(
-        f"can't find gene model parser for {filename}; "
+        f"can't find gene model parser; "
         f"inferred file formats are {inferred_formats}"
     )
     return None
 
 
-def load_gene_models(filename, gene_mapping_file=None, fileformat=None):
-    assert os.path.exists(filename), filename
+@contextmanager
+def _open_file(filename):
+    if filename.endswith(".gz") or filename.endswith(".bgz"):
+        infile = gzip.open(filename, "rt")
+    else:
+        infile = open(filename)
+    try:
+        yield infile
+    finally:
+        infile.close()
 
+
+def load_gene_models(
+    filename: str,
+    gene_mapping_file=None, fileformat: Optional[str] = None
+) -> GeneModels:
+    assert os.path.exists(filename), filename
     logger.debug(f"loading gene models from {filename}")
-    if fileformat is None:
-        fileformat = infer_gene_model_parser(filename)
-        logger.debug(f"infering gene models file format: {fileformat}")
-        if filename is None:
+
+    with _open_file(filename) as infile:
+        if fileformat is None:
+            fileformat = _infer_gene_model_parser(infile)
+            logger.debug(f"infering gene models file format: {fileformat}")
+            if fileformat is None:
+                logger.error(
+                    f"can't infer gene models file format for {filename}...")
+                return None
+
+        parser = SUPPORTED_GENE_MODELS_FILE_FORMATS.get(fileformat)
+        if parser is None:
+            logger.error(
+                f"unsupported gene model file format: {fileformat}")
+
             return None
 
-    parser = SUPPORTED_GENE_MODELS_FILE_FORMATS.get(fileformat)
-    if parser is None:
-        print(
-            f"unsupported gene model file format: {fileformat}",
-            file=sys.stderr,
-        )
-        return None
+        gene_mapping = None
+        if gene_mapping_file is not None:
+            assert os.path.exists(gene_mapping_file)
+            gene_mapping = _gene_mapping(gene_mapping_file)
 
-    return parser(filename, gene_mapping_file=gene_mapping_file)
+        infile.seek(0)
+        gm = GeneModels()
+        return parser(gm, infile, gene_mapping=gene_mapping)
 
 
 def join_gene_models(*gene_models):
@@ -1493,7 +1548,7 @@ def knownGeneParser(gm, file_name, gene_mapping_file="default"):
             os.path.dirname(file_name), "kg_id2sym.txt.gz"
         )
 
-    gm._alternative_names = gene_mapping(gene_mapping_file)
+    gm.alternative_names = _gene_mapping(gene_mapping_file)
 
     gmf = openFile(file_name)
 
@@ -1504,7 +1559,7 @@ def knownGeneParser(gm, file_name, gene_mapping_file="default"):
 
         tm, cs = lR.parse(line)
         try:
-            tm.gene = gm._alternative_names[cs["name"]]
+            tm.gene = gm.alternative_names[cs["name"]]
         except KeyError:
             tm.gene = cs["name"]
 
@@ -1534,7 +1589,7 @@ def ccdsParser(gm, file_name, gene_mapping_file="default"):
             os.path.dirname(file_name), "ccds_id2sym.txt.gz"
         )
 
-    gm._alternative_names = gene_mapping(gene_mapping_file)
+    gm.alternative_names = _gene_mapping(gene_mapping_file)
 
     GMF = openFile(file_name)
 
@@ -1544,7 +1599,7 @@ def ccdsParser(gm, file_name, gene_mapping_file="default"):
             continue
 
         tm, cs = lR.parse(line)
-        tm.gene = gm._alternative_names.get(cs["name"])
+        tm.gene = gm.alternative_names.get(cs["name"])
         if tm.gene is None:
             tm.gene = cs["name"]
 
@@ -1562,7 +1617,7 @@ def ucscGenePredParser(gm, file_name, gene_mapping_file="default"):
     lR = parserLine4UCSC_genePred(colNames)
 
     if gene_mapping_file != "default":
-        gm._alternative_names = gene_mapping(gene_mapping_file)
+        gm.alternative_names = _gene_mapping(gene_mapping_file)
 
     GMF = openFile(file_name)
 
@@ -1573,7 +1628,7 @@ def ucscGenePredParser(gm, file_name, gene_mapping_file="default"):
 
         tm, cs = lR.parse(line)
         try:
-            tm.gene = gm._alternative_names[cs["name"]]
+            tm.gene = gm.alternative_names[cs["name"]]
         except (KeyError, TypeError):
             tm.gene = cs["name"]
 
@@ -1724,7 +1779,7 @@ def gtfGeneModelParser(gm, file_name, gene_mapping_file=None):
 #
 def mitoGeneModelParser(gm, file_name, gene_mapping_file=None):
     gm.name = "mitomap"
-    gm._alternative_names = None
+    gm.alternative_names = None
 
     gm.utr_models["chrM"] = {}
     file = openFile(file_name)

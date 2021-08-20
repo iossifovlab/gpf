@@ -1,4 +1,4 @@
-from dae.configuration.schemas.genomic_score_database import \
+from dae.configuration.schemas.genomic_resources_database import \
     default_annotation_schema
 
 annotator_schema = {

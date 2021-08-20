@@ -4,7 +4,7 @@ from copy import deepcopy
 
 from dae.genome.genome_access import GenomicSequenceBase
 from dae.genomic_resources.resources import GenomicResource
-from dae.configuration.schemas.genomic_score_database import \
+from dae.configuration.schemas.genomic_resources_database import \
     genomic_sequence_schema
 
 logger = logging.getLogger(__name__)
