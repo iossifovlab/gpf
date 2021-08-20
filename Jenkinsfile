@@ -1,3 +1,4 @@
+
 pipeline {
   agent { label 'piglet || pooh || dory' }
   options {
@@ -28,12 +29,14 @@ pipeline {
   post {
     always {
       junit 'test-results/wdae-junit.xml, test-results/dae-junit.xml'
+
+      cobertura coberturaReportFile: 'test-results/dae-coverage.xml', enableNewApi: true
+      cobertura coberturaReportFile: 'test-results/wdae-coverage.xml', enableNewApi: true
+
       recordIssues(
         enabledForFailure: true, aggregatingResults: false,
         tools: [
           flake8(pattern: 'test-results/flake8_report', reportEncoding: 'UTF-8'),
-          junitParser(pattern: 'test-results/dae-junit.xml', reportEncoding: 'UTF-8', id: 'junit-dae', name: 'JUnit - dae'),
-          junitParser(pattern: 'test-results/wdae-junit.xml', reportEncoding: 'UTF-8', id: 'junit-wdae', name: 'JUnit - wdae'),
           myPy(pattern: 'test-results/mypy_dae_report', reportEncoding: 'UTF-8', id: 'mypy-dae', name: 'MyPy - dae'),
           myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8', id: 'mypy-wdae', name: 'MyPy - wdae')
         ]
