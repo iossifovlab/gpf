@@ -25,6 +25,7 @@ pipeline {
         }
       }
     }
+/*
     stage('SonarQube') {
       steps {
         script {
@@ -35,6 +36,7 @@ pipeline {
         }
       }
     }
+*/
   }
   post {
     always {
