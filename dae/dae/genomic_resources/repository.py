@@ -129,16 +129,24 @@ class GenomicResourcesRepo:
     * HTTP protocol
     """
 
-    def __init__(self, gsd_id: str, path: str):
+    def __init__(self, gsd_id: str, url: str):
         self.gsd_id = gsd_id
-        self.path = path
-        self._url = path
+        self.url = url
 
         self.resources: Dict[str, GenomicResource] = dict()
         self.root_group = None
 
+    # def get_path(self):
+    #     return self.path
+
+    def get_name(self):
+        return self.gsd_id
+
+    def get_url(self):
+        return self.url
+
     def _load_repository_content(self):
-        logger.info(f"loading repository content for {self._url}")
+        logger.info(f"loading repository content for {self.get_url()}")
         content_url = "/".join(
             [self.get_url(), "CONTENT.yaml"]
         )
@@ -153,9 +161,6 @@ class GenomicResourcesRepo:
         self.root_group = root_group
         for resource in self.root_group.get_genomic_resources():
             self.resources[resource.get_id()] = resource
-
-    def get_path(self):
-        return self.path
 
     def load(self):
         repo_content = self._load_repository_content()
@@ -179,12 +184,6 @@ class GenomicResourcesRepo:
         resource_class = resource_type_to_class(config["resource_type"])
         resource = resource_class(config, repo=self)
         return resource
-
-    def get_name(self):
-        return self.gsd_id
-
-    def get_url(self):
-        return self._url
 
     def get_resource(self, resource_id: str) -> GenomicResource:
         return self.resources.get(resource_id)
@@ -211,9 +210,8 @@ class FSGenomicResourcesRepo(GenomicResourcesRepo):
     A genomic score repository on a local or remote filesystem.
     """
 
-    def __init__(self, gsd_id: str, path: str):
-        super().__init__(gsd_id, path)
-        self._url = pathlib.Path(self.path).absolute().as_uri()
+    def __init__(self, gsd_id: str, url: str):
+        super().__init__(gsd_id, pathlib.Path(url).absolute().as_uri())
 
     def _stream_resource_file_internal(self, file_uri, offset, size):
         # TODO Implement progress bar and interruptible download
@@ -230,7 +228,8 @@ class FSGenomicResourcesRepo(GenomicResourcesRepo):
 
     def build_repository_content(self):
         content = _create_resource_content_dict(self.root_group)
-        content_filepath = os.path.join(self.path, "CONTENT.yaml")
+        path = urlparse(self.get_url()).path
+        content_filepath = os.path.join(path, "CONTENT.yaml")
 
         with open(content_filepath, "w") as out:
             yaml.dump(
@@ -269,10 +268,7 @@ class HTTPGenomicResourcesRepo(GenomicResourcesRepo):
     ]
 
     def __init__(self, gsd_id: str, url: str):
-
         super().__init__(gsd_id, url)
-        print(self.path)
-        self._url = url
 
     def _stream_resource_file_internal(self, file_uri, offset, size):
         # TODO Implement progress bar and interruptible download

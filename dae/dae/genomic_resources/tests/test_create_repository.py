@@ -1,31 +1,12 @@
 import pytest
-import os
-import yaml
-
-from urllib.parse import urlparse
-from box import Box
 
 from dae.genomic_resources.resources import GenomicResource, \
     GenomicResourceGroup
 from dae.genomic_resources.repository import \
     _walk_genomic_resources_repository, \
-    _walk_genomic_repository_content, \
     _create_genomic_resources_hierarchy, \
     _create_resource_content_dict, \
-    create_fs_genomic_resource_repository, \
-    GenomicResourcesRepo
-
-
-class FakeRepository(GenomicResourcesRepo):
-
-    def create_resource(self, resource_id, path):
-        return GenomicResource(Box({"id": resource_id}), repo=self)
-
-
-@pytest.fixture
-def fake_repo():
-    fake_repo = FakeRepository("fake_repo_id", "/repo/path")
-    return fake_repo
+    create_fs_genomic_resource_repository
 
 
 def test_create_genomic_resources_hierarchy(fixture_dirname, fake_repo):
@@ -93,124 +74,6 @@ def test_create_genomic_resource_hierarchy_bad_3(fake_repo):
         )
 
 
-def test_walk_genomic_resources_repository(fixture_dirname):
-    repo_dirname = fixture_dirname("genomic_resources")
-    print(repo_dirname)
-
-    for parents, child, in _walk_genomic_resources_repository(repo_dirname):
-        print(parents, child)
-
-
-@pytest.fixture
-def genomic_group():
-    g1 = GenomicResourceGroup("a", "url1")
-    g2 = GenomicResourceGroup("a/b", "url2")
-
-    g1.add_child(g2)
-
-    g3 = GenomicResourceGroup("a/b/c", "url3")
-    g2.add_child(g3)
-
-    print(g1.resource_children())
-
-    r = GenomicResource(Box({"id": "a/b/c/d"}))
-    g3.add_child(r)
-
-    return g1
-
-
-def test_group_resource_children(genomic_group):
-    g1 = genomic_group
-
-    print(g1.resource_children())
-
-    children = g1.resource_children()
-
-    assert len(children) == 1
-    groups = children[0][0]
-    res = children[0][1]
-
-    assert res.get_id() == "a/b/c/d"
-    assert len(groups) == 3
-
-
-def test_group_resources(genomic_group):
-    g1 = genomic_group
-    print(g1.get_resources())
-
-    assert len(g1.get_children()) == 1
-    print(g1.get_children(deep=True))
-
-
-def test_group_get_resource(genomic_group):
-    assert genomic_group.get_id() == "a"
-
-    res = genomic_group.get_resource("a/b")
-    assert res is not None
-    assert res.get_id() == "a/b"
-
-    res = genomic_group.get_resource("a/b/c")
-    assert res is not None
-    assert res.get_id() == "a/b/c"
-
-    res = genomic_group.get_resource("a/b/c/d")
-    assert res is not None
-    assert res.get_id() == "a/b/c/d"
-
-    res = genomic_group.get_resource("d")
-    assert res is None
-
-
-@pytest.fixture
-def root_group():
-    g1 = GenomicResourceGroup("", "url1")
-    g2 = GenomicResourceGroup("a", "url2")
-
-    g1.add_child(g2)
-
-    g3 = GenomicResourceGroup("a/b", "url3")
-    g2.add_child(g3)
-
-    print(g1.resource_children())
-
-    r = GenomicResource(Box({"id": "a/b/c"}))
-    g3.add_child(r)
-
-    return g1
-
-
-def test_root_group_get_resource(root_group):
-
-    assert root_group.get_id() == ""
-
-    res = root_group.get_resource("a/b")
-    assert res is not None
-    assert res.get_id() == "a/b"
-
-    res = root_group.get_resource("a/b/c")
-    assert res is not None
-    assert res.get_id() == "a/b/c"
-
-    res = root_group.get_resource("a/b/c/d")
-    assert res is None
-
-
-def test_root_group_get_resource_not_deep(root_group):
-
-    assert root_group.get_id() == ""
-
-    res = root_group.get_resource("a", deep=False)
-    assert res is not None
-    assert res.get_id() == "a"
-
-    res = root_group.get_resource("a/b", deep=False)
-    assert res is None
-
-    res = root_group.get_resource("a/b", deep=True)
-    assert res is not None
-    assert res.get_id() == "a/b"
-
-
 def test_create_resource_content_dict_group(root_group):
     res = root_group.get_resource("a/b", deep=True)
     section = _create_resource_content_dict(res)
@@ -251,16 +114,16 @@ def test_get_resources(root_group):
     assert res.get_id() == "a/b/c"
 
 
-def test_resource_paths(fixture_dirname):
-    repo = create_fs_genomic_resource_repository(
-        "test_repo", fixture_dirname("genomic_resources"))
-    assert repo is not None
-    for resource in repo.root_group.get_genomic_resources():
-        print(resource, resource.get_path())
-        assert os.path.exists(resource.get_path())
+# def test_resource_paths(fixture_dirname):
+#     repo = create_fs_genomic_resource_repository(
+#         "test_repo", fixture_dirname("genomic_resources"))
+#     assert repo is not None
+#     for resource in repo.root_group.get_genomic_resources():
+#         print(resource, resource.get_path())
+#         assert os.path.exists(resource.get_path())
 
-        url = urlparse(resource.get_url()).path
-        print(url)
+#         url = urlparse(resource.get_url()).path
+#         print(url)
 
 
 def test_build_manifests(fixture_dirname):
@@ -269,19 +132,3 @@ def test_build_manifests(fixture_dirname):
     assert repo is not None
     for resource in repo.root_group.get_genomic_resources():
         repo.build_resource_manifest(resource.get_id())
-
-
-def test_walk_genomic_resources_repository_content(fixture_dirname, fake_repo):
-    repo_dirname = fixture_dirname("genomic_resources")
-    print(repo_dirname)
-
-    content_path = os.path.join(repo_dirname, "CONTENT.yaml")
-    if os.path.exists(content_path):
-        with open(content_path, "r") as content:
-            repo_content = yaml.safe_load(content)
-
-    print(repo_content)
-
-    for parents, child, in _walk_genomic_repository_content(
-            fake_repo, repo_content):
-        print(parents, child)

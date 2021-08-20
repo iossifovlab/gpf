@@ -1,8 +1,52 @@
 import pytest
 import time
-from dae.configuration.gpf_config_parser import FrozenBox
+
 from subprocess import Popen, PIPE
 from http.client import HTTPConnection
+
+from box import Box
+
+from dae.configuration.gpf_config_parser import FrozenBox
+from dae.genomic_resources.repository import GenomicResourcesRepo
+from dae.genomic_resources.resources import GenomicResource, \
+    GenomicResourceGroup
+from dae.genomic_resources.resource_db import GenomicResourceDB
+
+
+@pytest.fixture
+def genomic_group():
+    g1 = GenomicResourceGroup("a", "url1")
+    g2 = GenomicResourceGroup("a/b", "url2")
+
+    g1.add_child(g2)
+
+    g3 = GenomicResourceGroup("a/b/c", "url3")
+    g2.add_child(g3)
+
+    print(g1.resource_children())
+
+    r = GenomicResource(Box({"id": "a/b/c/d"}))
+    g3.add_child(r)
+
+    return g1
+
+
+@pytest.fixture
+def root_group():
+    g1 = GenomicResourceGroup("", "url1")
+    g2 = GenomicResourceGroup("a", "url2")
+
+    g1.add_child(g2)
+
+    g3 = GenomicResourceGroup("a/b", "url3")
+    g2.add_child(g3)
+
+    print(g1.resource_children())
+
+    r = GenomicResource(Box({"id": "a/b/c"}))
+    g3.add_child(r)
+
+    return g1
 
 
 @pytest.fixture
@@ -14,6 +58,15 @@ def test_grdb_config(fixture_dirname, temp_dirname_grdb):
             {"id": "test_grr", "url": f"file://{test_grr_location}"}
         ]
     })
+
+
+@pytest.fixture
+def test_grdb(test_grdb_config):
+    grdb = GenomicResourceDB(
+        test_grdb_config["genomic_resource_repositories"])
+    assert len(grdb.repositories) == 1
+
+    return grdb
 
 
 @pytest.fixture
@@ -65,3 +118,15 @@ def resources_http_server(fixture_dirname, http_port):
 
     server.terminate()
     server.wait()
+
+
+class FakeRepository(GenomicResourcesRepo):
+
+    def create_resource(self, resource_id, path):
+        return GenomicResource(Box({"id": resource_id}), repo=self)
+
+
+@pytest.fixture
+def fake_repo():
+    fake_repo = FakeRepository("fake_repo_id", "/repo/path")
+    return fake_repo

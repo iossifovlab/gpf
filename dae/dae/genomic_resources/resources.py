@@ -21,8 +21,8 @@ class GenomicResourceBase:
     def get_url(self):
         return os.path.join(self.repo.get_url(), self.get_id())
 
-    def get_path(self):
-        return os.path.join(self.repo.get_path(), self.get_id())
+    # def get_path(self):
+    #     return os.path.join(self.repo.get_path(), self.get_id())
 
     def get_children(self, deep=False):
         return []
