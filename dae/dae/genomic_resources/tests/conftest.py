@@ -25,7 +25,7 @@ def genomic_group():
 
     print(g1.resource_children())
 
-    r = GenomicResource(Box({"id": "a/b/c/d"}))
+    r = GenomicResource(Box({"id": "a/b/c/d"}), None)
     g3.add_child(r)
 
     return g1
@@ -43,7 +43,7 @@ def root_group():
 
     print(g1.resource_children())
 
-    r = GenomicResource(Box({"id": "a/b/c"}))
+    r = GenomicResource(Box({"id": "a/b/c"}), None)
     g3.add_child(r)
 
     return g1
@@ -69,8 +69,13 @@ def test_grdb(test_grdb_config):
     return grdb
 
 
+@pytest.fixture(scope="session")
+def http_port():
+    return "16200"
+
+
 @pytest.fixture
-def test_grdb_http_config(fixture_dirname, temp_dirname_grdb, http_port):
+def test_grdb_http_config(temp_dirname_grdb, http_port):
     return FrozenBox({
         "cache_location": temp_dirname_grdb,
         "genomic_resource_repositories": [
@@ -79,9 +84,13 @@ def test_grdb_http_config(fixture_dirname, temp_dirname_grdb, http_port):
     })
 
 
-@pytest.fixture(scope="session")
-def http_port():
-    return "16200"
+@pytest.fixture
+def test_http_grdb(test_grdb_http_config):
+    grdb = GenomicResourceDB(
+        test_grdb_http_config["genomic_resource_repositories"])
+    assert len(grdb.repositories) == 1
+
+    return grdb
 
 
 @pytest.fixture(scope="module")

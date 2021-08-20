@@ -136,9 +136,6 @@ class GenomicResourcesRepo:
         self.resources: Dict[str, GenomicResource] = dict()
         self.root_group = None
 
-    # def get_path(self):
-    #     return self.path
-
     def get_name(self):
         return self.gsd_id
 

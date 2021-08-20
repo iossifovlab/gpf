@@ -32,20 +32,13 @@ class GenomicResourceBase:
 
 
 class GenomicResource(GenomicResourceBase):
-    def __init__(self, config, url=None, manifest=None, repo=None):
-        # import traceback as tb
-        # tb.print_stack()
-        print("\n", 80*"=", sep="")
-        print("\nconfig\t:", config, "\nurl\t:", url)
-
-        self._config = config
+    def __init__(self, config, repo):
         super(GenomicResource, self).__init__(config["id"], repo)
-
-        self._id: str = config["id"]
+        self._config = config
         self._manifest = None
 
     def __repr__(self):
-        return f"GR({self._id})"
+        return f"GR({self.get_id()})"
 
     def get_config(self):
         return self._config
@@ -78,6 +71,9 @@ class GenomicResource(GenomicResourceBase):
                 index_filename = f"{self._url}/{filename}"
         return pysam.TabixFile(filename, index=index_filename)
 
+    def open_file(self, filename):
+        return self.get_repo().open_file(self.get_id(), filename)
+
     def open(self):
         raise NotImplementedError
 
@@ -90,7 +86,7 @@ class GenomicResource(GenomicResourceBase):
 
 
 class GenomicResourceGroup(GenomicResourceBase):
-    def __init__(self, resource_id: str, url=None, repo=None):
+    def __init__(self, resource_id: str, repo=None):
         super(GenomicResourceGroup, self).__init__(resource_id, repo)
 
         self.children: Dict[str, GenomicResourceBase] = {}

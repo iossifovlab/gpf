@@ -19,12 +19,21 @@ class HTTPFile:
         if range_end > self._file_length or size == 0:
             range_end = self._file_length
         headers = {"Range": f"bytes={self._position}-{range_end}"}
+
         self._position = range_end
         response = requests.get(self.url, headers=headers)
-        return response.content.decode("utf-8")
+        content = response.content.decode("utf-8")
+        print(content)
+        return content
 
     def tell(self):
         return self._position
 
     def close(self):
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
         pass
