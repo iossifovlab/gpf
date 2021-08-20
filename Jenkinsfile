@@ -28,6 +28,11 @@ pipeline {
   }
   post {
     always {
+      def scannerHome = tool 'SonarScanner';
+      withSonarQubeEnv() {
+        sh "${scannerHome}/bin/sonar-scanner"
+      }
+
       junit 'test-results/wdae-junit.xml, test-results/dae-junit.xml'
 
       cobertura coberturaReportFile: 'test-results/dae-coverage.xml', enableNewApi: true
