@@ -1,4 +1,5 @@
 import os
+import abc
 import pysam
 
 from urllib.parse import urlparse
@@ -20,9 +21,6 @@ class GenomicResourceBase:
 
     def get_url(self):
         return os.path.join(self.repo.get_url(), self.get_id())
-
-    # def get_path(self):
-    #     return os.path.join(self.repo.get_path(), self.get_id())
 
     def get_children(self, deep=False):
         return []
@@ -74,15 +72,17 @@ class GenomicResource(GenomicResourceBase):
     def open_file(self, filename):
         return self.get_repo().open_file(self.get_id(), filename)
 
+    @abc.abstractmethod
     def open(self):
-        raise NotImplementedError
+        pass
 
+    @abc.abstractmethod
     def close(self):
-        raise NotImplementedError
+        pass
 
-    @classmethod
+    @abc.abstractclassmethod
     def get_config_schema(cls):
-        raise NotImplementedError
+        pass
 
 
 class GenomicResourceGroup(GenomicResourceBase):
