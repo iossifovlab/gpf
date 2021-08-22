@@ -2,20 +2,20 @@
     <div class="card-header card-title" style="font-family: Roboto; font-weight: 500; padding: 0px; position: relative; height: 40px;">
       <span class="header-item" style="left: 0;">
         <button type="button" class="astext" title="Undo (Ctrl+Z)" style="padding-left:20px; font-weight: bold;"
-          [disabled]="falsed" (click)="null">&#x021FD;</button>
+          [disabled]="!zoomHistory.canGoBackward" (click)="undo()">&#x021FD;</button>
         <button type="button" class="astext" title="Redo (Ctrl+Y)" style="padding-left:7px; font-weight: bold;"
-          [disabled]="false" (click)="null">&#x021FE;</button>
+          [disabled]="!zoomHistory.canGoForward" (click)="redo()">&#x021FE;</button>
         <button type="button" class="astext" title="Reset (Double-click)" style="padding-left:12px;"
-          (click)="null">&#x021BB;</button>
+          (click)="resetPlot(); zoomHistory.reset()">&#x021BB;</button>
       </span>
 
       <span class="header-item" style="left: 120px;">
-        <label style="margin-left: 20px; font-size: 17px; font-weight: 1;">
+        <label style="margin-left: 20px; font-size: 17px; font-weight: 1; user-select: none">
           <input type="checkbox" [checked]="!drawTranscripts" (change)="drawTranscripts = !drawTranscripts; redraw()">
           Hide transcripts
         </label>
-        <label style="margin-left: 15px; font-size: 17px; font-weight: 1;">
-          <input #checkbox type="checkbox" [checked]="condenseIntrons" (change)="condenseIntrons = !condenseIntrons; resetXScale(); redraw()">
+        <label style="margin-left: 15px; font-size: 17px; font-weight: 1; user-select: none">
+          <input #checkbox type="checkbox" [checked]="condenseIntrons" (change)="toggleCondenseIntrons()">
           Condense introns
         </label>
       </span>

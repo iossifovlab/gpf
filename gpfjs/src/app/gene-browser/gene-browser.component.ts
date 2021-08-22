@@ -12,6 +12,7 @@ import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { GeneViewComponent } from 'app/gene-view/gene-view.component';
+import { GenePlotComponent } from 'app/gene-plot/gene-plot.component';
 import { ConfigService } from 'app/config/config.service';
 
 import { CODING, CNV, LGDS } from 'app/effecttypes/effecttypes';
@@ -23,6 +24,7 @@ import { CODING, CNV, LGDS } from 'app/effecttypes/effecttypes';
 })
 export class GeneBrowserComponent implements OnInit, AfterViewInit {
   @ViewChild(GeneViewComponent) private geneViewComponent: GeneViewComponent;
+  @ViewChild(GenePlotComponent) private genePlotComponent: GenePlotComponent;
   private selectedGene: Gene;
   private geneSymbol = '';
   private maxFamilyVariants = 1000;
@@ -46,20 +48,21 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
   private selectedVariantTypes: Set<string>;
   private selectedFrequencies: [number, number] = [0, 0];
   private selectedRegion: [number, number] = [0, 0];
+  private collapsedTranscript
 
   // TODO: Use effects from effecttypes.ts
   private readonly codingEffectTypes = [
     // LGDs
     'lgds',
     // CODING
-    // 'nonsense', 'frame-shift', 'splice-site', 'no-frame-shift-newStop',
-    // 'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift',
-    ...CODING,
+    // ...CODING,
+    'nonsense', 'frame-shift', 'splice-site', 'no-frame-shift-newStop',
+    'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift',
     // ???
     'CDS',
     // CNV
-    ...CNV,
-    // 'CNV+', 'CNV-'
+    // ...CNV,
+    'CNV+', 'CNV-'
   ];
   private readonly otherEffectTypes = [
     // ???
@@ -71,7 +74,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     // CNV
     'CNV+', 'CNV-'
   ];
-  private readonly lgds = [...LGDS];
+  private readonly lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
   private readonly affectedStatusValues = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
   private readonly effectTypeValues = ['lgds', 'missense', 'synonymous', 'cnv+', 'cnv-', 'other'];
   private readonly variantTypeValues = ['sub', 'ins', 'del', 'cnv+', 'cnv-'];
@@ -141,17 +144,19 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     return this.geneViewComponent.getState();
   }
 
-  private updateShownTablePreviewVariantsArray($event: DomainRange) {
+  private updateShownTablePreviewVariantsArray() {
     this.familyLoadingFinished = false;
     const requestParams = {
       ...this.transformFamilyVariantsQueryParameters(this.state),
       'maxVariantsCount': this.maxFamilyVariants,
-      'summaryVariantIds': this.state['summaryVariantIds'],
+      'summaryVariantIds': this.summaryVariantsArrayFiltered.summaryAlleleIds.reduce(
+        (a, b) => a.concat(b), []
+      ),
       'uniqueFamilyVariants': false,
       'genomicScores': [{
         'metric': this.geneBrowserConfig.frequencyColumn,
-        'rangeStart': $event.start > 0 ? $event.start : null,
-        'rangeEnd': $event.end,
+        'rangeStart': this.selectedFrequencies[0] > 0 ? this.selectedFrequencies[0] : null,
+        'rangeEnd': this.selectedFrequencies[1],
       }]
     };
     this.selectedDataset$.subscribe(selectedDataset => {
@@ -188,16 +193,13 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
 
     const params: object = {
       'effectTypes': effects,
-      // 'genomicScores': state.genomicScores, ??????? FIXME
       'inheritanceTypeFilter': inheritanceFilters,
       'affectedStatus': Array.from(affectedStatus.values()),
       'variantType': this.selectedVariantTypes,
-      // 'geneSymbols': state.geneSymbols, ?????? FIXME
-      'datasetId': this.selectedDatasetId
+      'geneSymbols': [this.selectedGene.gene],
+      'datasetId': this.selectedDatasetId,
+      'regions': this.genePlotComponent.getRegionString(...this.selectedRegion),
     };
-    if (state.zoomState) {
-      params['regions'] = state.regions;
-    }
     return params;
   }
 
@@ -227,9 +229,10 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    this.selectedRegion = [
-      this.selectedGene.transcripts[0].start,
-      this.selectedGene.transcripts[this.selectedGene.transcripts.length - 1].stop
+    const collapsedTranscript = this.selectedGene.collapsedTranscript();
+    this.selectedRegion = [collapsedTranscript.start, collapsedTranscript.stop];
+    this.selectedFrequencies = [
+      0, this.geneBrowserConfig.domainMax
     ];
 
     this.queryService.summaryStreamingFinishedSubject.subscribe(async() => {
@@ -270,11 +273,13 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
   private onSubmit(event) {
     const requestParams = {
       ...this.transformFamilyVariantsQueryParameters(this.state),
-      'summaryVariantIds': this.state['summaryVariantIds'],
+      'summaryVariantIds': this.summaryVariantsArrayFiltered.summaryAlleleIds.reduce(
+        (a, b) => a.concat(b), []
+      ),
       'genomicScores': [{
         'metric': this.geneBrowserConfig.frequencyColumn,
-        'rangeStart': this.state['zoomState'].yMin > 0 ? this.state['zoomState'].yMin : null,
-        'rangeEnd': this.state['zoomState'].yMax,
+        'rangeStart': this.selectedFrequencies[0] > 0 ? this.selectedFrequencies[0] : null,
+        'rangeEnd': this.selectedFrequencies[1],
       }],
       'download': true,
     };
@@ -373,6 +378,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     this.summaryVariantsArrayFiltered = this.filterSummaryVariantsArray(
       this.summaryVariantsArray, ...this.selectedRegion
     );
+    this.updateShownTablePreviewVariantsArray();
   }
 
   private checkShowTransmitted(checked: boolean) {
@@ -380,6 +386,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     this.summaryVariantsArrayFiltered = this.filterSummaryVariantsArray(
       this.summaryVariantsArray, ...this.selectedRegion
     );
+    this.updateShownTablePreviewVariantsArray();
   }
 
   private checkEffectType(effectType: string, checked: boolean) {
@@ -392,6 +399,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     this.summaryVariantsArrayFiltered = this.filterSummaryVariantsArray(
       this.summaryVariantsArray, ...this.selectedRegion
     );
+    this.updateShownTablePreviewVariantsArray();
   }
 
   private checkVariantType(variantType: string, checked: boolean) {
@@ -404,6 +412,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     this.summaryVariantsArrayFiltered = this.filterSummaryVariantsArray(
       this.summaryVariantsArray, ...this.selectedRegion
     );
+    this.updateShownTablePreviewVariantsArray();
   }
 
   private checkAffectedStatus(affectedStatus: string, checked: boolean) {
@@ -415,6 +424,23 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     this.summaryVariantsArrayFiltered = this.filterSummaryVariantsArray(
       this.summaryVariantsArray, ...this.selectedRegion
     );
+    this.updateShownTablePreviewVariantsArray();
+  }
+
+  private setSelectedRegion(region: [number, number]) {
+    this.selectedRegion = region;
+    this.summaryVariantsArrayFiltered = this.filterSummaryVariantsArray(
+      this.summaryVariantsArray, ...this.selectedRegion
+    );
+    this.updateShownTablePreviewVariantsArray();
+  }
+
+  private setSelectedFrequencies(domain: [number, number]) {
+    this.selectedFrequencies = domain;
+    this.summaryVariantsArrayFiltered = this.filterSummaryVariantsArray(
+      this.summaryVariantsArray, ...this.selectedRegion
+    );
+    this.updateShownTablePreviewVariantsArray();
   }
 
 }

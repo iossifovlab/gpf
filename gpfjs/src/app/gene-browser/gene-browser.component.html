@@ -92,7 +92,8 @@
       [frequencyDomain]="[this.geneBrowserConfig.domainMin, this.geneBrowserConfig.domainMax]"
       [yAxisLabel]="this.geneBrowserConfig.frequencyName || this.geneBrowserConfig.frequencyColumn"
       [allVariantsCounts]="[summaryVariantsArray.totalSummaryAllelesCount, summaryVariantsArray.totalFamilyVariantsCount]"
-      (selectedRegion)="selectedRegion = $event">
+      (selectedRegion)="setSelectedRegion($event)"
+      (selectedFrequencies)="setSelectedFrequencies($event)">
     </gpf-gene-plot>
 
     <div *ngIf="!hideResults">

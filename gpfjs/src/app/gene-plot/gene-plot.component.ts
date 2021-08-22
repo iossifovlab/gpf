@@ -1,5 +1,5 @@
-import { Component, EventEmitter, Input, Output, OnChanges } from '@angular/core';
-import { Gene, GeneViewTranscript, GeneViewSummaryAllelesArray } from 'app/gene-view/gene';
+import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges } from '@angular/core';
+import { Gene, GeneViewTranscript, GeneViewSummaryAllelesArray, GeneViewSummaryAllele } from 'app/gene-view/gene';
 import { GeneViewModel } from 'app/gene-view/gene-view';
 import * as d3 from 'd3';
 import * as draw from 'app/utils/svg-drawing';
@@ -7,6 +7,7 @@ import * as draw from 'app/utils/svg-drawing';
 export class GeneViewScaleState {
   constructor(
     public xDomain: number[],
+    public xRange: number[],
     public yMin: number,
     public yMax: number,
     public condenseToggled: boolean,
@@ -33,6 +34,14 @@ export class GeneViewZoomHistory {
     return this.stateList[this.currentStateIdx];
   }
 
+  get canGoForward() {
+    return this.currentStateIdx < this.stateList.length - 1;
+  }
+
+  get canGoBackward() {
+    return this.currentStateIdx > 0;
+  }
+
   public reset(): void {
     this.stateList = [this.defaultState];
     this.currentStateIdx = 0;
@@ -48,13 +57,13 @@ export class GeneViewZoomHistory {
   }
 
   public moveToPrevious(): void {
-    if (this.currentStateIdx > 0) {
+    if (this.canGoBackward) {
       this.currentStateIdx--;
     }
   }
 
   public moveToNext(): void {
-    if (this.currentStateIdx < this.stateList.length - 1) {
+    if (this.canGoForward) {
       this.currentStateIdx++;
     }
   }
@@ -73,6 +82,7 @@ export class GenePlotComponent implements OnChanges {
   @Input() private readonly allVariantsCounts: [number, number];
 
   @Output() public selectedRegion = new EventEmitter<[number, number]>();
+  @Output() public selectedFrequencies = new EventEmitter<[number, number]>();
 
   private readonly constants = {
     svgContainerId: '#svg-container',
@@ -85,6 +95,7 @@ export class GenePlotComponent implements OnChanges {
     frequencyPlotSize: 300,
     frequencyPlotPadding: 30, // Padding between the frequency plot and the transcripts
     transcriptHeight: 12,
+    denovoSpacing: 22,
     margin: { top: 10, right: 30, left: 120, bottom: 0 },
     exonThickness: { normal: 3, collapsed: 6 },
     cdsThickness: { normal: 6, collapsed: 12 },
@@ -108,10 +119,15 @@ export class GenePlotComponent implements OnChanges {
   private svgElement: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>;
   private plotElement: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
   private brush;
+  private doubleClickTimer;
   private geneViewModel: GeneViewModel;
   private zoomHistory: GeneViewZoomHistory;
   private condenseIntrons = true;
   private drawTranscripts = true;
+  private normalRange: number[];
+  private condensedRange: number[];
+  private denovoLevels: number;
+  private denovoAllelesSpacings: Map<string, number>;
 
   constructor() {
     this.scale.x = d3.scaleLinear();
@@ -120,16 +136,22 @@ export class GenePlotComponent implements OnChanges {
     this.scale.yDenovo = d3.scalePoint();
   }
 
-  public ngOnChanges(): void {
-    if (this.gene === undefined) {
+  public ngOnChanges(changes: SimpleChanges): void {
+    if (!('gene' in changes) || this.gene === undefined) {
+      // The initialization code below is only relevant when the gene is changed
+      this.redraw();
       return;
     }
 
     this.geneViewModel = new GeneViewModel(this.gene, this.plotWidth);
+    this.normalRange = this.geneViewModel.normalRange;
+    this.condensedRange = this.geneViewModel.condensedRange;
 
     d3.select(this.constants.svgContainerId)
       .selectAll('*')
       .remove();
+
+    this.calculateDenovoAllelesSpacings();
 
     this.svgElement = d3.select(this.constants.svgContainerId)
       .append('svg')
@@ -143,7 +165,7 @@ export class GenePlotComponent implements OnChanges {
       .attr('transform', `translate(${this.constants.margin.left}, ${this.constants.margin.top})`);
 
     this.brush = d3.brush()
-      .extent([[0, 0], [this.plotWidth, this.constants.frequencyPlotSize]])
+      .extent([[0, 0], [this.plotWidth, this.frequencyPlotHeight]])
       .on('end', this.focusRegion);
 
     const subdomainAxisY = this.constants.frequencyPlotSize * this.constants.axisSizes.domain;
@@ -151,24 +173,24 @@ export class GenePlotComponent implements OnChanges {
 
     this.scale.x
       .domain(this.geneViewModel.domain)
-      .range(this.condenseIntrons ? this.geneViewModel.condensedRange : this.geneViewModel.normalRange);
+      .range(this.condenseIntrons ? this.condensedRange : this.normalRange);
     this.scale.y
       .domain(this.frequencyDomain)
       .range([subdomainAxisY, 0]);
     this.scale.ySubdomain
       .domain([0, this.frequencyDomain[0]])
       .range([zeroAxisY, subdomainAxisY]);
-    this.scale.yDenovo
-      .domain(['Denovo'])
-      .range([this.constants.frequencyPlotSize, zeroAxisY]);
+    // The yDenovo scale is set in calculateDenovoAllelesSpacings for convenience
 
     this.axis.x = d3.axisBottom(this.scale.x).tickValues(this.xAxisTicks);
     this.axis.y = d3.axisLeft(this.scale.y).tickValues(this.yAxisTicks).tickFormat(d3.format('1'));
     this.axis.ySubdomain = d3.axisLeft(this.scale.ySubdomain).tickValues([0]);
-    this.axis.yDenovo = d3.axisLeft(this.scale.yDenovo);
+    this.axis.yDenovo = d3.axisLeft(this.scale.yDenovo).tickValues([]);
 
     this.zoomHistory = new GeneViewZoomHistory(
-      new GeneViewScaleState(this.geneViewModel.domain, 0, this.frequencyDomain[1], this.condenseIntrons)
+      new GeneViewScaleState(
+        this.geneViewModel.domain, this.scale.x.range(), 0, this.frequencyDomain[1], this.condenseIntrons
+      )
     );
 
     this.redraw();
@@ -183,11 +205,15 @@ export class GenePlotComponent implements OnChanges {
   private get svgHeight(): number {
     // +1 transcript if transcripts are drawn due to the extra padding between the collapsed and normal transcripts
     const transcriptsCount = (this.drawTranscripts ? this.geneViewModel.geneViewTranscripts.length + 1 : 0) + 1;
-    return this.constants.frequencyPlotSize
+    return this.frequencyPlotHeight
       + this.constants.margin.top
       + this.constants.margin.bottom
       + this.constants.frequencyPlotPadding
       + (transcriptsCount * this.constants.transcriptHeight);
+  }
+
+  private get frequencyPlotHeight(): number {
+    return this.constants.frequencyPlotSize + (this.denovoLevels * this.constants.denovoSpacing);
   }
 
   private get xDomain(): [number, number] {
@@ -196,15 +222,11 @@ export class GenePlotComponent implements OnChanges {
   }
 
   private set xDomain(domain: [number, number]) {
-    let newRange: number[];
-    if (this.condenseIntrons) {
-      newRange = this.geneViewModel.buildCondensedIntronsRange(...domain, this.plotWidth);
-    } else {
-      newRange = this.geneViewModel.buildNormalIntronsRange(...domain, this.plotWidth);
-    }
+    this.normalRange = this.geneViewModel.buildNormalIntronsRange(...domain, this.plotWidth);
+    this.condensedRange = this.geneViewModel.buildCondensedIntronsRange(...domain, this.plotWidth);
     this.scale.x
       .domain(this.geneViewModel.buildDomain(...domain))
-      .range(newRange);
+      .range(this.condenseIntrons ? this.condensedRange : this.normalRange);
     this.axis.x.tickValues(this.xAxisTicks);
   }
 
@@ -232,10 +254,17 @@ export class GenePlotComponent implements OnChanges {
       .range(this.condenseIntrons ? this.geneViewModel.condensedRange : this.geneViewModel.normalRange);
     this.axis.x.tickValues(this.xAxisTicks);
     this.selectedRegion.emit(this.xDomain);
+    this.selectedFrequencies.emit([0, this.frequencyDomain[1]]);
+    this.zoomHistory.addStateToHistory(
+      new GeneViewScaleState(
+        this.scale.x.domain(), this.scale.x.range(), 0, this.frequencyDomain[1], this.condenseIntrons
+      )
+    );
     this.redraw();
   }
 
   private redraw(): void {
+    this.calculateDenovoAllelesSpacings();
     // Update SVG element with newly-calculated height and clear all child elements
     this.svgElement
       .attr('max-height', `${this.svgHeight}`)
@@ -250,11 +279,31 @@ export class GenePlotComponent implements OnChanges {
     this.drawGene();
   }
 
+  private toggleCondenseIntrons() {
+    this.condenseIntrons = !this.condenseIntrons;
+    let range;
+    if (this.condenseIntrons) {
+      range = this.geneViewModel.buildCondensedIntronsRange(...this.xDomain, this.plotWidth);
+    } else {
+      range = this.geneViewModel.buildNormalIntronsRange(...this.xDomain, this.plotWidth);
+    }
+    this.scale.x.range(range);
+    this.axis.x.tickValues(this.xAxisTicks);
+    this.zoomHistory.addStateToHistory(
+      new GeneViewScaleState(
+        this.scale.x.domain(), range,
+        this.zoomHistory.currentState.yMin, this.zoomHistory.currentState.yMax,
+        this.condenseIntrons
+      )
+    );
+    this.redraw();
+  }
+
   private drawPlot(): void {
     this.plotElement.append('g')
       .attr('id', 'xAxis')
       .style('font', `${this.constants.fontSize}px sans-serif`)
-      .attr('transform', `translate(0, ${this.constants.frequencyPlotSize})`)
+      .attr('transform', `translate(0, ${this.frequencyPlotHeight})`)
       .call(this.axis.x);
     this.plotElement.append('g')
       .attr('id', 'yAxis')
@@ -275,66 +324,78 @@ export class GenePlotComponent implements OnChanges {
       .style('text-anchor', 'middle')
       .style('font', `${this.constants.fontSize}px sans-serif`)
       .text(this.yAxisLabel);
+    this.plotElement.append('text')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', 0 - this.constants.margin.left / 2)
+      .attr('x', 0 - ((this.constants.frequencyPlotSize + this.frequencyPlotHeight) / 2))
+      .style('text-anchor', 'middle')
+      .style('font', `${this.constants.fontSize}px sans-serif`)
+      .text('Denovo');
+    // Denovo rectangle
+    this.plotElement
+      .append('rect')
+      .attr('height', this.frequencyPlotHeight - this.scale.ySubdomain(0))
+      .attr('width', this.plotWidth)
+      .attr('x', 1)
+      .attr('y', this.scale.ySubdomain(0))
+      .attr('fill', '#FFAD18')
+      .attr('fill-opacity', '0.25');
   }
 
   private drawVariants(): void {
     const variantsElement = this.plotElement.append('g').attr('id', 'variants');
     for (const allele of this.variantsArray.summaryAlleles) {
-        const allelePosition = this.scale.x(allele.position);
-        const alleleTitle = `Effect type: ${allele.effect}\nVariant position: ${allele.location}`;
-        const alleleHeight = this.freqToY(allele.frequency);
-        let color: string;
-        if (allele.seenInAffected) {
-          color = '#AA0000';
-          if (allele.seenInUnaffected) {
-            color = '#8a8a8a';
-          }
-        } else {
-          color = '#04613a';
+      const allelePosition = this.scale.x(Math.max(allele.position, this.xDomain[0]));
+      const alleleEndPosition = this.scale.x(Math.min(allele.endPosition, this.xDomain[1]));
+      const alleleTitle = `Effect type: ${allele.effect}\nVariant position: ${allele.location}`;
+      const alleleHeight = this.getAlleleHeight(allele);
+      let color: string;
+      if (allele.seenInAffected) {
+        color = '#AA0000';
+        if (allele.seenInUnaffected) {
+          color = '#8a8a8a';
         }
+      } else {
+        color = '#04613a';
+      }
 
-        let spacing = 0;
-        if (allele.seenAsDenovo) {
-          if (allele.frequency === null) {
-            // spacing = this.denovoAllelesSpacings[allele.sauid] + 8;
-          }
-
-          if (allele.isCNV()) {
-            const cnvLength = this.scale.x(allele.endPosition) - allelePosition;
-            draw.surroundingRectangle(
-              variantsElement, allelePosition + cnvLength / 2,
-              alleleHeight + spacing, color, alleleTitle, 1, cnvLength
-            );
-          } else {
-            draw.surroundingRectangle(variantsElement, allelePosition, alleleHeight + spacing, color, alleleTitle);
-          }
-        }
-
-        if (allele.isLGDs()) {
-          draw.star(variantsElement, allelePosition, alleleHeight + spacing, color, alleleTitle);
-        } else if (allele.isMissense()) {
-          draw.triangle(variantsElement, allelePosition, alleleHeight + spacing, color, alleleTitle);
-        } else if (allele.isSynonymous()) {
-          draw.circle(variantsElement, allelePosition, alleleHeight + spacing, color, alleleTitle);
-        } else if (allele.isCNVPlus()) {
-          draw.rect(
-            variantsElement, this.scale.x(allele.position), this.scale.x(allele.endPosition),
-            alleleHeight - 3 + spacing, 6, color, 1, alleleTitle
-          );
-        } else if (allele.isCNVPMinus()) {
-          draw.rect(
-            variantsElement, this.scale.x(allele.position), this.scale.x(allele.endPosition),
-            alleleHeight - 0.5 + spacing, 1, color, 1, alleleTitle
+      if (allele.seenAsDenovo) {
+        if (allele.isCNV()) {
+          const cnvLength = alleleEndPosition - allelePosition;
+          draw.surroundingRectangle(
+            variantsElement, allelePosition + cnvLength / 2,
+            alleleHeight, color, alleleTitle, 1, cnvLength
           );
         } else {
-          draw.dot(variantsElement, allelePosition, alleleHeight + spacing, color, alleleTitle);
+          draw.surroundingRectangle(variantsElement, allelePosition, alleleHeight, color, alleleTitle);
         }
       }
+
+      if (allele.isLGDs()) {
+        draw.star(variantsElement, allelePosition, alleleHeight, color, alleleTitle);
+      } else if (allele.isMissense()) {
+        draw.triangle(variantsElement, allelePosition, alleleHeight, color, alleleTitle);
+      } else if (allele.isSynonymous()) {
+        draw.circle(variantsElement, allelePosition, alleleHeight, color, alleleTitle);
+      } else if (allele.isCNVPlus()) {
+        draw.rect(
+          variantsElement, allelePosition, alleleEndPosition,
+          alleleHeight - 3, 6, color, 1, alleleTitle
+        );
+      } else if (allele.isCNVPMinus()) {
+        draw.rect(
+          variantsElement, allelePosition, alleleEndPosition,
+          alleleHeight - 0.5, 1, color, 1, alleleTitle
+        );
+      } else {
+        draw.dot(variantsElement, allelePosition, alleleHeight, color, alleleTitle);
+      }
+    }
   }
 
   private drawGene(): void {
     const summedTranscriptElement = this.plotElement.append('g').attr('id', 'summedTranscript');
-    let transcriptY = this.constants.frequencyPlotSize + this.constants.frequencyPlotPadding;
+    let transcriptY = this.frequencyPlotHeight + this.constants.frequencyPlotPadding;
     this.drawTranscript(summedTranscriptElement, this.geneViewModel.collapsedGeneViewTranscript, transcriptY);
 
     if (this.drawTranscripts) {
@@ -420,7 +481,7 @@ export class GenePlotComponent implements OnChanges {
   }
 
   private drawUTRLabels(svgGroup, xStart: number, xEnd: number, y: number, strand: string) {
-    const [lUTR, rUTR] = (strand === '+') ? [`5'`, `3'`] : [`3'`, `5'`];
+    const [lUTR, rUTR] = (strand === '+') ? [`5'`, `3'`] : [`3'`, `5'`]; // Choose strand direction
     draw.hoverText(svgGroup, this.scale.x(xStart) - 5, y, lUTR, `UTR ${lUTR}`, this.constants.fontSize);
     draw.hoverText(svgGroup, this.scale.x(xEnd) + 10, y, rUTR, `UTR ${rUTR}`, this.constants.fontSize);
   }
@@ -461,13 +522,13 @@ export class GenePlotComponent implements OnChanges {
     }
   }
 
-  private freqToY(variantFrequency: number): number {
-    if (variantFrequency === 0) {
-      return this.scale.yDenovo('0');
-    } else if (variantFrequency < this.frequencyDomain[0]) {
-      return this.scale.ySubdomain(variantFrequency);
+  private getAlleleHeight(allele: GeneViewSummaryAllele): number {
+    if (allele.frequency >= this.frequencyDomain[0] && allele.frequency <= this.frequencyDomain[1]) {
+      return this.scale.y(allele.frequency);
+    } else if (allele.seenAsDenovo && !allele.frequency) {
+      return this.scale.yDenovo(this.denovoAllelesSpacings.get(allele.svuid));
     } else {
-      return this.scale.y(variantFrequency);
+      return this.scale.ySubdomain(allele.frequency);
     }
   }
 
@@ -477,7 +538,7 @@ export class GenePlotComponent implements OnChanges {
     } else if (y < this.scale.yDenovo.range()[0]) {
       return this.scale.ySubdomain.invert(y);
     } else {
-      return 0; // FIXME Signal denovo somehow? Maybe -1?
+      return 0;
     }
   }
 
@@ -486,11 +547,11 @@ export class GenePlotComponent implements OnChanges {
 
     // Double-click
     if (!extent) {
-      // if (!this.doubleClickTimer) {
-      //   this.doubleClickTimer = setTimeout(this.resetDoubleClickTimer, 250);
-      //   return;
-      // }
-      this.resetPlot();
+      if (!this.doubleClickTimer) {
+        this.doubleClickTimer = setTimeout(() => { this.doubleClickTimer = null; }, 250);
+      } else {
+        this.resetPlot();
+      }
       return;
     }
 
@@ -506,16 +567,70 @@ export class GenePlotComponent implements OnChanges {
         domainMax = center + (this.constants.minDomainDistance / 2);
       }
       this.xDomain = [domainMin, domainMax];
+      this.selectedRegion.emit([domainMin, domainMax]);
     }
 
-    const freqSelection = [this.yToFreq(extent[0][1]), this.yToFreq(extent[1][1])];
+    const freqSelection: [number, number] = [this.yToFreq(extent[0][1]), this.yToFreq(extent[1][1])];
+    this.selectedFrequencies.emit([Math.min(...freqSelection), Math.max(...freqSelection)]);
 
     this.zoomHistory.addStateToHistory(
       new GeneViewScaleState(
-        this.scale.x.domain(), Math.min(...freqSelection), Math.max(...freqSelection), this.condenseIntrons
+        this.scale.x.domain(), this.scale.x.range(),
+        Math.min(...freqSelection), Math.max(...freqSelection), this.condenseIntrons
       )
     );
-    this.svgElement.select('.brush').call(this.brush.move, null);
+  }
+
+  private calculateDenovoAllelesSpacings(): void {
+    const denovoAlleles = this.variantsArray.summaryAlleles
+      .filter(sa => sa.seenAsDenovo && !sa.frequency)
+      .sort((sa, sa2) => sa.position - sa2.position);
+
+    const leveledDenovos: GeneViewSummaryAllele[][] = [[]];
+    this.denovoAllelesSpacings = new Map<string, number>();
+    for (const allele of denovoAlleles) {
+      // try putting in one of current levels
+      for (let level = 0; level < leveledDenovos.length; level++) {
+        if (leveledDenovos[level].every(sa => !sa.intersects(allele))) {
+          leveledDenovos[level].push(allele);
+          this.denovoAllelesSpacings.set(allele.svuid, level);
+          break;
+        }
+      }
+      // if no space, add another
+      if (!this.denovoAllelesSpacings.has(allele.svuid)) {
+        leveledDenovos.push([allele]);
+        this.denovoAllelesSpacings.set(allele.svuid, leveledDenovos.length - 1);
+      }
+    }
+    this.denovoLevels = leveledDenovos.length;
+    this.scale.yDenovo
+      .domain(Object.keys(leveledDenovos))
+      .range([this.constants.frequencyPlotSize, this.frequencyPlotHeight]);
+  }
+
+  private undo(): void {
+    this.zoomHistory.moveToPrevious();
+    this.restoreState(this.zoomHistory.currentState);
+  }
+
+  private redo(): void {
+    this.zoomHistory.moveToNext();
+    this.restoreState(this.zoomHistory.currentState);
+  }
+
+  private restoreState(state: GeneViewScaleState): void {
+    this.scale.x
+      .domain(state.xDomain)
+      .range(state.xRange);
+    this.axis.x.tickValues(this.xAxisTicks);
+    this.condenseIntrons = state.condenseToggled;
+    this.selectedFrequencies.emit([state.yMin, state.yMax]);
+    this.selectedRegion.emit(this.xDomain);
     this.redraw();
+  }
+
+  public getRegionString(startPos: number, endPos: number) {
+    return this.geneViewModel.collapsedGeneViewTranscript.resolveRegionChromosomes([startPos, endPos]);
   }
 }

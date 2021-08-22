@@ -218,6 +218,18 @@ export class GeneViewSummaryAllele {
     sum += (this.seenInAffected && this.seenInUnaffected) ? 1 : this.seenInUnaffected ? 2 : 3;
     return sum;
   }
+
+  public intersects(allele: GeneViewSummaryAllele): boolean {
+    if (!this.isCNV()) {
+      this.endPosition = this.position;
+    }
+
+    if (!allele.isCNV()) {
+      allele.endPosition = allele.position;
+    }
+
+    return !(this.position >= allele.endPosition || this.endPosition <= allele.position);
+  }
 }
 
 export class GeneViewSummaryAllelesArray {
