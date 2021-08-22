@@ -23,7 +23,6 @@ import { CODING, CNV, LGDS } from 'app/effecttypes/effecttypes';
   styleUrls: ['./gene-browser.component.css'],
 })
 export class GeneBrowserComponent implements OnInit, AfterViewInit {
-  @ViewChild(GeneViewComponent) private geneViewComponent: GeneViewComponent;
   @ViewChild(GenePlotComponent) private genePlotComponent: GenePlotComponent;
   private selectedGene: Gene;
   private geneSymbol = '';
@@ -35,8 +34,6 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
   private selectedDatasetId: string;
   private loadingFinished: boolean;
   private familyLoadingFinished: boolean;
-  private hideResults: boolean;
-  private hideDropdown: boolean;
   private showError = false;
   private geneBrowserConfig;
   private enableCodingOnly = true;
@@ -48,7 +45,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
   private selectedVariantTypes: Set<string>;
   private selectedFrequencies: [number, number] = [0, 0];
   private selectedRegion: [number, number] = [0, 0];
-  private collapsedTranscript
+  private collapsedTranscript;
 
   // TODO: Use effects from effecttypes.ts
   private readonly codingEffectTypes = [
@@ -122,17 +119,15 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
   public ngAfterViewInit(): void {
     this.datasetsService.getDataset(this.selectedDatasetId).subscribe(dataset => {
       if (dataset.accessRights && this.route.snapshot.params.gene) {
-        this.waitForGeneViewComponent().then(() => {
-          this.submitGeneRequest(this.route.snapshot.params.gene);
-        });
+        this.submitGeneRequest(this.route.snapshot.params.gene);
       }
     });
   }
 
-  private async waitForGeneViewComponent() {
+  private async waitForGenePlotComponent() {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
-        if (this.geneViewComponent !== undefined && this.geneViewComponent.svgElement) {
+        if (this.genePlotComponent !== undefined) {
           resolve();
           clearInterval(timer);
         }
@@ -140,14 +135,10 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     });
   }
 
-  get state() {
-    return this.geneViewComponent.getState();
-  }
-
   private updateShownTablePreviewVariantsArray() {
     this.familyLoadingFinished = false;
     const requestParams = {
-      ...this.transformFamilyVariantsQueryParameters(this.state),
+      ...this.transformFamilyVariantsQueryParameters(),
       'maxVariantsCount': this.maxFamilyVariants,
       'summaryVariantIds': this.summaryVariantsArrayFiltered.summaryAlleleIds.reduce(
         (a, b) => a.concat(b), []
@@ -167,7 +158,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     });
   }
 
-  private transformFamilyVariantsQueryParameters(state) {
+  private transformFamilyVariantsQueryParameters() {
     const inheritanceFilters = [];
     if (this.showDenovo) {
       inheritanceFilters.push('denovo');
@@ -205,11 +196,10 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
 
   private async submitGeneRequest(geneSymbol?: string) {
     this.showError = false;
-    this.hideDropdown = true;
 
     this.loadingFinished = false;
     this.loadingService.setLoadingStart();
-    this.hideResults = false;
+    this.genotypePreviewVariantsArray = null;
 
     // COLLECT GENE
     if (geneSymbol) {
@@ -222,7 +212,6 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     } catch(error) {
       console.error(error);
       this.showError = true;
-      this.hideDropdown = false;
     }
 
     if (this.selectedGene === undefined) {
@@ -231,25 +220,18 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
 
     const collapsedTranscript = this.selectedGene.collapsedTranscript();
     this.selectedRegion = [collapsedTranscript.start, collapsedTranscript.stop];
-    this.selectedFrequencies = [
-      0, this.geneBrowserConfig.domainMax
-    ];
+    this.selectedFrequencies = [0, this.geneBrowserConfig.domainMax];
 
     this.queryService.summaryStreamingFinishedSubject.subscribe(async() => {
       this.loadingFinished = true;
-      await this.waitForGeneViewComponent();
-      if (this.enableCodingOnly) {
-        this.geneViewComponent.enableIntronCondensing();
-      } else {
-        this.geneViewComponent.disableIntronCondensing();
-      }
+      await this.waitForGenePlotComponent();
       this.loadingService.setLoadingStop();
+      this.updateShownTablePreviewVariantsArray();
     });
 
     this.queryService.streamingFinishedSubject.subscribe(() => {
       this.familyLoadingFinished = true;
     });
-    this.genotypePreviewVariantsArray = null;
 
     const requestParams = {
       'datasetId': this.selectedDatasetId,
@@ -272,7 +254,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
 
   private onSubmit(event) {
     const requestParams = {
-      ...this.transformFamilyVariantsQueryParameters(this.state),
+      ...this.transformFamilyVariantsQueryParameters(),
       'summaryVariantIds': this.summaryVariantsArrayFiltered.summaryAlleleIds.reduce(
         (a, b) => a.concat(b), []
       ),

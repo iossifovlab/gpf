@@ -3,7 +3,7 @@
     <div class="effect-card card">
       <div style="font-family: Roboto; font-weight: 500; border-bottom: none;" class="card-header card-title">Gene Symbols</div>
       <div class="card-block">
-        <gpf-gene-symbol-with-search [hideDropdown]="hideDropdown"></gpf-gene-symbol-with-search>
+        <gpf-gene-symbol-with-search></gpf-gene-symbol-with-search>
         <div [hidden]="!showError" class="alert alert-danger" role="alert" style="display: inline-block; margin: 20px; margin-top: 0px; width: 45%">
           No such gene found!
         </div>
@@ -86,27 +86,17 @@
       </div>
     </div>
 
-    <gpf-gene-plot *ngIf="loadingFinished"
-      [gene]="selectedGene"
-      [variantsArray]="summaryVariantsArrayFiltered"
-      [frequencyDomain]="[this.geneBrowserConfig.domainMin, this.geneBrowserConfig.domainMax]"
-      [yAxisLabel]="this.geneBrowserConfig.frequencyName || this.geneBrowserConfig.frequencyColumn"
-      [allVariantsCounts]="[summaryVariantsArray.totalSummaryAllelesCount, summaryVariantsArray.totalFamilyVariantsCount]"
-      (selectedRegion)="setSelectedRegion($event)"
-      (selectedFrequencies)="setSelectedFrequencies($event)">
-    </gpf-gene-plot>
-
-    <div *ngIf="!hideResults">
-      <div class="row" style="margin-left: 0px; margin-right: 0px">
-        <gpf-gene-view style="width: 100%; min-width: 1300px;"
-          [gene]="selectedGene"
-          [variantsArray]="summaryVariantsArray"
-          (updateShownTablePreviewVariantsArrayEvent)="updateShownTablePreviewVariantsArray($event)"
-          [streamingFinished$]="queryService.summaryStreamingFinishedSubject"
-          (startLoadingSpinnerEvent)="null">
-        </gpf-gene-view>
-      </div>
-
+    <div *ngIf="loadingFinished">
+      <gpf-gene-plot
+        [gene]="selectedGene"
+        [variantsArray]="summaryVariantsArrayFiltered"
+        [frequencyDomain]="[this.geneBrowserConfig.domainMin, this.geneBrowserConfig.domainMax]"
+        [yAxisLabel]="this.geneBrowserConfig.frequencyName || this.geneBrowserConfig.frequencyColumn"
+        [allVariantsCounts]="[summaryVariantsArray.totalSummaryAllelesCount, summaryVariantsArray.totalFamilyVariantsCount]"
+        [condenseIntrons]="this.enableCodingOnly"
+        (selectedRegion)="setSelectedRegion($event)"
+        (selectedFrequencies)="setSelectedFrequencies($event)">
+      </gpf-gene-plot>
       <div class="row">
         <div class="col-12" *ngIf="selectedGene">
           <form id="summary_download" (ngSubmit)="onSubmit($event)" action="{{ configService.baseUrl }}genotype_browser/query"
