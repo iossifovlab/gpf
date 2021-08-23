@@ -75,12 +75,12 @@ export class GeneViewZoomHistory {
   styleUrls: ['./gene-plot.component.css']
 })
 export class GenePlotComponent implements OnChanges {
-  @Input() private readonly gene: Gene;
-  @Input() private readonly variantsArray: GeneViewSummaryAllelesArray;
+  @Input() public readonly gene: Gene;
+  @Input() public readonly variantsArray: GeneViewSummaryAllelesArray;
   @Input() private readonly frequencyDomain: [number, number];
   @Input() private readonly yAxisLabel: string;
-  @Input() private readonly allVariantsCounts: [number, number];
-  @Input() private condenseIntrons;
+  @Input() public readonly allVariantsCounts: [number, number];
+  @Input() public condenseIntrons;
 
   @Output() public selectedRegion = new EventEmitter<[number, number]>();
   @Output() public selectedFrequencies = new EventEmitter<[number, number]>();
@@ -122,8 +122,8 @@ export class GenePlotComponent implements OnChanges {
   private brush;
   private doubleClickTimer;
   private geneViewModel: GeneViewModel;
-  private zoomHistory: GeneViewZoomHistory;
-  private drawTranscripts = true;
+  public zoomHistory: GeneViewZoomHistory;
+  public drawTranscripts = true;
   private normalRange: number[];
   private condensedRange: number[];
   private denovoLevels: number;
@@ -248,7 +248,7 @@ export class GenePlotComponent implements OnChanges {
     return ticks;
   }
 
-  private resetPlot(): void {
+  public resetPlot(): void {
     this.scale.x
       .domain(this.geneViewModel.domain)
       .range(this.condenseIntrons ? this.geneViewModel.condensedRange : this.geneViewModel.normalRange);
@@ -263,7 +263,7 @@ export class GenePlotComponent implements OnChanges {
     this.redraw();
   }
 
-  private redraw(): void {
+  public redraw(): void {
     this.calculateDenovoAllelesSpacings();
     // Update SVG element with newly-calculated height and clear all child elements
     this.svgElement
@@ -279,7 +279,7 @@ export class GenePlotComponent implements OnChanges {
     this.drawGene();
   }
 
-  private toggleCondenseIntrons() {
+  public toggleCondenseIntrons() {
     this.condenseIntrons = !this.condenseIntrons;
     let range;
     if (this.condenseIntrons) {
@@ -609,12 +609,12 @@ export class GenePlotComponent implements OnChanges {
       .range([this.constants.frequencyPlotSize, this.frequencyPlotHeight]);
   }
 
-  private undo(): void {
+  public undo(): void {
     this.zoomHistory.moveToPrevious();
     this.restoreState(this.zoomHistory.currentState);
   }
 
-  private redo(): void {
+  public redo(): void {
     this.zoomHistory.moveToNext();
     this.restoreState(this.zoomHistory.currentState);
   }

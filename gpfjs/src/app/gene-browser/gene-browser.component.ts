@@ -11,10 +11,8 @@ import { switchMap, first } from 'rxjs/operators';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
-import { GeneViewComponent } from 'app/gene-view/gene-view.component';
 import { GenePlotComponent } from 'app/gene-plot/gene-plot.component';
 import { ConfigService } from 'app/config/config.service';
-
 import { CODING, CNV, LGDS } from 'app/effecttypes/effecttypes';
 
 @Component({
@@ -30,7 +28,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
   private genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
   private summaryVariantsArray: GeneViewSummaryAllelesArray;
   private summaryVariantsArrayFiltered: GeneViewSummaryAllelesArray;
-  private selectedDataset$: Observable<Dataset>;
+  public selectedDataset$: Observable<Dataset>;
   private selectedDatasetId: string;
   private loadingFinished: boolean;
   private familyLoadingFinished: boolean;
