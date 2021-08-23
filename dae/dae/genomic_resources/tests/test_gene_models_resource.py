@@ -11,5 +11,5 @@ def test_gene_models_resource(test_grdb):
 
     assert isinstance(res, GeneModelsResource)
 
-    # res.open()
-    # assert len(res.gene_models) > 0
+    res.open()
+    assert len(res.gene_models) > 0
