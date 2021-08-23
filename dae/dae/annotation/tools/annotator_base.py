@@ -58,10 +58,10 @@ class Annotator:
         Carry out the annotation and then relabel results as configured.
         """
         self._do_annotate(attributes, variant, liftover_variants)
-        attributes = self.resource._config.default_annotation.attributes
+        attributes_list = self.resource._config.default_annotation.attributes
         if self.override is not None:
-            attributes = self.override.attributes
-        for attr in attributes:
+            attributes_list = self.override.attributes
+        for attr in attributes_list:
             if attr.dest == attr.source:
                 continue
             attributes[attr.dest] = attributes[attr.source]

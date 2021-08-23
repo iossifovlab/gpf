@@ -9,12 +9,12 @@ logger = logging.getLogger(__name__)
 
 
 class FrequencyAnnotator(VariantScoreAnnotatorBase):
-    def __init__(self, config, genomes_db, liftover=None, override=None):
-        super().__init__(config, genomes_db, liftover, override)
+    def __init__(self, resource, genomes_db, liftover=None, override=None):
+        super().__init__(resource, genomes_db, liftover, override)
+        self.resource.open()
 
-    @staticmethod
-    def required_columns():
-        return ("chrom", "pos_begin", "pos_end", "variant")
+    def _collect_aggregators(self, attr):
+        return []
 
     def _do_annotate(self, attributes, variant, liftover_variants):
         if VariantType.is_cnv(variant.variant_type):
@@ -35,35 +35,25 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
 
         chrom = variant.chromosome
         pos = variant.details.cshl_position
-        scores = self.score_file.fetch_scores(chrom, pos, pos, ["variant"])
-        if not scores:
-            self._scores_not_found(attributes)
-            return
         variant_detail = variant.details.cshl_variant
 
-        variant_occurrences = scores["variant"].count(variant_detail)
-
-        if variant_occurrences == 0:
+        scores_dict = self.resource.fetch_scores(
+            chrom, pos, variant_detail
+        )
+        if scores_dict is None:
+            print("Not found!")
             self._scores_not_found(attributes)
             return
 
-        if variant_occurrences > 1:
-            logger.warning(
-                f"WARNING {self.score_file.filename}: "
-                f"multiple variant occurrences of {chrom}:{pos} {variant}"
-            )
-
-        variant_index = scores["variant"].index(variant_detail)
-        for score_id in self.score_file.score_ids:
-            val = scores[score_id][variant_index]
+        for score_id, score_value in scores_dict.items():
             try:
-                if val in ("", " "):
+                if score_value in ("", " "):
                     attributes[score_id] = None
                 else:
-                    attributes[score_id] = float(val)
+                    attributes[score_id] = score_value
             except ValueError as ex:
                 logger.error(
-                    f"problem with: {score_id}: {chrom}:{pos} - {val}"
+                    f"problem with: {score_id}: {chrom}:{pos} - {score_value}"
                 )
                 logger.error(ex)
                 raise ex

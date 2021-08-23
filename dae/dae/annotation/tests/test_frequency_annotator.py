@@ -3,10 +3,10 @@ from dae.annotation.annotation_pipeline import AnnotationPipeline
 
 
 def test_frequency_annotator(
-        frequency_variants_expected, get_score_config, genomes_db_2013):
-    config = get_score_config("TESTFreq")
-    annotator = FrequencyAnnotator(config, genomes_db_2013)
-    pipeline = AnnotationPipeline()
+        frequency_variants_expected, anno_grdb, genomes_db_2013):
+    resource = anno_grdb.get_resource("hg38/TESTFreq")
+    annotator = FrequencyAnnotator(resource, genomes_db_2013)
+    pipeline = AnnotationPipeline(None, None, None)
     pipeline.add_annotator(annotator)
 
     for sv, e in frequency_variants_expected:

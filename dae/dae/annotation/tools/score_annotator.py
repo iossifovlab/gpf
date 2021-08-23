@@ -18,9 +18,10 @@ class VariantScoreAnnotatorBase(Annotator):
         for score in self.resource._config.scores:
             self.score_types[score.id] = score.type
 
-        self.type_aggregators = dict()
-        for agg in self.resource._config.type_aggregators:
-            self.type_aggregators[agg.type] = agg.aggregator
+        if self.resource._config.type_aggregators:
+            self.type_aggregators = dict()
+            for agg in self.resource._config.type_aggregators:
+                self.type_aggregators[agg.type] = agg.aggregator
 
         self.aggregators = dict()
         for attr in self.config.attributes:
@@ -36,7 +37,9 @@ class VariantScoreAnnotatorBase(Annotator):
         ]
 
     def _scores_not_found(self, attributes):
-        values = {score_id: None for score_id in self.resource.get_default_scores()}
+        values = {
+            score_id: None for score_id in self.resource.get_default_scores()
+        }
         attributes.update(values)
 
     def _fetch_scores(self, variant, extra_cols=None):

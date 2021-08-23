@@ -377,13 +377,34 @@ class NPScoreResource(PositionScoreResource):
 
 
 class AlleleScoreResource(GenomicScoresResource):
-    def open(self):
-        pass
 
-    def close(self):
-        pass
+    @classmethod
+    def required_columns(cls):
+        return ("chrom", "pos_begin", "pos_end", "variant")
 
     def fetch_scores(
-        chrom: str, position: int, ref: str, alt: str, scores: List[str]
+        self, chrom: str, position: int, variant: str, scores: List[str] = None
     ):
-        pass
+        chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
+        assert chrom in self.get_all_chromosomes()
+
+        lines = self._fetch_lines(chrom, position, position)
+        if not lines:
+            return None
+
+        line = None
+        for li in lines:
+            if li["variant"] == variant:
+                line = li
+                break
+
+        if line is None:
+            return None
+
+        result = dict()
+
+        for col, val in line.scores.items():
+            if scores is None or col in scores:
+                result[col] = val
+
+        return result
