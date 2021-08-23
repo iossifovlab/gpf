@@ -8,7 +8,7 @@ from dae.annotation.tools.score_annotator import VariantScoreAnnotatorBase
 logger = logging.getLogger(__name__)
 
 
-class FrequencyAnnotator(VariantScoreAnnotatorBase):
+class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
     def __init__(self, resource, genomes_db, liftover=None, override=None):
         super().__init__(resource, genomes_db, liftover, override)
         self.resource.open()

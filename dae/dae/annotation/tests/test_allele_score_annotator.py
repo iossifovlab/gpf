@@ -1,11 +1,11 @@
-from dae.annotation.tools.frequency_annotator import FrequencyAnnotator
+from dae.annotation.tools.allele_score_annotator import AlleleScoreAnnotator
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 
 
-def test_frequency_annotator(
+def test_allele_score_annotator(
         frequency_variants_expected, anno_grdb, genomes_db_2013):
     resource = anno_grdb.get_resource("hg38/TESTFreq")
-    annotator = FrequencyAnnotator(resource, genomes_db_2013)
+    annotator = AlleleScoreAnnotator(resource, genomes_db_2013)
     pipeline = AnnotationPipeline(None, None, None)
     pipeline.add_annotator(annotator)
 
