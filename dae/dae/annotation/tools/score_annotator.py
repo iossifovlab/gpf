@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class VariantScoreAnnotatorBase(Annotator):
-    def __init__(self, resource, genomes_db, liftover=None, override=None):
-        super().__init__(resource, genomes_db, liftover, override)
+    def __init__(self, resource, liftover=None, override=None):
+        super().__init__(resource, liftover, override)
 
         self.score_types = dict()
         for score in self.resource._config.scores:
@@ -87,8 +87,8 @@ class VariantScoreAnnotatorBase(Annotator):
 
 
 class PositionScoreAnnotator(VariantScoreAnnotatorBase):
-    def __init__(self, resource, genomes_db, liftover=None, override=None):
-        super().__init__(resource, genomes_db, liftover, override)
+    def __init__(self, resource, liftover=None, override=None):
+        super().__init__(resource, liftover, override)
         # FIXME This should be closed somewhere
         self.resource.open()
 
@@ -129,12 +129,15 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
                     f"({variant.variant_type.value})"
                 )
                 raise Exception
-            scores = self.resource.fetch_scores_agg(
-                variant.chromosome,
-                first_position,
-                last_position,
-                self.aggregators,
-            )
+            if last_position - first_position > 500_000:
+                scores = None
+            else:
+                scores = self.resource.fetch_scores_agg(
+                    variant.chromosome,
+                    first_position,
+                    last_position,
+                    self.aggregators,
+                )
 
         if not scores:
             self._scores_not_found(attributes)
@@ -146,8 +149,8 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
 
 
 class NPScoreAnnotator(PositionScoreAnnotator):
-    def __init__(self, config, genomes_db, liftover=None, override=None):
-        super().__init__(config, genomes_db, liftover, override)
+    def __init__(self, config, liftover=None, override=None):
+        super().__init__(config, liftover, override)
 
     def _collect_aggregators(self, attr):
         aggr_name = attr.aggregator.position

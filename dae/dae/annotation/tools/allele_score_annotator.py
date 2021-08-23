@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
-    def __init__(self, resource, genomes_db, liftover=None, override=None):
-        super().__init__(resource, genomes_db, liftover, override)
+    def __init__(self, resource, liftover=None, override=None):
+        super().__init__(resource, liftover, override)
         self.resource.open()
 
     def _collect_aggregators(self, attr):

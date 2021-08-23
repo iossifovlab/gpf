@@ -10,8 +10,8 @@ def test_position_score_annotator(
         phastcons100way_variants_expected,
         anno_grdb, genomes_db_2013):
     resource = anno_grdb.get_resource("hg38/TESTphastCons100way")
-    annotator = PositionScoreAnnotator(resource, genomes_db_2013)
-    pipeline = AnnotationPipeline(None, None, None)
+    annotator = PositionScoreAnnotator(resource)
+    pipeline = AnnotationPipeline(None, None)
     pipeline.add_annotator(annotator)
 
     for sv, e in phastcons100way_variants_expected:
@@ -23,8 +23,8 @@ def test_position_score_annotator(
 def test_np_score_annotator(
         cadd_variants_expected, anno_grdb, genomes_db_2013):
     resource = anno_grdb.get_resource("hg38/TESTCADD")
-    annotator = NPScoreAnnotator(resource, genomes_db_2013)
-    pipeline = AnnotationPipeline(None, None, None)
+    annotator = NPScoreAnnotator(resource)
+    pipeline = AnnotationPipeline(None, None)
     pipeline.add_annotator(annotator)
 
     for sv, e in cadd_variants_expected:
@@ -38,9 +38,9 @@ def test_position_score_annotator_indels(
         anno_grdb, mean_override_phastcons, genomes_db_2013):
     resource = anno_grdb.get_resource("hg38/TESTphastCons100way")
     annotator = PositionScoreAnnotator(
-        resource, genomes_db_2013, override=mean_override_phastcons
+        resource, override=mean_override_phastcons
     )
-    pipeline = AnnotationPipeline(None, None, None)
+    pipeline = AnnotationPipeline(None, None)
     pipeline.add_annotator(annotator)
 
     for sv, e in phastcons100way_indel_variants_expected:
@@ -54,9 +54,9 @@ def test_np_score_annotator_indels(
         anno_grdb, mean_override_cadd, genomes_db_2013):
     resource = anno_grdb.get_resource("hg38/TESTCADD")
     annotator = NPScoreAnnotator(
-        resource, genomes_db_2013,
+        resource,
         override=mean_override_cadd)
-    pipeline = AnnotationPipeline(None, None, None)
+    pipeline = AnnotationPipeline(None, None)
     pipeline.add_annotator(annotator)
 
     for sv, e in cadd_indel_variants_expected:

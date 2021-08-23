@@ -14,18 +14,17 @@ logger = logging.getLogger(__name__)
 
 
 class AnnotationPipeline():
-    def __init__(self, config, genomes_db, resource_db):
+    def __init__(self, config, resource_db):
         self.annotators = []
         self.config = config
-        self.genomes_db = genomes_db
         self.resource_db = resource_db
 
     @staticmethod
-    def build(pipeline_config_path, genomes_db, resource_db):
+    def build(pipeline_config_path, resource_db):
         pipeline_config = GPFConfigParser.load_config(
             pipeline_config_path, annotation_conf_schema
         )
-        pipeline = AnnotationPipeline(pipeline_config, genomes_db, resource_db)
+        pipeline = AnnotationPipeline(pipeline_config, resource_db)
         for annotator in pipeline_config.annotators:
             score_id = annotator["resource"]
             liftover = annotator["liftover"]
@@ -33,7 +32,7 @@ class AnnotationPipeline():
             override = annotator.get("override")
             gs = resource_db.get_resource(score_id)
             annotator = AnnotatorFactory.make_annotator(
-                annotator_type, gs, genomes_db, liftover, override
+                annotator_type, gs, liftover, override
             )
             pipeline.add_annotator(annotator)
         return pipeline

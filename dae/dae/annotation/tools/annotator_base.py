@@ -8,24 +8,12 @@ logger = logging.getLogger(__name__)
 
 class Annotator:
 
-    def __init__(self, resource, genomes_db, liftover=None, override=None):
+    def __init__(self, resource, liftover=None, override=None):
         self.resource = resource
-        self.genomes_db = genomes_db
         self.config = override if override \
             else resource.get_default_annotation()
 
         # FIXME Reintroduce Graw, Traw and TrawFormat?
-
-        self.genomic_sequence = self.genomes_db.load_genomic_sequence(
-            # config.options.Graw
-        )
-        self.gene_models = self.genomes_db.load_gene_models(
-            # config.options.Traw, config.options.TrawFormat
-        )
-
-        assert self.genomes_db is not None
-        assert self.genomic_sequence is not None
-        assert self.gene_models is not None
 
         self.liftover = liftover
         self.override = override

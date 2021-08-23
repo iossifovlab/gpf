@@ -1346,7 +1346,6 @@ class GeneModels(GeneModelsBase):
             infile.seek(0)
             self.reset()
 
-            print(parser, type(parser))
             parser(infile, gene_mapping=gene_mapping)
 
 
