@@ -62,7 +62,7 @@ class CNVLoader(VariantsGenotypesLoader):
             self._adjust_chrom_prefix(chrom) for chrom in self.chromosomes
         ]
 
-        all_chromosomes = self.genome.get_genomic_sequence().chromosomes
+        all_chromosomes = self.genome.chromosomes
         if all([chrom in set(all_chromosomes) for chrom in self.chromosomes]):
             self.chromosomes = sorted(
                 self.chromosomes,

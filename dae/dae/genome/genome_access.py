@@ -73,6 +73,23 @@ class GenomicSequenceBase:
         w = w.replace("\n", "")[:ll]
         return w.upper()
 
+    def is_pseudoautosomal(self, chrom: str, pos: int) -> bool:
+        return False
+
+        # # TODO Handle variants which are both inside and outside a PARs
+        # # Currently, if the position of the reference is within a PAR,
+        # # the whole variant is considered to be within an autosomal region
+        # def in_any_region(chrom: str, pos: int, regions: List[Region]) -> bool:
+        #     return any(map(lambda reg: reg.isin(chrom, pos), regions))
+        
+        # pars_regions = self.pars.get(chrom, None)
+        # if pars_regions:
+        #     return in_any_region(
+        #         chrom, pos, pars_regions  # type: ignore
+        #     )
+        # else:
+        #     return False
+
 
 class GenomicSequence(GenomicSequenceBase):
 

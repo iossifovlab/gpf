@@ -1,0 +1,4 @@
+familyId	personId	dadId	momId	sex	status	role	sampleId
+f_trio	mom	0	0	F	1	mom	
+f_trio	dad	0	0	M	1	dad	
+f_trio	prb	dad	mom	M	2	prb	

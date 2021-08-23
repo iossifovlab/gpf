@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 class GenomicSequenceResource(GenomicResource, GenomicSequenceBase):
 
     def __init__(self, config, repo):
-        super().__init__(config, repo)
+        GenomicResource.__init__(self, config, repo)
+        GenomicSequenceBase.__init__(self)
 
     def open(self):
         index_filename = self.get_config().index_file.filename

@@ -104,7 +104,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             self._adjust_chrom_prefix(chrom) for chrom in self.chromosomes
         ]
 
-        all_chromosomes = self.genome.get_genomic_sequence().chromosomes
+        all_chromosomes = self.genome.chromosomes
         if all([chrom in set(all_chromosomes) for chrom in self.chromosomes]):
             self.chromosomes = sorted(
                 self.chromosomes,
@@ -534,7 +534,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             ref_alt_tuples = [
                 dae2vcf_variant(
                     variant_tuple[0], variant_tuple[1], variant_tuple[2],
-                    genome.get_genomic_sequence()
+                    genome
                 ) for variant_tuple in zip(chrom_col, pos_col, variant_col)
             ]
             pos_col, ref_col, alt_col = zip(*ref_alt_tuples)
@@ -833,7 +833,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             self._adjust_chrom_prefix(rec["chrom"]),
             rec["cshl_position"],
             rec["cshl_variant"],
-            self.genome.get_genomic_sequence(),
+            self.genome,
         )
         rec["position"] = position
         rec["reference"] = reference

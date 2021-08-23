@@ -86,7 +86,7 @@ class MakefilePartitionHelper:
         self.genome = genome
         self.partition_descriptor = partition_descriptor
         self.chromosome_lengths = dict(
-            self.genome.get_genomic_sequence().get_all_chrom_lengths()
+            self.genome.get_all_chrom_lengths()
         )
 
         self._build_adjust_chrom(add_chrom_prefix, del_chrom_prefix)
@@ -159,7 +159,7 @@ class MakefilePartitionHelper:
         genome_chromosomes = [
             chrom
             for chrom, _ in
-            self.genome.get_genomic_sequence().get_all_chrom_lengths()
+            self.genome.get_all_chrom_lengths()
         ]
         # fmt: on
         variants_targets = self.generate_variants_targets(genome_chromosomes)
