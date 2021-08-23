@@ -25,6 +25,4 @@ def test_gene_models_resource_http(test_http_grdb, resources_http_server):
 
     res.open()
     assert len(res.gene_models) == 13
-
-    r = open("a.tmp")
     
