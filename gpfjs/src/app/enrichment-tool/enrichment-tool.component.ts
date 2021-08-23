@@ -21,7 +21,7 @@ import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
 export class EnrichmentToolComponent implements OnInit {
   enrichmentResults: EnrichmentResults;
   public selectedDatasetId: string;
-  selectedDataset$: Observable<Dataset>;
+  selectedDataset: Dataset;
   private disableQueryButtons = false;
 
   @Select(EnrichmentToolComponent.enrichmentToolStateSelector) state$: Observable<any[]>;
@@ -41,7 +41,11 @@ export class EnrichmentToolComponent implements OnInit {
         this.selectedDatasetId = params['dataset'];
       }
     );
-    this.selectedDataset$ = this.datasetsService.getSelectedDataset();
+    this.selectedDataset = this.datasetsService.getSelectedDataset();
+    this.datasetsService.getDatasetsLoadedObservable()
+    .subscribe(datasetsLoaded => {
+      this.selectedDataset = this.datasetsService.getSelectedDataset();
+    });
 
     this.state$.subscribe(state => {
       this.enrichmentToolState = {

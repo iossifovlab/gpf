@@ -1,8 +1,6 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener, OnChanges, SimpleChanges } from '@angular/core';
-import { Router, ActivatedRoute, Params } from '@angular/router';
-
+import { Component, OnInit, ViewChild, ElementRef, HostListener} from '@angular/core';
+import { ActivatedRoute, Params } from '@angular/router';
 import { Observable } from 'rxjs';
-
 import { VariantReportsService } from './variant-reports.service';
 import { VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable,
          DeNovoData, PedigreeTable, PeopleCounter, PeopleSex } from './variant-reports';
@@ -15,7 +13,7 @@ import { map, share, switchMap, take } from 'rxjs/operators';
   templateUrl: './variant-reports.component.html',
   styleUrls: ['./variant-reports.component.css']
 })
-export class VariantReportsComponent implements OnInit, OnChanges {
+export class VariantReportsComponent implements OnInit {
   @ViewChild('families_pedigree') familiesPedigree: ElementRef;
   @ViewChild('legend') legend: ElementRef;
   familiesPedigreeTop: number;
@@ -35,7 +33,6 @@ export class VariantReportsComponent implements OnInit, OnChanges {
   constructor(
     private variantReportsService: VariantReportsService,
     private route: ActivatedRoute,
-    private router: Router,
     private datasetsService: DatasetsService,
   ) { }
 
@@ -51,11 +48,11 @@ export class VariantReportsComponent implements OnInit, OnChanges {
       }
     );
 
-    this.selectedDataset$ = this.datasetsService.getDataset(this.selectedDatasetId);
+    this.selectedDataset$ = this.datasetsService.getSelectedDatasetObservable();
 
     this.selectedDataset$.subscribe(
       dataset => {
-        if (dataset.accessRights) {
+        if (dataset && dataset.accessRights) {
           this.variantReport$ = datasetId$.pipe(
             switchMap(datasetId => this.variantReportsService.getVariantReport(datasetId)),
             share()
@@ -81,13 +78,9 @@ export class VariantReportsComponent implements OnInit, OnChanges {
     );
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    this.datasetsService.setSelectedDatasetById(this.selectedDatasetId);
-  }
-
   @HostListener('window:scroll', ['$event'])
   @HostListener('click', ['$event'])
-  onWindowScroll(event) {
+  onWindowScroll() {
     if (this.familiesPedigree && this.familiesPedigree.nativeElement) {
       this.familiesPedigreeTop = this.familiesPedigree.nativeElement.getBoundingClientRect().top;
       this.familiesPedigreeBottom = this.familiesPedigree.nativeElement.getBoundingClientRect().bottom;
@@ -175,5 +168,4 @@ export class VariantReportsComponent implements OnInit, OnChanges {
   getDownloadLink() {
     return this.variantReportsService.getDownloadLink();
   }
-
 }

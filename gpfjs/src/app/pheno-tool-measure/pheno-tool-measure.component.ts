@@ -50,10 +50,9 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
         this.normalizeBy = state.normalizeBy.length ? state.normalizeBy : [];
       });
 
-    this.datasetsService.getSelectedDataset().subscribe(dataset => {
-      if (dataset.phenotypeData) {
-        this.measuresService.getRegressions(dataset.id).subscribe(
-          res => { this.regressions = res });
+    this.datasetsService.getSelectedDatasetObservable().subscribe(dataset => {
+      if (dataset?.phenotypeData) {
+        this.measuresService.getRegressions(dataset.id).subscribe(res => this.regressions = res);
       } else {
         this.regressions = {};
       }

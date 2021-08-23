@@ -9,9 +9,9 @@ import { Dataset } from './datasets/datasets';
   providedIn: 'root'
 })
 export class DatasetPermissionGuard implements CanActivate, CanActivateChild, CanLoad {
-  selectedDataset$: Observable<Dataset>;
+  selectedDataset: Dataset;
   hasPermission = false;
-  
+
   constructor(
     private datasetsService: DatasetsService,
   ) { }
@@ -29,10 +29,12 @@ export class DatasetPermissionGuard implements CanActivate, CanActivateChild, Ca
   canLoad(
     route: Route,
     segments: UrlSegment[]): Observable<boolean> | Promise<boolean> | boolean {
-    this.selectedDataset$ = this.datasetsService.getSelectedDataset();
-    this.selectedDataset$.subscribe(selectedDataset => {
-      if (!selectedDataset) { return; }
-      this.hasPermission = selectedDataset.accessRights;
+    this.selectedDataset = this.datasetsService.getSelectedDataset();
+    this.datasetsService.getDatasetsLoadedObservable()
+    .subscribe(datasetsLoaded => {
+      this.selectedDataset = this.datasetsService.getSelectedDataset();
+      if (!this.selectedDataset) { return; }
+      this.hasPermission = this.selectedDataset.accessRights;
     });
     return this.hasPermission;
   }

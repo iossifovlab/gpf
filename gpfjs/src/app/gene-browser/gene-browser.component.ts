@@ -28,7 +28,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
   private genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
   private summaryVariantsArray: GeneViewSummaryAllelesArray;
   private summaryVariantsArrayFiltered: GeneViewSummaryAllelesArray;
-  public selectedDataset$: Observable<Dataset>;
+  public selectedDataset: Dataset;
   private selectedDatasetId: string;
   private loadingFinished: boolean;
   private familyLoadingFinished: boolean;
@@ -96,9 +96,16 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
   }
 
   public ngOnInit(): void {
-    this.selectedDataset$ = this.datasetsService.getSelectedDataset();
-    this.datasetsService.getSelectedDataset().subscribe(dataset => {
-      this.geneBrowserConfig = dataset.geneBrowser;
+    this.selectedDataset = this.datasetsService.getSelectedDataset();
+    if (this.selectedDataset) {
+      this.geneBrowserConfig = this.selectedDataset.geneBrowser;
+    }
+    this.datasetsService.getDatasetsLoadedObservable()
+    .subscribe(datasetsLoaded => {
+      this.selectedDataset = this.datasetsService.getSelectedDataset();
+      if (this.selectedDataset) {
+        this.geneBrowserConfig = this.selectedDataset.geneBrowser;
+      }
     });
 
     this.route.parent.params.subscribe(
@@ -148,12 +155,9 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
         'rangeEnd': this.selectedFrequencies[1],
       }]
     };
-    this.selectedDataset$.subscribe(selectedDataset => {
-      this.genotypePreviewVariantsArray = this.queryService.getGenotypePreviewVariantsByFilter(
-        requestParams,
-        selectedDataset.genotypeBrowserConfig.columnIds
-      );
-    });
+    this.genotypePreviewVariantsArray = this.queryService.getGenotypePreviewVariantsByFilter(
+      this.selectedDataset, requestParams
+    );
   }
 
   private transformFamilyVariantsQueryParameters() {

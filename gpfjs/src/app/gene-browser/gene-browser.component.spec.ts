@@ -47,7 +47,7 @@ describe('GeneBrowserComponent', () => {
     fixture = TestBed.createComponent(GeneBrowserComponent);
     component = fixture.componentInstance;
     spyOn((<any>component).datasetsService, 'getSelectedDataset').and.returnValue(
-      of({'genotypeBrowserConfig': {'columnIds': ['bla']}})
+      {'genotypeBrowserConfig': {'columnIds': ['bla']}}
     );
     fixture.detectChanges();
   });
@@ -76,29 +76,33 @@ describe('GeneBrowserComponent', () => {
   it('should update shown table preview variants array', () => {
     component.familyLoadingFinished = true;
     const stateGetterSpy = spyOnProperty(component, 'state').and.returnValue(testState);
-    const getGenotypePreviewVariantsByFilterSpy = spyOn(component.queryService, 'getGenotypePreviewVariantsByFilter')
-      .and.callFake((requestParams, previewInfo) => {
-        expect(requestParams).toEqual({
-          effectTypes: [ 'lgds', 'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift', 'CDS', 'CNV+', 'CNV-'],
-          genomicScores: [{ metric: 'testMetric', rangeStart: 1, rangeEnd: 11 }],
-          inheritanceTypeFilter: [ 'denovo', 'mendelian', 'omission', 'missing' ],
-          affectedStatus: [ 'Affected and unaffected', 'Affected only', 'Unaffected only' ],
-          geneSymbols: [ 'testSymbol' ],
-          datasetId: 'testDatasetId',
-          regions: [ 1, 10 ],
-          maxVariantsCount: 1,
-          summaryVariantIds: [5, 10, 15],
-          variantType: ['sub', 'ins', 'del', 'cnv+', 'cnv-'],
-          uniqueFamilyVariants: false
-        });
-        return 'testPreviewVariantsArray' as any;
-      });
-    // accesing private property - bad, needs to be refactored
-    (component as any).geneBrowserConfig = {frequencyColumn: 'testMetric'};
+    const getGenotypePreviewVariantsByFilterSpy = spyOn(component.queryService, 'getGenotypePreviewVariantsByFilter');
+    getGenotypePreviewVariantsByFilterSpy.and.returnValue('testPreviewVariantsArray' as any);
+    component['geneBrowserConfig'] = {frequencyColumn: 'testMetric'};
     component.maxFamilyVariants = 1;
 
     component.updateShownTablePreviewVariantsArray(new DomainRange(1, 11));
     expect(getGenotypePreviewVariantsByFilterSpy).toHaveBeenCalled();
+    expect(getGenotypePreviewVariantsByFilterSpy.calls.allArgs()).toEqual(
+      [[
+        {
+          genotypeBrowserConfig: { columnIds: ['bla']} as any
+        } as any,
+        {
+          effectTypes: [ 'lgds', 'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift', 'CDS', 'CNV+', 'CNV-'],
+          genomicScores: [{ metric: 'testMetric', rangeStart: 1, rangeEnd: 11 }],
+          inheritanceTypeFilter: ['denovo', 'mendelian', 'omission', 'missing'],
+          affectedStatus: ['Affected and unaffected', 'Affected only', 'Unaffected only'],
+          variantType: ['sub', 'ins', 'del', 'cnv+', 'cnv-'],
+          geneSymbols: ['testSymbol'],
+          datasetId: 'testDatasetId',
+          regions: [1, 10],
+          maxVariantsCount: 1,
+          summaryVariantIds: [5, 10, 15],
+          uniqueFamilyVariants: false
+        }
+      ]]
+    );
     expect(stateGetterSpy).toHaveBeenCalled();
     expect(component.genotypePreviewVariantsArray).toEqual('testPreviewVariantsArray' as any);
     expect(component.familyLoadingFinished).toBeFalse();
