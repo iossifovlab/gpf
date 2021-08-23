@@ -7,11 +7,15 @@ class HTTPFile:
         self._position = 0
         response = requests.head(self.url)
         self._file_length = int(response.headers["Content-Length"])
+        self.closed = False
 
     def seek(self, position: int = 0):
         self._position = position
 
     def read(self, size: int = 0):
+        if self.closed:
+            raise ValueError("ValueError: I/O operation on closed HTTP file.")
+
         if self._position >= self._file_length:
             return ""
 
@@ -29,10 +33,13 @@ class HTTPFile:
         return self._position
 
     def close(self):
-        pass
+        self.closed = True
 
     def __enter__(self):
         return self
 
     def __exit__(self, type, value, traceback):
+        pass
+
+    def __iter__(self):
         pass
