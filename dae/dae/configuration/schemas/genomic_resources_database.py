@@ -116,6 +116,11 @@ genomic_sequence_schema = {
         },
     },
 
+    "PARS": {
+        "type": "dict",
+        "valuesrules": {"type": "list", "schema": {"type": "string"}},
+    },
+
     "meta": {"type": "string"},
 }
 

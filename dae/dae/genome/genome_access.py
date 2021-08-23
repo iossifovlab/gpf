@@ -2,8 +2,13 @@
 # by Ewa
 
 import os
+import copy
 import abc
 import logging
+
+from typing import List
+
+from dae.utils.regions import Region
 
 
 logger = logging.getLogger(__name__)
@@ -15,6 +20,7 @@ class GenomicSequenceBase:
         self._index = None
         self._chromosomes = None
         self._sequence = None
+        self.PARS = {}
 
     @property
     def chromosomes(self):
@@ -74,30 +80,32 @@ class GenomicSequenceBase:
         return w.upper()
 
     def is_pseudoautosomal(self, chrom: str, pos: int) -> bool:
-        return False
 
-        # # TODO Handle variants which are both inside and outside a PARs
-        # # Currently, if the position of the reference is within a PAR,
-        # # the whole variant is considered to be within an autosomal region
-        # def in_any_region(chrom: str, pos: int, regions: List[Region]) -> bool:
-        #     return any(map(lambda reg: reg.isin(chrom, pos), regions))
-        
-        # pars_regions = self.pars.get(chrom, None)
-        # if pars_regions:
-        #     return in_any_region(
-        #         chrom, pos, pars_regions  # type: ignore
-        #     )
-        # else:
-        #     return False
+        # TODO Handle variants which are both inside and outside a PARs
+        # Currently, if the position of the reference is within a PAR,
+        # the whole variant is considered to be within an autosomal region
+        def in_any_region(
+                  chrom: str, pos: int, regions: List[Region]) -> bool:
+            return any(map(lambda reg: reg.isin(chrom, pos), regions))
+
+        pars_regions = self.PARS.get(chrom, None)
+        if pars_regions:
+            return in_any_region(
+                chrom, pos, pars_regions  # type: ignore
+            )
+        else:
+            return False
 
 
 class GenomicSequence(GenomicSequenceBase):
 
-    def __init__(self, genome_filename):
+    def __init__(self, genome_filename, PARS=None):
         super(GenomicSequence, self).__init__()
         assert os.path.exists(genome_filename)
 
         self.genome_filename = genome_filename
+        if PARS is not None:
+            self.PARS = copy.deepcopy(PARS)
 
     def open(self):
         index_filename = f"{self.genome_filename}.fai"
