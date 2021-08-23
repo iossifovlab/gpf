@@ -1,11 +1,17 @@
+from __future__ import annotations
+
 import gzip
 import os
-import sys
 import logging
+import copy
+import abc
 
 from collections import defaultdict
+from contextlib import contextmanager
 
 import pandas as pd
+
+from typing import Optional, Dict, TextIO
 
 from dae.utils.regions import Region
 
@@ -385,15 +391,34 @@ class TranscriptModel:
         return True
 
 
+@contextmanager
+def _open_file(filename):
+    if filename.endswith(".gz") or filename.endswith(".bgz"):
+        infile = gzip.open(filename, "rt")
+    else:
+        infile = open(filename)
+    try:
+        yield infile
+    finally:
+        infile.close()
+
+
 #
 # GeneModel's
 #
-class GeneModels:
-    def __init__(self, name=None, location=None):
+class GeneModelsBase:
+    def __init__(self, name=None):
         self.name = name
-        self.location = location
         self._shift = None
-        self._alternative_names = None
+        self.alternative_names = None
+
+        self.utr_models = defaultdict(lambda: defaultdict(list))
+        self.transcript_models = {}
+        self.gene_models = defaultdict(list)
+
+    def reset(self):
+        self._shift = None
+        self.alternative_names = None
 
         self.utr_models = defaultdict(lambda: defaultdict(list))
         self.transcript_models = {}
@@ -415,13 +440,13 @@ class GeneModels:
             self.gene_models[tm.gene].append(tm)
             self.utr_models[tm.chrom][tm.tx].append(tm)
 
+    @abc.abstractmethod
+    def open(self):
+        pass
+
     def gene_names(self):
         if self.gene_models is None:
-            print(
-                "Gene Models haven't been created/uploaded yet! "
-                "Use either loadGeneModels function or "
-                "self.createGeneModelDict function"
-            )
+            logger.warning(f"gene models {self.name} are empty")
             return None
 
         return list(self.gene_models.keys())
@@ -533,709 +558,814 @@ class GeneModels:
             with open(output_filename, "wt") as outfile:
                 self._save_gene_models(outfile)
 
+    def _parse_default_gene_models_format(
+        self, infile: TextIO,
+        gene_mapping: Optional[Dict[str, str]] = None,
+        nrows: Optional[int] = None
+    ) -> bool:
 
-def load_default_gene_models_format(
-    filename, gene_mapping_file=None, nrows=None
-):
-    df = pd.read_csv(
-        filename,
-        sep="\t",
-        nrows=nrows,
-        dtype={
-            "chr": str,
-            "trID": str,
-            "trOrigId": str,
-            "gene": str,
-            "strand": str,
-            "atts": str,
-        },
-    )
-
-    expected_columns = [
-        "chr",
-        "trID",
-        "gene",
-        "strand",
-        "tsBeg",
-        "txEnd",
-        "cdsStart",
-        "cdsEnd",
-        "exonStarts",
-        "exonEnds",
-        "exonFrames",
-        "atts",
-    ]
-    assert set(expected_columns) <= set(df.columns)
-
-    if not set(expected_columns) <= set(df.columns):
-        return None
-
-    if "trOrigId" not in df.columns:
-        tr_names = pd.Series(data=df["trID"].values)
-        df["trOrigId"] = tr_names
-
-    gm = GeneModels(location=filename)
-
-    records = df.to_dict(orient="records")
-    for line in records:
-        exon_starts = list(map(int, line["exonStarts"].split(",")))
-        exon_ends = list(map(int, line["exonEnds"].split(",")))
-        exon_frames = list(map(int, line["exonFrames"].split(",")))
-        assert len(exon_starts) == len(exon_ends) == len(exon_frames)
-
-        exons = []
-        for start, end, frame in zip(exon_starts, exon_ends, exon_frames):
-            exons.append(Exon(start=start, stop=end, frame=frame))
-        attributes = {}
-        atts = line.get("atts")
-        if atts and isinstance(atts, str):
-            attributes = dict(
-                [a.split(":") for a in line.get("atts").split(";")]
-            )
-        tm = TranscriptModel(
-            gene=line["gene"],
-            tr_id=line["trID"],
-            tr_name=line["trOrigId"],
-            chrom=line["chr"],
-            strand=line["strand"],
-            tx=(line["tsBeg"], line["txEnd"]),
-            cds=(line["cdsStart"], line["cdsEnd"]),
-            exons=exons,
-            attributes=attributes,
-        )
-        gm.transcript_models[tm.tr_id] = tm
-
-    gm._update_indexes()
-    if nrows is not None:
-        return True
-
-    return gm
-
-
-def load_ref_flat_gene_models_format(
-    filename, gene_mapping_file=None, nrows=None
-):
-    expected_columns = [
-        "#geneName",
-        "name",
-        "chrom",
-        "strand",
-        "txStart",
-        "txEnd",
-        "cdsStart",
-        "cdsEnd",
-        "exonCount",
-        "exonStarts",
-        "exonEnds",
-    ]
-
-    df = parse_raw(filename, expected_columns, nrows=nrows)
-    if df is None:
-        return None
-
-    gm = GeneModels(location=filename)
-    records = df.to_dict(orient="records")
-
-    transcript_ids_counter = defaultdict(int)
-
-    for rec in records:
-        gene = rec["#geneName"]
-        tr_name = rec["name"]
-        chrom = rec["chrom"]
-        strand = rec["strand"]
-        tx = (int(rec["txStart"]) + 1, int(rec["txEnd"]))
-        cds = (int(rec["cdsStart"]) + 1, int(rec["cdsEnd"]))
-
-        exon_starts = list(map(int, rec["exonStarts"].strip(",").split(",")))
-        exon_ends = list(map(int, rec["exonEnds"].strip(",").split(",")))
-        assert len(exon_starts) == len(exon_ends)
-
-        exons = [
-            Exon(start + 1, end) for start, end in zip(exon_starts, exon_ends)
-        ]
-
-        transcript_ids_counter[tr_name] += 1
-        tr_id = f"{tr_name}_{transcript_ids_counter[tr_name]}"
-
-        tm = TranscriptModel(
-            gene=gene,
-            tr_id=tr_id,
-            tr_name=tr_name,
-            chrom=chrom,
-            strand=strand,
-            tx=tx,
-            cds=cds,
-            exons=exons,
-        )
-        tm.update_frames()
-        gm._add_transcript_model(tm)
-
-    return gm
-
-
-def load_ref_seq_gene_models_format(
-    filename, gene_mapping_file=None, nrows=None
-):
-    expected_columns = [
-        "#bin",
-        "name",
-        "chrom",
-        "strand",
-        "txStart",
-        "txEnd",
-        "cdsStart",
-        "cdsEnd",
-        "exonCount",
-        "exonStarts",
-        "exonEnds",
-        "score",
-        "name2",
-        "cdsStartStat",
-        "cdsEndStat",
-        "exonFrames",
-    ]
-
-    df = parse_raw(filename, expected_columns, nrows=nrows)
-    if df is None:
-        return None
-
-    gm = GeneModels(location=filename)
-    records = df.to_dict(orient="records")
-
-    transcript_ids_counter = defaultdict(int)
-
-    for rec in records:
-        gene = rec["name2"]
-        tr_name = rec["name"]
-        chrom = rec["chrom"]
-        strand = rec["strand"]
-        tx = (int(rec["txStart"]) + 1, int(rec["txEnd"]))
-        cds = (int(rec["cdsStart"]) + 1, int(rec["cdsEnd"]))
-
-        exon_starts = list(map(int, rec["exonStarts"].strip(",").split(",")))
-        exon_ends = list(map(int, rec["exonEnds"].strip(",").split(",")))
-        assert len(exon_starts) == len(exon_ends)
-
-        exons = [
-            Exon(start + 1, end) for start, end in zip(exon_starts, exon_ends)
-        ]
-
-        transcript_ids_counter[tr_name] += 1
-        tr_id = f"{tr_name}_{transcript_ids_counter[tr_name]}"
-
-        attributes = {
-            k: rec[k]
-            for k in [
-                "#bin",
-                "score",
-                "exonCount",
-                "cdsStartStat",
-                "cdsEndStat",
-                "exonFrames",
-            ]
-        }
-        tm = TranscriptModel(
-            gene=gene,
-            tr_id=tr_id,
-            tr_name=tr_name,
-            chrom=chrom,
-            strand=strand,
-            tx=tx,
-            cds=cds,
-            exons=exons,
-            attributes=attributes,
-        )
-        tm.update_frames()
-        gm._add_transcript_model(tm)
-
-    return gm
-
-
-def probe_header(filename, expected_columns, comment=None):
-    df = pd.read_csv(filename, sep="\t", nrows=1, header=None, comment=comment)
-    return list(df.iloc[0, :]) == expected_columns
-
-
-def probe_columns(filename, expected_columns, comment=None):
-    df = pd.read_csv(filename, sep="\t", nrows=1, header=None, comment=comment)
-    return list(df.columns) == list(range(0, len(expected_columns)))
-
-
-def parse_raw(filename, expected_columns, nrows=None, comment=None):
-    if probe_header(filename, expected_columns, comment=comment):
-        df = pd.read_csv(filename, sep="\t", nrows=nrows, comment=comment)
-        assert list(df.columns) == expected_columns
-
-        return df
-    elif probe_columns(filename, expected_columns, comment=comment):
+        infile.seek(0)
         df = pd.read_csv(
-            filename,
+            infile,
             sep="\t",
             nrows=nrows,
-            header=None,
-            names=expected_columns,
-            comment=comment,
+            dtype={
+                "chr": str,
+                "trID": str,
+                "trOrigId": str,
+                "gene": str,
+                "strand": str,
+                "atts": str,
+            },
         )
-        assert list(df.columns) == expected_columns
-        return df
 
-
-def load_ccds_gene_models_format(filename, gene_mapping_file=None, nrows=None):
-    expected_columns = [
-        # CCDS is identical with RefSeq
-        "#bin",
-        "name",
-        "chrom",
-        "strand",
-        "txStart",
-        "txEnd",
-        "cdsStart",
-        "cdsEnd",
-        "exonCount",
-        "exonStarts",
-        "exonEnds",
-        "score",
-        "name2",
-        "cdsStartStat",
-        "cdsEndStat",
-        "exonFrames",
-    ]
-
-    df = parse_raw(filename, expected_columns, nrows=nrows)
-    if df is None:
-        return None
-
-    gm = GeneModels(location=filename)
-    records = df.to_dict(orient="records")
-
-    transcript_ids_counter = defaultdict(int)
-    gm._alternative_names = {}
-    if gene_mapping_file is not None:
-        gm._alternative_names = gene_mapping(gene_mapping_file)
-
-    for rec in records:
-        gene = rec["name"]
-        gene = gm._alternative_names.get(gene, gene)
-
-        tr_name = rec["name"]
-        chrom = rec["chrom"]
-        strand = rec["strand"]
-        tx = (int(rec["txStart"]) + 1, int(rec["txEnd"]))
-        cds = (int(rec["cdsStart"]) + 1, int(rec["cdsEnd"]))
-
-        exon_starts = list(map(int, rec["exonStarts"].strip(",").split(",")))
-        exon_ends = list(map(int, rec["exonEnds"].strip(",").split(",")))
-        assert len(exon_starts) == len(exon_ends)
-
-        exons = [
-            Exon(start + 1, end) for start, end in zip(exon_starts, exon_ends)
+        expected_columns = [
+            "chr",
+            "trID",
+            "gene",
+            "strand",
+            "tsBeg",
+            "txEnd",
+            "cdsStart",
+            "cdsEnd",
+            "exonStarts",
+            "exonEnds",
+            "exonFrames",
+            "atts",
         ]
+        assert set(expected_columns) <= set(df.columns)
 
-        transcript_ids_counter[tr_name] += 1
-        tr_id = f"{tr_name}_{transcript_ids_counter[tr_name]}"
+        if not set(expected_columns) <= set(df.columns):
+            return False
 
-        attributes = {
-            k: rec[k]
-            for k in [
-                "#bin",
-                "score",
-                "exonCount",
-                "cdsStartStat",
-                "cdsEndStat",
-                "exonFrames",
-            ]
-        }
-        tm = TranscriptModel(
-            gene=gene,
-            tr_id=tr_id,
-            tr_name=tr_name,
-            chrom=chrom,
-            strand=strand,
-            tx=tx,
-            cds=cds,
-            exons=exons,
-            attributes=attributes,
-        )
-        tm.update_frames()
-        gm._add_transcript_model(tm)
+        if "trOrigId" not in df.columns:
+            tr_names = pd.Series(data=df["trID"].values)
+            df["trOrigId"] = tr_names
 
-    return gm
+        records = df.to_dict(orient="records")
+        for line in records:
+            exon_starts = list(map(int, line["exonStarts"].split(",")))
+            exon_ends = list(map(int, line["exonEnds"].split(",")))
+            exon_frames = list(map(int, line["exonFrames"].split(",")))
+            assert len(exon_starts) == len(exon_ends) == len(exon_frames)
 
-
-def load_known_gene_models_format(
-        filename, gene_mapping_file=None, nrows=None):
-
-    expected_columns = [
-        "name",
-        "chrom",
-        "strand",
-        "txStart",
-        "txEnd",
-        "cdsStart",
-        "cdsEnd",
-        "exonCount",
-        "exonStarts",
-        "exonEnds",
-        "proteinID",
-        "alignID",
-    ]
-
-    df = parse_raw(filename, expected_columns, nrows=nrows)
-    if df is None:
-        return None
-
-    gm = GeneModels(location=filename)
-    records = df.to_dict(orient="records")
-
-    transcript_ids_counter = defaultdict(int)
-    gm._alternative_names = {}
-    if gene_mapping_file is not None:
-        gm._alternative_names = gene_mapping(gene_mapping_file)
-
-    for rec in records:
-        gene = rec["name"]
-        gene = gm._alternative_names.get(gene, gene)
-
-        tr_name = rec["name"]
-        chrom = rec["chrom"]
-        strand = rec["strand"]
-        tx = (int(rec["txStart"]) + 1, int(rec["txEnd"]))
-        cds = (int(rec["cdsStart"]) + 1, int(rec["cdsEnd"]))
-
-        exon_starts = list(map(int, rec["exonStarts"].strip(",").split(",")))
-        exon_ends = list(map(int, rec["exonEnds"].strip(",").split(",")))
-        assert len(exon_starts) == len(exon_ends)
-
-        exons = [
-            Exon(start + 1, end) for start, end in zip(exon_starts, exon_ends)
-        ]
-
-        transcript_ids_counter[tr_name] += 1
-        tr_id = f"{tr_name}_{transcript_ids_counter[tr_name]}"
-
-        attributes = {k: rec[k] for k in ["proteinID", "alignID"]}
-        tm = TranscriptModel(
-            gene=gene,
-            tr_id=tr_id,
-            tr_name=tr_name,
-            chrom=chrom,
-            strand=strand,
-            tx=tx,
-            cds=cds,
-            exons=exons,
-            attributes=attributes,
-        )
-        tm.update_frames()
-        gm._add_transcript_model(tm)
-
-    return gm
-
-
-def load_ucscgenepred_models_format(
-        filename, gene_mapping_file=None, nrows=None):
-    """
-    table genePred
-    "A gene prediction."
-        (
-        string  name;               "Name of gene"
-        string  chrom;              "Chromosome name"
-        char[1] strand;             "+ or - for strand"
-        uint    txStart;            "Transcription start position"
-        uint    txEnd;              "Transcription end position"
-        uint    cdsStart;           "Coding region start"
-        uint    cdsEnd;             "Coding region end"
-        uint    exonCount;          "Number of exons"
-        uint[exonCount] exonStarts; "Exon start positions"
-        uint[exonCount] exonEnds;   "Exon end positions"
-        )
-
-    table genePredExt
-    "A gene prediction with some additional info."
-        (
-        string name;        	"Name of gene (usually transcript_id from GTF)"
-        string chrom;       	"Chromosome name"
-        char[1] strand;     	"+ or - for strand"
-        uint txStart;       	"Transcription start position"
-        uint txEnd;         	"Transcription end position"
-        uint cdsStart;      	"Coding region start"
-        uint cdsEnd;        	"Coding region end"
-        uint exonCount;     	"Number of exons"
-        uint[exonCount] exonStarts; "Exon start positions"
-        uint[exonCount] exonEnds;   "Exon end positions"
-        int score;            	"Score"
-        string name2;       	"Alternate name (e.g. gene_id from GTF)"
-        string cdsStartStat; 	"Status of CDS start annotation (none,
-                                    unknown, incomplete, or complete)"
-        string cdsEndStat;   	"Status of CDS end annotation (none, unknown,
-                                    incomplete, or complete)"
-        lstring exonFrames; 	"Exon frame offsets {0,1,2}"
-        )
-    """
-
-    expected_columns = [
-        "name",
-        "chrom",
-        "strand",
-        "txStart",
-        "txEnd",
-        "cdsStart",
-        "cdsEnd",
-        "exonCount",
-        "exonStarts",
-        "exonEnds",
-        "score",
-        "name2",
-        "cdsStartStat",
-        "cdsEndStat",
-        "exonFrames",
-    ]
-
-    df = parse_raw(filename, expected_columns[:10], nrows=nrows)
-    if df is None:
-        df = parse_raw(filename, expected_columns, nrows=nrows)
-        if df is None:
-            return None
-
-    gm = GeneModels(location=filename)
-    records = df.to_dict(orient="records")
-
-    transcript_ids_counter = defaultdict(int)
-    gm._alternative_names = {}
-    if gene_mapping_file is not None:
-        gm._alternative_names = gene_mapping(gene_mapping_file)
-
-    for rec in records:
-        gene = rec.get("name2")
-        if not gene:
-            gene = rec["name"]
-        gene = gm._alternative_names.get(gene, gene)
-
-        tr_name = rec["name"]
-        chrom = rec["chrom"]
-        strand = rec["strand"]
-        tx = (int(rec["txStart"]) + 1, int(rec["txEnd"]))
-        cds = (int(rec["cdsStart"]) + 1, int(rec["cdsEnd"]))
-
-        exon_starts = list(map(int, rec["exonStarts"].strip(",").split(",")))
-        exon_ends = list(map(int, rec["exonEnds"].strip(",").split(",")))
-        assert len(exon_starts) == len(exon_ends)
-
-        exons = [
-            Exon(start + 1, end) for start, end in zip(exon_starts, exon_ends)
-        ]
-
-        transcript_ids_counter[tr_name] += 1
-        tr_id = f"{tr_name}_{transcript_ids_counter[tr_name]}"
-
-        attributes = {}
-        for attr in expected_columns[10:]:
-            if attr in rec:
-                attributes[attr] = rec.get(attr)
-        tm = TranscriptModel(
-            gene=gene,
-            tr_id=tr_id,
-            tr_name=tr_name,
-            chrom=chrom,
-            strand=strand,
-            tx=tx,
-            cds=cds,
-            exons=exons,
-            attributes=attributes,
-        )
-        tm.update_frames()
-        gm._add_transcript_model(tm)
-
-    return gm
-
-
-def load_gtf_gene_models_format(filename, gene_mapping_file=None, nrows=None):
-    expected_columns = [
-        "seqname",
-        "source",
-        "feature",
-        "start",
-        "end",
-        "score",
-        "strand",
-        "phase",
-        "attributes",
-        # "comments",
-    ]
-    df = parse_raw(filename, expected_columns, nrows=nrows, comment="#",)
-
-    if df is None:
-        expected_columns.append("comment")
-        df = parse_raw(filename, expected_columns, nrows=nrows, comment="#")
-        if df is None:
-            return None
-
-    def parse_gtf_attributes(attributes):
-        attributes = list(
-            filter(lambda x: x, [a.strip() for a in attributes.split(";")])
-        )
-        result = {}
-        for attr in attributes:
-            key, value = attr.split(" ")
-            result[key.strip()] = value.strip('"').strip()
-        return result
-
-    gm = GeneModels(location=filename)
-
-    records = df.to_dict(orient="records")
-    for rec in records:
-        feature = rec["feature"]
-        if feature == "gene":
-            continue
-        attributes = parse_gtf_attributes(rec["attributes"])
-        tr_id = attributes["transcript_id"]
-        if feature in set(["transcript", "Selenocysteine"]):
-            if feature == "Selenocysteine" and tr_id in gm.transcript_models:
-                continue
-            if tr_id in gm.transcript_models:
-                raise ValueError(
-                    f"{tr_id} of {feature} already in transcript models"
+            exons = []
+            for start, end, frame in zip(exon_starts, exon_ends, exon_frames):
+                exons.append(Exon(start=start, stop=end, frame=frame))
+            attributes = {}
+            atts = line.get("atts")
+            if atts and isinstance(atts, str):
+                attributes = dict(
+                    [a.split(":") for a in line.get("atts").split(";")]
                 )
             tm = TranscriptModel(
-                gene=attributes["gene_name"],
-                tr_id=tr_id,
-                tr_name=tr_id,
-                chrom=rec["seqname"],
-                strand=rec["strand"],
-                tx=(rec["start"], rec["end"]),
-                cds=(rec["end"], rec["start"]),
+                gene=line["gene"],
+                tr_id=line["trID"],
+                tr_name=line["trOrigId"],
+                chrom=line["chr"],
+                strand=line["strand"],
+                tx=(line["tsBeg"], line["txEnd"]),
+                cds=(line["cdsStart"], line["cdsEnd"]),
+                exons=exons,
                 attributes=attributes,
             )
-            gm._add_transcript_model(tm)
-            continue
-        if feature in {"CDS", "exon"}:
-            if tr_id not in gm.transcript_models:
-                raise ValueError(
-                    f"exon or CDS transcript {tr_id} not found "
-                    f"in transctipt models"
-                )
-            exon_number = int(attributes["exon_number"])
-            tm = gm.transcript_models[tr_id]
-            if len(tm.exons) < exon_number:
-                tm.exons.append(Exon())
-            assert len(tm.exons) >= exon_number
+            self.transcript_models[tm.tr_id] = tm
 
-            exon = tm.exons[exon_number - 1]
-            if feature == "exon":
-                exon.start = rec["start"]
-                exon.stop = rec["end"]
-                exon.frame = -1
-                exon.number = exon_number
-                continue
-            if feature == "CDS":
-                exon.cds_start = rec["start"]
-                exon.cds_stop = rec["end"]
-                exon.frame = rec["phase"]
-                tm._is_coding = True
-                continue
-        if feature in {"UTR", "5UTR", "3UTR", "start_codon", "stop_codon"}:
-            exon_number = int(attributes["exon_number"])
-            tm = gm.transcript_models[tr_id]
+        self._update_indexes()
+        if nrows is not None:
+            return True
 
-            if feature in {"UTR", "5UTR", "3UTR"}:
-                tm.utrs.append((rec["start"], rec["end"], exon_number))
-                continue
-            if feature == "start_codon":
-                tm.start_codon = (rec["start"], rec["end"], exon_number)
-            if feature == "stop_codon":
-                tm.stop_codon = (rec["start"], rec["end"], exon_number)
-            cds = tm.cds
-            tm.cds = (min(cds[0], rec["start"]), max(cds[1], rec["end"]))
-            continue
+        return True
 
-        raise ValueError(f"unknown feature {feature} found in {filename}")
+    def _parse_ref_flat_gene_models_format(
+        self, infile: TextIO,
+        gene_mapping: Optional[Dict[str, str]] = None,
+        nrows: Optional[int] = None
+    ) -> bool:
+        expected_columns = [
+            "#geneName",
+            "name",
+            "chrom",
+            "strand",
+            "txStart",
+            "txEnd",
+            "cdsStart",
+            "cdsEnd",
+            "exonCount",
+            "exonStarts",
+            "exonEnds",
+        ]
 
-    for tm in gm.transcript_models.values():
-        tm.exons = sorted(tm.exons, key=lambda x: x.start)
-        tm.utrs = sorted(tm.utrs, key=lambda x: x[0])
-        tm.update_frames()
+        infile.seek(0)
+        df = self._parse_raw(infile, expected_columns, nrows=nrows)
+        if df is None:
+            return False
 
-    return gm
+        records = df.to_dict(orient="records")
 
+        transcript_ids_counter = defaultdict(int)
 
-def gene_mapping(filename):
-    """
-      alternative names for genes
-      assume that its first line has two column names
-   """
+        for rec in records:
+            gene = rec["#geneName"]
+            tr_name = rec["name"]
+            chrom = rec["chrom"]
+            strand = rec["strand"]
+            tx = (int(rec["txStart"]) + 1, int(rec["txEnd"]))
+            cds = (int(rec["cdsStart"]) + 1, int(rec["cdsEnd"]))
 
-    df = pd.read_csv(filename, sep="\t")
-    assert len(df.columns) == 2
+            exon_starts = list(map(
+                int, rec["exonStarts"].strip(",").split(",")))
+            exon_ends = list(map(
+                int, rec["exonEnds"].strip(",").split(",")))
+            assert len(exon_starts) == len(exon_ends)
 
-    df = df.rename(columns={df.columns[0]: "tr_id", df.columns[1]: "gene"})
+            exons = [
+                Exon(start + 1, end)
+                for start, end in zip(exon_starts, exon_ends)
+            ]
 
-    records = df.to_dict(orient="records")
+            transcript_ids_counter[tr_name] += 1
+            tr_id = f"{tr_name}_{transcript_ids_counter[tr_name]}"
 
-    alt_names = {}
-    for rec in records:
-        alt_names[rec["tr_id"]] = rec["gene"]
+            tm = TranscriptModel(
+                gene=gene,
+                tr_id=tr_id,
+                tr_name=tr_name,
+                chrom=chrom,
+                strand=strand,
+                tx=tx,
+                cds=cds,
+                exons=exons,
+            )
+            tm.update_frames()
+            self._add_transcript_model(tm)
 
-    return alt_names
+        return True
 
+    def _parse_ref_seq_gene_models_format(
+        self, infile: TextIO,
+        gene_mapping: Optional[Dict[str, str]] = None,
+        nrows: Optional[int] = None
+    ) -> bool:
+        expected_columns = [
+            "#bin",
+            "name",
+            "chrom",
+            "strand",
+            "txStart",
+            "txEnd",
+            "cdsStart",
+            "cdsEnd",
+            "exonCount",
+            "exonStarts",
+            "exonEnds",
+            "score",
+            "name2",
+            "cdsStartStat",
+            "cdsEndStat",
+            "exonFrames",
+        ]
 
-SUPPORTED_GENE_MODELS_FILE_FORMATS = {
-    "default": load_default_gene_models_format,
-    "refflat": load_ref_flat_gene_models_format,
-    "refseq": load_ref_seq_gene_models_format,
-    "ccds": load_ccds_gene_models_format,
-    "knowngene": load_known_gene_models_format,
-    "gtf": load_gtf_gene_models_format,
-    "ucscgenepred": load_ucscgenepred_models_format,
-}
+        infile.seek(0)
+        df = self._parse_raw(infile, expected_columns, nrows=nrows)
+        if df is None:
+            return False
 
+        records = df.to_dict(orient="records")
 
-def infer_gene_model_parser(filename, fileformat=None):
+        transcript_ids_counter = defaultdict(int)
 
-    parser = SUPPORTED_GENE_MODELS_FILE_FORMATS.get(fileformat, None)
-    if parser is not None:
-        return fileformat
+        for rec in records:
+            gene = rec["name2"]
+            tr_name = rec["name"]
+            chrom = rec["chrom"]
+            strand = rec["strand"]
+            tx = (int(rec["txStart"]) + 1, int(rec["txEnd"]))
+            cds = (int(rec["cdsStart"]) + 1, int(rec["cdsEnd"]))
 
-    inferred_formats = []
-    for fileformat, parser in SUPPORTED_GENE_MODELS_FILE_FORMATS.items():
-        if parser is None:
-            continue
-        try:
-            logger.debug(f"trying file format: {fileformat}...")
-            gm = parser(filename, nrows=50)
-            if gm is not None:
-                inferred_formats.append(fileformat)
-        except Exception:
-            pass
+            exon_starts = list(map(
+                int, rec["exonStarts"].strip(",").split(",")))
+            exon_ends = list(map(
+                int, rec["exonEnds"].strip(",").split(",")))
+            assert len(exon_starts) == len(exon_ends)
 
-    logger.debug(f"inferred file formats: {inferred_formats}")
-    if len(inferred_formats) == 1:
-        return inferred_formats[0]
+            exons = [
+                Exon(start + 1, end)
+                for start, end in zip(exon_starts, exon_ends)
+            ]
 
-    logger.error(
-        f"can't find gene model parser for {filename}; "
-        f"inferred file formats are {inferred_formats}"
-    )
-    return None
+            transcript_ids_counter[tr_name] += 1
+            tr_id = f"{tr_name}_{transcript_ids_counter[tr_name]}"
 
+            attributes = {
+                k: rec[k]
+                for k in [
+                    "#bin",
+                    "score",
+                    "exonCount",
+                    "cdsStartStat",
+                    "cdsEndStat",
+                    "exonFrames",
+                ]
+            }
+            tm = TranscriptModel(
+                gene=gene,
+                tr_id=tr_id,
+                tr_name=tr_name,
+                chrom=chrom,
+                strand=strand,
+                tx=tx,
+                cds=cds,
+                exons=exons,
+                attributes=attributes,
+            )
+            tm.update_frames()
+            self._add_transcript_model(tm)
 
-def load_gene_models(filename, gene_mapping_file=None, fileformat=None):
-    assert os.path.exists(filename), filename
+        return True
 
-    logger.debug(f"loading gene models from {filename}")
-    if fileformat is None:
-        fileformat = infer_gene_model_parser(filename)
-        logger.debug(f"infering gene models file format: {fileformat}")
-        if filename is None:
+    @classmethod
+    def _probe_header(cls, infile, expected_columns, comment=None):
+        infile.seek(0)
+        df = pd.read_csv(
+            infile, sep="\t", nrows=1, header=None, comment=comment)
+        return list(df.iloc[0, :]) == expected_columns
+
+    @classmethod
+    def _probe_columns(cls, infile, expected_columns, comment=None):
+        infile.seek(0)
+        df = pd.read_csv(
+            infile, sep="\t", nrows=1, header=None, comment=comment)
+        return list(df.columns) == list(range(0, len(expected_columns)))
+
+    @classmethod
+    def _parse_raw(cls, infile, expected_columns, nrows=None, comment=None):
+        if cls._probe_header(infile, expected_columns, comment=comment):
+            infile.seek(0)
+            df = pd.read_csv(infile, sep="\t", nrows=nrows, comment=comment)
+            assert list(df.columns) == expected_columns
+
+            return df
+        elif cls._probe_columns(infile, expected_columns, comment=comment):
+            infile.seek(0)
+            df = pd.read_csv(
+                infile,
+                sep="\t",
+                nrows=nrows,
+                header=None,
+                names=expected_columns,
+                comment=comment,
+            )
+            assert list(df.columns) == expected_columns
+            return df
+
+    def _parse_ccds_gene_models_format(
+        self, infile: TextIO,
+        gene_mapping: Optional[Dict[str, str]] = None,
+        nrows: Optional[int] = None
+    ) -> bool:
+        expected_columns = [
+            # CCDS is identical with RefSeq
+            "#bin",
+            "name",
+            "chrom",
+            "strand",
+            "txStart",
+            "txEnd",
+            "cdsStart",
+            "cdsEnd",
+            "exonCount",
+            "exonStarts",
+            "exonEnds",
+            "score",
+            "name2",
+            "cdsStartStat",
+            "cdsEndStat",
+            "exonFrames",
+        ]
+
+        infile.seek(0)
+        df = self._parse_raw(infile, expected_columns, nrows=nrows)
+        if df is None:
+            return False
+
+        records = df.to_dict(orient="records")
+
+        transcript_ids_counter = defaultdict(int)
+        self.alternative_names = {}
+        if gene_mapping is not None:
+            self.alternative_names = copy.deepcopy(gene_mapping)
+
+        for rec in records:
+            gene = rec["name"]
+            gene = self.alternative_names.get(gene, gene)
+
+            tr_name = rec["name"]
+            chrom = rec["chrom"]
+            strand = rec["strand"]
+            tx = (int(rec["txStart"]) + 1, int(rec["txEnd"]))
+            cds = (int(rec["cdsStart"]) + 1, int(rec["cdsEnd"]))
+
+            exon_starts = list(map(
+                int, rec["exonStarts"].strip(",").split(",")))
+            exon_ends = list(map(
+                int, rec["exonEnds"].strip(",").split(",")))
+            assert len(exon_starts) == len(exon_ends)
+
+            exons = [
+                Exon(start + 1, end)
+                for start, end in zip(exon_starts, exon_ends)
+            ]
+
+            transcript_ids_counter[tr_name] += 1
+            tr_id = f"{tr_name}_{transcript_ids_counter[tr_name]}"
+
+            attributes = {
+                k: rec[k]
+                for k in [
+                    "#bin",
+                    "score",
+                    "exonCount",
+                    "cdsStartStat",
+                    "cdsEndStat",
+                    "exonFrames",
+                ]
+            }
+            tm = TranscriptModel(
+                gene=gene,
+                tr_id=tr_id,
+                tr_name=tr_name,
+                chrom=chrom,
+                strand=strand,
+                tx=tx,
+                cds=cds,
+                exons=exons,
+                attributes=attributes,
+            )
+            tm.update_frames()
+            self._add_transcript_model(tm)
+
+        return True
+
+    def _parse_known_gene_models_format(
+        self, infile: TextIO,
+        gene_mapping: Optional[Dict[str, str]] = None,
+        nrows: Optional[int] = None
+    ) -> bool:
+
+        expected_columns = [
+            "name",
+            "chrom",
+            "strand",
+            "txStart",
+            "txEnd",
+            "cdsStart",
+            "cdsEnd",
+            "exonCount",
+            "exonStarts",
+            "exonEnds",
+            "proteinID",
+            "alignID",
+        ]
+
+        infile.seek(0)
+        df = self._parse_raw(infile, expected_columns, nrows=nrows)
+        if df is None:
             return None
 
-    parser = SUPPORTED_GENE_MODELS_FILE_FORMATS.get(fileformat)
-    if parser is None:
-        print(
-            f"unsupported gene model file format: {fileformat}",
-            file=sys.stderr,
+        records = df.to_dict(orient="records")
+
+        transcript_ids_counter = defaultdict(int)
+        self.alternative_names = {}
+        if gene_mapping is not None:
+            self.alternative_names = copy.deepcopy(gene_mapping)
+
+        for rec in records:
+            gene = rec["name"]
+            gene = self.alternative_names.get(gene, gene)
+
+            tr_name = rec["name"]
+            chrom = rec["chrom"]
+            strand = rec["strand"]
+            tx = (int(rec["txStart"]) + 1, int(rec["txEnd"]))
+            cds = (int(rec["cdsStart"]) + 1, int(rec["cdsEnd"]))
+
+            exon_starts = list(map(
+                int, rec["exonStarts"].strip(",").split(",")))
+            exon_ends = list(map(
+                int, rec["exonEnds"].strip(",").split(",")))
+            assert len(exon_starts) == len(exon_ends)
+
+            exons = [
+                Exon(start + 1, end)
+                for start, end in zip(exon_starts, exon_ends)
+            ]
+
+            transcript_ids_counter[tr_name] += 1
+            tr_id = f"{tr_name}_{transcript_ids_counter[tr_name]}"
+
+            attributes = {k: rec[k] for k in ["proteinID", "alignID"]}
+            tm = TranscriptModel(
+                gene=gene,
+                tr_id=tr_id,
+                tr_name=tr_name,
+                chrom=chrom,
+                strand=strand,
+                tx=tx,
+                cds=cds,
+                exons=exons,
+                attributes=attributes,
+            )
+            tm.update_frames()
+            self._add_transcript_model(tm)
+
+        return True
+
+    def _parse_ucscgenepred_models_format(
+        self, infile: str,
+        gene_mapping: Optional[Dict[str, str]] = None,
+        nrows: Optional[int] = None
+    ) -> bool:
+        """
+        table genePred
+        "A gene prediction."
+            (
+            string  name;               "Name of gene"
+            string  chrom;              "Chromosome name"
+            char[1] strand;             "+ or - for strand"
+            uint    txStart;            "Transcription start position"
+            uint    txEnd;              "Transcription end position"
+            uint    cdsStart;           "Coding region start"
+            uint    cdsEnd;             "Coding region end"
+            uint    exonCount;          "Number of exons"
+            uint[exonCount] exonStarts; "Exon start positions"
+            uint[exonCount] exonEnds;   "Exon end positions"
+            )
+
+        table genePredExt
+        "A gene prediction with some additional info."
+            (
+            string name;        	"Name of gene (usually transcript_id from
+                                     GTF)"
+            string chrom;       	"Chromosome name"
+            char[1] strand;     	"+ or - for strand"
+            uint txStart;       	"Transcription start position"
+            uint txEnd;         	"Transcription end position"
+            uint cdsStart;      	"Coding region start"
+            uint cdsEnd;        	"Coding region end"
+            uint exonCount;     	"Number of exons"
+            uint[exonCount] exonStarts; "Exon start positions"
+            uint[exonCount] exonEnds;   "Exon end positions"
+            int score;            	"Score"
+            string name2;       	"Alternate name (e.g. gene_id from GTF)"
+            string cdsStartStat; 	"Status of CDS start annotation (none,
+                                        unknown, incomplete, or complete)"
+            string cdsEndStat;   	"Status of CDS end annotation
+                                        (none, unknown,
+                                        incomplete, or complete)"
+            lstring exonFrames; 	"Exon frame offsets {0,1,2}"
+            )
+        """
+
+        expected_columns = [
+            "name",
+            "chrom",
+            "strand",
+            "txStart",
+            "txEnd",
+            "cdsStart",
+            "cdsEnd",
+            "exonCount",
+            "exonStarts",
+            "exonEnds",
+            "score",
+            "name2",
+            "cdsStartStat",
+            "cdsEndStat",
+            "exonFrames",
+        ]
+
+        infile.seek(0)
+        df = self._parse_raw(infile, expected_columns[:10], nrows=nrows)
+        if df is None:
+            infile.seek(0)
+            df = self._parse_raw(infile, expected_columns, nrows=nrows)
+            if df is None:
+                return None
+
+        records = df.to_dict(orient="records")
+
+        transcript_ids_counter = defaultdict(int)
+        self.alternative_names = {}
+        if gene_mapping is not None:
+            self.alternative_names = copy.deepcopy(gene_mapping)
+
+        for rec in records:
+            gene = rec.get("name2")
+            if not gene:
+                gene = rec["name"]
+            gene = self.alternative_names.get(gene, gene)
+
+            tr_name = rec["name"]
+            chrom = rec["chrom"]
+            strand = rec["strand"]
+            tx = (int(rec["txStart"]) + 1, int(rec["txEnd"]))
+            cds = (int(rec["cdsStart"]) + 1, int(rec["cdsEnd"]))
+
+            exon_starts = list(map(
+                int, rec["exonStarts"].strip(",").split(",")))
+            exon_ends = list(map(
+                int, rec["exonEnds"].strip(",").split(",")))
+            assert len(exon_starts) == len(exon_ends)
+
+            exons = [
+                Exon(start + 1, end)
+                for start, end in zip(exon_starts, exon_ends)
+            ]
+
+            transcript_ids_counter[tr_name] += 1
+            tr_id = f"{tr_name}_{transcript_ids_counter[tr_name]}"
+
+            attributes = {}
+            for attr in expected_columns[10:]:
+                if attr in rec:
+                    attributes[attr] = rec.get(attr)
+            tm = TranscriptModel(
+                gene=gene,
+                tr_id=tr_id,
+                tr_name=tr_name,
+                chrom=chrom,
+                strand=strand,
+                tx=tx,
+                cds=cds,
+                exons=exons,
+                attributes=attributes,
+            )
+            tm.update_frames()
+            self._add_transcript_model(tm)
+
+        return True
+
+    def _parse_gtf_gene_models_format(
+        self, infile: TextIO,
+        gene_mapping: Optional[Dict[str, str]] = None,
+        nrows: Optional[int] = None
+    ) -> bool:
+
+        expected_columns = [
+            "seqname",
+            "source",
+            "feature",
+            "start",
+            "end",
+            "score",
+            "strand",
+            "phase",
+            "attributes",
+            # "comments",
+        ]
+
+        infile.seek(0)
+        df = self._parse_raw(
+            infile, expected_columns, nrows=nrows, comment="#",)
+
+        if df is None:
+            expected_columns.append("comment")
+            infile.seek(0)
+            df = self._parse_raw(
+                infile, expected_columns, nrows=nrows, comment="#")
+            if df is None:
+                return None
+
+        def parse_gtf_attributes(attributes):
+            attributes = list(
+                filter(lambda x: x, [a.strip() for a in attributes.split(";")])
+            )
+            result = {}
+            for attr in attributes:
+                key, value = attr.split(" ")
+                result[key.strip()] = value.strip('"').strip()
+            return result
+
+        records = df.to_dict(orient="records")
+        for rec in records:
+            feature = rec["feature"]
+            if feature == "gene":
+                continue
+            attributes = parse_gtf_attributes(rec["attributes"])
+            tr_id = attributes["transcript_id"]
+            if feature in set(["transcript", "Selenocysteine"]):
+                if feature == "Selenocysteine" and \
+                        tr_id in self.transcript_models:
+                    continue
+                if tr_id in self.transcript_models:
+                    raise ValueError(
+                        f"{tr_id} of {feature} already in transcript models"
+                    )
+                tm = TranscriptModel(
+                    gene=attributes["gene_name"],
+                    tr_id=tr_id,
+                    tr_name=tr_id,
+                    chrom=rec["seqname"],
+                    strand=rec["strand"],
+                    tx=(rec["start"], rec["end"]),
+                    cds=(rec["end"], rec["start"]),
+                    attributes=attributes,
+                )
+                self._add_transcript_model(tm)
+                continue
+            if feature in {"CDS", "exon"}:
+                if tr_id not in self.transcript_models:
+                    raise ValueError(
+                        f"exon or CDS transcript {tr_id} not found "
+                        f"in transctipt models"
+                    )
+                exon_number = int(attributes["exon_number"])
+                tm = self.transcript_models[tr_id]
+                if len(tm.exons) < exon_number:
+                    tm.exons.append(Exon())
+                assert len(tm.exons) >= exon_number
+
+                exon = tm.exons[exon_number - 1]
+                if feature == "exon":
+                    exon.start = rec["start"]
+                    exon.stop = rec["end"]
+                    exon.frame = -1
+                    exon.number = exon_number
+                    continue
+                if feature == "CDS":
+                    exon.cds_start = rec["start"]
+                    exon.cds_stop = rec["end"]
+                    exon.frame = rec["phase"]
+                    tm._is_coding = True
+                    continue
+            if feature in {"UTR", "5UTR", "3UTR", "start_codon", "stop_codon"}:
+                exon_number = int(attributes["exon_number"])
+                tm = self.transcript_models[tr_id]
+
+                if feature in {"UTR", "5UTR", "3UTR"}:
+                    tm.utrs.append((rec["start"], rec["end"], exon_number))
+                    continue
+                if feature == "start_codon":
+                    tm.start_codon = (rec["start"], rec["end"], exon_number)
+                if feature == "stop_codon":
+                    tm.stop_codon = (rec["start"], rec["end"], exon_number)
+                cds = tm.cds
+                tm.cds = (min(cds[0], rec["start"]), max(cds[1], rec["end"]))
+                continue
+
+            raise ValueError(
+                f"unknown feature {feature} found in gtf gene models")
+
+        for tm in self.transcript_models.values():
+            tm.exons = sorted(tm.exons, key=lambda x: x.start)
+            tm.utrs = sorted(tm.utrs, key=lambda x: x[0])
+            tm.update_frames()
+
+        return True
+
+    @classmethod
+    def _gene_mapping(cls, filename: str) -> Dict[str, str]:
+        """
+        alternative names for genes
+        assume that its first line has two column names
+    """
+
+        df = pd.read_csv(filename, sep="\t")
+        assert len(df.columns) == 2
+
+        df = df.rename(columns={df.columns[0]: "tr_id", df.columns[1]: "gene"})
+
+        records = df.to_dict(orient="records")
+
+        alt_names = {}
+        for rec in records:
+            alt_names[rec["tr_id"]] = rec["gene"]
+
+        return alt_names
+
+    SUPPORTED_GENE_MODELS_FILE_FORMATS = {
+        "default",
+        "refflat",
+        "refseq",
+        "ccds",
+        "knowngene",
+        "gtf",
+        "ucscgenepred",
+    }
+
+    def _get_parser(self, fileformat):
+        if fileformat == "default":
+            return self._parse_default_gene_models_format
+        elif fileformat == "refflat":
+            return self._parse_ref_flat_gene_models_format
+        elif fileformat == "refseq":
+            return self._parse_ref_seq_gene_models_format
+        elif fileformat == "ccds":
+            return self._parse_ccds_gene_models_format
+        elif fileformat == "knowngene":
+            return self._parse_known_gene_models_format
+        elif fileformat == "gtf":
+            return self._parse_gtf_gene_models_format
+        elif fileformat == "ucscgenepred":
+            return self._parse_ucscgenepred_models_format
+        return None
+
+    def _infer_gene_model_parser(self, infile, fileformat=None):
+
+        parser = self._get_parser(fileformat)
+        if parser is not None:
+            return fileformat
+        logger.warning("going to infer gene models file format...")
+
+        inferred_formats = []
+        for fileformat in self.SUPPORTED_GENE_MODELS_FILE_FORMATS:
+            parser = self._get_parser(fileformat)
+            if parser is None:
+                continue
+            try:
+                logger.debug(f"trying file format: {fileformat}...")
+                self.reset()
+                infile.seek(0)
+                res = parser(infile, nrows=50)
+                if res:
+                    inferred_formats.append(fileformat)
+                    logger.debug(
+                        f"gene models format {fileformat} matches input")
+            except Exception as ex:
+                logger.warning(
+                    f"file format {fileformat} does not match; {ex}")
+                pass
+
+        logger.info(f"inferred file formats: {inferred_formats}")
+        if len(inferred_formats) == 1:
+            return inferred_formats[0]
+
+        logger.error(
+            f"can't find gene model parser; "
+            f"inferred file formats are {inferred_formats}"
         )
         return None
 
-    return parser(filename, gene_mapping_file=gene_mapping_file)
+
+class GeneModels(GeneModelsBase):
+
+    def __init__(self, filename, gene_mapping_filename=None, fileformat=None):
+        super(GeneModels, self).__init__(filename)
+        self.filename = filename
+        self.gene_mapping_filename = gene_mapping_filename
+        self.fileformat = fileformat
+
+    def open(self):
+        assert os.path.exists(self.filename), self.filename
+        logger.debug(f"loading gene models from {self.filename}")
+
+        fileformat = self.fileformat
+        with _open_file(self.filename) as infile:
+            if self.fileformat is None:
+                fileformat = self._infer_gene_model_parser(infile)
+                logger.debug(f"infering gene models file format: {fileformat}")
+                if fileformat is None:
+                    logger.error(
+                        f"can't infer gene models file format for "
+                        f"{self.filename}...")
+                    raise ValueError()
+
+            parser = self._get_parser(fileformat)
+            if parser is None:
+                logger.error(
+                    f"unsupported gene model file {self.filename} "
+                    f"gene file format: {fileformat}")
+                raise ValueError()
+
+            gene_mapping = None
+            if self.gene_mapping_filename is not None:
+                assert os.path.exists(self.gene_mapping_filename)
+                gene_mapping = self._gene_mapping(self.gene_mapping_filename)
+
+            infile.seek(0)
+            self.reset()
+
+            print(parser, type(parser))
+            parser(infile, gene_mapping=gene_mapping)
+
+
+def load_gene_models(
+    filename: str,
+    gene_mapping_filename: Optional[str] = None,
+    fileformat: Optional[str] = None
+) -> GeneModels:
+
+    gm = GeneModels(
+        filename,
+        gene_mapping_filename=gene_mapping_filename,
+        fileformat=fileformat)
+    try:
+        gm.open()
+        return gm
+    except Exception:
+        logger.exception(f"unable to load gene models from {filename}")
+    return None
 
 
 def join_gene_models(*gene_models):
@@ -1243,7 +1373,7 @@ def join_gene_models(*gene_models):
     if len(gene_models) < 2:
         raise Exception("The function needs at least 2 arguments!")
 
-    gm = GeneModels()
+    gm = GeneModelsBase()
     gm.utr_models = {}
     gm.gene_models = {}
 
@@ -1493,7 +1623,7 @@ def knownGeneParser(gm, file_name, gene_mapping_file="default"):
             os.path.dirname(file_name), "kg_id2sym.txt.gz"
         )
 
-    gm._alternative_names = gene_mapping(gene_mapping_file)
+    gm.alternative_names = GeneModels._gene_mapping(gene_mapping_file)
 
     gmf = openFile(file_name)
 
@@ -1504,7 +1634,7 @@ def knownGeneParser(gm, file_name, gene_mapping_file="default"):
 
         tm, cs = lR.parse(line)
         try:
-            tm.gene = gm._alternative_names[cs["name"]]
+            tm.gene = gm.alternative_names[cs["name"]]
         except KeyError:
             tm.gene = cs["name"]
 
@@ -1519,7 +1649,7 @@ def knownGeneParser(gm, file_name, gene_mapping_file="default"):
 
 #  format = refseq
 #  CCC = {"refseq":refseqParser, ....}
-#  o = GeneModels()
+#  o = GeneModelsBase()
 #  CCC[format](o,file, geneMapFile)
 #
 
@@ -1534,7 +1664,7 @@ def ccdsParser(gm, file_name, gene_mapping_file="default"):
             os.path.dirname(file_name), "ccds_id2sym.txt.gz"
         )
 
-    gm._alternative_names = gene_mapping(gene_mapping_file)
+    gm.alternative_names = GeneModels._gene_mapping(gene_mapping_file)
 
     GMF = openFile(file_name)
 
@@ -1544,7 +1674,7 @@ def ccdsParser(gm, file_name, gene_mapping_file="default"):
             continue
 
         tm, cs = lR.parse(line)
-        tm.gene = gm._alternative_names.get(cs["name"])
+        tm.gene = gm.alternative_names.get(cs["name"])
         if tm.gene is None:
             tm.gene = cs["name"]
 
@@ -1562,7 +1692,7 @@ def ucscGenePredParser(gm, file_name, gene_mapping_file="default"):
     lR = parserLine4UCSC_genePred(colNames)
 
     if gene_mapping_file != "default":
-        gm._alternative_names = gene_mapping(gene_mapping_file)
+        gm.alternative_names = GeneModels._gene_mapping(gene_mapping_file)
 
     GMF = openFile(file_name)
 
@@ -1573,7 +1703,7 @@ def ucscGenePredParser(gm, file_name, gene_mapping_file="default"):
 
         tm, cs = lR.parse(line)
         try:
-            tm.gene = gm._alternative_names[cs["name"]]
+            tm.gene = gm.alternative_names[cs["name"]]
         except (KeyError, TypeError):
             tm.gene = cs["name"]
 
@@ -1724,7 +1854,7 @@ def gtfGeneModelParser(gm, file_name, gene_mapping_file=None):
 #
 def mitoGeneModelParser(gm, file_name, gene_mapping_file=None):
     gm.name = "mitomap"
-    gm._alternative_names = None
+    gm.alternative_names = None
 
     gm.utr_models["chrM"] = {}
     file = openFile(file_name)

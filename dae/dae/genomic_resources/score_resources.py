@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 from dae.genomic_resources.resources import GenomicResource
 from dae.annotation.tools.utils import is_gzip, regions_intersect, \
     handle_chrom_prefix
-from dae.configuration.schemas.genomic_score_database import attr_schema, \
+from dae.configuration.schemas.genomic_resources_database import attr_schema, \
     genomic_score_schema
 
 logger = logging.getLogger(__name__)

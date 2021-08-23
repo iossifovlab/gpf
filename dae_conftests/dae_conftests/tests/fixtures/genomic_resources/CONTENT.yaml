@@ -13,6 +13,11 @@ children:
     children:
     - id: hg19/GATK_ResourceBundle_5777_b37_phiX174/genome
       type: resource
+    - id: hg19/GATK_ResourceBundle_5777_b37_phiX174/gene_models
+      type: group
+      children:
+      - id: hg19/GATK_ResourceBundle_5777_b37_phiX174/gene_models/refGene_201309
+        type: resource
   - id: hg19/CADD
     type: resource
 - id: hg38

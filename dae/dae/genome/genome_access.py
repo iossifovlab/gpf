@@ -2,111 +2,104 @@
 # by Ewa
 
 import os
+import abc
 import logging
 
 
 logger = logging.getLogger(__name__)
 
 
-class GenomicSequence:
+class GenomicSequenceBase:
+
     def __init__(self):
-        self.genomic_file = None
-        self.genomic_index_file = None
-        self.chromosomes = None
-        self._indexing = {}
+        self._index = None
+        self._chromosomes = None
+        self._sequence = None
 
-    def __create_index_file(self, file):
-        from pysam import faidx
+    @property
+    def chromosomes(self):
+        return self._chromosomes
 
-        faidx(file)
+    @abc.abstractmethod
+    def open(self):
+        pass
 
-    def __chrom_names(self):
-        with open(self.genomic_index_file) as infile:
-            chroms = []
-
-            while True:
-                line = infile.readline()
-                if not line:
-                    break
-                line = line.split()
-                chroms.append(line[0])
-
-        self.chromosomes = chroms
-
-    def __initiate(self):
-        self._indexing = {}
-        with open(self.genomic_index_file, "r") as infile:
-            while True:
-                line = infile.readline()
-                if not line:
-                    break
-                line = line.split()
-                self._indexing[line[0]] = {
-                    "length": int(line[1]),
-                    "startBit": int(line[2]),
-                    "seqLineLength": int(line[3]),
-                    "lineLength": int(line[4]),
-                }
-
-        self.__f = open(self.genomic_file, "r")
+    def _load_genome_index(self, index_content):
+        self._index = {}
+        for line in index_content.split("\n"):
+            line = line.strip()
+            print(line)
+            if not line:
+                break
+            line = line.split()
+            self._index[line[0]] = {
+                "length": int(line[1]),
+                "startBit": int(line[2]),
+                "seqLineLength": int(line[3]),
+                "lineLength": int(line[4]),
+            }
+        self._chromosomes = list(self._index.keys())
 
     def close(self):
-        self.__f.close()
-
-    @staticmethod
-    def load_genome(filename):
-        genome = GenomicSequence()
-        genome._load_genome(filename)
-        return genome
-
-    def _load_genome(self, filename):
-        assert os.path.exists(filename), filename
-        assert filename.endswith(".fa")
-
-        self.genomic_index_file = f"{filename}.fai"
-        self.genomic_file = filename
-
-        if not os.path.exists(self.genomic_index_file):
-            self.__create_index_file(filename)
-
-        self.__chrom_names()
-        self.__initiate()
-
-        return self
+        self._sequence.close()
 
     def get_chrom_length(self, chrom):
-
-        try:
-            return self._indexing[chrom]["length"]
-        except KeyError:
-            logger.warning(f"unknown chromosome: {chrom}")
+        chrom_data = self._index.get(chrom)
+        if chrom_data is None:
             return None
+        return chrom_data["length"]
 
     def get_all_chrom_lengths(self):
-        result = []
-        for chrom in self.chromosomes:
-            result.append((chrom, self._indexing[chrom]["length"]))
-        return result
+        return [
+            (key, value["length"])
+            for key, value in self._index.items()]
 
     def get_sequence(self, chrom, start, stop):
         if chrom not in self.chromosomes:
-            logger.warning(f"unknown chromosome: {chrom}")
+            logger.warning(f"chromosome {chrom} not found in {self.get_id()}")
             return None
 
-        self.__f.seek(
-            self._indexing[chrom]["startBit"]
+        self._sequence.seek(
+            self._index[chrom]["startBit"]
             + start
             - 1
-            + (start - 1) / self._indexing[chrom]["seqLineLength"]
+            + (start - 1) // self._index[chrom]["seqLineLength"]
         )
 
         ll = stop - start + 1
-        x = 1 + ll // self._indexing[chrom]["seqLineLength"]
+        x = 1 + ll // self._index[chrom]["seqLineLength"]
 
-        w = self.__f.read(ll + x)
+        w = self._sequence.read(ll + x)
         w = w.replace("\n", "")[:ll]
-
         return w.upper()
+
+
+class GenomicSequence(GenomicSequenceBase):
+
+    def __init__(self, genome_filename):
+        super(GenomicSequence, self).__init__()
+        assert os.path.exists(genome_filename)
+
+        self.genome_filename = genome_filename
+
+    def open(self):
+        index_filename = f"{self.genome_filename}.fai"
+        assert os.path.exists(index_filename)
+        with open(index_filename) as index_file:
+            content = index_file.read()
+            self._load_genome_index(content)
+
+        self._sequence = open(self.genome_filename)
+
+    def create_index_file(self, file):
+        from pysam import faidx
+        faidx(file)
+
+    @staticmethod
+    def load_genome(filename):
+        genome = GenomicSequence(filename)
+        genome.open()
+        return genome
 
 
 def open_ref(filename):

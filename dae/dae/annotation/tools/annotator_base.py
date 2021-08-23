@@ -1,6 +1,6 @@
 import logging
 from copy import deepcopy
-from dae.configuration.schemas.genomic_score_database import attr_schema, \
+from dae.configuration.schemas.genomic_resources_database import attr_schema, \
     genomic_score_schema
 
 logger = logging.getLogger(__name__)

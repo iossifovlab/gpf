@@ -1,4 +1,3 @@
-from dae.configuration.gpf_config_parser import validate_existing_path
 
 attr_schema = {
     "type": "dict",
@@ -116,6 +115,21 @@ genomic_sequence_schema = {
             "format": {"type": "string"},
         },
     },
+
+    "meta": {"type": "string"},
+}
+
+
+gene_models_schema = {
+    "id": {"type": "string"},
+    "name": {"type": "string"},
+    "resource_type": {"type": "string", "required": True},
+    "filename": {
+        "type": "string",
+        "required": True,
+        "coerce": "abspath",
+    },
+    "format": {"type": "string"},
 
     "meta": {"type": "string"},
 }
