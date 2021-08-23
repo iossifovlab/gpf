@@ -65,7 +65,7 @@ export class GeneViewModel {
     return domain;
   }
 
-  private buildRange(domainMin: number, domainMax: number, rangeWidth: number, condenseIntrons: boolean) {
+  public buildRange(domainMin: number, domainMax: number, rangeWidth: number, condenseIntrons: boolean) {
     const range: number[] = [];
     const transcript = this.collapsedGeneViewTranscript.transcript;
     const filteredSegments = this.collapsedGeneViewTranscript.segments.filter(
