@@ -1,35 +1,31 @@
-<div *ngIf="selectedDataset">
-  <div *ngIf="selectedDataset.accessRights">
-    
-    <div class="container">
-      <div class="row mt-3">
-        <div class="col-12">
-          <div class="card">
-            <div class="pheno-instrument-block">
-              <div class="row">
-                <div class="centered-label col-2 text-center">
-                  <label class="form-block-title">Search</label>
-                  <label class="form-block-title" for="reports">Instrument</label>
-                </div>
+<div *ngIf="selectedDataset?.accessRights">
+  <div class="container">
+    <div class="row mt-3">
+      <div class="col-12">
+        <div class="card">
+          <div class="pheno-instrument-block">
+            <div class="row">
+              <div class="centered-label col-2 text-center">
+                <label class="form-block-title">Search</label>
+                <label class="form-block-title" for="reports">Instrument</label>
+              </div>
 
-                <div class="col-4">
-                  <input #searchBox id="search-term" (input)="search(searchBox.value)" type="text" class="form-control" placeholder="Search phenotypes" [ngModel]="input$ | async"/>
-                  <select class="form-control" [ngModel]="selectedInstrument$ | async" (ngModelChange)="emitInstrument($event)">
-                    <option value="">All instruments</option>
-                    <option *ngFor="let instrument of (instruments | async)?.instruments"
-                      [ngValue]="instrument">{{ instrument }}</option>
-                  </select>
-                  (<a download [href]="downloadLink$ | async" class="">Download</a>)
-                </div>
+              <div class="col-4">
+                <input #searchBox id="search-term" (input)="search(searchBox.value)" type="text" class="form-control" placeholder="Search phenotypes" [ngModel]="input$ | async"/>
+                <select class="form-control" [ngModel]="selectedInstrument$ | async" (ngModelChange)="emitInstrument($event)">
+                  <option value="">All instruments</option>
+                  <option *ngFor="let instrument of (instruments | async)?.instruments"
+                    [ngValue]="instrument">{{ instrument }}</option>
+                </select>
+                (<a download [href]="downloadLink$ | async" class="">Download</a>)
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div *ngIf="(measuresToShow$ | async) as measuresToShow" class="col-lg-12">
-      <gpf-pheno-browser-table [measures]="measuresToShow"></gpf-pheno-browser-table>
-    </div>
-
+  </div>
+  <div *ngIf="(measuresToShow$ | async) as measuresToShow" class="col-lg-12">
+    <gpf-pheno-browser-table [measures]="measuresToShow"></gpf-pheno-browser-table>
   </div>
 </div>

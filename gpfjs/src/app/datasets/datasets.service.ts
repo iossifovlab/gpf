@@ -104,7 +104,7 @@ export class DatasetsService {
     return !!this.selectedDataset$.getValue();
   }
 
-  hasLoadedAnyDataset() {
+  get hasLoadedAnyDataset() {
     return this._hasLoadedAnyDataset;
   }
 

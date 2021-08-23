@@ -14,9 +14,7 @@ export class DatasetPermissionGuard implements CanActivate, CanActivateChild, Ca
 
   constructor(
     private datasetsService: DatasetsService,
-  ) {
-    console.log('cosntruct');
-  }
+  ) { }
 
   canActivate(
     next: ActivatedRouteSnapshot,

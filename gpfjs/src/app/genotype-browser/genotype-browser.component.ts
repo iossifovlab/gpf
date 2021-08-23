@@ -72,17 +72,16 @@ export class GenotypeBrowserComponent implements OnInit {
     readonly configService: ConfigService,
     private loadingService: FullscreenLoadingService,
     private datasetsService: DatasetsService,
-  ) {
-  }
+  ) { }
 
   ngOnInit() {
     this.genotypeBrowserState = {};
 
     this.selectedDataset = this.datasetsService.getSelectedDataset();
     this.datasetsService.getDatasetsLoadedObservable()
-    .subscribe(datasetsLoaded => {
-      this.selectedDataset = this.datasetsService.getSelectedDataset();
-    });
+      .subscribe(() => {
+        this.selectedDataset = this.datasetsService.getSelectedDataset();
+      });
 
     this.state$.subscribe(state => {
       this.genotypeBrowserState = {...state};
@@ -114,7 +113,7 @@ export class GenotypeBrowserComponent implements OnInit {
     }
 
     this.queryService.streamingFinishedSubject.subscribe(
-      _ => { this.loadingFinished = true; }
+      () => { this.loadingFinished = true; }
     );
     this.genotypePreviewVariantsArray = this.queryService.getGenotypePreviewVariantsByFilter(
       this.selectedDataset, this.genotypeBrowserState, this.loadingService

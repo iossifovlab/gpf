@@ -1,8 +1,6 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener, OnChanges, SimpleChanges } from '@angular/core';
-import { Router, ActivatedRoute, Params } from '@angular/router';
-
+import { Component, OnInit, ViewChild, ElementRef, HostListener} from '@angular/core';
+import { ActivatedRoute, Params } from '@angular/router';
 import { Observable } from 'rxjs';
-
 import { VariantReportsService } from './variant-reports.service';
 import { VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable,
          DeNovoData, PedigreeTable, PeopleCounter, PeopleSex } from './variant-reports';
@@ -35,7 +33,6 @@ export class VariantReportsComponent implements OnInit {
   constructor(
     private variantReportsService: VariantReportsService,
     private route: ActivatedRoute,
-    private router: Router,
     private datasetsService: DatasetsService,
   ) { }
 
@@ -83,7 +80,7 @@ export class VariantReportsComponent implements OnInit {
 
   @HostListener('window:scroll', ['$event'])
   @HostListener('click', ['$event'])
-  onWindowScroll(event) {
+  onWindowScroll() {
     if (this.familiesPedigree && this.familiesPedigree.nativeElement) {
       this.familiesPedigreeTop = this.familiesPedigree.nativeElement.getBoundingClientRect().top;
       this.familiesPedigreeBottom = this.familiesPedigree.nativeElement.getBoundingClientRect().bottom;
@@ -171,5 +168,4 @@ export class VariantReportsComponent implements OnInit {
   getDownloadLink() {
     return this.variantReportsService.getDownloadLink();
   }
-
 }

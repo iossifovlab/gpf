@@ -47,8 +47,7 @@ export class DatasetsComponent implements OnInit {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
     this.selectedDataset$ = this.datasetsService.getSelectedDatasetObservable();
 
-    this.datasetsService.getDatasetsLoadedObservable()
-    .subscribe(datasetsLoaded => {
+    this.datasetsService.getDatasetsLoadedObservable().subscribe(() => {
       this.selectedDataset = this.datasetsService.getSelectedDataset();
       if (!this.selectedDataset) {
         return;
@@ -69,7 +68,7 @@ export class DatasetsComponent implements OnInit {
     });
 
     this.datasets$.pipe(take(1)).subscribe(datasets => {
-      if (!this.datasetsService.hasLoadedAnyDataset() && !this.datasetsService.hasSelectedDataset()) {
+      if (!this.datasetsService.hasLoadedAnyDataset && !this.datasetsService.hasSelectedDataset()) {
         this.datasetsService.setSelectedDataset(datasets[0]);
       }
     });

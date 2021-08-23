@@ -43,8 +43,7 @@ export class PhenoToolComponent implements OnInit {
       this.selectedDatasetId = this.selectedDataset.id;
     }
 
-    this.datasetsService.getDatasetsLoadedObservable()
-    .subscribe(datasetsLoaded => {
+    this.datasetsService.getDatasetsLoadedObservable().subscribe(() => {
       this.selectedDataset = this.datasetsService.getSelectedDataset();
       this.selectedDatasetId = this.selectedDataset.id;
     });
