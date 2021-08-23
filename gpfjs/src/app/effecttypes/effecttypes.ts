@@ -3,7 +3,7 @@ import { SetNotEmpty } from '../utils/set.validators';
 
 export class EffectTypes {
   @Validate(SetNotEmpty, {message: 'select at least one'})
-  selected: Set<string> = new Set();
+  public selected: Set<string> = new Set();
 }
 
 export const ALL: Set<string> = new Set([

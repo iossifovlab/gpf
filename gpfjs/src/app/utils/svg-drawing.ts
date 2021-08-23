@@ -65,7 +65,7 @@ export function triangle(element, x: number, y: number, color: string, title: st
     .append('svg:title').text(title);
 }
 
-function _circle(element, x: number, y: number, radius: number, color: string, title: string) {
+export function circle(element, x: number, y: number, color: string, title: string, radius: number = 7) {
   element.append('g')
     .append('circle')
     .attr('cx', x)
@@ -78,12 +78,8 @@ function _circle(element, x: number, y: number, radius: number, color: string, t
     .append('svg:title').text(title);
 }
 
-export function circle(element, x: number, y: number, color: string, title: string) {
-    _circle(element, x, y, 7, color, title);
-}
-
 export function dot(element, x: number, y: number, color: string, title: string) {
-    _circle(element, x, y, 3, color, title);
+    circle(element, x, y, color, title, 3);
 }
 
 export function rect(element, xStart: number, xEnd: number, y: number, height: number, color: string, opacity: number, title: string) {

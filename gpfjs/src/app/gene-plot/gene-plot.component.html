@@ -1,0 +1,42 @@
+<div class="card">
+    <div class="card-header card-title" style="font-family: Roboto; font-weight: 500; padding: 0px; position: relative; height: 40px;">
+      <span class="header-item" style="left: 0;">
+        <button type="button" class="astext" title="Undo (Ctrl+Z)" style="padding-left:20px; font-weight: bold;"
+          [disabled]="!zoomHistory.canGoBackward" (click)="undo()">&#x021FD;</button>
+        <button type="button" class="astext" title="Redo (Ctrl+Y)" style="padding-left:7px; font-weight: bold;"
+          [disabled]="!zoomHistory.canGoForward" (click)="redo()">&#x021FE;</button>
+        <button type="button" class="astext" title="Reset (Double-click)" style="padding-left:12px;"
+          (click)="resetPlot(); zoomHistory.reset()">&#x021BB;</button>
+      </span>
+
+      <span class="header-item" style="left: 120px;">
+        <label style="margin-left: 20px; font-size: 17px; font-weight: 1; user-select: none">
+          <input type="checkbox" [checked]="!drawTranscripts" (change)="drawTranscripts = !drawTranscripts; redraw()">
+          Hide transcripts
+        </label>
+        <label style="margin-left: 15px; font-size: 17px; font-weight: 1; user-select: none">
+          <input #checkbox type="checkbox" [checked]="condenseIntrons" (change)="toggleCondenseIntrons()">
+          Condense introns
+        </label>
+      </span>
+
+      <span class="header-item" style="float: left; font-size: 20px; font-weight: bold; left: 45%;">
+        {{ gene?.gene }}
+      </span>
+
+      <span class="header-item" style="right: 0;">
+        <span style="margin-left: 20px; font-size: 17px; font-weight: 1;">Summary alleles:
+          <span style="margin-left: 7px; background-color: #EEEEEE; padding: 2px; border: 1px solid rgba(0,0,0,.125);">
+            {{ this.variantsArray?.totalSummaryAllelesCount }} / {{ this.allVariantsCounts[0] }}
+          </span>
+        </span>
+        <span style="margin-left: 40px; font-size: 17px; font-weight: 1;">Family variants:
+          <span style="margin-left: 7px; background-color: #EEEEEE; padding: 2px; border: 1px solid rgba(0,0,0,.125);">
+            {{ this.variantsArray?.totalFamilyVariantsCount }} / {{ this.allVariantsCounts[1] }}
+          </span>
+        </span>
+      </span>
+  </div>
+  <div id="svg-container">
+  </div>
+</div>
