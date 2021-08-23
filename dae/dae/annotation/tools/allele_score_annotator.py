@@ -13,7 +13,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
         super().__init__(resource, liftover, override)
         self.resource.open()
 
-    def _collect_aggregators(self, attr):
+    def _get_aggregators(self, attr):
         return []
 
     def _do_annotate(self, attributes, variant, liftover_variants):

@@ -1,48 +1,18 @@
 #!/usr/bin/env python
 
+import copy
 import itertools
-from typing import List, Tuple
 
-from collections import OrderedDict
+from box import Box
 
 from dae.variants.attributes import VariantType
 
-from dae.variant_annotation.annotator import VariantAnnotator
+from dae.variant_annotation.annotator import \
+    VariantAnnotator as EffectAnnotator
 from dae.annotation.tools.annotator_base import Annotator
 
 
-class EffectAnnotatorBase(Annotator):
-    COLUMNS_SCHEMA: List[Tuple[str, str]] = []
-
-    def __init__(self, config, genomes_db, **kwargs):
-        super(EffectAnnotatorBase, self).__init__(config, genomes_db)
-
-        self.effect_annotator = VariantAnnotator(
-            self.genomic_sequence,
-            self.gene_models,
-            promoter_len=self.config.options.prom_len,
-        )
-
-        self.columns = OrderedDict()
-        for col_name, _col_type in self.COLUMNS_SCHEMA:
-            self.columns[col_name] = getattr(self.config.columns, col_name)
-
-    def collect_annotator_schema(self, schema):
-        super(EffectAnnotatorBase, self).collect_annotator_schema(schema)
-        for col_name, col_type in self.COLUMNS_SCHEMA:
-            if self.columns.get(col_name, None):
-                schema.create_column(self.columns[col_name], col_type)
-
-    def _not_found(self, aline):
-        for _col_name, col_conf in self.columns.items():
-            if col_conf:
-                aline[col_conf] = ""
-
-    def do_annotate(self, aline, variant, liftover_variants):
-        raise NotImplementedError()
-
-
-class VariantEffectAnnotator(EffectAnnotatorBase):
+class VariantEffectAnnotator(Annotator):
 
     COLUMNS_SCHEMA = [
         ("effect_type", "str"),
@@ -55,14 +25,78 @@ class VariantEffectAnnotator(EffectAnnotatorBase):
         ("effect_details", "list(str)"),
     ]
 
-    def __init__(self, config, genomes_db, **kwargs):
-        super(VariantEffectAnnotator, self).__init__(
-            config, genomes_db, **kwargs
+    DEFAULT_ANNOTATION = Box({
+        "attributes": [
+            {
+                "source": "effect_type",
+                "dest": "effect_type"
+            },
+
+            {
+                "source": "effect_genes",
+                "dest": "effect_genes"
+            },
+
+            {
+                "source": "effect_gene_genes",
+                "dest": "effect_gene_genes"
+            },
+
+            {
+                "source": "effect_gene_types",
+                "dest": "effect_gene_types"
+            },
+
+            {
+                "source": "effect_details",
+                "dest": "effect_details"
+            },
+
+            {
+                "source": "effect_details_transcript_ids",
+                "dest": "effect_details_transcript_ids"
+            },
+
+            {
+                "source": "effect_details_details",
+                "dest": "effect_details_details"
+            },
+        ]
+    })
+
+    def __init__(self, gene_models, genome, **kwargs):
+        super(VariantEffectAnnotator, self).__init__(gene_models, **kwargs)
+
+        self.gene_models = gene_models
+        self.genomic_sequence = genome
+
+        promoter_len = kwargs.get("promoter_len", 0)
+        self.effect_annotator = EffectAnnotator(
+            self.genomic_sequence,
+            self.gene_models,
+            promoter_len=promoter_len
         )
 
-    def do_annotate(self, aline, variant, liftover_variants):
+        self.attributes_list = copy.deepcopy(
+            self.DEFAULT_ANNOTATION.attributes)
+
+        override = kwargs.get("override")
+        if override:
+            self.attributes_list = copy.deepcopy(override.attributes)
+
+        self.gene_models.open()
+        self.genomic_sequence.open()
+
+    def _not_found(self, attributes):
+        for attr in self.attributes_list:
+            attributes[attr.dest] = ""
+
+    def get_default_annotation(self):
+        return copy.deepcopy(self.attributes_list)
+
+    def _do_annotate(self, attributes, variant, _liftover_variants):
         if variant is None:
-            self._not_found(aline)
+            self._not_found(attributes)
             return
 
         assert variant is not None
@@ -81,26 +115,26 @@ class VariantEffectAnnotator(EffectAnnotatorBase):
 
         r = self.wrap_effects(effects)
 
-        aline[self.columns["effect_type"]] = r[0]
+        result = {
+            "effect_type": r[0],
+            "effect_gene_genes": r[1],
+            "effect_gene_types": r[2],
+            "effect_genes": [f"{g}:{e}" for g, e in zip(r[1], r[2])],
+            "effect_details_transcript_ids": r[3],
+            "effect_details_genes": r[4],
+            "effect_details_details": r[5],
+            "effect_details": [
+                f"{t}:{g}:{d}" for t, g, d in zip(r[3], r[4], r[5])],
+        }
 
-        aline[self.columns["effect_gene_genes"]] = r[1]
-        aline[self.columns["effect_gene_types"]] = r[2]
-        aline[self.columns["effect_genes"]] = [
-            "{}:{}".format(g, e) for g, e in zip(r[1], r[2])
-        ]
-        aline[self.columns["effect_details_transcript_ids"]] = r[3]
-        aline[self.columns["effect_details_genes"]] = r[4]
-        aline[self.columns["effect_details_details"]] = r[5]
-        aline[self.columns["effect_details"]] = [
-            "{}:{}:{}".format(t, g, d) for t, g, d in zip(r[3], r[4], r[5])
-        ]
+        attributes.update(result)
 
     def wrap_effects(self, effects):
         return self.effect_simplify(effects)
 
     @classmethod
     def effect_severity(cls, effect):
-        return -VariantAnnotator.Severity[effect.effect]
+        return EffectAnnotator.Severity[effect.effect]
 
     @classmethod
     def sort_effects(cls, effects):

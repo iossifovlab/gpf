@@ -15,19 +15,34 @@ class VariantScoreAnnotatorBase(Annotator):
         super().__init__(resource, liftover, override)
 
         self.score_types = dict()
-        for score in self.resource._config.scores:
+        for score in self.resource.get_config().scores:
             self.score_types[score.id] = score.type
 
-        if self.resource._config.type_aggregators:
+        if self.resource.get_config().type_aggregators:
             self.type_aggregators = dict()
-            for agg in self.resource._config.type_aggregators:
+            for agg in self.resource.get_config().type_aggregators:
                 self.type_aggregators[agg.type] = agg.aggregator
 
         self.aggregators = dict()
-        for attr in self.config.attributes:
-            self.aggregators[attr.source] = self._collect_aggregators(attr)
+        for attr in self.get_config().attributes:
+            self.aggregators[attr.source] = self._get_aggregators(attr)
 
-    def _collect_aggregators(self, attr):
+    def get_default_annotation(self):
+        if self.override:
+            print("override:", self.override)
+            return self.override.attributes
+        print("resource:", self.resource.get_default_annotation())
+        return self.resource.get_default_annotation().attributes
+
+    def get_config(self):
+        if self.override:
+            print("override:", self.override)
+            return self.override
+        print("resource:", self.resource.get_config().default_annotation)
+
+        return self.resource.get_config().default_annotation
+
+    def _get_aggregators(self, attr):
         raise NotImplementedError()
 
     @property
@@ -92,7 +107,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         # FIXME This should be closed somewhere
         self.resource.open()
 
-    def _collect_aggregators(self, attr):
+    def _get_aggregators(self, attr):
         aggr_name = attr.aggregator.position
         if aggr_name is None:
             score_type = self.score_types[attr.source]
@@ -152,7 +167,7 @@ class NPScoreAnnotator(PositionScoreAnnotator):
     def __init__(self, config, liftover=None, override=None):
         super().__init__(config, liftover, override)
 
-    def _collect_aggregators(self, attr):
+    def _get_aggregators(self, attr):
         aggr_name = attr.aggregator.position
         if aggr_name is None:
             score_type = self.score_types[attr.source]

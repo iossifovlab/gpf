@@ -1,5 +1,5 @@
 import logging
-from copy import deepcopy
+import copy
 from dae.configuration.schemas.genomic_resources_database import attr_schema, \
     genomic_score_schema
 
@@ -10,10 +10,6 @@ class Annotator:
 
     def __init__(self, resource, liftover=None, override=None):
         self.resource = resource
-        self.config = override if override \
-            else resource.get_default_annotation()
-
-        # FIXME Reintroduce Graw, Traw and TrawFormat?
 
         self.liftover = liftover
         self.override = override
@@ -31,7 +27,7 @@ class Annotator:
         attributes_schemas = {
             attr_name: attr_schema for attr_name in cls.required_columns()
         }
-        schema = deepcopy(genomic_score_schema)
+        schema = copy.deepcopy(genomic_score_schema)
         schema.update(attributes_schemas)
         return schema
 
@@ -41,14 +37,16 @@ class Annotator:
         """
         raise NotImplementedError()
 
+    def get_default_annotation(self):
+        raise NotImplementedError()
+
     def annotate(self, attributes, variant, liftover_variants):
         """
         Carry out the annotation and then relabel results as configured.
         """
         self._do_annotate(attributes, variant, liftover_variants)
-        attributes_list = self.resource._config.default_annotation.attributes
-        if self.override is not None:
-            attributes_list = self.override.attributes
+        attributes_list = self.get_default_annotation()
+        print("attributes_list:", attributes_list)
         for attr in attributes_list:
             if attr.dest == attr.source:
                 continue

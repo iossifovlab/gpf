@@ -1,9 +1,15 @@
-from dae.pedigrees.loader import FamiliesLoader
+
 import os
+import copy
+
+from dae.annotation.tools.effect_annotator import VariantEffectAnnotator
+from dae.pedigrees.loader import FamiliesLoader
 
 from dae.backends.dae.loader import DenovoLoader
 from dae.genomic_resources.genomic_sequence_resource import \
     GenomicSequenceResource
+from dae.genomic_resources.gene_models_resource import \
+    GeneModelsResource
 
 
 def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
@@ -20,12 +26,18 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
     assert genome is not None
     assert isinstance(genome, GenomicSequenceResource)
 
+    gene_models = anno_grdb.get_resource(
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174/gene_models/refGene_201309"
+    )
+    assert gene_models is not None
+    assert isinstance(gene_models, GeneModelsResource)
+
     families_loader = FamiliesLoader(
         pedigree_filename)
     families = families_loader.load()
     assert families is not None
     assert len(families) == 1
-    
+
     genome.open()
     denovo_loader = DenovoLoader(
         families,
@@ -33,5 +45,17 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
     )
     assert denovo_loader is not None
 
-    for sv, fvs in denovo_loader.full_variants_iterator():
+    effect_annotator = VariantEffectAnnotator(
+        gene_models=gene_models, genome=genome)
+
+    variants = list(denovo_loader.full_variants_iterator())
+    for sv, fvs in variants:
         print(sv, fvs)
+        for sa in sv.alt_alleles:
+            attributes = copy.deepcopy(sa.attributes)
+            liftover_variants = {}
+            effect_annotator.annotate(attributes, sa, liftover_variants)
+
+            print(
+                attributes["effect_gene_types"],
+                attributes["effect_gene_genes"])
