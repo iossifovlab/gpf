@@ -12,11 +12,17 @@ import { PerfectlyDrawablePedigreeService } from 'app/perfectly-drawable-pedigre
 import { ResizeService } from 'app/table/resize.service';
 
 class MockDatasetsService {
-  getSelectedDataset(): Observable<any> {
-    return of({accessRights: true})
+  getSelectedDataset() {
+    return {accessRights: true};
   }
+  getSelectedDatasetObservable() {
+    return of({accessRights: true});
+  }
+  getDatasetsLoadedObservable = function() {
+    return of();
+  };
   getDataset(): Observable<any> {
-    return of({accessRights: true})
+    return of({accessRights: true});
   }
 }
 

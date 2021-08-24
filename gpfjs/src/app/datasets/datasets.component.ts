@@ -21,7 +21,8 @@ export class DatasetsComponent implements OnInit {
   registerAlertVisible = false;
   datasets$: Observable<Dataset[]>;
   datasetTrees: DatasetNode[];
-  selectedDataset$: Observable<Dataset>;
+  selectedDataset: Dataset;
+  selectedDataset$;
   permissionDeniedPrompt: string;
   public toolPageLinks = toolPageLinks;
 
@@ -43,32 +44,32 @@ export class DatasetsComponent implements OnInit {
       this.datasetsService.getDatasetsObservable());
 
     this.createDatasetHierarchy();
-    this.selectedDataset$ = this.datasetsService.getSelectedDataset();
+    this.selectedDataset = this.datasetsService.getSelectedDataset();
+    this.selectedDataset$ = this.datasetsService.getSelectedDatasetObservable();
 
-    this.selectedDataset$
-    .subscribe(selectedDataset => {
-      if (!selectedDataset) {
+    this.datasetsService.getDatasetsLoadedObservable().subscribe(() => {
+      this.selectedDataset = this.datasetsService.getSelectedDataset();
+      if (!this.selectedDataset) {
         return;
       }
-      this.registerAlertVisible = !selectedDataset.accessRights;
+
+      this.registerAlertVisible = !this.selectedDataset.accessRights;
+
+      if (!this.isToolSelected()) {
+        this.router.navigate(['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]);
+      } else {
+        const url = this.router.url.split('/');
+        const toolName = url[url.indexOf('datasets') + 2];
+
+        if (!this.isToolEnabled(this.selectedDataset, toolName)) {
+          this.router.navigate(['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]);
+        }
+      }
     });
 
     this.datasets$.pipe(take(1)).subscribe(datasets => {
-      if (!this.datasetsService.hasSelectedDataset()) {
-        this.selectDataset(datasets[0]);
-      } else if (!this.isToolSelected()) {
-        this.selectedDataset$.pipe(take(1)).subscribe(dataset => {
-          this.router.navigate(['/', 'datasets', dataset.id, this.findFirstTool(dataset)]);
-        });
-      } else {
-        this.selectedDataset$.pipe(take(1)).subscribe(dataset => {
-          const url = this.router.url.split('/');
-          const toolName = url[url.indexOf('datasets') + 2];
-
-          if (!this.isToolEnabled(dataset, toolName)) {
-            this.router.navigate(['/', 'datasets', dataset.id, this.findFirstTool(dataset)]);
-          }
-        });
+      if (!this.datasetsService.hasLoadedAnyDataset && !this.datasetsService.hasSelectedDataset()) {
+        this.datasetsService.setSelectedDataset(datasets[0]);
       }
     });
 
@@ -133,7 +134,7 @@ export class DatasetsComponent implements OnInit {
     } else if (selectedDataset.phenotypeTool) {
       firstTool = toolPageLinks.phenotypeTool;
     }
-
+    firstTool = toolPageLinks.datasetStatistics;
     return firstTool;
   }
 
@@ -156,12 +157,6 @@ export class DatasetsComponent implements OnInit {
           dataset.accessRights
       )
     ));
-  }
-
-  selectDataset(dataset: Dataset): void {
-    if (dataset !== undefined) {
-      this.router.navigate(['/', 'datasets', dataset.id, this.findFirstTool(dataset)]);
-    }
   }
 
   routeChange(): void {

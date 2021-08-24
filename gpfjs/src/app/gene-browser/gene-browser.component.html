@@ -1,16 +1,16 @@
-<div style="padding: 30px;" *ngIf="selectedDataset$ | async as dataset">
-  <div *ngIf="dataset.accessRights">
+<div style="padding: 30px;" *ngIf="selectedDataset">
+  <div *ngIf="selectedDataset.accessRights">
     <div class="effect-card card">
       <div style="font-family: Roboto; font-weight: 500; border-bottom: none;" class="card-header card-title">Gene Symbols</div>
       <div class="card-block">
-        <gpf-gene-symbol-with-search (inputClickEvent)="hideResults = true" [hideDropdown]="hideDropdown"></gpf-gene-symbol-with-search>
+        <gpf-gene-symbol-with-search></gpf-gene-symbol-with-search>
         <div [hidden]="!showError" class="alert alert-danger" role="alert" style="display: inline-block; margin: 20px; margin-top: 0px; width: 45%">
           No such gene found!
         </div>
 
         <div style="padding: 0px 10px 10px 20px">
           <input (click)="hideResults = true" style="margin-right: 10px;" type="checkbox" id="coding-only-checkbox" [(ngModel)]="enableCodingOnly">
-          <label for="coding-only-checkbox">Coding only</label>
+          <label for="coding-only-checkbox" style="user-select: none">Coding only</label>
         </div>
       </div>
     </div>
@@ -19,17 +19,84 @@
       <input type="button" style="width: 75px" class="btn btn-md btn-primary" value="Go" (click)="submitGeneRequest()">
     </div>
 
-    <div *ngIf="!hideResults">
-      <div class="row" style="margin-left: 0px; margin-right: 0px">
-        <gpf-gene-view style="width: 100%; min-width: 1300px;"
-          [gene]="selectedGene"
-          [variantsArray]="summaryVariantsArray"
-          (updateShownTablePreviewVariantsArrayEvent)="updateShownTablePreviewVariantsArray($event)"
-          [streamingFinished$]="queryService.summaryStreamingFinishedSubject"
-          (startLoadingSpinnerEvent)="startLoadingSpinner()">
-        </gpf-gene-view>
+    <div id="filters" class="row" style="margin-left: 0px">
+      <div class="effect-card card" style="margin-top: 40px; margin-bottom: 40px;">
+        <div class="card-header card-title" style="font-family: Roboto; font-weight: 500;">Affected Status</div>
+        <div class="card-block">
+          <div style="display: inline" *ngFor="let affectedStatus of affectedStatusValues; let i=index" class="checkbox">
+            <label style="padding: 15px; user-select: none">
+              <input #affectedStatusCheckbox checked type="checkbox" id="affectedStatus{{affectedStatus}}-checkbox"
+              (change)="checkAffectedStatus(affectedStatus, affectedStatusCheckbox.checked)">
+              <span class="pedigree-icon" [style.background-color]="'#aaaaaa'" style="opacity: 0.75;"></span>
+              <span style="display: inline-block;vertical-align: middle;line-height: 95%;"
+                [ngStyle]="{width: affectedStatus === 'Affected only' ? '70px' : 
+                                   affectedStatus === 'Unaffected only' ? '80px' :
+                                   affectedStatus === 'Affected and unaffected' ? '100px': {}}">
+                {{ affectedStatus }}
+              </span>
+            </label>
+          </div>
+        </div>
       </div>
 
+      <div class="effect-card card" style="margin-top: 40px; margin-bottom: 40px; margin-left: 30px">
+        <div class="card-header card-title" style="font-family: Roboto; font-weight: 500;">Effect Types</div>
+        <div class="card-block">
+          <div style="display: inline" *ngFor="let effect of ['LGDs', 'Missense', 'Synonymous', 'CNV+', 'CNV-', 'Other']; let i=index" class="checkbox">
+            <label style="padding: 15px; user-select: none">
+              <input #effectTypeCheckbox checked type="checkbox"
+                (change)="checkEffectType(effect, effectTypeCheckbox.checked)">
+              {{ effect }}
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="effect-card card" style="margin-top: 40px; margin-bottom: 40px; margin-left: 30px">
+        <div class="card-header card-title" style="font-family: Roboto; font-weight: 500;">Inheritance Types</div>
+        <div class="card-block">
+          <div style="display: inline">
+            <label style="padding: 15px; user-select: none">
+              <input style="margin-right: 5px;" #denovoCheckbox checked type="checkbox"
+                (click)="checkShowDenovo(denovoCheckbox.checked)">
+              <span style="margin-left: 10px">Denovo</span>
+            </label>
+          </div>
+          <div style="display: inline">
+            <label style="padding: 15px; user-select: none">
+              <input #transmittedCheckbox checked type="checkbox"
+                (click)="checkShowTransmitted(transmittedCheckbox.checked)">
+              <span style="margin-left: 10px">Transmitted</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="effect-card card" style="margin-top: 40px; margin-bottom: 40px; margin-left: 30px">
+        <div class="card-header card-title" style="font-family: Roboto; font-weight: 500;">Variant Types</div>
+        <div class="card-block">
+          <div style="display: inline" *ngFor="let variantType of ['sub', 'ins', 'del', 'CNV+', 'CNV-']; let i=index" class="checkbox">
+            <label style="padding: 15px; user-select: none">
+              <input #variantTypeCheckbox checked type="checkbox"
+                (change)="checkVariantType(variantType, variantTypeCheckbox.checked)">
+              {{ variantType }}
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="loadingFinished">
+      <gpf-gene-plot
+        [gene]="selectedGene"
+        [variantsArray]="summaryVariantsArrayFiltered"
+        [frequencyDomain]="[this.geneBrowserConfig.domainMin, this.geneBrowserConfig.domainMax]"
+        [yAxisLabel]="this.geneBrowserConfig.frequencyName || this.geneBrowserConfig.frequencyColumn"
+        [allVariantsCounts]="[summaryVariantsArray.totalSummaryAllelesCount, summaryVariantsArray.totalFamilyVariantsCount]"
+        [condenseIntrons]="this.enableCodingOnly"
+        (selectedRegion)="setSelectedRegion($event)"
+        (selectedFrequencies)="setSelectedFrequencies($event)">
+      </gpf-gene-plot>
       <div class="row">
         <div class="col-12" *ngIf="selectedGene">
           <form id="summary_download" (ngSubmit)="onSubmit($event)" action="{{ configService.baseUrl }}genotype_browser/query"
@@ -45,8 +112,11 @@
 
       <div class="row">
         <div class="col-6">
-          <gpf-loading-spinner *ngIf="selectedGene" [loadingFinished]="familyLoadingFinished"
-            [count]="getFamilyVariantCounts()" [displayText]="'Loading variants...'">
+          <gpf-loading-spinner
+            *ngIf="selectedGene"
+            [loadingFinished]="familyLoadingFinished"
+            [displayText]="'Loading variants...'"
+            [count]="genotypePreviewVariantsArray?.getVariantsCount(this.maxFamilyVariants)">
           </gpf-loading-spinner>
         </div>
         <div class="col-6" *ngIf="selectedGene">
@@ -60,7 +130,7 @@
       </div>
 
       <gpf-genotype-preview-table
-        [columns]="dataset?.genotypeBrowserConfig?.tableColumns"
+        [columns]="selectedDataset?.genotypeBrowserConfig?.tableColumns"
         [genotypePreviewVariantsArray]="genotypePreviewVariantsArray"
         [legend]="legend">
       </gpf-genotype-preview-table>

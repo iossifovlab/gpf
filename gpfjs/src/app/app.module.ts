@@ -160,7 +160,6 @@ import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
 import { DatasetPermissionGuard } from './dataset-permission.guard';
 import { CommonReportsRowComponent } from './variant-reports/common-reports-row/common-reports-row.component';
 import { CommonReportsPedigreeCellComponent } from './variant-reports/common-reports-pedigree-cell/common-reports-pedigree-cell.component';
-import { GeneViewComponent } from './gene-view/gene-view.component';
 import { GeneSymbolsWithSearchComponent } from './gene-symbols-with-search/gene-symbols-with-search.component';
 import { LoadingSpinnerComponent } from './loading-spinner/loading-spinner.component';
 import { DatasetNodeComponent } from './dataset-node/dataset-node.component';
@@ -187,6 +186,7 @@ import { RegionsFilterState } from './regions-filter/regions-filter.state';
 import { CheckboxListComponent, DisplayNamePipe } from './checkbox-list/checkbox-list.component';
 import { ErrorsState } from './common/errors.state';
 import { toolPageLinks } from './datasets/datasets';
+import { GenePlotComponent } from './gene-plot/gene-plot.component';
 
 const appRoutes: Routes = [
   {
@@ -380,7 +380,6 @@ const appRoutes: Routes = [
     InheritancetypesComponent,
     GeneBrowserComponent,
     GlobalErrorDisplayComponent,
-    GeneViewComponent,
     CommonReportsRowComponent,
     CommonReportsPedigreeCellComponent,
     GeneSymbolsWithSearchComponent,
@@ -398,6 +397,7 @@ const appRoutes: Routes = [
     AutismGeneProfileSingleViewWrapperComponent,
     CheckboxListComponent,
     DisplayNamePipe,
+    GenePlotComponent,
   ],
   imports: [
     BrowserModule,

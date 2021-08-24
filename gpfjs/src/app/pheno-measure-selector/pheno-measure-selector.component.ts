@@ -32,23 +32,25 @@ export class PhenoMeasureSelectorComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    this.subscription = this.datasetsService.getSelectedDataset()
-      .subscribe(dataset => {
-        this.measuresService.getContinuousMeasures(dataset.id)
-          .subscribe(measures => {
-            this.measures = measures;
-            let search = this.initialSelectedMeasure;
-            if (this.initialSelectedMeasure) {
-              this.selectedMeasure = this.measures
-                .find(m => m.name === this.initialSelectedMeasure);
-            }
-            if (!this.selectedMeasure) {
-              search = '';
-            }
-            this.searchBoxChange(search);
-            this.measuresChange.emit(this.measures);
-          });
+    this.subscription = this.datasetsService.getSelectedDatasetObservable().subscribe(dataset => {
+      if (!dataset) {
+        return;
+      }
+
+      this.measuresService.getContinuousMeasures(dataset.id).subscribe(measures => {
+        this.measures = measures;
+        let search = this.initialSelectedMeasure;
+        if (this.initialSelectedMeasure) {
+          this.selectedMeasure = this.measures
+            .find(m => m.name === this.initialSelectedMeasure);
+        }
+        if (!this.selectedMeasure) {
+          search = '';
+        }
+        this.searchBoxChange(search);
+        this.measuresChange.emit(this.measures);
       });
+    });
   }
 
   ngOnDestroy() {

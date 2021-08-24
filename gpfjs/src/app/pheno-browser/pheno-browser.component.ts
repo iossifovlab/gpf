@@ -26,7 +26,7 @@ export class PhenoBrowserComponent implements OnInit {
   public downloadLink$: Observable<string>;
 
   private selectedDatasetId: string;
-  public selectedDataset$: Observable<Dataset>;
+  public selectedDataset: Dataset;
 
   public input$ = new ReplaySubject<string>(1);
 
@@ -50,30 +50,37 @@ export class PhenoBrowserComponent implements OnInit {
       this.selectedDatasetId = params['dataset'];
     });
 
-    this.selectedDataset$ = this.datasetsService.getSelectedDataset();
+    this.updateSelectedDataset();
 
-    this.selectedDataset$.subscribe(
-      dataset => {
-        if (dataset.accessRights) {
-          this.initInstruments(datasetId$);
-          this.initMeasuresToShow(datasetId$);
-          this.initDownloadLink(datasetId$);
-        }
-      }
-    );
+    this.datasetsService.getDatasetsLoadedObservable()
+    .subscribe(datasetsLoaded => {
+      this.updateSelectedDataset();
+    });
 
     this.focusSearchBox();
   }
 
-  private initMeasuresToShow(datasetId$: Observable<string>) {
+  private updateSelectedDataset() {
+    this.selectedDataset = this.datasetsService.getSelectedDataset();
+    if (!this.selectedDataset) {
+      return;
+    }
+    if (this.selectedDataset.accessRights) {
+      this.initInstruments(this.selectedDataset.id);
+      this.initMeasuresToShow(this.selectedDataset.id);
+      this.initDownloadLink(this.selectedDataset.id);
+    }
+  }
+
+  private initMeasuresToShow(datasetId: string) {
     const searchTermObs$ = this.input$.pipe(
       map((searchTerm: string) => searchTerm.trim()),
       debounceTime(300),
       distinctUntilChanged()
     );
 
-    this.measuresToShow$ = combineLatest([searchTermObs$, this.selectedInstrument$, datasetId$]).pipe(
-      tap(([searchTerm, newSelection, datasetId]) => {
+    this.measuresToShow$ = combineLatest([searchTermObs$, this.selectedInstrument$]).pipe(
+      tap(([searchTerm, newSelection]) => {
         this.measuresToShow = null;
         const queryParamsObject: any = {};
         if (newSelection) {
@@ -83,19 +90,18 @@ export class PhenoBrowserComponent implements OnInit {
           queryParamsObject.search = searchTerm;
         }
         const url = this.router.createUrlTree(['.'], { /* Removed unsupported properties by Angular migration: replaceUrl. */ relativeTo: this.route,
-    queryParams: queryParamsObject }).toString();
+      queryParams: queryParamsObject }).toString();
         this.location.go(url);
       }),
-      switchMap(([searchTerm, newSelection, datasetId]) => {
+      switchMap(([searchTerm, newSelection]) => {
         this.measuresToShow = null;
         return combineLatest([
             of(searchTerm),
             of(newSelection),
-            of(datasetId),
             this.phenoBrowserService.getMeasuresInfo(datasetId)
         ]);
       }),
-      switchMap(([searchTerm, newSelection, datasetId, measuresInfo]) => {
+      switchMap(([searchTerm, newSelection, measuresInfo]) => {
         this.measuresToShow = measuresInfo;
         return this.phenoBrowserService.getMeasures(datasetId, newSelection, searchTerm);
       }),
@@ -118,20 +124,17 @@ export class PhenoBrowserComponent implements OnInit {
     });
   }
 
-  private initInstruments(datasetId$: Observable<string>): void {
-    this.instruments = datasetId$.pipe(
-      switchMap(datasetId => this.phenoBrowserService.getInstruments(datasetId)),
-      share()
-    );
+  private initInstruments(datasetId: string): void {
+    this.instruments = this.phenoBrowserService.getInstruments(datasetId);
   }
 
   public emitInstrument(instrument: PhenoInstrument) {
     this.selectedInstrument$.next(instrument);
   }
 
-  private initDownloadLink(datasetId$: Observable<string>) {
-    this.downloadLink$ = combineLatest([this.selectedInstrument$, datasetId$]).pipe(
-      map(([instrument, datasetId]) =>
+  private initDownloadLink(datasetId: string) {
+    this.downloadLink$ = this.selectedInstrument$.pipe(
+      map(instrument =>
         this.phenoBrowserService.getDownloadLink(instrument, datasetId)
       )
     );
