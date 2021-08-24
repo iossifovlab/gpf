@@ -3,24 +3,25 @@ from dae.genomic_resources.http_file import HTTPFile
 
 def test_http_file(resources_http_server):
     file_url = "http://localhost:16200/hg38/TESTCADD/genomic_resource.yaml"
-    file = HTTPFile(file_url)
-    print(file.read(100))
-    print("====")
-    print(file.read(100))
-    print("====")
-    print(file.read(100))
-    print("====")
-    print(file.read())
+    # file = HTTPFile(file_url)
+    with HTTPFile(file_url) as file:
+        print(file.read(100))
+        print("====")
+        print(file.read(100))
+        print("====")
+        print(file.read(100))
+        print("====")
+        print(file.read())
 
 
 def test_http_genomic_sequence(resources_http_server):
     file_url = "http://localhost:16200/" \
         "hg19/GATK_ResourceBundle_5777_b37_phiX174/genome/chrAll.fa"
-    file = HTTPFile(file_url)
 
-    print(file.read(100))
-    print("====")
-    print(file.read(100))
-    print("====")
-    print(file.read(100))
-    print("====")
+    with HTTPFile(file_url) as file:
+        print(file.read(100))
+        print("====")
+        print(file.read(100))
+        print("====")
+        print(file.read(100))
+        print("====")
