@@ -54,8 +54,9 @@ class EffectGene(object):
 
 
 class EffectTranscript(object):
-    def __init__(self, transcript_id, details):
+    def __init__(self, transcript_id, gene, details):
         self.transcript_id = transcript_id
+        self.gene = gene
         self.details = details
 
     @staticmethod
@@ -64,11 +65,11 @@ class EffectTranscript(object):
             return None
 
         parts = [p.strip() for p in data.split(":")]
-        assert len(parts) == 2
-        return EffectTranscript(parts[0], parts[1])
+        assert len(parts) == 3
+        return EffectTranscript(parts[0], parts[1], parts[2])
 
     def __repr__(self):
-        return "{}:{}".format(self.transcript_id, self.details)
+        return f"{self.transcript_id}:{self.gene}:{self.details}"
 
     def __str__(self):
         return self.__repr__()

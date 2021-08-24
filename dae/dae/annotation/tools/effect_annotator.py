@@ -8,11 +8,11 @@ from box import Box
 from dae.variants.attributes import VariantType
 
 from dae.variant_annotation.annotator import \
-    VariantAnnotator as EffectAnnotator
+    VariantAnnotator
 from dae.annotation.tools.annotator_base import Annotator
 
 
-class VariantEffectAnnotator(Annotator):
+class EffectAnnotator(Annotator):
 
     COLUMNS_SCHEMA = [
         ("effect_type", "str"),
@@ -65,13 +65,13 @@ class VariantEffectAnnotator(Annotator):
     })
 
     def __init__(self, gene_models, genome, **kwargs):
-        super(VariantEffectAnnotator, self).__init__(gene_models, **kwargs)
+        super(EffectAnnotator, self).__init__(gene_models, **kwargs)
 
         self.gene_models = gene_models
         self.genomic_sequence = genome
 
         promoter_len = kwargs.get("promoter_len", 0)
-        self.effect_annotator = EffectAnnotator(
+        self.effect_annotator = VariantAnnotator(
             self.genomic_sequence,
             self.gene_models,
             promoter_len=promoter_len
@@ -134,7 +134,7 @@ class VariantEffectAnnotator(Annotator):
 
     @classmethod
     def effect_severity(cls, effect):
-        return EffectAnnotator.Severity[effect.effect]
+        return VariantAnnotator.Severity[effect.effect]
 
     @classmethod
     def sort_effects(cls, effects):

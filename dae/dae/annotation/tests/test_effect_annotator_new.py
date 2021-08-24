@@ -2,7 +2,8 @@
 import os
 import copy
 
-from dae.annotation.tools.effect_annotator import VariantEffectAnnotator
+from dae.variants.effects import Effect
+from dae.annotation.tools.effect_annotator import EffectAnnotator
 from dae.pedigrees.loader import FamiliesLoader
 
 from dae.backends.dae.loader import DenovoLoader
@@ -45,7 +46,7 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
     )
     assert denovo_loader is not None
 
-    effect_annotator = VariantEffectAnnotator(
+    effect_annotator = EffectAnnotator(
         gene_models=gene_models, genome=genome)
 
     variants = list(denovo_loader.full_variants_iterator())
@@ -59,3 +60,25 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
             print(
                 attributes["effect_gene_types"],
                 attributes["effect_gene_genes"])
+            
+            effect_types = sa.get_attribute("effectGene")
+            print(effect_types)
+            effect = Effect.from_string(
+                "!".join([
+                    sa.get_attribute("effectType"),
+                    sa.get_attribute("effectGene"),
+                    sa.get_attribute("effectDetails")
+                ])
+            )
+            print(effect)
+            print(effect.genes)
+
+            assert len(effect.genes) == len(attributes["effect_gene_genes"]), \
+                (effect.genes, attributes["effect_gene_genes"])
+            assert len(effect.genes) == len(attributes["effect_gene_types"]), \
+                (effect.genes, attributes["effect_gene_types"])
+
+            assert set([g.symbol for g in effect.genes]) == \
+                set(attributes["effect_gene_genes"])
+            assert set([g.effect for g in effect.genes]) == \
+                set(attributes["effect_gene_types"])
