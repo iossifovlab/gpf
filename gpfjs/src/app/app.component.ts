@@ -54,11 +54,14 @@ export class AppComponent {
   agpConfig: AgpConfig;
   private sessionTimeoutInSeconds = 7 * 24 * 60 * 60; // 1 week
 
-  @HostListener('window:scroll', ['$event'])
+  @HostListener('window:scroll')
   onWindowScroll() {
-    if (this.showSidenav) {
-      this.showSidenav = false;
-    }
+    this.hideSidenav();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeButtonPress() {
+    this.hideSidenav();
   }
 
   constructor(
