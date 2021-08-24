@@ -2,9 +2,8 @@ import os
 import logging
 import pandas as pd
 import math
+import json
 from dae.genome.genomes_db import GenomesDB
-
-from dae.common_reports.common_report import CommonReport
 
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
@@ -361,11 +360,20 @@ class GPFInstance(object):
 
     # Common reports
     def get_common_report(self, study_id):
-        genotype_data_study = self.get_genotype_data(study_id)
-        if genotype_data_study is None or genotype_data_study.is_remote:
+        study = self.get_genotype_data(study_id)
+        if study is None or study.is_remote:
             return None
         try:
-            common_report = CommonReport(genotype_data_study)
+            common_report_path = study.config.common_report.file_path
+            if not common_report_path or not os.path.exists(
+                common_report_path
+            ):
+                return None
+
+            with open(common_report_path, "r") as crf:
+                common_report = json.load(crf)
+
+            return common_report
         except AssertionError:
             return None
         return common_report.to_dict()
