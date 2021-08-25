@@ -96,9 +96,9 @@ export class GenePlotComponent implements OnChanges {
     // in pixels
     frequencyPlotSize: 300,
     frequencyPlotPadding: 30, // Padding between the frequency plot and the transcripts
-    transcriptHeight: 12,
+    transcriptHeight: 15,
     denovoSpacing: 22,
-    margin: { top: 10, right: 30, left: 120, bottom: 0 },
+    margin: { top: 10, right: 30, left: 120, bottom: 15 },
     exonThickness: { normal: 3, collapsed: 6 },
     cdsThickness: { normal: 6, collapsed: 12 },
   };
