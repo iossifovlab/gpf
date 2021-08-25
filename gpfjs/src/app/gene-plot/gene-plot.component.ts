@@ -72,7 +72,8 @@ export class GeneViewZoomHistory {
 @Component({
   selector: 'gpf-gene-plot',
   templateUrl: './gene-plot.component.html',
-  styleUrls: ['./gene-plot.component.css']
+  styleUrls: ['./gene-plot.component.css'],
+  host: {'(document:keydown)': 'handleKeyboardEvent($event)'}
 })
 export class GenePlotComponent implements OnChanges {
   @Input() public readonly gene: Gene;
@@ -619,6 +620,11 @@ export class GenePlotComponent implements OnChanges {
     this.restoreState(this.zoomHistory.currentState);
   }
 
+  public reset(): void {
+    this.resetPlot();
+    this.zoomHistory.reset()
+  }
+
   private restoreState(state: GeneViewScaleState): void {
     this.scale.x
       .domain(state.xDomain)
@@ -628,6 +634,26 @@ export class GenePlotComponent implements OnChanges {
     this.selectedFrequencies.emit([state.yMin, state.yMax]);
     this.selectedRegion.emit(this.xDomain);
     this.redraw();
+  }
+
+  private handleKeyboardEvent($event): void {
+    const key: string = $event.key;
+    const isCtrlPressed = $event.ctrlKey;
+
+    if (key === 'z' || (isCtrlPressed && key === 'z')) {
+      this.undo();
+      return;
+    }
+
+    if (key === 'y' || (isCtrlPressed && key === 'y')) {
+      this.redo();
+      return;
+    }
+
+    if (key === '5') {
+      this.reset();
+      return;
+    }
   }
 
   public getRegionString(startPos: number, endPos: number) {
