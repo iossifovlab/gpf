@@ -205,7 +205,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
 
     // COLLECT GENE
     if (geneSymbol) {
-      this.geneSymbol = geneSymbol;
+      this.geneSymbol = geneSymbol.toUpperCase().trim();
     }
     try {
       this.selectedGene = await this.geneService.getGene(
@@ -237,7 +237,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
 
     const requestParams = {
       'datasetId': this.selectedDatasetId,
-      'geneSymbols': [this.geneSymbol],
+      'geneSymbols': [this.geneSymbol.toUpperCase().trim()],
       'maxVariantsCount': 10000,
       'inheritanceTypeFilter': [
         'denovo', 'mendelian', 'omission', 'missing'
