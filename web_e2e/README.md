@@ -1,61 +1,50 @@
 
-## Preliminary
-
-
-### Add hosts record for registry.seqpipe.org
-
-
-Add to `/etc/hosts`
-```
-10.0.1.7        registry.seqpipe.org
-```
-
-Check the name is resolved:
-```
-ping registry.seqpipe.org
-```
-
-
-Update `/etc/docker/daemon.json` to include:
-
-```
-{
-    "insecure-registries" : ["registry.seqpipe.org:5000"]
-}
-```
-
-and restart the docker deamon:
-
-```
-systemctl restart docker
-```
-
-and check that you have access to the seqpipe's docker registry:
-
-```
-docker pull registry.seqpipe.org:5000/seqpipe-gpf-full:latest
-```
 
 ## Setup GPF e2e tests
 
 Clear the previous e2e test instance:
 
 ```
-./test_cleanup.sh
+./build_cleanup.sh
 ```
 
 Setup a fresh one:
 
 ```
-./tests_setup.sh
+./build_setup.sh
 ```
 
-Instpect the IP address on whick GPF system is accessible:
+Inspect the IP address on which GPF system is accessible. To this end run
+
+```
+docker ps --filter label="build-scripts=local"
+```
+
+The output of this command should look like the following:
+
+```
+CONTAINER ID   IMAGE                                                      COMMAND                  CREATED...   STA...
+0352bc66baa5   registry.seqpipe.org/seqpipe-gpf-full:master_57c04e5-664   "supervisord -c /etc…"   45 minu...   Up ...
+f9fa020327e8   seqpipe/seqpipe-docker-impala:latest                       "supervisord -c /etc…"   49 minu...   Up ...
+b7856fa20651   mysql:5.7                                                  "docker-entrypoint.s…"   49 minu...   Up ...
+```
+
+Find the container ID that corresponds to `registry.seqpipe.org/seqpipe-gpf-full` image.
+In the above mentioned case this is the container with ID `0352bc66baa5`.
+
+Run following command to inspect IP address of this container:
 
 ```
 docker inspect \
     --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
-    gpf-e2e-dev-latest-genotype-impala-0
+    0352bc66baa5
+```
+
+This command shoud return an IP address. In our case it is `172.31.0.5`. You can browse 
+the GPF system setup by the scripts using following URL:
+
+```
+http://172.31.0.5/gpf/
 ```
 
 ## Run GPF e2e tests
