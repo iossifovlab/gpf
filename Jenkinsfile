@@ -1,4 +1,3 @@
-
 pipeline {
   agent { label 'piglet || pooh || dory' }
   options {
@@ -25,6 +24,18 @@ pipeline {
         }
       }
     }
+/*
+    stage('SonarQube') {
+      steps {
+        script {
+          def scannerHome = tool 'sonarqube-scanner-default';
+          withSonarQubeEnv() {
+            sh "${scannerHome}/bin/sonar-scanner"
+          }
+        }
+      }
+    }
+*/
   }
   post {
     always {

@@ -1,0 +1,82 @@
+#!/usr/bin/env python
+import sys
+import time
+import argparse
+import logging
+import os
+import json
+
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.common_reports.common_report import CommonReport
+
+logger = logging.getLogger(__name__)
+
+
+def main(argv, gpf_instance=None):
+    description = "Generate common reports tool"
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('--verbose', '-V', action='count', default=0)
+
+    parser.add_argument(
+        "--show-studies",
+        help="This option will print available "
+        "genotype studies and groups names",
+        default=False,
+        action="store_true",
+    )
+    parser.add_argument(
+        "--studies",
+        help="Specify genotype studies and groups "
+        "names for generating common report. Default to all query objects.",
+        default=None,
+        action="store",
+    )
+
+    args = parser.parse_args(argv)
+    if args.verbose == 1:
+        logging.basicConfig(level=logging.WARNING)
+    elif args.verbose == 2:
+        logging.basicConfig(level=logging.INFO)
+    elif args.verbose >= 3:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.WARNING)
+
+    logging.getLogger("impala").setLevel(logging.WARNING)
+
+    start = time.time()
+    if gpf_instance is None:
+        gpf_instance = GPFInstance()
+
+    available_studies = gpf_instance.get_genotype_data_ids(local_only=True)
+
+    if args.show_studies:
+        for study_id in available_studies:
+            logger.warning(f"study: {study_id}")
+    else:
+        elapsed = time.time() - start
+        logger.info(
+            f"started common reports generation after {elapsed:0.2f} sec")
+        if args.studies:
+            studies = args.studies.split(",")
+            logger.info(f"generating common reports for: {studies}")
+        else:
+            logger.info("generating common reports for all studies!!!")
+            studies = available_studies
+        for study in studies:
+            if study not in available_studies:
+                logger.error(f"Study {study} not found! Skipping...")
+                continue
+
+            study = gpf_instance.get_genotype_data(study)
+            common_report = CommonReport(study)
+            file_path = study.config.common_report.file_path
+
+            if not os.path.exists(os.path.dirname(file_path)):
+                os.makedirs(os.path.dirname(file_path))
+            with open(file_path, "w+") as crf:
+                json.dump(common_report.to_dict(), crf)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
