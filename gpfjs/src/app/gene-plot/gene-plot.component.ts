@@ -637,6 +637,10 @@ export class GenePlotComponent implements OnChanges {
   }
 
   private handleKeyboardEvent($event): void {
+    if ($event.target.id === 'search-box') {
+      return;
+    }
+
     const key: string = $event.key;
     const isCtrlPressed = $event.ctrlKey;
 
