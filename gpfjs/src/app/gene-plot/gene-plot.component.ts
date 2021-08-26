@@ -641,22 +641,15 @@ export class GenePlotComponent implements OnChanges {
       return;
     }
 
-    const key: string = $event.key;
+    const keyPressed: string = $event.key;
     const isCtrlPressed = $event.ctrlKey;
 
-    if (key === 'z' || (isCtrlPressed && key === 'z')) {
+    if (keyPressed === 'z' || (isCtrlPressed && keyPressed === 'z')) {
       this.undo();
-      return;
-    }
-
-    if (key === 'y' || (isCtrlPressed && key === 'y')) {
+    } else if (keyPressed === 'y' || (isCtrlPressed && keyPressed === 'y')) {
       this.redo();
-      return;
-    }
-
-    if (key === '5') {
+    } else if (keyPressed === '5') {
       this.reset();
-      return;
     }
   }
 
