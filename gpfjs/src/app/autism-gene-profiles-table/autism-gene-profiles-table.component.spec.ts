@@ -129,8 +129,17 @@ describe('AutismGeneProfilesTableComponent', () => {
         }
       }
     } as any;
-    spyOnProperty(window, 'innerHeight').and.returnValue(11);
+
+    const innerHeightSpy = spyOnProperty(window, 'innerHeight');
+    const clientHeightSpy = spyOnProperty(document.documentElement, 'clientHeight')
+
+    innerHeightSpy.and.returnValue(11);
+    clientHeightSpy.and.returnValue(11);
     expect(component.calculateModalBottom()).toBe(1);
+
+    innerHeightSpy.and.returnValue(11);
+    clientHeightSpy.and.returnValue(22);
+    expect(component.calculateModalBottom()).toBe(-14);
   });
 
   it('should handle multiple select apply event for gene sets', () => {
