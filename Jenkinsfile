@@ -1,5 +1,5 @@
 pipeline {
-  agent { label 'piglet || pooh || dory' }
+  agent { label 'piglet' }
   options {
     copyArtifactPermission('/iossifovlab/*,/seqpipe/*');
   }
