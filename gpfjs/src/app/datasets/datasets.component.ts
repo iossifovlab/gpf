@@ -40,8 +40,7 @@ export class DatasetsComponent implements OnInit {
         this.datasetsService.setSelectedDatasetById(params['dataset']);
       });
 
-    this.datasets$ = this.filterHiddenGroups(
-      this.datasetsService.getDatasetsObservable());
+    this.datasets$ = this.filterHiddenGroups(this.datasetsService.getDatasetsObservable());
 
     this.createDatasetHierarchy();
     this.selectedDataset = this.datasetsService.getSelectedDataset();
@@ -134,7 +133,7 @@ export class DatasetsComponent implements OnInit {
     } else if (selectedDataset.phenotypeTool) {
       firstTool = toolPageLinks.phenotypeTool;
     }
-    firstTool = toolPageLinks.datasetStatistics;
+
     return firstTool;
   }
 
