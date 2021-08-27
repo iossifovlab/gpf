@@ -102,6 +102,9 @@ class VariantReportsServiceMock {
             }
           }
         ],
+        familiesTotal: 1,
+      },
+      peopleReport: {
         peopleCounters: [
           {
             groupCounters: [
@@ -191,8 +194,7 @@ class VariantReportsServiceMock {
             columns: ['prb', 'mom', 'sib', 'dad'],
             getChildrenCounter: function() {return 0}
           }
-        ],
-        familiesTotal: 1
+        ]
       },
       denovoReport: null
     };
@@ -294,7 +296,7 @@ describe('VariantReportsComponent', () => {
   it('should not have denovo', () => {
     expect(component).toBeTruthy();
     expect(component.currentDenovoReport).toBeUndefined();
-  })
+  });
 });
 
 describe('VariantReportsComponent Denovo', () => {
