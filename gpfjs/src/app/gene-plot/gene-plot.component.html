@@ -1,9 +1,9 @@
 <div class="card">
     <div class="card-header card-title" style="font-family: Roboto; font-weight: 500; padding: 0px; position: relative; height: 40px;">
       <span class="header-item" style="left: 0;">
-        <button type="button" class="astext" (click)="undo()" [disabled]="!zoomHistory.canGoBackward"
+        <button type="button" class="astext" (click)="undo()" [disabled]="!zoomHistory?.canGoBackward"
           title="Undo (Ctrl+Z or Z)" style="padding-left:20px; font-weight: bold;">&#x021FD;</button>
-        <button type="button" class="astext" (click)="redo()" [disabled]="!zoomHistory.canGoForward"
+        <button type="button" class="astext" (click)="redo()" [disabled]="!zoomHistory?.canGoForward"
           title="Redo (Ctrl+Y or Y)" style="padding-left:7px; font-weight: bold;">&#x021FE;</button>
         <button type="button" class="astext" (click)="reset()"
           title="Reset (Double-click or 5)" style="padding-left:12px;">&#x021BB;</button>

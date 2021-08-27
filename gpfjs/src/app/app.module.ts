@@ -187,6 +187,7 @@ import { CheckboxListComponent, DisplayNamePipe } from './checkbox-list/checkbox
 import { ErrorsState } from './common/errors.state';
 import { toolPageLinks } from './datasets/datasets';
 import { GenePlotComponent } from './gene-plot/gene-plot.component';
+import { GeneBrowserFiltersComponent } from './gene-browser-filters/gene-browser-filters.component';
 
 const appRoutes: Routes = [
   {
@@ -398,6 +399,7 @@ const appRoutes: Routes = [
     CheckboxListComponent,
     DisplayNamePipe,
     GenePlotComponent,
+    GeneBrowserFiltersComponent,
   ],
   imports: [
     BrowserModule,

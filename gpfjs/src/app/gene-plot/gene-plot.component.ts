@@ -273,11 +273,12 @@ export class GenePlotComponent implements OnChanges {
       .select('#plot')
       .selectAll('*')
       .remove();
-    this.plotElement.append('g')
-      .call(this.brush);
     this.drawPlot();
     this.drawVariants();
     this.drawGene();
+
+    this.plotElement.append('g')
+      .call(this.brush);
   }
 
   public toggleCondenseIntrons() {
