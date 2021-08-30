@@ -60,8 +60,8 @@ export class DatasetsService {
     this.setSelectedDatasetById(dataset.id);
   }
 
-  setSelectedDatasetById(datasetId: string): void {
-    if (this.selectedDataset$.getValue()?.id === datasetId) {
+  setSelectedDatasetById(datasetId: string, force = false): void {
+    if (!force && this.selectedDataset$.getValue()?.id === datasetId) {
       return;
     }
 
@@ -74,8 +74,11 @@ export class DatasetsService {
     });
   }
 
-  reloadSelectedDataset() {
+  reloadSelectedDataset(force = false): void {
     if (this.hasSelectedDataset()) {
+      if (force) {
+        this.setSelectedDatasetById(this.getSelectedDatasetId(), true);
+      }
       this.datasetLoaded$.next();
     }
   }
