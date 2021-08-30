@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener} from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, HostListener, AfterViewInit} from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
 import { Observable } from 'rxjs';
 import { VariantReportsService } from './variant-reports.service';
@@ -13,7 +13,7 @@ import { map, share, switchMap, take } from 'rxjs/operators';
   templateUrl: './variant-reports.component.html',
   styleUrls: ['./variant-reports.component.css']
 })
-export class VariantReportsComponent implements OnInit {
+export class VariantReportsComponent implements OnInit, AfterViewInit {
   @ViewChild('families_pedigree') familiesPedigree: ElementRef;
   @ViewChild('legend') legend: ElementRef;
   familiesPedigreeTop: number;
@@ -36,7 +36,7 @@ export class VariantReportsComponent implements OnInit {
     private datasetsService: DatasetsService,
   ) { }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.route.parent.params.subscribe(
       (params: Params) => {
         this.selectedDatasetId = params['dataset'];
@@ -44,7 +44,9 @@ export class VariantReportsComponent implements OnInit {
     );
 
     this.selectedDataset$ = this.datasetsService.getSelectedDatasetObservable();
+  }
 
+  ngAfterViewInit() {
     //Done to avoid expression change after check
     setTimeout(() => {
       this.selectedDataset$.subscribe(dataset => {

@@ -26,6 +26,21 @@ class MockDatasetsService {
   }
 }
 
+class MockDatasetsDenovoService {
+  getSelectedDataset() {
+    return {id: "Denovo", accessRights: true};
+  }
+  getSelectedDatasetObservable() {
+    return of({id: "Denovo", accessRights: true});
+  }
+  getDatasetsLoadedObservable = function() {
+    return of();
+  };
+  getDataset(): Observable<any> {
+    return of({id: "Denovo", accessRights: true});
+  }
+}
+
 class ResizeServiceMock {
   addResizeEventListener(): null{
     return null
@@ -299,14 +314,14 @@ describe('VariantReportsComponent', () => {
   });
 });
 
-fdescribe('VariantReportsComponent Denovo', () => {
+describe('VariantReportsComponent Denovo', () => {
   let component: VariantReportsComponent;
   let fixture: ComponentFixture<VariantReportsComponent>;
 
   beforeEach(() => {
     const variantReportsServiceMock = new VariantReportsServiceMock('Denovo');
     const activatedRouteMock = new MockActivatedRoute('Denovo');
-    const datasetsServiceMock = new MockDatasetsService();
+    const datasetsServiceMock = new MockDatasetsDenovoService();
     TestBed.configureTestingModule({
       declarations: [ VariantReportsComponent ],
       imports: [ PedigreeChartModule, FormsModule ],
