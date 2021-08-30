@@ -37,11 +37,6 @@ export class VariantReportsComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    let datasetId$ = this.route.parent.params.pipe(
-      take(1),
-      map(params => <string>params['dataset'])
-    );
-
     this.route.parent.params.subscribe(
       (params: Params) => {
         this.selectedDatasetId = params['dataset'];
@@ -50,13 +45,11 @@ export class VariantReportsComponent implements OnInit {
 
     this.selectedDataset$ = this.datasetsService.getSelectedDatasetObservable();
 
-    this.selectedDataset$.subscribe(
-      dataset => {
+    //Done to avoid expression change after check
+    setTimeout(() => {
+      this.selectedDataset$.subscribe(dataset => {
         if (dataset && dataset.accessRights) {
-          this.variantReport$ = datasetId$.pipe(
-            switchMap(datasetId => this.variantReportsService.getVariantReport(datasetId)),
-            share()
-          );
+          this.variantReport$ = this.variantReportsService.getVariantReport(dataset.id);
 
           this.variantReport$.pipe(take(1)).subscribe(params => {
             this.pedigreeTables = params.familyReport.familiesCounters.map(
@@ -67,15 +60,15 @@ export class VariantReportsComponent implements OnInit {
                 )
               );
 
-            this.currentPeopleCounter = params.familyReport.peopleCounters[0];
+            this.currentPeopleCounter = params.peopleReport.peopleCounters[0];
             this.currentPedigreeTable = this.pedigreeTables[0];
             if(params.denovoReport !== null) {
               this.currentDenovoReport = params.denovoReport.tables[0];
             }
           });
         }
-      }
-    );
+      })
+    }, 0)
   }
 
   @HostListener('window:scroll', ['$event'])
