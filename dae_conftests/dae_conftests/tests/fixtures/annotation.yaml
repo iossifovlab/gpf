@@ -1,6 +1,6 @@
 effect_annotators:
   - annotator: effect_annotator
-    gene_models: test_gene_models
+    gene_models: hg38/GRCh38-hg38/gene_models/refSeq_20200330
     genome: hg38/GRCh38-hg38/genome
 
 

@@ -3,10 +3,11 @@ import os
 from importlib import import_module
 from dae.annotation.tools.score_annotator import PositionScoreAnnotator, \
     NPScoreAnnotator
+from dae.annotation.tools.effect_annotator import EffectAnnotator
 
 
 class AnnotatorFactory:
-    ANNOTATOR_NAMES = {
+    SCORE_ANNOTATOR_NAMES = {
         "position_score": PositionScoreAnnotator,
         "np_score": NPScoreAnnotator,
     }
@@ -34,12 +35,21 @@ class AnnotatorFactory:
         return clazz
 
     @classmethod
-    def make_annotator(
+    def make_score_annotator(
             cls, annotator_type, gr,
             liftover=None, override=None):
-        clazz = cls.ANNOTATOR_NAMES.get(annotator_type)
+        clazz = cls.SCORE_ANNOTATOR_NAMES.get(annotator_type)
         assert clazz is not None
         return clazz(gr, liftover=liftover, override=override)
+
+    @classmethod
+    def make_effect_annotator(
+            cls, annotator, gene_models, genome, override=None, **kwargs):
+        assert annotator == "effect_annotator"
+
+        return EffectAnnotator(
+                gene_models=gene_models,
+                genome=genome)
 
 
 def handle_chrom_prefix(expect_prefix, data):

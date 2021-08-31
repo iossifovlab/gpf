@@ -7,4 +7,4 @@ def test_build_pipeline(
     pipeline = AnnotationPipeline.build(
         annotation_config, anno_grdb
     )
-    assert len(pipeline.annotators) == 2
+    assert len(pipeline.annotators) == 3

@@ -25,13 +25,33 @@ class AnnotationPipeline():
             pipeline_config_path, annotation_conf_schema
         )
         pipeline = AnnotationPipeline(pipeline_config, resource_db)
-        for annotator in pipeline_config.score_annotators:
-            score_id = annotator["resource"]
-            liftover = annotator["liftover"]
-            annotator_type = annotator["annotator"]
-            override = annotator.get("override")
+
+        assert len(pipeline_config.effect_annotators) == 1
+
+        for annotator_config in pipeline_config.effect_annotators:
+            annotator_type = annotator_config["annotator"]
+
+            gene_models_id = annotator_config["gene_models"]
+            genome_id = annotator_config["genome"]
+            override = annotator_config.get("override")
+
+            gene_models = resource_db.get_resource(gene_models_id)
+            assert gene_models is not None, gene_models_id
+
+            genome = resource_db.get_resource(genome_id)
+            assert genome is not None, genome_id
+
+            effect_annotator = AnnotatorFactory.make_effect_annotator(
+                annotator_type, gene_models, genome, override=override)
+            pipeline.add_annotator(effect_annotator)
+
+        for annotator_config in pipeline_config.score_annotators:
+            score_id = annotator_config["resource"]
+            liftover = annotator_config["liftover"]
+            annotator_type = annotator_config["annotator"]
+            override = annotator_config.get("override")
             gs = resource_db.get_resource(score_id)
-            annotator = AnnotatorFactory.make_annotator(
+            annotator = AnnotatorFactory.make_score_annotator(
                 annotator_type, gs, liftover, override
             )
             pipeline.add_annotator(annotator)

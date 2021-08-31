@@ -4,7 +4,7 @@ resource_type: gene_models_resource.GeneModelsResource
 
 filename: refSeq_20200330.txt
 
-format: "default"
+format: "refseq"
 
 
 meta: |
