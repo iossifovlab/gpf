@@ -27,5 +27,15 @@ children:
     type: resource
   - id: hg38/TESTphastCons100way
     type: resource
+  - id: hg38/GRCh38-hg38
+    type: group
+    children:
+    - id: hg38/GRCh38-hg38/genome
+      type: resource
+    - id: hg38/GRCh38-hg38/gene_models
+      type: group
+      children:
+      - id: hg38/GRCh38-hg38/gene_models/refSeq_20200330
+        type: resource
   - id: hg38/TESTFreq
     type: resource

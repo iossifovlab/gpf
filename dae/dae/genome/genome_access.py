@@ -116,9 +116,9 @@ class GenomicSequence(GenomicSequenceBase):
 
         self._sequence = open(self.genome_filename)
 
-    def create_index_file(self, file):
+    def create_index_file(self):
         from pysam import faidx
-        faidx(file)
+        faidx(self.genome_filename)
 
     @staticmethod
     def load_genome(filename):

@@ -1,0 +1,13 @@
+id: hg38/GRCh38-hg38/gene_models/refSeq_20200330
+
+resource_type: gene_models_resource.GeneModelsResource
+
+filename: refSeq_20200330.txt
+
+format: "default"
+
+
+meta: |
+  ## refSeq gene models for HG38 from 2020-03
+
+  Default gene models used by GPF for HG38.

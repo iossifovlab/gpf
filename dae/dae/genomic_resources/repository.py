@@ -1,3 +1,4 @@
+from io import TextIOWrapper
 import os
 import yaml
 from typing import Dict
@@ -276,7 +277,12 @@ class HTTPGenomicResourcesRepo(GenomicResourcesRepo):
             for chunk in response.iter_content(chunk_size=8192):
                 yield chunk
 
-    def open_file(self, resource_id: str, filename: str):
+    def open_file(self, resource_id: str, filename: str, mode: str = "r"):
+        if mode not in {"r", "rb"}:
+            raise ValueError(f"unexpected mode for HTTP resource file: {mode}")
         resource = self.get_resource(resource_id)
         file_url = os.path.join(resource.get_url(), filename)
-        return HTTPFile(file_url)
+        if mode == "r":
+            return TextIOWrapper(HTTPFile(file_url))
+        else:
+            return HTTPFile(file_url)

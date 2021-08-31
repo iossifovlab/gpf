@@ -25,7 +25,7 @@ class AnnotationPipeline():
             pipeline_config_path, annotation_conf_schema
         )
         pipeline = AnnotationPipeline(pipeline_config, resource_db)
-        for annotator in pipeline_config.annotators:
+        for annotator in pipeline_config.score_annotators:
             score_id = annotator["resource"]
             liftover = annotator["liftover"]
             annotator_type = annotator["annotator"]
@@ -39,7 +39,8 @@ class AnnotationPipeline():
 
     @property
     def output_columns(self):
-        return chain(annotator.output_columns for annotator in self.annotators)
+        return chain(
+            annotator.output_columns for annotator in self.annotators)
 
     def add_annotator(self, annotator):
         assert isinstance(annotator, Annotator)

@@ -43,7 +43,7 @@ class GenomicSequenceResource(GenomicResource, GenomicSequenceBase):
         index_filename = self.get_config().index_file.filename
         with self.open_file(index_filename) as index_file:
             content = index_file.read()
-            print(content)
+            print("content:", content)
             self._load_genome_index(content)
         self._sequence = self.open_file(self.get_config().filename)
 

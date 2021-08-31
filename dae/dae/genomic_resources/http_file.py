@@ -47,6 +47,7 @@ class HTTPRawIO(RawIOBase):
         self._position = range_end
         response = requests.get(self.url, headers=headers)
         content = response.content
+
         return content
 
     def readall(self):
