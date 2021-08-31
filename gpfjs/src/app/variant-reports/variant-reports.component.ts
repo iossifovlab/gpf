@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener} from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, HostListener, AfterViewInit} from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
 import { Observable } from 'rxjs';
 import { VariantReportsService } from './variant-reports.service';
@@ -13,7 +13,7 @@ import { map, share, switchMap, take } from 'rxjs/operators';
   templateUrl: './variant-reports.component.html',
   styleUrls: ['./variant-reports.component.css']
 })
-export class VariantReportsComponent implements OnInit {
+export class VariantReportsComponent implements OnInit, AfterViewInit {
   @ViewChild('families_pedigree') familiesPedigree: ElementRef;
   @ViewChild('legend') legend: ElementRef;
   familiesPedigreeTop: number;
@@ -36,12 +36,7 @@ export class VariantReportsComponent implements OnInit {
     private datasetsService: DatasetsService,
   ) { }
 
-  ngOnInit() {
-    let datasetId$ = this.route.parent.params.pipe(
-      take(1),
-      map(params => <string>params['dataset'])
-    );
-
+  ngOnInit(): void {
     this.route.parent.params.subscribe(
       (params: Params) => {
         this.selectedDatasetId = params['dataset'];
@@ -49,14 +44,14 @@ export class VariantReportsComponent implements OnInit {
     );
 
     this.selectedDataset$ = this.datasetsService.getSelectedDatasetObservable();
+  }
 
-    this.selectedDataset$.subscribe(
-      dataset => {
+  ngAfterViewInit() {
+    //Done to avoid expression change after check
+    setTimeout(() => {
+      this.selectedDataset$.subscribe(dataset => {
         if (dataset && dataset.accessRights) {
-          this.variantReport$ = datasetId$.pipe(
-            switchMap(datasetId => this.variantReportsService.getVariantReport(datasetId)),
-            share()
-          );
+          this.variantReport$ = this.variantReportsService.getVariantReport(dataset.id);
 
           this.variantReport$.pipe(take(1)).subscribe(params => {
             this.pedigreeTables = params.familyReport.familiesCounters.map(
@@ -67,15 +62,15 @@ export class VariantReportsComponent implements OnInit {
                 )
               );
 
-            this.currentPeopleCounter = params.familyReport.peopleCounters[0];
+            this.currentPeopleCounter = params.peopleReport.peopleCounters[0];
             this.currentPedigreeTable = this.pedigreeTables[0];
             if(params.denovoReport !== null) {
               this.currentDenovoReport = params.denovoReport.tables[0];
             }
           });
         }
-      }
-    );
+      })
+    }, 0)
   }
 
   @HostListener('window:scroll', ['$event'])

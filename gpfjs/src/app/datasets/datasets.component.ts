@@ -1,11 +1,11 @@
 import { UsersService } from '../users/users.service';
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, toolPageLinks } from './datasets';
 // tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import * as _ from 'lodash';
+import { isEmpty } from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
@@ -22,7 +22,6 @@ export class DatasetsComponent implements OnInit {
   datasets$: Observable<Dataset[]>;
   datasetTrees: DatasetNode[];
   selectedDataset: Dataset;
-  selectedDataset$;
   permissionDeniedPrompt: string;
   public toolPageLinks = toolPageLinks;
 
@@ -35,50 +34,56 @@ export class DatasetsComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.route.params.subscribe(
-      (params: Params) => {
-        this.datasetsService.setSelectedDatasetById(params['dataset']);
-      });
+    this.route.params.subscribe((params: Params) => {
+      if (isEmpty(params)) {
+        return;
+      }
+
+      this.datasetsService.setSelectedDatasetById(params['dataset']);
+    });
 
     this.datasets$ = this.filterHiddenGroups(this.datasetsService.getDatasetsObservable());
 
     this.createDatasetHierarchy();
-    this.selectedDataset = this.datasetsService.getSelectedDataset();
-    this.selectedDataset$ = this.datasetsService.getSelectedDatasetObservable();
+    this.setupSelectedDataset();
 
     this.datasetsService.getDatasetsLoadedObservable().subscribe(() => {
-      this.selectedDataset = this.datasetsService.getSelectedDataset();
-      if (!this.selectedDataset) {
-        return;
-      }
-
-      this.registerAlertVisible = !this.selectedDataset.accessRights;
-
-      if (!this.isToolSelected()) {
-        this.router.navigate(['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]);
-      } else {
-        const url = this.router.url.split('/');
-        const toolName = url[url.indexOf('datasets') + 2];
-
-        if (!this.isToolEnabled(this.selectedDataset, toolName)) {
-          this.router.navigate(['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]);
-        }
-      }
+      this.setupSelectedDataset();
     });
 
     this.datasets$.pipe(take(1)).subscribe(datasets => {
-      if (!this.datasetsService.hasLoadedAnyDataset && !this.datasetsService.hasSelectedDataset()) {
+      if (this.router.url === '/datasets') {
         this.datasetsService.setSelectedDataset(datasets[0]);
       }
     });
 
     this.usersService.getUserInfoObservable().subscribe(() => {
-      this.datasetsService.reloadSelectedDataset();
+      this.datasetsService.reloadSelectedDataset(true);
     });
 
     this.datasetsService.getPermissionDeniedPrompt().subscribe(
       aprompt => this.permissionDeniedPrompt = aprompt
     );
+  }
+
+  setupSelectedDataset(): void {
+    this.selectedDataset = this.datasetsService.getSelectedDataset();
+    if (!this.selectedDataset) {
+      return;
+    }
+
+    this.registerAlertVisible = !this.selectedDataset.accessRights;
+
+    if (!this.isToolSelected()) {
+      this.router.navigate(['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]);
+    } else {
+      const url = this.router.url.split('/');
+      const toolName = url[url.indexOf('datasets') + 2];
+
+      if (!this.isToolEnabled(this.selectedDataset, toolName)) {
+        this.router.navigate(['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]);
+      }
+    }
   }
 
   private isToolEnabled(dataset: Dataset, toolName: string): boolean {

@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync, tick } from '@angular/core/testing';
 
 import { VariantReportsComponent } from './variant-reports.component';
 import { PedigreeChartModule } from '../pedigree-chart/pedigree-chart.module'
@@ -23,6 +23,21 @@ class MockDatasetsService {
   };
   getDataset(): Observable<any> {
     return of({accessRights: true});
+  }
+}
+
+class MockDatasetsDenovoService {
+  getSelectedDataset() {
+    return {id: "Denovo", accessRights: true};
+  }
+  getSelectedDatasetObservable() {
+    return of({id: "Denovo", accessRights: true});
+  }
+  getDatasetsLoadedObservable = function() {
+    return of();
+  };
+  getDataset(): Observable<any> {
+    return of({id: "Denovo", accessRights: true});
   }
 }
 
@@ -102,6 +117,9 @@ class VariantReportsServiceMock {
             }
           }
         ],
+        familiesTotal: 1,
+      },
+      peopleReport: {
         peopleCounters: [
           {
             groupCounters: [
@@ -192,7 +210,6 @@ class VariantReportsServiceMock {
             getChildrenCounter: function() {return 0}
           }
         ],
-        familiesTotal: 1
       },
       denovoReport: null
     };
@@ -294,7 +311,7 @@ describe('VariantReportsComponent', () => {
   it('should not have denovo', () => {
     expect(component).toBeTruthy();
     expect(component.currentDenovoReport).toBeUndefined();
-  })
+  });
 });
 
 describe('VariantReportsComponent Denovo', () => {
@@ -304,7 +321,7 @@ describe('VariantReportsComponent Denovo', () => {
   beforeEach(() => {
     const variantReportsServiceMock = new VariantReportsServiceMock('Denovo');
     const activatedRouteMock = new MockActivatedRoute('Denovo');
-    const datasetsServiceMock = new MockDatasetsService();
+    const datasetsServiceMock = new MockDatasetsDenovoService();
     TestBed.configureTestingModule({
       declarations: [ VariantReportsComponent ],
       imports: [ PedigreeChartModule, FormsModule ],
@@ -327,14 +344,18 @@ describe('VariantReportsComponent Denovo', () => {
 
     component.ngOnInit();
     fixture.detectChanges();
+    component.ngAfterViewInit();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should have denovo', () => {
+  it('should have denovo', (done) => {
     expect(component).toBeTruthy();
-    expect(component.currentDenovoReport).toBeDefined();
+    setTimeout(() => {
+      expect(component.currentDenovoReport).toBeDefined();
+      done();
+    }, 0)
   })
 });
