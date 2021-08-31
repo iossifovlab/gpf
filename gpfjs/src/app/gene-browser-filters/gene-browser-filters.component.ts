@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnChanges } from '@angular/core';
-import { Gene, GeneViewSummaryAllele, GeneViewSummaryAllelesArray } from 'app/gene-view/gene';
+import { Gene } from 'app/gene-view/gene';
+import { SummaryAllele, SummaryAllelesArray } from 'app/gene-browser/summary-variants';
 
 @Component({
   selector: 'gpf-gene-browser-filters',
@@ -8,13 +9,13 @@ import { Gene, GeneViewSummaryAllele, GeneViewSummaryAllelesArray } from 'app/ge
 })
 export class GeneBrowserFiltersComponent implements OnChanges {
 
-  @Input() private summaryVariantsArray: GeneViewSummaryAllelesArray;
+  @Input() private summaryVariantsArray: SummaryAllelesArray;
   @Input() private selectedFrequencies: [number, number] = [0, 0];
   @Input() private selectedRegion: [number, number] = [0, 0];
   @Input() private enableCodingOnly: boolean;
   @Input() private selectedDatasetId: string;
   @Input() private selectedGene: Gene;
-  @Output() public filteredVariants = new EventEmitter<GeneViewSummaryAllelesArray>();
+  @Output() public filteredVariants = new EventEmitter<SummaryAllelesArray>();
 
   private showDenovo = true;
   private showTransmitted = true;
@@ -65,7 +66,7 @@ export class GeneBrowserFiltersComponent implements OnChanges {
     }
   }
 
-  private filterSummaryAllele(summaryAllele: GeneViewSummaryAllele, startPos: number, endPos: number) {
+  private filterSummaryAllele(summaryAllele: SummaryAllele, startPos: number, endPos: number) {
     if (
       (!this.isVariantEffectSelected(summaryAllele.effect))
       || (!this.showDenovo && summaryAllele.seenAsDenovo)
@@ -89,9 +90,9 @@ export class GeneBrowserFiltersComponent implements OnChanges {
   }
 
   public filterSummaryVariantsArray(
-    summaryVariantsArray: GeneViewSummaryAllelesArray, startPos: number, endPos: number
-  ): GeneViewSummaryAllelesArray {
-    const result = new GeneViewSummaryAllelesArray();
+    summaryVariantsArray: SummaryAllelesArray, startPos: number, endPos: number
+  ): SummaryAllelesArray {
+    const result = new SummaryAllelesArray();
     for (const summaryAllele of summaryVariantsArray.summaryAlleles) {
       if (this.filterSummaryAllele(summaryAllele, startPos, endPos)) {
         result.addSummaryAllele(summaryAllele);
@@ -129,7 +130,7 @@ export class GeneBrowserFiltersComponent implements OnChanges {
       'inheritanceTypeFilter': inheritanceFilters,
       'affectedStatus': Array.from(affectedStatus.values()),
       'variantType': this.selectedVariantTypes,
-      'geneSymbols': [this.selectedGene.gene],
+      'geneSymbols': [this.selectedGene.geneSymbol],
       'datasetId': this.selectedDatasetId,
     };
     return params;
@@ -158,7 +159,7 @@ export class GeneBrowserFiltersComponent implements OnChanges {
     return result;
   }
 
-  private getVariantAffectedStatus(summaryVariant: GeneViewSummaryAllele): string {
+  private getVariantAffectedStatus(summaryVariant: SummaryAllele): string {
     if (summaryVariant.seenInAffected) {
       if (summaryVariant.seenInUnaffected) {
         return 'Affected and unaffected';

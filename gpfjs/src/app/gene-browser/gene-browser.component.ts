@@ -2,7 +2,8 @@ import { AfterViewInit, Component, HostListener, OnInit, ViewChild } from '@angu
 import { ActivatedRoute, Params } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { GeneService } from 'app/gene-view/gene.service';
-import { Gene, GeneViewSummaryAllele, GeneViewSummaryAllelesArray, DomainRange } from 'app/gene-view/gene';
+import { Gene } from 'app/gene-view/gene';
+import { SummaryAllelesArray } from 'app/gene-browser/summary-variants';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
 // tslint:disable-next-line:import-blacklist
@@ -28,8 +29,8 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
   private geneSymbol = '';
   private maxFamilyVariants = 1000;
   private genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
-  private summaryVariantsArray: GeneViewSummaryAllelesArray;
-  private summaryVariantsArrayFiltered: GeneViewSummaryAllelesArray;
+  private summaryVariantsArray: SummaryAllelesArray;
+  private summaryVariantsArrayFiltered: SummaryAllelesArray;
   public selectedDataset: Dataset;
   private selectedDatasetId: string;
   private loadingFinished: boolean;
@@ -123,7 +124,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     this.familyLoadingFinished = false;
     const requestParams = {
       ...this.geneBrowserFiltersComponent.transformFamilyVariantsQueryParameters(),
-      'regions': this.genePlotComponent.getRegionString(...this.selectedRegion),
+      'regions': this.selectedGene.getRegionString(...this.selectedRegion),
       'maxVariantsCount': this.maxFamilyVariants,
       'summaryVariantIds': this.summaryVariantsArrayFiltered.summaryAlleleIds.reduce(
         (a, b) => a.concat(b), []
@@ -164,8 +165,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    const collapsedTranscript = this.selectedGene.collapsedTranscript();
-    this.selectedRegion = [collapsedTranscript.start, collapsedTranscript.stop];
+    this.selectedRegion = [this.selectedGene.collapsedTranscript.start, this.selectedGene.collapsedTranscript.stop];
     this.selectedFrequencies = [0, this.geneBrowserConfig.domainMax];
 
     this.queryService.summaryStreamingFinishedSubject.subscribe(async() => {
@@ -201,7 +201,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
   private onSubmit(event) {
     const requestParams = {
       ...this.geneBrowserFiltersComponent.transformFamilyVariantsQueryParameters(),
-      'regions': this.genePlotComponent.getRegionString(...this.selectedRegion),
+      'regions': this.selectedGene.getRegionString(...this.selectedRegion),
       'summaryVariantIds': this.summaryVariantsArrayFiltered.summaryAlleleIds.reduce(
         (a, b) => a.concat(b), []
       ),

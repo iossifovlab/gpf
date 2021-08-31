@@ -16,13 +16,13 @@ export class GeneService {
     private config: ConfigService,
   ) {}
 
-  getGene(geneSymbol: string) {
+  public getGene(geneSymbol: string) {
     return this.http
     .get(this.config.baseUrl + this.geneVisualizationUrl + geneSymbol)
-    .pipe(map((response: any) => Gene.fromJson(response)));
+    .pipe(map((response: object) => Gene.fromJson(response)));
   }
 
-  searchGenes(searchTerm: string) {
+  public searchGenes(searchTerm: string) {
     return this.http.get(this.config.baseUrl + this.geneSymbolSearchUrl + searchTerm);
   }
 }

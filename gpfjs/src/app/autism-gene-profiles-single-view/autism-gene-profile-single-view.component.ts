@@ -113,7 +113,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   getUCSCLink(gene: Gene, datasetGenome): string {
     const genome: string = datasetGenome;
     const chromosomePrefix: string = genome === 'hg38' ? '' : 'chr';
-    const chromosome: string = gene.transcripts[0].chrom;
+    const chromosome: string = gene.transcripts[0].chromosome;
     const geneStartPosition: number = gene.transcripts[0].start;
     const geneStopPosition: number = gene.transcripts[gene.transcripts.length - 1].stop;
 
