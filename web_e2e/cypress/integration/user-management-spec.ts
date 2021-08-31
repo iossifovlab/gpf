@@ -93,7 +93,7 @@ describe('User management tests', () => {
     deleteTestUser(page);
   });
 
-  it('should create and delete group', () => {
+  it.skip('should create and delete group', () => {
     page.datasetsButton.click();
 
     page.datasetsTableAddGroupToLastDatasetInputField.type('test_group');
