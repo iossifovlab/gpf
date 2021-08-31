@@ -2,7 +2,7 @@ import { GeneBrowserPage } from 'cypress/elements/gene-browser-page';
 import { GeneViewPage } from 'cypress/elements/gene-view-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-describe('Gene view tests', () => {
+describe.skip('Gene view tests', () => {
   const page = new GeneViewPage();
   const geneBrowserPage = new GeneBrowserPage();
 
