@@ -108,6 +108,7 @@ export class BasePage {
   }
 
   openDatasetsDropdownMenu() {
+    cy.wait(500);
     this.datasetsDropdownMenuButton.click();
     this.waitForDatasetsDropdownItems();
   }
