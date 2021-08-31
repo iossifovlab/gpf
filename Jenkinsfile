@@ -1,6 +1,5 @@
-
 pipeline {
-  agent { label 'piglet || pooh || dory' }
+  agent { label 'piglet' }
   options {
     copyArtifactPermission('/iossifovlab/*,/seqpipe/*');
   }
@@ -25,9 +24,25 @@ pipeline {
         }
       }
     }
+/*
+    stage('SonarQube') {
+      steps {
+        script {
+          def scannerHome = tool 'sonarqube-scanner-default';
+          withSonarQubeEnv() {
+            sh "${scannerHome}/bin/sonar-scanner"
+          }
+        }
+      }
+    }
+*/
   }
   post {
     always {
+      zulipNotification(
+        topic: "${env.JOB_NAME}"
+      )
+
       junit 'test-results/wdae-junit.xml, test-results/dae-junit.xml'
 
       cobertura coberturaReportFile: 'test-results/dae-coverage.xml', enableNewApi: true
@@ -40,10 +55,6 @@ pipeline {
           myPy(pattern: 'test-results/mypy_dae_report', reportEncoding: 'UTF-8', id: 'mypy-dae', name: 'MyPy - dae'),
           myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8', id: 'mypy-wdae', name: 'MyPy - wdae')
         ]
-      )
-
-      zulipNotification(
-        topic: "${env.JOB_NAME}"
       )
     }
   }

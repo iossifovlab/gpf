@@ -712,27 +712,36 @@ class AlleleParquetSerializer:
         vectors = dict()
         for allele in summary_variant.alleles:
             vector = []
-            product_properties = []
             if allele.allele_index not in vectors:
                 vectors[allele.allele_index] = []
             for spr in self.searchable_properties_summary:
                 if spr in self.PRODUCT_PROPERTIES_LIST:
-                    product_properties.append(spr)
                     continue
                 prop_value = self._get_searchable_prop_value(allele, spr)
                 vector.append(prop_value)
             vector = [vector]
-            for prop in product_properties:
-                prop_value = getattr(allele, prop, None)
-                if prop_value is None:
-                    prop_value = allele.get_attribute(prop)
-                if not len(prop_value):
-                    prop_value = [None]
-                vector = list(itertools.product(vector, prop_value))
-                vector = [list(itertools.chain.from_iterable(map(
-                    lambda x: x if isinstance(x, list) else [x],
-                    subvector
-                ))) for subvector in vector]
+
+            effect_types = getattr(allele, "effect_types", None)
+            if effect_types is None:
+                effect_types = allele.get_attribute("effect_types")
+            if not len(effect_types):
+                effect_types = [None]
+
+            effect_gene_syms = getattr(allele, "effect_gene_symbols", None)
+            if effect_gene_syms is None:
+                effect_gene_syms = allele.get_attribute("effect_gene_symbols")
+            if not len(effect_gene_syms):
+                effect_gene_syms = [None]
+
+            vector = list(
+                itertools.product(vector, effect_types)
+            )
+            for idx, egs in enumerate(effect_gene_syms):
+                vector[idx] += tuple([egs])
+            vector = [list(itertools.chain.from_iterable(map(
+                lambda x: x if isinstance(x, list) else [x],
+                subvector
+            ))) for subvector in vector]
             vectors[allele.allele_index].append(list(vector))
         return {
             k: list(itertools.chain.from_iterable(v))
