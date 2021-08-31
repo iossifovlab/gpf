@@ -5,7 +5,7 @@ import { Dataset, toolPageLinks } from './datasets';
 // tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import * as _ from 'lodash';
+import { isEmpty } from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
@@ -34,15 +34,17 @@ export class DatasetsComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.route.params.subscribe(
-      (params: Params) => {
-        this.datasetsService.setSelectedDatasetById(params['dataset']);
-      });
+    this.route.params.subscribe((params: Params) => {
+      if (isEmpty(params)) {
+        return;
+      }
+
+      this.datasetsService.setSelectedDatasetById(params['dataset']);
+    });
 
     this.datasets$ = this.filterHiddenGroups(this.datasetsService.getDatasetsObservable());
 
     this.createDatasetHierarchy();
-    this.selectedDataset = this.datasetsService.getSelectedDataset();
     this.setupSelectedDataset();
 
     this.datasetsService.getDatasetsLoadedObservable().subscribe(() => {
@@ -50,7 +52,7 @@ export class DatasetsComponent implements OnInit {
     });
 
     this.datasets$.pipe(take(1)).subscribe(datasets => {
-      if (!this.datasetsService.hasLoadedAnyDataset && !this.datasetsService.hasSelectedDataset()) {
+      if (this.router.url === '/datasets') {
         this.datasetsService.setSelectedDataset(datasets[0]);
       }
     });

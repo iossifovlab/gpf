@@ -19,7 +19,6 @@ export class DatasetsService {
   private datasets$ = new ReplaySubject<Array<Dataset>>(1);
   private selectedDataset$ = new BehaviorSubject<Dataset>(null);
   private datasetLoaded$ = new Subject<void>();
-  private _hasLoadedAnyDataset = false;
 
   constructor(
     private http: HttpClient,
@@ -66,10 +65,8 @@ export class DatasetsService {
     }
 
     this.selectedDataset$.next(null);
-
     this.getDataset(datasetId).pipe(take(1)).subscribe(dataset => {
       this.selectedDataset$.next(dataset);
-      this._hasLoadedAnyDataset = true;
       this.datasetLoaded$.next();
     });
   }
@@ -91,27 +88,23 @@ export class DatasetsService {
     return this.selectedDataset$.getValue();
   }
 
-  getSelectedDatasetId() {
+  getSelectedDatasetId(): string {
     return this.selectedDataset$.getValue().id;
   }
 
-  getDatasetsObservable() {
+  getDatasetsObservable(): Observable<Dataset[]> {
     return this.datasets$.asObservable();
   }
 
-  getDatasetsLoadedObservable() {
+  getDatasetsLoadedObservable(): Subject<void> {
     return this.datasetLoaded$;
   }
 
-  hasSelectedDataset() {
+  hasSelectedDataset(): boolean {
     return !!this.selectedDataset$.getValue();
   }
 
-  get hasLoadedAnyDataset() {
-    return this._hasLoadedAnyDataset;
-  }
-
-  private reloadAllDatasets() {
+  private reloadAllDatasets(): void {
     this.getDatasets().pipe(take(1)).subscribe(() => {});
   }
 
