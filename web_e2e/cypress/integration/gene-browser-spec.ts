@@ -19,7 +19,7 @@ describe('Gene browser tests', () => {
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.geneBrowser);
     page.searchInputBox.type('chd8');
     page.goButton.click();
-    page.geneView.should('be.visible');
+    page.genePlot.should('be.visible');
     page.genotypePreviewTable.should('be.visible');
   });
 

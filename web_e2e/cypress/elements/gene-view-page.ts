@@ -25,15 +25,15 @@ export class GeneViewPage extends BasePage {
   }
 
   get undoButton() {
-    return cy.get('button[title="Undo (Ctrl+Z)"]');
+    return cy.get('#undo-button');
   }
 
   get redoButton() {
-    return cy.get('button[title="Redo (Ctrl+Y)"]');
+    return cy.get('#redo-button');
   }
 
   get resetButton() {
-    return cy.get('button[title="Reset (Double-click)"]');
+    return cy.get('#reset-button');
   }
 
   get hideTranscriptsCheckbox() {

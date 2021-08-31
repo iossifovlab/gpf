@@ -13,8 +13,8 @@ export class GeneBrowserPage extends BasePage {
     return cy.get('input[value=\'Go\']');
   }
 
-  get geneView() {
-    return cy.get('gpf-gene-view');
+  get genePlot() {
+    return cy.get('gpf-gene-plot');
   }
 
   get genotypePreviewTable() {
