@@ -239,6 +239,12 @@ class GenomicScoresResource(GenomicResource):
     def get_default_annotation(self):
         return self._config.default_annotation
 
+    def get_score_default_annotation(self, score_id):
+        for conf in self._config.default_annotation.attributes:
+            if conf.source == score_id:
+                return conf
+        return None
+
 
 class PositionScoreResource(GenomicScoresResource):
 
