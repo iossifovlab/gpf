@@ -16,6 +16,7 @@ import { GenePlotComponent } from 'app/gene-plot/gene-plot.component';
 import { GeneBrowserFiltersComponent } from 'app/gene-browser-filters/gene-browser-filters.component';
 import { ConfigService } from 'app/config/config.service';
 import { CODING, CNV, LGDS } from 'app/effecttypes/effecttypes';
+import { clone } from 'lodash';
 
 @Component({
   selector: 'gpf-gene-browser',
@@ -172,7 +173,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
       this.loadingFinished = true;
       await this.waitForGenePlotComponent();
       this.loadingService.setLoadingStop();
-      this.updateShownTablePreviewVariantsArray();
+      // this.updateShownTablePreviewVariantsArray();
     });
 
     this.queryService.streamingFinishedSubject.subscribe(() => {
@@ -192,10 +193,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     }
 
     this.summaryVariantsArray = this.queryService.getGeneViewVariants(requestParams);
-    await this.queryService.summaryStreamingFinishedSubject.pipe(first()).toPromise();
-    this.summaryVariantsArrayFiltered = this.geneBrowserFiltersComponent.filterSummaryVariantsArray(
-      this.summaryVariantsArray, ...this.selectedRegion
-    );
+    this.summaryVariantsArrayFiltered = clone(this.summaryVariantsArray);
   }
 
   private onSubmit(event) {
@@ -228,5 +226,11 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
 
   private setSelectedFrequencies(domain: [number, number]) {
     this.selectedFrequencies = domain;
+  }
+
+  private async updateFilteredSummaryAlleles(variants: SummaryAllelesArray) {
+    await this.waitForGenePlotComponent();
+    this.summaryVariantsArrayFiltered = variants;
+    this.updateShownTablePreviewVariantsArray();
   }
 }

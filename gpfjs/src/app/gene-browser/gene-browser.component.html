@@ -27,7 +27,7 @@
         [enableCodingOnly]="enableCodingOnly"
         [selectedDatasetId]="selectedDatasetId"
         [selectedGene]="selectedGene"
-        (filteredVariants)="summaryVariantsArrayFiltered = $event; updateShownTablePreviewVariantsArray()">
+        (filteredVariants)="updateFilteredSummaryAlleles($event)">
       </gpf-gene-browser-filters>
       <gpf-gene-plot
         [gene]="selectedGene"

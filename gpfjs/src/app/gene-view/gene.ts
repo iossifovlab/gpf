@@ -37,17 +37,16 @@ function collapseTranscripts(transcripts: Transcript[]): Transcript {
 }
 
 export class TranscriptSegment {
-
   public readonly length: number;
 
   constructor(
     public readonly chromosome: string,
     public readonly start: number,
     public readonly stop: number,
-    public readonly isExon: boolean = true,
-    public readonly isCDS: boolean = false,
-    public readonly isSpacer: boolean = false,
-    public readonly label: string = 'unlabeled segment'
+    public readonly isExon: boolean,
+    public readonly isCDS: boolean,
+    public readonly isSpacer: boolean,
+    public readonly label: string,
   ) {
     this.length = (this.stop - this.start) * (this.isSpacer ? 2 : 1);
   }
@@ -68,12 +67,10 @@ export class TranscriptSegment {
 }
 
 export class Transcript {
-
   public readonly start: number;
   public readonly stop: number;
   public readonly length: number;
   public readonly medianExonLength: number;
-
   public readonly segments: TranscriptSegment[] = [];
 
   constructor(
@@ -153,7 +150,6 @@ export class Transcript {
 }
 
 export class Gene {
-
   public readonly collapsedTranscript: Transcript;
   public readonly chromosomes: Map<string, [number, number]>;
 
