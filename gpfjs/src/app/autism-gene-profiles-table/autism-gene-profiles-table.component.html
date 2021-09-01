@@ -6,9 +6,9 @@
           <span>Gene</span>
         </th>
 
-        <ng-container *ngFor="let a of ['1', '2', '3']">
-          <ng-container *ngIf="a === '3'">
-            <ng-container  *ngFor="let geneSetCategory of shownGeneSetsCategories">
+        <ng-container *ngFor="let element of config.order">
+          <ng-container *ngIf="element.section === 'geneSets'">
+            <ng-container *ngIf="getGeneSetsCategory(element.id); let geneSetCategory">
               <th class="table-main-header category-border" style="position: sticky; top: 0px; max-width: 100px;" [attr.colspan]="geneSetCategory.sets.length">
                 <div class="table-main-header-text" style="margin-right: 40px">
                   <gpf-sorting-buttons class="sorting-buttons" [id]="geneSetCategory.category + '_rank'" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
@@ -24,9 +24,8 @@
             </ng-container>
           </ng-container>
 
-
-          <ng-container *ngIf="a === '2'">
-            <ng-container *ngFor="let genomicScoresCategory of shownGenomicScoresCategories">
+          <ng-container *ngIf="element.section === 'genomicScores'">
+            <ng-container *ngIf="getGenomicScoresCategory(element.id); let genomicScoresCategory">
               <th class="table-main-header category-border" style="position: sticky; top: 0px; max-width: 100px;" [attr.colspan]="genomicScoresCategory.scores.length">
                 <div class="table-main-header-text" style="margin-right: 30px">
                   <span [title]="genomicScoresCategory.displayName">{{genomicScoresCategory.displayName}}</span>
@@ -41,8 +40,8 @@
             </ng-container>
           </ng-container>
 
-          <ng-container *ngIf="a === '1'">
-            <th *ngFor="let dataset of shownDatasets" class="table-main-header category-border" style="position: sticky; top: 0px" [attr.colspan]="calculateDatasetColspan(dataset)">
+          <ng-container *ngIf="element.section === 'datasets'">
+            <th *ngIf="getDataset(element.id); let dataset" class="table-main-header category-border" style="position: sticky; top: 0px" [attr.colspan]="calculateDatasetColspan(dataset)">
               <div class="table-main-header-text" style="margin-right: 30px">
                 <span [title]="dataset.meta ? dataset.meta : ''">{{dataset.displayName}}</span>
               </div>
@@ -65,10 +64,9 @@
             class="form-control" autocomplete="off" type="text" placeholder="Search">
         </th>
 
-        <ng-container *ngFor="let a of ['1', '2', '3']">
-
-          <ng-container *ngIf="a === '3'">
-            <ng-container *ngFor="let geneSetCategory of shownGeneSetsCategories">
+        <ng-container *ngFor="let element of config.order">
+          <ng-container *ngIf="element.section === 'geneSets'">
+            <ng-container *ngIf="getGeneSetsCategory(element.id); let geneSetCategory">
               <th class="table-subheader" style="white-space: normal;" rowspan="2" *ngFor="let geneSet of geneSetCategory.sets; let i = index" [ngClass] = "{'category-border': i === 0}">
                 <span class="vertical-text" [title]="geneSet.meta ? geneSet.meta : ''">{{geneSet.setId}}</span>
                 <gpf-sorting-buttons [id]="geneSet.collectionId + '_' + geneSet.setId" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
@@ -76,8 +74,8 @@
             </ng-container>
           </ng-container>
 
-          <ng-container *ngIf="a === '2'">
-            <ng-container *ngFor="let genomicScoresCategory of shownGenomicScoresCategories">
+          <ng-container *ngIf="element.section === 'genomicScores'">
+            <ng-container *ngIf="getGenomicScoresCategory(element.id); let genomicScoresCategory">
               <th class="table-subheader" style="white-space: normal;"rowspan="2" *ngFor="let genomicScore of genomicScoresCategory.scores; let i = index" [ngClass] = "{'category-border': i === 0}">
                 <span class="vertical-text" [title]="genomicScore.meta ? genomicScore.meta : ''">{{genomicScore.scoreName}}</span>
                 <gpf-sorting-buttons [id]="genomicScoresCategory.category + '_' + genomicScore.scoreName" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
@@ -85,9 +83,8 @@
             </ng-container>
           </ng-container>
 
-
-          <ng-container *ngIf="a === '1'">
-            <ng-container *ngFor="let dataset of shownDatasets">
+          <ng-container *ngIf="element.section === 'datasets'">
+            <ng-container *ngIf="getDataset(element.id); let dataset">
               <ng-container *ngFor="let personSet of dataset.personSets; let i = index">
                 <th class="table-subheader" [attr.colspan]="personSet.statistics.length" [ngClass] = "{'category-border': i === 0}">
                   <div class="table-main-header-text" style="margin-right: 30px">
@@ -104,7 +101,6 @@
               </ng-container>
             </ng-container>
           </ng-container>
-
 
         </ng-container>
       </tr>
@@ -126,18 +122,17 @@
           {{gene.geneSymbol}}
         </td>
 
-        <ng-container *ngFor="let a of ['1', '2', '3']">
-          <ng-container *ngIf="a === '3'">
-          <ng-container *ngFor="let geneSetCategory of shownGeneSetsCategories">
-            <td style="min-width: 70px" *ngFor="let geneSet of geneSetCategory.sets; let i = index" [ngClass] = "{'category-border': i === 0}">
-              <ng-container *ngIf="gene.geneSets.indexOf(geneSet.collectionId + '_' + geneSet.setId) !== -1">&#10003;</ng-container>
-            </td>
+        <ng-container *ngFor="let element of config.order">
+          <ng-container *ngIf="element.section === 'geneSets'">
+            <ng-container *ngIf="getGeneSetsCategory(element.id); let geneSetCategory">
+              <td style="min-width: 70px" *ngFor="let geneSet of geneSetCategory.sets; let i = index" [ngClass] = "{'category-border': i === 0}">
+                <ng-container *ngIf="gene.geneSets.indexOf(geneSet.collectionId + '_' + geneSet.setId) !== -1">&#10003;</ng-container>
+              </td>
+            </ng-container>
           </ng-container>
-        </ng-container>
 
-
-          <ng-container *ngIf="a === '2'">
-            <ng-container *ngFor="let genomicScoresCategory of shownGenomicScoresCategories">
+          <ng-container *ngIf="element.section === 'genomicScores'">
+            <ng-container *ngIf="getGenomicScoresCategory(element.id); let genomicScoresCategory">
               <td style="min-width: 70px" *ngFor="let genomicScore of genomicScoresCategory.scores; let i = index" [ngClass] = "{'category-border': i === 0}">
                 <ng-container *ngIf="getGeneScoreValue(gene, genomicScoresCategory.category, genomicScore.scoreName) !== 'null' &&
                                     getGeneScoreValue(gene, genomicScoresCategory.category, genomicScore.scoreName) !== 'NaN'">
@@ -147,8 +142,8 @@
             </ng-container>
           </ng-container>
 
-          <ng-container *ngIf="a === '1'">
-            <ng-container *ngFor="let dataset of shownDatasets">
+          <ng-container *ngIf="element.section === 'datasets'">
+            <ng-container *ngIf="getDataset(element.id); let dataset">
               <ng-container *ngFor="let personSet of dataset.personSets; let i = index">
                 <td [class.link-td]="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id).count"
                 style="min-width: 70px;"
