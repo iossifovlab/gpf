@@ -68,10 +68,10 @@ export class GeneBrowserFiltersComponent implements OnChanges {
 
   private filterSummaryAllele(summaryAllele: SummaryAllele, startPos: number, endPos: number) {
     if (
-      (!this.isVariantEffectSelected(summaryAllele.effect))
+      (!this.isEffectTypeSelected(summaryAllele.effect))
       || (!this.showDenovo && summaryAllele.seenAsDenovo)
       || (!this.showTransmitted && !summaryAllele.seenAsDenovo)
-      || (!this.selectedAffectedStatus.has(this.getVariantAffectedStatus(summaryAllele)))
+      || (!this.selectedAffectedStatus.has(summaryAllele.affectedStatus))
       || (!this.isVariantTypeSelected(summaryAllele.variant))
     ) {
       return false;
@@ -113,10 +113,9 @@ export class GeneBrowserFiltersComponent implements OnChanges {
 
     let effects: string[] = Array.from(this.selectedEffectTypes);
     if (effects.includes('other')) {
-      effects = effects.filter(ef => ef !== 'other');
-      effects = effects.concat(this.otherEffectTypes);
+      effects = effects.filter(ef => ef !== 'other').concat(this.otherEffectTypes);
       if (this.enableCodingOnly) {
-        effects = effects.filter(et => this.codingEffectTypes.indexOf(et) >= 0);
+        effects = effects.filter(et => this.codingEffectTypes.includes(et));
       }
     }
     const affectedStatus = new Set(this.selectedAffectedStatus);
@@ -136,7 +135,7 @@ export class GeneBrowserFiltersComponent implements OnChanges {
     return params;
   }
 
-  private isVariantEffectSelected(variantEffect: string): boolean {
+  private isEffectTypeSelected(variantEffect: string): boolean {
     let result = false;
     variantEffect = variantEffect.toLowerCase();
 
@@ -144,31 +143,17 @@ export class GeneBrowserFiltersComponent implements OnChanges {
       result = true;
     }
 
-    if (this.lgds.indexOf(variantEffect) !== -1) {
-      if (this.selectedEffectTypes.has('lgds')) {
-        result = true;
-      }
+    if (this.selectedEffectTypes.has('lgds') && this.lgds.includes(variantEffect)) {
+      result = true;
     } else if (
-      variantEffect !== 'missense' && variantEffect !== 'synonymous' &&
-      variantEffect !== 'cnv+' && variantEffect !== 'cnv-' &&
-      this.selectedEffectTypes.has('other')
+      variantEffect !== 'missense' && variantEffect !== 'synonymous'
+      && variantEffect !== 'cnv+' && variantEffect !== 'cnv-'
+      && this.selectedEffectTypes.has('other')
     ) {
       result = true;
     }
 
     return result;
-  }
-
-  private getVariantAffectedStatus(summaryVariant: SummaryAllele): string {
-    if (summaryVariant.seenInAffected) {
-      if (summaryVariant.seenInUnaffected) {
-        return 'Affected and unaffected';
-      } else {
-        return 'Affected only';
-      }
-    } else {
-      return 'Unaffected only';
-    }
   }
 
   private isVariantTypeSelected(variantType: string): boolean {

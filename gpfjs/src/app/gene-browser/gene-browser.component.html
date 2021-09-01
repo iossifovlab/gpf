@@ -9,7 +9,7 @@
         </div>
 
         <div style="padding: 0px 10px 10px 20px">
-          <input (click)="hideResults = true" style="margin-right: 10px;" type="checkbox" id="coding-only-checkbox" [(ngModel)]="enableCodingOnly">
+          <input (click)="hideResults = true" style="margin-right: 10px;" type="checkbox" id="coding-only-checkbox" [(ngModel)]="summaryVariantsFilter.codingOnly">
           <label for="coding-only-checkbox" style="user-select: none">Coding only</label>
         </div>
       </div>
@@ -19,23 +19,86 @@
       <input type="button" style="width: 75px" class="btn btn-md btn-primary" value="Go" (click)="submitGeneRequest()">
     </div>
 
+    <div id="filters" class="row" style="margin-left: 0px">
+      <div class="effect-card card filter">
+        <div class="card-header card-title">
+          Affected Status
+        </div>
+        <div class="card-block">
+          <div *ngFor="let affectedStatus of affectedStatusValues; let i=index" class="checkbox">
+            <label class="filter-label">
+              <input #affectedStatusCheckbox checked type="checkbox" id="affectedStatus{{affectedStatus}}-checkbox"
+              (change)="checkAffectedStatus(affectedStatus, affectedStatusCheckbox.checked)">
+              <span class="pedigree-icon" [style.background-color]="'#aaaaaa'" style="opacity: 0.75;"></span>
+              <span style="display: inline-block; vertical-align: middle; line-height: 95%;"
+                [ngStyle]="{width: affectedStatus === 'Affected only' ? '70px' : 
+                                   affectedStatus === 'Unaffected only' ? '80px' :
+                                   affectedStatus === 'Affected and unaffected' ? '100px': {}}">
+                {{ affectedStatus }}
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="effect-card card filter" style="margin-left: 30px">
+        <div class="card-header card-title">
+          Effect Types
+        </div>
+        <div class="card-block">
+          <div *ngFor="let effect of effectTypeValues; let i=index" class="checkbox">
+            <label class="filter-label">
+              <input #effectTypeCheckbox checked type="checkbox" (change)="checkEffectType(effect, effectTypeCheckbox.checked)">
+              {{ effect }}
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="effect-card card filter" style="margin-left: 30px">
+        <div class="card-header card-title">
+          Inheritance Types
+        </div>
+        <div class="card-block">
+          <div>
+            <label class="filter-label">
+              <input #denovoCheckbox style="margin-right: 5px;" checked type="checkbox" (click)="checkShowDenovo(denovoCheckbox.checked)">
+              <span>Denovo</span>
+            </label>
+          </div>
+          <div>
+            <label class="filter-label">
+              <input #transmittedCheckbox checked type="checkbox" (click)="checkShowTransmitted(transmittedCheckbox.checked)">
+              <span>Transmitted</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="effect-card card filter" style="margin-left: 30px">
+        <div class="card-header card-title">
+          Variant Types
+        </div>
+        <div class="card-block">
+          <div *ngFor="let variantType of variantTypeValues; let i=index" class="checkbox">
+            <label class="filter-label">
+              <input #variantTypeCheckbox checked type="checkbox"
+                (change)="checkVariantType(variantType, variantTypeCheckbox.checked)">
+              {{ variantType }}
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div *ngIf="loadingFinished">
-      <gpf-gene-browser-filters
-        [summaryVariantsArray]="summaryVariantsArray"
-        [selectedFrequencies]="selectedFrequencies"
-        [selectedRegion]="selectedRegion"
-        [enableCodingOnly]="enableCodingOnly"
-        [selectedDatasetId]="selectedDatasetId"
-        [selectedGene]="selectedGene"
-        (filteredVariants)="updateFilteredSummaryAlleles($event)">
-      </gpf-gene-browser-filters>
       <gpf-gene-plot
         [gene]="selectedGene"
         [variantsArray]="summaryVariantsArrayFiltered"
         [frequencyDomain]="[geneBrowserConfig.domainMin, geneBrowserConfig.domainMax]"
         [yAxisLabel]="geneBrowserConfig.frequencyName || geneBrowserConfig.frequencyColumn"
         [allVariantsCounts]="[summaryVariantsArray.totalSummaryAllelesCount, summaryVariantsArray.totalFamilyVariantsCount]"
-        [condenseIntrons]="enableCodingOnly"
+        [condenseIntrons]="summaryVariantsFilter.codingOnly"
         (selectedRegion)="setSelectedRegion($event)"
         (selectedFrequencies)="setSelectedFrequencies($event)">
       </gpf-gene-plot>

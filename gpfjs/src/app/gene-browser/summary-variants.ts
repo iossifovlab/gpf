@@ -1,3 +1,17 @@
+// TODO: Use effects from effecttypes.ts
+const lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
+export const codingEffectTypes = [
+  'lgds', 'nonsense', 'frame-shift', 'splice-site', 'no-frame-shift-newStop',
+  'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift', 'CDS', 'CNV+', 'CNV-'
+];
+const otherEffectTypes = [
+  'noStart', 'noEnd', 'no-frame-shift', 'non-coding', 'intron', 'intergenic',
+  '3\'UTR', '3\'UTR-intron', '5\'UTR', '5\'UTR-intron', 'CDS', 'CNV+', 'CNV-'
+];
+export const affectedStatusValues = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
+export const effectTypeValues = ['LGDs', 'Missense', 'Synonymous', 'CNV+', 'CNV-', 'Other'];
+export const variantTypeValues = ['sub', 'ins', 'del', 'CNV+', 'CNV-'];
+
 export class SummaryAllele {
   public location: string;
   public position: number;
@@ -13,9 +27,6 @@ export class SummaryAllele {
   public seenInUnaffected: boolean;
   public svuid: string;
   public sauid: string;
-
-  // TODO: Use effecttypes.ts
-  public readonly lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
 
   public static comparator(a: SummaryAllele, b: SummaryAllele) {
     if (a.comparisonValue > b.comparisonValue) {
@@ -45,8 +56,24 @@ export class SummaryAllele {
     return result;
   }
 
+  public get affectedStatus(): string {
+    if (this.seenInAffected) {
+      if (this.seenInUnaffected) {
+        return 'Affected and unaffected';
+      } else {
+        return 'Affected only';
+      }
+    } else {
+      return 'Unaffected only';
+    }
+  }
+
+  public get variantType(): string {
+    return this.variant.substr(0, this.isCNV() ? 4 : 3);
+  }
+
   public isLGDs(): boolean {
-    return (this.lgds.indexOf(this.effect) !== -1 || this.effect === 'lgds');
+    return (lgds.indexOf(this.effect) !== -1 || this.effect === 'lgds');
   }
 
   public isMissense(): boolean {
@@ -131,5 +158,116 @@ export class SummaryAllelesArray {
 
   get totalSummaryAllelesCount(): number {
     return this.summaryAlleles.length;
+  }
+}
+
+export class SummaryAllelesFilter {
+
+  constructor(
+    public denovo = true,
+    public transmitted = true,
+    public codingOnly = true,
+    public selectedAffectedStatus: Set<string> = new Set(affectedStatusValues),
+    public selectedEffectTypes: Set<string> = new Set(effectTypeValues.map(eff => eff.toLowerCase())),
+    public selectedVariantTypes: Set<string> = new Set(variantTypeValues.map(vt => vt.toLowerCase())),
+    public selectedFrequencies: [number, number] = [0, 0],
+    public selectedRegion: [number, number] = [0, 0],
+  ) {}
+
+  public get minFreq(): number {
+    return this.selectedFrequencies[0] > 0 ? this.selectedFrequencies[0] : null;
+  }
+
+  public get maxFreq(): number {
+    return this.selectedFrequencies[1];
+  }
+
+  private isEffectTypeSelected(variantEffect: string): boolean {
+    let result = false;
+
+    if (this.selectedEffectTypes.has(variantEffect)) {
+      result = true;
+    }
+
+    if (this.selectedEffectTypes.has('lgds') && lgds.includes(variantEffect)) {
+      result = true;
+    } else if (
+      variantEffect !== 'missense' && variantEffect !== 'synonymous'
+      && variantEffect !== 'cnv+' && variantEffect !== 'cnv-'
+      && this.selectedEffectTypes.has('other')
+    ) {
+      result = true;
+    }
+    return result;
+  }
+
+  private filterSummaryAllele(summaryAllele: SummaryAllele): boolean {
+    const [minFreq, maxFreq] = this.selectedFrequencies;
+    const [startPos, endPos] = this.selectedRegion;
+
+    if (
+      (!this.denovo && summaryAllele.seenAsDenovo)
+      || (!this.transmitted && !summaryAllele.seenAsDenovo)
+      || (!this.selectedAffectedStatus.has(summaryAllele.affectedStatus))
+      || (!this.selectedVariantTypes.has(summaryAllele.variantType.toLowerCase()))
+      || (!this.isEffectTypeSelected(summaryAllele.effect.toLowerCase()))
+    ) {
+      return false;
+    }
+
+    if (summaryAllele.frequency < minFreq || summaryAllele.frequency > maxFreq) {
+      return false;
+    }
+
+    if (summaryAllele.isCNV()
+      && !(summaryAllele.position <= startPos && summaryAllele.endPosition <= startPos)
+      && !(summaryAllele.position >= endPos && summaryAllele.endPosition >= endPos)
+    ) {
+      return true;
+    } else if (summaryAllele.position >= startPos && summaryAllele.position <= endPos) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public filterSummaryVariantsArray(summaryVariantsArray: SummaryAllelesArray): SummaryAllelesArray {
+    const result = new SummaryAllelesArray();
+    for (const summaryAllele of summaryVariantsArray.summaryAlleles) {
+      if (this.filterSummaryAllele(summaryAllele)) {
+        result.addSummaryAllele(summaryAllele);
+      }
+    }
+    return result;
+  }
+
+  public get queryParams(): object {
+    const inheritanceFilters = [];
+    if (this.denovo) {
+      inheritanceFilters.push('denovo');
+    }
+    if (this.transmitted) {
+      inheritanceFilters.push('mendelian', 'omission', 'missing');
+    }
+
+    let effects: string[] = Array.from(this.selectedEffectTypes);
+    if (effects.includes('other')) {
+      effects = effects.filter(ef => ef !== 'other').concat(otherEffectTypes);
+      if (this.codingOnly) {
+        effects = effects.filter(et => codingEffectTypes.includes(et));
+      }
+    }
+    const affectedStatus = new Set(this.selectedAffectedStatus);
+    if (this.selectedAffectedStatus.has('Affected and unaffected')) {
+      affectedStatus.add('Affected only');
+      affectedStatus.add('Unaffected only');
+    }
+
+    return {
+      'effectTypes': effects,
+      'inheritanceTypeFilter': inheritanceFilters,
+      'affectedStatus': Array.from(affectedStatus),
+      'variantType': Array.from(this.selectedVariantTypes)
+    };
   }
 }
