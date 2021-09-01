@@ -132,6 +132,8 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     this.shownGeneSetsCategories = cloneDeep(this.config.geneSets);
     this.shownGenomicScoresCategories = cloneDeep(this.config.genomicScores);
     this.shownDatasets = cloneDeep(this.config.datasets);
+    console.log(this.config)
+    this.config['order'] = ["datasets:iossifov_2014", "genomic_scores:protection_scores", "genomic_scores:autism_scores", "gene_sets:relevant_gene_sets", "gene_sets:autism_gene_sets"];
 
     this.focusGeneSearchInput();
 
