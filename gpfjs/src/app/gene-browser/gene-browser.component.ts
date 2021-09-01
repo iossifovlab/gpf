@@ -28,7 +28,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
   private selectedGene: Gene;
   private geneSymbol = '';
   private maxFamilyVariants = 1000;
-  private selectedDataset: Dataset;
+  public selectedDataset: Dataset;
   private selectedDatasetId: string;
   private loadingFinished: boolean;
   private familyLoadingFinished: boolean;
