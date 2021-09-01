@@ -61,6 +61,21 @@ class ConfigurationView(QueryBaseView):
                     "personSets": person_sets_config,  # overwrite person_sets
                 })
 
+        if "order" not in response:
+            response["order"] = []
+            for gene_set in response["geneSets"]:
+                response["order"].append(
+                    {"section": "geneSets", "id": gene_set["category"]}
+                )
+            for genomic_score in response["genomicScores"]:
+                response["order"].append(
+                    {"section": "genomicScores", "id": genomic_score["category"]}
+                )
+            for dataset in response["datasets"]:
+                response["order"].append(
+                    {"section": "datasets", "id": dataset["id"]}
+                )
+
         return Response(response)
 
 

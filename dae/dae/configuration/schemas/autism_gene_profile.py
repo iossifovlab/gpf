@@ -113,5 +113,15 @@ autism_gene_tool_config = {
             }
         }
     },
-    "default_dataset": {"type": "string", "required": True}
+    "default_dataset": {"type": "string", "required": True},
+    "order": {
+        "type": "list",
+        "schema": {
+            "type": "dict",
+            "schema": {
+                "section": {"type": "string"},
+                "id": {"type": "string"},
+            }
+        }
+    },
 }
