@@ -1,3 +1,9 @@
+export const affectedStatusColors = {
+  'Affected only': '#AA0000',
+  'Unaffected only': '#04613a',
+  'Affected and unaffected': '#8a8a8a',
+};
+
 function getTrianglePoints(plotX: number, plotY: number, size: number) {
   const height = Math.sqrt(Math.pow(size, 2) - Math.pow((size / 2.0), 2));
   const x1 = plotX - (size / 2.0);

@@ -288,15 +288,7 @@ export class GenePlotComponent implements OnChanges {
       const alleleEndPosition = this.scale.x(Math.min(allele.endPosition, this.xDomain[1]));
       const alleleTitle = `Effect type: ${allele.effect}\nVariant position: ${allele.location}`;
       const alleleHeight = this.getAlleleHeight(allele);
-      let color: string;
-      if (allele.seenInAffected) {
-        color = '#AA0000';
-        if (allele.seenInUnaffected) {
-          color = '#8a8a8a';
-        }
-      } else {
-        color = '#04613a';
-      }
+      const color = draw.affectedStatusColors[allele.affectedStatus];
 
       if (allele.seenAsDenovo) {
         if (allele.isCNV()) {

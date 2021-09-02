@@ -14,6 +14,8 @@ import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-load
 import { GenePlotComponent } from 'app/gene-plot/gene-plot.component';
 import { ConfigService } from 'app/config/config.service';
 import { clone } from 'lodash';
+import * as d3 from 'd3';
+import * as draw from 'app/utils/svg-drawing';
 
 @Component({
   selector: 'gpf-gene-browser',
@@ -31,6 +33,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
   private familyLoadingFinished: boolean;
   private showError = false;
   private geneBrowserConfig;
+  private legendDrawn = false;
 
   public readonly affectedStatusValues = affectedStatusValues;
   public readonly effectTypeValues = effectTypeValues;
@@ -51,6 +54,19 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     }
   }
 
+  @ViewChild('filters', { static: false }) public set filters(element) {
+    /* Waits until the #filters div is rendered to draw the SVG legends,
+     * otherwise d3 cannot find the <svg> elements and nothing is drawn.
+     * The boolean flag is needed as this setter is called multiple times
+     * once the #filters div is rendered. */
+    if (element && !this.legendDrawn) {
+      this.drawDenovoIcons();
+      this.drawTransmittedIcons();
+      this.drawEffectTypesIcons();
+      this.legendDrawn = true;
+    }
+  }
+
   constructor(
     readonly configService: ConfigService,
     private route: ActivatedRoute,
@@ -66,8 +82,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     if (this.selectedDataset) {
       this.geneBrowserConfig = this.selectedDataset.geneBrowser;
     }
-    this.datasetsService.getDatasetsLoadedObservable()
-    .subscribe(datasetsLoaded => {
+    this.datasetsService.getDatasetsLoadedObservable().subscribe(datasetsLoaded => {
       this.selectedDataset = this.datasetsService.getSelectedDataset();
       if (this.selectedDataset) {
         this.geneBrowserConfig = this.selectedDataset.geneBrowser;
@@ -253,5 +268,53 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
   public setSelectedFrequencies(frequencies: [number, number]): void {
     this.summaryVariantsFilter.selectedFrequencies = frequencies;
     this.updateVariants();
+  }
+
+  public getAffectedStatusColor(affectedStatus: string): string {
+    return draw.affectedStatusColors[affectedStatus];
+  }
+
+  private drawDenovoIcons() {
+    const svgElement = d3.select('#denovo');
+    draw.surroundingRectangle(svgElement, 10, 7.5, '#000000', 'Denovo LGDs');
+    draw.star(svgElement, 10, 7.5, '#000000', 'Denovo LGDs');
+    draw.surroundingRectangle(svgElement, 30, 8, '#000000', 'Denovo Missense');
+    draw.triangle(svgElement, 30, 8, '#000000', 'Denovo Missense');
+    draw.surroundingRectangle(svgElement, 50, 8, '#000000', 'Denovo Synonymous');
+    draw.circle(svgElement, 50, 8, '#000000', 'Denovo Synonymous');
+    draw.surroundingRectangle(svgElement, 70, 8, '#000000', 'Denovo Other');
+    draw.dot(svgElement, 70, 8, '#000000', 'Denovo Other');
+    draw.surroundingRectangle(svgElement, 90, 8, '#000000', 'Denovo CNV+');
+    draw.rect(svgElement, 82, 98, 5, 6, '#000000', 0.4, 'Denovo CNV+');
+    draw.surroundingRectangle(svgElement, 110, 8, '#000000', 'Denovo CNV-');
+    draw.rect(svgElement, 102, 118, 7.5, 1, '#000000', 0.4, 'Denovo CNV-');
+  }
+
+  private drawTransmittedIcons() {
+    const svgElement = d3.select('#transmitted');
+    draw.star(svgElement, 10, 7.5, '#000000', 'LGDs');
+    draw.triangle(svgElement, 30, 8, '#000000', 'Missense');
+    draw.circle(svgElement, 50, 8, '#000000', 'Synonymous');
+    draw.dot(svgElement, 70, 8, '#000000', 'Other');
+    draw.rect(svgElement, 82, 98, 5, 6, '#000000', 0.4, 'CNV+');
+    draw.rect(svgElement, 107, 125, 7.5, 1, '#000000', 0.4, 'CNV-');
+  }
+
+  private drawEffectTypesIcons() {
+    const effectIcons = {
+      '#LGDs': draw.star,
+      '#Missense': draw.triangle,
+      '#Synonymous': draw.circle,
+      '#Other': draw.dot
+    };
+    let svgElement;
+    for (const [effect, drawFunc] of Object.entries(effectIcons)) {
+      svgElement = d3.select(effect);
+      drawFunc(svgElement, 10, 8, '#000000', effect);
+    }
+    svgElement = d3.select('#CNV\\+');
+    draw.rect(svgElement, 5, 20, 5, 6, '#000000', 0.4, 'CNV+');
+    svgElement = d3.select('#CNV-');
+    draw.rect(svgElement, 5, 20, 7.5, 1, '#000000', 0.4, 'CNV-');
   }
 }
