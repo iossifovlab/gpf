@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, HostListener, OnInit, ViewChild } from '@angular/core';
+import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { GeneService } from 'app/gene-browser/gene.service';
@@ -22,7 +22,7 @@ import * as draw from 'app/utils/svg-drawing';
   templateUrl: './gene-browser.component.html',
   styleUrls: ['./gene-browser.component.css'],
 })
-export class GeneBrowserComponent implements OnInit, AfterViewInit {
+export class GeneBrowserComponent implements OnInit {
   @ViewChild(GenePlotComponent) private genePlotComponent: GenePlotComponent;
   private selectedGene: Gene;
   private geneSymbol = '';
@@ -86,6 +86,9 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
       this.selectedDataset = this.datasetsService.getSelectedDataset();
       if (this.selectedDataset) {
         this.geneBrowserConfig = this.selectedDataset.geneBrowser;
+        if (this.route.snapshot.params.gene && this.selectedDataset.accessRights) {
+          this.submitGeneRequest(this.route.snapshot.params.gene);
+        }
       }
     });
 
@@ -98,14 +101,6 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     this.store.select(state => state.geneSymbolsState).subscribe(state => {
       if (state.geneSymbols.length) {
         this.geneSymbol = state.geneSymbols[0];
-      }
-    });
-  }
-
-  public ngAfterViewInit(): void {
-    this.datasetsService.getDataset(this.selectedDatasetId).subscribe(dataset => {
-      if (dataset.accessRights && this.route.snapshot.params.gene) {
-        this.submitGeneRequest(this.route.snapshot.params.gene);
       }
     });
   }
