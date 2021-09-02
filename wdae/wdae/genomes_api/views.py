@@ -40,7 +40,7 @@ class GeneModels(QueryBaseView):
         output["transcript_id"] = transcript.tr_id
         output["strand"] = transcript.strand
         output["chrom"] = transcript.chrom
-        output["cds"] = transcript.cds
+        output["cds"] = self.cds_to_dictlist(transcript.cds)
         output["utr3"] = list()
         for region in transcript.UTR3_regions():
             output["utr3"].append(self.region_to_dict(region))
@@ -51,6 +51,12 @@ class GeneModels(QueryBaseView):
         for exon in transcript.exons:
             output["exons"].append(self.exon_to_dict(exon))
         return output
+
+    def cds_to_dictlist(self, cds):
+        return [
+            {"start": a, "stop": b}
+            for (a, b) in zip(cds[::2], cds[1::2])
+        ]
 
     def region_to_dict(self, region):
         return {
