@@ -209,7 +209,11 @@ class FSGenomicResourcesRepo(GenomicResourcesRepo):
     """
 
     def __init__(self, repository_id: str, url: str):
-        super().__init__(repository_id, pathlib.Path(url).absolute().as_uri())
+        if url.startswith("file://"):
+            path = url
+        else:
+            path = pathlib.Path(url).absolute().as_uri()
+        super().__init__(repository_id, path)
 
     def _stream_resource_file_internal(self, file_uri, offset, size):
         # TODO Implement progress bar and interruptible download
@@ -297,6 +301,9 @@ class GenomicResourcesRepoCache(FSGenomicResourcesRepo):
                 f"resource {resource_id} not found in "
                 f"{self.remote_repository.repository_id}")
             return False
+
+    def is_cached(self, resource_id: str) -> bool:
+        return self.resources.get(resource_id) is not None
 
     def get_resource(self, resource_id: str) -> GenomicResource:
         local_resource = self.resources.get(resource_id)
