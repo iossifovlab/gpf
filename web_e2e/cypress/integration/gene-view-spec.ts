@@ -1,9 +1,9 @@
 import { GeneBrowserPage } from 'cypress/elements/gene-browser-page';
-import { GeneViewPage } from 'cypress/elements/gene-view-page';
+import { GenePlotPage } from 'cypress/elements/gene-plot-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-describe.skip('Gene view tests', () => {
-  const page = new GeneViewPage();
+describe.skip('Gene plot tests', () => {
+  const page = new GenePlotPage();
   const geneBrowserPage = new GeneBrowserPage();
 
   before(() => {

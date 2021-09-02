@@ -1,8 +1,8 @@
 import { BasePage } from './utils';
 
-export class GeneViewPage extends BasePage {
+export class GenePlotPage extends BasePage {
   get window() {
-    return cy.get('gpf-gene-view');
+    return cy.get('gpf-plot-view');
   }
 
   getAffectedStatusCheckbox(affectedStatus: string) {
