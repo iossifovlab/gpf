@@ -7,8 +7,8 @@ import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism
 import { switchMap, take, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
-import { GeneService } from 'app/gene-view/gene.service';
-import { Gene } from 'app/gene-view/gene';
+import { GeneService } from 'app/gene-browser/gene.service';
+import { Gene } from 'app/gene-browser/gene';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Store } from '@ngxs/store';
 import { QueryService } from 'app/query/query.service';

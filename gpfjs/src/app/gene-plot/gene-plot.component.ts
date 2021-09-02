@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges } from '@angular/core';
-import { Gene, Transcript } from 'app/gene-view/gene';
+import { Gene, Transcript } from 'app/gene-browser/gene';
 import { GenePlotModel, GenePlotScaleState, GenePlotZoomHistory } from 'app/gene-plot/gene-plot';
 import { SummaryAllele, SummaryAllelesArray } from 'app/gene-browser/summary-variants';
 import * as d3 from 'd3';

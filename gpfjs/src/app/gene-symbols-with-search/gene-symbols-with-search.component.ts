@@ -2,7 +2,7 @@ import { Component, OnInit, EventEmitter, Output, Input } from '@angular/core';
 import { Subject } from 'rxjs';
 import { ValidateNested } from 'class-validator';
 import { Store } from '@ngxs/store';
-import { GeneService } from '../gene-view/gene.service';
+import { GeneService } from '../gene-browser/gene.service';
 import { GeneSymbols } from 'app/gene-symbols/gene-symbols.component';
 import { SetGeneSymbols, GeneSymbolsState } from 'app/gene-symbols/gene-symbols.state';
 import { StatefulComponent } from 'app/common/stateful-component';

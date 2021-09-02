@@ -1,4 +1,4 @@
-import { Gene } from 'app/gene-view/gene';
+import { Gene } from 'app/gene-browser/gene';
 
 export class GenePlotModel {
 
