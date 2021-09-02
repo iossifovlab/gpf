@@ -59,8 +59,7 @@ export class GenePlotComponent implements OnChanges {
   private doubleClickTimer;
   private genePlotModel: GenePlotModel;
   public zoomHistory: GenePlotZoomHistory;
-  // TODO: Find a better name, overlaps with drawTranscript method
-  public drawTranscripts = true;
+  public showTranscripts = true;
   public condenseIntrons = true;
   private normalRange: number[];
   private condensedRange: number[];
@@ -142,7 +141,7 @@ export class GenePlotComponent implements OnChanges {
 
   private get svgHeight(): number {
     // +1 transcript if transcripts are drawn due to the extra padding between the collapsed and normal transcripts
-    const transcriptsCount = (this.drawTranscripts ? this.genePlotModel.gene.transcripts.length + 1 : 0) + 1;
+    const transcriptsCount = (this.showTranscripts ? this.genePlotModel.gene.transcripts.length + 1 : 0) + 1;
     return this.frequencyPlotHeight
       + this.constants.margin.top
       + this.constants.margin.bottom
@@ -333,12 +332,11 @@ export class GenePlotComponent implements OnChanges {
   }
 
   private drawGene(): void {
-    // TODO: 'Summed' is not the term used, replace with 'collapsed'
-    const summedTranscriptElement = this.plotElement.append('g').attr('id', 'summedTranscript');
+    const collapsedTranscriptElement = this.plotElement.append('g').attr('id', 'collapsedTranscript');
     let transcriptY = this.frequencyPlotHeight + this.constants.frequencyPlotPadding;
-    this.drawTranscript(summedTranscriptElement, this.genePlotModel.gene.collapsedTranscript, transcriptY);
+    this.drawTranscript(collapsedTranscriptElement, this.genePlotModel.gene.collapsedTranscript, transcriptY);
 
-    if (this.drawTranscripts) {
+    if (this.showTranscripts) {
       transcriptY += this.constants.transcriptHeight; // Add some extra padding after the collapsed transcript
       const transcriptsElement = this.plotElement.append('g').attr('id', 'transcripts');
       for (const geneViewTranscript of this.genePlotModel.gene.transcripts) {
