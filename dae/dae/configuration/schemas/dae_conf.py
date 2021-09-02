@@ -52,7 +52,13 @@ remote_schema = {
 
 grr_schema = {
     "id": {"type": "string"},
-    "url": {"type": "string"}
+    "url": {"type": "string"},
+    "cache": {
+        "type": "string",
+        "check_with": validate_path,
+        "coerce": "abspath",
+    },
+
 }
 
 storage_schema = {
@@ -130,18 +136,16 @@ dae_conf_schema = {
     "genomic_resources": {
         "type": "dict",
         "schema": {
-            "cache_location": {
-                "type": "string",
-                "check_with": validate_path,
-                "coerce": "abspath",
-            },
+            # "cache_location": {
+            #     "type": "string",
+            #     "check_with": validate_path,
+            #     "coerce": "abspath",
+            # },
             "repositories": {
                 "type": "list",
                 "valuesrules": {"type": "dict", "schema": grr_schema}
             },
         },
-    },
-    "genomic_score_databases": {
     },
     "gene_info_db": {"type": "dict", "schema": config_reference_schema},
     "default_study_config": {

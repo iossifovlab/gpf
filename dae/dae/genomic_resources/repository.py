@@ -130,15 +130,15 @@ class GenomicResourcesRepo:
     * HTTP protocol
     """
 
-    def __init__(self, gsd_id: str, url: str):
-        self.gsd_id = gsd_id
+    def __init__(self, repository_id: str, url: str):
+        self.repository_id = repository_id
         self.url = url
 
         self.resources: Dict[str, GenomicResource] = dict()
         self.root_group = None
 
     def get_name(self):
-        return self.gsd_id
+        return self.repository_id
 
     def get_url(self):
         return self.url
@@ -208,8 +208,8 @@ class FSGenomicResourcesRepo(GenomicResourcesRepo):
     A genomic score repository on a local or remote filesystem.
     """
 
-    def __init__(self, gsd_id: str, url: str):
-        super().__init__(gsd_id, pathlib.Path(url).absolute().as_uri())
+    def __init__(self, repository_id: str, url: str):
+        super().__init__(repository_id, pathlib.Path(url).absolute().as_uri())
 
     def _stream_resource_file_internal(self, file_uri, offset, size):
         # TODO Implement progress bar and interruptible download
@@ -252,6 +252,60 @@ class FSGenomicResourcesRepo(GenomicResourcesRepo):
         call(command, cwd=cwd, shell=True)
 
 
+class GenomicResourcesRepoCache(FSGenomicResourcesRepo):
+
+    def __init__(
+            self, remote_repository: GenomicResourcesRepo,
+            cache_location: str):
+
+        self.remote_repository = remote_repository
+        super(GenomicResourcesRepoCache, self).__init__(
+            remote_repository.repository_id,
+            cache_location)
+
+    def _do_cache(self, resource: GenomicResource):
+        cache_base_path = urlparse(self.get_url()).path
+        cache_path = os.path.join(cache_base_path, resource.get_id())
+        os.makedirs(cache_path, exist_ok=True)
+
+        def copy_file(filename: str):
+            output_path = os.path.join(cache_path, filename)
+            with open(output_path, "wb") as destination_file:
+                for chunk in resource.get_repo().stream_resource_file(
+                        resource.get_id(), filename):
+                    destination_file.write(chunk)
+
+        for file in resource.get_manifest().keys():
+            copy_file(file)
+
+        create_fs_genomic_resource_repository(
+            "cache", cache_base_path)
+
+        self.reload()
+
+    def cache_resource(self, resource_id: str) -> bool:
+        resource = self.remote_repository.get_resource(resource_id)
+
+        if resource is not None:
+            logger.info(
+                f"caching resource {resource_id} from "
+                f"{self.remote_repository.repository_id}")
+            self._do_cache(resource)
+            return True
+        else:
+            logger.warning(
+                f"resource {resource_id} not found in "
+                f"{self.remote_repository.repository_id}")
+            return False
+
+    def get_resource(self, resource_id: str) -> GenomicResource:
+        local_resource = self.resources.get(resource_id)
+        if local_resource is None:
+            if self.cache_resource(resource_id):
+                return self.resources.get(resource_id)
+        return None
+
+
 class HTTPGenomicResourcesRepo(GenomicResourcesRepo):
     """
     A genomic score repository on a local or remote filesystem.
@@ -265,8 +319,8 @@ class HTTPGenomicResourcesRepo(GenomicResourcesRepo):
         "Parent Directory",
     ]
 
-    def __init__(self, gsd_id: str, url: str):
-        super().__init__(gsd_id, url)
+    def __init__(self, repository_id: str, url: str):
+        super().__init__(repository_id, url)
 
     def _stream_resource_file_internal(self, file_uri, offset, size):
         # TODO Implement progress bar and interruptible download

@@ -7,7 +7,7 @@ import toml
 
 from box import Box
 
-from typing import List, Any, Dict, NamedTuple
+from typing import List, Any, Dict
 from cerberus import Validator
 
 from dae.utils.dict_utils import recursive_dict_update
