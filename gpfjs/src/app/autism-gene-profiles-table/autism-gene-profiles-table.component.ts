@@ -4,7 +4,7 @@ import {
 } from '@angular/core';
 // tslint:disable-next-line:import-blacklist
 import { Subject } from 'rxjs';
-import { AgpTableConfig, AgpTableDataset, AgpGene, AgpGeneSetsCategory, AgpGenomicScoresCategory, AgpDatasetStatistic, AgpDatasetPersonSet } from './autism-gene-profile-table';
+import { AgpTableConfig, AgpTableDataset, AgpGene, AgpGeneSetsCategory, AgpGenomicScoresCategory, AgpDatasetStatistic, AgpDatasetPersonSet, AgpTableGeneSetsCategory, AgpTableGenomicScoresCategory } from './autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { AutismGeneProfileSingleViewComponent } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view.component';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
@@ -48,9 +48,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   private pageIndex = 1;
   private loadMoreGenes = true;
   private scrollLoadThreshold = 1000;
-
-  // private focusGeneSetsInputs: boolean[];
-  // private focusGenomicScoresInputs: boolean[];
 
   geneInput: string;
   searchKeystrokes$: Subject<string> = new Subject();
@@ -122,6 +119,18 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
       }
       return newObject;
     });
+  }
+
+  getGeneSetsCategory(id: string): AgpTableGeneSetsCategory {
+    return this.shownGeneSetsCategories.find(category => category.category === id);
+  }
+
+  getGenomicScoresCategory(id: string): AgpTableGenomicScoresCategory {
+    return this.shownGenomicScoresCategories.find(category => category.category === id);
+  }
+
+  getDataset(id: string): AgpTableDataset {
+    return this.shownDatasets.find(dataset => dataset.id === id);
   }
 
   /**

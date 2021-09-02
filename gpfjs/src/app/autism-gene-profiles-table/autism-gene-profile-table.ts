@@ -12,6 +12,9 @@ export class AgpConfig {
 
   @Type(() => AgpDataset)
   datasets: AgpDataset[];
+
+  @Type(() => AgpOrder)
+  order: AgpOrder[];
 }
 
 export class AgpGeneSetsCategory {
@@ -79,12 +82,18 @@ export class AgpDatasetPersonSet {
   childrenCount: number;
 }
 
+export class AgpOrder {
+  section: string;
+  id: string;
+}
+
 export class AgpTableConfig {
   constructor(
     public defaultDataset: string,
     public geneSets: AgpTableGeneSetsCategory[],
     public genomicScores: AgpTableGenomicScoresCategory[],
-    public datasets: AgpTableDataset[]
+    public datasets: AgpTableDataset[],
+    public order: AgpTableOrder[]
   ) {}
 }
 
@@ -155,6 +164,13 @@ export class AgpTableDatasetStatistic {
     public description: string,
     public defaultVisible: boolean,
     public variantTypes: string[]
+  ) {}
+}
+
+export class AgpTableOrder {
+  constructor(
+    public section: string,
+    public id: string,
   ) {}
 }
 

@@ -191,7 +191,8 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
           cloneDeep(dataset.statistics)
         ));
         return new AgpTableDataset(dataset.id, dataset.displayName, dataset.meta, dataset.defaultVisible, personSets);
-      })
+      }),
+      cloneDeep(agpConfig.order)
     );
   }
 
