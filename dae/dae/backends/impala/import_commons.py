@@ -1251,7 +1251,7 @@ class Variants2ParquetTool:
 
         generator = MakefilePartitionHelper(
             partition_description,
-            gpf_instance.genomes_db.get_genome(),
+            gpf_instance.genomes_db.get_genomic_sequence(),
             add_chrom_prefix=add_chrom_prefix,
             del_chrom_prefix=del_chrom_prefix,
         )

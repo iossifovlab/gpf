@@ -303,7 +303,7 @@ def annotation_scores_dirname():
 @pytest.fixture(scope="session")
 def annotation_pipeline_vcf(genomic_resources_db):
     filename = relative_to_this_test_folder(
-        "fixtures/annotation_pipeline/import_annotation.conf"
+        "fixtures/annotation_pipeline/import_annotation.yaml"
     )
 
     pipeline = AnnotationPipeline.build(filename, genomic_resources_db)
@@ -313,7 +313,7 @@ def annotation_pipeline_vcf(genomic_resources_db):
 @pytest.fixture(scope="session")
 def annotation_pipeline_internal(genomic_resources_db):
     filename = relative_to_this_test_folder(
-        "fixtures/annotation_pipeline/import_annotation.conf"
+        "fixtures/annotation_pipeline/import_annotation.yaml"
     )
 
     pipeline = AnnotationPipeline.build(filename, genomic_resources_db)
@@ -448,7 +448,7 @@ def iossifov2014_loader(
     families = families_loader.load()
 
     variants_loader = DenovoLoader(
-        families, config.denovo_filename, genome_2013
+        families, config.denovo_filename, genome_2013.get_genomic_sequence()
     )
 
     variants_loader = AnnotationPipelineDecorator(

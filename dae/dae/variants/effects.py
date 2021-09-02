@@ -54,7 +54,7 @@ class EffectGene(object):
 
 
 class EffectTranscript(object):
-    def __init__(self, transcript_id, gene, details):
+    def __init__(self, transcript_id, gene=None, details=None):
         self.transcript_id = transcript_id
         self.gene = gene
         self.details = details
@@ -66,7 +66,7 @@ class EffectTranscript(object):
 
         parts = [p.strip() for p in data.split(":")]
         assert len(parts) == 3
-        return EffectTranscript(parts[0], parts[1], parts[2])
+        return EffectTranscript(parts[0], gene=parts[1], details=parts[2])
 
     def __repr__(self):
         return f"{self.transcript_id}:{self.gene}:{self.details}"
@@ -84,15 +84,16 @@ class EffectTranscript(object):
 
     @classmethod
     def from_tuple(cls, t):
-        (transcript_id, details) = tuple(t)
-        return EffectTranscript(transcript_id, details)
+        (transcript_id, gene, details) = tuple(t)
+        return EffectTranscript(transcript_id, gene=gene, details=details)
 
     @classmethod
     def from_effect_transcripts(cls, effect_transcripts):
         result = {}
         for transcript_id, details in effect_transcripts:
+
             result[transcript_id] = EffectTranscript.from_tuple(
-                (transcript_id, details)
+                (transcript_id, None, details)
             )
         return result
 

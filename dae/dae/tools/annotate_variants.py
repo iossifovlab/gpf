@@ -73,7 +73,7 @@ def parse_cli_genome_options(args):
         gene_models = load_gene_models(
             args.gene_models_filename,
             fileformat=args.gene_models_fileformat,
-            gene_mapping_file=args.gene_mapping_filename,
+            gene_mapping_filename=args.gene_mapping_filename,
         )
     if args.genome_filename:
         genomic_sequence = genome_access.open_ref(args.genome_filename)
@@ -212,16 +212,23 @@ def cli(argv=sys.argv[1:]):
 
     start = time.time()
     header = None
+    assert not args.no_header, args
+
     if args.no_header:
+        assert False
         for key, value in variant_columns.items():
             variant_columns[key] = int(value)
     else:
+
         line = infile.readline().strip()
         header = [c.strip() for c in line.split("\t")]
         for key, value in variant_columns.items():
             assert value in header
             variant_columns[key] = header.index(value)
         header.extend(["effectType", "effectGene", "effectDetails"])
+
+        print("header:", header, variant_columns, file=sys.stderr)
+        print("\t".join(header), file=sys.stderr)
         print("\t".join(header), file=outfile)
 
     counter = 0
@@ -235,6 +242,7 @@ def cli(argv=sys.argv[1:]):
         effects = annotator.do_annotate_variant(**variant)
         desc = annotator.effect_description(effects)
         columns.extend(desc)
+        print("\t".join(columns), file=sys.stderr)
         print("\t".join(columns), file=outfile)
 
         if (counter + 1) % 1000 == 0:

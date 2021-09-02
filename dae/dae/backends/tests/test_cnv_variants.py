@@ -24,7 +24,7 @@ def cnv_loader(
     families = families_loader.load()
 
     variants_loader = CNVLoader(
-        families, variants_filename, genome_2013)
+        families, variants_filename, genome_2013.get_genomic_sequence())
 
     variants_loader = AnnotationPipelineDecorator(
         variants_loader, annotation_pipeline_internal

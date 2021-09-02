@@ -28,7 +28,7 @@ setuptools.setup(
         "dae/tools/pheno2browser.py",
         "dae/tools/simple_pheno_import.py",
         "dae/tools/simple_study_import.py",
-        "dae/annotation/annotation_pipeline.py",
+        # "dae/annotation/annotation_pipeline.py",
         "dae/tools/generate_histogram.py",
         "dae/tools/generate_histogram2.py",
         "dae/tools/run_gpf_impala.sh",

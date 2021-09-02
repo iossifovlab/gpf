@@ -71,6 +71,9 @@ class AnnotationPipeline():
         cols = set()
         for annotator in self.annotators:
             cols.update(annotator.output_columns)
+        print(100*"+")
+        print(cols)
+        print(100*"+")
         return ParquetSchema.from_dict({"float": cols})
 
     def annotate_summary_variant(self, summary_variant):
