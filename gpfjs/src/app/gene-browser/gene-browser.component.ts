@@ -150,6 +150,11 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     this.queryService.streamingFinishedSubject.subscribe(() => {
       this.familyLoadingFinished = true;
     });
+
+    if (!this.summaryVariantsFilter.codingOnly) {
+      await this.waitForGenePlotComponent();
+      this.genePlotComponent.toggleCondenseIntrons();
+    }
   }
 
   private async waitForGenePlotComponent() {
