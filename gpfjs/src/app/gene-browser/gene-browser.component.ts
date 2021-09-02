@@ -62,13 +62,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     private geneService: GeneService,
     private datasetsService: DatasetsService,
     private loadingService: FullscreenLoadingService,
-  ) {
-    this.store.select(state => state.geneSymbolsState).subscribe(state => {
-      if (state.geneSymbols.length) {
-        this.geneSymbol = state.geneSymbols[0];
-      }
-    });
-  }
+  ) { }
 
   public ngOnInit(): void {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
@@ -88,6 +82,12 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
         this.selectedDatasetId = params['dataset'];
       }
     );
+
+    this.store.select(state => state.geneSymbolsState).subscribe(state => {
+      if (state.geneSymbols.length) {
+        this.geneSymbol = state.geneSymbols[0];
+      }
+    });
   }
 
   public ngAfterViewInit(): void {
