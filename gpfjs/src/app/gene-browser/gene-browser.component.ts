@@ -97,13 +97,11 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
 
   private async submitGeneRequest(geneSymbol?: string) {
     this.showError = false;
-
-    this.loadingFinished = false;
-    this.loadingService.setLoadingStart();
-    this.genotypePreviewVariantsArray = null;
-
     if (geneSymbol) {
       this.geneSymbol = geneSymbol.toUpperCase().trim();
+    }
+    if (!this.geneSymbol) {
+      return;
     }
     try {
       this.selectedGene = await this.geneService.getGene(
@@ -112,11 +110,11 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     } catch (error) {
       console.error(error);
       this.showError = true;
-    }
-
-    if (this.selectedGene === undefined) {
       return;
     }
+    this.loadingFinished = false;
+    this.loadingService.setLoadingStart();
+    this.genotypePreviewVariantsArray = null;
 
     const requestParams = {
       'datasetId': this.selectedDatasetId,

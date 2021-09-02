@@ -55,7 +55,7 @@ export class GeneSymbolsWithSearchComponent extends StatefulComponent implements
 
   selectGene(geneSymbol: string) {
     this.geneSymbols.geneSymbols = geneSymbol;
-    this.store.dispatch(new SetGeneSymbols(geneSymbol ? [geneSymbol] : []));
+    this.store.dispatch(new SetGeneSymbols([geneSymbol]));
     this.inputClickEvent.emit();
   }
 }
