@@ -132,7 +132,7 @@ export class QueryService {
     return genotypePreviewVariantsArray;
   }
 
-  getGeneViewVariants(filter, loadingService?: any) {
+  getSummaryVariants(filter) {
     const summaryVariantsArray = new SummaryAllelesArray();
     this.summaryStreamPost(this.geneViewVariants, filter).subscribe((variant: string[]) => {
       summaryVariantsArray.addSummaryRow(variant);

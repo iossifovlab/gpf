@@ -130,7 +130,7 @@ export class GeneBrowserComponent implements OnInit, AfterViewInit {
     if (this.summaryVariantsFilter.codingOnly) {
       requestParams['effectTypes'] = codingEffectTypes;
     }
-    this.summaryVariantsArray = this.queryService.getGeneViewVariants(requestParams);
+    this.summaryVariantsArray = this.queryService.getSummaryVariants(requestParams);
     this.summaryVariantsArrayFiltered = clone(this.summaryVariantsArray);
 
     this.summaryVariantsFilter.selectedRegion = [
