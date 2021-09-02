@@ -10,6 +10,17 @@ LOGGER = logging.getLogger(__name__)
 
 
 class ConfigurationView(QueryBaseView):
+    def find_category_section(self, configuration, category):
+        for gene_set in configuration["geneSets"]:
+            if gene_set["category"] == category:
+                return "geneSets"
+        for genomic_score in configuration["genomicScores"]:
+            if genomic_score["category"] == category:
+                return "genomicScores"
+        for dataset in configuration["datasets"]:
+            if dataset["id"] == category:
+                return "datasets"
+
     def get(self, request):
         configuration = self.gpf_instance.get_agp_configuration()
         if configuration is None:
@@ -18,6 +29,9 @@ class ConfigurationView(QueryBaseView):
         # Camelize snake_cased keys, excluding "datasets"
         # since its keys are dataset IDs
         response = to_response_json(configuration)
+        if len(configuration) == 0:
+            return Response(response)
+
         if "datasets" in configuration:
             response["datasets"] = list()
             for dataset_id, dataset in configuration["datasets"].items():
@@ -61,20 +75,13 @@ class ConfigurationView(QueryBaseView):
                     "personSets": person_sets_config,  # overwrite person_sets
                 })
 
-        if "order" not in response:
-            response["order"] = []
-            for gene_set in response["geneSets"]:
-                response["order"].append(
-                    {"section": "geneSets", "id": gene_set["category"]}
-                )
-            for genomic_score in response["genomicScores"]:
-                response["order"].append(
-                    {"section": "genomicScores", "id": genomic_score["category"]}
-                )
-            for dataset in response["datasets"]:
-                response["order"].append(
-                    {"section": "datasets", "id": dataset["id"]}
-                )
+        assert "order" in response
+
+        order = response["order"]
+        response["order"] = [
+            {"section": self.find_category_section(response, o), "id": o}
+            for o in order
+        ]
 
         return Response(response)
 

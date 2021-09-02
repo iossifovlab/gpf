@@ -117,11 +117,7 @@ autism_gene_tool_config = {
     "order": {
         "type": "list",
         "schema": {
-            "type": "dict",
-            "schema": {
-                "section": {"type": "string"},
-                "id": {"type": "string"},
-            }
+            "type": "string",
         }
     },
 }
