@@ -1,0 +1,26 @@
+.filter {
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+
+.filter .card-block  {
+  display: inline-block;
+}
+
+.checkbox  {
+  display: inline-block;
+}
+
+.card-title {
+  font-family: Roboto;
+  font-weight: 500;
+}
+
+.filter-label {
+  padding: 15px;
+  user-select: none;
+}
+
+.filter-label > span {
+  margin-left: 10px;
+}

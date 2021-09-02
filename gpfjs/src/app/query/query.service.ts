@@ -10,7 +10,7 @@ const oboe = require('oboe');
 import { environment } from 'environments/environment';
 import { ConfigService } from '../config/config.service';
 import { GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
-import { GeneViewSummaryAllelesArray } from '../gene-view/gene';
+import { SummaryAllelesArray } from '../gene-browser/summary-variants';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { map } from 'rxjs/operators';
 import { Dataset } from 'app/datasets/datasets';
@@ -132,8 +132,8 @@ export class QueryService {
     return genotypePreviewVariantsArray;
   }
 
-  getGeneViewVariants(filter, loadingService?: any) {
-    const summaryVariantsArray = new GeneViewSummaryAllelesArray();
+  getSummaryVariants(filter) {
+    const summaryVariantsArray = new SummaryAllelesArray();
     this.summaryStreamPost(this.geneViewVariants, filter).subscribe((variant: string[]) => {
       summaryVariantsArray.addSummaryRow(variant);
     });

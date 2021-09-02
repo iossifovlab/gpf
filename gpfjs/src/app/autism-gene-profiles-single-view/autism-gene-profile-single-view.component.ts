@@ -7,8 +7,8 @@ import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism
 import { switchMap, take, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
-import { GeneService } from 'app/gene-view/gene.service';
-import { Gene } from 'app/gene-view/gene';
+import { GeneService } from 'app/gene-browser/gene.service';
+import { Gene } from 'app/gene-browser/gene';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Store } from '@ngxs/store';
 import { QueryService } from 'app/query/query.service';
@@ -113,7 +113,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   getUCSCLink(gene: Gene, datasetGenome): string {
     const genome: string = datasetGenome;
     const chromosomePrefix: string = genome === 'hg38' ? '' : 'chr';
-    const chromosome: string = gene.transcripts[0].chrom;
+    const chromosome: string = gene.transcripts[0].chromosome;
     const geneStartPosition: number = gene.transcripts[0].start;
     const geneStopPosition: number = gene.transcripts[gene.transcripts.length - 1].stop;
 

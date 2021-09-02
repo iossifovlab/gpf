@@ -1,73 +1,9 @@
 import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges } from '@angular/core';
-import { Gene, GeneViewTranscript, GeneViewSummaryAllelesArray, GeneViewSummaryAllele } from 'app/gene-view/gene';
-import { GeneViewModel } from 'app/gene-view/gene-view';
+import { Gene, Transcript } from 'app/gene-browser/gene';
+import { GenePlotModel, GenePlotScaleState, GenePlotZoomHistory } from 'app/gene-plot/gene-plot';
+import { SummaryAllele, SummaryAllelesArray } from 'app/gene-browser/summary-variants';
 import * as d3 from 'd3';
 import * as draw from 'app/utils/svg-drawing';
-
-export class GeneViewScaleState {
-  constructor(
-    public xDomain: number[],
-    public xRange: number[],
-    public yMin: number,
-    public yMax: number,
-    public condenseToggled: boolean,
-  ) { }
-
-  get xMin(): number {
-    return this.xDomain[0];
-  }
-
-  get xMax(): number {
-    return this.xDomain[this.xDomain.length - 1];
-  }
-}
-
-export class GeneViewZoomHistory {
-  private stateList: GeneViewScaleState[];
-  private currentStateIdx: number;
-
-  constructor(private defaultState: GeneViewScaleState) {
-    this.reset();
-  }
-
-  get currentState(): GeneViewScaleState {
-    return this.stateList[this.currentStateIdx];
-  }
-
-  get canGoForward() {
-    return this.currentStateIdx < this.stateList.length - 1;
-  }
-
-  get canGoBackward() {
-    return this.currentStateIdx > 0;
-  }
-
-  public reset(): void {
-    this.stateList = [this.defaultState];
-    this.currentStateIdx = 0;
-  }
-
-  public addStateToHistory(scale: GeneViewScaleState): void {
-    if (this.currentStateIdx < this.stateList.length - 1) {
-      // overwrite history
-      this.stateList = this.stateList.slice(0, this.currentStateIdx + 1);
-    }
-    this.stateList.push(scale);
-    this.currentStateIdx++;
-  }
-
-  public moveToPrevious(): void {
-    if (this.canGoBackward) {
-      this.currentStateIdx--;
-    }
-  }
-
-  public moveToNext(): void {
-    if (this.canGoForward) {
-      this.currentStateIdx++;
-    }
-  }
-}
 
 @Component({
   selector: 'gpf-gene-plot',
@@ -77,11 +13,10 @@ export class GeneViewZoomHistory {
 })
 export class GenePlotComponent implements OnChanges {
   @Input() public readonly gene: Gene;
-  @Input() public readonly variantsArray: GeneViewSummaryAllelesArray;
+  @Input() public readonly variantsArray: SummaryAllelesArray;
   @Input() private readonly frequencyDomain: [number, number];
   @Input() private readonly yAxisLabel: string;
   @Input() public readonly allVariantsCounts: [number, number];
-  @Input() public condenseIntrons;
 
   @Output() public selectedRegion = new EventEmitter<[number, number]>();
   @Output() public selectedFrequencies = new EventEmitter<[number, number]>();
@@ -122,9 +57,10 @@ export class GenePlotComponent implements OnChanges {
   private plotElement: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
   private brush;
   private doubleClickTimer;
-  private geneViewModel: GeneViewModel;
-  public zoomHistory: GeneViewZoomHistory;
-  public drawTranscripts = true;
+  private genePlotModel: GenePlotModel;
+  public zoomHistory: GenePlotZoomHistory;
+  public showTranscripts = true;
+  public condenseIntrons = true;
   private normalRange: number[];
   private condensedRange: number[];
   private denovoLevels: number;
@@ -144,9 +80,9 @@ export class GenePlotComponent implements OnChanges {
       return;
     }
 
-    this.geneViewModel = new GeneViewModel(this.gene, this.plotWidth);
-    this.normalRange = this.geneViewModel.normalRange;
-    this.condensedRange = this.geneViewModel.condensedRange;
+    this.genePlotModel = new GenePlotModel(this.gene, this.plotWidth);
+    this.normalRange = this.genePlotModel.normalRange;
+    this.condensedRange = this.genePlotModel.condensedRange;
 
     d3.select(this.constants.svgContainerId)
       .selectAll('*')
@@ -173,7 +109,7 @@ export class GenePlotComponent implements OnChanges {
     const zeroAxisY = subdomainAxisY + (this.constants.frequencyPlotSize * this.constants.axisSizes.subdomain);
 
     this.scale.x
-      .domain(this.geneViewModel.domain)
+      .domain(this.genePlotModel.domain)
       .range(this.condenseIntrons ? this.condensedRange : this.normalRange);
     this.scale.y
       .domain(this.frequencyDomain)
@@ -188,9 +124,9 @@ export class GenePlotComponent implements OnChanges {
     this.axis.ySubdomain = d3.axisLeft(this.scale.ySubdomain).tickValues([0]);
     this.axis.yDenovo = d3.axisLeft(this.scale.yDenovo).tickValues([]);
 
-    this.zoomHistory = new GeneViewZoomHistory(
-      new GeneViewScaleState(
-        this.geneViewModel.domain, this.scale.x.range(), 0, this.frequencyDomain[1], this.condenseIntrons
+    this.zoomHistory = new GenePlotZoomHistory(
+      new GenePlotScaleState(
+        this.genePlotModel.domain, this.scale.x.range(), 0, this.frequencyDomain[1], this.condenseIntrons
       )
     );
 
@@ -205,7 +141,7 @@ export class GenePlotComponent implements OnChanges {
 
   private get svgHeight(): number {
     // +1 transcript if transcripts are drawn due to the extra padding between the collapsed and normal transcripts
-    const transcriptsCount = (this.drawTranscripts ? this.geneViewModel.geneViewTranscripts.length + 1 : 0) + 1;
+    const transcriptsCount = (this.showTranscripts ? this.genePlotModel.gene.transcripts.length + 1 : 0) + 1;
     return this.frequencyPlotHeight
       + this.constants.margin.top
       + this.constants.margin.bottom
@@ -223,10 +159,10 @@ export class GenePlotComponent implements OnChanges {
   }
 
   private set xDomain(domain: [number, number]) {
-    this.normalRange = this.geneViewModel.buildNormalIntronsRange(...domain, this.plotWidth);
-    this.condensedRange = this.geneViewModel.buildCondensedIntronsRange(...domain, this.plotWidth);
+    this.normalRange = this.genePlotModel.buildNormalIntronsRange(...domain, this.plotWidth);
+    this.condensedRange = this.genePlotModel.buildCondensedIntronsRange(...domain, this.plotWidth);
     this.scale.x
-      .domain(this.geneViewModel.buildDomain(...domain))
+      .domain(this.genePlotModel.buildDomain(...domain))
       .range(this.condenseIntrons ? this.condensedRange : this.normalRange);
     this.axis.x.tickValues(this.xAxisTicks);
   }
@@ -251,13 +187,13 @@ export class GenePlotComponent implements OnChanges {
 
   public resetPlot(): void {
     this.scale.x
-      .domain(this.geneViewModel.domain)
-      .range(this.condenseIntrons ? this.geneViewModel.condensedRange : this.geneViewModel.normalRange);
+      .domain(this.genePlotModel.domain)
+      .range(this.condenseIntrons ? this.genePlotModel.condensedRange : this.genePlotModel.normalRange);
     this.axis.x.tickValues(this.xAxisTicks);
     this.selectedRegion.emit(this.xDomain);
     this.selectedFrequencies.emit([0, this.frequencyDomain[1]]);
     this.zoomHistory.addStateToHistory(
-      new GeneViewScaleState(
+      new GenePlotScaleState(
         this.scale.x.domain(), this.scale.x.range(), 0, this.frequencyDomain[1], this.condenseIntrons
       )
     );
@@ -273,25 +209,26 @@ export class GenePlotComponent implements OnChanges {
       .select('#plot')
       .selectAll('*')
       .remove();
-    this.plotElement.append('g')
-      .call(this.brush);
     this.drawPlot();
     this.drawVariants();
     this.drawGene();
+
+    this.plotElement.append('g')
+      .call(this.brush);
   }
 
   public toggleCondenseIntrons() {
     this.condenseIntrons = !this.condenseIntrons;
     let range;
     if (this.condenseIntrons) {
-      range = this.geneViewModel.buildCondensedIntronsRange(...this.xDomain, this.plotWidth);
+      range = this.genePlotModel.buildCondensedIntronsRange(...this.xDomain, this.plotWidth);
     } else {
-      range = this.geneViewModel.buildNormalIntronsRange(...this.xDomain, this.plotWidth);
+      range = this.genePlotModel.buildNormalIntronsRange(...this.xDomain, this.plotWidth);
     }
     this.scale.x.range(range);
     this.axis.x.tickValues(this.xAxisTicks);
     this.zoomHistory.addStateToHistory(
-      new GeneViewScaleState(
+      new GenePlotScaleState(
         this.scale.x.domain(), range,
         this.zoomHistory.currentState.yMin, this.zoomHistory.currentState.yMax,
         this.condenseIntrons
@@ -395,25 +332,25 @@ export class GenePlotComponent implements OnChanges {
   }
 
   private drawGene(): void {
-    const summedTranscriptElement = this.plotElement.append('g').attr('id', 'summedTranscript');
+    const collapsedTranscriptElement = this.plotElement.append('g').attr('id', 'collapsedTranscript');
     let transcriptY = this.frequencyPlotHeight + this.constants.frequencyPlotPadding;
-    this.drawTranscript(summedTranscriptElement, this.geneViewModel.collapsedGeneViewTranscript, transcriptY);
+    this.drawTranscript(collapsedTranscriptElement, this.genePlotModel.gene.collapsedTranscript, transcriptY);
 
-    if (this.drawTranscripts) {
+    if (this.showTranscripts) {
       transcriptY += this.constants.transcriptHeight; // Add some extra padding after the collapsed transcript
       const transcriptsElement = this.plotElement.append('g').attr('id', 'transcripts');
-      for (const geneViewTranscript of this.geneViewModel.geneViewTranscripts) {
+      for (const geneViewTranscript of this.genePlotModel.gene.transcripts) {
         transcriptY += this.constants.transcriptHeight;
         this.drawTranscript(transcriptsElement, geneViewTranscript, transcriptY);
       }
     }
   }
 
-  private drawTranscript(svgGroup, geneViewTranscript: GeneViewTranscript, yPos: number) {
+  private drawTranscript(svgGroup, transcript: Transcript, yPos: number) {
     const domainMin = this.scale.x.domain()[0];
     const domainMax = this.scale.x.domain()[this.scale.x.domain().length - 1];
-    const transcriptId = geneViewTranscript.transcript.transcript_id;
-    const segments = geneViewTranscript.segments.filter(
+    const transcriptId = transcript.transcriptId;
+    const segments = transcript.segments.filter(
       seg => seg.intersectionLength(domainMin, domainMax) > 0
     );
 
@@ -434,10 +371,10 @@ export class GenePlotComponent implements OnChanges {
         nonCoding: this.constants.exonThickness.collapsed,
         coding: this.constants.cdsThickness.collapsed
       };
-      this.drawChromosomeLabels(svgGroup, yPos, geneViewTranscript);
+      this.drawChromosomeLabels(svgGroup, yPos);
     }
     this.drawUTRLabels(
-      svgGroup, firstSegmentStart, lastSegmentStop, yPos + brushSize.coding / 2, geneViewTranscript.strand
+      svgGroup, firstSegmentStart, lastSegmentStop, yPos + brushSize.coding / 2, transcript.strand
     );
 
     let exonsLength = 0;
@@ -501,29 +438,20 @@ export class GenePlotComponent implements OnChanges {
     }
   }
 
-  private drawChromosomeLabels(element, yPos: number, geneViewTranscript: GeneViewTranscript) {
-    const domainMin = this.scale.x.domain()[0];
-    const domainMax = this.scale.x.domain()[this.scale.x.domain().length - 1];
-    const selectedChromosomes = {};
-    for (const [chromosome, range] of Object.entries(geneViewTranscript.chromosomes)) {
+  private drawChromosomeLabels(element, yPos: number) {
+    const [domainMin, domainMax] = this.xDomain;
+    for (const [chromosome, range] of this.gene.chromosomes) {
       if (range[1] < domainMin || range[0] > domainMax) {
         continue;
-      } else {
-        selectedChromosomes[chromosome] = range;
       }
-    }
-
-    let fromX, toX: number;
-    for (const [chromosome, range] of Object.entries(selectedChromosomes)) {
-      fromX = Math.max(range[0], domainMin);
-      toX = Math.min(range[1], domainMax);
+      const [fromX, toX] = [Math.max(range[0], domainMin), Math.min(range[1], domainMax)];
       draw.hoverText(
         element, (this.scale.x(fromX) + this.scale.x(toX)) / 2 + 50, yPos - 5, `Chromosome: ${chromosome}`, `Chromosome: ${chromosome}`, this.constants.fontSize
       );
     }
   }
 
-  private getAlleleHeight(allele: GeneViewSummaryAllele): number {
+  private getAlleleHeight(allele: SummaryAllele): number {
     if (allele.frequency >= this.frequencyDomain[0] && allele.frequency <= this.frequencyDomain[1]) {
       return this.scale.y(allele.frequency);
     } else if (allele.seenAsDenovo && !allele.frequency) {
@@ -575,7 +503,7 @@ export class GenePlotComponent implements OnChanges {
     this.selectedFrequencies.emit([Math.min(...freqSelection), Math.max(...freqSelection)]);
 
     this.zoomHistory.addStateToHistory(
-      new GeneViewScaleState(
+      new GenePlotScaleState(
         this.scale.x.domain(), this.scale.x.range(),
         Math.min(...freqSelection), Math.max(...freqSelection), this.condenseIntrons
       )
@@ -587,7 +515,7 @@ export class GenePlotComponent implements OnChanges {
       .filter(sa => sa.seenAsDenovo && !sa.frequency)
       .sort((sa, sa2) => sa.position - sa2.position);
 
-    const leveledDenovos: GeneViewSummaryAllele[][] = [[]];
+    const leveledDenovos: SummaryAllele[][] = [[]];
     this.denovoAllelesSpacings = new Map<string, number>();
     for (const allele of denovoAlleles) {
       // try putting in one of current levels
@@ -622,10 +550,10 @@ export class GenePlotComponent implements OnChanges {
 
   public reset(): void {
     this.resetPlot();
-    this.zoomHistory.reset()
+    this.zoomHistory.reset();
   }
 
-  private restoreState(state: GeneViewScaleState): void {
+  private restoreState(state: GenePlotScaleState): void {
     this.scale.x
       .domain(state.xDomain)
       .range(state.xRange);
@@ -651,9 +579,5 @@ export class GenePlotComponent implements OnChanges {
     } else if (keyPressed === '5') {
       this.reset();
     }
-  }
-
-  public getRegionString(startPos: number, endPos: number) {
-    return this.geneViewModel.collapsedGeneViewTranscript.resolveRegionChromosomes([startPos, endPos]);
   }
 }

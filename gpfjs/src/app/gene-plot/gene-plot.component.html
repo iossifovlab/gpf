@@ -1,9 +1,9 @@
 <div class="card">
     <div class="card-header card-title" style="font-family: Roboto; font-weight: 500; padding: 0px; position: relative; height: 40px;">
       <span class="header-item" style="left: 0;">
-        <button type="button" id="undo-button" class="astext" (click)="undo()" [disabled]="!zoomHistory.canGoBackward"
+        <button type="button" id="undo-button" class="astext" (click)="undo()" [disabled]="!zoomHistory?.canGoBackward"
           title="Undo (Ctrl+Z or Z)" style="padding-left:20px; font-weight: bold;">&#x021FD;</button>
-        <button type="button" id="redo-button" class="astext" (click)="redo()" [disabled]="!zoomHistory.canGoForward"
+        <button type="button" id="redo-button" class="astext" (click)="redo()" [disabled]="!zoomHistory?.canGoForward"
           title="Redo (Ctrl+Y or Y)" style="padding-left:7px; font-weight: bold;">&#x021FE;</button>
         <button type="button" id="reset-button" class="astext" (click)="reset()"
           title="Reset (Double-click or 5)" style="padding-left:12px;">&#x021BB;</button>
@@ -11,7 +11,7 @@
 
       <span class="header-item" style="left: 120px;">
         <label style="margin-left: 20px; font-size: 17px; font-weight: 1; user-select: none">
-          <input type="checkbox" [checked]="!drawTranscripts" (change)="drawTranscripts = !drawTranscripts; redraw()">
+          <input type="checkbox" [checked]="!showTranscripts" (change)="showTranscripts = !showTranscripts; redraw()">
           Hide transcripts
         </label>
         <label style="margin-left: 15px; font-size: 17px; font-weight: 1; user-select: none">
@@ -21,7 +21,7 @@
       </span>
 
       <span id="gene-title" class="header-item" style="float: left; font-size: 20px; font-weight: bold; left: 45%;">
-        {{ gene?.gene }}
+        {{ gene?.geneSymbol }}
       </span>
 
       <span class="header-item" style="right: 0;">

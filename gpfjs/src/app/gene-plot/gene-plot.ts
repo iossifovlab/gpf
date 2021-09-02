@@ -1,10 +1,8 @@
-import { Gene, GeneViewTranscript } from 'app/gene-view/gene';
+import { Gene } from 'app/gene-browser/gene';
 
-export class GeneViewModel {
+export class GenePlotModel {
 
   public gene: Gene;
-  public geneViewTranscripts: GeneViewTranscript[] = [];
-  public collapsedGeneViewTranscript: GeneViewTranscript;
 
   // FIXME: See if these vars can be made readonly
   public domain: number[];
@@ -15,10 +13,6 @@ export class GeneViewModel {
   constructor(gene: Gene, rangeWidth: number, spacerLength: number = 150) {
     this.gene = gene;
     this.spacerLength = spacerLength; // in px
-    for (const transcript of gene.transcripts) {
-      this.geneViewTranscripts.push(new GeneViewTranscript(transcript));
-    }
-    this.collapsedGeneViewTranscript = new GeneViewTranscript(gene.collapsedTranscript());
     this.calculateRanges(rangeWidth);
   }
 
@@ -42,7 +36,7 @@ export class GeneViewModel {
   // FIXME: See if this can be made private
   public buildDomain(domainMin: number, domainMax: number) {
     const domain: number[] = [];
-    const filteredSegments = this.collapsedGeneViewTranscript.segments.filter(
+    const filteredSegments = this.gene.collapsedTranscript.segments.filter(
       seg => seg.intersectionLength(domainMin, domainMax) > 0);
 
     const firstSegment = filteredSegments[0];
@@ -67,8 +61,8 @@ export class GeneViewModel {
 
   public buildRange(domainMin: number, domainMax: number, rangeWidth: number, condenseIntrons: boolean) {
     const range: number[] = [];
-    const transcript = this.collapsedGeneViewTranscript.transcript;
-    const filteredSegments = this.collapsedGeneViewTranscript.segments.filter(
+    const transcript = this.gene.collapsedTranscript;
+    const filteredSegments = this.gene.collapsedTranscript.segments.filter(
       seg => seg.intersectionLength(domainMin, domainMax) > 0);
 
     const medianExonLength: number = transcript.medianExonLength;
@@ -111,5 +105,70 @@ export class GeneViewModel {
       range.push(rollingTracker);
     }
     return range;
+  }
+}
+
+export class GenePlotScaleState {
+  constructor(
+    public xDomain: number[],
+    public xRange: number[],
+    public yMin: number,
+    public yMax: number,
+    public condenseToggled: boolean,
+  ) { }
+
+  get xMin(): number {
+    return this.xDomain[0];
+  }
+
+  get xMax(): number {
+    return this.xDomain[this.xDomain.length - 1];
+  }
+}
+
+export class GenePlotZoomHistory {
+  private stateList: GenePlotScaleState[];
+  private currentStateIdx: number;
+
+  constructor(private defaultState: GenePlotScaleState) {
+    this.reset();
+  }
+
+  get currentState(): GenePlotScaleState {
+    return this.stateList[this.currentStateIdx];
+  }
+
+  get canGoForward() {
+    return this.currentStateIdx < this.stateList.length - 1;
+  }
+
+  get canGoBackward() {
+    return this.currentStateIdx > 0;
+  }
+
+  public reset(): void {
+    this.stateList = [this.defaultState];
+    this.currentStateIdx = 0;
+  }
+
+  public addStateToHistory(scale: GenePlotScaleState): void {
+    if (this.currentStateIdx < this.stateList.length - 1) {
+      // overwrite history
+      this.stateList = this.stateList.slice(0, this.currentStateIdx + 1);
+    }
+    this.stateList.push(scale);
+    this.currentStateIdx++;
+  }
+
+  public moveToPrevious(): void {
+    if (this.canGoBackward) {
+      this.currentStateIdx--;
+    }
+  }
+
+  public moveToNext(): void {
+    if (this.canGoForward) {
+      this.currentStateIdx++;
+    }
   }
 }

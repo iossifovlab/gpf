@@ -9,8 +9,11 @@
         </div>
 
         <div style="padding: 0px 10px 10px 20px">
-          <input (click)="hideResults = true" style="margin-right: 10px;" type="checkbox" id="coding-only-checkbox" [(ngModel)]="enableCodingOnly">
-          <label for="coding-only-checkbox" style="user-select: none">Coding only</label>
+          <label style="user-select: none">
+            <input style="margin-right: 6px;" type="checkbox" id="coding-only-checkbox"
+              (click)="hideResults = true"
+              [(ngModel)]="summaryVariantsFilter.codingOnly">Coding only
+          </label>
         </div>
       </div>
     </div>
@@ -20,15 +23,17 @@
     </div>
 
     <div id="filters" class="row" style="margin-left: 0px">
-      <div class="effect-card card" style="margin-top: 40px; margin-bottom: 40px;">
-        <div class="card-header card-title" style="font-family: Roboto; font-weight: 500;">Affected Status</div>
+      <div class="effect-card card filter">
+        <div class="card-header card-title">
+          Affected Status
+        </div>
         <div class="card-block">
-          <div style="display: inline" *ngFor="let affectedStatus of affectedStatusValues; let i=index" class="checkbox">
-            <label style="padding: 15px; user-select: none">
+          <div *ngFor="let affectedStatus of affectedStatusValues; let i=index" class="checkbox">
+            <label class="filter-label">
               <input #affectedStatusCheckbox checked type="checkbox" id="affectedStatus{{affectedStatus}}-checkbox"
               (change)="checkAffectedStatus(affectedStatus, affectedStatusCheckbox.checked)">
               <span class="pedigree-icon" [style.background-color]="'#aaaaaa'" style="opacity: 0.75;"></span>
-              <span style="display: inline-block;vertical-align: middle;line-height: 95%;"
+              <span style="display: inline-block; vertical-align: middle; line-height: 95%;"
                 [ngStyle]="{width: affectedStatus === 'Affected only' ? '70px' : 
                                    affectedStatus === 'Unaffected only' ? '80px' :
                                    affectedStatus === 'Affected and unaffected' ? '100px': {}}">
@@ -39,44 +44,47 @@
         </div>
       </div>
 
-      <div class="effect-card card" style="margin-top: 40px; margin-bottom: 40px; margin-left: 30px">
-        <div class="card-header card-title" style="font-family: Roboto; font-weight: 500;">Effect Types</div>
+      <div class="effect-card card filter" style="margin-left: 30px">
+        <div class="card-header card-title">
+          Effect Types
+        </div>
         <div class="card-block">
-          <div style="display: inline" *ngFor="let effect of ['LGDs', 'Missense', 'Synonymous', 'CNV+', 'CNV-', 'Other']; let i=index" class="checkbox">
-            <label style="padding: 15px; user-select: none">
-              <input #effectTypeCheckbox checked type="checkbox"
-                (change)="checkEffectType(effect, effectTypeCheckbox.checked)">
+          <div *ngFor="let effect of effectTypeValues; let i=index" class="checkbox">
+            <label class="filter-label">
+              <input #effectTypeCheckbox checked type="checkbox" (change)="checkEffectType(effect, effectTypeCheckbox.checked)">
               {{ effect }}
             </label>
           </div>
         </div>
       </div>
 
-      <div class="effect-card card" style="margin-top: 40px; margin-bottom: 40px; margin-left: 30px">
-        <div class="card-header card-title" style="font-family: Roboto; font-weight: 500;">Inheritance Types</div>
+      <div class="effect-card card filter" style="margin-left: 30px">
+        <div class="card-header card-title">
+          Inheritance Types
+        </div>
         <div class="card-block">
-          <div style="display: inline">
-            <label style="padding: 15px; user-select: none">
-              <input style="margin-right: 5px;" #denovoCheckbox checked type="checkbox"
-                (click)="checkShowDenovo(denovoCheckbox.checked)">
-              <span style="margin-left: 10px">Denovo</span>
+          <div class="checkbox">
+            <label class="filter-label">
+              <input #denovoCheckbox style="margin-right: 5px;" checked type="checkbox" (click)="checkShowDenovo(denovoCheckbox.checked)">
+              <span>Denovo</span>
             </label>
           </div>
-          <div style="display: inline">
-            <label style="padding: 15px; user-select: none">
-              <input #transmittedCheckbox checked type="checkbox"
-                (click)="checkShowTransmitted(transmittedCheckbox.checked)">
-              <span style="margin-left: 10px">Transmitted</span>
+          <div class="checkbox">
+            <label class="filter-label">
+              <input #transmittedCheckbox checked type="checkbox" (click)="checkShowTransmitted(transmittedCheckbox.checked)">
+              <span>Transmitted</span>
             </label>
           </div>
         </div>
       </div>
 
-      <div class="effect-card card" style="margin-top: 40px; margin-bottom: 40px; margin-left: 30px">
-        <div class="card-header card-title" style="font-family: Roboto; font-weight: 500;">Variant Types</div>
+      <div class="effect-card card filter" style="margin-left: 30px">
+        <div class="card-header card-title">
+          Variant Types
+        </div>
         <div class="card-block">
-          <div style="display: inline" *ngFor="let variantType of ['sub', 'ins', 'del', 'CNV+', 'CNV-']; let i=index" class="checkbox">
-            <label style="padding: 15px; user-select: none">
+          <div *ngFor="let variantType of variantTypeValues; let i=index" class="checkbox">
+            <label class="filter-label">
               <input #variantTypeCheckbox checked type="checkbox"
                 (change)="checkVariantType(variantType, variantTypeCheckbox.checked)">
               {{ variantType }}
@@ -90,10 +98,9 @@
       <gpf-gene-plot
         [gene]="selectedGene"
         [variantsArray]="summaryVariantsArrayFiltered"
-        [frequencyDomain]="[this.geneBrowserConfig.domainMin, this.geneBrowserConfig.domainMax]"
-        [yAxisLabel]="this.geneBrowserConfig.frequencyName || this.geneBrowserConfig.frequencyColumn"
+        [frequencyDomain]="[geneBrowserConfig.domainMin, geneBrowserConfig.domainMax]"
+        [yAxisLabel]="geneBrowserConfig.frequencyName || geneBrowserConfig.frequencyColumn"
         [allVariantsCounts]="[summaryVariantsArray.totalSummaryAllelesCount, summaryVariantsArray.totalFamilyVariantsCount]"
-        [condenseIntrons]="this.enableCodingOnly"
         (selectedRegion)="setSelectedRegion($event)"
         (selectedFrequencies)="setSelectedFrequencies($event)">
       </gpf-gene-plot>
@@ -116,7 +123,7 @@
             *ngIf="selectedGene"
             [loadingFinished]="familyLoadingFinished"
             [displayText]="'Loading variants...'"
-            [count]="genotypePreviewVariantsArray?.getVariantsCount(this.maxFamilyVariants)">
+            [count]="genotypePreviewVariantsArray?.getVariantsCount(maxFamilyVariants)">
           </gpf-loading-spinner>
         </div>
         <div class="col-6" *ngIf="selectedGene">
