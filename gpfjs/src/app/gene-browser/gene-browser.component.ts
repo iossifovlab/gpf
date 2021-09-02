@@ -2,18 +2,16 @@ import { AfterViewInit, Component, HostListener, OnInit, ViewChild } from '@angu
 import { ActivatedRoute, Params } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { GeneService } from 'app/gene-view/gene.service';
-import { Gene, GeneViewSummaryAllele, GeneViewSummaryAllelesArray, DomainRange } from 'app/gene-view/gene';
+import { Gene, GeneViewSummaryAllele, GeneViewSummaryAllelesArray } from 'app/gene-view/gene';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
-// tslint:disable-next-line:import-blacklist
-import { Observable, of, combineLatest } from 'rxjs';
-import { switchMap, first } from 'rxjs/operators';
+import { first } from 'rxjs/operators';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { GenePlotComponent } from 'app/gene-plot/gene-plot.component';
 import { ConfigService } from 'app/config/config.service';
-import { CODING, CNV, LGDS } from 'app/effecttypes/effecttypes';
+// import { CODING, CNV, LGDS } from 'app/effecttypes/effecttypes';
 
 @Component({
   selector: 'gpf-gene-browser',
