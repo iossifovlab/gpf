@@ -161,6 +161,9 @@ class GenomicResourcesRepo:
             self.resources[resource.get_id()] = resource
 
     def load(self):
+        if self.root_group is not None:
+            raise ValueError(f"repository {self.repository_id} already loaded")
+
         repo_content = self._load_repository_content()
         root_group = _create_genomic_resources_hierarchy(
             self,

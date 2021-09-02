@@ -8,9 +8,6 @@ def test_genomic_sequence_resource(test_grdb):
     res = test_grdb.get_resource(
         "hg19/GATK_ResourceBundle_5777_b37_phiX174/genome")
     assert res is not None
-
-    assert res.get_repo() == test_grdb.repositories[0]
-
     res.open()
 
     print(res.get_all_chrom_lengths())
@@ -39,9 +36,6 @@ def test_genomic_sequence_resource_http(test_http_grdb, resources_http_server):
     res = test_http_grdb.get_resource(
         "hg19/GATK_ResourceBundle_5777_b37_phiX174/genome")
     assert res is not None
-
-    assert res.get_repo() == test_http_grdb.repositories[0]
-
     res.open()
 
     print(res.get_all_chrom_lengths())

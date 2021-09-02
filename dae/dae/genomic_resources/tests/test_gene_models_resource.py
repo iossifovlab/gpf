@@ -7,8 +7,6 @@ def test_gene_models_resource(test_grdb):
         "hg19/GATK_ResourceBundle_5777_b37_phiX174/gene_models/refGene_201309")
     assert res is not None
 
-    assert res.get_repo() == test_grdb.repositories[0]
-
     assert isinstance(res, GeneModelsResource)
 
     res.open()
@@ -25,4 +23,3 @@ def test_gene_models_resource_http(test_http_grdb, resources_http_server):
 
     res.open()
     assert len(res.gene_models) == 13
-    
