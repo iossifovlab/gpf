@@ -70,9 +70,9 @@ def construct_import_annotation_pipeline(
         config_filename = gpf_instance.dae_config.annotation.conf_file
 
     # genomes_db = gpf_instance.genomes_db
-    resource_db = gpf_instance.genomic_resource_db
+    resources_db = gpf_instance.genomic_resources_db
     assert os.path.exists(config_filename), config_filename
-    return AnnotationPipeline.build(config_filename, resource_db)
+    return AnnotationPipeline.build(config_filename, resources_db)
 
 
 class MakefilePartitionHelper:

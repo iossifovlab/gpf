@@ -91,6 +91,12 @@ class EffectAnnotator(Annotator):
         for attr in self.attributes_list:
             attributes[attr.dest] = ""
 
+    @property
+    def output_columns(self):
+        return [
+            attr.dest for attr in self.attributes_list
+        ]
+
     def get_default_annotation(self):
         return copy.deepcopy(self.attributes_list)
 

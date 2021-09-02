@@ -61,7 +61,7 @@ class GPFInstance(object):
         self.load_eagerly = load_eagerly
 
         if self.dae_config.genomic_resources:
-            self.genomic_resource_db = GenomicResourceDB(
+            self.genomic_resources_db = GenomicResourceDB(
                 self.dae_config.genomic_resources.repositories)
 
         if load_eagerly:

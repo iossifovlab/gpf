@@ -45,16 +45,17 @@ class AnnotationPipeline():
                 annotator_type, gene_models, genome, override=override)
             pipeline.add_annotator(effect_annotator)
 
-        for annotator_config in pipeline_config.score_annotators:
-            score_id = annotator_config["resource"]
-            liftover = annotator_config["liftover"]
-            annotator_type = annotator_config["annotator"]
-            override = annotator_config.get("override")
-            gs = resource_db.get_resource(score_id)
-            annotator = AnnotatorFactory.make_score_annotator(
-                annotator_type, gs, liftover, override
-            )
-            pipeline.add_annotator(annotator)
+        if pipeline_config.score_annotators:
+            for annotator_config in pipeline_config.score_annotators:
+                score_id = annotator_config["resource"]
+                liftover = annotator_config["liftover"]
+                annotator_type = annotator_config["annotator"]
+                override = annotator_config.get("override")
+                gs = resource_db.get_resource(score_id)
+                annotator = AnnotatorFactory.make_score_annotator(
+                    annotator_type, gs, liftover, override
+                )
+                pipeline.add_annotator(annotator)
         return pipeline
 
     @property

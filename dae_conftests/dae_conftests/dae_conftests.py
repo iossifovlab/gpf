@@ -281,19 +281,15 @@ def annotation_pipeline_default_config(default_dae_config):
 
 
 @pytest.fixture(scope="session")
-def default_annotation_pipeline(default_dae_config, genomes_db_2013):
+def genomic_resources_db(gpf_instance_2013):
+    return gpf_instance_2013.genomic_resources_db
+
+
+@pytest.fixture(scope="session")
+def default_annotation_pipeline(default_dae_config, genomic_resources_db):
     filename = default_dae_config.annotation.conf_file
 
-    options = {
-        "default_arguments": None,
-        "vcf": True,
-        "r": "reference",
-        "a": "alternative",
-        "c": "chrom",
-        "p": "position",
-    }
-
-    pipeline = AnnotationPipeline.build(options, filename, genomes_db_2013)
+    pipeline = AnnotationPipeline.build(filename, genomic_resources_db)
 
     return pipeline
 
@@ -305,45 +301,22 @@ def annotation_scores_dirname():
 
 
 @pytest.fixture(scope="session")
-def annotation_pipeline_vcf(genomes_db_2013):
+def annotation_pipeline_vcf(genomic_resources_db):
     filename = relative_to_this_test_folder(
         "fixtures/annotation_pipeline/import_annotation.conf"
     )
 
-    options = {
-        "default_arguments": None,
-        "vcf": True,
-        "scores_dirname": relative_to_this_test_folder(
-            "fixtures/annotation_pipeline/"
-        )
-        # 'mode': 'overwrite',
-    }
-
-    pipeline = AnnotationPipeline.build(options, filename, genomes_db_2013,)
+    pipeline = AnnotationPipeline.build(filename, genomic_resources_db)
     return pipeline
 
 
 @pytest.fixture(scope="session")
-def annotation_pipeline_internal(genomes_db_2013):
-    assert genomes_db_2013 is not None
-    assert genomes_db_2013.get_gene_model_id() == "RefSeq2013"
+def annotation_pipeline_internal(genomic_resources_db):
     filename = relative_to_this_test_folder(
         "fixtures/annotation_pipeline/import_annotation.conf"
     )
 
-    options = {
-        "default_arguments": None,
-        "vcf": True,
-        "c": "chrom",
-        "p": "position",
-        "r": "reference",
-        "a": "alternative",
-        "scores_dirname": relative_to_this_test_folder(
-            "fixtures/annotation_pipeline/"
-        ),
-    }
-
-    pipeline = AnnotationPipeline.build(options, filename, genomes_db_2013,)
+    pipeline = AnnotationPipeline.build(filename, genomic_resources_db)
     return pipeline
 
 

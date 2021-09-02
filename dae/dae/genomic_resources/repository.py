@@ -1,6 +1,8 @@
-from io import TextIOWrapper
 import os
+import gzip
 import yaml
+import io
+
 from typing import Dict
 from glob import glob
 from subprocess import call
@@ -229,7 +231,10 @@ class FSGenomicResourcesRepo(GenomicResourcesRepo):
         resource = self.get_resource(resource_id)
         file_url = os.path.join(resource.get_url(), filename)
         filepath = urlparse(file_url).path
-        return open(filepath, "r")
+        if filepath.endswith(".gz") or filepath.endswith(".bgz"):
+            return gzip.open(filepath, "rt")
+        else:
+            return open(filepath, "r")
 
     def build_repository_content(self):
         content = _create_resource_content_dict(self.root_group)
@@ -347,6 +352,6 @@ class HTTPGenomicResourcesRepo(GenomicResourcesRepo):
         resource = self.get_resource(resource_id)
         file_url = os.path.join(resource.get_url(), filename)
         if mode == "r":
-            return TextIOWrapper(HTTPFile(file_url))
+            return io.TextIOWrapper(HTTPFile(file_url))
         else:
             return HTTPFile(file_url)
