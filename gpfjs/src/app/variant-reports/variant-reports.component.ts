@@ -6,7 +6,7 @@ import { VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable,
          DeNovoData, PedigreeTable, PeopleCounter, PeopleSex } from './variant-reports';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { map, share, switchMap, take } from 'rxjs/operators';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-variant-reports',
@@ -50,7 +50,7 @@ export class VariantReportsComponent implements OnInit, AfterViewInit {
     //Done to avoid expression change after check
     setTimeout(() => {
       this.selectedDataset$.subscribe(dataset => {
-        if (dataset && dataset.accessRights) {
+        if (dataset && dataset.accessRights && dataset.commonReport['enabled']) {
           this.variantReport$ = this.variantReportsService.getVariantReport(dataset.id);
 
           this.variantReport$.pipe(take(1)).subscribe(params => {
