@@ -340,7 +340,7 @@ export class Dataset extends IdName {
     readonly phenotypeTool: boolean,
     readonly enrichmentTool: boolean,
     readonly phenotypeBrowser: boolean,
-    readonly commonReport: boolean,
+    readonly commonReport: object,
     readonly genotypeBrowserConfig: GenotypeBrowser,
     readonly peopleGroupConfig: PeopleGroup,
     readonly groups: UserGroup[],
