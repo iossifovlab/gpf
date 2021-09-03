@@ -20,7 +20,7 @@ export class DatasetNodeComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.selectedDataset$ = this.datasetsService.getSelectedDataset();
+    this.selectedDataset$ = this.datasetsService.getSelectedDatasetObservable();
   }
 
   select() {
@@ -34,6 +34,8 @@ export class DatasetNodeComponent implements OnInit {
       return toolPageLinks.datasetDescription;
     } else if (selectedDataset.commonReport['enabled']) {
       return toolPageLinks.datasetStatistics;
+    } else if (selectedDataset.geneBrowser) {
+      return toolPageLinks.geneBrowser;
     } else if (selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig) {
       return toolPageLinks.genotypeBrowser;
     } else if (selectedDataset.phenotypeBrowser) {

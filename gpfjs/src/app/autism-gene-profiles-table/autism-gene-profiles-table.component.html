@@ -6,47 +6,56 @@
           <span>Gene</span>
         </th>
 
-        <ng-container *ngFor="let geneSetCategory of shownGeneSetsCategories">
-          <th class="table-main-header category-border" style="position: sticky; top: 0px; max-width: 100px;" [attr.colspan]="geneSetCategory.sets.length">
-            <div class="table-main-header-text" style="margin-right: 40px">
-              <gpf-sorting-buttons class="sorting-buttons" [id]="geneSetCategory.category + '_rank'" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
-              <span [title]="geneSetCategory.displayName">{{geneSetCategory.displayName}}</span>
-            </div>
-            <button #columnFilteringButton
-              [attr.id]="geneSetCategory.category + '-button'"
-              (click)="openGeneSetCategoryDropdown(geneSetCategory)"
-              class="dropdown-toggle btn navbar-toggler">
-              <span style="font-size: 14px;">&#9776;</span>
-            </button>
-          </th>
+        <ng-container *ngFor="let element of config.order">
+          <ng-container *ngIf="element.section === 'geneSets'">
+            <ng-container *ngIf="getGeneSetsCategory(element.id); let geneSetCategory">
+              <th class="table-main-header category-border" style="position: sticky; top: 0px; max-width: 100px;" [attr.colspan]="geneSetCategory.sets.length">
+                <div class="table-main-header-text" style="margin-right: 40px">
+                  <gpf-sorting-buttons class="sorting-buttons" [id]="geneSetCategory.category + '_rank'" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
+                  <span [title]="geneSetCategory.displayName">{{geneSetCategory.displayName}}</span>
+                </div>
+                <button #columnFilteringButton
+                  [attr.id]="geneSetCategory.category + '-button'"
+                  (click)="openGeneSetCategoryDropdown(geneSetCategory)"
+                  class="dropdown-toggle btn navbar-toggler">
+                  <span style="font-size: 14px;">&#9776;</span>
+                </button>
+              </th>
+            </ng-container>
+          </ng-container>
+
+          <ng-container *ngIf="element.section === 'genomicScores'">
+            <ng-container *ngIf="getGenomicScoresCategory(element.id); let genomicScoresCategory">
+              <th class="table-main-header category-border" style="position: sticky; top: 0px; max-width: 100px;" [attr.colspan]="genomicScoresCategory.scores.length">
+                <div class="table-main-header-text" style="margin-right: 30px">
+                  <span [title]="genomicScoresCategory.displayName">{{genomicScoresCategory.displayName}}</span>
+                </div>
+                <button #columnFilteringButton
+                  [attr.id]="genomicScoresCategory.category + '-button'"
+                  (click)="openGenomicScoresCategoryDropdown(genomicScoresCategory)"
+                  class="dropdown-toggle btn navbar-toggler">
+                  <span style="font-size: 14px;">&#9776;</span>
+                </button>
+              </th>
+            </ng-container>
+          </ng-container>
+
+          <ng-container *ngIf="element.section === 'datasets'">
+            <th *ngIf="getDataset(element.id); let dataset" class="table-main-header category-border" style="position: sticky; top: 0px" [attr.colspan]="calculateDatasetColspan(dataset)">
+              <div class="table-main-header-text" style="margin-right: 30px">
+                <span [title]="dataset.meta ? dataset.meta : ''">{{dataset.displayName}}</span>
+              </div>
+              <button #columnFilteringButton
+                  [attr.id]="dataset.id + '-button'"
+                  (click)="openDatasetDropdown(dataset, dataset.id)"
+                  class="dropdown-toggle btn navbar-toggler"
+                  style="float: right; outline: none; font-size: 18px; white-space: nowrap; border: 0; padding: 0; width: 18px; vertical-align: unset;">
+                  <span style="font-size: 14px;">&#9776;</span>
+              </button>
+            </th>
+          </ng-container>
         </ng-container>
 
-        <ng-container *ngFor="let genomicScoresCategory of shownGenomicScoresCategories">
-          <th class="table-main-header category-border" style="position: sticky; top: 0px; max-width: 100px;" [attr.colspan]="genomicScoresCategory.scores.length">
-            <div class="table-main-header-text" style="margin-right: 30px">
-              <span [title]="genomicScoresCategory.displayName">{{genomicScoresCategory.displayName}}</span>
-            </div>
-            <button #columnFilteringButton
-              [attr.id]="genomicScoresCategory.category + '-button'"
-              (click)="openGenomicScoresCategoryDropdown(genomicScoresCategory)"
-              class="dropdown-toggle btn navbar-toggler">
-              <span style="font-size: 14px;">&#9776;</span>
-            </button>
-          </th>
-        </ng-container>
-
-        <th *ngFor="let dataset of shownDatasets" class="table-main-header category-border" style="position: sticky; top: 0px" [attr.colspan]="calculateDatasetColspan(dataset)">
-          <div class="table-main-header-text" style="margin-right: 30px">
-            <span [title]="dataset.meta ? dataset.meta : ''">{{dataset.displayName}}</span>
-          </div>
-          <button #columnFilteringButton
-              [attr.id]="dataset.id + '-button'"
-              (click)="openDatasetDropdown(dataset, dataset.id)"
-              class="dropdown-toggle btn navbar-toggler"
-              style="float: right; outline: none; font-size: 18px; white-space: nowrap; border: 0; padding: 0; width: 18px; vertical-align: unset;">
-              <span style="font-size: 14px;">&#9776;</span>
-          </button>
-        </th>
       </tr>
 
       <tr style="height: 110px;">
@@ -55,34 +64,42 @@
             class="form-control" autocomplete="off" type="text" placeholder="Search">
         </th>
 
-        <ng-container *ngFor="let geneSetCategory of shownGeneSetsCategories">
-          <th class="table-subheader" style="white-space: normal;" rowspan="2" *ngFor="let geneSet of geneSetCategory.sets; let i = index" [ngClass] = "{'category-border': i === 0}">
-            <span class="vertical-text" [title]="geneSet.meta ? geneSet.meta : ''">{{geneSet.setId}}</span>
-            <gpf-sorting-buttons [id]="geneSet.collectionId + '_' + geneSet.setId" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
-          </th>
-        </ng-container>
+        <ng-container *ngFor="let element of config.order">
+          <ng-container *ngIf="element.section === 'geneSets'">
+            <ng-container *ngIf="getGeneSetsCategory(element.id); let geneSetCategory">
+              <th class="table-subheader" style="white-space: normal;" rowspan="2" *ngFor="let geneSet of geneSetCategory.sets; let i = index" [ngClass] = "{'category-border': i === 0}">
+                <span class="vertical-text" [title]="geneSet.meta ? geneSet.meta : ''">{{geneSet.setId}}</span>
+                <gpf-sorting-buttons [id]="geneSet.collectionId + '_' + geneSet.setId" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
+              </th>
+            </ng-container>
+          </ng-container>
 
-        <ng-container *ngFor="let genomicScoresCategory of shownGenomicScoresCategories">
-          <th class="table-subheader" style="white-space: normal;"rowspan="2" *ngFor="let genomicScore of genomicScoresCategory.scores; let i = index" [ngClass] = "{'category-border': i === 0}">
-            <span class="vertical-text" [title]="genomicScore.meta ? genomicScore.meta : ''">{{genomicScore.scoreName}}</span>
-            <gpf-sorting-buttons [id]="genomicScoresCategory.category + '_' + genomicScore.scoreName" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
-          </th>
-        </ng-container>
+          <ng-container *ngIf="element.section === 'genomicScores'">
+            <ng-container *ngIf="getGenomicScoresCategory(element.id); let genomicScoresCategory">
+              <th class="table-subheader" style="white-space: normal;"rowspan="2" *ngFor="let genomicScore of genomicScoresCategory.scores; let i = index" [ngClass] = "{'category-border': i === 0}">
+                <span class="vertical-text" [title]="genomicScore.meta ? genomicScore.meta : ''">{{genomicScore.scoreName}}</span>
+                <gpf-sorting-buttons [id]="genomicScoresCategory.category + '_' + genomicScore.scoreName" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
+              </th>
+            </ng-container>
+          </ng-container>
 
-        <ng-container *ngFor="let dataset of shownDatasets">
-          <ng-container *ngFor="let personSet of dataset.personSets; let i = index">
-            <th class="table-subheader" [attr.colspan]="personSet.statistics.length" [ngClass] = "{'category-border': i === 0}">
-              <div class="table-main-header-text" style="margin-right: 30px">
-                <span [title]="personSet.description ? personSet.description : ''">{{personSet.displayName}} ({{personSet.childrenCount}})</span>
-              </div>
-              <button #columnFilteringButton
-              [attr.id]="dataset.id + '-' + personSet.id + '-button'"
-              (click)="openDatasetDropdown(dataset, dataset.id + '-' + personSet.id)"
-              class="dropdown-toggle btn navbar-toggler"
-              style="float: right; outline: none; font-size: 18px; white-space: nowrap; border: 0; padding: 0; width: 18px; vertical-align: unset;">
-                <span style="font-size: 14px;">&#9776;</span>
-              </button>
-            </th>
+          <ng-container *ngIf="element.section === 'datasets'">
+            <ng-container *ngIf="getDataset(element.id); let dataset">
+              <ng-container *ngFor="let personSet of dataset.personSets; let i = index">
+                <th class="table-subheader" [attr.colspan]="personSet.statistics.length" [ngClass] = "{'category-border': i === 0}">
+                  <div class="table-main-header-text" style="margin-right: 30px">
+                    <span [title]="personSet.description ? personSet.description : ''">{{personSet.displayName}} ({{personSet.childrenCount}})</span>
+                  </div>
+                  <button #columnFilteringButton
+                  [attr.id]="dataset.id + '-' + personSet.id + '-button'"
+                  (click)="openDatasetDropdown(dataset, dataset.id + '-' + personSet.id)"
+                  class="dropdown-toggle btn navbar-toggler"
+                  style="float: right; outline: none; font-size: 18px; white-space: nowrap; border: 0; padding: 0; width: 18px; vertical-align: unset;">
+                    <span style="font-size: 14px;">&#9776;</span>
+                  </button>
+                </th>
+              </ng-container>
+            </ng-container>
           </ng-container>
 
         </ng-container>
@@ -105,35 +122,43 @@
           {{gene.geneSymbol}}
         </td>
 
-        <ng-container *ngFor="let geneSetCategory of shownGeneSetsCategories">
-          <td style="min-width: 70px" *ngFor="let geneSet of geneSetCategory.sets; let i = index" [ngClass] = "{'category-border': i === 0}">
-            <ng-container *ngIf="gene.geneSets.indexOf(geneSet.collectionId + '_' + geneSet.setId) !== -1">&#10003;</ng-container>
-          </td>
-        </ng-container>
-
-        <ng-container *ngFor="let genomicScoresCategory of shownGenomicScoresCategories">
-          <td style="min-width: 70px" *ngFor="let genomicScore of genomicScoresCategory.scores; let i = index" [ngClass] = "{'category-border': i === 0}">
-            <ng-container *ngIf="getGeneScoreValue(gene, genomicScoresCategory.category, genomicScore.scoreName) !== 'null' &&
-                                 getGeneScoreValue(gene, genomicScoresCategory.category, genomicScore.scoreName) !== 'NaN'">
-              {{getGeneScoreValue(gene, genomicScoresCategory.category, genomicScore.scoreName)}}
+        <ng-container *ngFor="let element of config.order">
+          <ng-container *ngIf="element.section === 'geneSets'">
+            <ng-container *ngIf="getGeneSetsCategory(element.id); let geneSetCategory">
+              <td style="min-width: 70px" *ngFor="let geneSet of geneSetCategory.sets; let i = index" [ngClass] = "{'category-border': i === 0}">
+                <ng-container *ngIf="gene.geneSets.indexOf(geneSet.collectionId + '_' + geneSet.setId) !== -1">&#10003;</ng-container>
+              </td>
             </ng-container>
-          </td>
-        </ng-container>
+          </ng-container>
 
-        <ng-container *ngFor="let dataset of shownDatasets">
-          <ng-container *ngFor="let personSet of dataset.personSets; let i = index">
-            <td (click)="goToQuery(gene.geneSymbol, personSet.id, dataset.id, statistic)"
-            (middleclick)="goToQuery(gene.geneSymbol, personSet.id, dataset.id, statistic)"
-            [class.link-td]="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id).count"
-            style="min-width: 70px;"
-            *ngFor="let statistic of personSet.statistics; let j = index"
-            [ngClass] = "{'category-border': i === 0 && j === 0}">
-              <ng-container *ngIf="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id) as value">
-                <ng-container *ngIf="value.count !== 0">
-                    {{value.count}} ({{value.rate | number : '1.0-3' }})
+          <ng-container *ngIf="element.section === 'genomicScores'">
+            <ng-container *ngIf="getGenomicScoresCategory(element.id); let genomicScoresCategory">
+              <td style="min-width: 70px" *ngFor="let genomicScore of genomicScoresCategory.scores; let i = index" [ngClass] = "{'category-border': i === 0}">
+                <ng-container *ngIf="getGeneScoreValue(gene, genomicScoresCategory.category, genomicScore.scoreName) !== 'null' &&
+                                    getGeneScoreValue(gene, genomicScoresCategory.category, genomicScore.scoreName) !== 'NaN'">
+                  {{getGeneScoreValue(gene, genomicScoresCategory.category, genomicScore.scoreName)}}
                 </ng-container>
+              </td>
+            </ng-container>
+          </ng-container>
+
+          <ng-container *ngIf="element.section === 'datasets'">
+            <ng-container *ngIf="getDataset(element.id); let dataset">
+              <ng-container *ngFor="let personSet of dataset.personSets; let i = index">
+                <td [class.link-td]="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id).count"
+                style="min-width: 70px;"
+                *ngFor="let statistic of personSet.statistics; let j = index"
+                [ngClass] = "{'category-border': i === 0 && j === 0}">
+                  <ng-container *ngIf="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id) as value">
+                    <div *ngIf="value.count !== 0"
+                    (click)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)"
+                    (middleclick)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)">
+                        {{value.count}} ({{value.rate | number : '1.0-3' }})
+                    </div>
+                  </ng-container>
+                </td>
               </ng-container>
-            </td>
+            </ng-container>
           </ng-container>
         </ng-container>
       </tr>

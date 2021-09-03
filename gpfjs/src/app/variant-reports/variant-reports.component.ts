@@ -1,21 +1,19 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener, OnChanges, SimpleChanges } from '@angular/core';
-import { Router, ActivatedRoute, Params } from '@angular/router';
-
+import { Component, OnInit, ViewChild, ElementRef, HostListener, AfterViewInit} from '@angular/core';
+import { ActivatedRoute, Params } from '@angular/router';
 import { Observable } from 'rxjs';
-
 import { VariantReportsService } from './variant-reports.service';
 import { VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable,
          DeNovoData, PedigreeTable, PeopleCounter, PeopleSex } from './variant-reports';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { map, share, switchMap, take } from 'rxjs/operators';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-variant-reports',
   templateUrl: './variant-reports.component.html',
   styleUrls: ['./variant-reports.component.css']
 })
-export class VariantReportsComponent implements OnInit, OnChanges {
+export class VariantReportsComponent implements OnInit, AfterViewInit {
   @ViewChild('families_pedigree') familiesPedigree: ElementRef;
   @ViewChild('legend') legend: ElementRef;
   familiesPedigreeTop: number;
@@ -35,31 +33,25 @@ export class VariantReportsComponent implements OnInit, OnChanges {
   constructor(
     private variantReportsService: VariantReportsService,
     private route: ActivatedRoute,
-    private router: Router,
     private datasetsService: DatasetsService,
   ) { }
 
-  ngOnInit() {
-    let datasetId$ = this.route.parent.params.pipe(
-      take(1),
-      map(params => <string>params['dataset'])
-    );
-
+  ngOnInit(): void {
     this.route.parent.params.subscribe(
       (params: Params) => {
         this.selectedDatasetId = params['dataset'];
       }
     );
 
-    this.selectedDataset$ = this.datasetsService.getDataset(this.selectedDatasetId);
+    this.selectedDataset$ = this.datasetsService.getSelectedDatasetObservable();
+  }
 
-    this.selectedDataset$.subscribe(
-      dataset => {
-        if (dataset.accessRights) {
-          this.variantReport$ = datasetId$.pipe(
-            switchMap(datasetId => this.variantReportsService.getVariantReport(datasetId)),
-            share()
-          );
+  ngAfterViewInit() {
+    //Done to avoid expression change after check
+    setTimeout(() => {
+      this.selectedDataset$.subscribe(dataset => {
+        if (dataset && dataset.accessRights && dataset.commonReport['enabled']) {
+          this.variantReport$ = this.variantReportsService.getVariantReport(dataset.id);
 
           this.variantReport$.pipe(take(1)).subscribe(params => {
             this.pedigreeTables = params.familyReport.familiesCounters.map(
@@ -70,24 +62,20 @@ export class VariantReportsComponent implements OnInit, OnChanges {
                 )
               );
 
-            this.currentPeopleCounter = params.familyReport.peopleCounters[0];
+            this.currentPeopleCounter = params.peopleReport.peopleCounters[0];
             this.currentPedigreeTable = this.pedigreeTables[0];
             if(params.denovoReport !== null) {
               this.currentDenovoReport = params.denovoReport.tables[0];
             }
           });
         }
-      }
-    );
-  }
-
-  ngOnChanges(changes: SimpleChanges) {
-    this.datasetsService.setSelectedDatasetById(this.selectedDatasetId);
+      })
+    }, 0)
   }
 
   @HostListener('window:scroll', ['$event'])
   @HostListener('click', ['$event'])
-  onWindowScroll(event) {
+  onWindowScroll() {
     if (this.familiesPedigree && this.familiesPedigree.nativeElement) {
       this.familiesPedigreeTop = this.familiesPedigree.nativeElement.getBoundingClientRect().top;
       this.familiesPedigreeBottom = this.familiesPedigree.nativeElement.getBoundingClientRect().bottom;
@@ -175,5 +163,4 @@ export class VariantReportsComponent implements OnInit, OnChanges {
   getDownloadLink() {
     return this.variantReportsService.getDownloadLink();
   }
-
 }

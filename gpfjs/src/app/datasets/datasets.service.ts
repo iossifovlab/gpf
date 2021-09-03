@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 // tslint:disable-next-line:import-blacklist
-import { Observable, ReplaySubject, BehaviorSubject, asyncScheduler, of } from 'rxjs';
+import { Observable, ReplaySubject, BehaviorSubject, zip, Subject } from 'rxjs';
 
-import { Dataset, DatasetDetails } from '../datasets/datasets';
+import { Dataset } from '../datasets/datasets';
 import { UsersService } from '../users/users.service';
 import { ConfigService } from '../config/config.service';
-import { catchError, distinctUntilChanged, filter, map, mergeMap, subscribeOn, switchMap, take } from 'rxjs/operators';
+import { distinctUntilChanged, map, take } from 'rxjs/operators';
 
 @Injectable()
 export class DatasetsService {
@@ -17,33 +17,14 @@ export class DatasetsService {
 
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
   private datasets$ = new ReplaySubject<Array<Dataset>>(1);
-  private selectedDataset$ = new ReplaySubject<Dataset>(1);
-  private selectedDatasetId$ = new BehaviorSubject<string>(null);
-  private selectedDatasetDetails$ = new BehaviorSubject<DatasetDetails>(null);
+  private selectedDataset$ = new BehaviorSubject<Dataset>(null);
+  private datasetLoaded$ = new Subject<void>();
 
   constructor(
     private http: HttpClient,
     private config: ConfigService,
     private usersService: UsersService
   ) {
-    this.selectedDatasetId$.asObservable().pipe(
-      switchMap(selectedDatasetId => {
-        if (!selectedDatasetId) {
-          return of(null);
-        }
-
-        return this.getDataset(selectedDatasetId);
-      }),
-      catchError(() => of(null)),
-      filter(a => !!a),
-      mergeMap((dataset: Dataset) => {
-        this.selectedDataset$.next(dataset);
-        return this.getDatasetDetails(dataset.id);
-      })
-    ).subscribe((datasetDetails: DatasetDetails) => {
-      this.selectedDatasetDetails$.next(datasetDetails);
-    });
-
     this.usersService.getUserInfoObservable().pipe(
       map(user => user.email || ''),
       distinctUntilChanged()
@@ -66,54 +47,64 @@ export class DatasetsService {
 
   getDataset(datasetId: string): Observable<Dataset> {
     const url = `${this.datasetUrl}/${datasetId}`;
-    const options = { withCredentials: true };
+    const options = { headers: this.headers, withCredentials: true };
 
-    return this.http.get(this.config.baseUrl + url, options).pipe(
-      map(res => {
-        return Dataset.fromJson(res['data']);
-      })
-    );
+    const dataset$ = this.http.get(this.config.baseUrl + url, options);
+    const details$ = this.http.get(`${this.config.baseUrl}${this.datasetsDetailsUrl}/${datasetId}`, options);
+
+    return zip(dataset$, details$).pipe(map(datasetPack => Dataset.fromDatasetAndDetailsJson(datasetPack[0]['data'], datasetPack[1])));
   }
 
   setSelectedDataset(dataset: Dataset): void {
-    if (this.selectedDatasetId$.getValue() !== dataset.id) {
-      this.selectedDatasetId$.next(dataset.id);
+    this.setSelectedDatasetById(dataset.id);
+  }
+
+  setSelectedDatasetById(datasetId: string, force = false): void {
+    if (!force && this.selectedDataset$.getValue()?.id === datasetId) {
+      return;
+    }
+
+    this.selectedDataset$.next(null);
+    this.getDataset(datasetId).pipe(take(1)).subscribe(dataset => {
+      this.selectedDataset$.next(dataset);
+      this.datasetLoaded$.next();
+    });
+  }
+
+  reloadSelectedDataset(force = false): void {
+    if (this.hasSelectedDataset()) {
+      if (force) {
+        this.setSelectedDatasetById(this.getSelectedDatasetId(), true);
+      }
+      this.datasetLoaded$.next();
     }
   }
 
-  setSelectedDatasetById(datasetId: string): void {
-    if (this.selectedDatasetId$.getValue() !== datasetId) {
-      this.selectedDatasetId$.next(datasetId);
-    }
+  getSelectedDatasetObservable(): Observable<Dataset> {
+    return this.selectedDataset$.asObservable();
   }
 
-  reloadSelectedDataset() {
-    this.selectedDatasetId$.next(this.selectedDatasetId$.value);
+  getSelectedDataset(): Dataset {
+    return this.selectedDataset$.getValue();
   }
 
-  getSelectedDataset() {
-    return this.selectedDataset$.asObservable().pipe(
-      subscribeOn(asyncScheduler)
-    );
+  getSelectedDatasetId(): string {
+    return this.selectedDataset$.getValue().id;
   }
 
-  getSelectedDatasetId() {
-    return this.selectedDatasetId$.value;
-  }
-
-  getDatasetsObservable() {
+  getDatasetsObservable(): Observable<Dataset[]> {
     return this.datasets$.asObservable();
   }
 
-  hasSelectedDataset() {
-    return !!this.selectedDatasetId$.getValue();
+  getDatasetsLoadedObservable(): Subject<void> {
+    return this.datasetLoaded$;
   }
 
-  getSelectedDatasetDetails(): DatasetDetails {
-    return this.selectedDatasetDetails$.getValue();
+  hasSelectedDataset(): boolean {
+    return !!this.selectedDataset$.getValue();
   }
 
-  private reloadAllDatasets() {
+  private reloadAllDatasets(): void {
     this.getDatasets().pipe(take(1)).subscribe(() => {});
   }
 
@@ -122,16 +113,6 @@ export class DatasetsService {
 
     return this.http.get(this.config.baseUrl + this.permissionDeniedPromptUrl, options).pipe(
       map(res => res['data'])
-    );
-  }
-
-  getDatasetDetails(datasetId: string): Observable<DatasetDetails> {
-    const options = { headers: this.headers, withCredentials: true };
-
-    return this.http.get(`${this.config.baseUrl}${this.datasetsDetailsUrl}/${datasetId}`, options).pipe(
-      map(res => {
-        return DatasetDetails.fromJson(res);
-      })
     );
   }
 

@@ -16,14 +16,11 @@ import { take } from 'rxjs/operators';
   styleUrls: ['../user-edit/user-edit.component.css']
 })
 export class UserCreateComponent implements OnInit {
-  @HostListener('window:popstate', [ '$event' ])
-  unloadHandler() {
-    this.closeConfirmnationModal();
-  }
 
   @ViewChild(UserGroupsSelectorComponent)
   private userGroupsSelectorComponent: UserGroupsSelectorComponent;
   @ViewChild('ele') ele: ElementRef;
+  @ViewChild('emailInput') emailInput: ElementRef;
 
   lockedOptions = {
     width: 'style',
@@ -44,7 +41,13 @@ export class UserCreateComponent implements OnInit {
     private usersGroupsService: UsersGroupsService
   ) { }
 
+  @HostListener('window:popstate', [ '$event' ])
+  unloadHandler() {
+    this.closeConfirmnationModal();
+  }
+
   ngOnInit() {
+    this.focusEmailInputArea();
     this.usersGroupsService
       .getAllGroups()
       .pipe(take(1))
@@ -80,5 +83,26 @@ export class UserCreateComponent implements OnInit {
 
   goBack() {
     this.router.navigate(['/management']);
+  }
+
+  /**
+  * Waits email input area element to load.
+  * @returns promise
+  */
+   private async waitForEmailInputAreaToLoad(): Promise<void> {
+    return new Promise<void>(resolve => {
+      const timer = setInterval(() => {
+        if (this.emailInput !== undefined) {
+          resolve();
+          clearInterval(timer);
+        }
+      }, 200);
+    });
+  }
+
+  private focusEmailInputArea() {
+    this.waitForEmailInputAreaToLoad().then(() => {
+      this.emailInput.nativeElement.focus();
+    });
   }
 }

@@ -42,8 +42,15 @@
             <gpf-table-subcontent field="measureType"></gpf-table-subcontent>
             <gpf-table-subcontent>
                 <span *gpfTableCellContent="let data">
-                    [{{ +data.valuesDomain.slice(data.valuesDomain.indexOf('[') + 1, data.valuesDomain.indexOf(',')) | numberWithExp: "1.3-3" }},
-                    {{ +data.valuesDomain.slice(data.valuesDomain.indexOf(',') + 1, data.valuesDomain.indexOf(']')) | numberWithExp: "1.3-3" }}]
+                    <ng-container *ngIf="data.measureType === 'continuous'">
+                        [{{ +data.valuesDomain.slice(data.valuesDomain.indexOf('[') + 1, data.valuesDomain.indexOf(',')) | numberWithExp: "1.3-3" }},
+                        {{ +data.valuesDomain.slice(data.valuesDomain.indexOf(',') + 1, data.valuesDomain.indexOf(']')) | numberWithExp: "1.3-3" }}]
+                    </ng-container>
+                    <ng-container *ngIf="data.measureType === 'categorical' || data.measureType === 'raw' || data.measureType === 'ordinal'">
+                        <ng-container *ngFor="let value of data.valuesDomain.split(', ')">
+                            [{{ value }}]
+                        </ng-container>
+                    </ng-container>
                 </span>
             </gpf-table-subcontent>
         </gpf-table-content>

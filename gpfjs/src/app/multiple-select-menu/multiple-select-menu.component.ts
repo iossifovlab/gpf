@@ -12,7 +12,6 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
   @Input() allItems: string[];
   @Input() readonly minSelectCount = 0;
   @Output() applyEvent = new EventEmitter<{menuId: string, data: string[]}>();
-  @Input() focusInput: boolean;
   @ViewChild('searchInput') searchInput: ElementRef;
 
   checkUncheckAllButtonName = 'Uncheck all';
@@ -26,10 +25,6 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
     this.checkboxDataArraySavedState = this.toCheckboxDataArray(this.allItems);
     this.applySavedState();
     this.searchText = '';
-
-    if (this.focusInput) {
-      this.focusSearchInput();
-    }
   }
 
   ngOnInit(): void {
@@ -82,9 +77,24 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
     });
   }
 
+  /**
+  * Waits search input element to load.
+  * @returns promise
+  */
+  private async waitForSearchInputToLoad(): Promise<void> {
+    return new Promise<void>(resolve => {
+      const timer = setInterval(() => {
+        if (this.searchInput !== undefined) {
+          resolve();
+          clearInterval(timer);
+        }
+      }, 100);
+    });
+  }
+
   focusSearchInput() {
-    setTimeout(() => {
+    this.waitForSearchInputToLoad().then(() => {
       this.searchInput.nativeElement.focus();
-    }, 0);
+    });
   }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, SimpleChanges, OnChanges } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router, Params } from '@angular/router';
 import { Location } from '@angular/common';
 
@@ -18,18 +18,19 @@ import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } 
   styleUrls: ['./pheno-browser.component.css'],
 })
 export class PhenoBrowserComponent implements OnInit {
-
-  selectedInstrument$: BehaviorSubject<PhenoInstrument> = new BehaviorSubject<PhenoInstrument>(undefined);
+  public selectedInstrument$: BehaviorSubject<PhenoInstrument> = new BehaviorSubject<PhenoInstrument>(undefined);
   private measuresToShow: PhenoMeasures;
-  measuresToShow$: Observable<PhenoMeasures>;
+  public measuresToShow$: Observable<PhenoMeasures>;
 
-  instruments: Observable<PhenoInstruments>;
-  downloadLink$: Observable<string>;
+  public instruments: Observable<PhenoInstruments>;
+  public downloadLink$: Observable<string>;
 
-  selectedDatasetId: string;
-  selectedDataset$: Observable<Dataset>;
+  private selectedDatasetId: string;
+  public selectedDataset: Dataset;
 
-  input$ = new ReplaySubject<string>(1);
+  public input$ = new ReplaySubject<string>(1);
+
+  @ViewChild('searchBox') public searchBox: ElementRef;
 
   constructor(
     private route: ActivatedRoute,
@@ -39,40 +40,47 @@ export class PhenoBrowserComponent implements OnInit {
     private datasetsService: DatasetsService,
   ) { }
 
-  ngOnInit() {
+  public ngOnInit() {
     const datasetId$ = this.route.parent.params.pipe(
       take(1),
       map(params => <string>params['dataset'])
     );
 
-      this.route.parent.params.subscribe(
-        (params: Params) => {
-          this.selectedDatasetId = params['dataset'];
-        }
-      );
+    this.route.parent.params.subscribe((params: Params) => {
+      this.selectedDatasetId = params['dataset'];
+    });
 
-      this.selectedDataset$ = this.datasetsService.getSelectedDataset();
+    this.updateSelectedDataset();
 
-      this.selectedDataset$.subscribe(
-        dataset => {
-          if (dataset.accessRights) {
-            this.initInstruments(datasetId$);
-            this.initMeasuresToShow(datasetId$);
-            this.initDownloadLink(datasetId$);
-          }
-        }
-      );
+    this.datasetsService.getDatasetsLoadedObservable()
+    .subscribe(datasetsLoaded => {
+      this.updateSelectedDataset();
+    });
+
+    this.focusSearchBox();
   }
 
-  initMeasuresToShow(datasetId$: Observable<string>) {
+  private updateSelectedDataset() {
+    this.selectedDataset = this.datasetsService.getSelectedDataset();
+    if (!this.selectedDataset) {
+      return;
+    }
+    if (this.selectedDataset.accessRights) {
+      this.initInstruments(this.selectedDataset.id);
+      this.initMeasuresToShow(this.selectedDataset.id);
+      this.initDownloadLink(this.selectedDataset.id);
+    }
+  }
+
+  private initMeasuresToShow(datasetId: string) {
     const searchTermObs$ = this.input$.pipe(
       map((searchTerm: string) => searchTerm.trim()),
       debounceTime(300),
       distinctUntilChanged()
     );
 
-    this.measuresToShow$ = combineLatest([searchTermObs$, this.selectedInstrument$, datasetId$]).pipe(
-      tap(([searchTerm, newSelection, datasetId]) => {
+    this.measuresToShow$ = combineLatest([searchTermObs$, this.selectedInstrument$]).pipe(
+      tap(([searchTerm, newSelection]) => {
         this.measuresToShow = null;
         const queryParamsObject: any = {};
         if (newSelection) {
@@ -82,19 +90,18 @@ export class PhenoBrowserComponent implements OnInit {
           queryParamsObject.search = searchTerm;
         }
         const url = this.router.createUrlTree(['.'], { /* Removed unsupported properties by Angular migration: replaceUrl. */ relativeTo: this.route,
-    queryParams: queryParamsObject }).toString();
+      queryParams: queryParamsObject }).toString();
         this.location.go(url);
       }),
-      switchMap(([searchTerm, newSelection, datasetId]) => {
+      switchMap(([searchTerm, newSelection]) => {
         this.measuresToShow = null;
         return combineLatest([
             of(searchTerm),
             of(newSelection),
-            of(datasetId),
             this.phenoBrowserService.getMeasuresInfo(datasetId)
         ]);
       }),
-      switchMap(([searchTerm, newSelection, datasetId, measuresInfo]) => {
+      switchMap(([searchTerm, newSelection, measuresInfo]) => {
         this.measuresToShow = measuresInfo;
         return this.phenoBrowserService.getMeasures(datasetId, newSelection, searchTerm);
       }),
@@ -117,26 +124,44 @@ export class PhenoBrowserComponent implements OnInit {
     });
   }
 
-  initInstruments(datasetId$: Observable<string>): void {
-    this.instruments = datasetId$.pipe(
-      switchMap(datasetId => this.phenoBrowserService.getInstruments(datasetId)),
-      share()
-    );
+  private initInstruments(datasetId: string): void {
+    this.instruments = this.phenoBrowserService.getInstruments(datasetId);
   }
 
-  emitInstrument(instrument: PhenoInstrument) {
+  public emitInstrument(instrument: PhenoInstrument) {
     this.selectedInstrument$.next(instrument);
   }
 
-  initDownloadLink(datasetId$: Observable<string>) {
-    this.downloadLink$ = combineLatest([this.selectedInstrument$, datasetId$]).pipe(
-      map(([instrument, datasetId]) =>
+  private initDownloadLink(datasetId: string) {
+    this.downloadLink$ = this.selectedInstrument$.pipe(
+      map(instrument =>
         this.phenoBrowserService.getDownloadLink(instrument, datasetId)
       )
     );
   }
 
-  search(value: string) {
+  public search(value: string) {
     this.input$.next(value);
+  }
+
+  /**
+  * Waits search box element to load.
+  * @returns promise
+  */
+  private async waitForSearchBoxToLoad(): Promise<void> {
+    return new Promise<void>(resolve => {
+      const timer = setInterval(() => {
+        if (this.searchBox !== undefined) {
+          resolve();
+          clearInterval(timer);
+        }
+      }, 200);
+    });
+  }
+
+  private focusSearchBox(): void {
+    this.waitForSearchBoxToLoad().then(() => {
+      this.searchBox.nativeElement.focus();
+    });
   }
 }

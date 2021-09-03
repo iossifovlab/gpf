@@ -282,6 +282,36 @@ export class Dataset extends IdName {
       json['person_set_collections'] ? PeopleGroup.fromJson(json['person_set_collections']) : null,
       UserGroup.fromJsonArray(json['groups']),
       json['gene_browser'] ? GeneBrowser.fromJson(json['gene_browser']) : null,
+      json['has_denovo'],
+      json['genome']
+    );
+  }
+
+  static fromDatasetAndDetailsJson(datasetJson, detailsJson): Dataset {
+    if (!datasetJson || !detailsJson) {
+      return undefined;
+    }
+    return new Dataset(
+      datasetJson['id'],
+      datasetJson['description'],
+      datasetJson['name'],
+      datasetJson['parents'],
+      datasetJson['access_rights'],
+      datasetJson['studies'],
+      datasetJson['study_names'],
+      datasetJson['study_types'],
+      datasetJson['phenotype_data'],
+      datasetJson['genotype_browser'],
+      datasetJson['phenotype_tool'],
+      datasetJson['enrichment_tool'],
+      datasetJson['phenotype_browser'],
+      datasetJson['common_report'],
+      datasetJson['genotype_browser_config'] ? GenotypeBrowser.fromJson(datasetJson['genotype_browser_config']) : null,
+      datasetJson['person_set_collections'] ? PeopleGroup.fromJson(datasetJson['person_set_collections']) : null,
+      UserGroup.fromJsonArray(datasetJson['groups']),
+      datasetJson['gene_browser'] ? GeneBrowser.fromJson(datasetJson['gene_browser']) : null,
+      detailsJson['has_denovo'],
+      detailsJson['genome']
     );
   }
 
@@ -310,26 +340,14 @@ export class Dataset extends IdName {
     readonly phenotypeTool: boolean,
     readonly enrichmentTool: boolean,
     readonly phenotypeBrowser: boolean,
-    readonly commonReport: boolean,
+    readonly commonReport: object,
     readonly genotypeBrowserConfig: GenotypeBrowser,
     readonly peopleGroupConfig: PeopleGroup,
     readonly groups: UserGroup[],
     readonly geneBrowser: GeneBrowser,
+    readonly hasDenovo: boolean,
+    readonly genome: string
   ) {
     super(id, name);
   }
-}
-
-export class DatasetDetails {
-  static fromJson(json: any): DatasetDetails {
-    return new DatasetDetails(
-      json.hasDenovo as boolean,
-      json['genome']
-    );
-  }
-
-  constructor(
-    readonly hasDenovo: boolean,
-    readonly genome: string,
-  ) { }
 }

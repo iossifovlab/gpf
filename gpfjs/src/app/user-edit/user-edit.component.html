@@ -45,13 +45,15 @@
         <div class="col-4">
           <div class="form-group">
             <label for="email">Email</label>
-            <input name="email"
+            <input
+              #emailInput
+              name="email"
               id="email"
               class="form-control"
               [(ngModel)]="user.email"
               type="text"
               [readonly]="edit"
-              required />
+              required/>
           </div>
         </div>
       </div>
@@ -60,7 +62,13 @@
         <div class="col-4">
           <div class="form-group">
             <label for="name">Name</label>
-            <input name="name" id="name" class="form-control" [(ngModel)]="user.name" type="text" />
+            <input
+              #nameInput
+              name="name"
+              id="name"
+              class="form-control"
+              [(ngModel)]="user.name"
+              type="text"/>
           </div>
         </div>
       </div>

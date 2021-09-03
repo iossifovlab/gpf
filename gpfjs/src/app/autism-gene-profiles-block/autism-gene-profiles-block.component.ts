@@ -4,6 +4,7 @@ import { AgpConfig, AgpTableConfig, AgpTableDataset, AgpTableDatasetPersonSet } 
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { cloneDeep } from 'lodash';
 import { take } from 'rxjs/operators';
+import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-block',
@@ -13,6 +14,7 @@ import { take } from 'rxjs/operators';
 export class AutismGeneProfilesBlockComponent implements OnInit {
   @ViewChild('nav') nav: NgbNav;
   @ViewChild(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu;
+  @ViewChild(MultipleSelectMenuComponent) multipleSelectMenuComponent: MultipleSelectMenuComponent; 
 
   geneTabs = new Set<string>();
   autismGeneToolConfig: AgpConfig;
@@ -189,12 +191,14 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
           cloneDeep(dataset.statistics)
         ));
         return new AgpTableDataset(dataset.id, dataset.displayName, dataset.meta, dataset.defaultVisible, personSets);
-      })
+      }),
+      cloneDeep(agpConfig.order)
     );
   }
 
   openDropdown() {
     this.ngbDropdownMenu.dropdown.open();
+    this.multipleSelectMenuComponent.focusSearchInput();
   }
 
   handleMultipleSelectMenuApplyEvent($event) {

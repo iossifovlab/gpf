@@ -19,7 +19,7 @@
       <div class="col-sm-3" class="variants-report-selector">
         <select id="families-by-number-dropdown-button" class="form-control" [(ngModel)]="this.currentPeopleCounter">
           <option value="" selected="selected"></option>
-          <option *ngFor="let peopleCounter of variantReport.familyReport.peopleCounters" [ngValue]="peopleCounter">
+          <option *ngFor="let peopleCounter of variantReport.peopleReport.peopleCounters" [ngValue]="peopleCounter">
             {{ peopleCounter.groupName }}
           </option>
         </select>

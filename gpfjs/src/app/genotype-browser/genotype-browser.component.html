@@ -1,65 +1,62 @@
-<div *ngIf="selectedDataset$ | async as dataset">
-  <div *ngIf="dataset.accessRights">
-    <div class="container" style="margin-bottom: 20px;">
-      <gpf-genes-block></gpf-genes-block>
-      <gpf-regions-block></gpf-regions-block>
-      <gpf-genotype-block [dataset]="dataset"></gpf-genotype-block>
-      <gpf-study-filters-block
-        *ngIf="dataset?.genotypeBrowserConfig?.hasStudyFilters"
-        [dataset]="dataset">
-      </gpf-study-filters-block>
-      <gpf-genomic-scores-block>
-      </gpf-genomic-scores-block>
-      <gpf-family-filters-block
-        *ngIf="dataset?.genotypeBrowserConfig?.hasFamilyFilters"
-        [dataset]="dataset"
-        [genotypeBrowserState]="genotypeBrowserState">
-      </gpf-family-filters-block>
-      <gpf-person-filters-block
-        *ngIf="dataset?.genotypeBrowserConfig?.hasPersonFilters"
-        [dataset]="dataset"
-        [genotypeBrowserState]="genotypeBrowserState">
-      </gpf-person-filters-block>
+<div *ngIf="selectedDataset?.accessRights">
+  <div class="container" style="margin-bottom: 20px;">
+    <gpf-genes-block></gpf-genes-block>
+    <gpf-regions-block></gpf-regions-block>
+    <gpf-genotype-block [dataset]="selectedDataset"></gpf-genotype-block>
+    <gpf-study-filters-block
+      *ngIf="selectedDataset?.genotypeBrowserConfig?.hasStudyFilters"
+      [dataset]="selectedDataset">
+    </gpf-study-filters-block>
+    <gpf-genomic-scores-block>
+    </gpf-genomic-scores-block>
+    <gpf-family-filters-block
+      *ngIf="selectedDataset?.genotypeBrowserConfig?.hasFamilyFilters"
+      [dataset]="selectedDataset"
+      [genotypeBrowserState]="genotypeBrowserState">
+    </gpf-family-filters-block>
+    <gpf-person-filters-block
+      *ngIf="selectedDataset?.genotypeBrowserConfig?.hasPersonFilters"
+      [dataset]="selectedDataset"
+      [genotypeBrowserState]="genotypeBrowserState">
+    </gpf-person-filters-block>
 
-      <div class="form-block">
-        <form
-            (ngSubmit)="onSubmit($event)"
-            action="{{ configService.baseUrl }}genotype_browser/query" method="post">
-          <input name="queryData" type="hidden">
-          <button class="btn btn-md btn-primary btn-right" id="download-button" [disabled]="disableQueryButtons" type="submit">Download</button>
-        </form>
-        <div class="button">
-          <input type="button" [disabled]="disableQueryButtons" class="btn btn-md btn-primary" id="table-preview-button" value="Table Preview" (click)="tablePreview = true; submitQuery()">
-          <input *ngIf="dataset?.genotypeBrowserConfig?.hasGraphicalPreview"
-            type="button" class="btn btn-md btn-primary"
-            value="Graphical Preview"
-            (click)="tablePreview = false; submitQuery()">
-          <gpf-share-query-button [disabled]="disableQueryButtons" queryType="genotype"></gpf-share-query-button>
-          <gpf-save-query [disabled]="disableQueryButtons" queryType="genotype"></gpf-save-query>
-        </div>
+    <div class="form-block">
+      <form
+          (ngSubmit)="onSubmit($event)"
+          action="{{ configService.baseUrl }}genotype_browser/query" method="post">
+        <input name="queryData" type="hidden">
+        <button class="btn btn-md btn-primary btn-right" id="download-button" [disabled]="disableQueryButtons" type="submit">Download</button>
+      </form>
+      <div class="button">
+        <input type="button" [disabled]="disableQueryButtons" class="btn btn-md btn-primary" id="table-preview-button" value="Table Preview" (click)="tablePreview = true; submitQuery()">
+        <input *ngIf="selectedDataset?.genotypeBrowserConfig?.hasGraphicalPreview"
+          type="button" class="btn btn-md btn-primary"
+          value="Graphical Preview"
+          (click)="tablePreview = false; submitQuery()">
+        <gpf-share-query-button [disabled]="disableQueryButtons" queryType="genotype"></gpf-share-query-button>
+        <gpf-save-query [disabled]="disableQueryButtons" queryType="genotype"></gpf-save-query>
       </div>
     </div>
-    <div class="genotype-browser-results" *ngIf="genotypePreviewVariantsArray">
+  </div>
+  <div class="genotype-browser-results" *ngIf="genotypePreviewVariantsArray">
+    <hr>
+    <gpf-loading-spinner
+      [loadingFinished]="loadingFinished"
+      [count]="genotypePreviewVariantsArray.getVariantsCount(selectedDataset?.genotypeBrowserConfig?.maxVariantsCount)"
+      [displayText]="'Loading variants...'">
+    </gpf-loading-spinner>
 
-      <hr>
-      <gpf-loading-spinner
-        [loadingFinished]="loadingFinished"
-        [count]="genotypePreviewVariantsArray.getVariantsCount(dataset?.genotypeBrowserConfig?.maxVariantsCount)"
-        [displayText]="'Loading variants...'">
-      </gpf-loading-spinner>
-
-      <gpf-genotype-preview-table
-        *ngIf="tablePreview"
-        [columns]="dataset?.genotypeBrowserConfig?.tableColumns"
-        [genotypePreviewVariantsArray]="genotypePreviewVariantsArray"
-        [legend]="legend">
-      </gpf-genotype-preview-table>
-      <gpf-genotype-preview-chromosomes
-        class="chromosomes-preview"
-        *ngIf="tablePreview === false"
-        width="1110"
-        [genotypePreviews]="genotypePreviewVariantsArray?.genotypePreviews">
-      </gpf-genotype-preview-chromosomes>
-    </div>
+    <gpf-genotype-preview-table
+      *ngIf="tablePreview"
+      [columns]="selectedDataset?.genotypeBrowserConfig?.tableColumns"
+      [genotypePreviewVariantsArray]="genotypePreviewVariantsArray"
+      [legend]="legend">
+    </gpf-genotype-preview-table>
+    <gpf-genotype-preview-chromosomes
+      class="chromosomes-preview"
+      *ngIf="tablePreview === false"
+      width="1110"
+      [genotypePreviews]="genotypePreviewVariantsArray?.genotypePreviews">
+    </gpf-genotype-preview-chromosomes>
   </div>
 </div>

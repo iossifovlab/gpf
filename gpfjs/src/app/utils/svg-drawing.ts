@@ -1,3 +1,9 @@
+export const affectedStatusColors = {
+  'Affected only': '#AA0000',
+  'Unaffected only': '#04613a',
+  'Affected and unaffected': '#8a8a8a',
+};
+
 function getTrianglePoints(plotX: number, plotY: number, size: number) {
   const height = Math.sqrt(Math.pow(size, 2) - Math.pow((size / 2.0), 2));
   const x1 = plotX - (size / 2.0);
@@ -65,7 +71,7 @@ export function triangle(element, x: number, y: number, color: string, title: st
     .append('svg:title').text(title);
 }
 
-function _circle(element, x: number, y: number, radius: number, color: string, title: string) {
+export function circle(element, x: number, y: number, color: string, title: string, radius: number = 7) {
   element.append('g')
     .append('circle')
     .attr('cx', x)
@@ -78,12 +84,8 @@ function _circle(element, x: number, y: number, radius: number, color: string, t
     .append('svg:title').text(title);
 }
 
-export function circle(element, x: number, y: number, color: string, title: string) {
-    _circle(element, x, y, 7, color, title);
-}
-
 export function dot(element, x: number, y: number, color: string, title: string) {
-    _circle(element, x, y, 3, color, title);
+    circle(element, x, y, color, title, 3);
 }
 
 export function rect(element, xStart: number, xEnd: number, y: number, height: number, color: string, opacity: number, title: string) {

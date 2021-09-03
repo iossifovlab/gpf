@@ -10,9 +10,10 @@ const oboe = require('oboe');
 import { environment } from 'environments/environment';
 import { ConfigService } from '../config/config.service';
 import { GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
-import { GeneViewSummaryAllelesArray } from '../gene-view/gene';
+import { SummaryAllelesArray } from '../gene-browser/summary-variants';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { map } from 'rxjs/operators';
+import { Dataset } from 'app/datasets/datasets';
 
 @Injectable()
 export class QueryService {
@@ -104,33 +105,35 @@ export class QueryService {
   }
 
   getGenotypePreviewVariantsByFilter(
-    filter, columnIds: Array<string>, loadingService?: any, maxVariantsCount: number = 1001
+    dataset: Dataset, filter, loadingService?: any, maxVariantsCount: number = 1001
   ): GenotypePreviewVariantsArray {
     const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
     const queryFilter = { ...filter };
     queryFilter['maxVariantsCount'] = maxVariantsCount;
 
-    this.datasetsService.getDatasetDetails(filter['datasetId']).subscribe(datasetDetails => {
-      this.streamPost(this.genotypePreviewVariantsUrl, queryFilter).subscribe(variant => {
-        genotypePreviewVariantsArray.addPreviewVariant(<Array<string>> variant, columnIds);
-        if (variant) {
-          // Attach the genome version to each variant
-          // This is done so that the table can construct the correct UCSC link for the variant
-          genotypePreviewVariantsArray.genotypePreviews[
-            genotypePreviewVariantsArray.genotypePreviews.length - 1
-          ].data.set('genome', datasetDetails['genome']);
-        }
-        if (loadingService) {
-          loadingService.setLoadingStop(); // Stop the loading overlay when at least one variant has been loaded
-        }
-      });
+    this.streamPost(this.genotypePreviewVariantsUrl, queryFilter).subscribe(variant => {
+      genotypePreviewVariantsArray.addPreviewVariant(
+        <Array<string>> variant,
+        dataset.genotypeBrowserConfig.columnIds
+      );
+
+      if (variant) {
+        // Attach the genome version to each variant
+        // This is done so that the table can construct the correct UCSC link for the variant
+        genotypePreviewVariantsArray.genotypePreviews[
+          genotypePreviewVariantsArray.genotypePreviews.length - 1
+        ].data.set('genome', dataset.genome);
+      }
+      if (loadingService) {
+        loadingService.setLoadingStop(); // Stop the loading overlay when at least one variant has been loaded
+      }
     });
 
     return genotypePreviewVariantsArray;
   }
 
-  getGeneViewVariants(filter, loadingService?: any) {
-    const summaryVariantsArray = new GeneViewSummaryAllelesArray();
+  getSummaryVariants(filter) {
+    const summaryVariantsArray = new SummaryAllelesArray();
     this.summaryStreamPost(this.geneViewVariants, filter).subscribe((variant: string[]) => {
       summaryVariantsArray.addSummaryRow(variant);
     });

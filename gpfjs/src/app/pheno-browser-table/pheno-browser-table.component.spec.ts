@@ -39,7 +39,6 @@ class HostComponentNoRegressions {
   @ViewChild('table') table;
 }
 
-
 describe('PhenoBrowserTableComponent; no regressions', () => {
   let component: HostComponentNoRegressions;
   let fixture: ComponentFixture<HostComponentNoRegressions>;
@@ -81,7 +80,6 @@ describe('PhenoBrowserTableComponent; no regressions', () => {
   });
 });
 
-
 @Component({
   template:
     `<gpf-pheno-browser-table #table
@@ -99,7 +97,6 @@ class HostComponentOneRegression {
   );
   @ViewChild('table') table;
 }
-
 
 describe('PhenoBrowserTableComponent; one regression', () => {
   let component: HostComponentOneRegression;
@@ -146,7 +143,6 @@ describe('PhenoBrowserTableComponent; one regression', () => {
   });
 });
 
-
 @Component({
   template:
     `<gpf-pheno-browser-table #table
@@ -164,7 +160,6 @@ class HostComponentTwoRegressions {
   );
   @ViewChild('table') table;
 }
-
 
 describe('PhenoBrowserTableComponent; two regressions', () => {
   let component: HostComponentTwoRegressions;

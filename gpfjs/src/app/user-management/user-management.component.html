@@ -6,7 +6,7 @@
       </div>
 
       <li ngbNavItem id="users">
-        <a ngbNavLink>Users</a>
+        <a ngbNavLink (click)="focusSearchBox()">Users</a>
         <ng-template ngbNavContent>
           <div class="row justify-content-between">
             <div class="col-7 btn-toolbar" style="padding-top: 15px; padding-left: 25px;">
@@ -17,11 +17,10 @@
                   </span>
                 </div>
                 <input
-                  #searchTerm (keyup)="search(searchTerm.value)"
+                  #searchBox (keyup)="search(searchBox.value)"
                   id="search-field" class="form-control my-0 py-1"
                   type="text" placeholder="Search" aria-label="Search"
-                  [ngModel]="input$ | async"
-                >
+                  [ngModel]="input$ | async">
               </div>
               <div class="btn-group pull-right" role="group">
                 <button

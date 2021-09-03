@@ -45,15 +45,9 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
       switchMap(geneSetsCollections => {
         return combineLatest(
           of(geneSetsCollections),
-          this.datasetService.getSelectedDataset().pipe(take(1))
-        )
-      }),
-      switchMap(([geneSetsCollections, dataset]) => {
-        return combineLatest(
-          of(geneSetsCollections),
-          of(dataset),
+          this.datasetService.getSelectedDatasetObservable().pipe(take(1)),
           this.store.selectOnce(state => state.geneSetsState),
-        )
+        );
       })
     ).subscribe(([geneSetsCollections, dataset, state]) => {
       this.selectedDatasetId = dataset.id;

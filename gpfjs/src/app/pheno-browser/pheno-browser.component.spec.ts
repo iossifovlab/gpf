@@ -28,22 +28,11 @@ import { Observable, of } from 'rxjs';
 import { ResizeService } from '../table/resize.service';
 import { By } from '@angular/platform-browser';
 
-
-
-
-
-
-
-
-
-    
-
 let fakeJsonMeasurei1 = JSON.parse(JSON.stringify(fakeJsonMeasureOneRegression));
 fakeJsonMeasurei1.instrument_name = 'i1';
 fakeJsonMeasurei1.measure_id = 'i1.test_measure';
 fakeJsonMeasurei1.measure_name = 'test_measure';
 fakeJsonMeasurei1.regressions[0].measure_id = 'i1.test_measure';
-
 
 class MockPhenoBrowserService {
   getInstruments(datasetId: string): Observable<PhenoInstruments> {
@@ -62,16 +51,17 @@ class MockPhenoBrowserService {
 
   getDownloadLink(instrument: PhenoInstrument, datasetId: string) {
     return `${environment.apiPath}pheno_browser/download`
-           + `?dataset_id=${datasetId}&instrument=${instrument}`
+           + `?dataset_id=${datasetId}&instrument=${instrument}`;
   }
 }
 
 class MockDatasetsService {
   getSelectedDataset = function() {
-    return of({
-      accessRights: true
-    })
-  }
+    return { accessRights: true, id: 'testDatasetId' };
+  };
+  getDatasetsLoadedObservable = function() {
+    return of();
+  };
 }
 
 class MockActivatedRoute {
@@ -139,7 +129,7 @@ describe('PhenoBrowserComponent', () => {
 
     router = TestBed.inject(Router);
     location = TestBed.inject(Location);
-  
+
     fixture = TestBed.createComponent(PhenoBrowserComponent);
     component = fixture.componentInstance;
 
