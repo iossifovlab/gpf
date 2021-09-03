@@ -1,0 +1,27 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: linux-64
+# conda create -c conda-forge -c bioconda -n <env name> --file <this file>
+channels:
+  - defaults
+  - conda-forge 
+  - bioconda
+  - iossifovlab
+dependencies:
+  - bump2version=1.0.1
+  - pytest-doctestplus=0.4.0
+  - sphinx=4.1.2
+  - sphinx_rtd_theme=0.5.2
+  - sphinx-copybutton=0.4.0
+  - sphinxcontrib-httpdomain=1.7.0
+  - coverage=5.5
+  - flake8=3.9.2
+  - mypy=0.910
+  - pytest=6.2.4
+  - pytest-cov=2.12.1
+  - pytest-mock=3.6.1
+  - pytest-xdist=2.3.0
+  - pytest-django=4.4.0
+  - pylint=2.9.1
+  - pre-commit=2.13.0
+  - django-extensions=2.2.5

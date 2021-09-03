@@ -33,6 +33,11 @@ class PersonSet(NamedTuple):
             if person.role in roles:
                 yield person
 
+    def get_children(self):
+        for person in self.persons.values():
+            if person.has_parent() and not person.generated:
+                yield person
+
     def to_json(self):
         return {
             "id": self.id,

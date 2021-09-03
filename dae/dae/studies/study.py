@@ -6,7 +6,7 @@ import threading
 from contextlib import closing
 
 from concurrent.futures import ThreadPoolExecutor
-from queue import Queue, Full
+from queue import Empty, Queue, Full
 
 from abc import ABC, abstractmethod, abstractproperty
 
@@ -29,6 +29,9 @@ class GenotypeData(ABC):
         self._person_set_collections: Dict[str, PersonSetCollection] = dict()
         self._person_set_collection_configs = dict()
         self._parents = set()
+
+    def close(self):
+        logger.error(f"base genotype data close() called for {self.study_id}")
 
     @property
     def study_id(self):
@@ -300,7 +303,7 @@ class GenotypeDataGroup(GenotypeData):
         variants_futures = list()
         logger.info(f"summary query - study_filters: {study_filters}")
 
-        results_queue = Queue(maxsize=5_000)
+        results_queue = Queue(maxsize=50_000)
 
         def get_summary_variants(genotype_study):
             start = time.time()
@@ -326,9 +329,11 @@ class GenotypeDataGroup(GenotypeData):
                 try:
                     for v in vs:
                         # print("put:", v)
-                        results_queue.put(v, timeout=1)
+                        results_queue.put(v, timeout=15)
                 except Full as ex:
-                    logger.info(f"summary queue full: {ex}", exc_info=False)
+                    logger.exception(
+                        f"summary queue for {genotype_study.study_id} "
+                        f"full: {ex}")
                     raise ex
 
                 results_queue.put(None)
@@ -350,8 +355,13 @@ class GenotypeDataGroup(GenotypeData):
         started = time.time()
         while futures_done < len(variants_futures):
             while True:
-                v = results_queue.get()
-                # print("get:", v)
+                try:
+                    v = results_queue.get(timeout=15)
+                except Empty:
+                    logger.exception(
+                        f"summary queue get for {genotype_study.study_id} "
+                        f"timeout")
+                    v = None
 
                 if v is None:
                     futures_done += 1
@@ -393,6 +403,10 @@ class GenotypeDataGroup(GenotypeData):
         for v in variants.values():
             yield v
 
+    BLOCKING_TIMEOUT = 6
+    MAX_RETRIES = 5
+    QUEUE_SIZE = 25_000
+
     def query_variants(
             self,
             regions=None,
@@ -417,7 +431,7 @@ class GenotypeDataGroup(GenotypeData):
 
         variants_futures = list()
         logger.info(f"study_filters: {study_filters}")
-        results_queue = Queue(maxsize=20_000)
+        results_queue = Queue(maxsize=self.QUEUE_SIZE)
 
         def get_variants(genotype_study):
             start = time.time()
@@ -441,18 +455,23 @@ class GenotypeDataGroup(GenotypeData):
                             affected_status=affected_status,
                             unique_family_variants=unique_family_variants,
                             **kwargs,)) as vs:
-                try:
-                    for v in vs:
-                        results_queue.put(v, timeout=3)
-                except Full as ex:
-                    logger.info(f"variants queue full: {ex}", exc_info=False)
-                    elapsed = time.time() - start
-                    logger.info(
-                        f"family variants queue full for genotype study "
-                        f"{genotype_study.study_id} process in "
-                        f"{elapsed:.2f} secs")
-                    raise ex
-                results_queue.put(None)
+                for v in vs:
+                    retries = 0
+                    while retries < self.MAX_RETRIES:
+                        try:
+                            results_queue.put(v, timeout=self.BLOCKING_TIMEOUT)
+                            retries = 5
+                        except Full as ex:
+                            retries += 1
+                            logger.exception(
+                                f"variants queue for "
+                                f"{genotype_study.study_id} full; "
+                                f"retries: {retries}; {ex}")
+
+                logger.error(f"finishing processing {genotype_study.study_id}")
+                results_queue.put(None, timeout=self.BLOCKING_TIMEOUT)
+                logger.error(f"DONE processing {genotype_study.study_id}")
+
             elapsed = time.time() - start
             logger.info(
                 f"family variants for genotype study "
@@ -472,7 +491,27 @@ class GenotypeDataGroup(GenotypeData):
 
         while futures_done < len(variants_futures):
             while True:
-                v = results_queue.get()
+                retries = 0
+                retry_flag = True
+
+                while retry_flag:
+                    try:
+                        v = results_queue.get(timeout=self.BLOCKING_TIMEOUT)
+                        retry_flag = False
+                    except Empty:
+                        retries += 1
+                        logger.exception(
+                            f"family variants queue get for "
+                            f"{genotype_study.study_id} timeout; "
+                            f"retries: {retries}")
+                        if retries >= self.MAX_RETRIES:
+                            v = None
+                            retry_flag = False
+                            logger.error(
+                                f"finishing consuming variants from "
+                                f"{genotype_study.study_id} because of "
+                                f"too many retries {retries}"
+                            )
 
                 if v is None:
                     futures_done += 1

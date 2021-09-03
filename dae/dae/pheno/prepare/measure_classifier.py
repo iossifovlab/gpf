@@ -277,8 +277,8 @@ class MeasureClassifier(object):
             [
                 int,
                 float,
-                np.float,
-                np.int,
+                float,
+                int,
                 np.dtype("int64"),
                 np.dtype("float64"),
             ]
@@ -300,8 +300,8 @@ class MeasureClassifier(object):
             [
                 int,
                 float,
-                np.float,
-                np.int,
+                float,
+                int,
                 np.dtype("int64"),
                 np.dtype("float64"),
             ]

@@ -6,6 +6,7 @@ from collections import OrderedDict
 from dae.variants.attributes import Role
 
 from dae.common_reports.family_report import FamiliesReport
+from dae.common_reports.people_counter import PeopleReport
 from dae.common_reports.denovo_report import DenovoReport
 
 
@@ -13,9 +14,12 @@ logger = logging.getLogger(__name__)
 
 
 class CommonReport(object):
-    def __init__(self, genotype_data_study, config):
+    def __init__(self, genotype_data_study):
+        config = genotype_data_study.config.common_report
         effect_groups = config.effect_groups
         effect_types = config.effect_types
+
+        assert config.enabled
 
         self.genotype_data_study = genotype_data_study
         self.id = genotype_data_study.study_id
@@ -38,6 +42,12 @@ class CommonReport(object):
             config.draw_all_families,
             config.families_count_show_id,
         )
+
+        self.people_report = PeopleReport(
+            genotype_data_study.families,
+            families_report_collections
+        )
+
         elapsed = time.time() - start
         logger.info(
             f"COMMON REPORTS family report " f"build in {elapsed:.2f} sec")
@@ -89,6 +99,7 @@ class CommonReport(object):
         return OrderedDict(
             [
                 ("id", self.id),
+                ("people_report", self.people_report.to_dict()),
                 ("families_report", self.families_report.to_dict()),
                 (
                     "denovo_report",
@@ -114,6 +125,7 @@ class CommonReport(object):
 
     def _get_phenotype(self):
         config = self.genotype_data_study.config.person_set_collections
+        assert config.selected_person_set_collections is not None
         collection = self.genotype_data_study.get_person_set_collection(
             config.selected_person_set_collections[0]
         )

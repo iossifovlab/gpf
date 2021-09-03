@@ -70,3 +70,10 @@ dae_conftests/dae_conftests/tests/fixtures/datasets/denovo-cache-phenotype.json
 dae_conftests/dae_conftests/tests/fixtures/studies/Study1/common_report.json
 common_report.json
 import
+/build-env/
+test-results/
+Jenkinsfile.generated-stages
+/import
+/test-results
+Jenkinsfile.generated-stages.all
+/.build-scripts-tmp-sessions

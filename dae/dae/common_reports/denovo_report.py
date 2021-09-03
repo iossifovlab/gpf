@@ -10,9 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class EffectCell:
-    def __init__(self, genotype_data, denovo_variants, person_set, effect):
-        self.genotype_data = genotype_data
-        self.families = genotype_data.families
+    def __init__(self, denovo_variants, person_set, effect):
         self.denovo_variants = denovo_variants
         assert len(person_set.persons) > 0
         self.person_set = person_set
@@ -23,15 +21,18 @@ class EffectCell:
 
         self.observed_variants_ids = set()
         self.observed_people_with_event = set([])
-
-        self.persons_with_parents = self.families.person_ids_with_parents()
         self.person_set_persons = set(self.person_set.persons.keys())
 
-        if self.persons_with_parents:
-            self.person_set_children = self.person_set_persons & \
-                self.persons_with_parents
-        else:
-            self.person_set_children = self.person_set_persons
+        self.person_set_children = {
+            p.person_id for p in self.person_set.get_children()
+        }
+        if len(self.person_set_children) == 0:
+            self.person_set_children = set(self.person_set.persons.keys())
+
+        for fv in self.denovo_variants:
+            for fa in fv.alt_alleles:
+                self.count_variant(fv, fa)
+
         logger.info(
             f"DENOVO REPORTS: persons set {self.person_set} children "
             f"{len(self.person_set_children)}")
@@ -89,6 +90,7 @@ class EffectCell:
                     f"mismatched persons: {variant_in_members}")
             return
         if not family_allele.effect:
+            print("No effect")
             return
         # FIXME: Avoid conversion of effect types to set
         if not (set(family_allele.effect.types) & self.effect_types):
@@ -107,8 +109,7 @@ class EffectCell:
 
 
 class EffectRow(object):
-    def __init__(self, genotype_data, denovo_variants, effect, person_sets):
-        self.genotype_data = genotype_data
+    def __init__(self, denovo_variants, effect, person_sets):
         self.denovo_variants = denovo_variants
         self.person_sets = person_sets
 
@@ -121,14 +122,9 @@ class EffectRow(object):
             "row": [r.to_dict() for r in self.row],
         }
 
-    def count_variant(self, family_variant, family_allele):
-        for effect_cell in self.row:
-            effect_cell.count_variant(family_variant, family_allele)
-
     def _build_row(self):
         return [
             EffectCell(
-                self.genotype_data,
                 self.denovo_variants,
                 person_set,
                 self.effect_type,
@@ -153,15 +149,12 @@ class EffectRow(object):
 class DenovoReportTable(object):
     def __init__(
             self,
-            genotype_data,
             denovo_variants,
             effect_groups,
             effect_types,
             person_set_collection):
 
-        self.genotype_data = genotype_data
         self.denovo_variants = denovo_variants
-        self.families = self.genotype_data.families
 
         self.person_set_collection = person_set_collection
         self.person_sets = []
@@ -228,18 +221,12 @@ class DenovoReportTable(object):
 
         effect_rows = [
             EffectRow(
-                self.genotype_data,
                 self.denovo_variants,
                 effect,
                 self.person_sets,
             )
             for effect in self.effects
         ]
-
-        for fv in self.denovo_variants:
-            for fa in fv.alt_alleles:
-                for effect_row in effect_rows:
-                    effect_row.count_variant(fv, fa)
 
         effect_rows_empty_columns = list(
             map(
@@ -308,7 +295,6 @@ class DenovoReport(object):
         denovo_report_tables = []
         for person_set_collection in self.person_set_collections:
             denovo_report_table = DenovoReportTable(
-                self.genotype_data,
                 self.denovo_variants,
                 deepcopy(self.effect_groups),
                 deepcopy(self.effect_types),

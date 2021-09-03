@@ -1,9 +1,9 @@
-from django.conf.urls import url
+from django.urls import re_path
 from user_queries.views import UserQuerySaveView, UserQueryCollectView
 
 urlpatterns = [
-    url(r"^/save/?$", UserQuerySaveView.as_view(), name="user-save-query"),
-    url(
+    re_path(r"^/save/?$", UserQuerySaveView.as_view(), name="user-save-query"),
+    re_path(
         r"^/collect/?$",
         UserQueryCollectView.as_view(),
         name="user-collect-queries",

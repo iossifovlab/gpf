@@ -63,8 +63,6 @@ def test_get_genotype_data_config_nonexistant(wgpf_instance_fixture):
 
 
 def test_get_common_report(wgpf_instance_fixture):
-    wgpf_instance_fixture._common_report_facade.generate_common_report(
-        "Study1")
     common_report = wgpf_instance_fixture.get_common_report("Study1")
     assert isinstance(common_report, dict)
 

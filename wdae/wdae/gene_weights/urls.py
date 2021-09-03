@@ -3,22 +3,22 @@ Created on Nov 16, 2015
 
 @author: lubo
 """
-from django.conf.urls import url
+from django.urls import re_path
 from gene_weights import views
 
 urlpatterns = [
-    url(r"^/?$", views.GeneWeightsListView.as_view(), name="gene_weights"),
-    url(
+    re_path(r"^/?$", views.GeneWeightsListView.as_view(), name="gene_weights"),
+    re_path(
         r"^/download/(?P<weight>.+)$",
         views.GeneWeightsDownloadView.as_view(),
         name="gene_weights_download",
     ),
-    url(
+    re_path(
         r"^/genes/?$",
         views.GeneWeightsGetGenesView.as_view(),
         name="gene_weights_get_genes",
     ),
-    url(
+    re_path(
         r"^/partitions/?$",
         views.GeneWeightsPartitionsView.as_view(),
         name="gene_weights_partitions",

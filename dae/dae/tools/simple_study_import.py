@@ -21,6 +21,8 @@ from dae.backends.raw.loader import AnnotationPipelineDecorator
 
 from dae.pedigrees.loader import FamiliesLoader
 
+from dae.tools import generate_common_report
+
 logger = logging.getLogger("simple_study_import")
 
 
@@ -143,13 +145,6 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
 
     parser_args = parser.parse_args(argv)
     return parser_args
-
-
-def generate_common_report(gpf_instance, study_id):
-    from dae.tools.generate_common_report import main
-
-    argv = ["--studies", study_id]
-    main(gpf_instance=gpf_instance, argv=argv)
 
 
 def generate_denovo_gene_sets(gpf_instance, study_id):
@@ -276,15 +271,10 @@ def main(argv, gpf_instance=None):
         # needs to reload the configuration, hence gpf_instance=None
         gpf_instance.reload()
 
-        print("generating common reports...", file=sys.stderr)
+        print("generating common reports...")
         start = time.time()
-        generate_common_report(gpf_instance, study_id)
-        print(
-            "DONE: generating common reports in {:.2f} sec".format(
-                time.time() - start
-            ),
-            file=sys.stderr,
-        )
+        argv = ["--studies", study_id]
+        generate_common_report.main(argv, gpf_instance)
 
         print("generating de Novo gene sets...", file=sys.stderr)
         start = time.time()

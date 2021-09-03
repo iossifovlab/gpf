@@ -1,14 +1,18 @@
 #!/usr/bin/env python
+import sys
 import time
 import argparse
 import logging
+import os
+import json
 
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.common_reports.common_report import CommonReport
 
 logger = logging.getLogger(__name__)
 
 
-def main(gpf_instance=None, argv=None):
+def main(argv, gpf_instance=None):
     description = "Generate common reports tool"
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--verbose', '-V', action='count', default=0)
@@ -44,10 +48,10 @@ def main(gpf_instance=None, argv=None):
     if gpf_instance is None:
         gpf_instance = GPFInstance()
 
-    common_report_facade = gpf_instance._common_report_facade
+    available_studies = gpf_instance.get_genotype_data_ids(local_only=True)
 
     if args.show_studies:
-        for study_id in common_report_facade.get_all_common_report_ids():
+        for study_id in available_studies:
             logger.warning(f"study: {study_id}")
     else:
         elapsed = time.time() - start
@@ -56,11 +60,23 @@ def main(gpf_instance=None, argv=None):
         if args.studies:
             studies = args.studies.split(",")
             logger.info(f"generating common reports for: {studies}")
-            common_report_facade.generate_common_reports(studies)
         else:
             logger.info("generating common reports for all studies!!!")
-            common_report_facade.generate_all_common_reports()
+            studies = available_studies
+        for study in studies:
+            if study not in available_studies:
+                logger.error(f"Study {study} not found! Skipping...")
+                continue
+
+            study = gpf_instance.get_genotype_data(study)
+            common_report = CommonReport(study)
+            file_path = study.config.common_report.file_path
+
+            if not os.path.exists(os.path.dirname(file_path)):
+                os.makedirs(os.path.dirname(file_path))
+            with open(file_path, "w+") as crf:
+                json.dump(common_report.to_dict(), crf)
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
