@@ -92,6 +92,15 @@ export class GeneBrowserComponent implements OnInit {
       }
     });
 
+    this.queryService.streamingFinishedSubject.subscribe(() => {
+      this.familyLoadingFinished = true;
+    });
+
+    this.queryService.summaryStreamingFinishedSubject.subscribe(async() => {
+      this.loadingFinished = true;
+      this.loadingService.setLoadingStop();
+    });
+
     this.route.parent.params.subscribe(
       (params: Params) => {
         this.selectedDatasetId = params['dataset'];
@@ -146,15 +155,7 @@ export class GeneBrowserComponent implements OnInit {
       0, this.geneBrowserConfig.domainMax
     ];
 
-    this.queryService.summaryStreamingFinishedSubject.subscribe(async() => {
-      this.loadingFinished = true;
-      this.loadingService.setLoadingStop();
-      this.updateShownTablePreviewVariantsArray();
-    });
-
-    this.queryService.streamingFinishedSubject.subscribe(() => {
-      this.familyLoadingFinished = true;
-    });
+    this.updateShownTablePreviewVariantsArray();
 
     if (!this.summaryVariantsFilter.codingOnly) {
       await this.waitForGenePlotComponent();
