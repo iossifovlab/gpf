@@ -69,6 +69,8 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     missense: ['Missense'],
   };
 
+  private highlightedRowElements = [];
+
   @HostListener('window:scroll', ['$event'])
   onWindowScroll() {
     if (this.isTableVisible) {
@@ -87,6 +89,13 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   onResize() {
     if (this.isTableVisible) {
       this.updateModalBottom();
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  clearHighlightedRows() {
+    for (const row of this.highlightedRowElements) {
+      row.classList.remove('row-highlight');
     }
   }
 
@@ -545,5 +554,15 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     this.waitForGeneSearchInputToLoad().then(() => {
       this.geneSearchInput.nativeElement.focus();
     });
+  }
+
+  public highlightRow(event): void {
+    if (event.srcElement.className.includes('link-td')) {
+      return;
+    }
+
+    const rowElement = event.path[1];
+    rowElement.className.includes('row-highlight') ? rowElement.classList.remove('row-highlight') : rowElement.classList.add('row-highlight');
+    this.highlightedRowElements.push(rowElement);
   }
 }

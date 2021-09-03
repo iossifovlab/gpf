@@ -1,8 +1,16 @@
+tr:hover.row-highlight {
+  background-color: blue !important;
+}
+
+.row-highlight {
+  background-color: red !important;
+}
+
 tr:nth-child(even) {
   background-color: #FAFAFA;
 }
 
-tr:hover td {
+tr:hover {
   background: #edf3ff
 }
 
