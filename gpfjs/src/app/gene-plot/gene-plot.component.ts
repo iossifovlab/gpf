@@ -160,8 +160,8 @@ export class GenePlotComponent implements OnChanges {
   }
 
   private set xDomain(domain: [number, number]) {
-    this.normalRange = this.genePlotModel.buildNormalIntronsRange(...domain, this.plotWidth);
-    this.condensedRange = this.genePlotModel.buildCondensedIntronsRange(...domain, this.plotWidth);
+    this.normalRange = this.genePlotModel.buildRange(...domain, this.plotWidth, false);
+    this.condensedRange = this.genePlotModel.buildRange(...domain, this.plotWidth, true);
     this.scale.x
       .domain(this.genePlotModel.buildDomain(...domain))
       .range(this.condenseIntrons ? this.condensedRange : this.normalRange);
@@ -220,12 +220,7 @@ export class GenePlotComponent implements OnChanges {
 
   public toggleCondenseIntrons() {
     this.condenseIntrons = !this.condenseIntrons;
-    let range;
-    if (this.condenseIntrons) {
-      range = this.genePlotModel.buildCondensedIntronsRange(...this.xDomain, this.plotWidth);
-    } else {
-      range = this.genePlotModel.buildNormalIntronsRange(...this.xDomain, this.plotWidth);
-    }
+    const range = this.genePlotModel.buildRange(...this.xDomain, this.plotWidth, this.condenseIntrons);
     this.scale.x.range(range);
     this.axis.x.tickValues(this.xAxisTicks);
     this.zoomHistory.addStateToHistory(

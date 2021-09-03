@@ -2,38 +2,20 @@ import { Gene } from 'app/gene-browser/gene';
 
 export class GenePlotModel {
 
-  public gene: Gene;
-
-  // FIXME: See if these vars can be made readonly
-  public domain: number[];
-  public normalRange: number[];
-  public condensedRange: number[];
-  public spacerLength: number;
+  public readonly gene: Gene;
+  public readonly domain: number[];
+  public readonly normalRange: number[];
+  public readonly condensedRange: number[];
+  public readonly spacerLength: number;
 
   constructor(gene: Gene, rangeWidth: number, spacerLength: number = 150) {
     this.gene = gene;
     this.spacerLength = spacerLength; // in px
-    this.calculateRanges(rangeWidth);
-  }
-
-  // FIXME: See if this can be made private or removed
-  public calculateRanges(rangeWidth) {
     this.domain = this.buildDomain(0, 3000000000);
     this.normalRange = this.buildRange(0, 3000000000, rangeWidth, false);
     this.condensedRange = this.buildRange(0, 3000000000, rangeWidth, true);
   }
 
-  // FIXME: See if this can be made private
-  public buildNormalIntronsRange(domainMin: number, domainMax: number, rangeWidth: number) {
-    return this.buildRange(domainMin, domainMax, rangeWidth, false);
-  }
-
-  // FIXME: See if this can be made private
-  public buildCondensedIntronsRange(domainMin: number, domainMax: number, rangeWidth: number) {
-    return this.buildRange(domainMin, domainMax, rangeWidth, true);
-  }
-
-  // FIXME: See if this can be made private
   public buildDomain(domainMin: number, domainMax: number) {
     const domain: number[] = [];
     const filteredSegments = this.gene.collapsedTranscript.segments.filter(

@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { GeneService } from 'app/gene-browser/gene.service';
@@ -8,6 +8,7 @@ import { SummaryAllelesArray, SummaryAllelesFilter, codingEffectTypes,
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
 import { first } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
@@ -22,7 +23,7 @@ import * as draw from 'app/utils/svg-drawing';
   templateUrl: './gene-browser.component.html',
   styleUrls: ['./gene-browser.component.css'],
 })
-export class GeneBrowserComponent implements OnInit {
+export class GeneBrowserComponent implements OnInit, OnDestroy {
   @ViewChild(GenePlotComponent) private genePlotComponent: GenePlotComponent;
   private selectedGene: Gene;
   private geneSymbol = '';
@@ -34,6 +35,7 @@ export class GeneBrowserComponent implements OnInit {
   private showError = false;
   private geneBrowserConfig;
   private legendDrawn = false;
+  private subscriptions: Subscription[] = [];
 
   public readonly affectedStatusValues = affectedStatusValues;
   public readonly effectTypeValues = effectTypeValues;
@@ -82,36 +84,39 @@ export class GeneBrowserComponent implements OnInit {
     if (this.selectedDataset) {
       this.geneBrowserConfig = this.selectedDataset.geneBrowser;
     }
-    this.datasetsService.getDatasetsLoadedObservable().subscribe(datasetsLoaded => {
-      this.selectedDataset = this.datasetsService.getSelectedDataset();
-      if (this.selectedDataset) {
-        this.geneBrowserConfig = this.selectedDataset.geneBrowser;
-        if (this.route.snapshot.params.gene && this.selectedDataset.accessRights) {
-          this.submitGeneRequest(this.route.snapshot.params.gene);
+
+    this.subscriptions.push(
+      this.datasetsService.getDatasetsLoadedObservable().subscribe(datasetsLoaded => {
+        this.selectedDataset = this.datasetsService.getSelectedDataset();
+        if (this.selectedDataset) {
+          this.geneBrowserConfig = this.selectedDataset.geneBrowser;
+          if (this.route.snapshot.params.gene && this.selectedDataset.accessRights) {
+            this.submitGeneRequest(this.route.snapshot.params.gene);
+          }
         }
-      }
-    });
-
-    this.queryService.streamingFinishedSubject.subscribe(() => {
-      this.familyLoadingFinished = true;
-    });
-
-    this.queryService.summaryStreamingFinishedSubject.subscribe(async() => {
-      this.loadingFinished = true;
-      this.loadingService.setLoadingStop();
-    });
-
-    this.route.parent.params.subscribe(
-      (params: Params) => {
-        this.selectedDatasetId = params['dataset'];
-      }
+      }),
+      this.queryService.streamingFinishedSubject.subscribe(() => {
+        this.familyLoadingFinished = true;
+      }),
+      this.queryService.summaryStreamingFinishedSubject.subscribe(async() => {
+        this.loadingFinished = true;
+        this.loadingService.setLoadingStop();
+      }),
+      this.route.parent.params.subscribe(
+        (params: Params) => {
+          this.selectedDatasetId = params['dataset'];
+        }
+      ),
+      this.store.select(state => state.geneSymbolsState).subscribe(state => {
+        if (state.geneSymbols.length) {
+          this.geneSymbol = state.geneSymbols[0];
+        }
+      })
     );
+  }
 
-    this.store.select(state => state.geneSymbolsState).subscribe(state => {
-      if (state.geneSymbols.length) {
-        this.geneSymbol = state.geneSymbols[0];
-      }
-    });
+  public ngOnDestroy(): void {
+    this.subscriptions.map(subscription => subscription.unsubscribe());
   }
 
   private async submitGeneRequest(geneSymbol?: string) {

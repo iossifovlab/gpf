@@ -1,11 +1,9 @@
-import { ComponentFixture, TestBed, waitForAsync, tick } from '@angular/core/testing';
-
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { VariantReportsComponent } from './variant-reports.component';
 import { PedigreeChartModule } from '../pedigree-chart/pedigree-chart.module'
 import { FormsModule } from '@angular/forms';
 import { VariantReportsService } from './variant-reports.service';
 import { Observable, of } from 'rxjs';
-import { VariantReport } from './variant-reports';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { PerfectlyDrawablePedigreeService } from 'app/perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
@@ -13,31 +11,31 @@ import { ResizeService } from 'app/table/resize.service';
 
 class MockDatasetsService {
   getSelectedDataset() {
-    return {accessRights: true};
+    return {accessRights: true, commonReport: {enabled: true}};
   }
   getSelectedDatasetObservable() {
-    return of({accessRights: true});
+    return of({accessRights: true, commonReport: {enabled: true}});
   }
   getDatasetsLoadedObservable = function() {
     return of();
   };
   getDataset(): Observable<any> {
-    return of({accessRights: true});
+    return of({accessRights: true, commonReport: {enabled: true}});
   }
 }
 
 class MockDatasetsDenovoService {
   getSelectedDataset() {
-    return {id: "Denovo", accessRights: true};
+    return {id: "Denovo", accessRights: true, commonReport: {enabled: true}};
   }
   getSelectedDatasetObservable() {
-    return of({id: "Denovo", accessRights: true});
+    return of({id: "Denovo", accessRights: true, commonReport: {enabled: true}});
   }
   getDatasetsLoadedObservable = function() {
     return of();
   };
   getDataset(): Observable<any> {
-    return of({id: "Denovo", accessRights: true});
+    return of({id: "Denovo", accessRights: true, commonReport: {enabled: true}});
   }
 }
 
