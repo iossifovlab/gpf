@@ -1,9 +1,9 @@
 tr:hover.row-highlight {
-  background-color: blue !important;
+  background-color: #e4e9d7 !important;
 }
 
 .row-highlight {
-  background-color: red !important;
+  background-color: rgb(255, 255, 214) !important;
 }
 
 tr:nth-child(even) {
