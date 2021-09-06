@@ -21,7 +21,7 @@
     <input type="button" style="width: 75px" class="btn btn-md btn-primary" value="Go" (click)="submitGeneRequest()">
   </div>
 
-  <div #filters id="filters" class="row" style="margin-left: 0px">
+  <div [hidden]="!loadingFinished" #filters id="filters" class="row" style="margin-left: 0px">
     <div class="effect-card card filter">
       <div class="card-header card-title">
         Affected Status
