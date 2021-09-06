@@ -91,7 +91,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   }
 
   @HostListener('document:keydown.escape')
-  clearHighlightedRows() {
+  private clearHighlightedRows() {
     for (const row of this.highlightedRowElements) {
       row.classList.remove('row-highlight');
     }
@@ -574,7 +574,11 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     }
 
     const rowElement = event.path[1];
-    rowElement.className.includes('row-highlight') ? rowElement.classList.remove('row-highlight') : rowElement.classList.add('row-highlight');
+
+    rowElement.className.includes('row-highlight')
+      ? rowElement.classList.remove('row-highlight')
+      : rowElement.classList.add('row-highlight');
+
     this.highlightedRowElements.push(rowElement);
   }
 }
