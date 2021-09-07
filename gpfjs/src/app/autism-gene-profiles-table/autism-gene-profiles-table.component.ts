@@ -27,12 +27,12 @@ import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-s
 })
 export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, OnChanges {
   @Input() public config: AgpTableConfig;
-  @Output() private configChange: EventEmitter<AgpTableConfig> = new EventEmitter<AgpTableConfig>();
+  @Output() public configChange: EventEmitter<AgpTableConfig> = new EventEmitter<AgpTableConfig>();
 
-  @Output() private createTabEvent = new EventEmitter();
-  @ViewChildren(NgbDropdownMenu) private ngbDropdownMenu: NgbDropdownMenu[];
+  @Output() public createTabEvent = new EventEmitter();
+  @ViewChildren(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu[];
 
-  private genes: AgpGene[] = [];
+  public genes: AgpGene[] = [];
 
   public shownGeneSetsCategories: AgpGeneSetsCategory[];
   public allGeneSetNames = new Map<string, string[]>();
@@ -48,29 +48,29 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   public allPersonSetNames: string[] = [];
   public shownPersonSetNames: string[] = [];
 
-  private pageIndex = 1;
-  private loadMoreGenes = true;
-  private scrollLoadThreshold = 1000;
+  public pageIndex = 1;
+  public loadMoreGenes = true;
+  public scrollLoadThreshold = 1000;
 
-  private geneInput: string;
-  private searchKeystrokes$: Subject<string> = new Subject();
-  @ViewChild('geneSearchInput') private geneSearchInput: ElementRef;
+  public geneInput: string;
+  public searchKeystrokes$: Subject<string> = new Subject();
+  @ViewChild('geneSearchInput') public geneSearchInput: ElementRef;
 
-  private sortBy: string;
-  private orderBy: string;
-  @ViewChildren(SortingButtonsComponent) private sortingButtonsComponents: SortingButtonsComponent[];
-  private currentSortingColumnId: string;
+  public sortBy: string;
+  public orderBy: string;
+  @ViewChildren(SortingButtonsComponent) public sortingButtonsComponents: SortingButtonsComponent[];
+  public currentSortingColumnId: string;
 
-  @ViewChildren('columnFilteringButton') private columnFilteringButtons: QueryList<ElementRef>;
-  @ViewChildren('dropdownSpan') private dropdownSpans: QueryList<ElementRef>;
+  @ViewChildren('columnFilteringButton') public columnFilteringButtons: QueryList<ElementRef>;
+  @ViewChildren('dropdownSpan') public dropdownSpans: QueryList<ElementRef>;
   @ViewChildren(MultipleSelectMenuComponent)
-  private multipleSelectMenuComponents: QueryList<MultipleSelectMenuComponent>;
+  public multipleSelectMenuComponents: QueryList<MultipleSelectMenuComponent>;
   public modalBottom: number;
 
-  private highlightedRowElements = [];
+  public highlightedRowElements = [];
 
   @HostListener('window:scroll')
-  private onWindowScroll() {
+  public onWindowScroll() {
     if (this.isTableVisible) {
       const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
       const totalScrollHeight = document.documentElement.scrollHeight;
@@ -84,14 +84,14 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   }
 
   @HostListener('window:resize')
-  private onResize() {
+  public onResize() {
     if (this.isTableVisible) {
       this.updateModalBottom();
     }
   }
 
   @HostListener('document:keydown.escape', ['$event'])
-  private clearHighlightedRows($event) {
+  public clearHighlightedRows($event) {
     if ($event.target['localName'] === 'input' || $event.target['localName'] === 'button') {
       return;
     }
@@ -102,11 +102,11 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   }
 
   constructor(
-    private autismGeneProfilesService: AutismGeneProfilesService,
-    private renderer: Renderer2,
-    private ref: ElementRef,
-    private queryService: QueryService,
-    private store: Store,
+    public autismGeneProfilesService: AutismGeneProfilesService,
+    public renderer: Renderer2,
+    public ref: ElementRef,
+    public queryService: QueryService,
+    public store: Store,
   ) { }
 
   public ngOnChanges(): void {
@@ -134,7 +134,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
    * @param matchingProperty object property used to check if object already exists when adding it
    * @returns updated category array
    */
-  private mergeArrays(oldArray, newArray, matchingProperty) {
+  public mergeArrays(oldArray, newArray, matchingProperty) {
     return newArray.map(newObject => {
       if (oldArray) {
         const oldObject = oldArray.find(obj => newObject[matchingProperty] === obj[matchingProperty]);
@@ -233,7 +233,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   /**
    * Updates column filtering modals position value.
    */
-  private updateModalBottom(): void {
+  public updateModalBottom(): void {
     this.modalBottom = this.calculateModalBottom();
   }
 
@@ -241,7 +241,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
    * Calculates column filtering modals position.
    * @returns modals position
    */
-  private calculateModalBottom(): number {
+  public calculateModalBottom(): number {
     const columnFilteringButton = this.columnFilteringButtons.first;
     let result = 0;
 
@@ -265,7 +265,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
-  private multipleSelectMenuApplyData($event) {
+  public multipleSelectMenuApplyData($event) {
     const menuId = $event.menuId.split(':');
     if (menuId[0] === 'gene_set_category') {
       const categoryIndex = this.shownGeneSetsCategories.findIndex(category => category.category === menuId[1]);
@@ -348,7 +348,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   /**
    * Updates genes. Can load the next set of genes, load only searched genes, load genes sorted and ordered by.
    */
-  private updateGenes(): void {
+  public updateGenes(): void {
     this.loadMoreGenes = false;
     this.pageIndex++;
 
@@ -364,7 +364,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
    * Sets gene input to be searched, resets currently loaded genes and triggers genes update.
    * @param value value used to filter matching genes
    */
-  private search(value: string) {
+  public search(value: string) {
     this.geneInput = value;
     this.genes = [];
     this.pageIndex = 0;
@@ -404,7 +404,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
    * Resets sorting button on current sorting column.
    * @param sortBy the new current column
    */
-  private resetSortButtons(sortBy: string): void {
+  public resetSortButtons(sortBy: string): void {
     if (this.currentSortingColumnId !== undefined) {
       const sortButton = this.sortingButtonsComponents.find(
         sortingButtonsComponent => {
@@ -471,7 +471,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
    * Waits dropdown to initialize.
    * @returns promise
    */
-  private async waitForDropdown(): Promise<void> {
+  public async waitForDropdown(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
         if (this.ngbDropdownMenu !== undefined) {
@@ -486,7 +486,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
    * Opens column filtering dropdown.
    * @param columnId id specifying which dropdown to open
    */
-  private openDropdown(columnId: string): void {
+  public openDropdown(columnId: string): void {
     this.waitForDropdown().then(() => {
       this.renderer.setStyle(
         this.dropdownSpans.find(ele => ele.nativeElement.id === `${columnId}-span`).nativeElement,
@@ -505,7 +505,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
    * @param columnFilteringButton column filtering button element
    * @returns position
    */
-  private calculateModalLeftPosition(columnFilteringButton: HTMLElement): string {
+  public calculateModalLeftPosition(columnFilteringButton: HTMLElement): string {
     const modalWidth = 400;
     const leftCap = 30;
     const modalLeft =
@@ -555,7 +555,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   * Waits search box element to load.
   * @returns promise
   */
-   private async waitForGeneSearchInputToLoad(): Promise<void> {
+   public async waitForGeneSearchInputToLoad(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
         if (this.geneSearchInput !== undefined) {

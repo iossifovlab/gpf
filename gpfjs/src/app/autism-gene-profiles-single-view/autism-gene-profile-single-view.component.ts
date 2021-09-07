@@ -39,14 +39,14 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
 
   public gene$: Observable<AgpGene>;
 
-  private _histogramOptions = {
+  public _histogramOptions = {
     width: 525,
     height: 100,
     marginLeft: 50,
     marginTop: 25,
   };
 
-  private isGeneInSFARI = false;
+  public isGeneInSFARI = false;
   public links = {
     GeneBrowser: '',
     SFARIgene: '',
@@ -56,14 +56,14 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   };
 
   constructor(
-    private autismGeneProfilesService: AutismGeneProfilesService,
-    private geneWeightsService: GeneWeightsService,
-    private geneService: GeneService,
-    private datasetsService: DatasetsService,
-    private location: Location,
-    private router: Router,
-    private queryService: QueryService,
-    private store: Store,
+    public autismGeneProfilesService: AutismGeneProfilesService,
+    public geneWeightsService: GeneWeightsService,
+    public geneService: GeneService,
+    public datasetsService: DatasetsService,
+    public location: Location,
+    public router: Router,
+    public queryService: QueryService,
+    public store: Store,
   ) { }
 
   public ngOnInit(): void {
@@ -102,7 +102,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     });
   }
 
-  private setLinks(geneSymbol: string, gene: Gene, datasetGenome): void {
+  public setLinks(geneSymbol: string, gene: Gene, datasetGenome): void {
     if (this.isGeneInSFARI) {
       this.links.SFARIgene = 'https://gene.sfari.org/database/human-gene/' + geneSymbol;
     }
@@ -113,7 +113,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     this.links.Pubmed = 'https://pubmed.ncbi.nlm.nih.gov/?term=' + geneSymbol + '%20AND%20(autism%20OR%20asd)';
   }
 
-  private getUCSCLink(gene: Gene, datasetGenome): string {
+  public getUCSCLink(gene: Gene, datasetGenome): string {
     const genome: string = datasetGenome;
     const chromosomePrefix: string = genome === 'hg38' ? '' : 'chr';
     const chromosome: string = gene.transcripts[0].chromosome;
@@ -123,7 +123,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     return `https://genome.ucsc.edu/cgi-bin/hgTracks?db=${genome}&position=${chromosomePrefix}${chromosome}%3A${geneStartPosition}-${geneStopPosition}`;
   }
 
-  private getGeneBrowserLink(): string {
+  public getGeneBrowserLink(): string {
     if (!this.config) {
       return;
     }

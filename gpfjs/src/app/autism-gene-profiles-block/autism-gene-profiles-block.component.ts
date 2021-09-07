@@ -15,20 +15,20 @@ import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-s
   styleUrls: ['./autism-gene-profiles-block.component.css']
 })
 export class AutismGeneProfilesBlockComponent implements OnInit {
-  @ViewChild('nav') private nav: NgbNav;
-  @ViewChild(NgbDropdownMenu) private ngbDropdownMenu: NgbDropdownMenu;
-  @ViewChild(MultipleSelectMenuComponent) private multipleSelectMenuComponent: MultipleSelectMenuComponent;
+  @ViewChild('nav') public nav: NgbNav;
+  @ViewChild(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu;
+  @ViewChild(MultipleSelectMenuComponent) public multipleSelectMenuComponent: MultipleSelectMenuComponent;
 
   public geneTabs = new Set<string>();
   public autismGeneToolConfig: AgpConfig;
-  private tableConfig: AgpTableConfig;
+  public tableConfig: AgpTableConfig;
   public shownTableConfig: AgpTableConfig;
 
   public allColumns: string[];
   public shownColumns: string[];
 
   @HostListener('window:keydown', ['$event'])
-  private keyEvent($event: KeyboardEvent) {
+  public keyEvent($event: KeyboardEvent) {
     if ($event.target['localName'] === 'input') {
       return;
     }
@@ -48,7 +48,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   }
 
   constructor(
-    private autismGeneProfilesService: AutismGeneProfilesService,
+    public autismGeneProfilesService: AutismGeneProfilesService,
   ) { }
 
   public ngOnInit(): void {
@@ -79,15 +79,15 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  private getActiveTabIndex(): number {
+  public getActiveTabIndex(): number {
     return [...this.geneTabs].indexOf(this.nav.activeId);
   }
 
-  private openHomeTab(): void {
+  public openHomeTab(): void {
     this.nav.select('autismGenesTool');
   }
 
-  private openPreviousTab(): void {
+  public openPreviousTab(): void {
     const index = this.getActiveTabIndex();
 
     if (index > 0) {
@@ -97,7 +97,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  private openNextTab(): void {
+  public openNextTab(): void {
     const index = this.getActiveTabIndex();
 
     if (index + 1 < this.geneTabs.size) {
@@ -105,11 +105,11 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  private openLastTab(): void {
+  public openLastTab(): void {
     this.nav.select([...this.geneTabs][this.geneTabs.size - 1]);
   }
 
-  private openTabAtIndex(index: number): void {
+  public openTabAtIndex(index: number): void {
     this.nav.select([...this.geneTabs][index]);
   }
 
@@ -128,7 +128,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     event.stopImmediatePropagation();
   }
 
-  private closeActiveTab(): void {
+  public closeActiveTab(): void {
     if (this.nav.activeId === 'autismGenesTool') {
       return;
     }
@@ -145,7 +145,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  private openTabByKey(key: string): void {
+  public openTabByKey(key: string): void {
     if (this.geneTabs.size === 0) {
       return;
     }
@@ -163,7 +163,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  private getAllCategories(config: AgpTableConfig) {
+  public getAllCategories(config: AgpTableConfig) {
     const allColumns = [];
     if (config.geneSets) {
       allColumns.push(...config.geneSets.map(obj => obj.displayName));
@@ -177,7 +177,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     return allColumns;
   }
 
-  private getTableConfig(agpConfig: AgpConfig): AgpTableConfig {
+  public getTableConfig(agpConfig: AgpConfig): AgpTableConfig {
     return new AgpTableConfig(
       agpConfig.defaultDataset,
       cloneDeep(agpConfig.geneSets),
