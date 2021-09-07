@@ -69,7 +69,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
 
   private highlightedRowElements = [];
 
-  @HostListener('window:scroll', ['$event'])
+  @HostListener('window:scroll')
   private onWindowScroll() {
     if (this.isTableVisible) {
       const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
@@ -83,15 +83,19 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     }
   }
 
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   private onResize() {
     if (this.isTableVisible) {
       this.updateModalBottom();
     }
   }
 
-  @HostListener('document:keydown.escape')
-  private clearHighlightedRows() {
+  @HostListener('document:keydown.escape', ['$event'])
+  private clearHighlightedRows($event) {
+    if ($event.target['localName'] === 'input' || $event.target['localName'] === 'button') {
+      return;
+    }
+
     for (const row of this.highlightedRowElements) {
       row.classList.remove('row-highlight');
     }
