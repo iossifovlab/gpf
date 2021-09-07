@@ -57,6 +57,7 @@ class GenomicScoresResource(GenomicResource):
 
     def open(self):
         scores_filename = f"{self.get_url()}/{self._config.filename}"
+        self.filename = scores_filename  # Kept for legacy try catch code
         index_filename = f"{self.get_url()}/{self._config.index_file.filename}"
         if urlparse(self.get_url()).scheme == "file":
             scores_filename = urlparse(scores_filename).path

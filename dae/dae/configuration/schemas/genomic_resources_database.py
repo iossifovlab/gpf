@@ -25,6 +25,26 @@ default_annotation_schema = {
                         "position": {"type": "string"},
                         "nucleotide": {"type": "string"}
                     }
+                },
+                "histogram": {
+                    "type": "dict",
+                    "schema": {
+                        "bins_count": {"type": "integer"},
+                        "x_min": {"type": "float"},
+                        "x_max": {"type": "float"},
+                        "x_scale": {
+                            "type": "string",
+                            "allowed": ["linear", "log"]
+                        },
+                        "y_scale": {
+                            "type": "string",
+                            "allowed": ["linear", "log"]
+                        },
+                        "x_min_log": {
+                            "type": "float",
+                            "dependencies": {"x_scale": "log"}
+                        }
+                    }
                 }
             }
         }
