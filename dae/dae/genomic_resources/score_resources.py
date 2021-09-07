@@ -233,6 +233,11 @@ class GenomicScoresResource(GenomicResource):
     def get_all_scores(self):
         return [s.id for s in self._config.scores]
 
+    def get_score_config(self, score_id):
+        for config in self._config.scores:
+            if config.id == score_id:
+                return config
+
     def get_default_scores(self):
         return [s.source for s in self._config.default_annotation.attributes]
 

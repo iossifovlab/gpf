@@ -1,12 +1,19 @@
 import logging
-import copy
-from dae.configuration.schemas.genomic_resources_database import attr_schema, \
-    genomic_score_schema
+import abc
+
+import pyarrow as pa
+from typing import List
 
 logger = logging.getLogger(__name__)
 
 
-class Annotator:
+class Annotator(abc.ABC):
+
+    TYPES = {
+        "float": pa.float32(),
+        "integer": pa.int32(),
+        "string": pa.string(),
+    }
 
     def __init__(self, resource, liftover=None, override=None):
         self.resource = resource
@@ -19,17 +26,12 @@ class Annotator:
         raise NotImplementedError()
 
     @property
-    def output_columns(self):
-        raise NotImplementedError()
+    def output_columns(self) -> List[str]:
+        return self.annotation_schema.names
 
-    @classmethod
-    def get_config_schema(cls):
-        attributes_schemas = {
-            attr_name: attr_schema for attr_name in cls.required_columns()
-        }
-        schema = copy.deepcopy(genomic_score_schema)
-        schema.update(attributes_schemas)
-        return schema
+    @abc.abstractproperty
+    def annotation_schema(self):
+        pass
 
     def _do_annotate(self, attributes, variant, liftover_variants):
         """

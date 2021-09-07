@@ -3,6 +3,8 @@ import logging
 from copy import deepcopy
 from itertools import chain
 
+import pyarrow as pa
+
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.annotation_conf import annotation_conf_schema
 from dae.annotation.tools.annotator_base import Annotator
@@ -18,6 +20,7 @@ class AnnotationPipeline():
         self.annotators = []
         self.config = config
         self.resource_db = resource_db
+        self._annotation_schema = None
 
     @staticmethod
     def build(pipeline_config_path, resource_db):
@@ -56,12 +59,25 @@ class AnnotationPipeline():
                     annotator_type, gs, liftover, override
                 )
                 pipeline.add_annotator(annotator)
+
         return pipeline
 
     @property
     def output_columns(self):
         return chain(
             annotator.output_columns for annotator in self.annotators)
+
+    @property
+    def annotation_schema(self):
+        if self._annotation_schema is None:
+            fields = []
+            for annotator in self.annotators:
+                schema = annotator.annotation_schema
+                for i in range(len(schema)):
+                    field = schema.field(i)
+                    fields.append(field)
+            self._annotation_schema = pa.schema(fields)
+        return self._annotation_schema
 
     def add_annotator(self, annotator):
         assert isinstance(annotator, Annotator)

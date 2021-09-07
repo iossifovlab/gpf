@@ -2,6 +2,8 @@
 import os
 import copy
 
+import pyarrow as pa
+
 from dae.variants.effects import Effect
 from dae.annotation.tools.effect_annotator import EffectAnnotator
 from dae.pedigrees.loader import FamiliesLoader
@@ -82,3 +84,31 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
                 set(attributes["effect_gene_genes"])
             assert set([g.effect for g in effect.genes]) == \
                 set(attributes["effect_gene_types"])
+
+
+def test_effect_annotation_schema(anno_grdb):
+    genome = anno_grdb.get_resource(
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174/genome")
+    assert genome is not None
+    assert isinstance(genome, GenomicSequenceResource)
+
+    gene_models = anno_grdb.get_resource(
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174/gene_models/refGene_201309"
+    )
+    assert gene_models is not None
+    assert isinstance(gene_models, GeneModelsResource)
+
+    effect_annotator = EffectAnnotator(
+        gene_models=gene_models, genome=genome)
+
+    schema = effect_annotator.annotation_schema
+    assert schema is not None
+
+    field = schema.field("effect_type")
+    assert field.type == pa.string()
+
+    field = schema.field("effect_gene_genes")
+    assert field.type == pa.list_(pa.string())
+
+    field = schema.field("effect_gene_types")
+    assert field.type == pa.list_(pa.string())
