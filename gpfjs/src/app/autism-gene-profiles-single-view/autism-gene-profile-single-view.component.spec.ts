@@ -78,10 +78,6 @@ describe('AutismGeneProfileSingleViewComponent', () => {
     expect(component.isGeneInSFARI).toBeFalse();
   });
 
-  it('should format score name', () => {
-    expect(component.formatScoreName('fake_score_name')).toEqual('fake score name');
-  });
-
   it('should get autism score gene weight', () => {
     const mocksWeights = [
       {category: 'autismScore', scores: [{weight: 'weight1'}, {weight: 'weight2'}]},
