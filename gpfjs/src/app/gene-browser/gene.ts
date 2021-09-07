@@ -108,8 +108,8 @@ export class Transcript {
   public static fromJson(json: object): Transcript {
     return new Transcript(
       json['transcript_id'], json['chrom'], json['strand'],
-      json['cds'].map(exon => ({chrom: json['cds'], ...exon})),
-      json['exons'].map(exon => ({chrom: json['chrom'], ...exon}))
+      json['cds'].map(exon => ({chromosome: json['chrom'], ...exon})),
+      json['exons'].map(exon => ({chromosome: json['chrom'], ...exon}))
     );
   }
 
