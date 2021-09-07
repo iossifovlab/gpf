@@ -6,6 +6,10 @@ tr:hover.row-highlight {
   background-color: rgb(255, 255, 214) !important;
 }
 
+.row-highlight:nth-child(even) {
+  background-color: rgb(247, 247, 203) !important;
+}
+
 tr:nth-child(even) {
   background-color: #FAFAFA;
 }
