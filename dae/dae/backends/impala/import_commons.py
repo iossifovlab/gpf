@@ -615,7 +615,7 @@ class BatchImporter:
             self.families,
             variants_filename,
             params=variants_params,
-            genome=self.gpf_instance.genomes_db.get_genome(),
+            genome=self.gpf_instance.genomes_db.get_genomic_sequence(),
         )
         self.denovo_loader = variants_loader
         self.variants_loaders["denovo"] = variants_loader
@@ -677,7 +677,7 @@ class BatchImporter:
 
         self.partition_helper = MakefilePartitionHelper(
             partition_description,
-            self.gpf_instance.genomes_db.get_genome(),
+            self.gpf_instance.genomes_db.get_genomic_sequence(),
             add_chrom_prefix=add_chrom_prefix,
             del_chrom_prefix=del_chrom_prefix,
         )
@@ -1229,7 +1229,7 @@ class Variants2ParquetTool:
             families,
             variants_filenames,
             params=variants_params,
-            genome=gpf_instance.genomes_db.get_genome(),
+            genome=gpf_instance.genomes_db.get_genomic_sequence(),
         )
         return variants_loader
 

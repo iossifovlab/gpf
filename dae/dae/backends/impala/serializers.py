@@ -38,7 +38,6 @@ def write_int32(stream, num):
 
 
 def write_float(stream, num):
-    print(num)
     stream.write(struct.pack("f", num))
 
 
@@ -400,7 +399,7 @@ class AlleleParquetSerializer:
                 "serializer called without variants schema")
         else:
             logger.debug(
-                f"serializer variants schema {variants_schema.col_names}")
+                f"serializer variants schema {variants_schema}")
 
         self.summary_prop_serializers = {
             "bucket_index": IntSerializer,
@@ -442,11 +441,6 @@ class AlleleParquetSerializer:
         additional_searchable_props = {}
         scores_searchable = {}
         scores_binary = {}
-        print(100*"=")
-        print("variants_schema:")
-        print(100*"=")
-        print(variants_schema)
-        print(100*"=")
         if variants_schema:
             if "af_allele_freq" in variants_schema.col_names:
                 additional_searchable_props["af_allele_freq"] = pa.float32()
@@ -594,12 +588,10 @@ class AlleleParquetSerializer:
 
     def _serialize_allele_scores(self, allele, stream):
         property_serializers = self.scores_serializers
-        print(self.scores_serializers)
         for prop, serializer in property_serializers.items():
             value = getattr(allele, prop, None)
             if value is None:
                 value = allele.get_attribute(prop)
-            print(prop, value)
             self.write_property(stream, value, serializer)
 
     def serialize_scores_data(self, alleles):

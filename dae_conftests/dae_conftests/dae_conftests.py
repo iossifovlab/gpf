@@ -270,7 +270,7 @@ def temp_filename(request, cleanup):
 @pytest.fixture(scope="session")
 def annotation_pipeline_config():
     filename = relative_to_this_test_folder(
-        "fixtures/annotation_pipeline/import_annotation.conf"
+        "fixtures/annotation_pipeline/import_annotation.yaml"
     )
     return filename
 
@@ -776,7 +776,7 @@ def data_import(
 
             families_loader = FamiliesLoader(config.pedigree)
             families = families_loader.load()
-            genome = gpf_instance_2013.genomes_db.get_genome()
+            genome = gpf_instance_2013.genomes_db.get_genomic_sequence()
 
             loaders = []
             if config.denovo:

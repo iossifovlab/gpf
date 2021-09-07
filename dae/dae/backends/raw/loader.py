@@ -379,7 +379,7 @@ class AnnotationDecorator(VariantsLoaderDecorator):
                 filter(
                     lambda col: col not in common_columns
                     and col not in AnnotationDecorator.CLEAN_UP_COLUMNS,
-                    variants_loader.annotation_schema.col_names,
+                    variants_loader.annotation_schema.names,
                 )
             )
         else:
@@ -419,6 +419,8 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
         super(AnnotationPipelineDecorator, self).__init__(variants_loader)
 
         self.annotation_pipeline = annotation_pipeline
+
+        logger.info(f"annotation pipeline schema: {self.annotation_schema}")
         self.set_attribute("annotation_schema", self.annotation_schema)
         self.set_attribute(
             "extra_attributes",
@@ -433,7 +435,7 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
 
     @property
     def annotation_schema(self):
-        return self.annotation_pipeline.produce_annotation_schema()
+        return self.annotation_pipeline.annotation_schema
 
     def full_variants_iterator(self):
         for (summary_variant, family_variants) in \

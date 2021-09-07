@@ -65,8 +65,14 @@ class EffectTranscript(object):
             return None
 
         parts = [p.strip() for p in data.split(":")]
-        assert len(parts) == 3
-        return EffectTranscript(parts[0], gene=parts[1], details=parts[2])
+
+        if len(parts) == 3:
+            return EffectTranscript(parts[0], gene=parts[1], details=parts[2])
+        elif len(parts) == 2:
+            return EffectTranscript(parts[0], gene=None, details=parts[1])
+        else:
+            raise ValueError(
+                f"unexpected effect details format: {data}")
 
     def __repr__(self):
         return f"{self.transcript_id}:{self.gene}:{self.details}"
