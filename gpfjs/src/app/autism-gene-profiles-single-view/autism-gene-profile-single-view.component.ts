@@ -56,14 +56,14 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   };
 
   constructor(
-    public autismGeneProfilesService: AutismGeneProfilesService,
-    public geneWeightsService: GeneWeightsService,
-    public geneService: GeneService,
-    public datasetsService: DatasetsService,
-    public location: Location,
-    public router: Router,
-    public queryService: QueryService,
-    public store: Store,
+    private autismGeneProfilesService: AutismGeneProfilesService,
+    private geneWeightsService: GeneWeightsService,
+    private geneService: GeneService,
+    private datasetsService: DatasetsService,
+    private location: Location,
+    private router: Router,
+    private queryService: QueryService,
+    private store: Store,
   ) { }
 
   public ngOnInit(): void {
