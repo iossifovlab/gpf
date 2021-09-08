@@ -50,7 +50,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   }
 
   constructor(
-    public autismGeneProfilesService: AutismGeneProfilesService,
+    private autismGeneProfilesService: AutismGeneProfilesService,
   ) { }
 
   public ngOnInit(): void {
