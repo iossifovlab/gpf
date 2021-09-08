@@ -1,6 +1,9 @@
-import { ChangeDetectorRef, Component, HostListener, OnInit, ViewChild } from '@angular/core';
+import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { NgbDropdownMenu, NgbNav } from '@ng-bootstrap/ng-bootstrap';
-import { AgpConfig, AgpTableConfig, AgpTableDataset, AgpTableDatasetPersonSet } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import {
+  AgpConfig, AgpTableConfig,
+  AgpTableDataset, AgpTableDatasetPersonSet
+} from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { cloneDeep } from 'lodash';
 import { take } from 'rxjs/operators';
@@ -12,20 +15,20 @@ import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-s
   styleUrls: ['./autism-gene-profiles-block.component.css']
 })
 export class AutismGeneProfilesBlockComponent implements OnInit {
-  @ViewChild('nav') nav: NgbNav;
-  @ViewChild(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu;
-  @ViewChild(MultipleSelectMenuComponent) multipleSelectMenuComponent: MultipleSelectMenuComponent; 
+  @ViewChild('nav') public nav: NgbNav;
+  @ViewChild(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu;
+  @ViewChild(MultipleSelectMenuComponent) public multipleSelectMenuComponent: MultipleSelectMenuComponent;
 
-  geneTabs = new Set<string>();
-  autismGeneToolConfig: AgpConfig;
-  tableConfig: AgpTableConfig;
-  shownTableConfig: AgpTableConfig;
+  public geneTabs = new Set<string>();
+  public autismGeneToolConfig: AgpConfig;
+  public tableConfig: AgpTableConfig;
+  public shownTableConfig: AgpTableConfig;
 
-  allColumns: string[];
-  shownColumns: string[];
+  public allColumns: string[];
+  public shownColumns: string[];
 
   @HostListener('window:keydown', ['$event'])
-  keyEvent($event: KeyboardEvent) {
+  public keyEvent($event: KeyboardEvent) {
     if ($event.target['localName'] === 'input') {
       return;
     }
@@ -45,11 +48,10 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   }
 
   constructor(
-    private autismGeneProfilesService: AutismGeneProfilesService,
-    private ref: ChangeDetectorRef,
+    public autismGeneProfilesService: AutismGeneProfilesService,
   ) { }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.autismGeneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
       this.autismGeneToolConfig = config;
       this.tableConfig = this.getTableConfig(config);
@@ -67,7 +69,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     });
   }
 
-  createTabEventHandler($event): void {
+  public createTabEventHandler($event): void {
     const tabId: string = $event.geneSymbol;
     const openTab: boolean = $event.openTab;
 
@@ -77,15 +79,15 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  getActiveTabIndex(): number {
+  public getActiveTabIndex(): number {
     return [...this.geneTabs].indexOf(this.nav.activeId);
   }
 
-  openHomeTab(): void {
+  public openHomeTab(): void {
     this.nav.select('autismGenesTool');
   }
 
-  openPreviousTab(): void {
+  public openPreviousTab(): void {
     const index = this.getActiveTabIndex();
 
     if (index > 0) {
@@ -95,7 +97,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  openNextTab(): void {
+  public openNextTab(): void {
     const index = this.getActiveTabIndex();
 
     if (index + 1 < this.geneTabs.size) {
@@ -103,15 +105,15 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  openLastTab(): void {
+  public openLastTab(): void {
     this.nav.select([...this.geneTabs][this.geneTabs.size - 1]);
   }
 
-  openTabAtIndex(index: number): void {
+  public openTabAtIndex(index: number): void {
     this.nav.select([...this.geneTabs][index]);
   }
 
-  closeTab(event: MouseEvent, tabId: string): void {
+  public closeTab(event: MouseEvent, tabId: string): void {
     if (tabId === 'autismGenesTool') {
       return;
     }
@@ -126,7 +128,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     event.stopImmediatePropagation();
   }
 
-  closeActiveTab(): void {
+  public closeActiveTab(): void {
     if (this.nav.activeId === 'autismGenesTool') {
       return;
     }
@@ -143,7 +145,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  openTabByKey(key: string): void {
+  public openTabByKey(key: string): void {
     if (this.geneTabs.size === 0) {
       return;
     }
@@ -161,7 +163,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  getAllCategories(config: AgpTableConfig) {
+  public getAllCategories(config: AgpTableConfig) {
     const allColumns = [];
     if (config.geneSets) {
       allColumns.push(...config.geneSets.map(obj => obj.displayName));
@@ -175,7 +177,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     return allColumns;
   }
 
-  getTableConfig(agpConfig: AgpConfig): AgpTableConfig {
+  public getTableConfig(agpConfig: AgpConfig): AgpTableConfig {
     return new AgpTableConfig(
       agpConfig.defaultDataset,
       cloneDeep(agpConfig.geneSets),
@@ -196,22 +198,29 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     );
   }
 
-  openDropdown() {
+  public openDropdown(): void {
     this.ngbDropdownMenu.dropdown.open();
     this.multipleSelectMenuComponent.focusSearchInput();
   }
 
-  handleMultipleSelectMenuApplyEvent($event) {
+  public handleMultipleSelectMenuApplyEvent($event): void {
     this.shownColumns = $event.data;
-    this.shownTableConfig.geneSets = this.tableConfig.geneSets.filter(obj => this.shownColumns.includes(obj.displayName));
-    this.shownTableConfig.genomicScores = this.tableConfig.genomicScores.filter(obj => this.shownColumns.includes(obj.displayName));
-    this.shownTableConfig.datasets = this.tableConfig.datasets.filter(obj => this.shownColumns.includes(obj.displayName));
+
+    this.shownTableConfig.geneSets = this.tableConfig.geneSets.filter((obj) =>
+      this.shownColumns.includes(obj.displayName)
+    );
+    this.shownTableConfig.genomicScores = this.tableConfig.genomicScores.filter((obj) =>
+      this.shownColumns.includes(obj.displayName)
+    );
+    this.shownTableConfig.datasets = this.tableConfig.datasets.filter((obj) =>
+      this.shownColumns.includes(obj.displayName)
+    );
     this.shownTableConfig = {...this.shownTableConfig};
 
     this.ngbDropdownMenu.dropdown.close();
   }
 
-  tableConfigChangeEvent($event) {
+  public tableConfigChangeEvent($event): void {
     this.shownTableConfig = $event;
     this.shownColumns = this.getAllCategories(this.shownTableConfig);
   }

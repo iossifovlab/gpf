@@ -12,7 +12,12 @@
       </a>
 
       <ng-template ngbNavContent>
-        <gpf-autism-gene-profiles-table [hidden]="nav.activeId !== 'autismGenesTool'" (createTabEvent)="createTabEventHandler($event)" [config]="shownTableConfig" (configChange)="tableConfigChangeEvent($event)"></gpf-autism-gene-profiles-table>
+        <gpf-autism-gene-profiles-table
+          [hidden]="nav.activeId !== 'autismGenesTool'"
+          (createTabEvent)="createTabEventHandler($event)"
+          [config]="shownTableConfig"
+          (configChange)="tableConfigChangeEvent($event)">
+        </gpf-autism-gene-profiles-table>
       </ng-template>
 
       <span #dropdownSpan ngbDropdown style="display: table; margin:auto" >
@@ -30,7 +35,10 @@
         <span class="close position-relative pl-2 font-weight-light" (click)="closeTab($event, geneTab)">×</span>
       </a>
       <ng-template ngbNavContent>
-        <gpf-autism-gene-profile-single-view [config]="autismGeneToolConfig" [geneSymbol]="geneTab"></gpf-autism-gene-profile-single-view>
+        <gpf-autism-gene-profile-single-view
+          [config]="autismGeneToolConfig"
+          [geneSymbol]="geneTab">
+        </gpf-autism-gene-profile-single-view>
       </ng-template>
     </li>
   </nav>
