@@ -69,10 +69,10 @@ def construct_import_annotation_pipeline(
     else:
         config_filename = gpf_instance.dae_config.annotation.conf_file
 
-    genomes_db = gpf_instance.genomes_db
-    resource_db = gpf_instance.genomic_resource_db
+    # genomes_db = gpf_instance.genomes_db
+    resources_db = gpf_instance.genomic_resources_db
     assert os.path.exists(config_filename), config_filename
-    return AnnotationPipeline.build(config_filename, genomes_db, resource_db)
+    return AnnotationPipeline.build(config_filename, resources_db)
 
 
 class MakefilePartitionHelper:
@@ -615,7 +615,7 @@ class BatchImporter:
             self.families,
             variants_filename,
             params=variants_params,
-            genome=self.gpf_instance.genomes_db.get_genome(),
+            genome=self.gpf_instance.genomes_db.get_genomic_sequence(),
         )
         self.denovo_loader = variants_loader
         self.variants_loaders["denovo"] = variants_loader
@@ -677,7 +677,7 @@ class BatchImporter:
 
         self.partition_helper = MakefilePartitionHelper(
             partition_description,
-            self.gpf_instance.genomes_db.get_genome(),
+            self.gpf_instance.genomes_db.get_genomic_sequence(),
             add_chrom_prefix=add_chrom_prefix,
             del_chrom_prefix=del_chrom_prefix,
         )
@@ -1229,7 +1229,7 @@ class Variants2ParquetTool:
             families,
             variants_filenames,
             params=variants_params,
-            genome=gpf_instance.genomes_db.get_genome(),
+            genome=gpf_instance.genomes_db.get_genomic_sequence(),
         )
         return variants_loader
 
@@ -1251,7 +1251,7 @@ class Variants2ParquetTool:
 
         generator = MakefilePartitionHelper(
             partition_description,
-            gpf_instance.genomes_db.get_genome(),
+            gpf_instance.genomes_db.get_genomic_sequence(),
             add_chrom_prefix=add_chrom_prefix,
             del_chrom_prefix=del_chrom_prefix,
         )

@@ -1,5 +1,4 @@
-from dae.genomic_resources.resource_db import GenomicResourceDB, \
-    CachedGenomicResourceDB
+from dae.genomic_resources.resource_db import GenomicResourceDB
 
 
 def test_fs_repository(test_grdb_config, fixture_dirname):
@@ -8,7 +7,7 @@ def test_fs_repository(test_grdb_config, fixture_dirname):
     grdb = GenomicResourceDB(
         test_grdb_config["genomic_resource_repositories"])
     assert len(grdb.repositories) == 1
-    repo = grdb.repositories[0]
+    repo = grdb.get_repository("test_grr")
     print(repo.get_name())
     print(repo.get_url())
     resources = list(repo.root_group.get_resources())
@@ -31,31 +30,45 @@ def test_fs_repository(test_grdb_config, fixture_dirname):
         f"{fixture_dirname('genomic_resources/hg38/TESTphastCons100way')}"
 
 
-def test_cache_filesystem(test_grdb_config):
-    grdb = CachedGenomicResourceDB(
-        test_grdb_config["genomic_resource_repositories"],
-        test_grdb_config["cache_location"])
+def test_cache_filesystem(test_cached_grdb_config):
+    grdb = GenomicResourceDB(
+        test_cached_grdb_config["genomic_resource_repositories"])
 
-    grdb.cache_resource("hg38/TESTCADD")
-    testcadd = grdb._cache.get_resource("hg38/TESTCADD")
-    assert testcadd is not None
+    print(list(grdb.repositories.keys()))
+
+    repo = grdb.get_repository("test_grr")
+    assert repo is not None
+
+    assert not repo.is_cached("hg38/TESTCADD")
+
+    res = grdb.get_resource("hg38/TESTCADD")
+    assert res is not None
+
+    assert repo.is_cached("hg38/TESTCADD")
 
 
-def test_cache_http(resources_http_server, test_grdb_http_config):
-    grdb = CachedGenomicResourceDB(
-        test_grdb_http_config["genomic_resource_repositories"],
-        test_grdb_http_config["cache_location"])
-    grdb.cache_resource("hg38/TESTCADD")
-    testcadd = grdb._cache.get_resource("hg38/TESTCADD")
-    assert testcadd is not None
+def test_cache_http(resources_http_server, test_cached_grdb_http_config):
+    grdb = GenomicResourceDB(
+        test_cached_grdb_http_config["genomic_resource_repositories"])
+
+    repo = grdb.get_repository("test_grr")
+    assert repo is not None
+
+    assert not repo.is_cached("hg38/TESTCADD")
+
+    res = grdb.get_resource("hg38/TESTCADD")
+    assert res is not None
+
+    assert repo.is_cached("hg38/TESTCADD")
 
 
 def test_http_repository(resources_http_server, test_grdb_http_config):
-    grdb = CachedGenomicResourceDB(
-        test_grdb_http_config["genomic_resource_repositories"],
-        test_grdb_http_config["cache_location"])
+    grdb = GenomicResourceDB(
+        test_grdb_http_config["genomic_resource_repositories"])
     assert len(grdb.repositories) == 1
-    repo = grdb.repositories[0]
+
+    repo = grdb.get_repository("test_grr")
+    assert repo is not None
     print(repo.get_name())
     print(repo.get_url())
 

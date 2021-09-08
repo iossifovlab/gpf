@@ -1,11 +1,10 @@
 import logging
 
+import pyarrow as pa
+
 from dae.variants.attributes import VariantType
-
 from dae.annotation.tools.annotator_base import Annotator
-
 from dae.genomic_resources.utils import aggregator_name_to_class
-
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +12,7 @@ logger = logging.getLogger(__name__)
 class VariantScoreAnnotatorBase(Annotator):
     def __init__(self, resource, liftover=None, override=None):
         super().__init__(resource, liftover, override)
+        self._annotation_schema = None
 
         self.score_types = dict()
         for score in self.resource.get_config().scores:
@@ -46,10 +46,17 @@ class VariantScoreAnnotatorBase(Annotator):
         raise NotImplementedError()
 
     @property
-    def output_columns(self):
-        return [
-            attr.dest for attr in self.config.attributes
-        ]
+    def annotation_schema(self) -> pa.Schema:
+        if self._annotation_schema is None:
+            fields = []
+            for attribute in self.get_config().attributes:
+                prop_name = attribute.dest
+                score_config = self.resource.get_score_config(attribute.source)
+                prop_type = self.TYPES.get(score_config.type)
+                assert prop_type is not None, score_config
+                fields.append(pa.field(prop_name, prop_type, nullable=True))
+            self._annotation_schema = pa.schema(fields)
+        return self._annotation_schema
 
     def _scores_not_found(self, attributes):
         values = {

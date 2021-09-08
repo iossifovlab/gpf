@@ -1,6 +1,8 @@
-from io import TextIOWrapper
 import os
+import gzip
 import yaml
+import io
+
 from typing import Dict
 from glob import glob
 from subprocess import call
@@ -161,6 +163,9 @@ class GenomicResourcesRepo:
             self.resources[resource.get_id()] = resource
 
     def load(self):
+        if self.root_group is not None:
+            raise ValueError(f"repository {self.repository_id} already loaded")
+
         repo_content = self._load_repository_content()
         root_group = _create_genomic_resources_hierarchy(
             self,
@@ -209,7 +214,11 @@ class FSGenomicResourcesRepo(GenomicResourcesRepo):
     """
 
     def __init__(self, repository_id: str, url: str):
-        super().__init__(repository_id, pathlib.Path(url).absolute().as_uri())
+        if url.startswith("file://"):
+            path = url
+        else:
+            path = pathlib.Path(url).absolute().as_uri()
+        super().__init__(repository_id, path)
 
     def _stream_resource_file_internal(self, file_uri, offset, size):
         # TODO Implement progress bar and interruptible download
@@ -222,7 +231,10 @@ class FSGenomicResourcesRepo(GenomicResourcesRepo):
         resource = self.get_resource(resource_id)
         file_url = os.path.join(resource.get_url(), filename)
         filepath = urlparse(file_url).path
-        return open(filepath, "r")
+        if filepath.endswith(".gz") or filepath.endswith(".bgz"):
+            return gzip.open(filepath, "rt")
+        else:
+            return open(filepath, "r")
 
     def build_repository_content(self):
         content = _create_resource_content_dict(self.root_group)
@@ -298,6 +310,9 @@ class GenomicResourcesRepoCache(FSGenomicResourcesRepo):
                 f"{self.remote_repository.repository_id}")
             return False
 
+    def is_cached(self, resource_id: str) -> bool:
+        return self.resources.get(resource_id) is not None
+
     def get_resource(self, resource_id: str) -> GenomicResource:
         local_resource = self.resources.get(resource_id)
         if local_resource is None:
@@ -337,6 +352,6 @@ class HTTPGenomicResourcesRepo(GenomicResourcesRepo):
         resource = self.get_resource(resource_id)
         file_url = os.path.join(resource.get_url(), filename)
         if mode == "r":
-            return TextIOWrapper(HTTPFile(file_url))
+            return io.TextIOWrapper(HTTPFile(file_url))
         else:
             return HTTPFile(file_url)

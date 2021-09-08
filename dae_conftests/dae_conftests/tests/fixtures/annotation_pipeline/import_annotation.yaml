@@ -1,0 +1,7 @@
+---
+
+effect_annotators:
+  - annotator: effect_annotator
+    genome: "GATK_ResourceBundle_5777_b37_phiX174/genome"
+    gene_models: "GATK_ResourceBundle_5777_b37_phiX174/gene_models/refGene_201309"
+

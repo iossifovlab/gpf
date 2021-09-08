@@ -180,7 +180,7 @@ def main(argv, gpf_instance=None):
 
     genotype_storage_factory = gpf_instance.genotype_storage_db
     genomes_db = gpf_instance.genomes_db
-    genome = genomes_db.get_genome()
+    genome = genomes_db.get_genomic_sequence()
 
     genotype_storage = genotype_storage_factory.get_genotype_storage(
         argv.genotype_storage

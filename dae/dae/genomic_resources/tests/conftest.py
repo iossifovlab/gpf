@@ -53,9 +53,22 @@ def root_group():
 def test_grdb_config(fixture_dirname, temp_dirname_grdb):
     test_grr_location = fixture_dirname("genomic_resources")
     return FrozenBox({
-        "cache_location": temp_dirname_grdb,
         "genomic_resource_repositories": [
             {"id": "test_grr", "url": f"file://{test_grr_location}"}
+        ]
+    })
+
+
+@pytest.fixture
+def test_cached_grdb_config(fixture_dirname, temp_dirname_grdb):
+    test_grr_location = fixture_dirname("genomic_resources")
+    return FrozenBox({
+        "genomic_resource_repositories": [
+            {
+                "id": "test_grr",
+                "url": f"file://{test_grr_location}",
+                "cache": f"file://{temp_dirname_grdb}",
+            }
         ]
     })
 
@@ -77,9 +90,21 @@ def http_port():
 @pytest.fixture
 def test_grdb_http_config(temp_dirname_grdb, http_port):
     return FrozenBox({
-        "cache_location": temp_dirname_grdb,
         "genomic_resource_repositories": [
             {"id": "test_grr", "url": f"http://localhost:{http_port}"}
+        ]
+    })
+
+
+@pytest.fixture
+def test_cached_grdb_http_config(temp_dirname_grdb, http_port):
+    return FrozenBox({
+        "genomic_resource_repositories": [
+            {
+                "id": "test_grr",
+                "url": f"http://localhost:{http_port}",
+                "cache": f"file://{temp_dirname_grdb}",
+            }
         ]
     })
 

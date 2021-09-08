@@ -3,6 +3,8 @@
 import copy
 import itertools
 
+import pyarrow as pa
+
 from box import Box
 
 from dae.variants.attributes import VariantType
@@ -14,16 +16,16 @@ from dae.annotation.tools.annotator_base import Annotator
 
 class EffectAnnotator(Annotator):
 
-    COLUMNS_SCHEMA = [
-        ("effect_type", "str"),
-        ("effect_gene_genes", "list(str)"),
-        ("effect_gene_types", "list(str)"),
-        ("effect_genes", "list(str)"),
-        ("effect_details_transcript_ids", "list(str)"),
-        ("effect_details_genes", "list(str)"),
-        ("effect_details_details", "list(str)"),
-        ("effect_details", "list(str)"),
-    ]
+    SCHEMA = pa.schema([
+        pa.field("effect_type", pa.string()),
+        pa.field("effect_gene_genes", pa.list_(pa.string())),
+        pa.field("effect_gene_types", pa.list_(pa.string())),
+        pa.field("effect_genes", pa.list_(pa.string())),
+        pa.field("effect_details_transcript_ids", pa.list_(pa.string())),
+        pa.field("effect_details_genes", pa.list_(pa.string())),
+        pa.field("effect_details_details", pa.list_(pa.string())),
+        pa.field("effect_details", pa.list_(pa.string())),
+    ])
 
     DEFAULT_ANNOTATION = Box({
         "attributes": [
@@ -70,6 +72,7 @@ class EffectAnnotator(Annotator):
         self.gene_models = gene_models
         self.genomic_sequence = genome
 
+        self._annotation_schema = None
         promoter_len = kwargs.get("promoter_len", 0)
         self.effect_annotator = VariantAnnotator(
             self.genomic_sequence,
@@ -90,6 +93,19 @@ class EffectAnnotator(Annotator):
     def _not_found(self, attributes):
         for attr in self.attributes_list:
             attributes[attr.dest] = ""
+
+    @property
+    def annotation_schema(self):
+        if self._annotation_schema is None:
+            fields = []
+            for attribute in self.attributes_list:
+                prop_name = attribute.dest
+                prop_type = self.SCHEMA.field(attribute.source)
+                assert prop_type is not None, attribute
+                field = pa.field(prop_name, prop_type.type)
+                fields.append(field)
+            self._annotation_schema = pa.schema(fields)
+        return self._annotation_schema
 
     def get_default_annotation(self):
         return copy.deepcopy(self.attributes_list)

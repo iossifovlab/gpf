@@ -55,9 +55,9 @@ def test_annotate_variant_simple(temp_filename, genomes_db_2013):
 def test_gene_models_orig_transcript_id(genomes_db_2019):
 
     gene_models = genomes_db_2019.get_gene_models("RefSeq")
-    assert gene_models.location.endswith(
+    assert gene_models.filename.endswith(
         "refGene-20190211.gz"
-    ), gene_models.location
+    ), gene_models.filename
 
     for count, tr in enumerate(gene_models.transcript_models.values()):
         # print(dir(tr))

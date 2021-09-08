@@ -48,7 +48,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             families_loader = FamiliesLoader(ped_filename)
             families = families_loader.load()
             variants_loader = VcfLoader(
-                families, [vcf_filename], genomes_db.get_genome()
+                families, [vcf_filename], genomes_db.get_genomic_sequence()
             )
             variants_loader = StoredAnnotationDecorator.decorate(
                 variants_loader, vcf_filename
@@ -85,7 +85,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                     variants_loader = VcfLoader(
                         families,
                         variants_filenames,
-                        genomes_db.get_genome(),
+                        genomes_db.get_genomic_sequence(),
                         params=variants_params,
                     )
                     annotation_filename = variants_filenames[0]
@@ -93,21 +93,21 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                     variants_loader = DenovoLoader(
                         families,
                         variants_filename,
-                        genomes_db.get_genome(),
+                        genomes_db.get_genomic_sequence(),
                         params=variants_params,
                     )
                 if file_conf.format == "dae":
                     variants_loader = DaeTransmittedLoader(
                         families,
                         variants_filename,
-                        genomes_db.get_genome(),
+                        genomes_db.get_genomic_sequence(),
                         params=variants_params,
                     )
                 if file_conf.format == "cnv":
                     variants_loader = CNVLoader(
                         families,
                         variants_filename,
-                        genomes_db.get_genome(),
+                        genomes_db.get_genomic_sequence(),
                         params=variants_params,
                     )
 

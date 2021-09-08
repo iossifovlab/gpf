@@ -42,9 +42,10 @@ def write_float(stream, num):
 
 
 def write_string(stream, string):
-    length = len(string)
+    encoded = string.encode("utf8")
+    length = len(encoded)
     stream.write(length.to_bytes(4, "big", signed=False))
-    stream.write(string.encode("utf8"))
+    stream.write(encoded)
 
 
 def write_string_list(stream, li):
@@ -380,6 +381,8 @@ class AlleleParquetSerializer:
         "summary_variant_index",
         "effect_type",
         "effect_gene",
+        "effect_genes",
+        "effect_details",
         "variant_inheritance",
         "variant_in_member",
         "variant_roles",
@@ -396,7 +399,7 @@ class AlleleParquetSerializer:
                 "serializer called without variants schema")
         else:
             logger.debug(
-                f"serializer variants schema {variants_schema.col_names}")
+                f"serializer variants schema {variants_schema}")
 
         self.summary_prop_serializers = {
             "bucket_index": IntSerializer,

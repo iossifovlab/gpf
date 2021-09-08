@@ -1,79 +1,53 @@
-import os
 import logging
 
+from typing import Optional
+
 from urllib.parse import urlparse
-from dae.genomic_resources.repository import FSGenomicResourcesRepo, \
-    HTTPGenomicResourcesRepo, \
-    create_fs_genomic_resource_repository
 from dae.genomic_resources.resources import GenomicResource
+from dae.genomic_resources.repository import GenomicResourcesRepo, \
+    FSGenomicResourcesRepo, \
+    HTTPGenomicResourcesRepo, GenomicResourcesRepoCache
 
 
 logger = logging.getLogger(__name__)
 
 
 class GenomicResourceDB:
-    def __init__(self, repositories):
-        self.repositories = []
-        for gsd_conf in repositories:
-            gsd_id = gsd_conf["id"]
-            gsd_url = urlparse(gsd_conf["url"])
 
-            logger.info(f"going to create repository from: {gsd_url}")
-            is_filesystem = gsd_url.scheme == "file"
-            if is_filesystem:
-                gsd = FSGenomicResourcesRepo(gsd_id, gsd_url.path)
-                gsd.load()
-            else:
-                gsd = HTTPGenomicResourcesRepo(gsd_id, gsd_url.geturl())
-                gsd.load()
+    def __init__(self, repositories_config):
+        self.repositories = {}
+        for repo_conf in repositories_config:
+            repo_id = repo_conf["id"]
+            repo_url = urlparse(repo_conf["url"])
+            repo_cache = repo_conf.get("cache")
 
-            self.repositories.append(gsd)
+            logger.info(f"going to create repository from: {repo_url}")
+            if repo_url.scheme == "file":
+                repo = FSGenomicResourcesRepo(repo_id, repo_url.path)
+                repo.load()
+            elif repo_url.scheme == "http":
+                repo = HTTPGenomicResourcesRepo(repo_id, repo_url.geturl())
+                repo.load()
+            if repo_cache is not None:
+                repo = GenomicResourcesRepoCache(repo, repo_cache)
+            self.repositories[repo_id] = repo
 
-    def get_resource(self, resource_id: str, repo_id: str = None):
+    def get_repository(self, repo_id: str) -> Optional[GenomicResourcesRepo]:
+        return self.repositories.get(repo_id)
+
+    def get_resource(
+        self, resource_id: str, repo_id: str = None
+    ) -> Optional[GenomicResource]:
+
         if repo_id is not None:
-            raise NotImplementedError
+            repository = self.repositories.get(repo_id)
+            if repository is None:
+                return None
+            return repository.get_resource(resource_id)
+        else:
+            for repository in self.repositories.values():
+                resource = repository.get_resource(resource_id)
+                if resource is not None:
+                    return resource
 
-        for repository in self.repositories:
-            resource = repository.get_resource(resource_id)
-            if resource is not None:
-                return resource
-
-        return None
-
-
-class CachedGenomicResourceDB(GenomicResourceDB):
-    def __init__(self, repositories, cache_location):
-        self._cache = FSGenomicResourcesRepo(
-            "cache", cache_location
-        )
-        super(CachedGenomicResourceDB, self).__init__(repositories)
-
-    def get_cache_repo(self):
-        return self._cache
-
-    def _do_cache(self, resource: GenomicResource):
-        cache_base_path = urlparse(self._cache.get_url()).path
-        cache_path = os.path.join(cache_base_path, resource.get_id())
-        os.makedirs(cache_path, exist_ok=True)
-
-        def copy_file(filename: str):
-            output_path = os.path.join(cache_path, filename)
-            with open(output_path, "wb") as destination_file:
-                for chunk in resource.get_repo().stream_resource_file(
-                        resource.get_id(), filename):
-                    destination_file.write(chunk)
-
-        for file in resource.get_manifest().keys():
-            copy_file(file)
-
-        create_fs_genomic_resource_repository(
-            "cache", cache_base_path)
-
-        self._cache.reload()
-
-    def cache_resource(self, resource_id: str):
-        for repository in self.repositories:
-            resource = repository.get_resource(resource_id)
-            if resource is not None:
-                self._do_cache(resource)
-                return
+            return None

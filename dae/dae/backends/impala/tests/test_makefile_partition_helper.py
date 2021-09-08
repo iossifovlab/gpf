@@ -29,7 +29,7 @@ def test_target_generator_region_bins_count(
     )
 
     generator = MakefilePartitionHelper(
-        partition_descriptor, genomes_db_2019.get_genome()
+        partition_descriptor, genomes_db_2019.get_genomic_sequence()
     )
     assert generator is not None
     assert generator.region_bins_count(chrom) == bins_count
@@ -61,7 +61,7 @@ def test_target_generator_region_bins(
     )
 
     generator = MakefilePartitionHelper(
-        partition_descriptor, genomes_db_2019.get_genome()
+        partition_descriptor, genomes_db_2019.get_genomic_sequence()
     )
 
     assert generator is not None
@@ -88,7 +88,7 @@ def test_target_generator_other_0(
     )
 
     generator = MakefilePartitionHelper(
-        partition_descriptor, genomes_db_2019.get_genome()
+        partition_descriptor, genomes_db_2019.get_genomic_sequence()
     )
 
     result = generator.generate_variants_targets(target_chroms)
@@ -112,7 +112,7 @@ def test_target_generator_chrom_1(region_length, targets, genomes_db_2019):
     )
 
     generator = MakefilePartitionHelper(
-        partition_descriptor, genomes_db_2019.get_genome()
+        partition_descriptor, genomes_db_2019.get_genomic_sequence()
     )
 
     result = generator.generate_variants_targets(["1"])
@@ -136,7 +136,7 @@ def test_target_generator_chrom_other(region_length, targets, genomes_db_2019):
     )
 
     generator = MakefilePartitionHelper(
-        partition_descriptor, genomes_db_2019.get_genome()
+        partition_descriptor, genomes_db_2019.get_genomic_sequence()
     )
     print(generator.chromosome_lengths)
 
@@ -175,7 +175,7 @@ def test_target_generator_chrom_prefix_target_other(
 
     generator = MakefilePartitionHelper(
         partition_descriptor,
-        genomes_db_2019.get_genome(),
+        genomes_db_2019.get_genomic_sequence(),
         add_chrom_prefix="chr",
     )
     print(generator.chromosome_lengths)
@@ -219,7 +219,7 @@ def test_target_generator_add_chrom_prefix_target_chrom(
 
     generator = MakefilePartitionHelper(
         partition_descriptor,
-        genomes_db_2019.get_genome(),
+        genomes_db_2019.get_genomic_sequence(),
         add_chrom_prefix="chr",
     )
     print(generator.chromosome_lengths)
@@ -263,7 +263,7 @@ def test_target_generator_del_chrom_prefix_target_chrom(
 
     generator = MakefilePartitionHelper(
         partition_descriptor,
-        genomes_db_2019.get_genome(),
+        genomes_db_2019.get_genomic_sequence(),
         del_chrom_prefix="chr",
     )
     print(generator.chromosome_lengths)
@@ -327,7 +327,7 @@ def test_makefile_generator_bucket_numbering(
 
     generator = MakefilePartitionHelper(
         partition_descriptor,
-        genomes_db_2019.get_genome(),
+        genomes_db_2019.get_genomic_sequence(),
         add_chrom_prefix="chr",
     )
     print(generator.chromosome_lengths)
@@ -384,7 +384,7 @@ def test_makefile_generator_regions(
     )
 
     generator = MakefilePartitionHelper(
-        partition_descriptor, genomes_db_2019.get_genome()
+        partition_descriptor, genomes_db_2019.get_genomic_sequence()
     )
 
     print(generator.chromosome_lengths)
@@ -447,7 +447,7 @@ def test_makefile_generator_regions_del_chrom_prefix(
 
     generator = MakefilePartitionHelper(
         partition_descriptor,
-        genomes_db_2019.get_genome(),
+        genomes_db_2019.get_genomic_sequence(),
         del_chrom_prefix="chr",
     )
 
@@ -507,7 +507,7 @@ def test_makefile_generator_regions_add_chrom_prefix(
 
     generator = MakefilePartitionHelper(
         partition_descriptor,
-        genomes_db_2019.get_genome(),
+        genomes_db_2019.get_genomic_sequence(),
         add_chrom_prefix="chr",
     )
 

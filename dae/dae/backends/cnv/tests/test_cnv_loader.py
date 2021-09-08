@@ -9,7 +9,8 @@ def test_cnv_loader(fixture_dirname, genomes_db_2013):
 
     variants_file = fixture_dirname("backends/cnv_variants.txt")
 
-    loader = CNVLoader(families, variants_file, genomes_db_2013.get_genome())
+    loader = CNVLoader(
+        families, variants_file, genomes_db_2013.get_genomic_sequence())
     assert loader is not None
 
     svs = []
@@ -27,7 +28,8 @@ def test_cnv_loader_avoids_duplication(fixture_dirname, genomes_db_2013):
 
     variants_file = fixture_dirname("backends/cnv_variants_dup.txt")
 
-    loader = CNVLoader(families, variants_file, genomes_db_2013.get_genome())
+    loader = CNVLoader(
+        families, variants_file, genomes_db_2013.get_genomic_sequence())
     assert loader is not None
 
     svs = []
@@ -50,7 +52,7 @@ def test_cnv_loader_alt(fixture_dirname, genomes_db_2013):
     variants_file = fixture_dirname("backends/cnv_variants_alt_1.txt")
 
     loader = CNVLoader(
-        families, variants_file, genomes_db_2013.get_genome(),
+        families, variants_file, genomes_db_2013.get_genomic_sequence(),
         params={
             "cnv_chrom": "Chr",
             "cnv_start": "Start",
@@ -79,7 +81,7 @@ def test_cnv_loader_alt_best_state(fixture_dirname, genomes_db_2013):
         "backends/cnv_variants_alt_1_best_state.txt")
 
     loader = CNVLoader(
-        families, variants_file, genomes_db_2013.get_genome(),
+        families, variants_file, genomes_db_2013.get_genomic_sequence(),
         params={
             "cnv_chrom": "Chr",
             "cnv_start": "Start",
@@ -113,7 +115,7 @@ def test_cnv_loader_alt_2(fixture_dirname, genomes_db_2013):
     variants_file = fixture_dirname("backends/cnv_variants_alt_2.txt")
 
     loader = CNVLoader(
-        families, variants_file, genomes_db_2013.get_genome(),
+        families, variants_file, genomes_db_2013.get_genomic_sequence(),
         params={
             "cnv_location": "location",
             "cnv_variant_type": "variant",

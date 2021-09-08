@@ -34,7 +34,6 @@ class GenomicSequenceBase:
         self._index = {}
         for line in index_content.split("\n"):
             line = line.strip()
-            print(line)
             if not line:
                 break
             line = line.split()
