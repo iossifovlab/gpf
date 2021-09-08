@@ -48,9 +48,9 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   public allPersonSetNames: string[] = [];
   public shownPersonSetNames: string[] = [];
 
-  public pageIndex = 1;
-  public loadMoreGenes = true;
-  public scrollLoadThreshold = 1000;
+  private pageIndex = 1;
+  private loadMoreGenes = true;
+  private scrollLoadThreshold = 1000;
 
   public geneInput: string;
   public searchKeystrokes$: Subject<string> = new Subject();
@@ -102,11 +102,11 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   }
 
   constructor(
-    public autismGeneProfilesService: AutismGeneProfilesService,
-    public renderer: Renderer2,
-    public ref: ElementRef,
-    public queryService: QueryService,
-    public store: Store,
+    private autismGeneProfilesService: AutismGeneProfilesService,
+    private renderer: Renderer2,
+    private ref: ElementRef,
+    private queryService: QueryService,
+    private store: Store,
   ) { }
 
   public ngOnChanges(): void {
@@ -509,8 +509,9 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     const modalWidth = 400;
     const leftCap = 30;
     const modalLeft =
-      (columnFilteringButton.getBoundingClientRect().right - modalWidth)
-      - (document.body.getBoundingClientRect().left);
+      columnFilteringButton.getBoundingClientRect().right
+      - modalWidth
+      - document.body.getBoundingClientRect().left;
 
     return (modalLeft >= leftCap ? modalLeft : leftCap) + 'px';
   }

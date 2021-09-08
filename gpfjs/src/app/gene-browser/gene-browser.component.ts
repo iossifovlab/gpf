@@ -57,16 +57,9 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   @ViewChild('filters', { static: false }) public set filters(element) {
-    /* Waits until the #filters div is rendered to draw the SVG legends,
-     * otherwise d3 cannot find the <svg> elements and nothing is drawn.
-     * The boolean flag is needed as this setter is called multiple times
-     * once the #filters div is rendered. */
-    if (element && !this.legendDrawn) {
-      this.drawDenovoIcons();
-      this.drawTransmittedIcons();
-      this.drawEffectTypesIcons();
-      this.legendDrawn = true;
-    }
+    this.drawDenovoIcons();
+    this.drawTransmittedIcons();
+    this.drawEffectTypesIcons();
   }
 
   constructor(

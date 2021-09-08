@@ -32,6 +32,7 @@ export class GenePlotComponent implements OnChanges {
     frequencyPlotSize: 300,
     frequencyPlotPadding: 30, // Padding between the frequency plot and the transcripts
     transcriptHeight: 15,
+    chromosomeLabelPadding: 38,
     denovoSpacing: 22,
     margin: { top: 10, right: 30, left: 120, bottom: 15 },
     exonThickness: { normal: 3, collapsed: 6 },
@@ -210,12 +211,14 @@ export class GenePlotComponent implements OnChanges {
       .select('#plot')
       .selectAll('*')
       .remove();
+
     this.drawPlot();
-    this.drawVariants();
-    this.drawGene();
 
     this.plotElement.append('g')
       .call(this.brush);
+
+    this.drawVariants();
+    this.drawGene();
   }
 
   public toggleCondenseIntrons() {
@@ -434,7 +437,12 @@ export class GenePlotComponent implements OnChanges {
       }
       const [fromX, toX] = [Math.max(range[0], domainMin), Math.min(range[1], domainMax)];
       draw.hoverText(
-        element, (this.scale.x(fromX) + this.scale.x(toX)) / 2 + 50, yPos - 5, `Chromosome: ${chromosome}`, `Chromosome: ${chromosome}`, this.constants.fontSize
+        element,
+        (this.scale.x(fromX) + this.scale.x(toX)) / 2 + 50,
+        yPos + this.constants.chromosomeLabelPadding - this.constants.transcriptHeight,
+        `Chromosome: ${chromosome}`,
+        `Chromosome: ${chromosome}`,
+        this.constants.fontSize
       );
     }
   }

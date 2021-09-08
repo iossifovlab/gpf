@@ -211,8 +211,8 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     this.shownTableConfig.geneSets = this.tableConfig.geneSets.filter((obj) =>
       this.shownColumns.includes(obj.displayName)
     );
-    this.shownTableConfig.genomicScores = this.tableConfig.genomicScores.filter(
-      (obj) => this.shownColumns.includes(obj.displayName)
+    this.shownTableConfig.genomicScores = this.tableConfig.genomicScores.filter((obj) =>
+      this.shownColumns.includes(obj.displayName)
     );
     this.shownTableConfig.datasets = this.tableConfig.datasets.filter((obj) =>
       this.shownColumns.includes(obj.displayName)
