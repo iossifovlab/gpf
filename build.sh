@@ -252,7 +252,7 @@ EOT'
         local -A ctx_impala
         build_run_ctx_init ctx:ctx_impala "persistent" "container" "seqpipe/seqpipe-docker-impala:latest" \
            "cmd-from-image" "no-def-mounts" \
-           ports:21050,8020 --hostname impala --network "${ctx_network["network_id"]}"
+           ports:21050,8020,25000,25010,25020 --hostname impala --network "${ctx_network["network_id"]}"
 
         defer_ret build_run_ctx_reset ctx:ctx_impala
 
