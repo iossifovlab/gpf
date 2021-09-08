@@ -271,6 +271,17 @@ def temp_filename(request, cleanup):
     return output
 
 
+@pytest.fixture
+def temp_dirname_scores(request, cleanup):
+    dirname = tempfile.mkdtemp(suffix="_data", prefix="scores_")
+
+    def fin():
+        shutil.rmtree(dirname)
+    if cleanup:
+        request.addfinalizer(fin)
+    return dirname
+
+
 @pytest.fixture(scope="session")
 def annotation_pipeline_config():
     filename = relative_to_this_test_folder(

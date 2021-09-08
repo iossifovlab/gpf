@@ -3,6 +3,7 @@ import os
 from importlib import import_module
 from dae.annotation.tools.score_annotator import PositionScoreAnnotator, \
     NPScoreAnnotator
+from dae.annotation.tools.allele_score_annotator import AlleleScoreAnnotator
 from dae.annotation.tools.effect_annotator import EffectAnnotator
 
 
@@ -10,6 +11,7 @@ class AnnotatorFactory:
     SCORE_ANNOTATOR_NAMES = {
         "position_score": PositionScoreAnnotator,
         "np_score": NPScoreAnnotator,
+        "allele_score": AlleleScoreAnnotator
     }
 
     @staticmethod

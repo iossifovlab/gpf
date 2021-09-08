@@ -1,3 +1,4 @@
+import numpy as np
 import logging
 import yaml
 
@@ -5,24 +6,125 @@ logger = logging.getLogger(__name__)
 
 
 class Histogram:
-    def __init__(self, bins, bars, x_max, x_scale, y_max, y_scale):
-        self.bins = bins
-        self.bars = bars
+    def __init__(
+        self, bins_count,
+        x_min, x_max, x_scale, y_scale,
+        x_min_log=None
+    ):
+        self.x_min = x_min
         self.x_max = x_max
         self.x_scale = x_scale
-        self.y_max = y_max
         self.y_scale = y_scale
+        self.x_min_log = x_min_log
+
+        if self.x_scale == "linear":
+            self.bins = np.linspace(
+                self.x_min,
+                self.x_max,
+                bins_count,
+            )
+        elif self.x_scale == "log":
+            assert x_min_log is not None
+            self.bins = np.array([
+                x_min_log,
+                * np.logspace(
+                    np.log10(self.x_min),
+                    np.log10(self.x_max),
+                    bins_count - 1
+                )])
+        else:
+            assert False, f"unexpected xscale: {self.x_scale}"
+
+        assert self.y_scale in ("linear", "log"), \
+            f"unexpected yscale {self.y_scale}"
+
+        self.y_scale = y_scale
+
+        self.bars = np.zeros(bins_count - 1, dtype=np.int32)
 
     @staticmethod
     def from_config(conf):
         return Histogram(
-            conf["bins"],
-            conf["bars"],
+            conf["bins_count"],
+            conf["x_min"],
             conf["x_max"],
             conf["x_scale"],
-            conf["y_max"],
-            conf["y_scale"]
+            conf["y_scale"],
+            conf.get("x_min_log")
         )
+
+    def to_dict(self):
+        return {
+            "bins_count": len(self.bins),
+            "bins": self.bins.tolist(),
+            "bars": self.bars.tolist(),
+            "x_min": self.x_min,
+            "x_max": self.x_max,
+            "x_scale": self.x_scale,
+            "y_scale": self.y_scale,
+        }
+
+    @staticmethod
+    def from_dict(d):
+        hist = Histogram(
+            d["bins_count"], d["x_min"], d["x_max"],
+            d["x_scale"], d["y_scale"]
+        )
+
+        hist.bins = np.array(d["bins"])
+        hist.bars = np.array(d["bars"], dtype=np.int32)
+
+        return hist
+
+    @staticmethod
+    def merge(hist1, hist2):
+        assert hist1.x_scale == hist2.x_scale
+        assert hist1.x_min == hist2.x_min
+        assert hist1.x_min_log == hist2.x_min_log
+        assert hist1.x_max == hist2.x_max
+        assert all(hist1.bins == hist2.bins)
+
+        result = Histogram(
+            len(hist1.bins),
+            hist1.x_min,
+            hist1.x_max,
+            hist1.x_scale,
+            hist1.y_scale,
+            hist1.x_min_log
+        )
+
+        result.bins = hist1.bins
+
+        result.bars += hist1.bars
+        result.bars += hist2.bars
+
+        return result
+
+    def add_value(self, value):
+        print("===")
+        print(value)
+        print(type(value))
+        if value < self.x_min or value > self.x_max:
+            logger.error(
+                f"value {value} out of range: [{self.x_min},{self.x_max}]")
+            return False
+        index = np.where(self.bins > value)
+        if len(index) == 0:
+            logger.error(f"(1) empty index {index} for value {value}")
+            return False
+        index = index[0]
+        if len(index) == 0:
+            logger.info(f"(2) empty index {index} for value {value}")
+            self.bars[-1] += 1
+            return True
+
+        if index[0] == 0:
+            logger.warning(
+                f"value: {value}; with index {index} in bins: {self.bins}")
+
+        self.bars[index[0] - 1] += 1
+
+        return True
 
 
 class ScoreStatistic:
@@ -66,7 +168,8 @@ class PositionScoreStatistic(ScoreStatistic):
     @classmethod
     def from_dict(cls, d):
         return PositionScoreStatistic(
-            d["min_value"], d["max_value"], d["histogram"],
+            d["min_value"], d["max_value"],
+            Histogram.from_dict(d["histogram"]),
             d["positions_covered"], d["positions_covered_all"],
             d["missing_count"]
         )
