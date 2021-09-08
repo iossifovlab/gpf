@@ -13,27 +13,6 @@ from dae.configuration.schemas.genomes_db import genomes_db_conf
 
 logger = logging.getLogger(__name__)
 
-"""
-GA = genomesDB.get_GA()
-GA = genomesDB.getGA("hg19")
-?? GA = genomesDB.getGA("/data/unsafe/autism/genomes/hg19/chrAll.fa") ??
-GA = GA("/data/unsafe/autism/genomes/hg19/chrAll.fa")
-
-GA.get_seq("1",151235,1414)
-
-
-gmDB = genomesDB.get_gene_models_db() # default genome default geneModels
-gmDB = genomesDB.get_gene_models_db("CCDS") # default genome given geneModels
-
-gmDB = genomesDB.get_gene_models_db(
-    genome='hg19') # given genome default models
-gmDB = genomesDB.get_gene_models_db(
-    "CCDS", genome='hg19') # given genome default models
-
-gmDB = GeneModels("/home/ivan/ccdsGene.txt.gz",geneMappingFile="")
-gmDB.....
-"""
-
 
 class Genome:
     def __init__(self, genome_id):
@@ -174,6 +153,8 @@ class GenomesDB(object):
         return genome.default_gene_models_filename
 
     def get_gene_models(self, gene_model_id=None, genome_id=None):
+        if genome_id is None:
+            genome_id = self.get_default_gene_models_id()
         genome = self.get_genome(genome_id)
         gene_model = genome.get_gene_models(gene_model_id)
         return gene_model
