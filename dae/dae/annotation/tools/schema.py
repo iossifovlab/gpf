@@ -182,6 +182,7 @@ class ParquetSchema(Schema):
                 "type_name": type_name,
                 "type_py": cls.type_map[type_name][0],
                 "type_pa": cls.type_map[type_name][1],
+                "type": cls.type_map[type_name][1],
             },
             default_box=True,
             default_box_attr=None,
