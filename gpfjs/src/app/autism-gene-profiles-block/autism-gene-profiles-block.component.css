@@ -8,6 +8,11 @@ nav {
   border-bottom: none;
 }
 
+.nav-link:hover:not(.active) {
+  border-bottom: none;
+  /* border-bottom: 1px solid #ffffff; */
+}
+
 .nav-link {
   color: #495057;
 }
