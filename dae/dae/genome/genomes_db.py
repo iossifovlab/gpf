@@ -153,9 +153,9 @@ class GenomesDB(object):
         return genome.default_gene_models_filename
 
     def get_gene_models(self, gene_model_id=None, genome_id=None):
-        if genome_id is None:
-            genome_id = self.get_default_gene_models_id()
         genome = self.get_genome(genome_id)
+        if gene_model_id is None:
+            gene_model_id = self.get_default_gene_models_id()
         gene_model = genome.get_gene_models(gene_model_id)
         return gene_model
 

@@ -8,7 +8,7 @@ import pyarrow as pa
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.annotation_conf import annotation_conf_schema
 from dae.annotation.tools.annotator_base import Annotator
-from dae.annotation.tools.file_io_parquet import ParquetSchema
+from dae.annotation.tools.schema import ParquetSchema
 from dae.annotation.tools.utils import AnnotatorFactory
 
 
@@ -76,21 +76,22 @@ class AnnotationPipeline():
                 for i in range(len(schema)):
                     field = schema.field(i)
                     fields.append(field)
-            self._annotation_schema = pa.schema(fields)
+            self._annotation_schema = ParquetSchema.from_arrow(
+                pa.schema(fields))
         return self._annotation_schema
 
     def add_annotator(self, annotator):
         assert isinstance(annotator, Annotator)
         self.annotators.append(annotator)
 
-    def produce_annotation_schema(self):
-        cols = set()
-        for annotator in self.annotators:
-            cols.update(annotator.output_columns)
-        print(100*"+")
-        print(cols)
-        print(100*"+")
-        return ParquetSchema.from_dict({"float": cols})
+    # def produce_annotation_schema(self):
+    #     cols = set()
+    #     for annotator in self.annotators:
+    #         cols.update(annotator.output_columns)
+    #     print(100*"+")
+    #     print(cols)
+    #     print(100*"+")
+    #     return ParquetSchema.from_dict({"float": cols})
 
     def annotate_summary_variant(self, summary_variant):
         for alt_allele in summary_variant.alt_alleles:

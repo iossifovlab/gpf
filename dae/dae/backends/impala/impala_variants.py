@@ -7,7 +7,7 @@ from impala.util import as_pandas
 from dae.backends.raw.raw_variants import RawVariantsIterator, \
     RawSummaryVariantsIterator
 
-from dae.annotation.tools.file_io_parquet import ParquetSchema
+from dae.annotation.tools.schema import ParquetSchema
 from dae.pedigrees.family import FamiliesData
 from dae.backends.impala.serializers import AlleleParquetSerializer
 

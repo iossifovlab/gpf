@@ -460,7 +460,8 @@ def test_denovo_loader(
 ):
     denovo_filename = fixture_dirname(f"denovo_import/{filename}")
     variants_loader = DenovoLoader(
-        fake_families, denovo_filename, genome=genome_2013, params=params
+        fake_families, denovo_filename, 
+        genome=genome_2013.get_genomic_sequence(), params=params
     )
 
     vs = list(variants_loader.full_variants_iterator())
@@ -533,7 +534,8 @@ def test_denovo_loader_avoids_duplicates(
         "denovo_best_state": "bestState"
     }
     variants_loader = DenovoLoader(
-        fake_families, denovo_filename, genome=genome_2013, params=params
+        fake_families, denovo_filename, 
+        genome=genome_2013.get_genomic_sequence(), params=params
     )
 
     vs = variants_loader.full_variants_iterator()

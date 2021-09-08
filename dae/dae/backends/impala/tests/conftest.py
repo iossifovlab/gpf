@@ -74,7 +74,7 @@ def denovo_extra_attr_loader(
     families = FamiliesLoader.load_simple_families_file(families_filename)
 
     variants_loader = DenovoLoader(
-        families, variants_filename, genome_2013)
+        families, variants_filename, genome_2013.get_genomic_sequence())
 
     variants_loader = AnnotationPipelineDecorator(
         variants_loader, annotation_pipeline_internal
