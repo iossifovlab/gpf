@@ -27,6 +27,8 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   public allColumns: string[];
   public shownColumns: string[];
 
+  public showKeybinds = false;
+
   @HostListener('window:keydown', ['$event'])
   public keyEvent($event: KeyboardEvent) {
     if ($event.target['localName'] === 'input') {
@@ -48,7 +50,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   }
 
   constructor(
-    public autismGeneProfilesService: AutismGeneProfilesService,
+    private autismGeneProfilesService: AutismGeneProfilesService,
   ) { }
 
   public ngOnInit(): void {
