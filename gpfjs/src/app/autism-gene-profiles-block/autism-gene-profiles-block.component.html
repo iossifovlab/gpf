@@ -1,12 +1,15 @@
 <div *ngIf="autismGeneToolConfig">
   <nav ngbNav [animation]="false" #nav="ngbNav" class="navbar" style="justify-content: flex-start; padding: 0; padding-left: 25px;">
     <li class="nav-tabs" [ngbNavItem]="'autismGenesTool'" [destroyOnHide]="false">
-      <a ngbNavLink>
+      <a ngbNavLink style="display: inline-flex; align-items: center;">
         Autism genes tool
+        <div (mouseover)="showKeybinds = true" (mouseout)="showKeybinds = false" class="keybinds-icon">
+          <span style="position: relative; top: -1px;">?</span>
+        </div>
         <button #columnFilteringButton
           (click)="openDropdown();"
-          class="dropdown-toggle btn navbar-toggler"
-          style="outline: none; font-size: 18px; white-space: nowrap; border: 0; padding: 0; width: 18px; vertical-align: unset;">
+          id="column-filtering-button"
+          class="dropdown-toggle btn navbar-toggler">
           <span style="font-size: 14px;">&#9776;</span>
         </button>
       </a>
@@ -43,4 +46,15 @@
     </li>
   </nav>
   <div [ngbNavOutlet]="nav" class="card-block"></div>
+
+  <div *ngIf="showKeybinds" class="keybinds-tooltip">
+    <span>
+      1, 2, 3, ... - navigate to tab by index<br>
+      n - navigate to the next tab<br>
+      p - navigate to the previous tab<br>
+      w - close current tab<br>
+      ctrl+mouse1 or mouse3 - highlight/unhighlight row<br>
+      esc - clear all highlights<br>
+    </span>
+  </div>
 </div>
