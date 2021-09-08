@@ -20,6 +20,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         self.select_accessors = {
             "bucket_index": "variants.bucket_index",
             "summary_index": "variants.summary_index",
+            "family_index": "variants.family_index",
             "chromosome": "MIN(variants.chromosome)",
             "`position`": "MIN(variants.`position`)",
             "end_position": "MIN(variants.end_position)",
@@ -140,6 +141,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
 
             bucket_index = cols[self.select_accessors["bucket_index"]]
             summary_index = cols[self.select_accessors["summary_index"]]
+            family_index = cols[self.select_accessors["family_index"]]
             family_id = cols[self.select_accessors["family_id"]]
             chrom = cols[self.select_accessors["chromosome"]]
             position = cols[self.select_accessors["`position`"]]
@@ -171,5 +173,6 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
             v = serializer.deserialize_family_variant(
                 variant_data, family, extra_attributes
             )
+            v.family_index = family_index
             return v
         return deserialize_row
