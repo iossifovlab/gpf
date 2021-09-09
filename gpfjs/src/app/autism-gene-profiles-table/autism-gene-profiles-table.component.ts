@@ -340,14 +340,14 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
    * Emits create tab event.
    * @param $event
    * @param geneSymbol gene symbol specifying which gene tab needs to open/close
-   * @param openTab condition specifying to open or close the tab
+   * @param navigateToTab condition specifying to open or close the tab
    */
-  public emitCreateTabEvent($event, geneSymbol: string, openTab: boolean = true): void {
+  public emitCreateTabEvent($event, geneSymbol: string, navigateToTab: boolean = true): void {
     if ($event.ctrlKey && $event.type === 'click') {
-      openTab = false;
+      navigateToTab = false;
     }
 
-    this.createTabEvent.emit({geneSymbol: geneSymbol, openTab: openTab});
+    this.createTabEvent.emit({geneSymbol: geneSymbol, navigateToTab: navigateToTab});
   }
 
   /**
