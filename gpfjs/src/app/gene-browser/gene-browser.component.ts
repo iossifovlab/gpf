@@ -30,7 +30,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   private maxFamilyVariants = 1000;
   public selectedDataset: Dataset;
   private selectedDatasetId: string;
-  private loadingFinished: boolean;
+  private showResults: boolean;
   private familyLoadingFinished: boolean;
   private showError = false;
   private geneBrowserConfig;
@@ -92,7 +92,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
         this.familyLoadingFinished = true;
       }),
       this.queryService.summaryStreamingFinishedSubject.subscribe(async() => {
-        this.loadingFinished = true;
+        this.showResults = true;
         this.loadingService.setLoadingStop();
       }),
       this.route.parent.params.subscribe(
@@ -129,7 +129,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       this.showError = true;
       return;
     }
-    this.loadingFinished = false;
+    this.showResults = false;
     this.loadingService.setLoadingStart();
     this.genotypePreviewVariantsArray = null;
 

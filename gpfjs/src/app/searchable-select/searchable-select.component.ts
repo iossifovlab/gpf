@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, ViewChild, ContentChild, AfterV
 import { SearchableSelectTemplateDirective } from './searchable-select-template.directive';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 import { NgZone } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'gpf-searchable-select',
@@ -26,7 +27,8 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
   }
 
   constructor(
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private route: ActivatedRoute,
   ) {}
 
   public ngOnChanges(): void {
@@ -36,7 +38,11 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
   }
 
   public ngAfterViewInit(): void {
-    this.focusSearchBox();
+    // temporary solution, fix along side issue GPF-1102
+    if (!(this.isInGeneBrowser && this.route.snapshot.params.gene)) {
+      this.focusSearchBox();
+    }
+
     this.dropdown.autoClose = 'inside';
   }
 
