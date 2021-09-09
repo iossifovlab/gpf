@@ -55,6 +55,10 @@ export class TranscriptSegment {
     return !this.isCDS;
   }
 
+  public intersection(start: number, stop: number): [number, number] {
+    return [Math.max(start, this.start), Math.min(stop, this.stop)];
+  }
+
   public intersectionLength(min: number, max: number): number {
     const start = Math.max(this.start, min);
     const stop = Math.min(this.stop, max);

@@ -98,3 +98,4 @@ import './app/autism-gene-profile-single-view-wrapper/autism-gene-profile-single
 import './app/present-in-child/present-in-child.component.spec';
 import './app/present-in-parent/present-in-parent.component.spec';
 import './app/checkbox-list/checkbox-list.component.spec';
+import './app/gene-plot/gene-plot.spec';
