@@ -1,5 +1,6 @@
 import { Component, HostListener, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
+import { Location } from '@angular/common'; 
 import { Store } from '@ngxs/store';
 import { GeneService } from 'app/gene-browser/gene.service';
 import { Gene } from 'app/gene-browser/gene';
@@ -7,7 +8,7 @@ import { SummaryAllelesArray, SummaryAllelesFilter, codingEffectTypes,
   affectedStatusValues, effectTypeValues, variantTypeValues } from 'app/gene-browser/summary-variants';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
-import { first } from 'rxjs/operators';
+import { first, take } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -17,6 +18,7 @@ import { ConfigService } from 'app/config/config.service';
 import { clone } from 'lodash';
 import * as d3 from 'd3';
 import * as draw from 'app/utils/svg-drawing';
+import { SetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 
 @Component({
   selector: 'gpf-gene-browser',
@@ -65,6 +67,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   constructor(
     readonly configService: ConfigService,
     private route: ActivatedRoute,
+    private location: Location,
     private store: Store,
     private queryService: QueryService,
     private geneService: GeneService,
@@ -79,11 +82,12 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     }
 
     this.subscriptions.push(
-      this.datasetsService.getDatasetsLoadedObservable().subscribe(datasetsLoaded => {
+      this.datasetsService.getDatasetsLoadedObservable().pipe(take(1)).subscribe(() => {
         this.selectedDataset = this.datasetsService.getSelectedDataset();
         if (this.selectedDataset) {
           this.geneBrowserConfig = this.selectedDataset.geneBrowser;
           if (this.route.snapshot.params.gene && this.selectedDataset.accessRights) {
+            this.store.dispatch(new SetGeneSymbols([this.route.snapshot.params.gene.toUpperCase()]));
             this.submitGeneRequest(this.route.snapshot.params.gene);
           }
         }
@@ -101,8 +105,10 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
         }
       ),
       this.store.select(state => state.geneSymbolsState).subscribe(state => {
-        if (state.geneSymbols.length) {
+        if (state.geneSymbols.length && state.geneSymbols[0]) {
           this.geneSymbol = state.geneSymbols[0];
+        } else {
+          this.location.go(`datasets/${this.selectedDatasetId}/gene-browser`);
         }
       })
     );
@@ -129,6 +135,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       this.showError = true;
       return;
     }
+    this.location.go(`datasets/${this.selectedDatasetId}/gene-browser/${this.geneSymbol.toUpperCase()}`);
     this.showResults = false;
     this.loadingService.setLoadingStart();
     this.genotypePreviewVariantsArray = null;
