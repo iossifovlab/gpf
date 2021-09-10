@@ -284,7 +284,11 @@ export class GenePlotComponent implements OnChanges {
     for (const allele of this.variantsArray.summaryAlleles) {
       const allelePosition = this.scale.x(Math.max(allele.position, this.xDomain[0]));
       const alleleEndPosition = this.scale.x(Math.min(allele.endPosition, this.xDomain[1]));
-      const alleleTitle = `Effect type: ${allele.effect}\nVariant position: ${allele.location}`;
+      const alleleTitle =
+        `Effect type: ${allele.effect}`
+        + `\nVariant position: ${allele.location}`
+        + `\nFrequency: ${allele.frequency === null ? 'N/A' : allele.frequency}`;
+
       const alleleHeight = this.getAlleleHeight(allele);
       const color = draw.affectedStatusColors[allele.affectedStatus];
 
