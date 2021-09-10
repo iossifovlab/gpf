@@ -154,7 +154,7 @@ class EffectAnnotator(Annotator):
 
     @classmethod
     def sort_effects(cls, effects):
-        sorted_effects = sorted(effects, key=lambda v: cls.effect_severity(v))
+        sorted_effects = sorted(effects, key=lambda v: -cls.effect_severity(v))
         return sorted_effects
 
     @classmethod

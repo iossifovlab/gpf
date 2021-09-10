@@ -3,12 +3,14 @@ import pathlib
 import time
 import copy
 import logging
-import numpy as np
-import pandas as pd
+
 from abc import ABC, abstractclassmethod, abstractmethod
 from enum import Enum
 
 from typing import Iterator, Tuple, List, Dict, Any, Optional, Sequence
+
+import numpy as np
+import pandas as pd
 
 from dae.genome.genomes_db import Genome
 
@@ -25,7 +27,7 @@ from dae.variants.attributes import TransmissionType
 
 from dae.utils.variant_utils import get_locus_ploidy, best2gt
 
-from dae.annotation.tools.file_io_parquet import ParquetSchema
+from dae.annotation.tools.schema import ParquetSchema
 
 
 logger = logging.getLogger(__name__)
@@ -420,7 +422,6 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
 
         self.annotation_pipeline = annotation_pipeline
 
-        logger.info(f"annotation pipeline schema: {self.annotation_schema}")
         self.set_attribute("annotation_schema", self.annotation_schema)
         self.set_attribute(
             "extra_attributes",

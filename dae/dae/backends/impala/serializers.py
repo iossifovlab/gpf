@@ -275,6 +275,44 @@ InheritanceSerializer = Serializer(
 
 
 class AlleleParquetSerializer:
+    BASE_SCHEMA_FIELDS = [
+        pa.field("bucket_index", pa.int32()),
+        pa.field("summary_variant_index", pa.int64()),
+        pa.field("allele_index", pa.int8()),
+        pa.field("chrom", pa.string()),
+        pa.field("position", pa.int32()),
+        pa.field("end_position", pa.int32()),
+        pa.field("reference", pa.string()),
+        pa.field("alternative", pa.string()),
+        pa.field("variant_type", pa.int8()),
+        pa.field("transmission_type", pa.int8()),
+        # pa.field("worst_effect", pa.string()),
+        pa.field("alternatives_data", pa.string()),
+        pa.field("effect_type", pa.string()),
+        pa.field("effect_gene", pa.string()),
+        pa.field("effect_data", pa.string()),
+        pa.field("family_variant_index", pa.int64()),
+        pa.field("family_id", pa.string()),
+        pa.field("is_denovo", pa.bool_()),
+        pa.field("variant_sexes", pa.int8()),
+        pa.field("variant_roles", pa.int32()),
+        pa.field("variant_inheritance", pa.int16()),
+        pa.field("variant_in_member", pa.string()),
+        pa.field("genotype_data", pa.string()),
+        pa.field("best_state_data", pa.string()),
+        pa.field("genetic_model_data", pa.int8()),
+        pa.field("inheritance_data", pa.string()),
+        pa.field("af_parents_called_count", pa.int32()),
+        pa.field("af_parents_called_percent", pa.float32()),
+        pa.field("af_allele_count", pa.int32()),
+        pa.field("af_allele_freq", pa.float32()),
+        pa.field("frequency_data", pa.string()),
+        pa.field("genomic_scores_data", pa.string()),
+    ]
+
+    @classmethod
+    def produce_base_schema(cls):
+        return pa.schema(cls.BASE_SCHEMA_FIELDS)
 
     SUMMARY_SEARCHABLE_PROPERTIES_TYPES = {
         "bucket_index": pa.int32(),
@@ -382,6 +420,10 @@ class AlleleParquetSerializer:
         "effect_type",
         "effect_gene",
         "effect_genes",
+        "effect_gene_genes",
+        "effect_gene_types",
+        "effect_details_details",
+        "effect_details_transcript_ids",
         "effect_details",
         "variant_inheritance",
         "variant_in_member",
@@ -397,9 +439,6 @@ class AlleleParquetSerializer:
         if variants_schema is None:
             logger.info(
                 "serializer called without variants schema")
-        else:
-            logger.debug(
-                f"serializer variants schema {variants_schema}")
 
         self.summary_prop_serializers = {
             "bucket_index": IntSerializer,
@@ -442,7 +481,9 @@ class AlleleParquetSerializer:
         scores_searchable = {}
         scores_binary = {}
         if variants_schema:
-            if "af_allele_freq" in variants_schema.col_names:
+            print(variants_schema.names)
+
+            if "af_allele_freq" in variants_schema.names:
                 additional_searchable_props["af_allele_freq"] = pa.float32()
                 additional_searchable_props["af_allele_count"] = pa.int32()
                 additional_searchable_props[
@@ -451,7 +492,7 @@ class AlleleParquetSerializer:
                 additional_searchable_props[
                     "af_parents_called_count"
                 ] = pa.int32()
-            for col_name in variants_schema.col_names:
+            for col_name in variants_schema.names:
                 if (
                     col_name
                     not in self.BASE_SEARCHABLE_PROPERTIES_TYPES.keys()
@@ -459,6 +500,8 @@ class AlleleParquetSerializer:
                     and col_name not in self.GENOMIC_SCORES_SCHEMA_CLEAN_UP
                     and col_name != "extra_attributes"
                 ):
+                    print("SCORE:", col_name)
+
                     scores_binary[col_name] = FloatSerializer
                     scores_searchable[col_name] = pa.float32()
 

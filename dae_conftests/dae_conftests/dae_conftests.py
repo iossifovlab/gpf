@@ -149,12 +149,13 @@ def gpf_instance(default_dae_config):
 @pytest.fixture(scope="session")
 def gpf_instance_2013(default_dae_config, global_dae_fixtures_dir):
     class GenomesDb2013(GenomesDB):
-        def get_gene_model_id(self, genome_id=None):
+        def get_default_gene_models_id(self, genome_id=None):
             return "RefSeq2013"
 
     class GPFInstance2013(GPFInstance):
         def __init__(self, *args, **kwargs):
             super(GPFInstance2013, self).__init__(*args, **kwargs)
+            print(self.dae_config.genomes_db.conf_file)
 
         @property
         @cached
@@ -165,6 +166,9 @@ def gpf_instance_2013(default_dae_config, global_dae_fixtures_dir):
             )
 
     gpf_instance = GPFInstance2013(dae_config=default_dae_config)
+    print(gpf_instance.genomes_db.get_default_gene_models_id())
+    print(gpf_instance.genomes_db.get_default_gene_models_filename())
+
     return gpf_instance
 
 

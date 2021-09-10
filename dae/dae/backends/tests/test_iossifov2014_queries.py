@@ -46,6 +46,8 @@ def test_iossifov2014_variant_coordinates(
     assert len(v.alt_alleles) == 1
     aa = v.alt_alleles[0]
 
+    print(aa.attributes)
+
     assert aa.chromosome == region.chrom
     assert aa.position == region.start
     assert aa.cshl_location == cshl_location

@@ -43,6 +43,25 @@ class AutismGeneProfileDB:
     def _build_configuration(self, configuration):
         if configuration is None:
             return dict()
+
+        order = configuration.get("order")
+        if order is None:
+            order = []
+            for gene_set in configuration["gene_sets"]:
+                order.append(gene_set["category"])
+            for genomic_score in configuration["genomic_scores"]:
+                order.append(genomic_score["category"])
+            for dataset_id in configuration["datasets"].keys():
+                order.append(dataset_id)
+            configuration["order"] = order
+        else:
+            total_categories_count = \
+                len(configuration["gene_sets"]) + \
+                len(configuration["genomic_scores"]) + \
+                len(configuration["datasets"])
+            assert len(order) == total_categories_count, "Given AGP order " \
+                "is missing items"
+
         return copy(configuration)
 
     def _get_genomic_scores(self, gene_symbol_id):

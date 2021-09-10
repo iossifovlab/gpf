@@ -46,7 +46,6 @@ class Annotator(abc.ABC):
         """
         self._do_annotate(attributes, variant, liftover_variants)
         attributes_list = self.get_default_annotation()
-        print("attributes_list:", attributes_list)
         for attr in attributes_list:
             if attr.dest == attr.source:
                 continue

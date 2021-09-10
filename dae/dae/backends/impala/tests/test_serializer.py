@@ -9,6 +9,7 @@ def test_all_properties_in_blob(vcf_variants_loaders, impala_genotype_storage):
     fv = list(loader.full_variants_iterator())[0][1][0]
     schema = loader.get_attribute("annotation_schema")
     family = loader.families.get(fv.family_id)
+    print(schema)
     schema.create_column("some_score", "float")
     fv.update_attributes({"some_score": [1.24]})
 
@@ -18,7 +19,14 @@ def test_all_properties_in_blob(vcf_variants_loaders, impala_genotype_storage):
     blob = serializer.serialize_family_variant(
         fv.alleles, summary_blobs, scores_blob)
     deserialized_variant = serializer.deserialize_family_variant(blob, family)
-    for prop in schema.columns.keys():
+    print("deserialized_variant:", deserialized_variant)
+    print(deserialized_variant.alt_alleles[0].attributes)
+
+    print(fv.alt_alleles[0].attributes)
+
+    for prop in schema.names:
+        if prop in {"effect_genes", "effect_details"}:
+            continue
         if prop == "summary_variant_index":
             continue  # Summary variant index has special handling
         fv_prop = getattr(fv, prop, None)
@@ -42,7 +50,7 @@ def test_extra_attributes_serialization_deserialization(
 
     loader = DenovoLoader(
         families_data, fixture_dirname("backends/iossifov_extra_attrs.tsv"),
-        fixtures_gpf_instance.get_genome()
+        fixtures_gpf_instance.get_genome().get_genomic_sequence()
     )
 
     main_schema = loader.get_attribute("annotation_schema")
@@ -82,7 +90,7 @@ def test_extra_attributes_loading_with_person_id(
 
     loader = DenovoLoader(
         families_data, fixture_dirname("backends/denovo-db-person-id.tsv"),
-        fixtures_gpf_instance.get_genome(),
+        fixtures_gpf_instance.get_genome().get_genomic_sequence(),
         params=params
     )
 
@@ -111,6 +119,8 @@ def test_build_allele_batch_dict(
     fv = list(loader.full_variants_iterator())[0][1][0]
     schema = loader.get_attribute("annotation_schema")
     family = loader.families.get(fv.family_id)
+    assert family is not None
+
     schema.create_column("some_score", "float")
     fv.update_attributes({"some_score": [1.24]})
 
