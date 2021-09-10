@@ -47,7 +47,12 @@ class ImpalaQueryRunner:
             self.cursor.execute(self.query)
             while not self.closed():
                 row = self.cursor.fetchone()
+                if row is None:
+                    break
+
                 val = self.deserializer(row)
+                if val is None:
+                    continue
 
                 if self.result_queue.full():
                     logger.debug(
