@@ -53,11 +53,11 @@ class ImpalaHelpers(object):
     def connection(self):
         logger.debug(
             f"going to get impala connection from the pool; "
-            f"{self._connection_pool.status()}; {id(self)}")
+            f"{self._connection_pool.status()}")
         conn = self._connection_pool.connect()
         logger.debug(
             f"[DONE] going to get impala connection to host {conn.host} "
-            f"from the pool; {self._connection_pool.status()}; {id(self)}")
+            f"from the pool; {self._connection_pool.status()}")
         return conn
 
     def _import_single_file(self, cursor, db, table, import_file):
@@ -148,34 +148,6 @@ class ImpalaHelpers(object):
                 f"ALTER TABLE {db}.{table} RECOVER PARTITIONS")
         cursor.execute(
             f"REFRESH {db}.{table}")
-
-    # def import_dataset_into_db(
-    #         self,
-    #         db,
-    #         pedigree_table,
-    #         variants_table,
-    #         pedigree_hdfs_file,
-    #         variants_hdfs_file,
-    #         partition_description):
-
-    #     with closing(self.connection()) as conn:
-    #         with conn.cursor() as cursor:
-    #             cursor.execute(
-    #                 f"CREATE DATABASE IF NOT EXISTS {db}")
-
-    #             self._import_single_file(
-    #                 cursor, db, pedigree_table, pedigree_hdfs_file)
-
-    #             self._create_dataset_table(
-    #                 cursor,
-    #                 db,
-    #                 variants_table,
-    #                 variants_hdfs_file,
-    #                 partition_description
-    #             )
-    #             if partition_description.has_partitions():
-    #                 self._add_partition_properties(
-    #                     cursor, db, variants_table, partition_description)
 
     def import_pedigree_into_db(self, db, pedigree_table, pedigree_hdfs_file):
         with closing(self.connection()) as conn:
