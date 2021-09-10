@@ -274,46 +274,6 @@ def reverse_complement(nucleotides: str) -> str:
     return complement(nucleotides[::-1])
 
 
-def liftover_variant(chrom, pos, ref, alt, lo, target_genome):
-
-    lo_coordinates = lo.convert_coordinate(chrom, pos - 1)
-
-    if not lo_coordinates:
-        return None
-    if len(lo_coordinates) > 1:
-        logger.info(
-            f"liftover_variant: liftover returns more than one target "
-            f"position: {lo_coordinates}")
-
-    lo_chrom, lo_pos, lo_strand, _ = lo_coordinates[0]
-
-    if lo_strand == "+" or len(ref) == len(alt):
-        lo_pos += 1
-    elif lo_strand == "-":
-        lo_pos -= len(ref)
-        lo_pos -= 1
-
-    _, tr_ref, tr_alt = trim_str_front(pos, ref, alt)
-
-    lo_ref = target_genome.get_sequence(
-        lo_chrom, lo_pos, lo_pos + len(ref) - 1)
-    if lo_ref is None:
-        logger.warning(
-            f"can't find genomic sequence for {lo_chrom}:{lo_pos}")
-        return None
-
-    lo_alt = alt
-    if lo_strand == "-":
-        if not tr_alt:
-            lo_alt = f"{lo_ref[0]}"
-        else:
-            lo_alt = reverse_complement(tr_alt)
-            if not tr_ref:
-                lo_alt = f"{lo_ref[0]}{lo_alt}"
-
-    return (lo_chrom, lo_pos, lo_ref, lo_alt)
-
-
 def tandem_repeat(ref, alt, min_mono_reference=8):
     for period in range(1, len(ref) // 2 + 1):
         if len(ref) % period != 0:

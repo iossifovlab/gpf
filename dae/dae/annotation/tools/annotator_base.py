@@ -15,9 +15,7 @@ class Annotator(abc.ABC):
         "string": pa.string(),
     }
 
-    def __init__(self, resource, liftover=None, override=None):
-        self.resource = resource
-
+    def __init__(self, liftover=None, override=None):
         self.liftover = liftover
         self.override = override
 

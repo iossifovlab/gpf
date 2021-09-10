@@ -227,14 +227,18 @@ class FSGenomicResourcesRepo(GenomicResourcesRepo):
         with open(abspath, "rb") as f:
             yield f.read(8192)
 
-    def open_file(self, resource_id: str, filename: str):
+    def open_file(self, resource_id: str, filename: str, mode=None):
         resource = self.get_resource(resource_id)
         file_url = os.path.join(resource.get_url(), filename)
         filepath = urlparse(file_url).path
         if filepath.endswith(".gz") or filepath.endswith(".bgz"):
-            return gzip.open(filepath, "rt")
+            if mode is None:
+                mode = "rt"
+            return gzip.open(filepath, mode)
         else:
-            return open(filepath, "r")
+            if mode is None:
+                mode = "r"
+            return open(filepath, mode)
 
     def build_repository_content(self):
         content = _create_resource_content_dict(self.root_group)
@@ -346,9 +350,11 @@ class HTTPGenomicResourcesRepo(GenomicResourcesRepo):
             for chunk in response.iter_content(chunk_size=8192):
                 yield chunk
 
-    def open_file(self, resource_id: str, filename: str, mode: str = "r"):
-        if mode not in {"r", "rb"}:
+    def open_file(self, resource_id: str, filename: str, mode: str = None):
+        if mode and mode not in {"r", "rb"}:
             raise ValueError(f"unexpected mode for HTTP resource file: {mode}")
+        if mode is None:
+            mode = "r"
         resource = self.get_resource(resource_id)
         file_url = os.path.join(resource.get_url(), filename)
         if mode == "r":

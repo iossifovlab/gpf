@@ -60,6 +60,20 @@ class AnnotationPipeline():
                 )
                 pipeline.add_annotator(annotator)
 
+        if pipeline_config.liftover_annotators:
+            for annotator_config in pipeline_config.liftover_annotators:
+                chain_id = annotator_config["chain"]
+                genome_id = annotator_config["genome"]
+                chain = resource_db.get_resource(chain_id)
+                genome = resource_db.get_resource(genome_id)
+                annotator_type = annotator_config["annotator"]
+                liftover_id = annotator_config["liftover"]
+                override = annotator_config.get("override")
+                annotator = AnnotatorFactory.make_liftover_annotator(
+                    annotator_type, chain, genome, liftover_id, override
+                )
+                pipeline.add_annotator(annotator)
+
         return pipeline
 
     @property

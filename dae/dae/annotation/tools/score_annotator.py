@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 class VariantScoreAnnotatorBase(Annotator):
     def __init__(self, resource, liftover=None, override=None):
-        super().__init__(resource, liftover, override)
+        super().__init__(liftover, override)
+        self.resource = resource
         self._annotation_schema = None
 
         self.score_types = dict()

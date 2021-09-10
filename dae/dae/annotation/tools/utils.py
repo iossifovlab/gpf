@@ -5,6 +5,7 @@ from dae.annotation.tools.score_annotator import PositionScoreAnnotator, \
     NPScoreAnnotator
 from dae.annotation.tools.allele_score_annotator import AlleleScoreAnnotator
 from dae.annotation.tools.effect_annotator import EffectAnnotator
+from dae.annotation.tools.lift_over_annotator import LiftOverAnnotator
 
 
 class AnnotatorFactory:
@@ -52,6 +53,13 @@ class AnnotatorFactory:
         return EffectAnnotator(
                 gene_models=gene_models,
                 genome=genome)
+
+    @classmethod
+    def make_liftover_annotator(
+            cls, annotator, chain, genome, liftover, override=None, **kwargs):
+        assert annotator == "liftover_annotator"
+
+        return LiftOverAnnotator(chain, genome, liftover, override=override)
 
 
 def handle_chrom_prefix(expect_prefix, data):

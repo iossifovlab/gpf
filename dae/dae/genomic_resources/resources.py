@@ -69,8 +69,8 @@ class GenomicResource(GenomicResourceBase):
                 index_filename = f"{self._url}/{filename}"
         return pysam.TabixFile(filename, index=index_filename)
 
-    def open_file(self, filename):
-        return self.get_repo().open_file(self.get_id(), filename)
+    def open_file(self, filename, mode=None):
+        return self.get_repo().open_file(self.get_id(), filename, mode)
 
     @abc.abstractmethod
     def open(self):
