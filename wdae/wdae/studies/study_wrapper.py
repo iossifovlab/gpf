@@ -272,7 +272,7 @@ class StudyWrapper(StudyWrapperBase):
                 svid = f"{allele.cshl_location}:{allele.cshl_variant}"
                 return svid in summary_variant_ids
 
-        variants = list(self.query_variants(**kwargs))
+        variants = self.query_variants(**kwargs)
 
         for v in variants:
             matched = True
