@@ -44,6 +44,7 @@ from dae.gene.denovo_gene_set_collection_factory import \
     DenovoGeneSetCollectionFactory
 from dae.autism_gene_profile.statistic import AGPStatistic
 from dae.autism_gene_profile.db import AutismGeneProfileDB
+from dae.genomic_resources.resource_db import GenomicResourceDB
 
 
 logging.basicConfig(
@@ -1174,3 +1175,13 @@ def get_score_config(fixture_dirname):
         )
         return GPFConfigParser.load_config(config, genomic_score_schema)
     return internal
+
+
+@pytest.fixture
+def anno_grdb(fixture_dirname):
+    test_grr_location = fixture_dirname("genomic_resources")
+    repositories = [
+        {"id": "test_grr", "url": f"file://{test_grr_location}"}
+    ]
+
+    return GenomicResourceDB(repositories)

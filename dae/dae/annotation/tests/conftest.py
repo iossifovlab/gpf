@@ -5,21 +5,10 @@ from dae.configuration.gpf_config_parser import FrozenBox
 
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.attributes import VariantType
-from dae.genomic_resources.resource_db import GenomicResourceDB
 
 
 def relative_to_this_test_folder(path):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), path)
-
-
-@pytest.fixture
-def anno_grdb(fixture_dirname):
-    test_grr_location = fixture_dirname("genomic_resources")
-    repositories = [
-        {"id": "test_grr", "url": f"file://{test_grr_location}"}
-    ]
-
-    return GenomicResourceDB(repositories)
 
 
 @pytest.fixture(scope="session")

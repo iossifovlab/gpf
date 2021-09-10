@@ -6,8 +6,8 @@ effect_annotators:
 
 liftover_annotators:
   - annotator: liftover_annotator
-    chain: test_chain
-    genome: test_genome
+    chain: hg38/hg38tohg19
+    genome: hg38/GRCh38-hg38/genome
 
 score_annotators:
  - annotator: position_score
