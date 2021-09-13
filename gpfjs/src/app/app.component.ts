@@ -6,6 +6,7 @@ import { BnNgIdleService } from 'bn-ng-idle';
 import { UsersService } from './users/users.service';
 import { AgpConfig } from './autism-gene-profiles-table/autism-gene-profile-table';
 import { switchMap } from 'rxjs/operators';
+import { NgbNavConfig } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'gpf-root',
@@ -68,7 +69,10 @@ export class AppComponent {
     private autismGeneProfilesService: AutismGeneProfilesService,
     private bnIdle: BnNgIdleService,
     private usersService: UsersService,
-  ) { }
+    private ngbNavConfig: NgbNavConfig,
+  ) {
+    ngbNavConfig.animation = false;
+  }
 
   ngOnInit(): void {
     this.bnIdle.startWatching(this.sessionTimeoutInSeconds)
