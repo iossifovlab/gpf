@@ -351,7 +351,6 @@ class ImpalaVariants:
         with closing(result) as result:
 
             for v in result:
-                print("sv:", v)
                 if v.svuid in seen:
                     continue
                 if v is None:
@@ -435,12 +434,15 @@ class ImpalaVariants:
         result.start()
 
         with closing(result) as result:
-
+            seen = set()
             for v in result:
-                print(v)
                 if v is None:
                     continue
+                if v.fvuid in seen:
+                    continue
                 yield v
+                seen.add(v.fvuid)
+
                 count -= 1
                 if count == 0:
                     break
