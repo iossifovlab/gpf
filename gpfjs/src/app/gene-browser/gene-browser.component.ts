@@ -46,7 +46,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   private genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
   private summaryVariantsArray: SummaryAllelesArray;
   private summaryVariantsArrayFiltered: SummaryAllelesArray;
-  private summaryVariantsFilter: SummaryAllelesFilter = new SummaryAllelesFilter();
+  public summaryVariantsFilter: SummaryAllelesFilter = new SummaryAllelesFilter();
 
   private selectedFrequencies: [number, number] = [0, 0];
   private selectedRegion: [number, number] = [0, 0];
@@ -58,7 +58,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     }
   }
 
-  @ViewChild('filters', { static: false }) public set filters(element) {
+  @ViewChild('filters', { static: false })
+  public set filters(element) {
     this.drawDenovoIcons();
     this.drawTransmittedIcons();
     this.drawEffectTypesIcons();
