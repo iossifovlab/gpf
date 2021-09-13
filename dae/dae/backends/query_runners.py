@@ -95,7 +95,6 @@ class QueryResult:
         while True:
             try:
                 item = self.result_queue.get(timeout=0.1)
-                logger.debug(f"result: getting row: {item}")
                 self._counter += 1
                 return item
             except queue.Empty:

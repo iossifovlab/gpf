@@ -1,9 +1,14 @@
 import time
 import logging
+import queue
+import abc
+
+from contextlib import closing
 
 from dae.variants.variant import SummaryAllele
 from dae.variants.family_variant import FamilyAllele
 
+from dae.backends.query_runners import QueryExecutor, QueryRunner, QueryResult
 from dae.backends.attributes_query import (
     role_query,
     sex_query,
@@ -15,12 +20,77 @@ from dae.backends.attributes_query import (
 logger = logging.getLogger(__name__)
 
 
-class RawFamilyVariants:
+class RawVariantsQueryRunner(QueryRunner):
+
+    def __init__(
+            self, variants_iterator=None,
+            deserializer=None):
+        super(RawVariantsQueryRunner, self).__init__(
+            deserializer=deserializer)
+        self.variants_iterator = variants_iterator
+        assert self.variants_iterator is not None
+
+    def run(self):
+        try:
+            if self.closed():
+                return
+
+            while True:
+                row = next(self.variants_iterator)
+                if row is None:
+                    break
+                val = self.deserializer(row)
+
+                if val is None:
+                    continue
+
+                while True:
+                    try:
+                        self._result_queue.put(val, timeout=0.1)
+                        break
+                    except queue.Full:
+                        if self.closed():
+                            break
+
+                if self.closed():
+                    break
+
+        except StopIteration:
+            logger.debug("variants iterator done")
+
+        except BaseException as ex:
+            logger.warn(
+                f"exception in runner run: {type(ex)}", exc_info=True)
+        finally:
+            self.close()
+            logger.debug("runner closed")
+
+        with self._status_lock:
+            self._done = True
+        logger.debug("runner done")
+
+
+class RawVariantsQueryExecutor(QueryExecutor):
+
+    def _submit(self, **kwargs):
+        variants_iterator = kwargs.get("variants_iterator")
+        deserializer = kwargs.get("deserializer")
+        runner = RawVariantsQueryRunner(
+            variants_iterator=variants_iterator,
+            deserializer=deserializer)
+        runner._owner = self
+        return runner
+
+
+class RawFamilyVariants(abc.ABC):
+    executor = RawVariantsQueryExecutor(max_workers=8)
+
     def __init__(self, families):
         self.families = families
 
+    @abc.abstractmethod
     def full_variants_iterator(self):
-        raise NotImplementedError()
+        pass
 
     def family_variants_iterator(self):
         for _, vs in self.full_variants_iterator():
@@ -340,14 +410,63 @@ class RawFamilyVariants:
 
         return filter_func
 
-    def query_variants(self, **kwargs):
-        filter_func = self.family_variant_filter_function(**kwargs)
+    def _build_families_variants_query_runner(
+            self,
+            regions=None,
+            genes=None,
+            effect_types=None,
+            family_ids=None,
+            person_ids=None,
+            inheritance=None,
+            roles=None,
+            sexes=None,
+            variant_type=None,
+            real_attr_filter=None,
+            ultra_rare=None,
+            frequency_filter=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None,
+            affected_status=None):
 
-        for v in self.family_variants_iterator():
-            result = filter_func(v)
-            if result is None:
-                continue
-            yield result
+        filter_func = RawFamilyVariants.family_variant_filter_function(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            limit=limit)
+
+        runner = self.executor._submit(
+            variants_iterator=self.family_variants_iterator(),
+            deserializer=filter_func)
+
+        return runner
+
+    def query_variants(self, **kwargs):
+        runner = self._build_families_variants_query_runner(**kwargs)
+        result_queueu = queue.Queue(maxsize=1_000)
+        result = QueryResult(
+                result_queueu, runners=[runner], 
+                limit=kwargs.get("limit", -1))
+
+        logger.debug("starting result")
+        result.start()
+
+        with closing(result) as result:
+            for v in result:
+                if v is None:
+                    continue
+                yield v
 
 
 class RawMemoryVariants(RawFamilyVariants):
@@ -378,34 +497,34 @@ class RawMemoryVariants(RawFamilyVariants):
             yield sv, fvs
 
 
-class RawVariantsIterator(RawFamilyVariants):
-    def __init__(self, family_variants, families):
-        super(RawVariantsIterator, self).__init__(families)
-        self.family_variants = family_variants
+# class RawVariantsIterator(RawFamilyVariants):
+#     def __init__(self, family_variants, families):
+#         super(RawVariantsIterator, self).__init__(families)
+#         self.family_variants = family_variants
 
-    def family_variants_iterator(self):
-        for fv in self.family_variants:
-            yield fv
+#     def family_variants_iterator(self):
+#         for fv in self.family_variants:
+#             yield fv
 
-    def full_variants_iterator(self):
-        seen = set()
-        for fv in self.family_variants_iterator():
-            sv = fv.summary_variant
-            if sv.svuid in seen:
-                continue
-            yield sv
-            seen.add(sv.svuid)
+#     def full_variants_iterator(self):
+#         seen = set()
+#         for fv in self.family_variants_iterator():
+#             sv = fv.summary_variant
+#             if sv.svuid in seen:
+#                 continue
+#             yield sv
+#             seen.add(sv.svuid)
 
 
-class RawSummaryVariantsIterator(RawFamilyVariants):
-    def __init__(self, summary_variants, families):
-        super(RawSummaryVariantsIterator, self).__init__(families)
-        self.summary_variants = summary_variants
+# class RawSummaryVariantsIterator(RawFamilyVariants):
+#     def __init__(self, summary_variants, families):
+#         super(RawSummaryVariantsIterator, self).__init__(families)
+#         self.summary_variants = summary_variants
 
-    def full_variants_iterator(self):
-        seen = set()
-        for sv in self.summary_variants:
-            if sv.svuid in seen:
-                continue
-            yield sv, []
-            seen.add(sv.svuid)
+#     def full_variants_iterator(self):
+#         seen = set()
+#         for sv in self.summary_variants:
+#             if sv.svuid in seen:
+#                 continue
+#             yield sv, []
+#             seen.add(sv.svuid)
