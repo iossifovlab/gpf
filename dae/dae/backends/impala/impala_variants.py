@@ -5,8 +5,7 @@ from queue import Queue
 
 from impala.util import as_pandas
 
-from dae.backends.raw.raw_variants import RawFamilyVariants, \
-    RawSummaryVariantsIterator
+from dae.backends.raw.raw_variants import RawFamilyVariants
 
 from dae.annotation.tools.file_io_parquet import ParquetSchema
 from dae.pedigrees.family import FamiliesData
@@ -146,79 +145,6 @@ class ImpalaVariants:
 
         return runner
 
-    # def _summary_variants_iterator(
-    #         self,
-    #         regions=None,
-    #         genes=None,
-    #         effect_types=None,
-    #         family_ids=None,
-    #         person_ids=None,
-    #         inheritance=None,
-    #         roles=None,
-    #         sexes=None,
-    #         variant_type=None,
-    #         real_attr_filter=None,
-    #         ultra_rare=None,
-    #         frequency_filter=None,
-    #         return_reference=None,
-    #         return_unknown=None,
-    #         limit=None):
-
-    #     if not self.variants_table:
-    #         return None
-    #     with closing(self.connection()) as conn:
-
-    #         with conn.cursor() as cursor:
-    #             sv_table = None
-    #             if self.has_summary_variants_table:
-    #                 sv_table = self.summary_variants_table
-    #             query_builder = SummaryVariantsQueryBuilder(
-    #                 self.db, self.variants_table, self.pedigree_table,
-    #                 self.schema, self.table_properties,
-    #                 self.pedigree_schema, self.ped_df,
-    #                 self.gene_models, summary_variants_table=sv_table
-    #             )
-    #             director = ImpalaQueryDirector(query_builder)
-    #             director.build_query(
-    #                 regions=regions,
-    #                 genes=genes,
-    #                 effect_types=effect_types,
-    #                 family_ids=family_ids,
-    #                 person_ids=person_ids,
-    #                 inheritance=inheritance,
-    #                 roles=roles,
-    #                 sexes=sexes,
-    #                 variant_type=variant_type,
-    #                 real_attr_filter=real_attr_filter,
-    #                 ultra_rare=ultra_rare,
-    #                 frequency_filter=frequency_filter,
-    #                 return_reference=return_reference,
-    #                 return_unknown=return_unknown,
-    #                 limit=None,
-    #             )
-
-    #             deserialize_row = query_builder.create_row_deserializer(
-    #                 self.serializer
-    #             )
-
-    #             query = query_builder.product
-    #             logger.debug(f"SUMMARY VARIANTS QUERY ({conn.host}): {query}")
-
-    #             cursor.execute(query)
-    #             for row in cursor:
-    #                 try:
-    #                     v = deserialize_row(row)
-
-    #                     if v is None:
-    #                         continue
-
-    #                     yield v
-    #                 except Exception as ex:
-    #                     logger.error("unable to deserialize summary variant")
-    #                     logger.exception(ex)
-    #                     continue
-    #             logger.debug(f"[DONE] SUMMARY VARIANTS QUERY ({conn.host})")
-
     def _build_family_variants_query_runner(
             self,
             regions=None,
@@ -264,7 +190,7 @@ class ImpalaVariants:
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            limit=None,
+            limit=limit,
             affected_status=affected_status
         )
 

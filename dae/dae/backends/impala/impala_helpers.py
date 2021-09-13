@@ -67,6 +67,8 @@ class ImpalaQueryRunner:
     def close(self):
         with self._status_lock:
             self._closed = True
+        canceled = self._future.cancel()
+        logger.debug(f"runner canceled: {canceled}")
 
     def done(self):
         with self._status_lock:
