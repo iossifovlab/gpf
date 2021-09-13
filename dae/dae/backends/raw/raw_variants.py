@@ -196,7 +196,7 @@ class RawFamilyVariants:
         return True
 
     @classmethod
-    def filter_variant(cls, v, **kwargs):
+    def filter_family_variant(cls, v, **kwargs):
         if kwargs.get("regions") is not None:
             if not cls.filter_regions(v, kwargs["regions"]):
                 return False
@@ -221,7 +221,8 @@ class RawFamilyVariants:
                 return False
         return True
 
-    def query_summary_variants(self, **kwargs):
+    @classmethod
+    def summary_variant_filter_function(cls, **kwargs):
         if kwargs.get("variant_type") is not None:
             parsed = kwargs["variant_type"]
             if isinstance(kwargs["variant_type"], str):
@@ -234,23 +235,36 @@ class RawFamilyVariants:
 
         return_reference = kwargs.get("return_reference", False)
 
-        # for _, vs in self.full_variants_iterator():
-        for sv, _ in self.full_variants_iterator():
-            if not self.filter_summary_variant(sv, **kwargs):
-                continue
+        def filter_func(sv):
+            if not cls.filter_summary_variant(sv, **kwargs):
+                return None
 
             alleles = sv.alleles
             alleles_matched = []
             for allele in alleles:
-                if self.filter_summary_allele(allele, **kwargs):
+                if cls.filter_summary_allele(allele, **kwargs):
                     if allele.allele_index == 0 and not return_reference:
                         continue
                     alleles_matched.append(allele.allele_index)
-            if alleles_matched:
+            if not alleles_matched:
+                return None
+            else:
                 sv.set_matched_alleles(alleles_matched)
-                yield sv
+                return sv
 
-    def query_variants(self, **kwargs):
+        return filter_func
+
+    def query_summary_variants(self, **kwargs):
+        filter_func = self.summary_variant_filter_function(**kwargs)
+
+        for sv, _ in self.full_variants_iterator():
+            result = filter_func(sv)
+            if result is None:
+                continue
+            yield result
+
+    @classmethod
+    def family_variant_filter_function(cls, **kwargs):
         if kwargs.get("roles") is not None:
             parsed = kwargs["roles"]
             if isinstance(parsed, list):
@@ -298,28 +312,38 @@ class RawFamilyVariants:
         return_reference = kwargs.get("return_reference", False)
         return_unknown = kwargs.get("return_unknown", False)
 
-        # for _, vs in self.full_variants_iterator():
-        for v in self.family_variants_iterator():
+        def filter_func(v):
             try:
                 if v.is_unknown() and not return_unknown:
-                    continue
+                    return None
 
-                if not self.filter_variant(v, **kwargs):
-                    continue
+                if not cls.filter_family_variant(v, **kwargs):
+                    return None
 
                 alleles = v.alleles
                 alleles_matched = []
                 for allele in alleles:
-                    if self.filter_allele(allele, **kwargs):
+                    if cls.filter_allele(allele, **kwargs):
                         if allele.allele_index == 0 and not return_reference:
                             continue
                         alleles_matched.append(allele.allele_index)
                 if alleles_matched:
                     v.set_matched_alleles(alleles_matched)
-                    yield v
+                    return v
             except Exception as ex:
-                logger.error(f"unexpected error {ex}")
-                logger.exception(ex)
+                logger.warning(f"unexpected error: {ex}", exc_info=True)
+                return None
+
+        return filter_func
+
+    def query_variants(self, **kwargs):
+        filter_func = self.family_variant_filter_function(**kwargs)
+
+        for v in self.family_variants_iterator():
+            result = filter_func(v)
+            if result is None:
+                continue
+            yield result
 
 
 class RawMemoryVariants(RawFamilyVariants):
