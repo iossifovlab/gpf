@@ -73,10 +73,10 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   public createTabEventHandler($event): void {
     const tabId: string = $event.geneSymbol;
-    const openTab: boolean = $event.openTab;
+    const navigateToTab: boolean = $event.navigateToTab;
 
     this.geneTabs.add(tabId);
-    if (openTab) {
+    if (navigateToTab) {
       this.nav.select(tabId);
     }
   }
