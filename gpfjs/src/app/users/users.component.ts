@@ -53,7 +53,6 @@ export class UsersComponent implements OnInit {
     this.usersService.login(this.username).subscribe(
       (res) => {
         if (res === true) {
-          this.reloadUserData();
           this.showPasswordField = true;
           this.errorMessage = undefined;
         } else {
