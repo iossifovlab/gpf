@@ -1,10 +1,11 @@
 import logging
 # from dae.utils.debug_closing import closing
 from contextlib import closing
+from queue import Queue
 
 from impala.util import as_pandas
 
-from dae.backends.raw.raw_variants import RawVariantsIterator, \
+from dae.backends.raw.raw_variants import RawFamilyVariants, \
     RawSummaryVariantsIterator
 
 from dae.annotation.tools.file_io_parquet import ParquetSchema
@@ -13,6 +14,7 @@ from dae.backends.impala.serializers import AlleleParquetSerializer
 
 from dae.variants.attributes import Role, Status, Sex
 
+from dae.backends.impala.impala_helpers import ImpalaQueryResult
 from dae.backends.impala.impala_query_director import ImpalaQueryDirector
 from dae.backends.impala.family_variants_query_builder import \
     FamilyVariantsQueryBuilder
@@ -156,7 +158,7 @@ class ImpalaVariants:
                         continue
                 logger.debug(f"[DONE] SUMMARY VARIANTS QUERY ({conn.host})")
 
-    def _family_variants_iterator(
+    def _build_family_variants_query_runner(
             self,
             regions=None,
             genes=None,
@@ -177,58 +179,118 @@ class ImpalaVariants:
 
         if not self.variants_table:
             return None
-        with closing(self.connection()) as conn:
+        do_join = affected_status is not None
+        query_builder = FamilyVariantsQueryBuilder(
+            self.db, self.variants_table, self.pedigree_table,
+            self.schema, self.table_properties,
+            self.pedigree_schema, self.ped_df,
+            self.families, gene_models=self.gene_models,
+            do_join=do_join
+        )
+        director = ImpalaQueryDirector(query_builder)
+        director.build_query(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            limit=None,
+            affected_status=affected_status
+        )
 
-            with conn.cursor() as cursor:
-                do_join = affected_status is not None
-                query_builder = FamilyVariantsQueryBuilder(
-                    self.db, self.variants_table, self.pedigree_table,
-                    self.schema, self.table_properties,
-                    self.pedigree_schema, self.ped_df,
-                    self.families, gene_models=self.gene_models,
-                    do_join=do_join
-                )
-                director = ImpalaQueryDirector(query_builder)
-                director.build_query(
-                    regions=regions,
-                    genes=genes,
-                    effect_types=effect_types,
-                    family_ids=family_ids,
-                    person_ids=person_ids,
-                    inheritance=inheritance,
-                    roles=roles,
-                    sexes=sexes,
-                    variant_type=variant_type,
-                    real_attr_filter=real_attr_filter,
-                    ultra_rare=ultra_rare,
-                    frequency_filter=frequency_filter,
-                    return_reference=return_reference,
-                    return_unknown=return_unknown,
-                    limit=None,
-                    affected_status=affected_status
-                )
+        query = query_builder.product
 
-                query = query_builder.product
+        logger.debug(f"FAMILY VARIANTS QUERY: {query}")
+        deserialize_row = query_builder.create_row_deserializer(
+            self.serializer)
 
-                logger.debug(f"FAMILY VARIANTS QUERY ({conn.host}): {query}")
+        runner = self._impala_helpers._submit(
+            query, deserializer=deserialize_row)
 
-                deserialize_row = query_builder.create_row_deserializer(
-                    self.serializer
-                )
-                cursor.execute(query)
+        return runner
 
-                for row in cursor:
-                    try:
-                        v = deserialize_row(row)
+    # def _family_variants_iterator(
+    #         self,
+    #         regions=None,
+    #         genes=None,
+    #         effect_types=None,
+    #         family_ids=None,
+    #         person_ids=None,
+    #         inheritance=None,
+    #         roles=None,
+    #         sexes=None,
+    #         variant_type=None,
+    #         real_attr_filter=None,
+    #         ultra_rare=None,
+    #         frequency_filter=None,
+    #         return_reference=None,
+    #         return_unknown=None,
+    #         limit=None,
+    #         affected_status=None):
 
-                        if v is None:
-                            continue
+    #     if not self.variants_table:
+    #         return None
+    #     with closing(self.connection()) as conn:
 
-                        yield v
-                    except Exception as ex:
-                        logger.error("unable to deserialize family variant")
-                        logger.exception(ex)
-                        continue
+    #         with conn.cursor() as cursor:
+    #             do_join = affected_status is not None
+    #             query_builder = FamilyVariantsQueryBuilder(
+    #                 self.db, self.variants_table, self.pedigree_table,
+    #                 self.schema, self.table_properties,
+    #                 self.pedigree_schema, self.ped_df,
+    #                 self.families, gene_models=self.gene_models,
+    #                 do_join=do_join
+    #             )
+    #             director = ImpalaQueryDirector(query_builder)
+    #             director.build_query(
+    #                 regions=regions,
+    #                 genes=genes,
+    #                 effect_types=effect_types,
+    #                 family_ids=family_ids,
+    #                 person_ids=person_ids,
+    #                 inheritance=inheritance,
+    #                 roles=roles,
+    #                 sexes=sexes,
+    #                 variant_type=variant_type,
+    #                 real_attr_filter=real_attr_filter,
+    #                 ultra_rare=ultra_rare,
+    #                 frequency_filter=frequency_filter,
+    #                 return_reference=return_reference,
+    #                 return_unknown=return_unknown,
+    #                 limit=None,
+    #                 affected_status=affected_status
+    #             )
+
+    #             query = query_builder.product
+
+    #             logger.debug(f"FAMILY VARIANTS QUERY ({conn.host}): {query}")
+
+    #             deserialize_row = query_builder.create_row_deserializer(
+    #                 self.serializer
+    #             )
+    #             cursor.execute(query)
+
+    #             for row in cursor:
+    #                 try:
+    #                     v = deserialize_row(row)
+
+    #                     if v is None:
+    #                         continue
+
+    #                     yield v
+    #                 except Exception as ex:
+    #                     logger.error("unable to deserialize family variant")
+    #                     logger.exception(ex)
+    #                     continue
 
     def query_summary_variants(
             self,
@@ -329,51 +391,59 @@ class ImpalaVariants:
             count = limit
             limit = 10 * limit
 
-        with closing(self._family_variants_iterator(
-                        regions=regions,
-                        genes=genes,
-                        effect_types=effect_types,
-                        family_ids=family_ids,
-                        person_ids=person_ids,
-                        inheritance=inheritance,
-                        roles=roles,
-                        sexes=sexes,
-                        variant_type=variant_type,
-                        real_attr_filter=real_attr_filter,
-                        ultra_rare=ultra_rare,
-                        frequency_filter=frequency_filter,
-                        return_reference=return_reference,
-                        return_unknown=return_unknown,
-                        limit=limit,
-                        affected_status=affected_status)) as fv_iterator:
+        runner = self._build_family_variants_query_runner(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            limit=limit,
+            affected_status=affected_status)
 
-            raw_variants_iterator = RawVariantsIterator(
-                fv_iterator, self.families)
+        filter_func = RawFamilyVariants.family_variant_filter_function(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            limit=count)
 
-            with closing(raw_variants_iterator.query_variants(
-                            regions=regions,
-                            genes=genes,
-                            effect_types=effect_types,
-                            family_ids=family_ids,
-                            person_ids=person_ids,
-                            inheritance=inheritance,
-                            roles=roles,
-                            sexes=sexes,
-                            variant_type=variant_type,
-                            real_attr_filter=real_attr_filter,
-                            ultra_rare=ultra_rare,
-                            frequency_filter=frequency_filter,
-                            return_reference=return_reference,
-                            return_unknown=return_unknown,
-                            limit=count)) as result:
+        runner.adapt(filter_func)
 
-                for v in result:
-                    if v is None:
-                        continue
-                    yield v
-                    count -= 1
-                    if count == 0:
-                        break
+        result_queueu = Queue(maxsize=1_000)
+        result = ImpalaQueryResult(
+                result_queueu, runners=[runner], limit=count)
+        logger.debug("starting result")
+        result.start()
+
+        with closing(result) as result:
+
+            for v in result:
+                print(v)
+                if v is None:
+                    continue
+                yield v
+                count -= 1
+                if count == 0:
+                    break
 
     def _fetch_pedigree(self):
         with closing(self.connection()) as conn:

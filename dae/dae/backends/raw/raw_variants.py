@@ -236,6 +236,8 @@ class RawFamilyVariants:
         return_reference = kwargs.get("return_reference", False)
 
         def filter_func(sv):
+            if sv is None:
+                return None
             if not cls.filter_summary_variant(sv, **kwargs):
                 return None
 
@@ -313,7 +315,10 @@ class RawFamilyVariants:
         return_unknown = kwargs.get("return_unknown", False)
 
         def filter_func(v):
+            print("family_variant_filter_function:", v)
             try:
+                if v is None:
+                    return None
                 if v.is_unknown() and not return_unknown:
                     return None
 

@@ -10,7 +10,8 @@ def test_impala_runner_simple(impala_helpers):
     query = "SELECT * FROM gpf_variant_db.test_study_impala_01_variants"
     result_queue = Queue(maxsize=3)
 
-    runner = impala_helpers._submit(query, result_queue)
+    runner = impala_helpers._submit(query)
+    runner._set_result_queue(result_queue)
     assert not runner.started()
 
     runner.start()
@@ -28,7 +29,7 @@ def test_impala_runner_result_simple(impala_helpers):
     query = "SELECT * FROM gpf_variant_db.test_study_impala_01_variants"
     result_queue = Queue(maxsize=3)
 
-    runner = impala_helpers._submit(query, result_queue)
+    runner = impala_helpers._submit(query)
     assert not runner.started()
 
     result = ImpalaQueryResult(result_queue, [runner])
@@ -55,7 +56,7 @@ def test_impala_runner_result_experimental_1(impala_helpers):
         "FROM gpf_variant_db.test_study_impala_01_variants"
     result_queue = Queue(maxsize=3)
 
-    runner = impala_helpers._submit(query, result_queue)
+    runner = impala_helpers._submit(query)
     assert not runner.started()
 
     result = ImpalaQueryResult(result_queue, [runner])
@@ -76,7 +77,7 @@ def test_impala_runner_result_experimental_2(impala_helpers):
         "FROM gpf_variant_db.test_study_impala_01_variants"
     result_queue = Queue(maxsize=3)
 
-    runner = impala_helpers._submit(query, result_queue)
+    runner = impala_helpers._submit(query)
     assert not runner.started()
 
     result = ImpalaQueryResult(result_queue, [runner])
@@ -97,7 +98,8 @@ def test_impala_runner_result_experimental(impala_helpers):
         "FROM gpf_variant_db.test_study_impala_01_variants"
     result_queue = Queue(maxsize=3)
 
-    runner = impala_helpers._submit(query, result_queue)
+    runner = impala_helpers._submit(query)
+
     assert not runner.started()
 
     result = ImpalaQueryResult(result_queue, [runner])

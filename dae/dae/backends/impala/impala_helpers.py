@@ -2,7 +2,6 @@ import os
 import re
 import itertools
 import logging
-import traceback
 import time
 
 # from dae.utils.debug_closing import closing
@@ -22,19 +21,20 @@ logger = logging.getLogger(__name__)
 class ImpalaQueryRunner:
 
     def __init__(
-            self, connection, query, result_queue, deserializer=None):
+            self, connection, query, deserializer=None):
         super(ImpalaQueryRunner, self).__init__()
 
         self._status_lock = threading.Lock()
         self._closed = False
         self._started = False
+        self._done = False
 
         self.connection = connection
         self.cursor = connection.cursor()
         logger.debug(f"cursor type: {type(self.cursor)}")
 
         self.query = query
-        self.result_queue = result_queue
+        self._result_queue = None
         self._future = None
         self._owner = None
 
@@ -43,13 +43,20 @@ class ImpalaQueryRunner:
         else:
             self.deserializer = lambda v: v
 
+    def adapt(self, adapter_func):
+        func = self.deserializer
+
+        self.deserializer = lambda v: adapter_func(func(v))
+
     def started(self):
         with self._status_lock:
             return self._started
 
     def start(self):
         with self._status_lock:
+            assert self._result_queue is not None
             assert self._owner is not None
+
             self._future = self._owner.executor.submit(self.run)
             self._started = True
 
@@ -60,6 +67,10 @@ class ImpalaQueryRunner:
     def close(self):
         with self._status_lock:
             self._closed = True
+
+    def done(self):
+        with self._status_lock:
+            return self._done
 
     def run(self):
         try:
@@ -72,62 +83,76 @@ class ImpalaQueryRunner:
                 if not self.cursor.is_executing():
                     break
                 time.sleep(0.1)
-
-            while not self.closed():
+            logger.debug("query execution finished")
+            while True:
                 row = self.cursor.fetchone()
                 if row is None:
                     break
-
                 val = self.deserializer(row)
+
                 if val is None:
                     continue
 
                 while True:
                     try:
-                        self.result_queue.put(val, timeout=0.1)
+                        self._result_queue.put(val, timeout=0.1)
                         break
                     except Full:
                         if self.closed():
                             break
 
+                if self.closed():
+                    break
+
         except BaseException as ex:
             logger.debug(
                 f"exception in runner run: {type(ex)}", exc_info=True)
         finally:
+
             logger.debug("runner closing connection")
             self.connection.close()
+
+        with self._status_lock:
+            self._done = True
         logger.debug("runner done")
 
     def _set_future(self, future):
         self._future = future
 
-    def done(self):
-        return self._future.done()
+    def _set_result_queue(self, result_queue):
+        self._result_queue = result_queue
 
 
 class ImpalaQueryResult:
-    def __init__(self, result_queue, runners):
+    def __init__(self, result_queue, runners, limit=-1):
         self.result_queue = result_queue
+        self.limit = limit
+        self._counter = 0
         self.runners = runners
+        for runner in self.runners:
+            assert runner._result_queue is None
+            runner._set_result_queue(result_queue)
 
     def done(self):
-        return all([r.done() for r in self.runners])
+        if self.limit >= 0 and self._counter >= self.limit:
+            logger.debug(f"limit done {self._counter} >= {self.limit}")
+            return True
+        if all([r.done() for r in self.runners]):
+            return True
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        if self.done():
-            print("don't even try; runner done")
-            raise StopIteration()
-
         while True:
             try:
-                row = self.result_queue.get(timeout=0.1)
-                return row
+                item = self.result_queue.get(timeout=0.1)
+                logger.debug(f"result: getting row: {item}")
+                self._counter += 1
+                return item
             except Empty:
                 if self.done():
-                    print("result done")
+                    logger.debug("result done")
                     raise StopIteration()
 
     def get(self, timeout=0):
@@ -141,14 +166,15 @@ class ImpalaQueryResult:
     def start(self):
         for runner in self.runners:
             runner.start()
+        time.sleep(0.1)
 
     def close(self):
         for runner in self.runners:
             try:
                 runner.close()
             except BaseException as ex:
-                print("exception in result close:", type(ex))
-                traceback.print_tb(ex.__traceback__)
+                logger.info(
+                    f"exception in result close: {type(ex)}", exc_info=True)
         while not self.result_queue.empty():
             self.result_queue.get()
 
@@ -202,22 +228,23 @@ class ImpalaHelpers(object):
             f"from the pool; {self._connection_pool.status()}")
         return conn
 
-    def _submit(self, query, result_queue):
+    def _submit(self, query, deserializer=None):
         connection = self.connection()
-        runner = ImpalaQueryRunner(connection, query, result_queue)
+        runner = ImpalaQueryRunner(
+            connection, query, deserializer=deserializer)
         runner._owner = self
         return runner
 
-    def _map(self, queries, result_queue):
+    def _map(self, queries):
         runners = []
         for query in queries:
-            runner = self._submit(query, result_queue)
+            runner = self._submit(query)
             runners.append(runner)
         return runners
 
     def submit(self, query):
         result_queue = Queue(maxsize=1_000)
-        runner = self._submit(query, result_queue)
+        runner = self._submit(query)
         result = ImpalaQueryResult(result_queue, [runner])
         return result
 
