@@ -18,10 +18,11 @@ export class GenePlotModel {
   }
 
   public buildDomain(domainMin: number, domainMax: number) {
+    const lastSegment = this.gene.collapsedTranscript.segments[this.gene.collapsedTranscript.segments.length - 1];
     return this.gene.collapsedTranscript.segments
       .filter(seg => seg.intersectionLength(domainMin, domainMax) > 0)
       .map(seg => seg.intersection(domainMin, domainMax)[0])
-      .concat(domainMax);
+      .concat(domainMax < lastSegment.stop ? domainMax : lastSegment.stop);
   }
 
   public buildRange(domainMin: number, domainMax: number, rangeWidth: number, condenseIntrons: boolean) {
