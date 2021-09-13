@@ -313,7 +313,7 @@ export class GenePlotComponent implements OnChanges {
           variantsElement, allelePosition, alleleEndPosition,
           alleleHeight - 3, 6, color, 1, alleleTitle
         );
-      } else if (allele.isCNVPMinus()) {
+      } else if (allele.isCNVMinus()) {
         draw.rect(
           variantsElement, allelePosition, alleleEndPosition,
           alleleHeight - 0.5, 1, color, 1, alleleTitle
