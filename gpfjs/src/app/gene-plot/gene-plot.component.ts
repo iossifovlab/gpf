@@ -55,7 +55,6 @@ export class GenePlotComponent implements OnChanges {
 
   private readonly svgWidth = 2000;
   private subdomainAxisY: number;
-  private denovoAxisY: number;
   private svgElement: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>;
   private plotElement: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
   private brush;
@@ -73,9 +72,8 @@ export class GenePlotComponent implements OnChanges {
     this.scale.x = d3.scaleLinear();
     this.scale.y = d3.scaleLog();
     this.scale.ySubdomain = d3.scaleLinear();
-    this.scale.yDenovo = d3.scalePoint();
+    this.scale.yDenovo = d3.scalePoint().padding(0.5);
     this.subdomainAxisY = this.constants.frequencyPlotSize * this.constants.axisSizes.domain;
-    this.denovoAxisY = this.subdomainAxisY + (this.constants.frequencyPlotSize * this.constants.axisSizes.subdomain);
   }
 
   public ngOnChanges(changes: SimpleChanges): void {
@@ -118,7 +116,7 @@ export class GenePlotComponent implements OnChanges {
       .range([this.subdomainAxisY, 0]);
     this.scale.ySubdomain
       .domain([0, this.frequencyDomain[0]])
-      .range([this.denovoAxisY, this.subdomainAxisY]);
+      .range([this.constants.frequencyPlotSize, this.subdomainAxisY]);
     // The yDenovo scale is set in calculateDenovoAllelesSpacings for convenience
 
     this.axis.x = d3.axisBottom(this.scale.x).tickValues(this.xAxisTicks);
@@ -535,7 +533,7 @@ export class GenePlotComponent implements OnChanges {
     this.denovoLevels = leveledDenovos.length;
     this.scale.yDenovo
       .domain(Object.keys(leveledDenovos))
-      .range([this.denovoAxisY, this.frequencyPlotHeight]);
+      .range([this.constants.frequencyPlotSize, this.frequencyPlotHeight]);
   }
 
   public undo(): void {
