@@ -37,20 +37,21 @@ class ImpalaQueryRunner:
         self.result_queue = result_queue
         self._future = None
         self._owner = None
+
         if deserializer is not None:
             self.deserializer = deserializer
         else:
             self.deserializer = lambda v: v
+
+    def started(self):
+        with self._status_lock:
+            return self._started
 
     def start(self):
         with self._status_lock:
             assert self._owner is not None
             self._future = self._owner.executor.submit(self.run)
             self._started = True
-
-    def started(self):
-        with self._status_lock:
-            return self._started
 
     def closed(self):
         with self._status_lock:
@@ -65,9 +66,7 @@ class ImpalaQueryRunner:
             if self.closed():
                 return
 
-            logger.debug("runner going to execute query")
             self.cursor.execute_async(self.query)
-            logger.debug("runner execute query finished")
 
             while not self.closed():
                 if not self.cursor.is_executing():
@@ -75,21 +74,14 @@ class ImpalaQueryRunner:
                 time.sleep(0.1)
 
             while not self.closed():
-                logger.debug("runner going to fetch row")
                 row = self.cursor.fetchone()
-                logger.debug(f"runner row fetched {row}")
                 if row is None:
-                    logger.debug("runner finished...")
                     break
 
                 val = self.deserializer(row)
                 if val is None:
                     continue
 
-                if self.result_queue.full():
-                    logger.debug(
-                        f"queue is full ({self.result_queue.qsize()}); "
-                        f"going to block")
                 while True:
                     try:
                         self.result_queue.put(val, timeout=0.1)
