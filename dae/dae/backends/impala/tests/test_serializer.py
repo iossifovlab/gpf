@@ -111,6 +111,8 @@ def test_build_allele_batch_dict(
     fv = list(loader.full_variants_iterator())[0][1][0]
     schema = loader.get_attribute("annotation_schema")
     family = loader.families.get(fv.family_id)
+    assert family, fv.family_id
+
     schema.create_column("some_score", "float")
     fv.update_attributes({"some_score": [1.24]})
 

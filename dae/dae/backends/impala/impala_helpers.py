@@ -5,74 +5,29 @@ import logging
 import time
 
 # from dae.utils.debug_closing import closing
-import threading
 
 from contextlib import closing
-from concurrent.futures import ThreadPoolExecutor
-from queue import Empty, Queue, Full
+from queue import Full
 
 from impala import dbapi
 from sqlalchemy.pool import QueuePool
-
+from dae.backends.query_runners import QueryRunner, QueryExecutor
 
 logger = logging.getLogger(__name__)
 
 
-class ImpalaQueryRunner:
+class ImpalaQueryRunner(QueryRunner):
 
     def __init__(
             self, connection, query, deserializer=None):
-        super(ImpalaQueryRunner, self).__init__()
-
-        self._status_lock = threading.Lock()
-        self._closed = False
-        self._started = False
-        self._done = False
+        super(ImpalaQueryRunner, self).__init__(
+            deserializer=deserializer)
 
         self.connection = connection
         self.cursor = connection.cursor()
         logger.debug(f"cursor type: {type(self.cursor)}")
 
         self.query = query
-        self._result_queue = None
-        self._future = None
-        self._owner = None
-
-        if deserializer is not None:
-            self.deserializer = deserializer
-        else:
-            self.deserializer = lambda v: v
-
-    def adapt(self, adapter_func):
-        func = self.deserializer
-
-        self.deserializer = lambda v: adapter_func(func(v))
-
-    def started(self):
-        with self._status_lock:
-            return self._started
-
-    def start(self):
-        with self._status_lock:
-            assert self._result_queue is not None
-            assert self._owner is not None
-
-            self._future = self._owner.executor.submit(self.run)
-            self._started = True
-
-    def closed(self):
-        with self._status_lock:
-            return self._closed
-
-    def close(self):
-        with self._status_lock:
-            self._closed = True
-        canceled = self._future.cancel()
-        logger.debug(f"runner canceled: {canceled}")
-
-    def done(self):
-        with self._status_lock:
-            return self._done
 
     def run(self):
         try:
@@ -118,72 +73,11 @@ class ImpalaQueryRunner:
             self._done = True
         logger.debug("runner done")
 
-    def _set_future(self, future):
-        self._future = future
 
-    def _set_result_queue(self, result_queue):
-        self._result_queue = result_queue
-
-
-class ImpalaQueryResult:
-    def __init__(self, result_queue, runners, limit=-1):
-        self.result_queue = result_queue
-        self.limit = limit
-        self._counter = 0
-        self.runners = runners
-        for runner in self.runners:
-            assert runner._result_queue is None
-            runner._set_result_queue(result_queue)
-
-    def done(self):
-        if self.limit >= 0 and self._counter >= self.limit:
-            logger.debug(f"limit done {self._counter} >= {self.limit}")
-            return True
-        if all([r.done() for r in self.runners]):
-            return True
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        while True:
-            try:
-                item = self.result_queue.get(timeout=0.1)
-                logger.debug(f"result: getting row: {item}")
-                self._counter += 1
-                return item
-            except Empty:
-                if self.done():
-                    logger.debug("result done")
-                    raise StopIteration()
-
-    def get(self, timeout=0):
-        try:
-            row = self.result_queue.get(timeout=timeout)
-            return row
-        except Empty:
-            if self.done():
-                raise StopIteration()
-
-    def start(self):
-        for runner in self.runners:
-            runner.start()
-        time.sleep(0.1)
-
-    def close(self):
-        for runner in self.runners:
-            try:
-                runner.close()
-            except BaseException as ex:
-                logger.info(
-                    f"exception in result close: {type(ex)}", exc_info=True)
-        while not self.result_queue.empty():
-            self.result_queue.get()
-
-
-class ImpalaHelpers(object):
+class ImpalaHelpers(QueryExecutor):
 
     def __init__(self, impala_hosts, impala_port=21050, pool_size=20):
+        super(ImpalaHelpers, self).__init__(max_workers=2*len(impala_hosts))
 
         if os.environ.get("DAE_IMPALA_HOST", None) is not None:
             impala_host = os.environ.get("DAE_IMPALA_HOST", None)
@@ -192,8 +86,6 @@ class ImpalaHelpers(object):
                 impala_hosts = [impala_host]
         if impala_hosts is None:
             impala_hosts = []
-
-        self.executor = ThreadPoolExecutor(max_workers=len(impala_hosts))
 
         host_generator = itertools.cycle(impala_hosts)
 
@@ -230,35 +122,16 @@ class ImpalaHelpers(object):
             f"from the pool; {self._connection_pool.status()}")
         return conn
 
-    def _submit(self, query, deserializer=None):
+    def _submit(self, **kwargs):
+        query = kwargs.get("query")
+        deserializer = kwargs.get("deserializer")
+        assert query is not None
+
         connection = self.connection()
         runner = ImpalaQueryRunner(
             connection, query, deserializer=deserializer)
         runner._owner = self
         return runner
-
-    def _map(self, queries):
-        runners = []
-        for query in queries:
-            runner = self._submit(query)
-            runners.append(runner)
-        return runners
-
-    def submit(self, query):
-        result_queue = Queue(maxsize=1_000)
-        runner = self._submit(query)
-        result = ImpalaQueryResult(result_queue, [runner])
-        return result
-
-    def map(self, queries):
-        result_queue = Queue(maxsize=1_000)
-        runners = []
-        for query in queries:
-            runner = self._submit(query, result_queue)
-            runners.append(runner)
-
-        result = ImpalaQueryResult(result_queue, runners)
-        return result
 
     def _import_single_file(self, cursor, db, table, import_file):
 

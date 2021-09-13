@@ -13,7 +13,7 @@ from dae.backends.impala.serializers import AlleleParquetSerializer
 
 from dae.variants.attributes import Role, Status, Sex
 
-from dae.backends.impala.impala_helpers import ImpalaQueryResult
+from dae.backends.query_runners import QueryResult
 from dae.backends.impala.impala_query_director import ImpalaQueryDirector
 from dae.backends.impala.family_variants_query_builder import \
     FamilyVariantsQueryBuilder
@@ -141,7 +141,7 @@ class ImpalaVariants:
         logger.debug(f"SUMMARY VARIANTS QUERY: {query}")
 
         runner = self._impala_helpers._submit(
-            query, deserializer=deserialize_row)
+            query=query, deserializer=deserialize_row)
 
         return runner
 
@@ -199,9 +199,10 @@ class ImpalaVariants:
         logger.debug(f"FAMILY VARIANTS QUERY: {query}")
         deserialize_row = query_builder.create_row_deserializer(
             self.serializer)
+        assert deserialize_row is not None
 
         runner = self._impala_helpers._submit(
-            query, deserializer=deserialize_row)
+            query=query, deserializer=deserialize_row)
 
         return runner
 
@@ -268,7 +269,7 @@ class ImpalaVariants:
         runner.adapt(filter_func)
 
         result_queueu = Queue(maxsize=1_000)
-        result = ImpalaQueryResult(
+        result = QueryResult(
                 result_queueu, runners=[runner], limit=count)
         logger.debug("starting result")
         result.start()
@@ -354,7 +355,7 @@ class ImpalaVariants:
         runner.adapt(filter_func)
 
         result_queueu = Queue(maxsize=1_000)
-        result = ImpalaQueryResult(
+        result = QueryResult(
                 result_queueu, runners=[runner], limit=count)
         logger.debug("starting result")
         result.start()

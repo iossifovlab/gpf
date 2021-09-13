@@ -1,4 +1,4 @@
-from dae.backends.impala.impala_helpers import ImpalaQueryResult
+from dae.backends.query_runners import QueryResult
 import time
 
 from queue import Queue
@@ -10,7 +10,7 @@ def test_impala_runner_simple(impala_helpers):
     query = "SELECT * FROM gpf_variant_db.test_study_impala_01_variants"
     result_queue = Queue(maxsize=3)
 
-    runner = impala_helpers._submit(query)
+    runner = impala_helpers._submit(query=query)
     runner._set_result_queue(result_queue)
     assert not runner.started()
 
@@ -29,10 +29,10 @@ def test_impala_runner_result_simple(impala_helpers):
     query = "SELECT * FROM gpf_variant_db.test_study_impala_01_variants"
     result_queue = Queue(maxsize=3)
 
-    runner = impala_helpers._submit(query)
+    runner = impala_helpers._submit(query=query)
     assert not runner.started()
 
-    result = ImpalaQueryResult(result_queue, [runner])
+    result = QueryResult(result_queue, [runner])
     result.start()
     time.sleep(0.1)
 
@@ -56,10 +56,10 @@ def test_impala_runner_result_experimental_1(impala_helpers):
         "FROM gpf_variant_db.test_study_impala_01_variants"
     result_queue = Queue(maxsize=3)
 
-    runner = impala_helpers._submit(query)
+    runner = impala_helpers._submit(query=query)
     assert not runner.started()
 
-    result = ImpalaQueryResult(result_queue, [runner])
+    result = QueryResult(result_queue, [runner])
     result.start()
 
     for row in result:
@@ -77,10 +77,10 @@ def test_impala_runner_result_experimental_2(impala_helpers):
         "FROM gpf_variant_db.test_study_impala_01_variants"
     result_queue = Queue(maxsize=3)
 
-    runner = impala_helpers._submit(query)
+    runner = impala_helpers._submit(query=query)
     assert not runner.started()
 
-    result = ImpalaQueryResult(result_queue, [runner])
+    result = QueryResult(result_queue, [runner])
     result.start()
     time.sleep(0.1)
 
@@ -98,11 +98,11 @@ def test_impala_runner_result_experimental(impala_helpers):
         "FROM gpf_variant_db.test_study_impala_01_variants"
     result_queue = Queue(maxsize=3)
 
-    runner = impala_helpers._submit(query)
+    runner = impala_helpers._submit(query=query)
 
     assert not runner.started()
 
-    result = ImpalaQueryResult(result_queue, [runner])
+    result = QueryResult(result_queue, [runner])
     result.start()
     time.sleep(0.1)
 
