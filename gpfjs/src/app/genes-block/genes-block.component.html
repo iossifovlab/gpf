@@ -1,6 +1,6 @@
 <div class="genes-block form-block">
   <div class="card">
-    <ul ngbNav [animation]="false" #nav="ngbNav" (navChange)="onNavChange()" class="navbar bg-light nav-pills" style="justify-content: flex-start">
+    <ul ngbNav #nav="ngbNav" (navChange)="onNavChange()" class="navbar bg-light nav-pills" style="justify-content: flex-start">
       <div class="nav-title-custom">Genes</div>
       <li [ngbNavItem]="'allGenes'" *ngIf="showAllTab">
           <a ngbNavLink>All</a>
