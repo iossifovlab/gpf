@@ -3,8 +3,11 @@ import re
 import itertools
 import logging
 import traceback
+import time
 
 # from dae.utils.debug_closing import closing
+import threading
+
 from contextlib import closing
 from concurrent.futures import ThreadPoolExecutor
 from queue import Empty, Queue, Full
@@ -21,8 +24,15 @@ class ImpalaQueryRunner:
     def __init__(
             self, connection, query, result_queue, deserializer=None):
         super(ImpalaQueryRunner, self).__init__()
+
+        self._status_lock = threading.Lock()
+        self._closed = False
+        self._started = False
+
         self.connection = connection
         self.cursor = connection.cursor()
+        logger.debug(f"cursor type: {type(self.cursor)}")
+
         self.query = query
         self.result_queue = result_queue
         self._future = None
@@ -33,21 +43,43 @@ class ImpalaQueryRunner:
             self.deserializer = lambda v: v
 
     def start(self):
-        assert self._owner is not None
-        self._future = self._owner.executor.submit(self.run)
+        with self._status_lock:
+            assert self._owner is not None
+            self._future = self._owner.executor.submit(self.run)
+            self._started = True
 
     def started(self):
-        return self._future is not None
+        with self._status_lock:
+            return self._started
 
     def closed(self):
-        return self.cursor._closed
+        with self._status_lock:
+            return self._closed
+
+    def close(self):
+        with self._status_lock:
+            self._closed = True
 
     def run(self):
         try:
-            self.cursor.execute(self.query)
+            if self.closed():
+                return
+
+            logger.debug("runner going to execute query")
+            self.cursor.execute_async(self.query)
+            logger.debug("runner execute query finished")
+
             while not self.closed():
+                if not self.cursor.is_executing():
+                    break
+                time.sleep(0.1)
+
+            while not self.closed():
+                logger.debug("runner going to fetch row")
                 row = self.cursor.fetchone()
+                logger.debug(f"runner row fetched {row}")
                 if row is None:
+                    logger.debug("runner finished...")
                     break
 
                 val = self.deserializer(row)
@@ -61,6 +93,7 @@ class ImpalaQueryRunner:
                 while True:
                     try:
                         self.result_queue.put(val, timeout=0.1)
+                        break
                     except Full:
                         if self.closed():
                             break
@@ -69,17 +102,9 @@ class ImpalaQueryRunner:
             logger.debug(
                 f"exception in runner run: {type(ex)}", exc_info=True)
         finally:
+            logger.debug("runner closing connection")
             self.connection.close()
         logger.debug("runner done")
-
-    def close(self):
-        try:
-            self.cursor.close()
-        except BaseException as ex:
-            logger.debug(
-                f"exception in runner close: {type(ex)}", exc_info=True)
-        self._owner = None
-        logger.debug("runner closed")
 
     def _set_future(self, future):
         self._future = future
@@ -104,13 +129,14 @@ class ImpalaQueryResult:
             print("don't even try; runner done")
             raise StopIteration()
 
-        try:
-            row = self.result_queue.get(timeout=0.1)
-            return row
-        except Empty:
-            if self.done():
-                print("result done")
-                raise StopIteration()
+        while True:
+            try:
+                row = self.result_queue.get(timeout=0.1)
+                return row
+            except Empty:
+                if self.done():
+                    print("result done")
+                    raise StopIteration()
 
     def get(self, timeout=0):
         try:
