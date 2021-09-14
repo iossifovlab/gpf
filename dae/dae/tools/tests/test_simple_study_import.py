@@ -261,7 +261,7 @@ def test_import_comp_all_into_genotype_storage(
     assert study is not None
 
     vs = list(study.query_variants())
-    assert len(vs) == 35
+    assert len(vs) == 30
 
 
 @pytest.mark.parametrize(
@@ -386,7 +386,7 @@ def test_add_chrom_prefix_simple(
     assert study is not None
 
     vs = list(study.query_variants())
-    assert len(vs) == 35
+    assert len(vs) == 30
 
     for v in vs:
         print(v)
@@ -455,7 +455,7 @@ def test_import_comp_all_del_chrom_prefix(
     assert study is not None
 
     vs = list(study.query_variants())
-    assert len(vs) == 35
+    assert len(vs) == 30
     for v in vs:
         assert v.chromosome == "1", v
 

@@ -386,6 +386,7 @@ class RawFamilyVariants(abc.ABC):
 
         def filter_func(v):
             try:
+                print("family variants filter:", v)
                 if v is None:
                     return None
                 if v.is_unknown() and not return_unknown:
@@ -461,11 +462,14 @@ class RawFamilyVariants(abc.ABC):
 
         logger.debug("starting result")
         result.start()
-
+        seen = set()
         with closing(result) as result:
             for v in result:
                 if v is None:
                     continue
+                if v.fvuid in seen:
+                    continue
+                seen.add(v.fvuid)
                 yield v
 
 

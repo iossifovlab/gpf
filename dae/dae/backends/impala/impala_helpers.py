@@ -47,6 +47,8 @@ class ImpalaQueryRunner(QueryRunner):
                     break
                 val = self.deserializer(row)
 
+                print("impala runner:", row, val)
+
                 if val is None:
                     continue
 
