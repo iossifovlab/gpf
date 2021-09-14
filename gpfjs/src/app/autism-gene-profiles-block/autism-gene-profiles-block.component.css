@@ -68,3 +68,8 @@ button:click{
   vertical-align: unset;
   margin-left: 15px;
 }
+
+.keybinds-tooltip span {
+  border: 1px solid rgba(83, 83, 83, 0.412);
+  padding: 0px 5px 0px 5px;
+}
