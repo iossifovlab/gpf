@@ -3,7 +3,7 @@ import pytest
 from rest_framework import status
 
 pytestmark = pytest.mark.usefixtures(
-    "wdae_gpf_instance", "dae_calc_gene_sets"
+    "wdae_gpf_instance", "dae_calc_gene_sets", "use_common_reports"
 )
 
 

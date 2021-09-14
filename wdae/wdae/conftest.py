@@ -13,6 +13,7 @@ from gpf_instance.gpf_instance import WGPFInstance,\
     reload_datasets, load_gpf_instance
 from dae.genome.genomes_db import GenomesDB
 from dae.autism_gene_profile.db import AutismGeneProfileDB
+import dae.tools.generate_common_report as generate_common_report
 
 
 pytest_plugins = ["dae_conftests.dae_conftests"]
@@ -230,3 +231,23 @@ def rest_client(admin_client, remote_settings):
         "Failed to create session for REST client"
 
     return client
+
+
+@pytest.fixture(scope="function")
+def use_common_reports(wdae_gpf_instance):
+    all_configs = wdae_gpf_instance.get_all_common_report_configs()
+    temp_files = [config.file_path for config in all_configs]
+
+    for temp_file in temp_files:
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
+
+    args = ["--studies", "Study1,study4"]
+
+    generate_common_report.main(args, wdae_gpf_instance)
+
+    yield
+
+    for temp_file in temp_files:
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
