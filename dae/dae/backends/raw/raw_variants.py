@@ -4,11 +4,12 @@ import queue
 import abc
 
 from contextlib import closing
+from concurrent.futures import ThreadPoolExecutor
 
 from dae.variants.variant import SummaryAllele
 from dae.variants.family_variant import FamilyAllele
 
-from dae.backends.query_runners import QueryExecutor, QueryRunner, QueryResult
+from dae.backends.query_runners import QueryRunner, QueryResult
 from dae.backends.attributes_query import (
     role_query,
     sex_query,
@@ -40,6 +41,7 @@ class RawVariantsQueryRunner(QueryRunner):
                 if row is None:
                     break
                 val = self.deserializer(row)
+                print("raw variants query runner:", row, val)
 
                 if val is None:
                     continue
@@ -70,20 +72,8 @@ class RawVariantsQueryRunner(QueryRunner):
         logger.debug("runner done")
 
 
-class RawVariantsQueryExecutor(QueryExecutor):
-
-    def _submit(self, **kwargs):
-        variants_iterator = kwargs.get("variants_iterator")
-        deserializer = kwargs.get("deserializer")
-        runner = RawVariantsQueryRunner(
-            variants_iterator=variants_iterator,
-            deserializer=deserializer)
-        runner._owner = self
-        return runner
-
-
 class RawFamilyVariants(abc.ABC):
-    executor = RawVariantsQueryExecutor(max_workers=8)
+    executor = ThreadPoolExecutor(max_workers=8)
 
     def __init__(self, families):
         self.families = families
@@ -96,6 +86,10 @@ class RawFamilyVariants(abc.ABC):
         for _, vs in self.full_variants_iterator():
             for v in vs:
                 yield v
+
+    def summary_variants_iterator(self):
+        for sv, _ in self.full_variants_iterator():
+            yield sv
 
     @staticmethod
     def filter_regions(v, regions):
@@ -326,14 +320,35 @@ class RawFamilyVariants(abc.ABC):
 
         return filter_func
 
-    def query_summary_variants(self, **kwargs):
-        filter_func = self.summary_variant_filter_function(**kwargs)
+    def build_summary_variants_query_runner(self, **kwargs):
+        filter_func = RawFamilyVariants\
+            .summary_variant_filter_function(**kwargs)
+        runner = RawVariantsQueryRunner(
+            variants_iterator=self.summary_variants_iterator(),
+            deserializer=filter_func)
 
-        for sv, _ in self.full_variants_iterator():
-            result = filter_func(sv)
-            if result is None:
-                continue
-            yield result
+        return runner
+
+    def query_summary_variants(self, **kwargs):
+        runner = self.build_summary_variants_query_runner(**kwargs)
+        runner._owner = self
+
+        result_queueu = queue.Queue(maxsize=1_000)
+        result = QueryResult(
+                result_queueu, runners=[runner], 
+                limit=kwargs.get("limit", -1))
+
+        logger.debug("starting result")
+        result.start()
+        seen = set()
+        with closing(result) as result:
+            for sv in result:
+                if sv is None:
+                    continue
+                if sv.svuid in seen:
+                    continue
+                seen.add(sv.svuid)
+                yield sv
 
     @classmethod
     def family_variant_filter_function(cls, **kwargs):
@@ -411,7 +426,7 @@ class RawFamilyVariants(abc.ABC):
 
         return filter_func
 
-    def _build_families_variants_query_runner(
+    def build_family_variants_query_runner(
             self,
             regions=None,
             genes=None,
@@ -447,14 +462,16 @@ class RawFamilyVariants(abc.ABC):
             return_unknown=return_unknown,
             limit=limit)
 
-        runner = self.executor._submit(
+        runner = RawVariantsQueryRunner(
             variants_iterator=self.family_variants_iterator(),
             deserializer=filter_func)
 
         return runner
 
     def query_variants(self, **kwargs):
-        runner = self._build_families_variants_query_runner(**kwargs)
+        runner = self.build_family_variants_query_runner(**kwargs)
+        runner._owner = self
+
         result_queueu = queue.Queue(maxsize=1_000)
         result = QueryResult(
                 result_queueu, runners=[runner], 
@@ -465,6 +482,7 @@ class RawFamilyVariants(abc.ABC):
         seen = set()
         with closing(result) as result:
             for v in result:
+                print(v)
                 if v is None:
                     continue
                 if v.fvuid in seen:

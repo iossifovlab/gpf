@@ -2,84 +2,20 @@ import os
 import re
 import itertools
 import logging
-import time
-
 # from dae.utils.debug_closing import closing
 
 from contextlib import closing
-from queue import Full
+from concurrent.futures import ThreadPoolExecutor
 
 from impala import dbapi
 from sqlalchemy.pool import QueuePool
-from dae.backends.query_runners import QueryRunner, QueryExecutor
 
 logger = logging.getLogger(__name__)
 
 
-class ImpalaQueryRunner(QueryRunner):
-
-    def __init__(
-            self, connection, query, deserializer=None):
-        super(ImpalaQueryRunner, self).__init__(
-            deserializer=deserializer)
-
-        self.connection = connection
-        self.cursor = connection.cursor()
-        logger.debug(f"cursor type: {type(self.cursor)}")
-
-        self.query = query
-
-    def run(self):
-        try:
-            if self.closed():
-                return
-
-            self.cursor.execute_async(self.query)
-
-            while not self.closed():
-                if not self.cursor.is_executing():
-                    break
-                time.sleep(0.1)
-            logger.debug("query execution finished")
-            while True:
-                row = self.cursor.fetchone()
-                if row is None:
-                    break
-                val = self.deserializer(row)
-
-                print("impala runner:", row, val)
-
-                if val is None:
-                    continue
-
-                while True:
-                    try:
-                        self._result_queue.put(val, timeout=0.1)
-                        break
-                    except Full:
-                        if self.closed():
-                            break
-
-                if self.closed():
-                    break
-
-        except BaseException as ex:
-            logger.debug(
-                f"exception in runner run: {type(ex)}", exc_info=True)
-        finally:
-
-            logger.debug("runner closing connection")
-            self.connection.close()
-
-        with self._status_lock:
-            self._done = True
-        logger.debug("runner done")
-
-
-class ImpalaHelpers(QueryExecutor):
+class ImpalaHelpers:
 
     def __init__(self, impala_hosts, impala_port=21050, pool_size=20):
-        super(ImpalaHelpers, self).__init__(max_workers=2*len(impala_hosts))
 
         if os.environ.get("DAE_IMPALA_HOST", None) is not None:
             impala_host = os.environ.get("DAE_IMPALA_HOST", None)
@@ -98,6 +34,8 @@ class ImpalaHelpers(QueryExecutor):
             connection.host = impala_host
             return connection
 
+        self._executor = None
+
         self._connection_pool = QueuePool(
             create_connection, pool_size=20,  # pool_size,
             reset_on_return=False,
@@ -114,6 +52,12 @@ class ImpalaHelpers(QueryExecutor):
         # for conn in connections:
         #     conn.close()
 
+    @property
+    def executor(self):
+        if self._executor is None:
+            self._executor = ThreadPoolExecutor(max_workers=2)
+        return self._executor
+
     def connection(self):
         logger.debug(
             f"going to get impala connection from the pool; "
@@ -123,17 +67,6 @@ class ImpalaHelpers(QueryExecutor):
             f"[DONE] going to get impala connection to host {conn.host} "
             f"from the pool; {self._connection_pool.status()}")
         return conn
-
-    def _submit(self, **kwargs):
-        query = kwargs.get("query")
-        deserializer = kwargs.get("deserializer")
-        assert query is not None
-
-        connection = self.connection()
-        runner = ImpalaQueryRunner(
-            connection, query, deserializer=deserializer)
-        runner._owner = self
-        return runner
 
     def _import_single_file(self, cursor, db, table, import_file):
 
