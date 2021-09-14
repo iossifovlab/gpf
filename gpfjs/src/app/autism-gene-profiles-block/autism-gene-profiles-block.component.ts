@@ -28,24 +28,24 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   public shownColumns: string[];
 
   public showKeybinds = false;
+  private keybinds = [
+    '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+    'q', 'p',
+    'e', 'n',
+    'w',
+  ];
 
   @HostListener('window:keydown', ['$event'])
   public keyEvent($event: KeyboardEvent) {
-    if ($event.target['localName'] === 'input') {
+    if ($event.target['localName'] === 'input' || !this.keybinds.includes($event.key)) {
       return;
     }
 
     const key = $event.key;
-
     if (key === 'w') {
       this.closeActiveTab();
-    } else if (
-        Number(key)
-        || key === '0'
-        || key === 'p'
-        || key === 'n'
-      ) {
-      this.openTabByKey($event.key);
+    } else {
+      this.openTabByKey(key);
     }
   }
 
@@ -158,9 +158,9 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
       this.openHomeTab();
     } else if (Number(key) - 1 <= this.geneTabs.size) {
       this.openTabAtIndex(Number(key) - 2);
-    } else if (key === 'p') {
+    } else if (key === 'p' || key === 'q') {
       this.openPreviousTab();
-    } else if (key === 'n') {
+    } else if (key === 'n' || key === 'e') {
       this.openNextTab();
     }
   }
