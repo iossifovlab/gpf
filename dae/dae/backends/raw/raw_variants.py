@@ -41,8 +41,6 @@ class RawVariantsQueryRunner(QueryRunner):
                 if row is None:
                     break
                 val = self.deserializer(row)
-                print("raw variants query runner:", row, val)
-
                 if val is None:
                     continue
 
@@ -401,7 +399,6 @@ class RawFamilyVariants(abc.ABC):
 
         def filter_func(v):
             try:
-                print("family variants filter:", v)
                 if v is None:
                     return None
                 if v.is_unknown() and not return_unknown:
@@ -482,7 +479,6 @@ class RawFamilyVariants(abc.ABC):
         seen = set()
         with closing(result) as result:
             for v in result:
-                print(v)
                 if v is None:
                     continue
                 if v.fvuid in seen:
