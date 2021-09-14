@@ -74,6 +74,8 @@ class QueryRunner(abc.ABC):
 class QueryResult:
     def __init__(self, result_queue, runners, limit=-1):
         self.result_queue = result_queue
+        if limit is None:
+            limit = -1
         self.limit = limit
         self._counter = 0
         self.runners = runners
