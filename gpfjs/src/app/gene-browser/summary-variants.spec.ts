@@ -620,7 +620,7 @@ describe('SummaryAllelesFilter', () => {
         'Unaffected only',
         'Affected and unaffected'
       ],
-      'variantType': [
+      'variantTypes': [
         'sub',
         'ins',
         'del',
@@ -659,7 +659,7 @@ describe('SummaryAllelesFilter', () => {
       'affectedStatus': [
         'Affected only'
       ],
-      'variantType': [
+      'variantTypes': [
         'fakeVariantType'
       ]
     });

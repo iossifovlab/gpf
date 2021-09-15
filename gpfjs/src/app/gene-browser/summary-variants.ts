@@ -267,7 +267,7 @@ export class SummaryAllelesFilter {
       'effectTypes': effects,
       'inheritanceTypeFilter': inheritanceFilters,
       'affectedStatus': Array.from(affectedStatus),
-      'variantType': Array.from(this.selectedVariantTypes)
+      'variantTypes': Array.from(this.selectedVariantTypes)
     };
   }
 }
