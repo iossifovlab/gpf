@@ -1,8 +1,10 @@
 import logging
-# from dae.utils.debug_closing import closing
-from contextlib import closing
 import queue
 import time
+
+from concurrent.futures import ThreadPoolExecutor
+# from dae.utils.debug_closing import closing
+from contextlib import closing
 
 from impala.util import as_pandas
 
@@ -371,18 +373,22 @@ class ImpalaVariants:
         result = QueryResult(
                 result_queueu, runners=[runner], limit=limit)
         logger.debug("starting result")
-        result.start(self.executor)
+        try:
+            executor = ThreadPoolExecutor(max_workers=1)
+            result.start(executor)
 
-        seen = set()
-        with closing(result) as result:
+            seen = set()
+            with closing(result) as result:
 
-            for v in result:
-                if v.svuid in seen:
-                    continue
-                if v is None:
-                    continue
-                yield v
-                seen.add(v.svuid)
+                for v in result:
+                    if v.svuid in seen:
+                        continue
+                    if v is None:
+                        continue
+                    yield v
+                    seen.add(v.svuid)
+        finally:
+            executor.shutdown(wait=True)
 
     def query_variants(
             self,
@@ -434,17 +440,21 @@ class ImpalaVariants:
         result = QueryResult(
                 result_queueu, runners=[runner], limit=limit)
         logger.debug("starting result")
-        result.start(self.executor)
+        try:
+            executor = ThreadPoolExecutor(max_workers=1)
+            result.start(executor)
 
-        with closing(result) as result:
-            seen = set()
-            for v in result:
-                if v is None:
-                    continue
-                if v.fvuid in seen:
-                    continue
-                yield v
-                seen.add(v.fvuid)
+            with closing(result) as result:
+                seen = set()
+                for v in result:
+                    if v is None:
+                        continue
+                    if v.fvuid in seen:
+                        continue
+                    yield v
+                    seen.add(v.fvuid)
+        finally:
+            executor.shutdown(wait=True)
 
     def _fetch_pedigree(self):
         with closing(self.connection()) as conn:
