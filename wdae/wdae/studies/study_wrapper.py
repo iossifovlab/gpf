@@ -295,10 +295,9 @@ class StudyWrapper(StudyWrapperBase):
         return self.config.genotype_browser.columns
 
     def query_variants_wdae(
-            self, kwargs, sources,
-            max_variants_count=10000,
-            max_variants_message=False):
-
+        self, kwargs, sources, max_variants_count=10000,
+        max_variants_message=False
+    ):
         people_group = kwargs.pop("peopleGroup", {})
         logger.debug(f"people group requested: {people_group}")
         if people_group:
@@ -315,15 +314,15 @@ class StudyWrapper(StudyWrapperBase):
         logger.debug(f"people group selected: {people_group}")
         person_set_collection = self.get_person_set_collection(people_group)
 
+        max_variants_count = kwargs.pop("maxVariantsCount", max_variants_count)
+        summary_variant_ids = set(kwargs.pop("summaryVariantIds", []))
+
         kwargs = self.query_transformer.transform_kwargs(**kwargs)
 
-        if not kwargs.get("summaryVariantIds"):
+        if not summary_variant_ids:
             def filter_allele(allele):
                 return True
         else:
-            summary_variant_ids = set(kwargs.get("summaryVariantIds"))
-            # logger.debug(f"sumamry variants ids: {summary_variant_ids}")
-
             def filter_allele(allele):
                 svid = f"{allele.cshl_location}:{allele.cshl_variant}"
                 return svid in summary_variant_ids
@@ -362,10 +361,7 @@ class StudyWrapper(StudyWrapperBase):
 
     def get_gene_view_summary_variants(self, frequency_column, **kwargs):
         kwargs = self.query_transformer.transform_kwargs(**kwargs)
-        limit = None
-        if "limit" in kwargs:
-            limit = kwargs["limit"]
-
+        limit = kwargs.pop("maxVariantsCount", None)
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_summary_variants(**kwargs), limit
         )
