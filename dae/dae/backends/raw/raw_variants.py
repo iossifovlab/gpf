@@ -63,11 +63,10 @@ class RawVariantsQueryRunner(QueryRunner):
                 f"exception in runner run: {type(ex)}", exc_info=True)
         finally:
             self.close()
-            logger.debug("runner closed")
 
         with self._status_lock:
             self._done = True
-        logger.debug("runner done")
+        logger.debug("raw variants query runner done")
 
 
 class RawFamilyVariants(abc.ABC):
