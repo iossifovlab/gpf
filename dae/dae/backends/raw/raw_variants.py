@@ -328,7 +328,6 @@ class RawFamilyVariants(abc.ABC):
 
     def query_summary_variants(self, **kwargs):
         runner = self.build_summary_variants_query_runner(**kwargs)
-        runner._owner = self
 
         result_queueu = queue.Queue(maxsize=1_000)
         result = QueryResult(
@@ -336,7 +335,7 @@ class RawFamilyVariants(abc.ABC):
                 limit=kwargs.get("limit", -1))
 
         logger.debug("starting result")
-        result.start()
+        result.start(self.executor)
         seen = set()
         with closing(result) as result:
             for sv in result:
@@ -466,7 +465,6 @@ class RawFamilyVariants(abc.ABC):
 
     def query_variants(self, **kwargs):
         runner = self.build_family_variants_query_runner(**kwargs)
-        runner._owner = self
 
         result_queueu = queue.Queue(maxsize=1_000)
         result = QueryResult(
@@ -474,7 +472,7 @@ class RawFamilyVariants(abc.ABC):
                 limit=kwargs.get("limit", -1))
 
         logger.debug("starting result")
-        result.start()
+        result.start(self.executor)
         seen = set()
         with closing(result) as result:
             for v in result:

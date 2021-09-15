@@ -366,13 +366,12 @@ class ImpalaVariants:
                 return_reference=return_reference,
                 return_unknown=return_unknown,
                 limit=request_limit)
-        runner._owner = self
 
         result_queueu = queue.Queue(maxsize=1_000)
         result = QueryResult(
                 result_queueu, runners=[runner], limit=limit)
         logger.debug("starting result")
-        result.start()
+        result.start(self.executor)
 
         seen = set()
         with closing(result) as result:
@@ -430,13 +429,12 @@ class ImpalaVariants:
             return_unknown=return_unknown,
             limit=request_limit,
             affected_status=affected_status)
-        runner._owner = self
 
         result_queueu = queue.Queue(maxsize=1_000)
         result = QueryResult(
                 result_queueu, runners=[runner], limit=limit)
         logger.debug("starting result")
-        result.start()
+        result.start(self.executor)
 
         with closing(result) as result:
             seen = set()

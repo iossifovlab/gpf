@@ -22,7 +22,6 @@ class QueryRunner(abc.ABC):
 
         self._result_queue = None
         self._future = None
-        self._owner = None
 
         if deserializer is not None:
             self.deserializer = deserializer
@@ -38,12 +37,11 @@ class QueryRunner(abc.ABC):
         with self._status_lock:
             return self._started
 
-    def start(self):
+    def start(self, executor):
         with self._status_lock:
             assert self._result_queue is not None
-            assert self._owner is not None
 
-            self._future = self._owner.executor.submit(self.run)
+            self._future = executor.submit(self.run)
             self._started = True
 
     def closed(self):
@@ -112,9 +110,9 @@ class QueryResult:
             if self.done():
                 raise StopIteration()
 
-    def start(self):
+    def start(self, executor):
         for runner in self.runners:
-            runner.start()
+            runner.start(executor)
         time.sleep(0.1)
 
     def close(self):

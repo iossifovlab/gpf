@@ -143,32 +143,21 @@ class GenotypeData(ABC):
                     seen.add(child.study_id)
         return result
 
-    @abstractmethod
-    def query_variants(
-        self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        person_set_collection=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-        study_filters=None,
-        affected_status=None,
-        **kwargs,
-    ):
-        pass
+    def _get_query_children(self, study_filters):
+        leafs = []
+        if self.is_group:
+            leafs = self.get_leaf_children()
+        else:
+            leafs = [self]
+        logger.debug(f"leaf children: {leafs}")
+        logger.debug(f"study_filters: {study_filters}")
 
-    @abstractmethod
-    def query_summary_variants(
+        if study_filters:
+            leafs = [st for st in leafs if st.study_id in study_filters]
+        logger.debug(f"studies to query: {leafs}")
+        return leafs
+
+    def query_variants(
             self,
             regions=None,
             genes=None,
@@ -186,8 +175,210 @@ class GenotypeData(ABC):
             return_unknown=None,
             limit=None,
             study_filters=None,
+            affected_status=None,
+            unique_family_variants=True,
             **kwargs):
-        pass
+
+        person_ids = self._transform_person_set_collection_query(
+            person_set_collection, person_ids)
+        if person_ids is not None and len(person_ids) == 0:
+            return
+
+        if effect_types:
+            effect_types = expand_effect_types(effect_types)
+
+        runners = []
+        for genotype_study in self._get_query_children(study_filters):
+            runner = genotype_study._backend\
+                .build_family_variants_query_runner(
+                    regions=regions,
+                    genes=genes,
+                    effect_types=effect_types,
+                    family_ids=family_ids,
+                    person_ids=person_ids,
+                    inheritance=inheritance,
+                    roles=roles,
+                    sexes=sexes,
+                    variant_type=variant_type,
+                    real_attr_filter=real_attr_filter,
+                    ultra_rare=ultra_rare,
+                    return_reference=return_reference,
+                    return_unknown=return_unknown,
+                    limit=limit,
+                    affected_status=affected_status,
+                    **kwargs)
+
+            study_name = genotype_study.name
+            study_phenotype = genotype_study.study_phenotype
+
+            def adapt_study_variants(v):
+                if v is None:
+                    return None
+                for allele in v.alleles:
+                    if allele.get_attribute("study_name") is None:
+                        allele.update_attributes(
+                            {"study_name": study_name})
+                    if allele.get_attribute("study_phenotype") is None:
+                        allele.update_attributes(
+                            {"study_phenotype": study_phenotype})
+                return v
+
+            runner.adapt(adapt_study_variants)
+
+            runners.append(runner)
+
+        if len(runners) == 0:
+            return
+
+        try:
+            executor = ThreadPoolExecutor(max_workers=len(runners))
+
+            results_queue = queue.Queue(maxsize=1_000)
+            result = QueryResult(results_queue, runners)
+            result.start(executor)
+            started = time.time()
+
+            with closing(result) as result:
+                seen = set()
+
+                for v in result:
+                    if v is None:
+                        continue
+                    if unique_family_variants and v.fvuid in seen:
+                        continue
+                    for allele in v.alleles:
+                        if allele.get_attribute("study_name") is None:
+                            allele.update_attributes(
+                                {"study_name": self.name})
+                        if allele.get_attribute("study_phenotype") is None:
+                            allele.update_attributes(
+                                {"study_phenotype": self.study_phenotype})
+
+                    seen.add(v.fvuid)
+                    yield v
+                    if limit and len(seen) >= limit:
+                        break
+
+            elapsed = time.time() - started
+            logger.info(
+                f"processing study {self.study_id} "
+                f"elapsed: {elapsed:.3f}")
+        finally:
+            logger.debug(f"shutdown thread pool executor for {self.study_id}")
+            executor.shutdown(wait=True)
+            logger.debug("[DONE] shutdown...")
+
+    def query_summary_variants(
+        self,
+        regions=None,
+        genes=None,
+        effect_types=None,
+        family_ids=None,
+        person_ids=None,
+        person_set_collection=None,
+        inheritance=None,
+        roles=None,
+        sexes=None,
+        variant_type=None,
+        real_attr_filter=None,
+        ultra_rare=None,
+        return_reference=None,
+        return_unknown=None,
+        limit=None,
+        study_filters=None,
+        **kwargs,
+    ):
+        logger.info(f"summary query - study_filters: {study_filters}")
+        logger.info(
+            f"study {self.study_id} children: {self.get_leaf_children()}")
+
+        person_ids = self._transform_person_set_collection_query(
+            person_set_collection, person_ids)
+        if person_ids is not None and len(person_ids) == 0:
+            return
+
+        if effect_types:
+            effect_types = expand_effect_types(effect_types)
+
+        runners = []
+        for genotype_study in self._get_query_children(study_filters):
+            runner = genotype_study._backend \
+                .build_summary_variants_query_runner(
+                    regions=regions,
+                    genes=genes,
+                    effect_types=effect_types,
+                    family_ids=family_ids,
+                    person_ids=person_ids,
+                    inheritance=inheritance,
+                    roles=roles,
+                    sexes=sexes,
+                    variant_type=variant_type,
+                    real_attr_filter=real_attr_filter,
+                    ultra_rare=ultra_rare,
+                    return_reference=return_reference,
+                    return_unknown=return_unknown,
+                    limit=limit,
+                    **kwargs
+                )
+            runner._owner = self
+            runners.append(runner)
+
+        if len(runners) == 0:
+            return
+
+        try:
+            executor = ThreadPoolExecutor(max_workers=len(runners))
+
+            results_queue = queue.Queue(maxsize=1_000)
+            result = QueryResult(results_queue, runners)
+            result.start(executor)
+            started = time.time()
+
+            variants = dict()
+            with closing(result) as result:
+
+                for v in result:
+                    if v is None:
+                        continue
+
+                    if v.svuid in variants:
+                        existing = variants[v.svuid]
+                        fv_count = existing.get_attribute(
+                            "family_variants_count")[0]
+                        if fv_count is None:
+                            continue
+                        fv_count += v.get_attribute("family_variants_count")[0]
+                        seen_in_status = existing.get_attribute(
+                            "seen_in_status")[0]
+                        seen_in_status = \
+                            seen_in_status | \
+                            v.get_attribute("seen_in_status")[0]
+
+                        seen_as_denovo = existing.get_attribute(
+                            "seen_as_denovo")[0]
+                        seen_as_denovo = \
+                            seen_as_denovo or \
+                            v.get_attribute("seen_as_denovo")[0]
+                        new_attributes = {
+                            "family_variants_count": [fv_count],
+                            "seen_in_status": [seen_in_status],
+                            "seen_as_denovo": [seen_as_denovo]
+                        }
+                        v.update_attributes(new_attributes)
+
+                    variants[v.svuid] = v
+                    if limit and len(variants) >= limit:
+                        return
+
+            elapsed = time.time() - started
+            logger.info(
+                f"processing study {self.study_id} "
+                f"elapsed: {elapsed:.3f}"
+            )
+            for v in variants.values():
+                yield v
+        finally:
+            executor.shutdown(wait=True)
 
     @abstractproperty
     def families(self):
@@ -290,224 +481,6 @@ class GenotypeDataGroup(GenotypeData):
     def families(self):
         return self._families
 
-    def query_summary_variants(
-        self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        person_set_collection=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-        study_filters=None,
-        **kwargs,
-    ):
-        logger.info(f"summary query - study_filters: {study_filters}")
-        logger.info(
-            f"study {self.study_id} children: {self.get_leaf_children()}")
-
-        person_ids = self._transform_person_set_collection_query(
-            person_set_collection, person_ids)
-
-        if person_ids is not None and len(person_ids) == 0:
-            return
-
-        runners = []
-        for genotype_study in self.get_leaf_children():
-            if study_filters is not None and \
-                    genotype_study.study_id not in study_filters:
-                continue
-
-            runner = genotype_study._backend \
-                .build_summary_variants_query_runner(
-                    regions=regions,
-                    genes=genes,
-                    effect_types=effect_types,
-                    family_ids=family_ids,
-                    person_ids=person_ids,
-                    inheritance=inheritance,
-                    roles=roles,
-                    sexes=sexes,
-                    variant_type=variant_type,
-                    real_attr_filter=real_attr_filter,
-                    ultra_rare=ultra_rare,
-                    return_reference=return_reference,
-                    return_unknown=return_unknown,
-                    limit=limit,
-                    **kwargs
-                )
-            runner._owner = self
-            runners.append(runner)
-
-        if len(runners) == 0:
-            return
-
-        results_queue = queue.Queue(maxsize=1_000)
-        result = QueryResult(results_queue, runners)
-        result.start()
-        started = time.time()
-
-        variants = dict()
-        with closing(result) as result:
-
-            for v in result:
-                if v is None:
-                    continue
-
-                if v.svuid in variants:
-                    existing = variants[v.svuid]
-                    fv_count = existing.get_attribute(
-                        "family_variants_count")[0]
-                    if fv_count is None:
-                        continue
-                    fv_count += v.get_attribute("family_variants_count")[0]
-                    seen_in_status = existing.get_attribute(
-                        "seen_in_status")[0]
-                    seen_in_status = \
-                        seen_in_status | v.get_attribute("seen_in_status")[0]
-
-                    seen_as_denovo = existing.get_attribute(
-                        "seen_as_denovo")[0]
-                    seen_as_denovo = \
-                        seen_as_denovo or v.get_attribute("seen_as_denovo")[0]
-                    new_attributes = {
-                        "family_variants_count": [fv_count],
-                        "seen_in_status": [seen_in_status],
-                        "seen_as_denovo": [seen_as_denovo]
-                    }
-                    v.update_attributes(new_attributes)
-
-                variants[v.svuid] = v
-                if limit and len(variants) >= limit:
-                    return
-
-        elapsed = time.time() - started
-        logger.info(
-            f"processing study {self.study_id} "
-            f"elapsed: {elapsed:.3f}"
-        )
-        for v in variants.values():
-            yield v
-
-    def query_variants(
-            self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            person_set_collection=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            ultra_rare=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None,
-            study_filters=None,
-            affected_status=None,
-            unique_family_variants=True,
-            **kwargs):
-
-        logger.info(f"study_filters: {study_filters}")
-
-        person_ids = self._transform_person_set_collection_query(
-            person_set_collection, person_ids)
-
-        if person_ids is not None and len(person_ids) == 0:
-            return
-
-        logger.info(
-            f"study {self.study_id} children: {self.get_leaf_children()}")
-        runners = []
-        for genotype_study in self.get_leaf_children():
-            if study_filters is not None and \
-                    genotype_study.study_id not in study_filters:
-                continue
-
-            runner = genotype_study._backend\
-                .build_family_variants_query_runner(
-                    regions=regions,
-                    genes=genes,
-                    effect_types=effect_types,
-                    family_ids=family_ids,
-                    person_ids=person_ids,
-                    inheritance=inheritance,
-                    roles=roles,
-                    sexes=sexes,
-                    variant_type=variant_type,
-                    real_attr_filter=real_attr_filter,
-                    ultra_rare=ultra_rare,
-                    return_reference=return_reference,
-                    return_unknown=return_unknown,
-                    limit=limit,
-                    affected_status=affected_status,
-                    **kwargs)
-            runner._owner = self
-
-            study_name = genotype_study.name
-            study_phenotype = genotype_study.study_phenotype
-
-            def adapt_study_variants(v):
-                if v is None:
-                    return None
-                for allele in v.alleles:
-                    if allele.get_attribute("study_name") is None:
-                        allele.update_attributes(
-                            {"study_name": study_name})
-                    if allele.get_attribute("study_phenotype") is None:
-                        allele.update_attributes(
-                            {"study_phenotype": study_phenotype})
-                return v
-
-            runner.adapt(adapt_study_variants)
-
-            runners.append(runner)
-
-        if len(runners) == 0:
-            return
-
-        results_queue = queue.Queue(maxsize=1_000)
-        result = QueryResult(results_queue, runners)
-        result.start()
-        started = time.time()
-
-        with closing(result) as result:
-            seen = set()
-
-            for v in result:
-                if v is None:
-                    continue
-                if unique_family_variants and v.fvuid in seen:
-                    continue
-                for allele in v.alleles:
-                    if allele.get_attribute("study_name") is None:
-                        allele.update_attributes(
-                            {"study_name": self.name})
-                    if allele.get_attribute("study_phenotype") is None:
-                        allele.update_attributes(
-                            {"study_phenotype": self.study_phenotype})
-
-                seen.add(v.fvuid)
-                yield v
-                if limit and len(seen) >= limit:
-                    break
-
-        elapsed = time.time() - started
-        logger.info(
-            f"processing study {self.study_id} "
-            f"elapsed: {elapsed:.3f}")
-
     def get_studies_ids(self, leaves=True):
         if not leaves:
             return [st.study_id for st in self.studies]
@@ -562,177 +535,6 @@ class GenotypeDataStudy(GenotypeData):
 
     def get_studies_ids(self, leaves=True):
         return [self.study_id]
-
-    def query_variants(
-            self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            person_set_collection=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            frequency_filter=None,
-            ultra_rare=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None,
-            study_filters=None,
-            affected_status=None,
-            **kwargs):
-
-        if len(kwargs):
-            # FIXME This will remain so it can be used for discovering
-            # when excess kwargs are passed in order to fix such cases.
-            logger.warning(
-                "received excess keyword arguments when querying variants!")
-            logger.warning(
-                "kwargs received: {}".format(list(kwargs.keys())))
-
-        logger.info(f"study_filters: {study_filters}")
-
-        if study_filters is not None and self.study_id not in study_filters:
-            return
-
-        person_ids = self._transform_person_set_collection_query(
-            person_set_collection, person_ids)
-
-        if person_ids is not None and len(person_ids) == 0:
-            return
-
-        if effect_types:
-            effect_types = expand_effect_types(effect_types)
-
-        runner = self._backend.build_family_variants_query_runner(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                family_ids=family_ids,
-                person_ids=person_ids,
-                inheritance=inheritance,
-                roles=roles,
-                sexes=sexes,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                ultra_rare=ultra_rare,
-                frequency_filter=frequency_filter,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                limit=limit,
-                affected_status=affected_status)
-        runner._owner = self
-
-        study_name = self.name
-        study_phenotype = self.study_phenotype
-
-        def adapt_study_variants(v):
-            if v is None:
-                return None
-            for allele in v.alleles:
-                if allele.get_attribute("study_name") is None:
-                    allele.update_attributes(
-                        {"study_name": study_name})
-                if allele.get_attribute("study_phenotype") is None:
-                    allele.update_attributes(
-                        {"study_phenotype": study_phenotype})
-            return v
-
-        runner.adapt(adapt_study_variants)
-
-        result_queueu = queue.Queue(maxsize=1_000)
-        result = QueryResult(
-                result_queueu, runners=[runner], limit=limit)
-        logger.debug("starting result")
-        result.start()
-
-        with closing(result) as result:
-            seen = set()
-            for v in result:
-                if v is None:
-                    continue
-                if v.fvuid in seen:
-                    continue
-
-                seen.add(v.fvuid)
-                yield v
-
-    def query_summary_variants(
-            self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            person_set_collection=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            frequency_filter=None,
-            ultra_rare=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None,
-            study_filters=None,
-            **kwargs):
-
-        if len(kwargs):
-            # FIXME This will remain so it can be used for discovering
-            # when excess kwargs are passed in order to fix such cases.
-            logger.warn(
-                "received excess keyword arguments when querying variants!")
-            logger.warn(
-                "kwargs received: {}".format(list(kwargs.keys())))
-
-        logger.info(f"study_filters: {study_filters}")
-
-        if study_filters is not None and self.study_id not in study_filters:
-            return
-
-        person_ids = self._transform_person_set_collection_query(
-            person_set_collection, person_ids)
-
-        if person_ids is not None and len(person_ids) == 0:
-            return
-
-        runner = self._backend.build_summary_variants_query_runner(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                family_ids=family_ids,
-                person_ids=person_ids,
-                inheritance=inheritance,
-                roles=roles,
-                sexes=sexes,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                ultra_rare=ultra_rare,
-                frequency_filter=frequency_filter,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                limit=limit)
-        runner._owner = self
-
-        result_queueu = queue.Queue(maxsize=1_000)
-        result = QueryResult(
-                result_queueu, runners=[runner], limit=limit)
-        logger.debug("starting result")
-        result.start()
-
-        seen = set()
-        with closing(result) as result:
-            for variant in result:
-                if variant.svuid in seen:
-                    continue
-                for allele in variant.alleles:
-                    allele.update_attributes({"study_name": self.name})
-                seen.add(variant.svuid)
-                yield variant
 
     @property
     def families(self):
