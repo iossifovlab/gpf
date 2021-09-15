@@ -6,7 +6,7 @@ import { VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable,
          DeNovoData, PedigreeTable, PeopleCounter, PeopleSex } from './variant-reports';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { take } from 'rxjs/operators';
+import { skipWhile, take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-variant-reports',
@@ -27,7 +27,6 @@ export class VariantReportsComponent implements OnInit, AfterViewInit {
   variantReport$: Observable<VariantReport>;
   pedigreeTables: PedigreeTable[];
 
-  selectedDatasetId: string;
   selectedDataset$: Observable<Dataset>;
 
   constructor(
@@ -37,19 +36,13 @@ export class VariantReportsComponent implements OnInit, AfterViewInit {
   ) { }
 
   ngOnInit(): void {
-    this.route.parent.params.subscribe(
-      (params: Params) => {
-        this.selectedDatasetId = params['dataset'];
-      }
-    );
-
     this.selectedDataset$ = this.datasetsService.getSelectedDatasetObservable();
   }
 
   ngAfterViewInit() {
-    //Done to avoid expression change after check
+    // Done to avoid expression change after check
     setTimeout(() => {
-      this.selectedDataset$.subscribe(dataset => {
+      this.selectedDataset$.pipe(skipWhile(dataset => !dataset), take(1)).subscribe(dataset => {
         if (dataset && dataset.accessRights && dataset.commonReport['enabled']) {
           this.variantReport$ = this.variantReportsService.getVariantReport(dataset.id);
 
