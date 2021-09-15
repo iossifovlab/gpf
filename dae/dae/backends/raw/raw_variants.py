@@ -513,36 +513,3 @@ class RawMemoryVariants(RawFamilyVariants):
     def full_variants_iterator(self):
         for sv, fvs in self.full_variants:
             yield sv, fvs
-
-
-# class RawVariantsIterator(RawFamilyVariants):
-#     def __init__(self, family_variants, families):
-#         super(RawVariantsIterator, self).__init__(families)
-#         self.family_variants = family_variants
-
-#     def family_variants_iterator(self):
-#         for fv in self.family_variants:
-#             yield fv
-
-#     def full_variants_iterator(self):
-#         seen = set()
-#         for fv in self.family_variants_iterator():
-#             sv = fv.summary_variant
-#             if sv.svuid in seen:
-#                 continue
-#             yield sv
-#             seen.add(sv.svuid)
-
-
-# class RawSummaryVariantsIterator(RawFamilyVariants):
-#     def __init__(self, summary_variants, families):
-#         super(RawSummaryVariantsIterator, self).__init__(families)
-#         self.summary_variants = summary_variants
-
-#     def full_variants_iterator(self):
-#         seen = set()
-#         for sv in self.summary_variants:
-#             if sv.svuid in seen:
-#                 continue
-#             yield sv, []
-#             seen.add(sv.svuid)
