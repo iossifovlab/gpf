@@ -5,7 +5,6 @@ import logging
 # from dae.utils.debug_closing import closing
 
 from contextlib import closing
-from concurrent.futures import ThreadPoolExecutor
 
 from impala import dbapi
 from sqlalchemy.pool import QueuePool
@@ -34,8 +33,6 @@ class ImpalaHelpers:
             connection.host = impala_host
             return connection
 
-        self._executor = None
-
         self._connection_pool = QueuePool(
             create_connection, pool_size=20,  # pool_size,
             reset_on_return=False,
@@ -51,12 +48,6 @@ class ImpalaHelpers:
         #     connections.append(conn)
         # for conn in connections:
         #     conn.close()
-
-    @property
-    def executor(self):
-        if self._executor is None:
-            self._executor = ThreadPoolExecutor(max_workers=2)
-        return self._executor
 
     def connection(self):
         logger.debug(

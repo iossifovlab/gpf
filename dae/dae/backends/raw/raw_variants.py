@@ -70,7 +70,6 @@ class RawVariantsQueryRunner(QueryRunner):
 
 
 class RawFamilyVariants(abc.ABC):
-    executor = ThreadPoolExecutor(max_workers=8)
 
     def __init__(self, families):
         self.families = families
@@ -334,17 +333,21 @@ class RawFamilyVariants(abc.ABC):
                 result_queueu, runners=[runner],
                 limit=kwargs.get("limit", -1))
 
-        logger.debug("starting result")
-        result.start(self.executor)
-        seen = set()
-        with closing(result) as result:
-            for sv in result:
-                if sv is None:
-                    continue
-                if sv.svuid in seen:
-                    continue
-                seen.add(sv.svuid)
-                yield sv
+        try:
+            logger.debug("starting result")
+            executor = ThreadPoolExecutor(max_workers=1)
+            result.start(executor)
+            seen = set()
+            with closing(result) as result:
+                for sv in result:
+                    if sv is None:
+                        continue
+                    if sv.svuid in seen:
+                        continue
+                    seen.add(sv.svuid)
+                    yield sv
+        finally:
+            executor.shutdown(wait=True)
 
     @classmethod
     def family_variant_filter_function(cls, **kwargs):
@@ -471,17 +474,21 @@ class RawFamilyVariants(abc.ABC):
                 result_queueu, runners=[runner],
                 limit=kwargs.get("limit", -1))
 
-        logger.debug("starting result")
-        result.start(self.executor)
-        seen = set()
-        with closing(result) as result:
-            for v in result:
-                if v is None:
-                    continue
-                if v.fvuid in seen:
-                    continue
-                seen.add(v.fvuid)
-                yield v
+        try:
+            logger.debug("starting result")
+            executor = ThreadPoolExecutor(max_workers=1)
+            result.start(executor)
+            seen = set()
+            with closing(result) as result:
+                for v in result:
+                    if v is None:
+                        continue
+                    if v.fvuid in seen:
+                        continue
+                    seen.add(v.fvuid)
+                    yield v
+        finally:
+            executor.shutdown(wait=True)
 
 
 class RawMemoryVariants(RawFamilyVariants):
