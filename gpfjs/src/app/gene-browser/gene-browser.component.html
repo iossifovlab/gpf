@@ -107,7 +107,7 @@
         (selectedRegion)="setSelectedRegion($event)"
         (selectedFrequencies)="setSelectedFrequencies($event)">
       </gpf-gene-plot>
-      <div class="row">
+      <div class="row" style="padding-top: 15px">
         <div class="col-12" *ngIf="selectedGene">
           <form id="summary_download" (ngSubmit)="onSubmit($event)" action="{{ configService.baseUrl }}genotype_browser/query"
             method="post">

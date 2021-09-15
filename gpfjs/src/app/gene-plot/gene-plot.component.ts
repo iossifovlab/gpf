@@ -24,17 +24,17 @@ export class GenePlotComponent implements OnChanges {
   private readonly constants = {
     svgContainerId: '#svg-container',
     xAxisTicks: 12,
-    fontSize: 10,
+    fontSize: 14,
     minDomainDistance: 12,
     // in percentages
     axisSizes: { domain: 0.90, subdomain: 0.05 },
     // in pixels
     frequencyPlotSize: 300,
-    frequencyPlotPadding: 30, // Padding between the frequency plot and the transcripts
-    transcriptHeight: 15,
-    chromosomeLabelPadding: 38,
+    frequencyPlotPadding: 40, // Padding between the frequency plot and the transcripts
+    transcriptHeight: 20,
+    chromosomeLabelPadding: 50,
     denovoSpacing: 22,
-    margin: { top: 10, right: 30, left: 120, bottom: 15 },
+    margin: { top: 10, right: 45, left: 120, bottom: 15 },
     exonThickness: { normal: 3, collapsed: 6 },
     cdsThickness: { normal: 6, collapsed: 12 },
   };
@@ -96,7 +96,6 @@ export class GenePlotComponent implements OnChanges {
     this.svgElement = d3.select(this.constants.svgContainerId)
       .append('svg')
       .attr('width', '100%')
-      .attr('max-height', `${this.svgHeight}`)
       .attr('viewBox', `0 0 ${this.svgWidth} ${this.svgHeight}`)
       .attr('preserveAspectRatio', 'none');
 
@@ -204,7 +203,6 @@ export class GenePlotComponent implements OnChanges {
     this.calculateDenovoAllelesSpacings();
     // Update SVG element with newly-calculated height and clear all child elements
     this.svgElement
-      .attr('max-height', `${this.svgHeight}`)
       .attr('viewBox', `0 0 ${this.svgWidth} ${this.svgHeight}`)
       .select('#plot')
       .selectAll('*')
@@ -254,14 +252,14 @@ export class GenePlotComponent implements OnChanges {
       .call(this.axis.yDenovo);
     this.plotElement.append('text')
       .attr('transform', 'rotate(-90)')
-      .attr('y', 0 - this.constants.margin.left / 2)
+      .attr('y', 0 - this.constants.margin.left / 2 - 20)
       .attr('x', 0 - (this.constants.frequencyPlotSize / 2))
       .style('text-anchor', 'middle')
       .style('font', `${this.constants.fontSize}px sans-serif`)
       .text(this.yAxisLabel);
     this.plotElement.append('text')
       .attr('transform', 'rotate(-90)')
-      .attr('y', 0 - this.constants.margin.left / 2)
+      .attr('y', 0 - this.constants.margin.left / 2 - 20)
       .attr('x', 0 - ((this.constants.frequencyPlotSize + this.frequencyPlotHeight) / 2))
       .style('text-anchor', 'middle')
       .style('font', `${this.constants.fontSize}px sans-serif`)
@@ -387,8 +385,8 @@ export class GenePlotComponent implements OnChanges {
       const formattedExonsLength = this.formatExonsLength(exonsLength);
       draw.hoverText(
         svgGroup,
-        this.scale.x(firstSegmentStart) - 20,
-        yPos + brushSize.coding / 2,
+        this.scale.x(firstSegmentStart) - 30,
+        yPos + brushSize.coding / 2 + 4.5,
         formattedExonsLength,
         `Transcript id: ${transcriptId}\nExons length: ${this.commaSeparateNumber(exonsLength)}`,
         this.constants.fontSize
@@ -413,8 +411,8 @@ export class GenePlotComponent implements OnChanges {
 
   private drawUTRLabels(svgGroup, xStart: number, xEnd: number, y: number, strand: string) {
     const [lUTR, rUTR] = (strand === '+') ? [`5'`, `3'`] : [`3'`, `5'`]; // Choose strand direction
-    draw.hoverText(svgGroup, this.scale.x(xStart) - 5, y, lUTR, `UTR ${lUTR}`, this.constants.fontSize);
-    draw.hoverText(svgGroup, this.scale.x(xEnd) + 10, y, rUTR, `UTR ${rUTR}`, this.constants.fontSize);
+    draw.hoverText(svgGroup, this.scale.x(xStart) - 10, y + 5, lUTR, `UTR ${lUTR}`, this.constants.fontSize);
+    draw.hoverText(svgGroup, this.scale.x(xEnd) + 23, y + 5, rUTR, `UTR ${rUTR}`, this.constants.fontSize);
   }
 
   private commaSeparateNumber(number: number): string {
