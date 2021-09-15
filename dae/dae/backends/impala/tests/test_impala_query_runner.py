@@ -128,5 +128,3 @@ def test_impala_runner_result_experimental(impala_helpers):
     time.sleep(0.5)
 
     assert runner.closed()
-
-

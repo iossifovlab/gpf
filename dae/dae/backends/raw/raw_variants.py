@@ -333,7 +333,7 @@ class RawFamilyVariants(abc.ABC):
 
         result_queueu = queue.Queue(maxsize=1_000)
         result = QueryResult(
-                result_queueu, runners=[runner], 
+                result_queueu, runners=[runner],
                 limit=kwargs.get("limit", -1))
 
         logger.debug("starting result")
@@ -471,7 +471,7 @@ class RawFamilyVariants(abc.ABC):
 
         result_queueu = queue.Queue(maxsize=1_000)
         result = QueryResult(
-                result_queueu, runners=[runner], 
+                result_queueu, runners=[runner],
                 limit=kwargs.get("limit", -1))
 
         logger.debug("starting result")
