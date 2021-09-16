@@ -337,7 +337,9 @@ class AnnotationDecorator(VariantsLoaderDecorator):
             return f"{filename}-eff.txt"
 
     @staticmethod
-    def has_annotation_file(annotation_filename):
+    def has_annotation_file(variants_filename):
+        annotation_filename = AnnotationDecorator\
+            .build_annotation_filename(variants_filename)
         return os.path.exists(annotation_filename)
 
     @staticmethod
@@ -432,9 +434,8 @@ class StoredAnnotationDecorator(AnnotationDecorator):
             .build_annotation_filename(
                 source_filename
             )
-        # assert os.path.exists(annotation_filename), \
-        #     annotation_filename
         if not os.path.exists(annotation_filename):
+            logger.warning(f"stored annotation missing {annotation_filename}")
             return variants_loader
         else:
             variants_loader = StoredAnnotationDecorator(

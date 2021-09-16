@@ -60,17 +60,23 @@ class PhenoToolView(QueryBaseView):
                 study_wrapper._remote_study_id
             )
 
-        helper = PhenoToolHelper(study_wrapper)
+        helper = PhenoToolHelper(
+            study_wrapper.genotype_data, study_wrapper.phenotype_data)
 
-        pheno_filter_family_ids = helper.pheno_filter_persons(
-            data.get("familyFilters")
-        )
+        family_filters = data.get("familyFilters")
+        if family_filters is None:
+            pheno_filter_family_ids = None
+        else:
+            pheno_filter_family_ids = study_wrapper\
+                .query_transformer\
+                ._transform_filters_to_ids(family_filters)
+
         study_persons = helper.genotype_data_persons(data.get("familyIds", []))
 
         person_ids = set(study_persons)
 
         tool = PhenoTool(
-            helper.genotype_data.phenotype_data,
+            helper.phenotype_data,
             measure_id=data["measureId"],
             person_ids=person_ids,
             family_ids=pheno_filter_family_ids,
@@ -108,7 +114,8 @@ class PhenoToolView(QueryBaseView):
 
         if not adapter:
             return Response(status=status.HTTP_404_NOT_FOUND)
-
+        study_wrapper = self.gpf_instance.get_wdae_wrapper(data["datasetId"])
+        data = study_wrapper.transform_request(data)
         result = adapter.calc_variants(data)
 
         return Response(result)

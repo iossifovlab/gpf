@@ -11,6 +11,7 @@ import pandas as pd
 import statsmodels.api as sm
 from scipy.stats.stats import ttest_ind
 
+from dae.studies.study import GenotypeData
 from dae.pheno.common import MeasureType
 from dae.variants.attributes import Role, Sex
 from dae.utils.effect_utils import EffectTypesMixin
@@ -55,9 +56,11 @@ class PhenoToolHelper(object):
     `genotype_data` -- an instance of StudyWrapper
     """
 
-    def __init__(self, genotype_data):
+    def __init__(self, genotype_data, phenotype_data):
+        # assert isinstance(genotype_data, GenotypeData), type(genotype_data)
         assert genotype_data
         self.genotype_data = genotype_data
+        self.phenotype_data = phenotype_data
         self.effect_types_mixin = EffectTypesMixin()
 
     def _package_effect_type_group(self, group, variants):
@@ -86,22 +89,22 @@ class PhenoToolHelper(object):
                     persons.add(person.person_id)
         return persons
 
-    def pheno_filter_persons(self, pheno_filters):
-        if not pheno_filters:
-            return None
-        assert isinstance(pheno_filters, list)
-        family_ids = \
-            self.genotype_data.query_transformer._transform_filters_to_ids(
-                pheno_filters
-            )
-        return family_ids
+    # def pheno_filter_persons(self, pheno_filters):
+    #     if not pheno_filters:
+    #         return None
+    #     assert isinstance(pheno_filters, list)
+    #     family_ids = \
+    #         self.genotype_data.query_transformer._transform_filters_to_ids(
+    #             pheno_filters
+    #         )
+    #     return family_ids
 
     def genotype_data_variants(self, data):
-        assert "effectTypes" in data
+        print("genotype_data_variants:", data)
 
-        queried_effect_types = set(
-            self.effect_types_mixin.get_effect_types(**data)
-        )
+        assert "effect_types" in data, data
+
+        queried_effect_types = set(data["effect_types"])
         variants_by_effect = {
             effect: Counter() for effect in queried_effect_types
         }
@@ -109,11 +112,12 @@ class PhenoToolHelper(object):
         for variant in self.genotype_data.query_variants(**data):
             for allele in variant.matched_alleles:
                 for person in filter(None, allele.variant_in_members):
+                    print(allele, allele.effects, person)
                     for effect in allele.effects.types:
                         if effect in queried_effect_types:
                             variants_by_effect[effect][person] = 1
 
-        for effect_type in data["effectTypes"]:
+        for effect_type in data["effect_types"]:
             effect_type = effect_type.lower()
             if effect_type not in self.effect_types_mixin.EFFECT_GROUPS:
                 continue

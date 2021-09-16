@@ -66,7 +66,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
             self.calc_by_effect(
                 effect, people_variants.get(effect.lower(), Counter())
             )
-            for effect in data["effectTypes"]
+            for effect in data["effect_types"]
         ]
         self.align_NA_results(results)
 

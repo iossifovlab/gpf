@@ -294,6 +294,9 @@ class StudyWrapper(StudyWrapperBase):
     def config_columns(self):
         return self.config.genotype_browser.columns
 
+    def transform_request(self, kwargs):
+        return self.query_transformer.transform_kwargs(**kwargs)
+
     def query_variants_wdae(
         self, kwargs, sources, max_variants_count=10000,
         max_variants_message=False

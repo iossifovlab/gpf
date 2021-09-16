@@ -93,7 +93,10 @@ class EffectTypesMixin(object):
             "noStart",
             "noEnd",
         ],
-        "utrs": ["3'-UTR", "5'-UTR",],
+        "utrs": [
+            "3'-UTR",
+            "5'-UTR",
+        ],
     }
 
     def _build_effect_types_groups(self, effect_types):
