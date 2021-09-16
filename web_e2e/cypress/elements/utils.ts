@@ -80,6 +80,7 @@ export class BasePage {
     usersPage.passwordInput.type(password);
     usersPage.loginSubmitButton.click();
     usersPage.logoutButton.should('be.visible');
+    cy.wait(1000);
   }
 
   loginAdmin() {
@@ -90,6 +91,7 @@ export class BasePage {
     const usersPage = new UsersPage();
     usersPage.logoutButton.click();
     usersPage.loginDropdownToggleButton.should('be.visible');
+    cy.wait(1000);
   }
 
   navigateToDatasetPage(dataset: string, page: string) {
@@ -108,15 +110,7 @@ export class BasePage {
   }
 
   openDatasetsDropdownMenu() {
-    cy.wait(500);
     this.datasetsDropdownMenuButton.click();
-    this.waitForDatasetsDropdownItems();
-  }
-
-  waitForDatasetsDropdownItems() {
-    this.datasetsDropdownMenuElements.should('have.length', Object.keys(datasetIds).length);
-    this.datasetsDropdownMenuElements.should('have.css', 'opacity');
-    cy.wait(150);
   }
 
   get sidenavTogglerButton() {
