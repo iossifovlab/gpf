@@ -8,8 +8,8 @@ import { SummaryAllelesArray, SummaryAllelesFilter, codingEffectTypes,
   affectedStatusValues, effectTypeValues, variantTypeValues } from 'app/gene-browser/summary-variants';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
-import { first, take } from 'rxjs/operators';
-import { Subscription } from 'rxjs';
+import { first, take, debounceTime } from 'rxjs/operators';
+import { Subject, Subscription } from 'rxjs';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
@@ -47,6 +47,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   private summaryVariantsArray: SummaryAllelesArray;
   private summaryVariantsArrayFiltered: SummaryAllelesArray;
   public summaryVariantsFilter: SummaryAllelesFilter = new SummaryAllelesFilter();
+
+  private variantUpdate$: Subject<void> = new Subject();
 
   private selectedFrequencies: [number, number] = [0, 0];
   private selectedRegion: [number, number] = [0, 0];
@@ -111,7 +113,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
         } else {
           this.location.go(`datasets/${this.selectedDatasetId}/gene-browser`);
         }
-      })
+      }),
+      this.variantUpdate$.pipe(debounceTime(750)).subscribe(() => this.updateShownTablePreviewVariantsArray())
     );
   }
 
@@ -229,7 +232,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.summaryVariantsArrayFiltered = this.summaryVariantsFilter.filterSummaryVariantsArray(
       this.summaryVariantsArray
     );
-    this.updateShownTablePreviewVariantsArray();
+    this.variantUpdate$.next();
   }
 
   public checkAffectedStatus(affectedStatus: string, value: boolean): void {
