@@ -38,3 +38,5 @@ def iterator_to_json(variants):
         logger.info("iterator_to_json generator closed")
     except BaseException:
         logger.exception("unexpected exception", exc_info=True)
+    finally:
+        variants.close()
