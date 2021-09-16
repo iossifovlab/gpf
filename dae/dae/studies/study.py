@@ -152,7 +152,7 @@ class GenotypeData(ABC):
         logger.debug(f"leaf children: {[st.study_id for st in leafs]}")
         logger.debug(f"study_filters: {study_filters}")
 
-        if study_filters:
+        if study_filters is not None:
             leafs = [st for st in leafs if st.study_id in study_filters]
         logger.debug(f"studies to query: {[st.study_id for st in leafs]}")
         return leafs
