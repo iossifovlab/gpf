@@ -93,7 +93,7 @@ class GenotypeBrowserQueryView(QueryBaseView):
             max_variants_count=max_variants,
             max_variants_message=is_download
         )
-
+        print("response:", response)
         if is_download:
             columns = [s.get("name", s["source"]) for s in sources]
             response = map(

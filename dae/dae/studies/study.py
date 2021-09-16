@@ -149,12 +149,12 @@ class GenotypeData(ABC):
             leafs = self.get_leaf_children()
         else:
             leafs = [self]
-        logger.debug(f"leaf children: {leafs}")
+        logger.debug(f"leaf children: {[st.study_id for st in leafs]}")
         logger.debug(f"study_filters: {study_filters}")
 
         if study_filters:
             leafs = [st for st in leafs if st.study_id in study_filters]
-        logger.debug(f"studies to query: {leafs}")
+        logger.debug(f"studies to query: {[st.study_id for st in leafs]}")
         return leafs
 
     def query_variants(
@@ -205,9 +205,8 @@ class GenotypeData(ABC):
                     return_reference=return_reference,
                     return_unknown=return_unknown,
                     limit=limit,
-                    affected_status=affected_status,
-                    **kwargs)
-
+                    affected_status=affected_status)
+            logger.debug("runner created")
             study_name = genotype_study.name
             study_phenotype = genotype_study.study_phenotype
 
@@ -224,19 +223,19 @@ class GenotypeData(ABC):
                 return v
 
             runner.adapt(adapt_study_variants)
-
             runners.append(runner)
 
+        logger.debug(f"runners: {len(runners)}")
         if len(runners) == 0:
             return
 
+        started = time.time()
         try:
-            executor = ThreadPoolExecutor(max_workers=len(runners))
 
+            executor = ThreadPoolExecutor(max_workers=len(runners))
             results_queue = queue.Queue(maxsize=1_000)
             result = QueryResult(results_queue, runners)
             result.start(executor)
-            started = time.time()
 
             with closing(result) as result:
                 seen = set()
@@ -258,15 +257,17 @@ class GenotypeData(ABC):
                     yield v
                     if limit and len(seen) >= limit:
                         break
-
+        except GeneratorExit:
+            logger.info("generator closed")
+        finally:
             elapsed = time.time() - started
             logger.info(
                 f"processing study {self.study_id} "
                 f"elapsed: {elapsed:.3f}")
-        finally:
-            logger.debug(f"shutdown thread pool executor for {self.study_id}")
+
+            logger.debug(f"closing thread pool executor for {self.study_id}")
             executor.shutdown(wait=True)
-            logger.debug("[DONE] shutdown...")
+            logger.debug("[DONE] executor closed...")
 
     def query_summary_variants(
         self,
@@ -317,9 +318,7 @@ class GenotypeData(ABC):
                     ultra_rare=ultra_rare,
                     return_reference=return_reference,
                     return_unknown=return_unknown,
-                    limit=limit,
-                    **kwargs
-                )
+                    limit=limit)
             runner._owner = self
             runners.append(runner)
 
@@ -378,7 +377,9 @@ class GenotypeData(ABC):
             for v in variants.values():
                 yield v
         finally:
+            logger.debug(f"closing thread pool executor for {self.study_id}")
             executor.shutdown(wait=True)
+            logger.debug("[DONE] executor closed...")
 
     @abstractproperty
     def families(self):

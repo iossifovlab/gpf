@@ -1,5 +1,9 @@
 import json
+import logging
 import numpy as np
+
+
+logger = logging.getLogger(__name__)
 
 
 def convert(obj):
@@ -28,7 +32,9 @@ def iterator_to_json(variants):
             curr = post
             post = next(variants, None)
         yield "]"
+
         return 0
     except GeneratorExit:
-        # TODO
-        print("Iterator closed!")
+        logger.info("iterator_to_json generator closed")
+    except BaseException:
+        logger.exception("unexpected exception", exc_info=True)
