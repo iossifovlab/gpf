@@ -8,7 +8,8 @@ class PhenoToolAdapterBase:
 
 
 class PhenoToolAdapter(PhenoToolAdapterBase):
-    def __init__(self, pheno_tool, pheno_tool_helper):
+    def __init__(self, study_wrapper, pheno_tool, pheno_tool_helper):
+        self.study_wrapper = study_wrapper
         self.pheno_tool = pheno_tool
         self.helper = pheno_tool_helper
 
@@ -29,14 +30,14 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
 
     def calc_by_effect(self, effect, people_variants):
         result = self.pheno_tool.calc(people_variants, sex_split=True)
-        print(result)
         return {
             "effect": effect,
             "maleResults": self.get_result_by_sex(result, Sex.M.name),
             "femaleResults": self.get_result_by_sex(result, Sex.F.name),
         }
 
-    def align_NA_results(self, results):
+    @staticmethod
+    def align_NA_results(results):
         for result in results:
             for sex in ["femaleResults", "maleResults"]:
                 res = result[sex]
@@ -60,6 +61,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
             return "{} ~ {}".format(measure_id, " + ".join(normalize_by))
 
     def calc_variants(self, data):
+        data = self.study_wrapper.transform_request(data)
         people_variants = self.helper.genotype_data_variants(data)
 
         results = [

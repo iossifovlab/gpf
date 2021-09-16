@@ -4,9 +4,7 @@ from typing import List, Set
 
 from functools import reduce
 
-from dae.utils.effect_utils import (
-    expand_effect_types,
-)
+from dae.utils.effect_utils import EffectTypesMixin
 from dae.variants.attributes import Role, Inheritance
 from dae.utils.regions import Region
 from dae.pedigrees.family import FamilyType
@@ -39,6 +37,7 @@ class QueryTransformer:
 
     def __init__(self, study_wrapper):
         self.study_wrapper = study_wrapper
+        self.effect_types_mixin = EffectTypesMixin()
 
     def _transform_genomic_scores(self, genomic_scores):
         genomic_scores_filter = [
@@ -397,7 +396,7 @@ class QueryTransformer:
                 del kwargs["variantTypes"]
 
         if "effectTypes" in kwargs:
-            kwargs["effectTypes"] = expand_effect_types(
+            kwargs["effectTypes"] = self.effect_types_mixin.build_effect_types(
                 kwargs["effectTypes"]
             )
 

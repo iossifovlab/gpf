@@ -82,23 +82,7 @@ class PhenoToolView(QueryBaseView):
             family_ids=pheno_filter_family_ids,
             normalize_by=data["normalizeBy"],
         )
-        return PhenoToolAdapter(tool, helper)
-
-    @staticmethod
-    def _align_NA_results(results):
-        for result in results:
-            for sex in ["femaleResults", "maleResults"]:
-                res = result[sex]
-                if res["positive"]["count"] == 0:
-                    assert res["positive"]["mean"] == 0
-                    assert res["positive"]["deviation"] == 0
-                    assert res["pValue"] == "NA"
-                    res["positive"]["mean"] = res["negative"]["mean"]
-                if res["negative"]["count"] == 0:
-                    assert res["negative"]["mean"] == 0
-                    assert res["negative"]["deviation"] == 0
-                    assert res["pValue"] == "NA"
-                    res["negative"]["mean"] = res["positive"]["mean"]
+        return PhenoToolAdapter(study_wrapper, tool, helper)
 
     @staticmethod
     def _build_report_description(measure_id, normalize_by):

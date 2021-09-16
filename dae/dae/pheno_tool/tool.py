@@ -11,10 +11,9 @@ import pandas as pd
 import statsmodels.api as sm
 from scipy.stats.stats import ttest_ind
 
-from dae.studies.study import GenotypeData
 from dae.pheno.common import MeasureType
 from dae.variants.attributes import Role, Sex
-from dae.utils.effect_utils import EffectTypesMixin
+from dae.utils.effect_utils import EffectTypesMixin, expand_effect_types
 
 
 LOGGER = logging.getLogger(__name__)
@@ -89,22 +88,12 @@ class PhenoToolHelper(object):
                     persons.add(person.person_id)
         return persons
 
-    # def pheno_filter_persons(self, pheno_filters):
-    #     if not pheno_filters:
-    #         return None
-    #     assert isinstance(pheno_filters, list)
-    #     family_ids = \
-    #         self.genotype_data.query_transformer._transform_filters_to_ids(
-    #             pheno_filters
-    #         )
-    #     return family_ids
-
     def genotype_data_variants(self, data):
-        print("genotype_data_variants:", data)
-
         assert "effect_types" in data, data
 
-        queried_effect_types = set(data["effect_types"])
+        effect_types = set(data["effect_types"])
+        queried_effect_types = set(expand_effect_types(effect_types))
+
         variants_by_effect = {
             effect: Counter() for effect in queried_effect_types
         }
@@ -112,12 +101,11 @@ class PhenoToolHelper(object):
         for variant in self.genotype_data.query_variants(**data):
             for allele in variant.matched_alleles:
                 for person in filter(None, allele.variant_in_members):
-                    print(allele, allele.effects, person)
                     for effect in allele.effects.types:
                         if effect in queried_effect_types:
                             variants_by_effect[effect][person] = 1
 
-        for effect_type in data["effect_types"]:
+        for effect_type in effect_types:
             effect_type = effect_type.lower()
             if effect_type not in self.effect_types_mixin.EFFECT_GROUPS:
                 continue

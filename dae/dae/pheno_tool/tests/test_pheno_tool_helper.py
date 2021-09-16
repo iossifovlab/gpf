@@ -181,8 +181,7 @@ def test_genotype_data_variants_specific_effects():
 
 def test_genotype_data_variants_lgds():
     helper = PhenoToolHelper(mocked_study, mocked_pheno)
-    variants = helper.genotype_data_variants({"effect_types": ["LGDs"]})
-
+    variants = helper.genotype_data_variants({"effect_types": ["lgds"]})
     assert variants.get("lgds") == Counter({"fam2.prb": 1, "fam3.prb": 1}), \
         variants
 
