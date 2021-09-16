@@ -47,12 +47,15 @@ class ImpalaQueryRunner(QueryRunner):
 
             self.cursor.execute_async(self.query)
 
-            while not self.closed():
+            while True:
+                if self.closed():
+                    logger.debug("query runner closed while executing")
+                    break
                 if not self.cursor.is_executing():
+                    logger.debug("query runner execution finished")
                     break
                 time.sleep(0.1)
-            logger.debug("query execution finished")
-            while True:
+            while not self.closed():
                 row = self.cursor.fetchone()
                 if row is None:
                     break
@@ -70,6 +73,7 @@ class ImpalaQueryRunner(QueryRunner):
                             break
 
                 if self.closed():
+                    logger.debug("query runner closed while iterating")
                     break
 
         except BaseException as ex:
