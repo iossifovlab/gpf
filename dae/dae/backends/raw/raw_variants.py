@@ -1,9 +1,15 @@
 import time
 import logging
+import queue
+import abc
+
+from contextlib import closing
+from concurrent.futures import ThreadPoolExecutor
 
 from dae.variants.variant import SummaryAllele
 from dae.variants.family_variant import FamilyAllele
 
+from dae.backends.query_runners import QueryRunner, QueryResult
 from dae.backends.attributes_query import (
     role_query,
     sex_query,
@@ -15,17 +21,71 @@ from dae.backends.attributes_query import (
 logger = logging.getLogger(__name__)
 
 
-class RawFamilyVariants:
+class RawVariantsQueryRunner(QueryRunner):
+
+    def __init__(
+            self, variants_iterator=None,
+            deserializer=None):
+        super(RawVariantsQueryRunner, self).__init__(
+            deserializer=deserializer)
+        self.variants_iterator = variants_iterator
+        assert self.variants_iterator is not None
+
+    def run(self):
+        try:
+            if self.closed():
+                return
+
+            while True:
+                row = next(self.variants_iterator)
+                if row is None:
+                    break
+                val = self.deserializer(row)
+                if val is None:
+                    continue
+
+                while True:
+                    try:
+                        self._result_queue.put(val, timeout=0.1)
+                        break
+                    except queue.Full:
+                        if self.closed():
+                            break
+
+                if self.closed():
+                    break
+
+        except StopIteration:
+            logger.debug("variants iterator done")
+
+        except BaseException as ex:
+            logger.warn(
+                f"exception in runner run: {type(ex)}", exc_info=True)
+        finally:
+            self.close()
+
+        with self._status_lock:
+            self._done = True
+        logger.debug("raw variants query runner done")
+
+
+class RawFamilyVariants(abc.ABC):
+
     def __init__(self, families):
         self.families = families
 
+    @abc.abstractmethod
     def full_variants_iterator(self):
-        raise NotImplementedError()
+        pass
 
     def family_variants_iterator(self):
         for _, vs in self.full_variants_iterator():
             for v in vs:
                 yield v
+
+    def summary_variants_iterator(self):
+        for sv, _ in self.full_variants_iterator():
+            yield sv
 
     @staticmethod
     def filter_regions(v, regions):
@@ -196,7 +256,7 @@ class RawFamilyVariants:
         return True
 
     @classmethod
-    def filter_variant(cls, v, **kwargs):
+    def filter_family_variant(cls, v, **kwargs):
         if kwargs.get("regions") is not None:
             if not cls.filter_regions(v, kwargs["regions"]):
                 return False
@@ -221,7 +281,8 @@ class RawFamilyVariants:
                 return False
         return True
 
-    def query_summary_variants(self, **kwargs):
+    @classmethod
+    def summary_variant_filter_function(cls, **kwargs):
         if kwargs.get("variant_type") is not None:
             parsed = kwargs["variant_type"]
             if isinstance(kwargs["variant_type"], str):
@@ -234,23 +295,62 @@ class RawFamilyVariants:
 
         return_reference = kwargs.get("return_reference", False)
 
-        # for _, vs in self.full_variants_iterator():
-        for sv, _ in self.full_variants_iterator():
-            if not self.filter_summary_variant(sv, **kwargs):
-                continue
+        def filter_func(sv):
+            if sv is None:
+                return None
+            if not cls.filter_summary_variant(sv, **kwargs):
+                return None
 
             alleles = sv.alleles
             alleles_matched = []
             for allele in alleles:
-                if self.filter_summary_allele(allele, **kwargs):
+                if cls.filter_summary_allele(allele, **kwargs):
                     if allele.allele_index == 0 and not return_reference:
                         continue
                     alleles_matched.append(allele.allele_index)
-            if alleles_matched:
+            if not alleles_matched:
+                return None
+            else:
                 sv.set_matched_alleles(alleles_matched)
-                yield sv
+                return sv
 
-    def query_variants(self, **kwargs):
+        return filter_func
+
+    def build_summary_variants_query_runner(self, **kwargs):
+        filter_func = RawFamilyVariants\
+            .summary_variant_filter_function(**kwargs)
+        runner = RawVariantsQueryRunner(
+            variants_iterator=self.summary_variants_iterator(),
+            deserializer=filter_func)
+
+        return runner
+
+    def query_summary_variants(self, **kwargs):
+        runner = self.build_summary_variants_query_runner(**kwargs)
+
+        result_queueu = queue.Queue(maxsize=1_000)
+        result = QueryResult(
+                result_queueu, runners=[runner],
+                limit=kwargs.get("limit", -1))
+
+        try:
+            logger.debug("starting result")
+            executor = ThreadPoolExecutor(max_workers=1)
+            result.start(executor)
+            seen = set()
+            with closing(result) as result:
+                for sv in result:
+                    if sv is None:
+                        continue
+                    if sv.svuid in seen:
+                        continue
+                    seen.add(sv.svuid)
+                    yield sv
+        finally:
+            executor.shutdown(wait=True)
+
+    @classmethod
+    def family_variant_filter_function(cls, **kwargs):
         if kwargs.get("roles") is not None:
             parsed = kwargs["roles"]
             if isinstance(parsed, list):
@@ -298,28 +398,97 @@ class RawFamilyVariants:
         return_reference = kwargs.get("return_reference", False)
         return_unknown = kwargs.get("return_unknown", False)
 
-        # for _, vs in self.full_variants_iterator():
-        for v in self.family_variants_iterator():
+        def filter_func(v):
             try:
+                if v is None:
+                    return None
                 if v.is_unknown() and not return_unknown:
-                    continue
+                    return None
 
-                if not self.filter_variant(v, **kwargs):
-                    continue
+                if not cls.filter_family_variant(v, **kwargs):
+                    return None
 
                 alleles = v.alleles
                 alleles_matched = []
                 for allele in alleles:
-                    if self.filter_allele(allele, **kwargs):
+                    if cls.filter_allele(allele, **kwargs):
                         if allele.allele_index == 0 and not return_reference:
                             continue
                         alleles_matched.append(allele.allele_index)
                 if alleles_matched:
                     v.set_matched_alleles(alleles_matched)
-                    yield v
+                    return v
             except Exception as ex:
-                logger.error(f"unexpected error {ex}")
-                logger.exception(ex)
+                logger.warning(f"unexpected error: {ex}", exc_info=True)
+                return None
+
+        return filter_func
+
+    def build_family_variants_query_runner(
+            self,
+            regions=None,
+            genes=None,
+            effect_types=None,
+            family_ids=None,
+            person_ids=None,
+            inheritance=None,
+            roles=None,
+            sexes=None,
+            variant_type=None,
+            real_attr_filter=None,
+            ultra_rare=None,
+            frequency_filter=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None,
+            affected_status=None):
+
+        filter_func = RawFamilyVariants.family_variant_filter_function(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            limit=limit)
+
+        runner = RawVariantsQueryRunner(
+            variants_iterator=self.family_variants_iterator(),
+            deserializer=filter_func)
+
+        return runner
+
+    def query_variants(self, **kwargs):
+        runner = self.build_family_variants_query_runner(**kwargs)
+
+        result_queueu = queue.Queue(maxsize=1_000)
+        result = QueryResult(
+                result_queueu, runners=[runner],
+                limit=kwargs.get("limit", -1))
+
+        try:
+            logger.debug("starting result")
+            executor = ThreadPoolExecutor(max_workers=1)
+            result.start(executor)
+            seen = set()
+            with closing(result) as result:
+                for v in result:
+                    if v is None:
+                        continue
+                    if v.fvuid in seen:
+                        continue
+                    seen.add(v.fvuid)
+                    yield v
+        finally:
+            executor.shutdown(wait=True)
 
 
 class RawMemoryVariants(RawFamilyVariants):
@@ -348,36 +517,3 @@ class RawMemoryVariants(RawFamilyVariants):
     def full_variants_iterator(self):
         for sv, fvs in self.full_variants:
             yield sv, fvs
-
-
-class RawVariantsIterator(RawFamilyVariants):
-    def __init__(self, family_variants, families):
-        super(RawVariantsIterator, self).__init__(families)
-        self.family_variants = family_variants
-
-    def family_variants_iterator(self):
-        for fv in self.family_variants:
-            yield fv
-
-    def full_variants_iterator(self):
-        seen = set()
-        for fv in self.family_variants_iterator():
-            sv = fv.summary_variant
-            if sv.svuid in seen:
-                continue
-            yield sv
-            seen.add(sv.svuid)
-
-
-class RawSummaryVariantsIterator(RawFamilyVariants):
-    def __init__(self, summary_variants, families):
-        super(RawSummaryVariantsIterator, self).__init__(families)
-        self.summary_variants = summary_variants
-
-    def full_variants_iterator(self):
-        seen = set()
-        for sv in self.summary_variants:
-            if sv.svuid in seen:
-                continue
-            yield sv, []
-            seen.add(sv.svuid)

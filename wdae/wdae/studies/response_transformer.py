@@ -146,6 +146,10 @@ class ResponseTransformer:
         self.study_wrapper = study_wrapper
         self._pheno_columns = study_wrapper.config_columns.phenotype
 
+    @property
+    def families(self):
+        return self.study_wrapper.families
+
     def _get_all_pheno_values(self, family_ids):
         if not self.study_wrapper.phenotype_data \
            or not self.study_wrapper.config_columns.phenotype:
@@ -456,6 +460,28 @@ class ResponseTransformer:
                         allele.update_attributes(pheno_values)
 
                 yield variant
+
+    def variant_transformer(self):
+        pheno_column_values = self._get_all_pheno_values(self.families)
+
+        def transformer(variant):
+            pheno_values = self._get_pheno_values_for_variant(
+                variant, pheno_column_values
+            )
+
+            for allele in variant.alt_alleles:
+                if not self.study_wrapper.is_remote:
+                    gene_weights_values = self._get_gene_weights_values(
+                        allele
+                    )
+                    allele.update_attributes(gene_weights_values)
+
+                if pheno_values:
+                    allele.update_attributes(pheno_values)
+
+            return variant
+
+        return transformer
 
     def transform_summary_variants(self, variants_iterable):
         for v in self._add_additional_columns_summary(variants_iterable):

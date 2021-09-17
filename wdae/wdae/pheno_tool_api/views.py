@@ -60,39 +60,29 @@ class PhenoToolView(QueryBaseView):
                 study_wrapper._remote_study_id
             )
 
-        helper = PhenoToolHelper(study_wrapper)
+        helper = PhenoToolHelper(
+            study_wrapper.genotype_data, study_wrapper.phenotype_data)
 
-        pheno_filter_family_ids = helper.pheno_filter_persons(
-            data.get("familyFilters")
-        )
+        family_filters = data.get("familyFilters")
+        if family_filters is None:
+            pheno_filter_family_ids = None
+        else:
+            pheno_filter_family_ids = study_wrapper\
+                .query_transformer\
+                ._transform_filters_to_ids(family_filters)
+
         study_persons = helper.genotype_data_persons(data.get("familyIds", []))
 
         person_ids = set(study_persons)
 
         tool = PhenoTool(
-            helper.genotype_data.phenotype_data,
+            helper.phenotype_data,
             measure_id=data["measureId"],
             person_ids=person_ids,
             family_ids=pheno_filter_family_ids,
             normalize_by=data["normalizeBy"],
         )
-        return PhenoToolAdapter(tool, helper)
-
-    @staticmethod
-    def _align_NA_results(results):
-        for result in results:
-            for sex in ["femaleResults", "maleResults"]:
-                res = result[sex]
-                if res["positive"]["count"] == 0:
-                    assert res["positive"]["mean"] == 0
-                    assert res["positive"]["deviation"] == 0
-                    assert res["pValue"] == "NA"
-                    res["positive"]["mean"] = res["negative"]["mean"]
-                if res["negative"]["count"] == 0:
-                    assert res["negative"]["mean"] == 0
-                    assert res["negative"]["deviation"] == 0
-                    assert res["pValue"] == "NA"
-                    res["negative"]["mean"] = res["positive"]["mean"]
+        return PhenoToolAdapter(study_wrapper, tool, helper)
 
     @staticmethod
     def _build_report_description(measure_id, normalize_by):
@@ -108,7 +98,8 @@ class PhenoToolView(QueryBaseView):
 
         if not adapter:
             return Response(status=status.HTTP_404_NOT_FOUND)
-
+        study_wrapper = self.gpf_instance.get_wdae_wrapper(data["datasetId"])
+        data = study_wrapper.transform_request(data)
         result = adapter.calc_variants(data)
 
         return Response(result)
