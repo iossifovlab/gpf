@@ -1,152 +1,132 @@
-import { TranscriptSegment, Transcript, Gene } from 'app/gene-browser/gene';
-import { GenePlotModel } from './gene-plot';
+import { GenePlotModel, GenePlotScaleState, GenePlotZoomHistory } from './gene-plot';
+import { Gene } from 'app/gene-browser/gene';
 
-describe('TranscriptSegment', () => {
-  it('should have working getters', () => {
-    const geneViewTranscriptSegment = new TranscriptSegment(
-      '1', 1109286, 1109306, true, false, false, 'exon 1/16'
-    );
+const simpleMockGene = {
+  'gene': 'Simple',
+  'transcripts': [{
+    'transcript_id': '', 'chrom': '', 'strand': '', 'cds': [{'start': 1, 'stop': 9}],
+    'exons': [{'start': 0, 'stop': 2}, {'start': 3, 'stop': 4}, {'start': 5, 'stop': 6}, {'start': 8, 'stop': 9}]
+  }]
+};
 
-    expect(geneViewTranscriptSegment.chromosome).toBe('1');
-    expect(geneViewTranscriptSegment.start).toBe(1109286);
-    expect(geneViewTranscriptSegment.stop).toBe(1109306);
-    expect(geneViewTranscriptSegment.isExon).toBe(true);
-    expect(geneViewTranscriptSegment.isCDS).toBe(false);
-    expect(geneViewTranscriptSegment.isSpacer).toBe(false);
-    expect(geneViewTranscriptSegment.label).toBe('exon 1/16');
-  });
-
-  it('should calculate length for a spacer segment', () => {
-    const geneViewTranscriptSegment = new TranscriptSegment(
-      '1', 10, 100, true, false, false, 'exon 1/16'
-    );
-    expect(geneViewTranscriptSegment.length).toBe(90);
-  });
-
-  it('should calculate length for a non spacer segment', () => {
-    const geneViewTranscriptSegment = new TranscriptSegment(
-      '1', 10, 100, true, false, true, 'exon 1/16'
-    );
-    expect(geneViewTranscriptSegment.length).toBe(180);
-  });
-
-  it('should calculate isIntron when isCDS is false', () => {
-    const geneViewTranscriptSegment = new TranscriptSegment(
-      '1', 1109286, 1109306, true, false, false, 'exon 1/16'
-    );
-    expect(geneViewTranscriptSegment.isIntron).toBe(true);
-  });
-
-  it('should calculate isIntron when isCDS is true', () => {
-    const geneViewTranscriptSegment = new TranscriptSegment(
-      '1', 1109286, 1109306, true, true, false, 'exon 1/16'
-    );
-    expect(geneViewTranscriptSegment.isIntron).toBe(false);
-  });
-
-  it('should calculate intersectionLength', () => {
-    const geneViewTranscriptSegment = new TranscriptSegment(
-      '1', 10, 100, true, false, false, 'exon 1/16'
-    );
-    expect(geneViewTranscriptSegment.intersectionLength(5, 105)).toBe(90);
-    expect(geneViewTranscriptSegment.intersectionLength(100, 10)).toBe(0);
-  });
-
-  it('should calculate isSubSegment', () => {
-    const geneViewTranscriptSegment = new TranscriptSegment(
-      '1', 10, 100, true, false, false, 'exon 1/16'
-    );
-    expect(geneViewTranscriptSegment.isSubSegment(5, 105)).toBe(true);
-    expect(geneViewTranscriptSegment.isSubSegment(100, 10)).toBe(false);
-  });
-});
-
-/* describe('Transcript', () => {
-  it('should have working getters', () => {
-    const exon = new Exon('1', 1, 10);
-    const exon1 = new Exon('1', 15, 25);
-    const transcript = new Transcript('NM_001130045_1', '+', '1', [100, 200], [exon, exon1]);
-    const geneViewTranscript = new Transcript(transcript);
-
-    expect(geneViewTranscript.start).toBe(transcript.start);
-    expect(geneViewTranscript.stop).toBe(transcript.stop);
-    expect(geneViewTranscript.strand).toBe(transcript.strand);
-  });
-
-  it('should calculate resolveRegionChromosomes', () => {
-    const exon = new Exon('1', 1, 10);
-    const exon1 = new Exon('2', 15, 25);
-    const exon2 = new Exon('3', 40, 55);
-    const exon3 = new Exon('4', 80, 100);
-    const transcript = new Transcript('NM_001130045_1', '+', '1', [100, 200], [exon, exon1, exon2, exon3]);
-    const geneViewTranscript = new Transcript(transcript);
-
-    expect(geneViewTranscript.resolveRegionChromosomes([1, 10])).toEqual(['1:1-10']);
-    expect(geneViewTranscript.resolveRegionChromosomes([1, 35])).toEqual(['1:1-10', '2:15-25']);
-    expect(geneViewTranscript.resolveRegionChromosomes([10, 60])).toEqual(['2:15-25', '3:40-55']);
-    expect(geneViewTranscript.resolveRegionChromosomes([1, 120])).toEqual(['1:1-10', '2:15-25', '3:40-55', '4:80-100']);
-  });
-});
+/*        First transcript           ####            Second transcript
+ * [exon] -> [intron] -> [exon] -> [spacer] -> [exon] -> [intron] -> [exon] */
+const rangeMockGene = {
+  'gene': 'Range',
+  'transcripts': [
+    {
+      'transcript_id': 'First', 'chrom': '1', 'strand': '+', 'cds': [{'start': 0, 'stop': 6000}],
+      'exons': [{'start': 0, 'stop': 2000}, {'start': 4000, 'stop': 6000}]
+    },
+    {
+      'transcript_id': 'Second', 'chrom': '2', 'strand': '+', 'cds': [{'start': 10000, 'stop': 18000}],
+      'exons': [{'start': 10000, 'stop': 12000}, {'start': 16000, 'stop': 18000}]
+    },
+  ]
+};
 
 describe('GenePlotModel', () => {
-  it('should have working getters', () => {
-    const exon = new Exon('1', 1, 10);
-    const exon1 = new Exon('1', 15, 25);
-    const exon2 = new Exon('1', 30, 40);
-    const exon3 = new Exon('1', 45, 55);
-    const transcript = new Transcript('NM_001130045_1', '+', '1', [100, 200], [exon, exon1]);
-    const transcript1 = new Transcript('NM_001130045_2', '+', '1', [100, 200], [exon2, exon3]);
-    const gene = new Gene('TEST', [transcript, transcript1]);
-    const geneViewModel = new GenePlotModel(gene, 1500);
-
-    expect(geneViewModel.gene).toBe(gene);
+  it('should build a domain and a normal and condensed range on instantiation', () => {
+    spyOn(GenePlotModel.prototype, 'buildDomain').and.callFake(() => [1]);
+    spyOn(GenePlotModel.prototype, 'buildRange').and.callFake(() => [2]);
+    const plotModel = new GenePlotModel(null, 123);
+    expect(plotModel.buildDomain).toHaveBeenCalledWith(0, 3000000000);
+    expect(plotModel.buildRange).toHaveBeenCalledWith(0, 3000000000, 123, false);
+    expect(plotModel.buildRange).toHaveBeenCalledWith(0, 3000000000, 123, true);
+    expect(plotModel.domain).toEqual([1]);
+    expect(plotModel.normalRange).toEqual([2]);
+    expect(plotModel.condensedRange).toEqual([2]);
   });
 
-  it('should calculate buildDomain', () => {
-    const exon = new Exon('1', 1, 10);
-    const exon1 = new Exon('1', 15, 25);
-    const exon2 = new Exon('1', 30, 40);
-    const exon3 = new Exon('1', 45, 55);
-    const transcript = new Transcript('NM_001130045_1', '+', '1', [100, 200], [exon, exon1]);
-    const transcript1 = new Transcript('NM_001130045_2', '+', '1', [100, 200], [exon2, exon3]);
-    const gene = new Gene('TEST', [transcript, transcript1]);
-    const geneViewModel = new GenePlotModel(gene, 1500);
-
-    expect(geneViewModel.buildDomain(0, 3000000000)).toEqual([1, 10, 15, 25, 30, 40, 45, 55]);
-    expect(geneViewModel.buildDomain(0, 10)).toEqual([1, 10]);
-    expect(geneViewModel.buildDomain(0, 5)).toEqual([0, 5]);
+  it('should build correct domains', () => {
+    spyOn(GenePlotModel.prototype, 'buildRange').and.callFake(() => [1]);
+    const gene = Gene.fromJson(simpleMockGene);
+    const plotModel = new GenePlotModel(gene, null);
+    expect(plotModel.buildDomain(1, 7)).toEqual([1, 2, 3, 4, 5, 6, 7]);
   });
 
-  it('should calculate buildRange without spacer segments', () => {
-    const exon = new Exon('1', 1, 10);
-    const exon1 = new Exon('1', 15, 25);
-    const exon2 = new Exon('1', 30, 40);
-    const exon3 = new Exon('1', 45, 55);
-    const transcript = new Transcript('NM_001130045_1', '+', '1', [100, 200], [exon, exon1]);
-    const transcript1 = new Transcript('NM_001130045_2', '+', '1', [100, 200], [exon2, exon3]);
-    const gene = new Gene('TEST', [transcript, transcript1]);
-    const geneViewModel = new GenePlotModel(gene, 1500);
-
-    expect(geneViewModel.buildRange(0, 3000000000, 1500, false)).toEqual(
-      [0, 250, 388.8888888888889, 666.6666666666667, 805.5555555555557, 1083.3333333333335, 1222.2222222222224, 1500.0000000000002]
-    );
-    expect(geneViewModel.buildRange(0, 3000000000, 1500, true)).toEqual(
-      [0, 214.28571428571428, 428.57142857142856, 642.8571428571429, 857.1428571428571, 1071.4285714285713, 1285.7142857142856, 1499.9999999999998]
+  it('should build correct normal ranges', () => {
+    spyOn(GenePlotModel.prototype, 'buildDomain').and.callFake(() => [1]);
+    const gene = Gene.fromJson(rangeMockGene);
+    const plotModel = new GenePlotModel(gene, 1000);
+    expect(plotModel.buildRange(0, 18000, 1000, false).map(Math.round)).toEqual(
+      [0, 142, 283, 433, 575, 858, 1000]
     );
   });
 
-  it('should calculate buildRange with spacer segments', () => {
-    const exon = new Exon('1', 1, 10);
-    const exon1 = new Exon('1', 15, 25);
-    const exon2 = new Exon('2', 30, 40);
-    const exon3 = new Exon('2', 45, 55);
-    const transcript = new Transcript('NM_001130045_1', '+', '1', [100, 200], [exon, exon1]);
-    const transcript1 = new Transcript('NM_001130045_2', '+', '1', [100, 200], [exon2, exon3]);
-    const gene = new Gene('TEST1', [transcript, transcript1]);
-    const geneViewModel = new GenePlotModel(gene, 1500);
-
-    expect(geneViewModel.buildRange(0, 3000000000, 1500, true)).toEqual(
-      [0, 225, 450, 675, 825, 1050, 1275, 1500]
+  it('should build correct condensed ranges', () => {
+    spyOn(GenePlotModel.prototype, 'buildDomain').and.callFake(() => [1]);
+    const gene = Gene.fromJson(rangeMockGene);
+    const plotModel = new GenePlotModel(gene, 1000);
+    expect(plotModel.buildRange(3000, 13000, 1000, true).map(Math.round)).toEqual(
+      [0, 155, 464, 614, 923, 1000]
     );
   });
-}); */
+});
+
+describe('GenePlotScaleState ', () => {
+  it('should have working x domain getters', () => {
+    const scaleState = new GenePlotScaleState([1, 2, 3, 4, 5], null, null, null, null);
+    expect(scaleState.xMin).toEqual(1);
+    expect(scaleState.xMax).toEqual(5);
+  });
+});
+
+describe('GenePlotZoomHistory ', () => {
+  it('should reset to default on instantiation', () => {
+    spyOn(GenePlotZoomHistory.prototype, 'reset');
+    const history = new GenePlotZoomHistory(new GenePlotScaleState(null, null, null, null, null));
+    expect(history.reset).toHaveBeenCalled();
+  });
+
+  it('should reset properly to default', () => {
+    const history = new GenePlotZoomHistory(new GenePlotScaleState([0, 1, 2], null, null, null, null));
+    history.addStateToHistory(new GenePlotScaleState([1, 2, 3], null, null, null, null));
+    history.reset();
+    expect(history.currentState.xDomain).toEqual([0, 1, 2]);
+    expect(history.canGoForward).toBeFalse();
+    expect(history.canGoBackward).toBeFalse();
+  });
+
+  it('should correctly determine if it can go forward and/or backward', () => {
+    const history = new GenePlotZoomHistory(new GenePlotScaleState([0, 1, 2], null, null, null, null));
+    expect(history.canGoForward).toBeFalse();
+    expect(history.canGoBackward).toBeFalse();
+
+    history.addStateToHistory(new GenePlotScaleState([1, 2, 3], null, null, null, null));
+    expect(history.canGoForward).toBeFalse();
+    expect(history.canGoBackward).toBeTrue();
+
+    history.moveToPrevious();
+    expect(history.canGoForward).toBeTrue();
+    expect(history.canGoBackward).toBeFalse();
+  });
+
+  it('should be able to add a new state to the list and give the correct current state', () => {
+    const history = new GenePlotZoomHistory(new GenePlotScaleState([0, 1, 2], null, null, null, null));
+    history.addStateToHistory(new GenePlotScaleState([1, 2, 3], null, null, null, null));
+    history.addStateToHistory(new GenePlotScaleState([2, 3, 4], null, null, null, null));
+    expect(history.canGoBackward).toBeTrue();
+    expect(history.currentState.xDomain).toEqual([2, 3, 4]);
+  });
+
+  it('should be able to overwrite history', () => {
+    const history = new GenePlotZoomHistory(new GenePlotScaleState([0, 1, 2], null, null, null, null));
+    history.addStateToHistory(new GenePlotScaleState([1, 2, 3], null, null, null, null));
+    history.moveToPrevious();
+    history.addStateToHistory(new GenePlotScaleState([2, 3, 4], null, null, null, null));
+    expect(history.canGoForward).toBeFalse();
+  });
+
+  it('should be able to go forwards and backwards in history', () => {
+    const history = new GenePlotZoomHistory(new GenePlotScaleState([0, 1, 2], null, null, null, null));
+    history.addStateToHistory(new GenePlotScaleState([1, 2, 3], null, null, null, null));
+    expect(history.currentState.xDomain).toEqual([1, 2, 3]);
+
+    history.moveToPrevious();
+    expect(history.currentState.xDomain).toEqual([0, 1, 2]);
+
+    history.moveToNext();
+    expect(history.currentState.xDomain).toEqual([1, 2, 3]);
+  });
+});

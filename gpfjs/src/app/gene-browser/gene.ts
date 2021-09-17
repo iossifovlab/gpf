@@ -55,6 +55,10 @@ export class TranscriptSegment {
     return !this.isCDS;
   }
 
+  public intersection(start: number, stop: number): [number, number] {
+    return [Math.max(start, this.start), Math.min(stop, this.stop)];
+  }
+
   public intersectionLength(min: number, max: number): number {
     const start = Math.max(this.start, min);
     const stop = Math.min(this.stop, max);
@@ -108,8 +112,8 @@ export class Transcript {
   public static fromJson(json: object): Transcript {
     return new Transcript(
       json['transcript_id'], json['chrom'], json['strand'],
-      json['cds'].map(exon => ({chrom: json['cds'], ...exon})),
-      json['exons'].map(exon => ({chrom: json['chrom'], ...exon}))
+      json['cds'].map(exon => ({chromosome: json['chrom'], ...exon})),
+      json['exons'].map(exon => ({chromosome: json['chrom'], ...exon}))
     );
   }
 

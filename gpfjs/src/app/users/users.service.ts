@@ -72,7 +72,9 @@ export class UsersService {
 
     return this.http.post(this.config.baseUrl + this.loginUrl, request, options).pipe(
       map(() => {
-        this.router.navigate([this.location.path()]);
+        if (request['password']) {
+          this.router.navigate([this.location.path()]);
+        }
         return true;
       }),
       catchError(error => {

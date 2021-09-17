@@ -1,7 +1,7 @@
 import { Gene } from 'app/gene-browser/gene';
 
 export class GenePlotModel {
-
+  // TODO: This class can be reduced to two functions - buildDomain and buildRange
   public readonly gene: Gene;
   public readonly domain: number[];
   public readonly normalRange: number[];
@@ -11,77 +11,51 @@ export class GenePlotModel {
   constructor(gene: Gene, rangeWidth: number, spacerLength: number = 150) {
     this.gene = gene;
     this.spacerLength = spacerLength; // in px
+    // TODO: Could use positive and negative infinity here instead of magic numbers
     this.domain = this.buildDomain(0, 3000000000);
     this.normalRange = this.buildRange(0, 3000000000, rangeWidth, false);
     this.condensedRange = this.buildRange(0, 3000000000, rangeWidth, true);
   }
 
   public buildDomain(domainMin: number, domainMax: number) {
-    const domain: number[] = [];
-    const filteredSegments = this.gene.collapsedTranscript.segments.filter(
-      seg => seg.intersectionLength(domainMin, domainMax) > 0);
-
-    const firstSegment = filteredSegments[0];
-    if (firstSegment.isSubSegment(domainMin, domainMax)) {
-      domain.push(firstSegment.start);
-    } else {
-      domain.push(domainMin);
-    }
-    for (let i = 1; i < filteredSegments.length; i++) {
-      const segment = filteredSegments[i];
-      domain.push(segment.start);
-    }
-    const lastSegment = filteredSegments[filteredSegments.length - 1];
-    if (lastSegment.stop <= domainMax) {
-      domain.push(lastSegment.stop);
-    } else {
-      domain.push(domainMax);
-    }
-
-    return domain;
+    const lastSegment = this.gene.collapsedTranscript.segments[this.gene.collapsedTranscript.segments.length - 1];
+    return this.gene.collapsedTranscript.segments
+      .filter(seg => seg.intersectionLength(domainMin, domainMax) > 0)
+      .map(seg => seg.intersection(domainMin, domainMax)[0])
+      .concat(domainMax < lastSegment.stop ? domainMax : lastSegment.stop);
   }
 
   public buildRange(domainMin: number, domainMax: number, rangeWidth: number, condenseIntrons: boolean) {
-    const range: number[] = [];
-    const transcript = this.gene.collapsedTranscript;
+    const range: number[] = [0];
+    const medianExonLength: number = this.gene.collapsedTranscript.medianExonLength;
     const filteredSegments = this.gene.collapsedTranscript.segments.filter(
-      seg => seg.intersectionLength(domainMin, domainMax) > 0);
+      seg => seg.intersectionLength(domainMin, domainMax) > 0
+    );
 
-    const medianExonLength: number = transcript.medianExonLength;
     let condensedLength = 0;
-
     let spacerCount = 0;
 
     for (const segment of filteredSegments) {
       if (segment.isSpacer) {
         spacerCount += 1;
       } else if (segment.isIntron && condenseIntrons) {
-        const intronLength = segment.length;
-        const intersectionLength = segment.intersectionLength(domainMin, domainMax);
-        const factor = intersectionLength / intronLength;
-
-        condensedLength += medianExonLength * factor;
+        const ratio = segment.intersectionLength(domainMin, domainMax) / segment.length;
+        condensedLength += medianExonLength * ratio;
       } else {
-        const length = segment.intersectionLength(domainMin, domainMax);
-        condensedLength += length;
+        condensedLength += segment.intersectionLength(domainMin, domainMax);
       }
     }
 
-    const scaleFactor: number = (rangeWidth - spacerCount * this.spacerLength) / condensedLength;
-
+    const scaleFactor: number = (rangeWidth - (spacerCount * this.spacerLength)) / condensedLength;
     let rollingTracker = 0;
-    range.push(0);
 
     for (const segment of filteredSegments) {
       if (segment.isSpacer) {
         rollingTracker += this.spacerLength;
       } else if (segment.isIntron && condenseIntrons) {
-        const intronLength = segment.length;
-        const intersectionLength = segment.intersectionLength(domainMin, domainMax);
-        const factor = intersectionLength / intronLength;
-
-        rollingTracker += medianExonLength * scaleFactor * factor;
-      }  else {
+        const ratio = segment.intersectionLength(domainMin, domainMax) / segment.length;
+        rollingTracker += medianExonLength * ratio * scaleFactor;
+      } else {
         rollingTracker += segment.intersectionLength(domainMin, domainMax) * scaleFactor;
       }
       range.push(rollingTracker);

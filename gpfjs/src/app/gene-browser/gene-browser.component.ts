@@ -1,5 +1,6 @@
 import { Component, HostListener, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
+import { Location } from '@angular/common'; 
 import { Store } from '@ngxs/store';
 import { GeneService } from 'app/gene-browser/gene.service';
 import { Gene } from 'app/gene-browser/gene';
@@ -7,8 +8,8 @@ import { SummaryAllelesArray, SummaryAllelesFilter, codingEffectTypes,
   affectedStatusValues, effectTypeValues, variantTypeValues } from 'app/gene-browser/summary-variants';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
-import { first } from 'rxjs/operators';
-import { Subscription } from 'rxjs';
+import { first, take, debounceTime } from 'rxjs/operators';
+import { Subject, Subscription } from 'rxjs';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
@@ -17,6 +18,7 @@ import { ConfigService } from 'app/config/config.service';
 import { clone } from 'lodash';
 import * as d3 from 'd3';
 import * as draw from 'app/utils/svg-drawing';
+import { SetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 
 @Component({
   selector: 'gpf-gene-browser',
@@ -30,7 +32,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   private maxFamilyVariants = 1000;
   public selectedDataset: Dataset;
   private selectedDatasetId: string;
-  private loadingFinished: boolean;
+  private showResults: boolean;
   private familyLoadingFinished: boolean;
   private showError = false;
   private geneBrowserConfig;
@@ -44,7 +46,9 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   private genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
   private summaryVariantsArray: SummaryAllelesArray;
   private summaryVariantsArrayFiltered: SummaryAllelesArray;
-  private summaryVariantsFilter: SummaryAllelesFilter = new SummaryAllelesFilter();
+  public summaryVariantsFilter: SummaryAllelesFilter = new SummaryAllelesFilter();
+
+  private variantUpdate$: Subject<void> = new Subject();
 
   private selectedFrequencies: [number, number] = [0, 0];
   private selectedRegion: [number, number] = [0, 0];
@@ -56,22 +60,17 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     }
   }
 
-  @ViewChild('filters', { static: false }) public set filters(element) {
-    /* Waits until the #filters div is rendered to draw the SVG legends,
-     * otherwise d3 cannot find the <svg> elements and nothing is drawn.
-     * The boolean flag is needed as this setter is called multiple times
-     * once the #filters div is rendered. */
-    if (element && !this.legendDrawn) {
-      this.drawDenovoIcons();
-      this.drawTransmittedIcons();
-      this.drawEffectTypesIcons();
-      this.legendDrawn = true;
-    }
+  @ViewChild('filters', { static: false })
+  public set filters(element) {
+    this.drawDenovoIcons();
+    this.drawTransmittedIcons();
+    this.drawEffectTypesIcons();
   }
 
   constructor(
     readonly configService: ConfigService,
     private route: ActivatedRoute,
+    private location: Location,
     private store: Store,
     private queryService: QueryService,
     private geneService: GeneService,
@@ -86,11 +85,12 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     }
 
     this.subscriptions.push(
-      this.datasetsService.getDatasetsLoadedObservable().subscribe(datasetsLoaded => {
+      this.datasetsService.getDatasetsLoadedObservable().pipe(take(1)).subscribe(() => {
         this.selectedDataset = this.datasetsService.getSelectedDataset();
         if (this.selectedDataset) {
           this.geneBrowserConfig = this.selectedDataset.geneBrowser;
           if (this.route.snapshot.params.gene && this.selectedDataset.accessRights) {
+            this.store.dispatch(new SetGeneSymbols([this.route.snapshot.params.gene.toUpperCase()]));
             this.submitGeneRequest(this.route.snapshot.params.gene);
           }
         }
@@ -99,7 +99,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
         this.familyLoadingFinished = true;
       }),
       this.queryService.summaryStreamingFinishedSubject.subscribe(async() => {
-        this.loadingFinished = true;
+        this.showResults = true;
         this.loadingService.setLoadingStop();
       }),
       this.route.parent.params.subscribe(
@@ -108,10 +108,13 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
         }
       ),
       this.store.select(state => state.geneSymbolsState).subscribe(state => {
-        if (state.geneSymbols.length) {
+        if (state.geneSymbols.length && state.geneSymbols[0]) {
           this.geneSymbol = state.geneSymbols[0];
+        } else {
+          this.location.go(`datasets/${this.selectedDatasetId}/gene-browser`);
         }
-      })
+      }),
+      this.variantUpdate$.pipe(debounceTime(750)).subscribe(() => this.updateShownTablePreviewVariantsArray())
     );
   }
 
@@ -136,7 +139,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       this.showError = true;
       return;
     }
-    this.loadingFinished = false;
+    this.location.go(`datasets/${this.selectedDatasetId}/gene-browser/${this.geneSymbol.toUpperCase()}`);
+    this.showResults = false;
     this.loadingService.setLoadingStart();
     this.genotypePreviewVariantsArray = null;
 
@@ -228,7 +232,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.summaryVariantsArrayFiltered = this.summaryVariantsFilter.filterSummaryVariantsArray(
       this.summaryVariantsArray
     );
-    this.updateShownTablePreviewVariantsArray();
+    this.variantUpdate$.next();
   }
 
   public checkAffectedStatus(affectedStatus: string, value: boolean): void {

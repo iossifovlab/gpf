@@ -88,12 +88,12 @@ export class SummaryAllele {
     return (this.effect === 'CNV+');
   }
 
-  public isCNVPMinus(): boolean {
+  public isCNVMinus(): boolean {
     return (this.effect === 'CNV-');
   }
 
   public isCNV(): boolean {
-    return this.isCNVPlus() || this.isCNVPMinus();
+    return this.isCNVPlus() || this.isCNVMinus();
   }
 
   get comparisonValue(): number {
@@ -113,7 +113,7 @@ export class SummaryAllele {
       allele.endPosition = allele.position;
     }
 
-    return !(this.position >= allele.endPosition || this.endPosition <= allele.position);
+    return !(this.position > allele.endPosition || this.endPosition < allele.position);
   }
 }
 
@@ -267,7 +267,7 @@ export class SummaryAllelesFilter {
       'effectTypes': effects,
       'inheritanceTypeFilter': inheritanceFilters,
       'affectedStatus': Array.from(affectedStatus),
-      'variantType': Array.from(this.selectedVariantTypes)
+      'variantTypes': Array.from(this.selectedVariantTypes)
     };
   }
 }

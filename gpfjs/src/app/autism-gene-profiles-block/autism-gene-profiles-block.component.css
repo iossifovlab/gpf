@@ -8,6 +8,11 @@ nav {
   border-bottom: none;
 }
 
+.nav-link:hover:not(.active) {
+  border-bottom: none;
+  /* border-bottom: 1px solid #ffffff; */
+}
+
 .nav-link {
   color: #495057;
 }
@@ -32,4 +37,39 @@ button::after {
 
 button:click{
   outline-color: #000000
+}
+
+.keybinds-tooltip {
+  border: 1px solid #dddddd;
+  text-align: left;
+  z-index: 10000;
+  position: fixed;
+  left: 179px;
+  top: 93px;
+  padding: 5px;
+  background-color: #ffffff;
+}
+
+.keybinds-icon {
+  border: 1px solid #dddddd;
+  text-align: center;
+  width: 28px;
+  height: 22px;
+  margin-left: 8px;
+}
+
+#column-filtering-button {
+  outline: none;
+  font-size: 18px;
+  white-space: nowrap;
+  border: 0;
+  padding: 0;
+  width: 18px;
+  vertical-align: unset;
+  margin-left: 15px;
+}
+
+.keybinds-tooltip span {
+  border: 1px solid rgba(83, 83, 83, 0.412);
+  padding: 0px 5px 0px 5px;
 }

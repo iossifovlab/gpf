@@ -28,11 +28,12 @@ export class QueryService {
 
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
 
-  private connectionEstablished = false;
-  private summaryConnectionEstablished = false;
   private oboeInstance = null;
-  public streamingFinishedSubject = new Subject(); // This is for notifying that the streaming has completely finished
-  public summaryStreamingFinishedSubject = new Subject(); // This is for notifying that the streaming has completely finished
+  private summaryOboeInstance = null;
+  public streamingSubject = new Subject();
+  public summaryStreamingSubject = new Subject();
+  public streamingFinishedSubject = new Subject();
+  public summaryStreamingFinishedSubject = new Subject();
 
   constructor(
     private location: Location,
@@ -42,66 +43,59 @@ export class QueryService {
     private datasetsService: DatasetsService,
   ) { }
 
-  streamPost(url: string, filter) {
-    if (this.connectionEstablished) {
+  public streamPost(url: string, filter) {
+    if (this.oboeInstance) {
       this.oboeInstance.abort();
+      this.oboeInstance = null;
     }
 
-    const streamingSubject = new Subject();
     this.oboeInstance = oboe({
       url: `${environment.apiPath}${url}`,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: filter,
       withCredentials: true
-    }).start(data => {
-      this.connectionEstablished = true;
     }).node('!.*', data => {
-      streamingSubject.next(data);
+      this.streamingSubject.next(data);
     }).done(data => {
-      this.connectionEstablished = false;
       this.streamingFinishedSubject.next(true);
-      streamingSubject.next(null); // Emit null so the loading service can stop the loading overlay even if no variants were received
+      // Emit null so the loading service can stop the loading overlay even if no variants were received
+      this.streamingSubject.next(null);
     }).fail(error => {
-      this.connectionEstablished = false;
-      this.streamingFinishedSubject.next(true);
       console.warn('oboejs encountered a fail event while streaming');
-      streamingSubject.next(null);
+      console.error(error);
+      this.streamingFinishedSubject.next(true);
+      this.streamingSubject.next(null);
     });
 
-    return streamingSubject;
+    return this.streamingSubject;
   }
 
-  summaryStreamPost(url: string, filter) {
-    if (this.summaryConnectionEstablished) {
-      console.log('Aborted');
-      this.oboeInstance.abort();
+  public summaryStreamPost(url: string, filter) {
+    if (this.summaryOboeInstance) {
+      this.summaryOboeInstance.abort();
+      this.summaryOboeInstance = null;
     }
 
-    const streamingSubject = new Subject();
-    this.oboeInstance = oboe({
+    this.summaryOboeInstance = oboe({
       url: `${environment.apiPath}${url}`,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: filter,
       withCredentials: true
-    }).start(data => {
-      this.summaryConnectionEstablished = true;
     }).node('!.*', data => {
-      streamingSubject.next(data);
+      this.summaryStreamingSubject.next(data);
     }).done(data => {
-      this.summaryConnectionEstablished = false;
       this.summaryStreamingFinishedSubject.next(true);
-      streamingSubject.next(null); // Emit null so the loading service can stop the loading overlay even if no variants were received
+      this.summaryStreamingSubject.next(null);
     }).fail(error => {
-      this.summaryConnectionEstablished = false;
-      this.summaryStreamingFinishedSubject.next(true);
       console.warn('oboejs encountered a fail event while streaming');
-      console.log(error);
-      streamingSubject.next(null);
+      console.error(error);
+      this.summaryStreamingFinishedSubject.next(true);
+      this.summaryStreamingSubject.next(null);
     });
 
-    return streamingSubject;
+    return this.summaryStreamingSubject;
   }
 
   getGenotypePreviewVariantsByFilter(

@@ -356,13 +356,13 @@ describe('AutismGeneProfilesTableComponent', () => {
   });
 
   it('should emit create tab event', () => {
-    const expectedEmitValue = {geneSymbol: 'testGeneSymbol', openTab: true};
+    const expectedEmitValue = {geneSymbol: 'testGeneSymbol', navigateToTab: true};
 
     const emitSpy = spyOn(component.createTabEvent, 'emit').and.callFake(emitValue => {
       expect(emitValue).toEqual(expectedEmitValue);
     });
 
-    component.emitCreateTabEvent('testGeneSymbol', true);
+    component.emitCreateTabEvent({ctrlKey: false, type: 'click'}, 'testGeneSymbol');
     expect(emitSpy).toHaveBeenCalled();
   });
 
