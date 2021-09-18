@@ -21,7 +21,7 @@
     </div>
   </div>
 
-  <div style="float: right; clear: right; margin-right: 0px; height: 100%">
+  <div style="float: left;position: relative;left: 26%;">
     <div style="height: 100%; display: table;">
       <div *ngFor="let child of columnInfo.subcolumnsChildren" style="display: table-row;">
         <div (click)="onSortClick(child)" [class.clickable]="child.sortable"
