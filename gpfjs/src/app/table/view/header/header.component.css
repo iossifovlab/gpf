@@ -6,4 +6,5 @@ gpf-table-view-header-cell {
     font-weight: 500;
     display: table-cell;
     word-break: break-all;
+    /*overflow-wrap: anywhere;*/
 }
