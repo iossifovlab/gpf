@@ -3,11 +3,11 @@
 <div class="row">
   <div class="col-12 mt-3">
     <gpf-table style="overflow-wrap: anywhere;" noScrollOptimization="true" [dataSource]="users">
-      <gpf-table-column columnWidth="35px" >
+      <gpf-table-column columnWidth="35px" columnMaxWidth="45px"> <!-- columnMaxWidth -->
         <gpf-table-header >
           <gpf-table-subheader>
             <span *gpfTableCellContent="let data">
-              <div style = "display: flex;height: 100%;justify-content: center;align-items: center;width: 100%;height: 45px;margin-top: -5px;">Selected</div>
+              <div style = "display: flex;height: 100%;justify-content: center;align-items: center;width: 100%;height: 45px;margin-top: -5px;/*white-space: nowrap;*/">Selected</div>
               <div class="select-unselect-all">
                 <input style = "/*display:-webkit-flex;*/display: flex; width: 90%;height: 13px;margin-top: -7px;" type="checkbox" [(ngModel)]="allSelected" (ngModelChange)="checkUncheckAll(allSelected)"/>
               </div>

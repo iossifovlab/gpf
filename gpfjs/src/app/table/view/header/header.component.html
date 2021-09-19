@@ -4,6 +4,7 @@
         [sortingInfo]="sortingInfo"
         [style.width]="getWidth(column)"
         [style.min-width]="getWidth(column)"
+        [style.max-width]="getMaxWidth(column)"
         (sortingInfoChange)="sortingInfoChange.emit($event)"
         style="vertical-align: middle">
     </gpf-table-view-header-cell>

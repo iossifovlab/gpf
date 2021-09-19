@@ -11,6 +11,7 @@ export class GpfTableColumnComponent {
   @ContentChildren(GpfTableContentHeaderComponent) headerChildren: QueryList<GpfTableContentHeaderComponent>;
   @ContentChildren(GpfTableContentComponent) contentChildren: QueryList<GpfTableContentComponent>;
   @Input() columnWidth = '';
+  @Input() columnMaxWidth = '';
 
   constructor(viewContainer: ViewContainerRef) {
   }
