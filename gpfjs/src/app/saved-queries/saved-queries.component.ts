@@ -22,9 +22,9 @@ export class SavedQueriesComponent implements OnInit {
 
   private subscription;
 
-  genotypeQueries: Array<UserSavedQuery>;
-  phenotoolQueries: Array<UserSavedQuery>;
-  enrichmentQueries: Array<UserSavedQuery>;
+  public genotypeQueries: Array<UserSavedQuery>;
+  public phenotoolQueries: Array<UserSavedQuery>;
+  public enrichmentQueries: Array<UserSavedQuery>;
 
   constructor(
     private router: Router,
@@ -32,25 +32,25 @@ export class SavedQueriesComponent implements OnInit {
     private usersService: UsersService,
   ) {}
 
-  ngOnInit() {
+  public ngOnInit(): void {
     this.subscription = this.usersService.getUserInfoObservable()
       .subscribe(userInfo => this.checkUserInfo(userInfo));
     this.updateQueries();
   }
 
-  ngOnDestroy() {
+  public ngOnDestroy(): void {
     if (this.subscription) {
       this.subscription.unsubscribe();
     }
   }
 
-  checkUserInfo(value) {
+  private checkUserInfo(value): void {
     if (!value.loggedIn) {
       this.router.navigate(['/']);
     }
   }
 
-  updateQueries() {
+  public updateQueries(): void {
     this.queryService.collectUserSavedQueries().subscribe(response => {
       const queries = response['queries'].map(query => {
         return new UserSavedQuery(

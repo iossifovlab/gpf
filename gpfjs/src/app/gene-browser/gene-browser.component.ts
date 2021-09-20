@@ -144,16 +144,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.loadingService.setLoadingStart();
     this.genotypePreviewVariantsArray = null;
 
-    const requestParams = {
-      'datasetId': this.selectedDatasetId,
-      'geneSymbols': [this.geneSymbol.toUpperCase().trim()],
-      'maxVariantsCount': 10000,
-      'inheritanceTypeFilter': ['denovo', 'mendelian', 'omission', 'missing'],
-    };
-    if (this.summaryVariantsFilter.codingOnly) {
-      requestParams['effectTypes'] = codingEffectTypes;
-    }
-    this.summaryVariantsArray = this.queryService.getSummaryVariants(requestParams);
+    this.summaryVariantsArray = this.queryService.getSummaryVariants(this.requestParamsSummary);
     this.summaryVariantsArrayFiltered = clone(this.summaryVariantsArray);
 
     this.summaryVariantsFilter.selectedRegion = [
@@ -200,6 +191,19 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     };
   }
 
+  private get requestParamsSummary(): object {
+    const requestParams = {
+      'datasetId': this.selectedDatasetId,
+      'geneSymbols': [this.geneSymbol.toUpperCase().trim()],
+      'maxVariantsCount': 10000,
+      'inheritanceTypeFilter': ['denovo', 'mendelian', 'omission', 'missing'],
+    };
+    if (this.summaryVariantsFilter.codingOnly) {
+      requestParams['effectTypes'] = codingEffectTypes;
+    }
+    return requestParams;
+  }
+
   private updateShownTablePreviewVariantsArray() {
     this.familyLoadingFinished = false;
     const requestParams = {
@@ -212,19 +216,13 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     );
   }
 
-  private onSubmit(event) {
-    const targetId = event.target.attributes.id.nodeValue;
+  private onSubmit(event): void {
+    event.target.queryData.value = JSON.stringify({...this.requestParams, 'download': true});
+    event.target.submit();
+  }
 
-    const requestParams = {
-      ...this.requestParams,
-      'download': true,
-    };
-
-    if (targetId === 'summary_download') {
-      requestParams['querySummary'] = true;
-    }
-
-    event.target.queryData.value = JSON.stringify(requestParams);
+  public onSubmitSummary(event): void {
+    event.target.queryData.value = JSON.stringify({...this.requestParamsSummary});
     event.target.submit();
   }
 

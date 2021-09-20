@@ -8,14 +8,13 @@ import { QueryService } from '../query/query.service';
   styleUrls: ['./saved-queries-table.component.css']
 })
 export class SavedQueriesTableComponent {
-  @Input()
-  queries: Array<UserSavedQuery>;
+  @Input() public queries: Array<UserSavedQuery>;
 
   constructor(
     private queryService: QueryService
   ) {}
 
-  deleteQuery(uuid: string) {
+  public deleteQuery(uuid: string): void {
     this.queries = this.queries.filter(query => query.uuid !== uuid);
     this.queryService.deleteQuery(uuid).subscribe();
   }

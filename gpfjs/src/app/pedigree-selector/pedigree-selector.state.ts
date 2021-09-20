@@ -15,7 +15,7 @@ export interface PedigreeSelectorModel {
 
 @State<PedigreeSelectorModel>({
   name: 'pedigreeSelectorState',
-  defaults: null,
+  defaults: <any>{},
 })
 @Injectable()
 export class PedigreeSelectorState {

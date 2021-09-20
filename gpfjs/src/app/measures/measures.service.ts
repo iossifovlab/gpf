@@ -14,53 +14,70 @@ export class MeasuresService {
   private readonly measurePartitionsUrl = 'measures/partitions';
   private readonly regressionsUrl = 'measures/regressions';
 
-  constructor(
-    private http: HttpClient,
-    private config: ConfigService
-  ) {}
+  constructor(private http: HttpClient, private config: ConfigService) {}
 
-  getContinuousMeasures(datasetId: string): Observable<Array<ContinuousMeasure>> {
+  public getContinuousMeasures(
+    datasetId: string
+  ): Observable<Array<ContinuousMeasure>> {
     const params = new HttpParams().set('datasetId', datasetId);
     const requestOptions = { withCredentials: true, params: params };
 
     return this.http
       .get(this.config.baseUrl + this.continuousMeasuresUrl, requestOptions)
-      .pipe(map((res: any) => {
-        return ContinuousMeasure.fromJsonArray(res);
-      }));
+      .pipe(
+        map((res: any) => {
+          return ContinuousMeasure.fromJsonArray(res);
+        })
+      );
   }
 
-  getMeasureHistogram(datasetId: string, measureName: string) {
+  public getMeasureHistogram(
+    datasetId: string,
+    measureName: string
+  ): Observable<HistogramData> {
     const headers = { 'Content-Type': 'application/json' };
     const options = { headers: headers, withCredentials: true };
 
     return this.http
-      .post(this.config.baseUrl + this.measureHistogramUrl, { datasetId: datasetId, measure: measureName }, options)
-      .pipe(map(res => {
-        return HistogramData.fromJson(res);
-      }));
+      .post(
+        this.config.baseUrl + this.measureHistogramUrl,
+        { datasetId: datasetId, measure: measureName },
+        options
+      )
+      .pipe(
+        map((res) => {
+          return HistogramData.fromJson(res);
+        })
+      );
   }
 
-  getMeasurePartitions(datasetId: string, measureName: string, rangeStart: number, rangeEnd: number) {
+  public getMeasurePartitions(
+    datasetId: string,
+    measureName: string,
+    rangeStart: number,
+    rangeEnd: number
+  ): Observable<Partitions> {
     const headers = { 'Content-Type': 'application/json' };
     const options = { headers: headers, withCredentials: true };
 
-    return this.http
-      .post(this.config.baseUrl + this.measurePartitionsUrl, {
-        datasetId: datasetId,
-        measure: measureName,
-        min: rangeStart,
-        max: rangeEnd
-      }, options)
-      .pipe(map(res => {
+    return this.http.post(
+      this.config.baseUrl + this.measurePartitionsUrl,
+      { datasetId: datasetId, measure: measureName, min: rangeStart, max: rangeEnd },
+      options
+    ).pipe(
+      map((res) => {
         return Partitions.fromJson(res);
-      }));
+      })
+    );
   }
 
-  getRegressions(datasetId: string) {
+  public getRegressions(datasetId: string): Observable<Object> {
     const params = new HttpParams().set('datasetId', datasetId);
     const requestOptions = { withCredentials: true, params: params };
 
-    return this.http.get(this.config.baseUrl + this.regressionsUrl, requestOptions);
+    return this.http.get(
+      this.config.baseUrl + this.regressionsUrl,
+      requestOptions
+    );
   }
 }
