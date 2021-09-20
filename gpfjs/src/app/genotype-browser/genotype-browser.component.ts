@@ -6,7 +6,7 @@ import { QueryService } from '../query/query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { ConfigService } from '../config/config.service';
 import { DatasetsService } from '../datasets/datasets.service';
-import { Dataset, SelectorValue } from '../datasets/datasets';
+import { Dataset, PersonSet } from '../datasets/datasets';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { Store, Select, Selector } from '@ngxs/store';
 import { GenotypeBlockComponent } from '../genotype-block/genotype-block.component';
@@ -25,7 +25,7 @@ import { ErrorsState, ErrorsModel } from '../common/errors.state';
 export class GenotypeBrowserComponent implements OnInit {
   genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
   tablePreview: boolean;
-  legend: Array<SelectorValue>;
+  legend: Array<PersonSet>;
 
   private disableQueryButtons = false;
 
@@ -99,7 +99,7 @@ export class GenotypeBrowserComponent implements OnInit {
 
     this.genotypePreviewVariantsArray = null;
     this.genotypeBrowserState['datasetId'] = this.selectedDataset.id;
-    this.legend = this.selectedDataset.peopleGroupConfig.getLegend(this.genotypeBrowserState['peopleGroup']);
+    this.legend = this.selectedDataset.personSetCollections.getLegend(this.genotypeBrowserState['personSetCollection']);
 
     /* FIXME: Hack to remove presentInChild and presentInParent from
     query arguments if they are not enabled (would interfere with results).

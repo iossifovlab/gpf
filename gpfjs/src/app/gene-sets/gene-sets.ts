@@ -55,16 +55,16 @@ export class GeneSetType {
 
   static fromJson(json: any): GeneSetType {
     return new GeneSetType(
-      json.datasetId, json.datasetName, json.peopleGroupId,
-      json.peopleGroupName, json.peopleGroupLegend
+      json.datasetId, json.datasetName, json.personSetCollectionId,
+      json.personSetCollectionName, json.personSetCollectionLegend
     );
   }
 
   constructor(
     readonly datasetId: string,
     readonly datasetName: string,
-    readonly peopleGroupId: string,
-    readonly peopleGroupName: string,
-    readonly peopleGroupLegend: Array<any>
+    readonly personSetCollectionId: string,
+    readonly personSetCollectionName: string,
+    readonly personSetCollectionLegend: Array<any>
   ) { }
 }
