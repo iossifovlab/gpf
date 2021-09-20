@@ -77,7 +77,7 @@ class ImpalaHelpers:
             return connection
 
         self._connection_pool = ConnectionPool(
-            create_connection, pool_size=4 * len(impala_hosts) + 1)
+            create_connection, pool_size=3 * len(impala_hosts) + 1)
 
         logger.debug(
             f"created impala pool with {self._connection_pool.status()} "
