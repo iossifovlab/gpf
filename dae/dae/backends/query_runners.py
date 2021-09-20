@@ -4,8 +4,6 @@ import logging
 import queue
 import time
 
-from concurrent.futures import ThreadPoolExecutor
-
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +52,8 @@ class QueryRunner(abc.ABC):
         logger.debug(f"closing runner after {elapsed:0.3f}")
         with self._status_lock:
             self._closed = True
-        self._future.cancel()
+            if self._started:
+                self._future.cancel()
 
     def done(self):
         with self._status_lock:
@@ -131,21 +130,3 @@ class QueryResult:
             self.result_queue.get()
         elapsed = time.time() - self.timestamp
         logger.debug(f"result closed after {elapsed:0.3f}")
-
-
-
-class QueryExecutor(abc.ABC):
-
-    def __init__(self, max_workers=2):
-        self.max_workers = max_workers
-        self.executor = ThreadPoolExecutor(max_workers=self.max_workers)
-
-    @abc.abstractmethod
-    def _submit(self, **kwargs):
-        pass
-
-    def submit(self, **kwargs):
-        result_queue = queue.Queue(maxsize=1_000)
-        runner = self._submit(**kwargs)
-        result = QueryResult(result_queue, [runner])
-        return result
