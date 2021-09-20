@@ -4,12 +4,48 @@ import itertools
 import logging
 # from dae.utils.debug_closing import closing
 
+import queue
+
 from contextlib import closing
 
 from impala import dbapi
-from sqlalchemy.pool import QueuePool
 
 logger = logging.getLogger(__name__)
+
+
+class _PoolConnection:
+
+    def __init__(self, pool, connection):
+        self.pool = pool
+        self.connection = connection
+    
+    def cursor(self):
+        return self.connection.cursor()
+    
+    def close(self):
+        self.pool.connections.put(self.connection)
+        logger.debug(f"connection close: pool {self.pool.status()}")
+
+    @property
+    def host(self):
+        return self.connection.host
+
+class ConnectionPool:
+    def __init__(self, create_connection_func, pool_size=12):
+        self.pool_size = pool_size
+        self.connections = queue.Queue(maxsize=pool_size)        
+        while not self.connections.full():
+            connection = create_connection_func()
+            self.connections.put(connection)
+
+    def connect(self):
+        logger.debug(f"connect called: {self.status()}")
+        connection = self.connections.get()
+        return _PoolConnection(self, connection)
+    
+    def status(self):
+        return f"pool size: {self.pool_size}; " \
+            f"available connections: {self.connections.qsize()}"
 
 
 class ImpalaHelpers:
@@ -33,21 +69,12 @@ class ImpalaHelpers:
             connection.host = impala_host
             return connection
 
-        self._connection_pool = QueuePool(
-            create_connection, pool_size=20,  # pool_size,
-            reset_on_return=False,
-            # use_threadlocal=True,
-        )
+        self._connection_pool = ConnectionPool(
+            create_connection, pool_size=12)
+
         logger.debug(
             f"created impala pool with {self._connection_pool.status()} "
             f"connections")
-        # connections = []
-        # for i in range(20):
-        #     conn = self.connection()
-        #     conn.id = i
-        #     connections.append(conn)
-        # for conn in connections:
-        #     conn.close()
 
     def connection(self):
         logger.debug(

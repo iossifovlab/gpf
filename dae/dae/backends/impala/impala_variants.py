@@ -30,63 +30,66 @@ logger = logging.getLogger(__name__)
 class ImpalaQueryRunner(QueryRunner):
 
     def __init__(
-            self, connection, query, deserializer=None):
+            self, connection_pool, query, deserializer=None):
         super(ImpalaQueryRunner, self).__init__(
             deserializer=deserializer)
 
-        self.connection = connection
-        self.cursor = connection.cursor()
-        logger.debug(f"cursor type: {type(self.cursor)}")
-
+        self.connection_pool = connection_pool
         self.query = query
 
     def run(self):
-        try:
-            if self.closed():
-                return
+        started = time.time()
+        if self.closed():
+            return
 
-            self.cursor.execute_async(self.query)
+        logger.debug(
+            f"impala runner started; "
+            f"connectio pool: {self.connection_pool.status()}")
 
-            while True:
-                if self.closed():
-                    logger.debug("query runner closed while executing")
-                    break
-                if not self.cursor.is_executing():
-                    logger.debug("query runner execution finished")
-                    break
-                time.sleep(0.1)
-            while not self.closed():
-                row = self.cursor.fetchone()
-                if row is None:
-                    break
-                val = self.deserializer(row)
+        with closing(self.connection_pool.connect()) as connection:
+            with connection.cursor() as cursor:
+                try:
+                    cursor.execute_async(self.query)
 
-                if val is None:
-                    continue
-
-                while True:
-                    try:
-                        self._result_queue.put(val, timeout=0.1)
-                        break
-                    except queue.Full:
+                    while True:
                         if self.closed():
+                            logger.debug("query runner closed while executing")
+                            break
+                        if not cursor.is_executing():
+                            logger.debug("query runner execution finished")
+                            break
+                        time.sleep(0.1)
+                    while not self.closed():
+                        row = cursor.fetchone()
+                        if row is None:
+                            break
+                        val = self.deserializer(row)
+
+                        if val is None:
+                            continue
+
+                        while True:
+                            try:
+                                self._result_queue.put(val, timeout=0.1)
+                                break
+                            except queue.Full:
+                                if self.closed():
+                                    break
+
+                        if self.closed():
+                            logger.debug("query runner closed while iterating")
                             break
 
-                if self.closed():
-                    logger.debug("query runner closed while iterating")
-                    break
-
-        except BaseException as ex:
-            logger.debug(
-                f"exception in runner run: {type(ex)}", exc_info=True)
-        finally:
-
-            logger.debug("runner closing connection")
-            self.connection.close()
+                except BaseException as ex:
+                    logger.debug(
+                        f"exception in runner run: {type(ex)}", exc_info=True)
+                finally:
+                    logger.debug("runner closing connection")
 
         with self._status_lock:
             self._done = True
-        logger.debug("runner done")
+        elapsed = time.time() - started
+        logger.debug(f"runner done in {elapsed:0.3f}sec")
 
 
 class ImpalaVariants:
@@ -149,6 +152,10 @@ class ImpalaVariants:
             f"getting connection to host {conn.host} from impala helpers "
             f"{id(self._impala_helpers)}")
         return conn
+
+    @property
+    def connection_pool(self):
+        return self._impala_helpers._connection_pool
 
     @property
     def executor(self):
@@ -217,9 +224,8 @@ class ImpalaVariants:
         query = query_builder.product
         logger.debug(f"SUMMARY VARIANTS QUERY: {query}")
 
-        connection = self.connection()
         runner = ImpalaQueryRunner(
-            connection, query, deserializer=deserialize_row)
+            self.connection_pool, query, deserializer=deserialize_row)
 
         filter_func = RawFamilyVariants.summary_variant_filter_function(
             regions=regions,
@@ -305,9 +311,8 @@ class ImpalaVariants:
             self.serializer)
         assert deserialize_row is not None
 
-        connection = self.connection()
         runner = ImpalaQueryRunner(
-            connection, query, deserializer=deserialize_row)
+            self.connection_pool, query, deserializer=deserialize_row)
 
         filter_func = RawFamilyVariants.family_variant_filter_function(
             regions=regions,
