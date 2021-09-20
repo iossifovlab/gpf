@@ -52,4 +52,62 @@ describe('SavedQueriesTableComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should delete query', () => {
+    const queriesMock = [
+      {
+        name: 'name1',
+        description: 'desc1',
+        page: 'page1',
+        uuid: 'uuid1',
+        url: 'url1',
+      },
+      {
+        name: 'name2',
+        description: 'desc2',
+        page: 'page2',
+        uuid: 'uuid2',
+        url: 'url2',
+      },
+      {
+        name: 'name3',
+        description: 'desc3',
+        page: 'page3',
+        uuid: 'uuid3',
+        url: 'url3',
+      }
+    ];
+
+    component.queries = queriesMock;
+    component.deleteQuery('uuid2');
+    expect(component.queries).toEqual([
+      {
+        name: 'name1',
+        description: 'desc1',
+        page: 'page1',
+        uuid: 'uuid1',
+        url: 'url1',
+      },
+      {
+        name: 'name3',
+        description: 'desc3',
+        page: 'page3',
+        uuid: 'uuid3',
+        url: 'url3',
+      }
+    ]);
+
+    component.queries = queriesMock;
+    component.deleteQuery('uuid1');
+    component.deleteQuery('uuid3');
+    expect(component.queries).toEqual([
+      {
+        name: 'name2',
+        description: 'desc2',
+        page: 'page2',
+        uuid: 'uuid2',
+        url: 'url2',
+      }
+    ]);
+  });
 });
