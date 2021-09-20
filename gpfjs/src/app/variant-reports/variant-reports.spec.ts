@@ -4,8 +4,8 @@ import {
   PeopleCounter,
 } from './variant-reports';
 
-fdescribe('ChildrenCounter', () => {
-  fit('should create from json', () => {
+describe('ChildrenCounter', () => {
+  it('should create from json', () => {
     const childrenCounter = ChildrenCounter.fromJson(
       {
         column: 'fakeColumn',
@@ -20,8 +20,8 @@ fdescribe('ChildrenCounter', () => {
   });
 });
 
-fdescribe('GroupCounter', () => {
-  fit('should create from json', () => {
+describe('GroupCounter', () => {
+  it('should create from json', () => {
     const groupCounter = GroupCounter.fromJson(
       {
         column: 'fakeColumn',
@@ -58,7 +58,8 @@ fdescribe('PeopleCounter', () => {
     ],
       'mock_group',
       ['row1', 'row2', 'row3'],
-      ['col1', 'col2', 'col3']);
+      ['col1', 'col2', 'col3']
+    );
 
     const peopleCounter = PeopleCounter.fromJson({
       counters: [
@@ -71,5 +72,25 @@ fdescribe('PeopleCounter', () => {
     });
 
     expect(peopleCounter).toEqual(mockPeopleCounter);
+  });
+
+  fit('should get children counter', () => {
+    const mockPeopleCounter = new PeopleCounter([
+      new GroupCounter('col1', [
+        new ChildrenCounter('row1', 'col1', 7),
+        new ChildrenCounter('row2', 'col1', 13),
+        new ChildrenCounter('row3', 'col1', 17),
+      ]),
+      new GroupCounter('col2', [
+        new ChildrenCounter('row1', 'col2', 15),
+        new ChildrenCounter('row2', 'col2', 666),
+        new ChildrenCounter('row3', 'col2', 42),
+      ]),
+    ],
+      'mock_group',
+      ['row1', 'row2', 'row3'],
+      ['col1', 'col2', 'col3']
+    );
+    expect(mockPeopleCounter.getChildrenCounter('col1', 'row1')).toEqual(new ChildrenCounter('row1', 'col1', 7));
   });
 });
