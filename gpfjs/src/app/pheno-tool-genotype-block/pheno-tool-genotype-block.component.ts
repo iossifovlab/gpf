@@ -14,10 +14,7 @@ export class PhenoToolGenotypeBlockComponent {
   variantTypes: Set<string> = new Set([]);
 
   @Selector([PresentInParentState.queryStateSelector, EffecttypesState])
-  static phenoToolGenotypeBlockQueryState(
-    presentInParentState,
-    phenoEffectTypesState: EffectTypeModel,
-  ) {
+  public static phenoToolGenotypeBlockQueryState(presentInParentState, phenoEffectTypesState: EffectTypeModel) {
     return {
       'presentInParent': presentInParentState,
       'effectTypes': phenoEffectTypesState.effectTypes,

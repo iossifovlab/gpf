@@ -26,7 +26,7 @@ export class PhenoToolComponent implements OnInit {
   @Select(ErrorsState) errorsState$: Observable<ErrorsModel>;
 
   phenoToolResults: PhenoToolResults;
-  private phenoToolState: Object;
+  private phenoToolState: object;
 
   private disableQueryButtons = false;
 
@@ -36,6 +36,21 @@ export class PhenoToolComponent implements OnInit {
     private phenoToolService: PhenoToolService,
     readonly configService: ConfigService,
   ) { }
+
+  @Selector([
+    GenesBlockComponent.genesBlockState,
+    PhenoToolMeasureState,
+    PhenoToolGenotypeBlockComponent.phenoToolGenotypeBlockQueryState,
+    FamilyFiltersBlockComponent.familyFiltersBlockState,
+  ])
+  public static phenoToolStateSelector(genesBlockState, measureState, genotypeState, familyFiltersState) {
+    return {
+      ...genesBlockState,
+      ...measureState,
+      ...genotypeState,
+      ...familyFiltersState,
+    }
+  }
 
   ngOnInit() {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
@@ -75,24 +90,7 @@ export class PhenoToolComponent implements OnInit {
   }
 
   onDownload(event) {
-    event.target.queryData.value = JSON.stringify(this.phenoToolState);
+    event.target.queryData.value = JSON.stringify({...this.phenoToolState, 'datasetId': this.selectedDatasetId});
     event.target.submit();
-  }
-
-  @Selector([
-    GenesBlockComponent.genesBlockState,
-    PhenoToolMeasureState,
-    PhenoToolGenotypeBlockComponent.phenoToolGenotypeBlockQueryState,
-    FamilyFiltersBlockComponent.familyFiltersBlockState,
-  ])
-  static phenoToolStateSelector(
-    genesBlockState, measureState, genotypeState, familyFiltersState
-  ) {
-    return {
-      ...genesBlockState,
-      ...measureState,
-      ...genotypeState,
-      ...familyFiltersState,
-    }
   }
 }
