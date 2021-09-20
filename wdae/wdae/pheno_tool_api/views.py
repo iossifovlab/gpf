@@ -60,8 +60,7 @@ class PhenoToolView(QueryBaseView):
                 study_wrapper._remote_study_id
             )
 
-        helper = PhenoToolHelper(
-            study_wrapper.genotype_data, study_wrapper.phenotype_data)
+        helper = PhenoToolHelper(study_wrapper, study_wrapper.phenotype_data)
 
         family_filters = data.get("familyFilters")
         if family_filters is None:
@@ -98,8 +97,7 @@ class PhenoToolView(QueryBaseView):
 
         if not adapter:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        study_wrapper = self.gpf_instance.get_wdae_wrapper(data["datasetId"])
-        data = study_wrapper.transform_request(data)
+        data = adapter.helper.genotype_data.transform_request(data)
         result = adapter.calc_variants(data)
 
         return Response(result)
@@ -116,15 +114,15 @@ class PhenoToolDownload(PhenoToolView):
     def post(self, request):
         data = self._parse_query_params(request.data)
         adapter = self.prepare_pheno_tool_adapter(data)
-        helper = adapter.helper
+        data = adapter.helper.genotype_data.transform_request(data)
         tool = adapter.pheno_tool
 
         result_df = tool.pheno_df.copy()
-        variants = helper.genotype_data_variants(data)
+        variants = adapter.helper.genotype_data_variants(data)
 
-        for effect in data["effectTypes"]:
+        for effect in data["effect_types"]:
             result_df = PhenoTool.join_pheno_df_with_variants(
-                result_df, variants[effect.lower()]
+                result_df, variants[effect]
             )
             result_df = result_df.rename(columns={"variant_count": effect})
 
@@ -135,7 +133,7 @@ class PhenoToolDownload(PhenoToolView):
             result_df = result_df.rename(columns={"normalized": column_name})
 
         # Select & sort columns for output
-        effectTypesCount = len(data["effectTypes"])
+        effect_types_count = len(data["effect_types"])
         columns = [
             col
             for col in result_df.columns.tolist()
@@ -144,8 +142,8 @@ class PhenoToolDownload(PhenoToolView):
         columns[0], columns[1] = columns[1], columns[0]
         columns = (
             columns[:3]
-            + columns[-effectTypesCount:]
-            + columns[3:-effectTypesCount]
+            + columns[-effect_types_count:]
+            + columns[3:-effect_types_count]
         )
 
         response = StreamingHttpResponse(
