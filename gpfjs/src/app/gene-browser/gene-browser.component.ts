@@ -124,10 +124,12 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
 
   private async submitGeneRequest(geneSymbol?: string) {
     this.showError = false;
+    if (geneSymbol) {
+      this.geneSymbol = geneSymbol.toUpperCase().trim();
+    }
     if (!this.geneSymbol) {
       return;
     }
-    this.geneSymbol = geneSymbol.toUpperCase().trim();
     try {
       this.selectedGene = await this.geneService.getGene(
         this.geneSymbol.toUpperCase().trim()
