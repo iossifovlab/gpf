@@ -2,6 +2,7 @@ import time
 import logging
 import threading
 import queue
+import functools
 
 # from dae.utils.debug_closing import closing
 from contextlib import closing
@@ -187,6 +188,18 @@ class GenotypeData(ABC):
         if effect_types:
             effect_types = expand_effect_types(effect_types)
 
+        def adapt_study_variants(study_name, study_phenotype, v):
+            if v is None:
+                return None
+            for allele in v.alleles:
+                if allele.get_attribute("study_name") is None:
+                    allele.update_attributes(
+                        {"study_name": study_name})
+                if allele.get_attribute("study_phenotype") is None:
+                    allele.update_attributes(
+                        {"study_phenotype": study_phenotype})
+            return v
+
         runners = []
         for genotype_study in self._get_query_children(study_filters):
             runner = genotype_study._backend\
@@ -207,22 +220,12 @@ class GenotypeData(ABC):
                     limit=limit,
                     affected_status=affected_status)
             logger.debug("runner created")
+
             study_name = genotype_study.name
             study_phenotype = genotype_study.study_phenotype
 
-            def adapt_study_variants(v):
-                if v is None:
-                    return None
-                for allele in v.alleles:
-                    if allele.get_attribute("study_name") is None:
-                        allele.update_attributes(
-                            {"study_name": study_name})
-                    if allele.get_attribute("study_phenotype") is None:
-                        allele.update_attributes(
-                            {"study_phenotype": study_phenotype})
-                return v
-
-            runner.adapt(adapt_study_variants)
+            runner.adapt(functools.partial(
+                adapt_study_variants, study_name, study_phenotype))
             runners.append(runner)
 
         logger.debug(f"runners: {len(runners)}")
@@ -245,13 +248,13 @@ class GenotypeData(ABC):
                         continue
                     if unique_family_variants and v.fvuid in seen:
                         continue
-                    for allele in v.alleles:
-                        if allele.get_attribute("study_name") is None:
-                            allele.update_attributes(
-                                {"study_name": self.name})
-                        if allele.get_attribute("study_phenotype") is None:
-                            allele.update_attributes(
-                                {"study_phenotype": self.study_phenotype})
+                    # for allele in v.alleles:
+                    #     if allele.get_attribute("study_name") is None:
+                    #         allele.update_attributes(
+                    #             {"study_name": self.name})
+                    #     if allele.get_attribute("study_phenotype") is None:
+                    #         allele.update_attributes(
+                    #             {"study_phenotype": self.study_phenotype})
 
                     seen.add(v.fvuid)
                     yield v
