@@ -7,9 +7,9 @@
         <gpf-table-header >
           <gpf-table-subheader>
             <span *gpfTableCellContent="let data">
-              <div style = "display: flex;height: 100%;justify-content: center;align-items: center;width: 100%;height: 45px;margin-top: -5px;/*white-space: nowrap;*/">Selected</div>
+              <div style = "margin-top: 10px;height: 30px;">Selected</div>
               <div class="select-unselect-all">
-                <input style = "/*display:-webkit-flex;*/display: flex; width: 90%;height: 13px;margin-top: -7px;" type="checkbox" [(ngModel)]="allSelected" (ngModelChange)="checkUncheckAll(allSelected)"/>
+                <input style = "display: flex; width: 75%;height: 13px;margin-top: -7px;" type="checkbox" [(ngModel)]="allSelected" (ngModelChange)="checkUncheckAll(allSelected)"/>
               </div>
             </span>
           </gpf-table-subheader>
