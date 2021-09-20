@@ -43,13 +43,15 @@ class QueryRunner(abc.ABC):
 
             self._future = executor.submit(self.run)
             self._started = True
+            self.timestamp = time.time()
 
     def closed(self):
         with self._status_lock:
             return self._closed
 
     def close(self):
-        logger.debug("closing runner")
+        elapsed = time.time() - self.timestamp
+        logger.debug(f"closing runner after {elapsed:0.3f}")
         with self._status_lock:
             self._closed = True
         self._future.cancel()
@@ -76,6 +78,8 @@ class QueryResult:
             limit = -1
         self.limit = limit
         self._counter = 0
+        self.timestamp = time.time()
+
         self.runners = runners
         for runner in self.runners:
             assert runner._result_queue is None
@@ -111,6 +115,7 @@ class QueryResult:
                 raise StopIteration()
 
     def start(self, executor):
+        self.timestamp = time.time()
         for runner in self.runners:
             runner.start(executor)
         time.sleep(0.1)
@@ -124,6 +129,9 @@ class QueryResult:
                     f"exception in result close: {type(ex)}", exc_info=True)
         while not self.result_queue.empty():
             self.result_queue.get()
+        elapsed = time.time() - self.timestamp
+        logger.debug(f"result closed after {elapsed:0.3f}")
+
 
 
 class QueryExecutor(abc.ABC):
