@@ -16,18 +16,18 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
   private rangeChanges = new Subject<[string, string, number, number]>();
   private partitions: Observable<Partitions>;
 
-  @Input() filterId: string;
-  @Input() datasetId: string;
-  @Input() measureName: string;
-  @Input() continuousFilterState: ContinuousFilterState;
-  @Output() updateFilterEvent = new EventEmitter();
-  histogramData: HistogramData;
+  @Input() public filterId: string;
+  @Input() public datasetId: string;
+  @Input() public measureName: string;
+  @Input() public continuousFilterState: ContinuousFilterState;
+  @Output() public updateFilterEvent = new EventEmitter();
+  public histogramData: HistogramData;
 
-  rangesCounts: Array<number>;
+  public rangesCounts: Array<number>;
 
   constructor(private measuresService: MeasuresService) { }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     this.partitions = this.rangeChanges.pipe(
       debounceTime(100),
       distinctUntilChanged(),
@@ -42,7 +42,7 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
     });
   }
 
-  ngOnChanges(changes: SimpleChanges) {
+  public ngOnChanges(changes: SimpleChanges): void {
     if (this.datasetId && this.measureName) {
       this.measuresService.getMeasureHistogram(this.datasetId, this.measureName)
         .subscribe(histogramData => {
@@ -58,7 +58,7 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
     }
   }
 
-  set rangeStart(value) {
+  public set rangeStart(value) {
     const selection = (this.continuousFilterState.selection as ContinuousSelection);
     selection.min = value;
     this.updateFilterEvent.emit();
@@ -70,11 +70,11 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
     ]);
   }
 
-  get rangeStart(): number {
+  public get rangeStart(): number {
     return (this.continuousFilterState.selection as ContinuousSelection).min;
   }
 
-  set rangeEnd(value) {
+  public set rangeEnd(value) {
     const selection = (this.continuousFilterState.selection as ContinuousSelection);
     selection.max = value;
     this.updateFilterEvent.emit();
@@ -86,7 +86,7 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
     ]);
   }
 
-  get rangeEnd(): number {
+  public get rangeEnd(): number {
     return (this.continuousFilterState.selection as ContinuousSelection).max;
   }
 
