@@ -420,27 +420,16 @@ class GenotypeData(ABC):
                 self.person_set_collection_configs[collection_id] = \
                     collection_conf
 
-    def _transform_person_set_collection_query(
-            self, person_set_collection, person_ids):
-
-        if person_set_collection is not None:
-            person_set_collection_id, selected_person_sets = \
-                person_set_collection
-            selected_person_sets = set(selected_person_sets)
-            person_set_collection = self.get_person_set_collection(
-                person_set_collection_id)
-            person_set_ids = set(person_set_collection.person_sets.keys())
-            selected_person_sets = person_set_ids & selected_person_sets
-
-            if selected_person_sets == person_set_ids:
-                # all persons selected
-                pass
-            else:
+    def _transform_person_set_collection_query(self, collection, person_ids):
+        if collection is not None:
+            collection_id, selected_sets = collection
+            collection = self.get_person_set_collection(collection_id)
+            person_set_ids = set(collection.person_sets.keys())
+            if selected_sets is not None:
                 selected_person_ids = set()
-                for set_id in selected_person_sets:
+                for set_id in set(selected_sets) & person_set_ids:
                     selected_person_ids.update(
-                        person_set_collection.
-                        person_sets[set_id].persons.keys()
+                        collection.person_sets[set_id].persons.keys()
                     )
                 if person_ids is not None:
                     person_ids = set(person_ids) & selected_person_ids

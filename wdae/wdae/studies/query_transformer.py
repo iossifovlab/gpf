@@ -251,32 +251,20 @@ class QueryTransformer:
         else:
             kwargs["roles"] = query
 
-    def _add_people_with_people_group(self, kwargs):
-
-        # TODO Rename peopleGroup kwarg to person_set_collections
-        # and all other, relevant keys in the kwargs dict
-
-        if kwargs.get("peopleGroup") is None:
-            return kwargs
-
-        person_set_collections_query = kwargs.pop("peopleGroup")
-        person_set_collection_id = person_set_collections_query["id"]
-        selected_person_set_ids = set(
-            person_set_collections_query["checkedValues"]
-        )
-
-        person_set_collection = self.study_wrapper\
-            .genotype_data_study \
-            .get_person_set_collection(person_set_collection_id)
-
-        if set(person_set_collection.person_sets.keys()) == \
-                selected_person_set_ids:
-            return kwargs
-
-        person_set_collection_query = (
-            person_set_collection_id, selected_person_set_ids
-        )
-        kwargs["person_set_collection"] = person_set_collection_query
+    def _handle_person_set_collection(self, kwargs):
+        people_group = kwargs.pop("personSetCollection", {})
+        logger.debug(f"person set collection requested: {people_group}")
+        collection_id, selected_sets = None, None
+        if people_group:
+            collection_id = people_group["id"]
+            selected_sets = people_group["checkedValues"]
+        else:
+            selected_person_set_collections = self.genotype_data\
+                .config.person_set_collections\
+                .selected_person_set_collections
+            if selected_person_set_collections:
+                collection_id = selected_person_set_collections[0]
+        kwargs["person_set_collection"] = collection_id, selected_sets
         return kwargs
 
     # Not implemented:
@@ -290,7 +278,7 @@ class QueryTransformer:
             kwargs
         )
 
-        kwargs = self._add_people_with_people_group(kwargs)
+        kwargs = self._handle_person_set_collection(kwargs)
 
         if "querySummary" in kwargs:
             kwargs["query_summary"] = kwargs["querySummary"]

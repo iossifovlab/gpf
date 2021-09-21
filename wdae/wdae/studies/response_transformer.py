@@ -236,9 +236,12 @@ class ResponseTransformer:
             0,
         ]
 
-    def _generate_pedigree(self, variant, person_set_collection):
+    def _generate_pedigree(self, variant, collection_id):
         result = []
         # best_st = np.sum(allele.gt == allele.allele_index, axis=0)
+        person_set_collection = self.study_wrapper.get_person_set_collection(
+            collection_id
+        )
         genotype = variant.family_genotype
 
         missing_members = set()
@@ -313,11 +316,9 @@ class ResponseTransformer:
                     col_source = f"{col_source}.{col_role}"
 
                 if col_source == "pedigree":
-                    person_set_collection = \
-                        kwargs.get("person_set_collection")
-                    row_variant.append(
-                        self._generate_pedigree(v, person_set_collection)
-                    )
+                    row_variant.append(self._generate_pedigree(
+                        v, kwargs.get("person_set_collection")
+                    ))
                 elif col_source in self.PHENOTYPE_ATTRS:
                     phenotype_person_sets = \
                         self.study_wrapper.person_set_collections.get(
