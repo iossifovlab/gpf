@@ -24,7 +24,11 @@ class _PoolConnection:
         return self.connection.cursor()
 
     def close(self):
-        self.connection.reconnect()
+        # self.connection.reconnect()
+
+        self.connection.close()
+        self.connection = self.pool.create_connection_func()
+
         self.pool.connections.put(self.connection)
         logger.debug(f"connection close: pool {self.pool.status()}")
 
@@ -37,6 +41,7 @@ class ConnectionPool:
     def __init__(self, create_connection_func, pool_size=12):
         self.pool_size = pool_size
         self.connections = queue.Queue(maxsize=pool_size)
+        self.create_connection_func = create_connection_func
         while not self.connections.full():
             connection = create_connection_func()
             self.connections.put(connection)
