@@ -259,7 +259,8 @@ class QueryTransformer:
             collection_id = people_group["id"]
             selected_sets = people_group["checkedValues"]
         else:
-            selected_person_set_collections = self.genotype_data\
+            selected_person_set_collections = self.study_wrapper\
+                .genotype_data\
                 .config.person_set_collections\
                 .selected_person_set_collections
             if selected_person_set_collections:
