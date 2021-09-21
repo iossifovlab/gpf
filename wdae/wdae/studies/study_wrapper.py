@@ -252,8 +252,8 @@ class StudyWrapper(StudyWrapperBase):
             for column_id in column_group.columns:
                 if column_id not in genotype_cols \
                    and column_id not in phenotype_cols:
-                    logger.warn(
-                        f"Column {column_id} not defined in configuration"
+                    logger.warning(
+                        f"column {column_id} not defined in configuration"
                     )
                     return False
         return True
