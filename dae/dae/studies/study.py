@@ -172,6 +172,7 @@ class GenotypeData(ABC):
             variant_type=None,
             real_attr_filter=None,
             ultra_rare=None,
+            frequency_filter=None,
             return_reference=None,
             return_unknown=None,
             limit=None,
@@ -215,6 +216,7 @@ class GenotypeData(ABC):
                     variant_type=variant_type,
                     real_attr_filter=real_attr_filter,
                     ultra_rare=ultra_rare,
+                    frequency_filter=frequency_filter,
                     return_reference=return_reference,
                     return_unknown=return_unknown,
                     limit=limit,
@@ -286,6 +288,7 @@ class GenotypeData(ABC):
         variant_type=None,
         real_attr_filter=None,
         ultra_rare=None,
+        frequency_filter=None,        
         return_reference=None,
         return_unknown=None,
         limit=None,
@@ -319,6 +322,7 @@ class GenotypeData(ABC):
                     variant_type=variant_type,
                     real_attr_filter=real_attr_filter,
                     ultra_rare=ultra_rare,
+                    frequency_filter=frequency_filter,
                     return_reference=return_reference,
                     return_unknown=return_unknown,
                     limit=limit)
@@ -427,6 +431,9 @@ class GenotypeData(ABC):
             person_set_ids = set(collection.person_sets.keys())
             if selected_sets is not None:
                 selected_person_ids = set()
+                if set(selected_sets) == person_set_ids:
+                    return person_ids
+
                 for set_id in set(selected_sets) & person_set_ids:
                     selected_person_ids.update(
                         collection.person_sets[set_id].persons.keys()

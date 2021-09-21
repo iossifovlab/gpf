@@ -60,6 +60,16 @@ class FamilyType(Enum):
         raise ValueError(f"unexpected family type name: {name}")
 
 
+ALL_FAMILY_TYPES = set([
+        FamilyType.TRIO,
+        FamilyType.QUAD,
+        FamilyType.MULTIGENERATIONAL,
+        FamilyType.SIMPLEX,
+        FamilyType.MULTIPLEX,
+        FamilyType.OTHER,
+    ])
+
+
 class Person(object):
     def __init__(self, **attributes):
         self._attributes = attributes

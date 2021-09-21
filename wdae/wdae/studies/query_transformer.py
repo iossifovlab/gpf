@@ -7,7 +7,7 @@ from functools import reduce
 from dae.utils.effect_utils import EffectTypesMixin
 from dae.variants.attributes import Role, Inheritance
 from dae.utils.regions import Region
-from dae.pedigrees.family import FamilyType
+from dae.pedigrees.family import ALL_FAMILY_TYPES, FamilyType
 from dae.backends.attributes_query import (
     role_query,
     variant_type_converter,
@@ -326,8 +326,10 @@ class QueryTransformer:
                         present_in_child, present_in_parent,
                         rarity, frequency_filter
                     )
+                print("frequency filter:", arg, val)
                 if arg is not None:
                     kwargs[arg] = val
+                print(kwargs)
 
         if (
             "minAltFrequencyPercent" in kwargs
@@ -432,19 +434,22 @@ class QueryTransformer:
 
         if "familyTypes" in kwargs:
             family_ids_with_types = set()
-            for family_type in kwargs["familyTypes"]:
-                family_type = FamilyType.from_name(family_type)
-                family_ids_with_types = set.union(
-                    family_ids_with_types,
-                    self.study_wrapper.families.families_by_type.get(
-                        family_type, set()
+            family_types = set([
+                FamilyType.from_name(ft) for ft in kwargs["familyTypes"]])
+
+            if family_types != ALL_FAMILY_TYPES:
+                for family_type in family_types:
+                    family_ids_with_types = set.union(
+                        family_ids_with_types,
+                        self.study_wrapper.families.families_by_type.get(
+                            family_type, set()
+                        )
                     )
-                )
-            if "familyIds" in kwargs:
-                family_ids_with_types = set.intersection(
-                    family_ids_with_types, set(kwargs.pop("familyIds"))
-                )
-            kwargs["familyIds"] = family_ids_with_types
+                if "familyIds" in kwargs:
+                    family_ids_with_types = set.intersection(
+                        family_ids_with_types, set(kwargs.pop("familyIds"))
+                    )
+                kwargs["familyIds"] = family_ids_with_types
 
         if kwargs.get("inheritanceTypeFilter"):
             inheritance = kwargs.get("inheritance", [])
