@@ -10,11 +10,13 @@
     <div>Rarity:</div>
     <div>
       <ng-container *ngFor="let rarityType of rarityTypes">
-        <input
-          type="radio"
-          (change)="updateRarityType(rarityType)"
-          value="rarityType"
-          [checked]="selectedRarityType === rarityType">{{rarityType}}
+        <label style="user-select: none">
+          <input
+            type="radio"
+            (change)="updateRarityType(rarityType)"
+            value="rarityType"
+            [checked]="selectedRarityType === rarityType">{{rarityType}}
+        </label>
         <br *ngIf="rarityType === 'ultraRare'">
       </ng-container>
     </div>
