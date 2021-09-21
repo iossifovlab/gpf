@@ -81,7 +81,7 @@ export class PedigreeCounter {
   }
 
   constructor(
-    readonly data: PedigreeData,
+    readonly data: PedigreeData[],
     readonly count: number
   ) {}
 }
@@ -208,7 +208,7 @@ export class EffectTypeTable {
         );
       }
 
-      constructor (
+      constructor(
         readonly tables: EffectTypeTable[]
   ) {}
 }
