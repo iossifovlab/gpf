@@ -8,10 +8,40 @@ import time
 import queue
 
 from contextlib import closing
+from six import reraise
 
 from impala import dbapi
 
 logger = logging.getLogger(__name__)
+
+
+class _PoolCursor:
+
+    def __init__(self, connection, cursor):
+        self.connection = connection
+        self.connection.open_cursors.add(id(self))
+        self.cursor = cursor
+
+    def __getattr__(self, name):
+        return getattr(self.cursor, name)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        if exc_type is not None:
+            reraise(exc_type, exc_val, exc_tb)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return self.cursor.__next__()
+
+    def close(self):
+        self.connection.open_cursors.remove(id(self))
+        self.cursor.close()
 
 
 class _PoolConnection:
@@ -19,15 +49,19 @@ class _PoolConnection:
     def __init__(self, pool, connection):
         self.pool = pool
         self.connection = connection
+        self.open_cursors = set()
 
     def cursor(self):
-        return self.connection.cursor()
+        assert len(self.open_cursors) == 0
+
+        result = self.connection.cursor()
+        return _PoolCursor(self, result)
 
     def close(self):
         # self.connection.reconnect()
 
-        self.connection.close()
-        self.connection = self.pool.create_connection_func()
+        # self.connection.close()
+        # self.connection = self.pool.create_connection_func()
 
         self.pool.connections.put(self.connection)
         logger.debug(f"connection close: pool {self.pool.status()}")
