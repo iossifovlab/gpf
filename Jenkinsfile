@@ -40,23 +40,27 @@ pipeline {
   }
   post {
     always {
-      zulipNotification(
-        topic: "${env.JOB_NAME}"
-      )
+      script {
+        try {
+          junit 'test-results/wdae-junit.xml, test-results/dae-junit.xml'
 
-      junit 'test-results/wdae-junit.xml, test-results/dae-junit.xml'
+          cobertura coberturaReportFile: 'test-results/dae-coverage.xml', enableNewApi: true
+          cobertura coberturaReportFile: 'test-results/wdae-coverage.xml', enableNewApi: true
 
-      cobertura coberturaReportFile: 'test-results/dae-coverage.xml', enableNewApi: true
-      cobertura coberturaReportFile: 'test-results/wdae-coverage.xml', enableNewApi: true
-
-      recordIssues(
-        enabledForFailure: true, aggregatingResults: false,
-        tools: [
-          flake8(pattern: 'test-results/flake8_report', reportEncoding: 'UTF-8'),
-          myPy(pattern: 'test-results/mypy_dae_report', reportEncoding: 'UTF-8', id: 'mypy-dae', name: 'MyPy - dae'),
-          myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8', id: 'mypy-wdae', name: 'MyPy - wdae')
-        ]
-      )
+          recordIssues(
+            enabledForFailure: true, aggregatingResults: false,
+            tools: [
+              flake8(pattern: 'test-results/flake8_report', reportEncoding: 'UTF-8'),
+              myPy(pattern: 'test-results/mypy_dae_report', reportEncoding: 'UTF-8', id: 'mypy-dae', name: 'MyPy - dae'),
+              myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8', id: 'mypy-wdae', name: 'MyPy - wdae')
+            ]
+          )
+        } finally {
+          zulipNotification(
+            topic: "${env.JOB_NAME}"
+          )
+        }
+      }
     }
   }
 }
