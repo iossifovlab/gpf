@@ -288,7 +288,7 @@ class GenotypeData(ABC):
         variant_type=None,
         real_attr_filter=None,
         ultra_rare=None,
-        frequency_filter=None,        
+        frequency_filter=None,
         return_reference=None,
         return_unknown=None,
         limit=None,
