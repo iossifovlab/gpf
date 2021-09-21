@@ -162,8 +162,8 @@ describe('PeopleReport', () => {
   });
 });
 
-fdescribe('PedigreeCounter', () => {
-  fit('should create from json', () => {
+describe('PedigreeCounter', () => {
+  it('should create from json', () => {
 
     const pedigreeCounter = new PedigreeCounter([
       new PedigreeData(
