@@ -1,1 +1,0 @@
-repeat 350 { ./node_modules/.bin/cypress run --config baseUrl=http://172.18.0.4/gpf } | tee log
