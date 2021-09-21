@@ -3,6 +3,7 @@ import {
   ChildrenCounter,
   FamilyCounter,
   FamilyCounters,
+  FamilyReport,
   GroupCounter,
   Legend,
   LegendItem,
@@ -12,7 +13,7 @@ import {
 } from './variant-reports';
 
 describe('ChildrenCounter', () => {
-  it('should create from json', () => {
+  it('should create children counter from json', () => {
     const childrenCounter = ChildrenCounter.fromJson(
       {
         column: 'fakeColumn',
@@ -28,7 +29,7 @@ describe('ChildrenCounter', () => {
 });
 
 describe('GroupCounter', () => {
-  it('should create from json', () => {
+  it('should create group counter from json', () => {
     const groupCounter = GroupCounter.fromJson(
       {
         column: 'fakeColumn',
@@ -50,7 +51,7 @@ describe('GroupCounter', () => {
 });
 
 describe('PeopleCounter', () => {
-  it('should create from json', () => {
+  it('should create people counter from json', () => {
     const mockPeopleCounter = new PeopleCounter([
       new GroupCounter('col1', [
         new ChildrenCounter('row1', 'col1', 7),
@@ -81,7 +82,7 @@ describe('PeopleCounter', () => {
     expect(peopleCounter).toEqual(mockPeopleCounter);
   });
 
-  it('should get children counter', () => {
+  it('should create children counter', () => {
     const mockPeopleCounter = new PeopleCounter([
       new GroupCounter('col1', [
         new ChildrenCounter('row1', 'col1', 7),
@@ -104,7 +105,7 @@ describe('PeopleCounter', () => {
 });
 
 describe('PeopleReport', () => {
-  it('should report people data', () => {
+  it('should create people data', () => {
       const peopleReport = {
         people_counters: [
           {
@@ -167,7 +168,7 @@ describe('PeopleReport', () => {
 });
 
 describe('PedigreeCounter', () => {
-  it('should create from json', () => {
+  it('should create pedigree counter from json', () => {
 
     const pedigreeCounter = new PedigreeCounter([
       new PedigreeData(
@@ -195,7 +196,7 @@ describe('PedigreeCounter', () => {
 });
 
 describe('FamilyCounter', () => {
-  it('should create from json', () => {
+  it('should create family counter from json', () => {
     const mockFamilyCounter = FamilyCounter.fromJson({
       counters: [
         {
@@ -247,63 +248,23 @@ describe('FamilyCounter', () => {
 });
 
 describe('FamilyCounters', () => {
-  it('should create from json', () => {
+  it('should create family counters from json', () => {
     const mockFamilyCounters1 = new FamilyCounters([
         new FamilyCounter([
           new PedigreeCounter([
             new PedigreeData(
-              'identifier1',
-              'id1',
-              'mother1',
-              'father1',
-              'gender1',
-              'role1',
-              'color1',
-              [2, 1],
-              true,
-              'label1',
-              'smallLabel1')], 5),
+              'identifier1', 'id1', 'mother1', 'father1', 'gender1', 'role1', 'color1', [2, 1], true, 'label1', 'smallLabel1')], 5),
           new PedigreeCounter([
             new PedigreeData(
-              'identifier2',
-              'id2',
-              'mother2',
-              'father2',
-              'gender2',
-              'role2',
-              'color2',
-              [5, 7],
-              false,
-              'label2',
-              'smallLabel2')], 7)
+              'identifier2', 'id2', 'mother2', 'father2', 'gender2', 'role2', 'color2', [5, 7], false, 'label2', 'smallLabel2')], 7)
         ]),
         new FamilyCounter([
           new PedigreeCounter([
             new PedigreeData(
-              'identifier3',
-              'id3',
-              'mother3',
-              'father3',
-              'gender3',
-              'role3',
-              'color3',
-              [6, 8],
-              false,
-              'label3',
-              'smallLabel3')], 1),
+              'identifier3', 'id3', 'mother3', 'father3', 'gender3', 'role3', 'color3', [6, 8], false, 'label3', 'smallLabel3')], 1),
           new PedigreeCounter([
             new PedigreeData(
-              'identifier4',
-              'id4',
-              'mother4',
-              'father4',
-              'gender4',
-              'role4',
-              'color4',
-              [1, 1],
-              true,
-              'label4',
-              'smallLabel4')], 10)
+              'identifier4', 'id4', 'mother4', 'father4', 'gender4', 'role4', 'color4', [1, 1], true, 'label4', 'smallLabel4')], 10)
         ]),
       ],
       'groupName1', ['pheno1', 'pheno2'],
@@ -354,5 +315,156 @@ describe('FamilyCounters', () => {
     });
 
     expect(mockFamilyCounters1).toEqual(mockFamilyCounters2);
+  });
+});
+
+fdescribe('FamilyReport', () => {
+  fit('should create family report from json', () => {
+    const mockFamilyReport1 = new FamilyReport(
+      [
+        new FamilyCounters([
+          new FamilyCounter([
+            new PedigreeCounter([
+              new PedigreeData(
+                'identifier1', 'id1', 'mother1', 'father1', 'gender1', 'role1', 'color1', [2, 1], true, 'label1', 'smallLabel1')], 5),
+            new PedigreeCounter([
+              new PedigreeData(
+                'identifier2', 'id2', 'mother2', 'father2', 'gender2', 'role2', 'color2', [5, 7], false, 'label2', 'smallLabel2')], 7)
+          ]),
+          new FamilyCounter([
+            new PedigreeCounter([
+              new PedigreeData(
+                'identifier3', 'id3', 'mother3', 'father3', 'gender3', 'role3', 'color3', [6, 8], false, 'label3', 'smallLabel3')], 1),
+            new PedigreeCounter([
+              new PedigreeData(
+                'identifier4', 'id4', 'mother4', 'father4', 'gender4', 'role4', 'color4', [1, 1], true, 'label4', 'smallLabel4')], 10)
+          ]),
+        ],
+        'groupName1', ['pheno1', 'pheno2'],
+        new Legend(
+          [
+            new LegendItem('id1', 'name1', 'color1'),
+            new LegendItem('id2', 'name2', 'color2')
+          ]
+        )),
+        new FamilyCounters([
+          new FamilyCounter([
+            new PedigreeCounter([
+              new PedigreeData(
+                'identifier5', 'id5', 'mother5', 'father5', 'gender5', 'role5', 'color5', [2, 2], true, 'label5', 'smallLabel5')], 9),
+            new PedigreeCounter([
+              new PedigreeData(
+                'identifier6', 'id6', 'mother6', 'father6', 'gender6', 'role6', 'color6', [51, 7], false, 'label6', 'smallLabel6')], 85)
+          ]),
+          new FamilyCounter([
+            new PedigreeCounter([
+              new PedigreeData(
+                'identifier7', 'id7', 'mother7', 'father7', 'gender7', 'role7', 'color7', [3, 3], false, 'label7', 'smallLabel7')], 14),
+            new PedigreeCounter([
+              new PedigreeData(
+                'identifier8', 'id8', 'mother8', 'father8', 'gender8', 'role8', 'color8', [16, 13], true, 'label8', 'smallLabel8')], 11)
+          ]),
+        ],
+        'groupName2', ['pheno3', 'pheno4'],
+        new Legend(
+          [
+            new LegendItem('id3', 'name3', 'color3'),
+            new LegendItem('id4', 'name4', 'color4')
+          ]
+        ))
+      ], 5
+    );
+
+    const mockFamilyReport2 = FamilyReport.fromJson(
+      {
+        families_counters: [{
+            counters: [
+              {
+                counters: [
+                  {
+                    pedigree: [
+                      ['identifier1', 'id1', 'mother1', 'father1', 'gender1', 'role1', 'color1', ':2,1', true, 'label1', 'smallLabel1']
+                    ],
+                    pedigrees_count: 5
+                  },
+                  {
+                    pedigree: [
+                      [
+                        'identifier2', 'id2', 'mother2', 'father2', 'gender2', 'role2', 'color2', ':5,7', false, 'label2', 'smallLabel2'
+                      ]
+                    ],
+                    pedigrees_count: 7
+                  }
+                ]
+              }, {
+                counters: [
+                  {
+                    pedigree: [
+                      [
+                        'identifier3', 'id3', 'mother3', 'father3', 'gender3', 'role3', 'color3', ':6,8', false, 'label3', 'smallLabel3'
+                      ]
+                    ],
+                    pedigrees_count: 1
+                  },
+                  {
+                    pedigree: [
+                      ['identifier4', 'id4', 'mother4', 'father4', 'gender4', 'role4', 'color4', ':1,1', true, 'label4', 'smallLabel4']
+                    ],
+                    pedigrees_count: 10
+                  }
+                ]
+              }
+            ], group_name: 'groupName1', phenotypes: ['pheno1', 'pheno2'], legend: [
+              {id: 'id1', name: 'name1', color: 'color1'},
+              {id: 'id2', name: 'name2', color: 'color2'}
+            ]
+        },
+        {
+            counters: [
+              {
+                counters: [
+                  {
+                    pedigree: [
+                      ['identifier5', 'id5', 'mother5', 'father5', 'gender5', 'role5', 'color5', ':2,2', true, 'label5', 'smallLabel5']
+                    ],
+                    pedigrees_count: 9
+                  },
+                  {
+                    pedigree: [
+                      [
+                        'identifier6', 'id6', 'mother6', 'father6', 'gender6', 'role6', 'color6', ':51,7', false, 'label6', 'smallLabel6'
+                      ]
+                    ],
+                    pedigrees_count: 85
+                  }
+                ]
+              }, {
+                counters: [
+                  {
+                    pedigree: [
+                      [
+                        'identifier7', 'id7', 'mother7', 'father7', 'gender7', 'role7', 'color7', ':3,3', false, 'label7', 'smallLabel7'
+                      ]
+                    ],
+                    pedigrees_count: 14
+                  },
+                  {
+                    pedigree: [
+                      ['identifier8', 'id8', 'mother8', 'father8', 'gender8', 'role8', 'color8', ':16,13', true, 'label8', 'smallLabel8']
+                    ],
+                    pedigrees_count: 11
+                  }
+                ]
+              }
+            ], group_name: 'groupName2', phenotypes: ['pheno3', 'pheno4'], legend: [
+              {id: 'id3', name: 'name3', color: 'color3'},
+              {id: 'id4', name: 'name4', color: 'color4'}
+            ]
+        }],
+        families_total: 5
+      }
+    );
+
+    expect(mockFamilyReport1).toEqual(mockFamilyReport2);
   });
 });
