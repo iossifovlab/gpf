@@ -1,6 +1,8 @@
 import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 import {
   ChildrenCounter,
+  DeNovoData,
+  EffectTypeRow,
   FamilyCounter,
   FamilyCounters,
   FamilyReport,
@@ -318,8 +320,8 @@ describe('FamilyCounters', () => {
   });
 });
 
-fdescribe('FamilyReport', () => {
-  fit('should create family report from json', () => {
+describe('FamilyReport', () => {
+  it('should create family report from json', () => {
     const mockFamilyReport1 = new FamilyReport(
       [
         new FamilyCounters([
@@ -468,3 +470,56 @@ fdescribe('FamilyReport', () => {
     expect(mockFamilyReport1).toEqual(mockFamilyReport2);
   });
 });
+
+describe('DeNovoData', () => {
+  it('should create de novo data from json', () => {
+    const denovo1 = new DeNovoData('1', 2, 3, 4, 5);
+    const denovo2 = DeNovoData.fromJson(
+      {
+        column: '1',
+        number_of_observed_events: 2,
+        number_of_children_with_event: 3,
+        observed_rate_per_child: 4,
+        percent_of_children_with_events: 5
+      }
+    );
+
+    expect(denovo1).toEqual(denovo2);
+  });
+});
+
+describe('EffectTypeRow', () => {
+  it('should create effects type row from json', () => {
+    const mockEffectTypeRow1 = new EffectTypeRow(
+      'effectType1',
+      [
+        new DeNovoData('1', 2, 3, 4, 5),
+        new DeNovoData('2', 6, 7, 8, 9)
+      ]
+    );
+
+    const mockEffectTypeRow2 = EffectTypeRow.fromJson({
+        effect_type: 'effectType1',
+        row : [
+          {
+            column: '1',
+            number_of_observed_events: 2,
+            number_of_children_with_event: 3,
+            observed_rate_per_child: 4,
+            percent_of_children_with_events: 5
+          },
+          {
+            column: '2',
+            number_of_observed_events: 6,
+            number_of_children_with_event: 7,
+            observed_rate_per_child: 8,
+            percent_of_children_with_events: 9
+          }
+        ]
+      }
+    );
+
+    expect(mockEffectTypeRow1).toEqual(mockEffectTypeRow2);
+  });
+});
+
