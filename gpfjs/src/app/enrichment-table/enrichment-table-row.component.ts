@@ -36,7 +36,7 @@ export class EnrichmentTableRowComponent {
     this.store.dispatch([
       new SetEffectTypes(new Set(browserQueryFilter['effectTypes'])),
       new SetGender(browserQueryFilter['gender']),
-      new SetPedigreeSelector('phenotype', new Set(browserQueryFilter['peopleGroup']['checkedValues'])),
+      new SetPedigreeSelector('phenotype', new Set(browserQueryFilter['personSetCollection']['checkedValues'])),
       new SetStudyTypes(new Set(browserQueryFilter['studyTypes'])),
       new SetVariantTypes(new Set(browserQueryFilter['variantTypes'])),
     ]);

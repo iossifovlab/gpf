@@ -12,27 +12,7 @@ export const toolPageLinks = {
   geneBrowser: 'gene-browser'
 };
 
-export class SelectorValue extends IdName {
-  static fromJson(json: any): SelectorValue {
-    if (!json) {
-      return undefined;
-    }
-
-    return new SelectorValue(
-      json['id'],
-      json['name'],
-      json['values'],
-      json['color'],
-    );
-  }
-
-  static fromJsonArray(jsonArray: Array<Object>): Array<SelectorValue> {
-    if (!jsonArray) {
-      return undefined;
-    }
-    return jsonArray.map((json) => SelectorValue.fromJson(json));
-  }
-
+export class PersonSet extends IdName {
   constructor(
     readonly id: string,
     readonly name: string,
@@ -41,63 +21,84 @@ export class SelectorValue extends IdName {
   ) {
     super(id, name);
   }
-}
 
-export class PedigreeSelector extends IdName {
-  static fromJson(json: any): PedigreeSelector[] {
+  public static fromJson(json: object): PersonSet {
     if (!json) {
       return undefined;
     }
 
-    const pedigreeSelectors: PedigreeSelector[] = [];
-
-    for (const k of Object.keys(json)) {
-      const v = json[k];
-      pedigreeSelectors.push(new PedigreeSelector(
-        k,
-        v['name'],
-        k,
-        SelectorValue.fromJson(v['default']),
-        SelectorValue.fromJsonArray(v['domain']),
-      ));
-    }
-
-    return pedigreeSelectors;
-
+    return new PersonSet(
+      json['id'],
+      json['name'],
+      json['values'],
+      json['color'],
+    );
   }
 
+  public static fromJsonArray(jsonArray: object[]): Array<PersonSet> {
+    if (!jsonArray) {
+      return undefined;
+    }
+    return jsonArray.map((json) => PersonSet.fromJson(json));
+  }
+}
+
+export class PersonSetCollection extends IdName {
   constructor(
     readonly id: string,
     readonly name: string,
     readonly source: string,
-    readonly defaultValue: SelectorValue,
-    readonly domain: SelectorValue[]
+    readonly defaultValue: PersonSet,
+    readonly domain: PersonSet[]
   ) {
     super(id, name);
+  }
+
+  public static fromJson(json: object): PersonSetCollection[] {
+    if (!json) {
+      return undefined;
+    }
+
+    const collections: PersonSetCollection[] = [];
+
+    for (const k of Object.keys(json)) {
+      const v = json[k];
+      collections.push(new PersonSetCollection(
+        k,
+        v['name'],
+        k,
+        PersonSet.fromJson(v['default']),
+        PersonSet.fromJsonArray(v['domain']),
+      ));
+    }
+    return collections;
+  }
+}
+
+export class PersonSetCollections {
+  constructor(
+    readonly collections: PersonSetCollection[],
+  ) { }
+
+  public static fromJson(json: object): PersonSetCollections {
+    return new PersonSetCollections(PersonSetCollection.fromJson(json));
+  }
+
+  public getLegend(collection: PersonSetCollection): Array<PersonSet> {
+    let result = [];
+    const collectionId = collection ? collection.id : this.collections[0].id;
+
+    for (const ps of this.collections) {
+      if (ps.id === collectionId) {
+        result = result.concat(ps.domain);
+      }
+    }
+    result.push({'color': '#E0E0E0', 'id': 'missing-person', 'name': 'missing-person'}); // Default legend value
+    return result;
   }
 }
 
 export class PersonFilter {
-  static fromJson(json: any): Array<PersonFilter> {
-    const filters = [];
-
-    for (const prop in json) {
-      if (json.hasOwnProperty(prop)) {
-        filters.push(
-          new PersonFilter(
-            json[prop]['name'],
-            json[prop]['from'],
-            json[prop]['source'],
-            json[prop]['source_type'],
-            json[prop]['filter_type'],
-            json[prop]['role'],
-          )
-        );
-      }
-    }
-    return filters;
-  }
-
   constructor(
     readonly name: string,
     readonly from: string,
@@ -106,6 +107,16 @@ export class PersonFilter {
     readonly filterType: string,
     readonly role: string,
   ) {}
+
+  public static fromJson(json: object): Array<PersonFilter> {
+    if (!json) {
+      return [];
+    }
+    return Object.values(json).map(filter => new PersonFilter(
+      filter['name'], filter['from'], filter['source'],
+      filter['source_type'], filter['filter_type'], filter['role']
+    ));
+  }
 }
 
 export class Column {
@@ -233,31 +244,6 @@ export class GeneBrowser {
   ) { }
 }
 
-export class PeopleGroup {
-  static fromJson(json: any): PeopleGroup {
-    return new PeopleGroup(
-      PedigreeSelector.fromJson(json)
-    );
-  }
-
-  constructor(
-    readonly pedigreeSelectors: PedigreeSelector[],
-  ) { }
-
-  getLegend(collection: PedigreeSelector): Array<SelectorValue> {
-    let result = [];
-    const collectionId = collection ? collection.id : this.pedigreeSelectors[0].id;
-
-    for (const ps of this.pedigreeSelectors) {
-      if (ps.id === collectionId) {
-        result = result.concat(ps.domain);
-      }
-    }
-    result.push({'color': '#E0E0E0', 'id': 'missing-person', 'name': 'missing-person'}); // Default legend value
-    return result;
-  }
-}
-
 export class Dataset extends IdName {
   static fromJson(json: any): Dataset {
     if (!json) {
@@ -279,7 +265,7 @@ export class Dataset extends IdName {
       json['phenotype_browser'],
       json['common_report'],
       json['genotype_browser_config'] ? GenotypeBrowser.fromJson(json['genotype_browser_config']) : null,
-      json['person_set_collections'] ? PeopleGroup.fromJson(json['person_set_collections']) : null,
+      json['person_set_collections'] ? PersonSetCollections.fromJson(json['person_set_collections']) : null,
       UserGroup.fromJsonArray(json['groups']),
       json['gene_browser'] ? GeneBrowser.fromJson(json['gene_browser']) : null,
       json['has_denovo'],
@@ -307,7 +293,7 @@ export class Dataset extends IdName {
       datasetJson['phenotype_browser'],
       datasetJson['common_report'],
       datasetJson['genotype_browser_config'] ? GenotypeBrowser.fromJson(datasetJson['genotype_browser_config']) : null,
-      datasetJson['person_set_collections'] ? PeopleGroup.fromJson(datasetJson['person_set_collections']) : null,
+      datasetJson['person_set_collections'] ? PersonSetCollections.fromJson(datasetJson['person_set_collections']) : null,
       UserGroup.fromJsonArray(datasetJson['groups']),
       datasetJson['gene_browser'] ? GeneBrowser.fromJson(datasetJson['gene_browser']) : null,
       detailsJson['has_denovo'],
@@ -342,7 +328,7 @@ export class Dataset extends IdName {
     readonly phenotypeBrowser: boolean,
     readonly commonReport: object,
     readonly genotypeBrowserConfig: GenotypeBrowser,
-    readonly peopleGroupConfig: PeopleGroup,
+    readonly personSetCollections: PersonSetCollections,
     readonly groups: UserGroup[],
     readonly geneBrowser: GeneBrowser,
     readonly hasDenovo: boolean,

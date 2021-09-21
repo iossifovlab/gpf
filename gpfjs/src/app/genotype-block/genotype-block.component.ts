@@ -48,7 +48,7 @@ export class GenotypeBlockComponent {
       'presentInChild': presentInChildState.presentInChild,
       'presentInParent': presentInParentState,
       'studyTypes': studyTypesState.studyTypes,
-      'peopleGroup': pedigreeSelectorState,
+      'personSetCollection': pedigreeSelectorState,
       'familyTypes': familyTypeFilterState.familyTypes,
     };
   }

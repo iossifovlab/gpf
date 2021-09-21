@@ -72,7 +72,6 @@ import './app/effecttypes/effecttypes.spec.ts';
 import './app/groups-bulk-add/groups-bulk-add.component.spec.ts';
 import './app/inheritancetypes/inheritancetypes.component.spec.ts';
 import './app/datasets/datasets.component.spec.ts';
-import './app/datasets/datasets.service.spec.ts';
 import './app/reset-password/reset-password.component.spec.ts';
 import './app/pheno-measure-selector/pheno-measure-selector.component.spec.ts';
 import './app/study-filter/study-filter.component.spec.ts';
