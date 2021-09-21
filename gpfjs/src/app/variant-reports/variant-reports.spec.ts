@@ -2,7 +2,9 @@ import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 import {
   ChildrenCounter,
   DeNovoData,
+  DenovoReport,
   EffectTypeRow,
+  EffectTypeTable,
   FamilyCounter,
   FamilyCounters,
   FamilyReport,
@@ -523,3 +525,174 @@ describe('EffectTypeRow', () => {
   });
 });
 
+describe('EffectTypeTable', () => {
+  it('should create effect type table from json', () => {
+    const mockEffectTypeTable1 = new EffectTypeTable(
+      [
+        new EffectTypeRow('effectType1', [ new DeNovoData('1', 2, 3, 4, 5), new DeNovoData('2', 6, 7, 8, 9)]),
+        new EffectTypeRow('effectType2', [ new DeNovoData('6', 7, 8, 9, 10), new DeNovoData('1', 2, 3, 4, 5)])
+      ], 'groupName1', ['col1', 'col2'], ['effectGroup1', 'effectGroup2'], ['effectType1', 'effectType2']
+    );
+
+    const mockEffectTypeTable2 = EffectTypeTable.fromJson({
+      rows: [
+        {
+        effect_type: 'effectType1',
+        row : [
+          {
+            column: '1',
+            number_of_observed_events: 2,
+            number_of_children_with_event: 3,
+            observed_rate_per_child: 4,
+            percent_of_children_with_events: 5
+          },
+          {
+            column: '2',
+            number_of_observed_events: 6,
+            number_of_children_with_event: 7,
+            observed_rate_per_child: 8,
+            percent_of_children_with_events: 9
+          }
+        ]},
+        {
+          effect_type: 'effectType2',
+          row : [
+            {
+              column: '6',
+              number_of_observed_events: 7,
+              number_of_children_with_event: 8,
+              observed_rate_per_child: 9,
+              percent_of_children_with_events: 10
+            },
+            {
+              column: '1',
+              number_of_observed_events: 2,
+              number_of_children_with_event: 3,
+              observed_rate_per_child: 4,
+              percent_of_children_with_events: 5
+            }
+          ]},
+      ],
+      group_name: 'groupName1',
+      columns: ['col1', 'col2'],
+      effect_groups: ['effectGroup1', 'effectGroup2'],
+      effect_types: ['effectType1', 'effectType2']
+    });
+
+    expect(mockEffectTypeTable1).toEqual(mockEffectTypeTable2);
+  });
+});
+
+describe('DenovoReport', () => {
+  it('should create json from denovo report', () => {
+    const mockDenovoReport1 = new DenovoReport(
+      [
+      new EffectTypeTable(
+        [
+          new EffectTypeRow('effectType1', [ new DeNovoData('1', 2, 3, 4, 5), new DeNovoData('2', 6, 7, 8, 9)]),
+          new EffectTypeRow('effectType2', [ new DeNovoData('6', 7, 8, 9, 10), new DeNovoData('1', 2, 3, 4, 5)])
+        ], 'groupName1', ['col1', 'col2'], ['effectGroup1', 'effectGroup2'], ['effectType1', 'effectType2']),
+        new EffectTypeTable(
+          [
+            new EffectTypeRow('effectType3', [ new DeNovoData('5', 5, 6, 2, 1), new DeNovoData('2', 5, 4, 6, 4)]),
+            new EffectTypeRow('effectType4', [ new DeNovoData('7', 4, 5, 6, 1), new DeNovoData('7', 2, 1, 8, 3)])
+          ], 'groupName2', ['col3', 'col4'], ['effectGroup2', 'effectGroup3'], ['effectType2', 'effectType3'])
+      ]
+    );
+
+    const mockDenovoReport2 = DenovoReport.fromJson({
+      tables: [
+      {
+        rows: [
+          {
+          effect_type: 'effectType1',
+          row : [
+            {
+              column: '1',
+              number_of_observed_events: 2,
+              number_of_children_with_event: 3,
+              observed_rate_per_child: 4,
+              percent_of_children_with_events: 5
+            },
+            {
+              column: '2',
+              number_of_observed_events: 6,
+              number_of_children_with_event: 7,
+              observed_rate_per_child: 8,
+              percent_of_children_with_events: 9
+            }
+          ]},
+          {
+            effect_type: 'effectType2',
+            row : [
+              {
+                column: '6',
+                number_of_observed_events: 7,
+                number_of_children_with_event: 8,
+                observed_rate_per_child: 9,
+                percent_of_children_with_events: 10
+              },
+              {
+                column: '1',
+                number_of_observed_events: 2,
+                number_of_children_with_event: 3,
+                observed_rate_per_child: 4,
+                percent_of_children_with_events: 5
+              }
+            ]},
+        ],
+        group_name: 'groupName1',
+        columns: ['col1', 'col2'],
+        effect_groups: ['effectGroup1', 'effectGroup2'],
+        effect_types: ['effectType1', 'effectType2']
+      },
+      {
+        rows: [
+          {
+          effect_type: 'effectType3',
+          row : [
+            {
+              column: '5',
+              number_of_observed_events: 5,
+              number_of_children_with_event: 6,
+              observed_rate_per_child: 2,
+              percent_of_children_with_events: 1
+            },
+            {
+              column: '2',
+              number_of_observed_events: 5,
+              number_of_children_with_event: 4,
+              observed_rate_per_child: 6,
+              percent_of_children_with_events: 4
+            }
+          ]},
+          {
+            effect_type: 'effectType4',
+            row : [
+              {
+                column: '7',
+                number_of_observed_events: 4,
+                number_of_children_with_event: 5,
+                observed_rate_per_child: 6,
+                percent_of_children_with_events: 1
+              },
+              {
+                column: '7',
+                number_of_observed_events: 2,
+                number_of_children_with_event: 1,
+                observed_rate_per_child: 8,
+                percent_of_children_with_events: 3
+              }
+            ]},
+        ],
+        group_name: 'groupName2',
+        columns: ['col3', 'col4'],
+        effect_groups: ['effectGroup2', 'effectGroup3'],
+        effect_types: ['effectType2', 'effectType3']
+        }
+      ]
+    });
+
+    expect(mockDenovoReport1).toEqual(mockDenovoReport2);
+  });
+});
