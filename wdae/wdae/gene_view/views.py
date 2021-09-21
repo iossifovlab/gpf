@@ -14,7 +14,6 @@ from datasets_api.permissions import \
     handle_partial_permissions
 
 
-
 LOGGER = logging.getLogger(__name__)
 
 

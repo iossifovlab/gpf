@@ -261,7 +261,7 @@ LOGGING = {
         },
         "impala": {
             "handlers": ["console", "logdebug"],  # 'logfile'],
-            "level": "INFO",
+            "level": "WARNING",
             "propagate": True,
         },
         "matplotlib": {

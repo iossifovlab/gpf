@@ -42,9 +42,10 @@ def write_float(stream, num):
 
 
 def write_string(stream, string):
-    length = len(string)
+    encoded = string.encode("utf8")
+    length = len(encoded)
     stream.write(length.to_bytes(4, "big", signed=False))
-    stream.write(string.encode("utf8"))
+    stream.write(encoded)
 
 
 def write_string_list(stream, li):

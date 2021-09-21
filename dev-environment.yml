@@ -3,7 +3,6 @@
 # platform: linux-64
 # conda create -c conda-forge -c bioconda -n <env name> --file <this file>
 channels:
-  - defaults
   - conda-forge 
   - bioconda
   - iossifovlab

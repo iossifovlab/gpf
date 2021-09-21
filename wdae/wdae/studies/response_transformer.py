@@ -146,6 +146,10 @@ class ResponseTransformer:
         self.study_wrapper = study_wrapper
         self._pheno_columns = study_wrapper.config_columns.phenotype
 
+    @property
+    def families(self):
+        return self.study_wrapper.families
+
     def _get_all_pheno_values(self, family_ids):
         if not self.study_wrapper.phenotype_data \
            or not self.study_wrapper.config_columns.phenotype:
@@ -232,9 +236,12 @@ class ResponseTransformer:
             0,
         ]
 
-    def _generate_pedigree(self, variant, person_set_collection):
+    def _generate_pedigree(self, variant, collection_id):
         result = []
         # best_st = np.sum(allele.gt == allele.allele_index, axis=0)
+        person_set_collection = self.study_wrapper.get_person_set_collection(
+            collection_id
+        )
         genotype = variant.family_genotype
 
         missing_members = set()
@@ -309,11 +316,9 @@ class ResponseTransformer:
                     col_source = f"{col_source}.{col_role}"
 
                 if col_source == "pedigree":
-                    person_set_collection = \
-                        kwargs.get("person_set_collection")
-                    row_variant.append(
-                        self._generate_pedigree(v, person_set_collection)
-                    )
+                    row_variant.append(self._generate_pedigree(
+                        v, kwargs.get("person_set_collection")
+                    ))
                 elif col_source in self.PHENOTYPE_ATTRS:
                     phenotype_person_sets = \
                         self.study_wrapper.person_set_collections.get(
@@ -456,6 +461,28 @@ class ResponseTransformer:
                         allele.update_attributes(pheno_values)
 
                 yield variant
+
+    def variant_transformer(self):
+        pheno_column_values = self._get_all_pheno_values(self.families)
+
+        def transformer(variant):
+            pheno_values = self._get_pheno_values_for_variant(
+                variant, pheno_column_values
+            )
+
+            for allele in variant.alt_alleles:
+                if not self.study_wrapper.is_remote:
+                    gene_weights_values = self._get_gene_weights_values(
+                        allele
+                    )
+                    allele.update_attributes(gene_weights_values)
+
+                if pheno_values:
+                    allele.update_attributes(pheno_values)
+
+            return variant
+
+        return transformer
 
     def transform_summary_variants(self, variants_iterable):
         for v in self._add_additional_columns_summary(variants_iterable):

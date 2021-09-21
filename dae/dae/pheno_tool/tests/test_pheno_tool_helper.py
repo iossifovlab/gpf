@@ -69,9 +69,11 @@ mocked_study = Box(
     }
 )
 
+mocked_pheno = Box()
+
 
 def test_genotype_data_persons():
-    helper = PhenoToolHelper(mocked_study)
+    helper = PhenoToolHelper(mocked_study, mocked_pheno)
     assert helper.genotype_data_persons() == {
         "fam1.prb",
         "fam2.prb",
@@ -80,12 +82,12 @@ def test_genotype_data_persons():
 
 
 def test_genotype_data_persons_family_filters():
-    helper = PhenoToolHelper(mocked_study)
+    helper = PhenoToolHelper(mocked_study, mocked_pheno)
     assert helper.genotype_data_persons(family_ids=["fam2"]) == {"fam2.prb"}
 
 
 def test_genotype_data_persons_roles():
-    helper = PhenoToolHelper(mocked_study)
+    helper = PhenoToolHelper(mocked_study, mocked_pheno)
     assert helper.genotype_data_persons(roles=[Role.prb, Role.sib]) == {
         "fam1.prb",
         "fam2.prb",
@@ -97,50 +99,50 @@ def test_genotype_data_persons_roles():
 
 
 def test_genotype_data_persons_invalid_roles():
-    helper = PhenoToolHelper(mocked_study)
+    helper = PhenoToolHelper(mocked_study, mocked_pheno)
     with pytest.raises(AssertionError):
         helper.genotype_data_persons(roles=Role.prb)
 
 
 def test_genotype_data_persons_invalid_family_ids():
-    helper = PhenoToolHelper(mocked_study)
+    helper = PhenoToolHelper(mocked_study, mocked_pheno)
     with pytest.raises(AssertionError):
         helper.genotype_data_persons(family_ids="fam1")
 
 
-def test_pheno_filter_persons(mocker):
-    mocker.spy(mocked_study.query_transformer, "_transform_filters_to_ids")
-    helper = PhenoToolHelper(mocked_study)
-    helper.pheno_filter_persons([1])
-    mocked_study.query_transformer._transform_filters_to_ids \
-        .assert_called_once_with([1])
+# def test_pheno_filter_persons(mocker):
+#     mocker.spy(mocked_study.query_transformer, "_transform_filters_to_ids")
+#     helper = PhenoToolHelper(mocked_study, mocked_pheno)
+#     helper.pheno_filter_persons([1])
+#     mocked_study.query_transformer._transform_filters_to_ids \
+#         .assert_called_once_with([1])
 
 
-def test_pheno_filter_persons_none_or_empty():
-    helper = PhenoToolHelper(mocked_study)
-    assert helper.pheno_filter_persons(None) is None
-    assert helper.pheno_filter_persons(list()) is None
+# def test_pheno_filter_persons_none_or_empty():
+#     helper = PhenoToolHelper(mocked_study, mocked_pheno)
+#     assert helper.pheno_filter_persons(None) is None
+#     assert helper.pheno_filter_persons(list()) is None
 
 
-def test_pheno_filter_persons_invalid_input_type():
-    helper = PhenoToolHelper(mocked_study)
-    with pytest.raises(AssertionError):
-        helper.pheno_filter_persons(dict)
-    with pytest.raises(AssertionError):
-        helper.pheno_filter_persons(tuple)
+# def test_pheno_filter_persons_invalid_input_type():
+#     helper = PhenoToolHelper(mocked_study, mocked_pheno)
+#     with pytest.raises(AssertionError):
+#         helper.pheno_filter_persons(dict)
+#     with pytest.raises(AssertionError):
+#         helper.pheno_filter_persons(tuple)
 
 
 def test_genotype_data_variants():
-    helper = PhenoToolHelper(mocked_study)
+    helper = PhenoToolHelper(mocked_study, mocked_pheno)
     variants = helper.genotype_data_variants(
         {
-            "effectTypes": [
-                "Splice-site",
-                "Frame-shift",
-                "Nonsense",
-                "No-frame-shift-newStop",
-                "Missense",
-                "Synonymous",
+            "effect_types": [
+                "splice-site",
+                "frame-shift",
+                "nonsense",
+                "no-frame-shift-newStop",
+                "missense",
+                "synonymous",
             ]
         }
     )
@@ -158,17 +160,17 @@ def test_genotype_data_variants():
 
 
 def test_genotype_data_variants_invalid_data():
-    helper = PhenoToolHelper(mocked_study)
+    helper = PhenoToolHelper(mocked_study, mocked_pheno)
     with pytest.raises(AssertionError):
         helper.genotype_data_variants(
-            {"effect_types": ["Splice-site", "Frame-shift"]}
+            {"effectTypes": ["splice-site", "frame-shift"]}
         )
 
 
 def test_genotype_data_variants_specific_effects():
-    helper = PhenoToolHelper(mocked_study)
+    helper = PhenoToolHelper(mocked_study, mocked_pheno)
     variants = helper.genotype_data_variants(
-        {"effectTypes": ["Missense", "Synonymous"]}
+        {"effect_types": ["missense", "synonymous"]}
     )
 
     assert variants.get("missense") == Counter({"fam1.prb": 1})
@@ -178,27 +180,27 @@ def test_genotype_data_variants_specific_effects():
 
 
 def test_genotype_data_variants_lgds():
-    helper = PhenoToolHelper(mocked_study)
-    variants = helper.genotype_data_variants({"effectTypes": ["LGDs"]})
-
-    assert variants.get("lgds") == Counter({"fam2.prb": 1, "fam3.prb": 1})
+    helper = PhenoToolHelper(mocked_study, mocked_pheno)
+    variants = helper.genotype_data_variants({"effect_types": ["lgds"]})
+    assert variants.get("lgds") == Counter({"fam2.prb": 1, "fam3.prb": 1}), \
+        variants
 
 
 def test_genotype_data_variants_nonsynonymous():
-    helper = PhenoToolHelper(mocked_study)
+    helper = PhenoToolHelper(mocked_study, mocked_pheno)
     variants = helper.genotype_data_variants(
-        {"effectTypes": ["Nonsynonymous"]}
+        {"effect_types": ["nonsynonymous"]}
     )
 
     assert variants.get("nonsynonymous") == Counter(
         {"fam1.prb": 1, "fam2.prb": 1, "fam3.prb": 1}
-    )
+    ), variants
 
 
 def test_genotype_data_variants_lgds_mixed():
-    helper = PhenoToolHelper(mocked_study)
+    helper = PhenoToolHelper(mocked_study, mocked_pheno)
     variants = helper.genotype_data_variants(
-        {"effectTypes": ["LGDs", "Frame-shift", "Splice-site"]}
+        {"effect_types": ["LGDs", "frame-shift", "splice-site"]}
     )
 
     assert variants.get("lgds") == Counter({"fam2.prb": 1, "fam3.prb": 1})
@@ -209,12 +211,12 @@ def test_genotype_data_variants_lgds_mixed():
 
 
 def test_genotype_data_variants_family_filters(mocker):
-    helper = PhenoToolHelper(mocked_study)
+    helper = PhenoToolHelper(mocked_study, mocked_pheno)
     mocker.spy(mocked_study, "query_variants")
     helper.genotype_data_variants(
-        {"effectTypes": ["LGDs"], "familyIds": {0: "fam1", 1: "fam2"}}
+        {"effect_types": ["LGDs"], "familyIds": {0: "fam1", 1: "fam2"}}
     )
 
     mocked_study.query_variants.assert_called_once_with(
-        effectTypes=["LGDs"], familyIds={0: "fam1", 1: "fam2"}
+        effect_types=["LGDs"], familyIds={0: "fam1", 1: "fam2"}
     )
