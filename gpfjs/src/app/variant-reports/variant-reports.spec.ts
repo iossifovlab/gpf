@@ -1017,3 +1017,36 @@ describe('VariantReport', () => {
     expect(mockVariantReport1).toEqual(mockVariantReport2);
   });
 });
+
+describe('LegendItem', () => {
+  it('should create legend item from json', () => {
+    const mockLegendItem = LegendItem.fromJson(
+      {
+        id: 'id1',
+        name: 'name1',
+        color: 'color1'
+      }
+    );
+
+    expect(mockLegendItem).toEqual(new LegendItem('id1', 'name1', 'color1'));
+  });
+});
+
+describe('Legend', () => {
+  it('should create legend from json', () => {
+    const mockLegend = Legend.fromList(
+      [{
+        id: 'id1',
+        name: 'name1',
+        color: 'color1'
+      },
+      {
+        id: 'id2',
+        name: 'name2',
+        color: 'color2'
+      }]
+    );
+
+    expect(mockLegend).toEqual(new Legend([new LegendItem('id1', 'name1', 'color1'), new LegendItem('id2', 'name2', 'color2')]));
+  });
+});
