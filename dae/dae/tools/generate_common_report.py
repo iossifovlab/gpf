@@ -69,6 +69,13 @@ def main(argv, gpf_instance=None):
                 continue
 
             study = gpf_instance.get_genotype_data(study)
+
+            if not study.config.common_report.enabled:
+                logger.warning(
+                    f"skipping study {study.study_id} since "
+                    f"common report is disabled")
+                continue
+
             common_report = CommonReport(study)
             file_path = study.config.common_report.file_path
 
