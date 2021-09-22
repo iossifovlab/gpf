@@ -180,9 +180,10 @@ class GenotypeData(ABC):
             affected_status=None,
             unique_family_variants=True,
             **kwargs):
-
-        person_ids = self._transform_person_set_collection_query(
-            person_set_collection, person_ids)
+        if person_set_collection is not None:
+            person_ids = self._transform_person_set_collection_query(
+                person_set_collection, person_ids
+            )
         if person_ids is not None and len(person_ids) == 0:
             return
 
