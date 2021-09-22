@@ -6,18 +6,18 @@
     <!-- style="text-align: left; border: 1px solid #dddddd; width: 100%" -->
     <ngb-accordion *ngIf="selectedGeneSetsCollection?.types" activeIds="{{defaultSelectedDenovoGeneSetId}}" destroyOnHide="false"
         #acc="ngbAccordion" class="gene-sets-types row-sm-3">
-      <ngb-panel *ngFor="let type of selectedGeneSetsCollection.types" id="{{type.datasetId}}-{{type.peopleGroupId}}-denovo-geneset">
+      <ngb-panel *ngFor="let type of selectedGeneSetsCollection.types" id="{{type.datasetId}}-{{type.personSetCollectionId}}-denovo-geneset">
         <ng-template ngbPanelTitle *ngIf="selectedGeneSetsCollection?.types?.length > 0">
           <div style="text-align: left">
             <span style="display: block;" class="dropdown-toggle btn-sm text-wrap">{{ getGeneSetName(type) }}</span>
           </div>
         </ng-template>
         <ng-template ngbPanelContent>
-          <div *ngFor="let peopleGroup of type.peopleGroupLegend">
-            <label [attr.for]="(type.datasetId) + '-checkbox-' + (peopleGroup.id)">
-              <input type="checkbox" [attr.id]="(type.datasetId) + '-checkbox-' + (peopleGroup.id)" [ngModel]="isSelectedGeneType(type.datasetId, type.peopleGroupId, peopleGroup.id)" (ngModelChange)="setSelectedGeneType(type.datasetId, type.peopleGroupId, peopleGroup.id, $event); onSearch()">
-              <span class="pedigree-icon" [style.background-color]="peopleGroup.color"></span>
-              {{ peopleGroup.name }}
+          <div *ngFor="let personSet of type.personSetCollectionLegend">
+            <label [attr.for]="(type.datasetId) + '-checkbox-' + (personSet.id)">
+              <input type="checkbox" [attr.id]="(type.datasetId) + '-checkbox-' + (personSet.id)" [ngModel]="isSelectedGeneType(type.datasetId, type.personSet, personSet.id)" (ngModelChange)="setSelectedGeneType(type.datasetId, type.personSetCollectionId, personSet.id, $event); onSearch()">
+              <span class="pedigree-icon" [style.background-color]="personSet.color"></span>
+              {{ personSet.name }}
             </label>
           </div>
         </ng-template>

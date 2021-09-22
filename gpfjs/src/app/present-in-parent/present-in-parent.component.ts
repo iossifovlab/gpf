@@ -22,7 +22,7 @@ export class PresentInParentComponent extends StatefulComponent implements OnIni
   @ValidateIf(o => o.selectedRarityType !== 'ultraRare')
   @Min(0) @Max(100)
   @IsMoreThanOrEqual('rarityIntervalStart')
-  rarityIntervalEnd = 100;
+  rarityIntervalEnd = 1;
 
   presentInParentValues: Set<string> = new Set([
     'mother only', 'father only', 'mother and father', 'neither'
@@ -59,7 +59,7 @@ export class PresentInParentComponent extends StatefulComponent implements OnIni
       this.selectedRarityType = '';
     } else if (this.selectedRarityType === '') {
       // otherwise, set 'all' as default rarity type
-      this.selectedRarityType = 'all';
+      this.selectedRarityType = 'ultraRare';
     }
     this.updateState();
   }

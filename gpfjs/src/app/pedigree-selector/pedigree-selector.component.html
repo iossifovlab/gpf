@@ -6,7 +6,7 @@
 
   <div
     *ngIf="pedigreeSelectorSwitch() == 'single'"
-    class="card-header card-title">{{ selectedPedigree?.name }}</div>
+    class="card-header card-title">{{ selectedCollection?.name }}</div>
   <div
     *ngIf="pedigreeSelectorSwitch() == 'multi'"
     class="card-header card-title">
@@ -19,16 +19,16 @@
           id="pedigree-dropdown-menu-button"
           data-toggle="dropdown"
           aria-haspopup="true"
-          aria-expanded="false">{{ selectedPedigree?.name }}
+          aria-expanded="false">{{ selectedCollection?.name }}
         </button>
         <div
           class="dropdown-menu"
           aria-labelledby="pedigree-dropdown-menu-button">
           <a
-            *ngFor="let pedigree of pedigrees; let i=index"
+            *ngFor="let collection of collections; let i=index"
             class="dropdown-item"
             (click)="selectPedigreeClicked(i, $event)"
-            href="#">{{ pedigree.name }}</a>
+            href="#">{{ collection.name }}</a>
         </div>
       </div>
     </div>
@@ -44,7 +44,7 @@
         class="btn btn-default">None</button>
     </div>
     <div
-      *ngFor="let selectorValue of selectedPedigree?.domain"
+      *ngFor="let selectorValue of selectedCollection?.domain"
       class="checkbox">
       <label> <input
         #checkbox

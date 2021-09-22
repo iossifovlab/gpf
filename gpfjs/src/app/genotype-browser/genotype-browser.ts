@@ -4,7 +4,7 @@ export class BrowserQueryFilter {
     private geneSymbols: string[],
     private effectTypes: string[],
     private gender: string[],
-    private peopleGroup: PeopleGroup,
+    private personSetCollection: PersonSetCollection,
     private studyTypes: string[],
     private variantTypes: string[],
     private genomicScores: GenomicScore[],
@@ -13,7 +13,7 @@ export class BrowserQueryFilter {
   ) { }
 }
 
-export class PeopleGroup {
+export class PersonSetCollection {
   constructor(
     private id: string,
     private checkedValues: string[],
