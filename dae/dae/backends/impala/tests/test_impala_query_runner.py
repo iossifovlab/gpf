@@ -11,9 +11,8 @@ from dae.backends.impala.impala_variants import ImpalaQueryRunner
 
 def create_runner(impala_helpers, query, deserializer=None):
 
-    connection = impala_helpers.connection()
     runner = ImpalaQueryRunner(
-        connection, query, deserializer=deserializer)
+        impala_helpers._connection_pool, query, deserializer=deserializer)
     return runner
 
 

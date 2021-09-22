@@ -252,8 +252,8 @@ class StudyWrapper(StudyWrapperBase):
             for column_id in column_group.columns:
                 if column_id not in genotype_cols \
                    and column_id not in phenotype_cols:
-                    logger.warn(
-                        f"Column {column_id} not defined in configuration"
+                    logger.warning(
+                        f"column {column_id} not defined in configuration"
                     )
                     return False
         return True
@@ -301,22 +301,6 @@ class StudyWrapper(StudyWrapperBase):
         self, kwargs, sources, max_variants_count=10000,
         max_variants_message=False
     ):
-        people_group = kwargs.pop("peopleGroup", {})
-        logger.debug(f"people group requested: {people_group}")
-        if people_group:
-            people_group = people_group.get("id")
-        else:
-            people_group = None
-            selected_person_set_collections = self.genotype_data\
-                .config\
-                .person_set_collections\
-                .selected_person_set_collections
-            if selected_person_set_collections:
-                people_group = selected_person_set_collections[0]
-
-        logger.debug(f"people group selected: {people_group}")
-        person_set_collection = self.get_person_set_collection(people_group)
-
         max_variants_count = kwargs.pop("maxVariantsCount", max_variants_count)
         summary_variant_ids = set(kwargs.pop("summaryVariantIds", []))
 
@@ -355,7 +339,9 @@ class StudyWrapper(StudyWrapperBase):
                     continue
 
                 row_variant = self.response_transformer._build_variant_row(
-                    v, sources, person_set_collection=person_set_collection)
+                    v, sources,
+                    person_set_collection=kwargs["person_set_collection"][0]
+                )
 
                 yield row_variant
         except GeneratorExit:
@@ -510,19 +496,8 @@ class RemoteStudyWrapper(StudyWrapperBase):
             max_variants_count=10000,
             max_variants_message=False):
         study_filters = kwargs.get("study_filters")
-        people_group = kwargs.get("peopleGroup", {})
-
-        if people_group:
-            people_group = people_group.get("id")
-        else:
-            people_group = None
-            selected_person_set_collections = self.genotype_data\
-                .config\
-                .person_set_collections\
-                .selected_person_set_collections
-            if selected_person_set_collections:
-                people_group = selected_person_set_collections[0]
-        person_set_collection = self.get_person_set_collection(people_group)
+        person_set_collection_id = \
+            kwargs.get("personSetCollection", {}).get("id")
 
         if study_filters is not None:
             del kwargs["study_filters"]
@@ -567,7 +542,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
             )
 
             row_variant = self.response_transformer._build_variant_row(
-                fv, sources, person_set_collection=person_set_collection
+                fv, sources, person_set_collection=person_set_collection_id
             )
 
             yield row_variant

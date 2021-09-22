@@ -2,15 +2,46 @@ import os
 import re
 import itertools
 import logging
+import time
 # from dae.utils.debug_closing import closing
 
 import queue
 
 from contextlib import closing
+from six import reraise
 
 from impala import dbapi
 
 logger = logging.getLogger(__name__)
+
+
+class _PoolCursor:
+
+    def __init__(self, connection, cursor):
+        self.connection = connection
+        self.connection.open_cursors.add(id(self))
+        self.cursor = cursor
+
+    def __getattr__(self, name):
+        return getattr(self.cursor, name)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        if exc_type is not None:
+            reraise(exc_type, exc_val, exc_tb)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return self.cursor.__next__()
+
+    def close(self):
+        self.connection.open_cursors.remove(id(self))
+        self.cursor.close()
 
 
 class _PoolConnection:
@@ -18,11 +49,20 @@ class _PoolConnection:
     def __init__(self, pool, connection):
         self.pool = pool
         self.connection = connection
-    
+        self.open_cursors = set()
+
     def cursor(self):
-        return self.connection.cursor()
-    
+        assert len(self.open_cursors) == 0
+
+        result = self.connection.cursor()
+        return _PoolCursor(self, result)
+
     def close(self):
+        # self.connection.reconnect()
+
+        # self.connection.close()
+        # self.connection = self.pool.create_connection_func()
+
         self.pool.connections.put(self.connection)
         logger.debug(f"connection close: pool {self.pool.status()}")
 
@@ -30,19 +70,25 @@ class _PoolConnection:
     def host(self):
         return self.connection.host
 
+
 class ConnectionPool:
     def __init__(self, create_connection_func, pool_size=12):
         self.pool_size = pool_size
-        self.connections = queue.Queue(maxsize=pool_size)        
+        self.connections = queue.Queue(maxsize=pool_size)
+        self.create_connection_func = create_connection_func
         while not self.connections.full():
             connection = create_connection_func()
             self.connections.put(connection)
 
     def connect(self):
+        start = time.time()
         logger.debug(f"connect called: {self.status()}")
         connection = self.connections.get()
+        elapsed = time.time() - start
+        logger.debug(
+            f"connection receieved: {self.status()} in {elapsed:0.3f} sec")
         return _PoolConnection(self, connection)
-    
+
     def status(self):
         return f"pool size: {self.pool_size}; " \
             f"available connections: {self.connections.qsize()}"
@@ -70,7 +116,7 @@ class ImpalaHelpers:
             return connection
 
         self._connection_pool = ConnectionPool(
-            create_connection, pool_size=12)
+            create_connection, pool_size=3 * len(impala_hosts) + 1)
 
         logger.debug(
             f"created impala pool with {self._connection_pool.status()} "
@@ -80,11 +126,7 @@ class ImpalaHelpers:
         logger.debug(
             f"going to get impala connection from the pool; "
             f"{self._connection_pool.status()}")
-        conn = self._connection_pool.connect()
-        logger.debug(
-            f"[DONE] going to get impala connection to host {conn.host} "
-            f"from the pool; {self._connection_pool.status()}")
-        return conn
+        return self._connection_pool.connect()
 
     def _import_single_file(self, cursor, db, table, import_file):
 

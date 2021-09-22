@@ -2,6 +2,7 @@ import time
 import logging
 import threading
 import queue
+import functools
 
 # from dae.utils.debug_closing import closing
 from contextlib import closing
@@ -171,6 +172,7 @@ class GenotypeData(ABC):
             variant_type=None,
             real_attr_filter=None,
             ultra_rare=None,
+            frequency_filter=None,
             return_reference=None,
             return_unknown=None,
             limit=None,
@@ -187,6 +189,18 @@ class GenotypeData(ABC):
         if effect_types:
             effect_types = expand_effect_types(effect_types)
 
+        def adapt_study_variants(study_name, study_phenotype, v):
+            if v is None:
+                return None
+            for allele in v.alleles:
+                if allele.get_attribute("study_name") is None:
+                    allele.update_attributes(
+                        {"study_name": study_name})
+                if allele.get_attribute("study_phenotype") is None:
+                    allele.update_attributes(
+                        {"study_phenotype": study_phenotype})
+            return v
+
         runners = []
         for genotype_study in self._get_query_children(study_filters):
             runner = genotype_study._backend\
@@ -202,27 +216,18 @@ class GenotypeData(ABC):
                     variant_type=variant_type,
                     real_attr_filter=real_attr_filter,
                     ultra_rare=ultra_rare,
+                    frequency_filter=frequency_filter,
                     return_reference=return_reference,
                     return_unknown=return_unknown,
                     limit=limit,
                     affected_status=affected_status)
             logger.debug("runner created")
+
             study_name = genotype_study.name
             study_phenotype = genotype_study.study_phenotype
 
-            def adapt_study_variants(v):
-                if v is None:
-                    return None
-                for allele in v.alleles:
-                    if allele.get_attribute("study_name") is None:
-                        allele.update_attributes(
-                            {"study_name": study_name})
-                    if allele.get_attribute("study_phenotype") is None:
-                        allele.update_attributes(
-                            {"study_phenotype": study_phenotype})
-                return v
-
-            runner.adapt(adapt_study_variants)
+            runner.adapt(functools.partial(
+                adapt_study_variants, study_name, study_phenotype))
             runners.append(runner)
 
         logger.debug(f"runners: {len(runners)}")
@@ -245,13 +250,13 @@ class GenotypeData(ABC):
                         continue
                     if unique_family_variants and v.fvuid in seen:
                         continue
-                    for allele in v.alleles:
-                        if allele.get_attribute("study_name") is None:
-                            allele.update_attributes(
-                                {"study_name": self.name})
-                        if allele.get_attribute("study_phenotype") is None:
-                            allele.update_attributes(
-                                {"study_phenotype": self.study_phenotype})
+                    # for allele in v.alleles:
+                    #     if allele.get_attribute("study_name") is None:
+                    #         allele.update_attributes(
+                    #             {"study_name": self.name})
+                    #     if allele.get_attribute("study_phenotype") is None:
+                    #         allele.update_attributes(
+                    #             {"study_phenotype": self.study_phenotype})
 
                     seen.add(v.fvuid)
                     yield v
@@ -283,6 +288,7 @@ class GenotypeData(ABC):
         variant_type=None,
         real_attr_filter=None,
         ultra_rare=None,
+        frequency_filter=None,
         return_reference=None,
         return_unknown=None,
         limit=None,
@@ -316,6 +322,7 @@ class GenotypeData(ABC):
                     variant_type=variant_type,
                     real_attr_filter=real_attr_filter,
                     ultra_rare=ultra_rare,
+                    frequency_filter=frequency_filter,
                     return_reference=return_reference,
                     return_unknown=return_unknown,
                     limit=limit)
@@ -417,27 +424,19 @@ class GenotypeData(ABC):
                 self.person_set_collection_configs[collection_id] = \
                     collection_conf
 
-    def _transform_person_set_collection_query(
-            self, person_set_collection, person_ids):
-
-        if person_set_collection is not None:
-            person_set_collection_id, selected_person_sets = \
-                person_set_collection
-            selected_person_sets = set(selected_person_sets)
-            person_set_collection = self.get_person_set_collection(
-                person_set_collection_id)
-            person_set_ids = set(person_set_collection.person_sets.keys())
-            selected_person_sets = person_set_ids & selected_person_sets
-
-            if selected_person_sets == person_set_ids:
-                # all persons selected
-                pass
-            else:
+    def _transform_person_set_collection_query(self, collection, person_ids):
+        if collection is not None:
+            collection_id, selected_sets = collection
+            collection = self.get_person_set_collection(collection_id)
+            person_set_ids = set(collection.person_sets.keys())
+            if selected_sets is not None:
                 selected_person_ids = set()
-                for set_id in selected_person_sets:
+                if set(selected_sets) == person_set_ids:
+                    return person_ids
+
+                for set_id in set(selected_sets) & person_set_ids:
                     selected_person_ids.update(
-                        person_set_collection.
-                        person_sets[set_id].persons.keys()
+                        collection.person_sets[set_id].persons.keys()
                     )
                 if person_ids is not None:
                     person_ids = set(person_ids) & selected_person_ids

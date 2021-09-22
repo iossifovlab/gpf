@@ -149,8 +149,8 @@ class ImpalaVariants:
     def connection(self):
         conn = self._impala_helpers.connection()
         logger.debug(
-            f"getting connection to host {conn.host} from impala helpers "
-            f"{id(self._impala_helpers)}")
+            f"ImpalaVariants: getting connection to host {conn.host} "
+            f"from impala helpers {id(self._impala_helpers)}")
         return conn
 
     @property
