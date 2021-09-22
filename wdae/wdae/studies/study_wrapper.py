@@ -340,7 +340,7 @@ class StudyWrapper(StudyWrapperBase):
 
                 row_variant = self.response_transformer._build_variant_row(
                     v, sources,
-                    person_set_collection=kwargs["person_set_collection"][0]
+                    person_set_collection=kwargs.get("person_set_collection", (None, None))[0]
                 )
 
                 yield row_variant
