@@ -196,42 +196,63 @@ const appRoutes: Routes = [
   {
     path: 'datasets/:dataset',
     component: DatasetsComponent,
-    data: {
-      reuse: false
-    },
     canLoad: [DatasetPermissionGuard],
     children: [
       {
         path: toolPageLinks.genotypeBrowser,
-        component: GenotypeBrowserSingleViewComponent
+        component: GenotypeBrowserSingleViewComponent,
+        data: {
+          reuse: false
+        },
       },
       {
         path: toolPageLinks.enrichmentTool,
-        component: EnrichmentToolComponent
+        component: EnrichmentToolComponent,
+        data: {
+          reuse: false
+        },
       },
       {
         path: toolPageLinks.phenotypeTool,
-        component: PhenoToolComponent
+        component: PhenoToolComponent,
+        data: {
+          reuse: false
+        },
       },
       {
         path: toolPageLinks.phenotypeBrowser,
-        component: PhenoBrowserComponent
+        component: PhenoBrowserComponent,
+        data: {
+          reuse: false
+        },
       },
       {
         path: toolPageLinks.datasetDescription,
-        component: DatasetDescriptionComponent
+        component: DatasetDescriptionComponent,
+        data: {
+          reuse: false
+        },
       },
       {
         path: toolPageLinks.datasetStatistics,
-        component: VariantReportsComponent
+        component: VariantReportsComponent,
+        data: {
+          reuse: false
+        },
       },
       {
         path: toolPageLinks.geneBrowser,
-        component: GeneBrowserComponent
+        component: GeneBrowserComponent,
+        data: {
+          reuse: false
+        },
       },
       {
         path: toolPageLinks.geneBrowser + '/:gene',
-        component: GeneBrowserComponent
+        component: GeneBrowserComponent,
+        data: {
+          reuse: false
+        },
       }
     ]
   },
@@ -406,7 +427,7 @@ const appRoutes: Routes = [
     GpfTableModule,
     PedigreeChartModule,
     HistogramModule,
-    RouterModule.forRoot(appRoutes, { onSameUrlNavigation: 'reload', relativeLinkResolution: 'legacy' }),
+    RouterModule.forRoot(appRoutes, { onSameUrlNavigation: 'reload' }),
     BrowserAnimationsModule,
     MarkdownModule.forRoot(),
     HttpClientModule,
@@ -449,11 +470,11 @@ const appRoutes: Routes = [
       provide: ErrorHandler,
       useClass: GlobalErrorHandler
     },
+    BnNgIdleService,
     {
       provide: RouteReuseStrategy,
       useClass: TaggingRouteReuseStrategy
     },
-    BnNgIdleService
   ],
 
   bootstrap: [AppComponent]

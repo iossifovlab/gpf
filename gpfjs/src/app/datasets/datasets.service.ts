@@ -61,12 +61,15 @@ export class DatasetsService {
 
   setSelectedDatasetById(datasetId: string, force = false): void {
     if (!force && this.selectedDataset$.getValue()?.id === datasetId) {
+      console.log('X');
       return;
     }
 
-    this.selectedDataset$.next(null);
+    // this.selectedDataset$.next(null);
+    console.log('V');
     this.getDataset(datasetId).pipe(take(1)).subscribe(dataset => {
       this.selectedDataset$.next(dataset);
+      console.log('V2');
       this.datasetLoaded$.next();
     });
   }

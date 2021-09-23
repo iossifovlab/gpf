@@ -1,5 +1,5 @@
 import { UsersService } from '../users/users.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, toolPageLinks } from './datasets';
 // tslint:disable-next-line:import-blacklist
@@ -16,7 +16,7 @@ import { map, take } from 'rxjs/operators';
   templateUrl: './datasets.component.html',
   styleUrls: ['./datasets.component.css'],
 })
-export class DatasetsComponent implements OnInit {
+export class DatasetsComponent implements OnInit, OnDestroy {
   static previousUrl = '';
   registerAlertVisible = false;
   datasets$: Observable<Dataset[]>;
@@ -45,17 +45,18 @@ export class DatasetsComponent implements OnInit {
     this.datasets$ = this.filterHiddenGroups(this.datasetsService.getDatasetsObservable());
 
     this.createDatasetHierarchy();
-    this.setupSelectedDataset();
 
     this.datasetsService.getDatasetsLoadedObservable().subscribe(() => {
+      console.log('setup');
       this.setupSelectedDataset();
+      // this.router.navigate(['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]);
     });
 
-    this.datasets$.pipe(take(1)).subscribe(datasets => {
-      if (this.router.url === '/datasets') {
-        this.datasetsService.setSelectedDataset(datasets[0]);
-      }
-    });
+    // this.datasets$.pipe(take(1)).subscribe(datasets => {
+    //   if (this.router.url === '/datasets') {
+    //     this.datasetsService.setSelectedDataset(datasets[0]);
+    //   }
+    // });
 
     this.usersService.getUserInfoObservable().subscribe(() => {
       this.datasetsService.reloadSelectedDataset(true);
@@ -66,15 +67,22 @@ export class DatasetsComponent implements OnInit {
     );
   }
 
+  ngOnDestroy() {
+    console.log('destroying dataset component');
+  }
+
   setupSelectedDataset(): void {
+    console.log('123123');
     this.selectedDataset = this.datasetsService.getSelectedDataset();
+    console.log(this.selectedDataset);
     if (!this.selectedDataset) {
       return;
     }
 
     this.registerAlertVisible = !this.selectedDataset.accessRights;
+    this.router.navigate(['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]);
 
-    if (!this.isToolSelected()) {
+    /* if (!this.isToolSelected()) {
       this.router.navigate(['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]);
     } else {
       const url = this.router.url.split('/');
@@ -83,7 +91,7 @@ export class DatasetsComponent implements OnInit {
       if (!this.isToolEnabled(this.selectedDataset, toolName)) {
         this.router.navigate(['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]);
       }
-    }
+    } */
   }
 
   private isToolEnabled(dataset: Dataset, toolName: string): boolean {
