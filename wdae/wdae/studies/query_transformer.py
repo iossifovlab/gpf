@@ -265,7 +265,9 @@ class QueryTransformer:
                 .selected_person_set_collections
             if selected_person_set_collections:
                 collection_id = selected_person_set_collections[0]
-        kwargs["person_set_collection"] = collection_id, selected_sets
+
+        if collection_id is not None:
+            kwargs["person_set_collection"] = collection_id, selected_sets
         return kwargs
 
     # Not implemented:
