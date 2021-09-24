@@ -51,7 +51,7 @@ export class VariantReportsComponent implements OnInit {
       if (this.variantReport.denovoReport !== null) {
         this.currentDenovoReport = this.variantReport.denovoReport.tables[0];
       }
-    }, error => console.error(error));
+    });
   }
 
   @HostListener('window:scroll', ['$event'])

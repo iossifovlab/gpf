@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { NgxsModule } from '@ngxs/store';
 import { PersonIdsState } from './person-ids.state';
+import { ErrorsAlertComponent } from '../errors-alert/errors-alert.component';
 
 import { PersonIdsComponent } from './person-ids.component';
 
@@ -11,7 +12,7 @@ describe('PersonIdsComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ PersonIdsComponent ],
+      declarations: [ PersonIdsComponent, ErrorsAlertComponent ],
       imports: [ FormsModule, NgxsModule.forRoot([PersonIdsState])],
     })
     .compileComponents();
