@@ -13,7 +13,7 @@ import { skipWhile, take } from 'rxjs/operators';
   templateUrl: './variant-reports.component.html',
   styleUrls: ['./variant-reports.component.css']
 })
-export class VariantReportsComponent implements OnInit, OnDestroy {
+export class VariantReportsComponent implements OnInit {
   @ViewChild('families_pedigree') private familiesPedigree: ElementRef;
   @ViewChild('legend') private legend: ElementRef;
   public familiesPedigreeTop: number;
@@ -36,16 +36,15 @@ export class VariantReportsComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
-    console.log('creating variant report for ' + this.selectedDataset.id);
     this.variantReportsService.getVariantReport(this.selectedDataset.id).pipe(take(1)).subscribe(params => {
       this.variantReport = params;
       this.pedigreeTables = this.variantReport.familyReport.familiesCounters.map(
         familiesCounters => new PedigreeTable(
-            this.chunkPedigrees(familiesCounters.familyCounter),
-            familiesCounters.phenotypes, familiesCounters.groupName,
-            familiesCounters.legend
-          )
-        );
+          this.chunkPedigrees(familiesCounters.familyCounter),
+          familiesCounters.phenotypes, familiesCounters.groupName,
+          familiesCounters.legend
+        )
+      );
 
       this.currentPeopleCounter = this.variantReport.peopleReport.peopleCounters[0];
       this.currentPedigreeTable = this.pedigreeTables[0];
@@ -53,11 +52,6 @@ export class VariantReportsComponent implements OnInit, OnDestroy {
         this.currentDenovoReport = this.variantReport.denovoReport.tables[0];
       }
     });
-  }
-
-  public ngOnDestroy() {
-    // FIXME: Remove this before merge to master
-    console.log('destroying variant report');
   }
 
   @HostListener('window:scroll', ['$event'])

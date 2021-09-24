@@ -196,63 +196,38 @@ const appRoutes: Routes = [
   {
     path: 'datasets/:dataset',
     component: DatasetsComponent,
-    canLoad: [DatasetPermissionGuard],
     children: [
       {
         path: toolPageLinks.genotypeBrowser,
         component: GenotypeBrowserSingleViewComponent,
-        data: {
-          reuse: false
-        },
       },
       {
         path: toolPageLinks.enrichmentTool,
         component: EnrichmentToolComponent,
-        data: {
-          reuse: false
-        },
       },
       {
         path: toolPageLinks.phenotypeTool,
         component: PhenoToolComponent,
-        data: {
-          reuse: false
-        },
       },
       {
         path: toolPageLinks.phenotypeBrowser,
         component: PhenoBrowserComponent,
-        data: {
-          reuse: false
-        },
       },
       {
         path: toolPageLinks.datasetDescription,
         component: DatasetDescriptionComponent,
-        data: {
-          reuse: false
-        },
       },
       {
         path: toolPageLinks.datasetStatistics,
         component: VariantReportsComponent,
-        data: {
-          reuse: false
-        },
       },
       {
         path: toolPageLinks.geneBrowser,
         component: GeneBrowserComponent,
-        data: {
-          reuse: false
-        },
       },
       {
         path: toolPageLinks.geneBrowser + '/:gene',
         component: GeneBrowserComponent,
-        data: {
-          reuse: false
-        },
       }
     ]
   },

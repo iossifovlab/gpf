@@ -53,6 +53,6 @@
       </div>
   </div>
 
-  <router-outlet *ngIf="selectedDataset" (activate)="routeChange()" class="content"></router-outlet>
+  <router-outlet *ngIf="selectedDataset.accessRights" (activate)="routeChange()" class="content"></router-outlet>
 
 </div>

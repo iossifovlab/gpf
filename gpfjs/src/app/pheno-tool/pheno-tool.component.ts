@@ -19,7 +19,6 @@ import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
   styleUrls: ['./pheno-tool.component.css'],
 })
 export class PhenoToolComponent implements OnInit {
-  selectedDatasetId: string;
   selectedDataset: Dataset;
 
   @Select(PhenoToolComponent.phenoToolStateSelector) state$: Observable<any[]>;
@@ -49,26 +48,16 @@ export class PhenoToolComponent implements OnInit {
       ...measureState,
       ...genotypeState,
       ...familyFiltersState,
-    }
+    };
   }
 
-  ngOnInit() {
+  public ngOnInit() {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
-    if (this.selectedDataset) {
-      this.selectedDatasetId = this.selectedDataset.id;
-    }
-
-    this.datasetsService.getDatasetsLoadedObservable().subscribe(() => {
-      this.selectedDataset = this.datasetsService.getSelectedDataset();
-      if (this.selectedDataset) {
-        this.selectedDatasetId = this.selectedDataset.id;
-      }
-    });
 
     this.state$.subscribe(state => {
       this.phenoToolState = state;
       this.phenoToolResults = null;
-    })
+    });
 
     this.errorsState$.subscribe(state => {
       setTimeout(() => this.disableQueryButtons = state.componentErrors.size > 0);
@@ -78,7 +67,7 @@ export class PhenoToolComponent implements OnInit {
   submitQuery() {
     this.loadingService.setLoadingStart();
     this.phenoToolService.getPhenoToolResults(
-      {'datasetId': this.selectedDatasetId, ...this.phenoToolState}
+      {'datasetId': this.selectedDataset.id, ...this.phenoToolState}
     ).subscribe((phenoToolResults) => {
       this.phenoToolResults = phenoToolResults;
       this.loadingService.setLoadingStop();
@@ -90,7 +79,7 @@ export class PhenoToolComponent implements OnInit {
   }
 
   onDownload(event) {
-    event.target.queryData.value = JSON.stringify({...this.phenoToolState, 'datasetId': this.selectedDatasetId});
+    event.target.queryData.value = JSON.stringify({...this.phenoToolState, 'datasetId': this.selectedDataset.id});
     event.target.submit();
   }
 }

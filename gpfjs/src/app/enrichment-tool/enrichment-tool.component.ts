@@ -20,7 +20,6 @@ import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
 })
 export class EnrichmentToolComponent implements OnInit {
   enrichmentResults: EnrichmentResults;
-  public selectedDatasetId: string;
   selectedDataset: Dataset;
   private disableQueryButtons = false;
 
@@ -36,20 +35,10 @@ export class EnrichmentToolComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.route.parent.params.subscribe(
-      (params: Params) => {
-        this.selectedDatasetId = params['dataset'];
-      }
-    );
     this.selectedDataset = this.datasetsService.getSelectedDataset();
-    this.datasetsService.getDatasetsLoadedObservable()
-    .subscribe(datasetsLoaded => {
-      this.selectedDataset = this.datasetsService.getSelectedDataset();
-    });
-
     this.state$.subscribe(state => {
       this.enrichmentToolState = {
-        'datasetId': this.selectedDatasetId,
+        'datasetId': this.selectedDataset.id,
         ...state
       };
       this.enrichmentResults = null;

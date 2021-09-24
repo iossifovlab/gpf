@@ -55,21 +55,12 @@ export class DatasetsService {
     return zip(dataset$, details$).pipe(map(datasetPack => Dataset.fromDatasetAndDetailsJson(datasetPack[0]['data'], datasetPack[1])));
   }
 
-  setSelectedDataset(dataset: Dataset): void {
-    this.setSelectedDatasetById(dataset.id);
-  }
-
   setSelectedDatasetById(datasetId: string, force = false): void {
     if (!force && this.selectedDataset$.getValue()?.id === datasetId) {
-      console.log('X');
       return;
     }
-
-    // this.selectedDataset$.next(null);
-    console.log('V');
     this.getDataset(datasetId).pipe(take(1)).subscribe(dataset => {
       this.selectedDataset$.next(dataset);
-      console.log('V2');
       this.datasetLoaded$.next();
     });
   }

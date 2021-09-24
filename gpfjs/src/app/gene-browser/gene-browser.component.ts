@@ -80,21 +80,14 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
-    if (this.selectedDataset) {
-      this.geneBrowserConfig = this.selectedDataset.geneBrowser;
+    this.geneBrowserConfig = this.selectedDataset.geneBrowser;
+    if (this.route.snapshot.params.gene && this.selectedDataset.accessRights) {
+      console.log('123');
+      this.store.dispatch(new SetGeneSymbols([this.route.snapshot.params.gene.toUpperCase()]));
+      this.submitGeneRequest(this.route.snapshot.params.gene);
     }
 
     this.subscriptions.push(
-      this.datasetsService.getDatasetsLoadedObservable().pipe(take(1)).subscribe(() => {
-        this.selectedDataset = this.datasetsService.getSelectedDataset();
-        if (this.selectedDataset) {
-          this.geneBrowserConfig = this.selectedDataset.geneBrowser;
-          if (this.route.snapshot.params.gene && this.selectedDataset.accessRights) {
-            this.store.dispatch(new SetGeneSymbols([this.route.snapshot.params.gene.toUpperCase()]));
-            this.submitGeneRequest(this.route.snapshot.params.gene);
-          }
-        }
-      }),
       this.queryService.streamingFinishedSubject.subscribe(() => {
         this.familyLoadingFinished = true;
       }),

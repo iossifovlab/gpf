@@ -3,7 +3,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, toolPageLinks } from './datasets';
 // tslint:disable-next-line:import-blacklist
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { isEmpty } from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
@@ -17,13 +17,15 @@ import { map, take } from 'rxjs/operators';
   styleUrls: ['./datasets.component.css'],
 })
 export class DatasetsComponent implements OnInit, OnDestroy {
-  static previousUrl = '';
-  registerAlertVisible = false;
-  datasets$: Observable<Dataset[]>;
-  datasetTrees: DatasetNode[];
-  selectedDataset: Dataset;
-  permissionDeniedPrompt: string;
+  private static previousUrl = '';
+  public registerAlertVisible = false;
+  private datasets$: Observable<Dataset[]>;
+  public datasetTrees: DatasetNode[];
+  public selectedDataset: Dataset;
+  public permissionDeniedPrompt: string;
   public toolPageLinks = toolPageLinks;
+
+  private subscriptions: Subscription[] = [];
 
   constructor(
     private usersService: UsersService,
@@ -33,56 +35,52 @@ export class DatasetsComponent implements OnInit, OnDestroy {
     private store: Store,
   ) { }
 
-  ngOnInit() {
-    this.route.params.subscribe((params: Params) => {
-      if (isEmpty(params)) {
-        return;
-      }
-
-      this.datasetsService.setSelectedDatasetById(params['dataset']);
-    });
-
+  public ngOnInit() {
+    this.datasetTrees = new Array<DatasetNode>();
     this.datasets$ = this.filterHiddenGroups(this.datasetsService.getDatasetsObservable());
-
-    this.createDatasetHierarchy();
-
-    this.datasetsService.getDatasetsLoadedObservable().subscribe(() => {
-      console.log('setup');
-      this.setupSelectedDataset();
-      // this.router.navigate(['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]);
-    });
-
-    // this.datasets$.pipe(take(1)).subscribe(datasets => {
-    //   if (this.router.url === '/datasets') {
-    //     this.datasetsService.setSelectedDataset(datasets[0]);
-    //   }
-    // });
-
-    this.usersService.getUserInfoObservable().subscribe(() => {
-      this.datasetsService.reloadSelectedDataset(true);
-    });
-
-    this.datasetsService.getPermissionDeniedPrompt().subscribe(
-      aprompt => this.permissionDeniedPrompt = aprompt
+    this.subscriptions.push(
+      this.route.params.subscribe((params: Params) => {
+        if (isEmpty(params)) {
+          return;
+        }
+        // Clear out previous loaded dataset - signifies loading and triggers change detection
+        this.selectedDataset = null;
+        this.datasetsService.setSelectedDatasetById(params['dataset']);
+      }),
+      // Create dataset hierarchy
+      this.datasets$.subscribe(datasets => {
+        datasets.filter(d => !d.parents.length).map(d => this.datasetTrees.push(new DatasetNode(d, datasets)));
+      }),
+      this.datasetsService.getDatasetsLoadedObservable().subscribe((res) => {
+        this.setupSelectedDataset();
+      }),
+      this.datasets$.pipe(take(1)).subscribe(datasets => {
+        if (this.router.url === '/datasets') {
+          this.router.navigate(['/', 'datasets', datasets[0].id]);
+        }
+      }),
+      this.usersService.getUserInfoObservable().subscribe(() => {
+        this.datasetsService.reloadSelectedDataset(true);
+      }),
+      this.datasetsService.getPermissionDeniedPrompt().subscribe(
+        aprompt => this.permissionDeniedPrompt = aprompt
+      ),
     );
   }
 
-  ngOnDestroy() {
-    console.log('destroying dataset component');
+  public ngOnDestroy() {
+    this.subscriptions.map(subscription => subscription.unsubscribe());
   }
 
-  setupSelectedDataset(): void {
-    console.log('123123');
+  private setupSelectedDataset(): void {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
-    console.log(this.selectedDataset);
     if (!this.selectedDataset) {
       return;
     }
 
     this.registerAlertVisible = !this.selectedDataset.accessRights;
-    this.router.navigate(['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]);
 
-    /* if (!this.isToolSelected()) {
+    if (!this.isToolSelected()) {
       this.router.navigate(['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]);
     } else {
       const url = this.router.url.split('/');
@@ -91,7 +89,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
       if (!this.isToolEnabled(this.selectedDataset, toolName)) {
         this.router.navigate(['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]);
       }
-    } */
+    }
   }
 
   private isToolEnabled(dataset: Dataset, toolName: string): boolean {
@@ -124,11 +122,11 @@ export class DatasetsComponent implements OnInit, OnDestroy {
     return result;
   }
 
-  isToolSelected(): boolean {
+  private isToolSelected(): boolean {
     return this.router.url.split('/').some(str => Object.values(toolPageLinks).includes(str));
   }
 
-  findFirstTool(selectedDataset: Dataset): string {
+  private findFirstTool(selectedDataset: Dataset): string {
     let firstTool = '';
 
     if (selectedDataset.description) {
@@ -150,28 +148,13 @@ export class DatasetsComponent implements OnInit, OnDestroy {
     return firstTool;
   }
 
-  createDatasetHierarchy(): void {
-    this.datasets$.subscribe((datasets) => {
-      this.datasetTrees = new Array<DatasetNode>();
-      datasets.forEach(d => {
-        if (!d.parents.length) {
-          this.datasetTrees.push(new DatasetNode(d, datasets));
-        }
-      });
-    });
-  }
-
-  filterHiddenGroups(datasets: Observable<Dataset[]>): Observable<Dataset[]> {
+  private filterHiddenGroups(datasets: Observable<Dataset[]>): Observable<Dataset[]> {
     return datasets.pipe(map((d) =>
-      d.filter(
-        (dataset) =>
-          dataset.groups.find((g) => g.name === 'hidden') == null ||
-          dataset.accessRights
-      )
+      d.filter((dataset) => dataset.groups.find((g) => g.name === 'hidden') == null || dataset.accessRights)
     ));
   }
 
-  routeChange(): void {
+  public routeChange(): void {
     /* In order to have state separation between the dataset tools,
     we clear the state if the previous url is from a different dataset tool */
     if (DatasetsComponent.previousUrl !== this.router.url && DatasetsComponent.previousUrl.startsWith('/datasets')) {
