@@ -27,7 +27,7 @@ export class PhenoToolComponent implements OnInit {
   phenoToolResults: PhenoToolResults;
   private phenoToolState: object;
 
-  private disableQueryButtons = false;
+  public disableQueryButtons = false;
 
   constructor(
     private datasetsService: DatasetsService,

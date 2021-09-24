@@ -21,7 +21,7 @@ import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
 export class EnrichmentToolComponent implements OnInit {
   enrichmentResults: EnrichmentResults;
   selectedDataset: Dataset;
-  private disableQueryButtons = false;
+  public disableQueryButtons = false;
 
   @Select(EnrichmentToolComponent.enrichmentToolStateSelector) state$: Observable<any[]>;
   @Select(ErrorsState) errorsState$: Observable<ErrorsModel>;

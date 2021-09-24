@@ -71,8 +71,7 @@ import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loadin
 
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
 
-import { RouteReuseStrategy, RouterModule, Routes } from '@angular/router';
-import { TaggingRouteReuseStrategy } from 'app/route-reuse.strategy';
+import { RouterModule, Routes } from '@angular/router';
 
 import { PersonFiltersComponent } from './person-filters/person-filters.component';
 import { PersonFiltersState } from './person-filters/person-filters.state';
@@ -401,7 +400,7 @@ const appRoutes: Routes = [
     GpfTableModule,
     PedigreeChartModule,
     HistogramModule,
-    RouterModule.forRoot(appRoutes, { onSameUrlNavigation: 'reload' }),
+    RouterModule.forRoot(appRoutes),
     BrowserAnimationsModule,
     MarkdownModule.forRoot(),
     HttpClientModule,
@@ -443,10 +442,6 @@ const appRoutes: Routes = [
     {
       provide: ErrorHandler,
       useClass: GlobalErrorHandler
-    },
-    {
-      provide: RouteReuseStrategy,
-      useClass: TaggingRouteReuseStrategy
     },
     BnNgIdleService
   ],

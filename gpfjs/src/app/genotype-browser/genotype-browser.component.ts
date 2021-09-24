@@ -27,7 +27,7 @@ export class GenotypeBrowserComponent implements OnInit {
   tablePreview: boolean;
   legend: Array<PersonSet>;
 
-  private disableQueryButtons = false;
+  public disableQueryButtons = false;
 
   @Input()
   selectedDatasetId: string;
