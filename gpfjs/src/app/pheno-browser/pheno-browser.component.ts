@@ -51,11 +51,9 @@ export class PhenoBrowserComponent implements OnInit {
     });
 
     this.selectedDataset = this.datasetsService.getSelectedDataset();
-    if (this.selectedDataset.accessRights) {
-      this.initInstruments(this.selectedDataset.id);
-      this.initMeasuresToShow(this.selectedDataset.id);
-      this.initDownloadLink(this.selectedDataset.id);
-    }
+    this.initInstruments(this.selectedDataset.id);
+    this.initMeasuresToShow(this.selectedDataset.id);
+    this.initDownloadLink(this.selectedDataset.id);
 
     this.focusSearchBox();
   }

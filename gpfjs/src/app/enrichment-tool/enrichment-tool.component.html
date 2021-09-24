@@ -1,13 +1,11 @@
-<div *ngIf="selectedDataset.accessRights">
-  <div class="container" style="margin-bottom: 20px;">
-    <gpf-genes-block [showAllTab]="false"></gpf-genes-block>
-    <gpf-enrichment-models-block [selectedDatasetId]="selectedDataset.id"></gpf-enrichment-models-block>
+<div class="container" style="margin-bottom: 20px;">
+  <gpf-genes-block [showAllTab]="false"></gpf-genes-block>
+  <gpf-enrichment-models-block [selectedDatasetId]="selectedDataset.id"></gpf-enrichment-models-block>
 
-    <div class="form-block" style="display: inline-flex;">
-      <input [disabled]="disableQueryButtons" class="btn btn-md btn-primary" type="button" value="Enrichment Test" (click)="submitQuery()">
-      <gpf-share-query-button [disabled]="disableQueryButtons" queryType="enrichment"></gpf-share-query-button>
-      <gpf-save-query [disabled]="disableQueryButtons" queryType="enrichment"></gpf-save-query>
-    </div>
-    <gpf-enrichment-table [enrichmentResults]="enrichmentResults"></gpf-enrichment-table>
+  <div class="form-block" style="display: inline-flex;">
+    <input [disabled]="disableQueryButtons" class="btn btn-md btn-primary" type="button" value="Enrichment Test" (click)="submitQuery()">
+    <gpf-share-query-button [disabled]="disableQueryButtons" queryType="enrichment"></gpf-share-query-button>
+    <gpf-save-query [disabled]="disableQueryButtons" queryType="enrichment"></gpf-save-query>
   </div>
+  <gpf-enrichment-table [enrichmentResults]="enrichmentResults"></gpf-enrichment-table>
 </div>

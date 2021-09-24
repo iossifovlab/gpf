@@ -198,35 +198,35 @@ const appRoutes: Routes = [
     children: [
       {
         path: toolPageLinks.genotypeBrowser,
-        component: GenotypeBrowserSingleViewComponent,
+        component: GenotypeBrowserSingleViewComponent
       },
       {
         path: toolPageLinks.enrichmentTool,
-        component: EnrichmentToolComponent,
+        component: EnrichmentToolComponent
       },
       {
         path: toolPageLinks.phenotypeTool,
-        component: PhenoToolComponent,
+        component: PhenoToolComponent
       },
       {
         path: toolPageLinks.phenotypeBrowser,
-        component: PhenoBrowserComponent,
+        component: PhenoBrowserComponent
       },
       {
         path: toolPageLinks.datasetDescription,
-        component: DatasetDescriptionComponent,
+        component: DatasetDescriptionComponent
       },
       {
         path: toolPageLinks.datasetStatistics,
-        component: VariantReportsComponent,
+        component: VariantReportsComponent
       },
       {
         path: toolPageLinks.geneBrowser,
-        component: GeneBrowserComponent,
+        component: GeneBrowserComponent
       },
       {
         path: toolPageLinks.geneBrowser + '/:gene',
-        component: GeneBrowserComponent,
+        component: GeneBrowserComponent
       }
     ]
   },
@@ -444,11 +444,11 @@ const appRoutes: Routes = [
       provide: ErrorHandler,
       useClass: GlobalErrorHandler
     },
-    BnNgIdleService,
     {
       provide: RouteReuseStrategy,
       useClass: TaggingRouteReuseStrategy
     },
+    BnNgIdleService
   ],
 
   bootstrap: [AppComponent]

@@ -81,7 +81,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   public ngOnInit(): void {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
     this.geneBrowserConfig = this.selectedDataset.geneBrowser;
-    if (this.route.snapshot.params.gene && this.selectedDataset.accessRights) {
+    if (this.route.snapshot.params.gene) {
       this.store.dispatch(new SetGeneSymbols([this.route.snapshot.params.gene.toUpperCase()]));
       this.submitGeneRequest(this.route.snapshot.params.gene);
     }

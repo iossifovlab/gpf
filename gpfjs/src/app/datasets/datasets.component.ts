@@ -49,6 +49,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
       }),
       // Create dataset hierarchy
       this.datasets$.subscribe(datasets => {
+        this.datasetTrees = new Array<DatasetNode>();
         datasets.filter(d => !d.parents.length).map(d => this.datasetTrees.push(new DatasetNode(d, datasets)));
       }),
       this.datasetsService.getDatasetsLoadedObservable().subscribe((res) => {
