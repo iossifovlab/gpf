@@ -35,7 +35,7 @@ export class ShareQueryButtonComponent implements OnInit {
       return;
     }
 
-    const datasetId = this.datasetsService.getSelectedDatasetId();
+    const datasetId = this.datasetsService.getSelectedDataset().id;
 
     this.buttonValue = 'Copy';
     this.store.selectOnce(state => state).subscribe(state => {

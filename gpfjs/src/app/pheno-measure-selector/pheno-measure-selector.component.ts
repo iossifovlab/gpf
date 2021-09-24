@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, forwardRef, ViewChild, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, forwardRef, ViewChild, Output, EventEmitter } from '@angular/core';
 
 import { Subscription } from 'rxjs';
 
@@ -11,7 +11,7 @@ import { DatasetsService } from '../datasets/datasets.service';
   templateUrl: './pheno-measure-selector.component.html',
   styleUrls: ['./pheno-measure-selector.component.css']
 })
-export class PhenoMeasureSelectorComponent implements OnInit, OnDestroy {
+export class PhenoMeasureSelectorComponent implements OnInit {
   @ViewChild('inputGroup') inputGroupSpan: any;
   @ViewChild('searchBox') searchBox: any;
 
@@ -31,33 +31,21 @@ export class PhenoMeasureSelectorComponent implements OnInit, OnDestroy {
     private datasetsService: DatasetsService
   ) { }
 
-  ngOnInit() {
-    this.subscription = this.datasetsService.getSelectedDatasetObservable().subscribe(dataset => {
-      if (!dataset) {
-        return;
+  public ngOnInit() {
+    const datasetId = this.datasetsService.getSelectedDataset().id;
+    this.measuresService.getContinuousMeasures(datasetId).subscribe(measures => {
+      this.measures = measures;
+      let search = this.initialSelectedMeasure;
+      if (this.initialSelectedMeasure) {
+        this.selectedMeasure = this.measures
+          .find(m => m.name === this.initialSelectedMeasure);
       }
-
-      this.measuresService.getContinuousMeasures(dataset.id).subscribe(measures => {
-        this.measures = measures;
-        let search = this.initialSelectedMeasure;
-        if (this.initialSelectedMeasure) {
-          this.selectedMeasure = this.measures
-            .find(m => m.name === this.initialSelectedMeasure);
-        }
-        if (!this.selectedMeasure) {
-          search = '';
-        }
-        this.searchBoxChange(search);
-        this.measuresChange.emit(this.measures);
-      });
+      if (!this.selectedMeasure) {
+        search = '';
+      }
+      this.searchBoxChange(search);
+      this.measuresChange.emit(this.measures);
     });
-  }
-
-  ngOnDestroy() {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-      this.subscription = null;
-    }
   }
 
   @Input()
