@@ -62,6 +62,8 @@ export class DatasetsService {
     this.getDataset(datasetId).pipe(take(1)).subscribe(dataset => {
       this.selectedDataset$.next(dataset);
       this.datasetLoaded$.next();
+    }, error => {
+      console.error(error);
     });
   }
 
@@ -91,7 +93,7 @@ export class DatasetsService {
   }
 
   private reloadAllDatasets(): void {
-    this.getDatasets().pipe(take(1)).subscribe(() => {});
+    this.getDatasets().pipe(take(1)).subscribe(() => {}, error => console.error(error));
   }
 
   public getPermissionDeniedPrompt() {

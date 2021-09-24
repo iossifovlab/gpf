@@ -50,20 +50,21 @@ export class DatasetsComponent implements OnInit, OnDestroy {
       // Create dataset hierarchy
       this.datasets$.subscribe(datasets => {
         datasets.filter(d => !d.parents.length).map(d => this.datasetTrees.push(new DatasetNode(d, datasets)));
-      }),
+      }, error => console.error(error)),
       this.datasetsService.getDatasetsLoadedObservable().subscribe((res) => {
         this.setupSelectedDataset();
-      }),
+      }, error => console.error(error)),
       this.datasets$.pipe(take(1)).subscribe(datasets => {
         if (this.router.url === '/datasets') {
           this.router.navigate(['/', 'datasets', datasets[0].id]);
         }
-      }),
+      }, error => console.error(error)),
       this.usersService.getUserInfoObservable().subscribe(() => {
         this.datasetsService.reloadSelectedDataset(true);
-      }),
+      }, error => console.error(error)),
       this.datasetsService.getPermissionDeniedPrompt().subscribe(
-        aprompt => this.permissionDeniedPrompt = aprompt
+        aprompt => this.permissionDeniedPrompt = aprompt,
+        error => console.error(error)
       ),
     );
   }

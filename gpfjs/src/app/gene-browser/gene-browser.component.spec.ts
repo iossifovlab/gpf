@@ -12,6 +12,10 @@ import { QueryService } from 'app/query/query.service';
 import { UsersService } from 'app/users/users.service';
 import { GeneService } from './gene.service';
 import { GeneBrowserComponent } from './gene-browser.component';
+import { GeneSymbolsWithSearchComponent } from '../gene-symbols-with-search/gene-symbols-with-search.component';
+import { SearchableSelectComponent } from '../searchable-select/searchable-select.component';
+import { FormsModule } from '@angular/forms';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 class MockActivatedRoute {
   public params = {dataset: 'testDatasetId', get: () => ''};
@@ -20,18 +24,28 @@ class MockActivatedRoute {
   public snapshot = {params: {gene: 'mockGeneSymbol'}};
 }
 
+class MockDatasetsService {
+  public getSelectedDataset(): object {
+    return { id: 'testDataset', geneBrowser: { domainMax: 100, frequencyColumn: 'testColumn'} };
+  }
+}
+
 describe('GeneBrowserComponent', () => {
   let component: GeneBrowserComponent;
   let fixture: ComponentFixture<GeneBrowserComponent>;
+  const mockDatasetsService = new MockDatasetsService();
 
   beforeEach(async() => {
     await TestBed.configureTestingModule({
-      declarations: [ GeneBrowserComponent ],
+      declarations: [ GeneBrowserComponent, GeneSymbolsWithSearchComponent, SearchableSelectComponent ],
       providers: [
         ConfigService, {provide: ActivatedRoute, useValue: new MockActivatedRoute()},
-        QueryService, UsersService, GeneService, DatasetsService, FullscreenLoadingService,
+        QueryService, UsersService, GeneService, {provide: DatasetsService, useValue: mockDatasetsService},
+        FullscreenLoadingService,
       ],
-      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([GeneSymbolsState])],
+      imports: [
+        HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([GeneSymbolsState]), NgbModule, FormsModule
+      ],
     })
     .compileComponents();
   });

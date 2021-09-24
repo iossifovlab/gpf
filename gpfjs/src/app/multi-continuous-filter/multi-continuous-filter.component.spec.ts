@@ -46,10 +46,17 @@ const PersonFilterMock = {
   filterType: '',
   domain: ['']
 };
-// done
+
+class MockDatasetsService {
+  public getSelectedDataset(): object {
+    return { id: 'testDataset' };
+  }
+}
+
 describe('MultiContinuousFilterComponent', () => {
   let component: MultiContinuousFilterComponent;
   let fixture: ComponentFixture<MultiContinuousFilterComponent>;
+  const mockDatasetsService = new MockDatasetsService();
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
@@ -64,7 +71,7 @@ describe('MultiContinuousFilterComponent', () => {
         HttpClient,
         HttpHandler,
         ConfigService,
-        DatasetsService,
+        {provide: DatasetsService, useValue: mockDatasetsService},
         UsersService,
       ],
       imports: [
