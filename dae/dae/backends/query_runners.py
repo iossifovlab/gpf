@@ -4,6 +4,8 @@ import logging
 import queue
 import time
 
+from concurrent.futures import ThreadPoolExecutor
+
 
 logger = logging.getLogger(__name__)
 
@@ -51,9 +53,9 @@ class QueryRunner(abc.ABC):
         elapsed = time.time() - self.timestamp
         logger.debug(f"closing runner after {elapsed:0.3f}")
         with self._status_lock:
-            self._closed = True
             if self._started:
                 self._future.cancel()
+            self._closed = True
 
     def done(self):
         with self._status_lock:
@@ -71,8 +73,9 @@ class QueryRunner(abc.ABC):
 
 
 class QueryResult:
-    def __init__(self, result_queue, runners, limit=-1):
-        self.result_queue = result_queue
+    def __init__(self, runners, limit=-1):
+        self.result_queue = queue.Queue(maxsize=1_000)
+
         if limit is None:
             limit = -1
         self.limit = limit
@@ -82,7 +85,8 @@ class QueryResult:
         self.runners = runners
         for runner in self.runners:
             assert runner._result_queue is None
-            runner._set_result_queue(result_queue)
+            runner._set_result_queue(self.result_queue)
+        self.executor = ThreadPoolExecutor(max_workers=len(runners))
 
     def done(self):
         if self.limit >= 0 and self._counter >= self.limit:
@@ -101,7 +105,9 @@ class QueryResult:
                 self._counter += 1
                 return item
             except queue.Empty:
-                if self.done():
+                if not self.done():
+                    return None
+                else:
                     logger.debug("result done")
                     raise StopIteration()
 
@@ -113,10 +119,10 @@ class QueryResult:
             if self.done():
                 raise StopIteration()
 
-    def start(self, executor):
+    def start(self):
         self.timestamp = time.time()
         for runner in self.runners:
-            runner.start(executor)
+            runner.start(self.executor)
         time.sleep(0.1)
 
     def close(self):
@@ -128,5 +134,8 @@ class QueryResult:
                     f"exception in result close: {type(ex)}", exc_info=True)
         while not self.result_queue.empty():
             self.result_queue.get()
+
+        logger.debug("closing thread pool executor")
+        self.executor.shutdown(wait=True)
         elapsed = time.time() - self.timestamp
         logger.debug(f"result closed after {elapsed:0.3f}")

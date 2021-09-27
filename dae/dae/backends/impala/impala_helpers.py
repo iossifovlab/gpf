@@ -2,6 +2,7 @@ import os
 import re
 import itertools
 import logging
+import threading
 import time
 # from dae.utils.debug_closing import closing
 
@@ -63,7 +64,7 @@ class _PoolConnection:
         # self.connection.close()
         # self.connection = self.pool.create_connection_func()
 
-        self.pool.connections.put(self.connection)
+        self.pool.connection_close(self.connection)
         logger.debug(f"connection close: pool {self.pool.status()}")
 
     @property
@@ -72,26 +73,49 @@ class _PoolConnection:
 
 
 class ConnectionPool:
-    def __init__(self, create_connection_func, pool_size=12):
+    def __init__(self, create_connection_func, pool_size=12, max_overflow=3):
+        self._connection_lock = threading.Lock()
         self.pool_size = pool_size
-        self.connections = queue.Queue(maxsize=pool_size)
+        self.overflow = 0
+        self.max_overflow = max_overflow
+
+        assert self.pool_size > 0, self.pool_size
+        assert self.max_overflow >= 0, self.max_overflow
+
+        self.connections = queue.Queue(maxsize=pool_size + max_overflow)
         self.create_connection_func = create_connection_func
-        while not self.connections.full():
+        while not self.connections.qsize() < self.pool_size:
             connection = create_connection_func()
             self.connections.put(connection)
 
     def connect(self):
-        start = time.time()
-        logger.debug(f"connect called: {self.status()}")
-        connection = self.connections.get()
-        elapsed = time.time() - start
-        logger.debug(
-            f"connection receieved: {self.status()} in {elapsed:0.3f} sec")
-        return _PoolConnection(self, connection)
+        with self._connection_lock:
+            start = time.time()
+            logger.debug(f"connect called: {self.status()}")
+            if self.connections.empty() and self.overflow < self.max_overflow:
+                connection = self.create_connection_func()
+                self.connections.put(connection)
+                self.overflow += 1
+                logger.warning(f"connection poll overflow: {self.overflow}")
+
+            connection = self.connections.get()
+            elapsed = time.time() - start
+            logger.debug(
+                f"connection receieved: {self.status()} in {elapsed:0.3f} sec")
+            return _PoolConnection(self, connection)
+
+    def connection_close(self, connection):
+        with self._connection_lock:
+            if self.overflow > 0:
+                connection.close()
+                self.overflow -= 1
+                return
+            self.connections.put(connection)
 
     def status(self):
         return f"pool size: {self.pool_size}; " \
-            f"available connections: {self.connections.qsize()}"
+            f"available connections: {self.connections.qsize()}; " \
+            f"overflow: {self.overflow}"
 
 
 class ImpalaHelpers:

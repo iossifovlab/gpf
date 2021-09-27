@@ -14,11 +14,10 @@ pytestmark = pytest.mark.usefixtures(
 )
 def test_query_all_variants(iossifov_2014_wrappers, wrapper_type):
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
-    variants = list(study_wrapper.query_variants_wdae(
-        {}, [{"source": "location"}])
-    )
+    variants = list(filter(None, study_wrapper.query_variants_wdae(
+        {}, [{"source": "location"}])))
 
-    assert len(variants) == 5645
+    assert len(variants) == 5645, variants
 
 
 @pytest.mark.parametrize(

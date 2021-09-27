@@ -2,7 +2,6 @@ import logging
 import queue
 import time
 
-from concurrent.futures import ThreadPoolExecutor
 # from dae.utils.debug_closing import closing
 from contextlib import closing
 
@@ -378,18 +377,18 @@ class ImpalaVariants:
                 return_unknown=return_unknown,
                 limit=request_limit)
 
-        result_queueu = queue.Queue(maxsize=1_000)
         result = QueryResult(
-                result_queueu, runners=[runner], limit=limit)
+                runners=[runner], limit=limit)
         logger.debug("starting result")
         try:
-            executor = ThreadPoolExecutor(max_workers=1)
-            result.start(executor)
+            result.start()
 
             seen = set()
             with closing(result) as result:
 
                 for v in result:
+                    if v is None:
+                        continue
                     if v.svuid in seen:
                         continue
                     if v is None:
@@ -397,7 +396,7 @@ class ImpalaVariants:
                     yield v
                     seen.add(v.svuid)
         finally:
-            executor.shutdown(wait=True)
+            pass
 
     def query_variants(
             self,
@@ -445,13 +444,11 @@ class ImpalaVariants:
             limit=request_limit,
             affected_status=affected_status)
 
-        result_queueu = queue.Queue(maxsize=1_000)
         result = QueryResult(
-                result_queueu, runners=[runner], limit=limit)
+                runners=[runner], limit=limit)
         logger.debug("starting result")
         try:
-            executor = ThreadPoolExecutor(max_workers=1)
-            result.start(executor)
+            result.start()
 
             with closing(result) as result:
                 seen = set()
@@ -463,7 +460,7 @@ class ImpalaVariants:
                     yield v
                     seen.add(v.fvuid)
         finally:
-            executor.shutdown(wait=True)
+            pass
 
     def _fetch_pedigree(self):
         with closing(self.connection()) as conn:
