@@ -1,6 +1,6 @@
 import itertools
 import logging
-
+from contextlib import closing
 from abc import abstractmethod
 
 from dae.variants.attributes import Role
@@ -317,40 +317,46 @@ class StudyWrapper(StudyWrapperBase):
         transform = self.response_transformer.variant_transformer()
 
         try:
-            variants = self.genotype_data_study.query_variants(**kwargs)
-            index = 0
-            for variant in variants:
-                if variant is None:
-                    yield None
-                    continue
+            variants_result = \
+                self.genotype_data_study.query_result_variants(**kwargs)
+            variants_result.start()
 
-                index += 1
-                if max_variants_count and index > max_variants_count:
-                    if max_variants_message:
-                        yield [
-                            f"# limit of {max_variants_count} variants "
-                            f"reached"
-                        ]
-                    break
+            with closing(variants_result) as variants:
 
-                v = transform(variant)
+                index = 0
+                for variant in variants:
+                    if variant is None:
+                        yield None
+                        continue
 
-                matched = True
-                for aa in v.matched_alleles:
-                    assert not aa.is_reference_allele
-                    if not filter_allele(aa):
-                        matched = False
+                    index += 1
+                    if max_variants_count and index > max_variants_count:
+                        if max_variants_message:
+                            yield [
+                                f"# limit of {max_variants_count} variants "
+                                f"reached"
+                            ]
                         break
-                if not matched:
-                    continue
 
-                row_variant = self.response_transformer._build_variant_row(
-                    v, sources,
-                    person_set_collection=kwargs.get(
-                        "person_set_collection", (None, None))[0]
-                )
+                    v = transform(variant)
 
-                yield row_variant
+                    matched = True
+                    for aa in v.matched_alleles:
+                        assert not aa.is_reference_allele
+                        if not filter_allele(aa):
+                            matched = False
+                            break
+                    if not matched:
+                        yield None
+                        continue
+
+                    row_variant = self.response_transformer._build_variant_row(
+                        v, sources,
+                        person_set_collection=kwargs.get(
+                            "person_set_collection", (None, None))[0]
+                    )
+
+                    yield row_variant
         except GeneratorExit:
             logger.info(f"study wrapper query variants for {self.name} closed")
         finally:
