@@ -283,7 +283,7 @@ export class HistogramComponent implements OnInit, OnChanges {
   set rangeStart(rangeStart: any) {
     if (rangeStart !== this.internalRangeStart) {
       this.setRangeStart(rangeStart);
-      this.internalRangeStartField = Number(this.rangeStart.toFixed(4));
+      this.internalRangeStartField = Number(this.transform(rangeStart));
     }
   }
 
@@ -305,7 +305,7 @@ export class HistogramComponent implements OnInit, OnChanges {
   set rangeEnd(rangeEnd: any) {
     if (rangeEnd !== this.internalRangeEnd) {
       this.setRangeEnd(rangeEnd);
-      this.internalRangeEndField = Number(this.rangeEnd.toFixed(4));
+      this.internalRangeEndField = Number(this.transform(rangeEnd));
     }
   }
 
@@ -452,5 +452,16 @@ export class HistogramComponent implements OnInit, OnChanges {
   get viewBox(): string {
     const pos = this.showMinMaxInputWithDefaultValue ? '0 0' : '-8 -8';
     return `${pos} ${this.width} ${this.height}`;
+  }
+
+  private transform(value: number): string {
+    if (!value) {
+      return '0';
+    }
+    if (value < 1e-4) {
+      return value.toExponential(2);
+    } else {
+      return value.toFixed(3);
+    }
   }
 }
