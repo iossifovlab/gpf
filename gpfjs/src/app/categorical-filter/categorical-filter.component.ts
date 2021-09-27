@@ -26,11 +26,11 @@ export class CategoricalFilterComponent implements OnInit {
   ngOnInit(): void {
     if (this.categoricalFilter.from === 'phenodb') {
       this.sourceDescription$ = this.phenoBrowserService.getMeasureDescription(
-        this.datasetsService.getSelectedDatasetId(), this.categoricalFilter.source
+        this.datasetsService.getSelectedDataset().id, this.categoricalFilter.source
       );
     } else if (this.categoricalFilter.from === 'pedigree') {
       this.sourceDescription$ = this.datasetsService.getDatasetPedigreeColumnDetails(
-        this.datasetsService.getSelectedDatasetId(), this.categoricalFilter.source
+        this.datasetsService.getSelectedDataset().id, this.categoricalFilter.source
       );
     }
     this.sourceDescription$.subscribe(res => {

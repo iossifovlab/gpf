@@ -33,7 +33,7 @@ export class DatasetsService {
     });
   }
 
-  getDatasets(): Observable<Dataset[]> {
+  public getDatasets(): Observable<Dataset[]> {
     const options = { withCredentials: true };
 
     return this.http.get(this.config.baseUrl + this.datasetUrl, options).pipe(
@@ -45,7 +45,7 @@ export class DatasetsService {
     );
   }
 
-  getDataset(datasetId: string): Observable<Dataset> {
+  public getDataset(datasetId: string): Observable<Dataset> {
     const url = `${this.datasetUrl}/${datasetId}`;
     const options = { headers: this.headers, withCredentials: true };
 
@@ -55,60 +55,46 @@ export class DatasetsService {
     return zip(dataset$, details$).pipe(map(datasetPack => Dataset.fromDatasetAndDetailsJson(datasetPack[0]['data'], datasetPack[1])));
   }
 
-  setSelectedDataset(dataset: Dataset): void {
-    this.setSelectedDatasetById(dataset.id);
-  }
-
-  setSelectedDatasetById(datasetId: string, force = false): void {
+  public setSelectedDatasetById(datasetId: string, force = false): void {
     if (!force && this.selectedDataset$.getValue()?.id === datasetId) {
       return;
     }
-
-    this.selectedDataset$.next(null);
     this.getDataset(datasetId).pipe(take(1)).subscribe(dataset => {
       this.selectedDataset$.next(dataset);
       this.datasetLoaded$.next();
     });
   }
 
-  reloadSelectedDataset(force = false): void {
-    if (this.hasSelectedDataset()) {
+  public reloadSelectedDataset(force = false): void {
+    if (this.selectedDataset$.getValue()) {
       if (force) {
-        this.setSelectedDatasetById(this.getSelectedDatasetId(), true);
+        this.setSelectedDatasetById(this.getSelectedDataset().id, true);
       }
       this.datasetLoaded$.next();
     }
   }
 
-  getSelectedDatasetObservable(): Observable<Dataset> {
+  public getSelectedDatasetObservable(): Observable<Dataset> {
     return this.selectedDataset$.asObservable();
   }
 
-  getSelectedDataset(): Dataset {
+  public getSelectedDataset(): Dataset {
     return this.selectedDataset$.getValue();
   }
 
-  getSelectedDatasetId(): string {
-    return this.selectedDataset$.getValue().id;
-  }
-
-  getDatasetsObservable(): Observable<Dataset[]> {
+  public getDatasetsObservable(): Observable<Dataset[]> {
     return this.datasets$.asObservable();
   }
 
-  getDatasetsLoadedObservable(): Subject<void> {
+  public getDatasetsLoadedObservable(): Subject<void> {
     return this.datasetLoaded$;
-  }
-
-  hasSelectedDataset(): boolean {
-    return !!this.selectedDataset$.getValue();
   }
 
   private reloadAllDatasets(): void {
     this.getDatasets().pipe(take(1)).subscribe(() => {});
   }
 
-  getPermissionDeniedPrompt() {
+  public getPermissionDeniedPrompt() {
     const options = { withCredentials: true };
 
     return this.http.get(this.config.baseUrl + this.permissionDeniedPromptUrl, options).pipe(
@@ -116,7 +102,7 @@ export class DatasetsService {
     );
   }
 
-  getDatasetPedigreeColumnDetails(datasetId: string, column: string): Observable<Object> {
+  public getDatasetPedigreeColumnDetails(datasetId: string, column: string): Observable<Object> {
     const options = { headers: this.headers, withCredentials: true };
     return this.http.get(`${this.config.baseUrl}${this.datasetPedigreeUrl}/${datasetId}/${column}`, options);
   }

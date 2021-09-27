@@ -11,9 +11,16 @@ import { UsersService } from 'app/users/users.service';
 
 import { PhenoMeasureSelectorComponent } from './pheno-measure-selector.component';
 
+class MockDatasetsService {
+  public getSelectedDataset(): object {
+    return { id: 'testDataset' };
+  }
+}
+
 describe('PhenoMeasureSelectorComponent', () => {
   let component: PhenoMeasureSelectorComponent;
   let fixture: ComponentFixture<PhenoMeasureSelectorComponent>;
+  const mockDatasetsService = new MockDatasetsService();
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
@@ -21,7 +28,7 @@ describe('PhenoMeasureSelectorComponent', () => {
       providers: [
         MeasuresService,
         ConfigService,
-        DatasetsService,
+        {provide: DatasetsService, useValue: mockDatasetsService},
         UsersService,
         SearchableSelectComponent
       ],

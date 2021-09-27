@@ -32,7 +32,7 @@ export class VariantReportsService {
   }
 
   getDownloadLink() {
-    const selectedDatasetId = this.datasetsService.getSelectedDatasetId();
+    const selectedDatasetId = this.datasetsService.getSelectedDataset().id;
     return `${environment.apiPath}${this.downloadUrl}${selectedDatasetId}`;
   }
 }

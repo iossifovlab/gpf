@@ -30,8 +30,10 @@ export abstract class StatefulComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.store.dispatch(new SetComponentErrors(this.componentId, new Array()));
-    this.stateSubscription.unsubscribe();
+    if (this.stateSubscription) {
+      this.store.dispatch(new SetComponentErrors(this.componentId, new Array()));
+      this.stateSubscription.unsubscribe();
+    }
   }
 
   private errorsToMessages(errors: Array<ValidationError>): Array<string> {

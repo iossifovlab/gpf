@@ -1,4 +1,4 @@
-import { HttpClient, HttpHandler } from '@angular/common/http';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ConfigService } from 'app/config/config.service';
@@ -8,6 +8,7 @@ import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-
 import { UsersService } from 'app/users/users.service';
 import { MultiContinuousFilterComponent } from './multi-continuous-filter.component';
 import { Component, Input, Output } from '@angular/core';
+import { of } from 'rxjs';
 import { NgxsModule } from '@ngxs/store';
 
 @Component({
@@ -46,10 +47,17 @@ const PersonFilterMock = {
   filterType: '',
   domain: ['']
 };
-// done
+
+class MockDatasetsService {
+  public getSelectedDataset(): object {
+    return { id: 'testDataset' };
+  }
+}
+
 describe('MultiContinuousFilterComponent', () => {
   let component: MultiContinuousFilterComponent;
   let fixture: ComponentFixture<MultiContinuousFilterComponent>;
+  const mockDatasetsService = new MockDatasetsService();
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
@@ -60,11 +68,10 @@ describe('MultiContinuousFilterComponent', () => {
       ],
       providers: [
         MultiContinuousFilterComponent,
-        MeasuresService,
-        HttpClient,
-        HttpHandler,
+        {provide: MeasuresService, useValue: {getContinuousMeasures: () => of([])}},
+        HttpClientTestingModule,
         ConfigService,
-        DatasetsService,
+        {provide: DatasetsService, useValue: mockDatasetsService},
         UsersService,
       ],
       imports: [
