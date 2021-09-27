@@ -66,7 +66,7 @@ export class DatasetsService {
   }
 
   public reloadSelectedDataset(force = false): void {
-    if (!!this.selectedDataset$.getValue()) {
+    if (this.selectedDataset$.getValue()) {
       if (force) {
         this.setSelectedDatasetById(this.getSelectedDataset().id, true);
       }
