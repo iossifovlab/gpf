@@ -43,14 +43,12 @@ def test_impala_runner_simple(impala_helpers):
 
 def test_impala_runner_result_simple(impala_helpers):
     query = "SELECT * FROM gpf_variant_db.test_study_impala_01_variants"
-    result_queue = Queue(maxsize=3)
 
     runner = create_runner(impala_helpers, query)
     assert not runner.started()
 
-    executor = ThreadPoolExecutor(max_workers=1)
-    result = QueryResult(result_queue, [runner])
-    result.start(executor)
+    result = QueryResult([runner])
+    result.start()
     time.sleep(0.1)
 
     assert runner.started()
@@ -63,8 +61,6 @@ def test_impala_runner_result_simple(impala_helpers):
     time.sleep(0.5)
 
     assert runner.closed()
-
-    executor.shutdown(wait=True)
 
 
 def test_impala_runner_result_experimental_1(impala_helpers):
@@ -73,21 +69,18 @@ def test_impala_runner_result_experimental_1(impala_helpers):
         "summary_variant_index, " \
         "family_variant_index) " \
         "FROM gpf_variant_db.test_study_impala_01_variants"
-    result_queue = Queue(maxsize=3)
 
     runner = create_runner(impala_helpers, query)
     assert not runner.started()
 
-    executor = ThreadPoolExecutor(max_workers=1)
-    result = QueryResult(result_queue, [runner])
-    result.start(executor)
+    result = QueryResult([runner])
+    result.start()
 
     for row in result:
         print(row)
         time.sleep(0.5)
 
     result.close()
-    executor.shutdown(wait=True)
 
 
 def test_impala_runner_result_experimental_2(impala_helpers):
@@ -96,21 +89,18 @@ def test_impala_runner_result_experimental_2(impala_helpers):
         "summary_variant_index, " \
         "family_variant_index) " \
         "FROM gpf_variant_db.test_study_impala_01_variants"
-    result_queue = Queue(maxsize=3)
 
     runner = create_runner(impala_helpers, query)
     assert not runner.started()
 
-    executor = ThreadPoolExecutor(max_workers=1)
-    result = QueryResult(result_queue, [runner])
-    result.start(executor)
+    result = QueryResult([runner])
+    result.start()
     time.sleep(0.1)
 
     assert runner.started()
 
     result.close()
     time.sleep(0.1)
-    executor.shutdown(wait=True)
 
 
 def test_impala_runner_result_experimental(impala_helpers):
@@ -119,15 +109,13 @@ def test_impala_runner_result_experimental(impala_helpers):
         "summary_variant_index, " \
         "family_variant_index) " \
         "FROM gpf_variant_db.test_study_impala_01_variants"
-    result_queue = Queue(maxsize=3)
 
     runner = create_runner(impala_helpers, query)
 
     assert not runner.started()
 
-    executor = ThreadPoolExecutor(max_workers=1)
-    result = QueryResult(result_queue, [runner])
-    result.start(executor)
+    result = QueryResult([runner])
+    result.start()
     time.sleep(0.1)
 
     assert runner.started()
@@ -140,4 +128,3 @@ def test_impala_runner_result_experimental(impala_helpers):
     time.sleep(0.5)
 
     assert runner.closed()
-    executor.shutdown(wait=True)

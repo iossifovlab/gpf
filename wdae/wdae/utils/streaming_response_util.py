@@ -18,25 +18,31 @@ def convert(obj):
 
 
 def iterator_to_json(variants):
+
     try:
         yield "["
-        curr = next(variants, None)
-        post = next(variants, None)
-        while curr is not None:
-            yieldval = json.dumps(curr, default=convert)
-            if post is None:
-                yield yieldval
-                break
-            else:
-                yield yieldval + ","
-            curr = post
-            post = next(variants, None)
-        yield "]"
+        curr = next(variants)
+        while curr is None:
+            yield ""
+            curr = next(variants)
+        yield json.dumps(curr, default=convert)
 
-        return 0
+        while True:
+
+            curr = next(variants)
+            while curr is None:
+                yield ""
+                curr = next(variants)
+
+            yield ","
+            yield json.dumps(curr, default=convert)
+
+    except StopIteration:
+        logger.debug("iterator_to_json generator done")
     except GeneratorExit:
         logger.info("iterator_to_json generator closed")
     except BaseException:
         logger.exception("unexpected exception", exc_info=True)
     finally:
         variants.close()
+        yield "]"
