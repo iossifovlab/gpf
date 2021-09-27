@@ -30,18 +30,14 @@ class FamiliesDataDownloadView(QueryBaseView):
     def __init__(self):
         super(FamiliesDataDownloadView, self).__init__()
 
-    def get(self, request, common_report_id):
-        report = self.gpf_instance.get_common_report(common_report_id)
-        if not report:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
+    def get(self, request, dataset_id):
         if not user_has_permission(
-            request.user, common_report_id
+            request.user, dataset_id
         ):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         families_data = self.gpf_instance.get_common_report_families_data(
-            common_report_id
+            dataset_id
         )
         if not families_data:
             return Response(status=status.HTTP_404_NOT_FOUND)
