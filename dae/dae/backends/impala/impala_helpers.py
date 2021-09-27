@@ -96,7 +96,7 @@ class ConnectionPool:
                 connection = self.create_connection_func()
                 self.connections.put(connection)
                 self.overflow += 1
-                logger.warn(f"connection poll overflow: {self.overflow}")
+                logger.warning(f"connection poll overflow: {self.overflow}")
 
             connection = self.connections.get()
             elapsed = time.time() - start

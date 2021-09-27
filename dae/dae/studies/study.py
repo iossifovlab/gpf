@@ -283,7 +283,7 @@ class GenotypeData(ABC):
                         continue
 
                     if unique_family_variants and v.fvuid in seen:
-                        yield None
+                        continue
 
                     seen.add(v.fvuid)
                     yield v

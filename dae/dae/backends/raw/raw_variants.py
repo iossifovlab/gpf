@@ -4,7 +4,6 @@ import queue
 import abc
 
 from contextlib import closing
-from concurrent.futures import ThreadPoolExecutor
 
 from dae.variants.variant import SummaryAllele
 from dae.variants.family_variant import FamilyAllele
