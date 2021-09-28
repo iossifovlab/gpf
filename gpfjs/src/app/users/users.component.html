@@ -8,7 +8,7 @@
 <div *ngIf="!(userInfo$ | async)?.email" class="row justify-content-end dropdown" data-backdrop="static">
   <div>
     <button #dropdownButton (click)="hideDropdown = !hideDropdown; focusEmailInput()"
-      class="btn btn-secondary dropdown-toggle" id="login-dropdown-toggle-button" type="button">
+      class="btn btn-secondary dropdown-toggle" id="login-dropdown-toggle-button" type="button" [disabled]="loading">
       Login
     </button>
     <div #dialog id="login-window" class="open row" [hidden]="hideDropdown">
@@ -38,7 +38,7 @@
             <button type="button" class="btn btn-light col-3" id="back-button" style="width: 100%; border: 1px solid #ced4da; opacity: 85%;" (click)="back()">
               Back
             </button>
-            <button type="submit" class="btn btn-primary col-8" id="login-button" style="width: 100%; float:right" (click)="login()" [class.spinner] = "loading" [disabled] = "loading">
+            <button type="submit" class="btn btn-primary col-8" id="login-button" style="width: 100%; float:right" (click)="login()" [class.spinner] = "passwordTimeout" [disabled] = "passwordTimeout">
               Login
             </button>
           </div>

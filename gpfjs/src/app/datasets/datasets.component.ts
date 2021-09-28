@@ -24,6 +24,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
   public selectedDataset: Dataset;
   public permissionDeniedPrompt: string;
   public toolPageLinks = toolPageLinks;
+  public loading = false;
 
   private subscriptions: Subscription[] = [];
 
@@ -36,6 +37,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
   ) { }
 
   public ngOnInit() {
+    this.loading = true;
     this.datasetTrees = new Array<DatasetNode>();
     this.datasets$ = this.filterHiddenGroups(this.datasetsService.getDatasetsObservable());
     this.subscriptions.push(
@@ -49,6 +51,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
       }),
       // Create dataset hierarchy
       this.datasets$.subscribe(datasets => {
+        this.loading = false;
         this.datasetTrees = new Array<DatasetNode>();
         datasets.filter(d => !d.parents.length).map(d => this.datasetTrees.push(new DatasetNode(d, datasets)));
       }),
@@ -61,6 +64,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
         }
       }),
       this.usersService.getUserInfoObservable().subscribe(() => {
+        this.loading = true;
         this.datasetsService.reloadSelectedDataset(true);
       }),
       this.datasetsService.getPermissionDeniedPrompt().subscribe(
