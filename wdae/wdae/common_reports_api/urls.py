@@ -14,7 +14,7 @@ urlpatterns = [
         name="common_report",
     ),
     re_path(
-        r"^/families_data/(?P<common_report_id>.+)$",
+        r"^/families_data/(?P<dataset_id>.+)$",
         views.FamiliesDataDownloadView.as_view(),
     ),
 ]
