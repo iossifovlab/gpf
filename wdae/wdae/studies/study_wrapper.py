@@ -160,12 +160,6 @@ class StudyWrapperBase:
             max_variants_message)
         return filter(None, variants_result)
 
-        # with closing(variants_result) as variants:
-        #     for variant in variants:
-        #         if variant is None:
-        #             continue
-        #         yield variant
-
     @abstractmethod
     def query_variants_wdae_streaming(
             self, kwargs, sources, max_variants_count=10000,
