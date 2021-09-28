@@ -14,11 +14,12 @@ export class MeasuresService {
   private readonly measurePartitionsUrl = 'measures/partitions';
   private readonly regressionsUrl = 'measures/regressions';
 
-  constructor(private http: HttpClient, private config: ConfigService) {}
+  constructor(
+    private http: HttpClient,
+    private config: ConfigService
+  ) {}
 
-  public getContinuousMeasures(
-    datasetId: string
-  ): Observable<Array<ContinuousMeasure>> {
+  public getContinuousMeasures(datasetId: string): Observable<Array<ContinuousMeasure>> {
     const params = new HttpParams().set('datasetId', datasetId);
     const requestOptions = { withCredentials: true, params: params };
 
@@ -31,10 +32,7 @@ export class MeasuresService {
       );
   }
 
-  public getMeasureHistogram(
-    datasetId: string,
-    measureName: string
-  ): Observable<HistogramData> {
+  public getMeasureHistogram(datasetId: string, measureName: string): Observable<HistogramData> {
     const headers = { 'Content-Type': 'application/json' };
     const options = { headers: headers, withCredentials: true };
 
