@@ -4,7 +4,6 @@ import queue
 import abc
 
 from contextlib import closing
-from concurrent.futures import ThreadPoolExecutor
 
 from dae.variants.variant import SummaryAllele
 from dae.variants.family_variant import FamilyAllele
@@ -328,15 +327,13 @@ class RawFamilyVariants(abc.ABC):
     def query_summary_variants(self, **kwargs):
         runner = self.build_summary_variants_query_runner(**kwargs)
 
-        result_queueu = queue.Queue(maxsize=1_000)
         result = QueryResult(
-                result_queueu, runners=[runner],
+                runners=[runner],
                 limit=kwargs.get("limit", -1))
 
         try:
             logger.debug("starting result")
-            executor = ThreadPoolExecutor(max_workers=1)
-            result.start(executor)
+            result.start()
             seen = set()
             with closing(result) as result:
                 for sv in result:
@@ -347,7 +344,7 @@ class RawFamilyVariants(abc.ABC):
                     seen.add(sv.svuid)
                     yield sv
         finally:
-            executor.shutdown(wait=True)
+            pass
 
     @classmethod
     def family_variant_filter_function(cls, **kwargs):
@@ -469,15 +466,13 @@ class RawFamilyVariants(abc.ABC):
     def query_variants(self, **kwargs):
         runner = self.build_family_variants_query_runner(**kwargs)
 
-        result_queueu = queue.Queue(maxsize=1_000)
         result = QueryResult(
-                result_queueu, runners=[runner],
+                runners=[runner],
                 limit=kwargs.get("limit", -1))
 
         try:
             logger.debug("starting result")
-            executor = ThreadPoolExecutor(max_workers=1)
-            result.start(executor)
+            result.start()
             seen = set()
             with closing(result) as result:
                 for v in result:
@@ -488,7 +483,7 @@ class RawFamilyVariants(abc.ABC):
                     seen.add(v.fvuid)
                     yield v
         finally:
-            executor.shutdown(wait=True)
+            pass
 
 
 class RawMemoryVariants(RawFamilyVariants):

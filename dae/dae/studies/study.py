@@ -1,13 +1,10 @@
 import time
 import logging
 import threading
-import queue
 import functools
 
 # from dae.utils.debug_closing import closing
 from contextlib import closing
-
-from concurrent.futures import ThreadPoolExecutor
 
 from abc import ABC, abstractmethod, abstractproperty
 
@@ -33,13 +30,6 @@ class GenotypeData(ABC):
         self._person_set_collection_configs = dict()
         self._parents = set()
         self._executor = None
-
-    @property
-    def executor(self):
-        if self._executor is None:
-            self._executor = ThreadPoolExecutor(
-                max_workers=len(self.studies) + 1)
-        return self._executor
 
     def close(self):
         logger.error(f"base genotype data close() called for {self.study_id}")
@@ -158,7 +148,7 @@ class GenotypeData(ABC):
         logger.debug(f"studies to query: {[st.study_id for st in leafs]}")
         return leafs
 
-    def query_variants(
+    def query_result_variants(
             self,
             regions=None,
             genes=None,
@@ -178,7 +168,6 @@ class GenotypeData(ABC):
             limit=None,
             study_filters=None,
             affected_status=None,
-            unique_family_variants=True,
             **kwargs):
         if person_set_collection is not None:
             person_ids = self._transform_person_set_collection_query(
@@ -235,13 +224,56 @@ class GenotypeData(ABC):
         if len(runners) == 0:
             return
 
+        return QueryResult(runners)
+
+    def query_variants(
+            self,
+            regions=None,
+            genes=None,
+            effect_types=None,
+            family_ids=None,
+            person_ids=None,
+            person_set_collection=None,
+            inheritance=None,
+            roles=None,
+            sexes=None,
+            variant_type=None,
+            real_attr_filter=None,
+            ultra_rare=None,
+            frequency_filter=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None,
+            study_filters=None,
+            affected_status=None,
+            unique_family_variants=True,
+            **kwargs):
+
+        result = self.query_result_variants(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            person_set_collection=person_set_collection,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            limit=limit,
+            study_filters=study_filters,
+            affected_status=affected_status,
+            **kwargs
+        )
+
         started = time.time()
         try:
-
-            executor = ThreadPoolExecutor(max_workers=len(runners))
-            results_queue = queue.Queue(maxsize=1_000)
-            result = QueryResult(results_queue, runners)
-            result.start(executor)
+            result.start()
 
             with closing(result) as result:
                 seen = set()
@@ -249,20 +281,15 @@ class GenotypeData(ABC):
                 for v in result:
                     if v is None:
                         continue
+
                     if unique_family_variants and v.fvuid in seen:
                         continue
-                    # for allele in v.alleles:
-                    #     if allele.get_attribute("study_name") is None:
-                    #         allele.update_attributes(
-                    #             {"study_name": self.name})
-                    #     if allele.get_attribute("study_phenotype") is None:
-                    #         allele.update_attributes(
-                    #             {"study_phenotype": self.study_phenotype})
 
                     seen.add(v.fvuid)
                     yield v
                     if limit and len(seen) >= limit:
                         break
+
         except GeneratorExit:
             logger.info("generator closed")
         finally:
@@ -271,11 +298,9 @@ class GenotypeData(ABC):
                 f"processing study {self.study_id} "
                 f"elapsed: {elapsed:.3f}")
 
-            logger.debug(f"closing thread pool executor for {self.study_id}")
-            executor.shutdown(wait=True)
             logger.debug("[DONE] executor closed...")
 
-    def query_summary_variants(
+    def query_result_summary_variants(
         self,
         regions=None,
         genes=None,
@@ -327,22 +352,61 @@ class GenotypeData(ABC):
                     return_reference=return_reference,
                     return_unknown=return_unknown,
                     limit=limit)
-            runner._owner = self
             runners.append(runner)
 
         if len(runners) == 0:
             return
 
-        try:
-            executor = ThreadPoolExecutor(max_workers=len(runners))
+        result = QueryResult(runners)
+        return result
 
-            results_queue = queue.Queue(maxsize=1_000)
-            result = QueryResult(results_queue, runners)
-            result.start(executor)
+    def query_summary_variants(
+        self,
+        regions=None,
+        genes=None,
+        effect_types=None,
+        family_ids=None,
+        person_ids=None,
+        person_set_collection=None,
+        inheritance=None,
+        roles=None,
+        sexes=None,
+        variant_type=None,
+        real_attr_filter=None,
+        ultra_rare=None,
+        frequency_filter=None,
+        return_reference=None,
+        return_unknown=None,
+        limit=None,
+        study_filters=None,
+        **kwargs,
+    ):
+
+        result = self.query_result_summary_variants(
+                    regions=regions,
+                    genes=genes,
+                    effect_types=effect_types,
+                    family_ids=family_ids,
+                    person_ids=person_ids,
+                    person_set_collection=person_set_collection,
+                    inheritance=inheritance,
+                    roles=roles,
+                    sexes=sexes,
+                    variant_type=variant_type,
+                    real_attr_filter=real_attr_filter,
+                    ultra_rare=ultra_rare,
+                    frequency_filter=frequency_filter,
+                    return_reference=return_reference,
+                    return_unknown=return_unknown,
+                    limit=limit,
+                    study_filters=study_filters,
+                    **kwargs)
+        try:
             started = time.time()
 
             variants = dict()
             with closing(result) as result:
+                result.start()
 
                 for v in result:
                     if v is None:
@@ -385,8 +449,6 @@ class GenotypeData(ABC):
             for v in variants.values():
                 yield v
         finally:
-            logger.debug(f"closing thread pool executor for {self.study_id}")
-            executor.shutdown(wait=True)
             logger.debug("[DONE] executor closed...")
 
     @abstractproperty
@@ -470,13 +532,6 @@ class GenotypeDataGroup(GenotypeData):
     @property
     def is_group(self):
         return True
-
-    @property
-    def executor(self):
-        with self._EXECUTOR_LOCK:
-            if self.EXECUTOR is None:
-                self.EXECUTOR = ThreadPoolExecutor(max_workers=6)
-            return self.EXECUTOR
 
     @property
     def families(self):

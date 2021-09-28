@@ -1,6 +1,6 @@
 import itertools
 import logging
-
+from contextlib import closing
 from abc import abstractmethod
 
 from dae.variants.attributes import Role
@@ -151,8 +151,19 @@ class StudyWrapperBase:
 
         return result
 
+    def query_variants_wdae(
+            self, kwargs, sources, max_variants_count=10000,
+            max_variants_message=False):
+
+        variants_result = self.query_variants_wdae_streaming(
+            kwargs, sources, max_variants_count,
+            max_variants_message)
+        return filter(None, variants_result)
+
     @abstractmethod
-    def query_variants_wdae(self, kwargs, sources, max_variants_count=10000):
+    def query_variants_wdae_streaming(
+            self, kwargs, sources, max_variants_count=10000,
+            max_variants_message=False):
         pass
 
 
@@ -297,7 +308,7 @@ class StudyWrapper(StudyWrapperBase):
     def transform_request(self, kwargs):
         return self.query_transformer.transform_kwargs(**kwargs)
 
-    def query_variants_wdae(
+    def query_variants_wdae_streaming(
         self, kwargs, sources, max_variants_count=10000,
         max_variants_message=False
     ):
@@ -317,33 +328,46 @@ class StudyWrapper(StudyWrapperBase):
         transform = self.response_transformer.variant_transformer()
 
         try:
-            variants = self.genotype_data_study.query_variants(**kwargs)
-            for index, variant in enumerate(variants):
-                if max_variants_count and index >= max_variants_count:
-                    if max_variants_message:
-                        yield [
-                            f"# limit of {max_variants_count} variants "
-                            f"reached"
-                        ]
-                    break
+            variants_result = \
+                self.genotype_data_study.query_result_variants(**kwargs)
+            variants_result.start()
 
-                v = transform(variant)
+            with closing(variants_result) as variants:
 
-                matched = True
-                for aa in v.matched_alleles:
-                    assert not aa.is_reference_allele
-                    if not filter_allele(aa):
-                        matched = False
+                index = 0
+                for variant in variants:
+                    if variant is None:
+                        yield None
+                        continue
+
+                    index += 1
+                    if max_variants_count and index > max_variants_count:
+                        if max_variants_message:
+                            yield [
+                                f"# limit of {max_variants_count} variants "
+                                f"reached"
+                            ]
                         break
-                if not matched:
-                    continue
 
-                row_variant = self.response_transformer._build_variant_row(
-                    v, sources,
-                    person_set_collection=kwargs.get("person_set_collection", (None, None))[0]
-                )
+                    v = transform(variant)
 
-                yield row_variant
+                    matched = True
+                    for aa in v.matched_alleles:
+                        assert not aa.is_reference_allele
+                        if not filter_allele(aa):
+                            matched = False
+                            break
+                    if not matched:
+                        yield None
+                        continue
+
+                    row_variant = self.response_transformer._build_variant_row(
+                        v, sources,
+                        person_set_collection=kwargs.get(
+                            "person_set_collection", (None, None))[0]
+                    )
+
+                    yield row_variant
         except GeneratorExit:
             logger.info(f"study wrapper query variants for {self.name} closed")
         finally:
@@ -375,54 +399,6 @@ class StudyWrapper(StudyWrapperBase):
                 variants_from_studies, frequency_column
             )
 
-    # def query_variants(self, **kwargs):
-    #     print(100*"=")
-    #     print("kwargs:", kwargs)
-    #     kwargs = self.query_transformer.transform_kwargs(**kwargs)
-    #     print("kwargs after tranform:", kwargs)
-    #     print(100*"=")
-
-    #     logger.info(f"query filters after translation: {kwargs}")
-
-    #     if not kwargs.get("summaryVariantIds"):
-    #         def filter_allele(allele):
-    #             return True
-    #     else:
-    #         summary_variant_ids = set(kwargs.get("summaryVariantIds"))
-    #         # logger.debug(f"sumamry variants ids: {summary_variant_ids}")
-
-    #         def filter_allele(allele):
-    #             svid = f"{allele.cshl_location}:{allele.cshl_variant}"
-    #             return svid in summary_variant_ids
-
-    #     sources = kwargs.get("sources")
-    #     person_set_collection = kwargs.pop("person_set_collection")
-
-    #     transform = self.response_transformer.variant_transformer()
-
-    #     try:
-    #         variants = self.genotype_data_study.query_variants(**kwargs)
-    #         for variant in variants:
-    #             v = transform(variant)
-
-    #             matched = True
-    #             for aa in v.matched_alleles:
-    #                 assert not aa.is_reference_allele
-    #                 if not filter_allele(aa):
-    #                     matched = False
-    #                     break
-    #             if not matched:
-    #                 continue
-
-    #             row_variant = self.response_transformer._build_variant_row(
-    #                 v, sources, person_set_collection=person_set_collection)
-
-    #             yield row_variant
-    #     except GeneratorExit:
-    #         variants.close()
-    #         logger.info(
-    #               f"study wrapper query variants for {self.name} closed")
-
     def _get_roles_value(self, allele, roles):
         result = []
         variant_in_members = allele.variant_in_members_objects
@@ -433,22 +409,6 @@ class StudyWrapper(StudyWrapperBase):
                     result.append(str(role) + member.sex.short())
 
         return result
-
-    # def _get_legend_default_values(self):
-    #     return [
-    #         {
-    #             "color": "#E0E0E0",
-    #             "id": "missing-person",
-    #             "name": "missing-person",
-    #         }
-    #     ]
-
-    # def get_legend(self, person_set_collection_id=None):
-    #     if person_set_collection_id is None:
-    #         legend = list(self.legend.values())[0] if self.legend else []
-    #     else:
-    #         legend = self.legend.get(person_set_collection_id, [])
-    #     return legend + self._get_legend_default_values()
 
 
 class RemoteStudyWrapper(StudyWrapperBase):
@@ -491,7 +451,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
     def get_studies_ids(self, leaves=True):
         return self.remote_genotype_data.get_studies_ids(leaves=leaves)
 
-    def query_variants_wdae(
+    def query_variants_wdae_streaming(
             self, kwargs, sources,
             max_variants_count=10000,
             max_variants_message=False):
