@@ -212,7 +212,7 @@ describe('Gene set file length tests', () => {
       genotypeBrowserController.setStudy(datasetIds.iossifov2014);
 
       page.geneSetsButton.click();
-      page.geneSetsCollectionSelectorDropdownMenu.select(data.collection);
+      page.geneSetsCollectionSelectorDropdownMenu.select(data.collection, {force: true});
       page.geneSetsSearchbox.click();
 
       results.splice(0, results.length);
@@ -277,7 +277,7 @@ describe('Denovo gene set gene symbols tests', () => {
 
       for (let i = 0; i < data.expectedConditions.effectTypesSearchQueries.length; i++) {
         page.geneSetsButton.click();
-        page.geneSetsCollectionSelectorDropdownMenu.select('Denovo');
+        page.geneSetsCollectionSelectorDropdownMenu.select('Denovo', {force: true});
         if (data.peopleGroup === 'unaffected') {
           page.findDenovoGeneSetCollectionCheckbox('iossifov_2014', 'affected').click();
           page.findDenovoGeneSetCollectionCheckbox('iossifov_2014', 'unaffected').click();

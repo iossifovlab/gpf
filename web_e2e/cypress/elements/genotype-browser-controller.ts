@@ -179,7 +179,7 @@ export class GenotypeBrowserController extends BaseController {
 
   filterGenesByGeneSets(collection: string, set: string) {
     this.genesBlockPage.geneSetsButton.click();
-    this.genesBlockPage.geneSetsCollectionSelectorDropdownMenu.select(collection);
+    this.genesBlockPage.geneSetsCollectionSelectorDropdownMenu.select(collection, {force: true});
 
     this.genesBlockPage.geneSetsSearchbox.click();
     this.genesBlockPage.geneSetsSearchbox.type(set);

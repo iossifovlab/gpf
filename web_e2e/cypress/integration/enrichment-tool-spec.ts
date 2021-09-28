@@ -94,7 +94,7 @@ describe('Enrichment tool tests', () => {
     const genesBlockPage = new GenesBlockPage();
 
     genesBlockPage.geneSetsButton.click();
-    genesBlockPage.geneSetsCollectionSelectorDropdownMenu.select('MSigDB Pathways');
+    genesBlockPage.geneSetsCollectionSelectorDropdownMenu.select('MSigDB Pathways', {force: true});
     genesBlockPage.geneSetsSearchbox.click();
     genesBlockPage.geneSetsSearchbox.type('BIOCARTA_PTEN_PATHWAY');
     genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText('BIOCARTA_PTEN_PATHWAY').click();
