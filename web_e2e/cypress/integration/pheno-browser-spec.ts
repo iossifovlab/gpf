@@ -18,7 +18,7 @@ describe('Pheno browser tests', () => {
   [{seachQuery: 'the age'}, {seachQuery: 'the iq'}, {seachQuery: 'measure 1'},
    {seachQuery: 'measure 2'}, {seachQuery: 'measure 3'}, {seachQuery: 'measure 4'}
   ].forEach((data) => {
-    it('should have working search box when filtering with \'' + data.seachQuery + '\' search query', () => {
+    it('should filter the right rows when typing \'' + data.seachQuery + '\' in the sarchbox', () => {
       page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
       page.allTableRows.should('have.length', 8)
 
@@ -27,9 +27,16 @@ describe('Pheno browser tests', () => {
     });
   });
 
-  it('should display the right amount of table rows when the query in the search box is \'1\'', () => {
+  it('should filter the right rows when typing \'1\' in the sarchbox', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
     page.searchInputBox.type('1');
     page.allTableRows.should('have.length', 7)
   });
+
+  // add tests for:
+  // instruments dropdown
+  // icons
+  // download
+  // sort
+  // row values
 });
