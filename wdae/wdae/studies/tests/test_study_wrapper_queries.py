@@ -14,8 +14,8 @@ pytestmark = pytest.mark.usefixtures(
 )
 def test_query_all_variants(iossifov_2014_wrappers, wrapper_type):
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
-    variants = list(filter(None, study_wrapper.query_variants_wdae(
-        {}, [{"source": "location"}])))
+    variants = list(study_wrapper.query_variants_wdae(
+        {}, [{"source": "location"}]))
 
     assert len(variants) == 5645, variants
 
@@ -46,9 +46,9 @@ def test_query_inheritance_variants(
     query = {
         "inheritance": inheritance_type
     }
-    variants = list(filter(None, study_wrapper.query_variants_wdae(
+    variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}])
-    ))
+    )
 
     assert len(variants) == count
 
@@ -59,9 +59,9 @@ def test_query_inheritance_variants(
 )
 def test_query_limit_variants(iossifov_2014_wrappers, wrapper_type):
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
-    variants = list(filter(None, study_wrapper.query_variants_wdae(
+    variants = list(study_wrapper.query_variants_wdae(
         {}, [{"source": "location"}], max_variants_count=1
-    )))
+    ))
     assert len(variants) == 1
 
 
@@ -88,9 +88,9 @@ def test_query_family_variants(
     query = {
         "family_ids": family_ids
     }
-    variants = list(filter(None, study_wrapper.query_variants_wdae(
+    variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}])
-    ))
+    )
 
     assert len(variants) == count
 
@@ -115,9 +115,9 @@ def test_query_sexes_variants(
     query = {
         "gender": sexes
     }
-    variants = list(filter(None, study_wrapper.query_variants_wdae(
+    variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}])
-    ))
+    )
 
     assert len(variants) == count
 
@@ -143,9 +143,9 @@ def test_query_variant_type_variants(
     query = {
         "variantTypes": variant_type
     }
-    variants = list(filter(None, study_wrapper.query_variants_wdae(
+    variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}])
-    ))
+    )
 
     assert len(variants) == count
 
@@ -172,9 +172,9 @@ def test_query_effect_types_variants(
     query = {
         "effect_types": effect_types
     }
-    variants = list(filter(None, study_wrapper.query_variants_wdae(
+    variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}])
-    ))
+    )
 
     assert len(variants) == count
 
@@ -200,9 +200,9 @@ def test_query_regions_variants(
     query = {
         "regions": regions
     }
-    variants = list(filter(None, study_wrapper.query_variants_wdae(
+    variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}])
-    ))
+    )
 
     assert len(variants) == count
 
@@ -240,9 +240,9 @@ def test_query_present_in_child(
             ]
         }
     }
-    variants = list(filter(None, study_wrapper.query_variants_wdae(
+    variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}])
-    ))
+    )
 
     assert len(variants) == count
 
@@ -280,9 +280,9 @@ def test_query_present_in_parent(
             "proband only", "sibling only", "proband and sibling", "neither"
         ]
     }
-    variants = list(filter(None, study_wrapper.query_variants_wdae(
+    variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}])
-    ))
+    )
 
     assert len(variants) == count
 
@@ -309,9 +309,9 @@ def test_query_min_alt_frequency(
     query = {
         "minAltFrequencyPercent": option
     }
-    variants = list(filter(None, study_wrapper.query_variants_wdae(
+    variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}])
-    ))
+    )
 
     assert len(variants) == count
 
@@ -338,9 +338,9 @@ def test_query_max_alt_frequency(
     query = {
         "maxAltFrequencyPercent": option
     }
-    variants = list(filter(None, study_wrapper.query_variants_wdae(
+    variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}])
-    ))
+    )
 
     assert len(variants) == count
 
@@ -391,9 +391,9 @@ def test_query_gene_weights(
     query = {
         "geneWeights": option
     }
-    variants = list(filter(None, study_wrapper.query_variants_wdae(
+    variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}])
-    ))
+    )
 
     assert len(variants) == count
 
@@ -417,9 +417,9 @@ def test_query_person_filters(iossifov_2014_wrappers, wrapper_type):
             }
         ]
     }
-    variants = list(filter(None, study_wrapper.query_variants_wdae(
+    variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}])
-    ))
+    )
     assert len(variants) == 2287
 
 
@@ -443,9 +443,9 @@ def test_query_family_filters(iossifov_2014_wrappers, wrapper_type):
             }
         ]
     }
-    variants = list(filter(None, study_wrapper.query_variants_wdae(
+    variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}])
-    ))
+    )
     assert len(variants) == 4805
 
 
@@ -461,7 +461,7 @@ def test_query_family_types(iossifov_2014_wrappers, wrapper_type):
     query = {
         "familyTypes": ["trio"]
     }
-    variants = list(filter(None, study_wrapper.query_variants_wdae(
+    variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}])
-    ))
+    )
     assert len(variants) == 885

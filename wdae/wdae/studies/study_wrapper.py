@@ -151,8 +151,25 @@ class StudyWrapperBase:
 
         return result
 
+    def query_variants_wdae(
+            self, kwargs, sources, max_variants_count=10000,
+            max_variants_message=False):
+
+        variants_result = self.query_variants_wdae_streaming(
+            kwargs, sources, max_variants_count,
+            max_variants_message)
+        return filter(None, variants_result)
+
+        # with closing(variants_result) as variants:
+        #     for variant in variants:
+        #         if variant is None:
+        #             continue
+        #         yield variant
+
     @abstractmethod
-    def query_variants_wdae(self, kwargs, sources, max_variants_count=10000):
+    def query_variants_wdae_streaming(
+            self, kwargs, sources, max_variants_count=10000,
+            max_variants_message=False):
         pass
 
 
@@ -297,7 +314,7 @@ class StudyWrapper(StudyWrapperBase):
     def transform_request(self, kwargs):
         return self.query_transformer.transform_kwargs(**kwargs)
 
-    def query_variants_wdae(
+    def query_variants_wdae_streaming(
         self, kwargs, sources, max_variants_count=10000,
         max_variants_message=False
     ):
@@ -440,7 +457,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
     def get_studies_ids(self, leaves=True):
         return self.remote_genotype_data.get_studies_ids(leaves=leaves)
 
-    def query_variants_wdae(
+    def query_variants_wdae_streaming(
             self, kwargs, sources,
             max_variants_count=10000,
             max_variants_message=False):
