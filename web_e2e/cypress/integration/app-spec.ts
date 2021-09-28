@@ -109,6 +109,7 @@ describe('User access rights tests', () => {
 
   it('should go through all tools and check whether the permission denied prompt ' +
      'is displayed when not logged in and not displayed when logged in with admin account', () => {
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
 
     datasetsPage.geneBrowserButton.click();

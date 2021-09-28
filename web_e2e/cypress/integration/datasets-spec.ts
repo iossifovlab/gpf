@@ -9,10 +9,11 @@ describe('Datasets tests', () => {
 
   before(() => {
     page.cleanup();
+    page.navigateToHome();
   });
 
   beforeEach(() => {
-    page.navigateToHome();
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics);
   });
 
   afterEach(() => {

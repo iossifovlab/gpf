@@ -64,7 +64,7 @@ export class BasePage {
 
   navigateToHome() {
     const baseUrl = Cypress.config().baseUrl;
-    cy.visit(`${baseUrl}/datasets/comp_all/${toolPageLinks.datasetStatistics}`);
+    cy.visit(`${baseUrl}/datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`);
   }
 
   login(username: string, password: string) {
