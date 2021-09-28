@@ -80,7 +80,7 @@ export class BasePage {
     usersPage.passwordInput.type(password);
     usersPage.loginSubmitButton.click();
     usersPage.logoutButton.should('be.visible');
-    cy.wait(1000);
+    cy.wait(1500);
   }
 
   loginAdmin() {
@@ -91,7 +91,7 @@ export class BasePage {
     const usersPage = new UsersPage();
     usersPage.logoutButton.click();
     usersPage.loginDropdownToggleButton.should('be.visible');
-    cy.wait(1000);
+    cy.wait(1500);
   }
 
   navigateToDatasetPage(dataset: string, page: string) {
