@@ -208,7 +208,7 @@ describe('User access rights tests', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics);
     page.login(userData.normal.username, userData.normal.password);
     datasetsPage.permissionDeniedPrompt.should('exist');
-    datasetsPage.datasetStatisticsWindow.should('not.be.visible');
+    datasetsPage.datasetStatisticsWindow.should('not.exist');
 
     page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.genotypeBrowser);
     datasetsPage.permissionDeniedPrompt.should('not.exist');
@@ -228,15 +228,15 @@ describe('User access rights tests', () => {
 
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
-    datasetsPage.datasetStatisticsWindow.should('not.be.visible');
+    datasetsPage.datasetStatisticsWindow.should('not.exist');
 
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
-    datasetsPage.datasetStatisticsWindow.should('not.be.visible');
+    datasetsPage.datasetStatisticsWindow.should('not.exist');
 
     page.navigateToDatasetPage(datasetIds.multi, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
-    datasetsPage.datasetStatisticsWindow.should('not.be.visible');
+    datasetsPage.datasetStatisticsWindow.should('not.exist');
 
     page.logout();
   });
@@ -302,31 +302,31 @@ describe('User access rights tests', () => {
     page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.genotypeBrowser);
     page.login(userData.normal.username, userData.normal.password);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
-    genotypeBrowserPage.window.should('not.be.visible');
+    genotypeBrowserPage.window.should('not.exist');
 
     page.navigateToDatasetPage(datasetIds.compGenotypes, toolPageLinks.genotypeBrowser);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
-    genotypeBrowserPage.window.should('not.be.visible');
+    genotypeBrowserPage.window.should('not.exist');
 
     page.navigateToDatasetPage(datasetIds.compDenovo, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
-    datasetsPage.datasetStatisticsWindow.should('not.be.visible');
+    datasetsPage.datasetStatisticsWindow.should('not.exist');
 
     page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
-    datasetsPage.datasetStatisticsWindow.should('not.be.visible');
+    datasetsPage.datasetStatisticsWindow.should('not.exist');
 
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
-    datasetsPage.datasetStatisticsWindow.should('not.be.visible');
+    datasetsPage.datasetStatisticsWindow.should('not.exist');
 
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
-    datasetsPage.datasetStatisticsWindow.should('not.be.visible');
+    datasetsPage.datasetStatisticsWindow.should('not.exist');
 
     page.navigateToDatasetPage(datasetIds.multi, toolPageLinks.datasetStatistics);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
-    datasetsPage.datasetStatisticsWindow.should('not.be.visible');
+    datasetsPage.datasetStatisticsWindow.should('not.exist');
 
     page.logout();
   });
