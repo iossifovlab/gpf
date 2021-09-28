@@ -27,7 +27,7 @@ export class GenotypeBrowserComponent implements OnInit {
   tablePreview: boolean;
   legend: Array<PersonSet>;
 
-  private disableQueryButtons = false;
+  public disableQueryButtons = false;
 
   @Input()
   selectedDatasetId: string;
@@ -78,10 +78,6 @@ export class GenotypeBrowserComponent implements OnInit {
     this.genotypeBrowserState = {};
 
     this.selectedDataset = this.datasetsService.getSelectedDataset();
-    this.datasetsService.getDatasetsLoadedObservable()
-      .subscribe(() => {
-        this.selectedDataset = this.datasetsService.getSelectedDataset();
-      });
 
     this.state$.subscribe(state => {
       this.genotypeBrowserState = {...state};

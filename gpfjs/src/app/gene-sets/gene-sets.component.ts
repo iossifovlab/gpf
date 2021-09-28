@@ -41,16 +41,17 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
 
   ngOnInit() {
     super.ngOnInit();
+
+    this.selectedDatasetId = this.datasetService.getSelectedDataset().id;
+
     this.geneSetsService.getGeneSetsCollections().pipe(
       switchMap(geneSetsCollections => {
         return combineLatest(
           of(geneSetsCollections),
-          this.datasetService.getSelectedDatasetObservable().pipe(take(1)),
           this.store.selectOnce(state => state.geneSetsState),
         );
       })
-    ).subscribe(([geneSetsCollections, dataset, state]) => {
-      this.selectedDatasetId = dataset.id;
+    ).subscribe(([geneSetsCollections, state]) => {
       const denovoGeneSetTypes = geneSetsCollections.filter(
         geneSetCollection => geneSetCollection.name === 'denovo'
       )[0].types;

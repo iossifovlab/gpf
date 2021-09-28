@@ -71,8 +71,7 @@ import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loadin
 
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
 
-import { RouteReuseStrategy, RouterModule, Routes } from '@angular/router';
-import { TaggingRouteReuseStrategy } from 'app/route-reuse.strategy';
+import { RouterModule, Routes } from '@angular/router';
 
 import { PersonFiltersComponent } from './person-filters/person-filters.component';
 import { PersonFiltersState } from './person-filters/person-filters.state';
@@ -157,7 +156,6 @@ import { GeneBrowserComponent } from './gene-browser/gene-browser.component';
 import { GlobalErrorHandler } from './global-error-handler/global-error-handler';
 import { GlobalErrorDisplayComponent } from './global-error-display/global-error-display.component';
 import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
-import { DatasetPermissionGuard } from './dataset-permission.guard';
 import { CommonReportsRowComponent } from './variant-reports/common-reports-row/common-reports-row.component';
 import { CommonReportsPedigreeCellComponent } from './variant-reports/common-reports-pedigree-cell/common-reports-pedigree-cell.component';
 import { GeneSymbolsWithSearchComponent } from './gene-symbols-with-search/gene-symbols-with-search.component';
@@ -196,10 +194,6 @@ const appRoutes: Routes = [
   {
     path: 'datasets/:dataset',
     component: DatasetsComponent,
-    data: {
-      reuse: false
-    },
-    canLoad: [DatasetPermissionGuard],
     children: [
       {
         path: toolPageLinks.genotypeBrowser,
@@ -406,7 +400,7 @@ const appRoutes: Routes = [
     GpfTableModule,
     PedigreeChartModule,
     HistogramModule,
-    RouterModule.forRoot(appRoutes, { onSameUrlNavigation: 'reload', relativeLinkResolution: 'legacy' }),
+    RouterModule.forRoot(appRoutes),
     BrowserAnimationsModule,
     MarkdownModule.forRoot(),
     HttpClientModule,
@@ -448,10 +442,6 @@ const appRoutes: Routes = [
     {
       provide: ErrorHandler,
       useClass: GlobalErrorHandler
-    },
-    {
-      provide: RouteReuseStrategy,
-      useClass: TaggingRouteReuseStrategy
     },
     BnNgIdleService
   ],

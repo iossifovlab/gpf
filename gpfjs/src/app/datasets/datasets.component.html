@@ -1,6 +1,5 @@
-<div class="content">
-  <nav *ngIf="selectedDataset"
-    class="navbar navbar-custom navbar-toggleable-md navbar-expand-lg navbar-light bg-light">
+<div *ngIf="selectedDataset" class="content">
+  <nav class="navbar navbar-custom navbar-toggleable-md navbar-expand-lg navbar-light bg-light">
     <ul class="navbar-nav">
       <li class="nav-item">
         <div class="btn-group">
@@ -17,7 +16,7 @@
               ngbDropdownMenu
               class="dataset-selector"
               aria-labelledby="datasets-dropdown-menu-button"
-              style="z-index: 199; padding-left: 1.5rem">
+              style="z-index: 199;">
               <gpf-dataset-node *ngFor="let tree of datasetTrees" [datasetNode]="tree"></gpf-dataset-node>
             </div>
           </div>
@@ -54,6 +53,5 @@
       </div>
   </div>
 
-  <router-outlet (activate)="routeChange()" class="content"></router-outlet>
-
+  <router-outlet *ngIf="selectedDataset.accessRights" (activate)="routeChange()" class="content"></router-outlet>
 </div>

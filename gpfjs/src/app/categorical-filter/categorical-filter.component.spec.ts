@@ -10,8 +10,8 @@ import { UsersService } from 'app/users/users.service';
 import { CategoricalFilterComponent } from './categorical-filter.component';
 
 class MockDatasetsService {
-  getSelectedDatasetId() {
-    return 'fakeDatasetId';
+  public getSelectedDataset(): object {
+    return { id: 'testDataset' };
   }
 }
 

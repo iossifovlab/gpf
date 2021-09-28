@@ -32,9 +32,9 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   private maxFamilyVariants = 1000;
   public selectedDataset: Dataset;
   private selectedDatasetId: string;
-  private showResults: boolean;
+  public showResults: boolean;
+  public showError = false;
   private familyLoadingFinished: boolean;
-  private showError = false;
   private geneBrowserConfig;
   private legendDrawn = false;
   private subscriptions: Subscription[] = [];
@@ -80,21 +80,13 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
-    if (this.selectedDataset) {
-      this.geneBrowserConfig = this.selectedDataset.geneBrowser;
+    this.geneBrowserConfig = this.selectedDataset.geneBrowser;
+    if (this.route.snapshot.params.gene) {
+      this.store.dispatch(new SetGeneSymbols([this.route.snapshot.params.gene.toUpperCase()]));
+      this.submitGeneRequest(this.route.snapshot.params.gene);
     }
 
     this.subscriptions.push(
-      this.datasetsService.getDatasetsLoadedObservable().pipe(take(1)).subscribe(() => {
-        this.selectedDataset = this.datasetsService.getSelectedDataset();
-        if (this.selectedDataset) {
-          this.geneBrowserConfig = this.selectedDataset.geneBrowser;
-          if (this.route.snapshot.params.gene && this.selectedDataset.accessRights) {
-            this.store.dispatch(new SetGeneSymbols([this.route.snapshot.params.gene.toUpperCase()]));
-            this.submitGeneRequest(this.route.snapshot.params.gene);
-          }
-        }
-      }),
       this.queryService.streamingFinishedSubject.subscribe(() => {
         this.familyLoadingFinished = true;
       }),
@@ -122,7 +114,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.subscriptions.map(subscription => subscription.unsubscribe());
   }
 
-  private async submitGeneRequest(geneSymbol?: string) {
+  public async submitGeneRequest(geneSymbol?: string) {
     this.showError = false;
     if (geneSymbol) {
       this.geneSymbol = geneSymbol.toUpperCase().trim();

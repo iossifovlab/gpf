@@ -342,7 +342,6 @@ describe('VariantReportsComponent Denovo', () => {
 
     component.ngOnInit();
     fixture.detectChanges();
-    component.ngAfterViewInit();
   });
 
   it('should create', () => {

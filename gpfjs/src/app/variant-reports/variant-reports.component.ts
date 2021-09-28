@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener, AfterViewInit} from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
 import { Observable } from 'rxjs';
 import { VariantReportsService } from './variant-reports.service';
@@ -13,62 +13,50 @@ import { skipWhile, take } from 'rxjs/operators';
   templateUrl: './variant-reports.component.html',
   styleUrls: ['./variant-reports.component.css']
 })
-export class VariantReportsComponent implements OnInit, AfterViewInit {
-  @ViewChild('families_pedigree') familiesPedigree: ElementRef;
-  @ViewChild('legend') legend: ElementRef;
-  familiesPedigreeTop: number;
-  familiesPedigreeBottom: number;
-  legendTop: number;
+export class VariantReportsComponent implements OnInit {
+  @ViewChild('families_pedigree') private familiesPedigree: ElementRef;
+  @ViewChild('legend') private legend: ElementRef;
+  public familiesPedigreeTop: number;
+  public familiesPedigreeBottom: number;
+  public legendTop: number;
 
-  currentPeopleCounter: PeopleCounter;
-  currentPedigreeTable: PedigreeTable;
-  currentDenovoReport: EffectTypeTable;
+  public currentPeopleCounter: PeopleCounter;
+  public currentPedigreeTable: PedigreeTable;
+  public currentDenovoReport: EffectTypeTable;
 
-  variantReport$: Observable<VariantReport>;
-  pedigreeTables: PedigreeTable[];
+  public variantReport: VariantReport;
+  public pedigreeTables: PedigreeTable[];
 
-  selectedDataset$: Observable<Dataset>;
+  public selectedDataset: Dataset;
 
   constructor(
     private variantReportsService: VariantReportsService,
-    private route: ActivatedRoute,
     private datasetsService: DatasetsService,
   ) { }
 
-  ngOnInit(): void {
-    this.selectedDataset$ = this.datasetsService.getSelectedDatasetObservable();
-  }
+  public ngOnInit(): void {
+    this.selectedDataset = this.datasetsService.getSelectedDataset();
+    this.variantReportsService.getVariantReport(this.selectedDataset.id).pipe(take(1)).subscribe(params => {
+      this.variantReport = params;
+      this.pedigreeTables = this.variantReport.familyReport.familiesCounters.map(
+        familiesCounters => new PedigreeTable(
+          this.chunkPedigrees(familiesCounters.familyCounter),
+          familiesCounters.phenotypes, familiesCounters.groupName,
+          familiesCounters.legend
+        )
+      );
 
-  ngAfterViewInit() {
-    // Done to avoid expression change after check
-    setTimeout(() => {
-      this.selectedDataset$.pipe(skipWhile(dataset => !dataset), take(1)).subscribe(dataset => {
-        if (dataset && dataset.accessRights && dataset.commonReport['enabled']) {
-          this.variantReport$ = this.variantReportsService.getVariantReport(dataset.id);
-
-          this.variantReport$.pipe(take(1)).subscribe(params => {
-            this.pedigreeTables = params.familyReport.familiesCounters.map(
-              familiesCounters => new PedigreeTable(
-                  this.chunkPedigrees(familiesCounters.familyCounter),
-                  familiesCounters.phenotypes, familiesCounters.groupName,
-                  familiesCounters.legend
-                )
-              );
-
-            this.currentPeopleCounter = params.peopleReport.peopleCounters[0];
-            this.currentPedigreeTable = this.pedigreeTables[0];
-            if(params.denovoReport !== null) {
-              this.currentDenovoReport = params.denovoReport.tables[0];
-            }
-          });
-        }
-      })
-    }, 0)
+      this.currentPeopleCounter = this.variantReport.peopleReport.peopleCounters[0];
+      this.currentPedigreeTable = this.pedigreeTables[0];
+      if (this.variantReport.denovoReport !== null) {
+        this.currentDenovoReport = this.variantReport.denovoReport.tables[0];
+      }
+    });
   }
 
   @HostListener('window:scroll', ['$event'])
   @HostListener('click', ['$event'])
-  onWindowScroll() {
+  private onWindowScroll() {
     if (this.familiesPedigree && this.familiesPedigree.nativeElement) {
       this.familiesPedigreeTop = this.familiesPedigree.nativeElement.getBoundingClientRect().top;
       this.familiesPedigreeBottom = this.familiesPedigree.nativeElement.getBoundingClientRect().bottom;
@@ -79,18 +67,18 @@ export class VariantReportsComponent implements OnInit, AfterViewInit {
     }
   }
 
-  getPeopleSexValue(peopleSex: string) {
+  public getPeopleSexValue(peopleSex: string) {
     return PeopleSex[peopleSex];
   }
 
-  orderByColumnOrder(childrenCounters: DeNovoData[], columns: string[], strict = false) {
-    let columnsLookup = new Map<string, number>(
+  private orderByColumnOrder(childrenCounters: DeNovoData[], columns: string[], strict = false) {
+    const columnsLookup = new Map<string, number>(
       columns.map((value, index): [string, number] => [value, index])
     );
 
-    let filteredChildrenCounters = childrenCounters
-      .filter(
-        childCounters => columnsLookup.has(childCounters.column));
+    const filteredChildrenCounters = childrenCounters.filter(
+      childCounters => columnsLookup.has(childCounters.column)
+    );
 
     if (strict && filteredChildrenCounters.length !== columns.length) {
       return [];
@@ -98,43 +86,40 @@ export class VariantReportsComponent implements OnInit, AfterViewInit {
 
     return filteredChildrenCounters.sort(
       (child1, child2) => {
-        let index1 = columnsLookup.get(child1.column);
-        let index2 = columnsLookup.get(child2.column);
+        const index1 = columnsLookup.get(child1.column);
+        const index2 = columnsLookup.get(child2.column);
         return index1 - index2;
       }
     );
   }
 
-  chunkPedigrees(familyCounters: FamilyCounter[], chunkSize = 4) {
-    let allPedigrees = familyCounters
-      .reduce(
-        (acc, familyCounter) =>
-          acc.concat(familyCounter.pedigreeCounters),
-        [] as PedigreeCounter[]);
+  private chunkPedigrees(familyCounters: FamilyCounter[], chunkSize = 4) {
+    const allPedigrees = familyCounters.reduce(
+      (acc, familyCounter) => acc.concat(familyCounter.pedigreeCounters), [] as PedigreeCounter[]
+    );
 
-    return allPedigrees
-      .reduce(
-        (acc: PedigreeCounter[][], pedigree, index) => {
-          if (acc.length === 0 || acc[acc.length - 1].length === chunkSize) {
-            acc.push([pedigree]);
-          } else {
-            acc[acc.length - 1].push(pedigree);
+    return allPedigrees.reduce(
+      (acc: PedigreeCounter[][], pedigree, index) => {
+        if (acc.length === 0 || acc[acc.length - 1].length === chunkSize) {
+          acc.push([pedigree]);
+        } else {
+          acc[acc.length - 1].push(pedigree);
+        }
+
+        if (index === allPedigrees.length - 1) {
+          const lastChunk = acc[acc.length - 1];
+          const toFill = chunkSize - lastChunk.length;
+          for (let i = 0; i < toFill; i++) {
+            lastChunk.push(null);
           }
+        }
 
-          if (index === allPedigrees.length - 1) {
-            let lastChunk = acc[acc.length - 1];
-            let toFill = chunkSize - lastChunk.length;
-            for (let i = 0; i <  toFill; i++) {
-              lastChunk.push(null);
-            }
-          }
-
-          return acc;
-        },
-        []);
+        return acc;
+      }, []
+    );
   }
 
-  getRows(effectGroups: string[], effectTypes: string[]) {
+  public getRows(effectGroups: string[], effectTypes: string[]) {
     if (effectGroups) {
       return effectGroups.concat(effectTypes);
     } else if (effectTypes) {
@@ -143,17 +128,15 @@ export class VariantReportsComponent implements OnInit, AfterViewInit {
     return [];
   }
 
-  getEffectTypeOrderByColumOrder(effectTypeName: string, table: EffectTypeTable, phenotypes: string[]) {
-    let effectType = table.rows
-      .find(et => et.effectType === effectTypeName);
-
+  public getEffectTypeOrderByColumOrder(effectTypeName: string, table: EffectTypeTable, phenotypes: string[]) {
+    const effectType = table.rows.find(et => et.effectType === effectTypeName);
     if (!effectType) {
       return [];
     }
     return this.orderByColumnOrder(effectType.data, phenotypes);
   }
 
-  getDownloadLink() {
+  public getDownloadLink() {
     return this.variantReportsService.getDownloadLink();
   }
 }
