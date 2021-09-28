@@ -370,8 +370,6 @@ class StudyWrapper(StudyWrapperBase):
                     yield row_variant
         except GeneratorExit:
             logger.info(f"study wrapper query variants for {self.name} closed")
-        finally:
-            variants.close()
 
     def get_gene_view_summary_variants(self, frequency_column, **kwargs):
         kwargs = self.query_transformer.transform_kwargs(**kwargs)

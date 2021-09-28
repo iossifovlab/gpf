@@ -39,6 +39,7 @@ class ImpalaQueryRunner(QueryRunner):
     def run(self):
         started = time.time()
         if self.closed():
+            logger.info("runner closed before executing...")
             return
 
         logger.debug(
