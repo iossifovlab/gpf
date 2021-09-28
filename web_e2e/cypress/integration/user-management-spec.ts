@@ -1,7 +1,7 @@
 import { UserManagementPage } from 'cypress/elements/user-management-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
 
-describe('User management tests', () => {
+describe.skip('User management tests', () => {
   const page = new UserManagementPage();
 
   before(() => {
@@ -93,7 +93,7 @@ describe('User management tests', () => {
     deleteTestUser(page);
   });
 
-  it.skip('should create and delete group', () => {
+  it('should create and delete group', () => {
     page.datasetsButton.click();
 
     page.datasetsTableAddGroupToLastDatasetInputField.type('test_group');
