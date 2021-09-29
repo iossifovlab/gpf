@@ -20,7 +20,7 @@
               aria-labelledby="datasets-dropdown-menu-button"
               style="z-index: 199;">
               <ng-container *ngIf="!loading">
-                <gpf-dataset-node  *ngFor="let tree of datasetTrees" [datasetNode]="tree"></gpf-dataset-node>
+                <gpf-dataset-node *ngFor="let tree of datasetTrees" [datasetNode]="tree"></gpf-dataset-node>
               </ng-container>
             </div>
           </div>
