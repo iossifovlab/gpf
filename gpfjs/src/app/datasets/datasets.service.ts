@@ -19,6 +19,7 @@ export class DatasetsService {
   private datasets$ = new ReplaySubject<Array<Dataset>>(1);
   private selectedDataset$ = new BehaviorSubject<Dataset>(null);
   private datasetLoaded$ = new Subject<void>();
+  public datasetsLoading = false;
 
   constructor(
     private http: HttpClient,
@@ -35,11 +36,13 @@ export class DatasetsService {
 
   public getDatasets(): Observable<Dataset[]> {
     const options = { withCredentials: true };
+    this.datasetsLoading = true;
 
     return this.http.get(this.config.baseUrl + this.datasetUrl, options).pipe(
       map(res => {
         const datasets = Dataset.fromJsonArray(res['data']);
         this.datasets$.next(datasets);
+        this.datasetsLoading = false;
         return datasets;
       })
     );

@@ -11,15 +11,15 @@
               id="datasets-dropdown-menu-button"
               aria-haspopup="true"
               aria-expanded="false">
-              <span *ngIf="loading">Loading datasets...</span>
-              <span *ngIf="!loading">{{ selectedDataset.name }}</span>
+              <span *ngIf="datasetsLoading">Loading datasets...</span>
+              <span *ngIf="!datasetsLoading">{{ selectedDataset.name }}</span>
             </button>
             <div 
               ngbDropdownMenu
               class="dataset-selector"
               aria-labelledby="datasets-dropdown-menu-button"
               style="z-index: 199;">
-              <ng-container *ngIf="!loading">
+              <ng-container *ngIf="!datasetsLoading">
                 <gpf-dataset-node *ngFor="let tree of datasetTrees" [datasetNode]="tree"></gpf-dataset-node>
               </ng-container>
             </div>
