@@ -30,9 +30,9 @@ class DenovoGeneSetCollection(object):
             {
                 "datasetId": self.study_id,
                 "datasetName": name,
-                "peopleGroupId": collection_id,
-                "peopleGroupName": person_set_collection["name"],
-                "peopleGroupLegend": self.get_person_set_collection_legend(
+                "personSetCollectionId": collection_id,
+                "personSetCollectionName": person_set_collection["name"],
+                "personSetCollectionLegend": self.get_person_set_collection_legend(
                     collection_id
                 ),
             }
