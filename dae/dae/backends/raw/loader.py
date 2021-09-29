@@ -480,7 +480,7 @@ class StoredAnnotationDecorator(AnnotationDecorator):
                     "effect_details_details": cls._convert_array_of_strings,
                 },
                 encoding="utf-8",
-            )
+            ).replace({np.nan: None})
         special_columns = set(annot_df.columns) & set(
             ["alternative", "effect_type"]
         )
