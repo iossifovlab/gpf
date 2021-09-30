@@ -6,7 +6,7 @@ export class GenePlotPage extends BasePage {
   }
 
   getAffectedStatusCheckbox(affectedStatus: string) {
-    return cy.get('label').contains(affectedStatus).siblings('input');
+    return cy.get('.filter-label span').contains(affectedStatus);
   }
 
   getEffectTypesCheckbox(effectType: string) {
