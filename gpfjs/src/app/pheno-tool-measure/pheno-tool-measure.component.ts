@@ -40,7 +40,7 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
     super(store, PhenoToolMeasureState, 'phenoToolMeasure');
   }
 
-  ngOnInit() {
+  public ngOnInit() {
     super.ngOnInit();
     combineLatest([this.store.selectOnce(PhenoToolMeasureState), this.measuresLoaded$]).pipe(take(1))
       .subscribe(([state, measures]) => {
@@ -50,13 +50,12 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
         this.normalizeBy = state.normalizeBy.length ? state.normalizeBy : [];
       });
 
-    this.datasetsService.getSelectedDatasetObservable().subscribe(dataset => {
-      if (dataset?.phenotypeData) {
-        this.measuresService.getRegressions(dataset.id).subscribe(res => this.regressions = res);
-      } else {
-        this.regressions = {};
-      }
-    });
+    const dataset = this.datasetsService.getSelectedDataset();
+    if (dataset?.phenotypeData) {
+      this.measuresService.getRegressions(dataset.id).subscribe(res => this.regressions = res);
+    } else {
+      this.regressions = {};
+    }
   }
 
   get measure() {

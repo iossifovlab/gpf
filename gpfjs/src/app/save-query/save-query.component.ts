@@ -35,7 +35,7 @@ export class SaveQueryComponent implements OnInit {
   }
 
   saveUserQuery(name: string, description: string) {
-    const datasetId = this.datasetsService.getSelectedDatasetId();
+    const datasetId = this.datasetsService.getSelectedDataset().id;
     this.store.selectOnce(state => state).subscribe(state => {
     state['datasetId'] = datasetId;
      this.queryService.saveQuery(state, this.queryType).pipe(take(1)).subscribe(response => {

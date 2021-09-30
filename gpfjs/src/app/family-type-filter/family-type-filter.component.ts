@@ -12,7 +12,7 @@ import { StatefulComponent } from 'app/common/stateful-component';
 })
 export class FamilyTypeFilterComponent extends StatefulComponent implements OnInit {
 
-  allFamilyTypes: Set<string> = new Set(['trio', 'quad', 'multigenerational', 'simplex', 'multiplex']);
+  allFamilyTypes: Set<string> = new Set(['trio', 'quad', 'multigenerational', 'simplex', 'multiplex', 'other']);
   @Validate(SetNotEmpty, {message: 'select at least one'}) selectedFamilyTypes: Set<string> = new Set();
 
   constructor(protected store: Store) {

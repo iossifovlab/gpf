@@ -41,16 +41,17 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
 
   ngOnInit() {
     super.ngOnInit();
+
+    this.selectedDatasetId = this.datasetService.getSelectedDataset().id;
+
     this.geneSetsService.getGeneSetsCollections().pipe(
       switchMap(geneSetsCollections => {
         return combineLatest(
           of(geneSetsCollections),
-          this.datasetService.getSelectedDatasetObservable().pipe(take(1)),
           this.store.selectOnce(state => state.geneSetsState),
         );
       })
-    ).subscribe(([geneSetsCollections, dataset, state]) => {
-      this.selectedDatasetId = dataset.id;
+    ).subscribe(([geneSetsCollections, state]) => {
       const denovoGeneSetTypes = geneSetsCollections.filter(
         geneSetCollection => geneSetCollection.name === 'denovo'
       )[0].types;
@@ -68,7 +69,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
 
         if (selectedStudyTypes) {
           this.defaultSelectedDenovoGeneSetId = selectedStudyTypes.datasetId +
-            '-' + selectedStudyTypes.peopleGroupId + '-denovo-geneset';
+            '-' + selectedStudyTypes.personSetCollectionId + '-denovo-geneset';
         }
       }
       this.geneSetsCollections = geneSetsCollections;
@@ -123,15 +124,15 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
   restoreGeneTypes(geneSetsTypes, geneSetCollection: GeneSetsCollection) {
     const geneTypes = geneSetCollection.types
       .filter(geneType => geneType.datasetId in geneSetsTypes &&
-              geneType.peopleGroupId in geneSetsTypes[geneType.datasetId]);
+              geneType.personSetCollectionId in geneSetsTypes[geneType.datasetId]);
     if (geneTypes.length !== 0) {
       this.geneSetsLocalState.geneSetsTypes = Object.create(null);
       for (const geneType of geneTypes) {
         const datasetId = geneType.datasetId;
-        const peopleGroupId = geneType.peopleGroupId;
-        for (const peopleGroup of geneType.peopleGroupLegend) {
-          if (geneSetsTypes[datasetId][peopleGroupId].indexOf(peopleGroup.id) > -1) {
-            this.geneSetsLocalState.select(datasetId, peopleGroupId, peopleGroup.id);
+        const personSetCollectionId = geneType.personSetCollectionId;
+        for (const personSet of geneType.personSetCollectionLegend) {
+          if (geneSetsTypes[datasetId][personSetCollectionId].indexOf(personSet.id) > -1) {
+            this.geneSetsLocalState.select(datasetId, personSetCollectionId, personSet.id);
           }
         }
       }
@@ -165,16 +166,16 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
     }
   }
 
-  isSelectedGeneType(datasetId: string, peopleGroupId: string, geneType: string): boolean {
-    return this.geneSetsLocalState.isSelected(datasetId, peopleGroupId, geneType);
+  isSelectedGeneType(datasetId: string, personSetCollectionId: string, geneType: string): boolean {
+    return this.geneSetsLocalState.isSelected(datasetId, personSetCollectionId, geneType);
   }
 
-  setSelectedGeneType(datasetId: string, peopleGroupId: string, geneType: string, value: boolean) {
+  setSelectedGeneType(datasetId: string, personSetCollectionId: string, geneType: string, value: boolean) {
     this.selectedGeneSet = null;
     if (value) {
-      this.geneSetsLocalState.select(datasetId, peopleGroupId, geneType);
+      this.geneSetsLocalState.select(datasetId, personSetCollectionId, geneType);
     } else {
-      this.geneSetsLocalState.deselect(datasetId, peopleGroupId, geneType);
+      this.geneSetsLocalState.deselect(datasetId, personSetCollectionId, geneType);
     }
   }
 
@@ -193,8 +194,8 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
         return genesetType.datasetId === this.selectedDatasetId;
       }) || selectedGeneSetsCollection.types[0];
 
-      this.setSelectedGeneType(geneSetType.datasetId, geneSetType.peopleGroupId,
-                               geneSetType.peopleGroupLegend[0].id, true);
+      this.setSelectedGeneType(geneSetType.datasetId, geneSetType.personSetCollectionId,
+                               geneSetType.personSetCollectionLegend[0].id, true);
     }
 
     this.onSearch();
@@ -214,6 +215,6 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
   }
 
   getGeneSetName(geneType: GeneSetType): string {
-    return `${geneType.datasetName}: ${geneType.peopleGroupName}`;
+    return `${geneType.datasetName}: ${geneType.personSetCollectionName}`;
   }
 }

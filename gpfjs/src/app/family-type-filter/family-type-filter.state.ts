@@ -13,7 +13,7 @@ export interface FamilyTypeFilterModel {
 @State<FamilyTypeFilterModel>({
   name: 'familyTypeFilterState',
   defaults: {
-    familyTypes: ['trio', 'quad', 'multigenerational', 'simplex', 'multiplex']
+    familyTypes: ['trio', 'quad', 'multigenerational', 'simplex', 'multiplex', 'other']
   },
 })
 @Injectable()

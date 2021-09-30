@@ -24,7 +24,7 @@ export interface PresentInParentModel {
     presentInParent: ['neither'],
     rarityType: '',
     rarityIntervalStart: 0,
-    rarityIntervalEnd: 100,
+    rarityIntervalEnd: 1,
   },
 })
 @Injectable()
@@ -43,9 +43,12 @@ export class PresentInParentState {
   @Selector([PresentInParentState])
   static queryStateSelector(state: PresentInParentModel) {
     const res = {
-      'presentInParent': state.presentInParent,
-      'rarity': { 'ultraRare': state.rarityType === 'ultraRare' }
+      'presentInParent': state.presentInParent
     };
+    if (state.presentInParent.length === 1 && state.presentInParent[0] === 'neither') {
+      return res;
+    }
+    res['rarity'] = { 'ultraRare': state.rarityType === 'ultraRare' };
     if (state.rarityType !== 'ultraRare' && state.rarityType !== 'all') {
       res['rarity']['minFreq'] = state.rarityIntervalStart;
       res['rarity']['maxFreq'] = state.rarityIntervalEnd;

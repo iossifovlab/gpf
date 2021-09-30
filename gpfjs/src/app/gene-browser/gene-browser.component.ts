@@ -8,8 +8,8 @@ import { SummaryAllelesArray, SummaryAllelesFilter, codingEffectTypes,
   affectedStatusValues, effectTypeValues, variantTypeValues } from 'app/gene-browser/summary-variants';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
-import { first, take } from 'rxjs/operators';
-import { Subscription } from 'rxjs';
+import { first, take, debounceTime } from 'rxjs/operators';
+import { Subject, Subscription } from 'rxjs';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
@@ -32,9 +32,9 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   private maxFamilyVariants = 1000;
   public selectedDataset: Dataset;
   private selectedDatasetId: string;
-  private showResults: boolean;
+  public showResults: boolean;
+  public showError = false;
   private familyLoadingFinished: boolean;
-  private showError = false;
   private geneBrowserConfig;
   private legendDrawn = false;
   private subscriptions: Subscription[] = [];
@@ -47,6 +47,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   private summaryVariantsArray: SummaryAllelesArray;
   private summaryVariantsArrayFiltered: SummaryAllelesArray;
   public summaryVariantsFilter: SummaryAllelesFilter = new SummaryAllelesFilter();
+
+  private variantUpdate$: Subject<void> = new Subject();
 
   private selectedFrequencies: [number, number] = [0, 0];
   private selectedRegion: [number, number] = [0, 0];
@@ -78,21 +80,13 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
-    if (this.selectedDataset) {
-      this.geneBrowserConfig = this.selectedDataset.geneBrowser;
+    this.geneBrowserConfig = this.selectedDataset.geneBrowser;
+    if (this.route.snapshot.params.gene) {
+      this.store.dispatch(new SetGeneSymbols([this.route.snapshot.params.gene.toUpperCase()]));
+      this.submitGeneRequest(this.route.snapshot.params.gene);
     }
 
     this.subscriptions.push(
-      this.datasetsService.getDatasetsLoadedObservable().pipe(take(1)).subscribe(() => {
-        this.selectedDataset = this.datasetsService.getSelectedDataset();
-        if (this.selectedDataset) {
-          this.geneBrowserConfig = this.selectedDataset.geneBrowser;
-          if (this.route.snapshot.params.gene && this.selectedDataset.accessRights) {
-            this.store.dispatch(new SetGeneSymbols([this.route.snapshot.params.gene.toUpperCase()]));
-            this.submitGeneRequest(this.route.snapshot.params.gene);
-          }
-        }
-      }),
       this.queryService.streamingFinishedSubject.subscribe(() => {
         this.familyLoadingFinished = true;
       }),
@@ -111,7 +105,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
         } else {
           this.location.go(`datasets/${this.selectedDatasetId}/gene-browser`);
         }
-      })
+      }),
+      this.variantUpdate$.pipe(debounceTime(750)).subscribe(() => this.updateShownTablePreviewVariantsArray())
     );
   }
 
@@ -119,7 +114,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.subscriptions.map(subscription => subscription.unsubscribe());
   }
 
-  private async submitGeneRequest(geneSymbol?: string) {
+  public async submitGeneRequest(geneSymbol?: string) {
     this.showError = false;
     if (geneSymbol) {
       this.geneSymbol = geneSymbol.toUpperCase().trim();
@@ -141,16 +136,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.loadingService.setLoadingStart();
     this.genotypePreviewVariantsArray = null;
 
-    const requestParams = {
-      'datasetId': this.selectedDatasetId,
-      'geneSymbols': [this.geneSymbol.toUpperCase().trim()],
-      'maxVariantsCount': 10000,
-      'inheritanceTypeFilter': ['denovo', 'mendelian', 'omission', 'missing'],
-    };
-    if (this.summaryVariantsFilter.codingOnly) {
-      requestParams['effectTypes'] = codingEffectTypes;
-    }
-    this.summaryVariantsArray = this.queryService.getSummaryVariants(requestParams);
+    this.summaryVariantsArray = this.queryService.getSummaryVariants(this.requestParamsSummary);
     this.summaryVariantsArrayFiltered = clone(this.summaryVariantsArray);
 
     this.summaryVariantsFilter.selectedRegion = [
@@ -197,6 +183,19 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     };
   }
 
+  private get requestParamsSummary(): object {
+    const requestParams = {
+      'datasetId': this.selectedDatasetId,
+      'geneSymbols': [this.geneSymbol.toUpperCase().trim()],
+      'maxVariantsCount': 10000,
+      'inheritanceTypeFilter': ['denovo', 'mendelian', 'omission', 'missing'],
+    };
+    if (this.summaryVariantsFilter.codingOnly) {
+      requestParams['effectTypes'] = codingEffectTypes;
+    }
+    return requestParams;
+  }
+
   private updateShownTablePreviewVariantsArray() {
     this.familyLoadingFinished = false;
     const requestParams = {
@@ -209,19 +208,13 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     );
   }
 
-  private onSubmit(event) {
-    const targetId = event.target.attributes.id.nodeValue;
+  private onSubmit(event): void {
+    event.target.queryData.value = JSON.stringify({...this.requestParams, 'download': true});
+    event.target.submit();
+  }
 
-    const requestParams = {
-      ...this.requestParams,
-      'download': true,
-    };
-
-    if (targetId === 'summary_download') {
-      requestParams['querySummary'] = true;
-    }
-
-    event.target.queryData.value = JSON.stringify(requestParams);
+  public onSubmitSummary(event): void {
+    event.target.queryData.value = JSON.stringify({...this.requestParamsSummary});
     event.target.submit();
   }
 
@@ -229,7 +222,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.summaryVariantsArrayFiltered = this.summaryVariantsFilter.filterSummaryVariantsArray(
       this.summaryVariantsArray
     );
-    this.updateShownTablePreviewVariantsArray();
+    this.variantUpdate$.next();
   }
 
   public checkAffectedStatus(affectedStatus: string, value: boolean): void {

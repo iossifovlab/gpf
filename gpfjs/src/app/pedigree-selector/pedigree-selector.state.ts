@@ -15,15 +15,12 @@ export interface PedigreeSelectorModel {
 
 @State<PedigreeSelectorModel>({
   name: 'pedigreeSelectorState',
-  defaults: {
-    id: '',
-    checkedValues: [],
-  },
+  defaults: <any>{},
 })
 @Injectable()
 export class PedigreeSelectorState {
   @Action(SetPedigreeSelector)
-  setPedigreeSelector(ctx: StateContext<PedigreeSelectorModel>, action: SetPedigreeSelector) {
+  public setPedigreeSelector(ctx: StateContext<PedigreeSelectorModel>, action: SetPedigreeSelector) {
     ctx.patchState({
       id: action.id,
       checkedValues: [...action.checkedValues],

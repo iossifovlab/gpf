@@ -19,7 +19,8 @@ export class UsersComponent implements OnInit {
   hideDropdown = true;
   userInfo$: Observable<any>;
   showPasswordField = false;
-  loading = false;
+  public passwordTimeout = false;
+  public loading = false;
 
   @ViewChild('dropdownButton') dropdownButton: ElementRef;
   @ViewChild('dialog') dialog: ElementRef;
@@ -41,6 +42,7 @@ export class UsersComponent implements OnInit {
 
   reloadUserData() {
     this.usersService.getUserInfo().pipe(take(1)).subscribe(() => {
+      this.loading = false;
       // this.router.navigate(['.'], { relativeTo: this.currentRoute });
     });
   }
@@ -67,6 +69,7 @@ export class UsersComponent implements OnInit {
   }
 
   login() {
+    this.loading = true;
     this.usersService.login(this.username, this.password).subscribe(
       (res) => {
         if (res === true) {
@@ -76,10 +79,11 @@ export class UsersComponent implements OnInit {
           this.showPasswordField = false;
           this.errorMessage = undefined;
         } else {
+          this.loading = false;
           if (res['status'] === 401) {
-            this.loading = true;
+            this.passwordTimeout = true;
             setTimeout(() => {
-              this.loading = false;
+              this.passwordTimeout = false;
               this.showPasswordField = true;
               this.errorMessage = 'Wrong password!';
             }, 1000);

@@ -1,4 +1,4 @@
-<div style="padding: 30px;" *ngIf="selectedDataset?.accessRights">
+<div style="padding: 30px">
   <div class="effect-card card">
     <div style="font-family: Roboto; font-weight: 500; border-bottom: none;" class="card-header card-title">Gene Symbols</div>
     <div class="card-block">
@@ -109,7 +109,7 @@
       </gpf-gene-plot>
       <div class="row" style="padding-top: 15px">
         <div class="col-12" *ngIf="selectedGene">
-          <form id="summary_download" (ngSubmit)="onSubmit($event)" action="{{ configService.baseUrl }}genotype_browser/query"
+          <form id="summary_download" (ngSubmit)="onSubmitSummary($event)" action="{{ configService.baseUrl }}gene_view/download_summary_variants"
             method="post">
             <input name="queryData" type="hidden">
             <button class="btn btn-md btn-primary btn-right" id="download-summary-button" [disabled]="disableQueryButtons"

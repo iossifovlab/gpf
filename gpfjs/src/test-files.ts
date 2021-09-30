@@ -4,6 +4,7 @@ import './app/pheno-tool-results-chart/pheno-tool-results-chart-per-effect.compo
 import './app/variant-reports/variant-reports.service.spec.ts';
 import './app/variant-reports/common-reports-pedigree-cell/common-reports-pedigree-cell.component.spec.ts';
 import './app/variant-reports/variant-reports.component.spec.ts';
+import './app/variant-reports/variant-reports.spec.ts';
 import './app/variant-reports/common-reports-row/common-reports-row.component.spec.ts';
 import './app/perfectly-drawable-pedigree/perfectly-drawable-pedigree.component.spec.ts';
 import './app/popup/popup.component.spec.ts';
@@ -71,7 +72,8 @@ import './app/effecttypes/effecttypes.spec.ts';
 import './app/groups-bulk-add/groups-bulk-add.component.spec.ts';
 import './app/inheritancetypes/inheritancetypes.component.spec.ts';
 import './app/datasets/datasets.component.spec.ts';
-import './app/datasets/datasets.service.spec.ts';
+import './app/datasets/datasets.spec.ts';
+import './app/datasets/datasets.service.spec';
 import './app/reset-password/reset-password.component.spec.ts';
 import './app/pheno-measure-selector/pheno-measure-selector.component.spec.ts';
 import './app/study-filter/study-filter.component.spec.ts';
@@ -100,3 +102,4 @@ import './app/present-in-child/present-in-child.component.spec';
 import './app/present-in-parent/present-in-parent.component.spec';
 import './app/checkbox-list/checkbox-list.component.spec';
 import './app/gene-plot/gene-plot.spec';
+import './app/person-ids/person-ids.component.spec'

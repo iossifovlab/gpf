@@ -1,198 +1,63 @@
-/* tslint:disable:no-unused-variable */
-import { Injector } from '@angular/core';
-import { TestBed, getTestBed, inject, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
-import { DatasetsService } from './datasets.service';
-import { IdDescription } from '../common/iddescription';
-import { IdName } from '../common/idname';
-import { Dataset } from '../datasets/datasets';
-import { ConfigService } from '../config/config.service';
+import { TestBed, waitForAsync } from '@angular/core/testing';
 
-// import {
-//   BaseRequestOptions, XHRBackend, Response, ResponseOptions
-// } from '@angular/http';
-
-// import { MockBackend, MockConnection } from '@angular/http/testing/mock_backend';
-import { Observable } from 'rxjs';
-
-
-/*
-const mockDatasetResponse: Dataset = {
-  id: 'VIP',
-  name: 'VIP Dataset',
-  studies: ['VIP-JHC'],
-  studyTypes: ['WE'],
-  phenoDB: 'vip',
-
-  genotypeBrowser: true,
-  phenotypeTool: true,
-  enrichmentTool: false,
-  phenotypeBrowser: true,
-  commonReport: true,
-
-  genotypeBrowserConfig: {
-    hasAdvancedFamilyFilters: false,
-    hasPedigreeSelector: true,
-    hasStudyTypes: false,
-  },
-  peopleGroups: [
-    {
-      id: '16pstatus',
-      name: '16p Status',
-      source: 'phenoDB.pheno_common.genetic_status_16p',
-      defaultValue: {
-        color: '#aaaaaa',
-        id: 'unknown',
-        name: 'unknown'
-      },
-      domain: [
-        {
-          color: '#e35252',
-          id: 'deletion',
-          name: 'deletion'
-        },
-        {
-          color: '#b8008a',
-          id: 'duplication',
-          name: 'duplication'
-        },
-        {
-          color: '#e3d252',
-          id: 'triplication',
-          name: 'triplication'
-        },
-        {
-          color: '#ffffff',
-          id: 'negative',
-          name: 'negative'
-        }
-      ]
-    },
-    {
-      id: 'phenotypes',
-      name: 'Phenotypes',
-      source: 'legacy',
-      defaultValue: {
-        color: '#aaaaaa',
-        id: 'unknown',
-        name: 'unknown'
-      },
-      domain: [
-        {
-          color: '#e35252',
-          id: 'autism',
-          name: 'autism'
-        },
-        {
-          color: '#ffffff',
-          id: 'unaffected',
-          name: 'unaffected'
-        }
-      ]
-    }
-  ]
-};
-
-
-export class DatasetsServiceStub {
-
-  getDatasets(): Observable<Dataset[]> {
-    return Observable.of([mockDatasetResponse]);
-  }
-
-  getDataset(datasetId: string): Observable<Dataset> {
-    return Observable.of(mockDatasetResponse);
-  }
-
-  setSelectedDataset(dataset: Dataset): void {
-    console.log('setSelectedDataset() called...');
-    //    this.store.dispatch({
-    //      'type': DATASETS_SELECT,
-    //      'payload': dataset
-    //
-    //    });
-    // this.selectedDataset.next(dataset);
-  }
-
-
-}
+import {
+  HttpClient,
+  HttpClientModule,
+  HttpHandler,
+  HttpHeaders,
+} from '@angular/common/http';
+import { ConfigService } from 'app/config/config.service';
+import { DatasetsService } from 'app/datasets/datasets.service';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { UsersService } from 'app/users/users.service';
+import { RouterTestingModule } from '@angular/router/testing';
+import { NgxsModule, StateStream, Store } from '@ngxs/store';
+import { Dataset } from './datasets';
+import { of } from 'rxjs/internal/observable/of';
+import { environment } from 'environments/environment';
+import { take } from 'rxjs/internal/operators/take';
 
 describe('DatasetService', () => {
-  let mockBackend: MockBackend;
-
-  beforeEach(async(() => {
+  let service: DatasetsService;
+  beforeEach(waitForAsync(() => {
+    const configMock = { 'baseUrl': 'testUrl/' };
     TestBed.configureTestingModule({
+      imports: [NgxsModule.forRoot([]), RouterTestingModule, HttpClientTestingModule],
       providers: [
-        ConfigService,
         DatasetsService,
-
-        MockBackend,
-        BaseRequestOptions,
-        {
-          provide: Http,
-          deps: [MockBackend, BaseRequestOptions],
-          useFactory:
-          (backend: XHRBackend, defaultOptions: BaseRequestOptions) => {
-            return new Http(backend, defaultOptions);
-          }
-        }
+        UsersService,
+        {provide: ConfigService, useValue: configMock},
       ],
-      imports: [
-        HttpModule,
+      declarations: [],
+    }).compileComponents();
 
-      ],
-
-    });
-    getTestBed().compileComponents();
-    mockBackend = getTestBed().get(MockBackend);
+    service = TestBed.inject(DatasetsService);
   }));
 
-  it('getDatasets() should parse correct response',
-    async(inject([DatasetsService], (service) => {
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
 
-      mockBackend.connections.subscribe(
-        (conn: MockConnection) => {
-          conn.mockRespond(
-            new Response(
-              new ResponseOptions(
-                {
-                  body: JSON.stringify({ data: [mockDatasetResponse] })
-                }
-              )));
-        });
+  it('should fetch datasets', () => {
+    const httpGetSpy = spyOn(HttpClient.prototype, 'get');
+    httpGetSpy.and.returnValue(of('fakeResponse'));
 
-      service.getDatasets().subscribe(res => {
-        expect(res.length).toBe(1);
-        expect(res[0].id).toEqual('VIP');
-      });
-    })
-    )
-  );
+    service.getDatasets().subscribe((post: Dataset[]) => {
+      expect(httpGetSpy.calls.allArgs()).toEqual([['testUrl/datasets', {withCredentials: true}]]);
+    });
+  });
 
-  it('getDataset() should parse correct response',
-    async(inject([DatasetsService], (service) => {
+  it('should get dataset', () => {
+    const datasetFromJsonSpy = spyOn(Dataset, 'fromDatasetAndDetailsJson');
+    datasetFromJsonSpy.and.returnValue('fakeDataset' as any);
+    const httpGetSpy = spyOn(HttpClient.prototype, 'get');
+    httpGetSpy.and.returnValue(of('fakeResponse'));
 
-      mockBackend.connections.subscribe(
-        (conn: MockConnection) => {
-          conn.mockRespond(
-            new Response(
-              new ResponseOptions(
-                {
-                  body: JSON.stringify({ data: mockDatasetResponse })
-                }
-              )));
-        });
-
-      service.getDataset('VIP').subscribe(res => {
-        expect(res.id).toEqual('VIP');
-        expect(res.peopleGroups.length).toBe(2);
-      });
-
-    })
-    )
-  );
-
-
-
+    service.getDataset('geneSymbol').pipe(take(1)).subscribe((response) => {
+      expect(response).toEqual('fakeDataset' as any);
+      expect(httpGetSpy.calls.allArgs()[0][0]).toEqual('testUrl/datasets/geneSymbol');
+      expect(httpGetSpy.calls.allArgs()[1][0]).toEqual('testUrl/datasets/details/geneSymbol');
+      expect(datasetFromJsonSpy.calls.allArgs()).toEqual([[undefined, 'fakeResponse' as any]]);
+    });
+  });
 });
-
-*/
