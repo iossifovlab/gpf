@@ -34,11 +34,11 @@ describe('DatasetService', () => {
     service = TestBed.inject(DatasetsService);
   }));
 
-  fit('should be created', () => {
+  it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
-  fit('should fetch datasets', () => {
+  it('should fetch datasets', () => {
     const httpGetSpy = spyOn(HttpClient.prototype, 'get');
     httpGetSpy.and.returnValue(of('fakeResponse'));
 
@@ -47,7 +47,7 @@ describe('DatasetService', () => {
     });
   });
 
-  fit('should get dataset', () => {
+  it('should get dataset', () => {
     const datasetFromJsonSpy = spyOn(Dataset, 'fromDatasetAndDetailsJson');
     datasetFromJsonSpy.and.returnValue('fakeDataset' as any);
     const httpGetSpy = spyOn(HttpClient.prototype, 'get');
