@@ -149,14 +149,20 @@ export class DatasetsTableComponent implements OnInit {
   }
 
   removeGroup(dataset: Dataset, groupName: string) {
-    let group = this.groups.find(g => g.name === groupName);
-    if (!group) {
-      return;
-    }
-    this.userGroupsService.revokePermission(group, dataset)
+    this.userGroupsService.getAllGroups()
       .pipe(take(1))
-      .subscribe(() => {
-        this.datasetsRefresh$.next(true);
+      .subscribe(groups => {
+        this.groups = groups;
+
+        let group = this.groups.find(g => g.name === groupName);
+        if (!group) {
+          return;
+        }
+        this.userGroupsService.revokePermission(group, dataset)
+          .pipe(take(1))
+          .subscribe(() => {
+            this.datasetsRefresh$.next(true);
+          });
       });
   }
 }
