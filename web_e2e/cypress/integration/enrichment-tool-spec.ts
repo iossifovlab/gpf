@@ -85,8 +85,8 @@ describe('Enrichment tool tests', () => {
     genesBlockPage.geneSetsSearchbox.type('FMRP Darnell');
     genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText('FMRP Darnell').click();
     page.enrichmentTestButton.click();
-    page.findTableField('affected', 'LGDs', 1).should('have.text', '55');
-    page.findTableField('affected', 'Missense', 1).should('have.text', '169')
+    page.findTableField('affected', 'LGDs', 2).should('have.text', '55');
+    page.findTableField('affected', 'Missense', 2).should('have.text', '169')
   });
 
   it('should display \'0\' and \'2\' in the affected person\'s observed column of LGDs and missense\'s rows respectively ' +
@@ -99,7 +99,7 @@ describe('Enrichment tool tests', () => {
     genesBlockPage.geneSetsSearchbox.type('BIOCARTA_PTEN_PATHWAY');
     genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText('BIOCARTA_PTEN_PATHWAY').click();
     page.enrichmentTestButton.click();
-    page.findTableField('affected', 'LGDs', 1).should('have.text', '0');
-    page.findTableField('affected', 'Missense', 1).should('have.text', '2');
+    page.findTableField('affected', 'LGDs', 2).should('have.text', '0');
+    page.findTableField('affected', 'Missense', 2).should('have.text', '2');
   });
 });
