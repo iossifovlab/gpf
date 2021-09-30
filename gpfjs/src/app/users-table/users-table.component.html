@@ -3,38 +3,42 @@
 <div class="row">
   <div class="col-12 mt-3">
     <gpf-table noScrollOptimization="true" [dataSource]="users">
-      <gpf-table-column columnWidth="75px">
+      <gpf-table-column columnWidth="35px" columnMaxWidth="45px">
         <gpf-table-header>
           <gpf-table-subheader>
             <span *gpfTableCellContent="let data">
-              <div>Selected</div>
+              <div style="margin-top: 10px;height: 30px;">Selected</div>
               <div class="select-unselect-all">
-                <input type="checkbox" [(ngModel)]="allSelected" (ngModelChange)="checkUncheckAll(allSelected)"/>
+                <input
+                  style="display: flex; margin-top: -7px; margin-left: auto; margin-right: auto; position: absolute; left: 4.5%;"
+                  type="checkbox"
+                  [(ngModel)]="allSelected"
+                  (ngModelChange)="checkUncheckAll(allSelected)"/>
               </div>
             </span>
           </gpf-table-subheader>
         </gpf-table-header>
         <gpf-table-content>
           <gpf-table-subcontent>
-              <span *gpfTableCellContent="let data">
-                  <input type="checkbox" [(ngModel)]="data.selected" />
-              </span>
-          </gpf-table-subcontent>
-        </gpf-table-content>
-      </gpf-table-column>
-
-      <gpf-table-column>
-        <gpf-table-header caption="Name"></gpf-table-header>
-        <gpf-table-content>
-          <gpf-table-subcontent>
             <span *gpfTableCellContent="let data">
-                {{ data.user.name }}
+              <input type="checkbox" [(ngModel)]="data.selected" />
             </span>
           </gpf-table-subcontent>
         </gpf-table-content>
       </gpf-table-column>
 
-      <gpf-table-column>
+      <gpf-table-column columnWidth="75px">
+        <gpf-table-header caption="Name"></gpf-table-header>
+        <gpf-table-content>
+          <gpf-table-subcontent>
+            <span *gpfTableCellContent="let data">
+              {{ data.user.name }}
+            </span>
+          </gpf-table-subcontent>
+        </gpf-table-content>
+      </gpf-table-column>
+
+      <gpf-table-column columnWidth="75px">
         <gpf-table-header caption="Email"></gpf-table-header>
         <gpf-table-content>
           <gpf-table-subcontent>
@@ -45,7 +49,7 @@
         </gpf-table-content>
       </gpf-table-column>
 
-      <gpf-table-column>
+      <gpf-table-column columnWidth="75px">
         <gpf-table-header caption="Groups"></gpf-table-header>
         <gpf-table-content>
           <gpf-table-subcontent>
@@ -67,7 +71,7 @@
         </gpf-table-content>
       </gpf-table-column>
 
-      <gpf-table-column columnWidth="150px">
+      <gpf-table-column columnWidth="50px">
         <gpf-table-header caption="Has password"></gpf-table-header>
         <gpf-table-content>
           <gpf-table-subcontent>
@@ -80,11 +84,11 @@
         </gpf-table-content>
       </gpf-table-column>
 
-      <gpf-table-column>
+      <gpf-table-column columnWidth="75px">
         <gpf-table-header caption="Allowed datasets"></gpf-table-header>
         <gpf-table-content>
           <gpf-table-subcontent>
-            <div *gpfTableCellContent="let data" style="height:150px;overflow:auto">
+            <div *gpfTableCellContent="let data" style="height:150px; overflow: auto">
               <div *ngFor="let datasetId of data.user.allowedDatasets">
                   {{ datasetId }}
               </div>
@@ -93,7 +97,7 @@
         </gpf-table-content>
       </gpf-table-column>
 
-      <gpf-table-column columnWidth="150px">
+      <gpf-table-column columnWidth="75px">
         <gpf-table-header caption="Actions"></gpf-table-header>
         <gpf-table-content>
           <gpf-table-subcontent>

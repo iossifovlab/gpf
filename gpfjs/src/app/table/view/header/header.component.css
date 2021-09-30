@@ -1,9 +1,9 @@
 gpf-table-view-header-cell {
-    border: 1px solid #dddddd;
-    padding: 8px;
-    font-size: 0.9em;
-    background: #eee;
-    font-weight: 500;
-    display: table-cell;
-    word-break: break-all;
+  border: 1px solid #dddddd;
+  padding: 8px;
+  font-size: 0.9em;
+  background: #eee;
+  font-weight: 500;
+  display: table-cell;
+  word-break: break-all;
 }
