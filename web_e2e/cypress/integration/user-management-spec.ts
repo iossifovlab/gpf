@@ -1,7 +1,7 @@
 import { UserManagementPage } from 'cypress/elements/user-management-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
 
-describe.skip('User management tests', () => {
+describe('User management tests', () => {
   const page = new UserManagementPage();
 
   before(() => {
