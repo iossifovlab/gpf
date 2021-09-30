@@ -250,6 +250,7 @@ export class HistogramComponent implements OnInit, OnChanges {
   redrawXAxis(svg, width, height) {
     const axisX = [0];
     const axisVals = [];
+
     for (let i  = 0; i < this.bins.length - 1; i++) {
       let leftX;
       if (this.centerLabelsWithDefaultValue) {
@@ -268,16 +269,16 @@ export class HistogramComponent implements OnInit, OnChanges {
       axisX.push(width);
       axisVals.push(this.bins[this.bins.length - 1]);
     }
-    this.scaleXAxis = d3.scaleThreshold().range(axisX).domain(axisVals);
 
-    const form = this.getFormatter(5);
+    this.scaleXAxis = d3.scaleThreshold().range(axisX).domain(axisVals);
+    const formatter = this.createFormatterFunction(5);
 
     svg.append('g')
       .attr('transform', 'translate(0,' + height + ')')
       .call(
         d3.axisBottom(this.scaleXAxis)
         .tickValues(this.xLabelsWithDefaultValue as any)
-        .tickFormat((d, i) => form(this.xLabelsWithDefaultValue[i]) as any)
+        .tickFormat((d, i) => formatter(this.xLabelsWithDefaultValue[i]) as any)
       );
   }
 
@@ -467,7 +468,8 @@ export class HistogramComponent implements OnInit, OnChanges {
     }
   }
 
-  public getFormatter(digits) {
+  private createFormatterFunction(digitCount: number): (num: any) => any {
+    // used to add e-6 scientific notation
     const notations = [
       { value: 1E-6,  suffix: 'e-6' },
     ];
@@ -480,7 +482,7 @@ export class HistogramComponent implements OnInit, OnChanges {
         notation = notations[i];
         if (num === notation.value) {
           let value = num / notation.value;
-          value = Number(value.toFixed(digits));
+          value = Number(value.toFixed(digitCount));
           value = Number(String(value).replace(rx, '$1'));
           return value + notation.suffix;
         } else {
