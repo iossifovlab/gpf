@@ -21,6 +21,6 @@ def test_get_gene_sets_types_legend(denovo_gene_set_f4):
     assert len(dgstl) == 1
     assert dgstl[0]["datasetId"] == "f4_trio"
     assert dgstl[0]["datasetName"] == "f4_trio"
-    assert dgstl[0]["peopleGroupId"] == "phenotype"
-    assert dgstl[0]["peopleGroupName"] == "Phenotype"
-    assert len(dgstl[0]["peopleGroupLegend"]) == 2
+    assert dgstl[0]["personSetCollectionId"] == "phenotype"
+    assert dgstl[0]["personSetCollectionName"] == "Phenotype"
+    assert len(dgstl[0]["personSetCollectionLegend"]) == 2
