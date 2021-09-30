@@ -1,10 +1,10 @@
 .height-limited {
-    max-height: 252px;
-    overflow: auto;
+  max-height: 252px;
+  overflow: auto;
 }
 
 .error-popup {
-    position: absolute;
-    bottom: 130%;
-    padding: 8px;
- }
+  position: absolute;
+  bottom: 130%;
+  padding: 8px;
+}
