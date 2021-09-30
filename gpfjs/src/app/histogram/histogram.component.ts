@@ -270,12 +270,14 @@ export class HistogramComponent implements OnInit, OnChanges {
     }
     this.scaleXAxis = d3.scaleThreshold().range(axisX).domain(axisVals);
 
+    const form = this.getFormatter(5);
+
     svg.append('g')
       .attr('transform', 'translate(0,' + height + ')')
       .call(
         d3.axisBottom(this.scaleXAxis)
         .tickValues(this.xLabelsWithDefaultValue as any)
-        .tickFormat((d, i) => this.xLabelsWithDefaultValue[i] as any)
+        .tickFormat((d, i) => form(this.xLabelsWithDefaultValue[i]) as any)
       );
   }
 
@@ -464,4 +466,28 @@ export class HistogramComponent implements OnInit, OnChanges {
       return value.toFixed(3);
     }
   }
+
+  public getFormatter(digits) {
+    const notations = [
+      { value: 1E-6,  suffix: 'e-6' },
+    ];
+
+    const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
+
+    return function(num) {
+      let notation;
+      for (let i = 0; i < notations.length; i++) {
+        notation = notations[i];
+        if (num === notation.value) {
+          let value = num / notation.value;
+          value = Number(value.toFixed(digits));
+          value = Number(String(value).replace(rx, '$1'));
+          return value + notation.suffix;
+        } else {
+          return num;
+        }
+      }
+    };
+  }
+
 }
