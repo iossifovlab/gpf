@@ -415,8 +415,9 @@ const appRoutes: Routes = [
       GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState, GeneSetsState,
       GeneWeightsState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
       StudyFiltersBlockState, PersonFiltersState, GenomicScoresBlockState, PhenoToolMeasureState,
-      ErrorsState,
-    ]),
+      ErrorsState],
+      {compatibility: { strictContentSecurityPolicy: true }}
+    ),
     NgxsResetPluginModule.forRoot(),
   ],
   providers: [
