@@ -2,7 +2,6 @@ import os
 import re
 import itertools
 import logging
-import threading
 import time
 # from dae.utils.debug_closing import closing
 
@@ -59,14 +58,10 @@ class _PoolConnection:
         return _PoolCursor(self, result)
 
     def close(self):
-        # self.connection.reconnect()
-
         # self.connection.close()
         # self.connection = self.pool.create_connection_func()
 
-        logger.debug(f"going to close connection: pool {self.pool.status()}")
         self.pool.connection_close(self.connection)
-        logger.debug(f"connection closed: pool {self.pool.status()}")
 
     @property
     def host(self):
@@ -95,8 +90,9 @@ class ConnectionPool:
         return _PoolConnection(self, connection)
 
     def connection_close(self, connection):
+        connection.reconnect()
         self.connections.put(connection)
-        logger.debug(f"connection closed: {self.status}")
+        logger.debug(f"connection closed: {self.status()}")
 
     def status(self):
         return f"pool size: {self.pool_size}; " \
