@@ -73,6 +73,10 @@ export class DatasetsComponent implements OnInit, OnDestroy {
     this.subscriptions.map(subscription => subscription.unsubscribe());
   }
 
+  public get datasetsLoading(): boolean {
+    return this.datasetsService.datasetsLoading;
+  }
+
   private setupSelectedDataset(): void {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
     if (!this.selectedDataset) {

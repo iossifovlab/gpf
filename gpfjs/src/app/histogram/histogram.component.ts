@@ -250,6 +250,7 @@ export class HistogramComponent implements OnInit, OnChanges {
   redrawXAxis(svg, width, height) {
     const axisX = [0];
     const axisVals = [];
+
     for (let i  = 0; i < this.bins.length - 1; i++) {
       let leftX;
       if (this.centerLabelsWithDefaultValue) {
@@ -268,14 +269,16 @@ export class HistogramComponent implements OnInit, OnChanges {
       axisX.push(width);
       axisVals.push(this.bins[this.bins.length - 1]);
     }
+
     this.scaleXAxis = d3.scaleThreshold().range(axisX).domain(axisVals);
+    const formatter = this.createFormatterFunction(5);
 
     svg.append('g')
       .attr('transform', 'translate(0,' + height + ')')
       .call(
         d3.axisBottom(this.scaleXAxis)
         .tickValues(this.xLabelsWithDefaultValue as any)
-        .tickFormat((d, i) => this.xLabelsWithDefaultValue[i] as any)
+        .tickFormat((d, i) => formatter(this.xLabelsWithDefaultValue[i]) as any)
       );
   }
 
@@ -283,7 +286,7 @@ export class HistogramComponent implements OnInit, OnChanges {
   set rangeStart(rangeStart: any) {
     if (rangeStart !== this.internalRangeStart) {
       this.setRangeStart(rangeStart);
-      this.internalRangeStartField = Number(this.rangeStart.toFixed(4));
+      this.internalRangeStartField = Number(this.transform(rangeStart));
     }
   }
 
@@ -305,7 +308,7 @@ export class HistogramComponent implements OnInit, OnChanges {
   set rangeEnd(rangeEnd: any) {
     if (rangeEnd !== this.internalRangeEnd) {
       this.setRangeEnd(rangeEnd);
-      this.internalRangeEndField = Number(this.rangeEnd.toFixed(4));
+      this.internalRangeEndField = Number(this.transform(rangeEnd));
     }
   }
 
@@ -453,4 +456,40 @@ export class HistogramComponent implements OnInit, OnChanges {
     const pos = this.showMinMaxInputWithDefaultValue ? '0 0' : '-8 -8';
     return `${pos} ${this.width} ${this.height}`;
   }
+
+  private transform(value: number): string {
+    if (!value) {
+      return '0';
+    }
+    if (value < 1e-4) {
+      return value.toExponential(2);
+    } else {
+      return value.toFixed(3);
+    }
+  }
+
+  private createFormatterFunction(digitCount: number): (num: any) => any {
+    // used to add e-6 scientific notation
+    const notations = [
+      { value: 1E-6,  suffix: 'e-6' },
+    ];
+
+    const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
+
+    return function(num) {
+      let notation;
+      for (let i = 0; i < notations.length; i++) {
+        notation = notations[i];
+        if (num === notation.value) {
+          let value = num / notation.value;
+          value = Number(value.toFixed(digitCount));
+          value = Number(String(value).replace(rx, '$1'));
+          return value + notation.suffix;
+        } else {
+          return num;
+        }
+      }
+    };
+  }
+
 }

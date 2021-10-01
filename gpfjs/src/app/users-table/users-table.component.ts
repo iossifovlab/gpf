@@ -1,9 +1,4 @@
-import {
-  Component, OnInit, NgZone, Input, OnChanges, SimpleChanges
-} from '@angular/core';
-
-import { Observable, ReplaySubject } from 'rxjs';
-
+import { Component, OnInit, NgZone, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 import { SelectableUser } from '../user-management/user-management';
@@ -15,10 +10,7 @@ import { take } from 'rxjs/operators';
   styleUrls: ['./users-table.component.css']
 })
 export class UsersTableComponent implements OnInit, OnChanges {
-
-  @Input()
-  users: SelectableUser[];
-
+  @Input() users: SelectableUser[];
   allSelected = true;
 
   constructor(
@@ -26,8 +18,7 @@ export class UsersTableComponent implements OnInit, OnChanges {
     private usersService: UsersService,
   ) { }
 
-  ngOnInit() {
-  }
+  ngOnInit() { }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes && changes['users']) {
@@ -53,5 +44,4 @@ export class UsersTableComponent implements OnInit, OnChanges {
       user.selected = selected;
     }
   }
-
 }

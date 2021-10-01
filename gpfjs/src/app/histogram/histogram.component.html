@@ -5,10 +5,7 @@
       <g *ngIf="isInteractive">
         <g gpf-histogram-range-selector-line [width]="2" [(x)]="startX" [textOnRight]="false" [text]=beforeRangeText></g>
         <g gpf-histogram-range-selector-line [width]="2" [(x)]="endX" [textOnRight]="true" [text]=afterRangeText></g>
-        <text
-          id="sumOfBarsLabel" y=0 [attr.x.px]="(xScale(selectedStartIndex.toString()) + xScale(selectedEndIndex.toString())) / 2"
-          dy=".35em" text-anchor="middle" class="partitions-text">{{ insideRangeText }}
-        </text>
+        <text id="sumOfBarsLabel" [attr.x]="(startX + endX) / 2" [attr.y]="0" dy=".35em" text-anchor="middle" class="partitions-text">{{ insideRangeText }}</text>
       </g>
       <g *ngIf="!isInteractive && singleScoreValueIsValid()">
         <text [attr.x]="scaleXAxis(singleScoreValue)" [attr.y]="-10" class="small" text-anchor="middle">{{ singleScoreValue }}</text>

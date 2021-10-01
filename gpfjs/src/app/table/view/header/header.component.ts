@@ -20,6 +20,12 @@ export class GpfTableHeaderComponent {
     return [];
   }
 
+  getMaxWidth(column) {
+    if(column.columnMaxWidth) {
+      return column.columnMaxWidth;
+    }
+  }
+
   getWidth(column) {
     if (column.columnWidth) {
       return column.columnWidth;

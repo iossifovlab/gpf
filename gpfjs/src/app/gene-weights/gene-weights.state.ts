@@ -44,9 +44,11 @@ export class GeneWeightsState {
   static queryStateSelector(geneWeightsState: GeneWeightsModel) {
     if (geneWeightsState.geneWeight) {
       return {
-        'weight': geneWeightsState.geneWeight['weight'],
-        'rangeStart': geneWeightsState.rangeStart,
-        'rangeEnd': geneWeightsState.rangeEnd,
+        geneWeights: {
+          'weight': geneWeightsState.geneWeight['weight'],
+          'rangeStart': geneWeightsState.rangeStart,
+          'rangeEnd': geneWeightsState.rangeEnd,
+        }
       }
     }
     return null;

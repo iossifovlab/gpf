@@ -1,6 +1,7 @@
 .genotype-browser-results {
-	padding: 30px;
-	width: 100%;
+  padding: 30px;
+  width: 100%;
+  white-space: nowrap;
 }
 
 .genotype-browser-results .chromosomes-preview {
@@ -8,7 +9,6 @@
   margin: 0 auto;
   width: fit-content;
 }
-
 
 .genotype-browser-results .overview {
   border-top: 1px solid rgba(0,0,0,0.125);
