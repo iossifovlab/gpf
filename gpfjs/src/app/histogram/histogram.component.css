@@ -38,3 +38,7 @@
 .no-arrows::-webkit-inner-spin-button {
     -webkit-appearance: none;
 }
+
+g > text {
+    font-size:11px;
+}

@@ -1,5 +1,5 @@
-<div class="histogram">
-  <svg [attr.width]="width" [attr.height]="height" [attr.viewBox]="viewBox">
+<div class="histogram" style="overflow: auto;">
+  <svg style="min-width: 750px;" [attr.width]="width" [attr.height]="height" [attr.viewBox]="viewBox" [attr.font-size]="80">
     <g [attr.transform]="'translate(' + marginLeft +',' + marginTop + ')'">
       <g #histogramContainer [ngStyle]="isInteractive ? {'transform': 'translate(0px, 50px)'} : {'transform': 'translate(0px, 0px)'}"></g>
       <g *ngIf="isInteractive">
