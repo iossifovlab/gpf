@@ -1,6 +1,5 @@
 import { Component, Output } from '@angular/core';
 import { EventEmitter } from '@angular/core';
-
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -10,15 +9,13 @@ import { environment } from '../../environments/environment';
 })
 export class AddButtonComponent {
   @Output() addFilter: EventEmitter<any> = new EventEmitter(true);
+  imgPathPrefix: string;
 
-  get imgPathPrefix() {
-    return environment.imgPathPrefix;
+  constructor() {
+    this.imgPathPrefix = environment.imgPathPrefix;
   }
 
-  add() {
+  public add(): void {
     this.addFilter.emit(null);
   }
-
-  constructor() { }
-
 }
