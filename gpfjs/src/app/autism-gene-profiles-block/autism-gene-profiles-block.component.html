@@ -25,7 +25,8 @@
 
       <span #dropdownSpan ngbDropdown style="display: table; margin:auto" >
         <button ngbDropdownToggle style="display: none;"></button>
-        <gpf-multiple-select-menu ngbDropdownMenu 
+        <gpf-multiple-select-menu ngbDropdownMenu
+          style="margin-top: 5px"
           [allItems]="allColumns"
           [selectedItems]="shownColumns"
           (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
