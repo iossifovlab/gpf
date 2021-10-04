@@ -39,6 +39,10 @@ export class ResetPasswordComponent implements AfterViewInit {
   }
 
   resetPassword() {
+    if (this.password === undefined || this.confirmPassword === undefined) {
+      return;
+    }
+
     if (this.password !== this.confirmPassword) {
       this.resetPasswordError = 'Passwords don\'t match';
       return;
