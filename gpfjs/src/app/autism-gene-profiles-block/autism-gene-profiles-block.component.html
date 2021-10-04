@@ -2,16 +2,27 @@
   <nav ngbNav #nav="ngbNav" class="navbar" style="justify-content: flex-start; padding: 0; padding-left: 25px;">
     <li class="nav-tabs" [ngbNavItem]="'autismGenesTool'" [destroyOnHide]="false">
       <a ngbNavLink style="display: inline-flex; align-items: center;">
-        Autism genes tool
-        <div (mouseover)="showKeybinds = true" (mouseout)="showKeybinds = false" class="keybinds-icon">
-          <span style="position: relative; top: -1px;">?</span>
+        <span>Autism genes tool</span>
+        <div style="display: inline-flex; margin-left: 15px;">
+          <div (mouseover)="showKeybinds = true" (mouseout)="showKeybinds = false" class="keybinds-icon">
+            <span style="position: relative;">?</span>
+          </div>
+          <button #columnFilteringButton
+            (click)="openDropdown();"
+            id="column-filtering-button"
+            class="dropdown-toggle btn navbar-toggler">
+            <span style="font-size: 14px;">&#9776;</span>
+          </button>
         </div>
-        <button #columnFilteringButton
-          (click)="openDropdown();"
-          id="column-filtering-button"
-          class="dropdown-toggle btn navbar-toggler">
-          <span style="font-size: 14px;">&#9776;</span>
-        </button>
+
+        <div *ngIf="showKeybinds" class="keybinds-tooltip">
+          <span>1, 2, 3, ...</span> - navigate to tab by index<br>
+          <span>e</span> or <span>n</span> - navigate to the next tab<br>
+          <span>q</span> or <span>p</span> - navigate to the previous tab<br>
+          <span>w</span> - close current tab<br>
+          <span>ctrl+mouse1</span> or <span>mouse3</span> - toggle row highlight<br>
+          <span>esc</span> - clear all highlights<br>
+        </div>
       </a>
 
       <ng-template ngbNavContent>
@@ -47,13 +58,4 @@
     </li>
   </nav>
   <div [ngbNavOutlet]="nav" class="card-block"></div>
-
-  <div *ngIf="showKeybinds" class="keybinds-tooltip">
-    <span>1, 2, 3, ...</span> - navigate to tab by index<br>
-    <span>e</span> or <span>n</span> - navigate to the next tab<br>
-    <span>q</span> or <span>p</span> - navigate to the previous tab<br>
-    <span>w</span> - close current tab<br>
-    <span>ctrl+mouse1</span> or <span>mouse3</span> - toggle row highlight<br>
-    <span>esc</span> - clear all highlights<br>
-  </div>
 </div>
