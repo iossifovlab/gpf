@@ -96,7 +96,7 @@ export class UserCreateComponent implements OnInit {
           resolve();
           clearInterval(timer);
         }
-      }, 200);
+      }, 100);
     });
   }
 
