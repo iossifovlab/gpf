@@ -28,6 +28,7 @@ describe('User management tests', () => {
     page.usersTableRows.should('have.length', 3);
 
     page.createUserButton.click();
+    page.emailInputField.should('be.focused');
 
     page.emailInputField.type('test_email@email.com');
     page.nameInputField.type('test_name');
@@ -49,6 +50,7 @@ describe('User management tests', () => {
     page.usersTableRows.should('have.length', 4);
 
     page.createUserButton.click();
+    page.emailInputField.should('be.focused');
 
     page.emailInputField.type('test_email@email.com');
     page.nameInputField.type('other_test_name');
@@ -147,6 +149,8 @@ describe('User management tests', () => {
     page.usersButton.click();
 
     page.createUserButton.click();
+    // field focuses automatically and should be awaited to avoid unwanted focus behavior
+    page.emailInputField.should('be.focused');
 
     page.userWindowGroupDropDownMenuButton.click();
     page.userWindowGroupDropdownSearch.type('test_group');
@@ -164,7 +168,6 @@ describe('User management tests', () => {
     createTestGroup(page, 'test_group');
 
     page.usersButton.click();
-    page.userTableEmailElements;
 
     page.userBulkEditButton.click();
     page.userBulkEditAddGroupButton.click();
@@ -234,6 +237,7 @@ describe('User management tests', () => {
 function createTestUser(page: UserManagementPage, email: string, name: string) {
   page.usersButton.click();
   page.createUserButton.click();
+  page.emailInputField.should('be.focused');
 
   page.emailInputField.type(email);
   page.nameInputField.type(name);
