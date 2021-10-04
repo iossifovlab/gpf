@@ -68,12 +68,25 @@ class ImpalaQueryRunner(QueryRunner):
                         if val is None:
                             continue
 
+                        no_interest = 0
                         while True:
                             try:
                                 self._result_queue.put(val, timeout=0.1)
                                 break
                             except queue.Full:
+                                logger.debug("nobody interested")
+
                                 if self.closed():
+                                    break
+                                no_interest += 1
+                                if no_interest % 1_000 == 0:
+                                    logger.warning(
+                                        f"nobody interested {no_interest}")
+                                if no_interest > 5_000:
+                                    logger.warning(
+                                        f"nobody interested {no_interest}; "
+                                        f"closing...")
+                                    self.close()
                                     break
 
                         if self.closed():
