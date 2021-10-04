@@ -19,7 +19,6 @@ class _PoolCursor:
 
     def __init__(self, connection, cursor):
         self.connection = connection
-        self.connection.open_cursors.add(id(self))
         self.cursor = cursor
 
     def __getattr__(self, name):
@@ -40,7 +39,7 @@ class _PoolCursor:
         return self.cursor.__next__()
 
     def close(self):
-        self.connection.open_cursors.remove(id(self))
+        self.connection.open_cursors.remove(self)
         self.cursor.close()
 
 
@@ -50,18 +49,17 @@ class _PoolConnection:
         self.pool = pool
         self.connection = connection
         self.open_cursors = set()
+        self.timestamp = time.time()
 
     def cursor(self):
         assert len(self.open_cursors) == 0
 
-        result = self.connection.cursor()
-        return _PoolCursor(self, result)
+        result = _PoolCursor(self, self.connection.cursor())
+        self.open_cursors.add(result)
+        return result
 
     def close(self):
-        # self.connection.close()
-        # self.connection = self.pool.create_connection_func()
-
-        self.pool.connection_close(self.connection)
+        self.pool.connection_close(self)
 
     @property
     def host(self):
@@ -78,21 +76,50 @@ class ConnectionPool:
         while self.connections.qsize() < self.pool_size:
             connection = create_connection_func()
             self.connections.put(connection)
+        self.open_connections = set()
 
     def connect(self):
         start = time.time()
         logger.debug(f"connect called: {self.status()}")
 
-        connection = self.connections.get()
+        try:
+            connection = self.connections.get(timeout=10.0)
+        except queue.Empty:
+            connection = self._emergency_connection()
+
         elapsed = time.time() - start
         logger.debug(
             f"connection receieved: {self.status()} in {elapsed:0.3f} sec")
-        return _PoolConnection(self, connection)
+        result = _PoolConnection(self, connection)
+        self.open_connections.add(result)
+        return result
 
     def connection_close(self, connection):
-        connection.reconnect()
-        self.connections.put(connection)
+        self.open_connections.remove(connection)
+        connection.connection.reconnect()
+        try:
+            self.connections.put(connection.connection, timeout=10.0)
+        except queue.Full:
+            self._emergency_close(connection)
+
         logger.debug(f"connection closed: {self.status()}")
+
+    def _emergency_connect(self):
+        now = time.time()
+        for connection in self.open_connections:
+            running_time = now - connection.timestamp
+            if running_time > 1_200:
+                logger.warning(
+                    f"connection running time {running_time:0.3f} sec; "
+                    f"emergency reconnecting...")
+
+        logger.warning("emergency connection created")
+        connection = _PoolConnection(self, self.create_connection_func())
+        return connection
+
+    def _emergency_close(self, connection):
+        logger.warning("emergency connection close called...")
+        connection.connection.close()
 
     def status(self):
         return f"pool size: {self.pool_size}; " \
