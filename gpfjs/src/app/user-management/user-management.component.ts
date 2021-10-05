@@ -115,7 +115,7 @@ export class UserManagementComponent implements OnInit {
           resolve();
           clearInterval(timer);
         }
-      }, 200);
+      }, 100);
     });
   }
 

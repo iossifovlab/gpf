@@ -50,9 +50,6 @@ export class HistogramComponent implements OnInit, OnChanges {
   xScale: d3.ScaleBand<string>;
   private barsTotalSum: number;
 
-  private lastValidStart = 0;
-  private lastValidEnd = 0;
-
   private svg: any;
 
   scaledBins: Array<number>;
@@ -286,7 +283,7 @@ export class HistogramComponent implements OnInit, OnChanges {
   set rangeStart(rangeStart: any) {
     if (rangeStart !== this.internalRangeStart) {
       this.setRangeStart(rangeStart);
-      this.internalRangeStartField = Number(this.transform(rangeStart));
+      this.internalRangeStartField = Number(this.transform(this.internalRangeStart));
     }
   }
 
@@ -308,7 +305,7 @@ export class HistogramComponent implements OnInit, OnChanges {
   set rangeEnd(rangeEnd: any) {
     if (rangeEnd !== this.internalRangeEnd) {
       this.setRangeEnd(rangeEnd);
-      this.internalRangeEndField = Number(this.transform(rangeEnd));
+      this.internalRangeEndField = Number(this.transform(this.internalRangeEnd));
     }
   }
 

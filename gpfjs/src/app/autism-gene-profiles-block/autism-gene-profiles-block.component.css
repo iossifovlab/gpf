@@ -43,19 +43,21 @@ button:click{
   border: 1px solid #dddddd;
   text-align: left;
   z-index: 10000;
-  position: fixed;
-  left: 179px;
-  top: 93px;
+  position: absolute;
+  top: 33px;
+  left: 51px;
   padding: 5px;
   background-color: #ffffff;
 }
 
+.keybinds-tooltip span {
+  border: 1px solid rgba(126, 126, 126, 0.412);
+  padding: 0px 5px 0px 5px;
+}
+
 .keybinds-icon {
-  border: 1px solid #dddddd;
   text-align: center;
-  width: 28px;
-  height: 22px;
-  margin-left: 8px;
+  padding: 0px 10px 0px 10px;
 }
 
 #column-filtering-button {
@@ -66,10 +68,5 @@ button:click{
   padding: 0;
   width: 18px;
   vertical-align: unset;
-  margin-left: 15px;
 }
 
-.keybinds-tooltip span {
-  border: 1px solid rgba(83, 83, 83, 0.412);
-  padding: 0px 5px 0px 5px;
-}

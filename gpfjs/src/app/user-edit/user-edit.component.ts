@@ -111,7 +111,7 @@ export class UserEditComponent implements OnInit {
           resolve();
           clearInterval(timer);
         }
-      }, 200);
+      }, 100);
     });
   }
 
