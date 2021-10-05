@@ -22,7 +22,7 @@ export class GenePlotComponent implements OnChanges {
   @Output() public selectedFrequencies = new EventEmitter<[number, number]>();
 
   private readonly constants = {
-    selectionColor: '#1567eb',
+    selectionColor: '#ADD8E6',
     svgContainerId: '#svg-container',
     xAxisTicks: 12,
     fontSize: 14,
