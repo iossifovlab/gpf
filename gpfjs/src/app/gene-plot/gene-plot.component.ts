@@ -235,18 +235,25 @@ export class GenePlotComponent implements OnChanges {
     this.redraw();
   }
 
+  get isInZoom(): boolean {
+    return !(this.xDomain[0] === this.genePlotModel.domain[0]
+             && this.xDomain[1] === this.genePlotModel.domain[this.genePlotModel.domain.length - 1]);
+  }
+
   private drawPlot(): void {
-    if (this.zoomHistory.canGoBackward) {
+    if (this.isInZoom) {
       const zoomElement = this.plotElement.append('g').attr('id', 'zoomElement');
-      draw.rect(zoomElement, 0, this.plotWidth,
-        this.freqToY(this.zoomHistory.currentState.yMin), 1, this.constants.selectionColor, 1, 'rect');
-      if (this.zoomHistory.currentState.yMax !== 0) {
-        draw.rect(zoomElement, 0, this.plotWidth,
-          this.freqToY(this.zoomHistory.currentState.yMax), 1, this.constants.selectionColor, 1, 'rect');
-      } else {
-        draw.rect(zoomElement, 0, this.plotWidth,
-          this.scale.ySubdomain(0), 1, this.constants.selectionColor, 1, 'rect');
-      }
+      const yMinPosition = this.zoomHistory.currentState.yMin ?
+        this.freqToY(this.zoomHistory.currentState.yMin) : this.frequencyPlotHeight;
+      const yMaxPosition = this.zoomHistory.currentState.yMax ?
+        this.freqToY(this.zoomHistory.currentState.yMax) : this.scale.ySubdomain(0);
+
+      draw.rect(
+        zoomElement, 0, this.plotWidth, yMinPosition, 1, this.constants.selectionColor, 1, 'yMinSelectionBorder'
+      );
+      draw.rect(
+        zoomElement, 0, this.plotWidth, yMaxPosition, 1, this.constants.selectionColor, 1, 'yMaxSelectionBorder'
+      );
     }
 
     this.plotElement.append('g')
@@ -474,9 +481,9 @@ export class GenePlotComponent implements OnChanges {
   }
 
   private freqToY(freq: number): number {
-    if (freq >= this.frequencyDomain[0] && freq <= this.frequencyDomain[1] + 0.5) {
+    if (freq >= this.frequencyDomain[0]) {
       return this.scale.y(freq);
-    } else if (freq > 0) {
+    } else if (freq >= 0) {
       return this.scale.ySubdomain(freq);
     } else {
       return this.frequencyPlotHeight;
