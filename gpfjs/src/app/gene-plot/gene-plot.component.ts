@@ -22,6 +22,7 @@ export class GenePlotComponent implements OnChanges {
   @Output() public selectedFrequencies = new EventEmitter<[number, number]>();
 
   private readonly constants = {
+    selectionColor: '#1567eb',
     svgContainerId: '#svg-container',
     xAxisTicks: 12,
     fontSize: 14,
@@ -199,19 +200,6 @@ export class GenePlotComponent implements OnChanges {
     this.redraw();
   }
 
-  public isInZoom(): boolean {
-    if (!((this.xDomain[1] === this.genePlotModel.domain[this.genePlotModel.domain.length - 1])
-      && (this.xDomain[0] === this.genePlotModel.domain[0]))) {
-        return true;
-    } else {
-      return false;
-    }
-  }
-
-  public map(x, in_min, in_max, out_min, out_max): number {
-    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-  }
-
   public redraw(): void {
 
     this.calculateDenovoAllelesSpacings();
@@ -247,26 +235,18 @@ export class GenePlotComponent implements OnChanges {
   }
 
   private drawPlot(): void {
-    //console.log(this.zoomHistory.currentState.yMin);
-    //console.log(this.map(Math.log(this.zoomHistory.currentState.yMin), -8, 4, 0, 280));
-
-    if (this.isInZoom()) {
+    if (this.zoomHistory.canGoBackward) {
       const zoomElement = this.plotElement.append('g').attr('id', 'zoomElement');
       draw.rect(zoomElement, 0, this.plotWidth,
-        this.map(Math.log(this.zoomHistory.currentState.yMin), -8, 5, 295, -9), 1, '#357ae8', 1, 'rect');
-      draw.rect(zoomElement, 0, this.plotWidth,
-        this.map(Math.log(this.zoomHistory.currentState.yMax), -8, 5, 295, -9), 1, '#1567eb', 1, 'rect');
+        this.freqToY(this.zoomHistory.currentState.yMin), 1, this.constants.selectionColor, 1, 'rect');
+      if (this.zoomHistory.currentState.yMax !== 0) {
+        draw.rect(zoomElement, 0, this.plotWidth,
+          this.freqToY(this.zoomHistory.currentState.yMax), 1, this.constants.selectionColor, 1, 'rect');
+      } else {
+        draw.rect(zoomElement, 0, this.plotWidth,
+          this.scale.ySubdomain(0), 1, this.constants.selectionColor, 1, 'rect');
+      }
     }
-
-    /*
-    if (this.isInZoom()) {
-      const zoomElement = this.plotElement.append('g').attr('id', 'zoomElement');
-      draw.rect(zoomElement, 0, this.plotWidth,
-        300 - Math.log(this.zoomHistory.currentState.yMin) * 40, 1, '#357ae8', 1, 'rect');
-      draw.rect(zoomElement, 0, this.plotWidth,
-        300 - (Math.log(this.zoomHistory.currentState.yMax) * 40), 1, '#1567eb', 1, 'rect');
-    }
-    */
 
     this.plotElement.append('g')
       .attr('id', 'xAxis')
@@ -489,6 +469,16 @@ export class GenePlotComponent implements OnChanges {
       return this.scale.yDenovo(this.denovoAllelesSpacings.get(allele.svuid));
     } else {
       return this.scale.ySubdomain(allele.frequency);
+    }
+  }
+
+  private freqToY(freq: number): number {
+    if (freq >= this.frequencyDomain[0] && freq <= this.frequencyDomain[1] + 0.5) {
+      return this.scale.y(freq);
+    } else if (freq > 0) {
+      return this.scale.ySubdomain(freq);
+    } else {
+      return this.frequencyPlotHeight;
     }
   }
 
