@@ -29,4 +29,24 @@ export class GenesWeights extends GenesBlockPage {
   get graphicsTextArray() {
     return cy.get('g > text');
   }
+
+  get inputFiledMin() {
+    return cy.get('input#from-input-field');
+  }
+
+  get inputFiledMax() {
+    return cy.get('input#to-input-field');
+  }
+
+  get gpfErrorAlert() {
+    return cy.get('div.alert');
+  }
+
+  get effectPanel() {
+    return cy.get('.col-lg-6');
+  }
+
+  get tablePreview() {
+    return cy.get('input#table-preview-button');
+  }
 }

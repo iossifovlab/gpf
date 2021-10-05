@@ -38,25 +38,20 @@ describe('Genes block panel tests', () => {
 
     page.buttonsLowRange.eq(0).click();
 
-    cy.intercept('POST', '/gpf/api/v3/gene_weights/partitions*', (req) => {
-      expect(req.body).to.deep.equal({
-        "weight": "pLI",
-        "min": 1e-26,
-        "max": 1.01
-      });
-    }).as('getInputValueUp');
-
-    cy.wait('@getInputValueUp');
+    page.inputFiledMin.should('have.value', '1e-26');
+    page.inputFiledMax.should('have.value', '1.01');
 
     page.buttonsLowRange.eq(1).click();
 
-    cy.intercept('POST', '/gpf/api/v3/gene_weights/partitions*', (req) => {
-      expect(req.body).to.deep.equal({
-        "weight": "pLI",
-        "min": 0,
-        "max": 1.01
-      });
-    });
+    page.inputFiledMin.should('have.value', '0');
+    page.inputFiledMax.should('have.value', '1.01');
+
+    page.inputFiledMin.clear().type('1e-24').type('{enter}');
+    page.inputFiledMin.should('have.value', '1e-24');
+    page.gpfErrorAlert.should('not.be.visible');
+
+    page.inputFiledMin.clear().type('3').type('{enter}');
+    page.gpfErrorAlert.should('be.visible');
   });
 
   it('should test for changes in dropdown', () => {
@@ -72,5 +67,27 @@ describe('Genes block panel tests', () => {
 
     page.sumOfBars.should('have.text', '18459 (100.00%)');
     page.graphicsTextArray.eq(0).should('have.text', '0');
+  });
+
+  it('should fetch table results based on the position', () => {
+
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    page.geneWeightsButton.click();
+
+    page.selectField.select('ExAC pRec');
+    page.effectPanel.contains('All').click();
+
+    page.tablePreview.click();
+
+    cy.get('span#variants-count-span', {timeout:10000}).should('be.visible').contains('35');
+
+    page.effectPanel.contains('None').click();
+    page.tablePreview.should('be.disabled');
+
+    page.effectPanel.contains('Nonsense').click();
+    page.tablePreview.click();
+    cy.get('span#variants-count-span', {timeout:10000}).should('be.visible').contains('0');
+
+
   });
 });
