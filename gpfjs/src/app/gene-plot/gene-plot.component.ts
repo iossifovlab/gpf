@@ -32,6 +32,7 @@ export class GenePlotComponent implements OnChanges {
     // in pixels
     frequencyPlotSize: 300,
     frequencyPlotPadding: 40, // Padding between the frequency plot and the transcripts
+    denovoAxisGap: 8, // Gap between subdomain and denovo axis
     transcriptHeight: 20,
     chromosomeLabelPadding: 50,
     denovoSpacing: 22,
@@ -116,7 +117,7 @@ export class GenePlotComponent implements OnChanges {
       .range([this.subdomainAxisY, 0]);
     this.scale.ySubdomain
       .domain([0, this.frequencyDomain[0]])
-      .range([this.constants.frequencyPlotSize, this.subdomainAxisY]);
+      .range([this.constants.frequencyPlotSize - this.constants.denovoAxisGap, this.subdomainAxisY]);
     // The yDenovo scale is set in calculateDenovoAllelesSpacings for convenience
 
     this.axis.x = d3.axisBottom(this.scale.x).tickValues(this.xAxisTicks);
@@ -282,10 +283,10 @@ export class GenePlotComponent implements OnChanges {
     // Denovo rectangle
     this.plotElement
       .append('rect')
-      .attr('height', this.frequencyPlotHeight - this.scale.ySubdomain(0))
+      .attr('height', this.frequencyPlotHeight - this.scale.ySubdomain(0) - this.constants.denovoAxisGap)
       .attr('width', this.plotWidth)
       .attr('x', 1)
-      .attr('y', this.scale.ySubdomain(0))
+      .attr('y', this.scale.ySubdomain(0) + this.constants.denovoAxisGap)
       .attr('fill', '#FFAD18')
       .attr('fill-opacity', '0.25');
   }
