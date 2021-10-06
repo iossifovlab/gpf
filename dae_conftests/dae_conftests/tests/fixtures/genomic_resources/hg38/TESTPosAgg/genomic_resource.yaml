@@ -1,0 +1,44 @@
+---
+
+id: hg38/TESTPosAgg
+
+resource_type: score_resources.PositionScoreResource
+
+filename: scores.tsv.gz
+format: tsv/bgz
+
+index_file:
+  filename: scores.tsv.gz.tbi
+  format: tabix
+
+has_header: false
+
+type_aggregators:
+  - type: float
+    aggregator: dae.genomic_resource.aggregators.MaxAggregator
+  - type: int
+    aggregator: dae.genomic_resource.aggregators.MaxAggregator
+  - type: str
+    aggregator: dae.genomic_resource.aggregators.ConcatAggregator
+
+# defined by score_type
+chrom: 
+  index: 0
+pos_begin:
+  index: 1
+pos_end: 
+  index: 2
+
+# score values
+scores:
+    - id: test_score
+      type: float
+      desc: ""
+      index: 3
+
+default_annotation:
+  attributes:
+    - source: test_score
+      dest: test_score
+      aggregator:
+        position: MeanAggregator

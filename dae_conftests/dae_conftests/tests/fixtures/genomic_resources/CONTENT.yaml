@@ -37,6 +37,8 @@ children:
     type: resource
   - id: hg38/TESTFreq
     type: resource
+  - id: hg38/TESTPosAgg
+    type: resource
   - id: hg38/TESTCADD
     type: resource
   - id: hg38/TESTphastCons100way
