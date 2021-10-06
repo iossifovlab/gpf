@@ -3,7 +3,7 @@ import gzip
 import yaml
 import io
 
-from typing import Dict
+from typing import Dict, List
 from glob import glob
 from subprocess import call
 import pathlib
@@ -207,6 +207,13 @@ class GenomicResourcesRepo:
     def open_file(self, resource_id: str, filename: str):
         raise NotImplementedError
 
+    def get_file_urls(self, resource_id: str) -> List[str]:
+        resource = self.get_resource(resource_id)
+        return [
+            os.path.join(resource.get_url(), filename)
+            for filename in resource.get_manifest()
+        ]
+
 
 class FSGenomicResourcesRepo(GenomicResourcesRepo):
     """
@@ -258,6 +265,14 @@ class FSGenomicResourcesRepo(GenomicResourcesRepo):
         assert isinstance(resource, GenomicResource)
 
         cwd = urlparse(resource.get_url()).path
+
+        if os.path.exists(manifest_path := os.path.join(cwd, "MANIFEST")):
+            manifest_mtime = os.path.getmtime(manifest_path)
+            for file in glob(f"{cwd}/**/*[!MANIFEST]", recursive=True):
+                if os.path.getmtime(os.path.join(cwd, file)) > manifest_mtime:
+                    break
+            else:
+                return  # manifest is up-to-date, skip recreating it
 
         command = \
             "find . -type f \\( ! -iname \"MANIFEST\" \\)  " \

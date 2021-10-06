@@ -1,4 +1,5 @@
 import pytest
+import os
 
 from dae.genomic_resources.resources import GenomicResource, \
     GenomicResourceGroup
@@ -132,3 +133,36 @@ def test_build_manifests(fixture_dirname):
     assert repo is not None
     for resource in repo.root_group.get_genomic_resources():
         repo.build_resource_manifest(resource.get_id())
+
+
+def test_lazy_manifest_timestamp_check(fixture_dirname):
+    repo = create_fs_genomic_resource_repository(
+        "test_repo", fixture_dirname("genomic_resources"))
+    assert repo is not None
+    for resource in repo.root_group.get_genomic_resources():
+        manifest_path = os.path.join(
+            resource.get_url().replace("file://", ""), "MANIFEST"
+        )
+        mtime_old = os.path.getmtime(manifest_path)
+        repo.build_resource_manifest(resource.get_id())
+        mtime_new = os.path.getmtime(manifest_path)
+        assert mtime_new == mtime_old
+
+
+def test_lazy_manifest_outdated_timestamp(fixture_dirname):
+    repo = create_fs_genomic_resource_repository(
+        "test_repo", fixture_dirname("genomic_resources"))
+    assert repo is not None
+    for resource in repo.root_group.get_genomic_resources():
+        manifest_path = os.path.join(
+            resource.get_url().replace("file://", ""), "MANIFEST"
+        )
+        mtime_old = os.path.getmtime(manifest_path)
+        # update timestamp of some resource file to force manifest rebuild
+        os.utime(
+            repo.get_file_urls(resource.get_id())[0].replace("file://", ""),
+            (mtime_old + 1, mtime_old + 1)
+        )
+        repo.build_resource_manifest(resource.get_id())
+        mtime_new = os.path.getmtime(manifest_path)
+        assert mtime_new > mtime_old
