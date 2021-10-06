@@ -33,7 +33,7 @@ export class PhenoBrowserPage extends BasePage {
     return this.tableDiv.get('gpf-pheno-browser-table > gpf-table > div > div.ng-star-inserted');
   }
 
-  get downloadButton() {
-    return cy.get('.col-4 > a');
+  get downloadInstrumentsButton() {
+    return cy.get('a').contains('Download instruments');
   }
 }
