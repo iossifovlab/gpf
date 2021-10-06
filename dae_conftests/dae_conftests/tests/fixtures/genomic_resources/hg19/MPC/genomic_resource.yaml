@@ -4,11 +4,11 @@ id: hg19/MPC
 
 resource_type: score_resources.NPScoreResource
 
-filename: CADD.bedgraph.gz
+filename: fordist_constraint_official_mpc_values_v2.txt.gz
 format: tsv/bgz
 
 index_file:
-  filename: CADD.bedgraph.gz.tbi
+  filename: fordist_constraint_official_mpc_values_v2.txt.gz.tbi
   format: tabix
 
 has_header: true
@@ -25,7 +25,7 @@ type_aggregators:
 chrom:
   name: chrom
 pos_begin:
-  name: ps
+  name: pos
 reference:
   name: ref
 alternative:

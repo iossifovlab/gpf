@@ -78,6 +78,21 @@ def phastcons100way_indel_variants_expected():
 
 
 @pytest.fixture
+def position_agg_mean_variants_expected():
+    variants_records = [
+        [{"chrom": "1", "position": 11072,
+         "reference": "GGGA", "alternative": "G"}],
+    ]
+    variants = [
+        SummaryVariantFactory.blank_summary_variant_from_records(rec)
+        for rec in variants_records
+    ]
+    expected = [0.003400000045076013]
+
+    return list(zip(variants, expected))
+
+
+@pytest.fixture
 def cadd_variants_expected():
     variants_records = [
         [{

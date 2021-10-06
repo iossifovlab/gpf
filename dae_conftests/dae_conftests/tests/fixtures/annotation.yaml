@@ -6,6 +6,7 @@ effect_annotators:
 
 liftover_annotators:
   - annotator: liftover_annotator
+    liftover: hg38tohg19
     chain: hg38/hg38tohg19
     genome: hg38/GRCh38-hg38/genome
 
@@ -15,3 +16,7 @@ score_annotators:
 
  - annotator: np_score
    resource: hg38/TESTCADD
+
+ - annotator: np_score
+   liftover: hg38tohg19
+   resource: hg19/MPC

@@ -1,7 +1,7 @@
 import pytest
 
 from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.variants.variant import SummaryAllele, SummaryVariant
+from dae.variants.variant import SummaryAllele, SummaryVariantFactory
 from dae.annotation.tools.lift_over_annotator import LiftOverAnnotator
 
 
@@ -65,6 +65,10 @@ def test_pipeline_liftover(
     pipeline = AnnotationPipeline.build(
         annotation_config, anno_grdb
     )
-    allele = SummaryAllele("chr1", 1000, "A", "T")
-    variant = SummaryVariant([allele])
+    records = [{
+        "chrom": "chr1", "position": 69094,
+        "reference": "G", "alternative": "A"
+    }]
+    variant = SummaryVariantFactory.blank_summary_variant_from_records(records)
     pipeline.annotate_summary_variant(variant)
+    assert variant.get_attribute("mpc")[0] is not None

@@ -23,6 +23,8 @@ class LiftOverAnnotator(Annotator):
         self.chain = chain_resource
         self.target_genome = genome_resource
         self._annotation_schema = pa.schema([])
+        #TODO do somewhere else
+        self.chain.open()
 
     def liftover_variant(self, variant):
         assert isinstance(variant, SummaryAllele)
@@ -77,7 +79,7 @@ class LiftOverAnnotator(Annotator):
         except Exception as ex:
             logger.warning(f"problem in variant {variant} liftover: {ex}")
 
-    def do_annotate(self, _, variant, liftover_variants):
+    def _do_annotate(self, _, variant, liftover_variants):
         assert self.liftover not in liftover_variants, \
             (self.liftover, liftover_variants)
         assert variant is not None
@@ -89,6 +91,9 @@ class LiftOverAnnotator(Annotator):
                 f"unable to liftover variant: {variant}")
             return
         liftover_variants[self.liftover] = lo_variant
+
+    def get_default_annotation(self):
+        return []
 
     @property
     def annotation_schema(self) -> pa.Schema:

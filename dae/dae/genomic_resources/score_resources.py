@@ -299,7 +299,18 @@ class PositionScoreResource(GenomicScoresResource):
             for col, val in line.scores.items():
                 if col not in aggregators:
                     continue
-                aggregators[col].add(val)
+                left = (
+                    pos_begin
+                    if pos_begin >= line.pos_begin
+                    else line.pos_begin
+                )
+                right = (
+                    pos_end
+                    if pos_end <= line.pos_end
+                    else line.pos_end
+                )
+                for i in range(left, right+1):
+                    aggregators[col].add(val)
 
         return {
             score_id: aggregator.get_final()

@@ -72,9 +72,11 @@ class VariantScoreAnnotatorBase(Annotator):
                 variant.chromosome, variant.position,
             )
         elif variant.variant_type & VariantType.indel:
-            scores = self.resource.fetch_scores(
+            scores = self.resource.fetch_scores_agg(
                 variant.chromosome,
                 variant.position,
+                variant.position + len(variant.reference),
+                self.aggregators
             )
         else:
             logger.warning(
@@ -140,7 +142,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             scores = self._fetch_substition(variant)
         else:
             if variant.variant_type & VariantType.indel:
-                first_position = variant.position-1
+                first_position = variant.position
                 last_position = variant.position + len(variant.reference)
             elif variant.is_cnv():
                 first_position = variant.position
