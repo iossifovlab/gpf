@@ -123,7 +123,8 @@ class ConnectionPool:
 
     def status(self):
         return f"pool size: {self.pool_size}; " \
-            f"available connections: {self.connections.qsize()}"
+            f"available connections: {self.connections.qsize()}; " \
+            f"open connections: {len(self.open_connections)}"
 
 
 class ImpalaHelpers:
