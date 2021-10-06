@@ -53,8 +53,9 @@ export class UsersService {
 
     return this.http.post(this.config.baseUrl + this.logoutUrl, {}, options).pipe(
       map(() => {
-        this.router.navigate([this.location.path()]);
         this.store.dispatch(new StateResetAll());
+        window.location.href = '/';
+
         return true;
       })
     );
