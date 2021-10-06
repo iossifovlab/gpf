@@ -55,6 +55,7 @@ describe('Genes block panel tests', () => {
   });
 
   it('should test for changes in dropdown', () => {
+    
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     page.geneWeightsButton.click();
 
@@ -67,6 +68,7 @@ describe('Genes block panel tests', () => {
 
     page.sumOfBars.should('have.text', '18459 (100.00%)');
     page.graphicsTextArray.eq(0).should('have.text', '0');
+
   });
 
   it('should fetch table results based on the position', () => {
