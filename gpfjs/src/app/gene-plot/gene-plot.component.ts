@@ -22,6 +22,7 @@ export class GenePlotComponent implements OnChanges {
   @Output() public selectedFrequencies = new EventEmitter<[number, number]>();
 
   private readonly constants = {
+    selectionColor: '#ADD8E6',
     svgContainerId: '#svg-container',
     xAxisTicks: 12,
     fontSize: 14,
@@ -201,6 +202,7 @@ export class GenePlotComponent implements OnChanges {
   }
 
   public redraw(): void {
+
     this.calculateDenovoAllelesSpacings();
     // Update SVG element with newly-calculated height and clear all child elements
     this.svgElement
@@ -233,7 +235,27 @@ export class GenePlotComponent implements OnChanges {
     this.redraw();
   }
 
+  get isInZoom(): boolean {
+    return !(this.xDomain[0] === this.genePlotModel.domain[0]
+             && this.xDomain[1] === this.genePlotModel.domain[this.genePlotModel.domain.length - 1]);
+  }
+
   private drawPlot(): void {
+    if (this.isInZoom) {
+      const zoomElement = this.plotElement.append('g').attr('id', 'zoomElement');
+      const yMinPosition = this.zoomHistory.currentState.yMin ?
+        this.freqToY(this.zoomHistory.currentState.yMin) : this.frequencyPlotHeight;
+      const yMaxPosition = this.zoomHistory.currentState.yMax ?
+        this.freqToY(this.zoomHistory.currentState.yMax) : this.scale.ySubdomain(0);
+
+      draw.rect(
+        zoomElement, 0, this.plotWidth, yMinPosition, 1, this.constants.selectionColor, 1, 'yMinSelectionBorder'
+      );
+      draw.rect(
+        zoomElement, 0, this.plotWidth, yMaxPosition, 1, this.constants.selectionColor, 1, 'yMaxSelectionBorder'
+      );
+    }
+
     this.plotElement.append('g')
       .attr('id', 'xAxis')
       .style('font', `${this.constants.fontSize}px sans-serif`)
@@ -455,6 +477,16 @@ export class GenePlotComponent implements OnChanges {
       return this.scale.yDenovo(this.denovoAllelesSpacings.get(allele.svuid));
     } else {
       return this.scale.ySubdomain(allele.frequency);
+    }
+  }
+
+  private freqToY(freq: number): number {
+    if (freq >= this.frequencyDomain[0]) {
+      return this.scale.y(freq);
+    } else if (freq >= 0) {
+      return this.scale.ySubdomain(freq);
+    } else {
+      return this.frequencyPlotHeight;
     }
   }
 
