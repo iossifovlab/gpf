@@ -9,7 +9,7 @@ import { CookieService } from 'ngx-cookie-service';
 import { User } from './users';
 
 import { Router } from '@angular/router';
-import { Location } from '@angular/common';
+import { Location, LocationStrategy } from '@angular/common';
 import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
 import { catchError, map, tap } from 'rxjs/operators';
@@ -44,6 +44,7 @@ export class UsersService {
     private router: Router,
     private location: Location,
     private store: Store,
+    private locationStrategy: LocationStrategy
   ) {}
 
   logout(): Observable<boolean> {
@@ -54,7 +55,7 @@ export class UsersService {
     return this.http.post(this.config.baseUrl + this.logoutUrl, {}, options).pipe(
       map(() => {
         this.store.dispatch(new StateResetAll());
-        window.location.href = '/';
+        window.location.href = this.locationStrategy.getBaseHref();
 
         return true;
       })
