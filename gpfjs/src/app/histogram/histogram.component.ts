@@ -279,7 +279,7 @@ export class HistogramComponent implements OnInit, OnChanges {
         d3.axisBottom(this.scaleXAxis)
         .tickValues(this.xLabelsWithDefaultValue as any)
         .tickFormat((d, i) => formatter(this.xLabelsWithDefaultValue[i]) as any)
-      ).style('font-size', '11px');
+      ).style('font-size', '12px');
   }
 
   @Input()
