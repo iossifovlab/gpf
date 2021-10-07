@@ -37,21 +37,13 @@ export class GenesBlockPage extends BasePage {
     return cy.get('button.dropdown-item span').contains(text);
   }
 
-  getFirstGeneSetFromDropdownMenu() {
+  get firstGeneSetFromDropdownMenu() {
     return cy.get('button.dropdown-item span').first();
   }
 
   get geneSetsFromDropdownMenu() {
     return cy.get('button.dropdown-item span');
   }
-
-  // async presenceOfOneElement(elementArrayFinder: ElementArrayFinder) {
-  //   return function () {
-  //       return elementArrayFinder.count().then(function (currentCount) {
-  //           return currentCount === 1;
-  //       });
-  //   };
-  // }
 
   get selectedGeneSet() {
     return cy.get('#selected-value');

@@ -285,7 +285,7 @@ describe('Denovo gene set gene symbols tests', () => {
         page.geneSetsSearchbox.click();
         page.geneSetsSearchbox.type(data.expectedConditions.effectTypesSearchQueries[i]);
 
-        page.getFirstGeneSetFromDropdownMenu().click();
+        page.firstGeneSetFromDropdownMenu.click();
         cy.window().document().then(function (doc) {
           doc.addEventListener('click', () => {
             setTimeout(function () { doc.location.reload() }, 5000)
