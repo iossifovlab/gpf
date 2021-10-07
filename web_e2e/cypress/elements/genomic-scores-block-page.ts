@@ -13,20 +13,20 @@ export class GenomicScoresBlockPage extends BasePage {
     return cy.get('gpf-histogram');
   }
 
-  get inputFromField() {
+  get fromInputField() {
     return cy.get('input#from-input-field');
+  }
+
+  get toInputField() {
+    return cy.get('input#to-input-field');
   }
 
   get filterSelect() {
     return cy.get('select.form-control');
   }
 
-  get histogramText() {
+  get histogramRangeSelectors() {
     return cy.get('text.partitions-text');
-  }
-
-  get inputToField() {
-    return cy.get('input#to-input-field');
   }
 
   get addFilterButton() {
