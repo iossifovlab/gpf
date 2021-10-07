@@ -1,29 +1,29 @@
 .partitions-text {
-	font-size: 12px;
+  font-size: 12px;
 }
 
 .histogram {
-	text-align: center;
+  text-align: center;
 }
 
 .histogram svg {
-	width: 100%;
-	height: 100%;
+  width: 100%;
+  height: 100%;
 }
 
 .histogram-controls {
-	display: flex;
-	width: 100%;
-	max-width: 850px;
-	margin: auto;
+  display: flex;
+  width: 100%;
+  max-width: 850px;
+  margin: auto;
 }
 
 .histogram-controls label {
-	display: inline-block;
-	margin-right: 5px;
+  display: inline-block;
+  margin-right: 5px;
 }
 
 .histogram-controls input {
-    display: inline-block;
-    width: 100px;
+  display: inline-block;
+  width: 100px;
 }
