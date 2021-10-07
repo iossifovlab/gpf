@@ -14,8 +14,9 @@
     <div class="col-sm-12">
       <gpf-histogram
         *ngIf="selectedGenomicScores"
-        width="650"
+        width="800"
         height="145"
+        [marginLeft]="180"
         [bins]="selectedGenomicScores.bins"
         [bars]="selectedGenomicScores.bars"
         [domainMin]="domainMin"
