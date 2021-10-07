@@ -1,52 +1,31 @@
-import { GenesBlockPage } from './genes-block-page';
 import { BasePage } from './utils';
 
-export class GenesWeights extends GenesBlockPage {
-  get buttonsLowRange() {
-    return cy.get('div.histogram-from > div.stepper > button');
-  }
-
-  get buttonsHighRange() {
-    return cy.get('div.histogram-to > div.stepper > button');
-  }
-
-  get fieldLowRange() {
-    return cy.get('div.histogram-from > div.stepper > input');
-  }
-
-  get fieldHighRange() {
-    return cy.get('div.histogram-to > div.stepper > input');
-  }
-
-  get selectField() {
+export class GenesWeights extends BasePage {
+  get dropdownButton() {
     return cy.get('gpf-gene-weights select');
   }
 
-  get sumOfBars() {
-    return cy.get('text#sumOfBarsLabel');
-  }
-
-  get graphicsTextArray() {
-    return cy.get('g > text');
-  }
-
-  get inputFiledMin() {
+  get fromInputField() {
     return cy.get('input#from-input-field');
   }
 
-  get inputFiledMax() {
+  get toInputField() {
     return cy.get('input#to-input-field');
   }
 
-  get gpfErrorAlert() {
-    return cy.get('div.alert');
+  get fromFieldStepUp() {
+    return cy.get('.histogram-from .step.up');
   }
 
-  get effectPanel() {
-    return cy.get('.col-lg-6');
+  get fromFieldStepDown() {
+    return cy.get('.histogram-from .step.down');
   }
 
-  get tablePreview() {
-    return cy.get('input#table-preview-button');
+  get toFieldStepUp() {
+    return cy.get('.histogram-to .step.up');
+  }
+
+  get toFieldStepDown() {
+    return cy.get('.histogram-to .step.down');
   }
 }
