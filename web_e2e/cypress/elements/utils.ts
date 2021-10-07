@@ -89,7 +89,6 @@ export class BasePage {
   logout() {
     const usersPage = new UsersPage();
     usersPage.logoutButton.click();
-    usersPage.loginDropdownToggleButton.should('be.visible');
   }
 
   navigateToDatasetPage(dataset: string, page: string) {
