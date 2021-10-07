@@ -1,5 +1,4 @@
 import { BaseController } from "./base-controller";
-import { EffecttypesPage } from "./effectypes-page";
 import { FamilyFilterBlockPage } from "./family-filter-block-page";
 import { GenesBlockPage } from "./genes-block-page";
 import { GenotypeBlockPage } from "./genotype-block-page";
@@ -74,6 +73,10 @@ export class GenotypeBrowserController extends BaseController {
 
   setEffectTypesGroup(group: string) {
     this.setEffectTypes(this.genotypeBlockPage.effectTypesGroups.get(group));
+  }
+
+  setEffectTypesToAll() {
+    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-effecttypes', 'All').click();
   }
 
   setPhenotypeToAll() {
