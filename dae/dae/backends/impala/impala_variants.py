@@ -105,6 +105,7 @@ class ImpalaQueryRunner(QueryRunner):
             self._done = True
         elapsed = time.time() - started
         logger.debug(f"runner done in {elapsed:0.3f}sec")
+        logger.debug(f"connection pool: {self.connection_pool.status()}")
 
 
 class ImpalaVariants:
