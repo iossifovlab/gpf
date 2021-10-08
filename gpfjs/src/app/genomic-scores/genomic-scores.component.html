@@ -24,7 +24,8 @@
         [logScaleX]="selectedGenomicScores.logScaleX"
         [logScaleY]="selectedGenomicScores.logScaleY"
         [rangesCounts]="rangesCounts | async"
-        [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
+        [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd"
+        style="display:block; margin-top: 17px;">
       </gpf-histogram>
       <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
     </div>
