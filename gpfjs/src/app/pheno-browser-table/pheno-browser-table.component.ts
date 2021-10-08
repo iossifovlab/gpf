@@ -52,6 +52,21 @@ export class PhenoBrowserTableComponent {
     return leftVal.localeCompare(rightVal);
   }
 
+  regressionCompare(regressionId: string, field: string) {
+    return (a: any, b: any) => {
+      let leftVal = a['regressions'][regressionId];
+      let rightVal = b['regressions'][regressionId];
+
+      leftVal = !leftVal || isNaN(leftVal[field]) ? null : leftVal[field];
+      rightVal = !rightVal || isNaN(rightVal[field]) ? null : rightVal[field];
+
+      if (leftVal == null && rightVal == null) { return 0; }
+      if (leftVal == null) { return -1; }
+      if (rightVal == null) { return 1; }
+      return +leftVal - +rightVal;
+    }
+  }
+
   getRegressionIds() {
     return Object.getOwnPropertyNames(this.measures.regressionNames);
   }
