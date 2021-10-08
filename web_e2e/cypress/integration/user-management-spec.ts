@@ -90,7 +90,8 @@ describe('User management tests', () => {
     page.userSearchField.clear();
     page.userSearchField.type('test_email@email.com');
     page.usersTableRows.last().should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
-    cy.reload();
+    cy.intercept('GET', '/gpf/api/v3/users/streaming_search?search=test_email@email.com').as('searchQuery');
+    cy.wait('@searchQuery');
 
     deleteTestUser(page);
   });
@@ -135,7 +136,7 @@ describe('User management tests', () => {
     page.usersButton.click();
     page.userTableRemoveUserGroupButton.click();
     page.userTableRemoveUserGroupConfirmButton.click();
-    cy.reload();
+
     page.usersTableRows.last()
       .should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
 
@@ -224,7 +225,6 @@ describe('User management tests', () => {
     page.usersButton.click();
     page.userTableRemoveUserGroupButton.click();
     page.userTableRemoveUserGroupConfirmButton.click();
-    cy.reload();
 
     page.datasetsButton.click();
     page.datasetsTableRows.last().should('not.contain.text', 'test_email@email.com');
@@ -248,7 +248,9 @@ function deleteTestUser(page: UserManagementPage) {
   page.usersButton.click();
   page.userTableDeleteNewestUserButton.click();
   page.userTableDeleteUserConfirmButton.click();
-  cy.reload();
+  cy.intercept('GET', '/gpf/api/v3/users/streaming_search?search=*').as('deleteUserQuery');
+  cy.wait('@deleteUserQuery');
+
 }
 
 function createTestGroup(page: UserManagementPage, groupName: string) {
