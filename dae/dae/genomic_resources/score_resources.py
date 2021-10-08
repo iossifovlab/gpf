@@ -388,7 +388,18 @@ class NPScoreResource(PositionScoreResource):
             for col, val in line.scores.items():
                 if col not in nuc_aggregators:
                     continue
-                nuc_aggregators[col].add(val)
+                left = (
+                    pos_begin
+                    if pos_begin >= line.pos_begin
+                    else line.pos_begin
+                )
+                right = (
+                    pos_end
+                    if pos_end <= line.pos_end
+                    else line.pos_end
+                )
+                for i in range(left, right+1):
+                    nuc_aggregators[col].add(val)
             last_pos = line.pos_begin
         aggregate_nucleotides()
 

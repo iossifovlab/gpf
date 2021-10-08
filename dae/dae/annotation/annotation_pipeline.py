@@ -35,7 +35,7 @@ class AnnotationPipeline():
             annotator_type = annotator_config["annotator"]
 
             gene_models_id = annotator_config["gene_models"]
-            genome_id = annotator_config["genome"]
+            genome_id = annotator_config["target_genome"]
             override = annotator_config.get("override")
 
             gene_models = resource_db.get_resource(gene_models_id)
@@ -51,7 +51,7 @@ class AnnotationPipeline():
         if pipeline_config.liftover_annotators:
             for annotator_config in pipeline_config.liftover_annotators:
                 chain_id = annotator_config["chain"]
-                genome_id = annotator_config["genome"]
+                genome_id = annotator_config["target_genome"]
                 chain = resource_db.get_resource(chain_id)
                 genome = resource_db.get_resource(genome_id)
                 annotator_type = annotator_config["annotator"]

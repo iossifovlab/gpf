@@ -7,9 +7,9 @@ attr_schema = {
     }
 }
 
-target_genome_schema = {
-    "filename": {"type": "string"},
-    "del_chrom_prefix": {"type": "string"},
+prefix_schema = {
+    "add_prefix": {"type": "string"},
+    "del_prefix": {"type": "string"},
 }
 
 default_annotation_schema = {
@@ -63,6 +63,10 @@ genomic_score_schema = {
     "format": {"type": "string"},
     "has_header": {"type": "boolean"},
     "add_chrom_prefix": {"type": "string"},
+    "chrom_prefix": {"type": "dict", "schema": {
+        "variant_coordinates": {"type": "dict", "schema": prefix_schema},
+        "target_coordinates": {"type": "dict", "schema": prefix_schema},
+    }},
     "index_file": {
         "type": "dict",
         "schema": {
@@ -79,10 +83,6 @@ genomic_score_schema = {
         "schema": {
             "score_version": {"type": "string"}
         },
-    },
-    "target_genome": {
-        "type": "dict",
-        "schema": target_genome_schema,
     },
     "type_aggregators": {
         "type": "list", "schema": {

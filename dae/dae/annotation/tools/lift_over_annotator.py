@@ -23,8 +23,9 @@ class LiftOverAnnotator(Annotator):
         self.chain = chain_resource
         self.target_genome = genome_resource
         self._annotation_schema = pa.schema([])
-        #TODO do somewhere else
+        # TODO do somewhere else
         self.chain.open()
+        self.target_genome.open()
 
     def liftover_variant(self, variant):
         assert isinstance(variant, SummaryAllele)
