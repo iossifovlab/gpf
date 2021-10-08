@@ -18,6 +18,12 @@ import { GeneSymbolsComponent } from 'app/gene-symbols/gene-symbols.component';
 import { GeneSymbolsState } from 'app/gene-symbols/gene-symbols.state';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 
+class MockDatasetsService {
+  getSelectedDataset = function() {
+    return { accessRights: true, id: 'testDatasetId' };
+  };
+}
+
 describe('PhenoToolComponent', () => {
   let component: PhenoToolComponent;
   let fixture: ComponentFixture<PhenoToolComponent>;
@@ -26,18 +32,34 @@ describe('PhenoToolComponent', () => {
     TestBed.configureTestingModule({
       declarations: [
         PhenoToolComponent,
+        // PhenoToolGenotypeBlockComponent,
         GenesBlockComponent,
         GeneSymbolsComponent,
-        PhenoToolMeasureComponent
+        PhenoToolMeasureComponent,
+        // ShareQueryButtonComponent,
+        // PhenoMeasureSelectorComponent,
+        // ErrorsAlertComponent,
+        // SaveQueryComponent,
+        // PhenoToolEffectTypesComponent,
+        // EffecttypesColumnComponent,
+        // CheckboxListComponent,
       ],
       providers: [
-        {
-          provide: ActivatedRoute,
-          useValue: new ActivatedRoute()
-        }, DatasetsService, ConfigService, UsersService, FullscreenLoadingService, PhenoToolService, MeasuresService
+        {provide: ActivatedRoute, useValue: new ActivatedRoute()},
+        {provide: DatasetsService, useValue: new MockDatasetsService()},
+        ConfigService,
+        UsersService,
+        FullscreenLoadingService,
+        PhenoToolService,
+        MeasuresService,
+        // QueryService
       ],
-      imports: [HttpClientTestingModule, RouterTestingModule,
-        NgxsModule.forRoot([ErrorsState, GeneSymbolsState]), NgbNavModule],
+      imports: [
+        HttpClientTestingModule,
+        RouterTestingModule,
+        NgxsModule.forRoot([ErrorsState, GeneSymbolsState]),
+        NgbNavModule
+      ],
       schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();
