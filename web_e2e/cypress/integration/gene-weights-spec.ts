@@ -136,7 +136,7 @@ describe('Gene weights panel tests', () => {
     page.toInputField.should('have.value', '1.01');
   });
 
-  it('should filter variants based on selected gene weight', () => {
+  it.only('should filter variants based on selected gene weight', () => {
     const genotypeBrowserController = new GenotypeBrowserController();
     const genotypeBrowserPage = new GenotypeBrowserPage();
 
@@ -145,52 +145,92 @@ describe('Gene weights panel tests', () => {
     genesBlockPage.geneWeightsButton.click();
 
     page.dropdownButton.select('SFARI gene score');
-    cy.wait(1000);
+
+    cy.intercept('POST' , '/gpf/api/v3/gene_weights/partitions').as('availability');
+    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+
     genotypeBrowserController.showTablePreview();
     genotypeBrowserPage.overviewParagraph.should('have.text', ' 0 variants selected (0 shown) ');
 
     page.dropdownButton.select('RVIS rank');
-    cy.wait(1000);
+
+    cy.intercept('POST' , '/gpf/api/v3/gene_weights/partitions').as('availability');
+    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    
     genotypeBrowserController.showTablePreview();
     genotypeBrowserPage.overviewParagraph.should('have.text', ' 0 variants selected (0 shown) ');
 
     page.dropdownButton.select('RVIS');
-    cy.wait(1000);
+
+    cy.intercept('POST' , '/gpf/api/v3/gene_weights/partitions').as('availability');
+    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+
     genotypeBrowserController.showTablePreview();
     genotypeBrowserPage.overviewParagraph.should('have.text', ' 0 variants selected (0 shown) ');
 
     page.dropdownButton.select('LGD rank');
-    cy.wait(1000);
+
+    cy.intercept('POST' , '/gpf/api/v3/gene_weights/partitions').as('availability');
+    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+
     genotypeBrowserController.showTablePreview();
     genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
     
     page.dropdownButton.select('LGD score');
-    cy.wait(1000);
+
+    cy.intercept('POST' , '/gpf/api/v3/gene_weights/partitions').as('availability');
+    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+
     genotypeBrowserController.showTablePreview();
     genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
 
     page.dropdownButton.select('ExAC pRec');
-    cy.wait(1000);
+
+    cy.intercept('POST' , '/gpf/api/v3/gene_weights/partitions').as('availability');
+    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+
     genotypeBrowserController.showTablePreview();
     genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
 
     page.dropdownButton.select('ExAC pLI rank');
-    cy.wait(1000);
+
+    cy.intercept('POST' , '/gpf/api/v3/gene_weights/partitions').as('availability');
+    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+
     genotypeBrowserController.showTablePreview();
     genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
 
     page.dropdownButton.select('ExAC pLI');
-    cy.wait(1000);
+
+    cy.intercept('POST' , '/gpf/api/v3/gene_weights/partitions').as('availability');
+    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+
     genotypeBrowserController.showTablePreview();
     genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
     
     page.dropdownButton.select('ExAC pRec rank');
-    cy.wait(1000);
+
+    cy.intercept('POST' , '/gpf/api/v3/gene_weights/partitions').as('availability');
+    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+
     genotypeBrowserController.showTablePreview();
     genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
 
     page.dropdownButton.select('ExAC pRec');
-    cy.wait(1000);
+
+    cy.intercept('POST' , '/gpf/api/v3/gene_weights/partitions').as('availability');
+    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+
     genotypeBrowserController.showTablePreview();
     genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
   });
