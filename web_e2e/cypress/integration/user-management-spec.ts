@@ -136,6 +136,8 @@ describe('User management tests', () => {
     page.usersButton.click();
     page.userTableRemoveUserGroupButton.click();
     page.userTableRemoveUserGroupConfirmButton.click();
+    cy.intercept('GET', '/gpf/api/v3/users/streaming_search?search=test_email@email.com').as('searchQuery');
+    cy.wait('@searchQuery');
 
     page.usersTableRows.last()
       .should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
@@ -225,6 +227,8 @@ describe('User management tests', () => {
     page.usersButton.click();
     page.userTableRemoveUserGroupButton.click();
     page.userTableRemoveUserGroupConfirmButton.click();
+    cy.intercept('GET', '/gpf/api/v3/users/streaming_search?search=test_email@email.com').as('searchQuery');
+    cy.wait('@searchQuery');
 
     page.datasetsButton.click();
     page.datasetsTableRows.last().should('not.contain.text', 'test_email@email.com');
