@@ -18,10 +18,13 @@ from dae.utils.regions import Region
 
 logger = logging.getLogger(__name__)
 
+# TODO IVAN: not all parsers handle the gene_mapping properly!
 
 #
 # Exon
 #
+
+
 class Exon:
     def __init__(
         self,
@@ -667,6 +670,8 @@ class GeneModelsBase:
 
         for rec in records:
             gene = rec["#geneName"]
+            if gene_mapping:
+                gene = gene_mapping.get(gene, gene)
             tr_name = rec["name"]
             chrom = rec["chrom"]
             strand = rec["strand"]

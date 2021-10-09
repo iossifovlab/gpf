@@ -4,7 +4,14 @@ import pyarrow as pa
 
 from dae.variants.attributes import VariantType
 from dae.annotation.tools.annotator_base import Annotator
-from dae.genomic_resources.utils import aggregator_name_to_class
+
+# from dae.genomic_resources.utils import aggregator_name_to_class
+
+
+def aggregator_name_to_class(agg_name):
+    # TODO IVAN
+    raise Exception("THIS IS A STUB BY IVAN UNTILL I UNDERSTAND AND RESTORE")
+
 
 logger = logging.getLogger(__name__)
 

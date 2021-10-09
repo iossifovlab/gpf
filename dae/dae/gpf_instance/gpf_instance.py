@@ -29,11 +29,11 @@ from dae.configuration.schemas.autism_gene_profile import (
 )
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.autism_gene_profile.statistic import AGPStatistic
-from dae.genomic_resources.resource_db import GenomicResourceDB
+from dae.genomic_resources import build_genomic_resource_repository
 from dae.utils.helpers import isnan
 from dae.utils.dae_utils import cached, join_line
 
-
+build_genomic_resource_repository
 logger = logging.getLogger(__name__)
 
 
@@ -61,7 +61,7 @@ class GPFInstance(object):
         self.load_eagerly = load_eagerly
 
         if self.dae_config.genomic_resources:
-            self.genomic_resources_db = GenomicResourceDB(
+            self.genomic_resources_db = build_genomic_resource_repository(
                 self.dae_config.genomic_resources.repositories)
 
         if load_eagerly:

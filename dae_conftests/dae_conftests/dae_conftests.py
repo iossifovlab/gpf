@@ -44,7 +44,7 @@ from dae.gene.denovo_gene_set_collection_factory import \
     DenovoGeneSetCollectionFactory
 from dae.autism_gene_profile.statistic import AGPStatistic
 from dae.autism_gene_profile.db import AutismGeneProfileDB
-from dae.genomic_resources.resource_db import GenomicResourceDB
+from dae.genomic_resources import build_genomic_resource_repository
 
 
 logging.basicConfig(
@@ -879,9 +879,9 @@ def iossifov2014_impala(
 
     if reimport or \
             not impala_helpers.check_table(
-                    "impala_test_db", variant_table) or \
+                "impala_test_db", variant_table) or \
             not impala_helpers.check_table(
-                    "impala_test_db", pedigree_table):
+                "impala_test_db", pedigree_table):
 
         from dae.backends.impala.hdfs_helpers import HdfsHelpers
 
@@ -1185,7 +1185,7 @@ def get_score_config(fixture_dirname):
 def anno_grdb(fixture_dirname):
     test_grr_location = fixture_dirname("genomic_resources")
     repositories = [
-        {"id": "test_grr", "url": f"file://{test_grr_location}"}
+        {"id": "test_grr", "type": "url", "url": f"file://{test_grr_location}"}
     ]
 
-    return GenomicResourceDB(repositories)
+    return build_genomic_resource_repository(repositories)

@@ -1,38 +1,37 @@
 import logging
-from copy import deepcopy
 
 from dae.genome.gene_models import GeneModelsBase
-from dae.genomic_resources.resources import GenomicResource
-from dae.configuration.schemas.genomic_resources_database import \
-    gene_models_schema
-
+from .repository import GenomicResource
+from .repository import GenomicResourceRealRepo
 
 logger = logging.getLogger(__name__)
 
 
 class GeneModelsResource(GenomicResource, GeneModelsBase):
 
-    def __init__(self, config, repo):
-        GenomicResource.__init__(self, config, repo)
-        GeneModelsBase.__init__(self, config["id"])
-
-    @classmethod
-    def get_config_schema(cls):
-        schema = deepcopy(gene_models_schema)
-        return schema
+    def __init__(self, resourceId: str, version: tuple,
+                 repo: GenomicResourceRealRepo,
+                 config=None):
+        GenomicResource.__init__(self, resourceId, version, repo, config)
+        GeneModelsBase.__init__(self, resourceId)
 
     def open(self):
-        filename = self.get_config().filename
-        fileformat = self.get_config().format
-        gene_mapping_filename = self.get_config().gene_mapping
+        filename = self.get_config()["file"]
+        fileformat = self.get_config().get("format", None)
+        gene_mapping_filename = self.get_config().get("gene_mapping", None)
 
         logger.debug(f"loading gene models {filename} ({fileformat})")
         gene_mapping = None
         if gene_mapping_filename is not None:
-            with self.open_file(gene_mapping_filename) as infile:
+            with self.open_raw_file(gene_mapping_filename,
+                                    "rt", uncompress=True) as infile:
+                logger.debug(
+                    f"loading gene mapping from {gene_mapping_filename}")
                 gene_mapping = self._gene_mapping(infile)
+                logger.debug(
+                    f"loaded {len(gene_mapping)} gene mappnigs.")
 
-        with self.open_file(filename) as infile:
+        with self.open_raw_file(filename, 'rt', uncompress=True) as infile:
             if fileformat is None:
                 fileformat = self._infer_gene_model_parser(infile)
                 logger.debug(

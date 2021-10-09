@@ -1,378 +1,316 @@
-import os
-import gzip
-import yaml
-import io
+from __future__ import annotations
 
-from typing import Dict, List
-from glob import glob
-from subprocess import call
-import pathlib
+import re
 import logging
-
-import requests
-from urllib.parse import urlparse
-
-from dae.genomic_resources.resources_config import ResourcesConfigParser
-
-from dae.genomic_resources.resources import \
-    GenomicResourceBase, GenomicResource, GenomicResourceGroup
-from dae.genomic_resources.http_file import HTTPFile
-from dae.genomic_resources.utils import resource_type_to_class
+import yaml
+import abc
+import hashlib
 
 logger = logging.getLogger(__name__)
 
 
-def _create_genomic_resources_hierarchy(repo, parents_resource_iterator):
-    root_group = GenomicResourceGroup("", repo=repo)
+GR_CONF_FILE_NAME = "genomic_resource.yaml"
+GR_MANIFEST_FILE_NAME = ".MANIFEST"
+GRP_CONTENTS_FILE_NAME = ".CONTENTS"
 
-    for parents, child in parents_resource_iterator:
-        group_id = ""
-        current_group = root_group
-        for group_part in parents:
-            group_id = f"{group_id}/{group_part}" if group_id else group_part
+GR_ENCODING = 'utf-8'
 
-            group = current_group.get_resource(group_id, deep=False)
-            if group is None:
-                group = GenomicResourceGroup(group_id, repo=repo)
-                current_group.add_child(group)
-            assert isinstance(group, GenomicResourceGroup)
+_GR_ID_TOKEN_RE = re.compile('[a-zA-Z0-9._-]+')
 
-            current_group = group
 
-        resource_id = f"{group_id}/{child[0]}"
-        assert current_group.get_resource(resource_id, deep=False) is None
+def is_gr_id_token(token):
+    '''
+        Genomic Resource Id Token is a string with one or more letters,
+        numbers, '.', '_', or '-'. The function checks if the parameter
+        token is a Genomic REsource Id Token.
+    '''
+    return bool(_GR_ID_TOKEN_RE.fullmatch(token))
 
-        child = repo.create_resource(resource_id, child[1])
-        current_group.add_child(child)
 
-    return root_group
+_GR_ID_WITH_VERSION_TOKEN_RE = re.compile(
+    r'([a-zA-Z0-9._-]+)(?:\[([1-9]\d*(?:\.\d+)*)\])?')
 
 
-def _walk_genomic_resources_repository(repository_path):
-    root_path = pathlib.Path(repository_path).absolute()
-    root_dirname = str(root_path)
-    resource_files = glob(
-        os.path.join(root_path, "**", "genomic_resource.yaml"),
-        recursive=True
-    )
-
-    for resource_file in resource_files:
-        assert resource_file.startswith(root_dirname)
-        resource_path = resource_file[len(root_dirname) + 1:]
-        parts = resource_path.split(os.path.sep)
-        assert len(parts) >= 2
-
-        parents = parts[:-2]
-        child = parts[-2:]
-        assert len(child) == 2
-        child[1] = resource_file
-        yield tuple(parents), tuple(child)
-
-
-def _walk_genomic_repository_content(repo, content, parents=None):
-    if parents is None:
-        parents = []
-
-    id_part = content["id"].split("/")[-1]
-
-    if content["type"] == "resource":
-        path = os.path.join(*parents, id_part, "genomic_resource.yaml")
-        url = os.path.join(repo.get_url(), path)
-
-        yield tuple(parents), (id_part, url)
-    else:
-        assert content["type"] == "group"
-        for child in content["children"]:
-            child_parents = parents[:]
-            if id_part:
-                child_parents.append(id_part)
-            yield from _walk_genomic_repository_content(
-                repo, child, child_parents)
-
-
-def _create_resource_content_dict(resource: GenomicResourceBase):
-    section = dict()
-    section["id"] = resource.get_id()
-    if isinstance(resource, GenomicResourceGroup):
-        section["type"] = "group"
-        section["children"] = []
-        for child in resource.get_children():
-            child_section = _create_resource_content_dict(child)
-            section["children"].append(child_section)
-    else:
-        section["type"] = "resource"
-    return section
-
-
-def create_fs_genomic_resource_repository(repository_id, repository_path):
-    repo = FSGenomicResourcesRepo(repository_id, repository_path)
-
-    # walk filesystem for genomic resources
-    root_group = _create_genomic_resources_hierarchy(
-        repo,
-        _walk_genomic_resources_repository(repository_path))
-    assert root_group is not None
-
-    repo.set_root(root_group)
-    repo.build_repository_content()
-
-    for resource in root_group.get_genomic_resources():
-        repo.build_resource_manifest(resource.get_id())
-
-    return repo
-
-
-class GenomicResourcesRepo:
-    """
-    Represents a collection of genomic resources and genomic resource groups
-    accessible through a specified protocol.
-
-    At the moment the supported protocols are:
-    * filesystem
-    * HTTP protocol
-    """
-
-    def __init__(self, repository_id: str, url: str):
-        self.repository_id = repository_id
-        self.url = url
-
-        self.resources: Dict[str, GenomicResource] = dict()
-        self.root_group = None
-
-    def get_name(self):
-        return self.repository_id
-
-    def get_url(self):
-        return self.url
-
-    def _load_repository_content(self):
-        logger.info(f"loading repository content for {self.get_url()}")
-        content_url = "/".join(
-            [self.get_url(), "CONTENT.yaml"]
-        )
-        logger.info(f"loading from {content_url}")
-        file_contents = b""
-        for chunk_raw in self._stream_resource_file_internal(
-                content_url, None, None):
-            file_contents += chunk_raw
-        return yaml.safe_load(file_contents.decode("utf-8"))
-
-    def set_root(self, root_group):
-        self.root_group = root_group
-        for resource in self.root_group.get_genomic_resources():
-            self.resources[resource.get_id()] = resource
-
-    def load(self):
-        if self.root_group is not None:
-            raise ValueError(f"repository {self.repository_id} already loaded")
-
-        repo_content = self._load_repository_content()
-        root_group = _create_genomic_resources_hierarchy(
-            self,
-            _walk_genomic_repository_content(self, repo_content)
-        )
-        assert root_group is not None
-        self.set_root(root_group)
-
-    def reload(self):
-        self.resources: Dict[str, GenomicResource] = dict()
-        self.root_group = None
-        self.load()
-
-    def create_resource(self, resource_id, config_path):
-        config = ResourcesConfigParser.load_resource_config_from_stream(
-            self._stream_resource_file_internal(config_path, None, None)
-        )
-        assert config["id"] == resource_id, (config["id"], resource_id)
-        resource_class = resource_type_to_class(config["resource_type"])
-        resource = resource_class(config, repo=self)
-        return resource
-
-    def get_resource(self, resource_id: str) -> GenomicResource:
-        return self.resources.get(resource_id)
-
-    def _stream_resource_file_internal(self, file_uri, offset, size):
-        raise NotImplementedError
-
-    def stream_resource_file(
-            self, resource_id: str, filename: str,
-            offset: int = None, size: int = None):
-        """
-        Returns a file object related to a given genomic resource.
-        """
-        resource = self.get_resource(resource_id)
-        file_url = os.path.join(resource.get_url(), filename)
-        return self._stream_resource_file_internal(file_url, offset, size)
-
-    def open_file(self, resource_id: str, filename: str):
-        raise NotImplementedError
-
-    def get_file_urls(self, resource_id: str) -> List[str]:
-        resource = self.get_resource(resource_id)
-        return [
-            os.path.join(resource.get_url(), filename)
-            for filename in resource.get_manifest()
-        ]
-
-
-class FSGenomicResourcesRepo(GenomicResourcesRepo):
-    """
-    A genomic score repository on a local or remote filesystem.
-    """
-
-    def __init__(self, repository_id: str, url: str):
-        if url.startswith("file://"):
-            path = url
-        else:
-            path = pathlib.Path(url).absolute().as_uri()
-        super().__init__(repository_id, path)
-
-    def _stream_resource_file_internal(self, file_uri, offset, size):
-        # TODO Implement progress bar and interruptible download
-        abspath = urlparse(file_uri).path
-        logger.info(f"loading file: {file_uri} -> {abspath}")
-        with open(abspath, "rb") as f:
-            yield f.read(8192)
-
-    def open_file(self, resource_id: str, filename: str, mode=None):
-        resource = self.get_resource(resource_id)
-        file_url = os.path.join(resource.get_url(), filename)
-        filepath = urlparse(file_url).path
-        if filepath.endswith(".gz") or filepath.endswith(".bgz"):
-            if mode is None:
-                mode = "rt"
-            return gzip.open(filepath, mode)
-        else:
-            if mode is None:
-                mode = "r"
-            return open(filepath, mode)
-
-    def build_repository_content(self):
-        content = _create_resource_content_dict(self.root_group)
-        path = urlparse(self.get_url()).path
-        content_filepath = os.path.join(path, "CONTENT.yaml")
-
-        with open(content_filepath, "w") as out:
-            yaml.dump(
-                content, out, default_flow_style=False, sort_keys=False
-                )
-
-    def build_resource_manifest(self, resource_id):
-        logger.info(f"generating MANIFEST files for {resource_id}")
-
-        resource = self.get_resource(resource_id)
-        assert resource is not None
-        assert isinstance(resource, GenomicResource)
-
-        cwd = urlparse(resource.get_url()).path
-
-        if os.path.exists(manifest_path := os.path.join(cwd, "MANIFEST")):
-            manifest_mtime = os.path.getmtime(manifest_path)
-            for file in glob(f"{cwd}/**/*[!MANIFEST]", recursive=True):
-                if os.path.getmtime(os.path.join(cwd, file)) > manifest_mtime:
-                    break
-            else:
-                return  # manifest is up-to-date, skip recreating it
-
-        command = \
-            "find . -type f \\( ! -iname \"MANIFEST\" \\)  " \
-            "-exec sha256sum {} \\; | sed \"s|\\s\\./||\"" \
-            "> MANIFEST"
-
-        logger.info(f"going to execute <{command}> in wd <{cwd}>")
-        call(command, cwd=cwd, shell=True)
-
-
-class GenomicResourcesRepoCache(FSGenomicResourcesRepo):
-
-    def __init__(
-            self, remote_repository: GenomicResourcesRepo,
-            cache_location: str):
-
-        self.remote_repository = remote_repository
-        super(GenomicResourcesRepoCache, self).__init__(
-            remote_repository.repository_id,
-            cache_location)
-
-    def _do_cache(self, resource: GenomicResource):
-        cache_base_path = urlparse(self.get_url()).path
-        cache_path = os.path.join(cache_base_path, resource.get_id())
-        os.makedirs(cache_path, exist_ok=True)
-
-        def copy_file(filename: str):
-            output_path = os.path.join(cache_path, filename)
-            with open(output_path, "wb") as destination_file:
-                for chunk in resource.get_repo().stream_resource_file(
-                        resource.get_id(), filename):
-                    destination_file.write(chunk)
-
-        for file in resource.get_manifest().keys():
-            copy_file(file)
-
-        create_fs_genomic_resource_repository(
-            "cache", cache_base_path)
-
-        self.reload()
-
-    def cache_resource(self, resource_id: str) -> bool:
-        resource = self.remote_repository.get_resource(resource_id)
-
-        if resource is not None:
-            logger.info(
-                f"caching resource {resource_id} from "
-                f"{self.remote_repository.repository_id}")
-            self._do_cache(resource)
-            return True
-        else:
-            logger.warning(
-                f"resource {resource_id} not found in "
-                f"{self.remote_repository.repository_id}")
-            return False
-
-    def is_cached(self, resource_id: str) -> bool:
-        return self.resources.get(resource_id) is not None
-
-    def get_resource(self, resource_id: str) -> GenomicResource:
-        local_resource = self.resources.get(resource_id)
-        if local_resource is None:
-            if self.cache_resource(resource_id):
-                return self.resources.get(resource_id)
+def parse_gr_id_version_token(token):
+    '''
+        Genomic Resource Id Version Token is a Genomic Resource Id Token with
+        an optional version appened. If present, the version suffix has the
+        form "[3.3.2]". The default version is [0].
+        Returns None if s in not a Genomic Resource Id Version. Otherwise
+        returns token,version tupple
+    '''
+    match = _GR_ID_WITH_VERSION_TOKEN_RE.fullmatch(token)
+    if not match:
         return None
+    token = match[1]
+    versionS = match[2]
+    if versionS:
+        versionT = tuple(map(int, versionS.split(".")))
+    else:
+        versionT = (0,)
+    return token, versionT
 
 
-class HTTPGenomicResourcesRepo(GenomicResourcesRepo):
-    """
-    A genomic score repository on a local or remote filesystem.
-    """
+def version_tuple_to_suffix(versionT):
+    if versionT == (0,):
+        return ""
+    return "[" + ".".join(map(str, versionT)) + "]"
 
-    IGNORE_LIST = [
-        "Name",
-        "Last modified",
-        "Size",
-        "Description",
-        "Parent Directory",
-    ]
 
-    def __init__(self, repository_id: str, url: str):
-        super().__init__(repository_id, url)
+VERSION_CONSTRAINT_RE = re.compile(r'(>=|=)?(\d+(?:\.\d+)*)')
 
-    def _stream_resource_file_internal(self, file_uri, offset, size):
-        # TODO Implement progress bar and interruptible download
-        print("Providing: ", file_uri)
-        with requests.get(file_uri, stream=True) as response:
-            assert response.status_code == requests.codes.ok, \
-                response.status_code
-            for chunk in response.iter_content(chunk_size=8192):
-                yield chunk
 
-    def open_file(self, resource_id: str, filename: str, mode: str = None):
-        if mode and mode not in {"r", "rb"}:
-            raise ValueError(f"unexpected mode for HTTP resource file: {mode}")
-        if mode is None:
-            mode = "r"
-        resource = self.get_resource(resource_id)
-        file_url = os.path.join(resource.get_url(), filename)
-        if mode == "r":
-            return io.TextIOWrapper(HTTPFile(file_url))
+def is_version_constraint_satisfied(version_constraint, version):
+    if not version_constraint:
+        return True
+    match = VERSION_CONSTRAINT_RE.fullmatch(version_constraint)
+    if not match:
+        raise ValueError(f'Wrong version constrainted {version_constraint}')
+    op = match[1] if match[1] else '>='
+    constraintVersion = tuple(map(int, match[2].split(".")))
+    if op == '=':
+        return version == constraintVersion
+    if op == '>=':
+        return version >= constraintVersion
+    raise ValueError(
+        f'worng operation {op} in version constraint {version_constraint}')
+
+
+def find_genomic_resource_files_helper(contentDict, leaf_to_size_and_date,
+                                       pref=[]):
+    for name, content in contentDict.items():
+        if name[0] == '.':
+            continue
+        nxt = pref + [name]
+        if isinstance(content, dict):
+            yield from find_genomic_resource_files_helper(
+                content, leaf_to_size_and_date, nxt)
         else:
-            return HTTPFile(file_url)
+            sz, tm = leaf_to_size_and_date(content)
+            yield "/".join(nxt), sz, tm
+
+
+def find_genomic_resources_helper(content_dict, id_pref=[]):
+    n_resources = 0
+    unused_dirs = set([])
+    if GR_CONF_FILE_NAME in content_dict and \
+            not isinstance(content_dict[GR_CONF_FILE_NAME], dict):
+        yield "", (0,)
+        return
+    for name, content in content_dict.items():
+        if name[0] == '.':
+            continue
+        idvr = parse_gr_id_version_token(name)
+        if isinstance(content, dict) and idvr and \
+           GR_CONF_FILE_NAME in content and \
+           not isinstance(content[GR_CONF_FILE_NAME], dict):
+            GRIdToken, GRVersion = idvr
+            yield "/".join(id_pref + [GRIdToken]), GRVersion
+            n_resources += 1
+        else:
+            currId = id_pref + [name]
+            currIdS = "/".join(currId)
+            if not isinstance(content, dict):
+                logger.warning(f"The file {currIdS} is not used.")
+                continue
+            if not is_gr_id_token(name):
+                logger.warning(
+                    f"The directory {currIdS} has a name {name} that is not a "
+                    "valid Genomic Resoruce Id Token.")
+                continue
+            dirNResourceN = 0
+            for grId, grVr in find_genomic_resources_helper(content, currId):
+                yield grId, grVr
+                n_resources += 1
+                dirNResourceN += 1
+            if dirNResourceN == 0:
+                unused_dirs.add(currIdS)
+    if n_resources > 0:
+        for drId in unused_dirs:
+            logger.warning(f"The directory {drId} contains no resources.")
+
+
+class GenomicResource:
+    def __init__(self, resource_id, version, repo: GenomicResourceRealRepo,
+                 config=None):
+        self.id = resource_id
+        self.version = version
+        self.config = config
+        self.repo = repo
+
+    def get_id(self):
+        return self.id
+
+    def get_config(self):
+        return self.config
+
+    def get_version_str(self) -> str:
+        '''returns string of the form 3.1'''
+        return ".".join(map(str, self.version))
+
+    def get_genomic_resource_dir(self) -> str:
+        '''
+        returns a string of the form aa/bb/cc[3.2] for a genomic resource with
+        id aa/bb/cc and version 3.2.
+        If the version is 0 the string will be aa/bb/cc.
+        '''
+        return f"{self.id}{version_tuple_to_suffix(self.version)}"
+
+    def get_files(self):
+        '''
+        Returns a generator returning (filename,filesize,filetime) for each of
+        the files in the genomic resource.
+        Files and directories staring with "." are ignored.
+        '''
+        return self.repo.get_files(self)
+
+    def get_md5_sum(self, filename):
+        with self.open_raw_file(filename, "rb") as F:
+            md5_hash = hashlib.md5()
+            while d := F.read(8192):
+                md5_hash.update(d)
+        return md5_hash.hexdigest()
+
+    def build_manifest(self):
+        return [{"name": fn, "size": fs, "time": ft,
+                 "md5": self.get_md5_sum(fn)}
+                for fn, fs, ft in sorted(self.get_files())]
+
+    def update_manifest(self):
+        try:
+            currentManifest = self.load_manifest()
+            currentManifestD = {x['name']: x for x in currentManifest}
+            newManifest = []
+            for fn, fs, ft in sorted(self.get_files()):
+                md5 = None
+                if fn in currentManifestD:
+                    cmnF = currentManifestD[fn]
+                    if cmnF["size"] == fs and cmnF["time"] == ft:
+                        md5 = currentManifestD[fn]["md5"]
+                    else:
+                        print(f"Updating md5 sum for file {fn}"
+                              "for resource {self.id}")
+                else:
+                    print(f"Found a new file {fn} for resource {self.id}")
+                if not md5:
+                    md5 = self.get_md5_sum(fn)
+                newManifest.append(
+                    {"name": fn, "size": fs, "time": ft, "md5": md5})
+            if newManifest != currentManifest:
+                self.save_manifest(newManifest)
+        except Exception:
+            print(f"Building a new manifest for resource {self.id}")
+            manifest = self.build_manifest()
+            self.save_manifest(manifest)
+
+    def load_manifest(self):
+        return self.load_yaml(GR_MANIFEST_FILE_NAME)
+
+    def save_manifest(self, manifest):
+        with self.open_raw_file(GR_MANIFEST_FILE_NAME, "wt") as MOF:
+            yaml.dump(manifest, MOF)
+
+    def get_manifest(self):
+        try:
+            return self.load_manifest()
+        except Exception:
+            return self.build_manifest()
+
+    def load_yaml(self, filename):
+        return self.repo.load_yaml(self, filename)
+
+    def get_file_content(self, filename, uncompress=True):
+        return self.repo.get_file_content(self, filename, uncompress)
+
+    def open_raw_file(self, filename, mode=None, uncompress=False):
+        return self.repo.open_raw_file(self, filename, mode, uncompress)
+
+    def open_tabix_file(self, filename, index_filename=None):
+        return self.repo.open_tabix_file(self, filename, index_filename)
+
+    def update_stats(self):
+        pass
+
+
+_registered_genomic_resource_types = {"Basic": GenomicResource}
+
+
+def register_genomic_resource_type(name, constructor):
+    _registered_genomic_resource_types[name] = constructor
+
+
+class GenomicResourceRepo(abc.ABC):
+    def __init__(self):
+        pass
+
+    @abc.abstractmethod
+    def get_resource(self, resource_id, version_constraint=None,
+                     genomic_repository_id=None) -> GenomicResource:
+        '''
+            Returns one resource with id qual to resource_id. If not found,
+            None is returned.
+        '''
+        pass
+
+    @abc.abstractmethod
+    def get_all_resources(self):
+        '''
+        Returns a list of GenomicResource objects stored in the repository.
+        '''
+        pass
+
+
+class GenomicResourceRealRepo(GenomicResourceRepo):
+    def __init__(self, repo_id):
+        super().__init__()
+        self.id = repo_id
+
+    def build_genomic_resource(self, id, version):
+        grTemp = GenomicResource(id, version, self)
+        resourceConfig = grTemp.load_yaml(GR_CONF_FILE_NAME)
+        grClass = GenomicResource
+        if isinstance(resourceConfig, dict) and "type" in resourceConfig:
+            grClassType = resourceConfig["type"]
+            try:
+                grClass = _registered_genomic_resource_types[grClassType]
+            except KeyError:
+                raise Exception("Unknown genomic resource type")
+        return grClass(id, version, self, resourceConfig)
+
+    def get_resource(self, resource_id, version_constraint=None,
+                     genomic_repository_id=None) -> GenomicResource:
+        if genomic_repository_id and self.id != genomic_repository_id:
+            return None
+
+        matchingGRs = []
+        for gr in self.get_all_resources():
+            if gr.id != resource_id:
+                continue
+            if is_version_constraint_satisfied(version_constraint, gr.version):
+                matchingGRs.append(gr)
+        if not matchingGRs:
+            return None
+        return max(matchingGRs, key=lambda x: x.version)
+
+    def load_yaml(self, genomic_resource, filename):
+        return yaml.safe_load(
+            self.get_file_content(genomic_resource, filename, True))
+
+    def get_file_content(self, genomic_resource, filename, uncompress=True):
+        with self.open_raw_file(genomic_resource, filename, "rb",
+                                uncompress) as F:
+            return F.read()
+
+    @abc.abstractmethod
+    def get_files(self, genomicResource):
+        raise Exception("Should not be called!")
+
+    @abc.abstractmethod
+    def open_raw_file(self, genomic_resource, filename,
+                      mode=None, uncompress=False):
+        raise Exception("Should not be called!")
+
+    @abc.abstractmethod
+    def open_tabix_file(self, genomic_resource,  filename,
+                        index_filename=None):
+        raise Exception("Should not be called!")
