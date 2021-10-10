@@ -1,12 +1,6 @@
----
-id: hg19/GATK_ResourceBundle_5777_b37_phiX174/genome
+type: Genome 
 
-resource_type: genomic_sequence_resource.GenomicSequenceResource
-
-filename: chrAll.fa
-
-index_file:
-  filename: chrAll.fa.fai
+file: chrAll.fa
 
 chrom_prefix: ""
 

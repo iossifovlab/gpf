@@ -3,9 +3,9 @@ from .repository_factory import register_real_genomic_resource_repository_type
 from .repository_factory import build_genomic_resource_repository
 from .repository import GenomicResource
 
-from .positionscore import GenomicResourcePositionScores
-from .positionscore import GenomicResourceRefGenome
+from .genomic_sequence_resource import GenomicSequenceResource
 from .gene_models_resource import GeneModelsResource
+from .liftover_resource import LiftoverChainResource
 
 from .embeded_repository import GenomicResourceEmbededRepo
 from .url_repository import GenomicResourceURLRepo
@@ -14,9 +14,12 @@ from .dir_repository import GenomicResourceDirRepo
 __all__ = ["build_genomic_resource_repository", "GenomicResource",
            "GenomicResourcePositionScores", "GenomicResourceGeneModels"]
 
-register_genomic_resource_type("PositionScore", GenomicResourcePositionScores)
-register_genomic_resource_type("RefGenome", GenomicResourceRefGenome)
-register_genomic_resource_type("GeneModels", GeneModelsResource)
+
+register_genomic_resource_type(GenomicResource)
+register_genomic_resource_type(GeneModelsResource)
+register_genomic_resource_type(GenomicSequenceResource)
+register_genomic_resource_type(LiftoverChainResource)
+
 
 register_real_genomic_resource_repository_type(
     "url", GenomicResourceURLRepo)

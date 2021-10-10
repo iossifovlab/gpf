@@ -3,9 +3,9 @@ import os
 from dae.genome.genome_access import GenomicSequence
 
 
-def test_genomic_sequence_resource(test_grdb):
+def test_genomic_sequence_resource(genomic_resource_fixture_dir_repo):
 
-    res = test_grdb.get_resource(
+    res = genomic_resource_fixture_dir_repo.get_resource(
         "hg19/GATK_ResourceBundle_5777_b37_phiX174/genome")
     assert res is not None
     res.open()
@@ -31,9 +31,9 @@ def test_genomic_sequence_resource(test_grdb):
     res.close()
 
 
-def test_genomic_sequence_resource_http(test_http_grdb, resources_http_server):
+def test_genomic_sequence_resource_http(genomic_resource_fixture_http_repo):
 
-    res = test_http_grdb.get_resource(
+    res = genomic_resource_fixture_http_repo.get_resource(
         "hg19/GATK_ResourceBundle_5777_b37_phiX174/genome")
     assert res is not None
     res.open()

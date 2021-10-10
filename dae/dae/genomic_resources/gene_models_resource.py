@@ -15,6 +15,10 @@ class GeneModelsResource(GenomicResource, GeneModelsBase):
         GenomicResource.__init__(self, resourceId, version, repo, config)
         GeneModelsBase.__init__(self, resourceId)
 
+    @classmethod
+    def get_resource_type(clazz):
+        return "GeneModels"
+
     def open(self):
         filename = self.get_config()["file"]
         fileformat = self.get_config().get("format", None)

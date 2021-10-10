@@ -1,6 +1,12 @@
 from dae.genomic_resources.http_file import HTTPFile
 
 
+def test_ivan_explore_fixture_dir_name(fixture_dirname):
+    dr = fixture_dirname("genomic_resources")
+    assert dr
+    print("DDDDDDDDDDDD: ", dr)
+
+
 def test_http_file(resources_http_server):
     file_url = "http://localhost:16200/hg38/TESTCADD/genomic_resource.yaml"
     # file = HTTPFile(file_url)

@@ -1,12 +1,11 @@
 from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
-from dae.genomic_resources.positionscore import GenomicResourcePositionScores
 
 
 def test_pos_gr():
     repo = GenomicResourceEmbededRepo("b", {
         "genomic_resource.yaml": '''
             refGenome: hg38/bla_bla
-            type: PositionScore
+            ttype: PositionScore
             table:
                 file: data.txt''',
         "data.txt": '''
@@ -19,7 +18,7 @@ def test_pos_gr():
             2   3   8.14   ff'''
     })
     gr = repo.get_resource("")
-    assert isinstance(gr, GenomicResourcePositionScores)
+
     assert {fn for fn, _, _ in gr.get_files()} == {
         "genomic_resource.yaml", "data.txt"}
     # gr.fetch('1', 4, ['c1']) == 4.14

@@ -1,0 +1,12 @@
+- md5: e00929f659f77c5d04d0a881cf6f3033
+  name: GRCh38_full_analysis_set_plus_decoy_hla.fa
+  size: 2840225
+  time: 1632952362.1594825
+- md5: 2e3b716901f9da348a3ea6a424d54006
+  name: GRCh38_full_analysis_set_plus_decoy_hla.fa.fai
+  size: 50
+  time: 1632952362.1602206
+- md5: 4ea8f72b8e972d448551223937693a89
+  name: genomic_resource.yaml
+  size: 304
+  time: 1633796265.2080183

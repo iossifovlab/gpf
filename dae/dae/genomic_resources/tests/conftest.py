@@ -4,6 +4,68 @@ import time
 from subprocess import Popen, PIPE
 from http.client import HTTPConnection
 
+
+@pytest.fixture(scope="module")
+def resources_http_server(fixture_dirname, http_port):
+    server = Popen(
+        [
+            "python",
+            "-m", "RangeHTTPServer",
+            http_port,
+            "--bind", "localhost",
+            "--directory", fixture_dirname("genomic_resources"),
+        ],
+        stdout=PIPE,
+        encoding="utf-8",
+        universal_newlines=True
+    )
+    retries = 5
+    success = False
+    while retries > 0:
+        try:
+            conn = HTTPConnection(f"localhost:{http_port}")
+            conn.request("HEAD", "/")
+            response = conn.getresponse()
+            if response is not None:
+                success = True
+                yield server
+                break
+        except ConnectionRefusedError:
+            time.sleep(0.5)
+            retries -= 1
+
+    if not success:
+        raise RuntimeError("Failed to start local HTTP server")
+
+    server.terminate()
+    server.wait()
+
+
+@pytest.fixture(scope="session")
+def http_port():
+    return "16200"
+
+
+@pytest.fixture
+def genomic_resource_fixture_dir_repo(fixture_dirname):
+    from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
+    dr = fixture_dirname("genomic_resources")
+    return GenomicResourceDirRepo("genomic_resource_fixture_dir_repo", dr)
+
+
+@pytest.fixture
+def genomic_resource_fixture_http_repo(resources_http_server, http_port):
+    from dae.genomic_resources.url_repository import GenomicResourceURLRepo
+    url = f"http://localhost:{http_port}"
+    return GenomicResourceURLRepo("genomic_resource_fixture_url_repo", url)
+
+
+'''
+
+
+from subprocess import Popen, PIPE
+from http.client import HTTPConnection
+
 from box import Box
 
 from dae.configuration.gpf_config_parser import FrozenBox
@@ -73,18 +135,9 @@ def test_cached_grdb_config(fixture_dirname, temp_dirname_grdb):
     })
 
 
-@pytest.fixture
-def test_grdb(test_grdb_config):
-    grdb = GenomicResourceDB(
-        test_grdb_config["genomic_resource_repositories"])
-    assert len(grdb.repositories) == 1
-
-    return grdb
 
 
-@pytest.fixture(scope="session")
-def http_port():
-    return "16200"
+
 
 
 @pytest.fixture
@@ -109,49 +162,6 @@ def test_cached_grdb_http_config(temp_dirname_grdb, http_port):
     })
 
 
-@pytest.fixture
-def test_http_grdb(test_grdb_http_config):
-    grdb = GenomicResourceDB(
-        test_grdb_http_config["genomic_resource_repositories"])
-    assert len(grdb.repositories) == 1
-
-    return grdb
-
-
-@pytest.fixture(scope="module")
-def resources_http_server(fixture_dirname, http_port):
-    server = Popen(
-        [
-            "python",
-            "-m", "RangeHTTPServer",
-            http_port,
-            "--bind", "localhost",
-            "--directory", fixture_dirname("genomic_resources"),
-        ],
-        stdout=PIPE,
-        encoding="utf-8",
-        universal_newlines=True
-    )
-    retries = 5
-    success = False
-    while retries > 0:
-        try:
-            conn = HTTPConnection(f"localhost:{http_port}")
-            conn.request("HEAD", "/")
-            response = conn.getresponse()
-            if response is not None:
-                success = True
-                yield server
-                break
-        except ConnectionRefusedError:
-            time.sleep(0.5)
-            retries -= 1
-
-    if not success:
-        raise RuntimeError("Failed to start local HTTP server")
-
-    server.terminate()
-    server.wait()
 
 
 class FakeRepository(GenomicResourcesRepo):
@@ -164,3 +174,5 @@ class FakeRepository(GenomicResourcesRepo):
 def fake_repo():
     fake_repo = FakeRepository("fake_repo_id", "/repo/path")
     return fake_repo
+
+'''

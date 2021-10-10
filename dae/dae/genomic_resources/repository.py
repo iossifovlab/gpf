@@ -138,6 +138,10 @@ class GenomicResource:
         self.config = config
         self.repo = repo
 
+    @classmethod
+    def get_resource_type(clazz):
+        return "Basic"
+
     def get_id(self):
         return self.id
 
@@ -222,6 +226,9 @@ class GenomicResource:
     def get_file_content(self, filename, uncompress=True):
         return self.repo.get_file_content(self, filename, uncompress)
 
+    def get_file_str_content(self, filename, uncompress=True):
+        return self.get_file_content(filename, uncompress).decode(GR_ENCODING)
+
     def open_raw_file(self, filename, mode=None, uncompress=False):
         return self.repo.open_raw_file(self, filename, mode, uncompress)
 
@@ -232,11 +239,14 @@ class GenomicResource:
         pass
 
 
-_registered_genomic_resource_types = {"Basic": GenomicResource}
+_registered_genomic_resource_types = {}
 
 
-def register_genomic_resource_type(name, constructor):
-    _registered_genomic_resource_types[name] = constructor
+def register_genomic_resource_type(constructor):
+    tp = constructor.get_resource_type()
+    if tp in _registered_genomic_resource_types:
+        raise Exception(f"The resource {tp} is registered twice!")
+    _registered_genomic_resource_types[tp] = constructor
 
 
 class GenomicResourceRepo(abc.ABC):

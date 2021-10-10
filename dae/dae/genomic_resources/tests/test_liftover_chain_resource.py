@@ -1,5 +1,7 @@
-def test_liftover_chain_resource(anno_grdb):
-    chain_resource = anno_grdb.get_resource("hg38/hg38tohg19")
+def test_liftover_chain_resource(genomic_resource_fixture_dir_repo):
+    chain_resource = genomic_resource_fixture_dir_repo.get_resource(
+        "hg38/hg38tohg19")
+    assert chain_resource
     chain_resource.open()
 
     def check_coordinate(pos, expected_chrom, expected_pos, expected_strand):

@@ -24,5 +24,5 @@ def test_dir_repository(tmp_path):
     dir_repo.store_all_resources(src_repo)
 
     assert not (tmp_path / GRP_CONTENTS_FILE_NAME).is_file()
-    cli([str(tmp_path)])
+    cli(["index", str(tmp_path)])
     assert (tmp_path / GRP_CONTENTS_FILE_NAME).is_file()

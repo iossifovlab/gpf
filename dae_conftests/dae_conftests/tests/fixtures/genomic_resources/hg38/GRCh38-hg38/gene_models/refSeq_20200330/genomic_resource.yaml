@@ -1,6 +1,4 @@
-id: hg38/GRCh38-hg38/gene_models/refSeq_20200330
-
-resource_type: gene_models_resource.GeneModelsResource
+type: GeneModels 
 
 filename: refSeq_20200330.txt
 

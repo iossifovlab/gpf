@@ -1,11 +1,6 @@
----
-id: hg38/GRCh38-hg38/genome
-resource_type: genomic_sequence_resource.GenomicSequenceResource
+type: Genome 
 
-filename: GRCh38_full_analysis_set_plus_decoy_hla.fa
-
-index_file:
-  filename: GRCh38_full_analysis_set_plus_decoy_hla.fa.fai
+file: GRCh38_full_analysis_set_plus_decoy_hla.fa
 
 chrom_prefix: ""
 

@@ -74,7 +74,7 @@ class GenomicSequenceBase:
         ll = stop - start + 1
         x = 1 + ll // self._index[chrom]["seqLineLength"]
 
-        w = self._sequence.read(ll + x)
+        w = self._sequence.read(ll + x).decode('ascii')
         w = w.replace("\n", "")[:ll]
         return w.upper()
 
@@ -84,7 +84,7 @@ class GenomicSequenceBase:
         # Currently, if the position of the reference is within a PAR,
         # the whole variant is considered to be within an autosomal region
         def in_any_region(
-                  chrom: str, pos: int, regions: List[Region]) -> bool:
+                chrom: str, pos: int, regions: List[Region]) -> bool:
             return any(map(lambda reg: reg.isin(chrom, pos), regions))
 
         pars_regions = self.PARS.get(chrom, None)
@@ -113,7 +113,7 @@ class GenomicSequence(GenomicSequenceBase):
             content = index_file.read()
             self._load_genome_index(content)
 
-        self._sequence = open(self.genome_filename)
+        self._sequence = open(self.genome_filename, 'rb')
 
     def create_index_file(self):
         from pysam import faidx

@@ -1,42 +1,39 @@
-import os
+from dae.genomic_resources.repository import GenomicResourceRealRepo
+from dae.genomic_resources import GenomicResource
 import logging
-from urllib.parse import urlparse
 
 from pyliftover import LiftOver
-
-from dae.genomic_resources.resources import GenomicResource
-from dae.annotation.tools.utils import is_gzip
-from dae.configuration.schemas.genomic_resources_database import \
-    genomic_score_schema
 
 logger = logging.getLogger(__name__)
 
 
 class LiftoverChainResource(GenomicResource):
+
+    def __init__(self, resourceId: str, version: tuple,
+                 repo: GenomicResourceRealRepo,
+                 config=None):
+        super().__init__(resourceId, version, repo, config)
+        self.file = config["file"]
+        self.chrom_variant_coordinates = config.get(
+            'chrom_prefix.variant_coordinates', None)
+        self.chrom_target_coordinates = config.get(
+            'chrom_prefix.target_coordinates', None)
+
+    @classmethod
+    def get_resource_type(clazz):
+        return "LiftoverChain"
+
     def open(self):
-        assert self._config.filename
-        print("================")
-        print(self._config.filename)
-        if urlparse(self.get_url()).scheme == "file":
-            print("LOCAL FILESYSTEM")
-            print("LOCAL FILESYSTEM")
-            print("LOCAL FILESYSTEM")
-            print("LOCAL FILESYSTEM")
-            print("LOCAL FILESYSTEM")
-            scores_filename = f"{self.get_url()}/{self._config.filename}"
-            scores_filename = urlparse(scores_filename).path
-            assert os.path.exists(scores_filename), scores_filename
-            assert is_gzip(scores_filename)
-        self.chain_file = self.open_file(self._config.filename, "rb")
-        print(self.chain_file)
-        print(type(self.chain_file))
+        file = self.get_config()["file"]
+
+        self.chain_file = self.open_raw_file(file, "rb", uncompress=True)
         self.liftover = LiftOver(self.chain_file)
 
     def close(self):
         pass
 
     def convert_coordinate(self, chrom, pos):
-        variant_coordinates = self._config.chrom_prefix.variant_coordinates
+        variant_coordinates = self.chrom_variant_coordinates
         if variant_coordinates:
             if variant_coordinates.del_prefix:
                 del_prefix = variant_coordinates.del_prefix
@@ -57,7 +54,7 @@ class LiftoverChainResource(GenomicResource):
 
         coordinates = lo_coordinates[0]
 
-        target_coordinates = self._config.chrom_prefix.target_coordinates
+        target_coordinates = self.chrom_target_coordinates
         if target_coordinates:
             new_chrom = None
             if target_coordinates.del_prefix:
@@ -79,7 +76,3 @@ class LiftoverChainResource(GenomicResource):
                 )
 
         return coordinates
-
-    @classmethod
-    def get_config_schema(cls):
-        return genomic_score_schema
