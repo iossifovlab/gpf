@@ -1,33 +1,35 @@
-<div class="modal-header">
-  <h4 class="modal-title">Register</h4>
-  <button type="button" class="close" aria-label="Close" (click)="activeModal.dismiss('Cross click')">
-    <span aria-hidden="true">&times;</span>
-  </button>
-</div>
+<form>
+  <div class="modal-header">
+    <h4 class="modal-title">Register</h4>
+    <button type="button" class="close" aria-label="Close" (click)="activeModal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
 
-<div class="modal-body">
-  <div style="display: table; border-spacing: 15px;">
-    <div style="display: table-row;">
-      <label for="email-input" style="display: table-cell;">Email</label>
-      <div style="display: table-cell;">
-        <input ngbAutofocus id="email-input" class="form-control" [(ngModel)]="email" type="text">
+  <div class="modal-body">
+    <div style="display: table; border-spacing: 15px;">
+      <div style="display: table-row;">
+        <label for="email-input" style="display: table-cell;">Email:</label>
+        <div style="display: table-cell;">
+          <input ngbAutofocus id="email-input" class="form-control" [(ngModel)]="email" name="email" type="text">
+        </div>
+      </div>
+      <div style="display: table-row;">
+        <label for="name-input" style="display: table-cell;">Name:</label>
+        <div style="display: table-cell;">
+            <input id="name-input" class="form-control" [(ngModel)]="name" name="name" type="text">
+        </div>
       </div>
     </div>
-    <div style="display: table-row;">
-      <label for="name-input" style="display: table-cell;">Name</label>
-      <div style="display: table-cell;">
-          <input id="name-input" class="form-control" [(ngModel)]="name" type="text">
-      </div>
+    <div *ngIf="registerError" style="margin-bottom: 0px;" class="alert alert-danger">{{ registerError }}</div>
+
+    <div *ngIf="registerSuccess" style="margin-bottom: 0px;" class="alert alert-info" role="alert">
+      <span>An email has been sent to the given address</span>
     </div>
   </div>
-  <div *ngIf="registerError" style="margin-bottom: 0px;" class="alert alert-danger">{{ registerError }}</div>
 
-  <div *ngIf="registerSuccess" style="margin-bottom: 0px;" class="alert alert-info" role="alert">
-    <span>An email has been sent to the given address</span>
+  <div class="modal-footer">
+    <button type="submit" class="btn btn-primary" (click)="register()">Register</button>
+    <button type="button" class="btn btn-secondary" (click)="activeModal.close('Close click')">Close</button>
   </div>
-</div>
-
-<div class="modal-footer">
-  <button type="button" class="btn btn-secondary" (click)="register()">Register</button>
-  <button type="button" class="btn btn-secondary" (click)="activeModal.close('Close click')">Close</button>
-</div>
+</form>

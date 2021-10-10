@@ -1,0 +1,11 @@
+.modal-body > div {
+    height: 100%;
+    width: 100%;
+}
+
+.alert {
+    height: 100%;
+    width: 95%;
+    margin: auto;
+    text-align: center;
+}   
