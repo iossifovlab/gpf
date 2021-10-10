@@ -1,8 +1,10 @@
 import os
+import pytest
 
 from dae.genome.genome_access import GenomicSequence
 
 
+@pytest.mark.fixture_repo
 def test_genomic_sequence_resource(genomic_resource_fixture_dir_repo):
 
     res = genomic_resource_fixture_dir_repo.get_resource(
@@ -31,6 +33,7 @@ def test_genomic_sequence_resource(genomic_resource_fixture_dir_repo):
     res.close()
 
 
+@pytest.mark.fixture_repo
 def test_genomic_sequence_resource_http(genomic_resource_fixture_http_repo):
 
     res = genomic_resource_fixture_http_repo.get_resource(
@@ -57,6 +60,7 @@ def test_genomic_sequence_resource_http(genomic_resource_fixture_http_repo):
     assert seq == "ACCCTGACAGCCTCGTTCTAATACTATGAGGCCAAATACACTCACGTTCT"
 
 
+@pytest.mark.fixture_repo
 def test_filesystem_genomic_sequence(fixture_dirname):
     genome = GenomicSequence.load_genome(
         os.path.join(

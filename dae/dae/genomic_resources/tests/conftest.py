@@ -1,6 +1,5 @@
 import pytest
 import time
-
 from subprocess import Popen, PIPE
 from http.client import HTTPConnection
 

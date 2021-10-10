@@ -1,3 +1,7 @@
+import pytest
+
+
+@pytest.mark.fixture_repo
 def test_liftover_chain_resource(genomic_resource_fixture_dir_repo):
     chain_resource = genomic_resource_fixture_dir_repo.get_resource(
         "hg38/hg38tohg19")

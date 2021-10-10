@@ -1,6 +1,8 @@
-from dae.genomic_resources.embeded_repository import build_a_test_resource
-from dae.genomic_resources.embeded_repository import convert_to_tab_separated
+
 from dae.genomic_resources.gene_models_resource import GeneModelsResource
+from dae.genomic_resources.test_tools import build_a_test_resource
+from dae.genomic_resources.test_tools import convert_to_tab_separated
+
 
 # this content follows the 'refflat' gene model format
 gmmContent = '''

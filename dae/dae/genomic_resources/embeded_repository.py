@@ -9,16 +9,6 @@ import io
 import time
 
 
-def build_a_test_resource(content: str):
-    return GenomicResourceEmbededRepo("", content).get_resource("")
-
-
-def convert_to_tab_separated(s: str):
-    return "\n".join("\t".join(line.strip("\n\r").split())
-                     for line in s.split("\n")
-                     if line.strip("\r\n") != "")
-
-
 class GenomicResourceEmbededRepo(GenomicResourceRealRepo):
     def __init__(self, repo_id, content, **atts):
         super().__init__(repo_id)
