@@ -1,23 +1,23 @@
 <div class="pheno-tool-measure-block form-block">
   <div class="row">
     <div class="col-lg-6">
-      Proband Pheno Measure
-  	  <gpf-pheno-measure-selector [(selectedMeasure)]="measure" (measuresChange)="measuresUpdate($event)">
+      <span>Proband Pheno Measure</span>
+      <gpf-pheno-measure-selector [(selectedMeasure)]="measure" (measuresChange)="measuresUpdate($event)">
       </gpf-pheno-measure-selector>
 
       <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
     </div>
     <div class="col-lg-6">
-      Normalized by:
+      <span>Normalized by:</span>
       <div *ngFor="let reg of getRegressionNames()">
           <label style="user-select: none">
-              <input
-                #checkboxes
-                type="checkbox"
-                [checked]="isNormalizedBy(regressions[reg].measure_name)"
-                (change)="onNormalizeByChange(regressions[reg], $event);"
-                [disabled]="measure === null || (regressions[reg].instrument_name + '.' + regressions[reg].measure_name) === measure.name">
-              {{ regressions[reg].display_name }}
+            <input
+              #checkboxes
+              type="checkbox"
+              [checked]="isNormalizedBy(regressions[reg].measure_name)"
+              (change)="onNormalizeByChange(regressions[reg], $event);"
+              [disabled]="measure === null || (regressions[reg].instrument_name + '.' + regressions[reg].measure_name) === measure.name">
+            <span>{{ regressions[reg].display_name }}</span>
           </label>
       </div>
     </div>

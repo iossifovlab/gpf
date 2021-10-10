@@ -1,6 +1,6 @@
 <div class="panel" id="gene-symbols-panel">
     <textarea #textArea id="text-area" type="text" [ngModel]="geneSymbols.geneSymbols" (ngModelChange)="setGeneSymbols($event)" class="form-control"></textarea>
     <div [hidden]="geneSymbols.geneSymbols" class="alert alert-warning" role="alert">
-      Please insert at least one gene symbol.
+      <span>Please insert at least one gene symbol.</span>
     </div>
 </div>

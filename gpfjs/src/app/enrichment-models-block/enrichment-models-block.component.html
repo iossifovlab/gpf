@@ -2,16 +2,16 @@
   <div class="card">
       <ul ngbNav #nav="ngbNav" (navChange)="onNavChange()" class="navbar bg-light nav-pills" style="justify-content: flex-start">
         <div class="nav-title-custom">
-	        Enrichment Models
-	    </div>
+          <span>Enrichment Models</span>
+        </div>
         <li [ngbNavItem]="'default'">
-            <a ngbNavLink>Default</a>
+          <a ngbNavLink>Default</a>
         </li>
         <li [ngbNavItem]="'models'">
-            <a ngbNavLink>Select Models</a>
-            <ng-template ngbNavContent>
-              <gpf-enrichment-models [selectedDatasetId]="selectedDatasetId"></gpf-enrichment-models>
-            </ng-template>
+          <a ngbNavLink>Select Models</a>
+          <ng-template ngbNavContent>
+            <gpf-enrichment-models [selectedDatasetId]="selectedDatasetId"></gpf-enrichment-models>
+          </ng-template>
         </li>
       </ul>
       <div [ngbNavOutlet]="nav" class="card-block"></div>

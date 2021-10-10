@@ -3,7 +3,6 @@
     <select class="row-sm-3 form-control" [(ngModel)]="selectedGeneSetsCollection" required style="width: 100%" >
       <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{ collection.desc }}</option>
     </select>
-    <!-- style="text-align: left; border: 1px solid #dddddd; width: 100%" -->
     <ngb-accordion *ngIf="selectedGeneSetsCollection?.types" activeIds="{{defaultSelectedDenovoGeneSetId}}" destroyOnHide="false"
         #acc="ngbAccordion" class="gene-sets-types row-sm-3">
       <ngb-panel *ngFor="let type of selectedGeneSetsCollection.types" id="{{type.datasetId}}-{{type.personSetCollectionId}}-denovo-geneset">
@@ -17,7 +16,7 @@
             <label [attr.for]="(type.datasetId) + '-checkbox-' + (personSet.id)">
               <input type="checkbox" [attr.id]="(type.datasetId) + '-checkbox-' + (personSet.id)" [ngModel]="isSelectedGeneType(type.datasetId, type.personSetCollectionId, personSet.id)" (ngModelChange)="setSelectedGeneType(type.datasetId, type.personSetCollectionId, personSet.id, $event); onSearch()">
               <span class="pedigree-icon" [style.background-color]="personSet.color"></span>
-              {{ personSet.name }}
+              <span>{{ personSet.name }}</span>
             </label>
           </div>
         </ng-template>
@@ -41,8 +40,8 @@
       </div>
     </gpf-searchable-select>
     <div *ngIf="selectedGeneSet">
-      Count: {{ selectedGeneSet.count }}
-      (<a href="{{ getDownloadLink(selectedGeneSet) }}">Download</a>)
+      <span>Count: {{ selectedGeneSet.count }}</span>
+      <span>(<a href="{{ getDownloadLink(selectedGeneSet) }}">Download</a>)</span>
     </div>
 
     <gpf-errors-alert [errors]="errors"></gpf-errors-alert>

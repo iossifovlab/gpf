@@ -3,23 +3,23 @@
     <ul ngbNav #nav="ngbNav" (navChange)="onNavChange()" class="navbar bg-light nav-pills" style="justify-content: flex-start">
       <div class="nav-title-custom">Person filters</div>
       <li [ngbNavItem]="'allPersons'" id="all-persons">
-          <a ngbNavLink>All</a>
+        <a ngbNavLink>All</a>
       </li>
       <li [ngbNavItem]="'personIds'" id="person-ids">
-          <a ngbNavLink>Person Ids</a>
-          <ng-template ngbNavContent>
-              <gpf-person-ids></gpf-person-ids>
-          </ng-template>
+        <a ngbNavLink>Person Ids</a>
+        <ng-template ngbNavContent>
+          <gpf-person-ids></gpf-person-ids>
+        </ng-template>
       </li>
       <li [ngbNavItem]="'advanced'" *ngIf="showAdvancedButton" id="advanced">
-          <a ngbNavLink>Advanced</a>
-          <ng-template ngbNavContent>
-              <gpf-person-filters
-                [dataset]="dataset"
-                [filters]="dataset?.genotypeBrowserConfig?.personFilters"
-                [isFamilyFilters]="false"
-              ></gpf-person-filters>
-          </ng-template>
+        <a ngbNavLink>Advanced</a>
+        <ng-template ngbNavContent>
+          <gpf-person-filters
+            [dataset]="dataset"
+            [filters]="dataset?.genotypeBrowserConfig?.personFilters"
+            [isFamilyFilters]="false">
+          </gpf-person-filters>
+        </ng-template>
       </li>
     </ul>
     <div [ngbNavOutlet]="nav" class="card-block"></div>

@@ -1,22 +1,8 @@
-<svg:text x="50" y="-55">
-  {{ effectResults.effect }}
-</svg:text>
-
-<svg:text x="30" y="-35">
-  {{ effectResults.maleResult.positive.count }}
-</svg:text>
-
-<svg:text x="30" y="-15">
-  {{ effectResults.maleResult.negative.count }}
-</svg:text>
-
-<svg:text x="100" y="-35">
-  {{ effectResults.femaleResult.positive.count }}
-</svg:text>
-
-<svg:text x="100" y="-15">
-  {{ effectResults.femaleResult.negative.count }}
-</svg:text>
+<svg:text x="50" y="-55">{{ effectResults.effect }}</svg:text>
+<svg:text x="30" y="-35">{{ effectResults.maleResult.positive.count }}</svg:text>
+<svg:text x="30" y="-15">{{ effectResults.maleResult.negative.count }}</svg:text>
+<svg:text x="100" y="-35">{{ effectResults.femaleResult.positive.count }}</svg:text>
+<svg:text x="100" y="-15">{{ effectResults.femaleResult.negative.count }}</svg:text>
 
 <svg:g gpf-pheno-tool-results-chart-per-result
   transform="translate(30, 0)"
@@ -33,9 +19,7 @@
   [fillColor]="'blue'">
 </svg:g>
 
-<svg:text x="40" [attr.y]="maleEndY" text-anchor="middle">
-  {{ effectResults.maleResult.pValue | numberWithExp: "1.2-2" }}
-</svg:text>
+<svg:text x="40" [attr.y]="maleEndY" text-anchor="middle">{{ effectResults.maleResult.pValue | numberWithExp: "1.2-2" }}</svg:text>
 
 <svg:g gpf-pheno-tool-results-chart-per-result
   transform="translate(100, 0)"
@@ -52,6 +36,4 @@
   [fillColor]="'red'">
 </svg:g>
 
-<svg:text x="110" [attr.y]="femaleEndY" text-anchor="middle">
-  {{ effectResults.femaleResult.pValue | numberWithExp: "1.2-2" }}
-</svg:text>
+<svg:text x="110" [attr.y]="femaleEndY" text-anchor="middle">{{ effectResults.femaleResult.pValue | numberWithExp: "1.2-2" }}</svg:text>

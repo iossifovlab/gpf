@@ -1,9 +1,7 @@
 <div class="form-block">
   <div class="card">
     <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: flex-start">
-      <div class="nav-title-custom">
-        Management
-      </div>
+      <div class="nav-title-custom">Management</div>
 
       <li ngbNavItem id="users">
         <a ngbNavLink (click)="focusSearchBox()">Users</a>
@@ -32,7 +30,7 @@
                   data-toggle="dropdown"
                   aria-haspopup="true"
                   aria-expanded="false">
-                    Bulk edit
+                  <span>Bulk edit</span>
                 </button>
                 <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
                   <button

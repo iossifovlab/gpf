@@ -1,5 +1,5 @@
 <div class="card">
-  <div class="card-header card-title">{{title}}</div>
+  <span class="card-header card-title">{{title}}</span>
   <div class="card-block">
     <div class="btn-group btn-group-sm">
       <button (click)="selectAll()" class="btn btn-default">All</button>
@@ -7,13 +7,12 @@
     </div>
 
     <ng-container *ngFor="let item of items">
-        <div class="checkbox">
-          <label style="user-select: none">
-            <input type="checkbox"
-              [checked]="selectedItems.has(item)"
-              (change)="toggleItem(item)">
-            {{item | displayName: displayNames}}
-          </label>
-        </div>
+      <div class="checkbox">
+        <label style="user-select: none">
+          <input type="checkbox" [checked]="selectedItems.has(item)" (change)="toggleItem(item)">
+          <span style="margin-left: 5px;">{{item | displayName: displayNames}}</span>
+        </label>
+      </div>
     </ng-container>
+  </div>
 </div>

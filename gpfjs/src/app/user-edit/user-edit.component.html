@@ -35,9 +35,7 @@
 <div class="form-block">
   <div class="card">
     <div class="navbar navbar-toggleable-md navbar-light navbar-expand-lg bg-light">
-      <div class="form-block-title">
-        {{ edit ? 'Edit user' : 'Create user' }}
-      </div>
+      <div class="form-block-title">{{ edit ? 'Edit user' : 'Create user' }}</div>
     </div>
     <div class="col-12 mt-3"></div>
     <form *ngIf="(user$ | async) as user">
@@ -81,8 +79,7 @@
               <div style="pointer-events: none; opacity: 0.7; cursor: not-allowed;">
                 <ng-multiselect-dropdown
                   [settings]="dropdownSettings"
-                  [placeholder]="getDefaultGroups()"
-                >
+                  [placeholder]="getDefaultGroups()">
                 </ng-multiselect-dropdown>
              </div>
             </div>
@@ -98,8 +95,7 @@
               <gpf-user-groups-selector
                 [allInputtedGroups]="groups"
                 [userGroups]="user.groups"
-                [defaultGroups]="getDefaultGroups()"
-              >
+                [defaultGroups]="getDefaultGroups()">
               </gpf-user-groups-selector>
             </div>
           </div>
@@ -108,9 +104,7 @@
 
       <div *ngIf="createUserError" class="row justify-content-center" style="margin-bottom: 30px;">
         <div class="col-4">
-          <div style="margin-bottom: 0px;" class="alert alert-danger">
-            {{ createUserError }}
-          </div>
+          <div style="margin-bottom: 0px;" class="alert alert-danger">{{ createUserError }}</div>
         </div>
       </div>
 

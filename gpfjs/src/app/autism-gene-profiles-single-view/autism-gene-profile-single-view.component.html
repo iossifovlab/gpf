@@ -2,7 +2,7 @@
   <h2 style="margin-right: 15px">{{geneSymbol}}</h2>
 
   <div class="wrapper" style="margin-bottom: 18px">
-    <a class="link-external-page" [attr.href]="links.GeneBrowser" id="gene-browser-link" target="_blank" >View {{geneSymbol}} in the Gene Browser</a>
+    <a class="link-external-page" [attr.href]="links.GeneBrowser" id="gene-browser-link" target="_blank">View {{geneSymbol}} in the Gene Browser</a>
     <a *ngIf="links.SFARIgene !== ''" class="link-external-page" [attr.href]="links.SFARIgene" target="_blank">SFARI gene</a>
     <a class="link-external-page" [attr.href]="links.UCSC" target="_blank">UCSC genome browser</a>
     <a class="link-external-page" [attr.href]="links.GeneCards" target="_blank">GeneCards</a>
@@ -53,13 +53,13 @@
         <thead>
           <tr class="card-block">
             <th style="text-align: center; border-bottom: none;" [attr.colspan]="dataset.personSets.length + 1">
-              {{dataset.displayName}}
+              <span>{{dataset.displayName}}</span>
             </th>
           </tr>
           <tr class="card-block">
             <th style="text-align: center; border-bottom: none;">Variant Statistics</th>
             <th *ngFor="let personSet of dataset.personSets" style="text-align: center; border-bottom: none;">
-              {{personSet.displayName}} ({{personSet.childrenCount}})
+              <span>{{personSet.displayName}} ({{personSet.childrenCount}})</span>
             </th>
           </tr>
         </thead>
@@ -73,7 +73,8 @@
                   <a class="link-genotype-browser"
                     (click)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)"
                     (middleclick)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)">
-                    {{effectType.value.count}} ({{effectType.value.rate | number : '1.0-3'}})</a>
+                    <span>{{effectType.value.count}} ({{effectType.value.rate | number : '1.0-3'}})</span>
+                  </a>
                 </ng-container>
                 <ng-container *ngIf="effectType.value.count === 0">&ndash;</ng-container>
               </ng-container>

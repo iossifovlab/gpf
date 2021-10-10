@@ -12,16 +12,12 @@
   <div class="form-block">
     <div class="btn-toolbar justify-content-between" role="toolbar" aria-label="Toolbar with button groups">
       <div class="btn-group">
-        <button type="button" class="btn btn-md btn-primary" (click)="submitQuery()" [disabled]="disableQueryButtons">
-          Report
-        </button>
+        <button type="button" class="btn btn-md btn-primary" (click)="submitQuery()" [disabled]="disableQueryButtons">Report</button>
         <gpf-share-query-button [disabled]="disableQueryButtons" queryType="phenotool"></gpf-share-query-button>
         <gpf-save-query [disabled]="disableQueryButtons" queryType="phenotool"></gpf-save-query>
       </div>
       <div class="btn-group">
-        <form
-            (ngSubmit)="onDownload($event)"
-            action="{{ configService.baseUrl }}pheno_tool/download" method="post">
+        <form (ngSubmit)="onDownload($event)" action="{{ configService.baseUrl }}pheno_tool/download" method="post">
           <input name="queryData" type="hidden" />
           <button class="btn btn-md btn-primary" [disabled]="disableQueryButtons" type="submit">Download</button>
         </form>

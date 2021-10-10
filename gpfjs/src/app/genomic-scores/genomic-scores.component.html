@@ -4,7 +4,7 @@
         [(ngModel)]="selectedGenomicScores"
          required>
         <option *ngFor="let genomicScores of genomicScoresArray" [ngValue]="genomicScores">
-          {{ genomicScores.desc }}
+          <span>{{ genomicScores.desc }}</span>
         </option>
       </select>
     </div>

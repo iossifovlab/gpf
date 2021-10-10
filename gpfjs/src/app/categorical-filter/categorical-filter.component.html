@@ -1,13 +1,9 @@
-{{ categoricalFilterState?.id }}:
+<span>{{ categoricalFilterState?.id }}:</span>
 <div *ngIf="sourceDescription$ | async as sourceDescription" class="input-group">
   <select class="form-control" [(ngModel)]="selectedValue" required>
-    <option *ngFor="let value of valuesDomain" [ngValue]="value">
-      {{ value }}
-    </option>
+    <option *ngFor="let value of valuesDomain" [ngValue]="value">{{ value }}</option>
   </select>
   <span class="input-group-btn">
-    <button class="btn btn-secondary" (click)="clear()">
-      &times;
-    </button>
+    <button class="btn btn-secondary" (click)="clear()">&times;</button>
   </span>
 </div>

@@ -1,29 +1,20 @@
-<div class="description">
-  {{ phenoToolResults.description }}
-</div>
+<div class="description">{{ phenoToolResults.description }}</div>
 <svg [attr.width]="width" [attr.height]="height">
 
-  <text x="0" y="45">
-    with hit
-  </text>
-
-  <text x="0" y="65">
-    without hit
-  </text>
+  <text x="0" y="45">with hit</text>
+  <text x="0" y="65">without hit</text>
 
   <g #innerGroup transform="translate(30, 80)">
     <g *ngFor="let result of phenoToolResults.results; let i = index"
-        gpf-pheno-tool-results-chart-per-effect
-        [attr.transform]="'translate(' + (i * 250 + 100) +',0)'"
-        [effectResults]="result"
-        [yScale]="yScale">
+      gpf-pheno-tool-results-chart-per-effect
+      [attr.transform]="'translate(' + (i * 250 + 100) +',0)'"
+      [effectResults]="result"
+      [yScale]="yScale">
     </g>
   </g>
 
-
   <g transform="translate(800, 550)">
-    <rect x="0" y="0" width="150" height="65" fill-opacity="0"
-          stroke-width="2" stroke="black">
+    <rect x="0" y="0" width="150" height="65" fill-opacity="0" stroke-width="2" stroke="black">
     </rect>
     <circle cx="10" cy="10" r="3" stroke="blue" fill="blue" stroke-width="2">
     </circle>

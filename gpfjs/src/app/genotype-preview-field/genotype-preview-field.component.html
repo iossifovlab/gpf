@@ -1,12 +1,8 @@
 <div *ngIf="field == 'pedigree'" style="max-height: 93px; height: 93px; overflow: hidden;">
-    <gpf-pedigree-chart style="width: 100%; height: 100%; display: block;"
-      *ngIf="value"
-      [family]="value">
-    </gpf-pedigree-chart>
+  <gpf-pedigree-chart *ngIf="value" style="width: 100%; height: 100%; display: block;" [family]="value">
+  </gpf-pedigree-chart>
 </div>
- <span *ngIf="field == 'variant.location'">
-   <a target="_blank" href="{{getUCSCLink()}}">{{ formattedValue }}</a>
- </span>
- <span *ngIf="field != 'pedigree' && field != 'variant.location'">
-    {{ formattedValue }}
- </span>
+<span *ngIf="field == 'variant.location'">
+  <a target="_blank" href="{{getUCSCLink()}}">{{ formattedValue }}</a>
+</span>
+<span *ngIf="field != 'pedigree' && field != 'variant.location'">{{ formattedValue }}</span>

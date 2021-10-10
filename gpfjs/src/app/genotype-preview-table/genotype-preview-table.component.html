@@ -42,7 +42,7 @@
             <div *gpfTableLegend style="text-align: left; border: 1px solid #dddddd; padding: 5px">
               <div *ngFor="let legendItem of legend">
                 <span class="pedigree-icon" [style.background-color]="legendItem.color"></span>
-                {{ legendItem.name }}
+                <span>{{ legendItem.name }}</span>
               </div>
             </div>
         </gpf-table>
