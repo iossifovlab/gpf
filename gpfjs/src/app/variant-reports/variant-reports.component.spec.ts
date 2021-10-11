@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { VariantReportsComponent } from './variant-reports.component';
-import { PedigreeChartModule } from '../pedigree-chart/pedigree-chart.module'
+import { PedigreeChartModule } from '../pedigree-chart/pedigree-chart.module';
 import { FormsModule } from '@angular/forms';
 import { VariantReportsService } from './variant-reports.service';
 import { Observable, of } from 'rxjs';
