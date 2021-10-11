@@ -81,10 +81,12 @@ class ImpalaQueryRunner(QueryRunner):
                                 no_interest += 1
                                 if no_interest % 1_000 == 0:
                                     logger.warning(
-                                        f"nobody interested {no_interest}")
+                                        f"nobody interested {no_interest}; "
+                                        f"{self.query}")
                                 if no_interest > 5_000:
                                     logger.warning(
                                         f"nobody interested {no_interest}; "
+                                        f"{self.query}; "
                                         f"closing...")
                                     self.close()
                                     break
@@ -103,6 +105,7 @@ class ImpalaQueryRunner(QueryRunner):
             self._done = True
         elapsed = time.time() - started
         logger.debug(f"runner done in {elapsed:0.3f}sec")
+        logger.debug(f"connection pool: {self.connection_pool.status()}")
 
 
 class ImpalaVariants:
