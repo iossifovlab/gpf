@@ -3,12 +3,12 @@
     <ul ngbNav #nav="ngbNav" (navChange)="onNavChange()" class="navbar bg-light nav-pills" style="justify-content: flex-start">
       <div class="nav-title-custom">Regions</div>
       <li [ngbNavItem]="'allRegions'">
-          <a ngbNavLink>All</a>
+        <a ngbNavLink>All</a>
       </li>
       <li [ngbNavItem]="'regionsFilter'" id="regions-filter">
           <a ngbNavLink>Regions Filter</a>
           <ng-template ngbNavContent>
-              <gpf-regions-filter></gpf-regions-filter>
+            <gpf-regions-filter></gpf-regions-filter>
           </ng-template>
       </li>
     </ul>

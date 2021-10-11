@@ -11,7 +11,7 @@
       [hidden]="!caption" id="selected-value"
       class="clickable"
       (click)="searchBox.value = ''; onFocus($event)">
-      {{ caption }}
+      <span>{{ caption }}</span>
     </span>
     <button type="button" class="btn btn-secondary dropdown-toggle-split" ngbDropdownToggle>
       <span class="caret"></span>

@@ -4,3 +4,7 @@
   padding-top: 20px;
   font-size: 0.8em;
 }
+
+.button > input, gpf-share-query-button {
+  margin-right: 5px;
+}

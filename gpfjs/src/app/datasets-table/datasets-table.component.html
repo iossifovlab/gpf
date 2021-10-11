@@ -5,9 +5,7 @@
         <gpf-table-header caption="Dataset" field="dataset" [comparator]="datasetComparator"></gpf-table-header>
         <gpf-table-content>
           <gpf-table-subcontent>
-            <span *gpfTableCellContent="let data">
-              {{ data.dataset.name || data.dataset.id }}
-            </span>
+            <span *gpfTableCellContent="let data">{{ data.dataset.name || data.dataset.id }}</span>
           </gpf-table-subcontent>
         </gpf-table-content>
       </gpf-table-column>
@@ -17,7 +15,7 @@
           <gpf-table-subcontent>
             <span *gpfTableCellContent="let data">
               <div *ngFor="let group of data.groups">
-                {{ group }}
+                <span>{{ group }}</span>
                 <gpf-small-remove-button
                   (clicked)="removeGroup(data.dataset, group)"
                   [hide]="!isDefaultGroup(data.dataset, group)"
@@ -45,9 +43,7 @@
         <gpf-table-content>
           <gpf-table-subcontent>
             <div *gpfTableCellContent="let data" class="height-limited">
-              <div *ngFor="let user of data.users">
-                {{ user.email }}
-              </div>
+              <div *ngFor="let user of data.users">{{ user.email }}</div>
             </div>
           </gpf-table-subcontent>
         </gpf-table-content>

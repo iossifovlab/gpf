@@ -1,10 +1,12 @@
 .button {
     display: flex;
-  }
-  .btn-group > button, gpf-save-query-button {
-    display: inline-block;
-    margin-right: 5px;
-  }
+}
+
+.button > button, gpf-share-query-button {
+  display: inline-block;
+  margin-right: 5px;
+}
+
 
 .pheno-tool-results {
 	padding: 30px;

@@ -43,13 +43,11 @@
             <gpf-table-subcontent>
                 <span *gpfTableCellContent="let data">
                     <ng-container *ngIf="data.measureType === 'continuous'">
-                        [{{ +data.valuesDomain.slice(data.valuesDomain.indexOf('[') + 1, data.valuesDomain.indexOf(',')) | numberWithExp: "1.3-3" }},
-                        {{ +data.valuesDomain.slice(data.valuesDomain.indexOf(',') + 1, data.valuesDomain.indexOf(']')) | numberWithExp: "1.3-3" }}]
+                        <span>[{{ +data.valuesDomain.slice(data.valuesDomain.indexOf('[') + 1, data.valuesDomain.indexOf(',')) | numberWithExp: "1.3-3" }},</span>
+                        <span>{{ +data.valuesDomain.slice(data.valuesDomain.indexOf(',') + 1, data.valuesDomain.indexOf(']')) | numberWithExp: "1.3-3" }}]</span>
                     </ng-container>
                     <ng-container *ngIf="data.measureType === 'categorical' || data.measureType === 'raw' || data.measureType === 'ordinal'">
-                        <ng-container *ngFor="let value of data.valuesDomain.split(', ')">
-                            [{{ value }}]
-                        </ng-container>
+                        <ng-container *ngFor="let value of data.valuesDomain.split(', ')">[{{ value }}]</ng-container>
                     </ng-container>
                 </span>
             </gpf-table-subcontent>
@@ -68,22 +66,22 @@
         </gpf-table-column>
         <gpf-table-column>
             <gpf-table-header caption="{{getRegressionName(regressionId)}} PV">
-                <gpf-table-subheader caption="male" field="pvalueRegressionMale"></gpf-table-subheader>
-                <gpf-table-subheader caption="female" field="pvalueRegressionFemale"></gpf-table-subheader>
+                <gpf-table-subheader caption="male" field="pvalueRegressionMale" [comparator]="regressionCompare(regressionId, 'pvalueRegressionMale')"></gpf-table-subheader>
+                <gpf-table-subheader caption="female" field="pvalueRegressionFemale" [comparator]="regressionCompare(regressionId, 'pvalueRegressionFemale')"></gpf-table-subheader>
             </gpf-table-header>
             <gpf-table-content>
                 <gpf-table-subcontent>
                     <span class="expanded-span"
                      *gpfTableCellContent="let data"
                       [style.background-color]="getBackgroundColor(data.regressions.getReg(regressionId).pvalueRegressionMale)">
-                      {{ data.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp: "1.2-4" }}
+                      <span>{{ data.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp: "1.2-4" }}</span>
                     </span>
                 </gpf-table-subcontent>
                 <gpf-table-subcontent>
                     <span class="expanded-span"
                      *gpfTableCellContent="let data"
                       [style.background-color]="getBackgroundColor(data.regressions.getReg(regressionId).pvalueRegressionFemale)">
-                      {{ data.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp: "1.2-4" }}
+                      <span>{{ data.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp: "1.2-4" }}</span>
                     </span>
                 </gpf-table-subcontent>
             </gpf-table-content>

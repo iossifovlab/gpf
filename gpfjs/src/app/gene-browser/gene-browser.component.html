@@ -4,7 +4,7 @@
     <div class="card-block">
       <gpf-gene-symbol-with-search (inputClickEvent)="showResults = false"></gpf-gene-symbol-with-search>
       <div [hidden]="!showError" class="alert alert-danger" role="alert" style="display: inline-block; margin: 20px; margin-top: 0px; width: 45%">
-        No such gene found!
+        <span>No such gene found!</span>
       </div>
 
       <div style="padding: 0px 10px 10px 20px">
@@ -24,9 +24,7 @@
   <div *ngIf="showResults">
     <div #filters id="filters" class="row" style="margin-left: 0px">
       <div class="effect-card card filter">
-        <div class="card-header card-title">
-          Affected Status
-        </div>
+        <div class="card-header card-title">Affected Status</div>
         <div class="card-block">
           <div *ngFor="let affectedStatus of affectedStatusValues; let i=index" class="checkbox">
             <label class="filter-label">
@@ -37,7 +35,7 @@
                 [ngStyle]="{width: affectedStatus === 'Affected only' ? '70px' :
                                   affectedStatus === 'Unaffected only' ? '80px' :
                                   affectedStatus === 'Affected and unaffected' ? '100px': {}}">
-                {{ affectedStatus }}
+                <span>{{ affectedStatus }}</span>
               </span>
             </label>
           </div>
@@ -45,24 +43,20 @@
       </div>
 
       <div class="effect-card card filter" style="margin-left: 30px">
-        <div class="card-header card-title">
-          Effect Types
-        </div>
+        <div class="card-header card-title">Effect Types</div>
         <div class="card-block">
           <div *ngFor="let effect of effectTypeValues; let i=index" class="checkbox">
             <label class="filter-label">
               <input #effectTypeCheckbox checked type="checkbox" (change)="checkEffectType(effect, effectTypeCheckbox.checked)">
               <svg id={{effect}} width="20" height="20"></svg>
-              {{ effect }}
+              <span>{{ effect }}</span>
             </label>
           </div>
         </div>
       </div>
 
       <div class="effect-card card filter" style="margin-left: 30px">
-        <div class="card-header card-title">
-          Inheritance Types
-        </div>
+        <div class="card-header card-title">Inheritance Types</div>
         <div class="card-block">
           <div class="checkbox">
             <label class="filter-label">
@@ -82,15 +76,13 @@
       </div>
 
       <div class="effect-card card filter" style="margin-left: 30px">
-        <div class="card-header card-title">
-          Variant Types
-        </div>
+        <div class="card-header card-title">Variant Types</div>
         <div class="card-block">
           <div *ngFor="let variantType of variantTypeValues; let i=index" class="checkbox">
             <label class="filter-label">
               <input #variantTypeCheckbox checked type="checkbox"
                 (change)="checkVariantType(variantType, variantTypeCheckbox.checked)">
-              {{ variantType }}
+              <span>{{ variantType }}</span>
             </label>
           </div>
         </div>

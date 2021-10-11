@@ -15,3 +15,7 @@
   transform: translateY(-50%);
   padding-right: 15px; 
 }
+
+.checkbox-option {
+  margin-left: 5px;
+}

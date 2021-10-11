@@ -6,10 +6,10 @@
   <a class="link">{{ effectResult.all.overlapped | numberWithExp: "1.0-2" }}</a>
 </td>
 <td [style.background-color]="getBackgroundColor(effectResult.all)">
-  {{ effectResult.all.expected | numberWithExp: "1.2-2" }}
+  <span>{{ effectResult.all.expected | numberWithExp: "1.2-2" }}</span>
 </td>
 <td [style.background-color]="getBackgroundColor(effectResult.all)">
-  {{ effectResult.all.pvalue | numberWithExp: "1.2-4" }}
+  <span>{{ effectResult.all.pvalue | numberWithExp: "1.2-4" }}</span>
 </td> 
 <td class="link-td" (click)="goToQuery(effectResult.rec.countFilter)" (middleclick)="goToQuery(effectResult.rec.countFilter)" [style.background-color]="getBackgroundColor(effectResult.rec)">
   <a class="link">{{ effectResult.rec.count | numberWithExp: "1.0-2" }}</a>
@@ -18,10 +18,10 @@
   <a class="link">{{ effectResult.rec.overlapped | numberWithExp: "1.0-2" }}</a>
 </td>
 <td [style.background-color]="getBackgroundColor(effectResult.rec)">
-  {{ effectResult.rec.expected  | numberWithExp: "1.2-2" }}
+  <span>{{ effectResult.rec.expected  | numberWithExp: "1.2-2" }}</span>
 </td>
 <td [style.background-color]="getBackgroundColor(effectResult.rec)">
-  {{ effectResult.rec.pvalue | numberWithExp: "1.2-4" }}
+  <span>{{ effectResult.rec.pvalue | numberWithExp: "1.2-4" }}</span>
 </td>
 <td class="link-td" (click)="goToQuery(effectResult.male.countFilter)" (middleclick)="goToQuery(effectResult.male.countFilter)" [style.background-color]="getBackgroundColor(effectResult.male)">
   <a class="link">{{ effectResult.male.count | numberWithExp: "1.0-2" }}</a>
@@ -30,10 +30,10 @@
   <a class="link">{{ effectResult.male.overlapped | numberWithExp: "1.0-2" }}</a>
 </td>
 <td [style.background-color]="getBackgroundColor(effectResult.male)">
-  {{ effectResult.male.expected | numberWithExp: "1.2-2" }}
+  <span>{{ effectResult.male.expected | numberWithExp: "1.2-2" }}</span>
 </td>
 <td [style.background-color]="getBackgroundColor(effectResult.male)">
-  {{ effectResult.male.pvalue | numberWithExp: "1.2-4" }}
+  <span>{{ effectResult.male.pvalue | numberWithExp: "1.2-4" }}</span>
 </td>
 <td class="link-td" (click)="goToQuery(effectResult.female.countFilter)" (middleclick)="goToQuery(effectResult.female.countFilter)" [style.background-color]="getBackgroundColor(effectResult.female)">
   <a class="link">{{ effectResult.female.count | numberWithExp: "1.0-2" }}</a>
@@ -42,8 +42,8 @@
   <a class="link">{{ effectResult.female.overlapped | numberWithExp: "1.0-2" }}</a>
 </td>
 <td [style.background-color]="getBackgroundColor(effectResult.female)">
-  {{ effectResult.female.expected  | numberWithExp: "1.2-2" }}
+  <span>{{ effectResult.female.expected  | numberWithExp: "1.2-2" }}</span>
 </td>
 <td [style.background-color]="getBackgroundColor(effectResult.female)">
-  {{ effectResult.female.pvalue | numberWithExp: "1.2-4" }}
+  <span>{{ effectResult.female.pvalue | numberWithExp: "1.2-4" }}</span>
 </td>

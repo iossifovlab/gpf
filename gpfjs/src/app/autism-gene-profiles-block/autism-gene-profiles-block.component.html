@@ -1,11 +1,11 @@
 <div *ngIf="autismGeneToolConfig">
   <nav ngbNav #nav="ngbNav" class="navbar" style="justify-content: flex-start; padding: 0; padding-left: 25px;">
     <li class="nav-tabs" [ngbNavItem]="'autismGenesTool'" [destroyOnHide]="false">
-      <a ngbNavLink style="display: inline-flex; align-items: center;">
+      <a ngbNavLink style="display: inline-flex; align-items: center; padding-right: 9px;">
         <span>Autism genes tool</span>
-        <div style="display: inline-flex; margin-left: 15px;">
+        <div style="display: inline-flex; margin-left: 6px;">
           <div (mouseover)="showKeybinds = true" (mouseout)="showKeybinds = false" class="keybinds-icon">
-            <span style="position: relative;">?</span>
+            <span style="position: relative; top: 1px">?</span>
           </div>
           <button #columnFilteringButton
             (click)="openDropdown();"
@@ -46,7 +46,7 @@
 
     <li class="nav-tabs" *ngFor="let geneTab of geneTabs" [ngbNavItem]="geneTab" [destroyOnHide]="false">
       <a ngbNavLink>
-        {{geneTab}}
+        <span>{{geneTab}}</span>
         <span class="close position-relative pl-2 font-weight-light" (click)="closeTab($event, geneTab)">×</span>
       </a>
       <ng-template ngbNavContent>

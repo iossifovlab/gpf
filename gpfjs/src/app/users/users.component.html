@@ -9,7 +9,7 @@
   <div>
     <button #dropdownButton (click)="hideDropdown = !hideDropdown; focusEmailInput()"
       class="btn btn-secondary dropdown-toggle" id="login-dropdown-toggle-button" type="button" [disabled]="loading">
-      Login
+      <span>Login</span>
     </button>
     <div #dialog id="login-window" class="open row" [hidden]="hideDropdown">
       <form>
@@ -21,9 +21,7 @@
             </div>
           </div>
           <div *ngIf="!showPasswordField" class="col-12">
-            <button class="btn btn-primary" id="next-button" style="width: 100%" (click)="next(); focusPasswordInput()">
-              Next
-            </button>
+            <button class="btn btn-primary" id="next-button" style="width: 100%" (click)="next(); focusPasswordInput()">Next</button>
           </div>
         </div>
 
@@ -36,29 +34,23 @@
           </div>
           <div class="col-12">
             <button type="button" class="btn btn-light col-3" id="back-button" style="width: 100%; border: 1px solid #ced4da; opacity: 85%;" (click)="back()">
-              Back
+              <span>Back</span>
             </button>
-            <button type="submit" class="btn btn-primary col-8" id="login-button" style="width: 100%; float:right" (click)="login()" [class.spinner] = "passwordTimeout" [disabled] = "passwordTimeout">
-              Login
+            <button type="submit" class="btn btn-primary col-8" id="login-button" style="width: 100%; float: right" (click)="login()" [class.spinner]="passwordTimeout" [disabled]="passwordTimeout">
+              <span>Login</span>
             </button>
           </div>
         </div>
 
         <div class="row mt-1 justify-content-center">
           <div>
-              <button class="btn btn-sm btn-link" (click)="showRegister()">
-                Register
-              </button>
-              <button class="btn btn-sm btn-link" (click)="showForgotPassword()">
-                Forgotten password
-              </button>
+            <button class="btn btn-sm btn-link" (click)="showRegister()">Register</button>
+            <button class="btn btn-sm btn-link" (click)="showForgotPassword()">Forgotten password</button>
           </div>
         </div>
         <div *ngIf="errorMessage" class="row mt-1">
-            <div class="col-12">
-              <div class="alert alert-danger" style="text-align: center;">
-                {{errorMessage}}
-              </div>
+          <div class="col-12">
+            <div class="alert alert-danger" style="text-align: center;">{{errorMessage}}</div>
           </div>
         </div>
       </form>

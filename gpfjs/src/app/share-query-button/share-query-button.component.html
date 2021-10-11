@@ -1,11 +1,11 @@
-<div ngbDropdown class="d-inline-block" autoClose="outside" placement="top" (openChange)="saveIfOpened($event)"> 
-	<button class="btn btn-default" [disabled]="disabled" ngbDropdownToggle id="share-query-dropdown-button">Share query</button>
-	<div id="share-query-dropdown" ngbDropdownMenu aria-labelledby="share-query-dropdown-button" >
-		<div class="input-group" style="flex-wrap: nowrap;">
-			<input #link type="disabled" value="{{ createUrl() }}" (click)="$event.target.select()" width="400px" />
-			<span class="input-group-btn">
-				<button class="btn btn-secondary" (click)="copyToClipboard(link)">{{ buttonValue }}</button>
-			</span>
-		</div>
-	</div>
+<div ngbDropdown class="d-inline-block" autoClose="outside" placement="top" (openChange)="saveIfOpened($event)">
+  <button class="btn btn-default" [disabled]="disabled" ngbDropdownToggle id="share-query-dropdown-button">Share query</button>
+  <div id="share-query-dropdown" ngbDropdownMenu aria-labelledby="share-query-dropdown-button">
+    <div class="input-group" style="flex-wrap: nowrap;">
+      <input #link type="disabled" value="{{ createUrl() }}" (click)="$event.target.select()" width="400px"/>
+      <span class="input-group-btn">
+        <button class="btn btn-secondary" (click)="copyToClipboard(link)">{{ buttonValue }}</button>
+      </span>
+    </div>
+  </div>
 </div>

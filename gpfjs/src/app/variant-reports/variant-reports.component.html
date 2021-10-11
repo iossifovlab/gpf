@@ -16,9 +16,7 @@
   <div class="col-sm-3" class="variants-report-selector">
     <select id="families-by-number-dropdown-button" class="form-control" [(ngModel)]="this.currentPeopleCounter">
       <option value="" selected="selected"></option>
-      <option *ngFor="let peopleCounter of variantReport.peopleReport.peopleCounters" [ngValue]="peopleCounter">
-        {{ peopleCounter.groupName }}
-      </option>
+      <option *ngFor="let peopleCounter of variantReport.peopleReport.peopleCounters" [ngValue]="peopleCounter">{{ peopleCounter.groupName }}</option>
     </select>
   </div>
 
@@ -34,18 +32,12 @@
               </div>
             </th>
 
-            <th style="vertical-align: top; border-bottom: 1px" *ngFor="let row of this.currentPeopleCounter.rows">
-                {{ getPeopleSexValue(row) }}
-            </th>
+            <th style="vertical-align: top; border-bottom: 1px" *ngFor="let row of this.currentPeopleCounter.rows">{{ getPeopleSexValue(row) }}</th>
           </thead>
           <tbody>
             <tr *ngFor="let row of this.currentPeopleCounter.columns">
-              <th style="text-align: left; padding-left: 15px;">  
-                {{ row }}
-              </th>
-              <td *ngFor="let column of this.currentPeopleCounter.rows">
-                {{ this.currentPeopleCounter.getChildrenCounter(row, column).children }}
-              </td>
+              <th style="text-align: left; padding-left: 15px;">{{ row }}</th>
+              <td *ngFor="let column of this.currentPeopleCounter.rows">{{ this.currentPeopleCounter.getChildrenCounter(row, column).children }}</td>
             </tr>
 
           </tbody>
@@ -61,9 +53,7 @@
   <div class="col-sm-3" class="variants-report-selector">
     <select class="form-control" [(ngModel)]="this.currentPedigreeTable">
       <option value="" selected="selected"></option>
-      <option *ngFor="let pedigreeTable of pedigreeTables" [ngValue]="pedigreeTable">
-        {{ pedigreeTable.groupName }}
-      </option>
+      <option *ngFor="let pedigreeTable of pedigreeTables" [ngValue]="pedigreeTable">{{ pedigreeTable.groupName }}</option>
     </select>
   </div>
 
@@ -74,15 +64,15 @@
 
         <table class="table table-bordered table-hover table-sm table-centered">
           <colgroup>
-            <col />
-            <col />
-            <col />
-            <col />
+            <col/>
+            <col/>
+            <col/>
+            <col/>
           </colgroup>
 
           <tbody>
             <ng-template ngFor let-pedigreeGroup [ngForOf]="this.currentPedigreeTable.pedigrees">
-                <tr [gpf-common-reports-row] [pedigreeGroup]="pedigreeGroup"></tr>
+              <tr [gpf-common-reports-row] [pedigreeGroup]="pedigreeGroup"></tr>
             </ng-template>
           </tbody>
 
@@ -95,7 +85,7 @@
     [style.visibility] = "((familiesPedigreeTop - legendTop) < 0 && (familiesPedigreeBottom - legendTop) > 0) ? 'visible' : 'hidden'" #legend>
       <div *ngFor="let legendItem of this.currentPedigreeTable.legend.legendItems">
         <span class="pedigree-icon" [style.background-color]="legendItem.color"></span>
-        {{ legendItem.name }}
+        <span>{{ legendItem.name }}</span>
       </div>
     </div>
   </ng-template>
@@ -109,9 +99,7 @@
     <div class="col-sm-3" class="variants-report-selector">
       <select id="denovo-variants-dropdown-button" class="form-control" [(ngModel)]="this.currentDenovoReport">
         <option value="" selected="selected"></option>
-        <option *ngFor="let denovoReport of variantReport.denovoReport.tables" [ngValue]="denovoReport">
-          {{ denovoReport.groupName }}
-        </option>
+        <option *ngFor="let denovoReport of variantReport.denovoReport.tables" [ngValue]="denovoReport">{{ denovoReport.groupName }}</option>
       </select>
     </div>
 
@@ -131,15 +119,10 @@
                 [ngClass]="{ 'table-active' : (this.currentDenovoReport.effectGroups.indexOf(effectType) !== -1) }">
                 <th>{{ effectType }}</th>
                 <td *ngFor="let effectTypeData of getEffectTypeOrderByColumOrder(effectType, this.currentDenovoReport, this.currentDenovoReport.columns)">
-                  <div>
-                    {{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number }}
-                  </div>
-                  <div>
-                    ({{ effectTypeData.numberOfChildrenWithEvent }}, {{ effectTypeData.percentOfChildrenWithEvents | percent }})
-                  </div>
+                  <div>{{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number }}</div>
+                  <div>({{ effectTypeData.numberOfChildrenWithEvent }}, {{ effectTypeData.percentOfChildrenWithEvents | percent }})</div>
                 </td>
               </tr>
-
             </tbody>
           </table>
         </div>

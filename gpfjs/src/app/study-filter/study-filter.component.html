@@ -1,11 +1,7 @@
 <div class="row">
   <div class="col-sm-3">
-    <select class="form-control"
-    [(ngModel)]="selectedStudyNames"
-     required>
-      <option *ngFor="let study of this.studies" [ngValue]="study.studyId">
-        {{ study.studyName }}
-      </option>
+    <select class="form-control" [(ngModel)]="selectedStudyNames" required>
+      <option *ngFor="let study of this.studies" [ngValue]="study.studyId">{{ study.studyName }}</option>
     </select>
     <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
   </div>

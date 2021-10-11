@@ -3,7 +3,6 @@
   *ngIf="pedigreeSelectorSwitch()"
   class="pedigree-selector-card card">
 
-
   <div
     *ngIf="pedigreeSelectorSwitch() == 'single'"
     class="card-header card-title">{{ selectedCollection?.name }}</div>
@@ -19,13 +18,13 @@
           id="pedigree-dropdown-menu-button"
           data-toggle="dropdown"
           aria-haspopup="true"
-          aria-expanded="false">{{ selectedCollection?.name }}
+          aria-expanded="false">
+          <span>{{ selectedCollection?.name }}</span>
         </button>
         <div
           class="dropdown-menu"
           aria-labelledby="pedigree-dropdown-menu-button">
-          <a
-            *ngFor="let collection of collections; let i=index"
+          <a *ngFor="let collection of collections; let i=index"
             class="dropdown-item"
             (click)="selectPedigreeClicked(i, $event)"
             href="#">{{ collection.name }}</a>
@@ -46,14 +45,14 @@
     <div
       *ngFor="let selectorValue of selectedCollection?.domain"
       class="checkbox">
-      <label> <input
-        #checkbox
-        type="checkbox"
-        [checked]="selectedValues.has(selectorValue.id)"
-        (change)="pedigreeCheckValue(selectorValue, checkbox.checked)"> <span
-        class="pedigree-icon"
-        [style.background-color]="selectorValue.color"></span>
-        {{ selectorValue.name }}
+      <label>
+        <input
+          #checkbox
+          type="checkbox"
+          [checked]="selectedValues.has(selectorValue.id)"
+          (change)="pedigreeCheckValue(selectorValue, checkbox.checked)">
+          <span class="pedigree-icon" [style.background-color]="selectorValue.color"></span>
+          <span>{{ selectorValue.name }}</span>
       </label>
     </div>
   </div>
