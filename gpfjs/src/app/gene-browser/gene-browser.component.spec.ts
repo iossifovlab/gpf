@@ -26,7 +26,11 @@ class MockActivatedRoute {
 
 class MockDatasetsService {
   public getSelectedDataset(): object {
-    return { id: 'testDataset', geneBrowser: { domainMax: 100, frequencyColumn: 'testColumn'} };
+    return {
+      id: 'testDataset',
+      geneBrowser: { domainMax: 100, frequencyColumn: 'testColumn'},
+      personSetCollections: { getLegend: () => [] },
+    };
   }
 }
 
