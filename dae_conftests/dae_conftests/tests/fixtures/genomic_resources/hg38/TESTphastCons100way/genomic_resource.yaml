@@ -1,40 +1,45 @@
----
+type: PositionScores 
 
-id: hg38/TESTphastCons100way
+table:
+    file: TESTphastCons100way.bedGraph.gz
+    format: tabix
+    header: none 
 
-resource_type: score_resources.PositionScoreResource
+    chrom.index: 0
+    pos_begin.index: 1
+    pos_end.index: 2
 
-filename: TESTphastCons100way.bedGraph.gz
-format: tsv/bgz
-
-index_file:
-  filename: TESTphastCons100way.bedGraph.gz.tbi
-  format: tabix
-
-has_header: false
-
-type_aggregators:
-  - type: float
-    aggregator: dae.genomic_resource.aggregators.MaxAggregator
-  - type: int
-    aggregator: dae.genomic_resource.aggregators.MaxAggregator
-  - type: str
-    aggregator: dae.genomic_resource.aggregators.ConcatAggregator
-
-# defined by score_type
-chrom: 
-  index: 0
-pos_begin:
-  index: 1
-pos_end: 
-  index: 2
-
-# score values
 scores:
     - id: phastCons100way
       type: float
       desc: "phastCons100way"
+      position_aggregator: max
       index: 3
+
+# resrouce_default_type_aggregators:
+#     float.aggregator: max
+#     int.agregator: max
+#     str.agregator: concatenate
+# 
+# type_aggregators:
+#   - type: float
+#     aggregator: max 
+#   - type: int
+#     aggregator: max
+#   - type: str
+#     aggregator: concatente 
+
+
+# defined by score_type
+
+histogram:
+  bins_count: 10
+  x_min: 0
+  x_max: 1
+  x_scale: linear
+  y_scale: linear
+
+# score values
 
 default_annotation:
   attributes:
@@ -42,9 +47,3 @@ default_annotation:
       dest: phastCons100way
       aggregator:
         position: MaxAggregator
-      histogram:
-        bins_count: 10
-        x_min: 0
-        x_max: 1
-        x_scale: linear
-        y_scale: linear

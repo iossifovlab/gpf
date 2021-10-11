@@ -284,7 +284,11 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
             try:
                 grClass = _registered_genomic_resource_types[grClassType]
             except KeyError:
-                raise Exception("Unknown genomic resource type")
+                raise Exception(
+                    f"Unknown genomic resource type {grClassType}. The known "
+                    f"resource types are: " +
+                    ", ".join(sorted(
+                        _registered_genomic_resource_types.keys())))
         return grClass(id, version, self, resourceConfig)
 
     def get_resource(self, resource_id, version_constraint=None,

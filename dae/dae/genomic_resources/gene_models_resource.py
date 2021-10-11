@@ -35,7 +35,7 @@ class GeneModelsResource(GenomicResource, GeneModelsBase):
                 logger.debug(
                     f"loaded {len(gene_mapping)} gene mappnigs.")
 
-        with self.open_raw_file(filename, 'rt', uncompress=True) as infile:
+        with self.open_raw_file(filename, 'rb', uncompress=True) as infile:
             if fileformat is None:
                 fileformat = self._infer_gene_model_parser(infile)
                 logger.debug(
@@ -62,3 +62,4 @@ class GeneModelsResource(GenomicResource, GeneModelsBase):
                 msg = f"failed parsing gene model {self.get_id()}"
                 logger.error(msg)
                 raise ValueError(msg)
+        return True

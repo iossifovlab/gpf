@@ -51,8 +51,8 @@ class AnnotatorFactory:
         assert annotator == "effect_annotator"
 
         return EffectAnnotator(
-                gene_models=gene_models,
-                genome=genome)
+            gene_models=gene_models,
+            genome=genome)
 
     @classmethod
     def make_liftover_annotator(
@@ -84,9 +84,5 @@ def is_gzip(filename):
 
 
 def regions_intersect(b1: int, e1: int, b2: int, e2: int) -> bool:
-    return (
-        b2 <= b1 <= e2
-        or b2 <= e1 <= e2
-        or b1 <= b2 <= e1
-        or b1 <= e2 <= e1
-    )
+    assert b1 <= e1 and b2 <= e2
+    return b2 <= e1 and b1 <= e2

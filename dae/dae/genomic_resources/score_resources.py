@@ -1,151 +1,194 @@
-import os
+
 import sys
-import pysam
+import abc
 import logging
 
-from copy import deepcopy
-from typing import List
+from typing import List, Tuple
 
-from urllib.parse import urlparse
+from . import GenomicResource
+from .repository import GenomicResourceRealRepo
+from .genome_position_table import get_genome_position_table
 
-from dae.genomic_resources.resources import GenomicResource
-from dae.annotation.tools.utils import is_gzip, regions_intersect, \
-    handle_chrom_prefix
-from dae.configuration.schemas.genomic_resources_database import attr_schema, \
-    genomic_score_schema
+from .aggregators import MaxAggregator, MeanAggregator, ConcatAggregator
+
 
 logger = logging.getLogger(__name__)
 
 
 class ScoreLine:
-    def __init__(self, values: dict, score_ids: list):
+    def __init__(self, values: Tuple[str], scores: dict,
+                 special_columns: dict, has_end_column):
         self.values = values
-        self.scores = {
-            score_id: float(self.values[score_id])
-            if self.values[score_id] not in (None, "") else None
-            for score_id in score_ids
-        }
+        self.scores = scores
+        self.special_columns = special_columns
+        self.has_end_column = has_end_column
 
-    def __getitem__(self, key):
-        return self.values[key]
+    def get_score_value(self, id):
+        scr_def = self.scores[id]
 
-    def __setitem__(self, key, value):
-        self.values[key] = value
+        str_value = self.values[scr_def.col_index]
+        return scr_def.value_parser(str_value)
 
-    def __repr__(self):
-        return f"{self.chrom}:{self.pos_begin}-{self.pos_end} {self.scores}"
+    def get_special_column_value(self, id):
+        clmn_def = self.special_columns[id]
 
-    @property
-    def chrom(self):
-        return self.values["chrom"]
+        str_value = self.values[clmn_def.col_index]
+        return clmn_def.value_parser(str_value)
 
-    @property
-    def pos_begin(self):
-        return int(self.values["pos_begin"])
+    def get_chrom(self):
+        return self.get_special_column_value("chrom")
 
-    @property
-    def pos_end(self):
-        if "pos_end" not in self.values:
-            return self.pos_begin
-        return int(self.values["pos_end"])
+    def get_pos_begin(self):
+        return self.get_special_column_value("pos_begin")
+
+    def get_pos_end(self):
+        if self.has_end_column:
+            return self.get_special_column_value("pos_end")
+        else:
+            return self.get_pos_begin()
 
 
-class GenomicScoresResource(GenomicResource):
+AGGREGATOR_CLASS_DICT = {
+    "max": MaxAggregator,
+    "mean": MeanAggregator,
+    "concatenate": ConcatAggregator
+}
+
+
+def get_aggregator_class(aggregator):
+    return AGGREGATOR_CLASS_DICT[aggregator]
+
+
+class GenomicScoresResource(GenomicResource, abc.ABC):
+    def __init__(self, resourceId: str, version: tuple,
+                 repo: GenomicResourceRealRepo,
+                 config=None):
+        super().__init__(resourceId, version, repo, config)
 
     LONG_JUMP_THRESHOLD = 5000
     ACCESS_SWITCH_THRESHOLD = 1500
 
     def open(self):
-        scores_filename = f"{self.get_url()}/{self._config.filename}"
-        self.filename = scores_filename  # Kept for legacy try catch code
-        index_filename = f"{self.get_url()}/{self._config.index_file.filename}"
-        if urlparse(self.get_url()).scheme == "file":
-            scores_filename = urlparse(scores_filename).path
-            index_filename = urlparse(index_filename).path
-            assert os.path.exists(scores_filename), scores_filename
-            assert os.path.exists(index_filename), index_filename
-            assert is_gzip(scores_filename)
-        self.infile = self.tabix_access(scores_filename, index_filename)
-        self.direct_infile = self.tabix_access(scores_filename, index_filename)
-        self.separator = "\t" if self._config.separator is None \
-            else self._config.separator
+        self.infile = get_genome_position_table(
+            self, self.get_config()['table'], 'chrom', 'pos_begin')
+        self.direct_infile = get_genome_position_table(
+            self, self.get_config()['table'], 'chrom', 'pos_begin')
+
         self.buffer = []
         self.last_pos = 0
 
-        file_columns = {rc: self._config[rc] for rc in self.required_columns()}
-        file_columns.update({
-            sc.id: sc for sc in self._config.scores
-        })
+        # load score configuraton
+        self.scores = {}
+        for score_conf in self.get_config()['scores']:
+            class ScoreDef:
+                pass
+            scr_def = ScoreDef()
 
-        contig_name = self.infile.contigs[-1]
-        self._has_chrom_prefix = contig_name.startswith("chr")
-        self._lines_iterator = map(
-            self._parse_line, self.infile.fetch(parser=pysam.asTuple())
-        )
+            scr_def.id = score_conf["id"]
 
-        if self._config.has_header:
-            header = self._get_header()
-            col_indexes = dict()
-            for col_name, desc in file_columns.items():
-                if desc is not None:
-                    col_indexes[col_name] = header.index(desc.name)
-        else:
-            col_indexes = {
-                k: file_columns[k].index for k in file_columns.keys()
+            if "index" in score_conf:
+                scr_def.col_index = int(score_conf["index"])
+            elif "name" in score_conf:
+                scr_def.col_index = self.infile.get_column_names().index(
+                    score_conf["name"])
+            else:
+                raise Exception(
+                    "The score configuration must have a column specified")
+
+            scr_def.type = score_conf.get(
+                "type", self.get_config().get("default.score.type", "float"))
+
+            type_parsers = {
+                "str": str,
+                "float": float,
+                "int": int
             }
+            scr_def.value_parser = type_parsers[scr_def.type]
 
-        self.col_indexes = col_indexes
+            default_type_aggregators = {
+                "float": "mean", "int": "mean", "str": "concatenate"}
+            scr_def.aggregator_name = score_conf.get(
+                "position_aggregator",
+                self.get_config().get(scr_def.type + ".aggregator",
+                                      default_type_aggregators[scr_def.type]))
+
+            scr_def.description = score_conf.get("description", None)
+            self.scores[scr_def.id] = scr_def
+
+        self.has_pos_end = True
+        try:
+            self.infile.get_special_column_index("pos_end")
+        except Exception:
+            self.has_pos_end = False
+
+        special_clmns = {"chrom": str, "pos_begin": int}
+        if self.has_pos_end:
+            special_clmns["pos_end"] = int
+        special_clmns.update(self.get_extra_special_columns())
+
+        self.special_columns = {}
+        for key, parser in special_clmns.items():
+            class SpecialDef:
+                pass
+            spec_def = SpecialDef()
+            spec_def.key = key
+            spec_def.col_index = self.infile.get_special_column_index(key)
+            spec_def.value_parser = parser
+            self.special_columns[key] = spec_def
+
+        self._has_chrom_prefix = self.infile.get_chromosomes(
+        )[-1].startswith("chr")
+        self._lines_iterator = map(self._parse_line,
+                                   self.infile.get_all_records())
+        return True
 
     def close(self):
         self.infile.close()
         self.direct_infile.close()
 
-    @classmethod
-    def required_columns(cls):
-        raise NotImplementedError
+    def get_extra_special_columns(self):
+        return {}
 
-    @classmethod
-    def get_config_schema(cls):
-        cols = cls.required_columns()
-        attributes_schemas = {
-            attr_name: attr_schema for attr_name in cols
-        }
-        schema = deepcopy(genomic_score_schema)
-        schema.update(attributes_schemas)
-        return schema
+    def _line_to_begin_end(self, line):
+        begin = line.get_pos_begin()
+        end = line.get_pos_end()
+        if end < begin:
+            raise Exception(f"The resource line {line.values} has a regions "
+                            f" with end {end} smaller that the "
+                            f"begining {end}.")
+        return begin, end
 
     @property
     def _buffer_chrom(self):
         if len(self.buffer) == 0:
             return None
 
-        return self.buffer[0].chrom
+        return self.buffer[0].get_chrom()
 
     @property
     def _buffer_pos_begin(self):
         if len(self.buffer) == 0:
             return -1
-        return self.buffer[0].pos_begin
+        return self.buffer[0].get_pos_begin()
 
     @property
     def _buffer_pos_end(self):
         if len(self.buffer) == 0:
             return -1
-        return self.buffer[0].pos_end
+        return self.buffer[0].get_pos_end()
 
     def _get_header(self):
-        return self.infile.header[-1].strip("#").split(self.separator)
+        return self.infile.get_column_names()
 
     def _parse_line(self, line):
-        return ScoreLine({
-            col: line[idx] for col, idx in self.col_indexes.items()
-        }, self.get_all_scores())
+        return ScoreLine(line, self.scores, self.special_columns,
+                         self.has_pos_end)
 
     def _purge_buffer(self, chrom, pos_begin, pos_end):
         # purge start of line buffer
         while len(self.buffer) > 0:
             line = self.buffer[0]
-            if line.chrom == chrom and line.pos_end >= pos_begin:
+            if line.get_chrom() == chrom and line.get_pos_end() >= pos_begin:
                 break
             self.buffer.pop(0)
 
@@ -157,7 +200,7 @@ class GenomicScoresResource(GenomicResource):
 
         line = None
         for line in self._lines_iterator:
-            if line.pos_end >= pos_begin:
+            if line.get_pos_end() >= pos_begin:
                 break
 
         if not line:
@@ -166,10 +209,10 @@ class GenomicScoresResource(GenomicResource):
         self.buffer.append(line)
 
         for line in self._lines_iterator:
-            assert line.chrom == self._buffer_chrom, \
-                (line.chrom, self._buffer_chrom)
+            assert line.get_chrom() == self._buffer_chrom, \
+                (line.get_chrom(), self._buffer_chrom)
             self.buffer.append(line)
-            if line.pos_end > pos_end:
+            if line.get_pos_end() > pos_end:
                 break
 
     def _fetch_lines(self, chrom, pos_begin, pos_end):
@@ -179,15 +222,15 @@ class GenomicScoresResource(GenomicResource):
         return self._fetch_sequential(chrom, pos_begin, pos_end)
 
     def _fetch_sequential(self, chrom, pos_begin, pos_end):
+        if pos_end < pos_begin:
+            raise ValueError("pos_end must be large or equal to pos_begin.")
         if (
             chrom != self._buffer_chrom
             or pos_begin < self._buffer_pos_begin
             or (pos_begin - self._buffer_pos_end) > self.LONG_JUMP_THRESHOLD
         ):
             self.buffer = list()
-            lines = self.infile.fetch(
-                f"{chrom}:{pos_begin}", parser=pysam.asTuple()
-            )
+            lines = self.infile.get_records_in_region(chrom, pos_begin, None)
             self._lines_iterator = map(
                 self._parse_line,
                 lines
@@ -203,10 +246,14 @@ class GenomicScoresResource(GenomicResource):
     def _select_lines(self, chrom, pos_begin, pos_end):
         result = []
         for line in self.buffer:
-            if line.chrom != chrom:
+            if line.get_chrom() != chrom:
                 continue
+
+            def regions_intersect(b1: int, e1: int, b2: int, e2: int) -> bool:
+                assert b1 <= e1 and b2 <= e2
+                return b2 <= e1 and b1 <= e2
             if regions_intersect(
-                pos_begin, pos_end, line.pos_begin, line.pos_end
+                pos_begin, pos_end, line.get_pos_begin(), line.get_pos_end()
             ):
                 result.append(line)
         return result
@@ -214,9 +261,8 @@ class GenomicScoresResource(GenomicResource):
     def _fetch_direct(self, chrom, pos_begin, pos_end):
         try:
             result = []
-            for line in self.direct_infile.fetch(
-                str(chrom), pos_begin - 1, pos_end, parser=pysam.asTuple()
-            ):
+            for line in self.direct_infile.get_records_in_region(
+                    chrom, pos_begin, pos_end):
                 result.append(self._parse_line(line))
             return result
         except ValueError as ex:
@@ -229,88 +275,105 @@ class GenomicScoresResource(GenomicResource):
             return []
 
     def get_all_chromosomes(self):
-        return self.infile.contigs
+        return self.infile.get_chromosomes()
 
     def get_all_scores(self):
-        return [s.id for s in self._config.scores]
-
-    def get_score_config(self, score_id):
-        for config in self._config.scores:
-            if config.id == score_id:
-                return config
-
-    def get_default_scores(self):
-        return [s.source for s in self._config.default_annotation.attributes]
-
-    def get_default_annotation(self):
-        return self._config.default_annotation
-
-    def get_score_default_annotation(self, score_id):
-        for conf in self._config.default_annotation.attributes:
-            if conf.source == score_id:
-                return conf
-        return None
+        return list(self.scores)
 
 
 class PositionScoreResource(GenomicScoresResource):
+    def __init__(self, resourceId: str, version: tuple,
+                 repo: GenomicResourceRealRepo,
+                 config=None):
+        super().__init__(resourceId, version, repo, config)
 
     @classmethod
-    def required_columns(cls):
-        return ("chrom", "pos_begin", "pos_end")
+    def get_resource_type(clazz):
+        return "PositionScores"
+
+    def get_extra_special_columns(self):
+        self.has_pos_end = True
+        try:
+            self.infile.get_special_column_index("pos_end")
+        except Exception:
+            self.has_pos_end = False
+
+        if self.has_pos_end:
+            return ({"chrom": str, "pos_begin": int, "pos_end": int})
+        else:
+            return ({"chrom": str, "pos_begin": int})
 
     def fetch_scores(
         self, chrom: str, position: int, scores: List[str] = None
     ):
-        chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
-        assert chrom in self.get_all_chromosomes()
+        if chrom not in self.get_all_chromosomes():
+            raise ValueError(
+                f"{chrom} is not among the available chromosomes.")
 
         line = self._fetch_lines(chrom, position, position)
         if not line:
             return None
 
-        result = dict()
-
-        for col, val in line[0].scores.items():
-            if scores is None or col in scores:
-                result[col] = val
-
-        return result
+        if len(line) != 1:
+            raise Exception(f"The resource {self.get_resource_it()} has "
+                            f"more than one ({len(line)}) lines for position "
+                            f"{chrom}:{position}")
+        line = line[0]
+        if not scores:
+            scores = self.get_all_scores()
+        return {scr: line.get_score_value(scr) for scr in scores}
 
     def fetch_scores_agg(
-        self, chrom: str, pos_begin: int, pos_end: int, scores_aggregators
+        self, chrom: str, pos_begin: int, pos_end: int,
+        scores: List[str] = None, non_default_aggregators={}
     ):
-        chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
-        assert chrom in self.get_all_chromosomes()
+        '''
+        # Case 1:
+        #    res.fetch_scores_agg("1", 10, 20) -->
+        #       all score with default aggregators
+        # Case 2:
+        #    res.fetch_scores_agg("1", 10, 20,
+        #                         non_default_aggregators={"bla":"max"}) -->
+        #       all score with default aggregators but 'bla' should use 'max'
+        '''
+        if chrom not in self.get_all_chromosomes():
+            raise ValueError(
+                f"{chrom} is not among the available chromosomes.")
+
         score_lines = self._fetch_lines(chrom, pos_begin, pos_end)
         logger.debug(f"score lines found: {score_lines}")
 
-        aggregators = {
-            score_id: aggregator_type()
-            for score_id, aggregator_type
-            in scores_aggregators.items()
-        }
+        scores = scores if scores else self.get_all_scores()
+        aggregators = {}
+        for scr_id in scores:
+            scr_def = self.scores[scr_id]
+            aggregator_name = non_default_aggregators.get(
+                scr_id, scr_def.aggregator_name)
+            aggregators[scr_id] = get_aggregator_class(aggregator_name)()
 
         for line in score_lines:
             logger.debug(
-                f"pos_end: {pos_end}; line.pos_end: {line.pos_end}; "
-                f"pos_begin: {pos_begin}; line.pos_begin: {line.pos_begin}"
+                f"pos_end: {pos_end}; line.pos_end: {line.get_pos_end()}; "
+                f"pos_begin: {pos_begin}; line.pos_begin: {line.get_pos_begin()}"
             )
 
-            for col, val in line.scores.items():
-                if col not in aggregators:
-                    continue
+            line_pos_begin, line_pos_end = self._line_to_begin_end(line)
+
+            for scr_id, aggregator in aggregators.items():
+                val = line.get_score_value(scr_id)
+
                 left = (
                     pos_begin
-                    if pos_begin >= line.pos_begin
-                    else line.pos_begin
+                    if pos_begin >= line_pos_begin
+                    else line_pos_begin
                 )
                 right = (
                     pos_end
-                    if pos_end <= line.pos_end
-                    else line.pos_end
+                    if pos_end <= line_pos_end
+                    else line_pos_end
                 )
                 for i in range(left, right+1):
-                    aggregators[col].add(val)
+                    aggregators[scr_id].add(val)
 
         return {
             score_id: aggregator.get_final()
@@ -319,6 +382,7 @@ class PositionScoreResource(GenomicScoresResource):
         }
 
 
+'''
 class NPScoreResource(PositionScoreResource):
 
     @classmethod
@@ -329,7 +393,6 @@ class NPScoreResource(PositionScoreResource):
         self, chrom: str, position: int, ref: str, alt: str,
         scores: List[str] = None
     ):
-        chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
         assert chrom in self.get_all_chromosomes()
 
         lines = self._fetch_lines(chrom, position, position)
@@ -356,7 +419,6 @@ class NPScoreResource(PositionScoreResource):
     def fetch_scores_agg(
         self, chrom: str, pos_begin: int, pos_end: int, scores_aggregators
     ):
-        chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
         assert chrom in self.get_all_chromosomes()
         score_lines = self._fetch_lines(chrom, pos_begin, pos_end)
         logger.debug(f"score lines found: {score_lines}")
@@ -408,8 +470,9 @@ class NPScoreResource(PositionScoreResource):
             for score_id, aggregator
             in pos_aggregators.items()
         }
+'''
 
-
+'''
 class AlleleScoreResource(GenomicScoresResource):
 
     @classmethod
@@ -419,7 +482,6 @@ class AlleleScoreResource(GenomicScoresResource):
     def fetch_scores(
         self, chrom: str, position: int, variant: str, scores: List[str] = None
     ):
-        chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
         assert chrom in self.get_all_chromosomes()
 
         lines = self._fetch_lines(chrom, position, position)
@@ -442,3 +504,4 @@ class AlleleScoreResource(GenomicScoresResource):
                 result[col] = val
 
         return result
+'''

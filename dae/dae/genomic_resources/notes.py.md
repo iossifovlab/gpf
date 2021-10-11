@@ -43,7 +43,6 @@ class ConcatAggregator(AbstractAggregator):
     pass
 
 
-
 class GenomicScoreResource:
     pass
 
@@ -54,7 +53,7 @@ class PositionScoreResource(GenomicScoreResource):
         positions are 1-based!
 
         assert chrom in get_all_chromosomes()
-        
+
         Notes: 
             The returned iterator will return elements of 
                 (position_1,{score_1:v_11, score_2:v_12, ...}, 
@@ -72,7 +71,7 @@ class PositionScoreResource(GenomicScoreResource):
                     centromeres, telomeres, ...
                     poor multiple alignment region,
                     repetetive region, 
-                
+
             Missing values will be represented by None. The type of the values will be 
             consistenet with what get_score_types returns.
 
@@ -103,9 +102,9 @@ class PositionScoreResource(GenomicScoreResource):
         pass
 
     def fetch_scores_agg(
-            chrom : str, pos_begin: int, pos_end: int, 
-            scoresAggregators : Dict[str, type(AbstractAggregator)]) -> Optional[Dict[str, Any]]: 
-        
+            chrom: str, pos_begin: int, pos_end: int,
+            scoresAggregators: Dict[str, type(AbstractAggregator)]) -> Optional[Dict[str, Any]]:
+
         aggregators = {
             sc: aggr() for sc, aggr in scoresAggregators.items()
         }
@@ -120,23 +119,23 @@ class PositionScoreResource(GenomicScoreResource):
 class NPScoreResource(GenomicScoreResource):
 
     def fetch_scores(
-            chrom: str, position: int, nt: str, scores: List[str]=None) -> Dict[str,Any]: pass
+        chrom: str, position: int, nt: str, scores: List[str] = None) -> Dict[str, Any]: pass
 
     # The first aggregator type will be used to aggregate scores accross nucleotides at each position.
     # The second  aggregator type will be used to aggregate scores accross position.
     def fetch_scores_agg(
-            chrom: str, pos_begin: int, pos_end: int, 
-            scores: Dict[
-                str,Tuple[
-                    type(AbstractAggregator),
-                    type(AbstractAggregator)]]) -> Dict[str,Any]: pass
+        chrom: str, pos_begin: int, pos_end: int,
+        scores: Dict[
+            str, Tuple[
+                type(AbstractAggregator),
+                type(AbstractAggregator)]]) -> Dict[str, Any]: pass
 
 
 class NPScoreResource(GenomicScoreResource):
 
     def fetch_scores(
-            chrom: str, position: int, ref: str, alt: str,
-            scores: List[str] = None) -> Dict[str, Any]: pass
+        chrom: str, position: int, ref: str, alt: str,
+        scores: List[str] = None) -> Dict[str, Any]: pass
 
 
 DEFAULT_AGGREGATIONS = {
@@ -186,10 +185,10 @@ class PositionScoreAnnotator:
         '''
         if allele.is_substitution():
             R = self.positionScoreResource.fetch_score(
-                allele.chrom,allele.pos,self.scores)
+                allele.chrom, allele.pos, self.scores)
             if R:
-                for a,s in zip(self.attributes,self.scores):
-                    allele.set_atts(a,R[s])
+                for a, s in zip(self.attributes, self.scores):
+                    allele.set_atts(a, R[s])
         else:
             if allele.is_indel():
                 fP = allele.pos-1
@@ -200,11 +199,10 @@ class PositionScoreAnnotator:
             else:
                 raise Exception()
 
-            scoresBuff = {s:at() for s,at in zip(self.scores,self.aggregateType)}
+            scoresBuff = {s: at()
+                          for s, at in zip(self.scores, self.aggregateType)}
             R = self.positionScoreResource.fetch_scores_agg(
-                allele.chrom,fP,lP,scoresBuff)
+                allele.chrom, fP, lP, scoresBuff)
             if R:
-                for a,s in zip(self.attributes,self.scores):
-                    allele.set_atts(a,R[s])
-
-
+                for a, s in zip(self.attributes, self.scores):
+                    allele.set_atts(a, R[s])
