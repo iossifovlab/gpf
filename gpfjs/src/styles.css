@@ -8,6 +8,7 @@ html, body, material-app {
 
 body {
 	font-family: 'Roboto', sans-serif;
+  overflow-y: scroll;
 }
 
 #logo {
