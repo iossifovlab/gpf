@@ -35,7 +35,7 @@ class AnnotationPipeline():
             annotator_type = annotator_config["annotator"]
 
             gene_models_id = annotator_config["gene_models"]
-            genome_id = annotator_config["target_genome"]
+            genome_id = annotator_config["genome"]
             override = annotator_config.get("override")
 
             gene_models = resource_db.get_resource(gene_models_id)

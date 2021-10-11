@@ -8,7 +8,7 @@ liftover_annotators:
   - annotator: liftover_annotator
     liftover: hg38tohg19
     chain: hg38/hg38tohg19
-    genome: hg38/GRCh38-hg38/genome
+    target_genome: hg19/GATK_ResourceBundle_5777_b37_phiX174/genome
 
 score_annotators:
  - annotator: position_score

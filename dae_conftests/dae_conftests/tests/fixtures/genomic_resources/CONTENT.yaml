@@ -4,6 +4,10 @@ children:
 - id: hg19
   type: group
   children:
+  - id: hg19/MPC
+    type: resource
+  - id: hg19/phastCons100
+    type: resource
   - id: hg19/GATK_ResourceBundle_5777_b37_phiX174
     type: group
     children:
@@ -16,13 +20,17 @@ children:
         type: resource
   - id: hg19/CADD
     type: resource
-  - id: hg19/phastCons100
-    type: resource
-  - id: hg19/MPC
-    type: resource
 - id: hg38
   type: group
   children:
+  - id: hg38/hg38tohg19
+    type: resource
+  - id: hg38/TESTCADD
+    type: resource
+  - id: hg38/TESTphastCons100way
+    type: resource
+  - id: hg38/TESTPosAgg
+    type: resource
   - id: hg38/GRCh38-hg38
     type: group
     children:
@@ -33,13 +41,5 @@ children:
       children:
       - id: hg38/GRCh38-hg38/gene_models/refSeq_20200330
         type: resource
-  - id: hg38/hg38tohg19
-    type: resource
   - id: hg38/TESTFreq
-    type: resource
-  - id: hg38/TESTPosAgg
-    type: resource
-  - id: hg38/TESTCADD
-    type: resource
-  - id: hg38/TESTphastCons100way
     type: resource
