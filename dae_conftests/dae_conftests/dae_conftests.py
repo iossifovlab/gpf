@@ -525,7 +525,7 @@ def vcf_variants_loaders(
             denovo_loader = DenovoLoader(
                 families,
                 config.denovo,
-                genomes_db_2013.get_genome(),
+                genomes_db_2013.get_genomic_sequence(),
                 params={
                     "denovo_genotype": "genotype",
                     "denovo_family_id": "family",
@@ -541,7 +541,7 @@ def vcf_variants_loaders(
         vcf_loader = VcfLoader(
             families,
             [config.vcf],
-            genomes_db_2013.get_genome(),
+            genomes_db_2013.get_genomic_sequence(),
             params=params
         )
 
