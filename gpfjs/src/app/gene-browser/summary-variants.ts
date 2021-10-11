@@ -183,22 +183,9 @@ export class SummaryAllelesFilter {
   }
 
   private isEffectTypeSelected(variantEffect: string): boolean {
-    let result = false;
-
-    if (this.selectedEffectTypes.has(variantEffect)) {
-      result = true;
-    }
-
-    if (this.selectedEffectTypes.has('lgds') && lgds.includes(variantEffect)) {
-      result = true;
-    } else if (
-      variantEffect !== 'missense' && variantEffect !== 'synonymous'
-      && variantEffect !== 'cnv+' && variantEffect !== 'cnv-'
-      && this.selectedEffectTypes.has('other')
-    ) {
-      result = true;
-    }
-    return result;
+    return this.selectedEffectTypes.has(variantEffect)
+      || (this.selectedEffectTypes.has('lgds') && lgds.includes(variantEffect))
+      || (this.selectedEffectTypes.has('other') && otherEffectTypes.includes(variantEffect));
   }
 
   private filterSummaryAllele(summaryAllele: SummaryAllele): boolean {
