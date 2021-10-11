@@ -395,7 +395,7 @@ EOT'
     build_run_container bash -c '
         cd /code/dae;
         export PYTHONHASHSEED=0;
-        /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup -n 10 \
+        /opt/conda/bin/conda run --no-capture-output -n gpf py.test -s -v -n 4 --no-cleanup --durations 20 \
           --cov-config /code/coveragerc \
           --junitxml=/code/results/dae-junit.xml \
           --cov-report=html:/code/results/dae-coverage.html \
@@ -429,7 +429,7 @@ EOT'
     build_run_container bash -c '
         cd /code/wdae;
         export PYTHONHASHSEED=0;
-        /opt/conda/bin/conda run --no-capture-output -n gpf py.test --no-cleanup -v -n 10 \
+        /opt/conda/bin/conda run --no-capture-output -n gpf py.test -s -v -n 4 --no-cleanup --durations 20 \
           --cov-config /code/coveragerc \
           --junitxml=/code/results/wdae-junit.xml \
           --cov-report=html:/code/results/wdae-coverage.html \

@@ -41,7 +41,7 @@ class GeneWeightsDownloadView(QueryBaseView):
         super(GeneWeightsDownloadView, self).__init__()
 
     def get(self, request, weight):
-        tsv = self.gpf_instance.get_gene_weight(weight)._to_tsv()
+        tsv = self.gpf_instance.get_gene_weight(weight).to_tsv()
 
         response = StreamingHttpResponse(tsv, content_type="text/csv")
 

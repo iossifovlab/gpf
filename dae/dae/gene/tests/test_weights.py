@@ -35,3 +35,10 @@ def test_weights_get_genes(gene_info_config):
 
     genes = w.get_genes(1, 5.0)
     assert 4 == len(genes)
+
+
+def test_weights_to_tsv(gene_info_config):
+    weight = GeneWeight("LGD_rank", gene_info_config.gene_weights.LGD_rank)
+    tsv = list(weight.to_tsv())
+    assert len(tsv) == 18460
+    assert tsv[0] == "gene\tLGD_rank\n"

@@ -13,7 +13,7 @@ from scipy.stats.stats import ttest_ind
 
 from dae.pheno.common import MeasureType
 from dae.variants.attributes import Role, Sex
-from dae.utils.effect_utils import EffectTypesMixin
+from dae.utils.effect_utils import EffectTypesMixin, expand_effect_types
 
 
 LOGGER = logging.getLogger(__name__)
@@ -55,9 +55,11 @@ class PhenoToolHelper(object):
     `genotype_data` -- an instance of StudyWrapper
     """
 
-    def __init__(self, genotype_data):
+    def __init__(self, genotype_data, phenotype_data):
+        # assert isinstance(genotype_data, GenotypeData), type(genotype_data)
         assert genotype_data
         self.genotype_data = genotype_data
+        self.phenotype_data = phenotype_data
         self.effect_types_mixin = EffectTypesMixin()
 
     def _package_effect_type_group(self, group, variants):
@@ -86,22 +88,12 @@ class PhenoToolHelper(object):
                     persons.add(person.person_id)
         return persons
 
-    def pheno_filter_persons(self, pheno_filters):
-        if not pheno_filters:
-            return None
-        assert isinstance(pheno_filters, list)
-        family_ids = \
-            self.genotype_data.query_transformer._transform_filters_to_ids(
-                pheno_filters
-            )
-        return family_ids
-
     def genotype_data_variants(self, data):
-        assert "effectTypes" in data
+        assert "effect_types" in data, data
 
-        queried_effect_types = set(
-            self.effect_types_mixin.get_effect_types(**data)
-        )
+        effect_types = set(data["effect_types"])
+        queried_effect_types = set(expand_effect_types(effect_types))
+
         variants_by_effect = {
             effect: Counter() for effect in queried_effect_types
         }
@@ -113,7 +105,7 @@ class PhenoToolHelper(object):
                         if effect in queried_effect_types:
                             variants_by_effect[effect][person] = 1
 
-        for effect_type in data["effectTypes"]:
+        for effect_type in effect_types:
             effect_type = effect_type.lower()
             if effect_type not in self.effect_types_mixin.EFFECT_GROUPS:
                 continue

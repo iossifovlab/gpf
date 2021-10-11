@@ -66,7 +66,8 @@ def test_variants_db_genotype_data_groups_simple(
 
 
 def test_get_existing_study_config(variants_db_fixture):
-    assert variants_db_fixture.get_genotype_study_config("quads_f1") is not None
+    assert variants_db_fixture\
+        .get_genotype_study_config("quads_f1") is not None
 
 
 def test_get_non_existing_study_config(variants_db_fixture):
@@ -86,6 +87,8 @@ def test_query_summary_variants(variants_db_fixture):
     assert study is not None
     vs = study.query_summary_variants()
     vs = list(vs)
+    print(vs)
+
     assert len(vs) == 3
 
 

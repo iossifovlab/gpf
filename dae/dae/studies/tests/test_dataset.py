@@ -1,4 +1,6 @@
 import os
+import time
+
 import pytest
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
@@ -113,3 +115,20 @@ def test_summary_variant_merging(
     assert vs[1].get_attribute("seen_as_denovo")[0] is True
     assert vs[1].get_attribute("seen_in_status")[0] == 3
     assert len(vs) == 4
+
+
+def test_can_close_study_group_query(
+        fixtures_gpf_instance, data_import, variants_impala):
+    genotype_data_group = fixtures_gpf_instance.get_genotype_data(
+        "svmergingdataset"
+    )
+    assert genotype_data_group is not None
+
+    variants = genotype_data_group.query_variants()
+
+    for v in variants:
+        print(v)
+        break
+
+    variants.close()
+    time.sleep(1)

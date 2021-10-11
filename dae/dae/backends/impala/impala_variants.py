@@ -1,11 +1,13 @@
 import logging
+import queue
+import time
+
 # from dae.utils.debug_closing import closing
 from contextlib import closing
 
 from impala.util import as_pandas
 
-from dae.backends.raw.raw_variants import RawVariantsIterator, \
-    RawSummaryVariantsIterator
+from dae.backends.raw.raw_variants import RawFamilyVariants
 
 from dae.annotation.tools.schema import ParquetSchema
 from dae.pedigrees.family import FamiliesData
@@ -13,6 +15,7 @@ from dae.backends.impala.serializers import AlleleParquetSerializer
 
 from dae.variants.attributes import Role, Status, Sex
 
+from dae.backends.query_runners import QueryResult, QueryRunner
 from dae.backends.impala.impala_query_director import ImpalaQueryDirector
 from dae.backends.impala.family_variants_query_builder import \
     FamilyVariantsQueryBuilder
@@ -21,6 +24,88 @@ from dae.backends.impala.summary_variants_query_builder import \
 
 
 logger = logging.getLogger(__name__)
+
+
+class ImpalaQueryRunner(QueryRunner):
+
+    def __init__(
+            self, connection_pool, query, deserializer=None):
+        super(ImpalaQueryRunner, self).__init__(
+            deserializer=deserializer)
+
+        self.connection_pool = connection_pool
+        self.query = query
+
+    def run(self):
+        started = time.time()
+        if self.closed():
+            logger.info("runner closed before executing...")
+            return
+
+        logger.debug(
+            f"impala runner started; "
+            f"connectio pool: {self.connection_pool.status()}")
+
+        with closing(self.connection_pool.connect()) as connection:
+            with connection.cursor() as cursor:
+                try:
+                    cursor.execute_async(self.query)
+
+                    while True:
+                        if self.closed():
+                            logger.debug("query runner closed while executing")
+                            break
+                        if not cursor.is_executing():
+                            logger.debug("query runner execution finished")
+                            break
+                        time.sleep(0.1)
+                    while not self.closed():
+                        row = cursor.fetchone()
+                        if row is None:
+                            break
+                        val = self.deserializer(row)
+
+                        if val is None:
+                            continue
+
+                        no_interest = 0
+                        while True:
+                            try:
+                                self._result_queue.put(val, timeout=0.1)
+                                break
+                            except queue.Full:
+                                logger.debug("nobody interested")
+
+                                if self.closed():
+                                    break
+                                no_interest += 1
+                                if no_interest % 1_000 == 0:
+                                    logger.warning(
+                                        f"nobody interested {no_interest}; "
+                                        f"{self.query}")
+                                if no_interest > 5_000:
+                                    logger.warning(
+                                        f"nobody interested {no_interest}; "
+                                        f"{self.query}; "
+                                        f"closing...")
+                                    self.close()
+                                    break
+
+                        if self.closed():
+                            logger.debug("query runner closed while iterating")
+                            break
+
+                except BaseException as ex:
+                    logger.debug(
+                        f"exception in runner run: {type(ex)}", exc_info=True)
+                finally:
+                    logger.debug("runner closing connection")
+
+        with self._status_lock:
+            self._done = True
+        elapsed = time.time() - started
+        logger.debug(f"runner done in {elapsed:0.3f}sec")
+        logger.debug(f"connection pool: {self.connection_pool.status()}")
 
 
 class ImpalaVariants:
@@ -80,11 +165,20 @@ class ImpalaVariants:
     def connection(self):
         conn = self._impala_helpers.connection()
         logger.debug(
-            f"getting connection to host {conn.host} from impala helpers "
-            f"{id(self._impala_helpers)}")
+            f"ImpalaVariants: getting connection to host {conn.host} "
+            f"from impala helpers {id(self._impala_helpers)}")
         return conn
 
-    def _summary_variants_iterator(
+    @property
+    def connection_pool(self):
+        return self._impala_helpers._connection_pool
+
+    @property
+    def executor(self):
+        assert self._impala_helpers.executor is not None
+        return self._impala_helpers.executor
+
+    def build_summary_variants_query_runner(
             self,
             regions=None,
             genes=None,
@@ -103,60 +197,74 @@ class ImpalaVariants:
             limit=None):
         if not self.variants_table:
             return None
-        with closing(self.connection()) as conn:
 
-            with conn.cursor() as cursor:
-                sv_table = None
-                if self.has_summary_variants_table:
-                    sv_table = self.summary_variants_table
-                query_builder = SummaryVariantsQueryBuilder(
-                    self.db, self.variants_table, self.pedigree_table,
-                    self.schema, self.table_properties,
-                    self.pedigree_schema, self.ped_df,
-                    self.gene_models, summary_variants_table=sv_table
-                )
-                director = ImpalaQueryDirector(query_builder)
-                director.build_query(
-                    regions=regions,
-                    genes=genes,
-                    effect_types=effect_types,
-                    family_ids=family_ids,
-                    person_ids=person_ids,
-                    inheritance=inheritance,
-                    roles=roles,
-                    sexes=sexes,
-                    variant_type=variant_type,
-                    real_attr_filter=real_attr_filter,
-                    ultra_rare=ultra_rare,
-                    frequency_filter=frequency_filter,
-                    return_reference=return_reference,
-                    return_unknown=return_unknown,
-                    limit=None,
-                )
+        sv_table = None
+        if self.has_summary_variants_table:
+            sv_table = self.summary_variants_table
+        query_builder = SummaryVariantsQueryBuilder(
+            self.db, self.variants_table, self.pedigree_table,
+            self.schema, self.table_properties,
+            self.pedigree_schema, self.ped_df,
+            self.gene_models, summary_variants_table=sv_table
+        )
+        if limit is None:
+            request_limit = None
+        elif limit < 0:
+            request_limit = None
+        else:
+            request_limit = limit
 
-                deserialize_row = query_builder.create_row_deserializer(
-                    self.serializer
-                )
+        director = ImpalaQueryDirector(query_builder)
+        director.build_query(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            limit=request_limit,
+        )
 
-                query = query_builder.product
-                logger.debug(f"SUMMARY VARIANTS QUERY ({conn.host}): {query}")
+        deserialize_row = query_builder.create_row_deserializer(
+            self.serializer
+        )
 
-                cursor.execute(query)
-                for row in cursor:
-                    try:
-                        v = deserialize_row(row)
+        query = query_builder.product
+        logger.debug(f"SUMMARY VARIANTS QUERY: {query}")
 
-                        if v is None:
-                            continue
+        runner = ImpalaQueryRunner(
+            self.connection_pool, query, deserializer=deserialize_row)
 
-                        yield v
-                    except Exception as ex:
-                        logger.error("unable to deserialize summary variant")
-                        logger.exception(ex)
-                        continue
-                logger.debug(f"[DONE] SUMMARY VARIANTS QUERY ({conn.host})")
+        filter_func = RawFamilyVariants.summary_variant_filter_function(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            limit=limit)
 
-    def _family_variants_iterator(
+        runner.adapt(filter_func)
+
+        return runner
+
+    def build_family_variants_query_runner(
             self,
             regions=None,
             genes=None,
@@ -177,58 +285,71 @@ class ImpalaVariants:
 
         if not self.variants_table:
             return None
-        with closing(self.connection()) as conn:
+        do_join = affected_status is not None
+        query_builder = FamilyVariantsQueryBuilder(
+            self.db, self.variants_table, self.pedigree_table,
+            self.schema, self.table_properties,
+            self.pedigree_schema, self.ped_df,
+            self.families, gene_models=self.gene_models,
+            do_join=do_join
+        )
+        director = ImpalaQueryDirector(query_builder)
+        if limit is None:
+            request_limit = None
+        elif limit < 0:
+            request_limit = None
+        else:
+            request_limit = limit
 
-            with conn.cursor() as cursor:
-                do_join = affected_status is not None
-                query_builder = FamilyVariantsQueryBuilder(
-                    self.db, self.variants_table, self.pedigree_table,
-                    self.schema, self.table_properties,
-                    self.pedigree_schema, self.ped_df,
-                    self.families, gene_models=self.gene_models,
-                    do_join=do_join
-                )
-                director = ImpalaQueryDirector(query_builder)
-                director.build_query(
-                    regions=regions,
-                    genes=genes,
-                    effect_types=effect_types,
-                    family_ids=family_ids,
-                    person_ids=person_ids,
-                    inheritance=inheritance,
-                    roles=roles,
-                    sexes=sexes,
-                    variant_type=variant_type,
-                    real_attr_filter=real_attr_filter,
-                    ultra_rare=ultra_rare,
-                    frequency_filter=frequency_filter,
-                    return_reference=return_reference,
-                    return_unknown=return_unknown,
-                    limit=None,
-                    affected_status=affected_status
-                )
+        director.build_query(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            limit=request_limit,
+            affected_status=affected_status
+        )
 
-                query = query_builder.product
+        query = query_builder.product
 
-                logger.debug(f"FAMILY VARIANTS QUERY ({conn.host}): {query}")
+        logger.debug(f"FAMILY VARIANTS QUERY: {query}")
+        deserialize_row = query_builder.create_row_deserializer(
+            self.serializer)
+        assert deserialize_row is not None
 
-                deserialize_row = query_builder.create_row_deserializer(
-                    self.serializer
-                )
-                cursor.execute(query)
+        runner = ImpalaQueryRunner(
+            self.connection_pool, query, deserializer=deserialize_row)
 
-                for row in cursor:
-                    try:
-                        v = deserialize_row(row)
+        filter_func = RawFamilyVariants.family_variant_filter_function(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            limit=limit)
 
-                        if v is None:
-                            continue
+        runner.adapt(filter_func)
 
-                        yield v
-                    except Exception as ex:
-                        logger.error("unable to deserialize family variant")
-                        logger.exception(ex)
-                        continue
+        return runner
 
     def query_summary_variants(
             self,
@@ -251,12 +372,12 @@ class ImpalaVariants:
             return None
 
         if limit is None:
-            count = -1
+            limit = -1
+            request_limit = -1
         else:
-            count = limit
-            limit = 10 * limit
+            request_limit = 10 * limit
 
-        with closing(self._summary_variants_iterator(
+        runner = self.build_summary_variants_query_runner(
                 regions=regions,
                 genes=genes,
                 effect_types=effect_types,
@@ -271,35 +392,28 @@ class ImpalaVariants:
                 frequency_filter=frequency_filter,
                 return_reference=return_reference,
                 return_unknown=return_unknown,
-                limit=limit)) as summary_variants_iterator:
+                limit=request_limit)
 
-            raw_variants_iterator = RawSummaryVariantsIterator(
-                summary_variants_iterator, self.families)
+        result = QueryResult(
+                runners=[runner], limit=limit)
+        logger.debug("starting result")
+        try:
+            result.start()
 
-            with closing(raw_variants_iterator.query_summary_variants(
-                    regions=regions,
-                    genes=genes,
-                    effect_types=effect_types,
-                    family_ids=family_ids,
-                    person_ids=person_ids,
-                    inheritance=inheritance,
-                    roles=roles,
-                    sexes=sexes,
-                    variant_type=variant_type,
-                    real_attr_filter=real_attr_filter,
-                    ultra_rare=ultra_rare,
-                    frequency_filter=frequency_filter,
-                    return_reference=return_reference,
-                    return_unknown=return_unknown,
-                    limit=count)) as result:
+            seen = set()
+            with closing(result) as result:
 
                 for v in result:
                     if v is None:
                         continue
+                    if v.svuid in seen:
+                        continue
+                    if v is None:
+                        continue
                     yield v
-                    count -= 1
-                    if count == 0:
-                        break
+                    seen.add(v.svuid)
+        finally:
+            pass
 
     def query_variants(
             self,
@@ -324,56 +438,46 @@ class ImpalaVariants:
             return None
 
         if limit is None:
-            count = -1
+            limit = -1
+            request_limit = -1
         else:
-            count = limit
-            limit = 10 * limit
+            request_limit = 10 * limit
 
-        with closing(self._family_variants_iterator(
-                        regions=regions,
-                        genes=genes,
-                        effect_types=effect_types,
-                        family_ids=family_ids,
-                        person_ids=person_ids,
-                        inheritance=inheritance,
-                        roles=roles,
-                        sexes=sexes,
-                        variant_type=variant_type,
-                        real_attr_filter=real_attr_filter,
-                        ultra_rare=ultra_rare,
-                        frequency_filter=frequency_filter,
-                        return_reference=return_reference,
-                        return_unknown=return_unknown,
-                        limit=limit,
-                        affected_status=affected_status)) as fv_iterator:
+        runner = self.build_family_variants_query_runner(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            limit=request_limit,
+            affected_status=affected_status)
 
-            raw_variants_iterator = RawVariantsIterator(
-                fv_iterator, self.families)
+        result = QueryResult(
+                runners=[runner], limit=limit)
+        logger.debug("starting result")
+        try:
+            result.start()
 
-            with closing(raw_variants_iterator.query_variants(
-                            regions=regions,
-                            genes=genes,
-                            effect_types=effect_types,
-                            family_ids=family_ids,
-                            person_ids=person_ids,
-                            inheritance=inheritance,
-                            roles=roles,
-                            sexes=sexes,
-                            variant_type=variant_type,
-                            real_attr_filter=real_attr_filter,
-                            ultra_rare=ultra_rare,
-                            frequency_filter=frequency_filter,
-                            return_reference=return_reference,
-                            return_unknown=return_unknown,
-                            limit=count)) as result:
-
+            with closing(result) as result:
+                seen = set()
                 for v in result:
                     if v is None:
                         continue
+                    if v.fvuid in seen:
+                        continue
                     yield v
-                    count -= 1
-                    if count == 0:
-                        break
+                    seen.add(v.fvuid)
+        finally:
+            pass
 
     def _fetch_pedigree(self):
         with closing(self.connection()) as conn:

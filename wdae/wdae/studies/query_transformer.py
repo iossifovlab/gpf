@@ -4,12 +4,10 @@ from typing import List, Set
 
 from functools import reduce
 
-from dae.utils.effect_utils import (
-    expand_effect_types,
-)
+from dae.utils.effect_utils import EffectTypesMixin
 from dae.variants.attributes import Role, Inheritance
 from dae.utils.regions import Region
-from dae.pedigrees.family import FamilyType
+from dae.pedigrees.family import ALL_FAMILY_TYPES, FamilyType
 from dae.backends.attributes_query import (
     role_query,
     variant_type_converter,
@@ -39,6 +37,7 @@ class QueryTransformer:
 
     def __init__(self, study_wrapper):
         self.study_wrapper = study_wrapper
+        self.effect_types_mixin = EffectTypesMixin()
 
     def _transform_genomic_scores(self, genomic_scores):
         genomic_scores_filter = [
@@ -252,32 +251,23 @@ class QueryTransformer:
         else:
             kwargs["roles"] = query
 
-    def _add_people_with_people_group(self, kwargs):
+    def _handle_person_set_collection(self, kwargs):
+        people_group = kwargs.pop("personSetCollection", {})
+        logger.debug(f"person set collection requested: {people_group}")
+        collection_id, selected_sets = None, None
+        if people_group:
+            collection_id = people_group["id"]
+            selected_sets = people_group["checkedValues"]
+        else:
+            selected_person_set_collections = self.study_wrapper\
+                .genotype_data\
+                .config.person_set_collections\
+                .selected_person_set_collections
+            if selected_person_set_collections:
+                collection_id = selected_person_set_collections[0]
 
-        # TODO Rename peopleGroup kwarg to person_set_collections
-        # and all other, relevant keys in the kwargs dict
-
-        if kwargs.get("peopleGroup") is None:
-            return kwargs
-
-        person_set_collections_query = kwargs.pop("peopleGroup")
-        person_set_collection_id = person_set_collections_query["id"]
-        selected_person_set_ids = set(
-            person_set_collections_query["checkedValues"]
-        )
-
-        person_set_collection = self.study_wrapper\
-            .genotype_data_study \
-            .get_person_set_collection(person_set_collection_id)
-
-        if set(person_set_collection.person_sets.keys()) == \
-                selected_person_set_ids:
-            return kwargs
-
-        person_set_collection_query = (
-            person_set_collection_id, selected_person_set_ids
-        )
-        kwargs["person_set_collection"] = person_set_collection_query
+        if collection_id is not None:
+            kwargs["person_set_collection"] = collection_id, selected_sets
         return kwargs
 
     # Not implemented:
@@ -291,7 +281,7 @@ class QueryTransformer:
             kwargs
         )
 
-        kwargs = self._add_people_with_people_group(kwargs)
+        kwargs = self._handle_person_set_collection(kwargs)
 
         if "querySummary" in kwargs:
             kwargs["query_summary"] = kwargs["querySummary"]
@@ -338,8 +328,10 @@ class QueryTransformer:
                         present_in_child, present_in_parent,
                         rarity, frequency_filter
                     )
+                print("frequency filter:", arg, val)
                 if arg is not None:
                     kwargs[arg] = val
+                print(kwargs)
 
         if (
             "minAltFrequencyPercent" in kwargs
@@ -397,7 +389,7 @@ class QueryTransformer:
                 del kwargs["variantTypes"]
 
         if "effectTypes" in kwargs:
-            kwargs["effectTypes"] = expand_effect_types(
+            kwargs["effectTypes"] = self.effect_types_mixin.build_effect_types(
                 kwargs["effectTypes"]
             )
 
@@ -444,19 +436,22 @@ class QueryTransformer:
 
         if "familyTypes" in kwargs:
             family_ids_with_types = set()
-            for family_type in kwargs["familyTypes"]:
-                family_type = FamilyType.from_name(family_type)
-                family_ids_with_types = set.union(
-                    family_ids_with_types,
-                    self.study_wrapper.families.families_by_type.get(
-                        family_type, set()
+            family_types = set([
+                FamilyType.from_name(ft) for ft in kwargs["familyTypes"]])
+
+            if family_types != ALL_FAMILY_TYPES:
+                for family_type in family_types:
+                    family_ids_with_types = set.union(
+                        family_ids_with_types,
+                        self.study_wrapper.families.families_by_type.get(
+                            family_type, set()
+                        )
                     )
-                )
-            if "familyIds" in kwargs:
-                family_ids_with_types = set.intersection(
-                    family_ids_with_types, set(kwargs.pop("familyIds"))
-                )
-            kwargs["familyIds"] = family_ids_with_types
+                if "familyIds" in kwargs:
+                    family_ids_with_types = set.intersection(
+                        family_ids_with_types, set(kwargs.pop("familyIds"))
+                    )
+                kwargs["familyIds"] = family_ids_with_types
 
         if kwargs.get("inheritanceTypeFilter"):
             inheritance = kwargs.get("inheritance", [])

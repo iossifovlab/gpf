@@ -355,7 +355,9 @@ class AnnotationDecorator(VariantsLoaderDecorator):
             return f"{filename}-eff.txt"
 
     @staticmethod
-    def has_annotation_file(annotation_filename):
+    def has_annotation_file(variants_filename):
+        annotation_filename = AnnotationDecorator\
+            .build_annotation_filename(variants_filename)
         return os.path.exists(annotation_filename)
 
     @staticmethod
@@ -458,9 +460,8 @@ class StoredAnnotationDecorator(AnnotationDecorator):
             .build_annotation_filename(
                 source_filename
             )
-        # assert os.path.exists(annotation_filename), \
-        #     annotation_filename
         if not os.path.exists(annotation_filename):
+            logger.warning(f"stored annotation missing {annotation_filename}")
             return variants_loader
         else:
             variants_loader = StoredAnnotationDecorator(
@@ -505,7 +506,7 @@ class StoredAnnotationDecorator(AnnotationDecorator):
                     "effect_details_details": cls._convert_array_of_strings,
                 },
                 encoding="utf-8",
-            )
+            ).replace({np.nan: None})
         special_columns = set(annot_df.columns) & set(
             ["alternative", "effect_type"]
         )

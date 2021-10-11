@@ -382,6 +382,15 @@ class GPFInstance(object):
             return None
         return common_report.to_dict()
 
+    def get_all_common_report_configs(self):
+        configs = []
+        local_ids = self.get_genotype_data_ids(True)
+        for gd_id in local_ids:
+            config = self.get_genotype_data_config(gd_id)
+            if config.common_report is not None:
+                configs.append(config.common_report)
+        return configs
+
     def get_common_report_families_data(self, common_report_id):
         genotype_data = GPFInstance.get_genotype_data(self, common_report_id)
         if not genotype_data:

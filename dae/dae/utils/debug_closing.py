@@ -33,7 +33,7 @@ class closing(AbstractContextManager):
 
         LIVE_CONNECTIONS += 1
         logger.info(
-            f"[closing] enter; live {LIVE_CONNECTIONS}",
+            f"[closing] enter {id(self.thing)}; live {LIVE_CONNECTIONS}",
             # stack_info=True
         )
         return self.thing
@@ -44,7 +44,7 @@ class closing(AbstractContextManager):
 
         LIVE_CONNECTIONS -= 1
         logger.info(
-            f"[closing] exit; live {LIVE_CONNECTIONS}",
+            f"[closing] exit {id(self.thing)}; live {LIVE_CONNECTIONS}",
             # stack_info=True
         )
 

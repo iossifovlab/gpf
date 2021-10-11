@@ -23,6 +23,8 @@ class EffectTypesMixin(object):
         "CDS",
         "CNV+",
         "CNV-",
+        "cnv+",
+        "cnv-",
     ]
 
     EFFECT_TYPES_MAPPING = {
@@ -93,7 +95,10 @@ class EffectTypesMixin(object):
             "noStart",
             "noEnd",
         ],
-        "utrs": ["3'-UTR", "5'-UTR",],
+        "utrs": [
+            "3'-UTR",
+            "5'-UTR",
+        ],
     }
 
     def _build_effect_types_groups(self, effect_types):
@@ -121,7 +126,7 @@ class EffectTypesMixin(object):
         etl = self._build_effect_types_groups(etl)
         etl = self._build_effect_types_list(etl)
         if safe:
-            assert all([et in self.EFFECT_TYPES for et in etl])
+            assert all([et in self.EFFECT_TYPES for et in etl]), etl
         else:
             etl = [et for et in etl if et in self.EFFECT_TYPES]
         return etl

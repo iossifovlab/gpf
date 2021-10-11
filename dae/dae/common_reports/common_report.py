@@ -19,7 +19,7 @@ class CommonReport(object):
         effect_groups = config.effect_groups
         effect_types = config.effect_types
 
-        assert config.enabled
+        assert config.enabled, genotype_data_study.study_id
 
         self.genotype_data_study = genotype_data_study
         self.id = genotype_data_study.study_id

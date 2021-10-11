@@ -1,4 +1,3 @@
-import numpy as np
 from dae.backends.raw.loader import StoredAnnotationDecorator
 
 
@@ -70,9 +69,9 @@ def test_stored_annotation_saves_nonetype_properly(
     for sv, _ in loader.full_variants_iterator():
         assert len(sv.alt_alleles) == 1
         if sv.chromosome == "3":
-            assert np.isnan(
-                sv.alt_alleles[0].attributes["score0_incomplete_cov"]
-            )
+            assert sv.alt_alleles[0].attributes[
+                "score0_incomplete_cov"
+            ] is None
         else:
             assert sv.alt_alleles[0].attributes["score0_incomplete_cov"] == \
                 float(sv.position)
