@@ -53,9 +53,7 @@ describe('Autism gene profiles table data tests', () => {
       page.allTableRows.should('have.length', 1);
       
       for (let cellIndex = 0; cellIndex < data.expectedRow.length; cellIndex++) {
-        page.allTableRows.find('td').eq(cellIndex).invoke('text').then(text => {
-          expect(text.trim()).to.eq(data.expectedRow[cellIndex]);
-        });
+        page.allTableRows.find('td').eq(cellIndex).should('have.text', data.expectedRow[cellIndex]);
       }
     });
   });

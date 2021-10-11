@@ -127,19 +127,18 @@ describe('Genotype browser table preview result tests', () => {
     genotypeBrowserController.navigateToHome();
   });
 
-  [{study: datasetIds.compAll, variantsCount: '35'},
-   {study: datasetIds.compDenovo, variantsCount: '5'},
-   {study: datasetIds.compVcf, variantsCount: '30'},
-   {study: datasetIds.iossifov2014, variantsCount: '0'},
-   {study: datasetIds.multi, variantsCount: '0'}
+  [{study: datasetIds.compAll, expectedOverviewParagraph: '35 variants selected (35 shown)'},
+   {study: datasetIds.compDenovo, expectedOverviewParagraph: '5 variants selected (5 shown)'},
+   {study: datasetIds.compVcf, expectedOverviewParagraph: '30 variants selected (30 shown)'},
+   {study: datasetIds.iossifov2014, expectedOverviewParagraph: '0 variants selected (0 shown)'},
+   {study: datasetIds.multi, expectedOverviewParagraph: '0 variants selected (0 shown)'}
   ].forEach((data) => {
-    it('should display \'' + data.variantsCount + ' variants selected\' in overview paragraph when ' +
-       'gene symbol is \'SAMD11\' at /' + data.study + '/browser', ()  => {
+    it('should display the correct data in overview paragraph when gene symbol is \'SAMD11\' at /' + data.study + '/browser', ()  => {
       genotypeBrowserController.setStudy(data.study);
       genotypeBrowserController.filterGenesByGeneSymbol('SAMD11');
       genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.showTablePreview();
-      page.overviewParagraph.should('have.text', ' ' + data.variantsCount + ' variants selected (' + data.variantsCount + ' shown) ');
+      page.overviewParagraph.should('have.text', data.expectedOverviewParagraph);
     });
   });
 
@@ -153,7 +152,7 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setRegion(data.region);
       genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.showTablePreview();
-      page.overviewParagraph.should('have.text', ' 5 variants selected (5 shown) ');
+      page.overviewParagraph.should('have.text', '5 variants selected (5 shown)');
     });
   });
 
@@ -184,46 +183,47 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setAffectedStatus(data.affectedStatus);
       genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.showTablePreview();
-      page.overviewParagraph.should('have.text', ' ' + data.expectedOverviewParagraph + ' ');
+      page.overviewParagraph.should('have.text', data.expectedOverviewParagraph);
     });
   });
 
-  [{childGender: 'male', variantsCount: '28'}, {childGender: 'female', variantsCount: '27'},
-    {childGender: 'unspecified', variantsCount: '0'}
+  [{childGender: 'male', expectedOverviewParagraph: '28 variants selected (28 shown)'},
+    {childGender: 'female', expectedOverviewParagraph: '27 variants selected (27 shown)'},
+    {childGender: 'unspecified', expectedOverviewParagraph: '0 variants selected (0 shown)'}
   ].forEach((data) => {
-    it('should display \'' + data.variantsCount + ' variants selected\' in overview paragraph when child gender is ' +
-        data.childGender, () => {
+    it('should display the correct data in overview paragraph when child gender is ' + data.childGender, () => {
       genotypeBrowserController.setStudy(datasetIds.compVcf);
       genotypeBrowserController.setGender(data.childGender);
       genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.showTablePreview();
-      page.overviewParagraph.should('have.text', ' ' + data.variantsCount + ' variants selected (' + data.variantsCount + ' shown) ');
+      page.overviewParagraph.should('have.text', data.expectedOverviewParagraph);
     });
   });
 
-  [{variantType: 'sub', variantsCount: '30'}, {variantType: 'ins', variantsCount: '0'},
-    {variantType: 'del', variantsCount: '0'}
+  [{variantType: 'sub', expectedOverviewParagraph: '30 variants selected (30 shown)'},
+    {variantType: 'ins', expectedOverviewParagraph: '0 variants selected (0 shown)'},
+    {variantType: 'del', expectedOverviewParagraph: '0 variants selected (0 shown)'}
   ].forEach((data) => {
-    it('should display \'' + data.variantsCount + ' variants selected\' in overview paragraph when variant types ' +
-        data.variantType + ' checkbox is only checked', () => {
+    it('should display the correct data in overview paragraph when only ' + data.variantType + ' variant type checkbox is checked', () => {
       genotypeBrowserController.setStudy(datasetIds.compVcf);
       genotypeBrowserController.setVariantType(data.variantType);
       genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.showTablePreview();
-      page.overviewParagraph.should('have.text', ' ' + data.variantsCount + ' variants selected (' + data.variantsCount + ' shown) ');
+      page.overviewParagraph.should('have.text', data.expectedOverviewParagraph);
     });
   });
 
-  [{effectType: 'All', variantsCount: '30'}, {effectType: 'LGDs', variantsCount: '0'},
-    {effectType: 'Nonsynonymous', variantsCount: '15'}, {effectType: 'Coding', variantsCount: '30'},
-    {effectType: 'UTRs', variantsCount: '0'}
+  [{effectType: 'All', expectedOverviewParagraph: '30 variants selected (30 shown)'},
+    {effectType: 'LGDs', expectedOverviewParagraph: '0 variants selected (0 shown)'},
+    {effectType: 'Nonsynonymous', expectedOverviewParagraph: '15 variants selected (15 shown)'},
+    {effectType: 'Coding', expectedOverviewParagraph: '30 variants selected (30 shown)'},
+    {effectType: 'UTRs', expectedOverviewParagraph: '0 variants selected (0 shown)'}
   ].forEach((data) => {
-    it('should display \'' + data.variantsCount + ' variants selected\' in overview paragraph when variant types are ' +
-        data.effectType, () => {
+    it('should display the correct data in overview paragraph whene effect types are ' + data.effectType, () => {
       genotypeBrowserController.setStudy(datasetIds.compVcf);
       genotypeBrowserController.setEffectTypesGroup(data.effectType);
       genotypeBrowserController.showTablePreview();
-      page.overviewParagraph.should('have.text', ' ' + data.variantsCount + ' variants selected (' + data.variantsCount + ' shown) ');
+      page.overviewParagraph.should('have.text', data.expectedOverviewParagraph);
     });
   });
 
@@ -254,7 +254,7 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.setInheritanceType(data.inheritanceType);
       genotypeBrowserController.showTablePreview();
-      page.overviewParagraph.should('have.text', ' ' + data.expectedOverviewParagraph + ' ');
+      page.overviewParagraph.should('have.text', data.expectedOverviewParagraph);
     });
   });
 
@@ -270,18 +270,23 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.setInheritanceType('Denovo');
       genotypeBrowserController.showTablePreview();
-      page.overviewParagraph.should('have.text', ' ' + data.expectedOverviewParagraph + ' ');
+      page.overviewParagraph.should('have.text', data.expectedOverviewParagraph);
     });
   });
 
-  [{familyId: 'f1'}, {familyId: 'f2'}, {familyId: 'f3'}, {familyId: 'f4'}, {familyId: 'f5'}].forEach((data) => {
+  [{familyId: 'f1'},
+    {familyId: 'f2'},
+    {familyId: 'f3'},
+    {familyId: 'f4'},
+    {familyId: 'f5'}
+  ].forEach((data) => {
     it('should display \'6 variants selected\' in overview paragraph when family id is \'' + data.familyId + '\'', () => {
       genotypeBrowserController.setStudy(datasetIds.compVcf);
       genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.setFamilyFilterToId(data.familyId);
       genotypeBrowserController.showTablePreview();
 
-      page.overviewParagraph.should('have.text', ' 6 variants selected (6 shown) ');
+      page.overviewParagraph.should('have.text', '6 variants selected (6 shown)');
     });
   });
 
@@ -298,7 +303,7 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setEffectTypesGroup(data.effectType);
       genotypeBrowserController.filterGenesByGeneSymbol(data.geneSymbol);
       genotypeBrowserController.showTablePreview();
-      page.overviewParagraph.should('have.text', ' ' + data.expectedOverviewParagraph + ' ');
+      page.overviewParagraph.should('have.text', data.expectedOverviewParagraph);
     });
   });
 
@@ -307,7 +312,7 @@ describe('Genotype browser table preview result tests', () => {
     genotypeBrowserController.setEffectTypesGroup('All');
     genotypeBrowserController.setFamilyFilterToId('11002');
     genotypeBrowserController.showTablePreview();
-    page.overviewParagraph.should('have.text', ' 2 variants selected (2 shown) ');
+    page.overviewParagraph.should('have.text', '2 variants selected (2 shown)');
   });
 
   it('should display \'0 variants selected\' in overview paragraph when gene sets is GO Terms - GO:0016917 GABA_receptor_activity\' ' +
@@ -316,7 +321,7 @@ describe('Genotype browser table preview result tests', () => {
     genotypeBrowserController.filterGenesByGeneSets('GO Terms', 'GO:0016917');
     genotypeBrowserController.setEffectTypesGroup('LGDs');
     genotypeBrowserController.showTablePreview();
-    page.overviewParagraph.should('have.text', ' 0 variants selected (0 shown) ');
+    page.overviewParagraph.should('have.text', '0 variants selected (0 shown)');
   });
 
   [{study: datasetIds.iossifov2014,
@@ -333,7 +338,7 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.filterGenesByGeneSets('GO Terms', 'GO:0016917');
       genotypeBrowserController.setEffectTypes(data.effectTypes);
       genotypeBrowserController.showTablePreview();
-      page.overviewParagraph.should('have.text', ' ' + data.expectedOverviewParagraph + ' ');
+      page.overviewParagraph.should('have.text', data.expectedOverviewParagraph);
     });
   });
 
@@ -355,12 +360,12 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setFamilyFilterToId(data.familyId);
       genotypeBrowserController.showTablePreview();
 
-      const spanEles = genotypePreviewTablePage.getCellSpanElementsByIndex(7);
+      genotypePreviewTablePage.getSpansInTableRowByIndex(7).eq(0).invoke('text').then(text => {
+        expect(truncate(text)).to.be.eq(data.values.age);
+      });
 
-      spanEles.invoke('text').then(text => {
-        const result = text.trim().split('  ').map(el => truncate(Number(el)));
-        expect(result[0]).to.equal(data.values.age);
-        expect(result[1]).to.equal(data.values.iq);
+      genotypePreviewTablePage.getSpansInTableRowByIndex(7).eq(1).invoke('text').then(text => {
+        expect(truncate(text)).to.be.eq(data.values.iq);
       });
     });
   });

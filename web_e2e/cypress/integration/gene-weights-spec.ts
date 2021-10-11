@@ -147,51 +147,51 @@ describe('Gene weights panel tests', () => {
     page.dropdownButton.select('SFARI gene score');
     cy.wait(1000);
     genotypeBrowserController.showTablePreview();
-    genotypeBrowserPage.overviewParagraph.should('have.text', ' 0 variants selected (0 shown) ');
+    genotypeBrowserPage.overviewParagraph.should('have.text', '0 variants selected (0 shown)');
 
     page.dropdownButton.select('RVIS rank');
     cy.wait(1000);
     genotypeBrowserController.showTablePreview();
-    genotypeBrowserPage.overviewParagraph.should('have.text', ' 0 variants selected (0 shown) ');
+    genotypeBrowserPage.overviewParagraph.should('have.text', '0 variants selected (0 shown)');
 
     page.dropdownButton.select('RVIS');
     cy.wait(1000);
     genotypeBrowserController.showTablePreview();
-    genotypeBrowserPage.overviewParagraph.should('have.text', ' 0 variants selected (0 shown) ');
+    genotypeBrowserPage.overviewParagraph.should('have.text', '0 variants selected (0 shown)');
 
     page.dropdownButton.select('LGD rank');
     cy.wait(1000);
     genotypeBrowserController.showTablePreview();
-    genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
+    genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
     
     page.dropdownButton.select('LGD score');
     cy.wait(1000);
     genotypeBrowserController.showTablePreview();
-    genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
+    genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
 
     page.dropdownButton.select('ExAC pRec');
     cy.wait(1000);
     genotypeBrowserController.showTablePreview();
-    genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
+    genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
 
     page.dropdownButton.select('ExAC pLI rank');
     cy.wait(1000);
     genotypeBrowserController.showTablePreview();
-    genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
+    genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
 
     page.dropdownButton.select('ExAC pLI');
     cy.wait(1000);
     genotypeBrowserController.showTablePreview();
-    genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
+    genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
     
     page.dropdownButton.select('ExAC pRec rank');
     cy.wait(1000);
     genotypeBrowserController.showTablePreview();
-    genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
+    genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
 
     page.dropdownButton.select('ExAC pRec');
     cy.wait(1000);
     genotypeBrowserController.showTablePreview();
-    genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
+    genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
   });
 });

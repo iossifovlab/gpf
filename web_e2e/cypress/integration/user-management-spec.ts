@@ -35,7 +35,7 @@ describe('User management tests', () => {
     page.submitUserButton.click();
 
     page.usersTableRows.should('have.length', 4);
-    page.usersTableRows.last().should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
+    page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
 
     page.userTableDeleteNewestUserButton.click();
     page.userTableDeleteUserConfirmButton.click();
@@ -56,12 +56,12 @@ describe('User management tests', () => {
     page.nameInputField.type('other_test_name');
     page.submitUserButton.click();
 
-    page.alertElement.should('have.text', ' Error: wdae user with this email already exists. ');
+    page.alertElement.should('have.text', 'Error: wdae user with this email already exists.');
     page.backUserButton.click();
     page.backUserConfirmationButton.click();
 
     page.usersTableRows.should('have.length', 4);
-    page.usersTableRows.last().should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
+    page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
 
     deleteTestUser(page);
   });
@@ -85,11 +85,11 @@ describe('User management tests', () => {
   it('should search and find user', () => {
     createTestUser(page, 'test_email@email.com', 'test_name');
     page.userSearchField.type('test_name');
-    page.usersTableRows.last().should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
+    page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
 
     page.userSearchField.clear();
     page.userSearchField.type('test_email@email.com');
-    page.usersTableRows.last().should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
+    page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
     cy.reload();
 
     deleteTestUser(page);
@@ -126,8 +126,7 @@ describe('User management tests', () => {
     page.userWindowGroupDropdownListCheckboxes.last().click();
     page.userWindowGroupDropDownMenuButton.click();
     page.userWindowSubmitButton.click();
-    page.usersTableRows.last()
-      .should('have.text', ' test_name test_email@email.comany_user test_email@email.com test_group × multi ');
+    page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.comtest_group×multi');
 
     page.groupsButton.click();
     page.groupsTableRows.last().should('contain.text', 'test_email@email.com');
@@ -136,8 +135,7 @@ describe('User management tests', () => {
     page.userTableRemoveUserGroupButton.click();
     page.userTableRemoveUserGroupConfirmButton.click();
     cy.reload();
-    page.usersTableRows.last()
-      .should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
+    page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
 
     deleteTestGroup(page);
     deleteTestUser(page);
