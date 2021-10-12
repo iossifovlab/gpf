@@ -148,7 +148,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             if variant.variant_type & VariantType.indel:
                 first_position = variant.position
                 last_position = variant.position + len(variant.reference)
-            elif variant.is_cnv():
+            elif VariantType.is_cnv(variant.variant_type):
                 first_position = variant.position
                 last_position = variant.end_position
             else:
