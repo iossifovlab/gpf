@@ -2,8 +2,6 @@ import os
 import glob
 import pyarrow.parquet as pq
 
-from dae.utils.regions import Region
-
 from dae.tools.denovo2parquet import main
 from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 
@@ -59,6 +57,6 @@ def test_denovo2parquet_denovo_partition(
     file_glob = os.path.join(temp_dirname, pd.generate_file_access_glob())
     partition_files = glob.glob(file_glob)
 
-    assert len(partition_files) == 5
+    assert len(partition_files) == 6
     for file in partition_files:
         assert "frequency_bin=0" in file
