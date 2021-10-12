@@ -126,8 +126,6 @@ import { UsersGroupsService } from './users-groups/users-groups.service';
 
 import { ConfirmationPopoverModule } from 'angular-confirmation-popover';
 import { UserCreateComponent } from './user-create/user-create.component';
-import { GroupsBulkAddComponent } from './groups-bulk-add/groups-bulk-add.component';
-import { GroupsBulkRemoveComponent } from './groups-bulk-remove/groups-bulk-remove.component';
 import { UserGroupsSelectorComponent } from './user-groups-selector/user-groups-selector.component';
 import { UsersActionsComponent } from './users-actions/users-actions.component';
 import { DatasetsTableComponent } from './datasets-table/datasets-table.component';
@@ -251,14 +249,6 @@ const appRoutes: Routes = [
         component: UserCreateComponent
       },
       {
-        path: 'users/add-group',
-        component: GroupsBulkAddComponent
-      },
-      {
-        path: 'users/remove-group',
-        component: GroupsBulkRemoveComponent
-      },
-      {
         path: 'users/:id',
         component: UserEditComponent
       }
@@ -350,8 +340,6 @@ const appRoutes: Routes = [
     UserEditComponent,
     ManagementComponent,
     UserCreateComponent,
-    GroupsBulkAddComponent,
-    GroupsBulkRemoveComponent,
     UserGroupsSelectorComponent,
     UsersActionsComponent,
     DatasetsTableComponent,
