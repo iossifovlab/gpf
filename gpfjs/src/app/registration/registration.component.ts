@@ -20,6 +20,9 @@ export class RegistrationComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+    this.usersService.emailLog.subscribe(email => {
+      this.email = email;
+    });
   }
 
   register() {

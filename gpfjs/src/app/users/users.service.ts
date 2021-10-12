@@ -1,6 +1,6 @@
 
 // tslint:disable-next-line:import-blacklist
-import {throwError as observableThrowError, Observable, Subject, ReplaySubject, of } from 'rxjs';
+import {throwError as observableThrowError, Observable, Subject, ReplaySubject, of, BehaviorSubject } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
@@ -36,6 +36,7 @@ export class UsersService {
   private oboeInstance = null;
   private connectionEstablished = false;
   public usersStreamingFinishedSubject = new Subject();
+  public emailLog: BehaviorSubject<string>;
 
   constructor(
     private http: HttpClient,
@@ -45,7 +46,13 @@ export class UsersService {
     private location: Location,
     private store: Store,
     private locationStrategy: LocationStrategy
-  ) {}
+  ) {
+    this.emailLog = new BehaviorSubject('');
+  }
+
+  public nextEmail(email: string) {
+    this.emailLog.next(email);
+  }
 
   logout(): Observable<boolean> {
     const csrfToken = this.cookieService.get('csrftoken');

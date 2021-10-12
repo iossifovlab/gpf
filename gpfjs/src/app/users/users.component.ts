@@ -38,6 +38,9 @@ export class UsersComponent implements OnInit {
   ngOnInit() {
     this.reloadUserData();
     this.userInfo$ = this.usersService.getUserInfoObservable().pipe(share());
+    this.usersService.emailLog.subscribe(email => {
+      this.username = email;
+    });
   }
 
   reloadUserData() {
@@ -101,10 +104,12 @@ export class UsersComponent implements OnInit {
   }
 
   showRegister() {
+    this.usersService.emailLog.next(this.username);
     this.modalService.open(RegistrationComponent);
   }
 
   showForgotPassword() {
+    this.usersService.emailLog.next(this.username);
     this.modalService.open(ForgotPasswordComponent);
   }
 
