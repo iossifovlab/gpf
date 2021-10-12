@@ -155,6 +155,12 @@ export class UsersService {
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
 
+    if (!this.isEmailValid(email)) {
+      return observableThrowError(new Error(
+        'Invalid email address entered. Please use a valid email address.'
+      ));
+    }
+
     return this.http.post(this.config.baseUrl + this.resetPasswordUrl, { email: email }, options).pipe(
       map(() => {
         return true;

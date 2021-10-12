@@ -60,7 +60,7 @@ export class UsersComponent implements OnInit {
         } else {
           this.showPasswordField = false;
           if (res['status'] === 404) {
-            this.errorMessage = 'Wrong username!';
+            this.errorMessage = 'Wrong email!';
           } else if (res['status'] === 403) {
             this.errorMessage = `Too many incorrect attempts! Please wait ${res['error']['lockout_time']} seconds!`;
           }
