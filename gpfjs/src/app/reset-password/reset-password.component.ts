@@ -38,8 +38,13 @@ export class ResetPasswordComponent implements AfterViewInit {
     });
   }
 
+  private isEmptyPass(pass: string): boolean {
+    return (!pass || !/[^\s]+/.test(pass));
+  }
+
   resetPassword() {
-    if (this.password === undefined || this.confirmPassword === undefined) {
+    if (this.isEmptyPass(this.password) || this.isEmptyPass(this.confirmPassword)) {
+      this.resetPasswordError = 'Password field is empty';
       return;
     }
 
