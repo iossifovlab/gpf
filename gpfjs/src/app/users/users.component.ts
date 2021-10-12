@@ -59,8 +59,8 @@ export class UsersComponent implements OnInit {
           this.errorMessage = undefined;
         } else {
           this.showPasswordField = false;
-          if (res['status'] === 404) {
-            this.errorMessage = 'Wrong email!';
+          if (res['status'] === 404 || res['status'] === 400) {
+            this.errorMessage = 'Invalid email!';
           } else if (res['status'] === 403) {
             this.errorMessage = `Too many incorrect attempts! Please wait ${res['error']['lockout_time']} seconds!`;
           }
