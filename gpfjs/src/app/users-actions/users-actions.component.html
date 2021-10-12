@@ -10,8 +10,7 @@
     <div class="popover-body">
       <p [innerHTML]="options.popoverMessage"></p>
       <div class="row">
-        <div
-          class="col-xs-12 col-12 text-center">
+        <div class="col-xs-12 col-12 text-center">
           <button
             *ngIf="!options.hideConfirmButton"
             [mwlFocus]="options.focusButton === 'confirm'"
@@ -32,7 +31,9 @@
   </div>
 </ng-template>
 
-<a role="button" tabindex="0" class="btn btn-outline-primary btn-sm"
+<a role="button"
+  tabindex="0"
+  class="btn btn-outline-primary btn-sm"
   mwlConfirmationPopover
   confirmText="Reset password"
   title="Reset password"
