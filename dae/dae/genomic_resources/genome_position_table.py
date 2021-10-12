@@ -8,11 +8,12 @@ from dae.genomic_resources.repository import GenomicResource
 
 class GenomicPositionTable(abc.ABC):
     def __init__(self, genomic_resource: GenomicResource, table_definition,
-                 chrom_key="chr", pos_key="pos"):
+                 chrom_key, pos_begin_key, pos_end_key):
         self.genomic_resource = genomic_resource
         self.definition = table_definition
         self.chrom_key = chrom_key
-        self.pos_key = pos_key
+        self.pos_begin_key = pos_begin_key
+        self.pos_end_key = pos_end_key
         self.chr_map = None
 
         # handling the 'header' property
@@ -71,6 +72,19 @@ class GenomicPositionTable(abc.ABC):
                 self.chr_map = dict(zip(new_columns, file_columns))
                 self.chr_order = new_columns
             self.rev_chr_map = {fch: ch for ch, fch in self.chr_map.items()}
+
+    def _set_special_column_indexes(self):
+        self.chr_column_i = self.get_special_column_index(self.chrom_key)
+        self.pos_begin_column_i = self.get_special_column_index(
+            self.pos_begin_key)
+        self.pos_end_column_i = self.pos_begin_column_i
+        if self.pos_end_key:
+            try:
+                self.pos_end_column_i = self.get_special_column_index(
+                    self.pos_end_key)
+            except Exception:
+                pass
+        self.has_pos_end = self.pos_end_column_i != self.pos_begin_column_i
 
     def get_column_names(self):
         return self.header
@@ -143,11 +157,11 @@ class FlatGenomicPositionTable(GenomicPositionTable):
     }
 
     def __init__(self, genomic_resource: GenomicResource, table_definition,
-                 str_stream, format, chrom_key="chr", pos_key="pos"):
+                 chrom_key, pos_begin_key, pos_end_key, str_stream, format):
         self.format = format
         self.str_stream = str_stream
         super().__init__(genomic_resource, table_definition,
-                         chrom_key, pos_key)
+                         chrom_key, pos_begin_key, pos_end_key)
 
     def load(self):
         clmn_sep, strip_chars, space_replacement = \
@@ -165,8 +179,8 @@ class FlatGenomicPositionTable(GenomicPositionTable):
 
             self.header = tuple(hcs)
         col_number = len(self.header) if self.header else None
-        self.chr_column_i = self.get_special_column_index(self.chrom_key)
-        self.pos_column_i = self.get_special_column_index(self.pos_key)
+
+        self._set_special_column_indexes()
 
         records_by_chr = collections.defaultdict(list)
         for line in self.str_stream:
@@ -181,8 +195,9 @@ class FlatGenomicPositionTable(GenomicPositionTable):
             if space_replacement:
                 cs = tuple(["" if v == 'EMPTY' else v for v in cs])
             ch = cs[self.chr_column_i]
-            ps = int(cs[self.pos_column_i])
-            records_by_chr[ch].append((ps, cs))
+            ps_begin = int(cs[self.pos_begin_column_i])
+            ps_end = int(cs[self.pos_end_column_i])
+            records_by_chr[ch].append((ps_begin, ps_end, cs))
         self.records_by_chr = {c: sorted(pss)
                                for c, pss in records_by_chr.items()}
 
@@ -196,13 +211,13 @@ class FlatGenomicPositionTable(GenomicPositionTable):
                     continue
                 fch = self.chr_map[ch]
                 pss = self.records_by_chr[fch]
-                for _, cs in pss:
+                for _, _, cs in pss:
                     csl = list(cs)
                     csl[self.chr_column_i] = ch
                     yield tuple(csl)
             else:
                 pss = self.records_by_chr[ch]
-                for _, cs in pss:
+                for _, _, cs in pss:
                     yield cs
 
     def get_records_in_region(self, ch: str, beg: int = None, end: int = None):
@@ -210,10 +225,10 @@ class FlatGenomicPositionTable(GenomicPositionTable):
             fch = self.chr_map[ch]
         else:
             fch = ch
-        for ps, cs in self.records_by_chr[fch]:
-            if beg and beg > ps:
+        for ps_begin, ps_end, cs in self.records_by_chr[fch]:
+            if beg and beg > ps_end:
                 continue
-            if end and end < ps:
+            if end and end < ps_begin:
                 continue
             if self.chr_map:
                 csl = list(cs)
@@ -228,17 +243,17 @@ class FlatGenomicPositionTable(GenomicPositionTable):
 
 class TabixGenomicPositionTable(GenomicPositionTable):
     def __init__(self, genomic_resource: GenomicResource, table_definition,
-                 tabix_file: pysam.TabixFile, chrom_key="chr", pos_key="pos"):
+                 chrom_key, pos_begin_key, pos_end_key,
+                 tabix_file: pysam.TabixFile):
         self.tabix_file: pysam.TabixFile = tabix_file
         super().__init__(genomic_resource, table_definition,
-                         chrom_key, pos_key)
+                         chrom_key, pos_begin_key, pos_end_key)
 
     def load(self):
         if self.header_mode == "file":
             self.header = self._get_tabix_header()
 
-        self.chr_column_i = self.get_special_column_index(self.chrom_key)
-        self.pos_column_i = self.get_special_column_index(self.chrom_key)
+        self._set_special_column_indexes()
 
     def _get_tabix_header(self):
         return tuple(self.tabix_file.header[-1].strip("#").split("\t"))
@@ -280,7 +295,8 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
 
 def get_genome_position_table(gr: GenomicResource, table_definition: dict,
-                              chrom_key="chr", pos_key="pos"):
+                              chrom_key="chr", pos_begin_key="pos",
+                              pos_end_key=None):
     filename = table_definition['file']
 
     if filename.endswith(".bgz"):
@@ -296,13 +312,14 @@ def get_genome_position_table(gr: GenomicResource, table_definition: dict,
 
     if frmt in ["mem", "csv", "tsv"]:
         with gr.open_raw_file(filename, mode="rt", uncompress=True) as F:
-            table = FlatGenomicPositionTable(gr, table_definition, F, frmt,
-                                             chrom_key, pos_key)
+            table = FlatGenomicPositionTable(gr, table_definition,
+                                             chrom_key, pos_begin_key,
+                                             pos_end_key, F, frmt)
         return table
     elif frmt == "tabix":
         return TabixGenomicPositionTable(gr, table_definition,
-                                         gr.open_tabix_file(filename),
-                                         chrom_key, pos_key)
+                                         chrom_key, pos_begin_key, pos_end_key,
+                                         gr.open_tabix_file(filename))
     else:
         raise Exception("unknown table format")
 
@@ -320,8 +337,8 @@ def save_as_tabix_table(table: GenomicPositionTable,
 
     pysam.tabix_index(full_file_path, force=True,
                       seq_col=table.chr_column_i,
-                      start_col=table.pos_column_i,
-                      end_col=table.pos_column_i)
+                      start_col=table.pos_begin_column_i,
+                      end_col=table.pos_end_column_i)
 
 
 if __name__ == "__main__":

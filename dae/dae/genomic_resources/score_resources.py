@@ -27,6 +27,8 @@ class ScoreLine:
         scr_def = self.scores[id]
 
         str_value = self.values[scr_def.col_index]
+        if str_value in scr_def.na_values:
+            return None
         return scr_def.value_parser(str_value)
 
     def get_special_column_value(self, id):
@@ -70,12 +72,7 @@ class GenomicScoresResource(GenomicResource, abc.ABC):
 
     def open(self):
         self.infile = get_genome_position_table(
-            self, self.get_config()['table'], 'chrom', 'pos_begin')
-        self.direct_infile = get_genome_position_table(
-            self, self.get_config()['table'], 'chrom', 'pos_begin')
-
-        self.buffer = []
-        self.last_pos = 0
+            self, self.get_config()['table'], 'chrom', 'pos_begin', 'pos_end')
 
         # load score configuraton
         self.scores = {}
@@ -103,8 +100,19 @@ class GenomicScoresResource(GenomicResource, abc.ABC):
                 "float": float,
                 "int": int
             }
+
             scr_def.value_parser = type_parsers[scr_def.type]
 
+            default_na_values = {
+                "str": [],
+                "float": ["", 'nan', '.'],
+                "int": ["", 'nan', '.']
+            }
+
+            scr_def.na_values = score_conf.get(
+                "na_values",
+                self.get_config().get(f"default_na_values.{scr_def.type}",
+                                      default_na_values[scr_def.type]))
             default_type_aggregators = {
                 "float": "mean", "int": "mean", "str": "concatenate"}
             scr_def.aggregator_name = score_conf.get(
@@ -138,8 +146,6 @@ class GenomicScoresResource(GenomicResource, abc.ABC):
 
         self._has_chrom_prefix = self.infile.get_chromosomes(
         )[-1].startswith("chr")
-        self._lines_iterator = map(self._parse_line,
-                                   self.infile.get_all_records())
         return True
 
     def close(self):
@@ -158,121 +164,21 @@ class GenomicScoresResource(GenomicResource, abc.ABC):
                             f"begining {end}.")
         return begin, end
 
-    @property
-    def _buffer_chrom(self):
-        if len(self.buffer) == 0:
-            return None
-
-        return self.buffer[0].get_chrom()
-
-    @property
-    def _buffer_pos_begin(self):
-        if len(self.buffer) == 0:
-            return -1
-        return self.buffer[0].get_pos_begin()
-
-    @property
-    def _buffer_pos_end(self):
-        if len(self.buffer) == 0:
-            return -1
-        return self.buffer[0].get_pos_end()
-
     def _get_header(self):
         return self.infile.get_column_names()
 
-    def _parse_line(self, line):
-        return ScoreLine(line, self.scores, self.special_columns,
-                         self.has_pos_end)
-
-    def _purge_buffer(self, chrom, pos_begin, pos_end):
-        # purge start of line buffer
-        while len(self.buffer) > 0:
-            line = self.buffer[0]
-            if line.get_chrom() == chrom and line.get_pos_end() >= pos_begin:
-                break
-            self.buffer.pop(0)
-
-    def _fill_buffer(self, chrom, pos_begin, pos_end):
-        if self._buffer_chrom == chrom and self._buffer_pos_end > pos_end:
-            return
-        if self._lines_iterator is None:
-            return
-
-        line = None
-        for line in self._lines_iterator:
-            if line.get_pos_end() >= pos_begin:
-                break
-
-        if not line:
-            return
-
-        self.buffer.append(line)
-
-        for line in self._lines_iterator:
-            assert line.get_chrom() == self._buffer_chrom, \
-                (line.get_chrom(), self._buffer_chrom)
-            self.buffer.append(line)
-            if line.get_pos_end() > pos_end:
-                break
-
     def _fetch_lines(self, chrom, pos_begin, pos_end):
-        self.last_pos = pos_end
-        if abs(pos_begin - self.last_pos) > self.ACCESS_SWITCH_THRESHOLD:
-            return self._fetch_direct(chrom, pos_begin, pos_end)
-        return self._fetch_sequential(chrom, pos_begin, pos_end)
+        records = list(self.infile.get_records_in_region(
+            chrom, pos_begin, pos_end))
+        return [ScoreLine(record, self.scores, self.special_columns,
+                          self.has_pos_end)
+                for record in records]
 
-    def _fetch_sequential(self, chrom, pos_begin, pos_end):
-        if pos_end < pos_begin:
-            raise ValueError("pos_end must be large or equal to pos_begin.")
-        if (
-            chrom != self._buffer_chrom
-            or pos_begin < self._buffer_pos_begin
-            or (pos_begin - self._buffer_pos_end) > self.LONG_JUMP_THRESHOLD
-        ):
-            self.buffer = list()
-            lines = self.infile.get_records_in_region(chrom, pos_begin, None)
-            self._lines_iterator = map(
-                self._parse_line,
-                lines
-            )
-
-        if self._lines_iterator is None:
-            return []
-
-        self._purge_buffer(chrom, pos_begin, pos_end)
-        self._fill_buffer(chrom, pos_begin, pos_end)
-        return self._select_lines(chrom, pos_begin, pos_end)
-
-    def _select_lines(self, chrom, pos_begin, pos_end):
-        result = []
-        for line in self.buffer:
-            if line.get_chrom() != chrom:
-                continue
-
-            def regions_intersect(b1: int, e1: int, b2: int, e2: int) -> bool:
-                assert b1 <= e1 and b2 <= e2
-                return b2 <= e1 and b1 <= e2
-            if regions_intersect(
-                pos_begin, pos_end, line.get_pos_begin(), line.get_pos_end()
-            ):
-                result.append(line)
-        return result
-
-    def _fetch_direct(self, chrom, pos_begin, pos_end):
-        try:
-            result = []
-            for line in self.direct_infile.get_records_in_region(
-                    chrom, pos_begin, pos_end):
-                result.append(self._parse_line(line))
-            return result
-        except ValueError as ex:
-            print(
-                f"could not find region {chrom}:{pos_begin}-{pos_end} "
-                f"in {self.filename}: ",
-                ex,
-                file=sys.stderr,
-            )
-            return []
+        # return self._fetch_direct(chrom, pos_begin, pos_end)
+        # self.last_pos = pos_end
+        # if abs(pos_begin - self.last_pos) > self.ACCESS_SWITCH_THRESHOLD:
+        #
+        # return self._fetch_sequential(chrom, pos_begin, pos_end)
 
     def get_all_chromosomes(self):
         return self.infile.get_chromosomes()
@@ -292,16 +198,7 @@ class PositionScoreResource(GenomicScoresResource):
         return "PositionScores"
 
     def get_extra_special_columns(self):
-        self.has_pos_end = True
-        try:
-            self.infile.get_special_column_index("pos_end")
-        except Exception:
-            self.has_pos_end = False
-
-        if self.has_pos_end:
-            return ({"chrom": str, "pos_begin": int, "pos_end": int})
-        else:
-            return ({"chrom": str, "pos_begin": int})
+        return {}
 
     def fetch_scores(
         self, chrom: str, position: int, scores: List[str] = None

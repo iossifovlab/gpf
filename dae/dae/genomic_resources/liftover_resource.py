@@ -32,7 +32,7 @@ class LiftoverChainResource(GenomicResource):
     def close(self):
         pass
 
-    def map_chromosome(chrom, mapping):
+    def map_chromosome(self, chrom, mapping):
         if not mapping:
             return chrom
         if "del_prefix" in mapping:
@@ -55,8 +55,8 @@ class LiftoverChainResource(GenomicResource):
                 f"liftover_variant: liftover returns more than one target "
                 f"position: {lo_coordinates}")
 
-        coordinates = lo_coordinates[0]
+        coordinates = list(lo_coordinates[0])
         coordinates[0] = self.map_chromosome(
             coordinates[0], self.chrom_target_coordinates)
 
-        return coordinates
+        return tuple(coordinates)

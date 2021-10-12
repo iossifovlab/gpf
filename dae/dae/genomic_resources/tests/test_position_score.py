@@ -36,3 +36,38 @@ def test_the_simplest_position_score():
     assert res.fetch_scores_agg(
         "1", 10, 11, non_default_aggregators={"phastCons100way": "max"}) == \
         {"phastCons100way": 0.03}
+
+
+def test_region_score():
+    res: PositionScoreResource = build_a_test_resource({
+        GR_CONF_FILE_NAME: '''
+            type: PositionScores
+            table:
+                file: data.mem
+            scores:
+              - id: phastCons100way
+                type: float
+                desc: "The phastCons computed over the tree of 100 \
+                       verterbarte species"
+                name: s1
+              - id: phastCons5way
+                type: float
+                desc: "The phastCons computed over the tree of 5 \
+                       verterbarte species"
+                name: s2''',
+        "data.mem": '''
+            chrom   pos_begin  pos_end   s1     s2
+            1       10   15    0.02   -1
+            1       17   19    0.03   0
+            1       22   25    0.46   EMPTY
+            2       5    80    0.01   1.2
+            '''
+    })
+    assert res
+    assert res.open()
+    assert res.infile.chr_column_i == 0
+    assert res.infile.pos_begin_column_i == 1
+    assert res.infile.pos_end_column_i == 2
+
+    assert res.fetch_scores("1", 12) == {
+        "phastCons100way": 0.02, "phastCons5way": -1.}
