@@ -2,10 +2,10 @@ import json
 from datetime import timedelta
 from functools import wraps
 
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import BaseUserManager, Group
-from django.shortcuts import get_object_or_404, get_list_or_404
+from django.contrib.auth.models import BaseUserManager
+from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.conf import settings
 from django.http.response import StreamingHttpResponse
@@ -32,7 +32,6 @@ from .authentication import SessionAuthenticationWithUnauthenticatedCSRF
 from .models import VerificationPath, AuthenticationLog
 from .serializers import UserSerializer
 from .serializers import UserWithoutEmailSerializer
-from .serializers import BulkGroupOperationSerializer
 
 from django.utils import timezone
 
@@ -174,46 +173,6 @@ class UserViewSet(viewsets.ModelViewSet):
         user.deauthenticate()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-    @request_logging(LOGGER)
-    @action(detail=False, methods=["post"])
-    def bulk_add_groups(self, request):
-        self.check_permissions(request)
-
-        serializer = BulkGroupOperationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        data = serializer.validated_data
-
-        users = get_list_or_404(get_user_model(), id__in=data["userIds"])
-        if len(users) != len(data["userIds"]):
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        with transaction.atomic():
-            for group_name in data["groups"]:
-                group, _ = Group.objects.get_or_create(name=group_name)
-                group.user_set.add(*users)
-
-        return Response(status=status.HTTP_200_OK)
-
-    @request_logging(LOGGER)
-    @action(detail=False, methods=["post"])
-    def bulk_remove_groups(self, request):
-        serializer = BulkGroupOperationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        data = serializer.validated_data
-
-        users = get_list_or_404(get_user_model(), id__in=data["userIds"])
-        if len(users) != len(data["userIds"]):
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        with transaction.atomic():
-            for group_name in data["groups"]:
-                group = get_object_or_404(Group, name=group_name)
-                group.user_set.remove(*users)
-
-        return Response(status=status.HTTP_200_OK)
 
 
 @request_logging_function_view(LOGGER)
