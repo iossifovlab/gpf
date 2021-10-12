@@ -7,7 +7,7 @@
   </div>
 
   <div class="modal-body">
-    <div style="display: table; border-spacing: 15px;">
+    <div style="display: table; border-spacing: 15px; height: 100%; width: 100%;">
       <div style="display: table-row;">
         <label for="email-input">Email</label>
         <input ngbAutofocus id="email-input" class="form-control" [(ngModel)]="email" name="email" type="text">
@@ -17,9 +17,9 @@
         <input id="name-input" class="form-control" [(ngModel)]="name" name="name" type="text">
       </div>
     </div>
-    <div *ngIf="registerError" style="margin-bottom: 0px;" class="alert alert-danger">{{ registerError }}</div>
+    <div *ngIf="registerError" class="alert alert-danger">{{ registerError }}</div>
 
-    <div *ngIf="registerSuccess" style="margin-bottom: 0px;" class="alert alert-info" role="alert">
+    <div *ngIf="registerSuccess" class="alert alert-info" role="alert">
       <span>An email has been sent to the given address</span>
     </div>
   </div>

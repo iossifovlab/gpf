@@ -1,9 +1,4 @@
-.modal-body > div {
-  height: 100%;
-  width: 100%;
-}
-
-.modal-footer > button {
+.modal-footer button {
   width: 93%;
   margin: auto;
 }
@@ -13,4 +8,5 @@
   width: 95%;
   margin: auto;
   text-align: center;
+  margin-bottom: 0px;
 }
