@@ -21,7 +21,7 @@ annotation_conf_schema = {
         "schema": annotator_schema,
     },
     "liftover_annotators": {
-        "type": "list", 
+        "type": "list",
         "schema": annotator_schema,
     },
     "score_annotators": {
