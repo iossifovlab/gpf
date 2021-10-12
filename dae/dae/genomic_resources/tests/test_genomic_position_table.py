@@ -1,14 +1,18 @@
 import pytest
 
-from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.genome_position_table import \
     get_genome_position_table
+
+from dae.genomic_resources import build_genomic_resource_repository
+from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
+
 from dae.genomic_resources.genome_position_table import \
     save_as_tabix_table
 from dae.genomic_resources.test_tools import build_a_test_resource
+from dae.genomic_resources.test_tools import convert_to_tab_separated
 
 
-def test_default_column_setup():
+def test_default_setup():
     res = build_a_test_resource({
         "genomic_resource.yaml": '''
             table:
@@ -23,7 +27,105 @@ def test_default_column_setup():
     assert tab.pos_column_i == 1
 
 
-def test_default_column_with_name():
+def test_chr_add_pref():
+    res = build_a_test_resource({
+        "genomic_resource.yaml": '''
+            table:
+                file: data.mem
+                chr_mapping:
+                    add_prefix: chr''',
+        "data.mem": '''
+            chr pos pos2  c2
+            1   10  12  3.14
+            X   11  11  4.14
+            11  12  10  5.14'''})
+    tab = get_genome_position_table(res, res.config['table'])
+    assert tab.get_chromosomes() == ["chr1", "chr11", "chrX"]
+
+
+def test_chr_del_pref():
+    res = build_a_test_resource({
+        "genomic_resource.yaml": '''
+            table:
+                file: data.mem
+                chr_mapping:
+                    del_prefix: chr''',
+        "data.mem": '''
+            chr    pos pos2  c2
+            chr1   10  12  3.14
+            chr22  11  11  4.14
+            chrX   12  10  5.14'''})
+    tab = get_genome_position_table(res, res.config['table'])
+    assert tab.get_chromosomes() == ["1", "22", "X"]
+
+
+def test_chr_mapping_file():
+    res = build_a_test_resource({
+        "genomic_resource.yaml": '''
+            table:
+                file: data.mem
+                chr_mapping:
+                    file: chr_map.txt''',
+        "data.mem": '''
+            chr    pos pos2  c2
+            chr1   10  12  3.14
+            chr22  11  11  4.14
+            chrX   12  10  5.14''',
+        "chr_map.txt": convert_to_tab_separated('''
+            chr     file_chr
+            gosho   chr1
+            pesho   chr22
+        ''')})
+    tab = get_genome_position_table(res, res.config['table'])
+
+    assert tab.get_chromosomes() == ["gosho", "pesho"]
+    assert list(tab.get_all_records()) == [
+        ("gosho",  "10",  "12",  "3.14"),
+        ("pesho",  "11",  "11",  "4.14")
+    ]
+    assert list(tab.get_records_in_region("pesho")) == [
+        ("pesho",  "11",  "11",  "4.14"),
+    ]
+
+
+def test_chr_mapping_file_with_tabix(tmp_path):
+    e_gr = build_a_test_resource({
+        "genomic_resource.yaml": '''
+            text_table:
+                file: data.mem
+            tabix_table:
+                file: data.bgz
+                chr_mapping:
+                    file: chr_map.txt''',
+        "data.mem": '''
+            chr    pos pos2  c2
+            chr1   10  12  3.14
+            chr22  11  11  4.14
+            chrX   12  10  5.14''',
+        "chr_map.txt": convert_to_tab_separated('''
+                chr     file_chr
+                gosho   chr1
+                pesho   chr22
+        ''')})
+    d_repo = GenomicResourceDirRepo("b", directory=tmp_path)
+    d_repo.store_resource(e_gr)
+    d_gr = d_repo.get_resource("")
+    save_as_tabix_table(
+        get_genome_position_table(e_gr, e_gr.config['text_table']),
+        str(d_repo.get_file_path(d_gr, "data.bgz")))
+    tab = get_genome_position_table(d_gr, d_gr.config['tabix_table'])
+
+    assert tab.get_chromosomes() == ["gosho", "pesho"]
+    assert list(tab.get_all_records()) == [
+        ("gosho",  "10",  "12",  "3.14"),
+        ("pesho",  "11",  "11",  "4.14")
+    ]
+    assert list(tab.get_records_in_region("pesho")) == [
+        ("pesho",  "11",  "11",  "4.14"),
+    ]
+
+
+def test_column_with_name():
     res = build_a_test_resource({
         "genomic_resource.yaml": '''
             table:
@@ -37,11 +139,11 @@ def test_default_column_with_name():
     tab = get_genome_position_table(res, res.config['table'])
     assert tab.chr_column_i == 0
     assert tab.pos_column_i == 2
-    assert list(tab.get_records_in_region('1', 12, 12)) == \
-        [('1', '10', '12', '3.14')]
+    assert list(tab.get_records_in_region('1', 12, 12)) == [
+        ('1', '10', '12', '3.14')]
 
 
-def test_default_column_with_index():
+def test_column_with_index():
     res = build_a_test_resource({
         "genomic_resource.yaml": '''
             table:
@@ -55,11 +157,11 @@ def test_default_column_with_index():
     tab = get_genome_position_table(res, res.config['table'])
     assert tab.chr_column_i == 0
     assert tab.pos_column_i == 2
-    assert list(tab.get_records_in_region('1', 12, 12)) == \
-        [('1', '10', '12', '3.14')]
+    assert list(tab.get_records_in_region('1', 12, 12)) == [
+        ('1', '10', '12', '3.14')]
 
 
-def test_nonn_default_keys():
+def test_non_default_keys():
     res = build_a_test_resource({
         "genomic_resource.yaml": '''
             table:
@@ -75,8 +177,8 @@ def test_nonn_default_keys():
         res, res.config['table'], "chrom", "pos_start")
     assert tab.chr_column_i == 0
     assert tab.pos_column_i == 2
-    assert list(tab.get_records_in_region('1', 12, 12)) == \
-        [('1', '10', '12', '3.14')]
+    assert list(tab.get_records_in_region('1', 12, 12)) == [
+        ('1', '10', '12', '3.14')]
 
 
 def test_no_header():
@@ -94,8 +196,8 @@ def test_no_header():
     tab = get_genome_position_table(res, res.config['table'])
     assert tab.chr_column_i == 0
     assert tab.pos_column_i == 2
-    assert list(tab.get_records_in_region('1', 12, 12)) == \
-        [('1', '10', '12', '3.14')]
+    assert list(tab.get_records_in_region('1', 12, 12)) == [
+        ('1', '10', '12', '3.14')]
 
 
 def test_header_in_config():
@@ -112,8 +214,8 @@ def test_header_in_config():
     tab = get_genome_position_table(res, res.config['table'])
     assert tab.chr_column_i == 0
     assert tab.pos_column_i == 2
-    assert list(tab.get_records_in_region('1', 12, 12)) == \
-        [('1', '10', '12', '3.14')]
+    assert list(tab.get_records_in_region('1', 12, 12)) == [
+        ('1', '10', '12', '3.14')]
 
 
 def test_space_in_mem_table():
@@ -129,8 +231,8 @@ def test_space_in_mem_table():
     tab = get_genome_position_table(res, res.config['table'])
     assert tab.chr_column_i == 0
     assert tab.pos_column_i == 1
-    assert list(tab.get_records_in_region('1', 11, 11)) == \
-        [('1', '11', '', '4.14')]
+    assert list(tab.get_records_in_region('1', 11, 11)) == [
+        ('1', '11', '', '4.14')]
 
 
 def test_text_table():

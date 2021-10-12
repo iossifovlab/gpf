@@ -7,10 +7,13 @@ from dae.genomic_resources.repository import GenomicResource
 
 
 class GenomicPositionTable(abc.ABC):
-    def __init__(self, table_definition, chrom_key="chr", pos_key="pos"):
+    def __init__(self, genomic_resource: GenomicResource, table_definition,
+                 chrom_key="chr", pos_key="pos"):
+        self.genomic_resource = genomic_resource
         self.definition = table_definition
         self.chrom_key = chrom_key
         self.pos_key = pos_key
+        self.chr_map = None
 
         # handling the 'header' property
         self.header_mode = table_definition.get("header", "file")
@@ -30,6 +33,44 @@ class GenomicPositionTable(abc.ABC):
                                 f"list of strings. The current value "
                                 f"{self.header_mode} does not meet these "
                                 f"requirements.")
+        self.load()
+        self.chr_map = None
+        self.chr_order = self.get_file_chromosomes()
+        if "chr_mapping" in table_definition:
+            mapping = table_definition['chr_mapping']
+            if "file" in mapping:
+                self.chr_map = {}
+                self.chr_order = []
+                with self.genomic_resource.open_raw_file(
+                        mapping["file"], "rt", True) as F:
+                    hcs = F.readline().strip("\n\r").split("\t")
+                    if hcs != ["chr", "file_chr"]:
+                        raise Exception(f"The chromosome mapping file "
+                                        f"{mapping['file']} in resource "
+                                        f"{self.genomic_resource.get_id()} is "
+                                        f"is expected to have the two columns "
+                                        f"chr and file_chr")
+                    for line in F:
+                        ch, fch = line.strip("\n\r").split("\t")
+                        assert ch not in self.chr_map
+                        self.chr_map[ch] = fch
+                        self.chr_order.append(ch)
+                    assert len(set(self.chr_map.values())) == len(self.chr_map)
+            else:
+                file_columns = self.chr_order
+                new_columns = file_columns
+
+                if 'del_prefix' in mapping:
+                    pref = mapping['del_prefix']
+                    new_columns = [ch[len(pref):] if ch.startswith(pref)
+                                   else ch for ch in new_columns]
+
+                if 'add_prefix' in mapping:
+                    pref = mapping['add_prefix']
+                    new_columns = [pref + ch for ch in new_columns]
+                self.chr_map = dict(zip(new_columns, file_columns))
+                self.chr_order = new_columns
+            self.rev_chr_map = {fch: ch for ch, fch in self.chr_map.items()}
 
     def get_column_names(self):
         return self.header
@@ -65,16 +106,31 @@ class GenomicPositionTable(abc.ABC):
             raise Exception("The table has no header.")
         return self.definition.get(key + ".name", key)
 
-    @ abc.abstractmethod
+    @abc.abstractmethod
+    def load(self):
+        pass
+
+    @abc.abstractmethod
     def get_all_records(self):
         pass
 
-    @ abc.abstractmethod
+    @abc.abstractmethod
     def get_records_in_region(self, ch: str, beg: int = None, end: int = None):
         pass
 
-    @ abc.abstractmethod
+    @abc.abstractmethod
     def close(self):
+        pass
+
+    def get_chromosomes(self):
+        return self.chr_order
+
+    @ abc.abstractmethod
+    def get_file_chromosomes(self):
+        '''
+        This is to be overwritten by the subclass. It should return a list of
+        the chromomes in the file in the order determinted by the file.
+        '''
         pass
 
 
@@ -86,18 +142,19 @@ class FlatGenomicPositionTable(GenomicPositionTable):
         "csv": (",", "\n\r", False)
     }
 
-    def __init__(self, table_definition, str_stream, format,
-                 chrom_key="chr", pos_key="pos"):
-        super().__init__(table_definition, chrom_key, pos_key)
+    def __init__(self, genomic_resource: GenomicResource, table_definition,
+                 str_stream, format, chrom_key="chr", pos_key="pos"):
         self.format = format
-        self.load(str_stream)
+        self.str_stream = str_stream
+        super().__init__(genomic_resource, table_definition,
+                         chrom_key, pos_key)
 
-    def load(self, str_stream):
+    def load(self):
         clmn_sep, strip_chars, space_replacement = \
             FlatGenomicPositionTable.FORMAT_DEF[self.format]
         if self.header_mode == "file":
             hcs = None
-            for line in str_stream:
+            for line in self.str_stream:
                 line = line.strip(strip_chars)
                 if not line:
                     continue
@@ -112,7 +169,7 @@ class FlatGenomicPositionTable(GenomicPositionTable):
         self.pos_column_i = self.get_special_column_index(self.pos_key)
 
         records_by_chr = collections.defaultdict(list)
-        for line in str_stream:
+        for line in self.str_stream:
             line = line.strip(strip_chars)
             if not line:
                 continue
@@ -129,33 +186,54 @@ class FlatGenomicPositionTable(GenomicPositionTable):
         self.records_by_chr = {c: sorted(pss)
                                for c, pss in records_by_chr.items()}
 
-    def get_chromosomes(self):
+    def get_file_chromosomes(self):
         return sorted(self.records_by_chr.keys())
 
     def get_all_records(self):
         for ch in self.get_chromosomes():
-            pss = self.records_by_chr[ch]
-            for _, cs in pss:
-                yield cs
+            if self.chr_map:
+                if ch not in self.chr_map:
+                    continue
+                fch = self.chr_map[ch]
+                pss = self.records_by_chr[fch]
+                for _, cs in pss:
+                    csl = list(cs)
+                    csl[self.chr_column_i] = ch
+                    yield tuple(csl)
+            else:
+                pss = self.records_by_chr[ch]
+                for _, cs in pss:
+                    yield cs
 
     def get_records_in_region(self, ch: str, beg: int = None, end: int = None):
-        for ps, cs in self.records_by_chr[ch]:
+        if self.chr_map:
+            fch = self.chr_map[ch]
+        else:
+            fch = ch
+        for ps, cs in self.records_by_chr[fch]:
             if beg and beg > ps:
                 continue
             if end and end < ps:
                 continue
-            yield cs
+            if self.chr_map:
+                csl = list(cs)
+                csl[self.chr_column_i] = ch
+                yield tuple(csl)
+            else:
+                yield cs
 
     def close(self):
         pass
 
 
 class TabixGenomicPositionTable(GenomicPositionTable):
-    def __init__(self, table_definition, tabix_file: pysam.TabixFile,
-                 chrom_key="chr", pos_key="pos"):
-        super().__init__(table_definition, chrom_key, pos_key)
+    def __init__(self, genomic_resource: GenomicResource, table_definition,
+                 tabix_file: pysam.TabixFile, chrom_key="chr", pos_key="pos"):
         self.tabix_file: pysam.TabixFile = tabix_file
+        super().__init__(genomic_resource, table_definition,
+                         chrom_key, pos_key)
 
+    def load(self):
         if self.header_mode == "file":
             self.header = self._get_tabix_header()
 
@@ -165,19 +243,37 @@ class TabixGenomicPositionTable(GenomicPositionTable):
     def _get_tabix_header(self):
         return tuple(self.tabix_file.header[-1].strip("#").split("\t"))
 
-    def get_chromosomes(self):
+    def get_file_chromosomes(self):
         return self.tabix_file.contigs
 
     def get_all_records(self):
         for line in self.tabix_file.fetch(parser=pysam.asTuple()):
-            yield tuple(line)
+            if self.chr_map:
+                fch = line[self.chr_column_i]
+                if fch not in self.rev_chr_map:
+                    continue
+                linel = list(line)
+                linel[self.chr_column_i] = self.rev_chr_map[fch]
+                yield tuple(linel)
+            else:
+                yield tuple(line)
 
     def get_records_in_region(self, ch: str, beg: int = None, end: int = None):
+        if ch not in self.get_chromosomes():
+            raise ValueError(f"The chromosome {ch} is not part of the table.")
         if beg:
             beg -= 1
-        for line in self.tabix_file.fetch(ch, beg, end,
-                                          parser=pysam.asTuple()):
-            yield tuple(line)
+        if self.chr_map:
+            fch = self.chr_map[ch]
+            for line in self.tabix_file.fetch(fch, beg, end,
+                                              parser=pysam.asTuple()):
+                linel = list(line)
+                linel[self.chr_column_i] = self.rev_chr_map[fch]
+                yield tuple(linel)
+        else:
+            for line in self.tabix_file.fetch(ch, beg, end,
+                                              parser=pysam.asTuple()):
+                yield tuple(line)
 
     def close(self):
         self.tabix_file.close()
@@ -200,11 +296,11 @@ def get_genome_position_table(gr: GenomicResource, table_definition: dict,
 
     if frmt in ["mem", "csv", "tsv"]:
         with gr.open_raw_file(filename, mode="rt", uncompress=True) as F:
-            table = FlatGenomicPositionTable(table_definition, F, frmt,
+            table = FlatGenomicPositionTable(gr, table_definition, F, frmt,
                                              chrom_key, pos_key)
         return table
     elif frmt == "tabix":
-        return TabixGenomicPositionTable(table_definition,
+        return TabixGenomicPositionTable(gr, table_definition,
                                          gr.open_tabix_file(filename),
                                          chrom_key, pos_key)
     else:

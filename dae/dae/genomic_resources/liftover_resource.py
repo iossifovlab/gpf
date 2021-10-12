@@ -32,16 +32,19 @@ class LiftoverChainResource(GenomicResource):
     def close(self):
         pass
 
+    def map_chromosome(chrom, mapping):
+        if not mapping:
+            return chrom
+        if "del_prefix" in mapping:
+            del_prefix = mapping["del_prefix"]
+            if chrom.startswith(del_prefix):
+                chrom = chrom.lstrip(del_prefix)
+        if "add_prefix" in mapping:
+            add_prefix = mapping["add_prefix"]
+            chrom = f"{add_prefix}{chrom}"
+
     def convert_coordinate(self, chrom, pos):
-        variant_coordinates = self.chrom_variant_coordinates
-        if variant_coordinates:
-            if variant_coordinates.del_prefix:
-                del_prefix = variant_coordinates.del_prefix
-                if chrom.startswith(del_prefix):
-                    chrom = chrom.lstrip(del_prefix)
-            elif variant_coordinates.add_prefix:
-                add_prefix = variant_coordinates.add_prefix
-                chrom = f"{add_prefix}{chrom}"
+        chrom = self.map_chromosome(chrom, self.chrom_variant_coordinates)
 
         lo_coordinates = self.liftover.convert_coordinate(chrom, pos - 1)
 
@@ -53,26 +56,7 @@ class LiftoverChainResource(GenomicResource):
                 f"position: {lo_coordinates}")
 
         coordinates = lo_coordinates[0]
-
-        target_coordinates = self.chrom_target_coordinates
-        if target_coordinates:
-            new_chrom = None
-            if target_coordinates.del_prefix:
-                del_prefix = target_coordinates.del_prefix
-                if chrom.startswith(del_prefix):
-                    new_chrom = coordinates[0].lstrip(
-                        del_prefix
-                    )
-            elif target_coordinates.add_prefix:
-                add_prefix = target_coordinates.add_prefix
-                new_chrom = f"{add_prefix}{coordinates[0]}"
-
-            if new_chrom is not None:
-                coordinates = (
-                    new_chrom,
-                    coordinates[1],
-                    coordinates[2],
-                    coordinates[3],
-                )
+        coordinates[0] = self.map_chromosome(
+            coordinates[0], self.chrom_target_coordinates)
 
         return coordinates
