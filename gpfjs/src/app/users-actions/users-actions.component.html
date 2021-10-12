@@ -42,7 +42,7 @@
   (confirm)="resetPassword(user)">
   <i class="fa fa-refresh fa-lg" aria-hidden="true"></i>
 </a>
-<a
+<a *ngIf="showDeleteButton"
   #ele
   role="button"
   tabindex="0"

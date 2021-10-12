@@ -10,9 +10,9 @@ import { UsersService } from '../users/users.service';
   styleUrls: ['./users-actions.component.css']
 })
 export class UsersActionsComponent implements OnInit, OnDestroy {
-  @Input()
-  user: User;
+  @Input() user: User;
   @ViewChild('ele') ele: ElementRef;
+  showDeleteButton = true;
 
   constructor(
     private zone: NgZone,
@@ -20,6 +20,11 @@ export class UsersActionsComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
+    this.usersService.getUserInfo().pipe(take(1)).subscribe((currentUser) => {
+      if (currentUser.email === this.user.email) {
+        this.showDeleteButton = false;
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -52,7 +57,7 @@ export class UsersActionsComponent implements OnInit, OnDestroy {
 
   getUserString(user: User) {
     let user_string = `${user.name || user.email}`
-    if(user.name) {
+    if (user.name) {
       user_string = `(${user.email}) ` + user_string
     }
     return user_string;
