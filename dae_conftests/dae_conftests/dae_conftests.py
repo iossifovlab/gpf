@@ -121,7 +121,7 @@ def default_dae_config(request, cleanup):
 
 
 @pytest.fixture(scope="session")
-def gpf_instance(default_dae_config, fixtures_dirname):
+def gpf_instance(default_dae_config, fixture_dirname):
     class GenomesDbInternal(GenomesDB):
         def get_default_gene_models_id(self, genome_id=None):
             return "RefSeq2013"
@@ -142,8 +142,11 @@ def gpf_instance(default_dae_config, fixtures_dirname):
         instance = GPFInstanceInternal(
             work_dir=work_dir, load_eagerly=load_eagerly
         )
-        repositories = copy.copy(
-            instance.dae_config.genomic_resources.repositories)
+        if instance.dae_config.genomic_resources is None:
+            repositories = []
+        else:
+            repositories = list(
+                instance.dae_config.genomic_resources.repositories)
         repositories.append(
             Box({
                 "id": "fixtures",
