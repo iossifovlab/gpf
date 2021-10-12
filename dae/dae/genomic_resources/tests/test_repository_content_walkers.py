@@ -31,19 +31,19 @@ def test_repository_content_walker(fake_repo):
     assert child == ("MPC", "/repo/path/hg19/MPC/genomic_resource.yaml")
 
 
-def test_genomic_resource_repository_walker(fixture_dirname):
-    repo_dirname = fixture_dirname("genomic_resources")
-    walker = _walk_genomic_resources_repository(repo_dirname)
+# def test_genomic_resource_repository_walker(fixture_dirname):
+#     repo_dirname = fixture_dirname("genomic_resources")
+#     walker = _walk_genomic_resources_repository(repo_dirname)
 
-    parents, child = next(walker)
-    print(parents, child)
+#     parents, child = next(walker)
+#     print(parents, child)
 
-    assert parents == ("hg19", "internal")
-    child_id, child_path = child
-    assert child_id == "scores_incomplete_coverage"
-    assert child_path.endswith(
-        "genomic_resources/hg19/internal/scores_incomplete_coverage/"
-        "genomic_resource.yaml")
+#     assert parents == ("hg19", "internal")
+#     child_id, child_path = child
+#     assert child_id == "scores_incomplete_coverage"
+#     assert child_path.endswith(
+#         "genomic_resources/hg19/internal/scores_incomplete_coverage/"
+#         "genomic_resource.yaml")
 
 
 def test_walk_genomic_resources_repository(fixture_dirname):
