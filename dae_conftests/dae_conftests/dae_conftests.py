@@ -121,7 +121,7 @@ def default_dae_config(request, cleanup):
 
 
 @pytest.fixture(scope="session")
-def gpf_instance(default_dae_config):
+def gpf_instance(default_dae_config, fixtures_dirname):
     class GenomesDbInternal(GenomesDB):
         def get_default_gene_models_id(self, genome_id=None):
             return "RefSeq2013"
@@ -139,15 +139,26 @@ def gpf_instance(default_dae_config):
             )
 
     def build(work_dir=None, load_eagerly=False):
-        return GPFInstanceInternal(
+        instance = GPFInstanceInternal(
             work_dir=work_dir, load_eagerly=load_eagerly
         )
+        repositories = copy.copy(
+            instance.dae_config.genomic_resources.repositories)
+        repositories.append(
+            Box({
+                "id": "fixtures",
+                "url": f"file://{fixture_dirname('genomic_resources')}"
+            }))
+
+        instance.genomic_resources_db = GenomicResourceDB(repositories)
+        return instance
 
     return build
 
 
 @pytest.fixture(scope="session")
-def gpf_instance_2013(default_dae_config, global_dae_fixtures_dir):
+def gpf_instance_2013(
+        default_dae_config,  fixture_dirname, global_dae_fixtures_dir):
     class GenomesDb2013(GenomesDB):
         def get_default_gene_models_id(self, genome_id=None):
             return "RefSeq2013"
@@ -166,8 +177,18 @@ def gpf_instance_2013(default_dae_config, global_dae_fixtures_dir):
             )
 
     gpf_instance = GPFInstance2013(dae_config=default_dae_config)
-    print(gpf_instance.genomes_db.get_default_gene_models_id())
-    print(gpf_instance.genomes_db.get_default_gene_models_filename())
+
+    gpf_instance = GPFInstance2013(dae_config=default_dae_config)
+
+    repositories = list(
+        gpf_instance.dae_config.genomic_resources.repositories)
+
+    repositories.append(
+            Box({
+                "id": "fixtures",
+                "url": f"file://{fixture_dirname('genomic_resources')}"
+            }))
+    gpf_instance.genomic_resources_db = GenomicResourceDB(repositories)
 
     return gpf_instance
 
@@ -456,8 +477,8 @@ def dae_iossifov2014_config():
 
 @pytest.fixture(scope="session")
 def iossifov2014_loader(
-    dae_iossifov2014_config, genome_2013, annotation_pipeline_internal
-):
+        dae_iossifov2014_config, genome_2013, annotation_pipeline_internal):
+
     config = dae_iossifov2014_config
 
     families_loader = FamiliesLoader(config.family_filename)

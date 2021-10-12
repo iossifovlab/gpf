@@ -1,16 +1,25 @@
 from dae.backends.raw.loader import StoredAnnotationDecorator
 
 
+def test_gpf_instance_genomic_resources_db(gpf_instance_2013):
+    resources_db = gpf_instance_2013.genomic_resources_db
+    print(resources_db.repositories)
+
+
 def test_annotation_pipeline_decorator_iossifov2014(iossifov2014_loader):
 
     variants_loader, _families_loader = iossifov2014_loader
     assert variants_loader.annotation_schema is not None
 
+    print(100*"=")
     for sv, _ in variants_loader.full_variants_iterator():
         assert len(sv.alt_alleles) == 1
+        print(sv, sv.alt_alleles[0].attributes)
+
         assert sv.alt_alleles[0].attributes["score0"] == sv.position
         assert sv.alt_alleles[0].attributes["score2"] == sv.position / 100
         assert sv.alt_alleles[0].attributes["score4"] == sv.position / 10000
+    print(100*"=")
 
 
 def test_stored_annotation_iossifov2014(iossifov2014_loader, temp_filename):
@@ -28,9 +37,14 @@ def test_stored_annotation_iossifov2014(iossifov2014_loader, temp_filename):
 
     for sv, _ in loader.full_variants_iterator():
         assert len(sv.alt_alleles) == 1
-        assert sv.alt_alleles[0].attributes["score0"] == sv.position
-        assert sv.alt_alleles[0].attributes["score2"] == sv.position / 100
-        assert sv.alt_alleles[0].attributes["score4"] == sv.position / 10000
+        print(sv, sv.alt_alleles[0].attributes)
+
+        assert sv.alt_alleles[0].attributes["score0"] == sv.position, \
+            sv.alt_alleles[0].attributes
+        assert sv.alt_alleles[0].attributes["score2"] == sv.position / 100, \
+            sv.alt_alleles[0].attributes
+        assert sv.alt_alleles[0].attributes["score4"] == sv.position / 10000, \
+            sv.alt_alleles[0].attributes
 
 
 def test_stored_annotation_does_not_change_summary_alleles(

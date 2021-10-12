@@ -4,6 +4,13 @@ children:
 - id: hg19
   type: group
   children:
+  - id: hg19/internal
+    type: group
+    children:
+    - id: hg19/internal/scores_incomplete_coverage
+      type: resource
+    - id: hg19/internal/scores1
+      type: resource
   - id: hg19/MPC
     type: resource
   - id: hg19/phastCons100

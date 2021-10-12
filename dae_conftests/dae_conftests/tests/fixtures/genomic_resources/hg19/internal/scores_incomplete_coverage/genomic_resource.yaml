@@ -1,0 +1,43 @@
+---
+
+id: hg19/internal/scores_incomplete_coverage
+
+resource_type: score_resources.PositionScoreResource
+
+filename: scores_incomplete_coverage.tsv.gz
+format: tsv/bgz
+
+index_file:
+  filename: scores_incomplete_coverage.tsv.gz.tbi
+  format: tabix
+
+has_header: true
+
+type_aggregators:
+  - type: float
+    aggregator: dae.genomic_resource.aggregators.MaxAggregator
+  - type: int
+    aggregator: dae.genomic_resource.aggregators.MaxAggregator
+  - type: str
+    aggregator: dae.genomic_resource.aggregators.ConcatAggregator
+
+# defined by score_type
+chrom: 
+  name: CHROM
+pos_begin:
+  name: POS
+pos_end: 
+  name: POS
+
+# score values
+scores:
+    - id: score0_incomplete_cov
+      type: float
+      name: score0
+
+default_annotation:
+  attributes:
+    - source: score0_incomplete_cov
+      dest: score0_incomplete_cov
+      aggregator:
+        position: MaxAggregator

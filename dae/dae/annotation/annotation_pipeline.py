@@ -69,6 +69,8 @@ class AnnotationPipeline():
                 annotator_type = annotator_config["annotator"]
                 override = annotator_config.get("override")
                 gs = resource_db.get_resource(score_id)
+                assert gs is not None, annotator_config
+
                 annotator = AnnotatorFactory.make_score_annotator(
                     annotator_type, gs, liftover, override
                 )

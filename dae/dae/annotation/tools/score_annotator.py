@@ -138,6 +138,10 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(attributes)
             return
 
+        if variant.chromosome not in self.resource.get_all_chromosomes():
+            self._scores_not_found(attributes)
+            return
+
         if variant.variant_type & VariantType.substitution:
             scores = self._fetch_substition(variant)
         else:

@@ -280,7 +280,9 @@ class PositionScoreResource(GenomicScoresResource):
         self, chrom: str, pos_begin: int, pos_end: int, scores_aggregators
     ):
         chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
-        assert chrom in self.get_all_chromosomes()
+        assert chrom in self.get_all_chromosomes(), (
+            chrom, self.get_all_chromosomes())
+
         score_lines = self._fetch_lines(chrom, pos_begin, pos_end)
         logger.debug(f"score lines found: {score_lines}")
 
