@@ -38,11 +38,12 @@ def test_genomic_resource_repository_walker(fixture_dirname):
     parents, child = next(walker)
     print(parents, child)
 
-    assert parents == ("hg19", )
+    assert parents == ("hg19", "internal")
     child_id, child_path = child
-    assert child_id == "MPC"
+    assert child_id == "scores_incomplete_coverage"
     assert child_path.endswith(
-        "genomic_resources/hg19/MPC/genomic_resource.yaml")
+        "genomic_resources/hg19/internal/scores_incomplete_coverage/"
+        "genomic_resource.yaml")
 
 
 def test_walk_genomic_resources_repository(fixture_dirname):
@@ -53,7 +54,7 @@ def test_walk_genomic_resources_repository(fixture_dirname):
         print(parents, child)
 
     all_resources = list(_walk_genomic_resources_repository(repo_dirname))
-    assert len(all_resources) == 10
+    assert len(all_resources) == 14
 
     all_resources_ids = set([
         (*parents, child[0]) for parents, child in all_resources
@@ -83,7 +84,7 @@ def test_walk_genomic_resources_repository_content(fixture_dirname, fake_repo):
 
     all_resources = list(_walk_genomic_repository_content(
             fake_repo, repo_content))
-    assert len(all_resources) == 10
+    assert len(all_resources) == 14
 
     all_resources_ids = set([
         (*parents, child[0]) for parents, child in all_resources
