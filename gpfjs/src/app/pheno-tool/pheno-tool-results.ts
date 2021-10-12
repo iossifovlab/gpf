@@ -22,7 +22,6 @@ export class PhenoToolResult {
   }
 }
 
-
 export class PhenoToolResultsPerGender {
   constructor(
     readonly positive: PhenoToolResult,
