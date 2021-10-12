@@ -548,3 +548,10 @@ def test_user_create_update_case_sensitive_groups(
     assert "test_group" in groups
     assert "Test_GrouP" in groups
     assert "tEsT_gRoUp" not in groups
+
+
+def test_admin_cannot_delete_own_user(admin_client, admin, user_model):
+    url = f"/api/v3/users/{admin.id}"
+    response = admin_client.delete(url)
+    assert response.status_code is status.HTTP_400_BAD_REQUEST
+    assert user_model.objects.filter(pk=admin.id).exists()

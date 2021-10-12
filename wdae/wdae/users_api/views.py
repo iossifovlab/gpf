@@ -136,7 +136,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @request_logging(LOGGER)
     def destroy(self, request, pk=None):
-        return super(UserViewSet, self).destroy(request, pk=pk)
+        if request.user.pk == int(pk):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return super().destroy(request, pk=pk)
 
     def get_serializer_class(self):
         serializer_class = self.serializer_class
