@@ -296,7 +296,9 @@ def login(request):
     """Supports a two-step login procedure where only an email
     is given at first.
     """
-    username = request.data["username"]
+    username = request.data.get("username")
+    if not username:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
     password = request.data.get("password")
     user_model = get_user_model()
     userfound = user_model.objects.filter(email__iexact=username)
