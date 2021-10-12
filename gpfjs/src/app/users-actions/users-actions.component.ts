@@ -1,4 +1,4 @@
-import { Component, OnInit, NgZone, Input, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, NgZone, Input, ViewChild, ElementRef } from '@angular/core';
 import { take } from 'rxjs/operators';
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
@@ -8,7 +8,7 @@ import { UsersService } from '../users/users.service';
   templateUrl: './users-actions.component.html',
   styleUrls: ['./users-actions.component.css']
 })
-export class UsersActionsComponent implements OnInit, OnDestroy {
+export class UsersActionsComponent implements OnInit {
   @Input() public user: User;
   @ViewChild('ele') public ele: ElementRef;
   public showDeleteButton = true;
@@ -24,14 +24,6 @@ export class UsersActionsComponent implements OnInit, OnDestroy {
         this.showDeleteButton = false;
       }
     });
-  }
-
-  public ngOnDestroy(): void {
-    this.closeConfirmnationModal();
-  }
-
-  private closeConfirmnationModal(): void {
-    this.ele.nativeElement.click();
   }
 
   public deleteUser(user: User): void {
