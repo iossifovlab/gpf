@@ -51,7 +51,9 @@ def test_region_score():
                        verterbarte species"
                 name: s1
               - id: phastCons5way
-                type: float
+                type: int
+                position_aggregator: max
+                na_values: "-1"
                 desc: "The phastCons computed over the tree of 5 \
                        verterbarte species"
                 name: s2''',
@@ -60,7 +62,7 @@ def test_region_score():
             1       10   15    0.02   -1
             1       17   19    0.03   0
             1       22   25    0.46   EMPTY
-            2       5    80    0.01   1.2
+            2       5    80    0.01   3
             '''
     })
     assert res
@@ -71,3 +73,16 @@ def test_region_score():
 
     assert res.fetch_scores("1", 12) == {
         "phastCons100way": 0.02, "phastCons5way": -1.}
+    assert res.fetch_scores_agg("1", 13, 18, ["phastCons100way"]) == \
+        {"phastCons100way": (3*0.02 + 2*0.03) / 5.}
+    assert res.fetch_scores_agg(
+        "1", 13, 18, ["phastCons100way"],
+        non_default_aggregators={"phastCons100way": "max"}) == \
+        {"phastCons100way": 0.03}
+
+    assert res.fetch_scores_agg("1", 13, 18, ["phastCons5way"]) == \
+        {"phastCons5way": 0}
+    assert res.fetch_scores_agg(
+        "1", 13, 18, ["phastCons5way"],
+        non_default_aggregators={"phastCons5way": "mean"}) == \
+        {"phastCons5way": 0/2}

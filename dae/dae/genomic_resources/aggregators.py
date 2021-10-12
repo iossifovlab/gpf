@@ -17,9 +17,9 @@ class MaxAggregator(AbstractAggregator):
         self.current_max = None
 
     def add(self, v):
-        if self.current_max and v:
+        if self.current_max is not None and v is not None:
             self.current_max = max(self.current_max, v)
-        elif v:
+        elif v is not None:
             self.current_max = v
 
     def clear(self):
@@ -35,7 +35,7 @@ class MeanAggregator(AbstractAggregator):
         self.count = 0
 
     def add(self, v):
-        if v:
+        if v is not None:
             self.sum += v
             self.count += 1
 
@@ -45,7 +45,7 @@ class MeanAggregator(AbstractAggregator):
 
     def get_final(self):
         if self.count:
-            return float(self.sum)/self.count
+            return self.sum / self.count
         return None
 
 
