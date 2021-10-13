@@ -1,8 +1,8 @@
 import io
-import yaml
 import numpy as np
 
-from dae.tools.generate_vcf_score_histogram import ScoreHistogram, Range, load_domain_ranges, store_domain_ranges
+from dae.tools.generate_vcf_score_histogram import ScoreHistogram, \
+    Range, load_domain_ranges, store_domain_ranges
 
 
 def test_score_histogram_linear():

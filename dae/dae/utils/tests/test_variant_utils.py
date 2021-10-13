@@ -58,15 +58,15 @@ def test_reverse_complement(dna, expected):
 
 @pytest.mark.parametrize("gt,expected", [
     (
-        np.array([[0, 0, 0], [0, 1, 0]], dtype=np.int8), 
+        np.array([[0, 0, 0], [0, 1, 0]], dtype=np.int8),
         "0/0,0/1,0/0"
     ),
     (
-        np.array([[0, 0, 0], [0, -1, 0]], dtype=np.int8), 
+        np.array([[0, 0, 0], [0, -1, 0]], dtype=np.int8),
         "0/0,0/.,0/0"
     ),
     (
-        np.array([[0, 1, 0], [0, -1, 0]], dtype=np.int8), 
+        np.array([[0, 1, 0], [0, -1, 0]], dtype=np.int8),
         "0/0,1/.,0/0"
     ),
 ])
