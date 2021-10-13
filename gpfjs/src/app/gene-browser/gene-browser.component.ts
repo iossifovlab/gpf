@@ -1,6 +1,6 @@
-import { Component, HostListener, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
-import { Location } from '@angular/common'; 
+import { Location } from '@angular/common';
 import { Store } from '@ngxs/store';
 import { GeneService } from 'app/gene-browser/gene.service';
 import { Gene } from 'app/gene-browser/gene';
@@ -8,7 +8,7 @@ import { SummaryAllelesArray, SummaryAllelesFilter, codingEffectTypes,
   affectedStatusValues, effectTypeValues, variantTypeValues } from 'app/gene-browser/summary-variants';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
-import { first, take, debounceTime } from 'rxjs/operators';
+import { first, debounceTime } from 'rxjs/operators';
 import { Subject, Subscription } from 'rxjs';
 import { Dataset, PersonSet } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -19,6 +19,7 @@ import { clone } from 'lodash';
 import * as d3 from 'd3';
 import * as draw from 'app/utils/svg-drawing';
 import { SetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
+import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'gpf-gene-browser',
@@ -28,7 +29,7 @@ import { SetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 export class GeneBrowserComponent implements OnInit, OnDestroy {
   @ViewChild(GenePlotComponent) private genePlotComponent: GenePlotComponent;
   private selectedGene: Gene;
-  private geneSymbol = '';
+  public geneSymbol = '';
   private maxFamilyVariants = 1000;
   public selectedDataset: Dataset;
   private selectedDatasetId: string;
@@ -53,6 +54,11 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   private selectedRegion: [number, number] = [0, 0];
 
   public legend: Array<PersonSet>;
+
+  @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
+  @ViewChild('searchBox') private searchBox: ElementRef;
+  public geneSymbolSuggestions: string[] = [];
+  public searchBoxInput$: Subject<void> = new Subject();
 
   @HostListener('document:keydown.enter', ['$event'])
   private onEnterPress($event) {
@@ -108,12 +114,28 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
           this.location.go(`datasets/${this.selectedDatasetId}/gene-browser`);
         }
       }),
-      this.variantUpdate$.pipe(debounceTime(750)).subscribe(() => this.updateShownTablePreviewVariantsArray())
+      this.variantUpdate$.pipe(debounceTime(750)).subscribe(() => this.updateShownTablePreviewVariantsArray()),
+      this.searchBoxInput$.pipe(debounceTime(150)).subscribe(() => {
+        if (!this.geneSymbol) {
+          this.geneSymbolSuggestions = [];
+          return;
+        }
+        this.geneService.searchGenes(this.geneSymbol).subscribe(response => {
+          if (!this.dropdown.isOpen()) {
+            this.dropdown.open();
+          }
+          this.geneSymbolSuggestions = response['gene_symbols'];
+        });
+      })
     );
   }
 
   public ngOnDestroy(): void {
     this.subscriptions.map(subscription => subscription.unsubscribe());
+  }
+
+  public selectGeneSymbol(geneSymbol: string) {
+    this.geneSymbol = geneSymbol;
   }
 
   public async submitGeneRequest(geneSymbol?: string) {
@@ -123,6 +145,10 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     }
     if (!this.geneSymbol) {
       return;
+    }
+    if (this.dropdown && this.dropdown.isOpen()) {
+      this.dropdown.close();
+      this.searchBox.nativeElement.blur();
     }
     try {
       this.selectedGene = await this.geneService.getGene(

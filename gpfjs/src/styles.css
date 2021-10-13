@@ -159,7 +159,7 @@ label {
 	border: 1px solid #ddd;
 }
 
-#search-box, #selected-value {
+#selected-value {
   border: 1px solid #ccc;
   border-top-left-radius: 5px;
   border-bottom-left-radius: 5px;
