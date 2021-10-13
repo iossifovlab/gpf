@@ -162,49 +162,6 @@ describe('User management tests', () => {
     deleteTestGroup(page);
   });
 
-  it('should bulk add and remove users to group', () => {
-    createTestGroup(page, 'test_group');
-
-    page.usersButton.click();
-
-    page.userBulkEditButton.click();
-    page.userBulkEditAddGroupButton.click();
-    page.userWindowGroupDropDownMenuButton.click();
-    page.userWindowGroupDropdownListCheckboxes.last().click();
-    page.userWindowGroupDropDownMenuButton.click();
-    page.usersEditorAddGroupButton.click();
-
-    page.usersTableRows.each(row => {
-      page.usersTableRows.should('contain.text', 'test_group');
-    });
-
-    page.groupsButton.click();
-    page.groupsTableRows.last().then((row) => {
-      page.usersButton.click();
-      page.userTableEmailElements.each(el => {
-        expect(row.text()).to.contain(el.text());
-      });
-    });
-
-    page.usersButton.click();
-
-    page.userBulkEditButton.click();
-    page.userBulkEditRemoveGroupButton.click();
-    page.userWindowGroupDropDownMenuButton.click();
-    page.userWindowGroupDropdownListCheckboxes.last().click();
-    page.userWindowGroupDropDownMenuButton.click();
-    page.usersEditorRemoveGroupButton.click();
-
-    page.usersTableRows.each(row => {
-      page.usersTableRows.should('not.contain.text', 'test_group');
-    });
-
-    page.groupsButton.click();
-    page.groupsTableRows.last().should('not.contain.text', 'test_group\nmulti');
-
-    deleteTestGroup(page);
-  });
-
   it('should give dataset access to user', () => {
     createTestGroup(page, 'test_group');
     createTestUser(page, 'test_email@email.com', 'test_name');

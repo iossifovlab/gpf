@@ -73,14 +73,6 @@ export class UserManagementPage extends BasePage {
     return cy.get('gpf-user-edit');
   }
 
-  get groupsBulkAddWindow() {
-    return cy.get('gpf-groups-bulk-add');
-  }
-
-  get groupsBulkRemoveWindow() {
-    return cy.get('gpf-groups-bulk-remove');
-  }
-
   get userWindowGroupDropDownMenuButton() {
     return cy.get('gpf-user-groups-selector .dropdown-btn');
   }
