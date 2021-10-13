@@ -7,6 +7,7 @@ import { of } from 'rxjs';
 import { GeneSymbolsComponent } from 'app/gene-symbols/gene-symbols.component';
 import { GenesBlockComponent } from './genes-block.component';
 import { GeneSymbolsState } from 'app/gene-symbols/gene-symbols.state';
+import { FormsModule } from '@angular/forms';
 
 describe('GenesBlockComponent', () => {
   let component: GenesBlockComponent;
@@ -15,7 +16,7 @@ describe('GenesBlockComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [GeneSymbolsComponent, GenesBlockComponent],
-      imports: [NgbModule, NgxsModule.forRoot([GeneSymbolsState])],
+      imports: [NgbModule, NgxsModule.forRoot([GeneSymbolsState]), FormsModule],
     })
     .compileComponents();
   }));

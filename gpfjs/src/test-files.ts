@@ -102,3 +102,4 @@ import './app/checkbox-list/checkbox-list.component.spec';
 import './app/gene-plot/gene-plot.spec';
 import './app/person-ids/person-ids.component.spec';
 import './app/pheno-tool/pheno-tool-results.spec';
+import './app/pheno-tool/pheno-tool.service.spec';
