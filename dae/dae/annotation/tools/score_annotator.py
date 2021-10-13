@@ -145,13 +145,17 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(attributes)
             return
 
+        if variant.chromosome not in self.resource.get_all_chromosomes():
+            self._scores_not_found(attributes)
+            return
+
         if variant.variant_type & VariantType.substitution:
             scores = self._fetch_substition(variant)
         else:
             if variant.variant_type & VariantType.indel:
                 first_position = variant.position
                 last_position = variant.position + len(variant.reference)
-            elif variant.is_cnv():
+            elif VariantType.is_cnv(variant.variant_type):
                 first_position = variant.position
                 last_position = variant.end_position
             else:

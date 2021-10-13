@@ -5,3 +5,10 @@ effect_annotators:
     genome: "GATK_ResourceBundle_5777_b37_phiX174/genome"
     gene_models: "GATK_ResourceBundle_5777_b37_phiX174/gene_models/refGene_201309"
 
+
+score_annotators:
+ - annotator: position_score
+   resource: hg19/internal/scores1
+
+ - annotator: position_score
+   resource: hg19/internal/scores_incomplete_coverage

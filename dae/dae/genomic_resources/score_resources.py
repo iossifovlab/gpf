@@ -1,5 +1,4 @@
 
-import sys
 import abc
 import logging
 
@@ -251,7 +250,8 @@ class PositionScoreResource(GenomicScoresResource):
         for line in score_lines:
             logger.debug(
                 f"pos_end: {pos_end}; line.pos_end: {line.get_pos_end()}; "
-                f"pos_begin: {pos_begin}; line.pos_begin: {line.get_pos_begin()}"
+                f"pos_begin: {pos_begin}; "
+                f"line.pos_begin: {line.get_pos_begin()}"
             )
 
             line_pos_begin, line_pos_end = self._line_to_begin_end(line)

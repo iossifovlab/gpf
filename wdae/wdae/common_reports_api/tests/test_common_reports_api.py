@@ -3,7 +3,7 @@ import pytest
 from rest_framework import status
 
 pytestmark = pytest.mark.usefixtures(
-    "wdae_gpf_instance", "dae_calc_gene_sets"
+    "wdae_gpf_instance", "dae_calc_gene_sets", "use_common_reports"
 )
 
 
@@ -82,11 +82,3 @@ def test_families_data_download_no_permissions(user_client):
 
     assert response
     assert response.status_code == status.HTTP_403_FORBIDDEN
-
-
-def test_families_data_download_not_found(admin_client):
-    url = "/api/v3/common_reports/families_data/Study3"
-    response = admin_client.get(url)
-
-    assert response
-    assert response.status_code == status.HTTP_404_NOT_FOUND

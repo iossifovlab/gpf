@@ -237,8 +237,8 @@ def cshl_format(pos, ref, alt, trimmer=trim_str_front):
 
 
 def get_locus_ploidy(
-    chrom: str, pos: int, sex: Sex, genome: Genome
-) -> int:
+        chrom: str, pos: int, sex: Sex, genome: Genome) -> int:
+
     if chrom in ("chrX", "X") and sex == Sex.M:
         if not genome.is_pseudoautosomal(chrom, pos):
             return 1

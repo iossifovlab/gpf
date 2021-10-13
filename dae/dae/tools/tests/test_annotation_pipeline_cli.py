@@ -3,7 +3,7 @@ import os
 import tempfile
 import shutil
 
-import pandas as pd
+# import pandas as pd
 
 
 def relative_to_this_test_folder(path):

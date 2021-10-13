@@ -38,9 +38,12 @@ def test_get_f4_descriptions(denovo_gene_sets_db):
     assert len(gene_set_descriptions["types"]) == 1
     assert gene_set_descriptions["types"][0]["datasetId"] == "f4_trio"
     assert gene_set_descriptions["types"][0]["datasetName"] == "f4_trio"
-    assert gene_set_descriptions["types"][0]["peopleGroupId"] == "phenotype"
-    assert gene_set_descriptions["types"][0]["peopleGroupName"] == "Phenotype"
-    assert len(gene_set_descriptions["types"][0]["peopleGroupLegend"]) == 2
+    assert gene_set_descriptions["types"][0]["personSetCollectionId"] == \
+        "phenotype"
+    assert gene_set_descriptions["types"][0]["personSetCollectionName"] == \
+        "Phenotype"
+    assert len(
+        gene_set_descriptions["types"][0]["personSetCollectionLegend"]) == 2
 
 
 @pytest.mark.parametrize(

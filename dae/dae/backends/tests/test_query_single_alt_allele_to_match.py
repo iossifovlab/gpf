@@ -19,7 +19,9 @@ from dae.utils.variant_utils import mat2str
 )
 def test_multi_alt_allele_effects(variants_vcf, region, worst_effect, count):
     fvars = variants_vcf("backends/effects_trio_multi")
-    vs = list(fvars.query_variants(regions=[region], effects=["missense"]))
+    vs = list(fvars.query_variants(
+        regions=[region], effect_types=["missense"]))
+
     for v in vs:
         print("------------------")
         print(mat2str(v.best_state))

@@ -68,7 +68,8 @@ def test_vcf_loader_genetic_model(
             for fa in fv.alleles:
                 assert fa._genetic_model is not None
 
-            assert fv.genetic_model == expected[counter]
+            assert fv.genetic_model == expected[counter], (
+                fv.genetic_model, expected[counter], counter, fv)
             for fa in fv.alleles:
                 assert fa._genetic_model == expected[counter]
             counter += 1
@@ -126,7 +127,8 @@ def test_families_genotypes_decorator_broken_x(fixture_dirname, genome_2013):
     families = families_loader.load()
 
     variants_loader = DenovoLoader(
-        families, fixture_dirname("backends/denovo_X_broken.txt"), genome_2013
+        families, fixture_dirname("backends/denovo_X_broken.txt"),
+        genome_2013.get_genomic_sequence()
     )
 
     for sv, fvs in variants_loader.full_variants_iterator():

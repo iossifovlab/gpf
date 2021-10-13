@@ -1,5 +1,3 @@
-import pytest
-
 from dae.tools.generate_denovo_gene_sets import main
 
 

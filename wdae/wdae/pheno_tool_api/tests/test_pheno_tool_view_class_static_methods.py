@@ -4,6 +4,7 @@ from dae.variants.attributes import Sex
 from dae.pheno_tool.tool import PhenoResult
 
 from pheno_tool_api.views import PhenoToolView
+from pheno_tool_api.pheno_tool_adapter import PhenoToolAdapter
 
 
 pytestmark = pytest.mark.usefixtures(
@@ -34,7 +35,7 @@ def test_pheno_tool_view_align_NA_results_valid():
             "pValue": "NA",
         },
     }
-    PhenoToolView._align_NA_results([results])
+    PhenoToolAdapter.align_NA_results([results])
     assert results["maleResults"]["positive"]["mean"] == 1
     assert results["femaleResults"]["positive"]["mean"] == 1
 
@@ -53,7 +54,7 @@ def test_pheno_tool_view_align_NA_results_invalid():
         },
     }
     with pytest.raises(AssertionError):
-        PhenoToolView._align_NA_results([results])
+        PhenoToolAdapter.align_NA_results([results])
 
 
 def test_pheno_tool_view_get_result_by_sex():

@@ -1,4 +1,4 @@
-
+import pytest
 import numpy
 import pyarrow as pa
 
@@ -85,7 +85,8 @@ def test_position_score_annotator_indels(
     for sv, e in phastcons100way_indel_variants_expected:
         pipeline.annotate_summary_variant(sv)
 
-        assert sv.get_attribute("phastCons100way")[0] == e
+        assert sv.get_attribute("phastCons100way")[0] == \
+            pytest.approx(e, abs=1e-2)
 
 
 def test_position_score_annotator_mean_aggregate(

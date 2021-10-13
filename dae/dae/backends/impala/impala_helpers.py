@@ -2,8 +2,8 @@ import os
 import re
 import itertools
 import logging
-
 # from dae.utils.debug_closing import closing
+
 from contextlib import closing
 
 from impala import dbapi
@@ -13,7 +13,7 @@ from sqlalchemy.pool import QueuePool
 logger = logging.getLogger(__name__)
 
 
-class ImpalaHelpers(object):
+class ImpalaHelpers:
 
     def __init__(self, impala_hosts, impala_port=21050, pool_size=20):
 
@@ -35,30 +35,21 @@ class ImpalaHelpers(object):
             return connection
 
         self._connection_pool = QueuePool(
-            create_connection, pool_size=20,  # pool_size,
+            create_connection, pool_size=3 * len(impala_hosts) + 1,
             reset_on_return=False,
+            max_overflow=3,
             # use_threadlocal=True,
         )
+
         logger.debug(
             f"created impala pool with {self._connection_pool.status()} "
             f"connections")
-        # connections = []
-        # for i in range(20):
-        #     conn = self.connection()
-        #     conn.id = i
-        #     connections.append(conn)
-        # for conn in connections:
-        #     conn.close()
 
     def connection(self):
         logger.debug(
             f"going to get impala connection from the pool; "
-            f"{self._connection_pool.status()}; {id(self)}")
-        conn = self._connection_pool.connect()
-        logger.debug(
-            f"[DONE] going to get impala connection to host {conn.host} "
-            f"from the pool; {self._connection_pool.status()}; {id(self)}")
-        return conn
+            f"{self._connection_pool.status()}")
+        return self._connection_pool.connect()
 
     def _import_single_file(self, cursor, db, table, import_file):
 
@@ -148,34 +139,6 @@ class ImpalaHelpers(object):
                 f"ALTER TABLE {db}.{table} RECOVER PARTITIONS")
         cursor.execute(
             f"REFRESH {db}.{table}")
-
-    # def import_dataset_into_db(
-    #         self,
-    #         db,
-    #         pedigree_table,
-    #         variants_table,
-    #         pedigree_hdfs_file,
-    #         variants_hdfs_file,
-    #         partition_description):
-
-    #     with closing(self.connection()) as conn:
-    #         with conn.cursor() as cursor:
-    #             cursor.execute(
-    #                 f"CREATE DATABASE IF NOT EXISTS {db}")
-
-    #             self._import_single_file(
-    #                 cursor, db, pedigree_table, pedigree_hdfs_file)
-
-    #             self._create_dataset_table(
-    #                 cursor,
-    #                 db,
-    #                 variants_table,
-    #                 variants_hdfs_file,
-    #                 partition_description
-    #             )
-    #             if partition_description.has_partitions():
-    #                 self._add_partition_properties(
-    #                     cursor, db, variants_table, partition_description)
 
     def import_pedigree_into_db(self, db, pedigree_table, pedigree_hdfs_file):
         with closing(self.connection()) as conn:

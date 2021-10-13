@@ -73,6 +73,8 @@ from dae.genomic_resources.resources import GenomicResource, \
     GenomicResourceGroup
 from dae.genomic_resources.resource_db import GenomicResourceDB
 
+logger = logging.getLogger(__name__)
+
 
 @pytest.fixture
 def genomic_group():
@@ -140,7 +142,9 @@ def test_cached_grdb_config(fixture_dirname, temp_dirname_grdb):
 
 
 @pytest.fixture
-def test_grdb_http_config(temp_dirname_grdb, http_port):
+def test_grdb_http_config(temp_dirname_grdb, resources_http_server):
+    http_port = resources_http_server.http_port
+
     return FrozenBox({
         "genomic_resource_repositories": [
             {"id": "test_grr", "url": f"http://localhost:{http_port}"}
@@ -149,7 +153,9 @@ def test_grdb_http_config(temp_dirname_grdb, http_port):
 
 
 @pytest.fixture
-def test_cached_grdb_http_config(temp_dirname_grdb, http_port):
+def test_cached_grdb_http_config(temp_dirname_grdb, resources_http_server):
+    http_port = resources_http_server.http_port
+
     return FrozenBox({
         "genomic_resource_repositories": [
             {

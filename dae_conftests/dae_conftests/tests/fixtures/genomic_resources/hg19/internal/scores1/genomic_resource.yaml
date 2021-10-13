@@ -1,0 +1,62 @@
+---
+
+id: hg19/internal/scores1
+
+resource_type: score_resources.PositionScoreResource
+
+filename: scores1.tsv.gz
+format: tsv/bgz
+
+index_file:
+  filename: scores1.tsv.gz.tbi
+  format: tabix
+
+has_header: true
+
+type_aggregators:
+  - type: float
+    aggregator: dae.genomic_resource.aggregators.MaxAggregator
+  - type: int
+    aggregator: dae.genomic_resource.aggregators.MaxAggregator
+  - type: str
+    aggregator: dae.genomic_resource.aggregators.ConcatAggregator
+
+# defined by score_type
+chrom: 
+  name: CHROM
+pos_begin:
+  name: POS
+pos_end: 
+  name: POS
+
+# score values
+scores:
+    - id: score0
+      type: float
+      name: score0
+
+    - id: score2
+      type: float
+      name: score2
+
+    - id: score4
+      type: float
+      name: score4
+
+
+default_annotation:
+  attributes:
+    - source: score0
+      dest: score0
+      aggregator:
+        position: MaxAggregator
+
+    - source: score2
+      dest: score2
+      aggregator:
+        position: MaxAggregator
+
+    - source: score4
+      dest: score4
+      aggregator:
+        position: MaxAggregator

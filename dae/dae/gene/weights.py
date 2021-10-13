@@ -102,8 +102,8 @@ class GeneWeight:
         return itertools.chain([columns], values)
 
     @cached
-    def _to_tsv(self):
-        return map(join_line, self.to_list())
+    def to_tsv(self):
+        return map(join_line, self._to_list())
 
     @cached
     def min(self):

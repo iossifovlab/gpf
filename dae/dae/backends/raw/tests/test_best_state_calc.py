@@ -157,11 +157,13 @@ def test_family_variant_best2gt(bs, gt, gm, fv1, genome_2013):
     ],
 )
 def test_family_variant_X_best2gt(bs, gt, gm1, gm2, fvX1, fvX2, genome_2013):
+    genomic_sequence = genome_2013.get_genomic_sequence()
+
     v1 = fvX1(None, bs)
     v2 = fvX2(None, bs)
 
     genotype, genetic_model = VariantsGenotypesLoader._calc_genotype(
-        v1, genome_2013
+        v1, genomic_sequence
     )
     print(genotype, genetic_model)
 
@@ -169,7 +171,7 @@ def test_family_variant_X_best2gt(bs, gt, gm1, gm2, fvX1, fvX2, genome_2013):
     assert genetic_model == gm1
 
     genotype, genetic_model = VariantsGenotypesLoader._calc_genotype(
-        v2, genome_2013
+        v2, genomic_sequence
     )
     print(genotype, genetic_model)
 
@@ -211,21 +213,27 @@ def test_family_variant_X_best2gt(bs, gt, gm1, gm2, fvX1, fvX2, genome_2013):
     ],
 )
 def test_family_variant_X_gt2best_st(
-    fvX1, fvX2, gt, bs1, gm1, bs2, gm2, genome_2013
-):
+        fvX1, fvX2, gt, bs1, gm1, bs2, gm2, genome_2013):
+
+    genomic_sequence = genome_2013.get_genomic_sequence()
+
     v = fvX1(gt, None)
-    best_state = VariantsGenotypesLoader._calc_best_state(v, genome_2013)
+    best_state = VariantsGenotypesLoader._calc_best_state(
+        v, genomic_sequence)
     print(v)
     print(mat2str(best_state))
     assert mat2str(best_state) == bs1
-    genetic_model = VariantsGenotypesLoader._calc_genetic_model(v, genome_2013)
+    genetic_model = VariantsGenotypesLoader._calc_genetic_model(
+        v, genomic_sequence)
     assert genetic_model == gm1
 
     v = fvX2(gt, None)
-    best_state = VariantsGenotypesLoader._calc_best_state(v, genome_2013)
+    best_state = VariantsGenotypesLoader._calc_best_state(
+        v, genomic_sequence)
     print(v)
     print(mat2str(best_state))
     assert mat2str(best_state) == bs2
 
-    genetic_model = VariantsGenotypesLoader._calc_genetic_model(v, genome_2013)
+    genetic_model = VariantsGenotypesLoader._calc_genetic_model(
+        v, genomic_sequence)
     assert genetic_model == gm2

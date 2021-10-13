@@ -15,10 +15,9 @@ pytestmark = pytest.mark.usefixtures(
 def test_query_all_variants(iossifov_2014_wrappers, wrapper_type):
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     variants = list(study_wrapper.query_variants_wdae(
-        {}, [{"source": "location"}])
-    )
+        {}, [{"source": "location"}]))
 
-    assert len(variants) == 5645
+    assert len(variants) == 5645, variants
 
 
 @pytest.mark.parametrize(
@@ -161,9 +160,9 @@ def test_query_variant_type_variants(
 @pytest.mark.parametrize(
     "effect_types,count",
     [
-        (["Intergenic"], 66),
-        (["Missense"], 2808),
-        (["Missense", "Intergenic"], 2874),
+        (["Intergenic"], 74),  # 66),
+        (["Missense"], 2803),  # 2808),
+        (["Missense", "Intergenic"], 2877),  # 2874),
         (["CNV"], 0),
     ],
 )
@@ -358,27 +357,27 @@ def test_query_max_alt_frequency(
     [
         (
             {"weight": "LGD_rank", "rangeStart": None, "rangeEnd": None},
-            5328
+            5531,  # 5328
         ),
         (
             {"weight": "LGD_rank", "rangeStart": 10.5, "rangeEnd": None},
-            5301
+            5504,  # 5301
         ),
         (
             {"weight": "LGD_rank", "rangeStart": None, "rangeEnd": 20000.0},
-            5328
+            5531,  # 5328
         ),
         (
             {"weight": "LGD_rank", "rangeStart": 2000.0, "rangeEnd": 4000.0},
-            663
+            683,  # 663
         ),
         (
             {"weight": "LGD_rank", "rangeStart": 9000.0, "rangeEnd": 11000.0},
-            431
+            452,  # 431
         ),
         (
             {"weight": "LGD_rank", "rangeStart": 1000.0, "rangeEnd": 2000.0},
-            369
+            377,  # 369
         ),
         (
             {"weight": "ala bala", "rangeStart": 1000.0, "rangeEnd": 2000.0},

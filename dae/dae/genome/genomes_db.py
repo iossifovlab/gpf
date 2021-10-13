@@ -1,8 +1,7 @@
 import logging
+import copy
 
 from collections import namedtuple
-from typing import List
-
 
 from dae.utils.regions import Region
 from dae.genome.genome_access import open_ref
@@ -69,6 +68,7 @@ class Genome:
     def get_genomic_sequence(self):
         if self.genomic_sequence is None:
             self.genomic_sequence = open_ref(self.genomic_sequence_filename)
+            self.genomic_sequence.PARS = copy.deepcopy(self.pars)
         return self.genomic_sequence
 
     def get_gene_models(self, gene_models_id=None):
@@ -92,21 +92,6 @@ class Genome:
 
     def get_gene_models_ids(self):
         return list(self._gene_models.keys())
-
-    def is_pseudoautosomal(self, chrom: str, pos: int) -> bool:
-        # TODO Handle variants which are both inside and outside a PARs
-        # Currently, if the position of the reference is within a PAR,
-        # the whole variant is considered to be within an autosomal region
-        def in_any_region(chrom: str, pos: int, regions: List[Region]) -> bool:
-            return any(map(lambda reg: reg.isin(chrom, pos), regions))
-
-        pars_regions = self.pars.get(chrom, None)
-        if pars_regions:
-            return in_any_region(
-                chrom, pos, pars_regions  # type: ignore
-            )
-        else:
-            return False
 
 
 class GenomesDB(object):

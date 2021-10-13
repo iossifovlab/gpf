@@ -35,7 +35,7 @@ class AnnotationPipeline():
             annotator_type = annotator_config["annotator"]
 
             gene_models_id = annotator_config["gene_models"]
-            genome_id = annotator_config["target_genome"]
+            genome_id = annotator_config["genome"]
             override = annotator_config.get("override")
 
             gene_models = resource_db.get_resource(gene_models_id)
@@ -69,6 +69,8 @@ class AnnotationPipeline():
                 annotator_type = annotator_config["annotator"]
                 override = annotator_config.get("override")
                 gs = resource_db.get_resource(score_id)
+                assert gs is not None, annotator_config
+
                 annotator = AnnotatorFactory.make_score_annotator(
                     annotator_type, gs, liftover, override
                 )

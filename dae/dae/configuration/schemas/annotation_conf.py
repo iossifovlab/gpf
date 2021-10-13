@@ -8,6 +8,7 @@ annotator_schema = {
         "resource": {"type": "string"},
         "gene_models": {"type": "string"},
         "chain": {"type": "string"},
+        "genome": {"type": "string"},
         "target_genome": {"type": "string"},
         "liftover": {"type": "string"},
         "override": {"type": "dict", "schema": default_annotation_schema}
@@ -20,7 +21,7 @@ annotation_conf_schema = {
         "schema": annotator_schema,
     },
     "liftover_annotators": {
-        "type": "list", 
+        "type": "list",
         "schema": annotator_schema,
     },
     "score_annotators": {

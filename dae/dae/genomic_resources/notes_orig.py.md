@@ -1,3 +1,5 @@
+# flake8: noqa
+
 from typing import Any, List, Dict, Set, Type, Iterator, Tuple
 
 class GenomicResrouceException(Exception):
