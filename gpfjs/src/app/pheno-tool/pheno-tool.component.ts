@@ -64,7 +64,7 @@ export class PhenoToolComponent implements OnInit {
     });
   }
 
-  submitQuery() {
+  public submitQuery(): void {
     this.loadingService.setLoadingStart();
     this.phenoToolService.getPhenoToolResults(
       {'datasetId': this.selectedDataset.id, ...this.phenoToolState}
@@ -78,7 +78,7 @@ export class PhenoToolComponent implements OnInit {
     });
   }
 
-  onDownload(event) {
+  public onDownload(event): void {
     event.target.queryData.value = JSON.stringify({...this.phenoToolState, 'datasetId': this.selectedDataset.id});
     event.target.submit();
   }

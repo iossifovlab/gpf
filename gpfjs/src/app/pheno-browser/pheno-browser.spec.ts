@@ -1,6 +1,6 @@
-import { PhenoMeasure, PhenoMeasures, PhenoRegression, PhenoRegressions } from "./pheno-browser"
+import { PhenoMeasure, PhenoMeasures, PhenoRegression, PhenoRegressions } from './pheno-browser';
 import { environment } from '../../environments/environment';
-  
+
 export const fakeJsonMeasure = {
   Index: 1,
   instrument_name: 'test_instrument',
@@ -26,10 +26,10 @@ export const fakeJsonMeasureOneRegression = {
   description: 'a test measure',
   regressions: [
     {
-      regression_id: "age",
-      measure_id: "test_instrument.test_measure",
-      figure_regression: "imagepath",
-      figure_regression_small: "imagepathsmall",
+      regression_id: 'age',
+      measure_id: 'test_instrument.test_measure',
+      figure_regression: 'imagepath',
+      figure_regression_small: 'imagepathsmall',
       pvalue_regression_male: 1.0e-6,
       pvalue_regression_female: 0.20,
     }
@@ -48,23 +48,23 @@ export const fakeJsonMeasureTwoRegressions = {
   description: 'a test measure',
   regressions: [
     {
-      regression_id: "age",
-      measure_id: "test_instrument.test_measure",
-      figure_regression: "imagepathage",
-      figure_regression_small: "imagepathagesmall",
+      regression_id: 'age',
+      measure_id: 'test_instrument.test_measure',
+      figure_regression: 'imagepathage',
+      figure_regression_small: 'imagepathagesmall',
       pvalue_regression_male: 0.01,
       pvalue_regression_female: 1.0,
     },
     {
-      regression_id: "iq",
-      measure_id: "test_instrument.test_measure",
-      figure_regression: "imagepathiq",
-      figure_regression_small: "imagepathiqsmall",
+      regression_id: 'iq',
+      measure_id: 'test_instrument.test_measure',
+      figure_regression: 'imagepathiq',
+      figure_regression_small: 'imagepathiqsmall',
       pvalue_regression_male: 0.02,
       pvalue_regression_female: 2.0,
     }
   ]
-}
+};
 
 describe('pheno measure', () => {
 
@@ -77,15 +77,15 @@ describe('pheno measure', () => {
     expect(phenoMeasure.valuesDomain).toBe('0,1');
     expect(phenoMeasure.figureDistribution).toBe('test.jpg');
     expect(phenoMeasure.figureDistributionSmall).toBe(null);
-    expect(phenoMeasure.measureId).toBe('test_instrument.test_measure')
-    expect(phenoMeasure.measureName).toBe('test_measure')
-    expect(phenoMeasure.measureType).toBe('ordinal')
-    expect(phenoMeasure.description).toBe('a test measure')
+    expect(phenoMeasure.measureId).toBe('test_instrument.test_measure');
+    expect(phenoMeasure.measureName).toBe('test_measure');
+    expect(phenoMeasure.measureType).toBe('ordinal');
+    expect(phenoMeasure.description).toBe('a test measure');
   });
 });
 
 describe('pheno measures', () => {
-    
+
   let base_path = '/test_base_url/';
 
   let phenoMeasure = PhenoMeasure.fromJson(fakeJsonMeasure);
@@ -142,7 +142,7 @@ describe('PhenoRegressions', () => {
   it('should be creatable from a given json', () => {
     expect(phenoRegressions['age'].regressionId).toEqual('age');
     expect(phenoRegressions['age'].measureId).toEqual('test_instrument.test_measure');
-    expect(phenoRegressions['age'].figureRegression).toEqual('imagepathage')
+    expect(phenoRegressions['age'].figureRegression).toEqual('imagepathage');
     expect(phenoRegressions['age'].figureRegressionSmall).toEqual('imagepathagesmall');
     expect(phenoRegressions['age'].pvalueRegressionMale).toEqual(0.01);
     expect(phenoRegressions['age'].pvalueRegressionFemale).toEqual(1.00);
@@ -159,7 +159,7 @@ describe('PhenoRegressions', () => {
     phenoRegressionsBasePath.addBasePath('a_base_path/');
     expect(phenoRegressionsBasePath['age'].figureRegression).toEqual('a_base_path/imagepathage');
     expect(phenoRegressionsBasePath['age'].figureRegressionSmall).toEqual('a_base_path/imagepathagesmall');
-    expect(phenoRegressionsBasePath['iq'].figureRegression).toEqual('a_base_path/imagepathiq')
+    expect(phenoRegressionsBasePath['iq'].figureRegression).toEqual('a_base_path/imagepathiq');
     expect(phenoRegressionsBasePath['iq'].figureRegressionSmall).toEqual('a_base_path/imagepathiqsmall');
   });
 

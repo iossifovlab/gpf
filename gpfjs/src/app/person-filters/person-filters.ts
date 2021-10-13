@@ -48,7 +48,7 @@ export class ContinuousSelection implements Selection {
 export class PersonFilterState {
 
   @ValidateNested()
-  selection: Selection
+  selection: Selection;
 
   constructor(
     readonly id: string,
@@ -92,7 +92,7 @@ export class ContinuousFilterState extends PersonFilterState {
     role: string,
     source: string,
     from: string,
-    selection: ContinuousSelection = new ContinuousSelection(0,0,0,0),
+    selection: ContinuousSelection = new ContinuousSelection(0, 0, 0, 0),
   ) {
     super(id, type, role, source, from, selection);
   }

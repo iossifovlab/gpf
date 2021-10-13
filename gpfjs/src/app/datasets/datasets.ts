@@ -312,6 +312,10 @@ export class Dataset extends IdName {
     return ['any_dataset', this.id];
   }
 
+  get defaultPersonSetCollection(): PersonSetCollection {
+    return this.personSetCollections.collections[0];
+  }
+
   constructor(
     readonly id: string,
     readonly description: string,

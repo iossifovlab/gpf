@@ -8,7 +8,7 @@
         <ng-template ngbNavContent>
           <div class="row justify-content-between">
             <div class="col-7 btn-toolbar" style="padding-top: 15px; padding-left: 25px;">
-              <div class="input-group md-form form-sm form-1 pl-0">
+              <div class="input-group" style="width: 55%">
                 <div class="input-group-prepend">
                   <span class="input-group-text purple lighten-3" id="basic-text1">
                     <i class="fa fa-search" aria-hidden="true"></i>
@@ -20,40 +20,14 @@
                   type="text" placeholder="Search" aria-label="Search"
                   [ngModel]="input$ | async">
               </div>
-              <div class="btn-group pull-right" role="group">
-                <button
-                  ngbTooltip="Add or remove a group from the selected users"
-                  container="body"
-                  id="btnGroupDrop1"
-                  type="button"
-                  class="btn btn-outline-secondary dropdown-toggle"
-                  data-toggle="dropdown"
-                  aria-haspopup="true"
-                  aria-expanded="false">
-                  <span>Bulk edit</span>
-                </button>
-                <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                  <button
-                    class="dropdown-item"
-                    [disabled]="selectedUsers(usersToShow$ | async).length === 0"
-                    [routerLink]="['users', 'add-group']"
-                    [queryParams]="{ user_ids: getUserIds(usersToShow$ | async) }">Add group</button>
-                  <button
-                    class="dropdown-item"
-                    [disabled]="selectedUsers(usersToShow$ | async)?.length === 0"
-                    [routerLink]="['users', 'remove-group']"
-                    [queryParams]="{ user_ids: getUserIds(usersToShow$ | async) }">Remove group</button>
-                </div>
+              <div class="btn-toolbar" style="padding-left: 10px">
+                <a [routerLink]="['users', 'create']" class="btn btn-primary">Create user</a>
               </div>
-            </div>
-            <div class="col-4" style="padding-top: 15px; padding-right: 25px;">
-              <a [routerLink]="['users', 'create']" class="btn btn-primary pull-right">Create user</a>
             </div>
           </div>
 
-          <gpf-users-table
-            [users]="usersToShow$ | async">
-            </gpf-users-table>
+          <gpf-users-table [users]="usersToShow$ | async">
+          </gpf-users-table>
         </ng-template>
       </li>
 

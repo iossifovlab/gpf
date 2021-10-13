@@ -17,7 +17,7 @@ export class PhenoToolService {
     private config: ConfigService
   ) {}
 
-  getPhenoToolResults(filter): Observable<any> {
+  public getPhenoToolResults(filter): Observable<PhenoToolResults> {
     const headers = { 'Content-Type': 'application/json' };
     const options = { headers: headers, withCredentials: true };
 

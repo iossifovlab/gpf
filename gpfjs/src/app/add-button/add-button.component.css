@@ -1,11 +1,18 @@
 span {
-    padding: 5px;
+  padding: 5px;
+  line-height:30px;
+  height: 30px;
 }
 
-span,span {
-    line-height:30px;
+img {
+  height: 30px;
 }
 
-span,img {
-    height: 30px;
+#add-filter {
+  margin: -10px -16px -10px -16px;
+  padding: 10px 16px 10px 16px;
+  border: 0;
+  vertical-align: baseline;
+  height: auto;
+  display: inline-block;
 }

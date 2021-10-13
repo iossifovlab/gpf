@@ -55,14 +55,14 @@ export class PersonFiltersComponent extends StatefulComponent implements OnChang
               filterState.selection.max,
               filterState.selection.domainMin,
               filterState.selection.domainMax,
-            )
+            );
           } else {
-            selection = new CategoricalSelection(filterState.selection.selection)
+            selection = new CategoricalSelection(filterState.selection.selection);
           }
           const newFilter = new filterType(
             filterState.id, filterState.sourceType, filterState.role,
             filterState.source, filterState.from, selection
-          )
+          );
           this.personFiltersState.set(filterState.id, newFilter);
         }
       }

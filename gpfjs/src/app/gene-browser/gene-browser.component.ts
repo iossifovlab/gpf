@@ -10,7 +10,7 @@ import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotyp
 import { QueryService } from 'app/query/query.service';
 import { first, take, debounceTime } from 'rxjs/operators';
 import { Subject, Subscription } from 'rxjs';
-import { Dataset } from 'app/datasets/datasets';
+import { Dataset, PersonSet } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { GenePlotComponent } from 'app/gene-plot/gene-plot.component';
@@ -36,7 +36,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   public showError = false;
   private familyLoadingFinished: boolean;
   private geneBrowserConfig;
-  private legendDrawn = false;
   private subscriptions: Subscription[] = [];
 
   public readonly affectedStatusValues = affectedStatusValues;
@@ -52,6 +51,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
 
   private selectedFrequencies: [number, number] = [0, 0];
   private selectedRegion: [number, number] = [0, 0];
+
+  public legend: Array<PersonSet>;
 
   @HostListener('document:keydown.enter', ['$event'])
   private onEnterPress($event) {
@@ -80,6 +81,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
+    this.legend = this.selectedDataset.personSetCollections.getLegend(this.selectedDataset.defaultPersonSetCollection);
     this.geneBrowserConfig = this.selectedDataset.geneBrowser;
     if (this.route.snapshot.params.gene) {
       this.store.dispatch(new SetGeneSymbols([this.route.snapshot.params.gene.toUpperCase()]));
