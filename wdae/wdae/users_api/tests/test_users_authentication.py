@@ -75,6 +75,16 @@ def test_failed_auth(db, user, client):
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
+def test_no_username_auth(db, user, client):
+    url = "/api/v3/users/login"
+    data = {"username": "", "password": "secret"}
+
+    response = client.post(
+        url, json.dumps(data), content_type="application/json", format="json"
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
 def test_get_user_info_after_auth(user, client):
     user.is_staff = True
     user.save()
