@@ -32,11 +32,11 @@ class DenovoGeneSetCollection(object):
                 "datasetName": name,
                 "personSetCollectionId": collection_id,
                 "personSetCollectionName": person_set_collection["name"],
-                "personSetCollectionLegend": self.get_person_set_collection_legend(
-                    collection_id
-                ),
+                "personSetCollectionLegend":
+                    self.get_person_set_collection_legend(collection_id),
             }
-            for collection_id, person_set_collection in self.person_set_collections.items()
+            for collection_id, person_set_collection
+            in self.person_set_collections.items()
         ]
 
     def get_person_set_collection_legend(self, person_set_collection_id):
@@ -243,7 +243,8 @@ class DenovoGeneSetCollection(object):
                     "{}:{}:{}".format(
                         genotype_data, group_id, ",".join(values)
                     )
-                    for genotype_data, person_set_collection in denovo_gene_set_spec.items()
+                    for genotype_data, person_set_collection
+                    in denovo_gene_set_spec.items()
                     for group_id, values in person_set_collection.items()
                 ]
             )
@@ -253,7 +254,8 @@ class DenovoGeneSetCollection(object):
                 chain(
                     *[
                         person_set_collection.values()
-                        for person_set_collection in denovo_gene_set_spec.values()
+                        for person_set_collection
+                        in denovo_gene_set_spec.values()
                     ]
                 )
             )
@@ -265,8 +267,10 @@ class DenovoGeneSetCollection(object):
                     set(
                         [
                             f"{genotype_data}:{person_set_collection_id}"
-                            for genotype_data, person_set_collection in denovo_gene_set_spec.items()
-                            for person_set_collection_id in person_set_collection
+                            for genotype_data, person_set_collection
+                            in denovo_gene_set_spec.items()
+                            for person_set_collection_id
+                            in person_set_collection
                         ]
                     )
                 ),
