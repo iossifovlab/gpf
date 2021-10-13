@@ -63,6 +63,8 @@ def test_cache_http(resources_http_server, test_cached_grdb_http_config):
 
 
 def test_http_repository(resources_http_server, test_grdb_http_config):
+    http_port = resources_http_server.http_port
+
     grdb = GenomicResourceDB(
         test_grdb_http_config["genomic_resource_repositories"])
     assert len(grdb.repositories) == 1
@@ -77,7 +79,7 @@ def test_http_repository(resources_http_server, test_grdb_http_config):
 
     resource = repo.get_resource("hg38/TESTCADD")
     assert resource.get_id() == "hg38/TESTCADD"
-    assert resource.get_url() == "http://localhost:16200/hg38/TESTCADD"
+    assert resource.get_url() == f"http://localhost:{http_port}/hg38/TESTCADD"
 
     # resource = repo.get_resource("hg38/TESTFreq")
     # assert resource.get_id() == "hg38/TESTFreq"
@@ -86,7 +88,7 @@ def test_http_repository(resources_http_server, test_grdb_http_config):
     resource = repo.get_resource("hg38/TESTphastCons100way")
     assert resource.get_id() == "hg38/TESTphastCons100way"
     assert resource.get_url() == \
-        "http://localhost:16200/hg38/TESTphastCons100way"
+        f"http://localhost:{http_port}/hg38/TESTphastCons100way"
 
     # assert resources[0].get_id() == "hg38/TESTCADD"
     # assert resources[0].get_url() == "http://localhost:16200/hg38/TESTCADD"
