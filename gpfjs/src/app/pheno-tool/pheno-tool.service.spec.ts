@@ -10,8 +10,9 @@ describe('PhenoToolService', () => {
   let service: PhenoToolService;
 
   beforeEach(() => {
+    const configMock = { 'baseUrl': 'testUrl/' };
     TestBed.configureTestingModule({
-      providers: [ConfigService, HttpClientTestingModule, PhenoToolService],
+      providers: [{provide: ConfigService, useValue: configMock}, HttpClientTestingModule, PhenoToolService],
       imports: [HttpClientTestingModule],
     });
 
@@ -22,10 +23,24 @@ describe('PhenoToolService', () => {
     expect(service).toBeTruthy();
   });
 
-  /*
   it('should get pheno tool results', () => {
-    const httpGetSpy = spyOn(HttpClient.prototype, 'get');
+    const httpGetSpy = spyOn(HttpClient.prototype, 'post');
     httpGetSpy.and.returnValue(of('fakeResponse'));
+    service.getPhenoToolResults('filter');
+
+    expect(httpGetSpy.calls.allArgs()).toEqual(
+      [
+        [
+          'testUrl/pheno_tool',
+          'filter',
+          {
+            'headers': {
+              'Content-Type': 'application/json'
+            },
+            'withCredentials': true
+          }
+        ]
+      ]
+    );
   });
-  */
 });
