@@ -1,7 +1,6 @@
 import { Component, HostListener, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
 import { Location } from '@angular/common';
-import { Store } from '@ngxs/store';
 import { GeneService } from 'app/gene-browser/gene.service';
 import { Gene } from 'app/gene-browser/gene';
 import { SummaryAllelesArray, SummaryAllelesFilter, codingEffectTypes,
@@ -18,7 +17,6 @@ import { ConfigService } from 'app/config/config.service';
 import { clone } from 'lodash';
 import * as d3 from 'd3';
 import * as draw from 'app/utils/svg-drawing';
-import { SetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
@@ -78,7 +76,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     readonly configService: ConfigService,
     private route: ActivatedRoute,
     private location: Location,
-    private store: Store,
     private queryService: QueryService,
     private geneService: GeneService,
     private datasetsService: DatasetsService,
@@ -90,7 +87,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.legend = this.selectedDataset.personSetCollections.getLegend(this.selectedDataset.defaultPersonSetCollection);
     this.geneBrowserConfig = this.selectedDataset.geneBrowser;
     if (this.route.snapshot.params.gene) {
-      this.store.dispatch(new SetGeneSymbols([this.route.snapshot.params.gene.toUpperCase()]));
       this.submitGeneRequest(this.route.snapshot.params.gene);
     }
 
@@ -107,13 +103,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
           this.selectedDatasetId = params['dataset'];
         }
       ),
-      this.store.select(state => state.geneSymbolsState).subscribe(state => {
-        if (state.geneSymbols.length && state.geneSymbols[0]) {
-          this.geneSymbol = state.geneSymbols[0];
-        } else {
-          this.location.go(`datasets/${this.selectedDatasetId}/gene-browser`);
-        }
-      }),
       this.variantUpdate$.pipe(debounceTime(750)).subscribe(() => this.updateShownTablePreviewVariantsArray()),
       this.searchBoxInput$.pipe(debounceTime(150)).subscribe(() => {
         if (!this.geneSymbol) {
