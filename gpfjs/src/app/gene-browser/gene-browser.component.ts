@@ -7,7 +7,7 @@ import { SummaryAllelesArray, SummaryAllelesFilter, codingEffectTypes,
   affectedStatusValues, effectTypeValues, variantTypeValues } from 'app/gene-browser/summary-variants';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
-import { first, debounceTime } from 'rxjs/operators';
+import { first, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject, Subscription } from 'rxjs';
 import { Dataset, PersonSet } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -56,7 +56,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
   @ViewChild('searchBox') private searchBox: ElementRef;
   public geneSymbolSuggestions: string[] = [];
-  public searchBoxInput$: Subject<void> = new Subject();
+  public searchBoxInput$: Subject<string> = new Subject();
 
   @HostListener('document:keydown.enter', ['$event'])
   private onEnterPress($event) {
@@ -104,7 +104,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
         }
       ),
       this.variantUpdate$.pipe(debounceTime(750)).subscribe(() => this.updateShownTablePreviewVariantsArray()),
-      this.searchBoxInput$.pipe(debounceTime(150)).subscribe(() => {
+      this.searchBoxInput$.pipe(debounceTime(150), distinctUntilChanged()).subscribe(() => {
         if (!this.geneSymbol) {
           this.geneSymbolSuggestions = [];
           return;
