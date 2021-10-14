@@ -22,7 +22,7 @@ export abstract class StatefulComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.stateSubscription = this.state$.subscribe(_ => {
       // validate for errors
-      validate(this).then(errors => {
+      validate(this, { forbidUnknownValues: true }).then(errors => {
         this.errors = this.errorsToMessages(errors);
         this.store.dispatch(new SetComponentErrors(this.componentId, this.errors));
       });

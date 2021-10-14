@@ -156,7 +156,6 @@ import { GlobalErrorDisplayComponent } from './global-error-display/global-error
 import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
 import { CommonReportsRowComponent } from './variant-reports/common-reports-row/common-reports-row.component';
 import { CommonReportsPedigreeCellComponent } from './variant-reports/common-reports-pedigree-cell/common-reports-pedigree-cell.component';
-import { GeneSymbolsWithSearchComponent } from './gene-symbols-with-search/gene-symbols-with-search.component';
 import { LoadingSpinnerComponent } from './loading-spinner/loading-spinner.component';
 import { DatasetNodeComponent } from './dataset-node/dataset-node.component';
 import { AutismGeneProfilesTableComponent } from './autism-gene-profiles-table/autism-gene-profiles-table.component';
@@ -364,7 +363,6 @@ const appRoutes: Routes = [
     GlobalErrorDisplayComponent,
     CommonReportsRowComponent,
     CommonReportsPedigreeCellComponent,
-    GeneSymbolsWithSearchComponent,
     LoadingSpinnerComponent,
     DatasetNodeComponent,
     AutismGeneProfilesTableComponent,

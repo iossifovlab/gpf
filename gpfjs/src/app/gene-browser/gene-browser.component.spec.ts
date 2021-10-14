@@ -12,7 +12,6 @@ import { QueryService } from 'app/query/query.service';
 import { UsersService } from 'app/users/users.service';
 import { GeneService } from './gene.service';
 import { GeneBrowserComponent } from './gene-browser.component';
-import { GeneSymbolsWithSearchComponent } from '../gene-symbols-with-search/gene-symbols-with-search.component';
 import { SearchableSelectComponent } from '../searchable-select/searchable-select.component';
 import { FormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
@@ -41,7 +40,7 @@ describe('GeneBrowserComponent', () => {
 
   beforeEach(async() => {
     await TestBed.configureTestingModule({
-      declarations: [ GeneBrowserComponent, GeneSymbolsWithSearchComponent, SearchableSelectComponent ],
+      declarations: [ GeneBrowserComponent, SearchableSelectComponent ],
       providers: [
         ConfigService, {provide: ActivatedRoute, useValue: new MockActivatedRoute()},
         QueryService, UsersService, GeneService, {provide: DatasetsService, useValue: mockDatasetsService},

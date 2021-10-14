@@ -2,7 +2,22 @@
   <div class="effect-card card">
     <div style="font-family: Roboto; font-weight: 500; border-bottom: none;" class="card-header card-title">Gene Symbols</div>
     <div class="card-block">
-      <gpf-gene-symbol-with-search (inputClickEvent)="showResults = false"></gpf-gene-symbol-with-search>
+      <div ngbDropdown class="input-group panel" style="padding: 15px">
+        <input ngbDropdownAnchor
+          #searchBox 
+          id="search-box"
+          placeholder="Select or start typing to search"
+          [(ngModel)]="geneSymbol"
+          (keyup)="searchBoxInput$.next(geneSymbol)"
+          (click)="selectGeneSymbol(''); showResults = false"
+          (keydown.enter)="submitGeneRequest()">
+        <div ngbDropdownMenu style="width: 17%">
+          <button *ngFor="let geneSymbol of geneSymbolSuggestions"
+            class="dropdown-item" type="button"
+            (click)="selectGeneSymbol(geneSymbol)"
+            (keydown.enter)="selectGeneSymbol(geneSymbol); submitGeneRequest()">{{ geneSymbol }}</button>
+        </div>
+      </div>
       <div [hidden]="!showError" class="alert alert-danger" role="alert" style="display: inline-block; margin: 20px; margin-top: 0px; width: 45%">
         <span>No such gene found!</span>
       </div>
