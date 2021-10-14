@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
 import { Location } from '@angular/common';
 import { GeneService } from 'app/gene-browser/gene.service';
@@ -58,13 +58,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   public geneSymbolSuggestions: string[] = [];
   public searchBoxInput$: Subject<string> = new Subject();
 
-  @HostListener('document:keydown.enter', ['$event'])
-  private onEnterPress($event) {
-    if ($event.target.id === 'search-box') {
-      this.submitGeneRequest();
-    }
-  }
-
   @ViewChild('filters', { static: false })
   public set filters(element) {
     this.drawDenovoIcons();
@@ -96,6 +89,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       }),
       this.queryService.summaryStreamingFinishedSubject.subscribe(async() => {
         this.showResults = true;
+        this.dropdown.close();
+        this.searchBox.nativeElement.blur();
         this.loadingService.setLoadingStop();
       }),
       this.route.parent.params.subscribe(
@@ -104,7 +99,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
         }
       ),
       this.variantUpdate$.pipe(debounceTime(750)).subscribe(() => this.updateShownTablePreviewVariantsArray()),
-      this.searchBoxInput$.pipe(distinctUntilChanged()).subscribe(() => {
+      this.searchBoxInput$.pipe(debounceTime(100), distinctUntilChanged()).subscribe(() => {
         if (!this.geneSymbol) {
           this.geneSymbolSuggestions = [];
           return;
@@ -135,10 +130,20 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     if (!this.geneSymbol) {
       return;
     }
-    if (this.dropdown && this.dropdown.isOpen()) {
-      this.dropdown.close();
-      this.searchBox.nativeElement.blur();
-    }
+    // setTimeout(() => {
+    //   if (this.dropdown && this.dropdown.isOpen()) {
+    //     console.log('CLOSE')
+    //     this.dropdown.close();
+    //     this.searchBox.nativeElement.blur();
+    //   }
+    // }, 250);
+
+    // if (this.dropdown && this.dropdown.isOpen() && this.showResults) {
+    //   console.log('CLOSE')
+    //   this.dropdown.close();
+    //   this.searchBox.nativeElement.blur();
+    // }
+
     try {
       this.selectedGene = await this.geneService.getGene(
         this.geneSymbol.toUpperCase().trim()

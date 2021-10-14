@@ -7,11 +7,12 @@
           #searchBox 
           id="search-box"
           placeholder="Select or start typing to search"
+          autocomplete="off"
           [(ngModel)]="geneSymbol"
           (keyup)="searchBoxInput$.next(geneSymbol)"
           (click)="selectGeneSymbol(''); showResults = false"
           (keydown.enter)="submitGeneRequest()">
-        <div ngbDropdownMenu style="width: 17%">
+        <div ngbDropdownMenu style="width: 17%; z-index: 3;">
           <button *ngFor="let geneSymbol of geneSymbolSuggestions"
             class="dropdown-item" type="button"
             (click)="selectGeneSymbol(geneSymbol)"

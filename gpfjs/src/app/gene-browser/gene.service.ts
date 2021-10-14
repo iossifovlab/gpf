@@ -23,6 +23,6 @@ export class GeneService {
   }
 
   public searchGenes(searchTerm: string) {
-    return this.http.get(this.config.baseUrl + this.geneSymbolSearchUrl + searchTerm);
+    return this.http.get(this.config.baseUrl + this.geneSymbolSearchUrl + searchTerm.toUpperCase());
   }
 }
