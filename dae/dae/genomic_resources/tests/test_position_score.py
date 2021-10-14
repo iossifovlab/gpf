@@ -72,7 +72,8 @@ def test_region_score():
     assert res.infile.pos_end_column_i == 2
 
     assert res.fetch_scores("1", 12) == {
-        "phastCons100way": 0.02, "phastCons5way": -1.}
+        "phastCons100way": 0.02, "phastCons5way": None}
+
     assert res.fetch_scores_agg("1", 13, 18, ["phastCons100way"]) == \
         {"phastCons100way": (3*0.02 + 2*0.03) / 5.}
     assert res.fetch_scores_agg(
