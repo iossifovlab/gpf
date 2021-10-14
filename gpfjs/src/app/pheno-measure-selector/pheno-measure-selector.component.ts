@@ -62,6 +62,7 @@ export class PhenoMeasureSelectorComponent implements OnInit {
     this.selectedMeasure = null;
     (<HTMLInputElement>document.getElementById('search-box')).value = '';
     this.searchBoxChange('');
+    this.selectedMeasure = undefined;
   }
 
   onFocus(event) {

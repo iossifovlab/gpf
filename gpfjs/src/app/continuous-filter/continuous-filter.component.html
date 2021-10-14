@@ -1,5 +1,5 @@
 <gpf-histogram
-  *ngIf="histogramData"
+  *ngIf="histogramData && measureName"
   width="650" height="145"
   [bins]="histogramData.bins"
   [bars]="histogramData.bars"
