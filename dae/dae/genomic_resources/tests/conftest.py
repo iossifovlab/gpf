@@ -135,18 +135,21 @@ def resources_http_server(fixture_dirname):
     while retries > 0:
         http_port += 1
         logger.info(f"trying to start testing http server at {http_port}")
-        server = Popen(
-            [
-                "python",
-                "-m", "RangeHTTPServer",
-                f"{http_port}",
-                "--bind", "localhost",
-                "--directory", fixture_dirname("genomic_resources"),
-            ],
-            stdout=PIPE,
-            encoding="utf-8",
-            universal_newlines=True
-        )
+        try:
+            server = Popen(
+                [
+                    "python",
+                    "-m", "RangeHTTPServer",
+                    f"{http_port}",
+                    "--bind", "localhost",
+                    "--directory", fixture_dirname("genomic_resources"),
+                ],
+                stdout=PIPE,
+                encoding="utf-8",
+                universal_newlines=True
+            )
+        except Exception:
+            pass
 
         try:
             conn = HTTPConnection(f"localhost:{http_port}")
@@ -158,6 +161,11 @@ def resources_http_server(fixture_dirname):
                 yield server
                 break
         except ConnectionRefusedError:
+            time.sleep(0.5)
+            retries -= 1
+            http_port += 1
+
+        except OSError:
             time.sleep(0.5)
             retries -= 1
             http_port += 1
