@@ -42,6 +42,7 @@ class LiftoverChainResource(GenomicResource):
         if "add_prefix" in mapping:
             add_prefix = mapping["add_prefix"]
             chrom = f"{add_prefix}{chrom}"
+        return chrom
 
     def convert_coordinate(self, chrom, pos):
         chrom = self.map_chromosome(chrom, self.chrom_variant_coordinates)

@@ -13,6 +13,7 @@ def test_liftover_chain_resource(genomic_resource_fixture_dir_repo):
         assert out[0] == expected_chrom
         assert out[1] == expected_pos
         assert out[2] == expected_strand
+
     check_coordinate(100_000, "1", 99_999, "+")
     check_coordinate(180_000, "16", 90_188_902, "-")
     check_coordinate(190_000, "2", 114_351_526, "-")
