@@ -23,4 +23,3 @@ dependencies:
   - pytest-django=4.4.0
   - pylint=2.9.1
   - pre-commit=2.13.0
-  - django-extensions=2.2.5
