@@ -33,10 +33,6 @@ export class DatasetsPage extends BasePage {
     return cy.get('#families-by-number-dropdown-button');
   }
 
-  getFamiliesByNumberDropdownOptionByText(text: string) {
-    return cy.get('#families-by-number-dropdown-button option').contains(text);
-  }
-
   get allFamiliesByNumberHeaderCells() {
     return cy.get('div#families-by-number-div tbody th');
   }
@@ -46,11 +42,7 @@ export class DatasetsPage extends BasePage {
   }
 
   get familiesByPedigreeDivs() {
-    return cy.get('gpf-common-reports-pedigree-cell > div > div');
-  }
-
-  getDenovoTableHeaderElements() {
-    return cy.get('div#denovo-variants-div thead div');
+    return cy.get('gpf-common-reports-pedigree-cell div.pedigree-count');
   }
 
   findDenovoVariantsCountsByRowName(rowName: string) {
@@ -59,9 +51,5 @@ export class DatasetsPage extends BasePage {
 
   get denovoVariantsDropdownButton() {
     return cy.get('#denovo-variants-dropdown-button');
-  }
-
-  getDenovoVariantsDropdownOptionByText(text: string) {
-    return cy.get('#denovo-variants-dropdown-button option').contains(text);
   }
 }

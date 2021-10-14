@@ -41,16 +41,4 @@ describe('Family filters block tests', () => {
     page.advancedButton.click();
     page.phenoFiltersPanel.should('be.visible');
   });
-
-//   Uncomment me when NgbNav no longer always show dropdown menu
-//   it('should stop displaying tab panel after \'All\' button click', () => {
-//     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-//     page.tabPanel.should('not.exist');
-
-//     page.familyIdsButton.click();
-//     page.tabPanel.should('be.visible');
-
-//     page.allButton.click();
-//     page.tabPanel.should('not.exist');
-//   });
 });

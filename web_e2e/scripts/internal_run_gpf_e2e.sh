@@ -16,4 +16,4 @@ ${WD}/scripts/wait-for-it.sh ${CONTAINER_GPF_DEV}:80 --timeout=360
 
 
 # ng e2e --baseUrl http://${CONTAINER_GPF_DEV}/gpf/
-./node_modules/.bin/cypress run --config baseUrl=http://${CONTAINER_GPF_DEV}/gpf/
+./node_modules/.bin/cypress run --browser chrome --config baseUrl=http://${CONTAINER_GPF_DEV}/gpf/

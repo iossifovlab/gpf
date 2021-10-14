@@ -5,7 +5,7 @@ export class GenotypePreviewTablePage extends BasePage {
     return cy.get('gpf-genotype-preview-table');
   }
 
-  getCellSpanElementsByIndex(index: number) {
-    return cy.get('gpf-table gpf-table-view-cell').eq(index);
+  getSpansInTableRowByIndex(index: number) {
+    return cy.get('gpf-table gpf-table-view-cell').eq(index).find('gpf-genotype-preview-field span');
   }
 }

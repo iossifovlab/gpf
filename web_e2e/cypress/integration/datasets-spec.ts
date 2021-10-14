@@ -90,73 +90,52 @@ describe('Iossifov dataset count tests', () => {
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics);
   });
 
-  [{roleId: 'mom', expectedCounts: ['0', '2516', '2516']},
-   {roleId: 'dad', expectedCounts: ['2516', '0', '2516']},
-   {roleId: 'proband', expectedCounts: ['2166', '341', '2507']},
-   {roleId: 'sibling', expectedCounts: ['899', '1011', '1910']}
+  [{rowIndex: 0, roleId: 'mom', expectedCounts: ['0', '2516', '2516']},
+   {rowIndex: 1, roleId: 'dad', expectedCounts: ['2516', '0', '2516']},
+   {rowIndex: 2, roleId: 'proband', expectedCounts: ['2166', '341', '2507']},
+   {rowIndex: 3, roleId: 'sibling', expectedCounts: ['899', '1011', '1910']}
   ].forEach((data) => {
     it('should display the correct numbers in families by numbers of role - \'' + data.roleId + '\'', () => {
       page.familiesByNumberDropdownButton.select('Role');
 
-      page.allFamiliesByNumberHeaderCells.invoke('text').then((text) => {
-        const roles = text.split('  ').map(str => str.trim());
-        const indexOfRoleId = roles.indexOf(data.roleId);
-        page.allFamiliesByNumberDataCells.as('tds');
+      page.allFamiliesByNumberHeaderCells.eq(data.rowIndex).should('have.text', data.roleId);
 
-        for (let i = 0; i < data.expectedCounts.length; i++) {
-          cy.get('@tds').eq(indexOfRoleId * 3 + i).invoke('text').then(text => expect(text.trim()).to.eq(data.expectedCounts[i]));
-        }
-      });
+      page.allFamiliesByNumberDataCells.as('tds');
+      for (let i = 0; i < data.expectedCounts.length; i++) {
+        cy.get('@tds').eq(data.rowIndex * 3 + i).should('have.text', data.expectedCounts[i])
+      }
     });
   });
 
   it('should display the correct numbers in families by pedigree of affected status', () => {
-    const expectedValues: number[] = [6, 877, 789, 500, 128, 107, 106, 14658, 11299, 11633];
-
-    page.familiesByPedigreeDivs.invoke('text').then(text => {
-      let familiesByPedigreeValues = text.split(',').join(' ').split('  ').map(a => a.trim()).map(Number);
-
-      familiesByPedigreeValues.sort((a, b) =>  a - b);
-      expectedValues.sort((a, b) =>  a - b);
-
-      expect(familiesByPedigreeValues).to.deep.equal(expectedValues);
-    });
+    const expectedValues: string[] = ['877', '789', '500', '128', '107', '106', '6', '14658, 11299, 11633'];
+    page.familiesByPedigreeDivs.each((ele, i) => {
+      expect(ele.text()).to.eq(expectedValues[i]);
+    })
   });
 
-  [{effectType: 'LGDs', expectedCounts: ['180, 0.094', '(169, 9%)', '393, 0.157', '(366, 15%)']},
-   {effectType: 'UTRs', expectedCounts: ['154, 0.081', '(144, 8%)', '244, 0.097', '(237, 9%)']},
-   {effectType: 'Missense', expectedCounts: ['1149, 0.602', '(843, 44%)', '1680, 0.67', '(1185, 47%)']},
-   {effectType: 'Intron', expectedCounts: ['558, 0.292', '(464, 24%)', '821, 0.327', '(671, 27%)']}
+  [{effectType: 'LGDs', expectedCounts: ['393, 0.157', '(366, 15%)', '180, 0.094', '(169, 9%)']},
+   {effectType: 'UTRs', expectedCounts: ['244, 0.097', '(237, 9%)', '154, 0.081', '(144, 8%)']},
+   {effectType: 'Missense', expectedCounts: ['1680, 0.67', '(1185, 47%)', '1149, 0.602', '(843, 44%)']},
+   {effectType: 'Intron', expectedCounts: ['821, 0.327', '(671, 27%)', '558, 0.292', '(464, 24%)']}
   ].forEach((data) => {
-    it('should display the correct numbers for ' + data.effectType +
-       ' effectType in the \'Denovo variants of:\' role table', () => {
+    it('should display the correct numbers for ' + data.effectType + ' effectType in the \'Denovo variants of:\' role table', () => {
       page.denovoVariantsDropdownButton.select('Role');
-      page.findDenovoVariantsCountsByRowName(data.effectType).invoke('text').then(text => {
-        const denovoVariantsCounts = text.split('  ').map(a => a.trim());
-
-        denovoVariantsCounts.sort();
-        data.expectedCounts.sort();
-
-        expect(denovoVariantsCounts).to.deep.eq(data.expectedCounts);
+      page.findDenovoVariantsCountsByRowName(data.effectType).each((ele, i) => {
+        expect(ele.text()).to.eq(data.expectedCounts[i]);
       });
     });
   });
 
-  [{effectType: 'LGDs', expectedCounts: ['180, 0.094', '(169, 9%)', '393, 0.157', '(366, 15%)']},
-   {effectType: 'UTRs', expectedCounts: ['154, 0.081', '(144, 8%)', '244, 0.097', '(237, 9%)']},
-   {effectType: 'Missense', expectedCounts: ['1149, 0.602', '(843, 44%)', '1680, 0.67', '(1185, 47%)']},
-   {effectType: 'Intron', expectedCounts: ['558, 0.292', '(464, 24%)', '821, 0.327', '(671, 27%)']}
+  [{effectType: 'LGDs', expectedCounts: ['393, 0.157', '(366, 15%)', '180, 0.094', '(169, 9%)']},
+   {effectType: 'UTRs', expectedCounts: ['244, 0.097', '(237, 9%)', '154, 0.081', '(144, 8%)']},
+   {effectType: 'Missense', expectedCounts: ['1680, 0.67', '(1185, 47%)', '1149, 0.602', '(843, 44%)']},
+   {effectType: 'Intron', expectedCounts: ['821, 0.327', '(671, 27%)', '558, 0.292', '(464, 24%)']}
   ].forEach((data) => {
-    it('should display the correct numbers for ' + data.effectType +
-       ' effectType in the \'Denovo variants of:\' status table', () => {
+    it('should display the correct numbers for ' + data.effectType + ' effectType in the \'Denovo variants of:\' status table', () => {
       page.denovoVariantsDropdownButton.select('Affected Status');
-      page.findDenovoVariantsCountsByRowName(data.effectType).invoke('text').then(text => {
-        const denovoVariantsCounts = text.split('  ').map(a => a.trim());
-
-        denovoVariantsCounts.sort();
-        data.expectedCounts.sort();
-
-        expect(denovoVariantsCounts).to.deep.eq(data.expectedCounts);
+      page.findDenovoVariantsCountsByRowName(data.effectType).each((ele, i) => {
+        expect(ele.text()).to.eq(data.expectedCounts[i]);
       });
     });
   });

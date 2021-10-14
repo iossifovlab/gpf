@@ -10,18 +10,15 @@ export class GenePlotPage extends BasePage {
   }
 
   getEffectTypesCheckbox(effectType: string) {
-    effectType = effectType.replace('+', '\\+');
-    return cy.get(`svg#${effectType}`).siblings('input');
+    return cy.get('#effect-types-filters span').contains(effectType);
   }
 
   getInheritanceTypes(inheritanceType: string) {
-    inheritanceType = inheritanceType.toLowerCase();
-    return cy.get(`svg#${inheritanceType}`).siblings('input');
+    return cy.get('#inheritance-types-filters span').contains(inheritanceType);
   }
 
   getVariantTypes(variantType: string) {
-    return cy.get('div.card-header').contains('Variant Types')
-    .siblings('div').find('label').contains(variantType).find('input').first();
+    return cy.get('#variant-types-filters span').contains(variantType);
   }
 
   get undoButton() {

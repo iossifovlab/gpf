@@ -151,7 +151,7 @@ describe('Gene weights panel tests', () => {
     cy.wait('@availability').its('response.statusCode').should('eq', 200);
 
     genotypeBrowserController.showTablePreview();
-    genotypeBrowserPage.overviewParagraph.should('have.text', ' 0 variants selected (0 shown) ');
+    genotypeBrowserPage.overviewParagraph.should('have.text', '0 variants selected (0 shown)');
 
     page.dropdownButton.select('RVIS rank');
 
@@ -160,7 +160,7 @@ describe('Gene weights panel tests', () => {
     cy.wait('@availability').its('response.statusCode').should('eq', 200);
     
     genotypeBrowserController.showTablePreview();
-    genotypeBrowserPage.overviewParagraph.should('have.text', ' 0 variants selected (0 shown) ');
+    genotypeBrowserPage.overviewParagraph.should('have.text', '0 variants selected (0 shown)');
 
     page.dropdownButton.select('RVIS');
 
@@ -169,7 +169,7 @@ describe('Gene weights panel tests', () => {
     cy.wait('@availability').its('response.statusCode').should('eq', 200);
 
     genotypeBrowserController.showTablePreview();
-    genotypeBrowserPage.overviewParagraph.should('have.text', ' 0 variants selected (0 shown) ');
+    genotypeBrowserPage.overviewParagraph.should('have.text', '0 variants selected (0 shown)');
 
     page.dropdownButton.select('LGD rank');
 
@@ -178,7 +178,7 @@ describe('Gene weights panel tests', () => {
     cy.wait('@availability').its('response.statusCode').should('eq', 200);
 
     genotypeBrowserController.showTablePreview();
-    genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
+    genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
     
     page.dropdownButton.select('LGD score');
 
@@ -187,7 +187,7 @@ describe('Gene weights panel tests', () => {
     cy.wait('@availability').its('response.statusCode').should('eq', 200);
 
     genotypeBrowserController.showTablePreview();
-    genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
+    genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
 
     page.dropdownButton.select('ExAC pRec');
 
@@ -196,7 +196,7 @@ describe('Gene weights panel tests', () => {
     cy.wait('@availability').its('response.statusCode').should('eq', 200);
 
     genotypeBrowserController.showTablePreview();
-    genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
+    genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
 
     page.dropdownButton.select('ExAC pLI rank');
 
@@ -205,7 +205,7 @@ describe('Gene weights panel tests', () => {
     cy.wait('@availability').its('response.statusCode').should('eq', 200);
 
     genotypeBrowserController.showTablePreview();
-    genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
+    genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
 
     page.dropdownButton.select('ExAC pLI');
 
@@ -214,7 +214,7 @@ describe('Gene weights panel tests', () => {
     cy.wait('@availability').its('response.statusCode').should('eq', 200);
 
     genotypeBrowserController.showTablePreview();
-    genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
+    genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
     
     page.dropdownButton.select('ExAC pRec rank');
 
@@ -223,7 +223,7 @@ describe('Gene weights panel tests', () => {
     cy.wait('@availability').its('response.statusCode').should('eq', 200);
 
     genotypeBrowserController.showTablePreview();
-    genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
+    genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
 
     page.dropdownButton.select('ExAC pRec');
 
@@ -232,6 +232,6 @@ describe('Gene weights panel tests', () => {
     cy.wait('@availability').its('response.statusCode').should('eq', 200);
 
     genotypeBrowserController.showTablePreview();
-    genotypeBrowserPage.overviewParagraph.should('have.text', ' 35 variants selected (35 shown) ');
+    genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
   });
 });
