@@ -101,4 +101,8 @@ export class ContinuousFilterState extends PersonFilterState {
   ) {
     super(id, type, role, source, from, selection);
   }
+
+  public isEmpty() {
+    return !this.source;
+  }
 }
