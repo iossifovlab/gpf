@@ -4,6 +4,90 @@ import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 import { GenotypeBrowserController } from 'cypress/elements/genotype-browser-controller';
 import { GenotypeBrowserPage } from 'cypress/elements/genotype-browser-page';
 
+const geneWeightsData = [
+  {
+    name: "SFARI_gene_score",
+    desc: "SFARI gene score",
+    inputField: false,
+    values: [
+      
+    ]
+  },
+  {
+    name: "RVIS_rank",
+    desc: "RVIS rank",
+    inputField: true,
+    values: [
+      
+    ]
+  },
+  {
+    name: "RVIS",
+    desc: "RVIS",
+    inputField: true,
+    values: [
+      
+    ]
+  },
+  {
+    name: "LGD_rank",
+    desc: "LGD rank",
+    inputField: true,
+    values: [
+      
+    ]
+  },
+  {
+    name: "LGD_score",
+    desc: "LGD score",
+    inputField: true,
+    values: [
+      
+    ]
+  },
+  {
+    name: "pLI_rank",
+    desc: "ExAC pLI rank",
+    inputField: true,
+    values: [
+      
+    ]
+  },
+  {
+    name: "pLI",
+    desc: "ExAC pLI",
+    inputField: true,
+    values: [
+      
+    ]
+  },
+  {
+    name: "pRec_rank",
+    desc: "ExAC pRec rank",
+    inputField: true,
+    values: [
+      
+    ]
+  },
+  {
+    name: "pRec",
+    desc: "ExAC pRec",
+    inputField: true,
+    values: [
+      
+    ]
+  }
+];
+
+function wait_for_query(name = 'query', type = 'POST', url: string, response?: number, times = 1) {
+  if(!(times > 0))
+    return;
+  while(times-- > 0) {
+    cy.intercept(type, url).as(name);
+    cy.wait('@' + name).its('response.statusCode').should('eq', response ? response : 200);
+  }
+}
+
 describe('Gene weights panel tests', () => {
   const page = new GenesWeights();
   const genesBlockPage = new GenesBlockPage();
@@ -31,56 +115,21 @@ describe('Gene weights panel tests', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genesBlockPage.geneWeightsButton.click();
 
-    page.dropdownButton.contains('SFARI gene score');
-    page.dropdownButton.contains('RVIS rank');
-    page.dropdownButton.contains('RVIS');
-    page.dropdownButton.contains('LGD rank');
-    page.dropdownButton.contains('LGD score');
-    page.dropdownButton.contains('ExAC pLI rank');
-    page.dropdownButton.contains('ExAC pLI');
-    page.dropdownButton.contains('ExAC pRec rank');
-    page.dropdownButton.contains('ExAC pRec');
+    geneWeightsData.forEach(element => {
+      page.dropdownButton.contains(element.desc);
+    });
   });
 
   it('should go through all gene weights and check whether from/to buttons are shown', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genesBlockPage.geneWeightsButton.click();
 
-    page.dropdownButton.should('contain', 'SFARI gene score');
-    page.fromInputField.should('not.exist');
-    page.toInputField.should('not.exist');
-
-    page.dropdownButton.select('RVIS rank');
-    page.fromInputField.should('be.visible');
-    page.toInputField.should('be.visible');
-
-    page.dropdownButton.select('RVIS');
-    page.fromInputField.should('be.visible');
-    page.toInputField.should('be.visible');
-
-    page.dropdownButton.select('LGD rank');
-    page.fromInputField.should('be.visible');
-    page.toInputField.should('be.visible');
-
-    page.dropdownButton.select('LGD score');
-    page.fromInputField.should('be.visible');
-    page.toInputField.should('be.visible');
-
-    page.dropdownButton.select('ExAC pLI rank');
-    page.fromInputField.should('be.visible');
-    page.toInputField.should('be.visible');
-
-    page.dropdownButton.select('ExAC pLI');
-    page.fromInputField.should('be.visible');
-    page.toInputField.should('be.visible');
-
-    page.dropdownButton.select('ExAC pRec rank');
-    page.fromInputField.should('be.visible');
-    page.toInputField.should('be.visible');
-
-    page.dropdownButton.select('ExAC pRec');
-    page.fromInputField.should('be.visible');
-    page.toInputField.should('be.visible');
+    geneWeightsData.forEach(element => {
+      page.dropdownButton.select(element.desc);
+      console.log(element.inputField);
+      page.fromInputField.should(element.inputField ? 'be.visible' : 'not.exist');
+      page.toInputField.should(element.inputField ? 'be.visible' : 'not.exist');
+    });
   });
 
   it('should have working from/to step up/down buttons in RVIS rank', () => {
@@ -136,7 +185,7 @@ describe('Gene weights panel tests', () => {
     page.toInputField.should('have.value', '1.01');
   });
 
-  it.only('should filter variants based on selected gene weight', () => {
+  it('should filter variants based on selected gene weight', () => {
     const genotypeBrowserController = new GenotypeBrowserController();
     const genotypeBrowserPage = new GenotypeBrowserPage();
 
@@ -145,91 +194,70 @@ describe('Gene weights panel tests', () => {
     genesBlockPage.geneWeightsButton.click();
 
     page.dropdownButton.select('SFARI gene score');
-
-    cy.intercept('POST' , '/gpf/api/v3/gene_weights/partitions').as('availability');
-    cy.wait('@availability').its('response.statusCode').should('eq', 200);
-    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    wait_for_query('reponse', 'POST', '/gpf/api/v3/gene_weights/partitions');
 
     genotypeBrowserController.showTablePreview();
     genotypeBrowserPage.overviewParagraph.should('have.text', '0 variants selected (0 shown)');
 
     page.dropdownButton.select('RVIS rank');
 
-    cy.intercept('POST' , '/gpf/api/v3/gene_weights/partitions').as('availability');
-    cy.wait('@availability').its('response.statusCode').should('eq', 200);
-    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    wait_for_query('reponse', 'POST', '/gpf/api/v3/gene_weights/partitions', 200, 2);
     
     genotypeBrowserController.showTablePreview();
     genotypeBrowserPage.overviewParagraph.should('have.text', '0 variants selected (0 shown)');
 
     page.dropdownButton.select('RVIS');
 
-    cy.intercept('POST' , '/gpf/api/v3/gene_weights/partitions').as('availability');
-    cy.wait('@availability').its('response.statusCode').should('eq', 200);
-    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    wait_for_query('reponse', 'POST', '/gpf/api/v3/gene_weights/partitions', 200, 3);
 
     genotypeBrowserController.showTablePreview();
     genotypeBrowserPage.overviewParagraph.should('have.text', '0 variants selected (0 shown)');
 
     page.dropdownButton.select('LGD rank');
 
-    cy.intercept('POST' , '/gpf/api/v3/gene_weights/partitions').as('availability');
-    cy.wait('@availability').its('response.statusCode').should('eq', 200);
-    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    wait_for_query('reponse', 'POST', '/gpf/api/v3/gene_weights/partitions', 200, 3);
 
     genotypeBrowserController.showTablePreview();
     genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
     
     page.dropdownButton.select('LGD score');
 
-    cy.intercept('POST' , '/gpf/api/v3/gene_weights/partitions').as('availability');
-    cy.wait('@availability').its('response.statusCode').should('eq', 200);
-    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    wait_for_query('reponse', 'POST', '/gpf/api/v3/gene_weights/partitions', 200, 3);
 
     genotypeBrowserController.showTablePreview();
     genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
 
     page.dropdownButton.select('ExAC pRec');
 
-    cy.intercept('POST' , '/gpf/api/v3/gene_weights/partitions').as('availability');
-    cy.wait('@availability').its('response.statusCode').should('eq', 200);
-    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    wait_for_query('reponse', 'POST', '/gpf/api/v3/gene_weights/partitions', 200, 3);
 
     genotypeBrowserController.showTablePreview();
     genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
 
     page.dropdownButton.select('ExAC pLI rank');
 
-    cy.intercept('POST' , '/gpf/api/v3/gene_weights/partitions').as('availability');
-    cy.wait('@availability').its('response.statusCode').should('eq', 200);
-    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    wait_for_query('reponse', 'POST', '/gpf/api/v3/gene_weights/partitions', 200, 3);
 
     genotypeBrowserController.showTablePreview();
     genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
 
     page.dropdownButton.select('ExAC pLI');
 
-    cy.intercept('POST' , '/gpf/api/v3/gene_weights/partitions').as('availability');
-    cy.wait('@availability').its('response.statusCode').should('eq', 200);
-    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    wait_for_query('reponse', 'POST', '/gpf/api/v3/gene_weights/partitions', 200, 3);
 
     genotypeBrowserController.showTablePreview();
     genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
     
     page.dropdownButton.select('ExAC pRec rank');
 
-    cy.intercept('POST' , '/gpf/api/v3/gene_weights/partitions').as('availability');
-    cy.wait('@availability').its('response.statusCode').should('eq', 200);
-    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    wait_for_query('reponse', 'POST', '/gpf/api/v3/gene_weights/partitions', 200, 3);
 
     genotypeBrowserController.showTablePreview();
     genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
 
     page.dropdownButton.select('ExAC pRec');
 
-    cy.intercept('POST' , '/gpf/api/v3/gene_weights/partitions').as('availability');
-    cy.wait('@availability').its('response.statusCode').should('eq', 200);
-    cy.wait('@availability').its('response.statusCode').should('eq', 200);
+    wait_for_query('reponse', 'POST', '/gpf/api/v3/gene_weights/partitions', 200, 3);
 
     genotypeBrowserController.showTablePreview();
     genotypeBrowserPage.overviewParagraph.should('have.text', '35 variants selected (35 shown)');
