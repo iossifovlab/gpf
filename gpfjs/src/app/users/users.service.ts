@@ -50,10 +50,6 @@ export class UsersService {
     this.emailLog = new BehaviorSubject('');
   }
 
-  public nextEmail(email: string) {
-    this.emailLog.next(email);
-  }
-
   logout(): Observable<boolean> {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
