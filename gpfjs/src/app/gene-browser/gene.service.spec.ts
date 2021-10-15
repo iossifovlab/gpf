@@ -47,7 +47,7 @@ describe('GeneService', () => {
     service.searchGenes('fakeSearchTerm').pipe(take(1)).subscribe((response) => {
       expect(response).toEqual('fakeResponse' as any);
       expect(httpGetSpy.calls.allArgs()).toEqual([[
-        environment.apiPath + 'genome/gene_models/search/' + 'fakeSearchTerm'
+        environment.apiPath + 'genome/gene_models/search/' + 'FAKESEARCHTERM'
       ]]);
     });
   });
