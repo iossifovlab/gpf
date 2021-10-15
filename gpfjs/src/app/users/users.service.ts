@@ -27,8 +27,6 @@ export class UsersService {
   private readonly checkVerificationUrl = 'users/check_verif_path';
   private readonly usersUrl = 'users';
   private readonly usersStreamingUrl = `${this.usersUrl}/streaming_search`;
-  private readonly bulkAddGroupsUrl = `${this.usersUrl}/bulk_add_groups`;
-  private readonly bulkRemoveGroupsUrl = `${this.usersUrl}/bulk_remove_groups`;
 
   private userInfo$ = new ReplaySubject<{}>(1);
   private lastUserInfo = null;
@@ -329,27 +327,4 @@ export class UsersService {
 
     return usersSubject.pipe(map(data => { return User.fromJson(data); }));
   }
-
-  bulkAddGroups(users: User[], groups: string[]) {
-    const options = { withCredentials: true };
-
-    const data = {
-      userIds: users.map(u => u.id),
-      groups: groups
-    };
-
-    return this.http.post(this.config.baseUrl + this.bulkAddGroupsUrl, data, options);
-  }
-
-  bulkRemoveGroups(users: User[], groups: string[]) {
-    const options = { withCredentials: true };
-
-    const data = {
-      userIds: users.map(u => u.id),
-      groups: groups
-    };
-
-    return this.http.post(this.config.baseUrl + this.bulkRemoveGroupsUrl, data, options);
-  }
-
 }
