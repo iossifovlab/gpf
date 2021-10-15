@@ -4,19 +4,21 @@
     <div class="card-block">
       <div ngbDropdown class="input-group panel" style="padding: 15px">
         <input ngbDropdownAnchor
-          #searchBox 
+          #searchBox
           id="search-box"
           placeholder="Select or start typing to search"
           autocomplete="off"
           [(ngModel)]="geneSymbol"
-          (keyup)="searchBoxInput$.next(geneSymbol)"
+          (keyup)="openDropdown(); searchBoxInput$.next(geneSymbol)"
           (click)="selectGeneSymbol(''); showResults = false"
           (keydown.enter)="submitGeneRequest()">
         <div ngbDropdownMenu style="width: 17%; z-index: 3;">
-          <button *ngFor="let geneSymbol of geneSymbolSuggestions"
+          <button *ngFor="let suggestion of geneSymbolSuggestions"
             class="dropdown-item" type="button"
-            (click)="selectGeneSymbol(geneSymbol)"
-            (keydown.enter)="selectGeneSymbol(geneSymbol); submitGeneRequest()">{{ geneSymbol }}</button>
+            (click)="selectGeneSymbol(suggestion)"
+            (keydown.enter)="selectGeneSymbol(suggestion); submitGeneRequest()">
+            <span>{{ suggestion }}</span>
+          </button>
         </div>
       </div>
       <div [hidden]="!showError" class="alert alert-danger" role="alert" style="display: inline-block; margin: 20px; margin-top: 0px; width: 45%">
