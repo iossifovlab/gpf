@@ -94,7 +94,7 @@ describe('User management tests', () => {
       method: 'GET',
       url: '/gpf/api/v3/users/streaming_search?search=**',
     }).as('QueryHandler');
-    cy.wait('@QueryHandler').its('response.statusCode').should('equal', 200)
+    cy.wait('@QueryHandler').its('response.statusCode').should('equal', 200);
     deleteTestUser(page);
   });
 
