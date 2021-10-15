@@ -5,12 +5,14 @@ from http.client import HTTPConnection
 
 
 @pytest.fixture(scope="module")
-def resources_http_server(fixture_dirname, http_port):
+def resources_http_server(fixture_dirname):
+    http_port = 16500
+
     server = Popen(
         [
             "python",
             "-m", "RangeHTTPServer",
-            http_port,
+            str(http_port),
             "--bind", "localhost",
             "--directory", fixture_dirname("genomic_resources"),
         ],
@@ -27,6 +29,7 @@ def resources_http_server(fixture_dirname, http_port):
             response = conn.getresponse()
             if response is not None:
                 success = True
+                server.http_port = http_port
                 yield server
                 break
         except ConnectionRefusedError:
