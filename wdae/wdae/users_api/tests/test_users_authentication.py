@@ -1,4 +1,5 @@
 import json
+import pytest
 
 from datetime import timedelta
 from rest_framework import status
@@ -73,6 +74,16 @@ def test_failed_auth(db, user, client):
         url, json.dumps(data), content_type="application/json", format="json"
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_no_username_auth(db, user, client):
+    url = "/api/v3/users/login"
+    data = {"username": "", "password": "secret"}
+
+    response = client.post(
+        url, json.dumps(data), content_type="application/json", format="json"
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 def test_get_user_info_after_auth(user, client):
@@ -164,7 +175,10 @@ def test_failed_auth_lockouts(db, user, client):
             url, json.dumps(data),
             content_type="application/json", format="json"
         )
-        assert response.data == {"lockout_time": pow(2, i) * 60}, response.data
+        assert "lockout_time" in response.data
+        assert response.data["lockout_time"] == pytest.approx(
+            pow(2, i) * 60, abs=5  # 5 second tolerance
+        )
         assert response.status_code == status.HTTP_403_FORBIDDEN
         expire_email_lockout(data["username"])
 
