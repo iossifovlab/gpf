@@ -1,5 +1,5 @@
 import { ValidateIf, ValidateNested } from 'class-validator';
-import { IsNumber } from 'class-validator';
+import { IsNumber, IsNotEmpty } from 'class-validator';
 import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
 import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
 
@@ -8,7 +8,12 @@ export interface Selection {
 }
 
 export class CategoricalSelection implements Selection {
-  constructor(public selection: string[] = []) {}
+  @IsNotEmpty()
+  public selection: string[];
+
+  constructor(selection: string[] = []) {
+    this.selection = selection;
+  }
 
   isEmpty() {
     return this.selection.length === 0;
