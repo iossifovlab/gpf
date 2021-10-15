@@ -12,16 +12,4 @@ export class ShareQueryPage extends BasePage {
   get input() {
     return cy.get('div#share-query-dropdown input');
   }
-
-//   async waitForShareQueryInput() {
-//     const promise = new Promise<void>((resolve) => {
-//       setTimeout(async () => {
-//         if (await this.input.getAttribute('value') !== '') {
-//           resolve();
-//         }
-//       }, 5000);
-//     });
-
-//    return promise;
-//   }
 }

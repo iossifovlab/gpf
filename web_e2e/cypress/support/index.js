@@ -22,3 +22,21 @@ import './commands'
 Cypress.Cookies.defaults({
   preserve: 'sessionid',
 })
+
+// https://github.com/cypress-io/cypress/issues/2118#issuecomment-580095512
+Cypress.on('window:before:load', function (win) {
+  const original = win.EventTarget.prototype.addEventListener
+
+  win.EventTarget.prototype.addEventListener = function () {
+    if (arguments && arguments[0] === 'beforeunload') {
+      return
+    }
+    return original.apply(this, arguments)
+  }
+
+  Object.defineProperty(win, 'onbeforeunload', {
+    get: function () { },
+    set: function () { }
+  })
+})
+

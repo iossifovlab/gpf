@@ -35,7 +35,7 @@ describe('User management tests', () => {
     page.submitUserButton.click();
 
     page.usersTableRows.should('have.length', 4);
-    page.usersTableRows.last().should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
+    page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
 
     page.userTableDeleteNewestUserButton.click();
     page.userTableDeleteUserConfirmButton.click();
@@ -56,12 +56,12 @@ describe('User management tests', () => {
     page.nameInputField.type('other_test_name');
     page.submitUserButton.click();
 
-    page.alertElement.should('have.text', ' Error: wdae user with this email already exists. ');
+    page.alertElement.should('have.text', 'Error: wdae user with this email already exists.');
     page.backUserButton.click();
     page.backUserConfirmationButton.click();
 
     page.usersTableRows.should('have.length', 4);
-    page.usersTableRows.last().should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
+    page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
 
     deleteTestUser(page);
   });
@@ -85,11 +85,11 @@ describe('User management tests', () => {
   it('should search and find user', () => {
     createTestUser(page, 'test_email@email.com', 'test_name');
     page.userSearchField.type('test_name');
-    page.usersTableRows.last().should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
+    page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
 
     page.userSearchField.clear();
     page.userSearchField.type('test_email@email.com');
-    page.usersTableRows.last().should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
+    page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
     cy.intercept({
       method: 'GET',
       url: '/gpf/api/v3/users/streaming_search?search=**',
@@ -129,8 +129,7 @@ describe('User management tests', () => {
     page.userWindowGroupDropdownListCheckboxes.last().click();
     page.userWindowGroupDropDownMenuButton.click();
     page.userWindowSubmitButton.click();
-    page.usersTableRows.last()
-      .should('have.text', ' test_name test_email@email.comany_user test_email@email.com test_group × multi ');
+    page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.comtest_group×multi');
 
     page.groupsButton.click();
     page.groupsTableRows.last().should('contain.text', 'test_email@email.com');
@@ -143,8 +142,7 @@ describe('User management tests', () => {
       url: '/gpf/api/v3/users/streaming_search?search=**',
     }).as('QueryHandler');
     cy.wait('@QueryHandler').its('response.statusCode').should('equal', 200);
-    page.usersTableRows.last()
-      .should('have.text', ' test_name test_email@email.comany_user test_email@email.com ');
+    page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
 
     deleteTestGroup(page);
     deleteTestUser(page);
@@ -167,49 +165,6 @@ describe('User management tests', () => {
 
     page.backUserButton.click();
     page.backUserConfirmationButton.click();
-
-    deleteTestGroup(page);
-  });
-
-  it('should bulk add and remove users to group', () => {
-    createTestGroup(page, 'test_group');
-
-    page.usersButton.click();
-
-    page.userBulkEditButton.click();
-    page.userBulkEditAddGroupButton.click();
-    page.userWindowGroupDropDownMenuButton.click();
-    page.userWindowGroupDropdownListCheckboxes.last().click();
-    page.userWindowGroupDropDownMenuButton.click();
-    page.usersEditorAddGroupButton.click();
-
-    page.usersTableRows.each(row => {
-      page.usersTableRows.should('contain.text', 'test_group');
-    });
-
-    page.groupsButton.click();
-    page.groupsTableRows.last().then((row) => {
-      page.usersButton.click();
-      page.userTableEmailElements.each(el => {
-        expect(row.text()).to.contain(el.text());
-      });
-    });
-
-    page.usersButton.click();
-
-    page.userBulkEditButton.click();
-    page.userBulkEditRemoveGroupButton.click();
-    page.userWindowGroupDropDownMenuButton.click();
-    page.userWindowGroupDropdownListCheckboxes.last().click();
-    page.userWindowGroupDropDownMenuButton.click();
-    page.usersEditorRemoveGroupButton.click();
-
-    page.usersTableRows.each(row => {
-      page.usersTableRows.should('not.contain.text', 'test_group');
-    });
-
-    page.groupsButton.click();
-    page.groupsTableRows.last().should('not.contain.text', 'test_group\nmulti');
 
     deleteTestGroup(page);
   });

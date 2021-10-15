@@ -59,7 +59,7 @@ export class GenotypeBlockPage extends BasePage {
   // This function is also used for the child gender block
   findCheckboxInComponentContainingText(componentSelector: string, text: string) {
     if (componentSelector !== 'gpf-gender') {
-      const exactTextRegex = new RegExp(`^ ${text} $`);
+      const exactTextRegex = new RegExp(`^${text}$`);
       return cy.get(componentSelector + ' div.checkbox label').contains(exactTextRegex);
     } else if (componentSelector === 'gpf-gender') {
       return cy.get('.gender-icon ' + text).parent().get('input');

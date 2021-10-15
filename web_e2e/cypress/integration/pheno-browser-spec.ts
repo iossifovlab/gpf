@@ -77,23 +77,21 @@ describe('Pheno browser tests', () => {
   });
 
   const dataArray = [ 
-    'i1ageThe age of the individual (in months)continuous [68.001, 606.229]',
-    'i1iqThe IQ of the individualcontinuous [-1.111e+1, 174.290]',
-    'i1m1Measure 1, a normally distributed continuous measure with a mean of 80continuous [28.877, 143.029]  0.9711  0.2512  0.0299  0.6413',
-    'i1m2Measure 2, a normally distributed continuous measure with a mean of 40continuous [17.650, 69.721]  0.4389  0.4263  0.5547  0.3443',
-    'i1m3Measure 3, a continuous measure with a normal distribution with mean of 80 for non-affected individuals, and 40 for affected individualscontinuous [20.349, 122.832]  0.1173  0.6294  0.0556  0.0393',
-    'i1m4Measure 4, an ordinal measure with a Poisson distribution with an average number of events per interval of 4 for non-affected individuals, and 1 for affected individualscontinuous [0.000, 10.000]  0.3206  0.3232  0.9493  0.5862',
-    'i1m5Measure 5, a categorical measure with random distribution of 5 distinct valuescategorical [val1]  [val2]  [val3]  [val4]  [val5]',
-    'pheno_commonsample_idraw [f1.dad]  [f1.mom]  [f1.p1]  [f1.s1]  [f2.dad]  [f2.mom]  [f2.p1]  [f2.s1]  [f3.dad]  [f3.mom]  [f3.p1]  [f3.s1]  [f4.dad]  [f4.mom]  [f4.p1]  [f4.s1]  [f5.dad]  [f5.mom]  [f5.p1]  [f5.s1]'
+    'i1ageThe age of the individual (in months)continuous[68.001,606.229]',
+    'i1iqThe IQ of the individualcontinuous[-1.111e+1,174.290]',
+    'i1m1Measure 1, a normally distributed continuous measure with a mean of 80continuous[28.877,143.029]0.97110.25120.02990.6413',
+    'i1m2Measure 2, a normally distributed continuous measure with a mean of 40continuous[17.650,69.721]0.43890.42630.55470.3443',
+    'i1m3Measure 3, a continuous measure with a normal distribution with mean of 80 for non-affected individuals, and 40 for affected individualscontinuous[20.349,122.832]0.11730.62940.05560.0393',
+    'i1m4Measure 4, an ordinal measure with a Poisson distribution with an average number of events per interval of 4 for non-affected individuals, and 1 for affected individualscontinuous[0.000,10.000]0.32060.32320.94930.5862',
+    'i1m5Measure 5, a categorical measure with random distribution of 5 distinct valuescategorical[val1][val2][val3][val4][val5]',
+    'pheno_commonsample_idraw[f1.dad][f1.mom][f1.p1][f1.s1][f2.dad][f2.mom][f2.p1][f2.s1][f3.dad][f3.mom][f3.p1][f3.s1][f4.dad][f4.mom][f4.p1][f4.s1][f5.dad][f5.mom][f5.p1][f5.s1]'
   ]
   for (let i = 0; i < dataArray.length; i++) {
     it('should have the correct values in the row with index ' + i, () => {
       page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
 
       const expectedRowText = dataArray[i];
-      page.tableRows.eq(i).invoke('text').then(rowText => {
-        expect(rowText.trim()).to.eq(expectedRowText);
-      });
+      page.tableRows.eq(i).should('have.text', expectedRowText);
     });
   }
 
