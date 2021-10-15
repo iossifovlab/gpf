@@ -12,13 +12,18 @@ import { take } from 'rxjs/operators';
 export class UsersTableComponent implements OnInit, OnChanges {
   @Input() users: SelectableUser[];
   allSelected = true;
+  currentUserEmail: string;
 
   constructor(
     private zone: NgZone,
     private usersService: UsersService,
   ) { }
 
-  ngOnInit() { }
+  ngOnInit() {
+    this.usersService.getUserInfo().pipe(take(1)).subscribe((currentUser) => {
+      this.currentUserEmail = currentUser.email
+    });
+  }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes && changes['users']) {

@@ -57,7 +57,7 @@
                   <span>{{ group }}</span>
                   <gpf-small-remove-button
                     (clicked)="removeGroup(data.user, group)"
-                    [hide]="!isDefaultGroup(data.user, group)"
+                    [hide]="isDefaultGroup(data.user, group) || (data.user.email === currentUserEmail && group === 'admin')"
                     message="Removing the group '{{ group }}' could change which datasets {{ data.user.name }} ({{ data.user.email }}) has access to."
                     confirmText="Remove group"
                     title="Remove group">
