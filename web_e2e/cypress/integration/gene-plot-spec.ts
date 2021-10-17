@@ -62,4 +62,56 @@ describe('Gene plot tests', () => {
   it('should have download summary button', () => {
     page.downloadSummaryButton.should('be.visible');
   });
+
+  it('should have affected status filter field', () => {
+    page.affectedStatusField.should('exist');
+    page.variantsCount.should('have.text', '8 / 8');
+
+    [['Affected only', 0], ['Unaffected only', 8], ['Affected and unaffected', 8]].forEach(element => {
+      page.affectedStatusField.within(() => {
+        cy.get('label').contains(element[0]).click();
+      });
+      page.variantsCount.should('have.text', element[1] + ' / 8');
+      cy.get('label').contains(element[0]).click();
+    });
+  });
+
+  it('should have effect types filter field', () => {
+    page.effectTypeFiltersField.should('exist');
+    page.variantsCount.should('have.text', '8 / 8');
+
+    [['LGDs', 1], ['Missense', 8], ['Synonymous', 8], ['CNV+', 8], ['CNV-', 8], ['Other', 7]].forEach(element => {
+      page.effectTypeFiltersField.within(() => {
+        cy.get('span').contains(element[0]).click();
+      });
+      page.variantsCount.should('have.text', element[1] + ' / 8');
+      cy.get('span').contains(element[0]).click();
+    });
+  });
+
+  it('should have inheritance types filter field', () => {
+    page.inheritanceTypesFilter.should('exist');
+
+    [['Denovo', 0], ['Transmitted', 8]].forEach(element => {
+      page.inheritanceTypesFilter.within(() => {
+        cy.get('span').contains(element[0]).click();
+      });
+      page.variantsCount.should('have.text', element[1] + ' / 8');
+      cy.get('span').contains(element[0]).click();
+    });
+  });
+
+  it('should have variants types filter field', () => {
+    page.variantTypesFilter.should('exist');
+
+    [['sub', 5], ['ins', 7], ['del', 4], ['CNV+', 8], ['CNV-', 8]].forEach(element => {
+      page.variantTypesFilter.within(() => {
+        cy.get('label').contains(element[0]).click();
+      });
+      page.variantsCount.should('have.text', element[1] + ' / 8');
+      cy.get('span').contains(element[0]).click();
+    });
+  });
+
+  it('should condense introns');
 });

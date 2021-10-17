@@ -48,4 +48,24 @@ export class GenePlotPage extends BasePage {
   get downloadSummaryButton() {
     return cy.get('button').contains('Download Summary');
   }
+
+  get variantsCount() {
+    return cy.get('span#summary-alleles-count span');
+  }
+
+  get affectedStatusField() {
+    return cy.get('div#affected-status-filters');
+  }
+
+  get effectTypeFiltersField() {
+    return cy.get('div#effect-types-filters');
+  }
+
+  get inheritanceTypesFilter() {
+    return cy.get('div#inheritance-types-filters');
+  }
+
+  get variantTypesFilter() {
+    return cy.get('div#variant-types-filters');
+  }
 }
