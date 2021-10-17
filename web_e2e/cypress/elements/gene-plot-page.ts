@@ -34,11 +34,11 @@ export class GenePlotPage extends BasePage {
   }
 
   get hideTranscriptsCheckbox() {
-    return cy.get('label').contains('Hide transcripts').first().get('input');
+    return cy.get('label').contains('Hide transcripts').first();
   }
 
   get condenseIntronsCheckbox() {
-    return cy.get('label').contains('Condense introns').first().get('input');
+    return cy.get('.checkbox-option').contains('Condense introns').first();
   }
 
   get downloadButton() {
@@ -67,5 +67,9 @@ export class GenePlotPage extends BasePage {
 
   get variantTypesFilter() {
     return cy.get('div#variant-types-filters');
+  }
+
+  get legend() {
+    return cy.get('.legend-div > div > div > span');
   }
 }

@@ -113,5 +113,17 @@ describe('Gene plot tests', () => {
     });
   });
 
-  it('should condense introns');
+  it('should contain a browser legend', () => {
+    cy.scrollTo('bottom');
+    ['affected', 'unaffected', 'missing-person'].forEach(element => {
+      page.legend.should('contain.text', element);
+    });
+  });
+
+  it('should condense introns', () => {
+    cy.matchImageSnapshot('gene-plot/notCondenseIntrons.jpg');
+    page.condenseIntronsCheckbox.click();
+    cy.matchImageSnapshot('gene-plot/condenseIntrons.jpg');
+    page.condenseIntronsCheckbox.click();
+  });
 });
