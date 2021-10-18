@@ -6,15 +6,18 @@ from .repository import GenomicResource
 from .genomic_sequence_resource import GenomicSequenceResource
 from .gene_models_resource import GeneModelsResource
 from .liftover_resource import LiftoverChainResource
-from .score_resources import PositionScoreResource
+from .score_resources import PositionScoreResource, NPScoreResource
 
 from .embeded_repository import GenomicResourceEmbededRepo
 from .url_repository import GenomicResourceURLRepo
 from .dir_repository import GenomicResourceDirRepo
 
-__all__ = ["build_genomic_resource_repository", "GenomicResource",
-           "GenomicSequenceResource", "GeneModelsResource",
-           "LiftoverChainResource", "PositionScoreResource"]
+__all__ = [
+    "build_genomic_resource_repository", "GenomicResource",
+    "GenomicSequenceResource", "GeneModelsResource",
+    "LiftoverChainResource",
+    "PositionScoreResource", "NPScoreResource",
+]
 
 
 register_genomic_resource_type(GenomicResource)
@@ -22,6 +25,7 @@ register_genomic_resource_type(GeneModelsResource)
 register_genomic_resource_type(GenomicSequenceResource)
 register_genomic_resource_type(LiftoverChainResource)
 register_genomic_resource_type(PositionScoreResource)
+register_genomic_resource_type(NPScoreResource)
 
 
 register_real_genomic_resource_repository_type(

@@ -6,7 +6,7 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 def test_the_simplest_position_score():
     res: PositionScoreResource = build_a_test_resource({
         GR_CONF_FILE_NAME: '''
-            type: PositionScores
+            type: PositionScore
             table:
                 filename: data.mem
             scores:
@@ -23,7 +23,7 @@ def test_the_simplest_position_score():
             2       8          0.01
             '''
     })
-    assert res.get_resource_type() == "PositionScores"
+    assert res.get_resource_type() == "PositionScore"
     assert res.open()
     assert res.get_all_scores() == ["phastCons100way"]
     assert res.fetch_scores("1", 11) == {"phastCons100way": 0.03}
@@ -34,14 +34,14 @@ def test_the_simplest_position_score():
 
     assert res.fetch_scores_agg("1", 10, 11) == {"phastCons100way": 0.025}
     assert res.fetch_scores_agg(
-        "1", 10, 11, non_default_aggregators={"phastCons100way": "max"}) == \
-        {"phastCons100way": 0.03}
+        "1", 10, 11, non_default_pos_aggregators={"phastCons100way": "max"}) \
+        == {"phastCons100way": 0.03}
 
 
 def test_region_score():
     res: PositionScoreResource = build_a_test_resource({
         GR_CONF_FILE_NAME: '''
-            type: PositionScores
+            type: PositionScore
             table:
                 filename: data.mem
             scores:
@@ -67,9 +67,9 @@ def test_region_score():
     })
     assert res
     assert res.open()
-    assert res.infile.chrom_column_i == 0
-    assert res.infile.pos_begin_column_i == 1
-    assert res.infile.pos_end_column_i == 2
+    assert res.table.chrom_column_i == 0
+    assert res.table.pos_begin_column_i == 1
+    assert res.table.pos_end_column_i == 2
 
     assert res.fetch_scores("1", 12) == {
         "phastCons100way": 0.02, "phastCons5way": None}
@@ -78,12 +78,12 @@ def test_region_score():
         {"phastCons100way": (3*0.02 + 2*0.03) / 5.}
     assert res.fetch_scores_agg(
         "1", 13, 18, ["phastCons100way"],
-        non_default_aggregators={"phastCons100way": "max"}) == \
+        non_default_pos_aggregators={"phastCons100way": "max"}) == \
         {"phastCons100way": 0.03}
 
     assert res.fetch_scores_agg("1", 13, 18, ["phastCons5way"]) == \
         {"phastCons5way": 0}
     assert res.fetch_scores_agg(
         "1", 13, 18, ["phastCons5way"],
-        non_default_aggregators={"phastCons5way": "mean"}) == \
+        non_default_pos_aggregators={"phastCons5way": "mean"}) == \
         {"phastCons5way": 0/2}
