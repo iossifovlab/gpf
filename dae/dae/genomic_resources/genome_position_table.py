@@ -4,8 +4,49 @@ import pysam
 import os
 
 from box import Box
+from cerberus import Validator
 
 from dae.genomic_resources.repository import GenomicResource
+
+
+TABLE_SCHEMA = {
+    "filename": {"type": "string", 'required': True, "empty": False},
+    "chrom": {
+        "type": "dict", "schema": {
+            "name": {"type": "string", "empty": False},
+            "index": {"type": "integer"},
+        },
+    },
+    "pos_begin": {
+        "type": "dict", "schema": {
+            "name": {"type": "string", "empty": False},
+            "index": {"type": "integer"},
+        },
+    },
+    "pos_end": {
+        "type": "dict", "schema": {
+            "name": {"type": "string", "empty": False},
+            "index": {"type": "integer"},
+        },
+    },
+    "chrom_mapping": {
+        "type": "dict", "schema": {
+            "filename": {"type": "string", "nullable": True},
+            "del_prefix": {"type": "string", "nullable": True},
+            "add_prefix": {"type": "string", "nullable": True}, 
+        }
+    },
+    "header_mode": {
+        "type": "string",
+        "allowed": ["none", "list", "file"], "default": "file"
+    },
+    "header": {
+        "type": "list",
+        "schema": {"type": "string"},
+        "dependencies": "header_mode",
+        "empty": False
+    }
+}
 
 
 class GenomicPositionTable(abc.ABC):
@@ -15,14 +56,20 @@ class GenomicPositionTable(abc.ABC):
 
     def __init__(self, genomic_resource: GenomicResource, table_definition):
         self.genomic_resource = genomic_resource
-        self.definition = Box(table_definition)
+
+        v = Validator(TABLE_SCHEMA)
+        # v.allow_unknown = True
+        if not v.validate(table_definition):
+            raise ValueError(v.errors)
+
+        self.definition = Box(v.normalized(table_definition))
+
         self.chrom_map = None
 
         # handling the 'header' property
-        self.header_mode = table_definition.get("header", "file")
-        if isinstance(self.header_mode, list):
-            self.header = tuple(self.header_mode)
-            self.header_mode = "array"
+        self.header_mode = self.definition.get("header_mode", "file")
+        if self.header_mode == "list":
+            self.header = tuple(self.definition.header)
             for hi, hc in enumerate(self.header):
                 if not isinstance(hc, str):
                     raise ValueError(f"The {hi}-th header {hc} in the table "
@@ -98,6 +145,7 @@ class GenomicPositionTable(abc.ABC):
 
     def _get_index_prop_for_special_column(self, key):
         index_prop = key + ".index"
+        print(self.definition)
         if key not in self.definition:
             raise KeyError(f"The table definition has no index "
                            f"({index_prop} property) for the special "

@@ -1,4 +1,5 @@
 import pytest
+import yaml
 
 from dae.genomic_resources.genome_position_table import \
     open_genome_position_table
@@ -261,7 +262,7 @@ def test_no_header():
     res = build_a_test_resource({
         "genomic_resource.yaml": '''
             table:
-                header: none
+                header_mode: none
                 filename: data.mem
                 chrom:
                     index: 0
@@ -282,6 +283,7 @@ def test_header_in_config():
     res = build_a_test_resource({
         "genomic_resource.yaml": '''
             table:
+                header_mode: list
                 header: ["chrom", "pos", "pos2", "score"]
                 filename: data.mem
                 pos_begin:
@@ -442,3 +444,26 @@ def test_tabix_table(tmp_path):
 
     with pytest.raises(Exception):
         list(table.get_records_in_region('3'))
+
+
+def test_table_definition():
+    table_definition = yaml.safe_load("""
+        filename: data.mem
+        header_mode: list
+        header: ["chrom", "pos_begin", "pos_end", "s1", "s2"]
+        chrom:
+            index: 0
+        pos_begin:
+            index: 2
+        chrom_mapping:
+            filename: chrom_map.txt
+            del_prefix: chr
+            add_prefix: chr
+    """)
+    assert table_definition is not None
+
+    from cerberus import Validator
+    from dae.genomic_resources.genome_position_table import TABLE_SCHEMA
+
+    v = Validator(TABLE_SCHEMA)
+    assert v.validate(table_definition), v.errors
