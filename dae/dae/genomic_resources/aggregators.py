@@ -29,6 +29,23 @@ class MaxAggregator(AbstractAggregator):
         return self.current_max
 
 
+class MinAggregator(AbstractAggregator):
+    def __init__(self):
+        self.current_min = None
+
+    def add(self, v):
+        if self.current_min is not None and v is not None:
+            self.current_min = min(self.current_min, v)
+        elif v is not None:
+            self.current_min = v
+
+    def clear(self):
+        self.current_min = None
+
+    def get_final(self):
+        return self.current_min
+
+
 class MeanAggregator(AbstractAggregator):
     def __init__(self):
         self.sum = 0

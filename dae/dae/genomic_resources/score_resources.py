@@ -8,7 +8,8 @@ from . import GenomicResource
 from .repository import GenomicResourceRealRepo
 from .genome_position_table import open_genome_position_table
 
-from .aggregators import MaxAggregator, MeanAggregator, ConcatAggregator
+from .aggregators import MaxAggregator, MinAggregator, MeanAggregator, \
+    ConcatAggregator
 
 
 logger = logging.getLogger(__name__)
@@ -51,6 +52,7 @@ class ScoreLine:
 
 AGGREGATOR_CLASS_DICT = {
     "max": MaxAggregator,
+    "min": MinAggregator,
     "mean": MeanAggregator,
     "concatenate": ConcatAggregator
 }

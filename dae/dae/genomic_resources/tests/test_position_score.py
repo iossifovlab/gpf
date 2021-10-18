@@ -16,11 +16,11 @@ def test_the_simplest_position_score():
                        verterbarte species"
                 name: s1''',
         "data.mem": '''
-            chrom   pos_begin  s1
-            1       10         0.02
-            1       11         0.03
-            1       15         0.46
-            2       8          0.01
+            chrom  pos_begin  s1
+            1      10         0.02
+            1      11         0.03
+            1      15         0.46
+            2      8          0.01
             '''
     })
     assert res.get_resource_type() == "PositionScore"
@@ -58,11 +58,11 @@ def test_region_score():
                        verterbarte species"
                 name: s2''',
         "data.mem": '''
-            chrom   pos_begin  pos_end   s1     s2
-            1       10   15    0.02   -1
-            1       17   19    0.03   0
-            1       22   25    0.46   EMPTY
-            2       5    80    0.01   3
+            chrom  pos_begin  pos_end  s1    s2
+            1      10         15       0.02  -1
+            1      17         19       0.03  0
+            1      22         25       0.46  EMPTY
+            2      5          80       0.01  3
             '''
     })
     assert res
