@@ -29,7 +29,7 @@ export class HistogramRangeSelectorLineComponent implements OnInit, AfterViewIni
 
   ngOnInit() {
     d3.select(this.draggable.nativeElement).
-      call(d3.drag().on('drag', () => this.onDrag(d3.event.x)));
+      call(d3.drag().on('drag', (event: any, d) => this.onDrag(event.x)));
   }
 
   ngAfterViewInit() {
