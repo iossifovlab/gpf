@@ -121,9 +121,9 @@ describe('Gene plot tests', () => {
   });
 
   it('should condense introns', () => {
-    cy.matchImageSnapshot('gene-plot/notCondenseIntrons.jpg');
     page.condenseIntronsCheckbox.click();
-    cy.matchImageSnapshot('gene-plot/condenseIntrons.jpg');
+    cy.matchImageSnapshot('gene-plot/notCondenseIntrons');
     page.condenseIntronsCheckbox.click();
+    cy.matchImageSnapshot('gene-plot/condenseIntrons');
   });
 });
