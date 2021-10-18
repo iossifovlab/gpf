@@ -6,7 +6,7 @@ from typing import List, Tuple
 
 from . import GenomicResource
 from .repository import GenomicResourceRealRepo
-from .genome_position_table import get_genome_position_table
+from .genome_position_table import open_genome_position_table
 
 from .aggregators import MaxAggregator, MeanAggregator, ConcatAggregator
 
@@ -70,8 +70,8 @@ class GenomicScoresResource(GenomicResource, abc.ABC):
     ACCESS_SWITCH_THRESHOLD = 1500
 
     def open(self):
-        self.infile = get_genome_position_table(
-            self, self.get_config()['table'], 'chrom', 'pos_begin', 'pos_end')
+        self.infile = open_genome_position_table(
+            self, self.get_config()['table'])
 
         # load score configuraton
         self.scores = {}

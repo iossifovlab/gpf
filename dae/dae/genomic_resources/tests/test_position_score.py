@@ -8,7 +8,7 @@ def test_the_simplest_position_score():
         GR_CONF_FILE_NAME: '''
             type: PositionScores
             table:
-                file: data.mem
+                filename: data.mem
             scores:
               - id: phastCons100way
                 type: float
@@ -43,7 +43,7 @@ def test_region_score():
         GR_CONF_FILE_NAME: '''
             type: PositionScores
             table:
-                file: data.mem
+                filename: data.mem
             scores:
               - id: phastCons100way
                 type: float
@@ -67,7 +67,7 @@ def test_region_score():
     })
     assert res
     assert res.open()
-    assert res.infile.chr_column_i == 0
+    assert res.infile.chrom_column_i == 0
     assert res.infile.pos_begin_column_i == 1
     assert res.infile.pos_end_column_i == 2
 
