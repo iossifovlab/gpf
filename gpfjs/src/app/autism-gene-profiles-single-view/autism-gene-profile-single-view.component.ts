@@ -41,7 +41,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
 
   public _histogramOptions = {
     width: 525,
-    height: 100,
+    height: 110,
     marginLeft: 50,
     marginTop: 25,
   };
