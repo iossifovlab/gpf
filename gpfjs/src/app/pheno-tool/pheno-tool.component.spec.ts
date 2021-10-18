@@ -1,5 +1,5 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { ComponentFixture, fakeAsync, TestBed, tick, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule } from '@ngxs/store';
@@ -17,10 +17,8 @@ import { MeasuresService } from 'app/measures/measures.service';
 import { GeneSymbolsComponent } from 'app/gene-symbols/gene-symbols.component';
 import { GeneSymbolsState } from 'app/gene-symbols/gene-symbols.state';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { of } from 'rxjs/internal/observable/of';
 import { Observable } from 'rxjs/internal/Observable';
-import { By } from '@angular/platform-browser';
 
 class PhenoToolServiceMock {
   public getPhenoToolResults(): Observable<any> {
@@ -121,12 +119,20 @@ describe('PhenoToolComponent', () => {
     component.submitQuery();
     expect(component.phenoToolResults).toEqual('fakeValue' as any);
   });
-/*
-  it('should test download', fakeAsync(() => {
-    tick();
-    const onClickMock = spyOn(component, 'onDownload');
-    fixture.debugElement.query(By.css('.btn-primary')).triggerEventHandler('click', null);
-    expect(onClickMock).toHaveBeenCalled();
-  }));
-*/
+
+  it('should test on download event', () => {
+    const event = {
+      target: {
+        queryData: {
+          value: 'id'
+        },
+        submit() { }
+      }
+    };
+    const submitSpy = spyOn(event.target, 'submit');
+
+    component.onDownload(event);
+    expect(submitSpy).toHaveBeenCalledTimes(1);
+    expect(event.target.queryData.value).toEqual('{"datasetId":"testDatasetId"}');
+  });
 });
