@@ -119,7 +119,7 @@
     <tbody *ngIf="genes">
       <tr *ngFor="let gene of genes" (click)="highlightRow($event)" (middleclick)="highlightRow($event)">
         <td class="link-td" (click)="emitCreateTabEvent($event, gene.geneSymbol)" (middleclick)="emitCreateTabEvent($event, gene.geneSymbol, false)">
-          <span>{{gene.geneSymbol}}</span>
+          <span class="link-span">{{gene.geneSymbol}}</span>
         </td>
 
         <ng-container *ngFor="let element of config.order">
@@ -145,12 +145,12 @@
             <ng-container *ngIf="getDataset(element.id); let dataset">
               <ng-container *ngFor="let personSet of dataset.personSets; let i = index">
                 <td [class.link-td]="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id).count"
-                style="min-width: 70px;"
-                *ngFor="let statistic of personSet.statistics; let j = index"
-                [ngClass] = "{'category-border': i === 0 && j === 0}">
+                  style="min-width: 70px;"
+                  *ngFor="let statistic of personSet.statistics; let j = index"
+                  [ngClass] = "{'category-border': i === 0 && j === 0}">
                   <ng-container *ngIf="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id) as value">
                     <div class="link-td" *ngIf="value.count !== 0" (click)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)" (middleclick)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)">
-                      <span>{{value.count}} ({{value.rate | number : '1.0-3' }})</span>
+                      <span class="link-span">{{value.count}} ({{value.rate | number : '1.0-3' }})</span>
                     </div>
                   </ng-container>
                 </td>
