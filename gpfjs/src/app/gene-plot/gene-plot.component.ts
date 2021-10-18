@@ -476,7 +476,7 @@ export class GenePlotComponent implements OnChanges {
     } else if (allele.seenAsDenovo && !allele.frequency) {
       return this.scale.yDenovo(this.denovoAllelesSpacings.get(allele.svuid));
     } else {
-      return this.scale.ySubdomain(allele.frequency || 0);  // OR 0 handles null frequency alleles
+      return this.scale.ySubdomain(allele.frequency);
     }
   }
 
@@ -500,8 +500,8 @@ export class GenePlotComponent implements OnChanges {
     }
   }
 
-  private focusRegion = (event: any, d) => {
-    const extent = event.selection;
+  private focusRegion = () => {
+    const extent = d3.event.selection;
 
     // Double-click
     if (!extent) {
@@ -563,7 +563,7 @@ export class GenePlotComponent implements OnChanges {
     }
     this.denovoLevels = leveledDenovos.length;
     this.scale.yDenovo
-      .domain(Object.keys(leveledDenovos).map(Number))
+      .domain(Object.keys(leveledDenovos))
       .range([this.constants.frequencyPlotSize, this.frequencyPlotHeight]);
   }
 
