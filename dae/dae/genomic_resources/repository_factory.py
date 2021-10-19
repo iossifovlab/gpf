@@ -54,9 +54,9 @@ def build_genomic_resource_repository(definition=None) -> GenomicResourceRepo:
             f"The repository definition element {definition} "
             "has not type attiribute.")
 
-    repoType = definition["type"]
+    repo_type = definition["type"]
 
-    if repoType == "group":
+    if repo_type == "group":
         if "children" not in definition:
             raise ValueError(
                 f"The definition for group repository {definition} "
@@ -68,12 +68,12 @@ def build_genomic_resource_repository(definition=None) -> GenomicResourceRepo:
         repo = GenomicResourceGroupRepo(
             [build_genomic_resource_repository(chDef)
              for chDef in definition["children"]])
-    elif repoType in _registered_real_genomic_resource_repository_types:
+    elif repo_type in _registered_real_genomic_resource_repository_types:
         repo_id = definition["id"]
-        repo = _registered_real_genomic_resource_repository_types[repoType](
+        repo = _registered_real_genomic_resource_repository_types[repo_type](
             repo_id, **definition)
     else:
-        raise ValueError(f"unknown genomic repository type {repoType}")
-    if "cacheDir" in definition:
-        return GenomicResourceCachedRepo(repo, definition["cacheDir"])
+        raise ValueError(f"unknown genomic repository type {repo_type}")
+    if "cache_dir" in definition:
+        return GenomicResourceCachedRepo(repo, definition["cache_dir"])
     return repo

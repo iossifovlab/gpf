@@ -33,7 +33,7 @@ TABLE_SCHEMA = {
         "type": "dict", "schema": {
             "filename": {"type": "string", "nullable": True},
             "del_prefix": {"type": "string", "nullable": True},
-            "add_prefix": {"type": "string", "nullable": True}, 
+            "add_prefix": {"type": "string", "nullable": True},
         }
     },
     "header_mode": {

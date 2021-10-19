@@ -5,7 +5,7 @@ from dae.genomic_resources import build_genomic_resource_repository
 
 def test_create_definition_with_cache(tmpdir):
     repo = build_genomic_resource_repository(
-        {"cacheDir": tmpdir, "id": "bla", "type": "embeded",
+        {"cache_dir": tmpdir, "id": "bla", "type": "embeded",
          "content": {
              "one": {"genomic_resrouce.yaml"}
          }})
@@ -13,13 +13,9 @@ def test_create_definition_with_cache(tmpdir):
 
 
 def test_get_cached_resource(tmpdir):
-    chRepo = GenomicResourceEmbededRepo(
+    child_repo = GenomicResourceEmbededRepo(
         "bla", {"one": {"genomic_resource.yaml": ""}})
-    repo = GenomicResourceCachedRepo(chRepo, tmpdir)
-
-    print("BBBB", tmpdir)
-    print("BBBB", list(chRepo.get_all_resources()))
+    repo = GenomicResourceCachedRepo(child_repo, tmpdir)
 
     gr = repo.get_resource("one")
     assert gr
-    # print("BBBBB", gr.repo.__class__)
