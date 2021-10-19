@@ -24,7 +24,7 @@ interface Regression {
 export class PhenoToolMeasureComponent extends StatefulComponent implements OnInit {
   @ViewChildren('checkboxes') inputs: QueryList<ElementRef>;
 
-  @IsNotEmpty()
+  @IsNotEmpty({message: 'Please select a measure.'})
   selectedMeasure: ContinuousMeasure = null;
   normalizeBy: Regression[] = new Array<Regression>();
 
