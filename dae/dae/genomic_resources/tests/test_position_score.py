@@ -87,3 +87,44 @@ def test_region_score():
         "1", 13, 18, ["phastCons5way"],
         non_default_pos_aggregators={"phastCons5way": "mean"}) == \
         {"phastCons5way": 0/2}
+
+
+def test_phastcons100way():
+    res: PositionScoreResource = build_a_test_resource({
+        GR_CONF_FILE_NAME: '''
+            type: PositionScore
+            table:
+                filename: data.mem
+            scores:
+              - id: phastCons100way
+                type: float
+                desc: "The phastCons computed over the tree of 100 \
+                       verterbarte species"
+                name: phastCons100way
+        ''',
+        "data.mem": '''
+            chrom  pos_begin  pos_end  phastCons100way
+            1      54768      54768    0.002
+            1      54769      54771    0.001
+            1      54772      54773    0
+            1      54774      54774    0.001
+            1      54775      54776    0
+            1      54777      54780    0.001
+            1      54781      54789    0
+        '''
+    })
+    assert res
+    assert res.open()
+    assert res.get_all_scores() == ["phastCons100way"]
+
+    assert res.fetch_scores("1", 54773) == \
+        {"phastCons100way": 0}
+
+    # chr1 54773 TTCCTCC->T
+    #
+    # 73     74     75     76     77     78     79     80
+    # 0.000  0.001  0.000  0.000  0.001  0.001  0.001  0.001
+    # T      T      C      C      T      C      C      T
+    #        ^      ^      ^      ^      ^      ^
+    assert res.fetch_scores_agg("1", 54773, 54780, ["phastCons100way"]) == \
+        {"phastCons100way": 0.000625}
