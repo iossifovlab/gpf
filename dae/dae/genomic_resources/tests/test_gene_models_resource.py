@@ -48,7 +48,7 @@ def test_gene_models_resource_with_inferred_format():
     assert len(res.transcript_models) == 3
 
 
-def test_gene_models_resource_with_inferred_format_and_gend_mapping():
+def test_gene_models_resource_with_inferred_format_and_gene_mapping():
     res = build_a_test_resource({
         "genomic_resource.yaml":
             "{type: GeneModels, file: genes.txt, gene_mapping: geneMap.txt}",
@@ -87,7 +87,7 @@ def test_against_agains_dirrent_repo_types(tmp_path):
 '''
 TODO IVAN How can something like this be done?
 @pytest.mark.parametrize("repo", [
-    genomic_resource_fixture_http_repo,
+    genomic_resource_fixture_repo,
     genomic_resource_fixture_http_repo
 ])'''
 

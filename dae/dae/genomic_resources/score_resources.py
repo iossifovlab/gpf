@@ -297,10 +297,6 @@ class PositionScoreResource(GenomicScoresResource):
 class NPScoreResource(GenomicScoresResource):
 
     @staticmethod
-    def required_columns():
-        return ("chrom", "pos_begin", "pos_end", "reference", "alternative")
-
-    @staticmethod
     def get_extra_special_columns():
         return {"reference": str, "alternative": str}
 
