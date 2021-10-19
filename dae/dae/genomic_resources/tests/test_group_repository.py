@@ -11,9 +11,9 @@ def test_lookup_priority_in_a_group_repository():
     ])
     gr = repo.get_resource("one")
     assert gr
-    assert gr.id == "one"
+    assert gr.resource_id == "one"
     assert gr.version == (0,)
-    assert gr.repo.id == "a"
+    assert gr.repo.repo_id == "a"
 
 
 def test_lookup_in_a_group_repository_with_version_requirement():
@@ -25,6 +25,6 @@ def test_lookup_in_a_group_repository_with_version_requirement():
     ])
     gr = repo.get_resource("one", version_constraint="1.0")
     assert gr
-    assert gr.id == "one"
+    assert gr.resource_id == "one"
     assert gr.version == (1, 0)
-    assert gr.repo.id == "b"
+    assert gr.repo.repo_id == "b"

@@ -133,17 +133,17 @@ def find_genomic_resources_helper(content_dict, id_pref=[]):
 class GenomicResource:
     def __init__(self, resource_id, version, repo: GenomicResourceRealRepo,
                  config=None):
-        self.id = resource_id
+        self.resource_id = resource_id
         self.version = version
         self.config = config
         self.repo = repo
 
-    @classmethod
-    def get_resource_type(clazz):
+    @staticmethod
+    def get_resource_type():
         return "Basic"
 
     def get_id(self):
-        return self.id
+        return self.resource_id
 
     def get_config(self):
         return self.config
@@ -158,7 +158,7 @@ class GenomicResource:
         id aa/bb/cc and version 3.2.
         If the version is 0 the string will be aa/bb/cc.
         '''
-        return f"{self.id}{version_tuple_to_suffix(self.version)}"
+        return f"{self.resource_id}{version_tuple_to_suffix(self.version)}"
 
     def get_files(self):
         '''
@@ -169,9 +169,9 @@ class GenomicResource:
         return self.repo.get_files(self)
 
     def get_md5_sum(self, filename):
-        with self.open_raw_file(filename, "rb") as F:
+        with self.open_raw_file(filename, "rb") as infile:
             md5_hash = hashlib.md5()
-            while d := F.read(8192):
+            while d := infile.read(8192):
                 md5_hash.update(d)
         return md5_hash.hexdigest()
 
@@ -273,7 +273,7 @@ class GenomicResourceRepo(abc.ABC):
 class GenomicResourceRealRepo(GenomicResourceRepo):
     def __init__(self, repo_id):
         super().__init__()
-        self.id = repo_id
+        self.repo_id = repo_id
 
     def build_genomic_resource(self, id, version):
         grTemp = GenomicResource(id, version, self)
@@ -293,12 +293,12 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
 
     def get_resource(self, resource_id, version_constraint=None,
                      genomic_repository_id=None) -> GenomicResource:
-        if genomic_repository_id and self.id != genomic_repository_id:
+        if genomic_repository_id and self.repo_id != genomic_repository_id:
             return None
 
         matchingGRs = []
         for gr in self.get_all_resources():
-            if gr.id != resource_id:
+            if gr.resource_id != resource_id:
                 continue
             if is_version_constraint_satisfied(version_constraint, gr.version):
                 matchingGRs.append(gr)

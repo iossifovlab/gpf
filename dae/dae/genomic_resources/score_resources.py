@@ -63,10 +63,10 @@ def get_aggregator_class(aggregator):
 
 
 class GenomicScoresResource(GenomicResource, abc.ABC):
-    def __init__(self, resourceId: str, version: tuple,
+    def __init__(self, resource_id: str, version: tuple,
                  repo: GenomicResourceRealRepo,
                  config=None):
-        super().__init__(resourceId, version, repo, config)
+        super().__init__(resource_id, version, repo, config)
         self.table = None
 
     LONG_JUMP_THRESHOLD = 5000
@@ -212,8 +212,8 @@ class PositionScoreResource(GenomicScoresResource):
         return "PositionScore"
 
     def fetch_scores(
-        self, chrom: str, position: int, scores: List[str] = None
-    ):
+            self, chrom: str, position: int, scores: List[str] = None):
+
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
                 f"{chrom} is not among the available chromosomes.")
@@ -233,9 +233,8 @@ class PositionScoreResource(GenomicScoresResource):
         return {scr: line.get_score_value(scr) for scr in scores}
 
     def fetch_scores_agg(
-        self, chrom: str, pos_begin: int, pos_end: int,
-        scores: List[str] = None, non_default_pos_aggregators=None
-    ):
+            self, chrom: str, pos_begin: int, pos_end: int,
+            scores: List[str] = None, non_default_pos_aggregators=None):
         '''
         # Case 1:
         #    res.fetch_scores_agg("1", 10, 20) -->
@@ -295,7 +294,7 @@ class PositionScoreResource(GenomicScoresResource):
         }
 
 
-class NPScoreResource(PositionScoreResource):
+class NPScoreResource(GenomicScoresResource):
 
     @staticmethod
     def required_columns():
@@ -310,10 +309,13 @@ class NPScoreResource(PositionScoreResource):
         return "NPScore"
 
     def fetch_scores(
-        self, chrom: str, position: int, reference: str, alternative: str,
-        scores: List[str] = None
-    ):
-        assert chrom in self.get_all_chromosomes()
+            self, chrom: str, position: int, reference: str, alternative: str,
+            scores: List[str] = None):
+
+        if chrom not in self.get_all_chromosomes():
+            raise ValueError(
+                f"{chrom} is not among the available chromosomes for "
+                f"NP Score resource {self.resource_id}")
 
         lines = self._fetch_lines(chrom, position, position)
         if not lines:

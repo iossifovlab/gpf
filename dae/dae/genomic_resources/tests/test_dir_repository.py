@@ -23,7 +23,7 @@ def test_dir_repository(tmp_path):
     dir_repo.store_all_resources(src_repo)
 
     def resource_set(repo):
-        return {(gr.id, gr.version) for gr in repo.get_all_resources()}
+        return {(gr.resource_id, gr.version) for gr in repo.get_all_resources()}
 
     assert resource_set(src_repo) == resource_set(dir_repo)
     assert isinstance(dir_repo.get_resource("sub/two"), GeneModelsResource)

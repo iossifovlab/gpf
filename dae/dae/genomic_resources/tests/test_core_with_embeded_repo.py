@@ -7,9 +7,9 @@ def test_the_basic_resource_finding():
     })
     gr = repo.get_resource("one")
     assert gr
-    assert gr.id == "one"
+    assert gr.resource_id == "one"
     assert gr.version == (0,)
-    assert gr.repo.id == "oneResource"
+    assert gr.repo.repo_id == "oneResource"
 
 
 def test_not_finding_resource_with_the_required_version():
@@ -28,9 +28,9 @@ def test_finding_resource_with_version_and_repo_id():
     gr = repo.get_resource("one", version_constraint="1.0",
                            genomic_repository_id="oneResource")
     assert gr
-    assert gr.id == "one"
+    assert gr.resource_id == "one"
     assert gr.version == (1, 0)
-    assert gr.repo.id == "oneResource"
+    assert gr.repo.repo_id == "oneResource"
 
 
 def test_md5_checksum():

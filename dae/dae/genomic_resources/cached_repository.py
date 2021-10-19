@@ -23,7 +23,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
             self.cacheRepos[repo_id] = GenomicResourceDirRepo(
                 repo_id, directory=cached_repo_dir)
         cached_repo = self.cacheRepos[repo_id]
-        assert cached_repo.id == repo_id
+        assert cached_repo.repo_id == repo_id
         return cached_repo
 
     def get_resource(self, resource_id, version_constraint=None,
@@ -33,7 +33,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         if not grChld:
             return None
 
-        cached_repo = self._get_or_create_chache_dir_repo(grChld.repo.id)
+        cached_repo = self._get_or_create_chache_dir_repo(grChld.repo.repo_id)
 
         exact_version_constraint = "=" + grChld.get_version_str()
         grCache = cached_repo.get_resource(
