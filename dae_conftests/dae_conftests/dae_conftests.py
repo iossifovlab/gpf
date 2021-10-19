@@ -1208,8 +1208,10 @@ def get_score_config(fixture_dirname):
 @pytest.fixture
 def anno_grdb(fixture_dirname):
     test_grr_location = fixture_dirname("genomic_resources")
-    repositories = [
-        {"id": "test_grr", "type": "url", "url": f"file://{test_grr_location}"}
-    ]
+    repositories = {
+        "id": "test_grr",
+        "type": "directory",
+        "directory": f"{test_grr_location}"
+    }
 
     return build_genomic_resource_repository(repositories)
