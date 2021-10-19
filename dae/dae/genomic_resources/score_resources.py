@@ -341,7 +341,11 @@ class NPScoreResource(GenomicScoresResource):
             non_default_pos_aggregators=None,
             non_default_nuc_aggregators=None):
 
-        assert chrom in self.get_all_chromosomes()
+        if chrom not in self.get_all_chromosomes():
+            raise ValueError(
+                f"{chrom} is not among the available chromosomes for "
+                f"NP Score resource {self.resource_id}")
+
         score_lines = self._fetch_lines(chrom, pos_begin, pos_end)
         logger.debug(f"score lines found: {score_lines}")
         if not score_lines:
@@ -414,17 +418,28 @@ class NPScoreResource(GenomicScoresResource):
         }
 
 
-'''
 class AlleleScoreResource(GenomicScoresResource):
 
     @classmethod
     def required_columns(cls):
         return ("chrom", "pos_begin", "pos_end", "variant")
 
+    @staticmethod
+    def get_extra_special_columns():
+        return {"reference": str, "alternative": str}
+
+    @staticmethod
+    def get_resource_type():
+        return "AlleleScore"
+
     def fetch_scores(
-        self, chrom: str, position: int, variant: str, scores: List[str] = None
-    ):
-        assert chrom in self.get_all_chromosomes()
+            self, chrom: str, position: int, reference: str, alternative: str,
+            scores: List[str] = None):
+
+        if chrom not in self.get_all_chromosomes():
+            raise ValueError(
+                f"{chrom} is not among the available chromosomes for "
+                f"NP Score resource {self.resource_id}")
 
         lines = self._fetch_lines(chrom, position, position)
         if not lines:
@@ -432,18 +447,15 @@ class AlleleScoreResource(GenomicScoresResource):
 
         line = None
         for li in lines:
-            if li["variant"] == variant:
+            if li.get_special_column_value("reference") == reference and \
+                    li.get_special_column_value("alternative") == alternative:
                 line = li
                 break
 
         if line is None:
             return None
 
-        result = dict()
+        if not scores:
+            scores = self.get_all_scores()
 
-        for col, val in line.scores.items():
-            if scores is None or col in scores:
-                result[col] = val
-
-        return result
-'''
+        return {sc: line.get_score_value(sc) for sc in scores}
