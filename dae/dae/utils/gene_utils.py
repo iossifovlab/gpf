@@ -59,5 +59,7 @@ class GeneSymsMixin(object):
         if weights_id is None:
             return set([])
 
-        weights = GeneWeight(getattr(gene_weights_config, weights_id))
+        weights = GeneWeight(
+            weights_id, getattr(gene_weights_config, weights_id)
+        )
         return weights.get_genes(wmin=range_start, wmax=range_end)
