@@ -1,11 +1,11 @@
 <gpf-table noScrollOptimization="true" [dataSource]="queries" style="display: inline-block">
-  <gpf-table-column>
+  <gpf-table-column columnWidth="255px">
     <gpf-table-header caption=""></gpf-table-header>
     <gpf-table-content>
       <span *gpfTableCellContent="let data">
-        <a href="{{data.url}}" class="btn btn-primary">Load</a>
-        <a href="{{data.url}}" class="btn btn-secondary">Copy link</a>
-        <button class="btn btn-danger" (click)="deleteQuery(data.uuid)">Delete</button>
+        <a href="{{data.url}}" class="btn btn-primary action-button">Load</a>
+        <a href="{{data.url}}" class="btn btn-secondary action-button">Copy link</a>
+        <button class="btn btn-danger action-button" (click)="deleteQuery(data.uuid)">Delete</button>
       </span>
     </gpf-table-content>
   </gpf-table-column>
