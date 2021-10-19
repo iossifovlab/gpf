@@ -13,7 +13,7 @@ import { StatefulComponent } from '../common/stateful-component';
 export class VarianttypesComponent extends StatefulComponent implements OnChanges {
 
   @Input() variantTypes: Set<string> = new Set([]);
-  @Input() @Validate(SetNotEmpty, {message: 'Select at least one'}) selectedVariantTypes: Set<string> = new Set();
+  @Input() @Validate(SetNotEmpty, {message: 'Select at least one.'}) selectedVariantTypes: Set<string> = new Set();
 
   constructor(protected store: Store) {
     super(store, VarianttypesState, 'variantTypes');

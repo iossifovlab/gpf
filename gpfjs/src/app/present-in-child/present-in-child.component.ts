@@ -15,7 +15,7 @@ export class PresentInChildComponent extends StatefulComponent implements OnInit
     'proband only', 'sibling only', 'proband and sibling', 'neither'
   ]);
 
-  @Validate(SetNotEmpty, { message: 'select at least one' })
+  @Validate(SetNotEmpty, { message: 'Select at least one.' })
   selectedValues = new Set();
 
   constructor(protected store: Store) {

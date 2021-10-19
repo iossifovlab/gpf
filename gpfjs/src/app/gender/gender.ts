@@ -6,7 +6,7 @@ export class Gender {
 
   @ValidateIf(o => !o.male && !o.female)
   @Equals(true, {
-    message: 'select at least one'
+    message: 'Select at least one.'
   })
   unspecified = false;
 }

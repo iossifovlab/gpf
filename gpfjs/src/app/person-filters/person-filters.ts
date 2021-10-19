@@ -23,14 +23,14 @@ export class CategoricalSelection implements Selection {
 export class ContinuousSelection implements Selection {
   @ValidateIf(o => o.min !== null)
   @IsNumber()
-  @IsLessThanOrEqual('max')
-  @IsMoreThanOrEqual('domainMin')
+  @IsLessThanOrEqual('max', {message: 'The range beginning must be lesser than the range end.'})
+  @IsMoreThanOrEqual('domainMin', {message: 'The range beginning must be within the domain.'})
   min: number;
 
   @ValidateIf(o => o.max !== null)
   @IsNumber()
-  @IsMoreThanOrEqual('min')
-  @IsLessThanOrEqual('domainMax')
+  @IsMoreThanOrEqual('min', {message: 'The range end must be greater than the range start.'})
+  @IsLessThanOrEqual('domainMax', {message: 'The range end must be within the domain.'})
   max: number;
 
   domainMin: number;

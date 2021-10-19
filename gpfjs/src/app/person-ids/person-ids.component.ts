@@ -5,7 +5,7 @@ import { SetPersonIds, PersonIdsState } from './person-ids.state';
 import { StatefulComponent } from 'app/common/stateful-component';
 
 export class PersonIds {
-  @IsNotEmpty()
+  @IsNotEmpty({message: 'Please insert at least one person id.'})
   personIds = '';
 }
 

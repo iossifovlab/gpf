@@ -2,6 +2,6 @@ import { IsNotEmpty } from 'class-validator';
 
 export class FamilyIds {
 
-  @IsNotEmpty()
+  @IsNotEmpty({message: 'Please insert at least one family id.'})
   familyIds = '';
 }

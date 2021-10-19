@@ -5,7 +5,7 @@ export class GeneSetsLocalState {
   geneSetsCollection: GeneSetsCollection;
   geneSetsTypes = Object.create(null);
 
-  @IsNotEmpty()
+  @IsNotEmpty({message: 'Please select a gene set.'})
   geneSet: GeneSet;
 
   select(datasetId: string, personSetCollectionId: string, phenotype: string) {

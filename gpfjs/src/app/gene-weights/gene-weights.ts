@@ -70,16 +70,16 @@ export class GeneWeightsLocalState {
 
   @ValidateIf(o => o.rangeStart !== null)
   @IsNumber()
-  @IsLessThanOrEqual('rangeEnd')
-  @IsMoreThanOrEqual('domainMin')
-  @IsLessThanOrEqual('domainMax')
+  @IsLessThanOrEqual('rangeEnd', {message: 'The range beginning must be lesser than the range end.'})
+  @IsMoreThanOrEqual('domainMin', {message: 'The range beginning must be within the domain.'})
+  @IsLessThanOrEqual('domainMax', {message: 'The range beginning must be within the domain.'})
   rangeStart = 0;
 
   @ValidateIf(o => o.rangeEnd !== null)
   @IsNumber()
-  @IsMoreThanOrEqual('rangeStart')
-  @IsMoreThanOrEqual('domainMin')
-  @IsLessThanOrEqual('domainMax')
+  @IsMoreThanOrEqual('rangeStart', {message: 'The range end must be greater than the range start.'})
+  @IsMoreThanOrEqual('domainMin', {message: 'The range end must be within the domain.'})
+  @IsLessThanOrEqual('domainMax', {message: 'The range end must be within the domain.'})
   rangeEnd = 0;
 
   domainMin = 0;

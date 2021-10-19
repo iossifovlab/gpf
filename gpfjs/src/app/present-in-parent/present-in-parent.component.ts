@@ -28,7 +28,7 @@ export class PresentInParentComponent extends StatefulComponent implements OnIni
     'mother only', 'father only', 'mother and father', 'neither'
   ]);
 
-  @Validate(SetNotEmpty, { message: 'select at least one' })
+  @Validate(SetNotEmpty, { message: 'Select at least one.' })
   selectedValues: Set<string> = new Set();
 
   rarityTypes: Set<string> = new Set([

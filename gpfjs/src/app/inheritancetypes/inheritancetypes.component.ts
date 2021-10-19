@@ -16,7 +16,7 @@ export class InheritancetypesComponent extends StatefulComponent implements OnCh
   inheritanceTypes: Set<string>;
 
   @Input()
-  @Validate(SetNotEmpty, { message: 'select at least one' })
+  @Validate(SetNotEmpty, { message: 'Select at least one.' })
   selectedValues: Set<string> = new Set();
 
   constructor(protected store: Store) {

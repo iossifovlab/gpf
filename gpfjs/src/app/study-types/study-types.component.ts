@@ -13,7 +13,7 @@ export class StudyTypesComponent extends StatefulComponent implements OnInit {
 
   studyTypes: Set<string> = new Set(['we', 'wg', 'tg']);
 
-  @Validate(SetNotEmpty, {message: 'select at least one'})
+  @Validate(SetNotEmpty, {message: 'Select at least one.'})
   selectedValues: Set<string> = new Set([]);
 
   constructor(protected store: Store) {
