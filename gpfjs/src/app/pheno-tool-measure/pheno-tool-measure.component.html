@@ -17,7 +17,7 @@
               [checked]="isNormalizedBy(regressions[reg].measure_name)"
               (change)="onNormalizeByChange(regressions[reg], $event);"
               [disabled]="measure === null || (regressions[reg].instrument_name + '.' + regressions[reg].measure_name) === measure.name">
-            <span>{{ regressions[reg].display_name }}</span>
+            <span style="margin-left:5px;">{{ regressions[reg].display_name }}</span>
           </label>
       </div>
     </div>
