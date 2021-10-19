@@ -49,7 +49,8 @@ th {
   font-weight: bold;
 }
 
-div#enrichment-tool-results {
-  padding-top: 30px;
+#enrichment-tool-results {
   width: 100%;
+  padding-top: 30px;
+  padding-bottom: 50%;
 }
