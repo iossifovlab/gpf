@@ -2,7 +2,7 @@ import { Validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
 
 export class EffectTypes {
-  @Validate(SetNotEmpty, {message: 'select at least one'})
+  @Validate(SetNotEmpty, {message: 'Select at least one.'})
   public selected: Set<string> = new Set();
 }
 

@@ -19,10 +19,11 @@ export class MultiContinuousFilterComponent implements OnInit {
 
   constructor() { }
 
-  ngOnInit() {
+  public ngOnInit() {
+
   }
 
-  restoreContinuousFilter(state) {
+  public restoreContinuousFilter(state) {
     const filter = state.find(f => f.id === this.continuousFilterState.id);
     if (filter) {
       const selection = this.continuousFilterState.selection as ContinuousSelection;
@@ -47,6 +48,11 @@ export class MultiContinuousFilterComponent implements OnInit {
       selection.domainMin = measure.min;
       selection.domainMax = measure.max;
       this.internalSelectedMeasure = measure;
+      this.updateFilterEvent.emit();
+    } else {
+      const selection = new ContinuousSelection(0, 0, 0, 0);
+      this.continuousFilterState.source = null;
+      this.internalSelectedMeasure = null;
       this.updateFilterEvent.emit();
     }
   }

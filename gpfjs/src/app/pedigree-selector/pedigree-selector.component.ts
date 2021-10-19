@@ -16,7 +16,7 @@ export class PedigreeSelectorComponent extends StatefulComponent implements OnIn
   selectedCollection: PersonSetCollection = null;
 
   @Validate(SetNotEmpty, {
-    message: 'select at least one'
+    message: 'Select at least one.'
   })
   selectedValues: Set<string> = new Set();
 

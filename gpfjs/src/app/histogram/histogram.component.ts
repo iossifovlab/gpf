@@ -4,7 +4,6 @@ import * as d3 from 'd3';
 import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
-
 @Component({
   selector: 'gpf-histogram',
   templateUrl: './histogram.component.html',

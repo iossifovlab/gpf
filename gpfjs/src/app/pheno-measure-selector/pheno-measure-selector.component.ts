@@ -59,7 +59,7 @@ export class PhenoMeasureSelectorComponent implements OnInit {
   }
 
   clear() {
-    this.selectedMeasure = {} as ContinuousMeasure;
+    this.selectedMeasure = null;
     (<HTMLInputElement>document.getElementById('search-box')).value = '';
     this.searchBoxChange('');
   }

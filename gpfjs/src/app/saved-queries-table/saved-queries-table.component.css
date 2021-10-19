@@ -1,3 +1,7 @@
 gpf-table {
   width: 100%;
 }
+
+.action-button {
+  margin: 0px 2px 0px 2px;
+}
