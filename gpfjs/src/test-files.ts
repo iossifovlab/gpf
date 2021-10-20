@@ -103,3 +103,4 @@ import './app/gene-plot/gene-plot.spec';
 import './app/person-ids/person-ids.component.spec';
 import './app/pheno-tool/pheno-tool-results.spec';
 import './app/pheno-tool/pheno-tool.service.spec';
+import './app/enrichment-query/enrichment-result.spec';
