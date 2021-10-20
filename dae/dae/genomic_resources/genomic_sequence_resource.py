@@ -44,7 +44,8 @@ class GenomicSequenceResource(GenomicResource, GenomicSequenceBase):
         return result
 
     def open(self):
-        file_name = self.get_config()["file"]
+        file_name = self.get_config()["filename"]
+
         index_file_name = self.get_config().get("index_file",
                                                 file_name + ".fai")
         index_content = self.get_file_str_content(index_file_name)

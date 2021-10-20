@@ -36,7 +36,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
         scores_dict = self.resource.fetch_scores(
             variant.chromosome,
             variant.position,
-            variant.reference, 
+            variant.reference,
             variant.alternative
         )
         if scores_dict is None:

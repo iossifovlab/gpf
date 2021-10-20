@@ -19,7 +19,7 @@ POGZ      tx3  17    +      10      100   12       95     3         10,50,70   1
 def test_gene_models_resource_with_format():
     res = build_a_test_resource({
         "genomic_resource.yaml":
-            "{type: GeneModels, file: genes.txt, format: refflat}",
+            "{type: GeneModels, filename: genes.txt, format: refflat}",
         "genes.txt": convert_to_tab_separated(gmmContent)
     })
 
@@ -35,7 +35,7 @@ def test_gene_models_resource_with_format():
 def test_gene_models_resource_with_inferred_format():
     res = build_a_test_resource({
         "genomic_resource.yaml":
-            "{type: GeneModels, file: genes.txt}",
+            "{type: GeneModels, filename: genes.txt}",
         "genes.txt": convert_to_tab_separated(gmmContent)
     })
 
@@ -51,7 +51,8 @@ def test_gene_models_resource_with_inferred_format():
 def test_gene_models_resource_with_inferred_format_and_gene_mapping():
     res = build_a_test_resource({
         "genomic_resource.yaml":
-            "{type: GeneModels, file: genes.txt, gene_mapping: geneMap.txt}",
+            "{type: GeneModels, filename: genes.txt, "
+            "gene_mapping: geneMap.txt}",
         "genes.txt": convert_to_tab_separated(gmmContent),
         "geneMap.txt": convert_to_tab_separated('''
             from   to
@@ -73,7 +74,7 @@ def test_against_agains_dirrent_repo_types(tmp_path):
     test_repos = build_test_repos(tmp_path, {
         "one": {
             GR_CONF_FILE_NAME:
-            "{type: GeneModels, file: genes.txt}",
+            "{type: GeneModels, filename: genes.txt}",
             "genes.txt": convert_to_tab_separated(gmmContent)
         }
     })

@@ -1,6 +1,6 @@
 type: GeneModels 
 
-file: refGene201309.txt
+filename: refGene201309.txt
 
 format: "default"
 

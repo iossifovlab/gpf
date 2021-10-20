@@ -1,6 +1,6 @@
 type: Genome 
 
-file: chrAll.fa
+filename: chrAll.fa
 
 chrom_prefix: ""
 
@@ -13,6 +13,6 @@ PARS:
     - "Y:59034050-59363566"
 
 meta: |
-  ## HG19 Reference Genome 
+  ## HG19 Reference Genome Fragment
 
   Default HG19 reference genome used by GPF

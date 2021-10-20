@@ -1,6 +1,6 @@
 type: Genome 
 
-file: GRCh38_full_analysis_set_plus_decoy_hla.fa
+filename: GRCh38_full_analysis_set_plus_decoy_hla.fa
 
 chrom_prefix: ""
 

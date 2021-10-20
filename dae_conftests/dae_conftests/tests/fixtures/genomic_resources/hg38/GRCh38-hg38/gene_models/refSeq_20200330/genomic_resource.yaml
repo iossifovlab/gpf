@@ -1,6 +1,6 @@
 type: GeneModels 
 
-file: refSeq_20200330.txt
+filename: refSeq_20200330.txt
 
 format: "refseq"
 

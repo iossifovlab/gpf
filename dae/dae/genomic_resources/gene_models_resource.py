@@ -20,7 +20,7 @@ class GeneModelsResource(GenomicResource, GeneModelsBase):
         return "GeneModels"
 
     def open(self):
-        filename = self.get_config()["file"]
+        filename = self.get_config()["filename"]
         fileformat = self.get_config().get("format", None)
         gene_mapping_filename = self.get_config().get("gene_mapping", None)
 
