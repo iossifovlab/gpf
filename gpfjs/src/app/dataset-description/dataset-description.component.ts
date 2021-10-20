@@ -1,8 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-
 import { Observable } from 'rxjs';
-
 import { DatasetsService } from '../datasets/datasets.service';
 import { Dataset } from '../datasets/datasets';
 import { filter, map, switchMap, take } from 'rxjs/operators';
@@ -13,8 +11,7 @@ import { filter, map, switchMap, take } from 'rxjs/operators';
   styleUrls: ['./dataset-description.component.css']
 })
 export class DatasetDescriptionComponent implements OnInit {
-
-  dataset$: Observable<Dataset>;
+  public dataset$: Observable<Dataset>;
 
   constructor(
     private route: ActivatedRoute,
@@ -22,7 +19,7 @@ export class DatasetDescriptionComponent implements OnInit {
     private datasetsService: DatasetsService,
   ) { }
 
-  ngOnInit() {
+  public ngOnInit() {
     this.dataset$ = this.route.parent.params.pipe(
       map((params: Params) => params['dataset']),
       filter(datasetId => !!datasetId),
@@ -30,12 +27,9 @@ export class DatasetDescriptionComponent implements OnInit {
     );
 
     this.dataset$.pipe(take(1)).subscribe(dataset => {
-        if (!dataset.description) {
-            this.router.navigate(['..', 'browser'], {
-                relativeTo: this.route
-            });
-        }
+      if (!dataset.description) {
+        this.router.navigate(['..', 'browser'], {relativeTo: this.route});
+      }
     });
   }
-
 }
