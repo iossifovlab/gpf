@@ -11,8 +11,9 @@
           [(ngModel)]="geneSymbol"
           (keyup)="openDropdown(); searchBoxInput$.next(geneSymbol)"
           (click)="selectGeneSymbol(''); showResults = false"
-          (keydown.enter)="submitGeneRequest()">
-        <div ngbDropdownMenu style="width: 17%; z-index: 3;">
+          (keydown.enter)="submitGeneRequest()"
+          (keydown.escape)="closeDropdown()">
+        <div ngbDropdownMenu style="width: 17%; z-index: 3; min-width: 250px;">
           <button *ngFor="let suggestion of geneSymbolSuggestions"
             class="dropdown-item" type="button"
             (click)="selectGeneSymbol(suggestion)"
