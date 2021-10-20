@@ -45,6 +45,7 @@ from dae.gene.denovo_gene_set_collection_factory import \
 from dae.autism_gene_profile.statistic import AGPStatistic
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.genomic_resources import build_genomic_resource_repository
+from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 
 
 logging.basicConfig(
@@ -150,10 +151,15 @@ def gpf_instance(default_dae_config, fixture_dirname):
         repositories.append(
             Box({
                 "id": "fixtures",
-                "url": f"file://{fixture_dirname('genomic_resources')}"
+                "type": "directory",
+                "directory": f"{fixture_dirname('genomic_resources')}"
             }))
 
-        instance.genomic_resources_db = GenomicResourceDB(repositories)
+        instance.genomic_resources_db = GenomicResourceGroupRepo([
+            build_genomic_resource_repository(repo_def)
+            for repo_def in repositories
+        ])
+
         return instance
 
     return build
@@ -189,9 +195,13 @@ def gpf_instance_2013(
     repositories.append(
             Box({
                 "id": "fixtures",
-                "url": f"file://{fixture_dirname('genomic_resources')}"
+                "type": "directory",
+                "directory": f"{fixture_dirname('genomic_resources')}"
             }))
-    gpf_instance.genomic_resources_db = GenomicResourceDB(repositories)
+    gpf_instance.genomic_resources_db = GenomicResourceGroupRepo([
+        build_genomic_resource_repository(repo_def)
+        for repo_def in repositories
+    ])
 
     return gpf_instance
 

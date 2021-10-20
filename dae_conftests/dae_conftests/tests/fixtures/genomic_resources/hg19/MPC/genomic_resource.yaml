@@ -1,17 +1,21 @@
 ---
 
-id: hg19/MPC
+type: NPScore
 
-resource_type: score_resources.NPScoreResource
-
-filename: fordist_constraint_official_mpc_values_v2.txt.gz
-format: tsv/bgz
-
-index_file:
-  filename: fordist_constraint_official_mpc_values_v2.txt.gz.tbi
+table:
+  filename: fordist_constraint_official_mpc_values_v2.txt.gz
   format: tabix
 
-has_header: true
+  # defined by score_type
+  chrom:
+    name: chrom
+  pos_begin:
+    name: pos
+  reference:
+    name: ref
+  alternative:
+    name: alt
+
 
 type_aggregators:
   - type: float
@@ -20,16 +24,6 @@ type_aggregators:
     aggregator: dae.genomic_resource.aggregators.MaxAggregator
   - type: str
     aggregator: dae.genomic_resource.aggregators.ConcatAggregator
-
-# defined by score_type
-chrom:
-  name: chrom
-pos_begin:
-  name: pos
-reference:
-  name: ref
-alternative:
-  name: alt
 
 # score values
 scores:

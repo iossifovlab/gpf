@@ -11,6 +11,10 @@ from dae.genomic_resources.repository import GenomicResource
 
 TABLE_SCHEMA = {
     "filename": {"type": "string", 'required': True, "empty": False},
+    "format": {
+        "type": "string",
+        "allowed": ["tabix", "csv", "tsv", "mem"],
+    },
     "chrom": {
         "type": "dict", "schema": {
             "name": {"type": "string", "empty": False},
@@ -24,6 +28,18 @@ TABLE_SCHEMA = {
         },
     },
     "pos_end": {
+        "type": "dict", "schema": {
+            "name": {"type": "string", "empty": False},
+            "index": {"type": "integer"},
+        },
+    },
+    "reference": {
+        "type": "dict", "schema": {
+            "name": {"type": "string", "empty": False},
+            "index": {"type": "integer"},
+        },
+    },
+    "alternative": {
         "type": "dict", "schema": {
             "name": {"type": "string", "empty": False},
             "index": {"type": "integer"},

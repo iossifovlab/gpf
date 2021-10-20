@@ -1,13 +1,16 @@
 type: PositionScore
 
 table:
-    file: TESTphastCons100way.bedGraph.gz
+    filename: TESTphastCons100way.bedGraph.gz
     format: tabix
-    header: none 
+    header_mode: none 
 
-    chrom.index: 0
-    pos_begin.index: 1
-    pos_end.index: 2
+    chrom:
+      index: 0
+    pos_begin:
+      index: 1
+    pos_end:
+      index: 2
 
 scores:
     - id: phastCons100way

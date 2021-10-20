@@ -4,6 +4,7 @@ import pyarrow as pa
 
 from dae.variants.attributes import VariantType
 from dae.annotation.tools.annotator_base import Annotator
+from dae.genomic_resources.score_resources import GenomicScoresResource
 
 # from dae.genomic_resources.utils import aggregator_name_to_class
 
@@ -20,20 +21,25 @@ class VariantScoreAnnotatorBase(Annotator):
     def __init__(self, resource, liftover=None, override=None):
         super().__init__(liftover, override)
         self.resource = resource
+
+        assert isinstance(resource, GenomicScoresResource), \
+            resource.resource_id
         self._annotation_schema = None
 
         self.score_types = dict()
-        for score in self.resource.get_config().scores:
+        for score in self.resource.get_all_scores():
+            print(score)
+
             self.score_types[score.id] = score.type
 
-        if self.resource.get_config().type_aggregators:
-            self.type_aggregators = dict()
-            for agg in self.resource.get_config().type_aggregators:
-                self.type_aggregators[agg.type] = agg.aggregator
+        # if self.resource.get_config().type_aggregators:
+        #     self.type_aggregators = dict()
+        #     for agg in self.resource.get_config().type_aggregators:
+        #         self.type_aggregators[agg.type] = agg.aggregator
 
-        self.aggregators = dict()
-        for attr in self.get_config().attributes:
-            self.aggregators[attr.source] = self._get_aggregators(attr)
+        # self.aggregators = dict()
+        # for attr in self.get_config().attributes:
+        #     self.aggregators[attr.source] = self._get_aggregators(attr)
 
     def get_default_annotation(self):
         if self.override:
@@ -42,13 +48,16 @@ class VariantScoreAnnotatorBase(Annotator):
         print("resource:", self.resource.get_default_annotation())
         return self.resource.get_default_annotation().attributes
 
+    def get_scores(self):
+        return [attr.source for attr in self.get_default_annotation()]
+
     def get_config(self):
         if self.override:
             print("override:", self.override)
             return self.override
-        print("resource:", self.resource.get_config().default_annotation)
+        print("resource:", self.resource.get_default_annotation())
 
-        return self.resource.get_config().default_annotation
+        return self.resource.get_default_annotation()
 
     def _get_aggregators(self, attr):
         raise NotImplementedError()
@@ -68,7 +77,7 @@ class VariantScoreAnnotatorBase(Annotator):
 
     def _scores_not_found(self, attributes):
         values = {
-            score_id: None for score_id in self.resource.get_default_scores()
+            score_id: None for score_id in self.get_scores()
         }
         attributes.update(values)
 
@@ -77,13 +86,14 @@ class VariantScoreAnnotatorBase(Annotator):
         if variant.variant_type & VariantType.substitution:
             scores = self.resource.fetch_scores(
                 variant.chromosome, variant.position,
+                self.get_scores()
             )
         elif variant.variant_type & VariantType.indel:
             scores = self.resource.fetch_scores_agg(
                 variant.chromosome,
                 variant.position,
                 variant.position + len(variant.reference),
-                self.aggregators
+                self.get_scores()
             )
         else:
             logger.warning(
@@ -95,20 +105,11 @@ class VariantScoreAnnotatorBase(Annotator):
         return scores
 
     def _annotate_cnv(self, attributes, variant):
-        aggregators = dict()
-        for attr in self.config.default_annotation.attributes:
-            aggr_name = attr.aggregator
-            if aggr_name is None:
-                score_type = self.score_types[attr.source]
-                aggr_name = self.type_aggregators[score_type]
-            aggregators[attr.source] = aggregator_name_to_class(
-                aggr_name
-            )
         scores = self.resource.fetch_scores_agg(
             variant.chromosome,
             variant.position,
             variant.end_position,
-            aggregators
+            self.get_scores()
         )
 
         for score_name in self.score_names:
@@ -124,17 +125,10 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         # FIXME This should be closed somewhere
         self.resource.open()
 
-    def _get_aggregators(self, attr):
-        aggr_name = attr.aggregator.position
-        if aggr_name is None:
-            score_type = self.score_types[attr.source]
-            aggr_name = self.type_aggregators[score_type]
-        return aggregator_name_to_class(aggr_name)
-
     def _fetch_substition(self, variant):
         return self.resource.fetch_scores(
             variant.chromosome, variant.position,
-            self.resource.get_default_scores()
+            self.get_scores()
         )
 
     def _do_annotate(self, attributes, variant, liftover_variants):
@@ -172,40 +166,25 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
                     variant.chromosome,
                     first_position,
                     last_position,
-                    self.aggregators,
+                    self.get_scores()
                 )
 
         if not scores:
             self._scores_not_found(attributes)
             return
 
-        for score in self.resource._config.scores:
-            value = scores[score.id]
-            attributes[score.id] = value
+        for score in self.get_scores():
+            value = scores[score]
+            attributes[score] = value
 
 
 class NPScoreAnnotator(PositionScoreAnnotator):
     def __init__(self, config, liftover=None, override=None):
         super().__init__(config, liftover, override)
 
-    def _get_aggregators(self, attr):
-        aggr_name = attr.aggregator.position
-        if aggr_name is None:
-            score_type = self.score_types[attr.source]
-            aggr_name = self.type_aggregators[score_type]
-        pos_aggr = aggregator_name_to_class(aggr_name)
-
-        aggr_name = attr.aggregator.nucleotide
-        if aggr_name is None:
-            score_type = self.score_types[attr.source]
-            aggr_name = self.type_aggregators[score_type]
-        nuc_aggr = aggregator_name_to_class(aggr_name)
-
-        return (pos_aggr, nuc_aggr)
-
     def _fetch_substition(self, variant):
         return self.resource.fetch_scores(
             variant.chromosome, variant.position,
             variant.reference, variant.alternative,
-            self.resource.get_default_scores()
+            self.get_scores()
         )

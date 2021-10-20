@@ -1,35 +1,20 @@
 ---
 
-id: hg38/TESTCADD
+type: NPScore
 
-resource_type: score_resources.NPScoreResource
-
-filename: TESTCADD.tsv.gz
-format: tsv/bgz
-
-index_file:
-  filename: TESTCADD.tsv.gz.tbi
+table:
+  filename: TESTCADD.tsv.gz
   format: tabix
 
-has_header: true
-
-type_aggregators:
-  - type: float
-    aggregator: dae.genomic_resource.aggregators.MaxAggregator
-  - type: int
-    aggregator: dae.genomic_resource.aggregators.MaxAggregator
-  - type: str
-    aggregator: dae.genomic_resource.aggregators.ConcatAggregator
-
-# defined by score_type
-chrom:
-  name: Chrom
-pos_begin:
-  name: Pos
-reference:
-  name: Ref
-alternative:
-  name: Alt
+  # defined by score_type
+  chrom:
+    name: Chrom
+  pos_begin:
+    name: Pos
+  reference:
+    name: Ref
+  alternative:
+    name: Alt
 
 # score values
 scores:
@@ -41,6 +26,15 @@ scores:
       type: float
       desc: ""
       name: PHRED
+
+
+type_aggregators:
+  - type: float
+    aggregator: dae.genomic_resource.aggregators.MaxAggregator
+  - type: int
+    aggregator: dae.genomic_resource.aggregators.MaxAggregator
+  - type: str
+    aggregator: dae.genomic_resource.aggregators.ConcatAggregator
 
 default_annotation:
   attributes:

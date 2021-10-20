@@ -1,25 +1,22 @@
 ---
 
-id: hg38/TESTFreq
+type: AlleleScore
 
-resource_type: score_resources.AlleleScoreResource
-
-filename: TESTFreq.tsv.gz
-format: tsv/bgz
-
-index_file:
-  filename: TESTFreq.tsv.gz.tbi
+table:
+  filename: TESTFreq.tsv.gz
   format: tabix
+  # index_file:
+  #   filename: TESTFreq.tsv.gz.tbi
 
-has_header: true
-
-# defined by score_type
-chrom: 
-  name: chr
-pos_begin:
-  name: position
-variant:
-  name: variantColumn
+  # defined by score_type
+  chrom: 
+    name: chr
+  pos_begin:
+    name: position
+  reference:
+    name: ref
+  alternative:
+    name: alt
 
 # score values
 scores:
@@ -27,6 +24,7 @@ scores:
       type: float
       desc: ""
       name: all.altFreq
+
     - id: altFreq2
       type: float
       desc: ""
@@ -36,5 +34,6 @@ default_annotation:
   attributes:
     - source: altFreq
       dest: alt_freq
+
     - source: altFreq2
       dest: alt_freq2

@@ -2,16 +2,21 @@
 
 id: hg38/TESTPosAgg
 
-resource_type: score_resources.PositionScoreResource
+type: PositionScore
 
-filename: scores.tsv.gz
-format: tsv/bgz
-
-index_file:
-  filename: scores.tsv.gz.tbi
+table:
+  filename: scores.tsv.gz
   format: tabix
+  header_mode: none
 
-has_header: false
+  # defined by score_type
+  chrom: 
+    index: 0
+  pos_begin:
+    index: 1
+  pos_end: 
+    index: 2
+
 
 type_aggregators:
   - type: float
@@ -21,13 +26,6 @@ type_aggregators:
   - type: str
     aggregator: dae.genomic_resource.aggregators.ConcatAggregator
 
-# defined by score_type
-chrom: 
-  index: 0
-pos_begin:
-  index: 1
-pos_end: 
-  index: 2
 
 # score values
 scores:
@@ -35,6 +33,7 @@ scores:
       type: float
       desc: ""
       index: 3
+      position_aggregator: mean
 
 default_annotation:
   attributes:

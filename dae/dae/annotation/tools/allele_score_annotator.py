@@ -33,12 +33,11 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
         if self.liftover and liftover_variants.get(self.liftover):
             variant = liftover_variants.get(self.liftover)
 
-        chrom = variant.chromosome
-        pos = variant.details.cshl_position
-        variant_detail = variant.details.cshl_variant
-
         scores_dict = self.resource.fetch_scores(
-            chrom, pos, variant_detail
+            variant.chromosome,
+            variant.position,
+            variant.reference, 
+            variant.alternative
         )
         if scores_dict is None:
             print("Not found!")
@@ -53,7 +52,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
                     attributes[score_id] = score_value
             except ValueError as ex:
                 logger.error(
-                    f"problem with: {score_id}: {chrom}:{pos} - {score_value}"
+                    f"problem with: {score_id}: {variant} - {score_value}"
                 )
                 logger.error(ex)
                 raise ex

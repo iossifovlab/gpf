@@ -118,4 +118,4 @@ def test_np_score_annotator_indels(
     for sv, e in cadd_indel_variants_expected:
         pipeline.annotate_summary_variant(sv)
         for score, value in e.items():
-            assert numpy.isclose(sv.get_attribute(score)[0], value)
+            assert sv.get_attribute(score)[0] == pytest.approx(value, rel=1e-3)

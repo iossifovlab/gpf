@@ -3,6 +3,7 @@ import abc
 import logging
 
 from typing import List, Tuple
+from box import Box
 
 from . import GenomicResource
 from .repository import GenomicResourceRealRepo
@@ -68,16 +69,23 @@ class GenomicScoresResource(GenomicResource, abc.ABC):
                  config=None):
         super().__init__(resource_id, version, repo, config)
         self.table = None
+        self.scores = {}
+        self.default_annotation = {}
 
     LONG_JUMP_THRESHOLD = 5000
     ACCESS_SWITCH_THRESHOLD = 1500
 
+    def get_default_annotation(self):
+        return self.default_annotation
+
     def open(self):
         self.table = open_genome_position_table(
-            self, self.get_config()['table'])
+            self, self.get_config()["table"])
+        self.default_annotation = self.get_config()\
+            .get("default_annotation", {})
+        self.default_annotation = Box(self.default_annotation)
 
         # load score configuraton
-        self.scores = {}
         for score_conf in self.get_config()['scores']:
             class ScoreDef:
                 pass
@@ -158,6 +166,9 @@ class GenomicScoresResource(GenomicResource, abc.ABC):
         self._has_chrom_prefix = self.table.get_chromosomes(
         )[-1].startswith("chr")
         return True
+
+    def get_score_config(self, score_id):
+        return self.scores.get(score_id)
 
     def close(self):
         self.table.close()
