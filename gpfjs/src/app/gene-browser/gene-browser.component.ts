@@ -231,7 +231,12 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   public onSubmitSummary(event): void {
-    event.target.queryData.value = JSON.stringify({...this.requestParamsSummary});
+    event.target.queryData.value = JSON.stringify({
+      ...this.requestParamsSummary,
+      'summaryVariantIds': this.summaryVariantsArrayFiltered.summaryAlleleIds.reduce(
+        (a, b) => a.concat(b), []
+      ),
+    });
     event.target.submit();
   }
 
