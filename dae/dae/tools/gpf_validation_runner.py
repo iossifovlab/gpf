@@ -8,6 +8,7 @@ import logging
 import copy
 import enum
 import pandas as pd
+import numpy as np
 
 from xml.etree.ElementTree import Element, tostring
 
@@ -221,8 +222,8 @@ class BaseGenotypeBrowserRunner(AbstractRunner):
 
 class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
-    def __init__(self, expectations, gpf_instance):
-
+    def __init__(self, expectations, gpf_instance, detailed_reporting):
+        self.detailed_reporting = detailed_reporting
         super(GenotypeBrowserRunner, self).__init__(
             expectations, gpf_instance)
 
@@ -515,13 +516,54 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
             assert set(variants_df.columns) == set(expected_df.columns), (
                 variants_df.columns, expected_df.columns)
 
-            pd.testing.assert_frame_equal(variants_df, expected_df)
+            variants_df = variants_df.sort_index(axis=1)
+            expected_df = expected_df.sort_index(axis=1)
+
+            pd.testing.assert_frame_equal(
+                variants_df.sort_index(axis=1), expected_df.sort_index(axis=1)
+            )
 
         except AssertionError as ex:
             with io.StringIO() as out:
-                print("expected:\n", expected_df.head(), file=out)
-                print("actual:\n", variants_df.head(), file=out)
-                print(ex, file=out)
+                if not self.detailed_reporting:
+                    print("expected:\n", expected_df.head(), file=out)
+                    print("actual:\n", variants_df.head(), file=out)
+                    print(ex, file=out)
+                    return out.getvalue()
+
+                differences = (expected_df != variants_df).stack()
+                last_printed_idx = -1
+                for idxs, has_diff in differences.items():
+                    if not has_diff:
+                        continue
+
+                    idx, col_name = idxs
+                    expected = expected_df[col_name][idx]
+                    result = variants_df[col_name][idx]
+
+                    if np.isnan(expected) and np.isnan(result):
+                        continue
+                    elif type(expected) == np.float64:
+                        if np.isclose(expected, result):
+                            continue
+
+                    if last_printed_idx != idx:
+                        last_printed_idx = idx
+                        print(
+                            f"Differences in variant #{idx} "
+                            f"{expected_df['chromosome'][idx]} "
+                            f"{expected_df['position'][idx]} "
+                            f"{expected_df['reference'][idx]}->"
+                            f"{expected_df['alternative'][idx]} "
+                            f"{expected_df['cshl_variant'][idx]} " , 
+                            file=out
+                        )
+                    print(
+                        f"\t{col_name}:\n"
+                        f"\t\tExpected: {expected_df[col_name][idx]}\n"
+                        f"\t\tResult: {variants_df[col_name][idx]}",
+                        file=out
+                    )
                 return out.getvalue()
 
         return None
@@ -681,10 +723,11 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
 class MainRunner:
 
-    def __init__(self, gpf_instance, outfilename):
+    def __init__(self, gpf_instance, outfilename, detailed_reporting=False):
         self.gpf_instance = gpf_instance
         self.outfilename = outfilename
         self.runners = []
+        self.detailed_reporting = detailed_reporting
 
     @staticmethod
     def collect_expectations(expectations):
@@ -720,7 +763,9 @@ class MainRunner:
     def make_validation_runner(self, expectations):
         target = expectations["target"]
         if target == "genotype_browser":
-            return GenotypeBrowserRunner(expectations, self.gpf_instance)
+            return GenotypeBrowserRunner(
+                expectations, self.gpf_instance, self.detailed_reporting
+            )
         else:
             raise NotImplementedError(
                 f"not supported expectations target: {target}")
@@ -792,6 +837,11 @@ def main(argv=sys.argv[1:]):
         "--store-results", type=str,
         help="a directory where to store genotype variants into TSV files")
 
+    parser.add_argument(
+        "--detailed-reporting", "--dr",
+        action="store_true", default=False,
+        help="Use detailed logging of differences per variant per column")
+
     args = parser.parse_args(argv)
     if args.verbose == 1:
         logging.basicConfig(level=logging.WARNING)
@@ -804,7 +854,9 @@ def main(argv=sys.argv[1:]):
     logging.getLogger("impala").setLevel(logging.WARNING)
 
     gpf_instance = GPFInstance()
-    main_runner = MainRunner(gpf_instance, args.output)
+    main_runner = MainRunner(
+        gpf_instance, args.output, args.detailed_reporting
+    )
     expectations_iterator = MainRunner.collect_expectations(args.expectations)
 
     if args.store_results is not None:
