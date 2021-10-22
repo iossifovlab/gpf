@@ -4,6 +4,7 @@ downloads
 import
 package-lock.json
 cypress/screenshots
+cypress/snapshots
 cypress/videos
 results
 /build-env/*
