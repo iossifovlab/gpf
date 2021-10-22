@@ -650,7 +650,7 @@ new EnrichmentEffectResult(
   ), new ChildrenStats(415, 416, 417)
 );
 
-const enrichmentResultFromJson1 = EnrichmentResult.fromJson({
+const enrichmentResultFromJson1 = {
   selector: 'selector1',
   LGDs: {
     all: {
@@ -975,9 +975,9 @@ const enrichmentResultFromJson1 = EnrichmentResult.fromJson({
     F: 623,
     U: 624
   }
-});
+};
 
-const enrichmentResultFromJson2 = EnrichmentResult.fromJson({
+const enrichmentResultFromJson2 = {
   selector: 'selector423',
   LGDs: {
     all: {
@@ -1303,10 +1303,10 @@ const enrichmentResultFromJson2 = EnrichmentResult.fromJson({
     F: 623,
     U: 624
   }
-});
+};
 
-xdescribe('EnrichmentResult', () => {
-  xit('should create from json', () => {
+describe('EnrichmentResult', () => {
+  it('should create from json', () => {
     expect(enrichmentResult1).toEqual(EnrichmentResult.fromJson(enrichmentResultFromJson1));
   });
 
