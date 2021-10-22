@@ -9,8 +9,7 @@ from typing import List
 from urllib.parse import urlparse
 
 from dae.genomic_resources.resources import GenomicResource
-from dae.annotation.tools.utils import is_gzip, regions_intersect, \
-    handle_chrom_prefix
+from dae.annotation.tools.utils import is_gzip, regions_intersect
 from dae.configuration.schemas.genomic_resources_database import attr_schema, \
     genomic_score_schema
 
@@ -18,7 +17,9 @@ logger = logging.getLogger(__name__)
 
 
 class ScoreLine:
-    def __init__(self, values: dict, score_ids: list):
+    def __init__(self, values: dict, score_ids: list, add_chrom_prefix=None):
+        if add_chrom_prefix is not None:
+            values["chrom"] = f"{add_chrom_prefix}{values['chrom']}"
         self.values = values
         self.scores = {
             score_id: float(self.values[score_id])
@@ -79,6 +80,7 @@ class GenomicScoresResource(GenomicResource):
 
         contig_name = self.infile.contigs[-1]
         self._has_chrom_prefix = contig_name.startswith("chr")
+        self.add_chrom_prefix = self._config.add_chrom_prefix
         self._lines_iterator = map(
             self._parse_line, self.infile.fetch(parser=pysam.asTuple())
         )
@@ -139,7 +141,7 @@ class GenomicScoresResource(GenomicResource):
     def _parse_line(self, line):
         return ScoreLine({
             col: line[idx] for col, idx in self.col_indexes.items()
-        }, self.get_all_scores())
+        }, self.get_all_scores(), self.add_chrom_prefix)
 
     def _purge_buffer(self, chrom, pos_begin, pos_end):
         # purge start of line buffer
@@ -173,6 +175,8 @@ class GenomicScoresResource(GenomicResource):
                 break
 
     def _fetch_lines(self, chrom, pos_begin, pos_end):
+        if self.add_chrom_prefix is not None:
+            chrom = chrom.lstrip(self.add_chrom_prefix)
         self.last_pos = pos_end
         if abs(pos_begin - self.last_pos) > self.ACCESS_SWITCH_THRESHOLD:
             return self._fetch_direct(chrom, pos_begin, pos_end)
@@ -201,6 +205,8 @@ class GenomicScoresResource(GenomicResource):
         return self._select_lines(chrom, pos_begin, pos_end)
 
     def _select_lines(self, chrom, pos_begin, pos_end):
+        if self.add_chrom_prefix is not None:
+            chrom = f"{self.add_chrom_prefix}{chrom}"
         result = []
         for line in self.buffer:
             if line.chrom != chrom:
@@ -229,6 +235,9 @@ class GenomicScoresResource(GenomicResource):
             return []
 
     def get_all_chromosomes(self):
+        if self.add_chrom_prefix is not None:
+            return [f"{self.add_chrom_prefix}{c}" for c in self.infile.contigs]
+
         return self.infile.contigs
 
     def get_all_scores(self):
@@ -261,8 +270,8 @@ class PositionScoreResource(GenomicScoresResource):
     def fetch_scores(
         self, chrom: str, position: int, scores: List[str] = None
     ):
-        chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
-        assert chrom in self.get_all_chromosomes()
+        assert chrom in self.get_all_chromosomes(), (
+            chrom, self.get_all_chromosomes())
 
         line = self._fetch_lines(chrom, position, position)
         if not line:
@@ -279,7 +288,6 @@ class PositionScoreResource(GenomicScoresResource):
     def fetch_scores_agg(
         self, chrom: str, pos_begin: int, pos_end: int, scores_aggregators
     ):
-        chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
         assert chrom in self.get_all_chromosomes(), (
             chrom, self.get_all_chromosomes())
 
@@ -331,8 +339,8 @@ class NPScoreResource(PositionScoreResource):
         self, chrom: str, position: int, ref: str, alt: str,
         scores: List[str] = None
     ):
-        chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
-        assert chrom in self.get_all_chromosomes()
+        assert chrom in self.get_all_chromosomes(), (
+            chrom, self.get_all_chromosomes())
 
         lines = self._fetch_lines(chrom, position, position)
         if not lines:
@@ -358,8 +366,8 @@ class NPScoreResource(PositionScoreResource):
     def fetch_scores_agg(
         self, chrom: str, pos_begin: int, pos_end: int, scores_aggregators
     ):
-        chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
-        assert chrom in self.get_all_chromosomes()
+        assert chrom in self.get_all_chromosomes(), (
+            chrom, self.get_all_chromosomes())
         score_lines = self._fetch_lines(chrom, pos_begin, pos_end)
         logger.debug(f"score lines found: {score_lines}")
 
@@ -421,8 +429,8 @@ class AlleleScoreResource(GenomicScoresResource):
     def fetch_scores(
         self, chrom: str, position: int, variant: str, scores: List[str] = None
     ):
-        chrom = handle_chrom_prefix(self._has_chrom_prefix, chrom)
-        assert chrom in self.get_all_chromosomes()
+        assert chrom in self.get_all_chromosomes(), (
+            chrom, self.get_all_chromosomes())
 
         lines = self._fetch_lines(chrom, position, position)
         if not lines:
