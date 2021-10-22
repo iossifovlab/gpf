@@ -105,15 +105,15 @@ describe('Gene plot summary alleles count tests', () => {
   [ {checkbox: 'Affected only', expectedSummaryAllelesCount: '0 / 8'},
     {checkbox: 'Unaffected only', expectedSummaryAllelesCount: '8 / 8'},
     {checkbox: 'Affected and unaffected', expectedSummaryAllelesCount: '8 / 8'}
-  ].forEach(element => {
-    it('should display the correct value when filtering with the \'' + element.checkbox + '\' checkbox', () => {
+  ].forEach(data => {
+    it('should display the correct value when filtering with the \'' + data.checkbox + '\' checkbox', () => {
       geneBrowserPage.affectedStatusField.should('exist');
       page.summaryAllelesCount.should('have.text', '8 / 8');
 
-      geneBrowserPage.getAffectedStatusCheckbox(element.checkbox).click();
-      page.summaryAllelesCount.should('have.text', element.expectedSummaryAllelesCount);
+      geneBrowserPage.getAffectedStatusCheckbox(data.checkbox).click();
+      page.summaryAllelesCount.should('have.text', data.expectedSummaryAllelesCount);
 
-      geneBrowserPage.getAffectedStatusCheckbox(element.checkbox).click();
+      geneBrowserPage.getAffectedStatusCheckbox(data.checkbox).click();
     });
   });
 
@@ -123,29 +123,29 @@ describe('Gene plot summary alleles count tests', () => {
     {checkbox: 'CNV+', expectedSummaryAllelesCount: '8 / 8'},
     {checkbox: 'CNV-', expectedSummaryAllelesCount: '8 / 8'},
     {checkbox: 'Other', expectedSummaryAllelesCount: '7 / 8'}
-  ].forEach(element => {
-    it('should display the correct value when filtering with the \'' + element.checkbox + '\' checkbox', () => {
+  ].forEach(data => {
+    it('should display the correct value when filtering with the \'' + data.checkbox + '\' checkbox', () => {
       geneBrowserPage.effectTypeFiltersField.should('exist');
       page.summaryAllelesCount.should('have.text', '8 / 8');
 
-      geneBrowserPage.getEffectTypesCheckbox(element.checkbox).click();
-      page.summaryAllelesCount.should('have.text', element.expectedSummaryAllelesCount);
+      geneBrowserPage.getEffectTypesCheckbox(data.checkbox).click();
+      page.summaryAllelesCount.should('have.text', data.expectedSummaryAllelesCount);
 
-      geneBrowserPage.getEffectTypesCheckbox(element.checkbox).click()
+      geneBrowserPage.getEffectTypesCheckbox(data.checkbox).click()
     });
   });
 
   [ {checkbox: 'Denovo', expectedSummaryAllelesCount: '0 / 8'},
     {checkbox: 'Transmitted', expectedSummaryAllelesCount: '8 / 8'}
-  ].forEach(element => {
-    it('should display the correct value when filtering with the \'' + element.checkbox + '\' checkbox', () => {
+  ].forEach(data => {
+    it('should display the correct value when filtering with the \'' + data.checkbox + '\' checkbox', () => {
       geneBrowserPage.inheritanceTypesFilter.should('exist');
       page.summaryAllelesCount.should('have.text', '8 / 8');
 
-      geneBrowserPage.getInheritanceTypes(element.checkbox).click();
-      page.summaryAllelesCount.should('have.text', element.expectedSummaryAllelesCount);
+      geneBrowserPage.getInheritanceTypes(data.checkbox).click();
+      page.summaryAllelesCount.should('have.text', data.expectedSummaryAllelesCount);
 
-      geneBrowserPage.getInheritanceTypes(element.checkbox).click();
+      geneBrowserPage.getInheritanceTypes(data.checkbox).click();
     });
   });
 
@@ -154,15 +154,15 @@ describe('Gene plot summary alleles count tests', () => {
     {checkbox: 'del',expectedSummaryAllelesCount: '4 / 8'},
     {checkbox: 'CNV+',expectedSummaryAllelesCount: '8 / 8'},
     {checkbox: 'CNV-',expectedSummaryAllelesCount: '8 / 8'}
-  ].forEach(element => {
-    it('should display the correct value when filtering with the \'' + element.checkbox + '\' checkbox', () => {
+  ].forEach(data => {
+    it('should display the correct value when filtering with the \'' + data.checkbox + '\' checkbox', () => {
       geneBrowserPage.variantTypesFilter.should('exist');
       page.summaryAllelesCount.should('have.text', '8 / 8');
 
-      geneBrowserPage.getVariantTypes(element.checkbox).click();
-      page.summaryAllelesCount.should('have.text', element.expectedSummaryAllelesCount);
+      geneBrowserPage.getVariantTypes(data.checkbox).click();
+      page.summaryAllelesCount.should('have.text', data.expectedSummaryAllelesCount);
 
-      geneBrowserPage.getVariantTypes(element.checkbox).click();
+      geneBrowserPage.getVariantTypes(data.checkbox).click();
     });
   });
 });
