@@ -70,7 +70,7 @@ class GenomicScoresResource(GenomicResource, abc.ABC):
         super().__init__(resource_id, version, repo, config)
         self.table = None
         self.scores = {}
-        self.default_annotation = {}
+        self.default_annotation = Box({}, default_box=True)
 
     LONG_JUMP_THRESHOLD = 5000
     ACCESS_SWITCH_THRESHOLD = 1500
