@@ -34,7 +34,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
             variant = liftover_variants.get(self.liftover)
 
         chrom = variant.chromosome
-        pos = variant.details.cshl_position
+        pos = variant.position
         variant_detail = variant.details.cshl_variant
 
         scores_dict = self.resource.fetch_scores(

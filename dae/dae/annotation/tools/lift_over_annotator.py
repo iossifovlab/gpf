@@ -68,11 +68,6 @@ class LiftOverAnnotator(Annotator):
                     if not tr_ref:
                         lo_alt = f"{lo_ref[0]}{lo_alt}"
 
-            print("==")
-            print(lo_chrom)
-            print(lo_pos)
-            print(lo_ref)
-            print(lo_alt)
             result = SummaryAllele(lo_chrom, lo_pos, lo_ref, lo_alt)
             result.variant_type
 
@@ -87,7 +82,6 @@ class LiftOverAnnotator(Annotator):
         assert variant is not None
 
         lo_variant = self.liftover_variant(variant)
-        print(lo_variant)
         if lo_variant is None:
             logger.info(
                 f"unable to liftover variant: {variant}")
