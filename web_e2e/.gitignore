@@ -7,3 +7,5 @@ cypress/screenshots
 cypress/videos
 results
 /build-env/*
+Jenkinsfile.generated-stages.all
+.build-scripts-tmp-sessions
