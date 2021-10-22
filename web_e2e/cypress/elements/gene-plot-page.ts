@@ -2,23 +2,7 @@ import { BasePage } from './utils';
 
 export class GenePlotPage extends BasePage {
   get window() {
-    return cy.get('gpf-plot-view');
-  }
-
-  getAffectedStatusCheckbox(affectedStatus: string) {
-    return cy.get('.filter-label span').contains(affectedStatus);
-  }
-
-  getEffectTypesCheckbox(effectType: string) {
-    return cy.get('#effect-types-filters span').contains(effectType);
-  }
-
-  getInheritanceTypes(inheritanceType: string) {
-    return cy.get('#inheritance-types-filters span').contains(inheritanceType);
-  }
-
-  getVariantTypes(variantType: string) {
-    return cy.get('#variant-types-filters span').contains(variantType);
+    return cy.get('gpf-gene-plot');
   }
 
   get undoButton() {
@@ -34,18 +18,30 @@ export class GenePlotPage extends BasePage {
   }
 
   get hideTranscriptsCheckbox() {
-    return cy.get('label').contains('Hide transcripts').first().get('input');
+    return cy.get('label').contains('Hide transcripts').first();
   }
 
   get condenseIntronsCheckbox() {
-    return cy.get('label').contains('Condense introns').first().get('input');
+    return cy.get('.checkbox-option').contains('Condense introns').first();
   }
 
-  get downloadButton() {
-    return cy.get('button').contains(/^Download$/);
+  get geneTitle() {
+    return cy.get('#gene-title');
+  }
+
+  get summaryAllelesCount() {
+    return cy.get('#summary-alleles-count span');
+  }
+
+  get familyVariantsCount() {
+    return cy.get('#family-variants-count span');
   }
 
   get downloadSummaryButton() {
     return cy.get('button').contains('Download Summary');
+  }
+
+  get downloadButton() {
+    return cy.get('button').contains(/^Download$/);
   }
 }

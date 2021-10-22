@@ -1,8 +1,10 @@
 import { GeneBrowserPage } from 'cypress/elements/gene-browser-page';
+import { GenePlotPage } from 'cypress/elements/gene-plot-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Gene browser tests', () => {
   const page = new GeneBrowserPage();
+  const genePlotPage = new GenePlotPage();
 
   before(() => {
     page.cleanup();
@@ -19,7 +21,7 @@ describe('Gene browser tests', () => {
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.geneBrowser);
     page.searchInputBox.type('chd8');
     page.goButton.click();
-    page.genePlot.should('be.visible');
+    genePlotPage.window.should('be.visible');
     page.genotypePreviewTable.should('be.visible');
   });
 
