@@ -16,31 +16,31 @@ describe('Gene plot tests', () => {
   });
 
   it('should have Affected status checkboxes', () => {
-    page.getAffectedStatusCheckbox('Affected only').should('be.visible');
-    page.getAffectedStatusCheckbox('Unaffected only').should('be.visible');
-    page.getAffectedStatusCheckbox('Affected and unaffected').should('be.visible');
+    geneBrowserPage.getAffectedStatusCheckbox('Affected only').should('be.visible');
+    geneBrowserPage.getAffectedStatusCheckbox('Unaffected only').should('be.visible');
+    geneBrowserPage.getAffectedStatusCheckbox('Affected and unaffected').should('be.visible');
   });
 
   it('should have effect types checkboxes', () => {
-    page.getEffectTypesCheckbox('LGDs').should('be.visible');
-    page.getEffectTypesCheckbox('Missense').should('be.visible');
-    page.getEffectTypesCheckbox('Synonymous').should('be.visible');
-    page.getEffectTypesCheckbox('CNV+').should('be.visible');
-    page.getEffectTypesCheckbox('CNV-').should('be.visible');
-    page.getEffectTypesCheckbox('Other').should('be.visible');
+    geneBrowserPage.getEffectTypesCheckbox('LGDs').should('be.visible');
+    geneBrowserPage.getEffectTypesCheckbox('Missense').should('be.visible');
+    geneBrowserPage.getEffectTypesCheckbox('Synonymous').should('be.visible');
+    geneBrowserPage.getEffectTypesCheckbox('CNV+').should('be.visible');
+    geneBrowserPage.getEffectTypesCheckbox('CNV-').should('be.visible');
+    geneBrowserPage.getEffectTypesCheckbox('Other').should('be.visible');
   });
 
   it('should have effect types checkboxes', () => {
-    page.getInheritanceTypes('Denovo').should('be.visible');
-    page.getInheritanceTypes('Transmitted').should('be.visible');
+    geneBrowserPage.getInheritanceTypes('Denovo').should('be.visible');
+    geneBrowserPage.getInheritanceTypes('Transmitted').should('be.visible');
   });
 
   it('should have variant types checkboxes', () => {
-    page.getVariantTypes('del').should('be.visible');
-    page.getVariantTypes('ins').should('be.visible');
-    page.getVariantTypes('del').should('be.visible');
-    page.getVariantTypes('CNV+').should('be.visible');
-    page.getVariantTypes('CNV-').should('be.visible');
+    geneBrowserPage.getVariantTypes('del').should('be.visible');
+    geneBrowserPage.getVariantTypes('ins').should('be.visible');
+    geneBrowserPage.getVariantTypes('del').should('be.visible');
+    geneBrowserPage.getVariantTypes('CNV+').should('be.visible');
+    geneBrowserPage.getVariantTypes('CNV-').should('be.visible');
   });
 
   it('should have undo button', () => {
@@ -55,6 +55,26 @@ describe('Gene plot tests', () => {
     page.resetButton.should('be.visible');
   });
 
+  it('should have hide transcripts checkbox', () => {
+    page.hideTranscriptsCheckbox.should('be.visible');
+  });
+
+  it('should have condense introns checkbox', () => {
+    page.condenseIntronsCheckbox.should('be.visible');
+  });
+
+  it('should have gene title with the correct text inside', () => {
+    page.geneTitle.should('have.text', 'CHD8');
+  });
+
+  it('should have summary alleles count field', () => {
+    page.summaryAllelesCount.should('be.visible');
+  });
+
+  it('should have family variants count field', () => {
+    page.familyVariantsCount.should('be.visible');
+  });
+
   it('should have download button', () => {
     page.downloadButton.should('be.visible');
   });
@@ -63,61 +83,101 @@ describe('Gene plot tests', () => {
     page.downloadSummaryButton.should('be.visible');
   });
 
-  it('should have affected status filter field', () => {
-    page.affectedStatusField.should('exist');
-    page.variantsCount.should('have.text', '8 / 8');
-
-    [['Affected only', 0], ['Unaffected only', 8], ['Affected and unaffected', 8]].forEach(element => {
-      page.affectedStatusField.within(() => {
-        cy.get('label').contains(element[0]).click();
-      });
-      page.variantsCount.should('have.text', element[1] + ' / 8');
-      cy.get('label').contains(element[0]).click();
-    });
-  });
-
-  it('should have effect types filter field', () => {
-    page.effectTypeFiltersField.should('exist');
-    page.variantsCount.should('have.text', '8 / 8');
-
-    [['LGDs', 1], ['Missense', 8], ['Synonymous', 8], ['CNV+', 8], ['CNV-', 8], ['Other', 7]].forEach(element => {
-      page.effectTypeFiltersField.within(() => {
-        cy.get('span').contains(element[0]).click();
-      });
-      page.variantsCount.should('have.text', element[1] + ' / 8');
-      cy.get('span').contains(element[0]).click();
-    });
-  });
-
-  it('should have inheritance types filter field', () => {
-    page.inheritanceTypesFilter.should('exist');
-
-    [['Denovo', 0], ['Transmitted', 8]].forEach(element => {
-      page.inheritanceTypesFilter.within(() => {
-        cy.get('span').contains(element[0]).click();
-      });
-      page.variantsCount.should('have.text', element[1] + ' / 8');
-      cy.get('span').contains(element[0]).click();
-    });
-  });
-
-  it('should have variants types filter field', () => {
-    page.variantTypesFilter.should('exist');
-
-    [['sub', 5], ['ins', 7], ['del', 4], ['CNV+', 8], ['CNV-', 8]].forEach(element => {
-      page.variantTypesFilter.within(() => {
-        cy.get('label').contains(element[0]).click();
-      });
-      page.variantsCount.should('have.text', element[1] + ' / 8');
-      cy.get('span').contains(element[0]).click();
-    });
-  });
-
-  it('should contain a browser legend', () => {
+  it('should have table legend', () => {
     cy.scrollTo('bottom');
-    ['affected', 'unaffected', 'missing-person'].forEach(element => {
-      page.legend.should('contain.text', element);
+    geneBrowserPage.legend.should('contain.text', 'affectedunaffectedmissing-person');
+  });
+});
+
+describe('Gene plot summary alleles count tests', () => {
+  const page = new GenePlotPage();
+  const geneBrowserPage = new GeneBrowserPage();
+
+  before(() => {
+    page.cleanup();
+    page.navigateToHome();
+    page.loginAdmin();
+    geneBrowserPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.geneBrowser);
+    geneBrowserPage.searchInputBox.type('chd8');
+    geneBrowserPage.goButton.click();
+  });
+
+  [ {checkbox: 'Affected only', expectedSummaryAllelesCount: '0 / 8'},
+    {checkbox: 'Unaffected only', expectedSummaryAllelesCount: '8 / 8'},
+    {checkbox: 'Affected and unaffected', expectedSummaryAllelesCount: '8 / 8'}
+  ].forEach(element => {
+    it('should display the correct value when filtering with the \'' + element.checkbox + '\' checkbox', () => {
+      geneBrowserPage.affectedStatusField.should('exist');
+      page.summaryAllelesCount.should('have.text', '8 / 8');
+
+      geneBrowserPage.getAffectedStatusCheckbox(element.checkbox).click();
+      page.summaryAllelesCount.should('have.text', element.expectedSummaryAllelesCount);
+
+      geneBrowserPage.getAffectedStatusCheckbox(element.checkbox).click();
     });
+  });
+
+  [ {checkbox: 'LGDs', expectedSummaryAllelesCount: '1 / 8'},
+    {checkbox: 'Missense', expectedSummaryAllelesCount: '8 / 8'},
+    {checkbox: 'Synonymous', expectedSummaryAllelesCount: '8 / 8'},
+    {checkbox: 'CNV+', expectedSummaryAllelesCount: '8 / 8'},
+    {checkbox: 'CNV-', expectedSummaryAllelesCount: '8 / 8'},
+    {checkbox: 'Other', expectedSummaryAllelesCount: '7 / 8'}
+  ].forEach(element => {
+    it('should display the correct value when filtering with the \'' + element.checkbox + '\' checkbox', () => {
+      geneBrowserPage.effectTypeFiltersField.should('exist');
+      page.summaryAllelesCount.should('have.text', '8 / 8');
+
+      geneBrowserPage.getEffectTypesCheckbox(element.checkbox).click();
+      page.summaryAllelesCount.should('have.text', element.expectedSummaryAllelesCount);
+
+      geneBrowserPage.getEffectTypesCheckbox(element.checkbox).click()
+    });
+  });
+
+  [ {checkbox: 'Denovo', expectedSummaryAllelesCount: '0 / 8'},
+    {checkbox: 'Transmitted', expectedSummaryAllelesCount: '8 / 8'}
+  ].forEach(element => {
+    it('should display the correct value when filtering with the \'' + element.checkbox + '\' checkbox', () => {
+      geneBrowserPage.inheritanceTypesFilter.should('exist');
+      page.summaryAllelesCount.should('have.text', '8 / 8');
+
+      geneBrowserPage.getInheritanceTypes(element.checkbox).click();
+      page.summaryAllelesCount.should('have.text', element.expectedSummaryAllelesCount);
+
+      geneBrowserPage.getInheritanceTypes(element.checkbox).click();
+    });
+  });
+
+  [ {checkbox: 'sub',expectedSummaryAllelesCount: '5 / 8'},
+    {checkbox: 'ins',expectedSummaryAllelesCount: '7 / 8'},
+    {checkbox: 'del',expectedSummaryAllelesCount: '4 / 8'},
+    {checkbox: 'CNV+',expectedSummaryAllelesCount: '8 / 8'},
+    {checkbox: 'CNV-',expectedSummaryAllelesCount: '8 / 8'}
+  ].forEach(element => {
+    it('should display the correct value when filtering with the \'' + element.checkbox + '\' checkbox', () => {
+      geneBrowserPage.variantTypesFilter.should('exist');
+      page.summaryAllelesCount.should('have.text', '8 / 8');
+
+      geneBrowserPage.getVariantTypes(element.checkbox).click();
+      page.summaryAllelesCount.should('have.text', element.expectedSummaryAllelesCount);
+
+      geneBrowserPage.getVariantTypes(element.checkbox).click();
+    });
+  });
+});
+
+describe('Gene plot visual tests', () => {
+  const page = new GenePlotPage();
+  const geneBrowserPage = new GeneBrowserPage();
+
+  before(() => {
+    page.cleanup();
+    page.navigateToHome();
+    page.loginAdmin();
+    geneBrowserPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.geneBrowser);
+    geneBrowserPage.searchInputBox.type('chd8');
+    geneBrowserPage.goButton.click();
   });
 
   it('should condense introns', () => {
