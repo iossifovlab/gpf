@@ -6,89 +6,51 @@ import { GenotypeBrowserPage } from 'cypress/elements/genotype-browser-page';
 
 const geneWeightsData = [
   {
-    name: "SFARI_gene_score",
     desc: "SFARI gene score",
     inputField: false,
-    values: [
-
-    ], allVariants: '0'
+    allVariants: '0'
   },
   {
-    name: "RVIS_rank",
     desc: "RVIS rank",
     inputField: true,
-    values: [
-
-    ], allVariants: '0'
+    allVariants: '0'
   },
   {
-    name: "RVIS",
     desc: "RVIS",
     inputField: true,
-    values: [
-      
-    ], allVariants: '0'
+    allVariants: '0'
   },
   {
-    name: "LGD_rank",
     desc: "LGD rank",
     inputField: true,
-    values: [
-      
-    ], allVariants: '35'
+    allVariants: '35'
   },
   {
-    name: "LGD_score",
     desc: "LGD score",
     inputField: true,
-    values: [
-      
-    ], allVariants: '35'
+    allVariants: '35'
   },
   {
-    name: "pLI_rank",
     desc: "ExAC pLI rank",
     inputField: true,
-    values: [
-      
-    ], allVariants: '35'
+    allVariants: '35'
   },
   {
-    name: "pLI",
     desc: "ExAC pLI",
     inputField: true,
-    values: [
-      
-    ], allVariants: '35'
+    allVariants: '35'
   },
   {
-    name: "pRec_rank",
     desc: "ExAC pRec rank",
     inputField: true,
-    values: [
-      
-    ], allVariants: '35'
+    allVariants: '35'
   },
   {
-    name: "pRec",
     desc: "ExAC pRec",
     inputField: true,
-    values: [
-      
-    ], allVariants: '35'
+    allVariants: '35'
   }
 ];
-
-/*
-function wait_for_query(name = 'query', type = 'POST', url: string, response?: number, times = 1) {
-  if(!(times > 0))
-    return;
-  while(times-- > 0) {
-    cy.intercept(type, url).as(name);
-    cy.wait('@' + name).its('response.statusCode').should('eq', response ? response : 200);
-  }
-}
-*/
 
 describe('Gene weights panel tests', () => {
   const page = new GenesWeights();
@@ -117,8 +79,8 @@ describe('Gene weights panel tests', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genesBlockPage.geneWeightsButton.click();
 
-    geneWeightsData.forEach(element => {
-      page.dropdownButton.contains(element.desc);
+    geneWeightsData.forEach(geneWeight => {
+      page.dropdownButton.contains(geneWeight.desc);
     });
   });
 
@@ -126,11 +88,10 @@ describe('Gene weights panel tests', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genesBlockPage.geneWeightsButton.click();
 
-    geneWeightsData.forEach(element => {
-      page.dropdownButton.select(element.desc);
-      console.log(element.inputField);
-      page.fromInputField.should(element.inputField ? 'be.visible' : 'not.exist');
-      page.toInputField.should(element.inputField ? 'be.visible' : 'not.exist');
+    geneWeightsData.forEach(geneWeight => {
+      page.dropdownButton.select(geneWeight.desc);
+      page.fromInputField.should(geneWeight.inputField ? 'be.visible' : 'not.exist');
+      page.toInputField.should(geneWeight.inputField ? 'be.visible' : 'not.exist');
     });
   });
 
@@ -187,22 +148,20 @@ describe('Gene weights panel tests', () => {
     page.toInputField.should('have.value', '1.01');
   });
 
-  it('should filter variants based on selected gene weight', () => {
-    const genotypeBrowserController = new GenotypeBrowserController();
-    const genotypeBrowserPage = new GenotypeBrowserPage();
+  geneWeightsData.forEach(geneWeight => {
+    it('should filter variants when \'' + geneWeight.desc + '\' gene weight is selected', () => {
+      const genotypeBrowserController = new GenotypeBrowserController();
+      const genotypeBrowserPage = new GenotypeBrowserPage();
 
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    genotypeBrowserController.setEffectTypesToAll();
-    genesBlockPage.geneWeightsButton.click();
+      page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+      genotypeBrowserController.setEffectTypesToAll();
+      genesBlockPage.geneWeightsButton.click();
 
-    geneWeightsData.forEach(element => {
-      page.dropdownButton.select(element.desc);
-      //wait_for_query('reponse', 'POST', '/gpf/api/v3/gene_weights/partitions', 200, 3);
+      page.dropdownButton.select(geneWeight.desc);
       page.allGeneWeights.should('not.contain', '~');
   
       genotypeBrowserController.showTablePreview();
-      genotypeBrowserPage.overviewParagraph.should('have.text', element.allVariants + ' variants selected (' + element.allVariants + ' shown)');
+      genotypeBrowserPage.overviewParagraph.should('have.text', geneWeight.allVariants + ' variants selected (' + geneWeight.allVariants + ' shown)');
     });
-
   });
 });
