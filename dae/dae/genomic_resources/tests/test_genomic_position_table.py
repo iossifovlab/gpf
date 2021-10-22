@@ -1,5 +1,6 @@
 import pytest
 import yaml
+from dae.configuration.gpf_config_parser import GPFConfigParser
 
 from dae.genomic_resources.genome_position_table import \
     open_genome_position_table
@@ -467,3 +468,5 @@ def test_table_definition():
 
     v = Validator(TABLE_SCHEMA)
     assert v.validate(table_definition), v.errors
+    res = GPFConfigParser.process_config(table_definition, TABLE_SCHEMA)
+    print(res)

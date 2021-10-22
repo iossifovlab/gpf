@@ -95,10 +95,12 @@ def default_dae_config(request, cleanup):
 
     if cleanup:
         request.addfinalizer(fin)
-    dae_conf_path = os.path.join(
-        os.environ.get("DAE_DB_DIR", None), "DAE.conf"
-    )
-    dae_config = GPFConfigParser.parse_config(dae_conf_path)
+    conf_dir = os.environ.get("DAE_DB_DIR")
+    assert conf_dir is not None
+
+    dae_conf_path = os.path.join(conf_dir, "DAE.conf")
+
+    dae_config = GPFConfigParser.parse_and_interpolate_file(dae_conf_path)
     dae_config["studies_db"]["dir"] = studies_dirname
     remote_config = {
         "id": "TEST_REMOTE",
@@ -116,7 +118,7 @@ def default_dae_config(request, cleanup):
     dae_config = GPFConfigParser.process_config(
         dae_config,
         dae_conf_schema,
-        config_filename=dae_conf_path
+        conf_dir=conf_dir
     )
     return dae_config
 

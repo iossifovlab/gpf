@@ -19,14 +19,17 @@ from dae.genomic_resources.score_resources import PositionScoreResource
 #  70   71   72   73   74   75   76
 #  0.1  0.1  0.2  0.2  0.3  0.3  0.4
 #
-@pytest.mark.parametrize("variant,expected", [
-    ({"reference": "C", "alternative": "A"}, 0.1),
-    ({"reference": "CC", "alternative": "C"}, 0.13),
-    ({"reference": "CCT", "alternative": "C"}, 0.15),
-    ({"reference": "C", "alternative": "CA"}, 0.1),
-    ({"reference": "C", "alternative": "CAA"}, 0.1),
+@pytest.mark.parametrize("variant,pos_aggregator, expected", [
+    ({"reference": "C", "alternative": "A"}, "mean", 0.1),
+    ({"reference": "CC", "alternative": "C"}, "mean", 0.13),
+    ({"reference": "CC", "alternative": "C"}, "max", 0.2),
+    ({"reference": "CCT", "alternative": "C"}, "mean", 0.15),
+    ({"reference": "CCT", "alternative": "C"}, "max", 0.2),
+    ({"reference": "C", "alternative": "CA"}, "mean", 0.1),
+    ({"reference": "C", "alternative": "CAA"}, "mean", 0.1),
+    ({"reference": "C", "alternative": "CAA"}, "max", 0.1),
 ])
-def test_position_score_annotator(variant, expected):
+def test_position_score_annotator(variant, pos_aggregator, expected):
 
     variant.update({"chrom": "1", "position": 14970})
 
@@ -37,7 +40,7 @@ def test_position_score_annotator(variant, expected):
         "id": "test_annotation",
         "type": "embeded",
         "content": {
-            "position_score": {
+            "position_score1": {
                 "genomic_resource.yaml":
                 """\
                 type: PositionScore
@@ -61,27 +64,15 @@ def test_position_score_annotator(variant, expected):
     })
     assert len(list(repo.get_all_resources())) == 1
 
-    resource = repo.get_resource("position_score")
+    resource = repo.get_resource("position_score1")
     assert resource is not None
     assert isinstance(resource, PositionScoreResource)
-
-    annotation_config = Box(yaml.safe_load("""
-    score_annotators:
-    - annotator: position_score
-      resource: position_score
-      override:
-        attributes:
-        - source: test100way
-          dest: test100
-          position_aggregator: mean
-    """))
-
-    print(annotation_config)
 
     annotation_override = Box({"attributes": [
             {
                 "source": "test100way",
-                "dest": "test100"
+                "dest": "test100",
+                "position_aggregator": pos_aggregator,
             }
         ]
     })
@@ -92,7 +83,19 @@ def test_position_score_annotator(variant, expected):
 
     pipeline.annotate_summary_variant(sv)
     print(sv, sv.get_attribute("test100"))
-    for aa in sv.alt_alleles:
-        print(aa.attributes)
 
     assert sv.get_attribute("test100")[0] == pytest.approx(expected, abs=1e-2)
+
+
+    # annotation_config = Box(yaml.safe_load("""
+    # score_annotators:
+    # - annotator: position_score
+    #   resource: position_score1
+    #   override:
+    #     attributes:
+    #     - source: test100way
+    #       dest: test100
+    #       position_aggregator: mean
+    # """))
+
+    # print(annotation_config)

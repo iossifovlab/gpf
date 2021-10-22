@@ -70,59 +70,82 @@ class GPFConfigParser:
             )
         return config_files
 
-    @classmethod
-    def _get_file_contents(cls, filename: str) -> str:
+    @staticmethod
+    def _get_file_contents(filename: str) -> str:
         with open(filename, "r") as infile:
             return infile.read()
 
-    @classmethod
-    def interpolate_contents(cls, file_contents, ext):
+    @staticmethod
+    def parse_and_interpolate(content: str, parser) -> dict:
+        interpol_vars = parser(content).get("vars", {})
+
         env_vars = {f"${key}": val for key, val in os.environ.items()}
-        interpol_vars = cls.filetype_parsers[ext](file_contents).get(
-            "vars", {}
-        )
         interpol_vars = {
             key: value % env_vars for key, value in interpol_vars.items()
         }
         interpol_vars.update(env_vars)
 
-        interpolated_text = file_contents % interpol_vars
-        config = cls.filetype_parsers[ext](interpolated_text)
+        try:
+            interpolated_text = content % interpol_vars
+        except KeyError as ex:
+            raise ValueError(f"interpolation problems: {ex}")
+
+        config = parser(interpolated_text)
         config.pop("vars", None)
         return config
 
     @classmethod
-    def parse_config(cls, filename: str) -> dict:
+    def parse_and_interpolate_file(cls, filename: str) -> dict:
         try:
             ext = os.path.splitext(filename)[1]
-            assert ext in cls.filetype_parsers, \
-                f"Unsupported filetype {filename}!"
-            file_contents = cls._get_file_contents(filename)
+            if ext not in cls.filetype_parsers:
+                raise ValueError(f"unsupported file type: {filename}")
+            parser = cls.filetype_parsers[ext]
 
-            return cls.interpolate_contents(file_contents, ext)
+            file_contents = cls._get_file_contents(filename)
+            return cls.parse_and_interpolate(file_contents, parser)
 
         except Exception as ex:
             logger.error(f"problems parsing config file <{filename}>")
             logger.error(ex)
             raise ex
 
-    @classmethod
-    def process_config(
-        cls,
-        config: Dict[str, Any],
-        schema: dict,
-        default_config: Dict[str, Any] = None,
-        config_filename: str = None,
-    ) -> FrozenBox:
-        conf_dir = os.path.dirname(config_filename) \
-            if config_filename else None
+    @staticmethod
+    def merge_config(
+            config: Dict[str, Any],
+            default_config: Dict[str, Any] = None) -> Dict[str, Any]:
+        if default_config is not None:
+            config = recursive_dict_update(default_config, config)
+        return config
+
+    @staticmethod
+    def validate_config(
+            config: Dict[str, Any],
+            schema: dict,
+            conf_dir: str = None) -> dict:
+
         validator = GPFConfigValidator(
             schema, conf_dir=conf_dir
         )
-        if default_config is not None:
-            config = recursive_dict_update(default_config, config)
-        assert validator.validate(config), (config_filename, validator.errors)
-        return FrozenBox(validator.document)
+        if not validator.validate(config):
+            if conf_dir:
+                raise ValueError(f"{conf_dir}: {validator.errors}")
+            else:
+                raise ValueError(f"{validator.errors}")
+        return validator.normalized(validator.document)
+
+    @staticmethod
+    def process_config(
+        config: Dict[str, Any],
+        schema: dict,
+        default_config: Dict[str, Any] = None,
+        conf_dir: str = None,
+    ) -> FrozenBox:
+
+        config = GPFConfigParser.merge_config(config, default_config)
+        config = GPFConfigParser.validate_config(config, schema, conf_dir)
+
+        return FrozenBox(config)
 
     @classmethod
     def load_config_raw(cls, filename: str) -> Dict[str, Any]:
@@ -138,14 +161,19 @@ class GPFConfigParser:
         schema: dict,
         default_config_filename: str = None
     ) -> FrozenBox:
-        assert os.path.exists(filename), f"{filename} does not exist!"
-        config = cls.parse_config(filename)
+
+        if not os.path.exists(filename):
+            raise ValueError(f"{filename} does not exist!")
+
+        config = cls.parse_and_interpolate_file(filename)
         default_config = None
         if default_config_filename:
-            default_config = cls.parse_config(default_config_filename)
-        return GPFConfigParser.process_config(
-            config, schema, default_config, filename
-        )
+            default_config = cls.parse_and_interpolate_file(
+                default_config_filename)
+
+        conf_dir = os.path.dirname(filename)
+        return cls.process_config(
+            config, schema, default_config, conf_dir)
 
     @classmethod
     def load_directory_configs(

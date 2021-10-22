@@ -32,14 +32,9 @@ class VariantScoreAnnotatorBase(Annotator):
 
             self.score_types[score.id] = score.type
 
-        # if self.resource.get_config().type_aggregators:
-        #     self.type_aggregators = dict()
-        #     for agg in self.resource.get_config().type_aggregators:
-        #         self.type_aggregators[agg.type] = agg.aggregator
-
-        # self.aggregators = dict()
-        # for attr in self.get_config().attributes:
-        #     self.aggregators[attr.source] = self._get_aggregators(attr)
+        self.non_default_position_aggregators = None
+        self.non_default_nucleotide_aggregators = None
+        self._collect_non_default_aggregators()
 
     def get_default_annotation(self):
         if self.override:
@@ -47,6 +42,27 @@ class VariantScoreAnnotatorBase(Annotator):
             return self.override.attributes
         print("resource:", self.resource.get_default_annotation())
         return self.resource.get_default_annotation().attributes
+
+    def _collect_non_default_aggregators(self):
+        non_default_position_aggregators = {}
+        non_default_nucleotide_aggregators = {}
+        for attr in self.get_default_annotation():
+            if attr.get("position_aggregator") is not None:
+                non_default_position_aggregators[attr["source"]] = \
+                    attr.get("position_aggregator")
+            if attr.get("nucleotide_aggregator") is not None:
+                non_default_nucleotide_aggregators[attr["source"]] = \
+                    attr.get("nucleotide_aggregator")
+
+        if non_default_position_aggregators:
+            self.non_default_position_aggregators = \
+                non_default_position_aggregators
+        if non_default_nucleotide_aggregators:
+            self.non_default_nucleotide_aggregators = \
+                non_default_nucleotide_aggregators
+        print(100*"=")
+        print(self.non_default_position_aggregators)
+        print(100*"=")
 
     def get_scores(self):
         return [attr.source for attr in self.get_default_annotation()]
@@ -58,9 +74,6 @@ class VariantScoreAnnotatorBase(Annotator):
         print("resource:", self.resource.get_default_annotation())
 
         return self.resource.get_default_annotation()
-
-    def _get_aggregators(self, attr):
-        raise NotImplementedError()
 
     @property
     def annotation_schema(self) -> pa.Schema:
@@ -83,6 +96,7 @@ class VariantScoreAnnotatorBase(Annotator):
 
     def _fetch_scores(self, variant, extra_cols=None):
         scores = None
+        print("variant_type:", variant.variant_type)
         if variant.variant_type & VariantType.substitution:
             scores = self.resource.fetch_scores(
                 variant.chromosome, variant.position,
@@ -93,7 +107,8 @@ class VariantScoreAnnotatorBase(Annotator):
                 variant.chromosome,
                 variant.position,
                 variant.position + len(variant.reference),
-                self.get_scores()
+                self.get_scores(),
+                self.non_default_position_aggregators
             )
         else:
             logger.warning(
@@ -166,7 +181,8 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
                     variant.chromosome,
                     first_position,
                     last_position,
-                    self.get_scores()
+                    self.get_scores(),
+                    self.non_default_position_aggregators
                 )
 
         if not scores:
