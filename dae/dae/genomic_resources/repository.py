@@ -307,8 +307,8 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
         return max(matchingGRs, key=lambda x: x.version)
 
     def load_yaml(self, genomic_resource, filename):
-        return yaml.safe_load(
-            self.get_file_content(genomic_resource, filename, True))
+        content = self.get_file_content(genomic_resource, filename, True)
+        return yaml.safe_load(content)
 
     def get_file_content(self, genomic_resource, filename, uncompress=True):
         with self.open_raw_file(genomic_resource, filename, "rb",

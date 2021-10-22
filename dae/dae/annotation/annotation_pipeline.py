@@ -16,18 +16,18 @@ logger = logging.getLogger(__name__)
 
 
 class AnnotationPipeline():
-    def __init__(self, config, resource_db):
+    def __init__(self, config, repository):
         self.annotators = []
         self.config = config
-        self.resource_db = resource_db
+        self.repository = repository
         self._annotation_schema = None
 
     @staticmethod
-    def build(pipeline_config_path, resource_db):
+    def build(pipeline_config_path, repository):
         pipeline_config = GPFConfigParser.load_config(
             pipeline_config_path, annotation_conf_schema
         )
-        pipeline = AnnotationPipeline(pipeline_config, resource_db)
+        pipeline = AnnotationPipeline(pipeline_config, repository)
 
         assert len(pipeline_config.effect_annotators) == 1
 
@@ -38,10 +38,10 @@ class AnnotationPipeline():
             genome_id = annotator_config["genome"]
             override = annotator_config.get("override")
 
-            gene_models = resource_db.get_resource(gene_models_id)
+            gene_models = repository.get_resource(gene_models_id)
             assert gene_models is not None, gene_models_id
 
-            genome = resource_db.get_resource(genome_id)
+            genome = repository.get_resource(genome_id)
             assert genome is not None, genome_id
 
             effect_annotator = AnnotatorFactory.make_effect_annotator(
@@ -52,8 +52,8 @@ class AnnotationPipeline():
             for annotator_config in pipeline_config.liftover_annotators:
                 chain_id = annotator_config["chain"]
                 genome_id = annotator_config["target_genome"]
-                chain = resource_db.get_resource(chain_id)
-                genome = resource_db.get_resource(genome_id)
+                chain = repository.get_resource(chain_id)
+                genome = repository.get_resource(genome_id)
                 annotator_type = annotator_config["annotator"]
                 liftover_id = annotator_config["liftover"]
                 override = annotator_config.get("override")
@@ -68,7 +68,7 @@ class AnnotationPipeline():
                 liftover = annotator_config["liftover"]
                 annotator_type = annotator_config["annotator"]
                 override = annotator_config.get("override")
-                gs = resource_db.get_resource(score_id)
+                gs = repository.get_resource(score_id)
                 assert gs is not None, annotator_config
 
                 annotator = AnnotatorFactory.make_score_annotator(
