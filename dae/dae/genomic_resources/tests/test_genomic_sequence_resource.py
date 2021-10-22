@@ -2,6 +2,24 @@ import os
 import pytest
 
 from dae.genome.genome_access import GenomicSequence
+from dae.genomic_resources.test_tools import convert_to_tab_separated
+from dae.genomic_resources.test_tools import build_a_test_resource
+
+
+def test_basic_sequence_resoruce():
+    res = build_a_test_resource({
+        "genomic_resource.yaml": "{type: Genome, filename: chr.fa}",
+        "chr.fa": convert_to_tab_separated('''
+                >pesho
+                NNACCCAAAC
+                GGGCCTTCCN
+                NNNA
+        '''),
+        "chr.fa.fai": "pesho\t24\t10\t11\n"
+    })
+    res.open()
+    assert res.get_chrom_length("pesho") == 24
+    assert res.get_sequence("1", 1, 12) == "NNACCCAAACGG"
 
 
 @pytest.mark.fixture_repo
