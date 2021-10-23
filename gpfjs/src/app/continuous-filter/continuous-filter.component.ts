@@ -28,6 +28,7 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
   constructor(private measuresService: MeasuresService) { }
 
   public ngOnInit(): void {
+    this.continuousFilterState.selection = new ContinuousSelection(null, null, null, null);
     this.partitions = this.rangeChanges.pipe(
       debounceTime(100),
       distinctUntilChanged(),
