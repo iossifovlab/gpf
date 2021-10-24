@@ -238,25 +238,7 @@ describe('EnrichmentEffectResult', () => {
 
 const enrichmentResult1 = new EnrichmentResult('selector1', enrichmentEffectResultMock,
   new EnrichmentEffectResult(
-    new EnrichmentTestResult('name208', 209, 210, 211, 212,
-      new BrowserQueryFilter(
-        'name208', ['gene209', 'gene210'], ['effectType211', 'effectType212'],
-        ['gender213', 'gender214'], new PersonSetCollection('id215', ['216', '217']),
-        ['studyType218', 'studyType219'], ['variant220', 'variant221'], [
-          new GenomicScore('222', 223, 224), new GenomicScore('225', 226, 227)
-        ],
-        new PresentInParent(['parent228', 'parent229'], new PresentInParentRarity(230, 231, true)),
-        ['yes55', 'no55']
-      ),
-      new BrowserQueryFilter(
-        'name232', ['gene233', 'gene234'], ['effectType235', 'effectType236'],
-        ['gender237', 'gender238'], new PersonSetCollection('id239', ['240', '241']),
-        ['studyType242', 'studyType243'], ['variant244', 'variant245'], [
-          new GenomicScore('246', 247, 248), new GenomicScore('249', 250, 251)
-        ],
-        new PresentInParent(['parent252', 'parent253'], new PresentInParentRarity(254, 255, false)),
-        ['notNo', 'trueNot']
-      )
+    new EnrichmentTestResult('name208', 209, 210, 211, 212, browserQueryFilterMock1, browserQueryFilterMock2
     ),
     new EnrichmentTestResult('name256', 257, 258, 259, 260,
       new BrowserQueryFilter(
@@ -403,251 +385,252 @@ const enrichmentResult1 = new EnrichmentResult('selector1', enrichmentEffectResu
 );
 
 const enrichmentResult2 = new EnrichmentResult('selector423',
-new EnrichmentEffectResult(
-  new EnrichmentTestResult('name418', 419, 420, 421, 422,
-    new BrowserQueryFilter(
-      'name423', ['gene424', 'gene425'], ['effectType426', 'effectType427'],
-      ['gender428', 'gender429'], new PersonSetCollection('id430', ['431', '432']),
-      ['studyType433', 'studyType434'], ['variant435', 'variant436'], [
-        new GenomicScore('437', 438, 439), new GenomicScore('440', 441, 442)
-      ],
-      new PresentInParent(['parent443', 'parent444'], new PresentInParentRarity(445, 446, true)),
-      ['yes', 'no']
+  new EnrichmentEffectResult(
+    new EnrichmentTestResult('name418', 419, 420, 421, 422,
+      new BrowserQueryFilter(
+        'name423', ['gene424', 'gene425'], ['effectType426', 'effectType427'],
+        ['gender428', 'gender429'], new PersonSetCollection('id430', ['431', '432']),
+        ['studyType433', 'studyType434'], ['variant435', 'variant436'], [
+          new GenomicScore('437', 438, 439), new GenomicScore('440', 441, 442)
+        ],
+        new PresentInParent(['parent443', 'parent444'], new PresentInParentRarity(445, 446, true)),
+        ['yes', 'no']
+      ),
+      new BrowserQueryFilter(
+        'name447', ['gene448', 'gene449'], ['effectType450', 'effectType451'],
+        ['gender452', 'gender453'], new PersonSetCollection('id454', ['455', '456']),
+        ['studyType457', 'studyType458'], ['variant459', 'variant460'], [
+          new GenomicScore('461', 462, 463), new GenomicScore('464', 465, 466)
+        ],
+        new PresentInParent(['parent467', 'parent468'], new PresentInParentRarity(469, 470, false)),
+        ['notNo', 'trueNot']
+      )
     ),
-    new BrowserQueryFilter(
-      'name447', ['gene448', 'gene449'], ['effectType450', 'effectType451'],
-      ['gender452', 'gender453'], new PersonSetCollection('id454', ['455', '456']),
-      ['studyType457', 'studyType458'], ['variant459', 'variant460'], [
-        new GenomicScore('461', 462, 463), new GenomicScore('464', 465, 466)
-      ],
-      new PresentInParent(['parent467', 'parent468'], new PresentInParentRarity(469, 470, false)),
-      ['notNo', 'trueNot']
-    )),
-  new EnrichmentTestResult('name471', 472, 473, 474, 475,
-    new BrowserQueryFilter(
-      'name476', ['gene477', 'gene478'], ['effectType479', 'effectType480'],
-      ['gender481', 'gender482'], new PersonSetCollection('id483', ['484', '485']),
-      ['studyType486', 'studyType487'], ['variant488', 'variant489'], [
-        new GenomicScore('490', 491, 492), new GenomicScore('493', 494, 495)
-      ],
-      new PresentInParent(['parent496', 'parent497'], new PresentInParentRarity(498, 499, false)),
-      ['yes423', 'no423']
+    new EnrichmentTestResult('name471', 472, 473, 474, 475,
+      new BrowserQueryFilter(
+        'name476', ['gene477', 'gene478'], ['effectType479', 'effectType480'],
+        ['gender481', 'gender482'], new PersonSetCollection('id483', ['484', '485']),
+        ['studyType486', 'studyType487'], ['variant488', 'variant489'], [
+          new GenomicScore('490', 491, 492), new GenomicScore('493', 494, 495)
+        ],
+        new PresentInParent(['parent496', 'parent497'], new PresentInParentRarity(498, 499, false)),
+        ['yes423', 'no423']
+      ),
+      new BrowserQueryFilter(
+        'name500', ['gene501', 'gene502'], ['effectType503', 'effectType504'],
+        ['gender505', 'gender506'], new PersonSetCollection('id507', ['508', '509']),
+        ['studyType510', 'studyType511'], ['variant512', 'variant513'], [
+          new GenomicScore('514', 515, 516), new GenomicScore('517', 518, 519)
+        ],
+        new PresentInParent(['parent520', 'parent521'], new PresentInParentRarity(522, 523, true)),
+        ['yes419', 'no419']
+      )
     ),
-    new BrowserQueryFilter(
-      'name500', ['gene501', 'gene502'], ['effectType503', 'effectType504'],
-      ['gender505', 'gender506'], new PersonSetCollection('id507', ['508', '509']),
-      ['studyType510', 'studyType511'], ['variant512', 'variant513'], [
-        new GenomicScore('514', 515, 516), new GenomicScore('517', 518, 519)
-      ],
-      new PresentInParent(['parent520', 'parent521'], new PresentInParentRarity(522, 523, true)),
-      ['yes419', 'no419']
+    new EnrichmentTestResult('name524', 525, 526, 527 , 528,
+      new BrowserQueryFilter(
+        'name529', ['gene530', 'gene531'], ['effectType532', 'effectType533'],
+        ['gender534', 'gender535'], new PersonSetCollection('id536', ['537', '538']),
+        ['studyType539', 'studyType540'], ['variant541', 'variant542'], [
+          new GenomicScore('543', 544, 545), new GenomicScore('546', 547, 548)
+        ],
+        new PresentInParent(['parent549', 'parent550'], new PresentInParentRarity(551, 552, false)),
+        ['yes425', 'no425']
+      ),
+      new BrowserQueryFilter(
+        'name553', ['gene554', 'gene555'], ['effectType556', 'effectType557'],
+        ['gender558', 'gender559'], new PersonSetCollection('id560', ['561', '562']),
+        ['studyType563', 'studyType564'], ['variant565', 'variant566'], [
+          new GenomicScore('567', 568, 569), new GenomicScore('570', 571, 572)
+        ],
+        new PresentInParent(['parent573', 'parent574'], new PresentInParentRarity(575, 576, true)),
+        ['yes426', 'no426']
+      )
+    ),
+    new EnrichmentTestResult('name577', 578, 579, 580 , 581,
+      new BrowserQueryFilter(
+        'name582', ['gene583', 'gene584'], ['effectType585', 'effectType586'],
+        ['gender587', 'gender588'], new PersonSetCollection('id589', ['590', '591']),
+        ['studyType592', 'studyType593'], ['variant594', 'variant595'], [
+          new GenomicScore('596', 597, 598), new GenomicScore('599', 600, 601)
+        ],
+        new PresentInParent(['parent602', 'parent603'], new PresentInParentRarity(604, 605, true)),
+        ['yes427', 'no427']
+      ),
+      new BrowserQueryFilter(
+        'name606', ['gene607', 'gene608'], ['effectType609', 'effectType610'],
+        ['gender611', 'gender612'], new PersonSetCollection('id613', ['614', '615']),
+        ['studyType616', 'studyType617'], ['variant618', 'variant619'], [
+          new GenomicScore('620', 621, 622), new GenomicScore('623', 624, 625)
+        ],
+        new PresentInParent(['parent626', 'parent627'], new PresentInParentRarity(628, 629, false)),
+        ['yes428', 'no428']
+      )
     )
   ),
-  new EnrichmentTestResult('name524', 525, 526, 527 , 528,
-    new BrowserQueryFilter(
-      'name529', ['gene530', 'gene531'], ['effectType532', 'effectType533'],
-      ['gender534', 'gender535'], new PersonSetCollection('id536', ['537', '538']),
-      ['studyType539', 'studyType540'], ['variant541', 'variant542'], [
-        new GenomicScore('543', 544, 545), new GenomicScore('546', 547, 548)
-      ],
-      new PresentInParent(['parent549', 'parent550'], new PresentInParentRarity(551, 552, false)),
-      ['yes425', 'no425']
+  new EnrichmentEffectResult(
+    new EnrichmentTestResult('name630', 631, 632, 633, 634,
+      new BrowserQueryFilter(
+        'name630', ['gene631', 'gene632'], ['effectType633', 'effectType634'],
+        ['gender635', 'gender636'], new PersonSetCollection('id637', ['638', '639']),
+        ['studyType640', 'studyType641'], ['variant642', 'variant643'], [
+          new GenomicScore('644', 645, 646), new GenomicScore('647', 648, 649)
+        ],
+        new PresentInParent(['parent650', 'parent651'], new PresentInParentRarity(652, 653, true)),
+        ['yes477', 'no477']
+      ),
+      new BrowserQueryFilter(
+        'name654', ['gene655', 'gene656'], ['effectType657', 'effectType658'],
+        ['gender659', 'gender660'], new PersonSetCollection('id661', ['662', '663']),
+        ['studyType664', 'studyType665'], ['variant666', 'variant667'], [
+          new GenomicScore('668', 669, 670), new GenomicScore('671', 672, 673)
+        ],
+        new PresentInParent(['parent674', 'parent675'], new PresentInParentRarity(676, 677, false)),
+        ['notNo', 'trueNot']
+      )
     ),
-    new BrowserQueryFilter(
-      'name553', ['gene554', 'gene555'], ['effectType556', 'effectType557'],
-      ['gender558', 'gender559'], new PersonSetCollection('id560', ['561', '562']),
-      ['studyType563', 'studyType564'], ['variant565', 'variant566'], [
-        new GenomicScore('567', 568, 569), new GenomicScore('570', 571, 572)
-      ],
-      new PresentInParent(['parent573', 'parent574'], new PresentInParentRarity(575, 576, true)),
-      ['yes426', 'no426']
+    new EnrichmentTestResult('name678', 679, 680, 681, 682,
+      new BrowserQueryFilter(
+        'name683', ['gene684', 'gene685'], ['effectType686', 'effectType687'],
+        ['gender688', 'gender689'], new PersonSetCollection('id690', ['691', '692']),
+        ['studyType693', 'studyType694'], ['variant695', 'variant696'], [
+          new GenomicScore('697', 698, 699), new GenomicScore('700', 701, 702)
+        ],
+        new PresentInParent(['parent703', 'parent704'], new PresentInParentRarity(705, 706, false)),
+        ['yes630', 'no630']
+      ),
+      new BrowserQueryFilter(
+        'name707', ['gene708', 'gene709'], ['effectType710', 'effectType711'],
+        ['gender712', 'gender713'], new PersonSetCollection('id714', ['715', '716']),
+        ['studyType717', 'studyType718'], ['variant719', 'variant720'], [
+          new GenomicScore('721', 722, 723), new GenomicScore('724', 725, 726)
+        ],
+        new PresentInParent(['parent727', 'parent728'], new PresentInParentRarity(729, 730, true)),
+        ['yes631', 'no631']
+      )
+    ),
+    new EnrichmentTestResult('name731', 732, 733, 734 , 735,
+      new BrowserQueryFilter(
+        'name736', ['gene737', 'gene738'], ['effectType739', 'effectType740'],
+        ['gender741', 'gender742'], new PersonSetCollection('id743', ['744', '745']),
+        ['studyType746', 'studyType747'], ['variant748', 'variant749'], [
+          new GenomicScore('750', 751, 752), new GenomicScore('753', 754, 755)
+        ],
+        new PresentInParent(['parent756', 'parent757'], new PresentInParentRarity(758, 759, false)),
+        ['yes632', 'no632']
+      ),
+      new BrowserQueryFilter(
+        'name760', ['gene761', 'gene762'], ['effectType763', 'effectType764'],
+        ['gender765', 'gender766'], new PersonSetCollection('id767', ['768', '769']),
+        ['studyType770', 'studyType771'], ['variant772', 'variant773'], [
+          new GenomicScore('774', 775, 776), new GenomicScore('777', 778, 779)
+        ],
+        new PresentInParent(['parent780', 'parent781'], new PresentInParentRarity(782, 783, true)),
+        ['yes633', 'no633']
+      )
+    ),
+    new EnrichmentTestResult('name784', 785, 786, 787 , 788,
+      new BrowserQueryFilter(
+        'name789', ['gene790', 'gene791'], ['effectType792', 'effectType793'],
+        ['gender794', 'gender795'], new PersonSetCollection('id796', ['797', '798']),
+        ['studyType799', 'studyType800'], ['variant801', 'variant802'], [
+          new GenomicScore('803', 804, 805), new GenomicScore('806', 807, 808)
+        ],
+        new PresentInParent(['parent809', 'parent810'], new PresentInParentRarity(811, 812, true)),
+        ['yes634', 'no634']
+      ),
+      new BrowserQueryFilter(
+        'name813', ['gene814', 'gene815'], ['effectType816', 'effectType817'],
+        ['gender818', 'gender819'], new PersonSetCollection('id820', ['821', '822']),
+        ['studyType823', 'studyType824'], ['variant825', 'variant826'], [
+          new GenomicScore('827', 828, 829), new GenomicScore('830', 831, 832)
+        ],
+        new PresentInParent(['parent833', 'parent834'], new PresentInParentRarity(835, 836, false)),
+        ['yes635', 'no635']
+      )
     )
   ),
-  new EnrichmentTestResult('name577', 578, 579, 580 , 581,
-    new BrowserQueryFilter(
-      'name582', ['gene583', 'gene584'], ['effectType585', 'effectType586'],
-      ['gender587', 'gender588'], new PersonSetCollection('id589', ['590', '591']),
-      ['studyType592', 'studyType593'], ['variant594', 'variant595'], [
-        new GenomicScore('596', 597, 598), new GenomicScore('599', 600, 601)
-      ],
-      new PresentInParent(['parent602', 'parent603'], new PresentInParentRarity(604, 605, true)),
-      ['yes427', 'no427']
+  new EnrichmentEffectResult(
+    new EnrichmentTestResult('name837', 838, 839, 840, 841,
+      new BrowserQueryFilter(
+        'name837', ['gene838', 'gene839'], ['effectType840', 'effectType841'],
+        ['gender842', 'gender843'], new PersonSetCollection('id844', ['845', '846']),
+        ['studyType847', 'studyType848'], ['variant849', 'variant850'], [
+          new GenomicScore('851', 852, 853), new GenomicScore('854', 855, 856)
+        ],
+        new PresentInParent(['parent857', 'parent858'], new PresentInParentRarity(859, 860, true)),
+        ['yes', 'no']
+      ),
+      new BrowserQueryFilter(
+        'name861', ['gene862', 'gene863'], ['effectType864', 'effectType865'],
+        ['gender866', 'gender867'], new PersonSetCollection('id868', ['869', '870']),
+        ['studyType871', 'studyType872'], ['variant873', 'variant874'], [
+          new GenomicScore('875', 876, 877), new GenomicScore('878', 879, 880)
+        ],
+        new PresentInParent(['parent881', 'parent882'], new PresentInParentRarity(883, 884, false)),
+        ['notNo427', 'trueNot427']
+      )
     ),
-    new BrowserQueryFilter(
-      'name606', ['gene607', 'gene608'], ['effectType609', 'effectType610'],
-      ['gender611', 'gender612'], new PersonSetCollection('id613', ['614', '615']),
-      ['studyType616', 'studyType617'], ['variant618', 'variant619'], [
-        new GenomicScore('620', 621, 622), new GenomicScore('623', 624, 625)
-      ],
-      new PresentInParent(['parent626', 'parent627'], new PresentInParentRarity(628, 629, false)),
-      ['yes428', 'no428']
-    )
-  )
-),
-new EnrichmentEffectResult(
-  new EnrichmentTestResult('name630', 631, 632, 633, 634,
-    new BrowserQueryFilter(
-      'name630', ['gene631', 'gene632'], ['effectType633', 'effectType634'],
-      ['gender635', 'gender636'], new PersonSetCollection('id637', ['638', '639']),
-      ['studyType640', 'studyType641'], ['variant642', 'variant643'], [
-        new GenomicScore('644', 645, 646), new GenomicScore('647', 648, 649)
-      ],
-      new PresentInParent(['parent650', 'parent651'], new PresentInParentRarity(652, 653, true)),
-      ['yes477', 'no477']
+    new EnrichmentTestResult('name885', 886, 887, 888, 889,
+      new BrowserQueryFilter(
+        'name890', ['gene891', 'gene892'], ['effectType893', 'effectType894'],
+        ['gender895', 'gender896'], new PersonSetCollection('id897', ['898', '899']),
+        ['studyType900', 'studyType901'], ['variant902', 'variant903'], [
+          new GenomicScore('904', 905, 906), new GenomicScore('907', 908, 909)
+        ],
+        new PresentInParent(['parent910', 'parent911'], new PresentInParentRarity(912, 913, false)),
+        ['yes837', 'no837']
+      ),
+      new BrowserQueryFilter(
+        'name914', ['gene915', 'gene916'], ['effectType917', 'effectType918'],
+        ['gender919', 'gender920'], new PersonSetCollection('id921', ['922', '923']),
+        ['studyType924', 'studyType925'], ['variant926', 'variant927'], [
+          new GenomicScore('928', 929, 930), new GenomicScore('931', 932, 933)
+        ],
+        new PresentInParent(['parent934', 'parent935'], new PresentInParentRarity(936, 937, true)),
+        ['yes838', 'no838']
+      )
     ),
-    new BrowserQueryFilter(
-      'name654', ['gene655', 'gene656'], ['effectType657', 'effectType658'],
-      ['gender659', 'gender660'], new PersonSetCollection('id661', ['662', '663']),
-      ['studyType664', 'studyType665'], ['variant666', 'variant667'], [
-        new GenomicScore('668', 669, 670), new GenomicScore('671', 672, 673)
-      ],
-      new PresentInParent(['parent674', 'parent675'], new PresentInParentRarity(676, 677, false)),
-      ['notNo', 'trueNot']
-    )
-  ),
-  new EnrichmentTestResult('name678', 679, 680, 681, 682,
-    new BrowserQueryFilter(
-      'name683', ['gene684', 'gene685'], ['effectType686', 'effectType687'],
-      ['gender688', 'gender689'], new PersonSetCollection('id690', ['691', '692']),
-      ['studyType693', 'studyType694'], ['variant695', 'variant696'], [
-        new GenomicScore('697', 698, 699), new GenomicScore('700', 701, 702)
-      ],
-      new PresentInParent(['parent703', 'parent704'], new PresentInParentRarity(705, 706, false)),
-      ['yes630', 'no630']
+    new EnrichmentTestResult('name938', 939, 940, 941 , 942,
+      new BrowserQueryFilter(
+        'name943', ['gene944', 'gene945'], ['effectType946', 'effectType947'],
+        ['gender948', 'gender949'], new PersonSetCollection('id950', ['951', '952']),
+        ['studyType953', 'studyType954'], ['variant955', 'variant956'], [
+          new GenomicScore('957', 958, 959), new GenomicScore('960', 961, 962)
+        ],
+        new PresentInParent(['parent963', 'parent964'], new PresentInParentRarity(965, 966, false)),
+        ['yes839', 'no839']
+      ),
+      new BrowserQueryFilter(
+        'name967', ['gene968', 'gene969'], ['effectType970', 'effectType971'],
+        ['gender972', 'gender973'], new PersonSetCollection('id974', ['975', '976']),
+        ['studyType977', 'studyType978'], ['variant979', 'variant980'], [
+          new GenomicScore('981', 982, 983), new GenomicScore('984', 985, 986)
+        ],
+        new PresentInParent(['parent987', 'parent988'], new PresentInParentRarity(989, 990, true)),
+        ['yes840', 'no840']
+      )
     ),
-    new BrowserQueryFilter(
-      'name707', ['gene708', 'gene709'], ['effectType710', 'effectType711'],
-      ['gender712', 'gender713'], new PersonSetCollection('id714', ['715', '716']),
-      ['studyType717', 'studyType718'], ['variant719', 'variant720'], [
-        new GenomicScore('721', 722, 723), new GenomicScore('724', 725, 726)
-      ],
-      new PresentInParent(['parent727', 'parent728'], new PresentInParentRarity(729, 730, true)),
-      ['yes631', 'no631']
+    new EnrichmentTestResult('name991', 992, 993, 994 , 995,
+      new BrowserQueryFilter(
+        'name996', ['gene997', 'gene998'], ['effectType999', 'effectType1000'],
+        ['gender1001', 'gender1002'], new PersonSetCollection('id1003', ['1004', '1005']),
+        ['studyType1006', 'studyType1007'], ['variant1008', 'variant1009'], [
+          new GenomicScore('1010', 1011, 1012), new GenomicScore('1013', 1014, 1015)
+        ],
+        new PresentInParent(['parent1016', 'parent1017'], new PresentInParentRarity(1018, 1019, true)),
+        ['yes841', 'no841']
+      ),
+      new BrowserQueryFilter(
+        'name1020', ['gene1021', 'gene1022'], ['effectType1023', 'effectType1024'],
+        ['gender1025', 'gender1026'], new PersonSetCollection('id1027', ['1028', '1029']),
+        ['studyType1030', 'studyType1031'], ['variant1032', 'variant1033'], [
+          new GenomicScore('1034', 1035, 1036), new GenomicScore('1037', 1038, 1039)
+        ],
+        new PresentInParent(['parent1040', 'parent1041'], new PresentInParentRarity(1042, 1043, false)),
+        ['yes842', 'no842']
+      )
     )
-  ),
-  new EnrichmentTestResult('name731', 732, 733, 734 , 735,
-    new BrowserQueryFilter(
-      'name736', ['gene737', 'gene738'], ['effectType739', 'effectType740'],
-      ['gender741', 'gender742'], new PersonSetCollection('id743', ['744', '745']),
-      ['studyType746', 'studyType747'], ['variant748', 'variant749'], [
-        new GenomicScore('750', 751, 752), new GenomicScore('753', 754, 755)
-      ],
-      new PresentInParent(['parent756', 'parent757'], new PresentInParentRarity(758, 759, false)),
-      ['yes632', 'no632']
-    ),
-    new BrowserQueryFilter(
-      'name760', ['gene761', 'gene762'], ['effectType763', 'effectType764'],
-      ['gender765', 'gender766'], new PersonSetCollection('id767', ['768', '769']),
-      ['studyType770', 'studyType771'], ['variant772', 'variant773'], [
-        new GenomicScore('774', 775, 776), new GenomicScore('777', 778, 779)
-      ],
-      new PresentInParent(['parent780', 'parent781'], new PresentInParentRarity(782, 783, true)),
-      ['yes633', 'no633']
-    )
-  ),
-  new EnrichmentTestResult('name784', 785, 786, 787 , 788,
-    new BrowserQueryFilter(
-      'name789', ['gene790', 'gene791'], ['effectType792', 'effectType793'],
-      ['gender794', 'gender795'], new PersonSetCollection('id796', ['797', '798']),
-      ['studyType799', 'studyType800'], ['variant801', 'variant802'], [
-        new GenomicScore('803', 804, 805), new GenomicScore('806', 807, 808)
-      ],
-      new PresentInParent(['parent809', 'parent810'], new PresentInParentRarity(811, 812, true)),
-      ['yes634', 'no634']
-    ),
-    new BrowserQueryFilter(
-      'name813', ['gene814', 'gene815'], ['effectType816', 'effectType817'],
-      ['gender818', 'gender819'], new PersonSetCollection('id820', ['821', '822']),
-      ['studyType823', 'studyType824'], ['variant825', 'variant826'], [
-        new GenomicScore('827', 828, 829), new GenomicScore('830', 831, 832)
-      ],
-      new PresentInParent(['parent833', 'parent834'], new PresentInParentRarity(835, 836, false)),
-      ['yes635', 'no635']
-    )
-  )
-),
-new EnrichmentEffectResult(
-  new EnrichmentTestResult('name837', 838, 839, 840, 841,
-    new BrowserQueryFilter(
-      'name837', ['gene838', 'gene839'], ['effectType840', 'effectType841'],
-      ['gender842', 'gender843'], new PersonSetCollection('id844', ['845', '846']),
-      ['studyType847', 'studyType848'], ['variant849', 'variant850'], [
-        new GenomicScore('851', 852, 853), new GenomicScore('854', 855, 856)
-      ],
-      new PresentInParent(['parent857', 'parent858'], new PresentInParentRarity(859, 860, true)),
-      ['yes', 'no']
-    ),
-    new BrowserQueryFilter(
-      'name861', ['gene862', 'gene863'], ['effectType864', 'effectType865'],
-      ['gender866', 'gender867'], new PersonSetCollection('id868', ['869', '870']),
-      ['studyType871', 'studyType872'], ['variant873', 'variant874'], [
-        new GenomicScore('875', 876, 877), new GenomicScore('878', 879, 880)
-      ],
-      new PresentInParent(['parent881', 'parent882'], new PresentInParentRarity(883, 884, false)),
-      ['notNo427', 'trueNot427']
-    )
-  ),
-  new EnrichmentTestResult('name885', 886, 887, 888, 889,
-    new BrowserQueryFilter(
-      'name890', ['gene891', 'gene892'], ['effectType893', 'effectType894'],
-      ['gender895', 'gender896'], new PersonSetCollection('id897', ['898', '899']),
-      ['studyType900', 'studyType901'], ['variant902', 'variant903'], [
-        new GenomicScore('904', 905, 906), new GenomicScore('907', 908, 909)
-      ],
-      new PresentInParent(['parent910', 'parent911'], new PresentInParentRarity(912, 913, false)),
-      ['yes837', 'no837']
-    ),
-    new BrowserQueryFilter(
-      'name914', ['gene915', 'gene916'], ['effectType917', 'effectType918'],
-      ['gender919', 'gender920'], new PersonSetCollection('id921', ['922', '923']),
-      ['studyType924', 'studyType925'], ['variant926', 'variant927'], [
-        new GenomicScore('928', 929, 930), new GenomicScore('931', 932, 933)
-      ],
-      new PresentInParent(['parent934', 'parent935'], new PresentInParentRarity(936, 937, true)),
-      ['yes838', 'no838']
-    )
-  ),
-  new EnrichmentTestResult('name938', 939, 940, 941 , 942,
-    new BrowserQueryFilter(
-      'name943', ['gene944', 'gene945'], ['effectType946', 'effectType947'],
-      ['gender948', 'gender949'], new PersonSetCollection('id950', ['951', '952']),
-      ['studyType953', 'studyType954'], ['variant955', 'variant956'], [
-        new GenomicScore('957', 958, 959), new GenomicScore('960', 961, 962)
-      ],
-      new PresentInParent(['parent963', 'parent964'], new PresentInParentRarity(965, 966, false)),
-      ['yes839', 'no839']
-    ),
-    new BrowserQueryFilter(
-      'name967', ['gene968', 'gene969'], ['effectType970', 'effectType971'],
-      ['gender972', 'gender973'], new PersonSetCollection('id974', ['975', '976']),
-      ['studyType977', 'studyType978'], ['variant979', 'variant980'], [
-        new GenomicScore('981', 982, 983), new GenomicScore('984', 985, 986)
-      ],
-      new PresentInParent(['parent987', 'parent988'], new PresentInParentRarity(989, 990, true)),
-      ['yes840', 'no840']
-    )
-  ),
-  new EnrichmentTestResult('name991', 992, 993, 994 , 995,
-    new BrowserQueryFilter(
-      'name996', ['gene997', 'gene998'], ['effectType999', 'effectType1000'],
-      ['gender1001', 'gender1002'], new PersonSetCollection('id1003', ['1004', '1005']),
-      ['studyType1006', 'studyType1007'], ['variant1008', 'variant1009'], [
-        new GenomicScore('1010', 1011, 1012), new GenomicScore('1013', 1014, 1015)
-      ],
-      new PresentInParent(['parent1016', 'parent1017'], new PresentInParentRarity(1018, 1019, true)),
-      ['yes841', 'no841']
-    ),
-    new BrowserQueryFilter(
-      'name1020', ['gene1021', 'gene1022'], ['effectType1023', 'effectType1024'],
-      ['gender1025', 'gender1026'], new PersonSetCollection('id1027', ['1028', '1029']),
-      ['studyType1030', 'studyType1031'], ['variant1032', 'variant1033'], [
-        new GenomicScore('1034', 1035, 1036), new GenomicScore('1037', 1038, 1039)
-      ],
-      new PresentInParent(['parent1040', 'parent1041'], new PresentInParentRarity(1042, 1043, false)),
-      ['yes842', 'no842']
-    )
-  )
-  ), new ChildrenStats(415, 416, 417)
+  ), new ChildrenStats(1044, 1045, 1046)
 );
 
 const enrichmentResultFromJson1 = {
@@ -655,29 +638,8 @@ const enrichmentResultFromJson1 = {
   LGDs: {
     all: {
       name: 'name1', count: 2, expected: 3, overlapped: 4, pvalue: 5,
-      countFilter:
-      {
-        datasetId: 'name1', geneSymbols: [ 'gene2', 'gene3' ], effectTypes: [ 'effectType4', 'effectType5' ],
-        gender: [ 'gender6', 'gender7' ], personSetCollection: { id: 'id8', checkedValues: [ '9', '10' ] },
-        studyTypes: [ 'studyType11', 'studyType12' ], variantTypes: [ 'variant13', 'variant14' ],
-        genomicScores:  [
-          { metric: '15', rangeStart: 16, rangeEnd: 17 }, { metric: '18', rangeStart: 19, rangeEnd: 20 }
-        ], presentInParent: {
-          presentInParent: [ 'parent21', 'parent22' ], rarity: { minFreq: 23, maxFreq: 24, ultraRare: true }
-        }, presentInChild: ['yes', 'no']
-      },
-      overlapFilter:
-      {
-        datasetId: 'name25', geneSymbols: [ 'gene26', 'gene27' ], effectTypes: [ 'effectType28', 'effectType29' ],
-        gender: [ 'gender30', 'gender31' ],
-        personSetCollection: { id: 'id32', checkedValues: [ '33', '34' ] },
-        studyTypes: [ 'studyType35', 'studyType36' ], variantTypes: [ 'variant37', 'variant38' ],
-        genomicScores: [{
-          metric: '39', rangeStart: 40, rangeEnd: 41 }, { metric: '42', rangeStart: 43, rangeEnd: 44
-        }], presentInParent: {
-          presentInParent: [ 'parent45', 'parent46' ], rarity: { minFreq: 47, maxFreq: 48, ultraRare: false }
-        }, presentInChild: ['notNo', 'trueNot']
-      },
+      countFilter: browserQueryFilterMockFromJson1,
+      overlapFilter: browserQueryFilterMockFromJson2,
     }, male: {
       name: 'name49', count: 50, expected: 51, overlapped: 52, pvalue: 53,
       countFilter:
@@ -1299,9 +1261,9 @@ const enrichmentResultFromJson2 = {
       }
     }
   }, childrenStats: {
-    M: 622,
-    F: 623,
-    U: 624
+    M: 1044,
+    F: 1045,
+    U: 1046
   }
 };
 
@@ -1310,7 +1272,7 @@ describe('EnrichmentResult', () => {
     expect(enrichmentResult1).toEqual(EnrichmentResult.fromJson(enrichmentResultFromJson1));
   });
 
-  xit('should create from json array', () => {
+  it('should create from json array', () => {
     expect([enrichmentResult1, enrichmentResult2]).toEqual(EnrichmentResult.fromJsonArray([
       enrichmentResultFromJson1, enrichmentResultFromJson2
     ]));
