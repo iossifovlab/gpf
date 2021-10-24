@@ -90,11 +90,7 @@ describe('User management tests', () => {
     page.userSearchField.clear();
     page.userSearchField.type('test_email@email.com');
     page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
-    cy.intercept({
-      method: 'GET',
-      url: '/gpf/api/v3/users/streaming_search?search=**',
-    }).as('QueryHandler');
-    cy.wait('@QueryHandler').its('response.statusCode').should('equal', 200);
+    wait_for_query('GET', '/gpf/api/v3/users/streaming_search?search=**', 'usersUpdate', 200);
     deleteTestUser(page);
   });
 
@@ -137,11 +133,7 @@ describe('User management tests', () => {
     page.usersButton.click();
     page.userTableRemoveUserGroupButton.click();
     page.userTableRemoveUserGroupConfirmButton.click();
-    cy.intercept({
-      method: 'GET',
-      url: '/gpf/api/v3/users/streaming_search?search=**',
-    }).as('QueryHandler');
-    cy.wait('@QueryHandler').its('response.statusCode').should('equal', 200);
+    wait_for_query('GET', '/gpf/api/v3/users/streaming_search?search=', 'usersUpdate', 200);
     page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
 
     deleteTestGroup(page);
@@ -186,12 +178,8 @@ describe('User management tests', () => {
     page.usersButton.click();
     page.userTableRemoveUserGroupButton.click();
     page.userTableRemoveUserGroupConfirmButton.click();
-    cy.intercept({
-      method: 'GET',
-      url: '/gpf/api/v3/users/streaming_search?search=**',
-    }).as('QueryHandler');
-    cy.wait('@QueryHandler').its('response.statusCode').should('equal', 200);
-    page.datasetsButton.click();
+    wait_for_query('GET', '/gpf/api/v3/users/streaming_search?search=**', 'usersUpdate', 200);
+    page.datasetsButton.click(); 
     page.datasetsTableRows.last().should('not.contain.text', 'test_email@email.com');
 
     deleteTestGroup(page);
@@ -225,4 +213,12 @@ function deleteTestGroup(page: UserManagementPage) {
   page.datasetsButton.click();
   page.datasetsTableRemoveNewestGroupInLastDatasetButton.click();
   page.datasetsTableRemoveGroupConfirmButton.click();
+}
+
+function wait_for_query(method: string = 'POST', url: string, name: string, response: number = 200) {
+  cy.intercept({
+    method: method,
+    url: url
+  }).as(name);
+  cy.wait('@' + name).its('response.statusCode').should('eq', response);
 }
