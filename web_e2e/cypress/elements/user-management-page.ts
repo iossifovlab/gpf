@@ -6,7 +6,7 @@ export class UserManagementPage extends BasePage {
   }
 
   get usersButton() {
-    return cy.get('li#users a').contains('Users', {timeout: 2000});
+    return cy.get('li#users a').contains('Users');
   }
 
   get usersTable() {
