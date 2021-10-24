@@ -238,7 +238,25 @@ describe('EnrichmentEffectResult', () => {
 
 const enrichmentResult1 = new EnrichmentResult('selector1', enrichmentEffectResultMock,
   new EnrichmentEffectResult(
-    new EnrichmentTestResult('name208', 209, 210, 211, 212, browserQueryFilterMock1, browserQueryFilterMock2
+    new EnrichmentTestResult('name208', 209, 210, 211, 212,
+      new BrowserQueryFilter(
+        'name208', ['gene209', 'gene210'], ['effectType211', 'effectType212'],
+        ['gender213', 'gender214'], new PersonSetCollection('id215', ['216', '217']),
+        ['studyType218', 'studyType219'], ['variant220', 'variant221'], [
+          new GenomicScore('222', 223, 224), new GenomicScore('225', 226, 227)
+        ],
+        new PresentInParent(['parent228', 'parent229'], new PresentInParentRarity(230, 231, true)),
+        ['yes55', 'no55']
+      ),
+      new BrowserQueryFilter(
+        'name232', ['gene233', 'gene234'], ['effectType235', 'effectType236'],
+        ['gender237', 'gender238'], new PersonSetCollection('id239', ['240', '241']),
+        ['studyType242', 'studyType243'], ['variant244', 'variant245'], [
+          new GenomicScore('246', 247, 248), new GenomicScore('249', 250, 251)
+        ],
+        new PresentInParent(['parent252', 'parent253'], new PresentInParentRarity(254, 255, false)),
+        ['notNo', 'trueNot']
+      )
     ),
     new EnrichmentTestResult('name256', 257, 258, 259, 260,
       new BrowserQueryFilter(
