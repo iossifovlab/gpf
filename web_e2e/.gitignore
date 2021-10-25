@@ -4,6 +4,9 @@ downloads
 import
 package-lock.json
 cypress/screenshots
+cypress/snapshots
 cypress/videos
 results
 /build-env/*
+Jenkinsfile.generated-stages.all
+.build-scripts-tmp-sessions

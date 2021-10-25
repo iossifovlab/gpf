@@ -89,6 +89,8 @@ export class BasePage {
   logout() {
     const usersPage = new UsersPage();
     usersPage.logoutButton.click();
+    cy.intercept('ALL_genotypes').as('allGenotypesRequest');
+    cy.wait('@allGenotypesRequest');
   }
 
   navigateToDatasetPage(dataset: string, page: string) {

@@ -28,4 +28,8 @@ export class GenesWeights extends BasePage {
   get toFieldStepDown() {
     return cy.get('.histogram-to .step.down');
   }
+
+  get allGeneWeights() {
+    return cy.get('text#sumOfBarsLabel');
+  }
 }
