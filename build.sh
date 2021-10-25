@@ -291,32 +291,32 @@ EOT'
         build_run_ctx_persist ctx:ctx_gpf_remote
       }
     }
+  }
 
-    # import test data to impala
-    build_stage "Import test data to impala"
+  # import test data to impala
+  build_stage "Import test data to impala"
+  {
+    build_run_ctx_init "container" "${gpf_dev_image_ref}" \
+      --network "${ctx_network["network_id"]}" \
+      --env DAE_DB_DIR="/data/data-hg19-remote/" \
+      --env TEST_REMOTE_HOST="gpfremote" \
+      --env DAE_HDFS_HOST="impala" \
+      --env DAE_IMPALA_HOST="impala"
+    defer_ret build_run_ctx_reset
+
+    # fixup /code to point to /wd
     {
-      build_run_ctx_init "container" "${gpf_dev_image_ref}" \
-        --network "${ctx_network["network_id"]}" \
-        --env DAE_DB_DIR="/data/data-hg19-remote/" \
-        --env TEST_REMOTE_HOST="gpfremote" \
-        --env DAE_HDFS_HOST="impala" \
-        --env DAE_IMPALA_HOST="impala"
-      defer_ret build_run_ctx_reset
-
-      # fixup /code to point to /wd
-      {
-        build_run_container bash -c 'rmdir /code && ln -s /wd /code'
-      }
-
-      for d in /code/dae /code/wdae /code/dae_conftests; do
-        build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .'
-      done
-
-      build_run_container bash -c 'cd /code/dae_conftests; /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --reimport --no-cleanup dae_conftests/tests/'
-
-      build_run_container bash -c 'cd /code/dae; /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup dae/gene/tests/test_denovo_gene_sets_db.py'
-      build_run_container bash -c 'cd /code/dae; /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup dae/backends/tests/test_cnv_variants.py::test_cnv_impala'
+      build_run_container bash -c 'rmdir /code && ln -s /wd /code'
     }
+
+    for d in /code/dae /code/wdae /code/dae_conftests; do
+      build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .'
+    done
+
+    # build_run_container bash -c 'cd /code/dae_conftests; /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --reimport --no-cleanup dae_conftests/tests/'
+
+    # build_run_container bash -c 'cd /code/dae; /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup dae/gene/tests/test_denovo_gene_sets_db.py'
+    # build_run_container bash -c 'cd /code/dae; /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup dae/backends/tests/test_cnv_variants.py::test_cnv_impala'
   }
 
   # lint
