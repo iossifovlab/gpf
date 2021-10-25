@@ -7,7 +7,7 @@ import {
   AgpGeneSetsCategory, AgpGenomicScoresCategory, AgpDatasetStatistic,
   AgpDatasetPersonSet, AgpTableGeneSetsCategory, AgpTableGenomicScoresCategory
 } from './autism-gene-profile-table';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { Subject } from 'rxjs';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { AutismGeneProfileSingleViewComponent } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view.component';

@@ -1,0 +1,107 @@
+{
+  "root": true,
+  "ignorePatterns": [
+    "projects/**/*"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "*.ts"
+      ],
+      "parserOptions": {
+        "project": [
+          "tsconfig.json",
+          "e2e/tsconfig.json"
+        ],
+        "createDefaultProgram": true
+      },
+      "extends": [
+        "plugin:@angular-eslint/ng-cli-compat",
+        "plugin:@angular-eslint/ng-cli-compat--formatting-add-on",
+        "plugin:@angular-eslint/template/process-inline-templates"
+      ],
+      "rules": {
+        "@angular-eslint/component-selector": [
+          "warn",
+          {
+            "type": "element",
+            "prefix": "gpf",
+            "style": "kebab-case"
+          }
+        ],
+        "@angular-eslint/directive-selector": [
+          "warn",
+          {
+            "type": "attribute",
+            "prefix": "gpf",
+            "style": "camelCase"
+          }
+        ],
+        "@typescript-eslint/await-thenable": "warn",
+        "@typescript-eslint/consistent-type-definitions": "warn",
+        "@typescript-eslint/dot-notation": "off",
+        "@typescript-eslint/explicit-member-accessibility": [
+          "warn",
+          {
+            "accessibility": "explicit"
+          }
+        ],
+        "@typescript-eslint/no-explicit-any": "warn",
+        "@typescript-eslint/no-unused-vars": "warn",
+        "brace-style": [
+          "warn",
+          "1tbs"
+        ],
+        "dot-notation": "off",
+        "id-denylist": "off",
+        "id-match": "off",
+        "indent": ["warn", 2],
+        "max-len": [
+          "warn",
+          {
+            "code": 120
+          }
+        ],
+        "max-lines": [
+          "warn",
+          500
+        ],
+        "no-duplicate-case": "warn",
+        "no-empty-function": "off",
+        "no-invalid-this": "warn",
+        "no-multiple-empty-lines": "warn",
+        "no-restricted-syntax": [
+          "warn",
+          "ForInStatement"
+        ],
+        "no-shadow": "warn",
+        "no-template-curly-in-string": "warn",
+        "no-underscore-dangle": "off",
+        "no-unused-expressions": "warn",
+        "no-unused-vars": "warn",
+        "no-useless-constructor": "warn",
+        "quotes": ["warn", "single"],
+        "semi": "warn",
+        "space-before-function-paren": [
+          "warn",
+          "never"
+        ],
+        "space-in-parens": [
+          "warn",
+          "never"
+        ],
+        "valid-typeof": "warn",
+        "yoda": "warn"
+      }
+    },
+    {
+      "files": [
+        "*.html"
+      ],
+      "extends": [
+        "plugin:@angular-eslint/template/recommended"
+      ],
+      "rules": {}
+    }
+  ]
+}

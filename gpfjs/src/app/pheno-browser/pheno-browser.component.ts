@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router, Params } from '@angular/router';
 import { Location } from '@angular/common';
 
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { Observable, BehaviorSubject, ReplaySubject, combineLatest, of } from 'rxjs';
 
 import { PhenoBrowserService } from './pheno-browser.service';

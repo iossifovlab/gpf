@@ -5,7 +5,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { MarkdownModule } from 'ngx-markdown';
 
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { Observable, of } from 'rxjs';
 
 import { GenomicScoresBlockComponent } from './genomic-scores-block.component';

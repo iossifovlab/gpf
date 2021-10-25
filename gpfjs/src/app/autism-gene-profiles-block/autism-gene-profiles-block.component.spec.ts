@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { AutismGeneProfilesTableComponent } from 'app/autism-gene-profiles-table/autism-gene-profiles-table.component';
 import { ConfigService } from 'app/config/config.service';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { of } from 'rxjs';
 
 import { AutismGeneProfilesBlockComponent } from './autism-gene-profiles-block.component';

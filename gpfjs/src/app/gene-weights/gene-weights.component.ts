@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { GeneWeights, Partitions, GeneWeightsLocalState } from './gene-weights';
 import { GeneWeightsService } from './gene-weights.service';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { ReplaySubject ,  Observable, combineLatest, of } from 'rxjs';
 
 import { Store } from '@ngxs/store';

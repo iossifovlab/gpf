@@ -1,8 +1,8 @@
-/* tslint:disable:no-unused-variable */
+/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { StudyTypesComponent } from './study-types.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { of } from 'rxjs';
 import { NgxsModule } from '@ngxs/store';
 import { SetStudyTypes } from './study-types.state';

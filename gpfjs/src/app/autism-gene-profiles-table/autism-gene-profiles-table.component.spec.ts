@@ -11,7 +11,7 @@ import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.com
 import { UsersService } from 'app/users/users.service';
 import { cloneDeep } from 'lodash';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { of } from 'rxjs';
 import { AgpTableConfig } from './autism-gene-profile-table';
 
