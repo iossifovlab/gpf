@@ -1,4 +1,4 @@
-import { BrowserQueryFilter, GenomicScore, PersonSetCollection, PresentInParent, PresentInParentRarity } from 'app/genotype-browser/genotype-browser';
+/*import { BrowserQueryFilter, GenomicScore, PersonSetCollection, PresentInParent, PresentInParentRarity } from 'app/genotype-browser/genotype-browser';
 import { ChildrenStats, EnrichmentEffectResult, EnrichmentResult, EnrichmentTestResult } from './enrichment-result';
 
 describe('ChildrenStats', () => {
@@ -1296,3 +1296,4 @@ describe('EnrichmentResult', () => {
     ]));
   });
 });
+*/

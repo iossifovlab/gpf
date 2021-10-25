@@ -27,7 +27,7 @@ export class EnrichmentTestResult {
       json['overlapped'],
       json['pvalue'],
       BrowserQueryFilter.fromJson(json['countFilter']),
-      BrowserQueryFilter.fromJson(json['overlapFilter']),
+      BrowserQueryFilter.fromJson(json['overlapFilter'])
     );
   }
 

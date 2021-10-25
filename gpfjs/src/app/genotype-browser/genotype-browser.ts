@@ -6,10 +6,7 @@ export class BrowserQueryFilter {
     private gender: string[],
     private personSetCollection: PersonSetCollection,
     private studyTypes: string[],
-    private variantTypes: string[],
-    private genomicScores: GenomicScore[],
-    private presentInParent: PresentInParent,
-    private presentInChild: string[],
+    private variantTypes: string[]
   ) { }
 
   public static fromJson(json: any): BrowserQueryFilter {
@@ -18,12 +15,9 @@ export class BrowserQueryFilter {
       json['geneSymbols'],
       json['effectTypes'],
       json['gender'],
-      PersonSetCollection.fromJson(json['personSetCollection']),
+      PersonSetCollection.fromJson(json['peopleGroup']),
       json['studyTypes'],
-      json['variantTypes'],
-      GenomicScore.fromJsonArray(json['genomicScores']),
-      PresentInParent.fromJson(json['presentInParent']),
-      json['presentInChild']
+      json['variantTypes']
     );
   }
 }
@@ -63,34 +57,5 @@ export class GenomicScore {
     }
 
     return Object.values(json).map(arr => GenomicScore.fromJson(arr));
-  }
-}
-export class PresentInParent {
-  constructor(
-    private presentInParent: string[],
-    private rarity: PresentInParentRarity,
-  ) { }
-
-  public static fromJson(json: any): PresentInParent {
-    return new PresentInParent(
-      json['presentInParent'],
-      PresentInParentRarity .fromJson(json['rarity'])
-    );
-  }
-}
-
-export class PresentInParentRarity {
-  constructor(
-    private minFreq: number,
-    private maxFreq: number,
-    private ultraRare: boolean,
-  ) { }
-
-  public static fromJson(json: any): PresentInParentRarity {
-    return new PresentInParentRarity(
-      json['minFreq'],
-      json['maxFreq'],
-      json['ultraRare']
-    );
   }
 }
