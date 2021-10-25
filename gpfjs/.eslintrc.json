@@ -21,6 +21,44 @@
         "plugin:@angular-eslint/template/process-inline-templates"
       ],
       "rules": {
+        "array-bracket-spacing": ["error", "never"],
+        "arrow-parens": ["error", "as-needed"],
+        "arrow-spacing": ["error", { "before": true, "after": true }],
+        "block-spacing": ["error", "always"],
+        "brace-style": ["error", "1tbs"],
+        "comma-dangle": ["error", "never"],
+        "comma-spacing": ["error", { "before": false, "after": true }],
+        "comma-style": ["error", "last"],
+        "computed-property-spacing": ["error", "never"],
+        "func-call-spacing": ["error", "never"],
+        "function-paren-newline": ["error", "never"],
+        "implicit-arrow-linebreak": ["error", "beside"],
+        "key-spacing": ["error", { "beforeColon": false }],
+        "keyword-spacing": ["error", { "before": true }],
+        "line-comment-position": ["error", { "position": "above" }],
+        "lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }],
+        "max-statements-per-line": ["error"],
+        "new-parens": "error",
+        "no-extra-parens": "error",
+        "no-multi-spaces": "error",
+        "no-tabs": ["error"],
+        "no-whitespace-before-property": "error",
+        "curly": "error",
+        "object-curly-spacing": ["error", "always"],
+        "object-property-newline": ["error", { "allowAllPropertiesOnSameLine": true }],
+        "padded-blocks": ["error", "never"],
+        "rest-spread-spacing": ["error", "never"],
+        "semi-spacing": ["error", {"before": false, "after": true}],
+        "semi-style": ["error", "last"],
+        "space-before-blocks": ["error", "always"],
+        "space-unary-ops": [
+          2, {
+            "words": true,
+            "nonwords": false,
+            "overrides": {
+              "new": false
+            }
+        }],
         "@angular-eslint/component-selector": [
           "warn",
           {
@@ -37,9 +75,9 @@
             "style": "camelCase"
           }
         ],
+        "template-curly-spacing": ["error", "always"],
         "@typescript-eslint/await-thenable": "warn",
         "@typescript-eslint/consistent-type-definitions": "warn",
-        "@typescript-eslint/dot-notation": "off",
         "@typescript-eslint/explicit-member-accessibility": [
           "warn",
           {
@@ -47,11 +85,6 @@
           }
         ],
         "@typescript-eslint/no-explicit-any": "warn",
-        "@typescript-eslint/no-unused-vars": "warn",
-        "brace-style": [
-          "warn",
-          "1tbs"
-        ],
         "dot-notation": "off",
         "id-denylist": "off",
         "id-match": "off",
@@ -80,8 +113,6 @@
         "no-unused-expressions": "warn",
         "no-unused-vars": "warn",
         "no-useless-constructor": "warn",
-        "quotes": ["warn", "single"],
-        "semi": "warn",
         "space-before-function-paren": [
           "warn",
           "never"
