@@ -160,16 +160,11 @@ function main() {
       build_run_ctx_init "container" "$gpf_dev_image_ref"
       defer_ret build_run_ctx_reset
 
-      # fixup /code to point to /wd
-      {
-        build_run_container bash -c 'rmdir /code && ln -s /wd /code'
-      }
-
       # setup python env
       {
-        build_run bash -c 'cd /code/dae && /opt/conda/bin/conda run --no-capture-output -n gpf pip install .'
-        build_run bash -c 'cd /code/wdae && /opt/conda/bin/conda run --no-capture-output -n gpf pip install .'
-        build_run bash -c 'cd /code/dae_conftests && /opt/conda/bin/conda run --no-capture-output -n gpf pip install .'
+        build_run bash -c 'cd /wd/dae && /opt/conda/bin/conda run --no-capture-output -n gpf pip install .'
+        build_run bash -c 'cd /wd/wdae && /opt/conda/bin/conda run --no-capture-output -n gpf pip install .'
+        build_run bash -c 'cd /wd/dae_conftests && /opt/conda/bin/conda run --no-capture-output -n gpf pip install .'
       }
 
       # import genotype data
@@ -271,22 +266,17 @@ EOT'
           --env DAE_DB_DIR="/data/data-hg19-remote/"
         defer_ret build_run_ctx_reset ctx:ctx_gpf_remote
 
-        # fixup /code to point to /wd
-        {
-          build_run_container ctx:ctx_gpf_remote bash -c 'rmdir /code && ln -s /wd /code'
-        }
-
         local d
-        for d in /code/dae /code/wdae /code/dae_conftests; do
+        for d in /wd/dae /wd/wdae /wd/dae_conftests; do
           build_run_container ctx:ctx_gpf_remote bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .'
         done
 
-        build_run_container ctx:ctx_gpf_remote /opt/conda/bin/conda run --no-capture-output -n gpf /code/wdae/wdae/wdaemanage.py migrate
-        build_run_container ctx:ctx_gpf_remote /opt/conda/bin/conda run --no-capture-output -n gpf /code/wdae/wdae/wdae_create_dev_users.sh
+        build_run_container ctx:ctx_gpf_remote /opt/conda/bin/conda run --no-capture-output -n gpf /wd/wdae/wdae/wdaemanage.py migrate
+        build_run_container ctx:ctx_gpf_remote /opt/conda/bin/conda run --no-capture-output -n gpf /wd/wdae/wdae/wdae_create_dev_users.sh
 
-        build_run_container_detached ctx:ctx_gpf_remote /opt/conda/bin/conda run --no-capture-output -n gpf /code/wdae/wdae/wdaemanage.py runserver 0.0.0.0:21010
+        build_run_container_detached ctx:ctx_gpf_remote /opt/conda/bin/conda run --no-capture-output -n gpf /wd/wdae/wdae/wdaemanage.py runserver 0.0.0.0:21010
 
-        build_run_container ctx:ctx_gpf_remote /opt/conda/bin/conda run --no-capture-output -n gpf /code/scripts/wait-for-it.sh -h localhost -p 21010 -t 300
+        build_run_container ctx:ctx_gpf_remote /opt/conda/bin/conda run --no-capture-output -n gpf /wd/scripts/wait-for-it.sh -h localhost -p 21010 -t 300
 
         build_run_ctx_persist ctx:ctx_gpf_remote
       }
@@ -304,19 +294,13 @@ EOT'
       --env DAE_IMPALA_HOST="impala"
     defer_ret build_run_ctx_reset
 
-    # fixup /code to point to /wd
-    {
-      build_run_container bash -c 'rmdir /code && ln -s /wd /code'
-    }
-
-    for d in /code/dae /code/wdae /code/dae_conftests; do
+    for d in /wd/dae /wd/wdae /wd/dae_conftests; do
       build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .'
     done
 
-    # build_run_container bash -c 'cd /code/dae_conftests; /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --reimport --no-cleanup dae_conftests/tests/'
-
-    # build_run_container bash -c 'cd /code/dae; /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup dae/gene/tests/test_denovo_gene_sets_db.py'
-    # build_run_container bash -c 'cd /code/dae; /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup dae/backends/tests/test_cnv_variants.py::test_cnv_impala'
+    # build_run_container bash -c 'cd /wd/dae_conftests; /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --reimport --no-cleanup dae_conftests/tests/'
+    # build_run_container bash -c 'cd /wd/dae; /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup dae/gene/tests/test_denovo_gene_sets_db.py'
+    # build_run_container bash -c 'cd /wd/dae; /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup dae/backends/tests/test_cnv_variants.py::test_cnv_impala'
   }
 
   # lint
@@ -325,12 +309,7 @@ EOT'
     build_run_ctx_init "container" "${gpf_dev_image_ref}"
     defer_ret build_run_ctx_reset
 
-    # fixup /code to point to /wd
-    {
-      build_run_container bash -c 'rmdir /code && ln -s /wd /code'
-    }
-
-    build_run_container bash -c 'cd /code; flake8 --format=pylint --output-file=/code/results/flake8_report --exclude "*old*,*tmp*,*temp*,data-hg19*,gpf*" . || true'
+    build_run_container bash -c 'cd /wd; flake8 --format=pylint --output-file=/wd/results/flake8_report --exclude "*old*,*tmp*,*temp*,data-hg19*,gpf*" . || true'
 
     build_run_local cp ./results/flake8_report ./test-results/
   }
@@ -341,13 +320,8 @@ EOT'
     build_run_ctx_init "container" "${gpf_dev_image_ref}"
     defer_ret build_run_ctx_reset
 
-    # fixup /code to point to /wd
-    {
-      build_run_container bash -c 'rmdir /code && ln -s /wd /code'
-    }
-
     build_run_container bash -c '
-      cd /code/dae;
+      cd /wd/dae;
       /opt/conda/bin/conda run --no-capture-output -n gpf mypy dae \
           --exclude dae/docs/ \
           --exclude dae/docs/conf.py \
@@ -355,10 +329,10 @@ EOT'
           --ignore-missing-imports \
           --warn-return-any \
           --warn-redundant-casts \
-          > /code/results/mypy_dae_report || true'
+          > /wd/results/mypy_dae_report || true'
 
     build_run_container bash -c '
-      cd /code/wdae;
+      cd /wd/wdae;
       /opt/conda/bin/conda run --no-capture-output -n gpf mypy wdae \
           --exclude wdae/docs/ \
           --exclude wdae/docs/conf.py \
@@ -367,7 +341,7 @@ EOT'
           --ignore-missing-imports \
           --warn-return-any \
           --warn-redundant-casts \
-          > /code/results/mypy_wdae_report || true'
+          > /wd/results/mypy_wdae_report || true'
 
       build_run_local cp ./results/mypy_dae_report ./results/mypy_wdae_report ./test-results/
   }
@@ -383,24 +357,19 @@ EOT'
       --env DAE_IMPALA_HOST="impala"
     defer_ret build_run_ctx_reset
 
-    # fixup /code to point to /wd
-    {
-      build_run_container bash -c 'rmdir /code && ln -s /wd /code'
-    }
-
-    for d in /code/dae /code/wdae /code/dae_conftests; do
+    for d in /wd/dae /wd/wdae /wd/dae_conftests; do
       build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .'
     done
 
     build_run_container bash -c '
-        cd /code/dae;
+        cd /wd/dae;
         export PYTHONHASHSEED=0;
         /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --reimport --durations 20 \
-          --cov-config /code/coveragerc \
-          --junitxml=/code/results/dae-junit.xml \
-          --cov-report=html:/code/results/dae-coverage.html \
-          --cov-report=xml:/code/results/dae-coverage.xml \
-          --cov /code/dae/ \
+          --cov-config /wd/coveragerc \
+          --junitxml=/wd/results/dae-junit.xml \
+          --cov-report=html:/wd/results/dae-coverage.html \
+          --cov-report=xml:/wd/results/dae-coverage.xml \
+          --cov /wd/dae/ \
           dae/ || true'
 
     build_run_local cp ./results/dae-junit.xml ./results/dae-coverage.xml ./test-results/
@@ -417,24 +386,19 @@ EOT'
       --env DAE_IMPALA_HOST="impala"
     defer_ret build_run_ctx_reset
 
-    # fixup /code to point to /wd
-    {
-      build_run_container bash -c 'rmdir /code && ln -s /wd /code'
-    }
-
-    for d in /code/dae /code/wdae /code/dae_conftests; do
+    for d in /wd/dae /wd/wdae /wd/dae_conftests; do
       build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .'
     done
 
     build_run_container bash -c '
-        cd /code/wdae;
+        cd /wd/wdae;
         export PYTHONHASHSEED=0;
-        /opt/conda/bin/conda run --no-capture-output -n gpf py.test -s -v --no-cleanup --durations 20 \
-          --cov-config /code/coveragerc \
-          --junitxml=/code/results/wdae-junit.xml \
-          --cov-report=html:/code/results/wdae-coverage.html \
-          --cov-report=xml:/code/results/wdae-coverage.xml \
-          --cov /code/wdae/ \
+        /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup --durations 20 \
+          --cov-config /wd/coveragerc \
+          --junitxml=/wd/results/wdae-junit.xml \
+          --cov-report=html:/wd/results/wdae-coverage.html \
+          --cov-report=xml:/wd/results/wdae-coverage.xml \
+          --cov /wd/wdae/ \
           wdae || true'
 
     build_run_local cp ./results/wdae-junit.xml ./results/wdae-coverage.xml ./test-results/
