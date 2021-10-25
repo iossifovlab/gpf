@@ -181,8 +181,10 @@ describe('Gene plot visual tests', () => {
   });
 
   it('should condense introns', () => {
+    page.window.scrollIntoView();
     page.condenseIntronsCheckbox.click();
     cy.matchImageSnapshot('gene-plot/notCondenseIntrons');
+    page.window.scrollIntoView();
     page.condenseIntronsCheckbox.click();
     cy.matchImageSnapshot('gene-plot/condenseIntrons');
   });
