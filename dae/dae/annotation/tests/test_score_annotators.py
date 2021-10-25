@@ -1,4 +1,3 @@
-import yaml
 import pytest
 
 from box import Box
@@ -19,21 +18,33 @@ from dae.genomic_resources.score_resources import PositionScoreResource
 #  70   71   72   73   74   75   76
 #  0.1  0.1  0.2  0.2  0.3  0.3  0.4
 #
-@pytest.mark.parametrize("variant,pos_aggregator, expected", [
-    ({"reference": "C", "alternative": "A"}, "mean", 0.1),
-    ({"reference": "CC", "alternative": "C"}, "mean", 0.13),
-    ({"reference": "CC", "alternative": "C"}, "max", 0.2),
-    ({"reference": "CCT", "alternative": "C"}, "mean", 0.15),
-    ({"reference": "CCT", "alternative": "C"}, "max", 0.2),
-    ({"reference": "C", "alternative": "CA"}, "mean", 0.1),
-    ({"reference": "C", "alternative": "CAA"}, "mean", 0.1),
-    ({"reference": "C", "alternative": "CAA"}, "max", 0.1),
+@pytest.mark.parametrize("record,pos_aggregator, expected", [
+    (("1", 14970, "C", "A"), "mean", 0.1),
+
+    (("1", 14970, "CC", "C"), "mean", 0.13),
+    (("1", 14970, "CC", "C"), "max", 0.2),
+
+    (("1", 14970, "CCT", "C"), "mean", 0.15),
+    (("1", 14970, "CCT", "C"), "max", 0.2),
+
+    (("1", 14970, "C", "CA"), "mean", 0.1),
+    (("1", 14970, "C", "CAA"), "mean", 0.1),
+    (("1", 14970, "C", "CAA"), "max", 0.1),
+
+    (("1", 14971, "C", "CA"), "mean", 0.15),
+    (("1", 14971, "C", "CA"), "max", 0.2),
+
+    (("1", 14971, "C", "CAA"), "mean", 0.15),
+    (("1", 14971, "C", "CAA"), "max", 0.2),
 ])
-def test_position_score_annotator(variant, pos_aggregator, expected):
+def test_position_score_annotator(record, pos_aggregator, expected):
 
-    variant.update({"chrom": "1", "position": 14970})
-
-    sv = SummaryVariantFactory.summary_variant_from_records([variant])
+    record = {
+        k: v
+        for k, v in zip(
+            ("chrom", "position", "reference", "alternative"), record)
+    }
+    sv = SummaryVariantFactory.summary_variant_from_records([record])
     assert sv is not None
 
     repo = build_genomic_resource_repository({
@@ -85,7 +96,6 @@ def test_position_score_annotator(variant, pos_aggregator, expected):
     print(sv, sv.get_attribute("test100"))
 
     assert sv.get_attribute("test100")[0] == pytest.approx(expected, abs=1e-2)
-
 
     # annotation_config = Box(yaml.safe_load("""
     # score_annotators:

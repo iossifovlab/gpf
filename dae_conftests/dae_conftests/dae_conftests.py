@@ -340,8 +340,8 @@ def genomic_resources_db(gpf_instance_2013):
 @pytest.fixture(scope="session")
 def default_annotation_pipeline(default_dae_config, genomic_resources_db):
     filename = default_dae_config.annotation.conf_file
-
-    pipeline = AnnotationPipeline.build(filename, genomic_resources_db)
+    config = AnnotationPipeline.load_and_parse(filename)
+    pipeline = AnnotationPipeline.build(config, genomic_resources_db)
 
     return pipeline
 
@@ -357,8 +357,8 @@ def annotation_pipeline_vcf(genomic_resources_db):
     filename = relative_to_this_test_folder(
         "fixtures/annotation_pipeline/import_annotation.yaml"
     )
-
-    pipeline = AnnotationPipeline.build(filename, genomic_resources_db)
+    config = AnnotationPipeline.load_and_parse(filename)
+    pipeline = AnnotationPipeline.build(config, genomic_resources_db)
     return pipeline
 
 
@@ -367,8 +367,8 @@ def annotation_pipeline_internal(genomic_resources_db):
     filename = relative_to_this_test_folder(
         "fixtures/annotation_pipeline/import_annotation.yaml"
     )
-
-    pipeline = AnnotationPipeline.build(filename, genomic_resources_db)
+    config = AnnotationPipeline.load_and_parse(filename)
+    pipeline = AnnotationPipeline.build(config, genomic_resources_db)
     return pipeline
 
 

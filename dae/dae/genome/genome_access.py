@@ -37,6 +37,7 @@ class GenomicSequenceBase:
             if not line:
                 break
             line = line.split()
+
             self._index[line[0]] = {
                 "length": int(line[1]),
                 "startBit": int(line[2]),

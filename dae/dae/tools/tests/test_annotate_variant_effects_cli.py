@@ -77,24 +77,3 @@ def test_gene_models_load_default(genomes_db_2019):
     assert ref_seq_gene_model is not None
     # gene_models = load_gene_models(ref_seq_gene_model.file, format="default")
     # assert gene_models is not None
-
-
-@pytest.mark.skip
-def test_annotate_mouse_variants():
-    dirname = (
-        "/home/lubo/Work/seq-pipeline/gpf_validation_data/mouse/mouseStrains"
-    )
-    genome_filename = "mouse/GRCm38_68.fa"
-    gene_models_filename = "mouse.GRCm38-relabeled.txt.gz"
-    variants_filename = "i.txt"
-
-    argv = [
-        "--Traw",
-        os.path.join(dirname, gene_models_filename),
-        "--Graw",
-        os.path.join(dirname, genome_filename),
-        os.path.join(dirname, variants_filename),
-    ]
-    from dae.tools.annotate_variant import main
-
-    main(argv)

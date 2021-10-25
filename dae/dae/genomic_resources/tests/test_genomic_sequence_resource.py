@@ -15,11 +15,11 @@ def test_basic_sequence_resoruce():
                 GGGCCTTCCN
                 NNNA
         '''),
-        "chr.fa.fai": "pesho\t24\t10\t11\n"
+        "chr.fa.fai": "pesho\t24\t7\t10\t11\n"
     })
     res.open()
     assert res.get_chrom_length("pesho") == 24
-    assert res.get_sequence("1", 1, 12) == "NNACCCAAACGG"
+    assert res.get_sequence("pesho", 1, 12) == "NNACCCAAACGG"
 
 
 @pytest.mark.fixture_repo

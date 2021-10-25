@@ -25,6 +25,9 @@ class GenomicSequenceResource(GenomicResource, GenomicSequenceBase):
 
     @staticmethod
     def _parse_PARS(config):
+        if "PARS" not in config:
+            return None
+
         assert config["PARS"]["X"] is not None
         regions_x = [
             Region.from_str(region) for region in config["PARS"]["X"]

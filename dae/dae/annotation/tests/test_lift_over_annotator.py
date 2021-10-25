@@ -62,8 +62,9 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected, genomes_db_2013):
 def test_pipeline_liftover(
         annotation_config, anno_grdb):
 
+    config = AnnotationPipeline.load_and_parse(annotation_config)
     pipeline = AnnotationPipeline.build(
-        annotation_config, anno_grdb
+        config, anno_grdb
     )
     records = [{
         "chrom": "chr1", "position": 69094,

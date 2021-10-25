@@ -72,7 +72,8 @@ def construct_import_annotation_pipeline(
     # genomes_db = gpf_instance.genomes_db
     resources_db = gpf_instance.genomic_resources_db
     assert os.path.exists(config_filename), config_filename
-    return AnnotationPipeline.build(config_filename, resources_db)
+    config = AnnotationPipeline.load_and_parse(config_filename)
+    return AnnotationPipeline.build(config, resources_db)
 
 
 class MakefilePartitionHelper:

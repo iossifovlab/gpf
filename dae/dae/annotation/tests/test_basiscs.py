@@ -12,7 +12,8 @@ def test_basic():
                     filename: data.mem
                 scores:
                   - id: s1
-                    type: float''',
+                    type: float
+                    name: s1''',
             "data.mem": '''
                 chrom  pos_begin  s1
                 1      10         0.02
@@ -22,24 +23,31 @@ def test_basic():
                 '''
         }
     })
-    annotation_cofiguration = "- score: one"
-    annPipe: AnnotationPipeline = AnnotationPipeline.build(
-        genomic_resoruce_repo=grr_repo, pipeline=annotation_cofiguration, context)
+    annotation_cofiguration = AnnotationPipeline.parse_config("""
+    score_annotators:
+    - annotator: position_score
+      resource: one
+    """)
+    context = {}
+    ann_pipe = AnnotationPipeline.build(
+        annotation_cofiguration,
+        grr_repo,
+        context=context)
     assert grr_repo
-    assert annPipe
+    assert ann_pipe
 
-    class annotation.VariantAllele:
-        def get_chrom()
-        def get_possition()
-        def get_end_position()
-        def get_ref()
-        def get_alt()
+    # class annotation.VariantAllele:
+    #     def get_chrom()
+    #     def get_possition()
+    #     def get_end_position()
+    #     def get_ref()
+    #     def get_alt()
 
-        def get_variant_type_helper()
+    #     def get_variant_type_helper()
 
-        def update_attributes()
+    #     def update_attributes()
 
-    va = BasicVariantSubstitution("1", 11, "G", "A")
-    annPipe.annotate_summary_variant(va)
-    assert va.get_attribute("s1") == 0.03
-    assert set(annPipe.get_ordered_attributes_names()) = set(["s1"])
+    # va = BasicVariantSubstitution("1", 11, "G", "A")
+    # annPipe.annotate_summary_variant(va)
+    # assert va.get_attribute("s1") == 0.03
+    # assert set(annPipe.get_ordered_attributes_names()) = set(["s1"])

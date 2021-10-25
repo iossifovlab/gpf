@@ -23,30 +23,44 @@ class AnnotationPipeline():
         self._annotation_schema = None
 
     @staticmethod
-    def build(pipeline_config_path, repository):
-        pipeline_config = GPFConfigParser.load_config(
-            pipeline_config_path, annotation_conf_schema
+    def load_and_parse(config_path: str) -> dict:
+        with open(config_path, "r") as infile:
+            content = infile.read()
+        return AnnotationPipeline.parse_config(content)
+
+    @staticmethod
+    def parse_config(content: str) -> dict:
+        config = GPFConfigParser.parse_and_interpolate(content)
+        pipeline_config = GPFConfigParser.process_config(
+            config, annotation_conf_schema
         )
+        return pipeline_config
+
+    @staticmethod
+    def build(
+            pipeline_config,
+            repository,
+            context=None) -> "AnnotationPipeline":
+
         pipeline = AnnotationPipeline(pipeline_config, repository)
 
-        assert len(pipeline_config.effect_annotators) == 1
+        if pipeline_config.effect_annotators:
+            for annotator_config in pipeline_config.effect_annotators:
+                annotator_type = annotator_config["annotator"]
 
-        for annotator_config in pipeline_config.effect_annotators:
-            annotator_type = annotator_config["annotator"]
+                gene_models_id = annotator_config["gene_models"]
+                genome_id = annotator_config["genome"]
+                override = annotator_config.get("override")
 
-            gene_models_id = annotator_config["gene_models"]
-            genome_id = annotator_config["genome"]
-            override = annotator_config.get("override")
+                gene_models = repository.get_resource(gene_models_id)
+                assert gene_models is not None, gene_models_id
 
-            gene_models = repository.get_resource(gene_models_id)
-            assert gene_models is not None, gene_models_id
+                genome = repository.get_resource(genome_id)
+                assert genome is not None, genome_id
 
-            genome = repository.get_resource(genome_id)
-            assert genome is not None, genome_id
-
-            effect_annotator = AnnotatorFactory.make_effect_annotator(
-                annotator_type, gene_models, genome, override=override)
-            pipeline.add_annotator(effect_annotator)
+                effect_annotator = AnnotatorFactory.make_effect_annotator(
+                    annotator_type, gene_models, genome, override=override)
+                pipeline.add_annotator(effect_annotator)
 
         if pipeline_config.liftover_annotators:
             for annotator_config in pipeline_config.liftover_annotators:

@@ -76,7 +76,7 @@ class GPFConfigParser:
             return infile.read()
 
     @staticmethod
-    def parse_and_interpolate(content: str, parser) -> dict:
+    def parse_and_interpolate(content: str, parser=yaml.safe_load) -> dict:
         interpol_vars = parser(content).get("vars", {})
 
         env_vars = {f"${key}": val for key, val in os.environ.items()}
