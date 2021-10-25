@@ -6,13 +6,59 @@ from itertools import chain
 import pyarrow as pa
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.configuration.schemas.annotation_conf import annotation_conf_schema
 from dae.annotation.tools.annotator_base import Annotator
 from dae.annotation.tools.schema import ParquetSchema
 from dae.annotation.tools.utils import AnnotatorFactory
 
 
 logger = logging.getLogger(__name__)
+
+
+DEFAULT_ANNOTATION_SCHEMA = {
+    "attributes": {
+        "type": "list",
+        "schema": {
+            "type": "dict",
+            "schema": {
+                "source": {"type": "string"},
+                "dest": {"type": "string"},
+                "position_aggregator": {"type": "string"},
+                "nucleotide_aggregator": {"type": "string"},
+            }
+        }
+    }
+}
+
+
+ANNOTATOR_SCHEMA = {
+    "type": "dict",
+    "schema": {
+        "annotator": {"type": "string", "required": True},
+        "resource": {"type": "string"},
+        "gene_models": {"type": "string"},
+        "chain": {"type": "string"},
+        "genome": {"type": "string"},
+        "target_genome": {"type": "string"},
+        "liftover": {"type": "string"},
+        "override": {"type": "dict", "schema": DEFAULT_ANNOTATION_SCHEMA}
+    }
+}
+
+
+ANNOTATION_PIPELINE_SCHEMA = {
+    "effect_annotators": {
+        "type": "list",
+        "schema": ANNOTATOR_SCHEMA,
+    },
+    "liftover_annotators": {
+        "type": "list",
+        "schema": ANNOTATOR_SCHEMA,
+    },
+    "score_annotators": {
+        "type": "list",
+        "schema": ANNOTATOR_SCHEMA,
+    }
+}
 
 
 class AnnotationPipeline():
@@ -32,7 +78,7 @@ class AnnotationPipeline():
     def parse_config(content: str) -> dict:
         config = GPFConfigParser.parse_and_interpolate(content)
         pipeline_config = GPFConfigParser.process_config(
-            config, annotation_conf_schema
+            config, ANNOTATION_PIPELINE_SCHEMA
         )
         return pipeline_config
 
