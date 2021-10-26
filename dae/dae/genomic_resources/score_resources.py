@@ -18,11 +18,10 @@ logger = logging.getLogger(__name__)
 
 class ScoreLine:
     def __init__(self, values: Tuple[str], scores: dict,
-                 special_columns: dict, has_end_column):
+                 special_columns: dict):
         self.values = values
         self.scores = scores
         self.special_columns = special_columns
-        self.has_end_column = has_end_column
 
     def get_score_value(self, score_id):
         scr_def = self.scores[score_id]
@@ -45,10 +44,7 @@ class ScoreLine:
         return self.get_special_column_value("pos_begin")
 
     def get_pos_end(self):
-        if self.has_end_column:
-            return self.get_special_column_value("pos_end")
-        else:
-            return self.get_pos_begin()
+        return self.get_special_column_value("pos_end")
 
 
 AGGREGATOR_CLASS_DICT = {
@@ -142,15 +138,7 @@ class GenomicScoresResource(GenomicResource, abc.ABC):
             scr_def.description = score_conf.get("description", None)
             self.scores[scr_def.id] = scr_def
 
-        self.has_pos_end = True
-        try:
-            self.table.get_special_column_index("pos_end")
-        except Exception:
-            self.has_pos_end = False
-
-        special_clmns = {"chrom": str, "pos_begin": int}
-        if self.has_pos_end:
-            special_clmns["pos_end"] = int
+        special_clmns = {"chrom": str, "pos_begin": int, "pos_end": int}
         special_clmns.update(self.get_extra_special_columns())
 
         self.special_columns = {}
@@ -195,9 +183,10 @@ class GenomicScoresResource(GenomicResource, abc.ABC):
             chrom, pos_begin, pos_end))
         print(self.special_columns)
 
-        return [ScoreLine(record, self.scores, self.special_columns,
-                          self.has_pos_end)
-                for record in records]
+        return [
+            ScoreLine(record, self.scores, self.special_columns)
+            for record in records
+        ]
 
         # return self._fetch_direct(chrom, pos_begin, pos_end)
         # self.last_pos = pos_end

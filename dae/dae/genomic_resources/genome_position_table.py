@@ -79,7 +79,6 @@ class GenomicPositionTable(abc.ABC):
             raise ValueError(v.errors)
 
         self.definition = Box(v.normalized(table_definition))
-
         self.chrom_map = None
 
         # handling the 'header' property
@@ -154,14 +153,16 @@ class GenomicPositionTable(abc.ABC):
         try:
             self.pos_end_column_i = self.get_special_column_index(self.POS_END)
         except Exception:
-            pass
+            definition = self.definition.to_dict()
+            definition[self.POS_END] = {"index": self.pos_end_column_i}
+            self.definition = Box(definition)
 
     def get_column_names(self):
         return self.header
 
     def _get_index_prop_for_special_column(self, key):
         index_prop = key + ".index"
-        print(self.definition)
+
         if key not in self.definition:
             raise KeyError(f"The table definition has no index "
                            f"({index_prop} property) for the special "

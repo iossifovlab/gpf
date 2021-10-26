@@ -27,6 +27,10 @@ def test_default_setup():
     tab = open_genome_position_table(res, res.config['table'])
     assert tab.chrom_column_i == 0
     assert tab.pos_begin_column_i == 1
+    assert tab.pos_end_column_i == 1
+    assert tab.get_special_column_index("chrom") == 0
+    assert tab.get_special_column_index("pos_begin") == 1
+    assert tab.get_special_column_index("pos_end") == 1
 
 
 def test_regions():
