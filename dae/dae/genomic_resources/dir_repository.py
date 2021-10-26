@@ -1,3 +1,11 @@
+import pathlib
+import yaml
+import hashlib
+import os
+import gzip
+import pysam
+import logging
+
 from .repository import GenomicResource
 from .repository import GenomicResourceRepo
 from .repository import GenomicResourceRealRepo
@@ -5,13 +13,7 @@ from .repository import find_genomic_resources_helper
 from .repository import find_genomic_resource_files_helper
 from .repository import GRP_CONTENTS_FILE_NAME
 
-
-import pathlib
-import yaml
-import hashlib
-import os
-import gzip
-import pysam
+logger = logging.getLogger(__name__)
 
 
 class GenomicResourceDirRepo(GenomicResourceRealRepo):
@@ -63,33 +65,39 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         for gr in source_repo.get_all_resources():
             self.store_resource(gr)
 
-    def store_resource(self, genomic_resource: GenomicResource):
-        manifest = genomic_resource.get_manifest()
-        temp_gr = GenomicResource(genomic_resource.resource_id,
-                                  genomic_resource.version, self)
-        for mnfF in manifest:
-            dr = pathlib.Path(self.directory /
-                              genomic_resource.get_genomic_resource_dir() /
-                              mnfF['name']).parent
+    def store_resource(self, resource: GenomicResource):
+        manifest = resource.get_manifest()
+
+        temp_gr = GenomicResource(resource.resource_id,
+                                  resource.version, self)
+        for mnf_file in manifest:
+            dr = pathlib.Path(
+                self.directory /
+                resource.get_genomic_resource_dir() /
+                mnf_file['name']).parent
             os.makedirs(dr, exist_ok=True)
-            with genomic_resource.open_raw_file(mnfF["name"], "rb",
-                                                uncompress=False) as IF, \
-                    temp_gr.open_raw_file(mnfF["name"], 'wb',
-                                          uncompress=False) as OF:
+            with resource.open_raw_file(
+                    mnf_file["name"], "rb",
+                    uncompress=False) as infile, \
+                    temp_gr.open_raw_file(
+                        mnf_file["name"], 'wb',
+                        uncompress=False) as outfile:
+
                 md5_hash = hashlib.md5()
-                while b := IF.read(8192):
-                    OF.write(b)
+                while b := infile.read(8192):
+                    outfile.write(b)
                     md5_hash.update(b)
-            if md5_hash.hexdigest() != mnfF["md5"]:
-                raise Exception("The copy failed! ")
+            if md5_hash.hexdigest() != mnf_file["md5"]:
+                raise IOError(f"storing of {resource.resource_id} failed")
+
         new_gr = self.get_resource(
-            genomic_resource.resource_id,
-            f"={genomic_resource.get_version_str()}")
+            resource.resource_id,
+            f"={resource.get_version_str()}")
         new_gr.save_manifest(manifest)
 
     def save_content_file(self):
         content_filename = self.directory / GRP_CONTENTS_FILE_NAME
-        print("Saving contents file", content_filename)
+        logger.debug(f"saving contents file {content_filename}")
         content = [{"id": gr.resource_id, "version": gr.get_version_str()}
                    for gr in self.get_all_resources()]
         content = sorted(content, key=lambda x: x['id'])
