@@ -68,15 +68,16 @@ def test_position_score_annotator(variant, pos_aggregator, expected):
 
     pipeline_config = AnnotationPipeline.parse_config(
         textwrap.dedent(f"""
-        score_annotators:
-        - annotator: position_score
-          resource: position_score1
-          override:
-              attributes:
-              - source: test100way
-                dest: test100
-                position_aggregator: {pos_aggregator}
-          """))
+            score_annotators:
+            - annotator: position_score
+              resource: position_score1
+              override:
+                attributes:
+                - source: test100way
+                  dest: test100
+                  position_aggregator: {pos_aggregator}
+            """)
+        )
 
     pipeline = AnnotationPipeline.build(pipeline_config, repo)
 

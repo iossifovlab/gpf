@@ -248,7 +248,6 @@ class PositionScoreResource(GenomicScoresResource):
                 f"{chrom} is not among the available chromosomes.")
 
         score_lines = self._fetch_lines(chrom, pos_begin, pos_end)
-        logger.debug(f"score lines found: {score_lines}")
 
         scores = scores if scores else self.get_all_scores()
         aggregators = {}
@@ -342,7 +341,6 @@ class NPScoreResource(GenomicScoresResource):
                 f"NP Score resource {self.resource_id}")
 
         score_lines = self._fetch_lines(chrom, pos_begin, pos_end)
-        logger.debug(f"score lines found: {score_lines}")
         if not score_lines:
             return None
 
