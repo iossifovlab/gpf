@@ -73,10 +73,12 @@ def test_position_score_annotator(
                   position_aggregator: {pos_aggregator}
                   nucleotide_aggregator: {nuc_aggregator}
             """)
-        )
+    )
 
     pipeline = AnnotationPipeline.build(pipeline_config, repo)
 
+    # pipeline.get_schema -> ["attribute", "type", "resource", "scores"]
+    # pipeline.annotate_allele(sa) -> {("a1": v1), "a2": v2}}
     pipeline.annotate_allele(sa)
 
     print(sa, sa.get_attribute("test"))
