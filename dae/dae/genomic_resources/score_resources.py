@@ -181,7 +181,6 @@ class GenomicScoresResource(GenomicResource, abc.ABC):
     def _fetch_lines(self, chrom, pos_begin, pos_end):
         records = list(self.table.get_records_in_region(
             chrom, pos_begin, pos_end))
-        print(self.special_columns)
 
         return [
             ScoreLine(record, self.scores, self.special_columns)
@@ -288,7 +287,7 @@ class PositionScoreResource(GenomicScoresResource):
                     aggregators[scr_id].add(val)
 
         return {
-            score_id: aggregator.get_final()
+            score_id: aggregator
             for score_id, aggregator
             in aggregators.items()
         }
@@ -408,7 +407,7 @@ class NPScoreResource(GenomicScoresResource):
         aggregate_nucleotides()
 
         return {
-            score_id: aggregator.get_final()
+            score_id: aggregator
             for score_id, aggregator
             in pos_aggregators.items()
         }

@@ -4,36 +4,43 @@ from subprocess import Popen, PIPE
 from http.client import HTTPConnection
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def resources_http_server(fixture_dirname):
     http_port = 16500
 
-    server = Popen(
-        [
-            "python",
-            "-m", "RangeHTTPServer",
-            str(http_port),
-            "--bind", "localhost",
-            "--directory", fixture_dirname("genomic_resources"),
-        ],
-        stdout=PIPE,
-        encoding="utf-8",
-        universal_newlines=True
-    )
-    retries = 5
+    retries = 10
     success = False
-    while retries > 0:
+
+    while not success and retries > 0:
         try:
-            conn = HTTPConnection(f"localhost:{http_port}")
-            conn.request("HEAD", "/")
-            response = conn.getresponse()
-            if response is not None:
-                success = True
-                server.http_port = http_port
-                yield server
-                break
-        except ConnectionRefusedError:
+            server = Popen(
+                [
+                    "python",
+                    "-m", "RangeHTTPServer",
+                    str(http_port),
+                    "--bind", "localhost",
+                    "--directory", fixture_dirname("genomic_resources"),
+                ],
+                stdout=PIPE,
+                encoding="utf-8",
+                universal_newlines=True
+            )
+            while retries > 0:
+                try:
+                    conn = HTTPConnection(f"localhost:{http_port}")
+                    conn.request("HEAD", "/")
+                    response = conn.getresponse()
+                    if response is not None:
+                        success = True
+                        server.http_port = http_port
+                        yield server
+                        break
+                except ConnectionRefusedError:
+                    time.sleep(0.5)
+                    retries -= 1
+        except OSError:
             time.sleep(0.5)
+            http_port += 1
             retries -= 1
 
     if not success:

@@ -50,7 +50,7 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected, genomes_db_2013):
     }
     allele = SummaryAllele(chrom, pos, "A", "T")
     liftover_variants = {}
-    annotator._do_annotate(aline, allele, liftover_variants)
+    annotator._do_annotate_allele(aline, allele, liftover_variants)
 
     lo_variant = liftover_variants.get("liftover_test")
     print(f"liftover variant: {lo_variant}")
@@ -71,5 +71,5 @@ def test_pipeline_liftover(
         "reference": "G", "alternative": "A"
     }]
     variant = SummaryVariantFactory.blank_summary_variant_from_records(records)
-    pipeline.annotate_summary_variant(variant)
+    pipeline.annotate_variant(variant)
     assert variant.get_attribute("mpc")[0] is not None

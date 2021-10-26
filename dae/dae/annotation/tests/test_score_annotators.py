@@ -92,7 +92,7 @@ def test_position_score_annotator(record, pos_aggregator, expected):
     pipeline = AnnotationPipeline(None, None)
     pipeline.add_annotator(annotator)
 
-    pipeline.annotate_summary_variant(sv)
+    pipeline.annotate_variant(sv)
     print(sv, sv.get_attribute("test100"))
 
     assert sv.get_attribute("test100")[0] == pytest.approx(expected, abs=1e-2)

@@ -81,18 +81,17 @@ class LiftOverAnnotator(Annotator):
             logger.warning(
                 f"problem in variant {variant} liftover: {ex}", exc_info=True)
 
-    def _do_annotate(self, _, variant, liftover_variants):
-        assert self.liftover not in liftover_variants, \
-            (self.liftover, liftover_variants)
-        assert variant is not None
+    def _do_annotate_allele(self, _, allele, liftover_context):
+        assert self.liftover not in liftover_context, \
+            (self.liftover, liftover_context)
+        assert allele is not None
 
-        lo_variant = self.liftover_variant(variant)
-        print(lo_variant)
-        if lo_variant is None:
+        lo_allele = self.liftover_variant(allele)
+        if lo_allele is None:
             logger.info(
-                f"unable to liftover variant: {variant}")
+                f"unable to liftover allele: {allele}")
             return
-        liftover_variants[self.liftover] = lo_variant
+        liftover_context[self.liftover] = lo_allele
 
     def get_default_annotation(self):
         return []

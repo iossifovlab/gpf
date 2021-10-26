@@ -16,28 +16,28 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
     def _get_aggregators(self, attr):
         return []
 
-    def _do_annotate(self, attributes, variant, liftover_variants):
-        if VariantType.is_cnv(variant.variant_type):
+    def _do_annotate_allele(self, attributes, allele, liftover_context):
+        if VariantType.is_cnv(allele.variant_type):
             logger.info(
-                f"skip trying to add frequency for CNV variant {variant}")
+                f"skip trying to add frequency for CNV variant {allele}")
             self._scores_not_found(attributes)
             return
 
         if self.liftover:
-            variant = liftover_variants.get(self.liftover)
+            allele = liftover_context.get(self.liftover)
 
-        if variant is None:
+        if allele is None:
             self._scores_not_found(attributes)
             return
 
-        if self.liftover and liftover_variants.get(self.liftover):
-            variant = liftover_variants.get(self.liftover)
+        # if self.liftover and liftover_context.get(self.liftover):
+        #     allele = liftover_context.get(self.liftover)
 
         scores_dict = self.resource.fetch_scores(
-            variant.chromosome,
-            variant.position,
-            variant.reference,
-            variant.alternative
+            allele.chromosome,
+            allele.position,
+            allele.reference,
+            allele.alternative
         )
         if scores_dict is None:
             print("Not found!")
@@ -52,7 +52,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
                     attributes[score_id] = score_value
             except ValueError as ex:
                 logger.error(
-                    f"problem with: {score_id}: {variant} - {score_value}"
+                    f"problem with: {score_id}: {allele} - {score_value}"
                 )
                 logger.error(ex)
                 raise ex

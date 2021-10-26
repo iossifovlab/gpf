@@ -31,20 +31,22 @@ class Annotator(abc.ABC):
     def annotation_schema(self):
         pass
 
-    def _do_annotate(self, attributes, variant, liftover_variants):
+    @abc.abstractmethod
+    def _do_annotate_allele(self, attributes, allele, liftover_context):
         """
         Internal abstract method used for annotation.
         """
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def get_default_annotation(self):
-        raise NotImplementedError()
+        pass
 
-    def annotate(self, attributes, variant, liftover_variants):
+    def annotate_allele(self, attributes, allele, liftover_variants):
         """
         Carry out the annotation and then relabel results as configured.
         """
-        self._do_annotate(attributes, variant, liftover_variants)
+        self._do_annotate_allele(attributes, allele, liftover_variants)
         attributes_list = self.get_default_annotation()
         for attr in attributes_list:
             if attr.dest == attr.source:

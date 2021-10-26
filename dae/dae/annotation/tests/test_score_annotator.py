@@ -1,5 +1,4 @@
 import pytest
-import numpy
 import pyarrow as pa
 
 from dae.annotation.annotation_pipeline import AnnotationPipeline
@@ -18,7 +17,7 @@ def test_position_score_annotator(
     pipeline.add_annotator(annotator)
 
     for sv, e in phastcons100way_variants_expected:
-        pipeline.annotate_summary_variant(sv)
+        pipeline.annotate_variant(sv)
 
         assert sv.get_attribute("phastCons100way")[0] == e
 
@@ -39,9 +38,9 @@ def test_np_score_annotator(cadd_variants_expected, anno_grdb):
     pipeline.add_annotator(annotator)
 
     for sv, e in cadd_variants_expected:
-        pipeline.annotate_summary_variant(sv)
+        pipeline.annotate_variant(sv)
         for score, value in e.items():
-            assert numpy.isclose(sv.get_attribute(score)[0], value)
+            assert sv.get_attribute(score)[0] == pytest.approx(value, abs=1e-2)
 
 
 def test_np_score_annotator_schema(anno_grdb):
@@ -83,7 +82,7 @@ def test_position_score_annotator_indels(
     pipeline.add_annotator(annotator)
 
     for sv, e in phastcons100way_indel_variants_expected:
-        pipeline.annotate_summary_variant(sv)
+        pipeline.annotate_variant(sv)
 
         assert sv.get_attribute("phastCons100way")[0] == \
             pytest.approx(e, abs=1e-2)
@@ -100,9 +99,9 @@ def test_position_score_annotator_mean_aggregate(
     pipeline.add_annotator(annotator)
 
     for sv, e in position_agg_mean_variants_expected:
-        pipeline.annotate_summary_variant(sv)
+        pipeline.annotate_variant(sv)
 
-        assert numpy.isclose(sv.get_attribute("test_score")[0], e)
+        assert sv.get_attribute("test_score")[0] == pytest.approx(e, 1e-2)
 
 
 def test_np_score_annotator_indels(
@@ -116,6 +115,6 @@ def test_np_score_annotator_indels(
     pipeline.add_annotator(annotator)
 
     for sv, e in cadd_indel_variants_expected:
-        pipeline.annotate_summary_variant(sv)
+        pipeline.annotate_variant(sv)
         for score, value in e.items():
             assert sv.get_attribute(score)[0] == pytest.approx(value, rel=1e-3)

@@ -11,6 +11,9 @@ class AbstractAggregator:
     def get_final(self):
         raise NotImplementedError()
 
+    def __eq__(self, o: object) -> bool:
+        return self.get_final() == o
+
 
 class MaxAggregator(AbstractAggregator):
     def __init__(self):

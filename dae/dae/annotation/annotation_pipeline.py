@@ -169,10 +169,11 @@ class AnnotationPipeline():
     #     print(100*"+")
     #     return ParquetSchema.from_dict({"float": cols})
 
-    def annotate_summary_variant(self, summary_variant):
-        for alt_allele in summary_variant.alt_alleles:
+    def annotate_variant(self, variant):
+        for alt_allele in variant.alt_alleles:
             attributes = deepcopy(alt_allele.attributes)
-            liftover_variants = dict()
+            liftover_context = dict()
             for annotator in self.annotators:
-                annotator.annotate(attributes, alt_allele, liftover_variants)
+                annotator.annotate_allele(
+                    attributes, alt_allele, liftover_context)
             alt_allele.update_attributes(attributes)

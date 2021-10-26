@@ -60,19 +60,13 @@ class VariantScoreAnnotatorBase(Annotator):
         if non_default_nucleotide_aggregators:
             self.non_default_nucleotide_aggregators = \
                 non_default_nucleotide_aggregators
-        print(100*"=")
-        print(self.non_default_position_aggregators)
-        print(100*"=")
 
     def get_scores(self):
         return [attr.source for attr in self.get_default_annotation()]
 
     def get_config(self):
         if self.override:
-            print("override:", self.override)
             return self.override
-        print("resource:", self.resource.get_default_annotation())
-
         return self.resource.get_default_annotation()
 
     @property
@@ -94,45 +88,6 @@ class VariantScoreAnnotatorBase(Annotator):
         }
         attributes.update(values)
 
-    def _fetch_scores(self, variant, extra_cols=None):
-        scores = None
-        print("variant_type:", variant.variant_type)
-        if variant.variant_type & VariantType.substitution:
-            scores = self.resource.fetch_scores(
-                variant.chromosome, variant.position,
-                self.get_scores()
-            )
-        elif variant.variant_type & VariantType.indel:
-            scores = self.resource.fetch_scores_agg(
-                variant.chromosome,
-                variant.position,
-                variant.position + len(variant.reference),
-                self.get_scores(),
-                self.non_default_position_aggregators
-            )
-        else:
-            logger.warning(
-                f"unexpected variant type in score annotation: "
-                f"{variant}, {variant.variant_type}, "
-                f"({variant.variant_type.value})"
-            )
-            raise Exception
-        return scores
-
-    def _annotate_cnv(self, attributes, variant):
-        scores = self.resource.fetch_scores_agg(
-            variant.chromosome,
-            variant.position,
-            variant.end_position,
-            self.get_scores()
-        )
-
-        for score_name in self.score_names:
-            column_name = getattr(self.config.columns, score_name)
-            attributes[column_name] = scores.get(
-                score_name, self.score_file.no_score_value
-            )
-
 
 class PositionScoreAnnotator(VariantScoreAnnotatorBase):
     def __init__(self, resource, liftover=None, override=None):
@@ -140,51 +95,60 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         # FIXME This should be closed somewhere
         self.resource.open()
 
-    def _fetch_substition(self, variant):
-        return self.resource.fetch_scores(
+    def _fetch_substitution_scores(self, variant):
+        scores = self.resource.fetch_scores(
             variant.chromosome, variant.position,
             self.get_scores()
         )
+        return scores
 
-    def _do_annotate(self, attributes, variant, liftover_variants):
+    def _fetch_aggregated_scores(self, variant, pos_begin, pos_end):
+        scores_agg = self.resource.fetch_scores_agg(
+            variant.chromosome,
+            pos_begin,
+            pos_end,
+            self.get_scores(),
+            self.non_default_position_aggregators
+        )
+        scores = {
+            sc_name: sc_agg.get_final()
+            for sc_name, sc_agg in scores_agg.items()
+        }
+        return scores
+
+    def _do_annotate_allele(self, attributes, allele, liftover_context):
         if self.liftover:
-            variant = liftover_variants.get(self.liftover)
+            allele = liftover_context.get(self.liftover)
 
-        if variant is None:
+        if allele is None:
             self._scores_not_found(attributes)
             return
 
-        if variant.chromosome not in self.resource.get_all_chromosomes():
+        if allele.chromosome not in self.resource.get_all_chromosomes():
             self._scores_not_found(attributes)
             return
 
-        if variant.variant_type & VariantType.substitution:
-            scores = self._fetch_substition(variant)
+        if allele.variant_type & VariantType.substitution:
+            scores = self._fetch_substitution_scores(allele)
         else:
-            if variant.variant_type & VariantType.indel:
-                first_position = variant.position
-                last_position = variant.position + len(variant.reference)
-            elif VariantType.is_cnv(variant.variant_type):
-                first_position = variant.position
-                last_position = variant.end_position
+            if allele.variant_type & VariantType.indel:
+                pos_begin = allele.position
+                pos_end = allele.position + len(allele.reference)
+            elif VariantType.is_cnv(allele.variant_type):
+                pos_begin = allele.position
+                pos_end = allele.end_position
             else:
-                logger.warning(
-                    f"unexpected variant type in score annotation: "
-                    f"{variant}, {variant.variant_type}, "
-                    f"({variant.variant_type.value})"
-                )
-                raise Exception
-            if last_position - first_position > 500_000:
+                message = f"unexpected variant type in score annotation: " \
+                    f"{allele}, {allele.variant_type}, " \
+                    f"({allele.variant_type.value})"
+                logger.warning(message)
+                raise ValueError(message)
+
+            if pos_end - pos_begin > 500_000:
                 scores = None
             else:
-                scores = self.resource.fetch_scores_agg(
-                    variant.chromosome,
-                    first_position,
-                    last_position,
-                    self.get_scores(),
-                    self.non_default_position_aggregators
-                )
-
+                scores = self._fetch_aggregated_scores(
+                    allele, pos_begin, pos_end)
         if not scores:
             self._scores_not_found(attributes)
             return
@@ -198,9 +162,24 @@ class NPScoreAnnotator(PositionScoreAnnotator):
     def __init__(self, config, liftover=None, override=None):
         super().__init__(config, liftover, override)
 
-    def _fetch_substition(self, variant):
+    def _fetch_substitution_scores(self, allele):
         return self.resource.fetch_scores(
-            variant.chromosome, variant.position,
-            variant.reference, variant.alternative,
+            allele.chromosome, allele.position,
+            allele.reference, allele.alternative,
             self.get_scores()
         )
+
+    def _fetch_aggregated_scores(self, allele, pos_begin, pos_end):
+        scores_agg = self.resource.fetch_scores_agg(
+            allele.chromosome,
+            pos_begin,
+            pos_end,
+            self.get_scores(),
+            self.non_default_position_aggregators,
+            self.non_default_nucleotide_aggregators
+        )
+        scores = {
+            sc_name: sc_agg.get_final()
+            for sc_name, sc_agg in scores_agg.items()
+        }
+        return scores

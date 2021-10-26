@@ -110,22 +110,22 @@ class EffectAnnotator(Annotator):
     def get_default_annotation(self):
         return copy.deepcopy(self.attributes_list)
 
-    def _do_annotate(self, attributes, variant, _liftover_variants):
-        if variant is None:
+    def _do_annotate_allele(self, attributes, allele, _liftover_context):
+        if allele is None:
             self._not_found(attributes)
             return
 
-        assert variant is not None
+        assert allele is not None
         length = None
-        if VariantType.is_cnv(variant.variant_type):
-            length = variant.end_position - variant.position
+        if VariantType.is_cnv(allele.variant_type):
+            length = allele.end_position - allele.position
 
         effects = self.effect_annotator.do_annotate_variant(
-            chrom=variant.chromosome,
-            position=variant.position,
-            ref=variant.reference,
-            alt=variant.alternative,
-            variant_type=variant.variant_type,
+            chrom=allele.chromosome,
+            position=allele.position,
+            ref=allele.reference,
+            alt=allele.alternative,
+            variant_type=allele.variant_type,
             length=length
         )
 
