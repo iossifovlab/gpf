@@ -49,95 +49,95 @@ const [
 ];
 
 const enrichmentEffectResultMock = new EnrichmentEffectResult(
-  new EnrichmentTestResult('name1', 2, 3, 4, 5, browserQueryFilterMock1, browserQueryFilterMock2),
-  new EnrichmentTestResult('name49', 50, 51, 52, 53,
+  new EnrichmentTestResult('name0', 2, 3, 4, 5, browserQueryFilterMock1, browserQueryFilterMock2),
+  new EnrichmentTestResult('name39', 40, 41, 42, 43,
     new BrowserQueryFilter(
-      'name54', ['gene55', 'gene56'], ['effectType57', 'effectType58'],
-      ['gender59', 'gender60'], new PersonSetCollection('id61', ['62', '63']),
-      ['studyType64', 'studyType65'], ['variant66', 'variant67']
+      'name44', ['gene45', 'gene46'], ['effectType47', 'effectType48'],
+      ['gender49', 'gender50'], new PersonSetCollection('id51', ['52', '53']),
+      ['studyType54', 'studyType55'], ['variant56', 'variant57']
     ),
     new BrowserQueryFilter(
-      'name78', ['gene79', 'gene80'], ['effectType81', 'effectType82'],
-      ['gender83', 'gender84'], new PersonSetCollection('id85', ['86', '87']),
-      ['studyType88', 'studyType89'], ['variant90', 'variant91']
+      'name58', ['gene59', 'gene60'], ['effectType61', 'effectType62'],
+      ['gender63', 'gender64'], new PersonSetCollection('id65', ['66', '67']),
+      ['studyType68', 'studyType69'], ['variant70', 'variant71']
     )
   ),
-  new EnrichmentTestResult('name102', 103, 104, 105 , 106,
+  new EnrichmentTestResult('name72', 73, 74, 75 , 76,
     new BrowserQueryFilter(
-      'name107', ['gene108', 'gene109'], ['effectType110', 'effectType111'],
-      ['gender112', 'gender113'], new PersonSetCollection('id114', ['115', '116']),
-      ['studyType117', 'studyType118'], ['variant119', 'variant120']
+      'name77', ['gene78', 'gene79'], ['effectType80', 'effectType81'],
+      ['gender82', 'gender83'], new PersonSetCollection('id84', ['85', '86']),
+      ['studyType87', 'studyType88'], ['variant89', 'variant90']
     ),
     new BrowserQueryFilter(
-      'name131', ['gene132', 'gene133'], ['effectType134', 'effectType135'],
-      ['gender136', 'gender137'], new PersonSetCollection('id138', ['139', '140']),
-      ['studyType141', 'studyType142'], ['variant143', 'variant144']
+      'name91', ['gene92', 'gene93'], ['effectType94', 'effectType95'],
+      ['gender96', 'gender97'], new PersonSetCollection('id98', ['99', '100']),
+      ['studyType101', 'studyType102'], ['variant103', 'variant104']
     )
   ),
-  new EnrichmentTestResult('name155', 156, 157, 158 , 159,
+  new EnrichmentTestResult('name105', 106, 107, 108 , 109,
     new BrowserQueryFilter(
-      'name160', ['gene161', 'gene162'], ['effectType163', 'effectType164'],
-      ['gender165', 'gender166'], new PersonSetCollection('id167', ['168', '169']),
-      ['studyType170', 'studyType171'], ['variant172', 'variant173']
+      'name110', ['gene111', 'gene112'], ['effectType113', 'effectType114'],
+      ['gender115', 'gender116'], new PersonSetCollection('id117', ['118', '119']),
+      ['studyType120', 'studyType121'], ['variant122', 'variant123']
     ),
     new BrowserQueryFilter(
-      'name184', ['gene185', 'gene186'], ['effectType187', 'effectType188'],
-      ['gender189', 'gender190'], new PersonSetCollection('id191', ['192', '193']),
-      ['studyType194', 'studyType195'], ['variant196', 'variant197']
+      'name124', ['gene125', 'gene126'], ['effectType127', 'effectType128'],
+      ['gender129', 'gender130'], new PersonSetCollection('id131', ['132', '133']),
+      ['studyType134', 'studyType135'], ['variant136', 'variant137']
     )
   )
 );
 
 const enrichmentEffectResultMockFromJson = {
   all: {
-    name: 'name1', count: 2, expected: 3, overlapped: 4, pvalue: 5,
+    name: 'name0', count: 2, expected: 3, overlapped: 4, pvalue: 5,
     countFilter: browserQueryFilterMockFromJson1,
     overlapFilter: browserQueryFilterMockFromJson2
   }, male: {
-    name: 'name49', count: 50, expected: 51, overlapped: 52, pvalue: 53,
+    name: 'name39', count: 40, expected: 41, overlapped: 42, pvalue: 43,
     countFilter:
     {
-      datasetId: 'name54', geneSymbols: [ 'gene55', 'gene56' ], effectTypes: [ 'effectType57', 'effectType58' ],
-      gender: [ 'gender59', 'gender60' ], peopleGroup: { id: 'id61', checkedValues: [ '62', '63' ] },
-      studyTypes: [ 'studyType64', 'studyType65' ], variantTypes: [ 'variant66', 'variant67' ]
+      datasetId: 'name44', geneSymbols: [ 'gene45', 'gene46' ], effectTypes: [ 'effectType47', 'effectType48' ],
+      gender: [ 'gender49', 'gender50' ], peopleGroup: { id: 'id51', checkedValues: [ '52', '53' ] },
+      studyTypes: [ 'studyType54', 'studyType55' ], variantTypes: [ 'variant56', 'variant57' ]
     },
     overlapFilter:
     {
-      datasetId: 'name78', geneSymbols: [ 'gene79', 'gene80' ], effectTypes: [ 'effectType81', 'effectType82' ],
-      gender: [ 'gender83', 'gender84' ], peopleGroup: { id: 'id85', checkedValues: [ '86', '87' ] },
-      studyTypes: [ 'studyType88', 'studyType89' ], variantTypes: [ 'variant90', 'variant91' ]
+      datasetId: 'name58', geneSymbols: [ 'gene59', 'gene60' ], effectTypes: [ 'effectType61', 'effectType62' ],
+      gender: [ 'gender63', 'gender64' ], peopleGroup: { id: 'id65', checkedValues: [ '66', '67' ] },
+      studyTypes: [ 'studyType68', 'studyType69' ], variantTypes: [ 'variant70', 'variant71' ]
     }
   }, female: {
-    name: 'name102', count: 103, expected: 104, overlapped: 105, pvalue: 106,
+    name: 'name72', count: 73, expected: 74, overlapped: 75, pvalue: 76,
     countFilter:
     {
-      datasetId: 'name107', geneSymbols: [ 'gene108', 'gene109' ],
-      effectTypes: [ 'effectType110', 'effectType111' ],
-      gender: [ 'gender112', 'gender113' ], peopleGroup: { id: 'id114', checkedValues: [ '115', '116' ] },
-      studyTypes: [ 'studyType117', 'studyType118' ], variantTypes: [ 'variant119', 'variant120' ]
+      datasetId: 'name77', geneSymbols: [ 'gene78', 'gene79' ],
+      effectTypes: [ 'effectType80', 'effectType81' ],
+      gender: [ 'gender82', 'gender83' ], peopleGroup: { id: 'id84', checkedValues: [ '85', '86' ] },
+      studyTypes: [ 'studyType87', 'studyType88' ], variantTypes: [ 'variant89', 'variant90' ]
     },
     overlapFilter:
     {
-      datasetId: 'name131', geneSymbols: [ 'gene132', 'gene133' ],
-      effectTypes: [ 'effectType134', 'effectType135' ],
-      gender: [ 'gender136', 'gender137' ], peopleGroup: { id: 'id138', checkedValues: [ '139', '140' ] },
-      studyTypes: [ 'studyType141', 'studyType142' ], variantTypes: [ 'variant143', 'variant144' ]
+      datasetId: 'name91', geneSymbols: [ 'gene92', 'gene93' ],
+      effectTypes: [ 'effectType94', 'effectType95' ],
+      gender: [ 'gender96', 'gender97' ], peopleGroup: { id: 'id98', checkedValues: [ '99', '100' ] },
+      studyTypes: [ 'studyType101', 'studyType102' ], variantTypes: [ 'variant103', 'variant104' ]
     }
   }, rec: {
-    name: 'name155', count: 156, expected: 157, overlapped: 158, pvalue: 159,
+    name: 'name105', count: 106, expected: 107, overlapped: 108, pvalue: 109,
     countFilter:
     {
-      datasetId: 'name160', geneSymbols: [ 'gene161', 'gene162' ],
-      effectTypes: [ 'effectType163', 'effectType164' ],
-      gender: [ 'gender165', 'gender166' ], peopleGroup: { id: 'id167', checkedValues: [ '168', '169' ] },
-      studyTypes: [ 'studyType170', 'studyType171' ], variantTypes: [ 'variant172', 'variant173' ]
+      datasetId: 'name110', geneSymbols: [ 'gene111', 'gene112' ],
+      effectTypes: [ 'effectType113', 'effectType114' ],
+      gender: [ 'gender115', 'gender116' ], peopleGroup: { id: 'id117', checkedValues: [ '118', '119' ] },
+      studyTypes: [ 'studyType120', 'studyType121' ], variantTypes: [ 'variant122', 'variant123' ]
     },
     overlapFilter:
     {
-      datasetId: 'name184', geneSymbols: [ 'gene185', 'gene186' ],
-      effectTypes: [ 'effectType187', 'effectType188' ],
-      gender: [ 'gender189', 'gender190' ], peopleGroup: { id: 'id191', checkedValues: [ '192', '193' ] },
-      studyTypes: [ 'studyType194', 'studyType195' ], variantTypes: [ 'variant196', 'variant197' ]
+      datasetId: 'name124', geneSymbols: [ 'gene125', 'gene126' ],
+      effectTypes: [ 'effectType127', 'effectType128' ],
+      gender: [ 'gender129', 'gender130' ], peopleGroup: { id: 'id131', checkedValues: [ '132', '133' ] },
+      studyTypes: [ 'studyType134', 'studyType135' ], variantTypes: [ 'variant136', 'variant137' ]
     }
   }
 };
@@ -166,660 +166,609 @@ describe('EnrichmentEffectResult', () => {
 
 const enrichmentResult1 = new EnrichmentResult('selector1', enrichmentEffectResultMock,
   new EnrichmentEffectResult(
-    new EnrichmentTestResult('name208', 209, 210, 211, 212,
+    new EnrichmentTestResult('name138', 139, 140, 141, 142,
       new BrowserQueryFilter(
-        'name208', ['gene209', 'gene210'], ['effectType211', 'effectType212'],
-        ['gender213', 'gender214'], new PersonSetCollection('id215', ['216', '217']),
-        ['studyType218', 'studyType219'], ['variant220', 'variant221']
+        'name139', ['gene140', 'gene141'], ['effectType142', 'effectType143'],
+        ['gender144', 'gender145'], new PersonSetCollection('id146', ['147', '148']),
+        ['studyType149', 'studyType150'], ['variant151', 'variant152']
       ),
       new BrowserQueryFilter(
-        'name232', ['gene233', 'gene234'], ['effectType235', 'effectType236'],
-        ['gender237', 'gender238'], new PersonSetCollection('id239', ['240', '241']),
-        ['studyType242', 'studyType243'], ['variant244', 'variant245']
+        'name153', ['gene154', 'gene155'], ['effectType156', 'effectType157'],
+        ['gender158', 'gender159'], new PersonSetCollection('id160', ['161', '162']),
+        ['studyType163', 'studyType164'], ['variant165', 'variant166']
       )
     ),
-    new EnrichmentTestResult('name256', 257, 258, 259, 260,
+    new EnrichmentTestResult('name167', 168, 169, 170, 171,
       new BrowserQueryFilter(
-        'name261', ['gene262', 'gene263'], ['effectType264', 'effectType265'],
-        ['gender266', 'gender267'], new PersonSetCollection('id268', ['269', '270']),
-        ['studyType271', 'studyType272'], ['variant273', 'variant274']
+        'name172', ['gene173', 'gene174'], ['effectType175', 'effectType176'],
+        ['gender177', 'gender178'], new PersonSetCollection('id179', ['180', '181']),
+        ['studyType182', 'studyType183'], ['variant184', 'variant185']
       ),
       new BrowserQueryFilter(
-        'name285', ['gene286', 'gene287'], ['effectType288', 'effectType289'],
-        ['gender290', 'gender291'], new PersonSetCollection('id292', ['293', '294']),
-        ['studyType295', 'studyType296'], ['variant297', 'variant298']
+        'name186', ['gene187', 'gene188'], ['effectType189', 'effectType190'],
+        ['gender191', 'gender192'], new PersonSetCollection('id193', ['194', '195']),
+      ['studyType196', 'studyType197'], ['variant198', 'variant199']
       )
     ),
-    new EnrichmentTestResult('name309', 310, 311, 312 , 313,
+    new EnrichmentTestResult('name200', 201, 202, 203 , 204,
       new BrowserQueryFilter(
-        'name314', ['gene315', 'gene316'], ['effectType317', 'effectType318'],
-        ['gender319', 'gender320'], new PersonSetCollection('id321', ['322', '323']),
-        ['studyType324', 'studyType325'], ['variant326', 'variant327']
+        'name205', ['gene206', 'gene207'], ['effectType208', 'effectType209'],
+        ['gender210', 'gender211'], new PersonSetCollection('id212', ['213', '214']),
+        ['studyType215', 'studyType216'], ['variant217', 'variant218']
       ),
       new BrowserQueryFilter(
-        'name338', ['gene339', 'gene340'], ['effectType341', 'effectType342'],
-        ['gender343', 'gender344'], new PersonSetCollection('id345', ['346', '347']),
-        ['studyType348', 'studyType349'], ['variant350', 'variant351']
+        'name219', ['gene220', 'gene221'], ['effectType222', 'effectType223'],
+        ['gender224', 'gender225'], new PersonSetCollection('id226', ['227', '228']),
+        ['studyType229', 'studyType230'], ['variant231', 'variant232']
       )
     ),
-    new EnrichmentTestResult('name362', 363, 364, 365 , 366,
+    new EnrichmentTestResult('name233', 234, 235, 236 , 237,
       new BrowserQueryFilter(
-        'name367', ['gene368', 'gene369'], ['effectType370', 'effectType371'],
-        ['gender372', 'gender373'], new PersonSetCollection('id374', ['375', '376']),
-        ['studyType377', 'studyType378'], ['variant379', 'variant380']
+        'name238', ['gene239', 'gene240'], ['effectType241', 'effectType242'],
+        ['gender243', 'gender244'], new PersonSetCollection('id245', ['246', '247']),
+        ['studyType248', 'studyType249'], ['variant250', 'variant251']
       ),
       new BrowserQueryFilter(
-        'name391', ['gene392', 'gene393'], ['effectType394', 'effectType395'],
-        ['gender396', 'gender397'], new PersonSetCollection('id398', ['399', '400']),
-        ['studyType401', 'studyType402'], ['variant403', 'variant404']
+        'name252', ['gene253', 'gene254'], ['effectType255', 'effectType256'],
+        ['gender257', 'gender258'], new PersonSetCollection('id259', ['260', '261']),
+        ['studyType262', 'studyType263'], ['variant264', 'variant265']
       )
     )
   ), new EnrichmentEffectResult(
-    new EnrichmentTestResult('name415', 416, 417, 418, 419,
+    new EnrichmentTestResult('name266', 267, 268, 269, 270,
+      new BrowserQueryFilter(
+        'name266', ['gene267', 'gene268'], ['effectType269', 'effectType270'],
+        ['gender271', 'gender272'], new PersonSetCollection('id273', ['274', '275']),
+        ['studyType276', 'studyType277'], ['variant278', 'variant279']
+      ),
+      new BrowserQueryFilter(
+        'name280', ['gene281', 'gene282'], ['effectType283', 'effectType284'],
+        ['gender285', 'gender286'], new PersonSetCollection('id287', ['288', '289']),
+        ['studyType290', 'studyType291'], ['variant292', 'variant293']
+      )
+    ),
+    new EnrichmentTestResult('name294', 295, 296, 297, 298,
+      new BrowserQueryFilter(
+        'name299', ['gene300', 'gene301'], ['effectType302', 'effectType303'],
+        ['gender304', 'gender305'], new PersonSetCollection('id306', ['307', '308']),
+        ['studyType309', 'studyType310'], ['variant311', 'variant312']
+      ),
+      new BrowserQueryFilter(
+        'name313', ['gene314', 'gene315'], ['effectType316', 'effectType317'],
+        ['gender318', 'gender319'], new PersonSetCollection('id320', ['321', '322']),
+        ['studyType323', 'studyType324'], ['variant325', 'variant326']
+      )
+    ),
+    new EnrichmentTestResult('name327', 328, 329, 330 , 331,
+      new BrowserQueryFilter(
+        'name332', ['gene333', 'gene334'], ['effectType335', 'effectType336'],
+        ['gender337', 'gender338'], new PersonSetCollection('id339', ['340', '341']),
+        ['studyType342', 'studyType343'], ['variant344', 'variant345']
+      ),
+      new BrowserQueryFilter(
+        'name346', ['gene347', 'gene348'], ['effectType349', 'effectType350'],
+        ['gender351', 'gender352'], new PersonSetCollection('id353', ['354', '355']),
+        ['studyType356', 'studyType357'], ['variant358', 'variant359']
+      )
+    ),
+    new EnrichmentTestResult('name360', 361, 362, 363 , 364,
+      new BrowserQueryFilter(
+        'name365', ['gene366', 'gene367'], ['effectType368', 'effectType369'],
+        ['gender370', 'gender371'], new PersonSetCollection('id372', ['373', '374']),
+        ['studyType375', 'studyType376'], ['variant377', 'variant378']
+      ),
+      new BrowserQueryFilter(
+        'name379', ['gene380', 'gene381'], ['effectType382', 'effectType383'],
+        ['gender384', 'gender385'], new PersonSetCollection('id386', ['387', '388']),
+        ['studyType389', 'studyType390'], ['variant391', 'variant392']
+      )
+    )
+  ), new ChildrenStats(393, 394, 395)
+);
+
+const enrichmentResult2 = new EnrichmentResult('selector396',
+  new EnrichmentEffectResult(
+    new EnrichmentTestResult('name396', 397, 398, 399, 400,
+      new BrowserQueryFilter(
+        'name401', ['gene402', 'gene403'], ['effectType404', 'effectType405'],
+        ['gender406', 'gender407'], new PersonSetCollection('id408', ['409', '410']),
+        ['studyType411', 'studyType412'], ['variant413', 'variant414']
+      ),
       new BrowserQueryFilter(
         'name415', ['gene416', 'gene417'], ['effectType418', 'effectType419'],
         ['gender420', 'gender421'], new PersonSetCollection('id422', ['423', '424']),
         ['studyType425', 'studyType426'], ['variant427', 'variant428']
-      ),
-      new BrowserQueryFilter(
-        'name439', ['gene440', 'gene441'], ['effectType442', 'effectType443'],
-        ['gender444', 'gender445'], new PersonSetCollection('id446', ['447', '448']),
-        ['studyType449', 'studyType450'], ['variant451', 'variant452']
       )
     ),
-    new EnrichmentTestResult('name463', 464, 465, 466, 467,
+    new EnrichmentTestResult('name429', 430, 431, 432, 433,
       new BrowserQueryFilter(
-        'name468', ['gene469', 'gene470'], ['effectType471', 'effectType472'],
-        ['gender473', 'gender474'], new PersonSetCollection('id475', ['476', '477']),
-        ['studyType478', 'studyType479'], ['variant480', 'variant481']
+        'name434', ['gene435', 'gene436'], ['effectType437', 'effectType438'],
+        ['gender439', 'gender440'], new PersonSetCollection('id441', ['442', '443']),
+        ['studyType444', 'studyType445'], ['variant446', 'variant447']
       ),
       new BrowserQueryFilter(
-        'name492', ['gene493', 'gene494'], ['effectType495', 'effectType496'],
-        ['gender497', 'gender498'], new PersonSetCollection('id499', ['500', '501']),
-        ['studyType502', 'studyType503'], ['variant504', 'variant505']
+        'name448', ['gene449', 'gene450'], ['effectType451', 'effectType452'],
+        ['gender453', 'gender454'], new PersonSetCollection('id455', ['456', '457']),
+        ['studyType458', 'studyType459'], ['variant460', 'variant461']
       )
     ),
-    new EnrichmentTestResult('name516', 517, 518, 519 , 520,
+    new EnrichmentTestResult('name462', 463, 464, 465 , 466,
       new BrowserQueryFilter(
-        'name521', ['gene522', 'gene523'], ['effectType524', 'effectType525'],
-        ['gender526', 'gender527'], new PersonSetCollection('id528', ['529', '530']),
-        ['studyType531', 'studyType532'], ['variant533', 'variant534']
+        'name467', ['gene468', 'gene469'], ['effectType470', 'effectType471'],
+        ['gender472', 'gender473'], new PersonSetCollection('id474', ['475', '476']),
+        ['studyType477', 'studyType478'], ['variant479', 'variant480']
       ),
       new BrowserQueryFilter(
-        'name545', ['gene546', 'gene547'], ['effectType548', 'effectType549'],
-        ['gender550', 'gender551'], new PersonSetCollection('id552', ['553', '554']),
-        ['studyType555', 'studyType556'], ['variant557', 'variant558']
+        'name481', ['gene482', 'gene483'], ['effectType484', 'effectType485'],
+        ['gender486', 'gender487'], new PersonSetCollection('id488', ['489', '490']),
+        ['studyType491', 'studyType492'], ['variant493', 'variant494']
       )
     ),
-    new EnrichmentTestResult('name569', 570, 571, 572 , 573,
-      new BrowserQueryFilter(
-        'name574', ['gene575', 'gene576'], ['effectType577', 'effectType578'],
-        ['gender579', 'gender580'], new PersonSetCollection('id581', ['582', '583']),
-        ['studyType584', 'studyType585'], ['variant586', 'variant587']
-      ),
-      new BrowserQueryFilter(
-        'name598', ['gene599', 'gene600'], ['effectType601', 'effectType602'],
-        ['gender603', 'gender604'], new PersonSetCollection('id605', ['606', '607']),
-        ['studyType608', 'studyType609'], ['variant610', 'variant611']
-      )
-    )
-  ), new ChildrenStats(622, 623, 624)
-);
-
-const enrichmentResult2 = new EnrichmentResult('selector423',
-  new EnrichmentEffectResult(
-    new EnrichmentTestResult('name418', 419, 420, 421, 422,
-      new BrowserQueryFilter(
-        'name423', ['gene424', 'gene425'], ['effectType426', 'effectType427'],
-        ['gender428', 'gender429'], new PersonSetCollection('id430', ['431', '432']),
-        ['studyType433', 'studyType434'], ['variant435', 'variant436']
-      ),
-      new BrowserQueryFilter(
-        'name447', ['gene448', 'gene449'], ['effectType450', 'effectType451'],
-        ['gender452', 'gender453'], new PersonSetCollection('id454', ['455', '456']),
-        ['studyType457', 'studyType458'], ['variant459', 'variant460']
-      )
-    ),
-    new EnrichmentTestResult('name471', 472, 473, 474, 475,
-      new BrowserQueryFilter(
-        'name476', ['gene477', 'gene478'], ['effectType479', 'effectType480'],
-        ['gender481', 'gender482'], new PersonSetCollection('id483', ['484', '485']),
-        ['studyType486', 'studyType487'], ['variant488', 'variant489']
-      ),
+    new EnrichmentTestResult('name495', 496, 497, 498 , 499,
       new BrowserQueryFilter(
         'name500', ['gene501', 'gene502'], ['effectType503', 'effectType504'],
         ['gender505', 'gender506'], new PersonSetCollection('id507', ['508', '509']),
         ['studyType510', 'studyType511'], ['variant512', 'variant513']
-      )
-    ),
-    new EnrichmentTestResult('name524', 525, 526, 527 , 528,
-      new BrowserQueryFilter(
-        'name529', ['gene530', 'gene531'], ['effectType532', 'effectType533'],
-        ['gender534', 'gender535'], new PersonSetCollection('id536', ['537', '538']),
-        ['studyType539', 'studyType540'], ['variant541', 'variant542']
       ),
       new BrowserQueryFilter(
-        'name553', ['gene554', 'gene555'], ['effectType556', 'effectType557'],
-        ['gender558', 'gender559'], new PersonSetCollection('id560', ['561', '562']),
-        ['studyType563', 'studyType564'], ['variant565', 'variant566']
-      )
-    ),
-    new EnrichmentTestResult('name577', 578, 579, 580 , 581,
-      new BrowserQueryFilter(
-        'name582', ['gene583', 'gene584'], ['effectType585', 'effectType586'],
-        ['gender587', 'gender588'], new PersonSetCollection('id589', ['590', '591']),
-        ['studyType592', 'studyType593'], ['variant594', 'variant595']
-      ),
-      new BrowserQueryFilter(
-        'name606', ['gene607', 'gene608'], ['effectType609', 'effectType610'],
-        ['gender611', 'gender612'], new PersonSetCollection('id613', ['614', '615']),
-        ['studyType616', 'studyType617'], ['variant618', 'variant619']
+        'name514', ['gene515', 'gene516'], ['effectType517', 'effectType518'],
+        ['gender519', 'gender520'], new PersonSetCollection('id521', ['522', '523']),
+        ['studyType524', 'studyType525'], ['variant526', 'variant527']
       )
     )
   ),
   new EnrichmentEffectResult(
-    new EnrichmentTestResult('name630', 631, 632, 633, 634,
+    new EnrichmentTestResult('name528', 529, 530, 531, 532,
       new BrowserQueryFilter(
-        'name630', ['gene631', 'gene632'], ['effectType633', 'effectType634'],
-        ['gender635', 'gender636'], new PersonSetCollection('id637', ['638', '639']),
-        ['studyType640', 'studyType641'], ['variant642', 'variant643']
+        'name528', ['gene529', 'gene530'], ['effectType531', 'effectType532'],
+        ['gender533', 'gender534'], new PersonSetCollection('id535', ['536', '537']),
+        ['studyType538', 'studyType539'], ['variant540', 'variant541']
       ),
       new BrowserQueryFilter(
-        'name654', ['gene655', 'gene656'], ['effectType657', 'effectType658'],
-        ['gender659', 'gender660'], new PersonSetCollection('id661', ['662', '663']),
-        ['studyType664', 'studyType665'], ['variant666', 'variant667']
+        'name542', ['gene543', 'gene544'], ['effectType545', 'effectType546'],
+        ['gender547', 'gender548'], new PersonSetCollection('id549', ['550', '551']),
+        ['studyType552', 'studyType553'], ['variant554', 'variant555']
       )
     ),
-    new EnrichmentTestResult('name678', 679, 680, 681, 682,
+    new EnrichmentTestResult('name556', 557, 558, 559, 560,
       new BrowserQueryFilter(
-        'name683', ['gene684', 'gene685'], ['effectType686', 'effectType687'],
-        ['gender688', 'gender689'], new PersonSetCollection('id690', ['691', '692']),
-        ['studyType693', 'studyType694'], ['variant695', 'variant696']
+        'name561', ['gene562', 'gene563'], ['effectType564', 'effectType565'],
+        ['gender566', 'gender567'], new PersonSetCollection('id568', ['569', '570']),
+        ['studyType571', 'studyType572'], ['variant573', 'variant574']
       ),
       new BrowserQueryFilter(
-        'name707', ['gene708', 'gene709'], ['effectType710', 'effectType711'],
-        ['gender712', 'gender713'], new PersonSetCollection('id714', ['715', '716']),
-        ['studyType717', 'studyType718'], ['variant719', 'variant720']
+        'name575', ['gene576', 'gene577'], ['effectType578', 'effectType579'],
+        ['gender580', 'gender581'], new PersonSetCollection('id582', ['583', '584']),
+        ['studyType585', 'studyType586'], ['variant587', 'variant588']
       )
     ),
-    new EnrichmentTestResult('name731', 732, 733, 734 , 735,
+    new EnrichmentTestResult('name589', 590, 591, 592 , 593,
       new BrowserQueryFilter(
-        'name736', ['gene737', 'gene738'], ['effectType739', 'effectType740'],
-        ['gender741', 'gender742'], new PersonSetCollection('id743', ['744', '745']),
-        ['studyType746', 'studyType747'], ['variant748', 'variant749']
+        'name594', ['gene595', 'gene596'], ['effectType597', 'effectType598'],
+        ['gender599', 'gender600'], new PersonSetCollection('id601', ['602', '603']),
+        ['studyType604', 'studyType605'], ['variant606', 'variant607']
       ),
       new BrowserQueryFilter(
-        'name760', ['gene761', 'gene762'], ['effectType763', 'effectType764'],
-        ['gender765', 'gender766'], new PersonSetCollection('id767', ['768', '769']),
-        ['studyType770', 'studyType771'], ['variant772', 'variant773']
+        'name608', ['gene609', 'gene610'], ['effectType611', 'effectType612'],
+        ['gender613', 'gender614'], new PersonSetCollection('id615', ['616', '617']),
+        ['studyType618', 'studyType619'], ['variant620', 'variant621']
       )
     ),
-    new EnrichmentTestResult('name784', 785, 786, 787 , 788,
+    new EnrichmentTestResult('name622', 623, 624, 625 , 626,
       new BrowserQueryFilter(
-        'name789', ['gene790', 'gene791'], ['effectType792', 'effectType793'],
-        ['gender794', 'gender795'], new PersonSetCollection('id796', ['797', '798']),
-        ['studyType799', 'studyType800'], ['variant801', 'variant802']
+        'name627', ['gene628', 'gene629'], ['effectType630', 'effectType631'],
+        ['gender632', 'gender633'], new PersonSetCollection('id634', ['635', '636']),
+        ['studyType637', 'studyType638'], ['variant639', 'variant640']
       ),
       new BrowserQueryFilter(
-        'name813', ['gene814', 'gene815'], ['effectType816', 'effectType817'],
-        ['gender818', 'gender819'], new PersonSetCollection('id820', ['821', '822']),
-        ['studyType823', 'studyType824'], ['variant825', 'variant826']
+        'name641', ['gene642', 'gene643'], ['effectType644', 'effectType645'],
+        ['gender646', 'gender647'], new PersonSetCollection('id648', ['649', '650']),
+        ['studyType651', 'studyType652'], ['variant653', 'variant654']
       )
     )
   ),
   new EnrichmentEffectResult(
-    new EnrichmentTestResult('name837', 838, 839, 840, 841,
+    new EnrichmentTestResult('name655', 656, 657, 658, 659,
       new BrowserQueryFilter(
-        'name837', ['gene838', 'gene839'], ['effectType840', 'effectType841'],
-        ['gender842', 'gender843'], new PersonSetCollection('id844', ['845', '846']),
-        ['studyType847', 'studyType848'], ['variant849', 'variant850']
+        'name655', ['gene656', 'gene657'], ['effectType658', 'effectType659'],
+        ['gender660', 'gender661'], new PersonSetCollection('id662', ['663', '664']),
+        ['studyType665', 'studyType666'], ['variant667', 'variant668']
       ),
       new BrowserQueryFilter(
-        'name861', ['gene862', 'gene863'], ['effectType864', 'effectType865'],
-        ['gender866', 'gender867'], new PersonSetCollection('id868', ['869', '870']),
-        ['studyType871', 'studyType872'], ['variant873', 'variant874']
+        'name669', ['gene670', 'gene671'], ['effectType672', 'effectType673'],
+        ['gender674', 'gender675'], new PersonSetCollection('id676', ['677', '678']),
+        ['studyType679', 'studyType680'], ['variant681', 'variant682']
       )
     ),
-    new EnrichmentTestResult('name885', 886, 887, 888, 889,
+    new EnrichmentTestResult('name683', 684, 685, 686, 687,
       new BrowserQueryFilter(
-        'name890', ['gene891', 'gene892'], ['effectType893', 'effectType894'],
-        ['gender895', 'gender896'], new PersonSetCollection('id897', ['898', '899']),
-        ['studyType900', 'studyType901'], ['variant902', 'variant903']
+        'name688', ['gene689', 'gene690'], ['effectType691', 'effectType692'],
+        ['gender693', 'gender694'], new PersonSetCollection('id695', ['696', '697']),
+        ['studyType698', 'studyType699'], ['variant700', 'variant701']
       ),
       new BrowserQueryFilter(
-        'name914', ['gene915', 'gene916'], ['effectType917', 'effectType918'],
-        ['gender919', 'gender920'], new PersonSetCollection('id921', ['922', '923']),
-        ['studyType924', 'studyType925'], ['variant926', 'variant927']
+        'name702', ['gene703', 'gene704'], ['effectType705', 'effectType706'],
+        ['gender707', 'gender708'], new PersonSetCollection('id709', ['710', '711']),
+        ['studyType712', 'studyType713'], ['variant714', 'variant715']
       )
     ),
-    new EnrichmentTestResult('name938', 939, 940, 941 , 942,
+    new EnrichmentTestResult('name716', 717, 718, 719 , 720,
       new BrowserQueryFilter(
-        'name943', ['gene944', 'gene945'], ['effectType946', 'effectType947'],
-        ['gender948', 'gender949'], new PersonSetCollection('id950', ['951', '952']),
-        ['studyType953', 'studyType954'], ['variant955', 'variant956']
+        'name721', ['gene722', 'gene723'], ['effectType724', 'effectType725'],
+        ['gender726', 'gender727'], new PersonSetCollection('id728', ['729', '730']),
+        ['studyType731', 'studyType732'], ['variant733', 'variant734']
       ),
       new BrowserQueryFilter(
-        'name967', ['gene968', 'gene969'], ['effectType970', 'effectType971'],
-        ['gender972', 'gender973'], new PersonSetCollection('id974', ['975', '976']),
-        ['studyType977', 'studyType978'], ['variant979', 'variant980']
+        'name735', ['gene736', 'gene737'], ['effectType738', 'effectType739'],
+        ['gender740', 'gender741'], new PersonSetCollection('id742', ['743', '744']),
+        ['studyType745', 'studyType746'], ['variant747', 'variant748']
       )
     ),
-    new EnrichmentTestResult('name991', 992, 993, 994 , 995,
+    new EnrichmentTestResult('name749', 750, 751, 752 , 753,
       new BrowserQueryFilter(
-        'name996', ['gene997', 'gene998'], ['effectType999', 'effectType1000'],
-        ['gender1001', 'gender1002'], new PersonSetCollection('id1003', ['1004', '1005']),
-        ['studyType1006', 'studyType1007'], ['variant1008', 'variant1009']
+        'name754', ['gene755', 'gene756'], ['effectType757', 'effectType758'],
+        ['gender759', 'gender760'], new PersonSetCollection('id761', ['762', '763']),
+        ['studyType764', 'studyType765'], ['variant766', 'variant767']
       ),
       new BrowserQueryFilter(
-        'name1020', ['gene1021', 'gene1022'], ['effectType1023', 'effectType1024'],
-        ['gender1025', 'gender1026'], new PersonSetCollection('id1027', ['1028', '1029']),
-        ['studyType1030', 'studyType1031'], ['variant1032', 'variant1033']
+        'name768', ['gene769', 'gene770'], ['effectType771', 'effectType772'],
+        ['gender773', 'gender774'], new PersonSetCollection('id775', ['776', '777']),
+        ['studyType778', 'studyType779'], ['variant780', 'variant781']
       )
     )
-  ), new ChildrenStats(1044, 1045, 1046)
+    ), new ChildrenStats(782, 783, 784)
 );
 
 const enrichmentResultFromJson1 = {
   selector: 'selector1',
-  LGDs: {
+  LGDs: enrichmentEffectResultMockFromJson,
+  missense: {
     all: {
-      name: 'name1', count: 2, expected: 3, overlapped: 4, pvalue: 5,
-      countFilter: browserQueryFilterMockFromJson1,
-      overlapFilter: browserQueryFilterMockFromJson2,
-    }, male: {
-      name: 'name49', count: 50, expected: 51, overlapped: 52, pvalue: 53,
+      name: 'name138', count: 139, expected: 140, overlapped: 141, pvalue: 142,
       countFilter:
       {
-        datasetId: 'name54', geneSymbols: [ 'gene55', 'gene56' ], effectTypes: [ 'effectType57', 'effectType58' ],
-        gender: [ 'gender59', 'gender60' ], peopleGroup: { id: 'id61', checkedValues: [ '62', '63' ] },
-        studyTypes: [ 'studyType64', 'studyType65' ], variantTypes: [ 'variant66', 'variant67' ]
+        datasetId: 'name139', geneSymbols: [ 'gene140', 'gene141' ],
+        effectTypes: [ 'effectType142', 'effectType143' ],
+        gender: [ 'gender144', 'gender145' ], peopleGroup: { id: 'id146', checkedValues: [ '147', '148' ] },
+        studyTypes: [ 'studyType149', 'studyType150' ], variantTypes: [ 'variant151', 'variant152' ]
       },
       overlapFilter:
       {
-        datasetId: 'name78', geneSymbols: [ 'gene79', 'gene80' ], effectTypes: [ 'effectType81', 'effectType82' ],
-        gender: [ 'gender83', 'gender84' ], peopleGroup: { id: 'id85', checkedValues: [ '86', '87' ] },
-        studyTypes: [ 'studyType88', 'studyType89' ], variantTypes: [ 'variant90', 'variant91' ]
-      }
-    }, female: {
-      name: 'name102', count: 103, expected: 104, overlapped: 105, pvalue: 106,
-      countFilter:
-      {
-        datasetId: 'name107', geneSymbols: [ 'gene108', 'gene109' ],
-        effectTypes: [ 'effectType110', 'effectType111' ],
-        gender: [ 'gender112', 'gender113' ], peopleGroup: { id: 'id114', checkedValues: [ '115', '116' ] },
-        studyTypes: [ 'studyType117', 'studyType118' ], variantTypes: [ 'variant119', 'variant120' ]
-      },
-      overlapFilter:
-      {
-        datasetId: 'name131', geneSymbols: [ 'gene132', 'gene133' ],
-        effectTypes: [ 'effectType134', 'effectType135' ],
-        gender: [ 'gender136', 'gender137' ], peopleGroup: { id: 'id138', checkedValues: [ '139', '140' ] },
-        studyTypes: [ 'studyType141', 'studyType142' ], variantTypes: [ 'variant143', 'variant144' ]
-      }
-    }, rec: {
-      name: 'name155', count: 156, expected: 157, overlapped: 158, pvalue: 159,
-      countFilter:
-      {
-        datasetId: 'name160', geneSymbols: [ 'gene161', 'gene162' ],
-        effectTypes: [ 'effectType163', 'effectType164' ],
-        gender: [ 'gender165', 'gender166' ], peopleGroup: { id: 'id167', checkedValues: [ '168', '169' ] },
-        studyTypes: [ 'studyType170', 'studyType171' ], variantTypes: [ 'variant172', 'variant173' ]
-      },
-      overlapFilter:
-      {
-        datasetId: 'name184', geneSymbols: [ 'gene185', 'gene186' ],
-        effectTypes: [ 'effectType187', 'effectType188' ],
-        gender: [ 'gender189', 'gender190' ], peopleGroup: { id: 'id191', checkedValues: [ '192', '193' ] },
-        studyTypes: [ 'studyType194', 'studyType195' ], variantTypes: [ 'variant196', 'variant197' ]
-      }
-    }
-  }, missense: {
-    all: {
-      name: 'name208', count: 209, expected: 210, overlapped: 211, pvalue: 212,
-      countFilter:
-      {
-        datasetId: 'name208', geneSymbols: [ 'gene209', 'gene210' ],
-        effectTypes: [ 'effectType211', 'effectType212' ],
-        gender: [ 'gender213', 'gender214' ], peopleGroup: { id: 'id215', checkedValues: [ '216', '217' ] },
-        studyTypes: [ 'studyType218', 'studyType219' ], variantTypes: [ 'variant220', 'variant221' ]
-      },
-      overlapFilter:
-      {
-        datasetId: 'name232', geneSymbols: [ 'gene233', 'gene234' ],
-        effectTypes: [ 'effectType235', 'effectType236' ],
-        gender: [ 'gender237', 'gender238' ],
-        peopleGroup: { id: 'id239', checkedValues: [ '240', '241' ] },
-        studyTypes: [ 'studyType242', 'studyType243' ], variantTypes: [ 'variant244', 'variant245' ]
+        datasetId: 'name153', geneSymbols: [ 'gene154', 'gene155' ],
+        effectTypes: [ 'effectType156', 'effectType157' ],
+        gender: [ 'gender158', 'gender159' ],
+        peopleGroup: { id: 'id160', checkedValues: [ '161', '162' ] },
+        studyTypes: [ 'studyType163', 'studyType164' ], variantTypes: [ 'variant165', 'variant166' ]
       },
     }, male: {
-      name: 'name256', count: 257, expected: 258, overlapped: 259, pvalue: 260,
+      name: 'name167', count: 168, expected: 169, overlapped: 170, pvalue: 171,
       countFilter:
       {
-        datasetId: 'name261', geneSymbols: [ 'gene262', 'gene263' ],
-        effectTypes: [ 'effectType264', 'effectType265' ],
-        gender: [ 'gender266', 'gender267' ], peopleGroup: { id: 'id268', checkedValues: [ '269', '270' ] },
-        studyTypes: [ 'studyType271', 'studyType272' ], variantTypes: [ 'variant273', 'variant274' ]
+        datasetId: 'name172', geneSymbols: [ 'gene173', 'gene174' ],
+        effectTypes: [ 'effectType175', 'effectType176' ],
+        gender: [ 'gender177', 'gender178' ], peopleGroup: { id: 'id179', checkedValues: [ '180', '181' ] },
+        studyTypes: [ 'studyType182', 'studyType183' ], variantTypes: [ 'variant184', 'variant185' ]
       },
       overlapFilter:
       {
-        datasetId: 'name285', geneSymbols: [ 'gene286', 'gene287' ],
-        effectTypes: [ 'effectType288', 'effectType289' ],
-        gender: [ 'gender290', 'gender291' ], peopleGroup: { id: 'id292', checkedValues: [ '293', '294' ] },
-        studyTypes: [ 'studyType295', 'studyType296' ], variantTypes: [ 'variant297', 'variant298' ]
+        datasetId: 'name186', geneSymbols: [ 'gene187', 'gene188' ],
+        effectTypes: [ 'effectType189', 'effectType190' ],
+        gender: [ 'gender191', 'gender192' ], peopleGroup: { id: 'id193', checkedValues: [ '194', '195' ] },
+        studyTypes: [ 'studyType196', 'studyType197' ], variantTypes: [ 'variant198', 'variant199' ]
       }
     }, female: {
-      name: 'name309', count: 310, expected: 311, overlapped: 312, pvalue: 313,
+      name: 'name200', count: 201, expected: 202, overlapped: 203, pvalue: 204,
       countFilter:
       {
-        datasetId: 'name314', geneSymbols: [ 'gene315', 'gene316' ],
-        effectTypes: [ 'effectType317', 'effectType318' ],
-        gender: [ 'gender319', 'gender320' ], peopleGroup: { id: 'id321', checkedValues: [ '322', '323' ] },
-        studyTypes: [ 'studyType324', 'studyType325' ], variantTypes: [ 'variant326', 'variant327' ]
+        datasetId: 'name205', geneSymbols: [ 'gene206', 'gene207' ],
+        effectTypes: [ 'effectType208', 'effectType209' ],
+        gender: [ 'gender210', 'gender211' ], peopleGroup: { id: 'id212', checkedValues: [ '213', '214' ] },
+        studyTypes: [ 'studyType215', 'studyType216' ], variantTypes: [ 'variant217', 'variant218' ]
       },
       overlapFilter:
       {
-        datasetId: 'name338', geneSymbols: [ 'gene339', 'gene340' ],
-        effectTypes: [ 'effectType341', 'effectType342' ],
-        gender: [ 'gender343', 'gender344' ], peopleGroup: { id: 'id345', checkedValues: [ '346', '347' ] },
-        studyTypes: [ 'studyType348', 'studyType349' ], variantTypes: [ 'variant350', 'variant351' ]
+        datasetId: 'name219', geneSymbols: [ 'gene220', 'gene221' ],
+        effectTypes: [ 'effectType222', 'effectType223' ],
+        gender: [ 'gender224', 'gender225' ], peopleGroup: { id: 'id226', checkedValues: [ '227', '228' ] },
+        studyTypes: [ 'studyType229', 'studyType230' ], variantTypes: [ 'variant231', 'variant232' ]
       }
     }, rec: {
-      name: 'name362', count: 363, expected: 364, overlapped: 365, pvalue: 366,
+      name: 'name233', count: 234, expected: 235, overlapped: 236, pvalue: 237,
       countFilter:
       {
-        datasetId: 'name367', geneSymbols: [ 'gene368', 'gene369' ],
-        effectTypes: [ 'effectType370', 'effectType371' ],
-        gender: [ 'gender372', 'gender373' ], peopleGroup: { id: 'id374', checkedValues: [ '375', '376' ] },
-        studyTypes: [ 'studyType377', 'studyType378' ], variantTypes: [ 'variant379', 'variant380' ]
+        datasetId: 'name238', geneSymbols: [ 'gene239', 'gene240' ],
+        effectTypes: [ 'effectType241', 'effectType242' ],
+        gender: [ 'gender243', 'gender244' ], peopleGroup: { id: 'id245', checkedValues: [ '246', '247' ] },
+        studyTypes: [ 'studyType248', 'studyType249' ], variantTypes: [ 'variant250', 'variant251' ]
       },
       overlapFilter:
       {
-        datasetId: 'name391', geneSymbols: [ 'gene392', 'gene393' ],
-        effectTypes: [ 'effectType394', 'effectType395' ],
-        gender: [ 'gender396', 'gender397' ], peopleGroup: { id: 'id398', checkedValues: [ '399', '400' ] },
-        studyTypes: [ 'studyType401', 'studyType402' ], variantTypes: [ 'variant403', 'variant404' ]
+        datasetId: 'name252', geneSymbols: [ 'gene253', 'gene254' ],
+        effectTypes: [ 'effectType255', 'effectType256' ],
+        gender: [ 'gender257', 'gender258' ], peopleGroup: { id: 'id259', checkedValues: [ '260', '261' ] },
+        studyTypes: [ 'studyType262', 'studyType263' ], variantTypes: [ 'variant264', 'variant265' ]
       }
     }
   }, synonymous: {
     all: {
-      name: 'name415', count: 416, expected: 417, overlapped: 418, pvalue: 419,
+      name: 'name266', count: 267, expected: 268, overlapped: 269, pvalue: 270,
       countFilter:
       {
-        datasetId: 'name415', geneSymbols: [ 'gene416', 'gene417' ],
-        effectTypes: [ 'effectType418', 'effectType419' ],
-        gender: [ 'gender420', 'gender421' ], peopleGroup: { id: 'id422', checkedValues: [ '423', '424' ] },
-        studyTypes: [ 'studyType425', 'studyType426' ], variantTypes: [ 'variant427', 'variant428' ]
+        datasetId: 'name266', geneSymbols: [ 'gene267', 'gene268' ],
+        effectTypes: [ 'effectType269', 'effectType270' ],
+        gender: [ 'gender271', 'gender272' ], peopleGroup: { id: 'id273', checkedValues: [ '274', '275' ] },
+        studyTypes: [ 'studyType276', 'studyType277' ], variantTypes: [ 'variant278', 'variant279' ]
       },
       overlapFilter:
       {
-        datasetId: 'name439', geneSymbols: [ 'gene440', 'gene441' ],
-        effectTypes: [ 'effectType442', 'effectType443' ],
-        gender: [ 'gender444', 'gender445' ],
-        peopleGroup: { id: 'id446', checkedValues: [ '447', '448' ] },
-        studyTypes: [ 'studyType449', 'studyType450' ], variantTypes: [ 'variant451', 'variant452' ]
+        datasetId: 'name280', geneSymbols: [ 'gene281', 'gene282' ],
+        effectTypes: [ 'effectType283', 'effectType284' ],
+        gender: [ 'gender285', 'gender286' ],
+        peopleGroup: { id: 'id287', checkedValues: [ '288', '289' ] },
+        studyTypes: [ 'studyType290', 'studyType291' ], variantTypes: [ 'variant292', 'variant293' ]
       },
     }, male: {
-      name: 'name463', count: 464, expected: 465, overlapped: 466, pvalue: 467,
+      name: 'name294', count: 295, expected: 296, overlapped: 297, pvalue: 298,
       countFilter:
       {
-        datasetId: 'name468', geneSymbols: [ 'gene469', 'gene470' ],
-        effectTypes: [ 'effectType471', 'effectType472' ],
-        gender: [ 'gender473', 'gender474' ], peopleGroup: { id: 'id475', checkedValues: [ '476', '477' ] },
-        studyTypes: [ 'studyType478', 'studyType479' ], variantTypes: [ 'variant480', 'variant481' ]
+        datasetId: 'name299', geneSymbols: [ 'gene300', 'gene301' ],
+        effectTypes: [ 'effectType302', 'effectType303' ],
+        gender: [ 'gender304', 'gender305' ], peopleGroup: { id: 'id306', checkedValues: [ '307', '308' ] },
+        studyTypes: [ 'studyType309', 'studyType310' ], variantTypes: [ 'variant311', 'variant312' ]
       },
       overlapFilter:
       {
-        datasetId: 'name492', geneSymbols: [ 'gene493', 'gene494' ],
-        effectTypes: [ 'effectType495', 'effectType496' ],
-        gender: [ 'gender497', 'gender498' ], peopleGroup: { id: 'id499', checkedValues: [ '500', '501' ] },
-        studyTypes: [ 'studyType502', 'studyType503' ], variantTypes: [ 'variant504', 'variant505' ]
+        datasetId: 'name313', geneSymbols: [ 'gene314', 'gene315' ],
+        effectTypes: [ 'effectType316', 'effectType317' ],
+        gender: [ 'gender318', 'gender319' ], peopleGroup: { id: 'id320', checkedValues: [ '321', '322' ] },
+        studyTypes: [ 'studyType323', 'studyType324' ], variantTypes: [ 'variant325', 'variant326' ]
       }
     }, female: {
-      name: 'name516', count: 517, expected: 518, overlapped: 519, pvalue: 520,
+      name: 'name327', count: 328, expected: 329, overlapped: 330, pvalue: 331,
       countFilter:
       {
-        datasetId: 'name521', geneSymbols: [ 'gene522', 'gene523' ],
-        effectTypes: [ 'effectType524', 'effectType525' ],
-        gender: [ 'gender526', 'gender527' ], peopleGroup: { id: 'id528', checkedValues: [ '529', '530' ] },
-        studyTypes: [ 'studyType531', 'studyType532' ], variantTypes: [ 'variant533', 'variant534' ]
+        datasetId: 'name332', geneSymbols: [ 'gene333', 'gene334' ],
+        effectTypes: [ 'effectType335', 'effectType336' ],
+        gender: [ 'gender337', 'gender338' ], peopleGroup: { id: 'id339', checkedValues: [ '340', '341' ] },
+        studyTypes: [ 'studyType342', 'studyType343' ], variantTypes: [ 'variant344', 'variant345' ]
       },
       overlapFilter:
       {
-        datasetId: 'name545', geneSymbols: [ 'gene546', 'gene547' ],
-        effectTypes: [ 'effectType548', 'effectType549' ],
-        gender: [ 'gender550', 'gender551' ], peopleGroup: { id: 'id552', checkedValues: [ '553', '554' ] },
-        studyTypes: [ 'studyType555', 'studyType556' ], variantTypes: [ 'variant557', 'variant558' ]
+        datasetId: 'name346', geneSymbols: [ 'gene347', 'gene348' ],
+        effectTypes: [ 'effectType349', 'effectType350' ],
+        gender: [ 'gender351', 'gender352' ], peopleGroup: { id: 'id353', checkedValues: [ '354', '355' ] },
+        studyTypes: [ 'studyType356', 'studyType357' ], variantTypes: [ 'variant358', 'variant359' ]
       }
     }, rec: {
-      name: 'name569', count: 570, expected: 571, overlapped: 572, pvalue: 573,
+      name: 'name360', count: 361, expected: 362, overlapped: 363, pvalue: 364,
       countFilter:
       {
-        datasetId: 'name574', geneSymbols: [ 'gene575', 'gene576' ],
-        effectTypes: [ 'effectType577', 'effectType578' ],
-        gender: [ 'gender579', 'gender580' ], peopleGroup: { id: 'id581', checkedValues: [ '582', '583' ] },
-        studyTypes: [ 'studyType584', 'studyType585' ], variantTypes: [ 'variant586', 'variant587' ]
+        datasetId: 'name365', geneSymbols: [ 'gene366', 'gene367' ],
+        effectTypes: [ 'effectType368', 'effectType369' ],
+        gender: [ 'gender370', 'gender371' ], peopleGroup: { id: 'id372', checkedValues: [ '373', '374' ] },
+        studyTypes: [ 'studyType375', 'studyType376' ], variantTypes: [ 'variant377', 'variant378' ]
       },
       overlapFilter:
       {
-        datasetId: 'name598', geneSymbols: [ 'gene599', 'gene600' ],
-        effectTypes: [ 'effectType601', 'effectType602' ],
-        gender: [ 'gender603', 'gender604' ], peopleGroup: { id: 'id605', checkedValues: [ '606', '607' ] },
-        studyTypes: [ 'studyType608', 'studyType609' ], variantTypes: [ 'variant610', 'variant611' ]
+        datasetId: 'name379', geneSymbols: [ 'gene380', 'gene381' ],
+        effectTypes: [ 'effectType382', 'effectType383' ],
+        gender: [ 'gender384', 'gender385' ], peopleGroup: { id: 'id386', checkedValues: [ '387', '388' ] },
+        studyTypes: [ 'studyType389', 'studyType390' ], variantTypes: [ 'variant391', 'variant392' ]
       }
     }
   },
   childrenStats: {
-    M: 622,
-    F: 623,
-    U: 624
+    M: 393,
+    F: 394,
+    U: 395
   }
 };
 
 const enrichmentResultFromJson2 = {
-  selector: 'selector423',
+  selector: 'selector396',
   LGDs: {
     all: {
-      name: 'name418', count: 419, expected: 420, overlapped: 421, pvalue: 422,
+      name: 'name396', count: 397, expected: 398, overlapped: 399, pvalue: 400,
       countFilter:
       {
-        datasetId: 'name423', geneSymbols: [ 'gene424', 'gene425' ], effectTypes: [ 'effectType426', 'effectType427' ],
-        gender: [ 'gender428', 'gender429' ], peopleGroup: { id: 'id430', checkedValues: [ '431', '432' ] },
-        studyTypes: [ 'studyType433', 'studyType434' ], variantTypes: [ 'variant435', 'variant436' ]
+        datasetId: 'name401', geneSymbols: [ 'gene402', 'gene403' ], effectTypes: [ 'effectType404', 'effectType405' ],
+        gender: [ 'gender406', 'gender407' ], peopleGroup: { id: 'id408', checkedValues: [ '409', '410' ] },
+        studyTypes: [ 'studyType411', 'studyType412' ], variantTypes: [ 'variant413', 'variant414' ]
       },
       overlapFilter:
       {
-        datasetId: 'name447', geneSymbols: [ 'gene448', 'gene449' ], effectTypes: [ 'effectType450', 'effectType451' ],
-        gender: [ 'gender452', 'gender453' ],
-        peopleGroup: { id: 'id454', checkedValues: [ '455', '456' ] },
-        studyTypes: [ 'studyType457', 'studyType458' ], variantTypes: [ 'variant459', 'variant460' ]
+        datasetId: 'name415', geneSymbols: [ 'gene416', 'gene417' ], effectTypes: [ 'effectType418', 'effectType419' ],
+        gender: [ 'gender420', 'gender421' ],
+        peopleGroup: { id: 'id422', checkedValues: [ '423', '424' ] },
+        studyTypes: [ 'studyType425', 'studyType426' ], variantTypes: [ 'variant427', 'variant428' ]
       },
     }, male: {
-      name: 'name471', count: 472, expected: 473, overlapped: 474, pvalue: 475,
+      name: 'name429', count: 430, expected: 431, overlapped: 432, pvalue: 433,
       countFilter:
       {
-        datasetId: 'name476', geneSymbols: [ 'gene477', 'gene478' ], effectTypes: [ 'effectType479', 'effectType480' ],
-        gender: [ 'gender481', 'gender482' ], peopleGroup: { id: 'id483', checkedValues: [ '484', '485' ] },
-        studyTypes: [ 'studyType486', 'studyType487' ], variantTypes: [ 'variant488', 'variant489' ]
+        datasetId: 'name434', geneSymbols: [ 'gene435', 'gene436' ], effectTypes: [ 'effectType437', 'effectType438' ],
+        gender: [ 'gender439', 'gender440' ], peopleGroup: { id: 'id441', checkedValues: [ '442', '443' ] },
+        studyTypes: [ 'studyType444', 'studyType445' ], variantTypes: [ 'variant446', 'variant447' ]
       },
       overlapFilter:
       {
-        datasetId: 'name500', geneSymbols: [ 'gene501', 'gene502' ], effectTypes: [ 'effectType503', 'effectType504' ],
-        gender: [ 'gender505', 'gender506' ], peopleGroup: { id: 'id507', checkedValues: [ '508', '509' ] },
-        studyTypes: [ 'studyType510', 'studyType511' ], variantTypes: [ 'variant512', 'variant513' ]
+        datasetId: 'name448', geneSymbols: [ 'gene449', 'gene450' ], effectTypes: [ 'effectType451', 'effectType452' ],
+        gender: [ 'gender453', 'gender454' ], peopleGroup: { id: 'id455', checkedValues: [ '456', '457' ] },
+        studyTypes: [ 'studyType458', 'studyType459' ], variantTypes: [ 'variant460', 'variant461' ]
       }
     }, female: {
-      name: 'name524', count: 525, expected: 526, overlapped: 527, pvalue: 528,
+      name: 'name462', count: 463, expected: 464, overlapped: 465, pvalue: 466,
       countFilter:
       {
-        datasetId: 'name529', geneSymbols: [ 'gene530', 'gene531' ],
-        effectTypes: [ 'effectType532', 'effectType533' ],
-        gender: [ 'gender534', 'gender535' ], peopleGroup: { id: 'id536', checkedValues: [ '537', '538' ] },
-        studyTypes: [ 'studyType539', 'studyType540' ], variantTypes: [ 'variant541', 'variant542' ]
+        datasetId: 'name467', geneSymbols: [ 'gene468', 'gene469' ],
+        effectTypes: [ 'effectType470', 'effectType471' ],
+        gender: [ 'gender472', 'gender473' ], peopleGroup: { id: 'id474', checkedValues: [ '475', '476' ] },
+        studyTypes: [ 'studyType477', 'studyType478' ], variantTypes: [ 'variant479', 'variant480' ]
       },
       overlapFilter:
       {
-        datasetId: 'name553', geneSymbols: [ 'gene554', 'gene555' ],
-        effectTypes: [ 'effectType556', 'effectType557' ],
-        gender: [ 'gender558', 'gender559' ], peopleGroup: { id: 'id560', checkedValues: [ '561', '562' ] },
-        studyTypes: [ 'studyType563', 'studyType564' ], variantTypes: [ 'variant565', 'variant566' ]
+        datasetId: 'name481', geneSymbols: [ 'gene482', 'gene483' ],
+        effectTypes: [ 'effectType484', 'effectType485' ],
+        gender: [ 'gender486', 'gender487' ], peopleGroup: { id: 'id488', checkedValues: [ '489', '490' ] },
+        studyTypes: [ 'studyType491', 'studyType492' ], variantTypes: [ 'variant493', 'variant494' ]
       }
     }, rec: {
-      name: 'name577', count: 578, expected: 579, overlapped: 580, pvalue: 581,
+      name: 'name495', count: 496, expected: 497, overlapped: 498, pvalue: 499,
       countFilter:
       {
-        datasetId: 'name582', geneSymbols: [ 'gene583', 'gene584' ],
-        effectTypes: [ 'effectType585', 'effectType586' ],
-        gender: [ 'gender587', 'gender588' ], peopleGroup: { id: 'id589', checkedValues: [ '590', '591' ] },
-        studyTypes: [ 'studyType592', 'studyType593' ], variantTypes: [ 'variant594', 'variant595' ]
+        datasetId: 'name500', geneSymbols: [ 'gene501', 'gene502' ],
+        effectTypes: [ 'effectType503', 'effectType504' ],
+        gender: [ 'gender505', 'gender506' ], peopleGroup: { id: 'id507', checkedValues: [ '508', '509' ] },
+        studyTypes: [ 'studyType510', 'studyType511' ], variantTypes: [ 'variant512', 'variant513' ]
       },
       overlapFilter:
       {
-        datasetId: 'name606', geneSymbols: [ 'gene607', 'gene608' ],
-        effectTypes: [ 'effectType609', 'effectType610' ],
-        gender: [ 'gender611', 'gender612' ], peopleGroup: { id: 'id613', checkedValues: [ '614', '615' ] },
-        studyTypes: [ 'studyType616', 'studyType617' ], variantTypes: [ 'variant618', 'variant619' ]
+        datasetId: 'name514', geneSymbols: [ 'gene515', 'gene516' ],
+        effectTypes: [ 'effectType517', 'effectType518' ],
+        gender: [ 'gender519', 'gender520' ], peopleGroup: { id: 'id521', checkedValues: [ '522', '523' ] },
+        studyTypes: [ 'studyType524', 'studyType525' ], variantTypes: [ 'variant526', 'variant527' ]
       }
     }
   }, missense: {
     all: {
-      name: 'name630', count: 631, expected: 632, overlapped: 633, pvalue: 634,
+      name: 'name528', count: 529, expected: 530, overlapped: 531, pvalue: 532,
       countFilter:
       {
-        datasetId: 'name630', geneSymbols: [ 'gene631', 'gene632' ],
-        effectTypes: [ 'effectType633', 'effectType634' ],
-        gender: [ 'gender635', 'gender636' ], peopleGroup: { id: 'id637', checkedValues: [ '638', '639' ] },
-        studyTypes: [ 'studyType640', 'studyType641' ], variantTypes: [ 'variant642', 'variant643' ]
+        datasetId: 'name528', geneSymbols: [ 'gene529', 'gene530' ],
+        effectTypes: [ 'effectType531', 'effectType532' ],
+        gender: [ 'gender533', 'gender534' ], peopleGroup: { id: 'id535', checkedValues: [ '536', '537' ] },
+        studyTypes: [ 'studyType538', 'studyType539' ], variantTypes: [ 'variant540', 'variant541' ]
       },
       overlapFilter:
       {
-        datasetId: 'name654', geneSymbols: [ 'gene655', 'gene656' ],
-        effectTypes: [ 'effectType657', 'effectType658' ],
-        gender: [ 'gender659', 'gender660' ],
-        peopleGroup: { id: 'id661', checkedValues: [ '662', '663' ] },
-        studyTypes: [ 'studyType664', 'studyType665' ], variantTypes: [ 'variant666', 'variant667' ]
+        datasetId: 'name542', geneSymbols: [ 'gene543', 'gene544' ],
+        effectTypes: [ 'effectType545', 'effectType546' ],
+        gender: [ 'gender547', 'gender548' ],
+        peopleGroup: { id: 'id549', checkedValues: [ '550', '551' ] },
+        studyTypes: [ 'studyType552', 'studyType553' ], variantTypes: [ 'variant554', 'variant555' ]
       },
     }, male: {
-      name: 'name678', count: 679, expected: 680, overlapped: 681, pvalue: 682,
+      name: 'name556', count: 557, expected: 558, overlapped: 559, pvalue: 560,
       countFilter:
       {
-        datasetId: 'name683', geneSymbols: [ 'gene684', 'gene685' ],
-        effectTypes: [ 'effectType686', 'effectType687' ],
-        gender: [ 'gender688', 'gender689' ], peopleGroup: { id: 'id690', checkedValues: [ '691', '692' ] },
-        studyTypes: [ 'studyType693', 'studyType694' ], variantTypes: [ 'variant695', 'variant696' ]
+        datasetId: 'name561', geneSymbols: [ 'gene562', 'gene563' ],
+        effectTypes: [ 'effectType564', 'effectType565' ],
+        gender: [ 'gender566', 'gender567' ], peopleGroup: { id: 'id568', checkedValues: [ '569', '570' ] },
+        studyTypes: [ 'studyType571', 'studyType572' ], variantTypes: [ 'variant573', 'variant574' ]
       },
       overlapFilter:
       {
-        datasetId: 'name707', geneSymbols: [ 'gene708', 'gene709' ],
-        effectTypes: [ 'effectType710', 'effectType711' ],
-        gender: [ 'gender712', 'gender713' ], peopleGroup: { id: 'id714', checkedValues: [ '715', '716' ] },
-        studyTypes: [ 'studyType717', 'studyType718' ], variantTypes: [ 'variant719', 'variant720' ]
+        datasetId: 'name575', geneSymbols: [ 'gene576', 'gene577' ],
+        effectTypes: [ 'effectType578', 'effectType579' ],
+        gender: [ 'gender580', 'gender581' ], peopleGroup: { id: 'id582', checkedValues: [ '583', '584' ] },
+        studyTypes: [ 'studyType585', 'studyType586' ], variantTypes: [ 'variant587', 'variant588' ]
       }
     }, female: {
-      name: 'name731', count: 732, expected: 733, overlapped: 734, pvalue: 735,
+      name: 'name589', count: 590, expected: 591, overlapped: 592, pvalue: 593,
       countFilter:
       {
-        datasetId: 'name736', geneSymbols: [ 'gene737', 'gene738' ],
-        effectTypes: [ 'effectType739', 'effectType740' ],
-        gender: [ 'gender741', 'gender742' ], peopleGroup: { id: 'id743', checkedValues: [ '744', '745' ] },
-        studyTypes: [ 'studyType746', 'studyType747' ], variantTypes: [ 'variant748', 'variant749' ]
+        datasetId: 'name594', geneSymbols: [ 'gene595', 'gene596' ],
+        effectTypes: [ 'effectType597', 'effectType598' ],
+        gender: [ 'gender599', 'gender600' ], peopleGroup: { id: 'id601', checkedValues: [ '602', '603' ] },
+        studyTypes: [ 'studyType604', 'studyType605' ], variantTypes: [ 'variant606', 'variant607' ]
       },
       overlapFilter:
       {
-        datasetId: 'name760', geneSymbols: [ 'gene761', 'gene762' ],
-        effectTypes: [ 'effectType763', 'effectType764' ],
-        gender: [ 'gender765', 'gender766' ], peopleGroup: { id: 'id767', checkedValues: [ '768', '769' ] },
-        studyTypes: [ 'studyType770', 'studyType771' ], variantTypes: [ 'variant772', 'variant773' ]
+        datasetId: 'name608', geneSymbols: [ 'gene609', 'gene610' ],
+        effectTypes: [ 'effectType611', 'effectType612' ],
+        gender: [ 'gender613', 'gender614' ], peopleGroup: { id: 'id615', checkedValues: [ '616', '617' ] },
+        studyTypes: [ 'studyType618', 'studyType619' ], variantTypes: [ 'variant620', 'variant621' ]
       }
     }, rec: {
-      name: 'name784', count: 785, expected: 786, overlapped: 787, pvalue: 788,
+      name: 'name622', count: 623, expected: 624, overlapped: 625, pvalue: 626,
       countFilter:
       {
-        datasetId: 'name789', geneSymbols: [ 'gene790', 'gene791' ],
-        effectTypes: [ 'effectType792', 'effectType793' ],
-        gender: [ 'gender794', 'gender795' ], peopleGroup: { id: 'id796', checkedValues: [ '797', '798' ] },
-        studyTypes: [ 'studyType799', 'studyType800' ], variantTypes: [ 'variant801', 'variant802' ]
+        datasetId: 'name627', geneSymbols: [ 'gene628', 'gene629' ],
+        effectTypes: [ 'effectType630', 'effectType631' ],
+        gender: [ 'gender632', 'gender633' ], peopleGroup: { id: 'id634', checkedValues: [ '635', '636' ] },
+        studyTypes: [ 'studyType637', 'studyType638' ], variantTypes: [ 'variant639', 'variant640' ]
       },
       overlapFilter:
       {
-        datasetId: 'name813', geneSymbols: [ 'gene814', 'gene815' ],
-        effectTypes: [ 'effectType816', 'effectType817' ],
-        gender: [ 'gender818', 'gender819' ], peopleGroup: { id: 'id820', checkedValues: [ '821', '822' ] },
-        studyTypes: [ 'studyType823', 'studyType824' ], variantTypes: [ 'variant825', 'variant826' ]
+        datasetId: 'name641', geneSymbols: [ 'gene642', 'gene643' ],
+        effectTypes: [ 'effectType644', 'effectType645' ],
+        gender: [ 'gender646', 'gender647' ], peopleGroup: { id: 'id648', checkedValues: [ '649', '650' ] },
+        studyTypes: [ 'studyType651', 'studyType652' ], variantTypes: [ 'variant653', 'variant654' ]
       }
     }
   }, synonymous: {
     all: {
-      name: 'name837', count: 838, expected: 839, overlapped: 840, pvalue: 841,
+      name: 'name655', count: 656, expected: 657, overlapped: 658, pvalue: 659,
       countFilter:
       {
-        datasetId: 'name837', geneSymbols: [ 'gene838', 'gene839' ],
-        effectTypes: [ 'effectType840', 'effectType841' ],
-        gender: [ 'gender842', 'gender843' ], peopleGroup: { id: 'id844', checkedValues: [ '845', '846' ] },
-        studyTypes: [ 'studyType847', 'studyType848' ], variantTypes: [ 'variant849', 'variant850' ]
+        datasetId: 'name655', geneSymbols: [ 'gene656', 'gene657' ],
+        effectTypes: [ 'effectType658', 'effectType659' ],
+        gender: [ 'gender660', 'gender661' ], peopleGroup: { id: 'id662', checkedValues: [ '663', '664' ] },
+        studyTypes: [ 'studyType665', 'studyType666' ], variantTypes: [ 'variant667', 'variant668' ]
       },
       overlapFilter:
       {
-        datasetId: 'name861', geneSymbols: [ 'gene862', 'gene863' ],
-        effectTypes: [ 'effectType864', 'effectType865' ],
-        gender: [ 'gender866', 'gender867' ],
-        peopleGroup: { id: 'id868', checkedValues: [ '869', '870' ] },
-        studyTypes: [ 'studyType871', 'studyType872' ], variantTypes: [ 'variant873', 'variant874' ]
+        datasetId: 'name669', geneSymbols: [ 'gene670', 'gene671' ],
+        effectTypes: [ 'effectType672', 'effectType673' ],
+        gender: [ 'gender674', 'gender675' ],
+        peopleGroup: { id: 'id676', checkedValues: [ '677', '678' ] },
+        studyTypes: [ 'studyType679', 'studyType680' ], variantTypes: [ 'variant681', 'variant682' ]
       },
     }, male: {
-      name: 'name885', count: 886, expected: 887, overlapped: 888, pvalue: 889,
+      name: 'name683', count: 684, expected: 685, overlapped: 686, pvalue: 687,
       countFilter:
       {
-        datasetId: 'name890', geneSymbols: [ 'gene891', 'gene892' ],
-        effectTypes: [ 'effectType893', 'effectType894' ],
-        gender: [ 'gender895', 'gender896' ], peopleGroup: { id: 'id897', checkedValues: [ '898', '899' ] },
-        studyTypes: [ 'studyType900', 'studyType901' ], variantTypes: [ 'variant902', 'variant903' ]
+        datasetId: 'name688', geneSymbols: [ 'gene689', 'gene690' ],
+        effectTypes: [ 'effectType691', 'effectType692' ],
+        gender: [ 'gender693', 'gender694' ], peopleGroup: { id: 'id695', checkedValues: [ '696', '697' ] },
+        studyTypes: [ 'studyType698', 'studyType699' ], variantTypes: [ 'variant700', 'variant701' ]
       },
       overlapFilter:
       {
-        datasetId: 'name914', geneSymbols: [ 'gene915', 'gene916' ],
-        effectTypes: [ 'effectType917', 'effectType918' ],
-        gender: [ 'gender919', 'gender920' ], peopleGroup: { id: 'id921', checkedValues: [ '922', '923' ] },
-        studyTypes: [ 'studyType924', 'studyType925' ], variantTypes: [ 'variant926', 'variant927' ]
+        datasetId: 'name702', geneSymbols: [ 'gene703', 'gene704' ],
+        effectTypes: [ 'effectType705', 'effectType706' ],
+        gender: [ 'gender707', 'gender708' ], peopleGroup: { id: 'id709', checkedValues: [ '710', '711' ] },
+        studyTypes: [ 'studyType712', 'studyType713' ], variantTypes: [ 'variant714', 'variant715' ]
       }
     }, female: {
-      name: 'name938', count: 939, expected: 940, overlapped: 941, pvalue: 942,
+      name: 'name716', count: 717, expected: 718, overlapped: 719, pvalue: 720,
       countFilter:
       {
-        datasetId: 'name943', geneSymbols: [ 'gene944', 'gene945' ],
-        effectTypes: [ 'effectType946', 'effectType947' ],
-        gender: [ 'gender948', 'gender949' ], peopleGroup: { id: 'id950', checkedValues: [ '951', '952' ] },
-        studyTypes: [ 'studyType953', 'studyType954' ], variantTypes: [ 'variant955', 'variant956' ]
+        datasetId: 'name721', geneSymbols: [ 'gene722', 'gene723' ],
+        effectTypes: [ 'effectType724', 'effectType725' ],
+        gender: [ 'gender726', 'gender727' ], peopleGroup: { id: 'id728', checkedValues: [ '729', '730' ] },
+        studyTypes: [ 'studyType731', 'studyType732' ], variantTypes: [ 'variant733', 'variant734' ]
       },
       overlapFilter:
       {
-        datasetId: 'name967', geneSymbols: [ 'gene968', 'gene969' ],
-        effectTypes: [ 'effectType970', 'effectType971' ],
-        gender: [ 'gender972', 'gender973' ], peopleGroup: { id: 'id974', checkedValues: [ '975', '976' ] },
-        studyTypes: [ 'studyType977', 'studyType978' ], variantTypes: [ 'variant979', 'variant980' ]
+        datasetId: 'name735', geneSymbols: [ 'gene736', 'gene737' ],
+        effectTypes: [ 'effectType738', 'effectType739' ],
+        gender: [ 'gender740', 'gender741' ], peopleGroup: { id: 'id742', checkedValues: [ '743', '744' ] },
+        studyTypes: [ 'studyType745', 'studyType746' ], variantTypes: [ 'variant747', 'variant748' ]
       }
     }, rec: {
-      name: 'name991', count: 992, expected: 993, overlapped: 994, pvalue: 995,
+      name: 'name749', count: 750, expected: 751, overlapped: 752, pvalue: 753,
       countFilter:
       {
-        datasetId: 'name996', geneSymbols: [ 'gene997', 'gene998' ],
-        effectTypes: [ 'effectType999', 'effectType1000' ],
-        gender: [ 'gender1001', 'gender1002' ],
-        peopleGroup: { id: 'id1003', checkedValues: [ '1004', '1005' ] },
-        studyTypes: [ 'studyType1006', 'studyType1007' ], variantTypes: [ 'variant1008', 'variant1009' ]
+        datasetId: 'name754', geneSymbols: [ 'gene755', 'gene756' ],
+        effectTypes: [ 'effectType757', 'effectType758' ],
+        gender: [ 'gender759', 'gender760' ],
+        peopleGroup: { id: 'id761', checkedValues: [ '762', '763' ] },
+        studyTypes: [ 'studyType764', 'studyType765' ], variantTypes: [ 'variant766', 'variant767' ]
       },
       overlapFilter:
       {
-        datasetId: 'name1020', geneSymbols: [ 'gene1021', 'gene1022' ],
-        effectTypes: [ 'effectType1023', 'effectType1024' ],
-        gender: [ 'gender1025', 'gender1026' ],
-        peopleGroup: { id: 'id1027', checkedValues: [ '1028', '1029' ] },
-        studyTypes: [ 'studyType1030', 'studyType1031' ], variantTypes: [ 'variant1032', 'variant1033' ]
+        datasetId: 'name768', geneSymbols: [ 'gene769', 'gene770' ],
+        effectTypes: [ 'effectType771', 'effectType772' ],
+        gender: [ 'gender773', 'gender774' ],
+        peopleGroup: { id: 'id775', checkedValues: [ '776', '777' ] },
+        studyTypes: [ 'studyType778', 'studyType779' ], variantTypes: [ 'variant780', 'variant781' ]
       }
     }
   }, childrenStats: {
-    M: 1044,
-    F: 1045,
-    U: 1046
+    M: 782,
+    F: 783,
+    U: 784
   }
 };
 
