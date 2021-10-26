@@ -43,11 +43,6 @@ def resources_http_server(fixture_dirname):
     server.wait()
 
 
-@pytest.fixture(scope="session")
-def http_port():
-    return "16200"
-
-
 @pytest.fixture
 def genomic_resource_fixture_dir_repo(fixture_dirname):
     from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
@@ -56,7 +51,9 @@ def genomic_resource_fixture_dir_repo(fixture_dirname):
 
 
 @pytest.fixture
-def genomic_resource_fixture_http_repo(resources_http_server, http_port):
+def genomic_resource_fixture_http_repo(resources_http_server):
+    http_port = resources_http_server.http_port
+
     from dae.genomic_resources.url_repository import GenomicResourceURLRepo
     url = f"http://localhost:{http_port}"
     return GenomicResourceURLRepo("genomic_resource_fixture_url_repo", url)
