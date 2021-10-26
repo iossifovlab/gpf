@@ -2,10 +2,13 @@
 import logging
 from copy import deepcopy
 from itertools import chain
+from typing import List, Optional
 
 import pyarrow as pa
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.variants.variant import Variant, Allele
+from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.annotation.tools.annotator_base import Annotator
 from dae.annotation.tools.schema import ParquetSchema
 from dae.annotation.tools.utils import AnnotatorFactory
@@ -63,9 +66,9 @@ ANNOTATION_PIPELINE_SCHEMA = {
 
 class AnnotationPipeline():
     def __init__(self, config, repository):
-        self.annotators = []
-        self.config = config
-        self.repository = repository
+        self.annotators: List[Annotator] = []
+        self.config: dict = config
+        self.repository: GenomicResourceRepo = repository
         self._annotation_schema = None
 
     @staticmethod
@@ -84,9 +87,9 @@ class AnnotationPipeline():
 
     @staticmethod
     def build(
-            pipeline_config,
-            repository,
-            context=None) -> "AnnotationPipeline":
+            pipeline_config: dict,
+            repository: GenomicResourceRepo,
+            context: Optional[dict] = None) -> "AnnotationPipeline":
 
         pipeline = AnnotationPipeline(pipeline_config, repository)
 
@@ -144,7 +147,7 @@ class AnnotationPipeline():
             annotator.output_columns for annotator in self.annotators)
 
     @property
-    def annotation_schema(self):
+    def annotation_schema(self) -> ParquetSchema:
         if self._annotation_schema is None:
             fields = []
             for annotator in self.annotators:
@@ -156,24 +159,18 @@ class AnnotationPipeline():
                 pa.schema(fields))
         return self._annotation_schema
 
-    def add_annotator(self, annotator):
+    def add_annotator(self, annotator: Annotator) -> None:
         assert isinstance(annotator, Annotator)
         self.annotators.append(annotator)
 
-    # def produce_annotation_schema(self):
-    #     cols = set()
-    #     for annotator in self.annotators:
-    #         cols.update(annotator.output_columns)
-    #     print(100*"+")
-    #     print(cols)
-    #     print(100*"+")
-    #     return ParquetSchema.from_dict({"float": cols})
+    def annotate_allele(self, allele: Allele) -> None:
+        attributes = deepcopy(allele.attributes)
+        liftover_context = dict()
+        for annotator in self.annotators:
+            annotator.annotate_allele(
+                attributes, allele, liftover_context)
+        allele.update_attributes(attributes)
 
-    def annotate_variant(self, variant):
+    def annotate_variant(self, variant: Variant):
         for alt_allele in variant.alt_alleles:
-            attributes = deepcopy(alt_allele.attributes)
-            liftover_context = dict()
-            for annotator in self.annotators:
-                annotator.annotate_allele(
-                    attributes, alt_allele, liftover_context)
-            alt_allele.update_attributes(attributes)
+            self.annotate_allele(alt_allele)

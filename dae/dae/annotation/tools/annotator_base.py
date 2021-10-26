@@ -2,7 +2,9 @@ import logging
 import abc
 
 import pyarrow as pa
-from typing import List
+from typing import List, Optional
+
+from dae.variants.variant import Allele
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +17,7 @@ class Annotator(abc.ABC):
         "string": pa.string(),
     }
 
-    def __init__(self, liftover=None, override=None):
+    def __init__(self, liftover: str = None, override: dict = None):
         self.liftover = liftover
         self.override = override
 
@@ -32,7 +34,10 @@ class Annotator(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def _do_annotate_allele(self, attributes, allele, liftover_context):
+    def _do_annotate_allele(
+            self, attributes: dict,
+            allele: Allele,
+            liftover_context: Optional[dict]):
         """
         Internal abstract method used for annotation.
         """
@@ -42,11 +47,14 @@ class Annotator(abc.ABC):
     def get_default_annotation(self):
         pass
 
-    def annotate_allele(self, attributes, allele, liftover_variants):
+    def annotate_allele(
+            self, attributes: dict,
+            allele: Allele,
+            liftover_context: Optional[dict]):
         """
         Carry out the annotation and then relabel results as configured.
         """
-        self._do_annotate_allele(attributes, allele, liftover_variants)
+        self._do_annotate_allele(attributes, allele, liftover_context)
         attributes_list = self.get_default_annotation()
         for attr in attributes_list:
             if attr.dest == attr.source:

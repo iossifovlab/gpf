@@ -38,9 +38,7 @@ class VariantScoreAnnotatorBase(Annotator):
 
     def get_default_annotation(self):
         if self.override:
-            print("override:", self.override)
             return self.override.attributes
-        print("resource:", self.resource.get_default_annotation())
         return self.resource.get_default_annotation().attributes
 
     def _collect_non_default_aggregators(self):
