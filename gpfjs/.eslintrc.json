@@ -25,6 +25,13 @@
         "plugin:@typescript-eslint/recommended-requiring-type-checking"
       ],
       "rules": {
+        "prefer-exponentiation-operator": "warn",
+        "no-param-reassign": "warn",
+        "no-labels": "warn",
+        "multiline-comment-style": ["warn", "starred-block"],
+        "max-nested-callbacks": ["warn", 2],
+        "max-depth": ["warn", 3],
+        "require-atomic-updates": "warn",
         "no-await-in-loop": "warn",
         "no-constructor-return": "warn",
         "no-duplicate-imports": "warn",
@@ -106,9 +113,7 @@
         "implicit-arrow-linebreak": ["warn", "beside"],
         "key-spacing": ["warn", { "beforeColon": false }],
         "keyword-spacing": ["warn", { "before": true }],
-        "line-comment-position": ["warn", { "position": "above" }],
-        "lines-between-class-members": ["warn", "always", { "exceptAfterSingleLine": true }],
-        "max-statements-per-line": ["warn"],
+        "lines-between-class-members": ["warn", "always", {"exceptAfterSingleLine": true}],
         "new-parens": "warn",
         "no-extra-parens": ["warn", "all", { "nestedBinaryExpressions": false }],
         "no-multi-spaces": "warn",
@@ -166,10 +171,6 @@
           {
             "code": 120
           }
-        ],
-        "max-lines": [
-          "warn",
-          500
         ],
         "no-duplicate-case": "warn",
         "no-invalid-this": "warn",
