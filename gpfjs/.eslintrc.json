@@ -67,7 +67,7 @@
         "no-octal-escape": "warn",
         "no-proto": "warn",
         "no-regex-spaces": "warn",
-        "no-console": ["warn", { "allow": ["warn", "warn"] }],
+        "no-console": ["warn", { "allow": ["warn", "error"] }],
         "no-return-assign": "warn",
         "no-return-await": "warn",
         "no-script-url": "warn",
