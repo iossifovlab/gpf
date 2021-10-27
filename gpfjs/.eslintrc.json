@@ -18,7 +18,11 @@
       "extends": [
         "plugin:@angular-eslint/ng-cli-compat",
         "plugin:@angular-eslint/ng-cli-compat--formatting-add-on",
-        "plugin:@angular-eslint/template/process-inline-templates"
+        "plugin:@angular-eslint/template/process-inline-templates",
+        "plugin:@angular-eslint/recommended",
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@typescript-eslint/recommended-requiring-type-checking"
       ],
       "rules": {
         "no-await-in-loop": "error",
@@ -153,6 +157,7 @@
         ],
         "@typescript-eslint/no-explicit-any": "warn",
         "dot-notation": "off",
+        "@typescript-eslint/dot-notation": "off",
         "id-denylist": "off",
         "id-match": "off",
         "indent": ["warn", 2],
@@ -179,7 +184,6 @@
         "no-underscore-dangle": "off",
         "no-unused-expressions": "warn",
         "no-unused-vars": "warn",
-        "no-useless-constructor": "warn",
         "space-before-function-paren": [
           "warn",
           "never"
@@ -191,19 +195,6 @@
         "valid-typeof": "warn",
         "yoda": "warn"
       }
-    },
-    {
-      "files": [
-        "*.html"
-      ],
-      "extends": [
-        "plugin:@angular-eslint/recommended",
-        "eslint:recommended",
-        "plugin:@typescript-eslint/recommended",
-        "plugin:@typescript-eslint/recommended-requiring-type-checking",
-        "plugin:@angular-eslint/template/process-inline-templates"
-      ],
-      "rules": {}
     }
   ]
 }
