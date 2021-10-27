@@ -195,6 +195,16 @@
         "valid-typeof": "warn",
         "yoda": "warn"
       }
+    },
+    {
+      "files": [
+        "*.html"
+      ],
+      "extends": [
+        "plugin:@angular-eslint/template/recommended",
+        "plugin:prettier/recommended"
+      ],
+      "rules": {}
     }
   ]
 }
