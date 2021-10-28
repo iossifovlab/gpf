@@ -43,7 +43,7 @@ export class EnrichmentToolPage extends BasePage {
   }
 
   get geneSetsColletionDropdown() {
-    return cy.get('select#row-sm-3');
+    return cy.get('select.row-sm-3');
   }
 
   get geneSetsVariantsCount() {

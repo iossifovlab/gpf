@@ -159,5 +159,22 @@ describe('Enrichment tool tests', () => {
       cy.get('span').contains('PNAS 2015').click();
       page.geneSetsVariantsCount.should('have.text', 'Count: 239');
     });
+
+    page.geneSetsColletionDropdown.select('Denovo');
+    page.geneSetsInputField.type('LGDs').then(option => {
+      cy.get('div.dropdown-menu').should('contain.text', 'LGDs (363)');
+      cy.get('span').contains('LGDs (363)').click();
+      page.geneSetsVariantsCount.should('have.text', 'Count: 363');
+    });
+
+    cy.get('input#iossifov_2014-checkbox-affected').click();
+    page.findErrorAlertInComponent('gpf-gene-sets').contains('Please select a gene');
+
+    cy.get('input#iossifov_2014-checkbox-unaffected').click();
+    page.geneSetsInputField.type('LGDs').then(option => {
+      cy.get('div.dropdown-menu').should('contain.text', 'LGDs (176)');
+      cy.get('span').contains('LGDs (176)').click();
+      page.geneSetsVariantsCount.should('have.text', 'Count: 176');
+    });
   });
 });
