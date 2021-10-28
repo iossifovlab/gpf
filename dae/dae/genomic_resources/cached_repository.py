@@ -13,26 +13,28 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         self.cache_repos = {}
 
     def get_all_resources(self):
-        yield from self.child.get_all_resources()
+        for cache_repo in self.cache_repos.values():
+            yield from cache_repo.get_all_resources()
 
-    def _get_or_create_chache_dir_repo(self, repo_id):
+    def _get_or_create_cache_dir_repo(self, repo_id):
         if repo_id not in self.cache_repos:
             cached_repo_dir = self.cache_dir / repo_id
             os.makedirs(cached_repo_dir, exist_ok=True)
-            self.cache_repos[repo_id] = GenomicResourceDirRepo(
-                repo_id, directory=cached_repo_dir)
+            self.cache_repos[repo_id] = \
+                GenomicResourceDirRepo(f"{repo_id}.cached", cached_repo_dir)
         cached_repo = self.cache_repos[repo_id]
-        assert cached_repo.repo_id == repo_id
+        assert cached_repo.repo_id == f"{repo_id}.cached"
         return cached_repo
 
     def get_resource(self, resource_id, version_constraint=None,
                      genomic_repository_id=None) -> GenomicResource:
         gr_child = self.child.get_resource(
             resource_id, version_constraint, genomic_repository_id)
+
         if not gr_child:
             return None
 
-        cached_repo = self._get_or_create_chache_dir_repo(
+        cached_repo = self._get_or_create_cache_dir_repo(
             gr_child.repo.repo_id)
 
         exact_version_constraint = "=" + gr_child.get_version_str()
@@ -51,5 +53,4 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         mnfst_child = child.get_manifest()
         if mnfst_cache == mnfst_child:
             return
-
         cached.repo.update_resource(cached, child)
