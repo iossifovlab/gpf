@@ -4,7 +4,7 @@ from subprocess import Popen, PIPE
 from http.client import HTTPConnection
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def resources_http_server(fixture_dirname):
     http_port = 16500
 
