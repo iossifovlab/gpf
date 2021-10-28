@@ -1,7 +1,7 @@
 import pytest
 import textwrap
 
-from dae.variants.variant import SummaryAllele
+from dae.variants.core import Allele
 from dae.genomic_resources import build_genomic_resource_repository
 
 from dae.annotation.annotation_pipeline import AnnotationPipeline
@@ -26,7 +26,7 @@ from dae.annotation.annotation_pipeline import AnnotationPipeline
 def test_position_score_annotator(
         variant, pos_aggregator, nuc_aggregator, expected):
 
-    sa = SummaryAllele(*variant)
+    sa = Allele.build_vcf_allele(*variant)
     assert sa is not None
 
     repo = build_genomic_resource_repository({
@@ -79,7 +79,7 @@ def test_position_score_annotator(
 
     # pipeline.get_schema -> ["attribute", "type", "resource", "scores"]
     # pipeline.annotate_allele(sa) -> {("a1": v1), "a2": v2}}
-    pipeline.annotate_allele(sa)
+    result = pipeline.annotate_allele(sa)
 
-    print(sa, sa.get_attribute("test"))
-    assert sa.get_attribute("test") == pytest.approx(expected, rel=1e-2)
+    print(sa, result)
+    assert result.get("test") == pytest.approx(expected, rel=1e-2)

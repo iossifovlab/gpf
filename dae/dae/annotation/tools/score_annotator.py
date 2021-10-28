@@ -2,7 +2,7 @@ import logging
 
 import pyarrow as pa
 
-from dae.variants.attributes import VariantType
+from dae.variants.core import Allele
 from dae.annotation.tools.annotator_base import Annotator
 from dae.genomic_resources.score_resources import GenomicScoresResource
 
@@ -126,19 +126,19 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(attributes)
             return
 
-        if allele.variant_type & VariantType.substitution:
+        if allele.allele_type & Allele.Type.substitution:
             scores = self._fetch_substitution_scores(allele)
         else:
-            if allele.variant_type & VariantType.indel:
+            if allele.allele_type & Allele.Type.indel:
                 pos_begin = allele.position
                 pos_end = allele.position + len(allele.reference)
-            elif VariantType.is_cnv(allele.variant_type):
+            elif Allele.Type.is_cnv(allele.allele_type):
                 pos_begin = allele.position
                 pos_end = allele.end_position
             else:
                 message = f"unexpected variant type in score annotation: " \
-                    f"{allele}, {allele.variant_type}, " \
-                    f"({allele.variant_type.value})"
+                    f"{allele}, {allele.allele_type}, " \
+                    f"({allele.allele_type.value})"
                 logger.warning(message)
                 raise ValueError(message)
 

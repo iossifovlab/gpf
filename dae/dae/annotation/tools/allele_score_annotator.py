@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import logging
 
-from dae.variants.attributes import VariantType
+from dae.variants.core import Allele
 from dae.annotation.tools.score_annotator import VariantScoreAnnotatorBase
 
 
@@ -17,7 +17,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
         return []
 
     def _do_annotate_allele(self, attributes, allele, liftover_context):
-        if VariantType.is_cnv(allele.variant_type):
+        if Allele.Type.is_cnv(allele.allele_type):
             logger.info(
                 f"skip trying to add frequency for CNV variant {allele}")
             self._scores_not_found(attributes)

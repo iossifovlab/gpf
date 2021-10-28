@@ -11,9 +11,10 @@ from collections import namedtuple, defaultdict
 import numpy as np
 import pyarrow as pa
 
+from dae.variants.core import Allele
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
-from dae.variants.attributes import GeneticModel, Inheritance, VariantType, \
+from dae.variants.attributes import GeneticModel, Inheritance, \
     TransmissionType, Sex, Role
 
 
@@ -199,7 +200,7 @@ def read_best_state(stream):
 
 
 def read_variant_type(stream):
-    return VariantType(read_int8(stream))
+    return Allele.Type(read_int8(stream))
 
 
 def read_genetic_model(stream):
@@ -369,7 +370,7 @@ class AlleleParquetSerializer:
     ]
 
     ENUM_PROPERTIES = {
-        "variant_type": VariantType,
+        "variant_type": Allele.Type,
         "transmission_type": TransmissionType,
         "variant_in_sexes": Sex,
         "variant_in_roles": Role,

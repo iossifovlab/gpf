@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 import logging
-from copy import deepcopy
 from itertools import chain
 from typing import List, Optional
 
 import pyarrow as pa
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.variants.variant import Variant, Allele
+from dae.variants.core import Allele
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.annotation.tools.annotator_base import Annotator
 from dae.annotation.tools.schema import ParquetSchema
@@ -163,14 +162,14 @@ class AnnotationPipeline():
         assert isinstance(annotator, Annotator)
         self.annotators.append(annotator)
 
-    def annotate_allele(self, allele: Allele) -> None:
-        attributes = deepcopy(allele.attributes)
+    def annotate_allele(self, allele: Allele) -> dict:
+        attributes = {}
         liftover_context = dict()
         for annotator in self.annotators:
             annotator.annotate_allele(
                 attributes, allele, liftover_context)
-        allele.update_attributes(attributes)
 
-    def annotate_variant(self, variant: Variant):
-        for alt_allele in variant.alt_alleles:
-            self.annotate_allele(alt_allele)
+        return attributes
+    # def annotate_variant(self, variant: Variant):
+    #     for alt_allele in variant.alt_alleles:
+    #         self.annotate_allele(alt_allele)

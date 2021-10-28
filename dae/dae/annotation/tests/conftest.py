@@ -3,8 +3,9 @@ import os
 
 from dae.configuration.gpf_config_parser import FrozenBox
 
+from dae.variants.core import Allele
+
 from dae.variants.variant import SummaryVariantFactory
-from dae.variants.attributes import VariantType
 
 
 def relative_to_this_test_folder(path):
@@ -193,32 +194,32 @@ def frequency_variants_expected():
         [{
             "chrom": "1", "position": 20000,
             "reference": "T", "alternative": "A",
-            "variant_type": VariantType.substitution
+            "variant_type": Allele.Type.substitution
         }],
         [{
             "chrom": "1", "position": 20000,
             "reference": "T", "alternative": "C",
-            "variant_type": VariantType.substitution
+            "variant_type": Allele.Type.substitution
         }],
         [{
             "chrom": "1", "position": 20000,
             "reference": "T", "alternative": "G",
-            "variant_type": VariantType.substitution
+            "variant_type": Allele.Type.substitution
         }],
         [{
             "chrom": "1", "position": 20001,
             "reference": "C", "alternative": "A",
-            "variant_type": VariantType.substitution
+            "variant_type": Allele.Type.substitution
         }],
         [{
             "chrom": "1", "position": 20001,
             "reference": "C", "alternative": "G",
-            "variant_type": VariantType.substitution
+            "variant_type": Allele.Type.substitution
         }],
         [{
             "chrom": "1", "position": 20001,
             "reference": "C", "alternative": "T",
-            "variant_type": VariantType.substitution
+            "variant_type": Allele.Type.substitution
         }],
     ]
     variants = [

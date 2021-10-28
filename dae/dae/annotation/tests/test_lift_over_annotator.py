@@ -1,7 +1,7 @@
 import pytest
 
 from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.variants.variant import SummaryAllele, SummaryVariantFactory
+from dae.variants.core import Allele
 from dae.annotation.tools.lift_over_annotator import LiftOverAnnotator
 
 
@@ -10,29 +10,31 @@ def mock_get_sequence(chrom, start, stop):
 
 
 @pytest.mark.parametrize(
-    "chrom,pos,lift_over,expected",
+    "chrom,pos,lift_over,expected_chrom,expected_pos",
     [
         (
             "chr1",
             10000,
             lambda c, p: (c, p + 1000, "+", ""),
-            "chr1:11001"
+            "chr1", 11001
         ),
         (
             "chr1",
             10000,
             lambda c, p: (c, p + 2000, "+", ""),
-            "chr1:12001",
+            "chr1", 12001,
         ),
         (
             "chr1",
             10000,
             lambda c, p: None,
-            None
+            None, None
         ),
     ],
 )
-def test_lift_over(mocker, chrom, pos, lift_over, expected, genomes_db_2013):
+def test_lift_over(
+        mocker, chrom, pos, lift_over, expected_chrom, expected_pos,
+        genomes_db_2013):
 
     chain_resource = mocker.Mock()
     chain_resource.convert_coordinate = lift_over
@@ -48,15 +50,17 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected, genomes_db_2013):
         "chrom": chrom,
         "pos": pos,
     }
-    allele = SummaryAllele(chrom, pos, "A", "T")
-    liftover_variants = {}
-    annotator._do_annotate_allele(aline, allele, liftover_variants)
+    allele = Allele.build_vcf_allele(chrom, pos, "A", "T")
+    liftover_context = {}
+    annotator._do_annotate_allele(aline, allele, liftover_context)
 
-    lo_variant = liftover_variants.get("liftover_test")
-    print(f"liftover variant: {lo_variant}")
-    lo_location = lo_variant.details.cshl_location if lo_variant else None
+    lo_allele = liftover_context.get("liftover_test")
+    print(f"liftover allele: {lo_allele}")
+    lo_chrom = lo_allele.chrom if lo_allele else None
+    lo_pos = lo_allele.position if lo_allele else None
 
-    assert expected == lo_location
+    assert expected_chrom == lo_chrom
+    assert expected_pos == lo_pos
 
 
 def test_pipeline_liftover(
@@ -66,10 +70,6 @@ def test_pipeline_liftover(
     pipeline = AnnotationPipeline.build(
         config, anno_grdb
     )
-    records = [{
-        "chrom": "chr1", "position": 69094,
-        "reference": "G", "alternative": "A"
-    }]
-    variant = SummaryVariantFactory.blank_summary_variant_from_records(records)
-    pipeline.annotate_variant(variant)
-    assert variant.get_attribute("mpc")[0] is not None
+    allele = Allele.build_vcf_allele("chr1", 69094, "G", "A")
+    attributes = pipeline.annotate_allele(allele)
+    assert attributes.get("mpc") is not None

@@ -13,14 +13,12 @@ from dae.utils.variant_utils import GENOTYPE_TYPE, \
 
 from dae.variants.attributes import GeneticModel, \
     Inheritance,\
-    TransmissionType,\
-    VariantType
+    TransmissionType
 
-from dae.variants.variant import Allele, \
+from dae.variants.variant import \
     Effect, \
     SummaryAllele, \
-    SummaryVariant, \
-    Variant
+    SummaryVariant
 
 
 logger = logging.getLogger(__name__)
@@ -76,7 +74,7 @@ class FamilyDelegate:
         return self.family.family_id
 
 
-class FamilyAllele(Allele, FamilyDelegate):
+class FamilyAllele(SummaryAllele, FamilyDelegate):
     def __init__(
             self,
             summary_allele: SummaryAllele,
@@ -111,11 +109,15 @@ class FamilyAllele(Allele, FamilyDelegate):
         self.matched_gene_effects: List = []
 
     def __repr__(self):
-        allele_repr = Allele.__repr__(self)
+        allele_repr = SummaryAllele.__repr__(self)
         return f"{allele_repr} {self.family_id}"
 
     @property
     def chromosome(self):
+        return self.summary_allele.chromosome
+
+    @property
+    def chrom(self):
         return self.summary_allele.chromosome
 
     @property
@@ -167,12 +169,8 @@ class FamilyAllele(Allele, FamilyDelegate):
         return self.summary_allele.effect
 
     @property
-    def variant_type(self) -> Optional[VariantType]:
-        return self.summary_allele.variant_type
-
-    @property
-    def _variant_type(self) -> Optional[VariantType]:
-        return self.summary_allele._variant_type
+    def allele_type(self) -> Optional[SummaryAllele.Type]:
+        return self.summary_allele.allele_type
 
     @property
     def end_position(self) -> Optional[int]:
@@ -382,7 +380,7 @@ class FamilyAllele(Allele, FamilyDelegate):
             return Inheritance.other
 
 
-class FamilyVariant(Variant, FamilyDelegate):
+class FamilyVariant(SummaryVariant, FamilyDelegate):
     def __init__(
             self,
             summary_variant: SummaryVariant,
@@ -391,7 +389,7 @@ class FamilyVariant(Variant, FamilyDelegate):
             best_state: Any,
             inheritance_in_members=None):
 
-        super(FamilyVariant, self).__init__()
+        # super(FamilyVariant, self).__init__()
 
         assert family is not None
         assert isinstance(family, Family)
@@ -459,6 +457,10 @@ class FamilyVariant(Variant, FamilyDelegate):
 
     @property
     def chromosome(self):
+        return self.summary_variant.chromosome
+
+    @property
+    def chrom(self):
         return self.summary_variant.chromosome
 
     @property
@@ -535,7 +537,7 @@ class FamilyVariant(Variant, FamilyDelegate):
         return is_all_unknown_genotype(self.gt)
 
     def __repr__(self):
-        output = Variant.__repr__(self)
+        output = SummaryVariant.__repr__(self)
         return f"{output} {self.family_id} {mat2str(self.gt)}"
 
     @property

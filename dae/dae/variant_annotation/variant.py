@@ -1,5 +1,5 @@
 import re
-from dae.variants.attributes import VariantType
+from dae.variants.core import Allele
 
 
 class Variant(object):
@@ -20,7 +20,7 @@ class Variant(object):
 
         self.set_position(chrom, position, loc)
 
-        if VariantType.is_cnv(variant_type):
+        if Allele.Type.is_cnv(variant_type):
             assert self.chromosome is not None
             assert self.position is not None
 
@@ -69,7 +69,7 @@ class Variant(object):
             assert length is None
             assert seq is None
 
-            assert not VariantType.is_cnv(typ)
+            assert not Allele.Type.is_cnv(typ)
             self.reference = ref
             self.alternate = alt
 
@@ -78,7 +78,7 @@ class Variant(object):
             assert alt is None
             assert length is None
             assert seq is None
-            assert not VariantType.is_cnv(typ)
+            assert not Allele.Type.is_cnv(typ)
 
             self.set_ref_alt_from_variant(var)
 

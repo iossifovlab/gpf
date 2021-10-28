@@ -7,7 +7,7 @@ import logging
 import numpy as np
 
 from dae.genome.genomes_db import Genome
-from dae.variants.attributes import Sex, VariantDesc, VariantType
+from dae.variants.attributes import Sex
 
 
 logger = logging.getLogger(__name__)
@@ -211,31 +211,6 @@ def trim_str_back(pos, ref, alt):
     return pos + n, r[n:], a[n:]
 
 
-def cshl_format(pos, ref, alt, trimmer=trim_str_front):
-    p, r, a = trimmer(pos, ref, alt)
-    if len(r) == len(a) and len(r) == 0:
-        return VariantDesc(
-            VariantType.comp, p, ref=r, alt=a, length=0)
-
-    if len(r) == len(a) and len(r) == 1:
-        return VariantDesc(
-            VariantType.substitution, p, ref=r, alt=a, length=1)
-
-    if len(r) > len(a) and len(a) == 0:
-        return VariantDesc(
-            VariantType.deletion, p, length=len(r)
-        )
-
-    # len(ref) < len(alt):
-    if len(r) < len(a) and len(r) == 0:
-        return VariantDesc(
-            VariantType.insertion, p, alt=a, length=len(a))
-
-    return VariantDesc(
-        VariantType.comp, p, ref=r, alt=a, length=max(len(r), len(a))
-    )
-
-
 def get_locus_ploidy(
         chrom: str, pos: int, sex: Sex, genome: Genome) -> int:
 
@@ -272,51 +247,3 @@ def complement(nucleotides: str) -> str:
 
 def reverse_complement(nucleotides: str) -> str:
     return complement(nucleotides[::-1])
-
-
-def tandem_repeat(ref, alt, min_mono_reference=8):
-    for period in range(1, len(ref) // 2 + 1):
-        if len(ref) % period != 0:
-            continue
-        unit = ref[:period]
-
-        ref_repeats = len(ref) // period
-        if ref_repeats * unit != ref:
-            continue
-
-        if len(alt) % period != 0:
-            continue
-        alt_repeats = len(alt) // period
-        if alt_repeats * unit != alt:
-            continue
-
-        if len(unit) == 1 and len(ref) < min_mono_reference:
-            return None, None, None
-
-        return unit, ref_repeats, alt_repeats
-    return None, None, None
-
-
-def vcf2cshl(pos, ref, alt, trimmer=trim_str_back):
-    tr_vd = None
-    tr_unit, tr_ref, tr_alt = tandem_repeat(ref, alt)
-
-    if tr_unit is not None:
-
-        assert tr_ref is not None
-        assert tr_alt is not None
-
-        tr_vd = VariantDesc(
-            VariantType.tandem_repeat, pos,
-            tr_ref=tr_ref, tr_alt=tr_alt, tr_unit=tr_unit)
-
-        vd = cshl_format(pos, ref, alt, trimmer=trimmer)
-
-        vd.variant_type |= tr_vd.variant_type
-        vd.tr_unit = tr_vd.tr_unit
-        vd.tr_ref = tr_vd.tr_ref
-        vd.tr_alt = tr_vd.tr_alt
-
-        return vd
-
-    return cshl_format(pos, ref, alt, trimmer=trimmer)

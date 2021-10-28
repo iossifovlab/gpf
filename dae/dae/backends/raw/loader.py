@@ -443,7 +443,9 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
     def full_variants_iterator(self):
         for (summary_variant, family_variants) in \
                 self.variants_loader.full_variants_iterator():
-            self.annotation_pipeline.annotate_variant(summary_variant)
+            for sa in summary_variant.alt_alleles:
+                attributes = self.annotation_pipeline.annotate_allele(sa)
+                sa.update_attributes(attributes)
             yield summary_variant, family_variants
 
 
@@ -765,7 +767,7 @@ class VariantsGenotypesLoader(VariantsLoader):
             chrom = self._adjust_chrom_prefix(summary_variant.chromosome)
             summary_variant._chromosome = chrom
             for summary_allele in summary_variant.alleles:
-                summary_allele._chromosome = chrom
+                summary_allele._chrom = chrom
                 summary_allele._attributes["chrom"] = chrom
 
             for family_variant in family_variants:

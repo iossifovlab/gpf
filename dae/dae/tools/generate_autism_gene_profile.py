@@ -8,7 +8,8 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.autism_gene_profile.statistic import AGPStatistic
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.utils.effect_utils import expand_effect_types
-from dae.variants.attributes import VariantType, Role
+from dae.variants.attributes import Role
+from dae.variants.core import Allele
 
 logger = logging.getLogger(__file__)
 
@@ -197,7 +198,7 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
 
             if statistic.get("variant_types"):
                 variant_types = {
-                    VariantType.from_name(t)
+                    Allele.Type.from_name(t)
                     for t in statistic.variant_types
                 }
                 do_count = do_count and \
@@ -399,7 +400,7 @@ def main(gpf_instance=None, argv=None):
 
                 if statistic.variant_types:
                     variant_types = [
-                        VariantType.from_name(statistic.variant_types).repr()
+                        Allele.Type.from_name(statistic.variant_types).repr()
                     ]
                     kwargs["variant_type"] = " or ".join(variant_types)
 

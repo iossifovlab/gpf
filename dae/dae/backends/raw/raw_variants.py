@@ -197,7 +197,7 @@ class RawFamilyVariants(abc.ABC):
             if not cls.filter_gene_effects(allele, effect_types, genes):
                 return False
         if variant_type is not None:
-            if not variant_type.match([allele.variant_type]):
+            if not variant_type.match([allele.allele_type]):
                 return False
         if person_ids is not None:
             if allele.is_reference_allele:
@@ -245,7 +245,7 @@ class RawFamilyVariants(abc.ABC):
             if not cls.filter_gene_effects(allele, effect_types, genes):
                 return False
         if variant_type is not None:
-            if not variant_type.match([allele.variant_type]):
+            if not variant_type.match([allele.allele_type]):
                 return False
         if person_ids is not None:
             if allele.is_reference_allele:

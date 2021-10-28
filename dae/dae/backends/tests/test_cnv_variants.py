@@ -2,7 +2,7 @@ import pytest
 
 import numpy as np
 
-from dae.variants.attributes import VariantType
+from dae.variants.core import Allele
 from dae.backends.cnv.loader import CNVLoader
 from dae.pedigrees.loader import FamiliesLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator
@@ -105,7 +105,7 @@ def test_cnv_impala(cnv_impala):
         assert v.alt_alleles
         for aa in v.alt_alleles:
             print(aa)
-            assert VariantType.is_cnv(aa.variant_type)
+            assert Allele.Type.is_cnv(aa.allele_type)
     assert len(vs) == 12
 
 
@@ -150,7 +150,7 @@ def test_cnv_best_state_X(cnv_raw):
     for v in vs:
         assert v.alt_alleles
         for aa in v.alt_alleles:
-            assert VariantType.is_cnv(aa.variant_type)
+            assert Allele.Type.is_cnv(aa.allele_type)
 
     assert np.array_equal(
         vs[0].best_state,

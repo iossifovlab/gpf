@@ -3,8 +3,7 @@
 import logging
 import pyarrow as pa
 
-from dae.variants.attributes import VariantType
-from dae.variants.variant import SummaryAllele
+from dae.variants.core import Allele
 from dae.utils.variant_utils import trim_str_front, reverse_complement
 
 from dae.annotation.tools.annotator_base import Annotator
@@ -27,22 +26,22 @@ class LiftOverAnnotator(Annotator):
         self.chain.open()
         self.target_genome.open()
 
-    def liftover_variant(self, variant):
-        assert isinstance(variant, SummaryAllele)
-        if VariantType.is_cnv(variant.variant_type):
+    def liftover_allele(self, allele):
+        assert isinstance(allele, Allele)
+        if Allele.Type.is_cnv(allele.allele_type):
             return
         try:
             lo_coordinates = self.chain.convert_coordinate(
-                variant.chrom, variant.position,
+                allele.chrom, allele.position,
             )
 
             if lo_coordinates is None:
                 return
 
             lo_chrom, lo_pos, lo_strand, _ = lo_coordinates
-            pos = variant.position
-            ref = variant.reference
-            alt = variant.alternative
+            pos = allele.position
+            ref = allele.reference
+            alt = allele.alternative
 
             if lo_strand == "+" or len(ref) == len(alt):
                 lo_pos += 1
@@ -73,20 +72,19 @@ class LiftOverAnnotator(Annotator):
             print(lo_pos)
             print(lo_ref)
             print(lo_alt)
-            result = SummaryAllele(lo_chrom, lo_pos, lo_ref, lo_alt)
-            result.variant_type
+            result = Allele.build_vcf_allele(lo_chrom, lo_pos, lo_ref, lo_alt)
 
             return result
         except Exception as ex:
             logger.warning(
-                f"problem in variant {variant} liftover: {ex}", exc_info=True)
+                f"problem in variant {allele} liftover: {ex}", exc_info=True)
 
     def _do_annotate_allele(self, _, allele, liftover_context):
         assert self.liftover not in liftover_context, \
             (self.liftover, liftover_context)
         assert allele is not None
 
-        lo_allele = self.liftover_variant(allele)
+        lo_allele = self.liftover_allele(allele)
         if lo_allele is None:
             logger.info(
                 f"unable to liftover allele: {allele}")

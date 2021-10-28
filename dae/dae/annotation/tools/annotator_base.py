@@ -4,7 +4,7 @@ import abc
 import pyarrow as pa
 from typing import List, Optional
 
-from dae.variants.variant import Allele
+from dae.variants.core import Allele
 
 logger = logging.getLogger(__name__)
 

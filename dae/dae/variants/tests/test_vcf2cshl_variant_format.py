@@ -3,10 +3,10 @@ Created on Mar 12, 2018
 
 @author: lubo
 """
-from dae.variants.attributes import VariantType
+from dae.variants.core import Allele
 import pytest
 
-from dae.utils.variant_utils import vcf2cshl, trim_str_back, \
+from dae.variants.variant import vcf2cshl, trim_str_back, \
     tandem_repeat
 from dae.utils.dae_utils import dae2vcf_variant
 
@@ -228,8 +228,8 @@ def test_tandem_repeat_unit(
     assert tr_alt == alt_repeats
 
     vd = vcf2cshl(position, ref, alt)
-    assert vd.variant_type & VariantType.tandem_repeat
+    assert vd.variant_type & Allele.Type.tandem_repeat
     if ref_repeats < alt_repeats:
-        assert vd.variant_type & VariantType.insertion
+        assert vd.variant_type & Allele.Type.small_insertion
     elif ref_repeats > alt_repeats:
-        assert vd.variant_type & VariantType.deletion
+        assert vd.variant_type & Allele.Type.small_deletion

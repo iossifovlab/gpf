@@ -10,6 +10,7 @@ def test_allele_score_annotator(
     pipeline.add_annotator(annotator)
 
     for sv, e in frequency_variants_expected:
-        pipeline.annotate_variant(sv)
-        for score, value in e.items():
-            assert sv.get_attribute(score)[0] == value
+        for sa in sv.alt_alleles:
+            result = pipeline.annotate_allele(sa)
+            for score, value in e.items():
+                assert result.get(score) == value

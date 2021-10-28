@@ -9,8 +9,9 @@ import pandas as pd
 from dae.genome.genomes_db import Genome
 from dae.backends.raw.loader import VariantsGenotypesLoader, TransmissionType
 from dae.pedigrees.family import FamiliesData
-from dae.variants.attributes import VariantType, Inheritance
-from dae.variants.variant import SummaryVariantFactory, SummaryVariant
+from dae.variants.attributes import Inheritance
+from dae.variants.variant import SummaryVariantFactory, SummaryVariant, \
+    SummaryAllele
 from dae.variants.family_variant import FamilyVariant
 from dae.backends.raw.loader import CLIArgument
 
@@ -236,13 +237,13 @@ class CNVLoader(VariantsGenotypesLoader):
     def _calc_cnv_best_state(
         cls,
         best_state: str,
-        variant_type: VariantType,
+        variant_type: SummaryAllele.Type,
         expected_ploidy: np.ndarray,
     ) -> np.ndarray:
         actual_ploidy = np.fromstring(best_state, dtype=GENOTYPE_TYPE, sep=" ")
-        if variant_type == VariantType.cnv_p:
+        if variant_type == SummaryAllele.Type.large_duplication:
             alt_row = actual_ploidy - expected_ploidy
-        elif variant_type == VariantType.cnv_m:
+        elif variant_type == SummaryAllele.Type.large_deletion:
             alt_row = expected_ploidy - actual_ploidy
         else:
             assert (
@@ -337,7 +338,7 @@ class CNVLoader(VariantsGenotypesLoader):
             translate_variant_type
         )
         variant_type_col = tuple(
-            map(VariantType.from_name, variant_types_transformed)
+            map(SummaryAllele.Type.from_name, variant_types_transformed)
         )
 
         if cnv_person_id:

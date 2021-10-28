@@ -7,7 +7,7 @@ import pyarrow as pa
 
 from box import Box
 
-from dae.variants.attributes import VariantType
+from dae.variants.core import Allele
 
 from dae.variant_annotation.annotator import \
     VariantAnnotator
@@ -117,7 +117,7 @@ class EffectAnnotator(Annotator):
 
         assert allele is not None
         length = None
-        if VariantType.is_cnv(allele.variant_type):
+        if Allele.Type.is_cnv(allele.allele_type):
             length = allele.end_position - allele.position
 
         effects = self.effect_annotator.do_annotate_variant(
@@ -125,7 +125,7 @@ class EffectAnnotator(Annotator):
             position=allele.position,
             ref=allele.reference,
             alt=allele.alternative,
-            variant_type=allele.variant_type,
+            variant_type=allele.allele_type,
             length=length
         )
 
