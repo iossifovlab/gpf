@@ -153,5 +153,11 @@ describe('Enrichment tool tests', () => {
   it.only('should perform enrichment test based on gene sets', () => {
     const genesBlockPage = new GenesBlockPage();
     genesBlockPage.geneSetsButton.click();
+
+    page.geneSetsInputField.type('autism').then(option => {
+      cy.get('div.dropdown-menu').should('contain.text', 'PNAS 2015');
+      cy.get('span').contains('PNAS 2015').click();
+      page.geneSetsVariantsCount.should('have.text', 'Count: 239');
+    });
   });
 });

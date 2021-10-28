@@ -37,4 +37,16 @@ export class EnrichmentToolPage extends BasePage {
     });
     return element;
   }
+
+  get geneSetsInputField() {
+    return cy.get('input#search-box');
+  }
+
+  get geneSetsColletionDropdown() {
+    return cy.get('select#row-sm-3');
+  }
+
+  get geneSetsVariantsCount() {
+    return cy.get('div.col-sm-9').contains('Count:');
+  }
 }
