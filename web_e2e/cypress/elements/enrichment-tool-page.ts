@@ -25,4 +25,16 @@ export class EnrichmentToolPage extends BasePage {
   selectorTableRow(affectedStatus: string) {
     return cy.get('.selector-cell').eq(affectedStatus === 'affected' ? 1 : 2);
   }
+
+  enrichmentModelsSelector(modelName: string) {
+    let element = cy.get('select');
+    this.enrichmentModelsBlock.then(() => {
+      if (modelName === 'background') {
+        element = cy.get('select').eq(0);
+      } else if (modelName === 'counting') {
+        element = cy.get('select').eq(1);
+      }
+    });
+    return element;
+  }
 }

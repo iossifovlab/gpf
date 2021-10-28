@@ -86,7 +86,10 @@ describe('Enrichment tool tests', () => {
     genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText('FMRP Darnell').click();
     page.enrichmentTestButton.click();
     page.findTableField('affected', 'LGDs', 2).should('have.text', '55');
-    page.findTableField('affected', 'Missense', 2).should('have.text', '169')
+    page.findTableField('affected', 'Missense', 2).should('have.text', '169');
+
+    page.findTableField('affected', 'LGDs', 3).should('have.text', '35.02');
+    page.findTableField('affected', 'Missense', 3).should('have.text', '145.68');
   });
 
   it('should display \'0\' and \'2\' in the affected person\'s observed column of LGDs and missense\'s rows respectively ' +
@@ -101,8 +104,11 @@ describe('Enrichment tool tests', () => {
     page.enrichmentTestButton.click();
     page.findTableField('affected', 'LGDs', 2).should('have.text', '0');
     page.findTableField('affected', 'Missense', 2).should('have.text', '2');
-  });
 
+    page.findTableField('affected', 'LGDs', 3).should('have.text', '0.36');
+    page.findTableField('affected', 'Missense', 3).should('have.text', '1.52');
+  });
+ 
   it('should display affected and unaffected variants based on gene symbol', () => {
     const genesBlockPage = new GenesBlockPage();
     genesBlockPage.geneSymbolsButton.click();
@@ -124,17 +130,28 @@ describe('Enrichment tool tests', () => {
     genesBlockPage.geneSymbolsTextarea.type('CAMSAP1');
     
     // TODO data based test in columns/rows
-    page.enrichmentModelsBlock.then(models => {
+    page.enrichmentModelsBlock.then(() => {
       cy.get('a#ngb-nav-4').click();
     });
 
     page.enrichmentTestButton.click();
     page.table.should('be.visible');
 
-    page.selectorTableRow('affected').should('have.text', 'affected F:341  M:2166  U: -');
-    page.selectorTableRow('unaffected').should('have.text', 'unaffected F:1011  M:899  U: -');
-
     page.findTableField('affected', 'LGDs', 3).should('have.text', '0.06');
     page.findTableField('affected', 'Missense', 3).should('have.text', '0.24');
+
+    page.enrichmentModelsSelector('background').select('samocha_background_model');
+    page.enrichmentModelsSelector('counting').select('enrichment_gene_counting');
+    page.enrichmentTestButton.click();
+
+    // TODO test more values
+
+    page.findTableField('affected', 'LGDs', 3).should('have.text', '0.03');
+    page.findTableField('affected', 'Missense', 3).should('have.text', '0.24');
+  });
+
+  it.only('should perform enrichment test based on gene sets', () => {
+    const genesBlockPage = new GenesBlockPage();
+    genesBlockPage.geneSetsButton.click();
   });
 });
