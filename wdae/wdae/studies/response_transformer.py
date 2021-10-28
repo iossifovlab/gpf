@@ -9,8 +9,8 @@ from dae.utils.effect_utils import ge2str, \
     gd2str, \
     gene_effect_get_worst_effect, \
     gene_effect_get_genes
-from dae.variants.attributes import Inheritance, VariantDesc
-from dae.variants.variant import SummaryVariant
+from dae.variants.attributes import Inheritance
+from dae.variants.variant import SummaryVariant, VariantDesc
 from dae.variants.family_variant import FamilyVariant
 from dae.person_sets import PersonSetCollection
 
