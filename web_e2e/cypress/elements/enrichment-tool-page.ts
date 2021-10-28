@@ -19,6 +19,10 @@ export class EnrichmentToolPage extends BasePage {
 
   findTableField(affectedStatus: string, effectType: string, columnNumber: number) {
     const statusToRow = {'affected': 0, 'unaffected': 1};
-    return cy.get(`tr[label="${effectType}"]`).eq(statusToRow[affectedStatus]).find(('td > a')).eq(columnNumber - 1);
+    return cy.get(`tr[label="${effectType}"]`).eq(statusToRow[affectedStatus]).find(('td')).eq(columnNumber);
+  }
+
+  selectorTableRow(affectedStatus: string) {
+    return cy.get('.selector-cell').eq(affectedStatus === 'affected' ? 1 : 2);
   }
 }

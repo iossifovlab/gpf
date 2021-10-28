@@ -102,4 +102,39 @@ describe('Enrichment tool tests', () => {
     page.findTableField('affected', 'LGDs', 2).should('have.text', '0');
     page.findTableField('affected', 'Missense', 2).should('have.text', '2');
   });
+
+  it('should display affected and unaffected variants based on gene symbol', () => {
+    const genesBlockPage = new GenesBlockPage();
+    genesBlockPage.geneSymbolsButton.click();
+
+    genesBlockPage.geneSymbolsTextarea.type('CAMSAP1');
+    page.enrichmentTestButton.click();
+    page.table.should('be.visible');
+    
+    // TODO data based test in columns/rows
+
+    page.selectorTableRow('affected').should('have.text', 'affected F:341  M:2166  U: -');
+    page.selectorTableRow('unaffected').should('have.text', 'unaffected F:1011  M:899  U: -');
+  });
+
+  it('should display affected and unaffected variants based on gene symbol and select models', () => {
+    const genesBlockPage = new GenesBlockPage();
+    genesBlockPage.geneSymbolsButton.click();
+
+    genesBlockPage.geneSymbolsTextarea.type('CAMSAP1');
+    
+    // TODO data based test in columns/rows
+    page.enrichmentModelsBlock.then(models => {
+      cy.get('a#ngb-nav-4').click();
+    });
+
+    page.enrichmentTestButton.click();
+    page.table.should('be.visible');
+
+    page.selectorTableRow('affected').should('have.text', 'affected F:341  M:2166  U: -');
+    page.selectorTableRow('unaffected').should('have.text', 'unaffected F:1011  M:899  U: -');
+
+    page.findTableField('affected', 'LGDs', 3).should('have.text', '0.06');
+    page.findTableField('affected', 'Missense', 3).should('have.text', '0.24');
+  });
 });
