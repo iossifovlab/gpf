@@ -205,7 +205,9 @@
         "plugin:@angular-eslint/template/recommended",
         "plugin:prettier/recommended"
       ],
-      "rules": {}
+      "rules": {
+        "prettier/prettier": "warn"
+      }
     }
   ]
 }
