@@ -11,7 +11,7 @@ from dae.backends.raw.loader import VariantsGenotypesLoader, TransmissionType
 from dae.pedigrees.family import FamiliesData
 from dae.variants.attributes import Inheritance
 from dae.variants.variant import SummaryVariantFactory, SummaryVariant, \
-    SummaryAllele
+    SummaryAllele, allele_type_from_name
 from dae.variants.family_variant import FamilyVariant
 from dae.backends.raw.loader import CLIArgument
 
@@ -338,7 +338,7 @@ class CNVLoader(VariantsGenotypesLoader):
             translate_variant_type
         )
         variant_type_col = tuple(
-            map(SummaryAllele.Type.from_name, variant_types_transformed)
+            map(allele_type_from_name, variant_types_transformed)
         )
 
         if cnv_person_id:

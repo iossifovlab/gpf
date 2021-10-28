@@ -80,7 +80,7 @@ class VariantAnnotator(object):
         return None
 
     def _do_annotate_cnv(self, variant):
-        assert Allele.Type.is_cnv(variant.variant_type)
+        assert Allele.Type.cnv & variant.variant_type
         if variant.variant_type & Allele.Type.large_duplication:
             effect_type = "CNV+"
         elif variant.variant_type & Allele.Type.large_deletion:
@@ -111,7 +111,7 @@ class VariantAnnotator(object):
 
     def annotate(self, variant):
         logger = logging.getLogger(__name__)
-        if Allele.Type.is_cnv(variant.variant_type):
+        if variant.variant_type and (Allele.Type.cnv & variant.variant_type):
             return self._do_annotate_cnv(variant)
 
         effects = []

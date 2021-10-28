@@ -117,7 +117,7 @@ class EffectAnnotator(Annotator):
 
         assert allele is not None
         length = None
-        if Allele.Type.is_cnv(allele.allele_type):
+        if Allele.Type.cnv & allele.allele_type:
             length = allele.end_position - allele.position
 
         effects = self.effect_annotator.do_annotate_variant(

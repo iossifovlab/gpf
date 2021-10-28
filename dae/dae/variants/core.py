@@ -3,7 +3,6 @@ from typing import Optional
 
 
 class Allele:
-
     TYPE_DISPLAY_NAME = {
         "substitution": "sub",
         "small_insertion": "ins",
@@ -42,78 +41,24 @@ class Allele:
             assert isinstance(other, Allele.Type)
             return Allele.Type(self.value | other.value)
 
-        @staticmethod
-        def from_name(name):
-            name = name.lower().strip()
-            if name == "sub" or name == "substitution":
-                return Allele.Type.substitution
-            elif name == "ins" or name == "insertion":
-                return Allele.Type.small_insertion
-            elif name == "del" or name == "deletion":
-                return Allele.Type.small_deletion
-            elif name == "comp" or name == "complex":
-                return Allele.Type.complex
-            elif name in {"cnv_p", "cnv+", "large_duplication"}:
-                return Allele.Type.large_duplication
-            elif name in {"cnv_m", "cnv-", "large_deletion"}:
-                return Allele.Type.large_deletion
-            elif name in {"tr", "tandem_repeat"}:
-                return Allele.Type.tandem_repeat
-
-            raise ValueError(f"unexpected variant type: {name}")
-
-        @staticmethod
-        def from_cshl_variant(variant):
-            # FIXME: Change logic to use entire string
-            if variant is None:
-                return Allele.Type.invalid
-
-            vt = variant[0:2]
-            if vt == "su":
-                return Allele.Type.substitution
-            elif vt == "in":
-                return Allele.Type.small_insertion
-            elif vt == "de":
-                return Allele.Type.small_deletion
-            elif vt == "co":
-                return Allele.Type.complex
-            elif vt == "TR":
-                return Allele.Type.tandem_repeat
-            elif variant == "CNV+":
-                return Allele.Type.large_duplication
-            elif variant == "CNV-":
-                return Allele.Type.large_duplication
-            else:
-                raise ValueError(f"unexpected variant type: {variant}")
-
-        @staticmethod
-        def from_value(value):
-            if value is None:
-                return None
-            return Allele.Type(value)
-
-        @staticmethod
-        def is_cnv(vt):
-            if vt is None:
-                return False
-            assert isinstance(vt, Allele.Type)
-            return vt & Allele.Type.cnv
-
-        @staticmethod
-        def is_tr(vt):
-            if vt is None:
-                return False
-            assert isinstance(vt, Allele.Type)
-            return vt & Allele.Type.tandem_repeat
-
         def __repr__(self) -> str:
             return Allele.TYPE_DISPLAY_NAME.get(self.name) or self.name
 
-        def __str__(self) -> str:
-            return Allele.TYPE_DISPLAY_NAME.get(self.name) or self.name
+        @classmethod
+        def is_cnv(cls, vt):
+            if vt is None:
+                return False
+            if not isinstance(vt, Allele.Type):
+                return False
+            return vt & cls.cnv
 
-        def __lt__(self, other):
-            return self.value < other.value
+        @classmethod
+        def is_tr(cls, vt):
+            if vt is None:
+                return False
+            if not isinstance(vt, Allele.Type):
+                return False
+            return vt & cls.tandem_repeat
 
     def __init__(self, chrom: str, pos: int, pos_end: int = None,
                  ref: str = None, alt: str = None,
@@ -164,7 +109,7 @@ class Allele:
 
         if not self._allele_type:
             raise ValueError(
-                f"Can not determine the type of the variant: "
+                f"Can not determine the type of variant: "
                 f"{self._chrom}:{self._pos} {self._ref}->{self._alt}")
 
     @property

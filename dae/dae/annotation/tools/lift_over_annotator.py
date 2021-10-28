@@ -28,7 +28,7 @@ class LiftOverAnnotator(Annotator):
 
     def liftover_allele(self, allele):
         assert isinstance(allele, Allele)
-        if Allele.Type.is_cnv(allele.allele_type):
+        if Allele.Type.cnv & allele.allele_type:
             return
         try:
             lo_coordinates = self.chain.convert_coordinate(

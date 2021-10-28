@@ -17,7 +17,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
         return []
 
     def _do_annotate_allele(self, attributes, allele, liftover_context):
-        if Allele.Type.is_cnv(allele.allele_type):
+        if allele.allele_type & Allele.Type.cnv:
             logger.info(
                 f"skip trying to add frequency for CNV variant {allele}")
             self._scores_not_found(attributes)

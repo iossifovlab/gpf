@@ -17,6 +17,50 @@ from dae.variants.effects import Effect, EffectGene
 logger = logging.getLogger(__name__)
 
 
+def allele_type_from_name(name):
+    name = name.lower().strip()
+    if name == "sub" or name == "substitution":
+        return core.Allele.Type.substitution
+    elif name == "ins" or name == "insertion":
+        return core.Allele.Type.small_insertion
+    elif name == "del" or name == "deletion":
+        return core.Allele.Type.small_deletion
+    elif name == "comp" or name == "complex":
+        return core.Allele.Type.complex
+    elif name in {"cnv_p", "cnv+", "large_duplication"}:
+        return core.Allele.Type.large_duplication
+    elif name in {"cnv_m", "cnv-", "large_deletion"}:
+        return core.Allele.Type.large_deletion
+    elif name in {"tr", "tandem_repeat"}:
+        return core.Allele.Type.tandem_repeat
+
+    raise ValueError(f"unexpected variant type: {name}")
+
+
+def allele_type_from_cshl_variant(variant):
+    # FIXME: Change logic to use entire string
+    if variant is None:
+        return None
+
+    vt = variant[0:2]
+    if vt == "su":
+        return core.Allele.Type.substitution
+    elif vt == "in":
+        return core.Allele.Type.small_insertion
+    elif vt == "de":
+        return core.Allele.Type.small_deletion
+    elif vt == "co":
+        return core.Allele.Type.complex
+    elif vt == "TR":
+        return core.Allele.Type.tandem_repeat
+    elif variant == "CNV+":
+        return core.Allele.Type.large_duplication
+    elif variant == "CNV-":
+        return core.Allele.Type.large_duplication
+    else:
+        raise ValueError(f"unexpected variant type: {variant}")
+
+
 class VariantDesc:
 
     def __init__(
@@ -180,7 +224,7 @@ class VariantDetails:
         self.variant_desc = variant_desc
 
         self.cshl_position = self.variant_desc.position
-        if core.Allele.Type.is_cnv(self.variant_desc.variant_type):
+        if core.Allele.Type.cnv & self.variant_desc.variant_type:
             self.cshl_location = f"{self.chrom}:" \
                 f"{self.variant_desc.position}-" \
                 f"{self.variant_desc.end_position}"
@@ -197,7 +241,7 @@ class VariantDetails:
 
     @staticmethod
     def from_cnv(variant):
-        assert core.Allele.Type.is_cnv(variant._variant_type)
+        assert core.Allele.Type.cnv & variant._variant_type
 
         variant_desc = VariantDesc(
             variant_type=variant._variant_type,
@@ -211,6 +255,44 @@ class SummaryAllele(core.Allele):
     """
     `SummaryAllele` represents a single allele for given position.
     """
+    # class Type(core.Allele.Type):
+    #     def __and__(self, other):
+    #         assert isinstance(other, core.Allele.Type), type(other)
+    #         return self.value & other.value
+
+    #     def __or__(self, other):
+    #         assert isinstance(other, core.Allele.Type)
+    #         return self.value | other.value
+
+    #     def __ior__(self, other):
+    #         assert isinstance(other, SummaryAllele.Type)
+    #         return SummaryAllele.Type(self.value | other.value)
+
+    #     @classmethod
+    #     def from_value(cls, value):
+    #         if value is None:
+    #             return None
+    #         return cls(value)
+
+    #     # @classmethod
+    #     # def is_cnv(cls, vt):
+    #     #     if vt is None:
+    #     #         return False
+    #     #     assert isinstance(vt, core.Allele.Type)
+    #     #     return vt & cls.cnv
+
+    #     @classmethod
+    #     def is_tr(cls, vt):
+    #         if vt is None:
+    #             return False
+    #         assert isinstance(vt, core.Allele.Type)
+    #         return vt & core.Allele.Type.tandem_repeat
+
+    #     def __str__(self) -> str:
+    #         return self.TYPE_DISPLAY_NAME.get(self.name) or self.name
+
+    #     def __lt__(self, other):
+    #         return self.value < other.value
 
     def __init__(
         self,
@@ -273,7 +355,7 @@ class SummaryAllele(core.Allele):
     @property
     def details(self) -> Optional[VariantDetails]:
         if self._details is None:
-            if self.Type.is_cnv(self.allele_type):
+            if self.Type.cnv & self.allele_type:
                 self._details = VariantDetails.from_cnv(self)
             elif self.alternative is None:
                 return None
@@ -356,7 +438,7 @@ class SummaryAllele(core.Allele):
 
     @property
     def cshl_location(self) -> Optional[str]:
-        if self.Type.is_cnv(self.allele_type):
+        if self.Type.cnv & self.allele_type:
             return f"{self.chrom}:{self.position}-{self.end_position}"
         if self.alternative is None:
             return None
@@ -414,7 +496,7 @@ class SummaryAllele(core.Allele):
         return item in self.attributes
 
     def __repr__(self) -> str:
-        if self.Type.is_cnv(self.allele_type):
+        if self.Type.cnv & self.allele_type:
             return f"{self.chromosome}:{self.position}-{self.end_position}"
         elif not self.alternative:
             return f"{self.chrom}:{self.position} {self.reference} (ref)"

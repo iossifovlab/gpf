@@ -132,7 +132,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             if allele.allele_type & Allele.Type.indel:
                 pos_begin = allele.position
                 pos_end = allele.position + len(allele.reference)
-            elif Allele.Type.is_cnv(allele.allele_type):
+            elif Allele.Type.cnv & allele.allele_type:
                 pos_begin = allele.position
                 pos_end = allele.end_position
             else:

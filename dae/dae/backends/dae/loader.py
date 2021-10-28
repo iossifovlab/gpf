@@ -21,8 +21,8 @@ from dae.utils.dae_utils import dae2vcf_variant
 from dae.pedigrees.family import Family, FamiliesData
 from dae.variants.attributes import Inheritance, Role
 
-from dae.variants.core import Allele
-from dae.variants.variant import SummaryVariantFactory
+from dae.variants.variant import SummaryVariantFactory, \
+    allele_type_from_cshl_variant
 from dae.variants.family_variant import FamilyVariant
 
 from dae.backends.raw.loader import (
@@ -874,7 +874,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             "position": rec["position"],
             "reference": rec["reference"],
             "alternative": rec["alternative"],
-            "variant_type": Allele.Type.from_cshl_variant(rec["cshl_variant"]),
+            "variant_type": allele_type_from_cshl_variant(rec["cshl_variant"]),
             "cshl_position": rec["cshl_position"],
             "cshl_variant": rec["cshl_variant"],
             "summary_variant_index": rec["summary_variant_index"],
