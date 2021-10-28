@@ -40,14 +40,14 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
             yield self.build_genomic_resource(grId, grVr)
 
     def get_files(self, genomic_resource):
-        contentDict = self._dir_to_dict(
+        content_dict = self._dir_to_dict(
             self.get_genomic_resource_dir(genomic_resource))
 
         def my_leaf_to_size_and_time(ff):
             sts = ff.stat()
             return sts.st_size, sts.st_mtime
         yield from find_genomic_resource_files_helper(
-            contentDict, my_leaf_to_size_and_time)
+            content_dict, my_leaf_to_size_and_time)
 
     def open_raw_file(self, genomic_resource: GenomicResource, filename: str,
                       mode=None, uncompress=False):
@@ -57,9 +57,95 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         else:
             return open(fullFilePath, mode)
 
-    def update_resource(self, my_gr, other_gr):
-        assert my_gr.repo == self
-        raise Exception("not yet")
+    def update_resource(
+            self, src_gr: GenomicResource):
+
+        dest_gr: GenomicResource = self.get_resource(
+            src_gr.resource_id, f"={src_gr.get_version_str()}")
+        assert dest_gr is not None
+
+        assert dest_gr.repo == self
+        mnfst_dest = dest_gr.get_manifest()
+        mnfst_src = src_gr.get_manifest()
+
+        if mnfst_dest == mnfst_src:
+            logger.debug(f"nothing to update {dest_gr.resource_id}")
+            return
+
+        manifest_diff = {}
+        for dest_file in mnfst_dest:
+            manifest_diff[dest_file["name"]] = [dest_file, None]
+        for source_file in mnfst_src:
+            if source_file["name"] in manifest_diff:
+                manifest_diff[source_file["name"]][1] = source_file
+            else:
+                manifest_diff[source_file["name"]] = [None, source_file]
+
+        result_manifest = []
+        for dest_file, src_file in manifest_diff.values():
+
+            if dest_file is None and src_file:
+                # copy src_file
+                dest_mnfst = self._copy_manifest_entry(
+                    dest_gr, src_gr, src_file)
+                result_manifest.append(dest_mnfst)
+            elif dest_file and src_file is None:
+                # delete dest_file
+                self._delete_manifest_entry(
+                    dest_gr, dest_file)
+
+            elif dest_file != src_file:
+                # update src_file
+                dest_mnfst = self._copy_manifest_entry(
+                    dest_gr, src_gr, src_file)
+                result_manifest.append(dest_mnfst)
+        dest_gr.save_manifest(result_manifest)
+
+    def _delete_manifest_entry(
+            self, dest_gr: GenomicResource, dest_mnfst_file):
+        filename = dest_mnfst_file["name"]
+
+        dr = pathlib.Path(
+            self.directory /
+            dest_gr.get_genomic_resource_dir() / filename).parent
+
+        dest_path = dr / filename
+        dest_path.remove()
+
+    def _copy_manifest_entry(
+            self, dest_gr: GenomicResource, src_gr: GenomicResource,
+            src_mnfst_file):
+
+        assert dest_gr.resource_id == src_gr.resource_id
+        filename = src_mnfst_file["name"]
+
+        dr = pathlib.Path(
+            self.directory /
+            dest_gr.get_genomic_resource_dir() / filename).parent
+        os.makedirs(dr, exist_ok=True)
+
+        with src_gr.open_raw_file(
+                filename, "rb",
+                uncompress=False) as infile, \
+                dest_gr.open_raw_file(
+                    filename, 'wb',
+                    uncompress=False) as outfile:
+
+            md5_hash = hashlib.md5()
+            while b := infile.read(8192):
+                outfile.write(b)
+                md5_hash.update(b)
+        md5 = md5_hash.hexdigest()
+
+        if src_mnfst_file["md5"] != md5:
+            raise IOError(f"storing of {src_gr.resource_id} failed")
+        src_modtime = src_mnfst_file["time"]
+
+        dest_filename = dr / filename
+        assert dest_filename.exists()
+
+        os.utime(dest_filename, (src_modtime, src_modtime))
+        return src_mnfst_file
 
     def store_all_resources(self, source_repo: GenomicResourceRepo):
         for gr in source_repo.get_all_resources():
@@ -71,24 +157,9 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         temp_gr = GenomicResource(resource.resource_id,
                                   resource.version, self)
         for mnf_file in manifest:
-            dr = pathlib.Path(
-                self.directory /
-                resource.get_genomic_resource_dir() /
-                mnf_file['name']).parent
-            os.makedirs(dr, exist_ok=True)
-            with resource.open_raw_file(
-                    mnf_file["name"], "rb",
-                    uncompress=False) as infile, \
-                    temp_gr.open_raw_file(
-                        mnf_file["name"], 'wb',
-                        uncompress=False) as outfile:
-
-                md5_hash = hashlib.md5()
-                while b := infile.read(8192):
-                    outfile.write(b)
-                    md5_hash.update(b)
-            if md5_hash.hexdigest() != mnf_file["md5"]:
-                raise IOError(f"storing of {resource.resource_id} failed")
+            dest_mnf_file = \
+                self._copy_manifest_entry(temp_gr, resource, mnf_file)
+            assert dest_mnf_file == mnf_file
 
         new_gr = self.get_resource(
             resource.resource_id,

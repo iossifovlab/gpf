@@ -1,10 +1,9 @@
+import os
+import pathlib
+
 from .repository import GenomicResource
 from .repository import GenomicResourceRepo
 from .dir_repository import GenomicResourceDirRepo
-
-import pathlib
-import shutil
-import os
 
 
 class GenomicResourceCachedRepo(GenomicResourceRepo):
@@ -49,9 +48,8 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
     def refresh_cached_genomic_resource(self, cached: GenomicResource,
                                         child: GenomicResource):
         mnfst_cache = cached.get_manifest()
-        mnfst_chld = child.get_manifest()
-        if mnfst_cache == mnfst_chld:
+        mnfst_child = child.get_manifest()
+        if mnfst_cache == mnfst_child:
             return
-        shutil.rmtree(cached.repo.directory /
-                      cached.get_genomic_resource_dir())
-        cached.repo.store_resource(child)
+
+        cached.repo.update_resource(cached, child)

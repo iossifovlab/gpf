@@ -13,6 +13,7 @@ class GenomicResourceEmbededRepo(GenomicResourceRealRepo):
     def __init__(self, repo_id, content, **atts):
         super().__init__(repo_id)
         self.content = content
+        self.stable_timestamp = time.time()
 
     def get_all_resources(self):
         for grId, grVr in find_genomic_resources_helper(self.content):
@@ -32,7 +33,7 @@ class GenomicResourceEmbededRepo(GenomicResourceRealRepo):
             tm = leaf_data[1]
         else:
             content = leaf_data
-            tm = time.time()
+            tm = self.stable_timestamp
         if isinstance(content, str):
             content = bytes(content, GR_ENCODING)
         return content, tm
@@ -40,18 +41,18 @@ class GenomicResourceEmbededRepo(GenomicResourceRealRepo):
     def _get_file_content_and_time(self,
                                    genomic_resource: GenomicResource,
                                    filename: str):
-        pathArray = genomic_resource.get_genomic_resource_dir().split("/") + \
+        path_array = genomic_resource.get_genomic_resource_dir().split("/") + \
             filename.split("/")
         d = self.content
-        for t in pathArray[:-1]:
+        for t in path_array[:-1]:
             if t == "":
                 continue
             if t not in d or not isinstance(d[t], dict):
-                raise Exception("not a valid file name")
+                raise ValueError("not a valid file name")
             d = d[t]
-        lt = pathArray[-1]
+        lt = path_array[-1]
         if lt not in d or isinstance(d[lt], dict):
-            raise Exception("not a valid file name")
+            raise ValueError("not a valid file name")
 
         return self._get_content_and_time(d[lt])
 
@@ -68,22 +69,23 @@ class GenomicResourceEmbededRepo(GenomicResourceRealRepo):
         else:
             return io.BytesIO(content)
 
-    def get_files(self, genomicResource):
-        pathArray = genomicResource.get_genomic_resource_dir().split("/")
+    def get_files(self, genomic_resource):
+        path_array = genomic_resource.get_genomic_resource_dir().split("/")
 
-        contentDict = self.content
-        for token in pathArray:
+        content_dict = self.content
+        for token in path_array:
             if token == "":
                 continue
-            contentDict = contentDict[token]
+            content_dict = content_dict[token]
 
         def my_leaf_to_size_and_time(v):
             content, tm = self._get_content_and_time(v)
             return len(content), tm
+
         yield from find_genomic_resource_files_helper(
-            contentDict, my_leaf_to_size_and_time)
+            content_dict, my_leaf_to_size_and_time)
 
     def open_tabix_file(self, genomic_resource,  filename,
                         index_filename=None):
-        raise Exception(
+        raise ValueError(
             "Tabix files are not supported by GenomicResourceEmbededRepo.")
