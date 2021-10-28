@@ -39,7 +39,7 @@ def get_configured_definition():
     if GRR_DEFINITION_FILE_ENV is os.environ:
         return parse_definition_file(os.environ[GRR_DEFINITION_FILE_ENV])
 
-    if pathlib.Path("~/.grr_efinition.yaml"):
+    if pathlib.Path("~/.grr_definition.yaml"):
         return parse_definition_file(os.environ[GRR_DEFINITION_FILE_ENV])
 
     return DEFAULT_DEFINITION
