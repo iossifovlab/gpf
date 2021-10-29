@@ -37,6 +37,7 @@ def resources_http_server(fixture_dirname):
                         break
                 except ConnectionRefusedError:
                     time.sleep(0.5)
+                    http_port += 1
                     retries -= 1
         except OSError:
             time.sleep(0.5)
