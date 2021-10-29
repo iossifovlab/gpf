@@ -45,7 +45,7 @@ def resources_http_server(fixture_dirname):
             retries -= 1
 
     if not success:
-        raise RuntimeError("Failed to start local HTTP server")
+        raise RuntimeError(f"failed to start local HTTP server at {http_port}")
 
     server.terminate()
     server.wait()

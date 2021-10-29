@@ -1,6 +1,7 @@
 import pytest
 import pyarrow as pa
 
+from dae.annotation.tools.schema import Schema
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.annotation.tools.score_annotator import (
     PositionScoreAnnotator,
@@ -50,15 +51,15 @@ def test_np_score_annotator_schema(anno_grdb):
 
     schema = annotator.annotation_schema
     assert schema is not None
-    assert isinstance(schema, pa.Schema)
+    assert isinstance(schema, Schema)
     assert "cadd_raw" in schema.names
     assert "cadd_phred" in schema.names
 
-    field = schema.field("cadd_raw")
-    assert field.type == pa.float32()
+    field = schema["cadd_raw"]
+    assert field.pa_type == pa.float32()
 
-    field = schema.field("cadd_phred")
-    assert field.type == pa.float32()
+    field = schema["cadd_phred"]
+    assert field.pa_type == pa.float32()
 
     assert len(schema) == 2
     print(dir(schema))

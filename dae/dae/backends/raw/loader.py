@@ -27,7 +27,7 @@ from dae.variants.attributes import TransmissionType
 
 from dae.utils.variant_utils import get_locus_ploidy, best2gt
 
-from dae.annotation.tools.schema import ParquetSchema
+from dae.annotation.tools.schema import Schema
 
 
 logger = logging.getLogger(__name__)
@@ -227,7 +227,7 @@ class VariantsLoader(CLILoader):
             self._attributes = copy.deepcopy(attributes)
         self.arguments = []
 
-        self._variants_schema = ParquetSchema.produce_base_schema()
+        self._variants_schema = Schema.produce_base_schema()
 
     def get_attribute(self, key: str) -> Any:
         return self._attributes.get(key, None)
@@ -432,7 +432,7 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
 
     @property
     def variants_schema(self):
-        return ParquetSchema.merge_schemas(
+        return Schema.merge_schemas(
             super().variants_schema, self.annotation_schema
         )
 

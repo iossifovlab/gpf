@@ -6,7 +6,7 @@ import itertools
 import pyarrow as pa
 
 from box import Box
-
+from dae.annotation.tools.schema import Schema
 from dae.variants.core import Allele
 
 from dae.variant_annotation.annotator import \
@@ -16,16 +16,16 @@ from dae.annotation.tools.annotator_base import Annotator
 
 class EffectAnnotator(Annotator):
 
-    SCHEMA = pa.schema([
-        pa.field("effect_type", pa.string()),
-        pa.field("effect_gene_genes", pa.list_(pa.string())),
-        pa.field("effect_gene_types", pa.list_(pa.string())),
-        pa.field("effect_genes", pa.list_(pa.string())),
-        pa.field("effect_details_transcript_ids", pa.list_(pa.string())),
-        pa.field("effect_details_genes", pa.list_(pa.string())),
-        pa.field("effect_details_details", pa.list_(pa.string())),
-        pa.field("effect_details", pa.list_(pa.string())),
-    ])
+    SCHEMA = {
+        "effect_type": (str, pa.string()),
+        "effect_gene_genes": (list, pa.list_(pa.string())),
+        "effect_gene_types": (list, pa.list_(pa.string())),
+        "effect_genes": (list, pa.list_(pa.string())),
+        "effect_details_transcript_ids": (list, pa.list_(pa.string())),
+        "effect_details_genes": (list, pa.list_(pa.string())),
+        "effect_details_details": (list, pa.list_(pa.string())),
+        "effect_details": (list, pa.list_(pa.string())),
+    }
 
     DEFAULT_ANNOTATION = Box({
         "attributes": [
@@ -95,16 +95,23 @@ class EffectAnnotator(Annotator):
             attributes[attr.dest] = ""
 
     @property
+    def annotator_type(self):
+        return "effect_annotator"
+
+    @property
     def annotation_schema(self):
         if self._annotation_schema is None:
-            fields = []
-            for attribute in self.attributes_list:
+            schema = Schema()
+            for attribute in self.get_default_annotation():
                 prop_name = attribute.dest
-                prop_type = self.SCHEMA.field(attribute.source)
-                assert prop_type is not None, attribute
-                field = pa.field(prop_name, prop_type.type)
-                fields.append(field)
-            self._annotation_schema = pa.schema(fields)
+                py_type, pa_type = self.SCHEMA[attribute.source]
+                schema.create_field(
+                    prop_name, py_type, pa_type,
+                    self.annotator_type,
+                    f"{self.genomic_sequence.resource_id}:"
+                    f"{self.gene_models.resource_id}",
+                    attribute.source)
+            self._annotation_schema = schema
         return self._annotation_schema
 
     def get_default_annotation(self):

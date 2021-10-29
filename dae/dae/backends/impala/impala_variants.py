@@ -9,7 +9,7 @@ from impala.util import as_pandas
 
 from dae.backends.raw.raw_variants import RawFamilyVariants
 
-from dae.annotation.tools.schema import ParquetSchema
+from dae.annotation.tools.schema import Schema
 from dae.pedigrees.family import FamiliesData
 from dae.backends.impala.serializers import AlleleParquetSerializer
 
@@ -535,7 +535,7 @@ class ImpalaVariants:
             schema = {
                 col_name: col_type for (_, col_name, col_type) in records
             }
-            return ParquetSchema(schema)
+            return Schema.from_impala_schema(schema)
 
     def _fetch_pedigree_schema(self):
         with closing(self.connection()) as conn:

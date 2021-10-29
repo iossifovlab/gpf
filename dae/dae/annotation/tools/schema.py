@@ -1,113 +1,121 @@
-import copy
-from typing import Dict, Any
-from collections import OrderedDict
-from box import Box
+from __future__ import annotations
 
+import logging
+
+from typing import Dict, Any, Type, Optional
 import pyarrow as pa
 
+logger = logging.getLogger(__name__)
 
-class Schema(object):
+
+class Field:
+    class Source:
+        def __init__(
+                self, annotator_type: str, resource_id: str, source_attr: str):
+            self.annotator_type = annotator_type
+            self.resource_id = resource_id
+            self.source_attr = source_attr
+
+    def __init__(
+            self, name: str,
+            py_type: Type, pa_type: Any = None,
+            source: Optional[Field.Source] = None):
+
+        self.name: str = name
+        self.type: Type = py_type
+        self.pa_type: Any = pa_type
+        self.source: Optional[Field.Source] = source
+
+
+class Schema:
 
     # New types only need to be added here.
-    type_map: Dict[str, Any] = OrderedDict(
-        [
-            ("str", str),
-            ("float", float),
-            ("int", int),
-            ("list(str)", str),
-            ("list(float)", float),
-            ("list(int)", int),
-        ]
-    )
+    TYPE_MAP: Dict[str, Any] = {
+        "str": (str, pa.string()),
+        "float": (float, pa.float32()),
+        "float32": (float, pa.float32()),
+        "float64": (float, pa.float64()),
+        "int": (int, pa.int32()),
+        "int8": (int, pa.int8()),
+        "tinyint": (int, pa.int8()),
+        "int16": (int, pa.int16()),
+        "smallint": (int, pa.int16()),
+        "int32": (int, pa.int32()),
+        "int64": (int, pa.int64()),
+        "bigint": (int, pa.int64()),
+        "list(str)": (list, pa.list_(pa.string())),
+        "list(float)": (list, pa.list_(pa.float64())),
+        "list(int)": (list, pa.list_(pa.int32())),
+        "bool": (bool, pa.bool_()),
+        "boolean": (bool, pa.bool_()),
+        "binary": (bytes, pa.binary()),
+        "string": (bytes, pa.string()),
+    }
 
     def __init__(self):
-        self.columns = OrderedDict()
+        self.fields: Dict[str, Field] = {}
 
-    @classmethod
-    def produce_type(cls, type_name):
-        assert type_name in cls.type_map
-        return Box(
-            {"type_name": type_name, "type_py": cls.type_map[type_name]},
-            default_box=True,
-            default_box_attr=None,
-        )
-
-    def create_column(self, col_name, col_type):
-        if col_name not in self.columns:
-            self.columns[col_name] = Schema.produce_type(col_type)
-
-    def remove_column(self, col_name):
-        if col_name in self.columns:
-            del self.columns[col_name]
-
-    def order_as(self, ordered_col_names):
-        ordered_schema = Schema()
-        for col in ordered_col_names:
-            assert col in self.columns, [col, self.col_names]
-            ordered_schema.columns[col] = self.columns[col]
-        return ordered_schema
-
-    @classmethod
-    def from_dict(cls, schema_dict):
-        new_schema = Schema()
-        assert isinstance(schema_dict, dict)
-        for col_type in cls.type_map.keys():
-            if col_type not in schema_dict:
-                # TODO Should this skip the faulty col_type
-                # or exit with an error? (or just print out an error?)
-                continue
-            for col in schema_dict[col_type]:
-                new_schema.create_column(col, col_type)
-        return new_schema
+    def create_field(
+            self, name: str, py_type: Type, pa_type: Any = None,
+            annotator_type: str = None, resource_id: str = None,
+            source_attr: str = None):
+        if name not in self.fields:
+            source = None
+            if annotator_type or resource_id or source_attr:
+                source = Field.Source(annotator_type, resource_id, source_attr)
+            self.fields[name] = Field(name, py_type, pa_type, source)
 
     @staticmethod
-    def merge_schemas(left, right):
+    def merge_schemas(left: Schema, right: Schema) -> Schema:
         merged_schema = Schema()
-        missing_columns = OrderedDict()
-        for col_name, col_type in right.columns.items():
-            if col_name in left.columns:
-                left.columns[col_name] = col_type
+        missing_fields = {}
+        for field_name, field in right.fields.items():
+            if field_name in left.fields:
+                left.fields[field_name] = field
             else:
-                missing_columns[col_name] = col_type
-        merged_schema.columns.update(left.columns)
-        merged_schema.columns.update(missing_columns)
+                missing_fields[field_name] = field
+        merged_schema.fields.update(left.fields)
+        merged_schema.fields.update(missing_fields)
         return merged_schema
 
     @staticmethod
-    def diff_schemas(left, right):
-        result = copy.deepcopy(left)
-        for key in right.columns:
-            if key in result.columns:
-                del result.columns[key]
+    def concat_schemas(first: Schema, second: Schema) -> Schema:
+        result = Schema()
+        result.fields.update(first.fields)
+
+        for name, field in second.fields.items():
+            if name in result:
+                message = f"two schemas has fields with the same name: " \
+                    f"first {first[name]}; second {field}"
+                logger.error(message)
+                raise ValueError(message)
+            result.fields[name] = field
+
         return result
 
     @property
     def names(self):
-        return list(self.columns.keys())
-
-    @property
-    def col_names(self):
-        return list(self.columns.keys())
+        return list(self.fields.keys())
 
     def __str__(self):
         ret_str = ""
-        for col, col_type in self.columns.items():
-            ret_str += "{} -> [{}]\n".format(col, col_type.type_py)
+        for field_name, field in self.fields.items():
+            ret_str += "{} -> [{}]\n".format(field_name, field.type)
         return ret_str
 
     def __contains__(self, key):
-        return key in self.columns
+        return key in self.fields
 
     def __delitem__(self, key):
-        del self.columns[key]
+        del self.fields[key]
 
     def __getitem__(self, key):
-        return self.columns.__getitem__(key)
+        return self.fields.__getitem__(key)
 
+    def __len__(self):
+        return len(self.fields)
 
-class ParquetSchema(Schema):
-
-    BASE_SCHEMA_FIELDS = [
+    BASE_SCHEMA = pa.schema([
         pa.field("bucket_index", pa.int32()),
         pa.field("summary_variant_index", pa.int64()),
         pa.field("allele_index", pa.int8()),
@@ -140,113 +148,33 @@ class ParquetSchema(Schema):
         pa.field("af_allele_freq", pa.float32()),
         pa.field("frequency_data", pa.string()),
         pa.field("genomic_scores_data", pa.string()),
-    ]
-
-    # New types only need to be added here.
-    type_map: Dict[str, Any] = OrderedDict(
-        [
-            ("str", (str, pa.string())),
-            ("float", (float, pa.float32())),
-            ("float32", (float, pa.float32())),
-            ("float64", (float, pa.float64())),
-            ("int", (int, pa.uint32())),
-            ("int8", (int, pa.int8())),
-            ("tinyint", (int, pa.int8())),
-            ("int16", (int, pa.int16())),
-            ("smallint", (int, pa.int16())),
-            ("int32", (int, pa.int32())),
-            ("int64", (int, pa.int64())),
-            ("bigint", (int, pa.int64())),
-            ("list(str)", (str, pa.list_(pa.string()))),
-            ("list(float)", (float, pa.list_(pa.float64()))),
-            ("list(int)", (int, pa.list_(pa.uint32()))),
-            ("bool", (bool, pa.bool_())),
-            ("boolean", (bool, pa.bool_())),
-            ("binary", (bytes, pa.binary())),
-            ("string", (bytes, pa.string())),
-        ]
-    )
-
-    def __init__(self, schema_dict={}):
-        super(ParquetSchema, self).__init__()
-        self.columns = {
-            key: ParquetSchema.produce_type(val)
-            for key, val in schema_dict.items()
-        }
+    ])
 
     @classmethod
-    def produce_type(cls, type_name):
-        assert type_name in cls.type_map, type_name
-        return Box(
-            {
-                "type_name": type_name,
-                "type_py": cls.type_map[type_name][0],
-                "type_pa": cls.type_map[type_name][1],
-                "type": cls.type_map[type_name][1],
-            },
-            default_box=True,
-            default_box_attr=None,
-        )
-
-    def create_column(self, col_name, col_type):
-        if col_name not in self.columns:
-            self.columns[col_name] = ParquetSchema.produce_type(col_type)
+    def produce_base_schema(cls):
+        return cls.from_arrow_schema(cls.BASE_SCHEMA)
 
     @classmethod
-    def convert(cls, schema):
-        if isinstance(schema, ParquetSchema):
-            return schema
-        assert isinstance(schema, Schema)
-        pq_schema = ParquetSchema()
-        for col_name, col_type in schema.columns.items():
-            pq_schema.columns[col_name] = ParquetSchema.produce_type(
-                col_type.type_name
-            )
-        return pq_schema
+    def from_impala_schema(cls, schema_dict):
+        new_schema = Schema()
+        for name, type_name in schema_dict.items():
+            py_type, pa_type = cls.TYPE_MAP[type_name]
+            field = Field(name, py_type, pa_type)
+            new_schema.fields[name] = field
+        return new_schema
 
     @classmethod
-    def from_dict(cls, schema_dict):
-        return cls.convert(Schema.from_dict(schema_dict))
-
-    @classmethod
-    def merge_schemas(cls, left, right):
-        return cls.convert(Schema.merge_schemas(left, right))
-
-    @classmethod
-    def from_parquet(cls, pq_schema):
-        return cls.from_arrow(pq_schema.to_arrow_schema())
-
-    @classmethod
-    def from_arrow(cls, pa_schema):
-        new_schema = ParquetSchema()
+    def from_arrow_schema(cls, pa_schema: pa.Schema):
+        new_schema = Schema()
         for col in pa_schema:
             found = False
-            for type_name, types in new_schema.type_map.items():
-                if col.type == types[1]:
-                    new_schema.columns[col.name] = cls.produce_type(type_name)
+            for py_type, pa_type in cls.TYPE_MAP.values():
+                if col.type == pa_type:
+                    new_schema.fields[col.name] = \
+                        Field(col.name, py_type, pa_type)
                     found = True
                     break
             assert found, col
 
-        assert len(new_schema.columns) == len(pa_schema)
+        assert len(new_schema.fields) == len(pa_schema)
         return new_schema
-
-    def to_arrow(self):
-        return pa.schema(
-            [
-                pa.field(col, col_type.type_pa, nullable=True)
-                for col, col_type in self.columns.items()
-            ]
-        )
-
-    @classmethod
-    def produce_base_schema(cls):
-        return cls.from_arrow(pa.schema(cls.BASE_SCHEMA_FIELDS))
-
-    def __str__(self):
-        ret_str = ""
-        for col, col_type in self.columns.items():
-            ret_str += "{} -> [{} / {}]\n".format(
-                col, col_type.type_py, col_type.type_pa
-            )
-        return ret_str

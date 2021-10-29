@@ -63,7 +63,7 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
             print(
                 attributes["effect_gene_types"],
                 attributes["effect_gene_genes"])
-            
+
             effect_types = sa.get_attribute("effectGene")
             print(effect_types)
             effect = Effect.from_string(
@@ -105,11 +105,11 @@ def test_effect_annotation_schema(anno_grdb):
     schema = effect_annotator.annotation_schema
     assert schema is not None
 
-    field = schema.field("effect_type")
-    assert field.type == pa.string()
+    field = schema["effect_type"]
+    assert field.pa_type == pa.string()
 
-    field = schema.field("effect_gene_genes")
-    assert field.type == pa.list_(pa.string())
+    field = schema["effect_gene_genes"]
+    assert field.pa_type == pa.list_(pa.string())
 
-    field = schema.field("effect_gene_types")
-    assert field.type == pa.list_(pa.string())
+    field = schema["effect_gene_types"]
+    assert field.pa_type == pa.list_(pa.string())

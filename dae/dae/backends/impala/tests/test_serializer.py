@@ -10,7 +10,7 @@ def test_all_properties_in_blob(vcf_variants_loaders, impala_genotype_storage):
     schema = loader.get_attribute("annotation_schema")
     family = loader.families.get(fv.family_id)
     print(schema)
-    schema.create_column("some_score", "float")
+    schema.create_field("some_score", float)
     fv.update_attributes({"some_score": [1.24]})
 
     serializer = AlleleParquetSerializer(schema)
@@ -121,7 +121,7 @@ def test_build_allele_batch_dict(
     family = loader.families.get(fv.family_id)
     assert family, fv.family_id
 
-    schema.create_column("some_score", "float")
+    schema.create_field("some_score", float)
     fv.update_attributes({"some_score": [1.24]})
 
     serializer = AlleleParquetSerializer(schema)

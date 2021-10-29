@@ -787,8 +787,6 @@ class SummaryVariantFactory(object):
             record, transmission_type=None,
             attr_filter=None):
 
-        print("SummaryAllele:", record)
-
         if transmission_type is not None:
             record["transmission_type"] = transmission_type
         alternative = record["alternative"]
@@ -837,7 +835,6 @@ class SummaryVariantFactory(object):
             records, transmission_type=None,
             attr_filter=None):
 
-        print("SummaryVariant:", records)
         assert len(records) > 0
 
         alleles = []

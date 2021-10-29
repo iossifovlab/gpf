@@ -7,6 +7,7 @@ from dae.variants.core import Allele
 from dae.utils.variant_utils import trim_str_front, reverse_complement
 
 from dae.annotation.tools.annotator_base import Annotator
+from .schema import Schema
 
 
 logger = logging.getLogger(__name__)
@@ -21,10 +22,14 @@ class LiftOverAnnotator(Annotator):
 
         self.chain = chain_resource
         self.target_genome = genome_resource
-        self._annotation_schema = pa.schema([])
+        self._annotation_schema = Schema()
         # TODO do somewhere else
         self.chain.open()
         self.target_genome.open()
+
+    @property
+    def annotator_type(self):
+        return "liftover_annotator"
 
     def liftover_allele(self, allele):
         assert isinstance(allele, Allele)

@@ -1,24 +1,20 @@
 import logging
 
-import pyarrow as pa
-
 from dae.variants.core import Allele
+from .schema import Schema
+
 from dae.annotation.tools.annotator_base import Annotator
 from dae.genomic_resources.score_resources import GenomicScoresResource
-
-# from dae.genomic_resources.utils import aggregator_name_to_class
-
-
-def aggregator_name_to_class(agg_name):
-    # TODO IVAN
-    raise Exception("THIS IS A STUB BY IVAN UNTILL I UNDERSTAND AND RESTORE")
 
 
 logger = logging.getLogger(__name__)
 
 
 class VariantScoreAnnotatorBase(Annotator):
-    def __init__(self, resource, liftover=None, override=None):
+    def __init__(
+            self, resource: GenomicScoresResource,
+            liftover=None, override=None):
+
         super().__init__(liftover, override)
         self.resource = resource
 
@@ -28,8 +24,6 @@ class VariantScoreAnnotatorBase(Annotator):
 
         self.score_types = dict()
         for score in self.resource.get_all_scores():
-            print(score)
-
             self.score_types[score.id] = score.type
 
         self.non_default_position_aggregators = None
@@ -68,16 +62,21 @@ class VariantScoreAnnotatorBase(Annotator):
         return self.resource.get_default_annotation()
 
     @property
-    def annotation_schema(self) -> pa.Schema:
+    def annotation_schema(self) -> Schema:
         if self._annotation_schema is None:
-            fields = []
+            schema = Schema()
             for attribute in self.get_config().attributes:
                 prop_name = attribute.dest
                 score_config = self.resource.get_score_config(attribute.source)
-                prop_type = self.TYPES.get(score_config.type)
-                assert prop_type is not None, score_config
-                fields.append(pa.field(prop_name, prop_type, nullable=True))
-            self._annotation_schema = pa.schema(fields)
+                py_type = score_config.type
+                pa_type = self.TYPES.get(score_config.type)
+                assert py_type is not None, score_config
+                schema.create_field(
+                    prop_name, py_type, pa_type,
+                    self.annotator_type, self.resource.resource_id,
+                    attribute.source)
+
+            self._annotation_schema = schema
         return self._annotation_schema
 
     def _scores_not_found(self, attributes):
@@ -92,6 +91,10 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         super().__init__(resource, liftover, override)
         # FIXME This should be closed somewhere
         self.resource.open()
+
+    @property
+    def annotator_type(self):
+        return "position_score_annotator"
 
     def _fetch_substitution_scores(self, variant):
         scores = self.resource.fetch_scores(
@@ -159,6 +162,10 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
 class NPScoreAnnotator(PositionScoreAnnotator):
     def __init__(self, config, liftover=None, override=None):
         super().__init__(config, liftover, override)
+
+    @property
+    def annotator_type(self):
+        return "np_score_annotator"
 
     def _fetch_substitution_scores(self, allele):
         return self.resource.fetch_scores(

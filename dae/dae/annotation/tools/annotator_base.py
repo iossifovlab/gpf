@@ -5,6 +5,7 @@ import pyarrow as pa
 from typing import List, Optional
 
 from dae.variants.core import Allele
+from .schema import Schema
 
 logger = logging.getLogger(__name__)
 
@@ -21,16 +22,16 @@ class Annotator(abc.ABC):
         self.liftover = liftover
         self.override = override
 
-    @staticmethod
-    def required_columns():
-        raise NotImplementedError()
-
     @property
     def output_columns(self) -> List[str]:
         return self.annotation_schema.names
 
     @abc.abstractproperty
-    def annotation_schema(self):
+    def annotation_schema(self) -> Schema:
+        pass
+
+    @abc.abstractproperty
+    def annotator_type(self) -> str:
         pass
 
     @abc.abstractmethod

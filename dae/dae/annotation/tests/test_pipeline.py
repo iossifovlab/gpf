@@ -31,8 +31,8 @@ def test_build_pipeline_schema(
     field = schema["effect_gene_genes"]
     print(field, dir(field))
 
-    assert field.type == pa.list_(pa.string()), field
+    assert field.pa_type == pa.list_(pa.string()), field
 
     assert "cadd_raw" in schema.names
     field = schema["cadd_raw"]
-    assert field.type == pa.float32()
+    assert field.pa_type == pa.float32()

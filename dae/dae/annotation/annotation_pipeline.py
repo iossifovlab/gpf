@@ -3,13 +3,11 @@ import logging
 from itertools import chain
 from typing import List, Optional
 
-import pyarrow as pa
-
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.variants.core import Allele
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.annotation.tools.annotator_base import Annotator
-from dae.annotation.tools.schema import ParquetSchema
+from dae.annotation.tools.schema import Schema
 from dae.annotation.tools.utils import AnnotatorFactory
 
 
@@ -146,21 +144,19 @@ class AnnotationPipeline():
             annotator.output_columns for annotator in self.annotators)
 
     @property
-    def annotation_schema(self) -> ParquetSchema:
+    def annotation_schema(self) -> Schema:
         if self._annotation_schema is None:
-            fields = []
+            schema = Schema()
             for annotator in self.annotators:
-                schema = annotator.annotation_schema
-                for i in range(len(schema)):
-                    field = schema.field(i)
-                    fields.append(field)
-            self._annotation_schema = ParquetSchema.from_arrow(
-                pa.schema(fields))
+                schema = Schema.concat_schemas(
+                    schema, annotator.annotation_schema)
+            self._annotation_schema = schema
         return self._annotation_schema
 
     def add_annotator(self, annotator: Annotator) -> None:
         assert isinstance(annotator, Annotator)
         self.annotators.append(annotator)
+        self._annotation_schema = None
 
     def annotate_allele(self, allele: Allele) -> dict:
         attributes = {}
@@ -170,6 +166,3 @@ class AnnotationPipeline():
                 attributes, allele, liftover_context)
 
         return attributes
-    # def annotate_variant(self, variant: Variant):
-    #     for alt_allele in variant.alt_alleles:
-    #         self.annotate_allele(alt_allele)

@@ -13,8 +13,9 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
         super().__init__(resource, liftover, override)
         self.resource.open()
 
-    def _get_aggregators(self, attr):
-        return []
+    @property
+    def annotator_type(self):
+        return "allele_score_annotator"
 
     def _do_annotate_allele(self, attributes, allele, liftover_context):
         if allele.allele_type & Allele.Type.cnv:
