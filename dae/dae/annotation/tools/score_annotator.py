@@ -30,15 +30,17 @@ class VariantScoreAnnotatorBase(Annotator):
         self.non_default_nucleotide_aggregators = None
         self._collect_non_default_aggregators()
 
-    def get_default_annotation(self):
+    def get_annotation_config(self):
         if self.override:
             return self.override.attributes
-        return self.resource.get_default_annotation().attributes
+        if self.resource.get_default_annotation():
+            return self.resource.get_default_annotation().attributes
+        return {}
 
     def _collect_non_default_aggregators(self):
         non_default_position_aggregators = {}
         non_default_nucleotide_aggregators = {}
-        for attr in self.get_default_annotation():
+        for attr in self.get_annotation_config():
             if attr.get("position_aggregator") is not None:
                 non_default_position_aggregators[attr["source"]] = \
                     attr.get("position_aggregator")
@@ -54,18 +56,13 @@ class VariantScoreAnnotatorBase(Annotator):
                 non_default_nucleotide_aggregators
 
     def get_scores(self):
-        return [attr.source for attr in self.get_default_annotation()]
-
-    def get_config(self):
-        if self.override:
-            return self.override
-        return self.resource.get_default_annotation()
+        return [attr.source for attr in self.get_annotation_config()]
 
     @property
     def annotation_schema(self) -> Schema:
         if self._annotation_schema is None:
             schema = Schema()
-            for attribute in self.get_config().attributes:
+            for attribute in self.get_annotation_config():
                 prop_name = attribute.dest
                 score_config = self.resource.get_score_config(attribute.source)
                 py_type = score_config.type

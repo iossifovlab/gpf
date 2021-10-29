@@ -96,7 +96,7 @@ class LiftOverAnnotator(Annotator):
             return
         liftover_context[self.liftover] = lo_allele
 
-    def get_default_annotation(self):
+    def get_annotation_config(self):
         return []
 
     @property

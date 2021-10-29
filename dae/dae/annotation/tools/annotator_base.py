@@ -45,7 +45,7 @@ class Annotator(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_default_annotation(self):
+    def get_annotation_config(self):
         pass
 
     def annotate_allele(
@@ -56,7 +56,7 @@ class Annotator(abc.ABC):
         Carry out the annotation and then relabel results as configured.
         """
         self._do_annotate_allele(attributes, allele, liftover_context)
-        attributes_list = self.get_default_annotation()
+        attributes_list = self.get_annotation_config()
         for attr in attributes_list:
             if attr.dest == attr.source:
                 continue

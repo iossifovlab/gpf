@@ -102,7 +102,7 @@ class EffectAnnotator(Annotator):
     def annotation_schema(self):
         if self._annotation_schema is None:
             schema = Schema()
-            for attribute in self.get_default_annotation():
+            for attribute in self.get_annotation_config():
                 prop_name = attribute.dest
                 py_type, pa_type = self.SCHEMA[attribute.source]
                 schema.create_field(
@@ -114,7 +114,7 @@ class EffectAnnotator(Annotator):
             self._annotation_schema = schema
         return self._annotation_schema
 
-    def get_default_annotation(self):
+    def get_annotation_config(self):
         return copy.deepcopy(self.attributes_list)
 
     def _do_annotate_allele(self, attributes, allele, _liftover_context):
