@@ -24,7 +24,11 @@
         "plugin:@typescript-eslint/recommended",
         "plugin:@typescript-eslint/recommended-requiring-type-checking"
       ],
+      "plugins": [
+        "@typescript-eslint"
+       ],
       "rules": {
+        "no-trailing-spaces": "warn",
         "prefer-exponentiation-operator": "warn",
         "no-param-reassign": "warn",
         "no-labels": "warn",
