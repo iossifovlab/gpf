@@ -74,10 +74,12 @@ def test_position_resource_default_annotation(position_score_repo):
 #  70   71   72   73   74   75   76
 #  0.1  0.1  0.2  0.2  0.3  0.3  0.4
 #
+
+# TODO: Add test for complex
 @pytest.mark.parametrize("variant,pos_aggregator, expected", [
     (("1", 14970, "C", "A"),   "mean", 0.1),
 
-    (("1", 14970, "CC", "C"),  "mean", 0.13),
+    (("1", 14970, "CC", "C"),  "mean", (0.1 + 0.1 + 0.2)/3),
     (("1", 14970, "CC", "C"),  "max", 0.2),
 
     (("1", 14970, "CCT", "C"), "mean", 0.15),
@@ -110,14 +112,17 @@ def test_position_score_annotator(
                   dest: test100
                   position_aggregator: {pos_aggregator}
             """)
-        )
+    )
 
     pipeline = AnnotationPipeline.build(pipeline_config, position_score_repo)
+    annotator = BasicAnnotator()
+    annotator = ThreadAnnotatorRunner()
+    annotator = AsynioAnnotatorRunner()
 
-    result = pipeline.annotate_allele(sa)
+    result = annotator.annotate(pipeline, sa)
 
     print(sa, result)
-    assert result.get("test100") == pytest.approx(expected, abs=1e-2)
+    assert result.get("test100") == pytest.approx(expected, abs=1e-50)
 
 
 def test_position_annotator_schema(position_score_repo):
@@ -131,7 +136,7 @@ def test_position_annotator_schema(position_score_repo):
                 - source: test100way
                   dest: test100
             """)
-        )
+    )
 
     pipeline = AnnotationPipeline.build(pipeline_config, position_score_repo)
     schema = pipeline.annotation_schema
@@ -153,7 +158,7 @@ def test_position_default_annotator_schema(position_score_repo):
             - annotator: position_score
               resource: position_score1
             """)
-        )
+    )
 
     pipeline = AnnotationPipeline.build(pipeline_config, position_score_repo)
     assert len(pipeline.annotation_schema) == 3
@@ -183,7 +188,7 @@ def test_position_annotator_schema_one_source_two_dest(position_score_repo):
                   dest: test100max
                   position_aggregator: max
             """)
-        )
+    )
 
     pipeline = AnnotationPipeline.build(pipeline_config, position_score_repo)
     schema = pipeline.annotation_schema
