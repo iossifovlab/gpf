@@ -26,7 +26,7 @@ describe('Effect types tests', () => {
     page.findErrorAlertInComponent('gpf-effecttypes').should('not.exist');
   });
 
-  it('should check/uncheck effect types checkboxes using \'All\' and \'None\' buttons', () => {
+  it('should check/uncheck effect types checkboxes using "All" and "None" buttons', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genotypeBlockPage.findButtonInComponentContainingText('gpf-effecttypes', 'None').click();
     genotypeBlockPage.findAllCheckboxesInComponent('gpf-effecttypes').each((element) => {

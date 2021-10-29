@@ -106,7 +106,7 @@ describe('Gene plot summary alleles count tests', () => {
     {checkbox: 'Unaffected only', expectedSummaryAllelesCount: '8 / 8'},
     {checkbox: 'Affected and unaffected', expectedSummaryAllelesCount: '8 / 8'}
   ].forEach(data => {
-    it('should display the correct value when filtering with the \'' + data.checkbox + '\' checkbox', () => {
+    it('should display the correct value when filtering with the "' + data.checkbox + '" checkbox', () => {
       geneBrowserPage.affectedStatusField.should('exist');
       page.summaryAllelesCount.should('have.text', '8 / 8');
 
@@ -124,7 +124,7 @@ describe('Gene plot summary alleles count tests', () => {
     {checkbox: 'CNV-', expectedSummaryAllelesCount: '8 / 8'},
     {checkbox: 'Other', expectedSummaryAllelesCount: '7 / 8'}
   ].forEach(data => {
-    it('should display the correct value when filtering with the \'' + data.checkbox + '\' checkbox', () => {
+    it('should display the correct value when filtering with the "' + data.checkbox + '" checkbox', () => {
       geneBrowserPage.effectTypeFiltersField.should('exist');
       page.summaryAllelesCount.should('have.text', '8 / 8');
 
@@ -138,7 +138,7 @@ describe('Gene plot summary alleles count tests', () => {
   [ {checkbox: 'Denovo', expectedSummaryAllelesCount: '0 / 8'},
     {checkbox: 'Transmitted', expectedSummaryAllelesCount: '8 / 8'}
   ].forEach(data => {
-    it('should display the correct value when filtering with the \'' + data.checkbox + '\' checkbox', () => {
+    it('should display the correct value when filtering with the "' + data.checkbox + '" checkbox', () => {
       geneBrowserPage.inheritanceTypesFilter.should('exist');
       page.summaryAllelesCount.should('have.text', '8 / 8');
 
@@ -155,7 +155,7 @@ describe('Gene plot summary alleles count tests', () => {
     {checkbox: 'CNV+',expectedSummaryAllelesCount: '8 / 8'},
     {checkbox: 'CNV-',expectedSummaryAllelesCount: '8 / 8'}
   ].forEach(data => {
-    it('should display the correct value when filtering with the \'' + data.checkbox + '\' checkbox', () => {
+    it('should display the correct value when filtering with the "' + data.checkbox + '" checkbox', () => {
       geneBrowserPage.variantTypesFilter.should('exist');
       page.summaryAllelesCount.should('have.text', '8 / 8');
 

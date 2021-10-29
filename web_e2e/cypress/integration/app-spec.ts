@@ -15,13 +15,13 @@ describe('App tests', () => {
     page.navigateToHome();
   });
 
-  it('should display \'GPF: Genotypes and Phenotypes in Families\' as a title', () => {
+  it('should display "GPF: Genotypes and Phenotypes in Families" as a title', () => {
     page.loginAdmin();
     page.title.should('have.text', 'GPF: Genotypes and Phenotypes in Families');
     page.logout();
   });
 
-  it('should toggle sidenav, click on the \'Datasets\' button and navigate to \'/datasets/ALL_genotypes/gene-browser\'', () => {
+  it('should toggle sidenav, click on the "Datasets" button and navigate to "/datasets/ALL_genotypes/gene-browser"', () => {
     const baseUrl = Cypress.config().baseUrl;
     const expectedUrl = `${baseUrl}datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`;
 
@@ -35,7 +35,7 @@ describe('App tests', () => {
     page.logout();
   });
 
-  it('should toggle sidenav, click on the \'Saved queries\' button and navigate to \'/saved-queries\'', () => {
+  it('should toggle sidenav, click on the "Saved queries" button and navigate to "/saved-queries"', () => {
     const baseUrl = Cypress.config().baseUrl;
     const savedQueriesUrl = `${baseUrl}saved-queries`;
 
@@ -49,7 +49,7 @@ describe('App tests', () => {
     page.logout();
   });
 
-  it('should toggle sidenav, click on the \'Management\' button and navigate to \'/management\'', () => {
+  it('should toggle sidenav, click on the "Management" button and navigate to "/management"', () => {
     const baseUrl = Cypress.config().baseUrl;
     const managementUrl = `${baseUrl}management`;
 
@@ -63,7 +63,7 @@ describe('App tests', () => {
     page.logout();
   });
 
-  it('should toggle sidenav, click on the \'Autism gene profiles\' button and navigate to \'/autism-gene-profiles\'', () => {
+  it('should toggle sidenav, click on the "Autism gene profiles" button and navigate to "/autism-gene-profiles"', () => {
     const baseUrl = Cypress.config().baseUrl;
     const autismGeneProfilesUrl = `${baseUrl}autism-gene-profiles`;
 

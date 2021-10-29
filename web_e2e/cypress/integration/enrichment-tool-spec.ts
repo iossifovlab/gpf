@@ -28,21 +28,21 @@ describe('Enrichment tool tests', () => {
     page.enrichmentModelsBlock.should('be.visible');
   });
 
-  it('should display \'Enrichment Test\' button', () => {
+  it('should display "Enrichment Test" button', () => {
     page.enrichmentTestButton.should('be.visible');
   });
 
-  it('should display \'Share query\' button', () => {
+  it('should display "Share query" button', () => {
     const shareQueryPage = new ShareQueryPage();
     shareQueryPage.button.should('be.visible');
   });
 
-  it('should display \'Save query\' button', () => {
+  it('should display "Save query" button', () => {
     const saveQueryPage = new SaveQueryPage();
     saveQueryPage.button.should('be.visible');
   });
 
-  it('should display enrichment table after \'Enrichment Test\' button click', () => {
+  it('should display enrichment table after "Enrichment Test" button click', () => {
     const genesBlockPage = new GenesBlockPage();
 
     page.table.should('not.exist');
@@ -52,7 +52,7 @@ describe('Enrichment tool tests', () => {
     page.table.should('be.visible');
   });
 
-  it('should display alert window after \'Enrichment Test\' button click when the gene symbols textarea is empty', () => {
+  it('should display alert window after "Enrichment Test" button click when the gene symbols textarea is empty', () => {
     const genesBlockPage = new GenesBlockPage();
 
     page.findWarningAlertInComponent('gpf-gene-symbols').should('be.visible');
@@ -76,7 +76,7 @@ describe('Enrichment tool tests', () => {
     page.findErrorAlertInComponent('gpf-gene-sets').should('not.exist');
   });
 
-  it('should display \'55\' and \'169\' in the affected person\'s observed column of LGDs and missense\'s rows respectively ' +
+  it('should display "55" and "169" in the affected person"s observed column of LGDs and missense"s rows respectively ' +
      'with gene set Main: FMRP Darnell', () => {
     const genesBlockPage = new GenesBlockPage();
     
@@ -89,7 +89,7 @@ describe('Enrichment tool tests', () => {
     page.findTableField('affected', 'Missense', 2).should('have.text', '169')
   });
 
-  it('should display \'0\' and \'2\' in the affected person\'s observed column of LGDs and missense\'s rows respectively ' +
+  it('should display "0" and "2" in the affected person"s observed column of LGDs and missense"s rows respectively ' +
      'with gene set MSigDB Pathways: BIOCARTA_PTEN_PATHWAY', () => {
     const genesBlockPage = new GenesBlockPage();
 

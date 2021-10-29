@@ -43,29 +43,29 @@ describe('Pheno tool tests', () => {
     familyFilterBlockPage.window.should('be.visible');
   });
 
-  it('should display \'Report\' button', () => {
+  it('should display "Report" button', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
     page.reportButton.should('be.visible');
   });
 
-  it('should display \'Share query\' button', () => {
+  it('should display "Share query" button', () => {
     const shareQueryPage = new ShareQueryPage();
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
     shareQueryPage.button.should('be.visible');
   });
 
-  it('should display \'Save query\' button', () => {
+  it('should display "Save query" button', () => {
     const saveQueryPage = new SaveQueryPage();
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
     saveQueryPage.button.should('be.visible');
   });
 
-  it('should display \'Download\' button', () => {
+  it('should display "Download" button', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
     page.findButtonInComponentContainingText('gpf-pheno-tool', 'Download').should('be.visible');
   });
 
-  it('should display pheno tool results chart after \'Report\' button click', () => {
+  it('should display pheno tool results chart after "Report" button click', () => {
     const phenoToolMeasurePage = new PhenoToolMeasurePage();
 
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);

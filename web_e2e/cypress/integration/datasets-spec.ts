@@ -95,7 +95,7 @@ describe('Iossifov dataset count tests', () => {
    {rowIndex: 2, roleId: 'proband', expectedCounts: ['2166', '341', '2507']},
    {rowIndex: 3, roleId: 'sibling', expectedCounts: ['899', '1011', '1910']}
   ].forEach((data) => {
-    it('should display the correct numbers in families by numbers of role - \'' + data.roleId + '\'', () => {
+    it('should display the correct numbers in families by numbers of role - "' + data.roleId + '"', () => {
       page.familiesByNumberDropdownButton.select('Role');
 
       page.allFamiliesByNumberHeaderCells.eq(data.rowIndex).should('have.text', data.roleId);
@@ -119,7 +119,7 @@ describe('Iossifov dataset count tests', () => {
    {effectType: 'Missense', expectedCounts: ['1680, 0.67', '(1185, 47%)', '1149, 0.602', '(843, 44%)']},
    {effectType: 'Intron', expectedCounts: ['821, 0.327', '(671, 27%)', '558, 0.292', '(464, 24%)']}
   ].forEach((data) => {
-    it('should display the correct numbers for ' + data.effectType + ' effectType in the \'Denovo variants of:\' role table', () => {
+    it('should display the correct numbers for ' + data.effectType + ' effectType in the "Denovo variants of:" role table', () => {
       page.denovoVariantsDropdownButton.select('Role');
       page.findDenovoVariantsCountsByRowName(data.effectType).each((ele, i) => {
         expect(ele.text()).to.eq(data.expectedCounts[i]);
@@ -132,7 +132,7 @@ describe('Iossifov dataset count tests', () => {
    {effectType: 'Missense', expectedCounts: ['1680, 0.67', '(1185, 47%)', '1149, 0.602', '(843, 44%)']},
    {effectType: 'Intron', expectedCounts: ['821, 0.327', '(671, 27%)', '558, 0.292', '(464, 24%)']}
   ].forEach((data) => {
-    it('should display the correct numbers for ' + data.effectType + ' effectType in the \'Denovo variants of:\' status table', () => {
+    it('should display the correct numbers for ' + data.effectType + ' effectType in the "Denovo variants of:" status table', () => {
       page.denovoVariantsDropdownButton.select('Affected Status');
       page.findDenovoVariantsCountsByRowName(data.effectType).each((ele, i) => {
         expect(ele.text()).to.eq(data.expectedCounts[i]);
