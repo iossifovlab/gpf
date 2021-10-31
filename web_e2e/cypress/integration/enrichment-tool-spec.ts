@@ -200,8 +200,9 @@ describe('Enrichment tool data tests', () => {
     page.enrichmentTestButton.click();
     page.table.should('be.visible');
 
-    page.findTableField('affected', 'LGDs', 3).should('have.text', '0.06');
-    page.findTableField('affected', 'Missense', 3).should('have.text', '0.24');
+    ['LGDs', '392', '0', '0.06', '1.00', '27', '0', '3.92e-3', '1.00', '321', '0', '0.05', '1.00', '71', '0', '0.01', '1.00'].forEach((el, index) => {
+      page.findTableField('affected', 'LGDs', index).should('have.text', el);
+    });
 
     page.enrichmentModelsSelector('background').select('samocha_background_model');
     page.enrichmentModelsSelector('counting').select('enrichment_gene_counting');
@@ -209,7 +210,8 @@ describe('Enrichment tool data tests', () => {
 
     // TODO test more values
 
-    page.findTableField('affected', 'LGDs', 3).should('have.text', '0.03');
-    page.findTableField('affected', 'Missense', 3).should('have.text', '0.24');
+    ['LGDs', '363', '0', '0.03', '1.00', '27', '0', '1.89e-3', '1.00', '306', '0', '0.02', '1.00', '68', '0', '3.45e-3', '1.00'].forEach((el, index) => {
+      page.findTableField('affected', 'LGDs', index).should('have.text', el);
+    });
   });
 });
