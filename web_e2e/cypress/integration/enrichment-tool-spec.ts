@@ -200,9 +200,10 @@ describe('Enrichment tool data tests', () => {
     page.enrichmentTestButton.click();
     page.table.should('be.visible');
 
-    ['LGDs', '392', '0', '0.06', '1.00', '27', '0', '3.92e-3', '1.00', '321', '0', '0.05', '1.00', '71', '0', '0.01', '1.00'].forEach((el, index) => {
+    /*['LGDs', '392', '0', '0.06', '1.00', '27', '0', '3.92e-3', '1.00', '321', '0', '0.05', '1.00', '71', '0', '0.01', '1.00'].forEach((el, index) => {
       page.findTableField('affected', 'LGDs', index).should('have.text', el);
-    });
+    });*/
+    compare_data('gene_symbol_without_model_LGDs', 'affected', 'LGDs');
 
     page.enrichmentModelsSelector('background').select('samocha_background_model');
     page.enrichmentModelsSelector('counting').select('enrichment_gene_counting');
@@ -210,8 +211,34 @@ describe('Enrichment tool data tests', () => {
 
     // TODO test more values
 
-    ['LGDs', '363', '0', '0.03', '1.00', '27', '0', '1.89e-3', '1.00', '306', '0', '0.02', '1.00', '68', '0', '3.45e-3', '1.00'].forEach((el, index) => {
+    /*['LGDs', '363', '0', '0.03', '1.00', '27', '0', '1.89e-3', '1.00', '306', '0', '0.02', '1.00', '68', '0', '3.45e-3', '1.00'].forEach((el, index) => {
       page.findTableField('affected', 'LGDs', index).should('have.text', el);
-    });
+    });*/ //experimental below
+    compare_data('gene_symbol_and_models_LGDs', 'affected', 'LGDs');
+
   });
 });
+
+class data_model {
+  public set_name: string;
+  public data: Array<string>;
+
+  constructor(set_name, data) {
+    this.set_name = set_name;
+    this.data = data;
+  }
+}
+const data = [
+  new data_model('gene_symbol_and_models_LGDs' ,['LGDs', '363', '0', '0.03', '1.00', '27', '0', '1.89e-3', '1.00', '306', '0', '0.02', '1.00', '68', '0', '3.45e-3', '1.00']),
+  new data_model('gene_symbol_without_model_LGDs', ['LGDs', '392', '0', '0.06', '1.00', '27', '0', '3.92e-3', '1.00', '321', '0', '0.05', '1.00', '71', '0', '0.01', '1.00'])
+] ;
+
+function compare_data(set_name: string, affected: string, type: string) {
+  const page = new EnrichmentToolPage();
+  const dataset = data.filter(item => item.set_name === set_name);
+  dataset.forEach(el => {
+    el.data.forEach((el, index) => {
+      page.findTableField(affected, type, index).should('have.text', el);
+    });
+  });
+}
