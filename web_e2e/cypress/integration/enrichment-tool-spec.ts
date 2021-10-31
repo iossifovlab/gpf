@@ -134,12 +134,8 @@ describe('Enrichment tool data tests', () => {
     page.enrichmentTestButton.click();
     page.table.should('be.visible');
     
-    (['LGDs', '363', '0', '0.05', '1.00', '27', '0',	'3.92e-3' , '1.00', '306', '0', '0.04', '1.00', '68', '0', '9.88e-3' ,'1.00']).forEach((el, index) => {
-      page.findTableField('affected', 'LGDs', index).should('have.text', el);
-    });
-    (['Missense', '1,510', '1', '0.22',	'0.197', '149', '0',	'0.02',	'1.00',	'1,307',	'1',	'0.19',	'0.173', '246', '0', '0.04', '1.00']).forEach((el, index) => {
-      page.findTableField('affected', 'Missense', index).should('have.text', el);
-    });
+    compare_data('gene_symbol_CAMSAP1', 'affected');
+    compare_data('gene_symbol_CAMSAP1', 'affected', 'Missense'); // same data name can be used with different effect types
 
     page.selectorTableRow('affected').should('have.text', 'affected F:341  M:2166  U: -');
     page.selectorTableRow('unaffected').should('have.text', 'unaffected F:1011  M:899  U: -');
@@ -155,9 +151,7 @@ describe('Enrichment tool data tests', () => {
       page.geneSetsVariantsCount.should('have.text', 'Count: 239');
     });
     page.enrichmentTestButton.click();
-    ['LGDs', '363', '97', '12.87', '2.48e-55', '27', '22', '0.96', '8.48e-28', '306', '78', '10.85', '3.29e-43', '68', '29', '2.41', '3.11e-24'].forEach((el, index) => {
-      page.findTableField('affected', 'LGDs', index).should('have.text', el);
-    });
+    compare_data('gene_symbol_pnas_2015_set', 'affected');
 
 
     page.geneSetsColletionDropdown.select('Denovo');
@@ -167,9 +161,7 @@ describe('Enrichment tool data tests', () => {
       page.geneSetsVariantsCount.should('have.text', 'Count: 363');
     });
     page.enrichmentTestButton.click();
-    ['LGDs', '363', '363', '13.67', '0.00', '27', '27', '1.02', '3.53e-39', '306', '306', '11.52', '0.00', '68', '68', '2.56', '1.43e-97'].forEach((el, index) => {
-      page.findTableField('affected', 'LGDs', index).should('have.text', el);
-    });
+    compare_data('gene_symbols_iossifov_affected', 'affected');
 
     cy.get('input#iossifov_2014-checkbox-affected').click();
     page.findErrorAlertInComponent('gpf-gene-sets').contains('Please select a gene');
@@ -181,9 +173,7 @@ describe('Enrichment tool data tests', () => {
       page.geneSetsVariantsCount.should('have.text', 'Count: 176');
     });
     page.enrichmentTestButton.click();
-    ['LGDs', '363', '8', '6.13', '0.4108', '27', '1', '0.46', '0.3686', '306', '7', '5.17', '0.3708', '68', '1', '1.15', '1.00'].forEach((el, index) => {
-      page.findTableField('affected', 'LGDs', index).should('have.text', el);
-    });
+    compare_data('gene_symbol_iossifov_unaffected', 'affected');
   });
 
   it('should display affected and unaffected variants based on gene symbol and select models', () => {
@@ -203,7 +193,7 @@ describe('Enrichment tool data tests', () => {
     /*['LGDs', '392', '0', '0.06', '1.00', '27', '0', '3.92e-3', '1.00', '321', '0', '0.05', '1.00', '71', '0', '0.01', '1.00'].forEach((el, index) => {
       page.findTableField('affected', 'LGDs', index).should('have.text', el);
     });*/
-    compare_data('gene_symbol_without_model_LGDs', 'affected', 'LGDs');
+    compare_data('gene_symbol_without_model_LGDs', 'affected');
 
     page.enrichmentModelsSelector('background').select('samocha_background_model');
     page.enrichmentModelsSelector('counting').select('enrichment_gene_counting');
@@ -214,8 +204,7 @@ describe('Enrichment tool data tests', () => {
     /*['LGDs', '363', '0', '0.03', '1.00', '27', '0', '1.89e-3', '1.00', '306', '0', '0.02', '1.00', '68', '0', '3.45e-3', '1.00'].forEach((el, index) => {
       page.findTableField('affected', 'LGDs', index).should('have.text', el);
     });*/ //experimental below
-    compare_data('gene_symbol_and_models_LGDs', 'affected', 'LGDs');
-
+    compare_data('gene_symbol_and_models_LGDs', 'affected');
   });
 });
 
@@ -229,16 +218,19 @@ class data_model {
   }
 }
 const data = [
+  new data_model('gene_symbol_CAMSAP1', ['LGDs', '363', '0', '0.05', '1.00', '27', '0',	'3.92e-3' , '1.00', '306', '0', '0.04', '1.00', '68', '0', '9.88e-3' ,'1.00']),
+  new data_model('gene_symbol_CAMSAP1', ['Missense', '1,510', '1', '0.22',	'0.197', '149', '0',	'0.02',	'1.00',	'1,307',	'1',	'0.19',	'0.173', '246', '0', '0.04', '1.00']),
   new data_model('gene_symbol_and_models_LGDs' ,['LGDs', '363', '0', '0.03', '1.00', '27', '0', '1.89e-3', '1.00', '306', '0', '0.02', '1.00', '68', '0', '3.45e-3', '1.00']),
-  new data_model('gene_symbol_without_model_LGDs', ['LGDs', '392', '0', '0.06', '1.00', '27', '0', '3.92e-3', '1.00', '321', '0', '0.05', '1.00', '71', '0', '0.01', '1.00'])
+  new data_model('gene_symbol_without_model_LGDs', ['LGDs', '392', '0', '0.06', '1.00', '27', '0', '3.92e-3', '1.00', '321', '0', '0.05', '1.00', '71', '0', '0.01', '1.00']),
+  new data_model('gene_symbols_iossifov_affected', ['LGDs', '363', '363', '13.67', '0.00', '27', '27', '1.02', '3.53e-39', '306', '306', '11.52', '0.00', '68', '68', '2.56', '1.43e-97']),
+  new data_model('gene_symbol_iossifov_unaffected', ['LGDs', '363', '8', '6.13', '0.4108', '27', '1', '0.46', '0.3686', '306', '7', '5.17', '0.3708', '68', '1', '1.15', '1.00']),
+  new data_model('gene_symbol_pnas_2015_set', ['LGDs', '363', '97', '12.87', '2.48e-55', '27', '22', '0.96', '8.48e-28', '306', '78', '10.85', '3.29e-43', '68', '29', '2.41', '3.11e-24'])
 ] ;
 
-function compare_data(set_name: string, affected: string, type: string) {
+function compare_data(set_name: string, affected: string, type:string = 'LGDs') {
   const page = new EnrichmentToolPage();
-  const dataset = data.filter(item => item.set_name === set_name);
-  dataset.forEach(el => {
-    el.data.forEach((el, index) => {
-      page.findTableField(affected, type, index).should('have.text', el);
-    });
+  const dataset = data.find(item => (item.set_name === set_name && item.data[0] === type));
+  dataset.data.forEach((el, index) => {
+    page.findTableField(affected, type, index).should('have.text', el);
   });
 }
