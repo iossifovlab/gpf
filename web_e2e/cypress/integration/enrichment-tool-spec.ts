@@ -4,7 +4,7 @@ import { SaveQueryPage } from 'cypress/elements/save-query-page';
 import { ShareQueryPage } from 'cypress/elements/share-query-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-describe('Enrichment tool tests', () => {
+describe('Enrichment tool common tests', () => {
   const page = new EnrichmentToolPage();
 
   before(() => {
@@ -108,8 +108,25 @@ describe('Enrichment tool tests', () => {
     page.findTableField('affected', 'LGDs', 3).should('have.text', '0.36');
     page.findTableField('affected', 'Missense', 3).should('have.text', '1.52');
   });
- 
-  it.only('should display affected and unaffected variants based on gene symbol', () => {
+
+});
+
+describe('Enrichment tool data tests', () => {
+  const page = new EnrichmentToolPage();
+
+  before(() => {
+    page.cleanup();
+    page.navigateToHome();
+    page.loginAdmin();
+  });
+
+  beforeEach(() => {
+    page.preserveLogin();
+    page.navigateToHome();
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.enrichmentTool);
+  });
+
+  it('should display affected and unaffected variants based on gene symbol', () => {
     const genesBlockPage = new GenesBlockPage();
     genesBlockPage.geneSymbolsButton.click();
 
@@ -126,6 +143,47 @@ describe('Enrichment tool tests', () => {
 
     page.selectorTableRow('affected').should('have.text', 'affected F:341  M:2166  U: -');
     page.selectorTableRow('unaffected').should('have.text', 'unaffected F:1011  M:899  U: -');
+  });
+
+  it('should perform enrichment test based on gene sets', () => { // TODO: unaffected tests
+    const genesBlockPage = new GenesBlockPage();
+    genesBlockPage.geneSetsButton.click();
+
+    page.geneSetsInputField.type('autism').then(option => {
+      cy.get('div.dropdown-menu').should('contain.text', 'PNAS 2015');
+      cy.get('span').contains('PNAS 2015').click();
+      page.geneSetsVariantsCount.should('have.text', 'Count: 239');
+    });
+    page.enrichmentTestButton.click();
+    ['LGDs', '363', '97', '12.87', '2.48e-55', '27', '22', '0.96', '8.48e-28', '306', '78', '10.85', '3.29e-43', '68', '29', '2.41', '3.11e-24'].forEach((el, index) => {
+      page.findTableField('affected', 'LGDs', index).should('have.text', el);
+    });
+
+
+    page.geneSetsColletionDropdown.select('Denovo');
+    page.geneSetsInputField.type('LGDs').then(option => {
+      cy.get('div.dropdown-menu').should('contain.text', 'LGDs (363)');
+      cy.get('span').contains('LGDs (363)').click();
+      page.geneSetsVariantsCount.should('have.text', 'Count: 363');
+    });
+    page.enrichmentTestButton.click();
+    ['LGDs', '363', '363', '13.67', '0.00', '27', '27', '1.02', '3.53e-39', '306', '306', '11.52', '0.00', '68', '68', '2.56', '1.43e-97'].forEach((el, index) => {
+      page.findTableField('affected', 'LGDs', index).should('have.text', el);
+    });
+
+    cy.get('input#iossifov_2014-checkbox-affected').click();
+    page.findErrorAlertInComponent('gpf-gene-sets').contains('Please select a gene');
+
+    cy.get('input#iossifov_2014-checkbox-unaffected').click();
+    page.geneSetsInputField.type('LGDs').then(option => {
+      cy.get('div.dropdown-menu').should('contain.text', 'LGDs (176)');
+      cy.get('span').contains('LGDs (176)').click();
+      page.geneSetsVariantsCount.should('have.text', 'Count: 176');
+    });
+    page.enrichmentTestButton.click();
+    ['LGDs', '363', '8', '6.13', '0.4108', '27', '1', '0.46', '0.3686', '306', '7', '5.17', '0.3708', '68', '1', '1.15', '1.00'].forEach((el, index) => {
+      page.findTableField('affected', 'LGDs', index).should('have.text', el);
+    });
   });
 
   it('should display affected and unaffected variants based on gene symbol and select models', () => {
@@ -153,33 +211,5 @@ describe('Enrichment tool tests', () => {
 
     page.findTableField('affected', 'LGDs', 3).should('have.text', '0.03');
     page.findTableField('affected', 'Missense', 3).should('have.text', '0.24');
-  });
-
-  it.only('should perform enrichment test based on gene sets', () => {
-    const genesBlockPage = new GenesBlockPage();
-    genesBlockPage.geneSetsButton.click();
-
-    page.geneSetsInputField.type('autism').then(option => {
-      cy.get('div.dropdown-menu').should('contain.text', 'PNAS 2015');
-      cy.get('span').contains('PNAS 2015').click();
-      page.geneSetsVariantsCount.should('have.text', 'Count: 239');
-    });
-
-    page.geneSetsColletionDropdown.select('Denovo');
-    page.geneSetsInputField.type('LGDs').then(option => {
-      cy.get('div.dropdown-menu').should('contain.text', 'LGDs (363)');
-      cy.get('span').contains('LGDs (363)').click();
-      page.geneSetsVariantsCount.should('have.text', 'Count: 363');
-    });
-
-    cy.get('input#iossifov_2014-checkbox-affected').click();
-    page.findErrorAlertInComponent('gpf-gene-sets').contains('Please select a gene');
-
-    cy.get('input#iossifov_2014-checkbox-unaffected').click();
-    page.geneSetsInputField.type('LGDs').then(option => {
-      cy.get('div.dropdown-menu').should('contain.text', 'LGDs (176)');
-      cy.get('span').contains('LGDs (176)').click();
-      page.geneSetsVariantsCount.should('have.text', 'Count: 176');
-    });
   });
 });
