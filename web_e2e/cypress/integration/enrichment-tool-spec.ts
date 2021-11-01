@@ -141,7 +141,7 @@ describe('Enrichment tool data tests', () => {
     page.selectorTableRow('unaffected').should('have.text', 'unaffected F:1011  M:899  U: -');
   });
 
-  it('should perform enrichment test based on gene sets', () => { // TODO: unaffected tests
+  it.only('should perform enrichment test based on gene sets', () => { // TODO: unaffected tests
     const genesBlockPage = new GenesBlockPage();
     genesBlockPage.geneSetsButton.click();
 
@@ -152,7 +152,8 @@ describe('Enrichment tool data tests', () => {
     });
     page.enrichmentTestButton.click();
     compare_data('gene_symbol_pnas_2015_set', 'affected');
-
+    compare_data('gene_symbol_pnas_2015_set', 'affected', 'Missense');
+    compare_data('gene_symbol_pnas_2015_set', 'unaffected');
 
     page.geneSetsColletionDropdown.select('Denovo');
     page.geneSetsInputField.type('LGDs').then(option => {
@@ -162,6 +163,7 @@ describe('Enrichment tool data tests', () => {
     });
     page.enrichmentTestButton.click();
     compare_data('gene_symbols_iossifov_affected', 'affected');
+    compare_data('gene_symbols_iossifov_affected', 'affected', 'Missense');
 
     cy.get('input#iossifov_2014-checkbox-affected').click();
     page.findErrorAlertInComponent('gpf-gene-sets').contains('Please select a gene');
@@ -223,13 +225,16 @@ const data = [
   new data_model('gene_symbol_and_models_LGDs' ,['LGDs', '363', '0', '0.03', '1.00', '27', '0', '1.89e-3', '1.00', '306', '0', '0.02', '1.00', '68', '0', '3.45e-3', '1.00']),
   new data_model('gene_symbol_without_model_LGDs', ['LGDs', '392', '0', '0.06', '1.00', '27', '0', '3.92e-3', '1.00', '321', '0', '0.05', '1.00', '71', '0', '0.01', '1.00']),
   new data_model('gene_symbols_iossifov_affected', ['LGDs', '363', '363', '13.67', '0.00', '27', '27', '1.02', '3.53e-39', '306', '306', '11.52', '0.00', '68', '68', '2.56', '1.43e-97']),
+  new data_model('gene_symbols_iossifov_affected', ['Missense', '1,510', '75', '56.86', '0.0177', '149', '16', '5.61', '0.0002', '1,307', '67', '49.22', '0.0132', '246', '12', '9.26', '0.3161']),
   new data_model('gene_symbol_iossifov_unaffected', ['LGDs', '363', '8', '6.13', '0.4108', '27', '1', '0.46', '0.3686', '306', '7', '5.17', '0.3708', '68', '1', '1.15', '1.00']),
-  new data_model('gene_symbol_pnas_2015_set', ['LGDs', '363', '97', '12.87', '2.48e-55', '27', '22', '0.96', '8.48e-28', '306', '78', '10.85', '3.29e-43', '68', '29', '2.41', '3.11e-24'])
+  new data_model('gene_symbol_pnas_2015_set', ['LGDs', '363', '97', '12.87', '2.48e-55', '27', '22', '0.96', '8.48e-28', '306', '78', '10.85', '3.29e-43', '68', '29', '2.41', '3.11e-24']),
+  new data_model('gene_symbol_pnas_2015_set', ['Missense', '1,510', '114', '53.56', '1.71e-13', '149', '34', '5.28', '3.90e-18', '1,307', '100', '46.36', '2.30e-12', '246', '22', '8.73', '7.94e-5']),
+  new data_model('gene_symbol_pnas_2015_set', ['LGDs', '176', '4', '6.24', '0.537', '3', '0', '0.11', '1.00', '84', '2', '2.98', '0.7719', '94', '2', '3.33', '0.7763']),
 ] ;
 
 function compare_data(set_name: string, affected: string, type:string = 'LGDs') {
   const page = new EnrichmentToolPage();
-  const dataset = data.find(item => (item.set_name === set_name && item.data[0] === type));
+  const dataset = data.filter(item => (item.set_name === set_name && item.data[0] === type))[affected === 'affected' ? 0 : 1];
   dataset.data.forEach((el, index) => {
     page.findTableField(affected, type, index).should('have.text', el);
   });
