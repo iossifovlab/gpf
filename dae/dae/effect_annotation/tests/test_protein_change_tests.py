@@ -2,11 +2,11 @@ import pytest
 
 from .mocks import TranscriptModelMock
 
-from dae.variant_annotation.annotator import Variant
-from dae.variant_annotation.effect_checkers.protein_change import (
+from dae.effect_annotation.annotator import Variant
+from dae.effect_annotation.effect_checkers.protein_change import (
     ProteinChangeEffectChecker,
 )
-from dae.variant_annotation.annotation_request import AnnotationRequestFactory
+from dae.effect_annotation.annotation_request import AnnotationRequestFactory
 
 
 @pytest.fixture(scope="session")

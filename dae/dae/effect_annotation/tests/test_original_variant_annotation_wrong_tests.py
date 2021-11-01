@@ -1,6 +1,6 @@
 import pytest
 
-from dae.variant_annotation.annotator import (
+from dae.effect_annotation.annotator import (
     VariantAnnotator as VariantAnnotation,
 )
 

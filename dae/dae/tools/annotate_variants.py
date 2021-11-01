@@ -10,7 +10,7 @@ import pysam
 
 from dae.genome import genome_access
 from dae.genome.gene_models import load_gene_models
-from dae.variant_annotation.annotator import (
+from dae.effect_annotation.annotator import (
     VariantAnnotator as VariantAnnotation,
 )
 

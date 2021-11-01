@@ -2,8 +2,8 @@ import pytest
 
 from .mocks import TranscriptModelMock
 
-from dae.variant_annotation.annotator import Variant
-from dae.variant_annotation.annotation_request import AnnotationRequestFactory
+from dae.effect_annotation.annotator import Variant
+from dae.effect_annotation.annotation_request import AnnotationRequestFactory
 
 
 @pytest.fixture(scope="session")

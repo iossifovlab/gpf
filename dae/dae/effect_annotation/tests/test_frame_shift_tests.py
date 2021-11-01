@@ -2,9 +2,9 @@ import pytest
 
 from .mocks import TranscriptModelMock
 
-from dae.variant_annotation.annotator import Variant
-from dae.variant_annotation.annotation_request import AnnotationRequestFactory
-from dae.variant_annotation.effect_checkers.frame_shift import (
+from dae.effect_annotation.annotator import Variant
+from dae.effect_annotation.annotation_request import AnnotationRequestFactory
+from dae.effect_annotation.effect_checkers.frame_shift import (
     FrameShiftEffectChecker,
 )
 

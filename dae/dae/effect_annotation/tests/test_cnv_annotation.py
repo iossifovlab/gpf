@@ -2,7 +2,7 @@ import pytest
 
 from dae.annotation.annotatable import Annotatable
 
-from dae.variant_annotation.annotator import VariantAnnotator
+from dae.effect_annotation.annotator import VariantAnnotator
 
 
 @pytest.mark.parametrize(

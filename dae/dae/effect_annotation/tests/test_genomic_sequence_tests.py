@@ -3,8 +3,8 @@ from .mocks import TranscriptModelMock
 from .mocks import ReferenceGenomeMock
 from .mocks import AnnotatorMock
 
-from dae.variant_annotation.annotation_request import AnnotationRequestFactory
-from dae.variant_annotation.annotator import Variant
+from dae.effect_annotation.annotation_request import AnnotationRequestFactory
+from dae.effect_annotation.annotator import Variant
 
 
 def test_get_coding_left_inner():

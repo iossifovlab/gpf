@@ -9,7 +9,7 @@ from box import Box
 from .schema import Schema
 from .annotatable import Annotatable, CNVAllele, VCFAllele
 
-from dae.variant_annotation.annotator import \
+from dae.effect_annotation.annotator import \
     VariantAnnotator
 from .annotator_base import Annotator
 

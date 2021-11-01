@@ -56,7 +56,7 @@ logging.basicConfig(
 logger = logging.getLogger("impala")
 logger.setLevel(logging.WARNING)
 
-logger = logging.getLogger("dae.variant_annotation")
+logger = logging.getLogger("dae.effect_annotation")
 logger.setLevel(logging.INFO)
 
 logger = logging.getLogger("dae.annotation")

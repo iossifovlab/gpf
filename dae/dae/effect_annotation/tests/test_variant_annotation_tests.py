@@ -1,4 +1,4 @@
-from dae.variant_annotation.annotator import VariantAnnotator
+from dae.effect_annotation.annotator import VariantAnnotator
 
 
 def test_synonymous_complex_var(genomic_sequence_2013, gene_models_2013):
