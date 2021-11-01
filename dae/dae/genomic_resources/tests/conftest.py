@@ -8,7 +8,7 @@ from http.client import HTTPConnection
 def resources_http_server(fixture_dirname):
     http_port = 16500
 
-    retries = 10
+    retries = 20
     success = False
 
     while not success and retries > 0:
