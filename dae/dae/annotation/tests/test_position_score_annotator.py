@@ -82,17 +82,17 @@ def test_position_resource_default_annotation(position_score_repo):
     (("1", 14970, "CC", "C"),  "mean", (0.1 + 0.1 + 0.2)/3),
     (("1", 14970, "CC", "C"),  "max", 0.2),
 
-    (("1", 14970, "CCT", "C"), "mean", 0.15),
+    (("1", 14970, "CCT", "C"), "mean", (0.1 + 0.1 + 0.2 + 0.2) / 4),
     (("1", 14970, "CCT", "C"), "max", 0.2),
 
     (("1", 14970, "C", "CA"),  "mean", 0.1),
     (("1", 14970, "C", "CAA"), "mean", 0.1),
     (("1", 14970, "C", "CAA"), "max", 0.1),
 
-    (("1", 14971, "C", "CA"),  "mean", 0.15),
+    (("1", 14971, "C", "CA"),  "mean", (0.1 + 0.2) / 2),
     (("1", 14971, "C", "CA"),  "max", 0.2),
 
-    (("1", 14971, "C", "CAA"), "mean", 0.15),
+    (("1", 14971, "C", "CAA"), "mean", (0.1 + 0.2) / 2),
     (("1", 14971, "C", "CAA"), "max", 0.2),
 ])
 def test_position_score_annotator(
@@ -115,14 +115,16 @@ def test_position_score_annotator(
     )
 
     pipeline = AnnotationPipeline.build(pipeline_config, position_score_repo)
-    annotator = BasicAnnotator()
-    annotator = ThreadAnnotatorRunner()
-    annotator = AsynioAnnotatorRunner()
+    # annotator = BasicAnnotator()
+    # annotator = ThreadAnnotatorRunner()
+    # annotator = AsynioAnnotatorRunner()
 
-    result = annotator.annotate(pipeline, sa)
+    # result = annotator.annotate(pipeline, sa)
+
+    result = pipeline.annotate_allele(sa)
 
     print(sa, result)
-    assert result.get("test100") == pytest.approx(expected, abs=1e-50)
+    assert result.get("test100") == expected
 
 
 def test_position_annotator_schema(position_score_repo):
