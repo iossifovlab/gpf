@@ -5,7 +5,7 @@ import copy
 import pyarrow as pa
 
 from dae.variants.effects import Effect
-from dae.annotation.tools.effect_annotator import EffectAnnotator
+from dae.annotation.effect_annotator import EffectAnnotator
 from dae.pedigrees.loader import FamiliesLoader
 
 from dae.backends.dae.loader import DenovoLoader

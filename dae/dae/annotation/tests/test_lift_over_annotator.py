@@ -2,7 +2,7 @@ import pytest
 
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.variants.core import Allele
-from dae.annotation.tools.lift_over_annotator import LiftOverAnnotator
+from dae.annotation.lift_over_annotator import LiftOverAnnotator
 
 
 def mock_get_sequence(chrom, start, stop):

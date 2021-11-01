@@ -3,7 +3,7 @@ import logging
 from dae.variants.core import Allele
 from .schema import Schema
 
-from dae.annotation.tools.annotator_base import Annotator
+from .annotator_base import Annotator
 from dae.genomic_resources.score_resources import GenomicScoresResource
 
 

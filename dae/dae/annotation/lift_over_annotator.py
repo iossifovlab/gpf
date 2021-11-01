@@ -6,7 +6,7 @@ import pyarrow as pa
 from dae.variants.core import Allele
 from dae.utils.variant_utils import trim_str_front, reverse_complement
 
-from dae.annotation.tools.annotator_base import Annotator
+from .annotator_base import Annotator
 from .schema import Schema
 
 

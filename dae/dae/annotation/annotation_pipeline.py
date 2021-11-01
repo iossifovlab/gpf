@@ -6,9 +6,9 @@ from typing import List, Optional
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.variants.core import Allele
 from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.annotation.tools.annotator_base import Annotator
-from dae.annotation.tools.schema import Schema
-from dae.annotation.tools.utils import AnnotatorFactory
+from dae.annotation.annotator_base import Annotator
+from dae.annotation.schema import Schema
+from dae.annotation.utils import AnnotatorFactory
 
 
 logger = logging.getLogger(__name__)

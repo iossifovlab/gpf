@@ -2,7 +2,7 @@
 import logging
 
 from dae.variants.core import Allele
-from dae.annotation.tools.score_annotator import VariantScoreAnnotatorBase
+from dae.annotation.score_annotator import VariantScoreAnnotatorBase
 
 
 logger = logging.getLogger(__name__)

@@ -1,11 +1,11 @@
 import gzip
 import os
 from importlib import import_module
-from dae.annotation.tools.score_annotator import PositionScoreAnnotator, \
+from .score_annotator import PositionScoreAnnotator, \
     NPScoreAnnotator
-from dae.annotation.tools.allele_score_annotator import AlleleScoreAnnotator
-from dae.annotation.tools.effect_annotator import EffectAnnotator
-from dae.annotation.tools.lift_over_annotator import LiftOverAnnotator
+from .allele_score_annotator import AlleleScoreAnnotator
+from .effect_annotator import EffectAnnotator
+from .lift_over_annotator import LiftOverAnnotator
 
 
 class AnnotatorFactory:

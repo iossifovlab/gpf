@@ -9,7 +9,7 @@ from impala.util import as_pandas
 
 from dae.backends.raw.raw_variants import RawFamilyVariants
 
-from dae.annotation.tools.schema import Schema
+from dae.annotation.schema import Schema
 from dae.pedigrees.family import FamiliesData
 from dae.backends.impala.serializers import AlleleParquetSerializer
 

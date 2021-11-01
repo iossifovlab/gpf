@@ -27,7 +27,7 @@ from dae.variants.attributes import TransmissionType
 
 from dae.utils.variant_utils import get_locus_ploidy, best2gt
 
-from dae.annotation.tools.schema import Schema
+from dae.annotation.schema import Schema
 
 
 logger = logging.getLogger(__name__)

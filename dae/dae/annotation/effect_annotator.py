@@ -6,12 +6,12 @@ import itertools
 import pyarrow as pa
 
 from box import Box
-from dae.annotation.tools.schema import Schema
+from dae.annotation.schema import Schema
 from dae.variants.core import Allele
 
 from dae.variant_annotation.annotator import \
     VariantAnnotator
-from dae.annotation.tools.annotator_base import Annotator
+from dae.annotation.annotator_base import Annotator
 
 
 class EffectAnnotator(Annotator):

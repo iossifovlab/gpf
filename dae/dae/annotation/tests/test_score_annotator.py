@@ -1,9 +1,9 @@
 import pytest
 import pyarrow as pa
 
-from dae.annotation.tools.schema import Schema
+from dae.annotation.schema import Schema
 from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.annotation.tools.score_annotator import (
+from dae.annotation.score_annotator import (
     PositionScoreAnnotator,
     NPScoreAnnotator,
 )

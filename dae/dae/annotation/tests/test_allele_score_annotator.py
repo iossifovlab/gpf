@@ -1,4 +1,4 @@
-from dae.annotation.tools.allele_score_annotator import AlleleScoreAnnotator
+from dae.annotation.allele_score_annotator import AlleleScoreAnnotator
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 
 
