@@ -444,7 +444,9 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
         for (summary_variant, family_variants) in \
                 self.variants_loader.full_variants_iterator():
             for sa in summary_variant.alt_alleles:
-                attributes = self.annotation_pipeline.annotate_allele(sa)
+                attributes = self.annotation_pipeline.annotate(
+                    sa.get_annotatable())
+
                 sa.update_attributes(attributes)
             yield summary_variant, family_variants
 

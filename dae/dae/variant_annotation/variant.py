@@ -1,5 +1,6 @@
 import re
-from dae.variants.core import Allele
+
+from dae.annotation.annotatable import Annotatable
 
 
 class Variant(object):
@@ -20,7 +21,8 @@ class Variant(object):
 
         self.set_position(chrom, position, loc)
 
-        if Allele.Type.is_cnv(variant_type):
+        if Annotatable.Type.large_duplication == variant_type or \
+                Annotatable.Type.large_deletion == variant_type:
             assert self.chromosome is not None
             assert self.position is not None
 
@@ -66,19 +68,17 @@ class Variant(object):
         if ref is not None:
             assert alt is not None
             assert var is None
-            assert length is None
+            # assert length is None
             assert seq is None
 
-            assert not Allele.Type.is_cnv(typ)
             self.reference = ref
             self.alternate = alt
 
         if var is not None:
             assert ref is None
             assert alt is None
-            assert length is None
+            # assert length is None
             assert seq is None
-            assert not Allele.Type.is_cnv(typ)
 
             self.set_ref_alt_from_variant(var)
 

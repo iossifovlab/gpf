@@ -180,7 +180,8 @@ def cadd_indel_variants_expected():
             #           0.5376293333333334,    7.984333333333335
         },
         {
-            "cadd_raw": 0.4407,  "cadd_phred": 7.01775
+            "cadd_raw": 0.4799115,  "cadd_phred": 7.40450
+            # "cadd_raw": 0.4407,  "cadd_phred": 7.01775
             # "cadd_raw": 0.5376293333333334, "cadd_phred": 7.984333333333335
         },
     ]

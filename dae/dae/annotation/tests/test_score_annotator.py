@@ -19,7 +19,7 @@ def test_position_score_annotator(
 
     for sv, e in phastcons100way_variants_expected:
         for sa in sv.alt_alleles:
-            result = pipeline.annotate_allele(sa)
+            result = pipeline.annotate(sa.get_annotatable())
             assert result.get("phastCons100way") == e
 
 
@@ -40,7 +40,7 @@ def test_np_score_annotator(cadd_variants_expected, anno_grdb):
 
     for sv, e in cadd_variants_expected:
         for sa in sv.alt_alleles:
-            result = pipeline.annotate_allele(sa)
+            result = pipeline.annotate(sa.get_annotatable())
             for score, value in e.items():
                 assert result.get(score) == pytest.approx(value, abs=1e-2)
 
@@ -85,7 +85,7 @@ def test_position_score_annotator_indels(
 
     for sv, e in phastcons100way_indel_variants_expected:
         for sa in sv.alt_alleles:
-            result = pipeline.annotate_allele(sa)
+            result = pipeline.annotate(sa.get_annotatable())
 
             assert result.get("phastCons100way") == \
                 pytest.approx(e, abs=1e-2)
@@ -103,7 +103,7 @@ def test_position_score_annotator_mean_aggregate(
 
     for sv, e in position_agg_mean_variants_expected:
         for sa in sv.alt_alleles:
-            result = pipeline.annotate_allele(sa)
+            result = pipeline.annotate(sa.get_annotatable())
 
             assert result.get("test_score") == pytest.approx(e, 1e-2)
 
@@ -120,6 +120,6 @@ def test_np_score_annotator_indels(
 
     for sv, e in cadd_indel_variants_expected:
         for sa in sv.alt_alleles:
-            result = pipeline.annotate_allele(sa)
+            result = pipeline.annotate(sa.get_annotatable())
             for score, value in e.items():
                 assert result.get(score) == pytest.approx(value, rel=1e-3)

@@ -1,5 +1,11 @@
+import logging
+
 from enum import Enum
 from typing import Optional
+
+from dae.annotation.annotatable import Annotatable, CNVAllele, VCFAllele
+
+logger = logging.getLogger(__name__)
 
 
 class Allele:
@@ -111,6 +117,27 @@ class Allele:
             raise ValueError(
                 f"Can not determine the type of variant: "
                 f"{self._chrom}:{self._pos} {self._ref}->{self._alt}")
+
+    def get_annotatable(self) -> Annotatable:
+        if Allele.Type.large_duplication & self.allele_type:
+            return CNVAllele(
+                self.chrom, self.position, self.end_position,
+                Annotatable.Type.large_duplication)
+        elif Allele.Type.large_deletion & self.allele_type:
+            return CNVAllele(
+                self.chrom, self.position, self.end_position,
+                Annotatable.Type.large_deletion)
+        elif Allele.Type.substitution == self.allele_type:
+            return VCFAllele(
+                self.chrom, self.position,
+                self.reference, self.alternative)
+        elif Allele.Type.indel & self.allele_type:
+            return VCFAllele(
+                self.chrom, self.position,
+                self.reference, self.alternative)
+        else:
+            logger.error(f"unexpected allele: {self}")
+            raise ValueError(f"unexpeced allele: {self}")
 
     @property
     def chromosome(self) -> str:

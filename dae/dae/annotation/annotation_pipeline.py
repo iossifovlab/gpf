@@ -4,7 +4,7 @@ from itertools import chain
 from typing import List, Optional
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.variants.core import Allele
+from dae.annotation.annotatable import Annotatable
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.annotation.annotator_base import Annotator
 from dae.annotation.schema import Schema
@@ -158,11 +158,11 @@ class AnnotationPipeline():
         self.annotators.append(annotator)
         self._annotation_schema = None
 
-    def annotate_allele(self, allele: Allele) -> dict:
+    def annotate(self, annotatable: Annotatable) -> dict:
         attributes = {}
         liftover_context = dict()
         for annotator in self.annotators:
-            annotator.annotate_allele(
-                attributes, allele, liftover_context)
+            annotator.annotate(
+                attributes, annotatable, liftover_context)
 
         return attributes

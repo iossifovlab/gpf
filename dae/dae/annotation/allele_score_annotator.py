@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import logging
 
-from dae.variants.core import Allele
-from dae.annotation.score_annotator import VariantScoreAnnotatorBase
+from .annotatable import Annotatable, VCFAllele
+from .score_annotator import VariantScoreAnnotatorBase
 
 
 logger = logging.getLogger(__name__)
@@ -17,17 +17,19 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
     def annotator_type(self):
         return "allele_score_annotator"
 
-    def _do_annotate_allele(self, attributes, allele, liftover_context):
-        if allele.allele_type & Allele.Type.cnv:
+    def _do_annotate(
+            self, attributes, annotatable: Annotatable, liftover_context):
+        
+        if not isinstance(annotatable, VCFAllele):
             logger.info(
-                f"skip trying to add frequency for CNV variant {allele}")
+                f"skip trying to add frequency for CNV variant {annotatable}")
             self._scores_not_found(attributes)
             return
 
         if self.liftover:
-            allele = liftover_context.get(self.liftover)
+            annotatable = liftover_context.get(self.liftover)
 
-        if allele is None:
+        if annotatable is None:
             self._scores_not_found(attributes)
             return
 
@@ -35,10 +37,10 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
         #     allele = liftover_context.get(self.liftover)
 
         scores_dict = self.resource.fetch_scores(
-            allele.chromosome,
-            allele.position,
-            allele.reference,
-            allele.alternative
+            annotatable.chromosome,
+            annotatable.position,
+            annotatable.reference,
+            annotatable.alternative
         )
         if scores_dict is None:
             print("Not found!")
@@ -53,7 +55,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
                     attributes[score_id] = score_value
             except ValueError as ex:
                 logger.error(
-                    f"problem with: {score_id}: {allele} - {score_value}"
+                    f"problem with: {score_id}: {annotatable} - {score_value}"
                 )
                 logger.error(ex)
                 raise ex

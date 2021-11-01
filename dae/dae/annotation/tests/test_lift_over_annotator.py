@@ -52,7 +52,7 @@ def test_lift_over(
     }
     allele = Allele.build_vcf_allele(chrom, pos, "A", "T")
     liftover_context = {}
-    annotator._do_annotate_allele(aline, allele, liftover_context)
+    annotator._do_annotate(aline, allele.get_annotatable(), liftover_context)
 
     lo_allele = liftover_context.get("liftover_test")
     print(f"liftover allele: {lo_allele}")
@@ -71,5 +71,5 @@ def test_pipeline_liftover(
         config, anno_grdb
     )
     allele = Allele.build_vcf_allele("chr1", 69094, "G", "A")
-    attributes = pipeline.annotate_allele(allele)
+    attributes = pipeline.annotate(allele.get_annotatable())
     assert attributes.get("mpc") is not None

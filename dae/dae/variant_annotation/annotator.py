@@ -1,5 +1,5 @@
+from dae.annotation.annotatable import Annotatable
 from dae.utils.regions import Region
-from dae.variants.core import Allele
 
 from .gene_codes import NuclearCode
 from .effect_checkers.coding import CodingEffectChecker
@@ -80,10 +80,9 @@ class VariantAnnotator(object):
         return None
 
     def _do_annotate_cnv(self, variant):
-        assert Allele.Type.cnv & variant.variant_type
-        if variant.variant_type & Allele.Type.large_duplication:
+        if variant.variant_type == Annotatable.Type.large_duplication:
             effect_type = "CNV+"
-        elif variant.variant_type & Allele.Type.large_deletion:
+        elif variant.variant_type == Annotatable.Type.large_deletion:
             effect_type = "CNV-"
         else:
             raise ValueError(
@@ -111,7 +110,8 @@ class VariantAnnotator(object):
 
     def annotate(self, variant):
         logger = logging.getLogger(__name__)
-        if variant.variant_type and (Allele.Type.cnv & variant.variant_type):
+        if variant.variant_type == Annotatable.Type.large_duplication or \
+                variant.variant_type == Annotatable.Type.large_deletion:
             return self._do_annotate_cnv(variant)
 
         effects = []

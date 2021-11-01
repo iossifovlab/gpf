@@ -6,12 +6,12 @@ import itertools
 import pyarrow as pa
 
 from box import Box
-from dae.annotation.schema import Schema
-from dae.variants.core import Allele
+from .schema import Schema
+from .annotatable import Annotatable, CNVAllele, VCFAllele
 
 from dae.variant_annotation.annotator import \
     VariantAnnotator
-from dae.annotation.annotator_base import Annotator
+from .annotator_base import Annotator
 
 
 class EffectAnnotator(Annotator):
@@ -117,26 +117,32 @@ class EffectAnnotator(Annotator):
     def get_annotation_config(self):
         return copy.deepcopy(self.attributes_list)
 
-    def _do_annotate_allele(self, attributes, allele, _liftover_context):
-        if allele is None:
+    def _do_annotate(
+            self, attributes, annotatable: Annotatable, _liftover_context):
+
+        assert isinstance(annotatable, VCFAllele) or \
+            isinstance(annotatable, CNVAllele), annotatable
+
+        print(annotatable)
+
+        if annotatable is None:
             self._not_found(attributes)
             return
 
-        assert allele is not None
-        length = None
-        if Allele.Type.cnv & allele.allele_type:
-            length = allele.end_position - allele.position
+        assert annotatable is not None
+        length = len(annotatable)
 
         effects = self.effect_annotator.do_annotate_variant(
-            chrom=allele.chromosome,
-            position=allele.position,
-            ref=allele.reference,
-            alt=allele.alternative,
-            variant_type=allele.allele_type,
+            chrom=annotatable.chromosome,
+            position=annotatable.position,
+            ref=annotatable.reference,
+            alt=annotatable.alternative,
+            variant_type=annotatable.type,
             length=length
         )
 
         r = self.wrap_effects(effects)
+        print(annotatable, r[0], r[1], r[2])
 
         result = {
             "effect_type": r[0],

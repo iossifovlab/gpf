@@ -1,8 +1,7 @@
 import logging
 
-from dae.variants.core import Allele
 from .schema import Schema
-
+from .annotatable import Annotatable
 from .annotator_base import Annotator
 from dae.genomic_resources.score_resources import GenomicScoresResource
 
@@ -100,9 +99,9 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         )
         return scores
 
-    def _fetch_aggregated_scores(self, variant, pos_begin, pos_end):
+    def _fetch_aggregated_scores(self, chrom, pos_begin, pos_end):
         scores_agg = self.resource.fetch_scores_agg(
-            variant.chromosome,
+            chrom,
             pos_begin,
             pos_end,
             self.get_scores(),
@@ -114,39 +113,29 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         }
         return scores
 
-    def _do_annotate_allele(self, attributes, allele, liftover_context):
+    def _do_annotate(
+            self, attributes, annotatable: Annotatable, liftover_context):
         if self.liftover:
-            allele = liftover_context.get(self.liftover)
+            annotatable = liftover_context.get(self.liftover)
 
-        if allele is None:
+        if annotatable is None:
             self._scores_not_found(attributes)
             return
 
-        if allele.chromosome not in self.resource.get_all_chromosomes():
+        if annotatable.chromosome not in self.resource.get_all_chromosomes():
             self._scores_not_found(attributes)
             return
 
-        if allele.allele_type & Allele.Type.substitution:
-            scores = self._fetch_substitution_scores(allele)
+        length = len(annotatable)
+        if annotatable.type == Annotatable.Type.substitution:
+            scores = self._fetch_substitution_scores(annotatable)
         else:
-            if allele.allele_type & Allele.Type.indel:
-                pos_begin = allele.position
-                pos_end = allele.position + len(allele.reference)
-            elif Allele.Type.cnv & allele.allele_type:
-                pos_begin = allele.position
-                pos_end = allele.end_position
-            else:
-                message = f"unexpected variant type in score annotation: " \
-                    f"{allele}, {allele.allele_type}, " \
-                    f"({allele.allele_type.value})"
-                logger.warning(message)
-                raise ValueError(message)
-
-            if pos_end - pos_begin > 500_000:
+            if length > 500_000:
                 scores = None
             else:
                 scores = self._fetch_aggregated_scores(
-                    allele, pos_begin, pos_end)
+                    annotatable.chrom,
+                    annotatable.pos_begin, annotatable.pos_end)
         if not scores:
             self._scores_not_found(attributes)
             return
@@ -171,9 +160,9 @@ class NPScoreAnnotator(PositionScoreAnnotator):
             self.get_scores()
         )
 
-    def _fetch_aggregated_scores(self, allele, pos_begin, pos_end):
+    def _fetch_aggregated_scores(self, chrom, pos_begin, pos_end):
         scores_agg = self.resource.fetch_scores_agg(
-            allele.chromosome,
+            chrom,
             pos_begin,
             pos_end,
             self.get_scores(),

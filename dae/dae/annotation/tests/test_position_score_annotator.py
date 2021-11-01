@@ -1,7 +1,7 @@
 import pytest
 import textwrap
 
-from dae.variants.core import Allele
+from dae.annotation.annotatable import VCFAllele
 from dae.genomic_resources import build_genomic_resource_repository
 
 from dae.annotation.annotation_pipeline import AnnotationPipeline
@@ -76,7 +76,7 @@ def test_position_resource_default_annotation(position_score_repo):
 #
 
 # TODO: Add test for complex
-@pytest.mark.parametrize("variant,pos_aggregator, expected", [
+@pytest.mark.parametrize("allele,pos_aggregator, expected", [
     (("1", 14970, "C", "A"),   "mean", 0.1),
 
     (("1", 14970, "CC", "C"),  "mean", (0.1 + 0.1 + 0.2)/3),
@@ -96,10 +96,9 @@ def test_position_resource_default_annotation(position_score_repo):
     (("1", 14971, "C", "CAA"), "max", 0.2),
 ])
 def test_position_score_annotator(
-        variant, pos_aggregator, expected, position_score_repo):
+        allele, pos_aggregator, expected, position_score_repo):
 
-    sa = Allele.build_vcf_allele(*variant)
-    assert sa is not None
+    annotatable = VCFAllele(*allele)
 
     pipeline_config = AnnotationPipeline.parse_config(
         textwrap.dedent(f"""
@@ -121,9 +120,9 @@ def test_position_score_annotator(
 
     # result = annotator.annotate(pipeline, sa)
 
-    result = pipeline.annotate_allele(sa)
+    result = pipeline.annotate(annotatable)
 
-    print(sa, result)
+    print(annotatable, result)
     assert result.get("test100") == expected
 
 

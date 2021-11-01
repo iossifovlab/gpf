@@ -3,7 +3,7 @@
 import logging
 import pyarrow as pa
 
-from dae.variants.core import Allele
+from .annotatable import Annotatable, VCFAllele
 from dae.utils.variant_utils import trim_str_front, reverse_complement
 
 from .annotator_base import Annotator
@@ -31,10 +31,10 @@ class LiftOverAnnotator(Annotator):
     def annotator_type(self):
         return "liftover_annotator"
 
-    def liftover_allele(self, allele):
-        assert isinstance(allele, Allele)
-        if Allele.Type.cnv & allele.allele_type:
+    def liftover_allele(self, allele: VCFAllele):
+        if not isinstance(allele, VCFAllele):
             return
+
         try:
             lo_coordinates = self.chain.convert_coordinate(
                 allele.chrom, allele.position,
@@ -72,27 +72,22 @@ class LiftOverAnnotator(Annotator):
                     if not tr_ref:
                         lo_alt = f"{lo_ref[0]}{lo_alt}"
 
-            print("==")
-            print(lo_chrom)
-            print(lo_pos)
-            print(lo_ref)
-            print(lo_alt)
-            result = Allele.build_vcf_allele(lo_chrom, lo_pos, lo_ref, lo_alt)
+            result = VCFAllele(lo_chrom, lo_pos, lo_ref, lo_alt)
 
             return result
         except Exception as ex:
             logger.warning(
                 f"problem in variant {allele} liftover: {ex}", exc_info=True)
 
-    def _do_annotate_allele(self, _, allele, liftover_context):
+    def _do_annotate(self, _, annotatable: Annotatable, liftover_context):
         assert self.liftover not in liftover_context, \
             (self.liftover, liftover_context)
-        assert allele is not None
+        assert annotatable is not None
 
-        lo_allele = self.liftover_allele(allele)
+        lo_allele = self.liftover_allele(annotatable)
         if lo_allele is None:
             logger.info(
-                f"unable to liftover allele: {allele}")
+                f"unable to liftover allele: {annotatable}")
             return
         liftover_context[self.liftover] = lo_allele
 

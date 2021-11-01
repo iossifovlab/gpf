@@ -4,7 +4,7 @@ import abc
 import pyarrow as pa
 from typing import List, Optional
 
-from dae.variants.core import Allele
+from .annotatable import Annotatable
 from .schema import Schema
 
 logger = logging.getLogger(__name__)
@@ -35,9 +35,9 @@ class Annotator(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def _do_annotate_allele(
+    def _do_annotate(
             self, attributes: dict,
-            allele: Allele,
+            allele: Annotatable,
             liftover_context: Optional[dict]):
         """
         Internal abstract method used for annotation.
@@ -48,14 +48,14 @@ class Annotator(abc.ABC):
     def get_annotation_config(self):
         pass
 
-    def annotate_allele(
+    def annotate(
             self, attributes: dict,
-            allele: Allele,
+            annotatable: Annotatable,
             liftover_context: Optional[dict]):
         """
         Carry out the annotation and then relabel results as configured.
         """
-        self._do_annotate_allele(attributes, allele, liftover_context)
+        self._do_annotate(attributes, annotatable, liftover_context)
         attributes_list = self.get_annotation_config()
         for attr in attributes_list:
             if attr.dest == attr.source:

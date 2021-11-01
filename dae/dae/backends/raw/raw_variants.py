@@ -58,7 +58,7 @@ class RawVariantsQueryRunner(QueryRunner):
             logger.debug("variants iterator done")
 
         except BaseException as ex:
-            logger.warn(
+            logger.warning(
                 f"exception in runner run: {type(ex)}", exc_info=True)
         finally:
             self.close()
