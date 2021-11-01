@@ -40,7 +40,9 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
     this.partitions.subscribe(partitions => {
       this.rangesCounts = [partitions.leftCount, partitions.midCount, partitions.rightCount];
     });
-    this.continuousFilterState.selection = new ContinuousSelection(null, null, null, null);
+    if (this.continuousFilterState !== undefined) {
+      this.continuousFilterState.selection = new ContinuousSelection(null, null, null, null);
+    }
   }
 
   public ngOnChanges(changes: SimpleChanges): void {
