@@ -149,7 +149,7 @@
                   *ngFor="let statistic of personSet.statistics; let j = index"
                   [ngClass] = "{'category-border': i === 0 && j === 0}">
                   <ng-container *ngIf="getEffectTypeValue(gene, dataset.id, personSet.id, statistic.id) as value">
-                    <div class="link-td" *ngIf="value.count !== 0" (click)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)" (middleclick)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)">
+                    <div class="link-td" style="padding: 5px; margin: -5px" *ngIf="value.count !== 0" (click)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)" (middleclick)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)">
                       <span class="link-span">{{value.count}} ({{value.rate | number : '1.0-3' }})</span>
                     </div>
                   </ng-container>
