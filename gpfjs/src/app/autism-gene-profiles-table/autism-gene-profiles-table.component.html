@@ -91,8 +91,8 @@
                     <span [title]="personSet.description ? personSet.description : ''">{{personSet.displayName}} ({{personSet.childrenCount}})</span>
                   </div>
                   <button #columnFilteringButton
-                  [attr.id]="dataset.id + '-' + personSet.id + '-button'"
-                  (click)="openDatasetDropdown(dataset, dataset.id + '-' + personSet.id)"
+                  [attr.id]="dataset.id + ':' + personSet.id + '-button'"
+                  (click)="openDatasetDropdown(dataset, dataset.id + ':' + personSet.id)"
                   class="dropdown-toggle btn navbar-toggler"
                   style="float: right; outline: none; font-size: 18px; white-space: nowrap; border: 0; padding: 0; width: 18px; vertical-align: unset;">
                     <span style="font-size: 14px;">&#9776;</span>
@@ -204,9 +204,9 @@ Described in GPF-546 -->
   </div>
   <ng-container *ngFor="let personSet of dataset.personSets">
     <div *ngIf="allDatasetNames.get(dataset.displayName)?.get(personSet.displayName) && shownDatasetNames.get(dataset.displayName)?.get(personSet.displayName)" style="position: sticky;" [style.bottom.px]="modalBottom - 150">
-      <span #dropdownSpan [attr.id]="dataset.id + '-' + personSet.id + '-span'" ngbDropdown>
+      <span #dropdownSpan [attr.id]="dataset.id + ':' + personSet.id + '-span'" ngbDropdown>
         <button ngbDropdownToggle style="display: none;"></button>
-        <gpf-multiple-select-menu ngbDropdownMenu [attr.id]="dataset.id + '-' + personSet.id + '-dropdown'"
+        <gpf-multiple-select-menu ngbDropdownMenu [attr.id]="dataset.id + ':' + personSet.id + '-dropdown'"
           [menuId]="'dataset:' + dataset.id + ':' + personSet.id"
           [allItems]="allDatasetNames.get(dataset.displayName).get(personSet.displayName)"
           [selectedItems]="shownDatasetNames.get(dataset.displayName).get(personSet.displayName)"
