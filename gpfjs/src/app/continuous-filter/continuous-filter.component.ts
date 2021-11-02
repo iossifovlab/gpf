@@ -60,13 +60,6 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
         });
     }
 
-    if (!this.measureName) {
-      const selection = (this.continuousFilterState.selection as ContinuousSelection);
-      selection.min = null;
-      selection.domainMin = null;
-      selection.max = null;
-      selection.domainMax = null;
-    }
   }
 
   public set rangeStart(value) {
