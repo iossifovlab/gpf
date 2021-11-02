@@ -35,7 +35,6 @@ class Variant(object):
             self.set_ref_alt(var, ref, alt, length, seq, variant_type)
 
             self.ref_position_last = self.position + len(self.reference)
-            self.alt_position_last = self.position + len(self.alternate)
 
             self.corrected_ref_position_last = max(
                 self.position, self.ref_position_last - 1

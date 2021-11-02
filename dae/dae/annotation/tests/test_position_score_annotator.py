@@ -43,6 +43,8 @@ def position_score_repo():
                 """,
                 "data.mem": """
                     chrom  pos_begin  pos_end  100way   t1   t2
+                    1      14966      14967    0.02     -2   -20
+                    1      14968      14969    0.01     -1   -10
                     1      14970      14971    0.1      1    10
                     1      14972      14973    0.2      2    20
                     1      14974      14975    0.3      3    30
@@ -70,17 +72,17 @@ def test_position_resource_default_annotation(position_score_repo):
 #  chrom: 1
 #  pos:   14970
 #
-#  C    C    T    T    G    C    G
-#  70   71   72   73   74   75   76
-#  0.1  0.1  0.2  0.2  0.3  0.3  0.4
+#  T     A     C     C    C    T    T    G    C    G
+#  67    68    69    70   71   72   73   74   75   76
+#  0.02  0.01  0.01  0.1  0.1  0.2  0.2  0.3  0.3  0.4
 #
 
 # TODO: Add test for complex
 @pytest.mark.parametrize("allele,pos_aggregator, expected", [
     (("1", 14970, "C", "A"),   "mean", 0.1),
 
-    (("1", 14970, "CC", "C"),  "mean", (0.1 + 0.1 + 0.2)/3),
-    (("1", 14970, "CC", "C"),  "max", 0.2),
+    (("1", 14970, "CC", "C"),  "mean", (0.01 + 0.1 + 0.1)/3),
+    (("1", 14970, "CC", "C"),  "max", 0.1),
 
     (("1", 14970, "CCT", "C"), "mean", (0.1 + 0.1 + 0.2 + 0.2) / 4),
     (("1", 14970, "CCT", "C"), "max", 0.2),

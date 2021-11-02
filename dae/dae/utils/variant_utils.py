@@ -161,24 +161,23 @@ def trim_str_front(pos, ref, alt):
         alt = alt[n:]
         pos += n
 
-    if len(ref) == 0 or len(alt) == 0:
-        return pos, ref, alt
+    return pos, ref, alt
 
-    for n, s in enumerate(zip(ref[::-1], alt[::-1])):
-        if s[0] != s[1]:
-            break
-    # not made simple
-    if ref[-(n + 1)] == alt[-(n + 1)]:
-        r, a = ref[: -(n + 1)], alt[: -(n + 1)]
-    else:
-        if n == 0:
-            r, a = ref[:], alt[:]
-        else:
-            r, a = ref[:-n], alt[:-n]
-    if len(r) == 0 or len(a) == 0:
-        return pos, r, a
+    # for n, s in enumerate(zip(ref[::-1], alt[::-1])):
+    #     if s[0] != s[1]:
+    #         break
+    # # not made simple
+    # if ref[-(n + 1)] == alt[-(n + 1)]:
+    #     r, a = ref[: -(n + 1)], alt[: -(n + 1)]
+    # else:
+    #     if n == 0:
+    #         r, a = ref[:], alt[:]
+    #     else:
+    #         r, a = ref[:-n], alt[:-n]
+    # if len(r) == 0 or len(a) == 0:
+    #     return pos, r, a
 
-    return pos, r, a
+    # return pos, r, a
 
 
 def trim_str_back(pos, ref, alt):
@@ -198,17 +197,34 @@ def trim_str_back(pos, ref, alt):
         else:
             r, a = ref[:-n], alt[:-n]
 
-    if len(r) == 0 or len(a) == 0:
-        return pos, r, a
+    return pos, r, a
 
-    for n, s in enumerate(zip(r, a)):
-        if s[0] != s[1]:
-            break
+    # for n, s in enumerate(zip(r, a)):
+    #     if s[0] != s[1]:
+    #         break
 
-    if r[n] == a[n]:
-        return pos + n + 1, r[n + 1:], a[n + 1:]
+    # if r[n] == a[n]:
+    #     return pos + n + 1, r[n + 1:], a[n + 1:]
 
-    return pos + n, r[n:], a[n:]
+    # return pos + n, r[n:], a[n:]
+
+
+def trim_str_front_back(pos, ref, alt):
+    if len(ref) == 0 or len(alt) == 0:
+        return pos, ref, alt
+    pos, ref, alt = trim_str_front(pos, ref, alt)
+    if len(ref) == 0 or len(alt) == 0:
+        return pos, ref, alt
+    return trim_str_back(pos, ref, alt)
+
+
+def trim_str_back_front(pos, ref, alt):
+    if len(ref) == 0 or len(alt) == 0:
+        return pos, ref, alt
+    pos, ref, alt = trim_str_back(pos, ref, alt)
+    if len(ref) == 0 or len(alt) == 0:
+        return pos, ref, alt
+    return trim_str_front(pos, ref, alt)
 
 
 def get_locus_ploidy(

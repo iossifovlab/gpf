@@ -5,7 +5,7 @@ from typing import List, Union
 import numpy as np
 
 from dae.utils.variant_utils import get_locus_ploidy, reverse_complement, \
-    gt2str, str2gt
+    gt2str, str2gt, trim_str_back, trim_str_front
 from dae.variants.attributes import Sex
 
 
@@ -94,3 +94,37 @@ def test_str2gt(gts, expected):
     res = str2gt(gts)
 
     assert np.all(res == expected)
+
+
+@pytest.mark.parametrize("pos,ref,alt,trim_pos,trim_ref,trim_alt", [
+    (1, "AA", "CA", 1, "A", "C"),
+    (1, "AAA", "CCA", 1, "AA", "CC"),
+    (1, "AAA", "ACA", 1, "AA", "AC"),
+    (100, "TGGTGCAGGC", "T", 100, "TGGTGCAGGC", "T"),
+    (100, "TGGTGCAGGC", "CGGTGCAGGC", 100, "T", "C"),
+    (100, "TGGTGCAGGC", "TGGTGCAGGCGGTGCAGGC", 100, "T", "TGGTGCAGGC"),
+    (100, "TGGTGCAGGC", "TGGTGCAGGT", 100, "TGGTGCAGGC", "TGGTGCAGGT"),
+])
+def test_trim_str_back(pos, ref, alt, trim_pos, trim_ref, trim_alt):
+
+    tpos, tref, talt = trim_str_back(pos, ref, alt)
+    assert trim_pos == tpos
+    assert trim_ref == tref
+    assert trim_alt == talt
+
+
+@pytest.mark.parametrize("pos,ref,alt,trim_pos,trim_ref,trim_alt", [
+    (1, "AA", "CA", 1, "AA", "CA"),
+    (1, "AAA", "CCA", 1, "AAA", "CCA"),
+    (1, "AAA", "ACA", 2, "AA", "CA"),
+    (100, "TGGTGCAGGC", "T", 101, "GGTGCAGGC", ""),
+    (100, "TGGTGCAGGC", "CGGTGCAGGC", 100, "TGGTGCAGGC", "CGGTGCAGGC"),
+    (100, "TGGTGCAGGC", "TGGTGCAGGCGGTGCAGGC", 110, "", "GGTGCAGGC"),
+    (100, "TGGTGCAGGC", "TGGTGCAGGT", 109, "C", "T"),
+])
+def test_trim_str_front(pos, ref, alt, trim_pos, trim_ref, trim_alt):
+
+    tpos, tref, talt = trim_str_front(pos, ref, alt)
+    assert trim_pos == tpos
+    assert trim_ref == tref
+    assert trim_alt == talt

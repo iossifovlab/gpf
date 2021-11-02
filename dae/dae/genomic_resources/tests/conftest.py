@@ -11,7 +11,7 @@ def resources_http_server(fixture_dirname):
     retries = 20
     success = False
 
-    while not success and retries > 0:
+    while not success and http_port < 16510:
         try:
             server = Popen(
                 [
@@ -37,12 +37,10 @@ def resources_http_server(fixture_dirname):
                         break
                 except ConnectionRefusedError:
                     time.sleep(0.5)
-                    http_port += 1
                     retries -= 1
         except OSError:
             time.sleep(0.5)
             http_port += 1
-            retries -= 1
 
     if not success:
         raise RuntimeError(f"failed to start local HTTP server at {http_port}")

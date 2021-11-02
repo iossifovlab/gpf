@@ -11,14 +11,14 @@ from dae.annotation.annotation_pipeline import AnnotationPipeline
 #  chrom: 1
 #  pos:   14970
 #
-#  C    C    T    T    G    C    G
-#  70   71   72   73   74   75   76
+#  T   A   C   C    C    T    T    G    C    G
+#  67  68  69  70   71   72   73   74   75   76
 #
 @pytest.mark.parametrize("variant,pos_aggregator,nuc_aggregator,expected", [
     # (("1", 14970, "C", "A"),   "mean", "max", 0.001),
 
-    (("1", 14970, "CC", "C"),  "mean", "max", 0.148),
-    (("1", 14970, "CC", "C"),  "max",  "max", 0.4),
+    (("1", 14970, "CC", "C"),  "mean", "max", (0.0004 + 0.004 + 0.04)/3),
+    (("1", 14970, "CC", "C"),  "max",  "max", 0.04),
 
     (("1", 14970, "C", "CA"),  "mean", "max", 0.022),
     (("1", 14970, "C", "CA"),  "max",  "max", 0.04),
@@ -47,6 +47,12 @@ def test_position_score_annotator(
                 """,
                 "data.mem": """
                     chrom  pos_begin  reference alternative raw
+                    1      14968      A         C           0.00001
+                    1      14968      A         G           0.00002
+                    1      14968      A         T           0.00004
+                    1      14969      C         A           0.0001
+                    1      14969      C         G           0.0002
+                    1      14969      C         T           0.0004
                     1      14970      C         A           0.001
                     1      14970      C         G           0.002
                     1      14970      C         T           0.004

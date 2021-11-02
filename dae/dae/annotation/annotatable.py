@@ -89,9 +89,9 @@ class VCFAllele(Annotatable):
         self._pos = pos
 
         if alt and ref:
-            pos, ref, alt = trim_str_front(pos, ref, alt)
-        if alt and ref:
             pos, ref, alt = trim_str_back(pos, ref, alt)
+        if alt and ref:
+            pos, ref, alt = trim_str_front(pos, ref, alt)
 
         self._trim_ref = ref
         self._trim_alt = alt

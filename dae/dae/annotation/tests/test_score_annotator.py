@@ -121,5 +121,6 @@ def test_np_score_annotator_indels(
     for sv, e in cadd_indel_variants_expected:
         for sa in sv.alt_alleles:
             result = pipeline.annotate(sa.get_annotatable())
+            print(sa, sa.get_annotatable())
             for score, value in e.items():
                 assert result.get(score) == pytest.approx(value, rel=1e-3)
