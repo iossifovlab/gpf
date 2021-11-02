@@ -2,12 +2,12 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 
-import { EffecttypesComponent } from './effecttypes.component';
-import { EffecttypesColumnComponent } from './effecttypes-column.component';
-import { ALL, CODING, LGDS, NONSYNONYMOUS, UTRS } from './effecttypes';
+import { EffecttypesComponent } from './effect-types.component';
+import { EffecttypesColumnComponent } from './effect-types-column.component';
+import { ALL, CODING, LGDS, NONSYNONYMOUS, UTRS } from './effect-types';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
-import { AddEffectType, RemoveEffectType, SetEffectTypes, EffecttypesState } from './effecttypes.state';
+import { AddEffectType, RemoveEffectType, SetEffectTypes, EffecttypesState } from './effect-types.state';
 
 describe('EffecttypesComponent', () => {
   let component: EffecttypesComponent;

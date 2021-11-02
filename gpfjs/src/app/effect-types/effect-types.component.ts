@@ -1,14 +1,14 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { EffectTypes, CODING, NONCODING, CNV, ALL, LGDS, NONSYNONYMOUS, UTRS } from './effecttypes';
+import { EffectTypes, CODING, NONCODING, CNV, ALL, LGDS, NONSYNONYMOUS, UTRS } from './effect-types';
 import { ValidateNested } from 'class-validator';
 import { Store } from '@ngxs/store';
-import { EffecttypesState, AddEffectType, RemoveEffectType, SetEffectTypes } from './effecttypes.state';
+import { EffecttypesState, AddEffectType, RemoveEffectType, SetEffectTypes } from './effect-types.state';
 import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
-  selector: 'gpf-effecttypes',
-  templateUrl: './effecttypes.component.html',
-  styleUrls: ['./effecttypes.component.css'],
+  selector: 'gpf-effect-types',
+  templateUrl: './effect-types.component.html',
+  styleUrls: ['./effect-types.component.css'],
 })
 export class EffecttypesComponent extends StatefulComponent implements OnInit {
 

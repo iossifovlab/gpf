@@ -1,6 +1,6 @@
 /* tslint:disable:no-unused-variable */
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { VarianttypesComponent } from './varianttypes.component';
+import { VarianttypesComponent } from './variant-types.component';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ConfigService } from 'app/config/config.service';
@@ -11,7 +11,7 @@ import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { of } from 'rxjs';
 import { NgxsModule, StateStream, Store } from '@ngxs/store';
 import { CheckboxListComponent } from 'app/checkbox-list/checkbox-list.component';
-import { SetVariantTypes } from './varianttypes.state';
+import { SetVariantTypes } from './variant-types.state';
 
 describe('VarianttypesComponent', () => {
   let component: VarianttypesComponent;

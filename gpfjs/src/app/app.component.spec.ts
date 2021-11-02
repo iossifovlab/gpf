@@ -3,11 +3,11 @@
 import { TestBed, waitForAsync } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { GenderComponent } from './gender/gender.component';
-import { VarianttypesComponent } from './varianttypes/varianttypes.component';
+import { VarianttypesComponent } from './variant-types/variant-types.component';
 import { DatasetsService } from './datasets/datasets.service';
 import { DatasetsComponent } from './datasets/datasets.component';
 // import { DatasetsServiceStub } from './datasets/datasets.service.spec';
-import { EffecttypesComponent } from './effecttypes/effecttypes.component';
+import { EffecttypesComponent } from './effect-types/effect-types.component';
 import { GenotypeBlockComponent } from './genotype-block/genotype-block.component';
 import { RegionsBlockComponent } from './regions-block/regions-block.component';
 import { GenesBlockComponent } from './genes-block/genes-block.component';

@@ -2,13 +2,13 @@ import { Input, Component, OnChanges } from '@angular/core';
 import { Validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
 import { Store } from '@ngxs/store';
-import { VarianttypesState, SetVariantTypes } from './varianttypes.state';
+import { VarianttypesState, SetVariantTypes } from './variant-types.state';
 import { StatefulComponent } from '../common/stateful-component';
 
 @Component({
-  selector: 'gpf-varianttypes',
-  templateUrl: './varianttypes.component.html',
-  styleUrls: ['./varianttypes.component.css'],
+  selector: 'gpf-variant-types',
+  templateUrl: './variant-types.component.html',
+  styleUrls: ['./variant-types.component.css'],
 })
 export class VarianttypesComponent extends StatefulComponent implements OnChanges {
 

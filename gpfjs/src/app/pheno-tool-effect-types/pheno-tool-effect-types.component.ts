@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 
 import { Store } from '@ngxs/store';
 
-import { EffecttypesComponent } from '../effecttypes/effecttypes.component';
+import { EffecttypesComponent } from '../effect-types/effect-types.component';
 import {
   PHENO_TOOL_ALL, PHENO_TOOL_OTHERS,
   PHENO_TOOL_CNV, PHENO_TOOL_LGDS,

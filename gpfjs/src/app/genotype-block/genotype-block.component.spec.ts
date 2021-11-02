@@ -5,8 +5,8 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { GenotypeBlockComponent } from './genotype-block.component';
 import { GenderComponent } from '../gender/gender.component';
-import { VarianttypesComponent } from '../varianttypes/varianttypes.component';
-import { EffecttypesComponent } from '../effecttypes/effecttypes.component';
+import { VarianttypesComponent } from '../variant-types/variant-types.component';
+import { EffecttypesComponent } from '../effect-types/effect-types.component';
 import { PedigreeSelectorComponent } from '../pedigree-selector/pedigree-selector.component';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { UsersService } from 'app/users/users.service';
@@ -14,12 +14,12 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ConfigService } from 'app/config/config.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
-import { EffecttypesColumnComponent } from 'app/effecttypes/effecttypes-column.component';
+import { EffecttypesColumnComponent } from 'app/effect-types/effect-types-column.component';
 import { NgxsModule } from '@ngxs/store';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { EffecttypesState } from 'app/effecttypes/effecttypes.state';
+import { EffecttypesState } from 'app/effect-types/effect-types.state';
 import { GenderState } from 'app/gender/gender.state';
-import { VarianttypesState } from 'app/varianttypes/varianttypes.state';
+import { VarianttypesState } from 'app/variant-types/variant-types.state';
 
 describe('GenotypeBlockComponent', () => {
   let component: GenotypeBlockComponent;
