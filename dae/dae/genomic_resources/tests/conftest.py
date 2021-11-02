@@ -1,18 +1,22 @@
 import pytest
 import time
+import logging
+
 from subprocess import Popen, PIPE
 from http.client import HTTPConnection
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="module")
 def resources_http_server(fixture_dirname):
     http_port = 16500
 
-    retries = 20
     success = False
 
-    while not success and http_port < 16510:
+    while not success and http_port < 16530:
         try:
+            retries = 10
             server = Popen(
                 [
                     "python",
@@ -33,12 +37,18 @@ def resources_http_server(fixture_dirname):
                     if response is not None:
                         success = True
                         server.http_port = http_port
+                        logger.info(
+                            f"HTTP repository server started at {http_port}")
                         yield server
                         break
                 except ConnectionRefusedError:
+                    logger.info(
+                        f"can't connect to localhost:{http_port}; ({retries})")
                     time.sleep(0.5)
                     retries -= 1
         except OSError:
+            logger.info(
+                f"can't bind to localhost:{http_port}; trying next port")
             time.sleep(0.5)
             http_port += 1
 
