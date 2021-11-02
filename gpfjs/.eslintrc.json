@@ -167,6 +167,7 @@
         "@typescript-eslint/no-explicit-any": "warn",
         "dot-notation": "off",
         "@typescript-eslint/dot-notation": "off",
+        "@typescript-eslint/explicit-function-return-type": "warn",
         "id-denylist": "off",
         "id-match": "off",
         "indent": ["warn", 2],
