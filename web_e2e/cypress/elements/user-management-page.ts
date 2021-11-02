@@ -57,7 +57,7 @@ export class UserManagementPage extends BasePage {
     return cy.get('gpf-users-actions a').last();
   }
 
-  get   userTableDeleteUserConfirmButton() {
+  get userTableDeleteUserConfirmButton() {
     return cy.get('mwl-confirmation-popover-window button').contains('Delete');
   }
 
