@@ -1,6 +1,6 @@
 import enum
 
-from dae.utils.variant_utils import trim_str_back, trim_str_front
+from dae.utils.variant_utils import trim_str_right, trim_str_left
 
 
 class Annotatable:
@@ -89,9 +89,9 @@ class VCFAllele(Annotatable):
         self._pos = pos
 
         if alt and ref:
-            pos, ref, alt = trim_str_back(pos, ref, alt)
+            pos, ref, alt = trim_str_right(pos, ref, alt)
         if alt and ref:
-            pos, ref, alt = trim_str_front(pos, ref, alt)
+            pos, ref, alt = trim_str_left(pos, ref, alt)
 
         self._trim_ref = ref
         self._trim_alt = alt

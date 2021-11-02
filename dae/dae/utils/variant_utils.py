@@ -143,7 +143,7 @@ def is_all_unknown_genotype(gt):
     return np.all(gt == -1)
 
 
-def trim_str_front(pos, ref, alt):
+def trim_str_left(pos, ref, alt):
     assert alt, (pos, ref, alt)
     assert ref, (pos, ref, alt)
 
@@ -180,7 +180,7 @@ def trim_str_front(pos, ref, alt):
     # return pos, r, a
 
 
-def trim_str_back(pos, ref, alt):
+def trim_str_right(pos, ref, alt):
     assert alt, (pos, ref, alt)
     assert ref, (pos, ref, alt)
 
@@ -209,22 +209,22 @@ def trim_str_back(pos, ref, alt):
     # return pos + n, r[n:], a[n:]
 
 
-def trim_str_front_back(pos, ref, alt):
+def trim_str_left_right(pos, ref, alt):
     if len(ref) == 0 or len(alt) == 0:
         return pos, ref, alt
-    pos, ref, alt = trim_str_front(pos, ref, alt)
+    pos, ref, alt = trim_str_left(pos, ref, alt)
     if len(ref) == 0 or len(alt) == 0:
         return pos, ref, alt
-    return trim_str_back(pos, ref, alt)
+    return trim_str_right(pos, ref, alt)
 
 
-def trim_str_back_front(pos, ref, alt):
+def trim_str_right_left(pos, ref, alt):
     if len(ref) == 0 or len(alt) == 0:
         return pos, ref, alt
-    pos, ref, alt = trim_str_back(pos, ref, alt)
+    pos, ref, alt = trim_str_right(pos, ref, alt)
     if len(ref) == 0 or len(alt) == 0:
         return pos, ref, alt
-    return trim_str_front(pos, ref, alt)
+    return trim_str_left(pos, ref, alt)
 
 
 def get_locus_ploidy(

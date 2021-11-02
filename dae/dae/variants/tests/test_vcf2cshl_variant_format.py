@@ -6,7 +6,7 @@ Created on Mar 12, 2018
 from dae.variants.core import Allele
 import pytest
 
-from dae.variants.variant import vcf2cshl, trim_str_back_front, \
+from dae.variants.variant import vcf2cshl, trim_str_right_left, \
     tandem_repeat
 from dae.utils.dae_utils import dae2vcf_variant
 
@@ -40,7 +40,7 @@ from dae.utils.dae_utils import dae2vcf_variant
     ])
 def test_vcf2cshl_variant_format(ref, alt, vt, pos, length):
 
-    vd = vcf2cshl(1, ref, alt, trimmer=trim_str_back_front)
+    vd = vcf2cshl(1, ref, alt, trimmer=trim_str_right_left)
 
     assert vd.position == pos
     assert str(vd) == vt
@@ -76,7 +76,7 @@ def test_vcf2cshl_variant_format(ref, alt, vt, pos, length):
     ])
 def test_vcf2cshl_variant_format2(ref, alt, vt, pos, length):
 
-    vd = vcf2cshl(1, ref, alt, trimmer=trim_str_back_front)
+    vd = vcf2cshl(1, ref, alt, trimmer=trim_str_right_left)
     assert vd.position == pos
     assert str(vd) == vt
     assert vd.length == length
@@ -119,7 +119,7 @@ def test_vcf2cshl_variant_format2(ref, alt, vt, pos, length):
     ])
 def test_vcf2cshl_variant_format3(ref, alt, vt, pos, length):
 
-    vd = vcf2cshl(1, ref, alt, trimmer=trim_str_back_front)
+    vd = vcf2cshl(1, ref, alt, trimmer=trim_str_right_left)
     assert vd.position == pos
     assert str(vd) == vt
     assert vd.length == length
@@ -131,7 +131,7 @@ def test_insert_long():
         "CCCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT"
         "CCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT"
     )
-    vd = vcf2cshl(1, ref, alt, trimmer=trim_str_back_front)
+    vd = vcf2cshl(1, ref, alt, trimmer=trim_str_right_left)
 
     assert vd.position == 2  # FIXME
 
@@ -151,7 +151,7 @@ def test_cshl_to_vcf_problem(genome_2013):
     assert alternative == "A"
 
     vd = vcf2cshl(
-        position, reference, alternative, trimmer=trim_str_back_front
+        position, reference, alternative, trimmer=trim_str_right_left
     )
 
     assert vd.position == position
@@ -166,7 +166,7 @@ def test_spark_v3_problems_check():
     ref = "AGCCCCACCTTCCTCTCCTCCT"
     alt = "AGCCCCACCTTCCTCTCCTCCT" "GCCCCACCTTCCTCTCCTCCT"
 
-    vd = vcf2cshl(position, ref, alt, trimmer=trim_str_back_front)
+    vd = vcf2cshl(position, ref, alt, trimmer=trim_str_right_left)
 
     assert str(vd) == "ins(GCCCCACCTTCCTCTCCTCCT)"
     assert vd.position == position + 1

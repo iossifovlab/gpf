@@ -19,7 +19,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
 
     def _do_annotate(
             self, attributes, annotatable: Annotatable, liftover_context):
-        
+
         if not isinstance(annotatable, VCFAllele):
             logger.info(
                 f"skip trying to add frequency for CNV variant {annotatable}")

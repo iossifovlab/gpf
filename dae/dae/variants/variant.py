@@ -8,7 +8,7 @@ import logging
 
 from typing import List, Dict, Set, Any, Optional
 
-from dae.utils.variant_utils import trim_str_front_back, trim_str_back_front
+from dae.utils.variant_utils import trim_str_left_right, trim_str_right_left
 from dae.variants import core
 from dae.variants.attributes import TransmissionType
 from dae.variants.effects import Effect, EffectGene
@@ -142,7 +142,7 @@ class VariantDesc:
         return [str(vd) for vd in variant_descs]
 
 
-def cshl_format(pos, ref, alt, trimmer=trim_str_front_back):
+def cshl_format(pos, ref, alt, trimmer=trim_str_left_right):
     p, r, a = trimmer(pos, ref, alt)
     if len(r) == len(a) and len(r) == 0:
         return VariantDesc(
@@ -190,7 +190,7 @@ def tandem_repeat(ref, alt, min_mono_reference=8):
     return None, None, None
 
 
-def vcf2cshl(pos, ref, alt, trimmer=trim_str_back_front):
+def vcf2cshl(pos, ref, alt, trimmer=trim_str_right_left):
     tr_vd = None
     tr_unit, tr_ref, tr_alt = tandem_repeat(ref, alt)
 

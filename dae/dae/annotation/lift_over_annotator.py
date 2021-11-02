@@ -4,7 +4,7 @@ import logging
 import pyarrow as pa
 
 from .annotatable import Annotatable, VCFAllele
-from dae.utils.variant_utils import trim_str_front, reverse_complement
+from dae.utils.variant_utils import trim_str_left, reverse_complement
 
 from .annotator_base import Annotator
 from .schema import Schema
@@ -54,7 +54,7 @@ class LiftOverAnnotator(Annotator):
                 lo_pos -= len(ref)
                 lo_pos -= 1
 
-            _, tr_ref, tr_alt = trim_str_front(pos, ref, alt)
+            _, tr_ref, tr_alt = trim_str_left(pos, ref, alt)
 
             lo_ref = self.target_genome.get_sequence(
                 lo_chrom, lo_pos, lo_pos + len(ref) - 1)

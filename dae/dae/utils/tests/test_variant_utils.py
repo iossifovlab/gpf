@@ -5,7 +5,7 @@ from typing import List, Union
 import numpy as np
 
 from dae.utils.variant_utils import get_locus_ploidy, reverse_complement, \
-    gt2str, str2gt, trim_str_back, trim_str_front
+    gt2str, str2gt, trim_str_right, trim_str_left
 from dae.variants.attributes import Sex
 
 
@@ -105,9 +105,9 @@ def test_str2gt(gts, expected):
     (100, "TGGTGCAGGC", "TGGTGCAGGCGGTGCAGGC", 100, "T", "TGGTGCAGGC"),
     (100, "TGGTGCAGGC", "TGGTGCAGGT", 100, "TGGTGCAGGC", "TGGTGCAGGT"),
 ])
-def test_trim_str_back(pos, ref, alt, trim_pos, trim_ref, trim_alt):
+def test_trim_str_right(pos, ref, alt, trim_pos, trim_ref, trim_alt):
 
-    tpos, tref, talt = trim_str_back(pos, ref, alt)
+    tpos, tref, talt = trim_str_right(pos, ref, alt)
     assert trim_pos == tpos
     assert trim_ref == tref
     assert trim_alt == talt
@@ -122,9 +122,9 @@ def test_trim_str_back(pos, ref, alt, trim_pos, trim_ref, trim_alt):
     (100, "TGGTGCAGGC", "TGGTGCAGGCGGTGCAGGC", 110, "", "GGTGCAGGC"),
     (100, "TGGTGCAGGC", "TGGTGCAGGT", 109, "C", "T"),
 ])
-def test_trim_str_front(pos, ref, alt, trim_pos, trim_ref, trim_alt):
+def test_trim_str_left(pos, ref, alt, trim_pos, trim_ref, trim_alt):
 
-    tpos, tref, talt = trim_str_front(pos, ref, alt)
+    tpos, tref, talt = trim_str_left(pos, ref, alt)
     assert trim_pos == tpos
     assert trim_ref == tref
     assert trim_alt == talt
