@@ -1,5 +1,6 @@
-from dae.annotation.annotatable import Annotatable
-from dae.utils.regions import Region
+import logging
+
+from typing import List
 
 from .gene_codes import NuclearCode
 from .effect_checkers.coding import CodingEffectChecker
@@ -11,10 +12,14 @@ from .effect_checkers.start_loss import StartLossEffectChecker
 from .effect_checkers.stop_loss import StopLossEffectChecker
 from .effect_checkers.splice_site import SpliceSiteEffectChecker
 from .effect_checkers.intron import IntronicEffectChecker
-from .effect import EffectFactory
+from .effect import EffectFactory, Effect
 from .variant import Variant
 from .annotation_request import AnnotationRequestFactory
-import logging
+
+from dae.annotation.annotatable import Annotatable
+from dae.utils.regions import Region
+
+logger = logging.getLogger(__name__)
 
 
 class VariantAnnotator(object):
@@ -108,8 +113,7 @@ class VariantAnnotator(object):
 
         return effects
 
-    def annotate(self, variant):
-        logger = logging.getLogger(__name__)
+    def annotate(self, variant) -> List[Effect]:
         if variant.variant_type == Annotatable.Type.large_duplication or \
                 variant.variant_type == Annotatable.Type.large_deletion:
             return self._do_annotate_cnv(variant)
@@ -180,8 +184,6 @@ class VariantAnnotator(object):
             chrom, position, loc, var, ref, alt, length, seq, variant_type
         )
         desc = VariantAnnotator.effect_description(effects)
-
-        logger = logging.getLogger(__name__)
         logger.debug("effect: %s", desc)
 
         return effects

@@ -90,57 +90,6 @@ class Effect(object):
             [data for cond, data in eff_data if self.effect in cond]
         )
 
-    # def effect_details(self):
-    #     eff_data = [
-    #         (["noStart", "noEnd", "CDS", "all"], str(self.prot_length)),
-    #         (
-    #             [
-    #                 "intron",
-    #                 "5'UTR-intron",
-    #                 "3'UTR-intron",
-    #                 "non-coding-intron",
-    #             ],
-    #             str(self.which_intron) + "/" + str(self.how_many_introns),
-    #         ),
-    #         (
-    #             [
-    #                 "intron",
-    #                 "5'UTR-intron",
-    #                 "3'UTR-intron",
-    #                 "non-coding-intron",
-    #             ],
-    #             "[" + str(self.dist_from_coding) + "]",
-    #         ),
-    #         (
-    #             [
-    #                 "no-frame-shift",
-    #                 "no-frame-shift-newStop",
-    #                 "frame-shift",
-    #                 "splice-site",
-    #                 "synonymous",
-    #                 "missense",
-    #                 "nonsense",
-    #                 "coding_unknown",
-    #             ],
-    #             str(self.prot_pos) + "/" + str(self.prot_length),
-    #         ),
-    #         (
-    #             [
-    #                 "no-frame-shift",
-    #                 "no-frame-shift-newStop",
-    #                 "missense",
-    #                 "nonsense",
-    #                 "coding_unknown",
-    #             ],
-    #             "(" + str(self.aa_change) + ")",
-    #         ),
-    #         (["no-mutation"], "no-mutation"),
-    #         (["5'UTR", "3'UTR"], str(self.dist_from_coding)),
-    #         (["non-coding", "unknown", "tRNA:ANTICODON"], str(self.length)),
-    #         (["promoter"], str(self.dist_from_5utr)),
-    #     ]
-    #     return [data for cond, data in eff_data if self.effect in cond]
-
 
 class EffectFactory(object):
     @classmethod
