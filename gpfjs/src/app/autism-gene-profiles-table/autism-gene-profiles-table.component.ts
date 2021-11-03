@@ -580,12 +580,19 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
 
   public highlightRow($event): void {
     const linkElements = ['link-td', 'link-span'];
-
-    if ((!$event.ctrlKey && $event.type === 'click') || linkElements.includes($event.srcElement.className)) {
+    if (
+      (!$event.ctrlKey && $event.type === 'click')
+      || linkElements.includes($event.srcElement.classList.value.replace('ng-star-inserted', '').trim())
+    ) {
       return;
     }
 
-    const rowElement = $event.path.find(ele => ele.localName === 'tr');
+    let rowElement;
+    if ($event.srcElement.parentElement.localName !== 'tr') {
+      rowElement = $event.srcElement.parentElement.parentElement
+    } else {
+      rowElement = $event.srcElement.parentElement;
+    }
 
     rowElement.className.includes('row-highlight')
       ? rowElement.classList.remove('row-highlight')

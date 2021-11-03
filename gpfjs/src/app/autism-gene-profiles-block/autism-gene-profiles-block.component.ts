@@ -37,7 +37,12 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   @HostListener('window:keydown', ['$event'])
   public keyEvent($event: KeyboardEvent) {
-    if ($event.target['localName'] === 'input' || !this.keybinds.includes($event.key)) {
+    if (
+      $event.target['localName'] === 'input'
+      || !this.keybinds.includes($event.key)
+      || $event.altKey
+      || $event.ctrlKey
+    ) {
       return;
     }
 

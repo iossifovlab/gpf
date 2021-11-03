@@ -40,6 +40,9 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
     this.partitions.subscribe(partitions => {
       this.rangesCounts = [partitions.leftCount, partitions.midCount, partitions.rightCount];
     });
+    if (this.continuousFilterState !== undefined) {
+      this.continuousFilterState.selection = new ContinuousSelection(null, null, null, null);
+    }
   }
 
   public ngOnChanges(changes: SimpleChanges): void {
@@ -57,13 +60,6 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
         });
     }
 
-    if (!this.measureName) {
-      const selection = (this.continuousFilterState.selection as ContinuousSelection);
-      selection.min = null;
-      selection.domainMin = null;
-      selection.max = null;
-      selection.domainMax = null;
-    }
   }
 
   public set rangeStart(value) {
