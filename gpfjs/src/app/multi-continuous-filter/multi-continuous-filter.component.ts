@@ -50,7 +50,6 @@ export class MultiContinuousFilterComponent implements OnInit {
       this.internalSelectedMeasure = measure;
       this.updateFilterEvent.emit();
     } else {
-      const selection = new ContinuousSelection(0, 0, 0, 0);
       this.continuousFilterState.source = null;
       this.internalSelectedMeasure = null;
       this.updateFilterEvent.emit();

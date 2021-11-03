@@ -54,16 +54,19 @@ export class PersonFilterState {
 
   @ValidateNested()
   selection: Selection;
+  @IsNotEmpty({message: 'Please select a measure.'})
+  public source: string;
 
   constructor(
     readonly id: string,
     readonly sourceType: string,
     readonly role: string,
-    public source: string,
+    source: string,
     public from: string,
     selection: Selection
   ) {
     this.selection = selection;
+    this.source = source;
   }
 
   isEmpty() {
@@ -72,7 +75,7 @@ export class PersonFilterState {
 }
 
 export class CategoricalFilterState extends PersonFilterState {
-
+  
   constructor(
     id: string,
     type: string,
