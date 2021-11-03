@@ -1,5 +1,5 @@
 
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import {throwError as observableThrowError, Observable, Subject, ReplaySubject, of, BehaviorSubject } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';

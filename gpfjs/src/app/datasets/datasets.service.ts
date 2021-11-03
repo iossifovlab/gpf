@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { Observable, ReplaySubject, BehaviorSubject, zip, Subject } from 'rxjs';
 
 import { Dataset } from '../datasets/datasets';

@@ -1,5 +1,5 @@
 import { Component, OnInit, ElementRef, QueryList, ViewChildren } from '@angular/core';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { combineLatest, Observable, ReplaySubject } from 'rxjs';
 import { ContinuousMeasure } from '../measures/measures';
 import { MeasuresService } from '../measures/measures.service';
