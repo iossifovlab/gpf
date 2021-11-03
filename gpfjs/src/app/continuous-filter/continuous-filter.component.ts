@@ -27,6 +27,7 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
   constructor(private measuresService: MeasuresService) { }
 
   public ngOnInit(): void {
+    console.log('init');
     this.partitions = this.rangeChanges.pipe(
       debounceTime(100),
       distinctUntilChanged(),
@@ -35,6 +36,7 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
           .getMeasurePartitions(datasetId, measureName, internalRangeStart, internalRangeEnd);
       })
     );
+    console.log('first set');
 
     this.partitions.subscribe(partitions => {
       this.rangesCounts = [partitions.leftCount, partitions.midCount, partitions.rightCount];
@@ -42,9 +44,13 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
     if (this.continuousFilterState !== undefined) {
       this.continuousFilterState.selection = new ContinuousSelection(null, null, null, null);
     }
+    console.log('second set');
   }
 
   public ngOnChanges(changes: SimpleChanges): void {
+    console.log('changes');
+    console.log(this.continuousFilterState.selection);
+    console.log('first set ch');
     if (this.datasetId && this.measureName) {
       this.measuresService.getMeasureHistogram(this.datasetId, this.measureName)
         .subscribe(histogramData => {
@@ -58,6 +64,8 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
           }
         });
     }
+    console.log('second set ch');
+    console.log(this.continuousFilterState.selection);
 
   }
 
