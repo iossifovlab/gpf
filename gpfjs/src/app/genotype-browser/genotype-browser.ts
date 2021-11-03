@@ -4,7 +4,7 @@ export class BrowserQueryFilter {
     private geneSymbols: string[],
     private effectTypes: string[],
     private gender: string[],
-    private personSetCollection: PersonSetCollection,
+    public personSetCollection: PersonSetCollection,
     private studyTypes: string[],
     private variantTypes: string[]
   ) { }
@@ -24,8 +24,8 @@ export class BrowserQueryFilter {
 
 export class PersonSetCollection {
   constructor(
-    private id: string,
-    private checkedValues: string[],
+    public id: string,
+    public checkedValues: string[],
   ) { }
 
   public static fromJson(json: any): PersonSetCollection {
