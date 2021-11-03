@@ -43,12 +43,14 @@ def resources_http_server(fixture_dirname):
                         break
                 except ConnectionRefusedError:
                     logger.info(
-                        f"can't connect to localhost:{http_port}; ({retries})")
+                        f"can't connect to localhost:{http_port}; ({retries})",
+                        exc_info=True)
                     time.sleep(0.5)
                     retries -= 1
         except OSError:
             logger.info(
-                f"can't bind to localhost:{http_port}; trying next port")
+                f"can't bind to localhost:{http_port}; trying next port",
+                exc_info=True)
             time.sleep(0.5)
             http_port += 1
 
