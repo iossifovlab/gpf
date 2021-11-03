@@ -10,7 +10,7 @@ import { StatefulComponent } from 'app/common/stateful-component';
   templateUrl: './effect-types.component.html',
   styleUrls: ['./effect-types.component.css'],
 })
-export class EffecttypesComponent extends StatefulComponent implements OnInit {
+export class EffectTypesComponent extends StatefulComponent implements OnInit {
 
   @Input() variantTypes: Set<string> = new Set([]);
 

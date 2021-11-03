@@ -10,7 +10,7 @@ import { StatefulComponent } from '../common/stateful-component';
   templateUrl: './variant-types.component.html',
   styleUrls: ['./variant-types.component.css'],
 })
-export class VarianttypesComponent extends StatefulComponent implements OnChanges {
+export class VariantTypesComponent extends StatefulComponent implements OnChanges {
 
   @Input() variantTypes: Set<string> = new Set([]);
   @Input() @Validate(SetNotEmpty, {message: 'Select at least one.'}) selectedVariantTypes: Set<string> = new Set();

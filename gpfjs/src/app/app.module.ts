@@ -14,8 +14,8 @@ import { PresentInChildComponent } from './present-in-child/present-in-child.com
 import { PresentInChildState } from './present-in-child/present-in-child.state';
 import { PresentInParentComponent } from './present-in-parent/present-in-parent.component';
 import { PresentInParentState } from './present-in-parent/present-in-parent.state';
-import { VarianttypesComponent } from './variant-types/variant-types.component';
-import { EffecttypesComponent } from './effect-types/effect-types.component';
+import { VariantTypesComponent } from './variant-types/variant-types.component';
+import { EffectTypesComponent } from './effect-types/effect-types.component';
 import { EffecttypesColumnComponent } from './effect-types/effect-types-column.component';
 import { GenotypePreviewTableComponent } from './genotype-preview-table/genotype-preview-table.component';
 import { QueryService } from './query/query.service';
@@ -276,8 +276,8 @@ const appRoutes: Routes = [
   declarations: [
     AppComponent,
     GenderComponent,
-    VarianttypesComponent,
-    EffecttypesComponent,
+    VariantTypesComponent,
+    EffectTypesComponent,
     EffecttypesColumnComponent,
     GenotypePreviewTableComponent,
     DatasetsComponent,

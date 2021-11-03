@@ -2,21 +2,21 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 
-import { EffecttypesComponent } from './effect-types.component';
+import { EffectTypesComponent } from './effect-types.component';
 import { EffecttypesColumnComponent } from './effect-types-column.component';
 import { ALL, CODING, LGDS, NONSYNONYMOUS, UTRS } from './effect-types';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 import { AddEffectType, RemoveEffectType, SetEffectTypes, EffecttypesState } from './effect-types.state';
 
-describe('EffecttypesComponent', () => {
-  let component: EffecttypesComponent;
-  let fixture: ComponentFixture<EffecttypesComponent>;
+describe('EffectTypesComponent', () => {
+  let component: EffectTypesComponent;
+  let fixture: ComponentFixture<EffectTypesComponent>;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
-        EffecttypesComponent,
+        EffectTypesComponent,
         EffecttypesColumnComponent,
       ],
       imports: [NgxsModule.forRoot([EffecttypesState])],
@@ -26,7 +26,7 @@ describe('EffecttypesComponent', () => {
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(EffecttypesComponent);
+    fixture = TestBed.createComponent(EffectTypesComponent);
     component = fixture.componentInstance;
     component['store'] = {
       selectOnce(f) {

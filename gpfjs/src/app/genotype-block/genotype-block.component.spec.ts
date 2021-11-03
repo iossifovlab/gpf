@@ -5,8 +5,8 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { GenotypeBlockComponent } from './genotype-block.component';
 import { GenderComponent } from '../gender/gender.component';
-import { VarianttypesComponent } from '../variant-types/variant-types.component';
-import { EffecttypesComponent } from '../effect-types/effect-types.component';
+import { VariantTypesComponent } from '../variant-types/variant-types.component';
+import { EffectTypesComponent } from '../effect-types/effect-types.component';
 import { PedigreeSelectorComponent } from '../pedigree-selector/pedigree-selector.component';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { UsersService } from 'app/users/users.service';
@@ -29,12 +29,12 @@ describe('GenotypeBlockComponent', () => {
     TestBed.configureTestingModule({
       declarations: [
         GenderComponent,
-        VarianttypesComponent,
-        EffecttypesComponent,
+        VariantTypesComponent,
+        EffectTypesComponent,
         GenotypeBlockComponent,
         PedigreeSelectorComponent,
         ErrorsAlertComponent,
-        EffecttypesComponent,
+        EffectTypesComponent,
         EffecttypesColumnComponent
       ],
       providers: [
