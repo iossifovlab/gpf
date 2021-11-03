@@ -45,7 +45,7 @@ class ImpalaQueryDirector:
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            affected_status=affected_status,
+            pedigree_fields=pedigree_fields,
         )
 
         self.query_builder.build_group_by()
