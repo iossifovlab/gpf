@@ -227,6 +227,38 @@ def trim_str_right_left(pos, ref, alt):
     return trim_str_left(pos, ref, alt)
 
 
+def trim_parsimonious(pos, ref, alt):
+    assert alt, (pos, ref, alt)
+    assert ref, (pos, ref, alt)
+
+    rp, rr, ra = trim_str_right(pos, ref, alt)
+    if len(rr) == 0:
+        ra = alt[:len(ra) + 1]
+        rr = ref[0:1]
+        assert ra[-1] == rr[-1]
+        return rp, rr, ra
+
+    if len(ra) == 0:
+        rr = ref[:len(rr) + 1]
+        ra = alt[0:1]
+        assert ra[-1] == rr[-1]
+        return rp, rr, ra
+
+    lp, lr, la = trim_str_left(rp, rr, ra)
+    if len(lr) == 0:
+        lr = ra[-len(la) - 1]
+        la = ra[-len(la) - 1:]
+        lp -= 1
+        return lp, lr, la
+    if len(la) == 0:
+        la = rr[-len(lr) - 1]
+        lr = rr[-len(lr) - 1:]
+        lp -= 1
+        return lp, lr, la
+
+    return lp, lr, la
+
+
 def get_locus_ploidy(
         chrom: str, pos: int, sex: Sex, genome: Genome) -> int:
 

@@ -81,8 +81,8 @@ def test_position_resource_default_annotation(position_score_repo):
 @pytest.mark.parametrize("allele,pos_aggregator, expected", [
     (("1", 14970, "C", "A"),   "mean", 0.1),
 
-    (("1", 14970, "CC", "C"),  "mean", (0.01 + 0.1 + 0.1)/3),
-    (("1", 14970, "CC", "C"),  "max", 0.1),
+    (("1", 14970, "CC", "C"),  "mean", (0.1 + 0.1 + 0.2)/3),
+    (("1", 14970, "CC", "C"),  "max", 0.2),
 
     (("1", 14970, "CCT", "C"), "mean", (0.1 + 0.1 + 0.2 + 0.2) / 4),
     (("1", 14970, "CCT", "C"), "max", 0.2),

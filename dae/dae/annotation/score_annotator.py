@@ -135,7 +135,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             else:
                 scores = self._fetch_aggregated_scores(
                     annotatable.chrom,
-                    annotatable.pos_begin, annotatable.pos_end)
+                    annotatable.pos, annotatable.pos_end)
         if not scores:
             self._scores_not_found(attributes)
             return
