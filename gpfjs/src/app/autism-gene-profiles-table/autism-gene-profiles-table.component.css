@@ -1,3 +1,7 @@
+th, td {
+  -moz-user-select: none;
+}
+
 tr:hover.row-highlight {
   background-color: #e4e9d7 !important;
 }
