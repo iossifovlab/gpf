@@ -1,64 +1,67 @@
 import pytest
-import time
+# import time
 import logging
 
-from subprocess import Popen, PIPE
-from http.client import HTTPConnection
+# from subprocess import Popen, PIPE
+from threading import Thread, Condition
+from functools import partial
+
+from http.server import ThreadingHTTPServer
+# from http.client import HTTPConnection
+from RangeHTTPServer import RangeRequestHandler
 
 logger = logging.getLogger(__name__)
+
+
+class HTTPRepositoryServer(Thread):
+
+    def __init__(self, http_port, directory):
+        super(HTTPRepositoryServer, self).__init__()
+
+        self.http_port = http_port
+        self.directory = directory
+        self.httpd = None
+        self.server_address = None
+        self.ready = Condition()
+
+    def run(self):
+        handler_class = partial(
+            RangeRequestHandler, directory=self.directory)
+
+        self.server_address = ("localhost", self.http_port)
+        handler_class.protocol_version = "HTTP/1.0"
+
+        with ThreadingHTTPServer(self.server_address, handler_class) as httpd:
+            sa = httpd.socket.getsockname()
+            serve_message = \
+                "Serving HTTP on {host} port {port} " \
+                "(http://{host}:{port}/) ..."
+
+            logger.info(serve_message.format(host=sa[0], port=sa[1]))
+            self.httpd = httpd
+            with self.ready:
+                self.ready.notify()
+
+            self.httpd.serve_forever()
 
 
 @pytest.fixture(scope="module")
 def resources_http_server(fixture_dirname):
     http_port = 16500
+    directory = fixture_dirname("genomic_resources")
 
-    success = False
+    http_server = HTTPRepositoryServer(http_port, directory)
+    http_server.start()
+    with http_server.ready:
+        http_server.ready.wait()
 
-    while not success and http_port < 16530:
-        try:
-            retries = 10
-            server = Popen(
-                [
-                    "python",
-                    "-m", "RangeHTTPServer",
-                    str(http_port),
-                    "--bind", "localhost",
-                    "--directory", fixture_dirname("genomic_resources"),
-                ],
-                stdout=PIPE,
-                encoding="utf-8",
-                universal_newlines=True
-            )
-            while retries > 0:
-                try:
-                    conn = HTTPConnection(f"localhost:{http_port}")
-                    conn.request("HEAD", "/")
-                    response = conn.getresponse()
-                    if response is not None:
-                        success = True
-                        server.http_port = http_port
-                        logger.info(
-                            f"HTTP repository server started at {http_port}")
-                        yield server
-                        break
-                except ConnectionRefusedError:
-                    logger.info(
-                        f"can't connect to localhost:{http_port}; ({retries})",
-                        exc_info=True)
-                    time.sleep(0.5)
-                    retries -= 1
-        except OSError:
-            logger.info(
-                f"can't bind to localhost:{http_port}; trying next port",
-                exc_info=True)
-            time.sleep(0.5)
-            http_port += 1
+    logger.info(
+        f"HTTP repository test server started: {http_server.server_address}")
 
-    if not success:
-        raise RuntimeError(f"failed to start local HTTP server at {http_port}")
+    yield http_server
 
-    server.terminate()
-    server.wait()
+    http_server.httpd.shutdown()
+    http_server.join()
 
 
 @pytest.fixture
