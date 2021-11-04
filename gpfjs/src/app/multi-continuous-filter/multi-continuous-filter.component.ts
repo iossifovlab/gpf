@@ -33,7 +33,6 @@ export class MultiContinuousFilterComponent extends StatefulComponent implements
   public restoreContinuousFilter(state) {
     const filters = state['personFiltersState']['familyFilters'];
     filters.forEach(filter => {
-      //console.log(filter);
       let selection = {
         name: filter.source,
         min: filter['selection'].min,
