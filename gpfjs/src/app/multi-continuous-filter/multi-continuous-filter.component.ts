@@ -1,14 +1,17 @@
 import { Component, OnInit, Input, EventEmitter, Output } from '@angular/core';
 import { ContinuousMeasure } from '../measures/measures';
-import { ContinuousFilterState, ContinuousSelection } from '../person-filters/person-filters';
+import { ContinuousFilterState, ContinuousSelection, PersonFilterState } from '../person-filters/person-filters';
 import { PersonFilter } from '../datasets/datasets';
+import { Store } from '@ngxs/store';
+import { StatefulComponent } from 'app/common/stateful-component';
+import { PersonFiltersState } from 'app/person-filters/person-filters.state';
 
 @Component({
   selector: 'gpf-multi-continuous-filter',
   templateUrl: './multi-continuous-filter.component.html',
   styleUrls: ['./multi-continuous-filter.component.css'],
 })
-export class MultiContinuousFilterComponent implements OnInit {
+export class MultiContinuousFilterComponent extends StatefulComponent implements OnInit {
   @Input() datasetId: string;
   @Input() continuousFilter: PersonFilter;
   @Input() continuousFilterState: ContinuousFilterState;
@@ -17,28 +20,27 @@ export class MultiContinuousFilterComponent implements OnInit {
   measures: Array<ContinuousMeasure>;
   internalSelectedMeasure: ContinuousMeasure;
 
-  constructor() { }
+  constructor(protected store: Store) {
+    super(store, PersonFiltersState, 'personFilters');
+  }
 
   public ngOnInit() {
-
+    this.store.selectOnce(state => state).subscribe(state => {
+      this.restoreContinuousFilter(state);
+    });
   }
 
   public restoreContinuousFilter(state) {
-    const filter = state.find(f => f.id === this.continuousFilterState.id);
-    if (filter) {
-      const selection = this.continuousFilterState.selection as ContinuousSelection;
-      this.continuousFilterState.source = filter.source;
-      selection.domainMin = filter.domainMin;
-      selection.domainMax = filter.domainMax;
-      selection.max = filter.mmax;
-      selection.min = filter.mmin;
-      if (this.measures) {
-        const measure = this.measures.find(m => m.name === filter.source);
-        if (measure) {
-          this.internalSelectedMeasure = measure;
-        }
-      }
-    }
+    const filters = state['personFiltersState']['familyFilters'];
+    filters.forEach(filter => {
+      //console.log(filter);
+      let selection = {
+        name: filter.source,
+        min: filter['selection'].min,
+        max: filter['selection'].max
+      };
+      this.selectedMeasure = selection;
+    });
   }
 
   set selectedMeasure(measure) {
