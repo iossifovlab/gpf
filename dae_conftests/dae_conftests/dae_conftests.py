@@ -26,15 +26,16 @@ from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.variants.family_variant import FamilyVariant
 
-from dae.backends.raw.loader import AnnotationPipelineDecorator
+from dae.backends.raw.loader import EffectAnnotationDecorator, \
+    AnnotationPipelineDecorator
 from dae.backends.raw.raw_variants import RawMemoryVariants
 
 from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.backends.vcf.loader import VcfLoader
 
-from dae.backends.impala.import_commons import (
-    construct_import_annotation_pipeline,
-)
+from dae.backends.impala.import_commons import \
+    construct_import_effect_annotator
+
 
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.helpers import study_id_from_path
@@ -338,15 +339,6 @@ def genomic_resources_db(gpf_instance_2013):
 
 
 @pytest.fixture(scope="session")
-def default_annotation_pipeline(default_dae_config, genomic_resources_db):
-    filename = default_dae_config.annotation.conf_file
-    config = AnnotationPipeline.load_and_parse(filename)
-    pipeline = AnnotationPipeline.build(config, genomic_resources_db)
-
-    return pipeline
-
-
-@pytest.fixture(scope="session")
 def annotation_scores_dirname():
     filename = relative_to_this_test_folder("fixtures/annotation_pipeline/")
     return filename
@@ -538,7 +530,11 @@ def vcf_loader_data():
 
 @pytest.fixture(scope="session")
 def vcf_variants_loaders(
-        vcf_loader_data, default_annotation_pipeline, genomes_db_2013):
+        vcf_loader_data, gpf_instance_2013, genomes_db_2013):
+
+    effect_annotator = construct_import_effect_annotator(
+        gpf_instance_2013
+    )
 
     def builder(
         path,
@@ -571,8 +567,8 @@ def vcf_variants_loaders(
                     "denovo_alt": "alt",
                 }
             )
-            loaders.append(AnnotationPipelineDecorator(
-                denovo_loader, default_annotation_pipeline))
+            loaders.append(EffectAnnotationDecorator(
+                denovo_loader, effect_annotator))
 
         vcf_loader = VcfLoader(
             families,
@@ -581,8 +577,8 @@ def vcf_variants_loaders(
             params=params
         )
 
-        loaders.append(AnnotationPipelineDecorator(
-            vcf_loader, default_annotation_pipeline
+        loaders.append(EffectAnnotationDecorator(
+            vcf_loader, effect_annotator
         ))
 
         return loaders
@@ -616,17 +612,6 @@ def variants_mem():
     def builder(loader):
         fvars = RawMemoryVariants([loader], loader.families)
         return fvars
-
-    return builder
-
-
-@pytest.fixture(scope="session")
-def annotation_pipeline_default_decorator(default_annotation_pipeline):
-    def builder(variants_loader):
-        decorator = AnnotationPipelineDecorator(
-            variants_loader, default_annotation_pipeline
-        )
-        return decorator
 
     return builder
 
@@ -783,7 +768,7 @@ def data_import(
     if cleanup:
         request.addfinalizer(fin)
 
-    annotation_pipeline = construct_import_annotation_pipeline(
+    effect_annotator = construct_import_effect_annotator(
         gpf_instance_2013
     )
 
@@ -845,8 +830,8 @@ def data_import(
                         "denovo_alt": "alt",
                     }
                 )
-                loaders.append(AnnotationPipelineDecorator(
-                    denovo_loader, annotation_pipeline))
+                loaders.append(EffectAnnotationDecorator(
+                    denovo_loader, effect_annotator))
 
             vcf_loader = VcfLoader(
                 families,
@@ -863,8 +848,8 @@ def data_import(
                 },
             )
 
-            loaders.append(AnnotationPipelineDecorator(
-                vcf_loader, annotation_pipeline))
+            loaders.append(EffectAnnotationDecorator(
+                vcf_loader, effect_annotator))
 
             impala_genotype_storage.simple_study_import(
                 study_id,

@@ -1,3 +1,4 @@
+from dae.annotation.schema import Schema
 from dae.backends.impala.serializers import AlleleParquetSerializer
 from dae.backends.dae.loader import DenovoLoader
 from dae.pedigrees.loader import FamiliesLoader
@@ -7,8 +8,8 @@ def test_all_properties_in_blob(vcf_variants_loaders, impala_genotype_storage):
     loader = vcf_variants_loaders("backends/quads_f1")[0]
 
     fv = list(loader.full_variants_iterator())[0][1][0]
-    schema = loader.get_attribute("annotation_schema")
     family = loader.families.get(fv.family_id)
+    schema = Schema()
     print(schema)
     schema.create_field("some_score", float)
     fv.update_attributes({"some_score": [1.24]})
@@ -117,10 +118,10 @@ def test_build_allele_batch_dict(
     loader = vcf_variants_loaders("backends/effects_trio")[-1]
 
     fv = list(loader.full_variants_iterator())[0][1][0]
-    schema = loader.get_attribute("annotation_schema")
     family = loader.families.get(fv.family_id)
     assert family, fv.family_id
 
+    schema = Schema()
     schema.create_field("some_score", float)
     fv.update_attributes({"some_score": [1.24]})
 

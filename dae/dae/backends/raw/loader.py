@@ -11,6 +11,7 @@ from typing import Iterator, Tuple, List, Dict, Any, Optional, Sequence
 
 import numpy as np
 import pandas as pd
+from dae.annotation.annotation_pipeline import AnnotationPipeline
 
 from dae.genome.genomes_db import Genome
 
@@ -417,6 +418,32 @@ class AnnotationDecorator(VariantsLoaderDecorator):
 
                     outfile.write(sep.join(line))
                     outfile.write("\n")
+
+
+class EffectAnnotationDecorator(AnnotationDecorator):
+    def __init__(self, variants_loader, effect_annotator):
+        super(EffectAnnotationDecorator, self).__init__(variants_loader)
+
+        self.set_attribute(
+            "extra_attributes",
+            variants_loader.get_attribute("extra_attributes")
+        )
+
+        self.effect_annotator = effect_annotator
+
+    def full_variants_iterator(self):
+        for (summary_variant, family_variants) in \
+                self.variants_loader.full_variants_iterator():
+            for sa in summary_variant.alt_alleles:
+                attributes = {}
+                self.effect_annotator.annotate(
+                    attributes,
+                    sa.get_annotatable(), None)
+                assert "allele_effects" in attributes
+                allele_effects = attributes["allele_effects"]
+                assert isinstance(allele_effects, AlleleEffects)
+                sa.effects = allele_effects
+            yield summary_variant, family_variants
 
 
 class AnnotationPipelineDecorator(AnnotationDecorator):

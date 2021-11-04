@@ -708,7 +708,7 @@ class ParquetManager:
             variants_loader, partition_descriptor,
             bucket_index=1, rows=100_000, include_reference=False):
 
-        assert variants_loader.get_attribute("annotation_schema") is not None
+        # assert variants_loader.get_attribute("annotation_schema") is not None
         print(f"variants to parquet ({rows} rows)", file=sys.stderr)
 
         start = time.time()

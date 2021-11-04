@@ -64,10 +64,10 @@ class EffectAnnotatorAdapter(Annotator):
                 "dest": "effect_details_details"
             },
 
-            {
-                "source": "allele_effects",
-                "dest": "allele_effects"
-            }
+            # {
+            #     "source": "allele_effects",
+            #     "dest": "allele_effects"
+            # }
         ]
     })
 
@@ -128,8 +128,6 @@ class EffectAnnotatorAdapter(Annotator):
         assert isinstance(annotatable, VCFAllele) or \
             isinstance(annotatable, CNVAllele), annotatable
 
-        print(annotatable)
-
         if annotatable is None:
             self._not_found(attributes)
             return
@@ -158,7 +156,7 @@ class EffectAnnotatorAdapter(Annotator):
             "effect_details_details": r[5],
             "effect_details": [
                 f"{t}:{g}:{d}" for t, g, d in zip(r[3], r[4], r[5])],
-            "allele_effect": AlleleEffects.from_effects(effects),
+            "allele_effects": AlleleEffects.from_effects(effects),
         }
 
         attributes.update(result)
