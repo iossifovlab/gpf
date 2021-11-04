@@ -26,16 +26,14 @@ export class EnrichmentToolPage extends BasePage {
     return cy.get('.selector-cell').eq(affectedStatus === 'affected' ? 1 : 2);
   }
 
-  enrichmentModelsSelector(modelName: string) {
-    let element = cy.get('select');
-    this.enrichmentModelsBlock.then(() => {
+  enrichmentModelsSelect(modelName: string, value: string) {
+    this.enrichmentModelsBlock.within(() => {
       if (modelName === 'background') {
-        element = cy.get('select').eq(0);
+        cy.get('select').eq(0).select(value);
       } else if (modelName === 'counting') {
-        element = cy.get('select').eq(1);
+        cy.get('select').eq(1).select(value);
       }
     });
-    return element;
   }
 
   get geneSetsInputField() {

@@ -1,5 +1,6 @@
 import { EnrichmentToolPage } from 'cypress/elements/enrichment-tool-page';
 import { GenesBlockPage } from 'cypress/elements/genes-block-page';
+import { GenesWeights } from 'cypress/elements/genes-weights';
 import { SaveQueryPage } from 'cypress/elements/save-query-page';
 import { ShareQueryPage } from 'cypress/elements/share-query-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
@@ -141,7 +142,7 @@ describe('Enrichment tool data tests', () => {
     page.selectorTableRow('unaffected').should('have.text', 'unaffected F:1011  M:899  U: -');
   });
 
-  it.only('should perform enrichment test based on gene sets', () => { // TODO: unaffected tests
+  it('should perform enrichment test based on gene sets', () => { // TODO: unaffected tests
     const genesBlockPage = new GenesBlockPage();
     genesBlockPage.geneSetsButton.click();
 
@@ -184,7 +185,6 @@ describe('Enrichment tool data tests', () => {
 
     genesBlockPage.geneSymbolsTextarea.type('CAMSAP1');
     
-    // TODO data based test in columns/rows
     page.enrichmentModelsBlock.then(() => {
       cy.get('a#ngb-nav-4').click();
     });
@@ -192,21 +192,49 @@ describe('Enrichment tool data tests', () => {
     page.enrichmentTestButton.click();
     page.table.should('be.visible');
 
-    /*['LGDs', '392', '0', '0.06', '1.00', '27', '0', '3.92e-3', '1.00', '321', '0', '0.05', '1.00', '71', '0', '0.01', '1.00'].forEach((el, index) => {
-      page.findTableField('affected', 'LGDs', index).should('have.text', el);
-    });*/
     compare_data('gene_symbol_without_model_LGDs', 'affected');
 
-    page.enrichmentModelsSelector('background').select('samocha_background_model');
-    page.enrichmentModelsSelector('counting').select('enrichment_gene_counting');
+    page.enrichmentModelsSelect('background', 'samocha_background_model');
+    page.enrichmentModelsSelect('counting', 'enrichment_gene_counting');
     page.enrichmentTestButton.click();
 
     // TODO test more values
 
-    /*['LGDs', '363', '0', '0.03', '1.00', '27', '0', '1.89e-3', '1.00', '306', '0', '0.02', '1.00', '68', '0', '3.45e-3', '1.00'].forEach((el, index) => {
-      page.findTableField('affected', 'LGDs', index).should('have.text', el);
-    });*/ //experimental below
     compare_data('gene_symbol_and_models_LGDs', 'affected');
+  });
+
+  it('should test gene weights', () => {
+    const genesBlockPage = new GenesBlockPage();
+    const weights = new GenesWeights();
+    genesBlockPage.geneWeightsButton.click();
+    weights.moveSlider('left', 0);
+  });
+
+  it('parametrization test', () => {
+    const genesBlockPage = new GenesBlockPage();
+    const weights = new GenesWeights();
+    let req = new request_options('gene_symbols', {
+      gene_symbols: 'CAMP'
+    }, ['samocha_background_model', 'enrichment_gene_counting']);
+
+    parse_options(req);
+    req = new request_options('gene_sets', {
+      set: 'Denovo',
+      denovo_collection_sets: [
+        {
+          study_type: 'comp_vcf: Affected Status',
+          affected: false,
+          unaffected: false
+        }, 
+      ]
+    }, ['samocha_background_model', 'enrichment_gene_counting']);
+    parse_options(req);
+
+    req = new request_options('gene_sets', {
+      set: 'Main',
+      study: 'autism candidates from Iossifov',
+    }, ['samocha_background_model', 'enrichment_gene_counting']);
+    parse_options(req);
   });
 });
 
@@ -219,6 +247,18 @@ class data_model {
     this.data = data;
   }
 }
+class request_options {
+  public mode: string;
+  public options: JSON;
+  public models_selected: string[];
+
+  constructor(mode, options, models_selected: string[]) {
+    this.mode = mode;
+    this.options = options;
+    this.models_selected = models_selected;
+  }
+}
+
 const data = [
   new data_model('gene_symbol_CAMSAP1', ['LGDs', '363', '0', '0.05', '1.00', '27', '0',	'3.92e-3' , '1.00', '306', '0', '0.04', '1.00', '68', '0', '9.88e-3' ,'1.00']),
   new data_model('gene_symbol_CAMSAP1', ['Missense', '1,510', '1', '0.22',	'0.197', '149', '0',	'0.02',	'1.00',	'1,307',	'1',	'0.19',	'0.173', '246', '0', '0.04', '1.00']),
@@ -238,4 +278,62 @@ function compare_data(set_name: string, affected: string, type:string = 'LGDs') 
   dataset.data.forEach((el, index) => {
     page.findTableField(affected, type, index).should('have.text', el);
   });
+}
+
+function parse_options(request: request_options) {
+  const page = new EnrichmentToolPage();
+  const genesBlockPage = new GenesBlockPage();
+  const weights = new GenesWeights();
+  console.log(request);
+  switch(request.mode) {
+    case 'gene_symbols': {
+      genesBlockPage.geneSymbolsButton.click();
+      genesBlockPage.geneSymbolsTextarea.type(request.options['gene_symbols']);
+      break;
+    }
+    case 'gene_sets': {
+      genesBlockPage.geneSetsButton.click();
+      page.geneSetsColletionDropdown.select(request.options['set']);
+
+      if (request.options['study'] !== undefined) {
+        console.log('sf');
+        page.geneSetsInputField.type(request.options['study']).then(() => {
+          cy.get('div.dropdown-menu').should('contain.text', request.options['study']).get('span').contains(request.options['study']).click();
+        });
+      }
+
+      if(request.options['set'] === 'Denovo' && request.options['set'] !== undefined) {
+        request.options['denovo_collection_sets'].forEach(element => {
+          //checkboxes exclusive for denovo
+          cy.get('ngb-accordion > div').within(() => {
+            cy.get('span.dropdown-toggle').contains(element['study_type']).click().parents('.card.ng-star-inserted').within(() => {
+              cy.get('label > input[type="checkbox"]').uncheck({force: true});
+              if(element['affected'] === true) {
+                cy.get('label').contains('affected').click();
+              }
+              if(element['unaffected'] === true) {
+                cy.get('label').contains('unaffected').click();
+              }
+            });        
+          });
+        });
+      }
+
+      break;
+    }
+    case 'gene_weights': {
+      genesBlockPage.geneWeightsButton.click();
+      break;
+    } default: {
+      throw new Error('Unknown mode selected: ' + request.mode);
+    }
+  }
+  if(request.models_selected !== null && request.models_selected.length === 2) {
+    page.enrichmentModelsBlock.within(() => {
+      cy.get('a#ngb-nav-4').click();
+    });
+    request.models_selected.forEach((element, index) => {
+      page.enrichmentModelsSelect((index === 0) ? 'background' : 'counting', element);
+    });
+  }
 }

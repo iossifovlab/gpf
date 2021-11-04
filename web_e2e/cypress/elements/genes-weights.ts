@@ -32,4 +32,45 @@ export class GenesWeights extends BasePage {
   get allGeneWeights() {
     return cy.get('text#sumOfBarsLabel');
   }
+
+  dragLine(which: string) {
+    switch(which) {
+      case 'left': {
+        return cy.get('g[gpf-histogram-range-selector-line] > g > line').eq(0);
+      }
+      case 'right': {
+        return cy.get('g[gpf-histogram-range-selector-line] > g > line').eq(1)
+      }
+      default: {
+        return cy.get('g[gpf-histogram-range-selector-line] > g > line');
+      }
+    }
+  }
+
+  moveSlider(which: string, percentage: number) {
+    switch(which) {
+      case 'left': {
+        dragTo(this.dragLine('left'), this.dragLine('right'));
+        //dragTo(this.dragLine(''));
+        break;        
+      }
+      case 'right': {
+        /*let obj = cy.get('g[gpf-histogram-range-selector-line] > g > line').eq(1);
+        obj.trigger('dragstart');
+        cy.get('g[gpf-histogram-range-selector-line] > g > line').eq(1)
+        .trigger('drop');*/
+        //dragTo(this.dragLine('left'), this.dragLine('right'));
+        break;    
+      }
+      default: {
+        return;
+      }
+    }
+  }
+}
+
+function dragTo (subject, targetEl) {
+  subject.trigger("mousedown", {which: 1});
+  targetEl.trigger("mousemove");
+  targetEl.trigger("mouseup", {force: true});
 }
