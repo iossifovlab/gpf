@@ -768,15 +768,15 @@ class AlleleParquetSerializer:
                 vector.append(prop_value)
             vector = [vector]
 
-            effect_types = getattr(allele, "effect_types", None)
-            if effect_types is None:
-                effect_types = allele.get_attribute("effect_types")
+            effect_types = allele.effect_types
+            assert effect_types is not None
+
             if not len(effect_types):
                 effect_types = [None]
 
-            effect_gene_syms = getattr(allele, "effect_gene_symbols", None)
-            if effect_gene_syms is None:
-                effect_gene_syms = allele.get_attribute("effect_gene_symbols")
+            effect_gene_syms = allele.effect_gene_symbols
+            assert effect_gene_syms is not None
+
             if not len(effect_gene_syms):
                 effect_gene_syms = [None]
 
