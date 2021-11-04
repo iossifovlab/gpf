@@ -40,7 +40,7 @@ export abstract class StatefulComponent implements OnInit, OnDestroy {
     let messages = new Array<string>();
     for (const error of errors) {
       if (error.constraints !== undefined) {
-        messages.push(this.errorToMessage(error))
+        messages.push(this.errorToMessage(error));
       }
       if (error.children && error.children.length) {
         messages = [...messages, ...this.errorsToMessages(error.children)];

@@ -4,7 +4,7 @@ import { PersonFilterState, CategoricalFilterState, ContinuousFilterState, Conti
 import { Store } from '@ngxs/store';
 import { SetFamilyFilters, SetPersonFilters, PersonFiltersState } from './person-filters.state';
 import { StatefulComponent } from 'app/common/stateful-component';
-import { ValidateNested } from 'class-validator';
+import { IsNotEmpty, ValidateNested } from 'class-validator';
 
 @Component({
   selector: 'gpf-person-filters',
@@ -15,6 +15,9 @@ export class PersonFiltersComponent extends StatefulComponent implements OnChang
   @Input() dataset: Dataset;
   @Input() filters: PersonFilter[];
   @Input() isFamilyFilters: boolean;
+
+  @IsNotEmpty()
+  selected = false;
 
   @ValidateNested({each: true})
   private personFiltersState = new Map<string, PersonFilterState>();
@@ -87,6 +90,7 @@ export class PersonFiltersComponent extends StatefulComponent implements OnChang
   }
 
   updateFilters() {
+    this.updateSelected();
     const filters = [...this.personFiltersState]
       .map(([_, personFilter]) => personFilter)
       .filter(personFilter => personFilter && !personFilter.isEmpty());
@@ -95,5 +99,14 @@ export class PersonFiltersComponent extends StatefulComponent implements OnChang
     } else {
       this.store.dispatch(new SetPersonFilters(filters));
     }
+  }
+
+public updateSelected() {
+    this.selected = null;
+    this.personFiltersState.forEach(el => {
+      if (!el.isEmpty()) {
+        this.selected = true;
+      }
+    });
   }
 }

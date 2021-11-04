@@ -49,6 +49,6 @@ export class CategoricalFilterComponent implements OnInit {
 
   clear() {
     (this.categoricalFilterState.selection as CategoricalSelection).selection = [];
+    this.updateFilterEvent.emit();
   }
-
 }

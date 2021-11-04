@@ -54,7 +54,6 @@ export class PersonFilterState {
 
   @ValidateNested()
   selection: Selection;
-  @IsNotEmpty({message: 'Please select a measure.'})
   public source: string;
 
   constructor(
