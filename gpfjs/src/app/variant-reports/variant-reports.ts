@@ -1,7 +1,7 @@
 import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 
 export class ChildrenCounter {
-  static fromJson(json: any, row: string) {
+  public static fromJson(json: any, row: string) {
     return new ChildrenCounter(row, json['column'], json[row]);
   }
 
@@ -13,7 +13,7 @@ export class ChildrenCounter {
 }
 
 export class GroupCounter {
-  static fromJson(json: any, rows: string[]) {
+  public static fromJson(json: any, rows: string[]) {
     return new GroupCounter(
       json['column'],
       rows.map((row) => ChildrenCounter.fromJson(json, row))
@@ -27,9 +27,9 @@ export class GroupCounter {
 }
 
 export class PeopleCounter {
-  static fromJson(json: any) {
+  public static fromJson(json: any) {
     return new PeopleCounter(
-      json['counters'].map((childCounter) =>
+      json['counters'].map((childCounter: any) =>
         GroupCounter.fromJson(childCounter, json['rows'])
       ),
       json['group_name'],
@@ -45,11 +45,11 @@ export class PeopleCounter {
     readonly columns: string[]
   ) {}
 
-  getChildrenCounter(column: string, row: string) {
-    let columnGroupCounter = this.groupCounters.filter(
+  public getChildrenCounter(column: string, row: string) {
+    const columnGroupCounter = this.groupCounters.filter(
       (groupCounter) => groupCounter.column === column
     )[0];
-    let rowChildrenCounter = columnGroupCounter.childrenCounters.filter(
+    const rowChildrenCounter = columnGroupCounter.childrenCounters.filter(
       (childrenCounter) => childrenCounter.row === row
     )[0];
 
@@ -58,9 +58,9 @@ export class PeopleCounter {
 }
 
 export class PeopleReport {
-  static fromJson(json: any) {
+  public static fromJson(json: any) {
     return new PeopleReport(
-      json['people_counters'].map((peopleCounter) =>
+      json['people_counters'].map((peopleCounter: any) =>
         PeopleCounter.fromJson(peopleCounter)
       )
     );
@@ -70,9 +70,9 @@ export class PeopleReport {
 }
 
 export class PedigreeCounter {
-  static fromArray(data: any) {
+  public static fromArray(data: any) {
     return new PedigreeCounter(
-      data['pedigree'].map((pedigreeData) =>
+      data['pedigree'].map((pedigreeData: any) =>
         PedigreeData.fromArray(pedigreeData)
       ),
       data['pedigrees_count']
@@ -83,9 +83,9 @@ export class PedigreeCounter {
 }
 
 export class FamilyCounter {
-  static fromJson(json: any) {
+  public static fromJson(json: any) {
     return new FamilyCounter(
-      json['counters'].map((pedigree) => PedigreeCounter.fromArray(pedigree))
+      json['counters'].map((pedigree: any) => PedigreeCounter.fromArray(pedigree))
     );
   }
 
@@ -93,9 +93,9 @@ export class FamilyCounter {
 }
 
 export class FamilyCounters {
-  static fromJson(json: any) {
+  public static fromJson(json: any) {
     return new FamilyCounters(
-      json['counters'].map((family_counter) =>
+      json['counters'].map((family_counter: any) =>
         FamilyCounter.fromJson(family_counter)
       ),
       json['group_name'],
@@ -113,9 +113,9 @@ export class FamilyCounters {
 }
 
 export class FamilyReport {
-  static fromJson(json: any) {
+  public static fromJson(json: any) {
     return new FamilyReport(
-      json['families_counters'].map((familyCounters) =>
+      json['families_counters'].map((familyCounters: any) =>
         FamilyCounters.fromJson(familyCounters)
       ),
       json['families_total']
@@ -129,7 +129,7 @@ export class FamilyReport {
 }
 
 export class DeNovoData {
-  static fromJson(json: any) {
+  public static fromJson(json: any) {
     return new DeNovoData(
       json['column'],
       json['number_of_observed_events'],
@@ -149,10 +149,10 @@ export class DeNovoData {
 }
 
 export class EffectTypeRow {
-  static fromJson(json: any) {
+  public static fromJson(json: any) {
     return new EffectTypeRow(
       json['effect_type'],
-      json['row'].map((data) => DeNovoData.fromJson(data))
+      json['row'].map((data: any) => DeNovoData.fromJson(data))
     );
   }
 
@@ -160,9 +160,9 @@ export class EffectTypeRow {
 }
 
 export class EffectTypeTable {
-  static fromJson(json: any) {
+  public static fromJson(json: any) {
     return new EffectTypeTable(
-      json['rows'].map((row) => EffectTypeRow.fromJson(row)),
+      json['rows'].map((row: any) => EffectTypeRow.fromJson(row)),
       json['group_name'],
       json['columns'],
       json['effect_groups'],
@@ -180,12 +180,12 @@ export class EffectTypeTable {
 }
 
 export class DenovoReport {
-  static fromJson(json: any) {
+  public static fromJson(json: any) {
     if (!json) {
       return null;
     }
     return new DenovoReport(
-      json['tables'].map((table) => EffectTypeTable.fromJson(table))
+      json['tables'].map((table: any) => EffectTypeTable.fromJson(table))
     );
   }
 
@@ -193,7 +193,7 @@ export class DenovoReport {
 }
 
 export class VariantReport {
-  static fromJson(json: any) {
+  public static fromJson(json: any) {
     return new VariantReport(
       json['id'],
       json['study_name'],
@@ -224,7 +224,7 @@ export class PedigreeTable {
 }
 
 export class LegendItem {
-  static fromJson(json: any) {
+  public static fromJson(json: any) {
     return new LegendItem(json['id'], json['name'], json['color']);
   }
 
@@ -236,7 +236,7 @@ export class LegendItem {
 }
 
 export class Legend {
-  static fromList(list: any[]) {
+  public static fromList(list: any[]) {
     return new Legend(
       list.map((legendItem) => LegendItem.fromJson(legendItem))
     );
