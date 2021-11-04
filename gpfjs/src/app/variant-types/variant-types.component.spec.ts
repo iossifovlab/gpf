@@ -11,7 +11,7 @@ import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { of } from 'rxjs';
 import { NgxsModule, StateStream, Store } from '@ngxs/store';
 import { CheckboxListComponent } from 'app/checkbox-list/checkbox-list.component';
-import { SetVariantTypes } from './variant-types.state';
+import { SetVariantTypes, VarianttypesState } from './variant-types.state';
 
 describe('VariantTypesComponent', () => {
   let component: VariantTypesComponent;
@@ -44,10 +44,10 @@ describe('VariantTypesComponent', () => {
     let dispatchSpy;
 
     component['store'] = {
-      selectOnce(f) {
+      selectOnce(f: VarianttypesState) {
         return of({variantTypes: ['value1', 'value2']});
       },
-      dispatch(set) {}
+      dispatch(set: SetVariantTypes) {}
     } as any;
     dispatchSpy = spyOn(component['store'], 'dispatch');
     component.ngOnChanges();
@@ -56,10 +56,10 @@ describe('VariantTypesComponent', () => {
 
     component.selectedVariantTypes = new Set(['value3']);
     component['store'] = {
-      selectOnce(f) {
+      selectOnce(f: VarianttypesState) {
         return of({variantTypes: []});
       },
-      dispatch(set) {}
+      dispatch(set: SetVariantTypes) {}
     } as any;
     dispatchSpy = spyOn(component['store'], 'dispatch');
     component.ngOnChanges();
@@ -70,7 +70,7 @@ describe('VariantTypesComponent', () => {
 
   it('should update variant types', () => {
     component.selectedVariantTypes = undefined;
-    component['store'] = { dispatch(set) {} } as any;
+    component['store'] = { dispatch(set: SetVariantTypes) {} } as any;
     const dispatchSpy = spyOn(component['store'], 'dispatch');
     const mockSet = new Set(['value1', 'value2', 'value3']);
 
