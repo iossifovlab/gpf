@@ -1,4 +1,4 @@
-// TODO: Use effects from effecttypes.ts
+// TODO: Use effects from effect-types.ts
 const lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
 export const codingEffectTypes = [
   'lgds', 'nonsense', 'frame-shift', 'splice-site', 'no-frame-shift-newStop',

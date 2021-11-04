@@ -14,9 +14,9 @@ import { PresentInChildComponent } from './present-in-child/present-in-child.com
 import { PresentInChildState } from './present-in-child/present-in-child.state';
 import { PresentInParentComponent } from './present-in-parent/present-in-parent.component';
 import { PresentInParentState } from './present-in-parent/present-in-parent.state';
-import { VarianttypesComponent } from './varianttypes/varianttypes.component';
-import { EffecttypesComponent } from './effecttypes/effecttypes.component';
-import { EffecttypesColumnComponent } from './effecttypes/effecttypes-column.component';
+import { VariantTypesComponent } from './variant-types/variant-types.component';
+import { EffectTypesComponent } from './effect-types/effect-types.component';
+import { EffecttypesColumnComponent } from './effect-types/effect-types-column.component';
 import { GenotypePreviewTableComponent } from './genotype-preview-table/genotype-preview-table.component';
 import { QueryService } from './query/query.service';
 
@@ -174,8 +174,8 @@ import { BnNgIdleService } from 'bn-ng-idle';
 import { AutismGeneProfileSingleViewWrapperComponent } from './autism-gene-profile-single-view-wrapper/autism-gene-profile-single-view-wrapper.component';
 import { NgxsModule } from '@ngxs/store';
 import { NgxsResetPluginModule } from 'ngxs-reset-plugin';
-import { VarianttypesState } from './varianttypes/varianttypes.state';
-import { EffecttypesState } from './effecttypes/effecttypes.state';
+import { VarianttypesState } from './variant-types/variant-types.state';
+import { EffecttypesState } from './effect-types/effect-types.state';
 import { GenderState } from './gender/gender.state';
 import { RegionsFilterState } from './regions-filter/regions-filter.state';
 import { CheckboxListComponent, DisplayNamePipe } from './checkbox-list/checkbox-list.component';
@@ -276,8 +276,8 @@ const appRoutes: Routes = [
   declarations: [
     AppComponent,
     GenderComponent,
-    VarianttypesComponent,
-    EffecttypesComponent,
+    VariantTypesComponent,
+    EffectTypesComponent,
     EffecttypesColumnComponent,
     GenotypePreviewTableComponent,
     DatasetsComponent,

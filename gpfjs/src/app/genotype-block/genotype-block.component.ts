@@ -2,8 +2,8 @@ import { Component, Input } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 import { Selector } from '@ngxs/store';
 
-import { VarianttypesState, VarianttypeModel } from 'app/varianttypes/varianttypes.state';
-import { EffecttypesState, EffectTypeModel } from 'app/effecttypes/effecttypes.state';
+import { VarianttypesState, VarianttypeModel } from 'app/variant-types/variant-types.state';
+import { EffecttypesState, EffectTypeModel } from 'app/effect-types/effect-types.state';
 import { GenderState, GenderModel } from 'app/gender/gender.state';
 import { InheritancetypesState, InheritancetypesModel } from 'app/inheritancetypes/inheritancetypes.state';
 import { PresentInChildState, PresentInChildModel } from 'app/present-in-child/present-in-child.state';

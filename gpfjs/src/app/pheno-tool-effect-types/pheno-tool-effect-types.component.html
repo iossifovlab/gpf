@@ -12,27 +12,27 @@
     </div>
     <div class="row">
       <div class="col-lg-4">
-        <gpf-effecttypes-column
+        <gpf-effect-types-column
           [effectTypesLabels]="phenoToolLGDs"
           [effectTypes]="effectTypes"
           (effectTypeEvent)="onEffectTypeChange($event)">
-        </gpf-effecttypes-column>
+        </gpf-effect-types-column>
       </div>
 
       <div class="col-lg-4">
-        <gpf-effecttypes-column
+        <gpf-effect-types-column
           [effectTypesLabels]="phenoToolOthers"
           [effectTypes]="effectTypes"
           (effectTypeEvent)="onEffectTypeChange($event)">
-        </gpf-effecttypes-column>
+        </gpf-effect-types-column>
       </div>
       <div class="col-lg-4">
-        <gpf-effecttypes-column
+        <gpf-effect-types-column
           *ngIf="variantTypes && variantTypes.has('CNV')"
           [effectTypesLabels]="phenoToolCNV"
           [effectTypes]="effectTypes"
           (effectTypeEvent)="onEffectTypeChange($event)">
-        </gpf-effecttypes-column>
+        </gpf-effect-types-column>
       </div>
     </div>
   </div>

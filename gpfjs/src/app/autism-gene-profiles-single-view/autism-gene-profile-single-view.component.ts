@@ -17,15 +17,15 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { Store } from '@ngxs/store';
 import { QueryService } from 'app/query/query.service';
 import { GenomicScore } from 'app/genotype-browser/genotype-browser';
-import { SetEffectTypes } from 'app/effecttypes/effecttypes.state';
+import { SetEffectTypes } from 'app/effect-types/effect-types.state';
 import { SetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { SetGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 import { SetPresentInChildValues } from 'app/present-in-child/present-in-child.state';
 import { SetPresentInParentValues } from 'app/present-in-parent/present-in-parent.state';
 import { SetStudyTypes } from 'app/study-types/study-types.state';
-import { SetVariantTypes } from 'app/varianttypes/varianttypes.state';
-import { EffectTypes } from 'app/effecttypes/effecttypes';
+import { SetVariantTypes } from 'app/variant-types/variant-types.state';
+import { EffectTypes } from 'app/effect-types/effect-types';
 
 @Component({
   selector: 'gpf-autism-gene-profile-single-view',

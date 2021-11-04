@@ -4,11 +4,11 @@ import { PValueIntensityPipe } from '../utils/p-value-intensity.pipe';
 import { QueryService } from '../query/query.service';
 import { BrowserQueryFilter } from 'app/genotype-browser/genotype-browser';
 import { Store } from '@ngxs/store';
-import { SetEffectTypes } from 'app/effecttypes/effecttypes.state';
+import { SetEffectTypes } from 'app/effect-types/effect-types.state';
 import { SetGender } from 'app/gender/gender.state';
 import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 import { SetStudyTypes } from 'app/study-types/study-types.state';
-import { SetVariantTypes } from 'app/varianttypes/varianttypes.state';
+import { SetVariantTypes } from 'app/variant-types/variant-types.state';
 import { take } from 'rxjs/operators';
 
 @Component({

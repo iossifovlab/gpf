@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { VarianttypesComponent } from './varianttypes.component';
+import { VariantTypesComponent } from './variant-types.component';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ConfigService } from 'app/config/config.service';
@@ -11,15 +11,15 @@ import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { of } from 'rxjs';
 import { NgxsModule, StateStream, Store } from '@ngxs/store';
 import { CheckboxListComponent } from 'app/checkbox-list/checkbox-list.component';
-import { SetVariantTypes } from './varianttypes.state';
+import { SetVariantTypes } from './variant-types.state';
 
-describe('VarianttypesComponent', () => {
-  let component: VarianttypesComponent;
-  let fixture: ComponentFixture<VarianttypesComponent>;
+describe('VariantTypesComponent', () => {
+  let component: VariantTypesComponent;
+  let fixture: ComponentFixture<VariantTypesComponent>;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [VarianttypesComponent, ErrorsAlertComponent, CheckboxListComponent],
+      declarations: [VariantTypesComponent, ErrorsAlertComponent, CheckboxListComponent],
       providers: [
         DatasetsService,
         ConfigService,
@@ -31,7 +31,7 @@ describe('VarianttypesComponent', () => {
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(VarianttypesComponent);
+    fixture = TestBed.createComponent(VariantTypesComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
