@@ -203,11 +203,11 @@ describe('Enrichment tool data tests', () => {
     compare_data('gene_symbol_and_models_LGDs', 'affected');
   });
 
-  it('should test gene weights', () => {
+  it.only('should test gene weights', () => {
     const genesBlockPage = new GenesBlockPage();
     const weights = new GenesWeights();
     genesBlockPage.geneWeightsButton.click();
-    weights.moveSlider('left', 0);
+    weights.moveSlider('right', 150, 0);
   });
 
   it('parametrization test', () => {
@@ -284,7 +284,6 @@ function parse_options(request: request_options) {
   const page = new EnrichmentToolPage();
   const genesBlockPage = new GenesBlockPage();
   const weights = new GenesWeights();
-  console.log(request);
   switch(request.mode) {
     case 'gene_symbols': {
       genesBlockPage.geneSymbolsButton.click();

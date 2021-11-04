@@ -47,30 +47,59 @@ export class GenesWeights extends BasePage {
     }
   }
 
-  moveSlider(which: string, percentage: number) {
-    switch(which) {
-      case 'left': {
-        dragTo(this.dragLine('left'), this.dragLine('right'));
-        //dragTo(this.dragLine(''));
-        break;        
-      }
-      case 'right': {
-        /*let obj = cy.get('g[gpf-histogram-range-selector-line] > g > line').eq(1);
-        obj.trigger('dragstart');
-        cy.get('g[gpf-histogram-range-selector-line] > g > line').eq(1)
-        .trigger('drop');*/
-        //dragTo(this.dragLine('left'), this.dragLine('right'));
-        break;    
-      }
-      default: {
-        return;
-      }
-    }
+  moveSlider(which: string, dragValue, heightValue) {
+    if(which === 'right')
+      dragValue = -dragValue;
+    cy.window().then((win) => {
+      cy.get('g[gpf-histogram-range-selector-line] > g > line').eq(which === 'left' ? 0 : 1)
+        .trigger("mousedown", 0, heightValue, { // start value, height value
+            view: win,
+            which: 1,
+            force: true,
+            bubbles: true
+        })
+        .trigger("mousemove", dragValue, heightValue, { // how much to be dragged value, height value
+            which: 1,
+            force: true,
+            bubbles: true
+        })
+        .trigger("mouseup", 0, heightValue, { // end value, height value
+            which: 1,
+            force: true,
+            view: win,
+            bubbles: true
+        });
+    });     
+  }
+
+  partitionsText(which: string) {
+    return cy.get('text.partitions-text.ng-star-inserted').eq(which === 'left' ? 0 : 1);
   }
 }
 
-function dragTo (subject, targetEl) {
-  subject.trigger("mousedown", {which: 1});
-  targetEl.trigger("mousemove");
-  targetEl.trigger("mouseup", {force: true});
-}
+
+
+/*
+
+        cy.window().then((win) => {
+          cy.get('g[gpf-histogram-range-selector-line] > g > line').eq(0)
+              .trigger("mousedown", 100, 50, {
+                  view: win,
+                  which: 1,
+                  force: true,
+                  bubbles: true
+              })
+              .trigger("mousemove", 200, 50, {
+                  which: 1,
+                  force: true,
+                  bubbles: true
+              })
+              .trigger("mouseup", 200, 50, {
+                  which: 1,
+                  force: true,
+                  view: win,
+                  bubbles: true
+              });
+          });
+
+*/
