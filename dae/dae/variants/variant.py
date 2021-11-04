@@ -9,9 +9,10 @@ import logging
 from typing import List, Dict, Set, Any, Optional
 
 from dae.utils.variant_utils import trim_str_left_right, trim_str_right_left
+from dae.effect_annotation.effect import AlleleEffects, EffectGene
+
 from dae.variants import core
 from dae.variants.attributes import TransmissionType
-from dae.variants.effects import AlleleEffects, EffectGene
 
 
 logger = logging.getLogger(__name__)

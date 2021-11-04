@@ -4,8 +4,8 @@ import copy
 
 import pyarrow as pa
 
-from dae.variants.effects import AlleleEffects
-from dae.annotation.effect_annotator import EffectAnnotator
+from dae.effect_annotation.effect import AlleleEffects
+from dae.annotation.effect_annotator import EffectAnnotatorAdapter
 from dae.pedigrees.loader import FamiliesLoader
 
 from dae.backends.dae.loader import DenovoLoader
@@ -48,7 +48,7 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
     )
     assert denovo_loader is not None
 
-    effect_annotator = EffectAnnotator(
+    effect_annotator = EffectAnnotatorAdapter(
         gene_models=gene_models, genome=genome)
 
     variants = list(denovo_loader.full_variants_iterator())
@@ -99,7 +99,7 @@ def test_effect_annotation_schema(anno_grdb):
     assert gene_models is not None
     assert isinstance(gene_models, GeneModelsResource)
 
-    effect_annotator = EffectAnnotator(
+    effect_annotator = EffectAnnotatorAdapter(
         gene_models=gene_models, genome=genome)
 
     schema = effect_annotator.annotation_schema

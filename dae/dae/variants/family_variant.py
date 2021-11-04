@@ -15,8 +15,8 @@ from dae.variants.attributes import GeneticModel, \
     Inheritance,\
     TransmissionType
 
+from dae.effect_annotation.effect import AlleleEffects
 from dae.variants.variant import \
-    AlleleEffects, \
     SummaryAllele, \
     SummaryVariant
 

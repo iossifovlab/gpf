@@ -10,9 +10,8 @@ import pysam
 
 from dae.genome import genome_access
 from dae.genome.gene_models import load_gene_models
-from dae.effect_annotation.annotator import (
-    VariantAnnotator as VariantAnnotation,
-)
+from dae.effect_annotation.annotator import EffectAnnotator
+from dae.effect_annotation.effect import AnnotationEffect
 
 
 def cli_genome_options(parser):
@@ -193,7 +192,7 @@ def cli(argv=sys.argv[1:]):
     genomic_sequence, gene_models = parse_cli_genome_options(args)
     assert genomic_sequence is not None
     assert gene_models is not None
-    annotator = VariantAnnotation(
+    annotator = EffectAnnotator(
         genomic_sequence, gene_models, promoter_len=args.promoter_len
     )
 
@@ -240,7 +239,7 @@ def cli(argv=sys.argv[1:]):
             key: columns[value] for key, value in variant_columns.items()
         }
         effects = annotator.do_annotate_variant(**variant)
-        desc = annotator.effect_description(effects)
+        desc = AnnotationEffect.effects_description(effects)
         columns.extend(desc)
         print("\t".join(columns), file=sys.stderr)
         print("\t".join(columns), file=outfile)
@@ -280,7 +279,7 @@ def cli_vcf(argv=sys.argv[1:]):
     genomic_sequence, gene_models = parse_cli_genome_options(args)
     assert genomic_sequence is not None
     assert gene_models is not None
-    annotator = VariantAnnotation(
+    annotator = EffectAnnotator(
         genomic_sequence, gene_models, promoter_len=args.promoter_len
     )
 

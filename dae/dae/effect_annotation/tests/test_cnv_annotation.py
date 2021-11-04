@@ -2,7 +2,8 @@ import pytest
 
 from dae.annotation.annotatable import Annotatable
 
-from dae.effect_annotation.annotator import VariantAnnotator
+from dae.effect_annotation.annotator import EffectAnnotator
+from dae.effect_annotation.effect import AnnotationEffect
 
 
 @pytest.mark.parametrize(
@@ -29,7 +30,7 @@ from dae.effect_annotation.annotator import VariantAnnotator
 def test_cnv_simple(
         genomic_sequence_2013, gene_models_2013,
         variant_type, location, effect_type, effect_genes):
-    effects = VariantAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc=location,
@@ -37,7 +38,7 @@ def test_cnv_simple(
     )
     assert effects
     et, eg, _ = \
-        VariantAnnotator.effect_simplify(effects)
+        AnnotationEffect.simplify_effects(effects)
 
     assert et == effect_type
     assert set(eg) == set(effect_genes)

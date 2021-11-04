@@ -1,10 +1,8 @@
-from dae.effect_annotation.annotator import (
-    VariantAnnotator as VariantAnnotation,
-)
+from dae.effect_annotation.annotator import EffectAnnotator
 
 
 def test_chr12_130827138_del_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="12:130827138",
@@ -32,7 +30,7 @@ def test_chr12_130827138_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr12_64841908_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="12:64841908",
@@ -49,7 +47,7 @@ def test_chr12_64841908_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_95712170_del_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:95712170", var="del(3)"
     )
 
@@ -114,7 +112,7 @@ def test_chr1_95712170_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr19_35249941_ins_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="19:35249941",
@@ -131,7 +129,7 @@ def test_chr19_35249941_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr3_195966608_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="3:195966608",
@@ -154,7 +152,7 @@ def test_chr3_195966608_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_156786466_ins_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="1:156786466",
@@ -236,7 +234,7 @@ def test_chr1_156786466_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_21050866_del_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="1:21050866",
@@ -276,7 +274,7 @@ def test_chr1_21050866_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr2_111753543_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="2:111753543",
@@ -299,7 +297,7 @@ def test_chr2_111753543_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr3_97611838_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="3:97611838", var="del(4)"
     )
 
@@ -323,7 +321,7 @@ def test_chr13_21729291_ins_var(genomic_sequence_2013, gene_models_2013):
         "ins(AGTTTTCTTTGTTGCTGACATCTC"
         "GGATGTTCTGTCCATGTTTAAGGAACCTTTTACTGGGTGGCACTGCTTTAAT)"
     )
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="13:21729291", var=var
     )
 
@@ -360,7 +358,7 @@ def test_chr13_21729291_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr12_93792633_ins_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="12:93792633",
@@ -416,7 +414,7 @@ def test_chr12_93792633_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr17_4086688_del_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="17:4086688", var="del(4)"
     )
 
@@ -461,7 +459,7 @@ def test_chr17_4086688_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr21_11049623_sub_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="21:11049623",
@@ -529,7 +527,7 @@ def test_chr21_11049623_sub_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_71530819_del_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:71530819", var="del(4)"
     )
 
@@ -574,7 +572,7 @@ def test_chr1_71530819_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_43917074_del_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="1:43917074",
@@ -637,7 +635,7 @@ def test_chr1_43917074_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_1653031_del_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:1653031", var="del(7)"
     )
 
@@ -758,7 +756,7 @@ def test_chr1_1653031_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr3_56627768_del_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="3:56627768", var="del(4)"
     )
 
@@ -803,7 +801,7 @@ def test_chr3_56627768_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr3_172538026_del_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="3:172538026",
@@ -839,7 +837,7 @@ def test_chr3_172538026_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_29447418_ins_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="1:29447418",
@@ -867,7 +865,7 @@ def test_chr1_29447418_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr6_99817476_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="6:99817476",
@@ -886,7 +884,7 @@ def test_chr6_99817476_del_var(genomic_sequence_2013, gene_models_2013):
 def test_last_codon_ins_frameshift_var(
     genomic_sequence_2013, gene_models_2013
 ):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="7:24727231", var="ins(A)"
     )
 
@@ -900,7 +898,7 @@ def test_last_codon_ins_frameshift_var(
 
 
 def test_chr10_104629323_del_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="10:104629323",
@@ -934,7 +932,7 @@ def test_chr10_104629323_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_6694147_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:6694147", var="del(3)"
     )
 
@@ -948,7 +946,7 @@ def test_chr1_6694147_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_23836374_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:23836374", var="del(4)"
     )
 
@@ -962,7 +960,7 @@ def test_chr1_23836374_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_first_codon_ins_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:3527831", var="ins(A)"
     )
 
@@ -976,7 +974,7 @@ def test_first_codon_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr4_100544005_ins_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="4:100544005",
@@ -993,7 +991,7 @@ def test_chr4_100544005_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr6_109954111_del_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="6:109954111",
@@ -1027,7 +1025,7 @@ def test_chr6_109954111_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr16_3070391_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="16:3070391",
@@ -1044,7 +1042,7 @@ def test_chr16_3070391_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_115316880_del_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="1:115316880",
@@ -1089,7 +1087,7 @@ def test_chr1_115316880_del_var(genomic_sequence_2013, gene_models_2013):
 
 def test_chr2_47630333_ins_var(genomic_sequence_2013, gene_models_2013):
     var = "ins(GGCGGTGCAGCCGAAGGA)"
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="2:47630333", var=var
     )
 
@@ -1115,7 +1113,7 @@ def test_chr2_47630333_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr2_32853362_ins_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="2:32853362",
@@ -1143,7 +1141,7 @@ def test_chr2_32853362_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr20_44518889_ins_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="20:44518889",
@@ -1172,7 +1170,7 @@ def test_chr20_44518889_ins_var(genomic_sequence_2013, gene_models_2013):
 
 def test_chr9_139839774_ins_var(genomic_sequence_2013, gene_models_2013):
     var = "ins(TGCTGCCGCCACCA)"
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="9:139839774", var=var
     )
 
@@ -1186,7 +1184,7 @@ def test_chr9_139839774_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_17313765_ins_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:17313765", var="ins(C)"
     )
 
@@ -1220,7 +1218,7 @@ def test_chr1_17313765_ins_var(genomic_sequence_2013, gene_models_2013):
 
 def test_chr13_45911524_ins_var(genomic_sequence_2013, gene_models_2013):
     var = "ins(ACATTTTTCCATTTCTAAACCAT)"
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="13:45911524", var=var
     )
 
@@ -1235,7 +1233,7 @@ def test_chr13_45911524_ins_var(genomic_sequence_2013, gene_models_2013):
 
 def test_chr1_906785_ins_var(genomic_sequence_2013, gene_models_2013):
     var = "ins(GTGGGCCCCTCCCCACT)"
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:906785", var=var
     )
 
@@ -1261,7 +1259,7 @@ def test_chr1_906785_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_45446840_ins_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:45446840", var="ins(T)"
     )
 
@@ -1294,7 +1292,7 @@ def test_chr1_45446840_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_31845860_ins_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="1:31845860",
@@ -1311,7 +1309,7 @@ def test_chr1_31845860_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_47775990_del_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:47775990", var="del(3)"
     )
 
@@ -1336,7 +1334,7 @@ def test_chr1_47775990_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_120387156_sub_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="1:120387156",
@@ -1357,7 +1355,7 @@ def test_chr11_128868319_ins_var(genomic_sequence_2013, gene_models_2013):
         "ins(AATTTCACAATCACCTATTTCTGGTACTTAGCAACATCACAGGTAGATCCTGCCTTC"
         "ATCTTCTGGCATTTC)"
     )
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="11:128868319", var=var
     )
 
@@ -1386,7 +1384,7 @@ def test_chr11_128868319_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_38061419_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="1:38061419",
@@ -1405,7 +1403,7 @@ def test_chr1_38061419_del_var(genomic_sequence_2013, gene_models_2013):
 def test_first_codon_ins_integenic_var(
     genomic_sequence_2013, gene_models_2013
 ):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:3407092", var="ins(A)"
     )
 
@@ -1419,7 +1417,7 @@ def test_first_codon_ins_integenic_var(
 
 
 def test_chr1_92546129_ins_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:92546129", var="ins(A)"
     )
 
@@ -1433,7 +1431,7 @@ def test_chr1_92546129_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_11740658_ins_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="1:11740658",
@@ -1461,7 +1459,7 @@ def test_chr1_11740658_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr6_161557574_ins_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="6:161557574",
@@ -1478,7 +1476,7 @@ def test_chr6_161557574_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr11_123847404_ins_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="11:123847404",
@@ -1495,7 +1493,7 @@ def test_chr11_123847404_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_26158517_ins_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="1:26158517",
@@ -1541,7 +1539,7 @@ def test_chr1_26158517_ins_var(genomic_sequence_2013, gene_models_2013):
 def test_last_codon_ins_intergenic_var(
     genomic_sequence_2013, gene_models_2013
 ):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="7:24727232", var="ins(A)"
     )
 
@@ -1556,7 +1554,7 @@ def test_last_codon_ins_intergenic_var(
 
 
 def test_chr7_149461804_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="7:149461804",
@@ -1574,7 +1572,7 @@ def test_chr7_149461804_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_44686290_ins_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:44686290", var="ins(A)"
     )
 
@@ -1610,7 +1608,7 @@ def test_chr1_44686290_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_26142208_ins_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="1:26142208",
@@ -1640,7 +1638,7 @@ def test_chr1_26142208_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr12_125396262_ins_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="12:125396262",
@@ -1658,7 +1656,7 @@ def test_chr12_125396262_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_16890438_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:16890438", var="del(1)"
     )
 
@@ -1673,7 +1671,7 @@ def test_chr1_16890438_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_20440608_ins_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:20440608", var="ins(T)"
     )
 
@@ -1700,7 +1698,7 @@ def test_chr1_20440608_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr11_62931298_ins_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="11:62931298",
@@ -1717,7 +1715,7 @@ def test_chr11_62931298_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_20490475_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="1:20490475",
@@ -1735,7 +1733,7 @@ def test_chr1_20490475_del_var(genomic_sequence_2013, gene_models_2013):
 
 def test_chr13_21729290_ins_var(genomic_sequence_2013, gene_models_2013):
     var = "ins(CAGTTTTCTTTGTTGCTGACATCTCGGATGTTCTGTCCATGTTTAAGGAACCTTTTA)"
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="13:21729290", var=var
     )
 
