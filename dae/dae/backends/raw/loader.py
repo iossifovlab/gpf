@@ -16,6 +16,7 @@ from dae.genome.genomes_db import Genome
 
 from dae.pedigrees.family import FamiliesData
 
+from dae.effect_annotation.effect import AlleleEffects
 from dae.variants.variant import SummaryVariant
 from dae.variants.family_variant import (
     FamilyVariant,
@@ -446,7 +447,10 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
             for sa in summary_variant.alt_alleles:
                 attributes = self.annotation_pipeline.annotate(
                     sa.get_annotatable())
-
+                if "allele_effects" in attributes:
+                    allele_effects = attributes["allele_effects"]
+                    assert isinstance(allele_effects, AlleleEffects)
+                    sa.effects = allele_effects
                 sa.update_attributes(attributes)
             yield summary_variant, family_variants
 

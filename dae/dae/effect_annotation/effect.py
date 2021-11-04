@@ -163,6 +163,7 @@ class AnnotationEffect:
 
     @classmethod
     def transcript_effects(cls, effects: List[AnnotationEffect]):
+        effects = cls.sort_effects(effects)
         worst_effect = cls.worst_effect(effects)
         if worst_effect == "intergenic":
             return (
@@ -457,7 +458,7 @@ class AlleleEffects:
         return self._effect_types
 
     @classmethod
-    def from_effects(cls, effect_type, effect_genes, transcripts):
+    def from_simplified_effects(cls, effect_type, effect_genes, transcripts):
         if effect_type is None:
             return None
 
@@ -485,3 +486,13 @@ class AlleleEffects:
         if not effect_genes and not transcripts:
             return None
         return AlleleEffects(worst, effect_genes, transcripts)
+
+    @classmethod
+    def from_effects(cls, effects: List[AnnotationEffect]) -> AlleleEffects:
+        worst_effect, gene_effects, transcript_effects = \
+            AnnotationEffect.simplify_effects(effects)
+        gene_effects = [EffectGene(g, e) for g, e in gene_effects]
+        transcript_effects = {
+            t: EffectTranscript(t, g, d) for t, g, d in transcript_effects
+        }
+        return AlleleEffects(worst_effect, gene_effects, transcript_effects)

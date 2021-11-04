@@ -377,7 +377,7 @@ class SummaryAllele(core.Allele):
                 worst_effect = record["effect_type"]
                 if worst_effect is None:
                     return None
-                effects = AlleleEffects.from_effects(
+                effects = AlleleEffects.from_simplified_effects(
                     worst_effect,
                     list(
                         zip(
@@ -398,6 +398,11 @@ class SummaryAllele(core.Allele):
             else:
                 self._effect = None
         return self._effect
+
+    @effects.setter
+    def effects(self, effects: AlleleEffects) -> None:
+        assert self._effect is None
+        self._effect = effects
 
     @property
     def effect_types(self) -> List[str]:

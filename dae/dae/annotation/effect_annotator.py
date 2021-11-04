@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import copy
 
 import pyarrow as pa
@@ -7,7 +5,7 @@ import pyarrow as pa
 from box import Box
 
 from dae.effect_annotation.annotator import EffectAnnotator
-from dae.effect_annotation.effect import AnnotationEffect
+from dae.effect_annotation.effect import AlleleEffects, AnnotationEffect
 
 from .schema import Schema
 from .annotatable import Annotatable, CNVAllele, VCFAllele
@@ -26,6 +24,7 @@ class EffectAnnotatorAdapter(Annotator):
         "effect_details_genes": (list, pa.list_(pa.string())),
         "effect_details_details": (list, pa.list_(pa.string())),
         "effect_details": (list, pa.list_(pa.string())),
+        "allele_effects": (AlleleEffects, None),
     }
 
     DEFAULT_ANNOTATION = Box({
@@ -64,6 +63,11 @@ class EffectAnnotatorAdapter(Annotator):
                 "source": "effect_details_details",
                 "dest": "effect_details_details"
             },
+
+            {
+                "source": "allele_effects",
+                "dest": "allele_effects"
+            }
         ]
     })
 
@@ -154,7 +158,7 @@ class EffectAnnotatorAdapter(Annotator):
             "effect_details_details": r[5],
             "effect_details": [
                 f"{t}:{g}:{d}" for t, g, d in zip(r[3], r[4], r[5])],
+            "allele_effect": AlleleEffects.from_effects(effects),
         }
 
         attributes.update(result)
-
