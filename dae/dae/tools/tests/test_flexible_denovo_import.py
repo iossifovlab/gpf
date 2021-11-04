@@ -71,19 +71,19 @@ def assert_proper_flexible_short_variants(vs):
     assert len(vs) == 3
     v = vs[0]
     for a in v.alt_alleles:
-        print(a, a.effect)
-        print("\t>", a.effect.transcripts)
+        print(a, a.effects)
+        print("\t>", a.effects.transcripts)
         assert a.chrom == "15"
         assert a.position == 80137553
         assert a.reference == "T"
         assert a.alternative == "TA"
         assert a.family_id == "f1"
-        assert len(a.effect.transcripts) == 4
+        assert len(a.effects.transcripts) == 4
 
     v = vs[1]
     for a in v.alt_alleles:
-        print(a, a.effect)
-        print("\t>", a.effect.transcripts)
+        print(a, a.effects)
+        print("\t>", a.effects.transcripts)
 
         assert a.chrom == "3"
         assert a.position == 56627767
@@ -94,8 +94,8 @@ def assert_proper_flexible_short_variants(vs):
 
     v = vs[2]
     for a in v.alt_alleles:
-        print(a, a.effect)
-        print("\t>", a.effect.transcripts)
+        print(a, a.effects)
+        print("\t>", a.effects.transcripts)
         assert a.chrom == "4"
         assert a.position == 83276456
         assert a.reference == "C"

@@ -407,7 +407,7 @@ class AnnotationDecorator(VariantsLoaderDecorator):
 
                     line_values = [
                         *[rec.get(col, "") for col in common_columns],
-                        summary_allele.effect,
+                        summary_allele.effects,
                         *[rec.get(col, "") for col in other_columns],
                     ]
 

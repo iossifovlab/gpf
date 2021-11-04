@@ -206,7 +206,7 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
     def _evaluate_coding_bin(self, family_allele):
         if family_allele.is_reference_allele:
             return 0
-        variant_effects = set(family_allele.effect.types)
+        variant_effects = set(family_allele.effects.types)
         coding_effect_types = set(self._coding_effect_types)
 
         result = variant_effects.intersection(coding_effect_types)

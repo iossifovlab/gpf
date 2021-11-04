@@ -5,7 +5,7 @@ Created on Jul 1, 2018
 """
 
 
-class EffectGene(object):
+class EffectGene:
     def __init__(self, symbol=None, effect=None):
         self.symbol = symbol
         self.effect = effect
@@ -53,7 +53,7 @@ class EffectGene(object):
         return EffectGene(symbol, effect)
 
 
-class EffectTranscript(object):
+class EffectTranscript:
     def __init__(self, transcript_id, gene=None, details=None):
         self.transcript_id = transcript_id
         self.gene = gene
@@ -104,12 +104,16 @@ class EffectTranscript(object):
         return result
 
 
-class Effect(object):
+class AlleleEffects:
     def __init__(self, worst_effect, gene_effects, effect_transcripts):
-        self.worst = worst_effect
+        self.worst_effect = worst_effect
         self.genes = gene_effects
         self.transcripts = effect_transcripts
         self._effect_types = None
+
+    @property
+    def worst(self):
+        return self.worst_effect
 
     def __repr__(self):
         effects = "|".join([str(g) for g in self.genes])
@@ -120,7 +124,7 @@ class Effect(object):
         return repr(self)
 
     def __eq__(self, other):
-        assert isinstance(other, Effect)
+        assert isinstance(other, AlleleEffects)
 
         return (
             self.worst == other.worst
@@ -141,7 +145,7 @@ class Effect(object):
 
         transcripts = EffectTranscript.from_effect_transcripts(transcripts)
         effect_genes = EffectGene.from_gene_effects(effect_genes)
-        return Effect(effect_type, effect_genes, transcripts)
+        return AlleleEffects(effect_type, effect_genes, transcripts)
 
     @staticmethod
     def from_string(data):
@@ -162,4 +166,4 @@ class Effect(object):
         transcripts = {t.transcript_id: t for t in transcripts}
         if not effect_genes and not transcripts:
             return None
-        return Effect(worst, effect_genes, transcripts)
+        return AlleleEffects(worst, effect_genes, transcripts)

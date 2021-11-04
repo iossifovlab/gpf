@@ -4,7 +4,7 @@ import copy
 
 import pyarrow as pa
 
-from dae.variants.effects import Effect
+from dae.variants.effects import AlleleEffects
 from dae.annotation.effect_annotator import EffectAnnotator
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -66,7 +66,7 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
 
             effect_types = sa.get_attribute("effectGene")
             print(effect_types)
-            effect = Effect.from_string(
+            effect = AlleleEffects.from_string(
                 "!".join([
                     sa.get_attribute("effectType"),
                     sa.get_attribute("effectGene"),

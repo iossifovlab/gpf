@@ -213,8 +213,8 @@ class DenovoGeneSetCollectionFactory:
                     if search_arg_name == "effect_types":
                         # FIXME: Avoid conversion of effect types to set
                         if not (
-                            aa.effect
-                            and set(aa.effect.types) & set(search_arg_value)
+                            aa.effects
+                            and set(aa.effects.types) & set(search_arg_value)
                         ):
                             filter_flag = True
                             break
@@ -228,7 +228,7 @@ class DenovoGeneSetCollectionFactory:
                 if filter_flag:
                     continue
 
-                effect = aa.effect
+                effect = aa.effects
                 for gene in effect.genes:
                     if gene.effect in search_args.get("effect_types", set()):
                         cache.setdefault(gene.symbol, set()).add(family_id)

@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 class Effect(object):
 
     def __init__(self, effect_name):
@@ -35,6 +38,28 @@ class Effect(object):
                 self.aa_change,
             )
         )
+
+    def __eq__(self, other: Effect) -> bool:
+        return self.effect == other.effect and \
+            self.gene == other.gene and \
+            self.transcript_id == other.transcript_id and \
+            self.strand == other.strand and \
+            self.prot_pos == other.prot_pos and \
+            self.non_coding_pos == other.non_coding_pos and \
+            self.prot_length == other.prot_length and \
+            self.length == other.length and \
+            self.which_intron == other.which_intron and \
+            self.how_many_introns == other.how_many_introns and \
+            self.dist_from_coding == other.dist_from_coding and \
+            self.aa_change == other.aa_change and \
+            self.dist_from_acceptor == other.dist_from_acceptor and \
+            self.dist_from_donor == other.dist_from_donor and \
+            self.intron_length == other.intron_length and \
+            self.mRNA_length == other.mRNA_length and \
+            self.mRNA_position == other.mRNA_position and \
+            self.ref_aa == other.ref_aa and \
+            self.alt_aa == other.alt_aa and \
+            self.dist_from_5utr == other.dist_from_5utr
 
     def create_effect_details(self):
         eff_data = [
