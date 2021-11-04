@@ -2,7 +2,7 @@ import { UsersService } from '../users/users.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, toolPageLinks } from './datasets';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { Observable, Subscription } from 'rxjs';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { isEmpty } from 'lodash';

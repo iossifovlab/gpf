@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { AgpConfig, AgpGene } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { ConfigService } from 'app/config/config.service';
 import { plainToClass } from 'class-transformer';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 

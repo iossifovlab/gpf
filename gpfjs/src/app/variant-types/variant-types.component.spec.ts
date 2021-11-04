@@ -1,4 +1,4 @@
-/* tslint:disable:no-unused-variable */
+/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { VariantTypesComponent } from './variant-types.component';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -7,7 +7,7 @@ import { ConfigService } from 'app/config/config.service';
 import { UsersService } from 'app/users/users.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { of } from 'rxjs';
 import { NgxsModule, StateStream, Store } from '@ngxs/store';
 import { CheckboxListComponent } from 'app/checkbox-list/checkbox-list.component';
