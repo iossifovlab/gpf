@@ -172,22 +172,24 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
       this.shownGeneSetsCategories.forEach(category => {
         this.multipleSelectMenuApplyData({
           menuId: 'gene_set_category:' + category.category,
-          data: category.sets
-            .filter(set => set.defaultVisible === true).map(set => set.setId)
+          selectedItems: category.sets
+            .filter(set => set.defaultVisible === true).map(set => set.setId),
+          order: category.sets.map(s => s.setId)
         });
       });
       this.shownGenomicScoresCategories.forEach(category => {
         this.multipleSelectMenuApplyData({
           menuId: 'genomic_scores_category:' + category.category,
-          data: category.scores
-            .filter(score => score.defaultVisible === true).map(score => score.scoreName)
+          selectedItems: category.scores
+            .filter(score => score.defaultVisible === true).map(score => score.scoreName),
+          order: category.scores.map(s => s.scoreName)
         });
       });
       this.shownDatasets.forEach(dataset => {
         dataset.personSets.forEach(personSet => {
           this.multipleSelectMenuApplyData({
             menuId: 'dataset:' + dataset.id + ':' + personSet.id,
-            data: personSet.statistics
+            selectedItems: personSet.statistics
               .filter(statistic => statistic.defaultVisible === true)
               .map(statistic => statistic.displayName)
           });
@@ -269,10 +271,17 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     const menuId = $event.menuId.split(':');
     if (menuId[0] === 'gene_set_category') {
       const categoryIndex = this.shownGeneSetsCategories.findIndex(category => category.category === menuId[1]);
+      let b = this.config.geneSets.find(category => category.category === menuId[1]).sets;
 
-      this.shownGeneSetsCategories[categoryIndex].sets = this.config.geneSets
+      this.config.geneSets.find(category => category.category === menuId[1]).sets = $event.order.map(
+        column => b.find(s => s.setId === column)
+      );
+
+      let a = this.config.geneSets
         .find(category => category.category === menuId[1]).sets
-        .filter(set => $event.data.includes(set.setId));
+        .filter(set => $event.selectedItems.includes(set.setId));
+      
+      this.shownGeneSetsCategories[categoryIndex].sets = $event.selectedItems.map(c => a.find(b => b.setId === c));
 
       if (this.shownGeneSetsCategories[categoryIndex].sets.length === 0) {
         this.config.geneSets.splice(categoryIndex, 1);
@@ -290,7 +299,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
 
       this.shownGenomicScoresCategories[categoryIndex].scores = this.config.genomicScores
         .find(category => category.category === menuId[1]).scores
-        .filter(score => $event.data.includes(score.scoreName));
+        .filter(score => $event.selectedItems.includes(score.scoreName));
 
       if (this.shownGenomicScoresCategories[categoryIndex].scores.length === 0) {
         this.config.genomicScores.splice(categoryIndex, 1);
@@ -307,7 +316,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
           this.shownDatasets[datasetIndex].personSets,
           cloneDeep(
             this.config.datasets[datasetIndex].personSets.filter((personSet) =>
-              $event.data.includes(personSet.displayName)
+              $event.selectedItems.includes(personSet.displayName)
             )
           ),
           'id'
@@ -318,7 +327,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
         );
         currentPersonSetRef.statistics = this.config.datasets[datasetIndex].personSets
           .find(personSet => personSet.id === menuId[2]).statistics
-          .filter(statistic => $event.data.includes(statistic.displayName));
+          .filter(statistic => $event.selectedItems.includes(statistic.displayName));
 
         if (currentPersonSetRef.statistics.length === 0) {
           this.shownDatasets[datasetIndex].personSets.splice(

@@ -17,7 +17,7 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
   @Input() public selectedItems: string[];
   @Input() public allItems: string[];
   @Input() public readonly minSelectCount = 0;
-  @Output() public applyEvent = new EventEmitter<{menuId: string, data: string[]}>();
+  @Output() public applyEvent = new EventEmitter<{menuId: string, selectedItems: string[], order: string[]}>();
   @ViewChild('searchInput') public searchInput: ElementRef;
 
   public checkUncheckAllButtonName = 'Uncheck all';
@@ -63,7 +63,8 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
 
     this.applyEvent.emit({
       menuId: this.menuId,
-      data: this.checkboxDataArray.filter(item => item.isChecked).map(item => item.id)
+      selectedItems: this.checkboxDataArray.filter(item => item.isChecked).map(item => item.id),
+      order: this.allItems
     });
   }
 
@@ -75,6 +76,7 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
 
   public drop(event: CdkDragDrop<string[]>): void {
     moveItemInArray(this.checkboxDataArray, event.previousIndex, event.currentIndex);
+    moveItemInArray(this.allItems, event.previousIndex, event.currentIndex);
   }
 
   private toCheckboxDataArray(allItems: string[]): MenuItem[] {
