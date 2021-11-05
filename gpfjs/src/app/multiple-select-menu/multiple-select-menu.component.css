@@ -5,3 +5,15 @@
 .form-control {
   border-radius: 0;
 }
+
+tr {
+  background-color: #ffffff;
+}
+
+label {
+  border: 1px solid #dedede;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0;
+}

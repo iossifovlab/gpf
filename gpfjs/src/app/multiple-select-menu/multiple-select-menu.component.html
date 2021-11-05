@@ -4,8 +4,8 @@
     <input #searchInput class="form-control" type="text" style="width: 68%;" name="search" [(ngModel)]="searchText" autocomplete="off" placeholder="Search...">
   </div>
 
-  <table>
-    <tr *ngFor="let item of checkboxDataArray | filter:searchText" style="height: 30px;">
+  <table cdkDropList (cdkDropListDropped)="drop($event)">
+    <tr *ngFor="let item of checkboxDataArray | filter:searchText" style="height: 30px;" cdkDrag>
       <td>
         <label style="width: 100%">
           <input type="checkbox" [checked]="item.isChecked" [(ngModel)]="item.isChecked">

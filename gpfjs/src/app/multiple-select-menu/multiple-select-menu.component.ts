@@ -1,3 +1,4 @@
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
 import {cloneDeep} from 'lodash';
 
@@ -96,5 +97,12 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
     this.waitForSearchInputToLoad().then(() => {
       this.searchInput.nativeElement.focus();
     });
+  }
+
+  drop(event: CdkDragDrop<string[]>) {
+    console.log(this.checkboxDataArray);
+    console.log(event);
+    moveItemInArray(this.checkboxDataArray, event.previousIndex, event.currentIndex);
+    console.log(this.checkboxDataArray);
   }
 }
