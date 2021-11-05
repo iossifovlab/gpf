@@ -447,7 +447,8 @@ class EffectAnnotationDecorator(AnnotationDecorator):
 
 
 class AnnotationPipelineDecorator(AnnotationDecorator):
-    def __init__(self, variants_loader, annotation_pipeline):
+    def __init__(
+            self, variants_loader, annotation_pipeline: AnnotationPipeline):
         super(AnnotationPipelineDecorator, self).__init__(variants_loader)
 
         self.annotation_pipeline = annotation_pipeline
