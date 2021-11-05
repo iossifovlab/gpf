@@ -24,6 +24,28 @@ def test_can_query_effect_groups(quads_f1):
     assert len(no_variants) == 0
 
 
+def test_can_query_person_sets(
+    fixtures_gpf_instance, data_import, variants_impala
+):
+    genotype_study = fixtures_gpf_instance.get_genotype_data(
+        "iossifov_we2014_test"
+    )
+    ps_collection = ("status", ["affected"])
+    variants = genotype_study.query_variants(
+        person_set_collection=ps_collection
+    )
+
+    variants = list(variants)
+    assert len(variants) == 14
+    ps_collection = ("status", ["unaffected"])
+    variants = genotype_study.query_variants(
+        person_set_collection=ps_collection
+    )
+
+    variants = list(variants)
+    assert len(variants) == 2
+
+
 def test_can_close_query(quads_f1):
     variants = quads_f1.query_variants()
 
