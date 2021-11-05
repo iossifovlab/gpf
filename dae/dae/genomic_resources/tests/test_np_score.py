@@ -5,7 +5,7 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
 def test_the_simplest_np_score():
     res: NPScoreResource = build_a_test_resource({
-        GR_CONF_FILE_NAME: '''
+        "genomic_resource.yaml": '''
             type: NPScore
             table:
                 filename: data.mem

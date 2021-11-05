@@ -249,6 +249,8 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
             filename += f"_family_bin_{current_bin}"
         filename += ".parquet"
 
+        print(family_allele, family_allele.effects, current_bin, filename)
+
         return os.path.join(filepath, filename)
 
     def _variants_partition_bins(self):

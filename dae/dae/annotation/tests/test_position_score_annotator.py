@@ -116,11 +116,11 @@ def test_position_score_annotator(
     )
 
     pipeline = AnnotationPipeline.build(pipeline_config, position_score_repo)
-    # annotator = BasicAnnotator()
+    # annoation_runner = BasicAnnotatorRunner()
     # annotator = ThreadAnnotatorRunner()
     # annotator = AsynioAnnotatorRunner()
 
-    # result = annotator.annotate(pipeline, sa)
+    # result = annotation_runner.run(pipeline, annotatable)
 
     result = pipeline.annotate(annotatable)
 

@@ -482,8 +482,6 @@ class AlleleParquetSerializer:
         scores_searchable = {}
         scores_binary = {}
         if variants_schema:
-            print(variants_schema.names)
-
             if "af_allele_freq" in variants_schema.names:
                 additional_searchable_props["af_allele_freq"] = pa.float32()
                 additional_searchable_props["af_allele_count"] = pa.int32()
@@ -501,7 +499,6 @@ class AlleleParquetSerializer:
                     and col_name not in self.GENOMIC_SCORES_SCHEMA_CLEAN_UP
                     and col_name != "extra_attributes"
                 ):
-                    print("SCORE:", col_name)
 
                     scores_binary[col_name] = FloatSerializer
                     scores_searchable[col_name] = pa.float32()
@@ -610,12 +607,31 @@ class AlleleParquetSerializer:
         stream.close()
         return output
 
+    ALLELE_PROP_GETTERS = {
+        "effect_type": lambda a: a.worst_effect,
+        "effect_gene_genes": lambda a: a.effect_gene_symbols,
+        "effect_gene_types": lambda a: a.effect_types,
+        "effect_details_transcript_ids":
+        lambda a: list(a.effects.transcripts.keys()) if a.effects else None,
+        "effect_details_details":
+        lambda a: [
+            str(d) for d in a.effects.transcripts.values()
+        ] if a.effects else None,
+    }
+
     def _serialize_summary_allele(self, allele, stream):
+
+        def default_getter(allele, prop):
+            value = getattr(allele, prop, None)
+            if value is None:
+                value = allele.get_attribute(prop)
+            return value
+
         for property_serializers in self.summary_serializers_list:
             for prop, serializer in property_serializers.items():
-                value = getattr(allele, prop, None)
-                if value is None:
-                    value = allele.get_attribute(prop)
+                attr_getter = self.ALLELE_PROP_GETTERS.get(
+                    prop, lambda a: default_getter(a, prop))
+                value = attr_getter(allele)
                 self.write_property(stream, value, serializer)
 
     def serialize_summary_data(self, alleles):

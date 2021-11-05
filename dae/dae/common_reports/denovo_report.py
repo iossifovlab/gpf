@@ -90,7 +90,6 @@ class EffectCell:
                     f"mismatched persons: {variant_in_members}")
             return
         if not family_allele.effects:
-            print("No effect")
             return
         # FIXME: Avoid conversion of effect types to set
         if not (set(family_allele.effects.types) & self.effect_types):

@@ -658,7 +658,6 @@ class VariantsGenotypesLoader(VariantsLoader):
         pass
 
     def reset_regions(self, regions):
-        # print("resetting regions to:", regions)
         if regions is None or isinstance(regions, str):
             self.regions = [regions]
         else:

@@ -320,7 +320,7 @@ class SummaryAllele(core.Allele):
 
         self._details = None
 
-        self._effect = AlleleEffects.from_string(effect) if effect else None
+        self._effects = AlleleEffects.from_string(effect) if effect else None
 
         self._attributes: Dict[str, Any] = {
             "allele_index": allele_index,
@@ -371,7 +371,7 @@ class SummaryAllele(core.Allele):
 
     @property
     def effects(self) -> Optional[AlleleEffects]:
-        if self._effect is None:
+        if self._effects is None:
             record = self.attributes
             if "effect_type" in record:
                 worst_effect = record["effect_type"]
@@ -392,17 +392,24 @@ class SummaryAllele(core.Allele):
                         )
                     ),
                 )
-                self._effect = effects
+                self._effects = effects
             elif "effects" in record:
-                self._effect = AlleleEffects.from_string(record.get("effects"))
+                self._effects = AlleleEffects.from_string(
+                    record.get("effects"))
             else:
-                self._effect = None
-        return self._effect
+                self._effects = None
+        return self._effects
 
     @effects.setter
     def effects(self, effects: AlleleEffects) -> None:
-        assert self._effect is None
-        self._effect = effects
+        # assert self._effects is None
+        self._effects = effects
+
+    @property
+    def worst_effect(self) -> Optional[str]:
+        if self.effects:
+            return self.effects.worst
+        return None
 
     @property
     def effect_types(self) -> List[str]:
