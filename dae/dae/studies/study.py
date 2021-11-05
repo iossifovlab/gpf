@@ -169,21 +169,25 @@ class GenotypeData(ABC):
             study_filters=None,
             pedigree_fields=None,
             **kwargs):
-        pedigree_fields = self._collect_pedigree_fields(
-            person_set_collection, pedigree_fields
-        )
 
-        # if person_set_collection is not None:
-        #     person_ids = self._transform_person_set_collection_query(
-        #         person_set_collection, person_ids
-        #     )
-        #     collection_id, selected_sets = person_set_collection
-        #     if selected_sets is not None:
-        #         collection_config = \
-        #             self.config.person_set_collections.get(collection_id)
-        #         is_pedigree = \
-        #             collection_config.sources[0]["from"] == "pedigree"
-        #         if is_pedigree:
+        if person_set_collection is not None:
+            collection_id, _ = person_set_collection
+            collection_config = self.config.person_set_collections.get(
+                collection_id
+            )
+            only_pedigree_sources = True
+            for src in collection_config.sources:
+                if src["from"] != "pedigree":
+                    only_pedigree_sources = False
+
+            if only_pedigree_sources:
+                pedigree_fields = self._collect_pedigree_fields(
+                    person_set_collection, pedigree_fields
+                )
+            else:
+                person_ids = self._transform_person_set_collection_query(
+                    person_set_collection, person_ids
+                )
 
         if person_ids is not None and len(person_ids) == 0:
             return
@@ -205,12 +209,14 @@ class GenotypeData(ABC):
 
         runners = []
         for genotype_study in self._get_query_children(study_filters):
-            collection_id, _ = person_set_collection
-            collection = self.get_person_set_collection(collection_id)
-            local_fields = dict()
-            for ps_id in pedigree_fields.keys():
-                if ps_id in collection.person_sets.keys():
-                    local_fields[ps_id] = pedigree_fields[ps_id]
+            local_fields = None
+            if person_set_collection is not None:
+                collection_id, _ = person_set_collection
+                collection = self.get_person_set_collection(collection_id)
+                local_fields = dict()
+                for ps_id in pedigree_fields.keys():
+                    if ps_id in collection.person_sets.keys():
+                        local_fields[ps_id] = pedigree_fields[ps_id]
             runner = genotype_study._backend\
                 .build_family_variants_query_runner(
                     regions=regions,
@@ -534,7 +540,7 @@ class GenotypeData(ABC):
             assert ps_id in sets
             ps = sets[ps_id]
             pedigree_fields[ps_id] = {
-                "values": ps.values,
+                "values": [val for val in ps["values"]],
                 "sources": [src.source for src in collection_config.sources]
             }
 

@@ -9,7 +9,8 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
     def __init__(
             self, db, variants_table, pedigree_table,
             variants_schema, table_properties, pedigree_schema,
-            pedigree_df, families, gene_models=None):
+            pedigree_df, families, gene_models=None, do_join=False):
+        self.do_join = do_join
         super().__init__(
             db, variants_table, pedigree_table,
             variants_schema, table_properties, pedigree_schema,
@@ -18,11 +19,11 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
 
     def _get_pedigree_column_value(self, source, str_value):
         if source == "status":
-            value = Status.from_name(str_value)
+            value = Status.from_name(str_value).value
         elif source == "role":
-            value = Role.from_name(str_value)
+            value = Role.from_name(str_value).value
         elif source == "sex":
-            value = Sex.from_name(str_value)
+            value = Sex.from_name(str_value).value
         else:
             value = str_value
         return value
@@ -42,6 +43,9 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         if self.has_extra_attributes:
             self.select_accessors["extra_attributes"] = \
                 "variants.extra_attributes"
+        if not self.do_join:
+            for k, v in self.select_accessors.items():
+                self.select_accessors[k] = k
         columns = list(self.select_accessors.values())
 
         return columns
@@ -49,15 +53,21 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
     def _where_accessors(self):
         accessors = super()._where_accessors()
 
-        for key, value in accessors.items():
-            accessors[key] = f"variants.{value}"
+        if self.do_join:
+            for key, value in accessors.items():
+                accessors[key] = f"variants.{value}"
         return accessors
 
     def build_from(self):
-        from_clause = f"FROM {self.db}.{self.variants_table} as variants"
+        if self.do_join:
+            from_clause = f"FROM {self.db}.{self.variants_table} as variants"
+        else:
+            from_clause = f"FROM {self.db}.{self.variants_table}"
         self._add_to_product(from_clause)
 
     def build_join(self):
+        if not self.do_join:
+            return
         join_clause = f"JOIN {self.db}.{self.pedigree_table} as pedigree"
         self._add_to_product(join_clause)
 
@@ -97,6 +107,10 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
             return_unknown=return_unknown,
         )
         self._add_to_product(where_clause)
+
+        if not self.do_join:
+            return
+
         if pedigree_fields is not None:
             if where_clause:
                 pedigree_where = "AND ("
@@ -108,8 +122,8 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
             for field in pedigree_fields.values():
                 if not first_or:
                     pedigree_where += "OR "
-                values = field.values
-                sources = field.sources
+                values = field["values"]
+                sources = field["sources"]
                 first_and = True
                 pedigree_where += "("
                 for source, str_value in zip(sources, values):

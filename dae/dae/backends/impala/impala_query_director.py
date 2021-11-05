@@ -20,7 +20,8 @@ class ImpalaQueryDirector:
             return_reference=None,
             return_unknown=None,
             limit=None,
-            affected_status=None):
+            affected_status=None,
+            pedigree_fields=None):
 
         self.query_builder.reset_product()
 
