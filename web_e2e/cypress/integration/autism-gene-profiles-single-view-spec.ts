@@ -63,12 +63,12 @@ describe('Autism gene profiles single view links tests', () => {
     page.cleanup();
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
-    autismGeneProfilesTablePage.geneSearchInput.type('CHD8');
-    autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
-    autismGeneProfilesTablePage.allTableCells.first().click();
   });
 
   it('should display gene browser link', () => {
+    autismGeneProfilesTablePage.geneSearchInput.type('CHD8');
+    autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
+    autismGeneProfilesTablePage.allTableCells.first().click();
     page.geneBrowserLink.should('be.visible');
     page.geneBrowserLink.should('have.text', 'View CHD8 in the Gene Browser');
   });
@@ -111,12 +111,113 @@ describe('Autism gene profiles single view links tests', () => {
     const pubmedLink = 'https://pubmed.ncbi.nlm.nih.gov/?term=CHD8%20AND%20(autism%20OR%20asd)';
     page.pubmedLink.should('have.prop', 'href').and('equal', pubmedLink)
   });
-
-  // Add tests for SFARI link - it had a specific condition in order to be displayed,
+/*
+  it('should display SFARI link when is contained in the list', () => {
+  });
+  // add tests for SFARI link - it had a specific condition in order to be displayed,
   // see if that logic works
-
   // it('should display SFARI link when ... and not display it when ...', () => {
   // });
   // it('should have the correct href for the SFARI link', () => {
-  // });
+  // }); */
+
+  it('should test data', () => {
+    page.cleanup();
+    page.navigateToHome();
+    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+    const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
+    page.autismGeneToolAllView.click();
+    autismGeneProfilesTablePage.geneSearchInput.clear().type('GRIN2B');
+    autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
+    autismGeneProfilesTablePage.allTableCells.first().click();
+
+    compareData(gene_data);
+  });
 });
+
+
+const gene_data = {
+  gene_symbols: 'GRIN2B',
+  data: [
+    { name:'SFARI_gene_score', value: 1 }, // sfari_score: 
+    { name: 'RVIS_rank',value: 174.5 },  // rvis_rank: 
+    { name: 'LGD_rank',value: 85.5 }, // lgd_rank:
+    { name: 'pLI_rank',value: 400 }, // pli_rank: 
+    { name: 'pRec_rank',value: 17792 } // prec_rank: 
+  ], statistics: {
+    autism_gene_sets: [
+      { name: 'autism candidates from Iossifov PNAS 2015', value: true },
+      { name: 'autism candidates from Sanders Neuron 2015', value: true }
+    ], relevant_gene_sets: [
+      { name: 'CHD8 target genes', value:  false },
+      { name: 'chromatin modifiers', value:  true },
+      { name: 'essential genes', value:  true },
+      { name: 'FMRP Darnell', value:  true }
+    ], study: {
+      variant_statistics: ['', '', ''],
+      affected: ['3 (1.197)', '1 (0.399)', '–'],
+      unaffected: ['–', '–', '–']
+    }
+  }
+}
+
+
+const sfari_genes = [
+  'ABCA7',
+  'ACE',
+  'ACHE',
+  'ARHGEF10',
+  'BICRA',
+  'BICDL1',
+  'BRINP3',
+  'BST1'
+];
+
+function compareData(data: any) {
+  const page = new AutismGeneProfilesSingleView();
+
+  page.singleScoreMarkers.parent().each((el, index, list) => {
+    cy.wrap(el).get('g > text.small').eq(index).should('have.text', data['data'][index]['value']);
+    cy.wrap(el).get('g > text.small').eq(index).should('have.text', data['data'][index]['value']);
+  });
+
+  page.geneAutismGeneSetsTable.within(row => {
+    cy.wrap(row).get('tr').each((el, index, list) => {
+      cy.wrap(el).within(col => {
+        cy.wrap(col).get('td').eq(0).should('have.text', data['statistics']['autism_gene_sets'][index]['name']);
+      });
+      if(data['statistics']['autism_gene_sets'][index]['value'] === true) {
+        cy.wrap(el).within(col => {
+          cy.wrap(col).get('td').eq(1).should('have.length', 1);
+        });
+      }
+    });
+  });
+
+  page.geneRelevantGeneSetsTable.within(row => { // these can be made with a single for, const table = geneAutism in the first and geneRelevant in the second case
+    cy.wrap(row).get('tr').each((el, index, list) => {
+      cy.wrap(el).within(col => {
+        cy.wrap(col).get('td').eq(0).should('have.text', data['statistics']['relevant_gene_sets'][index]['name']);
+      });
+      if(data['statistics']['relevant_gene_sets'][index]['value'] === true) {
+        cy.wrap(el).within(col => {
+          cy.wrap(col).get('td').eq(1).should('have.length', 1);
+        });
+      }
+    });
+  });
+
+  page.datasetsTable.within(row => {
+    cy.wrap(row).get('tbody > tr').each((el, index, list) => {
+      cy.wrap(el).within(col => {
+        cy.wrap(col).get('td').eq(0).should('have.text', data['statistics']['study']['variant_statistics'][index]);
+      });
+      cy.wrap(el).within(col => {
+        cy.wrap(col).get('td').eq(1).should('have.text', data['statistics']['study']['affected'][index]);
+      });
+      cy.wrap(el).within(col => {
+        cy.wrap(col).get('td').eq(2).should('have.text', data['statistics']['study']['unaffected'][index]);
+      });
+    });
+  });
+}

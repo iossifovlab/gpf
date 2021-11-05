@@ -41,6 +41,10 @@ export class AutismGeneProfilesSingleView extends BasePage {
     return cy.get('#autism_gene_sets');
   }
 
+  get autismGeneToolAllView() {
+    return cy.get('a#ngb-nav-0.nav-link');
+  }
+
   get geneRelevantGeneSetsTable() {
     return cy.get('#relevant_gene_sets');
   }
