@@ -122,14 +122,18 @@ describe('Autism gene profiles single view links tests', () => {
   // }); */
 
   it('should test data', () => {
-    page.cleanup();
-    page.navigateToHome();
-    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+    //page.cleanup();
+    //page.navigateToHome();
+    //page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
     const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
     page.autismGeneToolAllView.click();
     autismGeneProfilesTablePage.geneSearchInput.clear().type('GRIN2B');
-    autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
+    cy.intercept('GET', '/gpf/api/v3/autism_gene_tool/genes/?page=1&symbol=GRIN2B&sortBy=autism_gene_sets_rank&order=desc').as('responseHandler');
+    cy.wait('@responseHandler');
+    autismGeneProfilesTablePage.allTableRows.first().should('have.length', 1);
     autismGeneProfilesTablePage.allTableCells.first().click();
+    getView('GRIN2B');
+    //autismGeneProfilesTablePage.allTableCells.first().click();
 
     compareData(gene_data);
   });
@@ -178,7 +182,6 @@ function compareData(data: any) {
 
   page.singleScoreMarkers.parent().each((el, index, list) => {
     cy.wrap(el).get('g > text.small').eq(index).should('have.text', data['data'][index]['value']);
-    cy.wrap(el).get('g > text.small').eq(index).should('have.text', data['data'][index]['value']);
   });
 
   page.geneAutismGeneSetsTable.within(row => {
@@ -218,6 +221,20 @@ function compareData(data: any) {
       cy.wrap(el).within(col => {
         cy.wrap(col).get('td').eq(2).should('have.text', data['statistics']['study']['unaffected'][index]);
       });
+    });
+  });
+}
+
+function getView(name: string) {
+
+  cy.get('nav > li > a > span').not('.close').each(nav => {
+    cy.wrap(nav).eq(0).then(el => {
+      if(el.text() === name) {
+        cy.wrap(el).click();
+        return false;
+      } else {
+        cy.wrap(el).parent().children().eq(1).click();
+      }
     });
   });
 }
