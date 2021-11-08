@@ -2,6 +2,7 @@
 # $ conda create --name <env> --file <this file>
 # platform: linux-64
 # conda create -c conda-forge -c bioconda -n <env name> --file <this file>
+name: gsd_dev
 channels:
   - defaults
   - conda-forge 

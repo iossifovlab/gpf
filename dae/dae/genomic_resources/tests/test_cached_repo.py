@@ -31,9 +31,29 @@ def test_cached_get_all_resources(tmpdir):
             "data.txt": "alabala"
         },
         "sub": {
-            "two[1.0]": {
+            '''
+               The test is unstable with the resource below is unstable because
+               the precision of the processor time is larger than the precisio
+               of the file stamps. For example,
+
+                ts = 1636242231.5675972 # this was returned by time.time()
+                                        # in a failed run of the test.
+                os.utime('a',(ts,ts))
+                fs = pathlib.Path("a").stat().st_mtime
+                print(f"{ts}\n{fs}")
+
+                Results in:
+                1636242231.5675972
+                1636242231.567597
+                '''
+            "two-unstable[1.0]": {
                 GR_CONF_FILE_NAME: "type: GeneModels\nfile: genes.gtf",
                 "genes.txt": demo_gtf_content
+            },
+            "two[1.0]": {
+                GR_CONF_FILE_NAME:
+                    ["type: GeneModels\nfile: genes.gtf", 1636241590.2],
+                "genes.txt": [demo_gtf_content, 1636241585.5]
             }
         }
     })

@@ -66,15 +66,18 @@ class GenomicScoresResource(GenomicResource, abc.ABC):
         super().__init__(resource_id, version, repo, config)
         self.table = None
         self.scores = {}
-        self.default_annotation = self.get_config()\
-            .get("default_annotation", {})
-        self.default_annotation = Box(self.default_annotation)
 
     LONG_JUMP_THRESHOLD = 5000
     ACCESS_SWITCH_THRESHOLD = 1500
 
     def get_default_annotation(self):
-        return self.default_annotation
+        if "default_annotation" in self.get_config():
+            return Box(self.get_config()["default_annotation"])
+        else:
+            return Box({
+                "attributes": [{"source": score, "dest": score}
+                               for score in self.scores.keys()]
+            })
 
     def open(self):
         self.table = open_genome_position_table(

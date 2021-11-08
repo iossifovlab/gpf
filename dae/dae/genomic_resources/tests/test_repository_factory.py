@@ -1,3 +1,4 @@
+import yaml
 from dae.genomic_resources import build_genomic_resource_repository
 
 
@@ -55,7 +56,6 @@ def test_build_a_complex_but_realistic_scenario():
 
 
 def test_build_a_complex_but_realistic_scenario_yaml():
-    import yaml
     definition = yaml.safe_load('''
         {type: group, children: [
             {type: group, cache_dir: /tmp/remotes12Cache, children: [
@@ -83,3 +83,32 @@ def test_build_a_complex_but_realistic_scenario_yaml():
     assert repo.children[1].child.url == "http://r3.org/repo"
     assert str(repo.children[2].directory) == "/data/my/grRepo"
     assert repo.children[3].content == {}
+
+
+def test_build_a_configuration_with_embeded():
+    definition = yaml.safe_load('''
+        id: mm
+        type: embeded
+        content:
+            one:
+                genomic_resource.yaml: |
+                    type: PositionScore
+                    table:
+                        filename: data.mem
+                    scores:
+                    - id: score
+                      type: float
+                      desc: >
+                            The phastCons computed over the tree of 100
+                            verterbarte species
+                      name: s1
+                data.mem: |
+                    chrom  pos_begin  s1
+                    chr1   23         0.01
+                    chr1   24         0.2''')
+    repo = build_genomic_resource_repository(definition)
+    assert repo is not None
+    gr = repo.get_resource('one')
+    assert gr is not None
+    gr.open()
+    gr.fetch_scores('chr1', 23) == {"score": 0.01}
