@@ -303,8 +303,8 @@ class VariantsLoaderDecorator(VariantsLoader):
         return getattr(self.variants_loader, attr, None)
 
     @property
-    def variants_schema(self):
-        return self.variants_loader.variants_schema
+    def annotation_schema(self):
+        return self.variants_loader.annotation_schema
 
     @classmethod
     def build_cli_params(cls, params):
@@ -467,12 +467,6 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
             "extra_attributes",
             variants_loader.get_attribute("extra_attributes")
         )
-
-    # @property
-    # def variants_schema(self):
-    #     return Schema.merge_schemas(
-    #         super().variants_schema, self.annotation_schema
-    #     )
 
     @property
     def annotation_schema(self):
