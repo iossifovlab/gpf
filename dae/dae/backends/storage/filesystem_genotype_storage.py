@@ -196,9 +196,10 @@ class FilesystemGenotypeStorage(GenotypeStorage):
     def _import_variants_files(self, study_id, loaders):
         result_config = []
         for index, variants_loader in enumerate(loaders):
-            assert (
-                variants_loader.get_attribute("annotation_schema") is not None
-            )
+            # assert (
+            #     variants_loader.get_attribute("annotation_schema")
+            #     is not None
+            # )
 
             destination_dirname = os.path.join(self.data_dir, study_id, "data")
 

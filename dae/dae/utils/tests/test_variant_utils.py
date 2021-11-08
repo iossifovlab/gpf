@@ -5,7 +5,8 @@ from typing import List, Union
 import numpy as np
 
 from dae.utils.variant_utils import get_locus_ploidy, reverse_complement, \
-    gt2str, str2gt, trim_str_right, trim_str_left
+    gt2str, str2gt, trim_str_right, trim_str_left, \
+    trim_parsimonious
 from dae.variants.attributes import Sex
 
 
@@ -128,3 +129,23 @@ def test_trim_str_left(pos, ref, alt, trim_pos, trim_ref, trim_alt):
     assert trim_pos == tpos
     assert trim_ref == tref
     assert trim_alt == talt
+
+
+@pytest.mark.parametrize("allele,parsimonious", [
+    ((1, "AA", "CA"), (1, "A", "C")),
+    ((1, "CA", "CT"), (2, "A", "T")),
+    ((1, "ACA", "A"), (1, "ACA", "A")),
+    ((1, "AACA", "AA"), (1, "AAC", "A")),
+    ((4, "GCAT", "GTGC"), (5, "CAT", "TGC")),
+    ((5, "CATG", "TGCG"), (5, "CAT", "TGC")),
+    ((4, "GCATG", "GTGCG"), (5, "CAT", "TGC")),
+    ((4, "GG", "GAGG"), (4, "G", "GAG")),
+    ((100, "TGGTGCAGGC", "T"), (100, "TGGTGCAGGC", "T")),
+    ((100, "TGGTGCAGGC", "CGGTGCAGGC"), (100, "T", "C")),
+    ((100, "TGGTGCAGGC", "TGGTGCAGGCGGTGCAGGC"), (100, "T", "TGGTGCAGGC")),
+    ((100, "TGGTGCAGGC", "TGGTGCAGGT"), (109, "C", "T")),
+])
+def test_trim_parsimonious(allele, parsimonious):
+    pos, ref, alt = trim_parsimonious(*allele)
+
+    assert (pos, ref, alt) == parsimonious

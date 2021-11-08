@@ -26,7 +26,7 @@ def filter_denovo_one_event_per_family(vs, requested_effect_types):
             [
                 ge.symbol.upper()
                 for aa in v.alt_alleles
-                for ge in aa.effect.genes
+                for ge in aa.effects.genes
                 if ge.effect in requested_effect_types
             ]
         )
@@ -46,7 +46,7 @@ def get_sym_2_fn(vs, requested_effect_types):
             [ge.symbol.upper(), v]
             for v in vs
             for aa in v.alt_alleles
-            for ge in aa.effect.genes
+            for ge in aa.effects.genes
             if ge.effect in requested_effect_types
         ]
     )

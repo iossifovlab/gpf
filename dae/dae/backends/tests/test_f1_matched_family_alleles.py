@@ -7,7 +7,7 @@ import pytest
 
 from dae.utils.regions import Region
 
-from dae.variants.effects import EffectGene
+from dae.effect_annotation.effect import EffectGene
 
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])

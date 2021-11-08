@@ -365,7 +365,7 @@ class ResponseTransformer:
                     a.end_position,
                     a.chrom,
                     a.get_attribute(frequency_column),
-                    gene_effect_get_worst_effect(a.effect),
+                    gene_effect_get_worst_effect(a.effects),
                     a.cshl_variant,
                     a.get_attribute("family_variants_count"),
                     a.get_attribute("seen_as_denovo"),
@@ -387,7 +387,7 @@ class ResponseTransformer:
                 "end_position": a.end_position,
                 "chrom": a.chrom,
                 "frequency": a.get_attribute(frequency_column),
-                "effect": gene_effect_get_worst_effect(a.effect),
+                "effect": gene_effect_get_worst_effect(a.effects),
                 "variant": a.cshl_variant,
                 "family_variants_count":
                     a.get_attribute("family_variants_count"),
@@ -406,7 +406,7 @@ class ResponseTransformer:
         #         "end_position": a.end_position,
         #         "chrom": a.chrom,
         #         "frequency": a.get_attribute(frequency_column),
-        #         "effect": gene_effect_get_worst_effect(a.effect),
+        #         "effect": gene_effect_get_worst_effect(a.effects),
         #         "variant": a.cshl_variant,
         #         "family_variants_count":
         #             a.get_attribute("family_variants_count"),

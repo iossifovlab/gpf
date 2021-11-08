@@ -9,9 +9,10 @@ import logging
 from typing import List, Dict, Set, Any, Optional
 
 from dae.utils.variant_utils import trim_str_left_right, trim_str_right_left
+from dae.effect_annotation.effect import AlleleEffects, EffectGene
+
 from dae.variants import core
 from dae.variants.attributes import TransmissionType
-from dae.variants.effects import Effect, EffectGene
 
 
 logger = logging.getLogger(__name__)
@@ -319,7 +320,7 @@ class SummaryAllele(core.Allele):
 
         self._details = None
 
-        self._effect = Effect.from_string(effect) if effect else None
+        self._effects = AlleleEffects.from_string(effect) if effect else None
 
         self._attributes: Dict[str, Any] = {
             "allele_index": allele_index,
@@ -369,14 +370,14 @@ class SummaryAllele(core.Allele):
         return self._details
 
     @property
-    def effect(self) -> Optional[Effect]:
-        if self._effect is None:
+    def effects(self) -> Optional[AlleleEffects]:
+        if self._effects is None:
             record = self.attributes
             if "effect_type" in record:
                 worst_effect = record["effect_type"]
                 if worst_effect is None:
                     return None
-                effects = Effect.from_effects(
+                effects = AlleleEffects.from_simplified_effects(
                     worst_effect,
                     list(
                         zip(
@@ -391,28 +392,36 @@ class SummaryAllele(core.Allele):
                         )
                     ),
                 )
-                self._effect = effects
+                self._effects = effects
             elif "effects" in record:
-                self._effect = Effect.from_string(record.get("effects"))
+                self._effects = AlleleEffects.from_string(
+                    record.get("effects"))
             else:
-                self._effect = None
-        return self._effect
+                self._effects = None
+        return self._effects
+
+    @effects.setter
+    def effects(self, effects: AlleleEffects) -> None:
+        # assert self._effects is None
+        self._effects = effects
 
     @property
-    def effects(self) -> Optional[Effect]:
-        return self.effect
+    def worst_effect(self) -> Optional[str]:
+        if self.effects:
+            return self.effects.worst
+        return None
 
     @property
     def effect_types(self) -> List[str]:
-        if self.effect:
-            return self.effect.types
+        if self.effects:
+            return self.effects.types
         else:
             return []
 
     @property
     def effect_genes(self) -> List[EffectGene]:
-        if self.effect:
-            return self.effect.genes
+        if self.effects:
+            return self.effects.genes
         else:
             return []
 
@@ -664,7 +673,7 @@ class SummaryVariant:
         """
         if not self.alt_alleles:
             return []
-        return [sa.effect for sa in self.alt_alleles]
+        return [sa.effects for sa in self.alt_alleles]
 
     @property
     def effect_types(self) -> List[str]:

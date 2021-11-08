@@ -15,8 +15,8 @@ from dae.variants.attributes import GeneticModel, \
     Inheritance,\
     TransmissionType
 
+from dae.effect_annotation.effect import AlleleEffects
 from dae.variants.variant import \
-    Effect, \
     SummaryAllele, \
     SummaryVariant
 
@@ -165,8 +165,8 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return self.summary_allele.details
 
     @property
-    def effect(self) -> Optional[Effect]:
-        return self.summary_allele.effect
+    def effects(self) -> Optional[AlleleEffects]:
+        return self.summary_allele.effects
 
     @property
     def allele_type(self) -> Optional[SummaryAllele.Type]:

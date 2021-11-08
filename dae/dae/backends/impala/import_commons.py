@@ -17,11 +17,13 @@ from collections import defaultdict
 from jinja2 import Template
 
 from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.effect_annotator import EffectAnnotatorAdapter
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.pedigrees.loader import FamiliesLoader
-from dae.backends.raw.loader import AnnotationPipelineDecorator
+from dae.backends.raw.loader import AnnotationPipelineDecorator, \
+    EffectAnnotationDecorator
 from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.cnv.loader import CNVLoader
@@ -67,13 +69,28 @@ def construct_import_annotation_pipeline(
     if annotation_configfile is not None:
         config_filename = annotation_configfile
     else:
+        if gpf_instance.dae_config.annotation is None:
+            return None
         config_filename = gpf_instance.dae_config.annotation.conf_file
+
+    if not os.path.exists(config_filename):
+        logger.warning(f"missing annotation configuration: {config_filename}")
+        return None
 
     # genomes_db = gpf_instance.genomes_db
     resources_db = gpf_instance.genomic_resources_db
     assert os.path.exists(config_filename), config_filename
     config = AnnotationPipeline.load_and_parse(config_filename)
     return AnnotationPipeline.build(config, resources_db)
+
+
+def construct_import_effect_annotator(gpf_instance):
+    genome = gpf_instance.genomes_db.get_genomic_sequence()
+    gene_models = gpf_instance.genomes_db.get_gene_models()
+
+    effect_annotator = EffectAnnotatorAdapter(
+        genome=genome, gene_models=gene_models)
+    return effect_annotator
 
 
 class MakefilePartitionHelper:
@@ -1210,14 +1227,20 @@ class Variants2ParquetTool:
 
     @classmethod
     def _build_variants_loader_pipeline(
-        cls, gpf_instance, argv, variants_loader
-    ):
+            cls, gpf_instance: GPFInstance, argv, variants_loader):
+
+        effect_annotator = construct_import_effect_annotator(gpf_instance)
+
+        variants_loader = EffectAnnotationDecorator(
+            variants_loader, effect_annotator)
+
         annotation_pipeline = construct_import_annotation_pipeline(
             gpf_instance, annotation_configfile=argv.annotation_config,
         )
-        variants_loader = AnnotationPipelineDecorator(
-            variants_loader, annotation_pipeline
-        )
+        if annotation_pipeline is not None:
+            variants_loader = AnnotationPipelineDecorator(
+                variants_loader, annotation_pipeline
+            )
 
         return variants_loader
 

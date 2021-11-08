@@ -132,7 +132,7 @@ def test_effects(f1_trio):
         print(30 * "-")
         print(v, v.effects)
         for fa in v.alleles:
-            print("\t", fa, fa.effect)
+            print("\t", fa, fa.effects)
 
 
 # def test_effects_annotate(f1_trio):

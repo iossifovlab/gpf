@@ -57,6 +57,6 @@ def test_denovo2parquet_denovo_partition(
     file_glob = os.path.join(temp_dirname, pd.generate_file_access_glob())
     partition_files = glob.glob(file_glob)
 
-    assert len(partition_files) == 6
+    assert len(partition_files) == 5
     for file in partition_files:
         assert "frequency_bin=0" in file

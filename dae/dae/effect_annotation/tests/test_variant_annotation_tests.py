@@ -1,8 +1,8 @@
-from dae.effect_annotation.annotator import VariantAnnotator
+from dae.effect_annotation.annotator import EffectAnnotator
 
 
 def test_synonymous_complex_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotator.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="1:897349",
@@ -19,7 +19,7 @@ def test_synonymous_complex_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_just_next_to_splice_site_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="5:86705101", var="del(4)"
     )
 
@@ -44,7 +44,7 @@ def test_just_next_to_splice_site_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr2_32853362_ins_var(genomic_sequence_2013, gene_models_2013):
-    effects = VariantAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="6:157527729",
@@ -72,7 +72,7 @@ def test_chr2_32853362_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr5_75902128_sub_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = VariantAnnotator.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="5:75902128",

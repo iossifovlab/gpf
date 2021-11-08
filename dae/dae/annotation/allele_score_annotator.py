@@ -43,7 +43,6 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
             annotatable.alternative
         )
         if scores_dict is None:
-            print("Not found!")
             self._scores_not_found(attributes)
             return
 

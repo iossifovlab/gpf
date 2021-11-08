@@ -15,10 +15,10 @@ from dae.annotation.annotation_pipeline import AnnotationPipeline
 #  67  68  69  70   71   72   73   74   75   76
 #
 @pytest.mark.parametrize("variant,pos_aggregator,nuc_aggregator,expected", [
-    # (("1", 14970, "C", "A"),   "mean", "max", 0.001),
+    (("1", 14970, "C", "A"),   "mean", "max", 0.001),
 
-    (("1", 14970, "CC", "C"),  "mean", "max", (0.0004 + 0.004 + 0.04)/3),
-    (("1", 14970, "CC", "C"),  "max",  "max", 0.04),
+    (("1", 14970, "CA", "C"),  "mean", "max", (0.004 + 0.04 + 0.4)/3),
+    (("1", 14970, "CA", "C"),  "max",  "max", 0.4),
 
     (("1", 14970, "C", "CA"),  "mean", "max", 0.022),
     (("1", 14970, "C", "CA"),  "max",  "max", 0.04),

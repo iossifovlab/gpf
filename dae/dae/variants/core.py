@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Optional
 
 from dae.annotation.annotatable import Annotatable, CNVAllele, VCFAllele
+from dae.utils.variant_utils import trim_parsimonious
 
 logger = logging.getLogger(__name__)
 
@@ -128,13 +129,13 @@ class Allele:
                 self.chrom, self.position, self.end_position,
                 Annotatable.Type.large_deletion)
         elif Allele.Type.substitution == self.allele_type:
-            return VCFAllele(
-                self.chrom, self.position,
-                self.reference, self.alternative)
+            pos, ref, alt = trim_parsimonious(
+                self.position, self.reference, self.alternative)
+            return VCFAllele(self.chrom, pos, ref, alt)
         elif Allele.Type.indel & self.allele_type:
-            return VCFAllele(
-                self.chrom, self.position,
-                self.reference, self.alternative)
+            pos, ref, alt = trim_parsimonious(
+                self.position, self.reference, self.alternative)
+            return VCFAllele(self.chrom, pos, ref, alt)
         else:
             logger.error(f"unexpected allele: {self}")
             raise ValueError(f"unexpeced allele: {self}")

@@ -131,10 +131,10 @@ class RawFamilyVariants(abc.ABC):
     @staticmethod
     def filter_gene_effects(v, effect_types, genes):
         assert effect_types is not None or genes is not None
-        if v.effect is None:
+        if v.effects is None:
             return False
 
-        gene_effects = v.effect.genes
+        gene_effects = v.effects.genes
 
         if effect_types is None:
             result = [ge for ge in gene_effects if ge.symbol in genes]

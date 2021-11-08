@@ -4,7 +4,7 @@ from importlib import import_module
 from .score_annotator import PositionScoreAnnotator, \
     NPScoreAnnotator
 from .allele_score_annotator import AlleleScoreAnnotator
-from .effect_annotator import EffectAnnotator
+from .effect_annotator import EffectAnnotatorAdapter
 from .lift_over_annotator import LiftOverAnnotator
 
 
@@ -50,7 +50,7 @@ class AnnotatorFactory:
             cls, annotator, gene_models, genome, override=None, **kwargs):
         assert annotator == "effect_annotator"
 
-        return EffectAnnotator(
+        return EffectAnnotatorAdapter(
             gene_models=gene_models,
             genome=genome)
 

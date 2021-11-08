@@ -11,11 +11,13 @@ from typing import Iterator, Tuple, List, Dict, Any, Optional, Sequence
 
 import numpy as np
 import pandas as pd
+from dae.annotation.annotation_pipeline import AnnotationPipeline
 
 from dae.genome.genomes_db import Genome
 
 from dae.pedigrees.family import FamiliesData
 
+from dae.effect_annotation.effect import AlleleEffects
 from dae.variants.variant import SummaryVariant
 from dae.variants.family_variant import (
     FamilyVariant,
@@ -407,7 +409,7 @@ class AnnotationDecorator(VariantsLoaderDecorator):
 
                     line_values = [
                         *[rec.get(col, "") for col in common_columns],
-                        summary_allele.effect,
+                        summary_allele.effects,
                         *[rec.get(col, "") for col in other_columns],
                     ]
 
@@ -418,8 +420,35 @@ class AnnotationDecorator(VariantsLoaderDecorator):
                     outfile.write("\n")
 
 
+class EffectAnnotationDecorator(AnnotationDecorator):
+    def __init__(self, variants_loader, effect_annotator):
+        super(EffectAnnotationDecorator, self).__init__(variants_loader)
+
+        self.set_attribute(
+            "extra_attributes",
+            variants_loader.get_attribute("extra_attributes")
+        )
+
+        self.effect_annotator = effect_annotator
+
+    def full_variants_iterator(self):
+        for (summary_variant, family_variants) in \
+                self.variants_loader.full_variants_iterator():
+            for sa in summary_variant.alt_alleles:
+                attributes = {}
+                self.effect_annotator.annotate(
+                    attributes,
+                    sa.get_annotatable(), None)
+                assert "allele_effects" in attributes
+                allele_effects = attributes["allele_effects"]
+                assert isinstance(allele_effects, AlleleEffects)
+                sa.effects = allele_effects
+            yield summary_variant, family_variants
+
+
 class AnnotationPipelineDecorator(AnnotationDecorator):
-    def __init__(self, variants_loader, annotation_pipeline):
+    def __init__(
+            self, variants_loader, annotation_pipeline: AnnotationPipeline):
         super(AnnotationPipelineDecorator, self).__init__(variants_loader)
 
         self.annotation_pipeline = annotation_pipeline
@@ -446,7 +475,10 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
             for sa in summary_variant.alt_alleles:
                 attributes = self.annotation_pipeline.annotate(
                     sa.get_annotatable())
-
+                if "allele_effects" in attributes:
+                    allele_effects = attributes["allele_effects"]
+                    assert isinstance(allele_effects, AlleleEffects)
+                    sa.effects = allele_effects
                 sa.update_attributes(attributes)
             yield summary_variant, family_variants
 
@@ -627,7 +659,6 @@ class VariantsGenotypesLoader(VariantsLoader):
         pass
 
     def reset_regions(self, regions):
-        # print("resetting regions to:", regions)
         if regions is None or isinstance(regions, str):
             self.regions = [regions]
         else:

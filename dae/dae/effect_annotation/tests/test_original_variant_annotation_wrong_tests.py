@@ -1,12 +1,10 @@
 import pytest
 
-from dae.effect_annotation.annotator import (
-    VariantAnnotator as VariantAnnotation,
-)
+from dae.effect_annotation.annotator import EffectAnnotator
 
 
 def test_chr1_120387132_del_var(genome_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013, genome_2013, loc="1:120387132", var="del(71)"
     )
 
@@ -20,7 +18,7 @@ def test_chr1_120387132_del_var(genome_2013, gene_models_2013):
 
 
 def test_chr2_237172988_ins_var(genome_2013, gene_models_2013):
-    [effect] = VariantAnnotation.annotate_variant(
+    [effect] = EffectAnnotator.annotate_variant(
         gene_models_2013, genome_2013, loc="2:237172988", var="ins(TTGTTACG)"
     )
 
@@ -35,7 +33,7 @@ def test_chr2_237172988_ins_var(genome_2013, gene_models_2013):
 
 @pytest.mark.skip()
 def test_chr1_802610_867930_CNV_var(genome_2013, gene_models_2013):
-    effects = VariantAnnotation.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genome_2013, loc="1:802610-867930", var="CNV+"
     )
     assert len(effects) == 3
