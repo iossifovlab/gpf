@@ -55,11 +55,20 @@ export class AgpDataset {
   meta: string;
   defaultVisible: boolean;
 
-  @Type(() => AgpDatasetStatistic)
-  statistics: AgpDatasetStatistic[];
-
   @Type(() => AgpDatasetPersonSet)
   personSets: AgpDatasetPersonSet[];
+}
+
+export class AgpDatasetPersonSet {
+  id: string;
+  displayName: string;
+  collectionId: string;
+  description: string;
+  parentsCount: number;
+  childrenCount: number;
+  
+  @Type(() => AgpDatasetStatistic)
+  statistics: AgpDatasetStatistic[];
 }
 
 export class AgpDatasetStatistic {
@@ -73,105 +82,9 @@ export class AgpDatasetStatistic {
   defaultVisible: boolean;
 }
 
-export class AgpDatasetPersonSet {
-  id: string;
-  displayName: string;
-  collectionId: string;
-  description: string;
-  parentsCount: number;
-  childrenCount: number;
-}
-
 export class AgpOrder {
   section: string;
   id: string;
-}
-
-export class AgpTableConfig {
-  constructor(
-    public defaultDataset: string,
-    public geneSets: AgpTableGeneSetsCategory[],
-    public genomicScores: AgpTableGenomicScoresCategory[],
-    public datasets: AgpTableDataset[],
-    public order: AgpTableOrder[]
-  ) {}
-}
-
-export class AgpTableGeneSetsCategory {
-  constructor(
-    public category: string,
-    public displayName: string,
-    public defaultVisible: boolean,
-    public sets: AgpTableGeneSet[]
-  ) {}
-}
-
-export class AgpTableGeneSet {
-  constructor(
-    public setId: string,
-    public collectionId: string,
-    public meta: string,
-    public defaultVisible: boolean
-  ) {}
-}
-
-export class AgpTableGenomicScoresCategory {
-  constructor(
-    public category: string,
-    public displayName: string,
-    public defaultVisible: boolean,
-    public scores: AgpTableGenomicScore[]
-  ) {}
-}
-
-export class AgpTableGenomicScore {
-  constructor(
-    public scoreName: string,
-    public format: string,
-    public meta: string,
-    public defaultVisible: boolean
-  ) {}
-}
-
-export class AgpTableDataset {
-  constructor(
-    public id: string,
-    public displayName: string,
-    public meta: string,
-    public defaultVisible: boolean,
-    public personSets: AgpTableDatasetPersonSet[]
-  ) {}
-}
-
-export class AgpTableDatasetPersonSet {
-  constructor(
-    public id: string,
-    public displayName: string,
-    public collectionId: string,
-    public description: string,
-    public parentsCount: number,
-    public childrenCount: number,
-    public statistics: AgpTableDatasetStatistic[]
-  ) {}
-}
-
-export class AgpTableDatasetStatistic {
-  constructor(
-    public id: string,
-    public displayName: string,
-    public effects: string[],
-    public category: string,
-    public description: string,
-    public defaultVisible: boolean,
-    public variantTypes: string[]
-  ) {}
-}
-
-export class AgpTableOrder {
-  constructor(
-    public section: string,
-    public id: string,
-  ) {}
 }
 
 export class AgpGene {

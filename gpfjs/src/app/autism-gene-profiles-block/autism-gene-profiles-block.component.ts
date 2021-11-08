@@ -1,9 +1,6 @@
 import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { NgbDropdownMenu, NgbNav } from '@ng-bootstrap/ng-bootstrap';
-import {
-  AgpConfig, AgpTableConfig,
-  AgpTableDataset, AgpTableDatasetPersonSet
-} from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import { AgpConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { cloneDeep } from 'lodash';
 import { take } from 'rxjs/operators';
@@ -21,8 +18,8 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   public geneTabs = new Set<string>();
   public autismGeneToolConfig: AgpConfig;
-  public tableConfig: AgpTableConfig;
-  public shownTableConfig: AgpTableConfig;
+  public tableConfig: AgpConfig;
+  public shownTableConfig: AgpConfig;
 
   public allColumns: string[];
   public shownColumns: string[];
@@ -61,8 +58,9 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   public ngOnInit(): void {
     this.autismGeneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
       this.autismGeneToolConfig = config;
-      this.tableConfig = this.getTableConfig(config);
-      this.shownTableConfig = cloneDeep(this.getTableConfig(config));
+      this.tableConfig = cloneDeep(config);
+      console.log(this.tableConfig);
+      this.shownTableConfig = cloneDeep(config);
 
       this.shownTableConfig.geneSets = this.shownTableConfig.geneSets
       .filter(geneSet => geneSet.defaultVisible === true);
@@ -170,7 +168,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  public getAllCategories(config: AgpTableConfig) {
+  public getAllCategories(config: AgpConfig) {
     const allColumns = [];
     if (config.geneSets) {
       allColumns.push(...config.geneSets.map(obj => obj.displayName));
@@ -182,27 +180,6 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
       allColumns.push(...config.datasets.map(obj => obj.displayName));
     }
     return allColumns;
-  }
-
-  public getTableConfig(agpConfig: AgpConfig): AgpTableConfig {
-    return new AgpTableConfig(
-      agpConfig.defaultDataset,
-      cloneDeep(agpConfig.geneSets),
-      cloneDeep(agpConfig.genomicScores),
-      agpConfig.datasets.map(dataset => {
-        const personSets = dataset.personSets.map(personSet => new AgpTableDatasetPersonSet(
-          personSet.id,
-          personSet.displayName,
-          personSet.collectionId,
-          personSet.description,
-          personSet.parentsCount,
-          personSet.childrenCount,
-          cloneDeep(dataset.statistics)
-        ));
-        return new AgpTableDataset(dataset.id, dataset.displayName, dataset.meta, dataset.defaultVisible, personSets);
-      }),
-      cloneDeep(agpConfig.order)
-    );
   }
 
   public openDropdown(): void {

@@ -3,9 +3,9 @@ import {
   Input, OnChanges, OnInit, Output, QueryList, Renderer2, ViewChild, ViewChildren
 } from '@angular/core';
 import {
-  AgpTableConfig, AgpTableDataset, AgpGene,
+  AgpConfig, AgpDataset, AgpGene,
   AgpGeneSetsCategory, AgpGenomicScoresCategory, AgpDatasetStatistic,
-  AgpDatasetPersonSet, AgpTableGeneSetsCategory, AgpTableGenomicScoresCategory
+  AgpDatasetPersonSet
 } from './autism-gene-profile-table';
 // eslint-disable-next-line no-restricted-imports
 import { Subject } from 'rxjs';
@@ -26,8 +26,8 @@ import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-s
   styleUrls: ['./autism-gene-profiles-table.component.css'],
 })
 export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, OnChanges {
-  @Input() public config: AgpTableConfig;
-  @Output() public configChange: EventEmitter<AgpTableConfig> = new EventEmitter<AgpTableConfig>();
+  @Input() public config: AgpConfig;
+  @Output() public configChange: EventEmitter<AgpConfig> = new EventEmitter<AgpConfig>();
 
   @Output() public createTabEvent = new EventEmitter();
   @ViewChildren(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu[];
@@ -42,7 +42,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
   public allGenomicScoresNames = new Map<string, string[]>();
   public shownGenomicScoresNames = new Map<string, string[]>();
 
-  public shownDatasets: AgpTableDataset[];
+  public shownDatasets: AgpDataset[];
   public allDatasetNames = new Map<string, Map<string, string[]>>();
   public shownDatasetNames = new Map<string, Map<string, string[]>>();
   public allPersonSetNames: string[] = [];
@@ -144,15 +144,15 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     });
   }
 
-  public getGeneSetsCategory(id: string): AgpTableGeneSetsCategory {
+  public getGeneSetsCategory(id: string): AgpGeneSetsCategory {
     return this.shownGeneSetsCategories.find(category => category.category === id);
   }
 
-  public getGenomicScoresCategory(id: string): AgpTableGenomicScoresCategory {
+  public getGenomicScoresCategory(id: string): AgpGenomicScoresCategory {
     return this.shownGenomicScoresCategories.find(category => category.category === id);
   }
 
-  public getDataset(id: string): AgpTableDataset {
+  public getDataset(id: string): AgpDataset {
     return this.shownDatasets.find(dataset => dataset.id === id);
   }
 
@@ -461,7 +461,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
     this.openDropdown(genomicScoresCategory.category);
   }
 
-  public openDatasetDropdown(dataset: AgpTableDataset, menuToOpen: string): void {
+  public openDatasetDropdown(dataset: AgpDataset, menuToOpen: string): void {
     this.allDatasetNames.set(
       dataset.displayName,
       new Map(this.config.datasets.find(set => set.id === dataset.id).personSets.map(personSet =>
@@ -552,7 +552,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, AfterViewInit, 
       .value;
   }
 
-  public calculateDatasetColspan(dataset: AgpTableDataset): number {
+  public calculateDatasetColspan(dataset: AgpDataset): number {
     let count = 0;
     dataset.personSets.forEach(personSet => count += personSet.statistics.length);
     return count;
