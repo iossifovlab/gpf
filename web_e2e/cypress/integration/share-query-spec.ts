@@ -44,12 +44,12 @@ describe('Share query tests', () => {
      'load it and validate that all effect types checkboxes are checked', () => {
     const genotypeBlockPage = new GenotypeBlockPage();
 
-    genotypeBlockPage.findButtonInComponentContainingText('gpf-effecttypes', 'All').click();
+    genotypeBlockPage.findButtonInComponentContainingText('gpf-effect-types', 'All').click();
 
     page.button.click();
     page.input.invoke('val').then((url) => {
       cy.visit(String(url)).then(() => {
-        genotypeBlockPage.findAllCheckboxesInComponent('gpf-effecttypes').each((element) => {
+        genotypeBlockPage.findAllCheckboxesInComponent('gpf-effect-types').each((element) => {
           cy.wrap(element).should('be.checked');
         });
       })
