@@ -51,6 +51,7 @@
       </a>
       <ng-template ngbNavContent>
         <gpf-autism-gene-profile-single-view
+          [attr.id]="geneTab + '-single-view'"
           [config]="autismGeneToolConfig"
           [geneSymbol]="geneTab">
         </gpf-autism-gene-profile-single-view>
