@@ -10,12 +10,12 @@ describe('Autism gene profiles single view tests', () => {
     page.cleanup();
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
-    autismGeneProfilesTablePage.geneSearchInput.type('CHD8');
-    autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
-    autismGeneProfilesTablePage.allTableCells.first().click();
   });
 
   it('should display header', () => {
+    autismGeneProfilesTablePage.geneSearchInput.type('CHD8');
+    autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
+    autismGeneProfilesTablePage.allTableCells.first().click();
     page.header.should('be.visible');
     page.header.should('have.text', 'CHD8');
   });
@@ -121,7 +121,7 @@ describe('Autism gene profiles single view links tests', () => {
   // it('should have the correct href for the SFARI link', () => {
   // }); */
 
-  it('should test data', () => {
+  it('should have proper single view data', () => {
     //page.cleanup();
     //page.navigateToHome();
     //page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
@@ -132,10 +132,39 @@ describe('Autism gene profiles single view links tests', () => {
     cy.wait('@responseHandler');
     autismGeneProfilesTablePage.allTableRows.first().should('have.length', 1);
     autismGeneProfilesTablePage.allTableCells.first().click();
-    getView('GRIN2B');
+    page.getView('GRIN2B');
     //autismGeneProfilesTablePage.allTableCells.first().click();
 
-    compareData(gene_data);
+    page.compareData(gene_data);
+  });
+
+  it.skip('should have proper single view links in the study table', () => {
+    page.cleanup();
+    page.navigateToHome();
+    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+
+    const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
+    page.autismGeneToolAllView.click();
+    autismGeneProfilesTablePage.geneSearchInput.clear().type('GRIN2B');
+    cy.intercept('GET', '/gpf/api/v3/autism_gene_tool/genes/?page=1&symbol=GRIN2B&sortBy=autism_gene_sets_rank&order=desc').as('responseHandler');
+    cy.wait('@responseHandler');
+    autismGeneProfilesTablePage.allTableRows.first().should('have.length', 1);
+    autismGeneProfilesTablePage.allTableCells.first().click();
+    page.getView('GRIN2B');
+
+    gene_data.statistics.study.affected.forEach(arr => {
+      page.datasetsTable.within(el => {
+        if(arr === '' || arr === '–') {
+
+        } else {
+          cy.wrap(el).contains(arr).invoke('attr', 'href').then(href => {
+            console.log(href);
+            //cy.visit(href);
+          });
+        }
+      });
+    });
+
   });
 });
 
@@ -177,64 +206,3 @@ const sfari_genes = [
   'BST1'
 ];
 
-function compareData(data: any) {
-  const page = new AutismGeneProfilesSingleView();
-
-  page.singleScoreMarkers.parent().each((el, index, list) => {
-    cy.wrap(el).get('g > text.small').eq(index).should('have.text', data['data'][index]['value']);
-  });
-
-  page.geneAutismGeneSetsTable.within(row => {
-    cy.wrap(row).get('tr').each((el, index, list) => {
-      cy.wrap(el).within(col => {
-        cy.wrap(col).get('td').eq(0).should('have.text', data['statistics']['autism_gene_sets'][index]['name']);
-      });
-      if(data['statistics']['autism_gene_sets'][index]['value'] === true) {
-        cy.wrap(el).within(col => {
-          cy.wrap(col).get('td').eq(1).should('have.length', 1);
-        });
-      }
-    });
-  });
-
-  page.geneRelevantGeneSetsTable.within(row => { // these can be made with a single for, const table = geneAutism in the first and geneRelevant in the second case
-    cy.wrap(row).get('tr').each((el, index, list) => {
-      cy.wrap(el).within(col => {
-        cy.wrap(col).get('td').eq(0).should('have.text', data['statistics']['relevant_gene_sets'][index]['name']);
-      });
-      if(data['statistics']['relevant_gene_sets'][index]['value'] === true) {
-        cy.wrap(el).within(col => {
-          cy.wrap(col).get('td').eq(1).should('have.length', 1);
-        });
-      }
-    });
-  });
-
-  page.datasetsTable.within(row => {
-    cy.wrap(row).get('tbody > tr').each((el, index, list) => {
-      cy.wrap(el).within(col => {
-        cy.wrap(col).get('td').eq(0).should('have.text', data['statistics']['study']['variant_statistics'][index]);
-      });
-      cy.wrap(el).within(col => {
-        cy.wrap(col).get('td').eq(1).should('have.text', data['statistics']['study']['affected'][index]);
-      });
-      cy.wrap(el).within(col => {
-        cy.wrap(col).get('td').eq(2).should('have.text', data['statistics']['study']['unaffected'][index]);
-      });
-    });
-  });
-}
-
-function getView(name: string) {
-
-  cy.get('nav > li > a > span').not('.close').each(nav => {
-    cy.wrap(nav).eq(0).then(el => {
-      if(el.text() === name) {
-        cy.wrap(el).click();
-        return false;
-      } else {
-        cy.wrap(el).parent().children().eq(1).click();
-      }
-    });
-  });
-}
