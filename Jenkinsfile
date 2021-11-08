@@ -55,13 +55,14 @@ pipeline {
               myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8', id: 'mypy-wdae', name: 'MyPy - wdae')
             ]
           )
-          publishHTML (target : [allowMissing: false,
-            alwaysLinkToLastBuild: true,
-            keepAll: true,
-            reportDir: 'test-results/mypy_dae_html/',
-            reportFiles: 'index.html',
-            reportName: 'MyPy DAE Report',
-            reportTitles: 'The MyPy DAE Report'])
+
+          // publishHTML (target : [allowMissing: false,
+          //   alwaysLinkToLastBuild: true,
+          //   keepAll: true,
+          //   reportDir: 'test-results/mypy_dae_html/',
+          //   reportFiles: 'index.html',
+          //   reportName: 'MyPy DAE Report',
+          //   reportTitles: 'The MyPy DAE Report'])
           
         } finally {
           zulipNotification(
