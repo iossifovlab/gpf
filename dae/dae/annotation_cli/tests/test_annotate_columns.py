@@ -1,6 +1,5 @@
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.annotation_cli.annotate_columns import cli
-from yaml import safe_load
 
 
 def setup_dir(dir, files):
