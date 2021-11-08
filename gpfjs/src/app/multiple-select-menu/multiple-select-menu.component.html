@@ -18,18 +18,20 @@
   </div>
 
   <table cdkDropList (cdkDropListDropped)="drop($event)">
-    <tr *ngFor="let item of checkboxDataArray | filter: searchText" style="height: 30px" cdkDrag>
+    <tr cdkDrag *ngFor="let item of allItems | filter: searchText" style="height: 30px">
       <td>
         <label style="width: 100%">
-          <input type="checkbox" [checked]="item.isChecked" [(ngModel)]="item.isChecked" />
-          <span style="padding-left: 10px">{{ item.id }}</span>
+          <input type="checkbox"
+            [checked]="selectedItems.has(item)"
+            (change)="toggleItem(item, $event)"
+          />
+          <span style="padding-left: 10px">{{ item }}</span>
         </label>
       </td>
     </tr>
     <td>
       <button
         type="submit"
-        [disabled]="!isSelectionValid()"
         class="btn btn-secondary"
         style="width: 100%"
         (click)="apply()">Apply</button>

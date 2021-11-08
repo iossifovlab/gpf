@@ -15,6 +15,19 @@ export class AgpConfig {
 
   @Type(() => AgpOrder)
   order: AgpOrder[];
+
+  public get shownGeneSets(): AgpGeneSetsCategory[] {
+    return this.geneSets.filter(gs => gs.defaultVisible);
+  }
+
+  public get shownGenomicScores(): AgpGenomicScoresCategory[] {
+    return this.genomicScores.filter(gs => gs.defaultVisible);
+  }
+
+  public get shownDatasets(): AgpDataset[] {
+    return this.datasets.filter(d => d.defaultVisible);
+  }
+  
 }
 
 export class AgpGeneSetsCategory {
@@ -24,6 +37,18 @@ export class AgpGeneSetsCategory {
 
   @Type(() => AgpGeneSet)
   sets: AgpGeneSet[];
+
+  public get itemIds(): string[] {
+    return this.sets.map(set => set.setId);
+  }
+
+  public get shown(): AgpGeneSet[] {
+    return this.sets.filter(set => set.defaultVisible);
+  }
+
+  public get shownItemIds(): string[] {
+    return this.sets.filter(set => set.defaultVisible).map(set => set.setId);
+  }
 }
 
 export class AgpGeneSet {
@@ -40,6 +65,18 @@ export class AgpGenomicScoresCategory {
 
   @Type(() => AgpGenomicScore)
   scores: AgpGenomicScore[];
+
+  public get itemIds(): string[] {
+    return this.scores.map(score => score.scoreName);
+  }
+
+  public get shown(): AgpGenomicScore[] {
+    return this.scores.filter(score => score.defaultVisible);
+  }
+
+  public get shownItemIds(): string[] {
+    return this.scores.filter(score => score.defaultVisible).map(score => score.scoreName);
+  }
 }
 
 export class AgpGenomicScore {
@@ -57,6 +94,18 @@ export class AgpDataset {
 
   @Type(() => AgpDatasetPersonSet)
   personSets: AgpDatasetPersonSet[];
+
+  public get itemIds(): string[] {
+    return this.personSets.map(ps => ps.id);
+  }
+
+  public get shown(): AgpDatasetPersonSet[] {
+    return this.personSets.filter(ps => ps.defaultVisible);
+  }
+
+  public get shownItemIds(): string[] {
+    return this.personSets.filter(ps => ps.defaultVisible).map(ps => ps.id);
+  }
 }
 
 export class AgpDatasetPersonSet {
@@ -66,9 +115,22 @@ export class AgpDatasetPersonSet {
   description: string;
   parentsCount: number;
   childrenCount: number;
+  defaultVisible = true;
   
   @Type(() => AgpDatasetStatistic)
   statistics: AgpDatasetStatistic[];
+
+  public get itemIds(): string[] {
+    return this.statistics.map(s => s.id);
+  }
+
+  public get shown(): AgpDatasetStatistic[] {
+    return this.statistics.filter(s => s.defaultVisible);
+  }
+
+  public get shownItemIds(): string[] {
+    return this.statistics.filter(s => s.defaultVisible).map(s => s.id);
+  }
 }
 
 export class AgpDatasetStatistic {

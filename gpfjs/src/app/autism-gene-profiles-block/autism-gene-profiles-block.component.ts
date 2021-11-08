@@ -1,10 +1,8 @@
 import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
-import { NgbDropdownMenu, NgbNav } from '@ng-bootstrap/ng-bootstrap';
+import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { AgpConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
-import { cloneDeep } from 'lodash';
 import { take } from 'rxjs/operators';
-import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-block',
@@ -13,16 +11,9 @@ import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-s
 })
 export class AutismGeneProfilesBlockComponent implements OnInit {
   @ViewChild('nav') public nav: NgbNav;
-  @ViewChild(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu;
-  @ViewChild(MultipleSelectMenuComponent) public multipleSelectMenuComponent: MultipleSelectMenuComponent;
 
   public geneTabs = new Set<string>();
   public autismGeneToolConfig: AgpConfig;
-  public tableConfig: AgpConfig;
-  public shownTableConfig: AgpConfig;
-
-  public allColumns: string[];
-  public shownColumns: string[];
 
   public showKeybinds = false;
   private keybinds = [
@@ -58,19 +49,6 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   public ngOnInit(): void {
     this.autismGeneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
       this.autismGeneToolConfig = config;
-      this.tableConfig = cloneDeep(config);
-      console.log(this.tableConfig);
-      this.shownTableConfig = cloneDeep(config);
-
-      this.shownTableConfig.geneSets = this.shownTableConfig.geneSets
-      .filter(geneSet => geneSet.defaultVisible === true);
-      this.shownTableConfig.genomicScores = this.shownTableConfig.genomicScores
-      .filter(genomicScore => genomicScore.defaultVisible === true);
-      this.shownTableConfig.datasets = this.shownTableConfig.datasets
-      .filter(dataset => dataset.defaultVisible === true);
-
-      this.allColumns = this.getAllCategories(this.tableConfig);
-      this.shownColumns = this.getAllCategories(this.shownTableConfig);
     });
   }
 
@@ -166,46 +144,5 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     } else if (key === 'n' || key === 'e') {
       this.openNextTab();
     }
-  }
-
-  public getAllCategories(config: AgpConfig) {
-    const allColumns = [];
-    if (config.geneSets) {
-      allColumns.push(...config.geneSets.map(obj => obj.displayName));
-    }
-    if (config.genomicScores) {
-      allColumns.push(...config.genomicScores.map(obj => obj.displayName));
-    }
-    if (config.datasets) {
-      allColumns.push(...config.datasets.map(obj => obj.displayName));
-    }
-    return allColumns;
-  }
-
-  public openDropdown(): void {
-    this.ngbDropdownMenu.dropdown.open();
-    this.multipleSelectMenuComponent.focusSearchInput();
-  }
-
-  public handleMultipleSelectMenuApplyEvent($event): void {
-    this.shownColumns = $event.data;
-
-    this.shownTableConfig.geneSets = this.tableConfig.geneSets.filter((obj) =>
-      this.shownColumns.includes(obj.displayName)
-    );
-    this.shownTableConfig.genomicScores = this.tableConfig.genomicScores.filter((obj) =>
-      this.shownColumns.includes(obj.displayName)
-    );
-    this.shownTableConfig.datasets = this.tableConfig.datasets.filter((obj) =>
-      this.shownColumns.includes(obj.displayName)
-    );
-    this.shownTableConfig = {...this.shownTableConfig};
-
-    this.ngbDropdownMenu.dropdown.close();
-  }
-
-  public tableConfigChangeEvent($event): void {
-    this.shownTableConfig = $event;
-    this.shownColumns = this.getAllCategories(this.shownTableConfig);
   }
 }
