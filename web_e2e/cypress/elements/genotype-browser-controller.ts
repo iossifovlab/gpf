@@ -61,13 +61,13 @@ export class GenotypeBrowserController extends BaseController {
   }
 
   setEffectTypesToNone() {
-    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-effecttypes', 'None').click();
+    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-effect-types', 'None').click();
   }
 
   setEffectTypes(effectTypes: string[]) {
     this.setEffectTypesToNone();
     for (const effectType of effectTypes) {
-      this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-effecttypes', effectType).click();
+      this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-effect-types', effectType).click();
     }
   }
 
@@ -76,7 +76,7 @@ export class GenotypeBrowserController extends BaseController {
   }
 
   setEffectTypesToAll() {
-    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-effecttypes', 'All').click();
+    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-effect-types', 'All').click();
   }
 
   setPhenotypeToAll() {
@@ -134,16 +134,16 @@ export class GenotypeBrowserController extends BaseController {
   }
 
   setVariantTypesToAll() {
-    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-varianttypes', 'All').click();
+    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-variant-types', 'All').click();
   }
 
   setVariantTypesToNone() {
-    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-varianttypes', 'None').click();
+    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-variant-types', 'None').click();
   }
 
   setVariantType(variantType: string) {
     this.setVariantTypesToNone();
-    this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-varianttypes', variantType).click();
+    this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-variant-types', variantType).click();
   }
 
   setInheritanceTypeToAll() {
