@@ -225,7 +225,20 @@ class VariantsLoader(CLILoader):
             self._attributes = copy.deepcopy(attributes)
         self.arguments = []
 
-        # self._variants_schema = Schema.produce_base_schema()
+    #     self._variants_schema = Schema()
+    #     self._init_frequencies_schema()
+
+    # def _init_frequencies_schema(self):
+    #     frequencies_schema = {
+    #             "af_parents_called_count": "int",
+    #             "af_parents_called_percent": "float",
+    #             "af_allele_count": "int",
+    #             "af_allele_freq": "float",
+    #             "af_ref_allele_count": "int",
+    #             "af_ref_allele_freq": "float",
+    #     }
+    #     for n, t in frequencies_schema.items():
+    #         self._variants_schema.create_field(n, t)
 
     def get_attribute(self, key: str) -> Any:
         return self._attributes.get(key, None)

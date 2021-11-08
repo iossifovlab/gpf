@@ -436,8 +436,8 @@ class AlleleParquetSerializer:
         "family_variant_index"
     ]
 
-    def __init__(self, variants_schema, extra_attributes=None):
-        if variants_schema is None:
+    def __init__(self, annotation_schema, extra_attributes=None):
+        if annotation_schema is None:
             logger.info(
                 "serializer called without variants schema")
 
@@ -479,19 +479,19 @@ class AlleleParquetSerializer:
         self._schema = None
 
         additional_searchable_props = {}
+        additional_searchable_props["af_allele_freq"] = pa.float32()
+        additional_searchable_props["af_allele_count"] = pa.int32()
+        additional_searchable_props[
+            "af_parents_called_percent"
+        ] = pa.float32()
+        additional_searchable_props[
+            "af_parents_called_count"
+        ] = pa.int32()
+
         scores_searchable = {}
         scores_binary = {}
-        if variants_schema:
-            if "af_allele_freq" in variants_schema.names:
-                additional_searchable_props["af_allele_freq"] = pa.float32()
-                additional_searchable_props["af_allele_count"] = pa.int32()
-                additional_searchable_props[
-                    "af_parents_called_percent"
-                ] = pa.float32()
-                additional_searchable_props[
-                    "af_parents_called_count"
-                ] = pa.int32()
-            for col_name in variants_schema.names:
+        if annotation_schema:
+            for col_name in annotation_schema.names:
                 if (
                     col_name
                     not in self.BASE_SEARCHABLE_PROPERTIES_TYPES.keys()
@@ -856,6 +856,8 @@ class AlleleParquetSerializer:
             self, allele, variant_data,
             extra_attributes_data,
             summary_vectors):
+        assert "variant_data" in self.schema.names
+
         vectors = summary_vectors[allele.allele_index]
         family_properties = []
         product_properties = []

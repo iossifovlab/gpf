@@ -372,7 +372,7 @@ class ContinuousParquetFileWriter:
         self.filepath = filepath
         extra_attributes = variant_loader.get_attribute("extra_attributes")
         self.serializer = AlleleParquetSerializer(
-            variant_loader.variants_schema, extra_attributes
+            variant_loader.annotation_schema, extra_attributes
         )
         self.schema = self.serializer.schema
 
@@ -459,7 +459,7 @@ class VariantsParquetWriter:
         extra_attributes = self.variants_loader.get_attribute(
             "extra_attributes")
         self.serializer = AlleleParquetSerializer(
-            self.variants_loader.variants_schema, extra_attributes)
+            self.variants_loader.annotation_schema, extra_attributes)
 
     def _setup_reference_allele(self, summary_variant, family):
         genotype = -1 * np.ones(shape=(2, len(family)), dtype=GENOTYPE_TYPE)
@@ -578,6 +578,8 @@ class VariantsParquetWriter:
 
                 variant_data = self.serializer.serialize_family_variant(
                     alleles, summary_blobs, scores_blob)
+                assert variant_data is not None
+
                 extra_attributes_data = \
                     self.serializer.serialize_extra_attributes(fv)
                 for family_allele in alleles:
