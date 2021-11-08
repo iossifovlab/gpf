@@ -1,27 +1,28 @@
 <div *ngIf="autismGeneToolConfig">
-  <nav ngbNav #nav="ngbNav" class="navbar" style="justify-content: flex-start; padding: 0; padding-left: 25px;">
+  <nav ngbNav #nav="ngbNav" class="navbar" style="justify-content: flex-start; padding: 0; padding-left: 25px">
     <li class="nav-tabs" [ngbNavItem]="'autismGenesTool'" [destroyOnHide]="false">
-      <a ngbNavLink style="display: inline-flex; align-items: center; padding-right: 9px;">
+      <a ngbNavLink style="display: inline-flex; align-items: center; padding-right: 9px">
         <span>Autism genes tool</span>
-        <div style="display: inline-flex; margin-left: 6px;">
+        <div style="display: inline-flex; margin-left: 6px">
           <div (mouseover)="showKeybinds = true" (mouseout)="showKeybinds = false" class="keybinds-icon">
             <span style="position: relative; top: 1px">?</span>
           </div>
-          <button #columnFilteringButton
-            (click)="openDropdown();"
+          <button
+            #columnFilteringButton
+            (click)="openDropdown()"
             id="column-filtering-button"
             class="dropdown-toggle btn navbar-toggler">
-            <span style="font-size: 14px;">&#9776;</span>
+            <span style="font-size: 14px">&#9776;</span>
           </button>
         </div>
 
         <div *ngIf="showKeybinds" class="keybinds-tooltip">
-          <span>1, 2, 3, ...</span> - navigate to tab by index<br>
-          <span>e</span> or <span>n</span> - navigate to the next tab<br>
-          <span>q</span> or <span>p</span> - navigate to the previous tab<br>
-          <span>w</span> - close current tab<br>
-          <span>ctrl+mouse1</span> or <span>mouse3</span> - toggle row highlight<br>
-          <span>esc</span> - clear all highlights<br>
+          <span>1, 2, 3, ...</span> - navigate to tab by index<br />
+          <span>e</span> or <span>n</span> - navigate to the next tab<br />
+          <span>q</span> or <span>p</span> - navigate to the previous tab<br />
+          <span>w</span> - close current tab<br />
+          <span>ctrl+mouse1</span> or <span>mouse3</span> - toggle row highlight<br />
+          <span>esc</span> - clear all highlights<br />
         </div>
       </a>
 
@@ -34,9 +35,10 @@
         </gpf-autism-gene-profiles-table>
       </ng-template>
 
-      <span #dropdownSpan ngbDropdown style="display: table; margin:auto" >
-        <button ngbDropdownToggle style="display: none;"></button>
-        <gpf-multiple-select-menu ngbDropdownMenu
+      <span #dropdownSpan ngbDropdown style="display: table; margin: auto">
+        <button ngbDropdownToggle style="display: none"></button>
+        <gpf-multiple-select-menu
+          ngbDropdownMenu
           style="margin-top: 5px"
           [allItems]="allColumns"
           [selectedItems]="shownColumns"
@@ -46,7 +48,7 @@
 
     <li class="nav-tabs" *ngFor="let geneTab of geneTabs" [ngbNavItem]="geneTab" [destroyOnHide]="false">
       <a ngbNavLink>
-        <span>{{geneTab}}</span>
+        <span>{{ geneTab }}</span>
         <span class="close position-relative pl-2 font-weight-light" (click)="closeTab($event, geneTab)">×</span>
       </a>
       <ng-template ngbNavContent>
