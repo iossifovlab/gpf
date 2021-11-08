@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 from .schema import Schema
 from .annotatable import Annotatable
@@ -10,6 +11,26 @@ logger = logging.getLogger(__name__)
 
 
 class VariantScoreAnnotatorBase(Annotator):
+
+    class ScoreSource(Schema.Source):
+        def __init__(
+                self, annotator_type: str, resource_id: str,
+                score_id: str,
+                position_aggregator: Optional[None] = None,
+                nucleotide_aggregator: Optional[None] = None):
+            super().__init__(annotator_type, resource_id)
+            self.score_id = score_id
+            self.position_aggregator = position_aggregator
+            self.nucleotide_aggregator = nucleotide_aggregator
+
+        def __repr__(self):
+            repr = [super().__repr__(), ]
+            if self.position_aggregator:
+                repr.append(f"pos_aggr({self.position_aggregator})")
+            if self.nucleotide_aggregator:
+                repr.append(f"nuc_aggre({self.nucleotide_aggregator})")
+            return "; ".join(repr)
+
     def __init__(
             self, resource: GenomicScoresResource,
             liftover=None, override=None):
@@ -25,8 +46,8 @@ class VariantScoreAnnotatorBase(Annotator):
         for score in self.resource.get_all_scores():
             self.score_types[score.id] = score.type
 
-        self.non_default_position_aggregators = None
-        self.non_default_nucleotide_aggregators = None
+        self.non_default_position_aggregators = {}
+        self.non_default_nucleotide_aggregators = {}
         self._collect_non_default_aggregators()
 
     def get_annotation_config(self):
@@ -65,12 +86,16 @@ class VariantScoreAnnotatorBase(Annotator):
                 prop_name = attribute.dest
                 score_config = self.resource.get_score_config(attribute.source)
                 py_type = score_config.type
-                pa_type = self.TYPES.get(score_config.type)
                 assert py_type is not None, score_config
-                schema.create_field(
-                    prop_name, py_type, pa_type,
-                    self.annotator_type, self.resource.resource_id,
-                    attribute.source)
+                score_id = attribute.source
+                source = self.ScoreSource(
+                    self.annotator_type,
+                    self.resource.resource_id,
+                    score_id,
+                    self.non_default_position_aggregators.get(score_id),
+                    self.non_default_position_aggregators.get(score_id))
+
+                schema.create_field(prop_name, py_type, source)
 
             self._annotation_schema = schema
         return self._annotation_schema

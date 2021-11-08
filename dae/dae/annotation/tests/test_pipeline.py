@@ -1,5 +1,3 @@
-import pyarrow as pa
-
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 
 
@@ -27,12 +25,12 @@ def test_build_pipeline_schema(
 
     # assert len(schema) == 10
 
-    assert "effect_gene_genes" in schema.names
-    field = schema["effect_gene_genes"]
+    assert "effect_genes" in schema.names
+    field = schema["effect_genes"]
     print(field, dir(field))
 
-    assert field.pa_type == pa.list_(pa.string()), field
+    assert field.type == "str", field
 
     assert "cadd_raw" in schema.names
     field = schema["cadd_raw"]
-    assert field.pa_type == pa.float32()
+    assert field.type == "float"

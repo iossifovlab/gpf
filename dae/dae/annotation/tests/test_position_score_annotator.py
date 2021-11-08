@@ -151,7 +151,7 @@ def test_position_annotator_schema(position_score_repo):
     # FIXME: assert field.type == float
     assert field.source.annotator_type == "position_score_annotator"
     assert field.source.resource_id == "position_score1"
-    assert field.source.source_attr == "test100way"
+    assert field.source.score_id == "test100way"
 
 
 def test_position_default_annotator_schema(position_score_repo):
@@ -174,7 +174,7 @@ def test_position_default_annotator_schema(position_score_repo):
     # FIXME: assert field.type == float
     assert field.source.annotator_type == "position_score_annotator"
     assert field.source.resource_id == "position_score1"
-    assert field.source.source_attr == "t1"
+    assert field.source.score_id == "t1"
 
 
 def test_position_annotator_schema_one_source_two_dest(position_score_repo):
@@ -204,11 +204,11 @@ def test_position_annotator_schema_one_source_two_dest(position_score_repo):
     # FIXME: assert field.type == float
     assert field.source.annotator_type == "position_score_annotator"
     assert field.source.resource_id == "position_score1"
-    assert field.source.source_attr == "test100way"
+    assert field.source.score_id == "test100way"
 
     field = schema["test100max"]
     assert field.name == "test100max"
     # FIXME: assert field.type == float
     assert field.source.annotator_type == "position_score_annotator"
     assert field.source.resource_id == "position_score1"
-    assert field.source.source_attr == "test100way"
+    assert field.source.score_id == "test100way"

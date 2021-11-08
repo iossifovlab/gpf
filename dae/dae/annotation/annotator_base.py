@@ -1,7 +1,6 @@
 import logging
 import abc
 
-import pyarrow as pa
 from typing import List, Optional
 
 from .annotatable import Annotatable
@@ -11,12 +10,6 @@ logger = logging.getLogger(__name__)
 
 
 class Annotator(abc.ABC):
-
-    TYPES = {
-        "float": pa.float32(),
-        "integer": pa.int32(),
-        "string": pa.string(),
-    }
 
     def __init__(self, liftover: str = None, override: dict = None):
         self.liftover = liftover

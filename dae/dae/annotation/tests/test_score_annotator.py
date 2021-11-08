@@ -1,5 +1,4 @@
 import pytest
-import pyarrow as pa
 
 from dae.annotation.schema import Schema
 from dae.annotation.annotation_pipeline import AnnotationPipeline
@@ -56,10 +55,10 @@ def test_np_score_annotator_schema(anno_grdb):
     assert "cadd_phred" in schema.names
 
     field = schema["cadd_raw"]
-    assert field.pa_type == pa.float32()
+    assert field.type == "float"
 
     field = schema["cadd_phred"]
-    assert field.pa_type == pa.float32()
+    assert field.type == "float"
 
     assert len(schema) == 2
     print(dir(schema))

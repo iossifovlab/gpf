@@ -1,7 +1,5 @@
 import copy
 
-import pyarrow as pa
-
 from box import Box
 
 from dae.effect_annotation.annotator import EffectAnnotator
@@ -15,17 +13,16 @@ from .annotator_base import Annotator
 
 class EffectAnnotatorAdapter(Annotator):
 
-    SCHEMA = {
-        "effect_type": (str, pa.string()),
-        "effect_gene_genes": (list, pa.list_(pa.string())),
-        "effect_gene_types": (list, pa.list_(pa.string())),
-        "effect_genes": (list, pa.list_(pa.string())),
-        "effect_details_transcript_ids": (list, pa.list_(pa.string())),
-        "effect_details_genes": (list, pa.list_(pa.string())),
-        "effect_details_details": (list, pa.list_(pa.string())),
-        "effect_details": (list, pa.list_(pa.string())),
-        "allele_effects": (AlleleEffects, None),
-    }
+    class EffectSource(Schema.Source):
+        def __init__(
+                self, annotator_type: str, resource_id: str,
+                effect_attribute: str):
+            super().__init__(annotator_type, resource_id)
+            self.effect_attribute = effect_attribute
+
+        def __repr__(self):
+            repr = [super().__repr__(), self.effect_attribute]
+            return "; ".join(repr)
 
     DEFAULT_ANNOTATION = Box({
         "attributes": [
@@ -39,30 +36,30 @@ class EffectAnnotatorAdapter(Annotator):
                 "dest": "effect_genes"
             },
 
-            {
-                "source": "effect_gene_genes",
-                "dest": "effect_gene_genes"
-            },
+            # {
+            #     "source": "effect_gene_genes",
+            #     "dest": "effect_gene_genes"
+            # },
 
-            {
-                "source": "effect_gene_types",
-                "dest": "effect_gene_types"
-            },
+            # {
+            #     "source": "effect_gene_types",
+            #     "dest": "effect_gene_types"
+            # },
 
             {
                 "source": "effect_details",
                 "dest": "effect_details"
             },
 
-            {
-                "source": "effect_details_transcript_ids",
-                "dest": "effect_details_transcript_ids"
-            },
+            # {
+            #     "source": "effect_details_transcript_ids",
+            #     "dest": "effect_details_transcript_ids"
+            # },
 
-            {
-                "source": "effect_details_details",
-                "dest": "effect_details_details"
-            },
+            # {
+            #     "source": "effect_details_details",
+            #     "dest": "effect_details_details"
+            # },
 
             # {
             #     "source": "allele_effects",
@@ -109,13 +106,12 @@ class EffectAnnotatorAdapter(Annotator):
             schema = Schema()
             for attribute in self.get_annotation_config():
                 prop_name = attribute.dest
-                py_type, pa_type = self.SCHEMA[attribute.source]
-                schema.create_field(
-                    prop_name, py_type, pa_type,
-                    self.annotator_type,
-                    f"{self.genomic_sequence.resource_id}:"
-                    f"{self.gene_models.resource_id}",
-                    attribute.source)
+                source_name = attribute.source
+
+                source = self.EffectSource(
+                    self.annotator_type, str(self.gene_models), source_name)
+                schema.create_field(prop_name, "str", source)
+
             self._annotation_schema = schema
         return self._annotation_schema
 

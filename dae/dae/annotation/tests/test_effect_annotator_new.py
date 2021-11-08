@@ -2,8 +2,6 @@
 import os
 import copy
 
-import pyarrow as pa
-
 from dae.effect_annotation.effect import AlleleEffects
 from dae.annotation.effect_annotator import EffectAnnotatorAdapter
 from dae.pedigrees.loader import FamiliesLoader
@@ -106,10 +104,10 @@ def test_effect_annotation_schema(anno_grdb):
     assert schema is not None
 
     field = schema["effect_type"]
-    assert field.pa_type == pa.string()
+    assert field.type == "str"
 
-    field = schema["effect_gene_genes"]
-    assert field.pa_type == pa.list_(pa.string())
+    field = schema["effect_genes"]
+    assert field.type == "str"
 
-    field = schema["effect_gene_types"]
-    assert field.pa_type == pa.list_(pa.string())
+    field = schema["effect_details"]
+    assert field.type == "str"
