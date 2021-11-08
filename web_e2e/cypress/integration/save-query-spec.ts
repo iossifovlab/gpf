@@ -51,14 +51,14 @@ describe('Save query tests', () => {
     const genotypeBlockPage = new GenotypeBlockPage();
 
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    genotypeBlockPage.findButtonInComponentContainingText('gpf-effecttypes', 'All').click();
+    genotypeBlockPage.findButtonInComponentContainingText('gpf-effect-types', 'All').click();
     page.button.click();
     page.dropdownNameInput.type('Test');
     page.saveButton.click();
 
     page.navigateToSidenavPage(sidenavPageLinks.savedQueries);
     page.tableFirstLoadButton.click();
-    genotypeBlockPage.findAllCheckboxesInComponent('gpf-effecttypes').each((element) => {
+    genotypeBlockPage.findAllCheckboxesInComponent('gpf-effect-types').each((element) => {
       cy.wrap(element).should('be.checked');
     });
 
