@@ -41,6 +41,10 @@ export class AutismGeneProfilesSingleView extends BasePage {
     return cy.get('#autism_gene_sets');
   }
 
+  get genomicScoresTable() {
+    return cy.get('table.genomic-scores-table');
+  }
+
   get autismGeneToolAllView() {
     return cy.get('a#ngb-nav-0.nav-link');
   }
@@ -76,52 +80,81 @@ export class AutismGeneProfilesSingleView extends BasePage {
   compareData(data: any) {
     const page = new AutismGeneProfilesSingleView();
   
-    page.singleScoreMarkers.parent().each((el, index) => {
-      cy.wrap(el).get('g > text.small').eq(index).should('have.text', data['data'][index]['value']);
-    });
+    if(data.hasOwnProperty('data')) {
 
-    ['autism_gene_sets', 'relevant_gene_sets'].forEach(element => {
-      let pg: Cypress.Chainable<JQuery<HTMLElement>>;
-      switch(element) {
-        case 'autism_gene_sets': {
-          pg = page.geneAutismGeneSetsTable;
-          break;
-        }
-        case 'relevant_gene_sets': {
-          pg = page.geneRelevantGeneSetsTable;
-          break;
-        }
-        default: {
-          return;
-        }
-      }
-
-      pg.within(table => {
-        cy.wrap(table).get('tr').each((el, index) => {
-          cy.wrap(el).within(col => {
-            cy.wrap(col).get('td').eq(0).should('have.text', data['statistics'][element][index]['name']);
-          });
-          if(data['statistics'][element][index]['value'] === true) {
-            cy.wrap(el).within(col => {
-              cy.wrap(col).get('td').eq(1).should('have.length', 1);
+      data.data.forEach(value => {
+        [0, 1].forEach(tab => {
+          page.genomicScoresTable.eq(tab).each(name => {
+            cy.wrap(name).within(table => {
+              cy.wrap(table).get('td').not('.ng-star-inserted').each((element, id) => {
+                if(element.text() === value['name']) {
+                  expect(element.text()).to.equal(value['name']);
+                  cy.wrap(table).get('td.ng-star-inserted').eq(id).within(scores => {
+                    cy.wrap(scores).get('g > text.small').should('have.text', value['value']);
+                  });
+                }
+              });
             });
+          });
+        })
+      });
+    }
+
+    if(data.hasOwnProperty('statistics')) {
+      ['autism_gene_sets', 'relevant_gene_sets'].forEach(element => {
+        let pg: Cypress.Chainable<JQuery<HTMLElement>> = null;
+        switch(element) {
+          case 'autism_gene_sets': {
+            if(!data.statistics.hasOwnProperty('autism_gene_sets')) {
+              break;
+            }
+            pg = page.geneAutismGeneSetsTable;
+            break;
           }
-        });
+          case 'relevant_gene_sets': {
+            if(!data.statistics.hasOwnProperty('relevant_gene_sets')) {
+              break;
+            }
+            pg = page.geneRelevantGeneSetsTable;
+            break;
+          }
+          default: {
+            pg = null;
+            break;
+          }
+        }
+
+        if(pg !== null) {
+          pg.within(table => {
+            cy.wrap(table).get('tr').each((el, index) => {
+              cy.wrap(el).within(col => {
+                cy.wrap(col).get('td').eq(0).should('have.text', data['statistics'][element][index]['name']);
+              });
+              if(data['statistics'][element][index]['value'] === true) {
+                cy.wrap(el).within(col => {
+                  cy.wrap(col).get('td').eq(1).should('have.length', 1);
+                });
+              }
+            });
+          });
+        }
       });
-    });
-  
-    page.datasetsTable.within(row => {
-      cy.wrap(row).get('tbody > tr').each((el, index, list) => {
-        cy.wrap(el).within(col => {
-          cy.wrap(col).get('td').eq(0).should('have.text', data['statistics']['study']['variant_statistics'][index]);
+    
+      if(data.statistics.hasOwnProperty('study')) {
+        page.datasetsTable.within(row => {
+          cy.wrap(row).get('tbody > tr').each((el, index, list) => {
+            cy.wrap(el).within(col => {
+              cy.wrap(col).get('td').eq(0).should('have.text', data['statistics']['study']['variant_statistics'][index]);
+            });
+            cy.wrap(el).within(col => {
+              cy.wrap(col).get('td').eq(1).should('have.text', data['statistics']['study']['affected'][index]);
+            });
+            cy.wrap(el).within(col => {
+              cy.wrap(col).get('td').eq(2).should('have.text', data['statistics']['study']['unaffected'][index]);
+            });
+          });
         });
-        cy.wrap(el).within(col => {
-          cy.wrap(col).get('td').eq(1).should('have.text', data['statistics']['study']['affected'][index]);
-        });
-        cy.wrap(el).within(col => {
-          cy.wrap(col).get('td').eq(2).should('have.text', data['statistics']['study']['unaffected'][index]);
-        });
-      });
-    });
+      }
+    }
   }
 }

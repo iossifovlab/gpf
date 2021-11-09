@@ -121,7 +121,7 @@ describe('Autism gene profiles single view links tests', () => {
   // it('should have the correct href for the SFARI link', () => {
   // }); */
 
-  it('should have proper single view data', () => {
+  it.only('should have proper single view data', () => {
     //page.cleanup();
     //page.navigateToHome();
     //page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
@@ -167,7 +167,6 @@ describe('Autism gene profiles single view links tests', () => {
 
   });
 });
-
 
 const gene_data = {
   gene_symbols: 'GRIN2B',
