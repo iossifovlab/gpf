@@ -1,7 +1,7 @@
 import itertools
 import traceback
 import logging
-from typing import List, Dict
+from typing import List, Dict, Set
 
 from dae.utils.dae_utils import join_line, split_iterable
 from dae.utils.variant_utils import mat2str, fgt2str
@@ -418,7 +418,11 @@ class ResponseTransformer:
         #     }
 
     def transform_gene_view_summary_variant_download(
-            self, variants: List[SummaryVariant], frequency_column):
+        self,
+        variants: List[SummaryVariant],
+        frequency_column,
+        summary_variant_ids: Set[str],
+    ):
         columns = [
             "location",
             "position",
@@ -432,8 +436,12 @@ class ResponseTransformer:
             "seen_in_affected",
             "seen_in_unaffected"
         ]
-        rows = self._gene_view_summary_download_variants_iterator(
-            variants, frequency_column
+
+        rows = filter(
+            lambda sa: f"{sa[0]}:{sa[6]}" in summary_variant_ids,
+            self._gene_view_summary_download_variants_iterator(
+                variants, frequency_column
+            )
         )
         return map(join_line, itertools.chain([columns], rows))
 
