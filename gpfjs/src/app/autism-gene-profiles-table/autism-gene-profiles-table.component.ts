@@ -92,21 +92,6 @@ export class AutismGeneProfilesTableComponent implements OnInit {
     private store: Store,
   ) { }
 
-  public getGeneSetsCategory(id: string): AgpGeneSetsCategory {
-    const category = this.config.geneSets.find(cat => cat.category === id);
-    return category.defaultVisible ? category : null;
-  }
-
-  public getGenomicScoresCategory(id: string): AgpGenomicScoresCategory {
-    const category = this.config.genomicScores.find(cat => cat.category === id);
-    return category.defaultVisible ? category : null;
-  }
-
-  public getDataset(id: string): AgpDataset {
-    const dataset = this.config.datasets.find(ds => ds.id === id);
-    return dataset.defaultVisible ? dataset : null;
-  }
-
   public ngOnInit(): void {
     this.focusGeneSearchInput();
 
@@ -135,6 +120,18 @@ export class AutismGeneProfilesTableComponent implements OnInit {
       firstSortingButton.hideState = 1;
       this.updateModalBottom();
     });
+  }
+
+  public getGeneSetsCategory(id: string): AgpGeneSetsCategory {
+    return this.config.shownGeneSets.find(cat => cat.category === id);
+  }
+
+  public getGenomicScoresCategory(id: string): AgpGenomicScoresCategory {
+    return this.config.shownGenomicScores.find(cat => cat.category === id);
+  }
+
+  public getDataset(id: string): AgpDataset {
+    return this.config.shownDatasets.find(ds => ds.id === id);
   }
 
   public updateModalBottom(): void {
@@ -267,18 +264,6 @@ export class AutismGeneProfilesTableComponent implements OnInit {
     this.currentSortingColumnId = sortBy;
   }
 
-  public openGeneSetCategoryDropdown(geneSetCategory: AgpGeneSetsCategory): void {
-    this.openDropdown(geneSetCategory.category);
-  }
-
-  public openGenomicScoresCategoryDropdown(genomicScoresCategory: AgpGenomicScoresCategory): void {
-    this.openDropdown(genomicScoresCategory.category);
-  }
-
-  public openDatasetDropdown(dataset: AgpDataset, menuToOpen: string): void {
-    this.openDropdown(menuToOpen);
-  }
-
   public async waitForDropdown(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
@@ -330,10 +315,9 @@ export class AutismGeneProfilesTableComponent implements OnInit {
   }
 
   public calculateDatasetColspan(dataset: AgpDataset): number {
-    // TODO Refactor with reduce
-    let count = 0;
-    dataset.shown.forEach(personSet => count += personSet.shown.length);
-    return count;
+    return dataset.shown
+      .map(personSet => personSet.shown.length)
+      .reduce((sum, length) => sum += length);
   }
 
   public goToQuery(
@@ -344,7 +328,7 @@ export class AutismGeneProfilesTableComponent implements OnInit {
     );
   }
 
-   public async waitForGeneSearchInputToLoad(): Promise<void> {
+  public async waitForGeneSearchInputToLoad(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
         if (this.geneSearchInput !== undefined) {
