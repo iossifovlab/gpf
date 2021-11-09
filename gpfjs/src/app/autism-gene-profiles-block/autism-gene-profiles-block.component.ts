@@ -79,6 +79,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   public createTabEventHandler($event): void {
     if (this.geneTabs.size >= this.maxTabCount) {
+      window.scroll(0, 0);
       return;
     }
 
