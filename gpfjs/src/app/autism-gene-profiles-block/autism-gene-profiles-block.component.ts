@@ -20,6 +20,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   @ViewChild(MultipleSelectMenuComponent) public multipleSelectMenuComponent: MultipleSelectMenuComponent;
 
   public geneTabs = new Set<string>();
+  public maxTabCount = 20;
   public autismGeneToolConfig: AgpConfig;
   public tableConfig: AgpTableConfig;
   public shownTableConfig: AgpTableConfig;
@@ -77,6 +78,10 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   }
 
   public createTabEventHandler($event): void {
+    if (this.geneTabs.size >= this.maxTabCount) {
+      return;
+    }
+
     const tabId: string = $event.geneSymbol;
     const navigateToTab: boolean = $event.navigateToTab;
 
