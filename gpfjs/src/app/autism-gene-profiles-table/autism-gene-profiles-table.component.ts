@@ -154,9 +154,7 @@ export class AutismGeneProfilesTableComponent implements OnInit {
     for (const geneSet of category.sets) {
       geneSet.defaultVisible = $event.selected.includes(geneSet.setId);
     }
-    if ($event.selected.length === 0) {
-      category.defaultVisible = false;
-    }
+    category.defaultVisible = $event.selected.length > 0;
     category.sets.sort((a, b) => $event.order.indexOf(a.setId) - $event.order.indexOf(b.setId));
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
@@ -167,9 +165,7 @@ export class AutismGeneProfilesTableComponent implements OnInit {
     for (const genomicScore of category.scores) {
       genomicScore.defaultVisible = $event.selected.includes(genomicScore.scoreName);
     }
-    if ($event.selected.length === 0) {
-      category.defaultVisible = false;
-    }
+    category.defaultVisible = $event.selected.length > 0;
     category.scores.sort((a, b) => $event.order.indexOf(a.scoreName) - $event.order.indexOf(b.scoreName));
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
@@ -180,9 +176,7 @@ export class AutismGeneProfilesTableComponent implements OnInit {
     for (const personSet of dataset.personSets) {
       personSet.defaultVisible = $event.selected.includes(personSet.id);
     }
-    if ($event.selected.length === 0) {
-      dataset.defaultVisible = false;
-    }
+    dataset.defaultVisible = $event.selected.length > 0;
     dataset.personSets.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
@@ -195,10 +189,16 @@ export class AutismGeneProfilesTableComponent implements OnInit {
     for (const statistic of personSet.statistics) {
       statistic.defaultVisible = $event.selected.includes(statistic.id);
     }
-    if ($event.selected.length === 0) {
-      personSet.defaultVisible = false;
-    }
+    personSet.defaultVisible = $event.selected.length > 0;
     personSet.statistics.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
+    this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
+  }
+
+  public filterCategories($event) {
+    for (const category of this.config.categories) {
+      category.defaultVisible = $event.selected.includes(category.id);
+    }
+    this.config.order.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
@@ -206,14 +206,12 @@ export class AutismGeneProfilesTableComponent implements OnInit {
     if ($event.ctrlKey && $event.type === 'click') {
       navigateToTab = false;
     }
-
     this.createTabEvent.emit({geneSymbol: geneSymbol, navigateToTab: navigateToTab});
   }
 
   public updateGenes(): void {
     this.loadMoreGenes = false;
     this.pageIndex++;
-
     this.autismGeneProfilesService
     .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
     .pipe(take(1)).subscribe(res => {
@@ -285,7 +283,7 @@ export class AutismGeneProfilesTableComponent implements OnInit {
         )
       );
       this.ngbDropdownMenu.find(ele => ele.nativeElement.id === `${columnId}-dropdown`).dropdown.open();
-      this.multipleSelectMenuComponents.find(menu => menu.menuId.includes(columnId)).focusSearchInput();
+      this.multipleSelectMenuComponents.find(menu => menu.menuId.includes(columnId)).refresh();
     });
   }
 

@@ -4,6 +4,12 @@
       <tr>
         <th class="table-main-header" style="width: 160px; min-width: 140px; position: sticky; top: 0px">
           <span>Gene</span>
+          <button #columnFilteringButton
+            id="column-filtering-button"
+            (click)="openDropdown('column-filtering')"
+            class="dropdown-toggle btn navbar-toggler">
+            <span style="font-size: 14px">&#9776;</span>
+          </button> 
         </th>
 
         <ng-container *ngFor="let element of config.order">
@@ -204,4 +210,15 @@
       </span>
     </div>
   </ng-container>
+</ng-container>
+
+<ng-container>
+  <div style="position: sticky;" [style.bottom.px]="modalBottom">
+    <span #dropdownSpan ngbDropdownAnchor ngbDropdown id="column-filtering-span">
+      <gpf-multiple-select-menu ngbDropdownMenu id="column-filtering-dropdown"
+        [menuId]="'column-filtering'"
+        [itemsSource]="config"
+        (applyEvent)="filterCategories($event)"></gpf-multiple-select-menu>
+    </span>
+  </div>
 </ng-container>

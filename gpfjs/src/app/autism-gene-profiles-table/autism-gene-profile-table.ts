@@ -16,6 +16,24 @@ export class AgpConfig {
   @Type(() => AgpOrder)
   order: AgpOrder[];
 
+  public get categories() {
+    return [
+      ...this.geneSets, ...this.genomicScores, ...this.datasets,
+    ]
+  }
+
+  public get itemIds(): string[] {
+    return this.order.map(o => o.id);
+  }
+
+  public get shownItemIds(): string[] {
+    return [
+      ...this.shownGeneSets.map(gs => gs.category),
+      ...this.shownGenomicScores.map(gs => gs.category),
+      ...this.shownDatasets.map(ds => ds.id),
+    ]
+  }
+
   public get shownGeneSets(): AgpGeneSetsCategory[] {
     return this.geneSets.filter(gs => gs.defaultVisible);
   }
@@ -37,6 +55,11 @@ export class AgpGeneSetsCategory {
 
   @Type(() => AgpGeneSet)
   sets: AgpGeneSet[];
+
+  public get id(): string {
+    // TODO This should be relabeled in the backend
+    return this.category;
+  }
 
   public get itemIds(): string[] {
     return this.sets.map(set => set.setId);
@@ -65,6 +88,11 @@ export class AgpGenomicScoresCategory {
 
   @Type(() => AgpGenomicScore)
   scores: AgpGenomicScore[];
+
+  public get id(): string {
+    // TODO This should be relabeled in the backend
+    return this.category;
+  }
 
   public get itemIds(): string[] {
     return this.scores.map(score => score.scoreName);

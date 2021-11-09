@@ -21,7 +21,19 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
   public ngOnChanges(): void {
     this.searchText = '';
     this.allItems = this.itemsSource.itemIds;
+    console.log('123123');
     this.selectedItems = new Set(this.itemsSource.shownItemIds);
+  }
+
+  public refresh(): void {
+    console.log('weqeqwe');
+    this.allItems = this.itemsSource.itemIds;
+    if (this.itemsSource.shownItemIds.length) {
+      this.selectedItems = new Set(this.itemsSource.shownItemIds);
+    } else {
+      this.selectedItems = new Set(this.allItems);
+    }
+    this.focusSearchInput();
   }
 
   public ngOnInit(): void {
