@@ -1,0 +1,33 @@
+vars:
+  wd: "."
+
+genotype_storage:
+  default: genotype_filesystem
+
+storage:
+
+  genotype_filesystem:
+    dir: "%(wd)s/studies"
+    storage_type: filesystem
+
+phenotype_data:
+  dir: "%(wd)s/dummy_pheno_dir"
+
+
+studies:
+  dir: "%(wd)s/studies"
+
+datasets:
+  dir: "%(wd)s/datasets"
+
+default_study_config:
+  conf_file: "%(wd)s/defaultConfiguration.conf"
+
+gene_info_db:
+  conf_file: "%(wd)s/gene_info.conf"
+
+genomes_db:
+  conf_file: "%(wd)s/genomesDB.conf"
+
+genomic_scores_db:
+  conf_file: "%(wd)s/genomicScores.conf"

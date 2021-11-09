@@ -99,10 +99,10 @@ def default_dae_config(request, cleanup):
     conf_dir = os.environ.get("DAE_DB_DIR")
     assert conf_dir is not None
 
-    dae_conf_path = os.path.join(conf_dir, "DAE.conf")
+    dae_conf_path = os.path.join(conf_dir, "gpf_instance.yaml")
 
     dae_config = GPFConfigParser.parse_and_interpolate_file(dae_conf_path)
-    dae_config["studies_db"]["dir"] = studies_dirname
+    dae_config["studies"]["dir"] = studies_dirname
     remote_config = {
         "id": "TEST_REMOTE",
         "host": "gpfremote",

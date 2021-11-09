@@ -29,9 +29,9 @@ def test_variants_db_studies_simple(
     genotype_storage_factory,
 ):
     assert dae_config_fixture is not None
-    assert dae_config_fixture.studies_db.dir is not None
+    assert dae_config_fixture.studies.dir is not None
 
-    assert dae_config_fixture.studies_db.dir == os.path.join(
+    assert dae_config_fixture.studies.dir == os.path.join(
         fixtures_dir(), "studies"
     )
 
@@ -51,9 +51,9 @@ def test_variants_db_genotype_data_groups_simple(
     genotype_storage_factory,
 ):
     assert dae_config_fixture is not None
-    assert dae_config_fixture.datasets_db.dir is not None
+    assert dae_config_fixture.datasets.dir is not None
 
-    assert dae_config_fixture.datasets_db.dir == os.path.join(
+    assert dae_config_fixture.datasets.dir == os.path.join(
         fixtures_dir(), "datasets"
     )
 

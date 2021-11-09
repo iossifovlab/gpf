@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 
 
 def save_study_config(dae_config, study_id, study_config, force=False):
-    dirname = os.path.join(dae_config.studies_db.dir, study_id)
+    dirname = os.path.join(dae_config.studies.dir, study_id)
     filename = os.path.join(dirname, "{}.conf".format(study_id))
 
     if os.path.exists(filename):

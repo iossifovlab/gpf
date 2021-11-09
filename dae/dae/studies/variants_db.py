@@ -54,7 +54,7 @@ class VariantsDb(object):
                 self.dae_config.default_study_config.conf_file
 
         study_configs = GPFConfigParser.load_directory_configs(
-            self.dae_config.studies_db.dir,
+            self.dae_config.studies.dir,
             study_config_schema,
             default_config_filename=default_config_filename,
         )
@@ -76,7 +76,7 @@ class VariantsDb(object):
                 self.dae_config.default_study_config.conf_file
 
         group_configs = GPFConfigParser.load_directory_configs(
-            self.dae_config.datasets_db.dir,
+            self.dae_config.datasets.dir,
             study_config_schema,
             default_config_filename=default_config_filename,
         )

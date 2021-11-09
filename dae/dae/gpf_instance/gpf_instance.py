@@ -42,7 +42,7 @@ class GPFInstance(object):
     def __init__(
             self,
             dae_config=None,
-            config_file="DAE.conf",
+            config_file="gpf_instance.yaml",
             work_dir=None,
             defaults=None,
             load_eagerly=False):
