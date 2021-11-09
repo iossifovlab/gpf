@@ -30,7 +30,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   public showKeybinds = false;
   private keybinds = [
-    '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+    '1', '2', '3', '4', '5', '6', '7', '8', '9',
     'q', 'p',
     'e', 'n',
     'w',
@@ -162,7 +162,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
       return;
     }
 
-    if (key === '0') {
+    if (key === '9') {
       this.openLastTab();
     } else if (key === '1') {
       this.openHomeTab();
