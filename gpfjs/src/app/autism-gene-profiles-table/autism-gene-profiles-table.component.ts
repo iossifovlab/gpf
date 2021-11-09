@@ -160,6 +160,7 @@ export class AutismGeneProfilesTableComponent implements OnInit {
     if ($event.selected.length === 0) {
       category.defaultVisible = false;
     }
+    category.sets.sort((a, b) => $event.order.indexOf(a.setId) - $event.order.indexOf(b.setId));
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
@@ -172,6 +173,7 @@ export class AutismGeneProfilesTableComponent implements OnInit {
     if ($event.selected.length === 0) {
       category.defaultVisible = false;
     }
+    category.scores.sort((a, b) => $event.order.indexOf(a.scoreName) - $event.order.indexOf(b.scoreName));
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
@@ -184,6 +186,7 @@ export class AutismGeneProfilesTableComponent implements OnInit {
     if ($event.selected.length === 0) {
       dataset.defaultVisible = false;
     }
+    dataset.personSets.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
@@ -198,6 +201,7 @@ export class AutismGeneProfilesTableComponent implements OnInit {
     if ($event.selected.length === 0) {
       personSet.defaultVisible = false;
     }
+    personSet.statistics.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
