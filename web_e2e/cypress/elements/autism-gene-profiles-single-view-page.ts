@@ -141,16 +141,14 @@ export class AutismGeneProfilesSingleView extends BasePage {
       });
     
       if(data.statistics.hasOwnProperty('study')) {
-        page.datasetsTable.within(row => {
-          cy.wrap(row).get('tbody > tr').each((el, index, list) => {
-            cy.wrap(el).within(col => {
-              cy.wrap(col).get('td').eq(0).should('have.text', data['statistics']['study']['variant_statistics'][index]);
-            });
-            cy.wrap(el).within(col => {
-              cy.wrap(col).get('td').eq(1).should('have.text', data['statistics']['study']['affected'][index]);
-            });
-            cy.wrap(el).within(col => {
-              cy.wrap(col).get('td').eq(2).should('have.text', data['statistics']['study']['unaffected'][index]);
+        [0, 1, 2].forEach(row => {
+          ['variant_statistics', 'affected', 'unaffected'].forEach((column_name, column_number) => {
+            page.datasetsTable.within(table_row => {
+              if(data.statistics.study.hasOwnProperty(column_name)) {
+                cy.wrap(table_row).get('tbody > tr').eq(row).within(elements => {
+                  cy.wrap(elements).get('td').eq(column_number).should('have.text', data.statistics.study[column_name][row]);
+                });
+              }
             });
           });
         });
