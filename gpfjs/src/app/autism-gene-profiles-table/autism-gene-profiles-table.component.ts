@@ -74,6 +74,13 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
   public modalBottom: number;
 
   public highlightedRowElements = [];
+  
+  @ViewChild('table') tableViewChild: any;
+  @ViewChildren('rows') rowViewChildren: QueryList<any>;
+
+  private lastRowHeight = 80;
+  private drawOutsideVisibleCount = 5;
+  private tableTopPosition = 0;
 
   @HostListener('window:scroll')
   public onWindowScroll() {
@@ -82,6 +89,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
       const totalScrollHeight = document.documentElement.scrollHeight;
 
       if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
+        console.log('update genes')
         this.updateGenes();
       }
       this.updateModalBottom();
@@ -114,6 +122,38 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     private store: Store,
   ) { }
 
+  tableTop(): boolean {
+    return this.tableViewChild.nativeElement.getBoundingClientRect().top < 0;
+  }
+
+  getScrollIndices(): Array<number> {
+    if (!this.genes) {
+      return [0, 0];
+    }
+    const visibleRowCount = Math.ceil(window.innerHeight / this.lastRowHeight);
+    const maxRowCountToDraw = this.drawOutsideVisibleCount * 2 + visibleRowCount;
+
+    let startIndex = Math.ceil(-this.tableTopPosition / this.lastRowHeight) - this.drawOutsideVisibleCount;
+
+    // We should display at least maxRowCountToDraw rows, even at the bottom of the page
+    const maxStartIndex = this.genes.length - maxRowCountToDraw;
+    startIndex = Math.min(startIndex , maxStartIndex);
+
+    // Make sure we always start from index 0 or above
+    startIndex = Math.max(0, startIndex);
+
+    const endIndex = startIndex + maxRowCountToDraw;
+    return [startIndex, endIndex];
+  }
+
+  get visibleData(): Array<any> {
+    if (!this.genes) {
+      return [];
+    }
+    const scrollIndices  = this.getScrollIndices();
+    return this.genes.slice(scrollIndices[0], scrollIndices[1]);
+  }
+
   public ngOnInit(): void {
     this.focusGeneSearchInput();
 
@@ -132,13 +172,20 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     ).subscribe(searchTerm => {
       this.search(searchTerm);
     });
+      
+    this.rowViewChildren.changes.subscribe(res => {
+      this.tableTopPosition = this.tableViewChild.nativeElement.getBoundingClientRect().top;
+      if (res && res.last && res.last.nativeElement.getBoundingClientRect().height > 0) {
+        this.lastRowHeight = res.last.nativeElement.getBoundingClientRect().height;
+      }
+    });
   }
 
   public ngOnChanges() {
+    this.setupShownCategories();
     for (const dataset of this.config.datasets) {
       this.calculateDatasetColspan(dataset);
     }
-    this.setupShownCategories();
   }
 
   public ngAfterViewInit(): void {
@@ -172,6 +219,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
       geneSet.defaultVisible = $event.selected.includes(geneSet.setId);
     }
     category.defaultVisible = $event.selected.length > 0;
+    category['shown'] = category.sets.filter(set => set.defaultVisible);
     category.sets.sort((a, b) => $event.order.indexOf(a.setId) - $event.order.indexOf(b.setId));
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
@@ -183,6 +231,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
       genomicScore.defaultVisible = $event.selected.includes(genomicScore.scoreName);
     }
     category.defaultVisible = $event.selected.length > 0;
+    category['shown'] = category.scores.filter(score => score.defaultVisible);
     category.scores.sort((a, b) => $event.order.indexOf(a.scoreName) - $event.order.indexOf(b.scoreName));
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
@@ -197,6 +246,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
       }
     }
     dataset.defaultVisible = $event.selected.length > 0;
+    dataset['shown'] = dataset.personSets.filter(set => set.defaultVisible);
     dataset.personSets.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
     this.calculateDatasetColspan(dataset);
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
@@ -213,6 +263,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     dataset.defaultVisible = dataset.shownItemIds.length > 0;
     this.calculateDatasetColspan(dataset);
     personSet.statistics.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
+    personSet['shown'] = personSet.statistics.filter(s => s.defaultVisible);
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
@@ -238,26 +289,25 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     console.log('test');
     this.config['shown'] = [];
     for (const item of this.config.order) {
+      let category;
       switch(item.section) {
         case 'geneSets':
-          this.config['shown'].push({
-            ...item,
-            category: this.config.geneSets.find(gs => gs.category === item.id)
-          })
+          category = this.config.geneSets.find(gs => gs.category === item.id);
+          category['shown'] = category.sets.filter(set => set.defaultVisible);
           break;
         case 'genomicScores':
-          this.config['shown'].push({
-            ...item,
-            category: this.config.genomicScores.find(gs => gs.category === item.id)
-          })
+          category = this.config.genomicScores.find(gs => gs.category === item.id)
+          category['shown'] = category.scores.filter(score => score.defaultVisible);
           break;
         case 'datasets':
-          this.config['shown'].push({
-            ...item,
-            category: this.config.datasets.find(ds => ds.id === item.id)
-          })
+          category = this.config.datasets.find(ds => ds.id === item.id)
+          category['shown'] = category.personSets.filter(set => set.defaultVisible);
+          for (const personSet of category.personSets) {
+            personSet['shown'] = personSet.statistics.filter(s => s.defaultVisible);
+          }
           break;
       }
+      this.config['shown'].push({...item, category: category});
     }
   }
 
@@ -357,7 +407,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
   }
 
   public calculateDatasetColspan(dataset: AgpDataset) {
-    dataset['colspan'] = dataset.shown
+    dataset['colspan'] = dataset['shown']
       .map(personSet => personSet.shown.length)
       .reduce((sum, length) => sum += length, 0);
   }

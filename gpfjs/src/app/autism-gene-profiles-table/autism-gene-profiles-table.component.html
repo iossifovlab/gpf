@@ -1,5 +1,5 @@
 <div style="padding: 25px; white-space: nowrap;">
-  <table *ngIf="config" class="table table-sm table-centered table-header-rotate">
+  <table #table *ngIf="config" class="table table-sm table-centered table-header-rotate">
     <thead>
       <tr>
         <th class="table-main-header" style="width: 160px; min-width: 140px; position: sticky; top: 0px">
@@ -113,7 +113,7 @@
     </thead>
 
     <tbody *ngIf="genes">
-      <tr *ngFor="let gene of genes" (click)="highlightRow($event)" (middleclick)="highlightRow($event)">
+      <tr #rows *ngFor="let gene of visibleData" (click)="highlightRow($event)" (middleclick)="highlightRow($event)">
         <td class="link-td" (click)="emitCreateTabEvent($event, gene.geneSymbol)" (middleclick)="emitCreateTabEvent($event, gene.geneSymbol, false)">
           <span class="link-span">{{gene.geneSymbol}}</span>
         </td>
@@ -127,7 +127,7 @@
 
           <ng-container *ngIf="element.section === 'genomicScores'">
             <td style="min-width: 70px" *ngFor="let genomicScore of element.category.shown; let i = index" [ngClass] = "{'category-border': i === 0}">
-              <span> {{gene | getGeneScore: element.category:genomicScore}} </span>
+              {{gene | getGeneScore: element.category:genomicScore}}
             </td>
           </ng-container>
 
