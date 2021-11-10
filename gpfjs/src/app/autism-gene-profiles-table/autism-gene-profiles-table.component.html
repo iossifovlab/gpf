@@ -111,7 +111,7 @@
         </ng-container>
       </tr>
       <tr>
-        <ng-container *ngFor="let dataset of config.datasets">
+        <ng-container *ngFor="let dataset of config.shownDatasets">
           <ng-container *ngFor="let personSet of dataset.shown; let i = index">
             <td *ngFor="let statistic of personSet.shown; let j = index" style="min-width: 100px;" class="effect-type-header" [ngClass] = "{'category-border': i === 0 && j === 0}">
               <span [title]="statistic.description ? statistic.description : ''">{{statistic.displayName}}</span>
