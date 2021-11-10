@@ -57,6 +57,10 @@ export class AutismGeneProfilesSingleView extends BasePage {
     return cy.get('.datasets-table');
   }
 
+  datasetsTableColumn(id: string, type: number) {
+    return cy.get('table.datasets-table > tbody >  tr#' + id + '> td').eq(type);
+  }
+
   get externalLinksTable() {
     return cy.get('#external-links');
   }
@@ -83,7 +87,7 @@ export class AutismGeneProfilesSingleView extends BasePage {
     if(data.hasOwnProperty('data')) {
 
       data.data.forEach(value => {
-        [0, 1].forEach(tab => {
+        [0, 1].forEach(tab => { // tables
           page.genomicScoresTable.eq(tab).each(name => {
             cy.wrap(name).within(table => {
               cy.wrap(table).get('td').not('.ng-star-inserted').each((element, id) => {
@@ -99,6 +103,7 @@ export class AutismGeneProfilesSingleView extends BasePage {
         })
       });
     }
+    
 
     if(data.hasOwnProperty('statistics')) {
       ['autism_gene_sets', 'relevant_gene_sets'].forEach(element => {
@@ -141,16 +146,11 @@ export class AutismGeneProfilesSingleView extends BasePage {
       });
     
       if(data.statistics.hasOwnProperty('study')) {
-        [0, 1, 2].forEach(row => {
-          ['variant_statistics', 'affected', 'unaffected'].forEach((column_name, column_number) => {
-            page.datasetsTable.within(table_row => {
-              if(data.statistics.study.hasOwnProperty(column_name)) {
-                cy.wrap(table_row).get('tbody > tr').eq(row).within(elements => {
-                  cy.wrap(elements).get('td').eq(column_number).should('have.text', data.statistics.study[column_name][row]);
-                });
-              }
-            });
-          });
+        data.statistics.study.variant_ids.forEach((id, index) => {
+          console.log(index);
+          this.datasetsTableColumn(id, 0).should('have.text', data.statistics.study.variant_statistics[index]);
+          this.datasetsTableColumn(id, 1).should('have.text', data.statistics.study.affected[index]);
+          this.datasetsTableColumn(id, 2).should('have.text', data.statistics.study.unaffected[index]);
         });
       }
     }

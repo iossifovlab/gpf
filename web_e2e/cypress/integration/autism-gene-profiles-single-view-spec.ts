@@ -159,12 +159,10 @@ describe('Autism gene profiles single view links tests', () => {
         } else {
           cy.wrap(el).contains(arr).invoke('attr', 'href').then(href => {
             console.log(href);
-            //cy.visit(href);
           });
         }
       });
     });
-
   });
 });
 
@@ -172,11 +170,12 @@ const gene_data = {
   gene_symbols: 'GRIN2B',
   data: [
     { name:'SFARI_gene_score', value: 1 }, // sfari_score: 
-    { name: 'RVIS_rank',value: 174.5 },  // rvis_rank: 
-    { name: 'LGD_rank',value: 85.5 }, // lgd_rank:
-    { name: 'pLI_rank',value: 400 }, // pli_rank: 
-    { name: 'pRec_rank',value: 17792 } // prec_rank: 
-  ], statistics: {
+    { name: 'RVIS_rank', value: 174.5 },  // rvis_rank: 
+    { name: 'LGD_rank', value: 85.5 }, // lgd_rank:
+    { name: 'pLI_rank', value: 400 }, // pli_rank: 
+    { name: 'pRec_rank', value: 17792 } // prec_rank: 
+  ],
+  statistics: {
     autism_gene_sets: [
       { name: 'autism candidates from Iossifov PNAS 2015', value: true },
       { name: 'autism candidates from Sanders Neuron 2015', value: true }
@@ -186,13 +185,13 @@ const gene_data = {
       { name: 'essential genes', value:  true },
       { name: 'FMRP Darnell', value:  true }
     ], study: {
-      variant_statistics: ['', '', ''],
+      variant_statistics: ['LGDs', 'missense', 'intron'],
+      variant_ids: ['denovo_lgds', 'denovo_missense', 'denovo_intron'],
       affected: ['3 (1.197)', '1 (0.399)', '–'],
       unaffected: ['–', '–', '–']
     }
   }
 }
-
 
 const sfari_genes = [
   'ABCA7',
