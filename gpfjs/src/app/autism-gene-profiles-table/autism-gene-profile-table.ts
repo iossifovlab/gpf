@@ -56,6 +56,10 @@ export class AgpGeneSetsCategory {
   @Type(() => AgpGeneSet)
   sets: AgpGeneSet[];
 
+  public get items() {
+    return this.sets;
+  }
+
   public get id(): string {
     // TODO This should be relabeled in the backend
     return this.category;
@@ -88,6 +92,10 @@ export class AgpGenomicScoresCategory {
 
   @Type(() => AgpGenomicScore)
   scores: AgpGenomicScore[];
+
+  public get items() {
+    return this.scores;
+  }
 
   public get id(): string {
     // TODO This should be relabeled in the backend
@@ -123,6 +131,10 @@ export class AgpDataset {
   @Type(() => AgpDatasetPersonSet)
   personSets: AgpDatasetPersonSet[];
 
+  public get items() {
+    return this.personSets;
+  }
+
   public get itemIds(): string[] {
     return this.personSets.map(ps => ps.id);
   }
@@ -147,6 +159,10 @@ export class AgpDatasetPersonSet {
   
   @Type(() => AgpDatasetStatistic)
   statistics: AgpDatasetStatistic[];
+
+  public get items() {
+    return this.statistics;
+  }
 
   public get itemIds(): string[] {
     return this.statistics.map(s => s.id);

@@ -175,6 +175,9 @@ export class AutismGeneProfilesTableComponent implements OnInit {
     const dataset = this.config.datasets.find(dataset => dataset.id === menuId[1]);
     for (const personSet of dataset.personSets) {
       personSet.defaultVisible = $event.selected.includes(personSet.id);
+      if (personSet.defaultVisible && !personSet.shownItemIds.length) {
+        personSet.statistics.forEach(s => s.defaultVisible = true);
+      }
     }
     dataset.defaultVisible = $event.selected.length > 0;
     dataset.personSets.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
@@ -183,13 +186,13 @@ export class AutismGeneProfilesTableComponent implements OnInit {
 
   public filterPersonSetColumns($event) {
     const menuId = $event.menuId.split(':');
-    const personSet = this.config.datasets
-      .find(dataset => dataset.id === menuId[1])
-      .personSets.find(personSet => personSet.id === menuId[2]);
+    const dataset = this.config.datasets.find(dataset => dataset.id === menuId[1])
+    const personSet = dataset.personSets.find(personSet => personSet.id === menuId[2]);
     for (const statistic of personSet.statistics) {
       statistic.defaultVisible = $event.selected.includes(statistic.id);
     }
     personSet.defaultVisible = $event.selected.length > 0;
+    dataset.defaultVisible = dataset.shownItemIds.length > 0;
     personSet.statistics.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
@@ -197,6 +200,14 @@ export class AutismGeneProfilesTableComponent implements OnInit {
   public filterCategories($event) {
     for (const category of this.config.categories) {
       category.defaultVisible = $event.selected.includes(category.id);
+      if (category.defaultVisible && !category.shownItemIds.length) {
+        category.items.forEach(item => item.defaultVisible = true);
+        if (category['personSets']) {
+          category['personSets'].forEach(ps => ps.statistics.forEach(s => {
+            s.defaultVisible = true;
+          }));
+        }
+      }
     }
     this.config.order.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
