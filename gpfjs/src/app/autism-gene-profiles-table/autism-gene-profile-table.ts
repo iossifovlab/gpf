@@ -233,5 +233,10 @@ export class AgpPersonSet {
 
 export class AgpEffectType {
   id: string;
-  value: number;
+  value: AgpEffectTypeValue;
+}
+
+export class AgpEffectTypeValue {
+  count: number;
+  rate: number;
 }

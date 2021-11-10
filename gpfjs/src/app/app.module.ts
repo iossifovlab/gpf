@@ -158,7 +158,7 @@ import { CommonReportsRowComponent } from './variant-reports/common-reports-row/
 import { CommonReportsPedigreeCellComponent } from './variant-reports/common-reports-pedigree-cell/common-reports-pedigree-cell.component';
 import { LoadingSpinnerComponent } from './loading-spinner/loading-spinner.component';
 import { DatasetNodeComponent } from './dataset-node/dataset-node.component';
-import { AutismGeneProfilesTableComponent } from './autism-gene-profiles-table/autism-gene-profiles-table.component';
+import { AutismGeneProfilesTableComponent, GetGeneScorePipe, GetEffectTypeValuePipe } from './autism-gene-profiles-table/autism-gene-profiles-table.component';
 import { MultipleSelectMenuComponent } from './multiple-select-menu/multiple-select-menu.component';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { AutismGeneProfilesBlockComponent } from './autism-gene-profiles-block/autism-gene-profiles-block.component';
@@ -367,6 +367,8 @@ const appRoutes: Routes = [
     LoadingSpinnerComponent,
     DatasetNodeComponent,
     AutismGeneProfilesTableComponent,
+    GetGeneScorePipe,
+    GetEffectTypeValuePipe,
     MultipleSelectMenuComponent,
     AutismGeneProfilesBlockComponent,
     AutismGeneProfileSingleViewComponent,
