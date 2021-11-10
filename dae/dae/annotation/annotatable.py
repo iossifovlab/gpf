@@ -61,7 +61,7 @@ class Position(Annotatable):
             chrom, pos, pos, Annotatable.Type.position)
 
 
-class Region(Annotatable):
+class Region(Position):
 
     def __init__(self, chrom, pos_begin, pos_end):
         super(Position, self).__init__(
