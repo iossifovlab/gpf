@@ -1,5 +1,5 @@
 <div *ngIf="autismGeneToolConfig">
-  <nav ngbNav #nav="ngbNav" class="navbar" style="justify-content: flex-start; padding: 0; padding-left: 25px">
+  <nav ngbNav #nav="ngbNav" class="navbar" style="justify-content: flex-start; padding: 0; padding-left: 25px" [ngClass]="{'tab-limit' : geneTabs.size >= maxTabCount}">
     <li class="nav-tabs" [ngbNavItem]="'autismGenesTool'" [destroyOnHide]="false">
       <a ngbNavLink style="display: inline-flex; align-items: center; padding-right: 9px">
         <span>Autism genes tool</span>

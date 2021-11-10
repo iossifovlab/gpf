@@ -2,6 +2,18 @@ nav {
   border-bottom: 1px solid #dee2e6;
   padding: none;
   padding-left: 25px;
+  -webkit-transition: background-color 250ms ease-out;
+  -moz-transition: background-color 250ms ease-out;
+  -o-transition: background-color 250ms ease-out;
+  transition: background-color 250ms ease-out;
+}
+
+nav.tab-limit {
+  background-color: rgb(255, 245, 245);
+  -webkit-transition: background-color 250ms ease-out;
+  -moz-transition: background-color 250ms ease-out;
+  -o-transition: background-color 250ms ease-out;
+  transition: background-color 250ms ease-out;
 }
 
 .nav-tabs {
