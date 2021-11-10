@@ -31,7 +31,7 @@ def test_basic():
     context = {}
     ann_pipe = AnnotationPipeline.build(
         annotation_cofiguration,
-        grr_repo,
+        grr_repository=grr_repo,
         context=context)
     assert grr_repo
     assert ann_pipe

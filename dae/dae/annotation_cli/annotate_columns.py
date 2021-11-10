@@ -3,7 +3,6 @@ from __future__ import annotations
 import sys
 import abc
 import gzip
-import yaml
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotatable import Position
 from dae.annotation.annotatable import Region
@@ -85,10 +84,11 @@ def cli(args: list[str] = None):
 
     in_file_name, pipeline_file_name, out_file_name, grr_file_name = args[: 4]
 
-    with open(grr_file_name) as grr_file:
-        grr = build_genomic_resource_repository(yaml.safe_load(grr_file))
-    config = AnnotationPipeline.load_and_parse(pipeline_file_name)
-    pipeline = AnnotationPipeline.build(config, grr)
+    grr = build_genomic_resource_repository(file_name=grr_file_name)
+    pipeline = AnnotationPipeline.build(
+        pipeline_config_file=pipeline_file_name,
+        grr_repository=grr)
+
     annotation_attributes = pipeline.annotation_schema.names
     print("DEBUG", annotation_attributes)
 

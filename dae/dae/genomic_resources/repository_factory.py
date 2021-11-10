@@ -21,16 +21,16 @@ def register_real_genomic_resource_repository_type(
 
 
 DEFAULT_DEFINITION = {
-    "id": "defaut",
+    "id": "default",
     "type": "url",
     "url": "https://www.iossifovlab.com/distribution/"
-    "public/genomic-resources-repository/",
-    "cache_dir": f"{os.environ.get('HOME', '')}/grrCache"
+           "public/genomic-resources-repository/"
 }
 
 
-def parse_definition_file(filename):
-    return yaml.safe_load(filename)
+def load_definition_file(filename):
+    with open(filename) as F:
+        return yaml.safe_load(F)
 
 
 GRR_DEFINITION_FILE_ENV = "GRR_DEFINITION_FILE"
@@ -38,17 +38,27 @@ GRR_DEFINITION_FILE_ENV = "GRR_DEFINITION_FILE"
 
 def get_configured_definition():
     if GRR_DEFINITION_FILE_ENV is os.environ:
-        return parse_definition_file(os.environ[GRR_DEFINITION_FILE_ENV])
+        return load_definition_file(os.environ[GRR_DEFINITION_FILE_ENV])
 
     if pathlib.Path("~/.grr_definition.yaml").exists():
-        return parse_definition_file("~/.grr_definition.yaml")
+        return load_definition_file("~/.grr_definition.yaml")
 
     return DEFAULT_DEFINITION
 
 
-def build_genomic_resource_repository(definition=None) -> GenomicResourceRepo:
+def build_genomic_resource_repository(
+        definition: dict = None, file_name: str = None) -> GenomicResourceRepo:
+
     if not definition:
-        definition = get_configured_definition()
+        if file_name is not None:
+            definition = load_definition_file(file_name)
+        else:
+            definition = get_configured_definition()
+    else:
+        if file_name is not None:
+            raise ValueError(
+                "only one of the definition and file_name parameters"
+                "should be provided")
 
     if "type" not in definition:
         raise ValueError(

@@ -115,7 +115,8 @@ def test_position_score_annotator(
             """)
     )
 
-    pipeline = AnnotationPipeline.build(pipeline_config, position_score_repo)
+    pipeline = AnnotationPipeline.build(
+        pipeline_config, grr_repository=position_score_repo)
     # annoation_runner = BasicAnnotatorRunner()
     # annotator = ThreadAnnotatorRunner()
     # annotator = AsynioAnnotatorRunner()
@@ -141,7 +142,8 @@ def test_position_annotator_schema(position_score_repo):
             """)
     )
 
-    pipeline = AnnotationPipeline.build(pipeline_config, position_score_repo)
+    pipeline = AnnotationPipeline.build(pipeline_config,
+                                        grr_repository=position_score_repo)
     schema = pipeline.annotation_schema
 
     assert len(schema) == 1
@@ -163,7 +165,8 @@ def test_position_default_annotator_schema(position_score_repo):
             """)
     )
 
-    pipeline = AnnotationPipeline.build(pipeline_config, position_score_repo)
+    pipeline = AnnotationPipeline.build(
+        pipeline_config, grr_repository=position_score_repo)
     assert len(pipeline.annotation_schema) == 3
     schema = pipeline.annotation_schema
 
@@ -193,7 +196,8 @@ def test_position_annotator_schema_one_source_two_dest(position_score_repo):
             """)
     )
 
-    pipeline = AnnotationPipeline.build(pipeline_config, position_score_repo)
+    pipeline = AnnotationPipeline.build(
+        pipeline_config, grr_repository=position_score_repo)
     schema = pipeline.annotation_schema
 
     assert len(schema) == 2

@@ -67,7 +67,7 @@ def test_pipeline_liftover(
 
     config = AnnotationPipeline.load_and_parse(annotation_config)
     pipeline = AnnotationPipeline.build(
-        config, anno_grdb
+        config, grr_repository=anno_grdb
     )
     allele = Allele.build_vcf_allele("chr1", 69094, "G", "A")
     attributes = pipeline.annotate(allele.get_annotatable())

@@ -51,17 +51,17 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
         if 't' in mode:
             return io.TextIOWrapper(binarySt, encoding=GR_ENCODING)
 
-        if self.scheme == 'http':
+        if self.scheme in ['http', 'https']:
             return HTTPFile(file_url)
 
         return binarySt
 
     def open_tabix_file(self, genomic_resource,  filename,
                         index_filename=None):
-        if self.scheme != 'http':
+        if self.scheme not in ['http', 'https']:
             raise Exception(
                 f"Tabix files are not supported by GenomicResourceURLRepo "
-                f"for URLs with scheme {self.scheme}. Only http URLs allow "
+                f"for URLs with scheme {self.scheme}. Only http(s) URLs allow "
                 f"the direct access needed by tabix")
         file_url = self.get_file_url(genomic_resource, filename)
         index_url = self.get_file_url(genomic_resource, index_filename) \
