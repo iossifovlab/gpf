@@ -4,6 +4,12 @@ vars:
   wd: "%($DAE_DB_DIR)s"
   instance_id: "test_local_hg19_instance"
 
+reference_genome:
+  resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174/genome"
+
+gene_models:
+  resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174/gene_models/refGene_201309"
+
 genotype_storage:
   default: genotype_filesystem
 
@@ -28,9 +34,6 @@ default_study_config:
 
 gene_info_db:
   conf_file: "%(wd)s/geneInfo.conf"
-
-genomes_db:
-  conf_file: "%(wd)s/genomesDB.conf"
 
 genomic_scores_db:
   conf_file: "%(wd)s/genomicScores.conf"

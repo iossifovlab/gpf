@@ -23,9 +23,7 @@ def test_variants_db_can_create_study_from_config(
 
 def test_variants_db_studies_simple(
     dae_config_fixture,
-    pheno_db,
-    gene_weights_db,
-    mocked_gene_models,
+    gpf_instance_2013,
     genotype_storage_factory,
 ):
     assert dae_config_fixture is not None
@@ -37,7 +35,8 @@ def test_variants_db_studies_simple(
 
     vdb = VariantsDb(
         dae_config_fixture,
-        mocked_gene_models,
+        gpf_instance_2013.reference_genome,
+        gpf_instance_2013.gene_models,
         genotype_storage_factory,
     )
     assert vdb is not None
@@ -45,9 +44,7 @@ def test_variants_db_studies_simple(
 
 def test_variants_db_genotype_data_groups_simple(
     dae_config_fixture,
-    pheno_db,
-    gene_weights_db,
-    mocked_gene_models,
+    gpf_instance_2013,
     genotype_storage_factory,
 ):
     assert dae_config_fixture is not None
@@ -59,7 +56,8 @@ def test_variants_db_genotype_data_groups_simple(
 
     vdb = VariantsDb(
         dae_config_fixture,
-        mocked_gene_models,
+        gpf_instance_2013.reference_genome,
+        gpf_instance_2013.gene_models,
         genotype_storage_factory,
     )
     assert vdb is not None

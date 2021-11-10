@@ -55,7 +55,7 @@ def test_get_diploid_males(vcf, expected, vcf_variants_loaders):
     ],
 )
 def test_vcf_loader_genetic_model(
-        vcf, expected, vcf_variants_loaders, genome_2013):
+        vcf, expected, vcf_variants_loaders):
 
     loaders = vcf_variants_loaders(vcf)
     loader = loaders[0]
@@ -98,7 +98,7 @@ def test_vcf_loader_genetic_model(
     ],
 )
 def test_vcf_loader_best_state(
-        vcf, expected, vcf_variants_loaders, genome_2013):
+        vcf, expected, vcf_variants_loaders):
 
     loaders = vcf_variants_loaders(vcf)
     loader = loaders[0]
@@ -118,7 +118,8 @@ def test_vcf_loader_best_state(
             counter += 1
 
 
-def test_families_genotypes_decorator_broken_x(fixture_dirname, genome_2013):
+def test_families_genotypes_decorator_broken_x(
+        fixture_dirname, gpf_instance_2013):
 
     families_loader = FamiliesLoader(
         fixture_dirname("backends/denovo_families.txt"),
@@ -128,7 +129,7 @@ def test_families_genotypes_decorator_broken_x(fixture_dirname, genome_2013):
 
     variants_loader = DenovoLoader(
         families, fixture_dirname("backends/denovo_X_broken.txt"),
-        genome_2013.get_genomic_sequence()
+        gpf_instance_2013.reference_genome
     )
 
     for sv, fvs in variants_loader.full_variants_iterator():

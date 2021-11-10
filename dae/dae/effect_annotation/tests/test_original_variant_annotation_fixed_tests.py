@@ -1,4 +1,15 @@
+import pytest
 from dae.effect_annotation.annotator import EffectAnnotator
+
+
+@pytest.fixture
+def genomic_sequence_2013(gpf_instance_2013):
+    return gpf_instance_2013.reference_genome
+
+
+@pytest.fixture
+def gene_models_2013(gpf_instance_2013):
+    return gpf_instance_2013.gene_models
 
 
 def test_chr12_130827138_del_var(genomic_sequence_2013, gene_models_2013):

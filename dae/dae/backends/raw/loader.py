@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 
-from dae.genome.genomes_db import Genome
+from dae.genome.genome_access import GenomicSequenceBase
 
 from dae.pedigrees.family import FamiliesData
 
@@ -605,7 +605,7 @@ class VariantsGenotypesLoader(VariantsLoader):
             families: FamiliesData,
             filenames: List[str],
             transmission_type: TransmissionType,
-            genome: Genome,
+            genome: GenomicSequenceBase,
             regions: List[str] = None,
             expect_genotype: bool = True,
             expect_best_state: bool = False,
@@ -683,7 +683,7 @@ class VariantsGenotypesLoader(VariantsLoader):
 
     @classmethod
     def _calc_genetic_model(
-        cls, family_variant: FamilyVariant, genome: Genome
+        cls, family_variant: FamilyVariant, genome: GenomicSequenceBase
     ) -> GeneticModel:
         if family_variant.chromosome in ("X", "chrX"):
             male_ploidy = get_locus_ploidy(
@@ -709,7 +709,7 @@ class VariantsGenotypesLoader(VariantsLoader):
     def _calc_best_state(
         cls,
         family_variant: FamilyVariant,
-        genome: Genome,
+        genome: GenomicSequenceBase,
         force: bool = True,
     ) -> np.array:
 
@@ -750,7 +750,7 @@ class VariantsGenotypesLoader(VariantsLoader):
 
     @classmethod
     def _calc_genotype(
-        cls, family_variant: FamilyVariant, genome: Genome
+        cls, family_variant: FamilyVariant, genome: GenomicSequenceBase
     ) -> np.array:
         best_state = family_variant._best_state
         genotype = best2gt(best_state)

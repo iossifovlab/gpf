@@ -65,7 +65,8 @@ def iossifov_2014_local(
     )
 
     variants = genotype_storage.build_backend(
-        iossifov_2014_local_config, local_gpf_instance.genomes_db)
+        iossifov_2014_local_config, local_gpf_instance.reference_genome,
+        local_gpf_instance.gene_models)
 
     data_study = GenotypeDataStudy(
         iossifov_2014_local_config, variants)

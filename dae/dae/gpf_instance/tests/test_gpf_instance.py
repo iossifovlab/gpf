@@ -17,7 +17,8 @@ def test_init(local_gpf_instance):
 
     assert local_gpf_instance.dae_config
     print(local_gpf_instance.dae_config)
-    assert local_gpf_instance.genomes_db
+    assert local_gpf_instance.reference_genome
+    assert local_gpf_instance.gene_models
     assert local_gpf_instance._pheno_db
     assert local_gpf_instance._gene_info_config
     assert local_gpf_instance.gene_weights_db is not None
@@ -36,7 +37,8 @@ def test_eager_init(gpf_instance):
     assert local_gpf_instance
 
     assert local_gpf_instance.dae_config
-    assert local_gpf_instance.genomes_db
+    assert local_gpf_instance.reference_genome
+    assert local_gpf_instance.gene_models
     assert local_gpf_instance._pheno_db
     assert local_gpf_instance._gene_info_config
     assert local_gpf_instance.gene_weights_db is not None
@@ -52,17 +54,6 @@ def test_dae_config(local_gpf_instance):
     dae_config = local_gpf_instance.dae_config
 
     assert dae_config.dae_data_dir == fixtures_dir()
-
-
-def test_mocker_genomes_db(local_gpf_instance):
-    genomes_db = local_gpf_instance.genomes_db
-
-    assert genomes_db.get_genome()
-    assert genomes_db.load_genomic_sequence()
-    assert genomes_db.get_genomic_sequence_filename().endswith(
-        "GATK_ResourceBundle_5777_b37_phiX174/genome/chrAll.fa"
-    )
-    assert genomes_db.get_default_gene_models_id() == "RefSeq2013"
 
 
 def test_variants_db(local_gpf_instance):

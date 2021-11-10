@@ -14,7 +14,7 @@ from dae.utils.regions import Region
 
 @pytest.fixture(scope="session")
 def cnv_loader(
-        fixture_dirname, genome_2013, annotation_pipeline_internal):
+        fixture_dirname, gpf_instance_2013, annotation_pipeline_internal):
 
     families_filename = fixture_dirname("backends/cnv_ped.txt")
     variants_filename = fixture_dirname("backends/cnv_variants.txt")
@@ -24,7 +24,7 @@ def cnv_loader(
     families = families_loader.load()
 
     variants_loader = CNVLoader(
-        families, variants_filename, genome_2013.get_genomic_sequence())
+        families, variants_filename, gpf_instance_2013.reference_genome)
 
     variants_loader = AnnotationPipelineDecorator(
         variants_loader, annotation_pipeline_internal
@@ -44,7 +44,7 @@ def cnv_raw(cnv_loader):
 def cnv_impala(
         request,
         cnv_loader,
-        genomes_db_2013,
+        gpf_instance_2013,
         hdfs_host,
         impala_host,
         impala_genotype_storage,
@@ -85,7 +85,8 @@ def cnv_impala(
             include_reference=True)
 
     fvars = impala_genotype_storage.build_backend(
-        FrozenBox({"id": study_id}), genomes_db_2013
+        FrozenBox({"id": study_id}), gpf_instance_2013.reference_genome,
+        gpf_instance_2013.gene_models
     )
 
     return fvars

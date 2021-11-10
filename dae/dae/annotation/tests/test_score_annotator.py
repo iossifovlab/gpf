@@ -10,7 +10,7 @@ from dae.annotation.score_annotator import (
 
 def test_position_score_annotator(
         phastcons100way_variants_expected,
-        anno_grdb, genomes_db_2013):
+        anno_grdb):
     resource = anno_grdb.get_resource("hg38/TESTphastCons100way")
     annotator = PositionScoreAnnotator(resource)
     pipeline = AnnotationPipeline(None, None)

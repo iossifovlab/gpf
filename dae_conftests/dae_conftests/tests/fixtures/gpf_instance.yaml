@@ -2,6 +2,12 @@ vars:
   instance_id: test_data
   wd: "."
 
+reference_genome:
+  resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
+
+gene_models:
+  resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/gene_models/refGene_201309"
+
 genotype_storage:
   default: genotype_filesystem
 
@@ -78,9 +84,6 @@ genomic_resources:
 
 gene_info_db:
   conf_file: "%(wd)s/gene_info.conf"
-
-genomes_db:
-  conf_file: "%(wd)s/genomesDB.conf"
 
 genomic_scores_db:
   conf_file: "%(wd)s/genomicScores.conf"

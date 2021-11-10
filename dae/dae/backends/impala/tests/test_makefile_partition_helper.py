@@ -1,6 +1,7 @@
 import pytest
 
-from dae.genome.genome_access import GenomicSequence
+from dae.genomic_resources.genomic_sequence_resource import \
+    GenomicSequenceResource
 
 from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 from dae.backends.impala.import_commons import MakefilePartitionHelper
@@ -21,7 +22,7 @@ from dae.backends.impala.import_commons import MakefilePartitionHelper
     ],
 )
 def test_target_generator_region_bins_count(
-    region_length, chrom, bins_count, genomes_db_2019
+    region_length, chrom, bins_count, gpf_instance_2013
 ):
 
     partition_descriptor = ParquetPartitionDescriptor(
@@ -29,7 +30,7 @@ def test_target_generator_region_bins_count(
     )
 
     generator = MakefilePartitionHelper(
-        partition_descriptor, genomes_db_2019.get_genomic_sequence()
+        partition_descriptor, gpf_instance_2013.reference_genome
     )
     assert generator is not None
     assert generator.region_bins_count(chrom) == bins_count
@@ -53,7 +54,7 @@ def test_target_generator_region_bins_count(
     ],
 )
 def test_target_generator_region_bins(
-    region_length, chrom, targets, genomes_db_2019
+    region_length, chrom, targets, gpf_instance_2013
 ):
 
     partition_descriptor = ParquetPartitionDescriptor(
@@ -61,7 +62,7 @@ def test_target_generator_region_bins(
     )
 
     generator = MakefilePartitionHelper(
-        partition_descriptor, genomes_db_2019.get_genomic_sequence()
+        partition_descriptor, gpf_instance_2013.reference_genome
     )
 
     assert generator is not None
@@ -80,7 +81,7 @@ def test_target_generator_region_bins(
     ],
 )
 def test_target_generator_other_0(
-    region_length, target_chroms, targets, genomes_db_2019
+    region_length, target_chroms, targets, gpf_instance_2013
 ):
 
     partition_descriptor = ParquetPartitionDescriptor(
@@ -88,7 +89,7 @@ def test_target_generator_other_0(
     )
 
     generator = MakefilePartitionHelper(
-        partition_descriptor, genomes_db_2019.get_genomic_sequence()
+        partition_descriptor, gpf_instance_2013.reference_genome
     )
 
     result = generator.generate_variants_targets(target_chroms)
@@ -105,14 +106,14 @@ def test_target_generator_other_0(
         (50_000_000, set(["1_0", "1_1", "1_2", "1_3", "1_4"])),
     ],
 )
-def test_target_generator_chrom_1(region_length, targets, genomes_db_2019):
+def test_target_generator_chrom_1(region_length, targets, gpf_instance_2013):
 
     partition_descriptor = ParquetPartitionDescriptor(
         ["1", "2"], region_length
     )
 
     generator = MakefilePartitionHelper(
-        partition_descriptor, genomes_db_2019.get_genomic_sequence()
+        partition_descriptor, gpf_instance_2013.reference_genome
     )
 
     result = generator.generate_variants_targets(["1"])
@@ -129,14 +130,15 @@ def test_target_generator_chrom_1(region_length, targets, genomes_db_2019):
         (50_000_000, set(["other_0", "other_1", "other_2", "other_3"])),
     ],
 )
-def test_target_generator_chrom_other(region_length, targets, genomes_db_2019):
+def test_target_generator_chrom_other(
+        region_length, targets, gpf_instance_2013):
 
     partition_descriptor = ParquetPartitionDescriptor(
         ["1", "2"], region_length
     )
 
     generator = MakefilePartitionHelper(
-        partition_descriptor, genomes_db_2019.get_genomic_sequence()
+        partition_descriptor, gpf_instance_2013.reference_genome
     )
     print(generator.chromosome_lengths)
 
@@ -155,11 +157,11 @@ def test_target_generator_chrom_other(region_length, targets, genomes_db_2019):
     ],
 )
 def test_target_generator_chrom_prefix_target_other(
-    region_length, targets, genomes_db_2019, mocker
+    region_length, targets, gpf_instance_2013, mocker
 ):
 
     mocker.patch.object(
-        GenomicSequence,
+        GenomicSequenceResource,
         "get_all_chrom_lengths",
         return_value=[
             ("chr1", 100_000_000),
@@ -175,7 +177,7 @@ def test_target_generator_chrom_prefix_target_other(
 
     generator = MakefilePartitionHelper(
         partition_descriptor,
-        genomes_db_2019.get_genomic_sequence(),
+        gpf_instance_2013.reference_genome,
         add_chrom_prefix="chr",
     )
     print(generator.chromosome_lengths)
@@ -199,11 +201,11 @@ def test_target_generator_chrom_prefix_target_other(
     ],
 )
 def test_target_generator_add_chrom_prefix_target_chrom(
-    region_length, targets, genomes_db_2019, mocker
+    region_length, targets, gpf_instance_2013, mocker
 ):
 
     mocker.patch.object(
-        GenomicSequence,
+        GenomicSequenceResource,
         "get_all_chrom_lengths",
         return_value=[
             ("chr1", 100_000_000),
@@ -219,7 +221,7 @@ def test_target_generator_add_chrom_prefix_target_chrom(
 
     generator = MakefilePartitionHelper(
         partition_descriptor,
-        genomes_db_2019.get_genomic_sequence(),
+        gpf_instance_2013.reference_genome,
         add_chrom_prefix="chr",
     )
     print(generator.chromosome_lengths)
@@ -243,11 +245,11 @@ def test_target_generator_add_chrom_prefix_target_chrom(
     ],
 )
 def test_target_generator_del_chrom_prefix_target_chrom(
-    region_length, targets, genomes_db_2019, mocker
+    region_length, targets, gpf_instance_2013, mocker
 ):
 
     mocker.patch.object(
-        GenomicSequence,
+        GenomicSequenceResource,
         "get_all_chrom_lengths",
         return_value=[
             ("1", 100_000_000),
@@ -263,7 +265,7 @@ def test_target_generator_del_chrom_prefix_target_chrom(
 
     generator = MakefilePartitionHelper(
         partition_descriptor,
-        genomes_db_2019.get_genomic_sequence(),
+        gpf_instance_2013.reference_genome,
         del_chrom_prefix="chr",
     )
     print(generator.chromosome_lengths)
@@ -307,11 +309,11 @@ def test_target_generator_del_chrom_prefix_target_chrom(
     ],
 )
 def test_makefile_generator_bucket_numbering(
-    region_length, targets, genomes_db_2019, mocker
+    region_length, targets, gpf_instance_2013, mocker
 ):
 
     mocker.patch.object(
-        GenomicSequence,
+        GenomicSequenceResource,
         "get_all_chrom_lengths",
         return_value=[
             ("chr1", 100_000_000),
@@ -327,7 +329,7 @@ def test_makefile_generator_bucket_numbering(
 
     generator = MakefilePartitionHelper(
         partition_descriptor,
-        genomes_db_2019.get_genomic_sequence(),
+        gpf_instance_2013.reference_genome,
         add_chrom_prefix="chr",
     )
     print(generator.chromosome_lengths)
@@ -365,11 +367,11 @@ def test_makefile_generator_bucket_numbering(
     ],
 )
 def test_makefile_generator_regions(
-    region_length, targets, genomes_db_2019, mocker
+    region_length, targets, gpf_instance_2013, mocker
 ):
 
     mocker.patch.object(
-        GenomicSequence,
+        GenomicSequenceResource,
         "get_all_chrom_lengths",
         return_value=[
             ("chr1", 100_000_000),
@@ -384,7 +386,7 @@ def test_makefile_generator_regions(
     )
 
     generator = MakefilePartitionHelper(
-        partition_descriptor, genomes_db_2019.get_genomic_sequence()
+        partition_descriptor, gpf_instance_2013.reference_genome
     )
 
     print(generator.chromosome_lengths)
@@ -427,11 +429,11 @@ def test_makefile_generator_regions(
     ],
 )
 def test_makefile_generator_regions_del_chrom_prefix(
-    region_length, targets, genomes_db_2019, mocker
+    region_length, targets, gpf_instance_2013, mocker
 ):
 
     mocker.patch.object(
-        GenomicSequence,
+        GenomicSequenceResource,
         "get_all_chrom_lengths",
         return_value=[
             ("1", 100_000_000),
@@ -447,7 +449,7 @@ def test_makefile_generator_regions_del_chrom_prefix(
 
     generator = MakefilePartitionHelper(
         partition_descriptor,
-        genomes_db_2019.get_genomic_sequence(),
+        gpf_instance_2013.reference_genome,
         del_chrom_prefix="chr",
     )
 
@@ -487,11 +489,11 @@ def test_makefile_generator_regions_del_chrom_prefix(
     ],
 )
 def test_makefile_generator_regions_add_chrom_prefix(
-    region_length, targets, genomes_db_2019, mocker
+    region_length, targets, gpf_instance_2013, mocker
 ):
 
     mocker.patch.object(
-        GenomicSequence,
+        GenomicSequenceResource,
         "get_all_chrom_lengths",
         return_value=[
             ("chr1", 100_000_000),
@@ -507,7 +509,7 @@ def test_makefile_generator_regions_add_chrom_prefix(
 
     generator = MakefilePartitionHelper(
         partition_descriptor,
-        genomes_db_2019.get_genomic_sequence(),
+        gpf_instance_2013.reference_genome,
         add_chrom_prefix="chr",
     )
 

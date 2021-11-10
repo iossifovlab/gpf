@@ -17,6 +17,12 @@ config_reference_schema = {
     },
 }
 
+resource_schema = {
+    "resource_id": {
+        "type": "string",
+    },
+}
+
 impala_schema = {
     "hosts": {
         "type": "list",
@@ -113,7 +119,6 @@ dae_conf_schema = {
     },
     "studies": {"type": "dict", "schema": config_reference_schema},
     "datasets": {"type": "dict", "schema": config_reference_schema},
-    "genomes_db": {"type": "dict", "schema": config_reference_schema},
     "genomic_scores_db": {"type": "dict", "schema": config_reference_schema},
     "autism_gene_tool_config": {
         "type": "dict", "schema": config_reference_schema
@@ -147,6 +152,9 @@ dae_conf_schema = {
             },
         },
     },
+    "reference_genome": {"type": "dict", "schema": resource_schema},
+    "gene_models": {"type": "dict", "schema": resource_schema},
+
     "gene_info_db": {"type": "dict", "schema": config_reference_schema},
     "default_study_config": {
         "type": "dict",

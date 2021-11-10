@@ -14,15 +14,19 @@ class VariantsDb(object):
     def __init__(
             self,
             dae_config,
-            genomes_db,
+            genome,
+            gene_models,
             genotype_storage_factory):
 
         self.dae_config = dae_config
 
-        assert genomes_db is not None
+        assert genome is not None
+        assert gene_models is not None
+
         assert genotype_storage_factory is not None
 
-        self.genomes_db = genomes_db
+        self.genome = genome
+        self.gene_models = gene_models
         self.genotype_storage_factory = genotype_storage_factory
 
         self._genotype_study_cache = {}
@@ -208,7 +212,7 @@ class VariantsDb(object):
 
         try:
             variants = genotype_storage.build_backend(
-                study_config, self.genomes_db
+                study_config, self.genome, self.gene_models
             )
 
             return GenotypeDataStudy(study_config, variants)

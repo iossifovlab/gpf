@@ -97,7 +97,8 @@ TODO IVAN How can something like this be done?
 def test_gene_models_resource_http(genomic_resource_fixture_http_repo):
 
     res = genomic_resource_fixture_http_repo.get_resource(
-        "hg19/GATK_ResourceBundle_5777_b37_phiX174/gene_models/refGene_201309")
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
+        "gene_models/refGene_201309")
     assert res is not None
 
 #     assert isinstance(res, GeneModelsResource)

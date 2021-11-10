@@ -33,8 +33,7 @@ def mock_get_sequence(chrom, start, stop):
     ],
 )
 def test_lift_over(
-        mocker, chrom, pos, lift_over, expected_chrom, expected_pos,
-        genomes_db_2013):
+        mocker, chrom, pos, lift_over, expected_chrom, expected_pos):
 
     chain_resource = mocker.Mock()
     chain_resource.convert_coordinate = lift_over

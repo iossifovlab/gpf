@@ -23,8 +23,9 @@ def register_real_genomic_resource_repository_type(
 DEFAULT_DEFINITION = {
     "id": "defaut",
     "type": "url",
-    "url": "https://iossifovlab.com/defaultGenomicResourceRepository",
-    "cacheDir": "/tmp/genomicResourcesCache"
+    "url": "https://www.iossifovlab.com/distribution/"
+    "public/genomic-resources-repository/",
+    "cache_dir": f"{os.environ.get('HOME', '')}/grrCache"
 }
 
 
@@ -39,8 +40,8 @@ def get_configured_definition():
     if GRR_DEFINITION_FILE_ENV is os.environ:
         return parse_definition_file(os.environ[GRR_DEFINITION_FILE_ENV])
 
-    if pathlib.Path("~/.grr_definition.yaml"):
-        return parse_definition_file(os.environ[GRR_DEFINITION_FILE_ENV])
+    if pathlib.Path("~/.grr_definition.yaml").exists():
+        return parse_definition_file("~/.grr_definition.yaml")
 
     return DEFAULT_DEFINITION
 

@@ -42,8 +42,8 @@ test_data.append(("X", 155260600, Sex.M, 1))
 
 
 @pytest.mark.parametrize("chrom,pos,sex,expected", [*test_data])
-def test_get_locus_ploidy(chrom, pos, sex, expected, genome_2013):
-    genomic_sequence = genome_2013.get_genomic_sequence()
+def test_get_locus_ploidy(chrom, pos, sex, expected, gpf_instance_2013):
+    genomic_sequence = gpf_instance_2013.reference_genome
     assert get_locus_ploidy(chrom, pos, sex, genomic_sequence) == expected
 
 

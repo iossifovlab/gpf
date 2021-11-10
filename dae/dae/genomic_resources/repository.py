@@ -195,7 +195,9 @@ class GenomicResource:
                         print(f"Updating md5 sum for file {fn}"
                               "for resource {self.id}")
                 else:
-                    print(f"Found a new file {fn} for resource {self.id}")
+                    print(
+                        f"Found a new file {fn} for resource "
+                        f"{self.resource_id}")
                 if not md5:
                     md5 = self.get_md5_sum(fn)
                 newManifest.append(
@@ -203,7 +205,7 @@ class GenomicResource:
             if newManifest != currentManifest:
                 self.save_manifest(newManifest)
         except Exception:
-            print(f"Building a new manifest for resource {self.id}")
+            print(f"Building a new manifest for resource {self.resource_id}")
             manifest = self.build_manifest()
             self.save_manifest(manifest)
 

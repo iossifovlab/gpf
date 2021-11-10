@@ -102,7 +102,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
     def _construct_pedigree_table(study_id):
         return f"{study_id}_pedigree"
 
-    def build_backend(self, study_config, genomes_db):
+    def build_backend(self, study_config, genome, gene_models):
         assert study_config is not None
 
         variants_table, pedigree_table = self.study_tables(study_config)
@@ -111,7 +111,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             self.storage_config.impala.db,
             variants_table,
             pedigree_table,
-            genomes_db.get_gene_models(),
+            gene_models,
         )
 
         return family_variants
