@@ -45,7 +45,7 @@ describe('AutismGeneProfilesBlockComponent', () => {
     expect(closeActiveTabSpy).toHaveBeenCalledTimes(1);
     expect(openTabByKeySpy).not.toHaveBeenCalled();
 
-    const tabKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'p', 'n'];
+    const tabKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'p', 'n'];
     tabKeys.forEach(tabKey => {
       mockEvent = {key: tabKey, target: {localName: 'notInput'}};
       component.keyEvent(mockEvent as any);
@@ -353,7 +353,7 @@ describe('AutismGeneProfilesBlockComponent', () => {
     component['geneTabs'].add('id3');
     component['geneTabs'].add('id4');
 
-    component.openTabByKey('0');
+    component.openTabByKey('9');
     expect(openLastTabSpy).toHaveBeenCalledTimes(1);
 
     expect(openHomeTabSpy).not.toHaveBeenCalled();
