@@ -12,10 +12,10 @@ const mockAllItems = [
   'item5'
 ];
 
-const mockSelectedItems = [
+const mockSelectedItems = new Set([
   'item1',
   'item2',
-];
+]);
 
 describe('MultipleSelectMenuComponent', () => {
   let component: MultipleSelectMenuComponent;
@@ -46,99 +46,34 @@ describe('MultipleSelectMenuComponent', () => {
     component['checkboxDataArray'] = undefined;
     component['checkUncheckAllButtonName'] = 'Uncheck all';
 
-    const areAllUncheckedSpy = spyOn(component, 'areAllUnchecked');
-
-    areAllUncheckedSpy.and.returnValue(false);
-
     component.ngOnInit();
-    expect(component['checkboxDataArray']).toEqual([
-      {id: 'item1', isChecked: true},
-      {id: 'item2', isChecked: true},
-      {id: 'item3', isChecked: false},
-      {id: 'item4', isChecked: false},
-      {id: 'item5', isChecked: false}
-    ]);
+    expect(component['selectedItems']).toEqual(new Set(['item1', 'item2']));
     expect(component['checkUncheckAllButtonName']).toEqual('Uncheck all');
-
-    areAllUncheckedSpy.and.returnValue(true);
-
-    component.ngOnInit();
-    expect(component['checkUncheckAllButtonName']).toEqual('Check all');
-  });
-
-  it('should check if all are unchecked', () => {
-    component.selectedItems = [];
-    component.ngOnInit();
-    expect(component.areAllUnchecked(component['checkboxDataArray'])).toBeTrue();
-
-    component.selectedItems = [
-      'item1'
-    ];
-    component.ngOnInit();
-    expect(component.areAllUnchecked(component['checkboxDataArray'])).toBeFalse();
-
-    component.selectedItems = [
-      'item1',
-      'item2'
-    ];
-    component.ngOnInit();
-    expect(component.areAllUnchecked(component['checkboxDataArray'])).toBeFalse();
   });
 
   it('should toggle checking all', () => {
     component['checkUncheckAllButtonName'] = 'Uncheck all';
-    component['checkboxDataArray'] = [
-      {id: 'item1', isChecked: true},
-      {id: 'item2', isChecked: true},
-      {id: 'item3', isChecked: false},
-      {id: 'item4', isChecked: true},
-      {id: 'item5', isChecked: false}
-    ];
+    component['selectedItems'] = new Set(['item1', 'item2', 'item4']);
     component.toggleCheckingAll();
-    component['checkboxDataArray'].forEach(item => expect(item.isChecked).toBeFalse());
+    expect(component['selectedItems'].size).toEqual(0);
     expect(component['checkUncheckAllButtonName']).toEqual('Check all');
 
-    component['checkboxDataArray'] = [
-      {id: 'item1', isChecked: false},
-      {id: 'item2', isChecked: true},
-      {id: 'item3', isChecked: false},
-      {id: 'item4', isChecked: true},
-      {id: 'item5', isChecked: false}
-    ];
+    component['selectedItems'] = new Set(['item2', 'item4']);
     component.toggleCheckingAll();
-    component['checkboxDataArray'].forEach(item => expect(item.isChecked).toBeTrue());
+    expect(component['selectedItems'].size).toEqual(5);
     expect(component['checkUncheckAllButtonName']).toEqual('Uncheck all');
-  });
-
-  it('should check if selection is valid', () => {
-    component['checkboxDataArray'] = [
-      {id: 'item1', isChecked: true},
-      {id: 'item2', isChecked: true},
-      {id: 'item3', isChecked: false},
-      {id: 'item4', isChecked: true},
-      {id: 'item5', isChecked: false}
-    ];
-    (component as any).minSelectCount = 3;
-    expect(component.isSelectionValid()).toBeTrue();
-    (component as any).minSelectCount = 4;
-    expect(component.isSelectionValid()).toBeFalse();
   });
 
   it('should emit on apply event', () => {
     component.menuId = 'mockId';
-    component['checkboxDataArray'] = [
-      {id: 'item1', isChecked: true},
-      {id: 'item2', isChecked: true},
-      {id: 'item3', isChecked: false},
-      {id: 'item4', isChecked: true},
-      {id: 'item5', isChecked: false}
-    ];
+    component['selectedItems'] = new Set(['item1', 'item2', 'item4']);
     const emitSpy = spyOn(component.applyEvent, 'emit');
 
     component.apply();
     expect(emitSpy).toHaveBeenCalledWith({
       menuId: 'mockId',
-      data: ['item1', 'item2', 'item4']
+      order: ['item1', 'item2', 'item3', 'item4', 'item5'],
+      selected: ['item1', 'item2', 'item4']
     });
   });
 });
