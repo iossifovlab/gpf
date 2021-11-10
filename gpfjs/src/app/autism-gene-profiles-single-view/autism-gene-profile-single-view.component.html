@@ -65,21 +65,23 @@
         </thead>
 
         <tbody>
-          <tr class="card-block" *ngFor="let statistic of dataset.statistics">
-            <td>{{ statistic.description ? statistic.description : statistic.displayName }}</td>
-            <td style="text-align: center;" *ngFor="let personSet of dataset.personSets">
-              <ng-container *ngIf="getGeneDatasetValue(gene, dataset.id, personSet.id, statistic.id) as effectType">
-                <ng-container *ngIf="effectType.value.count !== 0">
-                  <a class="link-genotype-browser"
-                    (click)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)"
-                    (middleclick)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)">
-                    <span>{{effectType.value.count}} ({{effectType.value.rate | number : '1.0-3'}})</span>
-                  </a>
+          <ng-container *ngFor="let statistic of dataset.statistics">
+            <tr class="card-block" [attr.id]="statistic.id">
+              <td>{{ statistic.description ? statistic.description : statistic.displayName }}</td>
+              <td style="text-align: center;" *ngFor="let personSet of dataset.personSets">
+                <ng-container *ngIf="getGeneDatasetValue(gene, dataset.id, personSet.id, statistic.id) as effectType">
+                  <ng-container *ngIf="effectType.value.count !== 0">
+                    <a class="link-genotype-browser"
+                      (click)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)"
+                      (middleclick)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)">
+                      <span>{{effectType.value.count}} ({{effectType.value.rate | number : '1.0-3'}})</span>
+                    </a>
+                  </ng-container>
+                  <ng-container *ngIf="effectType.value.count === 0">&ndash;</ng-container>
                 </ng-container>
-                <ng-container *ngIf="effectType.value.count === 0">&ndash;</ng-container>
-              </ng-container>
-            </td>
-          </tr>
+              </td>
+            </tr>
+          </ng-container>
         </tbody>
       </table>
     </ng-container>
