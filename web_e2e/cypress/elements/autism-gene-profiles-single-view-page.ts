@@ -104,6 +104,7 @@ export class AutismGeneProfilesSingleView extends BasePage {
       });
     });
     
+    cy.wrap(autism_scores).as('autism_results');
     return autism_scores;
   }
 
@@ -128,6 +129,7 @@ export class AutismGeneProfilesSingleView extends BasePage {
       });
     });
     
+    cy.wrap(protection_scores).as('protection_results');
     return protection_scores;
   }
 
@@ -154,6 +156,7 @@ export class AutismGeneProfilesSingleView extends BasePage {
       });
     });
 
+    cy.wrap(autism_gene_sets).as('autism_gene_results');
     return autism_gene_sets;
   }
 
@@ -180,6 +183,7 @@ export class AutismGeneProfilesSingleView extends BasePage {
       });
     });
 
+    cy.wrap(relevant_gene_sets).as('relevant_gene_results');
     return relevant_gene_sets;
   }
 
@@ -213,7 +217,8 @@ export class AutismGeneProfilesSingleView extends BasePage {
         });
       });  
     });
-
+    
+    cy.wrap(study).as('study_results');
     return study;
   }
 
@@ -249,7 +254,7 @@ export class AutismGeneProfilesSingleView extends BasePage {
     gene_data.statistics.relevant_gene_sets = view.getRelevantGeneSets(view);
     gene_data.statistics.study = view.getStudyTable(view, 0);
 
-    cy.wrap(gene_data).as('compare1');
+    cy.wrap(gene_data).as('result');
     return gene_data;
   }
 }

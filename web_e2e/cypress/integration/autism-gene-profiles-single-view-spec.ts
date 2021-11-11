@@ -168,7 +168,7 @@ describe('Autism gene profiles single view links tests', () => {
     //page.compareData(page);
   });
 
-  it.only('should test data view', () => {
+  it('should compare all data in single view', () => {
     const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
     page.autismGeneToolAllView.click();
     autismGeneProfilesTablePage.geneSearchInput.clear().type('GRIN2B');
@@ -178,11 +178,30 @@ describe('Autism gene profiles single view links tests', () => {
     autismGeneProfilesTablePage.allTableCells.first().click();
     page.getView('GRIN2B');
     page.compareData(page);
-    let data;
-    cy.get('@compare1').then(value => {
+
+    cy.get('@result').then(value => {
       cy.wrap(value).should('deep.equal', gene_data);
     });
     //or cy.intercept to wait asynchronous calls
+  });
+
+  it('should compare study table in single view', () => { // could be used describe in order to skip writing the lines from 189 to 196
+    page.cleanup();
+    page.navigateToHome();
+    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+    const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
+    page.autismGeneToolAllView.click();
+    autismGeneProfilesTablePage.geneSearchInput.clear().type('GRIN2B');
+    cy.intercept('GET', '/gpf/api/v3/autism_gene_tool/genes/?page=1&symbol=GRIN2B&sortBy=autism_gene_sets_rank&order=desc').as('responseHandler');
+    cy.wait('@responseHandler');
+    autismGeneProfilesTablePage.allTableRows.first().should('have.length', 1);
+    autismGeneProfilesTablePage.allTableCells.first().click();
+    page.getView('GRIN2B');
+    
+    page.getStudyTable(page, 0);
+    cy.get('@study_results').then(value => {
+      cy.wrap(value).should('deep.equal', gene_data.statistics.study);
+    });
   });
   
 
