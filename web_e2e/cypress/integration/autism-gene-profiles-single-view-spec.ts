@@ -135,8 +135,14 @@ describe('Autism gene profiles single view links tests', () => {
     page.getView('GRIN2B');
     //autismGeneProfilesTablePage.allTableCells.first().click();
 
-    page.compareData(gene_data);
+    page.getAutismScores(page);
+    page.getProtectionScores(page);
+    page.getAutismGeneSets(page);
+    page.getRelevantGeneSets(page);
+    //page.getStudyTable(page, 0);
+    //page.compareData(gene_data);
   });
+  
 
   it.skip('should have proper single view links in the study table', () => {
     page.cleanup();
@@ -166,10 +172,12 @@ describe('Autism gene profiles single view links tests', () => {
   });
 });
 
+// seperate data -> autism scores/ protection
 const gene_data = {
   gene_symbols: 'GRIN2B',
-  data: [
-    { name:'SFARI_gene_score', value: 1 }, // sfari_score: 
+  autism_scores: [
+    { name:'SFARI_gene_score', value: 1 }
+  ], protection_scores: [ // sfari_score: 
     { name: 'RVIS_rank', value: 174.5 },  // rvis_rank: 
     { name: 'LGD_rank', value: 85.5 }, // lgd_rank:
     { name: 'pLI_rank', value: 400 }, // pli_rank: 
@@ -185,6 +193,7 @@ const gene_data = {
       { name: 'essential genes', value:  true },
       { name: 'FMRP Darnell', value:  true }
     ], study: {
+      // title
       variant_statistics: ['LGDs', 'missense', 'intron'],
       variant_ids: ['denovo_lgds', 'denovo_missense', 'denovo_intron'],
       affected: ['3 (1.197)', '1 (0.399)', '–'],
@@ -192,6 +201,8 @@ const gene_data = {
     }
   }
 }
+
+//it = > get(variant_stat).should('');
 
 const sfari_genes = [
   'ABCA7',
