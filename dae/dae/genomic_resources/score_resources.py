@@ -279,12 +279,10 @@ class PositionScoreResource(GenomicScoresResource):
 
         for scr_id in scores:
             scr_def = self.scores[scr_id]
-            print(non_default_pos_aggregators)
             aggregator_def = non_default_pos_aggregators.get(
                 scr_id, scr_def.pos_aggregator)
             aggregator_name = aggregator_def["name"]
             aggregator_class = get_aggregator_class(aggregator_name)
-            print(scr_def.pos_aggregator)
             if "args" in aggregator_def:
                 aggregators[scr_id] = aggregator_class(
                     *aggregator_def["args"]

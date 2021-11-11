@@ -157,11 +157,8 @@ class GPFConfigParser:
         conf_dir: str = None,
     ) -> FrozenBox:
 
-        print('test')
         config = GPFConfigParser.merge_config(config, default_config)
-        print(config)
         config = GPFConfigParser.validate_config(config, schema, conf_dir)
-        print(config)
 
         return FrozenBox(config)
 
