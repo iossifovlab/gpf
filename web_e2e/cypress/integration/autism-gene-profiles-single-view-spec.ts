@@ -134,12 +134,13 @@ describe('Autism gene profiles single view links tests', () => {
     autismGeneProfilesTablePage.allTableCells.first().click();
     page.getView('GRIN2B');
     //autismGeneProfilesTablePage.allTableCells.first().click();
-
-    page.getAutismScores(page);
+    cy.get('.genomic-scores-table').should('be.visible');
+    //page.compareData(gene_data);
+    /*page.getAutismScores(page);
     page.getProtectionScores(page);
     page.getAutismGeneSets(page);
     page.getRelevantGeneSets(page);
-    //page.getStudyTable(page, 0);
+    page.getStudyTable(page, 0);*/
     //page.compareData(gene_data);
   });
   
