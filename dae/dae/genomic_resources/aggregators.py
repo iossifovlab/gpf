@@ -166,10 +166,36 @@ class ModeAggregator(AbstractAggregator):
         self.value_counts.clear()
 
     def get_final(self):
+        count_values = dict()
         current_max = None
         for value, count in self.value_counts.items():
+            if count not in count_values:
+                count_values[count] = list()
+
+            count_values[count].append(value)
+
             if current_max is None:
-                current_max = value
-            elif self.value_counts[current_max] < self.value_counts[value]:
-                current_max = value
-        return current_max
+                current_max = count
+            elif current_max < count:
+                current_max = count
+        modes = count_values[current_max]
+        modes.sort()
+        return modes[0]
+
+
+class JoinAggregator(AbstractAggregator):
+    def __init__(self, separator):
+        super().__init__()
+        self.values = list()
+        self.separator = separator
+
+    def _add_internal(self, v):
+        if v is not None:
+            self.values.append(str(v))
+            self.used_count += 1
+
+    def _clear_internal(self):
+        self.values.clear()
+
+    def get_final(self):
+        return self.separator.join(self.values)
