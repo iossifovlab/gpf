@@ -1,6 +1,9 @@
+import logging
 import requests
 from io import RawIOBase, SEEK_SET, SEEK_CUR, SEEK_END, BufferedRandom, \
     DEFAULT_BUFFER_SIZE
+
+logger = logging.getLogger(__name__)
 
 
 class HTTPRawIO(RawIOBase):
