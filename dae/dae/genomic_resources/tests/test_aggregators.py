@@ -1,7 +1,9 @@
 import numpy
 from dae.genomic_resources.aggregators import (
     ConcatAggregator, MinAggregator,
-    MaxAggregator, MeanAggregator, ModeAggregator, MedianAggregator
+    MaxAggregator, MeanAggregator,
+    ModeAggregator, MedianAggregator,
+    JoinAggregator
 )
 
 
@@ -105,12 +107,21 @@ def test_mode_aggregator():
 
 
 def test_mode_aggregator_multimode():
-    values = [6, 2, 3, 6, 5, 1, 1, 6, 1]
+    values = [6, 2, 3, 6, 5, 1, 1, 6, 1, 4, 4, 4]
     agg = ModeAggregator()
     for v in values:
         agg.add(v)
 
-    assert agg.get_final() == 6
+    assert agg.get_final() == 1
+
+
+def test_join_aggregator():
+    values = [1, 2, 3, 4, 5]
+    agg = JoinAggregator(", ")
+    for v in values:
+        agg.add(v)
+
+    assert agg.get_final() == "1, 2, 3, 4, 5"
 
 
 def test_aggregator_used_counts():

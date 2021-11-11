@@ -22,8 +22,18 @@ DEFAULT_ANNOTATION_SCHEMA = {
             "schema": {
                 "source": {"type": "string"},
                 "dest": {"type": "string"},
-                "position_aggregator": {"type": "string"},
-                "nucleotide_aggregator": {"type": "string"},
+                "position_aggregator": {
+                    "type": "dict", "coerce": "aggregator", "schema": {
+                        "name": {"type": "string"},
+                        "args": {"type": "list", "schema": {"type": "string"}}
+                    }
+                },
+                "nucleotide_aggregator": {
+                    "type": "dict", "coerce": "aggregator", "schema": {
+                        "name": {"type": "string"},
+                        "args": {"type": "list", "schema": {"type": "string"}}
+                    }
+                },
             }
         }
     }

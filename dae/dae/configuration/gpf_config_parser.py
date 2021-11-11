@@ -1,5 +1,6 @@
 import os
 import glob
+import re
 import logging
 
 import yaml
@@ -11,7 +12,6 @@ from typing import List, Any, Dict
 from cerberus import Validator
 
 from dae.utils.dict_utils import recursive_dict_update
-
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +43,7 @@ class FrozenBox(DefaultBox):
 
 
 class GPFConfigValidator(Validator):
+
     def _normalize_coerce_abspath(self, value: str) -> str:
         directory = self._config["conf_dir"]
         if directory is None:
@@ -50,6 +51,19 @@ class GPFConfigValidator(Validator):
         if not os.path.isabs(value):
             value = os.path.join(directory, value)
         return os.path.normpath(value)
+
+    def _normalize_coerce_aggregator(self, value: str) -> Dict[str, Any]:
+        join_regex = r"^(join)\((.+)\)"
+        join_match = re.match(join_regex, value)
+        if join_match is not None:
+            separator = join_match.groups()[1]
+            return {
+                "name": "join",
+                "args": [separator]
+            }
+        return {
+            "name": value,
+        }
 
 
 class GPFConfigParser:
@@ -132,7 +146,7 @@ class GPFConfigParser:
                 raise ValueError(f"{conf_dir}: {validator.errors}")
             else:
                 raise ValueError(f"{validator.errors}")
-        return validator.normalized(validator.document)
+        return validator.document
 
     @staticmethod
     def process_config(
@@ -142,8 +156,11 @@ class GPFConfigParser:
         conf_dir: str = None,
     ) -> FrozenBox:
 
+        print('test')
         config = GPFConfigParser.merge_config(config, default_config)
+        print(config)
         config = GPFConfigParser.validate_config(config, schema, conf_dir)
+        print(config)
 
         return FrozenBox(config)
 
