@@ -121,7 +121,7 @@ describe('Autism gene profiles single view links tests', () => {
   // it('should have the correct href for the SFARI link', () => {
   // }); */
 
-  it('should have proper single view data', () => {
+  it.only('should have proper single view data', () => {
     //page.cleanup();
     //page.navigateToHome();
     //page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
@@ -135,13 +135,14 @@ describe('Autism gene profiles single view links tests', () => {
     page.getView('GRIN2B');
     //autismGeneProfilesTablePage.allTableCells.first().click();
     cy.get('.genomic-scores-table').should('be.visible');
+    page.geneSymbol.should('have.text', gene_data.gene_symbols);
     //page.compareData(gene_data);
     /*page.getAutismScores(page);
     page.getProtectionScores(page);
     page.getAutismGeneSets(page);
     page.getRelevantGeneSets(page);
     page.getStudyTable(page, 0);*/
-    //page.compareData(gene_data);
+    console.log(page.compareData(page)) ;
   });
   
 

@@ -65,6 +65,10 @@ export class AutismGeneProfilesSingleView extends BasePage {
     return cy.get('#external-links');
   }
 
+  get geneSymbol() {
+    return cy.get('gpf-autism-gene-profile-single-view > div > h2');
+  }
+
   getView(name: string, force = true) {
     cy.get('nav > li > a > span').not('.close').each(nav => {
       cy.wrap(nav).eq(0).then(el => {
@@ -220,12 +224,38 @@ export class AutismGeneProfilesSingleView extends BasePage {
     return study;
   }
 
-  compareData(data: any) {
-    const page = new AutismGeneProfilesSingleView();
+  compareData(view: AutismGeneProfilesSingleView): any {
+    let gene_data = {
+      gene_symbols: '',
+      autism_scores: [
+        { name:'', value: null }
+      ], protection_scores: [
+        { name: '', value: null },
+      ],
+      statistics: {
+        autism_gene_sets: [
+          { name: '', value: null },
+        ], relevant_gene_sets: [
+          { name: '', value:  null },
+        ], study: {
+          variant_statistics: [''],
+          variant_ids: [''],
+          affected: [''],
+          unaffected: ['']
+        }
+      }
+    }
 
-    expect(data.autism_scores).to.equal(page.getAutismScores(page));
-    expect(data.protection_scores).to.equal(page.getProtectionScores(page));
-    expect(data.statistics.autism_gene_sets).to.equal(page.getAutismGeneSets(page));
-    expect(data.statistics.relevant_gene_sets).to.equal(page.getRelevantGeneSets(page));
+    view.geneSymbol.then(symbol => {
+      gene_data.gene_symbols = symbol.text();
+    });
+
+    gene_data.autism_scores = view.getAutismScores(view);
+    gene_data.protection_scores = view.getProtectionScores(view);
+    gene_data.statistics.autism_gene_sets = view.getAutismGeneSets(view);
+    gene_data.statistics.relevant_gene_sets = view.getRelevantGeneSets(view);
+    gene_data.statistics.study = view.getStudyTable(view, 0);
+
+    return gene_data;
   }
 }
