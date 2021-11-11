@@ -111,6 +111,7 @@ describe('Autism gene profiles single view links tests', () => {
     const pubmedLink = 'https://pubmed.ncbi.nlm.nih.gov/?term=CHD8%20AND%20(autism%20OR%20asd)';
     page.pubmedLink.should('have.prop', 'href').and('equal', pubmedLink)
   });
+  +
 /*
   it('should display SFARI link when is contained in the list', () => {
   });
@@ -120,6 +121,18 @@ describe('Autism gene profiles single view links tests', () => {
   // });
   // it('should have the correct href for the SFARI link', () => {
   // }); */
+
+  it('should load more genes when scrolling', () => {
+    page.cleanup();
+    page.navigateToHome();
+    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+
+    cy.get('.table tr').should('have.length.above', 5);
+    cy.get('.table').find('tr').its('length').then(value => {
+      cy.scrollTo('bottom');
+      cy.get('.table tr').should('have.length.above', value);
+    });
+  });
 
   it('should have proper single view data', () => {
     //page.cleanup();
@@ -172,8 +185,6 @@ describe('Autism gene profiles single view links tests', () => {
     const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
     page.autismGeneToolAllView.click();
     autismGeneProfilesTablePage.geneSearchInput.clear().type('GRIN2B');
-    cy.intercept('GET', '/gpf/api/v3/autism_gene_tool/genes/?page=1&symbol=GRIN2B&sortBy=autism_gene_sets_rank&order=desc').as('responseHandler');
-    cy.wait('@responseHandler');
     autismGeneProfilesTablePage.allTableRows.first().should('have.length', 1);
     autismGeneProfilesTablePage.allTableCells.first().click();
     page.getView('GRIN2B');
