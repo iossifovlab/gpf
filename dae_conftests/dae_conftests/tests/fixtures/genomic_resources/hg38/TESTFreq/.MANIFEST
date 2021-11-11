@@ -1,12 +1,12 @@
-- md5: 094a0b06660e3b4151a3f87b57b2012d
+- md5: 5220b08aa6081a753955e8b5cdf3566c
   name: TESTFreq.tsv.gz
-  size: 190
-  time: 1632952362.1680088
-- md5: 4300638174ebcb6c0a153c144aad7db1
+  size: 206
+  time: 1636543148.78107
+- md5: 05e5bc2e111692d73e2c27e76fc7e2a7
   name: TESTFreq.tsv.gz.tbi
-  size: 98
-  time: 1632952362.168339
-- md5: 2d73c2285acbf1d86fcc968ef8646509
+  size: 100
+  time: 1636543148.78107
+- md5: 8951f26376eaaa9d9209cec8b78e9544
   name: genomic_resource.yaml
-  size: 600
-  time: 1632952362.1686332
+  size: 567
+  time: 1636543148.78107

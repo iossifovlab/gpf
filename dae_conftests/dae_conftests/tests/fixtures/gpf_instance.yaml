@@ -1,0 +1,96 @@
+vars:
+  instance_id: test_data
+  wd: "."
+
+reference_genome:
+  resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
+
+gene_models:
+  resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/gene_models/refGene_201309"
+
+genotype_storage:
+  default: genotype_filesystem
+
+storage:
+
+  genotype_impala:
+    storage_type: impala
+    dir: "%(wd)s/work/"
+    hdfs:
+      base_dir: /tmp/test_data
+      host: impala
+      port: 8020
+      replication: 1
+    impala:
+      db: "impala_storage_test_db"
+      hosts:
+      - impala
+      pool_size: 3
+      port: 21050
+
+  genotype_impala_backends:
+    storage_type: impala
+    dir: /tmp/test_impala/studies
+    hdfs:
+      base_dir: /tmp/test_data
+      host: impala
+      port: 8020
+      replication: 1
+    impala:
+      db: impala_test_db
+      hosts:
+      - impala
+      pool_size: 1
+      port: 21050
+
+  genotype_filesystem:
+    dir: "%(wd)s/studies"
+    storage_type: filesystem
+
+  genotype_filesystem2:
+    dir: "%(wd)s/data_dir"
+    storage_type: filesystem
+
+remotes:
+  - id: "TEST_REMOTE"
+    host: "gpfremote"
+    base_url: "api/v3"
+    port: 21010
+    user: "admin@iossifovlab.com"
+    password: "secret"
+
+annotation:
+  conf_file: "%(wd)s/annotation_pipeline/import_annotation.conf"
+
+
+phenotype_data:
+  dir: "%(wd)s/pheno"
+
+
+studies:
+  dir: "%(wd)s/studies"
+
+datasets:
+  dir: "%(wd)s/datasets"
+
+default_study_config:
+  conf_file: "%(wd)s/defaultConfiguration.conf"
+
+genomic_resources:
+  repositories:
+    - id: "%(instance_id)s"
+      type: directory
+      directory: "%(wd)s"
+
+gene_info_db:
+  conf_file: "%(wd)s/gene_info.conf"
+
+genomic_scores_db:
+  conf_file: "%(wd)s/genomicScores.conf"
+
+enrichment:
+  conf_file: "%(wd)s/enrichment.conf"
+
+gpfjs:
+  permission_denied_prompt_file: "%(wd)s/permissionDeniedPrompt.md"
+

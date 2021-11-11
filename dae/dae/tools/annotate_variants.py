@@ -80,17 +80,18 @@ def parse_cli_genome_options(args):
         return genomic_sequence, gene_models
 
     if genomic_sequence is None or gene_models is None:
-        from dae import GPFInstance
+        return None, None
+        # from dae import GPFInstance
 
-        gpf = GPFInstance()
-        genome = gpf.genomes_db.get_genome(args.genome_id)
-        if genomic_sequence is None:
-            genomic_sequence = genome.get_genomic_sequence()
-        if gene_models is None:
-            gene_models = gpf.genomes_db.get_gene_models(
-                args.gene_models_id, args.genome_id
-            )
-        return genomic_sequence, gene_models
+        # gpf = GPFInstance()
+        # genome = gpf.genomes_db.get_genome(args.genome_id)
+        # if genomic_sequence is None:
+        #     genomic_sequence = genome.get_genomic_sequence()
+        # if gene_models is None:
+        #     gene_models = gpf.genomes_db.get_gene_models(
+        #         args.gene_models_id, args.genome_id
+        #     )
+        # return genomic_sequence, gene_models
 
 
 def cli_variants_options(parser):

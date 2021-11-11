@@ -71,4 +71,3 @@ def test_parsimonious_vcf_allele(
     assert a.pos == parsimonious[0]
     assert a.ref == parsimonious[1]
     assert a.alt == parsimonious[2]
-

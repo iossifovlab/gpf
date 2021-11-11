@@ -14,15 +14,19 @@ class VariantsDb(object):
     def __init__(
             self,
             dae_config,
-            genomes_db,
+            genome,
+            gene_models,
             genotype_storage_factory):
 
         self.dae_config = dae_config
 
-        assert genomes_db is not None
+        assert genome is not None
+        assert gene_models is not None
+
         assert genotype_storage_factory is not None
 
-        self.genomes_db = genomes_db
+        self.genome = genome
+        self.gene_models = gene_models
         self.genotype_storage_factory = genotype_storage_factory
 
         self._genotype_study_cache = {}
@@ -54,7 +58,7 @@ class VariantsDb(object):
                 self.dae_config.default_study_config.conf_file
 
         study_configs = GPFConfigParser.load_directory_configs(
-            self.dae_config.studies_db.dir,
+            self.dae_config.studies.dir,
             study_config_schema,
             default_config_filename=default_config_filename,
         )
@@ -76,7 +80,7 @@ class VariantsDb(object):
                 self.dae_config.default_study_config.conf_file
 
         group_configs = GPFConfigParser.load_directory_configs(
-            self.dae_config.datasets_db.dir,
+            self.dae_config.datasets.dir,
             study_config_schema,
             default_config_filename=default_config_filename,
         )
@@ -208,7 +212,7 @@ class VariantsDb(object):
 
         try:
             variants = genotype_storage.build_backend(
-                study_config, self.genomes_db
+                study_config, self.genome, self.gene_models
             )
 
             return GenotypeDataStudy(study_config, variants)

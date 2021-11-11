@@ -51,7 +51,7 @@ def test_extra_attributes_serialization_deserialization(
 
     loader = DenovoLoader(
         families_data, fixture_dirname("backends/iossifov_extra_attrs.tsv"),
-        fixtures_gpf_instance.get_genome().get_genomic_sequence()
+        fixtures_gpf_instance.reference_genome
     )
 
     main_schema = loader.get_attribute("annotation_schema")
@@ -91,7 +91,7 @@ def test_extra_attributes_loading_with_person_id(
 
     loader = DenovoLoader(
         families_data, fixture_dirname("backends/denovo-db-person-id.tsv"),
-        fixtures_gpf_instance.get_genome().get_genomic_sequence(),
+        fixtures_gpf_instance.reference_genome,
         params=params
     )
 

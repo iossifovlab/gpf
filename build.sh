@@ -329,6 +329,7 @@ EOT'
           --ignore-missing-imports \
           --warn-return-any \
           --warn-redundant-casts \
+          --html-report /wd/results/mypy_dae_html \
           > /wd/results/mypy_dae_report || true'
 
     build_run_container bash -c '
@@ -341,6 +342,7 @@ EOT'
           --ignore-missing-imports \
           --warn-return-any \
           --warn-redundant-casts \
+          --html-report /wd/results/mypy_wdae_html \
           > /wd/results/mypy_wdae_report || true'
 
       build_run_local cp ./results/mypy_dae_report ./results/mypy_wdae_report ./test-results/

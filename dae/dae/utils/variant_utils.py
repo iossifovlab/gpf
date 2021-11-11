@@ -6,7 +6,7 @@ Created on Mar 5, 2018
 import logging
 import numpy as np
 
-from dae.genome.genomes_db import Genome
+from dae.genome.genome_access import GenomicSequenceBase
 from dae.variants.attributes import Sex
 
 
@@ -260,7 +260,7 @@ def trim_parsimonious(pos, ref, alt):
 
 
 def get_locus_ploidy(
-        chrom: str, pos: int, sex: Sex, genome: Genome) -> int:
+        chrom: str, pos: int, sex: Sex, genome: GenomicSequenceBase) -> int:
 
     if chrom in ("chrX", "X") and sex == Sex.M:
         if not genome.is_pseudoautosomal(chrom, pos):
@@ -270,7 +270,7 @@ def get_locus_ploidy(
 
 def get_interval_locus_ploidy(
         chrom: str, pos_start: int, pos_end: int,
-        sex: Sex, genome: Genome) -> int:
+        sex: Sex, genome: GenomicSequenceBase) -> int:
 
     start_ploidy = get_locus_ploidy(chrom, pos_start, sex, genome)
     end_ploidy = get_locus_ploidy(chrom, pos_end, sex, genome)

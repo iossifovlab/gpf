@@ -1,10 +1,14 @@
 - id: hg19/CADD
   version: '0'
-- id: hg19/GATK_ResourceBundle_5777_b37_phiX174/gene_models/refGene_201309
+- id: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/gene_models/refGene_201309
   version: '0'
-- id: hg19/GATK_ResourceBundle_5777_b37_phiX174/genome
+- id: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
   version: '0'
 - id: hg19/MPC
+  version: '0'
+- id: hg19/internal/scores1
+  version: '0'
+- id: hg19/internal/scores_incomplete_coverage
   version: '0'
 - id: hg19/phastCons100
   version: '0'

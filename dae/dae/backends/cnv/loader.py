@@ -6,7 +6,7 @@ from copy import copy
 import numpy as np
 import pandas as pd
 
-from dae.genome.genomes_db import Genome
+from dae.genome.genome_access import GenomicSequenceBase
 from dae.backends.raw.loader import VariantsGenotypesLoader, TransmissionType
 from dae.pedigrees.family import FamiliesData
 from dae.variants.attributes import Inheritance
@@ -27,7 +27,7 @@ class CNVLoader(VariantsGenotypesLoader):
             self,
             families: FamiliesData,
             cnv_filename: str,
-            genome: Genome,
+            genome: GenomicSequenceBase,
             regions: List[str] = None,
             params: Dict[str, Any] = {}):
 
@@ -258,7 +258,7 @@ class CNVLoader(VariantsGenotypesLoader):
             cls,
             filepath: str,
             families: FamiliesData,
-            genome: Genome,
+            genome: GenomicSequenceBase,
             cnv_chrom: Optional[str] = None,
             cnv_start: Optional[str] = None,
             cnv_end: Optional[str] = None,

@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gpf_dae",
-    version="3.6.dev0",
+    version="3.6.dev1",
     author="Lubomir Chorbadjiev",
     author_email="lubomir.chorbadjiev@gmail.com",
     description="GPF: Genotypes and Phenotypes in Families",
@@ -54,7 +54,8 @@ setuptools.setup(
     cnv2parquet.py=dae.tools.cnv2parquet:main
     generate_vcf_score_histogram.py=dae.tools.generate_vcf_score_histogram:main
     gpf_validation_runner=dae.tools.gpf_validation_runner:main
-    grrm=dae.genomic_resources.cli:cli
+    grr_manage=dae.genomic_resources.cli:cli_manage
+    grr_browse=dae.genomic_resources.cli:cli_browse
     """,
     classifiers=[
         "Development Status :: 4 - Beta",

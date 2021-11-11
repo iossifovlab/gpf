@@ -136,13 +136,13 @@ def test_insert_long():
     assert vd.position == 2  # FIXME
 
 
-def test_cshl_to_vcf_problem(genome_2013):
+def test_cshl_to_vcf_problem(gpf_instance_2013):
     chrom = "2"
     position = 242815433
     variant = "sub(G->A)"
 
     position1, reference, alternative = dae2vcf_variant(
-        chrom, position, variant, genome_2013
+        chrom, position, variant, gpf_instance_2013.reference_genome
     )
     print(chrom, position, reference, alternative)
     assert chrom == "2"

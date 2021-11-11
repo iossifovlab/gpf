@@ -53,9 +53,10 @@ def test_family_variant_unknown_simple_best_st(fv1, gt, bs):
         (np.array([[0, 0, 0], [0, 0, 0]], dtype="int8"), "222/000/000"),
     ],
 )
-def test_family_variant_full_best_st(fv1, gt, bs, genome_2013):
+def test_family_variant_full_best_st(fv1, gt, bs, gpf_instance_2013):
     v = fv1(gt, None)
-    best_state = VariantsGenotypesLoader._calc_best_state(v, genome_2013)
+    best_state = VariantsGenotypesLoader._calc_best_state(
+        v, gpf_instance_2013.reference_genome)
     print(v)
     print(mat2str(best_state))
     assert mat2str(best_state) == bs
@@ -70,9 +71,10 @@ def test_family_variant_full_best_st(fv1, gt, bs, genome_2013):
         (np.array([[-1, 0, 0], [0, 0, 0]], dtype="int8"), "?22/?00/?00"),
     ],
 )
-def test_family_variant_unknown_full_best_st(fv1, gt, bs, genome_2013):
+def test_family_variant_unknown_full_best_st(fv1, gt, bs, gpf_instance_2013):
     v = fv1(gt, None)
-    best_state = VariantsGenotypesLoader._calc_best_state(v, genome_2013)
+    best_state = VariantsGenotypesLoader._calc_best_state(
+        v, gpf_instance_2013.reference_genome)
     print(v)
     print(mat2str(best_state))
     assert mat2str(best_state) == bs
@@ -122,10 +124,10 @@ def test_best2gt(bs, gt):
         ),
     ],
 )
-def test_family_variant_best2gt(bs, gt, gm, fv1, genome_2013):
+def test_family_variant_best2gt(bs, gt, gm, fv1, gpf_instance_2013):
     v = fv1(None, bs)
     genotype, genetic_model = VariantsGenotypesLoader._calc_genotype(
-        v, genome_2013
+        v, gpf_instance_2013.reference_genome
     )
     print(genotype, genetic_model)
 
@@ -156,8 +158,9 @@ def test_family_variant_best2gt(bs, gt, gm, fv1, genome_2013):
         ),
     ],
 )
-def test_family_variant_X_best2gt(bs, gt, gm1, gm2, fvX1, fvX2, genome_2013):
-    genomic_sequence = genome_2013.get_genomic_sequence()
+def test_family_variant_X_best2gt(
+        bs, gt, gm1, gm2, fvX1, fvX2, gpf_instance_2013):
+    genomic_sequence = gpf_instance_2013.reference_genome
 
     v1 = fvX1(None, bs)
     v2 = fvX2(None, bs)
@@ -213,9 +216,9 @@ def test_family_variant_X_best2gt(bs, gt, gm1, gm2, fvX1, fvX2, genome_2013):
     ],
 )
 def test_family_variant_X_gt2best_st(
-        fvX1, fvX2, gt, bs1, gm1, bs2, gm2, genome_2013):
+        fvX1, fvX2, gt, bs1, gm1, bs2, gm2, gpf_instance_2013):
 
-    genomic_sequence = genome_2013.get_genomic_sequence()
+    genomic_sequence = gpf_instance_2013.reference_genome
 
     v = fvX1(gt, None)
     best_state = VariantsGenotypesLoader._calc_best_state(

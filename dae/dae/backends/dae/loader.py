@@ -12,7 +12,8 @@ import pandas as pd
 
 from dae.utils.regions import Region
 
-from dae.genome.genomes_db import Genome
+from dae.genome.genome_access import \
+    GenomicSequenceBase
 from dae.utils.variant_utils import str2mat, GENOTYPE_TYPE, str2gt
 from dae.utils.helpers import str2bool
 
@@ -63,7 +64,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             self,
             families: FamiliesData,
             denovo_filename: str,
-            genome: Genome,
+            genome: GenomicSequenceBase,
             regions: List[str] = None,
             params: Dict[str, Any] = {}):
         super(DenovoLoader, self).__init__(
@@ -226,7 +227,7 @@ class DenovoLoader(VariantsGenotypesLoader):
     def produce_genotype(
         chrom: str,
         pos: int,
-        genome: Genome,
+        genome: GenomicSequenceBase,
         family: Family,
         members_with_variant: List[str],
     ) -> np.array:
@@ -412,7 +413,7 @@ class DenovoLoader(VariantsGenotypesLoader):
     def _flexible_denovo_load_internal(
             cls,
             filepath: str,
-            genome: Genome,
+            genome: GenomicSequenceBase,
             families: FamiliesData,
             denovo_location: Optional[str] = None,
             denovo_variant: Optional[str] = None,
@@ -654,7 +655,7 @@ class DenovoLoader(VariantsGenotypesLoader):
     def flexible_denovo_load(
             cls,
             filepath: str,
-            genome: Genome,
+            genome: GenomicSequenceBase,
             families: FamiliesData,
             denovo_location: Optional[str] = None,
             denovo_variant: Optional[str] = None,

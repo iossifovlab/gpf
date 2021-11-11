@@ -6,7 +6,7 @@ from dae.configuration.gpf_config_parser import (
 config_reference_schema = {
     "conf_file": {
         "type": "string",
-        "required": True,
+        "required": False,
         "check_with": validate_existing_path,
         "coerce": "abspath",
     },
@@ -14,6 +14,12 @@ config_reference_schema = {
         "type": "string",
         "check_with": validate_existing_path,
         "coerce": "abspath",
+    },
+}
+
+resource_schema = {
+    "resource_id": {
+        "type": "string",
     },
 }
 
@@ -111,9 +117,8 @@ dae_conf_schema = {
         "type": "dict",
         "valuesrules": {"type": "dict", "schema": storage_schema},
     },
-    "studies_db": {"type": "dict", "schema": config_reference_schema},
-    "datasets_db": {"type": "dict", "schema": config_reference_schema},
-    "genomes_db": {"type": "dict", "schema": config_reference_schema},
+    "studies": {"type": "dict", "schema": config_reference_schema},
+    "datasets": {"type": "dict", "schema": config_reference_schema},
     "genomic_scores_db": {"type": "dict", "schema": config_reference_schema},
     "autism_gene_tool_config": {
         "type": "dict", "schema": config_reference_schema
@@ -147,6 +152,9 @@ dae_conf_schema = {
             },
         },
     },
+    "reference_genome": {"type": "dict", "schema": resource_schema},
+    "gene_models": {"type": "dict", "schema": resource_schema},
+
     "gene_info_db": {"type": "dict", "schema": config_reference_schema},
     "default_study_config": {
         "type": "dict",

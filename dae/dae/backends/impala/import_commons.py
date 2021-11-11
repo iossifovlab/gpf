@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 
 
 def save_study_config(dae_config, study_id, study_config, force=False):
-    dirname = os.path.join(dae_config.studies_db.dir, study_id)
+    dirname = os.path.join(dae_config.studies.dir, study_id)
     filename = os.path.join(dirname, "{}.conf".format(study_id))
 
     if os.path.exists(filename):
@@ -77,16 +77,15 @@ def construct_import_annotation_pipeline(
         logger.warning(f"missing annotation configuration: {config_filename}")
         return None
 
-    # genomes_db = gpf_instance.genomes_db
-    resources_db = gpf_instance.genomic_resources_db
+    grr = gpf_instance.grr
     assert os.path.exists(config_filename), config_filename
     config = AnnotationPipeline.load_and_parse(config_filename)
-    return AnnotationPipeline.build(config, resources_db)
+    return AnnotationPipeline.build(config, grr)
 
 
 def construct_import_effect_annotator(gpf_instance):
-    genome = gpf_instance.genomes_db.get_genomic_sequence()
-    gene_models = gpf_instance.genomes_db.get_gene_models()
+    genome = gpf_instance.reference_genome
+    gene_models = gpf_instance.gene_models
 
     effect_annotator = EffectAnnotatorAdapter(
         genome=genome, gene_models=gene_models)
@@ -617,7 +616,7 @@ class BatchImporter:
             self.families,
             variants_filenames,
             params=variants_params,
-            genome=self.gpf_instance.genomes_db.get_genome(),
+            genome=self.gpf_instance.reference_genome,
         )
         self.vcf_loader = variants_loader
         self.variants_loaders["vcf"] = variants_loader
@@ -633,7 +632,7 @@ class BatchImporter:
             self.families,
             variants_filename,
             params=variants_params,
-            genome=self.gpf_instance.genomes_db.get_genomic_sequence(),
+            genome=self.gpf_instance.reference_genome,
         )
         self.denovo_loader = variants_loader
         self.variants_loaders["denovo"] = variants_loader
@@ -650,7 +649,7 @@ class BatchImporter:
             self.families,
             variants_filename,
             params=variants_params,
-            genome=self.gpf_instance.genomes_db.get_genome(),
+            genome=self.gpf_instance.reference_genome,
         )
         self.cnv_loader = variants_loader
         self.variants_loaders["cnv"] = variants_loader
@@ -666,7 +665,7 @@ class BatchImporter:
             self.families,
             variants_filename,
             params=variants_params,
-            genome=self.gpf_instance.genomes_db.get_genome(),
+            genome=self.gpf_instance.reference_genome,
         )
         self.dae_loader = variants_loader
         self.variants_loaders["dae"] = variants_loader
@@ -695,7 +694,7 @@ class BatchImporter:
 
         self.partition_helper = MakefilePartitionHelper(
             partition_description,
-            self.gpf_instance.genomes_db.get_genomic_sequence(),
+            self.gpf_instance.reference_genome,
             add_chrom_prefix=add_chrom_prefix,
             del_chrom_prefix=del_chrom_prefix,
         )
@@ -1253,7 +1252,7 @@ class Variants2ParquetTool:
             families,
             variants_filenames,
             params=variants_params,
-            genome=gpf_instance.genomes_db.get_genomic_sequence(),
+            genome=gpf_instance.reference_genome,
         )
         return variants_loader
 
@@ -1275,7 +1274,7 @@ class Variants2ParquetTool:
 
         generator = MakefilePartitionHelper(
             partition_description,
-            gpf_instance.genomes_db.get_genomic_sequence(),
+            gpf_instance.reference_genome,
             add_chrom_prefix=add_chrom_prefix,
             del_chrom_prefix=del_chrom_prefix,
         )

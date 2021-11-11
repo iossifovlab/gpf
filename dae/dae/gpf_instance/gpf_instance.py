@@ -3,7 +3,6 @@ import logging
 import pandas as pd
 import math
 import json
-from dae.genome.genomes_db import GenomesDB
 
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
@@ -30,7 +29,6 @@ from dae.configuration.schemas.autism_gene_profile import (
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.autism_gene_profile.statistic import AGPStatistic
 from dae.genomic_resources import build_genomic_resource_repository
-from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 
 from dae.utils.helpers import isnan
 from dae.utils.dae_utils import cached, join_line
@@ -42,7 +40,7 @@ class GPFInstance(object):
     def __init__(
             self,
             dae_config=None,
-            config_file="DAE.conf",
+            config_file="gpf_instance.yaml",
             work_dir=None,
             defaults=None,
             load_eagerly=False):
@@ -61,14 +59,14 @@ class GPFInstance(object):
         self.__autism_gene_profile_config = None
         self.load_eagerly = load_eagerly
 
-        if self.dae_config.genomic_resources:
-            self.genomic_resources_db = GenomicResourceGroupRepo([
-                build_genomic_resource_repository(repo_def)
-                for repo_def in self.dae_config.genomic_resources.repositories
-            ])
+        if self.dae_config.grr:
+            self.grr = build_genomic_resource_repository(self.dae_config.grr)
+        else:
+            self.grr = build_genomic_resource_repository()
 
         if load_eagerly:
-            self.genomes_db
+            self.reference_genome
+            self.gene_models
             self.gene_sets_db
             self._gene_info_config
             self._pheno_db
@@ -82,10 +80,21 @@ class GPFInstance(object):
 
     @property  # type: ignore
     @cached
-    def genomes_db(self):
-        return GenomesDB(
-            self.dae_config.dae_data_dir, self.dae_config.genomes_db.conf_file
-        )
+    def reference_genome(self):
+        print(self.dae_config.reference_genome)
+        result = self.grr.get_resource(
+            self.dae_config.reference_genome.resource_id)
+        result.open()
+        return result
+
+    @property  # type: ignore
+    @cached
+    def gene_models(self):
+        print(self.dae_config.gene_models)
+        result = self.grr.get_resource(
+            self.dae_config.gene_models.resource_id)
+        result.open()
+        return result
 
     @property  # type: ignore
     @cached
@@ -130,7 +139,8 @@ class GPFInstance(object):
     def _variants_db(self):
         return VariantsDb(
             self.dae_config,
-            self.genomes_db,
+            self.reference_genome,
+            self.gene_models,
             self.genotype_storage_db,
         )
 
@@ -360,10 +370,6 @@ class GPFInstance(object):
 
     def get_gene_info_gene_weights(self):
         return self._gene_info_config.gene_weights
-
-    # Genomes DB
-    def get_genome(self):
-        return self.genomes_db.get_genome()
 
     # Common reports
     def get_common_report(self, study_id):

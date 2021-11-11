@@ -2,8 +2,6 @@
 import os
 import copy
 
-import pyarrow as pa
-
 from dae.effect_annotation.effect import AlleleEffects
 from dae.annotation.effect_annotator import EffectAnnotatorAdapter
 from dae.pedigrees.loader import FamiliesLoader
@@ -25,12 +23,13 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
     assert os.path.exists(pedigree_filename)
 
     genome = anno_grdb.get_resource(
-        "hg19/GATK_ResourceBundle_5777_b37_phiX174/genome")
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome")
     assert genome is not None
     assert isinstance(genome, GenomicSequenceResource)
 
     gene_models = anno_grdb.get_resource(
-        "hg19/GATK_ResourceBundle_5777_b37_phiX174/gene_models/refGene_201309"
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
+        "gene_models/refGene_201309"
     )
     assert gene_models is not None
     assert isinstance(gene_models, GeneModelsResource)
@@ -89,12 +88,13 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
 
 def test_effect_annotation_schema(anno_grdb):
     genome = anno_grdb.get_resource(
-        "hg19/GATK_ResourceBundle_5777_b37_phiX174/genome")
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome")
     assert genome is not None
     assert isinstance(genome, GenomicSequenceResource)
 
     gene_models = anno_grdb.get_resource(
-        "hg19/GATK_ResourceBundle_5777_b37_phiX174/gene_models/refGene_201309"
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
+        "gene_models/refGene_201309"
     )
     assert gene_models is not None
     assert isinstance(gene_models, GeneModelsResource)
@@ -106,10 +106,10 @@ def test_effect_annotation_schema(anno_grdb):
     assert schema is not None
 
     field = schema["effect_type"]
-    assert field.pa_type == pa.string()
+    assert field.type == "str"
 
-    field = schema["effect_gene_genes"]
-    assert field.pa_type == pa.list_(pa.string())
+    field = schema["effect_genes"]
+    assert field.type == "str"
 
-    field = schema["effect_gene_types"]
-    assert field.pa_type == pa.list_(pa.string())
+    field = schema["effect_details"]
+    assert field.type == "str"

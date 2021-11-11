@@ -26,6 +26,6 @@ test_data.append(("Y", 59363600, False))
 
 
 @pytest.mark.parametrize("chrom,pos,expected", [*test_data])
-def test_is_pseudoautosomal(chrom, pos, expected, genome_2013):
-    genomic_sequence = genome_2013.get_genomic_sequence()
+def test_is_pseudoautosomal(chrom, pos, expected, gpf_instance_2013):
+    genomic_sequence = gpf_instance_2013.reference_genome
     assert genomic_sequence.is_pseudoautosomal(chrom, pos) == expected

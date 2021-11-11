@@ -1,5 +1,4 @@
 import pytest
-import pyarrow as pa
 
 from dae.annotation.schema import Schema
 from dae.annotation.annotation_pipeline import AnnotationPipeline
@@ -11,7 +10,7 @@ from dae.annotation.score_annotator import (
 
 def test_position_score_annotator(
         phastcons100way_variants_expected,
-        anno_grdb, genomes_db_2013):
+        anno_grdb):
     resource = anno_grdb.get_resource("hg38/TESTphastCons100way")
     annotator = PositionScoreAnnotator(resource)
     pipeline = AnnotationPipeline(None, None)
@@ -56,10 +55,10 @@ def test_np_score_annotator_schema(anno_grdb):
     assert "cadd_phred" in schema.names
 
     field = schema["cadd_raw"]
-    assert field.pa_type == pa.float32()
+    assert field.type == "float"
 
     field = schema["cadd_phred"]
-    assert field.pa_type == pa.float32()
+    assert field.type == "float"
 
     assert len(schema) == 2
     print(dir(schema))

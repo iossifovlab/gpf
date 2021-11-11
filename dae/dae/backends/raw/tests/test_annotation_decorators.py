@@ -1,9 +1,9 @@
 from dae.backends.raw.loader import StoredAnnotationDecorator
 
 
-def test_gpf_instance_genomic_resources_db(gpf_instance_2013):
-    resources_db = gpf_instance_2013.genomic_resources_db
-    print(resources_db)
+def test_gpf_instance_genomic_resources_repository(gpf_instance_2013):
+    grr = gpf_instance_2013.grr
+    print(grr)
 
 
 def test_annotation_pipeline_decorator_iossifov2014(iossifov2014_loader):

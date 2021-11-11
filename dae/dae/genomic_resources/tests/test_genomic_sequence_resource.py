@@ -26,7 +26,7 @@ def test_basic_sequence_resoruce():
 def test_genomic_sequence_resource(genomic_resource_fixture_dir_repo):
 
     res = genomic_resource_fixture_dir_repo.get_resource(
-        "hg19/GATK_ResourceBundle_5777_b37_phiX174/genome")
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome")
     assert res is not None
     res.open()
 
@@ -55,7 +55,7 @@ def test_genomic_sequence_resource(genomic_resource_fixture_dir_repo):
 def test_genomic_sequence_resource_http(genomic_resource_fixture_http_repo):
 
     res = genomic_resource_fixture_http_repo.get_resource(
-        "hg19/GATK_ResourceBundle_5777_b37_phiX174/genome")
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome")
     assert res is not None
     res.open()
 
@@ -83,7 +83,8 @@ def test_filesystem_genomic_sequence(fixture_dirname):
     genome = GenomicSequence.load_genome(
         os.path.join(
             fixture_dirname("genomic_resources"),
-            "hg19/GATK_ResourceBundle_5777_b37_phiX174/genome/chrAll.fa"))
+            "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
+            "genome/chrAll.fa"))
 
     assert genome is not None
 

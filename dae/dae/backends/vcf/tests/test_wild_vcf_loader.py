@@ -15,7 +15,7 @@ def test_wild_vcf_loader_simple(
     variants_loader = VcfLoader(
         families,
         [vcf_file1, vcf_file2],
-        gpf_instance_2013.genomes_db.get_genome(),
+        gpf_instance_2013.reference_genome,
         params={"vcf_chromosomes": "1;2", },
     )
     assert variants_loader is not None
@@ -42,7 +42,7 @@ def test_wild_vcf_loader_pedigree(
     variants_loader = VcfLoader(
         families,
         [vcf_file1, vcf_file2],
-        gpf_instance_2013.genomes_db.get_genome(),
+        gpf_instance_2013.reference_genome,
         params={
             "vcf_chromosomes": "1;2",
             "vcf_pedigree_mode": "fixed",
@@ -100,7 +100,7 @@ def test_wild_vcf_loader_pedigree_union(
     variants_loader = VcfLoader(
         families,
         [vcf_file1, vcf_file2],
-        gpf_instance_2013.genomes_db.get_genome(),
+        gpf_instance_2013.reference_genome,
         params={
             "vcf_chromosomes": "1;2",
             "vcf_pedigree_mode": "union",

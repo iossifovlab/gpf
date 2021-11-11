@@ -1,12 +1,12 @@
 - md5: 9499e8511a30d7445ec973cae9726920
   name: CADD.bedgraph.gz
   size: 18459035
-  time: 1632952362.086225
+  time: 1636543148.7370698
 - md5: 5d95f08840be7f0f6fef13a5157d7f47
   name: CADD.bedgraph.gz.tbi
   size: 670
-  time: 1632952362.0888064
+  time: 1636543148.7370698
 - md5: f88a081e6062d01137363cb836e8957d
   name: genomic_resource.yaml
   size: 1013
-  time: 1632952362.0895383
+  time: 1636543148.7370698

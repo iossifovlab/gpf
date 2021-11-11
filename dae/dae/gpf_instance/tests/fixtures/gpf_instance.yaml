@@ -1,0 +1,39 @@
+dae_data_dir: "."
+
+vars:
+  wd: "%($DAE_DB_DIR)s"
+  instance_id: "test_local_hg19_instance"
+
+reference_genome:
+  resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174/genome"
+
+gene_models:
+  resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174/gene_models/refGene_201309"
+
+genotype_storage:
+  default: genotype_filesystem
+
+storage:
+
+  genotype_filesystem:
+    dir: "studies"
+    storage_type: filesystem
+
+phenotype_data:
+  dir: "%(wd)s/pheno"
+
+
+studies:
+  dir: "studies"
+
+datasets:
+  dir: "datasets"
+
+default_study_config:
+  conf_file: "%(wd)s/defaultConfiguration.conf"
+
+gene_info_db:
+  conf_file: "%(wd)s/geneInfo.conf"
+
+genomic_scores_db:
+  conf_file: "%(wd)s/genomicScores.conf"

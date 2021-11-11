@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 
-from dae.genome.genomes_db import Genome
+from dae.genome.genome_access import GenomicSequenceBase
 
 from dae.pedigrees.family import FamiliesData
 
@@ -24,12 +24,8 @@ from dae.variants.family_variant import (
     calculate_simple_best_state,
 )
 from dae.variants.attributes import Sex, GeneticModel
-
 from dae.variants.attributes import TransmissionType
-
 from dae.utils.variant_utils import get_locus_ploidy, best2gt
-
-from dae.annotation.schema import Schema
 
 
 logger = logging.getLogger(__name__)
@@ -229,7 +225,20 @@ class VariantsLoader(CLILoader):
             self._attributes = copy.deepcopy(attributes)
         self.arguments = []
 
-        self._variants_schema = Schema.produce_base_schema()
+    #     self._variants_schema = Schema()
+    #     self._init_frequencies_schema()
+
+    # def _init_frequencies_schema(self):
+    #     frequencies_schema = {
+    #             "af_parents_called_count": "int",
+    #             "af_parents_called_percent": "float",
+    #             "af_allele_count": "int",
+    #             "af_allele_freq": "float",
+    #             "af_ref_allele_count": "int",
+    #             "af_ref_allele_freq": "float",
+    #     }
+    #     for n, t in frequencies_schema.items():
+    #         self._variants_schema.create_field(n, t)
 
     def get_attribute(self, key: str) -> Any:
         return self._attributes.get(key, None)
@@ -241,9 +250,9 @@ class VariantsLoader(CLILoader):
     # def variants_filenames(self):
     #     return self.filenames
 
-    @property
-    def variants_schema(self):
-        return self._variants_schema
+    # @property
+    # def variants_schema(self):
+    #     return self._variants_schema
 
     @property
     def annotation_schema(self):
@@ -294,8 +303,8 @@ class VariantsLoaderDecorator(VariantsLoader):
         return getattr(self.variants_loader, attr, None)
 
     @property
-    def variants_schema(self):
-        return self.variants_loader.variants_schema
+    def annotation_schema(self):
+        return self.variants_loader.annotation_schema
 
     @classmethod
     def build_cli_params(cls, params):
@@ -460,12 +469,6 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
         )
 
     @property
-    def variants_schema(self):
-        return Schema.merge_schemas(
-            super().variants_schema, self.annotation_schema
-        )
-
-    @property
     def annotation_schema(self):
         return self.annotation_pipeline.annotation_schema
 
@@ -602,7 +605,7 @@ class VariantsGenotypesLoader(VariantsLoader):
             families: FamiliesData,
             filenames: List[str],
             transmission_type: TransmissionType,
-            genome: Genome,
+            genome: GenomicSequenceBase,
             regions: List[str] = None,
             expect_genotype: bool = True,
             expect_best_state: bool = False,
@@ -680,7 +683,7 @@ class VariantsGenotypesLoader(VariantsLoader):
 
     @classmethod
     def _calc_genetic_model(
-        cls, family_variant: FamilyVariant, genome: Genome
+        cls, family_variant: FamilyVariant, genome: GenomicSequenceBase
     ) -> GeneticModel:
         if family_variant.chromosome in ("X", "chrX"):
             male_ploidy = get_locus_ploidy(
@@ -706,7 +709,7 @@ class VariantsGenotypesLoader(VariantsLoader):
     def _calc_best_state(
         cls,
         family_variant: FamilyVariant,
-        genome: Genome,
+        genome: GenomicSequenceBase,
         force: bool = True,
     ) -> np.array:
 
@@ -747,7 +750,7 @@ class VariantsGenotypesLoader(VariantsLoader):
 
     @classmethod
     def _calc_genotype(
-        cls, family_variant: FamilyVariant, genome: Genome
+        cls, family_variant: FamilyVariant, genome: GenomicSequenceBase
     ) -> np.array:
         best_state = family_variant._best_state
         genotype = best2gt(best_state)

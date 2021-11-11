@@ -66,7 +66,7 @@ def best_state_serialized():
 
 @pytest.fixture(scope="session")
 def denovo_extra_attr_loader(
-        fixture_dirname, genome_2013, annotation_pipeline_internal):
+        fixture_dirname, gpf_instance_2013, annotation_pipeline_internal):
 
     families_filename = fixture_dirname("backends/iossifov_extra_attrs.ped")
     variants_filename = fixture_dirname("backends/iossifov_extra_attrs.tsv")
@@ -74,7 +74,7 @@ def denovo_extra_attr_loader(
     families = FamiliesLoader.load_simple_families_file(families_filename)
 
     variants_loader = DenovoLoader(
-        families, variants_filename, genome_2013.get_genomic_sequence())
+        families, variants_filename, gpf_instance_2013.reference_genome)
 
     variants_loader = AnnotationPipelineDecorator(
         variants_loader, annotation_pipeline_internal
@@ -87,7 +87,7 @@ def denovo_extra_attr_loader(
 def extra_attrs_impala(
         request,
         denovo_extra_attr_loader,
-        genomes_db_2013,
+        gpf_instance_2013,
         hdfs_host,
         impala_genotype_storage):
 
@@ -123,7 +123,8 @@ def extra_attrs_impala(
     )
 
     fvars = impala_genotype_storage.build_backend(
-        FrozenBox({"id": study_id}), genomes_db_2013
+        FrozenBox({"id": study_id}), gpf_instance_2013.reference_genome,
+        gpf_instance_2013.gene_models
     )
 
     return fvars

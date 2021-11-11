@@ -28,11 +28,11 @@ from dae.effect_annotation.effect import AnnotationEffect
     ],
 )
 def test_cnv_simple(
-        genomic_sequence_2013, gene_models_2013,
+        gpf_instance_2019,
         variant_type, location, effect_type, effect_genes):
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013,
-        genomic_sequence_2013,
+        gpf_instance_2019.gene_models,
+        gpf_instance_2019.reference_genome,
         loc=location,
         variant_type=variant_type
     )

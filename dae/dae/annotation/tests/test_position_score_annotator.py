@@ -115,7 +115,8 @@ def test_position_score_annotator(
             """)
     )
 
-    pipeline = AnnotationPipeline.build(pipeline_config, position_score_repo)
+    pipeline = AnnotationPipeline.build(
+        pipeline_config, grr_repository=position_score_repo)
     # annoation_runner = BasicAnnotatorRunner()
     # annotator = ThreadAnnotatorRunner()
     # annotator = AsynioAnnotatorRunner()
@@ -141,7 +142,8 @@ def test_position_annotator_schema(position_score_repo):
             """)
     )
 
-    pipeline = AnnotationPipeline.build(pipeline_config, position_score_repo)
+    pipeline = AnnotationPipeline.build(pipeline_config,
+                                        grr_repository=position_score_repo)
     schema = pipeline.annotation_schema
 
     assert len(schema) == 1
@@ -151,7 +153,7 @@ def test_position_annotator_schema(position_score_repo):
     # FIXME: assert field.type == float
     assert field.source.annotator_type == "position_score_annotator"
     assert field.source.resource_id == "position_score1"
-    assert field.source.source_attr == "test100way"
+    assert field.source.score_id == "test100way"
 
 
 def test_position_default_annotator_schema(position_score_repo):
@@ -163,7 +165,8 @@ def test_position_default_annotator_schema(position_score_repo):
             """)
     )
 
-    pipeline = AnnotationPipeline.build(pipeline_config, position_score_repo)
+    pipeline = AnnotationPipeline.build(
+        pipeline_config, grr_repository=position_score_repo)
     assert len(pipeline.annotation_schema) == 3
     schema = pipeline.annotation_schema
 
@@ -174,7 +177,7 @@ def test_position_default_annotator_schema(position_score_repo):
     # FIXME: assert field.type == float
     assert field.source.annotator_type == "position_score_annotator"
     assert field.source.resource_id == "position_score1"
-    assert field.source.source_attr == "t1"
+    assert field.source.score_id == "t1"
 
 
 def test_position_annotator_schema_one_source_two_dest(position_score_repo):
@@ -193,7 +196,8 @@ def test_position_annotator_schema_one_source_two_dest(position_score_repo):
             """)
     )
 
-    pipeline = AnnotationPipeline.build(pipeline_config, position_score_repo)
+    pipeline = AnnotationPipeline.build(
+        pipeline_config, grr_repository=position_score_repo)
     schema = pipeline.annotation_schema
 
     assert len(schema) == 2
@@ -204,14 +208,14 @@ def test_position_annotator_schema_one_source_two_dest(position_score_repo):
     # FIXME: assert field.type == float
     assert field.source.annotator_type == "position_score_annotator"
     assert field.source.resource_id == "position_score1"
-    assert field.source.source_attr == "test100way"
+    assert field.source.score_id == "test100way"
 
     field = schema["test100max"]
     assert field.name == "test100max"
     # FIXME: assert field.type == float
     assert field.source.annotator_type == "position_score_annotator"
     assert field.source.resource_id == "position_score1"
-    assert field.source.source_attr == "test100way"
+    assert field.source.score_id == "test100way"
 
 
 def test_position_annotator_join_aggregation(position_score_repo):

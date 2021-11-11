@@ -83,18 +83,9 @@ def admin_client(admin, client):
 
 @pytest.fixture(scope="session")
 def wgpf_instance(default_dae_config):
-    class GenomesDbInternal(GenomesDB):
-        def get_default_gene_models_id(self, genome_id=None):
-            return "RefSeq2013"
 
     class WGPFInstanceInternal(WGPFInstance):
-        @property
-        @cached
-        def genomes_db(self):
-            return GenomesDbInternal(
-                default_dae_config.dae_data_dir,
-                default_dae_config.genomes_db.conf_file,
-            )
+        pass
 
     def build(work_dir=None, load_eagerly=False):
         return WGPFInstanceInternal(

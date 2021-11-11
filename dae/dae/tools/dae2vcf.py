@@ -7,9 +7,8 @@ import csv
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 gpf_instance = GPFInstance()
-genomes_db = gpf_instance.genomes_db
 
-GENOME = genomes_db.get_genome()
+GENOME = gpf_instance.reference_genome
 
 subRE = re.compile(r"^sub\(([ACGT])->([ACGT])\)$")
 insRE = re.compile(r"^ins\(([ACGT]+)\)$")

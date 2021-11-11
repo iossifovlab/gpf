@@ -23,7 +23,7 @@ from dae.annotation.annotation_pipeline import AnnotationPipeline
     (("1", 14970, "C", "CA"),  "mean", "max", 0.022),
     (("1", 14970, "C", "CA"),  "max",  "max", 0.04),
 ])
-def test_position_score_annotator(
+def test_np_score_annotator(
         variant, pos_aggregator, nuc_aggregator, expected):
 
     annotatable = VCFAllele(*variant)
@@ -81,7 +81,7 @@ def test_position_score_annotator(
             """)
     )
 
-    pipeline = AnnotationPipeline.build(pipeline_config, repo)
+    pipeline = AnnotationPipeline.build(pipeline_config, grr_repository=repo)
 
     # pipeline.get_schema -> ["attribute", "type", "resource", "scores"]
     # pipeline.annotate_allele(sa) -> {("a1": v1), "a2": v2}}

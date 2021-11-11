@@ -33,8 +33,7 @@ def mock_get_sequence(chrom, start, stop):
     ],
 )
 def test_lift_over(
-        mocker, chrom, pos, lift_over, expected_chrom, expected_pos,
-        genomes_db_2013):
+        mocker, chrom, pos, lift_over, expected_chrom, expected_pos):
 
     chain_resource = mocker.Mock()
     chain_resource.convert_coordinate = lift_over
@@ -68,7 +67,7 @@ def test_pipeline_liftover(
 
     config = AnnotationPipeline.load_and_parse(annotation_config)
     pipeline = AnnotationPipeline.build(
-        config, anno_grdb
+        config, grr_repository=anno_grdb
     )
     allele = Allele.build_vcf_allele("chr1", 69094, "G", "A")
     attributes = pipeline.annotate(allele.get_annotatable())

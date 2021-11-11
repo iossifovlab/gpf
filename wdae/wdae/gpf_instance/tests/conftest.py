@@ -11,13 +11,7 @@ def wgpf_instance(default_dae_config):
             return "RefSeq2013"
 
     class WGPFInstanceInternal(WGPFInstance):
-        @property
-        @cached
-        def genomes_db(self):
-            return GenomesDbInternal(
-                default_dae_config.dae_data_dir,
-                default_dae_config.genomes_db.conf_file,
-            )
+        pass
 
     def build(work_dir=None, load_eagerly=False):
         return WGPFInstanceInternal(

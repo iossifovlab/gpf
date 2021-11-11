@@ -389,12 +389,13 @@ class StudyWrapper(StudyWrapperBase):
         if "limit" in kwargs:
             limit = kwargs["limit"]
 
+        summary_variant_ids = set(kwargs["summaryVariantIds"])
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_summary_variants(**kwargs), limit
         )
         return self.response_transformer.\
             transform_gene_view_summary_variant_download(
-                variants_from_studies, frequency_column
+                variants_from_studies, frequency_column, summary_variant_ids
             )
 
     def _get_roles_value(self, allele, roles):

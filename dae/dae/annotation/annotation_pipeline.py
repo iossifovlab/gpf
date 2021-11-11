@@ -6,6 +6,7 @@ from typing import List, Optional
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.annotation.annotatable import Annotatable
 from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources import build_genomic_resource_repository
 from dae.annotation.annotator_base import Annotator
 from dae.annotation.schema import Schema
 from dae.annotation.utils import AnnotatorFactory
@@ -94,11 +95,29 @@ class AnnotationPipeline():
 
     @staticmethod
     def build(
-            pipeline_config: dict,
-            repository: GenomicResourceRepo,
+            pipeline_config: dict = None,
+            pipeline_config_file: str = None,
+            grr_repository: GenomicResourceRepo = None,
+            grr_repository_file: str = None,
+            grr_repository_definition: str = None,
             context: Optional[dict] = None) -> "AnnotationPipeline":
 
-        pipeline = AnnotationPipeline(pipeline_config, repository)
+        if not pipeline_config:
+            assert pipeline_config_file is not None
+            pipeline_config = AnnotationPipeline.load_and_parse(
+                pipeline_config_file)
+        else:
+            assert pipeline_config_file is None
+
+        if not grr_repository:
+            grr_repository = build_genomic_resource_repository(
+                definition=grr_repository_definition,
+                file_name=grr_repository_file)
+        else:
+            assert grr_repository_file is None
+            assert grr_repository_definition is None
+
+        pipeline = AnnotationPipeline(pipeline_config, grr_repository)
 
         if pipeline_config.effect_annotators:
             for annotator_config in pipeline_config.effect_annotators:
@@ -108,10 +127,10 @@ class AnnotationPipeline():
                 genome_id = annotator_config["genome"]
                 override = annotator_config.get("override")
 
-                gene_models = repository.get_resource(gene_models_id)
+                gene_models = grr_repository.get_resource(gene_models_id)
                 assert gene_models is not None, gene_models_id
 
-                genome = repository.get_resource(genome_id)
+                genome = grr_repository.get_resource(genome_id)
                 assert genome is not None, genome_id
 
                 effect_annotator = AnnotatorFactory.make_effect_annotator(
@@ -122,8 +141,8 @@ class AnnotationPipeline():
             for annotator_config in pipeline_config.liftover_annotators:
                 chain_id = annotator_config["chain"]
                 genome_id = annotator_config["target_genome"]
-                chain = repository.get_resource(chain_id)
-                genome = repository.get_resource(genome_id)
+                chain = grr_repository.get_resource(chain_id)
+                genome = grr_repository.get_resource(genome_id)
                 annotator_type = annotator_config["annotator"]
                 liftover_id = annotator_config["liftover"]
                 override = annotator_config.get("override")
@@ -138,7 +157,7 @@ class AnnotationPipeline():
                 liftover = annotator_config["liftover"]
                 annotator_type = annotator_config["annotator"]
                 override = annotator_config.get("override")
-                gs = repository.get_resource(score_id)
+                gs = grr_repository.get_resource(score_id)
                 assert gs is not None, annotator_config
 
                 annotator = AnnotatorFactory.make_score_annotator(

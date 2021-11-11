@@ -222,28 +222,6 @@ def test_gene_models_from_default_with_transcript_orig_id(fixture_dirname):
         assert tm.tr_id != tm.tr_name
 
 
-def test_default_gene_models_loader_ref_seq_2019(genomes_db_2019):
-    genome_id = genomes_db_2019.config.genomes.default_genome
-    genome_config = getattr(genomes_db_2019.config.genome, genome_id)
-    ref_seq_gene_model = getattr(genome_config.gene_models, "RefSeq")
-
-    gm = load_gene_models(ref_seq_gene_model.file, fileformat="default")
-    assert gm is not None
-
-
-def test_default_gene_models_loader_ref_seq_2013(genomes_db_2013):
-    genome_id = genomes_db_2013.config.genomes.default_genome
-    genome_config = getattr(genomes_db_2013.config.genome, genome_id)
-    ref_seq_gene_model = getattr(genome_config.gene_models, "RefSeq2013")
-
-    gm = load_gene_models(ref_seq_gene_model.file, fileformat="default")
-    assert gm is not None
-
-    gm_yoonha = GeneModels(ref_seq_gene_model.file)
-    defaultGeneModelParser(gm_yoonha, ref_seq_gene_model.file)
-    assert len(gm.transcript_models) == len(gm_yoonha.transcript_models)
-
-
 @pytest.mark.parametrize(
     "filename,fileformat",
     [
