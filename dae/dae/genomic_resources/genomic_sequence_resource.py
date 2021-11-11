@@ -53,4 +53,5 @@ class GenomicSequenceResource(GenomicResource, GenomicSequenceBase):
                                                 file_name + ".fai")
         index_content = self.get_file_str_content(index_file_name)
         self._load_genome_index(index_content)
-        self._sequence = self.open_raw_file(file_name, "rb", uncompress=False)
+        self._sequence = self.open_raw_file(
+            file_name, "rb", uncompress=False, seekable=True)

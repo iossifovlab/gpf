@@ -160,7 +160,6 @@ def gpf_instance_2013(
         def __init__(self, *args, **kwargs):
             super(GPFInstance2013, self).__init__(*args, **kwargs)
 
-
         @property  # type: ignore
         @cached
         def gene_models(self):
@@ -296,7 +295,8 @@ def annotation_pipeline_vcf(gpf_instance_2013):
         "fixtures/annotation_pipeline/import_annotation.yaml"
     )
     config = AnnotationPipeline.load_and_parse(filename)
-    pipeline = AnnotationPipeline.build(config, gpf_instance_2013.grr)
+    pipeline = AnnotationPipeline.build(
+        pipeline_config=config, grr_repository=gpf_instance_2013.grr)
     return pipeline
 
 
@@ -306,7 +306,8 @@ def annotation_pipeline_internal(gpf_instance_2013):
         "fixtures/annotation_pipeline/import_annotation.yaml"
     )
     config = AnnotationPipeline.load_and_parse(filename)
-    pipeline = AnnotationPipeline.build(config, gpf_instance_2013.grr)
+    pipeline = AnnotationPipeline.build(
+        pipeline_config=config, grr_repository=gpf_instance_2013.grr)
     return pipeline
 
 

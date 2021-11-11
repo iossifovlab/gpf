@@ -50,7 +50,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
             content_dict, my_leaf_to_size_and_time)
 
     def open_raw_file(self, genomic_resource: GenomicResource, filename: str,
-                      mode=None, uncompress=False):
+                      mode=None, uncompress=False, _seekable=False):
         fullFilePath = self.get_file_path(genomic_resource, filename)
         if filename.endswith(".gz") and uncompress:
             return gzip.open(fullFilePath, "rb")
@@ -132,12 +132,16 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                     uncompress=False) as outfile:
 
             md5_hash = hashlib.md5()
-            while b := infile.read(8192):
+            while b := infile.read(32768):
                 outfile.write(b)
                 md5_hash.update(b)
         md5 = md5_hash.hexdigest()
 
         if src_mnfst_file["md5"] != md5:
+            logger.error(
+                f"storing {src_gr.resource_id} failed; "
+                f"expected md5 is {src_mnfst_file['md5']}; "
+                f"calculated md5 for the stored file is {md5}")
             raise IOError(f"storing of {src_gr.resource_id} failed")
         src_modtime = src_mnfst_file["time"]
 

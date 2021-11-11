@@ -57,7 +57,7 @@ class GenomicResourceEmbededRepo(GenomicResourceRealRepo):
         return self._get_content_and_time(d[lt])
 
     def open_raw_file(self, genomic_resource, filename,
-                      mode=None, uncompress=False):
+                      mode=None, uncompress=False, seekable=False):
         content = self.get_file_content(genomic_resource, filename, uncompress)
         if filename.endswith(".gz") and uncompress:
             raise Exception("Can't handle uncompressing zip files yet!")

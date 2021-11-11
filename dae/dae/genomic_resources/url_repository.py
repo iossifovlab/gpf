@@ -2,6 +2,8 @@ import io
 import gzip
 import yaml
 import pysam
+import logging
+
 from urllib.request import urlopen
 from urllib.parse import urlparse
 
@@ -11,6 +13,9 @@ from .repository import GenomicResourceRealRepo
 from .repository import GRP_CONTENTS_FILE_NAME
 from .repository import GR_ENCODING
 from .http_file import HTTPFile
+
+
+logger = logging.getLogger(__name__)
 
 
 class GenomicResourceURLRepo(GenomicResourceRealRepo):
@@ -37,24 +42,34 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
 
     def open_raw_file(self, genomic_resource: GenomicResource,
                       filename, mode=None,
-                      uncompress=False):
+                      uncompress=False,
+                      seekable=False):
+
         mode = mode if mode else "rb"
         if 'w' in mode:
             raise Exception("Can't handle writable files yet!")
 
         file_url = self.get_file_url(genomic_resource, filename)
-        binarySt = urlopen(file_url)
+        logger.debug(f"opening url resource: {file_url}")
 
-        if filename.endswith(".gz") and uncompress:
-            return gzip.open(binarySt, mode)
+        if self.scheme in ['http', 'https'] and seekable:
+            logger.debug("using HTTPFile for http(s)")
+            binary_stream = HTTPFile(file_url)
+            if "t" in mode:
+                return io.TextIOWrapper(
+                    binary_stream, encoding=GR_ENCODING)
+            # if filename.endswith(".gz") and uncompress:
+            #     return gzip.open(binary_stream, mode)
+            return binary_stream
+        else:
+            binary_stream = urlopen(file_url)
+            if filename.endswith(".gz") and uncompress:
+                return gzip.open(binary_stream, mode)
 
-        if 't' in mode:
-            return io.TextIOWrapper(binarySt, encoding=GR_ENCODING)
+            if 't' in mode:
+                return io.TextIOWrapper(binary_stream, encoding=GR_ENCODING)
 
-        if self.scheme in ['http', 'https']:
-            return HTTPFile(file_url)
-
-        return binarySt
+            return binary_stream
 
     def open_tabix_file(self, genomic_resource,  filename,
                         index_filename=None):

@@ -233,7 +233,8 @@ def test_position_annotator_join_aggregation(position_score_repo):
     )
     print(pipeline_config)
 
-    pipeline = AnnotationPipeline.build(pipeline_config, position_score_repo)
+    pipeline = AnnotationPipeline.build(
+      pipeline_config=pipeline_config, grr_repository=position_score_repo)
     allele = ("1", 14970, "CC", "C")
     annotatable = VCFAllele(*allele)
     result = pipeline.annotate(annotatable)
