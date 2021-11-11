@@ -95,14 +95,10 @@ export class AutismGeneProfilesSingleView extends BasePage {
           value: ''
         }
 
-        autism_scores[id].name = { 
-          name: element.text()
-        }
+        autism_scores[id].name = element.text();
         cy.wrap(table).get('td.ng-star-inserted').eq(id).then(scores => {
           cy.wrap(scores).get('g > text.small').then(value => {
-            autism_scores[id].value = {
-              value: value.text()
-            }
+            autism_scores[id].value = parseFloat(value.text());
           });
         });
       });
@@ -122,14 +118,11 @@ export class AutismGeneProfilesSingleView extends BasePage {
             value: ''
           }
         }
-        protection_scores[id].name = { 
-          name: element.text()
-        }
+        protection_scores[id].name = element.text();
+        
         cy.wrap(table).get('td.ng-star-inserted').eq(id).then(scores => {
           cy.wrap(scores).get('g > text.small').then(value => {
-            protection_scores[id].value = {
-              value: value.text()
-            }
+            protection_scores[id].value = parseFloat(value.eq(id).text());
           });
         });
       });
@@ -256,6 +249,7 @@ export class AutismGeneProfilesSingleView extends BasePage {
     gene_data.statistics.relevant_gene_sets = view.getRelevantGeneSets(view);
     gene_data.statistics.study = view.getStudyTable(view, 0);
 
+    cy.wrap(gene_data).as('compare1');
     return gene_data;
   }
 }

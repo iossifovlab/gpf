@@ -121,7 +121,7 @@ describe('Autism gene profiles single view links tests', () => {
   // it('should have the correct href for the SFARI link', () => {
   // }); */
 
-  it.only('should have proper single view data', () => {
+  it('should have proper single view data', () => {
     //page.cleanup();
     //page.navigateToHome();
     //page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
@@ -136,13 +136,53 @@ describe('Autism gene profiles single view links tests', () => {
     //autismGeneProfilesTablePage.allTableCells.first().click();
     cy.get('.genomic-scores-table').should('be.visible');
     page.geneSymbol.should('have.text', gene_data.gene_symbols);
+
+
+    let gene_data_ = {
+      gene_symbols: '',
+      autism_scores: [
+        { name:'', value: null }
+      ], protection_scores: [
+        { name: '', value: null },
+      ],
+      statistics: {
+        autism_gene_sets: [
+          { name: '', value: null },
+        ], relevant_gene_sets: [
+          { name: '', value:  null },
+        ], study: {
+          variant_statistics: [''],
+          variant_ids: [''],
+          affected: [''],
+          unaffected: ['']
+        }
+      }
+    }
+
     //page.compareData(gene_data);
     /*page.getAutismScores(page);
     page.getProtectionScores(page);
     page.getAutismGeneSets(page);
     page.getRelevantGeneSets(page);
     page.getStudyTable(page, 0);*/
-    console.log(page.compareData(page)) ;
+    //page.compareData(page);
+  });
+
+  it.only('should test data view', () => {
+    const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
+    page.autismGeneToolAllView.click();
+    autismGeneProfilesTablePage.geneSearchInput.clear().type('GRIN2B');
+    cy.intercept('GET', '/gpf/api/v3/autism_gene_tool/genes/?page=1&symbol=GRIN2B&sortBy=autism_gene_sets_rank&order=desc').as('responseHandler');
+    cy.wait('@responseHandler');
+    autismGeneProfilesTablePage.allTableRows.first().should('have.length', 1);
+    autismGeneProfilesTablePage.allTableCells.first().click();
+    page.getView('GRIN2B');
+    page.compareData(page);
+    let data;
+    /*cy.get('@compare1').then(value => {
+      cy.wrap(value).should('equal', gene_data);
+    }); */
+    //or cy.intercept to wait asynchronous calls
   });
   
 
@@ -194,6 +234,40 @@ const gene_data = {
       { name: 'chromatin modifiers', value:  true },
       { name: 'essential genes', value:  true },
       { name: 'FMRP Darnell', value:  true }
+    ], study: [
+      // title
+      {
+        variant_statistics: "LGDs", variant_ids: "denovo_lgds", affected: "3 (1.197)", unaffected: "–"
+      },
+      {
+        variant_statistics: "missense", variant_ids: "denovo_missense", affected: "1 (0.399)", unaffected: "–"
+      },
+      {
+        variant_statistics: "intron", variant_ids: "denovo_intron", affected: "–", unaffected: "–"
+      }
+    ]
+  }
+}
+/*
+const gene_data = {
+  gene_symbols: 'GRIN2B',
+  autism_scores: [
+    { name:'SFARI_gene_score', value: 1 }
+  ], protection_scores: [ // sfari_score: 
+    { name: 'RVIS_rank', value: 174.5 },  // rvis_rank: 
+    { name: 'LGD_rank', value: 85.5 }, // lgd_rank:
+    { name: 'pLI_rank', value: 400 }, // pli_rank: 
+    { name: 'pRec_rank', value: 17792 } // prec_rank: 
+  ],
+  statistics: {
+    autism_gene_sets: [
+      { name: 'autism candidates from Iossifov PNAS 2015', value: true },
+      { name: 'autism candidates from Sanders Neuron 2015', value: true }
+    ], relevant_gene_sets: [
+      { name: 'CHD8 target genes', value:  false },
+      { name: 'chromatin modifiers', value:  true },
+      { name: 'essential genes', value:  true },
+      { name: 'FMRP Darnell', value:  true }
     ], study: {
       // title
       variant_statistics: ['LGDs', 'missense', 'intron'],
@@ -203,6 +277,7 @@ const gene_data = {
     }
   }
 }
+*/
 
 //it = > get(variant_stat).should('');
 
