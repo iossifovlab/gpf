@@ -37,7 +37,10 @@ class FamiliesLoader(CLILoader):
         self.file_format = self.params.get("ped_file_format", "pedigree")
 
     @staticmethod
-    def load_pedigree_file(pedigree_filename, pedigree_format={}):
+    def load_pedigree_file(pedigree_filename, pedigree_format=None):
+        if pedigree_format is None:
+            pedigree_format = {}
+
         pedigree_format["ped_no_role"] = str2bool(
             pedigree_format.get("ped_no_role", False)
         )
