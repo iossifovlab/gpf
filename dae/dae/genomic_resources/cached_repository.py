@@ -1,6 +1,8 @@
 import os
 import pathlib
 
+from concurrent.futures import ThreadPoolExecutor
+
 from .repository import GenomicResource
 from .repository import GenomicResourceRepo
 from .dir_repository import GenomicResourceDirRepo
@@ -46,6 +48,19 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
             cached_repo.store_resource(gr_child)
         return cached_repo.get_resource(resource_id,
                                         exact_version_constraint)
+
+    def cache_all_resources(self, download_limit=4):
+        executor = ThreadPoolExecutor(max_workers=download_limit)
+        futures = []
+        for gr_child in self.child.get_all_resources():
+            cached_repo = self._get_or_create_cache_dir_repo(
+                    gr_child.repo.repo_id
+            )
+            futures.append(
+                executor.submit(cached_repo.store_resource, gr_child)
+            )
+        for future in futures:
+            future.result()
 
     def refresh_cached_genomic_resource(self, cached: GenomicResource,
                                         child: GenomicResource):
