@@ -199,3 +199,18 @@ class JoinAggregator(AbstractAggregator):
 
     def get_final(self):
         return self.separator.join(self.values)
+
+
+AGGREGATOR_CLASS_DICT = {
+    "max": MaxAggregator,
+    "min": MinAggregator,
+    "mean": MeanAggregator,
+    "concatenate": ConcatAggregator,
+    "median": MedianAggregator,
+    "mode": ModeAggregator,
+    "join": JoinAggregator
+}
+
+
+def get_aggregator_class(aggregator):
+    return AGGREGATOR_CLASS_DICT[aggregator]

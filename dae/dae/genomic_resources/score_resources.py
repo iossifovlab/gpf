@@ -9,8 +9,7 @@ from . import GenomicResource
 from .repository import GenomicResourceRealRepo
 from .genome_position_table import open_genome_position_table
 
-from .aggregators import MaxAggregator, MinAggregator, MeanAggregator, \
-    ConcatAggregator, MedianAggregator, ModeAggregator, JoinAggregator
+from .aggregators import get_aggregator_class
 
 
 logger = logging.getLogger(__name__)
@@ -47,19 +46,13 @@ class ScoreLine:
         return self.get_special_column_value("pos_end")
 
 
-AGGREGATOR_CLASS_DICT = {
-    "max": MaxAggregator,
-    "min": MinAggregator,
-    "mean": MeanAggregator,
-    "concatenate": ConcatAggregator,
-    "median": MedianAggregator,
-    "mode": ModeAggregator,
-    "join": JoinAggregator
-}
-
-
-def get_aggregator_class(aggregator):
-    return AGGREGATOR_CLASS_DICT[aggregator]
+def create_aggregator(aggregator_def):
+    aggregator_name = aggregator_def["name"]
+    aggregator_class = get_aggregator_class(aggregator_name)
+    if "args" in aggregator_def:
+        return aggregator_class(*aggregator_def["args"])
+    else:
+        return aggregator_class()
 
 
 class GenomicScoresResource(GenomicResource, abc.ABC):
@@ -281,14 +274,7 @@ class PositionScoreResource(GenomicScoresResource):
             scr_def = self.scores[scr_id]
             aggregator_def = non_default_pos_aggregators.get(
                 scr_id, scr_def.pos_aggregator)
-            aggregator_name = aggregator_def["name"]
-            aggregator_class = get_aggregator_class(aggregator_name)
-            if "args" in aggregator_def:
-                aggregators[scr_id] = aggregator_class(
-                    *aggregator_def["args"]
-                )
-            else:
-                aggregators[scr_id] = aggregator_class()
+            aggregators[scr_id] = create_aggregator(aggregator_def)
 
         for line in score_lines:
             logger.debug(
@@ -387,25 +373,11 @@ class NPScoreResource(GenomicScoresResource):
             scr_def = self.scores[scr_id]
             aggregator_def = non_default_pos_aggregators.get(
                 scr_id, scr_def.pos_aggregator)
-            aggregator_name = aggregator_def["name"]
-            aggregator_class = get_aggregator_class(aggregator_name)
-            if "args" in aggregator_def:
-                pos_aggregators[scr_id] = aggregator_class(
-                    *aggregator_def["args"]
-                )
-            else:
-                pos_aggregators[scr_id] = aggregator_class()
+            pos_aggregators[scr_id] = create_aggregator(aggregator_def)
 
             aggregator_def = non_default_nuc_aggregators.get(
                 scr_id, scr_def.nuc_aggregator)
-            aggregator_name = aggregator_def["name"]
-            aggregator_class = get_aggregator_class(aggregator_name)
-            if "args" in aggregator_def:
-                nuc_aggregators[scr_id] = aggregator_class(
-                    *aggregator_def["args"]
-                )
-            else:
-                nuc_aggregators[scr_id] = aggregator_class()
+            nuc_aggregators[scr_id] = create_aggregator(aggregator_def)
 
         # pos_aggregators = {
         #     score_id: aggregator_types[0]()
