@@ -179,9 +179,9 @@ describe('Autism gene profiles single view links tests', () => {
     page.getView('GRIN2B');
     page.compareData(page);
     let data;
-    /*cy.get('@compare1').then(value => {
-      cy.wrap(value).should('equal', gene_data);
-    }); */
+    cy.get('@compare1').then(value => {
+      cy.wrap(value).should('deep.equal', gene_data);
+    });
     //or cy.intercept to wait asynchronous calls
   });
   
@@ -215,7 +215,7 @@ describe('Autism gene profiles single view links tests', () => {
 });
 
 // seperate data -> autism scores/ protection
-const gene_data = {
+const gene_data: any = {
   gene_symbols: 'GRIN2B',
   autism_scores: [
     { name:'SFARI_gene_score', value: 1 }
@@ -231,7 +231,7 @@ const gene_data = {
       { name: 'autism candidates from Sanders Neuron 2015', value: true }
     ], relevant_gene_sets: [
       { name: 'CHD8 target genes', value:  false },
-      { name: 'chromatin modifiers', value:  true },
+      { name: 'chromatin modifiers', value:  false },
       { name: 'essential genes', value:  true },
       { name: 'FMRP Darnell', value:  true }
     ], study: [
