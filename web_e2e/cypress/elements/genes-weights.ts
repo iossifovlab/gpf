@@ -75,6 +75,27 @@ export class GenesWeights extends BasePage {
   partitionsText(which: string) {
     return cy.get('text.partitions-text.ng-star-inserted').eq(which === 'left' ? 0 : 1);
   }
+
+  getInput(which: string) {
+    return cy.get('input#' + (which === 'left' ? 'from-input-field' : (which === 'right' ? 'to-input-field' : null)));
+  }
+
+  setInputFieldValue(which: string, value: string) {
+    this.getInput(which).then(input => {
+      cy.wrap(input).clear().type(value);
+    });
+  }
+
+  clickInputField(which: string, where: string, times: number) {
+    cy.get('div.stepper').eq(which === 'left' ? 0 : (which === 'right' ? 1 : null)).within(input => {
+      cy.wrap(input).get(where === 'up' ? 'button.step.up' : (where === 'down' ? 'button.step.down' : null)).then(button => {
+        while(times !== 0) {
+          cy.wrap(button).click();
+          times--;
+        }
+      });
+    });
+  }
 }
 
 

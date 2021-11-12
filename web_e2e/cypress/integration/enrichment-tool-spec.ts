@@ -135,8 +135,8 @@ describe('Enrichment tool data tests', () => {
     page.enrichmentTestButton.click();
     page.table.should('be.visible');
     
-    compare_data('gene_symbol_CAMSAP1', 'affected');
-    compare_data('gene_symbol_CAMSAP1', 'affected', 'Missense'); // same data name can be used with different effect types
+    page.compare_data(data, 'gene_symbol_CAMSAP1', 'affected');
+    page.compare_data(data, 'gene_symbol_CAMSAP1', 'affected', 'Missense'); // same data name can be used with different effect types
 
     page.selectorTableRow('affected').should('have.text', 'affected F:341  M:2166  U: -');
     page.selectorTableRow('unaffected').should('have.text', 'unaffected F:1011  M:899  U: -');
@@ -152,9 +152,9 @@ describe('Enrichment tool data tests', () => {
       page.geneSetsVariantsCount.should('have.text', 'Count: 239');
     });
     page.enrichmentTestButton.click();
-    compare_data('gene_symbol_pnas_2015_set', 'affected');
-    compare_data('gene_symbol_pnas_2015_set', 'affected', 'Missense');
-    compare_data('gene_symbol_pnas_2015_set', 'unaffected');
+    page.compare_data(data, 'gene_symbol_pnas_2015_set', 'affected');
+    page.compare_data(data, 'gene_symbol_pnas_2015_set', 'affected', 'Missense');
+    page.compare_data(data, 'gene_symbol_pnas_2015_set', 'unaffected');
 
     page.geneSetsColletionDropdown.select('Denovo');
     page.geneSetsInputField.type('LGDs').then(option => {
@@ -163,8 +163,8 @@ describe('Enrichment tool data tests', () => {
       page.geneSetsVariantsCount.should('have.text', 'Count: 363');
     });
     page.enrichmentTestButton.click();
-    compare_data('gene_symbols_iossifov_affected', 'affected');
-    compare_data('gene_symbols_iossifov_affected', 'affected', 'Missense');
+    page.compare_data(data, 'gene_symbols_iossifov_affected', 'affected');
+    page.compare_data(data, 'gene_symbols_iossifov_affected', 'affected', 'Missense');
 
     cy.get('input#iossifov_2014-checkbox-affected').click();
     page.findErrorAlertInComponent('gpf-gene-sets').contains('Please select a gene');
@@ -176,7 +176,7 @@ describe('Enrichment tool data tests', () => {
       page.geneSetsVariantsCount.should('have.text', 'Count: 176');
     });
     page.enrichmentTestButton.click();
-    compare_data('gene_symbol_iossifov_unaffected', 'affected');
+    page.compare_data(data, 'gene_symbol_iossifov_unaffected', 'affected');
   });
 
   it('should display affected and unaffected variants based on gene symbol and select models', () => {
@@ -192,7 +192,7 @@ describe('Enrichment tool data tests', () => {
     page.enrichmentTestButton.click();
     page.table.should('be.visible');
 
-    compare_data('gene_symbol_without_model_LGDs', 'affected');
+    page.compare_data(data, 'gene_symbol_without_model_LGDs', 'affected');
 
     page.enrichmentModelsSelect('background', 'samocha_background_model');
     page.enrichmentModelsSelect('counting', 'enrichment_gene_counting');
@@ -200,10 +200,10 @@ describe('Enrichment tool data tests', () => {
 
     // TODO test more values
 
-    compare_data('gene_symbol_and_models_LGDs', 'affected');
+    page.compare_data(data, 'gene_symbol_and_models_LGDs', 'affected');
   });
 
-  it.only('should test gene weights', () => {
+  it('should test gene weights', () => {
     const genesBlockPage = new GenesBlockPage();
     const weights = new GenesWeights();
     genesBlockPage.geneWeightsButton.click();
@@ -235,6 +235,19 @@ describe('Enrichment tool data tests', () => {
       study: 'autism candidates from Iossifov',
     }, ['samocha_background_model', 'enrichment_gene_counting']);
     parse_options(req);
+
+    req = new request_options('gene_weights', {
+      weights: 'RVIS rank',
+      scroll: [
+        {position: 'left', value: 5},
+        {position: 'right', value: 150},
+      ],
+      step: [
+        {position: 'left', value: '3798.347', click: {which: 'down', times: 5}},
+        {position: 'right', value: '14296.893', click: {which: 'up', times: 5}}
+      ]
+    }, null);
+    parse_options(req);
   });
 });
 
@@ -250,7 +263,7 @@ class data_model {
 class request_options {
   public mode: string;
   public options: JSON;
-  public models_selected: string[];
+  public models_selected?: string[];
 
   constructor(mode, options, models_selected: string[]) {
     this.mode = mode;
@@ -272,6 +285,7 @@ const data = [
   new data_model('gene_symbol_pnas_2015_set', ['LGDs', '176', '4', '6.24', '0.537', '3', '0', '0.11', '1.00', '84', '2', '2.98', '0.7719', '94', '2', '3.33', '0.7763']),
 ] ;
 
+/*
 function compare_data(set_name: string, affected: string, type:string = 'LGDs') {
   const page = new EnrichmentToolPage();
   const dataset = data.filter(item => (item.set_name === set_name && item.data[0] === type))[affected === 'affected' ? 0 : 1];
@@ -279,6 +293,7 @@ function compare_data(set_name: string, affected: string, type:string = 'LGDs') 
     page.findTableField(affected, type, index).should('have.text', el);
   });
 }
+*/
 
 function parse_options(request: request_options) {
   const page = new EnrichmentToolPage();
@@ -322,6 +337,26 @@ function parse_options(request: request_options) {
     }
     case 'gene_weights': {
       genesBlockPage.geneWeightsButton.click();
+      genesBlockPage.genesWeightsPanel.within(panel => {
+        if(request.options.hasOwnProperty('weights')) {
+          cy.wrap(panel).get('select.form-control').select(request.options['weights']);
+        }
+      });
+      if(request.options.hasOwnProperty('scroll')) {
+        request.options['scroll'].forEach(element => {
+          weights.moveSlider(element['position'], element['value'], 0);
+        });
+      } 
+      if(request.options.hasOwnProperty('step')) {
+        request.options['step'].forEach(element => {
+          if(element.hasOwnProperty('position') && element.hasOwnProperty('value')) {
+            weights.setInputFieldValue(element['position'], element['value']);
+          }
+          if(element.hasOwnProperty('position') && element.hasOwnProperty('click')) {
+            weights.clickInputField(element['position'], element.click['which'], element.click['times']);
+          }
+        });
+      }
       break;
     } default: {
       throw new Error('Unknown mode selected: ' + request.mode);

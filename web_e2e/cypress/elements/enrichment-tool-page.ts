@@ -47,4 +47,12 @@ export class EnrichmentToolPage extends BasePage {
   get geneSetsVariantsCount() {
     return cy.get('div.col-sm-9').contains('Count:');
   }
+
+  compare_data(data: any, set_name: string, affected: string, type:string = 'LGDs') {
+    const page = new EnrichmentToolPage();
+    const dataset = data.filter(item => (item.set_name === set_name && item.data[0] === type))[affected === 'affected' ? 0 : (affected === 'unaffected' ? 1 : null)];
+    dataset.data.forEach((el, index) => {
+      page.findTableField(affected, type, index).should('have.text', el);
+    });
+  }
 }
