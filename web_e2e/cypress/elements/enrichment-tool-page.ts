@@ -55,4 +55,31 @@ export class EnrichmentToolPage extends BasePage {
       page.findTableField(affected, type, index).should('have.text', el);
     });
   }
+
+  // migrating to tests where the should is contained in the it
+  getTableData(affected: string, type:string = 'LGDs') {
+    let data: string[] = [];
+    const page = new EnrichmentToolPage();
+    page.table.then(table => {
+      cy.wrap(table).get('tr[label="' + type + '"]').eq(affected === 'affected' ? 0 : (affected === 'unaffected' ? 1 : null)).within(column => {
+        cy.wrap(column).get('td').each((el, index) => {
+          data[index] = el.text();
+        });
+      });
+    });
+    cy.wrap(data).as('tableData');
+  }
+
+  getAllTableData() {
+    let data: string[][] = [[],[]];
+    ['affected', 'unaffected'].forEach((affected, affected_index) => {
+      ['LGDs', 'Missense', 'Synonymous'].forEach((effect, effect_index) => {
+        this.getTableData(affected, effect);
+        cy.get('@tableData').then(table => {
+          data[affected_index][effect_index] = table as any;
+        });
+      });
+    });
+    cy.wrap(data).as('fullTableData');
+  }
 }

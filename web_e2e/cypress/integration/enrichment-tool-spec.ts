@@ -203,6 +203,26 @@ describe('Enrichment tool data tests', () => {
     page.compare_data(data, 'gene_symbol_and_models_LGDs', 'affected');
   });
 
+  // migrating to tests where the should is contained in the it
+  it('should test new function and retrieve table data', () => {
+    const genesBlockPage = new GenesBlockPage();
+    genesBlockPage.geneSymbolsButton.click();
+
+    genesBlockPage.geneSymbolsTextarea.type('CAMSAP1');
+    page.enrichmentModelsBlock.then(() => {
+      cy.get('a#ngb-nav-4').click();
+    });
+    page.enrichmentTestButton.click();
+    page.table.should('be.visible');
+
+    page.getTableData('affected', 'LGDs');
+    //page.getAllTableData();
+
+    cy.get('@tableData').then(value => {
+      expect(value).to.deep.equal(data[3].data);
+    });
+  });
+
   it('should test gene weights', () => {
     const genesBlockPage = new GenesBlockPage();
     const weights = new GenesWeights();
@@ -285,6 +305,10 @@ const data = [
   new data_model('gene_symbol_pnas_2015_set', ['LGDs', '176', '4', '6.24', '0.537', '3', '0', '0.11', '1.00', '84', '2', '2.98', '0.7719', '94', '2', '3.33', '0.7763']),
 ] ;
 
+/*const state = [
+  new request_options(), data[0]
+];*/
+
 /*
 function compare_data(set_name: string, affected: string, type:string = 'LGDs') {
   const page = new EnrichmentToolPage();
@@ -310,7 +334,6 @@ function parse_options(request: request_options) {
       page.geneSetsColletionDropdown.select(request.options['set']);
 
       if (request.options['study'] !== undefined) {
-        console.log('sf');
         page.geneSetsInputField.type(request.options['study']).then(() => {
           cy.get('div.dropdown-menu').should('contain.text', request.options['study']).get('span').contains(request.options['study']).click();
         });
