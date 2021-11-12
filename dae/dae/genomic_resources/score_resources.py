@@ -1,6 +1,7 @@
 
 import abc
 import logging
+import re
 
 from typing import List, Tuple
 from box import Box
@@ -44,6 +45,20 @@ class ScoreLine:
 
     def get_pos_end(self):
         return self.get_special_column_value("pos_end")
+
+
+def create_aggregator_definition(aggregator_type):
+    join_regex = r"^(join)\((.+)\)"
+    join_match = re.match(join_regex, aggregator_type)
+    if join_match is not None:
+        separator = join_match.groups()[1]
+        return {
+            "name": "join",
+            "args": [separator]
+        }
+    return {
+        "name": aggregator_type,
+    }
 
 
 def create_aggregator(aggregator_def):
@@ -118,15 +133,9 @@ class GenomicScoresResource(GenomicResource, abc.ABC):
                 self.get_config().get(f"default_na_values.{scr_def.type}",
                                       default_na_values[scr_def.type]))
             default_type_pos_aggregators = {
-                "float": {
-                    "name": "mean",
-                },
-                "int": {
-                    "name": "mean",
-                },
-                "str": {
-                    "name": "concatenate",
-                }
+                "float": "mean",
+                "int": "mean",
+                "str": "concatenate"
             }
             scr_def.pos_aggregator = score_conf.get(
                 "position_aggregator",
@@ -135,15 +144,9 @@ class GenomicScoresResource(GenomicResource, abc.ABC):
                     default_type_pos_aggregators[scr_def.type]))
 
             default_type_nuc_aggregators = {
-                "float": {
-                    "name": "max",
-                },
-                "int": {
-                    "name": "max",
-                },
-                "str": {
-                    "name": "concatenate",
-                }
+                "float": "max",
+                "int": "max",
+                "str": "concatenate"
             }
             scr_def.nuc_aggregator = score_conf.get(
                 "nucleotide_aggregator",
@@ -272,8 +275,9 @@ class PositionScoreResource(GenomicScoresResource):
 
         for scr_id in scores:
             scr_def = self.scores[scr_id]
-            aggregator_def = non_default_pos_aggregators.get(
+            aggregator_type = non_default_pos_aggregators.get(
                 scr_id, scr_def.pos_aggregator)
+            aggregator_def = create_aggregator_definition(aggregator_type)
             aggregators[scr_id] = create_aggregator(aggregator_def)
 
         for line in score_lines:
@@ -371,12 +375,14 @@ class NPScoreResource(GenomicScoresResource):
 
         for scr_id in scores:
             scr_def = self.scores[scr_id]
-            aggregator_def = non_default_pos_aggregators.get(
+            aggregator_type = non_default_pos_aggregators.get(
                 scr_id, scr_def.pos_aggregator)
+            aggregator_def = create_aggregator_definition(aggregator_type)
             pos_aggregators[scr_id] = create_aggregator(aggregator_def)
 
-            aggregator_def = non_default_nuc_aggregators.get(
+            aggregator_type = non_default_nuc_aggregators.get(
                 scr_id, scr_def.nuc_aggregator)
+            aggregator_def = create_aggregator_definition(aggregator_type)
             nuc_aggregators[scr_id] = create_aggregator(aggregator_def)
 
         # pos_aggregators = {
