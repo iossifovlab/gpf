@@ -12,6 +12,7 @@ from typing import List, Any, Dict
 from cerberus import Validator
 
 from dae.utils.dict_utils import recursive_dict_update
+from dae.genomic_resources.aggregators import AGGREGATOR_CLASS_DICT
 
 logger = logging.getLogger(__name__)
 
@@ -52,18 +53,19 @@ class GPFConfigValidator(Validator):
             value = os.path.join(directory, value)
         return os.path.normpath(value)
 
-    def _normalize_coerce_aggregator(self, value: str) -> Dict[str, Any]:
+    def _validate_is_aggregator(self, constraint, field, value):
+        "{'type': 'boolean'}"
+
+        if constraint is not True:
+            return
+        if value not in AGGREGATOR_CLASS_DICT.keys():
+            self._error(
+                field, f"Invalid aggregator type supplied ({value})"
+            )
         join_regex = r"^(join)\((.+)\)"
-        join_match = re.match(join_regex, value)
-        if join_match is not None:
-            separator = join_match.groups()[1]
-            return {
-                "name": "join",
-                "args": [separator]
-            }
-        return {
-            "name": value,
-        }
+        if value.startswith("join") and \
+                re.match(join_regex, value) is None:
+            self._error(field, "Incorrect join aggregator format")
 
 
 class GPFConfigParser:
@@ -157,11 +159,8 @@ class GPFConfigParser:
         conf_dir: str = None,
     ) -> FrozenBox:
 
-        print('test')
         config = GPFConfigParser.merge_config(config, default_config)
-        print(config)
         config = GPFConfigParser.validate_config(config, schema, conf_dir)
-        print(config)
 
         return FrozenBox(config)
 

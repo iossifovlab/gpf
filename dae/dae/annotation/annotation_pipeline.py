@@ -24,17 +24,11 @@ DEFAULT_ANNOTATION_SCHEMA = {
                 "source": {"type": "string"},
                 "dest": {"type": "string"},
                 "position_aggregator": {
-                    "type": "dict", "coerce": "aggregator", "schema": {
-                        "name": {"type": "string"},
-                        "args": {"type": "list", "schema": {"type": "string"}}
-                    }
+                    "type": "string", "is_aggregator": True,
                 },
                 "nucleotide_aggregator": {
-                    "type": "dict", "coerce": "aggregator", "schema": {
-                        "name": {"type": "string"},
-                        "args": {"type": "list", "schema": {"type": "string"}}
-                    }
-                },
+                    "type": "string", "is_aggregator": True,
+                }
             }
         }
     }

@@ -73,6 +73,34 @@ def test_cached_get_all_resources(tmpdir):
     assert len(list(cache_repo.get_all_resources())) == 1
 
 
+def test_cache_all(tmpdir):
+
+    demo_gtf_content = "TP53\tchr3\t300\t200".encode('utf-8')
+    src_repo = GenomicResourceEmbededRepo("src", content={
+        "one": {
+            GR_CONF_FILE_NAME: "",
+            "data.txt": "alabala"
+        },
+        "sub": {
+            "two-unstable[1.0]": {
+                GR_CONF_FILE_NAME: "type: GeneModels\nfile: genes.gtf",
+                "genes.txt": demo_gtf_content
+            },
+            "two[1.0]": {
+                GR_CONF_FILE_NAME:
+                    ["type: GeneModels\nfile: genes.gtf", 1636241590.2],
+                "genes.txt": [demo_gtf_content, 1636241585.5]
+            }
+        }
+    })
+
+    cache_repo = GenomicResourceCachedRepo(src_repo, tmpdir)
+    assert len(list(cache_repo.get_all_resources())) == 0
+    cache_repo.cache_all_resources()
+
+    assert len(list(cache_repo.get_all_resources())) == 3
+
+
 @pytest.mark.parametrize("resource_id", [
     "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
     "gene_models/refGene_201309",
