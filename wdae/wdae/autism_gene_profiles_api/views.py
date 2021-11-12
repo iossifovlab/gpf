@@ -60,6 +60,7 @@ class ConfigurationView(QueryBaseView):
                             "description": description,
                             "parentsCount": stats["parents"],
                             "childrenCount": stats["children"],
+                            "statistics": to_response_json(dataset)["statistics"],
                         })
 
                 display_name = dataset.get("display_name")
@@ -71,6 +72,7 @@ class ConfigurationView(QueryBaseView):
                 response["datasets"].append({
                     "id": dataset_id,
                     "displayName": display_name,
+                    "defaultVisible": True,
                     **to_response_json(dataset),
                     "personSets": person_sets_config,  # overwrite person_sets
                 })
