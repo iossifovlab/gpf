@@ -182,6 +182,7 @@ import { CheckboxListComponent, DisplayNamePipe } from './checkbox-list/checkbox
 import { ErrorsState } from './common/errors.state';
 import { toolPageLinks } from './datasets/datasets';
 import { GenePlotComponent } from './gene-plot/gene-plot.component';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 const appRoutes: Routes = [
   {
@@ -405,6 +406,7 @@ const appRoutes: Routes = [
       {compatibility: { strictContentSecurityPolicy: true }}
     ),
     NgxsResetPluginModule.forRoot(),
+    DragDropModule
   ],
   providers: [
     CookieService,
