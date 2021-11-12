@@ -88,7 +88,7 @@ class PhenoToolHelper(object):
                     persons.add(person.person_id)
         return persons
 
-    def genotype_data_variants(self, data):
+    def genotype_data_variants(self, data, effect_groups):
         assert "effect_types" in data, data
 
         effect_types = set(data["effect_types"])
@@ -97,15 +97,20 @@ class PhenoToolHelper(object):
         variants_by_effect = {
             effect: Counter() for effect in queried_effect_types
         }
-
-        for variant in self.genotype_data.query_variants(**data):
+        query = {
+            "effect_types": queried_effect_types,
+            "inheritnace": data.get("inheritance"),
+            "roles": data.get("roles"),
+        }
+        for variant in self.genotype_data.query_variants(**query):
             for allele in variant.matched_alleles:
+
                 for person in filter(None, allele.variant_in_members):
                     for effect in allele.effects.types:
                         if effect in queried_effect_types:
                             variants_by_effect[effect][person] = 1
 
-        for effect_type in effect_types:
+        for effect_type in effect_groups:
             effect_type = effect_type.lower()
             if effect_type not in self.effect_types_mixin.EFFECT_GROUPS:
                 continue
@@ -114,6 +119,11 @@ class PhenoToolHelper(object):
                     effect_type, variants_by_effect
                 )
             )
+        LOGGER.debug(f"variants_by_effect: {list(variants_by_effect.keys())}")
+        variants_by_effect = {
+            k: variants_by_effect[k.lower()] for k in effect_groups
+        }
+        LOGGER.debug(f"variants_by_effect: {list(variants_by_effect.keys())}")
 
         return variants_by_effect
 

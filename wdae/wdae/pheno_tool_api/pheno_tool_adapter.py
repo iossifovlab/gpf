@@ -60,15 +60,16 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
         else:
             return "{} ~ {}".format(measure_id, " + ".join(normalize_by))
 
-    def calc_variants(self, data):
+    def calc_variants(self, data, effect_groups):
         data = self.study_wrapper.transform_request(data)
-        people_variants = self.helper.genotype_data_variants(data)
+        people_variants = self.helper.genotype_data_variants(
+            data, effect_groups)
 
         results = [
             self.calc_by_effect(
-                effect, people_variants.get(effect.lower(), Counter())
+                effect, people_variants.get(effect, Counter())
             )
-            for effect in data["effect_types"]
+            for effect in effect_groups
         ]
         self.align_NA_results(results)
 
