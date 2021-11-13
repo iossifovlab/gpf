@@ -127,16 +127,20 @@ describe('Enrichment tool data tests', () => {
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.enrichmentTool);
   });
 
-  it('should display affected and unaffected variants based on gene symbol', () => {
+  it.only('should display affected and unaffected variants based on gene symbol', () => {
     const genesBlockPage = new GenesBlockPage();
     genesBlockPage.geneSymbolsButton.click();
 
-    genesBlockPage.geneSymbolsTextarea.type('CAMSAP1');
+    parse_options(getDataset('gene_symbol_CAMSAP1').request);
     page.enrichmentTestButton.click();
     page.table.should('be.visible');
     
-    page.compare_data(data, 'gene_symbol_CAMSAP1', 'affected');
-    page.compare_data(data, 'gene_symbol_CAMSAP1', 'affected', 'Missense'); // same data name can be used with different effect types
+    cy.wrap(page.getTableData('affected')).then(() => {
+      cy.get('@tableData').should('deep.equal', getDataset('gene_symbol_CAMSAP1').data);
+    });
+    cy.wrap(page.getTableData('affected', 'Missense')).then(() => {
+      cy.get('@tableData').should('deep.equal', getDataset('gene_symbol_CAMSAP1', 'Missense').data);
+    });
 
     page.selectorTableRow('affected').should('have.text', 'affected F:341  M:2166  U: -');
     page.selectorTableRow('unaffected').should('have.text', 'unaffected F:1011  M:899  U: -');
@@ -271,15 +275,6 @@ describe('Enrichment tool data tests', () => {
   });
 });
 
-class data_model {
-  public set_name: string;
-  public data: Array<string>;
-
-  constructor(set_name, data) {
-    this.set_name = set_name;
-    this.data = data;
-  }
-}
 class request_options {
   public mode: string;
   public options: JSON;
@@ -292,17 +287,69 @@ class request_options {
   }
 }
 
-const data = [
-  new data_model('gene_symbol_CAMSAP1', ['LGDs', '363', '0', '0.05', '1.00', '27', '0',	'3.92e-3' , '1.00', '306', '0', '0.04', '1.00', '68', '0', '9.88e-3' ,'1.00']),
-  new data_model('gene_symbol_CAMSAP1', ['Missense', '1,510', '1', '0.22',	'0.197', '149', '0',	'0.02',	'1.00',	'1,307',	'1',	'0.19',	'0.173', '246', '0', '0.04', '1.00']),
-  new data_model('gene_symbol_and_models_LGDs' ,['LGDs', '363', '0', '0.03', '1.00', '27', '0', '1.89e-3', '1.00', '306', '0', '0.02', '1.00', '68', '0', '3.45e-3', '1.00']),
-  new data_model('gene_symbol_without_model_LGDs', ['LGDs', '392', '0', '0.06', '1.00', '27', '0', '3.92e-3', '1.00', '321', '0', '0.05', '1.00', '71', '0', '0.01', '1.00']),
-  new data_model('gene_symbols_iossifov_affected', ['LGDs', '363', '363', '13.67', '0.00', '27', '27', '1.02', '3.53e-39', '306', '306', '11.52', '0.00', '68', '68', '2.56', '1.43e-97']),
-  new data_model('gene_symbols_iossifov_affected', ['Missense', '1,510', '75', '56.86', '0.0177', '149', '16', '5.61', '0.0002', '1,307', '67', '49.22', '0.0132', '246', '12', '9.26', '0.3161']),
-  new data_model('gene_symbol_iossifov_unaffected', ['LGDs', '363', '8', '6.13', '0.4108', '27', '1', '0.46', '0.3686', '306', '7', '5.17', '0.3708', '68', '1', '1.15', '1.00']),
-  new data_model('gene_symbol_pnas_2015_set', ['LGDs', '363', '97', '12.87', '2.48e-55', '27', '22', '0.96', '8.48e-28', '306', '78', '10.85', '3.29e-43', '68', '29', '2.41', '3.11e-24']),
-  new data_model('gene_symbol_pnas_2015_set', ['Missense', '1,510', '114', '53.56', '1.71e-13', '149', '34', '5.28', '3.90e-18', '1,307', '100', '46.36', '2.30e-12', '246', '22', '8.73', '7.94e-5']),
-  new data_model('gene_symbol_pnas_2015_set', ['LGDs', '176', '4', '6.24', '0.537', '3', '0', '0.11', '1.00', '84', '2', '2.98', '0.7719', '94', '2', '3.33', '0.7763']),
+const dataset = [
+  {
+    name: 'gene_symbol_CAMSAP1',
+    affected: 'affected',
+    request: new request_options('gene_symbols', {
+      gene_symbols: 'CAMSAP1'
+    }, null),
+    data: ['LGDs', '363', '0', '0.05', '1.00', '27', '0',	'3.92e-3' , '1.00', '306', '0', '0.04', '1.00', '68', '0', '9.88e-3' ,'1.00']
+  },
+  {
+    name: 'gene_symbol_CAMSAP1',
+    affected: 'affected',
+    request: new request_options(null, null, null),
+    data: ['Missense', '1,510', '1', '0.22',	'0.197', '149', '0',	'0.02',	'1.00',	'1,307',	'1',	'0.19',	'0.173', '246', '0', '0.04', '1.00']
+  },
+  {
+    name: 'gene_symbol_and_models_LGDs',
+    affected: 'affected',
+    request: new request_options(null, null, null),
+    data: ['LGDs', '363', '0', '0.03', '1.00', '27', '0', '1.89e-3', '1.00', '306', '0', '0.02', '1.00', '68', '0', '3.45e-3', '1.00']
+  },
+  {
+    name: 'gene_symbol_without_model_LGDs',
+    affected: 'affected',
+    request: new request_options(null, null, null),
+    data: ['LGDs', '392', '0', '0.06', '1.00', '27', '0', '3.92e-3', '1.00', '321', '0', '0.05', '1.00', '71', '0', '0.01', '1.00']
+  },
+  {
+    name: 'gene_symbols_iossifov_affected',
+    affected: 'affected',
+    request: new request_options(null, null, null),
+    data: ['LGDs', '363', '363', '13.67', '0.00', '27', '27', '1.02', '3.53e-39', '306', '306', '11.52', '0.00', '68', '68', '2.56', '1.43e-97']
+  },
+  {
+    name: 'gene_symbols_iossifov_affected',
+    affected: 'affected',
+    request: new request_options(null, null, null),
+    data: ['Missense', '1,510', '75', '56.86', '0.0177', '149', '16', '5.61', '0.0002', '1,307', '67', '49.22', '0.0132', '246', '12', '9.26', '0.3161']
+  },
+  {
+    name: 'gene_symbol_iossifov_unaffected',
+    affected: 'affected',
+    request: new request_options(null, null, null),
+    data: ['LGDs', '363', '8', '6.13', '0.4108', '27', '1', '0.46', '0.3686', '306', '7', '5.17', '0.3708', '68', '1', '1.15', '1.00']
+  },
+  {
+    name: 'gene_symbol_pnas_2015_set',
+    affected: 'affected',
+    request: new request_options(null, null, null),
+    data: ['LGDs', '363', '97', '12.87', '2.48e-55', '27', '22', '0.96', '8.48e-28', '306', '78', '10.85', '3.29e-43', '68', '29', '2.41', '3.11e-24']
+  },
+  {
+    name: 'gene_symbol_pnas_2015_set',
+    affected: 'affected',
+    request: new request_options(null, null, null),
+    data: ['Missense', '1,510', '114', '53.56', '1.71e-13', '149', '34', '5.28', '3.90e-18', '1,307', '100', '46.36', '2.30e-12', '246', '22', '8.73', '7.94e-5']
+  },
+  {
+    name: 'gene_symbol_pnas_2015_set',
+    affected: 'affected',
+    request: new request_options(null, null, null),
+    data: ['LGDs', '176', '4', '6.24', '0.537', '3', '0', '0.11', '1.00', '84', '2', '2.98', '0.7719', '94', '2', '3.33', '0.7763']
+  }
 ] ;
 
 /*const state = [
@@ -393,4 +440,11 @@ function parse_options(request: request_options) {
       page.enrichmentModelsSelect((index === 0) ? 'background' : 'counting', element);
     });
   }
+}
+
+function getDataset(name: string, type: string = 'LGDs', affected: string = 'affected') {
+
+  return dataset.filter(match => {
+    return (match.name === name && match.data[0] === type)
+  }).find(match => { return (match.affected === affected) });
 }
