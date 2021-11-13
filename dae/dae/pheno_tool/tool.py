@@ -97,12 +97,7 @@ class PhenoToolHelper(object):
         variants_by_effect = {
             effect: Counter() for effect in queried_effect_types
         }
-        query = {
-            "effect_types": queried_effect_types,
-            "inheritnace": data.get("inheritance"),
-            "roles": data.get("roles"),
-        }
-        for variant in self.genotype_data.query_variants(**query):
+        for variant in self.genotype_data.query_variants(**data):
             for allele in variant.matched_alleles:
 
                 for person in filter(None, allele.variant_in_members):
