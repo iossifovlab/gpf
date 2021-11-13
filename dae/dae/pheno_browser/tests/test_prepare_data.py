@@ -331,30 +331,30 @@ def test_handle_regressions_regressand_is_regressor(
         next(prep.handle_regressions(regressand))
 
 
-def test_handle_regressions_default_jitter(
-    mocker, fake_phenotype_data, output_dir, fake_phenotype_data_desc_conf
-):
-    def fake_build_regression(*args):
-        return {"pvalue_regression_male": 0, "pvalue_regression_female": 0}
+# def test_handle_regressions_default_jitter(
+#     mocker, fake_phenotype_data, output_dir, fake_phenotype_data_desc_conf
+# ):
+#     def fake_build_regression(*args):
+#         return {"pvalue_regression_male": 0, "pvalue_regression_female": 0}
 
-    mocked = mocker.patch(
-        "dae.pheno_browser.prepare_data."
-        "PreparePhenoBrowserBase.build_regression",
-        side_effect=fake_build_regression,
-    )
+#     mocked = mocker.patch(
+#         "dae.pheno_browser.prepare_data."
+#         "PreparePhenoBrowserBase.build_regression",
+#         side_effect=fake_build_regression,
+#     )
 
-    reg = GPFConfigParser.load_config(
-        fake_phenotype_data_desc_conf, pheno_conf_schema
-    )
-    prep = PreparePhenoBrowserBase(
-        "fake", fake_phenotype_data, output_dir, reg
-    )
-    regressand = fake_phenotype_data.get_measure("i1.m1")
-    for i in prep.handle_regressions(regressand):
-        pass
+#     reg = GPFConfigParser.load_config(
+#         fake_phenotype_data_desc_conf, pheno_conf_schema
+#     )
+#     prep = PreparePhenoBrowserBase(
+#         "fake", fake_phenotype_data, output_dir, reg
+#     )
+#     regressand = fake_phenotype_data.get_measure("i1.m1")
+#     for i in prep.handle_regressions(regressand):
+#         pass
 
-    mocked.assert_called()
-    measure, reg_measure, jitter = mocked.call_args_list[0][0]
-    assert jitter == 0.12
-    measure, reg_measure, jitter = mocked.call_args_list[1][0]
-    assert jitter == 0.13
+#     mocked.assert_called()
+#     measure, reg_measure, jitter = mocked.call_args_list[0][0]
+#     assert jitter == 0.12
+#     measure, reg_measure, jitter = mocked.call_args_list[1][0]
+#     assert jitter == 0.13
