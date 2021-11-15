@@ -119,15 +119,15 @@ grr:
   cache_dir: "/wd/cache/grrCache"
 EOT
 
-    build_run_local mkdir -p ./cache
-    build_run_local touch ./cache/grr_definition.yaml
-    build_run_local cat > ./cache/grr_definition.yaml << EOT
+    build_run_local bash -c "mkdir -p ./cache"
+    build_run_local bash -c "touch ./cache/grr_definition.yaml"
+    build_run_local bash -c 'cat > ./cache/grr_definition.yaml << EOT
 id: "default"
 type: "url"
 url: "https://www.iossifovlab.com/distribution/public/genomic-resources-repository/"
 cache_dir: "/wd/cache/grrCache"
 EOT
-
+'
     build_run_ctx_init "container" "ubuntu:18.04"
     defer_ret build_run_ctx_reset
 
