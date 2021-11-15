@@ -1,17 +1,21 @@
 import pytest
-from dae.genome.genomes_db import GenomesDB
 from dae.gpf_instance.gpf_instance import cached
 from gpf_instance.gpf_instance import WGPFInstance
 
 
 @pytest.fixture(scope="session")
 def wgpf_instance(default_dae_config):
-    class GenomesDbInternal(GenomesDB):
-        def get_default_gene_models_id(self, genome_id=None):
-            return "RefSeq2013"
 
     class WGPFInstanceInternal(WGPFInstance):
-        pass
+        @property  # type: ignore
+        @cached
+        def gene_models(self):
+            print(self.dae_config.gene_models)
+            result = self.grr.get_resource(
+                "hg19/GATK_ResourceBundle_5777_b37_phiX174/"
+                "gene_models/refGene_v201309")
+            result.open()
+            return result
 
     def build(work_dir=None, load_eagerly=False):
         return WGPFInstanceInternal(
