@@ -353,8 +353,6 @@ EOT'
         pip install -e .'
     done
 
-    build_run_attach
-
     build_run_container ctx:ctx_gpf_test bash -c 'cd /wd/dae_conftests; /opt/conda/bin/conda run --no-capture-output -n gpf \
       py.test -v --reimport --no-cleanup dae_conftests/tests/'
 
