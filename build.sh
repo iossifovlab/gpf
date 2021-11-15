@@ -119,7 +119,7 @@ grr:
   cache_dir: "/wd/cache/grrCache"
 EOT
 
-    build_run_local cat >> ./cache/grr_definition.yaml << EOT
+    build_run_local cat > ./cache/grr_definition.yaml << EOT
 id: "default"
 type: "url"
 url: "https://www.iossifovlab.com/distribution/public/genomic-resources-repository/"
