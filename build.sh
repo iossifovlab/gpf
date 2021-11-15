@@ -106,18 +106,20 @@ function main() {
     build_docker_image_cp_from "$data_hg19_startup_image_ref" ./data/data-hg19-startup /
 
     # reset instance conf
-    build_run_local sed -i \
+    build_run_local bash -c 'sed -i \
       -e s/"^      - localhost.*$/      - impala"/g \
       -e s/"^      host: localhost.*$/      host: impala"/g \
       ./data/data-hg19-startup/gpf_instance.yaml
+    '
 
-    build_run_local cat >> ./data/data-hg19-startup/gpf_instance.yaml << EOT
+    build_run_local bash -c 'cat >> ./data/data-hg19-startup/gpf_instance.yaml << EOT
 grr:
   id: "%(instance_id)s"
   type: "url"
   url: "https://www.iossifovlab.com/distribution/public/genomic-resources-repository/"
   cache_dir: "/wd/cache/grrCache"
 EOT
+'
 
     build_run_local bash -c "mkdir -p ./cache"
     build_run_local bash -c "touch ./cache/grr_definition.yaml"
