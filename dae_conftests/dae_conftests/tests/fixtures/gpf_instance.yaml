@@ -76,12 +76,6 @@ datasets:
 default_study_config:
   conf_file: "%(wd)s/defaultConfiguration.conf"
 
-genomic_resources:
-  repositories:
-    - id: "%(instance_id)s"
-      type: directory
-      directory: "%(wd)s"
-
 gene_info_db:
   conf_file: "%(wd)s/gene_info.conf"
 

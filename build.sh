@@ -119,6 +119,7 @@ grr:
   cache_dir: "/wd/cache/grrCache"
 EOT
 
+    build_run_local mkdir -p ./cache
     build_run_local cat > ./cache/grr_definition.yaml << EOT
 id: "default"
 type: "url"
@@ -344,13 +345,19 @@ EOT'
     defer_ret build_run_ctx_reset ctx:ctx_gpf_test
 
     for d in /wd/dae /wd/wdae /wd/dae_conftests; do
-      build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .'
+      build_run_container ctx:ctx_gpf_test bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
+        pip install -e .'
     done
 
-    build_run_container bash -c 'cd /wd/dae_conftests; /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --reimport --no-cleanup dae_conftests/tests/'
+    build_run_attach
 
-    build_run_container bash -c 'cd /wd/dae; /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup dae/gene/tests/test_denovo_gene_sets_db.py'
-    build_run_container bash -c 'cd /wd/dae; /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup dae/backends/tests/test_cnv_variants.py::test_cnv_impala'
+    build_run_container ctx:ctx_gpf_test bash -c 'cd /wd/dae_conftests; /opt/conda/bin/conda run --no-capture-output -n gpf \
+      py.test -v --reimport --no-cleanup dae_conftests/tests/'
+
+    build_run_container ctx:ctx_gpf_test bash -c 'cd /wd/dae; /opt/conda/bin/conda run --no-capture-output -n gpf \
+      py.test -v --no-cleanup dae/gene/tests/test_denovo_gene_sets_db.py'
+    build_run_container ctx:ctx_gpf_test bash -c 'cd /wd/dae; /opt/conda/bin/conda run --no-capture-output -n gpf \
+      py.test -v --no-cleanup dae/backends/tests/test_cnv_variants.py::test_cnv_impala'
 
   }
 
