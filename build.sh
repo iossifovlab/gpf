@@ -346,7 +346,9 @@ EOT'
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
       --env DAE_IMPALA_HOST="impala"
+
     defer_ret build_run_ctx_reset ctx:ctx_gpf_test
+    build_run_ctx_persist ctx:ctx_gpf_test
 
     for d in /wd/dae /wd/wdae /wd/dae_conftests; do
       build_run_container ctx:ctx_gpf_test bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
