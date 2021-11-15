@@ -8,10 +8,8 @@ from users_api.models import WdaeUser
 
 from remote.rest_api_client import RESTClient
 
-from dae.gpf_instance.gpf_instance import cached
 from gpf_instance.gpf_instance import WGPFInstance,\
     reload_datasets, load_gpf_instance
-from dae.genome.genomes_db import GenomesDB
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 import dae.tools.generate_common_report as generate_common_report
 
