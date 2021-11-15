@@ -166,19 +166,20 @@ EOT
 
       # reset instance conf
     # reset instance conf
-    build_run_local sed -i \
+    build_run_local bash -c 'sed -i \
       -e s/"^      - localhost.*$/      - impala"/g \
       -e s/"^      host: localhost.*$/      host: impala"/g \
       ./data/data-hg19-remote/gpf_instance.yaml
+      '
 
-    build_run_local cat >> ./data/data-hg19-remote/gpf_instance.yaml << EOT
+    build_run_local bash -c 'cat >> ./data/data-hg19-remote/gpf_instance.yaml << EOT
 grr:
   id: "%(instance_id)s"
   type: "url"
   url: "https://www.iossifovlab.com/distribution/public/genomic-resources-repository/"
   cache_dir: "/wd/cache/grrCache"
 EOT
-
+'
       build_run_ctx_init "container" "ubuntu:18.04"
       defer_ret build_run_ctx_reset
 
