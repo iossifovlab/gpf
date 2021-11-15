@@ -120,6 +120,7 @@ grr:
 EOT
 
     build_run_local mkdir -p ./cache
+    build_run_local touch ./cache/grr_definition.yaml
     build_run_local cat > ./cache/grr_definition.yaml << EOT
 id: "default"
 type: "url"
