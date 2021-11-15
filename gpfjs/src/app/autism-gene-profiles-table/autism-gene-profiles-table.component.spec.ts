@@ -118,7 +118,7 @@ describe('AutismGeneProfilesTableComponent', () => {
       expect(emitValue).toEqual(expectedEmitValue);
     });
 
-    component.emitCreateTabEvent({ctrlKey: false, type: 'click'}, 'testGeneSymbol');
+    component.emitCreateTabEvent({ctrlKey: false, type: 'click'} as MouseEvent, 'testGeneSymbol');
     expect(emitSpy).toHaveBeenCalled();
   });
 
