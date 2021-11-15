@@ -226,7 +226,7 @@ EOT
       ports:21010 \
       --hostname gpfremote \
       --network "${ctx_network["network_id"]}" \
-      --env DAE_DB_DIR="/data/data-hg19-remote/" \
+      --env DAE_DB_DIR="/wd/data/data-hg19-remote/" \
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" 
     defer_ret build_run_ctx_reset ctx:ctx_gpf_remote
 
@@ -243,7 +243,8 @@ EOT
       # import genotype data
       {
 
-        build_run_container ctx:ctx_gpf_remote bash -c 'export DAE_DB_DIR="/wd/data/data-hg19-remote"; cd ./import/iossifov_2014 && /opt/conda/bin/conda run --no-capture-output -n gpf simple_study_import.py --id iossifov_2014 \
+        build_run_container ctx:ctx_gpf_remote bash -c 'cd ./import/iossifov_2014 && /opt/conda/bin/conda run --no-capture-output -n gpf \
+          simple_study_import.py --id iossifov_2014 \
           -o ./data_iossifov_2014 \
           --denovo-file IossifovWE2014.tsv \
           IossifovWE2014.ped'
@@ -256,7 +257,8 @@ EOT'
 
       # import phenotype data
       {
-        build_run_container ctx:ctx_gpf_remote bash -c 'export DAE_DB_DIR="/wd/data/data-hg19-remote"; cd ./import/comp-data && /opt/conda/bin/conda run --no-capture-output -n gpf simple_pheno_import.py -p comp_pheno.ped \
+        build_run_container ctx:ctx_gpf_remote bash -c 'cd ./import/comp-data && /opt/conda/bin/conda run --no-capture-output -n gpf \
+          simple_pheno_import.py -p comp_pheno.ped \
           -i instruments/ -d comp_pheno_data_dictionary.tsv -o comp_pheno \
           --regression comp_pheno_regressions.conf'
 
@@ -265,7 +267,8 @@ EOT'
 
       # generate denovo gene sets
       {
-        build_run_container ctx:ctx_gpf_remote bash -c 'export DAE_DB_DIR="/wd/data/data-hg19-remote"; /opt/conda/bin/conda run --no-capture-output -n gpf generate_denovo_gene_sets.py'
+        build_run_container ctx:ctx_gpf_remote bash -c '/opt/conda/bin/conda run --no-capture-output -n gpf \
+          generate_denovo_gene_sets.py'
       }
     }
 
@@ -333,7 +336,7 @@ EOT'
 
     build_run_ctx_init ctx:ctx_gpf_test "persistent" "container" "${gpf_dev_image_ref}" \
       --network "${ctx_network["network_id"]}" \
-      --env DAE_DB_DIR="/data/data-hg19-startup/" \
+      --env DAE_DB_DIR="/wd/data/data-hg19-startup/" \
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
