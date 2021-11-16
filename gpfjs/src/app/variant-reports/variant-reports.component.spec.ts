@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { VariantReportsComponent } from './variant-reports.component';
+import { PeopleCounterRowPipe, VariantReportsComponent } from './variant-reports.component';
 import { PedigreeChartModule } from '../pedigree-chart/pedigree-chart.module';
 import { FormsModule } from '@angular/forms';
 import { VariantReportsService } from './variant-reports.service';
@@ -279,7 +279,7 @@ describe('VariantReportsComponent', () => {
     const activatedRouteMock = new MockActivatedRoute();
     const datasetsServiceMock = new MockDatasetsService();
     TestBed.configureTestingModule({
-      declarations: [ VariantReportsComponent ],
+      declarations: [ VariantReportsComponent, PeopleCounterRowPipe ],
       imports: [ PedigreeChartModule, FormsModule ],
       providers: [
         { provide: VariantReportsService, useValue: variantReportsServiceMock },
@@ -321,7 +321,7 @@ describe('VariantReportsComponent Denovo', () => {
     const activatedRouteMock = new MockActivatedRoute('Denovo');
     const datasetsServiceMock = new MockDatasetsDenovoService();
     TestBed.configureTestingModule({
-      declarations: [ VariantReportsComponent ],
+      declarations: [ VariantReportsComponent, PeopleCounterRowPipe ],
       imports: [ PedigreeChartModule, FormsModule ],
       providers: [
         { provide: VariantReportsService, useValue: variantReportsServiceMock },

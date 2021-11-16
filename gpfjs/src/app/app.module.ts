@@ -106,7 +106,7 @@ import { PhenoBrowserTableComponent } from './pheno-browser-table/pheno-browser-
 import { PValueIntensityPipe } from './utils/p-value-intensity.pipe';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { VariantReportsComponent } from './variant-reports/variant-reports.component';
+import { PeopleCounterRowPipe, VariantReportsComponent } from './variant-reports/variant-reports.component';
 import { VariantReportsService } from './variant-reports/variant-reports.service';
 import { DatasetDescriptionComponent } from './dataset-description/dataset-description.component';
 
@@ -379,6 +379,7 @@ const appRoutes: Routes = [
     CheckboxListComponent,
     DisplayNamePipe,
     GenePlotComponent,
+    PeopleCounterRowPipe
   ],
   imports: [
     BrowserModule,

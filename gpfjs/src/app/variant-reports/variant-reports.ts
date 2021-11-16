@@ -244,10 +244,3 @@ export class Legend {
 
   constructor(readonly legendItems: LegendItem[]) {}
 }
-
-export enum PeopleSex {
-  people_male = 'Male',
-  people_female = 'Female',
-  people_unspecified = 'Unspecified',
-  people_total = 'Total',
-}
