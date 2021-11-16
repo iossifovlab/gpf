@@ -146,44 +146,68 @@ describe('Enrichment tool data tests', () => {
     page.selectorTableRow('unaffected').should('have.text', 'unaffected F:1011  M:899  U: -');
   });
 
-  it('should perform enrichment test based on gene sets', () => { // TODO: unaffected tests
+  it.only('should perform enrichment test based on gene sets', () => { // TODO: unaffected tests
     const genesBlockPage = new GenesBlockPage();
     genesBlockPage.geneSetsButton.click();
 
-    page.geneSetsInputField.type('autism').then(option => {
-      cy.get('div.dropdown-menu').should('contain.text', 'PNAS 2015');
-      cy.get('span').contains('PNAS 2015').click();
-      page.geneSetsVariantsCount.should('have.text', 'Count: 239');
-    });
+    parse_options(getDataset('gene_symbol_pnas_2015_set').request);
     page.enrichmentTestButton.click();
-    page.compare_data(data, 'gene_symbol_pnas_2015_set', 'affected');
-    page.compare_data(data, 'gene_symbol_pnas_2015_set', 'affected', 'Missense');
-    page.compare_data(data, 'gene_symbol_pnas_2015_set', 'unaffected');
 
-    page.geneSetsColletionDropdown.select('Denovo');
+    cy.wrap(page.getTableData('affected')).then(() => {
+      cy.get('@tableData').should('deep.equal', getDataset('gene_symbol_pnas_2015_set').data);
+    });
+    cy.wrap(page.getTableData('affected', 'Missense')).then(() => {
+      cy.get('@tableData').should('deep.equal', getDataset('gene_symbol_pnas_2015_set', 'Missense').data);
+    });
+    cy.wrap(page.getTableData('unaffected')).then(() => {
+      cy.get('@tableData').should('deep.equal', getDataset('gene_symbol_pnas_2015_set', 'LGDs', 'unaffected').data);
+    });
+
+    parse_options(getDataset('gene_symbols_iossifov_affected').request);
+    /*page.geneSetsColletionDropdown.select('Denovo');
     page.geneSetsInputField.type('LGDs').then(option => {
       cy.get('div.dropdown-menu').should('contain.text', 'LGDs (363)');
       cy.get('span').contains('LGDs (363)').click();
       page.geneSetsVariantsCount.should('have.text', 'Count: 363');
-    });
+    });*/
     page.enrichmentTestButton.click();
-    page.compare_data(data, 'gene_symbols_iossifov_affected', 'affected');
-    page.compare_data(data, 'gene_symbols_iossifov_affected', 'affected', 'Missense');
+    cy.wrap(page.getTableData('affected')).then(() => {
+      cy.get('@tableData').should('deep.equal', getDataset('gene_symbols_iossifov_affected').data);
+    });
+    cy.wrap(page.getTableData('affected', 'Missense')).then(() => {
+      cy.get('@tableData').should('deep.equal', getDataset('gene_symbols_iossifov_affected', 'Missense').data);
+    });
 
-    cy.get('input#iossifov_2014-checkbox-affected').click();
+    parse_options(new request_options('gene_sets', {
+      implicit: true,
+      denovo_collection_sets: [
+        {
+          study_type: 'iossifov_2014: Affected Status',
+          affected: false,
+          unaffected: false
+        }, 
+      ]
+    }, null));
     page.findErrorAlertInComponent('gpf-gene-sets').contains('Please select a gene');
 
-    cy.get('input#iossifov_2014-checkbox-unaffected').click();
-    page.geneSetsInputField.type('LGDs').then(option => {
-      cy.get('div.dropdown-menu').should('contain.text', 'LGDs (176)');
-      cy.get('span').contains('LGDs (176)').click();
-      page.geneSetsVariantsCount.should('have.text', 'Count: 176');
-    });
+    parse_options(new request_options('gene_sets', {
+      set: 'Denovo',
+      study: 'LGDs (176)',
+      denovo_collection_sets: [
+        {
+          study_type: 'iossifov_2014: Affected Status',
+          affected: false,
+          unaffected: true
+        }, 
+      ]
+    }, ['default']));
     page.enrichmentTestButton.click();
-    page.compare_data(data, 'gene_symbol_iossifov_unaffected', 'affected');
+    cy.wrap(page.getTableData('affected')).then(() => {
+      cy.get('@tableData').should('deep.equal', getDataset('gene_symbol_iossifov_unaffected').data);
+    });
   });
 
-  it('should display affected and unaffected variants based on gene symbol and select models', () => {
+  it.only('should display affected and unaffected variants based on gene symbol and select models', () => {
     const genesBlockPage = new GenesBlockPage();
     genesBlockPage.geneSymbolsButton.click();
 
@@ -196,15 +220,23 @@ describe('Enrichment tool data tests', () => {
     page.enrichmentTestButton.click();
     page.table.should('be.visible');
 
-    page.compare_data(data, 'gene_symbol_without_model_LGDs', 'affected');
+    parse_options(getDataset('gene_symbol_without_model_LGDs').request);
+    page.enrichmentTestButton.click();
+    cy.wrap(page.getTableData('affected')).then(() => {
+      cy.get('@tableData').should('deep.equal', getDataset('gene_symbol_without_model_LGDs').data);
+    });
+    //page.compare_data(data, 'gene_symbol_without_model_LGDs', 'affected');
 
-    page.enrichmentModelsSelect('background', 'samocha_background_model');
-    page.enrichmentModelsSelect('counting', 'enrichment_gene_counting');
+  
+
+    parse_options(getDataset('gene_symbol_and_models_LGDs').request);
     page.enrichmentTestButton.click();
 
     // TODO test more values
 
-    page.compare_data(data, 'gene_symbol_and_models_LGDs', 'affected');
+    cy.wrap(page.getTableData('affected')).then(() => {
+      cy.get('@tableData').should('deep.equal', getDataset('gene_symbol_and_models_LGDs').data);
+    });
   });
 
   // migrating to tests where the should is contained in the it
@@ -305,26 +337,40 @@ const dataset = [
   {
     name: 'gene_symbol_and_models_LGDs',
     affected: 'affected',
-    request: new request_options(null, null, null),
+    request: new request_options('gene_symbols', {
+      gene_symbols: 'CAMSAP1'
+    }, ['samocha_background_model', 'enrichment_gene_counting']),
     data: ['LGDs', '363', '0', '0.03', '1.00', '27', '0', '1.89e-3', '1.00', '306', '0', '0.02', '1.00', '68', '0', '3.45e-3', '1.00']
   },
   {
     name: 'gene_symbol_without_model_LGDs',
     affected: 'affected',
-    request: new request_options(null, null, null),
+    request: new request_options('gene_symbols', {
+      gene_symbols: 'CAMSAP1'
+    }, ['coding_len_background_model', 'enrichment_events_counting']),
     data: ['LGDs', '392', '0', '0.06', '1.00', '27', '0', '3.92e-3', '1.00', '321', '0', '0.05', '1.00', '71', '0', '0.01', '1.00']
   },
   {
     name: 'gene_symbols_iossifov_affected',
     affected: 'affected',
-    request: new request_options(null, null, null),
-    data: ['LGDs', '363', '363', '13.67', '0.00', '27', '27', '1.02', '3.53e-39', '306', '306', '11.52', '0.00', '68', '68', '2.56', '1.43e-97']
+    request: new request_options('gene_sets', {
+      set: 'Denovo',
+      study: 'LGDs (363)',
+      denovo_collection_sets: [
+        {
+          study_type: 'iossifov_2014: Affected Status',
+          affected: true,
+          unaffected: false
+        }, 
+      ]
+    }, ['samocha_background_model', 'enrichment_gene_counting']),
+    data: ['LGDs', '363', '363', '7.81', '0.00', '27', '27', '0.58', '0.00', '306', '306', '6.75', '0.00', '68', '68', '1.06', '0.00']
   },
   {
     name: 'gene_symbols_iossifov_affected',
     affected: 'affected',
     request: new request_options(null, null, null),
-    data: ['Missense', '1,510', '75', '56.86', '0.0177', '149', '16', '5.61', '0.0002', '1,307', '67', '49.22', '0.0132', '246', '12', '9.26', '0.3161']
+    data: ['Missense', '1,510', '75', '54.72', '0.0107', '149', '16', '5.40', '0.0003', '1,307', '67', '47.28', '0.0079', '246', '12', '7.44', '0.152']
   },
   {
     name: 'gene_symbol_iossifov_unaffected',
@@ -335,7 +381,10 @@ const dataset = [
   {
     name: 'gene_symbol_pnas_2015_set',
     affected: 'affected',
-    request: new request_options(null, null, null),
+    request: new request_options('gene_sets', {
+      set: 'Main',
+      study: 'autism candidates from Iossifov',
+    }, null),
     data: ['LGDs', '363', '97', '12.87', '2.48e-55', '27', '22', '0.96', '8.48e-28', '306', '78', '10.85', '3.29e-43', '68', '29', '2.41', '3.11e-24']
   },
   {
@@ -346,7 +395,7 @@ const dataset = [
   },
   {
     name: 'gene_symbol_pnas_2015_set',
-    affected: 'affected',
+    affected: 'unaffected',
     request: new request_options(null, null, null),
     data: ['LGDs', '176', '4', '6.24', '0.537', '3', '0', '0.11', '1.00', '84', '2', '2.98', '0.7719', '94', '2', '3.33', '0.7763']
   }
@@ -373,33 +422,38 @@ function parse_options(request: request_options) {
   switch(request.mode) {
     case 'gene_symbols': {
       genesBlockPage.geneSymbolsButton.click();
-      genesBlockPage.geneSymbolsTextarea.type(request.options['gene_symbols']);
+      genesBlockPage.geneSymbolsTextarea.clear().type(request.options['gene_symbols']);
       break;
     }
     case 'gene_sets': {
-      genesBlockPage.geneSetsButton.click();
-      page.geneSetsColletionDropdown.select(request.options['set']);
-
-      if (request.options['study'] !== undefined) {
-        page.geneSetsInputField.type(request.options['study']).then(() => {
-          cy.get('div.dropdown-menu').should('contain.text', request.options['study']).get('span').contains(request.options['study']).click();
-        });
+      if(request.options['implicit'] === undefined || request.options['implicit'] === false) {
+        genesBlockPage.geneSetsButton.click();
+      }
+      if(request.options['set'] !== undefined) {
+        page.geneSetsColletionDropdown.select(request.options['set']);
       }
 
-      if(request.options['set'] === 'Denovo' && request.options['set'] !== undefined) {
+      if((request.options['set'] === 'Denovo' && request.options['set'] !== undefined) || request.options['implicit'] === true) {
         request.options['denovo_collection_sets'].forEach(element => {
           //checkboxes exclusive for denovo
           cy.get('ngb-accordion > div').within(() => {
             cy.get('span.dropdown-toggle').contains(element['study_type']).click().parents('.card.ng-star-inserted').within(() => {
               cy.get('label > input[type="checkbox"]').uncheck({force: true});
               if(element['affected'] === true) {
-                cy.get('label').contains('affected').click();
+                cy.get('label').contains('affected').click({force: true});
               }
               if(element['unaffected'] === true) {
-                cy.get('label').contains('unaffected').click();
+                cy.get('label').contains('unaffected').click({force: true});
               }
             });        
           });
+        });
+      }
+
+      if (request.options['study'] !== undefined) {
+        page.geneSetsInputField.clear().type(request.options['study']).then(() => {
+          cy.get('input#search-box').click();
+          cy.get('div.dropdown-menu.show').should('be.visible').click().should('contain.text', request.options['study']).get('span').contains(request.options['study']).click();
         });
       }
 
@@ -438,6 +492,10 @@ function parse_options(request: request_options) {
     });
     request.models_selected.forEach((element, index) => {
       page.enrichmentModelsSelect((index === 0) ? 'background' : 'counting', element);
+    });
+  } else if(request.models_selected !== null && request.models_selected[0] === 'default' && request.models_selected.length === 1) {
+    page.enrichmentModelsBlock.within(() => {
+      cy.get('a#ngb-nav-3').click();
     });
   }
 }

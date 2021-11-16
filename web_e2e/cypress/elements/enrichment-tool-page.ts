@@ -10,7 +10,7 @@ export class EnrichmentToolPage extends BasePage {
   }
 
   get enrichmentTestButton() {
-    return cy.get('gpf-enrichment-tool input[value="Enrichment Test"');
+    return cy.get('gpf-enrichment-tool input[value="Enrichment Test"]');
   }
 
   get table() {
