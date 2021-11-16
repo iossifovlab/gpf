@@ -336,13 +336,11 @@ EOT'
       build_run_local cp ./results/mypy_dae_report ./results/mypy_wdae_report ./test-results/
   }
 
-  local -A ctx_gpf_test
-
   # import test data to impala
   build_stage "Import test data to impala"
   {
 
-    build_run_ctx_init ctx:ctx_gpf_test "persistent" "container" "${gpf_dev_image_ref}" \
+    build_run_ctx_init "container" "${gpf_dev_image_ref}" \
       --network "${ctx_network["network_id"]}" \
       --env DAE_DB_DIR="/wd/data/data-hg19-startup/" \
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
@@ -350,28 +348,43 @@ EOT'
       --env DAE_HDFS_HOST="impala" \
       --env DAE_IMPALA_HOST="impala"
 
-    defer_ret build_run_ctx_reset ctx:ctx_gpf_test
+    defer_ret build_run_ctx_reset
 
     for d in /wd/dae /wd/wdae /wd/dae_conftests; do
-      build_run_container ctx:ctx_gpf_test bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
+      build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
         pip install -e .'
     done
 
-    build_run_container ctx:ctx_gpf_test bash -c 'cd /wd/dae_conftests; /opt/conda/bin/conda run --no-capture-output -n gpf \
+    build_run_container bash -c 'cd /wd/dae_conftests; /opt/conda/bin/conda run --no-capture-output -n gpf \
       py.test -v --reimport --no-cleanup dae_conftests/tests/'
 
-    build_run_container ctx:ctx_gpf_test bash -c 'cd /wd/dae; /opt/conda/bin/conda run --no-capture-output -n gpf \
+    build_run_container bash -c 'cd /wd/dae; /opt/conda/bin/conda run --no-capture-output -n gpf \
       py.test -v --no-cleanup dae/gene/tests/test_denovo_gene_sets_db.py'
-    build_run_container ctx:ctx_gpf_test bash -c 'cd /wd/dae; /opt/conda/bin/conda run --no-capture-output -n gpf \
+    build_run_container bash -c 'cd /wd/dae; /opt/conda/bin/conda run --no-capture-output -n gpf \
       py.test -v --no-cleanup dae/backends/tests/test_cnv_variants.py::test_cnv_impala'
 
-    build_run_ctx_persist ctx:ctx_gpf_test
   }
 
   # Tests - dae
   build_stage "Tests - dae"
   {
-    build_run_container ctx:ctx_gpf_test bash -c '
+
+    build_run_ctx_init "container" "${gpf_dev_image_ref}" \
+      --network "${ctx_network["network_id"]}" \
+      --env DAE_DB_DIR="/wd/data/data-hg19-startup/" \
+      --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+      --env TEST_REMOTE_HOST="gpfremote" \
+      --env DAE_HDFS_HOST="impala" \
+      --env DAE_IMPALA_HOST="impala"
+
+    defer_ret build_run_ctx_reset
+
+    for d in /wd/dae /wd/wdae /wd/dae_conftests; do
+      build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
+        pip install -e .'
+    done
+
+    build_run_container bash -c '
         cd /wd/dae;
         export PYTHONHASHSEED=0;
         /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --durations 20 \
@@ -382,9 +395,6 @@ EOT'
           --cov /wd/dae/ \
           dae/ || true'
 
-    build_run_ctx_init "local"
-    defer_ret build_run_ctx_reset
-
     build_run_local cp ./results/dae-junit.xml ./results/dae-coverage.xml ./test-results/
   }
 
@@ -392,7 +402,22 @@ EOT'
   build_stage "Tests - wdae"
   {
 
-    build_run_container ctx:ctx_gpf_test bash -c '
+    build_run_ctx_init "container" "${gpf_dev_image_ref}" \
+      --network "${ctx_network["network_id"]}" \
+      --env DAE_DB_DIR="/wd/data/data-hg19-startup/" \
+      --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+      --env TEST_REMOTE_HOST="gpfremote" \
+      --env DAE_HDFS_HOST="impala" \
+      --env DAE_IMPALA_HOST="impala"
+
+    defer_ret build_run_ctx_reset
+
+    for d in /wd/dae /wd/wdae /wd/dae_conftests; do
+      build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
+        pip install -e .'
+    done
+
+    build_run_container bash -c '
         cd /wd/wdae;
         export PYTHONHASHSEED=0;
         /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup --durations 20 \
@@ -402,9 +427,6 @@ EOT'
           --cov-report=xml:/wd/results/wdae-coverage.xml \
           --cov /wd/wdae/ \
           wdae || true'
-
-    build_run_ctx_init "local"
-    defer_ret build_run_ctx_reset
 
     build_run_local cp ./results/wdae-junit.xml ./results/wdae-coverage.xml ./test-results/
   }
