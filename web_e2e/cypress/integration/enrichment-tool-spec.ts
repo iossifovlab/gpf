@@ -202,17 +202,6 @@ describe('Enrichment tool data tests', () => {
   });
 
   it('should display affected and unaffected variants based on gene symbol and select models', () => {
-    const genesBlockPage = new GenesBlockPage();
-    genesBlockPage.geneSymbolsButton.click();
-
-    genesBlockPage.geneSymbolsTextarea.type('CAMSAP1');
-    
-    page.enrichmentModelsBlock.then(() => {
-      cy.get('a#ngb-nav-4').click();
-    });
-
-    page.enrichmentTestButton.click();
-    page.table.should('be.visible');
 
     parse_options(getDataset('gene_symbol_without_model_LGDs').request);
     page.enrichmentTestButton.click();
@@ -440,3 +429,23 @@ function getDataset(name: string, type: string = 'LGDs', affected: string = 'aff
     return (match.name === name && match.data[0] === type)
   }).find(match => { return (match.affected === affected) });
 }
+
+/* Idea: the wrapper to be in the following array structure:
+
+[
+  study: studyName1,
+  request: requestOptions1,
+  data[presumably 6 fields - 2(affected/unaffected) LGD's, Missense and Synonymous but not limited to]: {
+    ...data1...
+  }
+]
+
+[
+  study: studyName2,
+  request: requestOptions2,
+  data[presumably 6 fields - 2(affected/unaffected) LGD's, Missense and Synonymous but not limited to]: {
+    ...data2...
+  }
+]
+
+*/
