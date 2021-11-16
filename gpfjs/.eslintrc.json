@@ -55,7 +55,7 @@
         "no-delete-var": "warn",
         "no-else-return": ["warn", { "allowElseIf": false }],
         "no-empty": "warn",
-        "no-empty-function": "warn",
+        "no-empty-function": ["warn", { "allow": ["constructor"]}],
         "eqeqeq": ["warn", "always"],
         "no-extra-bind": "warn",
         "no-extra-semi": "warn",
