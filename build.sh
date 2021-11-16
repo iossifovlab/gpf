@@ -38,6 +38,8 @@ function main() {
   libmain_save_build_env_on_exit
   libbuild_init stage:"$stage" registry.seqpipe.org
 
+  liblog_verbosity=6
+
   libmain_validate_bumped_and_git_versions
 
   defer_ret build_run_ctx_reset_all_persistent
