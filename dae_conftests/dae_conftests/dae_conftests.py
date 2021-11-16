@@ -202,7 +202,6 @@ def gpf_instance_2019(default_dae_config, global_dae_fixtures_dir):
         @property  # type: ignore
         @cached
         def gene_models(self):
-            print(self.dae_config.gene_models)
             result = self.grr.get_resource(
                 "hg19/GATK_ResourceBundle_5777_b37_phiX174/"
                 "gene_models/refGene_v20190211")

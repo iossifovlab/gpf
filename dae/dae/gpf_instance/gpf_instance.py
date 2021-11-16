@@ -81,18 +81,20 @@ class GPFInstance(object):
     @property  # type: ignore
     @cached
     def reference_genome(self):
-        print(self.dae_config.reference_genome)
         result = self.grr.get_resource(
             self.dae_config.reference_genome.resource_id)
+        assert result is not None, \
+            self.dae_config.reference_genome.resource_id
         result.open()
         return result
 
     @property  # type: ignore
     @cached
     def gene_models(self):
-        print(self.dae_config.gene_models)
         result = self.grr.get_resource(
             self.dae_config.gene_models.resource_id)
+        assert result is not None, \
+            self.dae_config.gene_models.resource_id
         result.open()
         return result
 
