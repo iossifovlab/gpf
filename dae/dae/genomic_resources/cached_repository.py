@@ -14,8 +14,7 @@ logger = logging.getLogger(__name__)
 class GenomicResourceCachedRepo(GenomicResourceRepo):
     def __init__(self, child, cache_dir):
         logger.debug(
-            f"creating cached GRR for {child.repo_id} "
-            f"with cache directory: {cache_dir}")
+            f"creating cached GRR with cache directory: {cache_dir}")
 
         self.child = child
         self.cache_dir = pathlib.Path(cache_dir)
