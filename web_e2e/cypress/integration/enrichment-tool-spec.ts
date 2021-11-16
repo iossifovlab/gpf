@@ -127,7 +127,7 @@ describe('Enrichment tool data tests', () => {
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.enrichmentTool);
   });
 
-  it.only('should display affected and unaffected variants based on gene symbol', () => {
+  it('should display affected and unaffected variants based on gene symbol', () => {
     const genesBlockPage = new GenesBlockPage();
     genesBlockPage.geneSymbolsButton.click();
 
@@ -146,7 +146,7 @@ describe('Enrichment tool data tests', () => {
     page.selectorTableRow('unaffected').should('have.text', 'unaffected F:1011  M:899  U: -');
   });
 
-  it.only('should perform enrichment test based on gene sets', () => { // TODO: unaffected tests
+  it('should perform enrichment test based on gene sets', () => { // TODO: unaffected tests
     const genesBlockPage = new GenesBlockPage();
     genesBlockPage.geneSetsButton.click();
 
@@ -164,12 +164,6 @@ describe('Enrichment tool data tests', () => {
     });
 
     parse_options(getDataset('gene_symbols_iossifov_affected').request);
-    /*page.geneSetsColletionDropdown.select('Denovo');
-    page.geneSetsInputField.type('LGDs').then(option => {
-      cy.get('div.dropdown-menu').should('contain.text', 'LGDs (363)');
-      cy.get('span').contains('LGDs (363)').click();
-      page.geneSetsVariantsCount.should('have.text', 'Count: 363');
-    });*/
     page.enrichmentTestButton.click();
     cy.wrap(page.getTableData('affected')).then(() => {
       cy.get('@tableData').should('deep.equal', getDataset('gene_symbols_iossifov_affected').data);
@@ -207,7 +201,7 @@ describe('Enrichment tool data tests', () => {
     });
   });
 
-  it.only('should display affected and unaffected variants based on gene symbol and select models', () => {
+  it('should display affected and unaffected variants based on gene symbol and select models', () => {
     const genesBlockPage = new GenesBlockPage();
     genesBlockPage.geneSymbolsButton.click();
 
@@ -225,9 +219,6 @@ describe('Enrichment tool data tests', () => {
     cy.wrap(page.getTableData('affected')).then(() => {
       cy.get('@tableData').should('deep.equal', getDataset('gene_symbol_without_model_LGDs').data);
     });
-    //page.compare_data(data, 'gene_symbol_without_model_LGDs', 'affected');
-
-  
 
     parse_options(getDataset('gene_symbol_and_models_LGDs').request);
     page.enrichmentTestButton.click();
@@ -239,71 +230,14 @@ describe('Enrichment tool data tests', () => {
     });
   });
 
-  // migrating to tests where the should is contained in the it
-  it('should test new function and retrieve table data', () => {
-    const genesBlockPage = new GenesBlockPage();
-    genesBlockPage.geneSymbolsButton.click();
-
-    genesBlockPage.geneSymbolsTextarea.type('CAMSAP1');
-    page.enrichmentModelsBlock.then(() => {
-      cy.get('a#ngb-nav-4').click();
-    });
-    page.enrichmentTestButton.click();
-    page.table.should('be.visible');
-
-    page.getTableData('affected', 'LGDs');
-    //page.getAllTableData();
-
-    cy.get('@tableData').then(value => {
-      expect(value).to.deep.equal(data[3].data);
-    });
-  });
-
-  it('should test gene weights', () => {
+  it('should move gene weights slider', () => {
     const genesBlockPage = new GenesBlockPage();
     const weights = new GenesWeights();
     genesBlockPage.geneWeightsButton.click();
     weights.moveSlider('right', 150, 0);
-  });
-
-  it('parametrization test', () => {
-    const genesBlockPage = new GenesBlockPage();
-    const weights = new GenesWeights();
-    let req = new request_options('gene_symbols', {
-      gene_symbols: 'CAMP'
-    }, ['samocha_background_model', 'enrichment_gene_counting']);
-
-    parse_options(req);
-    req = new request_options('gene_sets', {
-      set: 'Denovo',
-      denovo_collection_sets: [
-        {
-          study_type: 'comp_vcf: Affected Status',
-          affected: false,
-          unaffected: false
-        }, 
-      ]
-    }, ['samocha_background_model', 'enrichment_gene_counting']);
-    parse_options(req);
-
-    req = new request_options('gene_sets', {
-      set: 'Main',
-      study: 'autism candidates from Iossifov',
-    }, ['samocha_background_model', 'enrichment_gene_counting']);
-    parse_options(req);
-
-    req = new request_options('gene_weights', {
-      weights: 'RVIS rank',
-      scroll: [
-        {position: 'left', value: 5},
-        {position: 'right', value: 150},
-      ],
-      step: [
-        {position: 'left', value: '3798.347', click: {which: 'down', times: 5}},
-        {position: 'right', value: '14296.893', click: {which: 'up', times: 5}}
-      ]
-    }, null);
-    parse_options(req);
+    weights.allGeneWeights.should('have.text', '543 (59.67%)');
+    weights.moveSlider('left', 100, 0);
+    weights.allGeneWeights.should('have.text', '468 (51.43%)');
   });
 });
 
