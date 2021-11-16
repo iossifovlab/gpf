@@ -1,5 +1,6 @@
 import os
 import pathlib
+import logging
 
 from concurrent.futures import ThreadPoolExecutor
 
@@ -7,9 +8,15 @@ from .repository import GenomicResource
 from .repository import GenomicResourceRepo
 from .dir_repository import GenomicResourceDirRepo
 
+logger = logging.getLogger(__name__)
+
 
 class GenomicResourceCachedRepo(GenomicResourceRepo):
     def __init__(self, child, cache_dir):
+        logger.debug(
+            f"creating cached GRR for {child.repo_id} "
+            f"with cache directory: {cache_dir}")
+
         self.child = child
         self.cache_dir = pathlib.Path(cache_dir)
         self.cache_repos = {}
@@ -21,6 +28,8 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
     def _get_or_create_cache_dir_repo(self, repo_id):
         if repo_id not in self.cache_repos:
             cached_repo_dir = self.cache_dir / repo_id
+            logger.debug(
+                f"going to create cached repo directory: {cached_repo_dir}")
             os.makedirs(cached_repo_dir, exist_ok=True)
             self.cache_repos[repo_id] = \
                 GenomicResourceDirRepo(f"{repo_id}.cached", cached_repo_dir)

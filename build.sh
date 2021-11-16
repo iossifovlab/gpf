@@ -114,14 +114,14 @@ function main() {
       ./data/data-hg19-startup/gpf_instance.yaml
     '
 
-    build_run_local bash -c 'cat >> ./data/data-hg19-startup/gpf_instance.yaml << EOT
-grr:
-  id: "%(instance_id)s"
-  type: "url"
-  url: "https://www.iossifovlab.com/distribution/public/genomic-resources-repository/"
-  cache_dir: "/wd/cache/grrCache"
-EOT
-'
+#     build_run_local bash -c 'cat >> ./data/data-hg19-startup/gpf_instance.yaml << EOT
+# grr:
+#   id: "%(instance_id)s"
+#   type: "url"
+#   url: "https://www.iossifovlab.com/distribution/public/genomic-resources-repository/"
+#   cache_dir: "/wd/cache/grrCache"
+# EOT
+# '
 
     build_run_local bash -c "mkdir -p ./cache"
     build_run_local bash -c "touch ./cache/grr_definition.yaml"
@@ -174,14 +174,14 @@ EOT
       ./data/data-hg19-remote/gpf_instance.yaml
       '
 
-    build_run_local bash -c 'cat >> ./data/data-hg19-remote/gpf_instance.yaml << EOT
-grr:
-  id: "%(instance_id)s"
-  type: "url"
-  url: "https://www.iossifovlab.com/distribution/public/genomic-resources-repository/"
-  cache_dir: "/wd/cache/grrCache"
-EOT
-'
+#     build_run_local bash -c 'cat >> ./data/data-hg19-remote/gpf_instance.yaml << EOT
+# grr:
+#   id: "%(instance_id)s"
+#   type: "url"
+#   url: "https://www.iossifovlab.com/distribution/public/genomic-resources-repository/"
+#   cache_dir: "/wd/cache/grrCache"
+# EOT
+# '
       build_run_ctx_init "container" "ubuntu:18.04"
       defer_ret build_run_ctx_reset
 
