@@ -44,7 +44,7 @@ def get_configured_definition():
     if env_repo_definition_path is not None:
         logger.debug(
             f"loading GRR definition from environment variable "
-            f"{GRR_DEFINITION_FILE_ENV}; "
+            f"{GRR_DEFINITION_FILE_ENV}="
             f"{env_repo_definition_path}")
         return load_definition_file(env_repo_definition_path)
 
