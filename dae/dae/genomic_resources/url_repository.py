@@ -23,13 +23,18 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
         super().__init__(repo_id)
         self.url = url
         self.scheme = urlparse(url).scheme
+        self._all_resources = None
 
     def get_all_resources(self):
-        contents = yaml.safe_load(
-            urlopen(self.url + "/" + GRP_CONTENTS_FILE_NAME))
-        for rdf in contents:
-            versionT = tuple(map(int, rdf['version'].split(".")))
-            yield self.build_genomic_resource(rdf['id'], versionT)
+        if self._all_resources is None:
+            self._all_resources = []
+            contents = yaml.safe_load(
+                urlopen(self.url + "/" + GRP_CONTENTS_FILE_NAME))
+            for rdf in contents:
+                versionT = tuple(map(int, rdf['version'].split(".")))
+                resource = self.build_genomic_resource(rdf['id'], versionT)
+                self._all_resources.append(resource)
+        yield from self._all_resources
 
     def get_files(self, genomicResource: GenomicResource):
         mnfst = genomicResource.load_manifest()
