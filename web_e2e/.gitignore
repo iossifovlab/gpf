@@ -10,3 +10,4 @@ results
 /build-env/*
 Jenkinsfile.generated-stages.all
 .build-scripts-tmp-sessions
+ts-lint-report.xml
