@@ -213,8 +213,20 @@ EOT
         docker_data_img_genotype_iossifov_2014="$(e docker_data_img_genotype_iossifov_2014)"
 
         # copy data
-        build_run_local mkdir -p ./import
-        build_docker_image_cp_from "$docker_data_img_genotype_iossifov_2014" ./import /
+        build_run bash -c 'mkdir -p ./import'
+
+        build_run bash -c 'export DAE_DB_DIR="/wd/data/data-hg19-remote"; \
+          cd /wd/dae_conftests/dae_conftests/tests/fixtures/dae_iossifov2014 && \
+          /opt/conda/bin/conda run --no-capture-output -n gpf simple_study_import.py --id iossifov_2014 \
+          -o ./import/data_iossifov_2014 \
+          --denovo-file iossifov2014.txt \
+          iossifov2014_families.ped'
+
+        build_run_container bash -c 'cat >> ./data/data-hg19-remote/studies/iossifov_2014/iossifov_2014.conf << EOT
+
+[enrichment]
+enabled = true
+EOT'
       }
 
       # prepare phenotype data

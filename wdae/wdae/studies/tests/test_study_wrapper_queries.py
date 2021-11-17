@@ -17,7 +17,7 @@ def test_query_all_variants(iossifov_2014_wrappers, wrapper_type):
     variants = list(study_wrapper.query_variants_wdae(
         {}, [{"source": "location"}]))
 
-    assert len(variants) == 5645, variants
+    assert len(variants) == 16, variants
 
 
 @pytest.mark.parametrize(
@@ -30,9 +30,9 @@ def test_query_all_variants(iossifov_2014_wrappers, wrapper_type):
 @pytest.mark.parametrize(
     "inheritance_type,count",
     [
-        ("denovo", 5645),
+        ("denovo", 16),
         ("omission", 0),
-        ("unknown", 5645),  # matches all variants
+        ("unknown", 16),  # matches all variants
         ("mendelian", 0),
         (
             "reference",
@@ -75,11 +75,11 @@ def test_query_limit_variants(iossifov_2014_wrappers, wrapper_type):
 @pytest.mark.parametrize(
     "family_ids,count",
     [
-        (["11542"], 3),
-        (["11547"], 2),
-        (["11542", "11547"], 5),
+        (["12628"], 6),
+        (["13590"], 1),
+        (["12628", "13590"], 7),
         ([], 0),
-        (None, 5645)
+        (None, 16)
     ],
 )
 def test_query_family_variants(
@@ -105,8 +105,8 @@ def test_query_family_variants(
 @pytest.mark.parametrize(
     "sexes,count",
     [
-        (["M"], 3915),
-        (["F"], 1751),
+        (["M"], 13),
+        (["F"], 3),
     ],
 )
 def test_query_sexes_variants(
@@ -132,9 +132,9 @@ def test_query_sexes_variants(
 @pytest.mark.parametrize(
     "variant_type,count",
     [
-        (["ins"], 143),
-        (["sub"], 5102),
-        (["del"], 400),
+        (["ins"], 3),
+        (["sub"], 4),
+        (["del"], 9),
     ],
 )
 def test_query_variant_type_variants(
@@ -160,9 +160,9 @@ def test_query_variant_type_variants(
 @pytest.mark.parametrize(
     "effect_types,count",
     [
-        (["Intergenic"],  66),
-        (["Missense"], 2808),
-        (["Missense", "Intergenic"], 2874),
+        (["Intergenic"], 0),
+        (["Missense"], 2),
+        (["Missense", "Intergenic"], 2),
         (["CNV"], 0),
     ],
 )
@@ -189,8 +189,8 @@ def test_query_effect_types_variants(
 @pytest.mark.parametrize(
     "regions,count",
     [
-        (["1:0-100000000"], 232),
-        (["2:0-100000000"], 169),
+        (["3:0-100000000"], 2),
+        (["2:0-100000000"], 2),
         (["1:11539-11539"], 0)
     ],
 )
@@ -217,15 +217,15 @@ def test_query_regions_variants(
 @pytest.mark.parametrize(
     "options,count",
     [
-        (["proband only"], 3358),
-        (["sibling only"], 2244),
-        (["proband and sibling"], 43),
+        (["proband only"], 14),
+        (["sibling only"], 2),
+        (["proband and sibling"], 0),
         (["neither"], 0),
-        (["proband and sibling", "proband only"], 3401),
-        (["proband only", "neither"], 3358),
+        (["proband and sibling", "proband only"], 14),
+        (["proband only", "neither"], 14),
         (
             ["proband only", "sibling only", "proband and sibling", "neither"],
-            5645
+            16
         )
     ],
 )
@@ -260,15 +260,15 @@ def test_query_present_in_child(
         ({"presentInParent": ["mother only"]}, 0),
         ({"presentInParent": ["father only"]}, 0),
         ({"presentInParent": ["mother and father"]}, 0),
-        ({"presentInParent": ["neither"]}, 5645),
+        ({"presentInParent": ["neither"]}, 16),
         ({"presentInParent": ["mother and father", "mother only"]}, 0),
-        ({"presentInParent": ["mother only", "neither"]}, 5645),
+        ({"presentInParent": ["mother only", "neither"]}, 16),
         ({"presentInParent": [
             "mother only",
             "father only",
             "mother and father",
             "neither",
-        ]}, 5645),
+        ]}, 16),
     ],
 )
 def test_query_present_in_parent(
@@ -297,7 +297,7 @@ def test_query_present_in_parent(
 @pytest.mark.parametrize(
     "option,count",
     [
-        (None, 5645),
+        (None, 16),
         (25, 0),
         (50, 0),
         (100, 0)
@@ -326,7 +326,7 @@ def test_query_min_alt_frequency(
 @pytest.mark.parametrize(
     "option,count",
     [
-        (None, 5645),
+        (None, 16),
         (25, 0),
         (50, 0),
         (100, 0)
@@ -357,31 +357,31 @@ def test_query_max_alt_frequency(
     [
         (
             {"weight": "LGD_rank", "rangeStart": None, "rangeEnd": None},
-            5328
+            16
         ),
         (
             {"weight": "LGD_rank", "rangeStart": 10.5, "rangeEnd": None},
-            5301
+            16
         ),
         (
             {"weight": "LGD_rank", "rangeStart": None, "rangeEnd": 20000.0},
-            5328
+            16
         ),
         (
             {"weight": "LGD_rank", "rangeStart": 2000.0, "rangeEnd": 4000.0},
-            663
+            0
         ),
         (
             {"weight": "LGD_rank", "rangeStart": 9000.0, "rangeEnd": 11000.0},
-            431
+            2
         ),
         (
             {"weight": "LGD_rank", "rangeStart": 1000.0, "rangeEnd": 2000.0},
-            369
+            0
         ),
         (
             {"weight": "ala bala", "rangeStart": 1000.0, "rangeEnd": 2000.0},
-            5645
+            16
         ),
     ],
 )
@@ -420,7 +420,7 @@ def test_query_person_filters(iossifov_2014_wrappers, wrapper_type):
     variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}])
     )
-    assert len(variants) == 2287
+    assert len(variants) == 2
 
 
 @pytest.mark.parametrize(
@@ -446,7 +446,7 @@ def test_query_family_filters(iossifov_2014_wrappers, wrapper_type):
     variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}])
     )
-    assert len(variants) == 4805
+    assert len(variants) == 15
 
 
 @pytest.mark.parametrize(
@@ -464,4 +464,4 @@ def test_query_family_types(iossifov_2014_wrappers, wrapper_type):
     variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}])
     )
-    assert len(variants) == 885
+    assert len(variants) == 1
