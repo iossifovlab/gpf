@@ -62,7 +62,7 @@ def test_cached_get_all_resources(tmpdir):
     })
 
     cache_repo = GenomicResourceCachedRepo(src_repo, tmpdir)
-    assert len(list(cache_repo.get_all_resources())) == 0
+    assert len(list(cache_repo.get_all_resources())) == 2
 
     src_gr = src_repo.get_resource("sub/two")
     cache_gr = cache_repo.get_resource("sub/two")
@@ -70,7 +70,7 @@ def test_cached_get_all_resources(tmpdir):
     assert src_gr.get_manifest() == cache_gr.get_manifest()
     assert src_gr.get_manifest() == cache_gr.build_manifest()
 
-    assert len(list(cache_repo.get_all_resources())) == 1
+    assert len(list(cache_repo.get_all_resources())) == 3
 
 
 def test_cache_all(tmpdir):
@@ -95,10 +95,10 @@ def test_cache_all(tmpdir):
     })
 
     cache_repo = GenomicResourceCachedRepo(src_repo, tmpdir)
-    assert len(list(cache_repo.get_all_resources())) == 0
+    assert len(list(cache_repo.get_all_resources())) == 3
     cache_repo.cache_all_resources()
 
-    assert len(list(cache_repo.get_all_resources())) == 3
+    assert len(list(cache_repo.get_all_resources())) == 6
 
 
 @pytest.mark.parametrize("resource_id", [

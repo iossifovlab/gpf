@@ -21,6 +21,8 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         self.cache_repos = {}
 
     def get_all_resources(self):
+        yield from self.child.get_all_resources()
+
         for cache_repo in self.cache_repos.values():
             yield from cache_repo.get_all_resources()
 
