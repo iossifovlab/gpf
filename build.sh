@@ -380,7 +380,7 @@ EOT'
     build_run_container bash -c '
         cd /wd/dae;
         export PYTHONHASHSEED=0;
-        /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --durations 20 \
+        /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup --durations 20 \
           --cov-config /wd/coveragerc \
           --junitxml=/wd/results/dae-junit.xml \
           --cov-report=html:/wd/results/dae-coverage.html \
