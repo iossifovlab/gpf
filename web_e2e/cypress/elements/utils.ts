@@ -63,7 +63,10 @@ export class BasePage {
   }
 
   navigateToHome() {
-    const baseUrl = Cypress.config().baseUrl;
+    let baseUrl = Cypress.config().baseUrl;
+    if(baseUrl.endsWith('/')) {
+      baseUrl = baseUrl.slice(0, -1);
+    }
     cy.visit(`${baseUrl}/datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`);
   }
 
