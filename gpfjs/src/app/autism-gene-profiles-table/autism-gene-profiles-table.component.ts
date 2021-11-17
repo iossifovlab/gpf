@@ -63,7 +63,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
 
   private pageIndex = 1;
   private loadMoreGenes = true;
-  private scrollLoadThreshold = 1000;
+  private scrollLoadThreshold = 100;
 
   public geneInput: string;
   public searchKeystrokes$: Subject<string> = new Subject();
@@ -78,18 +78,27 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
   @ViewChild('table') tableViewChild: any;
   @ViewChildren('rows') rowViewChildren: QueryList<any>;
 
-  private lastRowHeight = 80;
+  private lastRowHeight = 35;
   private drawOutsideVisibleCount = 5;
   private tableTopPosition = 0;
 
   @HostListener('window:scroll')
   public onWindowScroll() {
+    this.tableTopPosition = this.tableViewChild.nativeElement.getBoundingClientRect().top;
+    if (this.rowViewChildren &&
+        this.rowViewChildren.last &&
+        this.rowViewChildren.last.nativeElement.getBoundingClientRect().height > 0) {
+      this.lastRowHeight = this.rowViewChildren.last.nativeElement.getBoundingClientRect().height;
+    }
     if (!this.ref.nativeElement.hidden) {
       const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
       const totalScrollHeight = document.documentElement.scrollHeight;
-
-      if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
-        console.log('update genes')
+      // if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
+      //   this.updateGenes();
+      // }
+      const scrollIndices = this.getScrollIndices();
+      // console.log(scrollIndices, this.drawOutsideVisibleCount, this.genes.length, (scrollIndices[1] + (this.drawOutsideVisibleCount * 2)));
+      if (scrollIndices[1] >= this.genes.length) {
         this.updateGenes();
       }
       this.updateModalBottom();
@@ -131,18 +140,20 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
       return [0, 0];
     }
     const visibleRowCount = Math.ceil(window.innerHeight / this.lastRowHeight);
-    const maxRowCountToDraw = this.drawOutsideVisibleCount * 2 + visibleRowCount;
+    const maxRowCountToDraw = (this.drawOutsideVisibleCount * 2) + visibleRowCount;
 
-    let startIndex = Math.ceil(-this.tableTopPosition / this.lastRowHeight) - this.drawOutsideVisibleCount;
+    // console.log('tabletop', this.tableTopPosition);
+    let startIndex = Math.ceil(-this.tableTopPosition / this.lastRowHeight);
+    // console.log('startindex', startIndex);
 
     // We should display at least maxRowCountToDraw rows, even at the bottom of the page
     const maxStartIndex = this.genes.length - maxRowCountToDraw;
-    startIndex = Math.min(startIndex , maxStartIndex);
+    startIndex = Math.min(startIndex, maxStartIndex);
 
     // Make sure we always start from index 0 or above
     startIndex = Math.max(0, startIndex);
 
-    const endIndex = startIndex + maxRowCountToDraw;
+    const endIndex = startIndex + maxRowCountToDraw + 5;
     return [startIndex, endIndex];
   }
 
@@ -150,8 +161,13 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     if (!this.genes) {
       return [];
     }
-    const scrollIndices  = this.getScrollIndices();
-    return this.genes.slice(scrollIndices[0], scrollIndices[1]);
+    const scrollIndices = this.getScrollIndices();
+    return this.genes.slice(scrollIndices[0], scrollIndices[1] + 5);
+  }
+
+  isVisibleData(idx: number): boolean {
+    const scrollIndices = this.getScrollIndices();
+    return scrollIndices[0] <= idx + 10 && idx - 10 <= scrollIndices[1];
   }
 
   public ngOnInit(): void {
@@ -172,13 +188,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     ).subscribe(searchTerm => {
       this.search(searchTerm);
     });
-      
-    this.rowViewChildren.changes.subscribe(res => {
-      this.tableTopPosition = this.tableViewChild.nativeElement.getBoundingClientRect().top;
-      if (res && res.last && res.last.nativeElement.getBoundingClientRect().height > 0) {
-        this.lastRowHeight = res.last.nativeElement.getBoundingClientRect().height;
-      }
-    });
   }
 
   public ngOnChanges() {
@@ -195,6 +204,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     setTimeout(() => {
       firstSortingButton.hideState = 1;
       this.updateModalBottom();
+      this.tableTopPosition = this.tableViewChild.nativeElement.getBoundingClientRect().top;
     });
   }
 
@@ -286,7 +296,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
   }
 
   public setupShownCategories() {
-    console.log('test');
     this.config['shown'] = [];
     for (const item of this.config.order) {
       let category;
@@ -319,6 +328,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
   }
 
   public updateGenes(): void {
+    console.log('loading more genes');
     this.loadMoreGenes = false;
     this.pageIndex++;
     this.autismGeneProfilesService

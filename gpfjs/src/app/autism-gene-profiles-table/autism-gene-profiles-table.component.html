@@ -1,5 +1,5 @@
 <div style="padding: 25px; white-space: nowrap;">
-  <table #table *ngIf="config" class="table table-sm table-centered table-header-rotate">
+  <table *ngIf="config" class="table table-sm table-centered table-header-rotate">
     <thead>
       <tr>
         <th class="table-main-header" style="width: 160px; min-width: 140px; position: sticky; top: 0px">
@@ -112,36 +112,37 @@
       </tr>
     </thead>
 
-    <tbody *ngIf="genes">
-      <tr #rows *ngFor="let gene of visibleData" (click)="highlightRow($event)" (middleclick)="highlightRow($event)">
+    <tbody #table *ngIf="genes">
+      <tr #rows *ngFor="let gene of genes; let i = index" (click)="highlightRow($event)" (middleclick)="highlightRow($event)">
         <td class="link-td" (click)="emitCreateTabEvent($event, gene.geneSymbol)" (middleclick)="emitCreateTabEvent($event, gene.geneSymbol, false)">
           <span class="link-span">{{gene.geneSymbol}}</span>
         </td>
-
-        <ng-container *ngFor="let element of config.shown">
-          <ng-container *ngIf="element.section === 'geneSets'">
-            <td style="min-width: 70px" *ngFor="let geneSet of element.category.shown; let i = index" [ngClass] = "{'category-border': i === 0}">
-              <ng-container *ngIf="gene.geneSets.indexOf(geneSet.collectionId + '_' + geneSet.setId) !== -1">&#10003;</ng-container>
-            </td>
-          </ng-container>
-
-          <ng-container *ngIf="element.section === 'genomicScores'">
-            <td style="min-width: 70px" *ngFor="let genomicScore of element.category.shown; let i = index" [ngClass] = "{'category-border': i === 0}">
-              {{gene | getGeneScore: element.category:genomicScore}}
-            </td>
-          </ng-container>
-
-          <ng-container *ngIf="element.section === 'datasets'">
-            <ng-container *ngFor="let personSet of element.category.shown; let i = index">
-              <td style="min-width: 70px;"
-                *ngFor="let statistic of personSet.shown; let j = index"
-                [ngClass] = "{'category-border': i === 0 && j === 0}">
-                <div class="link-td" style="padding: 5px; margin: -5px"
-                  (click)="goToQuery(gene.geneSymbol, personSet, element.category.id, statistic)"
-                  (middleclick)="goToQuery(gene.geneSymbol, personSet, element.category.id, statistic)">
-                  <span class="link-span">{{ gene | getEffectTypeValue: element.category:personSet:statistic }}</span>
-                </div>
+        <ng-container *ngIf="isVisibleData(i)">
+          <ng-container *ngFor="let element of config.shown">
+            <ng-container *ngIf="element.section === 'geneSets'">
+              <td style="min-width: 70px" *ngFor="let geneSet of element.category.shown; let i = index" [ngClass] = "{'category-border': i === 0}">
+                <ng-container *ngIf="gene.geneSets.indexOf(geneSet.collectionId + '_' + geneSet.setId) !== -1">&#10003;</ng-container>
               </td>
+            </ng-container>
+
+            <ng-container *ngIf="element.section === 'genomicScores'">
+              <td style="min-width: 70px" *ngFor="let genomicScore of element.category.shown; let i = index" [ngClass] = "{'category-border': i === 0}">
+                {{gene | getGeneScore: element.category:genomicScore}}
+              </td>
+            </ng-container>
+
+            <ng-container *ngIf="element.section === 'datasets'">
+              <ng-container *ngFor="let personSet of element.category.shown; let i = index">
+                <td style="min-width: 70px;"
+                  *ngFor="let statistic of personSet.shown; let j = index"
+                  [ngClass] = "{'category-border': i === 0 && j === 0}">
+                  <div class="link-td" style="padding: 5px; margin: -5px"
+                    (click)="goToQuery(gene.geneSymbol, personSet, element.category.id, statistic)"
+                    (middleclick)="goToQuery(gene.geneSymbol, personSet, element.category.id, statistic)">
+                    <span class="link-span">{{ gene | getEffectTypeValue: element.category:personSet:statistic }}</span>
+                  </div>
+                </td>
+              </ng-container>
             </ng-container>
           </ng-container>
         </ng-container>
