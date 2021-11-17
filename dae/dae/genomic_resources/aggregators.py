@@ -1,3 +1,4 @@
+import re
 import math
 
 
@@ -211,6 +212,47 @@ AGGREGATOR_CLASS_DICT = {
     "join": JoinAggregator
 }
 
+AGGREGATOR_SCHEMA = {
+    "type": "string",
+    "oneof": [
+        {"regex": "^min$"},
+        {"regex": "^max$"},
+        {"regex": "^mean$"},
+        {"regex": "^concatenate$"},
+        {"regex": "^median$"},
+        {"regex": "^mode$"},
+        {"regex": "^join\\(.+\\)$"},
+    ],
+}
+
 
 def get_aggregator_class(aggregator):
     return AGGREGATOR_CLASS_DICT[aggregator]
+
+
+def create_aggregator_definition(aggregator_type):
+    join_regex = r"^(join)\((.+)\)"
+    join_match = re.match(join_regex, aggregator_type)
+    if join_match is not None:
+        separator = join_match.groups()[1]
+        return {
+            "name": "join",
+            "args": [separator]
+        }
+    return {
+        "name": aggregator_type,
+    }
+
+
+def create_aggregator(aggregator_def):
+    aggregator_name = aggregator_def["name"]
+    aggregator_class = get_aggregator_class(aggregator_name)
+    if "args" in aggregator_def:
+        return aggregator_class(*aggregator_def["args"])
+    else:
+        return aggregator_class()
+
+
+def build_aggregator(aggregator_type):
+    aggregator_def = create_aggregator_definition(aggregator_type)
+    return create_aggregator(aggregator_def)

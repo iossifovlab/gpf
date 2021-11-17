@@ -1,7 +1,6 @@
 
 import abc
 import logging
-import re
 
 from typing import List, Tuple
 from box import Box
@@ -10,7 +9,7 @@ from . import GenomicResource
 from .repository import GenomicResourceRealRepo
 from .genome_position_table import open_genome_position_table
 
-from .aggregators import get_aggregator_class
+from .aggregators import build_aggregator
 
 
 logger = logging.getLogger(__name__)
@@ -45,29 +44,6 @@ class ScoreLine:
 
     def get_pos_end(self):
         return self.get_special_column_value("pos_end")
-
-
-def create_aggregator_definition(aggregator_type):
-    join_regex = r"^(join)\((.+)\)"
-    join_match = re.match(join_regex, aggregator_type)
-    if join_match is not None:
-        separator = join_match.groups()[1]
-        return {
-            "name": "join",
-            "args": [separator]
-        }
-    return {
-        "name": aggregator_type,
-    }
-
-
-def create_aggregator(aggregator_def):
-    aggregator_name = aggregator_def["name"]
-    aggregator_class = get_aggregator_class(aggregator_name)
-    if "args" in aggregator_def:
-        return aggregator_class(*aggregator_def["args"])
-    else:
-        return aggregator_class()
 
 
 class GenomicScoresResource(GenomicResource, abc.ABC):
@@ -277,8 +253,7 @@ class PositionScoreResource(GenomicScoresResource):
             scr_def = self.scores[scr_id]
             aggregator_type = non_default_pos_aggregators.get(
                 scr_id, scr_def.pos_aggregator)
-            aggregator_def = create_aggregator_definition(aggregator_type)
-            aggregators[scr_id] = create_aggregator(aggregator_def)
+            aggregators[scr_id] = build_aggregator(aggregator_type)
 
         for line in score_lines:
             logger.debug(
@@ -377,25 +352,11 @@ class NPScoreResource(GenomicScoresResource):
             scr_def = self.scores[scr_id]
             aggregator_type = non_default_pos_aggregators.get(
                 scr_id, scr_def.pos_aggregator)
-            aggregator_def = create_aggregator_definition(aggregator_type)
-            pos_aggregators[scr_id] = create_aggregator(aggregator_def)
+            pos_aggregators[scr_id] = build_aggregator(aggregator_type)
 
             aggregator_type = non_default_nuc_aggregators.get(
                 scr_id, scr_def.nuc_aggregator)
-            aggregator_def = create_aggregator_definition(aggregator_type)
-            nuc_aggregators[scr_id] = create_aggregator(aggregator_def)
-
-        # pos_aggregators = {
-        #     score_id: aggregator_types[0]()
-        #     for score_id, aggregator_types
-        #     in scores_aggregators.items()
-        # }
-
-        # nuc_aggregators = {
-        #     score_id: aggregator_types[1]()
-        #     for score_id, aggregator_types
-        #     in scores_aggregators.items()
-        # }
+            nuc_aggregators[scr_id] = build_aggregator(aggregator_type)
 
         def aggregate_nucleotides():
             for col, nuc_agg in nuc_aggregators.items():

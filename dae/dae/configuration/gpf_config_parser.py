@@ -1,6 +1,5 @@
 import os
 import glob
-import re
 import logging
 
 import yaml
@@ -12,7 +11,6 @@ from typing import List, Any, Dict
 from cerberus import Validator
 
 from dae.utils.dict_utils import recursive_dict_update
-from dae.genomic_resources.aggregators import AGGREGATOR_CLASS_DICT
 
 logger = logging.getLogger(__name__)
 
@@ -53,19 +51,20 @@ class GPFConfigValidator(Validator):
             value = os.path.join(directory, value)
         return os.path.normpath(value)
 
-    def _validate_is_aggregator(self, constraint, field, value):
-        "{'type': 'boolean'}"
+    # def _validate_is_aggregator(self, constraint, field, value):
+    #     "{'type': 'boolean'}"
 
-        if constraint is not True:
-            return
-        if value not in AGGREGATOR_CLASS_DICT.keys():
-            self._error(
-                field, f"Invalid aggregator type supplied ({value})"
-            )
-        join_regex = r"^(join)\((.+)\)"
-        if value.startswith("join") and \
-                re.match(join_regex, value) is None:
-            self._error(field, "Incorrect join aggregator format")
+    #     if constraint is not True:
+    #         return
+    #     if value not in AGGREGATOR_CLASS_DICT.keys() and \
+    #             not value.startswith("join"):
+    #         self._error(
+    #             field, f"Invalid aggregator type supplied {value}"
+    #         )
+    #     join_regex = r"^join\(.+\)"
+    #     if value.startswith("join") and \
+    #             re.match(join_regex, value) is None:
+    #         self._error(field, "Incorrect join aggregator format")
 
 
 class GPFConfigParser:
