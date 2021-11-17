@@ -79,9 +79,7 @@ export class VariantReportsComponent implements OnInit {
 
     if (effectGroups) {
       result = effectGroups.concat(effectTypes);
-    }
-
-    if (effectTypes) {
+    } else if (effectTypes) {
       result = effectTypes;
     }
 
