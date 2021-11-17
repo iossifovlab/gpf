@@ -35,6 +35,7 @@ function main() {
   libmain_init_build_env \
     clobber:"$clobber" preset:"$preset" build_no:"$build_no" generate_jenkins_init:"$generate_jenkins_init" expose_ports:"$expose_ports" \
     seqpipe.data-hg19-startup
+
   libmain_save_build_env_on_exit
   libbuild_init stage:"$stage" registry.seqpipe.org
 
