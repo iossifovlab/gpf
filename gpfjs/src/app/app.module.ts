@@ -160,7 +160,6 @@ import { LoadingSpinnerComponent } from './loading-spinner/loading-spinner.compo
 import { DatasetNodeComponent } from './dataset-node/dataset-node.component';
 import { AutismGeneProfilesTableComponent } from './autism-gene-profiles-table/autism-gene-profiles-table.component';
 import { MultipleSelectMenuComponent } from './multiple-select-menu/multiple-select-menu.component';
-import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { AutismGeneProfilesBlockComponent } from './autism-gene-profiles-block/autism-gene-profiles-block.component';
 import { AutismGeneProfileSingleViewComponent } from './autism-gene-profiles-single-view/autism-gene-profile-single-view.component';
 import { MiddleClickDirective } from './autism-gene-profiles-table/middle-click.directive';
@@ -396,7 +395,6 @@ const appRoutes: Routes = [
       confirmButtonType: 'danger'
     }),
     NgMultiSelectDropDownModule.forRoot(),
-    Ng2SearchPipeModule,
     NgxsModule.forRoot([
       VarianttypesState, EffecttypesState, GenderState,
       InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,

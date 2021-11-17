@@ -14,6 +14,7 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
   @ViewChild('searchInput') public searchInput: ElementRef;
 
   public allItems: string[];
+  public filteredItems: string[];
   public selectedItems: Set<string>;
 
   public checkUncheckAllButtonName = 'Uncheck all';
@@ -22,11 +23,13 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
   public ngOnChanges(): void {
     this.searchText = '';
     this.allItems = this.itemsSource.itemIds;
+    this.filteredItems = this.allItems;
     this.selectedItems = new Set(this.itemsSource.shownItemIds);
   }
 
   public refresh(): void {
     this.allItems = this.itemsSource.itemIds;
+    this.filteredItems = this.allItems;
     this.selectedItems = new Set(this.itemsSource.shownItemIds);
     this.focusSearchInput();
   }
@@ -85,5 +88,9 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
 
   public drop(event: CdkDragDrop<string[]>): void {
     moveItemInArray(this.allItems, event.previousIndex, event.currentIndex);
+  }
+
+  public filterItems(substring): void {
+    this.filteredItems = this.allItems.filter(item => item.includes(substring));
   }
 }

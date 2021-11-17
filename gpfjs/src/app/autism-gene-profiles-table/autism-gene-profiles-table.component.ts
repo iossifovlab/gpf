@@ -52,8 +52,6 @@ export class AutismGeneProfilesTableComponent implements OnInit {
 
   public highlightedRowElements: Element[] = [];
 
-  // FIXME Recreate top-level dropdown for column categories
-
   @HostListener('window:scroll')
   public onWindowScroll() {
     if (!this.ref.nativeElement.hidden) {
