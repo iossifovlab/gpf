@@ -26,10 +26,10 @@ export class EnrichmentModelsService {
 
     return this.http
       .get(url)
-      .pipe(map(res => {
+      .pipe(map((res: {counting: {name: string, desc: string}[], background: {name: string, desc: string}[]}) => {
         return {
-          countings: res['counting'].map((j) => new IdDescription(j.name, j.desc)),
-          backgrounds: res['background'].map((j) => new IdDescription(j.name, j.desc)),
+          countings: res['counting'].map(j => new IdDescription(j.name, j.desc)),
+          backgrounds: res['background'].map(j => new IdDescription(j.name, j.desc)),
         }
       }));
   }
