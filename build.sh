@@ -201,14 +201,6 @@ EOT
         ./data/data-hg19-remote/genomic-scores-hg38 \
         ./data/data-hg19-remote/wdae
 
-      # GPF remote specific fixup
-      {
-        build_run_local sed -i \
-          -e s/"^instance_id.*$/instance_id = \"data_hg19_remote\"/"g \
-          ./data/data-hg19-remote/DAE.conf
-      }
-
-
       # prepare phenotype data
       {
         local docker_data_img_phenotype_comp_data
