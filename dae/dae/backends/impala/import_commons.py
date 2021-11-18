@@ -80,7 +80,8 @@ def construct_import_annotation_pipeline(
     grr = gpf_instance.grr
     assert os.path.exists(config_filename), config_filename
     config = AnnotationPipeline.load_and_parse(config_filename)
-    return AnnotationPipeline.build(config, grr)
+    return AnnotationPipeline.build(
+        pipeline_config=config, grr_repository=grr)
 
 
 def construct_import_effect_annotator(gpf_instance):

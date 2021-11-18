@@ -37,10 +37,10 @@ def iossifov_2014_local_config(remote_studies_dir, remote_dir):
 
     files = config["genotype_storage"]["files"]
     files["pedigree"]["path"] = str(
-        study_dir.joinpath("data", "IossifovWE2014.ped")
+        study_dir.joinpath("data", "iossifov2014_families.ped")
     )
     files["variants"][0]["path"] = str(
-        study_dir.joinpath("data", "IossifovWE2014.tsv")
+        study_dir.joinpath("data", "iossifov2014.txt")
     )
 
     default_config_filename = remote_dir.joinpath("defaultConfiguration.conf")

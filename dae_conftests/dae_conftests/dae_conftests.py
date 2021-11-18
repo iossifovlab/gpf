@@ -160,7 +160,6 @@ def gpf_instance_2013(
         def __init__(self, *args, **kwargs):
             super(GPFInstance2013, self).__init__(*args, **kwargs)
 
-
         @property  # type: ignore
         @cached
         def gene_models(self):
@@ -203,7 +202,6 @@ def gpf_instance_2019(default_dae_config, global_dae_fixtures_dir):
         @property  # type: ignore
         @cached
         def gene_models(self):
-            print(self.dae_config.gene_models)
             result = self.grr.get_resource(
                 "hg19/GATK_ResourceBundle_5777_b37_phiX174/"
                 "gene_models/refGene_v20190211")
@@ -296,7 +294,8 @@ def annotation_pipeline_vcf(gpf_instance_2013):
         "fixtures/annotation_pipeline/import_annotation.yaml"
     )
     config = AnnotationPipeline.load_and_parse(filename)
-    pipeline = AnnotationPipeline.build(config, gpf_instance_2013.grr)
+    pipeline = AnnotationPipeline.build(
+        pipeline_config=config, grr_repository=gpf_instance_2013.grr)
     return pipeline
 
 
@@ -306,7 +305,8 @@ def annotation_pipeline_internal(gpf_instance_2013):
         "fixtures/annotation_pipeline/import_annotation.yaml"
     )
     config = AnnotationPipeline.load_and_parse(filename)
-    pipeline = AnnotationPipeline.build(config, gpf_instance_2013.grr)
+    pipeline = AnnotationPipeline.build(
+        pipeline_config=config, grr_repository=gpf_instance_2013.grr)
     return pipeline
 
 

@@ -216,3 +216,27 @@ def test_position_annotator_schema_one_source_two_dest(position_score_repo):
     assert field.source.annotator_type == "position_score_annotator"
     assert field.source.resource_id == "position_score1"
     assert field.source.score_id == "test100way"
+
+
+def test_position_annotator_join_aggregation(position_score_repo):
+    pipeline_config = AnnotationPipeline.parse_config(
+        textwrap.dedent("""
+            score_annotators:
+            - annotator: position_score
+              resource: position_score1
+              override:
+                attributes:
+                - source: test100way
+                  dest: test100
+                  position_aggregator: join(, )
+            """)
+    )
+    print(pipeline_config)
+
+    pipeline = AnnotationPipeline.build(
+      pipeline_config=pipeline_config, grr_repository=position_score_repo)
+    allele = ("1", 14970, "CC", "C")
+    annotatable = VCFAllele(*allele)
+    result = pipeline.annotate(annotatable)
+
+    assert result.get("test100") == "0.1, 0.1, 0.2"

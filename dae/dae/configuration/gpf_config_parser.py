@@ -12,7 +12,6 @@ from cerberus import Validator
 
 from dae.utils.dict_utils import recursive_dict_update
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -43,6 +42,7 @@ class FrozenBox(DefaultBox):
 
 
 class GPFConfigValidator(Validator):
+
     def _normalize_coerce_abspath(self, value: str) -> str:
         directory = self._config["conf_dir"]
         if directory is None:
@@ -50,6 +50,21 @@ class GPFConfigValidator(Validator):
         if not os.path.isabs(value):
             value = os.path.join(directory, value)
         return os.path.normpath(value)
+
+    # def _validate_is_aggregator(self, constraint, field, value):
+    #     "{'type': 'boolean'}"
+
+    #     if constraint is not True:
+    #         return
+    #     if value not in AGGREGATOR_CLASS_DICT.keys() and \
+    #             not value.startswith("join"):
+    #         self._error(
+    #             field, f"Invalid aggregator type supplied {value}"
+    #         )
+    #     join_regex = r"^join\(.+\)"
+    #     if value.startswith("join") and \
+    #             re.match(join_regex, value) is None:
+    #         self._error(field, "Incorrect join aggregator format")
 
 
 class GPFConfigParser:
@@ -133,7 +148,7 @@ class GPFConfigParser:
                 raise ValueError(f"{conf_dir}: {validator.errors}")
             else:
                 raise ValueError(f"{validator.errors}")
-        return validator.normalized(validator.document)
+        return validator.document
 
     @staticmethod
     def process_config(

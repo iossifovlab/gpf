@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import os
-from typing import Type
 import yaml
 import pathlib
+import logging
 
+from typing import Type
 
 from .repository import GenomicResourceRepo
 from .repository import GenomicResourceRealRepo
@@ -12,6 +13,7 @@ from .cached_repository import GenomicResourceCachedRepo
 from .group_repository import GenomicResourceGroupRepo
 
 
+logger = logging.getLogger(__name__)
 _registered_real_genomic_resource_repository_types = {}
 
 
@@ -37,11 +39,23 @@ GRR_DEFINITION_FILE_ENV = "GRR_DEFINITION_FILE"
 
 
 def get_configured_definition():
-    if GRR_DEFINITION_FILE_ENV is os.environ:
-        return load_definition_file(os.environ[GRR_DEFINITION_FILE_ENV])
+    logger.info("using default GRR definitions")
+    env_repo_definition_path = os.environ.get(GRR_DEFINITION_FILE_ENV)
+    if env_repo_definition_path is not None:
+        logger.debug(
+            f"loading GRR definition from environment variable "
+            f"{GRR_DEFINITION_FILE_ENV}="
+            f"{env_repo_definition_path}")
+        return load_definition_file(env_repo_definition_path)
 
-    if pathlib.Path("~/.grr_definition.yaml").exists():
-        return load_definition_file("~/.grr_definition.yaml")
+    default_repo_definition_path = f"{os.environ['HOME']}/.grr_definition.yaml"
+    logger.debug(
+        f"checking default repo definition at "
+        f"{default_repo_definition_path}")
+    if pathlib.Path(default_repo_definition_path).exists():
+        logger.debug(
+            f"using repo definition at {default_repo_definition_path}")
+        return load_definition_file(default_repo_definition_path)
 
     return DEFAULT_DEFINITION
 

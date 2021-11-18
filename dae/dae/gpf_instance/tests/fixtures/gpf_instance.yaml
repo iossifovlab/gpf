@@ -8,7 +8,7 @@ reference_genome:
   resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174/genome"
 
 gene_models:
-  resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174/gene_models/refGene_201309"
+  resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174/gene_models/refGene_v201309"
 
 genotype_storage:
   default: genotype_filesystem

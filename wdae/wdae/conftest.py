@@ -1,6 +1,8 @@
 import pytest
 import os
 
+from box import Box
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 
@@ -8,11 +10,13 @@ from users_api.models import WdaeUser
 
 from remote.rest_api_client import RESTClient
 
-from dae.gpf_instance.gpf_instance import cached
 from gpf_instance.gpf_instance import WGPFInstance,\
     reload_datasets, load_gpf_instance
-from dae.genome.genomes_db import GenomesDB
 from dae.autism_gene_profile.db import AutismGeneProfileDB
+
+from dae.genomic_resources import build_genomic_resource_repository
+from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
+
 import dae.tools.generate_common_report as generate_common_report
 
 
@@ -82,15 +86,28 @@ def admin_client(admin, client):
 
 
 @pytest.fixture(scope="session")
-def wgpf_instance(default_dae_config):
+def wgpf_instance(default_dae_config, fixture_dirname):
 
     class WGPFInstanceInternal(WGPFInstance):
         pass
 
     def build(work_dir=None, load_eagerly=False):
-        return WGPFInstanceInternal(
+        result = WGPFInstanceInternal(
             work_dir=work_dir, load_eagerly=load_eagerly
         )
+        repositories = [
+            result.grr
+        ]
+        repositories.append(
+                build_genomic_resource_repository(
+                    Box({
+                        "id": "fixtures",
+                        "type": "directory",
+                        "directory": f"{fixture_dirname('genomic_resources')}"
+                    })))
+        result.grr = GenomicResourceGroupRepo(repositories)
+
+        return result
 
     return build
 
@@ -102,7 +119,19 @@ def fixtures_wgpf_instance(wgpf_instance, global_dae_fixtures_dir):
 
 @pytest.fixture(scope="function")
 def wdae_gpf_instance(
-        db, mocker, admin_client, fixtures_wgpf_instance):
+        db, mocker, admin_client, fixtures_wgpf_instance, fixture_dirname):
+
+    # repositories = [
+    #     wdae_gpf_instance.grr
+    # ]
+    # repositories.append(
+    #         build_genomic_resource_repository(
+    #             Box({
+    #                 "id": "fixtures",
+    #                 "type": "directory",
+    #                 "directory": f"{fixture_dirname('genomic_resources')}"
+    #             })))
+    # wdae_gpf_instance.grr = GenomicResourceGroupRepo(repositories)
 
     reload_datasets(fixtures_wgpf_instance)
     mocker.patch(
@@ -129,9 +158,22 @@ def wdae_gpf_instance(
 @pytest.fixture(scope="function")
 def wdae_gpf_instance_agp(
         db, mocker, admin_client, wgpf_instance, sample_agp,
-        global_dae_fixtures_dir, agp_config, temp_filename):
+        global_dae_fixtures_dir, agp_config, temp_filename,
+        fixture_dirname):
 
     wdae_gpf_instance = wgpf_instance(global_dae_fixtures_dir)
+    repositories = [
+        wdae_gpf_instance.grr
+    ]
+    repositories.append(
+            build_genomic_resource_repository(
+                Box({
+                    "id": "fixtures",
+                    "type": "directory",
+                    "directory": f"{fixture_dirname('genomic_resources')}"
+                })))
+    wdae_gpf_instance.grr = GenomicResourceGroupRepo(repositories)
+
     reload_datasets(wdae_gpf_instance)
     mocker.patch(
         "query_base.query_base.get_gpf_instance",

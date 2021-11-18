@@ -4,9 +4,12 @@ from itertools import chain
 from typing import List, Optional
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.annotation.annotatable import Annotatable
+
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources import build_genomic_resource_repository
+from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
+
+from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotator_base import Annotator
 from dae.annotation.schema import Schema
 from dae.annotation.utils import AnnotatorFactory
@@ -23,8 +26,8 @@ DEFAULT_ANNOTATION_SCHEMA = {
             "schema": {
                 "source": {"type": "string"},
                 "dest": {"type": "string"},
-                "position_aggregator": {"type": "string"},
-                "nucleotide_aggregator": {"type": "string"},
+                "position_aggregator": AGGREGATOR_SCHEMA,
+                "nucleotide_aggregator": AGGREGATOR_SCHEMA,
             }
         }
     }
