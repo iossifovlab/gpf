@@ -8,6 +8,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { PerfectlyDrawablePedigreeService } from 'app/perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 import { ResizeService } from 'app/table/resize.service';
+import { DenovoReport, PedigreeCounter } from './variant-reports';
 
 class MockDatasetsService {
   getSelectedDataset() {
@@ -73,6 +74,9 @@ class VariantReportsServiceMock {
   }
 
   getVariantReport(datasetId: string): Observable<any> {
+    const pedigreeCounter: PedigreeCounter | null = null;
+    const denovoReport: DenovoReport | null = null;
+
     const variantReport = {
       id: this.datasetId,
       studyName: this.datasetId,
@@ -82,9 +86,7 @@ class VariantReportsServiceMock {
           {
             familyCounter: [
               {
-                pedigreeCounters: [
-                  null
-                ]
+                pedigreeCounters: pedigreeCounter
               }
             ],
             groupName: 'test',
@@ -209,7 +211,7 @@ class VariantReportsServiceMock {
           }
         ],
       },
-      denovoReport: null
+      denovoReport: denovoReport
     };
 
     if(datasetId === 'Denovo') {
