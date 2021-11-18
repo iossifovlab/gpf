@@ -11,6 +11,7 @@ const otherEffectTypes = [
 export const affectedStatusValues = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
 export const effectTypeValues = ['LGDs', 'Missense', 'Synonymous', 'CNV+', 'CNV-', 'Other'];
 export const variantTypeValues = ['sub', 'ins', 'del', 'CNV+', 'CNV-'];
+type affectedStatusType = 'Affected only' | 'Unaffected only' | 'Affected and unaffected';
 
 export class SummaryAllele {
   public location: string;
@@ -56,7 +57,7 @@ export class SummaryAllele {
     return result;
   }
 
-  public get affectedStatus(): string {
+  public get affectedStatus(): affectedStatusType {
     if (this.seenInAffected) {
       if (this.seenInUnaffected) {
         return 'Affected and unaffected';
