@@ -56,6 +56,7 @@ setuptools.setup(
     gpf_validation_runner=dae.tools.gpf_validation_runner:main
     grr_manage=dae.genomic_resources.cli:cli_manage
     grr_browse=dae.genomic_resources.cli:cli_browse
+    annotate_columns=dae.annotation_cli.annotate_columns:cli
     """,
     classifiers=[
         "Development Status :: 4 - Beta",
