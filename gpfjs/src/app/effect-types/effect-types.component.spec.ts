@@ -9,7 +9,7 @@ import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 import { AddEffectType, RemoveEffectType, SetEffectTypes, EffecttypesState } from './effect-types.state';
 
-fdescribe('EffectTypesComponent', () => {
+describe('EffectTypesComponent', () => {
   let component: EffectTypesComponent;
   let fixture: ComponentFixture<EffectTypesComponent>;
 
