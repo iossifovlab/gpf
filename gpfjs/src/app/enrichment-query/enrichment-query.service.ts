@@ -17,7 +17,7 @@ export class EnrichmentQueryService {
     private config: ConfigService
   ) {}
 
-  getEnrichmentTest(filter): Observable<EnrichmentResults> {
+  getEnrichmentTest(filter: object): Observable<EnrichmentResults> {
     const options = { headers: this.headers, withCredentials: true };
 
     return this.http.post(this.config.baseUrl + this.genotypePreviewUrl, filter, options)
