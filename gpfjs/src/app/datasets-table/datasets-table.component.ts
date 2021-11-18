@@ -24,9 +24,9 @@ export class DatasetsTableComponent implements OnInit {
   private users$: Observable<User[]>;
   private datasetsRefresh$ = new ReplaySubject<boolean>(1);
   @ViewChildren('errorPopup') errorPopup: ElementRef[];
-  errorDisplayStyles: Object = {};
+  errorDisplayStyles: {[key: string]: string;} = {};
   errorMessage: String;
-  delay = ms => new Promise(res => setTimeout(res, ms));
+  delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
   constructor(
     private datasetsService: DatasetsService,
@@ -72,7 +72,7 @@ export class DatasetsTableComponent implements OnInit {
 
   toDatasetTableRow(datasets: Dataset[], users: User[]) {
     let result = new Array<DatasetTableRow>();
-    let groupsToUsers = users.reduce((acc, user) => {
+    let groupsToUsers = users.reduce((acc: {[key: string]: string[];}, user) => {
       for (let group of user.groups) {
         if (acc[group]) {
           acc[group].push(user.email);
@@ -103,7 +103,7 @@ export class DatasetsTableComponent implements OnInit {
     return (this.groups || []).filter(g => groups.indexOf(g.name) === -1);
   }
 
-  async updatePermissions(dataset, groupName) {
+  async updatePermissions(dataset: Dataset, groupName: string) {
     const groupNames = dataset.groups.map(group => group.name);
 
     if (groupNames.indexOf(groupName) !== -1 || groupName === '') {
