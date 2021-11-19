@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 import abc
 import gzip
+import argparse
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotatable import Position
 from dae.annotation.annotatable import Region
@@ -77,37 +78,55 @@ def build_record_to_annotatable(parameters: dict[str, str],
             return record_to_annotabale_class(renamed_columns)
 
 
-def cli(args: list[str] = None):
-    if not args:
-        args = sys.argv[1:]
-    argsparsed = {}
+def cli(raw_args: list[str] = None):
+    parser = argparse.ArgumentParser(
+        description="Annotate columns",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
 
-    in_file_name, pipeline_file_name, out_file_name, grr_file_name = args[: 4]
+    parser.add_argument('pipeline', help="The pipeline definition file.")
+    parser.add_argument('input', default='-', nargs="?",
+                        help="the input column file")
+    parser.add_argument('output', default='-', nargs="?",
+                        help="the output column file")
 
-    grr = build_genomic_resource_repository(file_name=grr_file_name)
+    parser.add_argument('-grr', '--grr-file_name', default=None,
+                        help="The GRR configuration file")
+
+    all_columns = {col for cols in RECORD_TO_ANNOTABALE_CONFIGUATION.keys()
+                   for col in cols}
+    for col in all_columns:
+        parser.add_argument(f'--col_{col}', default=col,
+                            help=f"The column name that stores {col}")
+
+    if not raw_args:
+        raw_args = sys.argv[1:]
+    args = parser.parse_args(raw_args)
+
+    grr = build_genomic_resource_repository(file_name=args.grr_file_name)
     pipeline = AnnotationPipeline.build(
-        pipeline_config_file=pipeline_file_name,
+        pipeline_config_file=args.pipeline,
         grr_repository=grr)
 
     annotation_attributes = pipeline.annotation_schema.names
     print("DEBUG", annotation_attributes)
 
-    if in_file_name == "-":
+    if args.input == "-":
         in_file = sys.stdin
-    elif in_file_name.endswith(".gz"):
-        in_file = gzip.open(in_file_name)
+    elif args.input.endswith(".gz"):
+        in_file = gzip.open(args.input)
     else:
-        in_file = open(in_file_name)
+        in_file = open(args.input)
 
-    if out_file_name == "-":
+    if args.output == "-":
         out_file = sys.stdout
-    elif out_file_name.endswith(".gz"):
-        out_file = gzip.open(out_file_name, "w")
+    elif args.output.endswith(".gz"):
+        out_file = gzip.open(args.output, "w")
     else:
-        out_file = open(out_file_name, "wt")
+        out_file = open(args.output, "wt")
 
     hcs = in_file.readline().strip("\r\n").split("\t")
-    record_to_annotable = build_record_to_annotatable(argsparsed, hcs)
+    record_to_annotable = build_record_to_annotatable(vars(args), hcs)
     print(*(hcs + annotation_attributes), sep="\t", file=out_file)
 
     for line in in_file:
@@ -119,10 +138,10 @@ def cli(args: list[str] = None):
                       for attrib in annotation_attributes]),
               sep="\t", file=out_file)
 
-    if in_file_name != "-":
+    if args.input != "-":
         in_file.close()
 
-    if out_file_name != "-":
+    if args.output != "-":
         out_file.close()
 
 
