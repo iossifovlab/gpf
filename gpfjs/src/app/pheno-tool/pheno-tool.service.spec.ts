@@ -26,7 +26,7 @@ describe('PhenoToolService', () => {
   it('should get pheno tool results', () => {
     const httpGetSpy = spyOn(HttpClient.prototype, 'post');
     httpGetSpy.and.returnValue(of('fakeResponse'));
-    service.getPhenoToolResults('filter');
+    service.getPhenoToolResults('filter' as any);
 
     expect(httpGetSpy.calls.allArgs()).toEqual(
       [

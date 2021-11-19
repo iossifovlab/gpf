@@ -121,17 +121,14 @@ describe('PhenoToolComponent', () => {
   });
 
   it('should test on download event', () => {
-    const event = {
-      target: {
-        queryData: {
-          value: 'id'
-        },
-        submit() { }
-      }
+    const form = document.createElement('form')
+    const event = {target: form};
+    event.target.queryData = {
+      value: 'id'
     };
     const submitSpy = spyOn(event.target, 'submit');
 
-    component.onDownload(event);
+    component.onDownload(event as any);
     expect(submitSpy).toHaveBeenCalledTimes(1);
     expect(event.target.queryData.value).toEqual('{"datasetId":"testDatasetId"}');
   });
