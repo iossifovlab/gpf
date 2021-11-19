@@ -33,7 +33,7 @@ default_study_config:
   conf_file: "%(wd)s/defaultConfiguration.conf"
 
 gene_info_db:
-  conf_file: "%(wd)s/geneInfo.conf"
+  conf_file: "%(wd)s/gene_info.conf"
 
 genomic_scores_db:
   conf_file: "%(wd)s/genomicScores.conf"
