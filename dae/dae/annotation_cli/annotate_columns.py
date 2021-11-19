@@ -10,8 +10,10 @@ from dae.annotation.annotatable import Region
 from dae.annotation.annotatable import VCFAllele
 
 from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_pipeline import AnnotationPipelineContext
+
+from dae.annotation.effect_annotator import EffectAnnotatorAdapter
 from dae.genomic_resources import build_genomic_resource_repository
-from dae.gpf_instance import GPFInstance
 
 
 class RecordToAnnotable(abc.ABC):
@@ -79,16 +81,19 @@ def build_record_to_annotatable(parameters: dict[str, str],
             return record_to_annotabale_class(renamed_columns)
 
 
-class Context:
+class Context(AnnotationPipelineContext):
     def __init__(self, args):
         self.args = args
         self._gpf_instance = None
         self._ref_genome = None
         self._gene_models = None
+        self._pipeline = None
 
-    def get_gpf_instance(self) -> GPFInstance:
+    def get_gpf_instance(self):
         if self._gpf_instance is None:
+            from dae.gpf_instance import GPFInstance
             self._gpf_instance = GPFInstance(self.args.gpf_instance_dir)
+        return self._gpf_instance
 
     def get_grr(self):
         if self.args.pipeline == "gpf_instance" or \
@@ -99,15 +104,24 @@ class Context:
                 file_name=self.args.grr_file_name)
 
     def get_pipeline(self):
-        if self.args.pipeline == "gpf_instance":
-            raise Exception("Not yet")
-            # return self.get_gpf_instance().
+        if self._pipeline is None:
+            if self.args.pipeline == "gpf_instance":
+                from dae.gpf_instance import GPFInstance
+                gpf: GPFInstance = self.get_gpf_instance()
+                self._pipeline = gpf.get_annotation_pipeline()
+                self._pipeline.add_annotator(EffectAnnotatorAdapter(
+                    gene_models=gpf.gene_models,
+                    genome=gpf.reference_genome))
+                # TODO: Improved on that
+                # 1. copy the pipeline?
+                # 2. prepend the EffectAnnotator
+            else:
+                self._pipeline = AnnotationPipeline.build(
+                    pipeline_config_file=self.args.pipeline,
+                    grr_repository=self.get_grr())
+        return self._pipeline
 
-        return AnnotationPipeline.build(
-            pipeline_config_file=self.args.pipeline,
-            grr_repository=self.get_grr())
-
-    def get_ref_genome(self):
+    def get_reference_genome(self):
         if self._ref_genome is None:
             if self.args.ref_genome_resource_id is not None:
                 self._ref_genome = self.get_grr().get_resource(
@@ -136,27 +150,27 @@ def cli(raw_args: list[str] = None):
 
     parser.add_argument('input', default='-', nargs="?",
                         help="the input column file")
-    parser.add_argument('pipeline', default="gpf_instance",
+    parser.add_argument('pipeline', default="gpf_instance", nargs="?",
                         help="The pipeline definition file. By default, or if "
                         "the value is gpf_instance, the annotation pipeline "
                         "from the configured gpf instance will be used.")
     parser.add_argument('output', default='-', nargs="?",
                         help="the output column file")
 
-    parser.add_argument('-grr', '--grr_file_name', default=None,
+    parser.add_argument('-grr', '--grr-file-name', default=None,
                         help="The GRR configuration file. If absent, "
                         "the default GRR repository will be used. "
                         "If equall equal to gpf_instance, will try get "
                         "the GRR for the configured gpf instance.")
-    parser.add_argument('-gpf', '--gpf_intance_dir', default=None,
+    parser.add_argument('-gpf', '--gpf-intance-dir', default=None,
                         help="The gpf instance to be used for as context.")
-    parser.add_argument('-ref', '--ref_genome_resource_id', default=None,
+    parser.add_argument('-ref', '--ref-genome-resource-id', default=None,
                         help='The resource id for the referende genome.')
-    parser.add_argument('-genes', '--gene_models_resource_id', default=None,
+    parser.add_argument('-genes', '--gene-models-resource-id', default=None,
                         help="The resource is of the gene models resoruce.")
-    parser.add_argument('-in_sep', '--input_separator', default="\t",
+    parser.add_argument('-in_sep', '--input-separator', default="\t",
                         help="The column separator in the input")
-    parser.add_argument('-out_sep', '--output_separator', default="\t",
+    parser.add_argument('-out_sep', '--output-separator', default="\t",
                         help="The column separator in the output")
 
     all_columns = {col for cols in RECORD_TO_ANNOTABALE_CONFIGUATION.keys()
@@ -211,4 +225,5 @@ def cli(raw_args: list[str] = None):
 
 
 if __name__ == '__main__':
+    print('hi')
     cli(sys.argv[1:])

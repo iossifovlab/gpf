@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import logging
 from itertools import chain
-from typing import List, Optional
+from typing import List
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 
@@ -65,6 +65,14 @@ ANNOTATION_PIPELINE_SCHEMA = {
 }
 
 
+class AnnotationPipelineContext:
+    def get_reference_genome(self):
+        return None
+
+    def get_gene_models(self):
+        return None
+
+
 class AnnotationPipeline():
     def __init__(self, config, repository):
         self.annotators: List[Annotator] = []
@@ -99,7 +107,7 @@ class AnnotationPipeline():
             grr_repository: GenomicResourceRepo = None,
             grr_repository_file: str = None,
             grr_repository_definition: str = None,
-            context: Optional[dict] = None) -> "AnnotationPipeline":
+            context: AnnotationPipelineContext = None) -> "AnnotationPipeline":
 
         if not pipeline_config:
             assert pipeline_config_file is not None
@@ -122,15 +130,26 @@ class AnnotationPipeline():
             for annotator_config in pipeline_config.effect_annotators:
                 annotator_type = annotator_config["annotator"]
 
-                gene_models_id = annotator_config["gene_models"]
-                genome_id = annotator_config["genome"]
+                if "gene_models" in annotator_config:
+                    gene_models_id = annotator_config["gene_models"]
+                    gene_models = grr_repository.get_resource(gene_models_id)
+                    assert gene_models is not None, gene_models_id
+                    # TODO: raise appropriate exception
+                else:
+                    gene_models = context.get_gene_models()
+                    # TODO: raise excpetion if context is null
+                    # or if genome is null
+
+                if "genome" in annotator_config:
+                    genome_id = annotator_config["genome"]
+                    genome = grr_repository.get_resource(genome_id)
+                    assert genome is not None, genome_id
+                    # TODO: raise appropriate exception
+                else:
+                    genome = context.get_reference_genome()
+                    # TODO: raise excpetion if context is null
+                    # or if genome is null
                 override = annotator_config.get("override")
-
-                gene_models = grr_repository.get_resource(gene_models_id)
-                assert gene_models is not None, gene_models_id
-
-                genome = grr_repository.get_resource(genome_id)
-                assert genome is not None, genome_id
 
                 effect_annotator = AnnotatorFactory.make_effect_annotator(
                     annotator_type, gene_models, genome, override=override)
