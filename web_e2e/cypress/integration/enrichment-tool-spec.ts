@@ -225,8 +225,10 @@ describe('Enrichment tool data tests', () => {
     genesBlockPage.geneWeightsButton.click();
     weights.moveSlider('right', 150, 0);
     weights.allGeneWeights.should('have.text', '543 (59.67%)');
-    weights.moveSlider('left', 100, 0);
-    weights.allGeneWeights.should('have.text', '468 (51.43%)');
+    weights.moveSlider('right', -150, 0);
+    weights.allGeneWeights.should('have.text', '910 (100.00%)');
+    weights.moveSliderTo('right', '835 (91.76%)');
+    weights.allGeneWeights.should('have.text', '75 (8.24%)');
   });
 });
 

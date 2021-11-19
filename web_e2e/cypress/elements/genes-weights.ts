@@ -47,7 +47,7 @@ export class GenesWeights extends BasePage {
     }
   }
 
-  moveSlider(which: string, dragValue, heightValue) {
+  moveSlider(which: string, dragValue, heightValue: number = 0) {
     if(which === 'right')
       dragValue = -dragValue;
     cy.window().then((win) => {
@@ -70,6 +70,27 @@ export class GenesWeights extends BasePage {
             bubbles: true
         });
     });     
+  }
+
+  moveSliderTo(which: string, value: string, dragCoefficient: number = 50, checkIterations: number = 20) {
+    while(checkIterations-- > 0) {
+      this.getTextPartitionValue(which);
+      cy.get('@weightsPartitionValue').then(partitionValue => {
+        if(partitionValue.startsWith('~')) {
+          partitionValue = partitionValue.substring(1);
+        }
+        if(partitionValue === value) {
+          return;
+        }
+        this.moveSlider(which, dragCoefficient, 0);
+      });
+    }
+  }
+
+  getTextPartitionValue(which: string): void {
+    this.partitionsText(which).then(values => {
+      cy.wrap(values.text()).as('weightsPartitionValue');
+    });
   }
 
   partitionsText(which: string) {
