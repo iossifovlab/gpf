@@ -16,8 +16,6 @@ from dae.gpf_instance.gpf_instance import GPFInstance, cached
 
 from dae.configuration.gpf_config_parser import GPFConfigParser, FrozenBox
 from dae.configuration.schemas.dae_conf import dae_conf_schema
-from dae.configuration.schemas.genomic_resources_database import \
-    genomic_score_schema
 
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 
@@ -86,7 +84,7 @@ def global_dae_fixtures_dir():
 
 
 @pytest.fixture(scope="session")
-def default_dae_config(request, cleanup):
+def default_dae_config(request, cleanup, fixture_dirname):
     studies_dirname = tempfile.mkdtemp(prefix="studies_", suffix="_test")
 
     def fin():
@@ -94,26 +92,29 @@ def default_dae_config(request, cleanup):
 
     if cleanup:
         request.addfinalizer(fin)
-    conf_dir = os.environ.get("DAE_DB_DIR")
+    conf_dir = fixture_dirname("")
     assert conf_dir is not None
 
     dae_conf_path = os.path.join(conf_dir, "gpf_instance.yaml")
 
     dae_config = GPFConfigParser.parse_and_interpolate_file(dae_conf_path)
+    if dae_config.get("studies") is None:
+        dae_config["studies"] = {}
+
     dae_config["studies"]["dir"] = studies_dirname
-    remote_config = {
-        "id": "TEST_REMOTE",
-        "host": "gpfremote",
-        "base_url": "api/v3",
-        "port": 21010,
-        "user": "admin@iossifovlab.com",
-        "password": "secret",
-    }
-    if "remotes" not in dae_config:
-        dae_config["remotes"] = list()
-        dae_config["remotes"].append(remote_config)
-    else:
-        dae_config["remotes"][0] = remote_config
+    # remote_config = {
+    #     "id": "TEST_REMOTE",
+    #     "host": "gpfremote",
+    #     "base_url": "api/v3",
+    #     "port": 21010,
+    #     "user": "admin@iossifovlab.com",
+    #     "password": "secret",
+    # }
+    # if "remotes" not in dae_config:
+    #     dae_config["remotes"] = list()
+    #     dae_config["remotes"].append(remote_config)
+    # else:
+    #     dae_config["remotes"][0] = remote_config
     dae_config = GPFConfigParser.process_config(
         dae_config,
         dae_conf_schema,
@@ -1142,16 +1143,6 @@ def sample_agp():
     return AGPStatistic(
         "CHD8", gene_sets, genomic_scores, variant_counts
     )
-
-
-@pytest.fixture(scope="session")
-def get_score_config(fixture_dirname):
-    def internal(score_name):
-        config = fixture_dirname(
-            f"genomic_scores/hg38/{score_name}/{score_name}.gs.yaml"
-        )
-        return GPFConfigParser.load_config(config, genomic_score_schema)
-    return internal
 
 
 @pytest.fixture

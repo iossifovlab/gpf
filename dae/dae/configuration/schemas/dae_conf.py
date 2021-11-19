@@ -7,12 +7,12 @@ config_reference_schema = {
     "conf_file": {
         "type": "string",
         "required": False,
-        "check_with": validate_existing_path,
+        # "check_with": validate_existing_path,
         "coerce": "abspath",
     },
     "dir": {
         "type": "string",
-        "check_with": validate_existing_path,
+        # "check_with": validate_existing_path,
         "coerce": "abspath",
     },
 }
@@ -99,6 +99,13 @@ dae_conf_schema = {
         "check_with": validate_existing_path,
         "coerce": "abspath",
     },
+    "conf_dir": {
+        "type": "string",
+        "check_with": validate_existing_path,
+        "coerce": "abspath",
+        "required": True,
+    },
+
     "mirror_of": {
         "type": "string",
         "default": None, 'nullable': True,
@@ -130,7 +137,7 @@ dae_conf_schema = {
         "schema": {
             "dir": {
                 "type": "string",
-                "check_with": validate_existing_path,
+                # "check_with": validate_existing_path,
                 "coerce": "abspath",
             }
         },
@@ -162,7 +169,7 @@ dae_conf_schema = {
             },
             "permission_denied_prompt_file": {
                 "type": "string",
-                "check_with": validate_existing_path,
+                # "check_with": validate_existing_path,
                 "coerce": "abspath",
             }
         },

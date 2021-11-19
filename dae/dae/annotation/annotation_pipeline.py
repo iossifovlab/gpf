@@ -74,9 +74,15 @@ class AnnotationPipeline():
 
     @staticmethod
     def load_and_parse(config_path: str) -> dict:
-        with open(config_path, "r") as infile:
-            content = infile.read()
-        return AnnotationPipeline.parse_config(content)
+        try:
+            with open(config_path, "r") as infile:
+                content = infile.read()
+            return AnnotationPipeline.parse_config(content)
+        except Exception as ex:
+            logger.exception(
+                f"can't parse annotation pipeline configuration {config_path}",
+                exc_info=True)
+            raise ex
 
     @staticmethod
     def parse_config(content: str) -> dict:

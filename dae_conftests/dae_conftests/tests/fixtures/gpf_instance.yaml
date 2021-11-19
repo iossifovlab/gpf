@@ -2,11 +2,17 @@ vars:
   instance_id: test_data
   wd: "."
 
+# reference_genome:
+#   resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
+
+# gene_models:
+#   resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/gene_models/refGene_201309"
+
 reference_genome:
-  resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
+  resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174/genome"
 
 gene_models:
-  resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/gene_models/refGene_201309"
+  resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174/gene_models/refGene_v20190211"
 
 genotype_storage:
   default: genotype_filesystem
@@ -50,6 +56,24 @@ storage:
   genotype_filesystem2:
     dir: "%(wd)s/data_dir"
     storage_type: filesystem
+
+  test_filesystem:
+    dir: /tmp/test_filesystem/studies
+    storage_type: filesystem
+  test_impala:
+    dir: /tmp/test_impala/studies
+    hdfs:
+      base_dir: /user/test_impala/studies
+      host: localhost
+      port: 8020
+      replication: 1
+    impala:
+      db: test_impala
+      hosts:
+      - localhost
+      pool_size: 1
+      port: 21050
+    storage_type: impala
 
 remotes:
   - id: "TEST_REMOTE"

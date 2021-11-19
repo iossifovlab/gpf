@@ -1,5 +1,8 @@
+import os
 import logging
+import copy
 
+import toml
 from deprecation import deprecated
 
 from dae.studies.study import GenotypeDataStudy, GenotypeDataGroup
@@ -8,6 +11,21 @@ from dae.configuration.schemas.study_config import study_config_schema
 
 
 logger = logging.getLogger(__name__)
+
+
+DEFAULT_STUDY_CONFIG = GPFConfigParser.parse_and_interpolate("""
+    [person_set_collections]
+    selected_person_set_collections = ["status"]
+
+    status.id = "status"
+    status.name = "Affected Status"
+    status.domain = [
+        {id = "affected", name = "affected", values = ["affected"], color = "#e35252"},
+        {id = "unaffected", name = "unaffected", values = ["unaffected"], color = "#ffffff"}
+    ]
+    status.default = {id = "unspecified", name = "unspecified", values = ["unspecified"], color = "#aaaaaa"}
+    status.sources = [{from = "pedigree", source = "status"}]
+""", parser=toml.loads)  # noqa
 
 
 class VariantsDb(object):
@@ -52,15 +70,34 @@ class VariantsDb(object):
 
     def _load_study_configs(self):
         default_config_filename = None
+        default_config = None
+
         if self.dae_config.default_study_config and \
                 self.dae_config.default_study_config.conf_file:
             default_config_filename = \
                 self.dae_config.default_study_config.conf_file
 
+        if default_config_filename is None or \
+                not os.path.exists(default_config_filename):
+            logger.warning(
+                f"default config file is missing: {default_config_filename}")
+            default_config_filename = None
+
+        if default_config_filename is None:
+            default_config = copy.deepcopy(DEFAULT_STUDY_CONFIG)
+
+        if self.dae_config.studies is None or \
+                self.dae_config.studies.dir is None:
+            studies_dir = os.path.join(
+                self.dae_config.conf_dir, "studies")
+        else:
+            studies_dir = self.dae_config.studies.dir
+
         study_configs = GPFConfigParser.load_directory_configs(
-            self.dae_config.studies.dir,
+            studies_dir,
             study_config_schema,
             default_config_filename=default_config_filename,
+            default_config=default_config
         )
 
         genotype_study_configs = {}
@@ -74,15 +111,33 @@ class VariantsDb(object):
 
     def _load_group_configs(self):
         default_config_filename = None
+        default_config = None
+
         if self.dae_config.default_study_config and \
                 self.dae_config.default_study_config.conf_file:
             default_config_filename = \
                 self.dae_config.default_study_config.conf_file
 
+        if default_config_filename is None or \
+                not os.path.exists(default_config_filename):
+            logger.warning(
+                f"default config file is missing: {default_config_filename}")
+            default_config_filename = None
+        if default_config_filename is None:
+            default_config = copy.deepcopy(DEFAULT_STUDY_CONFIG)
+
+        if self.dae_config.datasets is None or \
+                self.dae_config.datasets.dir is None:
+            datasets_dir = os.path.join(
+                self.dae_config.conf_dir, "datasets")
+        else:
+            datasets_dir = self.dae_config.datasets.dir
+
         group_configs = GPFConfigParser.load_directory_configs(
-            self.dae_config.datasets.dir,
+            datasets_dir,
             study_config_schema,
             default_config_filename=default_config_filename,
+            default_config=default_config
         )
 
         genotype_group_configs = {}
@@ -187,6 +242,9 @@ class VariantsDb(object):
         if not study_config:
             return
 
+        logger.info(
+            f"creating genotype group: {study_config.id}")
+
         genotype_study = self._make_genotype_study(study_config)
         self._genotype_study_cache[study_config.id] = genotype_study
         return genotype_study
@@ -233,7 +291,8 @@ class VariantsDb(object):
         if group_config is None:
             return
 
-        logger.info(f"creating genotype group: {group_config.id}")
+        logger.info(
+            f"creating genotype group: {group_config.id}")
         try:
             group_studies = []
             for child_id in group_config.studies:

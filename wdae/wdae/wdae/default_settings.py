@@ -43,11 +43,16 @@ DEFAULT_FROM_EMAIL = "no-reply@iossifovlab.com"
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
+DEFAULT_WDAE_SQL_DIR = os.path.join(
+    os.environ.get("DAE_DB_DIR", ""), "wdae")
+if os.path.exists(DEFAULT_WDAE_SQL_DIR):
+    os.makedirs(DEFAULT_WDAE_SQL_DIR, exist_ok=True)
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": os.path.join(
-            os.environ.get("DAE_DB_DIR", ""), "wdae/wdae.sql"),
+            DEFAULT_WDAE_SQL_DIR, "wdae.sql"),
         "USER": "",
         "PASSWORD": "",
         "HOST": "",
