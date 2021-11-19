@@ -2,8 +2,8 @@ import { Component, AfterViewInit, Input, ViewChild, OnInit } from '@angular/cor
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Dataset } from '../datasets/datasets';
 import { Store, Selector } from '@ngxs/store';
-import { FamilyIdsState } from 'app/family-ids/family-ids.state';
-import { PersonFiltersState } from 'app/person-filters/person-filters.state';
+import { FamilyIdsState, FamilyIdsModel } from 'app/family-ids/family-ids.state';
+import { PersonFiltersModel, PersonFiltersState } from 'app/person-filters/person-filters.state';
 import { StateReset } from 'ngxs-reset-plugin';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 
@@ -33,9 +33,9 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     this.store.selectOnce(FamilyFiltersBlockComponent.familyFiltersBlockState).subscribe(state => {
-      if (state['familyIds']) {
+      if (state.familyIds.length) {
         setTimeout(() => this.ngbNav.select('familyIds'));
-      } else if (state['familyFilters']) {
+      } else if (state.familyFilters.length) {
         setTimeout(() => this.ngbNav.select('advanced'));
       }
     });
@@ -46,13 +46,13 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   }
 
   @Selector([FamilyIdsState, PersonFiltersState])
-  static familyFiltersBlockState(familyIdsState, personFiltersState) {
-    const res = {};
+  static familyFiltersBlockState(familyIdsState: FamilyIdsModel, personFiltersState: PersonFiltersModel) {
+    let res: {familyIds: string[], familyFilters: object[]} = {familyIds: [], familyFilters: []};
     if (familyIdsState.familyIds.length) {
-      res['familyIds'] = familyIdsState.familyIds;
+      res.familyIds = familyIdsState.familyIds;
     }
     if (personFiltersState.familyFilters.length) {
-      res['familyFilters'] = personFiltersState.familyFilters;
+      res.familyFilters = personFiltersState.familyFilters;
     }
     return res;
   }
