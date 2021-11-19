@@ -86,9 +86,11 @@ def global_dae_fixtures_dir():
 @pytest.fixture(scope="session")
 def default_dae_config(request, cleanup, fixture_dirname):
     studies_dirname = tempfile.mkdtemp(prefix="studies_", suffix="_test")
+    datasets_dirname = tempfile.mkdtemp(prefix="datasets_", suffix="_test")
 
     def fin():
         shutil.rmtree(studies_dirname)
+        shutil.rmtree(datasets_dirname)
 
     if cleanup:
         request.addfinalizer(fin)
@@ -98,10 +100,10 @@ def default_dae_config(request, cleanup, fixture_dirname):
     dae_conf_path = os.path.join(conf_dir, "gpf_instance.yaml")
 
     dae_config = GPFConfigParser.parse_and_interpolate_file(dae_conf_path)
-    if dae_config.get("studies") is None:
-        dae_config["studies"] = {}
 
     dae_config["studies"]["dir"] = studies_dirname
+    dae_config["datasets"]["dir"] = datasets_dirname
+
     # remote_config = {
     #     "id": "TEST_REMOTE",
     #     "host": "gpfremote",

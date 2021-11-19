@@ -277,6 +277,7 @@ class VariantsDb(object):
         self._load_all_genotype_groups(genotype_group_configs)
 
     def _load_study_configs(self):
+        logger.info(f"loading study configs: {self.dae_config.studies}")
         default_config_filename = None
         default_config = None
 

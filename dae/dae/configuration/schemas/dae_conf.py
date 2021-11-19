@@ -131,7 +131,11 @@ dae_conf_schema = {
         "schema": config_reference_schema,
         "default": {"dir": "studies"},
     },
-    "datasets": {"type": "dict", "schema": config_reference_schema},
+    "datasets": {
+        "type": "dict",
+        "schema": config_reference_schema,
+        "default": {"dir": "datasets"}
+    },
     "genomic_scores_db": {"type": "dict", "schema": config_reference_schema},
     "autism_gene_tool_config": {
         "type": "dict", "schema": config_reference_schema

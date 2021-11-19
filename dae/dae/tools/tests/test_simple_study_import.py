@@ -546,7 +546,6 @@ def test_import_wild_multivcf_into_genotype_storage(
 
 def test_import_study_config_arg(
     fixture_dirname,
-    default_dae_config,
     gpf_instance_2013,
     temp_dirname,
 ):
