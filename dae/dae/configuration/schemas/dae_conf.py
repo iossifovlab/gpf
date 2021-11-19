@@ -120,12 +120,17 @@ dae_conf_schema = {
     "genotype_storage": {
         "type": "dict",
         "schema": {"default": {"type": "string"}},
+        "default": {"default": "genotype_filesystem"},
     },
     "storage": {
         "type": "dict",
         "valuesrules": {"type": "dict", "schema": storage_schema},
     },
-    "studies": {"type": "dict", "schema": config_reference_schema},
+    "studies": {
+        "type": "dict",
+        "schema": config_reference_schema,
+        "default": {"dir": "studies"},
+    },
     "datasets": {"type": "dict", "schema": config_reference_schema},
     "genomic_scores_db": {"type": "dict", "schema": config_reference_schema},
     "autism_gene_tool_config": {

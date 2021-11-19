@@ -13,19 +13,227 @@ from dae.configuration.schemas.study_config import study_config_schema
 logger = logging.getLogger(__name__)
 
 
-DEFAULT_STUDY_CONFIG = GPFConfigParser.parse_and_interpolate("""
-    [person_set_collections]
-    selected_person_set_collections = ["status"]
+DEFAULT_STUDY_CONFIG_TOML = """
 
-    status.id = "status"
-    status.name = "Affected Status"
-    status.domain = [
-        {id = "affected", name = "affected", values = ["affected"], color = "#e35252"},
-        {id = "unaffected", name = "unaffected", values = ["unaffected"], color = "#ffffff"}
-    ]
-    status.default = {id = "unspecified", name = "unspecified", values = ["unspecified"], color = "#aaaaaa"}
-    status.sources = [{from = "pedigree", source = "status"}]
-""", parser=toml.loads)  # noqa
+has_denovo = true
+has_transmitted = false
+has_complex = false
+has_cnv = false
+
+phenotype_browser = false
+phenotype_tool = false
+
+[person_set_collections]
+selected_person_set_collections = ["status"]
+
+status.id = "status"
+status.name = "Affected Status"
+status.domain = [
+    {
+        id = "affected",
+        name = "affected",
+        values = ["affected"],
+        color = "#e35252"
+    },
+    {
+        id = "unaffected",
+        name = "unaffected",
+        values = ["unaffected"],
+        color = "#ffffff"
+    }
+]
+status.default = {id = "unspecified", name = "unspecified", values = [
+    "unspecified"],color = "#aaaaaa"}
+status.sources = [{
+    from = "pedigree",
+    source = "status"
+}]
+
+[genotype_browser]
+enabled = true
+has_family_filters = true
+has_person_filters = true
+has_study_filters = false
+has_present_in_child = true
+has_present_in_parent = true
+has_pedigree_selector = true
+
+preview_columns = [
+	"family",
+	"variant",
+	"genotype",
+	"effect",
+	"weights",
+	"freq"
+]
+
+download_columns = [
+	"family",
+	"study_phenotype",
+	"variant",
+	"variant_extra",
+	"family_person_ids",
+	"family_structure",
+	"best",
+	"family_genotype",
+	"carriers",
+	"inheritance",
+	"phenotypes",
+	"par_called",
+	"allele_freq",
+	"effect",
+	"geneeffect",
+	"effectdetails",
+	"weights",
+]
+
+summary_preview_columns = ["variant", "effect", "weights", "freq"]
+summary_download_columns = ["variant", "effect", "weights", "freq"]
+
+[genotype_browser.column_groups]
+effect.name = "effect"
+effect.columns = ["worst_effect", "genes"]
+
+weights.name = "vulnerability/intolerance"
+weights.columns = ["lgd_rank", "rvis_rank", "pli_rank"]
+
+family.name = "family"
+family.columns = ["family_id", "study"]
+
+variant.name = "variant"
+variant.columns = ["location", "variant"]
+
+variant_extra.name = "variant"
+variant_extra.columns = ["chrom", "position", "reference", "alternative"]
+
+carriers.name = "carriers"
+carriers.columns = ["carrier_person_ids", "carrier_person_attributes"]
+
+phenotypes.name = "phenotypes"
+phenotypes.columns = ["family_phenotypes", "carrier_phenotypes"]
+
+freq.name = "Frequency"
+freq.columns = ["exome_gnomad_af_percent", "genome_gnomad_af_percent"]
+
+[genotype_browser.columns.genotype]
+genotype.name = "genotype"
+genotype.source = "pedigree"
+
+worst_effect.name = "worst effect"
+worst_effect.source = "worst_effect"
+
+genes.name = "genes"
+genes.source = "genes"
+
+lgd_rank.name = "LGD rank"
+lgd_rank.source = "LGD_rank"
+lgd_rank.format = "%%d"
+
+rvis_rank.name="RVIS rank"
+rvis_rank.source = "RVIS_rank"
+rvis_rank.format="%%d"
+
+pli_rank.name="pLI rank"
+pli_rank.source="pLI_rank"
+pli_rank.format="%%d"
+
+family_id.name = "family id"
+family_id.source = "family"
+
+study.name = "study"
+study.source = "study_name"
+
+family_person_ids.name = "family person ids"
+family_person_ids.source = "family_person_ids"
+
+location.name = "location"
+location.source = "location"
+
+variant.name = "variant"
+variant.source = "variant"
+
+chrom.name = "CHROM"
+chrom.source = "chrom"
+
+position.name = "POS"
+position.source = "position"
+
+reference.name = "REF"
+reference.source = "reference"
+
+alternative.name = "ALT"
+alternative.source = "alternative"
+
+carrier_person_ids.name = "carrier person ids"
+carrier_person_ids.source = "carrier_person_ids"
+
+carrier_person_attributes.name = "carrier person attributes"
+carrier_person_attributes.source = "carrier_person_attributes"
+
+inheritance.name = "inheritance type"
+inheritance.source = "inheritance_type"
+
+family_phenotypes.name = "family phenotypes"
+family_phenotypes.source = "family_phenotypes"
+
+carrier_phenotypes.name = "carrier phenotypes"
+carrier_phenotypes.source = "carrier_phenotypes"
+
+study_phenotype.name = "study phenotype"
+study_phenotype.source = "study_phenotype"
+
+best.name = "family best state"
+best.source = "best_st"
+
+family_genotype.name = "family genotype"
+family_genotype.source = "genotype"
+
+family_structure.name = "family structure"
+family_structure.source = "family_structure"
+
+# VARIANT EFFECTS
+
+geneeffect.name = "all effects"
+geneeffect.source = "effects"
+
+effectdetails.name = "effect details"
+effectdetails.source = "effect_details"
+
+# VARIANT FREQUENCY
+
+alt_alleles.name = "alt alleles"
+alt_alleles.source = "af_allele_count"
+
+par_called.name = "parents called"
+par_called.source = "af_parents_called_count"
+
+allele_freq.name = "allele frequency"
+allele_freq.source = "af_allele_freq"
+
+# SUMMARY VARIANTS
+
+seen_as_denovo.name = "seen_as_denovo"
+seen_as_denovo.source = "seen_as_denovo"
+
+seen_in_affected.name = "seen_in_affected"
+seen_in_affected.source = "seen_in_affected"
+
+seen_in_unaffected.name = "seen_in_unaffected"
+seen_in_unaffected.source = "seen_in_unaffected"
+
+[gene_browser]
+enabled = true
+frequency_column = "af_allele_freq"
+effect_column = "effect.worst effect type"
+location_column = "variant.location"
+domain_min = 0.001
+domain_max = 100
+
+"""  # noqa
+
+
+DEFAULT_STUDY_CONFIG = GPFConfigParser.parse_and_interpolate(
+    DEFAULT_STUDY_CONFIG_TOML, parser=toml.loads)  # noqa
 
 
 class VariantsDb(object):

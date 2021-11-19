@@ -353,6 +353,7 @@ study_config_schema = {
                 "default": "common_report.json",
             },
         },
+        "default": {"enabled": False},
     },
     "denovo_gene_sets": {
         "type": "dict",
@@ -386,6 +387,7 @@ study_config_schema = {
             },
             "gene_sets_names": {"type": "list", "schema": {"type": "string"}},
         },
+        "default": {"enabled": False},
     },
     "enrichment": {
         "type": "dict",
@@ -421,6 +423,7 @@ study_config_schema = {
             "default_counting_model": {"type": "string"},
             "effect_types": {"type": "list", "schema": {"type": "string"}},
         },
+        "default": {"enabled": False},
     },
     "gene_browser": {
         "type": "dict",
@@ -445,6 +448,7 @@ study_config_schema = {
                 "max": 100.0,
             },
         },
+        "default": {"enabled": False},
     },
     "person_set_collections": person_set_collections_schema,
 }

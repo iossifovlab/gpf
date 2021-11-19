@@ -43,16 +43,15 @@ DEFAULT_FROM_EMAIL = "no-reply@iossifovlab.com"
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-DEFAULT_WDAE_SQL_DIR = os.path.join(
+DEFAULT_WDAE_DIR = os.path.join(
     os.environ.get("DAE_DB_DIR", ""), "wdae")
-if os.path.exists(DEFAULT_WDAE_SQL_DIR):
-    os.makedirs(DEFAULT_WDAE_SQL_DIR, exist_ok=True)
+os.makedirs(DEFAULT_WDAE_DIR, exist_ok=True)
 
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": os.path.join(
-            DEFAULT_WDAE_SQL_DIR, "wdae.sql"),
+            DEFAULT_WDAE_DIR, "wdae.sql"),
         "USER": "",
         "PASSWORD": "",
         "HOST": "",
@@ -237,14 +236,14 @@ LOGGING = {
         "logfile": {
             "class": "logging.handlers.WatchedFileHandler",
             "filename": os.path.join(
-                os.environ.get("DAE_DB_DIR", ""), "wdae/wdae-api.log"),
+                DEFAULT_WDAE_DIR, "wdae-api.log"),
             "filters": ["require_debug_false"],
             "formatter": "verbose",
         },
         "logdebug": {
             "class": "logging.handlers.WatchedFileHandler",
             "filename": os.path.join(
-                os.environ.get("DAE_DB_DIR", ""), "wdae/wdae-debug.log"),
+                DEFAULT_WDAE_DIR, "wdae-debug.log"),
             "formatter": "verbose",
         },
     },

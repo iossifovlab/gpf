@@ -159,7 +159,7 @@ def generate_denovo_gene_sets(gpf_instance, study_id):
 def _decorate_loader(variants_loader, effect_annotator, annotation_pipeline):
     variants_loader = EffectAnnotationDecorator(
         variants_loader, effect_annotator)
-    
+
     if annotation_pipeline is not None:
         variants_loader = AnnotationPipelineDecorator(
             variants_loader, annotation_pipeline)
@@ -210,7 +210,9 @@ def main(argv, gpf_instance=None):
         study_id, _ = os.path.splitext(os.path.basename(argv.families))
 
     if argv.output is None:
-        output = dae_config.studies_db.dir
+        from pprint import pprint
+        pprint(dae_config)
+        output = dae_config.studies.dir
     else:
         output = argv.output
 
