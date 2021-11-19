@@ -445,14 +445,8 @@ def main(gpf_instance=None, argv=None):
         clear=True
     )
 
-    agpdb.clear_all_tables()
-    agpdb.populate_data_tables(gpf_instance.get_genotype_data_ids())
     logger.info("Inserting statistics into DB")
     agpdb.insert_agps(agps.values())
-    logger.info("Building AGP output view")
-    agpdb.build_agp_view()
-    logger.info("Generating cache table")
-    agpdb.generate_cache_table()
     logger.info("Done")
 
 
