@@ -33,7 +33,7 @@ export class GpfTableComponent {
   showFloatingHeader: boolean;
 
   @HostListener('window:scroll', ['$event'])
-  onWindowScroll(event) {
+  onWindowScroll() {
     this.tableTopPosition = this.tableViewChild.nativeElement.getBoundingClientRect().top;
 
     if (this.rowViewChildren &&
