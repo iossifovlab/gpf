@@ -451,7 +451,7 @@ class VariantsDb(object):
             return
 
         logger.info(
-            f"creating genotype group: {study_config.id}")
+            f"creating genotype study: {study_config.id}")
 
         genotype_study = self._make_genotype_study(study_config)
         self._genotype_study_cache[study_config.id] = genotype_study

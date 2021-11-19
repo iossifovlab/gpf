@@ -448,7 +448,6 @@ study_config_schema = {
                 "max": 100.0,
             },
         },
-        "default": {"enabled": False},
     },
     "person_set_collections": person_set_collections_schema,
 }

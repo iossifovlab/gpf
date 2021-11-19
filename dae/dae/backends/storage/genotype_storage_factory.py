@@ -34,7 +34,7 @@ class GenotypeStorageFactory:
         return self._genotype_storage_cache[genotype_storage_id]
 
     def get_genotype_storage_ids(self):
-        return list(self.storage_config["storage"].keys())
+        return list(self.storage_config.keys())
 
     def _load_genotype_storage(self, genotype_storage_ids=None):
         if genotype_storage_ids is None:
