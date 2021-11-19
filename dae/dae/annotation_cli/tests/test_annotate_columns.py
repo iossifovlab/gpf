@@ -49,7 +49,7 @@ def test_basic_setup(tmp_path):
                         scores:
                         - id: score
                           type: float
-                          desc: >
+                          desc: |
                                 The phastCons computed over the tree of 100
                                 verterbarte species
                           name: s1
@@ -57,6 +57,7 @@ def test_basic_setup(tmp_path):
                         chrom  pos_begin  s1
                         chr1   23         0.01
                         chr1   24         0.2
+
             '''
     })
     in_file = tmp_path / "in.txt"
@@ -64,7 +65,11 @@ def test_basic_setup(tmp_path):
     annotation_file = tmp_path / "annotation.yaml"
     grr_file = tmp_path / "grr.yaml"
 
-    cli([str(a) for a in [in_file, annotation_file, out_file, grr_file]])
+    cli([
+        str(a) for a in [
+            annotation_file, in_file, out_file, "-grr", grr_file
+        ]
+    ])
     out_file_content = get_file_content_as_string(out_file)
     print(out_file_content)
     assert out_file_content == out_expected_content

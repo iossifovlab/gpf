@@ -7,7 +7,7 @@ import toml
 
 from box import Box
 
-from typing import List, Any, Dict
+from typing import List, Any, Dict, Optional
 from cerberus import Validator
 
 from dae.utils.dict_utils import recursive_dict_update
@@ -140,6 +140,9 @@ class GPFConfigParser:
             schema: dict,
             conf_dir: str = None) -> dict:
 
+        if conf_dir is not None and "conf_dir" in schema:
+            config["conf_dir"] = conf_dir
+
         validator = GPFConfigValidator(
             schema, conf_dir=conf_dir
         )
@@ -175,15 +178,19 @@ class GPFConfigParser:
         cls,
         filename: str,
         schema: dict,
-        default_config_filename: str = None
+        default_config_filename: Optional[str] = None,
+        default_config: Optional[dict] = None,
     ) -> FrozenBox:
 
         if not os.path.exists(filename):
             raise ValueError(f"{filename} does not exist!")
+        logger.debug(
+            f"loading config {filename} with default configuration file "
+            f"{default_config_filename};")
 
         config = cls.parse_and_interpolate_file(filename)
-        default_config = None
         if default_config_filename:
+            assert default_config is None
             default_config = cls.parse_and_interpolate_file(
                 default_config_filename)
 
@@ -194,9 +201,13 @@ class GPFConfigParser:
     @classmethod
     def load_directory_configs(
             cls, dirname: str, schema: dict,
-            default_config_filename: str = None) -> List[Box]:
+            default_config_filename: Optional[str] = None,
+            default_config: Optional[dict] = None) -> List[Box]:
         return [
-            cls.load_config(config_path, schema, default_config_filename)
+            cls.load_config(
+                config_path, schema,
+                default_config_filename=default_config_filename,
+                default_config=default_config)
             for config_path in cls._collect_directory_configs(dirname)
         ]
 

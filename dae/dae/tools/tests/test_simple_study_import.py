@@ -25,7 +25,7 @@ def test_import_denovo_dae_style_into_genotype_storage(
         pedigree_filename,
         "--id",
         study_id,
-        "--skip-reports",
+        # "--skip-reports",
         "--denovo-file",
         denovo_filename,
         "--denovo-location",
@@ -236,6 +236,7 @@ def test_import_comp_all_into_genotype_storage(
 
     argv = [
         pedigree_filename,
+        "--skip-reports",
         "--id", study_id,
         "--vcf-denovo-mode", "possible_denovo",
         "--vcf-omission-mode", "possible_omission",
@@ -417,7 +418,7 @@ def test_import_comp_all_del_chrom_prefix(
         pedigree_filename,
         "--id",
         study_id,
-        # '--skip-reports',
+        '--skip-reports',
         "--vcf-denovo-mode", "possible_denovo",
         "--vcf-omission-mode", "possible_omission",
         "--vcf-files",
@@ -545,7 +546,6 @@ def test_import_wild_multivcf_into_genotype_storage(
 
 def test_import_study_config_arg(
     fixture_dirname,
-    default_dae_config,
     gpf_instance_2013,
     temp_dirname,
 ):

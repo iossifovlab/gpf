@@ -4,6 +4,8 @@ import pandas as pd
 import math
 import json
 
+from box import Box
+
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
 from dae.gene.weights import GeneWeightsDb
@@ -71,7 +73,6 @@ class GPFInstance(object):
             self._gene_info_config
             self._pheno_db
             self._variants_db
-            self._gene_info_config
             self.denovo_gene_sets_db
             self._score_config
             self._scores_factory
@@ -106,10 +107,17 @@ class GPFInstance(object):
     @property  # type: ignore
     @cached
     def _gene_info_config(self):
-        logger.debug(
-            f"loading gene info config file: "
-            f"{self.dae_config.gene_info_db.conf_file}")
+        if self.dae_config.gene_info_db is None or \
+                self.dae_config.gene_info_db.conf_file is None:
+            logger.warning(
+                "gene sets and weights are not configured...")
+            return Box({}, default_box=True)
 
+        conf_file = self.dae_config.gene_info_db.conf_file
+        logger.debug(
+            f"loading gene info config file: {conf_file}")
+        if not os.path.exists(conf_file):
+            return Box({}, default_box=True)
         return GPFConfigParser.load_config(
             self.dae_config.gene_info_db.conf_file, gene_info_conf
         )
@@ -122,8 +130,16 @@ class GPFInstance(object):
     @property  # type: ignore
     @cached
     def _score_config(self):
+        if self.dae_config.genomic_scores_db is None or \
+                self.dae_config.genomic_scores_db.conf_file is None:
+            logger.warning(
+                "scores are not configured...")
+            return Box({}, default_box=True)
+        conf_file = self.dae_config.genomic_scores_db.conf_file
+        if not os.path.exists(conf_file):
+            return Box({}, default_box=True)
         return GPFConfigParser.load_config(
-            self.dae_config.genomic_scores_db.conf_file, genomic_scores_schema
+            conf_file, genomic_scores_schema
         )
 
     @property  # type: ignore
@@ -572,4 +588,6 @@ class GPFInstance(object):
 
     # DAE config
     def get_selected_genotype_data(self):
+        if self.dae_config.gpfjs is None:
+            return None
         return self.dae_config.gpfjs.selected_genotype_data

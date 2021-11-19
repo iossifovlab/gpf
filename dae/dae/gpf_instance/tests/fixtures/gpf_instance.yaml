@@ -22,13 +22,6 @@ storage:
 phenotype_data:
   dir: "%(wd)s/pheno"
 
-
-studies:
-  dir: "studies"
-
-datasets:
-  dir: "datasets"
-
 default_study_config:
   conf_file: "%(wd)s/defaultConfiguration.conf"
 

@@ -280,6 +280,7 @@ study_config_schema = {
         "check_with": validate_existing_path,
         "coerce": "abspath",
         "default": ".",
+        "required": True,
     },
     "phenotype_data": {"type": "string"},
     "phenotype_browser": {"type": "boolean"},
@@ -297,10 +298,10 @@ study_config_schema = {
     "genome": {
         "type": "string",
         "allowed": ["hg19", "hg38"],
-        "required": True,
+        "default": "hg19",
     },
     "study_phenotype": {"type": "string"},
-    "chr_prefix": {"type": "boolean", "required": True},
+    "chr_prefix": {"type": "boolean", "default": False},
     "has_denovo": {"type": "boolean", "default": True},
     "has_transmitted": {"type": "boolean"},
     "has_complex": {"type": "boolean"},
@@ -352,6 +353,7 @@ study_config_schema = {
                 "default": "common_report.json",
             },
         },
+        "default": {"enabled": False},
     },
     "denovo_gene_sets": {
         "type": "dict",
@@ -385,6 +387,7 @@ study_config_schema = {
             },
             "gene_sets_names": {"type": "list", "schema": {"type": "string"}},
         },
+        "default": {"enabled": False},
     },
     "enrichment": {
         "type": "dict",
@@ -420,6 +423,7 @@ study_config_schema = {
             "default_counting_model": {"type": "string"},
             "effect_types": {"type": "list", "schema": {"type": "string"}},
         },
+        "default": {"enabled": False},
     },
     "gene_browser": {
         "type": "dict",

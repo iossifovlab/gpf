@@ -7,12 +7,12 @@ config_reference_schema = {
     "conf_file": {
         "type": "string",
         "required": False,
-        "check_with": validate_existing_path,
+        # "check_with": validate_existing_path,
         "coerce": "abspath",
     },
     "dir": {
         "type": "string",
-        "check_with": validate_existing_path,
+        # "check_with": validate_existing_path,
         "coerce": "abspath",
     },
 }
@@ -99,6 +99,13 @@ dae_conf_schema = {
         "check_with": validate_existing_path,
         "coerce": "abspath",
     },
+    "conf_dir": {
+        "type": "string",
+        "check_with": validate_existing_path,
+        "coerce": "abspath",
+        "required": True,
+    },
+
     "mirror_of": {
         "type": "string",
         "default": None, 'nullable': True,
@@ -113,13 +120,22 @@ dae_conf_schema = {
     "genotype_storage": {
         "type": "dict",
         "schema": {"default": {"type": "string"}},
+        "default": {"default": "genotype_filesystem"},
     },
     "storage": {
         "type": "dict",
         "valuesrules": {"type": "dict", "schema": storage_schema},
     },
-    "studies": {"type": "dict", "schema": config_reference_schema},
-    "datasets": {"type": "dict", "schema": config_reference_schema},
+    "studies": {
+        "type": "dict",
+        "schema": config_reference_schema,
+        "default": {"dir": "studies"},
+    },
+    "datasets": {
+        "type": "dict",
+        "schema": config_reference_schema,
+        "default": {"dir": "datasets"}
+    },
     "genomic_scores_db": {"type": "dict", "schema": config_reference_schema},
     "autism_gene_tool_config": {
         "type": "dict", "schema": config_reference_schema
@@ -130,7 +146,7 @@ dae_conf_schema = {
         "schema": {
             "dir": {
                 "type": "string",
-                "check_with": validate_existing_path,
+                # "check_with": validate_existing_path,
                 "coerce": "abspath",
             }
         },
@@ -162,7 +178,7 @@ dae_conf_schema = {
             },
             "permission_denied_prompt_file": {
                 "type": "string",
-                "check_with": validate_existing_path,
+                # "check_with": validate_existing_path,
                 "coerce": "abspath",
             }
         },

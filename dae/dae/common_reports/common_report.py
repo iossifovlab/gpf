@@ -125,7 +125,8 @@ class CommonReport(object):
 
     def _get_phenotype(self):
         config = self.genotype_data_study.config.person_set_collections
-        assert config.selected_person_set_collections is not None
+        assert config.selected_person_set_collections is not None, config
+
         collection = self.genotype_data_study.get_person_set_collection(
             config.selected_person_set_collections[0]
         )
