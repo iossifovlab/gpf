@@ -5,6 +5,7 @@ import os
 import gzip
 import pysam
 import logging
+import datetime
 
 from .repository import GenomicResource
 from .repository import GenomicResourceRepo
@@ -45,7 +46,9 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
 
         def my_leaf_to_size_and_time(ff):
             sts = ff.stat()
-            return sts.st_size, sts.st_mtime
+
+            return sts.st_size, \
+                datetime.datetime.fromtimestamp(int(sts.st_mtime)).isoformat()
         yield from find_genomic_resource_files_helper(
             content_dict, my_leaf_to_size_and_time)
 
@@ -99,6 +102,9 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                 dest_mnfst = self._copy_manifest_entry(
                     dest_gr, src_gr, src_file)
                 result_manifest.append(dest_mnfst)
+            else:
+                result_manifest.append(dest_file)
+
         dest_gr.save_manifest(result_manifest)
 
     def _delete_manifest_entry(
@@ -143,7 +149,8 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                 f"expected md5 is {src_mnfst_file['md5']}; "
                 f"calculated md5 for the stored file is {md5}")
             raise IOError(f"storing of {src_gr.resource_id} failed")
-        src_modtime = src_mnfst_file["time"]
+        src_modtime = datetime.datetime.fromisoformat(
+            src_mnfst_file["time"]).timestamp()
 
         dest_filename = dr / filename
         assert dest_filename.exists()

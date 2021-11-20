@@ -192,8 +192,8 @@ class GenomicResource:
                     if cmnF["size"] == fs and cmnF["time"] == ft:
                         md5 = currentManifestD[fn]["md5"]
                     else:
-                        print(f"Updating md5 sum for file {fn}"
-                              "for resource {self.id}")
+                        print(f"Updating md5 sum for file {fn} "
+                              f"for resource {self.resource_id}")
                 else:
                     print(
                         f"Found a new file {fn} for resource "

@@ -47,23 +47,23 @@ def test_md5_checksum():
 def test_manifest_file_creation():
     repo = GenomicResourceEmbededRepo("a", {
         "one": {
-            "genomic_resource.yaml": ["", 3],
-            "data.txt": ["some data", 4],
+            "genomic_resource.yaml": ["", '2000-03-03'],
+            "data.txt": ["some data", '2000-03-08T10:03:03'],
             "stats": {
-                "hists.txt": ["1,3,4", 10],
-                "hists.png": ["PNG", 11]
+                "hists.txt": ["1,3,4", '1999-03-08T10:03:03'],
+                "hists.png": ["PNG", '1999-03-08T10:04:03']
             }
         }
     })
     gr = repo.get_resource("one")
     assert gr.get_manifest() == [
-        {'name': 'data.txt', 'size': 9, 'time': 4,
+        {'name': 'data.txt', 'size': 9, 'time': '2000-03-08T10:03:03',
          'md5': '1e50210a0202497fb79bc38b6ade6c34'},
-        {'name': 'genomic_resource.yaml', 'size': 0, 'time': 3,
+        {'name': 'genomic_resource.yaml', 'size': 0, 'time': '2000-03-03',
          'md5': 'd41d8cd98f00b204e9800998ecf8427e'},
-        {'name': 'stats/hists.png', 'size': 3, 'time': 11,
+        {'name': 'stats/hists.png', 'size': 3, 'time': '1999-03-08T10:04:03',
          'md5': '55505ba281b015ec31f03ccb151b2a34'},
-        {'name': 'stats/hists.txt', 'size': 5, 'time': 10,
+        {'name': 'stats/hists.txt', 'size': 5, 'time': '1999-03-08T10:03:03',
          'md5': '9d9676541599e2054d98df2d361775c0'}]
 
 
@@ -82,11 +82,11 @@ def test_type_of_genomic_resoruces():
 def test_resources_files():
     repo = GenomicResourceEmbededRepo("a", {
         "one": {
-            "genomic_resource.yaml": ["", 3],
-            "data.txt": ["some data", 4],
+            "genomic_resource.yaml": ["", '2000-03-03'],
+            "data.txt": ["some data", '2000-03-08T10:03:03'],
             "stats": {
-                "hists.txt": ["1,3,4", 10],
-                "hists.png": ["PNG", 11]
+                "hists.txt": ["1,3,4", '1999-03-08T10:04:03'],
+                "hists.png": ["PNG", '1999-03-08T10:03:03']
             }
         }
     })
@@ -94,7 +94,7 @@ def test_resources_files():
     assert gr
 
     assert {(fn, fs, ft) for fn, fs, ft in gr.get_files()} == {
-        ("genomic_resource.yaml", 0, 3),
-        ("data.txt", 9, 4),
-        ("stats/hists.txt", 5, 10),
-        ("stats/hists.png", 3, 11)}
+        ("genomic_resource.yaml", 0, '2000-03-03'),
+        ("data.txt", 9, '2000-03-08T10:03:03'),
+        ("stats/hists.txt", 5, '1999-03-08T10:04:03'),
+        ("stats/hists.png", 3, '1999-03-08T10:03:03')}

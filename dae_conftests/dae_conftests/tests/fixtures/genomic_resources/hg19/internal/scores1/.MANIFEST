@@ -1,20 +1,20 @@
 - md5: 7eb9662b7995df530a9ac725a1316fbf
   name: MANIFEST
   size: 336
-  time: 1636543148.7570698
+  time: '2021-11-06T17:26:11'
 - md5: 4ad8643be86d50c2c03f86446c677c56
   name: genomic_resource.yaml
   size: 961
-  time: 1636543148.7570698
+  time: '2021-11-06T17:26:11'
 - md5: 093c47435b7440def543b99758a92afe
   name: scores1.tsv.gz
   size: 367
-  time: 1636543148.7570698
+  time: '2021-11-06T17:26:11'
 - md5: 7078e1403c7c4d627a1b7c5370f8ec21
   name: scores1.tsv.gz.conf
   size: 352
-  time: 1636543148.7570698
+  time: '2021-11-06T17:26:11'
 - md5: 26aa9750f0a1ad0458bcc99fe7d71ac2
   name: scores1.tsv.gz.tbi
   size: 1350
-  time: 1636543148.7570698
+  time: '2021-11-06T17:26:11'

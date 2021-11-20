@@ -7,13 +7,15 @@ from .repository import GR_ENCODING
 import gzip
 import io
 import time
+import datetime
 
 
 class GenomicResourceEmbededRepo(GenomicResourceRealRepo):
     def __init__(self, repo_id, content, **atts):
         super().__init__(repo_id)
         self.content = content
-        self.stable_timestamp = time.time()
+        self.stable_timestamp = datetime.datetime.fromtimestamp(
+            int(time.time())).isoformat()
 
     def get_all_resources(self):
         for grId, grVr in find_genomic_resources_helper(self.content):

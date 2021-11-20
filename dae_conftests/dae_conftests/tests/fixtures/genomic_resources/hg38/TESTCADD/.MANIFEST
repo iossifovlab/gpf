@@ -1,12 +1,12 @@
 - md5: 18001f318b5e9226d4ce5fd16613ac43
   name: TESTCADD.tsv.gz
   size: 639
-  time: 1636543148.78107
+  time: '2021-11-06T17:26:11'
 - md5: 64ea2e483af33f1ad35d771653889e1d
   name: TESTCADD.tsv.gz.tbi
   size: 99
-  time: 1636543148.78107
+  time: '2021-11-06T17:26:11'
 - md5: 001b1d7114bcc999850a39ada71349db
   name: genomic_resource.yaml
   size: 926
-  time: 1636543148.78107
+  time: '2021-11-06T17:26:11'

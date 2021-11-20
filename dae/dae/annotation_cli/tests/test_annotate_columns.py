@@ -67,7 +67,7 @@ def test_basic_setup(tmp_path):
 
     cli([
         str(a) for a in [
-            annotation_file, in_file, out_file, "-grr", grr_file
+            in_file, annotation_file, out_file, "-grr", grr_file
         ]
     ])
     out_file_content = get_file_content_as_string(out_file)

@@ -55,8 +55,8 @@ def test_cached_get_all_resources(tmpdir):
             },
             "two[1.0]": {
                 GR_CONF_FILE_NAME:
-                    ["type: GeneModels\nfile: genes.gtf", 1636241590.2],
-                "genes.txt": [demo_gtf_content, 1636241585.5]
+                    ["type: GeneModels\nfile: genes.gtf", '2021-11-20T00:00:56'],
+                "genes.txt": [demo_gtf_content, '2021-11-13T00:00:56']
             }
         }
     })
@@ -88,8 +88,8 @@ def test_cache_all(tmpdir):
             },
             "two[1.0]": {
                 GR_CONF_FILE_NAME:
-                    ["type: GeneModels\nfile: genes.gtf", 1636241590.2],
-                "genes.txt": [demo_gtf_content, 1636241585.5]
+                    ["type: GeneModels\nfile: genes.gtf", '2021-11-20T00:00:56'],
+                "genes.txt": [demo_gtf_content, '2021-11-13T00:00:56']
             }
         }
     })
@@ -131,8 +131,9 @@ def test_cached_default_http_repo(
 
     src_repo = GenomicResourceURLRepo(
         "default_http",
-        "https://www.iossifovlab.com/distribution/public/"
-        "genomic-resources-repository"
+        "file:///Users/iiossifov/genomic-resources-repository-clean"
+        # "https://www.iossifovlab.com/distribution/public/"
+        # "genomic-resources-repository"
     )
 
     cached_repo = GenomicResourceCachedRepo(

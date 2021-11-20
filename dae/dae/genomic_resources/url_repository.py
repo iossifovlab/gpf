@@ -39,7 +39,7 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
     def get_files(self, genomicResource: GenomicResource):
         mnfst = genomicResource.load_manifest()
         for mnfst in mnfst:
-            yield mnfst['name'], int(mnfst['size']), float(mnfst['time'])
+            yield mnfst['name'], int(mnfst['size']), mnfst['time']
 
     def get_file_url(self, genomic_resource, filename):
         return self.url + "/" + genomic_resource.get_genomic_resource_dir() + \

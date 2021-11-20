@@ -97,4 +97,4 @@ def cli_cache_repo(args=None):
 
 
 if __name__ == '__main__':
-    cli(sys.argv[1:])
+    cli_browse(sys.argv[1:])

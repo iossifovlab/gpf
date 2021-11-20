@@ -1,8 +1,8 @@
 - md5: 10d25f2c4ca897cdc7ca7977aca22ea3
   name: genomic_resource.yaml
   size: 168
-  time: 1636543148.76907
+  time: '2021-11-06T17:26:11'
 - md5: 05d8bbd9616407e862d82593d5fd1756
   name: refSeq_20200330.txt
   size: 30558
-  time: 1636543148.76907
+  time: '2021-11-06T17:26:11'
