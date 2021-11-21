@@ -176,6 +176,7 @@ class GenomicResource:
         return md5_hash.hexdigest()
 
     def build_manifest(self):
+        self._manifest = None
         return [{"name": fn, "size": fs, "time": ft,
                  "md5": self.get_md5_sum(fn)}
                 for fn, fs, ft in sorted(self.get_files())]
@@ -215,12 +216,15 @@ class GenomicResource:
     def save_manifest(self, manifest):
         with self.open_raw_file(GR_MANIFEST_FILE_NAME, "wt") as MOF:
             yaml.dump(manifest, MOF)
+        self._manifest = None
 
     def get_manifest(self):
-        try:
-            return self.load_manifest()
-        except Exception:
-            return self.build_manifest()
+        if self._manifest is None:
+            try:
+                self._manifest = self.load_manifest()
+            except Exception:
+                self._manifest = self.build_manifest()
+        return self._manifest
 
     def load_yaml(self, filename):
         return self.repo.load_yaml(self, filename)
@@ -279,12 +283,13 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
         super().__init__()
         self.repo_id = repo_id
 
-    def build_genomic_resource(self, id, version):
-        grTemp = GenomicResource(id, version, self)
-        resourceConfig = grTemp.load_yaml(GR_CONF_FILE_NAME)
+    def build_genomic_resource(self, id, version, config=None, manifest=None):
+        if not config:
+            grTemp = GenomicResource(id, version, self)
+            config = grTemp.load_yaml(GR_CONF_FILE_NAME)
         grClass = GenomicResource
-        if isinstance(resourceConfig, dict) and "type" in resourceConfig:
-            grClassType = resourceConfig["type"]
+        if isinstance(config, dict) and "type" in config:
+            grClassType = config["type"]
             try:
                 grClass = _registered_genomic_resource_types[grClassType]
             except KeyError:
@@ -293,7 +298,9 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
                     f"resource types are: " +
                     ", ".join(sorted(
                         _registered_genomic_resource_types.keys())))
-        return grClass(id, version, self, resourceConfig)
+        gr = grClass(id, version, self, config)
+        gr._manifest = manifest
+        return gr
 
     def get_resource(self, resource_id, version_constraint=None,
                      genomic_repository_id=None) -> GenomicResource:

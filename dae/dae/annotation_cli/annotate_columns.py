@@ -1,153 +1,19 @@
 from __future__ import annotations
 
 import sys
-import abc
 import gzip
 import argparse
-from dae.annotation.annotatable import Annotatable
-from dae.annotation.annotatable import Position
-from dae.annotation.annotatable import Region
-from dae.annotation.annotatable import VCFAllele
-
-from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.annotation.annotation_pipeline import AnnotationPipelineContext
-
-from dae.annotation.effect_annotator import EffectAnnotatorAdapter
-from dae.genomic_resources import build_genomic_resource_repository
+from .context import Context
+from .context import add_context_arguments
+from .record_to_annotatable import build_record_to_annotatable
+from .record_to_annotatable import add_record_to_annotable_arguments
 
 
-class RecordToAnnotable(abc.ABC):
-    @abc.abstractmethod
-    def build(self, record: dict[str, str]) -> Annotatable:
-        pass
-
-
-class RecordToPosition(RecordToAnnotable):
-    def __init__(self, columns: list[str]):
-        self.chrom_column, self.pos_column = columns
-
-    def build(self, record: dict[str, str]) -> Annotatable:
-        return Position(record[self.chrom_column],
-                        int(record[self.pos_column]))
-
-
-class RecordToRegion(RecordToAnnotable):
-    def __init__(self, columns: list[str]):
-        self.chrom_col, self.pos_beg_col, self.pos_end_col = columns
-
-    def build(self, record: dict[str, str]) -> Annotatable:
-        return Region(record[self.chrom_col],
-                      int(record[self.pos_beg_col]),
-                      int(record[self.pos_end_col]))
-
-
-class RecordToVcfAllele(RecordToAnnotable):
-    def __init__(self, columns: list[str]):
-        self.chrom_col, self.pos_col, self.ref_col, self.alt_col = columns
-
-    def build(self, record: dict[str, str]) -> Annotatable:
-        return VCFAllele(record[self.chrom_col],
-                         int(record[self.pos_col]),
-                         record[self.ref_col],
-                         record[self.alt_col])
-
-
-class VcfLikeRecordToVcfAllele(RecordToAnnotable):
-    def __init__(self, columns: list[str]):
-        self.vcf_like_col, = columns
-
-    def build(self, record: dict[str, str]) -> Annotatable:
-        chrom, pos, ref, alt = record[self.vcf_like_col].split(":")
-        return VCFAllele(chrom, int(pos), ref, alt)
-
-
-RECORD_TO_ANNOTABALE_CONFIGUATION = {
-    ("chrom", "pos_beg", "pos_end"): RecordToRegion,
-    ("chrom", "pos", "ref", "alt"): RecordToVcfAllele,
-    ("vcf_like",): VcfLikeRecordToVcfAllele,
-    ("chrom", "pos"): RecordToPosition
-}
-
-
-def build_record_to_annotatable(parameters: dict[str, str],
-                                available_columns: set[str]):
-    for columns, record_to_annotabale_class in \
-            RECORD_TO_ANNOTABALE_CONFIGUATION.items():
-        renamed_columns = [parameters.get(
-            f'col_{col}', col) for col in columns]
-        all_available = len(
-            [cn for cn in renamed_columns if cn not in available_columns]) == 0
-        if all_available:
-            return record_to_annotabale_class(renamed_columns)
-
-
-class Context(AnnotationPipelineContext):
-    def __init__(self, args):
-        self.args = args
-        self._gpf_instance = None
-        self._ref_genome = None
-        self._gene_models = None
-        self._pipeline = None
-
-    def get_gpf_instance(self):
-        if self._gpf_instance is None:
-            from dae.gpf_instance import GPFInstance
-            self._gpf_instance = GPFInstance(self.args.gpf_instance_dir)
-        return self._gpf_instance
-
-    def get_grr(self):
-        if self.args.pipeline == "gpf_instance" or \
-                self.args.grr_file_name == "gpf_intance":
-            return self.get_gpf_instance().grr
-        else:
-            return build_genomic_resource_repository(
-                file_name=self.args.grr_file_name)
-
-    def get_pipeline(self):
-        if self._pipeline is None:
-            if self.args.pipeline == "gpf_instance":
-                from dae.gpf_instance import GPFInstance
-                gpf: GPFInstance = self.get_gpf_instance()
-                self._pipeline = gpf.get_annotation_pipeline()
-                self._pipeline.add_annotator(EffectAnnotatorAdapter(
-                    gene_models=gpf.gene_models,
-                    genome=gpf.reference_genome))
-                # TODO: Improved on that
-                # 1. copy the pipeline?
-                # 2. prepend the EffectAnnotator
-            else:
-                self._pipeline = AnnotationPipeline.build(
-                    pipeline_config_file=self.args.pipeline,
-                    grr_repository=self.get_grr())
-        return self._pipeline
-
-    def get_reference_genome(self):
-        if self._ref_genome is None:
-            if self.args.ref_genome_resource_id is not None:
-                self._ref_genome = self.get_grr().get_resource(
-                    self.args.ref_genome_resource_id)
-                self._ref_genome.open()
-            else:
-                self._ref_genome = self.get_gpf_instance().reference_genome
-        return self._ref_genome
-
-    def get_gene_models(self):
-        if self.gene_models is None:
-            if self.args.gene_models_resource_id is not None:
-                self._gene_models = self.get_grr().get_resource(
-                    self.args.gene_models_resource_id)
-                self.gene_models.open()
-            else:
-                self.gene_models = self.get_gpf_instance().gene_models
-        return self.gene_models
-
-
-def cli(raw_args: list[str] = None):
+def configure_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Annotate columns",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-
     parser.add_argument('input', default='-', nargs="?",
                         help="the input column file")
     parser.add_argument('pipeline', default="gpf_instance", nargs="?",
@@ -157,37 +23,28 @@ def cli(raw_args: list[str] = None):
     parser.add_argument('output', default='-', nargs="?",
                         help="the output column file")
 
-    parser.add_argument('-grr', '--grr-file-name', default=None,
-                        help="The GRR configuration file. If absent, "
-                        "the default GRR repository will be used. "
-                        "If equall equal to gpf_instance, will try get "
-                        "the GRR for the configured gpf instance.")
-    parser.add_argument('-gpf', '--gpf-intance-dir', default=None,
-                        help="The gpf instance to be used for as context.")
-    parser.add_argument('-ref', '--ref-genome-resource-id', default=None,
-                        help='The resource id for the referende genome.')
-    parser.add_argument('-genes', '--gene-models-resource-id', default=None,
-                        help="The resource is of the gene models resoruce.")
     parser.add_argument('-in_sep', '--input-separator', default="\t",
                         help="The column separator in the input")
     parser.add_argument('-out_sep', '--output-separator', default="\t",
                         help="The column separator in the output")
+    parser.add_argument("-v", "--verbosity", action="count", default=0,
+                        help="increase output verbosity")
+    add_context_arguments(parser)
+    add_record_to_annotable_arguments(parser)
+    return parser
 
-    all_columns = {col for cols in RECORD_TO_ANNOTABALE_CONFIGUATION.keys()
-                   for col in cols}
-    for col in all_columns:
-        parser.add_argument(f'--col_{col}', default=col,
-                            help=f"The column name that stores {col}")
 
+def cli(raw_args: list[str] = None):
     if not raw_args:
         raw_args = sys.argv[1:]
+
+    parser = configure_argument_parser()
     args = parser.parse_args(raw_args)
 
     context = Context(args)
-    pipeline = context.get_pipeline()
 
+    pipeline = context.get_pipeline()
     annotation_attributes = pipeline.annotation_schema.names
-    print("DEBUG", annotation_attributes)
 
     if args.input == "-":
         in_file = sys.stdin
@@ -225,5 +82,4 @@ def cli(raw_args: list[str] = None):
 
 
 if __name__ == '__main__':
-    print('hi')
     cli(sys.argv[1:])

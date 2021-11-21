@@ -32,12 +32,14 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
                 urlopen(self.url + "/" + GRP_CONTENTS_FILE_NAME))
             for rdf in contents:
                 versionT = tuple(map(int, rdf['version'].split(".")))
-                resource = self.build_genomic_resource(rdf['id'], versionT)
+                resource = self.build_genomic_resource(
+                    rdf['id'], versionT, config=rdf['config'],
+                    manifest=rdf['manifest'])
                 self._all_resources.append(resource)
         yield from self._all_resources
 
     def get_files(self, genomicResource: GenomicResource):
-        mnfst = genomicResource.load_manifest()
+        mnfst = genomicResource.get_manifest()
         for mnfst in mnfst:
             yield mnfst['name'], int(mnfst['size']), mnfst['time']
 

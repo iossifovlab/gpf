@@ -21,6 +21,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
     def __init__(self, repo_id, directory, **atts):
         super().__init__(repo_id)
         self.directory = pathlib.Path(directory)
+        self._all_resources = None
 
     def _dir_to_dict(self, dr):
         if dr.is_dir():
@@ -36,9 +37,12 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
             file_name
 
     def get_all_resources(self):
-        d = self._dir_to_dict(self.directory)
-        for grId, grVr in find_genomic_resources_helper(d):
-            yield self.build_genomic_resource(grId, grVr)
+        if self._all_resources is None:
+            d = self._dir_to_dict(self.directory)
+            self._all_resources = [self.build_genomic_resource(grId, grVr)
+                                   for grId, grVr in
+                                   find_genomic_resources_helper(d)]
+        yield from self._all_resources
 
     def get_files(self, genomic_resource):
         content_dict = self._dir_to_dict(
@@ -172,15 +176,17 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                 self._copy_manifest_entry(temp_gr, resource, mnf_file)
             assert dest_mnf_file == mnf_file
 
-        new_gr = self.get_resource(
-            resource.resource_id,
-            f"={resource.get_version_str()}")
-        new_gr.save_manifest(manifest)
+        # new_gr = self.get_resource(
+        #     resource.resource_id,
+        #    f"={resource.get_version_str()}")
+        temp_gr.save_manifest(manifest)
+        self._all_resources = None
 
     def save_content_file(self):
         content_filename = self.directory / GRP_CONTENTS_FILE_NAME
         logger.debug(f"saving contents file {content_filename}")
-        content = [{"id": gr.resource_id, "version": gr.get_version_str()}
+        content = [{"id": gr.resource_id, "version": gr.get_version_str(),
+                    "config": gr.get_config(), "manifest": gr.get_manifest()}
                    for gr in self.get_all_resources()]
         content = sorted(content, key=lambda x: x['id'])
         with open(content_filename, "w") as CF:

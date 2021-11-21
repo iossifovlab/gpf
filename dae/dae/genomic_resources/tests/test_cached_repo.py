@@ -131,9 +131,8 @@ def test_cached_default_http_repo(
 
     src_repo = GenomicResourceURLRepo(
         "default_http",
-        "file:///Users/iiossifov/genomic-resources-repository-clean"
-        # "https://www.iossifovlab.com/distribution/public/"
-        # "genomic-resources-repository"
+        "https://www.iossifovlab.com/distribution/public/"
+        "genomic-resources-repository"
     )
 
     cached_repo = GenomicResourceCachedRepo(

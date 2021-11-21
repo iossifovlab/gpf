@@ -121,14 +121,15 @@ class EffectAnnotatorAdapter(Annotator):
     def _do_annotate(
             self, attributes, annotatable: Annotatable, _liftover_context):
 
-        assert isinstance(annotatable, VCFAllele) or \
-            isinstance(annotatable, CNVAllele), annotatable
-
         if annotatable is None:
             self._not_found(attributes)
             return
 
-        assert annotatable is not None
+        if not isinstance(annotatable, VCFAllele) and  \
+                not isinstance(annotatable, CNVAllele):
+            self._not_found(attributes)
+            return
+
         length = len(annotatable)
 
         effects = self.effect_annotator.do_annotate_variant(

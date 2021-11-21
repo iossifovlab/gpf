@@ -1,28 +1,585 @@
-- id: hg19/CADD
+- config:
+    alternative:
+      index: 3
+    chrom:
+      index: 0
+    default_annotation:
+      attributes:
+      - aggregator:
+          nucleotide: MaxAggregator
+          position: MaxAggregator
+        dest: cadd_raw
+        source: cadd_raw
+      - aggregator:
+          nucleotide: MaxAggregator
+          position: MaxAggregator
+        dest: cadd_phred
+        source: cadd_phred
+    filename: CADD.bedgraph.gz
+    format: tsv/bgz
+    has_header: false
+    id: hg19/CADD
+    index_file:
+      filename: CADD.bedgraph.gz.tbi
+      format: tabix
+    pos_begin:
+      index: 1
+    reference:
+      index: 2
+    resource_type: score_resources.NPScoreResource
+    scores:
+    - desc: ''
+      id: cadd_raw
+      index: 4
+      type: float
+    - desc: ''
+      id: cadd_phred
+      index: 5
+      type: float
+    type_aggregators:
+    - aggregator: dae.genomic_resource.aggregators.MaxAggregator
+      type: float
+    - aggregator: dae.genomic_resource.aggregators.MaxAggregator
+      type: int
+    - aggregator: dae.genomic_resource.aggregators.ConcatAggregator
+      type: str
+  id: hg19/CADD
+  manifest:
+  - md5: 9499e8511a30d7445ec973cae9726920
+    name: CADD.bedgraph.gz
+    size: 18459035
+    time: '2021-11-06T17:26:10'
+  - md5: 5d95f08840be7f0f6fef13a5157d7f47
+    name: CADD.bedgraph.gz.tbi
+    size: 670
+    time: '2021-11-06T17:26:10'
+  - md5: f88a081e6062d01137363cb836e8957d
+    name: genomic_resource.yaml
+    size: 1013
+    time: '2021-11-06T17:26:10'
   version: '0'
-- id: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/gene_models/refGene_201309
+- config:
+    filename: refGene201309.txt
+    format: default
+    meta: '## refGene gene models from 2013-09
+
+
+      Old gene models used by GPF up to 2019-02.
+
+      '
+    type: GeneModels
+  id: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/gene_models/refGene_201309
+  manifest:
+  - md5: 00ad196dedc47f7991cba52b8cb27ade
+    name: genomic_resource.yaml
+    size: 160
+    time: '2021-11-10T09:58:05'
+  - md5: a42701941f92c7b999a4f8f26e4a3a47
+    name: refGene201309.txt
+    size: 3761
+    time: '2021-11-10T09:58:05'
   version: '0'
-- id: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
+- config:
+    PARS:
+      X:
+      - X:60001-2699520
+      - X:154931044-155260560
+      Y:
+      - Y:10001-2649520
+      - Y:59034050-59363566
+    chrom_prefix: ''
+    filename: chrAll.fa
+    meta: '## HG19 Reference Genome Fragment
+
+
+      Default HG19 reference genome used by GPF
+
+      '
+    type: Genome
+  id: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
+  manifest:
+  - md5: bc006bda05a3f23930a65f9d566a42a2
+    name: chrAll.fa
+    size: 915148
+    time: '2021-11-10T09:58:05'
+  - md5: e195bffa62daa1d82e341f0bd4fb72ad
+    name: chrAll.fa.fai
+    size: 62
+    time: '2021-11-10T09:58:05'
+  - md5: b1e416c2cb275f0672fb497525242d78
+    name: genomic_resource.yaml
+    size: 270
+    time: '2021-11-10T09:58:05'
   version: '0'
-- id: hg19/MPC
+- config:
+    default_annotation:
+      attributes:
+      - aggregator:
+          nucleotide: MaxAggregator
+          position: MaxAggregator
+        dest: mpc
+        source: MPC
+    scores:
+    - desc: ''
+      id: MPC
+      name: MPC
+      type: float
+    table:
+      alternative:
+        name: alt
+      chrom:
+        name: chrom
+      filename: fordist_constraint_official_mpc_values_v2.txt.gz
+      format: tabix
+      pos_begin:
+        name: pos
+      reference:
+        name: ref
+    type: NPScore
+    type_aggregators:
+    - aggregator: dae.genomic_resource.aggregators.MaxAggregator
+      type: float
+    - aggregator: dae.genomic_resource.aggregators.MaxAggregator
+      type: int
+    - aggregator: dae.genomic_resource.aggregators.ConcatAggregator
+      type: str
+  id: hg19/MPC
+  manifest:
+  - md5: cd8f6f35577bc24f6b56c6ff1c06173a
+    name: fordist_constraint_official_mpc_values_v2.txt.gz
+    size: 417277
+    time: '2021-11-06T17:26:10'
+  - md5: 5bb77f8efe6ed1b01b3422a3b5070307
+    name: fordist_constraint_official_mpc_values_v2.txt.gz.tbi
+    size: 257
+    time: '2021-11-06T17:26:10'
+  - md5: c376ff46e5f2b51b234aa3f088754451
+    name: genomic_resource.yaml
+    size: 735
+    time: '2021-11-06T17:26:10'
   version: '0'
-- id: hg19/internal/scores1
+- config:
+    default_annotation:
+      attributes:
+      - aggregator:
+          position: MaxAggregator
+        dest: score0
+        source: score0
+      - aggregator:
+          position: MaxAggregator
+        dest: score2
+        source: score2
+      - aggregator:
+          position: MaxAggregator
+        dest: score4
+        source: score4
+    id: hg19/internal/scores1
+    scores:
+    - id: score0
+      name: score0
+      type: float
+    - id: score2
+      name: score2
+      type: float
+    - id: score4
+      name: score4
+      type: float
+    table:
+      chrom:
+        name: CHROM
+      filename: scores1.tsv.gz
+      format: tabix
+      pos_begin:
+        name: POS
+      pos_end:
+        name: POS
+    type: PositionScore
+    type_aggregators:
+    - aggregator: dae.genomic_resource.aggregators.MaxAggregator
+      type: float
+    - aggregator: dae.genomic_resource.aggregators.MaxAggregator
+      type: int
+    - aggregator: dae.genomic_resource.aggregators.ConcatAggregator
+      type: str
+  id: hg19/internal/scores1
+  manifest:
+  - md5: 7eb9662b7995df530a9ac725a1316fbf
+    name: MANIFEST
+    size: 336
+    time: '2021-11-06T17:26:11'
+  - md5: 4ad8643be86d50c2c03f86446c677c56
+    name: genomic_resource.yaml
+    size: 961
+    time: '2021-11-06T17:26:11'
+  - md5: 093c47435b7440def543b99758a92afe
+    name: scores1.tsv.gz
+    size: 367
+    time: '2021-11-06T17:26:11'
+  - md5: 7078e1403c7c4d627a1b7c5370f8ec21
+    name: scores1.tsv.gz.conf
+    size: 352
+    time: '2021-11-06T17:26:11'
+  - md5: 26aa9750f0a1ad0458bcc99fe7d71ac2
+    name: scores1.tsv.gz.tbi
+    size: 1350
+    time: '2021-11-06T17:26:11'
   version: '0'
-- id: hg19/internal/scores_incomplete_coverage
+- config:
+    default_annotation:
+      attributes:
+      - aggregator:
+          position: MaxAggregator
+        dest: score0_incomplete_cov
+        source: score0_incomplete_cov
+    id: hg19/internal/scores_incomplete_coverage
+    scores:
+    - id: score0_incomplete_cov
+      name: score0
+      type: float
+    table:
+      chrom:
+        name: CHROM
+      filename: scores_incomplete_coverage.tsv.gz
+      format: tabix
+      pos_begin:
+        name: POS
+      pos_end:
+        name: POS
+    type: PositionScore
+    type_aggregators:
+    - aggregator: dae.genomic_resource.aggregators.MaxAggregator
+      type: float
+    - aggregator: dae.genomic_resource.aggregators.MaxAggregator
+      type: int
+    - aggregator: dae.genomic_resource.aggregators.ConcatAggregator
+      type: str
+  id: hg19/internal/scores_incomplete_coverage
+  manifest:
+  - md5: 0861ec8c51f6d1909f42ef459e18fe4e
+    name: MANIFEST
+    size: 393
+    time: '2021-11-06T17:26:11'
+  - md5: e8f6eaf60436b26b5799c70dd93ae3c5
+    name: genomic_resource.yaml
+    size: 751
+    time: '2021-11-06T17:26:11'
+  - md5: 28ee47e15cc15c1b8881cd453cdefc7d
+    name: scores_incomplete_coverage.tsv.gz
+    size: 176
+    time: '2021-11-06T17:26:11'
+  - md5: 0430149f831b429fbf64235468576191
+    name: scores_incomplete_coverage.tsv.gz.conf
+    size: 292
+    time: '2021-11-06T17:26:11'
+  - md5: f77946424457cdc1e16ae23ba2062b1d
+    name: scores_incomplete_coverage.tsv.gz.tbi
+    size: 987
+    time: '2021-11-06T17:26:11'
   version: '0'
-- id: hg19/phastCons100
+- config:
+    chrom:
+      index: 0
+    default_annotation:
+      attributes:
+      - aggregator:
+          position: MaxAggregator
+        dest: phastCons100
+        source: phastCons100
+    filename: phastCons100.bedGraph.gz
+    format: tsv/bgz
+    has_header: false
+    id: hg19/phastCons100
+    index_file:
+      filename: phastCons100.bedGraph.gz.tbi
+      format: tabix
+    pos_begin:
+      index: 1
+    pos_end:
+      index: 2
+    resource_type: score_resources.PositionScoreResource
+    scores:
+    - desc: phastCons100
+      id: phastCons100
+      index: 3
+      type: float
+    type_aggregators:
+    - aggregator: dae.genomic_resource.aggregators.MaxAggregator
+      type: float
+    - aggregator: dae.genomic_resource.aggregators.MaxAggregator
+      type: int
+    - aggregator: dae.genomic_resource.aggregators.ConcatAggregator
+      type: str
+  id: hg19/phastCons100
+  manifest:
+  - md5: 6cebb0824c95ae058289e3588320db36
+    name: genomic_resource.yaml
+    size: 808
+    time: '2021-11-06T17:26:11'
+  - md5: 00c69ea8fae8ab8445ff64616b8cc07a
+    name: phastCons100.bedGraph.gz
+    size: 2556019
+    time: '2021-11-06T17:26:11'
+  - md5: c2c4b109900b9f5ea940563bab3a8ad7
+    name: phastCons100.bedGraph.gz.tbi
+    size: 622
+    time: '2021-11-06T17:26:11'
   version: '0'
-- id: hg38/GRCh38-hg38/gene_models/refSeq_20200330
+- config:
+    filename: refSeq_20200330.txt
+    format: refseq
+    meta: '## refSeq gene models for HG38 from 2020-03
+
+
+      Default gene models used by GPF for HG38.
+
+      '
+    type: GeneModels
+  id: hg38/GRCh38-hg38/gene_models/refSeq_20200330
+  manifest:
+  - md5: 10d25f2c4ca897cdc7ca7977aca22ea3
+    name: genomic_resource.yaml
+    size: 168
+    time: '2021-11-06T17:26:11'
+  - md5: 05d8bbd9616407e862d82593d5fd1756
+    name: refSeq_20200330.txt
+    size: 30558
+    time: '2021-11-06T17:26:11'
   version: '0'
-- id: hg38/GRCh38-hg38/genome
+- config:
+    PARS:
+      X:
+      - chrX:10000-2781479
+      - chrX:155701382-156030895
+      Y:
+      - chrY:10000-2781479
+      - chrY:56887902-57217415
+    chrom_prefix: ''
+    filename: GRCh38_full_analysis_set_plus_decoy_hla.fa
+    meta: "## HG38 Reference Genome \n\nDefault HG38 reference genome used by GPF\n"
+    type: Genome
+  id: hg38/GRCh38-hg38/genome
+  manifest:
+  - md5: e00929f659f77c5d04d0a881cf6f3033
+    name: GRCh38_full_analysis_set_plus_decoy_hla.fa
+    size: 2840225
+    time: '2021-11-06T17:26:11'
+  - md5: 2e3b716901f9da348a3ea6a424d54006
+    name: GRCh38_full_analysis_set_plus_decoy_hla.fa.fai
+    size: 50
+    time: '2021-11-06T17:26:11'
+  - md5: 76e0325983d973c3896613c06be2b9ec
+    name: genomic_resource.yaml
+    size: 308
+    time: '2021-11-06T17:26:11'
   version: '0'
-- id: hg38/TESTCADD
+- config:
+    default_annotation:
+      attributes:
+      - aggregator:
+          nucleotide: MaxAggregator
+          position: MaxAggregator
+        dest: cadd_raw
+        source: cadd_raw
+      - aggregator:
+          nucleotide: MaxAggregator
+          position: MaxAggregator
+        dest: cadd_phred
+        source: cadd_phred
+    scores:
+    - desc: ''
+      id: cadd_raw
+      name: RawScore
+      type: float
+    - desc: ''
+      id: cadd_phred
+      name: PHRED
+      type: float
+    table:
+      alternative:
+        name: Alt
+      chrom:
+        name: Chrom
+      filename: TESTCADD.tsv.gz
+      format: tabix
+      pos_begin:
+        name: Pos
+      reference:
+        name: Ref
+    type: NPScore
+    type_aggregators:
+    - aggregator: dae.genomic_resource.aggregators.MaxAggregator
+      type: float
+    - aggregator: dae.genomic_resource.aggregators.MaxAggregator
+      type: int
+    - aggregator: dae.genomic_resource.aggregators.ConcatAggregator
+      type: str
+  id: hg38/TESTCADD
+  manifest:
+  - md5: 18001f318b5e9226d4ce5fd16613ac43
+    name: TESTCADD.tsv.gz
+    size: 639
+    time: '2021-11-06T17:26:11'
+  - md5: 64ea2e483af33f1ad35d771653889e1d
+    name: TESTCADD.tsv.gz.tbi
+    size: 99
+    time: '2021-11-06T17:26:11'
+  - md5: 001b1d7114bcc999850a39ada71349db
+    name: genomic_resource.yaml
+    size: 926
+    time: '2021-11-06T17:26:11'
   version: '0'
-- id: hg38/TESTFreq
+- config:
+    default_annotation:
+      attributes:
+      - dest: alt_freq
+        source: altFreq
+      - dest: alt_freq2
+        source: altFreq2
+    scores:
+    - desc: ''
+      id: altFreq
+      name: all.altFreq
+      type: float
+    - desc: ''
+      id: altFreq2
+      name: all.altFreq2
+      type: float
+    table:
+      alternative:
+        name: alt
+      chrom:
+        name: chr
+      filename: TESTFreq.tsv.gz
+      format: tabix
+      pos_begin:
+        name: position
+      reference:
+        name: ref
+    type: AlleleScore
+  id: hg38/TESTFreq
+  manifest:
+  - md5: 5220b08aa6081a753955e8b5cdf3566c
+    name: TESTFreq.tsv.gz
+    size: 206
+    time: '2021-11-06T17:26:11'
+  - md5: 05e5bc2e111692d73e2c27e76fc7e2a7
+    name: TESTFreq.tsv.gz.tbi
+    size: 100
+    time: '2021-11-06T17:26:11'
+  - md5: 8951f26376eaaa9d9209cec8b78e9544
+    name: genomic_resource.yaml
+    size: 567
+    time: '2021-11-06T17:26:11'
   version: '0'
-- id: hg38/TESTPosAgg
+- config:
+    default_annotation:
+      attributes:
+      - aggregator:
+          position: MeanAggregator
+        dest: test_score
+        source: test_score
+    id: hg38/TESTPosAgg
+    scores:
+    - desc: ''
+      id: test_score
+      index: 3
+      position_aggregator: mean
+      type: float
+    table:
+      chrom:
+        index: 0
+      filename: scores.tsv.gz
+      format: tabix
+      header_mode: none
+      pos_begin:
+        index: 1
+      pos_end:
+        index: 2
+    type: PositionScore
+    type_aggregators:
+    - aggregator: dae.genomic_resource.aggregators.MaxAggregator
+      type: float
+    - aggregator: dae.genomic_resource.aggregators.MaxAggregator
+      type: int
+    - aggregator: dae.genomic_resource.aggregators.ConcatAggregator
+      type: str
+  id: hg38/TESTPosAgg
+  manifest:
+  - md5: fca35c7c1220670474458ae29df1f4e2
+    name: genomic_resource.yaml
+    size: 733
+    time: '2021-11-06T17:26:11'
+  - md5: 590e48aff9382edfa3330a072c98c6c5
+    name: scores.tsv.gz
+    size: 107
+    time: '2021-11-06T17:26:11'
+  - md5: 313f112e74853fa39dc6af0fa526b692
+    name: scores.tsv.gz.tbi
+    size: 99
+    time: '2021-11-06T17:26:11'
   version: '0'
-- id: hg38/TESTphastCons100way
+- config:
+    default_annotation:
+      attributes:
+      - aggregator:
+          position: MaxAggregator
+        dest: phastCons100way
+        source: phastCons100way
+    histogram:
+      bins_count: 10
+      x_max: 1
+      x_min: 0
+      x_scale: linear
+      y_scale: linear
+    scores:
+    - desc: phastCons100way
+      id: phastCons100way
+      index: 3
+      position_aggregator: max
+      type: float
+    table:
+      chrom:
+        index: 0
+      filename: TESTphastCons100way.bedGraph.gz
+      format: tabix
+      header_mode: none
+      pos_begin:
+        index: 1
+      pos_end:
+        index: 2
+    type: PositionScore
+  id: hg38/TESTphastCons100way
+  manifest:
+  - md5: e793fd5e2153ae2b35ecaa8efb595ab0
+    name: TESTphastCons100way.bedGraph.gz
+    size: 261
+    time: '2021-11-06T17:26:11'
+  - md5: 0cae8c2951f4c60954b94c0a0cb2e431
+    name: TESTphastCons100way.bedGraph.gz.tbi
+    size: 169
+    time: '2021-11-06T17:26:11'
+  - md5: 000155c8e76715149db87fb663594d45
+    name: genomic_resource.yaml
+    size: 873
+    time: '2021-11-06T17:26:11'
+  - md5: 56feb878ed78769d5200702392b8e4b7
+    name: scores/phastCons100way.yaml
+    size: 583
+    time: '2021-11-06T17:26:11'
   version: '0'
-- id: hg38/hg38tohg19
+- config:
+    chrom_prefix.target_coordinates:
+      del_prefix: chr
+    file: hg38ToHg19.over.chain.gz
+    type: LiftoverChain
+  id: hg38/hg38tohg19
+  manifest:
+  - md5: e138d36262d9387651c7aff2bd60ca28
+    name: genomic_resource.yaml
+    size: 289
+    time: '2021-11-06T17:26:11'
+  - md5: ff3031d93792f4cbb86af44055efd903
+    name: hg38ToHg19.over.chain.gz
+    size: 1246411
+    time: '2021-11-06T17:26:11'
   version: '0'

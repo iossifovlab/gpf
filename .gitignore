@@ -1,5 +1,6 @@
 *.pyc
 .cache
+.DS_Store
 *.log
 *.cache
 *.db
