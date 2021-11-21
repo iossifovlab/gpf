@@ -55,7 +55,8 @@ def test_cached_get_all_resources(tmpdir):
             },
             "two[1.0]": {
                 GR_CONF_FILE_NAME:
-                    ["type: GeneModels\nfile: genes.gtf", '2021-11-20T00:00:56'],
+                    ["type: GeneModels\nfile: genes.gtf",
+                     '2021-11-20T00:00:56'],
                 "genes.txt": [demo_gtf_content, '2021-11-13T00:00:56']
             }
         }
@@ -88,7 +89,8 @@ def test_cache_all(tmpdir):
             },
             "two[1.0]": {
                 GR_CONF_FILE_NAME:
-                    ["type: GeneModels\nfile: genes.gtf", '2021-11-20T00:00:56'],
+                    ["type: GeneModels\nfile: genes.gtf",
+                     '2021-11-20T00:00:56'],
                 "genes.txt": [demo_gtf_content, '2021-11-13T00:00:56']
             }
         }

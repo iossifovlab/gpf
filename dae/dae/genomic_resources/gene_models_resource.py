@@ -56,7 +56,6 @@ class GeneModelsResource(GenomicResource, GeneModelsBase):
 
             infile.seek(0)
             self.reset()
-            print(parser, type(parser))
             status = parser(infile, gene_mapping=gene_mapping)
             if not status:
                 msg = f"failed parsing gene model {self.get_id()}"

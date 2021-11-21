@@ -42,12 +42,12 @@ class Context(AnnotationPipelineContext):
             from dae.gpf_instance import GPFInstance
             if self.args.gpf_instance_dir:
                 self.user_message(
-                    2, f"Using the gpf_instance in the "
+                    2, f"Using the GPF instance in the "
                     f"directory {self.args.gpf_instance_dir} specified on the "
                     "command line.")
             else:
                 self.user_message(
-                    2, "Using the default convigured gpf_instance.")
+                    2, "Using the default convigured GPF instance.")
             self._gpf_instance = GPFInstance(self.args.gpf_instance_dir)
             self.user_message(
                 1, "Using the GPF instance in "
@@ -56,12 +56,12 @@ class Context(AnnotationPipelineContext):
 
     def get_grr(self):
         if self.args.pipeline == "gpf_instance":
-            self.user_message(1, "Using the grr from the gpf instance "
-                              "because we are using hte gpf instance's "
+            self.user_message(1, "Using the GRR from the GPF instance "
+                              "because we are using hte GPF instance's "
                               "annotation pipeline.")
             grr = self.get_gpf_instance().grr
         if self.args.grr_file_name == "gpf_instance":
-            self.user_message(1, "Using the GRR from the gpf instance "
+            self.user_message(1, "Using the GRR from the GPF instance "
                               "as requested on the command line.")
             grr = self.get_gpf_instance().grr
         else:
@@ -80,6 +80,8 @@ class Context(AnnotationPipelineContext):
     def get_pipeline(self):
         if self._pipeline is None:
             if self.args.pipeline == "gpf_instance":
+                self.user_message(1, "Using the annotation pipeline from "
+                                  "the GPF instance.")
                 from dae.gpf_instance import GPFInstance
                 gpf: GPFInstance = self.get_gpf_instance()
                 self._pipeline = gpf.get_annotation_pipeline()
@@ -90,6 +92,8 @@ class Context(AnnotationPipelineContext):
                 # 1. copy the pipeline?
                 # 2. prepend the EffectAnnotator
             else:
+                self.user_message(1, "Using the annotation pipeline from "
+                                  f"the file {self.args.pipeline}.")
                 self._pipeline = AnnotationPipeline.build(
                     pipeline_config_file=self.args.pipeline,
                     grr_repository=self.get_grr())
@@ -98,19 +102,29 @@ class Context(AnnotationPipelineContext):
     def get_reference_genome(self):
         if self._ref_genome is None:
             if self.args.ref_genome_resource_id is not None:
+                self.message(1, "Using the reference genome from resoruce "
+                             f"{self.args.ref_genome_resource_id} provided "
+                             "on the command line.")
                 self._ref_genome = self.get_grr().get_resource(
                     self.args.ref_genome_resource_id)
                 self._ref_genome.open()
             else:
+                self.message(
+                    1, "Using the reference genome from the GPF instance.")
                 self._ref_genome = self.get_gpf_instance().reference_genome
         return self._ref_genome
 
     def get_gene_models(self):
         if self.gene_models is None:
             if self.args.gene_models_resource_id is not None:
+                self.message(1, "Using the gene models from resoruce "
+                             f"{self.args.gene_models_resource_id} provided "
+                             "on the command line.")
                 self._gene_models = self.get_grr().get_resource(
                     self.args.gene_models_resource_id)
                 self.gene_models.open()
             else:
+                self.message(
+                    1, "Using the gene models from the GPF instance.")
                 self.gene_models = self.get_gpf_instance().gene_models
         return self.gene_models
