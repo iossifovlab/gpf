@@ -91,6 +91,6 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
   }
 
   public filterItems(substring): void {
-    this.filteredItems = this.allItems.filter(item => item.includes(substring));
+    this.filteredItems = this.allItems.filter(item => item.toLowerCase().includes(substring.toLowerCase()));
   }
 }
