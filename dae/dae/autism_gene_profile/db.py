@@ -20,6 +20,8 @@ class AutismGeneProfileDB:
         self.configuration = self._build_configuration(configuration)
         self._create_agp_table()
         self.gene_sets_categories = dict()
+        if clear:
+            self._clear_agp_table()
         if len(self.configuration.keys()):
             for category in self.configuration["gene_sets"]:
                 category_name = category["category"]
@@ -54,10 +56,67 @@ class AutismGeneProfileDB:
         return copy(configuration)
 
     def get_agp(self, gene_symbol):
-        # TODO:
-        # Remake this method to create an AGP statistic object
-        # from the cache table
-        pass
+        table = self.agp_table
+        s = table.select()
+        s = s.where(table.c.symbol_name == gene_symbol)
+        with self.engine.connect() as connection:
+            row = connection.execute(s).fetchone()
+            return self.agp_from_table_row(row)
+
+    def agp_from_table_row(self, row):
+        config = self.configuration
+        gene_symbol = row["symbol_name"]
+        genomic_scores = dict()
+        for gs_category in config.genomic_scores:
+            category_name = gs_category["category"]
+            genomic_scores[category_name] = dict()
+            for score in gs_category["scores"]:
+                score_name = score["score_name"]
+                full_score_id = f"{category_name}_{score_name}"
+                genomic_scores[category_name][score_name] = {
+                    "value": row[full_score_id],
+                    "format": score["format"]
+                }
+
+        gene_sets_categories = config.gene_sets
+        gene_sets = []
+        for gs_category in gene_sets_categories:
+            category_name = gs_category["category"]
+            for gene_set in gs_category["sets"]:
+                set_id = gene_set["set_id"]
+                collection_id = gene_set["collection_id"]
+                full_gs_id = f"{collection_id}_{set_id}"
+                if row[full_gs_id] == 1:
+                    gene_sets.append(full_gs_id)
+
+        variant_counts = {}
+        for dataset_id, filters in config.datasets.items():
+            current_counts = dict()
+            for ps in filters.person_sets:
+                person_set = ps.set_name
+                for statistic in filters.statistics:
+                    statistic_id = statistic["id"]
+                    counts = current_counts.get(person_set)
+                    if not counts:
+                        current_counts[person_set] = dict()
+                        counts = current_counts[person_set]
+
+                    count = row[
+                        f"{dataset_id}_{person_set}_{statistic_id}"
+                    ]
+                    rate = row[
+                        f"{dataset_id}_{person_set}_{statistic_id}_rate"
+                    ]
+                    counts[statistic_id] = {
+                        "count": count,
+                        "rate": rate
+                    }
+            variant_counts[dataset_id] = current_counts
+
+        return AGPStatistic(
+            gene_symbol, gene_sets,
+            genomic_scores, variant_counts
+        )
 
     def _transform_sort_by(self, sort_by):
         if sort_by.startswith("gene_set_"):
@@ -152,7 +211,6 @@ class AutismGeneProfileDB:
 
     def insert_agp(self, agp, connection=None):
         insert_map = self._create_insert_map(agp)
-        print(insert_map)
         if connection is None:
             with self.engine.connect() as connection:
                 connection.execute(
@@ -178,7 +236,7 @@ class AutismGeneProfileDB:
                 collection_id = gs["collection_id"]
                 gs_id = gs["set_id"]
                 set_col = f"{collection_id}_{gs_id}"
-                if gs_id in agp.gene_sets:
+                if set_col in agp.gene_sets:
                     insert_map[set_col] = 1
                     gs_categories_count[category] += 1
                 else:
