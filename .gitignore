@@ -77,3 +77,4 @@ Jenkinsfile.generated-stages
 /test-results
 Jenkinsfile.generated-stages.all
 /.build-scripts-tmp-sessions
+cache

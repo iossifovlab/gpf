@@ -229,7 +229,7 @@ class Allele(ABC):
 
     @property
     def frequency(self) -> Optional[float]:
-        return self.attributes.get("af_allele_freq")
+        return self.get_attribute("af_allele_freq")
 
     @abstractproperty
     def details(self) -> Optional[VariantDetails]:

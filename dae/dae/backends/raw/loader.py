@@ -641,8 +641,9 @@ class VariantsGenotypesLoader(VariantsLoader):
             # We currently assume all other chromosomes are autosomal
             return GeneticModel.autosomal
 
+    @classmethod
     def _calc_best_state(
-        self,
+        cls,
         family_variant: FamilyVariant,
         genome: Genome,
         force: bool = True,
@@ -683,14 +684,15 @@ class VariantsGenotypesLoader(VariantsLoader):
                 family_variant.gt, family_variant.allele_count
             )
 
+    @classmethod
     def _calc_genotype(
-        self, family_variant: FamilyVariant) -> np.array:
+            cls, family_variant: FamilyVariant, genome) -> np.array:
 
         best_state = family_variant._best_state
         genotype = best2gt(best_state)
         male_ploidy = get_locus_ploidy(
             family_variant.chromosome, family_variant.position,
-            Sex.M, self.genome
+            Sex.M, genome
         )
         ploidy = np.sum(best_state, 0)
         genetic_model = GeneticModel.autosomal
@@ -766,7 +768,7 @@ class VariantsGenotypesLoader(VariantsLoader):
                     (
                         family_variant.gt,
                         family_variant._genetic_model,
-                    ) = self._calc_genotype(family_variant)
+                    ) = self._calc_genotype(family_variant, self.genome)
                     for fa in family_variant.alleles:
                         fa.gt = family_variant.gt
                         fa._genetic_model = family_variant.genetic_model

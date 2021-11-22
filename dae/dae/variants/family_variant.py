@@ -177,7 +177,8 @@ class FamilyAllele(Allele, FamilyDelegate):
         """
         checks if additional variant attributes contain values for key `item`.
         """
-        return item in self.attributes or self.summary_allele.has_attribute()
+        return item in self.attributes or \
+            self.summary_allele.has_attribute(item)
 
     def update_attributes(self, atts) -> None:
         """
