@@ -692,11 +692,10 @@ class DenovoLoader(VariantsGenotypesLoader):
 
 class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
     def __init__(
-            self, families, families_best_states, families_read_counts=None):
+            self, families, family_data):
         super(DaeTransmittedFamiliesGenotypes, self).__init__()
         self.families = families
-        self.families_best_states = families_best_states
-        self.families_read_counts = families_read_counts
+        self.family_data = family_data
 
     # def get_family_genotype(self, family):
     #     gt = self.families_genotypes.get(family.family_id, None)
@@ -710,20 +709,25 @@ class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
     #         return reference_genotype(len(family))
 
     def get_family_best_state(self, family):
-        return self.families_best_states.get(family.family_id, None)
+        fd = self.family_data.get(family.family_id, None)
+        if fd is None:
+            return None
+        return fd[0]
 
     def get_family_read_counts(self, family):
-        return self.families_read_counts.get(family.family_id, None)
+        fd = self.family_data.get(family.family_id, None)
+        if fd is None:
+            return None
+        return fd[1]
 
     def get_family_genotype(self, family):
         raise NotImplementedError()
 
     def family_genotype_iterator(self):
-        for family_id, bs in self.families_best_states.items():
+        for family_id, (bs, rc) in self.family_data.items():
             fam = self.families.get(family_id)
             if fam is None:
                 continue
-            rc = self.families_read_counts.get(family_id)
             assert bs is not None, (family_id, bs, rc)
 
             yield fam, bs, rc
@@ -900,24 +904,27 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         return summary_variant
 
     @staticmethod
-    def _explode_family_best_states(family_data, col_sep="", row_sep="/"):
+    def _explode_family_data(family_data):
         best_states = {
-            fid: str2mat(bs, col_sep=col_sep, row_sep=row_sep)
-            for (fid, bs) in [
-                fg.split(":")[:2] for fg in family_data.split(";")
+            fid: (
+                str2mat(bs, col_sep="", row_sep="/"),
+                str2mat(rc, col_sep=" ", row_sep="/")
+            )
+            for (fid, bs, rc) in [
+                fg.split(":") for fg in family_data.split(";")
             ]
         }
         return best_states
 
-    @staticmethod
-    def _explode_family_read_counts(family_data):
-        read_counts = {
-            fid: str2mat(rc, col_sep=" ", row_sep="/")
-            for (fid, _bs, rc) in [
-                fg.split(":") for fg in family_data.split(";")
-            ]
-        }
-        return read_counts
+    # @staticmethod
+    # def _explode_family_read_counts(family_data):
+    #     read_counts = {
+    #         fid: str2mat(rc, col_sep=" ", row_sep="/")
+    #         for (fid, _bs, rc) in [
+    #             fg.split(":") for fg in family_data.split(";")
+    #         ]
+    #     }
+    #     return read_counts
 
     def _full_variants_iterator_impl(self):
 
@@ -959,13 +966,10 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                                 toomany_rec["cshl_position"]
                             )
 
-                        best_states = self._explode_family_best_states(
-                            family_data)
-                        read_counts = self._explode_family_read_counts(
-                            family_data)
+                        family_data = self._explode_family_data(family_data)
 
                         families_genotypes = DaeTransmittedFamiliesGenotypes(
-                            self.families, best_states, read_counts)
+                            self.families, family_data)
 
                         family_variants = []
                         for (fam, bs, rc) in families_genotypes\
