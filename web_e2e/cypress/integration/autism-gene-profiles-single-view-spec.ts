@@ -138,7 +138,6 @@ describe('Autism gene profiles single view links tests', () => {
     //page.cleanup();
     //page.navigateToHome();
     //page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
-    const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
     page.autismGeneToolAllView.click();
     autismGeneProfilesTablePage.geneSearchInput.clear().type('GRIN2B');
     cy.intercept('GET', '/gpf/api/v3/autism_gene_tool/genes/?page=1&symbol=GRIN2B&sortBy=autism_gene_sets_rank&order=desc').as('responseHandler');
@@ -214,14 +213,17 @@ describe('Autism gene profiles single view links tests', () => {
       cy.wrap(value).should('deep.equal', gene_data.statistics.study);
     });
   });
-  
+});
 
-  it.skip('should have proper single view links in the study table', () => {
+describe('Single view study table', () => {
+  const page = new AutismGeneProfilesSingleView();
+  const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
+
+  it.skip('should test redirect logic', () => {
     page.cleanup();
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
 
-    const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
     page.autismGeneToolAllView.click();
     autismGeneProfilesTablePage.geneSearchInput.clear().type('GRIN2B');
     cy.intercept('GET', '/gpf/api/v3/autism_gene_tool/genes/?page=1&symbol=GRIN2B&sortBy=autism_gene_sets_rank&order=desc').as('responseHandler');
@@ -230,14 +232,29 @@ describe('Autism gene profiles single view links tests', () => {
     autismGeneProfilesTablePage.allTableCells.first().click();
     page.getView('GRIN2B');
 
-    gene_data.statistics.study.affected.forEach(arr => {
-      page.datasetsTable.within(el => {
-        if(arr === '' || arr === '–') {
-
+    page.datasetsTable.within(table => {
+      cy.wrap(table).get('td').each(el => {
+        if(el.text() === '' || el.text() === '–') {
+  
         } else {
-          cy.wrap(el).contains(arr).invoke('attr', 'href').then(href => {
-            console.log(href);
+          cy.wrap(el).parent().invoke('attr', 'id').then(id => {
+            console.log(id);
+            //gene_data.statistics.study[id];
           });
+
+          cy.wrap(el).click();
+          cy.intercept({
+            method: 'POST',
+            url: '/gpf/api/v3/query_state/save'
+          }, req => {
+            console.log(req); // query body
+          }).as('query');
+          //intercept request to get the response body(contains the url for the request)
+          cy.get('@query').then(req => {
+            if(req !== null) {
+              console.log(req.response.body);
+            }
+          }); // can potentially get the data from the query body and compare it to the response URL(redirects to genotype browser)
         }
       });
     });
@@ -278,6 +295,8 @@ const gene_data: any = {
     ]
   }
 }
+
+//describe('')
 /*
 const gene_data = {
   gene_symbols: 'GRIN2B',
@@ -310,7 +329,7 @@ const gene_data = {
 */
 
 //it = > get(variant_stat).should('');
-
+/*
 const sfari_genes = [
   'ABCA7',
   'ACE',
@@ -321,4 +340,4 @@ const sfari_genes = [
   'BRINP3',
   'BST1'
 ];
-
+*/
