@@ -153,7 +153,8 @@
 
 <ng-container *ngFor="let category of config.geneSets">
   <div style="position: sticky;" [style.bottom.px]="modalBottom">
-    <span #dropdownSpan ngbDropdownAnchor [attr.id]="category.category + '-span'" ngbDropdown>
+    <span #dropdownSpan [attr.id]="category.category + '-span'" ngbDropdown>
+      <button ngbDropdownToggle style="display: none;"></button>
       <gpf-multiple-select-menu ngbDropdownMenu [attr.id]="category.category  + '-dropdown'"
         [menuId]="'gene_set_category:' + category.category"
         [itemsSource]="category"
@@ -164,7 +165,8 @@
 
 <ng-container *ngFor="let category of config.genomicScores">
   <div style="position: sticky;" [style.bottom.px]="modalBottom">
-    <span #dropdownSpan ngbDropdownAnchor [attr.id]="category.category + '-span'" ngbDropdown>
+    <span #dropdownSpan [attr.id]="category.category + '-span'" ngbDropdown>
+      <button ngbDropdownToggle style="display: none;"></button>
       <gpf-multiple-select-menu ngbDropdownMenu [attr.id]="category.category + '-dropdown'"
         [menuId]="'genomic_scores_category:' + category.category"
         [itemsSource]="category"
@@ -175,7 +177,8 @@
 
 <ng-container *ngFor="let dataset of config.datasets">
   <div style="position: sticky;" [style.bottom.px]="modalBottom">
-    <span #dropdownSpan ngbDropdownAnchor [attr.id]="dataset.id + '-span'" ngbDropdown>
+    <span #dropdownSpan [attr.id]="dataset.id + '-span'" ngbDropdown>
+      <button ngbDropdownToggle style="display: none;"></button>
       <gpf-multiple-select-menu ngbDropdownMenu [attr.id]="dataset.id + '-dropdown'"
         [menuId]="'dataset:' + dataset.id"
         [itemsSource]="dataset"
@@ -184,7 +187,8 @@
   </div>
   <ng-container *ngFor="let personSet of dataset.personSets">
     <div style="position: sticky;" [style.bottom.px]="modalBottom - 150">
-      <span #dropdownSpan ngbDropdownAnchor [attr.id]="dataset.id + ':' + personSet.id + '-span'" ngbDropdown>
+      <span #dropdownSpan [attr.id]="dataset.id + ':' + personSet.id + '-span'" ngbDropdown>
+      <button ngbDropdownToggle style="display: none;"></button>
         <gpf-multiple-select-menu ngbDropdownMenu [attr.id]="dataset.id + ':' + personSet.id + '-dropdown'"
           [menuId]="'dataset:' + dataset.id + ':' + personSet.id"
           [itemsSource]="personSet"
@@ -196,7 +200,8 @@
 
 <ng-container>
   <div style="position: sticky;" [style.bottom.px]="modalBottom">
-    <span #dropdownSpan ngbDropdownAnchor ngbDropdown id="column-filtering-span">
+    <span #dropdownSpan ngbDropdown id="column-filtering-span">
+      <button ngbDropdownToggle style="display: none;"></button>
       <gpf-multiple-select-menu ngbDropdownMenu id="column-filtering-dropdown"
         [menuId]="'column-filtering'"
         [itemsSource]="config"

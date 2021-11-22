@@ -20,6 +20,7 @@ import { QueryService } from 'app/query/query.service';
 import { Store } from '@ngxs/store';
 import { debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
+import { ItemApplyEvent } from 'app/multiple-select-menu/multiple-select-menu';
 
 @Pipe({name: 'getGeneScore'})
 export class GetGeneScorePipe implements PipeTransform {
@@ -73,7 +74,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
   public currentSortingColumnId: string;
   public modalBottom: number;
 
-  public highlightedRowElements = [];
+  public highlightedRowElements: Element[] = [];
   
   @ViewChild('table') tableViewChild: any;
   @ViewChildren('rows') rowViewChildren: QueryList<any>;
@@ -113,11 +114,13 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
   }
 
   @HostListener('document:keydown.escape', ['$event'])
-  public clearHighlightedRows($event) {
-    if ($event.target['localName'] === 'input' || $event.target['localName'] === 'button') {
-      return;
-    }
-
+  public clearHighlightedRows($event: KeyboardEvent) {
+    if($event.target instanceof Element) {
+      if ($event.target.localName === 'input' || $event.target.localName === 'button') {
+        return;
+      }
+    } 
+    
     for (const row of this.highlightedRowElements) {
       row.classList.remove('row-highlight');
     }
@@ -222,7 +225,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     this.modalBottom = result;
   }
 
-  public filterGeneSetColumns($event) {
+  public filterGeneSetColumns($event: ItemApplyEvent) {
     const menuId = $event.menuId.split(':');
     const category = this.config.geneSets.find(category => category.category === menuId[1]);
     for (const geneSet of category.sets) {
@@ -234,7 +237,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
-  public filterGenomicScoreColumns($event) {
+  public filterGenomicScoreColumns($event: ItemApplyEvent) {
     const menuId = $event.menuId.split(':');
     const category = this.config.genomicScores.find(category => category.category === menuId[1]);
     for (const genomicScore of category.scores) {
@@ -246,7 +249,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
-  public filterDatasetColumns($event) {
+  public filterDatasetColumns($event: ItemApplyEvent) {
     const menuId = $event.menuId.split(':');
     const dataset = this.config.datasets.find(dataset => dataset.id === menuId[1]);
     for (const personSet of dataset.personSets) {
@@ -262,7 +265,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
-  public filterPersonSetColumns($event) {
+  public filterPersonSetColumns($event: ItemApplyEvent) {
     const menuId = $event.menuId.split(':');
     const dataset = this.config.datasets.find(dataset => dataset.id === menuId[1])
     const personSet = dataset.personSets.find(personSet => personSet.id === menuId[2]);
@@ -277,12 +280,12 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
-  public filterCategories($event) {
+  public filterCategories($event: ItemApplyEvent) {
     for (const category of this.config.categories) {
       category.defaultVisible = $event.selected.includes(category.id);
       if (category.defaultVisible && !category.shownItemIds.length) {
         category.items.forEach(item => item.defaultVisible = true);
-        if (category['personSets']) {
+        if (category instanceof AgpDataset) {
           category['personSets'].forEach(ps => ps.statistics.forEach(s => {
             s.defaultVisible = true;
           }));
@@ -320,7 +323,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     }
   }
 
-  public emitCreateTabEvent($event, geneSymbol: string, navigateToTab: boolean = true): void {
+  public emitCreateTabEvent($event: MouseEvent, geneSymbol: string, navigateToTab: boolean = true): void {
     if ($event.ctrlKey && $event.type === 'click') {
       navigateToTab = false;
     }
@@ -416,7 +419,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     return (modalLeft >= leftCap ? modalLeft : leftCap) + 'px';
   }
 
-  public calculateDatasetColspan(dataset: AgpDataset) {
+  public calculateDatasetColspan(dataset: AgpDataset): void {
     dataset['colspan'] = dataset['shown']
       .map(personSet => personSet.shown.length)
       .reduce((sum, length) => sum += length, 0);
@@ -447,20 +450,24 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     });
   }
 
-  public highlightRow($event): void {
+  public highlightRow($event: MouseEvent): void {
+    if(!($event.target instanceof Element)) {
+      return;
+    }
+
     const linkElements = ['link-td', 'link-span'];
     if (
-      (!$event.ctrlKey && $event.type === 'click')
-      || linkElements.includes($event.srcElement.classList.value.replace('ng-star-inserted', '').trim())
+      !$event.ctrlKey && $event.type === 'click'
+      || linkElements.includes($event.target.classList.value.replace('ng-star-inserted', '').trim())
     ) {
       return;
     }
 
-    let rowElement;
-    if ($event.srcElement.parentElement.localName !== 'tr') {
-      rowElement = $event.srcElement.parentElement.parentElement
+    let rowElement: Element;
+    if ($event.target.parentElement.localName !== 'tr') {
+      rowElement = $event.target.parentElement.parentElement
     } else {
-      rowElement = $event.srcElement.parentElement;
+      rowElement = $event.target.parentElement;
     }
 
     rowElement.className.includes('row-highlight')

@@ -4,6 +4,7 @@ import { GeneSymbolsState, GeneSymbolsModel } from 'app/gene-symbols/gene-symbol
 import { GeneSetsState, GeneSetsModel } from 'app/gene-sets/gene-sets.state';
 import { GeneWeightsState, GeneWeightsModel } from 'app/gene-weights/gene-weights.state';
 import { StateReset } from 'ngxs-reset-plugin';
+import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'gpf-genes-block',
@@ -12,7 +13,7 @@ import { StateReset } from 'ngxs-reset-plugin';
 })
 export class GenesBlockComponent implements AfterViewInit {
   @Input() showAllTab = true;
-  @ViewChild('nav') ngbNav;
+  @ViewChild('nav') ngbNav: NgbNav;
 
   constructor(private store: Store) { }
 

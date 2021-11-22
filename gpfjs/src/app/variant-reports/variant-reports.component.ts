@@ -1,12 +1,19 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
-import { ActivatedRoute, Params } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Component, OnInit, ViewChild, ElementRef, HostListener, Pipe, PipeTransform } from '@angular/core';
 import { VariantReportsService } from './variant-reports.service';
-import { VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable,
-         DeNovoData, PedigreeTable, PeopleCounter, PeopleSex } from './variant-reports';
+import {
+  VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData, PedigreeTable, PeopleCounter
+} from './variant-reports';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { skipWhile, take } from 'rxjs/operators';
+import { take } from 'rxjs/operators';
+
+@Pipe({ name: 'getPeopleCounterRow' })
+export class PeopleCounterRowPipe implements PipeTransform {
+  public transform(currentPeopleCounterRow: string): string {
+    const result = currentPeopleCounterRow.replace('people_', '');
+    return result[0].toUpperCase() + result.substring(1);
+  }
+}
 
 @Component({
   selector: 'gpf-variant-reports',
@@ -29,10 +36,23 @@ export class VariantReportsComponent implements OnInit {
 
   public selectedDataset: Dataset;
 
-  constructor(
+  public constructor(
     private variantReportsService: VariantReportsService,
-    private datasetsService: DatasetsService,
+    private datasetsService: DatasetsService
   ) { }
+
+  @HostListener('window:scroll', ['$event'])
+  @HostListener('click', ['$event'])
+  private onWindowScroll(): void {
+    if (this.familiesPedigree && this.familiesPedigree.nativeElement) {
+      this.familiesPedigreeTop = (this.familiesPedigree.nativeElement as Element).getBoundingClientRect().top;
+      this.familiesPedigreeBottom = (this.familiesPedigree.nativeElement as Element).getBoundingClientRect().bottom;
+    }
+
+    if (this.legend && this.legend.nativeElement) {
+      this.legendTop = (this.legend.nativeElement as Element).getBoundingClientRect().top;
+    }
+  }
 
   public ngOnInit(): void {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
@@ -54,24 +74,35 @@ export class VariantReportsComponent implements OnInit {
     });
   }
 
-  @HostListener('window:scroll', ['$event'])
-  @HostListener('click', ['$event'])
-  private onWindowScroll() {
-    if (this.familiesPedigree && this.familiesPedigree.nativeElement) {
-      this.familiesPedigreeTop = this.familiesPedigree.nativeElement.getBoundingClientRect().top;
-      this.familiesPedigreeBottom = this.familiesPedigree.nativeElement.getBoundingClientRect().bottom;
+  public getRows(effectGroups: string[], effectTypes: string[]): string[] {
+    let result: string[] = [];
+
+    if (effectGroups) {
+      result = effectGroups.concat(effectTypes);
+    } else if (effectTypes) {
+      result = effectTypes;
     }
 
-    if (this.legend && this.legend.nativeElement) {
-      this.legendTop = this.legend.nativeElement.getBoundingClientRect().top;
+    return result;
+  }
+
+  public getEffectTypeOrderByColumOrder(
+    effectTypeName: string,
+    table: EffectTypeTable,
+    phenotypes: string[]
+  ): DeNovoData[] {
+    const effectType = table.rows.find(et => et.effectType === effectTypeName);
+    if (!effectType) {
+      return [];
     }
+    return this.orderByColumnOrder(effectType.data, phenotypes);
   }
 
-  public getPeopleSexValue(peopleSex: string) {
-    return PeopleSex[peopleSex];
+  public getDownloadLink(): string {
+    return this.variantReportsService.getDownloadLink();
   }
 
-  private orderByColumnOrder(childrenCounters: DeNovoData[], columns: string[], strict = false) {
+  private orderByColumnOrder(childrenCounters: DeNovoData[], columns: string[], strict = false): DeNovoData[] {
     const columnsLookup = new Map<string, number>(
       columns.map((value, index): [string, number] => [value, index])
     );
@@ -93,7 +124,7 @@ export class VariantReportsComponent implements OnInit {
     );
   }
 
-  private chunkPedigrees(familyCounters: FamilyCounter[], chunkSize = 4) {
+  private chunkPedigrees(familyCounters: FamilyCounter[], chunkSize = 4): PedigreeCounter[][] {
     const allPedigrees = familyCounters.reduce(
       (acc, familyCounter) => acc.concat(familyCounter.pedigreeCounters), [] as PedigreeCounter[]
     );
@@ -117,26 +148,5 @@ export class VariantReportsComponent implements OnInit {
         return acc;
       }, []
     );
-  }
-
-  public getRows(effectGroups: string[], effectTypes: string[]) {
-    if (effectGroups) {
-      return effectGroups.concat(effectTypes);
-    } else if (effectTypes) {
-      return effectTypes;
-    }
-    return [];
-  }
-
-  public getEffectTypeOrderByColumOrder(effectTypeName: string, table: EffectTypeTable, phenotypes: string[]) {
-    const effectType = table.rows.find(et => et.effectType === effectTypeName);
-    if (!effectType) {
-      return [];
-    }
-    return this.orderByColumnOrder(effectType.data, phenotypes);
-  }
-
-  public getDownloadLink() {
-    return this.variantReportsService.getDownloadLink();
   }
 }

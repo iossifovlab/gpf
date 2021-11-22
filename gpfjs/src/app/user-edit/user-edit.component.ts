@@ -83,7 +83,7 @@ export class UserEditComponent implements OnInit {
     return ['any_user', this.emailValue];
   }
 
-  submit(user) {
+  submit(user: User) {
     const groupsToAdd = this.userGroupsSelectorComponent.displayedGroups;
 
     if (!groupsToAdd.includes(undefined)) {

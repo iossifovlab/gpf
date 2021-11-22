@@ -13,12 +13,13 @@
       style="width: 68%"
       name="search"
       [(ngModel)]="searchText"
+      (ngModelChange)="filterItems($event)"
       autocomplete="off"
       placeholder="Search..." />
   </div>
 
   <table cdkDropList (cdkDropListDropped)="drop($event)">
-    <tr cdkDrag *ngFor="let item of allItems | filter: searchText" style="height: 30px">
+    <tr cdkDrag *ngFor="let item of filteredItems" style="height: 30px">
       <td>
         <label style="width: 100%">
           <input type="checkbox"

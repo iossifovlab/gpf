@@ -21,8 +21,12 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     '1', '2', '3', '4', '5', '6', '7', '8', '9',
     'q', 'p',
     'e', 'n',
-    'w',
+    'w'
   ];
+
+  public constructor(
+    private autismGeneProfilesService: AutismGeneProfilesService
+  ) { }
 
   @HostListener('window:keydown', ['$event'])
   public keyEvent($event: KeyboardEvent) {
@@ -43,17 +47,13 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  constructor(
-    private autismGeneProfilesService: AutismGeneProfilesService,
-  ) { }
-
   public ngOnInit(): void {
     this.autismGeneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
       this.autismGeneToolConfig = config;
     });
   }
 
-  public createTabEventHandler($event): void {
+  public createTabEventHandler($event: { geneSymbol: string; navigateToTab: boolean }): void {
     if (this.geneTabs.size >= this.maxTabCount) {
       window.scroll(0, 0);
       return;

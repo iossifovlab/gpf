@@ -1,3 +1,5 @@
+import { BaseType, Selection } from "d3-selection";
+
 export const affectedStatusColors = {
   'Affected only': '#AA0000',
   'Unaffected only': '#04613a',
@@ -15,7 +17,7 @@ function getTrianglePoints(plotX: number, plotY: number, size: number) {
   return `${x1},${y1} ${x2},${y2} ${x3},${y3}`;
 }
 
-export function hoverText(element, x: number, y: number, text: string, svgTitle: string, fontSize: number) {
+export function hoverText(element: Selection<BaseType, unknown, HTMLElement, any>, x: number, y: number, text: string, svgTitle: string, fontSize: number) {
   element.append('text')
     .attr('x', x)
     .attr('y', y)
@@ -27,7 +29,7 @@ export function hoverText(element, x: number, y: number, text: string, svgTitle:
 }
 
 export function surroundingRectangle(
-    element, x: number, y: number, color: string, title: string,
+    element: Selection<BaseType, unknown, HTMLElement, any>, x: number, y: number, color: string, title: string,
     strokeOpacity: number = 1, w: number = 16
   ) {
   const h = 16;
@@ -45,7 +47,7 @@ export function surroundingRectangle(
     .append('svg:title').text(title);
 }
 
-export function star(element, x: number, y: number, color: string, title: string) {
+export function star(element: Selection<BaseType, unknown, HTMLElement, any>, x: number, y: number, color: string, title: string) {
   element.append('svg')
     .attr('x', x - 8.5)
     .attr('y', y - 8.5)
@@ -60,7 +62,7 @@ export function star(element, x: number, y: number, color: string, title: string
     .append('svg:title').text(title);
 }
 
-export function triangle(element, x: number, y: number, color: string, title: string) {
+export function triangle(element: Selection<BaseType, unknown, HTMLElement, any>, x: number, y: number, color: string, title: string) {
   element.append('g')
     .append('polygon')
     .attr('points', getTrianglePoints(x, y, 14))
@@ -71,7 +73,7 @@ export function triangle(element, x: number, y: number, color: string, title: st
     .append('svg:title').text(title);
 }
 
-export function circle(element, x: number, y: number, color: string, title: string, radius: number = 7) {
+export function circle(element: Selection<BaseType, unknown, HTMLElement, any>, x: number, y: number, color: string, title: string, radius: number = 7) {
   element.append('g')
     .append('circle')
     .attr('cx', x)
@@ -84,11 +86,11 @@ export function circle(element, x: number, y: number, color: string, title: stri
     .append('svg:title').text(title);
 }
 
-export function dot(element, x: number, y: number, color: string, title: string) {
+export function dot(element: Selection<BaseType, unknown, HTMLElement, any>, x: number, y: number, color: string, title: string) {
     circle(element, x, y, color, title, 3);
 }
 
-export function rect(element, xStart: number, xEnd: number, y: number, height: number, color: string, opacity: number, title: string) {
+export function rect(element: Selection<BaseType, unknown, HTMLElement, any>, xStart: number, xEnd: number, y: number, height: number, color: string, opacity: number, title: string) {
   element.append('rect')
     .attr('height', height)
     .attr('width', xEnd - xStart)
@@ -101,7 +103,7 @@ export function rect(element, xStart: number, xEnd: number, y: number, height: n
     .append('svg:title').text(title);
 }
 
-export function line(element, xStart: number, xEnd: number, y: number, svgTitle: string) {
+export function line(element: Selection<BaseType, unknown, HTMLElement, any>, xStart: number, xEnd: number, y: number, svgTitle: string) {
   element.append('line')
     .attr('x1', xStart)
     .attr('y1', y)

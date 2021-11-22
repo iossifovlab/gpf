@@ -1,5 +1,6 @@
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
+import { ItemApplyEvent } from './multiple-select-menu';
 
 @Component({
   selector: 'gpf-multiple-select-menu',
@@ -8,11 +9,12 @@ import { Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, 
 })
 export class MultipleSelectMenuComponent implements OnInit, OnChanges {
   @Input() public menuId: string;
-  @Input() public itemsSource;
-  @Output() public applyEvent = new EventEmitter<{menuId: string, selected: string[], order: string[]}>();
+  @Input() public itemsSource: { itemIds: string[]; shownItemIds: string[]; };
+  @Output() public applyEvent = new EventEmitter<ItemApplyEvent>();
   @ViewChild('searchInput') public searchInput: ElementRef;
 
   public allItems: string[];
+  public filteredItems: string[];
   public selectedItems: Set<string>;
 
   public checkUncheckAllButtonName = 'Uncheck all';
@@ -21,11 +23,13 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
   public ngOnChanges(): void {
     this.searchText = '';
     this.allItems = this.itemsSource.itemIds;
+    this.filteredItems = this.allItems;
     this.selectedItems = new Set(this.itemsSource.shownItemIds);
   }
 
   public refresh(): void {
     this.allItems = this.itemsSource.itemIds;
+    this.filteredItems = this.allItems;
     this.selectedItems = new Set(this.itemsSource.shownItemIds);
     this.focusSearchInput();
   }
@@ -57,8 +61,11 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
     }
   }
 
-  public toggleItem(item: string, event) {
-    if (event.target.checked) {
+  public toggleItem(item: string, $event: Event) {
+    if(!($event.target instanceof HTMLInputElement)) {
+      return;
+    }
+    if ($event.target.checked) {
       this.selectedItems.add(item);
     } else {
       this.selectedItems.delete(item);
@@ -81,5 +88,9 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
 
   public drop(event: CdkDragDrop<string[]>): void {
     moveItemInArray(this.allItems, event.previousIndex, event.currentIndex);
+  }
+
+  public filterItems(substring): void {
+    this.filteredItems = this.allItems.filter(item => item.includes(substring));
   }
 }

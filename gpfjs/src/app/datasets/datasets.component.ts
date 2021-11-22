@@ -105,7 +105,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
         result = dataset.description !== undefined ? true : false;
         break;
       case 'dataset-statistics':
-        result = dataset.commonReport['enabled'];
+        result = dataset.commonReport.enabled;
         break;
       case 'genotype-browser':
         result = (dataset.genotypeBrowser && dataset.genotypeBrowserConfig) !== undefined ? true : false;
@@ -136,7 +136,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
 
     if (selectedDataset.description) {
       firstTool = toolPageLinks.datasetDescription;
-    } else if (selectedDataset.commonReport['enabled']) {
+    } else if (selectedDataset.commonReport.enabled) {
       firstTool = toolPageLinks.datasetStatistics;
     } else if (selectedDataset.geneBrowser) {
       firstTool = toolPageLinks.geneBrowser;

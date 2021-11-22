@@ -106,7 +106,7 @@ import { PhenoBrowserTableComponent } from './pheno-browser-table/pheno-browser-
 import { PValueIntensityPipe } from './utils/p-value-intensity.pipe';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { VariantReportsComponent } from './variant-reports/variant-reports.component';
+import { PeopleCounterRowPipe, VariantReportsComponent } from './variant-reports/variant-reports.component';
 import { VariantReportsService } from './variant-reports/variant-reports.service';
 import { DatasetDescriptionComponent } from './dataset-description/dataset-description.component';
 
@@ -160,7 +160,6 @@ import { LoadingSpinnerComponent } from './loading-spinner/loading-spinner.compo
 import { DatasetNodeComponent } from './dataset-node/dataset-node.component';
 import { AutismGeneProfilesTableComponent, GetGeneScorePipe, GetEffectTypeValuePipe } from './autism-gene-profiles-table/autism-gene-profiles-table.component';
 import { MultipleSelectMenuComponent } from './multiple-select-menu/multiple-select-menu.component';
-import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { AutismGeneProfilesBlockComponent } from './autism-gene-profiles-block/autism-gene-profiles-block.component';
 import { AutismGeneProfileSingleViewComponent } from './autism-gene-profiles-single-view/autism-gene-profile-single-view.component';
 import { MiddleClickDirective } from './autism-gene-profiles-table/middle-click.directive';
@@ -381,6 +380,7 @@ const appRoutes: Routes = [
     CheckboxListComponent,
     DisplayNamePipe,
     GenePlotComponent,
+    PeopleCounterRowPipe
   ],
   imports: [
     BrowserModule,
@@ -397,7 +397,6 @@ const appRoutes: Routes = [
       confirmButtonType: 'danger'
     }),
     NgMultiSelectDropDownModule.forRoot(),
-    Ng2SearchPipeModule,
     NgxsModule.forRoot([
       VarianttypesState, EffecttypesState, GenderState,
       InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,

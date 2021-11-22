@@ -32,7 +32,7 @@ export class DatasetNodeComponent implements OnInit {
   findFirstTool(selectedDataset: Dataset) {
     if (selectedDataset.description) {
       return toolPageLinks.datasetDescription;
-    } else if (selectedDataset.commonReport['enabled']) {
+    } else if (selectedDataset.commonReport.enabled) {
       return toolPageLinks.datasetStatistics;
     } else if (selectedDataset.geneBrowser) {
       return toolPageLinks.geneBrowser;

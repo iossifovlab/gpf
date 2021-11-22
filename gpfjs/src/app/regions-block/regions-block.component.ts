@@ -1,4 +1,5 @@
 import { Component, ViewChild, AfterViewInit } from '@angular/core';
+import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 
 import { Store } from '@ngxs/store';
 import { RegionsFilterState } from 'app/regions-filter/regions-filter.state';
@@ -10,7 +11,7 @@ import { StateReset } from 'ngxs-reset-plugin';
   styleUrls: ['./regions-block.component.css'],
 })
 export class RegionsBlockComponent implements AfterViewInit {
-  @ViewChild('nav') ngbNav;
+  @ViewChild('nav') ngbNav: NgbNav;
 
   constructor(private store: Store) { }
 

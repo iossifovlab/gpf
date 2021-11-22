@@ -9,7 +9,6 @@ import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-s
 import { QueryService } from 'app/query/query.service';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 import { UsersService } from 'app/users/users.service';
-import { Ng2SearchPipeModule } from 'ng2-search-filter';
 // eslint-disable-next-line no-restricted-imports
 import { of } from 'rxjs';
 import { AgpConfig } from './autism-gene-profile-table';
@@ -36,7 +35,6 @@ describe('AutismGeneProfilesTableComponent', () => {
       ],
       providers: [ConfigService, QueryService, DatasetsService, UsersService],
       imports: [
-        Ng2SearchPipeModule,
         HttpClientTestingModule,
         FormsModule,
         RouterTestingModule,
@@ -118,7 +116,7 @@ describe('AutismGeneProfilesTableComponent', () => {
       expect(emitValue).toEqual(expectedEmitValue);
     });
 
-    component.emitCreateTabEvent({ctrlKey: false, type: 'click'}, 'testGeneSymbol');
+    component.emitCreateTabEvent({ctrlKey: false, type: 'click'} as MouseEvent, 'testGeneSymbol');
     expect(emitSpy).toHaveBeenCalled();
   });
 
