@@ -3,6 +3,7 @@
   "ignorePatterns": [
     "projects/**/*"
   ],
+  "plugins": ["only-warn"],
   "overrides": [
     {
       "files": [
