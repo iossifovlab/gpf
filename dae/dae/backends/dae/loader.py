@@ -184,8 +184,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                         attr_val = values.get(attr)[f_idx]
                         extra_attributes[attr] = [attr_val]
                     if gt is None:
-                        fv.gt, fv._genetic_model = self._calc_genotype(
-                            fv, self.genome)
+                        fv.gt, fv._genetic_model = self._calc_genotype(fv)
                         for fa in fv.alleles:
                             fa.gt = fv.gt
                             fa._genetic_model = fv.genetic_model
@@ -711,6 +710,7 @@ class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
 
     def get_family_best_state(self, family):
         return self.families_best_states.get(family.family_id, None)
+
     def get_family_read_counts(self, family):
         return self.families_read_counts.get(family.family_id, None)
 
