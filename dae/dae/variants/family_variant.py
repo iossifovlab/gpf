@@ -107,6 +107,7 @@ class FamilyAllele(Allele, FamilyDelegate):
         self._variant_in_roles = None
         self._variant_in_sexes = None
         self._family_index = None
+        self._attributes = {}
 
         self.matched_gene_effects: List = []
 
@@ -155,8 +156,35 @@ class FamilyAllele(Allele, FamilyDelegate):
         return self.summary_allele.transmission_type
 
     @property
-    def attributes(self):
+    def summary_attributes(self):
         return self.summary_allele.attributes
+
+    @property
+    def attributes(self):
+        return self._attributes
+
+    def get_attribute(self, item: str, default=None):
+        """
+        looks up values matching key `item` in additional attributes passed
+        on creation of the variant.
+        """
+        val = self.attributes.get(item, default)
+        if val is not None:
+            return val
+        return self.summary_allele.get_attribute(item, default)
+
+    def has_attribute(self, item: str) -> bool:
+        """
+        checks if additional variant attributes contain values for key `item`.
+        """
+        return item in self.attributes or self.summary_allele.has_attribute()
+
+    def update_attributes(self, atts) -> None:
+        """
+        updates additional attributes of variant using dictionary `atts`.
+        """
+        for key, val in list(atts.items()):
+            self.attributes[key] = val
 
     @property
     def details(self):

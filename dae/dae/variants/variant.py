@@ -298,13 +298,13 @@ class Allele(ABC):
         attributes. For example `sv['af_parents_called']` will return value
         matching key `af_parents_called` from addtional variant attributes.
         """
-        return self.attributes.get(item)
+        return self.get_attribute(item)
 
     def __contains__(self, item) -> bool:
         """
         checks if additional variant attributes contain value for key `item`.
         """
-        return item in self.attributes
+        return item in self.has_attributes(item)
 
     def __repr__(self) -> str:
         if VariantType.is_cnv(self._variant_type):

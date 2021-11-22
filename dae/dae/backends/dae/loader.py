@@ -691,10 +691,12 @@ class DenovoLoader(VariantsGenotypesLoader):
 
 
 class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
-    def __init__(self, families, families_best_states):
+    def __init__(
+            self, families, families_best_states, families_read_counts=None):
         super(DaeTransmittedFamiliesGenotypes, self).__init__()
         self.families = families
         self.families_best_states = families_best_states
+        self.families_read_counts = families_read_counts
 
     # def get_family_genotype(self, family):
     #     gt = self.families_genotypes.get(family.family_id, None)
@@ -709,6 +711,8 @@ class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
 
     def get_family_best_state(self, family):
         return self.families_best_states.get(family.family_id, None)
+    def get_family_read_counts(self, family):
+        return self.families_read_counts.get(family.family_id, None)
 
     def get_family_genotype(self, family):
         raise NotImplementedError()
@@ -718,7 +722,10 @@ class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
             fam = self.families.get(family_id)
             if fam is None:
                 continue
-            yield fam, bs
+            rc = self.families_read_counts.get(family_id)
+            assert bs is not None, (family_id, bs, rc)
+
+            yield fam, bs, rc
 
     def full_families_genotypes(self):
         raise NotImplementedError()
@@ -901,6 +908,16 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         }
         return best_states
 
+    @staticmethod
+    def _explode_family_read_counts(family_data):
+        read_counts = {
+            fid: str2mat(rc, col_sep=" ", row_sep="/")
+            for (fid, _bs, rc) in [
+                fg.split(":") for fg in family_data.split(";")
+            ]
+        }
+        return read_counts
+
     def _full_variants_iterator_impl(self):
 
         summary_columns = self._load_summary_columns(self.summary_filename)
@@ -943,19 +960,23 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
                         best_states = self._explode_family_best_states(
                             family_data)
+                        read_counts = self._explode_family_read_counts(
+                            family_data)
 
                         families_genotypes = DaeTransmittedFamiliesGenotypes(
-                            self.families, best_states
-                        )
+                            self.families, best_states, read_counts)
 
                         family_variants = []
-                        for (
-                            fam,
-                            bs,
-                        ) in families_genotypes.family_genotype_iterator():
-                            family_variants.append(
-                                FamilyVariant(summary_variant, fam, None, bs)
-                            )
+                        for (fam, bs, rc) in families_genotypes\
+                                .family_genotype_iterator():
+
+                            fv = FamilyVariant(summary_variant, fam, None, bs)
+                            fv.gt, fv._genetic_model = self._calc_genotype(fv)
+                            for fa in fv.alleles:
+                                fa.gt = fv.gt
+                                fa._genetic_model = fv._genetic_model
+                                fa.update_attributes({"read_counts": rc})
+                            family_variants.append(fv)
 
                         yield summary_variant, family_variants
                         summary_index += 1
