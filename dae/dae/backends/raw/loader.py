@@ -707,11 +707,10 @@ class VariantsGenotypesLoader(VariantsLoader):
 
     @classmethod
     def _calc_best_state(
-        cls,
-        family_variant: FamilyVariant,
-        genome: GenomicSequenceBase,
-        force: bool = True,
-    ) -> np.array:
+            cls,
+            family_variant: FamilyVariant,
+            genome: GenomicSequenceBase,
+            force: bool = True) -> np.array:
 
         male_ploidy = get_locus_ploidy(
             family_variant.chromosome, family_variant.position, Sex.M, genome
@@ -750,12 +749,14 @@ class VariantsGenotypesLoader(VariantsLoader):
 
     @classmethod
     def _calc_genotype(
-        cls, family_variant: FamilyVariant, genome: GenomicSequenceBase
-    ) -> np.array:
+            cls, family_variant: FamilyVariant,
+            genome: GenomicSequenceBase) -> np.array:
+
         best_state = family_variant._best_state
         genotype = best2gt(best_state)
         male_ploidy = get_locus_ploidy(
-            family_variant.chromosome, family_variant.position, Sex.M, genome
+            family_variant.chromosome, family_variant.position,
+            Sex.M, genome
         )
         ploidy = np.sum(best_state, 0)
         genetic_model = GeneticModel.autosomal
