@@ -2,82 +2,49 @@ from dae.autism_gene_profile.db import AutismGeneProfileDB
 from sqlalchemy import inspect
 
 
-def test_agpdb_tables_building(temp_dbfile, agp_config):
+def test_agpdb_table_building(temp_dbfile, agp_config):
     agpdb = AutismGeneProfileDB(
         agp_config,
         temp_dbfile
     )
     inspector = inspect(agpdb.engine)
 
-    table_columns = dict()
+    cols = []
+    for column in inspector.get_columns("autism_gene_profile"):
+        cols.append(column["name"])
+    print(cols)
 
-    for table in inspector.get_table_names():
-        cols = []
-        for column in inspector.get_columns(table):
-            cols.append(column["name"])
-        table_columns[table] = cols
-    assert set(table_columns["gene_symbols"]).difference(
+    assert set(cols).difference(
         set([
-            "id", "symbol_name"
+            "symbol_name",
+            "relevant_gene_sets_rank",
+            "main_FMRP Darnell",
+            "main_CHD8 target genes",
+            "autism_scores_RVIS",
+            "autism_scores_RVIS_rank",
+            "autism_scores_SFARI_gene_score",
+            "protection_scores_RVIS",
+            "protection_scores_RVIS_rank",
+            "protection_scores_SFARI_gene_score",
+            "iossifov_we2014_test_unaffected_denovo_missense_rate",
+            "iossifov_we2014_test_unaffected_denovo_missense",
+            "iossifov_we2014_test_unaffected_denovo_noncoding_rate",
+            "iossifov_we2014_test_unaffected_denovo_noncoding",
+            "iossifov_we2014_test_unknown_denovo_missense_rate",
+            "iossifov_we2014_test_unknown_denovo_missense",
+            "iossifov_we2014_test_unknown_denovo_noncoding_rate",
+            "iossifov_we2014_test_unknown_denovo_noncoding",
         ])
     ) == set()
-    assert set(table_columns["gene_sets"]).difference(
-        set([
-            "id", "set_id", "collection_id"
-        ])
-    ) == set()
-    assert set(table_columns["gene_symbol_sets"]).difference(
-        set([
-            "id", "symbol_id", "set_id", "present"
-        ])
-    ) == set()
-    assert set(table_columns["genomic_scores"]).difference(
-        set([
-            "id", "symbol_id", "score_name", "score_value", "score_category"
-        ])
-    ) == set()
-    assert set(table_columns["variant_counts"]).difference(
-        set([
-            "id", "symbol_id", "study_id", "people_group",
-            "statistic_id", "count", "rate"
-        ])
-    ) == set()
-    assert set(table_columns["studies"]).difference(
-        set([
-            "id", "study_id"
-        ])
-    ) == set()
-    print(table_columns)
-
-
-def test_agpdb_get_studies(temp_dbfile, agp_gpf_instance, agp_config):
-    agpdb = AutismGeneProfileDB(
-        agp_config,
-        temp_dbfile
-    )
-    study_ids = agpdb._get_study_ids().keys()
-    assert len(study_ids) == 41
-
-
-def test_agpdb_get_gene_sets(temp_dbfile, agp_config, agp_gpf_instance):
-    agpdb = AutismGeneProfileDB(agp_config, temp_dbfile)
-    gene_sets = set([gs[1] for gs in agpdb._get_gene_sets()])
-    expected = {
-        'CHD8 target genes',
-        'FMRP Darnell',
-    }
-    assert expected.difference(gene_sets) == set()
-    assert gene_sets.difference(expected) == set()
 
 
 def test_agpdb_insert_and_get_agp(
         temp_dbfile, agp_gpf_instance, sample_agp, agp_config):
     agpdb = AutismGeneProfileDB(agp_config, temp_dbfile, clear=True)
-    agpdb.populate_data_tables(agp_gpf_instance.get_genotype_data_ids())
     agpdb.insert_agp(sample_agp)
     agp = agpdb.get_agp("CHD8")
     assert agp.gene_sets == [
-        'CHD8 target genes'
+        'main_CHD8 target genes'
     ]
 
     assert agp.genomic_scores["autism_scores"] == {

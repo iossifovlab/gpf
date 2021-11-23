@@ -8,7 +8,8 @@ def test_generate_autism_gene_profile(
         "--dbfile",
         temp_dbfile,
         "-vv",
-        "--gene-sets-genes",
+        "--genes",
+        "PCDHA4",
     ]
 
     main(agp_gpf_instance, argv)
