@@ -159,4 +159,9 @@ describe('Autism gene profiles block tests', () => {
       });
     });
   });
+
+  it('should hover the mouse over ? to show keybinds', () => {
+    cy.get('.keybinds-icon > span').trigger('mouseover');
+    cy.get('div.keybinds-tooltip.ng-star-inserted').should('be.visible');
+  });
 });
