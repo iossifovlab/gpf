@@ -140,4 +140,23 @@ describe('Autism gene profiles block tests', () => {
     autismGeneProfilesTablePage.table.should('be.visible');
     autismGeneProfilesSingleView.window.should('not.be.visible');
   });
+
+  it.only('should highlight rows and then use the clear keybind', () => {
+    [1, 2, 3].forEach(id => {
+      cy.get(`tbody.ng-star-inserted > :nth-child(${id}) > :nth-child(2)`).click({ctrlKey:true});        
+    });
+    [1, 2, 3].forEach(id => {
+      cy.get(`tbody.ng-star-inserted > :nth-child(${id})`).should('satisfy', row => {
+        const classList = Array.from(row[0].classList);
+        return classList.includes('row-highlight');
+      });
+    });
+    cy.get('body').type('{esc}');
+    [1, 2, 3].forEach(id => {
+      cy.get(`tbody.ng-star-inserted > :nth-child(${id})`).should('satisfy', row => {
+        const classList = Array.from(row[0].classList);
+        return !classList.includes('row-highlight');
+      });
+    });
+  });
 });
