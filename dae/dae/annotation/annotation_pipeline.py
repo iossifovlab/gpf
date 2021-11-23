@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import annotations
+
 import logging
 from itertools import chain
 from typing import List
@@ -101,30 +103,17 @@ class AnnotationPipeline():
         return pipeline_config
 
     @staticmethod
-    def build(
-            pipeline_config: dict = None,
-            pipeline_config_file: str = None,
-            grr_repository: GenomicResourceRepo = None,
-            grr_repository_file: str = None,
-            grr_repository_definition: str = None,
-            context: AnnotationPipelineContext = None) -> "AnnotationPipeline":
+    def construct_pipeline_ivan(pipeline: AnnotationPipeline,
+                                context: AnnotationPipelineContext):
+        # pipeline_config = pipeline.config
+        # grr_repository = pipeline.repository
+        pass
 
-        if not pipeline_config:
-            assert pipeline_config_file is not None
-            pipeline_config = AnnotationPipeline.load_and_parse(
-                pipeline_config_file)
-        else:
-            assert pipeline_config_file is None
-
-        if not grr_repository:
-            grr_repository = build_genomic_resource_repository(
-                definition=grr_repository_definition,
-                file_name=grr_repository_file)
-        else:
-            assert grr_repository_file is None
-            assert grr_repository_definition is None
-
-        pipeline = AnnotationPipeline(pipeline_config, grr_repository)
+    @staticmethod
+    def construct_pipeline_lubo(pipeline: AnnotationPipeline,
+                                context: AnnotationPipelineContext):
+        pipeline_config = pipeline.config
+        grr_repository = pipeline.repository
 
         if pipeline_config.effect_annotators:
             for annotator_config in pipeline_config.effect_annotators:
@@ -183,6 +172,32 @@ class AnnotationPipeline():
                 )
                 pipeline.add_annotator(annotator)
 
+    @staticmethod
+    def build(
+            pipeline_config: dict = None,
+            pipeline_config_file: str = None,
+            grr_repository: GenomicResourceRepo = None,
+            grr_repository_file: str = None,
+            grr_repository_definition: str = None,
+            context: AnnotationPipelineContext = None) -> "AnnotationPipeline":
+
+        if pipeline_config is None:
+            assert pipeline_config_file is not None
+            pipeline_config = AnnotationPipeline.load_and_parse(
+                pipeline_config_file)
+        else:
+            assert pipeline_config_file is None
+
+        if not grr_repository:
+            grr_repository = build_genomic_resource_repository(
+                definition=grr_repository_definition,
+                file_name=grr_repository_file)
+        else:
+            assert grr_repository_file is None
+            assert grr_repository_definition is None
+
+        pipeline = AnnotationPipeline(pipeline_config, grr_repository)
+        AnnotationPipeline.construct_pipeline_lubo(pipeline, context)
         return pipeline
 
     @property
