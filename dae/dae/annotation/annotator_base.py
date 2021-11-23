@@ -10,6 +10,15 @@ logger = logging.getLogger(__name__)
 
 
 class Annotator(abc.ABC):
+    '''
+        Annotator provides a set of attrubutes for a give Annotatable.
+
+    '''
+
+    # def __init__(self, pipeline: AnnotationPipeine, configuation: dict):
+    #    self.liftover = config.get("liftover", None)
+
+    # def get_possible_source_attributes()
 
     def __init__(self, liftover: str = None, override: dict = None):
         self.liftover = liftover

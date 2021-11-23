@@ -197,7 +197,13 @@ class AnnotationPipeline():
             assert grr_repository_definition is None
 
         pipeline = AnnotationPipeline(pipeline_config, grr_repository)
-        AnnotationPipeline.construct_pipeline_lubo(pipeline, context)
+
+        if "score_annotators" in pipeline_config or \
+                pipeline_config.get("effect_annotators") or \
+                pipeline_config.get("liftover_annotators"):
+            AnnotationPipeline.construct_pipeline_lubo(pipeline, context)
+        else:
+            AnnotationPipeline.construct_pipeline_ivan(pipeline, context)
         return pipeline
 
     @property
