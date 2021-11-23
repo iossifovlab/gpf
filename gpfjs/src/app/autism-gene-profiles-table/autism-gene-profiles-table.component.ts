@@ -1,11 +1,9 @@
 import {
   Component, ElementRef, EventEmitter, HostListener,
-  Input, OnInit, Output, QueryList, Renderer2, ViewChild, ViewChildren
+  Input, OnChanges, OnInit, Output, Pipe, PipeTransform, QueryList, Renderer2, ViewChild, ViewChildren
 } from '@angular/core';
 import {
-  AgpConfig, AgpDataset, AgpGene,
-  AgpGeneSetsCategory, AgpGenomicScoresCategory, AgpDatasetStatistic,
-  AgpDatasetPersonSet
+  AgpConfig, AgpDataset, AgpGene, AgpGenomicScoresCategory, AgpDatasetStatistic, AgpDatasetPersonSet, AgpGenomicScore,
 } from './autism-gene-profile-table';
 // eslint-disable-next-line no-restricted-imports
 import { Subject } from 'rxjs';
@@ -20,12 +18,34 @@ import { debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { ItemApplyEvent } from 'app/multiple-select-menu/multiple-select-menu';
 
+@Pipe({name: 'getGeneScore'})
+export class GetGeneScorePipe implements PipeTransform {
+  transform(gene: AgpGene, scoreCategory: AgpGenomicScoresCategory, score: AgpGenomicScore, args?: any): string {
+    const genomicScore = gene.genomicScores
+      .find(s => s.id === scoreCategory.category).scores
+      .find(s => s.id === score.scoreName);
+    return genomicScore.value ? Number(sprintf(genomicScore.format, genomicScore.value)).toString() : '';
+  }
+}
+
+@Pipe({name: 'getEffectTypeValue'})
+export class GetEffectTypeValuePipe implements PipeTransform {
+  transform(gene: AgpGene, dataset: AgpDataset, personSet: AgpDatasetPersonSet, statistic: AgpDatasetStatistic, args?: any): string {
+    // FIXME Disable link clicking on empty cells somehow without spamming functions in the templates
+    const effectTypeValue = gene.studies.find(study => study.id === dataset.id)
+      .personSets.find(ps => ps.id === personSet.id)
+      .effectTypes.find(effectType => effectType.id === statistic.id)
+      .value;
+    return effectTypeValue.count ? `${effectTypeValue.count} (${effectTypeValue.rate.toFixed(3)})` : '';
+  }
+}
+
 @Component({
   selector: 'gpf-autism-gene-profiles-table',
   templateUrl: './autism-gene-profiles-table.component.html',
   styleUrls: ['./autism-gene-profiles-table.component.css'],
 })
-export class AutismGeneProfilesTableComponent implements OnInit {
+export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
   @Input() public config: AgpConfig;
   @Output() public createTabEvent = new EventEmitter();
 
@@ -40,7 +60,6 @@ export class AutismGeneProfilesTableComponent implements OnInit {
 
   private pageIndex = 1;
   private loadMoreGenes = true;
-  private scrollLoadThreshold = 1000;
 
   public geneInput: string;
   public searchKeystrokes$: Subject<string> = new Subject();
@@ -51,14 +70,23 @@ export class AutismGeneProfilesTableComponent implements OnInit {
   public modalBottom: number;
 
   public highlightedRowElements: Element[] = [];
+  
+  @ViewChild('table') tableViewChild: any;
+  @ViewChildren('rows') rowViewChildren: QueryList<any>;
+
+  private lastRowHeight = 35;
+  private drawOutsideVisibleCount = 5;
+  private tableTopPosition = 0;
 
   @HostListener('window:scroll')
   public onWindowScroll() {
+    this.tableTopPosition = this.tableViewChild.nativeElement.getBoundingClientRect().top;
+    if (this.rowViewChildren && this.rowViewChildren.last
+        && this.rowViewChildren.last.nativeElement.getBoundingClientRect().height > 0) {
+      this.lastRowHeight = this.rowViewChildren.last.nativeElement.getBoundingClientRect().height;
+    }
     if (!this.ref.nativeElement.hidden) {
-      const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
-      const totalScrollHeight = document.documentElement.scrollHeight;
-
-      if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
+      if (this.getScrollIndices()[1] >= this.genes.length && this.loadMoreGenes) {
         this.updateGenes();
       }
       this.updateModalBottom();
@@ -113,6 +141,13 @@ export class AutismGeneProfilesTableComponent implements OnInit {
     });
   }
 
+  public ngOnChanges() {
+    this.setupShownCategories();
+    for (const dataset of this.config.datasets) {
+      this.calculateDatasetColspan(dataset);
+    }
+  }
+
   public ngAfterViewInit(): void {
     const firstSortingButton = this.sortingButtonsComponents.find(sortingButtonsComponent => {
       return sortingButtonsComponent.id === `${this.config.shownGeneSets[0].category}_rank`;
@@ -120,19 +155,8 @@ export class AutismGeneProfilesTableComponent implements OnInit {
     setTimeout(() => {
       firstSortingButton.hideState = 1;
       this.updateModalBottom();
+      this.tableTopPosition = this.tableViewChild.nativeElement.getBoundingClientRect().top;
     });
-  }
-
-  public getGeneSetsCategory(id: string): AgpGeneSetsCategory {
-    return this.config.shownGeneSets.find(cat => cat.category === id);
-  }
-
-  public getGenomicScoresCategory(id: string): AgpGenomicScoresCategory {
-    return this.config.shownGenomicScores.find(cat => cat.category === id);
-  }
-
-  public getDataset(id: string): AgpDataset {
-    return this.config.shownDatasets.find(ds => ds.id === id);
   }
 
   public updateModalBottom(): void {
@@ -149,6 +173,31 @@ export class AutismGeneProfilesTableComponent implements OnInit {
     this.modalBottom = result;
   }
 
+  getScrollIndices(): Array<number> {
+    if (!this.genes) {
+      return [0, 0];
+    }
+    const visibleRowCount = Math.ceil(window.innerHeight / this.lastRowHeight);
+    const maxRowCountToDraw = (this.drawOutsideVisibleCount * 2) + visibleRowCount;
+
+    let startIndex = Math.ceil(-this.tableTopPosition / this.lastRowHeight);
+
+    // We should display at least maxRowCountToDraw rows, even at the bottom of the page
+    const maxStartIndex = this.genes.length - maxRowCountToDraw;
+    startIndex = Math.min(startIndex, maxStartIndex);
+
+    // Make sure we always start from index 0 or above
+    startIndex = Math.max(0, startIndex);
+
+    const endIndex = startIndex + maxRowCountToDraw + 5;
+    return [startIndex, endIndex];
+  }
+
+  isVisibleData(idx: number): boolean {
+    const scrollIndices = this.getScrollIndices();
+    return scrollIndices[0] <= idx + 10 && idx - 10 <= scrollIndices[1];
+  }
+
   public filterGeneSetColumns($event: ItemApplyEvent) {
     const menuId = $event.menuId.split(':');
     const category = this.config.geneSets.find(category => category.category === menuId[1]);
@@ -157,6 +206,10 @@ export class AutismGeneProfilesTableComponent implements OnInit {
     }
     category.defaultVisible = $event.selected.length > 0;
     category.sets.sort((a, b) => $event.order.indexOf(a.setId) - $event.order.indexOf(b.setId));
+    category['shown'] = category.sets.filter(set => set.defaultVisible);
+    if (!category.defaultVisible) {
+      this.setupShownCategories();
+    }
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
@@ -168,6 +221,10 @@ export class AutismGeneProfilesTableComponent implements OnInit {
     }
     category.defaultVisible = $event.selected.length > 0;
     category.scores.sort((a, b) => $event.order.indexOf(a.scoreName) - $event.order.indexOf(b.scoreName));
+    category['shown'] = category.scores.filter(score => score.defaultVisible);
+    if (!category.defaultVisible) {
+      this.setupShownCategories();
+    }
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
@@ -179,9 +236,15 @@ export class AutismGeneProfilesTableComponent implements OnInit {
       if (personSet.defaultVisible && !personSet.shownItemIds.length) {
         personSet.statistics.forEach(s => s.defaultVisible = true);
       }
+      personSet['shown'] = personSet.statistics.filter(s => s.defaultVisible);
     }
     dataset.defaultVisible = $event.selected.length > 0;
     dataset.personSets.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
+    dataset['shown'] = dataset.personSets.filter(set => set.defaultVisible);
+    if (!dataset.defaultVisible) {
+      this.setupShownCategories();
+    }
+    this.calculateDatasetColspan(dataset);
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
@@ -193,8 +256,14 @@ export class AutismGeneProfilesTableComponent implements OnInit {
       statistic.defaultVisible = $event.selected.includes(statistic.id);
     }
     personSet.defaultVisible = $event.selected.length > 0;
-    dataset.defaultVisible = dataset.shownItemIds.length > 0;
     personSet.statistics.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
+    personSet['shown'] = personSet.statistics.filter(s => s.defaultVisible);
+    dataset.defaultVisible = dataset.shownItemIds.length > 0;
+    dataset['shown'] = dataset.personSets.filter(set => set.defaultVisible);
+    if (!dataset.defaultVisible) {
+      this.setupShownCategories();
+    }
+    this.calculateDatasetColspan(dataset);
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
@@ -204,14 +273,45 @@ export class AutismGeneProfilesTableComponent implements OnInit {
       if (category.defaultVisible && !category.shownItemIds.length) {
         category.items.forEach(item => item.defaultVisible = true);
         if (category instanceof AgpDataset) {
-          category['personSets'].forEach(ps => ps.statistics.forEach(s => {
-            s.defaultVisible = true;
-          }));
+          category['personSets'].forEach(ps => {
+            ps.statistics.forEach(s => { s.defaultVisible = true; })
+            ps['shown'] = ps.statistics.filter(s => s.defaultVisible);
+          });
+          category['shown'] = category.personSets.filter(set => set.defaultVisible);
+          this.calculateDatasetColspan(category as AgpDataset);
         }
       }
     }
     this.config.order.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
+    this.setupShownCategories();
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
+  }
+
+  public setupShownCategories() {
+    this.config['shown'] = [];
+    for (const item of this.config.order) {
+      let category;
+      switch(item.section) {
+        case 'geneSets':
+          category = this.config.geneSets.find(gs => gs.category === item.id);
+          category['shown'] = category.sets.filter(set => set.defaultVisible);
+          break;
+        case 'genomicScores':
+          category = this.config.genomicScores.find(gs => gs.category === item.id)
+          category['shown'] = category.scores.filter(score => score.defaultVisible);
+          break;
+        case 'datasets':
+          category = this.config.datasets.find(ds => ds.id === item.id)
+          category['shown'] = category.personSets.filter(set => set.defaultVisible);
+          for (const personSet of category.personSets) {
+            personSet['shown'] = personSet.statistics.filter(s => s.defaultVisible);
+          }
+          break;
+      }
+      if (category.defaultVisible) {
+        this.config['shown'].push({...item, category: category});
+      }
+    }
   }
 
   public emitCreateTabEvent($event: MouseEvent, geneSymbol: string, navigateToTab: boolean = true): void {
@@ -309,25 +409,10 @@ export class AutismGeneProfilesTableComponent implements OnInit {
     return (modalLeft >= leftCap ? modalLeft : leftCap) + 'px';
   }
 
-  public getGeneScoreValue(gene: AgpGene, scoreCategory: string, scoreId: string): string {
-    const genomicScore = gene.genomicScores
-      .find(score => score.id === scoreCategory).scores
-      .find(score => score.id === scoreId);
-
-    return Number(sprintf(genomicScore.format, genomicScore.value)).toString();
-  }
-
-  public getEffectTypeValue(gene: AgpGene, datasetId: string, personSetId: string, statisticId: string) {
-    return gene.studies.find(study => study.id === datasetId)
-      .personSets.find(personSet => personSet.id === personSetId)
-      .effectTypes.find(effectType => effectType.id === statisticId)
-      .value;
-  }
-
-  public calculateDatasetColspan(dataset: AgpDataset): number {
-    return dataset.shown
-      .map(personSet => personSet.shown.length)
-      .reduce((sum, length) => sum += length);
+  public calculateDatasetColspan(dataset: AgpDataset): void {
+    dataset['colspan'] = dataset['shown']
+      .map(personSet => personSet['shown'].length)
+      .reduce((sum, length) => sum += length, 0);
   }
 
   public goToQuery(

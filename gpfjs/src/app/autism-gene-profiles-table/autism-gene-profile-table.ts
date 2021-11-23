@@ -43,6 +43,7 @@ export class AgpConfig {
   }
 
   public get shownDatasets(): AgpDataset[] {
+    // FIXME called too many times
     return this.datasets.filter(d => d.defaultVisible);
   }
   
@@ -67,10 +68,6 @@ export class AgpGeneSetsCategory {
 
   public get itemIds(): string[] {
     return this.sets.map(set => set.setId);
-  }
-
-  public get shown(): AgpGeneSet[] {
-    return this.sets.filter(set => set.defaultVisible);
   }
 
   public get shownItemIds(): string[] {
@@ -106,10 +103,6 @@ export class AgpGenomicScoresCategory {
     return this.scores.map(score => score.scoreName);
   }
 
-  public get shown(): AgpGenomicScore[] {
-    return this.scores.filter(score => score.defaultVisible);
-  }
-
   public get shownItemIds(): string[] {
     return this.scores.filter(score => score.defaultVisible).map(score => score.scoreName);
   }
@@ -139,10 +132,6 @@ export class AgpDataset {
     return this.personSets.map(ps => ps.id);
   }
 
-  public get shown(): AgpDatasetPersonSet[] {
-    return this.personSets.filter(ps => ps.defaultVisible);
-  }
-
   public get shownItemIds(): string[] {
     return this.personSets.filter(ps => ps.defaultVisible).map(ps => ps.id);
   }
@@ -166,10 +155,6 @@ export class AgpDatasetPersonSet {
 
   public get itemIds(): string[] {
     return this.statistics.map(s => s.id);
-  }
-
-  public get shown(): AgpDatasetStatistic[] {
-    return this.statistics.filter(s => s.defaultVisible);
   }
 
   public get shownItemIds(): string[] {
@@ -233,5 +218,10 @@ export class AgpPersonSet {
 
 export class AgpEffectType {
   id: string;
-  value: number;
+  value: AgpEffectTypeValue;
+}
+
+export class AgpEffectTypeValue {
+  count: number;
+  rate: number;
 }
