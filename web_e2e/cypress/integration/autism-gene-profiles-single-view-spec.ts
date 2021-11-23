@@ -92,7 +92,7 @@ describe('Autism gene profiles single view links tests', () => {
     page.header.invoke('text').then((headerText) => {
       const baseUrl = Cypress.config().baseUrl;
       const headerName = headerText;
-      const geneBrowserUrl = `${baseUrl}datasets/ALL_genotypes/gene-browser/${headerName}`;
+      const geneBrowserUrl = `${baseUrl}/datasets/ALL_genotypes/gene-browser/${headerName}`;
       page.geneBrowserLink.should('have.prop', 'href').and('equal', geneBrowserUrl)
     });
   });
@@ -219,7 +219,7 @@ describe('Single view study table', () => {
   const page = new AutismGeneProfilesSingleView();
   const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
 
-  it.skip('should test redirect logic', () => {
+  it('should test redirect logic', () => {
     page.cleanup();
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
@@ -232,44 +232,16 @@ describe('Single view study table', () => {
     autismGeneProfilesTablePage.allTableCells.first().click();
     page.getView('GRIN2B');
 
-    page.datasetsTable.within(table => {
-      cy.wrap(table).get('td').each(el => {
-        if(el.text() === '' || el.text() === '–') {
-  
-        } else {
-          cy.wrap(el).parent().invoke('attr', 'id').then(id => {
-            //console.log(id); // id could be useful for fetching data from the data array
-            //gene_data.statistics.study[id];
-          });
-
-          cy.wrap(el).click();
-          cy.intercept({
-            method: 'POST',
-            url: '/gpf/api/v3/query_state/save'
-          }, req => {
-            console.log(req); // query body
-          }).as('query');
-          //intercept request to get the response body(contains the url for the request)
-          cy.get('@query').then(req => {
-            if(req !== null) {
-              let baseUrl = Cypress.config().baseUrl;
-              if(baseUrl.endsWith('/')) {
-                baseUrl = baseUrl.slice(0, -1);
-              }
-              const pg = new BasePage();
-              pg.preserveLogin();
-              cy.visit(`${baseUrl}/load-query/${req.response.body.uuid}`);
-              //const pg = new BasePage();
-              cy.wait(5000);
-              //pg.login('admin@iossifovlab.com', 'secret');
-              cy.wait(15000);
-              console.log(req.response.body.uuid);
-              //cy.visit(Cypress.config().baseUrl + '/load-query/' + req.response.body);
-              //compare the genotype options with a new data array(data_wrapper: [{}])
-            }
-          }); // can potentially get the data from the query body and compare it to the response URL(redirects to genotype browser)
-        }
-      });
+    cy.intercept({
+      method: 'POST',
+      url: '/gpf/api/v3/query_state/save'
+    }).as('query');
+    cy.get('#denovo_lgds > :nth-child(2) > .link-genotype-browser > span').click();
+    cy.get('@query').then(req => {
+      if(req !== null) {
+        expect(req.request.body.data).to.deep.equal(data_wrapper[0].data);
+        expect(req.request.body.page).to.deep.equal(data_wrapper[0].page);
+      }
     });
   });
 });
@@ -297,7 +269,7 @@ const gene_data: any = {
     ], study: [
       // title
       {
-        variant_statistics: "LGDs", variant_ids: "denovo_lgds", affected: "3 (1.197)", unaffected: "–"
+        variant_statistics: "LGDs", variant_ids: "denovo_lgds", affected: "3 (1.197)", unaffected: "–"//, data: data_wrapper[0]
       },
       {
         variant_statistics: "missense", variant_ids: "denovo_missense", affected: "1 (0.399)", unaffected: "–"
@@ -354,100 +326,105 @@ const sfari_genes = [
   'BST1'
 ];
 */
-data_wrapper: [{
-  "phenoToolMeasureState": {
-      "measureId": "",
-      "normalizeBy": []
+const data_wrapper = [
+  {
+  "name": "GRIN2B_affected_LGDs",
+  "data": {
+      "phenoToolMeasureState": {
+          "measureId": "",
+          "normalizeBy": []
+      },
+      "genomicScoresBlockState": {
+          "genomicScores": []
+      },
+      "personFiltersState": {
+          "familyFilters": [],
+          "personFilters": []
+      },
+      "studyFiltersBlockState": {
+          "studyFilters": []
+      },
+      "familyTypeFilterState": {
+          "familyTypes": [
+              "trio",
+              "quad",
+              "multigenerational",
+              "simplex",
+              "multiplex",
+              "other"
+          ]
+      },
+      "pedigreeSelectorState": {
+          "id": "status",
+          "checkedValues": [
+              "affected"
+          ]
+      },
+      "enrichmentModelsState": {
+          "enrichmentBackgroundModel": "",
+          "enrichmentCountingModel": ""
+      },
+      "geneWeightsState": {
+          "geneWeight": null,
+          "rangeStart": 0,
+          "rangeEnd": 0
+      },
+      "geneSetsState": {
+          "geneSetsTypes": null,
+          "geneSetsCollection": null,
+          "geneSet": null
+      },
+      "studyTypesState": {
+          "studyTypes": [
+              "we"
+          ]
+      },
+      "regionsFiltersState": {
+          "regionsFilters": []
+      },
+      "familyIdsState": {
+          "familyIds": []
+      },
+      "geneSymbolsState": {
+          "geneSymbols": [
+              "GRIN2B"
+          ]
+      },
+      "presentInParentState": {
+          "presentInParent": [
+              "neither"
+          ],
+          "rarityType": "all",
+          "rarityIntervalStart": 0,
+          "rarityIntervalEnd": 1
+      },
+      "presentInChildState": {
+          "presentInChild": [
+              "proband only",
+              "proband and sibling",
+              "sibling only"
+          ]
+      },
+      "personIdsState": {
+          "personIds": []
+      },
+      "inheritancetypesState": {
+          "inheritanceTypes": []
+      },
+      "genderState": {
+          "genders": [
+              "male",
+              "female",
+              "unspecified"
+          ]
+      },
+      "effecttypesState": {
+          "effectTypes": []
+      },
+      "varianttypesState": {
+          "variantTypes": []
+      },
+      "datasetId": "iossifov_2014"
   },
-  "genomicScoresBlockState": {
-      "genomicScores": []
-  },
-  "personFiltersState": {
-      "familyFilters": [],
-      "personFilters": []
-  },
-  "studyFiltersBlockState": {
-      "studyFilters": []
-  },
-  "familyTypeFilterState": {
-      "familyTypes": [
-          "trio",
-          "quad",
-          "multigenerational",
-          "simplex",
-          "multiplex",
-          "other"
-      ]
-  },
-  "pedigreeSelectorState": {
-      "id": "status",
-      "checkedValues": [
-          "affected"
-      ]
-  },
-  "enrichmentModelsState": {
-      "enrichmentBackgroundModel": "",
-      "enrichmentCountingModel": ""
-  },
-  "geneWeightsState": {
-      "geneWeight": null,
-      "rangeStart": 0,
-      "rangeEnd": 0
-  },
-  "geneSetsState": {
-      "geneSetsTypes": null,
-      "geneSetsCollection": null,
-      "geneSet": null
-  },
-  "studyTypesState": {
-      "studyTypes": [
-          "we"
-      ]
-  },
-  "regionsFiltersState": {
-      "regionsFilters": []
-  },
-  "familyIdsState": {
-      "familyIds": []
-  },
-  "geneSymbolsState": {
-      "geneSymbols": [
-          "GRIN2B"
-      ]
-  },
-  "presentInParentState": {
-      "presentInParent": [
-          "neither"
-      ],
-      "rarityType": "all",
-      "rarityIntervalStart": 0,
-      "rarityIntervalEnd": 1
-  },
-  "presentInChildState": {
-      "presentInChild": [
-          "proband only",
-          "proband and sibling",
-          "sibling only"
-      ]
-  },
-  "personIdsState": {
-      "personIds": []
-  },
-  "inheritancetypesState": {
-      "inheritanceTypes": []
-  },
-  "genderState": {
-      "genders": [
-          "male",
-          "female",
-          "unspecified"
-      ]
-  },
-  "effecttypesState": {
-      "effectTypes": []
-  },
-  "varianttypesState": {
-      "variantTypes": []
-  },
-  "datasetId": "iossifov_2014"
+  "page": "genotype"
 }]
