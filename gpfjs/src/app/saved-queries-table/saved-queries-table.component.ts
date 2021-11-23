@@ -18,4 +18,13 @@ export class SavedQueriesTableComponent {
     this.queries = this.queries.filter(query => query.uuid !== uuid);
     this.queryService.deleteQuery(uuid).subscribe();
   }
+
+  copyToClipboard(item) {
+    document.addEventListener('copy', (e: ClipboardEvent) => {
+      e.clipboardData.setData('text/plain', (item));
+      e.preventDefault();
+      document.removeEventListener('copy', null);
+    });
+    document.execCommand('copy');
+  }
 }
