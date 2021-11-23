@@ -81,14 +81,12 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
   @HostListener('window:scroll')
   public onWindowScroll() {
     this.tableTopPosition = this.tableViewChild.nativeElement.getBoundingClientRect().top;
-    if (this.rowViewChildren &&
-        this.rowViewChildren.last &&
-        this.rowViewChildren.last.nativeElement.getBoundingClientRect().height > 0) {
+    if (this.rowViewChildren && this.rowViewChildren.last
+        && this.rowViewChildren.last.nativeElement.getBoundingClientRect().height > 0) {
       this.lastRowHeight = this.rowViewChildren.last.nativeElement.getBoundingClientRect().height;
     }
     if (!this.ref.nativeElement.hidden) {
-      const scrollIndices = this.getScrollIndices();
-      if (scrollIndices[1] >= this.genes.length && this.loadMoreGenes) {
+      if (this.getScrollIndices()[1] >= this.genes.length && this.loadMoreGenes) {
         this.updateGenes();
       }
       this.updateModalBottom();
