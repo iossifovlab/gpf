@@ -158,6 +158,8 @@ class AutismGeneProfileDB:
         columns = {}
         columns["symbol_name"] = \
             Column("symbol_name", String(64), primary_key=True)
+        if len(self.configuration) == 0:
+            return columns
         for category in self.configuration["gene_sets"]:
             category_name = category["category"]
 
