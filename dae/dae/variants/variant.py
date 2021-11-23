@@ -431,7 +431,7 @@ class SummaryAllele(core.Allele):
 
     @property
     def frequency(self) -> Optional[float]:
-        return self.attributes.get("af_allele_freq")
+        return self.get_attribute("af_allele_freq")
 
     @property
     def cshl_variant(self) -> Optional[str]:
@@ -496,13 +496,13 @@ class SummaryAllele(core.Allele):
         attributes. For example `sv['af_parents_called']` will return value
         matching key `af_parents_called` from addtional variant attributes.
         """
-        return self.attributes.get(item)
+        return self.get_attribute(item)
 
     def __contains__(self, item) -> bool:
         """
         checks if additional variant attributes contain value for key `item`.
         """
-        return item in self.attributes
+        return item in self.has_attributes(item)
 
     def __repr__(self) -> str:
         if self.Type.cnv & self.allele_type:

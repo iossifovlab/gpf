@@ -62,18 +62,13 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
             print(
                 attributes["effect_gene_types"],
                 attributes["effect_gene_genes"])
+            print(100*"-")
+            print(attributes)
 
-            effect_types = sa.get_attribute("effectGene")
-            print(effect_types)
-            effect = AlleleEffects.from_string(
-                "!".join([
-                    sa.get_attribute("effectType"),
-                    sa.get_attribute("effectGene"),
-                    sa.get_attribute("effectDetails")
-                ])
-            )
-            print(effect)
+            effect = attributes["allele_effects"]
+            print("effect:", effect)
             print(effect.genes)
+            assert isinstance(effect, AlleleEffects)
 
             assert len(effect.genes) == len(attributes["effect_gene_genes"]), \
                 (effect.genes, attributes["effect_gene_genes"])
