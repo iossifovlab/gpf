@@ -141,7 +141,7 @@ describe('Autism gene profiles block tests', () => {
     autismGeneProfilesSingleView.window.should('not.be.visible');
   });
 
-  it.only('should highlight rows and then use the clear keybind', () => {
+  it('should highlight rows and then use the clear keybind', () => {
     [1, 2, 3].forEach(id => {
       cy.get(`tbody.ng-star-inserted > :nth-child(${id}) > :nth-child(2)`).click({ctrlKey:true});        
     });
