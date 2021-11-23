@@ -92,13 +92,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
       this.lastRowHeight = this.rowViewChildren.last.nativeElement.getBoundingClientRect().height;
     }
     if (!this.ref.nativeElement.hidden) {
-      const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
-      const totalScrollHeight = document.documentElement.scrollHeight;
-      // if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
-      //   this.updateGenes();
-      // }
       const scrollIndices = this.getScrollIndices();
-      // console.log(scrollIndices, this.drawOutsideVisibleCount, this.genes.length, (scrollIndices[1] + (this.drawOutsideVisibleCount * 2)));
       if (scrollIndices[1] >= this.genes.length) {
         this.updateGenes();
       }
@@ -133,45 +127,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     private queryService: QueryService,
     private store: Store,
   ) { }
-
-  tableTop(): boolean {
-    return this.tableViewChild.nativeElement.getBoundingClientRect().top < 0;
-  }
-
-  getScrollIndices(): Array<number> {
-    if (!this.genes) {
-      return [0, 0];
-    }
-    const visibleRowCount = Math.ceil(window.innerHeight / this.lastRowHeight);
-    const maxRowCountToDraw = (this.drawOutsideVisibleCount * 2) + visibleRowCount;
-
-    // console.log('tabletop', this.tableTopPosition);
-    let startIndex = Math.ceil(-this.tableTopPosition / this.lastRowHeight);
-    // console.log('startindex', startIndex);
-
-    // We should display at least maxRowCountToDraw rows, even at the bottom of the page
-    const maxStartIndex = this.genes.length - maxRowCountToDraw;
-    startIndex = Math.min(startIndex, maxStartIndex);
-
-    // Make sure we always start from index 0 or above
-    startIndex = Math.max(0, startIndex);
-
-    const endIndex = startIndex + maxRowCountToDraw + 5;
-    return [startIndex, endIndex];
-  }
-
-  get visibleData(): Array<any> {
-    if (!this.genes) {
-      return [];
-    }
-    const scrollIndices = this.getScrollIndices();
-    return this.genes.slice(scrollIndices[0], scrollIndices[1] + 5);
-  }
-
-  isVisibleData(idx: number): boolean {
-    const scrollIndices = this.getScrollIndices();
-    return scrollIndices[0] <= idx + 10 && idx - 10 <= scrollIndices[1];
-  }
 
   public ngOnInit(): void {
     this.focusGeneSearchInput();
@@ -225,6 +180,31 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     this.modalBottom = result;
   }
 
+  getScrollIndices(): Array<number> {
+    if (!this.genes) {
+      return [0, 0];
+    }
+    const visibleRowCount = Math.ceil(window.innerHeight / this.lastRowHeight);
+    const maxRowCountToDraw = (this.drawOutsideVisibleCount * 2) + visibleRowCount;
+
+    let startIndex = Math.ceil(-this.tableTopPosition / this.lastRowHeight);
+
+    // We should display at least maxRowCountToDraw rows, even at the bottom of the page
+    const maxStartIndex = this.genes.length - maxRowCountToDraw;
+    startIndex = Math.min(startIndex, maxStartIndex);
+
+    // Make sure we always start from index 0 or above
+    startIndex = Math.max(0, startIndex);
+
+    const endIndex = startIndex + maxRowCountToDraw + 5;
+    return [startIndex, endIndex];
+  }
+
+  isVisibleData(idx: number): boolean {
+    const scrollIndices = this.getScrollIndices();
+    return scrollIndices[0] <= idx + 10 && idx - 10 <= scrollIndices[1];
+  }
+
   public filterGeneSetColumns($event: ItemApplyEvent) {
     const menuId = $event.menuId.split(':');
     const category = this.config.geneSets.find(category => category.category === menuId[1]);
@@ -232,20 +212,27 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
       geneSet.defaultVisible = $event.selected.includes(geneSet.setId);
     }
     category.defaultVisible = $event.selected.length > 0;
-    category['shown'] = category.sets.filter(set => set.defaultVisible);
     category.sets.sort((a, b) => $event.order.indexOf(a.setId) - $event.order.indexOf(b.setId));
+    category['shown'] = category.sets.filter(set => set.defaultVisible);
+    if (!category.defaultVisible) {
+      this.setupShownCategories();
+    }
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
   public filterGenomicScoreColumns($event: ItemApplyEvent) {
+    console.log($event);
     const menuId = $event.menuId.split(':');
     const category = this.config.genomicScores.find(category => category.category === menuId[1]);
     for (const genomicScore of category.scores) {
       genomicScore.defaultVisible = $event.selected.includes(genomicScore.scoreName);
     }
     category.defaultVisible = $event.selected.length > 0;
-    category['shown'] = category.scores.filter(score => score.defaultVisible);
     category.scores.sort((a, b) => $event.order.indexOf(a.scoreName) - $event.order.indexOf(b.scoreName));
+    category['shown'] = category.scores.filter(score => score.defaultVisible);
+    if (!category.defaultVisible) {
+      this.setupShownCategories();
+    }
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
@@ -259,8 +246,8 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
       }
     }
     dataset.defaultVisible = $event.selected.length > 0;
-    dataset['shown'] = dataset.personSets.filter(set => set.defaultVisible);
     dataset.personSets.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
+    dataset['shown'] = dataset.personSets.filter(set => set.defaultVisible);
     this.calculateDatasetColspan(dataset);
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
@@ -319,7 +306,9 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
           }
           break;
       }
-      this.config['shown'].push({...item, category: category});
+      if (category.defaultVisible) {
+        this.config['shown'].push({...item, category: category});
+      }
     }
   }
 
@@ -331,7 +320,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
   }
 
   public updateGenes(): void {
-    console.log('loading more genes');
     this.loadMoreGenes = false;
     this.pageIndex++;
     this.autismGeneProfilesService
