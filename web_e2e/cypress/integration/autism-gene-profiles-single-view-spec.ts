@@ -1,6 +1,6 @@
 import { AutismGeneProfilesSingleView } from 'cypress/elements/autism-gene-profiles-single-view-page';
 import { AutismGeneProfilesTable } from 'cypress/elements/autism-gene-profiles-table-page';
-import { sidenavPageLinks } from 'cypress/elements/utils';
+import { BasePage, sidenavPageLinks } from 'cypress/elements/utils';
 
 describe('Autism gene profiles single view tests', () => {
   const page = new AutismGeneProfilesSingleView();
@@ -238,7 +238,7 @@ describe('Single view study table', () => {
   
         } else {
           cy.wrap(el).parent().invoke('attr', 'id').then(id => {
-            console.log(id);
+            //console.log(id); // id could be useful for fetching data from the data array
             //gene_data.statistics.study[id];
           });
 
@@ -252,7 +252,20 @@ describe('Single view study table', () => {
           //intercept request to get the response body(contains the url for the request)
           cy.get('@query').then(req => {
             if(req !== null) {
-              console.log(req.response.body);
+              let baseUrl = Cypress.config().baseUrl;
+              if(baseUrl.endsWith('/')) {
+                baseUrl = baseUrl.slice(0, -1);
+              }
+              const pg = new BasePage();
+              pg.preserveLogin();
+              cy.visit(`${baseUrl}/load-query/${req.response.body.uuid}`);
+              //const pg = new BasePage();
+              cy.wait(5000);
+              //pg.login('admin@iossifovlab.com', 'secret');
+              cy.wait(15000);
+              console.log(req.response.body.uuid);
+              //cy.visit(Cypress.config().baseUrl + '/load-query/' + req.response.body);
+              //compare the genotype options with a new data array(data_wrapper: [{}])
             }
           }); // can potentially get the data from the query body and compare it to the response URL(redirects to genotype browser)
         }
@@ -341,3 +354,100 @@ const sfari_genes = [
   'BST1'
 ];
 */
+data_wrapper: [{
+  "phenoToolMeasureState": {
+      "measureId": "",
+      "normalizeBy": []
+  },
+  "genomicScoresBlockState": {
+      "genomicScores": []
+  },
+  "personFiltersState": {
+      "familyFilters": [],
+      "personFilters": []
+  },
+  "studyFiltersBlockState": {
+      "studyFilters": []
+  },
+  "familyTypeFilterState": {
+      "familyTypes": [
+          "trio",
+          "quad",
+          "multigenerational",
+          "simplex",
+          "multiplex",
+          "other"
+      ]
+  },
+  "pedigreeSelectorState": {
+      "id": "status",
+      "checkedValues": [
+          "affected"
+      ]
+  },
+  "enrichmentModelsState": {
+      "enrichmentBackgroundModel": "",
+      "enrichmentCountingModel": ""
+  },
+  "geneWeightsState": {
+      "geneWeight": null,
+      "rangeStart": 0,
+      "rangeEnd": 0
+  },
+  "geneSetsState": {
+      "geneSetsTypes": null,
+      "geneSetsCollection": null,
+      "geneSet": null
+  },
+  "studyTypesState": {
+      "studyTypes": [
+          "we"
+      ]
+  },
+  "regionsFiltersState": {
+      "regionsFilters": []
+  },
+  "familyIdsState": {
+      "familyIds": []
+  },
+  "geneSymbolsState": {
+      "geneSymbols": [
+          "GRIN2B"
+      ]
+  },
+  "presentInParentState": {
+      "presentInParent": [
+          "neither"
+      ],
+      "rarityType": "all",
+      "rarityIntervalStart": 0,
+      "rarityIntervalEnd": 1
+  },
+  "presentInChildState": {
+      "presentInChild": [
+          "proband only",
+          "proband and sibling",
+          "sibling only"
+      ]
+  },
+  "personIdsState": {
+      "personIds": []
+  },
+  "inheritancetypesState": {
+      "inheritanceTypes": []
+  },
+  "genderState": {
+      "genders": [
+          "male",
+          "female",
+          "unspecified"
+      ]
+  },
+  "effecttypesState": {
+      "effectTypes": []
+  },
+  "varianttypesState": {
+      "variantTypes": []
+  },
+  "datasetId": "iossifov_2014"
+}]
