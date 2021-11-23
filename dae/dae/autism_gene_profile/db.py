@@ -67,7 +67,7 @@ class AutismGeneProfileDB:
         config = self.configuration
         gene_symbol = row["symbol_name"]
         genomic_scores = dict()
-        for gs_category in config.genomic_scores:
+        for gs_category in config["genomic_scores"]:
             category_name = gs_category["category"]
             genomic_scores[category_name] = dict()
             for score in gs_category["scores"]:
@@ -78,7 +78,7 @@ class AutismGeneProfileDB:
                     "format": score["format"]
                 }
 
-        gene_sets_categories = config.gene_sets
+        gene_sets_categories = config["gene_sets"]
         gene_sets = []
         for gs_category in gene_sets_categories:
             category_name = gs_category["category"]
@@ -90,11 +90,11 @@ class AutismGeneProfileDB:
                     gene_sets.append(full_gs_id)
 
         variant_counts = {}
-        for dataset_id, filters in config.datasets.items():
+        for dataset_id, filters in config["datasets"].items():
             current_counts = dict()
-            for ps in filters.person_sets:
-                person_set = ps.set_name
-                for statistic in filters.statistics:
+            for ps in filters["person_sets"]:
+                person_set = ps["set_name"]
+                for statistic in filters["statistics"]:
                     statistic_id = statistic["id"]
                     counts = current_counts.get(person_set)
                     if not counts:
@@ -234,7 +234,6 @@ class AutismGeneProfileDB:
         for gsc in self.configuration["gene_sets"]:
             category = gsc["category"]
             for gs in gsc["sets"]:
-                print(gs)
                 collection_id = gs["collection_id"]
                 gs_id = gs["set_id"]
                 set_col = f"{collection_id}_{gs_id}"

@@ -123,8 +123,12 @@ def calculate_rates(instance, agps, config):
 
                     stat = agp.variant_counts[dataset_id][set_name][stat_id]
                     count = len(stat["variants"])
-                    stat["count"] = count
-                    stat["rate"] = (count / children_count) * 1000
+                    if children_count > 0:
+                        stat["count"] = count
+                        stat["rate"] = (count / children_count) * 1000
+                    else:
+                        stat["count"] = 0
+                        stat["rate"] = 0
                     # if stat_id == "rare_lgds":
                     #     from pprint import pprint
                     #     print(100*"=")
