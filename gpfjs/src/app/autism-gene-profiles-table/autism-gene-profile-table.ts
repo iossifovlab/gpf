@@ -61,6 +61,10 @@ export class AgpGeneSetsCategory {
     return this.sets;
   }
 
+  public setAllShown() {
+    this['shown'] = this.items;
+  }
+
   public get id(): string {
     // TODO This should be relabeled in the backend
     return this.category;
@@ -92,6 +96,10 @@ export class AgpGenomicScoresCategory {
 
   public get items() {
     return this.scores;
+  }
+
+  public setAllShown() {
+    this['shown'] = this.items;
   }
 
   public get id(): string {
@@ -128,6 +136,11 @@ export class AgpDataset {
     return this.personSets;
   }
 
+  public setAllShown() {
+    this['shown'] = this.items;
+    this.personSets.forEach(ps => { ps.setAllShown(); })
+  }
+
   public get itemIds(): string[] {
     return this.personSets.map(ps => ps.id);
   }
@@ -151,6 +164,10 @@ export class AgpDatasetPersonSet {
 
   public get items() {
     return this.statistics;
+  }
+
+  public setAllShown() {
+    this['shown'] = this.items;
   }
 
   public get itemIds(): string[] {

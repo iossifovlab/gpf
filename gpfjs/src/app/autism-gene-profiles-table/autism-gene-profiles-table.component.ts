@@ -3,11 +3,7 @@ import {
   Input, OnChanges, OnInit, Output, Pipe, PipeTransform, QueryList, Renderer2, ViewChild, ViewChildren
 } from '@angular/core';
 import {
-  AgpConfig, AgpDataset, AgpGene,
-  AgpGeneSetsCategory, AgpGenomicScoresCategory, AgpDatasetStatistic,
-  AgpDatasetPersonSet,
-  AgpGenomicScore,
-  AgpPersonSet
+  AgpConfig, AgpDataset, AgpGene, AgpGenomicScoresCategory, AgpDatasetStatistic, AgpDatasetPersonSet, AgpGenomicScore,
 } from './autism-gene-profile-table';
 // eslint-disable-next-line no-restricted-imports
 import { Subject } from 'rxjs';
@@ -64,7 +60,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
 
   private pageIndex = 1;
   private loadMoreGenes = true;
-  private scrollLoadThreshold = 100;
 
   public geneInput: string;
   public searchKeystrokes$: Subject<string> = new Subject();
@@ -93,7 +88,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     }
     if (!this.ref.nativeElement.hidden) {
       const scrollIndices = this.getScrollIndices();
-      if (scrollIndices[1] >= this.genes.length) {
+      if (scrollIndices[1] >= this.genes.length && this.loadMoreGenes) {
         this.updateGenes();
       }
       this.updateModalBottom();
@@ -221,7 +216,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
   }
 
   public filterGenomicScoreColumns($event: ItemApplyEvent) {
-    console.log($event);
     const menuId = $event.menuId.split(':');
     const category = this.config.genomicScores.find(category => category.category === menuId[1]);
     for (const genomicScore of category.scores) {
@@ -244,10 +238,14 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
       if (personSet.defaultVisible && !personSet.shownItemIds.length) {
         personSet.statistics.forEach(s => s.defaultVisible = true);
       }
+      personSet['shown'] = personSet.statistics.filter(s => s.defaultVisible);
     }
     dataset.defaultVisible = $event.selected.length > 0;
     dataset.personSets.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
     dataset['shown'] = dataset.personSets.filter(set => set.defaultVisible);
+    if (!dataset.defaultVisible) {
+      this.setupShownCategories();
+    }
     this.calculateDatasetColspan(dataset);
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
@@ -260,10 +258,14 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
       statistic.defaultVisible = $event.selected.includes(statistic.id);
     }
     personSet.defaultVisible = $event.selected.length > 0;
-    dataset.defaultVisible = dataset.shownItemIds.length > 0;
-    this.calculateDatasetColspan(dataset);
     personSet.statistics.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
     personSet['shown'] = personSet.statistics.filter(s => s.defaultVisible);
+    dataset.defaultVisible = dataset.shownItemIds.length > 0;
+    dataset['shown'] = dataset.personSets.filter(set => set.defaultVisible);
+    if (!dataset.defaultVisible) {
+      this.setupShownCategories();
+    }
+    this.calculateDatasetColspan(dataset);
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
@@ -273,9 +275,11 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
       if (category.defaultVisible && !category.shownItemIds.length) {
         category.items.forEach(item => item.defaultVisible = true);
         if (category instanceof AgpDataset) {
-          category['personSets'].forEach(ps => ps.statistics.forEach(s => {
-            s.defaultVisible = true;
-          }));
+          category['personSets'].forEach(ps => {
+            ps.statistics.forEach(s => { s.defaultVisible = true; })
+            ps['shown'] = ps.statistics.filter(s => s.defaultVisible);
+          });
+          category['shown'] = category.personSets.filter(set => set.defaultVisible);
           this.calculateDatasetColspan(category as AgpDataset);
         }
       }
@@ -409,7 +413,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
 
   public calculateDatasetColspan(dataset: AgpDataset): void {
     dataset['colspan'] = dataset['shown']
-      .map(personSet => personSet.shown.length)
+      .map(personSet => personSet['shown'].length)
       .reduce((sum, length) => sum += length, 0);
   }
 

@@ -54,32 +54,6 @@ describe('AutismGeneProfilesTableComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should update genes on window scroll', () => {
-    const scrollTopSpy = spyOnProperty(document.documentElement, 'scrollTop');
-    const offsetHeightSpy = spyOnProperty(document.documentElement, 'offsetHeight');
-    const scrollHeightSpy = spyOnProperty(document.documentElement, 'scrollHeight');
-    const updateGenesSpy = spyOn(component, 'updateGenes');
-    const updateModalBottom = spyOn(component, 'updateModalBottom').and.callFake(() => {component.modalBottom = 1});
-
-    component['loadMoreGenes'] = false;
-    component.onWindowScroll();
-    expect(updateGenesSpy).not.toHaveBeenCalled();
-
-    component['loadMoreGenes'] = true;
-    scrollTopSpy.and.returnValue(1000 - component['scrollLoadThreshold']);
-    offsetHeightSpy.and.returnValue(199);
-    scrollHeightSpy.and.returnValue(1200);
-    component.onWindowScroll();
-    expect(updateGenesSpy).not.toHaveBeenCalled();
-
-    offsetHeightSpy.and.returnValue(200);
-    component.onWindowScroll();
-    expect(updateGenesSpy).toHaveBeenCalledTimes(1);
-
-    expect(updateModalBottom).toHaveBeenCalledTimes(3);
-    expect(component.modalBottom).toBe(1);
-  });
-
   it('should calculate modal bottom', () => {
     component.columnFilteringButtons = {
       first: undefined

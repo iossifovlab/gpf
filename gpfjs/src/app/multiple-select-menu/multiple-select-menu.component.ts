@@ -7,7 +7,7 @@ import { ItemApplyEvent } from './multiple-select-menu';
   templateUrl: './multiple-select-menu.component.html',
   styleUrls: ['./multiple-select-menu.component.css']
 })
-export class MultipleSelectMenuComponent implements OnInit, OnChanges {
+export class MultipleSelectMenuComponent implements OnChanges {
   @Input() public menuId: string;
   @Input() public itemsSource: { itemIds: string[]; shownItemIds: string[]; };
   @Output() public applyEvent = new EventEmitter<ItemApplyEvent>();
@@ -21,22 +21,17 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
   public searchText: string;
 
   public ngOnChanges(): void {
+    this.refresh(false);
+  }
+
+  public refresh(focusSearch: boolean = true): void {
     this.searchText = '';
     this.allItems = this.itemsSource.itemIds;
     this.filteredItems = this.allItems;
     this.selectedItems = new Set(this.itemsSource.shownItemIds);
-  }
-
-  public refresh(): void {
-    this.allItems = this.itemsSource.itemIds;
-    this.filteredItems = this.allItems;
-    this.selectedItems = new Set(this.itemsSource.shownItemIds);
-    this.focusSearchInput();
-  }
-
-  public ngOnInit(): void {
-    if (!this.selectedItems.size) {
-      this.checkUncheckAllButtonName = 'Check all';
+    this.checkUncheckAllButtonName = this.selectedItems.size ? 'Uncheck all' : 'Check all';
+    if (focusSearch) {
+      this.focusSearchInput();
     }
   }
 
@@ -70,6 +65,7 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
     } else {
       this.selectedItems.delete(item);
     }
+    this.checkUncheckAllButtonName = this.selectedItems.size ? 'Uncheck all' : 'Check all';
   }
 
   public apply(): void {

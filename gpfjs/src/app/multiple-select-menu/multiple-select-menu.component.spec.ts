@@ -45,7 +45,6 @@ describe('MultipleSelectMenuComponent', () => {
     component['checkboxDataArray'] = undefined;
     component['checkUncheckAllButtonName'] = 'Uncheck all';
 
-    component.ngOnInit();
     expect(component['selectedItems']).toEqual(new Set(['item1', 'item2']));
     expect(component['checkUncheckAllButtonName']).toEqual('Uncheck all');
   });
