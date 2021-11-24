@@ -188,10 +188,6 @@ def wdae_gpf_instance_agp(
             os.path.join(wdae_gpf_instance.dae_db_dir, temp_filename),
             clear=True
         )
-    wdae_gpf_instance._autism_gene_profile_db.clear_all_tables()
-    wdae_gpf_instance._autism_gene_profile_db.populate_data_tables(
-        wdae_gpf_instance.get_genotype_data_ids())
-    wdae_gpf_instance._autism_gene_profile_db.build_agp_view()
     wdae_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
 
     return wdae_gpf_instance
