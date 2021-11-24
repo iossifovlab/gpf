@@ -182,6 +182,7 @@ import { ErrorsState } from './common/errors.state';
 import { toolPageLinks } from './datasets/datasets';
 import { GenePlotComponent } from './gene-plot/gene-plot.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
+import { ClipboardModule } from '@angular/cdk/clipboard';
 
 const appRoutes: Routes = [
   {
@@ -407,7 +408,8 @@ const appRoutes: Routes = [
       {compatibility: { strictContentSecurityPolicy: true }}
     ),
     NgxsResetPluginModule.forRoot(),
-    DragDropModule
+    DragDropModule,
+    ClipboardModule
   ],
   providers: [
     CookieService,

@@ -10,7 +10,7 @@ import { QueryService } from '../query/query.service';
 export class SavedQueriesTableComponent {
   @Input() public queries: Array<UserSavedQuery>;
 
-  constructor(
+  public constructor(
     private queryService: QueryService
   ) {}
 
