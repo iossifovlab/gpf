@@ -127,7 +127,7 @@
 
             <ng-container *ngIf="element.section === 'genomicScores'">
               <td style="min-width: 70px" *ngFor="let genomicScore of element.category.shown; let i = index" [ngClass] = "{'category-border': i === 0}">
-                {{gene | getGeneScore: element.category:genomicScore}}
+                <span>{{gene | getGeneScore: element.category:genomicScore}}</span>
               </td>
             </ng-container>
 
