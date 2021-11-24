@@ -42,10 +42,6 @@ class VariantScoreAnnotatorBase(Annotator):
             resource.resource_id
         self._annotation_schema = None
 
-        self.score_types = dict()
-        for score in self.resource.get_all_scores():
-            self.score_types[score.id] = score.type
-
         self.non_default_position_aggregators = {}
         self.non_default_nucleotide_aggregators = {}
         self._collect_non_default_aggregators()

@@ -16,15 +16,6 @@ table:
   pos_end: 
     name: POS
 
-
-type_aggregators:
-  - type: float
-    aggregator: dae.genomic_resource.aggregators.MaxAggregator
-  - type: int
-    aggregator: dae.genomic_resource.aggregators.MaxAggregator
-  - type: str
-    aggregator: dae.genomic_resource.aggregators.ConcatAggregator
-
 # score values
 scores:
     - id: score0_incomplete_cov
@@ -35,5 +26,4 @@ default_annotation:
   attributes:
     - source: score0_incomplete_cov
       dest: score0_incomplete_cov
-      aggregator:
-        position: MaxAggregator
+      position_aggregator: max

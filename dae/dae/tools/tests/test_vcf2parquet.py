@@ -37,9 +37,9 @@ def test_vcf2parquet_vcf(
     pqfile = pq.ParquetFile(parquet_files[0])
     schema = pqfile.schema
 
-    # assert "score0" in schema.names
-    # assert "score2" in schema.names
-    # assert "score4" in schema.names
+    assert "score0" in schema.names
+    assert "score2" in schema.names
+    assert "score4" in schema.names
 
     assert "effect_gene_symbols" in schema.names
     assert "effect_types" in schema.names

@@ -16,15 +16,6 @@ table:
   pos_end: 
     name: POS
 
-
-type_aggregators:
-  - type: float
-    aggregator: dae.genomic_resource.aggregators.MaxAggregator
-  - type: int
-    aggregator: dae.genomic_resource.aggregators.MaxAggregator
-  - type: str
-    aggregator: dae.genomic_resource.aggregators.ConcatAggregator
-
 # score values
 scores:
     - id: score0
@@ -44,15 +35,12 @@ default_annotation:
   attributes:
     - source: score0
       dest: score0
-      aggregator:
-        position: MaxAggregator
+      position_aggregator: max
 
     - source: score2
       dest: score2
-      aggregator:
-        position: MaxAggregator
+      position_aggregator: max
 
     - source: score4
       dest: score4
-      aggregator:
-        position: MaxAggregator
+      position_aggregator: max
