@@ -1,7 +1,6 @@
 import { Component, OnInit, NgZone, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
-import { SelectableUser } from '../user-management/user-management';
 import { take } from 'rxjs/operators';
 
 @Component({
@@ -9,9 +8,8 @@ import { take } from 'rxjs/operators';
   templateUrl: './users-table.component.html',
   styleUrls: ['./users-table.component.css']
 })
-export class UsersTableComponent implements OnInit, OnChanges {
-  @Input() users: SelectableUser[];
-  allSelected = true;
+export class UsersTableComponent implements OnInit {
+  @Input() users: User[];
   currentUserEmail: string;
 
   constructor(
@@ -25,12 +23,6 @@ export class UsersTableComponent implements OnInit, OnChanges {
     });
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes && changes['users']) {
-      this.allSelected = true;
-    }
-  }
-
   isDefaultGroup(user: User, group: string) {
     return user.getDefaultGroups().indexOf(group) !== -1;
   }
@@ -42,11 +34,5 @@ export class UsersTableComponent implements OnInit, OnChanges {
           window.location.reload();
         });
       });
-  }
-
-  checkUncheckAll(selected) {
-    for (let user of this.users) {
-      user.selected = selected;
-    }
   }
 }

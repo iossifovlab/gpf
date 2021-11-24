@@ -3,7 +3,7 @@ import { PhenoBrowserService } from './pheno-browser.service';
 import { PhenoInstruments, PhenoMeasures, PhenoMeasure } from './pheno-browser';
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie-service';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { Observable, of } from 'rxjs';
 import { fakeJsonMeasure } from './pheno-browser.spec';
 

@@ -1,4 +1,5 @@
 import { Component, Input, ViewChild } from '@angular/core';
+import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { Store } from '@ngxs/store';
 import { EnrichmentModelsState } from 'app/enrichment-models/enrichment-models.state';
 import { StateReset } from 'ngxs-reset-plugin';
@@ -8,7 +9,7 @@ import { StateReset } from 'ngxs-reset-plugin';
   templateUrl: './enrichment-models-block.component.html',
 })
 export class EnrichmentModelsBlockComponent {
-  @ViewChild('nav') ngbNav;
+  @ViewChild('nav') ngbNav: NgbNav;
 
   @Input()
   private selectedDatasetId: string;

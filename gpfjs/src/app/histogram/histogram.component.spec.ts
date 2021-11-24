@@ -95,7 +95,7 @@ describe('HistogramComponent', () => {
 
   it('should render the correct amount of bars', waitForAsync(() => {
     fixture.whenStable().then(() => {
-      expect(d3.select('svg').selectAll('rect').nodes().length).toEqual(4);
+      expect(d3.select('svg').selectAll('rect').nodes().length).toEqual(6);
     });
   }));
 

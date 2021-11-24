@@ -23,29 +23,29 @@
     </div>
     <div class="row">
 
-      <gpf-effecttypes-column
+      <gpf-effect-types-column
         [columnName]="'Coding'"
         [effectTypesLabels]="codingColumn"
         [effectTypes]="effectTypes"
         (effectTypeEvent)="onEffectTypeChange($event)"
         class="col-lg-6">
-      </gpf-effecttypes-column>
+      </gpf-effect-types-column>
 
       <div class="col-lg-4">
-      <gpf-effecttypes-column
+      <gpf-effect-types-column
         [columnName]="'Noncoding'"
         [effectTypesLabels]="nonCodingColumn"
         [effectTypes]="effectTypes"
         (effectTypeEvent)="onEffectTypeChange($event)">
-      </gpf-effecttypes-column>
+      </gpf-effect-types-column>
 
-      <gpf-effecttypes-column
+      <gpf-effect-types-column
         *ngIf="variantTypes && variantTypes.has('CNV')"
         [columnName]="'CNV'"
         [effectTypesLabels]="cnvColumn"
         [effectTypes]="effectTypes"
         (effectTypeEvent)="onEffectTypeChange($event)">
-      </gpf-effecttypes-column>
+      </gpf-effect-types-column>
       </div>
     </div>
   </div>

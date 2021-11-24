@@ -14,9 +14,9 @@ import { PresentInChildComponent } from './present-in-child/present-in-child.com
 import { PresentInChildState } from './present-in-child/present-in-child.state';
 import { PresentInParentComponent } from './present-in-parent/present-in-parent.component';
 import { PresentInParentState } from './present-in-parent/present-in-parent.state';
-import { VarianttypesComponent } from './varianttypes/varianttypes.component';
-import { EffecttypesComponent } from './effecttypes/effecttypes.component';
-import { EffecttypesColumnComponent } from './effecttypes/effecttypes-column.component';
+import { VariantTypesComponent } from './variant-types/variant-types.component';
+import { EffectTypesComponent } from './effect-types/effect-types.component';
+import { EffecttypesColumnComponent } from './effect-types/effect-types-column.component';
 import { GenotypePreviewTableComponent } from './genotype-preview-table/genotype-preview-table.component';
 import { QueryService } from './query/query.service';
 
@@ -106,7 +106,7 @@ import { PhenoBrowserTableComponent } from './pheno-browser-table/pheno-browser-
 import { PValueIntensityPipe } from './utils/p-value-intensity.pipe';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { VariantReportsComponent } from './variant-reports/variant-reports.component';
+import { PeopleCounterRowPipe, VariantReportsComponent } from './variant-reports/variant-reports.component';
 import { VariantReportsService } from './variant-reports/variant-reports.service';
 import { DatasetDescriptionComponent } from './dataset-description/dataset-description.component';
 
@@ -158,9 +158,8 @@ import { CommonReportsRowComponent } from './variant-reports/common-reports-row/
 import { CommonReportsPedigreeCellComponent } from './variant-reports/common-reports-pedigree-cell/common-reports-pedigree-cell.component';
 import { LoadingSpinnerComponent } from './loading-spinner/loading-spinner.component';
 import { DatasetNodeComponent } from './dataset-node/dataset-node.component';
-import { AutismGeneProfilesTableComponent } from './autism-gene-profiles-table/autism-gene-profiles-table.component';
+import { AutismGeneProfilesTableComponent, GetGeneScorePipe, GetEffectTypeValuePipe } from './autism-gene-profiles-table/autism-gene-profiles-table.component';
 import { MultipleSelectMenuComponent } from './multiple-select-menu/multiple-select-menu.component';
-import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { AutismGeneProfilesBlockComponent } from './autism-gene-profiles-block/autism-gene-profiles-block.component';
 import { AutismGeneProfileSingleViewComponent } from './autism-gene-profiles-single-view/autism-gene-profile-single-view.component';
 import { MiddleClickDirective } from './autism-gene-profiles-table/middle-click.directive';
@@ -174,14 +173,16 @@ import { BnNgIdleService } from 'bn-ng-idle';
 import { AutismGeneProfileSingleViewWrapperComponent } from './autism-gene-profile-single-view-wrapper/autism-gene-profile-single-view-wrapper.component';
 import { NgxsModule } from '@ngxs/store';
 import { NgxsResetPluginModule } from 'ngxs-reset-plugin';
-import { VarianttypesState } from './varianttypes/varianttypes.state';
-import { EffecttypesState } from './effecttypes/effecttypes.state';
+import { VarianttypesState } from './variant-types/variant-types.state';
+import { EffecttypesState } from './effect-types/effect-types.state';
 import { GenderState } from './gender/gender.state';
 import { RegionsFilterState } from './regions-filter/regions-filter.state';
 import { CheckboxListComponent, DisplayNamePipe } from './checkbox-list/checkbox-list.component';
 import { ErrorsState } from './common/errors.state';
 import { toolPageLinks } from './datasets/datasets';
 import { GenePlotComponent } from './gene-plot/gene-plot.component';
+import { DragDropModule } from '@angular/cdk/drag-drop';
+import { ClipboardModule } from '@angular/cdk/clipboard';
 
 const appRoutes: Routes = [
   {
@@ -276,8 +277,8 @@ const appRoutes: Routes = [
   declarations: [
     AppComponent,
     GenderComponent,
-    VarianttypesComponent,
-    EffecttypesComponent,
+    VariantTypesComponent,
+    EffectTypesComponent,
     EffecttypesColumnComponent,
     GenotypePreviewTableComponent,
     DatasetsComponent,
@@ -366,6 +367,8 @@ const appRoutes: Routes = [
     LoadingSpinnerComponent,
     DatasetNodeComponent,
     AutismGeneProfilesTableComponent,
+    GetGeneScorePipe,
+    GetEffectTypeValuePipe,
     MultipleSelectMenuComponent,
     AutismGeneProfilesBlockComponent,
     AutismGeneProfileSingleViewComponent,
@@ -378,6 +381,7 @@ const appRoutes: Routes = [
     CheckboxListComponent,
     DisplayNamePipe,
     GenePlotComponent,
+    PeopleCounterRowPipe
   ],
   imports: [
     BrowserModule,
@@ -394,7 +398,6 @@ const appRoutes: Routes = [
       confirmButtonType: 'danger'
     }),
     NgMultiSelectDropDownModule.forRoot(),
-    Ng2SearchPipeModule,
     NgxsModule.forRoot([
       VarianttypesState, EffecttypesState, GenderState,
       InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,
@@ -405,6 +408,8 @@ const appRoutes: Routes = [
       {compatibility: { strictContentSecurityPolicy: true }}
     ),
     NgxsResetPluginModule.forRoot(),
+    DragDropModule,
+    ClipboardModule
   ],
   providers: [
     CookieService,

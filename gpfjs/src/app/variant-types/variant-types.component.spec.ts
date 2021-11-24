@@ -1,25 +1,25 @@
-/* tslint:disable:no-unused-variable */
+/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { VarianttypesComponent } from './varianttypes.component';
+import { VariantTypesComponent } from './variant-types.component';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ConfigService } from 'app/config/config.service';
 import { UsersService } from 'app/users/users.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { of } from 'rxjs';
 import { NgxsModule, StateStream, Store } from '@ngxs/store';
 import { CheckboxListComponent } from 'app/checkbox-list/checkbox-list.component';
-import { SetVariantTypes } from './varianttypes.state';
+import { SetVariantTypes, VarianttypesState } from './variant-types.state';
 
-describe('VarianttypesComponent', () => {
-  let component: VarianttypesComponent;
-  let fixture: ComponentFixture<VarianttypesComponent>;
+describe('VariantTypesComponent', () => {
+  let component: VariantTypesComponent;
+  let fixture: ComponentFixture<VariantTypesComponent>;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [VarianttypesComponent, ErrorsAlertComponent, CheckboxListComponent],
+      declarations: [VariantTypesComponent, ErrorsAlertComponent, CheckboxListComponent],
       providers: [
         DatasetsService,
         ConfigService,
@@ -31,7 +31,7 @@ describe('VarianttypesComponent', () => {
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(VarianttypesComponent);
+    fixture = TestBed.createComponent(VariantTypesComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
@@ -44,10 +44,10 @@ describe('VarianttypesComponent', () => {
     let dispatchSpy;
 
     component['store'] = {
-      selectOnce(f) {
+      selectOnce(f: VarianttypesState) {
         return of({variantTypes: ['value1', 'value2']});
       },
-      dispatch(set) {}
+      dispatch(set: SetVariantTypes) {}
     } as any;
     dispatchSpy = spyOn(component['store'], 'dispatch');
     component.ngOnChanges();
@@ -56,10 +56,10 @@ describe('VarianttypesComponent', () => {
 
     component.selectedVariantTypes = new Set(['value3']);
     component['store'] = {
-      selectOnce(f) {
+      selectOnce(f: VarianttypesState) {
         return of({variantTypes: []});
       },
-      dispatch(set) {}
+      dispatch(set: SetVariantTypes) {}
     } as any;
     dispatchSpy = spyOn(component['store'], 'dispatch');
     component.ngOnChanges();
@@ -70,7 +70,7 @@ describe('VarianttypesComponent', () => {
 
   it('should update variant types', () => {
     component.selectedVariantTypes = undefined;
-    component['store'] = { dispatch(set) {} } as any;
+    component['store'] = { dispatch(set: SetVariantTypes) {} } as any;
     const dispatchSpy = spyOn(component['store'], 'dispatch');
     const mockSet = new Set(['value1', 'value2', 'value3']);
 

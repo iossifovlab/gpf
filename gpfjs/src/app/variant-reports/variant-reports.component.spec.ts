@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { VariantReportsComponent } from './variant-reports.component';
+import { PeopleCounterRowPipe, VariantReportsComponent } from './variant-reports.component';
 import { PedigreeChartModule } from '../pedigree-chart/pedigree-chart.module';
 import { FormsModule } from '@angular/forms';
 import { VariantReportsService } from './variant-reports.service';
@@ -8,6 +8,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { PerfectlyDrawablePedigreeService } from 'app/perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 import { ResizeService } from 'app/table/resize.service';
+import { DenovoReport, PedigreeCounter } from './variant-reports';
 
 class MockDatasetsService {
   getSelectedDataset() {
@@ -73,6 +74,9 @@ class VariantReportsServiceMock {
   }
 
   getVariantReport(datasetId: string): Observable<any> {
+    const pedigreeCounter: PedigreeCounter | null = null;
+    const denovoReport: DenovoReport | null = null;
+
     const variantReport = {
       id: this.datasetId,
       studyName: this.datasetId,
@@ -82,9 +86,7 @@ class VariantReportsServiceMock {
           {
             familyCounter: [
               {
-                pedigreeCounters: [
-                  null
-                ]
+                pedigreeCounters: pedigreeCounter
               }
             ],
             groupName: 'test',
@@ -209,7 +211,7 @@ class VariantReportsServiceMock {
           }
         ],
       },
-      denovoReport: null
+      denovoReport: denovoReport
     };
 
     if(datasetId === 'Denovo') {
@@ -279,7 +281,7 @@ describe('VariantReportsComponent', () => {
     const activatedRouteMock = new MockActivatedRoute();
     const datasetsServiceMock = new MockDatasetsService();
     TestBed.configureTestingModule({
-      declarations: [ VariantReportsComponent ],
+      declarations: [ VariantReportsComponent, PeopleCounterRowPipe ],
       imports: [ PedigreeChartModule, FormsModule ],
       providers: [
         { provide: VariantReportsService, useValue: variantReportsServiceMock },
@@ -321,7 +323,7 @@ describe('VariantReportsComponent Denovo', () => {
     const activatedRouteMock = new MockActivatedRoute('Denovo');
     const datasetsServiceMock = new MockDatasetsDenovoService();
     TestBed.configureTestingModule({
-      declarations: [ VariantReportsComponent ],
+      declarations: [ VariantReportsComponent, PeopleCounterRowPipe ],
       imports: [ PedigreeChartModule, FormsModule ],
       providers: [
         { provide: VariantReportsService, useValue: variantReportsServiceMock },

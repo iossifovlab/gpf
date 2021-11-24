@@ -29,7 +29,7 @@
       <li *ngIf="selectedDataset.description" class="nav-item">
         <a class="nav-link" routerLink="{{toolPageLinks.datasetDescription}}" routerLinkActive="active">Dataset Description</a>
       </li>
-      <li *ngIf="selectedDataset.commonReport['enabled']" class="nav-item">
+      <li *ngIf="selectedDataset.commonReport.enabled" class="nav-item">
         <a class="nav-link" routerLink="{{toolPageLinks.datasetStatistics}}" routerLinkActive="active">Dataset Statistics</a>
       </li>
       <li *ngIf="selectedDataset.geneBrowser?.enabled" class="nav-item">

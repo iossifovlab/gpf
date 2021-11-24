@@ -9,7 +9,7 @@ import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotyp
 import { QueryService } from 'app/query/query.service';
 import { first, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject, Subscription } from 'rxjs';
-import { Dataset, PersonSet } from 'app/datasets/datasets';
+import { Dataset, GeneBrowser, PersonSet } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { GenePlotComponent } from 'app/gene-plot/gene-plot.component';
@@ -34,7 +34,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   public showResults: boolean;
   public showError = false;
   private familyLoadingFinished: boolean;
-  private geneBrowserConfig;
+  private geneBrowserConfig: GeneBrowser;
   private subscriptions: Subscription[] = [];
 
   public readonly affectedStatusValues = affectedStatusValues;
@@ -58,8 +58,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   public geneSymbolSuggestions: string[] = [];
   public searchBoxInput$: Subject<string> = new Subject();
 
-  @ViewChild('filters', { static: false })
-  public set filters(element) {
+  @ViewChild('filters', { static: false }) public set filters(element: any) {
     this.drawDenovoIcons();
     this.drawTransmittedIcons();
     this.drawEffectTypesIcons();
@@ -102,8 +101,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
           this.geneSymbolSuggestions = [];
           return;
         }
-        this.geneService.searchGenes(this.geneSymbol).subscribe(response => {
-          this.geneSymbolSuggestions = response['gene_symbols'];
+        this.geneService.searchGenes(this.geneSymbol).subscribe((response: { 'gene_symbols': string[] }) => {
+          this.geneSymbolSuggestions = response.gene_symbols;
         });
       })
     );
@@ -201,15 +200,16 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   private get requestParamsSummary(): object {
-    const requestParams = {
+    let requestParams = {
       'datasetId': this.selectedDatasetId,
       'geneSymbols': [this.geneSymbol.toUpperCase().trim()],
       'maxVariantsCount': 10000,
       'inheritanceTypeFilter': ['denovo', 'mendelian', 'omission', 'missing'],
     };
     if (this.summaryVariantsFilter.codingOnly) {
-      requestParams['effectTypes'] = codingEffectTypes;
+      return { ...requestParams, effectTypes: codingEffectTypes };
     }
+
     return requestParams;
   }
 
@@ -225,19 +225,23 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     );
   }
 
-  private onSubmit(event): void {
-    event.target.queryData.value = JSON.stringify({...this.requestParams, 'download': true});
-    event.target.submit();
+  private onSubmit(event: Event): void {
+    const target = <HTMLFormElement>event.target;
+
+    target.queryData.value = JSON.stringify({...this.requestParams, 'download': true});
+    target.submit();
   }
 
-  public onSubmitSummary(event): void {
-    event.target.queryData.value = JSON.stringify({
+  public onSubmitSummary(event: Event): void {
+    const target = <HTMLFormElement>event.target;
+
+    target.queryData.value = JSON.stringify({
       ...this.requestParamsSummary,
       'summaryVariantIds': this.summaryVariantsArrayFiltered.summaryAlleleIds.reduce(
         (a, b) => a.concat(b), []
       ),
     });
-    event.target.submit();
+    target.submit();
   }
 
   private updateVariants(): void {
@@ -287,7 +291,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.updateVariants();
   }
 
-  public getAffectedStatusColor(affectedStatus: string): string {
+  public getAffectedStatusColor(affectedStatus: 'Affected only' | 'Unaffected only' | 'Affected and unaffected'): string {
     return draw.affectedStatusColors[affectedStatus];
   }
 

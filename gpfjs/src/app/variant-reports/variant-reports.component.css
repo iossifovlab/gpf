@@ -1,7 +1,7 @@
 .variant-report-block {
-	padding: 20px;
-	border: 1px solid rgba(0,0,0,.125);
-	background-color: #fafafa;
+  padding: 20px;
+  border: 1px solid rgba(0, 0, 0, .125);
+  background-color: #fafafa;
 }
 
 .table-centered,
@@ -51,14 +51,14 @@ table {
 }
 
 .groups-title {
-  position:relative;
+  position: relative;
   text-align: left;
   padding-left: 12px;
   top: 25px;
 }
 
 .sex-title {
-  position:relative;
+  position: relative;
   text-align: right;
   padding-right: 11px;
   top: -25px;
@@ -72,4 +72,20 @@ table {
     white 51%
   );
   border-bottom: 1px;
+}
+
+.legend-report {
+  color: #6c757d !important;
+  font-size: 80%;
+  font-weight: 400;
+}
+
+.legend {
+  position: fixed;
+  bottom: 100px;
+  right: 100px;
+  background-color: white;
+  text-align: left;
+  border: 1px solid #ddd;
+  padding: 5px;
 }

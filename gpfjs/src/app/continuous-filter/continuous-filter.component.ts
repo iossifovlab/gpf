@@ -2,7 +2,7 @@ import { Component, OnInit, OnChanges, SimpleChanges, Input, Output, EventEmitte
 import { MeasuresService } from '../measures/measures.service';
 import { HistogramData } from '../measures/measures';
 import { ContinuousFilterState, ContinuousSelection } from '../person-filters/person-filters';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { Observable, Subject } from 'rxjs';
 import { Partitions } from '../gene-weights/gene-weights';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
@@ -40,6 +40,9 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
     this.partitions.subscribe(partitions => {
       this.rangesCounts = [partitions.leftCount, partitions.midCount, partitions.rightCount];
     });
+    if (this.continuousFilterState !== undefined) {
+      this.continuousFilterState.selection = new ContinuousSelection(null, null, null, null);
+    }
   }
 
   public ngOnChanges(changes: SimpleChanges): void {
@@ -57,13 +60,6 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
         });
     }
 
-    if (!this.measureName) {
-      const selection = (this.continuousFilterState.selection as ContinuousSelection);
-      selection.min = null;
-      selection.domainMin = null;
-      selection.max = null;
-      selection.domainMax = null;
-    }
   }
 
   public set rangeStart(value) {

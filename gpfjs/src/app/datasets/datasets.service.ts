@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { Observable, ReplaySubject, BehaviorSubject, zip, Subject } from 'rxjs';
 
 import { Dataset } from '../datasets/datasets';
@@ -39,8 +39,8 @@ export class DatasetsService {
     this.datasetsLoading = true;
 
     return this.http.get(this.config.baseUrl + this.datasetUrl, options).pipe(
-      map(res => {
-        const datasets = Dataset.fromJsonArray(res['data']);
+      map((res: {data: Array<object>}) => {
+        const datasets = Dataset.fromJsonArray(res.data);
         this.datasets$.next(datasets);
         this.datasetsLoading = false;
         return datasets;
@@ -55,7 +55,7 @@ export class DatasetsService {
     const dataset$ = this.http.get(this.config.baseUrl + url, options);
     const details$ = this.http.get(`${this.config.baseUrl}${this.datasetsDetailsUrl}/${datasetId}`, options);
 
-    return zip(dataset$, details$).pipe(map(datasetPack => Dataset.fromDatasetAndDetailsJson(datasetPack[0]['data'], datasetPack[1])));
+    return zip(dataset$, details$).pipe(map((datasetPack: [any, any]) => Dataset.fromDatasetAndDetailsJson(datasetPack[0]['data'], datasetPack[1])));
   }
 
   public setSelectedDatasetById(datasetId: string, force = false): void {
@@ -101,7 +101,7 @@ export class DatasetsService {
     const options = { withCredentials: true };
 
     return this.http.get(this.config.baseUrl + this.permissionDeniedPromptUrl, options).pipe(
-      map(res => res['data'])
+      map((res: any) => res['data'])
     );
   }
 

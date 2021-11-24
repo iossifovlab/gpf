@@ -4,7 +4,7 @@ import { Store, Selector } from '@ngxs/store';
 import { PersonIdsState } from 'app/person-ids/person-ids.state';
 import { PersonFiltersState } from 'app/person-filters/person-filters.state';
 import { StateReset } from 'ngxs-reset-plugin';
-
+import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'gpf-person-filters-block',
@@ -14,7 +14,7 @@ import { StateReset } from 'ngxs-reset-plugin';
 export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
   @Input() dataset: Dataset;
   @Input() genotypeBrowserState: Object;
-  @ViewChild('nav') ngbNav;
+  @ViewChild('nav') ngbNav: NgbNav;
   showAdvancedButton: boolean;
 
   constructor(private store: Store) { }

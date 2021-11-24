@@ -1,8 +1,8 @@
 import { Input, Component, OnInit, ChangeDetectionStrategy,  AfterViewInit, ViewChild, ChangeDetectorRef, OnDestroy } from '@angular/core';
 
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { Observable, BehaviorSubject, Subject, Subscription, of } from 'rxjs';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { difference } from '../utils/sets-helper';
 
 import { IntervalForVertex } from '../utils/interval-sandwich';

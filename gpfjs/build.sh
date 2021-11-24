@@ -52,8 +52,10 @@ function main() {
 
   build_stage "Lint"
   {
-    build_run ng lint --format checkstyle >ts-lint-report.xml || echo "tslint exited with $?"
-    build_run sed -i '$ d' ts-lint-report.xml
+    build_run ng lint --format checkstyle >ts-lint-report.xml || echo "eslint exited with $?"
+    build_run sed -i '1,2d' ts-lint-report.xml
+    build_run ./node_modules/.bin/stylelint --custom-formatter ./node_modules/stylelint-checkstyle-formatter "**/*.css" >css-lint-report.xml \
+      || echo "stylelint exited with $?"
   }
 
   build_stage "Tests"

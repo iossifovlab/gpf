@@ -14,9 +14,9 @@
   </div>
 
   <div class="col-lg-6 panel-row">
-    <gpf-effecttypes
+    <gpf-effect-types
       [variantTypes]="dataset.genotypeBrowserConfig.variantTypes">
-    </gpf-effecttypes>
+    </gpf-effect-types>
   </div>
 
   <div class="col-lg-3 panel-row">
@@ -24,10 +24,10 @@
   </div>
 
   <div class="col-lg-3 panel-row">
-    <gpf-varianttypes
+    <gpf-variant-types
       [variantTypes]="dataset.genotypeBrowserConfig.variantTypes"
       [selectedVariantTypes]="dataset.genotypeBrowserConfig.selectedVariantTypes">
-    </gpf-varianttypes>
+    </gpf-variant-types>
   </div>
 
   <div *ngIf="dataset.genotypeBrowserConfig.hasStudyTypes" class="col-lg-3">
