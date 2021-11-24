@@ -14,6 +14,8 @@ from xml.etree.ElementTree import Element, tostring
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.utils.regions import Region
 
+logger = logging.getLogger("gpf_validation_runner")
+
 
 class TestStatus(enum.Enum):
     NOTSET = 0
@@ -457,7 +459,8 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
         records = []
         for v in variants:
             for aa in v.alt_alleles:
-                vprops = copy.deepcopy(aa.attributes)
+                vprops = aa.attributes
+
                 if "transmission_type" in vprops:
                     del vprops["transmission_type"]
                 vprops["fvuid"] = v.fvuid
@@ -615,6 +618,8 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
             return (count_result, variants_result)
         except Exception as ex:
+            logger.debug(
+                f"unexpected error {study_id}: {ex}", exc_info=True)
             test_result = TestResult(
                 expectation=self.expectations,
                 case=case,

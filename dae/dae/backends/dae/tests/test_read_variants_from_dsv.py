@@ -55,7 +55,8 @@ def compare_variant_dfs(res_df, expected_df):
 def test_produce_genotype(fake_families, gpf_instance_2013):
     expected_output = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 1, 1]])
     output = DenovoLoader.produce_genotype(
-        "1", 123123, gpf_instance_2013.reference_genome, fake_families["f1"], ["f1.p1", "f1.s2"]
+        "1", 123123, gpf_instance_2013.reference_genome,
+        fake_families["f1"], ["f1.p1", "f1.s2"]
     )
     assert np.array_equal(output, expected_output)
     assert output.dtype == GENOTYPE_TYPE
@@ -65,7 +66,8 @@ def test_produce_genotype_no_people_with_variants(
         fake_families, gpf_instance_2013):
     expected_output = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 0, 0]])
     output = DenovoLoader.produce_genotype(
-        "1", 123123, gpf_instance_2013.reference_genome, fake_families["f1"], []
+        "1", 123123, gpf_instance_2013.reference_genome,
+        fake_families["f1"], []
     )
     assert np.array_equal(output, expected_output)
     assert output.dtype == GENOTYPE_TYPE
@@ -85,7 +87,8 @@ def test_families_instance_type_assertion():
     assert str(excinfo.value) == error_message
 
 
-def test_read_variants_DAE_style(gpf_instance_2013, fixture_dirname, fake_families):
+def test_read_variants_DAE_style(
+        gpf_instance_2013, fixture_dirname, fake_families):
     filename = fixture_dirname("denovo_import/variants_DAE_style.tsv")
     res_df = DenovoLoader.flexible_denovo_load(
         filename,
@@ -155,7 +158,8 @@ def test_read_variants_a_la_VCF_style(
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_mixed_A(gpf_instance_2013, fixture_dirname, fake_families):
+def test_read_variants_mixed_A(
+        gpf_instance_2013, fixture_dirname, fake_families):
     filename = fixture_dirname("denovo_import/variants_mixed_style_A.tsv")
     res_df = DenovoLoader.flexible_denovo_load(
         filename,
@@ -189,7 +193,8 @@ def test_read_variants_mixed_A(gpf_instance_2013, fixture_dirname, fake_families
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_mixed_B(gpf_instance_2013, fixture_dirname, fake_families):
+def test_read_variants_mixed_B(
+        gpf_instance_2013, fixture_dirname, fake_families):
     filename = fixture_dirname("denovo_import/variants_mixed_style_B.tsv")
     res_df = DenovoLoader.flexible_denovo_load(
         filename,
@@ -461,8 +466,9 @@ def test_denovo_loader(
 ):
     denovo_filename = fixture_dirname(f"denovo_import/{filename}")
     variants_loader = DenovoLoader(
-        fake_families, denovo_filename, 
-        genome=gpf_instance_2013.reference_genome, params=params
+        fake_families, denovo_filename,
+        genome=gpf_instance_2013.reference_genome, params=params,
+        sort=False
     )
 
     vs = list(variants_loader.full_variants_iterator())
@@ -535,7 +541,7 @@ def test_denovo_loader_avoids_duplicates(
         "denovo_best_state": "bestState"
     }
     variants_loader = DenovoLoader(
-        fake_families, denovo_filename, 
+        fake_families, denovo_filename,
         genome=gpf_instance_2013.reference_genome, params=params
     )
 

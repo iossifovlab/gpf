@@ -1111,10 +1111,6 @@ def agp_gpf_instance(
             clear=True
         )
     print(temp_dbfile)
-    fixtures_gpf_instance._autism_gene_profile_db.clear_all_tables()
-    fixtures_gpf_instance._autism_gene_profile_db.populate_data_tables(
-        fixtures_gpf_instance.get_genotype_data_ids())
-    fixtures_gpf_instance._autism_gene_profile_db.build_agp_view()
     fixtures_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
     return fixtures_gpf_instance
 

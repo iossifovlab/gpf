@@ -124,8 +124,12 @@ def calculate_rates(instance, agps, config):
 
                     stat = agp.variant_counts[dataset_id][set_name][stat_id]
                     count = len(stat["variants"])
-                    stat["count"] = count
-                    stat["rate"] = (count / children_count) * 1000
+                    if children_count > 0:
+                        stat["count"] = count
+                        stat["rate"] = (count / children_count) * 1000
+                    else:
+                        stat["count"] = 0
+                        stat["rate"] = 0
                     # if stat_id == "rare_lgds":
                     #     from pprint import pprint
                     #     print(100*"=")
@@ -446,14 +450,8 @@ def main(gpf_instance=None, argv=None):
         clear=True
     )
 
-    agpdb.clear_all_tables()
-    agpdb.populate_data_tables(gpf_instance.get_genotype_data_ids())
     logger.info("Inserting statistics into DB")
     agpdb.insert_agps(agps.values())
-    logger.info("Building AGP output view")
-    agpdb.build_agp_view()
-    logger.info("Generating cache table")
-    agpdb.generate_cache_table()
     logger.info("Done")
 
 
