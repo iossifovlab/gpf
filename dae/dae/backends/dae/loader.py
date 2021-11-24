@@ -65,7 +65,8 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_filename: str,
             genome: Genome,
             regions: List[str] = None,
-            params: Dict[str, Any] = {}):
+            params: Dict[str, Any] = {},
+            sort: bool = True):
         super(DenovoLoader, self).__init__(
             families=families,
             filenames=[denovo_filename],
@@ -97,6 +98,9 @@ class DenovoLoader(VariantsGenotypesLoader):
             self.expect_genotype = True
         else:
             assert False
+        if sort:
+            self.denovo_df = self.denovo_df.sort_values(
+                by=["chrom", "position", "reference", "alternative"])
 
     def _init_chromosomes(self):
         self.chromosomes = list(self.denovo_df.chrom.unique())
