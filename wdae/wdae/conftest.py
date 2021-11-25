@@ -137,10 +137,10 @@ def wdae_gpf_instance(
 
 @pytest.fixture(scope="function")
 def wdae_gpf_instance_agp(
-        db, mocker, admin_client, wgpf_instance, sample_agp,
+        db, mocker, admin_client, fixtures_wgpf_instance, sample_agp,
         global_dae_fixtures_dir, agp_config, temp_filename):
 
-    wdae_gpf_instance = wgpf_instance(global_dae_fixtures_dir)
+    wdae_gpf_instance = fixtures_wgpf_instance
     reload_datasets(wdae_gpf_instance)
     mocker.patch(
         "query_base.query_base.get_gpf_instance",
@@ -190,7 +190,10 @@ def wdae_gpf_instance_agp(
         )
     wdae_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
 
-    return wdae_gpf_instance
+    yield wdae_gpf_instance
+
+    wdae_gpf_instance.__autism_gene_profile_config = None
+    wdae_gpf_instance.__autism_gene_profile_db = None
 
 
 @pytest.fixture(scope="function")
