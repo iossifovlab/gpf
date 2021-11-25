@@ -686,12 +686,13 @@ class VariantsGenotypesLoader(VariantsLoader):
 
     @classmethod
     def _calc_genotype(
-        cls, family_variant: FamilyVariant, genome: Genome
-    ) -> np.array:
+            cls, family_variant: FamilyVariant, genome) -> np.array:
+
         best_state = family_variant._best_state
         genotype = best2gt(best_state)
         male_ploidy = get_locus_ploidy(
-            family_variant.chromosome, family_variant.position, Sex.M, genome
+            family_variant.chromosome, family_variant.position,
+            Sex.M, genome
         )
         ploidy = np.sum(best_state, 0)
         genetic_model = GeneticModel.autosomal
