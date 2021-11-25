@@ -49,7 +49,7 @@
     "ngx-markdown": "12.0.1",
     "ngxs-reset-plugin": "1.4.1",
     "oboe": "2.1.5",
-    "popper.js": "2.8.0",
+    "popper.js": "1.16.1",
     "reflect-metadata": "0.1.13",
     "rxjs": "6.6.0",
     "sprintf-js": "1.1.2",
