@@ -28,7 +28,7 @@ describe('Inheritance tests', () => {
     page.findErrorAlertInComponent('gpf-inheritancetypes').should('not.exist');
   });
 
-  it('should check/uncheck effect types checkboxes using \'All\' and \'None\' buttons', () => {
+  it('should check/uncheck effect types checkboxes using "All" and "None" buttons', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genotypeBlockPage.findButtonInComponentContainingText('gpf-inheritancetypes', 'None').click();
     genotypeBlockPage.findAllCheckboxesInComponent('gpf-inheritancetypes').each((element) => {
