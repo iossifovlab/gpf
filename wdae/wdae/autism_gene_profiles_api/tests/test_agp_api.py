@@ -37,6 +37,20 @@ def test_configuration(admin_client):
             "description": "",
             "parentsCount": 0,
             "childrenCount": 11,
+            "statistics": [
+                {
+                    'id': 'denovo_noncoding',
+                    'displayName': 'Noncoding',
+                    'effects': ['noncoding'],
+                    'category': 'denovo'
+                },
+                {
+                    'id': 'denovo_missense',
+                    'displayName': 'Missense',
+                    'effects': ['missense'],
+                    'category': 'denovo'
+                }
+            ]
         },
         {
             "id": "unaffected",
@@ -45,6 +59,20 @@ def test_configuration(admin_client):
             "description": "",
             "parentsCount": 22,
             "childrenCount": 10,
+            "statistics": [
+                {
+                    'id': 'denovo_noncoding',
+                    'displayName': 'Noncoding',
+                    'effects': ['noncoding'],
+                    'category': 'denovo'
+                },
+                {
+                    'id': 'denovo_missense',
+                    'displayName': 'Missense',
+                    'effects': ['missense'],
+                    'category': 'denovo'
+                }
+            ]
         }
     ]
 

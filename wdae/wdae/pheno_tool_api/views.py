@@ -97,8 +97,9 @@ class PhenoToolView(QueryBaseView):
 
         if not adapter:
             return Response(status=status.HTTP_404_NOT_FOUND)
+        effect_groups = [effect for effect in data["effectTypes"]]
         data = adapter.helper.genotype_data.transform_request(data)
-        result = adapter.calc_variants(data)
+        result = adapter.calc_variants(data, effect_groups)
 
         return Response(result)
 
@@ -114,13 +115,18 @@ class PhenoToolDownload(PhenoToolView):
     def post(self, request):
         data = self._parse_query_params(request.data)
         adapter = self.prepare_pheno_tool_adapter(data)
+        if not adapter:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        effect_groups = [effect for effect in data["effectTypes"]]
+
         data = adapter.helper.genotype_data.transform_request(data)
         tool = adapter.pheno_tool
 
         result_df = tool.pheno_df.copy()
-        variants = adapter.helper.genotype_data_variants(data)
+        variants = adapter.helper.genotype_data_variants(data, effect_groups)
 
-        for effect in data["effect_types"]:
+        for effect in effect_groups:
             result_df = PhenoTool.join_pheno_df_with_variants(
                 result_df, variants[effect]
             )

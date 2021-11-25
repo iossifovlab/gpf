@@ -187,7 +187,9 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
                 #     f"{position}, {end_position}, {reference}")
                 extra_attributes = bytes(extra_attributes, "utf8")
 
-            family = self.families[family_id]
+            family = self.families.get(family_id)
+            if family is None:
+                return None
             v = serializer.deserialize_family_variant(
                 variant_data, family, extra_attributes
             )

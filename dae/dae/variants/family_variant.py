@@ -1,3 +1,4 @@
+import copy
 import logging
 
 from typing import Any, List, Optional
@@ -107,6 +108,7 @@ class FamilyAllele(Allele, FamilyDelegate):
         self._variant_in_roles = None
         self._variant_in_sexes = None
         self._family_index = None
+        self._family_attributes = {}
 
         self.matched_gene_effects: List = []
 
@@ -155,8 +157,41 @@ class FamilyAllele(Allele, FamilyDelegate):
         return self.summary_allele.transmission_type
 
     @property
-    def attributes(self):
+    def summary_attributes(self):
         return self.summary_allele.attributes
+
+    @property
+    def family_attributes(self):
+        return self._family_attributes
+
+    @property
+    def attributes(self):
+        result = copy.deepcopy(self.summary_attributes)
+        result.update(self.family_attributes)
+        return result
+
+    def get_attribute(self, item: str, default=None):
+        """
+        looks up values matching key `item` in additional attributes passed
+        on creation of the variant.
+        """
+        val = self.family_attributes.get(item, default)
+        if val is not None:
+            return val
+        return self.summary_allele.get_attribute(item, default)
+
+    def has_attribute(self, item: str) -> bool:
+        """
+        checks if additional variant attributes contain values for key `item`.
+        """
+        return item in self.family_attributes or \
+            item in self.summary_attributes
+
+    def update_attributes(self, atts: dict) -> None:
+        """
+        updates additional attributes of variant using dictionary `atts`.
+        """
+        self._family_attributes.update(atts)
 
     @property
     def details(self):

@@ -4,6 +4,7 @@
 # conda create -c conda-forge -c bioconda -n <env name> --file <this file>
 channels:
   - conda-forge 
+  - defaults
   - bioconda
   - iossifovlab
 dependencies:

@@ -23,4 +23,4 @@ def test_simple_query_variants_preview(db, admin_client, remote_settings):
     res = json.loads(
         "".join(map(lambda x: x.decode("utf-8"), response.streaming_content))
     )
-    assert len(res) == 1001
+    assert len(res) == 16
