@@ -130,7 +130,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
                     if not first_and:
                         pedigree_where += "AND "
                     value = self._get_pedigree_column_value(source, str_value)
-                    pedigree_where += f"pedigree.{source} = {value} "
+                    pedigree_where += f'pedigree.{source} = "{value}" '
                     first_and = False
                 pedigree_where += ")"
             pedigree_where += ")"
