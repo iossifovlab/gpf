@@ -328,24 +328,24 @@ const sfari_genes = [
 */
 const data_wrapper = [
   {
-  "name": "GRIN2B_affected_LGDs",
-  "data": {
-      "phenoToolMeasureState": {
-          "measureId": "",
-          "normalizeBy": []
+  name: "GRIN2B_affected_LGDs",
+  data: {
+      phenoToolMeasureState: {
+          measureId: "",
+          normalizeBy: []
       },
-      "genomicScoresBlockState": {
+      genomicScoresBlockState: {
           "genomicScores": []
       },
-      "personFiltersState": {
-          "familyFilters": [],
-          "personFilters": []
+      personFiltersState: {
+          familyFilters: [],
+          personFilters: []
       },
-      "studyFiltersBlockState": {
-          "studyFilters": []
+      studyFiltersBlockState: {
+          studyFilters: []
       },
-      "familyTypeFilterState": {
-          "familyTypes": [
+      familyTypeFilterState: {
+          familyTypes: [
               "trio",
               "quad",
               "multigenerational",
@@ -354,77 +354,77 @@ const data_wrapper = [
               "other"
           ]
       },
-      "pedigreeSelectorState": {
-          "id": "status",
-          "checkedValues": [
+      pedigreeSelectorState: {
+          id: "status",
+          checkedValues: [
               "affected"
           ]
       },
-      "enrichmentModelsState": {
-          "enrichmentBackgroundModel": "",
-          "enrichmentCountingModel": ""
+      enrichmentModelsState: {
+          enrichmentBackgroundModel: "",
+          enrichmentCountingModel: ""
       },
-      "geneWeightsState": {
-          "geneWeight": null,
-          "rangeStart": 0,
-          "rangeEnd": 0
+      geneWeightsState: {
+          geneWeight: null,
+          rangeStart: 0,
+          rangeEnd: 0
       },
-      "geneSetsState": {
-          "geneSetsTypes": null,
-          "geneSetsCollection": null,
-          "geneSet": null
+      geneSetsState: {
+          geneSetsTypes: null,
+          geneSetsCollection: null,
+          geneSet: null
       },
-      "studyTypesState": {
-          "studyTypes": [
+      studyTypesState: {
+          studyTypes: [
               "we"
           ]
       },
-      "regionsFiltersState": {
+      regionsFiltersState: {
           "regionsFilters": []
       },
-      "familyIdsState": {
+      familyIdsState: {
           "familyIds": []
       },
-      "geneSymbolsState": {
-          "geneSymbols": [
+      geneSymbolsState: {
+          geneSymbols: [
               "GRIN2B"
           ]
       },
-      "presentInParentState": {
-          "presentInParent": [
+      presentInParentState: {
+          presentInParent: [
               "neither"
           ],
-          "rarityType": "all",
-          "rarityIntervalStart": 0,
-          "rarityIntervalEnd": 1
+          rarityType: "all",
+          rarityIntervalStart: 0,
+          rarityIntervalEnd: 1
       },
-      "presentInChildState": {
-          "presentInChild": [
+      presentInChildState: {
+          presentInChild: [
               "proband only",
               "proband and sibling",
               "sibling only"
           ]
       },
-      "personIdsState": {
+      personIdsState: {
           "personIds": []
       },
-      "inheritancetypesState": {
-          "inheritanceTypes": []
+      inheritancetypesState: {
+          inheritanceTypes: []
       },
-      "genderState": {
-          "genders": [
+      genderState: {
+          genders: [
               "male",
               "female",
               "unspecified"
           ]
       },
-      "effecttypesState": {
-          "effectTypes": []
+      effecttypesState: {
+          effectTypes: []
       },
-      "varianttypesState": {
-          "variantTypes": []
+      varianttypesState: {
+          variantTypes: []
       },
-      "datasetId": "iossifov_2014"
+      datasetId: "iossifov_2014"
   },
-  "page": "genotype"
+  page: "genotype"
 }]
