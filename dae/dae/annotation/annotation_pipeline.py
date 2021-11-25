@@ -2,8 +2,14 @@
 from __future__ import annotations
 
 import logging
+import copy
+import yaml
+
 from itertools import chain
-from typing import List
+from typing import Dict, List
+
+from cerberus.validator import Validator
+from box import Box
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 
@@ -19,52 +25,239 @@ from dae.annotation.utils import AnnotatorFactory
 
 logger = logging.getLogger(__name__)
 
-
-DEFAULT_ANNOTATION_SCHEMA = {
-    "attributes": {
-        "type": "list",
-        "schema": {
-            "type": "dict",
-            "schema": {
-                "source": {"type": "string"},
-                "dest": {"type": "string"},
-                "position_aggregator": AGGREGATOR_SCHEMA,
-                "nucleotide_aggregator": AGGREGATOR_SCHEMA,
-            }
-        }
+ATTRIBUTES_SCHEMA = {
+    "type": "dict",
+    "coerce": "attributes",
+    "schema": {
+        "source": {"type": "string"},
+        "destination": {"type": "string"},
     }
 }
+
+ATTRIBUTES_POS_AGGR_SCHEMA = copy.deepcopy(ATTRIBUTES_SCHEMA)
+ATTRIBUTES_POS_AGGR_SCHEMA["schema"]["position_aggregator"] = \
+    AGGREGATOR_SCHEMA
+
+ATTRIBUTES_NP_AGGR_SCHEMA = copy.deepcopy(ATTRIBUTES_POS_AGGR_SCHEMA)
+ATTRIBUTES_NP_AGGR_SCHEMA["schema"]["nucleotide_aggregator"] = \
+    AGGREGATOR_SCHEMA
 
 
 ANNOTATOR_SCHEMA = {
-    "type": "dict",
-    "schema": {
-        "annotator": {"type": "string", "required": True},
-        "resource": {"type": "string"},
-        "gene_models": {"type": "string"},
-        "chain": {"type": "string"},
-        "genome": {"type": "string"},
-        "target_genome": {"type": "string"},
-        "liftover": {"type": "string"},
-        "override": {"type": "dict", "schema": DEFAULT_ANNOTATION_SCHEMA}
-    }
+    "np_score": {
+        "type": "dict",
+        "coerce": "score_resources",
+        "schema": {
+            "resource_id": {
+                "type": "string",
+                "required": True,
+            },
+            "liftover_id": {
+                "type": "string",
+                "nullable": True,
+                "default": None,
+            },
+            "attributes": {
+                "type": "list",
+                "nullable": True,
+                "default": None,
+                "schema": ATTRIBUTES_NP_AGGR_SCHEMA
+            }
+        }
+    },
+    "position_score": {
+        "type": "dict",
+        "coerce": "score_resources",
+        "schema": {
+            "resource_id": {
+                "type": "string",
+                "required": True,
+            },
+            "liftover_id": {
+                "type": "string",
+                "nullable": True,
+                "default": None
+            },
+            "attributes": {
+                "type": "list",
+                "nullable": True,
+                "default": None,
+                "schema": ATTRIBUTES_POS_AGGR_SCHEMA
+            }
+        }
+    },
+    "allele_score": {
+        "type": "dict",
+        "coerce": "score_resources",
+        "schema": {
+            "resource_id": {
+                "type": "string",
+                "required": True,
+            },
+            "liftover_id": {
+                "type": "string",
+                "nullable": True,
+            },
+            "attributes": {
+                "type": "list",
+                "nullable": True,
+                "default": None,
+                "schema": ATTRIBUTES_SCHEMA
+            }
+        }
+    },
+
+    "effect_annotator": {
+        "type": "dict",
+        "coerce": "effect_annotator",
+        "schema": {
+            "gene_models": {
+                "type": "string",
+                "nullable": True,
+                "default": None,
+            },
+            "genome": {
+                "type": "string",
+                "nullable": True,
+                "default": None,
+            },
+            "attributes": {
+                "type": "list",
+                "nullable": True,
+                "default": None,
+                "schema": ATTRIBUTES_SCHEMA
+            }
+        }
+    },
+
+    "liftover_annotator": {
+        "type": "dict",
+        "schema": {
+            "resource_id": {
+                "type": "string",
+                "required": True,
+            },
+            "liftover_id": {
+                "type": "string",
+                "required": True,
+            },
+            "target_genome": {
+                "type": "string",
+                "required": True,
+            }
+        }
+    },
+
 }
 
 
-ANNOTATION_PIPELINE_SCHEMA = {
-    "effect_annotators": {
-        "type": "list",
-        "schema": ANNOTATOR_SCHEMA,
-    },
-    "liftover_annotators": {
-        "type": "list",
-        "schema": ANNOTATOR_SCHEMA,
-    },
-    "score_annotators": {
-        "type": "list",
-        "schema": ANNOTATOR_SCHEMA,
-    }
-}
+class AnnotationConfigValidator(Validator):
+
+    def _normalize_coerce_annotator_type(self, value):
+
+        from pprint import pprint
+        pprint(value)
+        assert isinstance(value, dict)
+
+        if "annotator_type" in value:
+            return value
+        else:
+            print("coercing annotator type")
+            assert len(value) == 1
+
+            annotator_type, annotator_config = next(iter(value.items()))
+
+            if isinstance(annotator_config, str):
+                result = {
+                    "annotator_type": annotator_type,
+                    "resource_id": annotator_config,
+                    "liftover_id": None,
+                }
+            else:
+                result = copy.deepcopy(annotator_config)
+                result["annotator_type"] = annotator_type
+
+            if "liftover_id" not in result:
+                result["liftover_id"] = None
+
+            pprint(result)
+            return result
+
+    def _normalize_coerce_score_resources(self, value):
+        print("coerce score resource", value)
+        if isinstance(value, str):
+            return {
+                "resource_id": value
+            }
+
+        return value
+
+    def _normalize_coerce_effect_annotator(self, value):
+        print("coerce effect annotator", value)
+        if isinstance(value, str):
+            return {}
+
+        return value
+
+    def _normalize_coerce_attributes(self, value):
+        if isinstance(value, str):
+            return {
+                "source": value,
+                "destination": value,
+            }
+        elif isinstance(value, dict):
+            if "source" in value and "destination" not in value:
+                value["destination"] = value["source"]
+            return value
+        return value
+
+
+class AnnotationConfigParser:
+
+    @classmethod
+    def validate(cls, pipeline_config: List[Dict]) -> List[Dict]:
+
+        from pprint import pprint
+        pprint(pipeline_config)
+        result = []
+
+        for annotator_config in pipeline_config:
+            validator = AnnotationConfigValidator(ANNOTATOR_SCHEMA)
+            if isinstance(annotator_config, str):
+                annotator_config = {
+                    annotator_config: {}
+                }
+            if not validator.validate(annotator_config):
+                logger.error(
+                    f"can't process annotator configuration: "
+                    f"{validator.errors}")
+                raise ValueError(f"{validator.errors}")
+
+            document = validator.document
+            assert isinstance(document, dict)
+            assert len(document) == 1
+            annotator_type, annotator_config = next(iter(document.items()))
+            print(100*"=")
+            print("annotator_type:", annotator_type)
+            print("annotator_config:", annotator_config)
+            assert isinstance(annotator_config, dict)
+
+            annotator_config["annotator_type"] = annotator_type
+            result.append(Box(annotator_config))
+
+        return result
+
+    @classmethod
+    def parse(cls, content: str) -> List[Dict]:
+        pipeline_config = yaml.safe_load(content)
+
+        return cls.validate(pipeline_config)
+
+    @classmethod
+    def parse_config_file(cls, filename: str) -> List[Dict]:
+        with open(filename, "rt") as infile:
+            content = infile.read()
+            return cls.parse(content)
 
 
 class AnnotationPipelineContext:
