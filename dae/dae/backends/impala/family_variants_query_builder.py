@@ -121,7 +121,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
 
             for field in pedigree_fields.values():
                 if not first_or:
-                    pedigree_where += "OR "
+                    pedigree_where += " OR "
                 values = field["values"]
                 sources = field["sources"]
                 first_and = True
@@ -130,9 +130,13 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
                     if not first_and:
                         pedigree_where += "AND "
                     value = self._get_pedigree_column_value(source, str_value)
-                    pedigree_where += f'pedigree.{source} = "{value}" '
+                    if source == "status":
+                        pedigree_where += f"pedigree.{source} = {value} "
+                    else:
+                        pedigree_where += f'pedigree.{source} = "{value}" '
                     first_and = False
                 pedigree_where += ")"
+                first_or = False
             pedigree_where += ")"
 
             self._add_to_product(pedigree_where)
