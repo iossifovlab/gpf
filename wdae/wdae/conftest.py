@@ -223,7 +223,10 @@ def wdae_gpf_instance_agp(
         )
     wdae_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
 
-    return wdae_gpf_instance
+    yield wdae_gpf_instance
+
+    wdae_gpf_instance.__autism_gene_profile_config = None
+    wdae_gpf_instance.__autism_gene_profile_db = None
 
 
 @pytest.fixture(scope="function")

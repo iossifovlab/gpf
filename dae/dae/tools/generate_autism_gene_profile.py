@@ -51,7 +51,7 @@ def generate_agp(gpf_instance, gene_symbol, collections_gene_sets):
                     counts = current_counts[person_set]
 
                 counts[stat_id] = {
-                    "variants": {},
+                    "variants": set(),
                     "count": 0,
                     "rate": 0
                 }
@@ -93,8 +93,8 @@ def add_variant_count(variant, agps, dataset_id, person_set, statistic_id):
             continue
 
         vc = agps[gs].variant_counts
-        variants_stats = vc[dataset_id][person_set][statistic_id]["variants"]
-        variants_stats[variant.fvuid] = variant
+        variants_fvuids = vc[dataset_id][person_set][statistic_id]["variants"]
+        variants_fvuids.add(variant.fvuid)
 
         # v = variant
         # if v.position == 152171343:
