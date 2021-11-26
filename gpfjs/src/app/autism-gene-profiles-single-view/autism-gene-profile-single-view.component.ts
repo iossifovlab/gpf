@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import {
   AgpDatasetPersonSet, AgpDatasetStatistic, AgpGene,
-  AgpGenomicScores, AgpConfig
+  AgpGenomicScores, AgpConfig, AgpEffectType
 } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 // eslint-disable-next-line no-restricted-imports
 import { Observable, of, zip } from 'rxjs';
@@ -43,7 +43,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     width: 525,
     height: 110,
     marginLeft: 50,
-    marginTop: 25,
+    marginTop: 25
   };
 
   public isGeneInSFARI = false;
@@ -55,7 +55,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     Pubmed: ''
   };
 
-  constructor(
+  public constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
     private geneWeightsService: GeneWeightsService,
     private geneService: GeneService,
@@ -63,7 +63,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     private location: Location,
     private router: Router,
     private queryService: QueryService,
-    private store: Store,
+    private store: Store
   ) { }
 
   public ngOnInit(): void {
@@ -94,15 +94,13 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
         });
         return this.geneService.getGene(this.geneSymbol);
       }),
-      switchMap(gene => {
-        return zip(of(gene), this.datasetsService.getDataset(this.config.defaultDataset));
-      })
+      switchMap(gene => zip(of(gene), this.datasetsService.getDataset(this.config.defaultDataset)))
     ).subscribe(([gene, dataset]) => {
       this.setLinks(this.geneSymbol, gene, dataset.genome);
     });
   }
 
-  public setLinks(geneSymbol: string, gene: Gene, datasetGenome): void {
+  public setLinks(geneSymbol: string, gene: Gene, datasetGenome: string): void {
     if (this.isGeneInSFARI) {
       this.links.SFARIgene = 'https://gene.sfari.org/database/human-gene/' + geneSymbol;
     }
@@ -113,14 +111,15 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     this.links.Pubmed = 'https://pubmed.ncbi.nlm.nih.gov/?term=' + geneSymbol + '%20AND%20(autism%20OR%20asd)';
   }
 
-  public getUCSCLink(gene: Gene, datasetGenome): string {
+  public getUCSCLink(gene: Gene, datasetGenome: string): string {
     const genome: string = datasetGenome;
     const chromosomePrefix: string = genome === 'hg38' ? '' : 'chr';
     const chromosome: string = gene.transcripts[0].chromosome;
     const geneStartPosition: number = gene.transcripts[0].start;
     const geneStopPosition: number = gene.transcripts[gene.transcripts.length - 1].stop;
 
-    return `https://genome.ucsc.edu/cgi-bin/hgTracks?db=${genome}&position=${chromosomePrefix}${chromosome}%3A${geneStartPosition}-${geneStopPosition}`;
+    // eslint-disable-next-line max-len
+    return `https://genome.ucsc.edu/cgi-bin/hgTracks?db=${ genome }&position=${ chromosomePrefix }${ chromosome }%3A${ geneStartPosition }-${ geneStopPosition }`;
   }
 
   public getGeneBrowserLink(): string {
@@ -140,14 +139,14 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
       .find(score => score.weight === key);
   }
 
-  public getSingleScoreValue(genomicScores: AgpGenomicScores[], categoryId: string, scoreId: string) {
+  public getSingleScoreValue(genomicScores: AgpGenomicScores[], categoryId: string, scoreId: string): number {
     return genomicScores.find(category => category.id === categoryId).scores.find(score => score.id === scoreId).value;
   }
 
-  public getGeneDatasetValue(gene: AgpGene, studyId: string, personSetId: string, statisticId: string) {
+  public getGeneDatasetValue(gene: AgpGene, studyId: string, personSetId: string, statisticId: string): AgpEffectType {
     return gene.studies.find(study => study.id === studyId).personSets
-    .find(genePersonSet => genePersonSet.id === personSetId).effectTypes
-    .find(effectType => effectType.id === statisticId);
+      .find(genePersonSet => genePersonSet.id === personSetId).effectTypes
+      .find(effectType => effectType.id === statisticId);
   }
 
   public get histogramOptions() {
@@ -156,7 +155,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
 
   public goToQuery(
     geneSymbol: string, personSet: AgpDatasetPersonSet, datasetId: string, statistic: AgpDatasetStatistic
-  ) {
+  ): void {
     AutismGeneProfileSingleViewComponent.goToQuery(
       this.store, this.queryService, geneSymbol, personSet, datasetId, statistic
     );
@@ -165,7 +164,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   public static goToQuery(
     store: Store, queryService: QueryService, geneSymbol: string,
     personSet: AgpDatasetPersonSet, datasetId: string, statistic: AgpDatasetStatistic
-  ) {
+  ): void {
     const effectTypes = {
       lgds: EffectTypes['LGDS'],
       intron: ['Intron'],
