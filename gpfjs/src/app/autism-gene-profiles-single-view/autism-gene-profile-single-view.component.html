@@ -59,7 +59,7 @@
       <tr *ngFor="let set of geneSetCategory.sets" class="card-block">
         <td>{{ set.setId }}</td>
         <td style="text-align: center">
-          <span *ngIf="gene.geneSets.indexOf(set.setId) !== -1">&#10003;</span>
+          <span *ngIf="gene.geneSets.indexOf(set.collectionId + '_' + set.setId) !== -1">&#10003;</span>
         </td>
       </tr>
     </table>
