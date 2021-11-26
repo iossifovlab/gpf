@@ -18,7 +18,11 @@ class Annotator(abc.ABC):
     # def __init__(self, pipeline: AnnotationPipeine, configuation: dict):
     #    self.liftover = config.get("liftover", None)
 
-    # def get_possible_source_attributes()
+    # def annnotate(annotatable, context, )
+    #   returns a dictionary where the keys are based on the 'distination'.
+
+    # def get_possible_source_attributes():
+    #     returns a list of the ('source', type, description)
 
     def __init__(self, liftover: str = None, override: dict = None):
         self.liftover = liftover
