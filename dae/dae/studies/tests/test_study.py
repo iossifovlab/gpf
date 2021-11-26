@@ -49,6 +49,8 @@ def test_can_query_person_sets(
     variants = genotype_study.query_variants(
         person_set_collection=ps_collection
     )
+
+    variants = list(variants)
     assert len(variants) == 14
 
 

@@ -210,7 +210,8 @@ class GenotypeData(ABC):
         runners = []
         for genotype_study in self._get_query_children(study_filters):
             local_fields = None
-            if person_set_collection is not None:
+            if person_set_collection is not None and \
+                    pedigree_fields is not None:
                 collection_id, _ = person_set_collection
                 collection = self.get_person_set_collection(collection_id)
                 local_fields = dict()
