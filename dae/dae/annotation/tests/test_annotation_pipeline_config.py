@@ -385,6 +385,22 @@ def test_effect_annotator():
     assert attributes[0].destination == "old_worst_effect"
 
 
+def test_effect_annotator_extra():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+        - effect_annotator:
+            gene_models: hg38/GRCh38-hg38/gene_models/refSeq_20200330
+            genome: hg38/GRCh38-hg38/genome
+            promoter_len: 100
+        """)
+    )
+
+    config = pipeline_config[0]
+    assert config.annotator_type == "effect_annotator"
+
+    assert config.promoter_len == 100
+
+
 def test_effect_annotator_minimal():
     pipeline_config = AnnotationConfigParser.parse(
         textwrap.dedent("""

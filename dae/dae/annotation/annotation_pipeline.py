@@ -110,6 +110,8 @@ ANNOTATOR_SCHEMA = {
     "effect_annotator": {
         "type": "dict",
         "coerce": "effect_annotator",
+        "allow_unknown": True,
+
         "schema": {
             "gene_models": {
                 "type": "string",
@@ -153,36 +155,6 @@ ANNOTATOR_SCHEMA = {
 
 class AnnotationConfigValidator(Validator):
 
-    def _normalize_coerce_annotator_type(self, value):
-
-        from pprint import pprint
-        pprint(value)
-        assert isinstance(value, dict)
-
-        if "annotator_type" in value:
-            return value
-        else:
-            print("coercing annotator type")
-            assert len(value) == 1
-
-            annotator_type, annotator_config = next(iter(value.items()))
-
-            if isinstance(annotator_config, str):
-                result = {
-                    "annotator_type": annotator_type,
-                    "resource_id": annotator_config,
-                    "liftover_id": None,
-                }
-            else:
-                result = copy.deepcopy(annotator_config)
-                result["annotator_type"] = annotator_type
-
-            if "liftover_id" not in result:
-                result["liftover_id"] = None
-
-            pprint(result)
-            return result
-
     def _normalize_coerce_score_resources(self, value):
         print("coerce score resource", value)
         if isinstance(value, str):
@@ -193,7 +165,6 @@ class AnnotationConfigValidator(Validator):
         return value
 
     def _normalize_coerce_effect_annotator(self, value):
-        print("coerce effect annotator", value)
         if isinstance(value, str):
             return {}
 
@@ -237,9 +208,6 @@ class AnnotationConfigParser:
             assert isinstance(document, dict)
             assert len(document) == 1
             annotator_type, annotator_config = next(iter(document.items()))
-            print(100*"=")
-            print("annotator_type:", annotator_type)
-            print("annotator_config:", annotator_config)
             assert isinstance(annotator_config, dict)
 
             annotator_config["annotator_type"] = annotator_type
