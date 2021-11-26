@@ -245,25 +245,18 @@ class AnnotationPipeline():
         self.repository: GenomicResourceRepo = repository
         self._annotation_schema = None
 
-    @staticmethod
-    def load_and_parse(config_path: str) -> dict:
-        try:
-            with open(config_path, "r") as infile:
-                content = infile.read()
-            return AnnotationPipeline.parse_config(content)
-        except Exception as ex:
-            logger.exception(
-                f"can't parse annotation pipeline configuration {config_path}",
-                exc_info=True)
-            raise ex
+    @classmethod
+    def build_pipeline(
+            cls,
+            pipeline_config: List[Dict],
+            grr: GenomicResourceRepo,
+            context: AnnotationPipelineContext) -> AnnotationPipeline:
+        
+        pipeline = AnnotationPipeline(pipeline_config, grr)
 
-    @staticmethod
-    def parse_config(content: str) -> dict:
-        config = GPFConfigParser.parse_and_interpolate(content)
-        pipeline_config = GPFConfigParser.process_config(
-            config, ANNOTATION_PIPELINE_SCHEMA
-        )
-        return pipeline_config
+        for annotator_config in pipeline_config:
+            annotator = AnnotatorFactory.build(annotator_config, grr, context)
+            pipeline.add_annotator(annotator)
 
     @staticmethod
     def construct_pipeline_ivan(pipeline: AnnotationPipeline,

@@ -68,13 +68,14 @@ class EffectAnnotatorAdapter(Annotator):
         ]
     })
 
-    def __init__(self, gene_models, genome, **kwargs):
+    def __init__(self, gene_models, genome, attributes=None, **kwargs):
         super(EffectAnnotatorAdapter, self).__init__(gene_models, **kwargs)
 
         self.gene_models = gene_models
         self.genomic_sequence = genome
 
         self._annotation_schema = None
+
         promoter_len = kwargs.get("promoter_len", 0)
         self.effect_annotator = EffectAnnotator(
             self.genomic_sequence,
@@ -85,9 +86,8 @@ class EffectAnnotatorAdapter(Annotator):
         self.attributes_list = copy.deepcopy(
             self.DEFAULT_ANNOTATION.attributes)
 
-        override = kwargs.get("override")
-        if override:
-            self.attributes_list = copy.deepcopy(override.attributes)
+        if attributes:
+            self.attributes_list = copy.deepcopy(attributes)
 
         self.gene_models.open()
         self.genomic_sequence.open()
