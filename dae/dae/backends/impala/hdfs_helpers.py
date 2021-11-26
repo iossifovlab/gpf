@@ -2,13 +2,14 @@ import os
 import re
 import tempfile
 import logging
-import pyarrow as pa
+from pyarrow import fs
+from fsspec.implementation.arrow import ArrowFSWrapper
 
 
 logger = logging.getLogger(__name__)
 
 
-class HdfsHelpers(object):
+class HdfsHelpers:
     def __init__(self, hdfs_host, hdfs_port, replication=None):
         assert hdfs_host
         assert hdfs_port
@@ -34,8 +35,9 @@ class HdfsHelpers(object):
             logger.info(
                 f"hdfs connecting to: {self.host}:{self.port}; "
                 f"extra: {extra_conf}")
-            self._hdfs = pa.hdfs.connect(
+            hdfs = fs.HadoopFileSystem(
                 host=self.host, port=self.port, extra_conf=extra_conf)
+            self._hdfs = ArrowFSWrapper(hdfs)
         return self._hdfs
 
     def exists(self, path):
@@ -43,7 +45,6 @@ class HdfsHelpers(object):
 
     def mkdir(self, path):
         self.hdfs.mkdir(path)
-        self.chmod(path, 0o777)
 
     def makedirs(self, path):
         if path[0] == os.sep:
@@ -65,9 +66,6 @@ class HdfsHelpers(object):
         assert self.exists(dirname)
 
         return dirname
-
-    def chmod(self, path, mode):
-        return self.hdfs.chmod(path, mode)
 
     def delete(self, path, recursive=False):
         return self.hdfs.delete(path, recursive=recursive)
@@ -115,13 +113,13 @@ class HdfsHelpers(object):
         if not self.exists(hdfs_dirname):
             return False
         info = self.hdfs.info(hdfs_dirname)
-        return info['kind'] == 'directory'
+        return info['type'] == 'directory'
 
     def isfile(self, hdfs_filename):
         if not self.exists(hdfs_filename):
             return False
         info = self.hdfs.info(hdfs_filename)
-        return info['kind'] == 'file'
+        return info['type'] == 'file'
 
     def list_parquet_files(self, hdfs_dirname, regexp=r".*\.parquet"):
         regexp = re.compile(regexp)
