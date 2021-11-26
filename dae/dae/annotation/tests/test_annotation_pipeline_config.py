@@ -433,3 +433,12 @@ def test_liftover_annotator():
     assert config.liftover_id == "hg38tohg19"
     assert config.target_genome == \
         "hg19/GATK_ResourceBundle_5777_b37_phiX174/genome"
+
+
+def test_empty_config():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+        """)
+    )
+
+    assert len(pipeline_config) == 0

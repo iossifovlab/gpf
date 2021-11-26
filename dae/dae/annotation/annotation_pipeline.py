@@ -218,7 +218,9 @@ class AnnotationConfigParser:
     @classmethod
     def parse(cls, content: str) -> List[Dict]:
         pipeline_config = yaml.safe_load(content)
-
+        if pipeline_config is None:
+            logger.warning("empty annotation pipeline configuration")
+            return []
         return cls.validate(pipeline_config)
 
     @classmethod
