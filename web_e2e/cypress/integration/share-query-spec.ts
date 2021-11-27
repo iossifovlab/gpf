@@ -44,7 +44,7 @@ describe('Share query tests', () => {
      'load it and validate that all effect types checkboxes are checked', () => {
     const genotypeBlockPage = new GenotypeBlockPage();
 
-    genotypeBlockPage.findButtonInComponentContainingText('gpf-effect-types', 'All').click();
+    genotypeBlockPage.findButtonInComponentContainingText('.effect-card input, .effect-card button', 'All').click();
 
     page.button.click();
     page.input.invoke('val').then((url) => {
