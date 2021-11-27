@@ -315,12 +315,12 @@ const geneDatas: any = [
     geneSets: [
       {
         id: 'autism_gene_sets', name: 'Autism Gene Sets', scores: [
-          { name: 'autism candidates from Iossifov PNAS 2015', value: false },
-          { name: 'autism candidates from Sanders Neuron 2015', value: false }
+          { name: 'autism candidates from Iossifov PNAS 2015', value: true },
+          { name: 'autism candidates from Sanders Neuron 2015', value: true }
         ]
       }, {
         id: 'relevant_gene_sets', name: 'Relevant Gene Sets', scores: [
-          { name: 'CHD8 target genes', value:  false },
+          { name: 'CHD8 target genes', value:  true },
           { name: 'chromatin modifiers', value:  false },
           { name: 'essential genes', value:  false },
           { name: 'FMRP Darnell', value:  false }
@@ -362,15 +362,15 @@ const geneDatas: any = [
     geneSets: [
       {
         id: 'autism_gene_sets', name: 'Autism Gene Sets', scores: [
-          { name: 'autism candidates from Iossifov PNAS 2015', value: false },
-          { name: 'autism candidates from Sanders Neuron 2015', value: false }
+          { name: 'autism candidates from Iossifov PNAS 2015', value: true },
+          { name: 'autism candidates from Sanders Neuron 2015', value: true }
         ]
       }, {
         id: 'relevant_gene_sets', name: 'Relevant Gene Sets', scores: [
           { name: 'CHD8 target genes', value:  false },
-          { name: 'chromatin modifiers', value:  false },
-          { name: 'essential genes', value:  false },
-          { name: 'FMRP Darnell', value:  false }
+          { name: 'chromatin modifiers', value:  true },
+          { name: 'essential genes', value:  true },
+          { name: 'FMRP Darnell', value:  true }
         ]
       }
     ], datasets: [
