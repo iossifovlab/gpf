@@ -49,7 +49,7 @@ describe('Share query tests', () => {
     page.button.click();
     page.input.invoke('val').then((url) => {
       cy.visit(String(url)).then(() => {
-        genotypeBlockPage.findAllCheckboxesInComponent('gpf-effect-types').each((element) => {
+        genotypeBlockPage.findAllCheckboxesInComponent('.effect-card').each((element) => {
           cy.wrap(element).should('be.checked');
         });
       })
