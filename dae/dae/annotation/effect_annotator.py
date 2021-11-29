@@ -1,4 +1,5 @@
 import copy
+import logging
 
 from box import Box
 
@@ -9,6 +10,8 @@ from .schema import Schema
 from .annotatable import Annotatable, CNVAllele, VCFAllele
 
 from .annotator_base import Annotator
+
+logger = logging.getLogger(__name__)
 
 
 class EffectAnnotatorAdapter(Annotator):
@@ -28,73 +31,71 @@ class EffectAnnotatorAdapter(Annotator):
         "attributes": [
             {
                 "source": "effect_type",
-                "dest": "effect_type"
+                "destination": "effect_type"
             },
 
             {
                 "source": "effect_genes",
-                "dest": "effect_genes"
+                "destination": "effect_genes"
             },
-
-            # {
-            #     "source": "effect_gene_genes",
-            #     "dest": "effect_gene_genes"
-            # },
-
-            # {
-            #     "source": "effect_gene_types",
-            #     "dest": "effect_gene_types"
-            # },
 
             {
                 "source": "effect_details",
-                "dest": "effect_details"
+                "destination": "effect_details"
             },
-
-            # {
-            #     "source": "effect_details_transcript_ids",
-            #     "dest": "effect_details_transcript_ids"
-            # },
-
-            # {
-            #     "source": "effect_details_details",
-            #     "dest": "effect_details_details"
-            # },
-
-            # {
-            #     "source": "allele_effects",
-            #     "dest": "allele_effects"
-            # }
         ]
     })
 
-    def __init__(self, gene_models, genome, attributes=None, **kwargs):
-        super(EffectAnnotatorAdapter, self).__init__(gene_models, **kwargs)
+    def __init__(self, pipeline, config):
+        super(EffectAnnotatorAdapter, self).__init__(pipeline, config)
 
-        self.gene_models = gene_models
-        self.genomic_sequence = genome
+        if self.config.get("genome") is None:
+            self.genome = self.pipeline.context.get_reference_genome()
+            if self.genome is None:
+                logger.error(
+                    "can't create effect annotator: config has no "
+                    "reference genome specified and genome is missing "
+                    "in the context")
+                raise ValueError(
+                    "can't create effect annotator: "
+                    "genome is missing in config and context")
+        else:
+            genome_id = self.config.genome
+            self.genome = self.pipeline.repository.get_resource(genome_id)
+
+        if self.config.get("gene_models") is None:
+            self.gene_models = self.pipeline.context.get_gene_models()
+            if self.gene_models is None:
+                raise ValueError(
+                    "can't create effect annotator: "
+                    "gene models are missing in config and context")
+        else:
+            self.gene_models = self.pipeline.repository.get_resource(
+                self.config.gene_models)
+            if self.gene_models is None:
+                raise ValueError(
+                    f"can't find gene models {self.config.gene_models} "
+                    f"in the specified repository "
+                    f"{self.pipeline.repository.repo_id}")
 
         self._annotation_schema = None
+        self.attributes_list = copy.deepcopy(
+            self.DEFAULT_ANNOTATION.attributes)
+        if self.config.attributes:
+            self.attributes_list = copy.deepcopy(self.config.attributes)
 
-        promoter_len = kwargs.get("promoter_len", 0)
+        self.gene_models.open()
+        self.genome.open()
+        promoter_len = self.config.get("promoter_len", 0)
         self.effect_annotator = EffectAnnotator(
-            self.genomic_sequence,
+            self.genome,
             self.gene_models,
             promoter_len=promoter_len
         )
 
-        self.attributes_list = copy.deepcopy(
-            self.DEFAULT_ANNOTATION.attributes)
-
-        if attributes:
-            self.attributes_list = copy.deepcopy(attributes)
-
-        self.gene_models.open()
-        self.genomic_sequence.open()
-
     def _not_found(self, attributes):
         for attr in self.attributes_list:
-            attributes[attr.dest] = ""
+            attributes[attr.destination] = ""
 
     @property
     def annotator_type(self):
@@ -105,7 +106,7 @@ class EffectAnnotatorAdapter(Annotator):
         if self._annotation_schema is None:
             schema = Schema()
             for attribute in self.get_annotation_config():
-                prop_name = attribute.dest
+                prop_name = attribute.destination
                 source_name = attribute.source
 
                 source = self.EffectSource(

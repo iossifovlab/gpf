@@ -2,8 +2,12 @@
 import os
 import copy
 
+from box import Box
+
 from dae.effect_annotation.effect import AlleleEffects
 from dae.annotation.effect_annotator import EffectAnnotatorAdapter
+from dae.annotation.annotation_pipeline import AnnotationPipeline
+
 from dae.pedigrees.loader import FamiliesLoader
 
 from dae.backends.dae.loader import DenovoLoader
@@ -22,17 +26,11 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
     assert os.path.exists(variants_filename)
     assert os.path.exists(pedigree_filename)
 
-    genome = anno_grdb.get_resource(
-        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome")
-    assert genome is not None
-    assert isinstance(genome, GenomicSequenceResource)
-
-    gene_models = anno_grdb.get_resource(
-        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
+    genome_id = \
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
+    gene_models_id = \
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/" \
         "gene_models/refGene_201309"
-    )
-    assert gene_models is not None
-    assert isinstance(gene_models, GeneModelsResource)
 
     families_loader = FamiliesLoader(
         pedigree_filename)
@@ -40,6 +38,7 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
     assert families is not None
     assert len(families) == 1
 
+    genome = anno_grdb.get_resource(genome_id)
     genome.open()
     denovo_loader = DenovoLoader(
         families,
@@ -47,8 +46,15 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
     )
     assert denovo_loader is not None
 
-    effect_annotator = EffectAnnotatorAdapter(
-        gene_models=gene_models, genome=genome)
+    pipeline = AnnotationPipeline([], anno_grdb, None)
+    config = Box({
+        "annotator_type": "effect_annotator",
+        "genome": genome_id,
+        "gene_models": gene_models_id,
+        "attributes": None,
+    })
+
+    effect_annotator = EffectAnnotatorAdapter(pipeline, config)
 
     variants = list(denovo_loader.full_variants_iterator())
     for sv, fvs in variants:
@@ -94,8 +100,16 @@ def test_effect_annotation_schema(anno_grdb):
     assert gene_models is not None
     assert isinstance(gene_models, GeneModelsResource)
 
+    pipeline = AnnotationPipeline([], anno_grdb, None)
+    config = Box({
+        "annotator_type": "effect_annotator",
+        "genome": genome.resource_id,
+        "gene_models": gene_models.resource_id,
+        "attributes": None,
+    })
+
     effect_annotator = EffectAnnotatorAdapter(
-        gene_models=gene_models, genome=genome)
+        pipeline, config)
 
     schema = effect_annotator.annotation_schema
     assert schema is not None
