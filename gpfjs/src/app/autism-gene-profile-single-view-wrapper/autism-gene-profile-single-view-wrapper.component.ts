@@ -10,19 +10,21 @@ import { Observable } from 'rxjs';
   styleUrls: ['./autism-gene-profile-single-view-wrapper.component.css']
 })
 export class AutismGeneProfileSingleViewWrapperComponent implements OnInit, AfterViewInit {
-  $autismGeneToolConfig: Observable<AgpConfig>;
-  geneSymbol: string;
+  public $autismGeneToolConfig: Observable<AgpConfig>;
+  public geneSymbol: string;
 
-  constructor(
+  public constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
-    private route: ActivatedRoute,
+    private route: ActivatedRoute
   ) { }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.$autismGeneToolConfig = this.autismGeneProfilesService.getConfig();
   }
 
-  ngAfterViewInit(): void {
-    this.geneSymbol = this.route.snapshot.params.gene.toUpperCase();
+  public ngAfterViewInit(): void {
+    if (this.route.snapshot.params.gene instanceof String) {
+      this.geneSymbol = this.route.snapshot.params.gene.toUpperCase();
+    }
   }
 }
