@@ -51,7 +51,7 @@ def test_can_query_person_sets(
     )
 
     variants = list(variants)
-    assert len(variants) == 14
+    assert len(variants) == 16
 
 
 def test_can_close_query(quads_f1):
