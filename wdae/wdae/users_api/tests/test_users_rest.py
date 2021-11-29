@@ -264,7 +264,7 @@ def test_single_admin_cant_remove_superuser_group_from_self(
     assert admin.groups.filter(name=WdaeUser.SUPERUSER_GROUP).exists()
 
 
-def test_two_admins_can_remove_superuser_group_from_self(
+def test_two_admins_can_not_remove_superuser_group_from_self(
     admin, admin_client, user_model
 ):
     other_superuser = user_model.objects.create_superuser(
@@ -288,10 +288,9 @@ def test_two_admins_can_remove_superuser_group_from_self(
         url, json.dumps(data), content_type="application/json", format="json"
     )
 
-    assert response.status_code is status.HTTP_200_OK
-
+    assert response.status_code is status.HTTP_400_BAD_REQUEST
     admin.refresh_from_db()
-    assert not admin.groups.filter(name=WdaeUser.SUPERUSER_GROUP).exists()
+    assert admin.groups.filter(name=WdaeUser.SUPERUSER_GROUP).exists()
 
 
 def test_two_admins_can_remove_superuser_group_from_other(

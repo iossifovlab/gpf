@@ -128,10 +128,22 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @request_logging(LOGGER)
     def update(self, request, pk=None, *args, **kwargs):
+        if (
+            request.user.pk == int(pk)
+            and request.user.is_staff
+            and "admin" not in request.data["groups"]
+        ):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         return super(UserViewSet, self).update(request, pk=pk, *args, **kwargs)
 
     @request_logging(LOGGER)
     def partial_update(self, request, pk=None):
+        if (
+            request.user.pk == int(pk)
+            and request.user.is_staff
+            and "admin" not in request.data["groups"]
+        ):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         return super(UserViewSet, self).partial_update(request, pk=pk)
 
     @request_logging(LOGGER)
