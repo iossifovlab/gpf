@@ -4,6 +4,16 @@ table {
   margin-bottom: 15px;
 }
 
+td {
+  vertical-align: middle;
+}
+
+tr,
+td {
+  height: 55px;
+  max-height: 55px;
+}
+
 .wrapper {
   display: flex;
   align-items: flex-start;
@@ -14,7 +24,8 @@ table {
   padding-right: 25px;
 }
 
-.link-genotype-browser, .link-genotype-browser:hover {
+.link-genotype-browser,
+.link-genotype-browser:hover {
   color: #2372c6;
   cursor: pointer;
   padding: 15px;
