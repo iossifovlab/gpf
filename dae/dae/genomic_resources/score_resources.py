@@ -62,7 +62,7 @@ class GenomicScoresResource(GenomicResource, abc.ABC):
             return Box(self.get_config()["default_annotation"])
         else:
             return Box({
-                "attributes": [{"source": score, "dest": score}
+                "attributes": [{"source": score, "destination": score}
                                for score in self.scores.keys()]
             })
 

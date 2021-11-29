@@ -5,8 +5,8 @@ import copy
 from box import Box
 
 from dae.effect_annotation.effect import AlleleEffects
-from dae.annotation.effect_annotator import EffectAnnotatorAdapter
 from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotator_factory import AnnotatorFactory
 
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -54,7 +54,7 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
         "attributes": None,
     })
 
-    effect_annotator = EffectAnnotatorAdapter(pipeline, config)
+    effect_annotator = AnnotatorFactory.build(pipeline, config)
 
     variants = list(denovo_loader.full_variants_iterator())
     for sv, fvs in variants:
@@ -108,8 +108,7 @@ def test_effect_annotation_schema(anno_grdb):
         "attributes": None,
     })
 
-    effect_annotator = EffectAnnotatorAdapter(
-        pipeline, config)
+    effect_annotator = AnnotatorFactory.build(pipeline, config)
 
     schema = effect_annotator.annotation_schema
     assert schema is not None

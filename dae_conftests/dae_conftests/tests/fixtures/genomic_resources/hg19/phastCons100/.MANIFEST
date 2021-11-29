@@ -1,12 +1,12 @@
 - md5: 6cebb0824c95ae058289e3588320db36
   name: genomic_resource.yaml
   size: 808
-  time: '2021-11-06T17:26:11'
+  time: '2021-11-25T16:07:09'
 - md5: 00c69ea8fae8ab8445ff64616b8cc07a
   name: phastCons100.bedGraph.gz
   size: 2556019
-  time: '2021-11-06T17:26:11'
+  time: '2021-11-25T16:07:09'
 - md5: c2c4b109900b9f5ea940563bab3a8ad7
   name: phastCons100.bedGraph.gz.tbi
   size: 622
-  time: '2021-11-06T17:26:11'
+  time: '2021-11-25T16:07:09'

@@ -420,8 +420,8 @@ def test_liftover_annotator():
     pipeline_config = AnnotationConfigParser.parse(
         textwrap.dedent("""
             - liftover_annotator:
-                resource_id: hg38/hg38tohg19
                 liftover_id: hg38tohg19
+                chain: hg38/hg38tohg19
                 target_genome: hg19/GATK_ResourceBundle_5777_b37_phiX174/genome
         """)
     )
@@ -429,7 +429,7 @@ def test_liftover_annotator():
     config = pipeline_config[0]
     assert config.annotator_type == "liftover_annotator"
 
-    assert config.resource_id == "hg38/hg38tohg19"
+    assert config.chain == "hg38/hg38tohg19"
     assert config.liftover_id == "hg38tohg19"
     assert config.target_genome == \
         "hg19/GATK_ResourceBundle_5777_b37_phiX174/genome"

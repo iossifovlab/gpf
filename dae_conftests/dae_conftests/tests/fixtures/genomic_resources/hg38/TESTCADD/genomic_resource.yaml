@@ -28,23 +28,14 @@ scores:
       name: PHRED
 
 
-type_aggregators:
-  - type: float
-    aggregator: dae.genomic_resource.aggregators.MaxAggregator
-  - type: int
-    aggregator: dae.genomic_resource.aggregators.MaxAggregator
-  - type: str
-    aggregator: dae.genomic_resource.aggregators.ConcatAggregator
-
 default_annotation:
   attributes:
     - source: cadd_raw
-      dest: cadd_raw
-      aggregator:
-        position: MaxAggregator
-        nucleotide: MaxAggregator
+      destination: cadd_raw
+      position_aggregator: max
+      nucleotide_aggregator: max
+
     - source: cadd_phred
-      dest: cadd_phred
-      aggregator:
-        position: MaxAggregator
-        nucleotide: MaxAggregator
+      destination: cadd_phred
+      position_aggregator: max
+      nucleotide_aggregator: max

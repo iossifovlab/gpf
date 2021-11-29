@@ -8,11 +8,11 @@ def test_allele_score_annotator(
 
     pipeline = AnnotationPipeline([], anno_grdb, None)
 
-    annotator = AlleleScoreAnnotator(pipeline, Box({
+    annotator = AlleleScoreAnnotator(Box({
         "annotator_type": "allele_score",
         "resource_id": "hg38/TESTFreq",
         "attributes": None,
-    }))
+    }), anno_grdb.get_resource("hg38/TESTFreq"))
     pipeline.add_annotator(annotator)
 
     for sv, e in frequency_variants_expected:

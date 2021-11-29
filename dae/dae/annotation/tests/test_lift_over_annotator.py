@@ -1,6 +1,7 @@
 import pytest
+from box import Box
 
-from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_pipeline import AnnotationConfigParser, AnnotationPipeline
 from dae.variants.core import Allele
 from dae.annotation.lift_over_annotator import LiftOverAnnotator
 
@@ -40,9 +41,16 @@ def test_lift_over(
     target_genome = mocker.Mock()
     target_genome.get_sequence = mock_get_sequence
 
+    config = Box({
+        "annotator_type": "liftover_annotator",
+        "resource_id": "test_lifover_chain",
+        "target_genome": "test_target_genome",
+        "liftover_id": "liftover_test",
+        "attributes": None
+    })
+
     annotator = LiftOverAnnotator(
-        chain_resource, target_genome, "liftover_test"
-    )
+        config, chain_resource, target_genome)
     assert annotator is not None
 
     aline = {
@@ -54,7 +62,7 @@ def test_lift_over(
     annotator._do_annotate(aline, allele.get_annotatable(), liftover_context)
 
     lo_allele = liftover_context.get("liftover_test")
-    print(f"liftover allele: {lo_allele}")
+    print(f"liftover allele: {lo_allele}", liftover_context)
     lo_chrom = lo_allele.chrom if lo_allele else None
     lo_pos = lo_allele.position if lo_allele else None
 
@@ -65,7 +73,7 @@ def test_lift_over(
 def test_pipeline_liftover(
         annotation_config, anno_grdb):
 
-    config = AnnotationPipeline.load_and_parse(annotation_config)
+    config = AnnotationConfigParser.parse_config_file(annotation_config)
     pipeline = AnnotationPipeline.build(
         config, grr_repository=anno_grdb
     )

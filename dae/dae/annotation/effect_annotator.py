@@ -46,46 +46,21 @@ class EffectAnnotatorAdapter(Annotator):
         ]
     })
 
-    def __init__(self, pipeline, config):
-        super(EffectAnnotatorAdapter, self).__init__(pipeline, config)
+    def __init__(self, config, genome, gene_models):
+        super(EffectAnnotatorAdapter, self).__init__(config)
 
-        if self.config.get("genome") is None:
-            self.genome = self.pipeline.context.get_reference_genome()
-            if self.genome is None:
-                logger.error(
-                    "can't create effect annotator: config has no "
-                    "reference genome specified and genome is missing "
-                    "in the context")
-                raise ValueError(
-                    "can't create effect annotator: "
-                    "genome is missing in config and context")
-        else:
-            genome_id = self.config.genome
-            self.genome = self.pipeline.repository.get_resource(genome_id)
+        self.genome = genome
+        self.gene_models = gene_models
 
-        if self.config.get("gene_models") is None:
-            self.gene_models = self.pipeline.context.get_gene_models()
-            if self.gene_models is None:
-                raise ValueError(
-                    "can't create effect annotator: "
-                    "gene models are missing in config and context")
-        else:
-            self.gene_models = self.pipeline.repository.get_resource(
-                self.config.gene_models)
-            if self.gene_models is None:
-                raise ValueError(
-                    f"can't find gene models {self.config.gene_models} "
-                    f"in the specified repository "
-                    f"{self.pipeline.repository.repo_id}")
+        self.gene_models.open()
+        self.genome.open()
 
         self._annotation_schema = None
         self.attributes_list = copy.deepcopy(
             self.DEFAULT_ANNOTATION.attributes)
-        if self.config.attributes:
+        if self.config.get("attributes"):
             self.attributes_list = copy.deepcopy(self.config.attributes)
 
-        self.gene_models.open()
-        self.genome.open()
         promoter_len = self.config.get("promoter_len", 0)
         self.effect_annotator = EffectAnnotator(
             self.genome,

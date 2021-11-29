@@ -296,9 +296,8 @@ def annotation_pipeline_vcf(gpf_instance_2013):
     filename = relative_to_this_test_folder(
         "fixtures/annotation_pipeline/import_annotation.yaml"
     )
-    config = AnnotationPipeline.load_and_parse(filename)
     pipeline = AnnotationPipeline.build(
-        pipeline_config=config, grr_repository=gpf_instance_2013.grr)
+        pipeline_config_file=filename, grr_repository=gpf_instance_2013.grr)
     return pipeline
 
 
@@ -307,9 +306,8 @@ def annotation_pipeline_internal(gpf_instance_2013):
     filename = relative_to_this_test_folder(
         "fixtures/annotation_pipeline/import_annotation.yaml"
     )
-    config = AnnotationPipeline.load_and_parse(filename)
     pipeline = AnnotationPipeline.build(
-        pipeline_config=config, grr_repository=gpf_instance_2013.grr)
+        pipeline_config_file=filename, grr_repository=gpf_instance_2013.grr)
     return pipeline
 
 

@@ -1,22 +1,19 @@
-effect_annotators:
-  - annotator: effect_annotator
+- effect_annotator:
     gene_models: hg38/GRCh38-hg38/gene_models/refSeq_20200330
     genome: hg38/GRCh38-hg38/genome
 
 
-liftover_annotators:
-  - annotator: liftover_annotator
-    liftover: hg38tohg19
+- liftover_annotator:
+    liftover_id: hg38tohg19
     chain: hg38/hg38tohg19
     target_genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
 
-score_annotators:
- - annotator: position_score
-   resource: hg38/TESTphastCons100way
+- position_score:
+    resource_id: hg38/TESTphastCons100way
 
- - annotator: np_score
-   resource: hg38/TESTCADD
+- np_score:
+    resource_id: hg38/TESTCADD
 
- - annotator: np_score
-   liftover: hg38tohg19
-   resource: hg19/MPC
+- np_score:
+    liftover_id: hg38tohg19
+    resource_id: hg19/MPC

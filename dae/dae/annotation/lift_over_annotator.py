@@ -14,14 +14,15 @@ logger = logging.getLogger(__name__)
 
 
 class LiftOverAnnotator(Annotator):
-    def __init__(
-        self, chain_resource, genome_resource,
-        liftover, override=None
-    ):
-        super().__init__(liftover, override)
+    def __init__(self, config, chain_resource, target_genome):
+        super().__init__(config)
 
         self.chain = chain_resource
-        self.target_genome = genome_resource
+        self.target_genome = target_genome
+        self.liftover_id = self.config.get("liftover_id")
+        if self.liftover_id is None:
+            raise ValueError(
+                f"can't create liftover annotator: {self.config}")
         self._annotation_schema = Schema()
         # TODO do somewhere else
         self.chain.open()
@@ -80,8 +81,8 @@ class LiftOverAnnotator(Annotator):
                 f"problem in variant {allele} liftover: {ex}", exc_info=True)
 
     def _do_annotate(self, _, annotatable: Annotatable, liftover_context):
-        assert self.liftover not in liftover_context, \
-            (self.liftover, liftover_context)
+        assert self.liftover_id not in liftover_context, \
+            (self.liftover_id, liftover_context)
         assert annotatable is not None
 
         lo_allele = self.liftover_allele(annotatable)
@@ -89,7 +90,7 @@ class LiftOverAnnotator(Annotator):
             logger.info(
                 f"unable to liftover allele: {annotatable}")
             return
-        liftover_context[self.liftover] = lo_allele
+        liftover_context[self.liftover_id] = lo_allele
 
     def get_annotation_config(self):
         return []

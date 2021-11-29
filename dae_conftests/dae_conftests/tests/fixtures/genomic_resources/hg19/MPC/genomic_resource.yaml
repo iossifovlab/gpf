@@ -16,15 +16,6 @@ table:
   alternative:
     name: alt
 
-
-type_aggregators:
-  - type: float
-    aggregator: dae.genomic_resource.aggregators.MaxAggregator
-  - type: int
-    aggregator: dae.genomic_resource.aggregators.MaxAggregator
-  - type: str
-    aggregator: dae.genomic_resource.aggregators.ConcatAggregator
-
 # score values
 scores:
     - id: MPC
@@ -35,7 +26,6 @@ scores:
 default_annotation:
   attributes:
     - source: MPC
-      dest: mpc
-      aggregator:
-        position: MaxAggregator
-        nucleotide: MaxAggregator
+      destination: mpc
+      position_aggregator: max
+      nucleotide_aggregator: max

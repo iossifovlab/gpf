@@ -33,9 +33,7 @@ def test_basic_setup(tmp_path):
     setup_dir(tmp_path, {
         "in.txt": in_content,
         "annotation.yaml": '''
-            score_annotators:
-            - annotator: position_score
-              resource: one
+            - position_score: one
             ''',
         "grr.yaml": '''
             id: mm

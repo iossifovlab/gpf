@@ -34,13 +34,13 @@ scores:
 default_annotation:
   attributes:
     - source: score0
-      dest: score0
+      destination: score0
       position_aggregator: max
 
     - source: score2
-      dest: score2
+      destination: score2
       position_aggregator: max
 
     - source: score4
-      dest: score4
+      destination: score4
       position_aggregator: max

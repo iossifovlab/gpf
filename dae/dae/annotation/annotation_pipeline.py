@@ -134,7 +134,7 @@ ANNOTATOR_SCHEMA = {
     "liftover_annotator": {
         "type": "dict",
         "schema": {
-            "resource_id": {
+            "chain": {
                 "type": "string",
                 "required": True,
             },
@@ -158,7 +158,8 @@ class AnnotationConfigValidator(Validator):
         print("coerce score resource", value)
         if isinstance(value, str):
             return {
-                "resource_id": value
+                "resource_id": value,
+                "attributes": None,
             }
 
         return value
@@ -224,6 +225,7 @@ class AnnotationConfigParser:
 
     @classmethod
     def parse_config_file(cls, filename: str) -> List[Dict]:
+        logger.info(f"loading annotation pipeline configuration: {filename}")
         with open(filename, "rt") as infile:
             content = infile.read()
             return cls.parse(content)
@@ -255,76 +257,6 @@ class AnnotationPipeline():
             pipeline.add_annotator(annotator)
 
         return pipeline
-
-    @staticmethod
-    def construct_pipeline_ivan(pipeline: AnnotationPipeline,
-                                context: AnnotationPipelineContext):
-        # pipeline_config = pipeline.config
-        # grr_repository = pipeline.repository
-        pass
-
-    @staticmethod
-    def construct_pipeline_lubo(pipeline: AnnotationPipeline,
-                                context: AnnotationPipelineContext):
-        pipeline_config = pipeline.config
-        grr_repository = pipeline.repository
-
-        if pipeline_config.effect_annotators:
-            for annotator_config in pipeline_config.effect_annotators:
-                annotator_type = annotator_config["annotator"]
-
-                if "gene_models" in annotator_config:
-                    gene_models_id = annotator_config["gene_models"]
-                    gene_models = grr_repository.get_resource(gene_models_id)
-                    assert gene_models is not None, gene_models_id
-                    # TODO: raise appropriate exception
-                else:
-                    gene_models = context.get_gene_models()
-                    # TODO: raise excpetion if context is null
-                    # or if genome is null
-
-                if "genome" in annotator_config:
-                    genome_id = annotator_config["genome"]
-                    genome = grr_repository.get_resource(genome_id)
-                    assert genome is not None, genome_id
-                    # TODO: raise appropriate exception
-                else:
-                    genome = context.get_reference_genome()
-                    # TODO: raise excpetion if context is null
-                    # or if genome is null
-                override = annotator_config.get("override")
-
-                effect_annotator = AnnotatorFactory.make_effect_annotator(
-                    annotator_type, gene_models, genome, override=override)
-                pipeline.add_annotator(effect_annotator)
-
-        if pipeline_config.liftover_annotators:
-            for annotator_config in pipeline_config.liftover_annotators:
-                chain_id = annotator_config["chain"]
-                genome_id = annotator_config["target_genome"]
-                chain = grr_repository.get_resource(chain_id)
-                genome = grr_repository.get_resource(genome_id)
-                annotator_type = annotator_config["annotator"]
-                liftover_id = annotator_config["liftover"]
-                override = annotator_config.get("override")
-                annotator = AnnotatorFactory.make_liftover_annotator(
-                    annotator_type, chain, genome, liftover_id, override
-                )
-                pipeline.add_annotator(annotator)
-
-        if pipeline_config.score_annotators:
-            for annotator_config in pipeline_config.score_annotators:
-                score_id = annotator_config["resource"]
-                liftover = annotator_config["liftover"]
-                annotator_type = annotator_config["annotator"]
-                override = annotator_config.get("override")
-                gs = grr_repository.get_resource(score_id)
-                assert gs is not None, annotator_config
-
-                annotator = AnnotatorFactory.make_score_annotator(
-                    annotator_type, gs, liftover, override
-                )
-                pipeline.add_annotator(annotator)
 
     @staticmethod
     def build(
@@ -414,7 +346,7 @@ class AnnotationPipeline():
         '''
         if pipeline_config is None:
             assert pipeline_config_file is not None
-            pipeline_config = AnnotationPipeline.load_and_parse(
+            pipeline_config = AnnotationConfigParser.parse_config_file(
                 pipeline_config_file)
         else:
             assert pipeline_config_file is None

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import logging
 
+from box import Box
+
 from .annotatable import Annotatable, VCFAllele
 from .score_annotator import VariantScoreAnnotatorBase
 
@@ -9,9 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
-    def __init__(self, pipeline, config):
-        super().__init__(pipeline, config)
-        self.resource.open()
+    def __init__(self, config: Box, resource):
+        super().__init__(config, resource)
+        resource.open()
 
     @property
     def annotator_type(self):

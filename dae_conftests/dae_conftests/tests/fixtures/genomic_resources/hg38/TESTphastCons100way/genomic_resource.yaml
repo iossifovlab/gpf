@@ -47,6 +47,5 @@ histogram:
 default_annotation:
   attributes:
     - source: phastCons100way
-      dest: phastCons100way
-      aggregator:
-        position: MaxAggregator
+      destination: phastCons100way
+      position_aggregator: MaxAggregator

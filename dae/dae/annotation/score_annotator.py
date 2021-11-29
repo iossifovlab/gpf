@@ -33,12 +33,9 @@ class VariantScoreAnnotatorBase(Annotator):
                 repr.append(f"nuc_aggre({self.nucleotide_aggregator})")
             return "; ".join(repr)
 
-    def __init__(
-            self, pipeline, config: Box):
+    def __init__(self, config: Box, resource):
 
-        super().__init__(pipeline, config)
-        resource = self.pipeline.repository.get_resource(config.resource_id)
-        assert resource is not None
+        super().__init__(config)
 
         self.resource = resource
         self.liftover_id = self.config.get("liftover_id")
@@ -52,14 +49,18 @@ class VariantScoreAnnotatorBase(Annotator):
         self._collect_non_default_aggregators()
 
     def get_annotation_config(self):
-        if self.config.attributes:
+        if self.config.get("attributes"):
             return self.config.attributes
         if self.resource.get_default_annotation():
-            return self.resource.get_default_annotation().attributes
+            attributes = self.resource.get_default_annotation().attributes
+            logger.info(
+                f"using default annotation for {self.resource.resource_id}: "
+                f"{attributes}")
+            return attributes
         logger.warning(
             f"can't find annotation config for resource: "
             f"{self.resource.resource_id}")
-        return {}
+        return []
 
     def _collect_non_default_aggregators(self):
         non_default_position_aggregators = {}
@@ -112,8 +113,8 @@ class VariantScoreAnnotatorBase(Annotator):
 
 
 class PositionScoreAnnotator(VariantScoreAnnotatorBase):
-    def __init__(self, pipeline, config: Box):
-        super().__init__(pipeline, config)
+    def __init__(self, config: Box, resource):
+        super().__init__(config, resource)
         # FIXME This should be closed somewhere
         self.resource.open()
 
@@ -175,8 +176,9 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
 
 
 class NPScoreAnnotator(PositionScoreAnnotator):
-    def __init__(self, pipeline, config: Box):
-        super().__init__(pipeline, config)
+    def __init__(self, config: Box, resource):
+        super().__init__(config, resource)
+        self.resource.open()
 
     @property
     def annotator_type(self):

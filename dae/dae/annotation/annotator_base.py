@@ -25,10 +25,7 @@ class Annotator(abc.ABC):
     # def get_possible_source_attributes():
     #     returns a list of the ('source', type, description)
 
-    def __init__(
-            self, pipeline,
-            config: Box):
-        self.pipeline = pipeline
+    def __init__(self, config: Box):
         self.config = config
 
     @property

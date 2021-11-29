@@ -252,31 +252,3 @@ def frequency_variants_expected():
 @pytest.fixture
 def annotation_config(fixture_dirname):
     return fixture_dirname("annotation.yaml")
-
-
-@pytest.fixture
-def mean_override_phastcons(fixture_dirname):
-    return FrozenBox({
-        'attributes': [{
-            'source': 'phastCons100way',
-            'dest': 'phastCons100way',
-            'aggregator': {'position': 'MeanAggregator'}
-        }]
-    })
-
-
-@pytest.fixture
-def mean_override_cadd(fixture_dirname):
-    return FrozenBox({
-        'attributes': [{
-            'source': 'cadd_raw',
-            'dest': 'cadd_raw',
-            'aggregator': {'position': 'MaxAggregator',
-                           'nucleotide': 'MeanAggregator'}
-        }, {
-            'source': 'cadd_phred',
-            'dest': 'cadd_phred',
-            'aggregator': {'position': 'MaxAggregator',
-                           'nucleotide': 'MeanAggregator'}
-        }]
-    })

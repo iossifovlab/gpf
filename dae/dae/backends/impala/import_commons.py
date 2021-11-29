@@ -79,17 +79,22 @@ def construct_import_annotation_pipeline(
 
     grr = gpf_instance.grr
     assert os.path.exists(config_filename), config_filename
-    config = AnnotationPipeline.load_and_parse(config_filename)
     return AnnotationPipeline.build(
-        pipeline_config=config, grr_repository=grr)
+        pipeline_config_file=config_filename, grr_repository=grr)
 
 
 def construct_import_effect_annotator(gpf_instance):
     genome = gpf_instance.reference_genome
     gene_models = gpf_instance.gene_models
 
+    config = Box({
+        "annotator_type": "effect_annotator",
+        "genome": genome.resource_id,
+        "gene_models": gene_models.resource_id
+    })
+
     effect_annotator = EffectAnnotatorAdapter(
-        genome=genome, gene_models=gene_models)
+        config, genome=genome, gene_models=gene_models)
     return effect_annotator
 
 
