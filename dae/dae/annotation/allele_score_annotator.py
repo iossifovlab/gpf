@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
-    def __init__(self, resource, liftover=None, override=None):
-        super().__init__(resource, liftover, override)
+    def __init__(self, pipeline, config):
+        super().__init__(pipeline, config)
         self.resource.open()
 
     @property
@@ -26,8 +26,8 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(attributes)
             return
 
-        if self.liftover:
-            annotatable = liftover_context.get(self.liftover)
+        if self.liftover_id:
+            annotatable = liftover_context.get(self.liftover_id)
 
         if annotatable is None:
             self._scores_not_found(attributes)

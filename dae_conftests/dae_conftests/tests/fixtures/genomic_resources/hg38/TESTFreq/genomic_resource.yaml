@@ -33,7 +33,7 @@ scores:
 default_annotation:
   attributes:
     - source: altFreq
-      dest: alt_freq
+      destination: alt_freq
 
     - source: altFreq2
-      dest: alt_freq2
+      destination: alt_freq2

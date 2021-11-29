@@ -1,8 +1,17 @@
+import logging
+
+from box import Box
+
+from dae.annotation.annotator_base import Annotator
+
 from .score_annotator import PositionScoreAnnotator, \
     NPScoreAnnotator
 from .allele_score_annotator import AlleleScoreAnnotator
 from .effect_annotator import EffectAnnotatorAdapter
 from .lift_over_annotator import LiftOverAnnotator
+
+
+logger = logging.getLogger(__name__)
 
 
 class AnnotatorFactory:
@@ -37,3 +46,15 @@ class AnnotatorFactory:
 
         return LiftOverAnnotator(chain, genome, liftover, override=override)
 
+    @classmethod
+    def build(cls, pipeline, config: Box) -> Annotator:
+
+        if config.annotator_type == "np_score":
+            return NPScoreAnnotator(pipeline, config)
+        elif config.annotator_type == "position_score":
+            return PositionScoreAnnotator(pipeline, config)
+        elif config.annotator_type == "allele_score":
+            return AlleleScoreAnnotator(pipeline, config)
+
+        logger.error(f"unexpected annotator type: {config}")
+        raise ValueError(f"unexpected annotator type: {config}")

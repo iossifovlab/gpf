@@ -4,7 +4,8 @@ import textwrap
 from dae.annotation.annotatable import VCFAllele
 from dae.genomic_resources import build_genomic_resource_repository
 
-from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_pipeline import AnnotationConfigParser, \
+    AnnotationPipeline
 
 
 @pytest.fixture
@@ -35,11 +36,11 @@ def position_score_repo():
                 default_annotation:
                     attributes:
                     - source: test100way
-                      dest: test100
+                      destination: test100
                     - source: t1
-                      dest: t1
+                      destination: t1
                     - source: t2
-                      dest: t2
+                      destination: t2
                 """,
                 "data.mem": """
                     chrom  pos_begin  pos_end  100way   t1   t2
@@ -102,15 +103,13 @@ def test_position_score_annotator(
 
     annotatable = VCFAllele(*allele)
 
-    pipeline_config = AnnotationPipeline.parse_config(
+    pipeline_config = AnnotationConfigParser.parse(
         textwrap.dedent(f"""
-            score_annotators:
-            - annotator: position_score
-              resource: position_score1
-              override:
+            - position_score:
+                resource_id: position_score1
                 attributes:
                 - source: test100way
-                  dest: test100
+                  destination: test100
                   position_aggregator: {pos_aggregator}
             """)
     )
@@ -130,15 +129,13 @@ def test_position_score_annotator(
 
 
 def test_position_annotator_schema(position_score_repo):
-    pipeline_config = AnnotationPipeline.parse_config(
+    pipeline_config = AnnotationConfigParser.parse(
         textwrap.dedent("""
-            score_annotators:
-            - annotator: position_score
-              resource: position_score1
-              override:
+            - position_score:
+                resource_id: position_score1
                 attributes:
                 - source: test100way
-                  dest: test100
+                  destination: test100
             """)
     )
 
@@ -151,17 +148,16 @@ def test_position_annotator_schema(position_score_repo):
     field = schema["test100"]
     assert field.name == "test100"
     # FIXME: assert field.type == float
-    assert field.source.annotator_type == "position_score_annotator"
+    assert field.source.annotator_type == "position_score"
     assert field.source.resource_id == "position_score1"
     assert field.source.score_id == "test100way"
 
 
 def test_position_default_annotator_schema(position_score_repo):
-    pipeline_config = AnnotationPipeline.parse_config(
+    pipeline_config = AnnotationConfigParser.parse(
         textwrap.dedent("""
-            score_annotators:
-            - annotator: position_score
-              resource: position_score1
+            - position_score:
+                resource_id: position_score1
             """)
     )
 
@@ -175,23 +171,21 @@ def test_position_default_annotator_schema(position_score_repo):
     field = schema["t1"]
     assert field.name == "t1"
     # FIXME: assert field.type == float
-    assert field.source.annotator_type == "position_score_annotator"
+    assert field.source.annotator_type == "position_score"
     assert field.source.resource_id == "position_score1"
     assert field.source.score_id == "t1"
 
 
 def test_position_annotator_schema_one_source_two_dest(position_score_repo):
-    pipeline_config = AnnotationPipeline.parse_config(
+    pipeline_config = AnnotationConfigParser.parse(
         textwrap.dedent("""
-            score_annotators:
-            - annotator: position_score
-              resource: position_score1
-              override:
+            - position_score:
+                resource_id: position_score1
                 attributes:
                 - source: test100way
-                  dest: test100
+                  destination: test100
                 - source: test100way
-                  dest: test100max
+                  destination: test100max
                   position_aggregator: max
             """)
     )
@@ -206,28 +200,26 @@ def test_position_annotator_schema_one_source_two_dest(position_score_repo):
     field = schema["test100"]
     assert field.name == "test100"
     # FIXME: assert field.type == float
-    assert field.source.annotator_type == "position_score_annotator"
+    assert field.source.annotator_type == "position_score"
     assert field.source.resource_id == "position_score1"
     assert field.source.score_id == "test100way"
 
     field = schema["test100max"]
     assert field.name == "test100max"
     # FIXME: assert field.type == float
-    assert field.source.annotator_type == "position_score_annotator"
+    assert field.source.annotator_type == "position_score"
     assert field.source.resource_id == "position_score1"
     assert field.source.score_id == "test100way"
 
 
 def test_position_annotator_join_aggregation(position_score_repo):
-    pipeline_config = AnnotationPipeline.parse_config(
+    pipeline_config = AnnotationConfigParser.parse(
         textwrap.dedent("""
-            score_annotators:
-            - annotator: position_score
-              resource: position_score1
-              override:
+            - position_score:
+                resource_id: position_score1
                 attributes:
                 - source: test100way
-                  dest: test100
+                  destination: test100
                   position_aggregator: join(, )
             """)
     )

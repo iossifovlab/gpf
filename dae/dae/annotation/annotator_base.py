@@ -2,6 +2,7 @@ import logging
 import abc
 
 from typing import List, Optional
+from box import Box
 
 from .annotatable import Annotatable
 from .schema import Schema
@@ -24,9 +25,11 @@ class Annotator(abc.ABC):
     # def get_possible_source_attributes():
     #     returns a list of the ('source', type, description)
 
-    def __init__(self, liftover: str = None, override: dict = None):
-        self.liftover = liftover
-        self.override = override
+    def __init__(
+            self, pipeline,
+            config: Box):
+        self.pipeline = pipeline
+        self.config = config
 
     @property
     def output_columns(self) -> List[str]:
@@ -64,7 +67,7 @@ class Annotator(abc.ABC):
         self._do_annotate(attributes, annotatable, liftover_context)
         attributes_list = self.get_annotation_config()
         for attr in attributes_list:
-            if attr.dest == attr.source:
+            if attr.destination == attr.source:
                 continue
-            attributes[attr.dest] = attributes[attr.source]
+            attributes[attr.destination] = attributes[attr.source]
             del attributes[attr.source]

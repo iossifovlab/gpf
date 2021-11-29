@@ -4,7 +4,8 @@ import textwrap
 from dae.genomic_resources import build_genomic_resource_repository
 
 from dae.annotation.annotatable import VCFAllele
-from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_pipeline import AnnotationConfigParser, \
+    AnnotationPipeline
 
 
 #  hg19
@@ -67,15 +68,13 @@ def test_np_score_annotator(
         }
     })
 
-    pipeline_config = AnnotationPipeline.parse_config(
+    pipeline_config = AnnotationConfigParser.parse(
         textwrap.dedent(f"""
-            score_annotators:
-            - annotator: np_score
-              resource: np_score1
-              override:
+            - np_score:
+                resource_id: np_score1
                 attributes:
                 - source: test_raw
-                  dest: test
+                  destination: test
                   position_aggregator: {pos_aggregator}
                   nucleotide_aggregator: {nuc_aggregator}
             """)

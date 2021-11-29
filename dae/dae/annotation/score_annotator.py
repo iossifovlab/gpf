@@ -1,5 +1,7 @@
 import logging
+
 from typing import Optional
+from box import Box
 
 from .schema import Schema
 from .annotatable import Annotatable
@@ -32,11 +34,14 @@ class VariantScoreAnnotatorBase(Annotator):
             return "; ".join(repr)
 
     def __init__(
-            self, resource: GenomicScoresResource,
-            liftover=None, override=None):
+            self, pipeline, config: Box):
 
-        super().__init__(liftover, override)
+        super().__init__(pipeline, config)
+        resource = self.pipeline.repository.get_resource(config.resource_id)
+        assert resource is not None
+
         self.resource = resource
+        self.liftover_id = self.config.get("liftover_id")
 
         assert isinstance(resource, GenomicScoresResource), \
             resource.resource_id
@@ -47,10 +52,13 @@ class VariantScoreAnnotatorBase(Annotator):
         self._collect_non_default_aggregators()
 
     def get_annotation_config(self):
-        if self.override:
-            return self.override.attributes
+        if self.config.attributes:
+            return self.config.attributes
         if self.resource.get_default_annotation():
             return self.resource.get_default_annotation().attributes
+        logger.warning(
+            f"can't find annotation config for resource: "
+            f"{self.resource.resource_id}")
         return {}
 
     def _collect_non_default_aggregators(self):
@@ -79,7 +87,7 @@ class VariantScoreAnnotatorBase(Annotator):
         if self._annotation_schema is None:
             schema = Schema()
             for attribute in self.get_annotation_config():
-                prop_name = attribute.dest
+                prop_name = attribute.destination
                 score_config = self.resource.get_score_config(attribute.source)
                 py_type = score_config.type
                 assert py_type is not None, score_config
@@ -104,14 +112,14 @@ class VariantScoreAnnotatorBase(Annotator):
 
 
 class PositionScoreAnnotator(VariantScoreAnnotatorBase):
-    def __init__(self, resource, liftover=None, override=None):
-        super().__init__(resource, liftover, override)
+    def __init__(self, pipeline, config: Box):
+        super().__init__(pipeline, config)
         # FIXME This should be closed somewhere
         self.resource.open()
 
     @property
     def annotator_type(self):
-        return "position_score_annotator"
+        return "position_score"
 
     def _fetch_substitution_scores(self, variant):
         scores = self.resource.fetch_scores(
@@ -136,8 +144,8 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
 
     def _do_annotate(
             self, attributes, annotatable: Annotatable, liftover_context):
-        if self.liftover:
-            annotatable = liftover_context.get(self.liftover)
+        if self.liftover_id:
+            annotatable = liftover_context.get(self.liftover_id)
 
         if annotatable is None:
             self._scores_not_found(attributes)
@@ -167,12 +175,12 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
 
 
 class NPScoreAnnotator(PositionScoreAnnotator):
-    def __init__(self, config, liftover=None, override=None):
-        super().__init__(config, liftover, override)
+    def __init__(self, pipeline, config: Box):
+        super().__init__(pipeline, config)
 
     @property
     def annotator_type(self):
-        return "np_score_annotator"
+        return "np_score"
 
     def _fetch_substitution_scores(self, allele):
         return self.resource.fetch_scores(
