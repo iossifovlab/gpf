@@ -11,7 +11,7 @@ import { Observable } from 'rxjs';
 })
 export class AutismGeneProfileSingleViewWrapperComponent implements OnInit, AfterViewInit {
   public $autismGeneToolConfig: Observable<AgpConfig>;
-  public geneSymbol: string;
+  public geneSymbols: string[];
 
   public constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
@@ -23,8 +23,10 @@ export class AutismGeneProfileSingleViewWrapperComponent implements OnInit, Afte
   }
 
   public ngAfterViewInit(): void {
-    if (this.route.snapshot.params.gene instanceof String) {
-      this.geneSymbol = this.route.snapshot.params.gene.toUpperCase();
-    }
+    this.geneSymbols = this.paramToArray(this.route.snapshot.params.genes);
+  }
+
+  paramToArray(param: string): string[] {
+    return param.toUpperCase().split('+').filter(e => e !== '');
   }
 }

@@ -1,5 +1,9 @@
-<gpf-autism-gene-profile-single-view
-  *ngIf="$autismGeneToolConfig | async as config"
-  [config]="config"
-  [geneSymbol]="geneSymbol">
-</gpf-autism-gene-profile-single-view>
+<ng-container *ngIf="$autismGeneToolConfig | async as config">
+  <ng-container *ngFor="let geneSymbol of geneSymbols">
+    <gpf-autism-gene-profile-single-view
+      [config]="config"
+      [geneSymbol]="geneSymbol">
+    </gpf-autism-gene-profile-single-view>
+  </ng-container>
+</ng-container>
+
