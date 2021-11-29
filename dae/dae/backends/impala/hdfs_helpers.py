@@ -3,7 +3,7 @@ import re
 import tempfile
 import logging
 from pyarrow import fs
-from fsspec.implementation.arrow import ArrowFSWrapper
+from fsspec.implementations.arrow import ArrowFSWrapper
 
 
 logger = logging.getLogger(__name__)
