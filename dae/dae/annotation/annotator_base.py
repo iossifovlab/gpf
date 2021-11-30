@@ -69,7 +69,7 @@ class Annotator(abc.ABC):
         """
         Normalizes and validates the annotation configuration.
 
-        When validation passes returns the normalized and validated 
+        When validation passes returns the normalized and validated
         annotator configuration dict.
 
         When validation fails, raises ValueError.
