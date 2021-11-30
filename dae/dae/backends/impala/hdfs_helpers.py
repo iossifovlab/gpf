@@ -79,8 +79,7 @@ class HdfsHelpers:
     def put(self, local_filename, hdfs_filename):
         assert os.path.exists(local_filename)
 
-        with open(local_filename, "rb") as infile:
-            self.hdfs.upload(hdfs_filename, infile)
+        self.hdfs.upload(local_filename, hdfs_filename)
 
     def put_in_directory(self, local_file, hdfs_dirname):
         basename = os.path.basename(local_file)
