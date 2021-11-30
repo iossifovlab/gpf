@@ -20,7 +20,7 @@
       class="table table-bordered table-centered genomic-scores-table">
       <th [attr.colspan]="2" style="text-align: center">{{ genomicScoreCategory.displayName }}</th>
       <tr *ngFor="let score of genomicScoreCategory.scores" class="card-block">
-        <td style="vertical-align: middle; text-align: center; width: 155px;">{{ score.scoreName }}</td>
+        <td style="height: 135px; max-height: 135px; width: 135px; max-width: 135px; white-space: nowrap; text-align: center;" [attr.title]="score.scoreName">{{ score.scoreName }}</td>
         <ng-container *ngIf="genomicScoresGeneWeights.length === gene.genomicScores.length">
           <td>
             <gpf-histogram
@@ -57,7 +57,7 @@
       class="table table-bordered table-centered gene-sets-table">
       <th [attr.colspan]="2" style="text-align: center">{{ geneSetCategory.displayName }}</th>
       <tr *ngFor="let set of geneSetCategory.sets" class="card-block">
-        <td style="max-width: 665px; overflow: hidden; white-space: nowrap" [attr.title]="set.setId">{{ set.setId }}</td>
+        <td style="max-width: 665px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" [attr.title]="set.setId">{{ set.setId }}</td>
         <td style="text-align: center; width: 55px">
           <span style="font-size: 20px;" *ngIf="gene.geneSets.indexOf(set.collectionId + '_' + set.setId) !== -1">&#10003;</span>
           <span style="font-size: 12px; opacity: 75%" *ngIf="gene.geneSets.indexOf(set.collectionId + '_' + set.setId) === -1">&#10005;</span>

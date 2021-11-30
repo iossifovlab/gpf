@@ -9,8 +9,8 @@ td {
   vertical-align: middle;
 }
 
-tr,
-td {
+.gene-sets-table tr,
+.gene-sets-table td {
   height: 55px;
   max-height: 55px;
 }
