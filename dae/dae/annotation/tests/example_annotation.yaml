@@ -10,11 +10,6 @@
         destination: old_worst_effect
 
 
-- liftover_annotator:
-    resource_id: hg38/hg38tohg19
-    liftover_id: hg38tohg19
-    target_genome: hg19/GATK_ResourceBundle_5777_b37_phiX174/genome
-
 
 - np_score: hg38/TESTphastCons100way
    # The Annotbor should treat this as equivalent to:
@@ -45,7 +40,7 @@
     - score2
     - score3
 # This should be equivallent to:
-- position_score: 
+- np_score: 
     resource_id: hg38/TESTCADD
     attributes:
     - destiantion: score1
@@ -54,12 +49,52 @@
       source: score2
     - destination: score3
       source: score3
-
-
-
+# if the default scores for the hg38/TESTCADD are score1, score2, and score3, 
 # the above is equivallent to:
-# - score:
-#     resource: hg38/TESTCADD
+# - np_score: hg38/TESTCADD
+
+
+# liftover_annotator SHULD try operate on all annotatables
+# The liftover all attributes are:
+#    source                 type           descr
+#    liftover_annotable     Annotatable
+#    liftover_chr           string
+# The default attribute configuration is:
+#    attributes:
+#    - destination: liftover_annotable
+#      source:      liftover_annotable
+#      internal:    yes
+- liftover_annotator:
+    resource_id: hg38/hg38tohg19
+    target_genome: hg19/GATK_ResourceBundle_5777_b37_phiX174/genome
+
+- liftover_annotator:
+    resource_id: hg38/hg38tohg19
+    target_genome: hg17/bla/genome
+    - destination: liftover_annotable_hg17
+      source:      liftover_annotable
+      internal:    yes
+
 - allele_score:
     resource: hg19/MPC
-    liftover_id: hg38tohg19
+    input_annotable: liftover_annotable
+
+  - allele_score:
+    resource: hg17/db_gap
+    input_annotable: liftover_annotable_hg17
+
+
+- effect_annotator:
+    attributes:
+      - source: genes
+        destination: list_of_genes
+        format: list
+        internal: yes
+      - source: genes
+        format: str 
+      - source: genes_LGD
+      - source: genes_missense 
+
+- gene_score_annotator:
+    resource: gene_scores/RVIS-1
+    input: list_of_genes
