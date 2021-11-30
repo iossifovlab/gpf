@@ -8,7 +8,7 @@ from collections import Counter
 import logging
 import numpy as np
 import pandas as pd
-import statsmodels.api as sm
+from dae.pheno.utils.lin_regress_wrapper import LinearRegressionWrapper
 from scipy.stats.stats import ttest_ind
 
 from dae.pheno.common import MeasureType
@@ -244,12 +244,11 @@ class PhenoTool(object):
             df.loc[:, "normalized"] = dn
             return df
         else:
-            X = sm.add_constant(df[normalize_by].to_numpy())
+            x = df[normalize_by].to_numpy()
             y = df[measure_id]
-            model = sm.OLS(y, X)
-            fitted = model.fit()
+            fitted = LinearRegressionWrapper(x, y)
 
-            dn = pd.Series(index=df.index, data=fitted.resid)
+            dn = pd.Series(index=df.index, data=fitted.resid())
             df.loc[:, "normalized"] = dn
             return df
 

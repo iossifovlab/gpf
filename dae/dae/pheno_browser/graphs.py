@@ -17,7 +17,7 @@ plt.ioff()  # noqa
 import pandas as pd
 import numpy as np
 import seaborn as sns
-import statsmodels.api as sm
+from dae.pheno.utils.lin_regress_wrapper import LinearRegressionWrapper
 from dae.pheno.common import ROLES_GRAPHS_DEFINITION
 
 import traceback
@@ -96,18 +96,16 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
 
     try:
         x = dmale[col1]
-        X = sm.add_constant(x)
         y = dmale[col2]
-        res_male = sm.OLS(y, X).fit()
+        res_male = LinearRegressionWrapper(x, y)
     except ValueError:
         traceback.print_exc()
         res_male = None
 
     try:
         x = dfemale[col1]
-        X = sm.add_constant(x)
         y = dfemale[col2]
-        res_female = sm.OLS(y, X).fit()
+        res_female = LinearRegressionWrapper(x, y)
     except ValueError:
         traceback.print_exc()
         res_female = None
