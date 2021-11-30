@@ -154,6 +154,8 @@ class StudyWrapperBase:
         result["name"] = result["name"] or result["id"]
 
         result["enrichment"] = config.enrichment.to_dict()
+        del result["enrichment"]["background"]["coding_len_background_model"]["file"]
+        del result["enrichment"]["background"]["samocha_background_model"]["file"]
 
         result["study_names"] = None
         if result["studies"] is not None:
