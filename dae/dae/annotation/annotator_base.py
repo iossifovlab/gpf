@@ -54,8 +54,7 @@ class Annotator(abc.ABC):
     #     returns a list of the ('source', type, description)
 
     def __init__(self, config: Box):
-        self.validate_config(config)
-        self.config = config
+        self.config = self.validate_config(config)
         self.id = self.config.get("id")
 
     @abc.abstractclassmethod
@@ -69,6 +68,22 @@ class Annotator(abc.ABC):
         When validation fails, raises ValueError.
         """
         return config
+
+    @abc.abstractmethod
+    def get_all_annotation_attributes(self) -> List[Dict]:
+        """
+        Returns list of all available attributes that could be provided by
+        the annotator.
+
+        The result is a list of dicts. Each dict contains following
+        attributes:
+
+        * source: the name of the attribute
+        * type: type of the attribute
+        * desc: descripion of the attribute
+
+        """
+        return []
 
     @property
     def output_columns(self) -> List[str]:

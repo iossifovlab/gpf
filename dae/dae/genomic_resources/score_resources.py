@@ -72,11 +72,13 @@ class GenomicScoresResource(GenomicResource, abc.ABC):
 
         # load score configuraton
         for score_conf in self.get_config()['scores']:
+
             class ScoreDef:
                 pass
             scr_def = ScoreDef()
 
             scr_def.id = score_conf["id"]
+            scr_def.desc = score_conf.get("desc", "")
 
             if "index" in score_conf:
                 scr_def.col_index = int(score_conf["index"])

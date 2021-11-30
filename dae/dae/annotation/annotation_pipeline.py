@@ -25,9 +25,6 @@ class AnnotationConfigParser:
 
     @classmethod
     def normalize(cls, pipeline_config: List[Dict]) -> List[Dict]:
-
-        from pprint import pprint
-        pprint(pipeline_config)
         result = []
 
         for index, config in enumerate(pipeline_config):

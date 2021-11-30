@@ -76,6 +76,16 @@ class VariantScoreAnnotatorBase(Annotator):
         self.non_default_nucleotide_aggregators = {}
         self._collect_non_default_aggregators()
 
+    def get_all_annotation_attributes(self) -> List[Dict]:
+        result = []
+        for score in self.resource.scores.values():
+            result.append({
+                "source": score.id,
+                "type": score.type,
+                "desc": score.desc
+            })
+        return result
+
     def get_annotation_config(self) -> List[Dict]:
         attributes = self.config.get("attributes")
         if attributes:

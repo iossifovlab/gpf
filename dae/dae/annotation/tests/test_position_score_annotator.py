@@ -68,6 +68,32 @@ def test_position_resource_default_annotation(position_score_repo):
     assert "attributes" in default_annotation
 
 
+def test_position_score_annotator_all_attributes(position_score_repo):
+
+    pipeline_config = textwrap.dedent("""
+            - position_score:
+                resource_id: position_score1
+                attributes:
+                - source: test100way
+                  destination: test100
+                  position_aggregator: max
+            """)
+
+    pipeline = AnnotationPipeline.build(
+        pipeline_config_str=pipeline_config,
+        grr_repository=position_score_repo)
+
+    annotator = pipeline.annotators[0]
+    attributes = annotator.get_all_annotation_attributes()
+    assert len(attributes) == 3
+
+    assert annotator.get_all_annotation_attributes() == [
+        {'desc': 'test values', 'source': 'test100way', 'type': 'float'},
+        {'desc': 'test score 1', 'source': 't1', 'type': 'float'},
+        {'desc': 'test score 2', 'source': 't2', 'type': 'float'},
+    ]
+
+
 #  hg19
 #  chrom: 1
 #  pos:   14970

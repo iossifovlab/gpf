@@ -1,8 +1,6 @@
-#!/usr/bin/env python
-
 import logging
 
-from typing import Dict
+from typing import Dict, List
 from box import Box
 
 from .annotatable import Annotatable, VCFAllele
@@ -44,6 +42,15 @@ class LiftOverAnnotator(Annotator):
     @staticmethod
     def annotator_type():
         return "liftover_annotator"
+
+    def get_all_annotation_attributes(self) -> List[Dict]:
+        return [
+            {
+                "source": "allele",
+                "type": "object",
+                "desc": "liftover allele"
+            }
+        ]
 
     @classmethod
     def validate_config(cls, config: Dict) -> Dict:

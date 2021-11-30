@@ -1,7 +1,7 @@
 import copy
 import logging
 
-from typing import Dict
+from typing import Dict, List
 from box import Box
 
 from dae.effect_annotation.annotator import EffectAnnotator
@@ -80,6 +80,56 @@ class EffectAnnotatorAdapter(Annotator):
     def _not_found(self, attributes):
         for attr in self.attributes_list:
             attributes[attr.destination] = ""
+
+    def get_all_annotation_attributes(self) -> List[Dict]:
+        result = [
+            {
+                "source": "effect_type",
+                "type": "str",
+                "desc": "worst effect",
+            },
+            {
+                "source": "effect_gene_genes",
+                "type": "object",
+                "desc": ""
+            },
+            {
+                "source": "effect_gene_types",
+                "type": "object",
+                "desc": ""
+            },
+            {
+                "source": "effect_genes",
+                "type": "str",
+                "desc": ""
+            },
+            {
+                "source": "effect_details_transcript_ids",
+                "type": "object",
+                "desc": ""
+            },
+            {
+                "source": "effect_details_genes",
+                "type": "object",
+                "desc": ""
+            },
+            {
+                "source": "effect_details_details",
+                "type": "object",
+                "desc": ""
+            },
+            {
+                "source": "effect_details",
+                "type": "str",
+                "desc": ""
+            },
+            {
+                "source": "allele_effects",
+                "type": "object",
+                "desc": ""
+            },
+        ]
+        return result
 
     @classmethod
     def validate_config(cls, config: Dict) -> Dict:
