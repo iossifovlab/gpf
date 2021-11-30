@@ -3,6 +3,7 @@
 import logging
 
 from typing import Dict
+from box import Box
 
 from .annotatable import Annotatable, VCFAllele
 from dae.utils.variant_utils import trim_str_left, reverse_complement
@@ -15,6 +16,17 @@ logger = logging.getLogger(__name__)
 
 
 class LiftOverAnnotator(Annotator):
+
+    DEFAULT_ANNOTATION = Box({
+        "attributes": [
+            {
+                "source": "allele",
+                "destination": "allele",
+                "internal": True,
+            },
+        ]
+    })
+
     def __init__(self, config, chain_resource, target_genome):
         super().__init__(config)
 
@@ -24,10 +36,10 @@ class LiftOverAnnotator(Annotator):
         if self.id is None:
             raise ValueError(
                 f"can't create liftover annotator: {self.config}")
-        self._annotation_schema = Schema()
         # TODO do somewhere else
         self.chain.open()
         self.target_genome.open()
+        self._annotation_schema = None
 
     @staticmethod
     def annotator_type():
@@ -72,6 +84,16 @@ class LiftOverAnnotator(Annotator):
             raise ValueError(
                 f"wrong effect annotator config {validator.errors}")
         return validator.document
+
+    @property
+    def annotation_schema(self):
+        if self._annotation_schema is None:
+            self._annotation_schema = Schema()
+
+        return self._annotation_schema
+
+    def get_annotation_config(self):
+        return []
 
     def liftover_allele(self, allele: VCFAllele):
         if not isinstance(allele, VCFAllele):
@@ -132,10 +154,3 @@ class LiftOverAnnotator(Annotator):
                 f"unable to liftover allele: {annotatable}")
             return
         context[self.id] = lo_allele
-
-    def get_annotation_config(self):
-        return []
-
-    @property
-    def annotation_schema(self):
-        return self._annotation_schema

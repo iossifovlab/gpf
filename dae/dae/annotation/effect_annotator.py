@@ -44,6 +44,12 @@ class EffectAnnotatorAdapter(Annotator):
                 "source": "effect_details",
                 "destination": "effect_details"
             },
+
+            {
+                "source": "allele_effects",
+                "destination": "allele_effects",
+                "internal": True,
+            }
         ]
     })
 
@@ -57,10 +63,12 @@ class EffectAnnotatorAdapter(Annotator):
         self.genome.open()
 
         self._annotation_schema = None
-        self.attributes_list = copy.deepcopy(
-            self.DEFAULT_ANNOTATION.attributes)
+        self.attributes_list = [
+            attr
+            for attr in self.DEFAULT_ANNOTATION.attributes
+        ]
         if self.config.get("attributes"):
-            self.attributes_list = copy.deepcopy(self.config.attributes)
+            self.attributes_list = copy.deepcopy(self.config.get("attributes"))
 
         promoter_len = self.config.get("promoter_len", 0)
         self.effect_annotator = EffectAnnotator(
@@ -124,12 +132,15 @@ class EffectAnnotatorAdapter(Annotator):
         if self._annotation_schema is None:
             schema = Schema()
             for attribute in self.get_annotation_config():
-                prop_name = attribute.destination
+                if attribute.get("internal"):
+                    continue
+
+                dest_name = attribute.destination
                 source_name = attribute.source
 
                 source = self.EffectSource(
                     self.annotator_type, str(self.gene_models), source_name)
-                schema.create_field(prop_name, "str", source)
+                schema.create_field(dest_name, "str", source)
 
             self._annotation_schema = schema
         return self._annotation_schema

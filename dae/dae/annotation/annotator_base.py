@@ -28,7 +28,6 @@ ATTRIBUTES_SCHEMA = {
 class Annotator(abc.ABC):
     '''
     Annotator provides a set of attrubutes for a given Annotatable.
-
     '''
 
     class ConfigValidator(Validator):
@@ -43,16 +42,6 @@ class Annotator(abc.ABC):
                 if "source" in value and "destination" not in value:
                     value["destination"] = value["source"]
                 return value
-            return value
-
-        def _normalize_coerce_score_resources(self, value):
-            print("coerce score resource", value)
-            if isinstance(value, str):
-                return {
-                    "resource_id": value,
-                    "attributes": None,
-                }
-
             return value
 
     # def __init__(self, pipeline: AnnotationPipeine, configuation: dict):

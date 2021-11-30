@@ -445,9 +445,10 @@ class EffectAnnotationDecorator(AnnotationDecorator):
                 self.variants_loader.full_variants_iterator():
             for sa in summary_variant.alt_alleles:
                 attributes = {}
+                context = {}
                 self.effect_annotator.annotate(
                     attributes,
-                    sa.get_annotatable(), None)
+                    sa.get_annotatable(), context)
                 assert "allele_effects" in attributes
                 allele_effects = attributes["allele_effects"]
                 assert isinstance(allele_effects, AlleleEffects)
