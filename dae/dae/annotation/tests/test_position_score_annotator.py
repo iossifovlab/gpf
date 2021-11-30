@@ -4,8 +4,7 @@ import textwrap
 from dae.annotation.annotatable import VCFAllele
 from dae.genomic_resources import build_genomic_resource_repository
 
-from dae.annotation.annotation_pipeline import AnnotationConfigParser, \
-    AnnotationPipeline
+from dae.annotation.annotation_pipeline import AnnotationPipeline
 
 
 @pytest.fixture
@@ -103,8 +102,7 @@ def test_position_score_annotator(
 
     annotatable = VCFAllele(*allele)
 
-    pipeline_config = AnnotationConfigParser.parse(
-        textwrap.dedent(f"""
+    pipeline_config = textwrap.dedent(f"""
             - position_score:
                 resource_id: position_score1
                 attributes:
@@ -112,10 +110,11 @@ def test_position_score_annotator(
                   destination: test100
                   position_aggregator: {pos_aggregator}
             """)
-    )
 
     pipeline = AnnotationPipeline.build(
-        pipeline_config, grr_repository=position_score_repo)
+        pipeline_config_str=pipeline_config,
+        grr_repository=position_score_repo)
+
     # annoation_runner = BasicAnnotatorRunner()
     # annotator = ThreadAnnotatorRunner()
     # annotator = AsynioAnnotatorRunner()
@@ -129,18 +128,17 @@ def test_position_score_annotator(
 
 
 def test_position_annotator_schema(position_score_repo):
-    pipeline_config = AnnotationConfigParser.parse(
-        textwrap.dedent("""
+    pipeline_config = textwrap.dedent("""
             - position_score:
                 resource_id: position_score1
                 attributes:
                 - source: test100way
                   destination: test100
             """)
-    )
 
-    pipeline = AnnotationPipeline.build(pipeline_config,
-                                        grr_repository=position_score_repo)
+    pipeline = AnnotationPipeline.build(
+        pipeline_config_str=pipeline_config,
+        grr_repository=position_score_repo)
     schema = pipeline.annotation_schema
 
     assert len(schema) == 1
@@ -154,15 +152,14 @@ def test_position_annotator_schema(position_score_repo):
 
 
 def test_position_default_annotator_schema(position_score_repo):
-    pipeline_config = AnnotationConfigParser.parse(
-        textwrap.dedent("""
+    pipeline_config = textwrap.dedent("""
             - position_score:
                 resource_id: position_score1
             """)
-    )
 
     pipeline = AnnotationPipeline.build(
-        pipeline_config, grr_repository=position_score_repo)
+        pipeline_config_str=pipeline_config,
+        grr_repository=position_score_repo)
     assert len(pipeline.annotation_schema) == 3
     schema = pipeline.annotation_schema
 
@@ -177,8 +174,7 @@ def test_position_default_annotator_schema(position_score_repo):
 
 
 def test_position_annotator_schema_one_source_two_dest(position_score_repo):
-    pipeline_config = AnnotationConfigParser.parse(
-        textwrap.dedent("""
+    pipeline_config = textwrap.dedent("""
             - position_score:
                 resource_id: position_score1
                 attributes:
@@ -188,10 +184,10 @@ def test_position_annotator_schema_one_source_two_dest(position_score_repo):
                   destination: test100max
                   position_aggregator: max
             """)
-    )
 
     pipeline = AnnotationPipeline.build(
-        pipeline_config, grr_repository=position_score_repo)
+        pipeline_config_str=pipeline_config,
+        grr_repository=position_score_repo)
     schema = pipeline.annotation_schema
 
     assert len(schema) == 2
@@ -213,8 +209,7 @@ def test_position_annotator_schema_one_source_two_dest(position_score_repo):
 
 
 def test_position_annotator_join_aggregation(position_score_repo):
-    pipeline_config = AnnotationConfigParser.parse(
-        textwrap.dedent("""
+    pipeline_config = textwrap.dedent("""
             - position_score:
                 resource_id: position_score1
                 attributes:
@@ -222,11 +217,12 @@ def test_position_annotator_join_aggregation(position_score_repo):
                   destination: test100
                   position_aggregator: join(, )
             """)
-    )
     print(pipeline_config)
 
     pipeline = AnnotationPipeline.build(
-      pipeline_config=pipeline_config, grr_repository=position_score_repo)
+      pipeline_config_str=pipeline_config,
+      grr_repository=position_score_repo)
+
     allele = ("1", 14970, "CC", "C")
     annotatable = VCFAllele(*allele)
     result = pipeline.annotate(annotatable)

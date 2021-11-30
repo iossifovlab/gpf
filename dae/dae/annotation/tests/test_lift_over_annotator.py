@@ -1,9 +1,9 @@
 import pytest
 from box import Box
 
-from dae.annotation.annotation_pipeline import AnnotationConfigParser, AnnotationPipeline
+from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.variants.core import Allele
-from dae.annotation.lift_over_annotator import LiftOverAnnotator
+from dae.annotation.liftover_annotator import LiftOverAnnotator
 
 
 def mock_get_sequence(chrom, start, stop):
@@ -73,9 +73,8 @@ def test_lift_over(
 def test_pipeline_liftover(
         annotation_config, anno_grdb):
 
-    config = AnnotationConfigParser.parse_config_file(annotation_config)
     pipeline = AnnotationPipeline.build(
-        config, grr_repository=anno_grdb
+        pipeline_config_file=annotation_config, grr_repository=anno_grdb
     )
     allele = Allele.build_vcf_allele("chr1", 69094, "G", "A")
     attributes = pipeline.annotate(allele.get_annotatable())

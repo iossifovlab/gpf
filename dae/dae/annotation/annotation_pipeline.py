@@ -263,7 +263,6 @@ class AnnotationPipeline():
             pipeline_config: dict = None,
             pipeline_config_file: str = None,
             pipeline_config_str: str = None,
-
             grr_repository: GenomicResourceRepo = None,
             grr_repository_file: str = None,
             grr_repository_definition: str = None,
@@ -344,12 +343,17 @@ class AnnotationPipeline():
 
 
         '''
-        if pipeline_config is None:
-            assert pipeline_config_file is not None
+        if pipeline_config_file is not None:
+            assert pipeline_config is None
+            assert pipeline_config_str is None
             pipeline_config = AnnotationConfigParser.parse_config_file(
                 pipeline_config_file)
-        else:
+        elif pipeline_config_str is not None:
             assert pipeline_config_file is None
+            assert pipeline_config is None
+            pipeline_config = AnnotationConfigParser.parse(pipeline_config_str)
+
+        assert pipeline_config is not None
 
         if not grr_repository:
             grr_repository = build_genomic_resource_repository(

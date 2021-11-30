@@ -8,7 +8,7 @@ from .score_annotator import PositionScoreAnnotator, \
     NPScoreAnnotator
 from .allele_score_annotator import AlleleScoreAnnotator
 from .effect_annotator import EffectAnnotatorAdapter
-from .lift_over_annotator import LiftOverAnnotator
+from .liftover_annotator import LiftOverAnnotator
 
 
 logger = logging.getLogger(__name__)
