@@ -53,16 +53,19 @@ def test_liftover(
         config, chain_resource, target_genome)
     assert annotator is not None
 
-    aline = {
-        "chrom": chrom,
-        "pos": pos,
-    }
-    allele = Allele.build_vcf_allele(chrom, pos, "A", "T")
-    liftover_context = {}
-    annotator._do_annotate(aline, allele.get_annotatable(), liftover_context)
+    # aline = {
+    #     "chrom": chrom,
+    #     "pos": pos,
+    # }
 
-    lo_allele = liftover_context.get("liftover_test")
-    print(f"liftover allele: {lo_allele}", liftover_context)
+    allele = Allele.build_vcf_allele(chrom, pos, "A", "T")
+    context = {}
+    result = annotator._do_annotate(allele.get_annotatable(), context)
+    assert not result
+    assert isinstance(result, dict)
+
+    lo_allele = context.get("liftover_test")
+    print(f"liftover allele: {lo_allele}", context)
     lo_chrom = lo_allele.chrom if lo_allele else None
     lo_pos = lo_allele.position if lo_allele else None
 

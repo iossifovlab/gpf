@@ -112,7 +112,7 @@ class LiftOverAnnotator(Annotator):
             )
 
             if lo_coordinates is None:
-                return
+                return {}
 
             lo_chrom, lo_pos, lo_strand, _ = lo_coordinates
             pos = allele.position
@@ -132,7 +132,7 @@ class LiftOverAnnotator(Annotator):
             if lo_ref is None:
                 logger.warning(
                     f"can't find genomic sequence for {lo_chrom}:{lo_pos}")
-                return None
+                return {}
 
             lo_alt = alt
             if lo_strand == "-":
@@ -150,7 +150,7 @@ class LiftOverAnnotator(Annotator):
             logger.warning(
                 f"problem in variant {allele} liftover: {ex}", exc_info=True)
 
-    def _do_annotate(self, _, annotatable: Annotatable, context: Dict):
+    def _do_annotate(self, annotatable: Annotatable, context: Dict):
         assert self.id not in context, \
             (self.id, context)
         assert annotatable is not None
@@ -161,3 +161,5 @@ class LiftOverAnnotator(Annotator):
                 f"unable to liftover allele: {annotatable}")
             return
         context[self.id] = lo_allele
+
+        return {}

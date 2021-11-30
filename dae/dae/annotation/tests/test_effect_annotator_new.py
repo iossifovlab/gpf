@@ -61,9 +61,10 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
         print(sv, fvs)
         for sa in sv.alt_alleles:
             attributes = copy.deepcopy(sa.attributes)
-            liftover_variants = {}
-            effect_annotator.annotate(
-                attributes, sa.get_annotatable(), liftover_variants)
+            context = {}
+            result = effect_annotator.annotate(
+                sa.get_annotatable(), context)
+            attributes.update(result)
 
             print(
                 attributes["effect_gene_types"],
@@ -71,7 +72,7 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
             print(100*"-")
             print(attributes)
 
-            effect = attributes["allele_effects"]
+            effect = result["allele_effects"]
             print("effect:", effect)
             print(effect.genes)
             assert isinstance(effect, AlleleEffects)

@@ -224,10 +224,10 @@ class AnnotationPipeline():
         self._annotation_schema = None
 
     def annotate(self, annotatable: Annotatable) -> dict:
-        attributes = {}
-        liftover_context = dict()
+        result = {}
+        context = dict()
         for annotator in self.annotators:
-            annotator.annotate(
-                attributes, annotatable, liftover_context)
-
-        return attributes
+            attributes = annotator.annotate(
+                annotatable, context)
+            result.update(attributes)
+        return result

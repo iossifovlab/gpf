@@ -99,9 +99,7 @@ class Annotator(abc.ABC):
 
     @abc.abstractmethod
     def _do_annotate(
-            self, attributes: dict,
-            allele: Annotatable,
-            context: Optional[dict]):
+            self, allele: Annotatable, context: Optional[dict]) -> Dict:
         """
         Internal abstract method used for annotation.
         """
@@ -112,17 +110,17 @@ class Annotator(abc.ABC):
         pass
 
     def annotate(
-            self, attributes: dict,
-            annotatable: Annotatable,
-            context: Optional[dict]):
+            self, annotatable: Annotatable, context: Optional[dict]) -> Dict:
         """
         Carry out the annotation and then relabel resulting attributes
         as configured.
         """
-        self._do_annotate(attributes, annotatable, context)
+        attributes = self._do_annotate(annotatable, context)
         attributes_list = self.get_annotation_config()
         for attr in attributes_list:
             if attr.destination == attr.source:
                 continue
             attributes[attr.destination] = attributes[attr.source]
             del attributes[attr.source]
+
+        return attributes

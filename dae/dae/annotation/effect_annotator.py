@@ -199,16 +199,17 @@ class EffectAnnotatorAdapter(Annotator):
         return copy.deepcopy(self.attributes_list)
 
     def _do_annotate(
-            self, attributes, annotatable: Annotatable, _liftover_context):
+            self, annotatable: Annotatable, _context: Dict):
 
+        result = {}
         if annotatable is None:
-            self._not_found(attributes)
-            return
+            self._not_found(result)
+            return result
 
         if not isinstance(annotatable, VCFAllele) and  \
                 not isinstance(annotatable, CNVAllele):
-            self._not_found(attributes)
-            return
+            self._not_found(result)
+            return result
 
         length = len(annotatable)
 
@@ -236,4 +237,4 @@ class EffectAnnotatorAdapter(Annotator):
             "allele_effects": AlleleEffects.from_effects(effects),
         }
 
-        attributes.update(result)
+        return result
