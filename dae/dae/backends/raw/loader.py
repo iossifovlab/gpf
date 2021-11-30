@@ -444,10 +444,8 @@ class EffectAnnotationDecorator(AnnotationDecorator):
         for (summary_variant, family_variants) in \
                 self.variants_loader.full_variants_iterator():
             for sa in summary_variant.alt_alleles:
-                attributes = {}
                 context = {}
-                self.effect_annotator.annotate(
-                    attributes,
+                attributes = self.effect_annotator.annotate(
                     sa.get_annotatable(), context)
                 assert "allele_effects" in attributes
                 allele_effects = attributes["allele_effects"]
