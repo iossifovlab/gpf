@@ -59,7 +59,8 @@
       <tr *ngFor="let set of geneSetCategory.sets" class="card-block">
         <td>{{ set.setId }}</td>
         <td style="text-align: center">
-          <span *ngIf="gene.geneSets.indexOf(set.collectionId + '_' + set.setId) !== -1">&#10003;</span>
+          <span style="font-size: 20px;" *ngIf="gene.geneSets.indexOf(set.collectionId + '_' + set.setId) !== -1">&#10003;</span>
+          <span style="font-size: 12px; opacity: 75%" *ngIf="gene.geneSets.indexOf(set.collectionId + '_' + set.setId) === -1">&#10005;</span>
         </td>
       </tr>
     </table>
@@ -93,7 +94,7 @@
                       class="link-genotype-browser"
                       (click)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)"
                       (middleclick)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)">
-                      <span>{{ effectType.value.count }} ({{ effectType.value.rate | number: '1.0-3' }})</span>
+                      <span style="white-space: nowrap">{{ effectType.value.count }} ({{ effectType.value.rate | number: '1.0-3' }})</span>
                     </a>
                   </ng-container>
                   <ng-container *ngIf="effectType.value.count === 0">&ndash;</ng-container>
