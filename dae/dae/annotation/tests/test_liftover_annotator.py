@@ -45,7 +45,7 @@ def test_liftover(
         "annotator_type": "liftover_annotator",
         "chain": "test_lifover_chain",
         "target_genome": "test_target_genome",
-        "liftover_id": "liftover_test",
+        "id": "liftover_test",
         "attributes": None
     })
 

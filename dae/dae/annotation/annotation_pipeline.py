@@ -30,7 +30,7 @@ class AnnotationConfigParser:
         pprint(pipeline_config)
         result = []
 
-        for config in pipeline_config:
+        for index, config in enumerate(pipeline_config):
             if isinstance(config, str):
                 config = {
                     config: {}
@@ -45,6 +45,8 @@ class AnnotationConfigParser:
                 config = {"resource_id": config}
 
             assert isinstance(config, dict)
+            if config.get("id") is None:
+                config["id"] = str(index)
 
             config["annotator_type"] = annotator_type
             result.append(Box(config))

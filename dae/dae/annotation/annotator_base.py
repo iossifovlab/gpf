@@ -17,13 +17,17 @@ ATTRIBUTES_SCHEMA = {
     "schema": {
         "source": {"type": "string"},
         "destination": {"type": "string"},
+        "internal": {
+            "type": "boolean",
+            "default": False,
+        }
     }
 }
 
 
 class Annotator(abc.ABC):
     '''
-        Annotator provides a set of attrubutes for a give Annotatable.
+    Annotator provides a set of attrubutes for a given Annotatable.
 
     '''
 
@@ -63,6 +67,7 @@ class Annotator(abc.ABC):
     def __init__(self, config: Box):
         self.validate_config(config)
         self.config = config
+        self.id = self.config.get("id")
 
     @abc.abstractclassmethod
     def validate_config(cls, config: Dict) -> Dict:
@@ -92,7 +97,7 @@ class Annotator(abc.ABC):
     def _do_annotate(
             self, attributes: dict,
             allele: Annotatable,
-            liftover_context: Optional[dict]):
+            context: Optional[dict]):
         """
         Internal abstract method used for annotation.
         """
@@ -105,11 +110,12 @@ class Annotator(abc.ABC):
     def annotate(
             self, attributes: dict,
             annotatable: Annotatable,
-            liftover_context: Optional[dict]):
+            context: Optional[dict]):
         """
-        Carry out the annotation and then relabel results as configured.
+        Carry out the annotation and then relabel resulting attributes
+        as configured.
         """
-        self._do_annotate(attributes, annotatable, liftover_context)
+        self._do_annotate(attributes, annotatable, context)
         attributes_list = self.get_annotation_config()
         for attr in attributes_list:
             if attr.destination == attr.source:

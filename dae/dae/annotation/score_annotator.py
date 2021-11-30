@@ -1,7 +1,7 @@
 import logging
 import copy
 
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from box import Box
 
 from .schema import Schema
@@ -14,6 +14,34 @@ logger = logging.getLogger(__name__)
 
 
 class VariantScoreAnnotatorBase(Annotator):
+
+    VALIDATION_SCHEMA = {
+        "annotator_type": {
+            "type": "string",
+            "required": True,
+            "allowed": ["position_score", "np_score", "allele_score"],
+        },
+        "id": {
+            "type": "string",
+            "required": False,
+        },
+        "resource_id": {
+            "type": "string",
+            "required": True,
+        },
+        "liftover_id": {
+            "type": "string",
+            "nullable": True,
+            "default": None
+        },
+        "attributes": {
+            "type": "list",
+            "nullable": True,
+            "default": None,
+            "schema": None
+        }
+    }
+
     class ScoreSource(Schema.Source):
         def __init__(
                 self, annotator_type: str, resource_id: str,
@@ -33,7 +61,7 @@ class VariantScoreAnnotatorBase(Annotator):
                 repr.append(f"nuc_aggre({self.nucleotide_aggregator})")
             return "; ".join(repr)
 
-    def __init__(self, config: Box, resource):
+    def __init__(self, config: Dict, resource):
 
         super().__init__(config)
 
@@ -48,9 +76,10 @@ class VariantScoreAnnotatorBase(Annotator):
         self.non_default_nucleotide_aggregators = {}
         self._collect_non_default_aggregators()
 
-    def get_annotation_config(self):
-        if self.config.get("attributes"):
-            return self.config.attributes
+    def get_annotation_config(self) -> List[Dict]:
+        attributes = self.config.get("attributes")
+        if attributes:
+            return attributes
         if self.resource.get_default_annotation():
             attributes = self.resource.get_default_annotation().attributes
             logger.info(
@@ -128,28 +157,9 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         attributes_schema["schema"]["position_aggregator"] = \
             AGGREGATOR_SCHEMA
 
-        schema = {
-            "annotator_type": {
-                "type": "string",
-                "required": True,
-                "allowed": ["position_score"],
-            },
-            "resource_id": {
-                "type": "string",
-                "required": True,
-            },
-            "liftover_id": {
-                "type": "string",
-                "nullable": True,
-                "default": None
-            },
-            "attributes": {
-                "type": "list",
-                "nullable": True,
-                "default": None,
-                "schema": attributes_schema
-            }
-        }
+        schema = copy.deepcopy(cls.VALIDATION_SCHEMA)
+        schema["annotator_type"]["allowed"] = [cls.annotator_type()]
+        schema["attributes"]["schema"] = attributes_schema
 
         validator = cls.ConfigValidator(schema)
         logger.debug(f"validating position score config: {config}")
@@ -226,28 +236,9 @@ class NPScoreAnnotator(PositionScoreAnnotator):
         attributes_schema["schema"]["nucleotide_aggregator"] = \
             AGGREGATOR_SCHEMA
 
-        schema = {
-            "annotator_type": {
-                "type": "string",
-                "required": True,
-                "allowed": ["np_score"],
-            },
-            "resource_id": {
-                "type": "string",
-                "required": True,
-            },
-            "liftover_id": {
-                "type": "string",
-                "nullable": True,
-                "default": None
-            },
-            "attributes": {
-                "type": "list",
-                "nullable": True,
-                "default": None,
-                "schema": attributes_schema
-            }
-        }
+        schema = copy.deepcopy(cls.VALIDATION_SCHEMA)
+        schema["annotator_type"]["allowed"] = [cls.annotator_type()]
+        schema["attributes"]["schema"] = attributes_schema
 
         validator = cls.ConfigValidator(schema)
         logger.debug(f"validating NP score config: {config}")
@@ -294,28 +285,9 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
     def validate_config(cls, config: Dict) -> Dict:
         attributes_schema = copy.deepcopy(ATTRIBUTES_SCHEMA)
 
-        schema = {
-            "annotator_type": {
-                "type": "string",
-                "required": True,
-                "allowed": ["allele_score"],
-            },
-            "resource_id": {
-                "type": "string",
-                "required": True,
-            },
-            "liftover_id": {
-                "type": "string",
-                "nullable": True,
-                "default": None
-            },
-            "attributes": {
-                "type": "list",
-                "nullable": True,
-                "default": None,
-                "schema": attributes_schema
-            }
-        }
+        schema = copy.deepcopy(cls.VALIDATION_SCHEMA)
+        schema["annotator_type"]["allowed"] = [cls.annotator_type()]
+        schema["attributes"]["schema"] = attributes_schema
 
         validator = cls.ConfigValidator(schema)
         logger.debug(f"validating allele score config: {config}")
@@ -328,7 +300,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
 
     @staticmethod
     def annotator_type():
-        return "allele_score_annotator"
+        return "allele_score"
 
     def _do_annotate(
             self, attributes, annotatable: Annotatable, liftover_context):

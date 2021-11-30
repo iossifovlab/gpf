@@ -20,8 +20,8 @@ class LiftOverAnnotator(Annotator):
 
         self.chain = chain_resource
         self.target_genome = target_genome
-        self.liftover_id = self.config.get("liftover_id")
-        if self.liftover_id is None:
+
+        if self.id is None:
             raise ValueError(
                 f"can't create liftover annotator: {self.config}")
         self._annotation_schema = Schema()
@@ -41,11 +41,11 @@ class LiftOverAnnotator(Annotator):
                 "required": True,
                 "allowed": ["liftover_annotator"]
             },
-            "chain": {
+            "id": {
                 "type": "string",
                 "required": True,
             },
-            "liftover_id": {
+            "chain": {
                 "type": "string",
                 "required": True,
             },
@@ -121,9 +121,9 @@ class LiftOverAnnotator(Annotator):
             logger.warning(
                 f"problem in variant {allele} liftover: {ex}", exc_info=True)
 
-    def _do_annotate(self, _, annotatable: Annotatable, liftover_context):
-        assert self.liftover_id not in liftover_context, \
-            (self.liftover_id, liftover_context)
+    def _do_annotate(self, _, annotatable: Annotatable, context: Dict):
+        assert self.id not in context, \
+            (self.id, context)
         assert annotatable is not None
 
         lo_allele = self.liftover_allele(annotatable)
@@ -131,7 +131,7 @@ class LiftOverAnnotator(Annotator):
             logger.info(
                 f"unable to liftover allele: {annotatable}")
             return
-        liftover_context[self.liftover_id] = lo_allele
+        context[self.id] = lo_allele
 
     def get_annotation_config(self):
         return []

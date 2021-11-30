@@ -81,6 +81,10 @@ class EffectAnnotatorAdapter(Annotator):
                 "required": True,
                 "allowed": ["effect_annotator"]
             },
+            "id": {
+                "type": "string",
+                "required": False,
+            },
             "gene_models": {
                 "type": "string",
                 "nullable": True,
