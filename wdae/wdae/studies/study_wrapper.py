@@ -85,7 +85,6 @@ class StudyWrapperBase:
             "phenotype_browser",
             "phenotype_tool",
             "phenotype_data",
-            "common_report",
             "study_type",
             "studies",
             "has_present_in_child",
@@ -149,6 +148,8 @@ class StudyWrapperBase:
 
         result["study_types"] = result["study_type"]
         result["enrichment_tool"] = config.enrichment.enabled
+        result["common_report"] = config.common_report.to_dict()
+        del result["common_report"]["file_path"]
         result["person_set_collections"] = person_set_collection_configs
         result["name"] = result["name"] or result["id"]
 
