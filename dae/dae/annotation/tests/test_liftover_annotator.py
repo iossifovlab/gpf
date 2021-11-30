@@ -33,7 +33,7 @@ def mock_get_sequence(chrom, start, stop):
         ),
     ],
 )
-def test_lift_over(
+def test_liftover(
         mocker, chrom, pos, lift_over, expected_chrom, expected_pos):
 
     chain_resource = mocker.Mock()
@@ -43,7 +43,7 @@ def test_lift_over(
 
     config = Box({
         "annotator_type": "liftover_annotator",
-        "resource_id": "test_lifover_chain",
+        "chain": "test_lifover_chain",
         "target_genome": "test_target_genome",
         "liftover_id": "liftover_test",
         "attributes": None

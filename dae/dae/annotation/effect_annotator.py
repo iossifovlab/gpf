@@ -1,6 +1,7 @@
 import copy
 import logging
 
+from typing import Dict
 from box import Box
 
 from dae.effect_annotation.annotator import EffectAnnotator
@@ -9,7 +10,7 @@ from dae.effect_annotation.effect import AlleleEffects, AnnotationEffect
 from .schema import Schema
 from .annotatable import Annotatable, CNVAllele, VCFAllele
 
-from .annotator_base import Annotator
+from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
 
 logger = logging.getLogger(__name__)
 
@@ -72,8 +73,46 @@ class EffectAnnotatorAdapter(Annotator):
         for attr in self.attributes_list:
             attributes[attr.destination] = ""
 
-    @property
-    def annotator_type(self):
+    @classmethod
+    def validate_config(cls, config: Dict) -> Dict:
+        schema = {
+            "annotator_type": {
+                "type": "string",
+                "required": True,
+                "allowed": ["effect_annotator"]
+            },
+            "gene_models": {
+                "type": "string",
+                "nullable": True,
+                "default": None,
+            },
+            "genome": {
+                "type": "string",
+                "nullable": True,
+                "default": None,
+            },
+            "attributes": {
+                "type": "list",
+                "nullable": True,
+                "default": None,
+                "schema": ATTRIBUTES_SCHEMA
+            }
+        }
+
+        validator = cls.ConfigValidator(schema)
+        validator.allow_unknown = True
+
+        logger.debug(f"validating effect annotator config: {config}")
+        if not validator.validate(config):
+            logger.error(
+                f"wrong config format for effect annotator: "
+                f"{validator.errors}")
+            raise ValueError(
+                f"wrong effect annotator config {validator.errors}")
+        return validator.document
+
+    @staticmethod
+    def annotator_type():
         return "effect_annotator"
 
     @property

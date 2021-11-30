@@ -5,8 +5,7 @@ from box import Box
 from dae.annotation.annotator_base import Annotator
 
 from .score_annotator import PositionScoreAnnotator, \
-    NPScoreAnnotator
-from .allele_score_annotator import AlleleScoreAnnotator
+    NPScoreAnnotator, AlleleScoreAnnotator
 from .effect_annotator import EffectAnnotatorAdapter
 from .liftover_annotator import LiftOverAnnotator
 

@@ -1,19 +1,19 @@
 import logging
+import copy
 
-from typing import Optional
+from typing import Optional, Dict
 from box import Box
 
 from .schema import Schema
-from .annotatable import Annotatable
-from .annotator_base import Annotator
+from .annotatable import Annotatable, VCFAllele
+from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
 from dae.genomic_resources.score_resources import GenomicScoresResource
-
+from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
 
 logger = logging.getLogger(__name__)
 
 
 class VariantScoreAnnotatorBase(Annotator):
-
     class ScoreSource(Schema.Source):
         def __init__(
                 self, annotator_type: str, resource_id: str,
@@ -94,7 +94,7 @@ class VariantScoreAnnotatorBase(Annotator):
                 assert py_type is not None, score_config
                 score_id = attribute.source
                 source = self.ScoreSource(
-                    self.annotator_type,
+                    self.annotator_type(),
                     self.resource.resource_id,
                     score_id,
                     self.non_default_position_aggregators.get(score_id),
@@ -118,9 +118,47 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         # FIXME This should be closed somewhere
         self.resource.open()
 
-    @property
-    def annotator_type(self):
+    @staticmethod
+    def annotator_type():
         return "position_score"
+
+    @classmethod
+    def validate_config(cls, config: Dict) -> Dict:
+        attributes_schema = copy.deepcopy(ATTRIBUTES_SCHEMA)
+        attributes_schema["schema"]["position_aggregator"] = \
+            AGGREGATOR_SCHEMA
+
+        schema = {
+            "annotator_type": {
+                "type": "string",
+                "required": True,
+                "allowed": ["position_score"],
+            },
+            "resource_id": {
+                "type": "string",
+                "required": True,
+            },
+            "liftover_id": {
+                "type": "string",
+                "nullable": True,
+                "default": None
+            },
+            "attributes": {
+                "type": "list",
+                "nullable": True,
+                "default": None,
+                "schema": attributes_schema
+            }
+        }
+
+        validator = cls.ConfigValidator(schema)
+        logger.debug(f"validating position score config: {config}")
+        if not validator.validate(config):
+            logger.error(
+                f"wrong config format for position score annotator: "
+                f"{validator.errors}")
+            raise ValueError(f"wrong position score config {validator.errors}")
+        return validator.document
 
     def _fetch_substitution_scores(self, variant):
         scores = self.resource.fetch_scores(
@@ -180,8 +218,48 @@ class NPScoreAnnotator(PositionScoreAnnotator):
         super().__init__(config, resource)
         self.resource.open()
 
-    @property
-    def annotator_type(self):
+    @classmethod
+    def validate_config(cls, config: Dict) -> Dict:
+        attributes_schema = copy.deepcopy(ATTRIBUTES_SCHEMA)
+        attributes_schema["schema"]["position_aggregator"] = \
+            AGGREGATOR_SCHEMA
+        attributes_schema["schema"]["nucleotide_aggregator"] = \
+            AGGREGATOR_SCHEMA
+
+        schema = {
+            "annotator_type": {
+                "type": "string",
+                "required": True,
+                "allowed": ["np_score"],
+            },
+            "resource_id": {
+                "type": "string",
+                "required": True,
+            },
+            "liftover_id": {
+                "type": "string",
+                "nullable": True,
+                "default": None
+            },
+            "attributes": {
+                "type": "list",
+                "nullable": True,
+                "default": None,
+                "schema": attributes_schema
+            }
+        }
+
+        validator = cls.ConfigValidator(schema)
+        logger.debug(f"validating NP score config: {config}")
+        if not validator.validate(config):
+            logger.error(
+                f"wrong config format for NP score annotator: "
+                f"{validator.errors}")
+            raise ValueError(f"wrong NP score config {validator.errors}")
+        return validator.document
+
+    @staticmethod
+    def annotator_type():
         return "np_score"
 
     def _fetch_substitution_scores(self, allele):
@@ -205,3 +283,91 @@ class NPScoreAnnotator(PositionScoreAnnotator):
             for sc_name, sc_agg in scores_agg.items()
         }
         return scores
+
+
+class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
+    def __init__(self, config: Box, resource):
+        super().__init__(config, resource)
+        resource.open()
+
+    @classmethod
+    def validate_config(cls, config: Dict) -> Dict:
+        attributes_schema = copy.deepcopy(ATTRIBUTES_SCHEMA)
+
+        schema = {
+            "annotator_type": {
+                "type": "string",
+                "required": True,
+                "allowed": ["allele_score"],
+            },
+            "resource_id": {
+                "type": "string",
+                "required": True,
+            },
+            "liftover_id": {
+                "type": "string",
+                "nullable": True,
+                "default": None
+            },
+            "attributes": {
+                "type": "list",
+                "nullable": True,
+                "default": None,
+                "schema": attributes_schema
+            }
+        }
+
+        validator = cls.ConfigValidator(schema)
+        logger.debug(f"validating allele score config: {config}")
+        if not validator.validate(config):
+            logger.error(
+                f"wrong config format for allele score annotator: "
+                f"{validator.errors}")
+            raise ValueError(f"wrong allele score config {validator.errors}")
+        return validator.document
+
+    @staticmethod
+    def annotator_type():
+        return "allele_score_annotator"
+
+    def _do_annotate(
+            self, attributes, annotatable: Annotatable, liftover_context):
+
+        if not isinstance(annotatable, VCFAllele):
+            logger.info(
+                f"skip trying to add frequency for CNV variant {annotatable}")
+            self._scores_not_found(attributes)
+            return
+
+        if self.liftover_id:
+            annotatable = liftover_context.get(self.liftover_id)
+
+        if annotatable is None:
+            self._scores_not_found(attributes)
+            return
+
+        # if self.liftover and liftover_context.get(self.liftover):
+        #     allele = liftover_context.get(self.liftover)
+
+        scores_dict = self.resource.fetch_scores(
+            annotatable.chromosome,
+            annotatable.position,
+            annotatable.reference,
+            annotatable.alternative
+        )
+        if scores_dict is None:
+            self._scores_not_found(attributes)
+            return
+
+        for score_id, score_value in scores_dict.items():
+            try:
+                if score_value in ("", " "):
+                    attributes[score_id] = None
+                else:
+                    attributes[score_id] = score_value
+            except ValueError as ex:
+                logger.error(
+                    f"problem with: {score_id}: {annotatable} - {score_value}"
+                )
+                logger.error(ex)
+                raise ex

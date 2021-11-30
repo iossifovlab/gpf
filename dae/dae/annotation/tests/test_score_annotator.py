@@ -101,12 +101,12 @@ def test_position_score_annotator_indels(
     resource = anno_grdb.get_resource("hg38/TESTphastCons100way")
 
     config = Box({
-        "annotator_type": "np_score",
+        "annotator_type": "position_score",
         "resource_id": "hg38/TESTphastCons100way",
         "attributes": [{
             'source': 'phastCons100way',
             'destination': 'phastCons100way',
-            'aggregator': {'position': 'MeanAggregator'}
+            'position_aggregator': "mean"
         }]
     })
     annotator = PositionScoreAnnotator(config, resource)

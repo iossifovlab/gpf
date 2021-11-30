@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
 import logging
-import pyarrow as pa
+
+from typing import Dict
 
 from .annotatable import Annotatable, VCFAllele
 from dae.utils.variant_utils import trim_str_left, reverse_complement
 
-from .annotator_base import Annotator
+from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
 from .schema import Schema
 
 
@@ -28,9 +29,49 @@ class LiftOverAnnotator(Annotator):
         self.chain.open()
         self.target_genome.open()
 
-    @property
-    def annotator_type(self):
+    @staticmethod
+    def annotator_type():
         return "liftover_annotator"
+
+    @classmethod
+    def validate_config(cls, config: Dict) -> Dict:
+        schema = {
+            "annotator_type": {
+                "type": "string",
+                "required": True,
+                "allowed": ["liftover_annotator"]
+            },
+            "chain": {
+                "type": "string",
+                "required": True,
+            },
+            "liftover_id": {
+                "type": "string",
+                "required": True,
+            },
+            "target_genome": {
+                "type": "string",
+                "required": True,
+            },
+            "attributes": {
+                "type": "list",
+                "nullable": True,
+                "default": None,
+                "schema": ATTRIBUTES_SCHEMA
+            }
+        }
+
+        validator = cls.ConfigValidator(schema)
+        validator.allow_unknown = True
+
+        logger.debug(f"validating effect annotator config: {config}")
+        if not validator.validate(config):
+            logger.error(
+                f"wrong config format for effect annotator: "
+                f"{validator.errors}")
+            raise ValueError(
+                f"wrong effect annotator config {validator.errors}")
+        return validator.document
 
     def liftover_allele(self, allele: VCFAllele):
         if not isinstance(allele, VCFAllele):
@@ -96,5 +137,5 @@ class LiftOverAnnotator(Annotator):
         return []
 
     @property
-    def annotation_schema(self) -> pa.Schema:
+    def annotation_schema(self):
         return self._annotation_schema

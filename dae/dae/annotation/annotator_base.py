@@ -1,8 +1,9 @@
 import logging
 import abc
 
-from typing import List, Optional
+from typing import List, Optional, Dict
 from box import Box
+from cerberus.validator import Validator
 
 from .annotatable import Annotatable
 from .schema import Schema
@@ -10,11 +11,45 @@ from .schema import Schema
 logger = logging.getLogger(__name__)
 
 
+ATTRIBUTES_SCHEMA = {
+    "type": "dict",
+    "coerce": "attributes",
+    "schema": {
+        "source": {"type": "string"},
+        "destination": {"type": "string"},
+    }
+}
+
+
 class Annotator(abc.ABC):
     '''
         Annotator provides a set of attrubutes for a give Annotatable.
 
     '''
+
+    class ConfigValidator(Validator):
+
+        def _normalize_coerce_attributes(self, value):
+            if isinstance(value, str):
+                return {
+                    "source": value,
+                    "destination": value,
+                }
+            elif isinstance(value, dict):
+                if "source" in value and "destination" not in value:
+                    value["destination"] = value["source"]
+                return value
+            return value
+
+        def _normalize_coerce_score_resources(self, value):
+            print("coerce score resource", value)
+            if isinstance(value, str):
+                return {
+                    "resource_id": value,
+                    "attributes": None,
+                }
+
+            return value
 
     # def __init__(self, pipeline: AnnotationPipeine, configuation: dict):
     #    self.liftover = config.get("liftover", None)
@@ -26,7 +61,20 @@ class Annotator(abc.ABC):
     #     returns a list of the ('source', type, description)
 
     def __init__(self, config: Box):
+        self.validate_config(config)
         self.config = config
+
+    @abc.abstractclassmethod
+    def validate_config(cls, config: Dict) -> Dict:
+        """
+        Normalizes and validates the annotation configuration.
+
+        When validation passes returns the normalized and validated 
+        annotator configuration dict.
+
+        When validation fails, raises ValueError.
+        """
+        return config
 
     @property
     def output_columns(self) -> List[str]:
@@ -36,8 +84,8 @@ class Annotator(abc.ABC):
     def annotation_schema(self) -> Schema:
         pass
 
-    @abc.abstractproperty
-    def annotator_type(self) -> str:
+    @abc.abstractstaticmethod
+    def annotator_type() -> str:
         pass
 
     @abc.abstractmethod

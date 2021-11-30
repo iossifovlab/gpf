@@ -2,6 +2,10 @@ import pytest
 import textwrap
 
 from dae.annotation.annotation_pipeline import AnnotationConfigParser
+from dae.annotation.score_annotator import AlleleScoreAnnotator, \
+    NPScoreAnnotator, PositionScoreAnnotator
+from dae.annotation.effect_annotator import EffectAnnotatorAdapter
+from dae.annotation.liftover_annotator import LiftOverAnnotator
 
 
 def test_np_score_annotator_simple():
@@ -77,7 +81,9 @@ def test_np_score_annotator_without_liftover():
     assert len(pipeline_config) == 1
 
     config = pipeline_config[0]
+    config = NPScoreAnnotator.validate_config(config)
     print(config)
+
     assert config.annotator_type == "np_score"
     assert config.resource_id == "np_score1"
     assert config.liftover_id is None
@@ -102,7 +108,9 @@ def test_np_score_annotator_attributes():
     assert len(pipeline_config) == 1
 
     config = pipeline_config[0]
+    config = NPScoreAnnotator.validate_config(config)
     print(config)
+
     assert config["annotator_type"] == "np_score"
     assert config.annotator_type == "np_score"
 
@@ -136,7 +144,9 @@ def test_np_score_annotator_attributes_short():
     )
 
     config = pipeline_config[0]
+    config = NPScoreAnnotator.validate_config(config)
     print(config)
+
     assert config["annotator_type"] == "np_score"
     assert config.annotator_type == "np_score"
 
@@ -173,6 +183,8 @@ def test_np_score_annotator_attributes_sources_only():
     assert len(pipeline_config) == 1
 
     config = pipeline_config[0]
+    config = NPScoreAnnotator.validate_config(config)
+
     attributes = config.attributes
     assert len(attributes) == 3
 
@@ -236,7 +248,7 @@ def test_np_score_annotator_attributes_without_aggr():
 
 def test_position_score_annotator_attributes_with_aggr_fails():
     with pytest.raises(ValueError) as ex_info:
-        AnnotationConfigParser.parse(
+        pipeline_config = AnnotationConfigParser.parse(
             textwrap.dedent("""
                 - position_score:
                     resource_id: hg38/TESTCADD
@@ -247,6 +259,8 @@ def test_position_score_annotator_attributes_with_aggr_fails():
                       nucleotide_aggregator: mean
             """)
         )
+        config = pipeline_config[0]
+        PositionScoreAnnotator.validate_config(config)
 
     assert "nucleotide_aggregator" in str(ex_info.value)
 
@@ -264,6 +278,7 @@ def test_position_score_annotator_attributes_with_aggr():
     )
 
     config = pipeline_config[0]
+    config = PositionScoreAnnotator.validate_config(config)
     assert config.annotator_type == "position_score"
 
     attributes = config.attributes
@@ -276,7 +291,7 @@ def test_position_score_annotator_attributes_with_aggr():
 
 def test_allele_score_annotator_attributes_with_aggr_fails():
     with pytest.raises(ValueError) as ex_info:
-        AnnotationConfigParser.parse(
+        pipeline_config = AnnotationConfigParser.parse(
             textwrap.dedent("""
             - allele_score:
                 resource_id: hg38/TESTCADD
@@ -287,6 +302,7 @@ def test_allele_score_annotator_attributes_with_aggr_fails():
                 nucleotide_aggregator: mean
                 """)
         )
+        AlleleScoreAnnotator.validate_config(pipeline_config[0])
 
     assert "nucleotide_aggregator" in str(ex_info.value)
     assert "position_aggregator" in str(ex_info.value)
@@ -324,7 +340,7 @@ def test_allele_score_annotator_attributes_short():
         """)
     )
 
-    config = pipeline_config[0]
+    config = AlleleScoreAnnotator.validate_config(pipeline_config[0])
     assert config.annotator_type == "allele_score"
     attributes = config.attributes
     assert len(attributes) == 2
@@ -343,7 +359,7 @@ def test_allele_score_annotator_short_attributes_none():
         """)
     )
 
-    config = pipeline_config[0]
+    config = AlleleScoreAnnotator.validate_config(pipeline_config[0])
     assert config.annotator_type == "allele_score"
     assert config.attributes is None
 
@@ -356,7 +372,7 @@ def test_allele_score_annotator_no_attributes():
         """)
     )
 
-    config = pipeline_config[0]
+    config = AlleleScoreAnnotator.validate_config(pipeline_config[0])
     assert config.attributes is None
 
 
@@ -372,7 +388,7 @@ def test_effect_annotator():
         """)
     )
 
-    config = pipeline_config[0]
+    config = EffectAnnotatorAdapter.validate_config(pipeline_config[0])
     assert config.annotator_type == "effect_annotator"
 
     assert config.genome == "hg38/GRCh38-hg38/genome"
@@ -395,7 +411,7 @@ def test_effect_annotator_extra():
         """)
     )
 
-    config = pipeline_config[0]
+    config = EffectAnnotatorAdapter.validate_config(pipeline_config[0])
     assert config.annotator_type == "effect_annotator"
 
     assert config.promoter_len == 100
@@ -408,7 +424,7 @@ def test_effect_annotator_minimal():
         """)
     )
 
-    config = pipeline_config[0]
+    config = EffectAnnotatorAdapter.validate_config(pipeline_config[0])
     assert config.annotator_type == "effect_annotator"
 
     assert config.gene_models is None
@@ -426,7 +442,7 @@ def test_liftover_annotator():
         """)
     )
 
-    config = pipeline_config[0]
+    config = LiftOverAnnotator.validate_config(pipeline_config[0])
     assert config.annotator_type == "liftover_annotator"
 
     assert config.chain == "hg38/hg38tohg19"
