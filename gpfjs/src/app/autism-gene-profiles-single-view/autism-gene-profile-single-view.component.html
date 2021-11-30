@@ -20,7 +20,7 @@
       class="table table-bordered table-centered genomic-scores-table">
       <th [attr.colspan]="2" style="text-align: center">{{ genomicScoreCategory.displayName }}</th>
       <tr *ngFor="let score of genomicScoreCategory.scores" class="card-block">
-        <td style="vertical-align: middle">{{ score.scoreName }}</td>
+        <td style="vertical-align: middle; text-align: center; width: 155px;">{{ score.scoreName }}</td>
         <ng-container *ngIf="genomicScoresGeneWeights.length === gene.genomicScores.length">
           <td>
             <gpf-histogram
@@ -57,8 +57,8 @@
       class="table table-bordered table-centered gene-sets-table">
       <th [attr.colspan]="2" style="text-align: center">{{ geneSetCategory.displayName }}</th>
       <tr *ngFor="let set of geneSetCategory.sets" class="card-block">
-        <td>{{ set.setId }}</td>
-        <td style="text-align: center">
+        <td style="max-width: 665px; overflow: hidden; white-space: nowrap" [attr.title]="set.setId">{{ set.setId }}</td>
+        <td style="text-align: center; width: 55px">
           <span style="font-size: 20px;" *ngIf="gene.geneSets.indexOf(set.collectionId + '_' + set.setId) !== -1">&#10003;</span>
           <span style="font-size: 12px; opacity: 75%" *ngIf="gene.geneSets.indexOf(set.collectionId + '_' + set.setId) === -1">&#10005;</span>
         </td>
@@ -66,7 +66,7 @@
     </table>
   </div>
 
-  <div class="wrapper">
+  <!-- <div class="wrapper">
     <ng-container *ngFor="let dataset of config.datasets">
       <table class="table table-bordered table-centered datasets-table">
         <thead>
@@ -105,5 +105,5 @@
         </tbody>
       </table>
     </ng-container>
-  </div>
+  </div> -->
 </div>

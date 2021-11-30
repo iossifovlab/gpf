@@ -1,5 +1,6 @@
 table {
-  max-width: 750px;
+  width: 720px;
+  max-width: 720px;
   margin-right: 15px;
   margin-bottom: 15px;
 }
