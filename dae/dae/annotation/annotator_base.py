@@ -77,10 +77,6 @@ class Annotator(abc.ABC):
         """
         return []
 
-    @property
-    def output_columns(self) -> List[str]:
-        return self.annotation_schema.names
-
     @abc.abstractproperty
     def annotation_schema(self) -> Schema:
         pass

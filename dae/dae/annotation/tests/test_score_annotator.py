@@ -83,18 +83,6 @@ def test_np_score_annotator_schema(anno_grdb):
     print(dir(schema))
 
 
-def test_np_score_annotator_output_columns(anno_grdb):
-    resource = anno_grdb.get_resource("hg38/TESTCADD")
-    config = Box({
-        "annotator_type": "np_score",
-        "resource_id": "hg38/TESTCADD"
-    })
-    annotator = NPScoreAnnotator(config, resource)
-
-    output_columns = annotator.output_columns
-    assert output_columns == ["cadd_raw", "cadd_phred"]
-
-
 def test_position_score_annotator_indels(
         phastcons100way_indel_variants_expected,
         anno_grdb):

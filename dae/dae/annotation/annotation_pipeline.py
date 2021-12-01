@@ -100,82 +100,7 @@ class AnnotationPipeline():
             grr_repository_file: str = None,
             grr_repository_definition: str = None,
             context: AnnotationPipelineContext = None) -> "AnnotationPipeline":
-        '''
-            - np_score: <resource id>
 
-            [ {"np_score":<resource id>} ]
-
-            OR
-
-            - np_score:
-                resource_id: 7
-
-            [ {"np_score":{"resource_id":7}} ]
-
-            OR
-
-            - np_score: <resource id1>
-            - np_score: <resource id2>
-
-            [ {"np_score":<resource id1>},
-              {"np_score":<resource id2>} ]
-
-            OR
-
-            - np_score:
-                resource_id: 7
-                lift_over_id: bla
-            - position_score:
-                resource_id: 9
-                attributes:
-                    - a
-                    - b
-
-            [ {
-                "np_score": {
-                   "resource_id":7,
-                   "lift_over_id": "bla" },
-              },
-              {
-                "position_score": {
-                    "resrouce_id": 9,
-                    "attributes": ['a', 'b']
-                }
-              }
-            ]
-
-
-            Pipeline_config is a list. Each element is either a dict or a
-            string.
-            If it is a string, it specifies the annotator type with and empty
-            configuration. If it is a dict, the dict must have only
-            one entry. The key of that entry is the annotator type. The value
-            of that entry is configuration for the annotator.
-
-
-
-            It is a list of dictionaries.
-            * Each dictionary has a filed 'annotator_type' whose value is a
-              string.
-            * Each dictionary may have have and annotoror_id, which if missinng
-              will be set to the index of annotator.
-
-            * Each dictionary can have a filed 'attributes' filed whose value
-              is a list of dictionaries. These dictionaries have the following
-              fields:
-                source
-                destination
-                internal: boolean
-                attribute_configuration_parameter_1
-                attribute_configuration_parameter_...
-              If 'attributes' is missing (or empty???) the Annotator should
-              use its default attributes configuration.
-
-            The additional parameters
-            configure the annotator.
-
-
-        '''
         if pipeline_config_file is not None:
             assert pipeline_config is None
             assert pipeline_config_str is None
@@ -200,11 +125,6 @@ class AnnotationPipeline():
             pipeline_config, grr_repository, context)
 
         return pipeline
-
-    @property
-    def output_columns(self):
-        return chain(
-            annotator.output_columns for annotator in self.annotators)
 
     @property
     def annotation_schema(self) -> Schema:
