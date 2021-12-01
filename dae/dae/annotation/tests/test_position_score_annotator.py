@@ -4,7 +4,7 @@ import textwrap
 from dae.annotation.annotatable import VCFAllele
 from dae.genomic_resources import build_genomic_resource_repository
 
-from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
 @pytest.fixture
@@ -79,7 +79,7 @@ def test_position_score_annotator_all_attributes(position_score_repo):
                   position_aggregator: max
             """)
 
-    pipeline = AnnotationPipeline.build(
+    pipeline = build_annotation_pipeline(
         pipeline_config_str=pipeline_config,
         grr_repository=position_score_repo)
 
@@ -137,7 +137,7 @@ def test_position_score_annotator(
                   position_aggregator: {pos_aggregator}
             """)
 
-    pipeline = AnnotationPipeline.build(
+    pipeline = build_annotation_pipeline(
         pipeline_config_str=pipeline_config,
         grr_repository=position_score_repo)
 
@@ -162,7 +162,7 @@ def test_position_annotator_schema(position_score_repo):
                   destination: test100
             """)
 
-    pipeline = AnnotationPipeline.build(
+    pipeline = build_annotation_pipeline(
         pipeline_config_str=pipeline_config,
         grr_repository=position_score_repo)
     schema = pipeline.annotation_schema
@@ -183,7 +183,7 @@ def test_position_default_annotator_schema(position_score_repo):
                 resource_id: position_score1
             """)
 
-    pipeline = AnnotationPipeline.build(
+    pipeline = build_annotation_pipeline(
         pipeline_config_str=pipeline_config,
         grr_repository=position_score_repo)
     assert len(pipeline.annotation_schema) == 3
@@ -211,7 +211,7 @@ def test_position_annotator_schema_one_source_two_dest(position_score_repo):
                   position_aggregator: max
             """)
 
-    pipeline = AnnotationPipeline.build(
+    pipeline = build_annotation_pipeline(
         pipeline_config_str=pipeline_config,
         grr_repository=position_score_repo)
     schema = pipeline.annotation_schema
@@ -245,7 +245,7 @@ def test_position_annotator_join_aggregation(position_score_repo):
             """)
     print(pipeline_config)
 
-    pipeline = AnnotationPipeline.build(
+    pipeline = build_annotation_pipeline(
       pipeline_config_str=pipeline_config,
       grr_repository=position_score_repo)
 

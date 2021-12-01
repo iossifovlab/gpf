@@ -4,7 +4,7 @@ import textwrap
 from dae.genomic_resources import build_genomic_resource_repository
 
 from dae.annotation.annotatable import VCFAllele
-from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
 #  hg19
@@ -77,8 +77,7 @@ def test_np_score_annotator(
               nucleotide_aggregator: {nuc_aggregator}
         """)
 
-
-    pipeline = AnnotationPipeline.build(
+    pipeline = build_annotation_pipeline(
         pipeline_config_str=pipeline_config, grr_repository=repo)
 
     # pipeline.get_schema -> ["attribute", "type", "resource", "scores"]

@@ -1,6 +1,6 @@
 import argparse
 import sys
-from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import AnnotationPipelineContext
 
 from dae.annotation.effect_annotator import EffectAnnotatorAdapter
@@ -94,7 +94,7 @@ class Context(AnnotationPipelineContext):
             else:
                 self.user_message(1, "Using the annotation pipeline from "
                                   f"the file {self.args.pipeline}.")
-                self._pipeline = AnnotationPipeline.build(
+                self._pipeline = build_annotation_pipeline(
                     pipeline_config_file=self.args.pipeline,
                     grr_repository=self.get_grr())
         return self._pipeline

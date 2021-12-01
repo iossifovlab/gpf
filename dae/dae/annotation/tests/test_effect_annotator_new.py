@@ -3,10 +3,10 @@ import os
 import copy
 
 from box import Box
+from dae.annotation.annotation_factory import \
+    build_effect_annotator, build_annotation_pipeline
 
 from dae.effect_annotation.effect import AlleleEffects
-from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.annotation.annotator_factory import AnnotatorFactory
 
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -46,7 +46,11 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
     )
     assert denovo_loader is not None
 
-    pipeline = AnnotationPipeline([], anno_grdb, None)
+    pipeline = build_annotation_pipeline(
+        pipeline_config=[],
+        grr_repository=anno_grdb,
+        context=None)
+
     config = Box({
         "annotator_type": "effect_annotator",
         "genome": genome_id,
@@ -54,7 +58,7 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
         "attributes": None,
     })
 
-    effect_annotator = AnnotatorFactory.build(pipeline, config)
+    effect_annotator = build_effect_annotator(pipeline, config)
 
     variants = list(denovo_loader.full_variants_iterator())
     for sv, fvs in variants:
@@ -101,7 +105,11 @@ def test_effect_annotation_schema(anno_grdb):
     assert gene_models is not None
     assert isinstance(gene_models, GeneModelsResource)
 
-    pipeline = AnnotationPipeline([], anno_grdb, None)
+    pipeline = build_annotation_pipeline(
+        pipeline_config=[],
+        grr_repository=anno_grdb,
+        context=None)
+
     config = Box({
         "annotator_type": "effect_annotator",
         "genome": genome.resource_id,
@@ -109,7 +117,7 @@ def test_effect_annotation_schema(anno_grdb):
         "attributes": None,
     })
 
-    effect_annotator = AnnotatorFactory.build(pipeline, config)
+    effect_annotator = build_effect_annotator(pipeline, config)
 
     schema = effect_annotator.annotation_schema
     assert schema is not None

@@ -1,7 +1,7 @@
 import pytest
 from box import Box
 
-from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.variants.core import Allele
 from dae.annotation.liftover_annotator import LiftOverAnnotator
 
@@ -75,7 +75,7 @@ def test_liftover(
 def test_pipeline_liftover(
         annotation_config, anno_grdb):
 
-    pipeline = AnnotationPipeline.build(
+    pipeline = build_annotation_pipeline(
         pipeline_config_file=annotation_config, grr_repository=anno_grdb
     )
     allele = Allele.build_vcf_allele("chr1", 69094, "G", "A")

@@ -7,6 +7,8 @@ from box import Box
 from .schema import Schema
 from .annotatable import Annotatable, VCFAllele
 from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
+from .annotation_pipeline import AnnotationPipeline
+
 from dae.genomic_resources.score_resources import GenomicScoresResource
 from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
 
@@ -147,6 +149,26 @@ class VariantScoreAnnotatorBase(Annotator):
         attributes.update(values)
 
 
+def build_position_score_annotator(pipeline: AnnotationPipeline, config: Dict):
+    config = PositionScoreAnnotator.validate_config(config)
+
+    if config.get("annotator_type") != "position_score":
+        logger.error(
+            f"wrong usage of build_position_score_annotator with an "
+            f"annotator config: {config}")
+        raise ValueError(f"wrong annotator type: {config}")
+
+    resource_id = config.get("resource_id")
+    resource = pipeline.repository.get_resource(resource_id)
+    if resource is None:
+        logger.error(
+            f"can't find resource {resource_id} in "
+            f"genomic resource repository {pipeline.repository.repo_id}")
+        raise ValueError(f"can't find resource {resource_id}")
+
+    return PositionScoreAnnotator(config, resource)
+
+
 class PositionScoreAnnotator(VariantScoreAnnotatorBase):
     def __init__(self, config: Box, resource):
         super().__init__(config, resource)
@@ -239,6 +261,26 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         return attributes
 
 
+def build_np_score_annotator(pipeline: AnnotationPipeline, config: Dict):
+    config = NPScoreAnnotator.validate_config(config)
+
+    if config.get("annotator_type") != "np_score":
+        logger.error(
+            f"wrong usage of build_np_score_annotator with an "
+            f"annotator config: {config}")
+        raise ValueError(f"wrong annotator type: {config}")
+
+    resource_id = config.get("resource_id")
+    resource = pipeline.repository.get_resource(resource_id)
+    if resource is None:
+        logger.error(
+            f"can't find resource {resource_id} in "
+            f"genomic resource repository {pipeline.repository.repo_id}")
+        raise ValueError(f"can't find resource {resource_id}")
+
+    return NPScoreAnnotator(config, resource)
+
+
 class NPScoreAnnotator(PositionScoreAnnotator):
     def __init__(self, config: Box, resource):
         super().__init__(config, resource)
@@ -263,23 +305,6 @@ class NPScoreAnnotator(PositionScoreAnnotator):
                 f"wrong config format for NP score annotator: "
                 f"{validator.errors}")
             raise ValueError(f"wrong NP score config {validator.errors}")
-
-        result = validator.document
-        if result.attributes:
-            if any(["nucleotide_aggregator" in attr
-                    for attr in result.attributes]):
-                logger.error(
-                    f"nucleotide aggregator found in position score config: "
-                    f"{result}")
-                raise ValueError(
-                    "nucleotide_aggregator is not allowed in position score")
-            if any(["position_aggregator" in attr
-                    for attr in result.attributes]):
-                logger.error(
-                    f"position aggregator found in position score config: "
-                    f"{result}")
-                raise ValueError(
-                    "position_aggregator is not allowed in position score")
 
         return validator.document
 
@@ -310,6 +335,26 @@ class NPScoreAnnotator(PositionScoreAnnotator):
         return scores
 
 
+def build_allele_score_annotator(pipeline: AnnotationPipeline, config: Dict):
+    config = AlleleScoreAnnotator.validate_config(config)
+
+    if config.get("annotator_type") != "allele_score":
+        logger.error(
+            f"wrong usage of build_allele_score_annotator with an "
+            f"annotator config: {config}")
+        raise ValueError(f"wrong annotator type: {config}")
+
+    resource_id = config.get("resource_id")
+    resource = pipeline.repository.get_resource(resource_id)
+    if resource is None:
+        logger.error(
+            f"can't find resource {resource_id} in "
+            f"genomic resource repository {pipeline.repository.repo_id}")
+        raise ValueError(f"can't find resource {resource_id}")
+
+    return AlleleScoreAnnotator(config, resource)
+
+
 class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
     def __init__(self, config: Box, resource):
         super().__init__(config, resource)
@@ -330,7 +375,25 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
                 f"wrong config format for allele score annotator: "
                 f"{validator.errors}")
             raise ValueError(f"wrong allele score config {validator.errors}")
-        return validator.document
+
+        result = validator.document
+        if result.attributes:
+            if any(["nucleotide_aggregator" in attr
+                    for attr in result.attributes]):
+                logger.error(
+                    f"nucleotide aggregator found in position score config: "
+                    f"{result}")
+                raise ValueError(
+                    "nucleotide_aggregator is not allowed in position score")
+            if any(["position_aggregator" in attr
+                    for attr in result.attributes]):
+                logger.error(
+                    f"position aggregator found in position score config: "
+                    f"{result}")
+                raise ValueError(
+                    "position_aggregator is not allowed in position score")
+
+        return result
 
     @staticmethod
     def annotator_type():

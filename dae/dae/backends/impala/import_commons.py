@@ -16,7 +16,7 @@ from collections import defaultdict
 
 from jinja2 import Template
 
-from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.effect_annotator import EffectAnnotatorAdapter
 
 from dae.gpf_instance.gpf_instance import GPFInstance
@@ -79,7 +79,7 @@ def construct_import_annotation_pipeline(
 
     grr = gpf_instance.grr
     assert os.path.exists(config_filename), config_filename
-    return AnnotationPipeline.build(
+    return build_annotation_pipeline(
         pipeline_config_file=config_filename, grr_repository=grr)
 
 

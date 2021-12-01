@@ -1,6 +1,6 @@
 from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
 def test_basic():
@@ -27,7 +27,7 @@ def test_basic():
     - position_score:
         resource_id: one
     """
-    ann_pipe = AnnotationPipeline.build(
+    ann_pipe = build_annotation_pipeline(
         pipeline_config_str=annotation_cofiguration,
         grr_repository=grr_repo,
         context=None)

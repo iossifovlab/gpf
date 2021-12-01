@@ -17,7 +17,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance, cached
 from dae.configuration.gpf_config_parser import GPFConfigParser, FrozenBox
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 
-from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_factory import build_annotation_pipeline
 
 from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.variants.family_variant import FamilyVariant
@@ -296,7 +296,7 @@ def annotation_pipeline_vcf(gpf_instance_2013):
     filename = relative_to_this_test_folder(
         "fixtures/annotation_pipeline/import_annotation.yaml"
     )
-    pipeline = AnnotationPipeline.build(
+    pipeline = build_annotation_pipeline(
         pipeline_config_file=filename, grr_repository=gpf_instance_2013.grr)
     return pipeline
 
@@ -306,7 +306,7 @@ def annotation_pipeline_internal(gpf_instance_2013):
     filename = relative_to_this_test_folder(
         "fixtures/annotation_pipeline/import_annotation.yaml"
     )
-    pipeline = AnnotationPipeline.build(
+    pipeline = build_annotation_pipeline(
         pipeline_config_file=filename, grr_repository=gpf_instance_2013.grr)
     return pipeline
 

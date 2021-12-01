@@ -14,6 +14,27 @@ from .schema import Schema
 logger = logging.getLogger(__name__)
 
 
+def build_liftover_annotator(pipeline, config):
+    config = LiftOverAnnotator.validate_config(config)
+
+    assert config.annotator_type == "liftover_annotator"
+
+    chain = pipeline.repository.get_resource(config.chain)
+    if chain is None:
+        raise ValueError(
+            f"can't create liftover annotator; "
+            f"can't find liftover chain {config.chain}")
+
+    target_genome = pipeline.repository.get_resource(config.target_genome)
+    if target_genome is None:
+        raise ValueError(
+            f"can't create liftover annotator; "
+            f"can't find liftover target genome: "
+            f"{config.target_genome}")
+
+    return LiftOverAnnotator(config, chain, target_genome)
+
+
 class LiftOverAnnotator(Annotator):
 
     def __init__(self, config, chain_resource, target_genome):

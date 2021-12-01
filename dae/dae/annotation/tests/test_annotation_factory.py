@@ -3,8 +3,8 @@ from box import Box
 from dae.annotation.annotation_context import AnnotationPipelineContext
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRealRepo
-from dae.annotation.annotator_factory import AnnotatorFactory
-from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_factory import build_annotation_pipeline, \
+    build_np_score_annotator
 
 
 @pytest.fixture(scope="session")
@@ -47,7 +47,11 @@ def grr_np_score1() -> GenomicResourceRealRepo:
 
 @pytest.fixture(scope="session")
 def annotation_pipeline1(grr_np_score1, empty_context):
-    pipeline = AnnotationPipeline([], grr_np_score1, empty_context)
+    pipeline = build_annotation_pipeline(
+        pipeline_config=[],
+        grr_repository=grr_np_score1,
+        context=empty_context)
+
     return pipeline
 
 
@@ -63,5 +67,5 @@ def test_annotation_factory_np_score(annotation_pipeline1):
         ],
     })
 
-    annotator = AnnotatorFactory.build(annotation_pipeline1, config)
+    annotator = build_np_score_annotator(annotation_pipeline1, config)
     assert annotator is not None

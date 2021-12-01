@@ -1,10 +1,10 @@
-from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
 def test_build_pipeline(
         annotation_config, anno_grdb):
 
-    pipeline = AnnotationPipeline.build(
+    pipeline = build_annotation_pipeline(
         pipeline_config_file=annotation_config, grr_repository=anno_grdb
     )
     assert len(pipeline.annotators) == 5
@@ -13,7 +13,7 @@ def test_build_pipeline(
 def test_build_pipeline_schema(
         annotation_config, anno_grdb):
 
-    pipeline = AnnotationPipeline.build(
+    pipeline = build_annotation_pipeline(
         pipeline_config_file=annotation_config, grr_repository=anno_grdb
     )
 

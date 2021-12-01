@@ -15,6 +15,52 @@ from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
 logger = logging.getLogger(__name__)
 
 
+def build_effect_annotator(pipeline, config):
+    config = EffectAnnotatorAdapter.validate_config(config)
+
+    if config.get("annotator_type") != "effect_annotator":
+        logger.error(
+            f"wrong usage of build_effect_annotator with an "
+            f"annotator config: {config}")
+        raise ValueError(f"wrong annotator type: {config}")
+
+    if config.get("genome") is None:
+        genome = pipeline.context.get_reference_genome()
+        if genome is None:
+            logger.error(
+                "can't create effect annotator: config has no "
+                "reference genome specified and genome is missing "
+                "in the context")
+            raise ValueError(
+                "can't create effect annotator: "
+                "genome is missing in config and context")
+    else:
+        genome_id = config.get("genome")
+        genome = pipeline.repository.get_resource(genome_id)
+        if genome is None:
+            logger.error(
+                f"can't find reference genome {genome_id} in genomic "
+                f"resources repository {pipeline.repository.repo_id}")
+            raise ValueError(f"can't find genome {genome_id}")
+
+    if config.get("gene_models") is None:
+        gene_models = pipeline.context.get_gene_models()
+        if gene_models is None:
+            raise ValueError(
+                "can't create effect annotator: "
+                "gene models are missing in config and context")
+    else:
+        gene_models_id = config.get("gene_models")
+        gene_models = pipeline.repository.get_resource(gene_models_id)
+        if gene_models is None:
+            raise ValueError(
+                f"can't find gene models {gene_models_id} "
+                f"in the specified repository "
+                f"{pipeline.repository.repo_id}")
+
+    return EffectAnnotatorAdapter(config, genome, gene_models)
+
+
 class EffectAnnotatorAdapter(Annotator):
 
     class EffectSource(Schema.Source):

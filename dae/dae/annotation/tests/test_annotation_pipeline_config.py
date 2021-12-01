@@ -1,7 +1,7 @@
 import pytest
 import textwrap
 
-from dae.annotation.annotation_pipeline import AnnotationConfigParser
+from dae.annotation.annotation_factory import AnnotationConfigParser
 from dae.annotation.score_annotator import AlleleScoreAnnotator, \
     NPScoreAnnotator, PositionScoreAnnotator
 from dae.annotation.effect_annotator import EffectAnnotatorAdapter

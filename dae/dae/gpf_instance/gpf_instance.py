@@ -29,9 +29,8 @@ from dae.configuration.schemas.autism_gene_profile import (
     autism_gene_tool_config
 )
 from dae.autism_gene_profile.db import AutismGeneProfileDB
-from dae.autism_gene_profile.statistic import AGPStatistic
 from dae.genomic_resources import build_genomic_resource_repository
-from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_factory import build_annotation_pipeline
 
 from dae.utils.helpers import isnan
 from dae.utils.dae_utils import cached, join_line
@@ -539,7 +538,8 @@ class GPFInstance(object):
         if self._annotation_pipeline is None:
 
             if self.dae_config.annotation is None:
-                self._annotation_pipeline = AnnotationPipeline({}, self.grr)
+                self._annotation_pipeline = build_annotation_pipeline(
+                    [], grr_repository=self.grr)
                 # TODO: write a test to check that this (or the correct
                 # version) works.
             config_filename = self.dae_config.annotation.conf_file
@@ -548,6 +548,7 @@ class GPFInstance(object):
                     f"missing annotation configuration: {config_filename}")
                 return None
             self._annotation_pipeline = \
-                AnnotationPipeline.build(pipeline_config_file=config_filename,
-                                         grr_repository=self.grr)
+                build_annotation_pipeline(
+                    pipeline_config_file=config_filename,
+                    grr_repository=self.grr)
         return self._annotation_pipeline
