@@ -458,3 +458,35 @@ def test_empty_config():
     )
 
     assert len(pipeline_config) == 0
+
+
+def test_effect_annotator_extra_attributes():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+        - effect_annotator:
+            gene_models: hg38/GRCh38-hg38/gene_models/refSeq_20200330
+            genome: hg38/GRCh38-hg38/genome
+            promoter_len: 100
+            attributes:
+            - source: genes
+              destination: list_of_genes
+              format: list
+              internal: yes
+            - source: genes
+              format: str
+            - source: genes_LGD
+            - source: genes_missense
+        """)
+    )
+
+    config = EffectAnnotatorAdapter.validate_config(pipeline_config[0])
+    assert config.annotator_type == "effect_annotator"
+
+    assert config.promoter_len == 100
+
+    attributes = config.get("attributes")
+    assert len(attributes) == 4
+
+    attr_2 = attributes[2]
+    assert attr_2.get("source") == "genes_LGD"
+    assert attr_2.get("destination") == "genes_LGD"
