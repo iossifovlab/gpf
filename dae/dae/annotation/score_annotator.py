@@ -174,7 +174,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
                 f"wrong config format for position score annotator: "
                 f"{validator.errors}")
             raise ValueError(f"wrong position score config {validator.errors}")
-        
+
         result = validator.document
         if result.attributes and any([
                 "nucleotide_aggregator" in attr
@@ -263,6 +263,24 @@ class NPScoreAnnotator(PositionScoreAnnotator):
                 f"wrong config format for NP score annotator: "
                 f"{validator.errors}")
             raise ValueError(f"wrong NP score config {validator.errors}")
+
+        result = validator.document
+        if result.attributes:
+            if any(["nucleotide_aggregator" in attr
+                    for attr in result.attributes]):
+                logger.error(
+                    f"nucleotide aggregator found in position score config: "
+                    f"{result}")
+                raise ValueError(
+                    "nucleotide_aggregator is not allowed in position score")
+            if any(["position_aggregator" in attr
+                    for attr in result.attributes]):
+                logger.error(
+                    f"position aggregator found in position score config: "
+                    f"{result}")
+                raise ValueError(
+                    "position_aggregator is not allowed in position score")
+
         return validator.document
 
     @staticmethod

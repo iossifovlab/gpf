@@ -1,10 +1,8 @@
-#!/usr/bin/env python
 from __future__ import annotations
 
 import logging
 import yaml
 
-from itertools import chain
 from typing import Dict, List
 
 from box import Box
