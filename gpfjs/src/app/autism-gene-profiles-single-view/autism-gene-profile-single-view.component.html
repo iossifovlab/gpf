@@ -20,7 +20,9 @@
       class="table table-bordered table-centered genomic-scores-table">
       <th [attr.colspan]="2" style="text-align: center">{{ genomicScoreCategory.displayName }}</th>
       <tr *ngFor="let score of genomicScoreCategory.scores" class="card-block">
-        <td style="height: 135px; max-height: 135px; width: 135px; max-width: 135px; white-space: nowrap; text-align: center;" [attr.title]="score.scoreName">{{ score.scoreName }}</td>
+        <td
+          style="height: 135px; max-height: 135px; width: 135px; max-width: 135px; overflow-wrap: break-word"
+          [attr.title]="score.scoreName">{{ score.scoreName }}</td>
         <ng-container *ngIf="genomicScoresGeneWeights.length === gene.genomicScores.length">
           <td>
             <gpf-histogram
