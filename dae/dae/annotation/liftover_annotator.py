@@ -1,4 +1,5 @@
 import logging
+import copy
 
 from typing import Dict, List
 from box import Box
@@ -15,25 +16,12 @@ logger = logging.getLogger(__name__)
 
 class LiftOverAnnotator(Annotator):
 
-    DEFAULT_ANNOTATION = Box({
-        "attributes": [
-            {
-                "source": "allele",
-                "destination": "allele",
-                "internal": True,
-            },
-        ]
-    })
-
     def __init__(self, config, chain_resource, target_genome):
         super().__init__(config)
 
         self.chain = chain_resource
         self.target_genome = target_genome
 
-        if self.id is None:
-            raise ValueError(
-                f"can't create liftover annotator: {self.config}")
         # TODO do somewhere else
         self.chain.open()
         self.target_genome.open()
@@ -43,12 +31,22 @@ class LiftOverAnnotator(Annotator):
     def annotator_type():
         return "liftover_annotator"
 
+    DEFAULT_ANNOTATION = Box({
+        "attributes": [
+            {
+                "source": "liftover_annotatable",
+                "destination": "liftover_annotatable",
+                "internal": True,
+            },
+        ]
+    })
+
     def get_all_annotation_attributes(self) -> List[Dict]:
         return [
             {
-                "source": "allele",
+                "source": "liftover_annotatable",
                 "type": "object",
-                "desc": "liftover allele"
+                "desc": "liftover annotatable"
             }
         ]
 
@@ -60,9 +58,10 @@ class LiftOverAnnotator(Annotator):
                 "required": True,
                 "allowed": ["liftover_annotator"]
             },
-            "id": {
+            "input_annotatable": {
                 "type": "string",
-                "required": True,
+                "nullable": True,
+                "default": None,
             },
             "chain": {
                 "type": "string",
@@ -99,8 +98,16 @@ class LiftOverAnnotator(Annotator):
 
         return self._annotation_schema
 
-    def get_annotation_config(self):
-        return []
+    def get_annotation_config(self) -> List[Dict]:
+        attributes = self.config.get("attributes")
+        if attributes:
+            return attributes
+        attributes = copy.deepcopy(self.DEFAULT_ANNOTATION.attributes)
+        logger.info(
+            f"using default annotation for liftover "
+            f"{self.config.get('chain')}: "
+            f"{attributes}")
+        return attributes
 
     def liftover_allele(self, allele: VCFAllele):
         if not isinstance(allele, VCFAllele):
@@ -150,16 +157,13 @@ class LiftOverAnnotator(Annotator):
             logger.warning(
                 f"problem in variant {allele} liftover: {ex}", exc_info=True)
 
-    def _do_annotate(self, annotatable: Annotatable, context: Dict):
-        assert self.id not in context, \
-            (self.id, context)
+    def _do_annotate(self, annotatable: Annotatable, _context: Dict):
         assert annotatable is not None
 
         lo_allele = self.liftover_allele(annotatable)
         if lo_allele is None:
             logger.info(
                 f"unable to liftover allele: {annotatable}")
-            return
-        context[self.id] = lo_allele
+            return {}
 
-        return {}
+        return {"liftover_annotatable": lo_allele}

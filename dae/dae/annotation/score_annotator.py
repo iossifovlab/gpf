@@ -21,18 +21,14 @@ class VariantScoreAnnotatorBase(Annotator):
             "required": True,
             "allowed": ["position_score", "np_score", "allele_score"],
         },
-        "id": {
+        "input_annotatable": {
             "type": "string",
-            "required": False,
+            "nullable": True,
+            "default": None,
         },
         "resource_id": {
             "type": "string",
             "required": True,
-        },
-        "liftover_id": {
-            "type": "string",
-            "nullable": True,
-            "default": None
         },
         "attributes": {
             "type": "list",
@@ -178,6 +174,16 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
                 f"wrong config format for position score annotator: "
                 f"{validator.errors}")
             raise ValueError(f"wrong position score config {validator.errors}")
+        
+        result = validator.document
+        if result.attributes and any([
+                "nucleotide_aggregator" in attr
+                for attr in result.attributes]):
+            logger.error(
+                f"nucleotide aggregator found in position score config: "
+                f"{result}")
+            raise ValueError(
+                "nucleotide_aggregator is not allowed in position score")
         return validator.document
 
     def _fetch_substitution_scores(self, variant):
@@ -202,10 +208,8 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         return scores
 
     def _do_annotate(
-            self, annotatable: Annotatable, liftover_context):
+            self, annotatable: Annotatable, context):
         attributes = {}
-        if self.liftover_id:
-            annotatable = liftover_context.get(self.liftover_id)
 
         if annotatable is None:
             self._scores_not_found(attributes)
@@ -315,7 +319,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
         return "allele_score"
 
     def _do_annotate(
-            self, annotatable: Annotatable, liftover_context):
+            self, annotatable: Annotatable, context: Dict):
 
         attributes = {}
 
@@ -324,9 +328,6 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
                 f"skip trying to add frequency for CNV variant {annotatable}")
             self._scores_not_found(attributes)
             return attributes
-
-        if self.liftover_id:
-            annotatable = liftover_context.get(self.liftover_id)
 
         if annotatable is None:
             self._scores_not_found(attributes)

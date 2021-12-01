@@ -86,7 +86,6 @@ def test_np_score_annotator_without_liftover():
 
     assert config.annotator_type == "np_score"
     assert config.resource_id == "np_score1"
-    assert config.liftover_id is None
 
 
 def test_np_score_annotator_attributes():

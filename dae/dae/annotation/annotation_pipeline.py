@@ -27,7 +27,7 @@ class AnnotationConfigParser:
     def normalize(cls, pipeline_config: List[Dict]) -> List[Dict]:
         result = []
 
-        for index, config in enumerate(pipeline_config):
+        for config in pipeline_config:
             if isinstance(config, str):
                 config = {
                     config: {}
@@ -42,8 +42,6 @@ class AnnotationConfigParser:
                 config = {"resource_id": config}
 
             assert isinstance(config, dict)
-            if config.get("id") is None:
-                config["id"] = str(index)
 
             config["annotator_type"] = annotator_type
             result.append(Box(config))
@@ -224,10 +222,9 @@ class AnnotationPipeline():
         self._annotation_schema = None
 
     def annotate(self, annotatable: Annotatable) -> dict:
-        result = {}
-        context = dict()
+        context = {}
         for annotator in self.annotators:
-            attributes = annotator.annotate(
-                annotatable, context)
-            result.update(attributes)
-        return result
+            attributes = annotator.annotate(annotatable, context)
+            context.update(attributes)
+
+        return context

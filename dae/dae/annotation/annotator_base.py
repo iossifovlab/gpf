@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 ATTRIBUTES_SCHEMA = {
     "type": "dict",
     "coerce": "attributes",
+    "allow_unknown": True,
     "schema": {
         "source": {"type": "string"},
         "destination": {"type": "string"},
@@ -44,18 +45,9 @@ class Annotator(abc.ABC):
                 return value
             return value
 
-    # def __init__(self, pipeline: AnnotationPipeine, configuation: dict):
-    #    self.liftover = config.get("liftover", None)
-
-    # def annnotate(annotatable, context, )
-    #   returns a dictionary where the keys are based on the 'distination'.
-
-    # def get_possible_source_attributes():
-    #     returns a list of the ('source', type, description)
-
     def __init__(self, config: Box):
         self.config = self.validate_config(config)
-        self.id = self.config.get("id")
+        self.input_annotatable = self.config.get("input_annotatable")
 
     @abc.abstractclassmethod
     def validate_config(cls, config: Dict) -> Dict:
@@ -115,6 +107,14 @@ class Annotator(abc.ABC):
         Carry out the annotation and then relabel resulting attributes
         as configured.
         """
+        if self.input_annotatable is not None:
+            annotatable = context.get(self.input_annotatable)
+            if annotatable is None:
+                logger.info(
+                    f"can't find input annotatable {self.input_annotatable} "
+                    f"in annotation context: {context}")
+                return {}
+
         attributes = self._do_annotate(annotatable, context)
         attributes_list = self.get_annotation_config()
         for attr in attributes_list:

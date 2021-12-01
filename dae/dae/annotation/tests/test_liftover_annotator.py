@@ -61,10 +61,9 @@ def test_liftover(
     allele = Allele.build_vcf_allele(chrom, pos, "A", "T")
     context = {}
     result = annotator._do_annotate(allele.get_annotatable(), context)
-    assert not result
     assert isinstance(result, dict)
 
-    lo_allele = context.get("liftover_test")
+    lo_allele = result.get("liftover_annotatable")
     print(f"liftover allele: {lo_allele}", context)
     lo_chrom = lo_allele.chrom if lo_allele else None
     lo_pos = lo_allele.position if lo_allele else None
