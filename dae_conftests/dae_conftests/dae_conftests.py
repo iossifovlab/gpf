@@ -1142,7 +1142,7 @@ def sample_agp():
 
 
 @pytest.fixture
-def anno_grdb(fixture_dirname):
+def grr_fixture(fixture_dirname):
     test_grr_location = fixture_dirname("genomic_resources")
     repositories = {
         "id": "test_grr",

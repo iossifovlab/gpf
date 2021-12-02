@@ -491,7 +491,7 @@ class AlleleParquetSerializer:
         scores_searchable = {}
         scores_binary = {}
         if annotation_schema:
-            for col_name in annotation_schema.names:
+            for col_name in annotation_schema.public_fields:
                 if (
                     col_name
                     not in self.BASE_SEARCHABLE_PROPERTIES_TYPES.keys()

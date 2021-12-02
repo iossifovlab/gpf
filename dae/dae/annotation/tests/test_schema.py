@@ -150,7 +150,7 @@ def test_annotation_pipeline_schema_with_internal(genomic_resources_repo):
     assert "test100way" not in schema.internal_fields
 
 
-def test_annotation_pipeline_liftover_schema(anno_grdb):
+def test_annotation_pipeline_liftover_annotator_schema(grr_fixture):
 
     pipeline_config = textwrap.dedent("""
     - liftover_annotator:
@@ -160,7 +160,7 @@ def test_annotation_pipeline_liftover_schema(anno_grdb):
 
     pipeline = build_annotation_pipeline(
         pipeline_config_str=pipeline_config,
-        grr_repository=anno_grdb)
+        grr_repository=grr_fixture)
 
     assert pipeline is not None
 
@@ -178,3 +178,34 @@ def test_annotation_pipeline_liftover_schema(anno_grdb):
 
     assert "liftover_annotatable" not in schema.public_fields
     assert "liftover_annotatable" in schema.internal_fields
+
+
+def test_annotation_pipeline_effect_annotator_schema(grr_fixture):
+
+    pipeline_config = textwrap.dedent("""
+    - effect_annotator:
+        genome: hg38/GRCh38-hg38/genome
+        gene_models: hg38/GRCh38-hg38/gene_models/refSeq_20200330
+    """)
+
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str=pipeline_config,
+        grr_repository=grr_fixture)
+
+    assert pipeline is not None
+
+    assert len(pipeline.annotators) == 1
+    print(100*"=")
+    print(pipeline.annotation_schema)
+    print(100*"=")
+
+    schema = pipeline.annotation_schema
+    assert len(schema) == 4, schema
+
+    assert "allele_effects" in schema
+    assert "allele_effects" in schema.internal_fields
+    assert "allele_effects" not in schema.public_fields
+
+    assert "effect_type" in schema
+    assert "effect_type" in schema.public_fields
+    assert "effect_type" not in schema.internal_fields

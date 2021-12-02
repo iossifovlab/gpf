@@ -2,20 +2,21 @@ from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
 def test_build_pipeline(
-        annotation_config, anno_grdb):
+        annotation_config, grr_fixture):
 
     pipeline = build_annotation_pipeline(
-        pipeline_config_file=annotation_config, grr_repository=anno_grdb
-    )
+        pipeline_config_file=annotation_config,
+        grr_repository=grr_fixture)
+
     assert len(pipeline.annotators) == 5
 
 
 def test_build_pipeline_schema(
-        annotation_config, anno_grdb):
+        annotation_config, grr_fixture):
 
     pipeline = build_annotation_pipeline(
-        pipeline_config_file=annotation_config, grr_repository=anno_grdb
-    )
+        pipeline_config_file=annotation_config,
+        grr_repository=grr_fixture)
 
     schema = pipeline.annotation_schema
     assert schema is not None

@@ -17,7 +17,7 @@ from dae.genomic_resources.gene_models_resource import \
     GeneModelsResource
 
 
-def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
+def test_effect_annotation_yuen(fixture_dirname, grr_fixture):
     variants_filename = os.path.join(
         fixture_dirname("denovo_import"), "YuenTest-variants.tsv")
     pedigree_filename = os.path.join(
@@ -38,7 +38,7 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
     assert families is not None
     assert len(families) == 1
 
-    genome = anno_grdb.get_resource(genome_id)
+    genome = grr_fixture.get_resource(genome_id)
     genome.open()
     denovo_loader = DenovoLoader(
         families,
@@ -48,7 +48,7 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
 
     pipeline = build_annotation_pipeline(
         pipeline_config=[],
-        grr_repository=anno_grdb,
+        grr_repository=grr_fixture,
         context=None)
 
     config = Box({
@@ -92,13 +92,13 @@ def test_effect_annotation_yuen(fixture_dirname, anno_grdb):
                 set(attributes["effect_gene_types"])
 
 
-def test_effect_annotation_schema(anno_grdb):
-    genome = anno_grdb.get_resource(
+def test_effect_annotation_schema(grr_fixture):
+    genome = grr_fixture.get_resource(
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome")
     assert genome is not None
     assert isinstance(genome, GenomicSequenceResource)
 
-    gene_models = anno_grdb.get_resource(
+    gene_models = grr_fixture.get_resource(
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
         "gene_models/refGene_201309"
     )
@@ -107,7 +107,7 @@ def test_effect_annotation_schema(anno_grdb):
 
     pipeline = build_annotation_pipeline(
         pipeline_config=[],
-        grr_repository=anno_grdb,
+        grr_repository=grr_fixture,
         context=None)
 
     config = Box({

@@ -4,15 +4,15 @@ from dae.annotation.annotation_pipeline import AnnotationPipeline
 
 
 def test_allele_score_annotator(
-        frequency_variants_expected, anno_grdb):
+        frequency_variants_expected, grr_fixture):
 
-    pipeline = AnnotationPipeline([], anno_grdb, None)
+    pipeline = AnnotationPipeline([], grr_fixture, None)
 
     annotator = AlleleScoreAnnotator(Box({
         "annotator_type": "allele_score",
         "resource_id": "hg38/TESTFreq",
         "attributes": None,
-    }), anno_grdb.get_resource("hg38/TESTFreq"))
+    }), grr_fixture.get_resource("hg38/TESTFreq"))
     pipeline.add_annotator(annotator)
 
     print(annotator.get_all_annotation_attributes())
@@ -26,15 +26,15 @@ def test_allele_score_annotator(
 
 
 def test_allele_score_annotator_attributes(
-        frequency_variants_expected, anno_grdb):
+        frequency_variants_expected, grr_fixture):
 
-    pipeline = AnnotationPipeline([], anno_grdb, None)
+    pipeline = AnnotationPipeline([], grr_fixture, None)
 
     annotator = AlleleScoreAnnotator(Box({
         "annotator_type": "allele_score",
         "resource_id": "hg38/TESTFreq",
         "attributes": None,
-    }), anno_grdb.get_resource("hg38/TESTFreq"))
+    }), grr_fixture.get_resource("hg38/TESTFreq"))
     pipeline.add_annotator(annotator)
 
     print(annotator.get_all_annotation_attributes())

@@ -148,7 +148,7 @@ class VariantScoreAnnotatorBase(Annotator):
                     self.non_default_position_aggregators.get(score_id))
 
                 schema.create_field(
-                    prop_name, py_type, 
+                    prop_name, py_type,
                     attribute.get("internal", False), source)
 
             self._annotation_schema = schema

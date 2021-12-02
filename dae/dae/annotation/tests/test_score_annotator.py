@@ -11,8 +11,8 @@ from dae.annotation.score_annotator import (
 
 def test_position_score_annotator(
         phastcons100way_variants_expected,
-        anno_grdb):
-    resource = anno_grdb.get_resource("hg38/TESTphastCons100way")
+        grr_fixture):
+    resource = grr_fixture.get_resource("hg38/TESTphastCons100way")
     config = Box({
         "annotator_type": "position_score",
         "resource_id": "hg38/TESTphastCons100way"
@@ -27,8 +27,8 @@ def test_position_score_annotator(
             assert result.get("phastCons100way") == e
 
 
-def test_position_score_annotator_schema(anno_grdb):
-    resource = anno_grdb.get_resource("hg38/TESTphastCons100way")
+def test_position_score_annotator_schema(grr_fixture):
+    resource = grr_fixture.get_resource("hg38/TESTphastCons100way")
     config = Box({
         "annotator_type": "position_score",
         "resource_id": "hg38/TESTphastCons100way"
@@ -42,14 +42,14 @@ def test_position_score_annotator_schema(anno_grdb):
     assert schema is not None
 
 
-def test_np_score_annotator(cadd_variants_expected, anno_grdb):
-    resource = anno_grdb.get_resource("hg38/TESTCADD")
+def test_np_score_annotator(cadd_variants_expected, grr_fixture):
+    resource = grr_fixture.get_resource("hg38/TESTCADD")
     config = Box({
         "annotator_type": "np_score",
         "resource_id": "hg38/TESTCADD"
     })
     annotator = NPScoreAnnotator(config, resource)
-    pipeline = AnnotationPipeline([], anno_grdb, None)
+    pipeline = AnnotationPipeline([], grr_fixture, None)
     pipeline.add_annotator(annotator)
 
     for sv, e in cadd_variants_expected:
@@ -59,8 +59,8 @@ def test_np_score_annotator(cadd_variants_expected, anno_grdb):
                 assert result.get(score) == pytest.approx(value, abs=1e-2)
 
 
-def test_np_score_annotator_schema(anno_grdb):
-    resource = anno_grdb.get_resource("hg38/TESTCADD")
+def test_np_score_annotator_schema(grr_fixture):
+    resource = grr_fixture.get_resource("hg38/TESTCADD")
     config = Box({
         "annotator_type": "np_score",
         "resource_id": "hg38/TESTCADD"
@@ -85,8 +85,8 @@ def test_np_score_annotator_schema(anno_grdb):
 
 def test_position_score_annotator_indels(
         phastcons100way_indel_variants_expected,
-        anno_grdb):
-    resource = anno_grdb.get_resource("hg38/TESTphastCons100way")
+        grr_fixture):
+    resource = grr_fixture.get_resource("hg38/TESTphastCons100way")
 
     config = Box({
         "annotator_type": "position_score",
@@ -98,7 +98,7 @@ def test_position_score_annotator_indels(
         }]
     })
     annotator = PositionScoreAnnotator(config, resource)
-    pipeline = AnnotationPipeline([], anno_grdb, None)
+    pipeline = AnnotationPipeline([], grr_fixture, None)
     pipeline.add_annotator(annotator)
 
     for sv, e in phastcons100way_indel_variants_expected:
@@ -110,15 +110,15 @@ def test_position_score_annotator_indels(
 
 
 def test_position_score_annotator_mean_aggregate(
-    position_agg_mean_variants_expected, anno_grdb
+    position_agg_mean_variants_expected, grr_fixture
 ):
-    resource = anno_grdb.get_resource("hg38/TESTPosAgg")
+    resource = grr_fixture.get_resource("hg38/TESTPosAgg")
     config = Box({
         "annotator_type": "position_score",
         "resource_id": "hg38/TESTPosAgg"
     })
     annotator = PositionScoreAnnotator(config, resource)
-    pipeline = AnnotationPipeline([], anno_grdb, None)
+    pipeline = AnnotationPipeline([], grr_fixture, None)
     pipeline.add_annotator(annotator)
 
     for sv, e in position_agg_mean_variants_expected:
@@ -130,8 +130,8 @@ def test_position_score_annotator_mean_aggregate(
 
 def test_np_score_annotator_indels(
         cadd_indel_variants_expected,
-        anno_grdb):
-    resource = anno_grdb.get_resource("hg38/TESTCADD")
+        grr_fixture):
+    resource = grr_fixture.get_resource("hg38/TESTCADD")
     config = Box({
         "annotator_type": "np_score",
         "resource_id": "hg38/TESTCADD",
@@ -149,7 +149,7 @@ def test_np_score_annotator_indels(
 
     annotator = NPScoreAnnotator(config, resource)
 
-    pipeline = AnnotationPipeline([], anno_grdb, None)
+    pipeline = AnnotationPipeline([], grr_fixture, None)
     pipeline.add_annotator(annotator)
 
     for sv, e in cadd_indel_variants_expected:
