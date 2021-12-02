@@ -162,7 +162,7 @@ export class Gene {
     public readonly transcripts: Transcript[]
   ) {
     this.collapsedTranscript = collapseTranscripts(this.transcripts);
-
+    
     this.chromosomes = new Map<string, [number, number]>();
     for (const transcript of this.transcripts) {
       if (!this.chromosomes.has(transcript.chromosome)) {

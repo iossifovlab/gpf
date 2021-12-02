@@ -10,7 +10,7 @@ export class GenePlotModel {
 
   constructor(gene: Gene, rangeWidth: number, spacerLength: number = 150) {
     this.gene = gene;
-    this.spacerLength = spacerLength; // in px
+    this.spacerLength = spacerLength - (gene.transcripts.length >= 25 ? (gene.transcripts.length <= 50 ? gene.transcripts.length : 50) * 2.5 : 0); // in px
     // TODO: Could use positive and negative infinity here instead of magic numbers
     this.domain = this.buildDomain(0, 3000000000);
     this.normalRange = this.buildRange(0, 3000000000, rangeWidth, false);
