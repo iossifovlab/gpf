@@ -71,6 +71,32 @@ class LiftOverAnnotator(Annotator):
             }
         ]
 
+    class LiftoverSource(Schema.Source):
+        def __init__(
+                self, chain: str, target_genome: str):
+            super().__init__("liftover_annotator", chain)
+            self.target_genome = target_genome
+
+        def __repr__(self):
+            repr = [super().__repr__(), self.target_genome]
+            return "; ".join(repr)
+
+    @property
+    def annotation_schema(self):
+        if self._annotation_schema is None:
+            schema = Schema()
+            for attr in self.get_annotation_config():
+                source = LiftOverAnnotator.LiftoverSource(
+                    self.chain.resource_id, self.target_genome.resource_id)
+                schema.create_field(
+                    attr.destination,
+                    "object",
+                    attr.get("internal", False),
+                    source
+                )
+            self._annotation_schema = schema
+        return self._annotation_schema
+
     @classmethod
     def validate_config(cls, config: Dict) -> Dict:
         schema = {
@@ -111,13 +137,6 @@ class LiftOverAnnotator(Annotator):
             raise ValueError(
                 f"wrong effect annotator config {validator.errors}")
         return validator.document
-
-    @property
-    def annotation_schema(self):
-        if self._annotation_schema is None:
-            self._annotation_schema = Schema()
-
-        return self._annotation_schema
 
     def get_annotation_config(self) -> List[Dict]:
         attributes = self.config.get("attributes")

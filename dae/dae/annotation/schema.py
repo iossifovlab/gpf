@@ -22,11 +22,14 @@ class Schema:
 
         def __init__(
                 self, name: str,
-                py_type: Type,
+                py_type: str,
+                internal: bool = False,
                 source: Optional[Schema.Source] = None):
 
             self.name: str = name
-            self.type: Type = py_type
+            self.type: str = py_type
+            self.internal: bool = internal
+
             self.source: Optional[Schema.Source] = source
 
     def __init__(self):
@@ -34,12 +37,13 @@ class Schema:
 
     def create_field(
             self, name: str, py_type: Type,
+            internal: bool = False,
             source: Optional[Source] = None):
         if name in self.fields:
             logger.warning(
                 f"creating a field with name {name} more than once")
 
-        self.fields[name] = Schema.Field(name, py_type, source)
+        self.fields[name] = Schema.Field(name, py_type, internal, source)
 
     @staticmethod
     def merge_schemas(left: Schema, right: Schema) -> Schema:
@@ -73,14 +77,30 @@ class Schema:
     def names(self):
         return list(self.fields.keys())
 
-    def __str__(self):
+    @property
+    def public_fields(self):
+        return [
+            key for key, field in self.fields.items() if not field.internal
+        ]
+
+    @property
+    def internal_fields(self):
+        return [
+            key for key, field in self.fields.items() if field.internal
+        ]
+
+    def __repr__(self):
         ret_str = ""
         for field_name, field in self.fields.items():
-            ret_str += "{} -> [{}]\n".format(field_name, field.type)
+            if not field.internal:
+                ret_str += f"\t{field_name} -> [{field.type}]\n"
+            else:
+                ret_str += f"\t{field_name} -> [{field.type}, <internal>] \n"
+
         return ret_str
 
     def __contains__(self, key):
-        return key in self.fields
+        return key in self.names
 
     def __delitem__(self, key):
         del self.fields[key]
@@ -89,7 +109,7 @@ class Schema:
         return self.fields.__getitem__(key)
 
     def __len__(self):
-        return len(self.fields)
+        return len(self.names)
 
     # # New types only need to be added here.
     # TYPE_MAP: Dict[str, Any] = {

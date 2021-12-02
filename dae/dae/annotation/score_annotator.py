@@ -127,6 +127,16 @@ class VariantScoreAnnotatorBase(Annotator):
             for attribute in self.get_annotation_config():
                 prop_name = attribute.destination
                 score_config = self.resource.get_score_config(attribute.source)
+                if score_config is None:
+                    logger.error(
+                        f"can't find score {attribute.source} in resource "
+                        f"{self.resource.resource_id}; available scores are "
+                        f"{self.get_all_annotation_attributes()}"
+                    )
+                    raise ValueError(
+                        f"can't find score {attribute.source} in resource "
+                        f"{self.resource.resource_id}")
+
                 py_type = score_config.type
                 assert py_type is not None, score_config
                 score_id = attribute.source
@@ -137,9 +147,13 @@ class VariantScoreAnnotatorBase(Annotator):
                     self.non_default_position_aggregators.get(score_id),
                     self.non_default_position_aggregators.get(score_id))
 
-                schema.create_field(prop_name, py_type, source)
+                schema.create_field(
+                    prop_name, py_type, 
+                    attribute.get("internal", False), source)
 
             self._annotation_schema = schema
+        print(self._annotation_schema)
+
         return self._annotation_schema
 
     def _scores_not_found(self, attributes):
