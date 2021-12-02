@@ -111,6 +111,24 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     for (const row of this.highlightedRowElements) {
       row.classList.remove('row-highlight');
     }
+
+    this.highlightedRowElements = [];
+  }
+
+  @HostListener('document:keydown.f', ['$event'])
+  public compareHighligtedGenes($event: KeyboardEvent, navigateToTab: boolean = true) {
+    if($event && $event.target instanceof Element) {
+      if ($event.target.localName === 'input' || $event.target.localName === 'button') {
+        return;
+      }
+    }
+
+    const highlightedGenes: string[] = this.highlightedRowElements.map(ele => ele['innerText'].split('\t')[0]);
+    if (highlightedGenes.length === 0) {
+      return;
+    }
+
+    this.emitCreateTabEvent(null, highlightedGenes, navigateToTab);
   }
 
   constructor(
@@ -314,11 +332,11 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     }
   }
 
-  public emitCreateTabEvent($event: MouseEvent, geneSymbol: string, navigateToTab: boolean = true): void {
-    if ($event.ctrlKey && $event.type === 'click') {
+  public emitCreateTabEvent($event: MouseEvent, geneSymbols: string[], navigateToTab: boolean = true): void {
+    if ($event && $event.ctrlKey && $event.type === 'click') {
       navigateToTab = false;
     }
-    this.createTabEvent.emit({geneSymbol: geneSymbol, navigateToTab: navigateToTab});
+    this.createTabEvent.emit({geneSymbols: geneSymbols, navigateToTab: navigateToTab});
   }
 
   public updateGenes(): void {
@@ -440,7 +458,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     });
   }
 
-  public highlightRow($event: MouseEvent): void {
+  public highlightRow($event): void {
     if(!($event.target instanceof Element)) {
       return;
     }
@@ -464,6 +482,10 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
       ? rowElement.classList.remove('row-highlight')
       : rowElement.classList.add('row-highlight');
 
-    this.highlightedRowElements.push(rowElement);
+    if (this.highlightedRowElements.map(ele => ele['innerText'].split('\t')[0]).includes(rowElement['innerText'].split('\t')[0])) {
+      this.highlightedRowElements = this.highlightedRowElements.filter(ele => ele['innerText'].split('\t')[0] !== $event.path.find(ele => ele.localName === 'tr').innerText.split('\t')[0]);
+    } else {
+      this.highlightedRowElements.push(rowElement);
+    }
   }
 }

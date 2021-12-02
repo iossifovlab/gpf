@@ -62,6 +62,7 @@
 
       <tr style="height: 110px;">
         <th class="table-subheader" rowspan="2">
+          <button (click)="compareHighligtedGenes(null)" (middleclick)="compareHighligtedGenes(null, false)">compare highligted genes</button>
           <input #geneSearchInput (keyup)="sendKeystrokes(geneSearchInput.value)" id="gene-search-input"
             class="form-control" autocomplete="off" type="text" placeholder="Search">
         </th>
@@ -114,7 +115,7 @@
 
     <tbody #table *ngIf="genes">
       <tr #rows *ngFor="let gene of genes; let i = index" (click)="highlightRow($event)" (middleclick)="highlightRow($event)">
-        <td class="link-td" (click)="emitCreateTabEvent($event, gene.geneSymbol)" (middleclick)="emitCreateTabEvent($event, gene.geneSymbol, false)">
+        <td class="link-td" (click)="emitCreateTabEvent($event, [gene.geneSymbol])" (middleclick)="emitCreateTabEvent($event, [gene.geneSymbol], false)">
           <span class="link-span">{{gene.geneSymbol}}</span>
         </td>
         <ng-container *ngIf="isVisibleData(i)">
