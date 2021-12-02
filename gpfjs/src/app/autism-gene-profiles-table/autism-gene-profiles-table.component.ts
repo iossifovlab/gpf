@@ -69,7 +69,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
   public currentSortingColumnId: string;
   public modalBottom: number;
 
-  public highlightedRowElements: Element[] = [];
+  public highlightedRowElements: HTMLElement[] = [];
   
   @ViewChild('table') tableViewChild: any;
   @ViewChildren('rows') rowViewChildren: QueryList<any>;
@@ -123,7 +123,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
       }
     }
 
-    const highlightedGenes: string[] = this.highlightedRowElements.map(ele => ele['innerText'].split('\t')[0]);
+    const highlightedGenes: string[] = this.highlightedRowElements.map(ele => ele.innerText.split('\t')[0]);
     if (highlightedGenes.length === 0) {
       return;
     }
@@ -459,31 +459,34 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
   }
 
   public highlightRow($event): void {
-    if(!($event.target instanceof Element)) {
-      return;
-    }
 
     const linkElements = ['link-td', 'link-span'];
     if (
       !$event.ctrlKey && $event.type === 'click'
       || linkElements.includes($event.target.classList.value.replace('ng-star-inserted', '').trim())
+      || !($event.target instanceof Element)
     ) {
       return;
     }
 
-    let rowElement: Element;
-    if ($event.target.parentElement.localName !== 'tr') {
-      rowElement = $event.target.parentElement.parentElement
+    let rowElement: HTMLElement;
+    const mouseEventParentElement = $event.target.parentElement;
+
+    if (mouseEventParentElement.localName !== 'tr') {
+      rowElement = mouseEventParentElement.parentElement;
     } else {
-      rowElement = $event.target.parentElement;
+      rowElement = mouseEventParentElement;
     }
 
     rowElement.className.includes('row-highlight')
       ? rowElement.classList.remove('row-highlight')
       : rowElement.classList.add('row-highlight');
 
-    if (this.highlightedRowElements.map(ele => ele['innerText'].split('\t')[0]).includes(rowElement['innerText'].split('\t')[0])) {
-      this.highlightedRowElements = this.highlightedRowElements.filter(ele => ele['innerText'].split('\t')[0] !== $event.path.find(ele => ele.localName === 'tr').innerText.split('\t')[0]);
+    const rowElementGeneSymbol: string = rowElement.innerText.split('\t')[0];
+    if (this.highlightedRowElements.map(ele => ele.innerText.split('\t')[0]).includes(rowElementGeneSymbol)) {
+      this.highlightedRowElements = this.highlightedRowElements.filter(
+        ele => ele.innerText.split('\t')[0] !== rowElementGeneSymbol
+      );
     } else {
       this.highlightedRowElements.push(rowElement);
     }
