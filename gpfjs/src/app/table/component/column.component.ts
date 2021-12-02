@@ -1,5 +1,4 @@
-import { Input, ContentChildren, ViewContainerRef, QueryList, Component } from '@angular/core';
-
+import { Input, ContentChildren, QueryList, Component } from '@angular/core';
 import { GpfTableContentHeaderComponent } from './header.component';
 import { GpfTableContentComponent } from './content.component';
 
@@ -12,7 +11,4 @@ export class GpfTableColumnComponent {
   @ContentChildren(GpfTableContentComponent) contentChildren: QueryList<GpfTableContentComponent>;
   @Input() columnWidth = '';
   @Input() columnMaxWidth = '';
-
-  constructor(viewContainer: ViewContainerRef) {
-  }
 }
