@@ -14,8 +14,8 @@ tr:nth-child(even) {
   background-color: #fafafa;
 }
 
-tr:hover {
-  background: #edf3ff;
+tr:hover:not(#search-warning) {
+  background-color: #edf3ff;
 }
 
 td {
@@ -149,4 +149,17 @@ a:hover,
 a:hover,
 .link-td:hover {
   text-decoration: underline;
+}
+
+#search-warning td {
+  height: 44px;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  text-align: left;
+}
+
+#search-warning span {
+  margin-left: 7px;
+  font-style: italic;
 }

@@ -147,6 +147,11 @@
           </ng-container>
         </ng-container>
       </tr>
+      <tr *ngIf="geneSearchInput.value && genes.length === 0 && showSearchWarning" id="search-warning">
+        <td>
+          <span>Nothing found</span>
+        </td>
+      </tr>
     </tbody>
   </table>
 </div>
