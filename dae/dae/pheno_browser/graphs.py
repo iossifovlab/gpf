@@ -17,8 +17,8 @@ plt.ioff()  # noqa
 import pandas as pd
 import numpy as np
 import seaborn as sns
-from dae.pheno.utils.lin_regress_wrapper import LinearRegressionWrapper
 from dae.pheno.common import ROLES_GRAPHS_DEFINITION
+from sklearn.linear_model import LinearRegression
 
 import traceback
 
@@ -95,17 +95,17 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
     ax.set_ylabel(name2)
 
     try:
-        x = dmale[col1]
+        male_x = dmale[[col1]]
         y = dmale[col2]
-        res_male = LinearRegressionWrapper(x, y)
+        res_male = LinearRegression().fit(male_x, y)
     except ValueError:
         traceback.print_exc()
         res_male = None
 
     try:
-        x = dfemale[col1]
+        female_x = dfemale[[col1]]
         y = dfemale[col2]
-        res_female = LinearRegressionWrapper(x, y)
+        res_female = LinearRegression().fit(female_x, y)
     except ValueError:
         traceback.print_exc()
         res_female = None
@@ -139,9 +139,13 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
     )
     color_male, color_female = gender_palette()
     if res_male:
-        ax.plot(dmale[col1], res_male.predict(), color=color_male)
+        ax.plot(
+            dmale[col1], res_male.predict(male_x), color=color_male
+        )
     if res_female:
-        ax.plot(dfemale[col1], res_female.predict(), color=color_female)
+        ax.plot(
+            dfemale[col1], res_female.predict(female_x), color=color_female
+        )
     male_female_legend(color_male, color_female, ax)
     # plt.tight_layout()
     return res_male, res_female

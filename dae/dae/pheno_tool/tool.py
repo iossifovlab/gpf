@@ -8,8 +8,8 @@ from collections import Counter
 import logging
 import numpy as np
 import pandas as pd
-from dae.pheno.utils.lin_regress_wrapper import LinearRegressionWrapper
 from scipy.stats.stats import ttest_ind
+from sklearn.linear_model import LinearRegression
 
 from dae.pheno.common import MeasureType
 from dae.variants.attributes import Role, Sex
@@ -246,9 +246,10 @@ class PhenoTool(object):
         else:
             x = df[normalize_by].to_numpy()
             y = df[measure_id]
-            fitted = LinearRegressionWrapper(x, y)
+            fitted = LinearRegression().fit(x, y)
+            resids = y - fitted.predict(x)
 
-            dn = pd.Series(index=df.index, data=fitted.resid())
+            dn = pd.Series(index=df.index, data=resids)
             df.loc[:, "normalized"] = dn
             return df
 
