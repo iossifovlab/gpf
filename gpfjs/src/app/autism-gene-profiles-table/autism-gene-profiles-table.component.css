@@ -1,4 +1,5 @@
-th, td {
+th,
+td {
   -moz-user-select: none;
 }
 
@@ -7,19 +8,19 @@ tr:hover.row-highlight {
 }
 
 .row-highlight {
-  background-color: rgb(255, 255, 214) !important;
+  background-color: #ffffd6 !important;
 }
 
 .row-highlight:nth-child(even) {
-  background-color: rgb(247, 247, 203) !important;
+  background-color: #f7f7cb !important;
 }
 
 tr:nth-child(even) {
-  background-color: #FAFAFA;
+  background-color: #fafafa;
 }
 
 tr:hover {
-  background: #edf3ff
+  background: #edf3ff;
 }
 
 td {
@@ -27,15 +28,11 @@ td {
   vertical-align: middle;
 }
 
-.table-main-header {
-  text-align: center;
-}
-
 .table {
   border-collapse: separate;
   border-spacing: 0;
-  border-right: 1px solid #dddddd;
-  border-bottom: 1px solid #dddddd;
+  border-right: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
 }
 
 .vertical-text {
@@ -55,7 +52,6 @@ td {
   margin-left: 5px;
   position: relative;
   top: 5.5px;
-  /* white-space: nowrap; */
 }
 
 .table-subheader {
@@ -69,13 +65,16 @@ td {
 }
 
 thead {
-  background-color: #eeeeee;
+  background-color: #eee;
 }
 
-td, th, .table-subheader, .table-main-header {
+td,
+th,
+.table-subheader,
+.table-main-header {
   border-bottom: none;
-  border-top: 1px solid #dddddd;
-  border-left: 1px solid #dddddd;
+  border-top: 1px solid #ddd;
+  border-left: 1px solid #ddd;
   border-right: none;
 }
 
@@ -87,12 +86,12 @@ td, th, .table-subheader, .table-main-header {
   content: none;
 }
 
-#gene-search-input:focus {
-  box-shadow: inset 0 -1px 0 #ddd;
-}
-
 #gene-search-input {
   border-radius: 0;
+}
+
+#gene-search-input:focus {
+  box-shadow: inset 0 -1px 0 #ddd;
 }
 
 thead th {
@@ -107,12 +106,13 @@ thead th {
 
 .table-main-header {
   position: sticky;
-  top: 0px;
+  top: 0;
   max-width: 100px;
+  text-align: center;
 }
 
 .table-main-header-text {
-  top: 0px;
+  top: 0;
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
@@ -122,12 +122,12 @@ thead th {
   right: 30px;
   display: inline-block;
   position: absolute;
-  bottom: 5px
+  bottom: 5px;
 }
 
 button.dropdown-toggle {
   display: inline-block;
-  position:absolute;
+  position: absolute;
   right: 10px;
   outline: none;
   font-size: 18px;
@@ -138,15 +138,20 @@ button.dropdown-toggle {
   bottom: 9px;
 }
 
-thead th, .effect-type-header {
-  background-color: #eeeeee;
+thead th,
+.effect-type-header {
+  background-color: #eee;
 }
 
-a, a:hover, .link-td, .link-td:hover {
+a,
+a:hover,
+.link-td,
+.link-td:hover {
   color: #2372c6;
   cursor: pointer;
 }
 
-a:hover, .link-td:hover {
+a:hover,
+.link-td:hover {
   text-decoration: underline;
 }
