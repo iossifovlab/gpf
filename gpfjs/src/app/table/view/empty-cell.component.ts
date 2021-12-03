@@ -29,7 +29,6 @@ export class GpfTableEmptyCellComponent implements AfterViewInit {
   }
 
   recalcWidth() {
-    console.log(this.columnInfo)
     if (this.firstRecalc) {
       this.firstRecalc = false;
       this.isCustomWidth = (this.columnInfo.columnWidth !== '');
