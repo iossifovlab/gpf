@@ -1359,8 +1359,7 @@ class DatasetHelpers:
 
         hdfs_helpers = genotype_storage.hdfs_helpers
 
-        study_dir = genotype_storage.full_hdfs_path(
-            genotype_storage.default_hdfs_study_path(dataset_id))
+        study_dir = genotype_storage.default_hdfs_study_path(dataset_id)
 
         logger.info(
             f"study hdfs dir {study_dir} should exists: "
@@ -1426,10 +1425,8 @@ class DatasetHelpers:
 
         hdfs_helpers = genotype_storage.hdfs_helpers
 
-        source_dir = genotype_storage.full_hdfs_path(
-            genotype_storage.default_hdfs_study_path(old_id))
-        dest_dir = genotype_storage.full_hdfs_path(
-            genotype_storage.default_hdfs_study_path(new_id))
+        source_dir = genotype_storage.default_hdfs_study_path(old_id)
+        dest_dir = genotype_storage.default_hdfs_study_path(new_id)
 
         logger.info(
             f"source hdfs dir {source_dir} should exists: "
@@ -1472,8 +1469,7 @@ class DatasetHelpers:
 
         hdfs_helpers = genotype_storage.hdfs_helpers
 
-        study_dir = genotype_storage.full_hdfs_path(
-            genotype_storage.default_hdfs_study_path(dataset_id))
+        study_dir = genotype_storage.default_hdfs_study_path(dataset_id)
 
         logger.info(f"going to remove HDFS directory: {study_dir}")
         if not dry_run:
