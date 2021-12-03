@@ -12,6 +12,7 @@ import { Observable } from 'rxjs';
 export class AutismGeneProfileSingleViewWrapperComponent implements OnInit, AfterViewInit {
   public $autismGeneToolConfig: Observable<AgpConfig>;
   public geneSymbols: string[];
+  private allowedSeparators = ['&', '+', ',', ':', ';', '!', '@', '$', '^', '*'];
 
   public constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
@@ -26,7 +27,8 @@ export class AutismGeneProfileSingleViewWrapperComponent implements OnInit, Afte
     this.geneSymbols = this.paramToArray(this.route.snapshot.params.genes);
   }
 
-  paramToArray(param: string): string[] {
-    return param.toUpperCase().split('+').filter(e => e !== '');
+  private paramToArray(param: string): string[] {
+    const separator = this.allowedSeparators.find(s => param.indexOf(s) > -1);
+    return param.toUpperCase().split(separator).filter(e => e !== '');
   }
 }
