@@ -1,5 +1,6 @@
 import { any } from 'cypress/types/bluebird';
 import { AutismGeneProfilesTable } from './autism-gene-profiles-table-page';
+import { GenotypeBlockPage } from './genotype-block-page';
 import { BasePage } from './utils';
 
 export class AutismGeneProfilesSingleView extends BasePage {
@@ -176,7 +177,7 @@ export class AutismGeneProfilesSingleView extends BasePage {
               geneSets[index]['scores'][rowIndex]['name'] = name.text();
             });
             cy.wrap(el).get('td').eq(1).then(value => {
-              if(value.text().length === 1) {
+              if(value.text().length === 1 && value.text() === '✓') {
                 geneSets[index]['scores'][rowIndex]['value'] = true;
               }
             });
@@ -232,7 +233,42 @@ export class AutismGeneProfilesSingleView extends BasePage {
     });
 
     cy.wrap(datasets).as('datasets');
-    return datasets
+    return datasets;
+  }
+
+  getStudyExpectedDataFromGenotype(variantStatistics: any) {
+    const genotypeBlockPage = new GenotypeBlockPage();
+
+    const studyWrapper = {
+      'denovo_lgds': genotypeBlockPage.effectTypesGroups.get('LGDs'),
+      'denovo_missense': 'Missense',
+      'denovo_intron': 'Intron'
+    }
+    let effectModelFromGenotypeWrapper = new Map<String, String>();
+    for(var value in studyWrapper) {
+      effectModelFromGenotypeWrapper.set(value, studyWrapper[value]);
+    }
+
+    cy.wrap(effectModelFromGenotypeWrapper.get(variantStatistics)).as('genotypeExpectedWrapper');
+  }
+
+  getStudyActualDataFromGenotype() {
+    let selectedEffects = [];
+
+    cy.get('.effect-card > .card-block label').each(label => {
+      console.log(label.text());
+      cy.wrap(label).within(checkBox => {
+        cy.wrap(checkBox).get('input').then(check => {
+          cy.wrap(check).invoke('prop', 'checked').then(isCheck => {
+            if(isCheck === true) {
+              selectedEffects.push(label.text());
+            }
+          });
+        });
+      });
+    });
+    
+    cy.wrap(selectedEffects).as('genotypeActualWrapper');
   }
 
 }

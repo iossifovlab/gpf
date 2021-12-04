@@ -1,5 +1,6 @@
 import { AutismGeneProfilesSingleView } from 'cypress/elements/autism-gene-profiles-single-view-page';
 import { AutismGeneProfilesTable } from 'cypress/elements/autism-gene-profiles-table-page';
+import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
 import { BasePage, sidenavPageLinks } from 'cypress/elements/utils';
 
 describe('Autism gene profiles single view tests', () => {
@@ -92,7 +93,7 @@ describe('Autism gene profiles single view links tests', () => {
     page.header.invoke('text').then((headerText) => {
       const baseUrl = Cypress.config().baseUrl;
       const headerName = headerText;
-      const geneBrowserUrl = `${baseUrl}/datasets/ALL_genotypes/gene-browser/${headerName}`;
+      const geneBrowserUrl = `${baseUrl}datasets/ALL_genotypes/gene-browser/${headerName}`;
       page.geneBrowserLink.should('have.prop', 'href').and('equal', geneBrowserUrl)
     });
   });
@@ -134,7 +135,7 @@ describe('Autism gene profiles single view links tests', () => {
     });
   });
 
-  it.only('should compare all data in single view for GRIN2B', () => {
+  it('should compare all data in single view for GRIN2B', () => {
     page.openSingleView('GRIN2B');
 
     const geneData = geneDatas.find(data => data.geneSymbols === 'GRIN2B');
@@ -162,7 +163,7 @@ describe('Autism gene profiles single view links tests', () => {
   });
   // note: every single view is always in the page while open(even if it is hiden).
   // This creates problems if even another single  view is open
-  it.only('should compare all data in single view for CHD8', () => {                                                           
+  it('should compare all data in single view for CHD8', () => {                                                           
     page.openSingleView('CHD8', true); // thus force: true(the second argument) is closing all the tabs before it
 
     const geneData = geneDatas.find(data => data.geneSymbols === 'CHD8');
@@ -189,7 +190,7 @@ describe('Autism gene profiles single view links tests', () => {
     });
   });
 
-  it.only('should compare all data in single view for POGZ', () => {                                                           
+  it('should compare all data in single view for POGZ', () => {                                                           
     page.openSingleView('POGZ', true); // thus force: true(the second argument) is closing all the tabs before it
 
     const geneData = geneDatas.find(data => data.geneSymbols === 'POGZ');
@@ -217,13 +218,14 @@ describe('Autism gene profiles single view links tests', () => {
   });
 });
 
-describe.skip('Single view study table', () => { // use cy.visit and then data test the genotype browser
+describe('Single view study table', () => { // use cy.visit and then data test the genotype browser
   const page = new AutismGeneProfilesSingleView();
   const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
 
-  it('should test redirect logic', () => {
+  it.only('should test redirect logic', () => {
     page.cleanup();
     page.navigateToHome();
+    page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
 
     page.autismGeneToolAllView.click();
@@ -238,11 +240,29 @@ describe.skip('Single view study table', () => { // use cy.visit and then data t
       method: 'POST',
       url: '/gpf/api/v3/query_state/save'
     }).as('query');
-    cy.get('#denovo_lgds > :nth-child(2) > .link-genotype-browser > span').click();
+    cy.get('#denovo_lgds > :nth-child(2) > .link-genotype-browser > span').then(value => {      
+      cy.wrap(value).parent().parent().parent().invoke('attr', 'id').then(effectType => {
+        //console.log(effectType);
+        cy.wrap(effectType).as('effectType');
+      });
+      cy.wrap(value).click();
+    });
     cy.get('@query').then(req => {
       if(req !== null) {
-        expect(req.request.body.data).to.deep.equal(data_wrapper[0].data);
-        expect(req.request.body.page).to.deep.equal(data_wrapper[0].page);
+        const genotypeBlockPage = new GenotypeBlockPage();
+        cy.visit(Cypress.config().baseUrl + '/load-query/' + req.response.body.uuid);
+        genotypeBlockPage.findCheckboxInComponentContainingText('.pedigree-selector-card', 'affected').parent().within(checkBoxes => {
+          cy.wrap(checkBoxes).get('input').should('be.checked');
+          cy.get('@effectType').then(effectType => {
+            page.getStudyExpectedDataFromGenotype(effectType);
+          });
+        });
+        page.getStudyActualDataFromGenotype();
+        cy.get('@genotypeExpectedWrapper').then(expected => {
+          cy.get('@genotypeActualWrapper').then(actual => {
+            expect(expected).to.deep.equal(actual);
+          });
+        });
       }
     });
   });
