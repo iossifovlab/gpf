@@ -1,3 +1,4 @@
+import { GenotypeBlockPage } from './genotype-block-page';
 import { BasePage } from './utils';
 
 export class AutismGeneProfilesTable extends BasePage {
@@ -51,5 +52,39 @@ export class AutismGeneProfilesTable extends BasePage {
 
   get firstTabCloseButton() {
     return cy.get('nav span').contains('×').first();
+  }
+
+  getStudyExpectedDataFromGenotype(variantStatistics: any) {
+    const genotypeBlockPage = new GenotypeBlockPage();
+
+    const studyWrapper = {
+      'denovo_lgds': genotypeBlockPage.effectTypesGroups.get('LGDs'),
+      'denovo_missense': [ 'Missense' ],
+      'denovo_intron': [ 'Intron' ]
+    }
+    let effectModelFromGenotypeWrapper = new Map<String, String>();
+    for(var value in studyWrapper) {
+      effectModelFromGenotypeWrapper.set(value, studyWrapper[value]);
+    }
+
+    cy.wrap(effectModelFromGenotypeWrapper.get(variantStatistics)).as('genotypeExpectedWrapper');
+  }
+
+  getStudyActualDataFromGenotype() {
+    let selectedEffects = [];
+
+    cy.get('.effect-card > .card-block label').each(label => {
+      cy.wrap(label).within(checkBox => {
+        cy.wrap(checkBox).get('input').then(check => {
+          cy.wrap(check).invoke('prop', 'checked').then(isCheck => {
+            if(isCheck === true) {
+              selectedEffects.push(label.text());
+            }
+          });
+        });
+      });
+    });
+    
+    cy.wrap(selectedEffects).as('genotypeActualWrapper');
   }
 }

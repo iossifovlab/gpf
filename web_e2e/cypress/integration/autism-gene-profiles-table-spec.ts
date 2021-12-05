@@ -1,4 +1,5 @@
 import { AutismGeneProfilesTable } from 'cypress/elements/autism-gene-profiles-table-page';
+import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
 
 describe('Autism gene profiles table tests', () => {
@@ -112,6 +113,36 @@ describe('Column filtering dropdown tests', () => {
     page.allAutismGeneSetsDropdownCheckboxes.should('have.length', 2);
     page.autismGeneSetsDropdownSearch.type('iossifov');
     page.allAutismGeneSetsDropdownCheckboxes.should('have.length', 1);
+  });
+
+  it.only('should test statistic to genotype browser test', () => {
+    page.loginAdmin();
+
+    cy.intercept({
+      method: 'POST',
+      url: '/gpf/api/v3/query_state/save'
+    }).as('query');
+    cy.get('tr:nth-child(1) > :nth-child(13) > .link-td > .link-span').click({force:true});
+    cy.wrap('denovo_lgds').as('effectType');
+    cy.wait('@query');
+    cy.get('@query').then(req => {
+      if(req !== null) {
+        const genotypeBlockPage = new GenotypeBlockPage();
+        cy.visit(Cypress.config().baseUrl + '/load-query/' + req.response.body.uuid);
+        genotypeBlockPage.findCheckboxInComponentContainingText('.pedigree-selector-card', 'affected').parent().within(checkBoxes => {
+          cy.wrap(checkBoxes).get('input').should('be.checked');
+          cy.get('@effectType').then(effectType => {
+            page.getStudyExpectedDataFromGenotype(effectType);
+          });
+        });
+        page.getStudyActualDataFromGenotype();
+        cy.get('@genotypeExpectedWrapper').then(expected => {
+          cy.get('@genotypeActualWrapper').then(actual => {
+            expect(expected).to.deep.equal(actual);
+          });
+        });
+      }
+    });
   });
 
   // apply should actually work and make columns disappear/add
