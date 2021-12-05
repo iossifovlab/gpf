@@ -60,11 +60,11 @@ logger = logging.getLogger("dae.annotation")
 logger.setLevel(logging.INFO)
 
 
-# from urllib.request import urlopen
-# with urlopen("https://www.iossifovlab.com/distribution/public/"
-#         "genomic-resources-repository/.CONTENTS") as repo:
-#     for line in repo:
-#         print(line)
+from urllib.request import urlopen
+with urlopen("https://www.iossifovlab.com/distribution/public/"
+        "genomic-resources-repository/.CONTENTS") as repo:
+    for line in repo:
+        print(line)
 
 
 def relative_to_this_test_folder(path):

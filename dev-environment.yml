@@ -3,9 +3,9 @@
 # platform: linux-64
 # conda create -c conda-forge -c bioconda -n <env name> --file <this file>
 channels:
-  - defaults
-  - conda-forge 
   - bioconda
+  - conda-forge
+  - defaults
   - iossifovlab
 dependencies:
   - bump2version=1.0.1
