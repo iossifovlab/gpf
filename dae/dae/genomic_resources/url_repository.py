@@ -22,14 +22,19 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
     def __init__(self, repo_id, url, **atts):
         super().__init__(repo_id)
         self.url = url
+        if self.url.endswith("/"):
+            self.url = self.url[:-1]
+
         self.scheme = urlparse(url).scheme
         self._all_resources = None
 
     def get_all_resources(self):
         if self._all_resources is None:
             self._all_resources = []
-            contents = yaml.safe_load(
-                urlopen(self.url + "/" + GRP_CONTENTS_FILE_NAME))
+            url = f"{self.url}/{GRP_CONTENTS_FILE_NAME}"
+            logger.debug(f"url repo to open: {url}")
+            contents = yaml.safe_load(urlopen(url))
+
             for rdf in contents:
                 versionT = tuple(map(int, rdf['version'].split(".")))
                 resource = self.build_genomic_resource(

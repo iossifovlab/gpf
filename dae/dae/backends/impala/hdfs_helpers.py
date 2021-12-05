@@ -2,9 +2,6 @@ import os
 import re
 import tempfile
 import logging
-from pyarrow import fs
-from fsspec.implementations.arrow import ArrowFSWrapper
-
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +23,9 @@ class HdfsHelpers:
     @property
     def hdfs(self):
         if self._hdfs is None:
+            from pyarrow import fs
+            from fsspec.implementations.arrow import ArrowFSWrapper
+
             extra_conf = None
             if self.replication and self.replication > 0:
                 assert self.replication > 0, self.replication

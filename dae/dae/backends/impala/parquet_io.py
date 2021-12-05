@@ -11,8 +11,9 @@ import toml
 from box import Box
 
 import numpy as np
+
 import pyarrow as pa
-import pyarrow.parquet as pq
+
 import configparser
 
 from dae.utils.variant_utils import GENOTYPE_TYPE
@@ -381,6 +382,7 @@ class ContinuousParquetFileWriter:
             os.makedirs(dirname)
         self.dirname = dirname
 
+        import pyarrow.parquet as pq
         self._writer = pq.ParquetWriter(
             filepath, self.schema, compression="snappy", filesystem=filesystem
         )
@@ -785,4 +787,6 @@ def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
     ped_df, pps = add_missing_parquet_fields(pps, ped_df)
 
     table = pa.Table.from_pandas(ped_df, schema=pps)
+
+    import pyarrow.parquet as pq
     pq.write_table(table, filename, filesystem=filesystem)

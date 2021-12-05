@@ -210,7 +210,10 @@ EOT
         build_docker_image_cp_from "$docker_data_img_phenotype_comp_data" ./import /
       }
     }
+  }
 
+  build_stage "Import GPF remote data"
+  {
 
     local -A ctx_gpf_remote
     build_run_ctx_init ctx:ctx_gpf_remote "persistent" "container" "${gpf_dev_image_ref}" \
@@ -226,42 +229,40 @@ EOT
       build_run_container ctx:ctx_gpf_remote bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .'
     done
 
+    # build_run_attach ctx:ctx_gpf_remote bash
 
-
-    # import data for gpf remote
+    # import genotype data
     {
 
-      # import genotype data
-      {
+      build_run_container ctx:ctx_gpf_remote bash -c '
+      cd /wd/dae_conftests/dae_conftests/tests/fixtures/dae_iossifov2014 && \
+      /opt/conda/bin/conda run --no-capture-output -n gpf \
+        simple_study_import.py --id iossifov_2014 \
+        -o /wd/import/data_iossifov_2014 \
+        --denovo-file iossifov2014.txt \
+        iossifov2014_families.ped'
 
-        build_run_container ctx:ctx_gpf_remote bash -c 'cd /wd/dae_conftests/dae_conftests/tests/fixtures/dae_iossifov2014 && \
-        /opt/conda/bin/conda run --no-capture-output -n gpf \
-          simple_study_import.py --id iossifov_2014 \
-          -o /wd/import/data_iossifov_2014 \
-          --denovo-file iossifov2014.txt \
-          iossifov2014_families.ped'
-
-        build_run_container ctx:ctx_gpf_remote bash -c 'cat >> ./data/data-hg19-remote/studies/iossifov_2014/iossifov_2014.conf << EOT
+      build_run_container ctx:ctx_gpf_remote bash -c '
+      cat >> ./data/data-hg19-remote/studies/iossifov_2014/iossifov_2014.conf << EOT
 [enrichment]
 enabled = true
 EOT'
-      }
+    }
 
-      # import phenotype data
-      {
-        build_run_container ctx:ctx_gpf_remote bash -c 'cd ./import/comp-data && /opt/conda/bin/conda run --no-capture-output -n gpf \
-          simple_pheno_import.py -p comp_pheno.ped \
-          -i instruments/ -d comp_pheno_data_dictionary.tsv -o comp_pheno \
-          --regression comp_pheno_regressions.conf'
+    # import phenotype data
+    {
+      build_run_container ctx:ctx_gpf_remote bash -c 'cd ./import/comp-data && /opt/conda/bin/conda run --no-capture-output -n gpf \
+        simple_pheno_import.py -p comp_pheno.ped \
+        -i instruments/ -d comp_pheno_data_dictionary.tsv -o comp_pheno \
+        --regression comp_pheno_regressions.conf'
 
-        build_run_container ctx:ctx_gpf_remote sed -i '5i\\nphenotype_data="comp_pheno"' /wd/data/data-hg19-remote/studies/iossifov_2014/iossifov_2014.conf
-      }
+      build_run_container ctx:ctx_gpf_remote sed -i '5i\\nphenotype_data="comp_pheno"' /wd/data/data-hg19-remote/studies/iossifov_2014/iossifov_2014.conf
+    }
 
-      # generate denovo gene sets
-      {
-        build_run_container ctx:ctx_gpf_remote bash -c '/opt/conda/bin/conda run --no-capture-output -n gpf \
-          generate_denovo_gene_sets.py'
-      }
+    # generate denovo gene sets
+    {
+      build_run_container ctx:ctx_gpf_remote bash -c '/opt/conda/bin/conda run --no-capture-output -n gpf \
+        generate_denovo_gene_sets.py'
     }
 
     build_run_container ctx:ctx_gpf_remote /opt/conda/bin/conda run --no-capture-output -n gpf \
@@ -284,7 +285,11 @@ EOT'
     build_run_ctx_init "container" "${gpf_dev_image_ref}"
     defer_ret build_run_ctx_reset
 
-    build_run_container bash -c 'cd /wd; flake8 --format=pylint --output-file=/wd/results/flake8_report --exclude "*old*,*tmp*,*temp*,data-hg19*,gpf*" . || true'
+    build_run_container bash -c '
+      cd /wd; 
+      flake8 --format=pylint \
+        --output-file=/wd/results/flake8_report \
+        --exclude "*old*,*tmp*,*temp*,data-hg19*,gpf*" . || true'
 
     build_run_local cp ./results/flake8_report ./test-results/
   }
