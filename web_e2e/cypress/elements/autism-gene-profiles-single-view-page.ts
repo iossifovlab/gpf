@@ -241,8 +241,8 @@ export class AutismGeneProfilesSingleView extends BasePage {
 
     const studyWrapper = {
       'denovo_lgds': genotypeBlockPage.effectTypesGroups.get('LGDs'),
-      'denovo_missense': 'Missense',
-      'denovo_intron': 'Intron'
+      'denovo_missense': [ 'Missense' ],
+      'denovo_intron': [ 'Intron' ]
     }
     let effectModelFromGenotypeWrapper = new Map<String, String>();
     for(var value in studyWrapper) {
@@ -256,7 +256,6 @@ export class AutismGeneProfilesSingleView extends BasePage {
     let selectedEffects = [];
 
     cy.get('.effect-card > .card-block label').each(label => {
-      console.log(label.text());
       cy.wrap(label).within(checkBox => {
         cy.wrap(checkBox).get('input').then(check => {
           cy.wrap(check).invoke('prop', 'checked').then(isCheck => {

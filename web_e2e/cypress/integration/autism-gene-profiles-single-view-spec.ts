@@ -240,9 +240,8 @@ describe('Single view study table', () => { // use cy.visit and then data test t
       method: 'POST',
       url: '/gpf/api/v3/query_state/save'
     }).as('query');
-    cy.get('#denovo_lgds > :nth-child(2) > .link-genotype-browser > span').then(value => {      
+    cy.get('#denovo_missense > :nth-child(2) > .link-genotype-browser > span').then(value => {      
       cy.wrap(value).parent().parent().parent().invoke('attr', 'id').then(effectType => {
-        //console.log(effectType);
         cy.wrap(effectType).as('effectType');
       });
       cy.wrap(value).click();
