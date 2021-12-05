@@ -37,13 +37,13 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.helpers import study_id_from_path
 
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
+
 from dae.gene.denovo_gene_set_collection_factory import \
     DenovoGeneSetCollectionFactory
 from dae.autism_gene_profile.statistic import AGPStatistic
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
-
 
 logging.basicConfig(
     stream=sys.stderr, level=logging.DEBUG,
@@ -58,6 +58,13 @@ logger.setLevel(logging.INFO)
 
 logger = logging.getLogger("dae.annotation")
 logger.setLevel(logging.INFO)
+
+
+# from urllib.request import urlopen
+# with urlopen("https://www.iossifovlab.com/distribution/public/"
+#         "genomic-resources-repository/.CONTENTS") as repo:
+#     for line in repo:
+#         print(line)
 
 
 def relative_to_this_test_folder(path):
