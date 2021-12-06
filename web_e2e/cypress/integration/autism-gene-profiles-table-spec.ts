@@ -115,7 +115,7 @@ describe('Column filtering dropdown tests', () => {
     page.allAutismGeneSetsDropdownCheckboxes.should('have.length', 1);
   });
 
-  it.only('should test statistic to genotype browser test', () => {
+  it('should test statistic to genotype browser test', () => {
     page.loginAdmin();
 
     cy.intercept({
@@ -143,6 +143,16 @@ describe('Column filtering dropdown tests', () => {
         });
       }
     });
+  });
+
+  it('should check if columns can be removed/added', () => {
+    cy.get('th.table-main-header').should('have.length', 6);
+
+    page.allGeneSetsDropdownButton.click();
+    page.allGeneSetsFilterSets(['autism_scores' ,'autism_gene_sets']);
+    page.allGeneSetsClickApplyButton();
+
+    cy.get('th.table-main-header').should('have.length', 4);
   });
 
   // apply should actually work and make columns disappear/add

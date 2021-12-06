@@ -50,6 +50,27 @@ export class AutismGeneProfilesTable extends BasePage {
     return this.autismGeneSetsDropdown.find('label input');
   }
 
+  get allGeneSetsDropdownButton() {
+    return cy.get('#column-filtering-button > span');
+  }
+
+  allGeneSetsClickApplyButton() {
+    cy.get('#column-filtering-dropdown').within(menu => {
+      cy.wrap(menu).get('button.btn-secondary').click();
+    });
+  }
+
+  allGeneSetsFilterSets(names: String[]) {
+    cy.get('#column-filtering-dropdown').within(menu => {
+      cy.wrap(menu).get('tr > td').each(row => {
+        const found = names.find(name => name === row.text());
+        if(found !== undefined && found !== null) {
+          cy.wrap(row).click();
+        }
+      });
+    });
+  }
+
   get firstTabCloseButton() {
     return cy.get('nav span').contains('×').first();
   }
