@@ -3,7 +3,7 @@
     <select class="row-sm-3 form-control" [(ngModel)]="selectedGeneSetsCollection" required style="width: 100%" >
       <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{ collection.desc }}</option>
     </select>
-    <ngb-accordion *ngIf="selectedGeneSetsCollection?.types" activeIds="{{defaultSelectedDenovoGeneSetId}}" destroyOnHide="false"
+    <ngb-accordion *ngIf="selectedGeneSetsCollection?.types" activeIds="{{defaultSelectedDenovoGeneSetId}}" [destroyOnHide]="false"
         #acc="ngbAccordion" class="gene-sets-types row-sm-3">
       <ngb-panel *ngFor="let type of selectedGeneSetsCollection.types" id="{{type.datasetId}}-{{type.personSetCollectionId}}-denovo-geneset">
         <ng-template ngbPanelTitle *ngIf="selectedGeneSetsCollection?.types?.length > 0">

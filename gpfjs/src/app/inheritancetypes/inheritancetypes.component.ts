@@ -14,6 +14,7 @@ export class InheritancetypesComponent extends StatefulComponent implements OnCh
 
   @Input()
   inheritanceTypes: Set<string>;
+  public inheritanceTypeDisplayNames: Map<string, string>;
 
   @Input()
   @Validate(SetNotEmpty, { message: 'Select at least one.' })
@@ -21,6 +22,16 @@ export class InheritancetypesComponent extends StatefulComponent implements OnCh
 
   constructor(protected store: Store) {
     super(store, InheritancetypesState, 'inheritanceTypes');
+    this.inheritanceTypeDisplayNames = new Map();
+    this.inheritanceTypeDisplayNames.set('reference', 'Reference');
+    this.inheritanceTypeDisplayNames.set('mendelian', 'Mendelian');
+    this.inheritanceTypeDisplayNames.set('denovo', 'Denovo');
+    this.inheritanceTypeDisplayNames.set('possible_denovo', 'Possible denovo');
+    this.inheritanceTypeDisplayNames.set('omission', 'Omission');
+    this.inheritanceTypeDisplayNames.set('possible_omission', 'Possible omission');
+    this.inheritanceTypeDisplayNames.set('other', 'Other');
+    this.inheritanceTypeDisplayNames.set('missing', 'Missing');
+    this.inheritanceTypeDisplayNames.set('unknown', 'Unknown');
   }
 
   ngOnChanges() {
@@ -37,19 +48,5 @@ export class InheritancetypesComponent extends StatefulComponent implements OnCh
   updateInheritanceTypes(newValues: Set<string>): void {
     this.selectedValues = newValues;
     this.store.dispatch(new SetInheritanceTypes(newValues));
-  }
-
-  get inheritanceTypeDisplayNames() {
-    return {
-     'reference': 'Reference',
-     'mendelian': 'Mendelian',
-     'denovo': 'Denovo',
-     'possible_denovo': 'Possible denovo',
-     'omission': 'Omission',
-     'possible_omission': 'Possible omission',
-     'other': 'Other',
-     'missing': 'Missing',
-     'unknown': 'Unknown'
-    };
   }
 }

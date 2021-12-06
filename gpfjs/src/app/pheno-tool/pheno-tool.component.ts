@@ -25,7 +25,7 @@ export class PhenoToolComponent implements OnInit {
   @Select(ErrorsState) errorsState$: Observable<ErrorsModel>;
 
   phenoToolResults: PhenoToolResults;
-  private phenoToolState: object;
+  public phenoToolState: object;
 
   public disableQueryButtons = false;
 
