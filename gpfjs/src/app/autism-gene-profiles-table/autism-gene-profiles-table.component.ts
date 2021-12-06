@@ -60,6 +60,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
 
   private pageIndex = 1;
   private loadMoreGenes = true;
+  public showSearchWarning = false;
 
   public geneInput: string;
   public searchKeystrokes$: Subject<string> = new Subject();
@@ -341,13 +342,17 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
 
   public updateGenes(): void {
     this.loadMoreGenes = false;
+    this.showSearchWarning = false;
     this.pageIndex++;
+
     this.autismGeneProfilesService
-    .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
-    .pipe(take(1)).subscribe(res => {
+      .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
+      .pipe(take(1))
+      .subscribe(res => {
         this.genes = this.genes.concat(res);
         this.loadMoreGenes = Object.keys(res).length !== 0 ? true : false;
-    });
+        this.showSearchWarning = !this.loadMoreGenes;
+      });
   }
 
   public search(value: string) {
