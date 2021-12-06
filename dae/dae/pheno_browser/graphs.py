@@ -97,7 +97,7 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
     try:
         male_x = dmale[[col1]]
         y = dmale[col2]
-        res_male = LinearRegression().fit(male_x, y)
+        res_male = LinearRegression().fit(male_x.to_numpy(), y)
     except ValueError:
         traceback.print_exc()
         res_male = None
@@ -105,7 +105,7 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
     try:
         female_x = dfemale[[col1]]
         y = dfemale[col2]
-        res_female = LinearRegression().fit(female_x, y)
+        res_female = LinearRegression().fit(female_x.to_numpy(), y)
     except ValueError:
         traceback.print_exc()
         res_female = None
