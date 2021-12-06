@@ -26,30 +26,27 @@ import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 })
 export class GeneBrowserComponent implements OnInit, OnDestroy {
   @ViewChild(GenePlotComponent) private genePlotComponent: GenePlotComponent;
-  private selectedGene: Gene;
+  public selectedGene: Gene;
   public geneSymbol = '';
-  private maxFamilyVariants = 1000;
+  public maxFamilyVariants = 1000;
   public selectedDataset: Dataset;
   private selectedDatasetId: string;
   public showResults: boolean;
   public showError = false;
-  private familyLoadingFinished: boolean;
-  private geneBrowserConfig: GeneBrowser;
+  public familyLoadingFinished: boolean;
+  public geneBrowserConfig: GeneBrowser;
   private subscriptions: Subscription[] = [];
 
   public readonly affectedStatusValues = affectedStatusValues;
   public readonly effectTypeValues = effectTypeValues;
   public readonly variantTypeValues = variantTypeValues;
 
-  private genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
-  private summaryVariantsArray: SummaryAllelesArray;
-  private summaryVariantsArrayFiltered: SummaryAllelesArray;
+  public genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
+  public summaryVariantsArray: SummaryAllelesArray;
+  public summaryVariantsArrayFiltered: SummaryAllelesArray;
   public summaryVariantsFilter: SummaryAllelesFilter = new SummaryAllelesFilter();
 
   private variantUpdate$: Subject<void> = new Subject();
-
-  private selectedFrequencies: [number, number] = [0, 0];
-  private selectedRegion: [number, number] = [0, 0];
 
   public legend: Array<PersonSet>;
 
@@ -225,7 +222,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     );
   }
 
-  private onSubmit(event: Event): void {
+  public onSubmit(event: Event): void {
     const target = <HTMLFormElement>event.target;
 
     target.queryData.value = JSON.stringify({...this.requestParams, 'download': true});

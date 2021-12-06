@@ -151,7 +151,7 @@ export class ColumnGroup {
 
 export class GenotypeBrowser {
 
-  static tableColumnsFromJson(json: Array<any>): Array<Column | ColumnGroup> {
+  static tableColumnsFromJson(json: Array<any>): Array<Column & ColumnGroup> {
     const result = [];
     for (const column of json) {
       if ('columns' in column) {
@@ -197,7 +197,7 @@ export class GenotypeBrowser {
     readonly hasStudyFilters: boolean,
     readonly hasStudyTypes: boolean,
     readonly hasGraphicalPreview: boolean,
-    readonly tableColumns: Array<Column | ColumnGroup>,
+    readonly tableColumns: Array<Column & ColumnGroup>,
     readonly personFilters: Array<PersonFilter>,
     readonly familyFilters: Array<PersonFilter>,
     readonly inheritanceTypeFilter: Set<string>,

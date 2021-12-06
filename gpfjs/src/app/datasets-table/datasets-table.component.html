@@ -1,6 +1,6 @@
 <div class="row">
   <div class="col-12">
-    <gpf-table noScrollOptimization="true" [dataSource]="tableData$ | async" style="width: 100%">
+    <gpf-table [noScrollOptimization]="true" [dataSource]="tableData$ | async" style="width: 100%">
       <gpf-table-column columnWidth="15px" columnMaxWidth="25px">
         <gpf-table-header caption="Dataset" field="dataset" [comparator]="datasetComparator"></gpf-table-header>
         <gpf-table-content>

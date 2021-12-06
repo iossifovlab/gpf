@@ -8,10 +8,10 @@ const otherEffectTypes = [
   'noStart', 'noEnd', 'no-frame-shift', 'non-coding', 'intron', 'intergenic',
   '3\'UTR', '3\'UTR-intron', '5\'UTR', '5\'UTR-intron', 'CDS', 'CNV+', 'CNV-'
 ];
-export const affectedStatusValues = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
+type affectedStatusType = 'Affected only' | 'Unaffected only' | 'Affected and unaffected';
+export const affectedStatusValues: Array<affectedStatusType> = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
 export const effectTypeValues = ['LGDs', 'Missense', 'Synonymous', 'CNV+', 'CNV-', 'Other'];
 export const variantTypeValues = ['sub', 'ins', 'del', 'CNV+', 'CNV-'];
-type affectedStatusType = 'Affected only' | 'Unaffected only' | 'Affected and unaffected';
 
 export class SummaryAllele {
   public location: string;

@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { Validate } from 'class-validator';
-import { PersonSetCollection } from '../datasets/datasets';
+import { PersonSet, PersonSetCollection } from '../datasets/datasets';
 import { SetNotEmpty } from '../utils/set.validators';
 import { Store } from '@ngxs/store';
 import { SetPedigreeSelector, PedigreeSelectorState } from './pedigree-selector.state';
@@ -82,7 +82,7 @@ export class PedigreeSelectorComponent extends StatefulComponent implements OnIn
     this.store.dispatch(new SetPedigreeSelector(this.selectedCollection.id, this.selectedValues));
   }
 
-  pedigreeCheckValue(pedigreeSelector: PersonSetCollection, value: boolean): void {
+  pedigreeCheckValue(pedigreeSelector: PersonSet, value: boolean): void {
     if (value) {
       this.selectedValues.add(pedigreeSelector.id);
     } else {

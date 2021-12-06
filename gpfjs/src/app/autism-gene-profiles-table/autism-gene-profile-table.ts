@@ -2,6 +2,7 @@ import { GenomicScore } from 'app/genotype-browser/genotype-browser';
 import { Type } from 'class-transformer';
 
 export class AgpConfig {
+  shown: Array<{category: any, section: string, id: string}>;
   defaultDataset: string;
 
   @Type(() => AgpGeneSetsCategory)
@@ -121,6 +122,9 @@ export class AgpDataset {
   meta: string;
   defaultVisible: boolean;
 
+  shown: AgpDatasetPersonSet[];
+  statistics: AgpDatasetStatistic[];
+
   @Type(() => AgpDatasetPersonSet)
   personSets: AgpDatasetPersonSet[];
 
@@ -145,6 +149,8 @@ export class AgpDatasetPersonSet {
   parentsCount: number;
   childrenCount: number;
   defaultVisible = true;
+  
+  shown: AgpDatasetStatistic[];
   
   @Type(() => AgpDatasetStatistic)
   statistics: AgpDatasetStatistic[];

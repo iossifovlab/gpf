@@ -21,19 +21,6 @@ export class PhenoBrowserTableComponent {
 
   @Input('measures') measures: PhenoMeasures;
 
-//  minDomainComparator(a: any, b: any): number {
-//    let leftVal = a.valuesDomain[0];
-//    let rightVal = b.valuesDomain[0];
-//
-//    return PhenoBrowserTableComponent.compare(leftVal, rightVal);
-//  }
-//  maxDomainComparator(a: any, b: any): number {
-//    let leftVal = a.valuesDomain[1];
-//    let rightVal = b.valuesDomain[1];
-//
-//    return PhenoBrowserTableComponent.compare(leftVal, rightVal);
-//  }
-
   static compare(leftVal: any, rightVal: any): number {
     if (leftVal == null && rightVal == null) {
       return 0;
@@ -80,7 +67,7 @@ export class PhenoBrowserTableComponent {
     }
   }
 
-  openModal(content, imageUrl) {
+  openModal(imageUrl) {
     if (imageUrl) {
       const modalRef = this.modalService.open(PhenoBrowserModalContentComponent, {
         windowClass: 'modal-fullscreen'

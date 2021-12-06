@@ -11,11 +11,10 @@
     <div class="col-sm-9">
       <gpf-histogram
 		    *ngIf="selectedGeneWeights"
-		    width="650" height="145"
+		    [width]="650"
+        [height]="145"
 		    [bins]="selectedGeneWeights.bins"
         [bars]="selectedGeneWeights.bars"
-        [domainMin]="domainMin"
-        [domainMax]="domainMax"
         [logScaleX]="selectedGeneWeights.logScaleX"
 		  	[logScaleY]="selectedGeneWeights.logScaleY"
 		    [rangesCounts]="rangesCounts | async"
