@@ -69,11 +69,10 @@ class StudyWrapperBase:
         }
         result["name"] = result["name"] or result["id"]
         result["genotype_browser"] = config.genotype_browser.enabled
-        result["common_report"] = { "enabled" : config.common_report.enabled }
+        result["common_report"] = {"enabled": config.common_report.enabled}
         result["enrichment_tool"] = config.enrichment.enabled
 
         return result
-        
 
     @staticmethod
     def build_genotype_data_group_description(
@@ -134,11 +133,13 @@ class StudyWrapperBase:
                 )
                 table_columns.append(new_col)
             else:
-                if column in config.genotype_browser.columns.genotype:
+                if config.genotype_browser.columns.genotype and \
+                        column in config.genotype_browser.columns.genotype:
                     table_columns.append(
                         dict(config.genotype_browser.columns.genotype[column])
                     )
-                elif column in config.genotype_browser.columns.phenotype:
+                elif config.genotype_browser.columns.phenotype and \
+                        column in config.genotype_browser.columns.phenotype:
                     table_columns.append(
                         dict(config.genotype_browser.columns.phenotype[column])
                     )
@@ -154,10 +155,14 @@ class StudyWrapperBase:
         result["name"] = result["name"] or result["id"]
 
         result["enrichment"] = config.enrichment.to_dict()
-        if "coding_len_background_model" in result["enrichment"]["background"].keys():
-            del result["enrichment"]["background"]["coding_len_background_model"]["file"]
-        if "samocha_background_model" in result["enrichment"]["background"].keys():
-            del result["enrichment"]["background"]["samocha_background_model"]["file"]
+        if "coding_len_background_model" in \
+                result["enrichment"]["background"].keys():
+            del result["enrichment"]["background"][
+                    "coding_len_background_model"]["file"]
+        if "samocha_background_model" in \
+                result["enrichment"]["background"].keys():
+            del result["enrichment"]["background"][
+                    "samocha_background_model"]["file"]
 
         result["study_names"] = None
         if result["studies"] is not None:
