@@ -1,5 +1,10 @@
 <div *ngIf="gene$ | async as gene" style="padding: 25px">
-  <h2 style="margin-right: 15px">{{ geneSymbol }}</h2>
+  <h2 style="margin-right: 15px">
+    {{ geneSymbol }}
+    <ng-container *ngIf="isInGeneCompare">
+      <button class="delete-component-button" (click)="deleteComponent()">&#10006;</button>
+    </ng-container>
+  </h2>
 
   <div class="wrapper" style="margin-bottom: 18px">
     <a class="link-external-page" [attr.href]="links.GeneBrowser" id="gene-browser-link" target="_blank"

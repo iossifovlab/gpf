@@ -36,3 +36,10 @@ td {
 .link-genotype-browser:hover {
   text-decoration: underline;
 }
+
+.delete-component-button {
+  float: right;
+  padding: 0;
+  border: none;
+  background: none;
+}

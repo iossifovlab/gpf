@@ -27,6 +27,10 @@ export class AutismGeneProfileSingleViewWrapperComponent implements OnInit, Afte
     this.geneSymbols = this.paramToArray(this.route.snapshot.params.genes);
   }
 
+  public removeGeneSymbol($event: string): void {
+    this.geneSymbols.splice(this.geneSymbols.indexOf($event), 1);
+  }
+
   private paramToArray(param: string): string[] {
     const separator = this.allowedSeparators.find(s => param.indexOf(s) > -1);
     return param.toUpperCase().split(separator).filter(e => e !== '');

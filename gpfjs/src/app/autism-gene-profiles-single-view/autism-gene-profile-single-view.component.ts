@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import {
   AgpDatasetPersonSet, AgpDatasetStatistic, AgpGene,
   AgpGenomicScores, AgpConfig, AgpEffectType
@@ -35,8 +35,10 @@ import { EffectTypes } from 'app/effect-types/effect-types';
 export class AutismGeneProfileSingleViewComponent implements OnInit {
   @Input() public readonly geneSymbol: string;
   @Input() public config: AgpConfig;
-  public genomicScoresGeneWeights = [];
+  @Input() public isInGeneCompare = false;
+  @Output() public deleteComponentEvent = new EventEmitter<string>();
 
+  public genomicScoresGeneWeights = [];
   public gene$: Observable<AgpGene>;
 
   public _histogramOptions = {
@@ -159,6 +161,10 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     AutismGeneProfileSingleViewComponent.goToQuery(
       this.store, this.queryService, geneSymbol, personSet, datasetId, statistic
     );
+  }
+
+  public deleteComponent(): void {
+    this.deleteComponentEvent.emit(this.geneSymbol);
   }
 
   public static goToQuery(

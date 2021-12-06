@@ -2,8 +2,10 @@
   <ng-container *ngIf="$autismGeneToolConfig | async as config">
     <ng-container *ngFor="let geneSymbol of geneSymbols">
       <gpf-autism-gene-profile-single-view
+        (deleteComponentEvent)="removeGeneSymbol($event)"
         [config]="config"
-        [geneSymbol]="geneSymbol">
+        [geneSymbol]="geneSymbol"
+        [isInGeneCompare]="geneSymbols.length !== 0">
       </gpf-autism-gene-profile-single-view>
     </ng-container>
   </ng-container>
