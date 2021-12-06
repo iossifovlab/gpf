@@ -24,6 +24,7 @@ export class UserEditComponent implements OnInit {
   @ViewChild('nameInput') nameInput: ElementRef;
 
   dropdownSettings: IDropdownSettings = {};
+  createUserError = '';
 
   lockedOptions = {
     width: 'style',

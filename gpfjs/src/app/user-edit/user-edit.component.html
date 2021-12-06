@@ -79,7 +79,7 @@
               <div style="pointer-events: none; opacity: 0.7; cursor: not-allowed;">
                 <ng-multiselect-dropdown
                   [settings]="dropdownSettings"
-                  [placeholder]="getDefaultGroups()">
+                  [placeholder]="getDefaultGroups().join(', ')">
                 </ng-multiselect-dropdown>
              </div>
             </div>
@@ -116,7 +116,7 @@
             mwlConfirmationPopover
             confirmText="Back"
             title="Remove password"
-            appendToBody="true"
+            [appendToBody]="true"
             [customTemplate]="confirmation"
             [popoverMessage]="'Changes on this screen will not be saved.'"
             (confirm)="goBack()">Back</button>

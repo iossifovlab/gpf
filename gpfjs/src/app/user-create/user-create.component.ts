@@ -9,6 +9,7 @@ import { UsersGroupsService } from '../users-groups/users-groups.service';
 import { UserGroup } from '../users-groups/users-groups';
 import { UserGroupsSelectorComponent } from 'app/user-groups-selector/user-groups-selector.component';
 import { take } from 'rxjs/operators';
+import { IDropdownSettings } from 'ng-multiselect-dropdown';
 
 @Component({
   selector: 'gpf-users-create',
@@ -34,6 +35,7 @@ export class UserCreateComponent implements OnInit {
   groups$ = new BehaviorSubject<UserGroup[]>(null);
   createUserError = '';
   edit = false;
+  dropdownSettings: IDropdownSettings = {};
 
   constructor(
     private router: Router,
