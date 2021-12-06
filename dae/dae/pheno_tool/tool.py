@@ -9,7 +9,7 @@ import logging
 import numpy as np
 import pandas as pd
 from scipy.stats.stats import ttest_ind
-from sklearn.linear_model import LinearRegression
+from dae.pheno.utils.lin_regress import LinearRegression
 
 from dae.pheno.common import MeasureType
 from dae.variants.attributes import Role, Sex

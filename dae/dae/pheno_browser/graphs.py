@@ -18,7 +18,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 from dae.pheno.common import ROLES_GRAPHS_DEFINITION
-from sklearn.linear_model import LinearRegression
+from dae.pheno.utils.lin_regress import LinearRegression
 
 import traceback
 
