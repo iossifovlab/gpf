@@ -37,7 +37,7 @@
           </th>
 
           <th style="vertical-align: top; border-bottom: 1px" *ngFor="let row of currentPeopleCounter.rows">
-            <span>{{ row | getPeopleCounterRow: currentPeopleCounter.rows }}</span>
+            <span>{{ row | getPeopleCounterRow }}</span>
           </th>
         </thead>
         <tbody>
@@ -76,7 +76,7 @@
         </colgroup>
         <tbody>
           <ng-template ngFor let-pedigreeGroup [ngForOf]="currentPedigreeTable.pedigrees">
-            <tr [gpf-common-reports-row] [pedigreeGroup]="pedigreeGroup"></tr>
+            <tr gpf-common-reports-row [pedigreeGroup]="pedigreeGroup"></tr>
           </ng-template>
         </tbody>
       </table>

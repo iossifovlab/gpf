@@ -1,5 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
+import { PedigreeCounter } from '../variant-reports';
 
 @Component({
   selector: 'gpf-common-reports-pedigree-cell',
@@ -7,7 +7,7 @@ import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
   styleUrls: ['./common-reports-pedigree-cell.component.css']
 })
 export class CommonReportsPedigreeCellComponent implements OnInit {
-  @Input() pedigree: PedigreeData;
+  @Input() pedigree: PedigreeCounter;
 
   constructor() { }
 
