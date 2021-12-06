@@ -1,8 +1,8 @@
-/* tslint:disable:no-unused-variable */
+/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 
-import { EffecttypesColumnComponent } from './effecttypes-column.component';
+import { EffecttypesColumnComponent } from './effect-types-column.component';
 
 describe('EffecttypesColumnComponent', () => {
   let component: EffecttypesColumnComponent;

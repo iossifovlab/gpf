@@ -3,7 +3,8 @@
   "angularCompilerOptions": {
     "entryModule": "./app/app.module#AppModule",
     "genDir": "./ngfactory",
-    "enableIvy": true
+    "enableIvy": true,
+    "strictTemplates": true
   },
   "compilerOptions": {
     "outDir": "./dist/out-tsc",
@@ -19,6 +20,8 @@
     "lib": [
       "es2017",
       "dom"
-    ]
+    ],
+    "noImplicitThis": true,
+    "strictBindCallApply": true
     }
 }

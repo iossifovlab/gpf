@@ -1,7 +1,7 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { of } from 'rxjs';
 import { AutismGeneProfilesService } from './autism-gene-profiles.service';
 import { AgpConfig, AgpGene } from 'app/autism-gene-profiles-table/autism-gene-profile-table';

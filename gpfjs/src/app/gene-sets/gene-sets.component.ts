@@ -19,13 +19,13 @@ import { StatefulComponent } from 'app/common/stateful-component';
 export class GeneSetsComponent extends StatefulComponent implements OnInit {
   geneSetsCollections: Array<GeneSetsCollection>;
   geneSets: Array<GeneSet>;
-  private searchQuery: string;
+  public searchQuery: string;
+  public defaultSelectedDenovoGeneSetId: string;
 
   private geneSetsQueryChange = new Subject<[string, string, Object]>();
   private geneSetsResult: Observable<GeneSet[]>;
 
   private selectedDatasetId: string;
-  private defaultSelectedDenovoGeneSetId: string;
 
   @ValidateNested()
   private geneSetsLocalState = new GeneSetsLocalState();

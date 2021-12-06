@@ -7,7 +7,7 @@ import {
   EFFECT_TYPE_CHECK,
   EFFECT_TYPE_UNCHECK,
   effectTypesReducer
-} from './effecttypes';
+} from './effect-types';
 
 
 describe('EffectTypesReducer', () => {

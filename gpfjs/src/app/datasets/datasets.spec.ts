@@ -520,7 +520,7 @@ describe('Dataset', () => {
     true,
     true,
     false,
-    ['1', '2', false],
+    {enabled: true},
     new GenotypeBrowser(
       false,
       true,
@@ -597,7 +597,7 @@ describe('Dataset', () => {
     false,
     true,
     true,
-    ['2', '3', true],
+    {enabled: true},
     new GenotypeBrowser(
       true,
       false,
@@ -672,7 +672,7 @@ describe('Dataset', () => {
     phenotype_tool: true,
     enrichment_tool: true,
     phenotype_browser: false,
-    common_report: ['1', '2', false],
+    common_report: {enabled: true},
     genotype_browser_config: {
       has_pedigree_selector: false,
       has_present_in_child: true,
@@ -827,7 +827,7 @@ describe('Dataset', () => {
     phenotype_tool: false,
     enrichment_tool: true,
     phenotype_browser: true,
-    common_report: ['2', '3', true],
+    common_report: {enabled: true},
     genotype_browser_config: {
       has_pedigree_selector: true,
       has_present_in_child: false,
@@ -998,7 +998,7 @@ describe('Dataset', () => {
       phenotype_tool: true,
       enrichment_tool: true,
       phenotype_browser: false,
-      common_report: ['1', '2', false],
+      common_report: {enabled: true},
       genotype_browser_config: {
         has_pedigree_selector: false,
         has_present_in_child: true,

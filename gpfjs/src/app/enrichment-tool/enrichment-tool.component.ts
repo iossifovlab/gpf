@@ -50,7 +50,7 @@ export class EnrichmentToolComponent implements OnInit {
   }
 
   @Selector([GenesBlockComponent.genesBlockState, EnrichmentModelsState])
-  static enrichmentToolStateSelector(genesBlockState, enrichmentModelsState) {
+  static enrichmentToolStateSelector(genesBlockState: object, enrichmentModelsState: object) {
     return {
       ...genesBlockState, ...enrichmentModelsState,
     };

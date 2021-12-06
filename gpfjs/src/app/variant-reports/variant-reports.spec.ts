@@ -702,40 +702,40 @@ describe('VariantReport', () => {
   it('should create variant report from json', () => {
     const mockVariantReport1 = new VariantReport('id1', 'studyName1', 'studyDescription1',
       new PeopleReport(
-      PeopleCounter[2] = [
-        new PeopleCounter([
-          new GroupCounter('col1', [
-            new ChildrenCounter('row1', 'col1', 7),
-            new ChildrenCounter('row2', 'col1', 13),
-            new ChildrenCounter('row3', 'col1', 17),
-          ]),
-          new GroupCounter('col2', [
-            new ChildrenCounter('row1', 'col2', 15),
-            new ChildrenCounter('row2', 'col2', 666),
-            new ChildrenCounter('row3', 'col2', 42),
-          ]),
-        ],
-          'mock_group',
-          ['row1', 'row2', 'row3'],
-          ['col1', 'col2', 'col3']
-        ),
-        new PeopleCounter([
-          new GroupCounter('col3', [
-            new ChildrenCounter('row1', 'col3', 67),
-            new ChildrenCounter('row2', 'col3', 12),
-            new ChildrenCounter('row3', 'col3', 18),
-          ]),
-          new GroupCounter('col4', [
-            new ChildrenCounter('row1', 'col4', 14),
-            new ChildrenCounter('row2', 'col4', 554),
-            new ChildrenCounter('row3', 'col4', 67),
-          ]),
-        ],
-          'mock_group',
-          ['row1', 'row2', 'row3'],
-          ['col1', 'col2', 'col3']
-        )
-      ]),
+        [
+          new PeopleCounter([
+            new GroupCounter('col1', [
+              new ChildrenCounter('row1', 'col1', 7),
+              new ChildrenCounter('row2', 'col1', 13),
+              new ChildrenCounter('row3', 'col1', 17),
+            ]),
+            new GroupCounter('col2', [
+              new ChildrenCounter('row1', 'col2', 15),
+              new ChildrenCounter('row2', 'col2', 666),
+              new ChildrenCounter('row3', 'col2', 42),
+            ]),
+          ],
+            'mock_group',
+            ['row1', 'row2', 'row3'],
+            ['col1', 'col2', 'col3']
+          ),
+          new PeopleCounter([
+            new GroupCounter('col3', [
+              new ChildrenCounter('row1', 'col3', 67),
+              new ChildrenCounter('row2', 'col3', 12),
+              new ChildrenCounter('row3', 'col3', 18),
+            ]),
+            new GroupCounter('col4', [
+              new ChildrenCounter('row1', 'col4', 14),
+              new ChildrenCounter('row2', 'col4', 554),
+              new ChildrenCounter('row3', 'col4', 67),
+            ]),
+          ],
+            'mock_group',
+            ['row1', 'row2', 'row3'],
+            ['col1', 'col2', 'col3']
+          )
+        ]),
       new FamilyReport(
         [
           new FamilyCounters([

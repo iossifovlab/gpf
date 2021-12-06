@@ -1,6 +1,6 @@
 import { Input, Component, OnInit, OnChanges, ViewChild, Output, EventEmitter, SimpleChanges } from '@angular/core';
 import * as d3 from 'd3';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
@@ -226,7 +226,7 @@ export class HistogramComponent implements OnInit, OnChanges {
     this.redrawXAxis(svg, width, height);
 
     const leftAxis = d3.axisLeft(this.scaleYAxis);
-    leftAxis.ticks(3).tickFormat(d3.format('.0f'));
+    leftAxis.ticks(3, '.0f');
     svg.append('g')
         .call(leftAxis);
     svg.selectAll('bar')

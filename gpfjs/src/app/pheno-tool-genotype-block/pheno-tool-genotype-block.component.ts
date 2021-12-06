@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { PresentInParentState, PresentInParentModel } from 'app/present-in-parent/present-in-parent.state';
-import { EffecttypesState, EffectTypeModel } from 'app/effecttypes/effecttypes.state';
+import { EffecttypesState, EffectTypeModel } from 'app/effect-types/effect-types.state';
 import { Selector } from '@ngxs/store';
 
 @Component({

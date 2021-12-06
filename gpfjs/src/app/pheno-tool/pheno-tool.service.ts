@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { Observable } from 'rxjs';
 
 import { ConfigService } from '../config/config.service';
@@ -17,7 +17,7 @@ export class PhenoToolService {
     private config: ConfigService
   ) {}
 
-  public getPhenoToolResults(filter): Observable<PhenoToolResults> {
+  public getPhenoToolResults(filter: object): Observable<PhenoToolResults> {
     const headers = { 'Content-Type': 'application/json' };
     const options = { headers: headers, withCredentials: true };
 

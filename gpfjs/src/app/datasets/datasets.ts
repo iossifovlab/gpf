@@ -22,7 +22,7 @@ export class PersonSet extends IdName {
     super(id, name);
   }
 
-  public static fromJson(json: object): PersonSet {
+  public static fromJson(json: any): PersonSet {
     if (!json) {
       return undefined;
     }
@@ -54,7 +54,7 @@ export class PersonSetCollection extends IdName {
     super(id, name);
   }
 
-  public static fromJson(json: object): PersonSetCollection[] {
+  public static fromJson(json: any): PersonSetCollection[] {
     if (!json) {
       return undefined;
     }
@@ -144,14 +144,14 @@ export class ColumnGroup {
   static fromJson(json: any): ColumnGroup {
     return new ColumnGroup(
       json['name'],
-      json['columns'].map(col => Column.fromJson(col)),
+      json['columns'].map((col: any) => Column.fromJson(col)),
     );
   }
 }
 
 export class GenotypeBrowser {
 
-  static tableColumnsFromJson(json: Array<any>): Array<Column | ColumnGroup> {
+  static tableColumnsFromJson(json: Array<any>): Array<Column & ColumnGroup> {
     const result = [];
     for (const column of json) {
       if ('columns' in column) {
@@ -197,7 +197,7 @@ export class GenotypeBrowser {
     readonly hasStudyFilters: boolean,
     readonly hasStudyTypes: boolean,
     readonly hasGraphicalPreview: boolean,
-    readonly tableColumns: Array<Column | ColumnGroup>,
+    readonly tableColumns: Array<Column & ColumnGroup>,
     readonly personFilters: Array<PersonFilter>,
     readonly familyFilters: Array<PersonFilter>,
     readonly inheritanceTypeFilter: Set<string>,
@@ -273,7 +273,7 @@ export class Dataset extends IdName {
     );
   }
 
-  static fromDatasetAndDetailsJson(datasetJson, detailsJson): Dataset {
+  static fromDatasetAndDetailsJson(datasetJson: any, detailsJson: any): Dataset {
     if (!datasetJson || !detailsJson) {
       return undefined;
     }
@@ -330,7 +330,7 @@ export class Dataset extends IdName {
     readonly phenotypeTool: boolean,
     readonly enrichmentTool: boolean,
     readonly phenotypeBrowser: boolean,
-    readonly commonReport: object,
+    readonly commonReport: {enabled: boolean},
     readonly genotypeBrowserConfig: GenotypeBrowser,
     readonly personSetCollections: PersonSetCollections,
     readonly groups: UserGroup[],

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { Observable } from 'rxjs';
 
 import { ConfigService } from '../config/config.service';
@@ -17,7 +17,7 @@ export class EnrichmentQueryService {
     private config: ConfigService
   ) {}
 
-  getEnrichmentTest(filter): Observable<EnrichmentResults> {
+  getEnrichmentTest(filter: object): Observable<EnrichmentResults> {
     const options = { headers: this.headers, withCredentials: true };
 
     return this.http.post(this.config.baseUrl + this.genotypePreviewUrl, filter, options)

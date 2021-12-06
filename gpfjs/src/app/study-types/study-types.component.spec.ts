@@ -1,8 +1,8 @@
-/* tslint:disable:no-unused-variable */
+/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { StudyTypesComponent } from './study-types.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { of } from 'rxjs';
 import { NgxsModule } from '@ngxs/store';
 import { SetStudyTypes } from './study-types.state';
@@ -26,10 +26,10 @@ describe('StudyTypesComponent', () => {
     fixture = TestBed.createComponent(StudyTypesComponent);
     component = fixture.componentInstance;
     component['store'] = {
-      selectOnce(f) {
+      selectOnce() {
         return of({studyTypes: ['value1', 'value2']});
       },
-      dispatch(set) {}
+      dispatch() {}
     } as any;
     fixture.detectChanges();
   });
@@ -45,7 +45,7 @@ describe('StudyTypesComponent', () => {
 
   it('should update variant types', () => {
     component.selectedValues = undefined;
-    component['store'] = { dispatch(set) {} } as any;
+    component['store'] = { dispatch() {} } as any;
     const dispatchSpy = spyOn(component['store'], 'dispatch');
     const mockSet = new Set(['value1', 'value2', 'value3']);
 

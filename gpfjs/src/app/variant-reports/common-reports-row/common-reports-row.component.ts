@@ -1,7 +1,6 @@
 import { Component, OnInit, AfterViewInit, Input, ComponentFactoryResolver, ViewChild, ViewChildren, ComponentFactory, ViewContainerRef, QueryList } from '@angular/core';
 import { PedigreeCounter } from '../variant-reports';
 import { CommonReportsPedigreeCellComponent } from '../common-reports-pedigree-cell/common-reports-pedigree-cell.component';
-import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 
 @Component({
   selector: '[gpf-common-reports-row]',
@@ -9,7 +8,7 @@ import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
   styleUrls: ['./common-reports-row.component.css']
 })
 export class CommonReportsRowComponent implements OnInit, AfterViewInit {
-  @Input() pedigreeGroup: [PedigreeData];
+  @Input() pedigreeGroup: PedigreeCounter[];
 
   @ViewChildren("gpfPedigreeHost", {read: ViewContainerRef}) gpfPedigreeHost: QueryList<ViewContainerRef>;
 
@@ -30,7 +29,7 @@ export class CommonReportsRowComponent implements OnInit, AfterViewInit {
     }
   }
 
-  async createPedigree(viewContainer: ViewContainerRef, pedigree: PedigreeData): Promise<any> {
+  async createPedigree(viewContainer: ViewContainerRef, pedigree: PedigreeCounter): Promise<any> {
     const component = viewContainer.createComponent<CommonReportsPedigreeCellComponent>(this.componentFactory);
     component.instance.pedigree = pedigree;
   }

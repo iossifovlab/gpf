@@ -32,8 +32,8 @@ export class GenotypeBrowserComponent implements OnInit {
   @Input()
   selectedDatasetId: string;
   selectedDataset: Dataset;
-  private genotypeBrowserState: Object;
-  private loadingFinished: boolean;
+  public genotypeBrowserState: Object;
+  public loadingFinished: boolean;
 
   @Select(GenotypeBrowserComponent.genotypeBrowserStateSelector) state$: Observable<any[]>;
   @Select(ErrorsState) errorsState$: Observable<ErrorsModel>;

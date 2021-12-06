@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { AgpConfig, AgpGene } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { ConfigService } from 'app/config/config.service';
 import { plainToClass } from 'class-transformer';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -14,33 +14,30 @@ export class AutismGeneProfilesService {
   private readonly configUrl = 'autism_gene_tool/configuration';
   private readonly genesUrl = 'autism_gene_tool/genes/';
 
-  constructor(
+  public constructor(
     private http: HttpClient,
-    private config: ConfigService,
+    private config: ConfigService
   ) {}
 
-  getConfig(): Observable<AgpConfig> {
+  public getConfig(): Observable<AgpConfig> {
     return this.http
-    .get(this.config.baseUrl + this.configUrl).pipe(
-      map(res => {
-        if (Object.keys(res).length === 0) {
-          return;
-        }
-        return plainToClass(AgpConfig, res);
-      })
-    );
+      .get(this.config.baseUrl + this.configUrl).pipe(
+        map(res => {
+          if (Object.keys(res).length === 0) {
+            return;
+          }
+          return plainToClass(AgpConfig, res);
+        })
+      );
   }
 
-  getGene(geneSymbol: string): Observable<AgpGene> {
+  public getGene(geneSymbol: string): Observable<AgpGene> {
     return this.http
-    .get(this.config.baseUrl + this.genesUrl + geneSymbol).pipe(
-      map(res => {
-        return plainToClass(AgpGene, res);
-      })
-    );
+      .get(this.config.baseUrl + this.genesUrl + geneSymbol)
+      .pipe(map(res => plainToClass(AgpGene, res)));
   }
 
-  getGenes(page: number, searchString?: string, sortBy?: string, order?: string): Observable<AgpGene[]> {
+  public getGenes(page: number, searchString?: string, sortBy?: string, order?: string): Observable<AgpGene[]> {
     let url = this.config.baseUrl + this.genesUrl;
     let params = new HttpParams().set('page', page.toString());
 
@@ -56,13 +53,10 @@ export class AutismGeneProfilesService {
       }
     }
 
-    url += `?${params}`;
+    url += `?${ params.toString() }`;
 
     return this.http.get(url).pipe(
-      map(res => {
-        return (res as Array<Object>)
-          .map(gene => plainToClass(AgpGene, gene));
-      })
+      map(res => (res as Array<any>).map(gene => plainToClass(AgpGene, gene)))
     );
   }
 }

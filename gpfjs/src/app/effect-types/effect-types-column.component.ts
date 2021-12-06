@@ -1,9 +1,9 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { EffectTypes } from './effecttypes';
+import { EffectTypes } from './effect-types';
 
 @Component({
-  selector: 'gpf-effecttypes-column',
-  templateUrl: './effecttypes-column.component.html'
+  selector: 'gpf-effect-types-column',
+  templateUrl: './effect-types-column.component.html'
 })
 export class EffecttypesColumnComponent {
   @Input() effectTypes: EffectTypes;

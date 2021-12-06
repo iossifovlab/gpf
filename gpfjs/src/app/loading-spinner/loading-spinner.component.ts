@@ -1,25 +1,19 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'gpf-loading-spinner',
   templateUrl: './loading-spinner.component.html',
   styleUrls: ['./loading-spinner.component.css']
 })
-export class LoadingSpinnerComponent implements OnInit {
+export class LoadingSpinnerComponent {
+  @Input() public loadingFinished: boolean;
+  @Input() public count: string;
+  @Input() public displayText: string = null;
 
-  @Input() loadingFinished: boolean;
-  @Input() count: string;
-  @Input() displayText: string = null;
-
-  constructor() { }
-
-  ngOnInit(): void {}
-
-  getDisplayText(): string {
-    if(this.displayText) {
+  public getDisplayText(): string {
+    if (this.displayText) {
       return this.displayText;
     }
-    return "Loading..."
+    return 'Loading...';
   }
-
 }

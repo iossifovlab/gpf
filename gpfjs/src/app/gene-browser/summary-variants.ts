@@ -1,4 +1,4 @@
-// TODO: Use effects from effecttypes.ts
+// TODO: Use effects from effect-types.ts
 const lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
 export const codingEffectTypes = [
   'lgds', 'nonsense', 'frame-shift', 'splice-site', 'no-frame-shift-newStop',
@@ -8,7 +8,8 @@ const otherEffectTypes = [
   'noStart', 'noEnd', 'no-frame-shift', 'non-coding', 'intron', 'intergenic',
   '3\'UTR', '3\'UTR-intron', '5\'UTR', '5\'UTR-intron', 'CDS', 'CNV+', 'CNV-'
 ];
-export const affectedStatusValues = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
+type affectedStatusType = 'Affected only' | 'Unaffected only' | 'Affected and unaffected';
+export const affectedStatusValues: Array<affectedStatusType> = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
 export const effectTypeValues = ['LGDs', 'Missense', 'Synonymous', 'CNV+', 'CNV-', 'Other'];
 export const variantTypeValues = ['sub', 'ins', 'del', 'CNV+', 'CNV-'];
 
@@ -56,7 +57,7 @@ export class SummaryAllele {
     return result;
   }
 
-  public get affectedStatus(): string {
+  public get affectedStatus(): affectedStatusType {
     if (this.seenInAffected) {
       if (this.seenInUnaffected) {
         return 'Affected and unaffected';

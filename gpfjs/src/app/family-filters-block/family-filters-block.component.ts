@@ -5,6 +5,7 @@ import { Store, Selector } from '@ngxs/store';
 import { FamilyIdsState } from 'app/family-ids/family-ids.state';
 import { PersonFiltersState } from 'app/person-filters/person-filters.state';
 import { StateReset } from 'ngxs-reset-plugin';
+import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'gpf-family-filters-block',
@@ -14,7 +15,7 @@ import { StateReset } from 'ngxs-reset-plugin';
 export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   @Input() dataset: Dataset;
   @Input() genotypeBrowserState: Object;
-  @ViewChild('nav') ngbNav;
+  @ViewChild('nav') ngbNav: NgbNav;
   showFamilyTypeFilter: boolean;
   showAdvancedButton: boolean;
 

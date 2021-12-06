@@ -42,25 +42,25 @@ export class GenePlotComponent implements OnChanges {
   };
 
   private readonly scale = {
-    x: null,
-    y: null,
-    ySubdomain: null,
-    yDenovo: null,
+    x: d3.scaleLinear(),
+    y: d3.scaleLog(),
+    ySubdomain: d3.scaleLinear(),
+    yDenovo: d3.scalePoint().padding(0.5),
   };
 
   private readonly axis = {
-    x: null,
-    y: null,
-    ySubdomain: null,
-    yDenovo: null,
+    x: d3.axisBottom(this.scale.x).tickValues(this.xAxisTicks),
+    y: d3.axisLeft(this.scale.y).tickValues(null).tickFormat(d3.format('1')),
+    ySubdomain: d3.axisLeft(this.scale.ySubdomain).tickValues([0]),
+    yDenovo:  d3.axisLeft(this.scale.yDenovo).tickValues([]),
   };
 
   private readonly svgWidth = 2000;
   private subdomainAxisY: number;
   private svgElement: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>;
   private plotElement: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
-  private brush;
-  private doubleClickTimer;
+  private brush: d3.BrushBehavior<unknown>;
+  private doubleClickTimer: NodeJS.Timeout;
   private genePlotModel: GenePlotModel;
   public zoomHistory: GenePlotZoomHistory;
   public showTranscripts = true;
@@ -71,10 +71,6 @@ export class GenePlotComponent implements OnChanges {
   private denovoAllelesSpacings: Map<string, number>;
 
   constructor() {
-    this.scale.x = d3.scaleLinear();
-    this.scale.y = d3.scaleLog();
-    this.scale.ySubdomain = d3.scaleLinear();
-    this.scale.yDenovo = d3.scalePoint().padding(0.5);
     this.subdomainAxisY = this.constants.frequencyPlotSize * this.constants.axisSizes.domain;
   }
 
@@ -360,7 +356,7 @@ export class GenePlotComponent implements OnChanges {
     }
   }
 
-  private drawTranscript(svgGroup, transcript: Transcript, yPos: number) {
+  private drawTranscript(svgGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>, transcript: Transcript, yPos: number) {
     const domainMin = this.scale.x.domain()[0];
     const domainMax = this.scale.x.domain()[this.scale.x.domain().length - 1];
     const transcriptId = transcript.transcriptId;
@@ -417,7 +413,7 @@ export class GenePlotComponent implements OnChanges {
     }
   }
 
-  private drawExon(svgGroup, xStart: number, xEnd: number, y: number, title: string, cds: boolean, brushSize) {
+  private drawExon(svgGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>, xStart: number, xEnd: number, y: number, title: string, cds: boolean, brushSize: { nonCoding: any; coding: any; }) {
     let rectThickness = brushSize.nonCoding;
     if (cds) {
       rectThickness = brushSize.coding;
@@ -428,11 +424,11 @@ export class GenePlotComponent implements OnChanges {
     draw.rect(svgGroup, xStart, xEnd, y, rectThickness, 'black', 1, title);
   }
 
-  private drawIntron(svgGroup, xStart: number, xEnd: number, y: number, title: string, brushSize) {
+  private drawIntron(svgGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>, xStart: number, xEnd: number, y: number, title: string, brushSize: { nonCoding?: number; coding: any; }) {
     draw.line(svgGroup, xStart, xEnd, y + brushSize.coding / 2, title);
   }
 
-  private drawUTRLabels(svgGroup, xStart: number, xEnd: number, y: number, strand: string) {
+  private drawUTRLabels(svgGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>, xStart: number, xEnd: number, y: number, strand: string) {
     const [lUTR, rUTR] = (strand === '+') ? [`5'`, `3'`] : [`3'`, `5'`]; // Choose strand direction
     draw.hoverText(svgGroup, this.scale.x(xStart) - 10, y + 5, lUTR, `UTR ${lUTR}`, this.constants.fontSize);
     draw.hoverText(svgGroup, this.scale.x(xEnd) + 23, y + 5, rUTR, `UTR ${rUTR}`, this.constants.fontSize);
@@ -452,7 +448,7 @@ export class GenePlotComponent implements OnChanges {
     }
   }
 
-  private drawChromosomeLabels(element, yPos: number) {
+  private drawChromosomeLabels(element: d3.Selection<SVGGElement, unknown, HTMLElement, any>, yPos: number) {
     const [domainMin, domainMax] = this.xDomain;
     for (const [chromosome, range] of this.gene.chromosomes) {
       if (range[1] < domainMin || range[0] > domainMax) {
@@ -474,9 +470,9 @@ export class GenePlotComponent implements OnChanges {
     if (allele.frequency >= this.frequencyDomain[0] && allele.frequency <= this.frequencyDomain[1]) {
       return this.scale.y(allele.frequency);
     } else if (allele.seenAsDenovo && !allele.frequency) {
-      return this.scale.yDenovo(this.denovoAllelesSpacings.get(allele.svuid));
+      return this.scale.yDenovo(`${this.denovoAllelesSpacings.get(allele.svuid)}`);
     } else {
-      return this.scale.ySubdomain(allele.frequency);
+      return this.scale.ySubdomain(allele.frequency || 0);  // OR 0 handles null frequency alleles
     }
   }
 
@@ -500,8 +496,8 @@ export class GenePlotComponent implements OnChanges {
     }
   }
 
-  private focusRegion = () => {
-    const extent = d3.event.selection;
+  private focusRegion = (event: any) => {
+    const extent = event.selection;
 
     // Double-click
     if (!extent) {
@@ -563,7 +559,7 @@ export class GenePlotComponent implements OnChanges {
     }
     this.denovoLevels = leveledDenovos.length;
     this.scale.yDenovo
-      .domain(Object.keys(leveledDenovos))
+      .domain(Object.keys(leveledDenovos).map(String))
       .range([this.constants.frequencyPlotSize, this.frequencyPlotHeight]);
   }
 
@@ -593,7 +589,11 @@ export class GenePlotComponent implements OnChanges {
     this.redraw();
   }
 
-  private handleKeyboardEvent($event): void {
+  private handleKeyboardEvent($event: KeyboardEvent): void {
+    if (!($event.target instanceof Element)) {
+      return;
+    }
+
     if ($event.target.id === 'search-box') {
       return;
     }

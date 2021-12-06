@@ -2,7 +2,7 @@ import { UsersService } from '../users/users.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, toolPageLinks } from './datasets';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { Observable, Subscription } from 'rxjs';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { isEmpty } from 'lodash';
@@ -105,7 +105,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
         result = dataset.description !== undefined ? true : false;
         break;
       case 'dataset-statistics':
-        result = dataset.commonReport['enabled'];
+        result = dataset.commonReport.enabled;
         break;
       case 'genotype-browser':
         result = (dataset.genotypeBrowser && dataset.genotypeBrowserConfig) !== undefined ? true : false;
@@ -136,7 +136,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
 
     if (selectedDataset.description) {
       firstTool = toolPageLinks.datasetDescription;
-    } else if (selectedDataset.commonReport['enabled']) {
+    } else if (selectedDataset.commonReport.enabled) {
       firstTool = toolPageLinks.datasetStatistics;
     } else if (selectedDataset.geneBrowser) {
       firstTool = toolPageLinks.geneBrowser;

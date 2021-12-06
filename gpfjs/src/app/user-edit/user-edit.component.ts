@@ -1,7 +1,7 @@
 import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { BehaviorSubject } from 'rxjs';
 
 import { User } from '../users/users';
@@ -24,6 +24,7 @@ export class UserEditComponent implements OnInit {
   @ViewChild('nameInput') nameInput: ElementRef;
 
   dropdownSettings: IDropdownSettings = {};
+  createUserError = '';
 
   lockedOptions = {
     width: 'style',
@@ -83,7 +84,7 @@ export class UserEditComponent implements OnInit {
     return ['any_user', this.emailValue];
   }
 
-  submit(user) {
+  submit(user: User) {
     const groupsToAdd = this.userGroupsSelectorComponent.displayedGroups;
 
     if (!groupsToAdd.includes(undefined)) {

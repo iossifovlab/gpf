@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { GpfTableColumnComponent } from 'app/table/component/column.component';
 import { SortInfo } from '../../table.component';
-
 
 @Component({
   selector: 'gpf-table-view-header',
@@ -26,10 +26,15 @@ export class GpfTableHeaderComponent {
     }
   }
 
-  getWidth(column) {
-    if (column.columnWidth) {
-      return column.columnWidth;
+  getWidth(column: GpfTableColumnComponent): string {
+    let width: string;
+
+    if (column === null) {
+      width = null;
+    } else if (column.columnWidth) {
+      width = column.columnWidth;
     }
-    return null;
+
+    return width;
   }
 }

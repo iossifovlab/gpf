@@ -25,7 +25,7 @@ export class PhenoToolComponent implements OnInit {
   @Select(ErrorsState) errorsState$: Observable<ErrorsModel>;
 
   phenoToolResults: PhenoToolResults;
-  private phenoToolState: object;
+  public phenoToolState: object;
 
   public disableQueryButtons = false;
 
@@ -42,7 +42,7 @@ export class PhenoToolComponent implements OnInit {
     PhenoToolGenotypeBlockComponent.phenoToolGenotypeBlockQueryState,
     FamilyFiltersBlockComponent.familyFiltersBlockState,
   ])
-  public static phenoToolStateSelector(genesBlockState, measureState, genotypeState, familyFiltersState) {
+  public static phenoToolStateSelector(genesBlockState: object, measureState: object, genotypeState: object, familyFiltersState: object) {
     return {
       ...genesBlockState,
       ...measureState,
@@ -56,7 +56,6 @@ export class PhenoToolComponent implements OnInit {
 
     this.state$.subscribe(state => {
       this.phenoToolState = state;
-      this.phenoToolResults = null;
     });
 
     this.errorsState$.subscribe(state => {
@@ -78,8 +77,10 @@ export class PhenoToolComponent implements OnInit {
     });
   }
 
-  public onDownload(event): void {
-    event.target.queryData.value = JSON.stringify({...this.phenoToolState, 'datasetId': this.selectedDataset.id});
-    event.target.submit();
+  public onDownload(event: Event): void {
+    if(event.target instanceof HTMLFormElement) {
+      event.target.queryData.value = JSON.stringify({...this.phenoToolState, 'datasetId': this.selectedDataset.id});
+      event.target.submit();
+    }
   }
 }

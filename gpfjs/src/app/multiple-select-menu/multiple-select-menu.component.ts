@@ -1,86 +1,40 @@
-import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
-import {cloneDeep} from 'lodash';
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
+import { ItemApplyEvent } from './multiple-select-menu';
 
 @Component({
   selector: 'gpf-multiple-select-menu',
   templateUrl: './multiple-select-menu.component.html',
-  styleUrls: ['./multiple-select-menu.component.css'],
+  styleUrls: ['./multiple-select-menu.component.css']
 })
-export class MultipleSelectMenuComponent implements OnInit, OnChanges {
-  @Input() menuId: string;
-  @Input() selectedItems: string[];
-  @Input() allItems: string[];
-  @Input() readonly minSelectCount = 0;
-  @Output() applyEvent = new EventEmitter<{menuId: string, data: string[]}>();
-  @ViewChild('searchInput') searchInput: ElementRef;
+export class MultipleSelectMenuComponent implements OnChanges {
+  @Input() public menuId: string;
+  @Input() public itemsSource: { itemIds: string[]; shownItemIds: string[]; };
+  @Output() public applyEvent = new EventEmitter<ItemApplyEvent>();
+  @ViewChild('searchInput') public searchInput: ElementRef;
 
-  checkUncheckAllButtonName = 'Uncheck all';
-  searchText: String;
-  checkboxDataArray: {id: string; isChecked: boolean}[];
-  checkboxDataArraySavedState: {id: string; isChecked: boolean}[];
+  public allItems: string[];
+  public filteredItems: string[];
+  public selectedItems: Set<string>;
 
-  constructor() { }
+  public checkUncheckAllButtonName = 'Uncheck all';
+  public searchText: string;
 
-  ngOnChanges(): void {
-    this.checkboxDataArraySavedState = this.toCheckboxDataArray(this.allItems);
-    this.applySavedState();
+  public ngOnChanges(): void {
+    this.refresh(false);
+  }
+
+  public refresh(focusSearch: boolean = true): void {
     this.searchText = '';
-  }
-
-  ngOnInit(): void {
-    this.checkboxDataArraySavedState = this.toCheckboxDataArray(this.allItems);
-    this.applySavedState();
-
-    if (this.areAllUnchecked(this.checkboxDataArraySavedState)) {
-      this.checkUncheckAllButtonName = 'Check all';
+    this.allItems = this.itemsSource.itemIds;
+    this.filteredItems = this.allItems;
+    this.selectedItems = new Set(this.itemsSource.shownItemIds);
+    this.checkUncheckAllButtonName = this.selectedItems.size ? 'Uncheck all' : 'Check all';
+    if (focusSearch) {
+      this.focusSearchInput();
     }
   }
 
-  toCheckboxDataArray(allItems: string[]) {
-    return allItems.map(
-      item => ({id: item, isChecked: this.selectedItems.includes(item)})
-    );
-  }
-
-  applySavedState() {
-    this.checkboxDataArray = cloneDeep(this.checkboxDataArraySavedState);
-  }
-
-  updateSavedState() {
-    this.checkboxDataArraySavedState = cloneDeep(this.checkboxDataArray);
-  }
-
-  areAllUnchecked(checkboxDataArray): boolean {
-    return !checkboxDataArray.map(item => item.isChecked).includes(true);
-  }
-
-  toggleCheckingAll() {
-    if (this.checkUncheckAllButtonName === 'Uncheck all') {
-      this.checkboxDataArray.forEach(item => item.isChecked = false);
-      this.checkUncheckAllButtonName = 'Check all';
-    } else if (this.checkUncheckAllButtonName === 'Check all') {
-      this.checkboxDataArray.forEach(item => item.isChecked = true);
-      this.checkUncheckAllButtonName = 'Uncheck all';
-    }
-  }
-
-  isSelectionValid() {
-    return this.checkboxDataArray.filter(item => item.isChecked === true).length >= this.minSelectCount;
-  }
-
-  apply() {
-    this.updateSavedState();
-
-    this.applyEvent.emit({
-      menuId: this.menuId,
-      data: this.checkboxDataArray.filter(item => item.isChecked).map(item => item.id)
-    });
-  }
-
-  /**
-  * Waits search input element to load.
-  * @returns promise
-  */
   private async waitForSearchInputToLoad(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
@@ -92,9 +46,47 @@ export class MultipleSelectMenuComponent implements OnInit, OnChanges {
     });
   }
 
-  focusSearchInput() {
+  public toggleCheckingAll(): void {
+    if (this.checkUncheckAllButtonName === 'Uncheck all') {
+      this.selectedItems = new Set();
+      this.checkUncheckAllButtonName = 'Check all';
+    } else if (this.checkUncheckAllButtonName === 'Check all') {
+      this.selectedItems = new Set(this.allItems);
+      this.checkUncheckAllButtonName = 'Uncheck all';
+    }
+  }
+
+  public toggleItem(item: string, $event: Event) {
+    if(!($event.target instanceof HTMLInputElement)) {
+      return;
+    }
+    if ($event.target.checked) {
+      this.selectedItems.add(item);
+    } else {
+      this.selectedItems.delete(item);
+    }
+    this.checkUncheckAllButtonName = this.selectedItems.size ? 'Uncheck all' : 'Check all';
+  }
+
+  public apply(): void {
+    this.applyEvent.emit({
+      menuId: this.menuId,
+      selected: Array.from(this.selectedItems),
+      order: this.allItems,
+    });
+  }
+
+  public focusSearchInput(): void {
     this.waitForSearchInputToLoad().then(() => {
       this.searchInput.nativeElement.focus();
     });
+  }
+
+  public drop(event: CdkDragDrop<string[]>): void {
+    moveItemInArray(this.allItems, event.previousIndex, event.currentIndex);
+  }
+
+  public filterItems(substring): void {
+    this.filteredItems = this.allItems.filter(item => item.toLowerCase().includes(substring.toLowerCase()));
   }
 }

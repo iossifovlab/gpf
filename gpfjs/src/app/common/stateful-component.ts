@@ -3,6 +3,7 @@ import { Observable, Subscription } from "rxjs";
 import { SetComponentErrors } from "./errors.state";
 import { validate, ValidationError } from "class-validator";
 import { Store } from "@ngxs/store";
+import { StateClass } from "@ngxs/store/internals";
 
 @Directive()
 export abstract class StatefulComponent implements OnInit, OnDestroy {
@@ -12,7 +13,7 @@ export abstract class StatefulComponent implements OnInit, OnDestroy {
 
   constructor(
     protected store: Store,
-    protected stateSelector,
+    protected stateSelector: StateClass,
     readonly componentId: string,
   ) {
     this.state$ = this.store.select(this.stateSelector);

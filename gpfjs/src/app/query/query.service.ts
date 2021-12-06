@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
-// tslint:disable-next-line:import-blacklist
+// eslint-disable-next-line no-restricted-imports
 import { Observable, Subject } from 'rxjs';
 
 const oboe = require('oboe');

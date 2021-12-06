@@ -6,7 +6,6 @@ import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } 
 
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
-import { SelectableUser } from './user-management';
 
 @Component({
   selector: 'gpf-user-management',
@@ -16,8 +15,8 @@ import { SelectableUser } from './user-management';
 export class UserManagementComponent implements OnInit {
 
   input$ = new ReplaySubject<string>(1);
-  users: SelectableUser[] = [];
-  usersToShow$: Observable<SelectableUser[]>;
+  users: User[] = [];
+  usersToShow$: Observable<User[]>;
   @ViewChild('searchBox') private searchBox: ElementRef;
 
   constructor(
@@ -46,7 +45,7 @@ export class UserManagementComponent implements OnInit {
       }),
       switchMap(searchTerm => this.usersService.searchUsersByGroup(searchTerm)),
       map(user => {
-        this.users.push(new SelectableUser(this.sortGroups(user)))
+        this.users.push(this.sortGroups(user));
         return this.users;
       }),
       share()
@@ -60,26 +59,8 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
-  selectedUsers(users: SelectableUser[]) {
-    if (!users) {
-      return [];
-    }
-
-    return users.filter(user => user.selected)
-      .map(user => user.user);
-  }
-
   search(value: string) {
     this.input$.next(value);
-  }
-
-  getUserIds(users: SelectableUser[]) {
-    if (!users) {
-      return '';
-    }
-    const selectedUsers = this.selectedUsers(users);
-
-    return selectedUsers.map(u => u.id).join(',');
   }
 
   sortGroups(user: User): User {

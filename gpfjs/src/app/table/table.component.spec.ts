@@ -67,7 +67,7 @@ describe('GpfTableComponent', () => {
   });
 
   it('should support window scroll', () => {
-    component.onWindowScroll(null);
+    component.onWindowScroll();
     expect(component.showFloatingHeader).toBe(false);
     expect(component.tableTop()).toBe(false);
   });
