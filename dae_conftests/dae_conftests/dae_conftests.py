@@ -45,6 +45,13 @@ from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 
+from urllib.request import urlopen
+with urlopen("https://www.iossifovlab.com/distribution/public/"
+             "genomic-resources-repository/.CONTENTS") as repo:
+    for line in repo:
+        print(line)
+
+
 logging.basicConfig(
     stream=sys.stderr, level=logging.DEBUG,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -57,14 +64,7 @@ logger = logging.getLogger("dae.effect_annotation")
 logger.setLevel(logging.INFO)
 
 logger = logging.getLogger("dae.annotation")
-logger.setLevel(logging.INFO)
-
-
-from urllib.request import urlopen
-with urlopen("https://www.iossifovlab.com/distribution/public/"
-        "genomic-resources-repository/.CONTENTS") as repo:
-    for line in repo:
-        print(line)
+logger.setLevel(logging.DEBUG)
 
 
 def relative_to_this_test_folder(path):

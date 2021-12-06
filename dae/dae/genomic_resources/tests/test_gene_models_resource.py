@@ -101,7 +101,7 @@ def test_gene_models_resource_http(genomic_resource_fixture_http_repo):
         "gene_models/refGene_201309")
     assert res is not None
 
-#     assert isinstance(res, GeneModelsResource)
+    assert isinstance(res, GeneModelsResource)
 
-#     res.open()
-#     assert len(res.gene_models) == 13
+    res.open()
+    assert len(res.gene_models) == 13

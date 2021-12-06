@@ -35,7 +35,9 @@ class GeneModelsResource(GenomicResource, GeneModelsBase):
                 logger.debug(
                     f"loaded {len(gene_mapping)} gene mappnigs.")
 
-        with self.open_raw_file(filename, 'rb', uncompress=True) as infile:
+        with self.open_raw_file(
+                filename, mode='rb',
+                uncompress=True, seekable=True) as infile:
             if fileformat is None:
                 fileformat = self._infer_gene_model_parser(infile)
                 logger.debug(

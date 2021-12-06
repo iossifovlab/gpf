@@ -124,7 +124,6 @@ def test_cached_http_repo(
     assert src_gr.get_manifest() == cached_gr.build_manifest()
 
 
-@pytest.mark.skip("too slow")
 @pytest.mark.parametrize("resource_id", [
     "hg19/GATK_ResourceBundle_5777_b37_phiX174/"
     "gene_models/refGene_v201309",
