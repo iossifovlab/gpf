@@ -1,5 +1,4 @@
 import { Component, OnInit, HostListener, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
-// import { Router, ActivatedRoute } from '@angular/router';
 import { UsersService } from './users.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Observable } from 'rxjs';
@@ -13,14 +12,14 @@ import { share, take } from 'rxjs/operators';
   styleUrls: ['./users.component.css'],
 })
 export class UsersComponent implements OnInit {
-  private username;
-  private password;
+  public username: string;
+  public password: string;
+  public passwordTimeout = false;
+  public loading = false;
   errorMessage: string;
   hideDropdown = true;
   userInfo$: Observable<any>;
   showPasswordField = false;
-  public passwordTimeout = false;
-  public loading = false;
 
   @ViewChild('dropdownButton') dropdownButton: ElementRef;
   @ViewChild('dialog') dialog: ElementRef;
@@ -30,8 +29,6 @@ export class UsersComponent implements OnInit {
   constructor(
     private modalService: NgbModal,
     private usersService: UsersService,
-    // private router: Router,
-    // private currentRoute: ActivatedRoute,
     private changeDetectorRef: ChangeDetectorRef
   ) { }
 
@@ -46,7 +43,6 @@ export class UsersComponent implements OnInit {
   reloadUserData() {
     this.usersService.getUserInfo().pipe(take(1)).subscribe(() => {
       this.loading = false;
-      // this.router.navigate(['.'], { relativeTo: this.currentRoute });
     });
   }
 
