@@ -71,6 +71,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
   public modalBottom: number;
 
   public highlightedRowElements: HTMLElement[] = [];
+  public highlightedGenes: string[] = [];
   
   @ViewChild('table') tableViewChild: any;
   @ViewChildren('rows') rowViewChildren: QueryList<any>;
@@ -114,6 +115,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     }
 
     this.highlightedRowElements = [];
+    this.highlightedGenes = [];
   }
 
   @HostListener('document:keydown.f', ['$event'])
@@ -124,12 +126,11 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
       }
     }
 
-    const highlightedGenes: string[] = this.highlightedRowElements.map(ele => ele.innerText.split('\t')[0]);
-    if (highlightedGenes.length === 0) {
+    if (this.highlightedGenes.length === 0) {
       return;
-    }
+    } 
 
-    this.emitCreateTabEvent(null, highlightedGenes, navigateToTab);
+    this.emitCreateTabEvent(null, this.highlightedGenes, navigateToTab);
   }
 
   constructor(
@@ -161,6 +162,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
   }
 
   public ngOnChanges() {
+    
     this.setupShownCategories();
     for (const dataset of this.config.datasets) {
       this.calculateDatasetColspan(dataset);
@@ -492,8 +494,10 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
       this.highlightedRowElements = this.highlightedRowElements.filter(
         ele => ele.innerText.split('\t')[0] !== rowElementGeneSymbol
       );
+      this.highlightedGenes = this.highlightedGenes.filter(gene => gene !== rowElementGeneSymbol)
     } else {
       this.highlightedRowElements.push(rowElement);
+      this.highlightedGenes.push(rowElement.innerText.split('\t')[0])
     }
   }
 }

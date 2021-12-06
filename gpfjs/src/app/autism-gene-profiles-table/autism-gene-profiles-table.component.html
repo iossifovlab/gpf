@@ -62,7 +62,6 @@
 
       <tr style="height: 110px;">
         <th class="table-subheader" rowspan="2">
-          <button (click)="compareHighligtedGenes(null)" (middleclick)="compareHighligtedGenes(null, false)">compare highligted genes</button>
           <input #geneSearchInput (keyup)="sendKeystrokes(geneSearchInput.value)" id="gene-search-input"
             class="form-control" autocomplete="off" type="text" placeholder="Search">
         </th>
@@ -215,3 +214,11 @@
     </span>
   </div>
 </ng-container>
+
+<div id="compare-genes-menu" *ngIf="highlightedGenes.length !== 0">
+  <button (click)="compareHighligtedGenes(null)" (middleclick)="compareHighligtedGenes(null, false)">compare highlighted genes</button>
+  <ng-container *ngFor="let gene of highlightedGenes; let i = index">
+    <span>{{ gene }}</span>
+    <span *ngIf="i !== highlightedGenes.length - 1">, </span>
+  </ng-container>
+</div>
