@@ -53,11 +53,8 @@ class DatasetView(QueryBaseView):
             #     selected_genotype_data
 
             res = [
-                StudyWrapperBase.build_genotype_data_group_description(
-                    self.gpf_instance,
+                StudyWrapperBase.build_genotype_data_all_datasets(
                     dataset.config,
-                    dataset.description,
-                    dataset.person_set_collection_configs
                 )
                 for dataset in datasets
             ]
