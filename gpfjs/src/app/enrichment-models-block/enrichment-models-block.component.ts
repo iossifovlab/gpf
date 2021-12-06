@@ -12,7 +12,7 @@ export class EnrichmentModelsBlockComponent {
   @ViewChild('nav') ngbNav: NgbNav;
 
   @Input()
-  private selectedDatasetId: string;
+  public selectedDatasetId: string;
 
   constructor(private store: Store) { }
 

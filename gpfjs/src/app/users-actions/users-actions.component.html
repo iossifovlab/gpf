@@ -37,7 +37,7 @@
   mwlConfirmationPopover
   confirmText="Reset password"
   title="Reset password"
-  appendToBody="true"
+  [appendToBody]="true"
   [customTemplate]="confirmation"
   [popoverMessage]="resetPasswordPopoverMessage(user)"
   (confirm)="resetPassword(user)">
@@ -51,7 +51,7 @@
   mwlConfirmationPopover
   confirmText="Delete"
   title="Delete user"
-  appendToBody="true"
+  [appendToBody]="true"
   [customTemplate]="confirmation"
   [popoverMessage]="deleteUserPopoverMessage(user)"
   (confirm)="deleteUser(user)">

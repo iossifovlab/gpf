@@ -16,7 +16,7 @@ export class PresentInChildComponent extends StatefulComponent implements OnInit
   ]);
 
   @Validate(SetNotEmpty, { message: 'Select at least one.' })
-  selectedValues = new Set();
+  selectedValues = new Set<string>();
 
   constructor(protected store: Store) {
     super(store, PresentInChildState, 'presentInChild');

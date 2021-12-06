@@ -27,7 +27,7 @@
         <gpf-table-header caption="Pheno Measure Values"></gpf-table-header>
         <gpf-table-content>
             <span *gpfTableCellContent="let data">
-                <a [class.clickable]="!!data.figureDistribution" (click)="openModal(content, data.figureDistribution)">
+                <a [class.clickable]="!!data.figureDistribution" (click)="openModal(data.figureDistribution)">
                     <img *ngIf="data.figureDistributionSmall" class="table-chart" [src]="data.figureDistributionSmall" />
                 </a>
             </span>
@@ -58,7 +58,7 @@
             <gpf-table-header caption="Regression by {{getRegressionName(regressionId)}}"></gpf-table-header>
             <gpf-table-content>
                 <span *gpfTableCellContent="let data">
-                    <a [class.clickable]="!!data.regressions.getReg(regressionId).figureRegression" (click)="openModal(content, data.regressions.getReg(regressionId).figureRegression)">
+                    <a [class.clickable]="!!data.regressions.getReg(regressionId).figureRegression" (click)="openModal(data.regressions.getReg(regressionId).figureRegression)">
                         <img *ngIf="data.regressions.getReg(regressionId).figureRegressionSmall" class="table-chart" [src]="data.regressions.getReg(regressionId).figureRegressionSmall" />
                     </a>
                 </span>
