@@ -57,6 +57,24 @@ class StudyWrapperBase:
         return result
 
     @staticmethod
+    def build_genotype_data_all_datasets(config):
+        keys = [
+            "id",
+            "name",
+            "phenotype_browser",
+            "phenotype_tool"
+        ]
+        result = {
+            key: config.get(key, None) for key in keys
+        }
+        result["name"] = result["name"] or result["id"]
+        result["genotype_browser"] = config.genotype_browser.enabled
+        result["common_report"] = {"enabled": config.common_report.enabled}
+        result["enrichment_tool"] = config.enrichment.enabled
+
+        return result
+
+    @staticmethod
     def build_genotype_data_group_description(
         gpf_instance, config, description, person_set_collection_configs
     ):
@@ -66,7 +84,6 @@ class StudyWrapperBase:
             "phenotype_browser",
             "phenotype_tool",
             "phenotype_data",
-            "common_report",
             "study_type",
             "studies",
             "has_present_in_child",
@@ -116,11 +133,13 @@ class StudyWrapperBase:
                 )
                 table_columns.append(new_col)
             else:
-                if column in config.genotype_browser.columns.genotype:
+                if config.genotype_browser.columns.genotype and \
+                        column in config.genotype_browser.columns.genotype:
                     table_columns.append(
                         dict(config.genotype_browser.columns.genotype[column])
                     )
-                elif column in config.genotype_browser.columns.phenotype:
+                elif config.genotype_browser.columns.phenotype and \
+                        column in config.genotype_browser.columns.phenotype:
                     table_columns.append(
                         dict(config.genotype_browser.columns.phenotype[column])
                     )
@@ -130,10 +149,20 @@ class StudyWrapperBase:
 
         result["study_types"] = result["study_type"]
         result["enrichment_tool"] = config.enrichment.enabled
+        result["common_report"] = config.common_report.to_dict()
+        del result["common_report"]["file_path"]
         result["person_set_collections"] = person_set_collection_configs
         result["name"] = result["name"] or result["id"]
 
         result["enrichment"] = config.enrichment.to_dict()
+        if "coding_len_background_model" in \
+                result["enrichment"]["background"].keys():
+            del result["enrichment"]["background"][
+                    "coding_len_background_model"]["file"]
+        if "samocha_background_model" in \
+                result["enrichment"]["background"].keys():
+            del result["enrichment"]["background"][
+                    "samocha_background_model"]["file"]
 
         result["study_names"] = None
         if result["studies"] is not None:
