@@ -1,6 +1,8 @@
 import pytest
+import pathlib
 
 from dae.genomic_resources.url_repository import GenomicResourceURLRepo
+from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
 from dae.genomic_resources import build_genomic_resource_repository
@@ -148,3 +150,93 @@ def test_cached_default_http_repo(
 
     assert src_gr.get_manifest() == cached_gr.get_manifest()
     assert src_gr.get_manifest() == cached_gr.build_manifest()
+
+
+def test_cached_repository_resource_update_delete(tmp_path):
+
+    src_repo = GenomicResourceEmbededRepo("src", content={
+        "one": {
+            GR_CONF_FILE_NAME: "",
+            "data.txt": "alabala",
+            "alabala.txt": "alabala",
+        },
+    })
+
+    dir_repo = GenomicResourceDirRepo('dir', directory=tmp_path / "t1")
+    dir_repo.store_all_resources(src_repo)
+
+    cached_repo = GenomicResourceCachedRepo(dir_repo, tmp_path / "t2")
+
+    gr1 = dir_repo.get_resource("one")
+    gr2 = cached_repo.get_resource("one")
+
+    assert gr1.get_manifest() == gr2.get_manifest()
+    assert any(["alabala.txt" == f["name"] for f in gr1.get_manifest()])
+    assert any(["alabala.txt" == f["name"] for f in gr2.get_manifest()])
+
+    dirname = pathlib.Path(dir_repo.get_genomic_resource_dir(gr1))
+    path = dirname / "alabala.txt"
+    path.unlink()
+
+    manifest = gr1.build_manifest()
+    print(manifest)
+    assert any(["alabala.txt" != f["name"] for f in manifest])
+
+    gr1.save_manifest(manifest)
+    assert gr1.get_manifest() != gr2.get_manifest()
+
+    gr2 = cached_repo.get_resource("one")
+    assert any(["alabala.txt" != f["name"] for f in gr2.get_manifest()])
+
+
+def test_cached_http_repository_resource_update_delete(
+        tmp_path, http_server):
+
+    src_repo = GenomicResourceEmbededRepo("src", content={
+        "one": {
+            GR_CONF_FILE_NAME: "",
+            "data.txt": "alabala",
+            "alabala.txt": "alabala",
+        },
+    })
+
+    dir_repo = GenomicResourceDirRepo('dir', directory=tmp_path / "t1")
+    dir_repo.store_all_resources(src_repo)
+    dir_repo.save_content_file()
+
+    http_server = http_server(dir_repo.directory)
+    http_port = http_server.http_port
+    url = f"http://localhost:{http_port}"
+    url_repo = GenomicResourceURLRepo("test_http_repo", url)
+    cached_repo = GenomicResourceCachedRepo(url_repo, tmp_path / "t2")
+
+    gr1 = dir_repo.get_resource("one")
+    gr2 = cached_repo.get_resource("one")
+
+    assert gr1.get_manifest() == gr2.get_manifest()
+    assert any(["alabala.txt" == f["name"] for f in gr1.get_manifest()])
+    assert any(["alabala.txt" == f["name"] for f in gr2.get_manifest()])
+
+    dirname = pathlib.Path(dir_repo.get_genomic_resource_dir(gr1))
+    path = dirname / "alabala.txt"
+    path.unlink()
+
+    manifest = gr1.build_manifest()
+    print(manifest)
+    assert any(["alabala.txt" != f["name"] for f in manifest])
+
+    gr1.save_manifest(manifest)
+    dir_repo.save_content_file()
+    content = dir_repo.build_repo_content()
+
+    print(100*"=")
+    print(content)
+    print(100*"=")
+
+    url_repo = GenomicResourceURLRepo("test_http_repo", url)
+    cached_repo = GenomicResourceCachedRepo(url_repo, tmp_path / "t2")
+    gr2 = cached_repo.get_resource("one")
+    print(gr2.get_manifest())
+
+    assert any(["alabala.txt" != f["name"] for f in gr2.get_manifest()])
+    assert gr1.get_manifest() == gr2.get_manifest()

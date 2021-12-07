@@ -36,15 +36,17 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
             contents = yaml.safe_load(urlopen(url))
 
             for rdf in contents:
-                versionT = tuple(map(int, rdf['version'].split(".")))
+                version = tuple(map(int, rdf['version'].split(".")))
                 resource = self.build_genomic_resource(
-                    rdf['id'], versionT, config=rdf['config'],
+                    rdf['id'], version, config=rdf['config'],
                     manifest=rdf['manifest'])
+                logger.debug(
+                    f"url repo caching resource {resource.resource_id}")
                 self._all_resources.append(resource)
         yield from self._all_resources
 
-    def get_files(self, genomicResource: GenomicResource):
-        mnfst = genomicResource.get_manifest()
+    def get_files(self, gr: GenomicResource):
+        mnfst = gr.get_manifest()
         for mnfst in mnfst:
             yield mnfst['name'], int(mnfst['size']), mnfst['time']
 

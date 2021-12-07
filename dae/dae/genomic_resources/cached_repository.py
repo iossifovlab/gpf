@@ -78,4 +78,4 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         mnfst_child = child.get_manifest()
         if mnfst_cache == mnfst_child:
             return
-        cached.repo.update_resource(cached)
+        cached.repo.update_resource(child)

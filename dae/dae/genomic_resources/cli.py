@@ -43,8 +43,8 @@ def cli_manage(args=None):
             gr.update_stats()
             gr.update_manifest()
 
-        if not (dr / GR_CONF_FILE_NAME).is_file():
-            GRR.save_content_file()
+        GRR.save_content_file()
+
     elif cmd == "list":
         for gr in GRR.get_all_resources():
 

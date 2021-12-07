@@ -46,6 +46,32 @@ class HTTPRepositoryServer(Thread):
 
 
 @pytest.fixture(scope="module")
+def http_server(request):
+
+    def builder(dirname):
+        http_port = 16510
+
+        http_server = HTTPRepositoryServer(http_port, dirname)
+        http_server.start()
+        with http_server.ready:
+            http_server.ready.wait()
+
+        logger.info(
+            f"HTTP repository test server started: "
+            f"{http_server.server_address}")
+
+        def fin():
+            http_server.httpd.shutdown()
+            http_server.join()
+
+        request.addfinalizer(fin)
+
+        return http_server
+
+    return builder
+
+
+@pytest.fixture(scope="module")
 def resources_http_server(fixture_dirname):
     http_port = 16500
     directory = fixture_dirname("genomic_resources")

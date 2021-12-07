@@ -26,7 +26,9 @@ def test_url_vs_dir_results(tmp_path):
     url_repo = GenomicResourceURLRepo("url", url=test_repo_URL)
 
     def resource_set(repo):
-        return {(gr.resource_id, gr.version) for gr in repo.get_all_resources()}
+        return {
+            (gr.resource_id, gr.version) for gr in repo.get_all_resources()
+        }
 
     assert dir_repo and url_repo
     assert resource_set(src_repo) == resource_set(url_repo)

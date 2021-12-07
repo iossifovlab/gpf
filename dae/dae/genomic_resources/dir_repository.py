@@ -120,7 +120,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
             dest_gr.get_genomic_resource_dir() / filename).parent
 
         dest_path = dr / filename
-        dest_path.remove()
+        dest_path.unlink()
 
     def _copy_manifest_entry(
             self, dest_gr: GenomicResource, src_gr: GenomicResource,
@@ -182,13 +182,17 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         temp_gr.save_manifest(manifest)
         self._all_resources = None
 
-    def save_content_file(self):
-        content_filename = self.directory / GRP_CONTENTS_FILE_NAME
-        logger.debug(f"saving contents file {content_filename}")
+    def build_repo_content(self):
         content = [{"id": gr.resource_id, "version": gr.get_version_str(),
                     "config": gr.get_config(), "manifest": gr.get_manifest()}
                    for gr in self.get_all_resources()]
         content = sorted(content, key=lambda x: x['id'])
+        return content
+
+    def save_content_file(self):
+        content_filename = self.directory / GRP_CONTENTS_FILE_NAME
+        logger.debug(f"saving contents file {content_filename}")
+        content = self.build_repo_content()
         with open(content_filename, "w") as CF:
             yaml.dump(content, CF)
 
