@@ -9,14 +9,14 @@ import matplotlib as mpl
 mpl.use("PDF")  # noqa
 
 from dae.variants.attributes import Status, Sex
-
 import matplotlib.pyplot as plt
 
 plt.ioff()  # noqa
 
 import pandas as pd
 import numpy as np
-import seaborn as sns
+from dae.pheno_browser.palletes import diverging_palette
+from dae.pheno_browser.plots import violinplot, stripplot
 from dae.pheno.common import ROLES_GRAPHS_DEFINITION
 from dae.pheno.utils.lin_regress import LinearRegression
 
@@ -195,12 +195,12 @@ def role_labels(ordered_columns):
 
 
 def gender_palette_light():
-    palette = sns.diverging_palette(240, 10, s=80, l=77, n=2)  # noqa
+    palette = diverging_palette(240, 10, s=80, l=77, n=2)  # noqa
     return palette
 
 
 def gender_palette():
-    palette = sns.diverging_palette(240, 10, s=80, l=50, n=2)  # noqa
+    palette = diverging_palette(240, 10, s=80, l=50, n=2)  # noqa
     return palette
 
 
@@ -260,7 +260,7 @@ def draw_measure_violinplot(
 
     set_figure_size(fig, len(columns))
 
-    sns.violinplot(
+    violinplot(
         data=df_with_column_names,
         x="column_name",
         y=measure_id,
@@ -276,7 +276,7 @@ def draw_measure_violinplot(
     )
 
     palette = gender_palette_light()
-    sns.stripplot(
+    stripplot(
         data=df_with_column_names,
         x="column_name",
         y=measure_id,
