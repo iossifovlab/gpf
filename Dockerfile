@@ -12,7 +12,7 @@ RUN /opt/conda/bin/mamba env create --name gpf --file /environment.yml
 RUN /opt/conda/bin/mamba env update --name gpf --file /dev-environment.yml --prune
 
 # http range server for testing
-RUN /opt/conda/bin/conda run --no-capture-output -n gpf pip install git+https://github.com/seqpipe/RangeHTTPServer
+RUN /opt/conda/bin/conda run --no-capture-output -n gpf pip install rangehttpserver==1.2.0
 
 # RUN echo "conda activate gpf" >> ~/.bashrc
 
