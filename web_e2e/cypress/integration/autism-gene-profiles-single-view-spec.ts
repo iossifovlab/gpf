@@ -222,7 +222,7 @@ describe('Single view study table', () => { // use cy.visit and then data test t
   const page = new AutismGeneProfilesSingleView();
   const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
 
-  it.only('should test redirect logic', () => {
+  it('should test redirect logic', () => {
     page.cleanup();
     page.navigateToHome();
     page.loginAdmin();
