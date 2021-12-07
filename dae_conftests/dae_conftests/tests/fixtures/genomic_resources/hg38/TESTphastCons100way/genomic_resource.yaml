@@ -1,4 +1,4 @@
-type: PositionScore
+type: position_score
 
 table:
     filename: TESTphastCons100way.bedGraph.gz

@@ -6,7 +6,7 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 def test_the_simplest_position_score():
     res: PositionScoreResource = build_a_test_resource({
         GR_CONF_FILE_NAME: '''
-            type: PositionScore
+            type: position_score
             table:
                 filename: data.mem
             scores:
@@ -23,7 +23,7 @@ def test_the_simplest_position_score():
             2      8          0.01
             '''
     })
-    assert res.get_resource_type() == "PositionScore"
+    assert res.get_resource_type() == "position_score"
     assert res.open()
     assert res.get_all_scores() == ["phastCons100way"]
     assert res.fetch_scores("1", 11) == {"phastCons100way": 0.03}
@@ -41,7 +41,7 @@ def test_the_simplest_position_score():
 def test_region_score():
     res: PositionScoreResource = build_a_test_resource({
         GR_CONF_FILE_NAME: '''
-            type: PositionScore
+            type: position_score
             table:
                 filename: data.mem
             scores:
@@ -92,7 +92,7 @@ def test_region_score():
 def test_phastcons100way():
     res: PositionScoreResource = build_a_test_resource({
         GR_CONF_FILE_NAME: '''
-            type: PositionScore
+            type: position_score
             table:
                 filename: data.mem
             scores:

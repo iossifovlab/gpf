@@ -1,6 +1,6 @@
 ---
 
-type: NPScore
+type: np_score
 
 table:
   filename: fordist_constraint_official_mpc_values_v2.txt.gz

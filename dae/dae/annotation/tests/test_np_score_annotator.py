@@ -36,7 +36,7 @@ def test_np_score_annotator(
             "np_score1": {
                 "genomic_resource.yaml":
                 """\
-                type: NPScore
+                type: np_score
                 table:
                     filename: data.mem
                 scores:

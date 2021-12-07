@@ -7,7 +7,7 @@ def test_basic():
     grr_repo = GenomicResourceEmbededRepo("r", {
         "one": {
             GR_CONF_FILE_NAME: '''
-                type: PositionScore
+                type: position_score
                 table:
                     filename: data.mem
                 scores:

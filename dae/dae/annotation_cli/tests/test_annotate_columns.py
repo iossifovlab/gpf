@@ -41,7 +41,7 @@ def test_basic_setup(tmp_path):
             content:
                 one:
                     genomic_resource.yaml: |
-                        type: PositionScore
+                        type: position_score
                         table:
                             filename: data.mem
                         scores:

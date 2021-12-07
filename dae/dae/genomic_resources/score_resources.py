@@ -205,7 +205,7 @@ class PositionScoreResource(GenomicScoresResource):
 
     @staticmethod
     def get_resource_type():
-        return "PositionScore"
+        return "position_score"
 
     def fetch_scores(
             self, chrom: str, position: int, scores: List[str] = None):
@@ -297,7 +297,7 @@ class NPScoreResource(GenomicScoresResource):
 
     @staticmethod
     def get_resource_type():
-        return "NPScore"
+        return "np_score"
 
     def fetch_scores(
             self, chrom: str, position: int, reference: str, alternative: str,
@@ -408,7 +408,7 @@ class AlleleScoreResource(GenomicScoresResource):
 
     @staticmethod
     def get_resource_type():
-        return "AlleleScore"
+        return "allele_score"
 
     def fetch_scores(
             self, chrom: str, position: int, reference: str, alternative: str,

@@ -1,8 +1,6 @@
 ---
 
-id: hg19/internal/scores1
-
-type: PositionScore
+type: position_score
 
 table:
   filename: scores1.tsv.gz

@@ -50,12 +50,12 @@ def test_cached_get_all_resources(tmpdir):
                 1636242231.567597
                 '''
             "two-unstable[1.0]": {
-                GR_CONF_FILE_NAME: "type: GeneModels\nfile: genes.gtf",
+                GR_CONF_FILE_NAME: "type: gene_models\nfile: genes.gtf",
                 "genes.txt": demo_gtf_content
             },
             "two[1.0]": {
                 GR_CONF_FILE_NAME:
-                    ["type: GeneModels\nfile: genes.gtf",
+                    ["type: gene_models\nfile: genes.gtf",
                      '2021-11-20T00:00:56'],
                 "genes.txt": [demo_gtf_content, '2021-11-13T00:00:56']
             }
@@ -84,12 +84,12 @@ def test_cache_all(tmpdir):
         },
         "sub": {
             "two-unstable[1.0]": {
-                GR_CONF_FILE_NAME: "type: GeneModels\nfile: genes.gtf",
+                GR_CONF_FILE_NAME: "type: gene_models\nfile: genes.gtf",
                 "genes.txt": demo_gtf_content
             },
             "two[1.0]": {
                 GR_CONF_FILE_NAME:
-                    ["type: GeneModels\nfile: genes.gtf",
+                    ["type: gene_models\nfile: genes.gtf",
                      '2021-11-20T00:00:56'],
                 "genes.txt": [demo_gtf_content, '2021-11-13T00:00:56']
             }

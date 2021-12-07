@@ -1,6 +1,6 @@
 ---
 
-type: AlleleScore
+type: allele_score
 
 table:
   filename: TESTFreq.tsv.gz

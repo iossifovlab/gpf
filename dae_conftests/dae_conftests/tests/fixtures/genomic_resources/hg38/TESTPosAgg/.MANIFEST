@@ -1,12 +1,12 @@
-- md5: f78af182d70e86a86982cb14c255d124
+- md5: 14c69783f5916ebdabe1a138f765b026
   name: genomic_resource.yaml
-  size: 465
-  time: '2021-11-29T15:39:17'
+  size: 445
+  time: '2021-12-06T18:16:36'
 - md5: 590e48aff9382edfa3330a072c98c6c5
   name: scores.tsv.gz
   size: 107
-  time: '2021-11-25T16:07:09'
+  time: '2021-12-06T17:38:48'
 - md5: 313f112e74853fa39dc6af0fa526b692
   name: scores.tsv.gz.tbi
   size: 99
-  time: '2021-11-25T16:07:09'
+  time: '2021-12-06T17:38:48'

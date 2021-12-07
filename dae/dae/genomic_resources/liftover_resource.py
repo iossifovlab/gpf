@@ -21,7 +21,7 @@ class LiftoverChainResource(GenomicResource):
 
     @classmethod
     def get_resource_type(clazz):
-        return "LiftoverChain"
+        return "liftover_chain"
 
     def open(self):
         file = self.get_config()["file"]

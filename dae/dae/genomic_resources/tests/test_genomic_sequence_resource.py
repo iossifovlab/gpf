@@ -8,7 +8,7 @@ from dae.genomic_resources.test_tools import build_a_test_resource
 
 def test_basic_sequence_resoruce():
     res = build_a_test_resource({
-        "genomic_resource.yaml": "{type: Genome, filename: chr.fa}",
+        "genomic_resource.yaml": "{type: genome, filename: chr.fa}",
         "chr.fa": convert_to_tab_separated('''
                 >pesho
                 NNACCCAAAC

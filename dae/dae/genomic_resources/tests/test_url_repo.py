@@ -15,7 +15,7 @@ def test_url_vs_dir_results(tmp_path):
         },
         "sub": {
             "two[1.0]": {
-                GR_CONF_FILE_NAME: "type: GeneModels\nfile: genes.gtf",
+                GR_CONF_FILE_NAME: "type: gene_models\nfile: genes.gtf",
                 "genes.txt": demo_gtf_content
             }
         }

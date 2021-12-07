@@ -17,7 +17,7 @@ class GeneModelsResource(GenomicResource, GeneModelsBase):
 
     @classmethod
     def get_resource_type(clazz):
-        return "GeneModels"
+        return "gene_models"
 
     def open(self):
         filename = self.get_config()["filename"]

@@ -1,6 +1,6 @@
 ---
 
-type: NPScore
+type: np_score
 
 table:
   filename: TESTCADD.tsv.gz

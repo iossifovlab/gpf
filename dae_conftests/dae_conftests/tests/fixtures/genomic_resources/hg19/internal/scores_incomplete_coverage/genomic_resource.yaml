@@ -1,8 +1,6 @@
 ---
 
-id: hg19/internal/scores_incomplete_coverage
-
-type: PositionScore
+type: position_score
 
 table:
   filename: scores_incomplete_coverage.tsv.gz

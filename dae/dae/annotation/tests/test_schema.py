@@ -14,7 +14,7 @@ def genomic_resources_repo():
             "position_score1": {
                 "genomic_resource.yaml":
                 """\
-                type: PositionScore
+                type: position_score
                 table:
                     filename: data.mem
                 scores:
@@ -52,7 +52,7 @@ def genomic_resources_repo():
             "np_score1": {
                 "genomic_resource.yaml":
                 """\
-                type: NPScore
+                type: np_score
                 table:
                     filename: data.mem
                 scores:

@@ -21,7 +21,7 @@ class GenomicSequenceResource(GenomicResource, GenomicSequenceBase):
 
     @classmethod
     def get_resource_type(clazz):
-        return "Genome"
+        return "genome"
 
     @staticmethod
     def _parse_PARS(config):

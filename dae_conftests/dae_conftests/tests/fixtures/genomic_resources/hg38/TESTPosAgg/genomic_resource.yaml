@@ -1,8 +1,6 @@
 ---
 
-id: hg38/TESTPosAgg
-
-type: PositionScore
+type: position_score
 
 table:
   filename: scores.tsv.gz

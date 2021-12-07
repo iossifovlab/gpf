@@ -92,7 +92,7 @@ def test_build_a_configuration_with_embeded():
         content:
             one:
                 genomic_resource.yaml: |
-                    type: PositionScore
+                    type: position_score
                     table:
                         filename: data.mem
                     scores:

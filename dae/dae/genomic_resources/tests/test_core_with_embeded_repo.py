@@ -35,7 +35,7 @@ def test_finding_resource_with_version_and_repo_id():
 
 def test_md5_checksum():
     repo = GenomicResourceEmbededRepo("a", {"one": {
-        "genomic_resource.yaml": "type: GeneModels\nseqFile: chrAll.fa",
+        "genomic_resource.yaml": "type: genome\nseqFile: chrAll.fa",
         "chrAll.fa": ">chr1\nAACCCCACACACACACACACCAC\n",
         "chrAll.fa.fai": "chr1\t30\t50\n",
     }})
@@ -68,15 +68,15 @@ def test_manifest_file_creation():
 
 
 def test_type_of_genomic_resoruces():
-    from dae.genomic_resources import GeneModelsResource
+    from dae.genomic_resources import GenomicSequenceResource
     repo = GenomicResourceEmbededRepo("a", {"one": {
-        "genomic_resource.yaml": "type: GeneModels\nseqFile: chrAll.fa",
+        "genomic_resource.yaml": "type: genome\nseqFile: chrAll.fa",
         "chrAll.fa": ">chr1\nAACCCCACACACACACACACCAC",
         "chrAll.fa.fai": "chr1\t30\t50",
     }})
     gr = repo.get_resource("one")
     assert gr
-    assert isinstance(gr, GeneModelsResource)
+    assert isinstance(gr, GenomicSequenceResource)
 
 
 def test_resources_files():

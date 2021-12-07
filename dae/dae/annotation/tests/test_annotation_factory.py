@@ -21,7 +21,7 @@ def grr_np_score1() -> GenomicResourceRealRepo:
             "np_score1": {
                 "genomic_resource.yaml":
                 """\
-                type: NPScore
+                type: np_score
                 table:
                     filename: data.mem
                 scores:

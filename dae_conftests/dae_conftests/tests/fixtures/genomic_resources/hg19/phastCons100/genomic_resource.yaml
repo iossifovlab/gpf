@@ -1,33 +1,18 @@
 ---
 
-id: hg19/phastCons100
+type: position_score
 
-resource_type: score_resources.PositionScoreResource
-
-filename: phastCons100.bedGraph.gz
-format: tsv/bgz
-
-index_file:
-  filename: phastCons100.bedGraph.gz.tbi
+table:
+  filename: phastCons100.bedGraph.gz
   format: tabix
 
-has_header: false
-
-type_aggregators:
-  - type: float
-    aggregator: dae.genomic_resource.aggregators.MaxAggregator
-  - type: int
-    aggregator: dae.genomic_resource.aggregators.MaxAggregator
-  - type: str
-    aggregator: dae.genomic_resource.aggregators.ConcatAggregator
-
-# defined by score_type
-chrom: 
-  index: 0
-pos_begin:
-  index: 1
-pos_end: 
-  index: 2
+  # defined by score_type
+  chrom: 
+    index: 0
+  pos_begin:
+    index: 1
+  pos_end: 
+    index: 2
 
 # score values
 scores:
@@ -40,5 +25,4 @@ default_annotation:
   attributes:
     - source: phastCons100
       dest: phastCons100
-      aggregator:
-        position: MaxAggregator
+      position_aggregator: max

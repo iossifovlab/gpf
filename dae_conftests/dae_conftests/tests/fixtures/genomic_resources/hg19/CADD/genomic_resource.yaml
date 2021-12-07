@@ -1,35 +1,21 @@
 ---
 
-id: hg19/CADD
 
-resource_type: score_resources.NPScoreResource
+type: np_score
 
-filename: CADD.bedgraph.gz
-format: tsv/bgz
-
-index_file:
-  filename: CADD.bedgraph.gz.tbi
+table:
+  filename: CADD.bedgraph.gz
   format: tabix
 
-has_header: false
-
-type_aggregators:
-  - type: float
-    aggregator: dae.genomic_resource.aggregators.MaxAggregator
-  - type: int
-    aggregator: dae.genomic_resource.aggregators.MaxAggregator
-  - type: str
-    aggregator: dae.genomic_resource.aggregators.ConcatAggregator
-
-# defined by score_type
-chrom:
-  index: 0
-pos_begin:
-  index: 1
-reference:
-  index: 2
-alternative:
-  index: 3
+  # defined by score_type
+  chrom:
+    index: 0
+  pos_begin:
+    index: 1
+  reference:
+    index: 2
+  alternative:
+    index: 3
 
 # score values
 scores:
@@ -46,11 +32,9 @@ default_annotation:
   attributes:
     - source: cadd_raw
       dest: cadd_raw
-      aggregator:
-        position: MaxAggregator
-        nucleotide: MaxAggregator
+      position_aggregator: max
+      nucleotide_aggregator: max
     - source: cadd_phred
       dest: cadd_phred
-      aggregator:
-        position: MaxAggregator
-        nucleotide: MaxAggregator
+      position_aggregator: max
+      nucleotide_aggregator: max

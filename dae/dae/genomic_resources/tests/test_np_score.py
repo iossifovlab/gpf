@@ -6,7 +6,7 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 def test_the_simplest_np_score():
     res: NPScoreResource = build_a_test_resource({
         "genomic_resource.yaml": '''
-            type: NPScore
+            type: np_score
             table:
                 filename: data.mem
             scores:
@@ -25,7 +25,7 @@ def test_the_simplest_np_score():
             1      16         19       C          A            0.05
         '''
     })
-    assert res.get_resource_type() == "NPScore"
+    assert res.get_resource_type() == "np_score"
     assert res.open()
     assert res.get_all_scores() == ["cadd_raw"]
     assert res.fetch_scores("1", 11, "A", "C") == {"cadd_raw": 0.03}
@@ -37,7 +37,7 @@ def test_the_simplest_np_score():
 def test_np_score_aggregation():
     res: NPScoreResource = build_a_test_resource({
         GR_CONF_FILE_NAME: '''
-            type: NPScore
+            type: np_score
             table:
                 filename: data.mem
             scores:
@@ -64,7 +64,7 @@ def test_np_score_aggregation():
             1      16         19       C          A            0.05  0
         '''
     })
-    assert res.get_resource_type() == "NPScore"
+    assert res.get_resource_type() == "np_score"
     assert res.open()
 
     assert res.table.chrom_column_i == 0

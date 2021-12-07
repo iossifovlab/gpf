@@ -1,4 +1,4 @@
-type: LiftoverChain
+type: liftover_chain
 
 file: hg38ToHg19.over.chain.gz
 
