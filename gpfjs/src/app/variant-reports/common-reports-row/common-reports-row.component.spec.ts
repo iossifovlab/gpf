@@ -17,7 +17,7 @@ describe('CommonReportsRowComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(CommonReportsRowComponent);
     component = fixture.componentInstance;
-    component.pedigreeGroup = [{
+    component.pedigreeGroup = [{data: [{
       pedigreeIdentifier: 'pi',
       id: 'id',
       father: 'dad',
@@ -29,7 +29,7 @@ describe('CommonReportsRowComponent', () => {
       generated: true,
       label: 'label',
       smallLabel: 'sl'
-    }];
+    }], count: 1}];
     fixture.detectChanges();
   });
 

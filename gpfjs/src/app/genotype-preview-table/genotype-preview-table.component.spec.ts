@@ -114,30 +114,30 @@ describe('GenotypePreviewTableComponent', () => {
     const windowSpy = spyOnProperty(window, 'innerWidth');
 
     windowSpy.and.returnValue(85);
-    component.columns = new Array<Column | ColumnGroup>(1);
+    component.columns = new Array<any>(1);
     component.onResize();
     expect((component as any).singleColumnWidth).toEqual('10px');
 
     windowSpy.and.returnValue(2075);
-    component.columns = new Array<Column | ColumnGroup>(10);
+    component.columns = new Array<any>(10);
     component.onResize();
     expect((component as any).singleColumnWidth).toEqual('200px');
 
-    component.columns = new Array<Column | ColumnGroup>(25);
+    component.columns = new Array<any>(25);
     component.onResize();
     expect((component as any).singleColumnWidth).toEqual('80px');
 
     windowSpy.and.returnValue(1920);
-    component.columns = new Array<Column | ColumnGroup>(12);
+    component.columns = new Array<any>(12);
     component.onResize();
     expect((component as any).singleColumnWidth).toEqual('153.75px');
 
-    component.columns = new Array<Column | ColumnGroup>(15);
+    component.columns = new Array<any>(15);
     component.onResize();
     expect((component as any).singleColumnWidth).toEqual('123px');
 
     windowSpy.and.returnValue(1366);
-    component.columns = new Array<Column | ColumnGroup>(8);
+    component.columns = new Array<any>(8);
     component.onResize();
     expect((component as any).singleColumnWidth).toEqual('161.375px');
    });
