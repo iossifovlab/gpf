@@ -12,7 +12,7 @@ class LinearRegression(LinearRegressionSK):
         self._tvalues = None
 
     def fit(self, X, y, sample_weight=None):
-        self = super().fit(X, y, sample_weight)
+        super().fit(X, y, sample_weight)
         n = len(y)
 
         x_consts = np.column_stack([np.ones(X.shape[0]), X])
