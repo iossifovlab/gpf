@@ -31,8 +31,8 @@ def test_linregres_notcorrelated():
     expected_value = 7.41799e-2
     assert res_male is not None
     assert res_female is not None
-    assert res_male.pvalues[0] == pytest.approx(expected_value)
-    assert res_female.pvalues[0] == pytest.approx(expected_value)
+    assert res_male.pvalues[1] == pytest.approx(expected_value)
+    assert res_female.pvalues[1] == pytest.approx(expected_value)
 
 
 def test_linregres_positive():
@@ -59,11 +59,11 @@ def test_linregres_positive():
         }
     )
     res_male, res_female = draw_linregres(df, "age", "i1.m1")
-    expected_value = 6.62770204e-01
+    expected_value = 1.18e-15
     assert res_male is not None
     assert res_female is not None
-    assert res_male.pvalues[0] == pytest.approx(expected_value)
-    assert res_female.pvalues[0] == pytest.approx(expected_value)
+    assert res_male.pvalues[1] == pytest.approx(expected_value)
+    assert res_female.pvalues[1] == pytest.approx(expected_value)
 
 
 def test_linregres_negative():
@@ -93,5 +93,5 @@ def test_linregres_negative():
     expected_value = 6.92e-16
     assert res_male is not None
     assert res_female is not None
-    assert res_male.pvalues[0] == pytest.approx(expected_value)
-    assert res_female.pvalues[0] == pytest.approx(expected_value)
+    assert res_male.pvalues[1] == pytest.approx(expected_value)
+    assert res_female.pvalues[1] == pytest.approx(expected_value)

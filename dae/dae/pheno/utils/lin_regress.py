@@ -1,4 +1,5 @@
 import numpy as np
+import scipy as sp
 from sklearn.linear_model import LinearRegression as LinearRegressionSK
 from scipy.stats import t
 
@@ -17,7 +18,7 @@ class LinearRegression(LinearRegressionSK):
 
         x_consts = np.column_stack([np.ones(X.shape[0]), X])
 
-        pinv_x, singular_vals = self._pinv_extended(x_consts)
+        pinv_x, rank = sp.linalg.pinv(x_consts, return_rank=True)
 
         df_resid = x_consts.shape[0] - np.linalg.matrix_rank(x_consts)
 
@@ -32,35 +33,13 @@ class LinearRegression(LinearRegressionSK):
 
         tvalues = beta / bse
 
-        rank = np.linalg.matrix_rank(np.diag(singular_vals))
+        #rank = np.linalg.matrix_rank(np.diag(singular_vals))
 
         pvalues = t.sf(np.abs(tvalues), n-rank) * 2
 
         self._tvalues = tvalues
         self._pvalues = pvalues
         return self
-
-    def _pinv_extended(self, x, rcond=1e-15):
-        """
-        Return the pinv of an array X as well as the singular values
-        used in computation.
-
-        Code adapted from numpy.
-        """
-        x = np.asarray(x)
-        x = x.conjugate()
-        u, s, vt = np.linalg.svd(x, False)
-        s_orig = np.copy(s)
-        m = u.shape[0]
-        n = vt.shape[1]
-        cutoff = rcond * np.maximum.reduce(s)
-        for i in range(min(n, m)):
-            if s[i] > cutoff:
-                s[i] = 1./s[i]
-            else:
-                s[i] = 0.
-        res = np.dot(np.transpose(vt), np.multiply(s[:, np.core.newaxis], u.T))
-        return res, s_orig
 
     @property
     def tvalues(self):
