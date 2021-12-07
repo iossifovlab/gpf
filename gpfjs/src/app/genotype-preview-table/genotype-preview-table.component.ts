@@ -10,7 +10,7 @@ import { Column, ColumnGroup } from 'app/datasets/datasets';
 })
 export class GenotypePreviewTableComponent implements OnInit {
   @Input() genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
-  @Input() columns: Array<Column & ColumnGroup>;
+  @Input() columns: Array<any>;
   @Input() legend: Array<PersonSet>;
   public singleColumnWidth: string;
 
