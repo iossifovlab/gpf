@@ -6,17 +6,26 @@
     </ng-container>
   </h2>
 
-  <div class="wrapper" style="margin-bottom: 18px">
-    <a class="link-external-page" [attr.href]="links.GeneBrowser" id="gene-browser-link" target="_blank"
-      >View {{ geneSymbol }} in the Gene Browser</a
-    >
-    <a *ngIf="links.SFARIgene !== ''" class="link-external-page" [attr.href]="links.SFARIgene" target="_blank"
-      >SFARI gene</a
-    >
-    <a class="link-external-page" [attr.href]="links.UCSC" target="_blank">UCSC genome browser</a>
-    <a class="link-external-page" [attr.href]="links.GeneCards" target="_blank">GeneCards</a>
-    <a class="link-external-page" [attr.href]="links.Pubmed" target="_blank">Pubmed</a>
-  </div>
+  <table class="wrapper" id="links-table">
+    <tr>
+      <td style="border-right: 1px solid #dee2e6; padding-right: 25px;">Links</td>
+      <td>
+        <a class="link-external-page" [attr.href]="links.GeneBrowser" id="gene-browser-link" target="_blank">Gene Browser</a>
+      </td>
+      <td>
+        <a class="link-external-page" [attr.href]="links.UCSC" target="_blank">UCSC genome browser</a>
+      </td>
+      <td>
+        <a class="link-external-page" [attr.href]="links.GeneCards" target="_blank">GeneCards</a>
+      </td>
+      <td>
+        <a class="link-external-page" [attr.href]="links.Pubmed" target="_blank">Pubmed</a>
+      </td>
+      <td>
+        <a *ngIf="links.SFARIgene !== ''" class="link-external-page" [attr.href]="links.SFARIgene" target="_blank">SFARI gene</a>
+      </td>
+    </tr>
+  </table>
 
   <div class="wrapper">
     <table

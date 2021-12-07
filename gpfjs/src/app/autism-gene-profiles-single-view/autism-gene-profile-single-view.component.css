@@ -10,20 +10,32 @@ td {
 }
 
 .gene-sets-table tr,
-.gene-sets-table td {
+.gene-sets-table td,
+#links-table td {
   height: 55px;
   max-height: 55px;
+}
+
+.link-external-page {
+  text-decoration: underline;
+  padding-right: 25px;
+}
+
+#links-table {
+  display: block;
+  margin-bottom: 18px;
+  border: 1px solid #dee2e6;
+  white-space: nowrap;
+}
+
+#links-table td {
+  padding: 5px;
 }
 
 .wrapper {
   display: flex;
   align-items: flex-start;
   flex-direction: column;
-}
-
-.link-external-page {
-  text-decoration: underline;
-  padding-right: 25px;
 }
 
 .link-genotype-browser,
