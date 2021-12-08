@@ -16,11 +16,9 @@ class LinearRegression(LinearRegressionSK):
         super().fit(X, y, sample_weight)
         n = len(y)
 
-        x_consts = np.column_stack([np.ones(X.shape[0]), X])
+        pinv_x, rank = sp.linalg.pinv(X, return_rank=True)
 
-        pinv_x, rank = sp.linalg.pinv(x_consts, return_rank=True)
-
-        df_resid = x_consts.shape[0] - np.linalg.matrix_rank(x_consts)
+        df_resid = X.shape[0] - np.linalg.matrix_rank(X)
 
         resid = y - self.predict(X)
 
@@ -32,8 +30,6 @@ class LinearRegression(LinearRegressionSK):
         bse = np.sqrt(np.diag(cov_params))
 
         tvalues = beta / bse
-
-        #rank = np.linalg.matrix_rank(np.diag(singular_vals))
 
         pvalues = t.sf(np.abs(tvalues), n-rank) * 2
 
