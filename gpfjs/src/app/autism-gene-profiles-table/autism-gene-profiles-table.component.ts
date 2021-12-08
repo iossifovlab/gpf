@@ -450,10 +450,9 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
       return;
     }
 
-    const linkElements = ['link-td', 'link-span'];
     if (
       !$event.ctrlKey && $event.type === 'click'
-      || linkElements.includes($event.target.classList.value.replace('ng-star-inserted', '').trim())
+      || $event.target.classList.value.replace('ng-star-inserted', '').trim().includes('link-td')
     ) {
       return;
     }
