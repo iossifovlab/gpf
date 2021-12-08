@@ -37,11 +37,12 @@
         </a>
         <ng-template ngbNavContent>
           <div style="display: flex">
-            <ng-container *ngFor="let geneSymbol of geneTab | split:','">
+            <ng-container *ngFor="let geneSymbol of geneTab | split: ','">
               <gpf-autism-gene-profile-single-view
                 [attr.id]="geneSymbol + '-single-view'"
                 [config]="autismGeneToolConfig"
-                [geneSymbol]="geneSymbol">
+                [geneSymbol]="geneSymbol"
+                [isInGeneCompare]="geneTab.indexOf(',') !== -1">
               </gpf-autism-gene-profile-single-view>
             </ng-container>
           </div>

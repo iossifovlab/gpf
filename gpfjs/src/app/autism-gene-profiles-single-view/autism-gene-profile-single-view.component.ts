@@ -36,7 +36,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   @Input() public readonly geneSymbol: string;
   @Input() public config: AgpConfig;
   @Input() public isInGeneCompare = false;
-  @Output() public deleteComponentEvent = new EventEmitter<string>();
+  public showTemplate = true;
 
   public genomicScoresGeneWeights = [];
   public gene$: Observable<AgpGene>;
@@ -161,10 +161,6 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     AutismGeneProfileSingleViewComponent.goToQuery(
       this.store, this.queryService, geneSymbol, personSet, datasetId, statistic
     );
-  }
-
-  public deleteComponent(): void {
-    this.deleteComponentEvent.emit(this.geneSymbol);
   }
 
   public static goToQuery(
