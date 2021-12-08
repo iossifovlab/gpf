@@ -154,10 +154,33 @@ describe('Column filtering dropdown tests', () => {
 
     cy.get('th.table-main-header').should('have.length', 4);
   });
-
-  // apply should actually work and make columns disappear/add
-
   // sorting should work
 
   // sorting arrow should change the image when clicked
+});
+
+describe('', () => {
+  const page = new AutismGeneProfilesTable();
+
+  before(() => {
+    page.cleanup();
+  });
+
+  beforeEach(() => {
+    page.navigateToHome();
+    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+  });
+
+  it('should sort genes', () => {
+    page.geneSearchInput.type('RAPGEF');
+
+    page.allTableRows.should('have.length', 4);
+
+    page.allSortingButtons.eq(0).click();
+    [0, 0, 0, 1].forEach((value, index) => {
+      page.allTableRows.eq(index).within(row => {
+        cy.wrap(row).get('td').eq(1).should('have.text', value === 1 ? '✓' : '');
+      });
+    });
+  });
 });

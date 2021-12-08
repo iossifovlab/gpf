@@ -194,7 +194,6 @@ describe('Autism gene profiles single view links tests', () => {
     page.openSingleView('POGZ', true); // thus force: true(the second argument) is closing all the tabs before it
 
     const geneData = geneDatas.find(data => data.geneSymbols === 'POGZ');
-    console.log(geneData);
 
     page.getGeneSymbols();
     cy.get('@geneSymbols').then(symbols => {

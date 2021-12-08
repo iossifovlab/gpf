@@ -50,6 +50,10 @@ export class AutismGeneProfilesTable extends BasePage {
     return this.autismGeneSetsDropdown.find('label input');
   }
 
+  get allSortingButtons() {
+    return cy.get('gpf-sorting-buttons');
+  }
+
   get allGeneSetsDropdownButton() {
     return cy.get('#column-filtering-button > span');
   }
