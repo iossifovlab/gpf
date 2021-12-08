@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from dae.genome.genome_access import GenomicSequence
+from dae.genomic_resources.reference_genome import ReferenceGenomeFilesystem
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.genomic_resources.test_tools import build_a_test_resource
 
@@ -80,7 +80,7 @@ def test_genomic_sequence_resource_http(genomic_resource_fixture_http_repo):
 
 @pytest.mark.fixture_repo
 def test_filesystem_genomic_sequence(fixture_dirname):
-    genome = GenomicSequence.load_genome(
+    genome = ReferenceGenomeFilesystem.load_genome(
         os.path.join(
             fixture_dirname("genomic_resources"),
             "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"

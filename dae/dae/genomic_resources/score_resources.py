@@ -1,3 +1,4 @@
+from __future__ import annotations
 
 import abc
 import logging
@@ -66,7 +67,7 @@ class GenomicScoresResource(GenomicResource, abc.ABC):
                                for score in self.scores.keys()]
             })
 
-    def open(self):
+    def open(self) -> GenomicScoresResource:
         self.table = open_genome_position_table(
             self, self.get_config()["table"])
 
@@ -86,7 +87,7 @@ class GenomicScoresResource(GenomicResource, abc.ABC):
                 scr_def.col_index = self.table.get_column_names().index(
                     score_conf["name"])
             else:
-                raise Exception(
+                raise ValueError(
                     "The score configuration must have a column specified")
 
             scr_def.type = score_conf.get(
@@ -148,16 +149,16 @@ class GenomicScoresResource(GenomicResource, abc.ABC):
             spec_def.value_parser = parser
             self.special_columns[key] = spec_def
 
-        self._has_chrom_prefix = self.table.get_chromosomes(
-        )[-1].startswith("chr")
-        return True
+        self._has_chrom_prefix = self.table\
+            .get_chromosomes()[-1]\
+            .startswith("chr")
+        return self
 
     def get_score_config(self, score_id):
         return self.scores.get(score_id)
 
     def close(self):
         self.table.close()
-        self.direct_infile.close()
 
     @staticmethod
     def get_extra_special_columns():

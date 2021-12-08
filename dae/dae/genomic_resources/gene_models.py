@@ -409,7 +409,7 @@ def _open_file(filename):
 #
 # GeneModel's
 #
-class GeneModelsBase:
+class GeneModels:
     def __init__(self, name=None):
         self.name = name
         self._shift = None
@@ -1313,15 +1313,15 @@ class GeneModelsBase:
         return None
 
 
-class GeneModels(GeneModelsBase):
+class GeneModelsFilesystem(GeneModels):
 
     def __init__(self, filename, gene_mapping_filename=None, fileformat=None):
-        super(GeneModels, self).__init__(filename)
+        super(GeneModelsFilesystem, self).__init__(filename)
         self.filename = filename
         self.gene_mapping_filename = gene_mapping_filename
         self.fileformat = fileformat
 
-    def open(self):
+    def open(self) -> GeneModels:
         assert os.path.exists(self.filename), self.filename
         logger.debug(f"loading gene models from {self.filename}")
 
@@ -1352,6 +1352,7 @@ class GeneModels(GeneModelsBase):
             self.reset()
 
             parser(infile, gene_mapping=gene_mapping)
+            return self
 
 
 def load_gene_models(
@@ -1360,7 +1361,7 @@ def load_gene_models(
     fileformat: Optional[str] = None
 ) -> GeneModels:
 
-    gm = GeneModels(
+    gm = GeneModelsFilesystem(
         filename,
         gene_mapping_filename=gene_mapping_filename,
         fileformat=fileformat)
@@ -1377,7 +1378,7 @@ def join_gene_models(*gene_models):
     if len(gene_models) < 2:
         raise Exception("The function needs at least 2 arguments!")
 
-    gm = GeneModelsBase()
+    gm = GeneModels()
     gm.utr_models = {}
     gm.gene_models = {}
 

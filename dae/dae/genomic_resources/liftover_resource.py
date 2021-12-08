@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dae.genomic_resources.repository import GenomicResourceRealRepo
 from dae.genomic_resources import GenomicResource
 import logging
@@ -23,11 +25,12 @@ class LiftoverChainResource(GenomicResource):
     def get_resource_type(clazz):
         return "liftover_chain"
 
-    def open(self):
+    def open(self) -> LiftoverChainResource:
         file = self.get_config()["file"]
 
         self.chain_file = self.open_raw_file(file, "rb", uncompress=True)
         self.liftover = LiftOver(self.chain_file)
+        return self
 
     def close(self):
         pass

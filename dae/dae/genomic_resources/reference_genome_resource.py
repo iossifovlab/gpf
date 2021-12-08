@@ -2,7 +2,7 @@ import logging
 
 
 from dae.utils.regions import Region
-from dae.genome.genome_access import GenomicSequenceBase
+from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.repository import GenomicResourceRealRepo
 
@@ -10,13 +10,13 @@ from dae.genomic_resources.repository import GenomicResourceRealRepo
 logger = logging.getLogger(__name__)
 
 
-class GenomicSequenceResource(GenomicResource, GenomicSequenceBase):
+class GenomicSequenceResource(GenomicResource, ReferenceGenome):
 
     def __init__(self, resourceId: str, version: tuple,
                  repo: GenomicResourceRealRepo,
                  config=None):
         GenomicResource.__init__(self, resourceId, version, repo, config)
-        GenomicSequenceBase.__init__(self)
+        ReferenceGenome.__init__(self)
         self.PARS = self._parse_PARS(config)
 
     @classmethod

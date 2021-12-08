@@ -1,6 +1,6 @@
 import pytest
 
-from dae.genomic_resources.genomic_sequence_resource import \
+from dae.genomic_resources.reference_genome_resource import \
     GenomicSequenceResource
 
 from dae.backends.impala.parquet_io import ParquetPartitionDescriptor

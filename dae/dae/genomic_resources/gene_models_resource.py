@@ -1,25 +1,25 @@
 import logging
 
-from dae.genome.gene_models import GeneModelsBase
+from dae.genomic_resources.gene_models import GeneModels
 from .repository import GenomicResource
 from .repository import GenomicResourceRealRepo
 
 logger = logging.getLogger(__name__)
 
 
-class GeneModelsResource(GenomicResource, GeneModelsBase):
+class GeneModelsResource(GenomicResource, GeneModels):
 
     def __init__(self, resourceId: str, version: tuple,
                  repo: GenomicResourceRealRepo,
                  config=None):
         GenomicResource.__init__(self, resourceId, version, repo, config)
-        GeneModelsBase.__init__(self, resourceId)
+        GeneModels.__init__(self, resourceId)
 
-    @classmethod
-    def get_resource_type(clazz):
+    @staticmethod
+    def get_resource_type():
         return "gene_models"
 
-    def open(self):
+    def open(self) -> GeneModels:
         filename = self.get_config()["filename"]
         fileformat = self.get_config().get("format", None)
         gene_mapping_filename = self.get_config().get("gene_mapping", None)
@@ -63,4 +63,4 @@ class GeneModelsResource(GenomicResource, GeneModelsBase):
                 msg = f"failed parsing gene model {self.get_id()}"
                 logger.error(msg)
                 raise ValueError(msg)
-        return True
+        return self

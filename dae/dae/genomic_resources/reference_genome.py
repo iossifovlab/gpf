@@ -14,7 +14,7 @@ from dae.utils.regions import Region
 logger = logging.getLogger(__name__)
 
 
-class GenomicSequenceBase:
+class ReferenceGenome:
 
     def __init__(self):
         self._index = None
@@ -97,10 +97,10 @@ class GenomicSequenceBase:
             return False
 
 
-class GenomicSequence(GenomicSequenceBase):
+class ReferenceGenomeFilesystem(ReferenceGenome):
 
     def __init__(self, genome_filename, PARS=None):
-        super(GenomicSequence, self).__init__()
+        super(ReferenceGenomeFilesystem, self).__init__()
         assert os.path.exists(genome_filename)
 
         self.genome_filename = genome_filename
@@ -122,10 +122,10 @@ class GenomicSequence(GenomicSequenceBase):
 
     @staticmethod
     def load_genome(filename):
-        genome = GenomicSequence(filename)
+        genome = ReferenceGenomeFilesystem(filename)
         genome.open()
         return genome
 
 
 def open_ref(filename):
-    return GenomicSequence.load_genome(filename)
+    return ReferenceGenomeFilesystem.load_genome(filename)

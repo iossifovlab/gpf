@@ -10,7 +10,7 @@ import numpy as np
 import pysam
 
 from dae.utils.helpers import str2bool
-from dae.genome.genome_access import GenomicSequenceBase
+from dae.genomic_resources.reference_genome import ReferenceGenome
 
 from dae.utils.variant_utils import is_all_reference_genotype, \
     is_all_unknown_genotype, \
@@ -110,7 +110,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             self,
             families,
             vcf_files,
-            genome: GenomicSequenceBase,
+            genome: ReferenceGenome,
             regions=None,
             params={},
             **kwargs):
@@ -607,7 +607,7 @@ class VcfLoader(VariantsGenotypesLoader):
             self,
             families,
             vcf_files,
-            genome: GenomicSequenceBase,
+            genome: ReferenceGenome,
             regions=None,
             params={},
             **kwargs):

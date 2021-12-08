@@ -11,7 +11,7 @@ from dae.effect_annotation.effect import AlleleEffects
 from dae.pedigrees.loader import FamiliesLoader
 
 from dae.backends.dae.loader import DenovoLoader
-from dae.genomic_resources.genomic_sequence_resource import \
+from dae.genomic_resources.reference_genome_resource import \
     GenomicSequenceResource
 from dae.genomic_resources.gene_models_resource import \
     GeneModelsResource

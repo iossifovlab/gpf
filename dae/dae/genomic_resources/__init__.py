@@ -3,7 +3,7 @@ from .repository_factory import register_real_genomic_resource_repository_type
 from .repository_factory import build_genomic_resource_repository
 from .repository import GenomicResource
 
-from .genomic_sequence_resource import GenomicSequenceResource
+from .reference_genome_resource import GenomicSequenceResource
 from .gene_models_resource import GeneModelsResource
 from .liftover_resource import LiftoverChainResource
 from .score_resources import PositionScoreResource, NPScoreResource, \
