@@ -83,13 +83,19 @@
     </div>
   </div>
 
+  <div  class="form-control docked" ngDefaultControl [(ngModel)]="legendToggle" id="legend-toggle"
+  [style.visibility]="familiesPedigreeTop - legendTop < 0 && familiesPedigreeBottom - legendTop > 0 ? 'visible' : 'hidden'"
+  style=""
+  >
+    <img (click)="toggleLegend()" class="docked"[src]="legendPopupImg">
+  </div>
   <div
     *ngIf="currentPedigreeTable !== ''"
     class="legend"
     style="z-index: 99; opacity:90%;"
     #legend
     [style.visibility]="
-      familiesPedigreeTop - legendTop < 0 && familiesPedigreeBottom - legendTop > 0 ? 'visible' : 'hidden'
+      (familiesPedigreeTop - legendTop < 0 && familiesPedigreeBottom - legendTop > 0 && legendToggle) ? 'visible' : 'hidden'
     ">
     <div *ngFor="let legendItem of currentPedigreeTable.legend.legendItems">
       <span class="pedigree-icon" [style.background-color]="legendItem.color"></span>
