@@ -1,10 +1,10 @@
 .astext {
-  font-size : 25px;
-  background:none;
-  border:none;
-  margin:0;
-  padding-right:5px;
-  outline:none;
+  font-size: 25px;
+  background: none;
+  border: none;
+  margin: 0;
+  padding-right: 5px;
+  outline: none;
 }
 
 .header-item {
@@ -13,7 +13,7 @@
   top: 50%;
   -ms-transform: translateY(-50%);
   transform: translateY(-50%);
-  padding-right: 15px; 
+  padding-right: 15px;
 }
 
 .checkbox-option {
