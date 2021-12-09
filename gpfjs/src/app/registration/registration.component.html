@@ -7,14 +7,14 @@
   </div>
 
   <div class="modal-body">
-    <div style="display: table; border-spacing: 15px; height: 100%; width: 100%;">
-      <div style="display: table-row;">
+    <div style="display: table; border-spacing: 15px; height: 100%; width: 100%">
+      <div style="display: table-row">
         <label for="email-input">Email</label>
-        <input ngbAutofocus id="email-input" class="form-control" [(ngModel)]="email" name="email" type="text">
+        <input ngbAutofocus id="email-input" class="form-control" [(ngModel)]="email" name="email" type="text" />
       </div>
       <div>
         <label for="name-input">Name</label>
-        <input id="name-input" class="form-control" [(ngModel)]="name" name="name" type="text">
+        <input id="name-input" class="form-control" [(ngModel)]="name" name="name" type="text" />
       </div>
     </div>
     <div *ngIf="registerError" class="alert alert-danger">{{ registerError }}</div>
