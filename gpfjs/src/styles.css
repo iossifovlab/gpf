@@ -53,13 +53,9 @@ label {
   margin-bottom: 0;
 }
 
-.checkbox {
-  margin-top: 4px;
-  margin-bottom: 4px;
-}
-
-.checkbox + .checkbox {
-  margin-top: -22px;
+.checkbox label {
+  padding-top: 4px;
+  padding-bottom: 4px;
 }
 
 .row-eq-height {
