@@ -1,30 +1,27 @@
-<form>
-  <div class="modal-header">
-    <h4 class="modal-title">Register</h4>
-    <button type="button" class="close" aria-label="Close" (click)="activeModal.dismiss('Cross click')">
-      <span aria-hidden="true">&times;</span>
-    </button>
+<form style="padding: 20px; width: 100%">
+  <button type="button" class="close" aria-label="Close" (click)="activeModal.dismiss('Cross click')">
+    <span style="position: absolute; top: 5px" aria-hidden="true">&times;</span>
+  </button>
+
+  <div style="margin-bottom: 15px">
+    <h4>Register</h4>
   </div>
 
-  <div class="modal-body">
-    <div style="display: table; border-spacing: 15px; height: 100%; width: 100%">
-      <div style="display: table-row">
-        <label for="email-input">Email</label>
-        <input ngbAutofocus id="email-input" class="form-control" [(ngModel)]="email" name="email" type="text" />
-      </div>
-      <div>
-        <label for="name-input">Name</label>
-        <input id="name-input" class="form-control" [(ngModel)]="name" name="name" type="text" />
-      </div>
-    </div>
-    <div *ngIf="registerError" class="alert alert-danger">{{ registerError }}</div>
-
-    <div *ngIf="registerSuccess" class="alert alert-info" role="alert">
-      <span>An email has been sent to the given address</span>
-    </div>
+  <div style="padding-bottom: 15px">
+    <label for="email-input">Email</label>
+    <input ngbAutofocus id="email-input" class="form-control" [(ngModel)]="email" name="email" type="text" />
   </div>
 
-  <div class="modal-footer">
-    <button type="submit" class="btn btn-primary" (click)="register()">Register</button>
+  <div style="padding-bottom: 15px">
+    <label for="name-input">Name</label>
+    <input id="name-input" class="form-control" [(ngModel)]="name" name="name" type="text" />
   </div>
+
+  <div *ngIf="registerError" class="alert alert-danger">{{ registerError }}</div>
+
+  <div *ngIf="registerSuccess" class="alert alert-info" role="alert">
+    <span>An email has been sent to the given address</span>
+  </div>
+
+  <button style="width: 100%" type="submit" class="btn btn-primary" (click)="register()">Register</button>
 </form>
