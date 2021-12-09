@@ -100,10 +100,6 @@ label {
   border-top: 1px solid rgba(0, 0, 0, 12.5%);
 }
 
-.nav-pills .nav-link.active {
-  background-color: #2a6395;
-}
-
 .btn {
   cursor: pointer;
 }
@@ -182,6 +178,14 @@ label {
 
 .clickable {
   cursor: pointer;
+}
+
+.nav-link {
+  margin-right: 8px;
+}
+
+.nav-pills .nav-link.active {
+  background-color: #2a6395;
 }
 
 .navbar.navbar-custom .nav-link,
