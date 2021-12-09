@@ -29,8 +29,8 @@
                 class="form-control"
                 [(ngModel)]="username"
                 [style.opacity.%]="showPasswordField ? 50 : 100"
-                [disabled]="showPasswordField"
-                type="text" />
+                type="text"
+                (focus)="back()" />
             </div>
           </div>
           <div *ngIf="!showPasswordField" class="col-12">
@@ -60,18 +60,10 @@
           </div>
           <div class="col-12">
             <button
-              type="button"
-              class="btn btn-light col-3"
-              id="back-button"
-              style="width: 100%; border: 1px solid #ced4da; opacity: 85%"
-              (click)="back()">
-              <span>Back</span>
-            </button>
-            <button
               type="submit"
-              class="btn btn-primary col-8"
+              class="btn btn-primary"
               id="login-button"
-              style="width: 100%; float: right"
+              style="width: 100%"
               (click)="login()"
               [class.spinner]="passwordTimeout"
               [disabled]="passwordTimeout">
