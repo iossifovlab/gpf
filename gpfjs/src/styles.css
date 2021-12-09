@@ -222,6 +222,7 @@ gpf-global-error-display {
   font-family: Roboto, sans-serif;
   font-weight: 500;
   width: 100px;
+  margin-right: 8px;
 }
 
 .pedigree-icon {
