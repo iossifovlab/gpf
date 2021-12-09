@@ -19,7 +19,3 @@
 .button {
   display: flex;
 }
-.button > input, gpf-share-query-button {
-  display: inline-block;
-  margin-right: 5px;
-}

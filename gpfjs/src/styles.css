@@ -233,3 +233,16 @@ gpf-global-error-display {
   height: 15px;
   border: 0.1px solid #aaa;
 }
+
+#table-preview-button {
+  margin-right: 19px;
+}
+
+#enrichment-test-button {
+  margin-right: 19px;
+}
+
+#share-query-dropdown-button,
+#save-query-dropdown-button {
+  margin-right: 8px;
+}
