@@ -20,18 +20,17 @@ nav.tab-limit {
   border-bottom: none;
 }
 
-.nav-link:hover:not(.active) {
-  border-bottom: none;
-  /* border-bottom: 1px solid #ffffff; */
-}
-
 .nav-link {
   color: #495057;
   margin-right: 0;
   min-width: 125px;
 }
 
-.nav-link.active{
+.nav-link:hover:not(.active) {
+  border-bottom: none;
+}
+
+.nav-link.active {
   border-color: #dee2e6 #dee2e6 #fff;
 }
 
@@ -49,29 +48,29 @@ button::after {
   display: none;
 }
 
-button:click{
-  outline-color: #000000
+button:click {
+  outline-color: #000;
 }
 
 .keybinds-tooltip {
-  border: 1px solid #dddddd;
+  border: 1px solid #ddd;
   text-align: left;
   z-index: 10000;
   position: absolute;
   top: 33px;
   left: 51px;
   padding: 5px;
-  background-color: #ffffff;
+  background-color: #fff;
 }
 
 .keybinds-tooltip span {
-  border: 1px solid rgba(126, 126, 126, 0.412);
-  padding: 0px 5px 0px 5px;
+  border: 1px solid rgba(126, 126, 126, 41.2%);
+  padding: 0 5px;
 }
 
 .keybinds-icon {
   text-align: center;
-  padding: 0px 3px 0px 26px;
+  padding: 0 3px 0 26px;
 }
 
 #column-filtering-button {
@@ -82,7 +81,4 @@ button:click{
   padding: 0;
   width: 18px;
   vertical-align: unset;
-}
-
-.nav-link {
 }
