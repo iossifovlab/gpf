@@ -24,6 +24,7 @@ nav.tab-limit {
   color: #495057;
   margin-right: 0;
   min-width: 125px;
+  cursor: default;
 }
 
 .nav-link:hover:not(.active) {
@@ -44,6 +45,7 @@ span.close {
   left: 12px;
   padding-left: 5px !important;
   padding-right: 5px !important;
+  cursor: pointer;
 }
 
 button::after {
