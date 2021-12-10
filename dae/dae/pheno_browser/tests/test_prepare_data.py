@@ -115,11 +115,11 @@ def test_build_regression(mocker, fake_phenotype_data, output_dir):
 
     def fake_linregres(*args):
         class Result:
-            pvalues = {"age": 0.123456}
+            pvalues = [0.123456]
 
         res_male = Result()
         res_female = Result()
-        res_female.pvalues["age"] = 0.654321
+        res_female.pvalues[0] = 0.654321
         return (res_male, res_female)
 
     def fake_savefig(*args):
