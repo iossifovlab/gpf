@@ -23,7 +23,7 @@ dependencies:
   - pyarrow=6.0.1
   - fsspec=2021.11.0
   - pyliftover=0.4
-  - python=3.8
+  - python=3.9
   - python-box=5.3.0
   - setuptools=52.0.0
   - sqlalchemy=1.4.22
