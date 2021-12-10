@@ -34,7 +34,7 @@
     </li>
 
     <li class="nav-tabs" *ngFor="let geneTab of geneTabs" [ngbNavItem]="geneTab" [destroyOnHide]="false">
-      <a ngbNavLink>
+      <a ngbNavLink (middleclick)="closeTab($event, geneTab)">
         <span>{{ geneTab }}</span>
         <span class="close position-relative pl-2 font-weight-light" (click)="closeTab($event, geneTab)">×</span>
       </a>
