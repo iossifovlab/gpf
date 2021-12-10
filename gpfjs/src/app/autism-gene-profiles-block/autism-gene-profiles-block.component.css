@@ -40,8 +40,10 @@ nav.tab-limit {
 
 span.close {
   font-size: 18px;
-  top: 3px;
-  left: 6px;
+  top: 2px;
+  left: 12px;
+  padding-left: 5px !important;
+  padding-right: 5px !important;
 }
 
 button::after {
