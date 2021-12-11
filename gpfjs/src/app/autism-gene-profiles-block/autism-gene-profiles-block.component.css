@@ -33,6 +33,7 @@ nav.tab-limit {
 
 .nav-link.active {
   border-color: #dee2e6 #dee2e6 #fff;
+  background-color: #fafafa;
 }
 
 .nav-item {
