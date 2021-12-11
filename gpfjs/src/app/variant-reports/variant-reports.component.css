@@ -1,3 +1,15 @@
+.effect-type-group-row {
+  background-color: #dadada;
+}
+
+tr:hover {
+  background-color: #edf3ff;
+}
+
+.effect-type-group-row:hover {
+  background-color: #e3e5eb;
+}
+
 .variant-report-block {
   padding: 20px;
   border: 1px solid rgba(0, 0, 0, 12.5%);

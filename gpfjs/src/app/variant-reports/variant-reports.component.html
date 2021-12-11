@@ -27,7 +27,7 @@
 
   <div *ngIf="currentPeopleCounter" id="families-by-number-div" class="row mb-3">
     <div class="col-12">
-      <table class="table table-bordered table-hover table-sm table-centered table-header-rotate">
+      <table class="table table-bordered table-sm table-centered table-header-rotate">
         <thead>
           <th class="first-header-cell">
             <div style="padding: 0">
@@ -67,7 +67,7 @@
 
   <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row mb-3" #families_pedigree>
     <div class="col-12">
-      <table class="table table-bordered table-hover table-sm table-centered">
+      <table class="table table-bordered table-sm table-centered">
         <colgroup>
           <col />
           <col />
@@ -114,7 +114,7 @@
 
     <div *ngIf="currentDenovoReport" id="denovo-variants-div" class="row mb-3">
       <div class="col-12">
-        <table class="table table-bordered table-hover table-sm table-centered">
+        <table class="table table-bordered table-sm table-centered">
           <thead>
             <th>Effect type</th>
             <th class="rotate" *ngFor="let column of currentDenovoReport.columns">
@@ -124,7 +124,7 @@
           <tbody>
             <tr
               *ngFor="let effectType of getRows(currentDenovoReport.effectGroups, currentDenovoReport.effectTypes)"
-              [ngClass]="{ 'table-active' : (currentDenovoReport.effectGroups.indexOf(effectType) !== -1) }">
+              [ngClass]="{ 'effect-type-group-row' : (currentDenovoReport.effectGroups.indexOf(effectType) !== -1) }">
               <th>{{ effectType }}</th>
               <td *ngFor="let effectTypeData of getEffectTypeOrderByColumOrder(effectType, currentDenovoReport, currentDenovoReport.columns)">
                 <div>{{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number }}</div>
