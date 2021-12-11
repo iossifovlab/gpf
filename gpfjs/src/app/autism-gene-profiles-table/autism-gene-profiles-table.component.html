@@ -54,8 +54,7 @@
                 #columnFilteringButton
                 [attr.id]="element.category.id + '-button'"
                 class="dropdown-toggle btn navbar-toggler"
-                (click)="openDropdown(element.category.id)"
-                style="float: right; outline: none; font-size: 18px; white-space: nowrap; border: 0; padding: 0; width: 18px; vertical-align: unset;">
+                (click)="openDropdown(element.category.id)">
                 &#9776;
               </button>
             </th>
@@ -95,8 +94,7 @@
                   #columnFilteringButton
                   [attr.id]="element.category.id + ':' + personSet.id + '-button'"
                   class="dropdown-toggle btn navbar-toggler"
-                  (click)="openDropdown(element.category.id + ':' + personSet.id)"
-                  style="float: right; outline: none; font-size: 18px; white-space: nowrap; border: 0; padding: 0; width: 18px; vertical-align: unset;">
+                  (click)="openDropdown(element.category.id + ':' + personSet.id)">
                   &#9776;
                 </button>
               </th>
