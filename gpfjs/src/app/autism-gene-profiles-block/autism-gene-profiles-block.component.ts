@@ -28,8 +28,18 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     private autismGeneProfilesService: AutismGeneProfilesService
   ) { }
 
+  @HostListener('window:keydown.home')
+  public scrollToTop(): void {
+    window.scroll(0, 0);
+  }
+
+  @HostListener('window:keydown.end')
+  public scrollToBottom(): void {
+    window.scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight);
+  }
+
   @HostListener('window:keydown', ['$event'])
-  public keyEvent($event: KeyboardEvent) {
+  public keyEvent($event: KeyboardEvent): void {
     if (
       $event.target['localName'] === 'input'
       || !this.keybinds.includes($event.key)
