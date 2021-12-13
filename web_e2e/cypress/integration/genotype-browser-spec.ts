@@ -228,25 +228,25 @@ describe('Genotype browser table preview result tests', () => {
   });
 
   [{study: datasetIds.compAll,
-    inheritanceType: 'Mendelian', expectedOverviewParagraph: '30 variants selected (30 shown)'},
+    inheritanceType: 'mendelian', expectedOverviewParagraph: '30 variants selected (30 shown)'},
     {study: datasetIds.compDenovo,
-    inheritanceType: 'Mendelian', expectedOverviewParagraph: '0 variants selected (0 shown)'},
+    inheritanceType: 'mendelian', expectedOverviewParagraph: '0 variants selected (0 shown)'},
     {study: datasetIds.compVcf,
-    inheritanceType: 'Mendelian', expectedOverviewParagraph: '30 variants selected (30 shown)'},
+    inheritanceType: 'mendelian', expectedOverviewParagraph: '30 variants selected (30 shown)'},
     {study: datasetIds.iossifov2014,
-    inheritanceType: 'Mendelian', expectedOverviewParagraph: '0 variants selected (0 shown)'},
+    inheritanceType: 'mendelian', expectedOverviewParagraph: '0 variants selected (0 shown)'},
     {study: datasetIds.multi,
-    inheritanceType: 'Mendelian', expectedOverviewParagraph: '2 variants selected (2 shown)'},
+    inheritanceType: 'mendelian', expectedOverviewParagraph: '2 variants selected (2 shown)'},
     {study: datasetIds.compAll,
-    inheritanceType: 'Denovo', expectedOverviewParagraph: '5 variants selected (5 shown)'},
+    inheritanceType: 'denovo', expectedOverviewParagraph: '5 variants selected (5 shown)'},
     {study: datasetIds.compDenovo,
-    inheritanceType: 'Denovo', expectedOverviewParagraph: '5 variants selected (5 shown)'},
+    inheritanceType: 'denovo', expectedOverviewParagraph: '5 variants selected (5 shown)'},
     {study: datasetIds.compVcf,
-    inheritanceType: 'Denovo', expectedOverviewParagraph: '0 variants selected (0 shown)'},
+    inheritanceType: 'denovo', expectedOverviewParagraph: '0 variants selected (0 shown)'},
     {study: datasetIds.iossifov2014,
-    inheritanceType: 'Denovo', expectedOverviewParagraph: 'more than 1000 variants selected (1000 shown)'},
+    inheritanceType: 'denovo', expectedOverviewParagraph: 'more than 1000 variants selected (1000 shown)'},
     {study: datasetIds.multi,
-    inheritanceType: 'Denovo', expectedOverviewParagraph: '0 variants selected (0 shown)'}
+    inheritanceType: 'denovo', expectedOverviewParagraph: '0 variants selected (0 shown)'}
   ].forEach((data) => {
     it('should display "' + data.expectedOverviewParagraph + '" in overview paragraph when ' +
        'inheritance types are ' + data.inheritanceType + ' at /' + data.study + '/browser', () => {
@@ -268,7 +268,7 @@ describe('Genotype browser table preview result tests', () => {
        'inheritance types are denovo at /' + data.study + '/browser', () => {
       genotypeBrowserController.setStudy(data.study);
       genotypeBrowserController.setEffectTypesGroup('All');
-      genotypeBrowserController.setInheritanceType('Denovo');
+      genotypeBrowserController.setInheritanceType('denovo');
       genotypeBrowserController.showTablePreview();
       page.overviewParagraph.should('have.text', data.expectedOverviewParagraph);
     });
