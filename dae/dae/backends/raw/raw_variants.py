@@ -408,9 +408,9 @@ class RawFamilyVariants(abc.ABC):
                 alleles = v.alleles
                 alleles_matched = []
                 for allele in alleles:
+                    if allele.allele_index == 0 and not return_reference:
+                        continue
                     if cls.filter_allele(allele, **kwargs):
-                        if allele.allele_index == 0 and not return_reference:
-                            continue
                         alleles_matched.append(allele.allele_index)
                 if alleles_matched:
                     v.set_matched_alleles(alleles_matched)

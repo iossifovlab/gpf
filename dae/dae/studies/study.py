@@ -317,6 +317,8 @@ class GenotypeData(ABC):
 
         except GeneratorExit:
             logger.info("generator closed")
+        except Exception:
+            logger.exception("unexpected exception:", exc_info=True)
         finally:
             elapsed = time.time() - started
             logger.info(

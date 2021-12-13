@@ -279,7 +279,8 @@ class Family(object):
         #     persons, key=lambda p: p.role.value if p.role else -1)
 
         family = Family(family_id)
-        for person in persons:
+        for index, person in enumerate(persons):
+            person.set_attr("member_index", index)
             family.persons[person.person_id] = person
         family._connect_family()
         assert all([p.family is not None for p in family.persons.values()])
@@ -312,7 +313,7 @@ class Family(object):
         assert all([isinstance(p, Person) for p in persons])
         assert all([p.family_id == self.family_id for p in persons])
 
-        for p in persons:
+        for index, p in enumerate(persons):
             self.persons[p.person_id] = p
         self.redefine()
 
