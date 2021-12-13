@@ -438,7 +438,7 @@ class RawFamilyVariants(abc.ABC):
             return_reference=None,
             return_unknown=None,
             limit=None,
-            affected_status=None):
+            pedigree_fields=None):
 
         filter_func = RawFamilyVariants.family_variant_filter_function(
             regions=regions,

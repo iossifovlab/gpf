@@ -281,17 +281,19 @@ class ImpalaVariants:
             return_reference=None,
             return_unknown=None,
             limit=None,
-            affected_status=None):
+            pedigree_fields=None):
 
         if not self.variants_table:
             return None
-        do_join = affected_status is not None
+        do_join = False
+        if pedigree_fields is not None:
+            do_join = True
         query_builder = FamilyVariantsQueryBuilder(
             self.db, self.variants_table, self.pedigree_table,
             self.schema, self.table_properties,
             self.pedigree_schema, self.ped_df,
             self.families, gene_models=self.gene_models,
-            do_join=do_join
+            do_join=do_join,
         )
         director = ImpalaQueryDirector(query_builder)
         if limit is None:
@@ -317,7 +319,7 @@ class ImpalaVariants:
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=request_limit,
-            affected_status=affected_status
+            pedigree_fields=pedigree_fields
         )
 
         query = query_builder.product
@@ -432,7 +434,7 @@ class ImpalaVariants:
             return_reference=None,
             return_unknown=None,
             limit=None,
-            affected_status=None):
+            pedigree_fields=None):
 
         if not self.variants_table:
             return None
@@ -459,7 +461,7 @@ class ImpalaVariants:
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=request_limit,
-            affected_status=affected_status)
+            pedigree_fields=pedigree_fields)
 
         result = QueryResult(
                 runners=[runner], limit=limit)
