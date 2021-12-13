@@ -250,6 +250,7 @@ describe('User access rights tests', () => {
     userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
     userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true});
     userManagementPage.userWindowGroupDropDownMenuButton.click();
+    userManagementPage.userWindowGroupDropdownSearch.should('be.visible');
     userManagementPage.userWindowGroupDropdownSearch.type('ALL_Genotypes');
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
