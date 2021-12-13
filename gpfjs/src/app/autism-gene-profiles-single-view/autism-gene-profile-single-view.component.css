@@ -2,6 +2,7 @@ table {
   width: 720px;
   max-width: 720px;
   margin-bottom: 15px;
+  margin-right: 15px;
 }
 
 td {
@@ -13,12 +14,6 @@ td {
 #links-table td {
   height: 55px;
   max-height: 55px;
-}
-
-.datasets-table {
-  display: block;
-  overflow-x: auto;
-  white-space: nowrap;
 }
 
 .link-external-page {
@@ -40,7 +35,6 @@ td {
 .wrapper {
   display: flex;
   align-items: flex-start;
-  flex-direction: column;
 }
 
 .link-genotype-browser,
@@ -73,4 +67,23 @@ td {
   justify-content: center;
   align-items: center;
   max-height: 80%;
+}
+
+.compare-wrapper {
+  flex-direction: column;
+}
+
+.compare-wrapper table {
+  margin-right: 0;
+}
+
+.compare-wrapper .datasets-table {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.compare-div {
+  border-right: 1px solid #dee2e6;
+  height: 100%;
 }

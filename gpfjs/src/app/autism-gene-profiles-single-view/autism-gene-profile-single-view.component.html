@@ -2,35 +2,39 @@
   <button class="minimize-component-button" [attr.title]="geneSymbol" (click)="showTemplate = !showTemplate">&ndash;</button>
 </ng-container>
 
-<div *ngIf="gene$ | async as gene" style="border-right: 1px solid #dee2e6; height: 100%">
+<div *ngIf="gene$ | async as gene" [ngClass]="{'compare-div': isInGeneCompare}">
   <ng-container *ngIf="showTemplate">
     <div style="padding: 25px">
-      <h2 style="margin-right: 15px">
-        {{ geneSymbol }}
-      </h2>
+      <h2 style="margin-right: 15px">{{ geneSymbol }}</h2>
 
-      <table class="wrapper" id="links-table">
-        <tr>
-          <td style="border-right: 1px solid #dee2e6; padding-right: 25px;">Links</td>
-          <td>
-            <a class="link-external-page" [attr.href]="links.GeneBrowser" id="gene-browser-link" target="_blank">Gene Browser</a>
-          </td>
-          <td>
-            <a class="link-external-page" [attr.href]="links.UCSC" target="_blank">UCSC genome browser</a>
-          </td>
-          <td>
-            <a class="link-external-page" [attr.href]="links.GeneCards" target="_blank">GeneCards</a>
-          </td>
-          <td>
-            <a class="link-external-page" [attr.href]="links.Pubmed" target="_blank">Pubmed</a>
-          </td>
-          <td>
-            <a *ngIf="links.SFARIgene !== ''" class="link-external-page" [attr.href]="links.SFARIgene" target="_blank">SFARI gene</a>
-          </td>
-        </tr>
-      </table>
+      <div
+        class="wrapper"
+        [ngClass]="{'compare-wrapper': isInGeneCompare}">
+        <table id="links-table">
+          <tr>
+            <td style="border-right: 1px solid #dee2e6; padding-right: 25px;">Links</td>
+            <td>
+              <a class="link-external-page" [attr.href]="links.GeneBrowser" id="gene-browser-link" target="_blank">Gene Browser</a>
+            </td>
+            <td>
+              <a class="link-external-page" [attr.href]="links.UCSC" target="_blank">UCSC genome browser</a>
+            </td>
+            <td>
+              <a class="link-external-page" [attr.href]="links.GeneCards" target="_blank">GeneCards</a>
+            </td>
+            <td>
+              <a class="link-external-page" [attr.href]="links.Pubmed" target="_blank">Pubmed</a>
+            </td>
+            <td>
+              <a *ngIf="links.SFARIgene !== ''" class="link-external-page" [attr.href]="links.SFARIgene" target="_blank">SFARI gene</a>
+            </td>
+          </tr>
+        </table>
+      </div>
 
-      <div class="wrapper">
+      <div
+        [ngClass]="{'compare-wrapper': isInGeneCompare}" 
+        class="wrapper">
         <table
           *ngFor="let genomicScoreCategory of config.genomicScores"
           [attr.id]="genomicScoreCategory.category"
@@ -69,7 +73,9 @@
         </table>
       </div>
 
-      <div class="wrapper">
+      <div
+        [ngClass]="{'compare-wrapper': isInGeneCompare}"
+        class="wrapper">
         <table
           *ngFor="let geneSetCategory of config.geneSets"
           [attr.id]="geneSetCategory.category"
@@ -85,7 +91,9 @@
         </table>
       </div>
 
-      <div class="wrapper">
+      <div
+        [ngClass]="{'compare-wrapper': isInGeneCompare}"
+        class="wrapper">
         <ng-container *ngFor="let dataset of config.datasets">
           <table class="table table-bordered table-centered datasets-table">
             <thead>
