@@ -163,10 +163,10 @@ class PreparePhenoBrowserBase(object):
             aug_df, aug_col_name, dependent_measure.measure_id, jitter
         )
         res["pvalue_regression_male"] = (
-            res_male.pvalues[0] if res_male is not None else None
+            res_male.pvalues[1] if res_male is not None else None
         )
         res["pvalue_regression_female"] = (
-            res_female.pvalues[0]
+            res_female.pvalues[1]
             if res_female is not None
             else None
         )
