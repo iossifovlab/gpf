@@ -451,7 +451,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     }
 
     if (
-      !$event.ctrlKey && $event.type === 'click'
+      $event.type === 'click' && !($event.ctrlKey || $event.metaKey)
       || $event.target.classList.value.replace('ng-star-inserted', '').trim().includes('link-td')
     ) {
       return;
