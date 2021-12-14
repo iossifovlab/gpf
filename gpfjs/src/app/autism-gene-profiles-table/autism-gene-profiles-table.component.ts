@@ -466,10 +466,9 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
   }
 
   public highlightRow($event): void {
-
     if (
-      !$event.ctrlKey && $event.type === 'click'
-      || linkElements.includes($event.target.classList.value.replace('ng-star-inserted', '').trim())
+      $event.type === 'click' && !($event.ctrlKey || $event.metaKey)
+      || $event.target.classList.value.replace('ng-star-inserted', '').trim().includes('link-td')
       || !($event.target instanceof Element)
     ) {
       return;
