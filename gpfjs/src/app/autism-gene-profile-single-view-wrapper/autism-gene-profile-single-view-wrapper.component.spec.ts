@@ -9,7 +9,7 @@ class MockActivatedRoute {
   params = {dataset: 'testDatasetId', get: () => ''};
   parent = {params: of(this.params)};
   queryParamMap = of(this.params);
-  snapshot = {params: {gene: 'mockGeneSymbol'}};
+  snapshot = {params: {genes: 'mockGeneSymbol'}};
 }
 
 describe('AutismGeneProfileSingleViewWrapperComponent', () => {

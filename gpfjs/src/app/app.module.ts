@@ -183,6 +183,7 @@ import { toolPageLinks } from './datasets/datasets';
 import { GenePlotComponent } from './gene-plot/gene-plot.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ClipboardModule } from '@angular/cdk/clipboard';
+import { SplitPipe } from './utils/split.pipe';
 
 const appRoutes: Routes = [
   {
@@ -232,7 +233,7 @@ const appRoutes: Routes = [
     component: AutismGeneProfilesBlockComponent
   },
   {
-    path: 'autism-gene-profiles/:gene',
+    path: 'autism-gene-profiles/:genes',
     component: AutismGeneProfileSingleViewWrapperComponent
   },
   {
@@ -381,7 +382,8 @@ const appRoutes: Routes = [
     CheckboxListComponent,
     DisplayNamePipe,
     GenePlotComponent,
-    PeopleCounterRowPipe
+    PeopleCounterRowPipe,
+    SplitPipe
   ],
   imports: [
     BrowserModule,
