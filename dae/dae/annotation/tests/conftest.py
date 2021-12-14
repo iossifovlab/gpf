@@ -1,8 +1,6 @@
 import pytest
 import os
 
-from dae.configuration.gpf_config_parser import FrozenBox
-
 from dae.variants.core import Allele
 
 from dae.variants.variant import SummaryVariantFactory

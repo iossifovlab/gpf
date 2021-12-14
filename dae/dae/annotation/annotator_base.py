@@ -97,6 +97,12 @@ class Annotator(abc.ABC):
     def get_annotation_config(self):
         pass
 
+    def _empty_result(self):
+        result = {}
+        for attr in self.get_annotation_config():
+            result[attr.destination] = None
+        return result
+
     def annotate(
             self, annotatable: Annotatable, context: Optional[dict]) -> Dict:
         """
@@ -105,11 +111,15 @@ class Annotator(abc.ABC):
         """
         if self.input_annotatable is not None:
             annotatable = context.get(self.input_annotatable)
+            logger.debug(
+                f"input annotatable {self.input_annotatable} found "
+                f"{annotatable}")
+
             if annotatable is None:
                 logger.info(
                     f"can't find input annotatable {self.input_annotatable} "
                     f"in annotation context: {context}")
-                return {}
+                return self._empty_result()
 
         attributes = self._do_annotate(annotatable, context)
         attributes_list = self.get_annotation_config()

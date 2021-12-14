@@ -159,7 +159,7 @@ class LiftOverAnnotator(Annotator):
             )
 
             if lo_coordinates is None:
-                return {}
+                return None
 
             lo_chrom, lo_pos, lo_strand, _ = lo_coordinates
             pos = allele.position
@@ -179,7 +179,7 @@ class LiftOverAnnotator(Annotator):
             if lo_ref is None:
                 logger.warning(
                     f"can't find genomic sequence for {lo_chrom}:{lo_pos}")
-                return {}
+                return None
 
             lo_alt = alt
             if lo_strand == "-":
@@ -204,6 +204,6 @@ class LiftOverAnnotator(Annotator):
         if lo_allele is None:
             logger.info(
                 f"unable to liftover allele: {annotatable}")
-            return {}
+            return {"liftover_annotatable": None}
 
         return {"liftover_annotatable": lo_allele}
