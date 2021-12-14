@@ -41,11 +41,10 @@ class LiftOverAnnotator(Annotator):
         super().__init__(config)
 
         self.chain = chain_resource
-        self.target_genome = target_genome
 
         # TODO do somewhere else
         self.chain.open()
-        self.target_genome.open()
+        self.target_genome = target_genome.open()
         self._annotation_schema = None
 
     @staticmethod
@@ -87,7 +86,8 @@ class LiftOverAnnotator(Annotator):
             schema = Schema()
             for attr in self.get_annotation_config():
                 source = LiftOverAnnotator.LiftoverSource(
-                    self.chain.resource_id, self.target_genome.resource_id)
+                    self.chain.resource_id,
+                    self.target_genome.resource_id)
                 schema.create_field(
                     attr.destination,
                     "object",

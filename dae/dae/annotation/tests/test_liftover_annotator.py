@@ -40,6 +40,7 @@ def test_liftover(
     chain_resource.convert_coordinate = lift_over
     target_genome = mocker.Mock()
     target_genome.get_sequence = mock_get_sequence
+    target_genome.open = lambda: target_genome
 
     config = Box({
         "annotator_type": "liftover_annotator",

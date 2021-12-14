@@ -1,7 +1,7 @@
 import pytest
 
-from dae.genomic_resources.reference_genome_resource import \
-    GenomicSequenceResource
+from dae.genomic_resources.reference_genome import \
+    ReferenceGenome
 
 from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 from dae.backends.impala.import_commons import MakefilePartitionHelper
@@ -161,7 +161,7 @@ def test_target_generator_chrom_prefix_target_other(
 ):
 
     mocker.patch.object(
-        GenomicSequenceResource,
+        ReferenceGenome,
         "get_all_chrom_lengths",
         return_value=[
             ("chr1", 100_000_000),
@@ -205,7 +205,7 @@ def test_target_generator_add_chrom_prefix_target_chrom(
 ):
 
     mocker.patch.object(
-        GenomicSequenceResource,
+        ReferenceGenome,
         "get_all_chrom_lengths",
         return_value=[
             ("chr1", 100_000_000),
@@ -249,7 +249,7 @@ def test_target_generator_del_chrom_prefix_target_chrom(
 ):
 
     mocker.patch.object(
-        GenomicSequenceResource,
+        ReferenceGenome,
         "get_all_chrom_lengths",
         return_value=[
             ("1", 100_000_000),
@@ -313,7 +313,7 @@ def test_makefile_generator_bucket_numbering(
 ):
 
     mocker.patch.object(
-        GenomicSequenceResource,
+        ReferenceGenome,
         "get_all_chrom_lengths",
         return_value=[
             ("chr1", 100_000_000),
@@ -371,7 +371,7 @@ def test_makefile_generator_regions(
 ):
 
     mocker.patch.object(
-        GenomicSequenceResource,
+        ReferenceGenome,
         "get_all_chrom_lengths",
         return_value=[
             ("chr1", 100_000_000),
@@ -433,7 +433,7 @@ def test_makefile_generator_regions_del_chrom_prefix(
 ):
 
     mocker.patch.object(
-        GenomicSequenceResource,
+        ReferenceGenome,
         "get_all_chrom_lengths",
         return_value=[
             ("1", 100_000_000),
@@ -493,7 +493,7 @@ def test_makefile_generator_regions_add_chrom_prefix(
 ):
 
     mocker.patch.object(
-        GenomicSequenceResource,
+        ReferenceGenome,
         "get_all_chrom_lengths",
         return_value=[
             ("chr1", 100_000_000),

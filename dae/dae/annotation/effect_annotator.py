@@ -6,6 +6,8 @@ from box import Box
 
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AlleleEffects, AnnotationEffect
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.gene_models import GeneModels
 
 from .schema import Schema
 from .annotatable import Annotatable, CNVAllele, VCFAllele
@@ -58,7 +60,7 @@ def build_effect_annotator(pipeline, config):
                 f"in the specified repository "
                 f"{pipeline.repository.repo_id}")
 
-    return EffectAnnotatorAdapter(config, genome, gene_models)
+    return EffectAnnotatorAdapter(config, genome.open(), gene_models.open())
 
 
 class EffectAnnotatorAdapter(Annotator):
@@ -99,11 +101,15 @@ class EffectAnnotatorAdapter(Annotator):
         ]
     })
 
-    def __init__(self, config, genome_resource, gene_models_resource):
+    def __init__(
+            self, config, genome: ReferenceGenome, gene_models: GeneModels):
         super(EffectAnnotatorAdapter, self).__init__(config)
 
-        self.genome = genome_resource.open()
-        self.gene_models = gene_models_resource.open()
+        assert isinstance(genome, ReferenceGenome)
+        assert isinstance(gene_models, GeneModels)
+
+        self.genome = genome
+        self.gene_models = gene_models
 
         self._annotation_schema = None
         self._annotation_config = None
