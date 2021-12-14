@@ -16,9 +16,10 @@ class LinearRegression(LinearRegressionSK):
         super().fit(X, y, sample_weight)
         n = len(y)
 
-        pinv_x, rank = sp.linalg.pinv(X, return_rank=True)
+        x_consts = np.column_stack([np.ones(X.shape[0]), X])
+        pinv_x, rank = sp.linalg.pinv(x_consts, return_rank=True)
 
-        df_resid = X.shape[0] - np.linalg.matrix_rank(X)
+        df_resid = x_consts.shape[0] - np.linalg.matrix_rank(x_consts)
 
         resid = y - self.predict(X)
 
