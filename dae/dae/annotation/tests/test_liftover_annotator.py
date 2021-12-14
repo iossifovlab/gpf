@@ -36,8 +36,10 @@ def mock_get_sequence(chrom, start, stop):
 def test_liftover(
         mocker, chrom, pos, lift_over, expected_chrom, expected_pos):
 
-    chain_resource = mocker.Mock()
-    chain_resource.convert_coordinate = lift_over
+    chain = mocker.Mock()
+    chain.convert_coordinate = lift_over
+    chain.open = lambda: chain
+
     target_genome = mocker.Mock()
     target_genome.get_sequence = mock_get_sequence
     target_genome.open = lambda: target_genome
@@ -51,7 +53,7 @@ def test_liftover(
     })
 
     annotator = LiftOverAnnotator(
-        config, chain_resource, target_genome)
+        config, chain, target_genome)
     assert annotator is not None
 
     # aline = {

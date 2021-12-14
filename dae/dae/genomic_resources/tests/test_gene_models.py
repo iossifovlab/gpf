@@ -265,7 +265,7 @@ def test_save_load_gene_models(
         assert tm.strand == tm1.strand
         assert tm.tx == tm1.tx
 
-        # THESE DON'T WORK (WITH GTF??)! WHY???
+        # TODO: THESE DON'T WORK (WITH GTF??)! WHY???
         # assert len(tm.utrs) == len(tm1.utrs)
         # assert tm.utrs == tm1.utrs
         # assert tm.start_codon == tm1.start_codon
