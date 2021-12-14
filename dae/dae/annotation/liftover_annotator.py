@@ -19,33 +19,34 @@ def build_liftover_annotator(pipeline, config):
 
     assert config.annotator_type == "liftover_annotator"
 
-    chain = pipeline.repository.get_resource(config.chain)
-    if chain is None:
+    chain_resource = pipeline.repository.get_resource(config.chain)
+    if chain_resource is None:
         raise ValueError(
             f"can't create liftover annotator; "
             f"can't find liftover chain {config.chain}")
 
-    target_genome = pipeline.repository.get_resource(config.target_genome)
-    if target_genome is None:
+    target_genome_resource = pipeline.repository.get_resource(
+        config.target_genome)
+    if target_genome_resource is None:
         raise ValueError(
             f"can't create liftover annotator; "
             f"can't find liftover target genome: "
             f"{config.target_genome}")
 
-    return LiftOverAnnotator(config, chain, target_genome)
+    return LiftOverAnnotator(config, chain_resource, target_genome_resource)
 
 
 class LiftOverAnnotator(Annotator):
 
-    def __init__(self, config, chain_resource, target_genome):
+    def __init__(self, config, chain_resource, target_genome_resource):
         super().__init__(config)
 
-        self.chain = chain_resource
-        self.target_genome = target_genome
+        self.chain_resource = chain_resource
+        self.target_genome_resource = target_genome_resource
 
         # TODO do somewhere else
-        self.chain.open()
-        self.target_genome.open()
+        self.chain = self.chain_resource.open()
+        self.target_genome = self.target_genome_resource.open()
         self._annotation_schema = None
 
     @staticmethod
@@ -87,7 +88,8 @@ class LiftOverAnnotator(Annotator):
             schema = Schema()
             for attr in self.get_annotation_config():
                 source = LiftOverAnnotator.LiftoverSource(
-                    self.chain.resource_id, self.target_genome.resource_id)
+                    self.chain.resource_id,
+                    self.target_genome_resource.resource_id)
                 schema.create_field(
                     attr.destination,
                     "object",
