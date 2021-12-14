@@ -30,7 +30,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   @HostListener('window:keydown.home')
   public scrollToTop(): void {
-    window.scroll(0, 0);
+    window.scrollTo(0, 0);
   }
 
   @HostListener('window:keydown.end')
