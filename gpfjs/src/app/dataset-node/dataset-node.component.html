@@ -2,7 +2,7 @@
   [class.active]="selectedDataset.id === datasetNode.dataset.id"
   (click)="select()"
   [style.opacity]="datasetNode.dataset.accessRights ? 1.0 : 0.3">
-  <span>{{ datasetNode.dataset.name }}</span>
+  <span style="user-select: none;">{{ datasetNode.dataset.name }}</span>
 </a>
 
 <div class="children-container">
