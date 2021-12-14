@@ -1,8 +1,10 @@
 <div class="row panel" id="gene-sets-panel" style="margin-left: 0px; margin-right: 0px">
   <div class="col-sm-3">
-    <select class="row-sm-3 form-control" [(ngModel)]="selectedGeneSetsCollection" required style="width: 100%" >
-      <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{ collection.desc }}</option>
-    </select>
+    <div class="select-wrapper">
+      <select class="row-sm-3 form-control" [(ngModel)]="selectedGeneSetsCollection" required style="width: 100%" >
+        <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{ collection.desc }}</option>
+      </select>
+    </div>
     <ngb-accordion *ngIf="selectedGeneSetsCollection?.types" activeIds="{{defaultSelectedDenovoGeneSetId}}" [destroyOnHide]="false"
         #acc="ngbAccordion" class="gene-sets-types row-sm-3">
       <ngb-panel *ngFor="let type of selectedGeneSetsCollection.types" id="{{type.datasetId}}-{{type.personSetCollectionId}}-denovo-geneset">

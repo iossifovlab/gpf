@@ -17,12 +17,14 @@
   </div>
 
   <div class="col-sm-3" class="variants-report-selector">
-    <select id="families-by-number-dropdown-button" class="form-control" [(ngModel)]="currentPeopleCounter">
-      <option value="" selected="selected">–</option>
-      <option *ngFor="let peopleCounter of variantReport.peopleReport.peopleCounters" [ngValue]="peopleCounter">
-        <span>{{ peopleCounter.groupName }}</span>
-      </option>
-    </select>
+    <div class="select-wrapper">
+      <select id="families-by-number-dropdown-button" class="form-control" [(ngModel)]="currentPeopleCounter">
+        <option value="" selected="selected">–</option>
+        <option *ngFor="let peopleCounter of variantReport.peopleReport.peopleCounters" [ngValue]="peopleCounter">
+          <span>{{ peopleCounter.groupName }}</span>
+        </option>
+      </select>
+    </div>
   </div>
 
   <div *ngIf="currentPeopleCounter" id="families-by-number-div" class="row mb-3">
@@ -56,13 +58,15 @@
     <h5>Families by pedigree of:</h5>
   </div>
 
-  <div class="col-sm-3" class="variants-report-selector">
-    <select class="form-control" [(ngModel)]="currentPedigreeTable">
-      <option value="" selected="selected">–</option>
-      <option *ngFor="let pedigreeTable of pedigreeTables" [ngValue]="pedigreeTable">
-        <span>{{ pedigreeTable.groupName }}</span>
-      </option>
-    </select>
+  <div class="col-sm-3 variants-report-selector">
+    <div class="select-wrapper">
+      <select class="form-control" [(ngModel)]="currentPedigreeTable">
+        <option value="" selected="selected">–</option>
+        <option *ngFor="let pedigreeTable of pedigreeTables" [ngValue]="pedigreeTable">
+          <span>{{ pedigreeTable.groupName }}</span>
+        </option>
+      </select>
+    </div>
   </div>
 
   <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row mb-3" #families_pedigree>
@@ -104,12 +108,14 @@
     </div>
 
     <div class="col-sm-3" class="variants-report-selector">
-      <select id="denovo-variants-dropdown-button" class="form-control" [(ngModel)]="currentDenovoReport">
-        <option value="" selected="selected">–</option>
-        <option *ngFor="let denovoReport of variantReport.denovoReport.tables" [ngValue]="denovoReport">
-          <span>{{ denovoReport.groupName }}</span>
-        </option>
-      </select>
+      <div class="select-wrapper">
+        <select id="denovo-variants-dropdown-button" class="form-control" [(ngModel)]="currentDenovoReport">
+          <option value="" selected="selected">–</option>
+          <option *ngFor="let denovoReport of variantReport.denovoReport.tables" [ngValue]="denovoReport">
+            <span>{{ denovoReport.groupName }}</span>
+          </option>
+        </select>
+      </div>
     </div>
 
     <div *ngIf="currentDenovoReport" id="denovo-variants-div" class="row mb-3">

@@ -247,3 +247,24 @@ gpf-global-error-display {
 #save-query-dropdown-button {
   margin-right: 8px;
 }
+
+.select-wrapper {
+  position: relative;
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+}
+
+.select-wrapper select {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.select-wrapper::after {
+  position: absolute;
+  right: 10px;
+  padding-bottom: 2px;
+  font-size: 1em;
+  content: url("/assets/dropdown_icon.png");
+  pointer-events: none;
+}

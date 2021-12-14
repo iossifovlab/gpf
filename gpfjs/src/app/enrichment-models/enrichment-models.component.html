@@ -1,14 +1,18 @@
 <div *ngIf="backgrounds" style="display:inline-block; width: 300px; padding: 15px">
   <span>Background Models:</span>
-  <select class="form-control" style="width: 100%" [ngModel]="background" (ngModelChange)='changeBackground($event)'>
-    <option *ngFor="let background of backgrounds" [ngValue]="background">{{ background.id }}</option>
-  </select>
+  <div class="select-wrapper">
+    <select class="form-control" style="width: 100%" [ngModel]="background" (ngModelChange)='changeBackground($event)'>
+      <option *ngFor="let background of backgrounds" [ngValue]="background">{{ background.id }}</option>
+    </select>
+  </div>
 </div>
 <div *ngIf="countings" style="display:inline-block; width: 300px; padding: 15px">
   <span>Counting Models:</span>
-  <select class="form-control" style="width: 100%" [ngModel]="counting" (ngModelChange)='changeCounting($event)'>
-    <option *ngFor="let counting of countings" [ngValue]="counting">{{ counting.id }}</option>
-  </select>
+  <div class="select-wrapper">
+    <select class="form-control" style="width: 100%" [ngModel]="counting" (ngModelChange)='changeCounting($event)'>
+      <option *ngFor="let counting of countings" [ngValue]="counting">{{ counting.id }}</option>
+    </select>
+  </div>
 </div>
 
 <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
