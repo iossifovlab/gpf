@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { environment } from 'environments/environment';
 
 @Component({
@@ -6,13 +6,15 @@ import { environment } from 'environments/environment';
   templateUrl: './sorting-buttons.component.html',
   styleUrls: ['./sorting-buttons.component.css']
 })
-export class SortingButtonsComponent {
+export class SortingButtonsComponent implements OnInit {
   @Input() id: string;
   @Output() sortEvent = new EventEmitter<{id: string, order: string}>();
-  hideState = 0;
 
-  get imgPathPrefix(): string {
-    return environment.imgPathPrefix;
+  hideState = 0;
+  imgPathPrefix: string;
+
+  ngOnInit(): void {
+    this.imgPathPrefix = environment.imgPathPrefix;
   }
 
   emitSortEvent(order: string): void {
