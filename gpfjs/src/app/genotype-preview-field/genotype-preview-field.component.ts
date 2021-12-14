@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges } from '@angular/core';
+import { Component, Input, OnChanges, OnInit } from '@angular/core';
 import { sprintf } from 'sprintf-js';
 
 @Component({
@@ -6,15 +6,20 @@ import { sprintf } from 'sprintf-js';
   templateUrl: './genotype-preview-field.component.html',
   styleUrls: ['./genotype-preview-field.component.css']
 })
-export class GenotypePreviewFieldComponent implements OnChanges {
+export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
   @Input() value: any;
   @Input() field: string;
   @Input() format: string;
   @Input() genome: string;
 
   formattedValue: string;
+  public UCSCLink: string;
 
   constructor() { }
+
+  ngOnInit(): void {
+    this.UCSCLink = this.getUCSCLink();
+  }
 
   ngOnChanges() {
     this.formattedValue = this.formatValue();
