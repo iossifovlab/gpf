@@ -7,21 +7,21 @@ import { environment } from 'environments/environment';
   styleUrls: ['./sorting-buttons.component.css']
 })
 export class SortingButtonsComponent implements OnInit {
-  @Input() id: string;
-  @Output() sortEvent = new EventEmitter<{id: string, order: string}>();
+  @Input() public id: string;
+  @Output() public sortEvent = new EventEmitter<{id: string, order: string}>();
 
-  hideState = 0;
-  imgPathPrefix: string;
+  public hideState = 0;
+  public imgPathPrefix: string;
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.imgPathPrefix = environment.imgPathPrefix;
   }
 
-  emitSortEvent(order: string): void {
-    this.sortEvent.emit({id: this.id, order: order});
+  public emitSortEvent(order: string): void {
+    this.sortEvent.emit({ id: this.id, order: order });
   }
 
-  resetHideState(): void {
+  public resetHideState(): void {
     this.hideState = 0;
   }
 }
