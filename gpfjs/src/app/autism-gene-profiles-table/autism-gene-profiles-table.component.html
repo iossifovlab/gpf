@@ -118,9 +118,7 @@
 
     <tbody #table *ngIf="genes">
       <tr #rows *ngFor="let gene of genes; let i = index" (click)="highlightRow($event)" (middleclick)="highlightRow($event)">
-        <td class="link-td" (click)="emitCreateTabEvent($event, [gene.geneSymbol])" (middleclick)="emitCreateTabEvent($event, [gene.geneSymbol], false)">
-          <span class="link-span">{{gene.geneSymbol}}</span>
-        </td>
+        <td class="link-td" (click)="emitCreateTabEvent($event, [gene.geneSymbol])" (middleclick)="emitCreateTabEvent($event, [gene.geneSymbol], false)">{{gene.geneSymbol}}</td>
         <ng-container *ngIf="isVisibleData(i)">
           <ng-container *ngFor="let element of config.shown">
             <ng-container *ngIf="element.section === 'geneSets'">
@@ -224,8 +222,5 @@
 
 <div id="compare-genes-menu" *ngIf="highlightedGenes.length !== 0">
   <button (click)="compareHighligtedGenes(null)" (middleclick)="compareHighligtedGenes(null, false)">compare highlighted genes</button>
-  <ng-container *ngFor="let gene of highlightedGenes; let i = index">
-    <span>{{ gene }}</span>
-    <span *ngIf="i !== highlightedGenes.length - 1">, </span>
-  </ng-container>
+  <span style="width: 100%; word-wrap: break-word;">{{highlightedGenes.join(', ')}}</span>
 </div>

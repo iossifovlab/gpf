@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import {
   AgpDatasetPersonSet, AgpDatasetStatistic, AgpGene,
   AgpGenomicScores, AgpConfig, AgpEffectType
