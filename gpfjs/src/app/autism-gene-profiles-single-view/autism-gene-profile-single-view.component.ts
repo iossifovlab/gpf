@@ -35,8 +35,10 @@ import { EffectTypes } from 'app/effect-types/effect-types';
 export class AutismGeneProfileSingleViewComponent implements OnInit {
   @Input() public readonly geneSymbol: string;
   @Input() public config: AgpConfig;
-  public genomicScoresGeneWeights = [];
+  @Input() public isInGeneCompare = false;
+  public showTemplate = true;
 
+  public genomicScoresGeneWeights = [];
   public gene$: Observable<AgpGene>;
 
   public _histogramOptions = {
@@ -49,10 +51,10 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   public isGeneInSFARI = false;
   public links = {
     GeneBrowser: '',
-    SFARIgene: '',
     UCSC: '',
     GeneCards: '',
-    Pubmed: ''
+    Pubmed: '',
+    SFARIgene: ''
   };
 
   public constructor(
@@ -101,14 +103,14 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   }
 
   public setLinks(geneSymbol: string, gene: Gene, datasetGenome: string): void {
-    if (this.isGeneInSFARI) {
-      this.links.SFARIgene = 'https://gene.sfari.org/database/human-gene/' + geneSymbol;
-    }
-
     this.links.GeneBrowser = this.getGeneBrowserLink();
     this.links.UCSC = this.getUCSCLink(gene, datasetGenome);
     this.links.GeneCards = 'https://www.genecards.org/cgi-bin/carddisp.pl?gene=' + geneSymbol;
     this.links.Pubmed = 'https://pubmed.ncbi.nlm.nih.gov/?term=' + geneSymbol + '%20AND%20(autism%20OR%20asd)';
+
+    if (this.isGeneInSFARI) {
+      this.links.SFARIgene = 'https://gene.sfari.org/database/human-gene/' + geneSymbol;
+    }
   }
 
   public getUCSCLink(gene: Gene, datasetGenome: string): string {

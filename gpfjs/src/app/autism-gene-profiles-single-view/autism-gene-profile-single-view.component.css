@@ -1,27 +1,40 @@
 table {
-  max-width: 750px;
-  margin-right: 15px;
+  width: 720px;
+  max-width: 720px;
   margin-bottom: 15px;
+  margin-right: 15px;
 }
 
 td {
   vertical-align: middle;
 }
 
-tr,
-td {
+.gene-sets-table tr,
+.gene-sets-table td,
+#links-table td {
   height: 55px;
   max-height: 55px;
-}
-
-.wrapper {
-  display: flex;
-  align-items: flex-start;
 }
 
 .link-external-page {
   text-decoration: underline;
   padding-right: 25px;
+}
+
+#links-table {
+  display: block;
+  margin-bottom: 18px;
+  border: 1px solid #dee2e6;
+  white-space: nowrap;
+}
+
+#links-table td {
+  padding: 5px;
+}
+
+.wrapper {
+  display: flex;
+  align-items: flex-start;
 }
 
 .link-genotype-browser,
@@ -33,4 +46,44 @@ td {
 
 .link-genotype-browser:hover {
   text-decoration: underline;
+}
+
+.minimize-component-button {
+  float: right;
+  background: none;
+  border: none;
+  padding: 0 3px;
+  font-size: 18px;
+}
+
+.vertical-text {
+  word-break: break-word;
+  writing-mode: vertical-rl;
+  transform-origin: center center;
+  transform: rotate(180deg);
+  width: 100%;
+  float: left;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-height: 80%;
+}
+
+.compare-wrapper {
+  flex-direction: column;
+}
+
+.compare-wrapper table {
+  margin-right: 0;
+}
+
+.compare-wrapper .datasets-table {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.compare-div {
+  border-right: 1px solid #dee2e6;
+  height: 100%;
 }
