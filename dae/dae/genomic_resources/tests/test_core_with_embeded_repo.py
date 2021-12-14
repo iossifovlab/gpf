@@ -68,7 +68,7 @@ def test_manifest_file_creation():
 
 
 def test_type_of_genomic_resoruces():
-    from dae.genomic_resources import GenomicSequenceResource
+    from dae.genomic_resources import ReferenceGenomeResource
     repo = GenomicResourceEmbededRepo("a", {"one": {
         "genomic_resource.yaml": "type: genome\nseqFile: chrAll.fa",
         "chrAll.fa": ">chr1\nAACCCCACACACACACACACCAC",
@@ -76,7 +76,7 @@ def test_type_of_genomic_resoruces():
     }})
     gr = repo.get_resource("one")
     assert gr
-    assert isinstance(gr, GenomicSequenceResource)
+    assert isinstance(gr, ReferenceGenomeResource)
 
 
 def test_resources_files():

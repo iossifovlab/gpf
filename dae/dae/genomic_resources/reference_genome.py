@@ -19,6 +19,11 @@ class ReferenceGenome:
         self._chromosomes = None
         self._sequence = None
         self.PARS = {}
+        self._resource_id = None
+
+    @property
+    def resource_id(self):
+        return self._resource_id
 
     @property
     def chromosomes(self):
@@ -46,6 +51,9 @@ class ReferenceGenome:
 
     def set_pars(self, PARS):
         self.PARS = PARS
+
+    def set_resource_id(self, resource_id):
+        self._resource_id = resource_id
 
     def close(self):
         self._sequence.close()
@@ -105,4 +113,5 @@ def open_ref(filename):
     with open(index_filename) as index_file:
         content = index_file.read()
     ref.set_open(content, open(filename, 'rb'))
+    ref.set_resource_id(filename)
     return ref

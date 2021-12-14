@@ -12,7 +12,7 @@ from dae.pedigrees.loader import FamiliesLoader
 
 from dae.backends.dae.loader import DenovoLoader
 from dae.genomic_resources.reference_genome_resource import \
-    GenomicSequenceResource
+    ReferenceGenomeResource
 from dae.genomic_resources.gene_models_resource import \
     GeneModelsResource
 
@@ -96,7 +96,7 @@ def test_effect_annotation_schema(grr_fixture):
     genome = grr_fixture.get_resource(
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome")
     assert genome is not None
-    assert isinstance(genome, GenomicSequenceResource)
+    assert isinstance(genome, ReferenceGenomeResource)
 
     gene_models = grr_fixture.get_resource(
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"

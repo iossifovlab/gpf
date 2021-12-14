@@ -11,11 +11,15 @@ logger = logging.getLogger(__name__)
 
 class LiftoverChainResource(GenomicResource):
 
-    def __init__(self, resourceId: str, version: tuple,
+    def __init__(self, resource_id: str, version: tuple,
                  repo: GenomicResourceRealRepo,
                  config=None):
-        super().__init__(resourceId, version, repo, config)
-        self.file = config["file"]
+        super().__init__(resource_id, version, repo, config)
+        self.file = config.get("filename")
+        if self.file is None:
+            self.file = config["file"]
+        assert self.file is not None, resource_id
+
         self.chrom_variant_coordinates = config.get(
             'chrom_prefix.variant_coordinates', None)
         self.chrom_target_coordinates = config.get(
@@ -26,9 +30,7 @@ class LiftoverChainResource(GenomicResource):
         return "liftover_chain"
 
     def open(self) -> LiftoverChainResource:
-        file = self.get_config()["file"]
-
-        self.chain_file = self.open_raw_file(file, "rb", uncompress=True)
+        self.chain_file = self.open_raw_file(self.file, "rb", uncompress=True)
         self.liftover = LiftOver(self.chain_file)
         return self
 

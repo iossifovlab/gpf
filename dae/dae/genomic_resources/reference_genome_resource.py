@@ -10,7 +10,7 @@ from dae.genomic_resources.repository import GenomicResourceRealRepo
 logger = logging.getLogger(__name__)
 
 
-class GenomicSequenceResource(GenomicResource):
+class ReferenceGenomeResource(GenomicResource):
 
     def __init__(self, resourceId: str, version: tuple,
                  repo: GenomicResourceRealRepo,
@@ -53,6 +53,8 @@ class GenomicSequenceResource(GenomicResource):
         index_content = self.get_file_str_content(index_file_name)
         ref = ReferenceGenome()
         ref.set_pars(self.PARS)
+        ref.set_resource_id(self.resource_id)
+
         ref.set_open(index_content, self.open_raw_file(
             file_name, "rb", uncompress=False, seekable=True))
         return ref

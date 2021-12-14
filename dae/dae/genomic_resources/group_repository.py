@@ -3,8 +3,9 @@ from .repository import GenomicResource
 
 
 class GenomicResourceGroupRepo(GenomicResourceRepo):
-    def __init__(self, children):
+    def __init__(self, children, repo_id=None):
         self.children = children
+        self.repo_id = repo_id
 
     def get_all_resources(self):
         for chRepo in self.children:
