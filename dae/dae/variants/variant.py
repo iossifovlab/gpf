@@ -569,6 +569,10 @@ class SummaryVariant:
         return self._chromosome
 
     @property
+    def chrom(self) -> str:
+        return self._chromosome
+
+    @property
     def position(self) -> int:
         return self._position
 

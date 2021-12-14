@@ -90,10 +90,11 @@ def build_genomic_resource_repository(
             raise ValueError(
                 "The children attribute in the definition of a group "
                 "repository must be a list")
+        repo_id = definition.get("repo_id")
         repo = GenomicResourceGroupRepo([
             build_genomic_resource_repository(child_def)
             for child_def in definition["children"]
-        ])
+        ], repo_id=repo_id)
     elif repo_type in _registered_real_genomic_resource_repository_types:
         repo_id = definition["id"]
         repo = _registered_real_genomic_resource_repository_types[repo_type](
