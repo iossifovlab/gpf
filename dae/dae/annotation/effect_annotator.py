@@ -99,14 +99,11 @@ class EffectAnnotatorAdapter(Annotator):
         ]
     })
 
-    def __init__(self, config, genome, gene_models):
+    def __init__(self, config, genome_resource, gene_models_resource):
         super(EffectAnnotatorAdapter, self).__init__(config)
 
-        self.genome = genome
-        self.gene_models = gene_models
-
-        self.gene_models.open()
-        self.genome.open()
+        self.genome = genome_resource.open()
+        self.gene_models = gene_models_resource.open()
 
         self._annotation_schema = None
         self._annotation_config = None

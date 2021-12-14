@@ -2,8 +2,6 @@
 # by Ewa
 
 import os
-import copy
-import abc
 import logging
 
 from typing import List
@@ -26,10 +24,6 @@ class ReferenceGenome:
     def chromosomes(self):
         return self._chromosomes
 
-    @abc.abstractmethod
-    def open(self):
-        pass
-
     def _load_genome_index(self, index_content):
         self._index = {}
         for line in index_content.split("\n"):
@@ -45,6 +39,13 @@ class ReferenceGenome:
                 "lineLength": int(line[4]),
             }
         self._chromosomes = list(self._index.keys())
+
+    def set_open(self, index_content, sequence_file):
+        self._sequence = sequence_file
+        self._load_genome_index(index_content)
+
+    def set_pars(self, PARS):
+        self.PARS = PARS
 
     def close(self):
         self._sequence.close()
@@ -97,35 +98,11 @@ class ReferenceGenome:
             return False
 
 
-class ReferenceGenomeFilesystem(ReferenceGenome):
-
-    def __init__(self, genome_filename, PARS=None):
-        super(ReferenceGenomeFilesystem, self).__init__()
-        assert os.path.exists(genome_filename)
-
-        self.genome_filename = genome_filename
-        if PARS is not None:
-            self.PARS = copy.deepcopy(PARS)
-
-    def open(self):
-        index_filename = f"{self.genome_filename}.fai"
-        assert os.path.exists(index_filename)
-        with open(index_filename) as index_file:
-            content = index_file.read()
-            self._load_genome_index(content)
-
-        self._sequence = open(self.genome_filename, 'rb')
-
-    def create_index_file(self):
-        from pysam import faidx
-        faidx(self.genome_filename)
-
-    @staticmethod
-    def load_genome(filename):
-        genome = ReferenceGenomeFilesystem(filename)
-        genome.open()
-        return genome
-
-
 def open_ref(filename):
-    return ReferenceGenomeFilesystem.load_genome(filename)
+    ref = ReferenceGenome()
+    index_filename = f"{filename}.fai"
+    assert os.path.exists(index_filename)
+    with open(index_filename) as index_file:
+        content = index_file.read()
+    ref.set_open(content, open(filename, 'rb'))
+    return ref

@@ -38,8 +38,8 @@ def test_effect_annotation_yuen(fixture_dirname, grr_fixture):
     assert families is not None
     assert len(families) == 1
 
-    genome = grr_fixture.get_resource(genome_id)
-    genome.open()
+    genome_resource = grr_fixture.get_resource(genome_id)
+    genome = genome_resource.open()
     denovo_loader = DenovoLoader(
         families,
         variants_filename, genome=genome

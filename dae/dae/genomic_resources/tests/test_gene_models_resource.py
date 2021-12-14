@@ -27,9 +27,9 @@ def test_gene_models_resource_with_format():
     assert res is not None
     assert isinstance(res, GeneModelsResource)
 
-    res.open()
-    assert set(res.gene_names()) == {"TP53", "POGZ"}
-    assert len(res.transcript_models) == 3
+    gm = res.open()
+    assert set(gm.gene_names()) == {"TP53", "POGZ"}
+    assert len(gm.transcript_models) == 3
 
 
 def test_gene_models_resource_with_inferred_format():
@@ -43,9 +43,9 @@ def test_gene_models_resource_with_inferred_format():
     assert res is not None
     assert isinstance(res, GeneModelsResource)
 
-    res.open()
-    assert set(res.gene_names()) == {"TP53", "POGZ"}
-    assert len(res.transcript_models) == 3
+    gm = res.open()
+    assert set(gm.gene_names()) == {"TP53", "POGZ"}
+    assert len(gm.transcript_models) == 3
 
 
 def test_gene_models_resource_with_inferred_format_and_gene_mapping():
@@ -65,9 +65,9 @@ def test_gene_models_resource_with_inferred_format_and_gene_mapping():
     assert res is not None
     assert isinstance(res, GeneModelsResource)
 
-    res.open()
-    assert set(res.gene_names()) == {"gosho", "pesho"}
-    assert len(res.transcript_models) == 3
+    gm = res.open()
+    assert set(gm.gene_names()) == {"gosho", "pesho"}
+    assert len(gm.transcript_models) == 3
 
 
 def test_against_agains_dirrent_repo_types(tmp_path):
@@ -103,5 +103,5 @@ def test_gene_models_resource_http(genomic_resource_fixture_http_repo):
 
     assert isinstance(res, GeneModelsResource)
 
-    res.open()
-    assert len(res.gene_models) == 13
+    gm = res.open()
+    assert len(gm.gene_models) == 13

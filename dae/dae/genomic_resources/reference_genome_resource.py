@@ -10,13 +10,12 @@ from dae.genomic_resources.repository import GenomicResourceRealRepo
 logger = logging.getLogger(__name__)
 
 
-class GenomicSequenceResource(GenomicResource, ReferenceGenome):
+class GenomicSequenceResource(GenomicResource):
 
     def __init__(self, resourceId: str, version: tuple,
                  repo: GenomicResourceRealRepo,
                  config=None):
         GenomicResource.__init__(self, resourceId, version, repo, config)
-        ReferenceGenome.__init__(self)
         self.PARS = self._parse_PARS(config)
 
     @classmethod
@@ -52,6 +51,8 @@ class GenomicSequenceResource(GenomicResource, ReferenceGenome):
         index_file_name = self.get_config().get("index_file",
                                                 file_name + ".fai")
         index_content = self.get_file_str_content(index_file_name)
-        self._load_genome_index(index_content)
-        self._sequence = self.open_raw_file(
-            file_name, "rb", uncompress=False, seekable=True)
+        ref = ReferenceGenome()
+        ref.set_pars(self.PARS)
+        ref.set_open(index_content, self.open_raw_file(
+            file_name, "rb", uncompress=False, seekable=True))
+        return ref

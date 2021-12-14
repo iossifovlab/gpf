@@ -7,13 +7,13 @@ from .repository import GenomicResourceRealRepo
 logger = logging.getLogger(__name__)
 
 
-class GeneModelsResource(GenomicResource, GeneModels):
+class GeneModelsResource(GenomicResource):
 
     def __init__(self, resourceId: str, version: tuple,
                  repo: GenomicResourceRealRepo,
                  config=None):
         GenomicResource.__init__(self, resourceId, version, repo, config)
-        GeneModels.__init__(self, resourceId)
+        # GeneModels.__init__(self, resourceId)
 
     @staticmethod
     def get_resource_type():
@@ -23,8 +23,21 @@ class GeneModelsResource(GenomicResource, GeneModels):
         filename = self.get_config()["filename"]
         fileformat = self.get_config().get("format", None)
         gene_mapping_filename = self.get_config().get("gene_mapping", None)
-
         logger.debug(f"loading gene models {filename} ({fileformat})")
+
+        gm = GeneModels(filename)
+        with self.open_raw_file(filename, mode='rb',
+                                uncompress=True, seekable=True) as infile:
+            if gene_mapping_filename is not None:
+                with self.open_raw_file(gene_mapping_filename,
+                                        "rt", uncompress=True) as gene_mapping:
+                    logger.debug(
+                        f"loading gene mapping from {gene_mapping_filename}")
+                    gm.load(infile, fileformat, gene_mapping)
+            else:
+                gm.load(infile, fileformat)
+        return gm
+    '''
         gene_mapping = None
         if gene_mapping_filename is not None:
             with self.open_raw_file(gene_mapping_filename,
@@ -64,3 +77,4 @@ class GeneModelsResource(GenomicResource, GeneModels):
                 logger.error(msg)
                 raise ValueError(msg)
         return self
+    '''
