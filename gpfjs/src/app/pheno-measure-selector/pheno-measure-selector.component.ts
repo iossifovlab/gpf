@@ -73,9 +73,11 @@ export class PhenoMeasureSelectorComponent implements OnInit {
   searchBoxChange(searchFieldValue) {
     this.searchString = searchFieldValue;
 
-    this.filteredMeasures = this.measures
-      .filter(value => {
-        return value.name.toLowerCase().indexOf(searchFieldValue.toLowerCase()) !== -1;
-      });
+    if(this.measures !== undefined) {
+      this.filteredMeasures = this.measures
+        .filter(value => {
+          return value.name.toLowerCase().indexOf(searchFieldValue.toLowerCase()) !== -1;
+        });
+    }
   }
 }

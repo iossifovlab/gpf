@@ -2,7 +2,6 @@ import { Component, OnInit, OnChanges, SimpleChanges, Input, Output, EventEmitte
 import { MeasuresService } from '../measures/measures.service';
 import { HistogramData } from '../measures/measures';
 import { ContinuousFilterState, ContinuousSelection } from '../person-filters/person-filters';
-// eslint-disable-next-line no-restricted-imports
 import { Observable, Subject } from 'rxjs';
 import { Partitions } from '../gene-weights/gene-weights';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
@@ -59,7 +58,6 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
           }
         });
     }
-
   }
 
   public set rangeStart(value) {
