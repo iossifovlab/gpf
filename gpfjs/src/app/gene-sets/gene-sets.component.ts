@@ -26,6 +26,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
   private geneSetsResult: Observable<GeneSet[]>;
 
   private selectedDatasetId: string;
+  public downloadUrl: string;
 
   @ValidateNested()
   private geneSetsLocalState = new GeneSetsLocalState();
@@ -207,14 +208,15 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
 
   set selectedGeneSet(geneSet) {
     this.geneSetsLocalState.geneSet = geneSet;
+    this.downloadUrl = this.getDownloadUrl(geneSet);
     this.store.dispatch(new SetGeneSetsValues(this.geneSetsLocalState));
   }
 
-  getDownloadLink(selectedGeneSet: GeneSet): string {
-    return `${this.config.baseUrl}${selectedGeneSet.download}`;
-  }
+  getDownloadUrl(selectedGeneSet: GeneSet): string {
+    if (!selectedGeneSet) {
+      return;
+    }
 
-  getGeneSetName(geneType: GeneSetType): string {
-    return `${geneType.datasetName}: ${geneType.personSetCollectionName}`;
+    return `${this.config.baseUrl}${selectedGeneSet.download}`;
   }
 }
