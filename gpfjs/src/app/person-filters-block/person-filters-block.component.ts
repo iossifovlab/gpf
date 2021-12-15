@@ -19,6 +19,18 @@ export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
 
   constructor(private store: Store) { }
 
+  @Selector([PersonIdsState, PersonFiltersState])
+  static personFiltersBlockState(personIdsState, personFiltersState) {
+    const res = {};
+    if (personIdsState.personIds.length) {
+      res['personIds'] = personIdsState.personIds;
+    }
+    if (personFiltersState.personFilters.length) {
+      res['personFilters'] = personFiltersState.personFilters;
+    }
+    return res;
+  }
+
   ngOnInit(): void {
     this.showAdvancedButton = this.dataset.genotypeBrowserConfig.personFilters.length !== 0;
   }
@@ -37,15 +49,4 @@ export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
     this.store.dispatch(new StateReset(PersonIdsState, PersonFiltersState));
   }
 
-  @Selector([PersonIdsState, PersonFiltersState])
-  static personFiltersBlockState(personIdsState, personFiltersState) {
-    const res = {};
-    if (personIdsState.personIds.length) {
-      res['personIds'] = personIdsState.personIds;
-    }
-    if (personFiltersState.personFilters.length) {
-      res['personFilters'] = personFiltersState.personFilters;
-    }
-    return res;
-  }
 }
