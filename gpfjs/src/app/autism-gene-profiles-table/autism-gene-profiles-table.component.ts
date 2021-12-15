@@ -474,8 +474,6 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
       return;
     }
 
-    window.getSelection().removeAllRanges();
-
     let rowElement: HTMLElement;
     const mouseEventParentElement = $event.target.parentElement;
 
