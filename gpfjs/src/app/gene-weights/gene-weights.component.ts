@@ -23,6 +23,7 @@ export class GeneWeightsComponent extends StatefulComponent implements OnInit {
 
   geneWeightsArray: GeneWeights[];
   rangesCounts: Observable<Array<number>>;
+  public downloadUrl: string;
 
   @ValidateNested()
   geneWeightsLocalState = new GeneWeightsLocalState();
@@ -103,6 +104,7 @@ export class GeneWeightsComponent extends StatefulComponent implements OnInit {
     this.rangeEnd = null;
     this.changeDomain(selectedGeneWeights);
     this.updateLabels();
+    this.downloadUrl = this.getDownloadUrl();
     this.store.dispatch(new SetGeneWeight(this.geneWeightsLocalState.weight));
   }
 
@@ -124,7 +126,7 @@ export class GeneWeightsComponent extends StatefulComponent implements OnInit {
     return this.geneWeightsLocalState.rangeEnd;
   }
 
-  getDownloadLink(): string {
+  getDownloadUrl(): string {
     return `${this.config.baseUrl}gene_weights/download/${this.selectedGeneWeights.weight}`;
   }
 
