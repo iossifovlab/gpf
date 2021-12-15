@@ -135,7 +135,6 @@
           <gpf-loading-spinner
             *ngIf="selectedGene"
             [loadingFinished]="familyLoadingFinished"
-            [displayText]="'Loading variants...'"
             [count]="genotypePreviewVariantsArray?.getVariantsCount(maxFamilyVariants)">
           </gpf-loading-spinner>
         </div>

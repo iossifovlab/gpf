@@ -16,6 +16,7 @@
           <span>w</span> - close current tab<br />
           <span>ctrl+mouse1</span> or <span>mouse3</span> - toggle row highlight<br />
           <span>esc</span> - clear all highlights<br />
+          <span>f</span> - compare highlighted genes<br />
         </div>
       </a>
 
@@ -34,11 +35,16 @@
         <span class="close position-relative pl-2 font-weight-light" (click)="closeTab($event, geneTab)">×</span>
       </a>
       <ng-template ngbNavContent>
-        <gpf-autism-gene-profile-single-view
-          [attr.id]="geneTab + '-single-view'"
-          [config]="autismGeneToolConfig"
-          [geneSymbol]="geneTab">
-        </gpf-autism-gene-profile-single-view>
+        <div style="display: flex">
+          <ng-container *ngFor="let geneSymbol of geneTab | split: ','">
+            <gpf-autism-gene-profile-single-view
+              [attr.id]="geneSymbol + '-single-view'"
+              [config]="autismGeneToolConfig"
+              [geneSymbol]="geneSymbol"
+              [isInGeneCompare]="geneTab.indexOf(',') !== -1">
+            </gpf-autism-gene-profile-single-view>
+          </ng-container>
+        </div>
       </ng-template>
     </li>
   </nav>

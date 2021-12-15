@@ -10,14 +10,14 @@ import { take } from 'rxjs/operators';
   templateUrl: './share-query-button.component.html',
   styleUrls: ['./share-query-button.component.css']
 })
-export class ShareQueryButtonComponent implements OnInit {
+export class ShareQueryButtonComponent {
   @Input() queryType: string;
   @Input() disabled: boolean;
   @ViewChild(NgbDropdown)
   dropdown: NgbDropdown;
 
   private urlUUID: string;
-  private url: string;
+  public url: string;
   private savedUrlUUID: string;
   buttonValue = 'Copy';
 
@@ -27,16 +27,13 @@ export class ShareQueryButtonComponent implements OnInit {
     private datasetsService: DatasetsService,
   ) { }
 
-  ngOnInit() { }
-
-  saveIfOpened(opened: boolean) {
+  public saveIfOpened(opened: boolean): void {
     if (!opened) {
       this.resetState();
       return;
     }
 
     const datasetId = this.datasetsService.getSelectedDataset().id;
-
     this.buttonValue = 'Copy';
     this.store.selectOnce(state => state).subscribe(state => {
       state['datasetId'] = datasetId;
@@ -44,6 +41,7 @@ export class ShareQueryButtonComponent implements OnInit {
         .pipe(take(1))
         .subscribe(response => {
           this.urlUUID = response['uuid'];
+          this.setUrl();
         });
       },
       error => {
@@ -58,19 +56,19 @@ export class ShareQueryButtonComponent implements OnInit {
     this.url = null;
   }
 
-  createUrl() {
+  private setUrl(): void {
     if (!this.urlUUID) {
-      return '';
+      return;
     }
+
     if (this.savedUrlUUID !== this.urlUUID) {
       this.url = this.queryService.getLoadUrl(this.urlUUID);
       this.savedUrlUUID = this.urlUUID;
     }
-    return this.url;
   }
 
-  copyToClipboard(input) {
-    input.select();
+  public copyToClipboard(inputElement): void {
+    inputElement.select();
     document.execCommand('Copy');
     this.buttonValue = 'Copied';
   }

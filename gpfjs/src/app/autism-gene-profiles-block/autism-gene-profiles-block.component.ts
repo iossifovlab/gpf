@@ -28,8 +28,18 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     private autismGeneProfilesService: AutismGeneProfilesService
   ) { }
 
+  @HostListener('window:keydown.home')
+  public scrollToTop(): void {
+    window.scrollTo(0, 0);
+  }
+
+  @HostListener('window:keydown.end')
+  public scrollToBottom(): void {
+    window.scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight);
+  }
+
   @HostListener('window:keydown', ['$event'])
-  public keyEvent($event: KeyboardEvent) {
+  public keyEvent($event: KeyboardEvent): void {
     if (
       $event.target['localName'] === 'input'
       || !this.keybinds.includes($event.key)
@@ -53,13 +63,13 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     });
   }
 
-  public createTabEventHandler($event: { geneSymbol: string; navigateToTab: boolean }): void {
+  public createTabEventHandler($event: { geneSymbols: string[]; navigateToTab: boolean }): void {
     if (this.geneTabs.size >= this.maxTabCount) {
       window.scroll(0, 0);
       return;
     }
 
-    const tabId: string = $event.geneSymbol;
+    const tabId: string = $event.geneSymbols.sort().toString();
     const navigateToTab: boolean = $event.navigateToTab;
 
     this.geneTabs.add(tabId);

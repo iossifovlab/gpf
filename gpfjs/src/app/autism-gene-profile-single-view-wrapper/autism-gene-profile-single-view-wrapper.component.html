@@ -1,5 +1,12 @@
-<gpf-autism-gene-profile-single-view
-  *ngIf="$autismGeneToolConfig | async as config"
-  [config]="config"
-  [geneSymbol]="geneSymbol">
-</gpf-autism-gene-profile-single-view>
+<div style="display: flex">
+  <ng-container *ngIf="$autismGeneToolConfig | async as config">
+    <ng-container *ngFor="let geneSymbol of geneSymbols">
+      <gpf-autism-gene-profile-single-view
+        style="border-top: 1px solid #dee2e6"
+        [config]="config"
+        [geneSymbol]="geneSymbol"
+        [isInGeneCompare]="geneSymbols.length !== 0">
+      </gpf-autism-gene-profile-single-view>
+    </ng-container>
+  </ng-container>
+</div>

@@ -70,7 +70,8 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
   public currentSortingColumnId: string;
   public modalBottom: number;
 
-  public highlightedRowElements: Element[] = [];
+  public highlightedRowElements: HTMLElement[] = [];
+  public highlightedGenes: string[] = [];
   
   @ViewChild('table') tableViewChild: any;
   @ViewChildren('rows') rowViewChildren: QueryList<any>;
@@ -112,6 +113,24 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     for (const row of this.highlightedRowElements) {
       row.classList.remove('row-highlight');
     }
+
+    this.highlightedRowElements = [];
+    this.highlightedGenes = [];
+  }
+
+  @HostListener('document:keydown.f', ['$event'])
+  public compareHighligtedGenes($event: KeyboardEvent, navigateToTab: boolean = true) {
+    if($event && $event.target instanceof Element) {
+      if ($event.target.localName === 'input' || $event.target.localName === 'button') {
+        return;
+      }
+    }
+
+    if (this.highlightedGenes.length === 0) {
+      return;
+    } 
+
+    this.emitCreateTabEvent(null, this.highlightedGenes, navigateToTab);
   }
 
   constructor(
@@ -143,6 +162,7 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
   }
 
   public ngOnChanges() {
+    
     this.setupShownCategories();
     for (const dataset of this.config.datasets) {
       this.calculateDatasetColspan(dataset);
@@ -315,11 +335,11 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     }
   }
 
-  public emitCreateTabEvent($event: MouseEvent, geneSymbol: string, navigateToTab: boolean = true): void {
-    if ($event.ctrlKey && $event.type === 'click') {
+  public emitCreateTabEvent($event: MouseEvent, geneSymbols: string[], navigateToTab: boolean = true): void {
+    if ($event && $event.ctrlKey && $event.type === 'click') {
       navigateToTab = false;
     }
-    this.createTabEvent.emit({geneSymbol: geneSymbol, navigateToTab: navigateToTab});
+    this.createTabEvent.emit({geneSymbols: geneSymbols, navigateToTab: navigateToTab});
   }
 
   public updateGenes(): void {
@@ -445,30 +465,37 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     });
   }
 
-  public highlightRow($event: MouseEvent): void {
-    if(!($event.target instanceof Element)) {
-      return;
-    }
-
-    const linkElements = ['link-td', 'link-span'];
+  public highlightRow($event): void {
     if (
-      !$event.ctrlKey && $event.type === 'click'
-      || linkElements.includes($event.target.classList.value.replace('ng-star-inserted', '').trim())
+      $event.type === 'click' && !($event.ctrlKey || $event.metaKey)
+      || $event.target.classList.value.replace('ng-star-inserted', '').trim().includes('link-td')
+      || !($event.target instanceof Element)
     ) {
       return;
     }
 
-    let rowElement: Element;
-    if ($event.target.parentElement.localName !== 'tr') {
-      rowElement = $event.target.parentElement.parentElement
+    let rowElement: HTMLElement;
+    const mouseEventParentElement = $event.target.parentElement;
+
+    if (mouseEventParentElement.localName !== 'tr') {
+      rowElement = mouseEventParentElement.parentElement;
     } else {
-      rowElement = $event.target.parentElement;
+      rowElement = mouseEventParentElement;
     }
 
     rowElement.className.includes('row-highlight')
       ? rowElement.classList.remove('row-highlight')
       : rowElement.classList.add('row-highlight');
 
-    this.highlightedRowElements.push(rowElement);
+    const rowElementGeneSymbol: string = rowElement.innerText.split('\t')[0];
+    if (this.highlightedRowElements.map(ele => ele.innerText.split('\t')[0]).includes(rowElementGeneSymbol)) {
+      this.highlightedRowElements = this.highlightedRowElements.filter(
+        ele => ele.innerText.split('\t')[0] !== rowElementGeneSymbol
+      );
+      this.highlightedGenes = this.highlightedGenes.filter(gene => gene !== rowElementGeneSymbol)
+    } else {
+      this.highlightedRowElements.push(rowElement);
+      this.highlightedGenes.push(rowElement.innerText.split('\t')[0])
+    }
   }
 }

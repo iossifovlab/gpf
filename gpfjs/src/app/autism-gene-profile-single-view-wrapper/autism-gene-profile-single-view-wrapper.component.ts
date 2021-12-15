@@ -10,19 +10,25 @@ import { Observable } from 'rxjs';
   styleUrls: ['./autism-gene-profile-single-view-wrapper.component.css']
 })
 export class AutismGeneProfileSingleViewWrapperComponent implements OnInit, AfterViewInit {
-  $autismGeneToolConfig: Observable<AgpConfig>;
-  geneSymbol: string;
+  public $autismGeneToolConfig: Observable<AgpConfig>;
+  public geneSymbols: string[];
+  private allowedSeparators = ['&', '+', ',', ':', ';', '!', '@', '$', '^', '*'];
 
-  constructor(
+  public constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
-    private route: ActivatedRoute,
+    private route: ActivatedRoute
   ) { }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.$autismGeneToolConfig = this.autismGeneProfilesService.getConfig();
   }
 
-  ngAfterViewInit(): void {
-    this.geneSymbol = this.route.snapshot.params.gene.toUpperCase();
+  public ngAfterViewInit(): void {
+    this.geneSymbols = this.paramToArray(this.route.snapshot.params.genes);
+  }
+
+  private paramToArray(param: string): string[] {
+    const separator = this.allowedSeparators.find(s => param.indexOf(s) > -1);
+    return param.toUpperCase().split(separator).filter(e => e !== '');
   }
 }

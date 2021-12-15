@@ -64,12 +64,12 @@ describe('AutismGeneProfilesBlockComponent', () => {
     });
     const expectedSet = new Set();
 
-    component.createTabEventHandler({geneSymbol: 'firstFakeTabId', navigateToTab: false});
+    component.createTabEventHandler({geneSymbols: ['firstFakeTabId'], navigateToTab: false});
     expectedSet.add('firstFakeTabId');
     expect(component['geneTabs']).toEqual(expectedSet);
     expect(navSpy).not.toHaveBeenCalled();
 
-    component.createTabEventHandler({geneSymbol: 'secondFakeTabId', navigateToTab: true});
+    component.createTabEventHandler({geneSymbols: ['secondFakeTabId'], navigateToTab: true});
     expectedSet.add('secondFakeTabId');
     expect(component['geneTabs']).toEqual(expectedSet);
     expect(navSpy).toHaveBeenCalled();

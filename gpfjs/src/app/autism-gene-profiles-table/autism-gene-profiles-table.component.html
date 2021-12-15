@@ -4,11 +4,12 @@
       <tr>
         <th class="table-main-header" style="width: 160px; min-width: 140px; position: sticky; top: 0px">
           <span>Gene</span>
-          <button #columnFilteringButton
+          <button
+            #columnFilteringButton
             id="column-filtering-button"
-            (click)="openDropdown('column-filtering')"
-            class="dropdown-toggle btn navbar-toggler">
-            <span style="font-size: 14px">&#9776;</span>
+            class="dropdown-toggle btn navbar-toggler"
+            (click)="openDropdown('column-filtering')">
+            &#9776;
           </button> 
         </th>
 
@@ -19,11 +20,12 @@
                 <gpf-sorting-buttons class="sorting-buttons" [id]="element.category.category + '_rank'" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
                 <span [title]="element.category.displayName">{{element.category.displayName}}</span>
               </div>
-              <button #columnFilteringButton
+              <button
+                #columnFilteringButton
                 [attr.id]="element.category.category + '-button'"
-                (click)="openDropdown(element.category.category)"
-                class="dropdown-toggle btn navbar-toggler">
-                <span style="font-size: 14px;">&#9776;</span>
+                class="dropdown-toggle btn navbar-toggler"
+                (click)="openDropdown(element.category.category)">
+                &#9776;
               </button>
             </th>
           </ng-container>
@@ -33,11 +35,12 @@
               <div class="table-main-header-text" style="margin-right: 30px">
                 <span [title]="element.category.displayName">{{element.category.displayName}}</span>
               </div>
-              <button #columnFilteringButton
+              <button
+                #columnFilteringButton
                 [attr.id]="element.category.category + '-button'"
-                (click)="openDropdown(element.category.category)"
-                class="dropdown-toggle btn navbar-toggler">
-                <span style="font-size: 14px;">&#9776;</span>
+                class="dropdown-toggle btn navbar-toggler"
+                (click)="openDropdown(element.category.category)">
+                &#9776;
               </button>
             </th>
           </ng-container>
@@ -47,12 +50,13 @@
               <div class="table-main-header-text" style="margin-right: 30px">
                 <span [title]="element.category.meta ? element.category.meta : ''">{{element.category.displayName}}</span>
               </div>
-              <button #columnFilteringButton
-                  [attr.id]="element.category.id + '-button'"
-                  (click)="openDropdown(element.category.id)"
-                  class="dropdown-toggle btn navbar-toggler"
-                  style="float: right; outline: none; font-size: 18px; white-space: nowrap; border: 0; padding: 0; width: 18px; vertical-align: unset;">
-                  <span style="font-size: 14px;">&#9776;</span>
+              <button
+                #columnFilteringButton
+                [attr.id]="element.category.id + '-button'"
+                class="dropdown-toggle btn navbar-toggler"
+                (click)="openDropdown(element.category.id)"
+                style="float: right; outline: none; font-size: 18px; white-space: nowrap; border: 0; padding: 0; width: 18px; vertical-align: unset;">
+                &#9776;
               </button>
             </th>
           </ng-container>
@@ -68,14 +72,14 @@
 
         <ng-container *ngFor="let element of config.shown">
           <ng-container *ngIf="element.section === 'geneSets'">
-            <th class="table-subheader" style="white-space: normal; min-width: 100px;" rowspan="2" *ngFor="let geneSet of element.category.shown; let i = index" [ngClass] = "{'category-border': i === 0}">
+            <th class="table-subheader" style="white-space: normal; min-width: 100px;" rowspan="2" *ngFor="let geneSet of element.category.shown; let i = index" [ngClass]="{'category-border': i === 0}">
               <span class="vertical-text" [title]="geneSet.meta ? geneSet.meta : ''">{{geneSet.setId}}</span>
               <gpf-sorting-buttons [id]="geneSet.collectionId + '_' + geneSet.setId" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
             </th>
           </ng-container>
 
           <ng-container *ngIf="element.section === 'genomicScores'">
-            <th class="table-subheader" style="white-space: normal; min-width: 100px;"rowspan="2" *ngFor="let genomicScore of element.category.shown; let i = index" [ngClass] = "{'category-border': i === 0}">
+            <th class="table-subheader" style="white-space: normal; min-width: 100px;"rowspan="2" *ngFor="let genomicScore of element.category.shown; let i = index" [ngClass]="{'category-border': i === 0}">
               <span class="vertical-text" [title]="genomicScore.meta ? genomicScore.meta : ''">{{genomicScore.scoreName}}</span>
               <gpf-sorting-buttons [id]="element.category.category + '_' + genomicScore.scoreName" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
             </th>
@@ -83,27 +87,27 @@
 
           <ng-container *ngIf="element.section === 'datasets'">
             <ng-container *ngFor="let personSet of element.category.shown; let i = index">
-              <th class="table-subheader" style="min-width: 100px;" [attr.colspan]="personSet.shown.length" [ngClass] = "{'category-border': i === 0}">
+              <th class="table-subheader" style="min-width: 100px;" [attr.colspan]="personSet.shown.length" [ngClass]="{'category-border': i === 0}">
                 <div class="table-main-header-text" style="margin-right: 30px">
                   <span [title]="personSet.description ? personSet.description : ''">{{personSet.displayName}} ({{personSet.childrenCount}})</span>
                 </div>
-                <button #columnFilteringButton
-                [attr.id]="element.category.id + ':' + personSet.id + '-button'"
-                (click)="openDropdown(element.category.id + ':' + personSet.id)"
-                class="dropdown-toggle btn navbar-toggler"
-                style="float: right; outline: none; font-size: 18px; white-space: nowrap; border: 0; padding: 0; width: 18px; vertical-align: unset;">
-                  <span style="font-size: 14px;">&#9776;</span>
+                <button
+                  #columnFilteringButton
+                  [attr.id]="element.category.id + ':' + personSet.id + '-button'"
+                  class="dropdown-toggle btn navbar-toggler"
+                  (click)="openDropdown(element.category.id + ':' + personSet.id)"
+                  style="float: right; outline: none; font-size: 18px; white-space: nowrap; border: 0; padding: 0; width: 18px; vertical-align: unset;">
+                  &#9776;
                 </button>
               </th>
             </ng-container>
           </ng-container>
-
         </ng-container>
       </tr>
       <tr>
         <ng-container *ngFor="let dataset of config.shownDatasets">
           <ng-container *ngFor="let personSet of dataset.shown; let i = index">
-            <td *ngFor="let statistic of personSet.shown; let j = index" style="min-width: 100px;" class="effect-type-header" [ngClass] = "{'category-border': i === 0 && j === 0}">
+            <td *ngFor="let statistic of personSet.shown; let j = index" style="min-width: 100px;" class="effect-type-header" [ngClass]="{'category-border': i === 0 && j === 0}">
               <span [title]="statistic.description ? statistic.description : ''">{{statistic.displayName}}</span>
               <gpf-sorting-buttons [id]="dataset.id + '_' + personSet.id + '_' + statistic.id" (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
             </td>
@@ -114,34 +118,35 @@
 
     <tbody #table *ngIf="genes">
       <tr #rows *ngFor="let gene of genes; let i = index" (click)="highlightRow($event)" (middleclick)="highlightRow($event)">
-        <td class="link-td" (click)="emitCreateTabEvent($event, gene.geneSymbol)" (middleclick)="emitCreateTabEvent($event, gene.geneSymbol, false)">
-          <span class="link-span">{{gene.geneSymbol}}</span>
-        </td>
+        <td class="link-td" (click)="emitCreateTabEvent($event, [gene.geneSymbol])" (middleclick)="emitCreateTabEvent($event, [gene.geneSymbol], false)">{{gene.geneSymbol}}</td>
         <ng-container *ngIf="isVisibleData(i)">
           <ng-container *ngFor="let element of config.shown">
             <ng-container *ngIf="element.section === 'geneSets'">
-              <td style="min-width: 70px" *ngFor="let geneSet of element.category.shown; let i = index" [ngClass] = "{'category-border': i === 0}">
+              <td style="min-width: 70px" *ngFor="let geneSet of element.category.shown; let i = index" [ngClass]="{'category-border': i === 0}">
                 <ng-container *ngIf="gene.geneSets.indexOf(geneSet.collectionId + '_' + geneSet.setId) !== -1">&#10003;</ng-container>
               </td>
             </ng-container>
 
             <ng-container *ngIf="element.section === 'genomicScores'">
-              <td style="min-width: 70px" *ngFor="let genomicScore of element.category.shown; let i = index" [ngClass] = "{'category-border': i === 0}">
-                <span>{{gene | getGeneScore: element.category:genomicScore}}</span>
-              </td>
+              <td
+                style="min-width: 70px"
+                *ngFor="let genomicScore of element.category.shown; let i = index"
+                [ngClass]="{'category-border': i === 0}"
+                >{{gene | getGeneScore: element.category:genomicScore}}</td
+              >
             </ng-container>
 
             <ng-container *ngIf="element.section === 'datasets'">
               <ng-container *ngFor="let personSet of element.category.shown; let i = index">
-                <td style="min-width: 70px;"
+                <td
+                  class="link-td" 
+                  (click)="goToQuery(gene.geneSymbol, personSet, element.category.id, statistic)"
+                  (middleclick)="goToQuery(gene.geneSymbol, personSet, element.category.id, statistic)"
+                  style="min-width: 70px"
                   *ngFor="let statistic of personSet.shown; let j = index"
-                  [ngClass] = "{'category-border': i === 0 && j === 0}">
-                  <div class="link-td" style="padding: 5px; margin: -5px"
-                    (click)="goToQuery(gene.geneSymbol, personSet, element.category.id, statistic)"
-                    (middleclick)="goToQuery(gene.geneSymbol, personSet, element.category.id, statistic)">
-                    <span class="link-span">{{ gene | getEffectTypeValue: element.category:personSet:statistic }}</span>
-                  </div>
-                </td>
+                  [ngClass]="{'category-border': i === 0 && j === 0}"
+                  >{{ gene | getEffectTypeValue: element.category:personSet:statistic }}</td
+                >
               </ng-container>
             </ng-container>
           </ng-container>
@@ -193,7 +198,7 @@
   <ng-container *ngFor="let personSet of dataset.personSets">
     <div style="position: sticky;" [style.bottom.px]="modalBottom - 150">
       <span #dropdownSpan [attr.id]="dataset.id + ':' + personSet.id + '-span'" ngbDropdown>
-      <button ngbDropdownToggle style="display: none;"></button>
+        <button ngbDropdownToggle style="display: none;"></button>
         <gpf-multiple-select-menu ngbDropdownMenu [attr.id]="dataset.id + ':' + personSet.id + '-dropdown'"
           [menuId]="'dataset:' + dataset.id + ':' + personSet.id"
           [itemsSource]="personSet"
@@ -214,3 +219,8 @@
     </span>
   </div>
 </ng-container>
+
+<div id="compare-genes-menu" *ngIf="highlightedGenes.length !== 0">
+  <button (click)="compareHighligtedGenes(null)" (middleclick)="compareHighligtedGenes(null, false)">compare highlighted genes</button>
+  <span style="width: 100%; word-wrap: break-word;">{{highlightedGenes.join(', ')}}</span>
+</div>
