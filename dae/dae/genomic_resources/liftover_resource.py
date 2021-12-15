@@ -20,10 +20,15 @@ class LiftoverChainResource(GenomicResource):
             self.file = config["file"]
         assert self.file is not None, resource_id
 
-        self.chrom_variant_coordinates = config.get(
-            'chrom_prefix.variant_coordinates', None)
-        self.chrom_target_coordinates = config.get(
-            'chrom_prefix.target_coordinates', None)
+        chrom_prefix = config.get("chrom_prefix")
+        if chrom_prefix is None:
+            self.chrom_variant_coordinates = None
+            self.chrom_target_coordinates = None
+        else:
+            self.chrom_variant_coordinates = chrom_prefix.get(
+                'variant_coordinates', None)
+            self.chrom_target_coordinates = chrom_prefix.get(
+                'target_coordinates', None)
 
     @classmethod
     def get_resource_type(clazz):
