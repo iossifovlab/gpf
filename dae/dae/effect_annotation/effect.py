@@ -163,7 +163,7 @@ class AnnotationEffect:
 
     @classmethod
     def transcript_effects(cls, effects: List[AnnotationEffect]):
-        effects = cls.sort_effects(effects)
+        # effects = cls.sort_effects(effects)
         worst_effect = cls.worst_effect(effects)
         if worst_effect == "intergenic":
             return (
