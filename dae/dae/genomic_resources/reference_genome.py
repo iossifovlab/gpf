@@ -55,6 +55,9 @@ class ReferenceGenome:
     def set_resource_id(self, resource_id):
         self._resource_id = resource_id
 
+    def get_id(self):
+        return self.resource_id
+
     def close(self):
         self._sequence.close()
 
