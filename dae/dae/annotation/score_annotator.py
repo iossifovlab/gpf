@@ -342,6 +342,9 @@ class NPScoreAnnotator(PositionScoreAnnotator):
             self.non_default_position_aggregators,
             self.non_default_nucleotide_aggregators
         )
+        if scores_agg is None:
+            return None
+
         scores = {
             sc_name: sc_agg.get_final()
             for sc_name, sc_agg in scores_agg.items()
