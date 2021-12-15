@@ -68,7 +68,8 @@ class LiftOverAnnotator(Annotator):
             {
                 "source": "liftover_annotatable",
                 "type": "object",
-                "desc": "liftover annotatable"
+                "desc": "liftover annotatable",
+                "internal": True,
             }
         ]
 
