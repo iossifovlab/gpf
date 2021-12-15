@@ -1,7 +1,7 @@
 <p class="loader-container">
   <span *ngIf="!loadingFinished">
     <span class="loader"></span>
-    <span>{{ getDisplayText() }}</span>
+    <span>Loading variants...</span>
   </span>
   <span *ngIf="loadingFinished" id="variants-count-span">
     <span>{{ count }}</span>

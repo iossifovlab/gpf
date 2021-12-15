@@ -8,12 +8,4 @@ import { Component, Input } from '@angular/core';
 export class LoadingSpinnerComponent {
   @Input() public loadingFinished: boolean;
   @Input() public count: string;
-  @Input() public displayText: string = null;
-
-  public getDisplayText(): string {
-    if (this.displayText) {
-      return this.displayText;
-    }
-    return 'Loading...';
-  }
 }
