@@ -10,7 +10,8 @@ export class GenePlotModel {
 
   constructor(gene: Gene, rangeWidth: number, spacerLength: number = 150) {
     this.gene = gene;
-    this.spacerLength = spacerLength; // in px
+    // Reduce the spacer length if a gene spans too many chromosomes, to improve visibility
+    this.spacerLength = spacerLength - (gene.chromosomes.size >= 3 ? (gene.chromosomes.size <= 5 ? 90 : gene.chromosomes.size * 18) : 0);
     // TODO: Could use positive and negative infinity here instead of magic numbers
     this.domain = this.buildDomain(0, 3000000000);
     this.normalRange = this.buildRange(0, 3000000000, rangeWidth, false);
