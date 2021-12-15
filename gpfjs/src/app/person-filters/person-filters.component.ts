@@ -16,7 +16,7 @@ export class PersonFiltersComponent extends StatefulComponent implements OnChang
   @Input() filters: PersonFilter[];
   @Input() isFamilyFilters: boolean;
 
-  @IsNotEmpty()
+  @IsNotEmpty({message: 'Select at least one continuous filter.'})
   selected = false;
 
   @ValidateNested({each: true})
@@ -101,7 +101,7 @@ export class PersonFiltersComponent extends StatefulComponent implements OnChang
     }
   }
 
-public updateSelected() {
+  public updateSelected() {
     this.selected = null;
     this.personFiltersState.forEach(el => {
       if (!el.isEmpty()) {
