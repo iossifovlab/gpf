@@ -10,7 +10,7 @@
       <ngb-panel *ngFor="let type of selectedGeneSetsCollection.types" id="{{type.datasetId}}-{{type.personSetCollectionId}}-denovo-geneset">
         <ng-template ngbPanelTitle *ngIf="selectedGeneSetsCollection?.types?.length > 0">
           <div style="text-align: left">
-            <span style="display: block;" class="dropdown-toggle btn-sm text-wrap">{{ getGeneSetName(type) }}</span>
+            <span style="display: block;" class="dropdown-toggle btn-sm text-wrap">{{ type.datasetName }}: {{ type.personSetCollectionName }}</span>
           </div>
         </ng-template>
         <ng-template ngbPanelContent>
@@ -43,7 +43,7 @@
     </gpf-searchable-select>
     <div *ngIf="selectedGeneSet">
       <span style="margin-right: 5px">Count: {{ selectedGeneSet.count }}</span>
-      <span>(<a href="{{ getDownloadLink(selectedGeneSet) }}">Download</a>)</span>
+      <span>(<a href="{{ downloadUrl }}">Download</a>)</span>
     </div>
 
     <gpf-errors-alert [errors]="errors"></gpf-errors-alert>

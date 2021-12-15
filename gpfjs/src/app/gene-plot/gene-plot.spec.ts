@@ -1,5 +1,5 @@
 import { GenePlotModel, GenePlotScaleState, GenePlotZoomHistory } from './gene-plot';
-import { Gene } from 'app/gene-browser/gene';
+import { Gene, Transcript } from 'app/gene-browser/gene';
 
 const simpleMockGene = {
   'gene': 'Simple',
@@ -29,7 +29,7 @@ describe('GenePlotModel', () => {
   it('should build a domain and a normal and condensed range on instantiation', () => {
     spyOn(GenePlotModel.prototype, 'buildDomain').and.callFake(() => [1]);
     spyOn(GenePlotModel.prototype, 'buildRange').and.callFake(() => [2]);
-    const plotModel = new GenePlotModel(null, 123);
+    const plotModel = new GenePlotModel(new Gene('CYP2D6', [new Transcript('id1', 'chr1', 'strand1', ['1', 2, 3] as any, ['2', 3, 4] as any)]), 123, 150);
     expect(plotModel.buildDomain).toHaveBeenCalledWith(0, 3000000000);
     expect(plotModel.buildRange).toHaveBeenCalledWith(0, 3000000000, 123, false);
     expect(plotModel.buildRange).toHaveBeenCalledWith(0, 3000000000, 123, true);
@@ -128,5 +128,19 @@ describe('GenePlotZoomHistory ', () => {
 
     history.moveToNext();
     expect(history.currentState.xDomain).toEqual([1, 2, 3]);
+  });
+
+  it('should test dynamic spacer length', () => {
+    const transcripts = [];
+    for(let i = 0; i < 50; i++) {
+      transcripts[i] = new Transcript('id' + i, 'chr' + i, 'strand' + i, [i, i as Number, i as Number] as any, [i, i as Number, i as Number] as any);
+    }
+
+    let geneModel = new GenePlotModel(new Gene('CYP2D6', [new Transcript('id1', 'chr1', 'strand1', ['1', 2, 3] as any, ['2', 3, 4] as any)]), 5, 150);
+    const length = geneModel.spacerLength;
+    expect(length).toEqual(150);
+
+    geneModel = new GenePlotModel(new Gene('CYP2D6', transcripts), 5, 150);
+    expect(length).toEqual(150);
   });
 });

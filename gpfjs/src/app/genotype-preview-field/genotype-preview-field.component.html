@@ -3,6 +3,6 @@
   </gpf-pedigree-chart>
 </div>
 <span *ngIf="field == 'variant.location'">
-  <a target="_blank" href="{{getUCSCLink()}}">{{ formattedValue }}</a>
+  <a target="_blank" [attr.href]="UCSCLink">{{ formattedValue }}</a>
 </span>
 <span *ngIf="field != 'pedigree' && field != 'variant.location'">{{ formattedValue }}</span>

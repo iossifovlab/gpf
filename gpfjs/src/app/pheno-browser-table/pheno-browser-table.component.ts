@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { PhenoBrowserModalContentComponent } from '../pheno-browser-modal-content/pheno-browser-modal-content.component';
@@ -56,15 +56,6 @@ export class PhenoBrowserTableComponent {
 
   getRegressionIds() {
     return Object.getOwnPropertyNames(this.measures.regressionNames);
-  }
-
-  getRegressionName(regressionId: string) {
-    if(this.measures.regressionNames[regressionId]) {
-      return this.measures.regressionNames[regressionId];
-    }
-    else {
-      return regressionId;
-    }
   }
 
   openModal(imageUrl) {

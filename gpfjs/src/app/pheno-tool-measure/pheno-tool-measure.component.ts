@@ -31,6 +31,7 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
   measuresLoaded$ = new ReplaySubject<Array<ContinuousMeasure>>();
 
   regressions: Object = {};
+  regressionNames: string[];
 
   constructor(
     protected store: Store,
@@ -52,9 +53,13 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
 
     const dataset = this.datasetsService.getSelectedDataset();
     if (dataset?.phenotypeData) {
-      this.measuresService.getRegressions(dataset.id).subscribe(res => this.regressions = res);
+      this.measuresService.getRegressions(dataset.id).subscribe(res => {
+        this.regressions = res;
+        this.regressionNames = Object.getOwnPropertyNames(this.regressions);
+      });
     } else {
       this.regressions = {};
+      this.regressionNames = [];
     }
   }
 
@@ -93,10 +98,6 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
       );
     }
     this.updateState();
-  }
-
-  getRegressionNames() {
-    return Object.getOwnPropertyNames(this.regressions);
   }
 
   isNormalizedBy(reg: string): boolean {
