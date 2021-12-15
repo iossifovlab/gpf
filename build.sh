@@ -380,12 +380,12 @@ EOT'
         /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup --durations 20 \
           --cov-config /wd/coveragerc \
           --junitxml=/wd/results/dae-junit.xml \
-          --cov-report=html:/wd/results/dae-coverage.html \
-          --cov-report=xml:/wd/results/dae-coverage.xml \
-          --cov /wd/dae/ \
+          --cov-report=html:/wd/results/gpf-coverage.html \
+          --cov-report=xml:/wd/results/gpf-coverage.xml \
+          --cov=GPF /wd/dae/ \
           dae/ || true'
 
-    build_run_local cp ./results/dae-junit.xml ./results/dae-coverage.xml ./test-results/
+    build_run_local cp ./results/dae-junit.xml ./results/gpf-coverage.xml ./test-results/
   }
 
   # Tests - wdae
@@ -413,12 +413,13 @@ EOT'
         /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup --durations 20 \
           --cov-config /wd/coveragerc \
           --junitxml=/wd/results/wdae-junit.xml \
-          --cov-report=html:/wd/results/wdae-coverage.html \
-          --cov-report=xml:/wd/results/wdae-coverage.xml \
-          --cov /wd/wdae/ \
+          --cov-report=html:/wd/results/gpf-coverage.html \
+          --cov-report=xml:/wd/results/gpf-coverage.xml \
+          --cov-append \
+          --cov=GPF /wd/wdae/ \
           wdae || true'
 
-    build_run_local cp ./results/wdae-junit.xml ./results/wdae-coverage.xml ./test-results/
+    build_run_local cp ./results/wdae-junit.xml ./results/gpf-coverage.xml ./test-results/
   }
 
   # post cleanup
