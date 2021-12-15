@@ -10,9 +10,8 @@ export class GenePlotModel {
 
   constructor(gene: Gene, rangeWidth: number, spacerLength: number = 150) {
     this.gene = gene;
+    // Reduce the spacer length if a gene spans too many chromosomes, to improve visibility
     this.spacerLength = spacerLength - (gene.chromosomes.size >= 3 ? (gene.chromosomes.size <= 5 ? 90 : gene.chromosomes.size * 18) : 0);
-    // If gene transcripts go over a specified length then it is limited by the browser size(gene plot field size). That causes a lot of transcripts to be laid over
-    // a specified amount of space. In order to prevent this there is a cap, going over the cap will result in too small spacer length
     // TODO: Could use positive and negative infinity here instead of magic numbers
     this.domain = this.buildDomain(0, 3000000000);
     this.normalRange = this.buildRange(0, 3000000000, rangeWidth, false);
