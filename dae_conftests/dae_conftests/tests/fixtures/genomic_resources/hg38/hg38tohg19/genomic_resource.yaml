@@ -2,16 +2,6 @@ type: liftover_chain
 
 filename: hg38ToHg19.over.chain.gz
 
-chrom_prefix.target_coordinates:
-  del_prefix: chr
-
-# id: hg38/hg38tohg19
-
-# resource_type: liftover_resource.LiftoverChainResource
-
-# filename: hg38ToHg19.over.chain.gz
-
-# chrom_prefix:
-#   target_coordinates:
-#     del_prefix: "chr"
-
+chrom_prefix:
+  target_coordinates:
+    del_prefix: chr
