@@ -70,7 +70,7 @@ describe('Autism gene profiles single view links tests', () => {
 
   it('should display gene browser link', () => {
     page.geneBrowserLink.should('be.visible');
-    page.geneBrowserLink.should('have.text', 'View CHD8 in the Gene Browser');
+    page.geneBrowserLink.should('have.text', 'Gene Browser');
   });
 
   it('should display UCSC link', () => {

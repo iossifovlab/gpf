@@ -98,6 +98,7 @@ export class BasePage {
 
   navigateToDatasetPage(dataset: string, page: string) {
     this.openDatasetsDropdownMenu();
+    this.datasetsDropdownMenuElements.contains(dataset).should('be.visible');
     this.datasetsDropdownMenuElements.contains(dataset).click();
     this.datasetsDropdownMenuButton.should('have.text', dataset);
     cy.get(`a.nav-link[href*="${page}"]`).click();
