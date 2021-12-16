@@ -1,14 +1,14 @@
 .button {
-    display: flex;
+  display: flex;
 }
 
-.button > button, gpf-share-query-button {
+.button > button,
+gpf-share-query-button {
   display: inline-block;
   margin-right: 5px;
 }
 
-
 .pheno-tool-results {
-	padding: 30px;
-	width: 100%;
+  padding: 30px;
+  width: 100%;
 }
