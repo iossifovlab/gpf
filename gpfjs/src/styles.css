@@ -193,6 +193,10 @@ label {
   border-radius: .25rem;
 }
 
+.dropdown-menu {
+  padding: 0;
+}
+
 .dropdown-item.active,
 .dropdown-item:active {
   background-color: #2a6395;
