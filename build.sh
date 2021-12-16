@@ -363,7 +363,6 @@ EOT'
         /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup --durations 20 \
           --cov-config /wd/coveragerc \
           --junitxml=/wd/results/dae-junit.xml \
-          --cov-report=xml:/wd/results/gpf-coverage.xml \
           --cov /wd/dae/ \
           dae/ || true'
 
@@ -395,12 +394,14 @@ EOT'
         /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup --durations 20 \
           --cov-config /wd/coveragerc \
           --junitxml=/wd/results/wdae-junit.xml \
-          --cov-report=xml:/wd/results/gpf-coverage.xml \
-          --cov-append \
           --cov /wd/wdae/ \
           wdae || true'
 
-    build_run_local cp ./results/wdae-junit.xml ./results/gpf-coverage.xml ./test-results/
+    build_run_container cp dae/.coverage .coverage_dae && cp wdae/.coverage .coverage_wdae
+    build_run_container coverage combine
+    build_run_container coverage xml
+
+    build_run_container cp ./results/wdae-junit.xml coverage.xml ./test-results/
   }
 
   build_stage "Package"
