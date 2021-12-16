@@ -382,10 +382,10 @@ EOT'
           --junitxml=/wd/results/dae-junit.xml \
           --cov-report=html:/wd/results/gpf-coverage.html \
           --cov-report=xml:/wd/results/gpf-coverage.xml \
-          --cov=GPF /wd/dae/ \
+          --cov /wd/dae/ \
           dae/ || true'
 
-    build_run_local cp ./results/dae-junit.xml ./results/gpf-coverage.xml ./test-results/
+    build_run_local cp ./results/dae-junit.xml ./test-results/
   }
 
   # Tests - wdae
@@ -416,7 +416,7 @@ EOT'
           --cov-report=html:/wd/results/gpf-coverage.html \
           --cov-report=xml:/wd/results/gpf-coverage.xml \
           --cov-append \
-          --cov=GPF /wd/wdae/ \
+          --cov /wd/wdae/ \
           wdae || true'
 
     build_run_local cp ./results/wdae-junit.xml ./results/gpf-coverage.xml ./test-results/
