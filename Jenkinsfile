@@ -44,7 +44,7 @@ pipeline {
         try {
           junit 'test-results/wdae-junit.xml, test-results/dae-junit.xml'
 
-          cobertura coberturaReportFile: 'test-results/coverage.xml', enableNewApi: true
+          cobertura coberturaReportFile: 'test-results/coverage.xml', enableNewApi: true, onlyStable: false, sourceEncoding: 'ASCII'
 
           recordIssues(
             enabledForFailure: true, aggregatingResults: false,
