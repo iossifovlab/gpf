@@ -55,7 +55,7 @@
     </gpf-table-column>
     <ng-container *ngFor="let regressionId of getRegressionIds()">
         <gpf-table-column>
-            <gpf-table-header caption="{{ measures.regressionNames[regressionId] ? measures.regressionNames[regressionId] : regressionId }}"></gpf-table-header>
+            <gpf-table-header caption="Regression by {{ measures.regressionNames[regressionId] ? measures.regressionNames[regressionId] : regressionId }}"></gpf-table-header>
             <gpf-table-content>
                 <span *gpfTableCellContent="let data">
                     <a [class.clickable]="!!data.regressions.getReg(regressionId).figureRegression" (click)="openModal(data.regressions.getReg(regressionId).figureRegression)">
