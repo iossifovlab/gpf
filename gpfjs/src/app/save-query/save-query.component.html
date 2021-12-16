@@ -3,13 +3,13 @@
   <div id="save-query-dropdown" ngbDropdownMenu aria-labelledby="dropdownQuerySave">
     <form (ngSubmit)="saveUserQuery(nameInput.value, descInput.value)" #queryStorageForm="ngForm" style="margin:10px">
       <div class="form-group">
-        <label for="name">Query name</label>
+        <label class="form-label" for="name">Query name</label>
         <input #nameInput type="text" class="form-control" id="name" required autocomplete="off" maxlength=256 style="width:300px">
-        <div [hidden]="nameInput.value" class="alert alert-danger" style="padding-top:5px;padding-bottom:5px">Query name is required</div>
+        <div [hidden]="nameInput.value" class="alert alert-danger" style="padding-top:5px; padding-bottom: 5px; margin-top: 10px;">Query name is required</div>
       </div>
 
       <div class="form-group">
-        <label for="description">Query description</label>
+        <label class="form-label" for="description">Query description</label>
         <textarea #descInput class="form-control" id="description" maxlength=1024 placeholder="A brief description of the query. (max. 1024 characters)"></textarea>
       </div>
 

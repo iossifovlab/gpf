@@ -8,7 +8,7 @@
 
     <ng-container *ngFor="let item of items">
       <div class="checkbox">
-        <label style="user-select: none">
+        <label class="checkbox-label" style="user-select: none">
           <input type="checkbox" [checked]="selectedItems.has(item)" (change)="toggleItem(item)">
           <span style="margin-left: 5px;">{{item | displayName: displayNames}}</span>
         </label>

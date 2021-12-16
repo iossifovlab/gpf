@@ -51,11 +51,6 @@ label {
   margin-bottom: 0;
 }
 
-.checkbox label {
-  padding-top: 4px;
-  padding-bottom: 4px;
-}
-
 .row-eq-height {
   display: -webkit-box;
   display: -webkit-flex;
@@ -306,4 +301,14 @@ gpf-global-error-display {
 
 .search-input:focus ~ .search-placeholder-wrapper .search-placeholder-text {
   padding-left: 14px;
+}
+
+.form-label {
+  width: 100%;
+}
+
+.checkbox-label {
+  width: 100%;
+  padding-top: 4px;
+  padding-bottom: 4px;
 }

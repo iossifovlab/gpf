@@ -10,11 +10,11 @@
       </span>
 
       <span class="header-item" style="left: 120px;">
-        <label style="margin-left: 20px; font-size: 17px; font-weight: 1; user-select: none">
+        <label style="margin-left: 12px;">
           <input type="checkbox" [checked]="!showTranscripts" (change)="showTranscripts = !showTranscripts; redraw()">
           <span class="checkbox-option">Hide transcripts</span>
         </label>
-        <label style="margin-left: 15px; font-size: 17px; font-weight: 1; user-select: none">
+        <label>
           <input #checkbox type="checkbox" [checked]="condenseIntrons" (change)="toggleCondenseIntrons()">
           <span class="checkbox-option">Condense introns</span>
         </label>
