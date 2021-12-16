@@ -269,7 +269,7 @@ gpf-global-error-display {
   pointer-events: none;
 }
 
-.tmp-parent {
+.search-placeholder-wrapper {
   display: flex;
   align-items: center;
   position: absolute;
@@ -290,20 +290,20 @@ gpf-global-error-display {
   background-position-x: 10px;
   width: 24px;
   height: 15px;
-  margin-right: 4px;
 }
 
-.search-input::placeholder {
+.search-placeholder-text {
   opacity: 50%;
   font-size: 14px;
-  padding-left: 15px;
+  padding-left: 4px;
+  font-weight: normal;
+  padding-top: 0.18em;
 }
 
-.search-input:focus::placeholder {
-  color: unset;
-  padding-left: 0;
-}
-
-.search-input:focus ~ .tmp-parent {
+.search-input:focus ~ .search-placeholder-wrapper .search-placeholder-icon {
   display: none;
+}
+
+.search-input:focus ~ .search-placeholder-wrapper .search-placeholder-text {
+  padding-left: 14px;
 }

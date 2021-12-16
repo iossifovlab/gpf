@@ -17,10 +17,10 @@
                   #searchBox
                   id="search-term"
                   class="search-input form-control"
-                  type="text"
-                  placeholder="Search" />
-                <div class="tmp-parent" *ngIf="searchBox.value === ''">
+                  type="text" />
+                <div class="search-placeholder-wrapper" *ngIf="searchBox.value === ''">
                   <span class="search-placeholder-icon"></span>
+                  <span class="search-placeholder-text">Search</span>
                 </div>
               </div>
               <div class="select-wrapper">

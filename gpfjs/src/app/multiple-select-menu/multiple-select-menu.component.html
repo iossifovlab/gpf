@@ -14,10 +14,10 @@
         name="search"
         [(ngModel)]="searchText"
         (ngModelChange)="filterItems($event)"
-        autocomplete="off"
-        placeholder="Search" />
-      <div class="tmp-parent">
+        autocomplete="off" />
+      <div class="search-placeholder-wrapper">
         <span class="search-placeholder-icon"></span>
+        <span class="search-placeholder-text">Search</span>
       </div>
     </div>
   </div>
