@@ -115,15 +115,6 @@ function main() {
       ./data/data-hg19-startup/gpf_instance.yaml
     '
 
-#     build_run_local bash -c 'cat >> ./data/data-hg19-startup/gpf_instance.yaml << EOT
-# grr:
-#   id: "%(instance_id)s"
-#   type: "url"
-#   url: "https://www.iossifovlab.com/distribution/public/genomic-resources-repository/"
-#   cache_dir: "/wd/cache/grrCache"
-# EOT
-# '
-
     build_run_local bash -c "mkdir -p ./cache"
     build_run_local bash -c "touch ./cache/grr_definition.yaml"
     build_run_local bash -c 'cat > ./cache/grr_definition.yaml << EOT
@@ -175,14 +166,6 @@ EOT
       ./data/data-hg19-remote/gpf_instance.yaml
       '
 
-#     build_run_local bash -c 'cat >> ./data/data-hg19-remote/gpf_instance.yaml << EOT
-# grr:
-#   id: "%(instance_id)s"
-#   type: "url"
-#   url: "https://www.iossifovlab.com/distribution/public/genomic-resources-repository/"
-#   cache_dir: "/wd/cache/grrCache"
-# EOT
-# '
       build_run_ctx_init "container" "ubuntu:18.04"
       defer_ret build_run_ctx_reset
 
@@ -380,7 +363,6 @@ EOT'
         /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup --durations 20 \
           --cov-config /wd/coveragerc \
           --junitxml=/wd/results/dae-junit.xml \
-          --cov-report=html:/wd/results/gpf-coverage.html \
           --cov-report=xml:/wd/results/gpf-coverage.xml \
           --cov /wd/dae/ \
           dae/ || true'
@@ -413,13 +395,33 @@ EOT'
         /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup --durations 20 \
           --cov-config /wd/coveragerc \
           --junitxml=/wd/results/wdae-junit.xml \
-          --cov-report=html:/wd/results/gpf-coverage.html \
           --cov-report=xml:/wd/results/gpf-coverage.xml \
           --cov-append \
           --cov /wd/wdae/ \
           wdae || true'
 
     build_run_local cp ./results/wdae-junit.xml ./results/gpf-coverage.xml ./test-results/
+  }
+
+  build_stage "Package"
+  {
+    local image_name="gpf-package"
+    build_docker_data_image_create_from_tarball "${image_name}" <(
+      build_run_local tar cvf - \
+          --exclude __pycache__ \
+          --exclude .mypy_cache \
+          --exclude .pytest_cache \
+          --exclude .coverage \
+          --exclude .vscode \
+          --exclude results \
+          --exclude .gitignore \
+          --exclude gpf_dae.egg-info \
+          --exclude dae/.coverage \
+          --exclude dae/tmp \
+          --exclude dae/build \
+          --exclude wdae/build \
+          dae/ wdae/
+    )
   }
 
   # post cleanup
