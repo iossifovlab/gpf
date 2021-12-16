@@ -268,3 +268,42 @@ gpf-global-error-display {
   content: url("/assets/dropdown_icon.png");
   pointer-events: none;
 }
+
+.tmp-parent {
+  display: flex;
+  align-items: center;
+  position: absolute;
+}
+
+.search-input-wrapper {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+}
+
+.search-placeholder-icon {
+  display: inline-block;
+  background-image: url("/assets/111.png");
+  background-repeat: no-repeat;
+  background-size: 12px 12px;
+  background-position-y: center;
+  background-position-x: 10px;
+  width: 24px;
+  height: 15px;
+  margin-right: 4px;
+}
+
+.search-input::placeholder {
+  opacity: 50%;
+  font-size: 14px;
+  padding-left: 15px;
+}
+
+.search-input:focus::placeholder {
+  color: unset;
+  padding-left: 0;
+}
+
+.search-input:focus ~ .tmp-parent {
+  display: none;
+}

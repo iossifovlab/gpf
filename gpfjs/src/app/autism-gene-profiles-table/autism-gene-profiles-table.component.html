@@ -65,8 +65,19 @@
 
       <tr style="height: 110px;">
         <th class="table-subheader" rowspan="2">
-          <input #geneSearchInput (keyup)="sendKeystrokes(geneSearchInput.value)" id="gene-search-input"
-            class="form-control" autocomplete="off" type="text" placeholder="Search">
+          <div class="search-input-wrapper">
+            <input
+              #geneSearchInput
+              (keyup)="sendKeystrokes(geneSearchInput.value)"
+              id="gene-search-input"
+              class="search-input form-control"
+              autocomplete="off"
+              type="text"
+              placeholder="Search" />
+            <div class="tmp-parent">
+              <span class="search-placeholder-icon"></span>
+            </div>
+          </div>
         </th>
 
         <ng-container *ngFor="let element of config.shown">

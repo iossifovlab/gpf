@@ -10,8 +10,19 @@
             </div>
 
             <div class="col-4">
-              <input [ngModel]="input$ | async" (input)="search(searchBox.value)" #searchBox
-                id="search-term" class="form-control bottom-space" type="text" placeholder="Search phenotypes"/>
+              <div class="search-input-wrapper" style="margin-bottom: 6px;">
+                <input 
+                  [ngModel]="input$ | async"
+                  (input)="search(searchBox.value)"
+                  #searchBox
+                  id="search-term"
+                  class="search-input form-control"
+                  type="text"
+                  placeholder="Search" />
+                <div class="tmp-parent" *ngIf="searchBox.value === ''">
+                  <span class="search-placeholder-icon"></span>
+                </div>
+              </div>
               <div class="select-wrapper">
                 <select class="form-control" [ngModel]="selectedInstrument$ | async" (ngModelChange)="emitInstrument($event)">
                   <option value="">All instruments</option>

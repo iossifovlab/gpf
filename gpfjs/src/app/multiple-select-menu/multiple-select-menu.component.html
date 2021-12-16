@@ -6,16 +6,20 @@
       class="btn btn-default"
       style="float: left; position: relative; width: 30%; margin-right: 2%"
       (click)="toggleCheckingAll()">{{ checkUncheckAllButtonName }}</button>
-    <input
-      #searchInput
-      class="form-control"
-      type="text"
-      style="width: 68%"
-      name="search"
-      [(ngModel)]="searchText"
-      (ngModelChange)="filterItems($event)"
-      autocomplete="off"
-      placeholder="Search..." />
+    <div class="search-input-wrapper" style="width: 68%">
+      <input
+        #searchInput
+        class="search-input form-control"
+        type="text"
+        name="search"
+        [(ngModel)]="searchText"
+        (ngModelChange)="filterItems($event)"
+        autocomplete="off"
+        placeholder="Search" />
+      <div class="tmp-parent">
+        <span class="search-placeholder-icon"></span>
+      </div>
+    </div>
   </div>
 
   <table cdkDropList (cdkDropListDropped)="drop($event)">
