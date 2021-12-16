@@ -16,37 +16,54 @@ nav.tab-limit {
   transition: background-color 250ms ease-out;
 }
 
+#ngb-nav-0.active,
+#ngb-nav-0:hover {
+  border-left: 1px solid #dee2e6;
+}
+
 .nav-tabs {
   border-bottom: none;
+  border-right: 1px solid #dee2e6;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  text-align: center;
 }
 
 .nav-link {
+  position: relative;
   color: #495057;
   margin-right: 0;
   min-width: 125px;
   cursor: default;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 .nav-link:hover:not(.active) {
   border-bottom: none;
+  border-right: 1px solid transparent;
+  border-left: 1px solid transparent;
 }
 
 .nav-link.active {
-  border-color: #dee2e6 #dee2e6 #fff;
-  background-color: #fafafa;
+  border-color: #dee2e6 #dee2e6 transparent;
+  background-color: #f6f6f6;
+  border-right-color: transparent;
+  border-left-color: transparent;
 }
 
 .nav-item {
   margin-bottom: -1px;
 }
 
-span.close {
-  font-size: 18px;
-  top: 2px;
-  left: 12px;
-  padding-left: 5px !important;
-  padding-right: 5px !important;
+.tab-close-icon {
+  position: absolute;
+  right: 2px;
+  font-weight: lighter;
   cursor: pointer;
+  padding-left: 5px;
+  padding-right: 5px;
+
 }
 
 button::after {
@@ -77,7 +94,7 @@ button:click {
   text-align: center;
   padding-left: 5px;
   padding-right: 5px;
-  margin-left: 20px;
+  margin-left: 8px;
 }
 
 #column-filtering-button {
