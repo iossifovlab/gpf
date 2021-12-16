@@ -283,7 +283,7 @@ gpf-global-error-display {
 
 .search-placeholder-icon {
   display: inline-block;
-  background-image: url("/assets/111.png");
+  background-image: url("/assets/search-icon.png");
   background-repeat: no-repeat;
   background-size: 12px 12px;
   background-position-y: center;
