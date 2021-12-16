@@ -39,3 +39,8 @@
   border-top-color: #000000;
   animation: spinner .8s linear infinite;
 }
+
+.submitted-email-input {
+  opacity: 77%;
+  cursor: pointer;
+}

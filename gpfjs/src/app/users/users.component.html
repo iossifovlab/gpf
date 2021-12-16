@@ -28,7 +28,7 @@
                 id="username"
                 class="form-control"
                 [(ngModel)]="username"
-                [style.opacity.%]="showPasswordField ? 50 : 100"
+                [ngClass]="{ 'submitted-email-input': showPasswordField }"
                 type="text"
                 (focus)="back()" />
             </div>
