@@ -77,6 +77,11 @@
               <span class="search-placeholder-icon"></span>
               <span class="search-placeholder-text">Search</span>
             </div>
+            <span
+              class="clear-search-icon"
+              *ngIf="geneSearchInput.value !== ''"
+              (click)="geneSearchInput.value = ''; sendKeystrokes('')">
+            </span>
           </div>
         </th>
 

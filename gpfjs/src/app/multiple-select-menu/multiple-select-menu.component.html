@@ -19,6 +19,11 @@
         <span class="search-placeholder-icon"></span>
         <span class="search-placeholder-text">Search</span>
       </div>
+      <span 
+        class="clear-search-icon"
+        *ngIf="searchInput.value !== ''"
+        (click)="searchInput.value = ''; searchText = ''; filterItems('')">
+      </span>
     </div>
   </div>
 

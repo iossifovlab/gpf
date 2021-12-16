@@ -277,6 +277,7 @@ gpf-global-error-display {
 
 .search-input-wrapper {
   display: inline-flex;
+  position: relative;
   width: 100%;
   align-items: center;
 }
@@ -306,6 +307,18 @@ gpf-global-error-display {
 
 .search-input:focus ~ .search-placeholder-wrapper .search-placeholder-text {
   padding-left: 14px;
+}
+
+.clear-search-icon {
+  display: inline-block;
+  background-image: url("/assets/clear-search-icon.png");
+  background-repeat: no-repeat;
+  background-position-y: center;
+  background-position-x: center;
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  right: 5px;
 }
 
 .form-label {

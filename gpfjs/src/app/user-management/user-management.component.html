@@ -23,6 +23,11 @@
                     <span class="search-placeholder-icon"></span>
                     <span class="search-placeholder-text">Search</span>
                   </div>
+                  <span 
+                    class="clear-search-icon"
+                    *ngIf="searchBox.value !== ''"
+                    (click)="searchBox.value = ''; search(searchBox.value)">
+                  </span>
                 </div>
               </div>
               <div class="btn-toolbar" style="padding-left: 10px">
