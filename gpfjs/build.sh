@@ -67,6 +67,14 @@ function main() {
   {
     build_run rm -rf dist/
     build_run ng build --prod --aot --configuration 'default' --base-href '/gpf_prefix/' --deploy-url '/gpf_prefix/'
+    build_run python ppindex.py
+
+    local image_name="gpfjs-build"
+    build_docker_data_image_create_from_tarball "${image_name}" <(
+        build_run_local tar cvf - \
+            -C dist \
+            gpfjs/
+      )
   }
 
 }
