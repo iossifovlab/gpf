@@ -272,6 +272,7 @@ gpf-global-error-display {
   display: flex;
   align-items: center;
   position: absolute;
+  pointer-events: none;
 }
 
 .search-input-wrapper {

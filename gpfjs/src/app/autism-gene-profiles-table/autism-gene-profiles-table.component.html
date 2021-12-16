@@ -73,7 +73,7 @@
               class="search-input form-control"
               autocomplete="off"
               type="text" />
-            <div class="search-placeholder-wrapper">
+            <div class="search-placeholder-wrapper" *ngIf="geneSearchInput.value === ''">
               <span class="search-placeholder-icon"></span>
               <span class="search-placeholder-text">Search</span>
             </div>
