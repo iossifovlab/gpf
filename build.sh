@@ -397,8 +397,7 @@ EOT'
           --cov /wd/wdae/ \
           wdae || true'
 
-    build_run_container cp dae/.coverage .coverage_dae && cp wdae/.coverage .coverage_wdae
-    build_run_container coverage combine
+    build_run_container coverage combine dae/.coverage wdae/.coverage
     build_run_container coverage xml
 
     build_run_container cp ./results/wdae-junit.xml coverage.xml ./test-results/
