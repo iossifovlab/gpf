@@ -31,6 +31,9 @@ export class MultiContinuousFilterComponent extends StatefulComponent implements
   }
 
   public restoreContinuousFilter(state) {
+    if (!state['personFiltersState']) {
+      return;
+    }
     const filters = state['personFiltersState']['familyFilters'];
     filters.forEach(filter => {
       let selection = {
