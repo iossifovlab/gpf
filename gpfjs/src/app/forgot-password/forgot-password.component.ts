@@ -25,7 +25,7 @@ export class ForgotPasswordComponent implements OnInit {
   }
 
   resetPassword() {
-    this.usersService.resetPassword(this.email)
+    this.usersService.resetPassword(this.email.trim())
     .subscribe(
       (res) => {
         if (res) {
