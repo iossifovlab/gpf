@@ -1,7 +1,6 @@
 import os
 import logging
 import pandas as pd
-import math
 import json
 from dae.genome.genomes_db import GenomesDB
 
@@ -28,9 +27,7 @@ from dae.configuration.schemas.autism_gene_profile import (
     autism_gene_tool_config
 )
 from dae.autism_gene_profile.db import AutismGeneProfileDB
-from dae.autism_gene_profile.statistic import AGPStatistic
 
-from dae.utils.helpers import isnan
 from dae.utils.dae_utils import cached, join_line
 
 
@@ -223,80 +220,6 @@ class GPFInstance(object):
         return self._pheno_db.get_phenotype_data_config(phenotype_data_id)
 
     # Pheno browser
-
-    def get_pheno_config(self, study_wrapper):
-        dbname = study_wrapper.config.phenotype_data
-        return self._pheno_db.config[dbname]
-
-    def has_pheno_data(self, study_wrapper):
-        return study_wrapper.phenotype_data is not None
-
-    def get_instruments(self, study_wrapper):
-        return study_wrapper.phenotype_data.instruments.keys()
-
-    def get_pheno_dbfile(self, study_wrapper):
-        config = self.get_pheno_config(study_wrapper)
-        return config.browser_dbfile
-
-    def get_pheno_images_url(self, study_wrapper):
-        config = self.get_pheno_config(study_wrapper)
-        return config.browser_images_url
-
-    def get_measures_info(self, study_wrapper):
-        dbfile = self.get_pheno_dbfile(study_wrapper)
-        images_url = self.get_pheno_images_url(study_wrapper)
-        db = DbManager(dbfile=dbfile)
-        db.build()
-        return {
-            "base_image_url": images_url,
-            "has_descriptions": db.has_descriptions,
-            "regression_names": db.regression_display_names,
-        }
-
-    def search_measures(self, study_wrapper, instrument, search_term):
-        dbfile = self.get_pheno_dbfile(study_wrapper)
-        db = DbManager(dbfile=dbfile)
-        db.build()
-
-        measures = db.search_measures(instrument, search_term)
-
-        for m in measures:
-            if m["values_domain"] is None:
-                m["values_domain"] = ""
-            m["measure_type"] = m["measure_type"].name
-
-            m["regressions"] = []
-            regressions = db.get_regression_values(m["measure_id"]) or []
-
-            for reg in regressions:
-                reg = dict(reg)
-                if isnan(reg["pvalue_regression_male"]):
-                    reg["pvalue_regression_male"] = "NaN"
-                if isnan(reg["pvalue_regression_female"]):
-                    reg["pvalue_regression_female"] = "NaN"
-                m["regressions"].append(reg)
-
-            yield {
-                "measure": m,
-            }
-
-    def has_measure(self, study_wrapper, measure_id):
-        return study_wrapper.phenotype_data.has_measure(measure_id)
-
-    def get_measure_description(self, study_wrapper, measure_id):
-        measure = study_wrapper.phenotype_data.measures[measure_id]
-
-        out = {
-            "instrument_name": measure.instrument_name,
-            "measure_name": measure.measure_name,
-            "measure_type": measure.measure_type.name,
-            "values_domain": measure.domain,
-        }
-        if not math.isnan(measure.min_value):
-            out["min_value"] = measure.min_value
-        if not math.isnan(measure.max_value):
-            out["max_value"] = measure.max_value
-        return out
 
     def get_regressions(self, study_wrapper):
         dataset_config = self.get_genotype_data_config(

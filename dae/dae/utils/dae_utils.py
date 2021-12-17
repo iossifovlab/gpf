@@ -1,3 +1,4 @@
+import os
 import re
 
 SUB_COMPLEX_RE = re.compile(r"^(sub|complex)\(([NACGT]+)->([NACGT]+)\)$")
@@ -7,6 +8,7 @@ DEL_RE = re.compile(r"^del\((\d+)\)$")
 
 def cached(prop):
     cached_val_name = "_" + prop.__name__
+
     def wrap(self):
         if getattr(self, cached_val_name, None) is None:
             setattr(self, cached_val_name, prop(self))
@@ -58,3 +60,17 @@ def join_line(ln, sep="\t"):
     lm = map(lambda v: "; ".join(v) if isinstance(v, list) else v, ln)
     tl = map(lambda v: "" if v is None or v == "None" else str(v), lm)
     return sep.join(tl) + "\n"
+
+
+def get_pheno_browser_images_dir(no_environ_override=""):
+    browser_images_path = os.environ.get("DAE_PHENO_BROWSER_IMAGES")
+    if browser_images_path is None:
+        db_dir = os.environ.get("DAE_DB_DIR")
+        if db_dir is not None:
+            base_path = os.path.join(
+                os.environ.get("DAE_DB_DIR"), "pheno"
+            )
+        else:
+            base_path = no_environ_override
+        browser_images_path = os.path.join(base_path, "images")
+    return browser_images_path

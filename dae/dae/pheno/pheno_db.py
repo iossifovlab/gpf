@@ -903,38 +903,49 @@ class PhenotypeGroup(PhenotypeData):
     @staticmethod
     def _merge_instruments(
             phenos_instruments: Iterable[Dict[str, Instrument]]):
-
         group_instruments = {}
         group_measures = {}
+
         for pheno_instruments in phenos_instruments:
             for instrument_name, instrument in pheno_instruments.items():
-                if instrument_name not in group_instruments:
-                    group_instruments[instrument_name] = instrument
-                    group_measures.update({
-                        f"{instrument_name}.{name}": measure
-                        for name, measure in instrument.measures.items()
-                    })
-                else:
-                    # try to merge instrument
-                    logger.info(
-                        f"trying to merge instrument {instrument_name}")
+                assert instrument_name not in group_instruments
+                group_instruments[instrument_name] = instrument
+                group_measures.update({
+                    f"{instrument_name}.{name}": measure
+                    for name, measure in instrument.measures.items()
+                })
 
-                    group_instrument = group_instruments[instrument_name]
-                    assert group_instrument.instrument_name == instrument_name
+        # group_instruments = {}
+        # group_measures = {}
+        # for pheno_instruments in phenos_instruments:
+        #     for instrument_name, instrument in pheno_instruments.items():
+        #         if instrument_name not in group_instruments:
+        #             group_instruments[instrument_name] = instrument
+        #             group_measures.update({
+        #                 f"{instrument_name}.{name}": measure
+        #                 for name, measure in instrument.measures.items()
+        #             })
+        #         else:
+        #             # try to merge instrument
+        #             logger.info(
+        #                 f"trying to merge instrument {instrument_name}")
 
-                    measure_ids = set(instrument.keys())
-                    group_measure_ids = set(group_instrument.measures.keys())
+        #             group_instrument = group_instruments[instrument_name]
+        #             assert group_instrument.instrument_name == instrument_name
 
-                    if measure_ids & group_measure_ids:
-                        msg = f"can't merge instruments because of measures " \
-                            f"{measure_ids & group_measure_ids}"
-                        logger.error(msg)
-                        raise ValueError(msg)
-                    group_instrument.measures.update(instrument.measures)
-                    group_measures.update({
-                        f"{instrument_name}.{name}": measure
-                        for name, measure in instrument.measures.items()
-                    })
+        #             measure_ids = set(instrument.keys())
+        #             group_measure_ids = set(group_instrument.measures.keys())
+
+        #             if measure_ids & group_measure_ids:
+        #                 msg = f"can't merge instruments because of measures " \
+        #                     f"{measure_ids & group_measure_ids}"
+        #                 logger.error(msg)
+        #                 raise ValueError(msg)
+        #             group_instrument.measures.update(instrument.measures)
+        #             group_measures.update({
+        #                 f"{instrument_name}.{name}": measure
+        #                 for name, measure in instrument.measures.items()
+        #             })
 
         return group_instruments, group_measures
 
@@ -1053,11 +1064,20 @@ class PhenoDb(object):
         if pheno_id in self.pheno_cache:
             phenotype_data = self.pheno_cache[pheno_id]
         else:
-            logger.info(f"loading pheno db <{pheno_id}>")
-            phenotype_data = PhenotypeStudy(
-                pheno_id,
-                dbfile=self.get_dbfile(pheno_id)
-            )
+            config = self.get_dbconfig(pheno_id)
+            if config.group_datas is not None:
+                logger.info(f"loading pheno db group <{pheno_id}>")
+                phenotype_studies = [
+                    self.get_phenotype_data(ps_id)
+                    for ps_id in config.group_datas
+                ]
+                phenotype_data = PhenotypeGroup(pheno_id, phenotype_studies)
+            else:
+                logger.info(f"loading pheno db <{pheno_id}>")
+                phenotype_data = PhenotypeStudy(
+                    pheno_id,
+                    dbfile=self.get_dbfile(pheno_id)
+                )
             self.pheno_cache[pheno_id] = phenotype_data
         return phenotype_data
 

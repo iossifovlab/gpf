@@ -20,6 +20,7 @@ from dae.pheno_browser.graphs import draw_measure_violinplot
 from dae.pheno_browser.graphs import draw_categorical_violin_distribution
 from dae.pheno_browser.graphs import draw_ordinal_violin_distribution
 from dae.utils.progress import progress, progress_nl
+from dae.utils.dae_utils import get_pheno_browser_images_dir
 
 
 mpl.use("PS")  # noqa
@@ -42,7 +43,9 @@ class PreparePhenoBrowserBase(object):
         assert os.path.exists(output_dir)
         self.output_dir = output_dir
         if images_dir is None:
-            images_dir = os.path.join(self.output_dir, "images")
+            images_dir = get_pheno_browser_images_dir(
+                no_environ_override=self.output_dir
+            )
         if not os.path.exists(images_dir):
             os.makedirs(images_dir)
 
@@ -102,7 +105,11 @@ class PreparePhenoBrowserBase(object):
 
     def figure_filepath(self, measure, suffix):
         filename = "{}.{}.png".format(measure.measure_id, suffix)
-        outdir = os.path.join(self.images_dir, measure.instrument_name)
+        outdir = os.path.join(
+            self.images_dir,
+            self.phenotype_data.pheno_id,
+            measure.instrument_name
+        )
         if not os.path.exists(outdir):
             os.mkdir(outdir)
 
@@ -111,7 +118,11 @@ class PreparePhenoBrowserBase(object):
 
     def figure_path(self, measure, suffix):
         filename = "{}.{}.png".format(measure.measure_id, suffix)
-        filepath = os.path.join(measure.instrument_name, filename)
+        filepath = os.path.join(
+            self.phenotype_data.pheno_id,
+            measure.instrument_name,
+            filename
+        )
         return filepath
 
     def save_fig(self, measure, suffix):

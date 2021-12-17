@@ -17,6 +17,7 @@ regression_conf_schema = {
 phenotype_data_schema = {
     "enabled": {"type": "boolean", "default": True},
     "name": {"type": "string"},
+    "group_datas": {"type": "list", "schema": {"type": "string"}},
     "dbfile": {
         "type": "string",
         "check_with": validate_existing_path,

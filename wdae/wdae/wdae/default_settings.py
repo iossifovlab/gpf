@@ -1,5 +1,6 @@
 # Django settings for wdae project.
 import os
+from dae.utils.dae_utils import get_pheno_browser_images_dir
 
 DEBUG = True
 
@@ -107,9 +108,7 @@ STATIC_URL = "/static/"
 APPEND_SLASH = False
 
 
-PHENO_BROWSER_CACHE = os.path.join(
-    os.environ.get("DAE_DB_DIR") or "", "pheno")
-PHENO_BROWSER_BASE_URL = "/static/"
+PHENO_BROWSER_CACHE = get_pheno_browser_images_dir()
 
 # Additional locations of static files
 STATICFILES_DIRS = (
