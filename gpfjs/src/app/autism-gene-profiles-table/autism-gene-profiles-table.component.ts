@@ -31,7 +31,6 @@ export class GetGeneScorePipe implements PipeTransform {
 @Pipe({name: 'getEffectTypeValue'})
 export class GetEffectTypeValuePipe implements PipeTransform {
   transform(gene: AgpGene, dataset: AgpDataset, personSet: AgpDatasetPersonSet, statistic: AgpDatasetStatistic, args?: any): string {
-    // FIXME Disable link clicking on empty cells somehow without spamming functions in the templates
     const effectTypeValue = gene.studies.find(study => study.id === dataset.id)
       .personSets.find(ps => ps.id === personSet.id)
       .effectTypes.find(effectType => effectType.id === statistic.id)
@@ -441,11 +440,17 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
   }
 
   public goToQuery(
-    geneSymbol: string, personSet: AgpDatasetPersonSet, datasetId: string, statistic: AgpDatasetStatistic
+    gene: AgpGene, personSet: AgpDatasetPersonSet, datasetId: string, statistic: AgpDatasetStatistic
   ): void {
-    AutismGeneProfileSingleViewComponent.goToQuery(
-      this.store, this.queryService, geneSymbol, personSet, datasetId, statistic
-    );
+    const effectTypeValue = gene.studies.find(study => study.id === datasetId)
+      .personSets.find(ps => ps.id === personSet.id)
+      .effectTypes.find(effectType => effectType.id === statistic.id)
+      .value.count;
+    if (effectTypeValue) {
+      AutismGeneProfileSingleViewComponent.goToQuery(
+        this.store, this.queryService, gene.geneSymbol, personSet, datasetId, statistic
+      );
+    }
   }
 
   public async waitForGeneSearchInputToLoad(): Promise<void> {
