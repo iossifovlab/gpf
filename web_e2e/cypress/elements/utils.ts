@@ -98,17 +98,18 @@ export class BasePage {
 
   navigateToDatasetPage(dataset: string, page: string) {
     this.openDatasetsDropdownMenu();
-    this.datasetsDropdownMenuElements.contains(dataset).should('be.visible');
     this.datasetsDropdownMenuElements.contains(dataset).click();
     this.datasetsDropdownMenuButton.should('have.text', dataset);
     cy.get(`a.nav-link[href*="${page}"]`).click();
   }
 
   get datasetsDropdownMenuButton() {
+    cy.get('#datasets-dropdown-menu-button').should('be.visible');
     return cy.get('#datasets-dropdown-menu-button');
   }
 
   get datasetsDropdownMenuElements() {
+    cy.get('.dataset-selector a').should('be.visible');
     return cy.get('.dataset-selector a');
   }
 
