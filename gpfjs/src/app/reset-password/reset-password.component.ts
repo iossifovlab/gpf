@@ -2,7 +2,6 @@ import { Component, ViewChild, AfterViewInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ConfigService } from 'app/config/config.service';
 import { UsersService } from '../users/users.service';
-import { passwordBlackList } from './blackList';
 
 @Component({
   selector: 'gpf-reset-password',
@@ -58,21 +57,15 @@ export class ResetPasswordComponent implements AfterViewInit {
       return;
     }
 
-    if (passwordBlackList.includes(this.password)) {
-      this.resetPasswordError = 'Password is too weak';
-      return;
-    }
-
-    this.usersService.changePassword(this.password, this.verifPath).subscribe(
-      (res) => {
-        if (res) {
-          this.password = null;
-          this.confirmPassword = null;
-          this.resetPasswordError = '';
-          this.router.navigateByUrl(this.config.baseUrl);
-        } else {
-          this.resetPasswordError = 'Reset Password Failed';
-        }
+    this.usersService.changePassword(this.password, this.verifPath).subscribe((res) => {
+      if (res['error']) {
+        this.resetPasswordError = res['error'];
+      } else {
+        this.password = null;
+        this.confirmPassword = null;
+        this.resetPasswordError = '';
+        this.router.navigateByUrl(this.config.baseUrl);
+      }
     });
   }
 }

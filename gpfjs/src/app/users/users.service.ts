@@ -172,7 +172,7 @@ export class UsersService {
     );
   }
 
-  changePassword(password: string, verifPath: string): Observable<boolean> {
+  changePassword(password: string, verifPath: string): Observable<boolean | object> {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
@@ -183,8 +183,8 @@ export class UsersService {
       map(() => {
         return true;
       }),
-      catchError(() => {
-        return of(false);
+      catchError(res => {
+        return of({error: res.error.error_msg})
       })
     );
   }
