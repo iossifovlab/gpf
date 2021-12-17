@@ -154,8 +154,8 @@
               <ng-container *ngFor="let personSet of element.category.shown; let i = index">
                 <td
                   class="link-td" 
-                  (click)="goToQuery(gene.geneSymbol, personSet, element.category.id, statistic)"
-                  (middleclick)="goToQuery(gene.geneSymbol, personSet, element.category.id, statistic)"
+                  (click)="goToQuery(gene, personSet, element.category.id, statistic)"
+                  (middleclick)="goToQuery(gene, personSet, element.category.id, statistic)"
                   style="min-width: 70px"
                   *ngFor="let statistic of personSet.shown; let j = index"
                   [ngClass]="{'category-border': i === 0 && j === 0}"

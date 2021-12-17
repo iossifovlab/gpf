@@ -1,4 +1,5 @@
 import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
+import { Location } from '@angular/common';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { AgpConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
@@ -25,7 +26,8 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   ];
 
   public constructor(
-    private autismGeneProfilesService: AutismGeneProfilesService
+    private location: Location,
+    private autismGeneProfilesService: AutismGeneProfilesService,
   ) { }
 
   @HostListener('window:keydown.home')
@@ -74,8 +76,18 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
     this.geneTabs.add(tabId);
     if (navigateToTab) {
-      this.nav.select(tabId);
+      this.selectNav(tabId);
     }
+  }
+
+  private selectNav(navId: string) {
+    this.changeUrl(navId);
+    this.nav.select(navId);
+  }
+  
+  public changeUrl(navId: string) {
+    const urlPart = navId === 'autismGenesTool' ? '' : `/${navId}`;
+    this.location.go(`autism-gene-profiles${urlPart}`);
   }
 
   public getActiveTabIndex(): number {
@@ -83,7 +95,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   }
 
   public openHomeTab(): void {
-    this.nav.select('autismGenesTool');
+    this.selectNav('autismGenesTool');
   }
 
   public openPreviousTab(): void {
@@ -105,11 +117,11 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   }
 
   public openLastTab(): void {
-    this.nav.select([...this.geneTabs][this.geneTabs.size - 1]);
+    this.selectNav([...this.geneTabs][this.geneTabs.size - 1]);
   }
 
   public openTabAtIndex(index: number): void {
-    this.nav.select([...this.geneTabs][index]);
+    this.selectNav([...this.geneTabs][index]);
   }
 
   public closeTab(event: MouseEvent, tabId: string): void {

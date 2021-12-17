@@ -52,8 +52,8 @@ td {
   float: right;
   background: none;
   border: none;
-  padding: 0 3px;
   font-size: 18px;
+  padding: 0 10px;
 }
 
 .vertical-text {
@@ -84,6 +84,6 @@ td {
 }
 
 .compare-div {
-  border-right: 1px solid #dee2e6;
-  height: 100%;
+  border-right: 15px solid #f1f1f1;
+  height: 100vh;
 }
