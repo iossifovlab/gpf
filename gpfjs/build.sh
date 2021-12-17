@@ -60,7 +60,7 @@ function main() {
 
   build_stage "Tests"
   {
-    build_run ng test -- --no-watch --no-progress --code-coverage --browsers=ChromeHeadlessCI || true
+    build_run bash -c 'ng test -- --no-watch --no-progress --code-coverage --browsers=ChromeHeadlessCI | tee /dev/stderr | grep -e "^TOTAL: " && exit ${PIPESTATUS[0]} || false'
   }
 
   build_stage "Clean and package"

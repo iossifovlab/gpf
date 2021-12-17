@@ -465,37 +465,50 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
     });
   }
 
-  public highlightRow($event): void {
+  public highlightRow($event: MouseEvent): void {
+    if (!($event.target instanceof Element)) {
+      return;
+    }
+
     if (
       $event.type === 'click' && !($event.ctrlKey || $event.metaKey)
       || $event.target.classList.value.replace('ng-star-inserted', '').trim().includes('link-td')
-      || !($event.target instanceof Element)
     ) {
       return;
     }
 
     let rowElement: HTMLElement;
-    const mouseEventParentElement = $event.target.parentElement;
+    const clickedElementParentElement = $event.target.parentElement;
 
-    if (mouseEventParentElement.localName !== 'tr') {
-      rowElement = mouseEventParentElement.parentElement;
+    if (clickedElementParentElement.localName !== 'tr') {
+      rowElement = clickedElementParentElement.parentElement;
     } else {
-      rowElement = mouseEventParentElement;
+      rowElement = clickedElementParentElement;
     }
 
     rowElement.className.includes('row-highlight')
       ? rowElement.classList.remove('row-highlight')
       : rowElement.classList.add('row-highlight');
 
-    const rowElementGeneSymbol: string = rowElement.innerText.split('\t')[0];
-    if (this.highlightedRowElements.map(ele => ele.innerText.split('\t')[0]).includes(rowElementGeneSymbol)) {
+    const rowElementGeneSymbol: string = this.getGeneSymbolFromHTMLElement(rowElement);
+
+    if (this.highlightedRowElements.map(rowEle => this.getGeneSymbolFromHTMLElement(rowEle)).includes(rowElementGeneSymbol)) {
+      if (rowElement.className.includes('row-highlight')) {
+        this.highlightedRowElements.push(rowElement);
+        return;
+      }
+
       this.highlightedRowElements = this.highlightedRowElements.filter(
-        ele => ele.innerText.split('\t')[0] !== rowElementGeneSymbol
+        rowEle => this.getGeneSymbolFromHTMLElement(rowEle) !== rowElementGeneSymbol
       );
       this.highlightedGenes = this.highlightedGenes.filter(gene => gene !== rowElementGeneSymbol)
     } else {
       this.highlightedRowElements.push(rowElement);
-      this.highlightedGenes.push(rowElement.innerText.split('\t')[0])
+      this.highlightedGenes.push(this.getGeneSymbolFromHTMLElement(rowElement))
     }
+  }
+
+  getGeneSymbolFromHTMLElement(rowElement: HTMLElement): string {
+    return rowElement.textContent.split('✓')[0];
   }
 }
