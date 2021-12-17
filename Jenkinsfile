@@ -55,13 +55,13 @@ pipeline {
             ]
           )
 
-          // publishHTML (target : [allowMissing: false,
-          //   alwaysLinkToLastBuild: true,
-          //   keepAll: true,
-          //   reportDir: 'test-results/mypy_dae_html/',
-          //   reportFiles: 'index.html',
-          //   reportName: 'MyPy DAE Report',
-          //   reportTitles: 'The MyPy DAE Report'])
+          publishHTML (target : [allowMissing: false,
+            alwaysLinkToLastBuild: true,
+            keepAll: true,
+            reportDir: 'test-results/coverage-html',
+            reportFiles: 'index.html',
+            reportName: 'GPF Coverage Report',
+            reportTitles: 'GPF Coverage Report'])
           
         } finally {
           zulipNotification(
