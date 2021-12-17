@@ -883,6 +883,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             ),
             "af_allele_count": ref_allele_count,
             "af_allele_freq": ref_allele_prcnt,
+            "hw": rec.get("HW"),
         }
 
         alt = {
@@ -901,6 +902,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             ),
             "af_allele_count": int(rec.get("all.nAltAlls", 0)),
             "af_allele_freq": float(rec.get("all.altFreq", 0.0)),
+            "hw": rec.get("HW"),
         }
         summary_variant = SummaryVariantFactory.summary_variant_from_records(
             [ref, alt], transmission_type=self.transmission_type
