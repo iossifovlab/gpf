@@ -54,7 +54,7 @@ function main() {
     build_run rm -rvf ./data/ ./import/ ./downloads ./results
     build_run_local mkdir -p ./data/ ./import/ ./downloads ./results ./cache
 
-    build_run_local rm -rvf ./test-results/
+    build_run rm -rvf ./test-results/
     build_run_local mkdir -p ./test-results/
 
   }
