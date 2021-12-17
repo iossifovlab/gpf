@@ -58,15 +58,13 @@ export class ResetPasswordComponent implements AfterViewInit {
     }
 
     this.usersService.changePassword(this.password, this.verifPath).subscribe((res) => {
-      if (!res['error']) {
+      if (res['error']) {
+        this.resetPasswordError = res['error'];
+      } else {
         this.password = null;
         this.confirmPassword = null;
         this.resetPasswordError = '';
         this.router.navigateByUrl(this.config.baseUrl);
-      } else if (res['error']) {
-        this.resetPasswordError = res['error'];
-      } else {
-        this.resetPasswordError = 'Reset Password Failed';
       }
     });
   }

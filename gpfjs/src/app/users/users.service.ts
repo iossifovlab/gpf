@@ -172,7 +172,7 @@ export class UsersService {
     );
   }
 
-  changePassword(password: string, verifPath: string): Observable<boolean | unknown> {
+  changePassword(password: string, verifPath: string): Observable<boolean | object> {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
