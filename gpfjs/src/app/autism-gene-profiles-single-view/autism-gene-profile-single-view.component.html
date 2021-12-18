@@ -1,9 +1,13 @@
-<div *ngIf="gene$ | async as gene" [ngClass]="{'compare-div': isInGeneCompare}">
+<div
+  *ngIf="gene$ | async as gene"
+  [ngClass]="{'compare-div': isInGeneCompare}"
+  [style.height]="showTemplate ? '100%' : '100vh'">
+
   <ng-container *ngIf="isInGeneCompare">
-    <div style="position: relative" [style.width]="showTemplate ? 'unset' : '48px'">
-      <div [attr.title]="geneSymbol" (click)="showTemplate = !showTemplate" style="position: absolute; right: 15px; cursor: pointer; margin-right: -9px;">
-        <button class="minimize-component-button" >&ndash;</button>
-        <span *ngIf="!showTemplate" style="writing-mode: vertical-rl; text-orientation: upright; position: absolute; right: 5px; top: 30px; padding-top: 5px;">{{ geneSymbol }}</span>
+    <div style="position: relative" [style.width]="showTemplate ? 'unset' : '30px'">
+      <div [attr.title]="geneSymbol" (click)="showTemplate = !showTemplate" class="minimize-elements-wrapper">
+        <button class="minimize-button" >&ndash;</button>
+        <span *ngIf="!showTemplate" class="minimize-gene-symbol">{{ geneSymbol }}</span>
       </div>
     </div>
   </ng-container>

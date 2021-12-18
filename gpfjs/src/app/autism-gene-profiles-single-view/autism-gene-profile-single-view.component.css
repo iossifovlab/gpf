@@ -48,14 +48,6 @@ td {
   text-decoration: underline;
 }
 
-.minimize-component-button {
-  float: right;
-  background: none;
-  border: none;
-  font-size: 18px;
-  padding: 0 10px;
-}
-
 .vertical-text {
   word-break: break-word;
   writing-mode: vertical-rl;
@@ -85,5 +77,28 @@ td {
 
 .compare-div {
   border-right: 15px solid #f1f1f1;
-  height: 100vh;
+}
+
+.minimize-elements-wrapper {
+  position: absolute;
+  right: 7px;
+  margin-right: -9px;
+  cursor: pointer;
+}
+
+.minimize-button {
+  float: right;
+  background: none;
+  border: none;
+  font-size: 18px;
+  padding: 0 10px;
+}
+
+.minimize-gene-symbol {
+  position: absolute;
+  right: 4px;
+  top: 25px;
+  padding-top: 5px;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
 }
