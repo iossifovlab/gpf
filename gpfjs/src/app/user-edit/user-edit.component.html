@@ -42,7 +42,7 @@
       <div class="row justify-content-center">
         <div class="col-4">
           <div class="form-group">
-            <label class="form-label" for="email">Email</label>
+            <label for="email">Email</label>
             <input
               #emailInput
               name="email"
@@ -59,7 +59,7 @@
       <div class="row justify-content-center">
         <div class="col-4">
           <div class="form-group">
-            <label class="form-label" for="name">Name</label>
+            <label for="name">Name</label>
             <input
               #nameInput
               name="name"
@@ -74,7 +74,7 @@
       <div class="row justify-content-center">
         <div class="col-4">
           <div class="form-group">
-            <label class="form-label" for="groups">Default groups</label>
+            <label for="groups">Default groups</label>
             <div style="cursor: not-allowed;" class="groupsInput">
               <div style="pointer-events: none; opacity: 0.7; cursor: not-allowed;">
                 <ng-multiselect-dropdown
@@ -90,7 +90,7 @@
       <div *ngIf="(groups$ | async) as groups" class="row justify-content-center">
         <div class="col-4">
           <div class="form-group">
-            <label class="form-label" for="groups">Add groups</label>
+            <label for="groups">Add groups</label>
             <div class="groupsInput">
               <gpf-user-groups-selector
                 [allInputtedGroups]="groups"

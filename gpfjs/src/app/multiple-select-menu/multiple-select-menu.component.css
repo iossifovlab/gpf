@@ -17,7 +17,3 @@ label {
 .cdk-drag-placeholder {
   opacity: 0%;
 }
-
-tr > td {
-  padding-bottom: 8px;
-}

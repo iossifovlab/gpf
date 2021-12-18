@@ -51,6 +51,11 @@ label {
   margin-bottom: 0;
 }
 
+.checkbox label {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
 .row-eq-height {
   display: -webkit-box;
   display: -webkit-flex;

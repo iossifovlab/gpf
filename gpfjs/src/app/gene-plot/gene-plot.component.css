@@ -19,11 +19,3 @@
 .checkbox-option {
   margin-left: 5px;
 }
-
-label {
-  margin-left: 20px;
-  padding: 7px;
-  font-size: 17px;
-  font-weight: 1;
-  user-select: none;
-}
