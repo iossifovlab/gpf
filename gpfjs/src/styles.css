@@ -335,3 +335,11 @@ gpf-global-error-display {
   padding-top: 4px;
   padding-bottom: 4px;
 }
+
+.modal-close-button {
+  position: absolute;
+  top: 10px;
+  right: 7px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
