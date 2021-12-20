@@ -9,17 +9,16 @@ import matplotlib as mpl
 mpl.use("PDF")  # noqa
 
 from dae.variants.attributes import Status, Sex
-
 import matplotlib.pyplot as plt
 
 plt.ioff()  # noqa
 
 import pandas as pd
 import numpy as np
-import statsmodels.api as sm
 from dae.pheno_browser.palletes import diverging_palette
 from dae.pheno_browser.plots import violinplot, stripplot
 from dae.pheno.common import ROLES_GRAPHS_DEFINITION
+from dae.pheno.utils.lin_regress import LinearRegression
 
 import traceback
 
@@ -96,19 +95,17 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
     ax.set_ylabel(name2)
 
     try:
-        x = dmale[col1]
-        X = sm.add_constant(x)
+        male_x = dmale[[col1]]
         y = dmale[col2]
-        res_male = sm.OLS(y, X).fit()
+        res_male = LinearRegression().fit(male_x.to_numpy(), y)
     except ValueError:
         traceback.print_exc()
         res_male = None
 
     try:
-        x = dfemale[col1]
-        X = sm.add_constant(x)
+        female_x = dfemale[[col1]]
         y = dfemale[col2]
-        res_female = sm.OLS(y, X).fit()
+        res_female = LinearRegression().fit(female_x.to_numpy(), y)
     except ValueError:
         traceback.print_exc()
         res_female = None
@@ -142,9 +139,13 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
     )
     color_male, color_female = gender_palette()
     if res_male:
-        ax.plot(dmale[col1], res_male.predict(), color=color_male)
+        ax.plot(
+            dmale[col1], res_male.predict(male_x), color=color_male
+        )
     if res_female:
-        ax.plot(dfemale[col1], res_female.predict(), color=color_female)
+        ax.plot(
+            dfemale[col1], res_female.predict(female_x), color=color_female
+        )
     male_female_legend(color_male, color_female, ax)
     # plt.tight_layout()
     return res_male, res_female

@@ -60,20 +60,21 @@ class StudyWrapperBase:
     def build_genotype_data_all_datasets(config):
         keys = [
             "id",
-            "name",
-            "phenotype_browser",
-            "phenotype_tool"
+            "name"
         ]
         result = {
             key: config.get(key, None) for key in keys
         }
-        result["name"] = result["name"] or result["id"]
         result["genotype_browser"] = config.genotype_browser.enabled
+        result["genotype_browser_config"] = {
+        }
+        result["genotype_browser_config"]["table_columns"] = []
         result["common_report"] = {"enabled": config.common_report.enabled}
         result["enrichment_tool"] = config.enrichment.enabled
+        result["name"] = result["name"] or result["id"]
 
         return result
-
+    
     @staticmethod
     def build_genotype_data_group_description(
         gpf_instance, config, description, person_set_collection_configs
@@ -369,15 +370,6 @@ class StudyWrapper(StudyWrapperBase):
                         yield None
                         continue
 
-                    index += 1
-                    if max_variants_count and index > max_variants_count:
-                        if max_variants_message:
-                            yield [
-                                f"# limit of {max_variants_count} variants "
-                                f"reached"
-                            ]
-                        break
-
                     v = transform(variant)
 
                     matched = True
@@ -390,6 +382,15 @@ class StudyWrapper(StudyWrapperBase):
                         yield None
                         continue
 
+                    index += 1
+                    if max_variants_count and index > max_variants_count:
+                        if max_variants_message:
+                            yield [
+                                f"# limit of {max_variants_count} variants "
+                                f"reached"
+                            ]
+                        break
+
                     row_variant = self.response_transformer._build_variant_row(
                         v, sources,
                         person_set_collection=kwargs.get(
@@ -398,7 +399,10 @@ class StudyWrapper(StudyWrapperBase):
 
                     yield row_variant
         except GeneratorExit:
-            logger.info(f"study wrapper query variants for {self.name} closed")
+            pass
+        finally:
+            logger.info(
+                f"study wrapper query {index} variants for {self.name} closed")
 
     def get_gene_view_summary_variants(self, frequency_column, **kwargs):
         kwargs = self.query_transformer.transform_kwargs(**kwargs)
