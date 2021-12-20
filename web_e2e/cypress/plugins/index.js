@@ -25,4 +25,3 @@ module.exports = (on, config) => {
   // `config` is the resolved Cypress config
   addMatchImageSnapshotPlugin(on, config);
 }
-

@@ -34,7 +34,7 @@ describe('Family filters block tests', () => {
 
   });
 
-  it('should display pheno filters panel after \'Advanced\' button click', () => {
+  it('should display pheno filters panel after "Advanced" button click', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     page.phenoFiltersPanel.should('not.exist');
 

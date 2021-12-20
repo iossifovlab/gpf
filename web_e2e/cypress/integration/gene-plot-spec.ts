@@ -106,7 +106,7 @@ describe('Gene plot summary alleles count tests', () => {
     {checkbox: 'Unaffected only', expectedSummaryAllelesCount: '8 / 8'},
     {checkbox: 'Affected and unaffected', expectedSummaryAllelesCount: '8 / 8'}
   ].forEach(data => {
-    it('should display the correct value when filtering with the \'' + data.checkbox + '\' checkbox', () => {
+    it('should display the correct value when filtering with the "' + data.checkbox + '" checkbox', () => {
       geneBrowserPage.affectedStatusField.should('exist');
       page.summaryAllelesCount.should('have.text', '8 / 8');
 
@@ -124,7 +124,7 @@ describe('Gene plot summary alleles count tests', () => {
     {checkbox: 'CNV-', expectedSummaryAllelesCount: '8 / 8'},
     {checkbox: 'Other', expectedSummaryAllelesCount: '7 / 8'}
   ].forEach(data => {
-    it('should display the correct value when filtering with the \'' + data.checkbox + '\' checkbox', () => {
+    it('should display the correct value when filtering with the "' + data.checkbox + '" checkbox', () => {
       geneBrowserPage.effectTypeFiltersField.should('exist');
       page.summaryAllelesCount.should('have.text', '8 / 8');
 
@@ -138,7 +138,7 @@ describe('Gene plot summary alleles count tests', () => {
   [ {checkbox: 'Denovo', expectedSummaryAllelesCount: '0 / 8'},
     {checkbox: 'Transmitted', expectedSummaryAllelesCount: '8 / 8'}
   ].forEach(data => {
-    it('should display the correct value when filtering with the \'' + data.checkbox + '\' checkbox', () => {
+    it('should display the correct value when filtering with the "' + data.checkbox + '" checkbox', () => {
       geneBrowserPage.inheritanceTypesFilter.should('exist');
       page.summaryAllelesCount.should('have.text', '8 / 8');
 
@@ -155,7 +155,7 @@ describe('Gene plot summary alleles count tests', () => {
     {checkbox: 'CNV+',expectedSummaryAllelesCount: '8 / 8'},
     {checkbox: 'CNV-',expectedSummaryAllelesCount: '8 / 8'}
   ].forEach(data => {
-    it('should display the correct value when filtering with the \'' + data.checkbox + '\' checkbox', () => {
+    it('should display the correct value when filtering with the "' + data.checkbox + '" checkbox', () => {
       geneBrowserPage.variantTypesFilter.should('exist');
       page.summaryAllelesCount.should('have.text', '8 / 8');
 
@@ -164,5 +164,26 @@ describe('Gene plot summary alleles count tests', () => {
 
       geneBrowserPage.getVariantTypes(data.checkbox).click();
     });
+  });
+});
+
+describe('Gene plot visual tests', () => {
+  const page = new GenePlotPage();
+  const geneBrowserPage = new GeneBrowserPage();
+
+  before(() => {
+    page.cleanup();
+    page.navigateToHome();
+    page.loginAdmin();
+    geneBrowserPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.geneBrowser);
+    geneBrowserPage.searchInputBox.type('chd8');
+    geneBrowserPage.goButton.click();
+  });
+
+  it('should condense introns', () => {
+    page.condenseIntronsCheckbox.click();
+    cy.get('g#plot').matchImageSnapshot('gene-plot/not_condensed_introns');
+    page.condenseIntronsCheckbox.click();
+    cy.get('g#plot').matchImageSnapshot('gene-plot/condensed_introns');
   });
 });

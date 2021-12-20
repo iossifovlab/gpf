@@ -10,22 +10,27 @@ export class DatasetsPage extends BasePage {
   }
 
   get datasetStatisticsButton() {
+    cy.get('.navbar-custom').should('be.visible');
     return cy.get('a.nav-link').contains('Dataset Statistics');
   }
 
   get genotypeBrowserButton() {
+    cy.get('.navbar-custom').should('be.visible');
     return cy.get('a.nav-link').contains('Genotype Browser');
   }
 
   get phenotypeBrowserButton() {
+    cy.get('.navbar-custom').should('be.visible');
     return cy.get('a.nav-link').contains('Phenotype Browser');
   }
 
   get phenotypeToolButton() {
+    cy.get('.navbar-custom').should('be.visible');
     return cy.get('a.nav-link').contains('Phenotype Tool');
   }
 
   get geneBrowserButton() {
+    cy.get('.navbar-custom').should('be.visible');
     return cy.get('a.nav-link').contains('Gene Browser');
   }
 

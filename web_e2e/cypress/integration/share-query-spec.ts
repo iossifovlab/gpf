@@ -29,7 +29,7 @@ describe('Share query tests', () => {
     const datasetsPage = new DatasetsPage();
 
     page.button.click();
-    page.input.invoke('val').then((url) => {
+    page.input.contains(/\.*/).invoke('val').then((url) => {
       cy.visit(String(url)).then(() => {
         datasetsPage.datasetStatisticsButton.click();
         datasetsPage.genotypeBrowserButton.click();
@@ -44,12 +44,12 @@ describe('Share query tests', () => {
      'load it and validate that all effect types checkboxes are checked', () => {
     const genotypeBlockPage = new GenotypeBlockPage();
 
-    genotypeBlockPage.findButtonInComponentContainingText('gpf-effect-types', 'All').click();
+    genotypeBlockPage.findButtonInComponentContainingText('.effect-card input, .effect-card button', 'All').click();
 
     page.button.click();
     page.input.invoke('val').then((url) => {
       cy.visit(String(url)).then(() => {
-        genotypeBlockPage.findAllCheckboxesInComponent('gpf-effect-types').each((element) => {
+        genotypeBlockPage.findAllCheckboxesInComponent('.effect-card').each((element) => {
           cy.wrap(element).should('be.checked');
         });
       })

@@ -90,8 +90,7 @@ describe('User management tests', () => {
     page.userSearchField.clear();
     page.userSearchField.type('test_email@email.com');
     page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
-    cy.reload();
-
+    waitForRequest('GET', '/gpf/api/v3/users/streaming_search?search=**', 'usersUpdate', 200);
     deleteTestUser(page);
   });
 
@@ -134,7 +133,7 @@ describe('User management tests', () => {
     page.usersButton.click();
     page.userTableRemoveUserGroupButton.click();
     page.userTableRemoveUserGroupConfirmButton.click();
-    cy.reload();
+    waitForRequest('GET', '/gpf/api/v3/users/streaming_search?search=', 'usersUpdate', 200);
     page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
 
     deleteTestGroup(page);
@@ -179,9 +178,8 @@ describe('User management tests', () => {
     page.usersButton.click();
     page.userTableRemoveUserGroupButton.click();
     page.userTableRemoveUserGroupConfirmButton.click();
-    cy.reload();
-
-    page.datasetsButton.click();
+    waitForRequest('GET', '/gpf/api/v3/users/streaming_search?search=**', 'usersUpdate', 200);
+    page.datasetsButton.click(); 
     page.datasetsTableRows.last().should('not.contain.text', 'test_email@email.com');
 
     deleteTestGroup(page);
@@ -203,7 +201,6 @@ function deleteTestUser(page: UserManagementPage) {
   page.usersButton.click();
   page.userTableDeleteNewestUserButton.click();
   page.userTableDeleteUserConfirmButton.click();
-  cy.reload();
 }
 
 function createTestGroup(page: UserManagementPage, groupName: string) {
@@ -216,4 +213,9 @@ function deleteTestGroup(page: UserManagementPage) {
   page.datasetsButton.click();
   page.datasetsTableRemoveNewestGroupInLastDatasetButton.click();
   page.datasetsTableRemoveGroupConfirmButton.click();
+}
+
+function waitForRequest(method: string, url: string, name: string, response: number): void {
+  cy.intercept({method: method, url: url}).as(name);
+  cy.wait('@' + name).its('response.statusCode').should('eq', response);
 }

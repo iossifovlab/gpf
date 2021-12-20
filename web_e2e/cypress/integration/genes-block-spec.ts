@@ -117,7 +117,7 @@ describe('Gene sets names and count tests', () => {
     { collection: 'miRNA from Darnell',
       expectedCondition: 'miR-124 (1018):'}
   ].forEach((data) => {
-    it('should properly display \'' + data.expectedCondition + '\' in \'' + data.collection + '\' collection, and the counts should match', () => {
+    it('should properly display "' + data.expectedCondition + '" in "' + data.collection + '" collection, and the counts should match', () => {
       let actualCount;
       let expectedCount;
       let geneSetName;
@@ -201,8 +201,8 @@ describe('Gene set file length tests', () => {
     { collection: 'miRNA from Darnell',
       expectedCondition: 'miR-124 (1018):'}
   ].forEach((data) => {
-    it('should download \'' + data.expectedCondition + '\' in the \'' + data.collection + '\' collection and check whether the count in the name should matches ' +
-      'the downloaded\'s file length and the gene set\'s name matches the first value of the file', () => {
+    it('should download "' + data.expectedCondition + '" in the "' + data.collection + '" collection and check whether the count in the name should matches ' +
+      'the downloaded"s file length and the gene set"s name matches the first value of the file', () => {
       let expectedCount;
       let expectedName;
       let geneSetName;
