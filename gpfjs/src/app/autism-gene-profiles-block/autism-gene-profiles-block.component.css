@@ -23,7 +23,6 @@ nav.tab-limit {
 .nav-link {
   color: #495057;
   margin-right: 0;
-  min-width: 125px;
   cursor: default;
 }
 
