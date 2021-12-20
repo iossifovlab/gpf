@@ -113,21 +113,21 @@ def test_no_start_var(genomic_sequence_2013, gene_models_2013):
     assert effect.effect == "no-frame-shift"
     assert effect.prot_pos == 68
     assert effect.prot_length == 190
-    assert effect.aa_change == "Met,Asn->Ile"
+    assert effect.aa_change == "MetAsn->Ile"
 
     effect = effects.pop(0)
     assert effect.transcript_id == "NM_001206983_1"
     assert effect.effect == "no-frame-shift"
     assert effect.prot_pos == 68
     assert effect.prot_length == 190
-    assert effect.aa_change == "Met,Asn->Ile"
+    assert effect.aa_change == "MetAsn->Ile"
 
     effect = effects.pop(0)
     assert effect.transcript_id == "NM_001206984_1"
     assert effect.effect == "no-frame-shift"
     assert effect.prot_pos == 68
     assert effect.prot_length == 190
-    assert effect.aa_change == "Met,Asn->Ile"
+    assert effect.aa_change == "MetAsn->Ile"
 
     effect = effects.pop(0)
     assert effect.transcript_id == "NM_001206985_1"
@@ -384,7 +384,7 @@ def test_no_frame_shift_newStop_var(genomic_sequence_2013, gene_models_2013):
     assert effect.effect == "no-frame-shift-newStop"
     assert effect.prot_pos == 333
     assert effect.prot_length == 1906
-    assert effect.aa_change == "Gln->Gln,End"
+    assert effect.aa_change == "Gln->GlnEnd"
 
 
 def test_no_end_var(genomic_sequence_2013, gene_models_2013):
@@ -715,7 +715,7 @@ def test_chr20_56284593_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[0].effect == "no-frame-shift"
     assert effects_sorted[0].prot_pos == 16
     assert effects_sorted[0].prot_length == 287
-    assert effects_sorted[0].aa_change == "Gly->Ala,Ala,Gly"
+    assert effects_sorted[0].aa_change == "Gly->AlaAlaGly"
 
     assert effects_sorted[1].gene == "PMEPA1"
     assert effects_sorted[1].transcript_id == "NM_199169_1"
@@ -1101,7 +1101,7 @@ def test_chr17_43227526_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.effect == "no-frame-shift"
     assert effect.prot_pos == 323
     assert effect.prot_length == 359
-    assert effect.aa_change == "Arg->Arg,Glu,Leu"
+    assert effect.aa_change == "Arg->ArgGluLeu"
 
 
 def test_chr5_56527122_sub_var(genomic_sequence_2013, gene_models_2013):
@@ -1163,7 +1163,7 @@ def test_chr4_2514166_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[0].effect == "no-frame-shift"
     assert effects_sorted[0].prot_pos == 72
     assert effects_sorted[0].prot_length == 190
-    assert effects_sorted[0].aa_change == "Glu,Arg->Glu"
+    assert effects_sorted[0].aa_change == "GluArg->Glu"
 
     assert effects_sorted[1].gene == "RNF4"
     assert effects_sorted[1].transcript_id == "NM_001185010_1"
@@ -1185,7 +1185,7 @@ def test_chr4_2514166_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[2].effect == "no-frame-shift"
     assert effects_sorted[2].prot_pos == 72
     assert effects_sorted[2].prot_length == 190
-    assert effects_sorted[2].aa_change == "Glu,Arg->Glu"
+    assert effects_sorted[2].aa_change == "GluArg->Glu"
 
 
 def test_chr7_131870222_sub_var(genomic_sequence_2013, gene_models_2013):
@@ -1322,7 +1322,7 @@ def test_chr5_79855195_del_var(genomic_sequence_2013, gene_models_2013):
     assert effect.effect == "no-frame-shift"
     assert effect.prot_pos == 213
     assert effect.prot_length == 514
-    assert effect.aa_change == "Asp,Leu,Glu->Glu"
+    assert effect.aa_change == "AspLeuGlu->Glu"
 
 
 def test_chr3_112997521_sub_var(genomic_sequence_2013, gene_models_2013):
@@ -1457,7 +1457,7 @@ def test_chr7_40134547_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[0].effect == "no-frame-shift"
     assert effects_sorted[0].prot_pos == 1503
     assert effects_sorted[0].prot_length == 1512
-    assert effects_sorted[0].aa_change == "->Gly,Arg"
+    assert effects_sorted[0].aa_change == "->GlyArg"
 
     assert effects_sorted[1].gene == "CDK13"
     assert effects_sorted[1].transcript_id == "NM_031267_1"
@@ -1465,7 +1465,7 @@ def test_chr7_40134547_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].effect == "no-frame-shift"
     assert effects_sorted[1].prot_pos == 1443
     assert effects_sorted[1].prot_length == 1452
-    assert effects_sorted[1].aa_change == "->Gly,Arg"
+    assert effects_sorted[1].aa_change == "->GlyArg"
 
 
 def test_chr9_98279102_sub_var(genomic_sequence_2013, gene_models_2013):
@@ -1556,7 +1556,7 @@ def test_chr12_70824294_del_var(genomic_sequence_2013, gene_models_2013):
     assert effect.effect == "no-frame-shift"
     assert effect.prot_pos == 165
     assert effect.prot_length == 210
-    assert effect.aa_change == "His,Asp->His"
+    assert effect.aa_change == "HisAsp->His"
 
 
 def test_chr20_34243229_sub_var(genomic_sequence_2013, gene_models_2013):
@@ -1679,7 +1679,7 @@ def test_chr7_6505720_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].effect == "no-frame-shift"
     assert effects_sorted[1].prot_pos == 195
     assert effects_sorted[1].prot_length == 212
-    assert effects_sorted[1].aa_change == "Phe,Tyr->Tyr"
+    assert effects_sorted[1].aa_change == "PheTyr->Tyr"
 
 
 def test_chr7_31609423_sub_var(genomic_sequence_2013, gene_models_2013):
@@ -1817,7 +1817,7 @@ def test_chr4_41748269_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.effect == "no-frame-shift"
     assert effect.prot_pos == 167
     assert effect.prot_length == 314
-    assert effect.aa_change == "Ala->Ala,Ala,Ala,Ala,Ala,Ala,Ala"
+    assert effect.aa_change == "Ala->AlaAlaAlaAlaAlaAlaAla"
 
 
 @pytest.mark.skip()
@@ -1964,7 +1964,7 @@ def test_chr9_140509156_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.effect == "no-frame-shift"
     assert effect.prot_pos == 314
     assert effect.prot_length == 433
-    assert effect.aa_change == "Gln->Gln,Glu,Glu"
+    assert effect.aa_change == "Gln->GlnGluGlu"
 
 
 def test_chr20_57466823_sub_var(genomic_sequence_2013, gene_models_2013):
@@ -2162,7 +2162,7 @@ def test_chr10_46248650_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[0].effect == "no-frame-shift-newStop"
     assert effects_sorted[0].prot_pos == 382
     assert effects_sorted[0].prot_length == 1279
-    assert effects_sorted[0].aa_change == "Ser,Gln->End"
+    assert effects_sorted[0].aa_change == "SerGln->End"
 
     assert effects_sorted[1].gene == "FAM21C"
     assert effects_sorted[1].transcript_id == "NM_001169107_1"
@@ -2170,7 +2170,7 @@ def test_chr10_46248650_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].effect == "no-frame-shift-newStop"
     assert effects_sorted[1].prot_pos == 358
     assert effects_sorted[1].prot_length == 1245
-    assert effects_sorted[1].aa_change == "Ser,Gln->End"
+    assert effects_sorted[1].aa_change == "SerGln->End"
 
     assert effects_sorted[2].gene == "FAM21C"
     assert effects_sorted[2].transcript_id == "NM_015262_1"
@@ -2178,7 +2178,7 @@ def test_chr10_46248650_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[2].effect == "no-frame-shift-newStop"
     assert effects_sorted[2].prot_pos == 382
     assert effects_sorted[2].prot_length == 1320
-    assert effects_sorted[2].aa_change == "Ser,Gln->End"
+    assert effects_sorted[2].aa_change == "SerGln->End"
 
 
 def test_chr15_41864763_del_var(genomic_sequence_2013, gene_models_2013):
@@ -2296,7 +2296,7 @@ def test_chr1_47515176_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.effect == "no-frame-shift-newStop"
     assert effect.prot_pos == 452
     assert effect.prot_length == 509
-    assert effect.aa_change == "Arg->Ile,Glu,Ile,End,Trp"
+    assert effect.aa_change == "Arg->IleGluIleEndTrp"
 
 
 def test_chr1_120934555_sub_var(genomic_sequence_2013, gene_models_2013):
@@ -2661,7 +2661,7 @@ def test_chr2_218747134_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.effect == "no-frame-shift-newStop"
     assert effect.prot_pos == 291
     assert effect.prot_length == 1735
-    assert effect.aa_change == "Asp->Glu,End,Leu"
+    assert effect.aa_change == "Asp->GluEndLeu"
 
 
 def test_chr11_3846347_del_var(genomic_sequence_2013, gene_models_2013):
@@ -2681,7 +2681,7 @@ def test_chr11_3846347_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[0].effect == "no-frame-shift"
     assert effects_sorted[0].prot_pos == 261
     assert effects_sorted[0].prot_length == 307
-    assert effects_sorted[0].aa_change == "Cys,Glu,Ala,Gly,Val->Leu"
+    assert effects_sorted[0].aa_change == "CysGluAlaGlyVal->Leu"
 
     assert effects_sorted[1].gene == "PGAP2"
     assert effects_sorted[1].transcript_id == "NM_001256235_1"
@@ -2689,7 +2689,7 @@ def test_chr11_3846347_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].effect == "no-frame-shift"
     assert effects_sorted[1].prot_pos == 226
     assert effects_sorted[1].prot_length == 272
-    assert effects_sorted[1].aa_change == "Cys,Glu,Ala,Gly,Val->Leu"
+    assert effects_sorted[1].aa_change == "CysGluAlaGlyVal->Leu"
 
     assert effects_sorted[2].gene == "PGAP2"
     assert effects_sorted[2].transcript_id == "NM_001256236_1"
@@ -2697,7 +2697,7 @@ def test_chr11_3846347_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[2].effect == "no-frame-shift"
     assert effects_sorted[2].prot_pos == 326
     assert effects_sorted[2].prot_length == 372
-    assert effects_sorted[2].aa_change == "Cys,Glu,Ala,Gly,Val->Leu"
+    assert effects_sorted[2].aa_change == "CysGluAlaGlyVal->Leu"
 
     assert effects_sorted[3].gene == "PGAP2"
     assert effects_sorted[3].transcript_id == "NM_001256237_1"
@@ -2721,7 +2721,7 @@ def test_chr11_3846347_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[5].effect == "no-frame-shift"
     assert effects_sorted[5].prot_pos == 204
     assert effects_sorted[5].prot_length == 250
-    assert effects_sorted[5].aa_change == "Cys,Glu,Ala,Gly,Val->Leu"
+    assert effects_sorted[5].aa_change == "CysGluAlaGlyVal->Leu"
 
     assert effects_sorted[6].gene == "PGAP2"
     assert effects_sorted[6].transcript_id == "NM_001256240_1"
@@ -2729,7 +2729,7 @@ def test_chr11_3846347_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[6].effect == "no-frame-shift"
     assert effects_sorted[6].prot_pos == 208
     assert effects_sorted[6].prot_length == 254
-    assert effects_sorted[6].aa_change == "Cys,Glu,Ala,Gly,Val->Leu"
+    assert effects_sorted[6].aa_change == "CysGluAlaGlyVal->Leu"
 
     assert effects_sorted[7].gene == "PGAP2"
     assert effects_sorted[7].transcript_id == "NM_014489_1"
@@ -2737,7 +2737,7 @@ def test_chr11_3846347_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[7].effect == "no-frame-shift"
     assert effects_sorted[7].prot_pos == 269
     assert effects_sorted[7].prot_length == 315
-    assert effects_sorted[7].aa_change == "Cys,Glu,Ala,Gly,Val->Leu"
+    assert effects_sorted[7].aa_change == "CysGluAlaGlyVal->Leu"
 
     assert effects_sorted[8].gene == "PGAP2"
     assert effects_sorted[8].transcript_id == "NR_027016_1"
@@ -2914,7 +2914,7 @@ def test_chr1_1425787_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.prot_length == 648
     assert (
         effect.aa_change
-        == "Pro->Pro,Arg,Asp,Ile,End,Leu,Ser,Leu,Leu,Val,Gly,Ser,Cys,Gln"
+        == "Pro->ProArgAspIleEndLeuSerLeuLeuValGlySerCysGln"
     )
 
 

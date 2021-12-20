@@ -239,7 +239,7 @@ class AnnotationEffect:
 
         gene_effects = "|".join([f"{g}:{e}" for g, e in gene_effects])
         transcript_effects = "|".join(
-            [f"{t};{g};{d}" for t, g, d in transcript_effects]
+            [f"{t};{g};{e};{d}" for t, g, e, d in transcript_effects]
         )
         return (worst_effect, gene_effects, transcript_effects)
 
@@ -389,7 +389,10 @@ class EffectTranscript:
 
         parts = [p.strip() for p in data.split(":")]
 
-        if len(parts) == 3:
+        if len(parts) == 4:
+            return EffectTranscript(
+                parts[0], gene=parts[1], effect=parts[2], details=parts[3])
+        elif len(parts) == 3:
             return EffectTranscript(parts[0], gene=parts[1], details=parts[2])
         elif len(parts) == 2:
             return EffectTranscript(parts[0], gene=None, details=parts[1])
@@ -423,7 +426,7 @@ class EffectTranscript:
         for transcript_id, details in effect_transcripts:
 
             result[transcript_id] = EffectTranscript.from_tuple(
-                (transcript_id, None, details)
+                (transcript_id, None, None, details)
             )
         return result
 
@@ -498,7 +501,8 @@ class AlleleEffects:
             AnnotationEffect.simplify_effects(effects)
         gene_effects = [EffectGene(g, e) for g, e in gene_effects]
         transcript_effects = {
-            t: EffectTranscript(t, g, e, d) for t, g, e, d in transcript_effects
+            t: EffectTranscript(t, g, e, d)
+            for t, g, e, d in transcript_effects
         }
         result = AlleleEffects(worst_effect, gene_effects, transcript_effects)
         result.all_effects = effects

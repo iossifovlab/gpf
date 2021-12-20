@@ -1392,8 +1392,8 @@ def test_chr11_128868319_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[0].prot_length == 2087
     assert (
         effects_sorted[0].aa_change
-        == "Met->Arg,Asn,Ala,Arg,Arg,End,Arg,Gln,Asp,Leu,Pro,Val,Met,Leu,Leu,"
-        "Ser,Thr,Arg,Asn,Arg,End,Leu,End,Asn,Leu"
+        == "Met->ArgAsnAlaArgArgEndArgGlnAspLeuProValMetLeuLeu"
+        "SerThrArgAsnArgEndLeuEndAsnLeu"
     )
 
     assert effects_sorted[1].gene == "ARHGAP32"
@@ -1770,8 +1770,8 @@ def test_chr13_21729290_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[0].prot_length == 388
     assert (
         effects_sorted[0].aa_change
-        == "->End,Lys,Val,Pro,End,Thr,Trp,Thr,Glu,His,Pro,Arg,Cys,Gln,Gln,Gln,"
-        "Arg,Lys,Leu"
+        == "->EndLysValProEndThrTrpThrGluHisProArgCysGlnGlnGln"
+        "ArgLysLeu"
     )
 
     assert effects_sorted[1].gene == "SKA3"

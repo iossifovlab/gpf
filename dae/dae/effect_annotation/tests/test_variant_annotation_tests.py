@@ -27,7 +27,7 @@ def test_synonymous_complex_var(genomic_sequence_2013, gene_models_2013):
     assert effect.effect == "missense"
     assert effect.prot_pos == 211
     assert effect.prot_length == 642
-    assert effect.aa_change == "Lys,Ala->Lys,Thr"
+    assert effect.aa_change == "LysAla->LysThr"
 
 
 def test_just_next_to_splice_site_var(genomic_sequence_2013, gene_models_2013):
@@ -72,7 +72,7 @@ def test_chr2_32853362_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[0].effect == "nonsense"
     # assert effects_sorted[0].prot_pos is None
     # assert effects_sorted[0].prot_length is None
-    assert effects_sorted[0].aa_change == "His,Trp->Gln,End"
+    assert effects_sorted[0].aa_change == "HisTrp->GlnEnd"
 
     assert effects_sorted[1].gene == "ARID1B"
     assert effects_sorted[1].transcript_id == "NM_020732_1"
@@ -80,7 +80,7 @@ def test_chr2_32853362_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].effect == "nonsense"
     assert effects_sorted[1].prot_pos, 1
     assert effects_sorted[1].prot_length, 843
-    assert effects_sorted[1].aa_change == "His,Trp->Gln,End"
+    assert effects_sorted[1].aa_change == "HisTrp->GlnEnd"
 
 
 def test_chr5_75902128_sub_var(genomic_sequence_2013, gene_models_2013):
