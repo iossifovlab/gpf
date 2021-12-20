@@ -1,5 +1,5 @@
 # This file may be used to create an environment using:
-# $ conda create --name <env> --file <this file>
+# $ conda env create --name <env> --file <this file>
 # platform: linux-64
 # conda create -c conda-forge -c bioconda -n <env name> --file <this file>
 # - conda-forge 
