@@ -166,3 +166,24 @@ describe('Gene plot summary alleles count tests', () => {
     });
   });
 });
+
+describe('Gene plot visual tests', () => {
+  const page = new GenePlotPage();
+  const geneBrowserPage = new GeneBrowserPage();
+
+  before(() => {
+    page.cleanup();
+    page.navigateToHome();
+    page.loginAdmin();
+    geneBrowserPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.geneBrowser);
+    geneBrowserPage.searchInputBox.type('chd8');
+    geneBrowserPage.goButton.click();
+  });
+
+  it('should condense introns', () => {
+    page.condenseIntronsCheckbox.click();
+    cy.get('g#plot').matchImageSnapshot('gene-plot/not_condensed_introns');
+    page.condenseIntronsCheckbox.click();
+    cy.get('g#plot').matchImageSnapshot('gene-plot/condensed_introns');
+  });
+});
