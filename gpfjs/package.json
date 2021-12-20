@@ -32,7 +32,7 @@
     "@types/d3": "7.1.0",
     "@types/d3-selection": "3.0.2",
     "@types/lodash": "4.14.176",
-    "@types/sprintf": "0.1.0",
+    "@types/sprintf-js": "1.1.2",
     "angular-confirmation-popover": "6.0.0",
     "bn-ng-idle": "1.0.1",
     "bootstrap": "4.6.1",
