@@ -26,8 +26,6 @@ export class VariantReportsComponent implements OnInit {
   public familiesPedigreeTop: number;
   public familiesPedigreeBottom: number;
   public legendTop: number;
-  public legendToggle: boolean = false;
-  public legendPopupImg: string = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRopGJctfosmkthp21l-gWWWfproto_nrLV8pk8uW8_y3WplicPi0qml61HeJ7_8iDW0go&usqp=CAU ';
 
   public currentPeopleCounter: PeopleCounter;
   public currentPedigreeTable: PedigreeTable;
@@ -150,15 +148,5 @@ export class VariantReportsComponent implements OnInit {
         return acc;
       }, []
     );
-  }
-
-  public toggleLegend() {
-    if(this.legendToggle === true) {
-      this.legendPopupImg = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRopGJctfosmkthp21l-gWWWfproto_nrLV8pk8uW8_y3WplicPi0qml61HeJ7_8iDW0go&usqp=CAU';
-    } else {
-      this.legendPopupImg = 'https://d29fhpw069ctt2.cloudfront.net/icon/image/39091/preview.png';
-    }
-
-    this.legendToggle = !this.legendToggle;
   }
 }
