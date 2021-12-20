@@ -115,36 +115,6 @@ describe('Column filtering dropdown tests', () => {
     page.allAutismGeneSetsDropdownCheckboxes.should('have.length', 1);
   });
 
-  it('should test statistic to genotype browser test', () => {
-    page.loginAdmin();
-
-    cy.intercept({
-      method: 'POST',
-      url: '/gpf/api/v3/query_state/save'
-    }).as('query');
-    cy.get('tr:nth-child(1) > :nth-child(13) > .link-td > .link-span').click({force:true});
-    cy.wrap('denovo_lgds').as('effectType');
-    cy.wait('@query');
-    cy.get('@query').then(req => {
-      if(req !== null) {
-        const genotypeBlockPage = new GenotypeBlockPage();
-        cy.visit(Cypress.config().baseUrl + '/load-query/' + req.response.body.uuid);
-        genotypeBlockPage.findCheckboxInComponentContainingText('.pedigree-selector-card', 'affected').parent().within(checkBoxes => {
-          cy.wrap(checkBoxes).get('input').should('be.checked');
-          cy.get('@effectType').then(effectType => {
-            page.getStudyExpectedDataFromGenotype(effectType);
-          });
-        });
-        page.getStudyActualDataFromGenotype();
-        cy.get('@genotypeExpectedWrapper').then(expected => {
-          cy.get('@genotypeActualWrapper').then(actual => {
-            expect(expected).to.deep.equal(actual);
-          });
-        });
-      }
-    });
-  });
-
   it('should check if columns can be removed/added', () => {
     cy.get('th.table-main-header').should('have.length', 6);
 
@@ -171,12 +141,44 @@ describe('Table functionality', () => {
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
+  it('should test statistic to genotype browser test', () => {
+    page.loginAdmin();
+
+    cy.intercept({
+      method: 'POST',
+      url: '/gpf/api/v3/query_state/save'
+    }).as('query');
+    page.geneSearchInput.type('CHD8');
+    page.allTableRows.should('have.length', 1);
+    cy.get('tr.ng-star-inserted > :nth-child(13)').click();
+    cy.wrap('denovo_lgds').as('effectType');
+    cy.wait('@query');
+    cy.get('@query').then(req => {
+      if(req !== null) {
+        const genotypeBlockPage = new GenotypeBlockPage();
+        cy.visit(Cypress.config().baseUrl + '/load-query/' + req.response.body.uuid);
+        genotypeBlockPage.findCheckboxInComponentContainingText('.pedigree-selector-card', 'affected').parent().within(checkBoxes => {
+          cy.wrap(checkBoxes).get('input').should('be.checked');
+          cy.get('@effectType').then(effectType => {
+            page.getStudyExpectedDataFromGenotype(effectType);
+          });
+        });
+        page.getStudyActualDataFromGenotype();
+        cy.get('@genotypeExpectedWrapper').then(expected => {
+          cy.get('@genotypeActualWrapper').then(actual => {
+            expect(expected).to.deep.equal(actual);
+          });
+        });
+      }
+    });
+  });
+
   it('should sort genes by autism gene sets', () => {
     page.geneSearchInput.type('RAPGEF');
 
     page.allTableRows.should('have.length', 4);
 
-    const dataArr = [[0, 0, 1], [0, 0, 0], [0, 0, 0], [1, 0, 0]];
+    const dataArr = [[0, 0, 0], [0, 0, 1], [0, 0, 0], [1, 0, 0]];
 
     page.allSortingButtons.eq(0).click();
     dataArr.forEach((allRows, allRowsIndex) => {
