@@ -49,6 +49,7 @@ button {
 
 label {
   margin-bottom: 0;
+  user-select: none;
 }
 
 .checkbox label {
