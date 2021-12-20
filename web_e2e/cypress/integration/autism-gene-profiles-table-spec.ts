@@ -246,6 +246,6 @@ describe('Table functionality', () => {
       page.allTableRows.eq(allRowsIndex).within(row => {
         cy.wrap(row).get('td').eq(7).should('have.text', rowData === null ? '' : rowData);
       });
-  });
+    });
   });
 });
