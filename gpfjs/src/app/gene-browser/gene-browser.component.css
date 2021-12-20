@@ -3,22 +3,21 @@
   margin-bottom: 40px;
 }
 
-.filter .card-block  {
+.filter .card-block {
   display: inline-block;
 }
 
-.checkbox  {
+.checkbox {
   display: inline-block;
 }
 
 .card-title {
-  font-family: Roboto;
+  font-family: Roboto, sans-serif;
   font-weight: 500;
 }
 
 .filter-label {
   padding: 15px;
-  user-select: none;
 }
 
 .filter-label > span {

@@ -20,17 +20,19 @@ nav.tab-limit {
   border-bottom: none;
 }
 
-.nav-link:hover:not(.active) {
-  border-bottom: none;
-  /* border-bottom: 1px solid #ffffff; */
-}
-
 .nav-link {
   color: #495057;
+  margin-right: 0;
+  cursor: default;
 }
 
-.nav-link.active{
+.nav-link:hover:not(.active) {
+  border-bottom: none;
+}
+
+.nav-link.active {
   border-color: #dee2e6 #dee2e6 #fff;
+  background-color: #fafafa;
 }
 
 .nav-item {
@@ -39,37 +41,42 @@ nav.tab-limit {
 
 span.close {
   font-size: 18px;
-  top: 3px;
-  left: 6px;
+  top: 2px;
+  left: 12px;
+  padding-left: 5px !important;
+  padding-right: 5px !important;
+  cursor: pointer;
 }
 
 button::after {
   display: none;
 }
 
-button:click{
-  outline-color: #000000
+button:click {
+  outline-color: #000;
 }
 
 .keybinds-tooltip {
-  border: 1px solid #dddddd;
+  border: 1px solid #ddd;
   text-align: left;
   z-index: 10000;
   position: absolute;
   top: 33px;
   left: 51px;
   padding: 5px;
-  background-color: #ffffff;
+  background-color: #fff;
 }
 
 .keybinds-tooltip span {
-  border: 1px solid rgba(126, 126, 126, 0.412);
-  padding: 0px 5px 0px 5px;
+  border: 1px solid rgba(126, 126, 126, 41.2%);
+  padding: 0 5px;
 }
 
 .keybinds-icon {
   text-align: center;
-  padding: 0px 3px 0px 10px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin-left: 20px;
 }
 
 #column-filtering-button {
@@ -81,4 +88,3 @@ button:click{
   width: 18px;
   vertical-align: unset;
 }
-

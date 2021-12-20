@@ -52,7 +52,7 @@
           [checked]="selectedValues.has(selectorValue.id)"
           (change)="pedigreeCheckValue(selectorValue, checkbox.checked)">
           <span class="pedigree-icon" [style.background-color]="selectorValue.color"></span>
-          <span style="user-select: none">{{ selectorValue.name }}</span>
+          <span>{{ selectorValue.name }}</span>
       </label>
     </div>
   </div>

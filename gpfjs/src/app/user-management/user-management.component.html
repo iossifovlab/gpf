@@ -9,16 +9,25 @@
           <div class="row justify-content-between">
             <div class="col-7 btn-toolbar" style="padding-top: 15px; padding-left: 25px;">
               <div class="input-group" style="width: 55%">
-                <div class="input-group-prepend">
-                  <label class="input-group-text purple lighten-3" for="search-field">
-                    <i class="fa fa-search" aria-hidden="true"></i>
-                  </label>
+                <div class="search-input-wrapper">
+                  <input
+                    #searchBox
+                    autocomplete="off"
+                    (keyup)="search(searchBox.value)"
+                    id="search-field"
+                    class="search-input form-control my-0 py-1"
+                    type="text"
+                    aria-label="Search"
+                    [ngModel]="input$ | async" />
+                  <div class="search-placeholder-wrapper" *ngIf="searchBox.value === ''">
+                    <span class="search-placeholder-text">Search</span>
+                  </div>
+                  <span 
+                    class="clear-search-icon"
+                    *ngIf="searchBox.value !== ''"
+                    (click)="searchBox.value = ''; search(searchBox.value)">
+                  </span>
                 </div>
-                <input
-                  #searchBox (keyup)="search(searchBox.value)"
-                  id="search-field" class="form-control my-0 py-1"
-                  type="text" placeholder="Search" aria-label="Search"
-                  [ngModel]="input$ | async">
               </div>
               <div class="btn-toolbar" style="padding-left: 10px">
                 <a [routerLink]="['users', 'create']" class="btn btn-primary">Create user</a>

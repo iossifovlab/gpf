@@ -5,7 +5,6 @@
   display: block;
   float: left;
   min-width: 300px;
-  padding: .5rem 0;
   margin: .125rem 0 0;
   font-size: 1rem;
   color: #292b2c;
@@ -17,7 +16,7 @@
   border-radius: .25rem;
   right: 0;
   left: auto;
-  padding: 20px;
+  padding: 15px 20px 10px 20px;
 }
 
 @keyframes spinner {
@@ -38,4 +37,9 @@
   border: 2px solid #00FF00;
   border-top-color: #000000;
   animation: spinner .8s linear infinite;
+}
+
+.submitted-email-input {
+  opacity: 77%;
+  cursor: pointer;
 }

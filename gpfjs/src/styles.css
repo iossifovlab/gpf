@@ -1,95 +1,93 @@
-/* You can add global styles to this file, and also import other style files */
-
-html, body, material-app {
+html,
+body,
+material-app {
   margin: 0;
   width: 100%;
   height: 100%;
 }
 
 body {
-	font-family: 'Roboto', sans-serif;
+  font-family: Roboto, sans-serif;
   overflow-y: scroll;
 }
 
 #logo {
-	padding: 10px 20px;
+  padding: 10px 20px;
 }
 
 #logo h3 {
-   font-size: 20px;
-   display: inline;
-   vertical-align: -3px;
+  font-size: 20px;
+  display: inline;
+  vertical-align: -3px;
 }
 
 #logo img {
-	display: inline-block;
-	height: 32px;
-	width: 32px;
-	margin-right: 10px;
+  display: inline-block;
+  height: 32px;
+  width: 32px;
+  margin-right: 10px;
 }
 
 a {
-	color: #2a6395;
+  color: #2a6395;
 }
 
-input, button {
-    font-family: 'Roboto', sans-serif;
+input,
+button {
+  font-family: Roboto, sans-serif;
 }
-
 
 @keyframes example {
-    from {background-color: red;}
-    to {background-color: inherit;}
+  from { background-color: red; }
+  to { background-color: inherit; }
 }
 
 /* The element to apply the animation to */
 .flashing {
-	animation: example 0.3s linear infinite alternate;
+  animation: example 0.3s linear infinite alternate;
 }
 
 label {
-	margin-bottom: 0px;
+  margin-bottom: 0;
+  user-select: none;
 }
-.checkbox {
-	margin-top: 4px;
-	margin-bottom: 4px;
-}
-.checkbox+.checkbox {
-	margin-top: -2px;
+
+.checkbox label {
+  padding-top: 4px;
+  padding-bottom: 4px;
 }
 
 .row-eq-height {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
-  display:         flex;
+  display: flex;
 }
 
 .card {
-	height: 100%;
+  height: 100%;
 }
 
 .card-row {
-	margin-left: -15px;
+  margin-left: -15px;
 }
 
 .form-block {
-    margin-top: 20px;
-    border-radius: 3px;
+  margin-top: 20px;
+  border-radius: 3px;
 }
 
 .form-block-title {
-	font-weight: 500;
-	width: 120px;
+  font-weight: 500;
+  width: 120px;
 }
 
 .form-block .nav-item {
-	font-size: 0.9em;
+  font-size: 0.9em;
 }
 
-
 .form-block .navbar {
-    padding: 10px 20px;
+  padding: 10px 20px;
 }
 
 .form-block .tab-content {
@@ -98,19 +96,15 @@ label {
 
 .panel {
   padding: 20px;
-  border-top: 1px solid rgba(0,0,0,.125);
-}
-
-.nav-pills .nav-link.active {
-	background-color: #2a6395;
+  border-top: 1px solid rgba(0, 0, 0, 12.5%);
 }
 
 .btn {
-	cursor: pointer;
+  cursor: pointer;
 }
 
 .btn-primary {
-    background-color: #2a6395;
+  background-color: #2a6395;
 }
 
 .btn-group {
@@ -119,15 +113,15 @@ label {
 
 .btn-primary,
 .btn-outline-primary {
-    border-color: #2a6395;
+  border-color: #2a6395;
 }
 
 .btn-primary:hover {
-    background-color: #173f62;
+  background-color: #173f62;
 }
 
 .btn-right {
-	float: right;
+  float: right;
 }
 
 .btn:disabled,
@@ -145,21 +139,22 @@ label {
 }
 
 .form-block .alert {
-    margin-bottom: 0px;
-    margin-top: 20px;
+  margin-bottom: 0;
+  margin-top: 20px;
 }
 
 .form-block .alert ul {
-    margin: 0;
-    padding-left: 1em;
+  margin: 0;
+  padding-left: 1em;
 }
 
 .btn-default {
-	background-color: #eee;
-	border: 1px solid #ddd;
+  background-color: #eee;
+  border: 1px solid #ddd;
 }
 
-#search-box, #selected-value {
+#search-box,
+#selected-value {
   border: 1px solid #ccc;
   border-top-left-radius: 5px;
   border-bottom-left-radius: 5px;
@@ -168,8 +163,8 @@ label {
 }
 
 .username-field {
-	font-size: 0.9em;
-	margin-right: 5px;
+  font-size: 0.9em;
+  margin-right: 5px;
 }
 
 .modal-fullscreen .modal-dialog {
@@ -184,15 +179,28 @@ label {
   cursor: pointer;
 }
 
+.nav-link {
+  margin-right: 8px;
+}
+
+.nav-pills .nav-link.active {
+  background-color: #2a6395;
+}
+
 .navbar.navbar-custom .nav-link,
 .navbar-nav.navbar-custom .nav-link {
-  color: rgba(0,0,0,.5);
+  color: rgba(0, 0, 0, 50%);
 }
+
 .navbar.navbar-custom .nav-link.active,
 .navbar-nav.navbar-custom .nav-link.active {
-	background-color: #2a6395;
+  background-color: #2a6395;
   color: #fff;
   border-radius: .25rem;
+}
+
+.dropdown-menu {
+  padding: 0;
 }
 
 .dropdown-item.active,
@@ -216,9 +224,10 @@ gpf-global-error-display {
 }
 
 .nav-title-custom {
-  font-family: Roboto;
+  font-family: Roboto, sans-serif;
   font-weight: 500;
   width: 100px;
+  margin-right: 8px;
 }
 
 .pedigree-icon {
@@ -228,5 +237,95 @@ gpf-global-error-display {
   display: inline-block;
   width: 15px;
   height: 15px;
-  border: 0.1px solid #aaaaaa;
+  border: 0.1px solid #aaa;
+}
+
+#table-preview-button {
+  margin-right: 19px;
+}
+
+#enrichment-test-button {
+  margin-right: 19px;
+}
+
+#share-query-dropdown-button,
+#save-query-dropdown-button {
+  margin-right: 8px;
+}
+
+.select-wrapper {
+  position: relative;
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+}
+
+.select-wrapper select {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.select-wrapper::after {
+  position: absolute;
+  right: 10px;
+  padding-bottom: 2px;
+  font-size: 1em;
+  content: url("/assets/dropdown_icon.png");
+  pointer-events: none;
+}
+
+.search-placeholder-wrapper {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  pointer-events: none;
+  left: 14px;
+}
+
+.search-input-wrapper {
+  display: inline-flex;
+  position: relative;
+  width: 100%;
+  align-items: center;
+}
+
+.search-input {
+  padding-right: 25px;
+}
+
+.search-placeholder-text {
+  opacity: 50%;
+  font-size: 14px;
+  font-weight: normal;
+  padding-top: 0.18em;
+}
+
+.clear-search-icon {
+  display: inline-block;
+  background-image: url("/assets/clear-search-icon.png");
+  background-repeat: no-repeat;
+  background-position-y: center;
+  background-position-x: center;
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  right: 5px;
+}
+
+.form-label {
+  width: 100%;
+}
+
+.checkbox-label {
+  width: 100%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.modal-close-button {
+  position: absolute;
+  top: 10px;
+  right: 7px;
+  padding-left: 8px;
+  padding-right: 8px;
 }

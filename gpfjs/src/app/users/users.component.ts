@@ -46,7 +46,7 @@ export class UsersComponent implements OnInit {
     });
   }
 
-  back() {
+  public back(): void {
     this.showPasswordField = false;
   }
 

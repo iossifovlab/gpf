@@ -11,15 +11,11 @@
 }
 
 .genotype-browser-results .overview {
-  border-top: 1px solid rgba(0,0,0,0.125);
+  border-top: 1px solid rgba(0, 0, 0, 12.5%);
   padding-top: 20px;
   vertical-align: middle;
 }
 
 .button {
   display: flex;
-}
-.button > input, gpf-share-query-button {
-  display: inline-block;
-  margin-right: 5px;
 }

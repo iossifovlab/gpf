@@ -54,8 +54,7 @@
                 #columnFilteringButton
                 [attr.id]="element.category.id + '-button'"
                 class="dropdown-toggle btn navbar-toggler"
-                (click)="openDropdown(element.category.id)"
-                style="float: right; outline: none; font-size: 18px; white-space: nowrap; border: 0; padding: 0; width: 18px; vertical-align: unset;">
+                (click)="openDropdown(element.category.id)">
                 &#9776;
               </button>
             </th>
@@ -66,8 +65,23 @@
 
       <tr style="height: 110px;">
         <th class="table-subheader" rowspan="2">
-          <input #geneSearchInput (keyup)="sendKeystrokes(geneSearchInput.value)" id="gene-search-input"
-            class="form-control" autocomplete="off" type="text" placeholder="Search">
+          <div class="search-input-wrapper">
+            <input
+              #geneSearchInput
+              (keyup)="sendKeystrokes(geneSearchInput.value)"
+              id="gene-search-input"
+              class="search-input form-control"
+              autocomplete="off"
+              type="text" />
+            <div class="search-placeholder-wrapper" *ngIf="geneSearchInput.value === ''">
+              <span class="search-placeholder-text">Search</span>
+            </div>
+            <span
+              class="clear-search-icon"
+              *ngIf="geneSearchInput.value !== ''"
+              (click)="geneSearchInput.value = ''; sendKeystrokes('')">
+            </span>
+          </div>
         </th>
 
         <ng-container *ngFor="let element of config.shown">
@@ -95,8 +109,7 @@
                   #columnFilteringButton
                   [attr.id]="element.category.id + ':' + personSet.id + '-button'"
                   class="dropdown-toggle btn navbar-toggler"
-                  (click)="openDropdown(element.category.id + ':' + personSet.id)"
-                  style="float: right; outline: none; font-size: 18px; white-space: nowrap; border: 0; padding: 0; width: 18px; vertical-align: unset;">
+                  (click)="openDropdown(element.category.id + ':' + personSet.id)">
                   &#9776;
                 </button>
               </th>

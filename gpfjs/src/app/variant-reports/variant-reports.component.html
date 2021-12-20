@@ -17,17 +17,19 @@
   </div>
 
   <div class="col-sm-3" class="variants-report-selector">
-    <select id="families-by-number-dropdown-button" class="form-control" [(ngModel)]="currentPeopleCounter">
-      <option value="" selected="selected">–</option>
-      <option *ngFor="let peopleCounter of variantReport.peopleReport.peopleCounters" [ngValue]="peopleCounter">
-        <span>{{ peopleCounter.groupName }}</span>
-      </option>
-    </select>
+    <div class="select-wrapper">
+      <select id="families-by-number-dropdown-button" class="form-control" [(ngModel)]="currentPeopleCounter">
+        <option value="" selected="selected">–</option>
+        <option *ngFor="let peopleCounter of variantReport.peopleReport.peopleCounters" [ngValue]="peopleCounter">
+          <span>{{ peopleCounter.groupName }}</span>
+        </option>
+      </select>
+    </div>
   </div>
 
   <div *ngIf="currentPeopleCounter" id="families-by-number-div" class="row mb-3">
     <div class="col-12">
-      <table class="table table-bordered table-hover table-sm table-centered table-header-rotate">
+      <table class="table table-bordered table-sm table-centered table-header-rotate">
         <thead>
           <th class="first-header-cell">
             <div style="padding: 0">
@@ -56,18 +58,20 @@
     <h5>Families by pedigree of:</h5>
   </div>
 
-  <div class="col-sm-3" class="variants-report-selector">
-    <select class="form-control" [(ngModel)]="currentPedigreeTable">
-      <option value="" selected="selected">–</option>
-      <option *ngFor="let pedigreeTable of pedigreeTables" [ngValue]="pedigreeTable">
-        <span>{{ pedigreeTable.groupName }}</span>
-      </option>
-    </select>
+  <div class="col-sm-3 variants-report-selector">
+    <div class="select-wrapper">
+      <select class="form-control" [(ngModel)]="currentPedigreeTable">
+        <option value="" selected="selected">–</option>
+        <option *ngFor="let pedigreeTable of pedigreeTables" [ngValue]="pedigreeTable">
+          <span>{{ pedigreeTable.groupName }}</span>
+        </option>
+      </select>
+    </div>
   </div>
 
   <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row mb-3" #families_pedigree>
     <div class="col-12">
-      <table class="table table-bordered table-hover table-sm table-centered">
+      <table class="table table-bordered table-sm table-centered">
         <colgroup>
           <col />
           <col />
@@ -104,17 +108,19 @@
     </div>
 
     <div class="col-sm-3" class="variants-report-selector">
-      <select id="denovo-variants-dropdown-button" class="form-control" [(ngModel)]="currentDenovoReport">
-        <option value="" selected="selected">–</option>
-        <option *ngFor="let denovoReport of variantReport.denovoReport.tables" [ngValue]="denovoReport">
-          <span>{{ denovoReport.groupName }}</span>
-        </option>
-      </select>
+      <div class="select-wrapper">
+        <select id="denovo-variants-dropdown-button" class="form-control" [(ngModel)]="currentDenovoReport">
+          <option value="" selected="selected">–</option>
+          <option *ngFor="let denovoReport of variantReport.denovoReport.tables" [ngValue]="denovoReport">
+            <span>{{ denovoReport.groupName }}</span>
+          </option>
+        </select>
+      </div>
     </div>
 
     <div *ngIf="currentDenovoReport" id="denovo-variants-div" class="row mb-3">
       <div class="col-12">
-        <table class="table table-bordered table-hover table-sm table-centered">
+        <table class="table table-bordered table-sm table-centered">
           <thead>
             <th>Effect type</th>
             <th class="rotate" *ngFor="let column of currentDenovoReport.columns">
@@ -124,7 +130,7 @@
           <tbody>
             <tr
               *ngFor="let effectType of getRows(currentDenovoReport.effectGroups, currentDenovoReport.effectTypes)"
-              [ngClass]="{ 'table-active' : (currentDenovoReport.effectGroups.indexOf(effectType) !== -1) }">
+              [ngClass]="{ 'effect-type-group-row' : (currentDenovoReport.effectGroups.indexOf(effectType) !== -1) }">
               <th>{{ effectType }}</th>
               <td *ngFor="let effectTypeData of getEffectTypeOrderByColumOrder(effectType, currentDenovoReport, currentDenovoReport.columns)">
                 <div>{{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number }}</div>
