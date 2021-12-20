@@ -447,9 +447,10 @@ class EffectAnnotationDecorator(AnnotationDecorator):
                 context = {}
                 attributes = self.effect_annotator.annotate(
                     sa.get_annotatable(), context)
-                assert "allele_effects" in attributes
+                assert "allele_effects" in attributes, attributes
                 allele_effects = attributes["allele_effects"]
-                assert isinstance(allele_effects, AlleleEffects)
+                assert isinstance(allele_effects, AlleleEffects), \
+                    (type(allele_effects), allele_effects)
                 sa.effects = allele_effects
             yield summary_variant, family_variants
 

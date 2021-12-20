@@ -170,9 +170,11 @@ class AnnotationEffect:
                 ["intergenic"],
                 ["intergenic"],
                 ["intergenic"],
+                ["intergenic"],
             )
         if worst_effect == "no-mutation":
             return (
+                ["no-mutation"],
                 ["no-mutation"],
                 ["no-mutation"],
                 ["no-mutation"],
@@ -180,13 +182,14 @@ class AnnotationEffect:
 
         transcripts = []
         genes = []
+        gene_effects = []
         details = []
         for effect in effects:
             transcripts.append(effect.transcript_id)
             genes.append(effect.gene)
+            gene_effects.append(effect.effect)
             details.append(effect.create_effect_details())
-
-        return (transcripts, genes, details)
+        return (transcripts, genes, gene_effects, details)
 
     @classmethod
     def wrap_effects(cls, effects: List[AnnotationEffect]):
@@ -284,7 +287,7 @@ class EffectFactory(object):
         # ef.prot_pos, _ = request.get_protein_position()
 
         ref_aa, alt_aa = request.get_amino_acids()
-        ef.aa_change = "{}->{}".format(",".join(ref_aa), ",".join(alt_aa))
+        ef.aa_change = "{}->{}".format("".join(ref_aa), "".join(alt_aa))
 
         ef.ref_aa = ref_aa
         ef.alt_aa = alt_aa
@@ -373,9 +376,10 @@ class EffectGene:
 
 
 class EffectTranscript:
-    def __init__(self, transcript_id, gene=None, details=None):
+    def __init__(self, transcript_id, gene=None, effect=None, details=None):
         self.transcript_id = transcript_id
         self.gene = gene
+        self.effect = effect
         self.details = details
 
     @staticmethod
@@ -394,7 +398,7 @@ class EffectTranscript:
                 f"unexpected effect details format: {data}")
 
     def __repr__(self):
-        return f"{self.transcript_id}:{self.gene}:{self.details}"
+        return f"{self.transcript_id}:{self.gene}:{self.effect}:{self.details}"
 
     def __str__(self):
         return self.__repr__()
@@ -409,8 +413,9 @@ class EffectTranscript:
 
     @classmethod
     def from_tuple(cls, t):
-        (transcript_id, gene, details) = tuple(t)
-        return EffectTranscript(transcript_id, gene=gene, details=details)
+        (transcript_id, gene, effect, details) = tuple(t)
+        return EffectTranscript(
+            transcript_id, gene=gene, effect=effect, details=details)
 
     @classmethod
     def from_effect_transcripts(cls, effect_transcripts):
@@ -493,6 +498,8 @@ class AlleleEffects:
             AnnotationEffect.simplify_effects(effects)
         gene_effects = [EffectGene(g, e) for g, e in gene_effects]
         transcript_effects = {
-            t: EffectTranscript(t, g, d) for t, g, d in transcript_effects
+            t: EffectTranscript(t, g, e, d) for t, g, e, d in transcript_effects
         }
-        return AlleleEffects(worst_effect, gene_effects, transcript_effects)
+        result = AlleleEffects(worst_effect, gene_effects, transcript_effects)
+        result.all_effects = effects
+        return result
