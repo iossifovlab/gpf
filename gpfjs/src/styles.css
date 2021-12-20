@@ -279,7 +279,7 @@ gpf-global-error-display {
   align-items: center;
   position: absolute;
   pointer-events: none;
-  left: 4%;
+  left: 14px;
 }
 
 .search-input-wrapper {
