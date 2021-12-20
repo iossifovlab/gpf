@@ -289,6 +289,10 @@ gpf-global-error-display {
   align-items: center;
 }
 
+.search-input {
+  padding-right: 25px;
+}
+
 .search-placeholder-text {
   opacity: 50%;
   font-size: 14px;
