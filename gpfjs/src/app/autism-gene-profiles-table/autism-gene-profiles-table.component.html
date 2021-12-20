@@ -234,6 +234,9 @@
 </ng-container>
 
 <div id="compare-genes-menu" *ngIf="highlightedGenes.length !== 0">
-  <button (click)="compareHighligtedGenes(null)" (middleclick)="compareHighligtedGenes(null, false)">compare highlighted genes</button>
-  <span style="width: 100%; word-wrap: break-word;">{{highlightedGenes.join(', ')}}</span>
+  <div>
+    <button (click)="compareHighligtedGenes(null)" (middleclick)="compareHighligtedGenes(null, false)">compare highlighted genes</button>
+    <button id="remove-highlights-button" (click)="clearHighlightedRows()">&#10005;</button>
+  </div>
+  <span style="width: 100%; word-wrap: break-word;">► {{highlightedGenes.join(', ')}}</span>
 </div>
