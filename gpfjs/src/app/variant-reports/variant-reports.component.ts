@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener, Pipe, PipeTransform } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, HostListener, Pipe, PipeTransform, Input, Output } from '@angular/core';
 import { VariantReportsService } from './variant-reports.service';
 import {
   VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData, PedigreeTable, PeopleCounter

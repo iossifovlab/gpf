@@ -101,3 +101,17 @@ table {
   border: 1px solid #ddd;
   padding: 5px;
 }
+
+.docked {
+  width: 60px;
+  background: #fff;
+  padding: 10px;
+  opacity: 75%;
+  margin: -20px;
+  left: 100%;
+  margin-left: -50px;
+  position: fixed;
+  bottom: 0;
+  box-sizing: border-box;
+  z-index: 99;
+}
