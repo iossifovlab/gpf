@@ -279,6 +279,7 @@ gpf-global-error-display {
   align-items: center;
   position: absolute;
   pointer-events: none;
+  left: 4%;
 }
 
 .search-input-wrapper {
@@ -288,31 +289,11 @@ gpf-global-error-display {
   align-items: center;
 }
 
-.search-placeholder-icon {
-  display: inline-block;
-  background-image: url("/assets/search-icon.png");
-  background-repeat: no-repeat;
-  background-size: 12px 12px;
-  background-position-y: center;
-  background-position-x: 10px;
-  width: 24px;
-  height: 15px;
-}
-
 .search-placeholder-text {
   opacity: 50%;
   font-size: 14px;
-  padding-left: 4px;
   font-weight: normal;
   padding-top: 0.18em;
-}
-
-.search-input:focus ~ .search-placeholder-wrapper .search-placeholder-icon {
-  display: none;
-}
-
-.search-input:focus ~ .search-placeholder-wrapper .search-placeholder-text {
-  padding-left: 14px;
 }
 
 .clear-search-icon {
