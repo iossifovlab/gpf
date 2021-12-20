@@ -159,7 +159,7 @@ describe('Column filtering dropdown tests', () => {
   // sorting arrow should change the image when clicked
 });
 
-describe('', () => {
+describe('Table functionality', () => {
   const page = new AutismGeneProfilesTable();
 
   before(() => {
@@ -171,16 +171,79 @@ describe('', () => {
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
-  it('should sort genes', () => {
+  it('should sort genes by autism gene sets', () => {
     page.geneSearchInput.type('RAPGEF');
 
     page.allTableRows.should('have.length', 4);
 
+    const dataArr = [[0, 0, 1], [0, 0, 0], [0, 0, 0], [1, 0, 0]];
+
     page.allSortingButtons.eq(0).click();
-    [0, 0, 0, 1].forEach((value, index) => {
-      page.allTableRows.eq(index).within(row => {
-        cy.wrap(row).get('td').eq(1).should('have.text', value === 1 ? '✓' : '');
+    dataArr.forEach((allRows, allRowsIndex) => {
+      allRows.forEach((rowData, rowIndex) => {
+        page.allTableRows.eq(allRowsIndex).within(row => {
+          cy.wrap(row).get('td').eq(rowIndex+1).should('have.text', rowData === 1 ? '✓' : '');
+        });
       });
     });
+
+    dataArr.sort((a, b) => b[0] - a[0]);
+
+    page.allSortingButtons.eq(0).click();
+    dataArr.forEach((allRows, allRowsIndex) => {
+      allRows.forEach((rowData, rowIndex) => {
+        page.allTableRows.eq(allRowsIndex).within(row => {
+          cy.wrap(row).get('td').eq(rowIndex+1).should('have.text', rowData === 1 ? '✓' : '');
+        });
+      });
+    });
+  });
+
+  it('should sort genes by relevant gene sets', () => {
+    page.geneSearchInput.type('RAPGEF');
+
+    page.allTableRows.should('have.length', 4);
+    page.clickSortButton('Relevant Gene Sets');
+
+    const dataArr = [[1, 0, 1, 1], [0, 0, 1, 1], [0, 0, 0, 1], [0, 0, 0, 1]];
+
+    dataArr.forEach((allRows, allRowsIndex) => {
+      allRows.forEach((rowData, rowIndex) => {
+        page.allTableRows.eq(allRowsIndex).within(row => {
+          cy.wrap(row).get('td').eq(rowIndex+3).should('have.text', rowData === 1 ? '✓' : '');
+        });
+      });
+    });
+
+    page.clickSortButton('Relevant Gene Sets');
+    dataArr.reverse();  
+    dataArr.forEach((allRows, allRowsIndex) => {
+      allRows.forEach((rowData, rowIndex) => {
+        page.allTableRows.eq(allRowsIndex).within(row => {
+          cy.wrap(row).get('td').eq(rowIndex+3).should('have.text', rowData === 1 ? '✓' : '');
+        });
+      });
+    });
+  });
+
+  it('should test autism scores', () => {
+    page.geneSearchInput.type('CHD');
+
+    page.allTableRows.should('have.length', 15);
+    page.clickSortButton('SFARI_gene_score');
+    
+    const dataArr = [2, 1, null];
+    dataArr.forEach((rowData, allRowsIndex) => {
+        page.allTableRows.eq(allRowsIndex).within(row => {
+          cy.wrap(row).get('td').eq(7).should('have.text', rowData === null ? '' : rowData);
+        });
+    });
+    dataArr.reverse();
+    page.clickSortButton('SFARI_gene_score');
+    dataArr.forEach((rowData, allRowsIndex) => {
+      page.allTableRows.eq(allRowsIndex).within(row => {
+        cy.wrap(row).get('td').eq(7).should('have.text', rowData === null ? '' : rowData);
+      });
+  });
   });
 });

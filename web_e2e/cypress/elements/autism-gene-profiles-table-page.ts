@@ -58,6 +58,14 @@ export class AutismGeneProfilesTable extends BasePage {
     return cy.get('#column-filtering-button > span');
   }
 
+  clickSortButton(columnName: string) {
+    cy.get('th').contains(columnName).then(column => {
+      cy.wrap(column).parent().within(button => {
+        cy.wrap(button).get('.clickable').click();
+      });
+    });
+  }
+
   allGeneSetsClickApplyButton() {
     cy.get('#column-filtering-dropdown').within(menu => {
       cy.wrap(menu).get('button.btn-secondary').click();
