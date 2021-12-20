@@ -28,7 +28,7 @@ describe('Pedigree selector tests', () => {
     page.findErrorAlertInComponent('gpf-pedigree-selector').should('not.exist');
   });
 
-  it('should check/uncheck affected status checkboxes using \'All\' and \'None\' buttons', () => {
+  it('should check/uncheck affected status checkboxes using "All" and "None" buttons', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'None').click();
     genotypeBlockPage.findAllCheckboxesInComponent('gpf-pedigree-selector').each((element) => {

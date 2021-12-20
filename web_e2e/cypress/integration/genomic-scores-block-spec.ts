@@ -15,8 +15,8 @@ describe('Genomic scores panel tests', () => {
     page.navigateToHome();
   });
 
-  it('should display genomic scores panel after \'add filter\' button click ' +
-     'and remove it after \'remove filter\' button click', () => {
+  it('should display genomic scores panel after "add filter" button click ' +
+     'and remove it after "remove filter" button click', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     page.panel.should('not.exist');
 

@@ -48,7 +48,7 @@ describe('Autism gene profiles block tests', () => {
     autismGeneProfilesSingleView.window.should('not.exist');
   });
 
-  it('should close the current tab after pressing the \'w\' shortcut and navigate to the home tab', () => {
+  it('should close the current tab after pressing the "w" shortcut and navigate to the home tab', () => {
     autismGeneProfilesTablePage.firstGeneInTable.click();
     page.allTabs.should('have.length', 2);
     autismGeneProfilesTablePage.table.should('not.be.visible');
@@ -60,7 +60,7 @@ describe('Autism gene profiles block tests', () => {
     autismGeneProfilesSingleView.window.should('not.exist');
   });
 
-  it('should click on gene that has already been opened and navigate to it\'s tab', () => {
+  it('should click on gene that has already been opened and navigate to its tab', () => {
     autismGeneProfilesTablePage.firstGeneInTable.click();
     page.homeTab.click();
     autismGeneProfilesTablePage.firstGeneInTable.click();

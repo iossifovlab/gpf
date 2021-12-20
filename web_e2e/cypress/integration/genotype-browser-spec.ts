@@ -70,14 +70,14 @@ describe('Genotype browser tests', () => {
   });
 
   datasetList.forEach((dataset) => {
-    it('should display \'Table Preview\' button in genotype browser at /' + dataset + '/browser', () => {
+    it('should display "Table Preview" button in genotype browser at /' + dataset + '/browser', () => {
       page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       page.tablePreviewButton.should('be.visible');
     });
   });
 
   datasetList.forEach((dataset) => {
-    it('should display \'Share query\' button in genotype browser at /' + dataset + '/browser', () => {
+    it('should display "Share query" button in genotype browser at /' + dataset + '/browser', () => {
       const shareQueryPage = new ShareQueryPage();
       page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       shareQueryPage.button.should('be.visible');
@@ -85,7 +85,7 @@ describe('Genotype browser tests', () => {
   });
 
   datasetList.forEach((dataset) => {
-    it('should display \'Save query\' button in genotype browser at /' + dataset + '/browser', () => {
+    it('should display "Save query" button in genotype browser at /' + dataset + '/browser', () => {
       const saveQueryPage = new SaveQueryPage();
       page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       saveQueryPage.button.should('be.visible');
@@ -93,7 +93,7 @@ describe('Genotype browser tests', () => {
   });
 
   datasetList.forEach((dataset) => {
-    it('should display \'Download\' button in genotype browser at /' + dataset + '/browser', () => {
+    it('should display "Download" button in genotype browser at /' + dataset + '/browser', () => {
       page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       page.downloadButton.should('be.visible');
     });
@@ -133,7 +133,7 @@ describe('Genotype browser table preview result tests', () => {
    {study: datasetIds.iossifov2014, expectedOverviewParagraph: '0 variants selected (0 shown)'},
    {study: datasetIds.multi, expectedOverviewParagraph: '0 variants selected (0 shown)'}
   ].forEach((data) => {
-    it('should display the correct data in overview paragraph when gene symbol is \'SAMD11\' at /' + data.study + '/browser', ()  => {
+    it('should display the correct data in overview paragraph when gene symbol is "SAMD11" at /' + data.study + '/browser', ()  => {
       genotypeBrowserController.setStudy(data.study);
       genotypeBrowserController.filterGenesByGeneSymbol('SAMD11');
       genotypeBrowserController.setEffectTypesGroup('All');
@@ -146,8 +146,8 @@ describe('Genotype browser table preview result tests', () => {
     {region: '1:865624'}, {region: '1:865627'},
     {region: '1:865664'}, {region: '1:865691'}
   ].forEach((data) => {
-    it('should display \'5 variants selected\' in overview paragraph when regions filter is \'' +
-       data.region + '\' at /comp_vcf/browser', () => {
+    it('should display "5 variants selected" in overview paragraph when regions filter is "' +
+       data.region + '" at /comp_vcf/browser', () => {
       genotypeBrowserController.setStudy(datasetIds.compVcf);
       genotypeBrowserController.setRegion(data.region);
       genotypeBrowserController.setEffectTypesGroup('All');
@@ -177,7 +177,7 @@ describe('Genotype browser table preview result tests', () => {
     {study: datasetIds.multi,
     affectedStatus: 'unaffected', expectedOverviewParagraph: '2 variants selected (2 shown)'}
   ].forEach((data) => {
-    it('should display \'' + data.expectedOverviewParagraph + '\' in overview paragraph when ' +
+    it('should display "' + data.expectedOverviewParagraph + '" in overview paragraph when ' +
       'affected status - ' + data.affectedStatus + ' is checked at /' + data.study + '/browser', () => {
       genotypeBrowserController.setStudy(data.study);
       genotypeBrowserController.setAffectedStatus(data.affectedStatus);
@@ -228,27 +228,27 @@ describe('Genotype browser table preview result tests', () => {
   });
 
   [{study: datasetIds.compAll,
-    inheritanceType: 'Mendelian', expectedOverviewParagraph: '30 variants selected (30 shown)'},
+    inheritanceType: 'mendelian', expectedOverviewParagraph: '30 variants selected (30 shown)'},
     {study: datasetIds.compDenovo,
-    inheritanceType: 'Mendelian', expectedOverviewParagraph: '0 variants selected (0 shown)'},
+    inheritanceType: 'mendelian', expectedOverviewParagraph: '0 variants selected (0 shown)'},
     {study: datasetIds.compVcf,
-    inheritanceType: 'Mendelian', expectedOverviewParagraph: '30 variants selected (30 shown)'},
+    inheritanceType: 'mendelian', expectedOverviewParagraph: '30 variants selected (30 shown)'},
     {study: datasetIds.iossifov2014,
-    inheritanceType: 'Mendelian', expectedOverviewParagraph: '0 variants selected (0 shown)'},
+    inheritanceType: 'mendelian', expectedOverviewParagraph: '0 variants selected (0 shown)'},
     {study: datasetIds.multi,
-    inheritanceType: 'Mendelian', expectedOverviewParagraph: '2 variants selected (2 shown)'},
+    inheritanceType: 'mendelian', expectedOverviewParagraph: '2 variants selected (2 shown)'},
     {study: datasetIds.compAll,
-    inheritanceType: 'Denovo', expectedOverviewParagraph: '5 variants selected (5 shown)'},
+    inheritanceType: 'denovo', expectedOverviewParagraph: '5 variants selected (5 shown)'},
     {study: datasetIds.compDenovo,
-    inheritanceType: 'Denovo', expectedOverviewParagraph: '5 variants selected (5 shown)'},
+    inheritanceType: 'denovo', expectedOverviewParagraph: '5 variants selected (5 shown)'},
     {study: datasetIds.compVcf,
-    inheritanceType: 'Denovo', expectedOverviewParagraph: '0 variants selected (0 shown)'},
+    inheritanceType: 'denovo', expectedOverviewParagraph: '0 variants selected (0 shown)'},
     {study: datasetIds.iossifov2014,
-    inheritanceType: 'Denovo', expectedOverviewParagraph: 'more than 1000 variants selected (1000 shown)'},
+    inheritanceType: 'denovo', expectedOverviewParagraph: 'more than 1000 variants selected (1000 shown)'},
     {study: datasetIds.multi,
-    inheritanceType: 'Denovo', expectedOverviewParagraph: '0 variants selected (0 shown)'}
+    inheritanceType: 'denovo', expectedOverviewParagraph: '0 variants selected (0 shown)'}
   ].forEach((data) => {
-    it('should display \'' + data.expectedOverviewParagraph + '\' in overview paragraph when ' +
+    it('should display "' + data.expectedOverviewParagraph + '" in overview paragraph when ' +
        'inheritance types are ' + data.inheritanceType + ' at /' + data.study + '/browser', () => {
       genotypeBrowserController.setStudy(data.study);
       genotypeBrowserController.setEffectTypesGroup('All');
@@ -264,11 +264,11 @@ describe('Genotype browser table preview result tests', () => {
     {study: datasetIds.iossifov2014, expectedOverviewParagraph: 'more than 1000 variants selected (1000 shown)'},
     {study: datasetIds.multi, expectedOverviewParagraph: '0 variants selected (0 shown)'}
   ].forEach((data) => {
-    it('should display \'' + data.expectedOverviewParagraph + '\' in overview paragraph when ' +
+    it('should display "' + data.expectedOverviewParagraph + '" in overview paragraph when ' +
        'inheritance types are denovo at /' + data.study + '/browser', () => {
       genotypeBrowserController.setStudy(data.study);
       genotypeBrowserController.setEffectTypesGroup('All');
-      genotypeBrowserController.setInheritanceType('Denovo');
+      genotypeBrowserController.setInheritanceType('denovo');
       genotypeBrowserController.showTablePreview();
       page.overviewParagraph.should('have.text', data.expectedOverviewParagraph);
     });
@@ -280,7 +280,7 @@ describe('Genotype browser table preview result tests', () => {
     {familyId: 'f4'},
     {familyId: 'f5'}
   ].forEach((data) => {
-    it('should display \'6 variants selected\' in overview paragraph when family id is \'' + data.familyId + '\'', () => {
+    it('should display "6 variants selected" in overview paragraph when family id is "' + data.familyId + '"', () => {
       genotypeBrowserController.setStudy(datasetIds.compVcf);
       genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.setFamilyFilterToId(data.familyId);
@@ -297,8 +297,8 @@ describe('Genotype browser table preview result tests', () => {
     {study: datasetIds.iossifov2014,
     geneSymbol: 'NRXN1', effectType: 'All', expectedOverviewParagraph: '1 variant selected (1 shown)'}
   ].forEach((data) => {
-    it('should display \'' + data.expectedOverviewParagraph + '\' in overview paragraph when effect types are ' +
-    data.effectType + ' and ' + 'gene symbol is \'' + data.geneSymbol + '\' at /' + data.study + '/browser', () => {
+    it('should display "' + data.expectedOverviewParagraph + '" in overview paragraph when effect types are ' +
+    data.effectType + ' and ' + 'gene symbol is "' + data.geneSymbol + '" at /' + data.study + '/browser', () => {
       genotypeBrowserController.setStudy(data.study);
       genotypeBrowserController.setEffectTypesGroup(data.effectType);
       genotypeBrowserController.filterGenesByGeneSymbol(data.geneSymbol);
@@ -307,7 +307,7 @@ describe('Genotype browser table preview result tests', () => {
     });
   });
 
-  it('should display \'2 variants selected\' in overview paragraph when family id is 11002 at /iossifov_2014/browser', () => {
+  it('should display "2 variants selected" in overview paragraph when family id is 11002 at /iossifov_2014/browser', () => {
     genotypeBrowserController.setStudy(datasetIds.iossifov2014);
     genotypeBrowserController.setEffectTypesGroup('All');
     genotypeBrowserController.setFamilyFilterToId('11002');
@@ -315,7 +315,7 @@ describe('Genotype browser table preview result tests', () => {
     page.overviewParagraph.should('have.text', '2 variants selected (2 shown)');
   });
 
-  it('should display \'0 variants selected\' in overview paragraph when gene sets is GO Terms - GO:0016917 GABA_receptor_activity\' ' +
+  it('should display "0 variants selected" in overview paragraph when gene sets is GO Terms - GO:0016917 GABA_receptor_activity" ' +
      'and effect types are LGDs at /iossifov_2014/browser', () => {
     genotypeBrowserController.setStudy(datasetIds.iossifov2014);
     genotypeBrowserController.filterGenesByGeneSets('GO Terms', 'GO:0016917');
@@ -331,7 +331,7 @@ describe('Genotype browser table preview result tests', () => {
     collection: 'GO Terms', geneSet: 'GO:0016917', effectTypes: ['Missense', 'Synonymous'],
     expectedOverviewParagraph: '5 variants selected (5 shown)'}
   ].forEach((data) => {
-    it('should display \'' + data.expectedOverviewParagraph + '\' in overview paragraph when gene sets is ' +
+    it('should display "' + data.expectedOverviewParagraph + '" in overview paragraph when gene sets is ' +
        data.collection + '- ' + data.geneSet + ' and effect types are ' + data.effectTypes.toString() +
        ' at /' + data.study + '/browser', () => {
       genotypeBrowserController.setStudy(datasetIds.iossifov2014);
@@ -352,7 +352,7 @@ describe('Genotype browser table preview result tests', () => {
     {familyId: 'f4', values: {age: 157.618, iq: 103.074}},
     {familyId: 'f5', values: {age: 171.890, iq: 38.885}}
   ].forEach((data) => {
-    it('should display the correct age and iq values in the measures column for \'' + data.familyId + '\' family', () => {
+    it('should display the correct age and iq values in the measures column for "' + data.familyId + '" family', () => {
       const genotypePreviewTablePage = new GenotypePreviewTablePage();
 
       genotypeBrowserController.setStudy(datasetIds.compAll);

@@ -149,7 +149,7 @@ describe('Gene weights panel tests', () => {
   });
 
   geneWeightsData.forEach(geneWeight => {
-    it('should filter variants when \'' + geneWeight.desc + '\' gene weight is selected', () => {
+    it('should filter variants when "' + geneWeight.desc + '" gene weight is selected', () => {
       const genotypeBrowserController = new GenotypeBrowserController();
       const genotypeBrowserPage = new GenotypeBrowserPage();
 
