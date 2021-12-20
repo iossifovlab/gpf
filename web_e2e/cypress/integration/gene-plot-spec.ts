@@ -181,13 +181,9 @@ describe('Gene plot visual tests', () => {
   });
 
   it('should condense introns', () => {
-    cy.scrollTo('bottom');
-    cy.get('g#plot').scrollIntoView();
     page.condenseIntronsCheckbox.click();
-    cy.matchImageSnapshot('gene-plot/notCondenseIntrons', {allowSizeMismatch: true, capture: 'fullPage'});
-    cy.scrollTo('bottom');
-    cy.get('g#plot').scrollIntoView();
+    cy.get('g#plot').matchImageSnapshot('gene-plot/notCondenseIntrons');
     page.condenseIntronsCheckbox.click();
-    cy.matchImageSnapshot('gene-plot/condenseIntrons', {allowSizeMismatch: true, capture: 'fullPage'});
+    cy.get('g#plot').matchImageSnapshot('gene-plot/condenseIntrons');
   });
 });
