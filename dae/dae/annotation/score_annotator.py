@@ -1,10 +1,9 @@
 import logging
 import copy
 
-from typing import Optional, Dict, List
+from typing import Dict, List
 from box import Box
 
-from .schema import Schema
 from .annotatable import Annotatable, VCFAllele
 from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
 from .annotation_pipeline import AnnotationPipeline
@@ -40,25 +39,6 @@ class VariantScoreAnnotatorBase(Annotator):
         }
     }
 
-    class ScoreSource(Schema.Source):
-        def __init__(
-                self, annotator_type: str, resource_id: str,
-                score_id: str,
-                position_aggregator: Optional[None] = None,
-                nucleotide_aggregator: Optional[None] = None):
-            super().__init__(annotator_type, resource_id)
-            self.score_id = score_id
-            self.position_aggregator = position_aggregator
-            self.nucleotide_aggregator = nucleotide_aggregator
-
-        def __repr__(self):
-            repr = [super().__repr__(), ]
-            if self.position_aggregator:
-                repr.append(f"pos_aggr({self.position_aggregator})")
-            if self.nucleotide_aggregator:
-                repr.append(f"nuc_aggre({self.nucleotide_aggregator})")
-            return "; ".join(repr)
-
     def __init__(self, config: Dict, resource):
 
         super().__init__(config)
@@ -78,7 +58,7 @@ class VariantScoreAnnotatorBase(Annotator):
         result = []
         for score in self.resource.scores.values():
             result.append({
-                "source": score.id,
+                "name": score.id,
                 "type": score.type,
                 "desc": score.desc
             })
@@ -119,42 +99,6 @@ class VariantScoreAnnotatorBase(Annotator):
 
     def get_scores(self):
         return [attr.source for attr in self.get_annotation_config()]
-
-    @property
-    def annotation_schema(self) -> Schema:
-        if self._annotation_schema is None:
-            schema = Schema()
-            for attribute in self.get_annotation_config():
-                prop_name = attribute.destination
-                score_config = self.resource.get_score_config(attribute.source)
-                if score_config is None:
-                    logger.error(
-                        f"can't find score {attribute.source} in resource "
-                        f"{self.resource.resource_id}; available scores are "
-                        f"{self.get_all_annotation_attributes()}"
-                    )
-                    raise ValueError(
-                        f"can't find score {attribute.source} in resource "
-                        f"{self.resource.resource_id}")
-
-                py_type = score_config.type
-                assert py_type is not None, score_config
-                score_id = attribute.source
-                source = self.ScoreSource(
-                    self.annotator_type(),
-                    self.resource.resource_id,
-                    score_id,
-                    self.non_default_position_aggregators.get(score_id),
-                    self.non_default_position_aggregators.get(score_id))
-
-                schema.create_field(
-                    prop_name, py_type,
-                    attribute.get("internal", False), source)
-
-            self._annotation_schema = schema
-        print(self._annotation_schema)
-
-        return self._annotation_schema
 
     def _scores_not_found(self, attributes):
         values = {

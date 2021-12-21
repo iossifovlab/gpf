@@ -8,7 +8,6 @@ from .annotatable import Annotatable, VCFAllele
 from dae.utils.variant_utils import trim_str_left, reverse_complement
 
 from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
-from .schema import Schema
 
 
 logger = logging.getLogger(__name__)
@@ -66,39 +65,11 @@ class LiftOverAnnotator(Annotator):
     def get_all_annotation_attributes(self) -> List[Dict]:
         return [
             {
-                "source": "liftover_annotatable",
+                "name": "liftover_annotatable",
                 "type": "object",
-                "desc": "liftover annotatable",
-                "internal": True,
+                "desc": "liftover allele",
             }
         ]
-
-    class LiftoverSource(Schema.Source):
-        def __init__(
-                self, chain: str, target_genome: str):
-            super().__init__("liftover_annotator", chain)
-            self.target_genome = target_genome
-
-        def __repr__(self):
-            repr = [super().__repr__(), self.target_genome]
-            return "; ".join(repr)
-
-    @property
-    def annotation_schema(self):
-        if self._annotation_schema is None:
-            schema = Schema()
-            for attr in self.get_annotation_config():
-                source = LiftOverAnnotator.LiftoverSource(
-                    self.chain.resource_id,
-                    self.target_genome_resource.resource_id)
-                schema.create_field(
-                    attr.destination,
-                    "object",
-                    attr.get("internal", False),
-                    source
-                )
-            self._annotation_schema = schema
-        return self._annotation_schema
 
     @classmethod
     def validate_config(cls, config: Dict) -> Dict:

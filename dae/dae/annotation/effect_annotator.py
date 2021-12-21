@@ -9,7 +9,6 @@ from dae.effect_annotation.effect import AlleleEffects, AnnotationEffect
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.gene_models import GeneModels
 
-from .schema import Schema
 from .annotatable import Annotatable, CNVAllele, VCFAllele
 
 from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
@@ -65,17 +64,6 @@ def build_effect_annotator(pipeline, config):
 
 class EffectAnnotatorAdapter(Annotator):
 
-    class EffectSource(Schema.Source):
-        def __init__(
-                self, annotator_type: str, resource_id: str,
-                effect_attribute: str):
-            super().__init__(annotator_type, resource_id)
-            self.effect_attribute = effect_attribute
-
-        def __repr__(self):
-            repr = [super().__repr__(), self.effect_attribute]
-            return "; ".join(repr)
-
     DEFAULT_ANNOTATION = Box({
         "attributes": [
             {
@@ -128,47 +116,47 @@ class EffectAnnotatorAdapter(Annotator):
     def get_all_annotation_attributes(self) -> List[Dict]:
         result = [
             {
-                "source": "effect_type",
+                "name": "effect_type",
                 "type": "str",
                 "desc": "worst effect",
             },
             {
-                "source": "effect_gene_genes",
+                "name": "effect_gene_genes",
                 "type": "object",
                 "desc": ""
             },
             {
-                "source": "effect_gene_types",
+                "name": "effect_gene_types",
                 "type": "object",
                 "desc": ""
             },
             {
-                "source": "effect_genes",
+                "name": "effect_genes",
                 "type": "str",
                 "desc": ""
             },
             {
-                "source": "effect_details_transcript_ids",
+                "name": "effect_details_transcript_ids",
                 "type": "object",
                 "desc": ""
             },
             {
-                "source": "effect_details_genes",
+                "name": "effect_details_genes",
                 "type": "object",
                 "desc": ""
             },
             {
-                "source": "effect_details_details",
+                "name": "effect_details_details",
                 "type": "object",
                 "desc": ""
             },
             {
-                "source": "effect_details",
+                "name": "effect_details",
                 "type": "str",
                 "desc": ""
             },
             {
-                "source": "allele_effects",
+                "name": "allele_effects",
                 "type": "object",
                 "desc": ""
             },
@@ -216,25 +204,6 @@ class EffectAnnotatorAdapter(Annotator):
     @staticmethod
     def annotator_type():
         return "effect_annotator"
-
-    @property
-    def annotation_schema(self):
-        if self._annotation_schema is None:
-            schema = Schema()
-            for attribute in self.get_annotation_config():
-
-                dest_name = attribute.destination
-                source_name = attribute.source
-
-                source = self.EffectSource(
-                    self.annotator_type, str(self.gene_models), source_name)
-                schema.create_field(
-                    dest_name, "str",
-                    attribute.get("internal", False),
-                    source)
-
-            self._annotation_schema = schema
-        return self._annotation_schema
 
     def get_annotation_config(self):
         if self._annotation_config is None:

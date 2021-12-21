@@ -77,9 +77,37 @@ class Annotator(abc.ABC):
         """
         return []
 
-    @abc.abstractproperty
-    def annotation_schema(self) -> Schema:
-        pass
+    def get_annotation_attribute(self, attribute_name) -> Dict[str, str]:
+        for attribute in self.get_all_annotation_attributes():
+            if attribute_name == attribute["name"]:
+                return attribute
+        message = f"can't find attribute {attribute_name} in annotator " \
+            f"{self.annotator_type}: {self.config}"
+        logger.error(message)
+        raise ValueError(message)
+
+    @property
+    def annotation_schema(self):
+        if self._annotation_schema is None:
+            schema = Schema()
+            for attribute in self.get_annotation_config():
+                annotation_attribute = self.get_annotation_attribute(
+                    attribute["source"])
+                
+                source = Schema.Source(
+                    self.annotator_type(),
+                    annotator_config=self.config,
+                    attribute_config=attribute)
+
+                schema.create_field(
+                    attribute.destination,
+                    py_type=annotation_attribute["type"],
+                    internal=attribute.get("internal", False),
+                    description=annotation_attribute["desc"],
+                    source=source)
+
+            self._annotation_schema = schema
+        return self._annotation_schema
 
     @abc.abstractstaticmethod
     def annotator_type() -> str:

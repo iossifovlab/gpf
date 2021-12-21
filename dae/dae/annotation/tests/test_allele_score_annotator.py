@@ -40,6 +40,6 @@ def test_allele_score_annotator_attributes(
     print(annotator.get_all_annotation_attributes())
 
     assert annotator.get_all_annotation_attributes() == [
-        {'source': 'altFreq', 'type': 'float', 'desc': ''},
-        {'source': 'altFreq2', 'type': 'float', 'desc': ''},
+        {'name': 'altFreq', 'type': 'float', 'desc': ''},
+        {'name': 'altFreq2', 'type': 'float', 'desc': ''},
     ]

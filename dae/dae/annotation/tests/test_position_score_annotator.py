@@ -88,9 +88,9 @@ def test_position_score_annotator_all_attributes(position_score_repo):
     assert len(attributes) == 3
 
     assert annotator.get_all_annotation_attributes() == [
-        {'desc': 'test values', 'source': 'test100way', 'type': 'float'},
-        {'desc': 'test score 1', 'source': 't1', 'type': 'float'},
-        {'desc': 'test score 2', 'source': 't2', 'type': 'float'},
+        {'desc': 'test values', 'name': 'test100way', 'type': 'float'},
+        {'desc': 'test score 1', 'name': 't1', 'type': 'float'},
+        {'desc': 'test score 2', 'name': 't2', 'type': 'float'},
     ]
 
 
@@ -171,10 +171,10 @@ def test_position_annotator_schema(position_score_repo):
     assert schema.names == ["test100"]
     field = schema["test100"]
     assert field.name == "test100"
-    # FIXME: assert field.type == float
+    assert field.type == "float"
     assert field.source.annotator_type == "position_score"
-    assert field.source.resource_id == "position_score1"
-    assert field.source.score_id == "test100way"
+    assert field.source.annotator_config["resource_id"] == "position_score1"
+    assert field.source.attribute_config["source"] == "test100way"
 
 
 def test_position_default_annotator_schema(position_score_repo):
@@ -193,10 +193,10 @@ def test_position_default_annotator_schema(position_score_repo):
 
     field = schema["t1"]
     assert field.name == "t1"
-    # FIXME: assert field.type == float
+    assert field.type == "float"
     assert field.source.annotator_type == "position_score"
-    assert field.source.resource_id == "position_score1"
-    assert field.source.score_id == "t1"
+    assert field.source.annotator_config["resource_id"] == "position_score1"
+    assert field.source.attribute_config["source"] == "t1"
 
 
 def test_position_annotator_schema_one_source_two_dest_schema(
@@ -222,17 +222,17 @@ def test_position_annotator_schema_one_source_two_dest_schema(
 
     field = schema["test100"]
     assert field.name == "test100"
-    # FIXME: assert field.type == float
+    assert field.type == "float"
     assert field.source.annotator_type == "position_score"
-    assert field.source.resource_id == "position_score1"
-    assert field.source.score_id == "test100way"
+    assert field.source.annotator_config["resource_id"] == "position_score1"
+    assert field.source.attribute_config["source"] == "test100way"
 
     field = schema["test100max"]
     assert field.name == "test100max"
-    # FIXME: assert field.type == float
+    assert field.type == "float"
     assert field.source.annotator_type == "position_score"
-    assert field.source.resource_id == "position_score1"
-    assert field.source.score_id == "test100way"
+    assert field.source.annotator_config["resource_id"] == "position_score1"
+    assert field.source.attribute_config["source"] == "test100way"
 
 
 def test_position_annotator_join_aggregation(position_score_repo):
