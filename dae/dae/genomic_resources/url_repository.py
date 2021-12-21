@@ -69,21 +69,16 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
         if self.scheme in ['http', 'https'] and seekable:
             logger.debug("using HTTPFile for http(s)")
             binary_stream = HTTPFile(file_url)
-            if "t" in mode:
-                return io.TextIOWrapper(
-                    binary_stream, encoding=GR_ENCODING)
-            # if filename.endswith(".gz") and uncompress:
-            #     return gzip.open(binary_stream, mode)
-            return binary_stream
         else:
             binary_stream = urlopen(file_url)
-            if filename.endswith(".gz") and uncompress:
-                return gzip.open(binary_stream, mode)
 
-            if 't' in mode:
-                return io.TextIOWrapper(binary_stream, encoding=GR_ENCODING)
+        if filename.endswith(".gz") and uncompress:
+            return gzip.open(binary_stream, mode)
 
-            return binary_stream
+        if 't' in mode:
+            return io.TextIOWrapper(binary_stream, encoding=GR_ENCODING)
+
+        return binary_stream
 
     def open_tabix_file(self, genomic_resource,  filename,
                         index_filename=None):

@@ -45,6 +45,8 @@ setuptools.setup(
         "dae/tools/create_genomic_resource_repository.py",
     ],
     entry_points="""
+    [dae.genomic_resources.plugins]
+    gpf_instance=dae.gpf_instance.gpf_instance_context_plugin:init_gpf_instance_genomic_context_plugin
     [console_scripts]
     annotate_variants.py=dae.tools.annotate_variants:cli
     annotate_variants_vcf.py=dae.tools.annotate_variants:cli_vcf
