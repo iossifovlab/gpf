@@ -25,7 +25,12 @@ export class DatasetNodeComponent implements OnInit {
 
   select() {
     if (this.datasetNode !== undefined && this.datasetNode.dataset !== undefined) {
-      this.router.navigate(['/', 'datasets', this.datasetNode.dataset.id, this.findFirstTool(this.datasetNode.dataset)]);
+      const firstTool = this.findFirstTool(this.datasetNode.dataset);
+      if (firstTool) {
+        this.router.navigate(['/', 'datasets', this.datasetNode.dataset.id, this.findFirstTool(this.datasetNode.dataset)]);
+      } else {
+        this.router.navigate(['/', 'datasets', this.datasetNode.dataset.id]);
+      }
     }
   }
 
@@ -34,7 +39,7 @@ export class DatasetNodeComponent implements OnInit {
       return toolPageLinks.datasetDescription;
     } else if (selectedDataset.commonReport.enabled) {
       return toolPageLinks.datasetStatistics;
-    } else if (selectedDataset.geneBrowser) {
+    } else if (selectedDataset.geneBrowser.enabled) {
       return toolPageLinks.geneBrowser;
     } else if (selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig) {
       return toolPageLinks.genotypeBrowser;

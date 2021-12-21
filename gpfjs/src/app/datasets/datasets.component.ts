@@ -86,7 +86,12 @@ export class DatasetsComponent implements OnInit, OnDestroy {
     this.registerAlertVisible = !this.selectedDataset.accessRights;
 
     if (!this.isToolSelected()) {
-      this.router.navigate(['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]);
+      const firstTool = this.findFirstTool(this.selectedDataset);
+      if (firstTool) {
+        this.router.navigate(['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]);
+      } else {
+        this.router.navigate(['/', 'datasets', this.selectedDataset.id]);
+      }
     } else {
       const url = this.router.url.split('/');
       const toolName = url[url.indexOf('datasets') + 2];
@@ -99,7 +104,6 @@ export class DatasetsComponent implements OnInit, OnDestroy {
 
   private isToolEnabled(dataset: Dataset, toolName: string): boolean {
     let result: boolean;
-
     switch (toolName) {
       case 'dataset-description':
         result = dataset.description !== undefined ? true : false;
@@ -120,7 +124,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
         result = dataset.enrichmentTool;
         break;
       case 'gene-browser':
-        result = dataset.geneBrowser?.enabled;
+        result = dataset.geneBrowser.enabled;
         break;
     }
 
@@ -131,14 +135,14 @@ export class DatasetsComponent implements OnInit, OnDestroy {
     return this.router.url.split('/').some(str => Object.values(toolPageLinks).includes(str));
   }
 
-  private findFirstTool(selectedDataset: Dataset): string {
+  public findFirstTool(selectedDataset: Dataset): string {
     let firstTool = '';
 
     if (selectedDataset.description) {
       firstTool = toolPageLinks.datasetDescription;
     } else if (selectedDataset.commonReport.enabled) {
       firstTool = toolPageLinks.datasetStatistics;
-    } else if (selectedDataset.geneBrowser) {
+    } else if (selectedDataset.geneBrowser.enabled) {
       firstTool = toolPageLinks.geneBrowser;
     } else if (selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig) {
       firstTool = toolPageLinks.genotypeBrowser;
