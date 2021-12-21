@@ -60,21 +60,20 @@ class StudyWrapperBase:
     def build_genotype_data_all_datasets(config):
         keys = [
             "id",
-            "name"
+            "name",
+            "phenotype_browser",
+            "phenotype_tool"
         ]
         result = {
             key: config.get(key, None) for key in keys
         }
+        result["name"] = result["name"] or result["id"]
         result["genotype_browser"] = config.genotype_browser.enabled
-        result["genotype_browser_config"] = {
-        }
-        result["genotype_browser_config"]["table_columns"] = []
         result["common_report"] = {"enabled": config.common_report.enabled}
         result["enrichment_tool"] = config.enrichment.enabled
-        result["name"] = result["name"] or result["id"]
 
         return result
-    
+
     @staticmethod
     def build_genotype_data_group_description(
         gpf_instance, config, description, person_set_collection_configs
