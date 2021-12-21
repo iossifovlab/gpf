@@ -93,7 +93,7 @@ class Annotator(abc.ABC):
             for attribute in self.get_annotation_config():
                 annotation_attribute = self.get_annotation_attribute(
                     attribute["source"])
-                
+
                 source = Schema.Source(
                     self.annotator_type(),
                     annotator_config=self.config,
