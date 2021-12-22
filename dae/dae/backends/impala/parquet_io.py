@@ -6,6 +6,7 @@ import hashlib
 import itertools
 import logging
 from copy import copy
+from urllib.parse import urlparse
 
 import toml
 from box import Box
@@ -14,6 +15,7 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 import configparser
+import fsspec
 
 from dae.utils.variant_utils import GENOTYPE_TYPE
 from dae.variants.attributes import TransmissionType
@@ -332,9 +334,8 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
             config["frequency_bin"]["rare_boundary"] = str(self._rare_boundary)
 
         filename = os.path.join(self.output, "_PARTITION_DESCRIPTION")
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
 
-        with open(filename, "w") as configfile:
+        with fsspec.open(filename, "w") as configfile:
             config.write(configfile)
 
     def generate_file_access_glob(self):
@@ -376,10 +377,14 @@ class ContinuousParquetFileWriter:
             annotation_schema, extra_attributes)
         self.schema = self.serializer.schema
 
-        dirname = os.path.dirname(filepath)
-        if dirname and not os.path.exists(dirname):
-            os.makedirs(dirname)
-        self.dirname = dirname
+        if filesystem is not None:
+            filesystem.create_dir(filepath)
+            self.dirname = filepath
+        else:
+            dirname = os.path.dirname(filepath)
+            if dirname and not os.path.exists(dirname):
+                os.makedirs(dirname)
+            self.dirname = dirname
 
         self._writer = pq.ParquetWriter(
             filepath, self.schema, compression="snappy", filesystem=filesystem
@@ -438,8 +443,7 @@ class VariantsParquetWriter:
             partition_descriptor,
             bucket_index=1,
             rows=100_000,
-            include_reference=True,
-            filesystem=None):
+            include_reference=True):
 
         self.variants_loader = variants_loader
         self.families = variants_loader.families
@@ -447,7 +451,6 @@ class VariantsParquetWriter:
 
         self.bucket_index = bucket_index
         self.rows = rows
-        self.filesystem = filesystem
 
         self.include_reference = include_reference
 
@@ -515,10 +518,15 @@ class VariantsParquetWriter:
         filename = self.partition_descriptor.variant_filename(family_allele)
 
         if filename not in self.data_writers:
+            if urlparse(filename).scheme:
+                filesystem, path = pa.fs.FileSystem.from_uri(filename)
+            else:
+                filesystem, path = None, filename
+
             self.data_writers[filename] = ContinuousParquetFileWriter(
-                filename,
+                path,
                 self.variants_loader,
-                filesystem=self.filesystem,
+                filesystem=filesystem,
                 rows=self.rows,
             )
         return self.data_writers[filename]
@@ -638,18 +646,14 @@ class VariantsParquetWriter:
         for k, v in schema.items():
             config["blob"][k] = v
 
-        if os.path.isdir(self.partition_descriptor.output):
-            path = self.partition_descriptor.output
-        else:
-            path = os.path.dirname(self.partition_descriptor.output)
-        filename = os.path.join(path, "_VARIANTS_SCHEMA")
+        filename = os.path.join(self.partition_descriptor.output, "_VARIANTS_SCHEMA")
 
         config["extra_attributes"] = {}
         extra_attributes = self.serializer.extra_attributes
         for attr in extra_attributes:
             config["extra_attributes"][attr] = "string"
 
-        with open(filename, "w") as configfile:
+        with fsspec.open(filename, "w") as configfile:
             content = toml.dumps(config)
             configfile.write(content)
 
