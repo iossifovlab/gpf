@@ -60,6 +60,14 @@ logging.basicConfig(
 logger = logging.getLogger("impala")
 logger.setLevel(logging.WARNING)
 
+# suppress url connection pool
+logger = logging.getLogger("urllib3.connectionpool")
+logger.setLevel(logging.INFO)
+
+# suppress fsspec
+logger = logging.getLogger("fsspec")
+logger.setLevel(logging.INFO)
+
 logger = logging.getLogger("dae.effect_annotation")
 logger.setLevel(logging.INFO)
 

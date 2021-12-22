@@ -3,6 +3,7 @@ import gzip
 import yaml
 import pysam
 import logging
+import fsspec
 
 from urllib.request import urlopen
 from urllib.parse import urlparse
@@ -12,7 +13,6 @@ from .repository import GenomicResource
 from .repository import GenomicResourceRealRepo
 from .repository import GRP_CONTENTS_FILE_NAME
 from .repository import GR_ENCODING
-from .http_file import HTTPFile
 
 
 logger = logging.getLogger(__name__)
@@ -68,7 +68,7 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
 
         if self.scheme in ['http', 'https'] and seekable:
             logger.debug("using HTTPFile for http(s)")
-            binary_stream = HTTPFile(file_url)
+            binary_stream = fsspec.open(file_url).open()
         else:
             binary_stream = urlopen(file_url)
 
