@@ -14,6 +14,7 @@ class HTTPRawIO(RawIOBase):
         self._file_length = int(response.headers["Content-Length"])
 
     def seek(self, offset: int, whence=SEEK_SET):
+        # print(f"IIII seek(offset={offset}, whence={whence})")
         if whence == SEEK_SET:
             self._position = 0 + offset
         elif whence == SEEK_CUR or whence == SEEK_END:
@@ -37,15 +38,17 @@ class HTTPRawIO(RawIOBase):
         return True
 
     def read(self, size: int = -1):
+        # print(f"IIII read(size={size})")
         if self.closed:
             raise ValueError("ValueError: I/O operation on closed HTTP file.")
         if self._position >= self._file_length:
-            return ""
+            return b""
 
         range_end = self._position + size
         if range_end > self._file_length or size == -1:
             range_end = self._file_length
-        headers = {"Range": f"bytes={int(self._position)}-{int(range_end)}"}
+        headers = {"Range": f"bytes={self._position}-{range_end-1}"}
+        # print(f'IIII      header: {headers}')
 
         self._position = range_end
         response = requests.get(self.url, headers=headers)
@@ -54,14 +57,19 @@ class HTTPRawIO(RawIOBase):
         return content
 
     def readall(self):
+        # print("IIII readall()")
         self.seek(0)
         return self.read()
 
     def readinto(self, b):
+        # print(f"IIII readinto({b.nbytes})")
         nbytes = b.nbytes
-        content = self.read(nbytes-1)
-        for idx, a in enumerate(content):
-            b[idx] = a
+        content = self.read(nbytes)
+        # print(f"IIII      len(content): {len(content)}")
+
+        # for idx, a in enumerate(content):
+        #     b[idx] = a
+        b[:len(content)] = content
         return len(content)
 
     def write(self, b):
