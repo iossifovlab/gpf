@@ -248,4 +248,33 @@ describe('Table functionality', () => {
       });
     });
   });
+
+  it('should test protection scores', () => {
+    page.geneSearchInput.type('RAPGEF');
+    page.allTableRows.should('have.length', 4);
+
+    [
+      ['RVIS_rank', 2208.5, 449, 2187.5, 383],
+      ['LGD_rank', 10012.5, 1838.5, 737, 299.5],
+      ['pLI_rank', 3433, 374, 2574, 659],
+      ['pRec_rank', 13429, 17823, 14843, 17507]
+    ].forEach((dataArray, columnIndex) => {
+      page.clickSortButton(dataArray[0]);
+      const valuesArray = dataArray.splice(1);
+      valuesArray.sort((a, b) => b - a);
+      valuesArray.forEach((rowData, rowIndex) => {
+        page.allTableRows.eq(rowIndex).within(row => {
+          cy.wrap(row).get('td').eq(8 + columnIndex).should('have.text', rowData);
+        });
+      });
+
+      page.clickSortButton(dataArray[0]);
+      valuesArray.sort((a, b) => a - b);
+      valuesArray.forEach((rowData, rowIndex) => {
+        page.allTableRows.eq(rowIndex).within(row => {
+          cy.wrap(row).get('td').eq(8 + columnIndex).should('have.text', rowData);
+        });
+      });
+    });
+  });
 });
