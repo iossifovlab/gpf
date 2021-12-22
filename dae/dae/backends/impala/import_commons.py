@@ -728,18 +728,9 @@ class BatchImporter:
             .build_genotype_storage(argv)
         return self
 
-    def _create_output_directory(self, argv):
-        dirname = argv.output
-        if dirname is None:
-            dirname = "."
-        dirname = os.path.abspath(dirname)
-
-        os.makedirs(dirname, exist_ok=True)
-        os.makedirs(os.path.join(dirname, "logs"), exist_ok=True)
-        return dirname
 
     def generate_instructions(self, argv):
-        dirname = self._create_output_directory(argv)
+        dirname = argv.output
         context = self.build_context(argv)
         if argv.tool == "make":
             generator = MakefileGenerator()
@@ -756,7 +747,7 @@ class BatchImporter:
             outfile.write(content)
 
     def build_context(self, argv):
-        outdir = self._create_output_directory(argv)
+        outdir = argv.output
         study_id = self.study_id
 
         context = {
