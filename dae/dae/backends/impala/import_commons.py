@@ -5,6 +5,7 @@ import argparse
 import time
 import logging
 import shutil
+import fsspec
 
 import toml
 from box import Box
@@ -821,7 +822,6 @@ class BatchImporter:
 
     def generate_study_config(self, argv):
         dirname = argv.output
-        assert os.path.exists(dirname)
 
         config_dict = {
             "id": self.study_id,
@@ -852,7 +852,7 @@ class BatchImporter:
 
         config_builder = StudyConfigBuilder(config_dict)
         config = config_builder.build_config()
-        with open(os.path.join(
+        with fsspec.open(os.path.join(
                 dirname, f"{self.study_id}.conf"), "w") as outfile:
             outfile.write(config)
 
