@@ -25,7 +25,7 @@ def test_http_file(resources_http_server):
 def test_http_genomic_sequence(resources_http_server):
     http_port = resources_http_server.http_port
     file_url = f"http://localhost:{http_port}/" \
-        "hg19/GATK_ResourceBundle_5777_b37_phiX174/genome/chrAll.fa"
+        "hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa"
 
     with HTTPFile(file_url) as file:
         print(file.read(100))

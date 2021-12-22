@@ -66,14 +66,15 @@
 #      internal:    yes
 - liftover_annotator:
     chain: hg38/hg38tohg19
-    target_genome: hg19/GATK_ResourceBundle_5777_b37_phiX174/genome
+    target_genome: hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174
 
 - liftover_annotator:
     chain: hg38/hg38tohg19
     target_genome: hg17/bla/genome
+    attributes:
     - destination: liftover_annotable_hg17
-      source:      liftover_annotable
-      internal:    yes
+      source: liftover_annotable
+      internal: yes
 
 - np_score:
     resource: hg19/MPC

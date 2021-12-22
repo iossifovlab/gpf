@@ -127,8 +127,7 @@ def test_cached_http_repo(
 
 
 @pytest.mark.parametrize("resource_id", [
-    "hg19/GATK_ResourceBundle_5777_b37_phiX174/"
-    "gene_models/refGene_v201309",
+    "hg19/gene_models/refGene_v201309",
 ])
 def test_cached_default_http_repo(
         resource_id, tmpdir):

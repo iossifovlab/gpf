@@ -175,8 +175,7 @@ def gpf_instance_2013(
         def gene_models(self):
             print(self.dae_config.gene_models)
             resource = self.grr.get_resource(
-                "hg19/GATK_ResourceBundle_5777_b37_phiX174/"
-                "gene_models/refGene_v201309")
+                "hg19/gene_models/refGene_v201309")
             result = resource.open()
             return result
 
@@ -213,8 +212,7 @@ def gpf_instance_2019(default_dae_config, global_dae_fixtures_dir):
         @cached
         def gene_models(self):
             resource = self.grr.get_resource(
-                "hg19/GATK_ResourceBundle_5777_b37_phiX174/"
-                "gene_models/refGene_v20190211")
+                "hg19/gene_models/refGene_v20190211")
             result = resource.open()
             return result
 

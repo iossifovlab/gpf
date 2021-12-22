@@ -2,17 +2,11 @@ vars:
   instance_id: test_data
   wd: "."
 
-# reference_genome:
-#   resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
-
-# gene_models:
-#   resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/gene_models/refGene_201309"
-
 reference_genome:
-  resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174/genome"
+  resource_id: "hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174"
 
 gene_models:
-  resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174/gene_models/refGene_v20190211"
+  resource_id: "hg19/gene_models/refGene_v20190211"
 
 genotype_storage:
   default: genotype_filesystem

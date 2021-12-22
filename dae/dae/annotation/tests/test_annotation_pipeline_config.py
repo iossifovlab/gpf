@@ -379,8 +379,8 @@ def test_effect_annotator():
     pipeline_config = AnnotationConfigParser.parse(
         textwrap.dedent("""
         - effect_annotator:
-            gene_models: hg38/GRCh38-hg38/gene_models/refSeq_20200330
-            genome: hg38/GRCh38-hg38/genome
+            gene_models: hg38/gene_models/refSeq_20200330
+            genome: hg38/genomes/GRCh38-hg38
             attributes:
             - source: worst_effect
               destination: old_worst_effect
@@ -390,8 +390,8 @@ def test_effect_annotator():
     config = EffectAnnotatorAdapter.validate_config(pipeline_config[0])
     assert config.annotator_type == "effect_annotator"
 
-    assert config.genome == "hg38/GRCh38-hg38/genome"
-    assert config.gene_models == "hg38/GRCh38-hg38/gene_models/refSeq_20200330"
+    assert config.genome == "hg38/genomes/GRCh38-hg38"
+    assert config.gene_models == "hg38/gene_models/refSeq_20200330"
 
     attributes = config.attributes
     assert len(attributes) == 1
@@ -404,8 +404,8 @@ def test_effect_annotator_extra():
     pipeline_config = AnnotationConfigParser.parse(
         textwrap.dedent("""
         - effect_annotator:
-            gene_models: hg38/GRCh38-hg38/gene_models/refSeq_20200330
-            genome: hg38/GRCh38-hg38/genome
+            gene_models: hg38/gene_models/refSeq_20200330
+            genome: hg38/genomes/GRCh38-hg38
             promoter_len: 100
         """)
     )
@@ -434,20 +434,20 @@ def test_effect_annotator_minimal():
 def test_liftover_annotator():
     pipeline_config = AnnotationConfigParser.parse(
         textwrap.dedent("""
-            - liftover_annotator:
-                liftover_id: hg38tohg19
-                chain: hg38/hg38tohg19
-                target_genome: hg19/GATK_ResourceBundle_5777_b37_phiX174/genome
+        - liftover_annotator:
+            liftover_id: hg38tohg19
+            chain: liftover/hg38tohg19
+            target_genome: hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174
         """)
     )
 
     config = LiftOverAnnotator.validate_config(pipeline_config[0])
     assert config.annotator_type == "liftover_annotator"
 
-    assert config.chain == "hg38/hg38tohg19"
+    assert config.chain == "liftover/hg38tohg19"
     assert config.liftover_id == "hg38tohg19"
     assert config.target_genome == \
-        "hg19/GATK_ResourceBundle_5777_b37_phiX174/genome"
+        "hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174"
 
 
 def test_empty_config():
@@ -463,8 +463,8 @@ def test_effect_annotator_extra_attributes():
     pipeline_config = AnnotationConfigParser.parse(
         textwrap.dedent("""
         - effect_annotator:
-            gene_models: hg38/GRCh38-hg38/gene_models/refSeq_20200330
-            genome: hg38/GRCh38-hg38/genome
+            gene_models: hg38/gene_models/refSeq_20200330
+            genome: hg38/genomes/GRCh38-hg38
             promoter_len: 100
             attributes:
             - source: genes
