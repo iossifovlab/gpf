@@ -18,8 +18,7 @@ def wgpf_instance(default_dae_config, fixture_dirname):
         def gene_models(self):
             print(self.dae_config.gene_models)
             result = self.grr.get_resource(
-                "hg19/GATK_ResourceBundle_5777_b37_phiX174/"
-                "gene_models/refGene_v201309")
+                "hg19/gene_models/refGene_v201309")
             result.open()
             return result
 
