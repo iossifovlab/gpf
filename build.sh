@@ -421,7 +421,12 @@ EOT'
           --exclude dae/tmp \
           --exclude dae/build \
           --exclude wdae/build \
-          dae/ wdae/
+          --exclude docs \
+          --exclude tests \
+          --exclude conftest.py \
+          --exclude gpf_wdae.egg-info \
+          --transform "s,^,gpf/," \
+          dae/ wdae/ environment.yml dev-environment.yml
     )
   }
 
