@@ -178,7 +178,7 @@ describe('Table functionality', () => {
 
     page.allTableRows.should('have.length', 4);
 
-    const dataArr = [[0, 0, 0], [0, 0, 1], [0, 0, 0], [1, 0, 0]];
+    const dataArr = [[0, 0, 1], [0, 0, 0], [0, 0, 0], [1, 0, 0]];
 
     page.allSortingButtons.eq(0).click();
     dataArr.forEach((allRows, allRowsIndex) => {
@@ -249,7 +249,7 @@ describe('Table functionality', () => {
     });
   });
 
-  it('should test protection scores', () => {
+  it('should compare protection scores', () => {
     page.geneSearchInput.type('RAPGEF');
     page.allTableRows.should('have.length', 4);
 
@@ -276,5 +276,16 @@ describe('Table functionality', () => {
         });
       });
     });
+  });
+  
+  it('should show nothing found when search query dosent match', () => {
+    page.geneSearchInput.type('9595');
+
+    page.searchResultWarning.should('be.visible');
+    page.searchResultWarning.should('have.text', 'Nothing found');
+
+    page.geneSearchInput.clear().type('R');
+    page.searchResultWarning.should('not.exist');
+    page.allTableRows.should('have.length.above', 1);
   });
 });

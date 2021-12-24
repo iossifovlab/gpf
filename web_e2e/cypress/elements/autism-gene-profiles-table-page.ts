@@ -61,7 +61,7 @@ export class AutismGeneProfilesTable extends BasePage {
   clickSortButton(columnName: string) {
     cy.get('th').contains(columnName).then(column => {
       cy.wrap(column).parent().within(button => {
-        cy.wrap(button).get('.clickable').click();
+        cy.wrap(button).get('.clickable').click({force:true});
       });
     });
   }
@@ -81,6 +81,10 @@ export class AutismGeneProfilesTable extends BasePage {
         }
       });
     });
+  }
+
+  get searchResultWarning() {
+    return cy.get('#search-warning > td > span');
   }
 
   get firstTabCloseButton() {
