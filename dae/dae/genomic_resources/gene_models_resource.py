@@ -25,7 +25,7 @@ class GeneModelsResource(GenomicResource):
         gene_mapping_filename = self.get_config().get("gene_mapping", None)
         logger.debug(f"loading gene models {filename} ({fileformat})")
 
-        gm = GeneModels(self.resource_id)
+        gm = GeneModels(('resource', self.repo.repo_id, self.resource_id))
         with self.open_raw_file(filename, mode='rt',
                                 uncompress=True, seekable=True) as infile:
             if gene_mapping_filename is not None:

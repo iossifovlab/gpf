@@ -4,7 +4,6 @@ from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.repository import GenomicResourceRepo
 
-_PLUGINS_LOADED = False
 _REGISTERED_CONEXT_GENERATORS = []
 
 GC_GRR_KEY = "genomic_resource_repository"
@@ -13,7 +12,7 @@ GC_GENE_MODELS_KEY = "gene_models"
 
 
 class GenomicContext(ABC):
-    def get_reference_genome(self) -> ReferenceGenome:
+    def get_reference_genome(self) -> Optional[ReferenceGenome]:
         o = self.get_context_object(GC_REFERENCE_GENOME_KEY)
         if o is None:
             return None
@@ -22,7 +21,7 @@ class GenomicContext(ABC):
         raise Exception(
             "The conext returned a worng type for a reference genome.")
 
-    def get_gene_models(self) -> GeneModels:
+    def get_gene_models(self) -> Optional[GeneModels]:
         o = self.get_context_object(GC_GENE_MODELS_KEY)
         if o is None:
             return None
@@ -30,7 +29,7 @@ class GenomicContext(ABC):
             return o
         raise Exception("The conext returned a wrong type for gene models.")
 
-    def get_genomic_resource_repository(self) -> GenomicResourceRepo:
+    def get_genomic_resource_repository(self) -> Optional[GenomicResourceRepo]:
         o = self.get_context_object(GC_GRR_KEY)
         if o is None:
             return None
@@ -46,7 +45,7 @@ class GenomicContext(ABC):
 
 class GenomicContextGenerator(ABC):
 
-    def get_context_generator_priority() -> int:
+    def get_context_generator_priority(self) -> int:
         return 0
 
     @abstractmethod
@@ -75,21 +74,7 @@ class PriorityGenomicContext(GenomicContext):
         return None
 
 
-def _load_plugins():
-    global _PLUGINS_LOADED
-    if _PLUGINS_LOADED:
-        return
-
-    from importlib_metadata import entry_points
-    discovered_plugins = entry_points(group='dae.genomic_resources.plugins')
-    for dp in discovered_plugins:
-        dp.load()()
-    _PLUGINS_LOADED = True
-    return None
-
-
-def get_genomic_context():
-    _load_plugins()
+def get_genomic_context() -> GenomicContext:
     contexts = []
     for generator in sorted(_REGISTERED_CONEXT_GENERATORS,
                             key=lambda g: (g.get_context_generator_priority(),

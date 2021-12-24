@@ -32,13 +32,10 @@ class GPFInstanceGenomicContextGenerator(GenomicContextGenerator):
     def __init__(self):
         self.contexts = []
 
-        gpf_instance = None
         try:
-            gpf_instance = GPFInstance()
+            self.contexts.append(GPFInstanceGenomicContext(GPFInstance()))
         except Exception:
             pass
-        if gpf_instance:
-            self.contexts.append(GPFInstanceGenomicContext(gpf_instance))
 
     def get_context_generator_priority(self) -> int:
         return 100
@@ -51,5 +48,4 @@ class GPFInstanceGenomicContextGenerator(GenomicContextGenerator):
 
 
 def init_gpf_instance_genomic_context_plugin():
-    print('BBBBBllllbBBBBllBB')
     register_context_source(GPFInstanceGenomicContextGenerator())

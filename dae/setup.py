@@ -48,8 +48,6 @@ setuptools.setup(
     [dae.genomic_resources.plugins]
     gpf_instance=dae.gpf_instance.gpf_instance_context_plugin:init_gpf_instance_genomic_context_plugin
     [console_scripts]
-    annotate_variants.py=dae.tools.annotate_variants:cli
-    annotate_variants_vcf.py=dae.tools.annotate_variants:cli_vcf
     dae2parquet.py=dae.tools.dae2parquet:main
     vcf2parquet.py=dae.tools.vcf2parquet:main
     denovo2parquet.py=dae.tools.denovo2parquet:main
@@ -59,6 +57,8 @@ setuptools.setup(
     grr_manage=dae.genomic_resources.cli:cli_manage
     grr_browse=dae.genomic_resources.cli:cli_browse
     annotate_columns=dae.annotation_cli.annotate_columns:cli
+    annotate_variant_effects=dae.effect_annotation.cli:cli_columns
+    annotate_variant_effects_vcf=dae.effect_annotation.cli:cli_vcf
     """,
     classifiers=[
         "Development Status :: 4 - Beta",

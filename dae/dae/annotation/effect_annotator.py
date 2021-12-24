@@ -232,7 +232,7 @@ class EffectAnnotatorAdapter(Annotator):
 
         effects = self.effect_annotator.do_annotate_variant(
             chrom=annotatable.chromosome,
-            position=annotatable.position,
+            pos=annotatable.position,
             ref=annotatable.reference,
             alt=annotatable.alternative,
             variant_type=annotatable.type,

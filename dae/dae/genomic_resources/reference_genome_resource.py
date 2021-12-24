@@ -51,9 +51,9 @@ class ReferenceGenomeResource(GenomicResource):
         index_file_name = self.get_config().get("index_file",
                                                 file_name + ".fai")
         index_content = self.get_file_str_content(index_file_name)
-        ref = ReferenceGenome()
+        ref = ReferenceGenome(
+            ('resource', self.repo.repo_id, self.resource_id))
         ref.set_pars(self.PARS)
-        ref.set_resource_id(self.resource_id)
 
         ref.set_open(index_content, self.open_raw_file(
             file_name, "rb", uncompress=False, seekable=True))

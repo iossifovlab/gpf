@@ -239,7 +239,7 @@ class AnnotationEffect:
 
         gene_effects = "|".join([f"{g}:{e}" for g, e in gene_effects])
         transcript_effects = "|".join(
-            [f"{t};{g};{e};{d}" for t, g, e, d in transcript_effects]
+            [f"{t}:{g}:{e}:{d}" for t, g, e, d in transcript_effects]
         )
         return (worst_effect, gene_effects, transcript_effects)
 

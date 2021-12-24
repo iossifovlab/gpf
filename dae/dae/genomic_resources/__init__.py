@@ -36,3 +36,22 @@ register_real_genomic_resource_repository_type(
     "directory", GenomicResourceDirRepo)
 register_real_genomic_resource_repository_type(
     "embeded", GenomicResourceEmbededRepo)
+
+
+_PLUGINS_LOADED = False
+
+
+def _load_plugins():
+    global _PLUGINS_LOADED
+    if _PLUGINS_LOADED:
+        return
+
+    from importlib_metadata import entry_points
+    discovered_plugins = entry_points(group='dae.genomic_resources.plugins')
+    for dp in discovered_plugins:
+        dp.load()()
+    _PLUGINS_LOADED = True
+    return None
+
+
+_load_plugins()

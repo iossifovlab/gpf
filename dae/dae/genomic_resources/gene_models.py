@@ -10,7 +10,7 @@ from contextlib import contextmanager
 
 import pandas as pd
 
-from typing import Optional, Dict, TextIO
+from typing import Optional, Dict, TextIO, Tuple
 
 from dae.utils.regions import Region
 
@@ -409,15 +409,11 @@ def _open_file(filename):
 # GeneModel's
 #
 class GeneModels:
-    def __init__(self, name=None):
-        self.name = name
-        self.reset()
+    def __init__(self, source: Tuple[str]):
+        self.source = source
+        self._reset()
 
-    @property
-    def resource_id(self):
-        return self.name
-
-    def reset(self):
+    def _reset(self):
         self._shift = None
         self.alternative_names = None
 
@@ -447,7 +443,7 @@ class GeneModels:
 
     def gene_names(self):
         if self.gene_models is None:
-            logger.warning(f"gene models {self.name} are empty")
+            logger.warning(f"gene models {self.source} are empty")
             return None
 
         return list(self.gene_models.keys())
@@ -1288,7 +1284,7 @@ class GeneModels:
                 continue
             try:
                 logger.debug(f"trying file format: {fileformat}...")
-                self.reset()
+                self._reset()
                 infile.seek(0)
                 res = parser(infile, nrows=50)
                 if res:
@@ -1317,14 +1313,14 @@ class GeneModels:
             if fileformat is None:
                 logger.error(
                     f"can't infer gene models file format for "
-                    f"{self.filename}...")
+                    f"{self.source}...")
                 raise ValueError()
 
         parser = self._get_parser(fileformat)
         if parser is None:
             logger.error(
                 f"Unsupported file format '{fileformat}' for "
-                f"gene model file {self.filename}.")
+                f"gene model file {self.source}.")
             raise ValueError()
 
         gene_mapping = None
@@ -1332,7 +1328,7 @@ class GeneModels:
             gene_mapping = self._gene_mapping(gene_mapping_file)
 
         infile.seek(0)
-        self.reset()
+        self._reset()
 
         parser(infile, gene_mapping=gene_mapping)
 
@@ -1385,8 +1381,7 @@ def load_gene_models(
     fileformat: Optional[str] = None,
     gene_mapping_filename: Optional[str] = None
 ) -> GeneModels:
-    gm = GeneModels(filename)
-    gm.filename = filename
+    gm = GeneModels(('file', filename, fileformat, gene_mapping_filename))
     with _open_file(filename) as infile:
         gm.load(infile, fileformat=fileformat,
                 gene_mapping_file=gene_mapping_filename)

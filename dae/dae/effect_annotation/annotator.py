@@ -17,6 +17,10 @@ from .variant import Variant
 from .annotation_request import AnnotationRequestFactory
 
 from dae.annotation.annotatable import Annotatable
+from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.reference_genome import ReferenceGenome
+
+
 from dae.utils.regions import Region
 
 logger = logging.getLogger(__name__)
@@ -25,7 +29,8 @@ logger = logging.getLogger(__name__)
 class EffectAnnotator(object):
 
     def __init__(
-            self, reference_genome, gene_models, code=NuclearCode(),
+            self, reference_genome: ReferenceGenome, gene_models: GeneModels,
+            code=NuclearCode(),
             promoter_len=0):
 
         self.reference_genome = reference_genome
@@ -120,9 +125,9 @@ class EffectAnnotator(object):
     def do_annotate_variant(
             self,
             chrom=None,
-            position=None,
-            loc=None,
-            var=None,
+            pos=None,
+            location=None,
+            variant=None,
             ref=None,
             alt=None,
             length=None,
@@ -130,7 +135,7 @@ class EffectAnnotator(object):
             variant_type=None):
 
         variant = Variant(
-            chrom, position, loc, var, ref, alt, length, seq, variant_type
+            chrom, pos, location, variant, ref, alt, length, seq, variant_type
         )
         return self.annotate(variant)
 

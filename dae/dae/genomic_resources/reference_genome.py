@@ -4,7 +4,7 @@
 import os
 import logging
 
-from typing import List
+from typing import List, Tuple
 
 from dae.utils.regions import Region
 
@@ -14,16 +14,12 @@ logger = logging.getLogger(__name__)
 
 class ReferenceGenome:
 
-    def __init__(self):
+    def __init__(self, source: Tuple[str]):
         self._index = None
         self._chromosomes = None
         self._sequence = None
         self.PARS = {}
-        self._resource_id = None
-
-    @property
-    def resource_id(self):
-        return self._resource_id
+        self.source = source
 
     @property
     def chromosomes(self):
@@ -51,12 +47,6 @@ class ReferenceGenome:
 
     def set_pars(self, PARS):
         self.PARS = PARS
-
-    def set_resource_id(self, resource_id):
-        self._resource_id = resource_id
-
-    def get_id(self):
-        return self.resource_id
 
     def close(self):
         self._sequence.close()
@@ -110,11 +100,10 @@ class ReferenceGenome:
 
 
 def open_ref(filename):
-    ref = ReferenceGenome()
+    ref = ReferenceGenome(('file', filename))
     index_filename = f"{filename}.fai"
     assert os.path.exists(index_filename)
     with open(index_filename) as index_file:
         content = index_file.read()
     ref.set_open(content, open(filename, 'rb'))
-    ref.set_resource_id(filename)
     return ref

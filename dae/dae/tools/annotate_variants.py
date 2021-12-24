@@ -318,7 +318,7 @@ def cli_vcf(argv=sys.argv[1:]):
         for alt in variant.alts:
             effects = annotator.do_annotate_variant(
                 chrom=variant.chrom,
-                position=variant.pos,
+                pos=variant.pos,
                 ref=variant.ref,
                 alt=alt,
             )
