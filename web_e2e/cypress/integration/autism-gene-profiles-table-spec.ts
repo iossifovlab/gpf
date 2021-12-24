@@ -206,6 +206,7 @@ describe('Table functionality', () => {
 
     page.allTableRows.should('have.length', 4);
     page.clickSortButton('Relevant Gene Sets');
+    page.allTableRows.should('have.length', 4);
 
     const dataArr = [[1, 0, 1, 1], [0, 0, 1, 1], [0, 0, 0, 1], [0, 0, 0, 1]];
 
@@ -218,6 +219,7 @@ describe('Table functionality', () => {
     });
 
     page.clickSortButton('Relevant Gene Sets');
+    page.allTableRows.should('have.length', 4);
     dataArr.reverse();  
     dataArr.forEach((allRows, allRowsIndex) => {
       allRows.forEach((rowData, rowIndex) => {
@@ -237,6 +239,7 @@ describe('Table functionality', () => {
     const dataArr = [2, 1, null];
     dataArr.forEach((rowData, allRowsIndex) => {
         page.allTableRows.eq(allRowsIndex).within(row => {
+          page.allTableRows.should('have.length', 15);
           cy.wrap(row).get('td').eq(7).should('have.text', rowData === null ? '' : rowData);
         });
     });
@@ -244,6 +247,7 @@ describe('Table functionality', () => {
     page.clickSortButton('SFARI_gene_score');
     dataArr.forEach((rowData, allRowsIndex) => {
       page.allTableRows.eq(allRowsIndex).within(row => {
+        page.allTableRows.should('have.length', 15);
         cy.wrap(row).get('td').eq(7).should('have.text', rowData === null ? '' : rowData);
       });
     });
@@ -264,6 +268,7 @@ describe('Table functionality', () => {
       valuesArray.sort((a, b) => b - a);
       valuesArray.forEach((rowData, rowIndex) => {
         page.allTableRows.eq(rowIndex).within(row => {
+          page.allTableRows.should('have.length', 4);
           cy.wrap(row).get('td').eq(8 + columnIndex).should('have.text', rowData);
         });
       });
@@ -272,6 +277,7 @@ describe('Table functionality', () => {
       valuesArray.sort((a, b) => a - b);
       valuesArray.forEach((rowData, rowIndex) => {
         page.allTableRows.eq(rowIndex).within(row => {
+          page.allTableRows.should('have.length', 4);
           cy.wrap(row).get('td').eq(8 + columnIndex).should('have.text', rowData);
         });
       });
