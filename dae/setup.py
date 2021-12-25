@@ -46,19 +46,23 @@ setuptools.setup(
     ],
     entry_points="""
     [dae.genomic_resources.plugins]
-    gpf_instance=dae.gpf_instance.gpf_instance_context_plugin:init_gpf_instance_genomic_context_plugin
+    gpf_instance=dae.gpf_instance_plugin.gpf_instance_context_plugin:init_gpf_instance_genomic_context_plugin
     [console_scripts]
+
+    grr_manage=dae.genomic_resources.cli:cli_manage
+    grr_browse=dae.genomic_resources.cli:cli_browse
+
+    annotate_variant_effects=dae.effect_annotation.cli:cli_columns
+    annotate_variant_effects_vcf=dae.effect_annotation.cli:cli_vcf
+
+    annotate_columns=dae.annotation.annotate_columns:cli
+
     dae2parquet.py=dae.tools.dae2parquet:main
     vcf2parquet.py=dae.tools.vcf2parquet:main
     denovo2parquet.py=dae.tools.denovo2parquet:main
     cnv2parquet.py=dae.tools.cnv2parquet:main
     generate_vcf_score_histogram.py=dae.tools.generate_vcf_score_histogram:main
     gpf_validation_runner=dae.tools.gpf_validation_runner:main
-    grr_manage=dae.genomic_resources.cli:cli_manage
-    grr_browse=dae.genomic_resources.cli:cli_browse
-    annotate_columns=dae.annotation_cli.annotate_columns:cli
-    annotate_variant_effects=dae.effect_annotation.cli:cli_columns
-    annotate_variant_effects_vcf=dae.effect_annotation.cli:cli_vcf
     """,
     classifiers=[
         "Development Status :: 4 - Beta",

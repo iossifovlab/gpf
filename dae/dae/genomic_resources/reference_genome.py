@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class ReferenceGenome:
 
-    def __init__(self, source: Tuple[str]):
+    def __init__(self, source: Tuple[str, ...]):
         self._index = None
         self._chromosomes = None
         self._sequence = None

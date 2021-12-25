@@ -3,10 +3,10 @@ from __future__ import annotations
 import sys
 import gzip
 import argparse
-from .context import Context
-from .context import add_context_arguments
-from .record_to_annotatable import build_record_to_annotatable
-from .record_to_annotatable import add_record_to_annotable_arguments
+from ..annotation.context import Context
+from ..annotation.record_to_annotatable import build_record_to_annotatable
+from ..annotation.record_to_annotatable import \
+    add_record_to_annotable_arguments
 
 
 def configure_argument_parser() -> argparse.ArgumentParser:
@@ -16,7 +16,7 @@ def configure_argument_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument('input', default='-', nargs="?",
                         help="the input column file")
-    parser.add_argument('pipeline', default="gpf_instance", nargs="?",
+    parser.add_argument('pipeline', default="context", nargs="?",
                         help="The pipeline definition file. By default, or if "
                         "the value is gpf_instance, the annotation pipeline "
                         "from the configured gpf instance will be used.")
@@ -29,12 +29,12 @@ def configure_argument_parser() -> argparse.ArgumentParser:
                         help="The column separator in the output")
     parser.add_argument("-v", "--verbosity", action="count", default=0,
                         help="increase output verbosity")
-    add_context_arguments(parser)
+    Context.add_context_arguments(parser)
     add_record_to_annotable_arguments(parser)
     return parser
 
 
-def cli(raw_args: list[str] = None):
+def cli(raw_args: list[str] = None) -> None:
     if not raw_args:
         raw_args = sys.argv[1:]
 
@@ -49,19 +49,19 @@ def cli(raw_args: list[str] = None):
     if args.input == "-":
         in_file = sys.stdin
     elif args.input.endswith(".gz"):
-        in_file = gzip.open(args.input)
+        in_file = gzip.open(args.input, "rt")
     else:
-        in_file = open(args.input)
+        in_file = open(args.input, "rt")
 
     if args.output == "-":
         out_file = sys.stdout
     elif args.output.endswith(".gz"):
-        out_file = gzip.open(args.output, "w")
+        out_file = gzip.open(args.output, "wt")
     else:
         out_file = open(args.output, "wt")
 
     hcs = in_file.readline().strip("\r\n").split(args.input_separator)
-    record_to_annotable = build_record_to_annotatable(vars(args), hcs)
+    record_to_annotable = build_record_to_annotatable(vars(args), set(hcs))
     print(*(hcs + annotation_attributes),
           sep=args.output_separator, file=out_file)
 

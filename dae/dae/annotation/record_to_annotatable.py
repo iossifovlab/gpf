@@ -88,7 +88,7 @@ def add_record_to_annotable_arguments(parser: argparse.ArgumentParser):
 
 def build_record_to_annotatable(parameters: dict[str, str],
                                 available_columns: set[str],
-                                context: Context = None):
+                                context: Context = None) -> RecordToAnnotable:
     for columns, record_to_annotabale_class in \
             RECORD_TO_ANNOTABALE_CONFIGUATION.items():
         renamed_columns = [parameters.get(
@@ -97,3 +97,4 @@ def build_record_to_annotatable(parameters: dict[str, str],
             [cn for cn in renamed_columns if cn not in available_columns]) == 0
         if all_available:
             return record_to_annotabale_class(renamed_columns, context)
+    raise Exception("not record to annotatable could be found.")

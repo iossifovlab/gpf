@@ -1,10 +1,12 @@
 import fsspec
+import pytest
 
 
 DEFAULT_URL = "https://www.iossifovlab.com/distribution/" \
     "public/genomic-resources-repository"
 
 
+@pytest.mark.internet
 def test_load_gzip_file_fsspec():
     import gzip
     with fsspec.open(
@@ -18,6 +20,7 @@ def test_load_gzip_file_fsspec():
                 assert line[-2] == ','
 
 
+@pytest.mark.internet
 def test_time_download_speed():
     import time
     from urllib.request import urlopen

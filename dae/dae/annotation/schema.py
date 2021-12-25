@@ -27,7 +27,7 @@ class Schema:
                 self, name: str,
                 py_type: str,
                 internal: bool = False,
-                description: Optional[str] = None,
+                description: str = "",
                 source: Optional[Schema.Source] = None):
 
             self.name: str = name
@@ -43,7 +43,7 @@ class Schema:
     def create_field(
             self, name: str, py_type: str,
             internal: bool = False,
-            description: Optional[str] = None,
+            description: str = "",
             source: Optional[Source] = None):
         if name in self.fields:
             logger.warning(

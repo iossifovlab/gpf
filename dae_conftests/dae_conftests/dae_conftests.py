@@ -45,11 +45,14 @@ from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 
+
+'''
 from urllib.request import urlopen
 with urlopen("https://www.iossifovlab.com/distribution/public/"
              "genomic-resources-repository/.CONTENTS") as repo:
     for line in repo:
         print(line)
+'''
 
 
 logging.basicConfig(
@@ -156,13 +159,13 @@ def gpf_instance(default_dae_config, fixture_dirname):
         ]
 
         repositories.append(
-                build_genomic_resource_repository(
-                    Box({
-                        "id": "fixtures",
-                        "type": "directory",
-                        "directory":
+            build_genomic_resource_repository(
+                Box({
+                    "id": "fixtures",
+                    "type": "directory",
+                    "directory":
                         f"{fixture_dirname('genomic_resources')}"
-                    })))
+                })))
         instance.grr = GenomicResourceGroupRepo(repositories)
 
         return instance
@@ -193,12 +196,12 @@ def gpf_instance_2013(
         gpf_instance.grr
     ]
     repositories.append(
-            build_genomic_resource_repository(
-                Box({
-                    "id": "fixtures",
-                    "type": "directory",
-                    "directory": f"{fixture_dirname('genomic_resources')}"
-                })))
+        build_genomic_resource_repository(
+            Box({
+                "id": "fixtures",
+                "type": "directory",
+                "directory": f"{fixture_dirname('genomic_resources')}"
+            })))
     gpf_instance.grr = GenomicResourceGroupRepo(repositories)
 
     return gpf_instance

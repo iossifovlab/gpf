@@ -75,7 +75,7 @@ def build_annotation_pipeline(
         pipeline_config_str: str = None,
         grr_repository: GenomicResourceRepo = None,
         grr_repository_file: str = None,
-        grr_repository_definition: str = None,
+        grr_repository_definition: dict = None,
         context: AnnotationPipelineContext = None) -> "AnnotationPipeline":
 
     if pipeline_config_file is not None:
@@ -101,8 +101,15 @@ def build_annotation_pipeline(
     pipeline = AnnotationPipeline(pipeline_config, grr_repository, context)
 
     for annotator_config in pipeline_config:
-        annotator_type = annotator_config.get("annotator_type")
-        builder = ANNOTATOR_BUILDER_REGISTRY.get(annotator_type)
+        try:
+            annotator_type = annotator_config["annotator_type"]
+        except KeyError:
+            raise Exception(
+                "The pipeline config element has not annotator_type!")
+        try:
+            builder = ANNOTATOR_BUILDER_REGISTRY[annotator_type]
+        except KeyError:
+            raise Exception(f'Unknonwn annotator type {annotator_type}.')
         annotator = builder(pipeline, annotator_config)
         pipeline.add_annotator(annotator)
 
