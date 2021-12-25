@@ -6,7 +6,7 @@ from dae.annotation.annotation_pipeline import AnnotationPipeline
 def test_allele_score_annotator(
         frequency_variants_expected, grr_fixture):
 
-    pipeline = AnnotationPipeline([], grr_fixture, None)
+    pipeline = AnnotationPipeline([], grr_fixture)
 
     annotator = AlleleScoreAnnotator(Box({
         "annotator_type": "allele_score",
@@ -28,7 +28,7 @@ def test_allele_score_annotator(
 def test_allele_score_annotator_attributes(
         frequency_variants_expected, grr_fixture):
 
-    pipeline = AnnotationPipeline([], grr_fixture, None)
+    pipeline = AnnotationPipeline([], grr_fixture)
 
     annotator = AlleleScoreAnnotator(Box({
         "annotator_type": "allele_score",

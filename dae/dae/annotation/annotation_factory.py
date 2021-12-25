@@ -7,11 +7,12 @@ from box import Box
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
 
+from dae.annotation.annotation_pipeline import AnnotationPipeline
+
 from .score_annotator import build_allele_score_annotator, \
     build_np_score_annotator, build_position_score_annotator
 from .effect_annotator import build_effect_annotator
 from .liftover_annotator import build_liftover_annotator
-from .annotation_pipeline import AnnotationPipeline, AnnotationPipelineContext
 
 
 logger = logging.getLogger(__name__)
@@ -75,8 +76,7 @@ def build_annotation_pipeline(
         pipeline_config_str: str = None,
         grr_repository: GenomicResourceRepo = None,
         grr_repository_file: str = None,
-        grr_repository_definition: dict = None,
-        context: AnnotationPipelineContext = None) -> "AnnotationPipeline":
+        grr_repository_definition: dict = None) -> AnnotationPipeline:
 
     if pipeline_config_file is not None:
         assert pipeline_config is None
@@ -98,7 +98,7 @@ def build_annotation_pipeline(
         assert grr_repository_file is None
         assert grr_repository_definition is None
 
-    pipeline = AnnotationPipeline(pipeline_config, grr_repository, context)
+    pipeline = AnnotationPipeline(pipeline_config, grr_repository)
 
     for annotator_config in pipeline_config:
         try:

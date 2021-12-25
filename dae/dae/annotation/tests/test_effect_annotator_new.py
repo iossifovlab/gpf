@@ -48,8 +48,7 @@ def test_effect_annotation_yuen(fixture_dirname, grr_fixture):
 
     pipeline = build_annotation_pipeline(
         pipeline_config=[],
-        grr_repository=grr_fixture,
-        context=None)
+        grr_repository=grr_fixture)
 
     config = Box({
         "annotator_type": "effect_annotator",
@@ -107,8 +106,7 @@ def test_effect_annotation_schema(grr_fixture):
 
     pipeline = build_annotation_pipeline(
         pipeline_config=[],
-        grr_repository=grr_fixture,
-        context=None)
+        grr_repository=grr_fixture)
 
     config = Box({
         "annotator_type": "effect_annotator",

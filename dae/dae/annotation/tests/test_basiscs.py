@@ -29,7 +29,6 @@ def test_basic():
     """
     ann_pipe = build_annotation_pipeline(
         pipeline_config_str=annotation_cofiguration,
-        grr_repository=grr_repo,
-        context=None)
+        grr_repository=grr_repo)
     assert grr_repo
     assert ann_pipe

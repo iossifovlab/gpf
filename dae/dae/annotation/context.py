@@ -2,7 +2,6 @@ import argparse
 import logging
 from typing import Optional, cast
 from dae.annotation.annotation_factory import build_annotation_pipeline
-from dae.annotation.annotation_pipeline import AnnotationPipelineContext
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.gene_models_resource import GeneModelsResource
@@ -17,7 +16,7 @@ from dae.genomic_resources.repository import GenomicResourceRepo
 logger = logging.getLogger(__name__)
 
 
-class Context(AnnotationPipelineContext):
+class Context:
 
     @staticmethod
     def add_context_arguments(parser: argparse.ArgumentParser):

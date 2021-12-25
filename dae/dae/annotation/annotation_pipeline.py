@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import logging
 
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from dae.genomic_resources.repository import GenomicResourceRepo
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotator_base import Annotator
 from dae.annotation.schema import Schema
-from dae.annotation.annotation_context import AnnotationPipelineContext
 
 logger = logging.getLogger(__name__)
 
@@ -17,12 +16,10 @@ logger = logging.getLogger(__name__)
 class AnnotationPipeline():
     def __init__(
             self, config: List[Dict],
-            repository: GenomicResourceRepo,
-            context: Optional[AnnotationPipelineContext]):
+            repository: GenomicResourceRepo):
         self.annotators: List[Annotator] = []
         self.config: List[Dict] = config
         self.repository: GenomicResourceRepo = repository
-        self.context: Optional[AnnotationPipelineContext] = context
 
         self._annotation_schema = None
 

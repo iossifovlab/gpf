@@ -1,19 +1,13 @@
 import pytest
 from box import Box
-from dae.annotation.annotation_context import AnnotationPipelineContext
 from dae.genomic_resources import build_genomic_resource_repository
-from dae.genomic_resources.repository import GenomicResourceRealRepo
+from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.annotation.annotation_factory import build_annotation_pipeline, \
     build_np_score_annotator
 
 
 @pytest.fixture(scope="session")
-def empty_context() -> AnnotationPipelineContext:
-    return AnnotationPipelineContext()
-
-
-@pytest.fixture(scope="session")
-def grr_np_score1() -> GenomicResourceRealRepo:
+def grr_np_score1() -> GenomicResourceRepo:
     repo = build_genomic_resource_repository({
         "id": "test_annotation",
         "type": "embeded",
@@ -46,11 +40,10 @@ def grr_np_score1() -> GenomicResourceRealRepo:
 
 
 @pytest.fixture(scope="session")
-def annotation_pipeline1(grr_np_score1, empty_context):
+def annotation_pipeline1(grr_np_score1):
     pipeline = build_annotation_pipeline(
         pipeline_config=[],
-        grr_repository=grr_np_score1,
-        context=empty_context)
+        grr_repository=grr_np_score1)
 
     return pipeline
 

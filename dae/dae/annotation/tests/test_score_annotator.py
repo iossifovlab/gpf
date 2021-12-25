@@ -18,7 +18,7 @@ def test_position_score_annotator(
         "resource_id": "hg38/TESTphastCons100way"
     })
     annotator = PositionScoreAnnotator(config, resource)
-    pipeline = AnnotationPipeline(None, None, None)
+    pipeline = AnnotationPipeline([], grr_fixture)
     pipeline.add_annotator(annotator)
 
     for sv, e in phastcons100way_variants_expected:
@@ -49,7 +49,7 @@ def test_np_score_annotator(cadd_variants_expected, grr_fixture):
         "resource_id": "hg38/TESTCADD"
     })
     annotator = NPScoreAnnotator(config, resource)
-    pipeline = AnnotationPipeline([], grr_fixture, None)
+    pipeline = AnnotationPipeline([], grr_fixture)
     pipeline.add_annotator(annotator)
 
     for sv, e in cadd_variants_expected:
@@ -98,7 +98,7 @@ def test_position_score_annotator_indels(
         }]
     })
     annotator = PositionScoreAnnotator(config, resource)
-    pipeline = AnnotationPipeline([], grr_fixture, None)
+    pipeline = AnnotationPipeline([], grr_fixture)
     pipeline.add_annotator(annotator)
 
     for sv, e in phastcons100way_indel_variants_expected:
@@ -118,7 +118,7 @@ def test_position_score_annotator_mean_aggregate(
         "resource_id": "hg38/TESTPosAgg"
     })
     annotator = PositionScoreAnnotator(config, resource)
-    pipeline = AnnotationPipeline([], grr_fixture, None)
+    pipeline = AnnotationPipeline([], grr_fixture)
     pipeline.add_annotator(annotator)
 
     for sv, e in position_agg_mean_variants_expected:
@@ -149,7 +149,7 @@ def test_np_score_annotator_indels(
 
     annotator = NPScoreAnnotator(config, resource)
 
-    pipeline = AnnotationPipeline([], grr_fixture, None)
+    pipeline = AnnotationPipeline([], grr_fixture)
     pipeline.add_annotator(annotator)
 
     for sv, e in cadd_indel_variants_expected:
