@@ -294,4 +294,21 @@ describe('Table functionality', () => {
     page.searchResultWarning.should('not.exist');
     page.allTableRows.should('have.length.above', 1);
   });
+
+  it('should use home/end buttons functionality', () => { // additional visual test can be done
+    page.geneSearchInput.type('CHD');
+    page.allTableRows.should('have.length', 15);
+    cy.scrollTo('bottom');
+    cy.window().its('scrollY').then(yScroll => {
+      cy.wrap(yScroll).as('pageEndY');
+    });
+    cy.get('body').type('{home}');
+    cy.window().its('scrollY').then(yScroll => {
+      expect(yScroll).to.equal(0);
+    });
+    cy.get('body').type('{end}');
+    cy.window().its('scrollY').then(yScroll => {
+      cy.get('@pageEndY').should('equal', yScroll);
+    });
+  });
 });
