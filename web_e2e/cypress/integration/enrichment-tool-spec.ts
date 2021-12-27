@@ -212,8 +212,6 @@ describe('Enrichment tool data tests', () => {
     parse_options(getDataset('gene_symbol_and_models_LGDs').request);
     page.enrichmentTestButton.click();
 
-    // TODO test more values
-
     cy.wrap(page.getTableData('affected')).then(() => {
       cy.get('@tableData').should('deep.equal', getDataset('gene_symbol_and_models_LGDs').data);
     });
@@ -221,14 +219,31 @@ describe('Enrichment tool data tests', () => {
 
   it('should move gene weights slider', () => {
     const genesBlockPage = new GenesBlockPage();
-    const weights = new GenesWeights();
     genesBlockPage.geneWeightsButton.click();
-    weights.moveSlider('right', 150, 0);
-    weights.allGeneWeights.should('have.text', '543 (59.67%)');
-    weights.moveSlider('right', -150, 0);
-    weights.allGeneWeights.should('have.text', '910 (100.00%)');
-    weights.moveSliderTo('right', '835 (91.76%)');
-    weights.allGeneWeights.should('have.text', '75 (8.24%)');
+
+    cy.intercept('POST', '/gpf/api/v3/gene_weights/partitions', {
+      body:{
+        left: {count: 0, percent: 0},
+        mid: {count: 910, percent: 1},
+        right: {count: 0, percent: 0}
+      }
+    }).as('WeightsOptions');
+    parse_options(getDataset('gene_weights_sfari_gene_score_right').request);
+    cy.wait('@WeightsOptions');
+    cy.wait('@WeightsOptions'); // That's bug from the GPFJS site, many excess requests are made with gene weights
+    page.enrichmentTestButton.click();
+
+    cy.wrap(page.getTableData('affected')).then(() => {
+      cy.get('@tableData').should('deep.equal', getDataset('gene_weights_sfari_gene_score_right').data);
+    });
+
+    parse_options(getDataset('gene_weights_sfari_gene_score_left', 'LGDs', 'unaffected').request);
+    cy.wait('@WeightsOptions'); // That's bug from the GPFJS site, many excess requests are made with gene weights
+    page.enrichmentTestButton.click();
+
+    cy.wrap(page.getTableData('unaffected')).then(() => {
+      cy.get('@tableData').should('deep.equal', getDataset('gene_weights_sfari_gene_score_left', 'LGDs', 'unaffected').data);
+    });
   });
 });
 
@@ -323,22 +338,28 @@ const dataset = [
     affected: 'unaffected',
     request: new request_options(null, null, null),
     data: ['LGDs', '176', '4', '6.24', '0.537', '3', '0', '0.11', '1.00', '84', '2', '2.98', '0.7719', '94', '2', '3.33', '0.7763']
+  }, {
+    name: 'gene_weights_sfari_gene_score_right',
+    affected: 'affected',
+    request: new request_options('gene_weights', {
+      scroll: [{
+        position: 'right',
+        value: 150
+      }]
+    }, null),
+    data: ['LGDs', '363', '107', '20.74', '5.86e-46', '27', '27', '1.54', '2.73e-34', '306', '82', '17.48', '2.36e-32', '68', '36', '3.89', '7.20e-27']
+  }, {
+    name: 'gene_weights_sfari_gene_score_left',
+    affected: 'unaffected',
+    request: new request_options('gene_weights', {
+      scroll: [{
+        position: 'left',
+        value: 150
+      }]
+    }, null),
+    data: ['LGDs', '176', '8', '7.27', '0.7043', '3', '0', '0.12', '1.00', '84', '6', '3.47', '0.1632', '94', '2', '3.88', '0.4428']
   }
-] ;
-
-/*const state = [
-  new request_options(), data[0]
-];*/
-
-/*
-function compare_data(set_name: string, affected: string, type:string = 'LGDs') {
-  const page = new EnrichmentToolPage();
-  const dataset = data.filter(item => (item.set_name === set_name && item.data[0] === type))[affected === 'affected' ? 0 : 1];
-  dataset.data.forEach((el, index) => {
-    page.findTableField(affected, type, index).should('have.text', el);
-  });
-}
-*/
+];
 
 function parse_options(request: request_options) {
   const page = new EnrichmentToolPage();
@@ -431,23 +452,3 @@ function getDataset(name: string, type: string = 'LGDs', affected: string = 'aff
     return (match.name === name && match.data[0] === type)
   }).find(match => { return (match.affected === affected) });
 }
-
-/* Idea: the wrapper to be in the following array structure:
-
-[
-  study: studyName1,
-  request: requestOptions1,
-  data[presumably 6 fields - 2(affected/unaffected) LGD's, Missense and Synonymous but not limited to]: {
-    ...data1...
-  }
-]
-
-[
-  study: studyName2,
-  request: requestOptions2,
-  data[presumably 6 fields - 2(affected/unaffected) LGD's, Missense and Synonymous but not limited to]: {
-    ...data2...
-  }
-]
-
-*/
