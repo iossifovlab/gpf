@@ -99,16 +99,16 @@ export class AutismGeneProfilesSingleView extends BasePage {
     });
   }
 
-  getGeneSymbols(): any {
-    cy.get('gpf-autism-gene-profile-single-view > div> h2').then(symbols => {
+  getGeneSymbols(id: string = null): any {
+    cy.get('gpf-autism-gene-profile-single-view' + (id !== null ? ('#' + id) : '') + ' > div > div > h2').then(symbols => {
       cy.wrap(symbols.text()).as('geneSymbols');
     });
   }
 
-  getGenomicScores(): any {
+  getGenomicScores(id: string = null): any {
     let genomicScores: any = [];
 
-    cy.get('div.ng-star-inserted > :nth-child(3) > table').each((table_iteration, index) => {
+    cy.get((id !== null ? ('#' + id + ' > ') : '') + 'div.ng-star-inserted > :nth-child(3) > table').each((table_iteration, index) => {
       genomicScores[index] = {
         category: '', name: '', scores: []
       }
@@ -147,11 +147,11 @@ export class AutismGeneProfilesSingleView extends BasePage {
     return genomicScores;
   }
 
-  getGeneSets(): any {
+  getGeneSets(id: string = null): any {
     let geneSets: any = [
     ];
 
-    cy.get('div.ng-star-inserted > :nth-child(4) > table').each((table_iteration, index) => {
+    cy.get((id !== null ? ('#' + id + ' > ') : '') + 'div.ng-star-inserted > :nth-child(4) > table').each((table_iteration, index) => {
       cy.wrap(table_iteration).within(table => {
 
         geneSets[index] = {
@@ -190,10 +190,10 @@ export class AutismGeneProfilesSingleView extends BasePage {
     return geneSets;
   }
 
-  getDatasetData(): any {
+  getDatasetData(id: string = null): any {
     let datasets = [];
 
-    cy.get('div.ng-star-inserted > :nth-child(5) > table').each((table_iterator,index) => {
+    cy.get((id !== null ? ('#' + id + ' > ') : '') + 'div.ng-star-inserted > :nth-child(5) > table').each((table_iterator,index) => {
       datasets[index] = {
         name: '', columns: [ ], rows: [
           {

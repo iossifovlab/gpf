@@ -71,7 +71,7 @@ describe('Autism gene profiles single view links tests', () => {
     autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
     autismGeneProfilesTablePage.allTableCells.first().click();
     page.geneBrowserLink.should('be.visible');
-    page.geneBrowserLink.should('have.text', 'View CHD8 in the Gene Browser');
+    page.geneBrowserLink.should('have.text', 'Gene Browser');
   });
 
   it('should display UCSC link', () => {
@@ -167,7 +167,6 @@ describe('Autism gene profiles single view links tests', () => {
     page.openSingleView('CHD8', true); // thus force: true(the second argument) is closing all the tabs before it
 
     const geneData = geneDatas.find(data => data.geneSymbols === 'CHD8');
-    console.log(geneData);
 
     page.getGeneSymbols();
     cy.get('@geneSymbols').then(symbols => {
