@@ -2,10 +2,12 @@ import { AutismGeneProfilesBlock } from 'cypress/elements/autism-gene-profiles-b
 import { AutismGeneProfilesSingleView } from 'cypress/elements/autism-gene-profiles-single-view-page';
 import { AutismGeneProfilesTable } from 'cypress/elements/autism-gene-profiles-table-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
+import { geneData } from 'cypress/integration/autism-gene-profiles-single-view-spec';
 
 describe('Autism gene profiles block tests', () => {
   const page = new AutismGeneProfilesBlock();
   const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
+  const autismGeneProfilesBlock = new AutismGeneProfilesBlock();
   const autismGeneProfilesSingleView = new AutismGeneProfilesSingleView();
 
   before(() => {
@@ -65,5 +67,9 @@ describe('Autism gene profiles block tests', () => {
     autismGeneProfilesTablePage.legendSelectedGenes.should('have.text', '► MYT1L, SPAST');
 
     autismGeneProfilesTablePage.legendCompareButton.click();
+    autismGeneProfilesBlock.allTabs.eq(1).should('have.text', 'MYT1L,SPAST×');
+    autismGeneProfilesSingleView.header.eq(0).should('have.text', 'MYT1L');
+    autismGeneProfilesSingleView.header.eq(1).should('have.text', 'SPAST');
+    
   });
 });

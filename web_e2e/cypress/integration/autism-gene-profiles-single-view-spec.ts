@@ -1,7 +1,7 @@
 import { AutismGeneProfilesSingleView } from 'cypress/elements/autism-gene-profiles-single-view-page';
 import { AutismGeneProfilesTable } from 'cypress/elements/autism-gene-profiles-table-page';
 import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
-import { BasePage, sidenavPageLinks } from 'cypress/elements/utils';
+import { sidenavPageLinks } from 'cypress/elements/utils';
 
 describe('Autism gene profiles single view tests', () => {
   const page = new AutismGeneProfilesSingleView();
@@ -138,26 +138,26 @@ describe('Autism gene profiles single view links tests', () => {
   it('should compare all data in single view for GRIN2B', () => {
     page.openSingleView('GRIN2B');
 
-    const geneData = geneDatas.find(data => data.geneSymbols === 'GRIN2B');
+    const geneSingleViewData = geneData.find(data => data.geneSymbols === 'GRIN2B');
 
     page.getGeneSymbols();
     cy.get('@geneSymbols').then(symbols => {
-      expect(symbols).to.deep.equal(geneData.geneSymbols, geneData.geneSymbols + ' gene symbols');
+      expect(symbols).to.deep.equal(geneSingleViewData.geneSymbols, geneSingleViewData.geneSymbols + ' gene symbols');
     });
 
     page.getGeneSets();
     cy.get('@geneSets').then(sets => {
-      expect(sets).to.deep.equal(geneData.geneSets, geneData.geneSymbols + ' gene sets');
+      expect(sets).to.deep.equal(geneSingleViewData.geneSets, geneSingleViewData.geneSymbols + ' gene sets');
     });
 
     page.getDatasetData();
     cy.get('@datasets').then(sets => {
-      expect(sets).to.deep.equal(geneData.datasets, geneData.geneSymbols + ' single view datasets');
+      expect(sets).to.deep.equal(geneSingleViewData.datasets, geneSingleViewData.geneSymbols + ' single view datasets');
     });
 
     page.getGenomicScores();
     cy.get('@genomicScores').then(scores => {
-      expect(scores).to.deep.equal(geneData.genomicScores, geneData.geneSymbols + ' single view genomic scores');
+      expect(scores).to.deep.equal(geneSingleViewData.genomicScores, geneSingleViewData.geneSymbols + ' single view genomic scores');
     });
 
   });
@@ -166,52 +166,52 @@ describe('Autism gene profiles single view links tests', () => {
   it('should compare all data in single view for CHD8', () => {                                                           
     page.openSingleView('CHD8', true); // thus force: true(the second argument) is closing all the tabs before it
 
-    const geneData = geneDatas.find(data => data.geneSymbols === 'CHD8');
+    const geneSingleViewData = geneData.find(data => data.geneSymbols === 'CHD8');
 
     page.getGeneSymbols();
     cy.get('@geneSymbols').then(symbols => {
-      expect(symbols).to.deep.equal(geneData.geneSymbols, geneData.geneSymbols + ' gene symbols');
+      expect(symbols).to.deep.equal(geneSingleViewData.geneSymbols, geneSingleViewData.geneSymbols + ' gene symbols');
     });
 
     page.getGeneSets();
     cy.get('@geneSets').then(sets => {
-      expect(sets).to.deep.equal(geneData.geneSets, geneData.geneSymbols + ' gene sets');
+      expect(sets).to.deep.equal(geneSingleViewData.geneSets, geneSingleViewData.geneSymbols + ' gene sets');
     });
 
     page.getDatasetData();
     cy.get('@datasets').then(sets => {
-      expect(sets).to.deep.equal(geneData.datasets, geneData.geneSymbols + ' single view datasets');
+      expect(sets).to.deep.equal(geneSingleViewData.datasets, geneSingleViewData.geneSymbols + ' single view datasets');
     });
 
     page.getGenomicScores();
     cy.get('@genomicScores').then(scores => {
-      expect(scores).to.deep.equal(geneData.genomicScores, geneData.geneSymbols + ' single view genomic scores');
+      expect(scores).to.deep.equal(geneSingleViewData.genomicScores, geneSingleViewData.geneSymbols + ' single view genomic scores');
     });
   });
 
   it('should compare all data in single view for POGZ', () => {                                                           
     page.openSingleView('POGZ', true); // thus force: true(the second argument) is closing all the tabs before it
 
-    const geneData = geneDatas.find(data => data.geneSymbols === 'POGZ');
+    const geneSingleViewData = geneData.find(data => data.geneSymbols === 'POGZ');
 
     page.getGeneSymbols();
     cy.get('@geneSymbols').then(symbols => {
-      expect(symbols).to.deep.equal(geneData.geneSymbols, geneData.geneSymbols + ' gene symbols');
+      expect(symbols).to.deep.equal(geneSingleViewData.geneSymbols, geneSingleViewData.geneSymbols + ' gene symbols');
     });
 
     page.getGeneSets();
     cy.get('@geneSets').then(sets => {
-      expect(sets).to.deep.equal(geneData.geneSets, geneData.geneSymbols + ' gene sets');
+      expect(sets).to.deep.equal(geneSingleViewData.geneSets, geneSingleViewData.geneSymbols + ' gene sets');
     });
 
     page.getDatasetData();
     cy.get('@datasets').then(sets => {
-      expect(sets).to.deep.equal(geneData.datasets, geneData.geneSymbols + ' single view datasets');
+      expect(sets).to.deep.equal(geneSingleViewData.datasets, geneSingleViewData.geneSymbols + ' single view datasets');
     });
 
     page.getGenomicScores();
     cy.get('@genomicScores').then(scores => {
-      expect(scores).to.deep.equal(geneData.genomicScores, geneData.geneSymbols + ' single view genomic scores');
+      expect(scores).to.deep.equal(geneSingleViewData.genomicScores, geneSingleViewData.geneSymbols + ' single view genomic scores');
     });
   });
 });
@@ -265,7 +265,7 @@ describe('Single view study table', () => { // use cy.visit and then data test t
   });
 });
 
-const geneDatas: any = [
+export const geneData: any = [
   {
     geneSymbols: 'GRIN2B',
     genomicScores: [
