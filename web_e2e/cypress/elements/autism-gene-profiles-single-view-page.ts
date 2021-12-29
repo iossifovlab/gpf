@@ -100,7 +100,7 @@ export class AutismGeneProfilesSingleView extends BasePage {
   }
 
   getGeneSymbols(id: string = null): any {
-    cy.get('gpf-autism-gene-profile-single-view' + (id !== null ? ('#' + id) : '') + ' > div > div > h2').then(symbols => {
+    cy.get('gpf-autism-gene-profile-single-view' + (id !== null ? ('#' + id + '-single-view') : '') + ' > div > div > h2').then(symbols => {
       cy.wrap(symbols.text()).as('geneSymbols');
     });
   }
@@ -108,7 +108,7 @@ export class AutismGeneProfilesSingleView extends BasePage {
   getGenomicScores(id: string = null): any {
     let genomicScores: any = [];
 
-    cy.get((id !== null ? ('#' + id + ' > ') : '') + 'div.ng-star-inserted > :nth-child(3) > table').each((table_iteration, index) => {
+    cy.get((id !== null ? (('#' + id + '-single-view')) : 'div.ng-star-inserted >') + ' :nth-child(3) > table').each((table_iteration, index) => {
       genomicScores[index] = {
         category: '', name: '', scores: []
       }
@@ -151,7 +151,7 @@ export class AutismGeneProfilesSingleView extends BasePage {
     let geneSets: any = [
     ];
 
-    cy.get((id !== null ? ('#' + id + ' > ') : '') + 'div.ng-star-inserted > :nth-child(4) > table').each((table_iteration, index) => {
+    cy.get((id !== null ? (('#' + id + '-single-view')) : 'div.ng-star-inserted >') + ' :nth-child(4) > table').each((table_iteration, index) => {
       cy.wrap(table_iteration).within(table => {
 
         geneSets[index] = {
@@ -193,7 +193,7 @@ export class AutismGeneProfilesSingleView extends BasePage {
   getDatasetData(id: string = null): any {
     let datasets = [];
 
-    cy.get((id !== null ? ('#' + id + ' > ') : '') + 'div.ng-star-inserted > :nth-child(5) > table').each((table_iterator,index) => {
+    cy.get((id !== null ? (('#' + id + '-single-view')) : 'div.ng-star-inserted >') + ' :nth-child(5) > table').each((table_iterator,index) => {
       datasets[index] = {
         name: '', columns: [ ], rows: [
           {
