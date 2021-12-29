@@ -167,7 +167,7 @@ describe('Gene plot summary alleles count tests', () => {
   });
 });
 
-describe('Gene plot visual tests', () => {
+describe.only('Gene plot visual tests', () => {
   const page = new GenePlotPage();
   const geneBrowserPage = new GeneBrowserPage();
 
@@ -176,14 +176,23 @@ describe('Gene plot visual tests', () => {
     page.navigateToHome();
     page.loginAdmin();
     geneBrowserPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.geneBrowser);
-    geneBrowserPage.searchInputBox.type('chd8');
-    geneBrowserPage.goButton.click();
   });
 
   it('should condense introns', () => {
+    geneBrowserPage.searchInputBox.type('chd8');
+    geneBrowserPage.goButton.click();
     page.condenseIntronsCheckbox.click();
     cy.get('g#plot').matchImageSnapshot('gene-plot/not_condensed_introns');
     page.condenseIntronsCheckbox.click();
     cy.get('g#plot').matchImageSnapshot('gene-plot/condensed_introns');
   });
+
+  it('should compare visually TTN gene plot results', () => {
+    geneBrowserPage.searchInputBox.type('ttn');
+    geneBrowserPage.goButton.click();
+    cy.get('g#plot').matchImageSnapshot('gene-plot/ttn_gene_plot_snapshot');
+
+    cy.get('gpf-table').matchImageSnapshot('gene-plot/ttn_gene_table_snapshot');
+  });
+
 });
