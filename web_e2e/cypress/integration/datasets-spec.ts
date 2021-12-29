@@ -160,3 +160,45 @@ describe('Iossifov dataset count tests', () => {
     });
   });
 });
+
+describe('Visual Iossifov dataset tests', () => {
+  const page = new DatasetsPage();
+
+  before(() => {
+    page.cleanup();
+    page.navigateToHome();
+    page.loginAdmin();
+  });
+
+  beforeEach(() => {
+    page.preserveLogin();
+    page.navigateToHome();
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics);
+  });
+
+  it('should compare family by number table data', () => {
+    cy.get('#families-by-number-div').matchImageSnapshot('datasets-spec/iossifov-family-table-status');
+    page.familiesByNumberDropdownButton.select('Role');
+    cy.get('#families-by-number-div').matchImageSnapshot('datasets-spec/iossifov-family-table-role');
+    page.familiesByNumberDropdownButton.select('Phenotype');
+    cy.get('#families-by-number-div').matchImageSnapshot('datasets-spec/iossifov-family-table-phenotype');
+  });
+
+  it('should compare families by pedigree table data', () => {
+    cy.get('#families-by-pedigree-div').scrollIntoView().matchImageSnapshot('datasets-spec/iossifov-pedigree-table-status');
+    cy.get('.col-sm-3 > .select-wrapper > .form-control').select('Role');
+    page.familiesByPedigreeDivs.should('have.length', 8);
+    cy.get('#families-by-pedigree-div').scrollIntoView().matchImageSnapshot('datasets-spec/iossifov-pedigree-table-role');
+    cy.get('.col-sm-3 > .select-wrapper > .form-control').select('Phenotype');
+    page.familiesByPedigreeDivs.should('have.length', 8);
+    cy.get('#families-by-pedigree-div').scrollIntoView().matchImageSnapshot('datasets-spec/iossifov-pedigree-table-phenotype'); 
+  });
+
+  it('should compare de novo variants table data', () => {
+    cy.get('#denovo-variants-div').scrollIntoView().matchImageSnapshot('datasets-spec/iossifov-denovo-table-status');
+    page.denovoVariantsDropdownButton.select('Role');
+    cy.get('#denovo-variants-div').scrollIntoView().matchImageSnapshot('datasets-spec/iossifov-denovo-table-role');
+    page.denovoVariantsDropdownButton.select('Phenotype');
+    cy.get('#denovo-variants-div').scrollIntoView().matchImageSnapshot('datasets-spec/iossifov-denovo-table-phenotype'); 
+  });
+});
