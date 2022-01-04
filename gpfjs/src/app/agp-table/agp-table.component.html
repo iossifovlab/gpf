@@ -1,1 +1,14 @@
-<p>agp-table works!</p>
+<div class="table-container">
+  <div>
+    <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: config.columns }"></ng-container>
+  </div>
+
+  <ng-template #recursiveListTmpl let-columns="columns">
+    <div *ngFor="let column of columns">
+      {{ column.id }}
+      <ul *ngIf="column.columns.length > 0">
+        <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: column.columns }"></ng-container>
+      </ul>
+    </div>
+  </ng-template>
+</div>
