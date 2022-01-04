@@ -46,6 +46,7 @@ function main() {
 
   build_stage "Clean and fetch fresh dependencies"
   {
+    build_run rm -rf dist
     build_run rm -rf node_modules package-lock.json
     build_run npm install
   }
@@ -63,18 +64,34 @@ function main() {
     build_run bash -c 'ng test -- --no-watch --no-progress --code-coverage --browsers=ChromeHeadlessCI | tee /dev/stderr | grep -e "^TOTAL: " && exit ${PIPESTATUS[0]} || false'
   }
 
-  build_stage "Clean and package"
+  build_stage "Compile"
   {
     build_run rm -rf dist/
     build_run ng build --prod --aot --configuration 'default' --base-href '/gpf_prefix/' --deploy-url '/gpf_prefix/'
     build_run python ppindex.py
+  }
 
+  build_stage "Package and clean"
+  {
+    local gpfjs_tag=$(e gpfjs_tag)
+    build_run echo $gpfjs_tag
+    local __gpfjs_build_no=$(e __gpfjs_build_no)
+    build_run echo $__gpfjs_build_no
+
+    build_run_container bash -c '
+      echo "'"${gpfjs_tag}"'" > dist/gpfjs/VERSION.txt
+    '
+    build_run_container bash -c '
+      echo "'"${gpfjs_tag}"'-'"${__gpfjs_build_no}"'" >> dist/gpfjs/VERSION.txt
+    '
+  
     local image_name="gpfjs-package"
     build_docker_data_image_create_from_tarball "${image_name}" <(
         build_run_local tar cvf - \
             -C dist \
             gpfjs/
       )
+
   }
 
 }
