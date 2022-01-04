@@ -56,6 +56,7 @@ setuptools.setup(
     annotate_variant_effects_vcf=dae.effect_annotation.cli:cli_vcf
 
     annotate_columns=dae.annotation.annotate_columns:cli
+    annotate_vcf=dae.annotation.annotate_vcf:cli
 
     dae2parquet.py=dae.tools.dae2parquet:main
     vcf2parquet.py=dae.tools.vcf2parquet:main

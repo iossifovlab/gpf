@@ -25,19 +25,27 @@ logger = logging.getLogger(__name__)
 class EffectAnnotatorBuilder:
     @staticmethod
     def set_arguments(parser: ArgumentParser) -> None:
+        genomic_repository_group = parser.add_argument_group(
+            "Genomic repository options")
+
+        genomic_repository_group.add_argument(
+            "-grr", "--genomic-repository-config-filename",
+            help="Genomic Repository Configuraiton File"
+        )
+
         gene_model_file_group = parser.add_argument_group(
             "Gene models file options")
 
         gene_model_file_group.add_argument(
-            "--gene-models-filename",
+            "-gmfn", "--gene-models-filename",
             help="Gene models file name."
         )
         gene_model_file_group.add_argument(
-            "--gene-models-fileformat",
+            "-gmff", "--gene-models-fileformat",
             help="Gene models file format."
         )
         gene_model_file_group.add_argument(
-            "--gene-mapping-filename",
+            "-gmmfn", "--gene-mapping-filename",
             help="Gene mapping file.",
             default=None,
             action="store",
@@ -45,26 +53,26 @@ class EffectAnnotatorBuilder:
         gene_model_resource_group = parser.add_argument_group(
             "Gene models resource options")
         gene_model_resource_group.add_argument(
-            "--gene-models-resource-id",
+            "-gmri", "--gene-models-resource-id",
             help="Gene models resource id."
         )
 
         reference_genome_file_group = parser.add_argument_group(
             "Reference genome file options")
         reference_genome_file_group.add_argument(
-            "--reference-genome-filename",
+            "-rgfn", "--reference-genome-filename",
             help="Reference genome file name."
         )
 
         reference_genome_resource_group = parser.add_argument_group(
             "Reference genome resource options")
         reference_genome_resource_group.add_argument(
-            "--reference-genome-resource-id",
+            "-rgri", "--reference-genome-resource-id",
             help="Reference genome resource id."
         )
 
         parser.add_argument(
-            "--promoter-len",
+            "-pl", "--promoter-len",
             help="promoter length",
             default=0,
             type=int,
@@ -80,7 +88,11 @@ class EffectAnnotatorBuilder:
         return self._gc
 
     def get_grr(self) -> GenomicResourceRepo:
-        grr = self.get_genomic_context().get_genomic_resource_repository()
+        if self.args.genomic_repository_config_filename:
+            grr = build_genomic_resource_repository(
+                self.args.genomic_repository_config_filename)
+        else:
+            grr = self.get_genomic_context().get_genomic_resource_repository()
         if grr:
             return grr
         return build_genomic_resource_repository()
@@ -242,21 +254,50 @@ class AnnotationAttributes:
         ["worst_effect", "gene_effects", "effect_details"])}
 
     @staticmethod
-    def set_argument(parser: ArgumentParser):
+    def set_argument(parser: ArgumentParser, default_columns: str =
+                     "worst_effect,gene_effects,effect_details"):
         annotation_attributes_group = parser.add_argument_group(
-            "Annotation attributes")
+            'Annotation attributes.')
         annotation_attributes_group. \
             add_argument("--annotation-attributes",
-                         default="worst_effect,gene_effects,effect_details")
+                         default=default_columns,
+                         help="The available attributes are "
+                         "worst_effect, gene_effects, and effect_details. "
+                         "Examples: "
+                         "1. 'worst_effect, gene_effects';"
+                         "2. 'WE: worst_effect, GE: gene_effects, "
+                         "ED: effect_details'"
+                         f"The default is : '{default_columns}'.")
 
     def __init__(self, args):
         self.args = args
-        self.attributes = self.args.annotation_attributes.split(",")
-        self.value_idxs = [AnnotationAttributes.ALL_ATTRIBUTE_IDXS[aa]
-                           for aa in self.attributes]
+        self.out_attributes = []
+        self.source_attributes = []
 
-    def get_attributes(self) -> List[str]:
-        return self.attributes
+        for attribute_def in self.args.annotation_attributes.split(","):
+            parts = attribute_def.split(":")
+            if len(parts) == 1:
+                out = parts[0]
+                source = parts[0]
+            elif len(parts) == 2:
+                out = parts[0]
+                source = parts[1]
+            else:
+                raise Exception("In correct attribute definition. "
+                                "TO IMPROVE MESSAGE!")
+            self.out_attributes.append(out)
+            self.source_attributes.append(source)
+        if len(self.out_attributes) != len(set(self.out_attributes)):
+            raise Exception("The output attributes should not be repeated. "
+                            "TO IMPROVE MESSAGE!!!")
+        self.value_idxs = [AnnotationAttributes.ALL_ATTRIBUTE_IDXS[aa]
+                           for aa in self.source_attributes]
+
+    def get_out_attributes(self) -> List[str]:
+        return self.out_attributes
+
+    def get_source_attributes(self) -> List[str]:
+        return self.source_attributes
 
     def get_values(self, E) -> List[str]:
         full_desc = AnnotationEffect.effects_description(E)
@@ -281,14 +322,82 @@ def cli_columns():
     annotation_attributes = AnnotationAttributes(args)
 
     output_file.write_columns(
-        input_file.get_header() + annotation_attributes.get_attributes())
+        input_file.get_header() + annotation_attributes.get_out_attributes())
     for cs, vdef in input_file.get_lines():
+        logger.debug(f"vdef: {vdef} AAA")
         E = annotator.do_annotate_variant(**vdef)
         output_file.write_columns(cs + annotation_attributes.get_values(E))
 
 
 def cli_vcf():
-    pass
+    from pysam import VariantFile  # noqu
+
+    parser = ArgumentParser(
+        description="Annotate Variant Effects in a VCF file.")
+
+    set_verbosity_argumnets(parser)
+    EffectAnnotatorBuilder.set_arguments(parser)
+    AnnotationAttributes.set_argument(
+        parser,
+        default_columns="WE:worst_effect,GE:gene_effects,ED:effect_details")
+
+    parser.add_argument("input_filename", help="input VCF variants file name")
+    parser.add_argument(
+        "output_filename", nargs="?", help="output file name (default: stdout)"
+    )
+    args = parser.parse_args(sys.argv[1:])
+    set_verbosity(args)
+    annotator = EffectAnnotatorBuilder(args).build_effect_annotator()
+    annotation_attributes = AnnotationAttributes(args)
+
+    infile = VariantFile(args.input_filename)
+    if args.output_filename is None:
+        outfile = sys.stdout
+    else:
+        outfile = open(args.output_filename, "w")
+
+    # handling the header
+    header = infile.header
+    header.add_meta(
+        "variant_effect_annotation", "GPF variant effects annotation."
+    )
+    header.add_meta(
+        "variant_effect_annotation_command", '"{}"'.format(" ".join(sys.argv))
+    )
+    source_attribute_description = {
+        "worst_effect": "The worst effect.",
+        "gene_effects": "Gene effects.",
+        "effect_details": "Detailed effects."
+    }
+    for out_a, src_a in zip(annotation_attributes.get_out_attributes(),
+                            annotation_attributes.get_source_attributes()):
+        header.info.add(out_a, "A", "String",
+                        source_attribute_description[src_a])
+
+    print(str(header), file=outfile, end="")
+
+    # handling the variants
+    out_as = annotation_attributes.get_out_attributes()
+    for variant in infile:
+        buffers = [list([]) for _ in out_as]
+
+        for alt in variant.alts:
+            E = annotator.do_annotate_variant(
+                chrom=variant.chrom,
+                pos=variant.pos,
+                ref=variant.ref,
+                alt=alt
+            )
+            for buff, v in zip(buffers, annotation_attributes.get_values(E)):
+                buff.append(v)
+
+        for out_a, buff in zip(out_as, buffers):
+            variant.info[out_a] = ",".join(buff)
+        print(str(variant), file=outfile, end="")
+
+    infile.close()
+    if args.output_filename:
+        outfile.close()
 
 
 if __name__ == "__main__":

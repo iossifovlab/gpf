@@ -3,14 +3,30 @@ import logging
 import pathlib
 import argparse
 import time
+from typing import cast
 
 from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository, load_definition_file, \
     get_configured_definition
+from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 
 logger = logging.getLogger(__file__)
+
+
+class VerbosityConfiguration:
+    @staticmethod
+    def set_argumnets(parser: argparse.ArgumentParser) -> None:
+        parser.add_argument('--verbose', '-v', '-V', action='count', default=0)
+
+    @staticmethod
+    def set(args):
+        if args.verbose == 1:
+            logging.basicConfig(level=logging.INFO)
+        elif args.verbose >= 2:
+            logging.basicConfig(level=logging.DEBUG)
+        else:
+            logging.basicConfig(level=logging.WARNING)
 
 
 def cli_browse(args=None):
@@ -30,7 +46,8 @@ def cli_manage(args=None):
         args = sys.argv[1:]
 
     if len(args) != 2:
-        print("Need two arguments: <command> and <repository directory>")
+        print("Need two arguments: <command> and <repository directory>. "
+              "The supported commands are index and list.")
         return
 
     cmd, dr = args
@@ -60,23 +77,16 @@ def cli_cache_repo(args=None):
     if not args:
         args = sys.argv[1:]
 
-    description = \
-        "Repository cache tool - caches all resources in a given repository"
+    description = "Repository cache tool - caches all resources in a given "
+    "repository"
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('--verbose', '-V', '-v', action='count', default=0)
     parser.add_argument(
         "--definition", default=None, help="Repository definition file"
     )
+    VerbosityConfiguration.set_argumnets(parser)
 
     args = parser.parse_args(args)
-    if args.verbose == 1:
-        logging.basicConfig(level=logging.WARNING)
-    elif args.verbose == 2:
-        logging.basicConfig(level=logging.INFO)
-    elif args.verbose >= 3:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.ERROR)
+    VerbosityConfiguration.set(args)
 
     start = time.time()
     if args.definition is not None:
@@ -84,11 +94,11 @@ def cli_cache_repo(args=None):
     else:
         definition = get_configured_definition()
 
-    assert "cache_dir" in definition, \
-        "No cache directory specified in definition"
-
     repository = build_genomic_resource_repository(definition=definition)
-
+    if not isinstance(repository, GenomicResourceCachedRepo):
+        raise Exception("This tool works only if the top configured "
+                        "repository is cached.")
+    repository = cast(GenomicResourceCachedRepo, repository)
     repository.cache_all_resources()
 
     elapsed = time.time() - start

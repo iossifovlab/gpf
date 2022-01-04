@@ -67,25 +67,19 @@ class EffectAnnotatorAdapter(Annotator):
     DEFAULT_ANNOTATION = Box({
         "attributes": [
             {
-                "source": "effect_type",
-                "destination": "effect_type"
+                "source": "worst_effect",
+                "destination": "worst_effect"
             },
 
             {
-                "source": "effect_genes",
-                "destination": "effect_genes"
+                "source": "gene_effects",
+                "destination": "gene_effects"
             },
 
             {
                 "source": "effect_details",
                 "destination": "effect_details"
             },
-
-            {
-                "source": "allele_effects",
-                "destination": "allele_effects",
-                "internal": True,
-            }
         ]
     })
 
@@ -109,6 +103,7 @@ class EffectAnnotatorAdapter(Annotator):
             promoter_len=promoter_len
         )
 
+    # FIXME
     def _not_found(self, attributes):
         for attr in self.attributes_list:
             attributes[attr.destination] = ""
@@ -116,10 +111,31 @@ class EffectAnnotatorAdapter(Annotator):
     def get_all_annotation_attributes(self) -> List[Dict]:
         result = [
             {
-                "name": "effect_type",
+                "name": "worst_effect",
                 "type": "str",
-                "desc": "worst effect",
+                "desc": "Worst effect accross all transcripts.",
             },
+            {
+                "name": "gene_effects",
+                "type": "str",
+                "desc": "Effects types for genes. "
+                        "Format: <gene_1>:<effect_1>|... "
+                "A gene can be repeated."
+            },
+            {
+                "name": "effect_details",
+                "type": "str",
+                "desc": "Effect details for each affected transcript. "
+                "Format: <transcript 1>:<gene 1>:<effect 1>:<details 1>|..."
+            },
+            {
+                "name": "allele_effects",
+                "type": "object",
+                "desc": "The a list of a python objects with details of the "
+                        "effects for each affected transcript. "
+            },
+            # FIXME
+            '''
             {
                 "name": "effect_gene_genes",
                 "type": "object",
@@ -128,11 +144,6 @@ class EffectAnnotatorAdapter(Annotator):
             {
                 "name": "effect_gene_types",
                 "type": "object",
-                "desc": ""
-            },
-            {
-                "name": "effect_genes",
-                "type": "str",
                 "desc": ""
             },
             {
@@ -150,16 +161,7 @@ class EffectAnnotatorAdapter(Annotator):
                 "type": "object",
                 "desc": ""
             },
-            {
-                "name": "effect_details",
-                "type": "str",
-                "desc": ""
-            },
-            {
-                "name": "allele_effects",
-                "type": "object",
-                "desc": ""
-            },
+            '''
         ]
         return result
 
@@ -239,19 +241,13 @@ class EffectAnnotatorAdapter(Annotator):
             length=length
         )
 
-        r = AnnotationEffect.wrap_effects(effects)
-
+        # r = AnnotationEffect.wrap_effects(effects)
+        full_desc = AnnotationEffect.effects_description(effects)
         result = {
-            "effect_type": r[0],
-            "effect_gene_genes": r[1],
-            "effect_gene_types": r[2],
-            "effect_genes": [f"{g}:{e}" for g, e in zip(r[1], r[2])],
-            "effect_details_transcript_ids": r[3],
-            "effect_details_genes": r[4],
-            "effect_details_details": r[5],
-            "effect_details": [
-                f"{t}:{g}:{d}" for t, g, d in zip(r[3], r[4], r[5])],
-            "allele_effects": AlleleEffects.from_effects(effects),
+            "worst_effect": full_desc[0],
+            "gene_effects": full_desc[1],
+            "effect_details": full_desc[2],
+            "allele_effects": effects
         }
 
         return result

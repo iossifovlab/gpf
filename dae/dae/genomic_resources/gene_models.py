@@ -1275,7 +1275,7 @@ class GeneModels:
         parser = self._get_parser(fileformat)
         if parser is not None:
             return fileformat
-        logger.warning("going to infer gene models file format...")
+        logger.info("going to infer gene models file format...")
 
         inferred_formats = []
         for fileformat in self.SUPPORTED_GENE_MODELS_FILE_FORMATS:

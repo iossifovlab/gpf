@@ -1,3 +1,4 @@
+from typing import cast
 from dae.genomic_resources import PositionScoreResource
 from dae.genomic_resources.test_tools import build_a_test_resource
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
@@ -128,3 +129,14 @@ def test_phastcons100way():
     #        ^      ^      ^      ^      ^      ^
     assert res.fetch_scores_agg("1", 54773, 54780, ["phastCons100way"]) == \
         {"phastCons100way": 0.000625}
+
+
+def test_position_score_over_http(genomic_resource_fixture_http_repo):
+    resource = genomic_resource_fixture_http_repo.get_resource(
+        "hg38/TESTphastCons100way")
+    assert isinstance(resource, PositionScoreResource)
+    resource = cast(PositionScoreResource, resource)
+    resource.open()
+    result = resource.fetch_scores("1", 10918)
+    assert result
+    assert result['phastCons100way'] == 0.253

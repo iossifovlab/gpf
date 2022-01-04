@@ -129,10 +129,10 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         assert dest_gr.resource_id == src_gr.resource_id
         filename = src_mnfst_file["name"]
 
-        dr = pathlib.Path(
+        dest_filename = pathlib.Path(
             self.directory /
-            dest_gr.get_genomic_resource_dir() / filename).parent
-        os.makedirs(dr, exist_ok=True)
+            dest_gr.get_genomic_resource_dir() / filename)
+        os.makedirs(dest_filename.parent, exist_ok=True)
 
         with src_gr.open_raw_file(
                 filename, "rb",
@@ -156,7 +156,6 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         src_modtime = datetime.datetime.fromisoformat(
             src_mnfst_file["time"]).timestamp()
 
-        dest_filename = dr / filename
         assert dest_filename.exists()
 
         os.utime(dest_filename, (src_modtime, src_modtime))

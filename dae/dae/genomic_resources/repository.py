@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import logging
+from typing import List, Optional
 import yaml
 import abc
 import hashlib
@@ -271,7 +272,7 @@ class GenomicResourceRepo(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_all_resources(self):
+    def get_all_resources(self) -> List[GenomicResource]:
         '''
         Returns a list of GenomicResource objects stored in the repository.
         '''
@@ -303,7 +304,7 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
         return gr
 
     def get_resource(self, resource_id, version_constraint=None,
-                     genomic_repository_id=None) -> GenomicResource:
+                     genomic_repository_id=None) -> Optional[GenomicResource]:
         if genomic_repository_id and self.repo_id != genomic_repository_id:
             return None
 
