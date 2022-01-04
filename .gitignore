@@ -80,3 +80,5 @@ Jenkinsfile.generated-stages
 Jenkinsfile.generated-stages.all
 /.build-scripts-tmp-sessions
 cache
+dae/dae/__build__.py
+wdae/wdae/__build__.py

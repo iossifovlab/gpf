@@ -406,6 +406,22 @@ EOT'
 
   build_stage "Package"
   {
+    build_run_ctx_init "container" "ubuntu:18.04"
+    defer_ret build_run_ctx_reset
+
+    local gpf_tag=$(e gpf_tag)
+    build_run echo "${gpf_tag}"
+    local __gpf_build_no=$(e __gpf_build_no)
+    build_run echo ${__gpf_build_no}
+
+    build_run bash -c '
+      echo "build = \"'"${gpf_tag}"'-'"${__gpf_build_no}"'\"" > dae/dae/__build__.py
+    '
+    build_run bash -c '
+      echo "build = \"'"${gpf_tag}"'-'"${__gpf_build_no}"'\"" > wdae/wdae/__build__.py
+    '
+
+
     local image_name="gpf-package"
     build_docker_data_image_create_from_tarball "${image_name}" <(
       build_run_local tar cvf - \
