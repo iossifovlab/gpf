@@ -480,7 +480,8 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
                     sa.get_annotatable())
                 if "allele_effects" in attributes:
                     allele_effects = attributes["allele_effects"]
-                    assert isinstance(allele_effects, AlleleEffects)
+                    assert isinstance(allele_effects, AlleleEffects), \
+                        attributes
                     sa.effects = allele_effects
                 sa.update_attributes(attributes)
             yield summary_variant, family_variants

@@ -89,8 +89,15 @@ def construct_import_effect_annotator(gpf_instance):
 
     config = Box({
         "annotator_type": "effect_annotator",
-        "genome": genome.resource_id,
-        "gene_models": gene_models.resource_id
+        "genome": gpf_instance.dae_config.reference_genome.resource_id,
+        "gene_models": gpf_instance.dae_config.gene_models.resource_id,
+        "attributes": [
+            {
+                "source": "allele_effects",
+                "destination": "allele_effects",
+                "internal": True
+            }
+        ]
     })
 
     effect_annotator = EffectAnnotatorAdapter(

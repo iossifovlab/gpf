@@ -186,6 +186,13 @@ def test_annotation_pipeline_effect_annotator_schema(grr_fixture):
     - effect_annotator:
         genome: hg38/GRCh38-hg38/genome
         gene_models: hg38/GRCh38-hg38/gene_models/refSeq_20200330
+        attributes:
+            - source: worst_effect
+              destination: worst_effect
+            
+            - source: allele_effects
+              destination: allele_effects
+              internal: true
     """)
 
     pipeline = build_annotation_pipeline(
@@ -200,12 +207,12 @@ def test_annotation_pipeline_effect_annotator_schema(grr_fixture):
     print(100*"=")
 
     schema = pipeline.annotation_schema
-    assert len(schema) == 4, schema
+    assert len(schema) == 2, schema
 
     assert "allele_effects" in schema
     assert "allele_effects" in schema.internal_fields
     assert "allele_effects" not in schema.public_fields
 
-    assert "effect_type" in schema
-    assert "effect_type" in schema.public_fields
-    assert "effect_type" not in schema.internal_fields
+    assert "worst_effect" in schema
+    assert "worst_effect" in schema.public_fields
+    assert "worst_effect" not in schema.internal_fields

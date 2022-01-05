@@ -247,7 +247,7 @@ class EffectAnnotatorAdapter(Annotator):
             "worst_effect": full_desc[0],
             "gene_effects": full_desc[1],
             "effect_details": full_desc[2],
-            "allele_effects": effects
+            "allele_effects": AlleleEffects.from_effects(effects),
         }
 
         return result

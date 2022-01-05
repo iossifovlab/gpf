@@ -23,8 +23,8 @@ def test_build_pipeline_schema(
 
     # assert len(schema) == 10
 
-    assert "effect_genes" in schema.names
-    field = schema["effect_genes"]
+    assert "gene_effects" in schema.names
+    field = schema["gene_effects"]
     print(field, dir(field))
 
     assert field.type == "str", field
