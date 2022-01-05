@@ -8,7 +8,8 @@ from query_base.query_base import QueryBaseView
 
 class DefaultGeneModelsId(QueryBaseView):
     def get(self, request):
-        default_gene_models_id = self.gpf_instance.gene_models.resource_id
+        default_gene_models_id = \
+            self.gpf_instance.dae_config.gene_models.resource_id
         return Response(default_gene_models_id, status=status.HTTP_200_OK)
 
 
