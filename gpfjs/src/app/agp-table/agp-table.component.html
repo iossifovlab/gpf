@@ -1,14 +1,21 @@
 <div class="table-container">
-  <div>
+  <div class="table">
     <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: config.columns }"></ng-container>
   </div>
 
   <ng-template #recursiveListTmpl let-columns="columns">
-    <div *ngFor="let column of columns">
-      {{ column.id }}
-      <ul *ngIf="column.columns.length > 0">
+    <div
+      *ngFor="let column of columns"
+      [ngStyle]="{
+        'grid-template-rows': column.columns.length > 0 ? 'auto auto' : 'auto',
+        'border-style': 'groove'
+      }">
+      <div>
+        {{ column.id }}
+      </div>
+      <div class="table" *ngIf="column.columns.length > 0">
         <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: column.columns }"></ng-container>
-      </ul>
+      </div>
     </div>
   </ng-template>
 </div>
