@@ -6,6 +6,7 @@ import time
 import logging
 import shutil
 import fsspec
+from urllib.parse import urlparse
 
 import toml
 from box import Box
@@ -562,6 +563,106 @@ rule setup_remote:
         """)
 
 
+class SnakefileKubernetesGenerator(BatchGenerator):
+
+    def __init__(self):
+        super(SnakefileKubernetesGenerator, self).__init__()
+
+    def generate(self, context):
+        return SnakefileKubernetesGenerator.TEMPLATE.render(context)
+
+    TEMPLATE = Template(
+        """\
+# To run this file against an already-configured k8s cluster run:
+# snakemake -j --kubernetes --default-remote-provider S3 --default-remote-prefix {{bucket}}
+#           --envvars AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY --container-image seqpipe/seqpipe-gpf-snakemake
+
+
+rule default:
+    input:
+        "{{outdir}}/parquet.flag"
+
+
+rule pedigree:
+    input:
+{%- if partition_description %}
+        partition_description="{{partition_description}}",
+{%- endif %}
+        pedigree="{{pedigree.pedigree}}"
+    output:
+        parquet="{{pedigree.output}}",
+        flag=touch("{{outdir}}/pedigree.flag")
+    benchmark:
+        "logs/pedigree_benchmark.txt"
+    log:
+        stdout="logs/pedigree_stdout.log",
+        stderr="logs/pedigree_stderr.log"
+    shell:
+        '''
+        ped2parquet.py --study-id {{study_id}} {{pedigree.verbose}} \\
+{%- if partition_description %}
+            --pd {input.partition_description} \\
+{%- endif %}
+            {{pedigree.params}} {input.pedigree} \\
+            -o {output.parquet} > {log.stdout} 2> {log.stderr}
+        '''
+
+{% for prefix, context in variants.items() %}
+
+{{prefix}}_bins={{context.bins|tojson}}
+
+rule {{prefix}}_variants_region_bin:
+    input:
+        pedigree="{{pedigree.pedigree}}",
+{%- if partition_description %}
+        partition_description="{{partition_description}}",
+{%- endif %}
+    params:
+        variants="{{context.variants}}",
+    output:
+        {{prefix}}_flag=touch("{{outdir}}/{{prefix}}_{rb}.flag")
+    benchmark:
+        "logs/{{prefix}}_{rb}_benchmark.tsv"
+    log:
+        stdout="logs/{{prefix}}_{rb}_stdout.log",
+        stderr="logs/{{prefix}}_{rb}_stderr.log"
+    shell:
+        '''
+        {{prefix}}2parquet.py --study-id {{study_id}} {{context.verbose}} \\
+            {{pedigree.params}} {input.pedigree} \\
+            {{context.params}} \\
+{%- if partition_description %}
+            --pd {input.partition_description} \\
+{%- endif %}
+            -o {{variants_output}} \\
+            {params.variants} \\
+            --rb {wildcards.rb} > {log.stdout} 2> {log.stderr}
+        '''
+
+rule {{prefix}}_variants:
+    input:
+        {{prefix}}_flags=expand("{{outdir}}/{{prefix}}_{rb}.flag", rb={{prefix}}_bins)
+    output:
+        touch("{{outdir}}/{{prefix}}_variants.flag")
+
+{% endfor %}
+
+
+rule parquet:
+    input:
+        pedigree="{{outdir}}/pedigree.flag",
+{%- for prefix in variants %}
+        {{prefix}}_flags=expand("{{outdir}}/{{prefix}}_{rb}.flag", rb={{prefix}}_bins),
+{%- endfor %}
+
+    output:
+        touch("{{outdir}}/parquet.flag")
+    benchmark:
+        "logs/parquet_benchmark.tsv"
+
+        """)
+
+
 class BatchImporter:
     def __init__(self, gpf_instance):
         self.gpf_instance = gpf_instance
@@ -731,7 +832,7 @@ class BatchImporter:
 
 
     def generate_instructions(self, argv):
-        dirname = argv.output
+        dirname = argv.generator_output or argv.output
         context = self.build_context(argv)
         if argv.tool == "make":
             generator = MakefileGenerator()
@@ -739,15 +840,64 @@ class BatchImporter:
         elif argv.tool == "snakemake":
             generator = SnakefileGenerator()
             filename = os.path.join(dirname, "Snakefile")
+        elif argv.tool == "snakemake-kubernetes":
+            generator = SnakefileKubernetesGenerator()
+            filename = os.path.join(dirname, "Snakefile")
         else:
             assert False, f"unexpected tool format: {argv.tool}"
 
         content = generator.generate(context)
 
-        with open(filename, "w") as outfile:
+        with fsspec.open(filename, "w") as outfile:
             outfile.write(content)
 
     def build_context(self, argv):
+        if urlparse(argv.output).scheme:
+            return self._build_context_remote(argv)
+        else:
+            return self._build_context_local(argv)
+
+    def _build_context_remote(self, argv):
+        context = self._build_context_local(argv)
+
+        out_url = urlparse(argv.output)
+        outdir = out_url.path[1:]  # strip leading '/' of path
+        bucket = out_url.netloc
+
+        context.update({
+            "outdir": outdir,
+            "bucket": bucket,
+        })
+
+        if argv.partition_description:
+            context["partition_description"] = \
+                urlparse(argv.partition_description).path[1:]
+
+        study_id = context["study_id"]
+
+        pedigree_output = os.path.join(
+            outdir, f"{study_id}_pedigree", "pedigree.parquet")
+        pedigree_pedigree = urlparse(self.families_loader.filename).path[1:]
+        context["pedigree"].update({
+            "pedigree": pedigree_pedigree,
+            "output": pedigree_output,
+        })
+
+        for prefix, variants_loader in self.variants_loaders.items():
+            variants_context = context["variants"][prefix]
+            variants_context["variants"] = " ".join(
+                [
+                    fn
+                    for fn in variants_loader.variants_filenames
+                ])
+
+        if self.variants_loaders:
+            context["variants_output"] = \
+                os.path.join(argv.output, f"{study_id}_variants")
+
+        return context
+
+    def _build_context_local(self, argv):
         outdir = argv.output
         study_id = self.study_id
 
@@ -923,6 +1073,16 @@ class BatchImporter:
             help="output directory. "
             "If none specified, current directory is used "
             "[default: %(default)s]",
+        )
+
+        parser.add_argument(
+            "--generator-out",
+            type=str,
+            default=None,
+            dest="generator_output",
+            metavar="<output directory>",
+            help="generator output directory. "
+            "If none specified, the output directory is used"
         )
 
         parser.add_argument(
