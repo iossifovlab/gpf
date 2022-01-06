@@ -362,9 +362,9 @@ class StudyWrapper(StudyWrapperBase):
                 self.genotype_data_study.query_result_variants(**kwargs)
             variants_result.start()
 
+            index = 0
             with closing(variants_result) as variants:
 
-                index = 0
                 for variant in variants:
                     if variant is None:
                         yield None
@@ -402,7 +402,8 @@ class StudyWrapper(StudyWrapperBase):
             pass
         finally:
             logger.info(
-                f"study wrapper query {index} variants for {self.name} closed")
+                f"study wrapper query returned {index} variants from "
+                f"{self.name} closed")
 
     def get_gene_view_summary_variants(self, frequency_column, **kwargs):
         kwargs = self.query_transformer.transform_kwargs(**kwargs)
