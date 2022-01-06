@@ -132,7 +132,7 @@ describe('Autism gene profiles single view visual tests', () => {
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
-  it.only('should compare histrograms', () => {
+  it('should compare histrograms', () => {
     autismGeneProfilesTablePage.geneSearchInput.type('CHD8');
     autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
     autismGeneProfilesTablePage.allTableCells.first().click();
