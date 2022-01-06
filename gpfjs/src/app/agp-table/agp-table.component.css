@@ -3,7 +3,37 @@
   white-space: nowrap;
 }
 
-.table {
+.header {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  box-sizing: border-box;
+  flex: 1;
+}
+
+.main-header {
+  width: 100%;
+  border-left: 1px solid #ddd;
+  border-top: 1px solid #ddd;
+}
+
+.header-cell {
+  border-spacing: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header-cell-title {
+  border-right: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+}
+
+.leaf {
+  flex: 1;
+}
+
+div {
+  margin: 0;
+  text-align: center;
+  vertical-align: middle;
 }
