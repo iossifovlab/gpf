@@ -20,31 +20,43 @@ describe('Autism gene profiles block tests', () => {
   });
 
   it('should select multiple genes', () => {
-    autismGeneProfilesTablePage.allTableRows.eq(1).click({ctrlKey:true});
-    autismGeneProfilesTablePage.allTableRows.eq(3).click({ctrlKey:true});
+    cy.intercept('GET', '/gpf/api/v3/autism_gene_tool/genes/?page=1&symbol=**').as('tableRequest');
+    
+    autismGeneProfilesTablePage.geneSearchInput.clear().type('MYT1L');
+    cy.wait('@tableRequest');
+    autismGeneProfilesTablePage.allTableRows.eq(0).click({ctrlKey:true});
+    autismGeneProfilesTablePage.geneSearchInput.clear().type('SPAST');
+    cy.wait('@tableRequest');
+    autismGeneProfilesTablePage.allTableRows.eq(0).click({ctrlKey:true});
 
     autismGeneProfilesTablePage.legend.should('be.visible');
     autismGeneProfilesTablePage.legendCompareButton.should('be.visible');
     autismGeneProfilesTablePage.legendDismissButton.should('be.visible');
     autismGeneProfilesTablePage.legendSelectedGenes.should('have.text', '► MYT1L, SPAST');
 
-    autismGeneProfilesTablePage.allTableRows.eq(1).click({ctrlKey:true});
+    autismGeneProfilesTablePage.allTableRows.eq(0).click({ctrlKey:true});
 
     autismGeneProfilesTablePage.legend.should('be.visible');
     autismGeneProfilesTablePage.legendCompareButton.should('be.visible');
     autismGeneProfilesTablePage.legendDismissButton.should('be.visible');
-    autismGeneProfilesTablePage.legendSelectedGenes.should('have.text', '► SPAST');
+    autismGeneProfilesTablePage.legendSelectedGenes.should('have.text', '► MYT1L');
 
   });
 
   it('should click dismiss gene compare button', () => {
-    autismGeneProfilesTablePage.allTableRows.eq(3).click({ctrlKey:true});
+    cy.intercept('GET', '/gpf/api/v3/autism_gene_tool/genes/?page=1&symbol=**').as('tableRequest');
+    autismGeneProfilesTablePage.geneSearchInput.clear().type('SPAST');
+    cy.wait('@tableRequest');
+
+    autismGeneProfilesTablePage.allTableRows.eq(0).click({ctrlKey:true});
     autismGeneProfilesTablePage.legend.should('be.visible');
     autismGeneProfilesTablePage.legendCompareButton.should('be.visible');
     autismGeneProfilesTablePage.legendDismissButton.should('be.visible');
     autismGeneProfilesTablePage.legendSelectedGenes.should('have.text', '► SPAST');
 
-    autismGeneProfilesTablePage.allTableRows.eq(5).click({ctrlKey:true});
+    autismGeneProfilesTablePage.geneSearchInput.clear().type('TBR1');
+    cy.wait('@tableRequest');
+    autismGeneProfilesTablePage.allTableRows.eq(0).click({ctrlKey:true});
     autismGeneProfilesTablePage.legend.should('be.visible');
     autismGeneProfilesTablePage.legendCompareButton.should('be.visible');
     autismGeneProfilesTablePage.legendDismissButton.should('be.visible');
