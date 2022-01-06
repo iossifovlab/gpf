@@ -1,4 +1,5 @@
 /// <reference types="cypress" />
+/// <reference types="cypress-image-snapshot" />
 // ***********************************************************
 // This example plugins/index.js can be used to load plugins
 //
