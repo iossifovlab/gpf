@@ -104,10 +104,12 @@ export class BasePage {
   }
 
   get datasetsDropdownMenuButton() {
+    cy.get('#datasets-dropdown-menu-button').should('be.visible');
     return cy.get('#datasets-dropdown-menu-button');
   }
 
   get datasetsDropdownMenuElements() {
+    cy.get('.dataset-selector a').should('be.visible');
     return cy.get('.dataset-selector a');
   }
 

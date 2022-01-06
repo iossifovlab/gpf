@@ -69,11 +69,6 @@ describe('Autism gene profiles block tests', () => {
     autismGeneProfilesSingleView.window.should('be.visible');
   });
 
-  /* 
-    Using `autismGeneProfilesTablePage.allTableRows.should('have.length', 1);`
-    instead of cy.wait doesn't work?
-    fix me
-  */
   it('should create multiple tabs and navigate through them using the number keybinds', () => {
     autismGeneProfilesTablePage.geneSearchInput.type('CHD8');
     autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
@@ -81,34 +76,38 @@ describe('Autism gene profiles block tests', () => {
     page.homeTab.click();
 
     autismGeneProfilesTablePage.geneSearchInput.clear();
+    autismGeneProfilesTablePage.allTableRows.should('have.length.greaterThan', 1);
     autismGeneProfilesTablePage.geneSearchInput.type('SHANK2');
-    cy.wait(1000);
-    autismGeneProfilesTablePage.firstGeneInTable.click();
+    autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
+    autismGeneProfilesTablePage.firstGeneInTable.click({timeout:1000});
     page.homeTab.click();
 
     autismGeneProfilesTablePage.geneSearchInput.clear();
+    autismGeneProfilesTablePage.allTableRows.should('have.length.greaterThan', 1);
     autismGeneProfilesTablePage.geneSearchInput.type('LAMA3');
-    cy.wait(1000);
-    autismGeneProfilesTablePage.firstGeneInTable.click();
+    autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
+    autismGeneProfilesTablePage.firstGeneInTable.click({timeout:1000});
     page.homeTab.click();
 
     autismGeneProfilesTablePage.geneSearchInput.clear();
+    autismGeneProfilesTablePage.allTableRows.should('have.length.greaterThan', 1);
     autismGeneProfilesTablePage.geneSearchInput.type('TTLL12');
-    cy.wait(1000);
-    autismGeneProfilesTablePage.firstGeneInTable.click();
+    autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
+    autismGeneProfilesTablePage.firstGeneInTable.click({timeout:1000});
     page.homeTab.click();
 
     autismGeneProfilesTablePage.geneSearchInput.clear();
+    autismGeneProfilesTablePage.allTableRows.should('have.length.greaterThan', 1);
     autismGeneProfilesTablePage.geneSearchInput.type('POLL');
-    cy.wait(1000);
-    autismGeneProfilesTablePage.firstGeneInTable.click();
+    autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
+    autismGeneProfilesTablePage.firstGeneInTable.click({timeout:1000});
     page.homeTab.click();
 
     autismGeneProfilesTablePage.geneSearchInput.clear();
+    autismGeneProfilesTablePage.allTableRows.should('have.length.greaterThan', 1);
     autismGeneProfilesTablePage.geneSearchInput.type('CHGA');
-    cy.wait(1000);
-
-    autismGeneProfilesTablePage.firstGeneInTable.click();
+    autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
+    autismGeneProfilesTablePage.firstGeneInTable.click({timeout:1000});
     page.homeTab.click();
     page.allTabs.should('have.length', 7);
 
