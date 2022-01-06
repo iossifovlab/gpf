@@ -119,4 +119,34 @@ describe('Autism gene profiles single view links tests', () => {
   // });
   // it('should have the correct href for the SFARI link', () => {
   // });
+
+});
+
+describe('Autism gene profiles single view visual tests', () => {
+  const page = new AutismGeneProfilesSingleView();
+  const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
+
+  before(() => {
+    page.cleanup();
+    page.navigateToHome();
+    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+  });
+
+  it.only('should compare histrograms', () => {
+    autismGeneProfilesTablePage.geneSearchInput.type('CHD8');
+    autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
+    autismGeneProfilesTablePage.allTableCells.first().click();
+
+    [['autism_scores', ['SFARI_gene_score']], ['protection_scores', ['RVIS_rank', 'LGD_rank', 'pLI_rank', 'pRec_rank']]].forEach(histograms => {
+      cy.get('#' + histograms[0]).within(scores => {
+        histograms[1].forEach((elements, index) => {
+          cy.wrap(scores).get('tr').eq(index).within(row => {
+            cy.wrap(row).get('td').eq(0).should('have.text', elements);
+            cy.wrap(row).scrollTo('center');
+            cy.wrap(row).matchImageSnapshot('autism-gene-profiles-single-view/CHD8/' + histograms[0] + '-' + elements);
+          });
+        });
+      });
+    });
+  });
 });
