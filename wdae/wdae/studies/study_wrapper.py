@@ -74,7 +74,7 @@ class StudyWrapperBase:
         result["name"] = result["name"] or result["id"]
 
         return result
-    
+
     @staticmethod
     def build_genotype_data_group_description(
         gpf_instance, config, description, person_set_collection_configs
