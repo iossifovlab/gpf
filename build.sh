@@ -48,7 +48,7 @@ function main() {
   # cleanup
   build_stage "Cleanup"
   {
-    build_run_ctx_init "container" "ubuntu:18.04"
+    build_run_ctx_init "container" "ubuntu:20.04"
     defer_ret build_run_ctx_reset
 
     build_run rm -rvf ./data/ ./import/ ./downloads ./results
@@ -124,7 +124,7 @@ url: "https://www.iossifovlab.com/distribution/public/genomic-resources-reposito
 cache_dir: "/wd/cache/grrCache"
 EOT
 '
-    build_run_ctx_init "container" "ubuntu:18.04"
+    build_run_ctx_init "container" "ubuntu:20.04"
     defer_ret build_run_ctx_reset
 
     # cleanup
@@ -166,7 +166,7 @@ EOT
       ./data/data-hg19-remote/gpf_instance.yaml
       '
 
-      build_run_ctx_init "container" "ubuntu:18.04"
+      build_run_ctx_init "container" "ubuntu:20.04"
       defer_ret build_run_ctx_reset
 
       # cleanup
@@ -406,7 +406,7 @@ EOT'
 
   build_stage "Package"
   {
-    build_run_ctx_init "container" "ubuntu:18.04"
+    build_run_ctx_init "container" "ubuntu:20.04"
     defer_ret build_run_ctx_reset
 
     local gpf_tag=$(e gpf_tag)
@@ -449,7 +449,7 @@ EOT'
   # post cleanup
   build_stage "Post Cleanup"
   {
-    build_run_ctx_init "container" "ubuntu:18.04"
+    build_run_ctx_init "container" "ubuntu:20.04"
     defer_ret build_run_ctx_reset
     build_run rm -rvf ./data/ ./import/ ./downloads ./results
   }
