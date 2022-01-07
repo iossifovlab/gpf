@@ -12,13 +12,13 @@ export class AgpConfig {
 
 export const rowMock = [
   ["testVal", "testVal2", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank"],
-  ["testVal", "testVal2", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank"],
-  ["testVal", "testVal2", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank"],
-  ["testVal", "testVal2", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank"],
-  ["testVal", "testVal2", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank"],
-  ["testVal", "testVal2", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank"],
-  ["testVal", "testVal2", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank"],
 ];
+
+const mockedRow = ["testVal", "testVal2", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank", "blankblank"];
+
+for (let i = 0; i < 100; i++) {
+  rowMock.push(mockedRow);
+}
 
 export const configMock: AgpConfig = {
   columns: [

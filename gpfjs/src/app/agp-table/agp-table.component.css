@@ -20,12 +20,18 @@
   border-spacing: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .cell {
+  overflow: hidden;
   border-right: 1px solid #ddd;
   border-bottom: 1px solid #ddd;
+}
+
+.header-title-cell {
+  position: sticky;
+  background: white;
+  height: 25px;
 }
 
 .leaf {
