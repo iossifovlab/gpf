@@ -357,12 +357,12 @@ class StudyWrapper(StudyWrapperBase):
 
         transform = self.response_transformer.variant_transformer()
 
+        index = 0
         try:
             variants_result = \
                 self.genotype_data_study.query_result_variants(**kwargs)
             variants_result.start()
 
-            index = 0
             with closing(variants_result) as variants:
 
                 for variant in variants:
