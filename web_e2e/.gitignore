@@ -11,3 +11,6 @@ results
 Jenkinsfile.generated-stages.all
 .build-scripts-tmp-sessions
 ts-lint-report.xml
+cache/
+__pycache__
+
