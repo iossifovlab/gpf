@@ -31,10 +31,9 @@ describe('Share query tests', () => {
 
     page.button.should('be.visible');
     page.button.click();
-    page.datasetsDropdownMenuButton.should('have.text', 'comp_all');
     page.input.contains(/\.*/).invoke('val').then((url) => {
       cy.visit(String(url)).then(() => {
-        datasetsPage.datasetStatisticsButton.should('be.visible');
+        page.datasetsDropdownMenuButton.should('have.text', 'comp_all');
         datasetsPage.datasetStatisticsButton.click();
         datasetsPage.genotypeBrowserButton.should('be.visible');
         datasetsPage.genotypeBrowserButton.click();
