@@ -29,9 +29,9 @@ describe('Share query tests', () => {
     const datasetsPage = new DatasetsPage();
 
     page.button.click();
-    page.datasetsDropdownMenuButton.should('have.text', 'comp_all');
     page.input.contains(/\.*/).invoke('val').then((url) => {
       cy.visit(String(url)).then(() => {
+        page.datasetsDropdownMenuButton.should('have.text', 'comp_all');
         datasetsPage.datasetStatisticsButton.click();
         datasetsPage.genotypeBrowserButton.click();
         datasetsPage.phenotypeBrowserButton.click();
