@@ -23,13 +23,14 @@
   overflow: hidden;
 }
 
-.header-cell-title {
+.cell {
   border-right: 1px solid #ddd;
   border-bottom: 1px solid #ddd;
 }
 
 .leaf {
   flex: 1;
+  border-bottom: 1px solid #555;
 }
 
 div {

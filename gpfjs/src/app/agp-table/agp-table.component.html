@@ -1,6 +1,6 @@
 <div class="table-container">
   <div class="header main-header">
-    <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: config.columns }"></ng-container>
+    <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: config.columns, rows: rows }"></ng-container>
   </div>
 
   <ng-template #recursiveListTmpl let-columns="columns">
@@ -8,13 +8,18 @@
       class="header-cell"
       *ngFor="let column of columns"
       [ngStyle]="{ 'grid-template-rows': column.columns.length > 0 ? 'auto auto' : 'auto' }">
-      <div class="header-cell-title" [ngClass]="{ leaf: column.columns.length === 0 }">
+      <div class="cell" [ngClass]="{ leaf: column.columns.length === 0 }">
         {{ column.id }}
       </div>
 
       <div class="header" *ngIf="column.columns.length > 0">
-        <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: column.columns }"></ng-container>
+        <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: column.columns, rows: rows }"></ng-container>
       </div>
+      <ng-container *ngIf="column.columns.length === 0">
+        <div class="cell" *ngFor="let row of rows">
+          {{ row[column.index] }}
+        </div>
+      </ng-container>
     </div>
   </ng-template>
 </div>

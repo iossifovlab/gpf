@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { configMock } from './agp-table';
+import { configMock, rowMock } from './agp-table';
 
 @Component({
   selector: 'gpf-agp-table',
@@ -8,4 +8,5 @@ import { configMock } from './agp-table';
 })
 export class AgpTableComponent {
   public config = configMock;
+  public rows = rowMock;
 }
