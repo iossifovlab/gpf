@@ -187,11 +187,22 @@ class GPFInstance(object):
     @cached
     def _autism_gene_profile_config(self):
         agp_config = self.dae_config.autism_gene_tool_config
-        if agp_config is None or not os.path.exists(agp_config.conf_file):
-            return None
+        config_filename = None
 
+        if agp_config is None:
+            config_filename = os.path.join(
+                self.dae_db_dir, "autismGeneTool.conf")
+            if not os.path.exists(config_filename):
+                return None
+        else:
+            if not os.path.exists(agp_config.conf_file):
+                return None
+            else:
+                config_filename = agp_config.conf_file
+
+        assert config_filename is not None
         return GPFConfigParser.load_config(
-            self.dae_config.autism_gene_tool_config.conf_file,
+            config_filename,
             autism_gene_tool_config
         )
 
