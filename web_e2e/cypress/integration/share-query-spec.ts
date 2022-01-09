@@ -30,6 +30,7 @@ describe('Share query tests', () => {
 
     page.button.click();
     page.input.contains(/\.*/).invoke('val').then((url) => {
+      console.log(url);
       cy.visit(String(url)).then(() => {
         page.datasetsDropdownMenuButton.should('have.text', 'comp_all');
         datasetsPage.datasetStatisticsButton.click();
