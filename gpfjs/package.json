@@ -87,6 +87,8 @@
     "typescript": "4.3.2"
   },
   "overrides": {
-    "colors": "1.4.0"
+    "karma": {
+      "colors": "1.4.0"
+    }
   }
 }
