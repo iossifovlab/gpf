@@ -1,6 +1,9 @@
 import yaml
 import os
 import pprint
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def adjust_instance_id(config, adjustments):
@@ -48,7 +51,9 @@ def adjust_available_studies(config, adjustments):
 
 def main(adjustments):
     filename = os.path.join(os.environ.get("DAE_DB_DIR"), "gpf_instance.yaml")
-    assert os.path.exists(filename), filename
+    if not os.path.exists(filename):
+        logger.error(f"can't find DAE_DB_DIR instance config: {filename}")
+        return
 
     with open(filename) as infile:
         config = yaml.safe_load(infile.read())
