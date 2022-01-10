@@ -7,6 +7,7 @@ import itertools
 import logging
 from copy import copy
 from urllib.parse import urlparse
+from fsspec.core import url_to_fs
 
 import toml
 from box import Box
@@ -152,10 +153,12 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
 
     @staticmethod
     def from_config(config_path, root_dirname=""):
-        assert os.path.exists(config_path), config_path
+        fs, _ = url_to_fs(config_path)
+        assert fs.exists(config_path), config_path
 
         config = configparser.ConfigParser()
-        config.read(config_path)
+        with fs.open(config_path, "rt") as f:
+            config.read_file(f, config_path)
         assert config["region_bin"] is not None
 
         chromosomes = list(
