@@ -1,6 +1,7 @@
 import os
 import glob
 import logging
+import fsspec
 
 import yaml
 import toml
@@ -70,7 +71,7 @@ class GPFConfigParser:
 
     @classmethod
     def _get_file_contents(cls, filename: str) -> str:
-        with open(filename, "r") as infile:
+        with fsspec.open(filename, "r") as infile:
             return infile.read()
 
     @classmethod
