@@ -24,7 +24,8 @@ class HdfsHelpers:
     def hdfs(self):
         if self._hdfs is None:
             from urllib.request import urlopen
-            with urlopen("https://www.iossifovlab.com/distribution/public/"
+            with urlopen(
+                    "https://www.iossifovlab.com/distribution/public/"
                     "genomic-resources-repository/.CONTENTS") as repo:
                 for index, line in enumerate(repo):
                     pass
