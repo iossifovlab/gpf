@@ -137,13 +137,14 @@ describe('Autism gene profiles single view visual tests', () => {
     autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
     autismGeneProfilesTablePage.allTableCells.first().click();
 
-    [['autism_scores', ['SFARI_gene_score']], ['protection_scores', ['RVIS_rank', 'LGD_rank', 'pLI_rank', 'pRec_rank']]].forEach(histograms => {
-      cy.get('#' + histograms[0]).within(scores => {
-        histograms[1].forEach((elements, index) => {
+    [{tableId: 'autism_scores', tableRows: ['SFARI_gene_score']},
+     {tableId: 'protection_scores', tableRows: ['RVIS_rank', 'LGD_rank', 'pLI_rank', 'pRec_rank']}
+    ].forEach(data => {
+      cy.get('#' + data.tableId).within(scores => {
+        data.tableRows.forEach((elements, index) => {
           cy.wrap(scores).get('tr').eq(index).within(row => {
             cy.wrap(row).get('td').eq(0).should('have.text', elements);
-            cy.wrap(row).scrollTo('center');
-            cy.wrap(row).matchImageSnapshot('autism-gene-profiles-single-view/CHD8/' + histograms[0] + '-' + elements);
+            cy.wrap(row).matchImageSnapshot('autism-gene-profiles-single-view/chd8-' + data.tableId + '-' + elements);
           });
         });
       });

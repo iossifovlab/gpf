@@ -4,7 +4,7 @@ downloads
 import
 package-lock.json
 cypress/screenshots
-cypress/snapshots
+cypress/fixtures/snapshots/**/__diff_output__
 cypress/videos
 results
 /build-env/*

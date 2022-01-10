@@ -411,7 +411,7 @@ describe('Genotype browser family variants download tests', () => {
   });
 });
 
-describe.only('Genotype browser pedigree visual tests', () => {
+describe('Genotype browser table preview visual tests', () => {
   const genotypeBrowserController = new GenotypeBrowserController();
   const page = new GenotypeBrowserPage();
   const genotypePreviewTablePage = new GenotypePreviewTablePage();
@@ -434,8 +434,6 @@ describe.only('Genotype browser pedigree visual tests', () => {
 
     genotypeBrowserController.showTablePreview();
     page.overviewParagraph.should('have.text', '4 variants selected (4 shown)');
-    genotypePreviewTablePage.table.matchImageSnapshot('genotype-browser/kdm5b-gene-genotype-table-preview');
-
-    
+    genotypePreviewTablePage.table.matchImageSnapshot('genotype-browser-table-preview/kdm5b');
   });
 });
