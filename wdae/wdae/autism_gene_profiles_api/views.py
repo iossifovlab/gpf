@@ -21,69 +21,85 @@ class ConfigurationView(QueryBaseView):
             if dataset["id"] == category:
                 return "datasets"
 
+    def transform_config(self, agp_config):
+        pass
+
     def get(self, request):
         configuration = self.gpf_instance.get_agp_configuration()
         if configuration is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # Camelize snake_cased keys, excluding "datasets"
-        # since its keys are dataset IDs
-        response = to_response_json(configuration)
+        response = {"config": []}
         if len(configuration) == 0:
             return Response(response)
 
+        for category in configuration["gene_sets"]:
+            response["config"].append({
+                "id": category["category"],
+                "displayName": category["display_name"],
+                "visible": True,
+                "columns": [{
+                    "id": gene_set["set_id"],
+                    "displayName": gene_set["set_id"],
+                    "visible": True,
+                    "columns": []
+                } for gene_set in category["sets"]]
+            })
+
+        for category in configuration["genomic_scores"]:
+            response["config"].append({
+                "id": category["category"],
+                "displayName": category["display_name"],
+                "visible": True,
+                "columns": [{
+                    "id": genomic_score["score_name"],
+                    "displayName": genomic_score["score_name"],
+                    "visible": True,
+                    "columns": []
+                } for genomic_score in category["scores"]]
+            })
+
         if "datasets" in configuration:
-            response["datasets"] = list()
+            all_datasets_col = {
+                "id": "datasets",
+                "displayName": "Datasets",
+                "visible": True,
+                "columns": list()
+            }
             for dataset_id, dataset in configuration["datasets"].items():
                 study_wrapper = self.gpf_instance.get_wdae_wrapper(dataset_id)
-
-                if "person_sets" in dataset:
-                    # Attach person set counts
-                    person_sets_config = list()
-                    for person_set in dataset["person_sets"]:
-                        set_id = person_set["set_name"]
-                        collection_id = person_set["collection_name"]
-                        description = ""
-                        if "description" in person_set:
-                            description = person_set["description"]
-                        person_set_collection = \
-                            study_wrapper.genotype_data.person_set_collections[
-                                collection_id
-                            ]
-                        stats = person_set_collection.get_stats()[set_id]
-                        set_name = \
-                            person_set_collection.person_sets[set_id].name
-                        person_sets_config.append({
-                            "id": set_id,
-                            "displayName": set_name,
-                            "collectionId": collection_id,
-                            "description": description,
-                            "parentsCount": stats["parents"],
-                            "childrenCount": stats["children"],
-                            "statistics": to_response_json(dataset)["statistics"],
-                        })
-
-                display_name = dataset.get("display_name")
-                if display_name is None:
-                    display_name = study_wrapper.config.get("name")
-                if display_name is None:
-                    display_name = dataset_id
-
-                response["datasets"].append({
+                display_name = dataset.get("display_name") \
+                    or study_wrapper.config.get("name") \
+                    or dataset_id
+                dataset_col = {
                     "id": dataset_id,
                     "displayName": display_name,
-                    "defaultVisible": True,
-                    **to_response_json(dataset),
-                    "personSets": person_sets_config,  # overwrite person_sets
-                })
-
-        assert "order" in response
-
-        order = response["order"]
-        response["order"] = [
-            {"section": self.find_category_section(response, o), "id": o}
-            for o in order
-        ]
+                    "visible": True,
+                    "columns": list()
+                }
+                for person_set in dataset.get("person_sets", []):
+                    set_id = person_set["set_name"]
+                    collection_id = person_set["collection_name"]
+                    person_set_collection = \
+                        study_wrapper.genotype_data.person_set_collections[
+                            collection_id
+                        ]
+                    set_name = \
+                        person_set_collection.person_sets[set_id].name
+                    dataset_col["columns"].append({
+                        "id": set_id,
+                        "displayName": set_name,
+                        "visible": True,
+                        "columns": [
+                            { "id": statistic.id,
+                              "displayName": statistic.display_name,
+                              "visible": True,
+                              "columns": list() }
+                            for statistic in dataset["statistics"]
+                        ]
+                    })
+                all_datasets_col["columns"].append(dataset_col)
+            response["config"].append(all_datasets_col)
 
         return Response(response)
 
