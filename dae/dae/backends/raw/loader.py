@@ -24,6 +24,7 @@ from dae.variants.attributes import Sex, GeneticModel
 from dae.variants.attributes import TransmissionType
 
 from dae.utils.variant_utils import get_locus_ploidy, best2gt
+from dae.utils import fs_utils
 
 
 logger = logging.getLogger(__name__)
@@ -212,7 +213,7 @@ class VariantsLoader(CLILoader):
         super().__init__(params=params)
         assert isinstance(families, FamiliesData)
         self.families = families
-        assert all([os.path.exists(fn) for fn in filenames]), filenames
+        assert all([fs_utils.exists(fn) for fn in filenames]), filenames
         self.filenames = filenames
 
         assert isinstance(transmission_type, TransmissionType)
