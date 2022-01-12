@@ -11,6 +11,8 @@ import numpy as np
 import pandas as pd
 
 from dae.utils.regions import Region
+import fsspec
+from dae.utils import fs_utils
 
 from dae.genome.genomes_db import Genome
 from dae.utils.variant_utils import str2mat, GENOTYPE_TYPE, str2gt
@@ -790,7 +792,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
     @staticmethod
     def _build_toomany_filename(summary_filename):
-        assert os.path.exists(
+        assert fs_utils.exists(
             f"{summary_filename}.tbi"
         ), f"summary filename tabix index missing {summary_filename}"
 
@@ -806,8 +808,8 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                 f"unexpected extention"
             )
 
-        assert os.path.exists(result), f"missing TOOMANY file {result}"
-        assert os.path.exists(
+        assert fs_utils.exists(result), f"missing TOOMANY file {result}"
+        assert fs_utils.exists(
             f"{result}.tbi"
         ), f"missing tabix index for TOOMANY file {result}"
 
@@ -827,10 +829,11 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
     @staticmethod
     def _load_column_names(filename):
-        with gzip.open(filename) as infile:
-            column_names = (
-                infile.readline().decode("utf-8").strip().split("\t")
-            )
+        with fsspec.open(filename) as f:
+            with gzip.open(f) as infile:
+                column_names = (
+                    infile.readline().decode("utf-8").strip().split("\t")
+                )
         return column_names
 
     @classmethod
