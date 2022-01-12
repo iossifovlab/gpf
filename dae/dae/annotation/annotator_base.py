@@ -138,23 +138,24 @@ class Annotator(abc.ABC):
         as configured.
         """
         if self.input_annotatable is not None:
-            ao = context.get(self.input_annotatable)
+            if self.input_annotatable not in context:
+                raise ValueError(
+                    f"can't find input annotatable {self.input_annotatable} "
+                    f"in annotation context: {context}")
+            ao = context[self.input_annotatable]
             logger.debug(
                 f"input annotatable {self.input_annotatable} found {ao}.")
 
             if ao is None:
-                # FIXME: discuss with Ivan
                 logger.warning(
                     f"can't find input annotatable {self.input_annotatable} "
                     f"in annotation context: {context}")
                 return self._empty_result()
 
             if not isinstance(ao, Annotatable):
-                # FIXME: discuss with Ivan
-                logger.warning(
+                raise ValueError(
                     f"The object with a key {self.input_annotatable} in the "
                     f"annotation context {context} is not an Annotabable.")
-                return self._empty_result()
 
             annotatable = cast(Annotatable, ao)
 
