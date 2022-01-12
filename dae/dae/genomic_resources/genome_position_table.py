@@ -16,13 +16,6 @@ class GenomicPositionTable(abc.ABC):
     def __init__(self, genomic_resource: GenomicResource, table_definition):
         self.genomic_resource = genomic_resource
 
-        # v = Validator(TABLE_SCHEMA)
-        # # v.allow_unknown = True
-        # if not v.validate(table_definition):
-        #     raise ValueError(v.errors)
-
-        # self.definition = Box(v.normalized(table_definition))
-
         self.definition = Box(table_definition)
         self.chrom_map = None
 
