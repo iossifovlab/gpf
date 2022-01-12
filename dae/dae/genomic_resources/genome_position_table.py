@@ -4,65 +4,8 @@ import pysam
 import os
 
 from box import Box
-from cerberus import Validator
 
 from dae.genomic_resources.repository import GenomicResource
-
-
-TABLE_SCHEMA = {
-    "filename": {"type": "string", 'required': True, "empty": False},
-    "format": {
-        "type": "string",
-        "allowed": ["tabix", "csv", "tsv", "mem"],
-    },
-    "chrom": {
-        "type": "dict", "schema": {
-            "name": {"type": "string", "empty": False},
-            "index": {"type": "integer"},
-        },
-    },
-    "pos_begin": {
-        "type": "dict", "schema": {
-            "name": {"type": "string", "empty": False},
-            "index": {"type": "integer"},
-        },
-    },
-    "pos_end": {
-        "type": "dict", "schema": {
-            "name": {"type": "string", "empty": False},
-            "index": {"type": "integer"},
-        },
-    },
-    "reference": {
-        "type": "dict", "schema": {
-            "name": {"type": "string", "empty": False},
-            "index": {"type": "integer"},
-        },
-    },
-    "alternative": {
-        "type": "dict", "schema": {
-            "name": {"type": "string", "empty": False},
-            "index": {"type": "integer"},
-        },
-    },
-    "chrom_mapping": {
-        "type": "dict", "schema": {
-            "filename": {"type": "string", "nullable": True},
-            "del_prefix": {"type": "string", "nullable": True},
-            "add_prefix": {"type": "string", "nullable": True},
-        }
-    },
-    "header_mode": {
-        "type": "string",
-        "allowed": ["none", "list", "file"], "default": "file"
-    },
-    "header": {
-        "type": "list",
-        "schema": {"type": "string"},
-        "dependencies": "header_mode",
-        "empty": False
-    }
-}
 
 
 class GenomicPositionTable(abc.ABC):
@@ -73,12 +16,14 @@ class GenomicPositionTable(abc.ABC):
     def __init__(self, genomic_resource: GenomicResource, table_definition):
         self.genomic_resource = genomic_resource
 
-        v = Validator(TABLE_SCHEMA)
-        # v.allow_unknown = True
-        if not v.validate(table_definition):
-            raise ValueError(v.errors)
+        # v = Validator(TABLE_SCHEMA)
+        # # v.allow_unknown = True
+        # if not v.validate(table_definition):
+        #     raise ValueError(v.errors)
 
-        self.definition = Box(v.normalized(table_definition))
+        # self.definition = Box(v.normalized(table_definition))
+
+        self.definition = Box(table_definition)
         self.chrom_map = None
 
         # handling the 'header' property
