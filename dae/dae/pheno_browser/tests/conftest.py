@@ -59,3 +59,14 @@ def fake_phenotype_data_desc_conf():
 @pytest.fixture(scope="session")
 def regressions_conf():
     return relative_to_this_folder("fixtures/regressions.conf")
+
+
+@pytest.fixture
+def temp_dirname_figures(request, cleanup):
+    dirname = tempfile.mkdtemp(suffix="_plots", prefix="figures_")
+
+    def fin():
+        shutil.rmtree(dirname)
+    if cleanup:
+        request.addfinalizer(fin)
+    return dirname
