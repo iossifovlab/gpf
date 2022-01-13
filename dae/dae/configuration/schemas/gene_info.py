@@ -23,6 +23,12 @@ gene_term_schema = {
 }
 
 gene_info_conf = {
+    "conf_dir": {
+        "type": "string",
+        "check_with": validate_existing_path,
+        "coerce": "abspath",
+        "required": True,
+    },
     "gene_info": {
         "type": "dict",
         "schema": {

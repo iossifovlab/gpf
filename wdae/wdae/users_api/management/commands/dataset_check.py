@@ -1,23 +1,9 @@
-import os
-import re
 import logging
-import glob
-import toml
 
-from box import Box
-
-from django.db.models import Count, Q
 from django.core.management.base import BaseCommand
-from django.contrib.auth.models import Group
-from guardian.shortcuts import get_perms
-from datasets_api.models import Dataset
 
 from .dataset_mixin import DatasetBaseMixin
-
 from gpf_instance.gpf_instance import get_gpf_instance
-
-from pprint import pprint
-
 
 logger = logging.getLogger(__name__)
 

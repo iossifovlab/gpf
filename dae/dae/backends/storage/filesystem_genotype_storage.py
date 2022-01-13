@@ -35,7 +35,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
     def is_filestorage(self):
         return True
 
-    def build_backend(self, study_config, genomes_db):
+    def build_backend(self, study_config, genome, gene_models):
         if not study_config.genotype_storage.files:
             data_dir = self.get_data_dir(study_config.id, "data")
             vcf_filename = os.path.join(
@@ -48,7 +48,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             families_loader = FamiliesLoader(ped_filename)
             families = families_loader.load()
             variants_loader = VcfLoader(
-                families, [vcf_filename], genomes_db.get_genome()
+                families, [vcf_filename], genome
             )
             variants_loader = StoredAnnotationDecorator.decorate(
                 variants_loader, vcf_filename
@@ -85,7 +85,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                     variants_loader = VcfLoader(
                         families,
                         variants_filenames,
-                        genomes_db.get_genome(),
+                        genome,
                         params=variants_params,
                     )
                     annotation_filename = variants_filenames[0]
@@ -93,21 +93,21 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                     variants_loader = DenovoLoader(
                         families,
                         variants_filename,
-                        genomes_db.get_genome(),
+                        genome,
                         params=variants_params,
                     )
                 if file_conf.format == "dae":
                     variants_loader = DaeTransmittedLoader(
                         families,
                         variants_filename,
-                        genomes_db.get_genome(),
+                        genome,
                         params=variants_params,
                     )
                 if file_conf.format == "cnv":
                     variants_loader = CNVLoader(
                         families,
                         variants_filename,
-                        genomes_db.get_genome(),
+                        genome,
                         params=variants_params,
                     )
 
@@ -196,9 +196,10 @@ class FilesystemGenotypeStorage(GenotypeStorage):
     def _import_variants_files(self, study_id, loaders):
         result_config = []
         for index, variants_loader in enumerate(loaders):
-            assert (
-                variants_loader.get_attribute("annotation_schema") is not None
-            )
+            # assert (
+            #     variants_loader.get_attribute("annotation_schema")
+            #     is not None
+            # )
 
             destination_dirname = os.path.join(self.data_dir, study_id, "data")
 

@@ -71,7 +71,7 @@ def collect_summary_schema(impala_variants):
     ])
 
     schema = {}
-    for field_name in impala_variants.schema.col_names:
+    for field_name in impala_variants.schema.names:
         if field_name in FAMILY_FIELDS:
             continue
         field_type = impala_variants.schema[field_name]

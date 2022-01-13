@@ -8,6 +8,7 @@ import logging
 import copy
 import enum
 import pandas as pd
+import numpy as np
 
 from xml.etree.ElementTree import Element, tostring
 
@@ -221,7 +222,11 @@ class BaseGenotypeBrowserRunner(AbstractRunner):
 
 class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
-    def __init__(self, expectations, gpf_instance):
+    def __init__(
+            self, expectations, gpf_instance,
+            detailed_reporting, skip_columns):
+        self.detailed_reporting = detailed_reporting
+        self.skip_columns = set(skip_columns)
 
         super(GenotypeBrowserRunner, self).__init__(
             expectations, gpf_instance)
@@ -345,8 +350,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
         return os.path.join(case_dirname, f"{case['id']}.tsv")
 
-    @staticmethod
-    def _cleanup_allele_attributes(vprops):
+    def _checked_columns(self):
         keep = {
             'af_allele_count',
             'af_allele_freq',
@@ -448,8 +452,15 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
             'reference',
             'ssc_freq',
             'study_name',
-            'study_phenotype'}
+            'study_phenotype'
+        }
+        if self.skip_columns:
+            keep = keep.difference(self.skip_columns)
 
+        return keep
+
+    def _cleanup_allele_attributes(self, vprops):
+        keep = self._checked_columns()
         keys = list(vprops.keys())
         for key in keys:
             if key not in keep:
@@ -510,19 +521,89 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
         return df
 
     def _variants_diff(self, variants_df, expected_df):
-
         try:
             assert set(variants_df.columns) == set(expected_df.columns), (
                 variants_df.columns, expected_df.columns)
 
-            pd.testing.assert_frame_equal(variants_df, expected_df)
+            variants_df = variants_df.sort_index().sort_index(axis=1)
+            expected_df = expected_df.sort_index().sort_index(axis=1)
 
+            pd.testing.assert_frame_equal(
+                variants_df.sort_index(axis=1), expected_df.sort_index(axis=1)
+            )
         except AssertionError as ex:
             with io.StringIO() as out:
-                print("expected:\n", expected_df.head(), file=out)
-                print("actual:\n", variants_df.head(), file=out)
-                print(ex, file=out)
+                if not self.detailed_reporting:
+                    print("expected:\n", expected_df.head(), file=out)
+                    print("actual:\n", variants_df.head(), file=out)
+                    print(ex, file=out)
+                    return out.getvalue()
+
+                expected_columns = set(expected_df.columns)
+                variants_columns = set(variants_df.columns)
+                diff1 = expected_columns.difference(variants_columns)
+                if diff1:
+                    print(
+                        "columns expected but not found in variants:",
+                        diff1, file=out)
+                diff2 = variants_columns.difference(expected_columns)
+                if diff2:
+                    print(
+                        "columns found in variants but not expected:",
+                        diff2, file=out)
+                if diff1 or diff2:
+                    return out.getvalue()
+                if all(expected_df.columns != expected_df.columns):
+                    print(
+                        "columns are in different order: ",
+                        "expected>", expected_df.columns,
+                        "variants>", variants_df.columns,
+                        file=out)
+                    return out.getvalue()
+
+                differences = (expected_df != variants_df).stack()
+                last_printed_idx = -1
+                for idxs, has_diff in differences.items():
+                    if not has_diff:
+                        continue
+
+                    idx, col_name = idxs
+                    expected = expected_df[col_name][idx]
+                    result = variants_df[col_name][idx]
+
+                    if type(expected) == np.float64:
+                        if np.isclose(expected, result):
+                            continue
+
+                    if type(expected) == str:
+                        if expected == result:
+                            continue
+                    if type(expected) == np.float64 and \
+                            np.isnan(expected) and np.isnan(result):
+                        continue
+
+                    if last_printed_idx != idx:
+                        last_printed_idx = idx
+                        print(
+                            f"Differences in variant #{idx} "
+                            f"{expected_df['chromosome'][idx]} "
+                            f"{expected_df['position'][idx]} "
+                            f"{expected_df['reference'][idx]}->"
+                            f"{expected_df['alternative'][idx]} "
+                            f"{expected_df['cshl_variant'][idx]} ",
+                            file=out
+                        )
+                    print(
+                        f"\t{col_name}:\n"
+                        f"\t\tExpected: > {expected_df[col_name][idx]}\n"
+                        f"\t\tResult:   > {variants_df[col_name][idx]}",
+                        file=out
+                    )
                 return out.getvalue()
+        except Exception as ex:
+            print(100*"@")
+            print(ex)
+            print(100*"@")
 
         return None
 
@@ -534,6 +615,10 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
         try:
             expect_df = pd.read_csv(variants_filename, sep="\t")
+            to_remove = set(self.skip_columns)
+            columns = [c for c in expect_df.columns if c not in to_remove]
+            expect_df = expect_df[columns]
+
         except pd.errors.EmptyDataError:
             expect_df = pd.DataFrame({})
             assert len(expect_df) == 0
@@ -681,10 +766,15 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
 class MainRunner:
 
-    def __init__(self, gpf_instance, outfilename):
+    def __init__(
+            self, gpf_instance, outfilename,
+            detailed_reporting,
+            skip_columns):
         self.gpf_instance = gpf_instance
         self.outfilename = outfilename
         self.runners = []
+        self.detailed_reporting = detailed_reporting
+        self.skip_columns = set(skip_columns)
 
     @staticmethod
     def collect_expectations(expectations):
@@ -720,7 +810,10 @@ class MainRunner:
     def make_validation_runner(self, expectations):
         target = expectations["target"]
         if target == "genotype_browser":
-            return GenotypeBrowserRunner(expectations, self.gpf_instance)
+            return GenotypeBrowserRunner(
+                expectations, self.gpf_instance,
+                self.detailed_reporting, self.skip_columns
+            )
         else:
             raise NotImplementedError(
                 f"not supported expectations target: {target}")
@@ -792,7 +885,23 @@ def main(argv=sys.argv[1:]):
         "--store-results", type=str,
         help="a directory where to store genotype variants into TSV files")
 
+    parser.add_argument(
+        "--detailed-reporting", "--dr",
+        action="store_true", default=False,
+        help="Use detailed logging of differences per variant per column")
+    parser.add_argument(
+        "--skip-columns", "--sk",
+        type=str, default=None,
+        help="Comma separated list of columns to skip when comparing with "
+        "expectations")
+
     args = parser.parse_args(argv)
+    if args.skip_columns is None:
+        skip_columns = []
+    else:
+        skip_columns = [c.strip() for c in args.skip_columns.split(",")]
+    print("skipping columns:", skip_columns)
+
     if args.verbose == 1:
         logging.basicConfig(level=logging.WARNING)
     elif args.verbose == 2:
@@ -804,7 +913,9 @@ def main(argv=sys.argv[1:]):
     logging.getLogger("impala").setLevel(logging.WARNING)
 
     gpf_instance = GPFInstance()
-    main_runner = MainRunner(gpf_instance, args.output)
+    main_runner = MainRunner(
+        gpf_instance, args.output, args.detailed_reporting, skip_columns)
+
     expectations_iterator = MainRunner.collect_expectations(args.expectations)
 
     if args.store_results is not None:

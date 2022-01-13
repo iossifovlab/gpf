@@ -68,9 +68,8 @@ def test_from_pedigree_missing_value_in_domain(fixture_dirname):
         PersonSetCollection.from_families(
             config.status, quads_f1_families,
         )
-    assert "Domain for 'status' does not have the value 'frozenset({'affected'})'!" in str(
-        excinfo.value
-    )
+    assert "Domain for 'status' does not have the value " \
+        "'frozenset({'affected'})'!" in str(excinfo.value)
 
 
 def test_from_pedigree_nonexistent_domain(fixture_dirname):
@@ -86,8 +85,8 @@ def test_from_pedigree_nonexistent_domain(fixture_dirname):
             config.invalid, quads_f1_families,
         )
 
-    assert "Domain for 'invalid' does not have the value 'frozenset({None})'!" in \
-        str(excinfo.value)
+    assert "Domain for 'invalid' does not have the value " \
+        "'frozenset({None})'!" in str(excinfo.value)
 
 
 def test_get_person_color(fixture_dirname):
@@ -278,7 +277,7 @@ def test_phenotype_person_set_continuous(
             config.pheno_cont, quads_f1_families, quads_f1_pheno
         )
 
-    assert "Continuous measures not allowed in person sets! (instrument1.continuous)" in \
-        str(excinfo.value)
+    assert "Continuous measures not allowed in person sets! " \
+        "(instrument1.continuous)" in str(excinfo.value)
 
 # TODO Add unit test for default values in person sets (normal and phenotype)

@@ -1,0 +1,44 @@
+---
+
+type: position_score
+
+table:
+  filename: scores1.tsv.gz
+  format: tabix
+
+  # defined by score_type
+  chrom: 
+    name: CHROM
+  pos_begin:
+    name: POS
+  pos_end: 
+    name: POS
+
+# score values
+scores:
+    - id: score0
+      type: float
+      name: score0
+
+    - id: score2
+      type: float
+      name: score2
+
+    - id: score4
+      type: float
+      name: score4
+
+
+default_annotation:
+  attributes:
+    - source: score0
+      destination: score0
+      position_aggregator: max
+
+    - source: score2
+      destination: score2
+      position_aggregator: max
+
+    - source: score4
+      destination: score4
+      position_aggregator: max

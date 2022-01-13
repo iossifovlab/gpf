@@ -4,7 +4,8 @@ def test_default_gene_models_id(admin_client):
 
     assert response
     assert response.status_code == 200
-    assert response.data == "RefSeq"
+    assert response.data == \
+        "hg19/gene_models/refGene_v20190211"
 
 
 def test_get_chd8_transcripts(admin_client):

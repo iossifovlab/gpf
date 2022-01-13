@@ -1,26 +1,19 @@
-"""
-Created on Apr 10, 2017
-
-@author: lubo
-"""
 import textwrap
+import traceback
 import matplotlib as mpl
 
 mpl.use("PDF")  # noqa
-
-from dae.variants.attributes import Status, Sex
-import matplotlib.pyplot as plt
-
+import matplotlib.pyplot as plt   # noqa
 plt.ioff()  # noqa
 
-import pandas as pd
-import numpy as np
-from dae.pheno_browser.palletes import diverging_palette
-from dae.pheno_browser.plots import violinplot, stripplot
-from dae.pheno.common import ROLES_GRAPHS_DEFINITION
-from dae.pheno.utils.lin_regress import LinearRegression
+import pandas as pd  # noqa
+import numpy as np  # noqa
 
-import traceback
+from dae.variants.attributes import Status, Sex  # noqa
+from dae.pheno_browser.palletes import diverging_palette  # noqa
+from dae.pheno_browser.plots import violinplot, stripplot  # noqa
+from dae.pheno.common import ROLES_GRAPHS_DEFINITION  # noqa
+from dae.pheno.utils.lin_regress import LinearRegression  # noqa
 
 
 MAX_CATEGORIES_COUNT = 12

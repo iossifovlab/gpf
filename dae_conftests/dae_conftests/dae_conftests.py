@@ -12,36 +12,47 @@ from io import StringIO
 
 from box import Box
 
-from dae.genome.genomes_db import GenomesDB
-
 from dae.gpf_instance.gpf_instance import GPFInstance, cached
 
 from dae.configuration.gpf_config_parser import GPFConfigParser, FrozenBox
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 
-from dae.annotation.annotation_pipeline import PipelineAnnotator
+from dae.annotation.annotation_factory import build_annotation_pipeline
 
 from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.variants.family_variant import FamilyVariant
 
-from dae.backends.raw.loader import AnnotationPipelineDecorator
+from dae.backends.raw.loader import EffectAnnotationDecorator, \
+    AnnotationPipelineDecorator
 from dae.backends.raw.raw_variants import RawMemoryVariants
 
 from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.backends.vcf.loader import VcfLoader
 
-from dae.backends.impala.import_commons import (
-    construct_import_annotation_pipeline,
-)
+from dae.backends.impala.import_commons import \
+    construct_import_effect_annotator
+
 
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.helpers import study_id_from_path
 
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
+
 from dae.gene.denovo_gene_set_collection_factory import \
     DenovoGeneSetCollectionFactory
 from dae.autism_gene_profile.statistic import AGPStatistic
 from dae.autism_gene_profile.db import AutismGeneProfileDB
+from dae.genomic_resources import build_genomic_resource_repository
+from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
+
+
+'''
+from urllib.request import urlopen
+with urlopen("https://www.iossifovlab.com/distribution/public/"
+             "genomic-resources-repository/.CONTENTS") as repo:
+    for line in repo:
+        print(line)
+'''
 
 
 logging.basicConfig(
@@ -52,11 +63,19 @@ logging.basicConfig(
 logger = logging.getLogger("impala")
 logger.setLevel(logging.WARNING)
 
-logger = logging.getLogger("dae.variant_annotation")
+# suppress url connection pool
+logger = logging.getLogger("urllib3.connectionpool")
+logger.setLevel(logging.INFO)
+
+# suppress fsspec
+logger = logging.getLogger("fsspec")
+logger.setLevel(logging.INFO)
+
+logger = logging.getLogger("dae.effect_annotation")
 logger.setLevel(logging.INFO)
 
 logger = logging.getLogger("dae.annotation")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 def relative_to_this_test_folder(path):
@@ -83,85 +102,108 @@ def global_dae_fixtures_dir():
 
 
 @pytest.fixture(scope="session")
-def default_dae_config(request, cleanup):
+def default_dae_config(request, cleanup, fixture_dirname):
     studies_dirname = tempfile.mkdtemp(prefix="studies_", suffix="_test")
+    datasets_dirname = tempfile.mkdtemp(prefix="datasets_", suffix="_test")
 
     def fin():
         shutil.rmtree(studies_dirname)
+        shutil.rmtree(datasets_dirname)
 
     if cleanup:
         request.addfinalizer(fin)
-    dae_conf_path = os.path.join(
-        os.environ.get("DAE_DB_DIR", None), "DAE.conf"
-    )
-    dae_config = GPFConfigParser.parse_config(dae_conf_path)
-    dae_config["studies_db"]["dir"] = studies_dirname
-    remote_config = {
-        "id": "TEST_REMOTE",
-        "host": "gpfremote",
-        "base_url": "api/v3",
-        "port": 21010,
-        "user": "admin@iossifovlab.com",
-        "password": "secret",
-    }
-    if "remotes" not in dae_config:
-        dae_config["remotes"] = list()
-        dae_config["remotes"].append(remote_config)
-    else:
-        dae_config["remotes"][0] = remote_config
+    conf_dir = fixture_dirname("")
+    assert conf_dir is not None
+
+    dae_conf_path = os.path.join(conf_dir, "gpf_instance.yaml")
+
+    dae_config = GPFConfigParser.parse_and_interpolate_file(dae_conf_path)
+
+    dae_config["studies"]["dir"] = studies_dirname
+    dae_config["datasets"]["dir"] = datasets_dirname
+
+    # remote_config = {
+    #     "id": "TEST_REMOTE",
+    #     "host": "gpfremote",
+    #     "base_url": "api/v3",
+    #     "port": 21010,
+    #     "user": "admin@iossifovlab.com",
+    #     "password": "secret",
+    # }
+    # if "remotes" not in dae_config:
+    #     dae_config["remotes"] = list()
+    #     dae_config["remotes"].append(remote_config)
+    # else:
+    #     dae_config["remotes"][0] = remote_config
     dae_config = GPFConfigParser.process_config(
         dae_config,
         dae_conf_schema,
-        config_filename=dae_conf_path
+        conf_dir=conf_dir
     )
     return dae_config
 
 
 @pytest.fixture(scope="session")
-def gpf_instance(default_dae_config):
-    class GenomesDbInternal(GenomesDB):
-        def get_default_gene_models_id(self, genome_id=None):
-            return "RefSeq2013"
+def gpf_instance(default_dae_config, fixture_dirname):
 
     class GPFInstanceInternal(GPFInstance):
         def __init__(self, *args, **kwargs):
             super(GPFInstanceInternal, self).__init__(*args, **kwargs)
 
-        @property
-        @cached
-        def genomes_db(self):
-            return GenomesDbInternal(
-                default_dae_config.dae_data_dir,
-                default_dae_config.genomes_db.conf_file,
-            )
-
     def build(work_dir=None, load_eagerly=False):
-        return GPFInstanceInternal(
+        instance = GPFInstanceInternal(
             work_dir=work_dir, load_eagerly=load_eagerly
         )
+        repositories = [
+            instance.grr
+        ]
+
+        repositories.append(
+            build_genomic_resource_repository(
+                Box({
+                    "id": "fixtures",
+                    "type": "directory",
+                    "directory":
+                        f"{fixture_dirname('genomic_resources')}"
+                })))
+        instance.grr = GenomicResourceGroupRepo(repositories)
+
+        return instance
 
     return build
 
 
 @pytest.fixture(scope="session")
-def gpf_instance_2013(default_dae_config, global_dae_fixtures_dir):
-    class GenomesDb2013(GenomesDB):
-        def get_gene_model_id(self, genome_id=None):
-            return "RefSeq2013"
+def gpf_instance_2013(
+        default_dae_config,  fixture_dirname, global_dae_fixtures_dir):
 
     class GPFInstance2013(GPFInstance):
         def __init__(self, *args, **kwargs):
             super(GPFInstance2013, self).__init__(*args, **kwargs)
 
-        @property
+        @property  # type: ignore
         @cached
-        def genomes_db(self):
-            return GenomesDb2013(
-                self.dae_config.dae_data_dir,
-                self.dae_config.genomes_db.conf_file,
-            )
+        def gene_models(self):
+            print(self.dae_config.gene_models)
+            resource = self.grr.get_resource(
+                "hg19/gene_models/refGene_v201309")
+            result = resource.open()
+            return result
 
     gpf_instance = GPFInstance2013(dae_config=default_dae_config)
+
+    repositories = [
+        gpf_instance.grr
+    ]
+    repositories.append(
+        build_genomic_resource_repository(
+            Box({
+                "id": "fixtures",
+                "type": "directory",
+                "directory": f"{fixture_dirname('genomic_resources')}"
+            })))
+    gpf_instance.grr = GenomicResourceGroupRepo(repositories)
+
     return gpf_instance
 
 
@@ -171,53 +213,23 @@ def fixtures_gpf_instance(gpf_instance, global_dae_fixtures_dir):
 
 
 @pytest.fixture(scope="session")
-def gene_models_2013(gpf_instance_2013):
-    return gpf_instance_2013.genomes_db.get_gene_models("RefSeq2013")
-
-
-@pytest.fixture(scope="session")
-def genomes_db_2013(gpf_instance_2013):
-    return gpf_instance_2013.genomes_db
-
-
-@pytest.fixture(scope="session")
-def genome_2013(gpf_instance_2013):
-    return gpf_instance_2013.genomes_db.get_genome()
-
-
-@pytest.fixture(scope="session")
-def genomic_sequence_2013(genome_2013):
-    return genome_2013.get_genomic_sequence()
-
-
-@pytest.fixture(scope="session")
 def gpf_instance_2019(default_dae_config, global_dae_fixtures_dir):
-    class GenomesDb2019(GenomesDB):
-        def get_gene_model_id(self, genome_id=None):
-            return "RefSeq"
 
     class GPFInstance2019(GPFInstance):
-        @property
+        def __init__(self, *args, **kwargs):
+            super(GPFInstance2019, self).__init__(*args, **kwargs)
+
+        @property  # type: ignore
         @cached
-        def genomes_db(self):
-            return GenomesDb2019(
-                self.dae_config.dae_data_dir,
-                self.dae_config.genomes_db.conf_file,
-            )
+        def gene_models(self):
+            resource = self.grr.get_resource(
+                "hg19/gene_models/refGene_v20190211")
+            result = resource.open()
+            return result
 
     return GPFInstance2019(
         dae_config=default_dae_config, work_dir=global_dae_fixtures_dir
     )
-
-
-@pytest.fixture(scope="session")
-def gene_models_2019(gpf_instance_2019):
-    return gpf_instance_2019.genomes_db.get_gene_models("RefSeq")
-
-
-@pytest.fixture(scope="session")
-def genomes_db_2019(gpf_instance_2019):
-    return gpf_instance_2019.genomes_db
 
 
 @pytest.fixture
@@ -242,6 +254,17 @@ def temp_dirname(request, cleanup):
 
 
 @pytest.fixture
+def temp_dirname_grdb(request, cleanup):
+    dirname = tempfile.mkdtemp(suffix="_data", prefix="grdb_")
+
+    def fin():
+        shutil.rmtree(dirname)
+    if cleanup:
+        request.addfinalizer(fin)
+    return dirname
+
+
+@pytest.fixture
 def temp_filename(request, cleanup):
     dirname = tempfile.mkdtemp(suffix="_eff", prefix="variants_")
 
@@ -254,10 +277,21 @@ def temp_filename(request, cleanup):
     return output
 
 
+@pytest.fixture
+def temp_dirname_scores(request, cleanup):
+    dirname = tempfile.mkdtemp(suffix="_data", prefix="scores_")
+
+    def fin():
+        shutil.rmtree(dirname)
+    if cleanup:
+        request.addfinalizer(fin)
+    return dirname
+
+
 @pytest.fixture(scope="session")
 def annotation_pipeline_config():
     filename = relative_to_this_test_folder(
-        "fixtures/annotation_pipeline/import_annotation.conf"
+        "fixtures/annotation_pipeline/import_annotation.yaml"
     )
     return filename
 
@@ -268,69 +302,28 @@ def annotation_pipeline_default_config(default_dae_config):
 
 
 @pytest.fixture(scope="session")
-def default_annotation_pipeline(default_dae_config, genomes_db_2013):
-    filename = default_dae_config.annotation.conf_file
-
-    options = {
-        "default_arguments": None,
-        "vcf": True,
-        "r": "reference",
-        "a": "alternative",
-        "c": "chrom",
-        "p": "position",
-    }
-
-    pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013)
-
-    return pipeline
-
-
-@pytest.fixture(scope="session")
 def annotation_scores_dirname():
     filename = relative_to_this_test_folder("fixtures/annotation_pipeline/")
     return filename
 
 
 @pytest.fixture(scope="session")
-def annotation_pipeline_vcf(genomes_db_2013):
+def annotation_pipeline_vcf(gpf_instance_2013):
     filename = relative_to_this_test_folder(
-        "fixtures/annotation_pipeline/import_annotation.conf"
+        "fixtures/annotation_pipeline/import_annotation.yaml"
     )
-
-    options = {
-        "default_arguments": None,
-        "vcf": True,
-        "scores_dirname": relative_to_this_test_folder(
-            "fixtures/annotation_pipeline/"
-        )
-        # 'mode': 'overwrite',
-    }
-
-    pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013,)
+    pipeline = build_annotation_pipeline(
+        pipeline_config_file=filename, grr_repository=gpf_instance_2013.grr)
     return pipeline
 
 
 @pytest.fixture(scope="session")
-def annotation_pipeline_internal(genomes_db_2013):
-    assert genomes_db_2013 is not None
-    assert genomes_db_2013.get_gene_model_id() == "RefSeq2013"
+def annotation_pipeline_internal(gpf_instance_2013):
     filename = relative_to_this_test_folder(
-        "fixtures/annotation_pipeline/import_annotation.conf"
+        "fixtures/annotation_pipeline/import_annotation.yaml"
     )
-
-    options = {
-        "default_arguments": None,
-        "vcf": True,
-        "c": "chrom",
-        "p": "position",
-        "r": "reference",
-        "a": "alternative",
-        "scores_dirname": relative_to_this_test_folder(
-            "fixtures/annotation_pipeline/"
-        ),
-    }
-
-    pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013,)
+    pipeline = build_annotation_pipeline(
+        pipeline_config_file=filename, grr_repository=gpf_instance_2013.grr)
     return pipeline
 
 
@@ -375,7 +368,8 @@ def dae_denovo_config():
 
 
 @pytest.fixture
-def dae_denovo(dae_denovo_config, genome_2013, annotation_pipeline_internal):
+def dae_denovo(
+        dae_denovo_config, gpf_instance_2013, annotation_pipeline_internal):
 
     families_loader = FamiliesLoader(
         dae_denovo_config.family_filename, **{"ped_file_format": "simple"}
@@ -383,7 +377,8 @@ def dae_denovo(dae_denovo_config, genome_2013, annotation_pipeline_internal):
     families = families_loader.load()
 
     variants_loader = DenovoLoader(
-        families, dae_denovo_config.denovo_filename, genome_2013
+        families, dae_denovo_config.denovo_filename,
+        gpf_instance_2013.reference_genome
     )
 
     variants_loader = AnnotationPipelineDecorator(
@@ -419,7 +414,7 @@ def dae_transmitted_config():
 
 @pytest.fixture
 def dae_transmitted(
-    dae_transmitted_config, genome_2013, annotation_pipeline_internal
+    dae_transmitted_config, gpf_instance_2013, annotation_pipeline_internal
 ):
 
     # ped_df = FamiliesLoader.load_simple_family_file(
@@ -433,7 +428,7 @@ def dae_transmitted(
         families,
         dae_transmitted_config.summary_filename,
         # dae_transmitted_config.toomany_filename,
-        genome=genome_2013,
+        genome=gpf_instance_2013.reference_genome,
         regions=None,
     )
     variants_loader = AnnotationPipelineDecorator(
@@ -454,15 +449,17 @@ def dae_iossifov2014_config():
 
 @pytest.fixture(scope="session")
 def iossifov2014_loader(
-    dae_iossifov2014_config, genome_2013, annotation_pipeline_internal
-):
+        dae_iossifov2014_config,
+        gpf_instance_2013, annotation_pipeline_internal):
+
     config = dae_iossifov2014_config
 
     families_loader = FamiliesLoader(config.family_filename)
     families = families_loader.load()
 
     variants_loader = DenovoLoader(
-        families, config.denovo_filename, genome_2013
+        families, config.denovo_filename,
+        gpf_instance_2013.reference_genome
     )
 
     variants_loader = AnnotationPipelineDecorator(
@@ -500,7 +497,11 @@ def vcf_loader_data():
 
 @pytest.fixture(scope="session")
 def vcf_variants_loaders(
-        vcf_loader_data, default_annotation_pipeline, genomes_db_2013):
+        vcf_loader_data, gpf_instance_2019):
+
+    effect_annotator = construct_import_effect_annotator(
+        gpf_instance_2019
+    )
 
     def builder(
         path,
@@ -523,7 +524,7 @@ def vcf_variants_loaders(
             denovo_loader = DenovoLoader(
                 families,
                 config.denovo,
-                genomes_db_2013.get_genome(),
+                gpf_instance_2019.reference_genome,
                 params={
                     "denovo_genotype": "genotype",
                     "denovo_family_id": "family",
@@ -533,18 +534,18 @@ def vcf_variants_loaders(
                     "denovo_alt": "alt",
                 }
             )
-            loaders.append(AnnotationPipelineDecorator(
-                denovo_loader, default_annotation_pipeline))
+            loaders.append(EffectAnnotationDecorator(
+                denovo_loader, effect_annotator))
 
         vcf_loader = VcfLoader(
             families,
             [config.vcf],
-            genomes_db_2013.get_genome(),
+            gpf_instance_2019.reference_genome,
             params=params
         )
 
-        loaders.append(AnnotationPipelineDecorator(
-            vcf_loader, default_annotation_pipeline
+        loaders.append(EffectAnnotationDecorator(
+            vcf_loader, effect_annotator
         ))
 
         return loaders
@@ -582,17 +583,6 @@ def variants_mem():
     return builder
 
 
-@pytest.fixture(scope="session")
-def annotation_pipeline_default_decorator(default_annotation_pipeline):
-    def builder(variants_loader):
-        decorator = AnnotationPipelineDecorator(
-            variants_loader, default_annotation_pipeline
-        )
-        return decorator
-
-    return builder
-
-
 @pytest.fixture
 def variants_implementations(variants_impala, variants_vcf):
     impls = {"variants_impala": variants_impala, "variants_vcf": variants_vcf}
@@ -615,7 +605,7 @@ def config_dae():
 
 
 @pytest.fixture(scope="session")
-def raw_dae(config_dae, genome_2013):
+def raw_dae(config_dae, gpf_instance_2013):
     def builder(path, region=None):
         config = config_dae(path)
 
@@ -628,7 +618,7 @@ def raw_dae(config_dae, genome_2013):
             config.dae.toomany_filename,
             ped_df,
             region=region,
-            genome=genome_2013,
+            genome=gpf_instance_2013.reference_genome,
         )
         return dae
 
@@ -745,7 +735,7 @@ def data_import(
     if cleanup:
         request.addfinalizer(fin)
 
-    annotation_pipeline = construct_import_annotation_pipeline(
+    effect_annotator = construct_import_effect_annotator(
         gpf_instance_2013
     )
 
@@ -790,7 +780,7 @@ def data_import(
 
             families_loader = FamiliesLoader(config.pedigree)
             families = families_loader.load()
-            genome = gpf_instance_2013.genomes_db.get_genome()
+            genome = gpf_instance_2013.reference_genome
 
             loaders = []
             if config.denovo:
@@ -807,8 +797,8 @@ def data_import(
                         "denovo_alt": "alt",
                     }
                 )
-                loaders.append(AnnotationPipelineDecorator(
-                    denovo_loader, annotation_pipeline))
+                loaders.append(EffectAnnotationDecorator(
+                    denovo_loader, effect_annotator))
 
             vcf_loader = VcfLoader(
                 families,
@@ -825,8 +815,8 @@ def data_import(
                 },
             )
 
-            loaders.append(AnnotationPipelineDecorator(
-                vcf_loader, annotation_pipeline))
+            loaders.append(EffectAnnotationDecorator(
+                vcf_loader, effect_annotator))
 
             impala_genotype_storage.simple_study_import(
                 study_id,
@@ -841,13 +831,14 @@ def data_import(
 
 @pytest.fixture(scope="session")
 def variants_impala(
-        request, data_import, impala_genotype_storage, genomes_db_2013):
+        request, data_import, impala_genotype_storage, gpf_instance_2013):
 
     def builder(path):
         study_id = os.path.basename(path)
         fvars = impala_genotype_storage.build_backend(
             FrozenBox({"id": study_id}),
-            genomes_db_2013,
+            gpf_instance_2013.reference_genome,
+            gpf_instance_2013.gene_models
         )
         return fvars
 
@@ -858,7 +849,7 @@ def variants_impala(
 def iossifov2014_impala(
         request,
         iossifov2014_loader,
-        genomes_db_2013,
+        gpf_instance_2013,
         hdfs_host,
         impala_host,
         impala_genotype_storage,
@@ -877,9 +868,9 @@ def iossifov2014_impala(
 
     if reimport or \
             not impala_helpers.check_table(
-                    "impala_test_db", variant_table) or \
+                "impala_test_db", variant_table) or \
             not impala_helpers.check_table(
-                    "impala_test_db", pedigree_table):
+                "impala_test_db", pedigree_table):
 
         from dae.backends.impala.hdfs_helpers import HdfsHelpers
 
@@ -898,7 +889,8 @@ def iossifov2014_impala(
             output=study_temp_dirname)
 
     fvars = impala_genotype_storage.build_backend(
-        FrozenBox({"id": study_id}), genomes_db_2013
+        FrozenBox({"id": study_id}), gpf_instance_2013.reference_genome,
+        gpf_instance_2013.gene_models
     )
     return fvars
 
@@ -1163,3 +1155,15 @@ def sample_agp():
     return AGPStatistic(
         "CHD8", gene_sets, genomic_scores, variant_counts
     )
+
+
+@pytest.fixture
+def grr_fixture(fixture_dirname):
+    test_grr_location = fixture_dirname("genomic_resources")
+    repositories = {
+        "id": "test_grr",
+        "type": "directory",
+        "directory": f"{test_grr_location}"
+    }
+
+    return build_genomic_resource_repository(repositories)

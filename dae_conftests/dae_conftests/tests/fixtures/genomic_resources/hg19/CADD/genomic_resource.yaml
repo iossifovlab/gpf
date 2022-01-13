@@ -1,0 +1,40 @@
+---
+
+
+type: np_score
+
+table:
+  filename: CADD.bedgraph.gz
+  format: tabix
+
+  # defined by score_type
+  chrom:
+    index: 0
+  pos_begin:
+    index: 1
+  reference:
+    index: 2
+  alternative:
+    index: 3
+
+# score values
+scores:
+    - id: cadd_raw
+      type: float
+      desc: ""
+      index: 4
+    - id: cadd_phred
+      type: float
+      desc: ""
+      index: 5
+
+default_annotation:
+  attributes:
+    - source: cadd_raw
+      dest: cadd_raw
+      position_aggregator: max
+      nucleotide_aggregator: max
+    - source: cadd_phred
+      dest: cadd_phred
+      position_aggregator: max
+      nucleotide_aggregator: max

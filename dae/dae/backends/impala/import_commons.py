@@ -18,12 +18,14 @@ from collections import defaultdict
 
 from jinja2 import Template
 
-from dae.annotation.annotation_pipeline import PipelineAnnotator
+from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.effect_annotator import EffectAnnotatorAdapter
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.pedigrees.loader import FamiliesLoader
-from dae.backends.raw.loader import AnnotationPipelineDecorator
+from dae.backends.raw.loader import AnnotationPipelineDecorator, \
+    EffectAnnotationDecorator
 from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.cnv.loader import CNVLoader
@@ -43,7 +45,7 @@ logger = logging.getLogger(__name__)
 
 
 def save_study_config(dae_config, study_id, study_config, force=False):
-    dirname = os.path.join(dae_config.studies_db.dir, study_id)
+    dirname = os.path.join(dae_config.studies.dir, study_id)
     filename = os.path.join(dirname, "{}.conf".format(study_id))
 
     if os.path.exists(filename):
@@ -69,21 +71,40 @@ def construct_import_annotation_pipeline(
     if annotation_configfile is not None:
         config_filename = annotation_configfile
     else:
+        if gpf_instance.dae_config.annotation is None:
+            return None
         config_filename = gpf_instance.dae_config.annotation.conf_file
 
-    assert os.path.exists(config_filename), config_filename
-    options = {
-        "vcf": True,
-        "c": "chrom",
-        "p": "position",
-        "r": "reference",
-        "a": "alternative",
-    }
+    if not os.path.exists(config_filename):
+        logger.warning(f"missing annotation configuration: {config_filename}")
+        return None
 
-    pipeline = PipelineAnnotator.build(
-        options, config_filename, gpf_instance.genomes_db,
-    )
-    return pipeline
+    grr = gpf_instance.grr
+    assert os.path.exists(config_filename), config_filename
+    return build_annotation_pipeline(
+        pipeline_config_file=config_filename, grr_repository=grr)
+
+
+def construct_import_effect_annotator(gpf_instance):
+    genome = gpf_instance.reference_genome
+    gene_models = gpf_instance.gene_models
+
+    config = Box({
+        "annotator_type": "effect_annotator",
+        "genome": gpf_instance.dae_config.reference_genome.resource_id,
+        "gene_models": gpf_instance.dae_config.gene_models.resource_id,
+        "attributes": [
+            {
+                "source": "allele_effects",
+                "destination": "allele_effects",
+                "internal": True
+            }
+        ]
+    })
+
+    effect_annotator = EffectAnnotatorAdapter(
+        config, genome=genome, gene_models=gene_models)
+    return effect_annotator
 
 
 class MakefilePartitionHelper:
@@ -97,7 +118,7 @@ class MakefilePartitionHelper:
         self.genome = genome
         self.partition_descriptor = partition_descriptor
         self.chromosome_lengths = dict(
-            self.genome.get_genomic_sequence().get_all_chrom_lengths()
+            self.genome.get_all_chrom_lengths()
         )
 
         self._build_adjust_chrom(add_chrom_prefix, del_chrom_prefix)
@@ -170,7 +191,7 @@ class MakefilePartitionHelper:
         genome_chromosomes = [
             chrom
             for chrom, _ in
-            self.genome.get_genomic_sequence().get_all_chrom_lengths()
+            self.genome.get_all_chrom_lengths()
         ]
         # fmt: on
         variants_targets = self.generate_variants_targets(genome_chromosomes)
@@ -710,7 +731,7 @@ class BatchImporter:
             self.families,
             variants_filenames,
             params=variants_params,
-            genome=self.gpf_instance.genomes_db.get_genome(),
+            genome=self.gpf_instance.reference_genome,
         )
         self.vcf_loader = variants_loader
         self.variants_loaders["vcf"] = variants_loader
@@ -726,7 +747,7 @@ class BatchImporter:
             self.families,
             variants_filename,
             params=variants_params,
-            genome=self.gpf_instance.genomes_db.get_genome(),
+            genome=self.gpf_instance.reference_genome,
         )
         self.denovo_loader = variants_loader
         self.variants_loaders["denovo"] = variants_loader
@@ -743,7 +764,7 @@ class BatchImporter:
             self.families,
             variants_filename,
             params=variants_params,
-            genome=self.gpf_instance.genomes_db.get_genome(),
+            genome=self.gpf_instance.reference_genome,
         )
         self.cnv_loader = variants_loader
         self.variants_loaders["cnv"] = variants_loader
@@ -759,7 +780,7 @@ class BatchImporter:
             self.families,
             variants_filename,
             params=variants_params,
-            genome=self.gpf_instance.genomes_db.get_genome(),
+            genome=self.gpf_instance.reference_genome,
         )
         self.dae_loader = variants_loader
         self.variants_loaders["dae"] = variants_loader
@@ -788,7 +809,7 @@ class BatchImporter:
 
         self.partition_helper = MakefilePartitionHelper(
             partition_description,
-            self.gpf_instance.genomes_db.get_genome(),
+            self.gpf_instance.reference_genome,
             add_chrom_prefix=add_chrom_prefix,
             del_chrom_prefix=del_chrom_prefix,
         )
@@ -1153,8 +1174,9 @@ class BatchImporter:
         if gpf_instance is None:
             try:
                 gpf_instance = GPFInstance()
-            except Exception:
+            except Exception as e:
                 logger.warning("GPF not configured properly...")
+                logger.exception(e)
 
         parser = BatchImporter.cli_arguments_parser(gpf_instance)
         argv = parser.parse_args(argv)
@@ -1368,14 +1390,20 @@ class Variants2ParquetTool:
 
     @classmethod
     def _build_variants_loader_pipeline(
-        cls, gpf_instance, argv, variants_loader
-    ):
+            cls, gpf_instance: GPFInstance, argv, variants_loader):
+
+        effect_annotator = construct_import_effect_annotator(gpf_instance)
+
+        variants_loader = EffectAnnotationDecorator(
+            variants_loader, effect_annotator)
+
         annotation_pipeline = construct_import_annotation_pipeline(
             gpf_instance, annotation_configfile=argv.annotation_config,
         )
-        variants_loader = AnnotationPipelineDecorator(
-            variants_loader, annotation_pipeline
-        )
+        if annotation_pipeline is not None:
+            variants_loader = AnnotationPipelineDecorator(
+                variants_loader, annotation_pipeline
+            )
 
         return variants_loader
 
@@ -1388,7 +1416,7 @@ class Variants2ParquetTool:
             families,
             variants_filenames,
             params=variants_params,
-            genome=gpf_instance.genomes_db.get_genome(),
+            genome=gpf_instance.reference_genome,
         )
         return variants_loader
 
@@ -1410,7 +1438,7 @@ class Variants2ParquetTool:
 
         generator = MakefilePartitionHelper(
             partition_description,
-            gpf_instance.genomes_db.get_genome(),
+            gpf_instance.reference_genome,
             add_chrom_prefix=add_chrom_prefix,
             del_chrom_prefix=del_chrom_prefix,
         )

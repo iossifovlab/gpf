@@ -1,3 +1,5 @@
+from dae.configuration.gpf_config_parser import validate_existing_path
+
 from dae.variants.attributes import _VARIANT_TYPE_DISPLAY_NAME, \
     _ROLE_DISPLAY_NAME
 
@@ -64,6 +66,13 @@ variant_statistic_schema = {
 }
 
 autism_gene_tool_config = {
+    "conf_dir": {
+        "type": "string",
+        "check_with": validate_existing_path,
+        "coerce": "abspath",
+        "required": True,
+    },
+
     "gene_sets": {
         "type": "list",
         "required": True,

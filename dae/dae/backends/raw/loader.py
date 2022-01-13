@@ -3,26 +3,28 @@ import pathlib
 import time
 import copy
 import logging
-import numpy as np
-import pandas as pd
+
 from abc import ABC, abstractclassmethod, abstractmethod
 from enum import Enum
 
 from typing import Iterator, Tuple, List, Dict, Any, Optional, Sequence
 
-from dae.genome.genomes_db import Genome
+import numpy as np
+import pandas as pd
+from dae.annotation.annotation_pipeline import AnnotationPipeline
+
+from dae.genomic_resources.reference_genome import ReferenceGenome
 
 from dae.pedigrees.family import FamiliesData
 
+from dae.effect_annotation.effect import AlleleEffects
 from dae.variants.variant import SummaryVariant
 from dae.variants.family_variant import (
     FamilyVariant,
     calculate_simple_best_state,
 )
 from dae.variants.attributes import Sex, GeneticModel
-
 from dae.variants.attributes import TransmissionType
-
 from dae.utils.variant_utils import get_locus_ploidy, best2gt
 from dae.utils import fs_utils
 
@@ -224,6 +226,21 @@ class VariantsLoader(CLILoader):
             self._attributes = copy.deepcopy(attributes)
         self.arguments = []
 
+    #     self._variants_schema = Schema()
+    #     self._init_frequencies_schema()
+
+    # def _init_frequencies_schema(self):
+    #     frequencies_schema = {
+    #             "af_parents_called_count": "int",
+    #             "af_parents_called_percent": "float",
+    #             "af_allele_count": "int",
+    #             "af_allele_freq": "float",
+    #             "af_ref_allele_count": "int",
+    #             "af_ref_allele_freq": "float",
+    #     }
+    #     for n, t in frequencies_schema.items():
+    #         self._variants_schema.create_field(n, t)
+
     def get_attribute(self, key: str) -> Any:
         return self._attributes.get(key, None)
 
@@ -233,6 +250,14 @@ class VariantsLoader(CLILoader):
     # @property
     # def variants_filenames(self):
     #     return self.filenames
+
+    # @property
+    # def variants_schema(self):
+    #     return self._variants_schema
+
+    @property
+    def annotation_schema(self):
+        return None
 
     @classmethod
     def _arguments(cls):
@@ -277,6 +302,10 @@ class VariantsLoaderDecorator(VariantsLoader):
 
     def __getattr__(self, attr):
         return getattr(self.variants_loader, attr, None)
+
+    @property
+    def annotation_schema(self):
+        return self.variants_loader.annotation_schema
 
     @classmethod
     def build_cli_params(cls, params):
@@ -366,7 +395,7 @@ class AnnotationDecorator(VariantsLoaderDecorator):
                 filter(
                     lambda col: col not in common_columns
                     and col not in AnnotationDecorator.CLEAN_UP_COLUMNS,
-                    variants_loader.annotation_schema.col_names,
+                    variants_loader.annotation_schema.names,
                 )
             )
         else:
@@ -390,7 +419,7 @@ class AnnotationDecorator(VariantsLoaderDecorator):
 
                     line_values = [
                         *[rec.get(col, "") for col in common_columns],
-                        summary_allele.effect,
+                        summary_allele.effects,
                         *[rec.get(col, "") for col in other_columns],
                     ]
 
@@ -401,24 +430,61 @@ class AnnotationDecorator(VariantsLoaderDecorator):
                     outfile.write("\n")
 
 
+class EffectAnnotationDecorator(AnnotationDecorator):
+    def __init__(self, variants_loader, effect_annotator):
+        super(EffectAnnotationDecorator, self).__init__(variants_loader)
+
+        self.set_attribute(
+            "extra_attributes",
+            variants_loader.get_attribute("extra_attributes")
+        )
+
+        self.effect_annotator = effect_annotator
+
+    def full_variants_iterator(self):
+        for (summary_variant, family_variants) in \
+                self.variants_loader.full_variants_iterator():
+            for sa in summary_variant.alt_alleles:
+                context = {}
+                attributes = self.effect_annotator.annotate(
+                    sa.get_annotatable(), context)
+                assert "allele_effects" in attributes, attributes
+                allele_effects = attributes["allele_effects"]
+                assert isinstance(allele_effects, AlleleEffects), \
+                    (type(allele_effects), allele_effects)
+                sa.effects = allele_effects
+            yield summary_variant, family_variants
+
+
 class AnnotationPipelineDecorator(AnnotationDecorator):
-    def __init__(self, variants_loader, annotation_pipeline):
+    def __init__(
+            self, variants_loader, annotation_pipeline: AnnotationPipeline):
         super(AnnotationPipelineDecorator, self).__init__(variants_loader)
 
         self.annotation_pipeline = annotation_pipeline
-        self.annotation_schema = annotation_pipeline.build_annotation_schema()
+
         self.set_attribute("annotation_schema", self.annotation_schema)
         self.set_attribute(
             "extra_attributes",
             variants_loader.get_attribute("extra_attributes")
         )
 
+    @property
+    def annotation_schema(self):
+        return self.annotation_pipeline.annotation_schema
+
     def full_variants_iterator(self):
         for (summary_variant, family_variants) in \
                 self.variants_loader.full_variants_iterator():
-            liftover_variants = {}
-            self.annotation_pipeline.annotate_summary_variant(
-                summary_variant, liftover_variants)
+            for sa in summary_variant.alt_alleles:
+                attributes = self.annotation_pipeline.annotate(
+                    sa.get_annotatable())
+                if "allele_effects" in attributes:
+                    allele_effects = attributes["allele_effects"]
+                    assert isinstance(allele_effects, AlleleEffects), \
+                        attributes
+                    sa.effects = allele_effects
+                sa.update_attributes(attributes)
             yield summary_variant, family_variants
 
 
@@ -541,7 +607,7 @@ class VariantsGenotypesLoader(VariantsLoader):
             families: FamiliesData,
             filenames: List[str],
             transmission_type: TransmissionType,
-            genome: Genome,
+            genome: ReferenceGenome,
             regions: List[str] = None,
             expect_genotype: bool = True,
             expect_best_state: bool = False,
@@ -598,7 +664,6 @@ class VariantsGenotypesLoader(VariantsLoader):
         pass
 
     def reset_regions(self, regions):
-        # print("resetting regions to:", regions)
         if regions is None or isinstance(regions, str):
             self.regions = [regions]
         else:
@@ -620,7 +685,7 @@ class VariantsGenotypesLoader(VariantsLoader):
 
     @classmethod
     def _calc_genetic_model(
-        cls, family_variant: FamilyVariant, genome: Genome
+        cls, family_variant: FamilyVariant, genome: ReferenceGenome
     ) -> GeneticModel:
         if family_variant.chromosome in ("X", "chrX"):
             male_ploidy = get_locus_ploidy(
@@ -644,11 +709,10 @@ class VariantsGenotypesLoader(VariantsLoader):
 
     @classmethod
     def _calc_best_state(
-        cls,
-        family_variant: FamilyVariant,
-        genome: Genome,
-        force: bool = True,
-    ) -> np.array:
+            cls,
+            family_variant: FamilyVariant,
+            genome: ReferenceGenome,
+            force: bool = True) -> np.array:
 
         male_ploidy = get_locus_ploidy(
             family_variant.chromosome, family_variant.position, Sex.M, genome
@@ -687,7 +751,8 @@ class VariantsGenotypesLoader(VariantsLoader):
 
     @classmethod
     def _calc_genotype(
-            cls, family_variant: FamilyVariant, genome) -> np.array:
+            cls, family_variant: FamilyVariant,
+            genome: ReferenceGenome) -> np.array:
 
         best_state = family_variant._best_state
         genotype = best2gt(best_state)
@@ -741,7 +806,7 @@ class VariantsGenotypesLoader(VariantsLoader):
             chrom = self._adjust_chrom_prefix(summary_variant.chromosome)
             summary_variant._chromosome = chrom
             for summary_allele in summary_variant.alleles:
-                summary_allele._chromosome = chrom
+                summary_allele._chrom = chrom
                 summary_allele._attributes["chrom"] = chrom
 
             for family_variant in family_variants:

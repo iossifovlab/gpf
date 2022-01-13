@@ -1,0 +1,11 @@
+type: gene_models 
+
+filename: refGene201309.txt
+
+format: "default"
+
+
+meta: |
+  ## refGene gene models from 2013-09
+
+  Old gene models used by GPF up to 2019-02.

@@ -1,0 +1,36 @@
+vars:
+  wd: "."
+
+reference_genome:
+  resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
+
+gene_models:
+  resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/gene_models/refGene_201309"
+
+genotype_storage:
+  default: genotype_filesystem
+
+storage:
+
+  genotype_filesystem:
+    dir: "%(wd)s/studies"
+    storage_type: filesystem
+
+phenotype_data:
+  dir: "%(wd)s/dummy_pheno_dir"
+
+
+studies:
+  dir: "%(wd)s/studies"
+
+datasets:
+  dir: "%(wd)s/datasets"
+
+default_study_config:
+  conf_file: "%(wd)s/defaultConfiguration.conf"
+
+gene_info_db:
+  conf_file: "%(wd)s/gene_info.conf"
+
+genomic_scores_db:
+  conf_file: "%(wd)s/genomicScores.conf"

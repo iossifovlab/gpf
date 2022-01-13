@@ -14,7 +14,7 @@ from dae.utils.regions import Region
 import fsspec
 from dae.utils import fs_utils
 
-from dae.genome.genomes_db import Genome
+from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.utils.variant_utils import str2mat, GENOTYPE_TYPE, str2gt
 from dae.utils.helpers import str2bool
 
@@ -23,7 +23,8 @@ from dae.utils.dae_utils import dae2vcf_variant
 from dae.pedigrees.family import Family, FamiliesData
 from dae.variants.attributes import Inheritance, Role
 
-from dae.variants.variant import SummaryVariantFactory
+from dae.variants.variant import SummaryVariantFactory, \
+    allele_type_from_cshl_variant
 from dae.variants.family_variant import FamilyVariant
 
 from dae.backends.raw.loader import (
@@ -33,7 +34,6 @@ from dae.backends.raw.loader import (
     CLIArgument
 )
 
-from dae.variants.attributes import VariantType
 from dae.utils.variant_utils import get_locus_ploidy
 
 
@@ -65,7 +65,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             self,
             families: FamiliesData,
             denovo_filename: str,
-            genome: Genome,
+            genome: ReferenceGenome,
             regions: List[str] = None,
             params: Dict[str, Any] = {},
             sort: bool = True):
@@ -110,7 +110,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             self._adjust_chrom_prefix(chrom) for chrom in self.chromosomes
         ]
 
-        all_chromosomes = self.genome.get_genomic_sequence().chromosomes
+        all_chromosomes = self.genome.chromosomes
         if all([chrom in set(all_chromosomes) for chrom in self.chromosomes]):
             self.chromosomes = sorted(
                 self.chromosomes,
@@ -232,7 +232,7 @@ class DenovoLoader(VariantsGenotypesLoader):
     def produce_genotype(
         chrom: str,
         pos: int,
-        genome: Genome,
+        genome: ReferenceGenome,
         family: Family,
         members_with_variant: List[str],
     ) -> np.array:
@@ -418,7 +418,7 @@ class DenovoLoader(VariantsGenotypesLoader):
     def _flexible_denovo_load_internal(
             cls,
             filepath: str,
-            genome: Genome,
+            genome: ReferenceGenome,
             families: FamiliesData,
             denovo_location: Optional[str] = None,
             denovo_variant: Optional[str] = None,
@@ -540,7 +540,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             ref_alt_tuples = [
                 dae2vcf_variant(
                     variant_tuple[0], variant_tuple[1], variant_tuple[2],
-                    genome.get_genomic_sequence()
+                    genome
                 ) for variant_tuple in zip(chrom_col, pos_col, variant_col)
             ]
             pos_col, ref_col, alt_col = zip(*ref_alt_tuples)
@@ -660,7 +660,7 @@ class DenovoLoader(VariantsGenotypesLoader):
     def flexible_denovo_load(
             cls,
             filepath: str,
-            genome: Genome,
+            genome: ReferenceGenome,
             families: FamiliesData,
             denovo_location: Optional[str] = None,
             denovo_variant: Optional[str] = None,
@@ -852,7 +852,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             self._adjust_chrom_prefix(rec["chrom"]),
             rec["cshl_position"],
             rec["cshl_variant"],
-            self.genome.get_genomic_sequence(),
+            self.genome,
         )
         rec["position"] = position
         rec["reference"] = reference
@@ -894,7 +894,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             "position": rec["position"],
             "reference": rec["reference"],
             "alternative": rec["alternative"],
-            "variant_type": VariantType.from_cshl_variant(rec["cshl_variant"]),
+            "variant_type": allele_type_from_cshl_variant(rec["cshl_variant"]),
             "cshl_position": rec["cshl_position"],
             "cshl_variant": rec["cshl_variant"],
             "summary_variant_index": rec["summary_variant_index"],

@@ -69,6 +69,6 @@ def test_multi_alt_allele_effects_match_family(
         checked = False
         for va in v.alt_alleles:
             checked = True
-            assert va.effect.worst == worst_effect[0]
-            assert va.effect.transcripts is not None
+            assert va.effects.worst == worst_effect[0]
+            assert va.effects.transcripts is not None
         assert checked

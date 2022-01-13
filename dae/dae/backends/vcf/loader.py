@@ -1,4 +1,3 @@
-import os
 import itertools
 import logging
 from fsspec.core import url_to_fs
@@ -10,7 +9,7 @@ import numpy as np
 import pysam
 
 from dae.utils.helpers import str2bool
-from dae.genome.genomes_db import Genome
+from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.utils import fs_utils
 
 from dae.utils.variant_utils import is_all_reference_genotype, \
@@ -111,7 +110,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             self,
             families,
             vcf_files,
-            genome: Genome,
+            genome: ReferenceGenome,
             regions=None,
             params={},
             **kwargs):
@@ -608,7 +607,7 @@ class VcfLoader(VariantsGenotypesLoader):
             self,
             families,
             vcf_files,
-            genome: Genome,
+            genome: ReferenceGenome,
             regions=None,
             params={},
             **kwargs):

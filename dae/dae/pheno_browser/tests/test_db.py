@@ -1,12 +1,10 @@
-"""
-Created on Aug 31, 2017
+# """
+# Created on Aug 31, 2017
 
-@author: lubo
-"""
-from __future__ import print_function
-from __future__ import unicode_literals
-from dae.pheno_browser.db import DbManager
+# @author: lubo
+# """
 import os
+from dae.pheno_browser.db import DbManager
 
 
 def test_db_save(output_dir):

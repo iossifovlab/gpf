@@ -23,7 +23,7 @@ from dae.backends.vcf.loader import VcfLoader
     ],
 )
 def test_vcf_loader(
-    vcf_loader_data, variants_vcf, fixture_data, genomes_db_2013
+    vcf_loader_data, variants_vcf, fixture_data, gpf_instance_2013
 ):
     conf = vcf_loader_data(fixture_data)
     print(conf)
@@ -34,7 +34,7 @@ def test_vcf_loader(
     loader = VcfLoader(
         families,
         [conf.vcf],
-        genomes_db_2013.get_genome(),
+        gpf_instance_2013.reference_genome,
         params={
             "vcf_include_reference_genotypes": True,
             "vcf_include_unknown_family_genotypes": True,
@@ -49,7 +49,7 @@ def test_vcf_loader(
         print(nfv)
 
 
-def test_simple_vcf_loader_multi(fixture_dirname, genomes_db_2013):
+def test_simple_vcf_loader_multi(fixture_dirname, gpf_instance_2013):
     vcf_filenames = [
         fixture_dirname("backends/multivcf_split1.vcf"),
         fixture_dirname("backends/multivcf_split2.vcf"),
@@ -63,7 +63,7 @@ def test_simple_vcf_loader_multi(fixture_dirname, genomes_db_2013):
     vcf_loader = VcfLoader(
         families,
         vcf_filenames,
-        genomes_db_2013.get_genome(),
+        gpf_instance_2013.reference_genome,
         fill_missing_ref=False,
     )
     assert vcf_loader is not None
@@ -78,7 +78,7 @@ def test_simple_vcf_loader_multi(fixture_dirname, genomes_db_2013):
         ["multivcf_original.vcf"],
     ],
 )
-def test_vcf_loader_multi(fixture_dirname, multivcf_files, genomes_db_2013):
+def test_vcf_loader_multi(fixture_dirname, multivcf_files, gpf_instance_2013):
     ped_file = fixture_dirname("backends/multivcf.ped")
 
     multivcf_files = list(
@@ -94,7 +94,7 @@ def test_vcf_loader_multi(fixture_dirname, multivcf_files, genomes_db_2013):
     multi_vcf_loader = VcfLoader(
         families_multi,
         multivcf_files,
-        genomes_db_2013.get_genome(),
+        gpf_instance_2013.reference_genome,
         fill_missing_ref=False,
     )
     assert multi_vcf_loader is not None
@@ -104,7 +104,7 @@ def test_vcf_loader_multi(fixture_dirname, multivcf_files, genomes_db_2013):
 
     single_vcf = fixture_dirname("backends/multivcf_original.vcf")
     single_loader = VcfLoader(
-        families, [single_vcf], genomes_db_2013.get_genome()
+        families, [single_vcf], gpf_instance_2013.reference_genome
     )
     assert single_loader is not None
 
@@ -140,7 +140,7 @@ def test_vcf_loader_multi(fixture_dirname, multivcf_files, genomes_db_2013):
     "fill_mode, fill_value", [["reference", 0], ["unknown", -1]]
 )
 def test_multivcf_loader_fill_missing(
-    fixture_dirname, fill_mode, fill_value, genomes_db_2013
+    fixture_dirname, fill_mode, fill_value, gpf_instance_2013
 ):
     ped_file = fixture_dirname("backends/multivcf.ped")
 
@@ -156,7 +156,7 @@ def test_multivcf_loader_fill_missing(
         "vcf_multi_loader_fill_in_mode": fill_mode,
     }
     multi_vcf_loader = VcfLoader(
-        families, multivcf_files, genomes_db_2013.get_genome(), params=params
+        families, multivcf_files, gpf_instance_2013.reference_genome, params=params
     )
 
     assert multi_vcf_loader is not None
@@ -230,7 +230,7 @@ def test_vcf_denovo_mode(
     total,
     unexpected_inheritance,
     fixture_dirname,
-    genomes_db_2013,
+    gpf_instance_2013,
 ):
     prefix = fixture_dirname("backends/inheritance_trio_denovo_omission")
     families = FamiliesLoader(f"{prefix}.ped").load()
@@ -243,7 +243,7 @@ def test_vcf_denovo_mode(
     vcf_loader = VcfLoader(
         families,
         [f"{prefix}.vcf"],
-        genomes_db_2013.get_genome(),
+        gpf_instance_2013.reference_genome,
         params=params,
     )
 
@@ -272,7 +272,7 @@ def test_vcf_omission_mode(
     total,
     unexpected_inheritance,
     fixture_dirname,
-    genomes_db_2013,
+    gpf_instance_2013,
 ):
     prefix = fixture_dirname("backends/inheritance_trio_denovo_omission")
     families = FamiliesLoader(f"{prefix}.ped").load()
@@ -285,7 +285,7 @@ def test_vcf_omission_mode(
     vcf_loader = VcfLoader(
         families,
         [f"{prefix}.vcf"],
-        genomes_db_2013.get_genome(),
+        gpf_instance_2013.reference_genome,
         params=params,
     )
 
@@ -340,7 +340,7 @@ def test_vcf_loader_params(
 #     "fill_mode, fill_value", [["reference", 0], ["unknown", -1]]
 # )
 # def test_multivcf_loader_handle_all_unknown(
-#     fixture_dirname, fill_mode, fill_value, genomes_db_2013
+#     fixture_dirname, fill_mode, fill_value, gpf_instance_2013
 # ):
 #     ped_file = fixture_dirname("backends/multivcf.ped")
 
@@ -356,7 +356,7 @@ def test_vcf_loader_params(
 #         "vcf_multi_loader_fill_in_mode": fill_mode,
 #     }
 #     multi_vcf_loader = VcfLoader(
-#         families, multivcf_files, genomes_db_2013.get_genome(), params=params
+#         families, multivcf_files, gpf_instance_2013.reference_genome, params=params
 #     )
 
 #     assert multi_vcf_loader is not None

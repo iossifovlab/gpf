@@ -2,8 +2,6 @@ import os
 import glob
 import pyarrow.parquet as pq
 
-from dae.utils.regions import Region
-
 from dae.tools.denovo2parquet import main
 from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 

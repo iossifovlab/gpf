@@ -10,7 +10,6 @@ from dae.tools.simple_study_import import main
 def test_import_denovo_dae_style_into_genotype_storage(
     genotype_storage_id,
     storage_type,
-    genomes_db_2013,
     fixture_dirname,
     default_dae_config,
     gpf_instance_2013,
@@ -26,7 +25,7 @@ def test_import_denovo_dae_style_into_genotype_storage(
         pedigree_filename,
         "--id",
         study_id,
-        "--skip-reports",
+        # "--skip-reports",
         "--denovo-file",
         denovo_filename,
         "--denovo-location",
@@ -63,7 +62,6 @@ def test_import_denovo_dae_style_into_genotype_storage(
 def test_import_denovo_dae_style_denovo_sep(
     genotype_storage_id,
     storage_type,
-    genomes_db_2013,
     fixture_dirname,
     default_dae_config,
     gpf_instance_2013,
@@ -126,7 +124,6 @@ def test_import_denovo_dae_style_denovo_sep(
 def test_import_comp_vcf_into_genotype_storage(
     genotype_storage_id,
     storage_type,
-    genomes_db_2013,
     fixture_dirname,
     default_dae_config,
     gpf_instance_2013,
@@ -173,7 +170,6 @@ def test_import_comp_vcf_into_genotype_storage(
 def test_import_comp_denovo_into_genotype_storage(
     genotype_storage_id,
     storage_type,
-    genomes_db_2013,
     fixture_dirname,
     default_dae_config,
     gpf_instance_2013,
@@ -226,7 +222,6 @@ def test_import_comp_denovo_into_genotype_storage(
 def test_import_comp_all_into_genotype_storage(
     genotype_storage_id,
     storage_type,
-    genomes_db_2013,
     fixture_dirname,
     default_dae_config,
     gpf_instance_2013,
@@ -241,6 +236,7 @@ def test_import_comp_all_into_genotype_storage(
 
     argv = [
         pedigree_filename,
+        "--skip-reports",
         "--id", study_id,
         "--vcf-denovo-mode", "possible_denovo",
         "--vcf-omission-mode", "possible_omission",
@@ -274,7 +270,6 @@ def test_import_comp_all_into_genotype_storage(
 def test_import_iossifov2014_into_genotype_storage(
     genotype_storage_id,
     storage_type,
-    genomes_db_2013,
     fixture_dirname,
     default_dae_config,
     gpf_instance_2013,
@@ -335,7 +330,6 @@ def test_import_iossifov2014_into_genotype_storage(
 def test_add_chrom_prefix_simple(
     genotype_storage_id,
     storage_type,
-    genomes_db_2013,
     fixture_dirname,
     default_dae_config,
     gpf_instance_2013,
@@ -406,7 +400,6 @@ def test_add_chrom_prefix_simple(
 def test_import_comp_all_del_chrom_prefix(
     genotype_storage_id,
     storage_type,
-    genomes_db_2013,
     fixture_dirname,
     default_dae_config,
     gpf_instance_2013,
@@ -425,7 +418,7 @@ def test_import_comp_all_del_chrom_prefix(
         pedigree_filename,
         "--id",
         study_id,
-        # '--skip-reports',
+        '--skip-reports',
         "--vcf-denovo-mode", "possible_denovo",
         "--vcf-omission-mode", "possible_omission",
         "--vcf-files",
@@ -470,7 +463,6 @@ def test_import_comp_all_del_chrom_prefix(
 def test_import_transmitted_dae_into_genotype_storage(
     genotype_storage_id,
     storage_type,
-    genomes_db_2013,
     fixture_dirname,
     default_dae_config,
     gpf_instance_2013,
@@ -518,7 +510,6 @@ def test_import_transmitted_dae_into_genotype_storage(
 def test_import_wild_multivcf_into_genotype_storage(
     genotype_storage_id,
     storage_type,
-    genomes_db_2013,
     fixture_dirname,
     default_dae_config,
     gpf_instance_2013,
@@ -554,9 +545,7 @@ def test_import_wild_multivcf_into_genotype_storage(
 
 
 def test_import_study_config_arg(
-    genomes_db_2013,
     fixture_dirname,
-    default_dae_config,
     gpf_instance_2013,
     temp_dirname,
 ):

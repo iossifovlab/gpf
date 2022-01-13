@@ -13,8 +13,9 @@ import toml
 from box import Box
 
 import numpy as np
+
 import pyarrow as pa
-import pyarrow.parquet as pq
+
 import configparser
 import fsspec
 
@@ -211,7 +212,7 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
     def _evaluate_coding_bin(self, family_allele):
         if family_allele.is_reference_allele:
             return 0
-        variant_effects = set(family_allele.effect.types)
+        variant_effects = set(family_allele.effects.types)
         coding_effect_types = set(self._coding_effect_types)
 
         result = variant_effects.intersection(coding_effect_types)
@@ -374,10 +375,10 @@ class ContinuousParquetFileWriter:
             self, filepath, variant_loader, filesystem=None, rows=100_000):
 
         self.filepath = filepath
-        annotation_schema = variant_loader.get_attribute("annotation_schema")
         extra_attributes = variant_loader.get_attribute("extra_attributes")
         self.serializer = AlleleParquetSerializer(
-            annotation_schema, extra_attributes)
+            variant_loader.annotation_schema, extra_attributes
+        )
         self.schema = self.serializer.schema
 
         if filesystem is not None:
@@ -389,6 +390,7 @@ class ContinuousParquetFileWriter:
                 os.makedirs(dirname)
             self.dirname = dirname
 
+        import pyarrow.parquet as pq
         self._writer = pq.ParquetWriter(
             filepath, self.schema, compression="snappy", filesystem=filesystem
         )
@@ -462,12 +464,10 @@ class VariantsParquetWriter:
         assert isinstance(partition_descriptor, PartitionDescriptor)
         self.partition_descriptor = partition_descriptor
 
-        annotation_schema = self.variants_loader.get_attribute(
-            "annotation_schema")
         extra_attributes = self.variants_loader.get_attribute(
             "extra_attributes")
         self.serializer = AlleleParquetSerializer(
-            annotation_schema, extra_attributes)
+            self.variants_loader.annotation_schema, extra_attributes)
 
     def _setup_reference_allele(self, summary_variant, family):
         genotype = -1 * np.ones(shape=(2, len(family)), dtype=GENOTYPE_TYPE)
@@ -537,10 +537,8 @@ class VariantsParquetWriter:
     def _write_internal(self):
         family_variant_index = 0
         report = False
-
         for summary_variant_index, (summary_variant, family_variants) in \
                 enumerate(self.full_variants_iterator):
-
             summary_alleles = summary_variant.alleles
 
             summary_blobs = self.serializer.serialize_summary_data(
@@ -593,6 +591,8 @@ class VariantsParquetWriter:
 
                 variant_data = self.serializer.serialize_family_variant(
                     alleles, summary_blobs, scores_blob)
+                assert variant_data is not None
+
                 extra_attributes_data = \
                     self.serializer.serialize_extra_attributes(fv)
                 for family_allele in alleles:
@@ -719,7 +719,7 @@ class ParquetManager:
             variants_loader, partition_descriptor,
             bucket_index=1, rows=100_000, include_reference=False):
 
-        assert variants_loader.get_attribute("annotation_schema") is not None
+        # assert variants_loader.get_attribute("annotation_schema") is not None
         print(f"variants to parquet ({rows} rows)", file=sys.stderr)
 
         start = time.time()
@@ -794,4 +794,6 @@ def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
     ped_df, pps = add_missing_parquet_fields(pps, ped_df)
 
     table = pa.Table.from_pandas(ped_df, schema=pps)
+
+    import pyarrow.parquet as pq
     pq.write_table(table, filename, filesystem=filesystem)

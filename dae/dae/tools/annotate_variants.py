@@ -8,11 +8,10 @@ import argparse
 
 import pysam
 
-from dae.genome import genome_access
-from dae.genome.gene_models import load_gene_models
-from dae.variant_annotation.annotator import (
-    VariantAnnotator as VariantAnnotation,
-)
+from dae.genomic_resources import reference_genome
+from dae.genomic_resources.gene_models import load_gene_models
+from dae.effect_annotation.annotator import EffectAnnotator
+from dae.effect_annotation.effect import AnnotationEffect
 
 
 def cli_genome_options(parser):
@@ -73,25 +72,26 @@ def parse_cli_genome_options(args):
         gene_models = load_gene_models(
             args.gene_models_filename,
             fileformat=args.gene_models_fileformat,
-            gene_mapping_file=args.gene_mapping_filename,
+            gene_mapping_filename=args.gene_mapping_filename,
         )
     if args.genome_filename:
-        genomic_sequence = genome_access.open_ref(args.genome_filename)
+        genomic_sequence = reference_genome.open_ref(args.genome_filename)
     if gene_models and genomic_sequence:
         return genomic_sequence, gene_models
 
     if genomic_sequence is None or gene_models is None:
-        from dae import GPFInstance
+        return None, None
+        # from dae import GPFInstance
 
-        gpf = GPFInstance()
-        genome = gpf.genomes_db.get_genome(args.genome_id)
-        if genomic_sequence is None:
-            genomic_sequence = genome.get_genomic_sequence()
-        if gene_models is None:
-            gene_models = gpf.genomes_db.get_gene_models(
-                args.gene_models_id, args.genome_id
-            )
-        return genomic_sequence, gene_models
+        # gpf = GPFInstance()
+        # genome = gpf.genomes_db.get_genome(args.genome_id)
+        # if genomic_sequence is None:
+        #     genomic_sequence = genome.get_genomic_sequence()
+        # if gene_models is None:
+        #     gene_models = gpf.genomes_db.get_gene_models(
+        #         args.gene_models_id, args.genome_id
+        #     )
+        # return genomic_sequence, gene_models
 
 
 def cli_variants_options(parser):
@@ -193,7 +193,7 @@ def cli(argv=sys.argv[1:]):
     genomic_sequence, gene_models = parse_cli_genome_options(args)
     assert genomic_sequence is not None
     assert gene_models is not None
-    annotator = VariantAnnotation(
+    annotator = EffectAnnotator(
         genomic_sequence, gene_models, promoter_len=args.promoter_len
     )
 
@@ -212,16 +212,23 @@ def cli(argv=sys.argv[1:]):
 
     start = time.time()
     header = None
+    assert not args.no_header, args
+
     if args.no_header:
+        assert False
         for key, value in variant_columns.items():
             variant_columns[key] = int(value)
     else:
+
         line = infile.readline().strip()
         header = [c.strip() for c in line.split("\t")]
         for key, value in variant_columns.items():
             assert value in header
             variant_columns[key] = header.index(value)
         header.extend(["effectType", "effectGene", "effectDetails"])
+
+        print("header:", header, variant_columns, file=sys.stderr)
+        print("\t".join(header), file=sys.stderr)
         print("\t".join(header), file=outfile)
 
     counter = 0
@@ -233,8 +240,9 @@ def cli(argv=sys.argv[1:]):
             key: columns[value] for key, value in variant_columns.items()
         }
         effects = annotator.do_annotate_variant(**variant)
-        desc = annotator.effect_description(effects)
+        desc = AnnotationEffect.effects_description(effects)
         columns.extend(desc)
+        print("\t".join(columns), file=sys.stderr)
         print("\t".join(columns), file=outfile)
 
         if (counter + 1) % 1000 == 0:
@@ -272,7 +280,7 @@ def cli_vcf(argv=sys.argv[1:]):
     genomic_sequence, gene_models = parse_cli_genome_options(args)
     assert genomic_sequence is not None
     assert gene_models is not None
-    annotator = VariantAnnotation(
+    annotator = EffectAnnotator(
         genomic_sequence, gene_models, promoter_len=args.promoter_len
     )
 
@@ -310,7 +318,7 @@ def cli_vcf(argv=sys.argv[1:]):
         for alt in variant.alts:
             effects = annotator.do_annotate_variant(
                 chrom=variant.chrom,
-                position=variant.pos,
+                pos=variant.pos,
                 ref=variant.ref,
                 alt=alt,
             )

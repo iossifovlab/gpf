@@ -6,8 +6,8 @@ Created on Mar 5, 2018
 import logging
 import numpy as np
 
-from dae.genome.genomes_db import Genome
-from dae.variants.attributes import Sex, VariantDesc, VariantType
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.variants.attributes import Sex
 
 
 logger = logging.getLogger(__name__)
@@ -143,7 +143,7 @@ def is_all_unknown_genotype(gt):
     return np.all(gt == -1)
 
 
-def trim_str_front(pos, ref, alt):
+def trim_str_left(pos, ref, alt):
     assert alt, (pos, ref, alt)
     assert ref, (pos, ref, alt)
 
@@ -161,27 +161,26 @@ def trim_str_front(pos, ref, alt):
         alt = alt[n:]
         pos += n
 
-    if len(ref) == 0 or len(alt) == 0:
-        return pos, ref, alt
+    return pos, ref, alt
 
-    for n, s in enumerate(zip(ref[::-1], alt[::-1])):
-        if s[0] != s[1]:
-            break
-    # not made simple
-    if ref[-(n + 1)] == alt[-(n + 1)]:
-        r, a = ref[: -(n + 1)], alt[: -(n + 1)]
-    else:
-        if n == 0:
-            r, a = ref[:], alt[:]
-        else:
-            r, a = ref[:-n], alt[:-n]
-    if len(r) == 0 or len(a) == 0:
-        return pos, r, a
+    # for n, s in enumerate(zip(ref[::-1], alt[::-1])):
+    #     if s[0] != s[1]:
+    #         break
+    # # not made simple
+    # if ref[-(n + 1)] == alt[-(n + 1)]:
+    #     r, a = ref[: -(n + 1)], alt[: -(n + 1)]
+    # else:
+    #     if n == 0:
+    #         r, a = ref[:], alt[:]
+    #     else:
+    #         r, a = ref[:-n], alt[:-n]
+    # if len(r) == 0 or len(a) == 0:
+    #     return pos, r, a
 
-    return pos, r, a
+    # return pos, r, a
 
 
-def trim_str_back(pos, ref, alt):
+def trim_str_right(pos, ref, alt):
     assert alt, (pos, ref, alt)
     assert ref, (pos, ref, alt)
 
@@ -198,47 +197,71 @@ def trim_str_back(pos, ref, alt):
         else:
             r, a = ref[:-n], alt[:-n]
 
-    if len(r) == 0 or len(a) == 0:
-        return pos, r, a
+    return pos, r, a
 
-    for n, s in enumerate(zip(r, a)):
-        if s[0] != s[1]:
-            break
+    # for n, s in enumerate(zip(r, a)):
+    #     if s[0] != s[1]:
+    #         break
 
-    if r[n] == a[n]:
-        return pos + n + 1, r[n + 1:], a[n + 1:]
+    # if r[n] == a[n]:
+    #     return pos + n + 1, r[n + 1:], a[n + 1:]
 
-    return pos + n, r[n:], a[n:]
+    # return pos + n, r[n:], a[n:]
 
 
-def cshl_format(pos, ref, alt, trimmer=trim_str_front):
-    p, r, a = trimmer(pos, ref, alt)
-    if len(r) == len(a) and len(r) == 0:
-        return VariantDesc(
-            VariantType.comp, p, ref=r, alt=a, length=0)
+def trim_str_left_right(pos, ref, alt):
+    if len(ref) == 0 or len(alt) == 0:
+        return pos, ref, alt
+    pos, ref, alt = trim_str_left(pos, ref, alt)
+    if len(ref) == 0 or len(alt) == 0:
+        return pos, ref, alt
+    return trim_str_right(pos, ref, alt)
 
-    if len(r) == len(a) and len(r) == 1:
-        return VariantDesc(
-            VariantType.substitution, p, ref=r, alt=a, length=1)
 
-    if len(r) > len(a) and len(a) == 0:
-        return VariantDesc(
-            VariantType.deletion, p, length=len(r)
-        )
+def trim_str_right_left(pos, ref, alt):
+    if len(ref) == 0 or len(alt) == 0:
+        return pos, ref, alt
+    pos, ref, alt = trim_str_right(pos, ref, alt)
+    if len(ref) == 0 or len(alt) == 0:
+        return pos, ref, alt
+    return trim_str_left(pos, ref, alt)
 
-    # len(ref) < len(alt):
-    if len(r) < len(a) and len(r) == 0:
-        return VariantDesc(
-            VariantType.insertion, p, alt=a, length=len(a))
 
-    return VariantDesc(
-        VariantType.comp, p, ref=r, alt=a, length=max(len(r), len(a))
-    )
+def trim_parsimonious(pos, ref, alt):
+    assert alt, (pos, ref, alt)
+    assert ref, (pos, ref, alt)
+
+    rp, rr, ra = trim_str_right(pos, ref, alt)
+    if len(rr) == 0:
+        ra = alt[:len(ra) + 1]
+        rr = ref[0:1]
+        assert ra[-1] == rr[-1]
+        return rp, rr, ra
+
+    if len(ra) == 0:
+        rr = ref[:len(rr) + 1]
+        ra = alt[0:1]
+        assert ra[-1] == rr[-1]
+        return rp, rr, ra
+
+    lp, lr, la = trim_str_left(rp, rr, ra)
+    if len(lr) == 0:
+        lr = ra[-len(la) - 1]
+        la = ra[-len(la) - 1:]
+        lp -= 1
+        return lp, lr, la
+    if len(la) == 0:
+        la = rr[-len(lr) - 1]
+        lr = rr[-len(lr) - 1:]
+        lp -= 1
+        return lp, lr, la
+
+    return lp, lr, la
 
 
 def get_locus_ploidy(
-    chrom: str, pos: int, sex: Sex, genome: Genome
-) -> int:
+        chrom: str, pos: int, sex: Sex, genome: ReferenceGenome) -> int:
+
     if chrom in ("chrX", "X") and sex == Sex.M:
         if not genome.is_pseudoautosomal(chrom, pos):
             return 1
@@ -247,7 +270,7 @@ def get_locus_ploidy(
 
 def get_interval_locus_ploidy(
         chrom: str, pos_start: int, pos_end: int,
-        sex: Sex, genome: Genome) -> int:
+        sex: Sex, genome: ReferenceGenome) -> int:
 
     start_ploidy = get_locus_ploidy(chrom, pos_start, sex, genome)
     end_ploidy = get_locus_ploidy(chrom, pos_end, sex, genome)
@@ -272,91 +295,3 @@ def complement(nucleotides: str) -> str:
 
 def reverse_complement(nucleotides: str) -> str:
     return complement(nucleotides[::-1])
-
-
-def liftover_variant(chrom, pos, ref, alt, lo, target_genome):
-
-    lo_coordinates = lo.convert_coordinate(chrom, pos - 1)
-
-    if not lo_coordinates:
-        return None
-    if len(lo_coordinates) > 1:
-        logger.info(
-            f"liftover_variant: liftover returns more than one target "
-            f"position: {lo_coordinates}")
-
-    lo_chrom, lo_pos, lo_strand, _ = lo_coordinates[0]
-
-    if lo_strand == "+" or len(ref) == len(alt):
-        lo_pos += 1
-    elif lo_strand == "-":
-        lo_pos -= len(ref)
-        lo_pos -= 1
-
-    _, tr_ref, tr_alt = trim_str_front(pos, ref, alt)
-
-    lo_ref = target_genome.get_sequence(
-        lo_chrom, lo_pos, lo_pos + len(ref) - 1)
-    if lo_ref is None:
-        logger.warning(
-            f"can't find genomic sequence for {lo_chrom}:{lo_pos}")
-        return None
-
-    lo_alt = alt
-    if lo_strand == "-":
-        if not tr_alt:
-            lo_alt = f"{lo_ref[0]}"
-        else:
-            lo_alt = reverse_complement(tr_alt)
-            if not tr_ref:
-                lo_alt = f"{lo_ref[0]}{lo_alt}"
-
-    return (lo_chrom, lo_pos, lo_ref, lo_alt)
-
-
-def tandem_repeat(ref, alt, min_mono_reference=8):
-    for period in range(1, len(ref) // 2 + 1):
-        if len(ref) % period != 0:
-            continue
-        unit = ref[:period]
-
-        ref_repeats = len(ref) // period
-        if ref_repeats * unit != ref:
-            continue
-
-        if len(alt) % period != 0:
-            continue
-        alt_repeats = len(alt) // period
-        if alt_repeats * unit != alt:
-            continue
-
-        if len(unit) == 1 and len(ref) < min_mono_reference:
-            return None, None, None
-
-        return unit, ref_repeats, alt_repeats
-    return None, None, None
-
-
-def vcf2cshl(pos, ref, alt, trimmer=trim_str_back):
-    tr_vd = None
-    tr_unit, tr_ref, tr_alt = tandem_repeat(ref, alt)
-
-    if tr_unit is not None:
-
-        assert tr_ref is not None
-        assert tr_alt is not None
-
-        tr_vd = VariantDesc(
-            VariantType.tandem_repeat, pos,
-            tr_ref=tr_ref, tr_alt=tr_alt, tr_unit=tr_unit)
-
-        vd = cshl_format(pos, ref, alt, trimmer=trimmer)
-
-        vd.variant_type |= tr_vd.variant_type
-        vd.tr_unit = tr_vd.tr_unit
-        vd.tr_ref = tr_vd.tr_ref
-        vd.tr_alt = tr_vd.tr_alt
-
-        return vd
-
-    return cshl_format(pos, ref, alt, trimmer=trimmer)

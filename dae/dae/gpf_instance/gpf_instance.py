@@ -3,7 +3,8 @@ import logging
 import pandas as pd
 import math
 import json
-from dae.genome.genomes_db import GenomesDB
+
+from box import Box
 
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
@@ -28,11 +29,11 @@ from dae.configuration.schemas.autism_gene_profile import (
     autism_gene_tool_config
 )
 from dae.autism_gene_profile.db import AutismGeneProfileDB
-from dae.autism_gene_profile.statistic import AGPStatistic
+from dae.genomic_resources import build_genomic_resource_repository
+from dae.annotation.annotation_factory import build_annotation_pipeline
 
 from dae.utils.helpers import isnan
 from dae.utils.dae_utils import cached, join_line
-
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ class GPFInstance(object):
     def __init__(
             self,
             dae_config=None,
-            config_file="DAE.conf",
+            config_file="gpf_instance.yaml",
             work_dir=None,
             defaults=None,
             load_eagerly=False):
@@ -60,13 +61,18 @@ class GPFInstance(object):
         self.__autism_gene_profile_config = None
         self.load_eagerly = load_eagerly
 
+        if self.dae_config.grr:
+            self.grr = build_genomic_resource_repository(self.dae_config.grr)
+        else:
+            self.grr = build_genomic_resource_repository()
+
         if load_eagerly:
-            self.genomes_db
+            self.reference_genome
+            self.gene_models
             self.gene_sets_db
             self._gene_info_config
             self._pheno_db
             self._variants_db
-            self._gene_info_config
             self.denovo_gene_sets_db
             self._score_config
             self._scores_factory
@@ -75,10 +81,23 @@ class GPFInstance(object):
 
     @property  # type: ignore
     @cached
-    def genomes_db(self):
-        return GenomesDB(
-            self.dae_config.dae_data_dir, self.dae_config.genomes_db.conf_file
-        )
+    def reference_genome(self):
+        resource = self.grr.get_resource(
+            self.dae_config.reference_genome.resource_id)
+        assert resource is not None, \
+            self.dae_config.reference_genome.resource_id
+        result = resource.open()
+        return result
+
+    @property  # type: ignore
+    @cached
+    def gene_models(self):
+        resource = self.grr.get_resource(
+            self.dae_config.gene_models.resource_id)
+        assert resource is not None, \
+            self.dae_config.gene_models.resource_id
+        result = resource.open()
+        return result
 
     @property  # type: ignore
     @cached
@@ -88,10 +107,17 @@ class GPFInstance(object):
     @property  # type: ignore
     @cached
     def _gene_info_config(self):
-        logger.debug(
-            f"loading gene info config file: "
-            f"{self.dae_config.gene_info_db.conf_file}")
+        if self.dae_config.gene_info_db is None or \
+                self.dae_config.gene_info_db.conf_file is None:
+            logger.warning(
+                "gene sets and weights are not configured...")
+            return Box({}, default_box=True)
 
+        conf_file = self.dae_config.gene_info_db.conf_file
+        logger.debug(
+            f"loading gene info config file: {conf_file}")
+        if not os.path.exists(conf_file):
+            return Box({}, default_box=True)
         return GPFConfigParser.load_config(
             self.dae_config.gene_info_db.conf_file, gene_info_conf
         )
@@ -104,8 +130,16 @@ class GPFInstance(object):
     @property  # type: ignore
     @cached
     def _score_config(self):
+        if self.dae_config.genomic_scores_db is None or \
+                self.dae_config.genomic_scores_db.conf_file is None:
+            logger.warning(
+                "scores are not configured...")
+            return Box({}, default_box=True)
+        conf_file = self.dae_config.genomic_scores_db.conf_file
+        if not os.path.exists(conf_file):
+            return Box({}, default_box=True)
         return GPFConfigParser.load_config(
-            self.dae_config.genomic_scores_db.conf_file, genomic_scores_schema
+            conf_file, genomic_scores_schema
         )
 
     @property  # type: ignore
@@ -123,7 +157,8 @@ class GPFInstance(object):
     def _variants_db(self):
         return VariantsDb(
             self.dae_config,
-            self.genomes_db,
+            self.reference_genome,
+            self.gene_models,
             self.genotype_storage_db,
         )
 
@@ -152,11 +187,22 @@ class GPFInstance(object):
     @cached
     def _autism_gene_profile_config(self):
         agp_config = self.dae_config.autism_gene_tool_config
-        if agp_config is None or not os.path.exists(agp_config.conf_file):
-            return None
+        config_filename = None
 
+        if agp_config is None:
+            config_filename = os.path.join(
+                self.dae_db_dir, "autismGeneTool.conf")
+            if not os.path.exists(config_filename):
+                return None
+        else:
+            if not os.path.exists(agp_config.conf_file):
+                return None
+            else:
+                config_filename = agp_config.conf_file
+
+        assert config_filename is not None
         return GPFConfigParser.load_config(
-            self.dae_config.autism_gene_tool_config.conf_file,
+            config_filename,
             autism_gene_tool_config
         )
 
@@ -354,10 +400,6 @@ class GPFInstance(object):
     def get_gene_info_gene_weights(self):
         return self._gene_info_config.gene_weights
 
-    # Genomes DB
-    def get_genome(self):
-        return self.genomes_db.get_genome()
-
     # Common reports
     def get_common_report(self, study_id):
         study = self.get_genotype_data(study_id)
@@ -499,4 +541,25 @@ class GPFInstance(object):
 
     # DAE config
     def get_selected_genotype_data(self):
+        if self.dae_config.gpfjs is None:
+            return None
         return self.dae_config.gpfjs.selected_genotype_data
+
+    def get_annotation_pipeline(self):
+        if self._annotation_pipeline is None:
+
+            if self.dae_config.annotation is None:
+                self._annotation_pipeline = build_annotation_pipeline(
+                    [], grr_repository=self.grr)
+                # TODO: write a test to check that this (or the correct
+                # version) works.
+            config_filename = self.dae_config.annotation.conf_file
+            if not os.path.exists(config_filename):
+                logger.warning(
+                    f"missing annotation configuration: {config_filename}")
+                return None
+            self._annotation_pipeline = \
+                build_annotation_pipeline(
+                    pipeline_config_file=config_filename,
+                    grr_repository=self.grr)
+        return self._annotation_pipeline

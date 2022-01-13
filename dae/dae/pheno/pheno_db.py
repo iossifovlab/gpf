@@ -1,3 +1,4 @@
+import os
 import math
 import logging
 from typing import Dict, Iterable, Any, List
@@ -1022,10 +1023,15 @@ class PhenoDb(object):
     def __init__(self, dae_config):
         super(PhenoDb, self).__init__()
         assert dae_config
+        if dae_config.phenotype_data is None or \
+                dae_config.phenotype_data.dir is None:
+            pheno_dir = os.path.join(
+                dae_config.conf_dir, "pheno")
+        else:
+            pheno_dir = dae_config.phenotype_data.dir
 
         configs = GPFConfigParser.load_directory_configs(
-            dae_config.phenotype_data.dir, pheno_conf_schema
-        )
+            pheno_dir, pheno_conf_schema)
 
         self.config = {
             config.phenotype_data.name: config.phenotype_data

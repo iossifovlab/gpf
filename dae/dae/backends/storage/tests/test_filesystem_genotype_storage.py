@@ -2,12 +2,13 @@ import pytest
 
 
 def test_build_backend(
-    filesystem_genotype_storage, quads_f1_vcf_config, genomes_db_2013
+    filesystem_genotype_storage, quads_f1_vcf_config, gpf_instance_2013
 ):
     assert filesystem_genotype_storage
 
     backend = filesystem_genotype_storage.build_backend(
-        quads_f1_vcf_config, genomes_db_2013
+        quads_f1_vcf_config, gpf_instance_2013.reference_genome,
+        gpf_instance_2013.gene_models
     )
 
     assert len(backend.families) == 2
@@ -16,12 +17,13 @@ def test_build_backend(
 
 
 def test_query_summary_variants(
-    filesystem_genotype_storage, quads_f1_vcf_config, genomes_db_2013
+    filesystem_genotype_storage, quads_f1_vcf_config, gpf_instance_2013
 ):
     assert filesystem_genotype_storage
 
     backend = filesystem_genotype_storage.build_backend(
-        quads_f1_vcf_config, genomes_db_2013
+        quads_f1_vcf_config, gpf_instance_2013.reference_genome,
+        gpf_instance_2013.gene_models
     )
 
     assert len(list(backend.query_summary_variants())) == 3

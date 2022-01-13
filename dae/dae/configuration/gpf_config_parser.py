@@ -8,11 +8,10 @@ import toml
 
 from box import Box
 
-from typing import List, Any, Dict, NamedTuple
+from typing import List, Any, Dict, Optional
 from cerberus import Validator
 
 from dae.utils.dict_utils import recursive_dict_update
-
 
 logger = logging.getLogger(__name__)
 
@@ -44,17 +43,36 @@ class FrozenBox(DefaultBox):
 
 
 class GPFConfigValidator(Validator):
+
     def _normalize_coerce_abspath(self, value: str) -> str:
         directory = self._config["conf_dir"]
+        if directory is None:
+            return value
         if not os.path.isabs(value):
             value = os.path.join(directory, value)
         return os.path.normpath(value)
+
+    # def _validate_is_aggregator(self, constraint, field, value):
+    #     "{'type': 'boolean'}"
+
+    #     if constraint is not True:
+    #         return
+    #     if value not in AGGREGATOR_CLASS_DICT.keys() and \
+    #             not value.startswith("join"):
+    #         self._error(
+    #             field, f"Invalid aggregator type supplied {value}"
+    #         )
+    #     join_regex = r"^join\(.+\)"
+    #     if value.startswith("join") and \
+    #             re.match(join_regex, value) is None:
+    #         self._error(field, "Incorrect join aggregator format")
 
 
 class GPFConfigParser:
 
     filetype_parsers: dict = {
         ".yaml": yaml.safe_load,
+        ".yml": yaml.safe_load,
         # ".json": json.loads,
         ".toml": toml.loads,
         ".conf": toml.loads,  # TODO FIXME Rename all .conf to .toml
@@ -74,49 +92,80 @@ class GPFConfigParser:
         with fsspec.open(filename, "r") as infile:
             return infile.read()
 
+    @staticmethod
+    def parse_and_interpolate(content: str, parser=yaml.safe_load) -> dict:
+        interpol_vars = parser(content).get("vars", {})
+
+        env_vars = {f"${key}": val for key, val in os.environ.items()}
+        interpol_vars = {
+            key: value % env_vars for key, value in interpol_vars.items()
+        }
+        interpol_vars.update(env_vars)
+
+        try:
+            interpolated_text = content % interpol_vars
+        except KeyError as ex:
+            raise ValueError(f"interpolation problems: {ex}")
+
+        config = parser(interpolated_text)
+        config.pop("vars", None)
+        return config
+
     @classmethod
-    def parse_config(cls, filename: str) -> dict:
+    def parse_and_interpolate_file(cls, filename: str) -> dict:
         try:
             ext = os.path.splitext(filename)[1]
-            assert ext in cls.filetype_parsers, \
-                f"Unsupported filetype {filename}!"
+            if ext not in cls.filetype_parsers:
+                raise ValueError(f"unsupported file type: {filename}")
+            parser = cls.filetype_parsers[ext]
+
             file_contents = cls._get_file_contents(filename)
-
-            env_vars = {f"${key}": val for key, val in os.environ.items()}
-
-            interpol_vars = cls.filetype_parsers[ext](file_contents).get(
-                "vars", {}
-            )
-            interpol_vars = {
-                key: value % env_vars for key, value in interpol_vars.items()
-            }
-            interpol_vars.update(env_vars)
-
-            interpolated_text = file_contents % interpol_vars
-            config = cls.filetype_parsers[ext](interpolated_text)
-            config.pop("vars", None)
-            return config  # type: ignore
+            return cls.parse_and_interpolate(file_contents, parser)
 
         except Exception as ex:
             logger.error(f"problems parsing config file <{filename}>")
             logger.error(ex)
             raise ex
 
-    @classmethod
+    @staticmethod
+    def merge_config(
+            config: Dict[str, Any],
+            default_config: Dict[str, Any] = None) -> Dict[str, Any]:
+        if default_config is not None:
+            config = recursive_dict_update(default_config, config)
+        return config
+
+    @staticmethod
+    def validate_config(
+            config: Dict[str, Any],
+            schema: dict,
+            conf_dir: str = None) -> dict:
+
+        if conf_dir is not None and "conf_dir" in schema:
+            config["conf_dir"] = conf_dir
+
+        validator = GPFConfigValidator(
+            schema, conf_dir=conf_dir
+        )
+        if not validator.validate(config):
+            if conf_dir:
+                raise ValueError(f"{conf_dir}: {validator.errors}")
+            else:
+                raise ValueError(f"{validator.errors}")
+        return validator.document
+
+    @staticmethod
     def process_config(
-        cls,
         config: Dict[str, Any],
         schema: dict,
         default_config: Dict[str, Any] = None,
-        config_filename: str = None,
+        conf_dir: str = None,
     ) -> FrozenBox:
-        validator = GPFConfigValidator(
-            schema, conf_dir=os.path.dirname(config_filename)
-        )
-        if default_config is not None:
-            config = recursive_dict_update(default_config, config)
-        assert validator.validate(config), (config_filename, validator.errors)
-        return FrozenBox(validator.document)
+
+        config = GPFConfigParser.merge_config(config, default_config)
+        config = GPFConfigParser.validate_config(config, schema, conf_dir)
+
+        return FrozenBox(config)
 
     @classmethod
     def load_config_raw(cls, filename: str) -> Dict[str, Any]:
@@ -130,23 +179,36 @@ class GPFConfigParser:
         cls,
         filename: str,
         schema: dict,
-        default_config_filename: str = None
+        default_config_filename: Optional[str] = None,
+        default_config: Optional[dict] = None,
     ) -> FrozenBox:
-        assert os.path.exists(filename), f"{filename} does not exist!"
-        config = cls.parse_config(filename)
-        default_config = None
+
+        if not os.path.exists(filename):
+            raise ValueError(f"{filename} does not exist!")
+        logger.debug(
+            f"loading config {filename} with default configuration file "
+            f"{default_config_filename};")
+
+        config = cls.parse_and_interpolate_file(filename)
         if default_config_filename:
-            default_config = cls.parse_config(default_config_filename)
-        return GPFConfigParser.process_config(
-            config, schema, default_config, filename
-        )
+            assert default_config is None
+            default_config = cls.parse_and_interpolate_file(
+                default_config_filename)
+
+        conf_dir = os.path.dirname(filename)
+        return cls.process_config(
+            config, schema, default_config, conf_dir)
 
     @classmethod
     def load_directory_configs(
             cls, dirname: str, schema: dict,
-            default_config_filename: str = None) -> List[Box]:
+            default_config_filename: Optional[str] = None,
+            default_config: Optional[dict] = None) -> List[Box]:
         return [
-            cls.load_config(config_path, schema, default_config_filename)
+            cls.load_config(
+                config_path, schema,
+                default_config_filename=default_config_filename,
+                default_config=default_config)
             for config_path in cls._collect_directory_configs(dirname)
         ]
 
