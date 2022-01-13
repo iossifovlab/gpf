@@ -33,23 +33,11 @@ export class GenesWeights extends BasePage {
     return cy.get('text#sumOfBarsLabel');
   }
 
-  dragLine(which: string) {
-    switch(which) {
-      case 'left': {
-        return cy.get('g[gpf-histogram-range-selector-line] > g > line').eq(0);
-      }
-      case 'right': {
-        return cy.get('g[gpf-histogram-range-selector-line] > g > line').eq(1)
-      }
-      default: {
-        return cy.get('g[gpf-histogram-range-selector-line] > g > line');
-      }
-    }
-  }
-
   moveSlider(which: string, dragValue, heightValue: number = 0) {
-    if(which === 'right')
+    if (which === 'right') {
       dragValue = -dragValue;
+    }
+
     cy.window().then((win) => {
       cy.get('g[gpf-histogram-range-selector-line] > g > line').eq(which === 'left' ? 0 : 1)
         .trigger("mousedown", 0, heightValue, { // start value, height value
@@ -70,21 +58,6 @@ export class GenesWeights extends BasePage {
             bubbles: true
         });
     });     
-  }
-
-  moveSliderTo(which: string, value: string, dragCoefficient: number = 50, checkIterations: number = 20) {
-    while(checkIterations-- > 0) {
-      this.getTextPartitionValue(which);
-      cy.get('@weightsPartitionValue').then(partitionValue => {
-        if(partitionValue.startsWith('~')) {
-          partitionValue = partitionValue.substring(1);
-        }
-        if(partitionValue === value) {
-          return;
-        }
-        this.moveSlider(which, dragCoefficient, 0);
-      });
-    }
   }
 
   getTextPartitionValue(which: string): void {
@@ -118,30 +91,3 @@ export class GenesWeights extends BasePage {
     });
   }
 }
-
-
-
-/*
-
-        cy.window().then((win) => {
-          cy.get('g[gpf-histogram-range-selector-line] > g > line').eq(0)
-              .trigger("mousedown", 100, 50, {
-                  view: win,
-                  which: 1,
-                  force: true,
-                  bubbles: true
-              })
-              .trigger("mousemove", 200, 50, {
-                  which: 1,
-                  force: true,
-                  bubbles: true
-              })
-              .trigger("mouseup", 200, 50, {
-                  which: 1,
-                  force: true,
-                  view: win,
-                  bubbles: true
-              });
-          });
-
-*/

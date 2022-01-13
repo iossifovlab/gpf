@@ -112,7 +112,7 @@ describe('Enrichment tool common tests', () => {
 
 });
 
-describe('Enrichment tool data tests', () => {
+describe.only('Enrichment tool data tests', () => {
   const page = new EnrichmentToolPage();
 
   before(() => {
@@ -131,7 +131,7 @@ describe('Enrichment tool data tests', () => {
     const genesBlockPage = new GenesBlockPage();
     genesBlockPage.geneSymbolsButton.click();
 
-    parse_options(getDataset('gene_symbol_CAMSAP1').request);
+    parseOptions(getDataset('gene_symbol_CAMSAP1').request);
     page.enrichmentTestButton.click();
     page.table.should('be.visible');
     
@@ -150,7 +150,7 @@ describe('Enrichment tool data tests', () => {
     const genesBlockPage = new GenesBlockPage();
     genesBlockPage.geneSetsButton.click();
 
-    parse_options(getDataset('gene_symbol_pnas_2015_set').request);
+    parseOptions(getDataset('gene_symbol_pnas_2015_set').request);
     page.enrichmentTestButton.click();
 
     cy.wrap(page.getTableData('affected')).then(() => {
@@ -163,7 +163,7 @@ describe('Enrichment tool data tests', () => {
       cy.get('@tableData').should('deep.equal', getDataset('gene_symbol_pnas_2015_set', 'LGDs', 'unaffected').data);
     });
 
-    parse_options(getDataset('gene_symbols_iossifov_affected').request);
+    parseOptions(getDataset('gene_symbols_iossifov_affected').request);
     page.enrichmentTestButton.click();
     cy.wrap(page.getTableData('affected')).then(() => {
       cy.get('@tableData').should('deep.equal', getDataset('gene_symbols_iossifov_affected').data);
@@ -172,7 +172,7 @@ describe('Enrichment tool data tests', () => {
       cy.get('@tableData').should('deep.equal', getDataset('gene_symbols_iossifov_affected', 'Missense').data);
     });
 
-    parse_options(new request_options('gene_sets', {
+    parseOptions(new RequestOptions('gene_sets', {
       implicit: true,
       denovo_collection_sets: [
         {
@@ -184,7 +184,7 @@ describe('Enrichment tool data tests', () => {
     }, null));
     page.findErrorAlertInComponent('gpf-gene-sets').contains('Please select a gene');
 
-    parse_options(new request_options('gene_sets', {
+    parseOptions(new RequestOptions('gene_sets', {
       set: 'Denovo',
       study: 'LGDs (176)',
       denovo_collection_sets: [
@@ -203,13 +203,13 @@ describe('Enrichment tool data tests', () => {
 
   it('should display affected and unaffected variants based on gene symbol and select models', () => {
 
-    parse_options(getDataset('gene_symbol_without_model_LGDs').request);
+    parseOptions(getDataset('gene_symbol_without_model_LGDs').request);
     page.enrichmentTestButton.click();
     cy.wrap(page.getTableData('affected')).then(() => {
       cy.get('@tableData').should('deep.equal', getDataset('gene_symbol_without_model_LGDs').data);
     });
 
-    parse_options(getDataset('gene_symbol_and_models_LGDs').request);
+    parseOptions(getDataset('gene_symbol_and_models_LGDs').request);
     page.enrichmentTestButton.click();
 
     cy.wrap(page.getTableData('affected')).then(() => {
@@ -217,7 +217,7 @@ describe('Enrichment tool data tests', () => {
     });
   });
 
-  it.skip('should move gene weights slider', () => { /// inconsistent data model
+  it.only('should move gene weights slider', () => { /// inconsistent data model
     const genesBlockPage = new GenesBlockPage();
     genesBlockPage.geneWeightsButton.click();
 
@@ -228,17 +228,19 @@ describe('Enrichment tool data tests', () => {
         right: {count: 0, percent: 0}
       }
     }).as('WeightsOptions');
-    parse_options(getDataset('gene_weights_sfari_gene_score_right').request);
+    parseOptions(getDataset('gene_weights_sfari_gene_score_right').request);
     cy.wait('@WeightsOptions');
     cy.wait('@WeightsOptions'); // That's bug from the GPFJS site, many excess requests are made with gene weights
+    cy.wait(1000); // fix state bug
     page.enrichmentTestButton.click();
 
     cy.wrap(page.getTableData('affected')).then(() => {
       cy.get('@tableData').should('deep.equal', getDataset('gene_weights_sfari_gene_score_right').data);
     });
 
-    parse_options(getDataset('gene_weights_sfari_gene_score_left', 'LGDs', 'unaffected').request);
+    parseOptions(getDataset('gene_weights_sfari_gene_score_left', 'LGDs', 'unaffected').request);
     cy.wait('@WeightsOptions'); // That's bug from the GPFJS site, many excess requests are made with gene weights
+    cy.wait(1000); // fix state bug
     page.enrichmentTestButton.click();
 
     cy.wrap(page.getTableData('unaffected')).then(() => {
@@ -247,53 +249,55 @@ describe('Enrichment tool data tests', () => {
   });
 });
 
-class request_options {
+class RequestOptions {
   public mode: string;
   public options: JSON;
-  public models_selected?: string[];
+  public modelsSelected?: string[];
 
-  constructor(mode, options, models_selected: string[]) {
+  constructor(mode, options, modelsSelected: string[]) {
     this.mode = mode;
     this.options = options;
-    this.models_selected = models_selected;
+    this.modelsSelected = modelsSelected;
   }
 }
 
-const dataset = [
+const data = [
   {
-    name: 'gene_symbol_CAMSAP1',
-    affected: 'affected',
-    request: new request_options('gene_symbols', {
-      gene_symbols: 'CAMSAP1'
-    }, null),
-    data: ['LGDs', '363', '0', '0.05', '1.00', '27', '0',	'3.92e-3' , '1.00', '306', '0', '0.04', '1.00', '68', '0', '9.88e-3' ,'1.00']
+    id: 'gene_symbol_CAMSAP1',
+    affectedStatus: 'affected',
+    request: new RequestOptions(
+      'gene_symbols',
+      {gene_symbols: 'CAMSAP1'},
+      null
+    ),
+    data: ['LGDs', '363', '0', '0.05', '1.00', '27', '0', '3.92e-3', '1.00', '306', '0', '0.04', '1.00', '68', '0', '9.88e-3', '1.00']
   },
   {
-    name: 'gene_symbol_CAMSAP1',
-    affected: 'affected',
-    request: new request_options(null, null, null),
-    data: ['Missense', '1,510', '1', '0.22',	'0.197', '149', '0',	'0.02',	'1.00',	'1,307',	'1',	'0.19',	'0.173', '246', '0', '0.04', '1.00']
+    id: 'gene_symbol_CAMSAP1',
+    affectedStatus: 'affected',
+    request: new RequestOptions(null, null, null),
+    data: ['Missense', '1,510', '1', '0.22', '0.197', '149', '0', '0.02', '1.00', '1,307', '1', '0.19', '0.173', '246', '0', '0.04', '1.00']
   },
   {
-    name: 'gene_symbol_and_models_LGDs',
-    affected: 'affected',
-    request: new request_options('gene_symbols', {
+    id: 'gene_symbol_and_models_LGDs',
+    affectedStatus: 'affected',
+    request: new RequestOptions('gene_symbols', {
       gene_symbols: 'CAMSAP1'
     }, ['samocha_background_model', 'enrichment_gene_counting']),
     data: ['LGDs', '363', '0', '0.03', '1.00', '27', '0', '1.89e-3', '1.00', '306', '0', '0.02', '1.00', '68', '0', '3.45e-3', '1.00']
   },
   {
-    name: 'gene_symbol_without_model_LGDs',
-    affected: 'affected',
-    request: new request_options('gene_symbols', {
+    id: 'gene_symbol_without_model_LGDs',
+    affectedStatus: 'affected',
+    request: new RequestOptions('gene_symbols', {
       gene_symbols: 'CAMSAP1'
     }, ['coding_len_background_model', 'enrichment_events_counting']),
     data: ['LGDs', '392', '0', '0.06', '1.00', '27', '0', '3.92e-3', '1.00', '321', '0', '0.05', '1.00', '71', '0', '0.01', '1.00']
   },
   {
-    name: 'gene_symbols_iossifov_affected',
-    affected: 'affected',
-    request: new request_options('gene_sets', {
+    id: 'gene_symbols_iossifov_affected',
+    affectedStatus: 'affected',
+    request: new RequestOptions('gene_sets', {
       set: 'Denovo',
       study: 'LGDs (363)',
       denovo_collection_sets: [
@@ -307,41 +311,41 @@ const dataset = [
     data: ['LGDs', '363', '363', '7.81', '0.00', '27', '27', '0.58', '0.00', '306', '306', '6.75', '0.00', '68', '68', '1.06', '0.00']
   },
   {
-    name: 'gene_symbols_iossifov_affected',
-    affected: 'affected',
-    request: new request_options(null, null, null),
+    id: 'gene_symbols_iossifov_affected',
+    affectedStatus: 'affected',
+    request: new RequestOptions(null, null, null),
     data: ['Missense', '1,510', '75', '54.72', '0.0107', '149', '16', '5.40', '0.0003', '1,307', '67', '47.28', '0.0079', '246', '12', '7.44', '0.152']
   },
   {
-    name: 'gene_symbol_iossifov_unaffected',
-    affected: 'affected',
-    request: new request_options(null, null, null),
+    id: 'gene_symbol_iossifov_unaffected',
+    affectedStatus: 'affected',
+    request: new RequestOptions(null, null, null),
     data: ['LGDs', '363', '8', '6.13', '0.4108', '27', '1', '0.46', '0.3686', '306', '7', '5.17', '0.3708', '68', '1', '1.15', '1.00']
   },
   {
-    name: 'gene_symbol_pnas_2015_set',
-    affected: 'affected',
-    request: new request_options('gene_sets', {
+    id: 'gene_symbol_pnas_2015_set',
+    affectedStatus: 'affected',
+    request: new RequestOptions('gene_sets', {
       set: 'Main',
       study: 'autism candidates from Iossifov',
     }, null),
     data: ['LGDs', '363', '97', '12.87', '2.48e-55', '27', '22', '0.96', '8.48e-28', '306', '78', '10.85', '3.29e-43', '68', '29', '2.41', '3.11e-24']
   },
   {
-    name: 'gene_symbol_pnas_2015_set',
-    affected: 'affected',
-    request: new request_options(null, null, null),
+    id: 'gene_symbol_pnas_2015_set',
+    affectedStatus: 'affected',
+    request: new RequestOptions(null, null, null),
     data: ['Missense', '1,510', '114', '53.56', '1.71e-13', '149', '34', '5.28', '3.90e-18', '1,307', '100', '46.36', '2.30e-12', '246', '22', '8.73', '7.94e-5']
   },
   {
-    name: 'gene_symbol_pnas_2015_set',
-    affected: 'unaffected',
-    request: new request_options(null, null, null),
+    id: 'gene_symbol_pnas_2015_set',
+    affectedStatus: 'unaffected',
+    request: new RequestOptions(null, null, null),
     data: ['LGDs', '176', '4', '6.24', '0.537', '3', '0', '0.11', '1.00', '84', '2', '2.98', '0.7719', '94', '2', '3.33', '0.7763']
   }, {
-    name: 'gene_weights_sfari_gene_score_right',
-    affected: 'affected',
-    request: new request_options('gene_weights', {
+    id: 'gene_weights_sfari_gene_score_right',
+    affectedStatus: 'affected',
+    request: new RequestOptions('gene_weights', {
       scroll: [{
         position: 'right',
         value: 150
@@ -349,9 +353,9 @@ const dataset = [
     }, null),
     data: ['LGDs', '363', '107', '20.74', '5.86e-46', '27', '27', '1.54', '2.73e-34', '306', '82', '17.48', '2.36e-32', '68', '36', '3.89', '7.20e-27']
   }, {
-    name: 'gene_weights_sfari_gene_score_left',
-    affected: 'unaffected',
-    request: new request_options('gene_weights', {
+    id: 'gene_weights_sfari_gene_score_left',
+    affectedStatus: 'unaffected',
+    request: new RequestOptions('gene_weights', {
       scroll: [{
         position: 'left',
         value: 150
@@ -361,10 +365,11 @@ const dataset = [
   }
 ];
 
-function parse_options(request: request_options) {
+function parseOptions(request: RequestOptions) {
   const page = new EnrichmentToolPage();
   const genesBlockPage = new GenesBlockPage();
   const weights = new GenesWeights();
+
   switch(request.mode) {
     case 'gene_symbols': {
       genesBlockPage.geneSymbolsButton.click();
@@ -432,23 +437,22 @@ function parse_options(request: request_options) {
       throw new Error('Unknown mode selected: ' + request.mode);
     }
   }
-  if(request.models_selected !== null && request.models_selected.length === 2) {
+  if (request.modelsSelected !== null && request.modelsSelected.length === 2) {
     page.enrichmentModelsBlock.within(() => {
       cy.get('a#ngb-nav-4').click();
     });
-    request.models_selected.forEach((element, index) => {
+    request.modelsSelected.forEach((element, index) => {
       page.enrichmentModelsSelect((index === 0) ? 'background' : 'counting', element);
     });
-  } else if(request.models_selected !== null && request.models_selected[0] === 'default' && request.models_selected.length === 1) {
+  } else if (request.modelsSelected !== null && request.modelsSelected[0] === 'default' && request.modelsSelected.length === 1) {
     page.enrichmentModelsBlock.within(() => {
       cy.get('a#ngb-nav-3').click();
     });
   }
 }
 
-function getDataset(name: string, type: string = 'LGDs', affected: string = 'affected') {
-
-  return dataset.filter(match => {
-    return (match.name === name && match.data[0] === type)
-  }).find(match => { return (match.affected === affected) });
+function getDataset(id: string, type: string = 'LGDs', affected: string = 'affected') {
+  return data.filter(match => {
+    return (match.id === id && match.data[0] === type)
+  }).find(match => { return (match.affectedStatus === affected) });
 }
