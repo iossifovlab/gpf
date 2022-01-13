@@ -63,60 +63,42 @@ class AutismGeneProfileDB:
             row = connection.execute(s).fetchone()
             return self.agp_from_table_row(row)
 
-    def agp_from_table_row(self, row):
+    def agp_from_table_row(self, row) -> dict:
         config = self.configuration
-        gene_symbol = row["symbol_name"]
-        genomic_scores = dict()
+        result = dict()
+
+        result["geneSymbol"] = row["symbol_name"]
         for gs_category in config["genomic_scores"]:
             category_name = gs_category["category"]
-            genomic_scores[category_name] = dict()
             for score in gs_category["scores"]:
                 score_name = score["score_name"]
-                full_score_id = f"{category_name}_{score_name}"
-                genomic_scores[category_name][score_name] = {
-                    "value": row[full_score_id],
-                    "format": score["format"]
-                }
+                result['.'.join([category_name, score_name])] = \
+                    row[f"{category_name}_{score_name}"]
 
-        gene_sets_categories = config["gene_sets"]
-        gene_sets = []
-        for gs_category in gene_sets_categories:
+        for gs_category in config["gene_sets"]:
             category_name = gs_category["category"]
             for gene_set in gs_category["sets"]:
                 set_id = gene_set["set_id"]
                 collection_id = gene_set["collection_id"]
                 full_gs_id = f"{collection_id}_{set_id}"
-                if row[full_gs_id] == 1:
-                    gene_sets.append(full_gs_id)
-
-        variant_counts = {}
+                result['.'.join([category_name, set_id])] = \
+                    bool(row[full_gs_id])
+        
         for dataset_id, filters in config["datasets"].items():
-            current_counts = dict()
             for ps in filters["person_sets"]:
                 person_set = ps["set_name"]
                 for statistic in filters["statistics"]:
                     statistic_id = statistic["id"]
-                    counts = current_counts.get(person_set)
-                    if not counts:
-                        current_counts[person_set] = dict()
-                        counts = current_counts[person_set]
-
                     count = row[
                         f"{dataset_id}_{person_set}_{statistic_id}"
                     ]
                     rate = row[
                         f"{dataset_id}_{person_set}_{statistic_id}_rate"
                     ]
-                    counts[statistic_id] = {
-                        "count": count,
-                        "rate": rate
-                    }
-            variant_counts[dataset_id] = current_counts
+                    result['.'.join([dataset_id, person_set, statistic_id])] = \
+                        f"{count} ({round(rate, 2)})"
 
-        return AGPStatistic(
-            gene_symbol, gene_sets,
-            genomic_scores, variant_counts
-        )
+        return result
 
     def _transform_sort_by(self, sort_by):
         if sort_by.startswith("gene_set_"):

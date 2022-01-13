@@ -21,9 +21,6 @@ class ConfigurationView(QueryBaseView):
             if dataset["id"] == category:
                 return "datasets"
 
-    def transform_config(self, agp_config):
-        pass
-
     def get(self, request):
         configuration = self.gpf_instance.get_agp_configuration()
         if configuration is None:
@@ -32,6 +29,13 @@ class ConfigurationView(QueryBaseView):
         response = {"config": []}
         if len(configuration) == 0:
             return Response(response)
+
+        response["config"].append({
+            "id": "geneSymbol",
+            "displayName": "Gene",
+            "visible": True,
+            "columns": []
+        })
 
         for category in configuration["gene_sets"]:
             response["config"].append({
@@ -109,8 +113,7 @@ class ProfileView(QueryBaseView):
         agp = self.gpf_instance.get_agp_statistic(gene_symbol)
         if not agp:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        return Response(agp.to_json())
+        return Response(agp)
 
 
 class QueryProfilesView(QueryBaseView):
@@ -122,11 +125,8 @@ class QueryProfilesView(QueryBaseView):
         symbol_like = data.get("symbol", None)
         sort_by = data.get("sortBy", None)
         order = data.get("order", None)
-
         agps = self.gpf_instance.query_agp_statistics(
             page, symbol_like, sort_by, order)
-
         if agps is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        return Response([agp.to_json() for agp in agps])
+        return Response(agps)
