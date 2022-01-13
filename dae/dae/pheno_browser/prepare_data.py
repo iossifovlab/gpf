@@ -111,7 +111,7 @@ class PreparePhenoBrowserBase(object):
             measure.instrument_name
         )
         if not os.path.exists(outdir):
-            os.mkdir(outdir)
+            os.makedirs(outdir, exist_ok=True)
 
         filepath = os.path.join(outdir, filename)
         return filepath

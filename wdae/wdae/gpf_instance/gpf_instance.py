@@ -1,5 +1,6 @@
 import logging
 import math
+import os
 from typing import Optional, List, Dict
 from threading import Lock
 
@@ -20,6 +21,7 @@ from dae.enrichment_tool.event_counters import CounterBase
 from enrichment_api.enrichment_builder import \
     EnrichmentBuilder, RemoteEnrichmentBuilder
 from dae.utils.helpers import isnan
+from dae.utils.dae_utils import get_pheno_browser_images_dir
 
 
 logger = logging.getLogger(__name__)
@@ -206,7 +208,8 @@ class WGPFInstance(GPFInstance):
 
     def get_pheno_images_url(self, study_wrapper):
         config = self.get_pheno_config(study_wrapper)
-        return config.browser_images_url
+        images_dir = get_pheno_browser_images_dir()
+        return os.path.join(images_dir, config.name)
 
     def get_measure_description(self, study_wrapper, measure_id):
         logger.warning("WARNING: Using is_remote")

@@ -89,6 +89,7 @@ def verify_phenotype_data_name(input_name):
 
 def generate_phenotype_data_config(args, regressions):
     dbfile = os.path.join("%(wd)s", os.path.basename(args.pheno_db_filename))
+    pheno_db_path = os.path.dirname("%(wd)s")
     browser_dbfile = os.path.join(
         "%(wd)s", "browser", "{}_browser.db".format(args.pheno_name)
     )
@@ -98,8 +99,9 @@ def generate_phenotype_data_config(args, regressions):
             "name": args.pheno_name,
             "dbfile": dbfile,
             "browser_dbfile": browser_dbfile,
-            "browser_images_dir": os.path.join("%(wd)s", "browser", "images"),
-            "browser_images_url": f"/static/{args.pheno_name}/browser/images/",
+            "browser_images_dir": os.path.join(
+                pheno_db_path, "images", args.pheno_name),
+            "browser_images_url": f"/static/images/{args.pheno_name}/",
         },
     }
     if regressions:

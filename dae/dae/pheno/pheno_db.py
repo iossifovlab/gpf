@@ -17,6 +17,7 @@ from dae.pheno.db import DbManager
 from dae.pheno.common import MeasureType
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
+from dae.utils.dae_utils import get_pheno_db_dir
 
 from dae.variants.attributes import Sex, Status, Role
 
@@ -894,9 +895,7 @@ class PhenotypeGroup(PhenotypeData):
         self.families = FamiliesData.combine_studies(self.phenotype_data)
         instruments, measures = self._merge_instruments(
             [ph.instruments for ph in self.phenotype_data])
-        print(instruments)
         self._instruments.update(instruments)
-        print(self._instruments)
 
         self._measures.update(measures)
 
@@ -908,12 +907,25 @@ class PhenotypeGroup(PhenotypeData):
 
         for pheno_instruments in phenos_instruments:
             for instrument_name, instrument in pheno_instruments.items():
-                assert instrument_name not in group_instruments
-                group_instruments[instrument_name] = instrument
-                group_measures.update({
-                    f"{instrument_name}.{name}": measure
-                    for name, measure in instrument.measures.items()
-                })
+                if instrument_name not in group_instruments:
+                    group_instrument = Instrument(
+                        instrument_name
+                    )
+                else:
+                    group_instrument = group_instruments[instrument_name]
+
+                for name, measure in instrument.measures.items():
+                    full_name = f"{instrument_name}.{name}"
+                    if full_name in group_measures:
+                        logger.warn(
+                            f"{full_name} measure duplication! ignoring"
+                        )
+                        del group_instrument.measures[full_name]
+                        del group_measures[full_name]
+                        continue
+                    group_instrument.measures[full_name] = measure
+                    group_measures[full_name] = measure
+                group_instruments[instrument_name] = group_instrument
 
         # group_instruments = {}
         # group_measures = {}
@@ -1034,8 +1046,12 @@ class PhenoDb(object):
         super(PhenoDb, self).__init__()
         assert dae_config
 
+        pheno_data_dir = get_pheno_db_dir(
+            no_environ_override=dae_config.phenotype_data.dir
+        )
+
         configs = GPFConfigParser.load_directory_configs(
-            dae_config.phenotype_data.dir, pheno_conf_schema
+            pheno_data_dir, pheno_conf_schema
         )
 
         self.config = {
