@@ -362,3 +362,101 @@ def test_vcf_loader_params(
 #     assert multi_vcf_loader is not None
 #     vs = list(multi_vcf_loader.family_variants_iterator())
 #     assert len(vs) == 30
+
+
+def test_collect_filenames_local(fixture_dirname):
+    vcf_filenames = [fixture_dirname("backends/multivcf_split[vc].vcf")]
+
+    params = {
+        "vcf_chromosomes": "1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;X;Y"
+    }
+    all_filenames, _ = VcfLoader._collect_filenames(params, vcf_filenames)
+
+    assert len(all_filenames) == 2
+    assert all_filenames[0] == fixture_dirname("backends/multivcf_split1.vcf")
+    assert all_filenames[1] == fixture_dirname("backends/multivcf_split2.vcf")
+
+
+def test_collect_filenames_s3(fixture_dirname, s3, mocker):
+    s3.put(fixture_dirname("backends/multivcf_split1.vcf"),
+           "s3://test-bucket/dir/multivcf_split1.vcf")
+    s3.put(fixture_dirname("backends/multivcf_split2.vcf"),
+           "s3://test-bucket/dir/multivcf_split2.vcf")
+
+    mocker.patch("dae.backends.vcf.loader.url_to_fs", return_value=(s3, None))
+
+    vcf_filenames = ["s3://test-bucket/dir/multivcf_split[vc].vcf"]
+
+    params = {
+        "vcf_chromosomes": "1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;X;Y"
+    }
+    all_filenames, _ = VcfLoader._collect_filenames(params, vcf_filenames)
+
+    assert len(all_filenames) == 2
+    assert all_filenames[0] == "s3://test-bucket/dir/multivcf_split1.vcf"
+    assert all_filenames[1] == "s3://test-bucket/dir/multivcf_split2.vcf"
+
+
+# Code copy/pasted from
+# https://github.com/fsspec/s3fs/blob/main/s3fs/tests/test_s3fs.py#L67
+port = 5555
+endpoint_uri = "http://127.0.0.1:%s/" % port
+
+
+@pytest.fixture()
+def s3_base():
+    import time
+    import requests
+
+    # writable local S3 system
+    import shlex
+    import subprocess
+
+    try:
+        # should fail since we didn't start server yet
+        r = requests.get(endpoint_uri)
+    except:  # NOQA
+        pass
+    else:
+        if r.ok:
+            raise RuntimeError("moto server already up")
+    if "AWS_SECRET_ACCESS_KEY" not in os.environ:
+        os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
+    if "AWS_ACCESS_KEY_ID" not in os.environ:
+        os.environ["AWS_ACCESS_KEY_ID"] = "foo"
+    proc = subprocess.Popen(shlex.split("moto_server s3 -p %s" % port))
+
+    timeout = 5
+    while timeout > 0:
+        try:
+            r = requests.get(endpoint_uri)
+            if r.ok:
+                break
+        except:  # NOQA
+            pass
+        timeout -= 0.1
+        time.sleep(0.1)
+    yield
+    proc.terminate()
+    proc.wait()
+
+
+def get_boto3_client():
+    from botocore.session import Session
+
+    # NB: we use the sync botocore client for setup
+    session = Session()
+    return session.create_client("s3", endpoint_url=endpoint_uri)
+
+
+@pytest.fixture()
+def s3(s3_base):
+    from s3fs.core import S3FileSystem
+
+    client = get_boto3_client()
+    client.create_bucket(Bucket='test-bucket', ACL="public-read")
+
+    S3FileSystem.clear_instance_cache()
+    s3 = S3FileSystem(anon=False, client_kwargs={"endpoint_url": endpoint_uri})
+    s3.invalidate_cache()
+    yield s3
