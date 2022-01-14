@@ -68,12 +68,14 @@ class AutismGeneProfileDB:
         result = dict()
 
         result["geneSymbol"] = row["symbol_name"]
+
         for gs_category in config["genomic_scores"]:
             category_name = gs_category["category"]
             for score in gs_category["scores"]:
                 score_name = score["score_name"]
+                value = row[f"{category_name}_{score_name}"]
                 result['.'.join([category_name, score_name])] = \
-                    row[f"{category_name}_{score_name}"]
+                    value if value is not None else "-"
 
         for gs_category in config["gene_sets"]:
             category_name = gs_category["category"]

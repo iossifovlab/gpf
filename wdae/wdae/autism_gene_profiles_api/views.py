@@ -43,7 +43,7 @@ class ConfigurationView(QueryBaseView):
                 "displayName": category["display_name"],
                 "visible": True,
                 "columns": [{
-                    "id": gene_set["set_id"],
+                    "id": f"{category['category']}.{gene_set['set_id']}",
                     "displayName": gene_set["set_id"],
                     "visible": True,
                     "columns": []
@@ -56,7 +56,7 @@ class ConfigurationView(QueryBaseView):
                 "displayName": category["display_name"],
                 "visible": True,
                 "columns": [{
-                    "id": genomic_score["score_name"],
+                    "id": f"{category['category']}.{genomic_score['score_name']}",
                     "displayName": genomic_score["score_name"],
                     "visible": True,
                     "columns": []
@@ -95,7 +95,7 @@ class ConfigurationView(QueryBaseView):
                         "displayName": set_name,
                         "visible": True,
                         "columns": [
-                            { "id": statistic.id,
+                            { "id": f"{dataset_id}.{set_id}.{statistic.id}",
                               "displayName": statistic.display_name,
                               "visible": True,
                               "columns": list() }
