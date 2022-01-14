@@ -18,13 +18,13 @@ storage:
     dir: "%(wd)s/work/"
     hdfs:
       base_dir: /tmp/test_data
-      host: impala
+      host: localhost
       port: 8020
       replication: 1
     impala:
       db: "impala_storage_test_db"
       hosts:
-      - impala
+      - localhost
       pool_size: 3
       port: 21050
 
@@ -33,13 +33,13 @@ storage:
     dir: /tmp/test_impala/studies
     hdfs:
       base_dir: /tmp/test_data
-      host: impala
+      host: localhost
       port: 8020
       replication: 1
     impala:
       db: impala_test_db
       hosts:
-      - impala
+      - localhost
       pool_size: 1
       port: 21050
 
