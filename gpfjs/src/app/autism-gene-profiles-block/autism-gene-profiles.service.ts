@@ -19,6 +19,10 @@ export class AutismGeneProfilesService {
     private config: ConfigService
   ) {}
 
+  public getConfigNew(): Observable<object> {
+    return this.http.get(this.config.baseUrl + this.configUrl);
+  }
+
   public getConfig(): Observable<AgpConfig> {
     return this.http
       .get(this.config.baseUrl + this.configUrl).pipe(

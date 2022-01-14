@@ -1,6 +1,6 @@
-<div class="table-container">
+<div *ngIf="config" class="table-container">
   <div class="header main-header">
-    <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: config.columns, headerDepth: 0 }"></ng-container>
+    <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: config.config, headerDepth: 0 }"></ng-container>
   </div>
 
   <ng-template #recursiveListTmpl let-columns="columns" let-headerDepth="headerDepth">
@@ -11,15 +11,15 @@
       <div class="cell header-title-cell"
         [ngClass]="{ leaf: column.columns.length === 0 }"
         [ngStyle]="{ 'top': headerDepth + 'px' }">
-        {{ column.id }}
+        {{ column.displayName }}
       </div>
 
       <div class="header" *ngIf="column.columns.length > 0">
         <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: column.columns, headerDepth: headerDepth + 25 }"></ng-container>
       </div>
       <ng-container *ngIf="column.columns.length === 0">
-        <div class="cell" *ngFor="let row of rows">
-          {{ row[column.index] }}
+        <div class="cell" *ngFor="let row of genes">
+          {{ row[column.id] }}
         </div>
       </ng-container>
     </div>
