@@ -179,9 +179,6 @@ def main(argv, gpf_instance=None):
 
             if summary_index % 10000 == 0:
                 print(f"progress {argv.region}: {summary_index}")
-            
-            if summary_index > 1000:
-                break
 
 
 if __name__ == "__main__":
