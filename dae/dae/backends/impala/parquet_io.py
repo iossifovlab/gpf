@@ -15,6 +15,7 @@ from box import Box
 import numpy as np
 
 import pyarrow as pa
+from pyarrow import fs as pa_fs
 
 import configparser
 import fsspec
@@ -522,7 +523,7 @@ class VariantsParquetWriter:
 
         if filename not in self.data_writers:
             if urlparse(filename).scheme:
-                filesystem, path = pa.fs.FileSystem.from_uri(filename)
+                filesystem, path = pa_fs.FileSystem.from_uri(filename)
             else:
                 filesystem, path = None, filename
 
