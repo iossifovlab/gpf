@@ -7,8 +7,34 @@ import os
 
 import pysam
 
+from contextlib import closing
+from functools import partial
+
+from dae.utils.regions import Region
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.variants.attributes import TransmissionType
 from dae.variants.variant import SummaryVariantFactory
+
+
+def info_get(info, column=None):
+    v = info.get(column)
+    if v is None:
+        return ""
+    return v
+
+
+def info_get_allele(info, column=None):
+    v = info.get(column)
+    if v is None:
+        return ""
+    return v[0]
+
+
+def info_get_allele_percent(info, column=None):
+    v = info.get(column)
+    if v is None:
+        return ""
+    return float(v[0]) * 100.0
 
 
 def main(argv, gpf_instance=None):
@@ -54,13 +80,10 @@ def main(argv, gpf_instance=None):
     if gpf_instance is None:
         gpf_instance = GPFInstance()
 
-    assert os.path.exists(argv.vcf_filename)
-    vcf = pysam.VariantFile(argv.vcf_filename)
-
     assert argv.columns is not None
     info_columns = [c.strip() for c in argv.columns.split(",")]
     header = [
-        "CHROM",
+        "#CHROM",
         "POS",
         "chrom",
         "position",
@@ -72,16 +95,61 @@ def main(argv, gpf_instance=None):
     ]
     header.extend(info_columns)
 
-    with open(argv.output, "wt") as output:
+    region = None
+    if argv.region:
+        if ":" in argv.region:
+            region = Region.from_str(argv.region)
+        elif "-" in argv.region:
+            parts = argv.region.split("-")
+            if len(parts) == 3:
+                region = Region.from_str(f"{parts[0]}:{parts[1]}-{parts[2]}")
+            elif len(parts) == 2:
+                region = Region.from_str(f"{parts[0]}:{parts[1]}")
+            else:
+                raise ValueError(f"unexpected region format {argv.region}")
+    print(f"processing region: {region}")
+
+    assert os.path.exists(argv.vcf_filename)
+    with closing(pysam.VariantFile(argv.vcf_filename)) as vcf, \
+            open(argv.output, "wt") as output:
+
+        header_info = vcf.header.info
+        accessors = {}
+        for column in info_columns:
+            if column not in header_info and column.endswith("_percent"):
+                base_column = column[:-8]
+                assert base_column in header_info
+                accessors[column] = partial(
+                    info_get_allele_percent, column=base_column)
+
+            elif header_info[column].number == 1:
+                accessors[column] = partial(info_get, column=column)
+
+            elif header_info[column].number == "A":
+                accessors[column] = partial(info_get_allele, column=column)
+
+            else:
+                raise ValueError("unexpected info number type")
+
+        if region is None:
+            vcf_iterator = vcf.fetch()
+        else:
+            vcf_iterator = vcf.fetch(region.chrom, region.begin, region.end)
+
         output.write("\t".join(header))
         output.write("\n")
 
-        for summary_index, vcf_variant in enumerate(vcf(argv.region)):
+        for summary_index, vcf_variant in enumerate(vcf_iterator):
+            assert len(vcf_variant.alts) == 1, vcf_variant
+
             sv = SummaryVariantFactory.summary_variant_from_vcf(
-                vcf_variant, summary_index)
+                vcf_variant, summary_index,
+                transmission_type=TransmissionType.transmitted)
+
             sa = sv.alt_alleles[0]
 
             assert len(vcf_variant.alts) == 1
+
             line = [
                 vcf_variant.chrom,
                 vcf_variant.pos,
@@ -93,18 +161,10 @@ def main(argv, gpf_instance=None):
                 vcf_variant.alts[0],
                 vcf_variant.id,
             ]
+
             for info_id in info_columns:
-                value = None
-                if info_id.endswith("_percent"):
-                    iid = info_id[:-8]
-                    ivalue = vcf_variant.info.get(iid)
-                    if ivalue:
-                        value = float(ivalue[0])
-                        value = value*100.0
-                else:
-                    ivalue = vcf_variant.info.get(info_id)
-                    if ivalue:
-                        value = float(ivalue[0])
+                accessor = accessors[info_id]
+                value = accessor(vcf_variant.info)
                 line.append(value)
 
             outline = []
@@ -119,6 +179,9 @@ def main(argv, gpf_instance=None):
 
             if summary_index % 10000 == 0:
                 print(f"progress {argv.region}: {summary_index}")
+            
+            if summary_index > 1000:
+                break
 
 
 if __name__ == "__main__":
