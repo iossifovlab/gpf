@@ -142,6 +142,9 @@ def main(argv, gpf_instance=None):
         for summary_index, vcf_variant in enumerate(vcf_iterator):
             assert len(vcf_variant.alts) == 1, vcf_variant
 
+            if not region.isin(vcf_variant.chrom, vcf_variant.pos):
+                continue
+
             sv = SummaryVariantFactory.summary_variant_from_vcf(
                 vcf_variant, summary_index,
                 transmission_type=TransmissionType.transmitted)
