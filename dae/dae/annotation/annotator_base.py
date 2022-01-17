@@ -1,7 +1,7 @@
 import logging
 import abc
 
-from typing import Any, List, Optional, Dict, cast
+from typing import Any, List, Dict, cast
 from box import Box
 from cerberus.validator import Validator
 
@@ -115,7 +115,7 @@ class Annotator(abc.ABC):
 
     @abc.abstractmethod
     def _do_annotate(
-            self, allele: Annotatable, context: Optional[dict]) -> Dict:
+            self, annotatable: Annotatable, context: Dict) -> Dict:
         """
         Internal abstract method used for annotation.
         """
@@ -162,9 +162,9 @@ class Annotator(abc.ABC):
         attributes = self._do_annotate(annotatable, context)
         attributes_list = self.get_annotation_config()
         for attr in attributes_list:
-            if attr.destination == attr.source:
+            if attr["destination"] == attr["source"]:
                 continue
-            attributes[attr.destination] = attributes[attr.source]
-            del attributes[attr.source]
+            attributes[attr["destination"]] = attributes[attr["source"]]
+            del attributes[attr["source"]]
 
         return attributes

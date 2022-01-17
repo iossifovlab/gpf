@@ -13,6 +13,7 @@ from .score_annotator import build_allele_score_annotator, \
     build_np_score_annotator, build_position_score_annotator
 from .effect_annotator import build_effect_annotator
 from .liftover_annotator import build_liftover_annotator
+from .normalize_allele_annotator import build_normalize_allele_annotator
 
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,7 @@ ANNOTATOR_BUILDER_REGISTRY = {
     "allele_score": build_allele_score_annotator,
     "effect_annotator": build_effect_annotator,
     "liftover_annotator": build_liftover_annotator,
+    "normalize_allele_annotator": build_normalize_allele_annotator,
 }
 
 
