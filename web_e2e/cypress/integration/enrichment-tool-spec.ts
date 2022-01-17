@@ -1,3 +1,7 @@
+import 'reflect-metadata';
+import { plainToClass, Type } from 'class-transformer';
+import * as YAML from 'yaml';
+
 import { EnrichmentToolPage } from 'cypress/elements/enrichment-tool-page';
 import { GenesBlockPage } from 'cypress/elements/genes-block-page';
 import { GenesWeights } from 'cypress/elements/genes-weights';
@@ -5,7 +9,6 @@ import { SaveQueryPage } from 'cypress/elements/save-query-page';
 import { ShareQueryPage } from 'cypress/elements/share-query-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-import * as YAML from 'yaml';
 
 describe('Enrichment tool common tests', () => {
   const page = new EnrichmentToolPage();
@@ -116,11 +119,11 @@ describe('Enrichment tool common tests', () => {
 
 describe.only('Enrichment tool data tests', () => {
   const page = new EnrichmentToolPage();
-  let data1: object;
+  let externalData;
 
   before(() => {
-    cy.readFile(Cypress.env().externalReferenceDataFilePath, { timeout: 5000 }).then(text => {
-      data1 = YAML.parse(text);
+    cy.readFile(Cypress.env().yamlPath, { timeout: 5000 }).then(text => {
+      externalData = plainToClass(EnrichmentToolData, YAML.parse(text));
     });
 
     page.cleanup();
@@ -132,6 +135,10 @@ describe.only('Enrichment tool data tests', () => {
     page.preserveLogin();
     page.navigateToHome();
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.enrichmentTool);
+  });
+
+  it.only('print yaml', () => {
+    console.log(externalData)
   });
 
   it('should display affected and unaffected variants based on gene symbol', () => {
@@ -255,6 +262,79 @@ describe.only('Enrichment tool data tests', () => {
     });
   });
 });
+
+
+class EnrichmentToolData {
+  name: string;
+  study: string;
+  target: string;
+
+  @Type(() => Case)
+  cases: Case[];
+}
+
+class Case {
+  name: string;
+
+  @Type(() => Params)
+  params: Params;
+
+  @Type(() => Expected)
+  expected: Expected[];
+}
+
+class Expected {
+  rowId: string;
+  values: string[];
+}
+
+class Params {
+  geneSymbols: string[];
+
+  @Type(() => Models)
+  models: Models;
+
+  @Type(() => GeneWeight)
+  geneWeight: GeneWeight;
+
+  @Type(() => GeneSet)
+  geneSet: GeneSet;
+}
+
+class Models {
+  backgroundModel: string;
+  countingModel: string;
+}
+
+class GeneWeight {
+  id: string;
+  from: number;
+  to: number;
+}
+
+class GeneSet {
+  id: string
+
+  @Type(() => GeneSetCollection)
+  collection: GeneSetCollection;
+}
+
+class GeneSetCollection {
+  id: string;
+
+  @Type(() => GeneSetCollectionAffectedStatus)
+  affectedStatus: GeneSetCollectionAffectedStatus[];
+}
+
+class GeneSetCollectionAffectedStatus {
+  studyId: string;
+  affected: boolean;
+  unaffected: boolean
+}
+
+
+
+
 
 class RequestOptions {
   public mode: string;
