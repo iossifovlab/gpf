@@ -1,6 +1,6 @@
 ---
 # ENRICHMENT_TOOL
-- name "CAMSAP1 affected LGDs and Missense"
+- name: "CAMSAP1 affected LGDs and Missense"
   target: "enrichment_tool"
   study: "iossifov_2014"
   cases:
@@ -15,7 +15,7 @@
         - row_id: "affected_missense"
           values: ['1,510', '1', '0.22', '0.197', '149', '0', '0.02', '1.00', '1,307', '1', '0.19', '0.173', '246', '0', '0.04', '1.00']
 
-- name "CAMSAP1 affected LGDs with model"
+- name: "CAMSAP1 affected LGDs with model"
   target: "enrichment_tool"
   study: "iossifov_2014"
   cases:
@@ -34,7 +34,7 @@
           values: ['1,510', '1', '0.22', '0.197', '149', '0', '0.02', '1.00', '1,307', '1', '0.19', '0.173', '246', '0', '0.04', '1.00']
 
 
-- name "autism candidates from Iossifov PNAS 2015 gene set unaffected LGDs/Missese values"
+- name: "autism candidates from Iossifov PNAS 2015 gene set unaffected LGDs/Missese values"
   target: "enrichment_tool"
   study: "iossifov_2014"
   cases:
@@ -52,7 +52,7 @@
           values: ['1,070', '48', '37.95', '0.0981', '72', '7', '2.55', '0.0139', '496', '20', '17.59', '0.5425', '615', '32', '21.81', '0.0371']
 
 
-- name "denovo LGDs with iossifov affected and unaffected"
+- name: "denovo LGDs with iossifov affected and unaffected"
   target: "enrichment_tool"
   study: "iossifov_2014"
   cases:
@@ -72,7 +72,7 @@
           values: ['363', '363', '19.51', '0.00', '27', '27', '1.45', '5.23e-35', '306', '306', '16.45', '0.00', '68', '68', '3.65', '4.59e-87']
 
 
-- name "RVIS rank from 0 to 5 LGDs affected"
+- name: "RVIS rank from 0 to 5 LGDs affected"
   target: "enrichment_tool"
   study: "iossifov_2014"
   cases:

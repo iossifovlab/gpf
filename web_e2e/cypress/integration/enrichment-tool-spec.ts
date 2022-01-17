@@ -5,6 +5,8 @@ import { SaveQueryPage } from 'cypress/elements/save-query-page';
 import { ShareQueryPage } from 'cypress/elements/share-query-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
+import * as YAML from 'yaml';
+
 describe('Enrichment tool common tests', () => {
   const page = new EnrichmentToolPage();
 
@@ -114,8 +116,13 @@ describe('Enrichment tool common tests', () => {
 
 describe.only('Enrichment tool data tests', () => {
   const page = new EnrichmentToolPage();
+  let data1: object;
 
   before(() => {
+    cy.readFile(Cypress.env().externalReferenceDataFilePath, { timeout: 5000 }).then(text => {
+      data1 = YAML.parse(text);
+    });
+
     page.cleanup();
     page.navigateToHome();
     page.loginAdmin();
@@ -217,7 +224,7 @@ describe.only('Enrichment tool data tests', () => {
     });
   });
 
-  it.only('should move gene weights slider', () => { /// inconsistent data model
+  it('should move gene weights slider', () => { /// inconsistent data model
     const genesBlockPage = new GenesBlockPage();
     genesBlockPage.geneWeightsButton.click();
 

@@ -10,7 +10,8 @@
   "license": "ISC",
   "dependencies": {
     "cypress-visual-regression": "^1.6.1",
-    "mocha-junit-reporter": "2.0.2"
+    "mocha-junit-reporter": "2.0.2",
+    "yaml": "^1.10.2"
   },
   "devDependencies": {
     "@cypress/request": "2.88.7",
