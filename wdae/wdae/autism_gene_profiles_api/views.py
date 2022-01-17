@@ -26,11 +26,11 @@ class ConfigurationView(QueryBaseView):
         if configuration is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        response = {"config": []}
+        response = {"columns": []}
         if len(configuration) == 0:
             return Response(response)
 
-        response["config"].append({
+        response["columns"].append({
             "id": "geneSymbol",
             "displayName": "Gene",
             "visible": True,
@@ -38,12 +38,12 @@ class ConfigurationView(QueryBaseView):
         })
 
         for category in configuration["gene_sets"]:
-            response["config"].append({
+            response["columns"].append({
                 "id": category["category"],
                 "displayName": category["display_name"],
                 "visible": True,
                 "columns": [{
-                    "id": f"{category['category']}.{gene_set['set_id']}",
+                    "id": f"{category['category']}+{gene_set['set_id']}",
                     "displayName": gene_set["set_id"],
                     "visible": True,
                     "columns": []
@@ -51,12 +51,12 @@ class ConfigurationView(QueryBaseView):
             })
 
         for category in configuration["genomic_scores"]:
-            response["config"].append({
+            response["columns"].append({
                 "id": category["category"],
                 "displayName": category["display_name"],
                 "visible": True,
                 "columns": [{
-                    "id": f"{category['category']}.{genomic_score['score_name']}",
+                    "id": f"{category['category']}+{genomic_score['score_name']}",
                     "displayName": genomic_score["score_name"],
                     "visible": True,
                     "columns": []
@@ -76,7 +76,7 @@ class ConfigurationView(QueryBaseView):
                     or study_wrapper.config.get("name") \
                     or dataset_id
                 dataset_col = {
-                    "id": dataset_id,
+                    "id": f"datasets+{dataset_id}",
                     "displayName": display_name,
                     "visible": True,
                     "columns": list()
@@ -91,11 +91,11 @@ class ConfigurationView(QueryBaseView):
                     set_name = \
                         person_set_collection.person_sets[set_id].name
                     dataset_col["columns"].append({
-                        "id": set_id,
+                        "id": f"datasets+{dataset_id}+{set_id}",
                         "displayName": set_name,
                         "visible": True,
                         "columns": [
-                            { "id": f"{dataset_id}.{set_id}.{statistic.id}",
+                            { "id": f"datasets+{dataset_id}+{set_id}+{statistic.id}",
                               "displayName": statistic.display_name,
                               "visible": True,
                               "columns": list() }
@@ -103,7 +103,7 @@ class ConfigurationView(QueryBaseView):
                         ]
                     })
                 all_datasets_col["columns"].append(dataset_col)
-            response["config"].append(all_datasets_col)
+            response["columns"].append(all_datasets_col)
 
         return Response(response)
 
