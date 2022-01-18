@@ -375,8 +375,9 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(attributes)
             return attributes
 
-        # if self.liftover and liftover_context.get(self.liftover):
-        #     allele = liftover_context.get(self.liftover)
+        if annotatable.chromosome not in self.resource.get_all_chromosomes():
+            self._scores_not_found(attributes)
+            return attributes
 
         scores_dict = self.resource.fetch_scores(
             annotatable.chromosome,
