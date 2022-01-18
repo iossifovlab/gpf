@@ -169,3 +169,56 @@ def test_normalize_allele_annotator_pipeline(grr_fixture, pos, ref, alt):
     assert norm.pos == 20_006
     assert norm.ref == "TGC"
     assert norm.alt == "T"
+
+
+@pytest.mark.parametrize("pos,ref,alt, npos, nref, nalt", [
+    (1_948_771, "TTTTTTTTTTTT", "TTTTTTTTTTT", 1_948_770, "AT", "A"),
+    (1_948_771, "TTTTTTTTTTTT", "TTTTTTTTTT", 1_948_770, "ATT", "A"),
+    (1_948_771, "TTTTTTTTTTTT", "TTTTTTTTTTTTT", 1_948_770, "A", "AT"),
+    (1_948_771, "TTTTTTTTTTTT", "TTTTTTTTTTTTTT", 1_948_770, "A", "ATT"),
+])
+def test_normalize_tandem_repeats(pos, ref, alt, npos, nref, nalt):
+    config = textwrap.dedent("""
+        - normalize_allele_annotator:
+            genome: hg38/genomes/GRCh38-hg38
+        """)
+
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str=config)
+
+    assert pipeline is not None
+
+    assert len(pipeline.annotators) == 1
+    annotator = pipeline.annotators[0]
+
+    assert annotator.annotator_type() == "normalize_allele_annotator"
+    assert isinstance(annotator, NormalizeAlleleAnnotator)
+
+    assert annotator.genome.get_sequence(
+        "chrX", 1_948_771, 1_948_782) == "TTTTTTTTTTTT"
+
+    allele = VCFAllele("chrX", pos, ref, alt)
+    result = pipeline.annotate(allele)
+
+    norm = result["normalized_allele"]
+
+    assert norm.pos == npos
+    assert norm.ref == nref
+    assert norm.alt == nalt
+
+
+def test_normalize_allele_annotator_pipeline_schema(grr_fixture):
+    config = textwrap.dedent("""
+        - normalize_allele_annotator:
+            genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
+        """)
+
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str=config, grr_repository=grr_fixture)
+
+    schema = pipeline.annotation_schema
+    print(schema)
+
+    assert "normalized_allele" in schema
+    assert "normalized_allele" not in schema.public_fields
+    assert "normalized_allele" in schema.internal_fields

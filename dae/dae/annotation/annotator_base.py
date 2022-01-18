@@ -100,7 +100,7 @@ class Annotator(abc.ABC):
                     attribute_config=attribute)
 
                 schema.create_field(
-                    attribute.destination,
+                    attribute["destination"],
                     py_type=annotation_attribute["type"],
                     internal=attribute.get("internal", False),
                     description=annotation_attribute["desc"],

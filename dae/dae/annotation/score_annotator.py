@@ -384,6 +384,10 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
             annotatable.reference,
             annotatable.alternative
         )
+        logger.debug(
+            f"allele score found for annotatable {annotatable}: "
+            f"{scores_dict}")
+
         if scores_dict is None:
             self._scores_not_found(attributes)
             return attributes

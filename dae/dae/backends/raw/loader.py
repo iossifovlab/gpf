@@ -462,6 +462,9 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
         super(AnnotationPipelineDecorator, self).__init__(variants_loader)
 
         self.annotation_pipeline = annotation_pipeline
+        logger.debug(
+            f"creating annotation pipeline decorator with "
+            f"annotation pipeline: {annotation_pipeline.annotation_schema}")
 
         self.set_attribute("annotation_schema", self.annotation_schema)
         self.set_attribute(

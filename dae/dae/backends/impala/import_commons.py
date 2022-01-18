@@ -681,7 +681,7 @@ rule parquet:
     benchmark:
         "logs/parquet_benchmark.tsv"
 
-        """)
+        """)  # noqa
 
 
 class BatchImporter:
@@ -850,7 +850,6 @@ class BatchImporter:
             .build_partition_helper(argv) \
             .build_genotype_storage(argv)
         return self
-
 
     def generate_instructions(self, argv):
         dirname = argv.generator_output or argv.output
