@@ -1,14 +1,12 @@
 import 'reflect-metadata';
-import { plainToClass, Type } from 'class-transformer';
+import { plainToClass } from 'class-transformer';
 import * as YAML from 'yaml';
-
 import { EnrichmentToolPage } from 'cypress/elements/enrichment-tool-page';
 import { GenesBlockPage } from 'cypress/elements/genes-block-page';
-import { GenesWeights } from 'cypress/elements/genes-weights';
 import { SaveQueryPage } from 'cypress/elements/save-query-page';
 import { ShareQueryPage } from 'cypress/elements/share-query-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
-
+import { EnrichmentToolData } from 'cypress/elements/dynamic-data-structure';
 
 describe('Enrichment tool common tests', () => {
   const page = new EnrichmentToolPage();
@@ -117,15 +115,19 @@ describe('Enrichment tool common tests', () => {
 
 });
 
+
+// Pass path to yaml file using the '--env' flag in the cypress command:
+// npx cypress open --config baseUrl=http://172.20.0.5/gpf/ --env yamlPath=cypress/iossifov.data.expected.yaml
+function parseYamlData(filePath: string): EnrichmentToolData[] {
+  return plainToClass(EnrichmentToolData, YAML.parse(filePath) as EnrichmentToolData[]);
+}
+
+const dynamicData: EnrichmentToolData[] = parseYamlData(Cypress.env('yamlFile'));
+
 describe.only('Enrichment tool data tests', () => {
   const page = new EnrichmentToolPage();
-  let externalData;
 
   before(() => {
-    cy.readFile(Cypress.env().yamlPath, { timeout: 5000 }).then(text => {
-      externalData = plainToClass(EnrichmentToolData, YAML.parse(text));
-    });
-
     page.cleanup();
     page.navigateToHome();
     page.loginAdmin();
@@ -137,409 +139,13 @@ describe.only('Enrichment tool data tests', () => {
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.enrichmentTool);
   });
 
-  it.only('print yaml', () => {
-    console.log(externalData)
+  it('print yaml', () => {
+    console.log(dynamicData);
   });
 
-  it('should display affected and unaffected variants based on gene symbol', () => {
-    const genesBlockPage = new GenesBlockPage();
-    genesBlockPage.geneSymbolsButton.click();
-
-    parseOptions(getDataset('gene_symbol_CAMSAP1').request);
-    page.enrichmentTestButton.click();
-    page.table.should('be.visible');
-    
-    cy.wrap(page.getTableData('affected')).then(() => {
-      cy.get('@tableData').should('deep.equal', getDataset('gene_symbol_CAMSAP1').data);
+  dynamicData.forEach(data => {
+    it(data.name, () => {
+      console.log(data.name);
     });
-    cy.wrap(page.getTableData('affected', 'Missense')).then(() => {
-      cy.get('@tableData').should('deep.equal', getDataset('gene_symbol_CAMSAP1', 'Missense').data);
-    });
-
-    page.selectorTableRow('affected').should('have.text', 'affected F:341  M:2166  U: -');
-    page.selectorTableRow('unaffected').should('have.text', 'unaffected F:1011  M:899  U: -');
-  });
-
-  it('should perform enrichment test based on gene sets', () => { // TODO: unaffected tests
-    const genesBlockPage = new GenesBlockPage();
-    genesBlockPage.geneSetsButton.click();
-
-    parseOptions(getDataset('gene_symbol_pnas_2015_set').request);
-    page.enrichmentTestButton.click();
-
-    cy.wrap(page.getTableData('affected')).then(() => {
-      cy.get('@tableData').should('deep.equal', getDataset('gene_symbol_pnas_2015_set').data);
-    });
-    cy.wrap(page.getTableData('affected', 'Missense')).then(() => {
-      cy.get('@tableData').should('deep.equal', getDataset('gene_symbol_pnas_2015_set', 'Missense').data);
-    });
-    cy.wrap(page.getTableData('unaffected')).then(() => {
-      cy.get('@tableData').should('deep.equal', getDataset('gene_symbol_pnas_2015_set', 'LGDs', 'unaffected').data);
-    });
-
-    parseOptions(getDataset('gene_symbols_iossifov_affected').request);
-    page.enrichmentTestButton.click();
-    cy.wrap(page.getTableData('affected')).then(() => {
-      cy.get('@tableData').should('deep.equal', getDataset('gene_symbols_iossifov_affected').data);
-    });
-    cy.wrap(page.getTableData('affected', 'Missense')).then(() => {
-      cy.get('@tableData').should('deep.equal', getDataset('gene_symbols_iossifov_affected', 'Missense').data);
-    });
-
-    parseOptions(new RequestOptions('gene_sets', {
-      implicit: true,
-      denovo_collection_sets: [
-        {
-          study_type: 'iossifov_2014: Affected Status',
-          affected: false,
-          unaffected: false
-        }, 
-      ]
-    }, null));
-    page.findErrorAlertInComponent('gpf-gene-sets').contains('Please select a gene');
-
-    parseOptions(new RequestOptions('gene_sets', {
-      set: 'Denovo',
-      study: 'LGDs (176)',
-      denovo_collection_sets: [
-        {
-          study_type: 'iossifov_2014: Affected Status',
-          affected: false,
-          unaffected: true
-        }, 
-      ]
-    }, ['default']));
-    page.enrichmentTestButton.click();
-    cy.wrap(page.getTableData('affected')).then(() => {
-      cy.get('@tableData').should('deep.equal', getDataset('gene_symbol_iossifov_unaffected').data);
-    });
-  });
-
-  it('should display affected and unaffected variants based on gene symbol and select models', () => {
-
-    parseOptions(getDataset('gene_symbol_without_model_LGDs').request);
-    page.enrichmentTestButton.click();
-    cy.wrap(page.getTableData('affected')).then(() => {
-      cy.get('@tableData').should('deep.equal', getDataset('gene_symbol_without_model_LGDs').data);
-    });
-
-    parseOptions(getDataset('gene_symbol_and_models_LGDs').request);
-    page.enrichmentTestButton.click();
-
-    cy.wrap(page.getTableData('affected')).then(() => {
-      cy.get('@tableData').should('deep.equal', getDataset('gene_symbol_and_models_LGDs').data);
-    });
-  });
-
-  it('should move gene weights slider', () => { /// inconsistent data model
-    const genesBlockPage = new GenesBlockPage();
-    genesBlockPage.geneWeightsButton.click();
-
-    cy.intercept('POST', '/gpf/api/v3/gene_weights/partitions', {
-      body:{
-        left: {count: 0, percent: 0},
-        mid: {count: 910, percent: 1},
-        right: {count: 0, percent: 0}
-      }
-    }).as('WeightsOptions');
-    parseOptions(getDataset('gene_weights_sfari_gene_score_right').request);
-    cy.wait('@WeightsOptions');
-    cy.wait('@WeightsOptions'); // That's bug from the GPFJS site, many excess requests are made with gene weights
-    cy.wait(1000); // fix state bug
-    page.enrichmentTestButton.click();
-
-    cy.wrap(page.getTableData('affected')).then(() => {
-      cy.get('@tableData').should('deep.equal', getDataset('gene_weights_sfari_gene_score_right').data);
-    });
-
-    parseOptions(getDataset('gene_weights_sfari_gene_score_left', 'LGDs', 'unaffected').request);
-    cy.wait('@WeightsOptions'); // That's bug from the GPFJS site, many excess requests are made with gene weights
-    cy.wait(1000); // fix state bug
-    page.enrichmentTestButton.click();
-
-    cy.wrap(page.getTableData('unaffected')).then(() => {
-      cy.get('@tableData').should('deep.equal', getDataset('gene_weights_sfari_gene_score_left', 'LGDs', 'unaffected').data);
-    });
-  });
+  })
 });
-
-
-class EnrichmentToolData {
-  name: string;
-  study: string;
-  target: string;
-
-  @Type(() => Case)
-  cases: Case[];
-}
-
-class Case {
-  name: string;
-
-  @Type(() => Params)
-  params: Params;
-
-  @Type(() => Expected)
-  expected: Expected[];
-}
-
-class Expected {
-  rowId: string;
-  values: string[];
-}
-
-class Params {
-  geneSymbols: string[];
-
-  @Type(() => Models)
-  models: Models;
-
-  @Type(() => GeneWeight)
-  geneWeight: GeneWeight;
-
-  @Type(() => GeneSet)
-  geneSet: GeneSet;
-}
-
-class Models {
-  backgroundModel: string;
-  countingModel: string;
-}
-
-class GeneWeight {
-  id: string;
-  from: number;
-  to: number;
-}
-
-class GeneSet {
-  id: string
-
-  @Type(() => GeneSetCollection)
-  collection: GeneSetCollection;
-}
-
-class GeneSetCollection {
-  id: string;
-
-  @Type(() => GeneSetCollectionAffectedStatus)
-  affectedStatus: GeneSetCollectionAffectedStatus[];
-}
-
-class GeneSetCollectionAffectedStatus {
-  studyId: string;
-  affected: boolean;
-  unaffected: boolean
-}
-
-
-
-
-
-class RequestOptions {
-  public mode: string;
-  public options: JSON;
-  public modelsSelected?: string[];
-
-  constructor(mode, options, modelsSelected: string[]) {
-    this.mode = mode;
-    this.options = options;
-    this.modelsSelected = modelsSelected;
-  }
-}
-
-const data = [
-  {
-    id: 'gene_symbol_CAMSAP1',
-    affectedStatus: 'affected',
-    request: new RequestOptions(
-      'gene_symbols',
-      {gene_symbols: 'CAMSAP1'},
-      null
-    ),
-    data: ['LGDs', '363', '0', '0.05', '1.00', '27', '0', '3.92e-3', '1.00', '306', '0', '0.04', '1.00', '68', '0', '9.88e-3', '1.00']
-  },
-  {
-    id: 'gene_symbol_CAMSAP1',
-    affectedStatus: 'affected',
-    request: new RequestOptions(null, null, null),
-    data: ['Missense', '1,510', '1', '0.22', '0.197', '149', '0', '0.02', '1.00', '1,307', '1', '0.19', '0.173', '246', '0', '0.04', '1.00']
-  },
-  {
-    id: 'gene_symbol_and_models_LGDs',
-    affectedStatus: 'affected',
-    request: new RequestOptions('gene_symbols', {
-      gene_symbols: 'CAMSAP1'
-    }, ['samocha_background_model', 'enrichment_gene_counting']),
-    data: ['LGDs', '363', '0', '0.03', '1.00', '27', '0', '1.89e-3', '1.00', '306', '0', '0.02', '1.00', '68', '0', '3.45e-3', '1.00']
-  },
-  {
-    id: 'gene_symbol_without_model_LGDs',
-    affectedStatus: 'affected',
-    request: new RequestOptions('gene_symbols', {
-      gene_symbols: 'CAMSAP1'
-    }, ['coding_len_background_model', 'enrichment_events_counting']),
-    data: ['LGDs', '392', '0', '0.06', '1.00', '27', '0', '3.92e-3', '1.00', '321', '0', '0.05', '1.00', '71', '0', '0.01', '1.00']
-  },
-  {
-    id: 'gene_symbols_iossifov_affected',
-    affectedStatus: 'affected',
-    request: new RequestOptions('gene_sets', {
-      set: 'Denovo',
-      study: 'LGDs (363)',
-      denovo_collection_sets: [
-        {
-          study_type: 'iossifov_2014: Affected Status',
-          affected: true,
-          unaffected: false
-        }, 
-      ]
-    }, ['samocha_background_model', 'enrichment_gene_counting']),
-    data: ['LGDs', '363', '363', '7.81', '0.00', '27', '27', '0.58', '0.00', '306', '306', '6.75', '0.00', '68', '68', '1.06', '0.00']
-  },
-  {
-    id: 'gene_symbols_iossifov_affected',
-    affectedStatus: 'affected',
-    request: new RequestOptions(null, null, null),
-    data: ['Missense', '1,510', '75', '54.72', '0.0107', '149', '16', '5.40', '0.0003', '1,307', '67', '47.28', '0.0079', '246', '12', '7.44', '0.152']
-  },
-  {
-    id: 'gene_symbol_iossifov_unaffected',
-    affectedStatus: 'affected',
-    request: new RequestOptions(null, null, null),
-    data: ['LGDs', '363', '8', '6.13', '0.4108', '27', '1', '0.46', '0.3686', '306', '7', '5.17', '0.3708', '68', '1', '1.15', '1.00']
-  },
-  {
-    id: 'gene_symbol_pnas_2015_set',
-    affectedStatus: 'affected',
-    request: new RequestOptions('gene_sets', {
-      set: 'Main',
-      study: 'autism candidates from Iossifov',
-    }, null),
-    data: ['LGDs', '363', '97', '12.87', '2.48e-55', '27', '22', '0.96', '8.48e-28', '306', '78', '10.85', '3.29e-43', '68', '29', '2.41', '3.11e-24']
-  },
-  {
-    id: 'gene_symbol_pnas_2015_set',
-    affectedStatus: 'affected',
-    request: new RequestOptions(null, null, null),
-    data: ['Missense', '1,510', '114', '53.56', '1.71e-13', '149', '34', '5.28', '3.90e-18', '1,307', '100', '46.36', '2.30e-12', '246', '22', '8.73', '7.94e-5']
-  },
-  {
-    id: 'gene_symbol_pnas_2015_set',
-    affectedStatus: 'unaffected',
-    request: new RequestOptions(null, null, null),
-    data: ['LGDs', '176', '4', '6.24', '0.537', '3', '0', '0.11', '1.00', '84', '2', '2.98', '0.7719', '94', '2', '3.33', '0.7763']
-  }, {
-    id: 'gene_weights_sfari_gene_score_right',
-    affectedStatus: 'affected',
-    request: new RequestOptions('gene_weights', {
-      scroll: [{
-        position: 'right',
-        value: 150
-      }]
-    }, null),
-    data: ['LGDs', '363', '107', '20.74', '5.86e-46', '27', '27', '1.54', '2.73e-34', '306', '82', '17.48', '2.36e-32', '68', '36', '3.89', '7.20e-27']
-  }, {
-    id: 'gene_weights_sfari_gene_score_left',
-    affectedStatus: 'unaffected',
-    request: new RequestOptions('gene_weights', {
-      scroll: [{
-        position: 'left',
-        value: 150
-      }]
-    }, null),
-    data: ['LGDs', '176', '8', '7.27', '0.7043', '3', '0', '0.12', '1.00', '84', '6', '3.47', '0.1632', '94', '2', '3.88', '0.4428']
-  }
-];
-
-function parseOptions(request: RequestOptions) {
-  const page = new EnrichmentToolPage();
-  const genesBlockPage = new GenesBlockPage();
-  const weights = new GenesWeights();
-
-  switch(request.mode) {
-    case 'gene_symbols': {
-      genesBlockPage.geneSymbolsButton.click();
-      genesBlockPage.geneSymbolsTextarea.clear().type(request.options['gene_symbols']);
-      break;
-    }
-    case 'gene_sets': {
-      if(request.options['implicit'] === undefined || request.options['implicit'] === false) {
-        genesBlockPage.geneSetsButton.click();
-      }
-      if(request.options['set'] !== undefined) {
-        page.geneSetsColletionDropdown.select(request.options['set']);
-      }
-
-      if((request.options['set'] === 'Denovo' && request.options['set'] !== undefined) || request.options['implicit'] === true) {
-        request.options['denovo_collection_sets'].forEach(element => {
-          //checkboxes exclusive for denovo
-          cy.get('ngb-accordion > div').within(() => {
-            cy.get('span.dropdown-toggle').contains(element['study_type']).click().parents('.card.ng-star-inserted').within(() => {
-              cy.get('label > input[type="checkbox"]').uncheck({force: true});
-              if(element['affected'] === true) {
-                cy.get('label').contains('affected').click({force: true});
-              }
-              if(element['unaffected'] === true) {
-                cy.get('label').contains('unaffected').click({force: true});
-              }
-            });        
-          });
-        });
-      }
-
-      if (request.options['study'] !== undefined) {
-        page.geneSetsInputField.clear().type(request.options['study']).then(() => {
-          cy.get('input#search-box').click();
-          cy.get('div.dropdown-menu.show').should('be.visible').click().should('contain.text', request.options['study']).get('span').contains(request.options['study']).click();
-        });
-      }
-
-      break;
-    }
-    case 'gene_weights': {
-      genesBlockPage.geneWeightsButton.click();
-      genesBlockPage.genesWeightsPanel.within(panel => {
-        if(request.options.hasOwnProperty('weights')) {
-          cy.wrap(panel).get('select.form-control').select(request.options['weights']);
-        }
-      });
-      if(request.options.hasOwnProperty('scroll')) {
-        request.options['scroll'].forEach(element => {
-          weights.moveSlider(element['position'], element['value'], 0);
-        });
-      } 
-      if(request.options.hasOwnProperty('step')) {
-        request.options['step'].forEach(element => {
-          if(element.hasOwnProperty('position') && element.hasOwnProperty('value')) {
-            weights.setInputFieldValue(element['position'], element['value']);
-          }
-          if(element.hasOwnProperty('position') && element.hasOwnProperty('click')) {
-            weights.clickInputField(element['position'], element.click['which'], element.click['times']);
-          }
-        });
-      }
-      break;
-    } default: {
-      throw new Error('Unknown mode selected: ' + request.mode);
-    }
-  }
-  if (request.modelsSelected !== null && request.modelsSelected.length === 2) {
-    page.enrichmentModelsBlock.within(() => {
-      cy.get('a#ngb-nav-4').click();
-    });
-    request.modelsSelected.forEach((element, index) => {
-      page.enrichmentModelsSelect((index === 0) ? 'background' : 'counting', element);
-    });
-  } else if (request.modelsSelected !== null && request.modelsSelected[0] === 'default' && request.modelsSelected.length === 1) {
-    page.enrichmentModelsBlock.within(() => {
-      cy.get('a#ngb-nav-3').click();
-    });
-  }
-}
-
-function getDataset(id: string, type: string = 'LGDs', affected: string = 'affected') {
-  return data.filter(match => {
-    return (match.id === id && match.data[0] === type)
-  }).find(match => { return (match.affectedStatus === affected) });
-}

@@ -17,6 +17,6 @@
       "es2018",
       "dom"
     ],
-    "types": ["cypress", "cypress-image-snapshot"]
+    "types": ["cypress", "cypress-image-snapshot", "node"]
   }
 }
