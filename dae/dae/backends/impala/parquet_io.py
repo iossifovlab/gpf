@@ -377,6 +377,10 @@ class ContinuousParquetFileWriter:
 
         self.filepath = filepath
         extra_attributes = variant_loader.get_attribute("extra_attributes")
+        logger.info(
+            f"using variant loader {variant_loader} with annotation schema "
+            f"{variant_loader.annotation_schema}")
+
         self.serializer = AlleleParquetSerializer(
             variant_loader.annotation_schema, extra_attributes
         )
@@ -650,7 +654,8 @@ class VariantsParquetWriter:
         for k, v in schema.items():
             config["blob"][k] = v
 
-        filename = os.path.join(self.partition_descriptor.output, "_VARIANTS_SCHEMA")
+        filename = os.path.join(
+            self.partition_descriptor.output, "_VARIANTS_SCHEMA")
 
         config["extra_attributes"] = {}
         extra_attributes = self.serializer.extra_attributes

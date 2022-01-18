@@ -4,9 +4,9 @@ import copy
 from typing import Dict, List
 from box import Box
 
-from .annotatable import Annotatable, VCFAllele
 from dae.utils.variant_utils import trim_str_left, reverse_complement
 
+from .annotatable import Annotatable, VCFAllele
 from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
 
 
@@ -103,13 +103,13 @@ class LiftOverAnnotator(Annotator):
         validator = cls.ConfigValidator(schema)
         validator.allow_unknown = True
 
-        logger.debug(f"validating effect annotator config: {config}")
+        logger.debug(f"validating liftover annotator config: {config}")
         if not validator.validate(config):
             logger.error(
-                f"wrong config format for effect annotator: "
+                f"wrong config format for liftover annotator: "
                 f"{validator.errors}")
             raise ValueError(
-                f"wrong effect annotator config {validator.errors}")
+                f"wrong liftover annotator config {validator.errors}")
         return validator.document
 
     def get_annotation_config(self) -> List[Dict]:

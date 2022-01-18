@@ -189,7 +189,6 @@ def test_annotation_pipeline_effect_annotator_schema(grr_fixture):
         attributes:
             - source: worst_effect
               destination: worst_effect
-            
             - source: allele_effects
               destination: allele_effects
               internal: true
