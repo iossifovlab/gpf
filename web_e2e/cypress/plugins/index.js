@@ -25,7 +25,9 @@ module.exports = (on, config) => {
 
   addMatchImageSnapshotPlugin(on, config);
 
-  config.env.yamlFile = fs.readFileSync('/home/joan/gpf-e2e/cypress/iossifov.data.expected.yaml', 'utf8');
+  if (config.env.yamlPath) {
+    config.env.yamlFile = fs.readFileSync(config.env.yamlPath, 'utf8');
+  }
 
   return config;
 }

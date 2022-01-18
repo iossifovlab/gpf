@@ -1,3 +1,8 @@
+import 'reflect-metadata';
+import { plainToClass } from 'class-transformer';
+import * as YAML from 'yaml';
+
+import { EnrichmentToolData } from "./dynamic-data-structure";
 import { UsersPage } from "./users-page";
 
 export const userData = {
@@ -142,4 +147,16 @@ export class BasePage {
   findWarningAlertInComponent(componentSelector: string) {
     return cy.get(`${componentSelector} .alert-warning`);
   }
+}
+
+
+
+// Pass path to yaml file using the '--env' flag in the cypress command:
+// npx cypress open --config baseUrl=http://172.20.0.5/gpf/ --env yamlPath=cypress/iossifov.data.expected.yaml
+export function parseYamlData(filePath: string): EnrichmentToolData[] {
+  if (filePath === undefined) {
+    return;
+  }
+
+  return plainToClass(EnrichmentToolData, YAML.parse(filePath) as EnrichmentToolData[]);
 }

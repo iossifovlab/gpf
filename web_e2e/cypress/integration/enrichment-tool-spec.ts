@@ -1,12 +1,9 @@
-import 'reflect-metadata';
-import { plainToClass } from 'class-transformer';
-import * as YAML from 'yaml';
 import { EnrichmentToolPage } from 'cypress/elements/enrichment-tool-page';
 import { GenesBlockPage } from 'cypress/elements/genes-block-page';
 import { SaveQueryPage } from 'cypress/elements/save-query-page';
 import { ShareQueryPage } from 'cypress/elements/share-query-page';
-import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
-import { EnrichmentToolData } from 'cypress/elements/dynamic-data-structure';
+import { datasetIds, parseYamlData, toolPageLinks } from 'cypress/elements/utils';
+import { EnrichmentToolData, Params } from 'cypress/elements/dynamic-data-structure';
 
 describe('Enrichment tool common tests', () => {
   const page = new EnrichmentToolPage();
@@ -112,40 +109,36 @@ describe('Enrichment tool common tests', () => {
     page.findTableField('affected', 'LGDs', 3).should('have.text', '0.36');
     page.findTableField('affected', 'Missense', 3).should('have.text', '1.52');
   });
-
 });
 
 
-// Pass path to yaml file using the '--env' flag in the cypress command:
-// npx cypress open --config baseUrl=http://172.20.0.5/gpf/ --env yamlPath=cypress/iossifov.data.expected.yaml
-function parseYamlData(filePath: string): EnrichmentToolData[] {
-  return plainToClass(EnrichmentToolData, YAML.parse(filePath) as EnrichmentToolData[]);
+if (Cypress.env().yamlPath !== undefined) {
+  const dynamicData: EnrichmentToolData[] = parseYamlData(Cypress.env('yamlFile'));
+
+  describe('Enrichment tool data tests', () => {
+    const page = new EnrichmentToolPage();
+  
+    before(() => {
+      page.cleanup();
+      page.navigateToHome();
+      page.loginAdmin();
+    });
+  
+    beforeEach(() => {
+      page.preserveLogin();
+      page.navigateToHome();
+      page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.enrichmentTool);
+    });
+  
+    it('print yaml', () => {
+      console.log(dynamicData);
+    });
+  
+    dynamicData.forEach(data => {
+      it(data.name, () => {
+        console.log(data.name);
+      });
+    })
+  });
 }
 
-const dynamicData: EnrichmentToolData[] = parseYamlData(Cypress.env('yamlFile'));
-
-describe.only('Enrichment tool data tests', () => {
-  const page = new EnrichmentToolPage();
-
-  before(() => {
-    page.cleanup();
-    page.navigateToHome();
-    page.loginAdmin();
-  });
-
-  beforeEach(() => {
-    page.preserveLogin();
-    page.navigateToHome();
-    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.enrichmentTool);
-  });
-
-  it('print yaml', () => {
-    console.log(dynamicData);
-  });
-
-  dynamicData.forEach(data => {
-    it(data.name, () => {
-      console.log(data.name);
-    });
-  })
-});

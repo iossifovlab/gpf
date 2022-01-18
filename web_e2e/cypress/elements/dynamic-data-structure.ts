@@ -25,7 +25,7 @@ class Expected {
   values: string[];
 }
 
-class Params {
+export class Params {
   geneSymbols: string[];
 
   @Type(() => Models)
