@@ -8,7 +8,8 @@ import argparse
 
 import pysam
 
-from dae.genomic_resources import reference_genome
+from dae.genomic_resources.reference_genome import \
+    open_reference_genome_from_file
 from dae.genomic_resources.gene_models import load_gene_models
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AnnotationEffect
@@ -75,7 +76,8 @@ def parse_cli_genome_options(args):
             gene_mapping_filename=args.gene_mapping_filename,
         )
     if args.genome_filename:
-        genomic_sequence = reference_genome.open_ref(args.genome_filename)
+        genomic_sequence = open_reference_genome_from_file(
+            args.genome_filename)
     if gene_models and genomic_sequence:
         return genomic_sequence, gene_models
 

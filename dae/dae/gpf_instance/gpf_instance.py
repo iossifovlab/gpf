@@ -6,6 +6,8 @@ import json
 
 from box import Box
 
+from dae.genomic_resources.reference_genome_resource import ReferenceGenome, \
+    open_reference_genome_from_resource
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
 from dae.gene.weights import GeneWeightsDb
@@ -81,12 +83,9 @@ class GPFInstance(object):
 
     @property  # type: ignore
     @cached
-    def reference_genome(self):
-        resource = self.grr.get_resource(
-            self.dae_config.reference_genome.resource_id)
-        assert resource is not None, \
-            self.dae_config.reference_genome.resource_id
-        result = resource.open()
+    def reference_genome(self) -> ReferenceGenome:
+        result = open_reference_genome_from_resource(
+            self.dae_config.reference_genome.resource_id, self.grr)
         return result
 
     @property  # type: ignore

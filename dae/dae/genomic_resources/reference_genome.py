@@ -99,7 +99,7 @@ class ReferenceGenome:
             return False
 
 
-def open_ref(filename):
+def open_reference_genome_from_file(filename) -> ReferenceGenome:
     ref = ReferenceGenome(('file', filename))
     index_filename = f"{filename}.fai"
     assert os.path.exists(index_filename)
