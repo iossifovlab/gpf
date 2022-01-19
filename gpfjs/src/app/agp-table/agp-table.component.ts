@@ -6,7 +6,7 @@ import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-s
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 import { AgpConfig, Column } from './agp-table';
 import { AutismGeneProfilesService } from 'app/agp-table/agp-table.service';
-import { take } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 
 @Component({
@@ -55,6 +55,13 @@ export class AgpTableComponent implements OnInit {
         this.genes = this.genes.concat(res);
       });
     });
+
+    this.searchKeystrokes$.pipe(
+      debounceTime(250),
+      distinctUntilChanged()
+    ).subscribe(searchTerm => {
+      this.search(searchTerm);
+    });
   }
 
   public search(value: string): void {
@@ -63,6 +70,10 @@ export class AgpTableComponent implements OnInit {
     this.pageIndex = 0;
 
     this.updateGenes();
+  }
+
+  public sendKeystrokes(value: string): void {
+    this.searchKeystrokes$.next(value);
   }
 
   public updateGenes(): void {
@@ -74,6 +85,7 @@ export class AgpTableComponent implements OnInit {
       .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
       .pipe(take(1))
       .subscribe(res => {
+        console.log(res);
         this.genes = this.genes.concat(res);
         this.loadMoreGenes = Object.keys(res).length !== 0;
         this.showSearchWarning = !this.loadMoreGenes;

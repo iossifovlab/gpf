@@ -15,6 +15,23 @@
           [ngClass]="{ leaf: column.columns.length === 0 || !column.visible }"
           [ngStyle]="{ top: headerDepth + 'px' }">
           {{ column.displayName }}
+          <div *ngIf="column.id === 'geneSymbol'">
+            <input
+              #geneSearchInput
+              (keyup)="sendKeystrokes(geneSearchInput.value)"
+              id="gene-search-input"
+              class="search-input form-control"
+              autocomplete="off"
+              type="text" />
+            <div class="search-placeholder-wrapper" *ngIf="geneSearchInput.value === ''">
+              <span class="search-placeholder-text">Search</span>
+            </div>
+            <span
+              class="clear-search-icon"
+              *ngIf="geneSearchInput.value !== ''"
+              (click)="geneSearchInput.value = ''; sendKeystrokes('')">
+            </span>
+          </div>
           <ng-container *ngIf="column.columns.length !== 0">
             <button
               #columnFilteringButton
