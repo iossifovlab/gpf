@@ -111,12 +111,13 @@ class AutismGeneProfileDB:
         if "_rank" in sort_by_tokens[0]:
             collection_id = ""
             category = sort_by_tokens[0].replace("_rank", "")
-            for gs_category in self.configuration["gene_sets"]:
-                if gs_category["category"] == category:
-                    for gene_set in gs_category["sets"]:
-                        if gene_set["set_id"] == sort_by_tokens[1]:
-                            collection_id = gene_set["collection_id"]
-            sort_by = '.'.join((collection_id, sort_by_tokens[1]))
+            if len(sort_by_tokens) == 2:
+                for gs_category in self.configuration["gene_sets"]:
+                    if gs_category["category"] == category:
+                        for gene_set in gs_category["sets"]:
+                            if gene_set["set_id"] == sort_by_tokens[1]:
+                                collection_id = gene_set["collection_id"]
+                sort_by = '.'.join((collection_id, sort_by_tokens[1]))
         return sort_by.replace(".", "_")
 
     def query_agps(self, page, symbol_like=None, sort_by=None, order=None):
