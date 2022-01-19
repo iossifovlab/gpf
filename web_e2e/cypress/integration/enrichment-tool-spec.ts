@@ -2,7 +2,7 @@ import { EnrichmentToolPage } from 'cypress/elements/enrichment-tool-page';
 import { GenesBlockPage } from 'cypress/elements/genes-block-page';
 import { SaveQueryPage } from 'cypress/elements/save-query-page';
 import { ShareQueryPage } from 'cypress/elements/share-query-page';
-import { datasetIds, parseYamlData, toolPageLinks } from 'cypress/elements/utils';
+import { applyData, datasetIds, parseYamlData, toolPageLinks } from 'cypress/elements/utils';
 import { EnrichmentToolData, Params } from 'cypress/elements/dynamic-data-structure';
 
 describe('Enrichment tool common tests', () => {
@@ -135,8 +135,13 @@ if (Cypress.env().yamlPath !== undefined) {
     });
   
     dynamicData.forEach(data => {
-      it(data.name, () => {
-        console.log(data.name);
+      describe(data.name, () => {
+        data.cases.forEach(caseee => {
+          it(caseee.name, () => {
+            applyData(caseee.params);
+            // expect
+          });
+        });
       });
     })
   });
