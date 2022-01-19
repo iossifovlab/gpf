@@ -1,5 +1,5 @@
 export interface ItemApplyEvent {
-  menuId: string,
-  selected: string[],
-  order: string[]
-};
+  menuId: string;
+  selected: string[];
+  order: string[];
+}

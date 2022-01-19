@@ -9,7 +9,7 @@ import { ItemApplyEvent } from './multiple-select-menu';
 })
 export class MultipleSelectMenuComponent implements OnChanges {
   @Input() public menuId: string;
-  @Input() public itemsSource: { itemIds: string[]; shownItemIds: string[]; };
+  @Input() public itemsSource: { itemIds: string[]; shownItemIds: string[] };
   @Output() public applyEvent = new EventEmitter<ItemApplyEvent>();
   @ViewChild('searchInput') public searchInput: ElementRef;
 
@@ -35,17 +35,6 @@ export class MultipleSelectMenuComponent implements OnChanges {
     }
   }
 
-  private async waitForSearchInputToLoad(): Promise<void> {
-    return new Promise<void>(resolve => {
-      const timer = setInterval(() => {
-        if (this.searchInput !== undefined) {
-          resolve();
-          clearInterval(timer);
-        }
-      }, 100);
-    });
-  }
-
   public toggleCheckingAll(): void {
     if (this.checkUncheckAllButtonName === 'Uncheck all') {
       this.selectedItems = new Set();
@@ -56,8 +45,8 @@ export class MultipleSelectMenuComponent implements OnChanges {
     }
   }
 
-  public toggleItem(item: string, $event: Event) {
-    if(!($event.target instanceof HTMLInputElement)) {
+  public toggleItem(item: string, $event: Event): void {
+    if (!($event.target instanceof HTMLInputElement)) {
       return;
     }
     if ($event.target.checked) {
@@ -86,7 +75,18 @@ export class MultipleSelectMenuComponent implements OnChanges {
     moveItemInArray(this.allItems, event.previousIndex, event.currentIndex);
   }
 
-  public filterItems(substring): void {
+  public filterItems(substring: string): void {
     this.filteredItems = this.allItems.filter(item => item.toLowerCase().includes(substring.toLowerCase()));
+  }
+
+  private async waitForSearchInputToLoad(): Promise<void> {
+    return new Promise<void>(resolve => {
+      const timer = setInterval(() => {
+        if (this.searchInput !== undefined) {
+          resolve();
+          clearInterval(timer);
+        }
+      }, 100);
+    });
   }
 }
