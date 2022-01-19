@@ -3,6 +3,8 @@ import logging
 from typing import List, Dict, cast
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.reference_genome_resource import \
+    open_reference_genome_from_resource
 
 from .annotatable import Annotatable, VCFAllele
 from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
@@ -55,17 +57,16 @@ def build_normalize_allele_annotator(pipeline, config):
             f"can't find reference genome: "
             f"{config.genome}"
         )
-
-    return NormalizeAlleleAnnotator(config, genome_resource)
+    genome = open_reference_genome_from_resource(genome_resource)
+    return NormalizeAlleleAnnotator(config, genome)
 
 
 class NormalizeAlleleAnnotator(Annotator):
 
-    def __init__(self, config, genome_resource):
+    def __init__(self, config, genome: ReferenceGenome):
         super().__init__(config)
 
-        self.genome_resource = genome_resource
-        self.genome = self.genome_resource.open()
+        self.genome = genome
         self._annotation_schema = None
 
     @staticmethod

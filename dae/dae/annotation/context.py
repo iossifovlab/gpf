@@ -8,7 +8,7 @@ from dae.genomic_resources.gene_models_resource import \
     load_gene_models_from_resource
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.reference_genome_resource import \
-    ReferenceGenomeResource
+    open_reference_genome_from_resource
 from dae.genomic_resources.genomic_context import get_genomic_context
 
 from dae.genomic_resources import build_genomic_resource_repository
@@ -92,15 +92,11 @@ class Context:
                 logger.info("Using the reference genome from resoruce"
                             f" {self.args.reference_genome_resource_id} "
                             "provided on the command line.")
-                ref_genome_resoruce = self.get_grr().get_resource(
+                resource = self.get_grr().get_resource(
                     self.args.reference_genome_resource_id)
-                if not isinstance(ref_genome_resoruce,
-                                  ReferenceGenomeResource):
-                    raise Exception(f"The resource with resoruce id "
-                                    f"{self.args.reference_genome_resource_id}"
-                                    f" is not a reference genome resrouce.")
-                self._ref_genome = cast(
-                    ReferenceGenomeResource, ref_genome_resoruce).open()
+
+                self._ref_genome = open_reference_genome_from_resource(
+                    resource)
             else:
                 logger.info("Using the reference genome from the context.")
                 self._ref_genome = get_genomic_context().get_reference_genome()

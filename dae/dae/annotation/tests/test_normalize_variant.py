@@ -3,6 +3,8 @@ import textwrap
 
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.genomic_resources.test_tools import build_a_test_resource
+from dae.genomic_resources.reference_genome_resource import \
+    open_reference_genome_from_resource
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_factory import AnnotationConfigParser, \
     build_annotation_pipeline
@@ -25,8 +27,8 @@ def example_1_genome():
         '''),
         "chr.fa.fai": "1\t11\t3\t11\t12\n"
     })
-    ref = res.open()
-    return ref
+    genome = open_reference_genome_from_resource(res)
+    return genome
 
 
 @pytest.mark.parametrize("beg,end,seq", [
@@ -58,8 +60,8 @@ def example_2_genome():
         '''),
         "chr.fa.fai": "1\t14\t3\t14\t15\n"
     })
-    ref = res.open()
-    return ref
+    genome = open_reference_genome_from_resource(res)
+    return genome
 
 
 @pytest.mark.parametrize("beg,end,seq", [
