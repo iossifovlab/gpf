@@ -1,5 +1,5 @@
 
-import { AfterViewInit, Component, ElementRef, HostListener, OnInit, QueryList, Renderer2, ViewChildren } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, OnInit, QueryList, Renderer2, ViewChild, ViewChildren } from '@angular/core';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { ItemApplyEvent } from 'app/multiple-select-menu/multiple-select-menu';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
@@ -16,10 +16,11 @@ import { Subject } from 'rxjs';
 })
 export class AgpTableComponent implements OnInit {
   @ViewChildren('dropdownSpan') public dropdownSpans: QueryList<ElementRef>;
-  @ViewChildren(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu[];
   @ViewChildren('columnFilteringButton') public columnFilteringButtons: QueryList<ElementRef>;
-  @ViewChildren(MultipleSelectMenuComponent) public multipleSelectMenuComponents: QueryList<MultipleSelectMenuComponent>;
   @ViewChildren(SortingButtonsComponent) public sortingButtonsComponents: SortingButtonsComponent[];
+  @ViewChild(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu;
+  @ViewChild(MultipleSelectMenuComponent) public multipleSelectMenuComponent: MultipleSelectMenuComponent;
+
 
   public config: AgpConfig;
   public genes = [];
@@ -85,14 +86,14 @@ export class AgpTableComponent implements OnInit {
     return { itemIds: allNames, shownItemIds: shownNames };
   }
 
-  public openDropdown(columnId: string): void {
+  public openDropdown(column: Column): void {
+    this.multipleSelectMenuComponent.menuId = column.id;
+    this.multipleSelectMenuComponent.itemsSource = this.createMultiSelectMenuSource(column);
+
     this.waitForDropdown()
       .then(() => {
-        this.ngbDropdownMenu
-          .find((ele: NgbDropdownMenu) => ele.nativeElement.id === `${ columnId }-dropdown`)
-          .dropdown
-          .open();
-        this.multipleSelectMenuComponents.find(menu => menu.menuId.includes(columnId)).refresh();
+        this.ngbDropdownMenu.dropdown.open();
+        this.multipleSelectMenuComponent.refresh();
       })
       .catch(err => console.error(err));
   }
@@ -114,7 +115,7 @@ export class AgpTableComponent implements OnInit {
     // Find column for filtering
     let column: Column = this.config.columns.find(col => col.id === menuId[0]);
     for (let i = 1; i < menuId.length; i++) {
-      menuId[i] = `${ menuId[i-1] }+${ menuId[i] }`;
+      menuId[i] = `${ menuId[i-1] }.${ menuId[i] }`;
       column = column.columns.find(col => col.id === menuId[i]);
     }
 
@@ -141,7 +142,7 @@ export class AgpTableComponent implements OnInit {
       column.visible = false;
     }
 
-    this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
+    this.ngbDropdownMenu.dropdown.close();
   }
 
   public updateModalBottom(): void {

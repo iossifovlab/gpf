@@ -20,20 +20,9 @@
               #columnFilteringButton
               [attr.id]="column.id + '-column-filtering-button'"
               class="dropdown-toggle btn navbar-toggler"
-              (click)="openDropdown(column.id)">
+              (click)="openDropdown(column)">
               &#9776;
             </button>
-            <span #dropdownSpan [attr.id]="column.id + '-span'" ngbDropdown>
-              <button ngbDropdownToggle style="display: none"></button>
-              <!-- REFACTOR itemsSource -->
-              <gpf-multiple-select-menu
-                class="multiple-select-menu"
-                ngbDropdownMenu
-                [attr.id]="column.id + '-dropdown'"
-                [menuId]="column.id"
-                [itemsSource]="createMultiSelectMenuSource(column)"
-                (applyEvent)="filterColumns($event)"></gpf-multiple-select-menu>
-            </span>
           </ng-container>
           <gpf-sorting-buttons
             *ngIf="column.sortable"
@@ -58,3 +47,12 @@
     </ng-container>
   </ng-template>
 </div>
+
+<span #dropdownSpan ngbDropdown>
+  <button ngbDropdownToggle style="display: none"></button>
+  <!-- REFACTOR itemsSource -->
+  <gpf-multiple-select-menu
+    class="multiple-select-menu"
+    ngbDropdownMenu
+    (applyEvent)="filterColumns($event)"></gpf-multiple-select-menu>
+</span>
