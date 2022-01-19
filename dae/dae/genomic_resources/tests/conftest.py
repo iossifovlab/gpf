@@ -1,6 +1,7 @@
 import pytest
 # import time
 import logging
+import os
 
 # from subprocess import Popen, PIPE
 from threading import Thread, Condition
@@ -105,6 +106,24 @@ def genomic_resource_fixture_http_repo(resources_http_server):
     url = f"http://localhost:{http_port}"
     return GenomicResourceURLRepo("genomic_resource_fixture_url_repo", url)
 
+# TODO move this to a common location
+from dae.backends.vcf.tests.test_vcf_loader import s3_base
+from dae.backends.vcf.tests.test_vcf_loader import s3
+@pytest.fixture
+def genomic_resource_fixture_s3_repo(genomic_resource_fixture_dir_repo, s3):
+    src_dir = genomic_resource_fixture_dir_repo.directory
+    s3_path = 's3://test-bucket'
+    for root, _, files in os.walk(src_dir):
+        for fn in files:
+            root_rel = os.path.relpath(root, src_dir)
+            if root_rel == '.':
+                root_rel = ''
+            s3.put(os.path.join(root, fn), os.path.join(s3_path, root_rel, fn))
+
+    from dae.genomic_resources.url_repository import GenomicResourceURLRepo
+    repo = GenomicResourceURLRepo("genomic_resource_fixture_url_repo", s3_path)
+    repo.filesystem = s3
+    return repo
 
 '''
 

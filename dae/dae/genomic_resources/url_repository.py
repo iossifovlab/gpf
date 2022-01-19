@@ -5,7 +5,6 @@ import logging
 import pysam  # type: ignore
 import fsspec  # type: ignore
 
-from urllib.request import urlopen
 from urllib.parse import urlparse
 
 
@@ -26,6 +25,7 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
             self.url = self.url[:-1]
 
         self.scheme = urlparse(url).scheme
+        self.filesystem, _ = fsspec.core.url_to_fs(self.url)
         self._all_resources = None
 
     def get_all_resources(self):
@@ -33,7 +33,7 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
             self._all_resources = []
             url = f"{self.url}/{GRP_CONTENTS_FILE_NAME}"
             logger.debug(f"url repo to open: {url}")
-            contents = yaml.safe_load(urlopen(url))
+            contents = yaml.safe_load(self.filesystem.open(url))
 
             for rdf in contents:
                 version = tuple(map(int, rdf['version'].split(".")))
@@ -66,11 +66,7 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
         file_url = self.get_file_url(genomic_resource, filename)
         logger.debug(f"opening url resource: {file_url}")
 
-        if self.scheme in ['http', 'https'] and seekable:
-            logger.debug("using HTTPFile for http(s)")
-            binary_stream = fsspec.open(file_url).open()
-        else:
-            binary_stream = urlopen(file_url)
+        binary_stream = self.filesystem.open(file_url)
 
         if filename.endswith(".gz") and uncompress:
             return gzip.open(binary_stream, mode)
@@ -82,7 +78,7 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
 
     def open_tabix_file(self, genomic_resource,  filename,
                         index_filename=None):
-        if self.scheme not in ['http', 'https']:
+        if self.scheme not in ['http', 'https', 's3']:
             raise Exception(
                 f"Tabix files are not supported by GenomicResourceURLRepo "
                 f"for URLs with scheme {self.scheme}. Only http(s) URLs allow "
