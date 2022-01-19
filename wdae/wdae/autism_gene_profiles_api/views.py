@@ -42,10 +42,12 @@ class ConfigurationView(QueryBaseView):
                 "id": f"{category['category']}_rank",
                 "displayName": category["display_name"],
                 "visible": True,
+                "sortable": True,
                 "columns": [{
                     "id": f"{category['category']}.{gene_set['set_id']}",
                     "displayName": gene_set["set_id"],
                     "visible": True,
+                    "sortable": True,
                     "columns": []
                 } for gene_set in category["sets"]]
             })
@@ -59,6 +61,7 @@ class ConfigurationView(QueryBaseView):
                     "id": f"{category['category']}.{genomic_score['score_name']}",
                     "displayName": genomic_score["score_name"],
                     "visible": True,
+                    "sortable": True,
                     "columns": []
                 } for genomic_score in category["scores"]]
             })
@@ -98,6 +101,7 @@ class ConfigurationView(QueryBaseView):
                             { "id": f"datasets.{dataset_id}.{set_id}.{statistic.id}",
                               "displayName": statistic.display_name,
                               "visible": True,
+                              "sortable": True,
                               "columns": list() }
                             for statistic in dataset["statistics"]
                         ]
