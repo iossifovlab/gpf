@@ -83,7 +83,7 @@ class AutismGeneProfileDB:
                 set_id = gene_set["set_id"]
                 collection_id = gene_set["collection_id"]
                 full_gs_id = f"{collection_id}_{set_id}"
-                result['.'.join([category_name, set_id])] = \
+                result['.'.join([f"{category_name}_rank", set_id])] = \
                     bool(row[full_gs_id])
         
         for dataset_id, filters in config["datasets"].items():
