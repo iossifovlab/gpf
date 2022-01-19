@@ -2,8 +2,8 @@ import { EnrichmentToolPage } from 'cypress/elements/enrichment-tool-page';
 import { GenesBlockPage } from 'cypress/elements/genes-block-page';
 import { SaveQueryPage } from 'cypress/elements/save-query-page';
 import { ShareQueryPage } from 'cypress/elements/share-query-page';
-import { applyData, datasetIds, parseYamlData, toolPageLinks } from 'cypress/elements/utils';
-import { EnrichmentToolData, Params } from 'cypress/elements/dynamic-data-structure';
+import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
+import { applyData, EnrichmentToolData, parseYamlData } from 'cypress/elements/dynamic-data-structure';
 
 describe('Enrichment tool common tests', () => {
   const page = new EnrichmentToolPage();
