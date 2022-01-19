@@ -39,7 +39,7 @@ class ConfigurationView(QueryBaseView):
 
         for category in configuration["gene_sets"]:
             response["columns"].append({
-                "id": category["category"],
+                "id": f"{category['category']}_rank",
                 "displayName": category["display_name"],
                 "visible": True,
                 "columns": [{
