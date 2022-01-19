@@ -1,34 +1,52 @@
-import { Component } from '@angular/core';
-import { configMock, rowMock } from './agp-table';
-import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
+
+import { AfterViewInit, Component, ElementRef, HostListener, OnInit, QueryList, Renderer2, ViewChildren } from '@angular/core';
+import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
+import { ItemApplyEvent } from 'app/multiple-select-menu/multiple-select-menu';
+import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
+import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
+import { AgpConfig, Column } from './agp-table';
+import { AutismGeneProfilesService } from 'app/agp-table/agp-table.service';
 import { take } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'gpf-agp-table',
   templateUrl: './agp-table.component.html',
   styleUrls: ['./agp-table.component.css']
 })
-export class AgpTableComponent {
+export class AgpTableComponent implements OnInit {
+  @ViewChildren('dropdownSpan') public dropdownSpans: QueryList<ElementRef>;
+  @ViewChildren(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu[];
+  @ViewChildren('columnFilteringButton') public columnFilteringButtons: QueryList<ElementRef>;
+  @ViewChildren(MultipleSelectMenuComponent) public multipleSelectMenuComponents: QueryList<MultipleSelectMenuComponent>;
+  @ViewChildren(SortingButtonsComponent) public sortingButtonsComponents: SortingButtonsComponent[];
+
+  public config: AgpConfig;
+  public genes = [];
 
   public sortBy: string;
   public orderBy: string;
-  private pageIndex = 1;
   public currentSortingColumnId: string;
+  public modalBottom: number;
+  public showSearchWarning = false;
 
-  public config;
-  public genes = [];
+  public geneInput: string;
+  public searchKeystrokes$: Subject<string> = new Subject();
 
-  constructor(
+  private pageIndex = 1;
+  private loadMoreGenes = true;
+
+  public constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
+    private renderer: Renderer2
   ) { }
 
   public ngOnInit(): void {
-    this.autismGeneProfilesService.getConfigNew().pipe(take(1)).subscribe(config => {
+    this.autismGeneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
       this.config = config;
 
       this.sortBy = `autism_gene_sets_rank`;
       this.orderBy = 'desc';
-      this.currentSortingColumnId = this.sortBy;
 
       this.autismGeneProfilesService.getGenes(
         this.pageIndex, undefined, this.sortBy, this.orderBy
@@ -36,6 +54,137 @@ export class AgpTableComponent {
         this.genes = this.genes.concat(res);
       });
     });
+  }
 
+  public search(value: string): void {
+    this.geneInput = value;
+    this.genes = [];
+    this.pageIndex = 0;
+
+    this.updateGenes();
+  }
+
+  public updateGenes(): void {
+    this.loadMoreGenes = false;
+    this.showSearchWarning = false;
+    this.pageIndex++;
+
+    this.autismGeneProfilesService
+      .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
+      .pipe(take(1))
+      .subscribe(res => {
+        this.genes = this.genes.concat(res);
+        this.loadMoreGenes = Object.keys(res).length !== 0;
+        this.showSearchWarning = !this.loadMoreGenes;
+      });
+  }
+
+  public createMultiSelectMenuSource(column: Column): { itemIds: string[]; shownItemIds: string[] } {
+    const allNames = column.columns.map(col => col.displayName);
+    const shownNames = column.columns.filter(col => col.visible).map(col => col.displayName);
+    return { itemIds: allNames, shownItemIds: shownNames };
+  }
+
+  public openDropdown(columnId: string): void {
+    this.waitForDropdown()
+      .then(() => {
+        this.ngbDropdownMenu
+          .find((ele: NgbDropdownMenu) => ele.nativeElement.id === `${ columnId }-dropdown`)
+          .dropdown
+          .open();
+        this.multipleSelectMenuComponents.find(menu => menu.menuId.includes(columnId)).refresh();
+      })
+      .catch(err => console.error(err));
+  }
+
+  public async waitForDropdown(): Promise<void> {
+    return new Promise<void>(resolve => {
+      const timer = setInterval(() => {
+        if (this.ngbDropdownMenu !== undefined) {
+          resolve();
+          clearInterval(timer);
+        }
+      }, 15);
+    });
+  }
+
+  public filterColumns($event: ItemApplyEvent): void {
+    const menuId = $event.menuId.split('.');
+
+    // Find column for filtering
+    let column: Column = this.config.columns.find(col => col.id === menuId[0]);
+    for (let i = 1; i < menuId.length; i++) {
+      menuId[i] = `${ menuId[i-1] }+${ menuId[i] }`;
+      column = column.columns.find(col => col.id === menuId[i]);
+    }
+
+    // Sort sub-columns according to the new order
+    column.columns.sort((a, b) => $event.order.indexOf(a.displayName) - $event.order.indexOf(b.displayName));
+
+    // Toggle sub-columns visibility according to the new selected
+    let hiddenCounter = 0;
+    column.columns.forEach(col => {
+      if ($event.selected.indexOf(col.displayName) === -1) {
+        col.visible = false;
+        hiddenCounter++;
+      }
+      else {
+        col.visible = true;
+      }
+    });
+
+    // Toggle main column visibility if all sub-columns are hidden
+    if (hiddenCounter === column.columns.length) {
+      column.columns.forEach(col => {
+        col.visible = true;
+      });
+      column.visible = false;
+    }
+
+    this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
+  }
+
+  public updateModalBottom(): void {
+    const columnFilteringButton = this.columnFilteringButtons.first;
+    let result = 0;
+
+    if (columnFilteringButton) {
+      result = window.innerHeight - columnFilteringButton.nativeElement.getBoundingClientRect().bottom;
+      // If there is a horizontal scroll
+      if (window.innerHeight !== document.documentElement.clientHeight) {
+        result -= 15;
+      }
+    }
+    this.modalBottom = result;
+  }
+
+  public sort(sortBy: string, orderBy?: string): void {
+    if (this.currentSortingColumnId !== sortBy) {
+      this.resetSortButtons(sortBy);
+    }
+
+    this.sortBy = sortBy;
+    if (orderBy) {
+      this.orderBy = orderBy;
+    }
+    this.genes = [];
+    this.pageIndex = 0;
+
+    this.updateGenes();
+  }
+
+  public resetSortButtons(sortBy: string): void {
+    if (this.currentSortingColumnId !== undefined) {
+      const sortButton = this.sortingButtonsComponents.find(
+        sortingButtonsComponent => {
+          return sortingButtonsComponent.id === this.currentSortingColumnId;
+        }
+      );
+
+      if (sortButton) {
+        sortButton.resetHideState();
+      }
+    }
+    this.currentSortingColumnId = sortBy;
   }
 }

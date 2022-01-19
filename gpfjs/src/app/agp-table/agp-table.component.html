@@ -1,27 +1,60 @@
 <div *ngIf="config" class="table-container">
   <div class="header main-header">
-    <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: config.config, headerDepth: 0 }"></ng-container>
+    <ng-container
+      *ngTemplateOutlet="recursiveListTmpl; context: { columns: config.columns, headerDepth: 0 }"></ng-container>
   </div>
 
   <ng-template #recursiveListTmpl let-columns="columns" let-headerDepth="headerDepth">
-    <div
-      class="header-cell"
-      *ngFor="let column of columns"
-      [ngStyle]="{ 'grid-template-rows': column.columns.length > 0 ? 'auto auto' : 'auto' }">
-      <div class="cell header-title-cell"
-        [ngClass]="{ leaf: column.columns.length === 0 }"
-        [ngStyle]="{ 'top': headerDepth + 'px' }">
-        {{ column.displayName }}
-      </div>
-
-      <div class="header" *ngIf="column.columns.length > 0">
-        <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: column.columns, headerDepth: headerDepth + 25 }"></ng-container>
-      </div>
-      <ng-container *ngIf="column.columns.length === 0">
-        <div class="cell" *ngFor="let row of genes">
-          {{ row[column.id] }}
+    <ng-container *ngFor="let column of columns">
+      <div
+        *ngIf="column.visible"
+        class="header-cell"
+        [ngStyle]="{ 'grid-template-rows': column.columns.length > 0 ? 'auto auto' : 'auto' }">
+        <div
+          class="cell header-title-cell"
+          [ngClass]="{ leaf: column.columns.length === 0 || !column.visible }"
+          [ngStyle]="{ top: headerDepth + 'px' }">
+          {{ column.displayName }}
+          <ng-container *ngIf="column.columns.length !== 0">
+            <button
+              #columnFilteringButton
+              [attr.id]="column.id + '-column-filtering-button'"
+              class="dropdown-toggle btn navbar-toggler"
+              (click)="openDropdown(column.id)">
+              &#9776;
+            </button>
+            <span #dropdownSpan [attr.id]="column.id + '-span'" ngbDropdown>
+              <button ngbDropdownToggle style="display: none"></button>
+              <!-- REFACTOR itemsSource -->
+              <gpf-multiple-select-menu
+                class="multiple-select-menu"
+                ngbDropdownMenu
+                [attr.id]="column.id + '-dropdown'"
+                [menuId]="column.id"
+                [itemsSource]="createMultiSelectMenuSource(column)"
+                (applyEvent)="filterColumns($event)"></gpf-multiple-select-menu>
+            </span>
+          </ng-container>
+          <gpf-sorting-buttons
+            *ngIf="column.sortable"
+            class="sorting-buttons"
+            [id]="column.id"
+            (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
         </div>
-      </ng-container>
-    </div>
+
+        <div class="header" *ngIf="column.columns.length > 0">
+          <ng-container
+            *ngTemplateOutlet="
+              recursiveListTmpl;
+              context: { columns: column.columns, headerDepth: headerDepth + 25 }
+            "></ng-container>
+        </div>
+        <ng-container *ngIf="column.columns.length === 0 || !column.visible">
+          <div class="cell" *ngFor="let row of genes">
+            {{ row[column.id] }}
+          </div>
+        </ng-container>
+      </div>
+    </ng-container>
   </ng-template>
 </div>
