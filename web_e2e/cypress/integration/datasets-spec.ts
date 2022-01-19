@@ -176,7 +176,7 @@ describe('Datasets visual tests', () => {
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics);
   });
 
-  it('should compare family by number table data', () => {
+  it.skip('should compare family by number table data', () => {
     cy.get('#families-by-number-div').matchImageSnapshot('datasets/iossifov-family-table-status');
 
     page.familiesByNumberDropdownButton.select('Role');
@@ -186,7 +186,7 @@ describe('Datasets visual tests', () => {
     cy.get('#families-by-number-div').matchImageSnapshot('datasets/iossifov-family-table-phenotype');
   });
 
-  it('should compare families by pedigree table data', () => {
+  it.skip('should compare families by pedigree table data', () => {
     cy.get('#families-by-pedigree-div').scrollIntoView().matchImageSnapshot('datasets/iossifov-pedigree-table-status');
 
     cy.get('.col-sm-3 > .select-wrapper > .form-control').select('Role');
@@ -198,7 +198,7 @@ describe('Datasets visual tests', () => {
     cy.get('#families-by-pedigree-div').scrollIntoView().matchImageSnapshot('datasets/iossifov-pedigree-table-phenotype'); 
   });
 
-  it('should compare de novo variants table data', () => {
+  it.skip('should compare de novo variants table data', () => {
     cy.get('#denovo-variants-div').scrollIntoView().matchImageSnapshot('datasets/iossifov-denovo-table-status');
 
     page.denovoVariantsDropdownButton.select('Role');
