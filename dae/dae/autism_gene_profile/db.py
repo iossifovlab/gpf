@@ -103,10 +103,20 @@ class AutismGeneProfileDB:
         return result
 
     def _transform_sort_by(self, sort_by):
+        sort_by_tokens = sort_by.split('.')
         if sort_by.startswith("gene_set_"):
             sort_by = sort_by.replace("gene_set_", "", 1)
         if sort_by.startswith("datasets."):
             sort_by = sort_by.replace("datasets.", "", 1)
+        if "_rank" in sort_by_tokens[0]:
+            collection_id = ""
+            category = sort_by_tokens[0].replace("_rank", "")
+            for gs_category in self.configuration["gene_sets"]:
+                if gs_category["category"] == category:
+                    for gene_set in gs_category["sets"]:
+                        if gene_set["set_id"] == sort_by_tokens[1]:
+                            collection_id = gene_set["collection_id"]
+            sort_by = '.'.join((collection_id, sort_by_tokens[1]))
         return sort_by.replace(".", "_")
 
     def query_agps(self, page, symbol_like=None, sort_by=None, order=None):

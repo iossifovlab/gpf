@@ -44,7 +44,7 @@ class ConfigurationView(QueryBaseView):
                 "visible": True,
                 "sortable": True,
                 "columns": [{
-                    "id": f"{category['category']}.{gene_set['set_id']}",
+                    "id": f"{category['category']}_rank.{gene_set['set_id']}",
                     "displayName": gene_set["set_id"],
                     "visible": True,
                     "sortable": True,
