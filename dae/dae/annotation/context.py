@@ -4,7 +4,8 @@ from typing import Optional, cast
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.genomic_resources.gene_models import GeneModels
-from dae.genomic_resources.gene_models_resource import GeneModelsResource
+from dae.genomic_resources.gene_models_resource import \
+    load_gene_models_from_resource
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.reference_genome_resource import \
     ReferenceGenomeResource
@@ -114,16 +115,10 @@ class Context:
                 logger.info("Using the gene models from resoruce "
                             f"{self.args.gene_models_resource_id} "
                             "provided on the command line.")
-                gene_models_resource = self.get_grr().get_resource(
+                resource = self.get_grr().get_resource(
                     self.args.gene_models_resource_id)
 
-                if not isinstance(gene_models_resource,
-                                  GeneModelsResource):
-                    raise Exception(f"The resource with resoruce id "
-                                    f"{self.args.gene_models_resource_id}"
-                                    f" is not a gene models resrouce.")
-                self._gene_models = cast(GeneModelsResource,
-                                         gene_models_resource).open()
+                self._gene_models = load_gene_models_from_resource(resource)
             else:
                 logger.info("Using the gene models from the GPF instance.")
                 self._gene_models = get_genomic_context().get_gene_models()

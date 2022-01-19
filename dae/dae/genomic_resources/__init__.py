@@ -4,7 +4,6 @@ from .repository_factory import build_genomic_resource_repository
 from .repository import GenomicResource
 
 from .reference_genome_resource import ReferenceGenomeResource
-from .gene_models_resource import GeneModelsResource
 from .liftover_resource import LiftoverChainResource
 from .score_resources import PositionScoreResource, NPScoreResource, \
     AlleleScoreResource
@@ -15,7 +14,7 @@ from .dir_repository import GenomicResourceDirRepo
 
 __all__ = [
     "build_genomic_resource_repository", "GenomicResource",
-    "ReferenceGenomeResource", "GeneModelsResource",
+    "ReferenceGenomeResource",
     "LiftoverChainResource",
     "PositionScoreResource", "NPScoreResource", "AlleleScoreResource",
 ]
