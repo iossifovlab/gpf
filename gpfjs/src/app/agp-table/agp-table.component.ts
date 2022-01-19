@@ -21,7 +21,6 @@ export class AgpTableComponent implements OnInit {
   @ViewChild(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu;
   @ViewChild(MultipleSelectMenuComponent) public multipleSelectMenuComponent: MultipleSelectMenuComponent;
 
-
   public config: AgpConfig;
   public genes = [];
 
@@ -35,12 +34,25 @@ export class AgpTableComponent implements OnInit {
   public searchKeystrokes$: Subject<string> = new Subject();
 
   private pageIndex = 1;
-  private loadMoreGenes = true;
 
+  private loadMoreGenes = true;
+  private scrollLoadThreshold = 1000;
   public constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
     private renderer: Renderer2
   ) { }
+
+  @HostListener('window:scroll')
+  public onWindowScroll(): void {
+    const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
+    const totalScrollHeight = document.documentElement.scrollHeight;
+
+    if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
+      this.updateGenes();
+    }
+
+    this.updateModalBottom();
+  }
 
   public ngOnInit(): void {
     this.autismGeneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
@@ -85,7 +97,6 @@ export class AgpTableComponent implements OnInit {
       .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
       .pipe(take(1))
       .subscribe(res => {
-        console.log(res);
         this.genes = this.genes.concat(res);
         this.loadMoreGenes = Object.keys(res).length !== 0;
         this.showSearchWarning = !this.loadMoreGenes;
