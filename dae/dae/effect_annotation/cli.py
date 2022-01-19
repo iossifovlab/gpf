@@ -11,10 +11,11 @@ from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.gene_models import load_gene_models
 from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.reference_genome import open_ref
+from dae.genomic_resources.reference_genome import \
+    open_reference_genome_from_file
 from dae.genomic_resources.gene_models_resource import GeneModelsResource
 from dae.genomic_resources.reference_genome_resource import \
-    ReferenceGenomeResource
+    open_reference_genome_from_resource
 
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AnnotationEffect
@@ -122,15 +123,11 @@ class EffectAnnotatorBuilder:
         if self.args.reference_genome_resource_id:
             resource = self.get_grr().get_resource(
                 self.args.reference_genome_resource_id)
-            if not isinstance(resource, ReferenceGenomeResource):
-                raise Exception("The resoruce with id "
-                                f"{self.args.reference_genome_resource_id} is "
-                                "not a ReferenceGenome resource.")
-            rg_resource = cast(ReferenceGenomeResource, resource)
-            return rg_resource.open()
+            return open_reference_genome_from_resource(resource)
 
         if self.args.reference_genome_filename:
-            return open_ref(self.args.reference_genome_filename)
+            return open_reference_genome_from_file(
+                self.args.reference_genome_filename)
 
         ref = self.get_genomic_context().get_reference_genome()
         if ref:

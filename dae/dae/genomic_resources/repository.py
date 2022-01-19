@@ -149,6 +149,12 @@ class GenomicResource:
     def get_config(self):
         return self.config
 
+    def get_type(self):
+        config_type = self.get_config().get("type")
+        if config_type is None:
+            return "Basic"
+        return config_type
+
     def get_version_str(self) -> str:
         '''returns string of the form 3.1'''
         return ".".join(map(str, self.version))
@@ -251,11 +257,10 @@ class GenomicResource:
 _registered_genomic_resource_types = {}
 
 
-def register_genomic_resource_type(constructor):
-    tp = constructor.get_resource_type()
-    if tp in _registered_genomic_resource_types:
-        raise Exception(f"The resource {tp} is registered twice!")
-    _registered_genomic_resource_types[tp] = constructor
+def register_genomic_resource_type(constructor, resource_type):
+    if resource_type in _registered_genomic_resource_types:
+        raise Exception(f"The resource {resource_type} is registered twice!")
+    _registered_genomic_resource_types[resource_type] = constructor
 
 
 class GenomicResourceRepo(abc.ABC):
@@ -284,22 +289,22 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
         super().__init__()
         self.repo_id = repo_id
 
-    def build_genomic_resource(self, id, version, config=None, manifest=None):
+    def build_genomic_resource(
+            self, resource_id, version, config=None, manifest=None):
         if not config:
-            grTemp = GenomicResource(id, version, self)
-            config = grTemp.load_yaml(GR_CONF_FILE_NAME)
-        grClass = GenomicResource
+            gr_base = GenomicResource(resource_id, version, self)
+            config = gr_base.load_yaml(GR_CONF_FILE_NAME)
+        gr_clazz = GenomicResource
         if isinstance(config, dict) and "type" in config:
-            grClassType = config["type"]
-            try:
-                grClass = _registered_genomic_resource_types[grClassType]
-            except KeyError:
-                raise Exception(
-                    f"Unknown genomic resource type {grClassType}. The known "
-                    f"resource types are: " +
-                    ", ".join(sorted(
-                        _registered_genomic_resource_types.keys())))
-        gr = grClass(id, version, self, config)
+            gr_type = config["type"]
+            if gr_type not in _registered_genomic_resource_types:
+                logger.warning(
+                    f"using basic resource for resource {resource_id} "
+                    f"of type {gr_type}")
+            else:
+                gr_clazz = _registered_genomic_resource_types[gr_type]
+
+        gr = gr_clazz(resource_id, version, self, config)
         gr._manifest = manifest
         return gr
 

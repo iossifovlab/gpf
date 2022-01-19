@@ -126,7 +126,7 @@ def test_cached_http_repo(
     assert src_gr.get_manifest() == cached_gr.build_manifest()
 
 
-@pytest.mark.internet
+@pytest.mark.skip
 @pytest.mark.parametrize("resource_id", [
     "hg19/gene_models/refGene_v201309",
 ])

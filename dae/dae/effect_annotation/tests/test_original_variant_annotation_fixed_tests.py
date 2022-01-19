@@ -1,6 +1,10 @@
 import pytest
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.genomic_resources import build_genomic_resource_repository
+from dae.genomic_resources.reference_genome_resource import \
+    open_reference_genome_from_resource
+from dae.genomic_resources.gene_models_resource import \
+    load_gene_models_from_resource
 
 
 @pytest.fixture(scope="module")
@@ -10,16 +14,16 @@ def grr_repository():
 
 @pytest.fixture(scope="module")
 def genomic_sequence_2013(grr_repository):
-    ref_genome_resource = grr_repository.get_resource(
+    resource = grr_repository.get_resource(
         "hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174")
-    return ref_genome_resource.open()
+    return open_reference_genome_from_resource(resource)
 
 
 @pytest.fixture(scope="module")
 def gene_models_2013(grr_repository):
-    gene_models_resource = grr_repository.get_resource(
+    resource = grr_repository.get_resource(
         "hg19/gene_models/refGene_v201309")
-    return gene_models_resource.open()
+    return load_gene_models_from_resource(resource)
 
 
 def test_chr12_130827138_del_var(genomic_sequence_2013, gene_models_2013):

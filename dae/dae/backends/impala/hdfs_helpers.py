@@ -23,12 +23,12 @@ class HdfsHelpers:
     @property
     def hdfs(self):
         if self._hdfs is None:
-            from urllib.request import urlopen
-            with urlopen(
-                    "https://www.iossifovlab.com/distribution/public/"
-                    "genomic-resources-repository/.CONTENTS") as repo:
-                for index, line in enumerate(repo):
-                    pass
+            # from urllib.request import urlopen
+            # with urlopen(
+            #         "https://www.iossifovlab.com/distribution/public/"
+            #         "genomic-resources-repository/.CONTENTS") as repo:
+            #     for index, line in enumerate(repo):
+            #         pass
 
             from pyarrow import fs
             from fsspec.implementations.arrow import ArrowFSWrapper

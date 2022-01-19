@@ -5,6 +5,8 @@ from box import Box
 from dae.gpf_instance.gpf_instance import cached
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
+from dae.genomic_resources.gene_models_resource import \
+    load_gene_models_from_resource
 
 from gpf_instance.gpf_instance import WGPFInstance
 
@@ -17,10 +19,10 @@ def wgpf_instance(default_dae_config, fixture_dirname):
         @cached
         def gene_models(self):
             print(self.dae_config.gene_models)
-            result = self.grr.get_resource(
+            resource = self.grr.get_resource(
                 "hg19/gene_models/refGene_v201309")
-            result.open()
-            return result
+            gene_models = load_gene_models_from_resource(resource)
+            return gene_models
 
     def build(work_dir=None, load_eagerly=False):
         result = WGPFInstanceInternal(

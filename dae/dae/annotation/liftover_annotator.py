@@ -3,6 +3,8 @@ import copy
 
 from typing import Dict, List
 from box import Box
+from dae.genomic_resources.reference_genome_resource import \
+    ReferenceGenome, open_reference_genome_from_resource
 
 from dae.utils.variant_utils import trim_str_left, reverse_complement
 
@@ -24,28 +26,28 @@ def build_liftover_annotator(pipeline, config):
             f"can't create liftover annotator; "
             f"can't find liftover chain {config.chain}")
 
-    target_genome_resource = pipeline.repository.get_resource(
+    resource = pipeline.repository.get_resource(
         config.target_genome)
-    if target_genome_resource is None:
+    if resource is None:
         raise ValueError(
             f"can't create liftover annotator; "
             f"can't find liftover target genome: "
             f"{config.target_genome}")
+    target_genome = open_reference_genome_from_resource(resource)
 
-    return LiftOverAnnotator(config, chain_resource, target_genome_resource)
+    return LiftOverAnnotator(config, chain_resource, target_genome)
 
 
 class LiftOverAnnotator(Annotator):
 
-    def __init__(self, config, chain_resource, target_genome_resource):
+    def __init__(self, config, chain_resource, target_genome: ReferenceGenome):
         super().__init__(config)
 
         self.chain_resource = chain_resource
-        self.target_genome_resource = target_genome_resource
 
         # TODO do somewhere else
         self.chain = self.chain_resource.open()
-        self.target_genome = self.target_genome_resource.open()
+        self.target_genome = target_genome
         self._annotation_schema = None
 
     @staticmethod

@@ -44,7 +44,8 @@ from dae.autism_gene_profile.statistic import AGPStatistic
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
-
+from dae.genomic_resources.gene_models_resource import \
+    load_gene_models_from_resource
 
 '''
 from urllib.request import urlopen
@@ -187,7 +188,7 @@ def gpf_instance_2013(
             print(self.dae_config.gene_models)
             resource = self.grr.get_resource(
                 "hg19/gene_models/refGene_v201309")
-            result = resource.open()
+            result = load_gene_models_from_resource(resource)
             return result
 
     gpf_instance = GPFInstance2013(dae_config=default_dae_config)
@@ -224,7 +225,7 @@ def gpf_instance_2019(default_dae_config, global_dae_fixtures_dir):
         def gene_models(self):
             resource = self.grr.get_resource(
                 "hg19/gene_models/refGene_v20190211")
-            result = resource.open()
+            result = load_gene_models_from_resource(resource)
             return result
 
     return GPFInstance2019(

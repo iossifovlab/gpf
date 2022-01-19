@@ -1376,7 +1376,7 @@ class GeneModelsFilesystem(GeneModels):
 '''
 
 
-def load_gene_models(
+def load_gene_models_from_file(
     filename: str,
     fileformat: Optional[str] = None,
     gene_mapping_filename: Optional[str] = None

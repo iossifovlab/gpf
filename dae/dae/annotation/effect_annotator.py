@@ -7,7 +7,11 @@ from box import Box
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AlleleEffects, AnnotationEffect
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.reference_genome_resource import \
+    open_reference_genome_from_resource
 from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.gene_models_resource import \
+    load_gene_models_from_resource
 
 from .annotatable import Annotatable, CNVAllele, VCFAllele
 
@@ -37,12 +41,8 @@ def build_effect_annotator(pipeline, config):
                 "genome is missing in config and context")
     else:
         genome_id = config.get("genome")
-        genome = pipeline.repository.get_resource(genome_id)
-        if genome is None:
-            logger.error(
-                f"can't find reference genome {genome_id} in genomic "
-                f"resources repository {pipeline.repository.repo_id}")
-            raise ValueError(f"can't find genome {genome_id}")
+        resource = pipeline.repository.get_resource(genome_id)
+        genome = open_reference_genome_from_resource(resource)
 
     if config.get("gene_models") is None:
         gene_models = pipeline.context.get_gene_models()
@@ -52,14 +52,10 @@ def build_effect_annotator(pipeline, config):
                 "gene models are missing in config and context")
     else:
         gene_models_id = config.get("gene_models")
-        gene_models = pipeline.repository.get_resource(gene_models_id)
-        if gene_models is None:
-            raise ValueError(
-                f"can't find gene models {gene_models_id} "
-                f"in the specified repository "
-                f"{pipeline.repository.repo_id}")
+        resource = pipeline.repository.get_resource(gene_models_id)
+        gene_models = load_gene_models_from_resource(resource)
 
-    return EffectAnnotatorAdapter(config, genome.open(), gene_models.open())
+    return EffectAnnotatorAdapter(config, genome, gene_models)
 
 
 class EffectAnnotatorAdapter(Annotator):

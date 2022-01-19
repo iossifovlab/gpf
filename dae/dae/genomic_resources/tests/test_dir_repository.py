@@ -3,7 +3,7 @@ import pathlib
 from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
 from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.genomic_resources import GeneModelsResource
+from dae.genomic_resources import GenomicResource
 
 
 def test_dir_repository(tmp_path):
@@ -32,7 +32,7 @@ def test_dir_repository(tmp_path):
         }
 
     assert resource_set(src_repo) == resource_set(dir_repo)
-    assert isinstance(dir_repo.get_resource("sub/two"), GeneModelsResource)
+    assert isinstance(dir_repo.get_resource("sub/two"), GenomicResource)
     assert dir_repo.get_resource("sub/two").get_file_content("genes.txt") == \
         demo_gtf_content
 
