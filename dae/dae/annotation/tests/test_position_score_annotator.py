@@ -3,7 +3,8 @@ import textwrap
 
 from dae.annotation.annotatable import VCFAllele
 from dae.genomic_resources import build_genomic_resource_repository
-
+from dae.genomic_resources.score_resources import \
+    open_position_score_from_resource
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
@@ -61,8 +62,9 @@ def test_position_resource_default_annotation(position_score_repo):
 
     res = position_score_repo.get_resource("position_score1")
     assert res is not None
+    score = open_position_score_from_resource(res)
 
-    default_annotation = res.get_default_annotation()
+    default_annotation = score.get_default_annotation()
     print(default_annotation)
 
     assert "attributes" in default_annotation

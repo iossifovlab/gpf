@@ -8,7 +8,9 @@ from .annotatable import Annotatable, VCFAllele
 from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
 from .annotation_pipeline import AnnotationPipeline
 
-from dae.genomic_resources.score_resources import GenomicScoresResource
+from dae.genomic_resources.score_resources import \
+    open_allele_score_from_resource, open_position_score_from_resource, \
+    open_np_score_from_resource
 from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
 
 logger = logging.getLogger(__name__)
@@ -39,15 +41,11 @@ class VariantScoreAnnotatorBase(Annotator):
         }
     }
 
-    def __init__(self, config: Dict, resource):
+    def __init__(self, config: Dict, score):
 
         super().__init__(config)
 
-        self.resource = resource
-        self.liftover_id = self.config.get("liftover_id")
-
-        assert isinstance(resource, GenomicScoresResource), \
-            resource.resource_id
+        self.score = score
         self._annotation_schema = None
 
         self.non_default_position_aggregators = {}
@@ -56,7 +54,7 @@ class VariantScoreAnnotatorBase(Annotator):
 
     def get_all_annotation_attributes(self) -> List[Dict]:
         result = []
-        for score in self.resource.scores.values():
+        for score in self.score.score_columns.values():
             result.append({
                 "name": score.id,
                 "type": score.type,
@@ -68,15 +66,15 @@ class VariantScoreAnnotatorBase(Annotator):
         attributes = self.config.get("attributes")
         if attributes:
             return attributes
-        if self.resource.get_default_annotation():
-            attributes = self.resource.get_default_annotation().attributes
+        if self.score.get_default_annotation():
+            attributes = self.score.get_default_annotation().attributes
             logger.info(
-                f"using default annotation for {self.resource.resource_id}: "
+                f"using default annotation for {self.score.score_id()}: "
                 f"{attributes}")
             return attributes
         logger.warning(
             f"can't find annotation config for resource: "
-            f"{self.resource.resource_id}")
+            f"{self.score.score_id()}")
         return []
 
     def _collect_non_default_aggregators(self):
@@ -124,14 +122,13 @@ def build_position_score_annotator(pipeline: AnnotationPipeline, config: Dict):
             f"genomic resource repository {pipeline.repository.repo_id}")
         raise ValueError(f"can't find resource {resource_id}")
 
-    return PositionScoreAnnotator(config, resource)
+    score = open_position_score_from_resource(resource)
+    return PositionScoreAnnotator(config, score)
 
 
 class PositionScoreAnnotator(VariantScoreAnnotatorBase):
     def __init__(self, config: Box, resource):
         super().__init__(config, resource)
-        # FIXME This should be closed somewhere
-        self.resource.open()
 
     @staticmethod
     def annotator_type():
@@ -167,14 +164,14 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         return validator.document
 
     def _fetch_substitution_scores(self, variant):
-        scores = self.resource.fetch_scores(
+        scores = self.score.fetch_scores(
             variant.chromosome, variant.position,
             self.get_scores()
         )
         return scores
 
     def _fetch_aggregated_scores(self, chrom, pos_begin, pos_end):
-        scores_agg = self.resource.fetch_scores_agg(
+        scores_agg = self.score.fetch_scores_agg(
             chrom,
             pos_begin,
             pos_end,
@@ -195,7 +192,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(attributes)
             return attributes
 
-        if annotatable.chromosome not in self.resource.get_all_chromosomes():
+        if annotatable.chromosome not in self.score.get_all_chromosomes():
             self._scores_not_found(attributes)
             return attributes
 
@@ -236,13 +233,13 @@ def build_np_score_annotator(pipeline: AnnotationPipeline, config: Dict):
             f"genomic resource repository {pipeline.repository.repo_id}")
         raise ValueError(f"can't find resource {resource_id}")
 
-    return NPScoreAnnotator(config, resource)
+    score = open_np_score_from_resource(resource)
+    return NPScoreAnnotator(config, score)
 
 
 class NPScoreAnnotator(PositionScoreAnnotator):
     def __init__(self, config: Box, resource):
         super().__init__(config, resource)
-        self.resource.open()
 
     @classmethod
     def validate_config(cls, config: Dict) -> Dict:
@@ -271,14 +268,14 @@ class NPScoreAnnotator(PositionScoreAnnotator):
         return "np_score"
 
     def _fetch_substitution_scores(self, allele):
-        return self.resource.fetch_scores(
+        return self.score.fetch_scores(
             allele.chromosome, allele.position,
             allele.reference, allele.alternative,
             self.get_scores()
         )
 
     def _fetch_aggregated_scores(self, chrom, pos_begin, pos_end):
-        scores_agg = self.resource.fetch_scores_agg(
+        scores_agg = self.score.fetch_scores_agg(
             chrom,
             pos_begin,
             pos_end,
@@ -313,13 +310,13 @@ def build_allele_score_annotator(pipeline: AnnotationPipeline, config: Dict):
             f"genomic resource repository {pipeline.repository.repo_id}")
         raise ValueError(f"can't find resource {resource_id}")
 
-    return AlleleScoreAnnotator(config, resource)
+    score = open_allele_score_from_resource(resource)
+    return AlleleScoreAnnotator(config, score)
 
 
 class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
-    def __init__(self, config: Box, resource):
-        super().__init__(config, resource)
-        resource.open()
+    def __init__(self, config: Box, score):
+        super().__init__(config, score)
 
     @classmethod
     def validate_config(cls, config: Dict) -> Dict:
@@ -375,11 +372,11 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(attributes)
             return attributes
 
-        if annotatable.chromosome not in self.resource.get_all_chromosomes():
+        if annotatable.chromosome not in self.score.get_all_chromosomes():
             self._scores_not_found(attributes)
             return attributes
 
-        scores_dict = self.resource.fetch_scores(
+        scores_dict = self.score.fetch_scores(
             annotatable.chromosome,
             annotatable.position,
             annotatable.reference,

@@ -1,11 +1,13 @@
 from typing import cast
-from dae.genomic_resources import PositionScoreResource
+from dae.genomic_resources import GenomicResource
+from dae.genomic_resources.score_resources import \
+    open_position_score_from_resource
 from dae.genomic_resources.test_tools import build_a_test_resource
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
 
 def test_the_simplest_position_score():
-    res: PositionScoreResource = build_a_test_resource({
+    res: GenomicResource = build_a_test_resource({
         GR_CONF_FILE_NAME: '''
             type: position_score
             table:
@@ -24,23 +26,24 @@ def test_the_simplest_position_score():
             2      8          0.01
             '''
     })
-    assert res.get_resource_type() == "position_score"
-    assert res.open()
-    assert res.get_all_scores() == ["phastCons100way"]
-    assert res.fetch_scores("1", 11) == {"phastCons100way": 0.03}
-    assert res.fetch_scores("1", 15) == {"phastCons100way": 0.46}
-    assert res.fetch_scores("2", 8) == {"phastCons100way": 0.01}
-    assert res.fetch_scores("1", 10) == {"phastCons100way": 0.02}
-    assert res.fetch_scores("1", 12) is None
+    assert res.get_type() == "position_score"
+    score = open_position_score_from_resource(res)
 
-    assert res.fetch_scores_agg("1", 10, 11) == {"phastCons100way": 0.025}
-    assert res.fetch_scores_agg(
+    assert score.get_all_scores() == ["phastCons100way"]
+    assert score.fetch_scores("1", 11) == {"phastCons100way": 0.03}
+    assert score.fetch_scores("1", 15) == {"phastCons100way": 0.46}
+    assert score.fetch_scores("2", 8) == {"phastCons100way": 0.01}
+    assert score.fetch_scores("1", 10) == {"phastCons100way": 0.02}
+    assert score.fetch_scores("1", 12) is None
+
+    assert score.fetch_scores_agg("1", 10, 11) == {"phastCons100way": 0.025}
+    assert score.fetch_scores_agg(
         "1", 10, 11, non_default_pos_aggregators={"phastCons100way": "max"}) \
         == {"phastCons100way": 0.03}
 
 
 def test_region_score():
-    res: PositionScoreResource = build_a_test_resource({
+    res: GenomicResource = build_a_test_resource({
         GR_CONF_FILE_NAME: '''
             type: position_score
             table:
@@ -67,31 +70,33 @@ def test_region_score():
             '''
     })
     assert res
-    assert res.open()
-    assert res.table.chrom_column_i == 0
-    assert res.table.pos_begin_column_i == 1
-    assert res.table.pos_end_column_i == 2
+    assert res.get_type() == "position_score"
+    score = open_position_score_from_resource(res)
 
-    assert res.fetch_scores("1", 12) == {
+    assert score.table.chrom_column_i == 0
+    assert score.table.pos_begin_column_i == 1
+    assert score.table.pos_end_column_i == 2
+
+    assert score.fetch_scores("1", 12) == {
         "phastCons100way": 0.02, "phastCons5way": None}
 
-    assert res.fetch_scores_agg("1", 13, 18, ["phastCons100way"]) == \
+    assert score.fetch_scores_agg("1", 13, 18, ["phastCons100way"]) == \
         {"phastCons100way": (3*0.02 + 2*0.03) / 5.}
-    assert res.fetch_scores_agg(
+    assert score.fetch_scores_agg(
         "1", 13, 18, ["phastCons100way"],
         non_default_pos_aggregators={"phastCons100way": "max"}) == \
         {"phastCons100way": 0.03}
 
-    assert res.fetch_scores_agg("1", 13, 18, ["phastCons5way"]) == \
+    assert score.fetch_scores_agg("1", 13, 18, ["phastCons5way"]) == \
         {"phastCons5way": 0}
-    assert res.fetch_scores_agg(
+    assert score.fetch_scores_agg(
         "1", 13, 18, ["phastCons5way"],
         non_default_pos_aggregators={"phastCons5way": "mean"}) == \
         {"phastCons5way": 0/2}
 
 
 def test_phastcons100way():
-    res: PositionScoreResource = build_a_test_resource({
+    res: GenomicResource = build_a_test_resource({
         GR_CONF_FILE_NAME: '''
             type: position_score
             table:
@@ -115,10 +120,12 @@ def test_phastcons100way():
         '''
     })
     assert res
-    assert res.open()
-    assert res.get_all_scores() == ["phastCons100way"]
+    assert res.get_type() == "position_score"
+    score = open_position_score_from_resource(res)
 
-    assert res.fetch_scores("1", 54773) == \
+    assert score.get_all_scores() == ["phastCons100way"]
+
+    assert score.fetch_scores("1", 54773) == \
         {"phastCons100way": 0}
 
     # chr1 54773 TTCCTCC->T
@@ -127,16 +134,18 @@ def test_phastcons100way():
     # 0.000  0.001  0.000  0.000  0.001  0.001  0.001  0.001
     # T      T      C      C      T      C      C      T
     #        ^      ^      ^      ^      ^      ^
-    assert res.fetch_scores_agg("1", 54773, 54780, ["phastCons100way"]) == \
+    assert score.fetch_scores_agg("1", 54773, 54780, ["phastCons100way"]) == \
         {"phastCons100way": 0.000625}
 
 
 def test_position_score_over_http(genomic_resource_fixture_http_repo):
     resource = genomic_resource_fixture_http_repo.get_resource(
         "hg38/TESTphastCons100way")
-    assert isinstance(resource, PositionScoreResource)
-    resource = cast(PositionScoreResource, resource)
-    resource.open()
-    result = resource.fetch_scores("1", 10918)
+    assert isinstance(resource, GenomicResource)
+    resource = cast(GenomicResource, resource)
+
+    score = open_position_score_from_resource(resource)
+
+    result = score.fetch_scores("1", 10918)
     assert result
     assert result['phastCons100way'] == 0.253

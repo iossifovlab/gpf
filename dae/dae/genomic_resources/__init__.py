@@ -20,9 +20,9 @@ __all__ = [
 
 register_genomic_resource_type(GenomicResource, "Basic")
 register_genomic_resource_type(LiftoverChainResource, "liftover_chain")
-register_genomic_resource_type(PositionScoreResource, "position_score")
-register_genomic_resource_type(NPScoreResource, "np_score")
-register_genomic_resource_type(AlleleScoreResource, "allele_score")
+# register_genomic_resource_type(PositionScoreResource, "position_score")
+# register_genomic_resource_type(NPScoreResource, "np_score")
+# register_genomic_resource_type(AlleleScoreResource, "allele_score")
 
 
 register_real_genomic_resource_repository_type(

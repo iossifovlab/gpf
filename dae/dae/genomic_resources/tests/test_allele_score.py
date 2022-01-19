@@ -1,10 +1,12 @@
-from dae.genomic_resources import NPScoreResource
+from dae.genomic_resources import GenomicResource
+from dae.genomic_resources.score_resources import \
+    open_allele_score_from_resource
 from dae.genomic_resources.test_tools import build_a_test_resource
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
 
 def test_the_simplest_allele_score():
-    res: NPScoreResource = build_a_test_resource({
+    res: GenomicResource = build_a_test_resource({
         GR_CONF_FILE_NAME: '''
             type: allele_score
             table:
@@ -25,7 +27,8 @@ def test_the_simplest_allele_score():
             1      16         C          A            0.05
         '''
     })
-    assert res.get_resource_type() == "allele_score"
-    assert res.open()
-    assert res.get_all_scores() == ["freq"]
-    assert res.fetch_scores("1", 10, "A", "C") == {"freq": 0.03}
+    assert res.get_type() == "allele_score"
+
+    score = open_allele_score_from_resource(res)
+    assert score.get_all_scores() == ["freq"]
+    assert score.fetch_scores("1", 10, "A", "C") == {"freq": 0.03}
