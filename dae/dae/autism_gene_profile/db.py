@@ -74,7 +74,7 @@ class AutismGeneProfileDB:
             for score in gs_category["scores"]:
                 score_name = score["score_name"]
                 value = row[f"{category_name}_{score_name}"]
-                result['+'.join([category_name, score_name])] = \
+                result['.'.join([category_name, score_name])] = \
                     value if value is not None else "-"
 
         for gs_category in config["gene_sets"]:
@@ -83,7 +83,7 @@ class AutismGeneProfileDB:
                 set_id = gene_set["set_id"]
                 collection_id = gene_set["collection_id"]
                 full_gs_id = f"{collection_id}_{set_id}"
-                result['+'.join([category_name, set_id])] = \
+                result['.'.join([category_name, set_id])] = \
                     bool(row[full_gs_id])
         
         for dataset_id, filters in config["datasets"].items():
@@ -97,7 +97,7 @@ class AutismGeneProfileDB:
                     rate = row[
                         f"{dataset_id}_{person_set}_{statistic_id}_rate"
                     ]
-                    result['+'.join(["datasets", dataset_id, person_set, statistic_id])] = \
+                    result['.'.join(["datasets", dataset_id, person_set, statistic_id])] = \
                         f"{count} ({round(rate, 2)})"
 
         return result

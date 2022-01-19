@@ -43,7 +43,7 @@ class ConfigurationView(QueryBaseView):
                 "displayName": category["display_name"],
                 "visible": True,
                 "columns": [{
-                    "id": f"{category['category']}+{gene_set['set_id']}",
+                    "id": f"{category['category']}.{gene_set['set_id']}",
                     "displayName": gene_set["set_id"],
                     "visible": True,
                     "columns": []
@@ -56,7 +56,7 @@ class ConfigurationView(QueryBaseView):
                 "displayName": category["display_name"],
                 "visible": True,
                 "columns": [{
-                    "id": f"{category['category']}+{genomic_score['score_name']}",
+                    "id": f"{category['category']}.{genomic_score['score_name']}",
                     "displayName": genomic_score["score_name"],
                     "visible": True,
                     "columns": []
@@ -76,7 +76,7 @@ class ConfigurationView(QueryBaseView):
                     or study_wrapper.config.get("name") \
                     or dataset_id
                 dataset_col = {
-                    "id": f"datasets+{dataset_id}",
+                    "id": f"datasets.{dataset_id}",
                     "displayName": display_name,
                     "visible": True,
                     "columns": list()
@@ -91,11 +91,11 @@ class ConfigurationView(QueryBaseView):
                     set_name = \
                         person_set_collection.person_sets[set_id].name
                     dataset_col["columns"].append({
-                        "id": f"datasets+{dataset_id}+{set_id}",
+                        "id": f"datasets.{dataset_id}.{set_id}",
                         "displayName": set_name,
                         "visible": True,
                         "columns": [
-                            { "id": f"datasets+{dataset_id}+{set_id}+{statistic.id}",
+                            { "id": f"datasets.{dataset_id}.{set_id}.{statistic.id}",
                               "displayName": statistic.display_name,
                               "visible": True,
                               "columns": list() }
