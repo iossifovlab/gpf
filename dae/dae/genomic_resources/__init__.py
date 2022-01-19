@@ -21,13 +21,12 @@ __all__ = [
 ]
 
 
-register_genomic_resource_type(GenomicResource)
-register_genomic_resource_type(GeneModelsResource)
-register_genomic_resource_type(ReferenceGenomeResource)
-register_genomic_resource_type(LiftoverChainResource)
-register_genomic_resource_type(PositionScoreResource)
-register_genomic_resource_type(NPScoreResource)
-register_genomic_resource_type(AlleleScoreResource)
+register_genomic_resource_type(GenomicResource, "Basic")
+register_genomic_resource_type(ReferenceGenomeResource, "genome")
+register_genomic_resource_type(LiftoverChainResource, "liftover_chain")
+register_genomic_resource_type(PositionScoreResource, "position_score")
+register_genomic_resource_type(NPScoreResource, "np_score")
+register_genomic_resource_type(AlleleScoreResource, "allele_score")
 
 
 register_real_genomic_resource_repository_type(

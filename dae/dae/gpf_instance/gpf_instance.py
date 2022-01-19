@@ -8,6 +8,8 @@ from box import Box
 
 from dae.genomic_resources.reference_genome_resource import ReferenceGenome, \
     open_reference_genome_from_resource
+from dae.genomic_resources.gene_models_resource import \
+    load_gene_models_from_resource
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
 from dae.gene.weights import GeneWeightsDb
@@ -84,8 +86,9 @@ class GPFInstance(object):
     @property  # type: ignore
     @cached
     def reference_genome(self) -> ReferenceGenome:
-        result = open_reference_genome_from_resource(
-            self.dae_config.reference_genome.resource_id, self.grr)
+        resource = self.grr.get_resource(
+            self.dae_config.reference_genome.resource_id)
+        result = open_reference_genome_from_resource(resource)
         return result
 
     @property  # type: ignore
@@ -95,7 +98,7 @@ class GPFInstance(object):
             self.dae_config.gene_models.resource_id)
         assert resource is not None, \
             self.dae_config.gene_models.resource_id
-        result = resource.open()
+        result = load_gene_models_from_resource(resource)
         return result
 
     @property  # type: ignore

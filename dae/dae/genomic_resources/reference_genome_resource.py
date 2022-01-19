@@ -61,16 +61,16 @@ class ReferenceGenomeResource(GenomicResource):
 
 
 def open_reference_genome_from_resource(
-        resource_id: str, grr: GenomicResourceRealRepo) -> ReferenceGenome:
+        resource: GenomicResource) -> ReferenceGenome:
 
-    resource = grr.get_resource(resource_id)
     if resource is None:
         raise ValueError(
-            f"cant find resource {resource_id} in repository: "
-            f"{grr.repo_id}")
+            f"cant find resource {resource.resource_id} in repository: "
+            f"{resource.repo.repo_id}")
 
     genome = resource.open()
     if not isinstance(genome, ReferenceGenome):
-        raise ValueError(f"resource {resource_id} is not a reference genome")
+        raise ValueError(
+            f"resource {resource.resource_id} is not a reference genome")
 
     return cast(ReferenceGenome, genome)

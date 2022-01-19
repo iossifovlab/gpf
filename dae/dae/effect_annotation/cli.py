@@ -121,9 +121,9 @@ class EffectAnnotatorBuilder:
 
     def get_refernce_genome(self) -> ReferenceGenome:
         if self.args.reference_genome_resource_id:
-            return open_reference_genome_from_resource(
-                self.args.reference_genome_resource_id,
-                self.get_grr())
+            resource = self.get_grr().get_resource(
+                self.args.reference_genome_resource_id)
+            return open_reference_genome_from_resource(resource)
 
         if self.args.reference_genome_filename:
             return open_reference_genome_from_file(
