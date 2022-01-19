@@ -106,9 +106,7 @@ def genomic_resource_fixture_http_repo(resources_http_server):
     url = f"http://localhost:{http_port}"
     return GenomicResourceURLRepo("genomic_resource_fixture_url_repo", url)
 
-# TODO move this to a common location
-from dae.backends.vcf.tests.test_vcf_loader import s3_base
-from dae.backends.vcf.tests.test_vcf_loader import s3
+
 @pytest.fixture
 def genomic_resource_fixture_s3_repo(genomic_resource_fixture_dir_repo, s3):
     src_dir = genomic_resource_fixture_dir_repo.directory
@@ -124,6 +122,7 @@ def genomic_resource_fixture_s3_repo(genomic_resource_fixture_dir_repo, s3):
     repo = GenomicResourceURLRepo("genomic_resource_fixture_url_repo", s3_path)
     repo.filesystem = s3
     return repo
+
 
 '''
 
