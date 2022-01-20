@@ -1,6 +1,7 @@
 .table-container {
   padding: 25px;
   white-space: nowrap;
+  position: relative;
 }
 
 .header {
@@ -51,6 +52,12 @@ gpf-sorting-buttons {
   margin-left: 5px;
   position: relative;
   top: 5.5px;
+}
+
+.dropdown-span {
+  top: 100px;
+  left: 100px;
+  position: absolute;
 }
 
 .dropdown-toggle::after {
