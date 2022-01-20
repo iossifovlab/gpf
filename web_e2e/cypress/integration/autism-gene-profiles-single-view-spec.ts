@@ -1,7 +1,6 @@
 import { AutismGeneProfilesSingleView } from 'cypress/elements/autism-gene-profiles-single-view-page';
 import { AutismGeneProfilesTable } from 'cypress/elements/autism-gene-profiles-table-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
-import {fixCypressSpec} from 'cypress/support/snapshotsPatch';
 
 describe('Autism gene profiles single view tests', () => {
   const page = new AutismGeneProfilesSingleView();
