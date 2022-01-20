@@ -133,9 +133,9 @@ def test_normalize_allele_annotator_config():
     )
 
     config = NormalizeAlleleAnnotator.validate_config(pipeline_config[0])
-    assert config.annotator_type == "normalize_allele_annotator"
+    assert config["annotator_type"] == "normalize_allele_annotator"
 
-    assert config.genome == \
+    assert config["genome"] == \
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
 
 

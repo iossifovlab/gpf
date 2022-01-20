@@ -1363,7 +1363,8 @@ def load_gene_models_from_file(
     return gm
 
 
-def load_gene_models_from_resource(resource: GenomicResource) -> GeneModels:
+def load_gene_models_from_resource(
+        resource: Optional[GenomicResource]) -> GeneModels:
 
     if resource is None:
         raise ValueError(f"missing resource {resource}")

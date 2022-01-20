@@ -1,4 +1,3 @@
-from .repository import register_genomic_resource_type
 from .repository_factory import register_real_genomic_resource_repository_type
 from .repository_factory import build_genomic_resource_repository
 from .repository import GenomicResource
@@ -10,9 +9,6 @@ from .dir_repository import GenomicResourceDirRepo
 __all__ = [
     "build_genomic_resource_repository", "GenomicResource",
 ]
-
-
-register_genomic_resource_type(GenomicResource, "Basic")
 
 
 register_real_genomic_resource_repository_type(

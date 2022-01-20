@@ -131,7 +131,7 @@ def _parse_PARS(config) -> Optional[dict]:
 
 
 def open_reference_genome_from_resource(
-        resource: GenomicResource) -> ReferenceGenome:
+        resource: Optional[GenomicResource]) -> ReferenceGenome:
 
     if resource is None:
         raise ValueError("None resource passed")

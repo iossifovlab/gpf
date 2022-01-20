@@ -1,9 +1,11 @@
 import abc
 import collections
-import pysam
+import pysam  # type: ignore
 import os
 
-from box import Box
+from typing import Optional
+
+from box import Box  # type: ignore
 
 from dae.genomic_resources.repository import GenomicResource
 
@@ -20,6 +22,8 @@ class GenomicPositionTable(abc.ABC):
         self.chrom_map = None
 
         # handling the 'header' property
+        self.header: Optional[tuple] = None
+
         self.header_mode = self.definition.get("header_mode", "file")
         if self.header_mode == "list":
             self.header = tuple(self.definition.header)
@@ -327,6 +331,8 @@ def open_genome_position_table(gr: GenomicResource, table_definition: dict):
         default_format = "mem"
 
     table_format = table_definition.get("format", default_format)
+
+    table: GenomicPositionTable
 
     if table_format in ["mem", "csv", "tsv"]:
         with gr.open_raw_file(filename, mode="rt", uncompress=True) as F:

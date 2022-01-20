@@ -30,3 +30,4 @@ dependencies:
   - types-pyyaml=6.0.3
   - types-setuptools=57.4.7
   - sqlalchemy-stubs=0.4
+  - data-science-types=0.2.23

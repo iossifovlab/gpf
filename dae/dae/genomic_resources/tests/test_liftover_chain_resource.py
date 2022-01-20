@@ -3,6 +3,7 @@ import pytest
 from dae.genomic_resources.liftover_resource import \
     load_liftover_chain_from_resource
 
+
 @pytest.mark.fixture_repo
 def test_liftover_chain_resource(genomic_resource_fixture_dir_repo):
     chain_resource = genomic_resource_fixture_dir_repo.get_resource(

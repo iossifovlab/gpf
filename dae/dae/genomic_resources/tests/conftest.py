@@ -8,7 +8,7 @@ from functools import partial
 
 from http.server import ThreadingHTTPServer
 # from http.client import HTTPConnection
-from RangeHTTPServer import RangeRequestHandler
+from RangeHTTPServer import RangeRequestHandler  # type: ignore
 
 logger = logging.getLogger(__name__)
 

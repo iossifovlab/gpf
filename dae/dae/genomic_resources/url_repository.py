@@ -1,9 +1,9 @@
 import io
 import gzip
 import yaml
-import pysam
 import logging
-import fsspec
+import pysam  # type: ignore
+import fsspec  # type: ignore
 
 from urllib.request import urlopen
 from urllib.parse import urlparse

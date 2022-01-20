@@ -48,14 +48,14 @@ def normalize_allele(allele: VCFAllele, genome: ReferenceGenome) -> VCFAllele:
 def build_normalize_allele_annotator(pipeline, config):
     config = NormalizeAlleleAnnotator.validate_config(config)
 
-    assert config.annotator_type == "normalize_allele_annotator"
+    assert config["annotator_type"] == "normalize_allele_annotator"
 
-    genome_resource = pipeline.repository.get_resource(config.genome)
+    genome_resource = pipeline.repository.get_resource(config["genome"])
     if genome_resource is None:
         raise ValueError(
             f"can't create normalize allele annotator; "
             f"can't find reference genome: "
-            f"{config.genome}"
+            f"{config['genome']}"
         )
     genome = open_reference_genome_from_resource(genome_resource)
     return NormalizeAlleleAnnotator(config, genome)

@@ -2,7 +2,6 @@ import logging
 import yaml
 
 from typing import List, Dict
-from box import Box
 
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
@@ -52,7 +51,7 @@ class AnnotationConfigParser:
             assert isinstance(config, dict)
 
             config["annotator_type"] = annotator_type
-            result.append(Box(config))
+            result.append(config)
 
         return result
 
