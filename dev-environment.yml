@@ -28,5 +28,5 @@ dependencies:
   - pandas-stubs=1.2.0.43
   - django-stubs=1.9.0
   - types-pyyaml=6.0.3
-  - types-setuptools=52.0.0
+  - types-setuptools=57.4.7
   - sqlalchemy-stubs=0.4
