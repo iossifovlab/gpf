@@ -113,10 +113,12 @@ export function applyData(params: Params): void {
     geneWeightsPage.dropdownButton.select(params.geneWeight.id);
 
     if (params.geneWeight.from) {
+      geneWeightsPage.fromInputField.clear();
       geneWeightsPage.fromInputField.type(params.geneWeight.from.toString())
     }
 
     if (params.geneWeight.to) {
+      geneWeightsPage.fromInputField.clear();
       geneWeightsPage.fromInputField.type(params.geneWeight.to.toString())
     }
   }

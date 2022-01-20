@@ -86,11 +86,11 @@ describe('Enrichment tool common tests', () => {
     genesBlockPage.geneSetsSearchbox.type('FMRP Darnell');
     genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText('FMRP Darnell').click();
     page.enrichmentTestButton.click();
-    page.findTableField('affected', 'LGDs', 2).should('have.text', '55');
-    page.findTableField('affected', 'Missense', 2).should('have.text', '169');
+    page.findTableCell('affected', 'LGDs', 2).should('have.text', '55');
+    page.findTableCell('affected', 'Missense', 2).should('have.text', '169');
 
-    page.findTableField('affected', 'LGDs', 3).should('have.text', '35.02');
-    page.findTableField('affected', 'Missense', 3).should('have.text', '145.68');
+    page.findTableCell('affected', 'LGDs', 3).should('have.text', '35.02');
+    page.findTableCell('affected', 'Missense', 3).should('have.text', '145.68');
   });
 
   it('should display "0" and "2" in the affected person"s observed column of LGDs and missense"s rows respectively ' +
@@ -103,11 +103,11 @@ describe('Enrichment tool common tests', () => {
     genesBlockPage.geneSetsSearchbox.type('BIOCARTA_PTEN_PATHWAY');
     genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText('BIOCARTA_PTEN_PATHWAY').click();
     page.enrichmentTestButton.click();
-    page.findTableField('affected', 'LGDs', 2).should('have.text', '0');
-    page.findTableField('affected', 'Missense', 2).should('have.text', '2');
+    page.findTableCell('affected', 'LGDs', 2).should('have.text', '0');
+    page.findTableCell('affected', 'Missense', 2).should('have.text', '2');
 
-    page.findTableField('affected', 'LGDs', 3).should('have.text', '0.36');
-    page.findTableField('affected', 'Missense', 3).should('have.text', '1.52');
+    page.findTableCell('affected', 'LGDs', 3).should('have.text', '0.36');
+    page.findTableCell('affected', 'Missense', 3).should('have.text', '1.52');
   });
 });
 
@@ -139,7 +139,20 @@ if (Cypress.env().yamlPath !== undefined) {
         data.cases.forEach(caseee => {
           it(caseee.name, () => {
             applyData(caseee.params);
-            // expect
+            page.enrichmentTestButton.click();
+
+            caseee.expected.forEach(expectedddd => {
+              const rowId = expectedddd.rowId.split('_');
+              const affectedStatus: string = rowId[0];
+              const effectType: string = rowId[1];
+
+              page.findTableRow(affectedStatus, effectType).invoke('text').then(text => {
+                console.log(typeof text);
+                console.log(text);
+                expect(text).to.eq(expectedddd.values)
+              })
+            })
+            cy.wait(5000);
           });
         });
       });

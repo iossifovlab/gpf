@@ -17,69 +17,21 @@ export class EnrichmentToolPage extends BasePage {
     return cy.get('.enrichment-table');
   }
 
-  findTableField(affectedStatus: string, effectType: string, columnNumber: number) {
-    const statusToRow = {'affected': 0, 'unaffected': 1};
-    return cy.get(`tr[label="${effectType}"]`).eq(statusToRow[affectedStatus]).find(('td')).eq(columnNumber);
+  findTableRow(affectedStatus: string, effectType: string) {
+    const statusToRow = {
+      'affected': 0,
+      'unaffected': 1
+    };
+
+    return cy.get(`tr[label="${effectType}"]`).eq(statusToRow[affectedStatus]);
   }
 
-  selectorTableRow(affectedStatus: string) {
-    return cy.get('.selector-cell').eq(affectedStatus === 'affected' ? 1 : 2);
+  parseRowValues(values: string) {
+    // ..
+    return values;
   }
 
-  enrichmentModelsSelect(modelName: string, value: string) {
-    this.enrichmentModelsBlock.within(() => {
-      if (modelName === 'background') {
-        cy.get('select').eq(0).select(value);
-      } else if (modelName === 'counting') {
-        cy.get('select').eq(1).select(value);
-      }
-    });
-  }
-
-  get geneSetsInputField() {
-    return cy.get('input#search-box');
-  }
-
-  get geneSetsColletionDropdown() {
-    return cy.get('select.row-sm-3');
-  }
-
-  get geneSetsVariantsCount() {
-    return cy.get('div.col-sm-9').contains('Count:');
-  }
-
-  compare_data(data: any, set_name: string, affected: string, type:string = 'LGDs') {
-    const page = new EnrichmentToolPage();
-    const dataset = data.filter(item => (item.set_name === set_name && item.data[0] === type))[affected === 'affected' ? 0 : (affected === 'unaffected' ? 1 : null)];
-    dataset.data.forEach((el, index) => {
-      page.findTableField(affected, type, index).should('have.text', el);
-    });
-  }
-
-  // migrating to tests where the should is contained in the it
-  getTableData(affected: string, type:string = 'LGDs') {
-    let data: string[] = [];
-    const page = new EnrichmentToolPage();
-    page.table.then(table => {
-      cy.wrap(table).get('tr[label="' + type + '"]').eq(affected === 'affected' ? 0 : (affected === 'unaffected' ? 1 : null)).within(column => {
-        cy.wrap(column).get('td').each((el, index) => {
-          data[index] = el.text();
-        });
-      });
-    });
-    cy.wrap(data).as('tableData');
-  }
-
-  getAllTableData() {
-    let data: string[][] = [[],[]];
-    ['affected', 'unaffected'].forEach((affected, affected_index) => {
-      ['LGDs', 'Missense', 'Synonymous'].forEach((effect, effect_index) => {
-        this.getTableData(affected, effect);
-        cy.get('@tableData').then(table => {
-          data[affected_index][effect_index] = table as any;
-        });
-      });
-    });
-    cy.wrap(data).as('fullTableData');
+  findTableCell(affectedStatus: string, effectType: string, columnNumber: number) {
+    return this.findTableRow(affectedStatus, effectType).find(('td')).eq(columnNumber);
   }
 }
