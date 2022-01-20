@@ -98,11 +98,13 @@ def calc_gene_sets(request, local_gpf_instance, genotype_data_names, cleanup):
     def remove_gene_sets():
         for dgs in genotype_data_names:
             genotype_data = local_gpf_instance.get_genotype_data(dgs)
-            os.remove(
+            cache_file = \
                 DenovoGeneSetCollectionFactory.denovo_gene_set_cache_file(
                     genotype_data.config, "phenotype"
                 )
-            )
+            if os.path.exists(cache_file):
+                os.remove(cache_file)
+
     if cleanup:
         request.addfinalizer(remove_gene_sets)
 
