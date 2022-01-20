@@ -1,6 +1,7 @@
 import { AutismGeneProfilesSingleView } from 'cypress/elements/autism-gene-profiles-single-view-page';
 import { AutismGeneProfilesTable } from 'cypress/elements/autism-gene-profiles-table-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
+import {fixCypressSpec} from 'cypress/support/snapshotsPatch';
 
 describe('Autism gene profiles single view tests', () => {
   const page = new AutismGeneProfilesSingleView();
@@ -132,22 +133,23 @@ describe('Autism gene profiles single view visual tests', () => {
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
-  it('should compare histrograms', () => {
+  it.only('should compare histrograms', () => {
     autismGeneProfilesTablePage.geneSearchInput.type('CHD8');
     autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
     autismGeneProfilesTablePage.allTableCells.first().click();
 
     [{tableId: 'autism_scores', tableRows: ['SFARI_gene_score']},
      {tableId: 'protection_scores', tableRows: ['RVIS_rank', 'LGD_rank', 'pLI_rank', 'pRec_rank']}
-    ].forEach(data => {
+    ].forEach((data, dataIndex) => {
       cy.get('#' + data.tableId).within(scores => {
         data.tableRows.forEach((elements, index) => {
           cy.wrap(scores).get('tr').eq(index).within(row => {
             cy.wrap(row).get('td').eq(0).should('have.text', elements);
-            cy.wrap(row).matchImageSnapshot('autism-gene-profiles-single-view/chd8-' + data.tableId + '-' + elements);
           });
         });
       });
+      cy.get('#' + data.tableId).scrollIntoView();
+      cy.matchImageSnapshot('autism-gene-profiles-single-view/chd8-' + data.tableId);
     });
   });
 });
