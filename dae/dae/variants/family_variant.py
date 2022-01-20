@@ -4,7 +4,8 @@ import logging
 from typing import Any, List, Optional
 
 import numpy as np
-from deprecation import deprecated
+
+from deprecation import deprecated  # type: ignore
 
 from dae.pedigrees.family import Family
 from dae.utils.variant_utils import GENOTYPE_TYPE, \
@@ -17,6 +18,7 @@ from dae.variants.attributes import GeneticModel, \
     TransmissionType
 
 from dae.effect_annotation.effect import AlleleEffects
+from dae.variants.core import Allele
 from dae.variants.variant import \
     SummaryAllele, \
     SummaryVariant
@@ -26,10 +28,10 @@ logger = logging.getLogger(__name__)
 
 
 def calculate_simple_best_state(
-        genotype: np.array, allele_count: int) -> np.array:
+        genotype: np.ndarray, allele_count: int) -> np.ndarray:
     # Simple best state calculation
     # Treats every genotype as diploid (including male X non-PAR)
-    ref = 2 * np.ones(genotype.shape[1], dtype=GENOTYPE_TYPE)
+    ref: np.ndarray = 2 * np.ones(genotype.shape[1], dtype=GENOTYPE_TYPE)
     unknown = np.any(genotype == -1, axis=0)
 
     best_st = [ref]
@@ -106,7 +108,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         self._variant_in_roles = None
         self._variant_in_sexes = None
         self._family_index = None
-        self._family_attributes = {}
+        self._family_attributes: dict = {}
 
         self.matched_gene_effects: List = []
 
@@ -204,7 +206,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return self.summary_allele.effects
 
     @property
-    def allele_type(self) -> Optional[SummaryAllele.Type]:
+    def allele_type(self) -> Allele.Type:
         return self.summary_allele.allele_type
 
     @property

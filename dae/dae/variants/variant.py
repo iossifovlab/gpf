@@ -6,7 +6,7 @@ Created on Feb 13, 2018
 import itertools
 import logging
 
-from typing import List, Dict, Set, Any, Optional
+from typing import List, Dict, Set, Any, Optional, cast
 
 from dae.utils.variant_utils import trim_str_left_right, trim_str_right_left
 from dae.effect_annotation.effect import AlleleEffects, EffectGene
@@ -354,12 +354,14 @@ class SummaryAllele(core.Allele):
         return self._attributes
 
     @property
-    def details(self) -> Optional[VariantDetails]:
+    def details(self) -> VariantDetails:
         if self._details is None:
             if self.Type.cnv & self.allele_type:
                 self._details = VariantDetails.from_cnv(self)
             elif self.alternative is None:
-                return None
+                raise ValueError(
+                    "variant detailf for allele without alternative "
+                    "has no meaning")
             else:
                 self._details = VariantDetails.from_vcf(
                     self.chromosome,
@@ -367,7 +369,7 @@ class SummaryAllele(core.Allele):
                     self.reference,
                     self.alternative,
                 )
-        return self._details
+        return cast(VariantDetails, self._details)
 
     @property
     def effects(self) -> Optional[AlleleEffects]:
@@ -399,11 +401,6 @@ class SummaryAllele(core.Allele):
             else:
                 self._effects = None
         return self._effects
-
-    @effects.setter
-    def effects(self, effects: AlleleEffects) -> None:
-        # assert self._effects is None
-        self._effects = effects
 
     @property
     def worst_effect(self) -> Optional[str]:
@@ -440,19 +437,24 @@ class SummaryAllele(core.Allele):
         return self.details.cshl_variant  # type: ignore
 
     @property
-    def cshl_variant_full(self) -> Optional[str]:
+    def cshl_variant_full(self) -> str:
         if self.details is None:
-            return None
+            raise ValueError(
+                "cshl location for allele without details")
         return self.details.cshl_variant_full  # type: ignore
 
     @property
-    def cshl_location(self) -> Optional[str]:
+    def cshl_location(self) -> str:
         if self.Type.cnv & self.allele_type:
             return f"{self.chrom}:{self.position}-{self.end_position}"
         if self.alternative is None:
-            return None
+            raise ValueError(
+                "cshl location for allele without alternative "
+                "has no meaning")
         if self.details is None:
-            return None
+            raise ValueError(
+                "cshl location for allele without details")
+
         return self.details.cshl_location  # type: ignore
 
     @property
@@ -502,7 +504,7 @@ class SummaryAllele(core.Allele):
         """
         checks if additional variant attributes contain value for key `item`.
         """
-        return item in self.has_attributes(item)
+        return self.has_attribute(item)
 
     def __repr__(self) -> str:
         if self.Type.cnv & self.allele_type:
@@ -665,23 +667,23 @@ class SummaryVariant:
         return [aa.cshl_variant_full for aa in self.alt_alleles]
 
     @property
-    def cshl_location(self) -> Optional[str]:
+    def cshl_location(self) -> List[str]:
         if not self.alt_alleles:
             return []
         return [aa.cshl_location for aa in self.alt_alleles]
 
     @property
-    def effects(self) -> List[str]:
+    def effects(self) -> List[AlleleEffects]:
         """
         1-based list of `Effect`, that describes variant effects.
         """
         if not self.alt_alleles:
             return []
-        return [sa.effects for sa in self.alt_alleles]
+        return [sa.effects for sa in self.alt_alleles if sa.effects]
 
     @property
     def effect_types(self) -> List[str]:
-        ets = set()
+        ets: set = set()
         for a in self.alt_alleles:
             ets = ets.union(a.effect_types)
         return list(ets)
