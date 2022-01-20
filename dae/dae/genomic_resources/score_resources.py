@@ -47,7 +47,7 @@ class ScoreLine:
         return self.get_special_column_value("pos_end")
 
 
-class GenomicScoresResource(abc.ABC):
+class GenomicScore(abc.ABC):
     def __init__(self, config, table, score_columns, special_columns):
         self.config = config
         self.table = table
@@ -106,7 +106,7 @@ class GenomicScoresResource(abc.ABC):
         return list(self.score_columns)
 
 
-class PositionScoreResource(GenomicScoresResource):
+class PositionScore(GenomicScore):
     def __init__(self, resourceId: str, version: tuple,
                  repo: GenomicResourceRealRepo,
                  config=None):
@@ -198,7 +198,7 @@ class PositionScoreResource(GenomicScoresResource):
         }
 
 
-class NPScoreResource(GenomicScoresResource):
+class NPScore(GenomicScore):
 
     @staticmethod
     def get_extra_special_columns():
@@ -305,7 +305,7 @@ class NPScoreResource(GenomicScoresResource):
         }
 
 
-class AlleleScoreResource(GenomicScoresResource):
+class AlleleScore(GenomicScore):
 
     @classmethod
     def required_columns(cls):
@@ -440,7 +440,7 @@ def _configure_special_columns(table, extra_special_columns=None):
 def _open_genomic_score_from_resource(
         clazz,
         resource: GenomicResource,
-        extra_special_columns=None) -> GenomicScoresResource:
+        extra_special_columns=None) -> GenomicScore:
     config = resource.get_config()
     config["id"] = resource.resource_id
 
@@ -458,7 +458,7 @@ def _open_genomic_score_from_resource(
 
 def open_position_score_from_resource(resource: GenomicResource):
     result = _open_genomic_score_from_resource(
-        PositionScoreResource,
+        PositionScore,
         resource,
         extra_special_columns=None)
 
@@ -467,7 +467,7 @@ def open_position_score_from_resource(resource: GenomicResource):
 
 def open_np_score_from_resource(resource: GenomicResource):
     result = _open_genomic_score_from_resource(
-        NPScoreResource,
+        NPScore,
         resource,
         extra_special_columns={"reference": str, "alternative": str})
 
@@ -476,7 +476,7 @@ def open_np_score_from_resource(resource: GenomicResource):
 
 def open_allele_score_from_resource(resource: GenomicResource):
     result = _open_genomic_score_from_resource(
-        AlleleScoreResource,
+        AlleleScore,
         resource,
         extra_special_columns={"reference": str, "alternative": str})
 
