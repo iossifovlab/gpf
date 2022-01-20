@@ -6,9 +6,9 @@ import json
 
 from box import Box
 
-from dae.genomic_resources.reference_genome_resource import ReferenceGenome, \
+from dae.genomic_resources.reference_genome import ReferenceGenome, \
     open_reference_genome_from_resource
-from dae.genomic_resources.gene_models_resource import \
+from dae.genomic_resources.gene_models import \
     load_gene_models_from_resource
 from dae.enrichment_tool.background_facade import BackgroundFacade
 

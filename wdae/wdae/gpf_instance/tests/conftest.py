@@ -5,7 +5,7 @@ from box import Box
 from dae.gpf_instance.gpf_instance import cached
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
-from dae.genomic_resources.gene_models_resource import \
+from dae.genomic_resources.gene_models import \
     load_gene_models_from_resource
 
 from gpf_instance.gpf_instance import WGPFInstance

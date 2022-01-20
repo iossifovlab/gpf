@@ -3,7 +3,7 @@ import textwrap
 
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.genomic_resources.test_tools import build_a_test_resource
-from dae.genomic_resources.reference_genome_resource import \
+from dae.genomic_resources.reference_genome import \
     open_reference_genome_from_resource
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_factory import AnnotationConfigParser, \
@@ -133,9 +133,9 @@ def test_normalize_allele_annotator_config():
     )
 
     config = NormalizeAlleleAnnotator.validate_config(pipeline_config[0])
-    assert config.annotator_type == "normalize_allele_annotator"
+    assert config["annotator_type"] == "normalize_allele_annotator"
 
-    assert config.genome == \
+    assert config["genome"] == \
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
 
 

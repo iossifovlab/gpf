@@ -5,7 +5,7 @@ from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.genomic_resources.test_tools import build_a_test_resource
 from dae.genomic_resources.reference_genome import \
     open_reference_genome_from_file
-from dae.genomic_resources.reference_genome_resource import \
+from dae.genomic_resources.reference_genome import \
     open_reference_genome_from_resource
 
 

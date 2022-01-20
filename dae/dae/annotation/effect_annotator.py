@@ -2,15 +2,14 @@ import copy
 import logging
 
 from typing import Dict, List
-from box import Box
 
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AlleleEffects, AnnotationEffect
 from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.reference_genome_resource import \
+from dae.genomic_resources.reference_genome import \
     open_reference_genome_from_resource
 from dae.genomic_resources.gene_models import GeneModels
-from dae.genomic_resources.gene_models_resource import \
+from dae.genomic_resources.gene_models import \
     load_gene_models_from_resource
 
 from .annotatable import Annotatable, CNVAllele, VCFAllele
@@ -60,7 +59,7 @@ def build_effect_annotator(pipeline, config):
 
 class EffectAnnotatorAdapter(Annotator):
 
-    DEFAULT_ANNOTATION = Box({
+    DEFAULT_ANNOTATION = {
         "attributes": [
             {
                 "source": "worst_effect",
@@ -77,7 +76,7 @@ class EffectAnnotatorAdapter(Annotator):
                 "destination": "effect_details"
             },
         ]
-    })
+    }
 
     def __init__(
             self, config, genome: ReferenceGenome, gene_models: GeneModels):
@@ -130,34 +129,6 @@ class EffectAnnotatorAdapter(Annotator):
                 "desc": "The a list of a python objects with details of the "
                         "effects for each affected transcript. "
             },
-            # FIXME
-            '''
-            {
-                "name": "effect_gene_genes",
-                "type": "object",
-                "desc": ""
-            },
-            {
-                "name": "effect_gene_types",
-                "type": "object",
-                "desc": ""
-            },
-            {
-                "name": "effect_details_transcript_ids",
-                "type": "object",
-                "desc": ""
-            },
-            {
-                "name": "effect_details_genes",
-                "type": "object",
-                "desc": ""
-            },
-            {
-                "name": "effect_details_details",
-                "type": "object",
-                "desc": ""
-            },
-            '''
         ]
         return result
 
@@ -199,8 +170,7 @@ class EffectAnnotatorAdapter(Annotator):
                 f"wrong effect annotator config {validator.errors}")
         return validator.document
 
-    @staticmethod
-    def annotator_type():
+    def annotator_type(self) -> str:
         return "effect_annotator"
 
     def get_annotation_config(self):
@@ -210,13 +180,13 @@ class EffectAnnotatorAdapter(Annotator):
                     self.config.get("attributes"))
             else:
                 self._annotation_config = copy.deepcopy(
-                    self.DEFAULT_ANNOTATION.attributes)
+                    self.DEFAULT_ANNOTATION["attributes"])
         return self._annotation_config
 
     def _do_annotate(
             self, annotatable: Annotatable, _context: Dict):
 
-        result = {}
+        result: dict = {}
         if annotatable is None:
             self._not_found(result)
             return result

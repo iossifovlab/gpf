@@ -452,7 +452,7 @@ class EffectAnnotationDecorator(AnnotationDecorator):
                 allele_effects = attributes["allele_effects"]
                 assert isinstance(allele_effects, AlleleEffects), \
                     (type(allele_effects), allele_effects)
-                sa.effects = allele_effects
+                sa._effects = allele_effects
             yield summary_variant, family_variants
 
 
@@ -486,7 +486,7 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
                     allele_effects = attributes["allele_effects"]
                     assert isinstance(allele_effects, AlleleEffects), \
                         attributes
-                    sa.effects = allele_effects
+                    sa._effects = allele_effects
                 sa.update_attributes(attributes)
             yield summary_variant, family_variants
 

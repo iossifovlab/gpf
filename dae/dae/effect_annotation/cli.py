@@ -2,19 +2,19 @@ import sys
 import logging
 import gzip
 from argparse import ArgumentParser
-from typing import Dict, Iterator, List, Optional, Tuple, cast
+from typing import Dict, Iterator, List, Optional, Tuple
 
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.genomic_context import GenomicContext
 from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.genomic_resources.gene_models import GeneModels
-from dae.genomic_resources.gene_models import load_gene_models
+from dae.genomic_resources.gene_models import GeneModels, \
+    load_gene_models_from_file, \
+    load_gene_models_from_resource
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.reference_genome import \
     open_reference_genome_from_file
-from dae.genomic_resources.gene_models_resource import GeneModelsResource
-from dae.genomic_resources.reference_genome_resource import \
+from dae.genomic_resources.reference_genome import \
     open_reference_genome_from_resource
 
 from dae.effect_annotation.annotator import EffectAnnotator
@@ -89,6 +89,8 @@ class EffectAnnotatorBuilder:
         return self._gc
 
     def get_grr(self) -> GenomicResourceRepo:
+        grr: Optional[GenomicResourceRepo] = None
+
         if self.args.genomic_repository_config_filename:
             grr = build_genomic_resource_repository(
                 self.args.genomic_repository_config_filename)
@@ -102,17 +104,13 @@ class EffectAnnotatorBuilder:
         if self.args.gene_models_resource_id:
             resource = self.get_grr().get_resource(
                 self.args.gene_models_resource_id)
-            if not isinstance(resource, GeneModelsResource):
-                raise Exception("The resoruce with id "
-                                f"{self.args.gene_models_resource_id} is not "
-                                "a GeneModels resoruce.")
-            gm_resource = cast(GeneModelsResource, resource)
-            return gm_resource.open()
+            return load_gene_models_from_resource(resource)
 
         if self.args.gene_models_filename:
-            return load_gene_models(self.args.gene_models_filename,
-                                    self.args.gene_models_fileformat,
-                                    self.args.gene_mapping_filename)
+            return load_gene_models_from_file(
+                self.args.gene_models_filename,
+                self.args.gene_models_fileformat,
+                self.args.gene_mapping_filename)
 
         gm = self.get_genomic_context().get_gene_models()
         if gm:
@@ -327,7 +325,7 @@ def cli_columns():
 
 
 def cli_vcf():
-    from pysam import VariantFile  # noqu
+    from pysam import VariantFile  # type: ignore
 
     parser = ArgumentParser(
         description="Annotate Variant Effects in a VCF file.")

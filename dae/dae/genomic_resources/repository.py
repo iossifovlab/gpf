@@ -254,22 +254,13 @@ class GenomicResource:
         pass
 
 
-_registered_genomic_resource_types = {}
-
-
-def register_genomic_resource_type(constructor, resource_type):
-    if resource_type in _registered_genomic_resource_types:
-        raise Exception(f"The resource {resource_type} is registered twice!")
-    _registered_genomic_resource_types[resource_type] = constructor
-
-
 class GenomicResourceRepo(abc.ABC):
-    def __init__(self):
-        pass
+    def __init__(self, repo_id):
+        self.repo_id: str = repo_id
 
     @abc.abstractmethod
     def get_resource(self, resource_id, version_constraint=None,
-                     genomic_repository_id=None) -> GenomicResource:
+                     genomic_repository_id=None) -> Optional[GenomicResource]:
         '''
             Returns one resource with id qual to resource_id. If not found,
             None is returned.
@@ -286,25 +277,15 @@ class GenomicResourceRepo(abc.ABC):
 
 class GenomicResourceRealRepo(GenomicResourceRepo):
     def __init__(self, repo_id):
-        super().__init__()
-        self.repo_id = repo_id
+        super().__init__(repo_id)
 
     def build_genomic_resource(
             self, resource_id, version, config=None, manifest=None):
         if not config:
             gr_base = GenomicResource(resource_id, version, self)
             config = gr_base.load_yaml(GR_CONF_FILE_NAME)
-        gr_clazz = GenomicResource
-        if isinstance(config, dict) and "type" in config:
-            gr_type = config["type"]
-            if gr_type not in _registered_genomic_resource_types:
-                logger.warning(
-                    f"using basic resource for resource {resource_id} "
-                    f"of type {gr_type}")
-            else:
-                gr_clazz = _registered_genomic_resource_types[gr_type]
 
-        gr = gr_clazz(resource_id, version, self, config)
+        gr = GenomicResource(resource_id, version, self, config)
         gr._manifest = manifest
         return gr
 

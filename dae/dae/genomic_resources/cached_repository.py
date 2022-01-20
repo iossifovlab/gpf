@@ -2,6 +2,7 @@ import os
 import pathlib
 import logging
 
+from typing import Optional, cast
 from concurrent.futures import ThreadPoolExecutor
 
 from .repository import GenomicResource
@@ -39,7 +40,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         return cached_repo
 
     def get_resource(self, resource_id, version_constraint=None,
-                     genomic_repository_id=None) -> GenomicResource:
+                     genomic_repository_id=None) -> Optional[GenomicResource]:
         gr_child = self.child.get_resource(
             resource_id, version_constraint, genomic_repository_id)
 
@@ -78,4 +79,6 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         mnfst_child = child.get_manifest()
         if mnfst_cache == mnfst_child:
             return
-        cached.repo.update_resource(child)
+
+        cached_repo = cast(GenomicResourceDirRepo, cached.repo)
+        cached_repo.update_resource(child)

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from .repository import GenomicResourceRepo
 from .repository import GenomicResource
 
@@ -13,7 +15,7 @@ class GenomicResourceGroupRepo(GenomicResourceRepo):
                 yield gr
 
     def get_resource(self, resource_id, version_constraint=None,
-                     genomic_repository_id=None) -> GenomicResource:
+                     genomic_repository_id=None) -> Optional[GenomicResource]:
         for chRepo in self.children:
             gr = chRepo.get_resource(
                 resource_id, version_constraint, genomic_repository_id)

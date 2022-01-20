@@ -10,4 +10,4 @@ def test_genomic_resources_fixture(fixture_dirname):
     assert len(all_resources) > 0
     basic_resources = [
         r for r in all_resources if r.get_resource_type() == "Basic"]
-    assert len(basic_resources) < len(all_resources)
+    assert len(basic_resources) == len(all_resources)

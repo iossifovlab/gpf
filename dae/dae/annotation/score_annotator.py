@@ -1,14 +1,15 @@
 import logging
 import copy
 
-from typing import Dict, List
-from box import Box
+from typing import Dict, List, cast
 
 from .annotatable import Annotatable, VCFAllele
 from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
 from .annotation_pipeline import AnnotationPipeline
 
-from dae.genomic_resources.score_resources import GenomicScoresResource
+from dae.genomic_resources.genomic_scores import \
+    open_allele_score_from_resource, open_position_score_from_resource, \
+    open_np_score_from_resource
 from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
 
 logger = logging.getLogger(__name__)
@@ -39,24 +40,20 @@ class VariantScoreAnnotatorBase(Annotator):
         }
     }
 
-    def __init__(self, config: Dict, resource):
+    def __init__(self, config: Dict, score):
 
         super().__init__(config)
 
-        self.resource = resource
-        self.liftover_id = self.config.get("liftover_id")
-
-        assert isinstance(resource, GenomicScoresResource), \
-            resource.resource_id
+        self.score = score
         self._annotation_schema = None
 
-        self.non_default_position_aggregators = {}
-        self.non_default_nucleotide_aggregators = {}
+        self.non_default_position_aggregators: dict = {}
+        self.non_default_nucleotide_aggregators: dict = {}
         self._collect_non_default_aggregators()
 
     def get_all_annotation_attributes(self) -> List[Dict]:
         result = []
-        for score in self.resource.scores.values():
+        for score in self.score.score_columns.values():
             result.append({
                 "name": score.id,
                 "type": score.type,
@@ -68,15 +65,15 @@ class VariantScoreAnnotatorBase(Annotator):
         attributes = self.config.get("attributes")
         if attributes:
             return attributes
-        if self.resource.get_default_annotation():
-            attributes = self.resource.get_default_annotation().attributes
+        if self.score.get_default_annotation():
+            attributes = self.score.get_default_annotation().get("attributes")
             logger.info(
-                f"using default annotation for {self.resource.resource_id}: "
+                f"using default annotation for {self.score.score_id()}: "
                 f"{attributes}")
             return attributes
         logger.warning(
             f"can't find annotation config for resource: "
-            f"{self.resource.resource_id}")
+            f"{self.score.score_id()}")
         return []
 
     def _collect_non_default_aggregators(self):
@@ -98,7 +95,7 @@ class VariantScoreAnnotatorBase(Annotator):
                 non_default_nucleotide_aggregators
 
     def get_scores(self):
-        return [attr.source for attr in self.get_annotation_config()]
+        return [attr["source"] for attr in self.get_annotation_config()]
 
     def _scores_not_found(self, attributes):
         values = {
@@ -124,27 +121,25 @@ def build_position_score_annotator(pipeline: AnnotationPipeline, config: Dict):
             f"genomic resource repository {pipeline.repository.repo_id}")
         raise ValueError(f"can't find resource {resource_id}")
 
-    return PositionScoreAnnotator(config, resource)
+    score = open_position_score_from_resource(resource)
+    return PositionScoreAnnotator(config, score)
 
 
 class PositionScoreAnnotator(VariantScoreAnnotatorBase):
-    def __init__(self, config: Box, resource):
+    def __init__(self, config: dict, resource):
         super().__init__(config, resource)
-        # FIXME This should be closed somewhere
-        self.resource.open()
 
-    @staticmethod
-    def annotator_type():
+    def annotator_type(self) -> str:
         return "position_score"
 
     @classmethod
     def validate_config(cls, config: Dict) -> Dict:
         attributes_schema = copy.deepcopy(ATTRIBUTES_SCHEMA)
-        attributes_schema["schema"]["position_aggregator"] = \
-            AGGREGATOR_SCHEMA
+        aschema = cast(dict, attributes_schema["schema"])
+        aschema["position_aggregator"] = AGGREGATOR_SCHEMA
 
         schema = copy.deepcopy(cls.VALIDATION_SCHEMA)
-        schema["annotator_type"]["allowed"] = [cls.annotator_type()]
+        schema["annotator_type"]["allowed"] = ["position_score"]
         schema["attributes"]["schema"] = attributes_schema
 
         validator = cls.ConfigValidator(schema)
@@ -156,9 +151,9 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             raise ValueError(f"wrong position score config {validator.errors}")
 
         result = validator.document
-        if result.attributes and any([
+        if result.get("attributes") and any([
                 "nucleotide_aggregator" in attr
-                for attr in result.attributes]):
+                for attr in result.get("attributes")]):
             logger.error(
                 f"nucleotide aggregator found in position score config: "
                 f"{result}")
@@ -167,14 +162,14 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         return validator.document
 
     def _fetch_substitution_scores(self, variant):
-        scores = self.resource.fetch_scores(
+        scores = self.score.fetch_scores(
             variant.chromosome, variant.position,
             self.get_scores()
         )
         return scores
 
     def _fetch_aggregated_scores(self, chrom, pos_begin, pos_end):
-        scores_agg = self.resource.fetch_scores_agg(
+        scores_agg = self.score.fetch_scores_agg(
             chrom,
             pos_begin,
             pos_end,
@@ -189,13 +184,13 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
 
     def _do_annotate(
             self, annotatable: Annotatable, context):
-        attributes = {}
+        attributes: dict = {}
 
         if annotatable is None:
             self._scores_not_found(attributes)
             return attributes
 
-        if annotatable.chromosome not in self.resource.get_all_chromosomes():
+        if annotatable.chromosome not in self.score.get_all_chromosomes():
             self._scores_not_found(attributes)
             return attributes
 
@@ -236,24 +231,23 @@ def build_np_score_annotator(pipeline: AnnotationPipeline, config: Dict):
             f"genomic resource repository {pipeline.repository.repo_id}")
         raise ValueError(f"can't find resource {resource_id}")
 
-    return NPScoreAnnotator(config, resource)
+    score = open_np_score_from_resource(resource)
+    return NPScoreAnnotator(config, score)
 
 
 class NPScoreAnnotator(PositionScoreAnnotator):
-    def __init__(self, config: Box, resource):
+    def __init__(self, config: dict, resource):
         super().__init__(config, resource)
-        self.resource.open()
 
     @classmethod
     def validate_config(cls, config: Dict) -> Dict:
         attributes_schema = copy.deepcopy(ATTRIBUTES_SCHEMA)
-        attributes_schema["schema"]["position_aggregator"] = \
-            AGGREGATOR_SCHEMA
-        attributes_schema["schema"]["nucleotide_aggregator"] = \
-            AGGREGATOR_SCHEMA
+        aschema = cast(dict, attributes_schema["schema"])
+        aschema["position_aggregator"] = AGGREGATOR_SCHEMA
+        aschema["nucleotide_aggregator"] = AGGREGATOR_SCHEMA
 
         schema = copy.deepcopy(cls.VALIDATION_SCHEMA)
-        schema["annotator_type"]["allowed"] = [cls.annotator_type()]
+        schema["annotator_type"]["allowed"] = ["np_score"]
         schema["attributes"]["schema"] = attributes_schema
 
         validator = cls.ConfigValidator(schema)
@@ -266,19 +260,18 @@ class NPScoreAnnotator(PositionScoreAnnotator):
 
         return validator.document
 
-    @staticmethod
-    def annotator_type():
+    def annotator_type(self) -> str:
         return "np_score"
 
     def _fetch_substitution_scores(self, allele):
-        return self.resource.fetch_scores(
+        return self.score.fetch_scores(
             allele.chromosome, allele.position,
             allele.reference, allele.alternative,
             self.get_scores()
         )
 
     def _fetch_aggregated_scores(self, chrom, pos_begin, pos_end):
-        scores_agg = self.resource.fetch_scores_agg(
+        scores_agg = self.score.fetch_scores_agg(
             chrom,
             pos_begin,
             pos_end,
@@ -313,20 +306,20 @@ def build_allele_score_annotator(pipeline: AnnotationPipeline, config: Dict):
             f"genomic resource repository {pipeline.repository.repo_id}")
         raise ValueError(f"can't find resource {resource_id}")
 
-    return AlleleScoreAnnotator(config, resource)
+    score = open_allele_score_from_resource(resource)
+    return AlleleScoreAnnotator(config, score)
 
 
 class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
-    def __init__(self, config: Box, resource):
-        super().__init__(config, resource)
-        resource.open()
+    def __init__(self, config: dict, score):
+        super().__init__(config, score)
 
     @classmethod
     def validate_config(cls, config: Dict) -> Dict:
         attributes_schema = copy.deepcopy(ATTRIBUTES_SCHEMA)
 
         schema = copy.deepcopy(cls.VALIDATION_SCHEMA)
-        schema["annotator_type"]["allowed"] = [cls.annotator_type()]
+        schema["annotator_type"]["allowed"] = ["allele_score"]
         schema["attributes"]["schema"] = attributes_schema
 
         validator = cls.ConfigValidator(schema)
@@ -338,16 +331,16 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
             raise ValueError(f"wrong allele score config {validator.errors}")
 
         result = validator.document
-        if result.attributes:
+        if result.get("attributes"):
             if any(["nucleotide_aggregator" in attr
-                    for attr in result.attributes]):
+                    for attr in result.get("attributes")]):
                 logger.error(
                     f"nucleotide aggregator found in position score config: "
                     f"{result}")
                 raise ValueError(
                     "nucleotide_aggregator is not allowed in position score")
             if any(["position_aggregator" in attr
-                    for attr in result.attributes]):
+                    for attr in result.get("attributes")]):
                 logger.error(
                     f"position aggregator found in position score config: "
                     f"{result}")
@@ -356,14 +349,13 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
 
         return result
 
-    @staticmethod
-    def annotator_type():
+    def annotator_type(self) -> str:
         return "allele_score"
 
     def _do_annotate(
             self, annotatable: Annotatable, context: Dict):
 
-        attributes = {}
+        attributes: dict = {}
 
         if not isinstance(annotatable, VCFAllele):
             logger.info(
@@ -375,11 +367,11 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(attributes)
             return attributes
 
-        if annotatable.chromosome not in self.resource.get_all_chromosomes():
+        if annotatable.chromosome not in self.score.get_all_chromosomes():
             self._scores_not_found(attributes)
             return attributes
 
-        scores_dict = self.resource.fetch_scores(
+        scores_dict = self.score.fetch_scores(
             annotatable.chromosome,
             annotatable.position,
             annotatable.reference,

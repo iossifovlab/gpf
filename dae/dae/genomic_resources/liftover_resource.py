@@ -1,24 +1,17 @@
 from __future__ import annotations
+from typing import TextIO
 
-from dae.genomic_resources.repository import GenomicResourceRealRepo
 from dae.genomic_resources import GenomicResource
 import logging
 
-from pyliftover import LiftOver
+from pyliftover import LiftOver  # type: ignore
 
 logger = logging.getLogger(__name__)
 
 
-class LiftoverChainResource(GenomicResource):
+class LiftoverChain:
 
-    def __init__(self, resource_id: str, version: tuple,
-                 repo: GenomicResourceRealRepo,
-                 config=None):
-        super().__init__(resource_id, version, repo, config)
-        self.file = config.get("filename")
-        if self.file is None:
-            self.file = config["file"]
-        assert self.file is not None, resource_id
+    def __init__(self, config: dict, chain_file: TextIO):
 
         chrom_prefix = config.get("chrom_prefix")
         if chrom_prefix is None:
@@ -30,14 +23,12 @@ class LiftoverChainResource(GenomicResource):
             self.chrom_target_coordinates = chrom_prefix.get(
                 'target_coordinates', None)
 
+        self.chain_file = chain_file
+        self.liftover = LiftOver(self.chain_file)
+
     @classmethod
     def get_resource_type(clazz):
         return "liftover_chain"
-
-    def open(self) -> LiftoverChainResource:
-        self.chain_file = self.open_raw_file(self.file, "rb", uncompress=True)
-        self.liftover = LiftOver(self.chain_file)
-        return self
 
     def close(self):
         pass
@@ -71,3 +62,25 @@ class LiftoverChainResource(GenomicResource):
             coordinates[0], self.chrom_target_coordinates)
 
         return tuple(coordinates)
+
+
+def load_liftover_chain_from_resource(
+        resource: GenomicResource) -> LiftoverChain:
+
+    config: dict = resource.get_config()
+
+    if resource.get_type() != "liftover_chain":
+        logger.error(
+            f"trying to use genomic resource {resource.resource_id} "
+            f"as a liftover chaing but its type is {resource.get_type()}; "
+            f"{config}")
+        raise ValueError(f"wrong resource type: {config}")
+
+    print(config)
+
+    filename: str = config["filename"]
+    chain_file: TextIO = resource.open_raw_file(
+        filename, "rb", uncompress=True)
+
+    result = LiftoverChain(config, chain_file)
+    return result
