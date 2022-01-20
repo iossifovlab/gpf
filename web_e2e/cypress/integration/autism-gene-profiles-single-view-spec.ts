@@ -132,7 +132,7 @@ describe('Autism gene profiles single view visual tests', () => {
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
-  it.skip('should compare histrograms', () => {
+  it('should compare histrograms', () => {
     autismGeneProfilesTablePage.geneSearchInput.type('CHD8');
     autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
     autismGeneProfilesTablePage.allTableCells.first().click();
@@ -144,7 +144,7 @@ describe('Autism gene profiles single view visual tests', () => {
         data.tableRows.forEach((elements, index) => {
           cy.wrap(scores).get('tr').eq(index).within(row => {
             cy.wrap(row).get('td').eq(0).should('have.text', elements);
-            //cy.wrap(row).matchImageSnapshot('autism-gene-profiles-single-view/chd8-' + data.tableId + '-' + elements);
+            cy.wrap(row).matchImageSnapshot('autism-gene-profiles-single-view/chd8-' + data.tableId + '-' + elements);
           });
         });
       });

@@ -40,3 +40,11 @@
 //         });
 //     });
 // }
+
+import { addMatchImageSnapshotCommand } from 'cypress-image-snapshot/command';
+
+addMatchImageSnapshotCommand({
+  customDiffConfig: { threshold: 0.1 }, // threshold for each pixel
+  capture: 'viewport', // capture viewport in screenshot
+  customSnapshotsDir: 'cypress/fixtures/snapshots/',
+});
