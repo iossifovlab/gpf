@@ -1,6 +1,6 @@
 import logging
 
-from typing import List, Dict, cast
+from typing import List, Dict, Optional, cast
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.reference_genome import \
@@ -107,7 +107,7 @@ class NormalizeAlleleAnnotator(Annotator):
                 f"{validator.errors}")
             raise ValueError(
                 f"wrong liftover annotator config {validator.errors}")
-        return validator.document
+        return cast(Dict, validator.document)
 
     def get_all_annotation_attributes(self) -> List[Dict]:
         return [
@@ -119,7 +119,7 @@ class NormalizeAlleleAnnotator(Annotator):
         ]
 
     def get_annotation_config(self) -> List[Dict]:
-        attributes = self.config.get("attributes")
+        attributes: Optional[List[Dict]] = self.config.get("attributes")
         if attributes:
             return attributes
         attributes = [
@@ -138,7 +138,6 @@ class NormalizeAlleleAnnotator(Annotator):
             self, annotatable: Annotatable, _context: Dict) -> Dict:
 
         assert isinstance(annotatable, VCFAllele), annotatable
-        allele = cast(VCFAllele, annotatable)
 
-        normalized_allele = normalize_allele(allele, self.genome)
+        normalized_allele = normalize_allele(annotatable, self.genome)
         return {"normalized_allele": normalized_allele}

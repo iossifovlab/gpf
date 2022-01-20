@@ -62,11 +62,11 @@ class VariantScoreAnnotatorBase(Annotator):
         return result
 
     def get_annotation_config(self) -> List[Dict]:
-        attributes = self.config.get("attributes")
-        if attributes:
-            return attributes
+        if self.config.get("attributes"):
+            return self.config["attributes"]
+
         if self.score.get_default_annotation():
-            attributes = self.score.get_default_annotation().get("attributes")
+            attributes = self.score.get_default_annotation()["attributes"]
             logger.info(
                 f"using default annotation for {self.score.score_id()}: "
                 f"{attributes}")
@@ -159,7 +159,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
                 f"{result}")
             raise ValueError(
                 "nucleotide_aggregator is not allowed in position score")
-        return validator.document
+        return cast(Dict, validator.document)
 
     def _fetch_substitution_scores(self, variant):
         scores = self.score.fetch_scores(
@@ -258,7 +258,7 @@ class NPScoreAnnotator(PositionScoreAnnotator):
                 f"{validator.errors}")
             raise ValueError(f"wrong NP score config {validator.errors}")
 
-        return validator.document
+        return cast(Dict, validator.document)
 
     def annotator_type(self) -> str:
         return "np_score"
@@ -330,17 +330,17 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
                 f"{validator.errors}")
             raise ValueError(f"wrong allele score config {validator.errors}")
 
-        result = validator.document
+        result: Dict = validator.document
         if result.get("attributes"):
             if any(["nucleotide_aggregator" in attr
-                    for attr in result.get("attributes")]):
+                    for attr in result["attributes"]]):
                 logger.error(
                     f"nucleotide aggregator found in position score config: "
                     f"{result}")
                 raise ValueError(
                     "nucleotide_aggregator is not allowed in position score")
             if any(["position_aggregator" in attr
-                    for attr in result.get("attributes")]):
+                    for attr in result["attributes"]]):
                 logger.error(
                     f"position aggregator found in position score config: "
                     f"{result}")

@@ -1,7 +1,7 @@
 import copy
 import logging
 
-from typing import Dict, List
+from typing import Dict, List, cast
 
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AlleleEffects, AnnotationEffect
@@ -168,7 +168,7 @@ class EffectAnnotatorAdapter(Annotator):
                 f"{validator.errors}")
             raise ValueError(
                 f"wrong effect annotator config {validator.errors}")
-        return validator.document
+        return cast(Dict, validator.document)
 
     def annotator_type(self) -> str:
         return "effect_annotator"

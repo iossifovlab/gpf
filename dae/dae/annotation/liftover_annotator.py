@@ -1,7 +1,7 @@
 import logging
 import copy
 
-from typing import Dict, List, cast
+from typing import Dict, List, Optional, cast
 from dae.genomic_resources.reference_genome import \
     ReferenceGenome, open_reference_genome_from_resource
 from dae.genomic_resources.liftover_resource import \
@@ -113,10 +113,10 @@ class LiftOverAnnotator(Annotator):
                 f"{validator.errors}")
             raise ValueError(
                 f"wrong liftover annotator config {validator.errors}")
-        return validator.document
+        return cast(Dict, validator.document)
 
     def get_annotation_config(self) -> List[Dict]:
-        attributes = self.config.get("attributes")
+        attributes: Optional[List[dict]] = self.config.get("attributes")
         if attributes:
             return attributes
         attributes = copy.deepcopy(self.DEFAULT_ANNOTATION["attributes"])

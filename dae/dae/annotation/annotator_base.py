@@ -1,7 +1,7 @@
 import logging
 import abc
 
-from typing import Any, List, Dict, cast
+from typing import Any, List, Dict
 from cerberus.validator import Validator  # type: ignore
 
 from .annotatable import Annotatable
@@ -124,10 +124,10 @@ class Annotator(abc.ABC):
     def get_annotation_config(self) -> List[Dict]:
         pass
 
-    def _empty_result(self):
-        result = {}
+    def _empty_result(self) -> Dict[str, Any]:
+        result: Dict[str, Any] = {}
         for attr in self.get_annotation_config():
-            result[attr.destination] = None
+            result[attr["destination"]] = None
         return result
 
     def annotate(self, annotatable: Annotatable,
@@ -156,7 +156,7 @@ class Annotator(abc.ABC):
                     f"The object with a key {self.input_annotatable} in the "
                     f"annotation context {context} is not an Annotabable.")
 
-            annotatable = cast(Annotatable, ao)
+            annotatable = ao
 
         attributes = self._do_annotate(annotatable, context)
         attributes_list = self.get_annotation_config()
