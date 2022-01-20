@@ -148,7 +148,7 @@ describe('Autism gene profiles single view visual tests', () => {
         });
       });
       cy.get('#' + data.tableId).scrollIntoView();
-      cy.matchImageSnapshot('autism-gene-profiles-single-view/chd8-' + data.tableId);
+      cy.matchImageSnapshot('chd8-' + data.tableId);
     });
   });
 });

@@ -182,17 +182,17 @@ describe('Gene plot visual tests', () => {
     geneBrowserPage.searchInputBox.type('chd8');
     geneBrowserPage.goButton.click();
     page.condenseIntronsCheckbox.click();
-    cy.get('g#plot').matchImageSnapshot('gene-plot/not-condensed-introns');
+    cy.get('g#plot').matchImageSnapshot('not-condensed-introns');
 
     page.condenseIntronsCheckbox.click();
-    cy.get('g#plot').matchImageSnapshot('gene-plot/condensed-introns');
+    cy.get('g#plot').matchImageSnapshot('condensed-introns');
   });
 
   it('should compare visually TTN gene plot results', () => {
     geneBrowserPage.searchInputBox.type('ttn');
     geneBrowserPage.goButton.click();
-    cy.get('g#plot').matchImageSnapshot('gene-plot/ttn-gene-plot-snapshot');
+    cy.get('g#plot').matchImageSnapshot('ttn-gene-plot-snapshot');
 
-    cy.get('gpf-table').matchImageSnapshot('gene-plot/ttn-gene-table-snapshot');
+    cy.get('gpf-table').matchImageSnapshot('ttn-gene-table-snapshot');
   });
 });

@@ -434,6 +434,6 @@ describe('Genotype browser table preview visual tests', () => {
 
     genotypeBrowserController.showTablePreview();
     page.overviewParagraph.should('have.text', '4 variants selected (4 shown)');
-    genotypePreviewTablePage.table.matchImageSnapshot('genotype-browser-table-preview/kdm5b');
+    genotypePreviewTablePage.table.matchImageSnapshot('kdm5b');
   });
 });
