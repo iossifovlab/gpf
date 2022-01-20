@@ -39,7 +39,7 @@ export class AgpTableComponent implements OnInit {
   private scrollLoadThreshold = 1000;
   public constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
-    private renderer: Renderer2
+    private renderer: Renderer2,
   ) { }
 
   @HostListener('window:scroll')
@@ -210,5 +210,17 @@ export class AgpTableComponent implements OnInit {
       }
     }
     this.currentSortingColumnId = sortBy;
+  }
+
+  public highlightRow(idx: number): void {
+    const elements = document.getElementsByClassName(`row-${idx}`);
+    for (let i = 0; i < elements.length; i++) {
+      const backgroundColor = (elements[i] as HTMLElement).style.backgroundColor;
+      if (!backgroundColor || backgroundColor === 'rgb(255, 255, 255)') {
+        (elements[i] as HTMLElement).style.backgroundColor = 'rgb(237, 243, 255)';
+      } else {
+        (elements[i] as HTMLElement).style.backgroundColor = 'rgb(255, 255, 255)';
+      }
+    }
   }
 }

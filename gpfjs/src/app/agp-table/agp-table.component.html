@@ -56,7 +56,7 @@
             "></ng-container>
         </div>
         <ng-container *ngIf="column.columns.length === 0 || !column.visible">
-          <div class="cell" *ngFor="let row of genes">
+          <div *ngFor="let row of genes; let i = index" [ngClass]="['cell', 'row-'+i]" (click)="highlightRow(i)">
             {{ row[column.id] }}
           </div>
         </ng-container>
