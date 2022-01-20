@@ -4,11 +4,11 @@
         <div class="nav-title-custom">
           <span>Enrichment Models</span>
         </div>
-        <li [ngbNavItem]="'default'">
-          <a ngbNavLink id="default-models">Default</a>
+        <li [ngbNavItem]="'default'" id="default-models">
+          <a ngbNavLink>Default</a>
         </li>
-        <li [ngbNavItem]="'models'">
-          <a ngbNavLink id="select-models">Select Models</a>
+        <li [ngbNavItem]="'models'" id="select-models">
+          <a ngbNavLink>Select Models</a>
           <ng-template ngbNavContent>
             <gpf-enrichment-models [selectedDatasetId]="selectedDatasetId"></gpf-enrichment-models>
           </ng-template>
