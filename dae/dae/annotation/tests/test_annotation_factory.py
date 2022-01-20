@@ -1,5 +1,4 @@
 import pytest
-from box import Box
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.annotation.annotation_factory import build_annotation_pipeline, \
@@ -49,7 +48,7 @@ def annotation_pipeline1(grr_np_score1):
 
 
 def test_annotation_factory_np_score(annotation_pipeline1):
-    config = Box({
+    config = {
         "annotator_type": "np_score",
         "resource_id": "np_score1",
         "attributes": [
@@ -58,7 +57,7 @@ def test_annotation_factory_np_score(annotation_pipeline1):
                 "destination": "np_score1",
             },
         ],
-    })
+    }
 
     annotator = build_np_score_annotator(annotation_pipeline1, config)
     assert annotator is not None

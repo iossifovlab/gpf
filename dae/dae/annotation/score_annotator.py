@@ -129,8 +129,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
     def __init__(self, config: dict, resource):
         super().__init__(config, resource)
 
-    @staticmethod
-    def annotator_type():
+    def annotator_type(self) -> str:
         return "position_score"
 
     @classmethod
@@ -140,7 +139,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         aschema["position_aggregator"] = AGGREGATOR_SCHEMA
 
         schema = copy.deepcopy(cls.VALIDATION_SCHEMA)
-        schema["annotator_type"]["allowed"] = [cls.annotator_type()]
+        schema["annotator_type"]["allowed"] = ["position_score"]
         schema["attributes"]["schema"] = attributes_schema
 
         validator = cls.ConfigValidator(schema)
@@ -248,7 +247,7 @@ class NPScoreAnnotator(PositionScoreAnnotator):
         aschema["nucleotide_aggregator"] = AGGREGATOR_SCHEMA
 
         schema = copy.deepcopy(cls.VALIDATION_SCHEMA)
-        schema["annotator_type"]["allowed"] = [cls.annotator_type()]
+        schema["annotator_type"]["allowed"] = ["np_score"]
         schema["attributes"]["schema"] = attributes_schema
 
         validator = cls.ConfigValidator(schema)
@@ -261,8 +260,7 @@ class NPScoreAnnotator(PositionScoreAnnotator):
 
         return validator.document
 
-    @staticmethod
-    def annotator_type():
+    def annotator_type(self) -> str:
         return "np_score"
 
     def _fetch_substitution_scores(self, allele):
@@ -321,7 +319,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
         attributes_schema = copy.deepcopy(ATTRIBUTES_SCHEMA)
 
         schema = copy.deepcopy(cls.VALIDATION_SCHEMA)
-        schema["annotator_type"]["allowed"] = [cls.annotator_type()]
+        schema["annotator_type"]["allowed"] = ["allele_score"]
         schema["attributes"]["schema"] = attributes_schema
 
         validator = cls.ConfigValidator(schema)
@@ -351,8 +349,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
 
         return result
 
-    @staticmethod
-    def annotator_type():
+    def annotator_type(self) -> str:
         return "allele_score"
 
     def _do_annotate(

@@ -199,8 +199,7 @@ class EffectAnnotatorAdapter(Annotator):
                 f"wrong effect annotator config {validator.errors}")
         return validator.document
 
-    @staticmethod
-    def annotator_type():
+    def annotator_type(self) -> str:
         return "effect_annotator"
 
     def get_annotation_config(self):

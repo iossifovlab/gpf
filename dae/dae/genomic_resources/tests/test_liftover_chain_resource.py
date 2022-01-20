@@ -1,15 +1,17 @@
 import pytest
 
+from dae.genomic_resources.liftover_resource import \
+    load_liftover_chain_from_resource
 
 @pytest.mark.fixture_repo
 def test_liftover_chain_resource(genomic_resource_fixture_dir_repo):
     chain_resource = genomic_resource_fixture_dir_repo.get_resource(
         "hg38/hg38tohg19")
     assert chain_resource
-    chain_resource.open()
+    chain = load_liftover_chain_from_resource(chain_resource)
 
     def check_coordinate(pos, expected_chrom, expected_pos, expected_strand):
-        out = chain_resource.convert_coordinate("chr1", pos)
+        out = chain.convert_coordinate("chr1", pos)
         assert out[0] == expected_chrom
         assert out[1] == expected_pos
         assert out[2] == expected_strand

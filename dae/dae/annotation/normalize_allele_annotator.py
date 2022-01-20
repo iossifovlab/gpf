@@ -69,8 +69,7 @@ class NormalizeAlleleAnnotator(Annotator):
         self.genome = genome
         self._annotation_schema = None
 
-    @staticmethod
-    def annotator_type():
+    def annotator_type(self) -> str:
         return "normalize_allele_annotator"
 
     @classmethod
