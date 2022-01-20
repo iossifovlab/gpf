@@ -7,10 +7,10 @@ from box import Box
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AlleleEffects, AnnotationEffect
 from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.reference_genome_resource import \
+from dae.genomic_resources.reference_genome import \
     open_reference_genome_from_resource
 from dae.genomic_resources.gene_models import GeneModels
-from dae.genomic_resources.gene_models_resource import \
+from dae.genomic_resources.gene_models import \
     load_gene_models_from_resource
 
 from .annotatable import Annotatable, CNVAllele, VCFAllele

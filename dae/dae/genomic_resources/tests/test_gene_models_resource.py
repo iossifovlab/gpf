@@ -1,6 +1,6 @@
 import pytest
 
-from dae.genomic_resources.gene_models_resource import \
+from dae.genomic_resources.gene_models import \
     load_gene_models_from_resource, GeneModels
 from dae.genomic_resources.test_tools import build_a_test_resource
 from dae.genomic_resources.test_tools import convert_to_tab_separated

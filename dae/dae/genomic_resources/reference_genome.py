@@ -1,12 +1,10 @@
-# June 6th 2013
-# by Ewa
-
 import os
 import logging
 
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 from dae.utils.regions import Region
+from dae.genomic_resources import GenomicResource
 
 
 logger = logging.getLogger(__name__)
@@ -106,4 +104,58 @@ def open_reference_genome_from_file(filename) -> ReferenceGenome:
     with open(index_filename) as index_file:
         content = index_file.read()
     ref.set_open(content, open(filename, 'rb'))
+    return ref
+
+
+def _parse_PARS(config) -> Optional[dict]:
+    if "PARS" not in config:
+        return None
+
+    assert config["PARS"]["X"] is not None
+    regions_x = [
+        Region.from_str(region) for region in config["PARS"]["X"]
+    ]
+    chrom_x = regions_x[0].chrom
+
+    result = {
+        chrom_x: regions_x
+    }
+
+    if config["PARS"]["Y"] is not None:
+        regions_y = [
+            Region.from_str(region) for region in config["PARS"]["Y"]
+        ]
+        chrom_y = regions_y[0].chrom
+        result[chrom_y] = regions_y
+    return result
+
+
+def open_reference_genome_from_resource(
+        resource: GenomicResource) -> ReferenceGenome:
+
+    if resource is None:
+        raise ValueError("None resource passed")
+
+    if resource.get_type() != "genome":
+        logger.error(
+            f"trying to open a resource {resource.resource_id} of type "
+            f"{resource.get_type()} as reference genome")
+        raise ValueError(f"wrong resource type: {resource.resource_id}")
+
+    config = resource.get_config()
+    file_name = config["filename"]
+    index_file_name = config.get("index_file", f"{file_name}.fai")
+
+    index_content = resource.get_file_str_content(index_file_name)
+
+    ref = ReferenceGenome(
+        ('resource', resource.repo.repo_id, resource.resource_id))
+
+    pars = _parse_PARS(config)
+    ref.set_pars(pars)
+
+    ref.set_open(
+        index_content,
+        resource.open_raw_file(
+            file_name, "rb", uncompress=False, seekable=True))
     return ref

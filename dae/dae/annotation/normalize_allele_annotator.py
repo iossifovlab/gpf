@@ -3,7 +3,7 @@ import logging
 from typing import List, Dict, cast
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.reference_genome_resource import \
+from dae.genomic_resources.reference_genome import \
     open_reference_genome_from_resource
 
 from .annotatable import Annotatable, VCFAllele

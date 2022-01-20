@@ -4,10 +4,10 @@ from typing import Optional, cast
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.genomic_resources.gene_models import GeneModels
-from dae.genomic_resources.gene_models_resource import \
+from dae.genomic_resources.gene_models import \
     load_gene_models_from_resource
 from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.reference_genome_resource import \
+from dae.genomic_resources.reference_genome import \
     open_reference_genome_from_resource
 from dae.genomic_resources.genomic_context import get_genomic_context
 

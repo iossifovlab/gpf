@@ -3,7 +3,7 @@ import copy
 
 from typing import Dict, List
 from box import Box
-from dae.genomic_resources.reference_genome_resource import \
+from dae.genomic_resources.reference_genome import \
     ReferenceGenome, open_reference_genome_from_resource
 
 from dae.utils.variant_utils import trim_str_left, reverse_complement
