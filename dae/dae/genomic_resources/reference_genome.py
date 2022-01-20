@@ -18,7 +18,7 @@ class ReferenceGenome:
         self._index = None
         self._chromosomes = None
         self._sequence = None
-        self.PARS = {}
+        self.PARS: dict = {}
         self.source = source
 
     @property

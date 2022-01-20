@@ -3,7 +3,7 @@ import textwrap
 
 from dae.annotation.annotatable import VCFAllele
 from dae.genomic_resources import build_genomic_resource_repository
-from dae.genomic_resources.score_resources import \
+from dae.genomic_resources.genomic_scores import \
     open_position_score_from_resource
 from dae.annotation.annotation_factory import build_annotation_pipeline
 

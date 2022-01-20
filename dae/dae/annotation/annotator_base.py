@@ -122,7 +122,7 @@ class Annotator(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_annotation_config(self) -> Dict:
+    def get_annotation_config(self) -> List[Dict]:
         pass
 
     def _empty_result(self):

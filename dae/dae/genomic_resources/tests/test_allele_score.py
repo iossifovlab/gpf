@@ -1,5 +1,5 @@
 from dae.genomic_resources import GenomicResource
-from dae.genomic_resources.score_resources import \
+from dae.genomic_resources.genomic_scores import \
     open_allele_score_from_resource
 from dae.genomic_resources.test_tools import build_a_test_resource
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
