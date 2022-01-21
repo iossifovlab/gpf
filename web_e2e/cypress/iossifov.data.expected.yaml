@@ -61,7 +61,7 @@
         geneSet:
           collection:
             id: "Denovo"
-            affected_status:
+            affectedStatus:
               - studyId: "iossifov_2014"
                 affected: "true"
                 unaffected: "true"
