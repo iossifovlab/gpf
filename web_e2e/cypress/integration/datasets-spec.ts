@@ -74,19 +74,25 @@ describe('Datasets tests', () => {
     phenoToolPage.window.should('not.exist');
   });
 
-  it('should change url based on selected study', () => {
-    const datasetList = [
-      datasetIds.compAll, datasetIds.compDenovo, datasetIds.compVcf, datasetIds.iossifov2014, datasetIds.multi
-    ];
+  it('should change url correctly after clicking on a dataset from the dataset dropdown menu', () => {
+    const datasets = [
+      {id: datasetIds.allGenotypes, url: "ALL_genotypes"},
+      {id: datasetIds.compGenotypes, url: "COMP_genotypes"},
+      {id: datasetIds.compDenovo, url: "comp_denovo"},
+      {id: datasetIds.compVcf, url: "comp_vcf"},
+      {id: datasetIds.compAll, url: "comp_all"},
+      {id: datasetIds.iossifov2014, url: "iossifov_2014"},
+      {id: datasetIds.multi, url: "multi"}
+    ]
 
     page.loginAdmin();
 
-    datasetList.forEach(dataset => {
+    datasets.forEach(dataset => {
       page.datasetsDropdownMenuButton.click();
       page.datasetsDropdownMenuElements.should('be.visible');
-      page.datasetsDropdownMenuElements.contains(dataset).click();
+      page.datasetsDropdownMenuElements.contains(dataset.id).click();
       cy.url().then(url => {
-        expect(url).to.contain(Cypress.config().baseUrl + 'datasets/' + dataset + '/');
+        expect(url).to.contain(Cypress.config().baseUrl + 'datasets/' + dataset.url + '/');
       });
     });
   });
