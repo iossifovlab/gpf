@@ -1,4 +1,4 @@
-import { GenesWeights } from 'cypress/elements/genes-weights';
+import { GeneWeightsPage } from 'cypress/elements/gene-weights-page';
 import { GenesBlockPage } from 'cypress/elements/genes-block-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 import { GenotypeBrowserController } from 'cypress/elements/genotype-browser-controller';
@@ -53,7 +53,7 @@ const geneWeightsData = [
 ];
 
 describe('Gene weights panel tests', () => {
-  const page = new GenesWeights();
+  const page = new GeneWeightsPage();
   const genesBlockPage = new GenesBlockPage();
 
   before(() => {

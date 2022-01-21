@@ -1,6 +1,6 @@
 import { BasePage } from './utils';
 
-export class GenesWeights extends BasePage {
+export class GeneWeightsPage extends BasePage {
   get dropdownButton() {
     return cy.get('gpf-gene-weights select');
   }
