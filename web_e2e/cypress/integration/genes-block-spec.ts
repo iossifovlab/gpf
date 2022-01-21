@@ -259,15 +259,15 @@ describe('Denovo gene set gene symbols tests', () => {
     expectedConditions: {
     effectTypesSearchQueries: ['LGDs', 'Missense', 'Synonymous', 'LGDs.Single', 'LGDs.Triple', 'LGDs.Male'],
     expectedGeneSymbolsFiles: [
-      'cypress/fixtures/gene_sets/LGDs_iossifov_2014_status_affected.csv', 'cypress/fixtures/gene_sets/Missense_iossifov_2014_status_affected.csv',
-      'cypress/fixtures/gene_sets/Synonymous_iossifov_2014_status_affected.csv', 'cypress/fixtures/gene_sets/LGDs_single_iossifov_2014_affected.csv',
-      'cypress/fixtures/gene_sets/LGDs_triple_iossifov_2014_affected.csv', 'cypress/fixtures/gene_sets/LGDs_male_iossifov_2014_affected.csv',
-      'cypress/fixtures/gene_sets/LGDs_iossifov_2014_unaffected.csv'
+      'cypress/fixtures/gene-sets/LGDs_iossifov_2014_status_affected.csv', 'cypress/fixtures/gene-sets/Missense_iossifov_2014_status_affected.csv',
+      'cypress/fixtures/gene-sets/Synonymous_iossifov_2014_status_affected.csv', 'cypress/fixtures/gene-sets/LGDs_single_iossifov_2014_affected.csv',
+      'cypress/fixtures/gene-sets/LGDs_triple_iossifov_2014_affected.csv', 'cypress/fixtures/gene-sets/LGDs_male_iossifov_2014_affected.csv',
+      'cypress/fixtures/gene-sets/LGDs_iossifov_2014_unaffected.csv'
     ]}},
     {peopleGroup: 'unaffected',
     expectedConditions: {
     effectTypesSearchQueries: ['LGDs'],
-    expectedGeneSymbolsFiles: ['cypress/fixtures/gene_sets/LGDs_iossifov_2014_unaffected.csv']}}
+    expectedGeneSymbolsFiles: ['cypress/fixtures/gene-sets/LGDs_iossifov_2014_unaffected.csv']}}
   ].forEach((data) => {
     it('should download iossifov ' + data.peopleGroup + ' denovo gene sets ' +
        'and check whether they are equal to the reference data', () => {
