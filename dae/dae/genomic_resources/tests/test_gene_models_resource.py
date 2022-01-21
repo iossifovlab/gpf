@@ -89,18 +89,19 @@ def test_against_agains_dirrent_repo_types(tmp_path):
     )
 
 
-'''
-TODO IVAN How can something like this be done?
-@pytest.mark.parametrize("repo", [
-    genomic_resource_fixture_repo,
-    genomic_resource_fixture_http_repo
-])'''
+@pytest.fixture(params=['http', 's3'])
+def genomic_resource_fixture_repo(request,
+        genomic_resource_fixture_http_repo, genomic_resource_fixture_s3_repo):
+    return {
+        'http': genomic_resource_fixture_http_repo,
+        's3': genomic_resource_fixture_s3_repo,
+    }[request.param]
 
 
 @pytest.mark.fixture_repo
-def test_gene_models_resource_http(genomic_resource_fixture_http_repo):
+def test_gene_models_resource(genomic_resource_fixture_repo):
 
-    res = genomic_resource_fixture_http_repo.get_resource(
+    res = genomic_resource_fixture_repo.get_resource(
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
         "gene_models/refGene_201309")
 
