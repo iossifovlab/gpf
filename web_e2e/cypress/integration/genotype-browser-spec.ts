@@ -463,10 +463,15 @@ describe('Genotype browser table preview visual tests', () => {
   it('should compare KDM5B gene results', () => {
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
     genotypeBrowserController.genesBlockPage.geneSymbolsButton.click();
-    genotypeBrowserController.genesBlockPage.geneSymbolsTextarea.type('KDM5B');
 
-    genotypeBrowserController.showTablePreview();
-    page.overviewParagraph.should('have.text', '4 variants selected (4 shown)');
-    genotypePreviewTablePage.table.matchImageSnapshot('kdm5b');
+    [['POGZ', '2', 'pogz'], ['KDM5B', '4','kdm5b']].forEach(data => {
+      genotypeBrowserController.genesBlockPage.geneSymbolsTextarea.clear().type(data[0]);
+
+      genotypeBrowserController.showTablePreview();
+      page.overviewParagraph.should('have.text', data[1] +' variants selected (' + data[1] + ' shown)');
+      genotypePreviewTablePage.table.matchImageSnapshot(data[2]);
+    });
+
   });
+
 });
