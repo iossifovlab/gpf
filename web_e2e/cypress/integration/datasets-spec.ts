@@ -74,22 +74,19 @@ describe('Datasets tests', () => {
     phenoToolPage.window.should('not.exist');
   });
 
-  it('should check if nested datasets are redirecting correctly', () => {
+  it('should change url based on selected study', () => {
+    const datasetList = [
+      datasetIds.compAll, datasetIds.compDenovo, datasetIds.compVcf, datasetIds.iossifov2014, datasetIds.multi
+    ];
+
     page.loginAdmin();
-    [
-      ['ALL Genotypes', 'ALL_genotypes'],
-      ['COMP Genotypes', 'COMP_genotypes'],
-      ['comp_denovo', 'comp_denovo'],
-      ['comp_vcf', 'comp_vcf'],
-      ['comp_all', 'comp_all'],
-      ['iossifov_2014', 'iossifov_2014'],
-      ['multi', 'multi']
-    ].forEach(dataset => {
+
+    datasetList.forEach(dataset => {
       page.datasetsDropdownMenuButton.click();
       page.datasetsDropdownMenuElements.should('be.visible');
-      page.datasetsDropdownMenuElements.contains(dataset[0]).click();
+      page.datasetsDropdownMenuElements.contains(dataset).click();
       cy.url().then(url => {
-        expect(url).to.contain(Cypress.config().baseUrl + 'datasets/' + dataset[1] + '/');
+        expect(url).to.contain(Cypress.config().baseUrl + 'datasets/' + dataset + '/');
       });
     });
   });
