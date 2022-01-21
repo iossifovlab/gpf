@@ -80,6 +80,7 @@ class Context:
             else:
                 logger.info("Using the annotation pipeline from "
                             f"the file {self.args.pipeline}.")
+                # TODO: Add self as a context plugin.
                 self._pipeline = build_annotation_pipeline(
                     pipeline_config_file=self.args.pipeline,
                     grr_repository=self.get_grr())
