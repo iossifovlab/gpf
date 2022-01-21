@@ -5,7 +5,7 @@ from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.repository import GenomicResourceRepo
 
-_REGISTERED_CONEXT_GENERATORS = []
+_REGISTERED_CONEXT_GENERATORS: list = []
 
 GC_GRR_KEY = "genomic_resource_repository"
 GC_REFERENCE_GENOME_KEY = "reference_genome"
@@ -56,11 +56,11 @@ class GenomicContextGenerator(ABC):
         return 0
 
     @abstractmethod
-    def get_context_generator_type() -> str:
+    def get_context_generator_type(self) -> str:
         pass
 
     @abstractmethod
-    def get_contexts() -> List[GenomicContext]:
+    def get_contexts(self) -> List[GenomicContext]:
         pass
     pass
 

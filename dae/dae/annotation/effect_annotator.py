@@ -1,14 +1,18 @@
 import copy
 import logging
 
-from typing import Dict, List
-from box import Box
+from typing import Dict, List, cast
 
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AlleleEffects, AnnotationEffect
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.reference_genome import \
+    open_reference_genome_from_resource
 from dae.genomic_resources.gene_models import GeneModels
+
 from dae.genomic_resources.genomic_context import get_genomic_context
+from dae.genomic_resources.gene_models import \
+    load_gene_models_from_resource
 
 from .annotatable import Annotatable, CNVAllele, VCFAllele
 
@@ -38,12 +42,8 @@ def build_effect_annotator(pipeline, config):
                 "genome is missing in config and context")
     else:
         genome_id = config.get("genome")
-        genome = pipeline.repository.get_resource(genome_id)
-        if genome is None:
-            logger.error(
-                f"can't find reference genome {genome_id} in genomic "
-                f"resources repository {pipeline.repository.repo_id}")
-            raise ValueError(f"can't find genome {genome_id}")
+        resource = pipeline.repository.get_resource(genome_id)
+        genome = open_reference_genome_from_resource(resource)
 
     if config.get("gene_models") is None:
         gene_models = get_genomic_context().get_gene_models()
@@ -53,19 +53,15 @@ def build_effect_annotator(pipeline, config):
                 "gene models are missing in config and context")
     else:
         gene_models_id = config.get("gene_models")
-        gene_models = pipeline.repository.get_resource(gene_models_id)
-        if gene_models is None:
-            raise ValueError(
-                f"can't find gene models {gene_models_id} "
-                f"in the specified repository "
-                f"{pipeline.repository.repo_id}")
+        resource = pipeline.repository.get_resource(gene_models_id)
+        gene_models = load_gene_models_from_resource(resource)
 
-    return EffectAnnotatorAdapter(config, genome.open(), gene_models.open())
+    return EffectAnnotatorAdapter(config, genome, gene_models)
 
 
 class EffectAnnotatorAdapter(Annotator):
 
-    DEFAULT_ANNOTATION = Box({
+    DEFAULT_ANNOTATION = {
         "attributes": [
             {
                 "source": "worst_effect",
@@ -82,7 +78,7 @@ class EffectAnnotatorAdapter(Annotator):
                 "destination": "effect_details"
             },
         ]
-    })
+    }
 
     def __init__(
             self, config, genome: ReferenceGenome, gene_models: GeneModels):
@@ -135,34 +131,6 @@ class EffectAnnotatorAdapter(Annotator):
                 "desc": "The a list of a python objects with details of the "
                         "effects for each affected transcript. "
             },
-            # FIXME
-            '''
-            {
-                "name": "effect_gene_genes",
-                "type": "object",
-                "desc": ""
-            },
-            {
-                "name": "effect_gene_types",
-                "type": "object",
-                "desc": ""
-            },
-            {
-                "name": "effect_details_transcript_ids",
-                "type": "object",
-                "desc": ""
-            },
-            {
-                "name": "effect_details_genes",
-                "type": "object",
-                "desc": ""
-            },
-            {
-                "name": "effect_details_details",
-                "type": "object",
-                "desc": ""
-            },
-            '''
         ]
         return result
 
@@ -202,10 +170,9 @@ class EffectAnnotatorAdapter(Annotator):
                 f"{validator.errors}")
             raise ValueError(
                 f"wrong effect annotator config {validator.errors}")
-        return validator.document
+        return cast(Dict, validator.document)
 
-    @staticmethod
-    def annotator_type():
+    def annotator_type(self) -> str:
         return "effect_annotator"
 
     def get_annotation_config(self):
@@ -215,13 +182,13 @@ class EffectAnnotatorAdapter(Annotator):
                     self.config.get("attributes"))
             else:
                 self._annotation_config = copy.deepcopy(
-                    self.DEFAULT_ANNOTATION.attributes)
+                    self.DEFAULT_ANNOTATION["attributes"])
         return self._annotation_config
 
     def _do_annotate(
             self, annotatable: Annotatable, _context: Dict):
 
-        result = {}
+        result: dict = {}
         if annotatable is None:
             self._not_found(result)
             return result

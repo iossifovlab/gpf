@@ -167,7 +167,7 @@ def unique_regions(R):
 
 def connected_component(R):
     """This might be the same as collapse"""
-    import networkx as nx  # noqa
+    import networkx as nx  # type: ignore
 
     G = nx.Graph()
 

@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import sys
 import argparse
+
+from typing import List
+
 from dae.annotation.context import Context
 from dae.annotation.annotatable import VCFAllele
 from dae.genomic_resources.cli import VerbosityConfiguration
-from pysam import VariantFile  # noqu
+from pysam import VariantFile  # type: ignore
 
 
 def configure_argument_parser() -> argparse.ArgumentParser:
@@ -62,7 +65,7 @@ def cli(raw_args: list[str] = None) -> None:
 
     # handling the variants
     for var in in_file:
-        buffers = [list([]) for _ in annotation_attributes]
+        buffers: List[List] = [list([]) for _ in annotation_attributes]
 
         for alt in var.alts:
             annotabale = VCFAllele(var.chrom, var.pos, var.ref, alt)

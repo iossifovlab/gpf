@@ -3,9 +3,11 @@ import yaml
 import hashlib
 import os
 import gzip
-import pysam
+import pysam  # type: ignore
 import logging
 import datetime
+
+from typing import Optional
 
 from .repository import GenomicResource
 from .repository import GenomicResourceRepo
@@ -67,7 +69,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
     def update_resource(
             self, src_gr: GenomicResource):
 
-        dest_gr: GenomicResource = self.get_resource(
+        dest_gr: Optional[GenomicResource] = self.get_resource(
             src_gr.resource_id, f"={src_gr.get_version_str()}")
         assert dest_gr is not None
 

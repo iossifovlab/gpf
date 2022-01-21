@@ -1,5 +1,4 @@
 import pytest
-from box import Box
 
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.variants.core import Allele
@@ -44,13 +43,13 @@ def test_liftover(
     target_genome.get_sequence = mock_get_sequence
     target_genome.open = lambda: target_genome
 
-    config = Box({
+    config = {
         "annotator_type": "liftover_annotator",
         "chain": "test_lifover_chain",
         "target_genome": "test_target_genome",
         "id": "liftover_test",
         "attributes": None
-    })
+    }
 
     annotator = LiftOverAnnotator(
         config, chain, target_genome)

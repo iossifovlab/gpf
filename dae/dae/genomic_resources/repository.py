@@ -149,6 +149,12 @@ class GenomicResource:
     def get_config(self):
         return self.config
 
+    def get_type(self):
+        config_type = self.get_config().get("type")
+        if config_type is None:
+            return "Basic"
+        return config_type
+
     def get_version_str(self) -> str:
         '''returns string of the form 3.1'''
         return ".".join(map(str, self.version))
@@ -248,23 +254,13 @@ class GenomicResource:
         pass
 
 
-_registered_genomic_resource_types = {}
-
-
-def register_genomic_resource_type(constructor):
-    tp = constructor.get_resource_type()
-    if tp in _registered_genomic_resource_types:
-        raise Exception(f"The resource {tp} is registered twice!")
-    _registered_genomic_resource_types[tp] = constructor
-
-
 class GenomicResourceRepo(abc.ABC):
-    def __init__(self):
-        pass
+    def __init__(self, repo_id):
+        self.repo_id: str = repo_id
 
     @abc.abstractmethod
     def get_resource(self, resource_id, version_constraint=None,
-                     genomic_repository_id=None) -> GenomicResource:
+                     genomic_repository_id=None) -> Optional[GenomicResource]:
         '''
             Returns one resource with id qual to resource_id. If not found,
             None is returned.
@@ -281,25 +277,15 @@ class GenomicResourceRepo(abc.ABC):
 
 class GenomicResourceRealRepo(GenomicResourceRepo):
     def __init__(self, repo_id):
-        super().__init__()
-        self.repo_id = repo_id
+        super().__init__(repo_id)
 
-    def build_genomic_resource(self, id, version, config=None, manifest=None):
+    def build_genomic_resource(
+            self, resource_id, version, config=None, manifest=None):
         if not config:
-            grTemp = GenomicResource(id, version, self)
-            config = grTemp.load_yaml(GR_CONF_FILE_NAME)
-        grClass = GenomicResource
-        if isinstance(config, dict) and "type" in config:
-            grClassType = config["type"]
-            try:
-                grClass = _registered_genomic_resource_types[grClassType]
-            except KeyError:
-                raise Exception(
-                    f"Unknown genomic resource type {grClassType}. The known "
-                    f"resource types are: " +
-                    ", ".join(sorted(
-                        _registered_genomic_resource_types.keys())))
-        gr = grClass(id, version, self, config)
+            gr_base = GenomicResource(resource_id, version, self)
+            config = gr_base.load_yaml(GR_CONF_FILE_NAME)
+
+        gr = GenomicResource(resource_id, version, self, config)
         gr._manifest = manifest
         return gr
 

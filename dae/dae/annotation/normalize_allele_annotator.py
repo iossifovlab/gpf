@@ -1,8 +1,10 @@
 import logging
 
-from typing import List, Dict, cast
+from typing import List, Dict, Optional, cast
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.reference_genome import \
+    open_reference_genome_from_resource
 
 from .annotatable import Annotatable, VCFAllele
 from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
@@ -46,30 +48,28 @@ def normalize_allele(allele: VCFAllele, genome: ReferenceGenome) -> VCFAllele:
 def build_normalize_allele_annotator(pipeline, config):
     config = NormalizeAlleleAnnotator.validate_config(config)
 
-    assert config.annotator_type == "normalize_allele_annotator"
+    assert config["annotator_type"] == "normalize_allele_annotator"
 
-    genome_resource = pipeline.repository.get_resource(config.genome)
+    genome_resource = pipeline.repository.get_resource(config["genome"])
     if genome_resource is None:
         raise ValueError(
             f"can't create normalize allele annotator; "
             f"can't find reference genome: "
-            f"{config.genome}"
+            f"{config['genome']}"
         )
-
-    return NormalizeAlleleAnnotator(config, genome_resource)
+    genome = open_reference_genome_from_resource(genome_resource)
+    return NormalizeAlleleAnnotator(config, genome)
 
 
 class NormalizeAlleleAnnotator(Annotator):
 
-    def __init__(self, config, genome_resource):
+    def __init__(self, config, genome: ReferenceGenome):
         super().__init__(config)
 
-        self.genome_resource = genome_resource
-        self.genome = self.genome_resource.open()
+        self.genome = genome
         self._annotation_schema = None
 
-    @staticmethod
-    def annotator_type():
+    def annotator_type(self) -> str:
         return "normalize_allele_annotator"
 
     @classmethod
@@ -107,7 +107,7 @@ class NormalizeAlleleAnnotator(Annotator):
                 f"{validator.errors}")
             raise ValueError(
                 f"wrong liftover annotator config {validator.errors}")
-        return validator.document
+        return cast(Dict, validator.document)
 
     def get_all_annotation_attributes(self) -> List[Dict]:
         return [
@@ -119,7 +119,7 @@ class NormalizeAlleleAnnotator(Annotator):
         ]
 
     def get_annotation_config(self) -> List[Dict]:
-        attributes = self.config.get("attributes")
+        attributes: Optional[List[Dict]] = self.config.get("attributes")
         if attributes:
             return attributes
         attributes = [
@@ -138,7 +138,6 @@ class NormalizeAlleleAnnotator(Annotator):
             self, annotatable: Annotatable, _context: Dict) -> Dict:
 
         assert isinstance(annotatable, VCFAllele), annotatable
-        allele = cast(VCFAllele, annotatable)
 
-        normalized_allele = normalize_allele(allele, self.genome)
+        normalized_allele = normalize_allele(annotatable, self.genome)
         return {"normalized_allele": normalized_allele}

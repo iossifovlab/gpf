@@ -1,4 +1,4 @@
-from fsspec.core import url_to_fs
+from fsspec.core import url_to_fs  # type: ignore
 
 
 def exists(filename):

@@ -1,5 +1,7 @@
 import yaml
 from dae.genomic_resources import build_genomic_resource_repository
+from dae.genomic_resources.genomic_scores import \
+    open_position_score_from_resource
 
 
 def test_build_an_empty_repository():
@@ -110,5 +112,6 @@ def test_build_a_configuration_with_embeded():
     assert repo is not None
     gr = repo.get_resource('one')
     assert gr is not None
-    gr.open()
-    gr.fetch_scores('chr1', 23) == {"score": 0.01}
+
+    score = open_position_score_from_resource(gr)
+    score.fetch_scores('chr1', 23) == {"score": 0.01}

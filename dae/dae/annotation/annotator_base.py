@@ -1,9 +1,8 @@
 import logging
 import abc
 
-from typing import Any, List, Dict, cast
-from box import Box
-from cerberus.validator import Validator
+from typing import Any, List, Dict
+from cerberus.validator import Validator  # type: ignore
 
 from .annotatable import Annotatable
 from .schema import Schema
@@ -45,7 +44,7 @@ class Annotator(abc.ABC):
                 return value
             return value
 
-    def __init__(self, config: Box):
+    def __init__(self, config: dict):
         self.config = self.validate_config(config)
         self.input_annotatable = self.config.get("input_annotatable")
 
@@ -82,7 +81,7 @@ class Annotator(abc.ABC):
             if attribute_name == attribute["name"]:
                 return attribute
         message = f"can't find attribute {attribute_name} in annotator " \
-            f"{self.annotator_type}: {self.config}"
+            f"{self.annotator_type()}: {self.config}"
         logger.error(message)
         raise ValueError(message)
 
@@ -109,8 +108,8 @@ class Annotator(abc.ABC):
             self._annotation_schema = schema
         return self._annotation_schema
 
-    @abc.abstractstaticmethod
-    def annotator_type() -> str:
+    @abc.abstractmethod
+    def annotator_type(self) -> str:
         raise Exception("Should be overriden.!!")
 
     @abc.abstractmethod
@@ -122,13 +121,13 @@ class Annotator(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_annotation_config(self) -> Dict:
+    def get_annotation_config(self) -> List[Dict]:
         pass
 
-    def _empty_result(self):
-        result = {}
+    def _empty_result(self) -> Dict[str, Any]:
+        result: Dict[str, Any] = {}
         for attr in self.get_annotation_config():
-            result[attr.destination] = None
+            result[attr["destination"]] = None
         return result
 
     def annotate(self, annotatable: Annotatable,
@@ -157,7 +156,7 @@ class Annotator(abc.ABC):
                     f"The object with a key {self.input_annotatable} in the "
                     f"annotation context {context} is not an Annotabable.")
 
-            annotatable = cast(Annotatable, ao)
+            annotatable = ao
 
         attributes = self._do_annotate(annotatable, context)
         attributes_list = self.get_annotation_config()

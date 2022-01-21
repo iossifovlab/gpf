@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from dae.genomic_resources.repository import GenomicResourceRepo
 
@@ -21,7 +21,7 @@ class AnnotationPipeline():
         self.config: List[Dict] = config
         self.repository: GenomicResourceRepo = repository
 
-        self._annotation_schema = None
+        self._annotation_schema: Optional[Schema] = None
 
     @ property
     def annotation_schema(self) -> Schema:
@@ -39,7 +39,7 @@ class AnnotationPipeline():
         self._annotation_schema = None
 
     def annotate(self, annotatable: Annotatable) -> dict:
-        context = {}
+        context: dict = {}
         for annotator in self.annotators:
             attributes = annotator.annotate(annotatable, context)
             context.update(attributes)

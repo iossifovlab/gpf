@@ -1,4 +1,5 @@
-from box import Box
+from dae.genomic_resources.genomic_scores import \
+    open_allele_score_from_resource
 from dae.annotation.score_annotator import AlleleScoreAnnotator
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 
@@ -7,12 +8,15 @@ def test_allele_score_annotator(
         frequency_variants_expected, grr_fixture):
 
     pipeline = AnnotationPipeline([], grr_fixture)
+    resource = grr_fixture.get_resource("hg38/TESTFreq")
+    score = open_allele_score_from_resource(resource)
 
-    annotator = AlleleScoreAnnotator(Box({
+    annotator = AlleleScoreAnnotator({
         "annotator_type": "allele_score",
         "resource_id": "hg38/TESTFreq",
         "attributes": None,
-    }), grr_fixture.get_resource("hg38/TESTFreq"))
+    }, score)
+
     pipeline.add_annotator(annotator)
 
     print(annotator.get_all_annotation_attributes())
@@ -29,12 +33,14 @@ def test_allele_score_annotator_attributes(
         frequency_variants_expected, grr_fixture):
 
     pipeline = AnnotationPipeline([], grr_fixture)
+    resource = grr_fixture.get_resource("hg38/TESTFreq")
+    score = open_allele_score_from_resource(resource)
 
-    annotator = AlleleScoreAnnotator(Box({
+    annotator = AlleleScoreAnnotator({
         "annotator_type": "allele_score",
         "resource_id": "hg38/TESTFreq",
         "attributes": None,
-    }), grr_fixture.get_resource("hg38/TESTFreq"))
+    }, score)
     pipeline.add_annotator(annotator)
 
     print(annotator.get_all_annotation_attributes())

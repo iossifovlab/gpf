@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import abc
 import argparse
+
+from typing import Optional, Dict, Type
+
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotatable import Position
 from dae.annotation.annotatable import Region
@@ -13,13 +16,16 @@ from .context import Context
 
 
 class RecordToAnnotable(abc.ABC):
+    def __init__(self, columns: tuple, _: Optional[Context]):
+        pass
+
     @abc.abstractmethod
     def build(self, record: dict[str, str]) -> Annotatable:
         pass
 
 
 class RecordToPosition(RecordToAnnotable):
-    def __init__(self, columns: list[str], _: Context):
+    def __init__(self, columns: tuple, _: Optional[Context]):
         self.chrom_column, self.pos_column = columns
 
     def build(self, record: dict[str, str]) -> Annotatable:
@@ -28,7 +34,7 @@ class RecordToPosition(RecordToAnnotable):
 
 
 class RecordToRegion(RecordToAnnotable):
-    def __init__(self, columns: list[str], _: Context):
+    def __init__(self, columns: tuple, _: Optional[Context]):
         self.chrom_col, self.pos_beg_col, self.pos_end_col = columns
 
     def build(self, record: dict[str, str]) -> Annotatable:
@@ -38,7 +44,7 @@ class RecordToRegion(RecordToAnnotable):
 
 
 class RecordToVcfAllele(RecordToAnnotable):
-    def __init__(self, columns: list[str], _: Context):
+    def __init__(self, columns: tuple, _: Optional[Context]):
         self.chrom_col, self.pos_col, self.ref_col, self.alt_col = columns
 
     def build(self, record: dict[str, str]) -> Annotatable:
@@ -49,7 +55,7 @@ class RecordToVcfAllele(RecordToAnnotable):
 
 
 class VcfLikeRecordToVcfAllele(RecordToAnnotable):
-    def __init__(self, columns: list[str], _: Context):
+    def __init__(self, columns: tuple, _: Optional[Context]):
         self.vcf_like_col, = columns
 
     def build(self, record: dict[str, str]) -> Annotatable:
@@ -58,7 +64,12 @@ class VcfLikeRecordToVcfAllele(RecordToAnnotable):
 
 
 class CSHLAlleleRecordToVcfAllele(RecordToAnnotable):
-    def __init__(self, columns: list[str], context: Context):
+    def __init__(self, columns: tuple, context: Optional[Context]):
+        if context is None:
+            raise ValueError(
+                "unable to instantialte CSHLAlleleRecordToVcfAllele "
+                "without context")
+
         self.location_col, self.variant_col = columns
         self.context = context
 
@@ -69,7 +80,7 @@ class CSHLAlleleRecordToVcfAllele(RecordToAnnotable):
             self.context.get_reference_genome()))
 
 
-RECORD_TO_ANNOTABALE_CONFIGUATION = {
+RECORD_TO_ANNOTABALE_CONFIGUATION: Dict[tuple, Type[RecordToAnnotable]] = {
     ("chrom", "pos_beg", "pos_end"): RecordToRegion,
     ("chrom", "pos", "ref", "alt"): RecordToVcfAllele,
     ("vcf_like",): VcfLikeRecordToVcfAllele,
@@ -96,5 +107,5 @@ def build_record_to_annotatable(parameters: dict[str, str],
         all_available = len(
             [cn for cn in renamed_columns if cn not in available_columns]) == 0
         if all_available:
-            return record_to_annotabale_class(renamed_columns, context)
+            return record_to_annotabale_class(tuple(renamed_columns), context)
     raise Exception("not record to annotatable could be found.")

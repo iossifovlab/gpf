@@ -1,8 +1,11 @@
 import logging
 import copy
 
-from typing import Dict, List
-from box import Box
+from typing import Dict, List, Optional, cast
+from dae.genomic_resources.reference_genome import \
+    ReferenceGenome, open_reference_genome_from_resource
+from dae.genomic_resources.liftover_resource import \
+    LiftoverChain, load_liftover_chain_from_resource
 
 from dae.utils.variant_utils import trim_str_left, reverse_complement
 
@@ -16,43 +19,43 @@ logger = logging.getLogger(__name__)
 def build_liftover_annotator(pipeline, config):
     config = LiftOverAnnotator.validate_config(config)
 
-    assert config.annotator_type == "liftover_annotator"
+    assert config["annotator_type"] == "liftover_annotator"
 
-    chain_resource = pipeline.repository.get_resource(config.chain)
+    chain_resource = pipeline.repository.get_resource(config["chain"])
     if chain_resource is None:
         raise ValueError(
             f"can't create liftover annotator; "
             f"can't find liftover chain {config.chain}")
 
-    target_genome_resource = pipeline.repository.get_resource(
-        config.target_genome)
-    if target_genome_resource is None:
+    resource = pipeline.repository.get_resource(
+        config["target_genome"])
+    if resource is None:
         raise ValueError(
             f"can't create liftover annotator; "
             f"can't find liftover target genome: "
             f"{config.target_genome}")
-
-    return LiftOverAnnotator(config, chain_resource, target_genome_resource)
+    target_genome: ReferenceGenome = \
+        open_reference_genome_from_resource(resource)
+    liftover_chain: LiftoverChain = \
+        load_liftover_chain_from_resource(chain_resource)
+    return LiftOverAnnotator(config, liftover_chain, target_genome)
 
 
 class LiftOverAnnotator(Annotator):
 
-    def __init__(self, config, chain_resource, target_genome_resource):
+    def __init__(
+            self, config: dict,
+            chain: LiftoverChain, target_genome: ReferenceGenome):
         super().__init__(config)
 
-        self.chain_resource = chain_resource
-        self.target_genome_resource = target_genome_resource
-
-        # TODO do somewhere else
-        self.chain = self.chain_resource.open()
-        self.target_genome = self.target_genome_resource.open()
+        self.chain: LiftoverChain = chain
+        self.target_genome: ReferenceGenome = target_genome
         self._annotation_schema = None
 
-    @staticmethod
-    def annotator_type():
+    def annotator_type(self) -> str:
         return "liftover_annotator"
 
-    DEFAULT_ANNOTATION = Box({
+    DEFAULT_ANNOTATION = {
         "attributes": [
             {
                 "source": "liftover_annotatable",
@@ -60,7 +63,7 @@ class LiftOverAnnotator(Annotator):
                 "internal": True,
             },
         ]
-    })
+    }
 
     def get_all_annotation_attributes(self) -> List[Dict]:
         return [
@@ -110,13 +113,13 @@ class LiftOverAnnotator(Annotator):
                 f"{validator.errors}")
             raise ValueError(
                 f"wrong liftover annotator config {validator.errors}")
-        return validator.document
+        return cast(Dict, validator.document)
 
     def get_annotation_config(self) -> List[Dict]:
-        attributes = self.config.get("attributes")
+        attributes: Optional[List[dict]] = self.config.get("attributes")
         if attributes:
             return attributes
-        attributes = copy.deepcopy(self.DEFAULT_ANNOTATION.attributes)
+        attributes = copy.deepcopy(self.DEFAULT_ANNOTATION["attributes"])
         logger.info(
             f"using default annotation for liftover "
             f"{self.config.get('chain')}: "
@@ -174,7 +177,7 @@ class LiftOverAnnotator(Annotator):
     def _do_annotate(self, annotatable: Annotatable, _context: Dict):
         assert annotatable is not None
 
-        lo_allele = self.liftover_allele(annotatable)
+        lo_allele = self.liftover_allele(cast(VCFAllele, annotatable))
         if lo_allele is None:
             logger.info(
                 f"unable to liftover allele: {annotatable}")

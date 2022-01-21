@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import logging
 
 from enum import Enum
-from typing import Optional
+from typing import Optional, cast
 
 from dae.annotation.annotatable import Annotatable, CNVAllele, VCFAllele
 from dae.utils.variant_utils import trim_parsimonious
@@ -69,13 +71,13 @@ class Allele:
 
     def __init__(self, chrom: str, pos: int, pos_end: int = None,
                  ref: str = None, alt: str = None,
-                 allele_type: Type = None):
+                 allele_type: Allele.Type = None):
         self._chrom: str = chrom
         self._pos: int = pos
-        self._pos_end: int = pos_end
+        self._pos_end: Optional[int] = pos_end
         self._ref: Optional[str] = ref
         self._alt: Optional[str] = alt
-        self._allele_type: Allele.Type = allele_type
+        self._allele_type: Optional[Allele.Type] = allele_type
 
         assert isinstance(self._chrom, str)
         assert isinstance(self._pos, int)
@@ -153,7 +155,7 @@ class Allele:
         return self._pos
 
     @property
-    def end_position(self) -> int:
+    def end_position(self) -> Optional[int]:
         return self._pos_end
 
     @property
@@ -165,8 +167,8 @@ class Allele:
         return self._alt
 
     @property
-    def allele_type(self) -> Type:
-        return self._allele_type
+    def allele_type(self) -> Allele.Type:
+        return cast(Allele.Type, self._allele_type)
 
     @staticmethod
     def build_position_allele(chrom: str, pos: int):

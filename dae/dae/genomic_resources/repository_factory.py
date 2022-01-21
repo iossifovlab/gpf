@@ -5,7 +5,7 @@ import yaml
 import pathlib
 import logging
 
-from typing import Type
+from typing import Type, Optional
 
 from .repository import GenomicResourceRepo
 from .repository import GenomicResourceRealRepo
@@ -14,7 +14,7 @@ from .group_repository import GenomicResourceGroupRepo
 
 
 logger = logging.getLogger(__name__)
-_registered_real_genomic_resource_repository_types = {}
+_registered_real_genomic_resource_repository_types: dict = {}
 
 
 def register_real_genomic_resource_repository_type(
@@ -30,7 +30,7 @@ DEFAULT_DEFINITION = {
 }
 
 
-def load_definition_file(filename):
+def load_definition_file(filename) -> dict:
     with open(filename) as F:
         return yaml.safe_load(F)
 
@@ -61,7 +61,8 @@ def get_configured_definition():
 
 
 def build_genomic_resource_repository(
-        definition: dict = None, file_name: str = None) -> GenomicResourceRepo:
+        definition: Optional[dict] = None,
+        file_name: str = None) -> GenomicResourceRepo:
 
     if not definition:
         if file_name is not None:
@@ -73,6 +74,9 @@ def build_genomic_resource_repository(
             raise ValueError(
                 "only one of the definition and file_name parameters"
                 "should be provided")
+
+    if definition is None:
+        raise ValueError("can't find GRR definition")
 
     if "type" not in definition:
         raise ValueError(
