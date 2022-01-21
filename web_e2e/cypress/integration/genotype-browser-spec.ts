@@ -444,3 +444,30 @@ describe('Genotype browser UCSC url tests', () => {
     }
   });
 });
+
+describe('Genotype browser table preview visual tests', () => {
+  const genotypeBrowserController = new GenotypeBrowserController();
+  const page = new GenotypeBrowserPage();
+  const genotypePreviewTablePage = new GenotypePreviewTablePage();
+
+  before(() => {
+    genotypeBrowserController.cleanup();
+    genotypeBrowserController.navigateToHome();
+    genotypeBrowserController.loginAdmin();
+  });
+
+  beforeEach(() => {
+    genotypeBrowserController.preserveLogin();
+    genotypeBrowserController.navigateToHome();
+  });
+
+  it('should compare KDM5B gene results', () => {
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
+    genotypeBrowserController.genesBlockPage.geneSymbolsButton.click();
+    genotypeBrowserController.genesBlockPage.geneSymbolsTextarea.type('KDM5B');
+
+    genotypeBrowserController.showTablePreview();
+    page.overviewParagraph.should('have.text', '4 variants selected (4 shown)');
+    genotypePreviewTablePage.table.matchImageSnapshot('kdm5b');
+  });
+});

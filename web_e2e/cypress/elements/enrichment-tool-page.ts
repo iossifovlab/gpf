@@ -10,41 +10,38 @@ export class EnrichmentToolPage extends BasePage {
   }
 
   get enrichmentTestButton() {
-    return cy.get('gpf-enrichment-tool input[value="Enrichment Test"');
+    return cy.get('gpf-enrichment-tool input[value="Enrichment Test"]');
   }
 
   get table() {
     return cy.get('.enrichment-table');
   }
 
-  findTableField(affectedStatus: string, effectType: string, columnNumber: number) {
-    const statusToRow = {'affected': 0, 'unaffected': 1};
-    return cy.get(`tr[label="${effectType}"]`).eq(statusToRow[affectedStatus]).find(('td')).eq(columnNumber);
+  findTableRow(affectedStatus: string, effectType: string) {
+    const statusToRow = {
+      'affected': 0,
+      'unaffected': 1
+    };
+
+    return cy.get(`tr[label="${effectType}"]`).eq(statusToRow[affectedStatus]);
   }
 
-  selectorTableRow(affectedStatus: string) {
-    return cy.get('.selector-cell').eq(affectedStatus === 'affected' ? 1 : 2);
-  }
-
-  enrichmentModelsSelect(modelName: string, value: string) {
-    this.enrichmentModelsBlock.within(() => {
-      if (modelName === 'background') {
-        cy.get('select').eq(0).select(value);
-      } else if (modelName === 'counting') {
-        cy.get('select').eq(1).select(value);
-      }
+  async getRowValues(affectedStatus: string, effectType: string): Promise<string[]> {
+    return new Cypress.Promise((resolve) => {
+      let result: string[] = [];
+      this.findTableRow(affectedStatus, effectType).find('td')
+      .each(td => {
+        result.push(td.text());
+        console.log(result);
+      })
+      .then(() => {
+        result.shift();
+        return resolve(result);
+      })
     });
   }
 
-  get geneSetsInputField() {
-    return cy.get('input#search-box');
-  }
-
-  get geneSetsColletionDropdown() {
-    return cy.get('select.row-sm-3');
-  }
-
-  get geneSetsVariantsCount() {
-    return cy.get('div.col-sm-9').contains('Count:');
+  findTableCell(affectedStatus: string, effectType: string, columnNumber: number) {
+    return this.findTableRow(affectedStatus, effectType).find(('td')).eq(columnNumber);
   }
 }

@@ -21,6 +21,7 @@ describe('Share query tests', () => {
   it('should open share query dropdown menu after share query button click', () => {
     page.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu');
 
+    page.button.should('be.visible');
     page.button.click();
     page.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu');
   });
@@ -28,14 +29,20 @@ describe('Share query tests', () => {
   it('should share a query, load it and open all tools tabs', () => {
     const datasetsPage = new DatasetsPage();
 
+    page.button.should('be.visible');
     page.button.click();
     page.input.contains(/\.*/).invoke('val').then((url) => {
       cy.visit(String(url)).then(() => {
+        cy.wait(1000);
         page.datasetsDropdownMenuButton.should('have.text', 'comp_all');
         datasetsPage.datasetStatisticsButton.click();
+        datasetsPage.genotypeBrowserButton.should('be.visible');
         datasetsPage.genotypeBrowserButton.click();
+        datasetsPage.phenotypeBrowserButton.should('be.visible');
         datasetsPage.phenotypeBrowserButton.click();
+        datasetsPage.phenotypeToolButton.should('be.visible');
         datasetsPage.phenotypeToolButton.click();
+        datasetsPage.geneBrowserButton.should('be.visible');
         datasetsPage.geneBrowserButton.click();
       });
     })
@@ -47,6 +54,7 @@ describe('Share query tests', () => {
 
     genotypeBlockPage.findButtonInComponentContainingText('.effect-card input, .effect-card button', 'All').click();
 
+    page.button.should('be.visible');
     page.button.click();
     page.input.invoke('val').then((url) => {
       cy.visit(String(url)).then(() => {
