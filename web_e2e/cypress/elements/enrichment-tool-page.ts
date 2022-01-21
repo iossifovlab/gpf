@@ -26,9 +26,19 @@ export class EnrichmentToolPage extends BasePage {
     return cy.get(`tr[label="${effectType}"]`).eq(statusToRow[affectedStatus]);
   }
 
-  parseRowValues(values: string) {
-    // ..
-    return values;
+  async getRowValues(affectedStatus: string, effectType: string): Promise<string[]> {
+    return new Cypress.Promise((resolve) => {
+      let result: string[] = [];
+      this.findTableRow(affectedStatus, effectType).find('td')
+      .each(td => {
+        result.push(td.text());
+        console.log(result);
+      })
+      .then(() => {
+        result.shift();
+        return resolve(result);
+      })
+    });
   }
 
   findTableCell(affectedStatus: string, effectType: string, columnNumber: number) {

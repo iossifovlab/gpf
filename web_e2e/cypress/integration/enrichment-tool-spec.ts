@@ -129,30 +129,24 @@ if (Cypress.env().yamlPath !== undefined) {
       page.navigateToHome();
       page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.enrichmentTool);
     });
-  
-    it('print yaml', () => {
-      console.log(dynamicData);
-    });
-  
-    dynamicData.forEach(data => {
-      describe(data.name, () => {
-        data.cases.forEach(caseee => {
-          it(caseee.name, () => {
-            applyData(caseee.params);
+
+    dynamicData.forEach(dataEntry => {
+      describe(dataEntry.name, () => {
+        dataEntry.cases.forEach(case_ => {
+          it(case_.name, () => {
+            applyData(case_.params);
+
             page.enrichmentTestButton.click();
 
-            caseee.expected.forEach(expectedddd => {
-              const rowId = expectedddd.rowId.split('_');
+            case_.expected.forEach(async expected_ => {
+              const rowId = expected_.rowId.split('_');
               const affectedStatus: string = rowId[0];
               const effectType: string = rowId[1];
 
-              page.findTableRow(affectedStatus, effectType).invoke('text').then(text => {
-                console.log(typeof text);
-                console.log(text);
-                expect(text).to.eq(expectedddd.values)
-              })
-            })
-            cy.wait(5000);
+              const actualValues: string[] = await page.getRowValues(affectedStatus, effectType);
+
+              expect(actualValues).to.deep.eq(expected_.values);
+            });
           });
         });
       });

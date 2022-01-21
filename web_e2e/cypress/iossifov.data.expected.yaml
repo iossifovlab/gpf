@@ -42,8 +42,8 @@
       params:
         geneSet:
           collection:
-            id: "main"
-          setId: "autism candidates from Iossifov PNAS 2015"
+            id: "Main"
+          id: "autism candidates from Iossifov PNAS 2015"
 
       expected:
         - rowId: "unaffected_LGDs"
