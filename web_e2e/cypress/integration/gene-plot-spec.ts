@@ -191,6 +191,7 @@ describe('Gene plot visual tests', () => {
   it('should compare visually TTN gene plot results', () => {
     geneBrowserPage.searchInputBox.type('ttn');
     geneBrowserPage.goButton.click();
+    cy.wait(1000);
     cy.get('g#plot').matchImageSnapshot('ttn-gene-plot-snapshot');
 
     cy.get('gpf-table').matchImageSnapshot('ttn-gene-table-snapshot');
