@@ -1,5 +1,4 @@
-
-import { AfterViewInit, Component, ElementRef, HostListener, OnInit, QueryList, Renderer2, ViewChild, ViewChildren } from '@angular/core';
+import { Component, OnInit, ViewChild, ViewChildren } from '@angular/core';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { ItemApplyEvent } from 'app/multiple-select-menu/multiple-select-menu';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
@@ -15,48 +14,32 @@ import { Subject } from 'rxjs';
   styleUrls: ['./agp-table.component.css']
 })
 export class AgpTableComponent implements OnInit {
-  @ViewChildren('dropdownSpan') public dropdownSpans: QueryList<ElementRef>;
-  @ViewChildren('columnFilteringButton') public columnFilteringButtons: QueryList<ElementRef>;
-  @ViewChildren(SortingButtonsComponent) public sortingButtonsComponents: SortingButtonsComponent[];
   @ViewChild(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu;
   @ViewChild(MultipleSelectMenuComponent) public multipleSelectMenuComponent: MultipleSelectMenuComponent;
+  @ViewChildren(SortingButtonsComponent) public sortingButtonsComponents: SortingButtonsComponent[];
 
   public config: AgpConfig;
+  public leaves: Column[];
   public genes = [];
 
   public sortBy: string;
   public orderBy: string;
   public currentSortingColumnId: string;
-  public modalBottom: number;
-  public showSearchWarning = false;
 
   public geneInput: string;
   public searchKeystrokes$: Subject<string> = new Subject();
 
   private pageIndex = 1;
 
-  private loadMoreGenes = true;
-  private scrollLoadThreshold = 1000;
   public constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
-    private renderer: Renderer2,
   ) { }
-
-  @HostListener('window:scroll')
-  public onWindowScroll(): void {
-    const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
-    const totalScrollHeight = document.documentElement.scrollHeight;
-
-    if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
-      this.updateGenes();
-    }
-
-    this.updateModalBottom();
-  }
 
   public ngOnInit(): void {
     this.autismGeneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
       this.config = config;
+      this.leaves = Column.leaves(config.columns);
+      this.calculateHeaderLayout();
 
       this.sortBy = `autism_gene_sets_rank`;
       this.orderBy = 'desc';
@@ -64,7 +47,7 @@ export class AgpTableComponent implements OnInit {
       this.autismGeneProfilesService.getGenes(
         this.pageIndex, undefined, this.sortBy, this.orderBy
       ).pipe(take(1)).subscribe(res => {
-        this.genes = this.genes.concat(res);
+        this.genes = res;
       });
     });
 
@@ -76,6 +59,25 @@ export class AgpTableComponent implements OnInit {
     });
   }
 
+  private calculateHeaderLayout(): void {
+    let columnIdx = 1;
+
+    const maxDepth: number = Math.max(...this.leaves.map(leaf => leaf.depth))
+
+    for (const leaf of this.leaves) { 
+      leaf.gridColumn = (columnIdx + 1).toString();
+      leaf.gridRow = maxDepth.toString();
+      columnIdx++;
+      if (leaf.parent !== null) {
+        const parentColumns = leaf.parent.columns;
+        leaf.parent.gridColumn = `${parentColumns[0].gridColumn} / ${parentColumns[parentColumns.length - 1].gridColumn}`;
+        leaf.parent.gridRow = `1 / ${leaf.gridRow}`;
+      } else {
+        leaf.parent.gridRow = `1 / ${leaf.gridRow}`;
+      }
+    }
+  }
+
   public search(value: string): void {
     this.geneInput = value;
     this.genes = [];
@@ -84,13 +86,7 @@ export class AgpTableComponent implements OnInit {
     this.updateGenes();
   }
 
-  public sendKeystrokes(value: string): void {
-    this.searchKeystrokes$.next(value);
-  }
-
   public updateGenes(): void {
-    this.loadMoreGenes = false;
-    this.showSearchWarning = false;
     this.pageIndex++;
 
     this.autismGeneProfilesService
@@ -98,8 +94,6 @@ export class AgpTableComponent implements OnInit {
       .pipe(take(1))
       .subscribe(res => {
         this.genes = this.genes.concat(res);
-        this.loadMoreGenes = Object.keys(res).length !== 0;
-        this.showSearchWarning = !this.loadMoreGenes;
       });
   }
 
@@ -168,20 +162,6 @@ export class AgpTableComponent implements OnInit {
     this.ngbDropdownMenu.dropdown.close();
   }
 
-  public updateModalBottom(): void {
-    const columnFilteringButton = this.columnFilteringButtons.first;
-    let result = 0;
-
-    if (columnFilteringButton) {
-      result = window.innerHeight - columnFilteringButton.nativeElement.getBoundingClientRect().bottom;
-      // If there is a horizontal scroll
-      if (window.innerHeight !== document.documentElement.clientHeight) {
-        result -= 15;
-      }
-    }
-    this.modalBottom = result;
-  }
-
   public sort(sortBy: string, orderBy?: string): void {
     if (this.currentSortingColumnId !== sortBy) {
       this.resetSortButtons(sortBy);
@@ -213,14 +193,6 @@ export class AgpTableComponent implements OnInit {
   }
 
   public highlightRow(idx: number): void {
-    const elements = document.getElementsByClassName(`row-${idx}`);
-    for (let i = 0; i < elements.length; i++) {
-      const backgroundColor = (elements[i] as HTMLElement).style.backgroundColor;
-      if (!backgroundColor || backgroundColor === 'rgb(255, 255, 255)') {
-        (elements[i] as HTMLElement).style.backgroundColor = 'rgb(237, 243, 255)';
-      } else {
-        (elements[i] as HTMLElement).style.backgroundColor = 'rgb(255, 255, 255)';
-      }
-    }
+    document.getElementById(`row-${idx}`).classList.toggle('row-highlight');
   }
 }

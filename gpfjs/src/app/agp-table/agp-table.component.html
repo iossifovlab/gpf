@@ -1,69 +1,50 @@
 <div *ngIf="config" class="table-container">
-  <div class="header main-header">
-    <ng-container
-      *ngTemplateOutlet="recursiveListTmpl; context: { columns: config.columns, headerDepth: 0 }"></ng-container>
+  <div style="margin: 10px; margin-left: 0px">
+    <span>Search genes:</span>
+    <input
+      #geneSearchInput
+      (keyup)="searchKeystrokes$.next(geneSearchInput.value)"
+      id="gene-search-input"
+      style="width: 200px; margin-left: 10px"
+      autocomplete="off"
+      type="text" />
   </div>
 
-  <ng-template #recursiveListTmpl let-columns="columns" let-headerDepth="headerDepth">
-    <ng-container *ngFor="let column of columns">
-      <div
-        *ngIf="column.visible"
-        class="header-cell"
-        [ngStyle]="{ 'grid-template-rows': column.columns.length > 0 ? 'auto auto' : 'auto' }">
-        <div
-          class="cell header-title-cell"
-          [ngClass]="{ leaf: column.columns.length === 0 || !column.visible }"
-          [ngStyle]="{ top: headerDepth + 'px' }">
-          {{ column.displayName }}
-          <div *ngIf="column.id === 'geneSymbol'">
-            <input
-              #geneSearchInput
-              (keyup)="sendKeystrokes(geneSearchInput.value)"
-              id="gene-search-input"
-              class="search-input form-control"
-              autocomplete="off"
-              type="text" />
-            <div class="search-placeholder-wrapper" *ngIf="geneSearchInput.value === ''">
-              <span class="search-placeholder-text">Search</span>
-            </div>
-            <span
-              class="clear-search-icon"
-              *ngIf="geneSearchInput.value !== ''"
-              (click)="geneSearchInput.value = ''; sendKeystrokes('')">
-            </span>
-          </div>
-          <ng-container *ngIf="column.columns.length !== 0">
-            <button
-              #columnFilteringButton
-              [attr.id]="column.id + '-column-filtering-button'"
-              class="dropdown-toggle btn navbar-toggler"
-              (click)="openDropdown(column)">
-              &#9776;
-            </button>
-          </ng-container>
-          <gpf-sorting-buttons
-            *ngIf="column.sortable"
-            class="sorting-buttons"
-            [id]="column.id"
-            (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
-        </div>
+  <!--<div class="header row">
+    <div class="cell" style="overflow: hidden" *ngFor="let column of leaves">
+      <span style="text-overflow: ellipsis;">{{ column.displayName }}</span>
+      <gpf-sorting-buttons
+        *ngIf="column.sortable"
+        [id]="column.id"
+        (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
+    </div>
+  </div>-->
 
-        <div class="header" *ngIf="column.columns.length > 0">
-          <ng-container
-            *ngTemplateOutlet="
-              recursiveListTmpl;
-              context: { columns: column.columns, headerDepth: headerDepth + 25 }
-            "></ng-container>
-        </div>
-        <ng-container *ngIf="column.columns.length === 0 || !column.visible">
-          <div *ngFor="let row of genes; let i = index" [ngClass]="['cell', 'row-'+i]" (click)="highlightRow(i)">
-            {{ row[column.id] }}
-          </div>
-        </ng-container>
-      </div>
-    </ng-container>
-  </ng-template>
+  <div class="header row">
+    <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: config.columns }"></ng-container>
+  </div>
+
+  <div class="row" *ngFor="let row of genes; let i = index" [attr.id]="'row-' + i" (click)="highlightRow(i)">
+    <span class="cell" *ngFor="let column of leaves">{{ row[column.id] }}</span>
+  </div>
 </div>
+
+<ng-template #recursiveListTmpl let-columns="columns">
+  <ng-container *ngFor="let column of columns">
+    <div class="cell"
+      style="overflow: hidden"
+      [style.grid-column]="column.gridColumn"
+      [style.grid-row]="column.gridRow"
+    >
+      <span style="text-overflow: ellipsis;">{{ column.displayName }}</span>
+      <gpf-sorting-buttons
+        *ngIf="column.sortable"
+        [id]="column.id"
+        (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
+    </div>
+    <ng-container *ngTemplateOutlet=" recursiveListTmpl; context: { columns: column.columns }"></ng-container>
+  </ng-container>
+</ng-template>
 
 <span #dropdownSpan class="dropdown-span" ngbDropdown>
   <button ngbDropdownToggle style="display: none"></button>
@@ -73,3 +54,14 @@
     ngbDropdownMenu
     (applyEvent)="filterColumns($event)"></gpf-multiple-select-menu>
 </span>
+
+
+          <!-- <ng-container *ngIf="column.columns.length !== 0">
+            <button
+              #columnFilteringButton
+              [attr.id]="column.id + '-column-filtering-button'"
+              class="dropdown-toggle btn navbar-toggler"
+              (click)="openDropdown(column)">
+              &#9776;
+            </button>
+          </ng-container> -->
