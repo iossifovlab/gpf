@@ -61,20 +61,16 @@ export class AgpTableComponent implements OnInit {
 
   private calculateHeaderLayout(): void {
     let columnIdx = 1;
+    const maxDepth: number = Math.max(...this.leaves.map(leaf => leaf.depth));
 
-    const maxDepth: number = Math.max(...this.leaves.map(leaf => leaf.depth))
-
-    for (const leaf of this.leaves) { 
+    for (const leaf of this.leaves) {
       leaf.gridColumn = (columnIdx + 1).toString();
-      leaf.gridRow = maxDepth.toString();
+      Column.setGridRow(leaf, maxDepth);
       columnIdx++;
-      if (leaf.parent !== null) {
-        const parentColumns = leaf.parent.columns;
-        leaf.parent.gridColumn = `${parentColumns[0].gridColumn} / ${parentColumns[parentColumns.length - 1].gridColumn}`;
-        leaf.parent.gridRow = `1 / ${leaf.gridRow}`;
-      } else {
-        leaf.parent.gridRow = `1 / ${leaf.gridRow}`;
-      }
+    }
+
+    for (const column of this.config.columns) {
+      Column.setGridColumn(column);
     }
   }
 
