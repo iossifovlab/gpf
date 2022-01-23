@@ -165,3 +165,38 @@ describe('Gene weights panel tests', () => {
     });
   });
 });
+
+describe.skip('Gene weights visual tests', () => {
+  const page = new GeneWeightsPage();
+  const genesBlockPage = new GenesBlockPage();
+
+  before(() => {
+    page.cleanup();
+    page.navigateToHome();
+    page.loginAdmin();
+  });
+  
+  beforeEach(() => {
+    page.preserveLogin();
+    page.navigateToHome();
+  });
+
+  it('should inspect gene weights on drag', () => {
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    genesBlockPage.geneWeightsButton.click();
+
+    page.moveSlider('left', 200);
+    page.allGeneWeights.should('not.contain.text', '~');
+    page.histogram.matchImageSnapshot('histogram-left-drag-200');
+    page.moveSlider('left', -100);
+    page.allGeneWeights.should('not.contain.text', '~');
+    page.histogram.matchImageSnapshot('histogram-left-drag-100');
+    page.moveSlider('left', -100);
+    page.moveSlider('right', 100);
+    page.allGeneWeights.should('not.contain.text', '~');
+    page.histogram.matchImageSnapshot('histogram-right-drag-100');
+    page.moveSlider('left', 200);
+    page.allGeneWeights.should('not.contain.text', '~');
+    page.histogram.matchImageSnapshot('histogram-left-right-drag-overlap');
+  });
+});
