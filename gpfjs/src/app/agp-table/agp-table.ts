@@ -25,8 +25,13 @@ export class Column {
       if (this.parent !== null && this.parent.visibleChildren.length === 0) {
         this.parent.visibility = false;
       }
-    } else if (this.visibleChildren.length === 0) {
-      this.columns.map(child => child.visibility = true);
+    } else {
+      if (this.parent !== null && this.parent.visibleChildren.length === 1) {
+        this.parent.visibility = true;
+      }
+      if (this.visibleChildren.length === 0) {
+        this.columns.map(child => child.visibility = true);
+      }
     }
   }
 

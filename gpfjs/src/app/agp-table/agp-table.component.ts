@@ -1,6 +1,5 @@
-import { Component, OnInit, ViewChild, ViewChildren } from '@angular/core';
+import { Component, HostListener, OnInit, ViewChild, ViewChildren } from '@angular/core';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
-import { ItemApplyEvent } from 'app/multiple-select-menu/multiple-select-menu';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 import { AgpConfig, Column } from './agp-table';
@@ -21,15 +20,17 @@ export class AgpTableComponent implements OnInit {
   public config: AgpConfig;
   public leaves: Column[];
   public genes = [];
+  public highlightedGenes: Set<string> = new Set();
 
-  public sortBy: string = "autism_gene_sets_rank";
-  public orderBy: string = "desc";
-  public currentSortingColumnId: string;
+  public geneSymbolColumnId = "geneSymbol"
+
+  public sortBy = "autism_gene_sets_rank";
+  public orderBy = "desc";
 
   public geneInput: string = null;
   public searchKeystrokes$: Subject<string> = new Subject();
 
-  private pageIndex = 0;
+  public pageIndex = 1;
 
   public constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
@@ -50,7 +51,22 @@ export class AgpTableComponent implements OnInit {
     });
   }
 
-  private calculateHeaderLayout(): void {
+  @HostListener('document:keydown.esc')
+  public clearHighlights() {
+    this.clearHighlightedGenes();
+  }
+
+  @HostListener('document:keydown.a')
+  public goToPrevPage() {
+    this.previousPage();
+  }
+
+  @HostListener('document:keydown.d')
+  public goToNextPage() {
+    this.nextPage();
+  }
+
+  public calculateHeaderLayout(): void {
     this.leaves = Column.leaves(this.config.columns);
     let columnIdx = 1;
     const maxDepth: number = Math.max(...this.leaves.map(leaf => leaf.depth));
@@ -68,39 +84,32 @@ export class AgpTableComponent implements OnInit {
 
   public search(value: string): void {
     this.geneInput = value;
-    this.genes = [];
-    this.pageIndex = 0;
-
+    this.pageIndex = 1;
     this.updateGenes();
   }
 
   public updateGenes(): void {
-    this.pageIndex++;
-
     this.autismGeneProfilesService
       .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
       .pipe(take(1))
       .subscribe(res => {
-        this.genes = this.genes.concat(res);
+        this.genes = res;
       });
-  }
-
-  public createMultiSelectMenuSource(column: Column): { itemIds: string[]; shownItemIds: string[] } {
-    const allNames = column.columns.map(col => col.displayName);
-    const shownNames = column.columns.filter(col => col.visibility).map(col => col.displayName);
-    return { itemIds: allNames, shownItemIds: shownNames };
   }
 
   public openDropdown(column: Column): void {
     this.multipleSelectMenuComponent.menuId = column.id;
-    this.multipleSelectMenuComponent.itemsSource = this.createMultiSelectMenuSource(column);
+    this.multipleSelectMenuComponent.columns = column.columns;
 
-    this.waitForDropdown()
-      .then(() => {
+    this.waitForDropdown().then(() => {
+      if (this.ngbDropdownMenu.dropdown.isOpen()) {
+        // FIXME This is never carried out
+        this.ngbDropdownMenu.dropdown.close();
+      } else {
         this.ngbDropdownMenu.dropdown.open();
         this.multipleSelectMenuComponent.refresh();
-      })
-      .catch(err => console.error(err));
+      }
+    }).catch(err => console.error(err));
   }
 
   public async waitForDropdown(): Promise<void> {
@@ -114,57 +123,70 @@ export class AgpTableComponent implements OnInit {
     });
   }
 
-  public filterColumns($event: ItemApplyEvent): void {
-    const menuId = $event.menuId.split('.');
-
-    // Find column for filtering
-    let column: Column = this.config.columns.find(col => col.id === menuId[0]);
-    for (let i = 1; i < menuId.length; i++) {
-      menuId[i] = `${ menuId[i-1] }.${ menuId[i] }`;
-      column = column.columns.find(col => col.id === menuId[i]);
-    }
-
-    // Sort sub-columns according to the new order
-    column.columns.sort((a, b) => $event.order.indexOf(a.displayName) - $event.order.indexOf(b.displayName));
-
-    // Toggle sub-columns visibility according to the new selected
-    column.columns.forEach(col => col.visibility = $event.selected.indexOf(col.displayName) !== -1);
-
-    this.calculateHeaderLayout();
-    this.ngbDropdownMenu.dropdown.close();
-  }
-
   public sort(sortBy: string, orderBy?: string): void {
-    if (this.currentSortingColumnId !== sortBy) {
+    if (this.sortBy !== sortBy) {
       this.resetSortButtons(sortBy);
     }
 
     this.sortBy = sortBy;
-    if (orderBy) {
-      this.orderBy = orderBy;
-    }
-    this.genes = [];
-    this.pageIndex = 0;
+    this.orderBy = orderBy;
+    this.pageIndex = 1;
 
     this.updateGenes();
   }
 
   public resetSortButtons(sortBy: string): void {
-    if (this.currentSortingColumnId !== undefined) {
-      const sortButton = this.sortingButtonsComponents.find(
-        sortingButtonsComponent => {
-          return sortingButtonsComponent.id === this.currentSortingColumnId;
-        }
-      );
-
-      if (sortButton) {
-        sortButton.resetHideState();
+    const sortButton = this.sortingButtonsComponents.find(
+      sortingButtonsComponent => {
+        return sortingButtonsComponent.id === this.sortBy;
       }
+    );
+
+    if (sortButton) {
+      sortButton.resetHideState();
     }
-    this.currentSortingColumnId = sortBy;
   }
 
-  public highlightRow(idx: number): void {
-    document.getElementById(`row-${idx}`).classList.toggle('row-highlight');
+  public toggleHighlightGene(geneSymbol: string): void {
+    if (this.highlightedGenes.has(geneSymbol)) {
+      this.highlightedGenes.delete(geneSymbol);
+    } else {
+      this.highlightedGenes.add(geneSymbol);
+    }
+  }
+
+  public goToPage(page: number): void {
+    if (this.pageIndex === page || (this.pageIndex < 1 && this.pageIndex > 123123)) {
+      return;
+    }
+    this.pageIndex = page;
+    this.updateGenes();
+  }
+
+  public previousPage(): void {
+    if (this.pageIndex > 1) {
+      this.goToPage(this.pageIndex - 1);
+    }
+  }
+
+  public nextPage(): void {
+    // FIXME this should have a sensible value with some page count from the backend
+    if (this.pageIndex < 123123) {
+      this.goToPage(this.pageIndex + 1);
+    }
+  }
+
+  get pageRange(): number[] {
+    const result: number[] = [];
+    for (let i = Math.max(this.pageIndex - 4, 1); i <= this.pageIndex + 4; i++) {
+      result.push(i);
+    }
+    return result;
+  }
+
+  public clearHighlightedGenes(): void {
+    for (const gene of this.highlightedGenes) {
+      this.toggleHighlightGene(gene);
+    }
   }
 }

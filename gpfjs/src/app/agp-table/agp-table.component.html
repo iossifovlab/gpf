@@ -1,20 +1,42 @@
 <div *ngIf="config" class="table-container">
-  <div style="margin: 10px; margin-left: 0px">
-    <span>Search genes:</span>
-    <input
-      #geneSearchInput
-      (keyup)="searchKeystrokes$.next(geneSearchInput.value)"
-      id="gene-search-input"
-      style="width: 200px; margin-left: 10px"
-      autocomplete="off"
-      type="text" />
+  <div style="display: flex; justify-content: space-between">
+    <div class="input-group mb-3" style="width: 300px">
+      <div class="input-group-prepend">
+        <span class="input-group-text">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+          </svg>
+        </span>
+      </div>
+      <input
+        #geneSearchInput
+        (keyup)="searchKeystrokes$.next(geneSearchInput.value)"
+        class="form-control"
+        autocomplete="off"
+        placeholder="Search genes"
+        type="text" />
+    </div>
+
+    <div>
+      <ul class="pagination">
+        <li class="page-item" (click)="goToPage(1)"><a class="page-link">&lt;&lt;</a></li>
+        <li class="page-item" (click)="previousPage()"><a class="page-link">&lt;</a></li>
+        <li *ngFor="let i of pageRange" class="page-item" (click)="goToPage(i)" [ngClass]="{'active': i === pageIndex}">
+          <a class="page-link">{{ i }}</a>
+        </li>
+        <li class="page-item" (click)="nextPage()"><a class="page-link">&gt;</a></li>
+      </ul>
+    </div>
   </div>
 
-  <div class="header row">
+  <div class="header table-row">
     <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: config.columns }"></ng-container>
   </div>
-
-  <div class="row" *ngFor="let row of genes; let i = index" [attr.id]="'row-' + i" (click)="highlightRow(i)">
+  
+  <div class="table-row" *ngFor="let row of genes"
+    [attr.id]="row[geneSymbolColumnId]"
+    (click)="toggleHighlightGene(row[geneSymbolColumnId])"
+    [ngClass]="{'row-highlight': highlightedGenes.has(row[geneSymbolColumnId])}">
     <span class="cell" *ngFor="let column of leaves">{{ row[column.id] }}</span>
   </div>
 </div>
@@ -49,9 +71,13 @@
 
 <span #dropdownSpan class="dropdown-span" ngbDropdown>
   <button ngbDropdownToggle style="display: none"></button>
-  <!-- REFACTOR itemsSource -->
-  <gpf-multiple-select-menu
-    class="multiple-select-menu"
-    ngbDropdownMenu
-    (applyEvent)="filterColumns($event)"></gpf-multiple-select-menu>
+  <gpf-multiple-select-menu class="multiple-select-menu" ngbDropdownMenu (applyEvent)="calculateHeaderLayout()"></gpf-multiple-select-menu>
 </span>
+
+<div
+  *ngIf="highlightedGenes.size > 0"
+  id="highlighted-genes">
+  <button *ngFor="let gene of highlightedGenes" class="btn btn-primary" style="margin: 2px" (click)="toggleHighlightGene(gene)">
+    {{ gene }} <span class="badge text-light">X</span>
+  </button>
+</div>

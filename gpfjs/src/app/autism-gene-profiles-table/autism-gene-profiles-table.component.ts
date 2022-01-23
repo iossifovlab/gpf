@@ -213,92 +213,92 @@ export class AutismGeneProfilesTableComponent implements OnInit, OnChanges {
   }
 
   public filterGeneSetColumns($event: ItemApplyEvent) {
-    const menuId = $event.menuId.split(':');
-    const category = this.config.geneSets.find(category => category.category === menuId[1]);
-    for (const geneSet of category.sets) {
-      geneSet.defaultVisible = $event.selected.includes(geneSet.setId);
-    }
-    category.defaultVisible = $event.selected.length > 0;
-    category.sets.sort((a, b) => $event.order.indexOf(a.setId) - $event.order.indexOf(b.setId));
-    category['shown'] = category.sets.filter(set => set.defaultVisible);
-    if (!category.defaultVisible) {
-      this.setupShownCategories();
-    }
-    this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
+    // const menuId = $event.menuId.split(':');
+    // const category = this.config.geneSets.find(category => category.category === menuId[1]);
+    // for (const geneSet of category.sets) {
+    //   geneSet.defaultVisible = $event.selected.includes(geneSet.setId);
+    // }
+    // category.defaultVisible = $event.selected.length > 0;
+    // category.sets.sort((a, b) => $event.order.indexOf(a.setId) - $event.order.indexOf(b.setId));
+    // category['shown'] = category.sets.filter(set => set.defaultVisible);
+    // if (!category.defaultVisible) {
+    //   this.setupShownCategories();
+    // }
+    // this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
   public filterGenomicScoreColumns($event: ItemApplyEvent) {
-    const menuId = $event.menuId.split(':');
-    const category = this.config.genomicScores.find(category => category.category === menuId[1]);
-    for (const genomicScore of category.scores) {
-      genomicScore.defaultVisible = $event.selected.includes(genomicScore.scoreName);
-    }
-    category.defaultVisible = $event.selected.length > 0;
-    category.scores.sort((a, b) => $event.order.indexOf(a.scoreName) - $event.order.indexOf(b.scoreName));
-    category['shown'] = category.scores.filter(score => score.defaultVisible);
-    if (!category.defaultVisible) {
-      this.setupShownCategories();
-    }
-    this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
+    // const menuId = $event.menuId.split(':');
+    // const category = this.config.genomicScores.find(category => category.category === menuId[1]);
+    // for (const genomicScore of category.scores) {
+    //   genomicScore.defaultVisible = $event.selected.includes(genomicScore.scoreName);
+    // }
+    // category.defaultVisible = $event.selected.length > 0;
+    // category.scores.sort((a, b) => $event.order.indexOf(a.scoreName) - $event.order.indexOf(b.scoreName));
+    // category['shown'] = category.scores.filter(score => score.defaultVisible);
+    // if (!category.defaultVisible) {
+    //   this.setupShownCategories();
+    // }
+    // this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
   public filterDatasetColumns($event: ItemApplyEvent) {
-    const menuId = $event.menuId.split(':');
-    const dataset = this.config.datasets.find(dataset => dataset.id === menuId[1]);
-    for (const personSet of dataset.personSets) {
-      personSet.defaultVisible = $event.selected.includes(personSet.id);
-      if (personSet.defaultVisible && !personSet.shownItemIds.length) {
-        personSet.statistics.forEach(s => s.defaultVisible = true);
-      }
-      personSet['shown'] = personSet.statistics.filter(s => s.defaultVisible);
-    }
-    dataset.defaultVisible = $event.selected.length > 0;
-    dataset.personSets.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
-    dataset['shown'] = dataset.personSets.filter(set => set.defaultVisible);
-    if (!dataset.defaultVisible) {
-      this.setupShownCategories();
-    }
-    this.calculateDatasetColspan(dataset);
-    this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
+    // const menuId = $event.menuId.split(':');
+    // const dataset = this.config.datasets.find(dataset => dataset.id === menuId[1]);
+    // for (const personSet of dataset.personSets) {
+    //   personSet.defaultVisible = $event.selected.includes(personSet.id);
+    //   if (personSet.defaultVisible && !personSet.shownItemIds.length) {
+    //     personSet.statistics.forEach(s => s.defaultVisible = true);
+    //   }
+    //   personSet['shown'] = personSet.statistics.filter(s => s.defaultVisible);
+    // }
+    // dataset.defaultVisible = $event.selected.length > 0;
+    // dataset.personSets.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
+    // dataset['shown'] = dataset.personSets.filter(set => set.defaultVisible);
+    // if (!dataset.defaultVisible) {
+    //   this.setupShownCategories();
+    // }
+    // this.calculateDatasetColspan(dataset);
+    // this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
   public filterPersonSetColumns($event: ItemApplyEvent) {
-    const menuId = $event.menuId.split(':');
-    const dataset = this.config.datasets.find(dataset => dataset.id === menuId[1])
-    const personSet = dataset.personSets.find(personSet => personSet.id === menuId[2]);
-    for (const statistic of personSet.statistics) {
-      statistic.defaultVisible = $event.selected.includes(statistic.id);
-    }
-    personSet.defaultVisible = $event.selected.length > 0;
-    personSet.statistics.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
-    personSet['shown'] = personSet.statistics.filter(s => s.defaultVisible);
-    dataset.defaultVisible = dataset.shownItemIds.length > 0;
-    dataset['shown'] = dataset.personSets.filter(set => set.defaultVisible);
-    if (!dataset.defaultVisible) {
-      this.setupShownCategories();
-    }
-    this.calculateDatasetColspan(dataset);
-    this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
+    // const menuId = $event.menuId.split(':');
+    // const dataset = this.config.datasets.find(dataset => dataset.id === menuId[1])
+    // const personSet = dataset.personSets.find(personSet => personSet.id === menuId[2]);
+    // for (const statistic of personSet.statistics) {
+    //   statistic.defaultVisible = $event.selected.includes(statistic.id);
+    // }
+    // personSet.defaultVisible = $event.selected.length > 0;
+    // personSet.statistics.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
+    // personSet['shown'] = personSet.statistics.filter(s => s.defaultVisible);
+    // dataset.defaultVisible = dataset.shownItemIds.length > 0;
+    // dataset['shown'] = dataset.personSets.filter(set => set.defaultVisible);
+    // if (!dataset.defaultVisible) {
+    //   this.setupShownCategories();
+    // }
+    // this.calculateDatasetColspan(dataset);
+    // this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
   public filterCategories($event: ItemApplyEvent) {
-    for (const category of this.config.categories) {
-      category.defaultVisible = $event.selected.includes(category.id);
-      if (category.defaultVisible && !category.shownItemIds.length) {
-        category.items.forEach(item => item.defaultVisible = true);
-        if (category instanceof AgpDataset) {
-          category['personSets'].forEach(ps => {
-            ps.statistics.forEach(s => { s.defaultVisible = true; })
-            ps['shown'] = ps.statistics.filter(s => s.defaultVisible);
-          });
-          category['shown'] = category.personSets.filter(set => set.defaultVisible);
-          this.calculateDatasetColspan(category as AgpDataset);
-        }
-      }
-    }
-    this.config.order.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
-    this.setupShownCategories();
-    this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
+    // for (const category of this.config.categories) {
+    //   category.defaultVisible = $event.selected.includes(category.id);
+    //   if (category.defaultVisible && !category.shownItemIds.length) {
+    //     category.items.forEach(item => item.defaultVisible = true);
+    //     if (category instanceof AgpDataset) {
+    //       category['personSets'].forEach(ps => {
+    //         ps.statistics.forEach(s => { s.defaultVisible = true; })
+    //         ps['shown'] = ps.statistics.filter(s => s.defaultVisible);
+    //       });
+    //       category['shown'] = category.personSets.filter(set => set.defaultVisible);
+    //       this.calculateDatasetColspan(category as AgpDataset);
+    //     }
+    //   }
+    // }
+    // this.config.order.sort((a, b) => $event.order.indexOf(a.id) - $event.order.indexOf(b.id));
+    // this.setupShownCategories();
+    // this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
   public setupShownCategories() {
