@@ -22,14 +22,14 @@ export class AgpTableComponent implements OnInit {
   public leaves: Column[];
   public genes = [];
 
-  public sortBy: string;
-  public orderBy: string;
+  public sortBy: string = "autism_gene_sets_rank";
+  public orderBy: string = "desc";
   public currentSortingColumnId: string;
 
-  public geneInput: string;
+  public geneInput: string = null;
   public searchKeystrokes$: Subject<string> = new Subject();
 
-  private pageIndex = 1;
+  private pageIndex = 0;
 
   public constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
@@ -38,17 +38,8 @@ export class AgpTableComponent implements OnInit {
   public ngOnInit(): void {
     this.autismGeneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
       this.config = config;
-      this.leaves = Column.leaves(config.columns);
       this.calculateHeaderLayout();
-
-      this.sortBy = `autism_gene_sets_rank`;
-      this.orderBy = 'desc';
-
-      this.autismGeneProfilesService.getGenes(
-        this.pageIndex, undefined, this.sortBy, this.orderBy
-      ).pipe(take(1)).subscribe(res => {
-        this.genes = res;
-      });
+      this.updateGenes();
     });
 
     this.searchKeystrokes$.pipe(
@@ -60,17 +51,18 @@ export class AgpTableComponent implements OnInit {
   }
 
   private calculateHeaderLayout(): void {
+    this.leaves = Column.leaves(this.config.columns);
     let columnIdx = 1;
     const maxDepth: number = Math.max(...this.leaves.map(leaf => leaf.depth));
 
     for (const leaf of this.leaves) {
       leaf.gridColumn = (columnIdx + 1).toString();
-      Column.setGridRow(leaf, maxDepth);
+      Column.calculateGridRow(leaf, maxDepth);
       columnIdx++;
     }
 
     for (const column of this.config.columns) {
-      Column.setGridColumn(column);
+      Column.calculateGridColumn(column);
     }
   }
 
@@ -95,7 +87,7 @@ export class AgpTableComponent implements OnInit {
 
   public createMultiSelectMenuSource(column: Column): { itemIds: string[]; shownItemIds: string[] } {
     const allNames = column.columns.map(col => col.displayName);
-    const shownNames = column.columns.filter(col => col.visible).map(col => col.displayName);
+    const shownNames = column.columns.filter(col => col.visibility).map(col => col.displayName);
     return { itemIds: allNames, shownItemIds: shownNames };
   }
 
@@ -136,25 +128,9 @@ export class AgpTableComponent implements OnInit {
     column.columns.sort((a, b) => $event.order.indexOf(a.displayName) - $event.order.indexOf(b.displayName));
 
     // Toggle sub-columns visibility according to the new selected
-    let hiddenCounter = 0;
-    column.columns.forEach(col => {
-      if ($event.selected.indexOf(col.displayName) === -1) {
-        col.visible = false;
-        hiddenCounter++;
-      }
-      else {
-        col.visible = true;
-      }
-    });
+    column.columns.forEach(col => col.visibility = $event.selected.indexOf(col.displayName) !== -1);
 
-    // Toggle main column visibility if all sub-columns are hidden
-    if (hiddenCounter === column.columns.length) {
-      column.columns.forEach(col => {
-        col.visible = true;
-      });
-      column.visible = false;
-    }
-
+    this.calculateHeaderLayout();
     this.ngbDropdownMenu.dropdown.close();
   }
 

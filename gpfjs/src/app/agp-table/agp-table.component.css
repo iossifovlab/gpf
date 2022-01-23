@@ -51,6 +51,13 @@
   background-color: #eee;
 }
 
+.header-cell {
+  max-width: 75%;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 multiple-select-menu {
   top: 50px;
 }
