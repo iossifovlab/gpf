@@ -188,12 +188,13 @@ describe('Gene plot visual tests', () => {
     cy.get('g#plot').matchImageSnapshot('condensed-introns');
   });
 
-  it('should compare visually TTN gene plot results', () => {
+  it.only('should compare visually TTN gene plot results', () => {
     geneBrowserPage.searchInputBox.type('ttn');
     geneBrowserPage.goButton.click();
-    cy.wait(1000);
     cy.get('g#plot').matchImageSnapshot('ttn-gene-plot-snapshot');
 
+    page.variantsCount.should('exist');
+    page.variantsCount.should('have.text', '19 variants selected (19 shown)');
     cy.get('gpf-table').matchImageSnapshot('ttn-gene-table-snapshot');
   });
 });
