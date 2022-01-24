@@ -166,7 +166,7 @@ describe('Gene weights panel tests', () => {
   });
 });
 
-describe.skip('Gene weights visual tests', () => {
+describe('Gene weights visual tests', () => {
   const page = new GeneWeightsPage();
   const genesBlockPage = new GenesBlockPage();
 

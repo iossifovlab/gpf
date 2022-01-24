@@ -188,7 +188,7 @@ describe('Gene plot visual tests', () => {
     cy.get('g#plot').matchImageSnapshot('condensed-introns');
   });
 
-  it.only('should compare visually TTN gene plot results', () => {
+  it('should compare visually TTN gene plot results', () => {
     geneBrowserPage.searchInputBox.type('ttn');
     geneBrowserPage.goButton.click();
     cy.get('g#plot').matchImageSnapshot('ttn-gene-plot-snapshot');
