@@ -181,21 +181,48 @@ describe('Gene weights visual tests', () => {
     page.navigateToHome();
   });
 
-  it('should inspect gene weights on drag', () => {
+  it('should inspect gene weights on drag', () => {\
+
+    function moveSlider(which: string, dragValue, heightValue: number = 0) {
+      if(which === 'right')
+        dragValue = -dragValue;
+      cy.window().then((win) => {
+        cy.get('g[gpf-histogram-range-selector-line] > g > line').eq(which === 'left' ? 0 : 1)
+          .trigger("mousedown", 0, heightValue, { // start value, height value
+              view: win,
+              which: 1,
+              force: true,
+              bubbles: true
+          })
+          .trigger("mousemove", dragValue, heightValue, { // how much to be dragged value, height value
+              which: 1,
+              force: true,
+              bubbles: true
+          })
+          .trigger("mouseup", 0, heightValue, { // end value, height value
+              which: 1,
+              force: true,
+              view: win,
+              bubbles: true
+          });
+      });     
+    }
+  
+
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genesBlockPage.geneWeightsButton.click();
 
-    page.moveSlider('left', 200);
+    moveSlider('left', 200);
     page.allGeneWeights.should('not.contain.text', '~');
     page.histogram.matchImageSnapshot('histogram-left-drag-200');
-    page.moveSlider('left', -100);
+    moveSlider('left', -100);
     page.allGeneWeights.should('not.contain.text', '~');
     page.histogram.matchImageSnapshot('histogram-left-drag-100');
-    page.moveSlider('left', -100);
-    page.moveSlider('right', 100);
+    moveSlider('left', -100);
+    moveSlider('right', 100);
     page.allGeneWeights.should('not.contain.text', '~');
     page.histogram.matchImageSnapshot('histogram-right-drag-100');
-    page.moveSlider('left', 200);
+    moveSlider('left', 200);
     page.allGeneWeights.should('not.contain.text', '~');
     page.histogram.matchImageSnapshot('histogram-left-right-drag-overlap');
   });
