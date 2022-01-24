@@ -388,7 +388,7 @@ describe('Genotype browser family variants download tests', () => {
 
   it.skip('should download all effect types CHD8 iossifov variants and validate whether they are equal to the reference data', () => {
     const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/variants.tsv';
-    const expectedVariantsPath = 'cypress/fixtures/variants.tsv';
+    const expectedVariantsPath = 'cypress/fixtures/genotype-browser/variants.tsv';
 
     genotypeBrowserController.setStudy(datasetIds.iossifov2014);
     genotypeBrowserController.setEffectTypesGroup('All');
@@ -431,9 +431,8 @@ describe('Genotype browser UCSC url tests', () => {
     genotypeBrowserController.setEffectTypesGroup('All');
     genotypeBrowserController.showTablePreview();
 
-
-    const baseUrl =  'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr';
-    for(let index = 0; index <= 10; index++) {
+    const baseUrl = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr';
+    for (let index = 0; index <= 10; index++) {
       genotypePreviewTablePage.getSpansInTableRow(index, 1).eq(0).then(element => {
         cy.wrap(element).within(span => {
           cy.wrap(span).get('a').should('have.attr', 'href').then(url => {
@@ -461,13 +460,16 @@ describe('Genotype browser table preview visual tests', () => {
     genotypeBrowserController.navigateToHome();
   });
 
-  it('should compare KDM5B gene results', () => {
+  it('should compare POGZ and KDM5B gene results', () => {
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
     genotypeBrowserController.genesBlockPage.geneSymbolsButton.click();
-    genotypeBrowserController.genesBlockPage.geneSymbolsTextarea.type('KDM5B');
 
-    genotypeBrowserController.showTablePreview();
-    page.overviewParagraph.should('have.text', '4 variants selected (4 shown)');
-    genotypePreviewTablePage.table.matchImageSnapshot('kdm5b');
+    [['POGZ', '2', 'pogz'], ['KDM5B', '4','kdm5b']].forEach(data => {
+      genotypeBrowserController.genesBlockPage.geneSymbolsTextarea.clear().type(data[0]);
+
+      genotypeBrowserController.showTablePreview();
+      page.overviewParagraph.should('have.text', data[1] +' variants selected (' + data[1] + ' shown)');
+      genotypePreviewTablePage.table.matchImageSnapshot(data[2]);
+    });
   });
 });

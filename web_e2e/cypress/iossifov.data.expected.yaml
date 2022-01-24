@@ -24,8 +24,8 @@
         geneSymbols:
           - "CAMSAP1"
         models:
-          background_model: "coding_len_background_model"
-          counting_model: "enrichment_events_counting"
+          backgroundModel: "coding_len_background_model"
+          countingModel: "enrichment_gene_counting"
 
       expected:
         - rowId: "affected_LGDs"
@@ -61,7 +61,7 @@
         geneSet:
           collection:
             id: "Denovo"
-            affected_status:
+            affectedStatus:
               - studyId: "iossifov_2014"
                 affected: "true"
                 unaffected: "true"

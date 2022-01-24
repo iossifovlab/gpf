@@ -112,16 +112,15 @@ describe('Autism gene profiles single view links tests', () => {
     const pubmedLink = 'https://pubmed.ncbi.nlm.nih.gov/?term=CHD8%20AND%20(autism%20OR%20asd)';
     page.pubmedLink.should('have.prop', 'href').and('equal', pubmedLink)
   });
-  
-/*
-  it('should display SFARI link when is contained in the list', () => {
-  });
+
+  // it('should display SFARI link when is contained in the list', () => {
+  // });
   // add tests for SFARI link - it had a specific condition in order to be displayed,
   // see if that logic works
   // it('should display SFARI link when ... and not display it when ...', () => {
   // });
   // it('should have the correct href for the SFARI link', () => {
-  // }); */
+  // });
 
   it('should load more genes when scrolling', () => {
     page.cleanup();
@@ -421,6 +420,37 @@ describe('Autism gene profiles single view visual tests', () => {
   });
 
   it.only('should compare histrograms', () => {
+    autismGeneProfilesTablePage.geneSearchInput.type('CHD8');
+    autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
+    autismGeneProfilesTablePage.allTableCells.first().click();
+
+    [{tableId: 'autism_scores', tableRows: ['SFARI_gene_score']},
+     {tableId: 'protection_scores', tableRows: ['RVIS_rank', 'LGD_rank', 'pLI_rank', 'pRec_rank']}
+    ].forEach((data, dataIndex) => {
+      cy.get('#' + data.tableId).within(scores => {
+        data.tableRows.forEach((elements, index) => {
+          cy.wrap(scores).get('tr').eq(index).within(row => {
+            cy.wrap(row).get('td').eq(0).should('have.text', elements);
+          });
+        });
+      });
+      cy.get('#' + data.tableId).scrollIntoView();
+      cy.matchImageSnapshot('chd8-' + data.tableId);
+    });
+  });
+});
+
+describe('Autism gene profiles single view visual tests', () => {
+  const page = new AutismGeneProfilesSingleView();
+  const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
+
+  before(() => {
+    page.cleanup();
+    page.navigateToHome();
+    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+  });
+
+  it('should compare histrograms', () => {
     autismGeneProfilesTablePage.geneSearchInput.type('CHD8');
     autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
     autismGeneProfilesTablePage.allTableCells.first().click();

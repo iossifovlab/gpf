@@ -17,6 +17,10 @@ export class GenePlotPage extends BasePage {
     return cy.get('#reset-button');
   }
 
+  get variantsCount() {
+    return cy.get('#variants-count-span');
+  }
+
   get hideTranscriptsCheckbox() {
     return cy.get('label').contains('Hide transcripts').first();
   }

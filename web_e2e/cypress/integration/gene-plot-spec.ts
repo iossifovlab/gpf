@@ -193,6 +193,8 @@ describe('Gene plot visual tests', () => {
     geneBrowserPage.goButton.click();
     cy.get('g#plot').matchImageSnapshot('ttn-gene-plot-snapshot');
 
+    page.variantsCount.should('exist');
+    page.variantsCount.should('have.text', '19 variants selected (19 shown)');
     cy.get('gpf-table').matchImageSnapshot('ttn-gene-table-snapshot');
   });
 });
