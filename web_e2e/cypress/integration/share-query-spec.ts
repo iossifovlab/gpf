@@ -33,7 +33,7 @@ describe('Share query tests', () => {
     page.button.click();
     page.input.contains(/\.*/).invoke('val').then((url) => {
       cy.visit(String(url)).then(() => {
-        cy.wait(1000);
+        cy.wait(1500);
         page.datasetsDropdownMenuButton.should('have.text', 'comp_all');
         datasetsPage.datasetStatisticsButton.click();
         datasetsPage.genotypeBrowserButton.should('be.visible');
@@ -59,6 +59,7 @@ describe('Share query tests', () => {
     page.input.invoke('val').then((url) => {
       cy.visit(String(url)).then(() => {
         genotypeBlockPage.findAllCheckboxesInComponent('.effect-card').each((element) => {
+          cy.wrap(element).should('be.visible');
           cy.wrap(element).should('be.checked');
         });
       })
