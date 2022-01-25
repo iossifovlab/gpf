@@ -16,17 +16,6 @@
         placeholder="Search genes"
         type="text" />
     </div>
-
-    <div>
-      <ul class="pagination">
-        <li class="page-item" (click)="goToPage(1)"><a class="page-link">&lt;&lt;</a></li>
-        <li class="page-item" (click)="previousPage()"><a class="page-link">&lt;</a></li>
-        <li *ngFor="let i of pageRange" class="page-item" (click)="goToPage(i)" [ngClass]="{'active': i === pageIndex}">
-          <a class="page-link">{{ i }}</a>
-        </li>
-        <li class="page-item" (click)="nextPage()"><a class="page-link">&gt;</a></li>
-      </ul>
-    </div>
   </div>
 
   <div class="header table-row">
@@ -36,8 +25,10 @@
   <div class="table-row" *ngFor="let row of genes"
     [attr.id]="row[geneSymbolColumnId]"
     (click)="toggleHighlightGene(row[geneSymbolColumnId])"
+    (middleclick)="emitCreateTabEvent(row[geneSymbolColumnId])"
     [ngClass]="{'row-highlight': highlightedGenes.has(row[geneSymbolColumnId])}">
-    <span class="cell" *ngFor="let column of leaves">{{ row[column.id] }}</span>
+    <span class="cell" *ngFor="let column of leaves"
+    [ngClass]="{'gene-cell': column.id === geneSymbolColumnId}">{{ row[column.id] }}</span>
   </div>
 </div>
 
@@ -79,5 +70,9 @@
   id="highlighted-genes">
   <button *ngFor="let gene of highlightedGenes" class="btn btn-primary" style="margin: 2px" (click)="toggleHighlightGene(gene)">
     {{ gene }} <span class="badge text-light">X</span>
+  </button>
+  <br>
+  <button class="btn btn-warning" style="margin: 2px" (click)="emitCreateTabEvent()">
+    Compare
   </button>
 </div>

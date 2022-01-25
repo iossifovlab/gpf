@@ -2,7 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import {
   AgpDatasetPersonSet, AgpDatasetStatistic, AgpGene,
   AgpGenomicScores, AgpConfig, AgpEffectType
-} from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+} from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
 // eslint-disable-next-line no-restricted-imports
 import { Observable, of, zip } from 'rxjs';
 import { GeneWeightsService } from '../gene-weights/gene-weights.service';

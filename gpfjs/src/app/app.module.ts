@@ -238,10 +238,6 @@ const appRoutes: Routes = [
     component: AutismGeneProfileSingleViewWrapperComponent
   },
   {
-    path: 'agp-table',
-    component: AgpTableComponent
-  },
-  {
     path: 'management',
     component: ManagementComponent,
     children: [

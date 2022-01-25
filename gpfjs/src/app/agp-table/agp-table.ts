@@ -94,6 +94,7 @@ export class Column {
 }
 
 export class AgpConfig {
+  public defaultDataset: string;
   @Type(() => Column)
   public columns: Column[];
 }

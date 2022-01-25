@@ -1,14 +1,10 @@
 .table-container {
   padding: 10px;
-  white-space: nowrap;
-  position: relative;
 }
 
 .table-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-  box-sizing: border-box;
-  flex: 1;
 }
 
 .table-row:nth-child(odd) {
@@ -43,7 +39,6 @@
   border-right: 1px solid #ddd;
   border-bottom: 1px solid #ddd;
   user-select: none;
-  margin: 0;
   text-align: center;
 }
 
@@ -86,18 +81,6 @@ gpf-sorting-buttons {
   box-shadow: inset 0 -1px 0 #ddd;
 }
 
-.page-link {
-  user-select: none;
-}
-
-.page-item {
-  color: black;
-}
-
-.page-item.active {
-  background-color: gray;
-}
-
 #highlighted-genes {
   position: fixed;
   right: 15px;
@@ -107,4 +90,14 @@ gpf-sorting-buttons {
   z-index: 101;
   padding: 8px;
   width: 250px;
+}
+
+.gene-cell,
+.gene-cell:hover {
+  color: #2372c6;
+  cursor: pointer;
+}
+
+.gene-cell:hover {
+  text-decoration: underline;
 }

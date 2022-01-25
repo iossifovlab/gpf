@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, ViewChild, ViewChildren } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, ViewChild, ViewChildren } from '@angular/core';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
@@ -12,12 +12,14 @@ import { Subject } from 'rxjs';
   templateUrl: './agp-table.component.html',
   styleUrls: ['./agp-table.component.css']
 })
-export class AgpTableComponent implements OnInit {
+export class AgpTableComponent implements OnInit, OnChanges {
+  @Input() public config: AgpConfig;
+  @Output() public createTabEvent = new EventEmitter();
+
   @ViewChild(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu;
   @ViewChild(MultipleSelectMenuComponent) public multipleSelectMenuComponent: MultipleSelectMenuComponent;
   @ViewChildren(SortingButtonsComponent) public sortingButtonsComponents: SortingButtonsComponent[];
 
-  public config: AgpConfig;
   public leaves: Column[];
   public genes = [];
   public highlightedGenes: Set<string> = new Set();
@@ -30,19 +32,17 @@ export class AgpTableComponent implements OnInit {
   public geneInput: string = null;
   public searchKeystrokes$: Subject<string> = new Subject();
 
-  public pageIndex = 1;
+  public pageIndex = 0;
+  private loadMoreGenes = true;
+  private scrollLoadThreshold = 500;
 
   public constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
   ) { }
 
   public ngOnInit(): void {
-    this.autismGeneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
-      this.config = config;
-      this.calculateHeaderLayout();
-      this.updateGenes();
-    });
-
+    this.updateGenes();
+    
     this.searchKeystrokes$.pipe(
       debounceTime(250),
       distinctUntilChanged()
@@ -51,19 +51,26 @@ export class AgpTableComponent implements OnInit {
     });
   }
 
+  public ngOnChanges(): void {
+    if (this.config) {
+      this.calculateHeaderLayout();
+    }
+  }
+
   @HostListener('document:keydown.esc')
   public clearHighlights() {
     this.clearHighlightedGenes();
   }
 
-  @HostListener('document:keydown.a')
-  public goToPrevPage() {
-    this.previousPage();
-  }
-
-  @HostListener('document:keydown.d')
-  public goToNextPage() {
-    this.nextPage();
+  @HostListener('window:scroll')
+  public onWindowScroll(): void {
+    // TODO Add optimization to infinite scroll
+    // FIXME Doesn't autoload rows when there's no scrollbar initially
+    const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
+    const totalScrollHeight = document.documentElement.scrollHeight;
+    if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
+      this.updateGenes();
+    }
   }
 
   public calculateHeaderLayout(): void {
@@ -84,16 +91,20 @@ export class AgpTableComponent implements OnInit {
 
   public search(value: string): void {
     this.geneInput = value;
-    this.pageIndex = 1;
+    this.genes = [];
+    this.pageIndex = 0;
     this.updateGenes();
   }
 
   public updateGenes(): void {
+    this.pageIndex++;
+    this.loadMoreGenes = false;
     this.autismGeneProfilesService
       .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
       .pipe(take(1))
       .subscribe(res => {
-        this.genes = res;
+        this.genes = this.genes.concat(res);
+        this.loadMoreGenes = true;
       });
   }
 
@@ -125,7 +136,7 @@ export class AgpTableComponent implements OnInit {
 
   public sort(sortBy: string, orderBy?: string): void {
     if (this.sortBy !== sortBy) {
-      this.resetSortButtons(sortBy);
+      this.resetSortButtons();
     }
 
     this.sortBy = sortBy;
@@ -135,11 +146,9 @@ export class AgpTableComponent implements OnInit {
     this.updateGenes();
   }
 
-  public resetSortButtons(sortBy: string): void {
+  public resetSortButtons(): void {
     const sortButton = this.sortingButtonsComponents.find(
-      sortingButtonsComponent => {
-        return sortingButtonsComponent.id === this.sortBy;
-      }
+      sortingButtonsComponent => sortingButtonsComponent.id === this.sortBy
     );
 
     if (sortButton) {
@@ -188,5 +197,14 @@ export class AgpTableComponent implements OnInit {
     for (const gene of this.highlightedGenes) {
       this.toggleHighlightGene(gene);
     }
+  }
+
+  public emitCreateTabEvent(geneSymbol: string = null, navigateToTab: boolean = true): void {
+    // if ($event && $event.ctrlKey && $event.type === 'click') {
+    //   navigateToTab = false;
+    // }
+    console.log(geneSymbol);
+    const geneSymbols: string[] = geneSymbol ? [geneSymbol] : Array.from(this.highlightedGenes);
+    this.createTabEvent.emit({geneSymbols: geneSymbols, navigateToTab: navigateToTab});
   }
 }

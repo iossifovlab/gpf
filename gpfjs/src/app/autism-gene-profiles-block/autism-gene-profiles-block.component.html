@@ -26,11 +26,11 @@
       </a>
 
       <ng-template ngbNavContent>
-        <gpf-autism-gene-profiles-table
+        <gpf-agp-table
           [hidden]="nav.activeId !== 'autismGenesTool'"
           (createTabEvent)="createTabEventHandler($event)"
-          [config]="autismGeneToolConfig">
-        </gpf-autism-gene-profiles-table>
+          [config]="autismGeneToolConfig"
+        ></gpf-agp-table>
       </ng-template>
     </li>
 

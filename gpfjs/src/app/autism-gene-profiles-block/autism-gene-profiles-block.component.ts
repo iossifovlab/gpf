@@ -1,8 +1,8 @@
 import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { Location } from '@angular/common';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
-import { AgpConfig } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
-import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
+import { AgpConfig } from 'app/agp-table/agp-table';
+import { AutismGeneProfilesService } from 'app/agp-table/agp-table.service';
 import { take } from 'rxjs/operators';
 
 @Component({
