@@ -16,4 +16,12 @@ export class AutismGeneProfilesBlock extends BasePage {
   get homeTab() {
     return cy.get('nav li').first();
   }
+
+  get keybindIcon() {
+    return cy.get('.keybinds-icon span');
+  }
+
+  get keybindTooltip() {
+    return cy.get('.keybinds-tooltip');
+  }
 }

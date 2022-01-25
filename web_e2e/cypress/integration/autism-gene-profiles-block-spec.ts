@@ -25,6 +25,10 @@ describe('Autism gene profiles block tests', () => {
     autismGeneProfilesTablePage.window.should('be.visible');
   });
 
+  it('should display the keybind icon', () => {
+    page.keybindIcon.should('be.visible');
+  });
+
   it('should create and navigate to the new tab after clicking the first gene link', () => {
     page.allTabs.should('have.length', 1);
     autismGeneProfilesTablePage.table.should('be.visible');
@@ -140,27 +144,13 @@ describe('Autism gene profiles block tests', () => {
     autismGeneProfilesSingleView.window.should('not.be.visible');
   });
 
-  it('should highlight rows and then use the clear keybind', () => {
-    [1, 2, 3].forEach(id => {
-      cy.get(`tbody.ng-star-inserted > :nth-child(${id}) > :nth-child(2)`).click({ctrlKey:true});
-    });
-    [1, 2, 3].forEach(id => {
-      cy.get(`tbody.ng-star-inserted > :nth-child(${id})`).should('satisfy', row => {
-        const classList = Array.from(row[0].classList);
-        return classList.includes('row-highlight');
-      });
-    });
-    cy.get('body').type('{esc}');
-    [1, 2, 3].forEach(id => {
-      cy.get(`tbody.ng-star-inserted > :nth-child(${id})`).should('satisfy', row => {
-        const classList = Array.from(row[0].classList);
-        return !classList.includes('row-highlight');
-      });
-    });
-  });
+  it('should mouseover the keybind icon to show the keybind tool tip and then mouseout to hide it', () => {
+    page.keybindTooltip.should('not.exist');
 
-  it('should hover the mouse over ? to show keybinds', () => {
-    cy.get('.keybinds-icon > span').trigger('mouseover');
-    cy.get('div.keybinds-tooltip.ng-star-inserted').should('be.visible');
+    page.keybindIcon.trigger('mouseover');
+    page.keybindTooltip.should('be.visible');
+
+    page.keybindIcon.trigger('mouseout');
+    page.keybindTooltip.should('not.exist');
   });
 });
