@@ -67,8 +67,8 @@ class VariantScoreAnnotatorBase(Annotator):
 
         if self.score.get_default_annotation():
             attributes = self.score.get_default_annotation()["attributes"]
-            logger.info(
-                f"using default annotation for {self.score.score_id()}: "
+            logger.debug(
+                f"using default score annotation for {self.score.score_id()}: "
                 f"{attributes}")
             return attributes
         logger.warning(
@@ -364,6 +364,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
             return attributes
 
         if annotatable is None:
+            logger.info("annotatable is None")
             self._scores_not_found(attributes)
             return attributes
 

@@ -46,6 +46,8 @@ class ScoreLine:
     def get_pos_end(self):
         return self.get_special_column_value("pos_end")
 
+    def __repr__(self):
+        return f"ScoreLine({self.values})"
 
 class GenomicScore(abc.ABC):
     def __init__(self, config, table, score_columns, special_columns):

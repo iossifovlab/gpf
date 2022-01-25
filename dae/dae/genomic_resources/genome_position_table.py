@@ -2,12 +2,15 @@ import abc
 import collections
 import pysam  # type: ignore
 import os
+import logging
 
 from typing import Optional
 
 from box import Box  # type: ignore
 
 from dae.genomic_resources.repository import GenomicResource
+
+logger = logging.getLogger(__name__)
 
 
 class GenomicPositionTable(abc.ABC):
@@ -271,6 +274,11 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.tabix_file: pysam.TabixFile = tabix_file
         super().__init__(genomic_resource, table_definition)
 
+        self.current_pos = None, -1, -1, None
+        self.tabix_iterator = None
+
+        self.jump_threshold = 1500
+
     def load(self):
         if self.header_mode == "file":
             self.header = self._get_tabix_header()
@@ -284,34 +292,123 @@ class TabixGenomicPositionTable(GenomicPositionTable):
     def get_file_chromosomes(self):
         return self.tabix_file.contigs
 
+    def _current_pos(self, line):
+        return line[self.chrom_column_i], \
+            int(line[self.pos_begin_column_i]), \
+            int(line[self.pos_end_column_i]), \
+            line
+
+    def _file_chromosome(self, chrom):
+        """
+        Transfroms chromosome (contig) name to the chromosomes (contigs)
+        used in the score table
+        """
+        if self.chrom_map:
+            return self.chrom_map[chrom]
+        return chrom
+
+    def _result_chromosome(self, chrom):
+        """
+        Transfroms chromosome (contig) from score table to the 
+        chromosomes (contigs) used in the genome corrdinates.
+        """
+        if self.chrom_map:
+            return self.rev_chrom_map[chrom]
+        else:
+            return chrom
+
+    def _transform_result(self, line):
+        result = list(line)
+        result[self.chrom_column_i] = self._result_chromosome(
+            result[self.chrom_column_i])
+        return tuple(result)
+
     def get_all_records(self):
         for line in self.tabix_file.fetch(parser=pysam.asTuple()):
             if self.chrom_map:
                 fchrom = line[self.chrom_column_i]
                 if fchrom not in self.rev_chrom_map:
                     continue
-                linel = list(line)
-                linel[self.chrom_column_i] = self.rev_chrom_map[fchrom]
-                yield tuple(linel)
+                result = list(line)
+                self.current_pos = self._current_pos(result)
+
+                result[self.chrom_column_i] = self.rev_chrom_map[fchrom]
+                yield tuple(result)
             else:
                 yield tuple(line)
 
-    def get_records_in_region(self, ch: str, beg: int = None, end: int = None):
-        if ch not in self.get_chromosomes():
-            raise ValueError(f"The chromosome {ch} is not part of the table.")
-        if beg:
-            beg -= 1
-        if self.chrom_map:
-            fch = self.chrom_map[ch]
-            for line in self.tabix_file.fetch(fch, beg, end,
-                                              parser=pysam.asTuple()):
-                linel = list(line)
-                linel[self.chrom_column_i] = self.rev_chrom_map[fch]
-                yield tuple(linel)
-        else:
-            for line in self.tabix_file.fetch(ch, beg, end,
-                                              parser=pysam.asTuple()):
-                yield tuple(line)
+    def _should_use_sequential(self, fchrom, beg):
+        if self.current_pos[0] is None:
+            return False
+        if self.current_pos[0] != fchrom:
+            return False
+        if self.current_pos[1] >= beg:
+            return False
+        if beg - self.current_pos[1] > self.jump_threshold:
+            return False
+        return True
+
+    def _sequential_rewind(self, fchrom, beg, end):
+        line = self.current_pos[3]
+        if line is None:
+            line = next(self.tabix_iterator)
+
+        while True:
+            if line is None:
+                return None
+            if line[self.chrom_column_i] != fchrom:
+                return None
+
+            line_begin = int(line[self.pos_begin_column_i])
+            line_end = int(line[self.pos_end_column_i])
+
+            if end and line_begin > end:
+                return None
+
+            if (line_begin >= beg or beg <= line_end):
+                return line
+            try:
+                line = next(self.tabix_iterator)
+                self.current_pos = self._current_pos(line)
+
+            except StopIteration:
+                return None
+
+    def get_records_in_region(
+            self, chrom: str, beg: int = None, end: int = None):
+
+        if chrom not in self.get_chromosomes():
+            logger.error(
+                f"chromosome {chrom} not found in the tabix file "
+                f"from {self.genomic_resource.resource_id}; "
+                f"{self.definition}")
+            raise ValueError(
+                f"The chromosome {chrom} is not part of the table.")
+
+        fchrom = self._file_chromosome(chrom)
+        if beg is None:
+            beg = 1
+        try:
+            if self._should_use_sequential(fchrom, beg):
+                line = self._sequential_rewind(fchrom, beg, end)
+                if line is None:
+                    return
+                self.current_pos = self._current_pos(line)
+                yield self._transform_result(line)
+            else:
+                self.tabix_iterator = self.tabix_file.fetch(
+                    fchrom, beg - 1, None, parser=pysam.asTuple())
+
+            while True:
+                line = next(self.tabix_iterator)
+                self.current_pos = self._current_pos(line)
+
+                if end and self.current_pos[1] > end:
+                    return
+                yield self._transform_result(line)
+    
+        except StopIteration:
+            return
 
     def close(self):
         self.tabix_file.close()
