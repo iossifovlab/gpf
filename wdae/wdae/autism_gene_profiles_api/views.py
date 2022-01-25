@@ -9,6 +9,18 @@ from query_base.query_base import QueryBaseView
 LOGGER = logging.getLogger(__name__)
 
 
+def column(id, display_name, visible=True, sortable=False, columns=None):
+    if columns is None:
+        columns = list()
+    return {
+        "id": id,
+        "displayName": display_name,
+        "visible": visible,
+        "sortable": sortable,
+        "columns": columns
+    }
+
+
 class ConfigurationView(QueryBaseView):
     def find_category_section(self, configuration, category):
         for gene_set in configuration["geneSets"]:
@@ -26,64 +38,46 @@ class ConfigurationView(QueryBaseView):
         if configuration is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        response = {"columns": []}
+        response = {
+            "defaultDataset": configuration["default_dataset"],
+            "columns": []
+        }
         if len(configuration) == 0:
             return Response(response)
 
-        response["columns"].append({
-            "id": "geneSymbol",
-            "displayName": "Gene",
-            "visible": True,
-            "columns": []
-        })
+        response["columns"].append(column("geneSymbol", "Gene"))
 
         for category in configuration["gene_sets"]:
-            response["columns"].append({
-                "id": f"{category['category']}_rank",
-                "displayName": category["display_name"],
-                "visible": True,
-                "sortable": True,
-                "columns": [{
-                    "id": f"{category['category']}_rank.{gene_set['set_id']}",
-                    "displayName": gene_set["set_id"],
-                    "visible": True,
-                    "sortable": True,
-                    "columns": []
-                } for gene_set in category["sets"]]
-            })
+            response["columns"].append(column(
+                f"{category['category']}_rank",
+                category["display_name"],
+                sortable=True,
+                columns=[column(
+                    f"{category['category']}_rank.{gene_set['set_id']}",
+                    gene_set["set_id"],
+                    sortable=True) for gene_set in category["sets"]
+                ]
+            ))
 
         for category in configuration["genomic_scores"]:
-            response["columns"].append({
-                "id": category["category"],
-                "displayName": category["display_name"],
-                "visible": True,
-                "columns": [{
-                    "id": f"{category['category']}.{genomic_score['score_name']}",
-                    "displayName": genomic_score["score_name"],
-                    "visible": True,
-                    "sortable": True,
-                    "columns": []
-                } for genomic_score in category["scores"]]
-            })
+            response["columns"].append(column(
+                category["category"],
+                category["display_name"],
+                columns=[column(
+                    f"{category['category']}.{genomic_score['score_name']}",
+                    genomic_score["score_name"],
+                    sortable=True) for genomic_score in category["scores"]
+                ]
+            ))
 
         if "datasets" in configuration:
-            all_datasets_col = {
-                "id": "datasets",
-                "displayName": "Datasets",
-                "visible": True,
-                "columns": list()
-            }
+            all_datasets_col = column("datasets", "Datasets")
             for dataset_id, dataset in configuration["datasets"].items():
                 study_wrapper = self.gpf_instance.get_wdae_wrapper(dataset_id)
                 display_name = dataset.get("display_name") \
                     or study_wrapper.config.get("name") \
                     or dataset_id
-                dataset_col = {
-                    "id": f"datasets.{dataset_id}",
-                    "displayName": display_name,
-                    "visible": True,
-                    "columns": list()
-                }
+                dataset_col = column(f"datasets.{dataset_id}", display_name)
                 for person_set in dataset.get("person_sets", []):
                     set_id = person_set["set_name"]
                     collection_id = person_set["collection_name"]
@@ -93,19 +87,15 @@ class ConfigurationView(QueryBaseView):
                         ]
                     set_name = \
                         person_set_collection.person_sets[set_id].name
-                    dataset_col["columns"].append({
-                        "id": f"datasets.{dataset_id}.{set_id}",
-                        "displayName": set_name,
-                        "visible": True,
-                        "columns": [
-                            { "id": f"datasets.{dataset_id}.{set_id}.{statistic.id}",
-                              "displayName": statistic.display_name,
-                              "visible": True,
-                              "sortable": True,
-                              "columns": list() }
-                            for statistic in dataset["statistics"]
+                    dataset_col["columns"].append(column(
+                        f"datasets.{dataset_id}.{set_id}",
+                        set_name,
+                        columns=[column(
+                            f"datasets.{dataset_id}.{set_id}.{statistic.id}",
+                            statistic.display_name,
+                            sortable=True) for statistic in dataset["statistics"]
                         ]
-                    })
+                    ))
                 all_datasets_col["columns"].append(dataset_col)
             response["columns"].append(all_datasets_col)
 
