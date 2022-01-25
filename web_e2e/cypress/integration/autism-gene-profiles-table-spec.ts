@@ -27,8 +27,6 @@ describe('Autism gene profiles table tests', () => {
   it('should display gene sets columns filtering button', () => {
     page.autismGeneSetsButton.should('be.visible');
   });
-
-  // tests for the other columns filtering buttons
 });
 
 describe('Autism gene profiles table data tests', () => {
@@ -124,9 +122,6 @@ describe('Column filtering dropdown tests', () => {
 
     cy.get('th.table-main-header').should('have.length', 4);
   });
-  // sorting should work
-
-  // sorting arrow should change the image when clicked
 });
 
 describe('Table functionality', () => {
@@ -309,6 +304,14 @@ describe('Table functionality', () => {
     cy.get('body').type('{end}');
     cy.window().its('scrollY').then(yScroll => {
       cy.get('@pageEndY').should('equal', yScroll);
+    });
+  });
+
+  it('should load more genes when scrolling', () => {
+    cy.get('.table tr').should('have.length.above', 5);
+    cy.get('.table').find('tr').its('length').then(value => {
+      cy.scrollTo('bottom');
+      cy.get('.table tr').should('have.length.above', value);
     });
   });
 });

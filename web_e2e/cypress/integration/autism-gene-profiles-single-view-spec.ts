@@ -112,110 +112,9 @@ describe('Autism gene profiles single view links tests', () => {
     const pubmedLink = 'https://pubmed.ncbi.nlm.nih.gov/?term=CHD8%20AND%20(autism%20OR%20asd)';
     page.pubmedLink.should('have.prop', 'href').and('equal', pubmedLink)
   });
-
-  // it('should display SFARI link when is contained in the list', () => {
-  // });
-  // add tests for SFARI link - it had a specific condition in order to be displayed,
-  // see if that logic works
-  // it('should display SFARI link when ... and not display it when ...', () => {
-  // });
-  // it('should have the correct href for the SFARI link', () => {
-  // });
-
-  it('should load more genes when scrolling', () => {
-    page.cleanup();
-    page.navigateToHome();
-    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
-
-    cy.get('.table tr').should('have.length.above', 5);
-    cy.get('.table').find('tr').its('length').then(value => {
-      cy.scrollTo('bottom');
-      cy.get('.table tr').should('have.length.above', value);
-    });
-  });
-
-  it('should compare all data in single view for GRIN2B', () => {
-    page.openSingleView('GRIN2B');
-
-    const geneSingleViewData = geneData.find(data => data.geneSymbols === 'GRIN2B');
-
-    page.getGeneSymbols();
-    cy.get('@geneSymbols').then(symbols => {
-      expect(symbols).to.deep.equal(geneSingleViewData.geneSymbols, geneSingleViewData.geneSymbols + ' gene symbols');
-    });
-
-    page.getGeneSets();
-    cy.get('@geneSets').then(sets => {
-      expect(sets).to.deep.equal(geneSingleViewData.geneSets, geneSingleViewData.geneSymbols + ' gene sets');
-    });
-
-    page.getDatasetData();
-    cy.get('@datasets').then(sets => {
-      expect(sets).to.deep.equal(geneSingleViewData.datasets, geneSingleViewData.geneSymbols + ' single view datasets');
-    });
-
-    page.getGenomicScores();
-    cy.get('@genomicScores').then(scores => {
-      expect(scores).to.deep.equal(geneSingleViewData.genomicScores, geneSingleViewData.geneSymbols + ' single view genomic scores');
-    });
-
-  });
-  // note: every single view is always in the page while open(even if it is hiden).
-  // This creates problems if even another single  view is open
-  it('should compare all data in single view for CHD8', () => {                                                           
-    page.openSingleView('CHD8', true); // thus force: true(the second argument) is closing all the tabs before it
-
-    const geneSingleViewData = geneData.find(data => data.geneSymbols === 'CHD8');
-
-    page.getGeneSymbols();
-    cy.get('@geneSymbols').then(symbols => {
-      expect(symbols).to.deep.equal(geneSingleViewData.geneSymbols, geneSingleViewData.geneSymbols + ' gene symbols');
-    });
-
-    page.getGeneSets();
-    cy.get('@geneSets').then(sets => {
-      expect(sets).to.deep.equal(geneSingleViewData.geneSets, geneSingleViewData.geneSymbols + ' gene sets');
-    });
-
-    page.getDatasetData();
-    cy.get('@datasets').then(sets => {
-      expect(sets).to.deep.equal(geneSingleViewData.datasets, geneSingleViewData.geneSymbols + ' single view datasets');
-    });
-
-    page.getGenomicScores();
-    cy.get('@genomicScores').then(scores => {
-      expect(scores).to.deep.equal(geneSingleViewData.genomicScores, geneSingleViewData.geneSymbols + ' single view genomic scores');
-    });
-  });
-
-  it('should compare all data in single view for POGZ', () => {                                                           
-    page.openSingleView('POGZ', true); // thus force: true(the second argument) is closing all the tabs before it
-
-    const geneSingleViewData = geneData.find(data => data.geneSymbols === 'POGZ');
-
-    page.getGeneSymbols();
-    cy.get('@geneSymbols').then(symbols => {
-      expect(symbols).to.deep.equal(geneSingleViewData.geneSymbols, geneSingleViewData.geneSymbols + ' gene symbols');
-    });
-
-    page.getGeneSets();
-    cy.get('@geneSets').then(sets => {
-      expect(sets).to.deep.equal(geneSingleViewData.geneSets, geneSingleViewData.geneSymbols + ' gene sets');
-    });
-
-    page.getDatasetData();
-    cy.get('@datasets').then(sets => {
-      expect(sets).to.deep.equal(geneSingleViewData.datasets, geneSingleViewData.geneSymbols + ' single view datasets');
-    });
-
-    page.getGenomicScores();
-    cy.get('@genomicScores').then(scores => {
-      expect(scores).to.deep.equal(geneSingleViewData.genomicScores, geneSingleViewData.geneSymbols + ' single view genomic scores');
-    });
-  });
 });
 
-describe('Single view study table', () => { // use cy.visit and then data test the genotype browser
+describe('Single view study table', () => {
   const page = new AutismGeneProfilesSingleView();
   const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
 
@@ -263,6 +162,38 @@ describe('Single view study table', () => { // use cy.visit and then data test t
     });
   });
 });
+
+describe('Autism gene profiles single view visual tests', () => {
+  const page = new AutismGeneProfilesSingleView();
+  const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
+
+  before(() => {
+    page.cleanup();
+    page.navigateToHome();
+    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+  });
+
+  it('should compare histrograms', () => {
+    autismGeneProfilesTablePage.geneSearchInput.type('CHD8');
+    autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
+    autismGeneProfilesTablePage.allTableCells.first().click();
+
+    [{tableId: 'autism_scores', tableRows: ['SFARI_gene_score']},
+     {tableId: 'protection_scores', tableRows: ['RVIS_rank', 'LGD_rank', 'pLI_rank', 'pRec_rank']}
+    ].forEach((data, dataIndex) => {
+      cy.get('#' + data.tableId).within(scores => {
+        data.tableRows.forEach((elements, index) => {
+          cy.wrap(scores).get('tr').eq(index).within(row => {
+            cy.wrap(row).get('td').eq(0).should('have.text', elements);
+          });
+        });
+      });
+      cy.get('#' + data.tableId).scrollIntoView();
+      cy.matchImageSnapshot('chd8-' + data.tableId);
+    });
+  });
+});
+
 
 export const geneData: any = [
   {
@@ -409,9 +340,8 @@ export const geneData: any = [
   }
 ]
 
-describe('Autism gene profiles single view visual tests', () => {
+describe('data', () => {
   const page = new AutismGeneProfilesSingleView();
-  const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
 
   before(() => {
     page.cleanup();
@@ -419,54 +349,81 @@ describe('Autism gene profiles single view visual tests', () => {
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
-  it.only('should compare histrograms', () => {
-    autismGeneProfilesTablePage.geneSearchInput.type('CHD8');
-    autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
-    autismGeneProfilesTablePage.allTableCells.first().click();
+  it('should compare all data in single view for GRIN2B', () => {
+    page.openSingleView('GRIN2B');
 
-    [{tableId: 'autism_scores', tableRows: ['SFARI_gene_score']},
-     {tableId: 'protection_scores', tableRows: ['RVIS_rank', 'LGD_rank', 'pLI_rank', 'pRec_rank']}
-    ].forEach((data, dataIndex) => {
-      cy.get('#' + data.tableId).within(scores => {
-        data.tableRows.forEach((elements, index) => {
-          cy.wrap(scores).get('tr').eq(index).within(row => {
-            cy.wrap(row).get('td').eq(0).should('have.text', elements);
-          });
-        });
-      });
-      cy.get('#' + data.tableId).scrollIntoView();
-      cy.matchImageSnapshot('chd8-' + data.tableId);
+    const geneSingleViewData = geneData.find(data => data.geneSymbols === 'GRIN2B');
+
+    page.getGeneSymbols();
+    cy.get('@geneSymbols').then(symbols => {
+      expect(symbols).to.deep.equal(geneSingleViewData.geneSymbols, geneSingleViewData.geneSymbols + ' gene symbols');
+    });
+
+    page.getGeneSets();
+    cy.get('@geneSets').then(sets => {
+      expect(sets).to.deep.equal(geneSingleViewData.geneSets, geneSingleViewData.geneSymbols + ' gene sets');
+    });
+
+    page.getDatasetData();
+    cy.get('@datasets').then(sets => {
+      expect(sets).to.deep.equal(geneSingleViewData.datasets, geneSingleViewData.geneSymbols + ' single view datasets');
+    });
+
+    page.getGenomicScores();
+    cy.get('@genomicScores').then(scores => {
+      expect(scores).to.deep.equal(geneSingleViewData.genomicScores, geneSingleViewData.geneSymbols + ' single view genomic scores');
+    });
+
+  });
+
+  it('should compare all data in single view for CHD8', () => {
+    page.openSingleView('CHD8', true);
+
+    const geneSingleViewData = geneData.find(data => data.geneSymbols === 'CHD8');
+
+    page.getGeneSymbols();
+    cy.get('@geneSymbols').then(symbols => {
+      expect(symbols).to.deep.equal(geneSingleViewData.geneSymbols, geneSingleViewData.geneSymbols + ' gene symbols');
+    });
+
+    page.getGeneSets();
+    cy.get('@geneSets').then(sets => {
+      expect(sets).to.deep.equal(geneSingleViewData.geneSets, geneSingleViewData.geneSymbols + ' gene sets');
+    });
+
+    page.getDatasetData();
+    cy.get('@datasets').then(sets => {
+      expect(sets).to.deep.equal(geneSingleViewData.datasets, geneSingleViewData.geneSymbols + ' single view datasets');
+    });
+
+    page.getGenomicScores();
+    cy.get('@genomicScores').then(scores => {
+      expect(scores).to.deep.equal(geneSingleViewData.genomicScores, geneSingleViewData.geneSymbols + ' single view genomic scores');
     });
   });
-});
 
-describe('Autism gene profiles single view visual tests', () => {
-  const page = new AutismGeneProfilesSingleView();
-  const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
+  it('should compare all data in single view for POGZ', () => {
+    page.openSingleView('POGZ', true);
+    const geneSingleViewData = geneData.find(data => data.geneSymbols === 'POGZ');
 
-  before(() => {
-    page.cleanup();
-    page.navigateToHome();
-    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
-  });
+    page.getGeneSymbols();
+    cy.get('@geneSymbols').then(symbols => {
+      expect(symbols).to.deep.equal(geneSingleViewData.geneSymbols, geneSingleViewData.geneSymbols + ' gene symbols');
+    });
 
-  it('should compare histrograms', () => {
-    autismGeneProfilesTablePage.geneSearchInput.type('CHD8');
-    autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
-    autismGeneProfilesTablePage.allTableCells.first().click();
+    page.getGeneSets();
+    cy.get('@geneSets').then(sets => {
+      expect(sets).to.deep.equal(geneSingleViewData.geneSets, geneSingleViewData.geneSymbols + ' gene sets');
+    });
 
-    [{tableId: 'autism_scores', tableRows: ['SFARI_gene_score']},
-     {tableId: 'protection_scores', tableRows: ['RVIS_rank', 'LGD_rank', 'pLI_rank', 'pRec_rank']}
-    ].forEach((data, dataIndex) => {
-      cy.get('#' + data.tableId).within(scores => {
-        data.tableRows.forEach((elements, index) => {
-          cy.wrap(scores).get('tr').eq(index).within(row => {
-            cy.wrap(row).get('td').eq(0).should('have.text', elements);
-          });
-        });
-      });
-      cy.get('#' + data.tableId).scrollIntoView();
-      cy.matchImageSnapshot('chd8-' + data.tableId);
+    page.getDatasetData();
+    cy.get('@datasets').then(sets => {
+      expect(sets).to.deep.equal(geneSingleViewData.datasets, geneSingleViewData.geneSymbols + ' single view datasets');
+    });
+
+    page.getGenomicScores();
+    cy.get('@genomicScores').then(scores => {
+      expect(scores).to.deep.equal(geneSingleViewData.genomicScores, geneSingleViewData.geneSymbols + ' single view genomic scores');
     });
   });
-});
+})
