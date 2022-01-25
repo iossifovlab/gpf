@@ -1,6 +1,7 @@
 import re
 import math
 
+from typing import cast
 
 class AbstractAggregator:
     def __init__(self):
@@ -35,7 +36,7 @@ class AbstractAggregator:
         return self.used_count
 
     def __eq__(self, o: object) -> bool:
-        return self.get_final() == o
+        return cast(bool, self.get_final() == o)
 
 
 class MaxAggregator(AbstractAggregator):

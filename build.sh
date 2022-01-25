@@ -291,7 +291,6 @@ EOT'
           --exclude dae/docs/ \
           --exclude dae/docs/conf.py \
           --pretty \
-          --ignore-missing-imports \
           --warn-return-any \
           --warn-redundant-casts \
           > /wd/results/mypy_dae_report || true'
@@ -303,7 +302,6 @@ EOT'
           --exclude wdae/docs/conf.py \
           --exclude wdae/conftest.py \
           --pretty \
-          --ignore-missing-imports \
           --warn-return-any \
           --warn-redundant-casts \
           > /wd/results/mypy_wdae_report || true'

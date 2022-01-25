@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import re
 import logging
-from typing import List, Optional
+from typing import List, Optional, cast
+
 import yaml
 import abc
 import hashlib
@@ -302,7 +303,9 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
                 matchingGRs.append(gr)
         if not matchingGRs:
             return None
-        return max(matchingGRs, key=lambda x: x.version)
+        return cast(
+            GenomicResource,
+            max(matchingGRs, key=lambda x: x.version))  # type: ignore
 
     def load_yaml(self, genomic_resource, filename):
         content = self.get_file_content(genomic_resource, filename, True)

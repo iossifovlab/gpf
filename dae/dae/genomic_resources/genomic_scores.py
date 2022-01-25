@@ -4,7 +4,8 @@ import abc
 import logging
 from numbers import Number
 
-from typing import Generator, List, Tuple, cast
+from typing import Generator, List, Tuple, cast, Type, Dict, Any
+
 
 from . import GenomicResource
 from .repository import GenomicResourceRealRepo
@@ -65,9 +66,10 @@ class GenomicScore(abc.ABC):
     def score_id(self):
         return self.get_config().get("id")
 
-    def get_default_annotation(self):
+    def get_default_annotation(self) -> Dict[str, Any]:
         if "default_annotation" in self.get_config():
-            return self.get_config()["default_annotation"]
+            return cast(
+                Dict[str, Any], self.get_config()["default_annotation"])
         else:
             return {
                 "attributes": [{"source": score, "destination": score}
@@ -462,9 +464,10 @@ def _configure_special_columns(table, extra_special_columns=None):
 
 
 def _open_genomic_score_from_resource(
-        clazz,
+        clazz: Type[GenomicScore],
         resource: GenomicResource,
         extra_special_columns=None) -> GenomicScore:
+
     config = resource.get_config()
     config["id"] = resource.resource_id
 

@@ -1215,8 +1215,8 @@ class GeneModels:
                 f"unknown feature {feature} found in gtf gene models")
 
         for tm in self.transcript_models.values():
-            tm.exons = sorted(tm.exons, key=lambda x: x.start)
-            tm.utrs = sorted(tm.utrs, key=lambda x: x[0])
+            tm.exons = sorted(tm.exons, key=lambda x: x.start)  # type: ignore
+            tm.utrs = sorted(tm.utrs, key=lambda x: x[0])  # type: ignore
             tm.update_frames()
 
         return True

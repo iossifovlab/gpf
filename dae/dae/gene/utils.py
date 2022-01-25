@@ -1,6 +1,6 @@
 import sys
 from copy import deepcopy
-from box import Box
+from box import Box  # type: ignore
 
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.gene.gene_term import loadGeneTerm

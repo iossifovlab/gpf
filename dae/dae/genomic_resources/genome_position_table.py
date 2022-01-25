@@ -400,6 +400,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                     fchrom, beg - 1, None, parser=pysam.asTuple())
 
             while True:
+                assert self.tabix_iterator is not None
                 line = next(self.tabix_iterator)
                 self.current_pos = self._current_pos(line)
 
