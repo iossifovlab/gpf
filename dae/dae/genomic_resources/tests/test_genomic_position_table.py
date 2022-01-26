@@ -739,6 +739,29 @@ def test_tabix_table_multi_get_regions(
     assert lines == expected
 
 
+def test_tabix_table_multi_get_regions_partial(tabix_table_multiline):
+
+    table = tabix_table_multiline
+    assert table.get_column_names() == ("chrom", "pos_begin", "c1")
+
+    assert not table._should_use_sequential("1", 1)
+    for row in table.get_records_in_region("1", 1, 1):
+        print(row)
+
+    assert table.current_pos[1] == 2
+    assert table.current_pos[2] == 2
+
+    for index, row in enumerate(table.get_records_in_region("1", 3, 3)):
+        print(row)
+        if index == 1:
+            break
+
+    lines = table.get_records_in_region("1", 3, 3)
+    lines = list(lines)
+    print(lines)
+    assert lines == [("1", "3", "4"), ("1", "3", "5")]
+
+
 
 def test_explore():
     from dae.gpf_instance.gpf_instance import GPFInstance

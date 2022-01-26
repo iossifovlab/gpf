@@ -338,38 +338,34 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 yield tuple(line)
 
     def _should_use_sequential(self, fchrom, beg):
-        if self.current_pos[0] is None:
+        assert fchrom is not None
+        curr_chrom, curr_begin, _, _ = self.current_pos
+        if curr_chrom != fchrom:
             return False
-        if self.current_pos[0] != fchrom:
+        if curr_begin >= beg:
             return False
-        if self.current_pos[1] >= beg:
-            return False
-        if beg - self.current_pos[1] > self.jump_threshold:
+        if beg - curr_begin >= self.jump_threshold:
             return False
         return True
 
     def _sequential_rewind(self, fchrom, beg, end):
-        line = self.current_pos[3]
-        if line is None:
-            line = next(self.tabix_iterator)
+
+        curr_chrom, curr_begin, curr_end, line = self.current_pos
+        assert line is not None
 
         while True:
-            if line is None:
-                return None
-            if line[self.chrom_column_i] != fchrom:
+            if curr_chrom != fchrom:
                 return None
 
-            line_begin = int(line[self.pos_begin_column_i])
-            line_end = int(line[self.pos_end_column_i])
-
-            if end and line_begin > end:
+            if end and curr_begin > end:
                 return None
 
-            if (line_begin >= beg or beg <= line_end):
+            if curr_begin >= beg or beg <= curr_end:
                 return line
             try:
                 line = next(self.tabix_iterator)
                 self.current_pos = self._current_pos(line)
+                curr_chrom, curr_begin, curr_end, _ = self.current_pos
 
             except StopIteration:
                 return None
@@ -393,7 +389,6 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 line = self._sequential_rewind(fchrom, beg, end)
                 if line is None:
                     return
-                self.current_pos = self._current_pos(line)
                 yield self._transform_result(line)
             else:
                 self.tabix_iterator = self.tabix_file.fetch(
