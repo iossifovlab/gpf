@@ -554,7 +554,7 @@ def test_tabix_table_should_use_sequential(tabix_table):
     assert table.current_pos[2] == 2
     assert not table._should_use_sequential("1", 1)
 
-    assert not table._should_use_sequential("1", 2)
+    assert table._should_use_sequential("1", 2)
     assert table._should_use_sequential("1", 3)
 
     table.jump_threshold = 0
@@ -564,11 +564,11 @@ def test_tabix_table_should_use_sequential(tabix_table):
 @pytest.mark.parametrize("pos_beg,pos_end,expected", [
     (1, 1, None),
     (2, 2, None),
-    (3, 3, ("1", "3", "3")),
+    (3, 3, [("1", "3", "3")]),
     (4, 3, None),
-    (4, 4, ("1", "4", "4")),
-    (10, 10, ("1", "10", "10")),
-    (12, 12, ("1", "12", "12")),
+    (4, 4, [("1", "4", "4")]),
+    (10, 10, [("1", "10", "10")]),
+    (12, 12, [("1", "12", "12")]),
 ])
 def test_tabix_table_sequential_rewind(tabix_table, pos_beg, pos_end, expected):
     table = tabix_table
@@ -580,9 +580,9 @@ def test_tabix_table_sequential_rewind(tabix_table, pos_beg, pos_end, expected):
     assert table.current_pos[1] == 3
     assert table.current_pos[2] == 3
 
-    line = table._sequential_rewind("1", pos_beg, pos_end)
-    if line: line = tuple(line)
-    assert line == expected
+    buff = table._sequential_rewind("1", pos_beg, pos_end)
+    if buff: buff = [tuple(line) for line in buff]
+    assert buff == expected
 
 
 def test_regions_tabix_table_should_use_sequential(regions_tabix_table):
@@ -596,7 +596,7 @@ def test_regions_tabix_table_should_use_sequential(regions_tabix_table):
     assert table.current_pos[2] == 10
 
     assert not table._should_use_sequential("1", 1)
-    assert not table._should_use_sequential("1", 6)
+    assert table._should_use_sequential("1", 6)
     assert table._should_use_sequential("1", 11)
     assert table._should_use_sequential("1", 21)
 
@@ -609,10 +609,10 @@ def test_regions_tabix_table_should_use_sequential(regions_tabix_table):
 @pytest.mark.parametrize("pos_beg,pos_end,expected", [
     (0, 1, None),
     (1, 2, None),
-    (5, 6, ("1", "6", "10", "2")),
-    (9, 15, ("1", "6", "10", "2")),
-    (7, 20, ("1", "6", "10", "2")),
-    (11, 12, ("1", "11", "15", "3")),
+    (5, 6, [("1", "6", "10", "2")]),
+    (9, 15, [("1", "6", "10", "2")]),
+    (7, 20, [("1", "6", "10", "2")]),
+    (11, 12, [("1", "11", "15", "3")]),
 ])
 def test_regions_tabix_table_sequential_rewind(
         regions_tabix_table, pos_beg, pos_end, expected):
@@ -625,9 +625,10 @@ def test_regions_tabix_table_sequential_rewind(
     assert table.current_pos[1] == 6
     assert table.current_pos[2] == 10
 
-    line = table._sequential_rewind("1", pos_beg, pos_end)
-    if line: line = tuple(line)
-    assert line == expected
+    buff = table._sequential_rewind("1", pos_beg, pos_end)
+    if buff: 
+        buff = [tuple(line) for line in buff]
+    assert buff == expected
 
 
 def test_tabix_table_jumper_current_position(tabix_table):
@@ -692,8 +693,8 @@ def tabix_table_multiline(tmp_path):
 
 @pytest.mark.parametrize("pos_beg,pos_end,expected", [
     (0, 1, None),
-    (2, 2, ("1", "2", "2")),
-    (3, 3, ("1", "3", "4")),
+    (2, 2, [("1", "2", "2")]),
+    (3, 3, [("1", "3", "4")]),
 ])
 def test_tabix_table_multi_sequential_rewind(
         tabix_table_multiline, pos_beg, pos_end, expected):
@@ -706,9 +707,10 @@ def test_tabix_table_multi_sequential_rewind(
     assert table.current_pos[1] == 2
     assert table.current_pos[2] == 2
 
-    line = table._sequential_rewind("1", pos_beg, pos_end)
-    if line: line = tuple(line)
-    assert line == expected
+    buff = table._sequential_rewind("1", pos_beg, pos_end)
+    if buff: 
+        buff = [tuple(line) for line in buff]
+    assert buff == expected
 
 
 @pytest.mark.parametrize("pos_beg,pos_end,expected", [

@@ -274,7 +274,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.tabix_file: pysam.TabixFile = tabix_file
         super().__init__(genomic_resource, table_definition)
 
-        self.current_pos = None, -1, -1, None
+        self._reset_current_pos()
         self.tabix_iterator = None
 
         self.jump_threshold = 1500
@@ -292,11 +292,23 @@ class TabixGenomicPositionTable(GenomicPositionTable):
     def get_file_chromosomes(self):
         return self.tabix_file.contigs
 
-    def _current_pos(self, line):
-        return line[self.chrom_column_i], \
+    def _update_current_pos(self, line):
+        line_chrom, line_beg, line_end = line[self.chrom_column_i], \
             int(line[self.pos_begin_column_i]), \
-            int(line[self.pos_end_column_i]), \
-            line
+            int(line[self.pos_end_column_i])
+        
+        curr_chrom, curr_beg, curr_end, buff = self.current_pos
+
+        if line_chrom == curr_chrom and line_beg == curr_beg \
+                and line_end == curr_end:
+            buff.append(line)
+            return True
+        
+        self.current_pos = line_chrom, line_beg, line_end, [line]
+        return False
+
+    def _reset_current_pos(self):
+        self.current_pos = None, -1, -1, None
 
     def _map_file_chrom(self, chrom):
         """
@@ -330,8 +342,6 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 if fchrom not in self.rev_chrom_map:
                     continue
                 result = list(line)
-                self.current_pos = self._current_pos(result)
-
                 result[self.chrom_column_i] = self.rev_chrom_map[fchrom]
                 yield tuple(result)
             else:
@@ -342,7 +352,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         curr_chrom, curr_begin, _, _ = self.current_pos
         if curr_chrom != fchrom:
             return False
-        if curr_begin >= beg:
+        if curr_begin > beg:
             return False
         if beg - curr_begin >= self.jump_threshold:
             return False
@@ -350,22 +360,32 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
     def _sequential_rewind(self, fchrom, beg, end):
 
-        curr_chrom, curr_begin, curr_end, line = self.current_pos
-        assert line is not None
+        curr_chrom, curr_begin, curr_end, curr_buff = self.current_pos
+        assert curr_buff is not None
+
+        if curr_chrom != fchrom:
+            return None
+
+        if end and curr_begin > end:
+            return None
+
+        if curr_begin >= beg or beg <= curr_end:
+            return curr_buff
 
         while True:
-            if curr_chrom != fchrom:
-                return None
-
-            if end and curr_begin > end:
-                return None
-
-            if curr_begin >= beg or beg <= curr_end:
-                return line
             try:
                 line = next(self.tabix_iterator)
-                self.current_pos = self._current_pos(line)
+                self._update_current_pos(line)
                 curr_chrom, curr_begin, curr_end, _ = self.current_pos
+
+                if curr_chrom != fchrom:
+                    return None
+
+                if end and curr_begin > end:
+                    return None
+
+                if curr_begin >= beg or beg <= curr_end:
+                    return [line]
 
             except StopIteration:
                 return None
@@ -386,18 +406,20 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             beg = 1
         try:
             if self._should_use_sequential(fchrom, beg):
-                line = self._sequential_rewind(fchrom, beg, end)
-                if line is None:
+                buff = self._sequential_rewind(fchrom, beg, end)
+                if buff is None:
                     return
-                yield self._transform_result(line)
+                for line in buff:
+                    yield self._transform_result(line)
             else:
                 self.tabix_iterator = self.tabix_file.fetch(
                     fchrom, beg - 1, None, parser=pysam.asTuple())
+                self._reset_current_pos()
 
             while True:
                 assert self.tabix_iterator is not None
                 line = next(self.tabix_iterator)
-                self.current_pos = self._current_pos(line)
+                self._update_current_pos(line)
 
                 if end and self.current_pos[1] > end:
                     return
