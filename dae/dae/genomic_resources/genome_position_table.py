@@ -417,8 +417,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 self._reset_current_pos()
 
             while True:
-                assert self.tabix_iterator is not None
-                line = next(self.tabix_iterator)
+                line = next(self.tabix_iterator)  # type: ignore
                 self._update_current_pos(line)
 
                 if end and self.current_pos[1] > end:
