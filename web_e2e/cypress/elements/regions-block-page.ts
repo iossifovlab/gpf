@@ -1,19 +1,19 @@
 import { BasePage } from './utils';
 
 export class RegionsBlockPage extends BasePage {
-  get block() {
+  public get block(): element {
     return cy.get('gpf-regions-block');
   }
 
-  get regionsFilterButton() {
+  public get regionsFilterButton(): element {
     return cy.get('#regions-filter');
   }
 
-  get regionsFilterPanel() {
+  public get regionsFilterPanel(): element {
     return cy.get('#regions-filter-panel');
   }
 
-  get regionsFilterTextarea() {
+  public get regionsFilterTextarea(): element {
     return cy.get('gpf-regions-filter textarea');
   }
 }

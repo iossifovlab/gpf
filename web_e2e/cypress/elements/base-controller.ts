@@ -1,53 +1,29 @@
 import { BasePage } from './utils';
 
 export class BaseController {
-  basePage = new BasePage();
+  private basePage = new BasePage();
 
-  navigateToHome() {
+  public navigateToHome(): void {
     this.basePage.navigateToHome();
   }
 
-  loginAdmin() {
+  public loginAdmin(): void {
     this.basePage.loginAdmin();
   }
 
-  login(username: string, password: string) {
+  public login(username: string, password: string): void {
     this.basePage.login(username, password);
   }
 
-  logout() {
+  public logout(): void {
     this.basePage.logout();
   }
 
-  cleanup() {
+  public cleanup(): void {
     this.basePage.cleanup();
   }
 
-  preserveLogin() {
+  public preserveLogin(): void {
     this.basePage.preserveLogin();
   }
-
-  // async navigateToDatasets() {
-  //   this.basePage.toggleSidenav();
-
-  //   this.basePage.browserWaitForVisibilityOfElement(this.basePage.sidenavDatasetButton);
-  //   this.basePage.sidenavManagementButton.click();
-  //   this.basePage.browserWaitForVisibilityOfElement(element(by.tagName('gpf-datasets')));
-  // }
-
-  // async navigateToSavedQueries() {
-  //   this.basePage.toggleSidenav();
-
-  //   this.basePage.browserWaitForVisibilityOfElement(this.basePage.sidenavSavedQueriesButton);
-  //   this.basePage.sidenavManagementButton.click();
-  //   this.basePage.browserWaitForVisibilityOfElement(element(by.tagName('gpf-saved-queries')));
-  // }
-
-  // async navigateToManagement() {
-  //   this.basePage.toggleSidenav();
-
-  //   this.basePage.browserWaitForVisibilityOfElement(this.basePage.sidenavManagementButton);
-  //   this.basePage.sidenavManagementButton.click();
-  //   this.basePage.browserWaitForVisibilityOfElement(element(by.tagName('gpf-management')));
-  // }
 }

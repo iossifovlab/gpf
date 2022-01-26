@@ -1,60 +1,60 @@
 import { BasePage } from './utils';
 
 export class DatasetsPage extends BasePage {
-  get datasetStatisticsWindow() {
+  public get datasetStatisticsWindow(): element {
     return cy.get('gpf-variant-reports');
   }
 
-  get permissionDeniedPrompt() {
+  public get permissionDeniedPrompt(): element {
     return cy.get('#permission-denied-prompt');
   }
 
-  get datasetStatisticsButton() {
+  public get datasetStatisticsButton(): element {
     cy.get('.navbar-custom').should('be.visible');
     return cy.get('a.nav-link').contains('Dataset Statistics');
   }
 
-  get genotypeBrowserButton() {
+  public get genotypeBrowserButton(): element {
     cy.get('.navbar-custom').should('be.visible');
     return cy.get('a.nav-link').contains('Genotype Browser');
   }
 
-  get phenotypeBrowserButton() {
+  public get phenotypeBrowserButton(): element {
     cy.get('.navbar-custom').should('be.visible');
     return cy.get('a.nav-link').contains('Phenotype Browser');
   }
 
-  get phenotypeToolButton() {
+  public get phenotypeToolButton(): element {
     cy.get('.navbar-custom').should('be.visible');
     return cy.get('a.nav-link').contains('Phenotype Tool');
   }
 
-  get geneBrowserButton() {
+  public get geneBrowserButton(): element {
     cy.get('.navbar-custom').should('be.visible');
     return cy.get('a.nav-link').contains('Gene Browser');
   }
 
-  get familiesByNumberDropdownButton() {
+  public get familiesByNumberDropdownButton(): element {
     return cy.get('#families-by-number-dropdown-button');
   }
 
-  get allFamiliesByNumberHeaderCells() {
+  public get allFamiliesByNumberHeaderCells(): element {
     return cy.get('div#families-by-number-div tbody th');
   }
 
-  get allFamiliesByNumberDataCells() {
+  public get allFamiliesByNumberDataCells(): element {
     return cy.get('div#families-by-number-div td');
   }
 
-  get familiesByPedigreeDivs() {
+  public get familiesByPedigreeDivs(): element {
     return cy.get('gpf-common-reports-pedigree-cell div.pedigree-count');
   }
 
-  findDenovoVariantsCountsByRowName(rowName: string) {
+  public findDenovoVariantsCountsByRowName(rowName: string): element {
     return cy.get('div#denovo-variants-div th').contains(rowName).parent().find('div');
   }
 
-  get denovoVariantsDropdownButton() {
+  public get denovoVariantsDropdownButton(): element {
     return cy.get('#denovo-variants-dropdown-button');
   }
 }

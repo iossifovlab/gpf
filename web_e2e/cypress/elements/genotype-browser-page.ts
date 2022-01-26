@@ -1,27 +1,27 @@
 import { BasePage } from './utils';
 
 export class GenotypeBrowserPage extends BasePage {
-  get window() {
+  public get window(): element {
     return cy.get('gpf-genotype-browser');
   }
 
-  get tablePreviewButton() {
+  public get tablePreviewButton(): element {
     return cy.get('#table-preview-button');
   }
 
-  get downloadButton() {
+  public get downloadButton(): element {
     return cy.get('#download-button');
   }
 
-  get overviewParagraph() {
+  public get overviewParagraph(): element {
     return cy.get('#variants-count-span');
   }
 
-  get loadingScreenElement() {
+  public get loadingScreenElement(): element {
     return cy.get('.overlay');
   }
 
-  get alertElement() {
+  public get alertElement(): element {
     return cy.get('div.alert.alert-danger.ng-star-inserted');
   }
 }

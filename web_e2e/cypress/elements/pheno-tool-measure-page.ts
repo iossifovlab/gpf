@@ -1,16 +1,15 @@
 import { BasePage } from './utils';
 
-
 export class PhenoToolMeasurePage extends BasePage {
-  get block() {
+  public get block(): element {
     return cy.get('gpf-pheno-tool-measure');
   }
 
-  get searchbox() {
+  public get searchbox(): element {
     return cy.get('gpf-pheno-tool-measure input#search-box');
   }
 
-  get searchboxAlert() {
+  public get searchboxAlert(): element {
     return cy.get('li').contains('measure should not be empty');
   }
 }

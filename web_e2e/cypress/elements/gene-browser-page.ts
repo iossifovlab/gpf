@@ -1,59 +1,59 @@
 import { BasePage } from './utils';
 
 export class GeneBrowserPage extends BasePage {
-  public get window(): Cypress.Chainable<JQuery<HTMLElement>> {
+  public get window(): element {
     return cy.get('gpf-gene-browser');
   }
 
-  public get searchInputBox(): Cypress.Chainable<JQuery<HTMLElement>> {
+  public get searchInputBox(): element {
     return cy.get('gpf-gene-browser input#search-box');
   }
 
-  public get goButton(): Cypress.Chainable<JQuery<HTMLElement>> {
+  public get goButton(): element {
     return cy.get('input[value=\'Go\']');
   }
 
-  public get genotypePreviewTable(): Cypress.Chainable<JQuery<HTMLElement>> {
+  public get genotypePreviewTable(): element {
     return cy.get('gpf-genotype-preview-table');
   }
 
-  public get codingOnlyCheckbox(): Cypress.Chainable<JQuery<HTMLElement>> {
+  public get codingOnlyCheckbox(): element {
     return cy.get('input#coding-only-checkbox');
   }
 
-  public get affectedStatusField(): Cypress.Chainable<JQuery<HTMLElement>> {
+  public get affectedStatusField(): element {
     return cy.get('div#affected-status-filters');
   }
 
-  public get effectTypeFiltersField(): Cypress.Chainable<JQuery<HTMLElement>> {
+  public get effectTypeFiltersField(): element {
     return cy.get('div#effect-types-filters');
   }
 
-  public get inheritanceTypesFilter(): Cypress.Chainable<JQuery<HTMLElement>> {
+  public get inheritanceTypesFilter(): element {
     return cy.get('div#inheritance-types-filters');
   }
 
-  public get variantTypesFilter(): Cypress.Chainable<JQuery<HTMLElement>> {
+  public get variantTypesFilter(): element {
     return cy.get('div#variant-types-filters');
   }
 
-  public getAffectedStatusCheckbox(affectedStatus: string): Cypress.Chainable<JQuery<HTMLElement>> {
+  public getAffectedStatusCheckbox(affectedStatus: string): element {
     return cy.get('.filter-label span').contains(affectedStatus);
   }
 
-  public getEffectTypesCheckbox(effectType: string): Cypress.Chainable<JQuery<HTMLElement>> {
+  public getEffectTypesCheckbox(effectType: string): element {
     return cy.get('#effect-types-filters span').contains(effectType);
   }
 
-  public getInheritanceTypes(inheritanceType: string): Cypress.Chainable<JQuery<HTMLElement>> {
+  public getInheritanceTypes(inheritanceType: string): element {
     return cy.get('#inheritance-types-filters span').contains(inheritanceType);
   }
 
-  public getVariantTypes(variantType: string): Cypress.Chainable<JQuery<HTMLElement>> {
+  public getVariantTypes(variantType: string): element {
     return cy.get('#variant-types-filters span').contains(variantType);
   }
 
-  public get legend(): Cypress.Chainable<JQuery<HTMLElement>> {
+  public get legend(): element {
     return cy.get('.legend-div');
   }
 }

@@ -1,19 +1,19 @@
 import { BasePage } from './utils';
 
 export class PhenoToolPage extends BasePage {
-  get window() {
+  public get window(): element {
     return cy.get('gpf-pheno-tool');
   }
 
-  get genotypeBlockPanel() {
+  public get genotypeBlockPanel(): element {
     return cy.get('gpf-pheno-tool-genotype-block');
   }
 
-  get resultsChart() {
+  public get resultsChart(): element {
     return cy.get('gpf-pheno-tool-results-chart');
   }
 
-  get reportButton() {
+  public get reportButton(): element {
     return cy.get('gpf-pheno-tool button').contains('Report');
   }
 }

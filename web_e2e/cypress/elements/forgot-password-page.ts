@@ -1,7 +1,7 @@
 import { BasePage } from './utils';
 
 export class ForgotPasswordPage extends BasePage {
-  get window() {
+  public get window(): element {
     return cy.get('gpf-forgot-password');
   }
 }

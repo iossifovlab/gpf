@@ -1,35 +1,35 @@
 import { BasePage } from './utils';
 
 export class FamilyFilterBlockPage extends BasePage {
-  get window() {
+  public get window(): element {
     return cy.get('gpf-family-filters-block');
   }
 
-  get allButton() {
+  public get allButton(): element {
     return cy.get('#all-families');
   }
 
-  get tabPanel() {
+  public get tabPanel(): element {
     return cy.get('.tab-pane active');
   }
 
-  get familyIdsButton() {
+  public get familyIdsButton(): element {
     return cy.get('#family-ids');
   }
 
-  get familyIdsPanel() {
+  public get familyIdsPanel(): element {
     return cy.get('#family-ids-panel');
   }
 
-  get advancedButton() {
+  public get advancedButton(): element {
     return cy.get('gpf-family-filters-block a').contains('Advanced');
   }
 
-  get phenoFiltersPanel() {
+  public get phenoFiltersPanel(): element {
     return cy.get('#pheno-filters-panel');
   }
 
-  get familyIdsTextarea() {
+  public get familyIdsTextarea(): element {
     return cy.get('gpf-family-ids textarea');
   }
 }

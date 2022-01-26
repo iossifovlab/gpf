@@ -1,39 +1,39 @@
 import { BasePage } from './utils';
 
 export class GeneWeightsPage extends BasePage {
-  get dropdownButton() {
+  public get dropdownButton(): element {
     return cy.get('gpf-gene-weights select');
   }
 
-  get fromInputField() {
+  public get fromInputField(): element {
     return cy.get('input#from-input-field');
   }
 
-  get toInputField() {
+  public get toInputField(): element {
     return cy.get('input#to-input-field');
   }
 
-  get fromFieldStepUp() {
+  public get fromFieldStepUp(): element {
     return cy.get('.histogram-from .step.up');
   }
 
-  get fromFieldStepDown() {
+  public get fromFieldStepDown(): element {
     return cy.get('.histogram-from .step.down');
   }
 
-  get toFieldStepUp() {
+  public get toFieldStepUp(): element {
     return cy.get('.histogram-to .step.up');
   }
 
-  get toFieldStepDown() {
+  public get toFieldStepDown(): element {
     return cy.get('.histogram-to .step.down');
   }
 
-  get allGeneWeights() {
+  public get allGeneWeights(): element {
     return cy.get('text#sumOfBarsLabel');
   }
-  
-  get histogram() {
+
+  public get histogram(): element {
     return cy.get('div.histogram > svg');
   }
 }

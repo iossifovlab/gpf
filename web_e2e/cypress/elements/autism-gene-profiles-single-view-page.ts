@@ -1,78 +1,77 @@
-import { any } from 'cypress/types/bluebird';
 import { AutismGeneProfilesTable } from './autism-gene-profiles-table-page';
 import { GenotypeBlockPage } from './genotype-block-page';
 import { BasePage } from './utils';
 
 export class AutismGeneProfilesSingleView extends BasePage {
-  get window() {
+  public get window(): element {
     return cy.get('gpf-autism-gene-profile-single-view');
   }
 
-  get header() {
+  public get header(): element {
     return cy.get('gpf-autism-gene-profile-single-view h2');
   }
 
-  get geneBrowserLink() {
+  public get geneBrowserLink(): element {
     return cy.get('#gene-browser-link');
   }
 
-  get UCSCLink() {
+  public get UCSCLink(): element {
     return cy.get('a.link-external-page').contains('UCSC genome browser');
   }
 
-  get geneCardsLink() {
+  public get geneCardsLink(): element {
     return cy.get('a.link-external-page').contains('GeneCards');
   }
 
-  get pubmedLink() {
+  public get pubmedLink(): element {
     return cy.get('a.link-external-page').contains('Pubmed');
   }
 
-  get autismScoresTable() {
+  public get autismScoresTable(): element {
     return cy.get('#autism_scores');
   }
 
-  get protectionScoresTable() {
+  public get protectionScoresTable(): element {
     return cy.get('#protection_scores');
   }
 
-  get singleScoreMarkers() {
+  public get singleScoreMarkers(): element {
     return cy.get('.single-score-marker');
   }
 
-  get geneAutismGeneSetsTable() {
+  public get geneAutismGeneSetsTable() : element{
     return cy.get('#autism_gene_sets');
   }
 
-  get genomicScoresTable() {
+  public get genomicScoresTable(): element {
     return cy.get('table.genomic-scores-table');
   }
 
-  get autismGeneToolAllView() {
+  public get autismGeneToolAllView(): element {
     return cy.get('a#ngb-nav-0.nav-link');
   }
 
-  get geneRelevantGeneSetsTable() {
+  public get geneRelevantGeneSetsTable(): element {
     return cy.get('#relevant_gene_sets');
   }
 
-  get datasetsTable() {
+  public get datasetsTable(): element {
     return cy.get('.datasets-table');
   }
 
-  datasetsTableColumn(id: string, type: number) {
+  public datasetsTableColumn(id: string, type: number): element {
     return cy.document().its('body').find('table.datasets-table > tbody >  tr#' + id + ' > td').eq(type);
   }
 
-  get externalLinksTable() {
+  public get externalLinksTable(): element {
     return cy.get('#external-links');
   }
 
-  get geneSymbol() {
+  public get geneSymbol(): element {
     return cy.get('gpf-autism-gene-profile-single-view > div > h2');
   }
 
-  openSingleView(gene: string, force: boolean = false) {
+  public openSingleView(gene: string, force = false): void {
     const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
     const page = new AutismGeneProfilesSingleView();
     page.autismGeneToolAllView.click();
@@ -83,7 +82,7 @@ export class AutismGeneProfilesSingleView extends BasePage {
     page.getView(gene, force);
   }
 
-  getView(name: string, force = true) {
+  public getView(name: string, force = true) {
     cy.get('nav > li > a > span').not('.close').each(nav => {
       cy.wrap(nav).eq(0).then(el => {
         if(el.text() === name) {
@@ -99,13 +98,13 @@ export class AutismGeneProfilesSingleView extends BasePage {
     });
   }
 
-  getGeneSymbols(id: string = null): any {
+  public getGeneSymbols(id: string = null): any {
     cy.get('gpf-autism-gene-profile-single-view' + (id !== null ? ('#' + id + '-single-view') : '') + ' > div > div > h2').then(symbols => {
       cy.wrap(symbols.text()).as('geneSymbols');
     });
   }
 
-  getGenomicScores(id: string = null): any {
+  public getGenomicScores(id: string = null): any {
     let genomicScores: any = [];
 
     cy.get((id !== null ? (('#' + id + '-single-view')) : 'div.ng-star-inserted >') + ' :nth-child(3) > table').each((table_iteration, index) => {
@@ -147,7 +146,7 @@ export class AutismGeneProfilesSingleView extends BasePage {
     return genomicScores;
   }
 
-  getGeneSets(id: string = null): any {
+  public getGeneSets(id: string = null): any {
     let geneSets: any = [
     ];
 
@@ -190,7 +189,7 @@ export class AutismGeneProfilesSingleView extends BasePage {
     return geneSets;
   }
 
-  getDatasetData(id: string = null): any {
+  public getDatasetData(id: string = null): any {
     let datasets = [];
 
     cy.get((id !== null ? (('#' + id + '-single-view')) : 'div.ng-star-inserted >') + ' :nth-child(5) > table').each((table_iterator,index) => {
@@ -236,7 +235,7 @@ export class AutismGeneProfilesSingleView extends BasePage {
     return datasets;
   }
 
-  getStudyExpectedDataFromGenotype(variantStatistics: any) {
+  public getStudyExpectedDataFromGenotype(variantStatistics: any) {
     const genotypeBlockPage = new GenotypeBlockPage();
 
     const studyWrapper = {
@@ -252,7 +251,7 @@ export class AutismGeneProfilesSingleView extends BasePage {
     cy.wrap(effectModelFromGenotypeWrapper.get(variantStatistics)).as('genotypeExpectedWrapper');
   }
 
-  getStudyActualDataFromGenotype() {
+  public getStudyActualDataFromGenotype() {
     let selectedEffects = [];
 
     cy.get('.effect-card > .card-block label').each(label => {
@@ -269,5 +268,4 @@ export class AutismGeneProfilesSingleView extends BasePage {
     
     cy.wrap(selectedEffects).as('genotypeActualWrapper');
   }
-
 }

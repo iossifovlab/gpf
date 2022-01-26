@@ -1,39 +1,39 @@
 import { BasePage } from './utils';
 
 export class GenomicScoresBlockPage extends BasePage {
-  get block() {
+  public get block(): element {
     return cy.get('gpf-genomic-scores-block');
   }
 
-  get panel() {
+  public get panel(): element {
     return cy.get('gpf-genomic-scores');
   }
 
-  get histogram() {
+  public get histogram(): element {
     return cy.get('gpf-histogram');
   }
 
-  get fromInputField() {
+  public get fromInputField(): element {
     return cy.get('input#from-input-field');
   }
 
-  get toInputField() {
+  public get toInputField(): element {
     return cy.get('input#to-input-field');
   }
 
-  get filterSelect() {
+  public get filterSelect(): element {
     return cy.get('select.form-control');
   }
 
-  get histogramRangeSelectors() {
+  public get histogramRangeSelectors(): element {
     return cy.get('text.partitions-text');
   }
 
-  get addFilterButton() {
+  public get addFilterButton(): element {
     return cy.get('gpf-genomic-scores-block gpf-add-button');
   }
 
-  get removeFilterButton() {
+  public get removeFilterButton(): element {
     return cy.get('gpf-remove-button > img.clickable');
   }
 }

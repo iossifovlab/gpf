@@ -1,15 +1,15 @@
 import { BasePage } from './utils';
 
 export class ShareQueryPage extends BasePage {
-  get button() {
+  public get button(): element {
     return cy.get('#share-query-dropdown-button');
   }
 
-  get dropdownMenu() {
+  public get dropdownMenu(): element {
     return cy.get('#share-query-dropdown');
   }
 
-  get input() {
+  public get input(): element {
     return cy.get('div#share-query-dropdown input');
   }
 }

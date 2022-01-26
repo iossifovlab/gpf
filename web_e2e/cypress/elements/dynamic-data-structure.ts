@@ -1,6 +1,5 @@
-import { Type } from 'class-transformer';
+import { Type, plainToClass } from 'class-transformer';
 import 'reflect-metadata';
-import { plainToClass } from 'class-transformer';
 import * as YAML from 'yaml';
 
 import { GenesBlockPage } from './genes-block-page';

@@ -1,27 +1,27 @@
 import { BasePage } from './utils';
 
 export class AutismGeneProfilesBlock extends BasePage {
-  get window() {
+  public get window(): element {
     return cy.get('gpf-autism-gene-profiles-block');
   }
 
-  get navbar() {
+  public get navbar(): element {
     return cy.get('nav');
   }
 
-  get allTabs() {
+  public get allTabs() : element {
     return cy.get('nav li');
   }
 
-  get homeTab() {
+  public get homeTab(): element {
     return cy.get('nav li').first();
   }
 
-  get keybindIcon() {
+  public get keybindIcon(): element {
     return cy.get('.keybinds-icon span');
   }
 
-  get keybindTooltip() {
+  public get keybindTooltip(): element {
     return cy.get('.keybinds-tooltip');
   }
 }

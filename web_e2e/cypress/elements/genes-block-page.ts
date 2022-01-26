@@ -1,79 +1,79 @@
 import { BasePage } from './utils';
 
 export class GenesBlockPage extends BasePage {
-  get window() {
+  public get window(): element {
     return cy.get('gpf-genes-block');
   }
 
-  get allButton() {
+  public get allButton(): element {
     return cy.get('gpf-genes-block a').contains('All');
   }
 
-  get geneSymbolsButton() {
+  public get geneSymbolsButton(): element {
     return cy.get('#gene-symbols');
   }
 
-  get geneSymbolsPanel() {
+  public get geneSymbolsPanel(): element {
     return cy.get('#gene-symbols-panel');
   }
 
-  get geneSymbolsTextarea() {
+  public get geneSymbolsTextarea(): element {
     return cy.get('gpf-gene-symbols textarea');
   }
 
-  get geneSetsButton() {
+  public get geneSetsButton(): element {
     return cy.get('#gene-sets');
   }
 
-  get geneSetsPanel() {
+  public get geneSetsPanel(): element {
     return cy.get('#gene-sets-panel');
   }
 
-  get geneSetsSearchbox() {
+  public get geneSetsSearchbox(): element {
     return cy.get('#search-box');
   }
 
-  findGeneSetsSearchboxDropdownOptionsByText(text: string) {
+  public findGeneSetsSearchboxDropdownOptionsByText(text: string): element {
     return cy.get('button.dropdown-item span').contains(text);
   }
 
-  get firstGeneSetFromDropdownMenu() {
+  public get firstGeneSetFromDropdownMenu(): element {
     return cy.get('button.dropdown-item span').first();
   }
 
-  get geneSetsFromDropdownMenu() {
+  public get geneSetsFromDropdownMenu(): element {
     return cy.get('button.dropdown-item span');
   }
 
-  get selectedGeneSet() {
+  public get selectedGeneSet(): element {
     return cy.get('#selected-value');
   }
 
-  get geneSetCountElement() {
+  public get geneSetCountElement(): element {
     return cy.get('gpf-gene-sets > div > div div.ng-star-inserted').contains('Count');
   }
 
-  get downloadButton() {
+  public get downloadButton(): element {
     return cy.get('gpf-gene-sets a').contains('Download');
   }
 
-  get geneSetsCollectionSelectorDropdownMenu() {
+  public get geneSetsCollectionSelectorDropdownMenu(): element {
     return cy.get('gpf-gene-sets select.form-control');
   }
 
-  findDenovoDropdownByText(text: string) {
+  public findDenovoDropdownByText(text: string): element {
     return cy.get('ngb-accordion span').contains(text);
   }
 
-  get geneWeightsButton() {
+  public get geneWeightsButton(): element {
     return cy.get('#gene-weights');
   }
 
-  get genesWeightsPanel() {
+  public get genesWeightsPanel(): element {
     return cy.get('#gene-weights-panel');
   }
 
-  findDenovoGeneSetCollectionCheckbox(genotypeDataId: string, peopleGroupValue: string) {
+  public findDenovoGeneSetCollectionCheckbox(genotypeDataId: string, peopleGroupValue: string): element {
     const checkboxId: string = genotypeDataId + '-checkbox-' + peopleGroupValue;
     return cy.get(`#${checkboxId}`);
   }

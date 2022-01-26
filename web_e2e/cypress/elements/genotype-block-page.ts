@@ -1,7 +1,7 @@
 import { BasePage } from './utils';
 
 export class GenotypeBlockPage extends BasePage {
-  effectTypesGroups = new Map([
+  public effectTypesGroups = new Map([
     ['All', [
       'Nonsense',
       'Frame-shift',
@@ -23,7 +23,7 @@ export class GenotypeBlockPage extends BasePage {
       'Nonsense',
       'Frame-shift',
       'Splice-site',
-      'No-frame-shift-newStop',
+      'No-frame-shift-newStop'
     ]],
     ['Nonsynonymous', [
       'Nonsense',
@@ -33,7 +33,7 @@ export class GenotypeBlockPage extends BasePage {
       'Missense',
       'No-frame-shift',
       'noStart',
-      'noEnd',
+      'noEnd'
     ]],
     ['Coding', [
       'Nonsense',
@@ -44,20 +44,20 @@ export class GenotypeBlockPage extends BasePage {
       'No-frame-shift',
       'noStart',
       'noEnd',
-      'Synonymous',
+      'Synonymous'
     ]],
     ['UTRs', [
       '3\'-UTR',
       '5\'-UTR'
-    ]],
+    ]]
   ]);
 
-  get window() {
+  public get window(): element {
     return cy.get('gpf-genotype-block');
   }
 
   // This function is also used for the child gender block
-  findCheckboxInComponentContainingText(componentSelector: string, text: string) {
+  public findCheckboxInComponentContainingText(componentSelector: string, text: string): element {
     if (componentSelector !== 'gpf-gender') {
       const exactTextRegex = new RegExp(`^${text}$`);
       return cy.get(componentSelector + ' div.checkbox label').contains(exactTextRegex);
@@ -66,19 +66,19 @@ export class GenotypeBlockPage extends BasePage {
     }
   }
 
-  findAllCheckboxesInComponent(componentSelector: string) {
+  public findAllCheckboxesInComponent(componentSelector: string): element {
     return cy.get(componentSelector + ' input');
   }
 
-  get pedigreeDropdownMenuButton() {
+  public get pedigreeDropdownMenuButton(): element {
     return cy.get('gpf-genotype-block button#pedigree-dropdown-menu-button');
   }
 
-  get pedigreeDropdownMenu() {
+  public get pedigreeDropdownMenu(): element {
     return cy.get('gpf-genotype-block gpf-pedigree-selector .dropdown-menu');
   }
 
-  getPedigreeDropdownOptionByText(text: string) {
+  public getPedigreeDropdownOptionByText(text: string): element {
     return cy.get('gpf-genotype-block gpf-pedigree-selector a').contains(text);
   }
 }

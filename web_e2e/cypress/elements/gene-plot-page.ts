@@ -1,51 +1,51 @@
 import { BasePage } from './utils';
 
 export class GenePlotPage extends BasePage {
-  get window() {
+  public get window(): element {
     return cy.get('gpf-gene-plot');
   }
 
-  get undoButton() {
+  public get undoButton(): element {
     return cy.get('#undo-button');
   }
 
-  get redoButton() {
+  public get redoButton(): element {
     return cy.get('#redo-button');
   }
 
-  get resetButton() {
+  public get resetButton(): element {
     return cy.get('#reset-button');
   }
 
-  get variantsCount() {
+  public get variantsCount(): element {
     return cy.get('#variants-count-span');
   }
 
-  get hideTranscriptsCheckbox() {
+  public get hideTranscriptsCheckbox(): element {
     return cy.get('label').contains('Hide transcripts').first();
   }
 
-  get condenseIntronsCheckbox() {
+  public get condenseIntronsCheckbox(): element {
     return cy.get('.checkbox-option').contains('Condense introns').first();
   }
 
-  get geneTitle() {
+  public get geneTitle(): element {
     return cy.get('#gene-title');
   }
 
-  get summaryAllelesCount() {
+  public get summaryAllelesCount(): element {
     return cy.get('#summary-alleles-count span');
   }
 
-  get familyVariantsCount() {
+  public get familyVariantsCount(): element {
     return cy.get('#family-variants-count span');
   }
 
-  get downloadSummaryButton() {
+  public get downloadSummaryButton(): element {
     return cy.get('button').contains('Download Summary');
   }
 
-  get downloadButton() {
+  public get downloadButton(): element {
     return cy.get('button').contains(/^Download$/);
   }
 }

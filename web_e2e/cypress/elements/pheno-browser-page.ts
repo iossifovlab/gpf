@@ -1,39 +1,39 @@
 import { BasePage } from './utils';
 
 export class PhenoBrowserPage extends BasePage {
-  get window() {
+  public get window(): element {
     return cy.get('gpf-pheno-browser');
   }
 
-  get searchInputBox() {
+  public get searchInputBox(): element {
     return cy.get('input.form-control');
   }
 
-  get allTableRows() {
+  public get allTableRows(): element {
     return cy.get('gpf-table > div > div.ng-star-inserted');
   }
 
-  get tableDiv() {
+  public get tableDiv(): element {
     return cy.get('.col-lg-12');
   }
 
-  get instrumentsBox() {
+  public get instrumentsBox(): element {
     return cy.get('select.form-control');
   }
 
-  get headerCells() {
+  public get headerCells(): element {
     return this.tableDiv.get('gpf-table-view-header-cell');
   }
 
-  get tableCells() {
+  public get tableCells(): element {
     return this.tableDiv.get('gpf-table-view-cell');
   }
 
-  get tableRows() {
+  public get tableRows(): element {
     return this.tableDiv.get('gpf-pheno-browser-table > gpf-table > div > div.ng-star-inserted');
   }
 
-  get downloadInstrumentsButton() {
+  public get downloadInstrumentsButton(): element {
     return cy.get('a').contains('Download instruments');
   }
 }

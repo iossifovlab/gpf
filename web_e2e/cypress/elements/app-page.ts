@@ -1,11 +1,11 @@
 import { BasePage } from './utils';
 
 export class AppPage extends BasePage {
-  get title() {
+  public get title(): element {
     return cy.get('#title');
   }
 
-  get sidenavElements() {
+  public get sidenavElements(): element {
     return cy.get('div.sidenav a.nav-link');
   }
 }

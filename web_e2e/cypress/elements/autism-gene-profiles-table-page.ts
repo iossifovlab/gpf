@@ -2,79 +2,79 @@ import { GenotypeBlockPage } from './genotype-block-page';
 import { BasePage } from './utils';
 
 export class AutismGeneProfilesTable extends BasePage {
-  get window() {
+  public get window(): element {
     return cy.get('gpf-autism-gene-profiles-table');
   }
 
-  get table() {
+  public get table(): element {
     return cy.get('gpf-autism-gene-profiles-table table');
   }
 
-  get allTableCells() {
+  public get allTableCells(): element {
     return this.table.find('tbody td');
   }
 
-  get allTableRows() {
+  public get allTableRows(): element {
     return this.table.find('tbody tr');
   }
 
-  get firstGeneInTable() {
+  public get firstGeneInTable(): element {
     return this.allTableCells.first();
   }
 
-  get geneSearchInput() {
+  public get geneSearchInput(): element {
     return cy.get('#gene-search-input');
   }
 
-  get autismGeneSetsButton() {
+  public get autismGeneSetsButton(): element {
     return cy.get('#autism_gene_sets-button');
   }
 
-  get autismGeneSetsDropdown() {
+  public get autismGeneSetsDropdown(): element {
     return cy.get('#autism_gene_sets-dropdown');
   }
 
-  get autismGeneSetsCheckUncheckAllButton() {
+  public get autismGeneSetsCheckUncheckAllButton(): element {
     return this.autismGeneSetsDropdown.find('#check-uncheck-all-button');
   }
 
-  get autismGeneSetsDropdownSearch() {
+  public get autismGeneSetsDropdownSearch(): element {
     return this.autismGeneSetsDropdown.find('input[name="search"]');
   }
 
-  get autismGeneSetsDropdownApplyButton() {
+  public get autismGeneSetsDropdownApplyButton(): element {
     return this.autismGeneSetsDropdown.contains('Apply');
   }
 
-  get allAutismGeneSetsDropdownCheckboxes() {
+  public get allAutismGeneSetsDropdownCheckboxes(): element {
     return this.autismGeneSetsDropdown.find('label input');
   }
 
-  get allSortingButtons() {
+  public get allSortingButtons(): element {
     return cy.get('gpf-sorting-buttons');
   }
 
-  get allGeneSetsDropdownButton() {
+  public get allGeneSetsDropdownButton(): element {
     return cy.get('#column-filtering-button');
   }
   
-  get legend() {
+  public get legend() : element{
     return cy.get('div#compare-genes-menu');
   }
 
-  get legendCompareButton() {
+  public get legendCompareButton(): element {
     return cy.get('#compare-genes-menu > div > :nth-child(1)');
   }
 
-  get legendDismissButton() {
+  public get legendDismissButton(): element {
     return cy.get('#remove-highlights-button');
   }
 
-  get legendSelectedGenes() {
+  public get legendSelectedGenes(): element {
     return cy.get('#compare-genes-menu > span');
   }
 
-  clickSortButton(columnName: string) {
+  public clickSortButton(columnName: string): void {
     cy.get('th').contains(columnName).then(column => {
       cy.wrap(column).parent().within(button => {
         cy.wrap(button).get('.clickable').click();
@@ -82,32 +82,32 @@ export class AutismGeneProfilesTable extends BasePage {
     });
   }
 
-  allGeneSetsClickApplyButton() {
+  public allGeneSetsClickApplyButton(): void {
     cy.get('#column-filtering-dropdown').within(menu => {
       cy.wrap(menu).get('button.btn-secondary').click();
     });
   }
 
-  allGeneSetsFilterSets(names: String[]) {
+  public allGeneSetsFilterSets(names: string[]): void {
     cy.get('#column-filtering-dropdown').within(menu => {
       cy.wrap(menu).get('tr > td').each(row => {
         const found = names.find(name => name === row.text());
-        if(found !== undefined && found !== null) {
+        if (found !== undefined && found !== null) {
           cy.wrap(row).click();
         }
       });
     });
   }
 
-  get searchResultWarning() {
+  public get searchResultWarning(): element {
     return cy.get('#search-warning > td > span');
   }
 
-  get firstTabCloseButton() {
+  public get firstTabCloseButton(): element {
     return cy.get('nav span').contains('×').first();
   }
 
-  getStudyExpectedDataFromGenotype(variantStatistics: any) {
+  public getStudyExpectedDataFromGenotype(variantStatistics: any): void {
     const genotypeBlockPage = new GenotypeBlockPage();
 
     const studyWrapper = {
@@ -123,7 +123,7 @@ export class AutismGeneProfilesTable extends BasePage {
     cy.wrap(effectModelFromGenotypeWrapper.get(variantStatistics)).as('genotypeExpectedWrapper');
   }
 
-  getStudyActualDataFromGenotype() {
+  public getStudyActualDataFromGenotype(): void {
     let selectedEffects = [];
 
     cy.get('.effect-card > .card-block label').each(label => {

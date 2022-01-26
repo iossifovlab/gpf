@@ -1,19 +1,19 @@
 import { BasePage } from './utils';
 
 export class EnrichmentModelsBockPage extends BasePage {
-  get window() {
+  public get window(): element {
     return cy.get('gpf-enrichment-models-block');
   }
 
-  get selectModelsButton() {
+  public get selectModelsButton(): element {
     return cy.get('#select-models');
   }
 
-  get backgroundModelsDropdown() {
+  public get backgroundModelsDropdown(): element {
     return cy.get('#background-models select');
   }
 
-  get countingModelsDropdown() {
+  public get countingModelsDropdown(): element {
     return cy.get('#counting-models select');
   }
 }
