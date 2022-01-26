@@ -83,35 +83,35 @@ describe('Autism gene profiles block tests', () => {
     autismGeneProfilesTablePage.allTableRows.should('have.length.greaterThan', 1);
     autismGeneProfilesTablePage.geneSearchInput.type('SHANK2');
     autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
-    autismGeneProfilesTablePage.firstGeneInTable.click({timeout:1000});
+    autismGeneProfilesTablePage.firstGeneInTable.click();
     page.homeTab.click();
 
     autismGeneProfilesTablePage.geneSearchInput.clear();
     autismGeneProfilesTablePage.allTableRows.should('have.length.greaterThan', 1);
     autismGeneProfilesTablePage.geneSearchInput.type('LAMA3');
     autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
-    autismGeneProfilesTablePage.firstGeneInTable.click({timeout:1000});
+    autismGeneProfilesTablePage.firstGeneInTable.click();
     page.homeTab.click();
 
     autismGeneProfilesTablePage.geneSearchInput.clear();
     autismGeneProfilesTablePage.allTableRows.should('have.length.greaterThan', 1);
     autismGeneProfilesTablePage.geneSearchInput.type('TTLL12');
     autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
-    autismGeneProfilesTablePage.firstGeneInTable.click({timeout:1000});
+    autismGeneProfilesTablePage.firstGeneInTable.click();
     page.homeTab.click();
 
     autismGeneProfilesTablePage.geneSearchInput.clear();
     autismGeneProfilesTablePage.allTableRows.should('have.length.greaterThan', 1);
     autismGeneProfilesTablePage.geneSearchInput.type('POLL');
     autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
-    autismGeneProfilesTablePage.firstGeneInTable.click({timeout:1000});
+    autismGeneProfilesTablePage.firstGeneInTable.click();
     page.homeTab.click();
 
     autismGeneProfilesTablePage.geneSearchInput.clear();
     autismGeneProfilesTablePage.allTableRows.should('have.length.greaterThan', 1);
     autismGeneProfilesTablePage.geneSearchInput.type('CHGA');
     autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
-    autismGeneProfilesTablePage.firstGeneInTable.click({timeout:1000});
+    autismGeneProfilesTablePage.firstGeneInTable.click();
     page.homeTab.click();
     page.allTabs.should('have.length', 7);
 

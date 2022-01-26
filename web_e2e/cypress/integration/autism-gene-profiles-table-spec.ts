@@ -121,6 +121,62 @@ describe('Autism gene profiles table', () => {
     });
   });
 
+  describe('row highlight tests', () => {
+    before(() => {
+      page.cleanup();
+    });
+
+    beforeEach(() => {
+      page.navigateToHome();
+      page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+    });
+
+    it('should highlight a row using control+click and change it\'s the background color', () => {
+      page.allTableRows.eq(0).should('not.have.class', 'row-highlight');
+
+      page.allTableRows.eq(0).click({ctrlKey: true});
+      page.allTableRows.eq(0).should('have.class', 'row-highlight');
+      page.allTableRows.eq(0).should('have.css', 'background-color').and('eq', 'rgb(255, 255, 214)');
+
+      page.allTableRows.eq(0).click({ctrlKey: true});
+      page.allTableRows.eq(0).should('not.have.class', 'row-highlight');
+      page.allTableRows.eq(0).should('not.have.property', 'background-color');
+    });
+
+    it.only('should highlight a several rows and check whether background color is different for odd and even rows', () => {
+      page.allTableRows.eq(0).click({ctrlKey: true});
+      page.allTableRows.eq(1).click({ctrlKey: true});
+      page.allTableRows.eq(2).click({ctrlKey: true});
+      page.allTableRows.eq(3).click({ctrlKey: true});
+      page.allTableRows.eq(4).click({ctrlKey: true});
+
+      page.allTableRows.eq(0).should('have.css', 'background-color').and('eq', 'rgb(255, 255, 214)');
+      page.allTableRows.eq(1).should('have.css', 'background-color').and('eq', 'rgb(247, 247, 203)');
+      page.allTableRows.eq(2).should('have.css', 'background-color').and('eq', 'rgb(255, 255, 214)');
+      page.allTableRows.eq(3).should('have.css', 'background-color').and('eq', 'rgb(247, 247, 203)');
+      page.allTableRows.eq(4).should('have.css', 'background-color').and('eq', 'rgb(255, 255, 214)');
+    });
+
+    it('should highlight the first 3 rows and then press escape to remove all highlights', () => {
+      page.allTableRows.eq(0).should('not.have.class', 'row-highlight');
+      page.allTableRows.eq(1).should('not.have.class', 'row-highlight');
+      page.allTableRows.eq(2).should('not.have.class', 'row-highlight');
+
+      page.allTableRows.eq(0).click({ctrlKey: true});
+      page.allTableRows.eq(1).click({ctrlKey: true});
+      page.allTableRows.eq(2).click({ctrlKey: true});
+
+      page.allTableRows.eq(0).should('have.class', 'row-highlight');
+      page.allTableRows.eq(1).should('have.class', 'row-highlight');
+      page.allTableRows.eq(2).should('have.class', 'row-highlight');
+
+      cy.get('body').type('{esc}');
+      page.allTableRows.eq(0).should('not.have.class', 'row-highlight');
+      page.allTableRows.eq(1).should('not.have.class', 'row-highlight');
+      page.allTableRows.eq(2).should('not.have.class', 'row-highlight');
+    });
+  });
+
   describe('functionality tests', () => {
     before(() => {
       page.cleanup();
@@ -165,7 +221,6 @@ describe('Autism gene profiles table', () => {
 
     it('should sort genes by autism gene sets', () => {
       page.geneSearchInput.type('RAPGEF');
-
       page.allTableRows.should('have.length', 4);
 
       const dataArr = [[0, 0, 1], [0, 0, 0], [0, 0, 0], [1, 0, 0]];
@@ -193,23 +248,29 @@ describe('Autism gene profiles table', () => {
 
     it('should sort genes by relevant gene sets', () => {
       page.geneSearchInput.type('RAPGEF');
-
       page.allTableRows.should('have.length', 4);
+
       page.clickSortButton('Relevant Gene Sets');
       page.allTableRows.should('have.length', 4);
 
-      const dataArr = [[1, 0, 1, 1], [0, 0, 1, 1], [0, 0, 0, 1], [0, 0, 0, 1]];
+      const dataArr = [
+        [1, 0, 1, 1],
+        [0, 0, 1, 1],
+        [0, 0, 0, 1],
+        [0, 0, 0, 1]
+      ];
 
       dataArr.forEach((allRows, allRowsIndex) => {
         allRows.forEach((rowData, rowIndex) => {
           page.allTableRows.eq(allRowsIndex).within(row => {
-            cy.wrap(row).get('td').eq(rowIndex+3).should('have.text', rowData === 1 ? '✓' : '');
+            cy.wrap(row).get('td').eq(rowIndex + 3).should('have.text', rowData === 1 ? '✓' : '');
           });
         });
       });
 
       page.clickSortButton('Relevant Gene Sets');
       page.allTableRows.should('have.length', 4);
+
       dataArr.reverse();  
       dataArr.forEach((allRows, allRowsIndex) => {
         allRows.forEach((rowData, rowIndex) => {
@@ -222,8 +283,8 @@ describe('Autism gene profiles table', () => {
 
     it('should test autism scores', () => {
       page.geneSearchInput.type('CHD');
-
       page.allTableRows.should('have.length', 15);
+
       page.clickSortButton('SFARI_gene_score');
       
       const dataArr = [2, 1, null];
@@ -233,8 +294,10 @@ describe('Autism gene profiles table', () => {
           cy.wrap(row).get('td').eq(7).should('have.text', rowData === null ? '' : rowData);
         });
       });
+
       dataArr.reverse();
       page.clickSortButton('SFARI_gene_score');
+
       dataArr.forEach((rowData, allRowsIndex) => {
         page.allTableRows.should('have.length', 15);
         page.allTableRows.eq(allRowsIndex).within(row => {
@@ -275,27 +338,31 @@ describe('Autism gene profiles table', () => {
     });
     
     it('should show nothing found when search query dosent match', () => {
-      page.geneSearchInput.type('9595');
+      page.searchResultWarning.should('not.exist');
 
+      page.geneSearchInput.type('non-existing-gene');
       page.searchResultWarning.should('be.visible');
       page.searchResultWarning.should('have.text', 'Nothing found');
 
-      page.geneSearchInput.clear().type('R');
-      page.searchResultWarning.should('not.exist');
+      page.geneSearchInput.clear();
       page.allTableRows.should('have.length.above', 1);
+      page.searchResultWarning.should('not.exist');
     });
 
-    it('should use home/end buttons functionality', () => { // additional visual test can be done
+    it('should use home/end buttons functionality', () => {
       page.geneSearchInput.type('CHD');
       page.allTableRows.should('have.length', 15);
+
       cy.scrollTo('bottom');
       cy.window().its('scrollY').then(yScroll => {
         cy.wrap(yScroll).as('pageEndY');
       });
+
       cy.get('body').type('{home}');
       cy.window().its('scrollY').then(yScroll => {
         expect(yScroll).to.equal(0);
       });
+
       cy.get('body').type('{end}');
       cy.window().its('scrollY').then(yScroll => {
         cy.get('@pageEndY').should('equal', yScroll);
@@ -304,30 +371,10 @@ describe('Autism gene profiles table', () => {
 
     it('should load more genes when scrolling', () => {
       cy.get('.table tr').should('have.length.above', 5);
+
       cy.get('.table').find('tr').its('length').then(value => {
         cy.scrollTo('bottom');
         cy.get('.table tr').should('have.length.above', value);
-      });
-    });
-
-    it('should highlight rows and then use the clear keybind', () => {
-      [1, 2, 3].forEach(id => {
-        cy.get(`tbody.ng-star-inserted > :nth-child(${id}) > :nth-child(2)`).click({ctrlKey:true});
-      });
-
-      [1, 2, 3].forEach(id => {
-        cy.get(`tbody.ng-star-inserted > :nth-child(${id})`).should('satisfy', row => {
-          const classList = Array.from(row[0].classList);
-          return classList.includes('row-highlight');
-        });
-      });
-
-      cy.get('body').type('{esc}');
-      [1, 2, 3].forEach(id => {
-        cy.get(`tbody.ng-star-inserted > :nth-child(${id})`).should('satisfy', row => {
-          const classList = Array.from(row[0].classList);
-          return !classList.includes('row-highlight');
-        });
       });
     });
   });
