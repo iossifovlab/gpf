@@ -19,7 +19,7 @@ describe('User management tests', () => {
   it('should navigate through all user management tabs', () => {
     page.groupsButton.click();
     page.groupsTable.should('be.visible');
-    
+
     page.datasetsButton.click();
     page.datasetsTable.should('be.visible');
   });
@@ -125,7 +125,10 @@ describe('User management tests', () => {
     page.userWindowGroupDropdownListCheckboxes.last().click();
     page.userWindowGroupDropDownMenuButton.click();
     page.userWindowSubmitButton.click();
-    page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.comtest_group×multi');
+    page.usersTableRows.last().should(
+      'have.text',
+      'test_nametest_email@email.comany_usertest_email@email.comtest_group×multi'
+    );
 
     page.groupsButton.click();
     page.groupsTableRows.last().should('contain.text', 'test_email@email.com');

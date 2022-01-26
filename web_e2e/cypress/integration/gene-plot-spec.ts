@@ -149,11 +149,11 @@ describe('Gene plot summary alleles count tests', () => {
     });
   });
 
-  [ {checkbox: 'sub',expectedSummaryAllelesCount: '5 / 8'},
-    {checkbox: 'ins',expectedSummaryAllelesCount: '7 / 8'},
-    {checkbox: 'del',expectedSummaryAllelesCount: '4 / 8'},
-    {checkbox: 'CNV+',expectedSummaryAllelesCount: '8 / 8'},
-    {checkbox: 'CNV-',expectedSummaryAllelesCount: '8 / 8'}
+  [ {checkbox: 'sub', expectedSummaryAllelesCount: '5 / 8'},
+    {checkbox: 'ins', expectedSummaryAllelesCount: '7 / 8'},
+    {checkbox: 'del', expectedSummaryAllelesCount: '4 / 8'},
+    {checkbox: 'CNV+', expectedSummaryAllelesCount: '8 / 8'},
+    {checkbox: 'CNV-', expectedSummaryAllelesCount: '8 / 8'}
   ].forEach(data => {
     it('should display the correct value when filtering with the "' + data.checkbox + '" checkbox', () => {
       geneBrowserPage.variantTypesFilter.should('exist');

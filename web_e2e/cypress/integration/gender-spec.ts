@@ -31,12 +31,12 @@ describe('Gender tests', () => {
   it('should check/uncheck child gender checkboxes using "All" and "None" buttons', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genotypeBlockPage.findButtonInComponentContainingText('gpf-gender', 'None').click();
-    genotypeBlockPage.findAllCheckboxesInComponent('gpf-gender').each((element) => {
+    genotypeBlockPage.findAllCheckboxesInComponent('gpf-gender').each(element => {
       cy.wrap(element).should('not.be.checked');
     });
 
     genotypeBlockPage.findButtonInComponentContainingText('gpf-gender', 'All').click();
-    genotypeBlockPage.findAllCheckboxesInComponent('gpf-gender').each((element) => {
+    genotypeBlockPage.findAllCheckboxesInComponent('gpf-gender').each(element => {
       cy.wrap(element).should('be.checked');
     });
   });

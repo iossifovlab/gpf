@@ -31,12 +31,12 @@ describe('Variant types tests', () => {
   it('should check/uncheck variant types checkboxes using "All" and "None" buttons', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genotypeBlockPage.findButtonInComponentContainingText('gpf-variant-types', 'None').click();
-    genotypeBlockPage.findAllCheckboxesInComponent('gpf-variant-types').each((element) => {
+    genotypeBlockPage.findAllCheckboxesInComponent('gpf-variant-types').each(element => {
       cy.wrap(element).should('not.be.checked');
     });
 
     genotypeBlockPage.findButtonInComponentContainingText('gpf-variant-types', 'All').click();
-    genotypeBlockPage.findAllCheckboxesInComponent('gpf-variant-types').each((element) => {
+    genotypeBlockPage.findAllCheckboxesInComponent('gpf-variant-types').each(element => {
       cy.wrap(element).should('be.checked');
     });
   });

@@ -117,7 +117,7 @@ describe('Iossifov dataset count tests', () => {
    {rowIndex: 1, roleId: 'dad', expectedCounts: ['2516', '0', '2516']},
    {rowIndex: 2, roleId: 'proband', expectedCounts: ['2166', '341', '2507']},
    {rowIndex: 3, roleId: 'sibling', expectedCounts: ['899', '1011', '1910']}
-  ].forEach((data) => {
+  ].forEach(data => {
     it('should display the correct numbers in families by numbers of role - "' + data.roleId + '"', () => {
       page.familiesByNumberDropdownButton.select('Role');
 
@@ -125,7 +125,7 @@ describe('Iossifov dataset count tests', () => {
 
       page.allFamiliesByNumberDataCells.as('tds');
       for (let i = 0; i < data.expectedCounts.length; i++) {
-        cy.get('@tds').eq(data.rowIndex * 3 + i).should('have.text', data.expectedCounts[i])
+        cy.get('@tds').eq((data.rowIndex * 3) + i).should('have.text', data.expectedCounts[i])
       }
     });
   });
@@ -141,8 +141,9 @@ describe('Iossifov dataset count tests', () => {
    {effectType: 'UTRs', expectedCounts: ['244, 0.097', '(237, 9%)', '154, 0.081', '(144, 8%)']},
    {effectType: 'Missense', expectedCounts: ['1680, 0.67', '(1185, 47%)', '1149, 0.602', '(843, 44%)']},
    {effectType: 'Intron', expectedCounts: ['821, 0.327', '(671, 27%)', '558, 0.292', '(464, 24%)']}
-  ].forEach((data) => {
-    it('should display the correct numbers for ' + data.effectType + ' effectType in the "Denovo variants of:" role table', () => {
+  ].forEach(data => {
+    it('should display the correct numbers for ' + data.effectType +
+       ' effectType in the "Denovo variants of:" role table', () => {
       page.denovoVariantsDropdownButton.select('Role');
       page.findDenovoVariantsCountsByRowName(data.effectType).each((ele, i) => {
         expect(ele.text()).to.eq(data.expectedCounts[i]);
@@ -154,8 +155,9 @@ describe('Iossifov dataset count tests', () => {
    {effectType: 'UTRs', expectedCounts: ['244, 0.097', '(237, 9%)', '154, 0.081', '(144, 8%)']},
    {effectType: 'Missense', expectedCounts: ['1680, 0.67', '(1185, 47%)', '1149, 0.602', '(843, 44%)']},
    {effectType: 'Intron', expectedCounts: ['821, 0.327', '(671, 27%)', '558, 0.292', '(464, 24%)']}
-  ].forEach((data) => {
-    it('should display the correct numbers for ' + data.effectType + ' effectType in the "Denovo variants of:" status table', () => {
+  ].forEach(data => {
+    it('should display the correct numbers for ' + data.effectType +
+       ' effectType in the "Denovo variants of:" status table', () => {
       page.denovoVariantsDropdownButton.select('Affected Status');
       page.findDenovoVariantsCountsByRowName(data.effectType).each((ele, i) => {
         expect(ele.text()).to.eq(data.expectedCounts[i]);
@@ -198,7 +200,7 @@ describe('Datasets visual tests', () => {
 
     cy.get('.col-sm-3 > .select-wrapper > .form-control').select('Phenotype');
     page.familiesByPedigreeDivs.should('have.length', 8);
-    cy.get('#families-by-pedigree-div').scrollIntoView().matchImageSnapshot('iossifov-pedigree-table-phenotype'); 
+    cy.get('#families-by-pedigree-div').scrollIntoView().matchImageSnapshot('iossifov-pedigree-table-phenotype');
   });
 
   it('should compare de novo variants table data', () => {
@@ -208,6 +210,6 @@ describe('Datasets visual tests', () => {
     cy.get('#denovo-variants-div').scrollIntoView().matchImageSnapshot('iossifov-denovo-table-role');
 
     page.denovoVariantsDropdownButton.select('Phenotype');
-    cy.get('#denovo-variants-div').scrollIntoView().matchImageSnapshot('iossifov-denovo-table-phenotype'); 
+    cy.get('#denovo-variants-div').scrollIntoView().matchImageSnapshot('iossifov-denovo-table-phenotype');
   });
 });

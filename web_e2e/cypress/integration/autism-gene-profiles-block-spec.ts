@@ -45,7 +45,7 @@ describe('Autism gene profiles block tests', () => {
     page.allTabs.should('have.length', 2);
     autismGeneProfilesTablePage.table.should('not.be.visible');
     autismGeneProfilesSingleView.window.should('be.visible');
-  
+
     autismGeneProfilesTablePage.firstTabCloseButton.click();
     page.allTabs.should('have.length', 1);
     autismGeneProfilesTablePage.table.should('be.visible');

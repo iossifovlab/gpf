@@ -21,7 +21,8 @@ describe('App tests', () => {
     page.logout();
   });
 
-  it('should toggle sidenav, click on the "Datasets" button and navigate to "/datasets/ALL_genotypes/gene-browser"', () => {
+  it('should toggle sidenav, click on the "Datasets" button and ' +
+     'navigate to "/datasets/ALL_genotypes/gene-browser"', () => {
     const baseUrl = Cypress.config().baseUrl;
     const expectedUrl = `${baseUrl}datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`;
 
@@ -63,7 +64,8 @@ describe('App tests', () => {
     page.logout();
   });
 
-  it('should toggle sidenav, click on the "Autism gene profiles" button and navigate to "/autism-gene-profiles"', () => {
+  it('should toggle sidenav, click on the "Autism gene profiles" button and ' +
+     'navigate to "/autism-gene-profiles"', () => {
     const baseUrl = Cypress.config().baseUrl;
     const autismGeneProfilesUrl = `${baseUrl}autism-gene-profiles`;
 
@@ -90,7 +92,7 @@ describe('User access rights tests', () => {
     page.navigateToHome();
   });
 
-  Object.values(userData).forEach((data) => {
+  Object.values(userData).forEach(data => {
     it('should toggle sidenav bar with the right elements inside', () => {
       page.login(data.username, data.password);
       page.sidenavElements.should('not.exist');
@@ -147,7 +149,7 @@ describe('User access rights tests', () => {
     page.logout();
   });
 
-  Object.values(userData).forEach((data) => {
+  Object.values(userData).forEach(data => {
     it('should login with accounts with different access rights and check whether the datasets ' +
        'in the dropdown have the correct opacity value', () => {
       const expectedOpacity = data.hasDatasetRights ? '1' : '0.3';
@@ -169,7 +171,8 @@ describe('User access rights tests', () => {
     page.logout();
   });
 
-  it('should login admin and give researcher access rights for comp_vcf, then login researcher and verify his rights ', () => {
+  it('should login admin and give researcher access rights for comp_vcf, ' +
+     'then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
 
     page.loginAdmin();
@@ -190,7 +193,8 @@ describe('User access rights tests', () => {
     page.logout();
   });
 
-  it('should login admin and give researcher access rights for COMP_genotypes, then login researcher and verify his rights', () => {
+  it('should login admin and give researcher access rights for COMP_genotypes, ' +
+     'then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
     const genotypeBrowserPage = new GenotypeBrowserPage();
 
@@ -241,7 +245,8 @@ describe('User access rights tests', () => {
     page.logout();
   });
 
-  it('should login admin and give researcher access rights for ALL Genotypes, then login researcher and verify his rights', () => {
+  it('should login admin and give researcher access rights for ALL Genotypes, ' +
+     'then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
     const genotypeBrowserPage = new GenotypeBrowserPage();
 

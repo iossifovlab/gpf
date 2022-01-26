@@ -41,15 +41,15 @@ describe('Autism gene profiles table', () => {
     });
 
     [{geneSymbol: 'CHD8', expectedRow: ['CHD8', '✓', '✓', '', '✓', '✓', '✓', '1', '193', '83', '31.5', '18178', '7 (2.792)', '', '', '', '', '']},
-    {geneSymbol: 'SHANK2', expectedRow: ['SHANK2', '✓', '✓', '', '', '', '✓', '2', '', '43', '649', '17517', '1 (0.399)', '', '', '', '1 (0.524)', '']},
-    {geneSymbol: 'FLG', expectedRow: ['FLG', '', '', '', '', '✓', '', '', '16640', '18394.5', '', '', '1 (0.399)', '', '', '', '', '']},
-    {geneSymbol: 'CMIP', expectedRow: ['CMIP', '', '', '✓', '', '', '', '7', '558', '2494', '694', '17467', '', '', '', '', '', '']},
-    {geneSymbol: 'TBCD', expectedRow: ['TBCD', '', '', '✓', '', '', '', '', '646', '9111.5', '13275.5', '222', '', '', '', '', '1 (0.524)', '2 (1.047)']},
-    ].forEach((data) => {
+     {geneSymbol: 'SHANK2', expectedRow: ['SHANK2', '✓', '✓', '', '', '', '✓', '2', '', '43', '649', '17517', '1 (0.399)', '', '', '', '1 (0.524)', '']},
+     {geneSymbol: 'FLG', expectedRow: ['FLG', '', '', '', '', '✓', '', '', '16640', '18394.5', '', '', '1 (0.399)', '', '', '', '', '']},
+     {geneSymbol: 'CMIP', expectedRow: ['CMIP', '', '', '✓', '', '', '', '7', '558', '2494', '694', '17467', '', '', '', '', '', '']},
+     {geneSymbol: 'TBCD', expectedRow: ['TBCD', '', '', '✓', '', '', '', '', '646', '9111.5', '13275.5', '222', '', '', '', '', '1 (0.524)', '2 (1.047)']},
+    ].forEach(data => {
       it(`should display correct gene data for ${data.geneSymbol}`, () => {
         page.geneSearchInput.type(data.geneSymbol);
         page.allTableRows.should('have.length', 1);
-        
+
         for (let cellIndex = 0; cellIndex < data.expectedRow.length; cellIndex++) {
           page.allTableRows.find('td').eq(cellIndex).should('have.text', data.expectedRow[cellIndex]);
         }
@@ -81,15 +81,15 @@ describe('Autism gene profiles table', () => {
     });
 
     it('should check/uncheck all gene sets column filtering options using the check/uncheck all button', () => {
-      page.allAutismGeneSetsDropdownCheckboxes.each((element) => {
+      page.allAutismGeneSetsDropdownCheckboxes.each(element => {
         cy.wrap(element).should('be.checked');
       });
       page.autismGeneSetsCheckUncheckAllButton.click();
-      page.allAutismGeneSetsDropdownCheckboxes.each((element) => {
+      page.allAutismGeneSetsDropdownCheckboxes.each(element => {
         cy.wrap(element).should('not.be.checked');
       });
       page.autismGeneSetsCheckUncheckAllButton.click();
-      page.allAutismGeneSetsDropdownCheckboxes.each((element) => {
+      page.allAutismGeneSetsDropdownCheckboxes.each(element => {
         cy.wrap(element).should('be.checked');
       });
     });
@@ -114,7 +114,7 @@ describe('Autism gene profiles table', () => {
       cy.get('th.table-main-header').should('have.length', 6);
 
       page.allGeneSetsDropdownButton.click();
-      page.allGeneSetsFilterSets(['autism_scores' ,'autism_gene_sets']);
+      page.allGeneSetsFilterSets(['autism_scores', 'autism_gene_sets']);
       page.allGeneSetsClickApplyButton();
 
       cy.get('th.table-main-header').should('have.length', 4);
@@ -200,7 +200,7 @@ describe('Autism gene profiles table', () => {
       cy.wrap('denovo_lgds').as('effectType');
       cy.wait('@query');
       cy.get('@query').then(req => {
-        if(req !== null) {
+        if (req !== null) {
           const genotypeBlockPage = new GenotypeBlockPage();
           cy.visit(Cypress.config().baseUrl + '/load-query/' + req.response.body.uuid);
           genotypeBlockPage.findCheckboxInComponentContainingText('.pedigree-selector-card', 'affected').parent().within(checkBoxes => {
@@ -286,7 +286,7 @@ describe('Autism gene profiles table', () => {
       page.allTableRows.should('have.length', 15);
 
       page.clickSortButton('SFARI_gene_score');
-      
+
       const dataArr = [2, 1, null];
       dataArr.forEach((rowData, allRowsIndex) => {
         page.allTableRows.should('have.length', 15);
@@ -336,7 +336,7 @@ describe('Autism gene profiles table', () => {
         });
       });
     });
-    
+
     it('should show nothing found when search query dosent match', () => {
       page.searchResultWarning.should('not.exist');
 

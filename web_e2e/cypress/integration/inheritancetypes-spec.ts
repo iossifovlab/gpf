@@ -31,12 +31,12 @@ describe('Inheritance tests', () => {
   it('should check/uncheck effect types checkboxes using "All" and "None" buttons', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genotypeBlockPage.findButtonInComponentContainingText('gpf-inheritancetypes', 'None').click();
-    genotypeBlockPage.findAllCheckboxesInComponent('gpf-inheritancetypes').each((element) => {
+    genotypeBlockPage.findAllCheckboxesInComponent('gpf-inheritancetypes').each(element => {
       cy.wrap(element).should('not.be.checked');
     });
 
     genotypeBlockPage.findButtonInComponentContainingText('gpf-inheritancetypes', 'All').click();
-    genotypeBlockPage.findAllCheckboxesInComponent('gpf-inheritancetypes').each((element) => {
+    genotypeBlockPage.findAllCheckboxesInComponent('gpf-inheritancetypes').each(element => {
       cy.wrap(element).should('be.checked');
     });
   });

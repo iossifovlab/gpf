@@ -91,7 +91,7 @@ describe('Autism gene profiles single view links tests', () => {
   });
 
   it('should have the correct href for the gene browser link', () => {
-    page.header.invoke('text').then((headerText) => {
+    page.header.invoke('text').then(headerText => {
       const baseUrl = Cypress.config().baseUrl;
       const headerName = headerText;
       const geneBrowserUrl = `${baseUrl}datasets/ALL_genotypes/gene-browser/${headerName}`;
@@ -137,14 +137,14 @@ describe('Single view study table', () => {
       method: 'POST',
       url: '/gpf/api/v3/query_state/save'
     }).as('query');
-    cy.get('#denovo_missense > :nth-child(2) > .link-genotype-browser > span').then(value => {      
+    cy.get('#denovo_missense > :nth-child(2) > .link-genotype-browser > span').then(value => {
       cy.wrap(value).parent().parent().parent().invoke('attr', 'id').then(effectType => {
         cy.wrap(effectType).as('effectType');
       });
       cy.wrap(value).click();
     });
     cy.get('@query').then(req => {
-      if(req !== null) {
+      if (req !== null) {
         const genotypeBlockPage = new GenotypeBlockPage();
         cy.visit(Cypress.config().baseUrl + '/load-query/' + req.response.body.uuid);
         genotypeBlockPage.findCheckboxInComponentContainingText('.pedigree-selector-card', 'affected').parent().within(checkBoxes => {
@@ -181,7 +181,7 @@ describe('Autism gene profiles single view visual tests', () => {
 
     [{tableId: 'autism_scores', tableRows: ['SFARI_gene_score']},
      {tableId: 'protection_scores', tableRows: ['RVIS_rank', 'LGD_rank', 'pLI_rank', 'pRec_rank']}
-    ].forEach((data, dataIndex) => {
+    ].forEach(data => {
       cy.get('#' + data.tableId).within(scores => {
         data.tableRows.forEach((elements, index) => {
           cy.wrap(scores).get('tr').eq(index).within(row => {
@@ -444,26 +444,25 @@ describe('Autism gene profiles single view compare genes tests', () => {
 
   it('should select multiple genes', () => {
     cy.intercept('GET', '/gpf/api/v3/autism_gene_tool/genes/?page=1&symbol=**').as('tableRequest');
-    
+
     autismGeneProfilesTablePage.geneSearchInput.clear().type('MYT1L');
     cy.wait('@tableRequest');
-    autismGeneProfilesTablePage.allTableRows.eq(0).click({ctrlKey:true});
+    autismGeneProfilesTablePage.allTableRows.eq(0).click({ctrlKey: true});
     autismGeneProfilesTablePage.geneSearchInput.clear().type('SPAST');
     cy.wait('@tableRequest');
-    autismGeneProfilesTablePage.allTableRows.eq(0).click({ctrlKey:true});
+    autismGeneProfilesTablePage.allTableRows.eq(0).click({ctrlKey: true});
 
     autismGeneProfilesTablePage.legend.should('be.visible');
     autismGeneProfilesTablePage.legendCompareButton.should('be.visible');
     autismGeneProfilesTablePage.legendDismissButton.should('be.visible');
     autismGeneProfilesTablePage.legendSelectedGenes.should('have.text', '► MYT1L, SPAST');
 
-    autismGeneProfilesTablePage.allTableRows.eq(0).click({ctrlKey:true});
+    autismGeneProfilesTablePage.allTableRows.eq(0).click({ctrlKey: true});
 
     autismGeneProfilesTablePage.legend.should('be.visible');
     autismGeneProfilesTablePage.legendCompareButton.should('be.visible');
     autismGeneProfilesTablePage.legendDismissButton.should('be.visible');
     autismGeneProfilesTablePage.legendSelectedGenes.should('have.text', '► MYT1L');
-
   });
 
   it('should click dismiss gene compare button', () => {
@@ -471,7 +470,7 @@ describe('Autism gene profiles single view compare genes tests', () => {
     autismGeneProfilesTablePage.geneSearchInput.clear().type('SPAST');
     cy.wait('@tableRequest');
 
-    autismGeneProfilesTablePage.allTableRows.eq(0).click({ctrlKey:true});
+    autismGeneProfilesTablePage.allTableRows.eq(0).click({ctrlKey: true});
     autismGeneProfilesTablePage.legend.should('be.visible');
     autismGeneProfilesTablePage.legendCompareButton.should('be.visible');
     autismGeneProfilesTablePage.legendDismissButton.should('be.visible');
@@ -479,7 +478,7 @@ describe('Autism gene profiles single view compare genes tests', () => {
 
     autismGeneProfilesTablePage.geneSearchInput.clear().type('TBR1');
     cy.wait('@tableRequest');
-    autismGeneProfilesTablePage.allTableRows.eq(0).click({ctrlKey:true});
+    autismGeneProfilesTablePage.allTableRows.eq(0).click({ctrlKey: true});
     autismGeneProfilesTablePage.legend.should('be.visible');
     autismGeneProfilesTablePage.legendCompareButton.should('be.visible');
     autismGeneProfilesTablePage.legendDismissButton.should('be.visible');
@@ -497,13 +496,13 @@ describe('Autism gene profiles single view compare genes tests', () => {
     cy.intercept('GET', '/gpf/api/v3/autism_gene_tool/genes/?page=1&symbol=**').as('responseHandler');
     cy.wait('@responseHandler');
     autismGeneProfilesTablePage.allTableRows.first().should('have.length', 1);
-    autismGeneProfilesTablePage.allTableRows.first().click({ctrlKey:true});
+    autismGeneProfilesTablePage.allTableRows.first().click({ctrlKey: true});
 
     autismGeneProfilesTablePage.geneSearchInput.clear().type('POGZ');
     cy.intercept('GET', '/gpf/api/v3/autism_gene_tool/genes/?page=1&symbol=**').as('responseHandler');
     cy.wait('@responseHandler');
     autismGeneProfilesTablePage.allTableRows.first().should('have.length', 1);
-    autismGeneProfilesTablePage.allTableRows.first().click({ctrlKey:true});
+    autismGeneProfilesTablePage.allTableRows.first().click({ctrlKey: true});
 
     autismGeneProfilesTablePage.legend.should('be.visible');
     autismGeneProfilesTablePage.legendCompareButton.should('be.visible');

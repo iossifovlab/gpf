@@ -17,7 +17,7 @@ describe('Pheno browser tests', () => {
 
   [{seachQuery: 'the age'}, {seachQuery: 'the iq'}, {seachQuery: 'measure 1'},
    {seachQuery: 'measure 2'}, {seachQuery: 'measure 3'}, {seachQuery: 'measure 4'}
-  ].forEach((data) => {
+  ].forEach(data => {
     it('should filter the right rows when typing "' + data.seachQuery + '" in the sarchbox', () => {
       page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
 
@@ -76,7 +76,7 @@ describe('Pheno browser tests', () => {
     page.tableRows.eq(2).get('gpf-table-view-cell').eq(2).should('have.text', 'The IQ of the individual');
   });
 
-  const dataArray = [ 
+  const dataArray = [
     'i1ageThe age of the individual (in months)continuous[68.001,606.229]',
     'i1iqThe IQ of the individualcontinuous[-1.111e+1,174.290]',
     'i1m1Measure 1, a normally distributed continuous measure with a mean of 80continuous[28.877,143.029]0.97110.25120.02990.6413',
@@ -87,7 +87,7 @@ describe('Pheno browser tests', () => {
     'pheno_commonsample_idraw[f1.dad][f1.mom][f1.p1][f1.s1][f2.dad][f2.mom][f2.p1][f2.s1][f3.dad][f3.mom][f3.p1][f3.s1][f4.dad][f4.mom][f4.p1][f4.s1][f5.dad][f5.mom][f5.p1][f5.s1]'
   ]
   for (let i = 0; i < dataArray.length; i++) {
-    it('should have the correct values in the row with index ' + i, () => {
+    it('should have the correct values in the row with index ' + String(i), () => {
       page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
 
       const expectedRowText = dataArray[i];
@@ -102,9 +102,9 @@ describe('Pheno browser tests', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
     page.instrumentsBox.select('All instruments');
 
-    cy.window().document().then(function (doc) {
+    cy.window().document().then(function(doc) {
       doc.addEventListener('click', () => {
-        setTimeout(function () { doc.location.reload() }, 5000)
+        setTimeout(function() { doc.location.reload() }, 5000)
       })
       page.downloadInstrumentsButton.click();
     });

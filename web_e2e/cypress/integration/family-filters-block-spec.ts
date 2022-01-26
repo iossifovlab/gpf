@@ -31,7 +31,6 @@ describe('Family filters block tests', () => {
 
     page.familyIdsTextarea.type('f1');
     page.findErrorAlertInComponent('gpf-family-ids').should('not.exist');
-
   });
 
   it('should display pheno filters panel after "Advanced" button click', () => {

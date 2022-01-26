@@ -77,10 +77,10 @@ describe('Enrichment tool common tests', () => {
     page.findErrorAlertInComponent('gpf-gene-sets').should('not.exist');
   });
 
-  it('should display "55" and "169" in the affected person"s observed column of LGDs and missense"s rows respectively ' +
-     'with gene set Main: FMRP Darnell', () => {
+  it('should display "55" and "169" in the affected person\'s observed column ' +
+     'of LGDs and missense\'s rows respectively with gene set Main: FMRP Darnell', () => {
     const genesBlockPage = new GenesBlockPage();
-    
+
     genesBlockPage.geneSetsButton.click();
     genesBlockPage.geneSetsSearchbox.click();
     genesBlockPage.geneSetsSearchbox.type('FMRP Darnell');
@@ -117,13 +117,13 @@ if (Cypress.env().yamlPath !== undefined) {
 
   describe('Enrichment tool data tests', () => {
     const page = new EnrichmentToolPage();
-  
+
     before(() => {
       page.cleanup();
       page.navigateToHome();
       page.loginAdmin();
     });
-  
+
     beforeEach(() => {
       page.preserveLogin();
       page.navigateToHome();
