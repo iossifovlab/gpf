@@ -29,7 +29,6 @@
         "no-param-reassign": "warn",
         "no-labels": "warn",
         "multiline-comment-style": ["warn", "starred-block"],
-        "max-nested-callbacks": ["warn", 2],
         "max-depth": ["warn", 3],
         "require-atomic-updates": "warn",
         "no-await-in-loop": "warn",
@@ -120,7 +119,6 @@
         "no-tabs": ["warn"],
         "no-whitespace-before-property": "warn",
         "curly": "warn",
-        "object-curly-spacing": ["warn", "always"],
         "object-property-newline": ["warn", { "allowAllPropertiesOnSameLine": true }],
         "padded-blocks": ["warn", "never"],
         "rest-spread-spacing": ["warn", "never"],
@@ -135,7 +133,6 @@
               "new": false
             }
         }],
-        "template-curly-spacing": ["warn", "always"],
         "@typescript-eslint/await-thenable": "warn",
         "@typescript-eslint/consistent-type-definitions": "warn",
         "@typescript-eslint/explicit-member-accessibility": [
