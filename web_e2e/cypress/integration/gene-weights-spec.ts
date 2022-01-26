@@ -169,7 +169,7 @@ describe('Gene weights panel tests', () => {
   });
 });
 
-describe('Gene weights visual tests', () => {
+describe.only('Gene weights visual tests', () => {
   const page = new GeneWeightsPage();
   const genesBlockPage = new GenesBlockPage();
 
