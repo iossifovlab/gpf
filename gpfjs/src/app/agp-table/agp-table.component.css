@@ -29,6 +29,8 @@
 
 .header {
   border-top: 1px solid #ddd;
+  position: sticky;
+  top: 0px;
 }
 
 .cell:nth-child(1) {
