@@ -31,6 +31,7 @@
   border-top: 1px solid #ddd;
   position: sticky;
   top: 0px;
+  font-weight: bold;
 }
 
 .cell:nth-child(1) {
@@ -49,10 +50,6 @@
 }
 
 .header-cell {
-  max-width: 75%;
-  display: inline-block;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 multiple-select-menu {
@@ -94,12 +91,19 @@ gpf-sorting-buttons {
   width: 250px;
 }
 
-.gene-cell,
-.gene-cell:hover {
+.clickable {
   color: #2372c6;
   cursor: pointer;
 }
 
-.gene-cell:hover {
+.clickable:hover {
   text-decoration: underline;
+}
+
+.vertical-text {
+  word-break: break-word;
+  writing-mode: vertical-rl;
+  transform-origin: center center;
+  transform: rotate(180deg);
+  max-height: 150px; 
 }

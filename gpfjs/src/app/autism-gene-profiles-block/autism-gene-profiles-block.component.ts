@@ -6,6 +6,9 @@ import { AgpSingleViewConfig } from 'app/autism-gene-profiles-single-view/autism
 import { AgpTableService } from 'app/agp-table/agp-table.service';
 import { AutismGeneProfilesService  } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { take } from 'rxjs/operators';
+import { Store } from '@ngxs/store';
+import { QueryService } from 'app/query/query.service';
+import { AutismGeneProfileSingleViewComponent } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view.component';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-block',
@@ -32,6 +35,8 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     private location: Location,
     private agpTableService: AgpTableService,
     private autismGeneProfilesService: AutismGeneProfilesService,
+    private queryService: QueryService,
+    private store: Store
   ) { }
 
   @HostListener('window:keydown.home')
@@ -85,6 +90,16 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     if (navigateToTab) {
       this.selectNav(tabId);
     }
+  }
+
+  public goToQueryEventHandler($event: { geneSymbol: string; statisticId: string }): void {
+    const tokens: string[] = $event.statisticId.split('.');
+    const datasetId = tokens[1];
+    const personSet = this.agpSingleViewConfig.datasets
+      .find(ds => ds.id === datasetId).personSets
+      .find(ps => ps.id === tokens[2]);
+    const statistic = personSet.statistics.find(st => st.id === tokens[3]);
+    AutismGeneProfileSingleViewComponent.goToQuery(this.store, this.queryService, $event.geneSymbol, personSet, datasetId, statistic);
   }
 
   private selectNav(navId: string) {

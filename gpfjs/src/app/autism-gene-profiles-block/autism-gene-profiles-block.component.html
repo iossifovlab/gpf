@@ -29,6 +29,7 @@
         <gpf-agp-table
           [hidden]="nav.activeId !== 'autismGenesTool'"
           (createTabEvent)="createTabEventHandler($event)"
+          (goToQueryEvent)="goToQueryEventHandler($event)"
           [config]="agpTableConfig"
         ></gpf-agp-table>
       </ng-template>

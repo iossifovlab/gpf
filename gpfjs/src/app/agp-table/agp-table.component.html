@@ -25,10 +25,10 @@
   <div class="table-row" *ngFor="let row of genes"
     [attr.id]="row[geneSymbolColumnId]"
     (click)="toggleHighlightGene(row[geneSymbolColumnId])"
-    (middleclick)="emitCreateTabEvent(row[geneSymbolColumnId])"
     [ngClass]="{'row-highlight': highlightedGenes.has(row[geneSymbolColumnId])}">
     <span class="cell" *ngFor="let column of leaves"
-    [ngClass]="{'gene-cell': column.id === geneSymbolColumnId}">{{ row[column.id] }}</span>
+    [ngClass]="{'clickable': column.clickable !== null}"
+    (middleclick)="emitClickEvent(row, column)">{{ row[column.id] }}</span>
   </div>
 </div>
 
@@ -40,20 +40,24 @@
         [style.grid-column]="column.gridColumn"
         [style.grid-row]="column.gridRow"
       >
-        <span class="header-cell">{{ column.displayName }}</span>
-        <gpf-sorting-buttons
-          *ngIf="column.sortable"
-          [id]="column.id"
-          (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
-        <ng-container *ngIf="column.columns.length !== 0">
-          <button
-            #columnFilteringButton
-            [attr.id]="column.id + '-column-filtering-button'"
-            class="dropdown-toggle btn navbar-toggler"
-            (click)="openDropdown(column)">
-            &#9776;
-          </button>
-        </ng-container>
+        <div style="display: flex; justify-content: center; align-items: center; width: 100%"
+          [ngStyle]="{'flex-direction': column.displayVertical ? 'column': 'row'}">
+          <span class="header-cell"
+          [ngClass]="{'vertical-text': column.displayVertical }">{{ column.displayName }}</span>
+          <gpf-sorting-buttons
+            *ngIf="column.sortable"
+            [id]="column.id"
+            (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
+          <ng-container *ngIf="column.columns.length !== 0">
+            <button
+              #columnFilteringButton
+              [attr.id]="column.id + '-column-filtering-button'"
+              class="dropdown-toggle btn navbar-toggler"
+              (click)="openDropdown(column)">
+              &#9776;
+            </button>
+          </ng-container>
+        </div>
       </div>
       <ng-container *ngTemplateOutlet=" recursiveListTmpl; context: { columns: column.columns }"></ng-container>
     </ng-container>

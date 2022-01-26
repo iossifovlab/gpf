@@ -9,6 +9,8 @@ export class Column {
   public displayName: string;
   private visible: boolean;
   public sortable: boolean;
+  public displayVertical: boolean;
+  public clickable: string | null;
 
   public parent?: Column = null;
   public gridColumn?: string = null;

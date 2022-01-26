@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, ViewChild, ViewChildren } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, ViewChild, ViewChildren } from '@angular/core';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
@@ -15,6 +15,7 @@ import { Subject } from 'rxjs';
 export class AgpTableComponent implements OnInit, OnChanges {
   @Input() public config: AgpTableConfig;
   @Output() public createTabEvent = new EventEmitter();
+  @Output() public goToQueryEvent = new EventEmitter();
 
   @ViewChild(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu;
   @ViewChild(MultipleSelectMenuComponent) public multipleSelectMenuComponent: MultipleSelectMenuComponent;
@@ -38,6 +39,7 @@ export class AgpTableComponent implements OnInit, OnChanges {
 
   public constructor(
     private autismGeneProfilesService: AgpTableService,
+    private ref: ElementRef,
   ) { }
 
   public ngOnInit(): void {
@@ -66,10 +68,12 @@ export class AgpTableComponent implements OnInit, OnChanges {
   public onWindowScroll(): void {
     // TODO Add optimization to infinite scroll
     // FIXME Doesn't autoload rows when there's no scrollbar initially
-    const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
-    const totalScrollHeight = document.documentElement.scrollHeight;
-    if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
-      this.updateGenes();
+    if (!this.ref.nativeElement.hidden) {
+      const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
+      const totalScrollHeight = document.documentElement.scrollHeight;
+      if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
+        this.updateGenes();
+      }
     }
   }
 
@@ -142,6 +146,7 @@ export class AgpTableComponent implements OnInit, OnChanges {
     this.sortBy = sortBy;
     this.orderBy = orderBy;
     this.pageIndex = 1;
+    this.genes = [];
 
     this.updateGenes();
   }
@@ -167,6 +172,14 @@ export class AgpTableComponent implements OnInit, OnChanges {
   public clearHighlightedGenes(): void {
     for (const gene of this.highlightedGenes) {
       this.toggleHighlightGene(gene);
+    }
+  }
+
+  public emitClickEvent(row, column) {
+    if (column.clickable === 'goToQuery') {
+      this.goToQueryEvent.emit({geneSymbol: row[this.geneSymbolColumnId], statisticId: column.id});
+    } else if (column.clickable === 'createTab') {
+      this.emitCreateTabEvent(row[this.geneSymbolColumnId])
     }
   }
 
