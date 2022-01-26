@@ -84,7 +84,7 @@ class AutismGeneProfileDB:
                 collection_id = gene_set["collection_id"]
                 full_gs_id = f"{collection_id}_{set_id}"
                 result['.'.join([f"{category_name}_rank", set_id])] = \
-                    '\u2713' if row[full_gs_id] else ''
+                    '\u2713' if row[full_gs_id] else None
         
         for dataset_id, filters in config["datasets"].items():
             for ps in filters["person_sets"]:
@@ -98,7 +98,7 @@ class AutismGeneProfileDB:
                         f"{dataset_id}_{person_set}_{statistic_id}_rate"
                     ]
                     result['.'.join(["datasets", dataset_id, person_set, statistic_id])] = \
-                        f"{count} ({round(rate, 2)})" if count else ''
+                        f"{count} ({round(rate, 2)})" if count else None
 
         return result
 

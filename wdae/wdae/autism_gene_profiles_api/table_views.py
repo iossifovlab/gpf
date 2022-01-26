@@ -9,14 +9,18 @@ from query_base.query_base import QueryBaseView
 LOGGER = logging.getLogger(__name__)
 
 
-def column(id, display_name, visible=True, sortable=False, columns=None):
+def column(
+    id, display_name, visible=True, clickable=None,
+    display_vertical=False, sortable=False, columns=None):
     if columns is None:
         columns = list()
     return {
         "id": id,
         "displayName": display_name,
         "visible": visible,
+        "displayVertical": display_vertical,
         "sortable": sortable,
+        "clickable": clickable,
         "columns": columns
     }
 
@@ -45,7 +49,9 @@ class TableConfigurationView(QueryBaseView):
         if len(configuration) == 0:
             return Response(response)
 
-        response["columns"].append(column("geneSymbol", "Gene"))
+        response["columns"].append(
+            column("geneSymbol", "Gene", clickable="createTab")
+        )
 
         for category in configuration["gene_sets"]:
             response["columns"].append(column(
@@ -55,6 +61,7 @@ class TableConfigurationView(QueryBaseView):
                 columns=[column(
                     f"{category['category']}_rank.{gene_set['set_id']}",
                     gene_set["set_id"],
+                    display_vertical=True,
                     sortable=True) for gene_set in category["sets"]
                 ]
             ))
@@ -66,6 +73,7 @@ class TableConfigurationView(QueryBaseView):
                 columns=[column(
                     f"{category['category']}.{genomic_score['score_name']}",
                     genomic_score["score_name"],
+                    display_vertical=True,
                     sortable=True) for genomic_score in category["scores"]
                 ]
             ))
@@ -93,6 +101,7 @@ class TableConfigurationView(QueryBaseView):
                         columns=[column(
                             f"datasets.{dataset_id}.{set_id}.{statistic.id}",
                             statistic.display_name,
+                            clickable="goToQuery",
                             sortable=True) for statistic in dataset["statistics"]
                         ]
                     ))
