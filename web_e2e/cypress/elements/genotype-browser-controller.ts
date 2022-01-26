@@ -191,6 +191,7 @@ export class GenotypeBrowserController extends BaseController {
 
   setRegion(region: string) {
     this.regionsBlockPage.regionsFilterButton.click();
+    this.regionsBlockPage.regionsFilterTextarea.should('not.be.disabled');
     this.regionsBlockPage.regionsFilterTextarea.type(region);
   }
 

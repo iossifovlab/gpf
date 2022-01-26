@@ -386,7 +386,7 @@ describe('Genotype browser family variants download tests', () => {
     genotypeBrowserController.navigateToHome();
   });
 
-  it('should download all effect types CHD8 iossifov variants and validate whether they are equal to the reference data', () => {
+  it.skip('should download all effect types CHD8 iossifov variants and validate whether they are equal to the reference data', () => {
     const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/variants.tsv';
     const expectedVariantsPath = 'cypress/fixtures/genotype-browser/variants.tsv';
 
@@ -460,7 +460,7 @@ describe('Genotype browser table preview visual tests', () => {
     genotypeBrowserController.navigateToHome();
   });
 
-  it('should compare KDM5B gene results', () => {
+  it('should compare POGZ and KDM5B gene results', () => {
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
     genotypeBrowserController.genesBlockPage.geneSymbolsButton.click();
 
@@ -471,7 +471,5 @@ describe('Genotype browser table preview visual tests', () => {
       page.overviewParagraph.should('have.text', data[1] +' variants selected (' + data[1] + ' shown)');
       genotypePreviewTablePage.table.matchImageSnapshot(data[2]);
     });
-
   });
-
 });

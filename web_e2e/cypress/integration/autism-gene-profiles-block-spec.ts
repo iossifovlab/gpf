@@ -25,6 +25,10 @@ describe('Autism gene profiles block tests', () => {
     autismGeneProfilesTablePage.window.should('be.visible');
   });
 
+  it('should display the keybind icon', () => {
+    page.keybindIcon.should('be.visible');
+  });
+
   it('should create and navigate to the new tab after clicking the first gene link', () => {
     page.allTabs.should('have.length', 1);
     autismGeneProfilesTablePage.table.should('be.visible');
@@ -79,35 +83,35 @@ describe('Autism gene profiles block tests', () => {
     autismGeneProfilesTablePage.allTableRows.should('have.length.greaterThan', 1);
     autismGeneProfilesTablePage.geneSearchInput.type('SHANK2');
     autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
-    autismGeneProfilesTablePage.firstGeneInTable.click({timeout:1000});
+    autismGeneProfilesTablePage.firstGeneInTable.click();
     page.homeTab.click();
 
     autismGeneProfilesTablePage.geneSearchInput.clear();
     autismGeneProfilesTablePage.allTableRows.should('have.length.greaterThan', 1);
     autismGeneProfilesTablePage.geneSearchInput.type('LAMA3');
     autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
-    autismGeneProfilesTablePage.firstGeneInTable.click({timeout:1000});
+    autismGeneProfilesTablePage.firstGeneInTable.click();
     page.homeTab.click();
 
     autismGeneProfilesTablePage.geneSearchInput.clear();
     autismGeneProfilesTablePage.allTableRows.should('have.length.greaterThan', 1);
     autismGeneProfilesTablePage.geneSearchInput.type('TTLL12');
     autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
-    autismGeneProfilesTablePage.firstGeneInTable.click({timeout:1000});
+    autismGeneProfilesTablePage.firstGeneInTable.click();
     page.homeTab.click();
 
     autismGeneProfilesTablePage.geneSearchInput.clear();
     autismGeneProfilesTablePage.allTableRows.should('have.length.greaterThan', 1);
     autismGeneProfilesTablePage.geneSearchInput.type('POLL');
     autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
-    autismGeneProfilesTablePage.firstGeneInTable.click({timeout:1000});
+    autismGeneProfilesTablePage.firstGeneInTable.click();
     page.homeTab.click();
 
     autismGeneProfilesTablePage.geneSearchInput.clear();
     autismGeneProfilesTablePage.allTableRows.should('have.length.greaterThan', 1);
     autismGeneProfilesTablePage.geneSearchInput.type('CHGA');
     autismGeneProfilesTablePage.allTableRows.should('have.length', 1);
-    autismGeneProfilesTablePage.firstGeneInTable.click({timeout:1000});
+    autismGeneProfilesTablePage.firstGeneInTable.click();
     page.homeTab.click();
     page.allTabs.should('have.length', 7);
 
@@ -138,5 +142,15 @@ describe('Autism gene profiles block tests', () => {
     page.homeTab.click();
     autismGeneProfilesTablePage.table.should('be.visible');
     autismGeneProfilesSingleView.window.should('not.be.visible');
+  });
+
+  it('should mouseover the keybind icon to show the keybind tool tip and then mouseout to hide it', () => {
+    page.keybindTooltip.should('not.exist');
+
+    page.keybindIcon.trigger('mouseover');
+    page.keybindTooltip.should('be.visible');
+
+    page.keybindIcon.trigger('mouseout');
+    page.keybindTooltip.should('not.exist');
   });
 });
