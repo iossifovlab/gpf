@@ -1,4 +1,4 @@
-<div *ngIf="autismGeneToolConfig">
+<div *ngIf="agpTableConfig && agpSingleViewConfig">
   <nav
     ngbNav
     #nav="ngbNav"
@@ -29,7 +29,7 @@
         <gpf-agp-table
           [hidden]="nav.activeId !== 'autismGenesTool'"
           (createTabEvent)="createTabEventHandler($event)"
-          [config]="autismGeneToolConfig"
+          [config]="agpTableConfig"
         ></gpf-agp-table>
       </ng-template>
     </li>
@@ -49,7 +49,7 @@
           <ng-container *ngFor="let geneSymbol of geneTab | split: ','">
             <gpf-autism-gene-profile-single-view
               [attr.id]="geneSymbol + '-single-view'"
-              [config]="autismGeneToolConfig"
+              [config]="agpSingleViewConfig"
               [geneSymbol]="geneSymbol"
               [isInGeneCompare]="geneTab.indexOf(',') !== -1">
             </gpf-autism-gene-profile-single-view>

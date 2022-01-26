@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import {
   AgpDatasetPersonSet, AgpDatasetStatistic, AgpGene,
-  AgpGenomicScores, AgpConfig, AgpEffectType
+  AgpGenomicScores, AgpSingleViewConfig, AgpEffectType
 } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
 // eslint-disable-next-line no-restricted-imports
 import { Observable, of, zip } from 'rxjs';
@@ -34,7 +34,7 @@ import { EffectTypes } from 'app/effect-types/effect-types';
 })
 export class AutismGeneProfileSingleViewComponent implements OnInit {
   @Input() public readonly geneSymbol: string;
-  @Input() public config: AgpConfig;
+  @Input() public config: AgpSingleViewConfig;
   @Input() public isInGeneCompare = false;
   public showTemplate = true;
 

@@ -1,8 +1,10 @@
 import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { Location } from '@angular/common';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
-import { AgpConfig } from 'app/agp-table/agp-table';
-import { AutismGeneProfilesService } from 'app/agp-table/agp-table.service';
+import { AgpTableConfig } from 'app/agp-table/agp-table';
+import { AgpSingleViewConfig } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
+import { AgpTableService } from 'app/agp-table/agp-table.service';
+import { AutismGeneProfilesService  } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { take } from 'rxjs/operators';
 
 @Component({
@@ -15,7 +17,8 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   public geneTabs = new Set<string>();
   public maxTabCount = 20;
-  public autismGeneToolConfig: AgpConfig;
+  public agpTableConfig: AgpTableConfig;
+  public agpSingleViewConfig: AgpSingleViewConfig;
 
   public showKeybinds = false;
   private keybinds = [
@@ -27,6 +30,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   public constructor(
     private location: Location,
+    private agpTableService: AgpTableService,
     private autismGeneProfilesService: AutismGeneProfilesService,
   ) { }
 
@@ -60,8 +64,11 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   }
 
   public ngOnInit(): void {
+    this.agpTableService.getConfig().pipe(take(1)).subscribe(config => {
+      this.agpTableConfig = config;
+    });
     this.autismGeneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
-      this.autismGeneToolConfig = config;
+      this.agpSingleViewConfig = config;
     });
   }
 

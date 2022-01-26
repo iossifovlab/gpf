@@ -93,7 +93,7 @@ export class Column {
   }
 }
 
-export class AgpConfig {
+export class AgpTableConfig {
   public defaultDataset: string;
   @Type(() => Column)
   public columns: Column[];

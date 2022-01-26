@@ -2,8 +2,8 @@ import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
-import { AgpConfig, Column } from './agp-table';
-import { AutismGeneProfilesService } from 'app/agp-table/agp-table.service';
+import { AgpTableConfig, Column } from './agp-table';
+import { AgpTableService } from 'app/agp-table/agp-table.service';
 import { debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 
@@ -13,7 +13,7 @@ import { Subject } from 'rxjs';
   styleUrls: ['./agp-table.component.css']
 })
 export class AgpTableComponent implements OnInit, OnChanges {
-  @Input() public config: AgpConfig;
+  @Input() public config: AgpTableConfig;
   @Output() public createTabEvent = new EventEmitter();
 
   @ViewChild(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu;
@@ -37,7 +37,7 @@ export class AgpTableComponent implements OnInit, OnChanges {
   private scrollLoadThreshold = 500;
 
   public constructor(
-    private autismGeneProfilesService: AutismGeneProfilesService,
+    private autismGeneProfilesService: AgpTableService,
   ) { }
 
   public ngOnInit(): void {
@@ -164,35 +164,6 @@ export class AgpTableComponent implements OnInit, OnChanges {
     }
   }
 
-  public goToPage(page: number): void {
-    if (this.pageIndex === page || (this.pageIndex < 1 && this.pageIndex > 123123)) {
-      return;
-    }
-    this.pageIndex = page;
-    this.updateGenes();
-  }
-
-  public previousPage(): void {
-    if (this.pageIndex > 1) {
-      this.goToPage(this.pageIndex - 1);
-    }
-  }
-
-  public nextPage(): void {
-    // FIXME this should have a sensible value with some page count from the backend
-    if (this.pageIndex < 123123) {
-      this.goToPage(this.pageIndex + 1);
-    }
-  }
-
-  get pageRange(): number[] {
-    const result: number[] = [];
-    for (let i = Math.max(this.pageIndex - 4, 1); i <= this.pageIndex + 4; i++) {
-      result.push(i);
-    }
-    return result;
-  }
-
   public clearHighlightedGenes(): void {
     for (const gene of this.highlightedGenes) {
       this.toggleHighlightGene(gene);
@@ -200,10 +171,6 @@ export class AgpTableComponent implements OnInit, OnChanges {
   }
 
   public emitCreateTabEvent(geneSymbol: string = null, navigateToTab: boolean = true): void {
-    // if ($event && $event.ctrlKey && $event.type === 'click') {
-    //   navigateToTab = false;
-    // }
-    console.log(geneSymbol);
     const geneSymbols: string[] = geneSymbol ? [geneSymbol] : Array.from(this.highlightedGenes);
     this.createTabEvent.emit({geneSymbols: geneSymbols, navigateToTab: navigateToTab});
   }

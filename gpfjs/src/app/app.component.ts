@@ -1,10 +1,10 @@
 import { Component, HostListener } from '@angular/core';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { environment } from '../environments/environment';
-import { AutismGeneProfilesService } from './autism-gene-profiles-block/autism-gene-profiles.service';
+import { AgpTableService } from './agp-table/agp-table.service'
 import { BnNgIdleService } from 'bn-ng-idle';
 import { UsersService } from './users/users.service';
-import { AgpConfig } from './autism-gene-profiles-table/autism-gene-profile-table';
+import { AgpTableConfig } from './agp-table/agp-table'
 import { switchMap } from 'rxjs/operators';
 import { NgbNavConfig } from '@ng-bootstrap/ng-bootstrap';
 
@@ -52,7 +52,7 @@ import { NgbNavConfig } from '@ng-bootstrap/ng-bootstrap';
 export class AppComponent {
   showSidenav = false;
   title = 'GPF: Genotypes and Phenotypes in Families';
-  agpConfig: AgpConfig;
+  agpConfig: AgpTableConfig;
   private sessionTimeoutInSeconds = 7 * 24 * 60 * 60; // 1 week
 
   @HostListener('window:scroll')
@@ -66,7 +66,7 @@ export class AppComponent {
   }
 
   constructor(
-    private autismGeneProfilesService: AutismGeneProfilesService,
+    private autismGeneProfilesService: AgpTableService,
     private bnIdle: BnNgIdleService,
     private usersService: UsersService,
     private ngbNavConfig: NgbNavConfig,

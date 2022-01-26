@@ -1,7 +1,7 @@
 import { GenomicScore } from "app/genotype-browser/genotype-browser";
 import { Type } from "class-transformer";
 
-export class AgpConfig {
+export class AgpSingleViewConfig {
   shown: Array<{category: any, section: string, id: string}>;
   defaultDataset: string;
 

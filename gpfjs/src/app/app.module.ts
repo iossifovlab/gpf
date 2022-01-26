@@ -158,11 +158,10 @@ import { CommonReportsRowComponent } from './variant-reports/common-reports-row/
 import { CommonReportsPedigreeCellComponent } from './variant-reports/common-reports-pedigree-cell/common-reports-pedigree-cell.component';
 import { LoadingSpinnerComponent } from './loading-spinner/loading-spinner.component';
 import { DatasetNodeComponent } from './dataset-node/dataset-node.component';
-import { AutismGeneProfilesTableComponent, GetGeneScorePipe, GetEffectTypeValuePipe } from './autism-gene-profiles-table/autism-gene-profiles-table.component';
 import { MultipleSelectMenuComponent } from './multiple-select-menu/multiple-select-menu.component';
 import { AutismGeneProfilesBlockComponent } from './autism-gene-profiles-block/autism-gene-profiles-block.component';
 import { AutismGeneProfileSingleViewComponent } from './autism-gene-profiles-single-view/autism-gene-profile-single-view.component';
-import { MiddleClickDirective } from './autism-gene-profiles-table/middle-click.directive';
+import { MiddleClickDirective } from './agp-table/middle-click.directive';
 import { PersonFiltersBlockComponent } from './person-filters-block/person-filters-block.component';
 import { PersonIdsComponent } from './person-ids/person-ids.component';
 import { PersonIdsState } from './person-ids/person-ids.state';
@@ -368,9 +367,6 @@ const appRoutes: Routes = [
     CommonReportsPedigreeCellComponent,
     LoadingSpinnerComponent,
     DatasetNodeComponent,
-    AutismGeneProfilesTableComponent,
-    GetGeneScorePipe,
-    GetEffectTypeValuePipe,
     MultipleSelectMenuComponent,
     AutismGeneProfilesBlockComponent,
     AutismGeneProfileSingleViewComponent,
