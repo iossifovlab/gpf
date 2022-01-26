@@ -386,7 +386,7 @@ describe('Genotype browser family variants download tests', () => {
     genotypeBrowserController.navigateToHome();
   });
 
-  it.skip('should download all effect types CHD8 iossifov variants and validate whether they are equal to the reference data', () => {
+  it('should download all effect types CHD8 iossifov variants and validate whether they are equal to the reference data', () => {
     const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/variants.tsv';
     const expectedVariantsPath = 'cypress/fixtures/genotype-browser/variants.tsv';
 

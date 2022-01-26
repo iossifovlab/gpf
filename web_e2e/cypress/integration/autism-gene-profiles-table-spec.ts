@@ -143,7 +143,7 @@ describe('Autism gene profiles table', () => {
       page.allTableRows.eq(0).should('not.have.property', 'background-color');
     });
 
-    it.only('should highlight a several rows and check whether background color is different for odd and even rows', () => {
+    it('should highlight a several rows and check whether background color is different for odd and even rows', () => {
       page.allTableRows.eq(0).click({ctrlKey: true});
       page.allTableRows.eq(1).click({ctrlKey: true});
       page.allTableRows.eq(2).click({ctrlKey: true});
