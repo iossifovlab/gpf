@@ -298,7 +298,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             int(line[self.pos_end_column_i]), \
             line
 
-    def _file_chromosome(self, chrom):
+    def _map_file_chrom(self, chrom):
         """
         Transfroms chromosome (contig) name to the chromosomes (contigs)
         used in the score table
@@ -307,7 +307,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             return self.chrom_map[chrom]
         return chrom
 
-    def _result_chromosome(self, chrom):
+    def _map_result_chrom(self, chrom):
         """
         Transfroms chromosome (contig) from score table to the 
         chromosomes (contigs) used in the genome corrdinates.
@@ -319,7 +319,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
     def _transform_result(self, line):
         result = list(line)
-        result[self.chrom_column_i] = self._result_chromosome(
+        result[self.chrom_column_i] = self._map_result_chrom(
             result[self.chrom_column_i])
         return tuple(result)
 
@@ -385,7 +385,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             raise ValueError(
                 f"The chromosome {chrom} is not part of the table.")
 
-        fchrom = self._file_chromosome(chrom)
+        fchrom = self._map_file_chrom(chrom)
         if beg is None:
             beg = 1
         try:
