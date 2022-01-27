@@ -1,6 +1,10 @@
+import os
 import numpy as np
 import logging
 import yaml
+import pandas as pd
+
+from dae.genomic_resources.genomic_scores import open_score_from_resource
 
 logger = logging.getLogger(__name__)
 
@@ -45,11 +49,11 @@ class Histogram:
     @staticmethod
     def from_config(conf):
         return Histogram(
-            conf["bins_count"],
-            conf["x_min"],
-            conf["x_max"],
-            conf["x_scale"],
-            conf["y_scale"],
+            conf["bins"],
+            conf["min"],
+            conf["max"],
+            conf.get("x_scale", "linear"),
+            conf.get("y_scale", "linear"),
             conf.get("x_min_log")
         )
 
@@ -101,16 +105,13 @@ class Histogram:
         return result
 
     def add_value(self, value):
-        print("===")
-        print(value)
-        print(type(value))
         if value < self.x_min or value > self.x_max:
-            logger.error(
+            logger.warning(
                 f"value {value} out of range: [{self.x_min},{self.x_max}]")
             return False
         index = np.where(self.bins > value)
         if len(index) == 0:
-            logger.error(f"(1) empty index {index} for value {value}")
+            logger.warning(f"(1) empty index {index} for value {value}")
             return False
         index = index[0]
         if len(index) == 0:
@@ -125,6 +126,42 @@ class Histogram:
         self.bars[index[0] - 1] += 1
 
         return True
+
+
+class HistogramBuilder:
+    def build(self, resource) -> dict[str, Histogram]:
+        histogram_desc = resource.get_config().get("histograms", [])
+        if len(histogram_desc) == 0:
+            return {}
+        histograms = {hist["score"]: Histogram.from_config(hist)
+                      for hist in histogram_desc}
+        score_names = list(histograms.keys())
+        score = open_score_from_resource(resource)
+
+        chromosomes = score.get_all_chromosomes()
+        for chrom in chromosomes:
+            score_to_values = \
+                score.fetch_region(chrom, None, None, score_names)
+            for scr_id, vals_iter in score_to_values.items():
+                hist = histograms[scr_id]
+                for v in vals_iter:
+                    if v is not None:  # None designates missing values
+                        hist.add_value(v)
+
+        return histograms
+
+    # def build():
+    #     over all chromosomes:
+    #         run build_region in parallel
+    #     merge all histograms.
+
+    def save(self, histograms, out_dir):
+        os.makedirs(out_dir, exist_ok=True)
+        for score, histogram in histograms.items():
+            df = pd.DataFrame({score: histogram.bars,
+                               'scores': histogram.bins[:-1]})
+            hist_name = f"{score}.csv"
+            df.to_csv(os.path.join(out_dir, hist_name), index=None)
 
 
 class ScoreStatistic:
