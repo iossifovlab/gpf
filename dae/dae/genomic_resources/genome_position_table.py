@@ -3,8 +3,10 @@ import collections
 import pysam  # type: ignore
 import os
 import logging
+import struct
+import gzip
 
-from typing import Optional
+from typing import Optional, Tuple
 
 from box import Box  # type: ignore
 
@@ -276,8 +278,12 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
         self._reset_current_pos()
         self.tabix_iterator = None
+        self._call: Tuple[Optional[str], int, Optional[int]] = "", -1, -1
+        self._call_result = []
 
-        self.jump_threshold = 1500
+        self.jump_threshold = 10_000
+        self.sequential_count = 0
+        self.direct_count = 0
 
     def load(self):
         if self.header_mode == "file":
@@ -310,7 +316,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
     def _reset_current_pos(self):
         self.current_pos = None, -1, -1, None
 
-    def _map_file_chrom(self, chrom):
+    def _map_file_chrom(self, chrom: str) -> str:
         """
         Transfroms chromosome (contig) name to the chromosomes (contigs)
         used in the score table
@@ -319,7 +325,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             return self.chrom_map[chrom]
         return chrom
 
-    def _map_result_chrom(self, chrom):
+    def _map_result_chrom(self, chrom: str) -> str:
         """
         Transfroms chromosome (contig) from score table to the 
         chromosomes (contigs) used in the genome corrdinates.
@@ -363,7 +369,13 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         curr_chrom, curr_begin, curr_end, curr_buff = self.current_pos
         assert curr_buff is not None
 
-        if curr_chrom != fchrom:
+        prev_chrom, prev_begin, prev_end = self._call
+        assert curr_chrom == fchrom
+        assert prev_chrom == fchrom, (prev_chrom, fchrom)
+
+        if end is not None and prev_end is not None \
+                and beg > prev_end \
+                and end < curr_begin:
             return None
 
         if end and curr_begin > end:
@@ -404,17 +416,61 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         fchrom = self._map_file_chrom(chrom)
         if beg is None:
             beg = 1
+
+        logger.info(
+            f"current call {fchrom, beg, end}; prev call {self._call}; "
+            f"score {self.genomic_resource.resource_id}")
+
+        if self._call == (fchrom, beg, end):
+            logger.info(
+                f"current call matches previous call {self._call}; "
+                f"re-using previous result; "
+                f"score {self.genomic_resource.resource_id}")
+
+            for line in self._call_result:
+                yield self._transform_result(line)
+            return
+
+        curr_chrom, curr_begin, curr_end, _ = self.current_pos
+        prev_chrom, prev_begin, prev_end = self._call
+        if end is not None and prev_end is not None \
+                and curr_chrom == prev_chrom \
+                and beg > prev_end \
+                and end < curr_begin:
+            return None
+
+
         try:
             if self._should_use_sequential(fchrom, beg):
+                self.sequential_count += 1
+                logger.info(
+                    f"using sequential ({self.sequential_count} times); "
+                    f"current call is {fchrom, beg, end}; "
+                    f"prev call was {self._call}; "
+                    f"curr position is {self.current_pos[:3]}; "
+                    f"score {self.genomic_resource.resource_id}")
                 buff = self._sequential_rewind(fchrom, beg, end)
+                self._call = fchrom, beg, end
+                self._call_result = []
                 if buff is None:
                     return
+                self._call_result = buff
                 for line in buff:
                     yield self._transform_result(line)
             else:
+
                 self.tabix_iterator = self.tabix_file.fetch(
                     fchrom, beg - 1, None, parser=pysam.asTuple())
                 self._reset_current_pos()
+                self.direct_count += 1
+                logger.info(
+                    f"using direct ({self.direct_count} times); "
+                    f"current call is {fchrom, beg, end}; "
+                    f"prev call was {self._call}; "
+                    f"curr position is {self.current_pos[:3]}; "
+                    f"score {self.genomic_resource.resource_id}")
+                self._call = fchrom, beg, end
+                self._call_result = []
 
             while True:
                 line = next(self.tabix_iterator)  # type: ignore
@@ -422,6 +478,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
                 if end and self.current_pos[1] > end:
                     return
+                self._call_result.append(line)
                 yield self._transform_result(line)
     
         except StopIteration:
@@ -478,3 +535,137 @@ def save_as_tabix_table(table: GenomicPositionTable,
                       seq_col=table.chrom_column_i,
                       start_col=table.pos_begin_column_i,
                       end_col=table.pos_end_column_i)
+
+class TabixHelper:
+
+    TABIX_MAGIC = b'TBI\x01'
+    TABIX_BLOCK_BYTES_MASK = 0x0000000000000FFFF
+
+    def __init__(self, index_filename):
+        self.index_filename = index_filename
+        self.index = None
+    
+    def open(self):
+        assert self.index is None
+        self.index = gzip.open(self.index_filename, "rb")
+    
+    def close(self):
+        assert self.index is not None
+        self.index.close()
+        self.index = None
+
+    def read_values(self, fmt):
+        size = struct.calcsize(fmt)
+        packet = self.index.read(size)
+
+        res = struct.unpack(fmt, packet)
+        return res
+
+    def load_index(self):
+
+        (magic, ) = self.read_values("<4s")
+        if magic != self.TABIX_MAGIC:
+            logger.error(
+                f"wrong tabix index magic {magic} in {self.index_filename}")
+            raise ValueError("wrong tabix index magic")
+        self.data = {}
+
+        self._load_header()
+        self._load_contig_names()
+        self._load_contig_indices()
+    
+    def _load_contig_indices(self):
+        self.data["contigs"] = {}
+        for contig_index in range(self.data["n_contigs"]):
+            contig = {}
+            contig["contig_index"] = contig_index
+            contig["contig_name"] = self.data["contig_names"][contig_index]
+            self.data["contigs"][contig_index] = contig
+
+            (n_bins, ) = self.read_values("<i")
+            logger.debug(f"contig {contig_index} ({contig['contig_name']})")
+            logger.debug(f"n_bins={n_bins}")
+
+            contig["n_bins"] = n_bins
+            contig["bins"] = []
+            contig["bins_begin"] = None
+            contig["bins_end"] = None
+
+            for bin_n in range(n_bins):
+                (bin_v, n_chunk) = self.read_values("<Ii")
+
+                logger.debug(
+                    f"bin_n   {bin_n + 1}/{n_bins}")
+                logger.debug(
+                    f"bin     Distinct bin number  uint32_t {bin_v:15,d}")
+                logger.debug(
+                    f"n_chunk # chunks             int32_t  {n_chunk:15,d}")
+                contig["bins"].append({
+                    "bin_n": bin_n,
+                    "bin": bin_v,
+                    "n_chunk": n_chunk,
+                })
+
+                chunks = self.read_values('<' + ('Q'*(n_chunk*2)))
+                logger.debug(f"chunks: {chunks}")
+                real_file_offsets = [c >> 16 for c in chunks]
+                block_bytes_offsets = [
+                    c & self.TABIX_BLOCK_BYTES_MASK for c in chunks]
+                logger.debug(f"file offsets: {real_file_offsets}")
+                logger.debug(f"block offsets: {block_bytes_offsets}")
+
+                break
+
+    def _load_contig_names(self):
+        l_nm = self.data["l_nm"]
+        names = self.index.read(l_nm)
+        result = [n.decode("utf8") for n in names.split(b"\x00") if n]
+        logger.debug(f"contig names loaded: {result}")
+
+        self.data["contig_names"] = result
+
+    def _load_header(self):        
+        (
+            n_contigs,# # sequences                              int32_t
+            f_format, # Format (0: generic; 1: SAM; 2: VCF)      int32_t
+            col_seq,  # Column for the sequence name             int32_t
+            col_beg,  # Column for the start of a region         int32_t
+            col_end,  # Column for the end of a region           int32_t
+            meta,     # Leading character for comment lines      int32_t
+            skip,     # # lines to skip at the beginning         int32_t
+            l_nm      # Length of concatenated sequence names    int32_t
+        ) = self.read_values('<8i')
+
+        logger.debug(
+            f"n_contigs    # sequences                           int32_t "
+            f"{n_contigs:15,d}")
+        logger.debug(
+            f"format   Format (0: generic; 1: SAM; 2: VCF)   int32_t "
+            f"{f_format:15,d}")
+        logger.debug(
+            f"col_seq  Column for the sequence name          int32_t "
+            f"{col_seq:15,d}")
+        logger.debug(
+            f"col_beg  Column for the start of a region      int32_t "
+            f"{col_beg:15,d}")
+        logger.debug(
+            f"col_end  Column for the end of a region        int32_t "
+            f"{col_end:15,d}")
+        logger.debug(
+            f"meta     Leading character for comment lines   int32_t "
+            f"{meta:15,d}")
+        logger.debug(
+            f"skip     # lines to skip at the beginning      int32_t "
+            f"{skip:15,d}")
+        logger.debug(
+            f"l_nm     Length of concatenated sequence names int32_t "
+            f"{l_nm:15,d}")
+
+        self.data["n_contigs"] = n_contigs
+        self.data["format"] = f_format
+        self.data["col_seq"] = col_seq
+        self.data["col_beg"] = col_beg
+        self.data["col_end"] = col_end
+        self.data["meta"] = chr(meta)
+        self.data["skip"] = skip
+        self.data["l_nm"] = l_nm
