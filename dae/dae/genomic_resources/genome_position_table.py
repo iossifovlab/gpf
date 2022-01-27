@@ -6,7 +6,7 @@ import logging
 import struct
 import gzip
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 from box import Box  # type: ignore
 
@@ -279,7 +279,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self._reset_current_pos()
         self.tabix_iterator = None
         self._call: Tuple[Optional[str], int, Optional[int]] = "", -1, -1
-        self._call_result = []
+        self._call_result: List = []
 
         self.jump_threshold = 10_000
         self.sequential_count = 0
@@ -368,15 +368,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
         curr_chrom, curr_begin, curr_end, curr_buff = self.current_pos
         assert curr_buff is not None
-
-        prev_chrom, prev_begin, prev_end = self._call
         assert curr_chrom == fchrom
-        assert prev_chrom == fchrom, (prev_chrom, fchrom)
-
-        if end is not None and prev_end is not None \
-                and beg > prev_end \
-                and end < curr_begin:
-            return None
 
         if end and curr_begin > end:
             return None
@@ -431,8 +423,8 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 yield self._transform_result(line)
             return
 
-        curr_chrom, curr_begin, curr_end, _ = self.current_pos
-        prev_chrom, prev_begin, prev_end = self._call
+        curr_chrom, curr_begin, _, _ = self.current_pos
+        prev_chrom, _, prev_end = self._call
         if end is not None and prev_end is not None \
                 and curr_chrom == prev_chrom \
                 and beg > prev_end \
