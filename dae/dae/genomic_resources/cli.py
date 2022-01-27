@@ -41,16 +41,16 @@ def cli_browse(args=None):
                   sum([fs for _, fs, _ in gr.get_files()]), gr.get_id()))
 
 
-def cli_manage(args=None):
-    if not args:
-        args = sys.argv[1:]
+def cli_manage():
+    desc = "Genomic Resource Repository Management Tool"
+    parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument('command', type=str, choices=['index', 'list'],
+                        help='Command to execute')
+    parser.add_argument('repo_dir', type=str,
+                        help='Path to the GR Repo')
+    args = parser.parse_args()
 
-    if len(args) != 2:
-        print("Need two arguments: <command> and <repository directory>. "
-              "The supported commands are index and list.")
-        return
-
-    cmd, dr = args
+    cmd, dr = args.command, args.repo_dir
 
     dr = pathlib.Path(dr)
     GRR = GenomicResourceDirRepo("", dr)
