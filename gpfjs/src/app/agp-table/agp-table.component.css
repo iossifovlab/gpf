@@ -3,8 +3,10 @@
 }
 
 .table-row {
+  width: max-content;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  grid-auto-columns: 150px;
+  grid-auto-flow: column;
 }
 
 .table-row:nth-child(odd) {
@@ -45,8 +47,15 @@
   text-align: center;
 }
 
-.header > .cell {
+.row-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-cell {
   background-color: #eee;
+  vertical-align: center;
 }
 
 multiple-select-menu {

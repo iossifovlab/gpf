@@ -79,7 +79,7 @@ export class AgpTableComponent implements OnInit, OnChanges {
 
   public calculateHeaderLayout(): void {
     this.leaves = Column.leaves(this.config.columns);
-    let columnIdx = 1;
+    let columnIdx = 0;
     const maxDepth: number = Math.max(...this.leaves.map(leaf => leaf.depth));
 
     for (const leaf of this.leaves) {

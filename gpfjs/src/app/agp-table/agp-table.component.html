@@ -22,26 +22,26 @@
     <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: config.columns }"></ng-container>
   </div>
   
-  <div class="table-row" *ngFor="let row of genes"
-    [attr.id]="row[geneSymbolColumnId]"
+  <div *ngFor="let row of genes"
+    class="table-row"
     (click)="toggleHighlightGene(row[geneSymbolColumnId])"
     [ngClass]="{'row-highlight': highlightedGenes.has(row[geneSymbolColumnId])}">
-    <span class="cell" *ngFor="let column of leaves"
-    [ngClass]="{'clickable': column.clickable !== null && row[column.id]}"
-    (middleclick)="emitClickEvent(row, column)">{{ row[column.id] }}</span>
+    <span *ngFor="let column of leaves"
+      class="cell row-cell"
+      [ngClass]="{'clickable': column.clickable !== null && row[column.id]}"
+      (middleclick)="emitClickEvent(row, column)">
+      {{ row[column.id] }}
+    </span>
   </div>
 </div>
 
 <ng-template #recursiveListTmpl let-columns="columns">
   <ng-container *ngFor="let column of columns">
     <ng-container *ngIf="column.visibility">
-      <div class="cell"
-        style="overflow: hidden"
+      <div class="cell header-cell"
         [style.grid-column]="column.gridColumn"
         [style.grid-row]="column.gridRow"
       >
-        <div style="display: flex; justify-content: center; align-items: center; width: 100%"
-          [ngStyle]="{'flex-direction': column.displayVertical ? 'column': 'row'}">
           <span class="header-cell"
           [ngClass]="{'vertical-text': column.displayVertical }">{{ column.displayName }}</span>
           <gpf-sorting-buttons
@@ -58,7 +58,6 @@
             </button>
           </ng-container>
         </div>
-      </div>
       <ng-container *ngTemplateOutlet=" recursiveListTmpl; context: { columns: column.columns }"></ng-container>
     </ng-container>
   </ng-container>
@@ -69,9 +68,7 @@
   <gpf-multiple-select-menu class="multiple-select-menu" ngbDropdownMenu (applyEvent)="calculateHeaderLayout()"></gpf-multiple-select-menu>
 </span>
 
-<div
-  *ngIf="highlightedGenes.size > 0"
-  id="highlighted-genes">
+<div id="highlighted-genes" *ngIf="highlightedGenes.size > 0">
   <button *ngFor="let gene of highlightedGenes" class="btn btn-primary" style="margin: 2px" (click)="toggleHighlightGene(gene)">
     {{ gene }} <span class="badge text-light">X</span>
   </button>
