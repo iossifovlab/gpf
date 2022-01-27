@@ -27,7 +27,7 @@
     (click)="toggleHighlightGene(row[geneSymbolColumnId])"
     [ngClass]="{'row-highlight': highlightedGenes.has(row[geneSymbolColumnId])}">
     <span class="cell" *ngFor="let column of leaves"
-    [ngClass]="{'clickable': column.clickable !== null}"
+    [ngClass]="{'clickable': column.clickable !== null && row[column.id]}"
     (middleclick)="emitClickEvent(row, column)">{{ row[column.id] }}</span>
   </div>
 </div>
