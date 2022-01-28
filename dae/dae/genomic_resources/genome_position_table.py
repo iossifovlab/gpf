@@ -430,11 +430,11 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         curr_chrom, curr_begin, _, _ = self.current_pos
         prev_chrom, _, prev_end = self._call
 
-        if end is not None and prev_end is not None \
-                and curr_chrom == prev_chrom \
-                and beg > prev_end \
-                and end < curr_begin:
-            return None
+        # if end is not None and prev_end is not None \
+        #         and curr_chrom == prev_chrom \
+        #         and beg > prev_end \
+        #         and end < curr_begin:
+        #     return None
 
 
         try:
@@ -570,62 +570,81 @@ class TabixHelper:
         self.data = {}
 
         self._load_header()
-        self._load_contig_names()
-        self._load_contig_indices()
+        self._load_names()
+        self._load_bins()
     
-    def _load_contig_indices(self):
-        self.data["contigs"] = {}
-        for contig_index in range(self.data["n_contigs"]):
-            contig = {}
-            contig["contig_index"] = contig_index
-            contig["contig_name"] = self.data["contig_names"][contig_index]
-            self.data["contigs"][contig_index] = contig
+    def _load_bins(self):
+        sequencies = []
+        for seq_index in range(self.data["n_ref"]):
+            seq_data = {}
+            seq_data["seq_index"] = seq_index
+            seq_data["name"] = self.data["names"][seq_index]
 
             (n_bins, ) = self.read_values("<i")
-            logger.debug(f"contig {contig_index} ({contig['contig_name']})")
+            logger.debug(f"seq {seq_index} ({seq_data['name']})")
             logger.debug(f"n_bins={n_bins}")
 
-            contig["n_bins"] = n_bins
-            contig["bins"] = []
-            contig["bins_begin"] = None
-            contig["bins_end"] = None
+            seq_data["n_bins"] = n_bins
+            seq_data["bins"] = []
 
-            for bin_n in range(n_bins):
-                (bin_v, n_chunk) = self.read_values("<Ii")
+            bins_data = []
+            for bin_index in range(n_bins):
+                (bin, ) = self.read_values("<I")
+                (n_chunk, ) = self.read_values("<i")
 
                 logger.debug(
-                    f"bin_n   {bin_n + 1}/{n_bins}")
+                    f"bin_index   {bin_index}/{n_bins}")
                 logger.debug(
-                    f"bin     Distinct bin number  uint32_t {bin_v:15,d}")
+                    f"bin     Distinct bin number  uint32_t {bin:15,d}")
                 logger.debug(
                     f"n_chunk # chunks             int32_t  {n_chunk:15,d}")
-                contig["bins"].append({
-                    "bin_n": bin_n,
-                    "bin": bin_v,
+                
+                chunks_data = self._load_chunks(n_chunk)
+        
+                bins_data.append({
+                    "bin_index": bin_index,
+                    "bin": bin,
                     "n_chunk": n_chunk,
+                    "chunks_data": chunks_data,
                 })
+            seq_data["bins"] = bins_data
+            (n_intv,)  = self.read_values('<i')
+            logger.debug(
+                f"     n_intv              # 16kb intervals (for the linear index)         int32_t  {n_intv:15,d}")
 
-                chunks = self.read_values('<' + ('Q'*(n_chunk*2)))
-                logger.debug(f"chunks: {chunks}")
-                real_file_offsets = [c >> 16 for c in chunks]
-                block_bytes_offsets = [
-                    c & self.TABIX_BLOCK_BYTES_MASK for c in chunks]
-                logger.debug(f"file offsets: {real_file_offsets}")
-                logger.debug(f"block offsets: {block_bytes_offsets}")
+            ioffs         = self.read_values('<' + ('Q'*n_intv))
 
-                break
+            sequencies.append(seq_data)
 
-    def _load_contig_names(self):
+        return sequencies
+
+    def _load_chunks(self, n_chunk):
+        chunks_data = []
+        for chk_index in range(n_chunk):
+            (chk_beg, chk_end,) = self.read_values("<QQ")
+            logger.debug(f"chk_index = {chk_index}")
+            logger.debug(f"chk_beg   = {chk_beg:0x}")
+            logger.debug(f"chk_end   = {chk_end:0x}")
+            chunks_data.append({
+                "chk_index": chk_index,
+                "chk_beg": chk_beg,
+                "chk_end": chk_end,
+            })
+
+        return chunks_data
+
+
+    def _load_names(self):
         l_nm = self.data["l_nm"]
         names = self.index.read(l_nm)
         result = [n.decode("utf8") for n in names.split(b"\x00") if n]
         logger.debug(f"contig names loaded: {result}")
 
-        self.data["contig_names"] = result
+        self.data["names"] = result
 
     def _load_header(self):        
         (
-            n_contigs,# # sequences                              int32_t
+            n_ref,    # # sequences                              int32_t
             f_format, # Format (0: generic; 1: SAM; 2: VCF)      int32_t
             col_seq,  # Column for the sequence name             int32_t
             col_beg,  # Column for the start of a region         int32_t
@@ -636,8 +655,8 @@ class TabixHelper:
         ) = self.read_values('<8i')
 
         logger.debug(
-            f"n_contigs    # sequences                           int32_t "
-            f"{n_contigs:15,d}")
+            f"n_ref    # sequences                           int32_t "
+            f"{n_ref:15,d}")
         logger.debug(
             f"format   Format (0: generic; 1: SAM; 2: VCF)   int32_t "
             f"{f_format:15,d}")
@@ -660,7 +679,7 @@ class TabixHelper:
             f"l_nm     Length of concatenated sequence names int32_t "
             f"{l_nm:15,d}")
 
-        self.data["n_contigs"] = n_contigs
+        self.data["n_ref"] = n_ref
         self.data["format"] = f_format
         self.data["col_seq"] = col_seq
         self.data["col_beg"] = col_beg
