@@ -1,8 +1,6 @@
 import pytest
 
 from dae.genomic_resources.genome_position_table import \
-    TabixGenomicPositionTable, \
-    TabixHelper, \
     open_genome_position_table
 
 from dae.genomic_resources import build_genomic_resource_repository
@@ -799,22 +797,3 @@ def test_explore():
 
     # lines = list(table.get_records_in_region("chr1", 17379, 17379))
     # print(lines)
-
-
-def test_explore_tabix_index(tabix_table_multiline):
-    table: TabixGenomicPositionTable = tabix_table_multiline
-    config = table.genomic_resource.get_config()
-    print(config)
-    print(dir(table.tabix_file))
-    print(table.tabix_file.filename)
-    print(table.tabix_file.index_filename)
-    print(table.tabix_file.filename_index)
-
-    index_filename = table.tabix_file.filename_index.decode("utf8")
-    print(index_filename)
-
-    helper = TabixHelper(index_filename)
-    helper.open()
-
-    helper.load_index()
-    helper.close()
