@@ -410,14 +410,18 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             beg = 1
 
         logger.info(
+            f"score {self.genomic_resource.resource_id}; "
             f"current call {fchrom, beg, end}; prev call {self._call}; "
-            f"score {self.genomic_resource.resource_id}")
+            f"curr position is {self.current_pos[:3]}; "
+        )
 
         if self._call == (fchrom, beg, end):
             logger.info(
+                f"score {self.genomic_resource.resource_id}; "
                 f"current call matches previous call {self._call}; "
                 f"re-using previous result; "
-                f"score {self.genomic_resource.resource_id}")
+                f"curr position is {self.current_pos[:3]}; "
+            )
 
             for line in self._call_result:
                 yield self._transform_result(line)
@@ -436,11 +440,12 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             if self._should_use_sequential(fchrom, beg):
                 self.sequential_count += 1
                 logger.info(
-                    f"using sequential ({self.sequential_count} times); "
+                    f"score {self.genomic_resource.resource_id}; "
+                    f"SEQUENTIAL ({self.sequential_count} times); "
                     f"current call is {fchrom, beg, end}; "
                     f"prev call was {self._call}; "
                     f"curr position is {self.current_pos[:3]}; "
-                    f"score {self.genomic_resource.resource_id}")
+                )
                 buff = self._sequential_rewind(fchrom, beg, end)
                 self._call = fchrom, beg, end
                 self._call_result = []
@@ -456,11 +461,12 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 self._reset_current_pos()
                 self.direct_count += 1
                 logger.info(
-                    f"using direct ({self.direct_count} times); "
+                    f"score {self.genomic_resource.resource_id}; "
+                    f"DIRECT ({self.direct_count} times); "
                     f"current call is {fchrom, beg, end}; "
                     f"prev call was {self._call}; "
                     f"curr position is {self.current_pos[:3]}; "
-                    f"score {self.genomic_resource.resource_id}")
+                )
                 self._call = fchrom, beg, end
                 self._call_result = []
 
