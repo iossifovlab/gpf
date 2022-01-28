@@ -20,6 +20,22 @@ def test_histogram_simple_input():
     assert (hist.bars == np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 2])).all()
 
 
+def test_histogram_log_scale():
+    hist = Histogram(4, 0, 1000, "log", "linear", x_min_log=1)
+    assert (hist.bins == np.array([0, 1, 10, 100, 1000])).all()
+
+    hist.add_value(0)
+    assert (hist.bars == np.array([1, 0, 0, 0])).all()
+
+    for i in [0.5, 2, 10, 200]:
+        hist.add_value(i)
+    assert (hist.bars == np.array([2, 1, 1, 1])).all()
+
+    hist.add_value(2000)
+    hist.add_value(-1)
+    assert (hist.bars == np.array([2, 1, 1, 1])).all()
+
+
 position_score_test_config = {
     GR_CONF_FILE_NAME: '''
         type: position_score

@@ -30,9 +30,9 @@ class Histogram:
         elif self.x_scale == "log":
             assert x_min_log is not None
             self.bins = np.array([
-                x_min_log,
+                self.x_min,
                 * np.logspace(
-                    np.log10(self.x_min),
+                    np.log10(self.x_min_log),
                     np.log10(self.x_max),
                     bins_count
                 )])
