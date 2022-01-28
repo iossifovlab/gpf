@@ -415,20 +415,21 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             f"curr position is {self.current_pos[:3]}; "
         )
 
-        if self._call == (fchrom, beg, end):
-            logger.info(
-                f"score {self.genomic_resource.resource_id}; "
-                f"current call matches previous call {self._call}; "
-                f"re-using previous result; "
-                f"curr position is {self.current_pos[:3]}; "
-            )
+        # if self._call == (fchrom, beg, end):
+        #     logger.info(
+        #         f"score {self.genomic_resource.resource_id}; "
+        #         f"current call matches previous call {self._call}; "
+        #         f"re-using previous result; "
+        #         f"curr position is {self.current_pos[:3]}; "
+        #     )
 
-            for line in self._call_result:
-                yield self._transform_result(line)
-            return
+        #     for line in self._call_result:
+        #         yield self._transform_result(line)
+        #     return
 
         curr_chrom, curr_begin, _, _ = self.current_pos
         prev_chrom, _, prev_end = self._call
+
         if end is not None and prev_end is not None \
                 and curr_chrom == prev_chrom \
                 and beg > prev_end \
@@ -448,10 +449,10 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 )
                 buff = self._sequential_rewind(fchrom, beg, end)
                 self._call = fchrom, beg, end
-                self._call_result = []
+                # self._call_result = []
                 if buff is None:
                     return
-                self._call_result = buff
+                # self._call_result = buff
                 for line in buff:
                     yield self._transform_result(line)
             else:
@@ -468,7 +469,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                     f"curr position is {self.current_pos[:3]}; "
                 )
                 self._call = fchrom, beg, end
-                self._call_result = []
+                # self._call_result = []
 
             while True:
                 line = next(self.tabix_iterator)  # type: ignore
@@ -476,7 +477,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
                 if end and self.current_pos[1] > end:
                     return
-                self._call_result.append(line)
+                # self._call_result.append(line)
                 yield self._transform_result(line)
     
         except StopIteration:
