@@ -1,3 +1,4 @@
+import os
 import sys
 import logging
 import pathlib
@@ -10,6 +11,7 @@ from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository, load_definition_file, \
     get_configured_definition
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
+from dae.genomic_resources.score_statistics import HistogramBuilder
 
 logger = logging.getLogger(__file__)
 
@@ -41,14 +43,32 @@ def cli_browse(args=None):
                   sum([fs for _, fs, _ in gr.get_files()]), gr.get_id()))
 
 
-def cli_manage():
+def cli_manage(cli_args=None):
+    if not cli_args:
+        cli_args = sys.argv[1:]
+
     desc = "Genomic Resource Repository Management Tool"
     parser = argparse.ArgumentParser(description=desc)
-    parser.add_argument('command', type=str, choices=['index', 'list'],
-                        help='Command to execute')
-    parser.add_argument('repo_dir', type=str,
-                        help='Path to the GR Repo')
-    args = parser.parse_args()
+    subparsers = parser.add_subparsers(dest='command',
+                                       help='Command to execute')
+
+    parser_index = subparsers.add_parser('index', help='Index a GR Repo')
+    parser_index.add_argument('repo_dir', type=str,
+                              help='Path to the GR Repo to index')
+
+    parser_list = subparsers.add_parser('list', help='List a GR Repo')
+    parser_list.add_argument('repo_dir', type=str,
+                             help='Path to the GR Repo to list')
+
+    parser_hist = subparsers.add_parser('histogram',
+                                        help='Build the histograms \
+                                        for a resource')
+    parser_hist.add_argument('repo_dir', type=str,
+                             help='Path to the GR Repo')
+    parser_hist.add_argument('resource', type=str,
+                             help='Resource to generate histograms for')
+
+    args = parser.parse_args(cli_args)
 
     cmd, dr = args.command, args.repo_dir
 
@@ -69,6 +89,17 @@ def cli_manage():
                   (gr.get_resource_type(), gr.get_version_str(),
                    len(list(gr.get_files())),
                       sum([fs for _, fs, _ in gr.get_files()]), gr.get_id()))
+    elif cmd == "histogram":
+        gr = GRR.get_resource(args.resource)
+        if gr is None:
+            print(f"Cannot find resource {args.resource}")
+            sys.exit(1)
+        builder = HistogramBuilder()
+        histograms = builder.build(gr)
+        resource_path = pathlib.Path(args.resource)
+        hist_out_dir = dr / resource_path / 'histograms'
+        print(f"Saving histograms in {hist_out_dir}")
+        builder.save(histograms, hist_out_dir)
     else:
         print(f'Unknown command {cmd}. The known commands are index and list')
 
