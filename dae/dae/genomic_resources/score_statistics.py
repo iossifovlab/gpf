@@ -158,8 +158,8 @@ class HistogramBuilder:
     def save(self, histograms, out_dir):
         os.makedirs(out_dir, exist_ok=True)
         for score, histogram in histograms.items():
-            df = pd.DataFrame({score: histogram.bars,
-                               'scores': histogram.bins[:-1]})
+            df = pd.DataFrame({'bars': histogram.bars,
+                               'bins': histogram.bins[:-1]})
             hist_name = f"{score}.csv"
             df.to_csv(os.path.join(out_dir, hist_name), index=None)
 
