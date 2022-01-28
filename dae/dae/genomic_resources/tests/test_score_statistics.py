@@ -20,43 +20,46 @@ def test_histogram_simple_input():
     assert (hist.bars == np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 2])).all()
 
 
-def test_histogram_builder_simple_input():
-    res: GenomicResource = build_a_test_resource({
-        GR_CONF_FILE_NAME: '''
-            type: position_score
-            table:
-                filename: data.mem
-            scores:
-              - id: phastCons100way
-                type: float
-                desc: "The phastCons computed over the tree of 100 \
-                       verterbarte species"
-                name: s1
-              - id: phastCons5way
-                type: int
-                position_aggregator: max
-                na_values: "-1"
-                desc: "The phastCons computed over the tree of 5 \
-                       verterbarte species"
-                name: s2
-            histograms:
-              - score: phastCons100way
-                bins: 100
-                min: 0
-                max: 1
-              - score: phastCons5way
-                bins: 4
-                min: 0
-                max: 4''',
-        "data.mem": '''
-            chrom  pos_begin  pos_end  s1    s2
-            1      10         15       0.02  -1
-            1      17         19       0.03  0
-            1      22         25       0.46  EMPTY
-            2      5          80       0.01  3
-            2      10         11       0.02  3
-            '''
-    })
+position_score_test_config = {
+    GR_CONF_FILE_NAME: '''
+        type: position_score
+        table:
+            filename: data.mem
+        scores:
+            - id: phastCons100way
+              type: float
+              desc: "The phastCons computed over the tree of 100 \
+                    verterbarte species"
+              name: s1
+            - id: phastCons5way
+              type: int
+              position_aggregator: max
+              na_values: "-1"
+              desc: "The phastCons computed over the tree of 5 \
+                    verterbarte species"
+              name: s2
+        histograms:
+            - score: phastCons100way
+              bins: 100
+              min: 0
+              max: 1
+            - score: phastCons5way
+              bins: 4
+              min: 0
+              max: 4''',
+    "data.mem": '''
+        chrom  pos_begin  pos_end  s1    s2
+        1      10         15       0.02  -1
+        1      17         19       0.03  0
+        1      22         25       0.46  EMPTY
+        2      5          80       0.01  3
+        2      10         11       0.02  3
+        '''
+}
+
+
+def test_histogram_builder_position_resource():
+    res: GenomicResource = build_a_test_resource(position_score_test_config)
     hbuilder = HistogramBuilder()
     hists = hbuilder.build(res)
     assert len(hists) == 2
@@ -76,3 +79,10 @@ def test_histogram_builder_simple_input():
     assert phastCons5way_hist.bars[0] == 3  # region [17-19]
     assert phastCons5way_hist.bars[3] == 76 + 2  # region [5-80] and [10-11]
     assert phastCons5way_hist.bars.sum() == (76 + 2 + 3)
+
+
+def test_histogram_builder_save(tmpdir):
+    res: GenomicResource = build_a_test_resource(position_score_test_config)
+    hbuilder = HistogramBuilder()
+    hists = hbuilder.build(res)
+    hbuilder.save(hists, tmpdir)
