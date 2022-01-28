@@ -25,7 +25,7 @@ class Histogram:
             self.bins = np.linspace(
                 self.x_min,
                 self.x_max,
-                bins_count,
+                bins_count + 1,
             )
         elif self.x_scale == "log":
             assert x_min_log is not None
@@ -34,7 +34,7 @@ class Histogram:
                 * np.logspace(
                     np.log10(self.x_min),
                     np.log10(self.x_max),
-                    bins_count - 1
+                    bins_count
                 )])
         else:
             assert False, f"unexpected xscale: {self.x_scale}"
@@ -44,7 +44,7 @@ class Histogram:
 
         self.y_scale = y_scale
 
-        self.bars = np.zeros(bins_count - 1, dtype=np.int32)
+        self.bars = np.zeros(bins_count, dtype=np.int32)
 
     @staticmethod
     def from_config(conf):

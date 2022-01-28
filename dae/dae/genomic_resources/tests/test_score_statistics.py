@@ -5,7 +5,7 @@ import numpy as np
 
 
 def test_histogram_simple_input():
-    hist = Histogram(11, 0, 10, "linear", "linear")
+    hist = Histogram(10, 0, 10, "linear", "linear")
     assert (hist.bins == np.arange(0, 11)).all()
 
     hist.add_value(0)
@@ -41,11 +41,11 @@ def test_histogram_builder_simple_input():
                 name: s2
             histograms:
               - score: phastCons100way
-                bins: 101
+                bins: 100
                 min: 0
                 max: 1
               - score: phastCons5way
-                bins: 5
+                bins: 4
                 min: 0
                 max: 4''',
         "data.mem": '''
