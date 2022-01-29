@@ -80,7 +80,7 @@ describe('App tests', () => {
   });
 });
 
-describe('User access rights tests', () => {
+describe('App user access rights tests', () => {
   const page = new AppPage();
   const datasetsPage = new DatasetsPage();
 

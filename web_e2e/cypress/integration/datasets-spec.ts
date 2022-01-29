@@ -98,7 +98,7 @@ describe('Datasets tests', () => {
   });
 });
 
-describe('Iossifov dataset count tests', () => {
+describe('Datasets Iossifov dataset count tests', () => {
   const page = new DatasetsPage();
 
   before(() => {

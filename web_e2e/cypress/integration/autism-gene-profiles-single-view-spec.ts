@@ -115,7 +115,7 @@ describe('Autism gene profiles single view links tests', () => {
   });
 });
 
-describe('Single view study table', () => {
+describe('Autism gene profiles single view study table tests', () => {
   const page = new AutismGeneProfilesSingleView();
   const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
 
@@ -340,7 +340,7 @@ export const geneData: any = [
   }
 ]
 
-describe('data', () => {
+describe('Autism gene profiles single view dynamic data tests', () => {
   const page = new AutismGeneProfilesSingleView();
 
   before(() => {

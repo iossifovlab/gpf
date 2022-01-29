@@ -2,7 +2,7 @@ import { GenesBlockPage } from "cypress/elements/genes-block-page";
 import { GenotypeBrowserController } from "cypress/elements/genotype-browser-controller";
 import { datasetIds, toolPageLinks } from "cypress/elements/utils";
 
-describe('Genes block panel tests', () => {
+describe('Genes block tests', () => {
   const page = new GenesBlockPage();
 
   before(() => {
@@ -62,7 +62,7 @@ describe('Genes block panel tests', () => {
   });
 });
 
-describe('Gene sets names and count tests', () => {
+describe('Genes block gene sets names and count tests', () => {
   const genotypeBrowserController = new GenotypeBrowserController();
   const page = new GenesBlockPage();
 
@@ -147,7 +147,7 @@ describe('Gene sets names and count tests', () => {
   });
 });
 
-describe('Gene set file length tests', () => {
+describe('Genes block gene set file length tests', () => {
   const page = new GenesBlockPage();
   const genotypeBrowserController = new GenotypeBrowserController();
 
@@ -242,7 +242,7 @@ describe('Gene set file length tests', () => {
   });
 });
 
-describe('Denovo gene set gene symbols tests', () => {
+describe('Genes block denovo gene set gene symbols tests', () => {
   const page = new GenesBlockPage();
   const genotypeBrowserController = new GenotypeBrowserController();
 
