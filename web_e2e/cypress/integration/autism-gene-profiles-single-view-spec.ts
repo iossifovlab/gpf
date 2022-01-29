@@ -119,7 +119,7 @@ describe('Autism gene profiles single view study table tests', () => {
   const page = new AutismGeneProfilesSingleView();
   const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
 
-  it.skip('should test redirect logic', () => {
+  it('should test redirect logic', () => {
     page.cleanup();
     page.navigateToHome();
     page.loginAdmin();
