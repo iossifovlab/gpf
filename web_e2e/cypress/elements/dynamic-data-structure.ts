@@ -7,71 +7,71 @@ import { EnrichmentModelsBockPage } from './enrichment-models-block-page';
 import { GeneWeightsPage } from './gene-weights-page';
 
 export class EnrichmentToolData {
-  name: string;
-  study: string;
-  target: string;
+  public name: string;
+  public study: string;
+  public target: string;
 
   @Type(() => Case)
-  cases: Case[];
+  public cases: Case[];
 }
 
 class Case {
-  name: string;
+  public name: string;
 
   @Type(() => Params)
-  params: Params;
+  public params: Params;
 
   @Type(() => Expected)
-  expected: Expected[];
+  public expected: Expected[];
 }
 
 class Expected {
-  rowId: string;
-  values: string[];
+  public rowId: string;
+  public values: string[];
 }
 
 export class Params {
-  geneSymbols: string[];
+  public geneSymbols: string[];
 
   @Type(() => Models)
-  models: Models;
+  public models: Models;
 
   @Type(() => GeneWeight)
-  geneWeight: GeneWeight;
+  public geneWeight: GeneWeight;
 
   @Type(() => GeneSet)
-  geneSet: GeneSet;
+  public geneSet: GeneSet;
 }
 
 class Models {
-  backgroundModel: string;
-  countingModel: string;
+  public backgroundModel: string;
+  public countingModel: string;
 }
 
 class GeneWeight {
-  id: string;
-  from: number;
-  to: number;
+  public id: string;
+  public from: number;
+  public to: number;
 }
 
 class GeneSet {
-  id: string
+  public id: string
 
   @Type(() => GeneSetCollection)
-  collection: GeneSetCollection;
+  public collection: GeneSetCollection;
 }
 
 class GeneSetCollection {
-  id: string;
+  public id: string;
 
   @Type(() => GeneSetCollectionAffectedStatus)
-  affectedStatus: GeneSetCollectionAffectedStatus[];
+  public affectedStatus: GeneSetCollectionAffectedStatus[];
 }
 
 class GeneSetCollectionAffectedStatus {
-  studyId: string;
-  affected: boolean;
-  unaffected: boolean
+  public studyId: string;
+  public affected: boolean;
+  public unaffected: boolean
 }
 
 // Pass path to yaml file using the '--env' flag in the cypress command:
@@ -103,10 +103,7 @@ export function applyData(params: Params): void {
 
     if (params.geneSet.collection.id === 'Denovo' && params.geneSet.collection.affectedStatus) {
       // TODO
-      // ...
-      // ..
     }
-
   } else if (params.geneWeight) {
     genesBlockPage.geneWeightsButton.click();
     geneWeightsPage.dropdownButton.select(params.geneWeight.id);
