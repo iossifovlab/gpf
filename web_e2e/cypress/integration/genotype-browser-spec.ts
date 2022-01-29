@@ -38,7 +38,7 @@ describe('Genotype browser tests', () => {
   });
 
   datasetList.forEach(dataset => {
-    it('should display genes block panel in genotype browser at /' + dataset + '/browser', () => {
+    it.only('should display genes block panel in genotype browser at /' + dataset + '/browser', () => {
       const genesBlockPage = new GenesBlockPage();
       page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       genesBlockPage.window.should('be.visible');
@@ -54,7 +54,7 @@ describe('Genotype browser tests', () => {
   });
 
   datasetList.forEach(dataset => {
-    it('should display genomic scores panel in genotype browser at /' + dataset + '/browser', () => {
+    it.only('should display genomic scores panel in genotype browser at /' + dataset + '/browser', () => {
       const genomicScoresBlockPage = new GenomicScoresBlockPage();
       page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       genomicScoresBlockPage.block.should('be.visible');
@@ -62,7 +62,7 @@ describe('Genotype browser tests', () => {
   });
 
   datasetList.forEach(dataset => {
-    it('should display family filters block panel in genotype browser at /' + dataset + '/browser', () => {
+    it.only('should display family filters block panel in genotype browser at /' + dataset + '/browser', () => {
       const familyFilterBlockPage = new FamilyFilterBlockPage();
       page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       familyFilterBlockPage.window.should('be.visible');
@@ -70,7 +70,7 @@ describe('Genotype browser tests', () => {
   });
 
   datasetList.forEach(dataset => {
-    it('should display "Table Preview" button in genotype browser at /' + dataset + '/browser', () => {
+    it.only('should display "Table Preview" button in genotype browser at /' + dataset + '/browser', () => {
       page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       page.tablePreviewButton.should('be.visible');
     });
@@ -93,14 +93,14 @@ describe('Genotype browser tests', () => {
   });
 
   datasetList.forEach(dataset => {
-    it('should display "Download" button in genotype browser at /' + dataset + '/browser', () => {
+    it.only('should display "Download" button in genotype browser at /' + dataset + '/browser', () => {
       page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       page.downloadButton.should('be.visible');
     });
   });
 
   datasetList.forEach(dataset => {
-    it('should display genotype preview table after table preview button click at /' + dataset + '/browser',  () => {
+    it.only('should display genotype preview table after table preview button click at /' + dataset + '/browser', () => {
       const genotypePreviewTablePage = new GenotypePreviewTablePage();
 
       page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
@@ -389,7 +389,7 @@ describe('Genotype browser family variants download tests', () => {
     genotypeBrowserController.navigateToHome();
   });
 
-  it('should download all effect types CHD8 iossifov variants ' +
+  it.only('should download all effect types CHD8 iossifov variants ' +
      'and validate whether they are equal to the reference data', () => {
     const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/variants.tsv';
     const expectedVariantsPath = 'cypress/fixtures/genotype-browser/variants.tsv';

@@ -98,9 +98,10 @@ export class BasePage {
 
   public navigateToDatasetPage(dataset: string, page: string): void {
     this.openDatasetsDropdownMenu();
+    // this.datasetsDropdownMenuElements.contains(dataset).should('be.visible');
     this.datasetsDropdownMenuElements.contains(dataset).click();
     this.datasetsDropdownMenuButton.should('have.text', dataset);
-    cy.get(`a.nav-link[href*="${page}"]`).click();
+    cy.get(`a.nav-link[href*="${page}"]`).click(); // add some sort of should here perhaps
   }
 
   public get datasetsDropdownMenuButton(): element {

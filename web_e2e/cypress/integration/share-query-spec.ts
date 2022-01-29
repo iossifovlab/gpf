@@ -26,7 +26,7 @@ describe('Share query tests', () => {
     page.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu');
   });
 
-  it('should share a query, load it and open all tools tabs', () => {
+  it.only('should share a query, load it and open all tools tabs', () => {
     const datasetsPage = new DatasetsPage();
 
     page.button.should('be.visible');
@@ -48,7 +48,7 @@ describe('Share query tests', () => {
     })
   });
 
-  it('should navigate to genotype browser, check all effect types checkboxes, generate a share query, ' +
+  it.only('should navigate to genotype browser, check all effect types checkboxes, generate a share query, ' +
      'load it and validate that all effect types checkboxes are checked', () => {
     const genotypeBlockPage = new GenotypeBlockPage();
 

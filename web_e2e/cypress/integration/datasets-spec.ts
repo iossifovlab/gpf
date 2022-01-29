@@ -29,7 +29,7 @@ describe('Datasets tests', () => {
     page.datasetsDropdownMenuButton.invoke('attr', 'aria-expanded').should('contain', 'false');
   });
 
-  it('should display genotype browser', () => {
+  it.only('should display genotype browser', () => {
     const genotypeBrowserPage = new GenotypeBrowserPage();
 
     page.loginAdmin();
@@ -39,7 +39,7 @@ describe('Datasets tests', () => {
     genotypeBrowserPage.window.should('be.visible');
   });
 
-  it('should display dataset statistics window', () => {
+  it.only('should display dataset statistics window', () => {
     page.loginAdmin();
     page.datasetStatisticsWindow.should('be.visible');
 
@@ -63,7 +63,7 @@ describe('Datasets tests', () => {
     phenoBrowserPage.window.should('not.exist');
   });
 
-  it('should display phenotype tool window', () => {
+  it.only('should display phenotype tool window', () => {
     const phenoToolPage = new PhenoToolPage();
 
     page.loginAdmin();

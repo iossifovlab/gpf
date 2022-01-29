@@ -15,7 +15,7 @@ describe('App tests', () => {
     page.navigateToHome();
   });
 
-  it('should display "GPF: Genotypes and Phenotypes in Families" as a title', () => {
+  it.only('should display "GPF: Genotypes and Phenotypes in Families" as a title', () => {
     page.loginAdmin();
     page.title.should('have.text', 'GPF: Genotypes and Phenotypes in Families');
     page.logout();
@@ -164,14 +164,14 @@ describe('App user access rights tests', () => {
     });
   });
 
-  it('should validate that researcher has no rights', () => {
+  it.only('should validate that researcher has no rights', () => {
     page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics);
     page.login(userData.normal.username, userData.normal.password);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     page.logout();
   });
 
-  it('should login admin and give researcher access rights for comp_vcf, ' +
+  it.only('should login admin and give researcher access rights for comp_vcf, ' +
      'then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
 
@@ -193,7 +193,7 @@ describe('App user access rights tests', () => {
     page.logout();
   });
 
-  it('should login admin and give researcher access rights for COMP_genotypes, ' +
+  it.only('should login admin and give researcher access rights for COMP_genotypes, ' +
      'then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
     const genotypeBrowserPage = new GenotypeBrowserPage();
@@ -245,7 +245,7 @@ describe('App user access rights tests', () => {
     page.logout();
   });
 
-  it('should login admin and give researcher access rights for ALL Genotypes, ' +
+  it.only('should login admin and give researcher access rights for ALL Genotypes, ' +
      'then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
     const genotypeBrowserPage = new GenotypeBrowserPage();
@@ -294,7 +294,7 @@ describe('App user access rights tests', () => {
     page.logout();
   });
 
-  it('should login admin and remove all researcher access rights, then login researcher and verify his rights', () => {
+  it.only('should login admin and remove all researcher access rights, then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
     const genotypeBrowserPage = new GenotypeBrowserPage();
 
