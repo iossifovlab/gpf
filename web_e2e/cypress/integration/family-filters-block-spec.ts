@@ -39,5 +39,8 @@ describe('Family filters block tests', () => {
 
     page.advancedButton.click();
     page.phenoFiltersPanel.should('be.visible');
+
+    page.allButton.click();
+    page.phenoFiltersPanel.should('not.exist');
   });
 });

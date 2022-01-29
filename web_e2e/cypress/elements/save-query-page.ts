@@ -24,12 +24,4 @@ export class SaveQueryPage extends BasePage {
   public get tableFirstDeleteButton(): element {
     return cy.get('gpf-table-view-cell button').contains('Delete').first();
   }
-
-  public get savedQueriesTableWindow(): element {
-    return cy.get('gpf-saved-queries');
-  }
-
-  public get errorAlertWindow(): element {
-    return cy.get('gpf-save-query div.alert.alert-danger');
-  }
 }

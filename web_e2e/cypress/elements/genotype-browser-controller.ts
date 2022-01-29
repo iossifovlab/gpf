@@ -27,12 +27,12 @@ export class GenotypeBrowserController extends BaseController {
     this.genotypeBlockPage.getPedigreeDropdownOptionByText('Role').click();
   }
 
-  public setAffectedStatusToAll(): void {
-    this.navigateToAffectedStatus();
-    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'All').click();
-  }
+  // public setAffectedStatusToAll(): void {
+  //   this.navigateToAffectedStatus();
+  //   this.genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'All').click();
+  // }
 
-  public setAffectedStatusToNone(): void {
+  private setAffectedStatusToNone(): void {
     this.navigateToAffectedStatus();
     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'None').click();
   }
@@ -43,24 +43,24 @@ export class GenotypeBrowserController extends BaseController {
     this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-pedigree-selector', affectedStatus).click();
   }
 
-  public setRolesToAll(): void {
-    this.navigateToRoles();
-    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'All').click();
-  }
+  // public setRolesToAll(): void {
+  //   this.navigateToRoles();
+  //   this.genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'All').click();
+  // }
 
-  public setRolesToNone(): void {
+  private setRolesToNone(): void {
     this.navigateToRoles();
     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'None').click();
   }
 
-  public setRoles(roles: string[]): void {
+  private setRoles(roles: string[]): void {
     this.setRolesToNone();
     for (const role of roles) {
       this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-pedigree-selector', role).click();
     }
   }
 
-  public setEffectTypesToNone(): void {
+  private setEffectTypesToNone(): void {
     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-effect-types', 'None').click();
   }
 
@@ -79,52 +79,52 @@ export class GenotypeBrowserController extends BaseController {
     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-effect-types', 'All').click();
   }
 
-  public setPhenotypeToAll(): void {
-    cy.get('gpf-pedigree-selector').contains('Phenotype').should('exist');
-    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'All').click();
-  }
+  // public setPhenotypeToAll(): void {
+  //   cy.get('gpf-pedigree-selector').contains('Phenotype').should('exist');
+  //   this.genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'All').click();
+  // }
 
-  public setPhenotypeToNone(): void {
+  private setPhenotypeToNone(): void {
     cy.get('gpf-pedigree-selector').contains('Phenotype').should('exist');
     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-pedigree-selector', 'None').click();
   }
 
-  public setPhenotype(phenotype: string): void {
+  private setPhenotype(phenotype: string): void {
     this.setPhenotypeToNone();
     this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-pedigree-selector', phenotype).click();
   }
 
-  public setPresentInChildToAll(): void {
-    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-present-in-child', 'All').click();
-  }
+  // public setPresentInChildToAll(): void {
+  //   this.genotypeBlockPage.findButtonInComponentContainingText('gpf-present-in-child', 'All').click();
+  // }
 
-  public setPresentInChildToNone(): void {
+  private setPresentInChildToNone(): void {
     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-present-in-child', 'None').click();
   }
 
-  public setPresentInChild(child: string): void {
+  private setPresentInChild(child: string): void {
     this.setPresentInChildToNone();
     this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-present-in-child', child).click();
   }
 
-  public setPresentInParentToAll(): void {
-    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-present-in-parent', 'All').click();
-  }
+  // public setPresentInParentToAll(): void {
+  //   this.genotypeBlockPage.findButtonInComponentContainingText('gpf-present-in-parent', 'All').click();
+  // }
 
-  public setPresentInParentToNone(): void {
+  private setPresentInParentToNone(): void {
     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-present-in-parent', 'None').click();
   }
 
-  public setPresentInParent(parent: string): void {
+  private setPresentInParent(parent: string): void {
     this.setPresentInParentToNone();
     this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-present-in-parent', parent).click();
   }
 
-  public setGendersToAll(): void {
-    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-gender', 'All').click();
-  }
+  // public setGendersToAll(): void {
+  //   this.genotypeBlockPage.findButtonInComponentContainingText('gpf-gender', 'All').click();
+  // }
 
-  public setGendersToNone(): void {
+  private setGendersToNone(): void {
     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-gender', 'None').click();
   }
 
@@ -133,11 +133,11 @@ export class GenotypeBrowserController extends BaseController {
     cy.get('gpf-gender span.gender-icon.' + gender).click();
   }
 
-  public setVariantTypesToAll(): void {
-    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-variant-types', 'All').click();
-  }
+  // public setVariantTypesToAll(): void {
+  //   this.genotypeBlockPage.findButtonInComponentContainingText('gpf-variant-types', 'All').click();
+  // }
 
-  public setVariantTypesToNone(): void {
+  private setVariantTypesToNone(): void {
     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-variant-types', 'None').click();
   }
 
@@ -146,11 +146,11 @@ export class GenotypeBrowserController extends BaseController {
     this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-variant-types', variantType).click();
   }
 
-  public setInheritanceTypeToAll(): void {
-    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-inheritancetypes', 'All').click();
-  }
+  // public setInheritanceTypeToAll(): void {
+  //   this.genotypeBlockPage.findButtonInComponentContainingText('gpf-inheritancetypes', 'All').click();
+  // }
 
-  public setInheritanceTypeToNone(): void {
+  private setInheritanceTypeToNone(): void {
     this.genotypeBlockPage.findButtonInComponentContainingText('gpf-inheritancetypes', 'None').click();
   }
 
@@ -159,9 +159,9 @@ export class GenotypeBrowserController extends BaseController {
     this.genotypeBlockPage.findCheckboxInComponentContainingText('gpf-inheritancetypes', inheritanceType).click();
   }
 
-  public setFamilyFilterToAll(): void {
-    this.genotypeBrowserPage.findButtonInComponentContainingText('gpf-family-filters-block', 'All').click();
-  }
+  // public setFamilyFilterToAll(): void {
+  //   this.genotypeBrowserPage.findButtonInComponentContainingText('gpf-family-filters-block', 'All').click();
+  // }
 
   public setFamilyFilterToId(id: string): void {
     this.familyFilterBlockPage.familyIdsButton.click();

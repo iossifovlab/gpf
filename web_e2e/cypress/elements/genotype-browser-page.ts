@@ -17,10 +17,6 @@ export class GenotypeBrowserPage extends BasePage {
     return cy.get('#variants-count-span');
   }
 
-  public get loadingScreenElement(): element {
-    return cy.get('.overlay');
-  }
-
   public get alertElement(): element {
     return cy.get('div.alert.alert-danger.ng-star-inserted');
   }

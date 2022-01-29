@@ -57,8 +57,8 @@ export class AutismGeneProfilesTable extends BasePage {
   public get allGeneSetsDropdownButton(): element {
     return cy.get('#column-filtering-button');
   }
-  
-  public get legend() : element{
+
+  public get legend() : element {
     return cy.get('div#compare-genes-menu');
   }
 
@@ -124,20 +124,20 @@ export class AutismGeneProfilesTable extends BasePage {
   }
 
   public getStudyActualDataFromGenotype(): void {
-    let selectedEffects = [];
+    const selectedEffects = [];
 
     cy.get('.effect-card > .card-block label').each(label => {
       cy.wrap(label).within(checkBox => {
         cy.wrap(checkBox).get('input').then(check => {
           cy.wrap(check).invoke('prop', 'checked').then(isCheck => {
-            if(isCheck === true) {
+            if (isCheck === true) {
               selectedEffects.push(label.text());
             }
           });
         });
       });
     });
-    
+
     cy.wrap(selectedEffects).as('genotypeActualWrapper');
   }
 }

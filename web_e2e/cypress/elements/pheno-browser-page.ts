@@ -13,7 +13,7 @@ export class PhenoBrowserPage extends BasePage {
     return cy.get('gpf-table > div > div.ng-star-inserted');
   }
 
-  public get tableDiv(): element {
+  private get tableDiv(): element {
     return cy.get('.col-lg-12');
   }
 

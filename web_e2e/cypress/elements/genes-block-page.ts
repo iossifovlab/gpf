@@ -41,10 +41,6 @@ export class GenesBlockPage extends BasePage {
     return cy.get('button.dropdown-item span').first();
   }
 
-  public get geneSetsFromDropdownMenu(): element {
-    return cy.get('button.dropdown-item span');
-  }
-
   public get selectedGeneSet(): element {
     return cy.get('#selected-value');
   }
@@ -59,10 +55,6 @@ export class GenesBlockPage extends BasePage {
 
   public get geneSetsCollectionSelectorDropdownMenu(): element {
     return cy.get('gpf-gene-sets select.form-control');
-  }
-
-  public findDenovoDropdownByText(text: string): element {
-    return cy.get('ngb-accordion span').contains(text);
   }
 
   public get geneWeightsButton(): element {

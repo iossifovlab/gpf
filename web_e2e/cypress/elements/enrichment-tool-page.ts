@@ -1,10 +1,6 @@
 import { BasePage } from './utils';
 
 export class EnrichmentToolPage extends BasePage {
-  public get enrichmentToolWindow(): element {
-    return cy.get('gpf-enrichment-tool');
-  }
-
   public get enrichmentModelsBlock(): element {
     return cy.get('gpf-enrichment-models-block');
   }
@@ -17,7 +13,7 @@ export class EnrichmentToolPage extends BasePage {
     return cy.get('.enrichment-table');
   }
 
-  public findTableRow(affectedStatus: string, effectType: string): element {
+  private findTableRow(affectedStatus: string, effectType: string): element {
     const statusToRow = {
       affected: 0,
       unaffected: 1
@@ -27,17 +23,16 @@ export class EnrichmentToolPage extends BasePage {
   }
 
   public async getRowValues(affectedStatus: string, effectType: string): Promise<string[]> {
-    return new Cypress.Promise((resolve) => {
-      let result: string[] = [];
+    return new Cypress.Promise(resolve => {
+      const result: string[] = [];
       this.findTableRow(affectedStatus, effectType).find('td')
-      .each(td => {
-        result.push(td.text());
-        console.log(result);
-      })
-      .then(() => {
-        result.shift();
-        return resolve(result);
-      })
+        .each(td => {
+          result.push(td.text());
+        })
+        .then(() => {
+          result.shift();
+          return resolve(result);
+        })
     });
   }
 

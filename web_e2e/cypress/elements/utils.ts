@@ -117,7 +117,7 @@ export class BasePage {
     this.datasetsDropdownMenuButton.click();
   }
 
-  public get sidenavTogglerButton(): element {
+  private get sidenavTogglerButton(): element {
     return cy.get('.navbar-toggler-icon');
   }
 

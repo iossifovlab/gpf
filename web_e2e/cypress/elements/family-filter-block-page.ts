@@ -9,10 +9,6 @@ export class FamilyFilterBlockPage extends BasePage {
     return cy.get('#all-families');
   }
 
-  public get tabPanel(): element {
-    return cy.get('.tab-pane active');
-  }
-
   public get familyIdsButton(): element {
     return cy.get('#family-ids');
   }

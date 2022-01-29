@@ -3,10 +3,6 @@ export class UsersPage {
     return cy.get('gpf-users').find('#login-dropdown-toggle-button');
   }
 
-  public get loginWindow(): element {
-    return cy.get('#login-window');
-  }
-
   public get usernameInput(): element {
     return cy.get('gpf-users').find('#username');
   }

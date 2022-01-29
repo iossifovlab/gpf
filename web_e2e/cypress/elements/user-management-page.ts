@@ -13,10 +13,6 @@ export class UserManagementPage extends BasePage {
     return cy.get('gpf-users-table');
   }
 
-  public get usersCreateWindow(): element {
-    return cy.get('gpf-users-create');
-  }
-
   public get createUserButton(): element {
     return cy.get('gpf-user-management a').contains('Create user');
   }
@@ -49,10 +45,6 @@ export class UserManagementPage extends BasePage {
     return cy.get('gpf-users-table gpf-table > div > div[class=\'ng-star-inserted\']');
   }
 
-  public get userTableEmailElements(): element {
-    return cy.get('gpf-table-view-cell a[href*=\'/gpf/management/users/\']');
-  }
-
   public get userTableDeleteNewestUserButton(): element {
     return cy.get('gpf-users-actions a').last();
   }
@@ -67,10 +59,6 @@ export class UserManagementPage extends BasePage {
 
   public get allUserEditGroupRemoveButtons(): element {
     return cy.get('ng-multiselect-dropdown a');
-  }
-
-  public get userEditWindow(): element {
-    return cy.get('gpf-user-edit');
   }
 
   public get userWindowGroupDropDownMenuButton(): element {
@@ -101,28 +89,8 @@ export class UserManagementPage extends BasePage {
     return cy.get('gpf-users-table mwl-confirmation-popover-window button').contains('Remove group');
   }
 
-  public get userBulkEditButton(): element {
-    return cy.get('gpf-user-management button#btnGroupDrop1');
-  }
-
-  public get userBulkEditAddGroupButton(): element {
-    return cy.get('gpf-user-management button').contains('Add group');
-  }
-
-  public get userBulkEditRemoveGroupButton(): element {
-    return cy.get('gpf-user-management button').contains('Remove group');
-  }
-
   public get userSearchField(): element {
     return cy.get('gpf-user-management input#search-field');
-  }
-
-  public get usersEditorAddGroupButton(): element {
-    return cy.get('gpf-groups-bulk-add button').contains('Add Group');
-  }
-
-  public get usersEditorRemoveGroupButton(): element {
-    return cy.get('gpf-groups-bulk-remove button').contains('Remove Group');
   }
 
   public get groupsButton(): element {

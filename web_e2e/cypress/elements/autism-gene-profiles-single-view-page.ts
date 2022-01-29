@@ -39,12 +39,8 @@ export class AutismGeneProfilesSingleView extends BasePage {
     return cy.get('.single-score-marker');
   }
 
-  public get geneAutismGeneSetsTable() : element{
+  public get geneAutismGeneSetsTable() : element {
     return cy.get('#autism_gene_sets');
-  }
-
-  public get genomicScoresTable(): element {
-    return cy.get('table.genomic-scores-table');
   }
 
   public get autismGeneToolAllView(): element {
@@ -57,18 +53,6 @@ export class AutismGeneProfilesSingleView extends BasePage {
 
   public get datasetsTable(): element {
     return cy.get('.datasets-table');
-  }
-
-  public datasetsTableColumn(id: string, type: number): element {
-    return cy.document().its('body').find('table.datasets-table > tbody >  tr#' + id + ' > td').eq(type);
-  }
-
-  public get externalLinksTable(): element {
-    return cy.get('#external-links');
-  }
-
-  public get geneSymbol(): element {
-    return cy.get('gpf-autism-gene-profile-single-view > div > h2');
   }
 
   public openSingleView(gene: string, force = false): void {
