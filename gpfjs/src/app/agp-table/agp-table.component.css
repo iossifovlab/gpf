@@ -32,7 +32,7 @@
 .header {
   border-top: 1px solid #ddd;
   position: sticky;
-  top: 0px;
+  top: 0;
   font-weight: bold;
 }
 
@@ -55,22 +55,35 @@
 
 .header-cell {
   background-color: #eee;
-  vertical-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: end;
+  padding: 2px;
+}
+
+.header-cell-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-cell-vertical-content {
+  flex-direction: column;
+  justify-content: end;
+  align-items: center;
+  gap: 0px;
 }
 
 multiple-select-menu {
   top: 50px;
 }
 
-gpf-sorting-buttons {
-  margin-left: 5px;
-  position: relative;
-  top: 5.5px;
+.header-button {
+  padding: 0px;
 }
 
 .dropdown-span {
-  top: 100px;
-  left: 100px;
   position: absolute;
 }
 
@@ -88,8 +101,8 @@ gpf-sorting-buttons {
 
 #highlighted-genes {
   position: fixed;
-  right: 15px;
-  bottom: 15px;
+  right: 10px;
+  bottom: 10px;
   background-color: #fff;
   border: 1px solid #ddd;
   z-index: 101;
@@ -112,4 +125,5 @@ gpf-sorting-buttons {
   transform-origin: center center;
   transform: rotate(180deg);
   max-height: 150px; 
+  text-align: left;
 }

@@ -42,22 +42,27 @@
         [style.grid-column]="column.gridColumn"
         [style.grid-row]="column.gridRow"
       >
+        <div class="header-cell-content"
+          [ngClass]="{'header-cell-vertical-content': column.displayVertical }"
+        >
           <span class="header-cell"
-          [ngClass]="{'vertical-text': column.displayVertical }">{{ column.displayName }}</span>
+            [ngClass]="{'vertical-text': column.displayVertical }"
+          >{{ column.displayName }}</span>
           <gpf-sorting-buttons
             *ngIf="column.sortable"
             [id]="column.id"
-            (sortEvent)="sort($event.id, $event.order)"></gpf-sorting-buttons>
-          <ng-container *ngIf="column.columns.length !== 0">
-            <button
-              #columnFilteringButton
-              [attr.id]="column.id + '-column-filtering-button'"
-              class="dropdown-toggle btn navbar-toggler"
-              (click)="openDropdown(column)">
-              &#9776;
-            </button>
-          </ng-container>
+            class="header-button"
+            (sortEvent)="sort($event.id, $event.order)">
+          </gpf-sorting-buttons>
+          <button
+            *ngIf="column.columns.length !== 0"
+            #columnFilteringButton
+            class="header-button navbar-toggler"
+            (click)="openDropdown(column, $event)">
+            &#9776;
+          </button>
         </div>
+      </div>
       <ng-container *ngTemplateOutlet=" recursiveListTmpl; context: { columns: column.columns }"></ng-container>
     </ng-container>
   </ng-container>
@@ -73,7 +78,7 @@
     {{ gene }} <span class="badge text-light">X</span>
   </button>
   <br>
-  <button class="btn btn-warning" style="margin: 2px" (click)="emitCreateTabEvent()">
+  <button class="btn btn-success" style="margin: 2px; width: 100%; height: 48px" (click)="emitCreateTabEvent()">
     Compare
   </button>
 </div>

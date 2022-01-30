@@ -72,10 +72,10 @@ export class Column {
       return;
     }
     if (column.parent !== null) {
-      column.gridRow = depth.toString();
+      column.gridRow = column.parent.parent !== null ? depth.toString() : `2 / ${depth + 1}`;
       Column.calculateGridRow(column.parent, depth - 1);
     } else {
-      column.gridRow = `1 / ${depth + 1}`;
+      column.gridRow = column.columns.length !== 0 ? '1' : `1 / ${depth + 1}`
     }
   }
 

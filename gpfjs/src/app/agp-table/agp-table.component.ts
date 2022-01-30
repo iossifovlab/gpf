@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, ViewChild, ViewChildren } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, Renderer2, ViewChild, ViewChildren } from '@angular/core';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
@@ -18,6 +18,7 @@ export class AgpTableComponent implements OnInit, OnChanges {
   @Output() public goToQueryEvent = new EventEmitter();
 
   @ViewChild(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu;
+  @ViewChild('dropdownSpan') public dropdownSpan;
   @ViewChild(MultipleSelectMenuComponent) public multipleSelectMenuComponent: MultipleSelectMenuComponent;
   @ViewChildren(SortingButtonsComponent) public sortingButtonsComponents: SortingButtonsComponent[];
 
@@ -40,6 +41,7 @@ export class AgpTableComponent implements OnInit, OnChanges {
   public constructor(
     private autismGeneProfilesService: AgpTableService,
     private ref: ElementRef,
+    private renderer: Renderer2,
   ) { }
 
   public ngOnInit(): void {
@@ -60,8 +62,13 @@ export class AgpTableComponent implements OnInit, OnChanges {
   }
 
   @HostListener('document:keydown.esc')
-  public clearHighlights() {
+  public keybindClearHighlight() {
     this.clearHighlightedGenes();
+  }
+
+  @HostListener('document:keydown.f')
+  public keybindCompareGenes() {
+    this.emitCreateTabEvent();
   }
 
   @HostListener('window:scroll')
@@ -112,18 +119,22 @@ export class AgpTableComponent implements OnInit, OnChanges {
       });
   }
 
-  public openDropdown(column: Column): void {
+  public openDropdown(column: Column, $event): void {
     this.multipleSelectMenuComponent.menuId = column.id;
     this.multipleSelectMenuComponent.columns = column.columns;
 
     this.waitForDropdown().then(() => {
-      if (this.ngbDropdownMenu.dropdown.isOpen()) {
-        // FIXME This is never carried out
-        this.ngbDropdownMenu.dropdown.close();
-      } else {
-        this.ngbDropdownMenu.dropdown.open();
-        this.multipleSelectMenuComponent.refresh();
+      this.ngbDropdownMenu.dropdown.open();
+      this.multipleSelectMenuComponent.refresh();
+      // calculate modal position
+      let modalLeft = $event.target.getBoundingClientRect().left - document.body.getBoundingClientRect().left;
+      const modalTop = $event.target.getBoundingClientRect().bottom;
+      const dropdownMenuWidth = 400;
+      if (modalLeft + dropdownMenuWidth > window.innerWidth) {
+        modalLeft -= (modalLeft + dropdownMenuWidth - window.innerWidth);
       }
+      this.renderer.setStyle(this.dropdownSpan.nativeElement, 'left', modalLeft + 'px');
+      this.renderer.setStyle(this.dropdownSpan.nativeElement, 'top',  modalTop + 'px');
     }).catch(err => console.error(err));
   }
 
