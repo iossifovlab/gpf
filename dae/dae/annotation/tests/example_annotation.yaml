@@ -1,0 +1,101 @@
+- effect_annotator:
+    # Let's assume that by default effect_annotator will add
+    #  the attributes:  worst_effect effect_genes effect_details
+
+- effect_annotator:
+    gene_models: hg38/GRCh38-hg38/gene_models/refSeq_20200330
+    genome: hg38/GRCh38-hg38/genome
+    attributes:
+      - source: worst_effect
+        destination: old_worst_effect
+
+
+
+- np_score: hg38/TESTphastCons100way
+   # The Annotbor should treat this as equivalent to:
+   # - np_score: 
+   #     resrouce_id: hg38/TESTphastCons100way
+   # 
+   # If 'default_annotation_attributes' is present in the configuration for the resource,
+   # it is must be a list of the scores configured for the resource. The 
+   # attributes will be the names of the scores in the 'default_annotation_attributes'.
+   # Otherwise, all scores configured for the resoruce will be returned as 
+   # attributes.
+
+
+- position_score: 
+    resource_id: hg38/TESTCADD
+    attributes:
+    - destination: max_sc
+      source: score_name
+      position_aggregator: max
+    - destination: mean_sc
+      source: score_name
+      position_aggregator: mean  
+
+- position_score: 
+    resource_id: hg38/TESTCADD
+    attributes:
+    - score1
+    - score2
+    - score3
+# This should be equivallent to:
+- np_score: 
+    resource_id: hg38/TESTCADD
+    attributes:
+    - destiantion: score1
+      source: score1
+    - destination: score2
+      source: score2
+    - destination: score3
+      source: score3
+# if the default scores for the hg38/TESTCADD are score1, score2, and score3, 
+# the above is equivallent to:
+# - np_score: hg38/TESTCADD
+
+
+# liftover_annotator SHULD try operate on all annotatables
+# The liftover all attributes are:
+#    source                 type           descr
+#    liftover_annotable     Annotatable
+#    liftover_chr           string
+# The default attribute configuration is:
+#    attributes:
+#    - destination: liftover_annotable
+#      source:      liftover_annotable
+#      internal:    yes
+- liftover_annotator:
+    chain: hg38/hg38tohg19
+    target_genome: hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174
+
+- liftover_annotator:
+    chain: hg38/hg38tohg19
+    target_genome: hg17/bla/genome
+    attributes:
+    - destination: liftover_annotable_hg17
+      source: liftover_annotable
+      internal: yes
+
+- np_score:
+    resource: hg19/MPC
+    input_annotable: liftover_annotable
+
+- allele_score:
+    resource: hg17/db_gap
+    input_annotable: liftover_annotable_hg17
+
+
+- effect_annotator:
+    attributes:
+      - source: genes
+        destination: list_of_genes
+        format: list
+        internal: yes
+      - source: genes
+        format: str 
+      - source: genes_LGD
+      - source: genes_missense 
+
+- gene_score_annotator:
+    resource: gene_scores/RVIS-1
+    input: list_of_genes

@@ -22,11 +22,6 @@ def local_gpf_instance(gpf_instance):
 
 
 @pytest.fixture(scope="session")
-def mocked_gene_models(local_gpf_instance):
-    return local_gpf_instance.genomes_db.get_gene_models()
-
-
-@pytest.fixture(scope="session")
 def dae_config_fixture(local_gpf_instance):
     return local_gpf_instance.dae_config
 

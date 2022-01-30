@@ -1,0 +1,31 @@
+---
+
+type: np_score
+
+table:
+  filename: fordist_constraint_official_mpc_values_v2.txt.gz
+  format: tabix
+
+  # defined by score_type
+  chrom:
+    name: chrom
+  pos_begin:
+    name: pos
+  reference:
+    name: ref
+  alternative:
+    name: alt
+
+# score values
+scores:
+    - id: MPC
+      type: float
+      desc: ""
+      name: MPC
+
+default_annotation:
+  attributes:
+    - source: MPC
+      destination: mpc
+      position_aggregator: max
+      nucleotide_aggregator: max

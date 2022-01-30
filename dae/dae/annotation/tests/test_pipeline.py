@@ -1,69 +1,34 @@
-import pytest
-import pandas as pd
-
-from dae.annotation.annotation_pipeline import PipelineAnnotator
-
-from .conftest import relative_to_this_test_folder
+from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
-input2_copy_expected = """chr\tposition
-1\t10918
-1\t10919
-1\t10920
-1\t10921
-1\t10922
-"""
-
-input2_score_expected = """RESULT_phastCons100way\tloc1\tvar1
-0.253\t1:10918\tsub(G->A)
-0.251\t1:10919\tsub(A->C)
-0.249\t1:10920\tsub(G->T)
-0.247\t1:10921\tsub(A->C)
-0.245\t1:10922\tsub(G->C)
-"""
-
-input2_score2_expected = """loc1\tvar1\tRESULT_phastCons100way\tRESULT_RawScore\tRESULT_PHRED
-1:10918\tsub(G->A)\t0.253\t0.40161\t6.631
-1:10919\tsub(A->C)\t0.251\t0.537788\t7.986
-1:10920\tsub(G->T)\t0.249\t0.371362\t6.298
-1:10921\tsub(A->C)\t0.247\t0.537794\t7.986
-1:10922\tsub(G->C)\t0.245\t0.391539\t6.522
-"""
-
-
-@pytest.mark.parametrize(
-    "config_file,expected",
-    [
-        ("fixtures/copy_annotator.conf", input2_copy_expected),
-        ("fixtures/score_annotator.conf", input2_score_expected),
-        ("fixtures/score2_annotator.conf", input2_score2_expected),
-    ],
-)
 def test_build_pipeline(
-    expected_df, variants_io, capsys, config_file, expected, genomes_db_2013
-):
+        annotation_config, grr_fixture):
 
-    options = {
-        "vcf": True,
-        "mode": "overwrite",
-    }
+    pipeline = build_annotation_pipeline(
+        pipeline_config_file=annotation_config,
+        grr_repository=grr_fixture)
 
-    filename = relative_to_this_test_folder(config_file)
+    assert len(pipeline.annotators) == 5
 
-    captured = capsys.readouterr()
-    with variants_io("fixtures/input2.tsv") as io_manager:
-        pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013,)
-        assert pipeline is not None
-        pipeline.annotate_file(io_manager)
-    captured = capsys.readouterr()
 
-    print(captured.err)
-    print(captured.out)
+def test_build_pipeline_schema(
+        annotation_config, grr_fixture):
 
-    cap_df = expected_df(captured.out)
+    pipeline = build_annotation_pipeline(
+        pipeline_config_file=annotation_config,
+        grr_repository=grr_fixture)
 
-    pd.testing.assert_frame_equal(
-        cap_df, expected_df(expected),
-        rtol=10e-3,
-        check_names=False
-    )
+    schema = pipeline.annotation_schema
+    assert schema is not None
+
+    # assert len(schema) == 10
+
+    assert "gene_effects" in schema.names
+    field = schema["gene_effects"]
+    print(field, dir(field))
+
+    assert field.type == "str", field
+
+    assert "cadd_raw" in schema.names
+    field = schema["cadd_raw"]
+    assert field.type == "float"

@@ -1,7 +1,6 @@
-import os
 import itertools
-import glob
 import logging
+from fsspec.core import url_to_fs
 
 from collections import Counter
 
@@ -10,7 +9,8 @@ import numpy as np
 import pysam
 
 from dae.utils.helpers import str2bool
-from dae.genome.genomes_db import Genome
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.utils import fs_utils
 
 from dae.utils.variant_utils import is_all_reference_genotype, \
     is_all_unknown_genotype, \
@@ -110,7 +110,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             self,
             families,
             vcf_files,
-            genome: Genome,
+            genome: ReferenceGenome,
             regions=None,
             params={},
             **kwargs):
@@ -284,7 +284,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         seqnames = list(self.vcfs[0].header.contigs)
         filename = self.filenames[0]
         tabix_index_filename = f"{filename}.tbi"
-        if not os.path.exists(tabix_index_filename):
+        if not fs_utils.exists(tabix_index_filename):
             return seqnames
 
         try:
@@ -607,7 +607,7 @@ class VcfLoader(VariantsGenotypesLoader):
             self,
             families,
             vcf_files,
-            genome: Genome,
+            genome: ReferenceGenome,
             regions=None,
             params={},
             **kwargs):
@@ -774,7 +774,22 @@ class VcfLoader(VariantsGenotypesLoader):
         ))
         return arguments
 
-    def _collect_filenames(self, params, vcf_files):
+    @staticmethod
+    def _glob(globname):
+        from urllib.parse import urlparse
+
+        fs, _ = url_to_fs(globname)
+        filenames = fs.glob(globname)
+        # fs.glob strips the protocol at the beginning. We need to add it back
+        # otherwise there is no way to know the correct fs down the pipeline
+        scheme = urlparse(globname).scheme
+        if scheme:
+            filenames = [f"{scheme}://{fn}" for fn in filenames]
+
+        return filenames
+
+    @staticmethod
+    def _collect_filenames(params, vcf_files):
         if params.get("vcf_chromosomes", None):
             vcf_chromosomes = [
                 wc.strip() for wc in params.get("vcf_chromosomes").split(";")
@@ -804,8 +819,7 @@ class VcfLoader(VariantsGenotypesLoader):
         for batches_globnames in glob_filenames:
             batches_result = []
             for globname in batches_globnames:
-
-                filenames = glob.glob(globname)
+                filenames = VcfLoader._glob(globname)
                 if len(filenames) == 0:
                     continue
                 assert len(filenames) == 1, (globname, filenames)

@@ -272,10 +272,9 @@ def main():
         logging.basicConfig(level=logging.ERROR)
 
     gpf_instance = GPFInstance()
-    genomes_db = gpf_instance.genomes_db
 
     chromosome_lengths = dict(
-        genomes_db.get_genomic_sequence().get_all_chrom_lengths()[:24])
+        gpf_instance.reference_genome.get_all_chrom_lengths()[:24])
 
     regions = build_regions(chromosome_lengths, argv.region)
     scores = [str(s).strip() for s in argv.scores.split(",")]

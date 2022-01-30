@@ -1,0 +1,34 @@
+from dae.genomic_resources import GenomicResource
+from dae.genomic_resources.genomic_scores import \
+    open_allele_score_from_resource
+from dae.genomic_resources.test_tools import build_a_test_resource
+from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+
+
+def test_the_simplest_allele_score():
+    res: GenomicResource = build_a_test_resource({
+        GR_CONF_FILE_NAME: '''
+            type: allele_score
+            table:
+                filename: data.mem
+            scores:
+                - id: freq
+                  type: float
+                  desc: ""
+                  name: freq
+        ''',
+        "data.mem": '''
+            chrom  pos_begin  reference  alternative  freq
+            1      10         A          G            0.02
+            1      10         A          C            0.03
+            1      10         A          A            0.04
+            1      16         CA         G            0.03
+            1      16         C          T            0.04
+            1      16         C          A            0.05
+        '''
+    })
+    assert res.get_type() == "allele_score"
+
+    score = open_allele_score_from_resource(res)
+    assert score.get_all_scores() == ["freq"]
+    assert score.fetch_scores("1", 10, "A", "C") == {"freq": 0.03}

@@ -11,9 +11,10 @@ from collections import namedtuple, defaultdict
 import numpy as np
 import pyarrow as pa
 
+from dae.variants.core import Allele
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
-from dae.variants.attributes import GeneticModel, Inheritance, VariantType, \
+from dae.variants.attributes import GeneticModel, Inheritance, \
     TransmissionType, Sex, Role
 
 
@@ -199,7 +200,7 @@ def read_best_state(stream):
 
 
 def read_variant_type(stream):
-    return VariantType(read_int8(stream))
+    return Allele.Type(read_int8(stream))
 
 
 def read_genetic_model(stream):
@@ -275,6 +276,44 @@ InheritanceSerializer = Serializer(
 
 
 class AlleleParquetSerializer:
+    BASE_SCHEMA_FIELDS = [
+        pa.field("bucket_index", pa.int32()),
+        pa.field("summary_variant_index", pa.int64()),
+        pa.field("allele_index", pa.int8()),
+        pa.field("chrom", pa.string()),
+        pa.field("position", pa.int32()),
+        pa.field("end_position", pa.int32()),
+        pa.field("reference", pa.string()),
+        pa.field("alternative", pa.string()),
+        pa.field("variant_type", pa.int8()),
+        pa.field("transmission_type", pa.int8()),
+        # pa.field("worst_effect", pa.string()),
+        pa.field("alternatives_data", pa.string()),
+        pa.field("effect_type", pa.string()),
+        pa.field("effect_gene", pa.string()),
+        pa.field("effect_data", pa.string()),
+        pa.field("family_variant_index", pa.int64()),
+        pa.field("family_id", pa.string()),
+        pa.field("is_denovo", pa.bool_()),
+        pa.field("variant_sexes", pa.int8()),
+        pa.field("variant_roles", pa.int32()),
+        pa.field("variant_inheritance", pa.int16()),
+        pa.field("variant_in_member", pa.string()),
+        pa.field("genotype_data", pa.string()),
+        pa.field("best_state_data", pa.string()),
+        pa.field("genetic_model_data", pa.int8()),
+        pa.field("inheritance_data", pa.string()),
+        pa.field("af_parents_called_count", pa.int32()),
+        pa.field("af_parents_called_percent", pa.float32()),
+        pa.field("af_allele_count", pa.int32()),
+        pa.field("af_allele_freq", pa.float32()),
+        pa.field("frequency_data", pa.string()),
+        pa.field("genomic_scores_data", pa.string()),
+    ]
+
+    @classmethod
+    def produce_base_schema(cls):
+        return pa.schema(cls.BASE_SCHEMA_FIELDS)
 
     SUMMARY_SEARCHABLE_PROPERTIES_TYPES = {
         "bucket_index": pa.int32(),
@@ -331,7 +370,7 @@ class AlleleParquetSerializer:
     ]
 
     ENUM_PROPERTIES = {
-        "variant_type": VariantType,
+        "variant_type": Allele.Type,
         "transmission_type": TransmissionType,
         "variant_in_sexes": Sex,
         "variant_in_roles": Role,
@@ -381,6 +420,12 @@ class AlleleParquetSerializer:
         "summary_variant_index",
         "effect_type",
         "effect_gene",
+        "effect_genes",
+        "effect_gene_genes",
+        "effect_gene_types",
+        "effect_details_details",
+        "effect_details_transcript_ids",
+        "effect_details",
         "variant_inheritance",
         "variant_in_member",
         "variant_roles",
@@ -391,13 +436,11 @@ class AlleleParquetSerializer:
         "family_variant_index"
     ]
 
-    def __init__(self, variants_schema, extra_attributes=None):
-        if variants_schema is None:
-            logger.info(
-                "serializer called without variants schema")
-        else:
-            logger.debug(
-                f"serializer variants schema {variants_schema.col_names}")
+    def __init__(self, annotation_schema, extra_attributes=None):
+        logger.debug(f"serializer annotation schema: {annotation_schema}")
+        if annotation_schema is None:
+            logger.warning(
+                "allele serializer called without variants schema")
 
         self.summary_prop_serializers = {
             "bucket_index": IntSerializer,
@@ -437,19 +480,19 @@ class AlleleParquetSerializer:
         self._schema = None
 
         additional_searchable_props = {}
+        additional_searchable_props["af_allele_freq"] = pa.float32()
+        additional_searchable_props["af_allele_count"] = pa.int32()
+        additional_searchable_props[
+            "af_parents_called_percent"
+        ] = pa.float32()
+        additional_searchable_props[
+            "af_parents_called_count"
+        ] = pa.int32()
+
         scores_searchable = {}
         scores_binary = {}
-        if variants_schema:
-            if "af_allele_freq" in variants_schema.col_names:
-                additional_searchable_props["af_allele_freq"] = pa.float32()
-                additional_searchable_props["af_allele_count"] = pa.int32()
-                additional_searchable_props[
-                    "af_parents_called_percent"
-                ] = pa.float32()
-                additional_searchable_props[
-                    "af_parents_called_count"
-                ] = pa.int32()
-            for col_name in variants_schema.col_names:
+        if annotation_schema:
+            for col_name in annotation_schema.public_fields:
                 if (
                     col_name
                     not in self.BASE_SEARCHABLE_PROPERTIES_TYPES.keys()
@@ -457,6 +500,7 @@ class AlleleParquetSerializer:
                     and col_name not in self.GENOMIC_SCORES_SCHEMA_CLEAN_UP
                     and col_name != "extra_attributes"
                 ):
+
                     scores_binary[col_name] = FloatSerializer
                     scores_searchable[col_name] = pa.float32()
 
@@ -564,12 +608,31 @@ class AlleleParquetSerializer:
         stream.close()
         return output
 
+    ALLELE_PROP_GETTERS = {
+        "effect_type": lambda a: a.worst_effect,
+        "effect_gene_genes": lambda a: a.effect_gene_symbols,
+        "effect_gene_types": lambda a: a.effect_types,
+        "effect_details_transcript_ids":
+        lambda a: list(a.effects.transcripts.keys()) if a.effects else None,
+        "effect_details_details":
+        lambda a: [
+            str(d) for d in a.effects.transcripts.values()
+        ] if a.effects else None,
+    }
+
     def _serialize_summary_allele(self, allele, stream):
+
+        def default_getter(allele, prop):
+            value = getattr(allele, prop, None)
+            if value is None:
+                value = allele.get_attribute(prop)
+            return value
+
         for property_serializers in self.summary_serializers_list:
             for prop, serializer in property_serializers.items():
-                value = getattr(allele, prop, None)
-                if value is None:
-                    value = allele.get_attribute(prop)
+                attr_getter = self.ALLELE_PROP_GETTERS.get(
+                    prop, lambda a: default_getter(a, prop))
+                value = attr_getter(allele)
                 self.write_property(stream, value, serializer)
 
     def serialize_summary_data(self, alleles):
@@ -722,15 +785,15 @@ class AlleleParquetSerializer:
                 vector.append(prop_value)
             vector = [vector]
 
-            effect_types = getattr(allele, "effect_types", None)
-            if effect_types is None:
-                effect_types = allele.get_attribute("effect_types")
+            effect_types = allele.effect_types
+            assert effect_types is not None
+
             if not len(effect_types):
                 effect_types = [None]
 
-            effect_gene_syms = getattr(allele, "effect_gene_symbols", None)
-            if effect_gene_syms is None:
-                effect_gene_syms = allele.get_attribute("effect_gene_symbols")
+            effect_gene_syms = allele.effect_gene_symbols
+            assert effect_gene_syms is not None
+
             if not len(effect_gene_syms):
                 effect_gene_syms = [None]
 
@@ -794,6 +857,8 @@ class AlleleParquetSerializer:
             self, allele, variant_data,
             extra_attributes_data,
             summary_vectors):
+        assert "variant_data" in self.schema.names
+
         vectors = summary_vectors[allele.allele_index]
         family_properties = []
         product_properties = []

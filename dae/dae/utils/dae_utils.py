@@ -7,6 +7,7 @@ DEL_RE = re.compile(r"^del\((\d+)\)$")
 
 def cached(prop):
     cached_val_name = "_" + prop.__name__
+
     def wrap(self):
         if getattr(self, cached_val_name, None) is None:
             setattr(self, cached_val_name, prop(self))

@@ -41,7 +41,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 __all__ = [
     "color_palette", "blend_palette", "desaturate", "get_color_cycle",
     "dark_palette", "light_palette", "diverging_palette",
-    "hls_palette", "husl_palette"
 ]
 
 
@@ -228,51 +227,7 @@ def color_palette(palette=None, n_colors=None, desat=None, as_cmap=False):
         if n_colors is None:
             n_colors = len(palette)
     else:
-
-        if n_colors is None:
-            # Use all colors in a qualitative palette or 6 of another kind
-            n_colors = QUAL_PALETTE_SIZES.get(palette, 6)
-
-        if palette in SEABORN_PALETTES:
-            # Named "seaborn variant" of matplotlib default color cycle
-            palette = SEABORN_PALETTES[palette]
-
-        elif palette == "hls":
-            # Evenly spaced colors in cylindrical RGB space
-            palette = hls_palette(n_colors, as_cmap=as_cmap)
-
-        elif palette == "husl":
-            # Evenly spaced colors in cylindrical Lab space
-            palette = husl_palette(n_colors, as_cmap=as_cmap)
-
-        elif palette.lower() == "jet":
-            # Paternalism
-            raise ValueError("No.")
-
-        elif palette.startswith("light:"):
-            # light palette to color specified in string
-            _, color = palette.split(":")
-            reverse = color.endswith("_r")
-            if reverse:
-                color = color[:-2]
-            palette = light_palette(color, n_colors, reverse=reverse, as_cmap=as_cmap)
-
-        elif palette.startswith("dark:"):
-            # light palette to color specified in string
-            _, color = palette.split(":")
-            reverse = color.endswith("_r")
-            if reverse:
-                color = color[:-2]
-            palette = dark_palette(color, n_colors, reverse=reverse, as_cmap=as_cmap)
-
-        elif palette.startswith("blend:"):
-            # blend palette between colors specified in string
-            _, colors = palette.split(":")
-            colors = colors.split(",")
-            palette = blend_palette(colors, n_colors, as_cmap=as_cmap)
-
-        else:
-            raise ValueError("%s is not a valid palette name" % palette)
+        raise ValueError("String palettes not supported")
 
     if desat is not None:
         palette = [desaturate(c, desat) for c in palette]
@@ -490,151 +445,6 @@ def light_palette(color, n_colors=6, reverse=False, as_cmap=False, input="rgb"):
     gray = _color_to_rgb((h, gray_s, gray_l), input="husl")
     colors = [rgb, gray] if reverse else [gray, rgb]
     return blend_palette(colors, n_colors, as_cmap)
-
-
-def hls_palette(n_colors=6, h=.01, l=.6, s=.65, as_cmap=False):  # noqa
-    """Get a set of evenly spaced colors in HLS hue space.
-
-    h, l, and s should be between 0 and 1
-
-    Parameters
-    ----------
-
-    n_colors : int
-        number of colors in the palette
-    h : float
-        first hue
-    l : float
-        lightness
-    s : float
-        saturation
-
-    Returns
-    -------
-    list of RGB tuples or :class:`matplotlib.colors.Colormap`
-
-    See Also
-    --------
-    husl_palette : Make a palette using evenly spaced hues in the HUSL system.
-
-    Examples
-    --------
-
-    Create a palette of 10 colors with the default parameters:
-
-    .. plot::
-        :context: close-figs
-
-        >>> import seaborn as sns; sns.set_theme()
-        >>> sns.palplot(sns.hls_palette(10))
-
-    Create a palette of 10 colors that begins at a different hue value:
-
-    .. plot::
-        :context: close-figs
-
-        >>> sns.palplot(sns.hls_palette(10, h=.5))
-
-    Create a palette of 10 colors that are darker than the default:
-
-    .. plot::
-        :context: close-figs
-
-        >>> sns.palplot(sns.hls_palette(10, l=.4))
-
-    Create a palette of 10 colors that are less saturated than the default:
-
-    .. plot::
-        :context: close-figs
-
-        >>> sns.palplot(sns.hls_palette(10, s=.4))
-
-    """
-    if as_cmap:
-        n_colors = 256
-    hues = np.linspace(0, 1, int(n_colors) + 1)[:-1]
-    hues += h
-    hues %= 1
-    hues -= hues.astype(int)
-    palette = [colorsys.hls_to_rgb(h_i, l, s) for h_i in hues]
-    if as_cmap:
-        return mpl.colors.ListedColormap(palette, "hls")
-    else:
-        return _ColorPalette(palette)
-
-
-def husl_palette(n_colors=6, h=.01, s=.9, l=.65, as_cmap=False):  # noqa
-    """Get a set of evenly spaced colors in HUSL hue space.
-
-    h, s, and l should be between 0 and 1
-
-    Parameters
-    ----------
-
-    n_colors : int
-        number of colors in the palette
-    h : float
-        first hue
-    s : float
-        saturation
-    l : float
-        lightness
-
-    Returns
-    -------
-    list of RGB tuples or :class:`matplotlib.colors.Colormap`
-
-    See Also
-    --------
-    hls_palette : Make a palette using evently spaced circular hues in the
-                  HSL system.
-
-    Examples
-    --------
-
-    Create a palette of 10 colors with the default parameters:
-
-    .. plot::
-        :context: close-figs
-
-        >>> import seaborn as sns; sns.set_theme()
-        >>> sns.palplot(sns.husl_palette(10))
-
-    Create a palette of 10 colors that begins at a different hue value:
-
-    .. plot::
-        :context: close-figs
-
-        >>> sns.palplot(sns.husl_palette(10, h=.5))
-
-    Create a palette of 10 colors that are darker than the default:
-
-    .. plot::
-        :context: close-figs
-
-        >>> sns.palplot(sns.husl_palette(10, l=.4))
-
-    Create a palette of 10 colors that are less saturated than the default:
-
-    .. plot::
-        :context: close-figs
-
-        >>> sns.palplot(sns.husl_palette(10, s=.4))
-
-    """
-    if as_cmap:
-        n_colors = 256
-    hues = np.linspace(0, 1, int(n_colors) + 1)[:-1]
-    hues += h
-    hues %= 1
-    hues *= 359
-    s *= 99
-    l *= 99  # noqa
-    palette = [_color_to_rgb((h_i, s, l), input="husl") for h_i in hues]
-    if as_cmap:
-        return mpl.colors.ListedColormap(palette, "hsl")
-    else:
-        return _ColorPalette(palette)
 
 
 def diverging_palette(h_neg, h_pos, s=75, l=50, sep=1, n=6,  # noqa

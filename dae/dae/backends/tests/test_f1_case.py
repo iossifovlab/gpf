@@ -17,8 +17,8 @@ def test_f1_check_all_variants_effects(variants_vcf):
         sa1 = summary_alleles[1]
         sa2 = summary_alleles[2]
 
-        assert sa1.effect.worst == "synonymous"
-        assert sa2.effect.worst == "missense"
+        assert sa1.effects.worst == "synonymous"
+        assert sa2.effects.worst == "missense"
 
     assert len(vs) == 7
 

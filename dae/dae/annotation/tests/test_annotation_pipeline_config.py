@@ -1,0 +1,484 @@
+import pytest
+import textwrap
+
+from dae.annotation.annotation_factory import AnnotationConfigParser
+from dae.annotation.score_annotator import AlleleScoreAnnotator, \
+    NPScoreAnnotator, PositionScoreAnnotator
+from dae.annotation.effect_annotator import EffectAnnotatorAdapter
+from dae.annotation.liftover_annotator import LiftOverAnnotator
+
+
+def test_np_score_annotator_simple():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+            - np_score:
+                resource_id: np_score1
+            """)
+    )
+    assert pipeline_config is not None
+
+    assert isinstance(pipeline_config, list)
+    assert len(pipeline_config) == 1
+
+    config = pipeline_config[0]
+    print(config)
+    assert "annotator_type" in config
+    assert config["annotator_type"] == "np_score"
+
+    assert config["resource_id"] == "np_score1"
+
+    assert "position_score" not in config
+    assert config.get("position_score") is None
+
+
+def test_np_score_annotator_short():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+            - np_score: np_score1
+            """)
+    )
+    assert pipeline_config is not None
+    assert isinstance(pipeline_config, list)
+    assert len(pipeline_config) == 1
+
+    config = pipeline_config[0]
+    print(config)
+    assert config["annotator_type"] == "np_score"
+    assert config["resource_id"] == "np_score1"
+
+
+def test_np_score_annotator_with_liftover():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+            - np_score:
+                resource_id: np_score1
+                liftover_id: hg38tohg19
+            """)
+    )
+    assert pipeline_config is not None
+    assert isinstance(pipeline_config, list)
+    assert len(pipeline_config) == 1
+
+    config = pipeline_config[0]
+    print(config)
+    assert config["annotator_type"] == "np_score"
+    assert config["resource_id"] == "np_score1"
+    assert config["liftover_id"] == "hg38tohg19"
+
+
+def test_np_score_annotator_without_liftover():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+            - np_score:
+                resource_id: np_score1
+            """)
+    )
+    assert pipeline_config is not None
+    assert isinstance(pipeline_config, list)
+    assert len(pipeline_config) == 1
+
+    config = pipeline_config[0]
+    config = NPScoreAnnotator.validate_config(config)
+    print(config)
+
+    assert config["annotator_type"] == "np_score"
+    assert config["resource_id"] == "np_score1"
+
+
+def test_np_score_annotator_attributes():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+            - np_score:
+                resource_id: hg38/TESTCADD
+                attributes:
+                - destination: score1
+                  source: score1
+                - destination: score2
+                  source: score2
+                - destination: score3
+                  source: score3
+            """)
+    )
+    assert pipeline_config is not None
+    assert isinstance(pipeline_config, list)
+    assert len(pipeline_config) == 1
+
+    config = pipeline_config[0]
+    config = NPScoreAnnotator.validate_config(config)
+    print(config)
+
+    assert config["annotator_type"] == "np_score"
+
+    assert config["resource_id"] == "hg38/TESTCADD"
+
+    assert len(config["attributes"]) == 3
+    attributes = config["attributes"]
+    assert len(attributes) == 3
+
+    assert attributes[0]["source"] == "score1"
+    assert attributes[0]["destination"] == "score1"
+
+    assert attributes[1]["source"] == "score2"
+    assert attributes[1]["destination"] == "score2"
+
+    assert attributes[2]["source"] == "score3"
+    assert attributes[2]["destination"] == "score3"
+
+
+def test_np_score_annotator_attributes_short():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+            - np_score:
+                resource_id: hg38/TESTCADD
+                attributes:
+                - score1
+                - score2
+                - score3
+            """)
+    )
+
+    config = pipeline_config[0]
+    config = NPScoreAnnotator.validate_config(config)
+    print(config)
+
+    assert config["annotator_type"] == "np_score"
+
+    assert config["resource_id"] == "hg38/TESTCADD"
+
+    assert len(config["attributes"]) == 3
+    attributes = config["attributes"]
+    assert len(attributes) == 3
+
+    assert attributes[0]["source"] == "score1"
+    assert attributes[0]["destination"] == "score1"
+
+    assert attributes[1]["source"] == "score2"
+    assert attributes[1]["destination"] == "score2"
+
+    assert attributes[2]["source"] == "score3"
+    assert attributes[2]["destination"] == "score3"
+
+
+def test_np_score_annotator_attributes_sources_only():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+            - np_score:
+                resource_id: hg38/TESTCADD
+                attributes:
+                - source: score1
+                - source: score2
+                - source: score3
+            """)
+    )
+    assert pipeline_config is not None
+    assert isinstance(pipeline_config, list)
+    assert len(pipeline_config) == 1
+
+    config = pipeline_config[0]
+    config = NPScoreAnnotator.validate_config(config)
+
+    attributes = config["attributes"]
+    assert len(attributes) == 3
+
+    assert attributes[0]["source"] == "score1"
+    assert attributes[0]["destination"] == "score1"
+
+    assert attributes[1]["source"] == "score2"
+    assert attributes[1]["destination"] == "score2"
+
+    assert attributes[2]["source"] == "score3"
+    assert attributes[2]["destination"] == "score3"
+
+
+def test_np_score_annotator_attributes_with_aggr():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+        - np_score:
+            resource_id: hg38/TESTCADD
+            attributes:
+            - destination: score1
+              source: score1
+              position_aggregator: mean
+              nucleotide_aggregator: mean
+            """)
+    )
+    assert pipeline_config is not None
+    assert isinstance(pipeline_config, list)
+    assert len(pipeline_config) == 1
+
+    config = pipeline_config[0]
+
+    attributes = config["attributes"]
+    assert len(attributes) == 1
+
+    assert attributes[0]["source"] == "score1"
+    assert attributes[0]["destination"] == "score1"
+    assert attributes[0]["position_aggregator"] == "mean"
+    assert attributes[0]["nucleotide_aggregator"] == "mean"
+
+
+def test_np_score_annotator_attributes_without_aggr():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+        - np_score:
+            resource_id: hg38/TESTCADD
+            attributes:
+            - destination: score1
+              source: score1
+            """)
+    )
+    config = pipeline_config[0]
+
+    attributes = config["attributes"]
+    assert len(attributes) == 1
+
+    assert attributes[0]["source"] == "score1"
+    assert attributes[0]["destination"] == "score1"
+    assert "position_aggregator" not in attributes[0]
+    assert "nucleotide_aggregator" not in attributes[0]
+
+
+def test_position_score_annotator_attributes_with_aggr_fails():
+    with pytest.raises(ValueError) as ex_info:
+        pipeline_config = AnnotationConfigParser.parse(
+            textwrap.dedent("""
+                - position_score:
+                    resource_id: hg38/TESTCADD
+                    attributes:
+                    - destination: score1
+                      source: score1
+                      position_aggregator: mean
+                      nucleotide_aggregator: mean
+            """)
+        )
+        config = pipeline_config[0]
+        PositionScoreAnnotator.validate_config(config)
+
+    assert "nucleotide_aggregator" in str(ex_info.value)
+
+
+def test_position_score_annotator_attributes_with_aggr():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+        - position_score:
+            resource_id: hg38/TESTCADD
+            attributes:
+            - destination: score1
+              source: score1
+              position_aggregator: mean
+            """)
+    )
+
+    config = pipeline_config[0]
+    config = PositionScoreAnnotator.validate_config(config)
+    assert config["annotator_type"] == "position_score"
+
+    attributes = config["attributes"]
+    assert len(attributes) == 1
+
+    assert attributes[0]["source"] == "score1"
+    assert attributes[0]["destination"] == "score1"
+    assert attributes[0]["position_aggregator"] == "mean"
+
+
+def test_allele_score_annotator_attributes_with_aggr_fails():
+    with pytest.raises(ValueError) as ex_info:
+        pipeline_config = AnnotationConfigParser.parse(
+            textwrap.dedent("""
+            - allele_score:
+                resource_id: hg38/TESTCADD
+                attributes:
+                - destination: score1
+                source: score1
+                position_aggregator: mean
+                nucleotide_aggregator: mean
+                """)
+        )
+        AlleleScoreAnnotator.validate_config(pipeline_config[0])
+
+    assert "nucleotide_aggregator" in str(ex_info.value)
+    assert "position_aggregator" in str(ex_info.value)
+
+
+def test_allele_score_annotator_attributes():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+        - allele_score:
+            resource_id: hg38/TESTCADD
+            attributes:
+            - destination: score1
+              source: score1
+            """)
+    )
+
+    config = pipeline_config[0]
+    assert config["annotator_type"] == "allele_score"
+
+    attributes = config["attributes"]
+    assert len(attributes) == 1
+
+    assert attributes[0]["source"] == "score1"
+    assert attributes[0]["destination"] == "score1"
+
+
+def test_allele_score_annotator_attributes_short():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+        - allele_score:
+            resource_id: hg38/TESTCADD
+            attributes:
+            - score1
+            - score2
+        """)
+    )
+
+    config = AlleleScoreAnnotator.validate_config(pipeline_config[0])
+    assert config["annotator_type"] == "allele_score"
+    attributes = config["attributes"]
+    assert len(attributes) == 2
+
+    assert attributes[0]["source"] == "score1"
+    assert attributes[0]["destination"] == "score1"
+
+    assert attributes[1]["source"] == "score2"
+    assert attributes[1]["destination"] == "score2"
+
+
+def test_allele_score_annotator_short_attributes_none():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+        - allele_score: hg38/TESTCADD
+        """)
+    )
+
+    config = AlleleScoreAnnotator.validate_config(pipeline_config[0])
+    assert config["annotator_type"] == "allele_score"
+    assert config.get("attributes") is None
+
+
+def test_allele_score_annotator_no_attributes():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+        - allele_score:
+            resource_id: hg38/TESTCADD
+        """)
+    )
+
+    config = AlleleScoreAnnotator.validate_config(pipeline_config[0])
+    assert config.get("attributes") is None
+
+
+def test_effect_annotator():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+        - effect_annotator:
+            gene_models: hg38/gene_models/refSeq_20200330
+            genome: hg38/genomes/GRCh38-hg38
+            attributes:
+            - source: worst_effect
+              destination: old_worst_effect
+        """)
+    )
+
+    config = EffectAnnotatorAdapter.validate_config(pipeline_config[0])
+    assert config["annotator_type"] == "effect_annotator"
+
+    assert config["genome"] == "hg38/genomes/GRCh38-hg38"
+    assert config["gene_models"] == "hg38/gene_models/refSeq_20200330"
+
+    attributes = config["attributes"]
+    assert len(attributes) == 1
+
+    assert attributes[0]["source"] == "worst_effect"
+    assert attributes[0]["destination"] == "old_worst_effect"
+
+
+def test_effect_annotator_extra():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+        - effect_annotator:
+            gene_models: hg38/gene_models/refSeq_20200330
+            genome: hg38/genomes/GRCh38-hg38
+            promoter_len: 100
+        """)
+    )
+
+    config = EffectAnnotatorAdapter.validate_config(pipeline_config[0])
+    assert config["annotator_type"] == "effect_annotator"
+
+    assert config["promoter_len"] == 100
+
+
+def test_effect_annotator_minimal():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+        - effect_annotator
+        """)
+    )
+
+    config = EffectAnnotatorAdapter.validate_config(pipeline_config[0])
+    assert config["annotator_type"] == "effect_annotator"
+
+    assert config.get("gene_models") is None
+    assert config.get("genome") is None
+    assert config.get("attributes") is None
+
+
+def test_liftover_annotator():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+        - liftover_annotator:
+            liftover_id: hg38tohg19
+            chain: liftover/hg38tohg19
+            target_genome: hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174
+        """)
+    )
+
+    config = LiftOverAnnotator.validate_config(pipeline_config[0])
+    assert config["annotator_type"] == "liftover_annotator"
+
+    assert config["chain"] == "liftover/hg38tohg19"
+    assert config["liftover_id"] == "hg38tohg19"
+    assert config["target_genome"] == \
+        "hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174"
+
+
+def test_empty_config():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+        """)
+    )
+
+    assert len(pipeline_config) == 0
+
+
+def test_effect_annotator_extra_attributes():
+    pipeline_config = AnnotationConfigParser.parse(
+        textwrap.dedent("""
+        - effect_annotator:
+            gene_models: hg38/gene_models/refSeq_20200330
+            genome: hg38/genomes/GRCh38-hg38
+            promoter_len: 100
+            attributes:
+            - source: genes
+              destination: list_of_genes
+              format: list
+              internal: yes
+            - source: genes
+              format: str
+            - source: genes_LGD
+            - source: genes_missense
+        """)
+    )
+
+    config = EffectAnnotatorAdapter.validate_config(pipeline_config[0])
+    assert config["annotator_type"] == "effect_annotator"
+
+    assert config["promoter_len"] == 100
+
+    attributes = config.get("attributes")
+    assert len(attributes) == 4
+
+    attr_2 = attributes[2]
+    assert attr_2.get("source") == "genes_LGD"
+    assert attr_2.get("destination") == "genes_LGD"

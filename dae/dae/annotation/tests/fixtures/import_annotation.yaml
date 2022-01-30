@@ -1,0 +1,15 @@
+- effect_annotator:
+    gene_models: hg38/GRCh38-hg38/gene_models/refSeq_20200330
+    genome: hg38/GRCh38-hg38/genome
+
+
+- liftover_annotator:
+    liftover_id: test_liftover
+    chain: test_chain
+    target_genome: test_genome
+
+- position_score:
+    resource_id: hg38/TESTphastCons100way
+
+- np_score:
+    resource_id: hg38/TESTCADD

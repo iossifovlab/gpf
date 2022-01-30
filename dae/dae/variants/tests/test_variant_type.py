@@ -1,15 +1,15 @@
 import pytest
 
-from dae.variants.attributes import VariantType
+from dae.variants.core import Allele
 
 
 @pytest.mark.parametrize(
-    "variant_type",
+    "allele_type",
     [
-        VariantType.insertion,
-        VariantType.deletion,
-        VariantType.tandem_repeat_del,
-        VariantType.tandem_repeat_ins,
+        Allele.Type.small_insertion,
+        Allele.Type.small_deletion,
+        Allele.Type.tandem_repeat_del,
+        Allele.Type.tandem_repeat_ins,
     ])
-def test_is_indel(variant_type):
-    assert variant_type & VariantType.indel
+def test_is_indel(allele_type):
+    assert allele_type & Allele.Type.indel

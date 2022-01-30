@@ -28,9 +28,9 @@ setuptools.setup(
         "dae/tools/pheno2browser.py",
         "dae/tools/simple_pheno_import.py",
         "dae/tools/simple_study_import.py",
-        "dae/annotation/annotation_pipeline.py",
-        "dae/tools/generate_histogram.py",
-        "dae/tools/generate_histogram2.py",
+        # "dae/annotation/annotation_pipeline.py",
+        # "dae/tools/generate_histogram.py",
+        # "dae/tools/generate_histogram2.py",
         "dae/tools/run_gpf_impala.sh",
         "dae/tools/simple_family2pedigree.py",
         "dae/tools/ped2parquet.py",
@@ -42,11 +42,22 @@ setuptools.setup(
         "dae/tools/genotype_data_tool.py",
         "dae/tools/vcfinfo_extractor.py",
         "dae/tools/generate_autism_gene_profile.py",
+        "dae/tools/create_genomic_resource_repository.py",
     ],
     entry_points="""
+    [dae.genomic_resources.plugins]
+    gpf_instance=dae.gpf_instance_plugin.gpf_instance_context_plugin:init_gpf_instance_genomic_context_plugin
     [console_scripts]
-    annotate_variants.py=dae.tools.annotate_variants:cli
-    annotate_variants_vcf.py=dae.tools.annotate_variants:cli_vcf
+
+    grr_manage=dae.genomic_resources.cli:cli_manage
+    grr_browse=dae.genomic_resources.cli:cli_browse
+
+    annotate_variant_effects=dae.effect_annotation.cli:cli_columns
+    annotate_variant_effects_vcf=dae.effect_annotation.cli:cli_vcf
+
+    annotate_columns=dae.annotation.annotate_columns:cli
+    annotate_vcf=dae.annotation.annotate_vcf:cli
+
     dae2parquet.py=dae.tools.dae2parquet:main
     vcf2parquet.py=dae.tools.vcf2parquet:main
     denovo2parquet.py=dae.tools.denovo2parquet:main

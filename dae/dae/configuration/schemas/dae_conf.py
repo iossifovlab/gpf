@@ -6,14 +6,20 @@ from dae.configuration.gpf_config_parser import (
 config_reference_schema = {
     "conf_file": {
         "type": "string",
-        "required": True,
-        "check_with": validate_existing_path,
+        "required": False,
+        # "check_with": validate_existing_path,
         "coerce": "abspath",
     },
     "dir": {
         "type": "string",
-        "check_with": validate_existing_path,
+        # "check_with": validate_existing_path,
         "coerce": "abspath",
+    },
+}
+
+resource_schema = {
+    "resource_id": {
+        "type": "string",
     },
 }
 
@@ -50,6 +56,18 @@ remote_schema = {
     "password": {"type": "string"},
 }
 
+grr_schema = {
+    "id": {"type": "string", },
+    "type": {"type": "string", },
+    "url": {"type": "string", },
+    "cache_dir": {
+        "type": "string",
+        "check_with": validate_path,
+        "coerce": "abspath",
+    },
+
+}
+
 storage_schema = {
     "storage_type": {"type": "string", "allowed": ["impala", "filesystem"]},
     "dir": {
@@ -81,6 +99,13 @@ dae_conf_schema = {
         "check_with": validate_existing_path,
         "coerce": "abspath",
     },
+    "conf_dir": {
+        "type": "string",
+        "check_with": validate_existing_path,
+        "coerce": "abspath",
+        "required": True,
+    },
+
     "mirror_of": {
         "type": "string",
         "default": None, 'nullable': True,
@@ -95,14 +120,22 @@ dae_conf_schema = {
     "genotype_storage": {
         "type": "dict",
         "schema": {"default": {"type": "string"}},
+        "default": {"default": "genotype_filesystem"},
     },
     "storage": {
         "type": "dict",
         "valuesrules": {"type": "dict", "schema": storage_schema},
     },
-    "studies_db": {"type": "dict", "schema": config_reference_schema},
-    "datasets_db": {"type": "dict", "schema": config_reference_schema},
-    "genomes_db": {"type": "dict", "schema": config_reference_schema},
+    "studies": {
+        "type": "dict",
+        "schema": config_reference_schema,
+        "default": {"dir": "studies"},
+    },
+    "datasets": {
+        "type": "dict",
+        "schema": config_reference_schema,
+        "default": {"dir": "datasets"}
+    },
     "genomic_scores_db": {"type": "dict", "schema": config_reference_schema},
     "autism_gene_tool_config": {
         "type": "dict", "schema": config_reference_schema
@@ -113,7 +146,7 @@ dae_conf_schema = {
         "schema": {
             "dir": {
                 "type": "string",
-                "check_with": validate_existing_path,
+                # "check_with": validate_existing_path,
                 "coerce": "abspath",
             }
         },
@@ -122,6 +155,15 @@ dae_conf_schema = {
         "type": "list",
         "valuesrules": {"type": "dict", "schema": remote_schema}
     },
+
+    "grr": {
+        "type": "dict",
+        "schema": grr_schema,
+    },
+
+    "reference_genome": {"type": "dict", "schema": resource_schema},
+    "gene_models": {"type": "dict", "schema": resource_schema},
+
     "gene_info_db": {"type": "dict", "schema": config_reference_schema},
     "default_study_config": {
         "type": "dict",
@@ -136,7 +178,7 @@ dae_conf_schema = {
             },
             "permission_denied_prompt_file": {
                 "type": "string",
-                "check_with": validate_existing_path,
+                # "check_with": validate_existing_path,
                 "coerce": "abspath",
             }
         },

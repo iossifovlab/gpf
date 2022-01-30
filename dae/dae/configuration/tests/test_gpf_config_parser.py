@@ -90,11 +90,12 @@ def test_config_parser_load_paths(conf_schema_path, fixtures_dir, mocker):
     )
 
 
-@pytest.mark.xfail()
 def test_config_parser_load_incorrect_paths(conf_schema_path, fixtures_dir):
-    GPFConfigParser.load_config(
-        os.path.join(fixtures_dir, "wrong_path_conf.toml"), conf_schema_path
-    )
+    with pytest.raises(ValueError):
+        GPFConfigParser.load_config(
+            os.path.join(fixtures_dir, "wrong_path_conf.toml"),
+            conf_schema_path
+        )
 
 
 def test_config_parser_env_interpolation(
@@ -114,11 +115,12 @@ def test_config_parser_env_interpolation(
     assert config.section1.someval3 == 52345
 
 
-@pytest.mark.xfail()
 def test_config_parser_env_interpolation_missing(
     conf_schema_basic, fixtures_dir
 ):
-    GPFConfigParser.load_config(
-        os.path.join(fixtures_dir, "env_interpolation_conf.toml"),
-        conf_schema_basic,
-    )
+
+    with pytest.raises(ValueError):
+        GPFConfigParser.load_config(
+            os.path.join(fixtures_dir, "env_interpolation_conf.toml"),
+            conf_schema_basic,
+        )

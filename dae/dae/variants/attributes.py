@@ -259,188 +259,6 @@ class Inheritance(enum.Enum):
         return self.name
 
 
-class VariantType(enum.Enum):
-    invalid = 0
-    substitution = 1
-    insertion = 1 << 1
-    deletion = 1 << 2
-    comp = 1 << 3
-    indel = insertion | deletion | comp
-    cnv_p = 1 << 4
-    cnv_m = 1 << 5
-    cnv = cnv_p | cnv_m
-
-    tandem_repeat = 1 << 6
-    tandem_repeat_ins = tandem_repeat | insertion
-    tandem_repeat_del = tandem_repeat | deletion
-
-    def __and__(self, other):
-        assert isinstance(other, VariantType), type(other)
-        return self.value & other.value
-
-    def __or__(self, other):
-        assert isinstance(other, VariantType)
-        return self.value | other.value
-
-    def __ior__(self, other):
-        assert isinstance(other, VariantType)
-        return VariantType(self.value | other.value)
-
-    @staticmethod
-    def from_name(name):
-        name = name.lower().strip()
-        if name == "sub" or name == "substitution":
-            return VariantType.substitution
-        elif name == "ins" or name == "insertion":
-            return VariantType.insertion
-        elif name == "del" or name == "deletion":
-            return VariantType.deletion
-        elif name == "comp" or name == "complex":
-            return VariantType.comp
-        elif name == "cnv_p" or name == "cnv+":
-            return VariantType.cnv_p
-        elif name == "cnv_m" or name == "cnv-":
-            return VariantType.cnv_m
-        elif name.lower() in set(["tr", "tandem_repeat"]):
-            return VariantType.tandem_repeat
-
-        raise ValueError(f"unexpected variant type: {name}")
-
-    @staticmethod
-    def from_cshl_variant(variant):
-        # FIXME: Change logic to use entire string
-        if variant is None:
-            return VariantType.invalid
-
-        vt = variant[0:2]
-        if vt == "su":
-            return VariantType.substitution
-        elif vt == "in":
-            return VariantType.insertion
-        elif vt == "de":
-            return VariantType.deletion
-        elif vt == "co":
-            return VariantType.comp
-        elif vt == "TR":
-            return VariantType.tandem_repeat
-        elif variant == "CNV+":
-            return VariantType.cnv_p
-        elif variant == "CNV-":
-            return VariantType.cnv_m
-        else:
-            raise ValueError(f"unexpected variant type: {variant}")
-
-    @staticmethod
-    def from_value(value):
-        if value is None:
-            return None
-        return VariantType(value)
-
-    @staticmethod
-    def is_cnv(vt):
-        if vt is None:
-            return False
-        assert isinstance(vt, VariantType)
-        return vt & VariantType.cnv
-
-    @staticmethod
-    def is_tr(vt):
-        if vt is None:
-            return False
-        assert isinstance(vt, VariantType)
-        return vt & VariantType.tandem_repeat
-
-    def __repr__(self) -> str:
-        return _VARIANT_TYPE_DISPLAY_NAME.get(self.name) or self.name
-
-    def __str__(self) -> str:
-        return _VARIANT_TYPE_DISPLAY_NAME.get(self.name) or self.name
-
-    def __lt__(self, other):
-        return self.value < other.value
-
-
-class VariantDesc:
-
-    def __init__(
-            self, variant_type, position,
-            end_position=None,
-            ref=None, alt=None, length=None,
-            tr_ref=None, tr_alt=None, tr_unit=None):
-
-        self.variant_type = variant_type
-        self.position = position
-        self.end_position = end_position
-
-        self.ref = ref
-        self.alt = alt
-        self.length = length
-
-        self.tr_ref = tr_ref
-        self.tr_alt = tr_alt
-        self.tr_unit = tr_unit
-
-    def __repr__(self):
-        return self.to_cshl_short()
-
-    def to_cshl_short(self):
-
-        if self.variant_type & VariantType.substitution:
-            return f"sub({self.ref}->{self.alt})"
-        elif self.variant_type & VariantType.insertion:
-            return f"ins({self.alt})"
-        elif self.variant_type & VariantType.deletion:
-            return f"del({self.length})"
-        elif self.variant_type & VariantType.comp:
-            return f"comp({self.ref}->{self.alt})"
-        elif self.variant_type & VariantType.cnv_p:
-            return "CNV+"
-        elif self.variant_type & VariantType.cnv_m:
-            return "CNV-"
-
-    def to_cshl_full(self):
-
-        if self.variant_type & VariantType.tandem_repeat:
-            return f"TR({self.tr_ref}x{self.tr_unit}->{self.tr_alt})"
-        elif self.variant_type & VariantType.substitution:
-            return f"sub({self.ref}->{self.alt})"
-        elif self.variant_type & VariantType.insertion:
-            return f"ins({self.alt})"
-        elif self.variant_type & VariantType.deletion:
-            return f"del({self.length})"
-        elif self.variant_type & VariantType.comp:
-            return f"comp({self.ref}->{self.alt})"
-        elif self.variant_type & VariantType.cnv_p:
-            return "CNV+"
-        elif self.variant_type & VariantType.cnv_m:
-            return "CNV-"
-
-    @staticmethod
-    def combine(variant_descs):
-        if all([variant_descs[0].variant_type == vd.variant_type
-                for vd in variant_descs]) or \
-            all([
-                vd.variant_type & VariantType.tandem_repeat
-                for vd in variant_descs]):
-
-            result = VariantDesc(
-                variant_descs[0].variant_type,
-                variant_descs[0].position,
-                ref=variant_descs[0].ref,
-                alt=",".join(filter(
-                    lambda a: a is not None,
-                    [vd.alt for vd in variant_descs])),
-                length=variant_descs[-1].length,
-                tr_ref=variant_descs[0].tr_ref,
-                tr_alt=",".join(filter(
-                    lambda a: a is not None,
-                    [str(vd.tr_alt) for vd in variant_descs])),
-                tr_unit=variant_descs[0].tr_unit
-            )
-            return [result.to_cshl_full()]
-        return [str(vd) for vd in variant_descs]
-
-
 class GeneticModel(enum.Enum):
     autosomal = 1
     autosomal_broken = 2
@@ -454,3 +272,104 @@ class TransmissionType(enum.Enum):
     unknown = 0
     transmitted = 1
     denovo = 2
+
+
+# class VariantType(enum.Enum):
+#     invalid = 0
+#     substitution = 1
+#     insertion = 1 << 1
+#     deletion = 1 << 2
+#     comp = 1 << 3
+#     indel = insertion | deletion | comp
+#     cnv_p = 1 << 4
+#     cnv_m = 1 << 5
+#     cnv = cnv_p | cnv_m
+
+#     tandem_repeat = 1 << 6
+#     tandem_repeat_ins = tandem_repeat | insertion
+#     tandem_repeat_del = tandem_repeat | deletion
+
+#     def __and__(self, other):
+#         assert isinstance(other, VariantType), type(other)
+#         return self.value & other.value
+
+#     def __or__(self, other):
+#         assert isinstance(other, VariantType)
+#         return self.value | other.value
+
+#     def __ior__(self, other):
+#         assert isinstance(other, VariantType)
+#         return VariantType(self.value | other.value)
+
+#     @staticmethod
+#     def from_name(name):
+#         name = name.lower().strip()
+#         if name == "sub" or name == "substitution":
+#             return VariantType.substitution
+#         elif name == "ins" or name == "insertion":
+#             return VariantType.insertion
+#         elif name == "del" or name == "deletion":
+#             return VariantType.deletion
+#         elif name == "comp" or name == "complex":
+#             return VariantType.comp
+#         elif name == "cnv_p" or name == "cnv+":
+#             return VariantType.cnv_p
+#         elif name == "cnv_m" or name == "cnv-":
+#             return VariantType.cnv_m
+#         elif name.lower() in set(["tr", "tandem_repeat"]):
+#             return VariantType.tandem_repeat
+
+#         raise ValueError(f"unexpected variant type: {name}")
+
+#     @staticmethod
+#     def from_cshl_variant(variant):
+#         # FIXME: Change logic to use entire string
+#         if variant is None:
+#             return VariantType.invalid
+
+#         vt = variant[0:2]
+#         if vt == "su":
+#             return VariantType.substitution
+#         elif vt == "in":
+#             return VariantType.insertion
+#         elif vt == "de":
+#             return VariantType.deletion
+#         elif vt == "co":
+#             return VariantType.comp
+#         elif vt == "TR":
+#             return VariantType.tandem_repeat
+#         elif variant == "CNV+":
+#             return VariantType.cnv_p
+#         elif variant == "CNV-":
+#             return VariantType.cnv_m
+#         else:
+#             raise ValueError(f"unexpected variant type: {variant}")
+
+#     @staticmethod
+#     def from_value(value):
+#         if value is None:
+#             return None
+#         return VariantType(value)
+
+#     @staticmethod
+#     def is_cnv(vt):
+#         if vt is None:
+#             return False
+#         assert isinstance(vt, VariantType)
+#         return vt & VariantType.cnv
+
+#     @staticmethod
+#     def is_tr(vt):
+#         if vt is None:
+#             return False
+#         assert isinstance(vt, VariantType)
+#         return vt & VariantType.tandem_repeat
+
+#     def __repr__(self) -> str:
+#         return _VARIANT_TYPE_DISPLAY_NAME.get(self.name) or self.name
+
+#     def __str__(self) -> str:
+#         return _VARIANT_TYPE_DISPLAY_NAME.get(self.name) or self.name
+
+#     def __lt__(self, other):
+#         return self.value < other.value

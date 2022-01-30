@@ -1,0 +1,39 @@
+---
+
+type: allele_score
+
+table:
+  filename: TESTFreq.tsv.gz
+  format: tabix
+  # index_file:
+  #   filename: TESTFreq.tsv.gz.tbi
+
+  # defined by score_type
+  chrom: 
+    name: chr
+  pos_begin:
+    name: position
+  reference:
+    name: ref
+  alternative:
+    name: alt
+
+# score values
+scores:
+    - id: altFreq
+      type: float
+      desc: ""
+      name: all.altFreq
+
+    - id: altFreq2
+      type: float
+      desc: ""
+      name: all.altFreq2
+
+default_annotation:
+  attributes:
+    - source: altFreq
+      destination: alt_freq
+
+    - source: altFreq2
+      destination: alt_freq2

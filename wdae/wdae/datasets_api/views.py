@@ -1,3 +1,5 @@
+import os
+
 from rest_framework.response import Response
 from rest_framework import status
 from guardian.shortcuts import get_groups_with_perms
@@ -90,12 +92,19 @@ class PermissionDeniedPromptView(QueryBaseView):
     def __init__(self):
         super(PermissionDeniedPromptView, self).__init__()
 
-        prompt_filepath = (
-            self.gpf_instance.dae_config.gpfjs.permission_denied_prompt_file
-        )
+        dae_config = self.gpf_instance.dae_config
+        if dae_config.gpfjs is None or \
+                dae_config.gpfjs.permission_denied_promtp_file is None:
+            self.permission_denied_prompt = ""
+        else:
+            prompt_filepath = dae_config.gpfjs.permission_denied_prompt_file
 
-        with open(prompt_filepath, "r") as infile:
-            self.permission_denied_prompt = infile.read()
+            if not os.path.exists(prompt_filepath) or\
+                    not os.path.isfile(prompt_filepath):
+                self.permission_denied_prompt = ""
+            else:
+                with open(prompt_filepath, "r") as infile:
+                    self.permission_denied_prompt = infile.read()
 
     def get(self, request):
         return Response({"data": self.permission_denied_prompt})

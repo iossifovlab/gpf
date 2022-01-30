@@ -89,11 +89,10 @@ class EffectCell:
                     f"person set: {self.person_set.id}; "
                     f"mismatched persons: {variant_in_members}")
             return
-        if not family_allele.effect:
-            print("No effect")
+        if not family_allele.effects:
             return
         # FIXME: Avoid conversion of effect types to set
-        if not (set(family_allele.effect.types) & self.effect_types):
+        if not (set(family_allele.effects.types) & self.effect_types):
             return
         self.observed_variants_ids.add(family_variant.fvuid)
         self.observed_people_with_event.update(
