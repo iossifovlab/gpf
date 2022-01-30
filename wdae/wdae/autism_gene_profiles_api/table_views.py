@@ -79,7 +79,6 @@ class TableConfigurationView(QueryBaseView):
             ))
 
         if "datasets" in configuration:
-            all_datasets_col = column("datasets", "Datasets")
             for dataset_id, dataset in configuration["datasets"].items():
                 study_wrapper = self.gpf_instance.get_wdae_wrapper(dataset_id)
                 display_name = dataset.get("display_name") \
@@ -105,8 +104,7 @@ class TableConfigurationView(QueryBaseView):
                             sortable=True) for statistic in dataset["statistics"]
                         ]
                     ))
-                all_datasets_col["columns"].append(dataset_col)
-            response["columns"].append(all_datasets_col)
+                response["columns"].append(dataset_col)
 
         return Response(response)
 
