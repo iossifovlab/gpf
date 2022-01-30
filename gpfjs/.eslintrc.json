@@ -124,7 +124,6 @@
         "no-tabs": ["warn"],
         "no-whitespace-before-property": "warn",
         "curly": "warn",
-        "object-curly-spacing": ["warn", "always"],
         "object-property-newline": ["warn", { "allowAllPropertiesOnSameLine": true }],
         "padded-blocks": ["warn", "never"],
         "rest-spread-spacing": ["warn", "never"],
@@ -155,7 +154,6 @@
             "style": "camelCase"
           }
         ],
-        "template-curly-spacing": ["warn", "always"],
         "@typescript-eslint/await-thenable": "warn",
         "@typescript-eslint/consistent-type-definitions": "warn",
         "@typescript-eslint/explicit-member-accessibility": [
