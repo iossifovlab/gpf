@@ -1,5 +1,7 @@
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { ConfigService } from 'app/config/config.service';
+import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { AgpTableComponent } from './agp-table.component';
 
 describe('AgpTableComponent', () => {
@@ -8,7 +10,9 @@ describe('AgpTableComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ AgpTableComponent ]
+      declarations: [ AgpTableComponent, MultipleSelectMenuComponent],
+      providers: [ConfigService],
+      imports: [HttpClientTestingModule]
     })
     .compileComponents();
   });

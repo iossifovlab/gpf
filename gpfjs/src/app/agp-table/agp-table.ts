@@ -1,13 +1,13 @@
 import { Type } from 'class-transformer';
-import * as _ from 'lodash';
 
 export class Column {
   @Type(() => Column)
   public columns: Column[];
 
+  private visible: boolean;
+
   public id: string;
   public displayName: string;
-  private visible: boolean;
   public sortable: boolean;
   public displayVertical: boolean;
   public clickable: string | null;

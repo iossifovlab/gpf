@@ -3,19 +3,20 @@ import { TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 // eslint-disable-next-line no-restricted-imports
 import { of } from 'rxjs';
-import { AutismGeneProfilesService } from './autism-gene-profiles.service';
-import { AgpSingleViewConfig, AgpGene } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
 import { take } from 'rxjs/operators';
+import { AgpTableConfig } from './agp-table';
+import { AgpTableService } from "./agp-table.service";
 
-describe('AutismGeneProfilesService', () => {
-  let service: AutismGeneProfilesService;
+
+describe('AgpTableService', () => {
+  let service: AgpTableService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [ConfigService],
       imports: [HttpClientTestingModule]
     });
-    service = TestBed.inject(AutismGeneProfilesService);
+    service = TestBed.inject(AgpTableService);
   });
 
   it('should be created', () => {
@@ -31,20 +32,21 @@ describe('AutismGeneProfilesService', () => {
     expect(getConfigSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['configUrl']);
     resultConfig.pipe(take(1)).subscribe(res => {
       expect(res['mockConfigProperty']).toEqual('mockConfigValue');
-      expect(res).toBeInstanceOf(AgpSingleViewConfig);
+      expect(res).toBeInstanceOf(AgpTableConfig);
     });
   });
 
-  it('should get single gene', () => {
-    const getGeneSpy = spyOn(service['http'], 'get');
-    getGeneSpy.and.returnValue(of({ mockGeneProperty: 'mockGeneValue' }));
+  it('should get genes', () => {
+    const getGenesSpy = spyOn(service['http'], 'get');
 
-    const resultGene = service.getGene('geneMock1');
-
-    expect(getGeneSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['genesUrl'] + 'geneMock1');
-    resultGene.pipe(take(1)).subscribe(res => {
-      expect(res['mockGeneProperty']).toEqual('mockGeneValue');
-      expect(res).toBeInstanceOf(AgpGene);
-    });
+    getGenesSpy.and.returnValue(of({}));
+    service.getGenes(1);
+    service.getGenes(1, 'mockSearch');
+    service.getGenes(1, 'mockSearch', 'mockSort', 'desc');
+    expect(getGenesSpy.calls.allArgs()).toEqual([
+      [service['config'].baseUrl + service['genesUrl'] + '?page=1'],
+      [service['config'].baseUrl + service['genesUrl'] + '?page=1' + '&symbol=mockSearch'],
+      [service['config'].baseUrl + service['genesUrl'] + '?page=1' + '&symbol=mockSearch' + '&sortBy=mockSort&order=desc']
+    ]);
   });
 });
