@@ -94,8 +94,8 @@ def cli_manage(cli_args=None):
         if gr is None:
             print(f"Cannot find resource {args.resource}")
             sys.exit(1)
-        builder = HistogramBuilder()
-        histograms = builder.build(gr)
+        builder = HistogramBuilder(gr)
+        histograms = builder.build()
         resource_path = pathlib.Path(args.resource)
         hist_out_dir = dr / resource_path / 'histograms'
         print(f"Saving histograms in {hist_out_dir}")

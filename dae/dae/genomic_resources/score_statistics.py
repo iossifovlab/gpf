@@ -129,12 +129,15 @@ class Histogram:
 
 
 class HistogramBuilder:
-    def build(self, resource) -> dict[str, Histogram]:
-        histogram_desc = resource.get_config().get("histograms", [])
+    def __init__(self, resource) -> None:
+        self.resource = resource
+
+    def build(self) -> dict[str, Histogram]:
+        histogram_desc = self.resource.get_config().get("histograms", [])
         if len(histogram_desc) == 0:
             return {}
 
-        score = open_score_from_resource(resource)
+        score = open_score_from_resource(self.resource)
         histograms = {}
         for hist_conf in histogram_desc:
             has_min_max = "min" in hist_conf and "max" in hist_conf
@@ -184,12 +187,23 @@ class HistogramBuilder:
     #     merge all histograms.
 
     def save(self, histograms, out_dir):
+        histogram_desc = self.resource.get_config().get("histograms", [])
+        configs = {hist['score']: hist for hist in histogram_desc}
+
         os.makedirs(out_dir, exist_ok=True)
         for score, histogram in histograms.items():
             df = pd.DataFrame({'bars': histogram.bars,
                                'bins': histogram.bins[:-1]})
             hist_name = f"{score}.csv"
             df.to_csv(os.path.join(out_dir, hist_name), index=None)
+
+            metadata = {
+                'resource': self.resource.get_id(),
+                'histogram_config': configs.get(score, {}),
+            }
+            metadata_name = f"{score}.metadata.yaml"
+            with open(os.path.join(out_dir, metadata_name), "wt") as f:
+                yaml.dump(metadata, f)
 
 
 class ScoreStatistic:

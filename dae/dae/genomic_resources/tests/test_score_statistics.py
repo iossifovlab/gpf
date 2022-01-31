@@ -1,3 +1,4 @@
+import os
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME, GenomicResource
 from dae.genomic_resources.score_statistics import Histogram, HistogramBuilder
 from dae.genomic_resources.test_tools import build_a_test_resource
@@ -76,8 +77,8 @@ position_score_test_config = {
 
 def test_histogram_builder_position_resource():
     res: GenomicResource = build_a_test_resource(position_score_test_config)
-    hbuilder = HistogramBuilder()
-    hists = hbuilder.build(res)
+    hbuilder = HistogramBuilder(res)
+    hists = hbuilder.build()
     assert len(hists) == 2
 
     phastCons100way_hist = hists["phastCons100way"]
@@ -121,8 +122,8 @@ def test_histogram_builder_no_explicit_min_max():
             2      10         11       1.0
             '''
     })
-    hbuilder = HistogramBuilder()
-    hists = hbuilder.build(res)
+    hbuilder = HistogramBuilder(res)
+    hists = hbuilder.build()
     assert len(hists) == 1
 
     assert hists["phastCons100way"].x_min == 0
@@ -130,6 +131,10 @@ def test_histogram_builder_no_explicit_min_max():
 
 def test_histogram_builder_save(tmpdir):
     res: GenomicResource = build_a_test_resource(position_score_test_config)
-    hbuilder = HistogramBuilder()
-    hists = hbuilder.build(res)
+    hbuilder = HistogramBuilder(res)
+    hists = hbuilder.build()
     hbuilder.save(hists, tmpdir)
+
+    files = os.listdir(tmpdir)
+    print(files)
+    assert len(files) == 4  # 2 histograms and 2 metadatas
