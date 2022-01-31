@@ -133,10 +133,20 @@ class HistogramBuilder:
         histogram_desc = resource.get_config().get("histograms", [])
         if len(histogram_desc) == 0:
             return {}
-        histograms = {hist["score"]: Histogram.from_config(hist)
-                      for hist in histogram_desc}
-        score_names = list(histograms.keys())
+
         score = open_score_from_resource(resource)
+        histograms = {}
+        for hist_conf in histogram_desc:
+            has_min_max = "min" in hist_conf and "max" in hist_conf
+            if not has_min_max:
+                scr_min, scr_max = self._score_min_max(
+                    score, hist_conf["score"])
+                if "min" not in hist_conf:
+                    hist_conf["min"] = scr_min
+                if "max" not in hist_conf:
+                    hist_conf["max"] = scr_max
+            histograms[hist_conf["score"]] = Histogram.from_config(hist_conf)
+        score_names = list(histograms.keys())
 
         chromosomes = score.get_all_chromosomes()
         for chrom in chromosomes:
@@ -149,6 +159,24 @@ class HistogramBuilder:
                         hist.add_value(v)
 
         return histograms
+
+    def _score_min_max(self, score, score_id):
+        logger.info(f"Calculating min max for {score_id}")
+        limits = np.iinfo(np.int64)
+        scr_min, scr_max = limits.max, limits.min
+        chromosomes = score.get_all_chromosomes()
+        for chrom in chromosomes:
+            score_to_values = \
+                score.fetch_region(chrom, None, None, [score_id])
+            vals_iter = score_to_values[score_id]
+            for v in vals_iter:
+                if v is not None:  # None designates missing values
+                    scr_min = min(scr_min, v)
+                    scr_max = max(scr_max, v)
+        logger.info(f"Done calculating min/max for {score_id}.\
+ min={scr_min} max={scr_max}")
+        assert scr_min <= scr_max
+        return scr_min, scr_max
 
     # def build():
     #     over all chromosomes:
