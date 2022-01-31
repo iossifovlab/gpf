@@ -44,7 +44,7 @@ class Histogram:
 
         self.y_scale = y_scale
 
-        self.bars = np.zeros(bins_count, dtype=np.int32)
+        self.bars = np.zeros(bins_count, dtype=np.int64)
 
     @staticmethod
     def from_config(conf):
@@ -76,7 +76,7 @@ class Histogram:
         )
 
         hist.bins = np.array(d["bins"])
-        hist.bars = np.array(d["bars"], dtype=np.int32)
+        hist.bars = np.array(d["bars"], dtype=np.int64)
 
         return hist
 
