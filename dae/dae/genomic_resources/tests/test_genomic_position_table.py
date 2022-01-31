@@ -847,3 +847,67 @@ def test_tabix_middle_optimization(tmp_path):
         print(row)
 
     assert table.current_pos[1] == 4
+
+
+def test_tabix_middle_optimization_regions(tmp_path):
+    e_repo = build_genomic_resource_repository(
+        {"id": "b", "type": "embeded", "content": {
+            "one": {
+                "genomic_resource.yaml": """
+                    text_table:
+                        filename: data.mem
+                    tabix_table:
+                        filename: data.bgz""",
+                "data.mem": """
+                    chrom pos_begin pos_end  c1
+                    1     1         1        1
+                    1     4         8        2
+                    1     9         12       3
+                """
+            }
+        }
+        })
+    d_repo = build_genomic_resource_repository(
+        {"id": "d", "type": "directory", "directory": tmp_path})
+    d_repo.store_all_resources(e_repo)
+    e_gr = e_repo.get_resource("one")
+    d_gr = d_repo.get_resource("one")
+    save_as_tabix_table(
+        open_genome_position_table(e_gr, e_gr.config["text_table"]),
+        str(d_repo.get_file_path(d_gr, "data.bgz")))
+
+    table = open_genome_position_table(d_gr, d_gr.config["tabix_table"])
+
+    row = None
+    for row in table.get_records_in_region("1", 1, 1):
+        assert row == ("1", "1", "1", "1")
+        break
+
+    assert table.current_pos[1] == 4
+
+    row = None
+    for row in table.get_records_in_region("1", 1, 1):
+        assert row == ("1", "1", "1", "1")
+
+    assert table.current_pos[1] == 4
+
+    row = None
+    for row in table.get_records_in_region("1", 4, 4):
+        print(row)
+    assert row == ("1", "4", "8", "2")
+
+    assert table.current_pos[1] == 9
+
+    row = None
+    for row in table.get_records_in_region("1", 4, 4):
+        print(row)
+        break
+    assert row == ("1", "4", "8", "2")
+
+    assert table.current_pos[1] == 9
+
+    row = None
+    for row in table.get_records_in_region("1", 5, 5):
+        print(row)
+        break
+    assert row == ("1", "4", "8", "2")

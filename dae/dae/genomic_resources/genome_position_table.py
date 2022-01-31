@@ -4,7 +4,7 @@ import pysam  # type: ignore
 import os
 import logging
 
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Any
 
 from box import Box  # type: ignore
 
@@ -276,12 +276,13 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
         self._reset_current_pos()
         self.tabix_iterator = None
-        self._call: Tuple[Optional[str], int, Optional[int]] = "", -1, -1
+        self._call: List[Any] = ["", -1, -1]
         self._call_result: List = []
 
         self.jump_threshold = 10_000
         self.sequential_count = 0
         self.direct_count = 0
+        self.middle_count = 0
 
     def load(self):
         if self.header_mode == "file":
@@ -309,6 +310,8 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             return True
         
         self.current_pos = line_chrom, line_beg, line_end, [line]
+        if self._call[2] and line_end > self._call[2]:
+            self._call[2] = line_end
         return False
 
     def _reset_current_pos(self):
@@ -320,7 +323,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         used in the score table
         """
         if self.chrom_map:
-            return self.chrom_map[chrom]
+            return self.chrom_map.get(chrom)
         return chrom
 
     def _map_result_chrom(self, chrom: str) -> str:
@@ -335,8 +338,10 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
     def _transform_result(self, line):
         result = list(line)
-        result[self.chrom_column_i] = self._map_result_chrom(
-            result[self.chrom_column_i])
+        rchrom = self._map_result_chrom(result[self.chrom_column_i])
+        if rchrom is None:
+            return None
+        result[self.chrom_column_i] = rchrom
         return tuple(result)
 
     def get_all_records(self):
@@ -432,9 +437,10 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 and curr_chrom == prev_chrom \
                 and beg > prev_end \
                 and end < curr_begin:
+            self.middle_count += 1
             logger.info(
                 f"score {self.genomic_resource.resource_id}; "
-                f"MIDDLE ({self.sequential_count} times); "
+                f"MIDDLE ({self.middle_count} times); "
                 f"current call is {fchrom, beg, end}; "
                 f"prev call was {self._call}; "
                 f"curr position is {self.current_pos[:3]}; "
@@ -452,13 +458,15 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                     f"curr position is {self.current_pos[:3]}; "
                 )
                 buff = self._sequential_rewind(fchrom, beg, end)
-                self._call = fchrom, beg, end
+                self._call = [fchrom, beg, end]
                 # self._call_result = []
                 if buff is None:
                     return
                 # self._call_result = buff
                 for line in buff:
-                    yield self._transform_result(line)
+                    result = self._transform_result(line)
+                    if result:
+                        yield result
             else:
 
                 self.tabix_iterator = self.tabix_file.fetch(
@@ -472,7 +480,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                     f"prev call was {self._call}; "
                     f"curr position is {self.current_pos[:3]}; "
                 )
-                self._call = fchrom, beg, end
+                self._call = [fchrom, beg, end]
                 # self._call_result = []
 
             while True:
@@ -482,19 +490,24 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 if end and self.current_pos[1] > end:
                     return
                 # self._call_result.append(line)
-                yield self._transform_result(line)
+                result = self._transform_result(line)
+                if result:
+                    yield result
     
         except StopIteration:
             return
 
         except GeneratorExit:
             logger.info("generator exit catched...")
-            while True:
-                line = next(self.tabix_iterator)  # type: ignore
-                self._update_current_pos(line)
+            try:
+                while True:
+                    line = next(self.tabix_iterator)  # type: ignore
+                    self._update_current_pos(line)
 
-                if end and self.current_pos[1] > end:
-                    return
+                    if end and self.current_pos[1] > end:
+                        return
+            except Exception:
+                logger.info("exception while handling of generator exit")
 
     def close(self):
         self.tabix_file.close()
