@@ -204,7 +204,7 @@ describe('App user access rights tests', () => {
     page.navigateToSidenavPage(sidenavPageLinks.management);
     userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
     userManagementPage.allUserEditGroupRemoveButtons.should('be.visible');
-    userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true});
+    userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true})  ;
     userManagementPage.userWindowGroupDropDownMenuButton.should('be.visible');
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowGroupDropdownSearch.type('COMP_genotypes');
@@ -259,7 +259,6 @@ describe('App user access rights tests', () => {
     userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
     userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true});
     userManagementPage.userWindowGroupDropDownMenuButton.click();
-    userManagementPage.userWindowGroupDropdownSearch.should('be.visible');
     userManagementPage.userWindowGroupDropdownSearch.type('ALL_Genotypes');
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
@@ -298,7 +297,7 @@ describe('App user access rights tests', () => {
     page.logout();
   });
 
-  it('should login admin and remove all researcher access rights, then login researcher and verify his rights', () => {
+it('should login admin and remove all researcher access rights, then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
     const genotypeBrowserPage = new GenotypeBrowserPage();
 
