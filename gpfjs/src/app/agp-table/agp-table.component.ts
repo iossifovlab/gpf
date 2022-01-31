@@ -120,7 +120,6 @@ export class AgpTableComponent implements OnInit, OnChanges {
   }
 
   public openDropdown(column: Column, $event): void {
-    this.multipleSelectMenuComponent.menuId = column.id;
     this.multipleSelectMenuComponent.columns = column.columns;
 
     this.waitForDropdown().then(() => {

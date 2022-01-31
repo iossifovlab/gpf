@@ -29,6 +29,7 @@
     <span *ngFor="let column of leaves"
       class="cell row-cell"
       [ngClass]="{'clickable': column.clickable !== null && row[column.id]}"
+      [attr.title]="row[column.id]"
       (middleclick)="emitClickEvent(row, column)">
       {{ row[column.id] }}
     </span>
@@ -46,6 +47,7 @@
           [ngClass]="{'header-cell-vertical-content': column.displayVertical }"
         >
           <span class="header-cell"
+            [attr.title]="column.displayName"
             [ngClass]="{'vertical-text': column.displayVertical }"
           >{{ column.displayName }}</span>
           <gpf-sorting-buttons

@@ -27,7 +27,7 @@
   </div>
 
   <table cdkDropList (cdkDropListDropped)="drop($event)">
-    <tr cdkDrag *ngFor="let column of columns" style="height: 30px">
+    <tr cdkDrag *ngFor="let column of filteredColumns" style="height: 30px">
       <td>
         <label style="width: 100%; padding-top: 4px; padding-bottom: 2px; padding-left: 6px">
           <input type="checkbox"

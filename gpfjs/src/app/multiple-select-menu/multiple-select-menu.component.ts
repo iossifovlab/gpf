@@ -8,14 +8,13 @@ import { Column } from '../agp-table/agp-table';
   styleUrls: ['./multiple-select-menu.component.css']
 })
 export class MultipleSelectMenuComponent implements OnChanges {
-  @Input() public menuId: string;
-  @Input() public itemsSource: { itemIds: string[]; shownItemIds: string[] };
   @Input() public columns: Column[];
   @Output() public applyEvent = new EventEmitter<void>();
   @ViewChild('searchInput') public searchInput: ElementRef;
 
   public buttonLabel = 'Uncheck all';
   public searchText: string;
+  public filteredColumns: Column[];
 
   public ngOnChanges(): void {
     this.refresh();
@@ -24,6 +23,7 @@ export class MultipleSelectMenuComponent implements OnChanges {
   public refresh(): void {
     this.searchText = '';
     this.updateButtonLabel();
+    this.filteredColumns = this.columns;
     
     // focus search input field
     this.waitForSearchInputToLoad().then(() => {
@@ -62,6 +62,10 @@ export class MultipleSelectMenuComponent implements OnChanges {
   public drop(event: CdkDragDrop<string[]>): void {
     moveItemInArray(this.columns, event.previousIndex, event.currentIndex);
     this.apply();
+  }
+
+  public filterItems(substring: string): void {
+    this.filteredColumns = this.columns.filter(col => col.displayName.toLowerCase().includes(substring.toLowerCase()));
   }
 
   private async waitForSearchInputToLoad(): Promise<void> {
