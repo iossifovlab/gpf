@@ -428,12 +428,18 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         curr_chrom, curr_begin, _, _ = self.current_pos
         prev_chrom, _, prev_end = self._call
 
-        # if end is not None and prev_end is not None \
-        #         and curr_chrom == prev_chrom \
-        #         and beg > prev_end \
-        #         and end < curr_begin:
-        #     return None
-
+        if end is not None and prev_end is not None \
+                and curr_chrom == prev_chrom \
+                and beg > prev_end \
+                and end < curr_begin:
+            logger.info(
+                f"score {self.genomic_resource.resource_id}; "
+                f"MIDDLE ({self.sequential_count} times); "
+                f"current call is {fchrom, beg, end}; "
+                f"prev call was {self._call}; "
+                f"curr position is {self.current_pos[:3]}; "
+            )
+            return None
 
         try:
             if self._should_use_sequential(fchrom, beg):
@@ -480,6 +486,15 @@ class TabixGenomicPositionTable(GenomicPositionTable):
     
         except StopIteration:
             return
+
+        except GeneratorExit:
+            logger.info("generator exit catched...")
+            while True:
+                line = next(self.tabix_iterator)  # type: ignore
+                self._update_current_pos(line)
+
+                if end and self.current_pos[1] > end:
+                    return
 
     def close(self):
         self.tabix_file.close()
