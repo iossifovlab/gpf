@@ -59,6 +59,7 @@ describe('Save query tests', () => {
     page.navigateToSidenavPage(sidenavPageLinks.savedQueries);
     page.tableFirstLoadButton.click();
     genotypeBlockPage.findAllCheckboxesInComponent('gpf-effect-types').each(element => {
+      cy.wrap(element).should('be.visible');
       cy.wrap(element).should('be.checked');
     });
 
