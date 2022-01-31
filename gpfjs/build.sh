@@ -53,7 +53,7 @@ function main() {
 
   build_stage "Lint"
   {
-    build_run ng lint --format checkstyle >ts-lint-report.xml || echo "eslint exited with $?"
+    build_run npm run-script ng lint -- --format checkstyle >ts-lint-report.xml || echo "eslint exited with $?"
     build_run sed -i '1,2d' ts-lint-report.xml
     build_run ./node_modules/.bin/stylelint --custom-formatter ./node_modules/stylelint-checkstyle-formatter "**/*.css" >css-lint-report.xml \
       || echo "stylelint exited with $?"
@@ -61,13 +61,14 @@ function main() {
 
   build_stage "Tests"
   {
-    build_run bash -c 'ng test -- --no-watch --no-progress --code-coverage --browsers=ChromeHeadlessCI | tee /dev/stderr | grep -e "^TOTAL: " && exit ${PIPESTATUS[0]} || false'
+    build_run bash -c 'npm run-script ng test -- --no-watch --no-progress --code-coverage --browsers=ChromeHeadlessCI | tee /dev/stderr | grep -e "^TOTAL: " && exit ${PIPESTATUS[0]} || false'
   }
 
   build_stage "Compile"
   {
     build_run rm -rf dist/
-    build_run ng build --prod --aot --configuration 'default' --base-href '/gpf_prefix/' --deploy-url '/gpf_prefix/'
+  
+    build_run npm run-script ng build -- --aot --configuration 'default' --base-href '/gpf_prefix/' --deploy-url '/gpf_prefix/'
     build_run python ppindex.py
   }
 
