@@ -103,38 +103,6 @@ class GenomicScore(abc.ABC):
     def get_all_scores(self):
         return list(self.score_columns)
 
-
-class PositionScore(GenomicScore):
-    def __init__(self, resourceId: str, version: tuple,
-                 repo: GenomicResourceRealRepo,
-                 config=None):
-        super().__init__(resourceId, version, repo, config)
-
-    @staticmethod
-    def get_resource_type():
-        return "position_score"
-
-    def fetch_scores(
-            self, chrom: str, position: int, scores: List[str] = None):
-
-        if chrom not in self.get_all_chromosomes():
-            raise ValueError(
-                f"{chrom} is not among the available chromosomes.")
-
-        line = list(self._fetch_lines(chrom, position, position))
-        if not line:
-            return None
-
-        if len(line) != 1:
-            raise ValueError(
-                f"The resource {self.score_id()} has "
-                f"more than one ({len(line)}) lines for position "
-                f"{chrom}:{position}")
-        line = line[0]
-
-        requested_scores = scores if scores else self.get_all_scores()
-        return {scr: line.get_score_value(scr) for scr in requested_scores}
-
     def fetch_region(self, chrom: str, pos_begin: int, pos_end: int,
                      scores: List[str]) \
             -> dict[str, Generator[Number, None, None]]:
@@ -166,6 +134,39 @@ class PositionScore(GenomicScore):
 
             for i in range(left, right+1):
                 yield val
+
+
+
+class PositionScore(GenomicScore):
+    def __init__(self, resourceId: str, version: tuple,
+                 repo: GenomicResourceRealRepo,
+                 config=None):
+        super().__init__(resourceId, version, repo, config)
+
+    @staticmethod
+    def get_resource_type():
+        return "position_score"
+
+    def fetch_scores(
+            self, chrom: str, position: int, scores: List[str] = None):
+
+        if chrom not in self.get_all_chromosomes():
+            raise ValueError(
+                f"{chrom} is not among the available chromosomes.")
+
+        line = list(self._fetch_lines(chrom, position, position))
+        if not line:
+            return None
+
+        if len(line) != 1:
+            raise ValueError(
+                f"The resource {self.score_id()} has "
+                f"more than one ({len(line)}) lines for position "
+                f"{chrom}:{position}")
+        line = line[0]
+
+        requested_scores = scores if scores else self.get_all_scores()
+        return {scr: line.get_score_value(scr) for scr in requested_scores}
 
     def fetch_scores_agg(
             self, chrom: str, pos_begin: int, pos_end: int,

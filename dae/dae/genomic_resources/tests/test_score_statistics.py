@@ -98,6 +98,110 @@ def test_histogram_builder_position_resource():
     assert phastCons5way_hist.bars.sum() == (76 + 2 + 3)
 
 
+def test_histogram_builder_allele_resource():
+    res: GenomicResource = build_a_test_resource({
+        GR_CONF_FILE_NAME: '''
+            type: allele_score
+            table:
+                filename: data.mem
+            scores:
+                - id: freq
+                  type: float
+                  desc: ""
+                  name: freq
+            histograms:
+                - score: freq
+                  bins: 100
+                  min: 0
+                  max: 1''',
+        "data.mem": '''
+            chrom  pos_begin  reference  alternative  freq
+            1      10         A          G            0.02
+            1      10         A          C            0.03
+            1      10         A          A            0.04
+            1      16         CA         G            0.03
+            1      16         C          T            0.04
+            1      16         C          A            0.05
+            2      16         CA         G            0.03
+            2      16         C          T            EMPTY
+            2      16         C          A            0.05
+        '''
+    })
+    hbuilder = HistogramBuilder(res)
+    hists = hbuilder.build()
+    assert len(hists) == 1
+
+    freq_hist = hists["freq"]
+    assert len(freq_hist.bars) == 100
+    assert freq_hist.bars[0] == 0
+    assert freq_hist.bars[2] == 1  # region [10]
+    assert freq_hist.bars[3] == 3  # region [10, 16, 16]
+    assert freq_hist.bars[4] == 2  # region [10, 16]
+    assert freq_hist.bars[5] == 2  # region [16, 16]
+    assert freq_hist.bars.sum() == (1 + 3 + 2 + 2)
+
+
+def test_histogram_builder_np_resource():
+    res: GenomicResource = build_a_test_resource({
+        GR_CONF_FILE_NAME: '''
+            type: np_score
+            table:
+                filename: data.mem
+            scores:
+                - id: cadd_raw
+                  type: float
+                  desc: ""
+                  name: s1
+                - id: cadd_test
+                  type: int
+                  position_aggregator: max
+                  nucleotide_aggregator: mean
+                  na_values: "-1"
+                  desc: ""
+                  name: s2
+            histograms:
+                - score: cadd_raw
+                  bins: 100
+                  min: 0
+                  max: 1
+                - score: cadd_test
+                  bins: 4
+                  min: 0
+                  max: 4
+        ''',
+        "data.mem": '''
+            chrom  pos_begin  pos_end  reference  alternative  s1    s2
+            1      10         15       A          G            0.02  2
+            1      10         15       A          C            0.03  -1
+            1      10         15       A          T            0.04  4
+            1      16         19       C          G            0.03  3
+            1      16         19       C          T            0.04  EMPTY
+            1      16         19       C          A            0.05  0
+            2      16         19       C          A            0.03  3
+            2      16         19       C          T            0.04  3
+            2      16         19       C          G            0.05  4
+        '''
+    })
+    hbuilder = HistogramBuilder(res)
+    hists = hbuilder.build()
+    assert len(hists) == 2
+
+    cadd_raw_hist = hists["cadd_raw"]
+    assert len(cadd_raw_hist.bars) == 100
+    assert cadd_raw_hist.bars[2] == 6  # region [10-15]
+    assert cadd_raw_hist.bars[3] == 14  # region [10-15], 2x[16-19]
+    assert cadd_raw_hist.bars[4] == 14  # region [10-15], 2x[16-19]
+    assert cadd_raw_hist.bars[5] == 8  # region 2x[16-19]
+    assert cadd_raw_hist.bars.sum() == (6 + 14 + 14 + 8)
+
+    cadd_test_hist = hists["cadd_test"]
+    assert len(cadd_test_hist.bars) == 4
+    assert cadd_test_hist.bars[0] == 4  # region [16-19]
+    assert cadd_test_hist.bars[2] == 6  # region [10-15]
+    assert cadd_test_hist.bars[3] == 22  # region [10-15]
+    assert cadd_test_hist.bars.sum() == (4 + 6 + 22)
+
+
 def test_histogram_builder_no_explicit_min_max():
     res: GenomicResource = build_a_test_resource({
         GR_CONF_FILE_NAME: '''
