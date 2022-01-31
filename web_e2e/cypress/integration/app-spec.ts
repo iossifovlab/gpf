@@ -201,7 +201,9 @@ describe('App user access rights tests', () => {
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
     userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
+    userManagementPage.allUserEditGroupRemoveButtons.should('be.visible ');
     userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true});
+    userManagementPage.userWindowGroupDropDownMenuButton.should('be.visible');
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowGroupDropdownSearch.type('COMP_genotypes');
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
