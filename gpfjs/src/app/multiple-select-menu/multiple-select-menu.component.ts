@@ -64,10 +64,6 @@ export class MultipleSelectMenuComponent implements OnChanges {
     this.apply();
   }
 
-  public filterItems(substring: string): void {
-    // this.filteredItems = this.allItems.filter(item => item.toLowerCase().includes(substring.toLowerCase()));
-  }
-
   private async waitForSearchInputToLoad(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
