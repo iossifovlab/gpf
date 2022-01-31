@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { AgpConfig, AgpGene } from 'app/autism-gene-profiles-table/autism-gene-profile-table';
+import { AgpSingleViewConfig, AgpGene } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
 import { ConfigService } from 'app/config/config.service';
 import { plainToClass } from 'class-transformer';
 // eslint-disable-next-line no-restricted-imports
@@ -11,22 +11,22 @@ import { map } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class AutismGeneProfilesService {
-  private readonly configUrl = 'autism_gene_tool/configuration';
-  private readonly genesUrl = 'autism_gene_tool/genes/';
+  private readonly configUrl = 'autism_gene_tool/single-view/configuration';
+  private readonly genesUrl = 'autism_gene_tool/single-view/gene/';
 
   public constructor(
     private http: HttpClient,
     private config: ConfigService
   ) {}
 
-  public getConfig(): Observable<AgpConfig> {
+  public getConfig(): Observable<AgpSingleViewConfig> {
     return this.http
       .get(this.config.baseUrl + this.configUrl).pipe(
         map(res => {
           if (Object.keys(res).length === 0) {
             return;
           }
-          return plainToClass(AgpConfig, res);
+          return plainToClass(AgpSingleViewConfig, res);
         })
       );
   }
@@ -35,28 +35,5 @@ export class AutismGeneProfilesService {
     return this.http
       .get(this.config.baseUrl + this.genesUrl + geneSymbol)
       .pipe(map(res => plainToClass(AgpGene, res)));
-  }
-
-  public getGenes(page: number, searchString?: string, sortBy?: string, order?: string): Observable<AgpGene[]> {
-    let url = this.config.baseUrl + this.genesUrl;
-    let params = new HttpParams().set('page', page.toString());
-
-    if (searchString) {
-      params = params.append('symbol', searchString);
-    }
-
-    if (sortBy) {
-      params = params.append('sortBy', sortBy);
-
-      if (order) {
-        params = params.append('order', order);
-      }
-    }
-
-    url += `?${ params.toString() }`;
-
-    return this.http.get(url).pipe(
-      map(res => (res as Array<any>).map(gene => plainToClass(AgpGene, gene)))
-    );
   }
 }

@@ -5,7 +5,7 @@
       type="button"
       class="btn btn-default"
       style="float: left; position: relative; width: 30%; margin-right: 2%"
-      (click)="toggleCheckingAll()">{{ checkUncheckAllButtonName }}</button>
+      (click)="toggleCheckingAll()">{{ buttonLabel }}</button>
     <div class="search-input-wrapper" style="width: 68%">
       <input
         #searchInput
@@ -27,23 +27,16 @@
   </div>
 
   <table cdkDropList (cdkDropListDropped)="drop($event)">
-    <tr cdkDrag *ngFor="let item of filteredItems" style="height: 30px">
+    <tr cdkDrag *ngFor="let column of filteredColumns" style="height: 30px">
       <td>
         <label style="width: 100%; padding-top: 4px; padding-bottom: 2px; padding-left: 6px">
           <input type="checkbox"
-            [checked]="selectedItems.has(item)"
-            (change)="toggleItem(item, $event)"
+            [checked]="column.visibility"
+            (change)="toggleItem(column, $event)"
           />
-          <span style="padding-left: 10px">{{ item }}</span>
+          <span style="padding-left: 10px">{{ column.displayName }}</span>
         </label>
       </td>
     </tr>
-    <td>
-      <button
-        type="submit"
-        class="btn btn-secondary"
-        style="width: 100%"
-        (click)="apply()">Apply</button>
-    </td>
   </table>
 </div>

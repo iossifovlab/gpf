@@ -1,7 +1,7 @@
-import { GenomicScore } from 'app/genotype-browser/genotype-browser';
-import { Type } from 'class-transformer';
+import { GenomicScore } from "app/genotype-browser/genotype-browser";
+import { Type } from "class-transformer";
 
-export class AgpConfig {
+export class AgpSingleViewConfig {
   shown: Array<{category: any, section: string, id: string}>;
   defaultDataset: string;
 
@@ -16,38 +16,6 @@ export class AgpConfig {
 
   @Type(() => AgpOrder)
   order: AgpOrder[];
-
-  public get categories() {
-    return [
-      ...this.geneSets, ...this.genomicScores, ...this.datasets,
-    ]
-  }
-
-  public get itemIds(): string[] {
-    return this.order.map(o => o.id);
-  }
-
-  public get shownItemIds(): string[] {
-    return [
-      ...this.shownGeneSets.map(gs => gs.category),
-      ...this.shownGenomicScores.map(gs => gs.category),
-      ...this.shownDatasets.map(ds => ds.id),
-    ]
-  }
-
-  public get shownGeneSets(): AgpGeneSetsCategory[] {
-    return this.geneSets.filter(gs => gs.defaultVisible);
-  }
-
-  public get shownGenomicScores(): AgpGenomicScoresCategory[] {
-    return this.genomicScores.filter(gs => gs.defaultVisible);
-  }
-
-  public get shownDatasets(): AgpDataset[] {
-    // FIXME called too many times
-    return this.datasets.filter(d => d.defaultVisible);
-  }
-  
 }
 
 export class AgpGeneSetsCategory {
@@ -57,23 +25,6 @@ export class AgpGeneSetsCategory {
 
   @Type(() => AgpGeneSet)
   sets: AgpGeneSet[];
-
-  public get items() {
-    return this.sets;
-  }
-
-  public get id(): string {
-    // TODO This should be relabeled in the backend
-    return this.category;
-  }
-
-  public get itemIds(): string[] {
-    return this.sets.map(set => set.setId);
-  }
-
-  public get shownItemIds(): string[] {
-    return this.sets.filter(set => set.defaultVisible).map(set => set.setId);
-  }
 }
 
 export class AgpGeneSet {
@@ -90,23 +41,6 @@ export class AgpGenomicScoresCategory {
 
   @Type(() => AgpGenomicScore)
   scores: AgpGenomicScore[];
-
-  public get items() {
-    return this.scores;
-  }
-
-  public get id(): string {
-    // TODO This should be relabeled in the backend
-    return this.category;
-  }
-
-  public get itemIds(): string[] {
-    return this.scores.map(score => score.scoreName);
-  }
-
-  public get shownItemIds(): string[] {
-    return this.scores.filter(score => score.defaultVisible).map(score => score.scoreName);
-  }
 }
 
 export class AgpGenomicScore {
@@ -127,18 +61,6 @@ export class AgpDataset {
 
   @Type(() => AgpDatasetPersonSet)
   personSets: AgpDatasetPersonSet[];
-
-  public get items() {
-    return this.personSets;
-  }
-
-  public get itemIds(): string[] {
-    return this.personSets.map(ps => ps.id);
-  }
-
-  public get shownItemIds(): string[] {
-    return this.personSets.filter(ps => ps.defaultVisible).map(ps => ps.id);
-  }
 }
 
 export class AgpDatasetPersonSet {
@@ -154,18 +76,6 @@ export class AgpDatasetPersonSet {
   
   @Type(() => AgpDatasetStatistic)
   statistics: AgpDatasetStatistic[];
-
-  public get items() {
-    return this.statistics;
-  }
-
-  public get itemIds(): string[] {
-    return this.statistics.map(s => s.id);
-  }
-
-  public get shownItemIds(): string[] {
-    return this.statistics.filter(s => s.defaultVisible).map(s => s.id);
-  }
 }
 
 export class AgpDatasetStatistic {

@@ -1,4 +1,4 @@
-<div *ngIf="autismGeneToolConfig">
+<div *ngIf="agpTableConfig && agpSingleViewConfig">
   <nav
     ngbNav
     #nav="ngbNav"
@@ -19,18 +19,20 @@
           <span>e</span> or <span>n</span> - navigate to the next tab<br />
           <span>q</span> or <span>p</span> - navigate to the previous tab<br />
           <span>w</span> - close current tab<br />
-          <span>ctrl+mouse1</span> or <span>mouse3</span> - toggle row highlight<br />
+          <span>left click</span> - highlight row<br />
+          <span>middle click</span> - open gene symbol or statistic link<br />
           <span>esc</span> - clear all highlights<br />
           <span>f</span> - compare highlighted genes<br />
         </div>
       </a>
 
       <ng-template ngbNavContent>
-        <gpf-autism-gene-profiles-table
+        <gpf-agp-table
           [hidden]="nav.activeId !== 'autismGenesTool'"
           (createTabEvent)="createTabEventHandler($event)"
-          [config]="autismGeneToolConfig">
-        </gpf-autism-gene-profiles-table>
+          (goToQueryEvent)="goToQueryEventHandler($event)"
+          [config]="agpTableConfig"
+        ></gpf-agp-table>
       </ng-template>
     </li>
 
@@ -49,7 +51,7 @@
           <ng-container *ngFor="let geneSymbol of geneTab | split: ','">
             <gpf-autism-gene-profile-single-view
               [attr.id]="geneSymbol + '-single-view'"
-              [config]="autismGeneToolConfig"
+              [config]="agpSingleViewConfig"
               [geneSymbol]="geneSymbol"
               [isInGeneCompare]="geneTab.indexOf(',') !== -1">
             </gpf-autism-gene-profile-single-view>

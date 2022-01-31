@@ -1,6 +1,6 @@
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
-import { Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
-import { ItemApplyEvent } from './multiple-select-menu';
+import { Component, ElementRef, EventEmitter, Input, OnChanges, Output, ViewChild } from '@angular/core';
+import { Column } from '../agp-table/agp-table';
 
 @Component({
   selector: 'gpf-multiple-select-menu',
@@ -8,31 +8,64 @@ import { ItemApplyEvent } from './multiple-select-menu';
   styleUrls: ['./multiple-select-menu.component.css']
 })
 export class MultipleSelectMenuComponent implements OnChanges {
-  @Input() public menuId: string;
-  @Input() public itemsSource: { itemIds: string[]; shownItemIds: string[]; };
-  @Output() public applyEvent = new EventEmitter<ItemApplyEvent>();
+  @Input() public columns: Column[];
+  @Output() public applyEvent = new EventEmitter<void>();
   @ViewChild('searchInput') public searchInput: ElementRef;
 
-  public allItems: string[];
-  public filteredItems: string[];
-  public selectedItems: Set<string>;
-
-  public checkUncheckAllButtonName = 'Uncheck all';
+  public buttonLabel = 'Uncheck all';
   public searchText: string;
+  public filteredColumns: Column[];
 
   public ngOnChanges(): void {
-    this.refresh(false);
+    this.refresh();
   }
 
-  public refresh(focusSearch: boolean = true): void {
+  public refresh(): void {
     this.searchText = '';
-    this.allItems = this.itemsSource.itemIds;
-    this.filteredItems = this.allItems;
-    this.selectedItems = new Set(this.itemsSource.shownItemIds);
-    this.checkUncheckAllButtonName = this.selectedItems.size ? 'Uncheck all' : 'Check all';
-    if (focusSearch) {
-      this.focusSearchInput();
+    this.updateButtonLabel();
+    this.filteredColumns = this.columns;
+    
+    // focus search input field
+    this.waitForSearchInputToLoad().then(() => {
+      this.searchInput.nativeElement.focus();
+    });
+  }
+
+  public toggleCheckingAll(): void {
+    if (this.buttonLabel === 'Uncheck all') {
+      this.buttonLabel = 'Check all';
+      this.columns.map(col => col.visibility = false);
+    } else if (this.buttonLabel === 'Check all') {
+      this.buttonLabel = 'Uncheck all';
+      this.columns.map(col => col.visibility = true);
     }
+    this.apply();
+  }
+
+  public toggleItem(column: Column, $event: Event): void {
+    if (!($event.target instanceof HTMLInputElement)) {
+      return;
+    }
+    column.visibility = $event.target.checked;
+    this.updateButtonLabel();
+    this.apply();
+  }
+
+  public apply(): void {
+    this.applyEvent.emit();
+  }
+
+  private updateButtonLabel(): void {
+    this.buttonLabel = this.columns.filter(col => col.visibility).length > 0 ? 'Uncheck all' : 'Check all';
+  }
+
+  public drop(event: CdkDragDrop<string[]>): void {
+    moveItemInArray(this.columns, event.previousIndex, event.currentIndex);
+    this.apply();
+  }
+
+  public filterItems(substring: string): void {
+    this.filteredColumns = this.columns.filter(col => col.displayName.toLowerCase().includes(substring.toLowerCase()));
   }
 
   private async waitForSearchInputToLoad(): Promise<void> {
@@ -44,49 +77,5 @@ export class MultipleSelectMenuComponent implements OnChanges {
         }
       }, 100);
     });
-  }
-
-  public toggleCheckingAll(): void {
-    if (this.checkUncheckAllButtonName === 'Uncheck all') {
-      this.selectedItems = new Set();
-      this.checkUncheckAllButtonName = 'Check all';
-    } else if (this.checkUncheckAllButtonName === 'Check all') {
-      this.selectedItems = new Set(this.allItems);
-      this.checkUncheckAllButtonName = 'Uncheck all';
-    }
-  }
-
-  public toggleItem(item: string, $event: Event) {
-    if(!($event.target instanceof HTMLInputElement)) {
-      return;
-    }
-    if ($event.target.checked) {
-      this.selectedItems.add(item);
-    } else {
-      this.selectedItems.delete(item);
-    }
-    this.checkUncheckAllButtonName = this.selectedItems.size ? 'Uncheck all' : 'Check all';
-  }
-
-  public apply(): void {
-    this.applyEvent.emit({
-      menuId: this.menuId,
-      selected: Array.from(this.selectedItems),
-      order: this.allItems,
-    });
-  }
-
-  public focusSearchInput(): void {
-    this.waitForSearchInputToLoad().then(() => {
-      this.searchInput.nativeElement.focus();
-    });
-  }
-
-  public drop(event: CdkDragDrop<string[]>): void {
-    moveItemInArray(this.allItems, event.previousIndex, event.currentIndex);
-  }
-
-  public filterItems(substring): void {
-    this.filteredItems = this.allItems.filter(item => item.toLowerCase().includes(substring.toLowerCase()));
   }
 }

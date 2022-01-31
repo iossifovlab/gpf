@@ -1,0 +1,129 @@
+.table-container {
+  padding: 10px;
+}
+
+.table-row {
+  width: max-content;
+  display: grid;
+  grid-auto-columns: 150px;
+  grid-auto-flow: column;
+}
+
+.table-row:nth-child(odd) {
+  background-color: #fafafa;
+}
+
+.table-row:hover {
+  background-color: #edf3ff;
+}
+
+.row-highlight {
+  background-color: #ffffd6 !important;
+}
+
+.row-highlight:nth-child(odd) {
+  background-color: #f7f7cb !important;
+}
+
+.row-highlight:hover {
+  background-color: #e4e9d7 !important;
+}
+
+.header {
+  border-top: 1px solid #ddd;
+  position: sticky;
+  top: 0;
+  font-weight: bold;
+}
+
+.cell:nth-child(1) {
+  border-left: 1px solid #ddd;
+}
+
+.cell {
+  border-right: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  user-select: none;
+  text-align: center;
+}
+
+.row-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-cell {
+  background-color: #eee;
+  display: flex;
+  justify-content: center;
+  align-items: end;
+  padding: 2px;
+}
+
+.header-cell-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-cell-vertical-content {
+  flex-direction: column;
+  justify-content: end;
+  align-items: center;
+  gap: 0px;
+}
+
+multiple-select-menu {
+  top: 50px;
+}
+
+.header-button {
+  padding: 0px;
+}
+
+.dropdown-span {
+  position: absolute;
+}
+
+.dropdown-toggle::after {
+  content: none;
+}
+
+#gene-search-input {
+  border-radius: 0;
+}
+
+#gene-search-input:focus {
+  box-shadow: inset 0 -1px 0 #ddd;
+}
+
+#highlighted-genes {
+  position: fixed;
+  right: 10px;
+  bottom: 10px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  z-index: 101;
+  padding: 8px;
+  width: 250px;
+}
+
+.clickable {
+  color: #2372c6;
+  cursor: pointer;
+}
+
+.clickable:hover {
+  text-decoration: underline;
+}
+
+.vertical-text {
+  word-break: break-word;
+  writing-mode: vertical-rl;
+  transform-origin: center center;
+  transform: rotate(180deg);
+  max-height: 150px; 
+  text-align: left;
+}
