@@ -85,6 +85,8 @@ def test_get_statistic(admin_client):
 def test_get_table_config(admin_client):
     response = admin_client.get(f"{route_prefix}/table/configuration")
     assert response.status_code == 200
+    assert "defaultDataset" in response.data
+    assert "columns" in response.data
     print(response.data)
 
 

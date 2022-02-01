@@ -43,7 +43,7 @@ class TableConfigurationView(QueryBaseView):
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         response = {
-            "defaultDataset": configuration["default_dataset"],
+            "defaultDataset": configuration.get("default_dataset"),
             "columns": []
         }
         if len(configuration) == 0:
