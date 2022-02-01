@@ -36,15 +36,15 @@
   font-weight: bold;
 }
 
-.cell:nth-child(1) {
-  border-left: 1px solid #ddd;
-}
-
 .cell {
   border-right: 1px solid #ddd;
   border-bottom: 1px solid #ddd;
   user-select: none;
   text-align: center;
+}
+
+.cell:nth-child(1) {
+  border-left: 1px solid #ddd;
 }
 
 .row-cell {
@@ -72,7 +72,7 @@
   flex-direction: column;
   justify-content: end;
   align-items: center;
-  gap: 0px;
+  gap: 0;
 }
 
 multiple-select-menu {
@@ -80,7 +80,7 @@ multiple-select-menu {
 }
 
 .header-button {
-  padding: 0px;
+  padding: 0;
 }
 
 .dropdown-span {
@@ -124,6 +124,6 @@ multiple-select-menu {
   writing-mode: vertical-rl;
   transform-origin: center center;
   transform: rotate(180deg);
-  max-height: 150px; 
+  max-height: 150px;
   text-align: left;
 }
