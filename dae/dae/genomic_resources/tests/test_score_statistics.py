@@ -37,6 +37,21 @@ def test_histogram_log_scale():
     assert (hist.bars == np.array([2, 1, 1, 1])).all()
 
 
+def test_histogram_merge():
+    hist1 = Histogram(10, 0, 10, "linear", "linear")
+    hist2 = Histogram(10, 0, 10, "linear", "linear")
+
+    hist1.add_value(3)
+    hist1.add_value(7.5)
+    hist1.add_value(9)
+    hist1.add_value(10)
+    hist2.add_value(5)
+    hist2.add_value(7)
+
+    hist = Histogram.merge(hist1, hist2)
+    assert (hist.bars == np.array([0, 0, 0, 1, 0, 1, 0, 2, 0, 2])).all()
+
+
 position_score_test_config = {
     GR_CONF_FILE_NAME: '''
         type: position_score
@@ -232,6 +247,7 @@ def test_histogram_builder_no_explicit_min_max():
 
     assert hists["phastCons100way"].x_min == 0
     assert hists["phastCons100way"].x_max == 1
+
 
 def test_histogram_builder_save(tmpdir):
     res: GenomicResource = build_a_test_resource(position_score_test_config)

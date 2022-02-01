@@ -3,6 +3,7 @@ import numpy as np
 import logging
 import yaml
 import pandas as pd
+from concurrent.futures import ProcessPoolExecutor
 
 from dae.genomic_resources.genomic_scores import open_score_from_resource
 
@@ -89,7 +90,7 @@ class Histogram:
         assert all(hist1.bins == hist2.bins)
 
         result = Histogram(
-            len(hist1.bins),
+            len(hist1.bins) - 1,
             hist1.x_min,
             hist1.x_max,
             hist1.x_scale,
@@ -129,8 +130,9 @@ class Histogram:
 
 
 class HistogramBuilder:
-    def __init__(self, resource) -> None:
+    def __init__(self, resource, jobs=None) -> None:
         self.resource = resource
+        self.jobs = jobs
 
     def build(self) -> dict[str, Histogram]:
         histogram_desc = self.resource.get_config().get("histograms", [])
@@ -138,7 +140,7 @@ class HistogramBuilder:
             return {}
 
         score = open_score_from_resource(self.resource)
-        histograms = {}
+        hist_configs = {}
         for hist_conf in histogram_desc:
             has_min_max = "min" in hist_conf and "max" in hist_conf
             if not has_min_max:
@@ -148,38 +150,84 @@ class HistogramBuilder:
                     hist_conf["min"] = scr_min
                 if "max" not in hist_conf:
                     hist_conf["max"] = scr_max
-            histograms[hist_conf["score"]] = Histogram.from_config(hist_conf)
+            hist_configs[hist_conf["score"]] = hist_conf
+
+        chrom_histograms = []
+        with ProcessPoolExecutor(max_workers=self.jobs) as executor:
+            futures = []
+            chromosomes = score.get_all_chromosomes()
+            for chrom in chromosomes:
+                futures.append(executor.submit(self._do_hist,
+                                               chrom, hist_configs))
+            for future in futures:
+                chrom_histograms.append(future.result())
+
+        return self._merge_histograms(chrom_histograms)
+
+    def _do_hist(self, chrom, hist_configs):
+        histograms = {}
+        for scr_id, config in hist_configs.items():
+            histograms[scr_id] = Histogram.from_config(config)
         score_names = list(histograms.keys())
 
-        chromosomes = score.get_all_chromosomes()
-        for chrom in chromosomes:
-            score_to_values = \
-                score.fetch_region(chrom, None, None, score_names)
-            for scr_id, vals_iter in score_to_values.items():
-                hist = histograms[scr_id]
-                for v in vals_iter:
-                    if v is not None:  # None designates missing values
-                        hist.add_value(v)
+        score = open_score_from_resource(self.resource)
+        score_to_values = \
+            score.fetch_region(chrom, None, None, score_names)
+        for scr_id, vals_iter in score_to_values.items():
+            hist = histograms[scr_id]
+            for v in vals_iter:
+                if v is not None:  # None designates missing values
+                    hist.add_value(v)
 
         return histograms
 
+    @staticmethod
+    def _merge_histograms(chrom_histograms):
+        res = {}
+        for histograms in chrom_histograms:
+            for scr_id, histogram in histograms.items():
+                if scr_id not in res:
+                    res[scr_id] = histogram
+                else:
+                    res[scr_id] = Histogram.merge(res[scr_id], histogram)
+        return res
+
     def _score_min_max(self, score, score_id):
         logger.info(f"Calculating min max for {score_id}")
+
+        chromosomes = score.get_all_chromosomes()
+        min_maxes = []
+        with ProcessPoolExecutor(max_workers=self.jobs) as executor:
+            futures = []
+            for chrom in chromosomes:
+                futures.append(executor.submit(self._min_max_for_chrom,
+                                               chrom, score_id))
+            for future in futures:
+                min_maxes.append(future.result())
+
         limits = np.iinfo(np.int64)
         scr_min, scr_max = limits.max, limits.min
-        chromosomes = score.get_all_chromosomes()
-        for chrom in chromosomes:
-            score_to_values = \
-                score.fetch_region(chrom, None, None, [score_id])
-            vals_iter = score_to_values[score_id]
-            for v in vals_iter:
-                if v is not None:  # None designates missing values
-                    scr_min = min(scr_min, v)
-                    scr_max = max(scr_max, v)
+        for i_min, i_max in min_maxes:
+            scr_min = min(scr_min, i_min)
+            scr_max = max(scr_max, i_max)
+
         logger.info(f"Done calculating min/max for {score_id}.\
  min={scr_min} max={scr_max}")
         assert scr_min <= scr_max
         return scr_min, scr_max
+
+    def _min_max_for_chrom(self, chrom, score_id):
+        score = open_score_from_resource(self.resource)
+        limits = np.iinfo(np.int64)
+        scr_min, scr_max = limits.max, limits.min
+        score_to_values = \
+            score.fetch_region(chrom, None, None, [score_id])
+        vals_iter = score_to_values[score_id]
+        for v in vals_iter:
+            if v is not None:  # None designates missing values
+                scr_min = min(scr_min, v)
+                scr_max = max(scr_max, v)
+        return (scr_min, scr_max)
 
     # def build():
     #     over all chromosomes:

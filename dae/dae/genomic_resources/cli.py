@@ -1,4 +1,3 @@
-import os
 import sys
 import logging
 import pathlib
@@ -67,6 +66,9 @@ def cli_manage(cli_args=None):
                              help='Path to the GR Repo')
     parser_hist.add_argument('resource', type=str,
                              help='Resource to generate histograms for')
+    parser_hist.add_argument('-j', '--jobs', type=int, default=None,
+                             help='Number of jobs to run in parallel. \
+ Defaults to the number of processors on the machine')
 
     args = parser.parse_args(cli_args)
 
@@ -94,7 +96,7 @@ def cli_manage(cli_args=None):
         if gr is None:
             print(f"Cannot find resource {args.resource}")
             sys.exit(1)
-        builder = HistogramBuilder(gr)
+        builder = HistogramBuilder(gr, args.jobs)
         histograms = builder.build()
         resource_path = pathlib.Path(args.resource)
         hist_out_dir = dr / resource_path / 'histograms'
