@@ -1,6 +1,11 @@
+import os
 import numpy as np
 import logging
 import yaml
+import pandas as pd
+from concurrent.futures import ProcessPoolExecutor
+
+from dae.genomic_resources.genomic_scores import open_score_from_resource
 
 logger = logging.getLogger(__name__)
 
@@ -21,16 +26,16 @@ class Histogram:
             self.bins = np.linspace(
                 self.x_min,
                 self.x_max,
-                bins_count,
+                bins_count + 1,
             )
         elif self.x_scale == "log":
             assert x_min_log is not None
             self.bins = np.array([
-                x_min_log,
+                self.x_min,
                 * np.logspace(
-                    np.log10(self.x_min),
+                    np.log10(self.x_min_log),
                     np.log10(self.x_max),
-                    bins_count - 1
+                    bins_count
                 )])
         else:
             assert False, f"unexpected xscale: {self.x_scale}"
@@ -40,16 +45,16 @@ class Histogram:
 
         self.y_scale = y_scale
 
-        self.bars = np.zeros(bins_count - 1, dtype=np.int32)
+        self.bars = np.zeros(bins_count, dtype=np.int64)
 
     @staticmethod
     def from_config(conf):
         return Histogram(
-            conf["bins_count"],
-            conf["x_min"],
-            conf["x_max"],
-            conf["x_scale"],
-            conf["y_scale"],
+            conf["bins"],
+            conf["min"],
+            conf["max"],
+            conf.get("x_scale", "linear"),
+            conf.get("y_scale", "linear"),
             conf.get("x_min_log")
         )
 
@@ -72,7 +77,7 @@ class Histogram:
         )
 
         hist.bins = np.array(d["bins"])
-        hist.bars = np.array(d["bars"], dtype=np.int32)
+        hist.bars = np.array(d["bars"], dtype=np.int64)
 
         return hist
 
@@ -85,7 +90,7 @@ class Histogram:
         assert all(hist1.bins == hist2.bins)
 
         result = Histogram(
-            len(hist1.bins),
+            len(hist1.bins) - 1,
             hist1.x_min,
             hist1.x_max,
             hist1.x_scale,
@@ -101,16 +106,13 @@ class Histogram:
         return result
 
     def add_value(self, value):
-        print("===")
-        print(value)
-        print(type(value))
         if value < self.x_min or value > self.x_max:
-            logger.error(
+            logger.warning(
                 f"value {value} out of range: [{self.x_min},{self.x_max}]")
             return False
         index = np.where(self.bins > value)
         if len(index) == 0:
-            logger.error(f"(1) empty index {index} for value {value}")
+            logger.warning(f"(1) empty index {index} for value {value}")
             return False
         index = index[0]
         if len(index) == 0:
@@ -125,6 +127,136 @@ class Histogram:
         self.bars[index[0] - 1] += 1
 
         return True
+
+
+class HistogramBuilder:
+    def __init__(self, resource, jobs=None) -> None:
+        self.resource = resource
+        self.jobs = jobs
+
+    def build(self) -> dict[str, Histogram]:
+        histogram_desc = self.resource.get_config().get("histograms", [])
+        if len(histogram_desc) == 0:
+            return {}
+
+        scores_missing_limits = []
+        for hist_conf in histogram_desc:
+            has_min_max = "min" in hist_conf and "max" in hist_conf
+            if not has_min_max:
+                scores_missing_limits.append(hist_conf["score"])
+
+        score = open_score_from_resource(self.resource)
+        score_limits = {}
+        if len(scores_missing_limits) > 0:
+            score_limits = self._score_min_max(score, scores_missing_limits)
+
+        hist_configs = {}
+        for hist_conf in histogram_desc:
+            if "min" not in hist_conf:
+                hist_conf["min"] = score_limits[hist_conf["score"]][0]
+            if "max" not in hist_conf:
+                hist_conf["max"] = score_limits[hist_conf["score"]][1]
+            hist_configs[hist_conf["score"]] = hist_conf
+
+        chrom_histograms = []
+        with ProcessPoolExecutor(max_workers=self.jobs) as executor:
+            futures = []
+            chromosomes = score.get_all_chromosomes()
+            for chrom in chromosomes:
+                futures.append(executor.submit(self._do_hist,
+                                               chrom, hist_configs))
+            for future in futures:
+                chrom_histograms.append(future.result())
+
+        return self._merge_histograms(chrom_histograms)
+
+    def _do_hist(self, chrom, hist_configs):
+        histograms = {}
+        for scr_id, config in hist_configs.items():
+            histograms[scr_id] = Histogram.from_config(config)
+        score_names = list(histograms.keys())
+
+        score = open_score_from_resource(self.resource)
+        for rec in score.fetch_region(chrom, None, None, score_names):
+            for scr_id, v in rec.items():
+                hist = histograms[scr_id]
+                if v is not None:  # None designates missing values
+                    hist.add_value(v)
+
+        return histograms
+
+    @staticmethod
+    def _merge_histograms(chrom_histograms):
+        res = {}
+        for histograms in chrom_histograms:
+            for scr_id, histogram in histograms.items():
+                if scr_id not in res:
+                    res[scr_id] = histogram
+                else:
+                    res[scr_id] = Histogram.merge(res[scr_id], histogram)
+        return res
+
+    def _score_min_max(self, score, score_ids):
+        logger.info(f"Calculating min max for {score_ids}")
+
+        chromosomes = score.get_all_chromosomes()
+        min_maxes = []
+        with ProcessPoolExecutor(max_workers=self.jobs) as executor:
+            futures = []
+            for chrom in chromosomes:
+                futures.append(executor.submit(self._min_max_for_chrom,
+                                               chrom, score_ids))
+            for future in futures:
+                min_maxes.append(future.result())
+
+        res = {}
+        for partial_res in min_maxes:
+            for scr_id, (i_min, i_max) in partial_res.items():
+                if scr_id in res:
+                    res[scr_id][0] = min(i_min, res[scr_id][0])
+                    res[scr_id][1] = max(i_max, res[scr_id][1])
+                else:
+                    res[scr_id] = [i_min, i_max]
+
+        logger.info(f"Done calculating min/max for {score_ids}.\
+ res={res}")
+        return res
+
+    def _min_max_for_chrom(self, chrom, score_ids):
+        score = open_score_from_resource(self.resource)
+        limits = np.iinfo(np.int64)
+        res = {scr_id: [limits.max, limits.min] for scr_id in score_ids}
+        for rec in score.fetch_region(chrom, None, None, score_ids):
+            for scr_id in score_ids:
+                v = rec[scr_id]
+                if v is not None:  # None designates missing values
+                    res[scr_id][0] = min(v, res[scr_id][0])
+                    res[scr_id][1] = max(v, res[scr_id][1])
+        return res
+
+    # def build():
+    #     over all chromosomes:
+    #         run build_region in parallel
+    #     merge all histograms.
+
+    def save(self, histograms, out_dir):
+        histogram_desc = self.resource.get_config().get("histograms", [])
+        configs = {hist['score']: hist for hist in histogram_desc}
+
+        os.makedirs(out_dir, exist_ok=True)
+        for score, histogram in histograms.items():
+            df = pd.DataFrame({'bars': histogram.bars,
+                               'bins': histogram.bins[:-1]})
+            hist_name = f"{score}.csv"
+            df.to_csv(os.path.join(out_dir, hist_name), index=None)
+
+            metadata = {
+                'resource': self.resource.get_id(),
+                'histogram_config': configs.get(score, {}),
+            }
+            metadata_name = f"{score}.metadata.yaml"
+            with open(os.path.join(out_dir, metadata_name), "wt") as f:
+                yaml.dump(metadata, f)
 
 
 class ScoreStatistic:

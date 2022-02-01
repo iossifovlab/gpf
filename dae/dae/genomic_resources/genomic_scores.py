@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import abc
 import logging
+from numbers import Number
 
-from typing import List, Tuple, cast
+from typing import Generator, List, Tuple, cast
 
 from . import GenomicResource
 from .repository import GenomicResourceRealRepo
@@ -90,19 +91,44 @@ class GenomicScore(abc.ABC):
         return self.table.get_column_names()
 
     def _fetch_lines(self, chrom, pos_begin, pos_end):
-        records = list(self.table.get_records_in_region(
-            chrom, pos_begin, pos_end))
+        records = self.table.get_records_in_region(
+            chrom, pos_begin, pos_end)
 
-        return [
-            ScoreLine(record, self.score_columns, self.special_columns)
-            for record in records
-        ]
+        for record in records:
+            yield ScoreLine(record, self.score_columns, self.special_columns)
 
     def get_all_chromosomes(self):
         return self.table.get_chromosomes()
 
     def get_all_scores(self):
         return list(self.score_columns)
+
+    def fetch_region(self, chrom: str, pos_begin: int, pos_end: int,
+                     scores: List[str]) \
+            -> Generator[dict[str, Number], None, None]:
+        if chrom not in self.get_all_chromosomes():
+            raise ValueError(
+                f"{chrom} is not among the available chromosomes.")
+
+        line_iter = self._fetch_lines(chrom, pos_begin, pos_end)
+        for line in line_iter:
+            line_pos_begin, line_pos_end = self._line_to_begin_end(line)
+
+            val = {}
+            for scr_id in scores:
+                val[scr_id] = line.get_score_value(scr_id)
+
+            if pos_begin is not None:
+                left = max(pos_begin, line_pos_begin)
+            else:
+                left = line_pos_begin
+            if pos_end is not None:
+                right = min(pos_end, line_pos_end)
+            else:
+                right = line_pos_end
+
+            for i in range(left, right+1):
+                yield val
 
 
 class PositionScore(GenomicScore):
@@ -122,7 +148,7 @@ class PositionScore(GenomicScore):
             raise ValueError(
                 f"{chrom} is not among the available chromosomes.")
 
-        line = self._fetch_lines(chrom, position, position)
+        line = list(self._fetch_lines(chrom, position, position))
         if not line:
             return None
 
@@ -152,7 +178,7 @@ class PositionScore(GenomicScore):
             raise ValueError(
                 f"{chrom} is not among the available chromosomes.")
 
-        score_lines = self._fetch_lines(chrom, pos_begin, pos_end)
+        score_lines = list(self._fetch_lines(chrom, pos_begin, pos_end))
 
         requested_scores = scores if scores else self.get_all_scores()
         aggregators = {}
@@ -216,7 +242,7 @@ class NPScore(GenomicScore):
                 f"{chrom} is not among the available chromosomes for "
                 f"NP Score resource {self.score_id()}")
 
-        lines = self._fetch_lines(chrom, position, position)
+        lines = list(self._fetch_lines(chrom, position, position))
         if not lines:
             return None
 
@@ -244,7 +270,7 @@ class NPScore(GenomicScore):
                 f"{chrom} is not among the available chromosomes for "
                 f"NP Score resource {self.score_id()}")
 
-        score_lines = self._fetch_lines(chrom, pos_begin, pos_end)
+        score_lines = list(self._fetch_lines(chrom, pos_begin, pos_end))
         if not score_lines:
             return None
 
@@ -326,7 +352,7 @@ class AlleleScore(GenomicScore):
                 f"{chrom} is not among the available chromosomes for "
                 f"NP Score resource {self.score_id()}")
 
-        lines = self._fetch_lines(chrom, position, position)
+        lines = list(self._fetch_lines(chrom, position, position))
         if not lines:
             return None
 
@@ -479,3 +505,16 @@ def open_allele_score_from_resource(
         extra_special_columns={"reference": str, "alternative": str})
 
     return cast(AlleleScore, result)
+
+
+def open_score_from_resource(resource: GenomicResource) -> GenomicScore:
+    type_to_ctor = {
+        PositionScore.get_resource_type(): open_position_score_from_resource,
+        NPScore.get_resource_type(): open_np_score_from_resource,
+        AlleleScore.get_resource_type(): open_allele_score_from_resource,
+    }
+    ctor = type_to_ctor.get(resource.get_type())
+    if ctor is None:
+        raise ValueError(f"Resource {resource.get_id()} is not of score type")
+
+    return ctor(resource)

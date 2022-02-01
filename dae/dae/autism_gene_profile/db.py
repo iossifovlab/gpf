@@ -61,9 +61,48 @@ class AutismGeneProfileDB:
         s = s.where(table.c.symbol_name == gene_symbol)
         with self.engine.connect() as connection:
             row = connection.execute(s).fetchone()
-            return self.agp_from_table_row(row)
+            return self.agp_from_table_row_single_view(row)
 
-    def agp_from_table_row(self, row):
+    def agp_from_table_row(self, row) -> dict:
+        config = self.configuration
+        result = dict()
+
+        result["geneSymbol"] = row["symbol_name"]
+
+        for gs_category in config["genomic_scores"]:
+            category_name = gs_category["category"]
+            for score in gs_category["scores"]:
+                score_name = score["score_name"]
+                value = row[f"{category_name}_{score_name}"]
+                result['.'.join([category_name, score_name])] = \
+                    value if value is not None else "-"
+
+        for gs_category in config["gene_sets"]:
+            category_name = gs_category["category"]
+            for gene_set in gs_category["sets"]:
+                set_id = gene_set["set_id"]
+                collection_id = gene_set["collection_id"]
+                full_gs_id = f"{collection_id}_{set_id}"
+                result['.'.join([f"{category_name}_rank", set_id])] = \
+                    '\u2713' if row[full_gs_id] else None
+        
+        for dataset_id, filters in config["datasets"].items():
+            for ps in filters["person_sets"]:
+                person_set = ps["set_name"]
+                for statistic in filters["statistics"]:
+                    statistic_id = statistic["id"]
+                    count = row[
+                        f"{dataset_id}_{person_set}_{statistic_id}"
+                    ]
+                    rate = row[
+                        f"{dataset_id}_{person_set}_{statistic_id}_rate"
+                    ]
+                    result['.'.join(["datasets", dataset_id, person_set, statistic_id])] = \
+                        f"{count} ({round(rate, 2)})" if count else None
+
+        return result
+
+    def agp_from_table_row_single_view(self, row):
         config = self.configuration
         gene_symbol = row["symbol_name"]
         genomic_scores = dict()
@@ -119,9 +158,22 @@ class AutismGeneProfileDB:
         )
 
     def _transform_sort_by(self, sort_by):
+        sort_by_tokens = sort_by.split('.')
         if sort_by.startswith("gene_set_"):
             sort_by = sort_by.replace("gene_set_", "", 1)
-        return sort_by
+        if sort_by.startswith("datasets."):
+            sort_by = sort_by.replace("datasets.", "", 1)
+        if "_rank" in sort_by_tokens[0]:
+            collection_id = ""
+            category = sort_by_tokens[0].replace("_rank", "")
+            if len(sort_by_tokens) == 2:
+                for gs_category in self.configuration["gene_sets"]:
+                    if gs_category["category"] == category:
+                        for gene_set in gs_category["sets"]:
+                            if gene_set["set_id"] == sort_by_tokens[1]:
+                                collection_id = gene_set["collection_id"]
+                sort_by = '.'.join((collection_id, sort_by_tokens[1]))
+        return sort_by.replace(".", "_")
 
     def query_agps(self, page, symbol_like=None, sort_by=None, order=None):
         table = self.agp_table

@@ -1,9 +1,14 @@
 from typing import cast
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.genomic_scores import \
-    open_position_score_from_resource
+    PositionScore,\
+    open_position_score_from_resource,\
+    open_score_from_resource
+from dae.genomic_resources.repository_factory import \
+    build_genomic_resource_repository
 from dae.genomic_resources.test_tools import build_a_test_resource
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+import yaml
 
 
 def test_the_simplest_position_score():
@@ -149,3 +154,83 @@ def test_position_score_over_http(genomic_resource_fixture_http_repo):
     result = score.fetch_scores("1", 10918)
     assert result
     assert result['phastCons100way'] == 0.253
+
+
+def test_build_score_from_resource_with_pos_resource():
+    definition = yaml.safe_load('''
+        id: mm
+        type: embeded
+        content:
+            pos_res:
+                genomic_resource.yaml: |
+                    type: position_score
+                    table:
+                            filename: data.mem
+                    scores:
+                    - id: score
+                      type: float
+                      name: s1
+                data.mem: |
+                        chrom  pos_begin  s1
+                        chr1   23         0.01
+    ''')
+    repo = build_genomic_resource_repository(definition)
+    assert repo is not None
+    gr = repo.get_resource('pos_res')
+    assert gr is not None
+
+    score = open_score_from_resource(gr)
+    assert isinstance(score, PositionScore)
+
+
+def test_position_score_fetch_region():
+    res: GenomicResource = build_a_test_resource({
+        GR_CONF_FILE_NAME: '''
+            type: position_score
+            table:
+                filename: data.mem
+            scores:
+              - id: phastCons100way
+                type: float
+                desc: "The phastCons computed over the tree of 100 \
+                       verterbarte species"
+                name: s1
+              - id: phastCons5way
+                type: int
+                position_aggregator: max
+                na_values: "-1"
+                desc: "The phastCons computed over the tree of 5 \
+                       verterbarte species"
+                name: s2''',
+        "data.mem": '''
+            chrom  pos_begin  pos_end  s1    s2
+            1      10         15       0.02  -1
+            1      17         19       0.03  0
+            1      22         25       0.46  EMPTY
+            2      5          80       0.01  3
+            '''
+    })
+    score = open_position_score_from_resource(res)
+
+    assert list(score.fetch_region("1", 13, 18, ["phastCons100way"])) == \
+        [{"phastCons100way": 0.02},
+         {"phastCons100way": 0.02},
+         {"phastCons100way": 0.02},
+         {"phastCons100way": 0.03},
+         {"phastCons100way": 0.03}]
+
+    assert list(score.fetch_region("1", 13, 18, ["phastCons5way"])) == \
+        [{"phastCons5way": None},
+         {"phastCons5way": None},
+         {"phastCons5way": None},
+         {"phastCons5way": 0},
+         {"phastCons5way": 0}]
+
+    scores = ["phastCons5way", "phastCons100way"]
+    assert list(score.fetch_region("2", 13, 18, scores)) == \
+        [{"phastCons5way": 3, "phastCons100way": 0.01},
+         {"phastCons5way": 3, "phastCons100way": 0.01},
+         {"phastCons5way": 3, "phastCons100way": 0.01},
+         {"phastCons5way": 3, "phastCons100way": 0.01},
+         {"phastCons5way": 3, "phastCons100way": 0.01},
+         {"phastCons5way": 3, "phastCons100way": 0.01}]

@@ -9,6 +9,8 @@ from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.reference_genome import \
     open_reference_genome_from_resource
 from dae.genomic_resources.gene_models import GeneModels
+
+from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.gene_models import \
     load_gene_models_from_resource
 
@@ -29,7 +31,7 @@ def build_effect_annotator(pipeline, config):
         raise ValueError(f"wrong annotator type: {config}")
 
     if config.get("genome") is None:
-        genome = pipeline.context.get_reference_genome()
+        genome = get_genomic_context().get_reference_genome()
         if genome is None:
             logger.error(
                 "can't create effect annotator: config has no "
@@ -44,7 +46,7 @@ def build_effect_annotator(pipeline, config):
         genome = open_reference_genome_from_resource(resource)
 
     if config.get("gene_models") is None:
-        gene_models = pipeline.context.get_gene_models()
+        gene_models = get_genomic_context().get_gene_models()
         if gene_models is None:
             raise ValueError(
                 "can't create effect annotator: "

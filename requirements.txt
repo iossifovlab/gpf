@@ -20,7 +20,7 @@ python-box==5.3.0
 setuptools==52.0.0
 sqlalchemy==1.4.27
 sqlite==3.36.0
-django==3.2.6
+django==3.2.11
 django-cors-headers==3.7.0
 django-guardian==2.4.0
 djangorestframework==3.12.4

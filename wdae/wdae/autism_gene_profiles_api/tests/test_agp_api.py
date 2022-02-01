@@ -9,7 +9,7 @@ route_prefix = "/api/v3/autism_gene_tool"
 
 
 def test_configuration(admin_client):
-    response = admin_client.get(f"{route_prefix}/configuration")
+    response = admin_client.get(f"{route_prefix}/single-view/configuration")
 
     assert response.status_code == 200
     print(response.data)
@@ -76,13 +76,21 @@ def test_configuration(admin_client):
     ]
 
 
-def test_get_statistics(admin_client):
-    response = admin_client.get(f"{route_prefix}/genes")
+def test_get_statistic(admin_client):
+    response = admin_client.get(f"{route_prefix}/single-view/gene/CHD8")
     assert response.status_code == 200
     print(response.data)
 
 
-def test_get_statistic(admin_client):
-    response = admin_client.get(f"{route_prefix}/genes/CHD8")
+def test_get_table_config(admin_client):
+    response = admin_client.get(f"{route_prefix}/table/configuration")
+    assert response.status_code == 200
+    assert "defaultDataset" in response.data
+    assert "columns" in response.data
+    print(response.data)
+
+
+def test_get_statistics(admin_client):
+    response = admin_client.get(f"{route_prefix}/table/rows")
     assert response.status_code == 200
     print(response.data)
