@@ -171,11 +171,9 @@ class HistogramBuilder:
         score_names = list(histograms.keys())
 
         score = open_score_from_resource(self.resource)
-        score_to_values = \
-            score.fetch_region(chrom, None, None, score_names)
-        for scr_id, vals_iter in score_to_values.items():
-            hist = histograms[scr_id]
-            for v in vals_iter:
+        for rec in score.fetch_region(chrom, None, None, score_names):
+            for scr_id, v in rec.items():
+                hist = histograms[scr_id]
                 if v is not None:  # None designates missing values
                     hist.add_value(v)
 
@@ -220,10 +218,8 @@ class HistogramBuilder:
         score = open_score_from_resource(self.resource)
         limits = np.iinfo(np.int64)
         scr_min, scr_max = limits.max, limits.min
-        score_to_values = \
-            score.fetch_region(chrom, None, None, [score_id])
-        vals_iter = score_to_values[score_id]
-        for v in vals_iter:
+        for rec in score.fetch_region(chrom, None, None, [score_id]):
+            v = rec[score_id]
             if v is not None:  # None designates missing values
                 scr_min = min(scr_min, v)
                 scr_max = max(scr_max, v)

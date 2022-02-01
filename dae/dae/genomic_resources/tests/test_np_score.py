@@ -132,17 +132,35 @@ def test_np_score_fetch_region():
     })
     score = open_np_score_from_resource(res)
 
-    def expand(d):
-        return {k: list(v) for k, v in d.items()}
-
     # The in-mem table will sort the records. In this example it will sort
     # the alternatives column (previous columns are the same). That is why
     # the scores (freq) appear out of order
-    assert expand(score.fetch_region("1", 14, 16, ["cadd_raw"])) == \
-        {"cadd_raw": [0.03, 0.03, 0.02, 0.02, 0.04, 0.04, 0.05, 0.03, 0.04]}
+    assert list(score.fetch_region("1", 14, 16, ["cadd_raw"])) == \
+        [{"cadd_raw": 0.03},
+         {"cadd_raw": 0.03},
+         {"cadd_raw": 0.02},
+         {"cadd_raw": 0.02},
+         {"cadd_raw": 0.04},
+         {"cadd_raw": 0.04},
+         {"cadd_raw": 0.05},
+         {"cadd_raw": 0.03},
+         {"cadd_raw": 0.04}]
 
-    assert expand(score.fetch_region("1", 14, 16, ["cadd_test"])) == \
-        {"cadd_test": [None, None, 2, 2, 4, 4, 0, 3, None]}
+    assert list(score.fetch_region("1", 14, 16, ["cadd_test"])) == \
+        [{"cadd_test": None},
+         {"cadd_test": None},
+         {"cadd_test": 2},
+         {"cadd_test": 2},
+         {"cadd_test": 4},
+         {"cadd_test": 4},
+         {"cadd_test": 0},
+         {"cadd_test": 3},
+         {"cadd_test": None}]
 
-    assert expand(score.fetch_region("2", 13, 17, ["cadd_test"])) == \
-        {"cadd_test": [3, 3, 4, 4, 3, 3]}
+    assert list(score.fetch_region("2", 13, 17, ["cadd_test"])) == \
+        [{"cadd_test": 3},
+         {"cadd_test": 3},
+         {"cadd_test": 4},
+         {"cadd_test": 4},
+         {"cadd_test": 3},
+         {"cadd_test": 3}]

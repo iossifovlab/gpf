@@ -183,7 +183,7 @@ def test_build_score_from_resource_with_pos_resource():
     assert isinstance(score, PositionScore)
 
 
-def test_fetch_region():
+def test_position_score_fetch_region():
     res: GenomicResource = build_a_test_resource({
         GR_CONF_FILE_NAME: '''
             type: position_score
@@ -212,14 +212,25 @@ def test_fetch_region():
     })
     score = open_position_score_from_resource(res)
 
-    def expand(d):
-        return {k: list(v) for k, v in d.items()}
+    assert list(score.fetch_region("1", 13, 18, ["phastCons100way"])) == \
+        [{"phastCons100way": 0.02},
+         {"phastCons100way": 0.02},
+         {"phastCons100way": 0.02},
+         {"phastCons100way": 0.03},
+         {"phastCons100way": 0.03}]
 
-    assert expand(score.fetch_region("1", 13, 18, ["phastCons100way"])) == \
-        {"phastCons100way": [0.02, 0.02, 0.02, 0.03, 0.03]}
+    assert list(score.fetch_region("1", 13, 18, ["phastCons5way"])) == \
+        [{"phastCons5way": None},
+         {"phastCons5way": None},
+         {"phastCons5way": None},
+         {"phastCons5way": 0},
+         {"phastCons5way": 0}]
 
-    assert expand(score.fetch_region("1", 13, 18, ["phastCons5way"])) == \
-        {"phastCons5way": [None, None, None, 0, 0]}
-
-    assert expand(score.fetch_region("2", 13, 18, ["phastCons5way"])) == \
-        {"phastCons5way": [3, 3, 3, 3, 3, 3]}
+    scores = ["phastCons5way", "phastCons100way"]
+    assert list(score.fetch_region("2", 13, 18, scores)) == \
+        [{"phastCons5way": 3, "phastCons100way": 0.01},
+         {"phastCons5way": 3, "phastCons100way": 0.01},
+         {"phastCons5way": 3, "phastCons100way": 0.01},
+         {"phastCons5way": 3, "phastCons100way": 0.01},
+         {"phastCons5way": 3, "phastCons100way": 0.01},
+         {"phastCons5way": 3, "phastCons100way": 0.01}]

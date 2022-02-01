@@ -61,17 +61,23 @@ def test_allele_score_fetch_region():
     })
     score = open_allele_score_from_resource(res)
 
-    def expand(d):
-        return {k: list(v) for k, v in d.items()}
-
     # The in-mem table will sort the records. In this example it will sort
     # the alternatives column (previous columns are the same). That is why
     # the scores (freq) appear out of order
-    assert expand(score.fetch_region("1", 10, 11, ["freq"])) == \
-        {"freq": [0.04, 0.03, 0.02]}
+    assert list(score.fetch_region("1", 10, 11, ["freq"])) == \
+        [{"freq": 0.04},
+         {"freq": 0.03},
+         {"freq": 0.02}]
 
-    assert expand(score.fetch_region("1", 10, 16, ["freq"])) == \
-        {"freq": [0.04, 0.03, 0.02, 0.05, 0.04, 0.03]}
+    assert list(score.fetch_region("1", 10, 16, ["freq"])) == \
+        [{"freq": 0.04},
+         {"freq": 0.03},
+         {"freq": 0.02},
+         {"freq": 0.05},
+         {"freq": 0.04},
+         {"freq": 0.03}]
 
-    assert expand(score.fetch_region("2", None, None, ["freq"])) == \
-        {"freq": [0.05, None, 0.03]}
+    assert list(score.fetch_region("2", None, None, ["freq"])) == \
+        [{"freq": 0.05},
+         {"freq": None},
+         {"freq": 0.03}]

@@ -105,23 +105,18 @@ class GenomicScore(abc.ABC):
 
     def fetch_region(self, chrom: str, pos_begin: int, pos_end: int,
                      scores: List[str]) \
-            -> dict[str, Generator[Number, None, None]]:
+            -> Generator[dict[str, Number], None, None]:
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
                 f"{chrom} is not among the available chromosomes.")
 
-        res = {}
-        for scr_id in scores:
-            res[scr_id] = self.iter_lines(chrom, pos_begin, pos_end, scr_id)
-        return res
-
-    def iter_lines(self, chrom: str, pos_begin: int, pos_end: int,
-                   scr_id: str) -> Generator[Number, None, None]:
         line_iter = self._fetch_lines(chrom, pos_begin, pos_end)
         for line in line_iter:
             line_pos_begin, line_pos_end = self._line_to_begin_end(line)
 
-            val = line.get_score_value(scr_id)
+            val = {}
+            for scr_id in scores:
+                val[scr_id] = line.get_score_value(scr_id)
 
             if pos_begin is not None:
                 left = max(pos_begin, line_pos_begin)
@@ -134,7 +129,6 @@ class GenomicScore(abc.ABC):
 
             for i in range(left, right+1):
                 yield val
-
 
 
 class PositionScore(GenomicScore):
