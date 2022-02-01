@@ -139,17 +139,23 @@ class HistogramBuilder:
         if len(histogram_desc) == 0:
             return {}
 
-        score = open_score_from_resource(self.resource)
-        hist_configs = {}
+        scores_missing_limits = []
         for hist_conf in histogram_desc:
             has_min_max = "min" in hist_conf and "max" in hist_conf
             if not has_min_max:
-                scr_min, scr_max = self._score_min_max(
-                    score, hist_conf["score"])
-                if "min" not in hist_conf:
-                    hist_conf["min"] = scr_min
-                if "max" not in hist_conf:
-                    hist_conf["max"] = scr_max
+                scores_missing_limits.append(hist_conf["score"])
+
+        score = open_score_from_resource(self.resource)
+        score_limits = {}
+        if len(scores_missing_limits) > 0:
+            score_limits = self._score_min_max(score, scores_missing_limits)
+
+        hist_configs = {}
+        for hist_conf in histogram_desc:
+            if "min" not in hist_conf:
+                hist_conf["min"] = score_limits[hist_conf["score"]][0]
+            if "max" not in hist_conf:
+                hist_conf["max"] = score_limits[hist_conf["score"]][1]
             hist_configs[hist_conf["score"]] = hist_conf
 
         chrom_histograms = []
@@ -190,8 +196,8 @@ class HistogramBuilder:
                     res[scr_id] = Histogram.merge(res[scr_id], histogram)
         return res
 
-    def _score_min_max(self, score, score_id):
-        logger.info(f"Calculating min max for {score_id}")
+    def _score_min_max(self, score, score_ids):
+        logger.info(f"Calculating min max for {score_ids}")
 
         chromosomes = score.get_all_chromosomes()
         min_maxes = []
@@ -199,31 +205,34 @@ class HistogramBuilder:
             futures = []
             for chrom in chromosomes:
                 futures.append(executor.submit(self._min_max_for_chrom,
-                                               chrom, score_id))
+                                               chrom, score_ids))
             for future in futures:
                 min_maxes.append(future.result())
 
-        limits = np.iinfo(np.int64)
-        scr_min, scr_max = limits.max, limits.min
-        for i_min, i_max in min_maxes:
-            scr_min = min(scr_min, i_min)
-            scr_max = max(scr_max, i_max)
+        res = {}
+        for partial_res in min_maxes:
+            for scr_id, (i_min, i_max) in partial_res.items():
+                if scr_id in res:
+                    res[scr_id][0] = min(i_min, res[scr_id][0])
+                    res[scr_id][1] = max(i_max, res[scr_id][1])
+                else:
+                    res[scr_id] = [i_min, i_max]
 
-        logger.info(f"Done calculating min/max for {score_id}.\
- min={scr_min} max={scr_max}")
-        assert scr_min <= scr_max
-        return scr_min, scr_max
+        logger.info(f"Done calculating min/max for {score_ids}.\
+ res={res}")
+        return res
 
-    def _min_max_for_chrom(self, chrom, score_id):
+    def _min_max_for_chrom(self, chrom, score_ids):
         score = open_score_from_resource(self.resource)
         limits = np.iinfo(np.int64)
-        scr_min, scr_max = limits.max, limits.min
-        for rec in score.fetch_region(chrom, None, None, [score_id]):
-            v = rec[score_id]
-            if v is not None:  # None designates missing values
-                scr_min = min(scr_min, v)
-                scr_max = max(scr_max, v)
-        return (scr_min, scr_max)
+        res = {scr_id: [limits.max, limits.min] for scr_id in score_ids}
+        for rec in score.fetch_region(chrom, None, None, score_ids):
+            for scr_id in score_ids:
+                v = rec[scr_id]
+                if v is not None:  # None designates missing values
+                    res[scr_id][0] = min(v, res[scr_id][0])
+                    res[scr_id][1] = max(v, res[scr_id][1])
+        return res
 
     # def build():
     #     over all chromosomes:

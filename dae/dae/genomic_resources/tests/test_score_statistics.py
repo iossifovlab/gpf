@@ -239,6 +239,8 @@ def test_histogram_builder_no_explicit_min_max():
             1      22         25       0.46
             2      5          80       0.01
             2      10         11       1.0
+            3      5          17       1.0
+            3      18         20       0.01
             '''
     })
     hbuilder = HistogramBuilder(res)
