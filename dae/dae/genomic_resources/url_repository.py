@@ -1,5 +1,6 @@
 import io
 import gzip
+from urllib.request import urlopen
 import yaml
 import logging
 import pysam  # type: ignore
@@ -66,7 +67,10 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
         file_url = self.get_file_url(genomic_resource, filename)
         logger.debug(f"opening url resource: {file_url}")
 
-        binary_stream = self.filesystem.open(file_url)
+        if self.scheme in ["http", "https"] and not seekable:
+            binary_stream = urlopen(file_url)
+        else:
+            binary_stream = self.filesystem.open(file_url)
 
         if filename.endswith(".gz") and uncompress:
             return gzip.open(binary_stream, mode)
