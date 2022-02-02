@@ -49,7 +49,8 @@
           <span class="header-cell"
             [attr.title]="column.displayName"
             [ngClass]="{'vertical-text': column.displayVertical }"
-          >{{ column.displayName }}</span>
+            >{{ column.displayName }}</span
+          >
           <gpf-sorting-buttons
             *ngIf="column.sortable"
             [id]="column.id"
@@ -72,7 +73,8 @@
 
 <span #dropdownSpan class="dropdown-span" ngbDropdown>
   <button ngbDropdownToggle style="display: none"></button>
-  <gpf-multiple-select-menu class="multiple-select-menu" ngbDropdownMenu (applyEvent)="calculateHeaderLayout()"></gpf-multiple-select-menu>
+  <gpf-multiple-select-menu class="multiple-select-menu" ngbDropdownMenu (applyEvent)="calculateHeaderLayout()">
+  </gpf-multiple-select-menu>
 </span>
 
 <div id="highlighted-genes" *ngIf="highlightedGenes.size > 0">
