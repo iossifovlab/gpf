@@ -370,7 +370,7 @@ def main(argv=sys.argv[1:], gpf_instance=None):
 
         region_bin_helpers = RegionBinsHelper(
             study_backend.table_properties,
-            gpf_instance.get_genome()
+            gpf_instance.reference_genome
         )
         region_bin_helpers._build_region_bins()
 

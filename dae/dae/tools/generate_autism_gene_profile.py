@@ -311,8 +311,8 @@ def main(gpf_instance=None, argv=None):
         for _, gs in collections_gene_sets:
             gene_symbols = gene_symbols.union(gs["syms"])
     else:
-        gene_models = gpf_instance.get_genome().get_gene_models().gene_models
-        gene_symbols = set(gene_models.keys())
+        gene_models = gpf_instance.gene_models
+        gene_symbols = set(gene_models.gene_names())
     gs_count = len(gene_symbols)
     logger.info(f"Collected {gs_count} gene symbols")
     has_denovo = False
