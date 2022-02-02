@@ -268,6 +268,11 @@ LOGGING = {
             "level": "WARNING",
             "propagate": True,
         },
+        "fsspec": {
+            "handlers": ["console", "logdebug"],  # 'logfile'],
+            "level": "WARNING",
+            "propagate": True,
+        },
         "matplotlib": {
             "handlers": ["console", "logdebug"],  # 'logfile'],
             "level": "INFO",
