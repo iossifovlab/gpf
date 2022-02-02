@@ -5,9 +5,9 @@ import { AgpSingleViewConfig } from 'app/autism-gene-profiles-single-view/autism
 import { Observable } from 'rxjs';
 
 @Component({
-  selector: 'gpf-autism-gene-profile-single-view-wrapper',
-  templateUrl: './autism-gene-profile-single-view-wrapper.component.html',
-  styleUrls: ['./autism-gene-profile-single-view-wrapper.component.css']
+  selector: 'gpf-autism-gene-profiles-single-view-wrapper',
+  templateUrl: './autism-gene-profiles-single-view-wrapper.component.html',
+  styleUrls: ['./autism-gene-profiles-single-view-wrapper.component.css']
 })
 export class AutismGeneProfileSingleViewWrapperComponent implements OnInit, AfterViewInit {
   public $autismGeneToolConfig: Observable<AgpSingleViewConfig>;

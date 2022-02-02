@@ -168,7 +168,6 @@ import { FamilyTypeFilterComponent } from './family-type-filter/family-type-filt
 import { FamilyTypeFilterState } from './family-type-filter/family-type-filter.state';
 import { SortingButtonsComponent } from './sorting-buttons/sorting-buttons.component';
 import { BnNgIdleService } from 'bn-ng-idle';
-import { AutismGeneProfileSingleViewWrapperComponent } from './autism-gene-profile-single-view-wrapper/autism-gene-profile-single-view-wrapper.component';
 import { NgxsModule } from '@ngxs/store';
 import { NgxsResetPluginModule } from 'ngxs-reset-plugin';
 import { VarianttypesState } from './variant-types/variant-types.state';
@@ -184,6 +183,7 @@ import { ClipboardModule } from '@angular/cdk/clipboard';
 import { SplitPipe } from './utils/split.pipe';
 import { MiddleClickDirective } from './autism-gene-profiles-table/middle-click.directive';
 import { AgpTableComponent } from './autism-gene-profiles-table/autism-gene-profiles-table.component';
+import { AutismGeneProfileSingleViewWrapperComponent } from './autism-gene-profiles-single-view-wrapper/autism-gene-profiles-single-view-wrapper.component';
 
 const appRoutes: Routes = [
   {

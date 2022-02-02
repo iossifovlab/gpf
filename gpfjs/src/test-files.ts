@@ -104,6 +104,7 @@ import './app/pheno-tool/pheno-tool.service.spec';
 import './app/enrichment-query/enrichment-result.spec';
 import './app/genotype-browser/genotype-browser.spec';
 import './app/utils/split.pipe';
-import 'app/autism-gene-profiles-table/autism-gene-profiles-table.service.spec.ts';
-import 'app/autism-gene-profiles-table/autism-gene-profiles-table.component.spec.ts';
-import 'app/autism-gene-profiles-table/middle-click.directive.spec.ts';
+import './app/autism-gene-profiles-table/autism-gene-profiles-table.service.spec.ts';
+import './app/autism-gene-profiles-table/autism-gene-profiles-table.component.spec.ts';
+import './app/autism-gene-profiles-table/middle-click.directive.spec.ts';
+import './app/autism-gene-profiles-single-view-wrapper/autism-gene-profiles-single-view-wrapper.component.spec.ts'

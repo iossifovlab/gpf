@@ -2,8 +2,8 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 import { ActivatedRoute } from '@angular/router';
-import { AutismGeneProfileSingleViewWrapperComponent } from './autism-gene-profile-single-view-wrapper.component';
 import { of } from 'rxjs';
+import { AutismGeneProfileSingleViewWrapperComponent } from './autism-gene-profiles-single-view-wrapper.component';
 
 class MockActivatedRoute {
   params = {dataset: 'testDatasetId', get: () => ''};
