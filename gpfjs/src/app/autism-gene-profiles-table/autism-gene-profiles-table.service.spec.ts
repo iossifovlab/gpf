@@ -4,9 +4,8 @@ import { ConfigService } from 'app/config/config.service';
 // eslint-disable-next-line no-restricted-imports
 import { of } from 'rxjs';
 import { take } from 'rxjs/operators';
-import { AgpTableConfig } from './agp-table';
-import { AgpTableService } from "./agp-table.service";
-
+import { AgpTableConfig } from './autism-gene-profiles-table';
+import { AgpTableService } from './autism-gene-profiles-table.service';
 
 describe('AgpTableService', () => {
   let service: AgpTableService;

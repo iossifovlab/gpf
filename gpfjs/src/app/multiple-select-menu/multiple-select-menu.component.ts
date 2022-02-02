@@ -1,6 +1,6 @@
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Component, ElementRef, EventEmitter, Input, OnChanges, Output, ViewChild } from '@angular/core';
-import { Column } from '../agp-table/agp-table';
+import { Column } from 'app/autism-gene-profiles-table/autism-gene-profiles-table';
 
 @Component({
   selector: 'gpf-multiple-select-menu',

@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule, Injector, ErrorHandler } from '@angular/core';
+import { NgModule, ErrorHandler } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 
@@ -161,7 +161,6 @@ import { DatasetNodeComponent } from './dataset-node/dataset-node.component';
 import { MultipleSelectMenuComponent } from './multiple-select-menu/multiple-select-menu.component';
 import { AutismGeneProfilesBlockComponent } from './autism-gene-profiles-block/autism-gene-profiles-block.component';
 import { AutismGeneProfileSingleViewComponent } from './autism-gene-profiles-single-view/autism-gene-profile-single-view.component';
-import { MiddleClickDirective } from './agp-table/middle-click.directive';
 import { PersonFiltersBlockComponent } from './person-filters-block/person-filters-block.component';
 import { PersonIdsComponent } from './person-ids/person-ids.component';
 import { PersonIdsState } from './person-ids/person-ids.state';
@@ -183,7 +182,8 @@ import { GenePlotComponent } from './gene-plot/gene-plot.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ClipboardModule } from '@angular/cdk/clipboard';
 import { SplitPipe } from './utils/split.pipe';
-import { AgpTableComponent } from './agp-table/agp-table.component';
+import { MiddleClickDirective } from './autism-gene-profiles-table/middle-click.directive';
+import { AgpTableComponent } from './autism-gene-profiles-table/autism-gene-profiles-table.component';
 
 const appRoutes: Routes = [
   {

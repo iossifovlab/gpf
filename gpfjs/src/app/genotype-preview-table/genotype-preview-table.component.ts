@@ -1,7 +1,6 @@
 import { Input, Component, HostListener, OnInit } from '@angular/core';
 import { GenotypePreview, GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
 import { PersonSet } from '../datasets/datasets';
-import { Column, ColumnGroup } from 'app/datasets/datasets';
 
 @Component({
   selector: 'gpf-genotype-preview-table',

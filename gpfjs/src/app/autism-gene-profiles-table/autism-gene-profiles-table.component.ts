@@ -2,15 +2,15 @@ import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, On
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
-import { AgpTableConfig, Column } from './agp-table';
-import { AgpTableService } from 'app/agp-table/agp-table.service';
 import { debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
 import { Subject } from 'rxjs';
+import { AgpTableConfig, Column } from './autism-gene-profiles-table';
+import { AgpTableService } from './autism-gene-profiles-table.service';
 
 @Component({
-  selector: 'gpf-agp-table',
-  templateUrl: './agp-table.component.html',
-  styleUrls: ['./agp-table.component.css']
+  selector: 'gpf-autism-gene-profiles-table',
+  templateUrl: './autism-gene-profiles-table.component.html',
+  styleUrls: ['./autism-gene-profiles-table.component.css']
 })
 export class AgpTableComponent implements OnInit, OnChanges {
   @Input() public config: AgpTableConfig;

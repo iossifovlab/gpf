@@ -7,7 +7,7 @@ import { GpfTableHeaderComponent } from 'app/table/view/header/header.component'
 import { GpfTableCellComponent } from 'app/table/view/cell.component';
 import { GpfTableEmptyCellComponent } from 'app/table/view/empty-cell.component';
 import { GpfTableSubheaderComponent } from 'app/table/component/subheader.component';
-import { Column, ColumnGroup, GenotypeBrowser } from 'app/datasets/datasets';
+import { GenotypeBrowser } from 'app/datasets/datasets';
 import { GenotypePreview, GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 
 describe('GenotypePreviewTableComponent', () => {

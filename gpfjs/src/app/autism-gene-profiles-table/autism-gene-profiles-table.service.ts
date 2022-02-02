@@ -1,11 +1,11 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { AgpTableConfig } from 'app/agp-table/agp-table';
 import { ConfigService } from 'app/config/config.service';
 import { plainToClass } from 'class-transformer';
 // eslint-disable-next-line no-restricted-imports
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { AgpTableConfig } from './autism-gene-profiles-table';
 
 @Injectable({
   providedIn: 'root'

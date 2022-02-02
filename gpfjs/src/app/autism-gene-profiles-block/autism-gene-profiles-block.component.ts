@@ -1,14 +1,14 @@
 import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { Location } from '@angular/common';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
-import { AgpTableConfig } from 'app/agp-table/agp-table';
 import { AgpSingleViewConfig } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
-import { AgpTableService } from 'app/agp-table/agp-table.service';
 import { AutismGeneProfilesService  } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { take } from 'rxjs/operators';
 import { Store } from '@ngxs/store';
 import { QueryService } from 'app/query/query.service';
 import { AutismGeneProfileSingleViewComponent } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view.component';
+import { AgpTableConfig } from 'app/autism-gene-profiles-table/autism-gene-profiles-table';
+import { AgpTableService } from 'app/autism-gene-profiles-table/autism-gene-profiles-table.service';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-block',

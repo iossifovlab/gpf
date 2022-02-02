@@ -2,7 +2,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
-import { AgpTableComponent } from './agp-table.component';
+import { AgpTableComponent } from './autism-gene-profiles-table.component';
 
 describe('AgpTableComponent', () => {
   let component: AgpTableComponent;

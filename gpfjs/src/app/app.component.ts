@@ -1,12 +1,12 @@
 import { Component, HostListener } from '@angular/core';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { environment } from '../environments/environment';
-import { AgpTableService } from './agp-table/agp-table.service'
 import { BnNgIdleService } from 'bn-ng-idle';
 import { UsersService } from './users/users.service';
-import { AgpTableConfig } from './agp-table/agp-table'
 import { switchMap } from 'rxjs/operators';
 import { NgbNavConfig } from '@ng-bootstrap/ng-bootstrap';
+import { AgpTableConfig } from './autism-gene-profiles-table/autism-gene-profiles-table';
+import { AgpTableService } from './autism-gene-profiles-table/autism-gene-profiles-table.service';
 
 @Component({
   selector: 'gpf-root',
