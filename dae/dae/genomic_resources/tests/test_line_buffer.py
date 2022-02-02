@@ -57,12 +57,12 @@ def test_line_buffer_prune(pos, expected):
 ])
 def test_line_buffer_find_index(pos, expected):
     buffer = LineBuffer()
-    buffer.append('1', 4, 4, "1")
-    buffer.append('1', 4, 4, "2")
-    buffer.append('1', 5, 5, "3")
-    buffer.append('1', 8, 8, "4")
-    buffer.append("1", 9, 10, "5")
-    buffer.append("1", 12, 14, "6")
+    buffer.append('1', 4, 4, "1")  # 0
+    buffer.append('1', 4, 4, "2")  # 1
+    buffer.append('1', 5, 5, "3")  # 2
+    buffer.append('1', 8, 8, "4")  # 3
+    buffer.append("1", 9, 10, "5")  # 4
+    buffer.append("1", 12, 14, "6")  # 5
 
     assert buffer.find_index("1", pos) == expected
 
@@ -82,3 +82,29 @@ def test_line_buffer_simple_3():
     assert len(res) == 1
 
     assert res[0][:3] == ('1', 1, 10,)
+
+
+@pytest.mark.parametrize("pos,index", [
+    (1847882, 6),
+    (1847880, 0),
+    (1847881, 3),
+    (1847883, 6),
+    (1847884, 8),
+    (1847885, 11),
+])
+def test_find_index_buggy(pos, index):
+    buffer = LineBuffer()
+    buffer.append('1', 1847880, 1847880, None)  # 0
+    buffer.append('1', 1847880, 1847880, None)  # 1
+    buffer.append('1', 1847880, 1847880, None)  # 2
+    buffer.append('1', 1847881, 1847881, None)  # 3
+    buffer.append('1', 1847881, 1847881, None)  # 4
+    buffer.append('1', 1847881, 1847881, None)  # 5
+    buffer.append('1', 1847883, 1847883, None)  # 6
+    buffer.append('1', 1847883, 1847883, None)  # 7
+    buffer.append('1', 1847884, 1847884, None)  # 8
+    buffer.append('1', 1847884, 1847884, None)  # 9
+    buffer.append('1', 1847884, 1847884, None)  # 10
+    buffer.append('1', 1847885, 1847885, None)  # 11
+
+    assert buffer.find_index('1', pos) == index
