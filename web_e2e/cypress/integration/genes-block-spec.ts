@@ -77,45 +77,81 @@ describe('Genes block gene sets names and count tests', () => {
     genotypeBrowserController.navigateToHome();
   });
 
-  [{ collection: 'Main',
-      expectedCondition: 'autism candidates from Iossifov PNAS 2015 (239): Iossifov I., et al. Low load for disruptive ' +
-      'mutations in autism genes and their biased transmission. PNAS (2015)'},
-    { collection: 'Main',
-      expectedCondition: 'autism candidates from Sanders Neuron 2015 (65): Sanders S., et. al, Insights into Autism Spectrum ' +
-      'Disorder Genomic Architecture and Biology from 71 Risk Loci. Neuron (2015)'},
-    { collection: 'Main',
-      expectedCondition: 'brain critical genes (1744): Uddin M, et al. Brain-expressed exons under purifying selection are ' +
-      'enriched for de novo mutations in autism spectrum disorder. Nat Genetics (2014)'},
-    { collection: 'SFARI Genes',
-      expectedCondition: 'sfari_all (910): SFARI Genes (2017-09): All genes'},
-    { collection: 'SFARI Genes',
-      expectedCondition: 'sfari_score_1 (24): SFARI Genes (2017-09): Gene score 1'},
-    { collection: 'SFARI Genes',
-      expectedCondition: 'sfari_score_2 (55): SFARI Genes (2017-09): Gene score 2'},
-    { collection: 'SPARK Gene Lists',
-      expectedCondition: 'SPARK_gene_list_2016 (50): SPARK Gene list 2016'},
-    { collection: 'SPARK Gene Lists',
-      expectedCondition: 'SPARK_gene_list_2017 (27): SPARK Gene list 2017'},
-    { collection: 'SPARK Gene Lists',
-      expectedCondition: 'SPARK_gene_list_all (76): SPARK Gene list ALL (2016, 2017)'},
-    { collection: 'GO Terms',
-      expectedCondition: 'GO:0000002 (7): mitochondrial_genome_maintenance'},
-    { collection: 'GO Terms',
-      expectedCondition: 'GO:0000003 (10): reproduction'},
-    { collection: 'GO Terms',
-      expectedCondition: 'GO:0000009 (1): alpha-1,6-mannosyltransferase_activity'},
-    { collection: 'Protein domains',
-      expectedCondition: '35EXO (9):'},
-    { collection: 'Protein domains',
-      expectedCondition: 'AAA (132):'},
-    { collection: 'Protein domains',
-      expectedCondition: 'ABH (18):'},
-    { collection: 'miRNA from Darnell',
-      expectedCondition: 'let-7 (881):'},
-    { collection: 'miRNA from Darnell',
-      expectedCondition: 'miR-101 (510):'},
-    { collection: 'miRNA from Darnell',
-      expectedCondition: 'miR-124 (1018):'}
+  [
+    {
+      collection: 'Main',
+      expectedCondition: 'autism candidates from Iossifov PNAS 2015 (239): Iossifov I., et al. ' +
+        'Low load for disruptive mutations in autism genes and their biased transmission. PNAS (2015)'
+    },
+    {
+      collection: 'Main',
+      expectedCondition: 'autism candidates from Sanders Neuron 2015 (65): Sanders S., et. al, Insights into ' +
+        'Autism Spectrum Disorder Genomic Architecture and Biology from 71 Risk Loci. Neuron (2015)'},
+    {
+      collection: 'Main',
+      expectedCondition: 'brain critical genes (1744): Uddin M, et al. Brain-expressed exons under ' +
+        'purifying selection are enriched for de novo mutations in autism spectrum disorder. Nat Genetics (2014)'
+    },
+    {
+      collection: 'SFARI Genes',
+      expectedCondition: 'sfari_all (910): SFARI Genes (2017-09): All genes'
+    },
+    {
+      collection: 'SFARI Genes',
+      expectedCondition: 'sfari_score_1 (24): SFARI Genes (2017-09): Gene score 1'
+    },
+    {
+      collection: 'SFARI Genes',
+      expectedCondition: 'sfari_score_2 (55): SFARI Genes (2017-09): Gene score 2'
+    },
+    {
+      collection: 'SPARK Gene Lists',
+      expectedCondition: 'SPARK_gene_list_2016 (50): SPARK Gene list 2016'
+    },
+    {
+      collection: 'SPARK Gene Lists',
+      expectedCondition: 'SPARK_gene_list_2017 (27): SPARK Gene list 2017'
+    },
+    {
+      collection: 'SPARK Gene Lists',
+      expectedCondition: 'SPARK_gene_list_all (76): SPARK Gene list ALL (2016, 2017)'
+    },
+    {
+      collection: 'GO Terms',
+      expectedCondition: 'GO:0000002 (7): mitochondrial_genome_maintenance'
+    },
+    {
+      collection: 'GO Terms',
+      expectedCondition: 'GO:0000003 (10): reproduction'
+    },
+    {
+      collection: 'GO Terms',
+      expectedCondition: 'GO:0000009 (1): alpha-1,6-mannosyltransferase_activity'
+    },
+    {
+      collection: 'Protein domains',
+      expectedCondition: '35EXO (9):'
+    },
+    {
+      collection: 'Protein domains',
+      expectedCondition: 'AAA (132):'
+    },
+    {
+      collection: 'Protein domains',
+      expectedCondition: 'ABH (18):'
+    },
+    {
+      collection: 'miRNA from Darnell',
+      expectedCondition: 'let-7 (881):'
+    },
+    {
+      collection: 'miRNA from Darnell',
+      expectedCondition: 'miR-101 (510):'
+    },
+    {
+      collection: 'miRNA from Darnell',
+      expectedCondition: 'miR-124 (1018):'
+    }
   ].forEach(data => {
     it('should properly display "' + data.expectedCondition + '" in "' +
       data.collection + '" collection, and the counts should match', () => {
@@ -162,45 +198,81 @@ describe('Genes block gene set file length tests', () => {
     genotypeBrowserController.navigateToHome();
   });
 
-  [{ collection: 'Main',
-      expectedCondition: 'autism candidates from Iossifov PNAS 2015 (239): Iossifov I., et al. Low load for disruptive ' +
-      'mutations in autism genes and their biased transmission. PNAS (2015)'},
-    { collection: 'Main',
-      expectedCondition: 'autism candidates from Sanders Neuron 2015 (65): Sanders S., et. al, Insights into Autism Spectrum ' +
-      'Disorder Genomic Architecture and Biology from 71 Risk Loci. Neuron (2015)'},
-    { collection: 'Main',
-      expectedCondition: 'brain critical genes (1744): Uddin M, et al. Brain-expressed exons under purifying selection are ' +
-      'enriched for de novo mutations in autism spectrum disorder. Nat Genetics (2014)'},
-    { collection: 'SFARI Genes',
-      expectedCondition: 'sfari_all (910): SFARI Genes (2017-09): All genes'},
-    { collection: 'SFARI Genes',
-      expectedCondition: 'sfari_score_1 (24): SFARI Genes (2017-09): Gene score 1'},
-    { collection: 'SFARI Genes',
-      expectedCondition: 'sfari_score_2 (55): SFARI Genes (2017-09): Gene score 2'},
-    { collection: 'SPARK Gene Lists',
-      expectedCondition: 'SPARK_gene_list_2016 (50): SPARK Gene list 2016'},
-    { collection: 'SPARK Gene Lists',
-      expectedCondition: 'SPARK_gene_list_2017 (27): SPARK Gene list 2017'},
-    { collection: 'SPARK Gene Lists',
-      expectedCondition: 'SPARK_gene_list_all (76): SPARK Gene list ALL (2016, 2017)'},
-    { collection: 'GO Terms',
-      expectedCondition: 'GO:0000002 (7): mitochondrial_genome_maintenance'},
-    { collection: 'GO Terms',
-      expectedCondition: 'GO:0000003 (10): reproduction'},
-    { collection: 'GO Terms',
-      expectedCondition: 'GO:0000009 (1): alpha-1,6-mannosyltransferase_activity'},
-    { collection: 'Protein domains',
-      expectedCondition: '35EXO (9):'},
-    { collection: 'Protein domains',
-      expectedCondition: 'AAA (132):'},
-    { collection: 'Protein domains',
-      expectedCondition: 'ABH (18):'},
-    { collection: 'miRNA from Darnell',
-      expectedCondition: 'let-7 (881):'},
-    { collection: 'miRNA from Darnell',
-      expectedCondition: 'miR-101 (510):'},
-    { collection: 'miRNA from Darnell',
-      expectedCondition: 'miR-124 (1018):'}
+  [
+    {
+      collection: 'Main',
+      expectedCondition: 'autism candidates from Iossifov PNAS 2015 (239): Iossifov I., et al. ' +
+        'Low load for disruptive mutations in autism genes and their biased transmission. PNAS (2015)'
+    },
+    {
+      collection: 'Main',
+      expectedCondition: 'autism candidates from Sanders Neuron 2015 (65): Sanders S., et. al, Insights into ' +
+        'Autism Spectrum Disorder Genomic Architecture and Biology from 71 Risk Loci. Neuron (2015)'},
+    {
+      collection: 'Main',
+      expectedCondition: 'brain critical genes (1744): Uddin M, et al. Brain-expressed exons under ' +
+        'purifying selection are enriched for de novo mutations in autism spectrum disorder. Nat Genetics (2014)'
+    },
+    {
+      collection: 'SFARI Genes',
+      expectedCondition: 'sfari_all (910): SFARI Genes (2017-09): All genes'
+    },
+    {
+      collection: 'SFARI Genes',
+      expectedCondition: 'sfari_score_1 (24): SFARI Genes (2017-09): Gene score 1'
+    },
+    {
+      collection: 'SFARI Genes',
+      expectedCondition: 'sfari_score_2 (55): SFARI Genes (2017-09): Gene score 2'
+    },
+    {
+      collection: 'SPARK Gene Lists',
+      expectedCondition: 'SPARK_gene_list_2016 (50): SPARK Gene list 2016'
+    },
+    {
+      collection: 'SPARK Gene Lists',
+      expectedCondition: 'SPARK_gene_list_2017 (27): SPARK Gene list 2017'
+    },
+    {
+      collection: 'SPARK Gene Lists',
+      expectedCondition: 'SPARK_gene_list_all (76): SPARK Gene list ALL (2016, 2017)'
+    },
+    {
+      collection: 'GO Terms',
+      expectedCondition: 'GO:0000002 (7): mitochondrial_genome_maintenance'
+    },
+    {
+      collection: 'GO Terms',
+      expectedCondition: 'GO:0000003 (10): reproduction'
+    },
+    {
+      collection: 'GO Terms',
+      expectedCondition: 'GO:0000009 (1): alpha-1,6-mannosyltransferase_activity'
+    },
+    {
+      collection: 'Protein domains',
+      expectedCondition: '35EXO (9):'
+    },
+    {
+      collection: 'Protein domains',
+      expectedCondition: 'AAA (132):'
+    },
+    {
+      collection: 'Protein domains',
+      expectedCondition: 'ABH (18):'
+    },
+    {
+      collection: 'miRNA from Darnell',
+      expectedCondition: 'let-7 (881):'
+    },
+    {
+      collection: 'miRNA from Darnell',
+      expectedCondition: 'miR-101 (510):'
+    },
+    {
+      collection: 'miRNA from Darnell',
+      expectedCondition: 'miR-124 (1018):'
+    }
   ].forEach(data => {
     it('should download "' + data.expectedCondition + '" in the "' + data.collection +
        '" collection and check whether the count in the name should matches ' +
@@ -257,20 +329,30 @@ describe('Genes block denovo gene set gene symbols tests', () => {
     genotypeBrowserController.navigateToHome();
   });
 
-  [{peopleGroup: 'affected',
-    expectedConditions: {
-    effectTypesSearchQueries: ['LGDs', 'Missense', 'Synonymous', 'LGDs.Single', 'LGDs.Triple', 'LGDs.Male'],
-    expectedGeneSymbolsFiles: [
-      'cypress/fixtures/gene-sets/LGDs_iossifov_2014_status_affected.csv', 'cypress/fixtures/gene-sets/Missense_iossifov_2014_status_affected.csv',
-      'cypress/fixtures/gene-sets/Synonymous_iossifov_2014_status_affected.csv', 'cypress/fixtures/gene-sets/LGDs_single_iossifov_2014_affected.csv',
-      'cypress/fixtures/gene-sets/LGDs_triple_iossifov_2014_affected.csv', 'cypress/fixtures/gene-sets/LGDs_male_iossifov_2014_affected.csv',
-      'cypress/fixtures/gene-sets/LGDs_iossifov_2014_unaffected.csv'
-    ]}},
-    {peopleGroup: 'unaffected',
-    expectedConditions: {
-    effectTypesSearchQueries: ['LGDs'],
-    expectedGeneSymbolsFiles: ['cypress/fixtures/gene-sets/LGDs_iossifov_2014_unaffected.csv']}}
-  ].forEach((data) => {
+  [
+    {
+      peopleGroup: 'affected',
+      expectedConditions: {
+        effectTypesSearchQueries: ['LGDs', 'Missense', 'Synonymous', 'LGDs.Single', 'LGDs.Triple', 'LGDs.Male'],
+        expectedGeneSymbolsFiles: [
+          'cypress/fixtures/gene-sets/LGDs_iossifov_2014_status_affected.csv',
+          'cypress/fixtures/gene-sets/Missense_iossifov_2014_status_affected.csv',
+          'cypress/fixtures/gene-sets/Synonymous_iossifov_2014_status_affected.csv',
+          'cypress/fixtures/gene-sets/LGDs_single_iossifov_2014_affected.csv',
+          'cypress/fixtures/gene-sets/LGDs_triple_iossifov_2014_affected.csv',
+          'cypress/fixtures/gene-sets/LGDs_male_iossifov_2014_affected.csv',
+          'cypress/fixtures/gene-sets/LGDs_iossifov_2014_unaffected.csv'
+        ]
+      }
+    },
+    {
+      peopleGroup: 'unaffected',
+      expectedConditions: {
+        effectTypesSearchQueries: ['LGDs'],
+        expectedGeneSymbolsFiles: ['cypress/fixtures/gene-sets/LGDs_iossifov_2014_unaffected.csv']
+      }
+    }
+  ].forEach(data => {
     it('should download iossifov ' + data.peopleGroup + ' denovo gene sets ' +
        'and check whether they are equal to the reference data', () => {
       const downloadedGeneSymbolsFilePath = Cypress.config('downloadsFolder') + '/geneset.csv';

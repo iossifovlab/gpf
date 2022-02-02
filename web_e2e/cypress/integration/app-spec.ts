@@ -178,7 +178,9 @@ describe('App user access rights tests', () => {
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
     userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
+    userManagementPage.allUserEditGroupRemoveButtons.should('be.visible');
     userManagementPage.userWindowGroupDropDownMenuButton.click();
+    userManagementPage.userWindowGroupDropDownMenuButton.should('be.visible');
     userManagementPage.userWindowGroupDropdownSearch.type('comp_vcf');
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
@@ -201,7 +203,9 @@ describe('App user access rights tests', () => {
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
     userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
-    userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true});
+    userManagementPage.allUserEditGroupRemoveButtons.should('be.visible');
+    userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true})  ;
+    userManagementPage.userWindowGroupDropDownMenuButton.should('be.visible');
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowGroupDropdownSearch.type('COMP_genotypes');
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
@@ -255,7 +259,6 @@ describe('App user access rights tests', () => {
     userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
     userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true});
     userManagementPage.userWindowGroupDropDownMenuButton.click();
-    userManagementPage.userWindowGroupDropdownSearch.should('be.visible');
     userManagementPage.userWindowGroupDropdownSearch.type('ALL_Genotypes');
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
@@ -299,7 +302,7 @@ describe('App user access rights tests', () => {
     const genotypeBrowserPage = new GenotypeBrowserPage();
 
     page.loginAdmin();
-    page.navigateToSidenavPage(sidenavPageLinks.management);
+    page.navigateToSidenavPage(sidenavPageLinks.management); 
     userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
     userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true});
     userManagementPage.userWindowSubmitButton.click();

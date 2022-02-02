@@ -15,8 +15,13 @@ describe('Pheno browser tests', () => {
     page.navigateToHome();
   });
 
-  [{seachQuery: 'the age'}, {seachQuery: 'the iq'}, {seachQuery: 'measure 1'},
-   {seachQuery: 'measure 2'}, {seachQuery: 'measure 3'}, {seachQuery: 'measure 4'}
+  [
+    {seachQuery: 'the age'},
+    {seachQuery: 'the iq'},
+    {seachQuery: 'measure 1'},
+    {seachQuery: 'measure 2'},
+    {seachQuery: 'measure 3'},
+    {seachQuery: 'measure 4'}
   ].forEach(data => {
     it('should filter the right rows when typing "' + data.seachQuery + '" in the sarchbox', () => {
       page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
