@@ -26,12 +26,17 @@ def test_line_buffer_simple_2():
     assert len(res) == 4
 
 @pytest.mark.parametrize("pos,expected", [
-    (1, 4),
+    (1, 5),
+    (2, 5),
+    (3, 4),
     (4, 4),
     (5, 2),
 ])
 def test_line_buffer_prune(pos, expected):
     buffer = LineBuffer()
+    buffer.PRUNE_CUTOFF = 0
+
+    buffer.append('1', 2, 2, "0")
     buffer.append('1', 4, 4, "1")
     buffer.append('1', 4, 4, "2")
     buffer.append('1', 5, 5, "3")

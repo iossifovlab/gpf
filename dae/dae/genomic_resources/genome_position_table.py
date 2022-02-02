@@ -272,6 +272,12 @@ class LineBuffer:
 
     def __init__(self):
         self.deque: Deque = collections.deque()
+        self.maxlen = 0
+        self.find_count = 0
+        self.maxdepth = 0
+        self.fetch_count = 0
+        self.append_count = 0
+        self.prune_count = 0
 
     def __len__(self):
         return len(self.deque)
@@ -280,9 +286,13 @@ class LineBuffer:
         self.deque.clear()
     
     def append(self, chrom: str, pos_begin: int, pos_end: int, line: Any):
+        self.append_count += 1
+
         if len(self.deque) > 0 and self.peek_first()[0] != chrom:
             self.clear()
         self.deque.append((chrom, pos_begin, pos_end, line))
+        if len(self.deque) > self.maxlen:
+            self.maxlen = len(self.deque)
 
     def peek_first(self):
         return self.deque[0]
@@ -312,16 +322,23 @@ class LineBuffer:
             return None, None, None
         return first_chrom, first_begin, last_end
 
-    def prune(self, chrom, beg):
+    PRUNE_CUTOFF = 100
+
+    def prune(self, chrom: str, beg: int) -> None:
+        self.prune_count += 1
+
+        if len(self.deque) == 0:
+            return
+
         first_chrom, first_beg, _, _ = self.peek_first()
         if chrom != first_chrom:
             self.clear()
             return
 
         while len(self.deque) > 0:
-            _, first_beg, first_end, _ = self.deque[0]
+            _, first_beg, _, _ = self.deque[0]
             
-            if beg<= first_beg:
+            if (beg - self.PRUNE_CUTOFF) <= first_beg:
                 break
             self.deque.popleft()
 
@@ -333,6 +350,8 @@ class LineBuffer:
         return False
 
     def find_index(self, chrom: str, pos: int) -> int:
+        self.find_count += 1
+
         if len(self.deque) == 0:
             return -1
         if not self.contains(chrom, pos):
@@ -343,7 +362,9 @@ class LineBuffer:
         
         first_index = 0
         last_index = len(self.deque) - 1
+        depth = 0
         while True:
+            depth += 1
             mid_index = (last_index - first_index) // 2 + first_index
             if last_index == first_index == mid_index:
                 break
@@ -362,10 +383,14 @@ class LineBuffer:
             if pos > t_beg:
                 break
             mid_index -= 1
+        if depth > self.maxdepth:
+            self.maxdepth = depth
 
         return mid_index
 
     def fetch(self, chrom, pos_begin, pos_end):
+        self.fetch_count += 1
+
         beg_index = self.find_index(chrom, pos_begin)
         if beg_index == -1:
             return
@@ -379,6 +404,16 @@ class LineBuffer:
                 break
             yield row
 
+    def dump_stats(self, resource_id=None):
+        message = f"buffer stats: maxlen={self.maxlen}; " \
+            f"append={self.append_count}; " \
+            f"prune={self.prune_count}; " \
+            f"find={self.find_count}; (depth={self.maxdepth})" \
+            f"fetch={self.fetch_count}"
+
+        if resource_id is not None:
+            message = f"score {resource_id}; {message}"
+        logger.info(message)
 
 
 class TabixGenomicPositionTable(GenomicPositionTable):
@@ -416,15 +451,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         line_end = int(line[self.pos_end_column_i])
         
         self.buffer.append(line_chrom, line_beg, line_end, line)
-        
-        if self._call[2] and line_end > self._call[2]:
-            self._call[2] = line_end
-
-    def current_pos(self):
-        return self.buffer.peek_last()
-
-    def _reset_buffer(self):
-        self.buffer.clear()
+        return line_chrom, line_beg, line_end, line
 
     def _map_file_chrom(self, chrom: str) -> str:
         """
@@ -465,64 +492,62 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             else:
                 yield tuple(line)
 
-    def _should_use_sequential(self, fchrom, beg):
-        assert fchrom is not None
-        curr_chrom, curr_begin, _, _ = self.current_pos()
-        if curr_chrom != fchrom:
+    def _should_use_sequential(self, chrom, pos):
+        assert chrom is not None
+        if len(self.buffer) == 0:
             return False
-        if curr_begin > beg:
+
+        last_chrom, last_begin, last_end, _ = self.buffer.peek_last()
+        if chrom != last_chrom:
             return False
-        if beg - curr_begin >= self.jump_threshold:
+        if pos < last_end:
+            return False
+
+        if pos - last_end >= self.jump_threshold:
             return False
         return True
 
-    def _sequential_rewind(self, fchrom, beg, end):
-
-        curr_chrom, curr_begin, curr_end, curr_buff = self.current_pos()
-        assert curr_buff is not None
-        assert curr_chrom == fchrom
-
-        if end and curr_begin > end:
-            return False
-
-        if curr_begin >= beg or beg <= curr_end:
-            return curr_buff
-
-        while True:
-            try:
-                line = next(self.tabix_iterator)
-                curr_chrom, curr_begin, curr_end, _ = self.current_pos()
-                self._update_buffer(line)
-
-                if curr_chrom != fchrom:
-                    return False
-
-                if end and curr_begin > end:
-                    return False
-
-                if curr_begin >= beg or beg <= curr_end:
-                    return True
-
-            except StopIteration:
-                return False
-
-    def _fill_buffer(self, _fcrhom, _beg, end):
-        assert end is not None
-
-        last_chrom, last_beg, last_end, _ = self.buffer.peek_last()
-        if end < last_beg:
-            return
-
+    def _gen_from_tabix(self, chrom, end):
         try:
             while True:
                 line = next(self.tabix_iterator)  # type: ignore
-                self._update_buffer(line)
+                line_chrom, line_beg, line_end, _ = self._update_buffer(line)
 
-                if self.current_pos()[1] > end:
+                if line_chrom != chrom:
                     return
+                if end is not None and line_beg > end:
+                    return
+                result = self._transform_result(line)
+                if result:
+                    yield line_chrom, line_beg, line_end, result
         except StopIteration:
-            logger.info(f"iterator finished while filling the buffer")
+            pass
 
+    def _sequential_rewind(self, chrom, pos):
+        assert len(self.buffer) > 0
+
+        last_chrom, last_begin, last_end, _ = self.buffer.peek_last()
+        assert chrom == last_chrom
+        assert pos >= last_begin
+
+        for row in self._gen_from_tabix(chrom, pos):
+            last_chrom, last_begin, last_end, _ = row
+        if pos >= last_end:
+            return True
+        else:
+            return False
+
+    def _gen_from_buffer_and_tabix(self, chrom, beg, end):
+        for row in self.buffer.fetch(chrom, beg, end):
+            line_chrom, line_beg, line_end, line = row
+            result = self._transform_result(line)
+            if result:
+                yield line_chrom, line_beg, line_end, result
+        _, last_beg, last_end, _ = self.buffer.peek_last()
+        if end < last_end:
+            return
+
+        yield from self._gen_from_tabix(chrom, end)
 
     def get_records_in_region(
             self, chrom: str, beg: int = None, end: int = None):
@@ -539,121 +564,56 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         if beg is None:
             beg = 1
 
-        logger.info(
-            f"score {self.genomic_resource.resource_id}; "
-            f"current call {fchrom, beg, end}; prev call {self._call}; "
-            f"curr position is {self.current_pos()[:3]}; "
-        )
+        self.buffer.prune(fchrom, beg)
+        self.buffer.dump_stats(self.genomic_resource.resource_id)
 
-        logger.info(
-            f"score {self.genomic_resource.resource_id}; "
-            f"buffer ({self.buffer.deque}); "
-        )
+        if end is not None:
+            if self.buffer.contains(fchrom, beg):
+                self.buffer_count += 1
+                logger.info(
+                    f"score {self.genomic_resource.resource_id}; "
+                    f"BUFFER ({self.buffer_count} times); "
+                    f"current call is {fchrom, beg, end}; "
+                    f"prev call was {self._call}; "
+                    f"buffer region is {self.buffer.region()}; "
+                )
+                for row in self._gen_from_buffer_and_tabix(fchrom, beg, end):
+                    _, _, _, line = row
+                    yield line
+                return
 
-        if self.buffer.contains(fchrom, beg, end):
-            self._fill_buffer(fchrom, beg, end)
-
-            self.buffer_count += 1
-            logger.info(
-                f"score {self.genomic_resource.resource_id}; "
-                f"BUFFER ({self.buffer_count} times); "
-                f"current call is {fchrom, beg, end}; "
-                f"prev call was {self._call}; "
-                f"curr position is {self.current_pos()[:3]}; "
-            )
-
-            for row in self.buffer.fetch(chrom, beg, end):
-                _, line_beg, line_end, line = row
-                # if beg < line_beg:
-                #     continue
-                # if line_beg > end:
-                #     return
-                result = self._transform_result(line)
-                if result:
-                    yield result
-            return
-
-        curr_chrom, curr_begin, _, _ = self.current_pos()
-        prev_chrom, _, prev_end = self._call
-
-        if end is not None and prev_end is not None \
-                and curr_chrom == prev_chrom \
-                and beg > prev_end \
-                and end < curr_begin:
-            self.middle_count += 1
-            logger.info(
-                f"score {self.genomic_resource.resource_id}; "
-                f"MIDDLE ({self.middle_count} times); "
-                f"current call is {fchrom, beg, end}; "
-                f"prev call was {self._call}; "
-                f"curr position is {self.current_pos()[:3]}; "
-            )
-            return None
-
-        try:
-            if self._should_use_sequential(fchrom, beg):
+            elif self._should_use_sequential(fchrom, beg):
                 self.sequential_count += 1
                 logger.info(
                     f"score {self.genomic_resource.resource_id}; "
                     f"SEQUENTIAL ({self.sequential_count} times); "
                     f"current call is {fchrom, beg, end}; "
                     f"prev call was {self._call}; "
-                    f"curr position is {self.current_pos()[:3]}; "
+                    f"buffer region is {self.buffer.region()}; "
                 )
-                found = self._sequential_rewind(fchrom, beg, end)
-                self._call = [fchrom, beg, end]
-                # self._call_result = []
-                if not found:
-                    return
-                # self._call_result = buff
-                for row in self.buffer.fetch(fchrom, beg, end):
+                self._sequential_rewind(fchrom, beg)
 
-                    _, line_beg, _, line = row
-                    if line_beg > end:
-                        return
-                    result = self._transform_result(line)
-                    if result:
-                        yield result
-            else:
+                for row in self._gen_from_buffer_and_tabix(fchrom, beg, end):
+                    _, _, _, line = row
+                    yield line
+                return
 
-                self.tabix_iterator = self.tabix_file.fetch(
-                    fchrom, beg - 1, None, parser=pysam.asTuple())
-                self._reset_buffer()
-                self.direct_count += 1
-                logger.info(
-                    f"score {self.genomic_resource.resource_id}; "
-                    f"DIRECT ({self.direct_count} times); "
-                    f"current call is {fchrom, beg, end}; "
-                    f"prev call was {self._call}; "
-                    f"curr position is {self.current_pos()[:3]}; "
-                )
-                self._call = [fchrom, beg, end]
-                # self._call_result = []
+        self.tabix_iterator = self.tabix_file.fetch(
+            fchrom, beg - 1, None, parser=pysam.asTuple())
+        self.buffer.clear()
 
-            while True:
-                line = next(self.tabix_iterator)  # type: ignore
-                self._update_buffer(line)
+        self.direct_count += 1
+        logger.info(
+            f"score {self.genomic_resource.resource_id}; "
+            f"DIRECT ({self.direct_count} times); "
+            f"current call is {fchrom, beg, end}; "
+            f"prev call was {self._call}; "
+            f"buffer region is {self.buffer.region()}; "
+        )
 
-                if end and self.current_pos()[1] > end:
-                    return
-                result = self._transform_result(line)
-                if result:
-                    yield result
-    
-        except StopIteration:
-            return
-
-        except GeneratorExit:
-            logger.info("generator exit catched...")
-            try:
-                while True:
-                    line = next(self.tabix_iterator)  # type: ignore
-                    self._update_buffer(line)
-
-                    if end and self.current_pos()[1] > end:
-                        return
-            except Exception:
-                logger.info("exception while handling of generator exit")
+        for row in self._gen_from_tabix(fchrom, end):
+            _, _, _, line = row
+            yield line
 
     def close(self):
         self.tabix_file.close()

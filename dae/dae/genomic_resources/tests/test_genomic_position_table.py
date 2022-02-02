@@ -550,8 +550,6 @@ def test_tabix_table_should_use_sequential(tabix_table):
     for row in table.get_records_in_region("1", 1, 1):
         print(row)
 
-    assert table.current_pos()[1] == 2
-    assert table.current_pos()[2] == 2
     assert not table._should_use_sequential("1", 1)
 
     assert table._should_use_sequential("1", 2)
@@ -561,30 +559,6 @@ def test_tabix_table_should_use_sequential(tabix_table):
     assert not table._should_use_sequential("1", 3)
 
 
-@pytest.mark.parametrize("pos_beg,pos_end,expected", [
-    (1, 1, None),
-    (2, 2, None),
-    (3, 3, [("1", "3", "3")]),
-    (4, 3, None),
-    (4, 4, [("1", "4", "4")]),
-    (10, 10, [("1", "10", "10")]),
-    (12, 12, [("1", "12", "12")]),
-])
-def test_tabix_table_sequential_rewind(tabix_table, pos_beg, pos_end, expected):
-    table = tabix_table
-    assert table.get_column_names() == ("chrom", "pos_begin", "c1")
-
-    assert not table._should_use_sequential("1", 1)
-    for row in table.get_records_in_region("1", 2, 2):
-        print(row)
-    assert table.current_pos()[1] == 3
-    assert table.current_pos()[2] == 3
-
-    # buff = table._sequential_rewind("1", pos_beg, pos_end)
-    # if buff: buff = [tuple(line) for line in buff]
-    # assert buff == expected
-
-
 def test_regions_tabix_table_should_use_sequential(regions_tabix_table):
     table = regions_tabix_table
     assert table.get_column_names() == ("chrom", "pos_begin", "pos_end", "c1")
@@ -592,11 +566,9 @@ def test_regions_tabix_table_should_use_sequential(regions_tabix_table):
     assert not table._should_use_sequential("1", 1)
     for row in table.get_records_in_region("1", 2, 2):
         print(row)
-    assert table.current_pos()[1] == 6
-    assert table.current_pos()[2] == 10
 
     assert not table._should_use_sequential("1", 1)
-    assert table._should_use_sequential("1", 6)
+    assert not table._should_use_sequential("1", 6)
     assert table._should_use_sequential("1", 11)
     assert table._should_use_sequential("1", 21)
 
@@ -606,29 +578,29 @@ def test_regions_tabix_table_should_use_sequential(regions_tabix_table):
     assert not table._should_use_sequential("1", 21)
 
 
-@pytest.mark.parametrize("pos_beg,pos_end,expected", [
-    (0, 1, None),
-    (1, 2, None),
-    (5, 6, [("1", "6", "10", "2")]),
-    (9, 15, [("1", "6", "10", "2")]),
-    (7, 20, [("1", "6", "10", "2")]),
-    (11, 12, [("1", "11", "15", "3")]),
-])
-def test_regions_tabix_table_sequential_rewind(
-        regions_tabix_table, pos_beg, pos_end, expected):
-    table = regions_tabix_table
-    assert table.get_column_names() == ("chrom", "pos_begin", "pos_end", "c1")
+# @pytest.mark.parametrize("pos_beg,pos_end,expected", [
+#     (0, 1, None),
+#     (1, 2, None),
+#     (5, 6, [("1", "6", "10", "2")]),
+#     (9, 15, [("1", "6", "10", "2")]),
+#     (7, 20, [("1", "6", "10", "2")]),
+#     (11, 12, [("1", "11", "15", "3")]),
+# ])
+# def test_regions_tabix_table_sequential_rewind(
+#         regions_tabix_table, pos_beg, pos_end, expected):
+#     table = regions_tabix_table
+#     assert table.get_column_names() == ("chrom", "pos_begin", "pos_end", "c1")
 
-    assert not table._should_use_sequential("1", 1)
-    for row in table.get_records_in_region("1", 2, 2):
-        print(row)
-    assert table.current_pos()[1] == 6
-    assert table.current_pos()[2] == 10
+#     assert not table._should_use_sequential("1", 1)
+#     for row in table.get_records_in_region("1", 2, 2):
+#         print(row)
+#     assert table.current_pos()[1] == 6
+#     assert table.current_pos()[2] == 10
 
-    # buff = table._sequential_rewind("1", pos_beg, pos_end)
-    # if buff: 
-    #     buff = [tuple(line) for line in buff]
-    # assert buff == expected
+#     # buff = table._sequential_rewind("1", pos_beg, pos_end)
+#     # if buff: 
+#     #     buff = [tuple(line) for line in buff]
+#     # assert buff == expected
 
 
 def test_tabix_table_jumper_current_position(tabix_table):
@@ -639,13 +611,11 @@ def test_tabix_table_jumper_current_position(tabix_table):
         print(rec)
         assert rec[0] == "1"
         assert int(rec[1]) == 1
-        assert table.current_pos()[0:3] == ("1", 1, 1)
         break
 
     for rec in table.get_records_in_region("1", 6):
         assert rec[0] == "1", rec
         assert int(rec[1]) == 6, rec
-        assert table.current_pos()[0:3] == ("1", 6, 6)
         break
 
     lines = list(table.get_records_in_region("1", 1, 1))
@@ -692,28 +662,6 @@ def tabix_table_multiline(tmp_path):
 
 
 @pytest.mark.parametrize("pos_beg,pos_end,expected", [
-    (0, 1, None),
-    (2, 2, [("1", "2", "2")]),
-    (3, 3, [("1", "3", "4")]),
-])
-def test_tabix_table_multi_sequential_rewind(
-        tabix_table_multiline, pos_beg, pos_end, expected):
-    table = tabix_table_multiline
-    assert table.get_column_names() == ("chrom", "pos_begin", "c1")
-
-    assert not table._should_use_sequential("1", 1)
-    for row in table.get_records_in_region("1", 1, 1):
-        print(row)
-    assert table.current_pos()[1] == 2
-    assert table.current_pos()[2] == 2
-
-    # buff = table._sequential_rewind("1", pos_beg, pos_end)
-    # if buff: 
-    #     buff = [tuple(line) for line in buff]
-    # assert buff == expected
-
-
-@pytest.mark.parametrize("pos_beg,pos_end,expected", [
     (1, 1, [("1", "1", "1")]),
     (2, 2, [("1", "2", "2"), ("1", "2", "3")]),
     (3, 3, [("1", "3", "4"), ("1", "3", "5")]),
@@ -732,9 +680,6 @@ def test_tabix_table_multi_get_regions(
     for row in table.get_records_in_region("1", 1, 1):
         print(row)
 
-    assert table.current_pos()[1] == 2
-    assert table.current_pos()[2] == 2
-
     lines = table.get_records_in_region("1", pos_beg, pos_end)
     lines = list(lines)
     print(lines)
@@ -750,9 +695,6 @@ def test_tabix_table_multi_get_regions_partial(tabix_table_multiline):
     for row in table.get_records_in_region("1", 1, 1):
         print(row)
 
-    assert table.current_pos()[1] == 2
-    assert table.current_pos()[2] == 2
-
     for index, row in enumerate(table.get_records_in_region("1", 3, 3)):
         print(row)
         if index == 1:
@@ -762,41 +704,6 @@ def test_tabix_table_multi_get_regions_partial(tabix_table_multiline):
     lines = list(lines)
     print(lines)
     assert lines == [("1", "3", "4"), ("1", "3", "5")]
-
-
-
-def test_explore():
-    from dae.gpf_instance.gpf_instance import GPFInstance
-    gpf_instance = GPFInstance()
-
-    grr = gpf_instance.grr
-    ssc_freq_resource = grr.get_resource(
-        "hg38/variant_frequencies/SSC_WG38_CSHL_2380")
-    assert ssc_freq_resource is not None
-    from dae.genomic_resources.genomic_scores import \
-        open_allele_score_from_resource
-    ssc_freq = open_allele_score_from_resource(ssc_freq_resource)
-    assert ssc_freq is not None
-
-    scores = ssc_freq.fetch_scores("chr1", 14350, "G", "A")
-    print(scores)
-
-    scores = ssc_freq.fetch_scores("chr1", 14397, "CTG", "C")
-    print(scores)
-
-    scores = ssc_freq.fetch_scores("chr1", 17378, "C", "T")
-    print(scores)
-
-    scores = ssc_freq.fetch_scores("chr1", 17379, "G", "A")
-    print(scores)
-
-    # table = ssc_freq.table
-
-    # lines = list(table.get_records_in_region("chr1", 17378, 17378))
-    # print(lines)
-
-    # lines = list(table.get_records_in_region("chr1", 17379, 17379))
-    # print(lines)
 
 
 def test_tabix_middle_optimization(tmp_path):
@@ -832,21 +739,21 @@ def test_tabix_middle_optimization(tmp_path):
 
     table = open_genome_position_table(d_gr, d_gr.config["tabix_table"])
 
+    row = None
     for row in table.get_records_in_region("1", 1, 1):
         assert row == ("1", "1", "1")
         break
+    assert row == ("1", "1", "1")
 
-    assert table.current_pos()[1] == 4
-
+    row = None
     for row in table.get_records_in_region("1", 1, 1):
         assert row == ("1", "1", "1")
+    assert row == ("1", "1", "1")
 
-    assert table.current_pos()[1] == 4
-
+    row = None
     for row in table.get_records_in_region("1", 2, 2):
         print(row)
-
-    # assert table.current_pos()[1] == 4
+    assert row is None
 
 
 def test_tabix_middle_optimization_regions(tmp_path):
@@ -883,28 +790,20 @@ def test_tabix_middle_optimization_regions(tmp_path):
         assert row == ("1", "1", "1", "1")
         break
 
-    assert table.current_pos()[1] == 4
-
     row = None
     for row in table.get_records_in_region("1", 1, 1):
         assert row == ("1", "1", "1", "1")
-
-    # assert table.current_pos()[1] == 4
 
     row = None
     for row in table.get_records_in_region("1", 4, 4):
         print(row)
     assert row == ("1", "4", "8", "2")
-
-    assert table.current_pos()[1] == 9
 
     row = None
     for row in table.get_records_in_region("1", 4, 4):
         print(row)
         break
     assert row == ("1", "4", "8", "2")
-
-    assert table.current_pos()[1] == 9
 
     row = None
     for row in table.get_records_in_region("1", 5, 5):
