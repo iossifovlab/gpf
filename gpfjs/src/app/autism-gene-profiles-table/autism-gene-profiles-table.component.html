@@ -11,6 +11,7 @@
       <input
         #geneSearchInput
         (keyup)="searchKeystrokes$.next(geneSearchInput.value)"
+        id="gene-search-input"
         class="form-control"
         autocomplete="off"
         placeholder="Search genes"
