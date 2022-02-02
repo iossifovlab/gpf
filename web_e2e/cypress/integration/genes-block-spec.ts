@@ -81,7 +81,7 @@ describe('Genes block gene sets names and count tests', () => {
     {
       collection: 'Main',
       expectedCondition: 'autism candidates from Iossifov PNAS 2015 (239): Iossifov I., et al. ' +
-        'Low load for disruptive  mutations in autism genes and their biased transmission. PNAS (2015)'
+        'Low load for disruptive mutations in autism genes and their biased transmission. PNAS (2015)'
     },
     {
       collection: 'Main',
@@ -202,7 +202,7 @@ describe('Genes block gene set file length tests', () => {
     {
       collection: 'Main',
       expectedCondition: 'autism candidates from Iossifov PNAS 2015 (239): Iossifov I., et al. ' +
-        'Low load for disruptive  mutations in autism genes and their biased transmission. PNAS (2015)'
+        'Low load for disruptive mutations in autism genes and their biased transmission. PNAS (2015)'
     },
     {
       collection: 'Main',
