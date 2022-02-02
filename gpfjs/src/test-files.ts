@@ -93,7 +93,6 @@ import './app/autism-gene-profiles-block/autism-gene-profiles.service.spec';
 import './app/autism-gene-profiles-block/autism-gene-profiles-block.component.spec';
 import './app/autism-gene-profiles-single-view/autism-gene-profile-single-view.component.spec';
 import './app/multiple-select-menu/multiple-select-menu.component.spec';
-import './app/autism-gene-profile-single-view-wrapper/autism-gene-profile-single-view-wrapper.component.spec';
 import './app/present-in-child/present-in-child.component.spec';
 import './app/present-in-parent/present-in-parent.component.spec';
 import './app/checkbox-list/checkbox-list.component.spec';
