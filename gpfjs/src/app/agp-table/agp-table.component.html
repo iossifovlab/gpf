@@ -30,9 +30,9 @@
       class="cell row-cell"
       [ngClass]="{'clickable': column.clickable !== null && row[column.id]}"
       [attr.title]="row[column.id]"
-      (middleclick)="emitClickEvent(row, column)">
-      {{ row[column.id] }}
-    </span>
+      (middleclick)="emitClickEvent(row, column)"
+      >{{ row[column.id] }}</span
+    >
   </div>
 </div>
 
@@ -76,11 +76,17 @@
 </span>
 
 <div id="highlighted-genes" *ngIf="highlightedGenes.size > 0">
-  <button *ngFor="let gene of highlightedGenes" class="btn btn-primary" style="margin: 2px" (click)="toggleHighlightGene(gene)">
-    {{ gene }} <span class="badge text-light">X</span>
-  </button>
+  <button 
+    *ngFor="let gene of highlightedGenes"
+    class="btn btn-primary"
+    style="margin: 2px"
+    (click)="toggleHighlightGene(gene)"
+    >{{ gene }}<span class="badge text-light" style="margin-left: 5px">X</span></button
+  >
   <br>
-  <button class="btn btn-success" style="margin: 2px; width: 100%; height: 48px" (click)="emitCreateTabEvent()">
-    Compare
-  </button>
+  <button
+    class="btn btn-success"
+    style="margin: 2px; width: 100%; height: 48px"
+    (click)="emitCreateTabEvent()">Compare</button
+  >
 </div>
