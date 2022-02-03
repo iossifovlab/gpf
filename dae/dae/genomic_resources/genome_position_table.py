@@ -322,9 +322,7 @@ class LineBuffer:
             return None, None, None
         return first_chrom, first_begin, last_end
 
-    PRUNE_CUTOFF = 50
-
-    def prune(self, chrom: str, beg: int) -> None:
+    def prune(self, chrom: str, pos: int) -> None:
         self.prune_count += 1
 
         if len(self.deque) == 0:
@@ -335,7 +333,6 @@ class LineBuffer:
             self.clear()
             return
 
-        pos = beg - self.PRUNE_CUTOFF
         while len(self.deque) > 0:
             _, first_beg, first_end, _ = self.deque[0]
 
