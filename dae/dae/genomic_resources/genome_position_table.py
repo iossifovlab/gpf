@@ -439,10 +439,8 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
     def __init__(self, genomic_resource: GenomicResource, table_definition,
                  tabix_file: pysam.TabixFile):
-        self.tabix_file: pysam.TabixFile = tabix_file
         super().__init__(genomic_resource, table_definition)
 
-        self.tabix_iterator = None
         self.jump_threshold: int = 2_500
         if "jump_threshold" in self.definition:
             jt = self.definition["jump_threshold"]
@@ -450,14 +448,18 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 self.jump_threshold = 0
             else:
                 self.jump_threshold = min(int(jt), self.BUFFER_MAXSIZE//2)
+
+        self.tabix_file: pysam.TabixFile = tabix_file
+        self.tabix_iterator = None
     
         self._last_call: Tuple[str, int, Optional[int]] = "", -1, -1
+        self.buffer = LineBuffer()
 
+        # stats counters
         self.empty_count = 0
         self.buffer_count = 0
         self.sequential_count = 0
         self.direct_count = 0
-        self.buffer = LineBuffer()
 
     def dump_stats(self):
         # self.buffer.dump_stats(self.genomic_resource.resource_id)
@@ -540,7 +542,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             return False
         return True
 
-    def _gen_from_tabix(self, chrom, end):
+    def _gen_from_tabix(self, chrom, pos, buffering=True):
         try:
             while True:
                 line = next(self.tabix_iterator)  # type: ignore
@@ -548,12 +550,12 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 line_beg = int(line[self.pos_begin_column_i])
                 line_end = int(line[self.pos_end_column_i])
 
-                if end is not None:                
+                if buffering:
                     self.buffer.append(line_chrom, line_beg, line_end, line)
 
                 if line_chrom != chrom:
                     return
-                if end is not None and line_beg > end:
+                if pos is not None and line_beg > pos:
                     return
                 result = self._transform_result(line)
                 if result:
@@ -569,7 +571,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         assert chrom == last_chrom
         assert pos >= last_begin
 
-        for row in self._gen_from_tabix(chrom, pos):
+        for row in self._gen_from_tabix(chrom, pos, buffering=True):
             last_chrom, last_begin, last_end, _ = row
         if pos >= last_end:
             return True
@@ -586,7 +588,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         if end < last_end:
             return
 
-        yield from self._gen_from_tabix(chrom, end)
+        yield from self._gen_from_tabix(chrom, end, buffering=True)
 
     def get_records_in_region(
             self, chrom: str, beg: int = None, end: int = None):
@@ -600,15 +602,24 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 f"The chromosome {chrom} is not part of the table.")
 
         fchrom = self._map_file_chrom(chrom)
+        buffering = True
         if beg is None:
             beg = 1
+        if end is None:
+            buffering = False
+        elif end - beg > self.BUFFER_MAXSIZE:
+            buffering = False
 
         self.dump_stats()
-
+        
         prev_call_chrom, prev_call_beg, prev_call_end = self._last_call
-        self._last_call = fchrom, beg, end
 
-        if end is not None and len(self.buffer) > 0:
+        if not buffering or len(self.buffer) == 0 or prev_call_chrom != fchrom:
+            # no buffering
+            self._last_call = "", -1, None
+        else:
+            self._last_call = fchrom, beg, end
+
             first_chrom, first_beg, first_end, _ = self.buffer.peek_first()
             if first_chrom == fchrom and prev_call_end is not None \
                     and beg > prev_call_end and end < first_beg:
@@ -670,7 +681,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         #     f"buffer region is {self.buffer.region()}; "
         # )
 
-        for row in self._gen_from_tabix(fchrom, end):
+        for row in self._gen_from_tabix(fchrom, end, buffering=buffering):
             _, _, _, line = row
             yield line
 
