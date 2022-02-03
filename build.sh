@@ -122,7 +122,7 @@ function main() {
     build_run_local bash -c 'cat > ./cache/grr_definition.yaml << EOT
 id: "default"
 type: "url"
-url: "https://www.iossifovlab.com/distribution/public/genomic-resources-repository/"
+url: "https://grr.seqpipe.org/"
 cache_dir: "/wd/cache/grrCache"
 EOT
 '
