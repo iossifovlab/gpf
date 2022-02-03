@@ -425,7 +425,7 @@ class LineBuffer:
             yield row
 
     def dump_stats(self, resource_id):
-        logger.info(
+        logger.debug(
             f"score {resource_id}; "
             f"buffer stats: len={len(self.deque)} "
             f"(maxlen={self.maxlen}); "
@@ -435,8 +435,6 @@ class LineBuffer:
             f"fetch={self.fetch_count}; "
             f"region={self.region()}"
         )
-
-        # logger.debug(f"score {resource_id}: {self.deque}")
 
 
 class TabixGenomicPositionTable(GenomicPositionTable):
@@ -463,7 +461,9 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.buffer = LineBuffer()
 
     def dump_stats(self):
-        logger.info(
+        self.buffer.dump_stats(self.genomic_resource.resource_id)
+
+        logger.debug(
             f"score {self.genomic_resource.resource_id}; "
             f"empty/buffer/sequential/direct ("
             f"{self.empty_count}/{self.buffer_count}/"
@@ -606,7 +606,6 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         if beg is None:
             beg = 1
 
-        self.buffer.dump_stats(self.genomic_resource.resource_id)
         self.dump_stats()
 
         prev_chrom, prev_beg, prev_end = self._last_call
@@ -641,7 +640,6 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                     _, _, _, line = row
                     yield line
 
-                self.buffer.dump_stats(self.genomic_resource.resource_id)
                 self.buffer.prune(fchrom, beg)
                 return
 
@@ -659,7 +657,6 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                     _, _, _, line = row
                     yield line
 
-                self.buffer.dump_stats(self.genomic_resource.resource_id)
                 self.buffer.prune(fchrom, beg)
                 return
 
@@ -679,7 +676,6 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             _, _, _, line = row
             yield line
 
-        # self.buffer.dump_stats(self.genomic_resource.resource_id)
         self.buffer.prune(fchrom, beg)
 
     def close(self):
