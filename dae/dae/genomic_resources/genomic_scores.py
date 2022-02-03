@@ -94,6 +94,9 @@ class GenomicScore(abc.ABC):
     def _get_header(self):
         return self.table.get_column_names()
 
+    def get_resource_id(self):
+        return self.config["id"]
+
     def _fetch_lines(self, chrom, pos_begin, pos_end):
         records = self.table.get_records_in_region(
             chrom, pos_begin, pos_end)
@@ -136,10 +139,6 @@ class GenomicScore(abc.ABC):
 
 
 class PositionScore(GenomicScore):
-    def __init__(self, resourceId: str, version: tuple,
-                 repo: GenomicResourceRealRepo,
-                 config=None):
-        super().__init__(resourceId, version, repo, config)
 
     @staticmethod
     def get_resource_type():
@@ -196,12 +195,6 @@ class PositionScore(GenomicScore):
             aggregators[scr_id] = build_aggregator(aggregator_type)
 
         for line in score_lines:
-            logger.debug(
-                f"pos_end: {pos_end}; line.pos_end: {line.get_pos_end()}; "
-                f"pos_begin: {pos_begin}; "
-                f"line.pos_begin: {line.get_pos_begin()}"
-            )
-
             line_pos_begin, line_pos_end = self._line_to_begin_end(line)
 
             for scr_id, aggregator in aggregators.items():

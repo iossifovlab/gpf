@@ -812,3 +812,113 @@ def test_tabix_middle_optimization_regions(tmp_path):
     assert row == ("1", "4", "8", "2")
 
 
+def test_tabix_middle_optimization_regions_buggy_1(tmp_path):
+    e_repo = build_genomic_resource_repository(
+        {"id": "b", "type": "embeded", "content": {
+            "one": {
+                "genomic_resource.yaml": """
+                    text_table:
+                        filename: data.mem
+                    tabix_table:
+                        filename: data.bgz
+                        chrom_mapping:
+                            add_prefix: chr
+                """,
+                "data.mem": """
+                    chrom pos_begin pos_end  c1
+                    1     505636    505636   0.006
+                    1     505637    505637   0.009
+                    1     505638    505638   0.011
+                    1     505639    505639   0.013
+                    1     505640    505641   0.014
+                    1     505642    505642   0.013
+                    1     505643    505643   0.012
+                    1     505644    505645   0.006
+                    1     505646    505646   0.005
+                    1     505755    505757   0.004
+                    1     505758    505758   0.003
+                    1     505759    505761   0.001
+                    1     505762    505764   0.002                """
+            }
+        }
+        })
+    d_repo = build_genomic_resource_repository(
+        {"id": "d", "type": "directory", "directory": tmp_path})
+    d_repo.store_all_resources(e_repo)
+    e_gr = e_repo.get_resource("one")
+    d_gr = d_repo.get_resource("one")
+    save_as_tabix_table(
+        open_genome_position_table(e_gr, e_gr.config["text_table"]),
+        str(d_repo.get_file_path(d_gr, "data.bgz")))
+
+    table = open_genome_position_table(d_gr, d_gr.config["tabix_table"])
+
+    rows = None
+    rows = list(table.get_records_in_region("chr1", 505637, 505637))
+    assert rows == [("chr1", "505637", "505637", "0.009")]
+
+    rows = None
+    rows = list(table.get_records_in_region("chr1", 505643, 505646))
+    assert rows == [
+        ("chr1", "505643", "505643", "0.012"),
+        ("chr1", "505644", "505645", "0.006"),
+        ("chr1", "505646", "505646", "0.005"),
+    ]
+
+    rows = None
+    rows = list(table.get_records_in_region("chr1", 505762, 505762))
+    assert rows == [
+        ("chr1", "505762", "505764", "0.002"),
+    ]
+
+
+def test_buggy_fitcons_e67(tmp_path):
+
+    e_repo = build_genomic_resource_repository(
+        {"id": "b", "type": "embeded", "content": {
+            "one": {
+                "genomic_resource.yaml": """
+                    text_table:
+                        filename: data.mem
+                    tabix_table:
+                        filename: data.bgz
+                """,
+                "data.mem": """
+                    chrom  pos_begin  pos_end    c1
+                    5      180739426  180742735  0.065122
+                    5      180742736  180742736  0.156342
+                    5      180742737  180742813  0.327393    
+                """
+            }
+        }
+        })
+    d_repo = build_genomic_resource_repository(
+        {"id": "d", "type": "directory", "directory": tmp_path})
+    d_repo.store_all_resources(e_repo)
+    e_gr = e_repo.get_resource("one")
+    d_gr = d_repo.get_resource("one")
+    save_as_tabix_table(
+        open_genome_position_table(e_gr, e_gr.config["text_table"]),
+        str(d_repo.get_file_path(d_gr, "data.bgz")))
+
+    table = open_genome_position_table(d_gr, d_gr.config["tabix_table"])
+
+    rows = None
+    rows = list(table.get_records_in_region('5', 180740299, 180740300))
+    assert rows == [
+        ('5', '180739426', '180742735', '0.065122'),
+    ]
+
+    rows = None
+    rows = list(table.get_records_in_region('5', 180740301, 180740301))
+    assert rows == [
+        ('5', '180739426', '180742735', '0.065122'),
+    ]
+
+# DEBUG:dae.annotation.score_annotator:using default score annotation for hg19/scores/FitCons2_E067: [{'source': 'FitCons2_E067', 'destination': 'fitcons2_e067'}]
+# INFO:dae.genomic_resources.genome_position_table:score hg19/scores/FitCons2_E067; buffer stats: len=1 (maxlen=3); append=75; prune=40; find=3 (depth=2); fetch=3; region=('5', 180742736, 180742736)
+# DEBUG:dae.genomic_resources.genome_position_table:score hg19/scores/FitCons2_E067: deque([('5', 180742736, 180742736, <pysam.libctabixproxies.TupleProxy object at 0x7fc4b7bce280>)])
+# INFO:dae.genomic_resources.genome_position_table:score hg19/scores/FitCons2_E067; empty/buffer/sequential/direct (0/3/0/37); 
+# INFO:dae.genomic_resources.genome_position_table:score hg19/scores/FitCons2_E067; EMPTY (1 times); current call is ('5', 180740301, 180740301); prev call is ('5', 180740299, 180740300); buffer region is ('5', 180742736, 180742736); 
+# DEBUG:dae.genomic_resources.genomic_scores:score hg19/scores/FitCons2_E067; call ('5', 180740301, 180740301); lines: []
+

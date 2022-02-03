@@ -335,10 +335,11 @@ class LineBuffer:
             self.clear()
             return
 
+        pos = beg - self.PRUNE_CUTOFF
         while len(self.deque) > 0:
-            _, first_beg, _, _ = self.deque[0]
-            
-            if (beg - self.PRUNE_CUTOFF) <= first_beg:
+            _, first_beg, first_end, _ = self.deque[0]
+
+            if pos <= first_end:
                 break
             self.deque.popleft()
 
@@ -365,12 +366,11 @@ class LineBuffer:
         depth = 0
         while True:
             depth += 1
+            mid_index = (last_index - first_index) // 2 + first_index
             if last_index <= first_index:
                 break
 
-            mid_index = (last_index - first_index) // 2 + first_index
             _, mid_beg, mid_end, _ = self.deque[mid_index]
-
             if pos >= mid_beg and pos <= mid_end:
                 break
 
@@ -389,10 +389,11 @@ class LineBuffer:
                 first_index = mid_index + 1
 
         while mid_index > 0:
-            _, t_beg, t_end, _ = self.deque[mid_index - 1]
-            if pos > t_beg:
+            _, prev_beg, prev_end, _ = self.deque[mid_index - 1]
+            if pos > prev_beg:
                 break
             mid_index -= 1
+
         for index in range(mid_index, len(self.deque)):
             _, t_beg, t_end, _ = self.deque[index]
             if pos >= t_beg and pos <= t_end:
@@ -423,18 +424,19 @@ class LineBuffer:
                 break
             yield row
 
-    def dump_stats(self, resource_id=None):
-        message = f"buffer stats: len={len(self.deque)} " \
-            f"(maxlen={self.maxlen}); " \
-            f"append={self.append_count}; " \
-            f"prune={self.prune_count}; " \
-            f"find={self.find_count} (depth={self.maxdepth}); " \
-            f"fetch={self.fetch_count}; " \
+    def dump_stats(self, resource_id):
+        logger.info(
+            f"score {resource_id}; "
+            f"buffer stats: len={len(self.deque)} "
+            f"(maxlen={self.maxlen}); "
+            f"append={self.append_count}; "
+            f"prune={self.prune_count}; "
+            f"find={self.find_count} (depth={self.maxdepth}); "
+            f"fetch={self.fetch_count}; "
             f"region={self.region()}"
+        )
 
-        if resource_id is not None:
-            message = f"score {resource_id}; {message}"
-        logger.info(message)
+        # logger.debug(f"score {resource_id}: {self.deque}")
 
 
 class TabixGenomicPositionTable(GenomicPositionTable):
@@ -445,7 +447,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
         self.tabix_iterator = None
 
-        self.jump_threshold = 10_000
+        self.jump_threshold: int = 2_500
         self._last_call: Tuple[str, int, int] = "", -1, -1
 
         self.empty_count = 0
@@ -594,55 +596,61 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         if beg is None:
             beg = 1
 
-        self.buffer.prune(fchrom, beg)
         self.buffer.dump_stats(self.genomic_resource.resource_id)
         self.dump_stats()
 
-        call_chrom, call_beg, call_end = self._last_call
+        prev_chrom, prev_beg, prev_end = self._last_call
         self._last_call = fchrom, beg, end
 
         if end is not None and len(self.buffer) > 0:
             first_chrom, first_beg, first_end, _ = self.buffer.peek_first()
-            if first_chrom == fchrom and call_end is not None \
-                    and beg > call_end and end < first_beg:
+            if first_chrom == fchrom and prev_end is not None \
+                    and beg > prev_end and end < first_beg:
 
-                assert first_chrom == call_chrom
+                assert first_chrom == prev_chrom
                 self.empty_count += 1
-                logger.info(
-                    f"score {self.genomic_resource.resource_id}; "
-                    f"EMPTY ({self.empty_count} times); "
-                    f"current call is {fchrom, beg, end}; "
-                    f"buffer region is {self.buffer.region()}; "
-                )
+                # logger.info(
+                #     f"score {self.genomic_resource.resource_id}; "
+                #     f"EMPTY ({self.empty_count} times); "
+                #     f"current call is {fchrom, beg, end}; "
+                #     f"prev call is {prev_chrom, prev_beg, prev_end}; "
+                #     f"buffer region is {self.buffer.region()}; "
+                # )
                 return
 
             elif self.buffer.contains(fchrom, beg):
                 self.buffer_count += 1
-                logger.info(
-                    f"score {self.genomic_resource.resource_id}; "
-                    f"BUFFER ({self.buffer_count} times); "
-                    f"current call is {fchrom, beg, end}; "
-                    f"buffer region is {self.buffer.region()}; "
-                )
+                # logger.info(
+                #     f"score {self.genomic_resource.resource_id}; "
+                #     f"BUFFER ({self.buffer_count} times); "
+                #     f"current call is {fchrom, beg, end}; "
+                #     f"buffer region is {self.buffer.region()}; "
+                # )
 
                 for row in self._gen_from_buffer_and_tabix(fchrom, beg, end):
                     _, _, _, line = row
                     yield line
+
+                self.buffer.dump_stats(self.genomic_resource.resource_id)
+                self.buffer.prune(fchrom, beg)
                 return
 
             elif self._should_use_sequential(fchrom, beg):
                 self.sequential_count += 1
-                logger.info(
-                    f"score {self.genomic_resource.resource_id}; "
-                    f"SEQUENTIAL ({self.sequential_count} times); "
-                    f"current call is {fchrom, beg, end}; "
-                    f"buffer region is {self.buffer.region()}; "
-                )
+                # logger.info(
+                #     f"score {self.genomic_resource.resource_id}; "
+                #     f"SEQUENTIAL ({self.sequential_count} times); "
+                #     f"current call is {fchrom, beg, end}; "
+                #     f"buffer region is {self.buffer.region()}; "
+                # )
                 self._sequential_rewind(fchrom, beg)
 
                 for row in self._gen_from_buffer_and_tabix(fchrom, beg, end):
                     _, _, _, line = row
                     yield line
+
+                self.buffer.dump_stats(self.genomic_resource.resource_id)
+                self.buffer.prune(fchrom, beg)
                 return
 
         self.tabix_iterator = self.tabix_file.fetch(
@@ -650,17 +658,19 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.buffer.clear()
 
         self.direct_count += 1
-        logger.info(
-            f"score {self.genomic_resource.resource_id}; "
-            f"DIRECT ({self.direct_count} times); "
-            f"current call is {fchrom, beg, end}; "
-            f"buffer region is {self.buffer.region()}; "
-        )
+        # logger.info(
+        #     f"score {self.genomic_resource.resource_id}; "
+        #     f"DIRECT ({self.direct_count} times); "
+        #     f"current call is {fchrom, beg, end}; "
+        #     f"buffer region is {self.buffer.region()}; "
+        # )
 
         for row in self._gen_from_tabix(fchrom, end):
             _, _, _, line = row
             yield line
-        self.buffer.dump_stats(self.genomic_resource.resource_id)
+
+        # self.buffer.dump_stats(self.genomic_resource.resource_id)
+        self.buffer.prune(fchrom, beg)
 
     def close(self):
         self.tabix_file.close()
