@@ -435,6 +435,8 @@ class LineBuffer:
 
 
 class TabixGenomicPositionTable(GenomicPositionTable):
+    BUFFER_MAXSIZE = 20_000
+
     def __init__(self, genomic_resource: GenomicResource, table_definition,
                  tabix_file: pysam.TabixFile):
         self.tabix_file: pysam.TabixFile = tabix_file
@@ -447,7 +449,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             if jt == "none":
                 self.jump_threshold = 0
             else:
-                self.jump_threshold = int(jt)
+                self.jump_threshold = min(int(jt), self.BUFFER_MAXSIZE//2)
     
         self._last_call: Tuple[str, int, Optional[int]] = "", -1, -1
 
@@ -458,14 +460,15 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.buffer = LineBuffer()
 
     def dump_stats(self):
-        self.buffer.dump_stats(self.genomic_resource.resource_id)
+        # self.buffer.dump_stats(self.genomic_resource.resource_id)
 
-        logger.debug(
-            f"score {self.genomic_resource.resource_id}; "
-            f"empty/buffer/sequential/direct ("
-            f"{self.empty_count}/{self.buffer_count}/"
-            f"{self.sequential_count}/{self.direct_count}); "
-        )
+        # logger.debug(
+        #     f"score {self.genomic_resource.resource_id}; "
+        #     f"empty/buffer/sequential/direct ("
+        #     f"{self.empty_count}/{self.buffer_count}/"
+        #     f"{self.sequential_count}/{self.direct_count}); "
+        # )
+        pass
 
     def load(self):
         if self.header_mode == "file":
@@ -479,14 +482,6 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
     def get_file_chromosomes(self):
         return self.tabix_file.contigs
-
-    def _update_buffer(self, line):
-        line_chrom = line[self.chrom_column_i]
-        line_beg = int(line[self.pos_begin_column_i])
-        line_end = int(line[self.pos_end_column_i])
-        
-        self.buffer.append(line_chrom, line_beg, line_end, line)
-        return line_chrom, line_beg, line_end, line
 
     def _map_file_chrom(self, chrom: str) -> str:
         """
@@ -549,7 +544,12 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         try:
             while True:
                 line = next(self.tabix_iterator)  # type: ignore
-                line_chrom, line_beg, line_end, _ = self._update_buffer(line)
+                line_chrom = line[self.chrom_column_i]
+                line_beg = int(line[self.pos_begin_column_i])
+                line_end = int(line[self.pos_end_column_i])
+
+                if end is not None:                
+                    self.buffer.append(line_chrom, line_beg, line_end, line)
 
                 if line_chrom != chrom:
                     return
