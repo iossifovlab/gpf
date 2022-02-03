@@ -23,7 +23,7 @@ class MockDatasetsService {
   }
 }
 
-fdescribe('AppComponent', () => {
+describe('AppComponent', () => {
   const datasetsServiceMock = new MockDatasetsService();
 
   beforeEach(() => {
