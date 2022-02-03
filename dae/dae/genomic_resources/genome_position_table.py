@@ -448,7 +448,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.tabix_iterator = None
 
         self.jump_threshold: int = 2_500
-        self._last_call: Tuple[str, int, int] = "", -1, -1
+        self._last_call: Tuple[str, int, Optional[int]] = "", -1, -1
 
         self.empty_count = 0
         self.buffer_count = 0
