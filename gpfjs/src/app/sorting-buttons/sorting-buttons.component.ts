@@ -10,6 +10,7 @@ export class SortingButtonsComponent implements OnInit {
   @Input() public id: string;
   @Output() public sortEvent = new EventEmitter<{id: string, order: string}>();
 
+  private order = 'desc';
   public hideState = 0;
   public imgPathPrefix: string;
 
@@ -19,6 +20,12 @@ export class SortingButtonsComponent implements OnInit {
 
   public emitSortEvent(order: string): void {
     this.sortEvent.emit({ id: this.id, order: order });
+  }
+
+  public emitSort() {
+    this.hideState = (this.hideState === 1 ? -1 : 1);
+    this.sortEvent.emit({id: this.id, order: this.order});
+    this.order = (this.order === 'desc' ? 'asc' : 'desc');
   }
 
   public resetHideState(): void {

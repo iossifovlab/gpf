@@ -43,6 +43,7 @@
       <div class="cell header-cell"
         [style.grid-column]="column.gridColumn"
         [style.grid-row]="column.gridRow"
+        (click)="sort(column.id, orderBy === 'desc' ? 'asc' : 'desc')"
       >
         <div class="header-cell-content"
           [ngClass]="{'header-cell-vertical-content': column.displayVertical }"
@@ -56,7 +57,7 @@
             *ngIf="column.sortable"
             [id]="column.id"
             class="header-button"
-            (sortEvent)="sort($event.id, $event.order)">
+          >
           </gpf-sorting-buttons>
           <button
             *ngIf="column.columns.length !== 0"

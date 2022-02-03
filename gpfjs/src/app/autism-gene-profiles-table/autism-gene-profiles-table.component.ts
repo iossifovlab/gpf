@@ -158,6 +158,12 @@ export class AgpTableComponent implements OnInit, OnChanges {
     this.pageIndex = 1;
     this.genes = [];
 
+    const sortButton = this.sortingButtonsComponents.find(
+      sortingButtonsComponent => sortingButtonsComponent.id === this.sortBy
+    );
+
+    sortButton.emitSort();
+
     this.updateGenes();
   }
 
