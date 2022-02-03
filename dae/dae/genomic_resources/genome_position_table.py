@@ -608,21 +608,22 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
         self.dump_stats()
 
-        prev_chrom, prev_beg, prev_end = self._last_call
+        prev_call_chrom, prev_call_beg, prev_call_end = self._last_call
         self._last_call = fchrom, beg, end
 
         if end is not None and len(self.buffer) > 0:
             first_chrom, first_beg, first_end, _ = self.buffer.peek_first()
-            if first_chrom == fchrom and prev_end is not None \
-                    and beg > prev_end and end < first_beg:
+            if first_chrom == fchrom and prev_call_end is not None \
+                    and beg > prev_call_end and end < first_beg:
 
-                assert first_chrom == prev_chrom
+                assert first_chrom == prev_call_chrom
                 self.empty_count += 1
                 # logger.info(
                 #     f"score {self.genomic_resource.resource_id}; "
                 #     f"EMPTY ({self.empty_count} times); "
                 #     f"current call is {fchrom, beg, end}; "
-                #     f"prev call is {prev_chrom, prev_beg, prev_end}; "
+                #     f"prev call was "
+                #     f"{prev_call_chrom, prev_call_beg, prev_call_end}; "
                 #     f"buffer region is {self.buffer.region()}; "
                 # )
                 return
