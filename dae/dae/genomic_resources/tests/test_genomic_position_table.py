@@ -915,10 +915,52 @@ def test_buggy_fitcons_e67(tmp_path):
         ('5', '180739426', '180742735', '0.065122'),
     ]
 
-# DEBUG:dae.annotation.score_annotator:using default score annotation for hg19/scores/FitCons2_E067: [{'source': 'FitCons2_E067', 'destination': 'fitcons2_e067'}]
-# INFO:dae.genomic_resources.genome_position_table:score hg19/scores/FitCons2_E067; buffer stats: len=1 (maxlen=3); append=75; prune=40; find=3 (depth=2); fetch=3; region=('5', 180742736, 180742736)
-# DEBUG:dae.genomic_resources.genome_position_table:score hg19/scores/FitCons2_E067: deque([('5', 180742736, 180742736, <pysam.libctabixproxies.TupleProxy object at 0x7fc4b7bce280>)])
-# INFO:dae.genomic_resources.genome_position_table:score hg19/scores/FitCons2_E067; empty/buffer/sequential/direct (0/3/0/37); 
-# INFO:dae.genomic_resources.genome_position_table:score hg19/scores/FitCons2_E067; EMPTY (1 times); current call is ('5', 180740301, 180740301); prev call is ('5', 180740299, 180740300); buffer region is ('5', 180742736, 180742736); 
-# DEBUG:dae.genomic_resources.genomic_scores:score hg19/scores/FitCons2_E067; call ('5', 180740301, 180740301); lines: []
 
+@pytest.mark.parametrize("jump_threshold,expected", [
+    ("none", 0),
+    ("1", 1),
+    ("1500", 1500),
+])
+def test_tabix_jump_config(tmp_path, jump_threshold, expected):
+    e_repo = build_genomic_resource_repository(
+        {"id": "b", "type": "embeded", "content": {
+            "one": {
+                "genomic_resource.yaml": f"""
+                    text_table:
+                        filename: data.mem
+                    tabix_table:
+                        filename: data.bgz
+                        jump_threshold: {jump_threshold}
+                """,
+                "data.mem": """
+                    chrom  pos_begin  pos_end    c1
+                    5      180739426  180742735  0.065122
+                    5      180742736  180742736  0.156342
+                    5      180742737  180742813  0.327393    
+                """
+            }
+        }
+        })
+    d_repo = build_genomic_resource_repository(
+        {"id": "d", "type": "directory", "directory": tmp_path})
+    d_repo.store_all_resources(e_repo)
+    e_gr = e_repo.get_resource("one")
+    d_gr = d_repo.get_resource("one")
+    save_as_tabix_table(
+        open_genome_position_table(e_gr, e_gr.config["text_table"]),
+        str(d_repo.get_file_path(d_gr, "data.bgz")))
+
+    table = open_genome_position_table(d_gr, d_gr.config["tabix_table"])
+    assert table.jump_threshold == expected
+
+    rows = None
+    rows = list(table.get_records_in_region('5', 180740299, 180740300))
+    assert rows == [
+        ('5', '180739426', '180742735', '0.065122'),
+    ]
+
+    rows = None
+    rows = list(table.get_records_in_region('5', 180740301, 180740301))
+    assert rows == [
+        ('5', '180739426', '180742735', '0.065122'),
+    ]

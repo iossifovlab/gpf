@@ -446,8 +446,14 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         super().__init__(genomic_resource, table_definition)
 
         self.tabix_iterator = None
-
         self.jump_threshold: int = 2_500
+        if "jump_threshold" in self.definition:
+            jt = self.definition["jump_threshold"]
+            if jt == "none":
+                self.jump_threshold = 0
+            else:
+                self.jump_threshold = int(jt)
+    
         self._last_call: Tuple[str, int, Optional[int]] = "", -1, -1
 
         self.empty_count = 0
@@ -525,6 +531,9 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 yield tuple(line)
 
     def _should_use_sequential(self, chrom, pos):
+        if self.jump_threshold == 0:
+            False
+
         assert chrom is not None
         if len(self.buffer) == 0:
             return False
@@ -557,6 +566,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
     def _sequential_rewind(self, chrom, pos):
         assert len(self.buffer) > 0
+        assert self.jump_threshold > 0
 
         last_chrom, last_begin, last_end, _ = self.buffer.peek_last()
         assert chrom == last_chrom
