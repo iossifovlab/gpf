@@ -68,7 +68,9 @@ export class AgpTableComponent implements OnInit, OnChanges {
 
   @HostListener('document:keydown.f')
   public keybindCompareGenes() {
-    this.emitCreateTabEvent();
+    if(this.highlightedGenes.size > 0) {
+      this.emitCreateTabEvent();
+    }
   }
 
   @HostListener('window:scroll')
