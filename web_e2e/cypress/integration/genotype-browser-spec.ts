@@ -21,7 +21,7 @@ describe('Genotype browser tests', () => {
   });
 
   beforeEach(() => {
-    page.navigateToHome();
+    page.navigateToHome(false);
     page.loginAdmin();
   });
 
@@ -118,7 +118,7 @@ describe('Genotype browser table preview result tests', () => {
 
   before(() => {
     genotypeBrowserController.cleanup();
-    genotypeBrowserController.navigateToHome();
+    genotypeBrowserController.navigateToHome(false);
     genotypeBrowserController.loginAdmin();
   });
 
@@ -472,7 +472,7 @@ describe('Genotype browser family variants download tests', () => {
 
   before(() => {
     genotypeBrowserController.cleanup();
-    genotypeBrowserController.navigateToHome();
+    genotypeBrowserController.navigateToHome(false);
     genotypeBrowserController.loginAdmin();
   });
 
@@ -513,7 +513,7 @@ describe('Genotype browser UCSC url tests', () => {
 
   before(() => {
     genotypeBrowserController.cleanup();
-    genotypeBrowserController.navigateToHome();
+    genotypeBrowserController.navigateToHome(false);
     genotypeBrowserController.loginAdmin();
   });
 
@@ -547,7 +547,7 @@ describe('Genotype browser table preview visual tests', () => {
 
   before(() => {
     genotypeBrowserController.cleanup();
-    genotypeBrowserController.navigateToHome();
+    genotypeBrowserController.navigateToHome(false);
     genotypeBrowserController.loginAdmin();
   });
 

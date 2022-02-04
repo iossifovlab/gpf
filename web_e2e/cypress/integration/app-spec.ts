@@ -12,7 +12,7 @@ describe('App tests', () => {
   });
 
   beforeEach(() => {
-    page.navigateToHome();
+    page.navigateToHome(false);
   });
 
   it.only('should display "GPF: Genotypes and Phenotypes in Families" as a title', () => {
@@ -89,12 +89,12 @@ describe('App user access rights tests', () => {
   });
 
   beforeEach(() => {
-    page.navigateToHome();
+    page.navigateToHome(false);
   });
 
   Object.values(userData).forEach(data => {
     it('should toggle sidenav bar with the right elements inside', () => {
-      page.login(data.username, data.password);
+      page.login(data.username, data.password, data.hasDatasetRights);
       page.sidenavElements.should('not.exist');
 
       page.toggleSidenav();
@@ -111,7 +111,7 @@ describe('App user access rights tests', () => {
 
   it('should go through all tools and check whether the permission denied prompt ' +
      'is displayed when not logged in and not displayed when logged in with admin account', () => {
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics, false);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
 
     datasetsPage.geneBrowserButton.click();
@@ -154,7 +154,7 @@ describe('App user access rights tests', () => {
        'in the dropdown have the correct opacity value', () => {
       const expectedOpacity = data.hasDatasetRights ? '1' : '0.3';
 
-      page.login(data.username, data.password);
+      page.login(data.username, data.password, data.hasDatasetRights);
       page.openDatasetsDropdownMenu();
       page.datasetsDropdownMenuElements.each(ele => cy.wrap(ele).should('have.css', 'opacity', expectedOpacity));
 
@@ -165,8 +165,8 @@ describe('App user access rights tests', () => {
   });
 
   it.only('should validate that researcher has no rights', () => {
-    page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics);
-    page.login(userData.normal.username, userData.normal.password);
+    page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics, false);
+    page.login(userData.normal.username, userData.normal.password, false);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     page.logout();
   });
@@ -178,16 +178,14 @@ describe('App user access rights tests', () => {
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
     userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
-    userManagementPage.allUserEditGroupRemoveButtons.should('be.visible');
     userManagementPage.userWindowGroupDropDownMenuButton.click();
-    userManagementPage.userWindowGroupDropDownMenuButton.should('be.visible');
     userManagementPage.userWindowGroupDropdownSearch.type('comp_vcf');
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowSubmitButton.click();
     page.logout();
 
-    page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics, false);
     page.login(userData.normal.username, userData.normal.password);
     datasetsPage.permissionDeniedPrompt.should('not.exist');
     datasetsPage.datasetStatisticsWindow.should('be.visible');
@@ -203,9 +201,7 @@ describe('App user access rights tests', () => {
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
     userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
-    userManagementPage.allUserEditGroupRemoveButtons.should('be.visible');
-    userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true})  ;
-    userManagementPage.userWindowGroupDropDownMenuButton.should('be.visible');
+    userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true});
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowGroupDropdownSearch.type('COMP_genotypes');
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
@@ -213,8 +209,8 @@ describe('App user access rights tests', () => {
     userManagementPage.userWindowSubmitButton.click();
     page.logout();
 
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics);
-    page.login(userData.normal.username, userData.normal.password);
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics, false);
+    page.login(userData.normal.username, userData.normal.password, false);
     datasetsPage.permissionDeniedPrompt.should('exist');
     datasetsPage.datasetStatisticsWindow.should('not.exist');
 
@@ -234,15 +230,15 @@ describe('App user access rights tests', () => {
     datasetsPage.permissionDeniedPrompt.should('not.exist');
     datasetsPage.datasetStatisticsWindow.should('be.visible');
 
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics, false);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     datasetsPage.datasetStatisticsWindow.should('not.exist');
 
-    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics, false);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     datasetsPage.datasetStatisticsWindow.should('not.exist');
 
-    page.navigateToDatasetPage(datasetIds.multi, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.multi, toolPageLinks.datasetStatistics, false);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     datasetsPage.datasetStatisticsWindow.should('not.exist');
 
@@ -265,7 +261,7 @@ describe('App user access rights tests', () => {
     userManagementPage.userWindowSubmitButton.click();
     page.logout();
 
-    page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.genotypeBrowser);
+    page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.genotypeBrowser, false);
     page.login(userData.normal.username, userData.normal.password);
     datasetsPage.permissionDeniedPrompt.should('not.exist');
     genotypeBrowserPage.window.should('be.visible');
@@ -308,32 +304,32 @@ describe('App user access rights tests', () => {
     userManagementPage.userWindowSubmitButton.click();
     page.logout();
 
-    page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.genotypeBrowser);
-    page.login(userData.normal.username, userData.normal.password);
+    page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.genotypeBrowser, false);
+    page.login(userData.normal.username, userData.normal.password, false);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     genotypeBrowserPage.window.should('not.exist');
 
-    page.navigateToDatasetPage(datasetIds.compGenotypes, toolPageLinks.genotypeBrowser);
+    page.navigateToDatasetPage(datasetIds.compGenotypes, toolPageLinks.genotypeBrowser, false);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     genotypeBrowserPage.window.should('not.exist');
 
-    page.navigateToDatasetPage(datasetIds.compDenovo, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.compDenovo, toolPageLinks.datasetStatistics, false);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     datasetsPage.datasetStatisticsWindow.should('not.exist');
 
-    page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics, false);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     datasetsPage.datasetStatisticsWindow.should('not.exist');
 
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics, false);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     datasetsPage.datasetStatisticsWindow.should('not.exist');
 
-    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics, false);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     datasetsPage.datasetStatisticsWindow.should('not.exist');
 
-    page.navigateToDatasetPage(datasetIds.multi, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.multi, toolPageLinks.datasetStatistics, false);
     datasetsPage.permissionDeniedPrompt.should('be.visible');
     datasetsPage.datasetStatisticsWindow.should('not.exist');
 

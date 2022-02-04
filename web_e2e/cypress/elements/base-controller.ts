@@ -3,8 +3,8 @@ import { BasePage } from './utils';
 export class BaseController {
   private basePage = new BasePage();
 
-  public navigateToHome(): void {
-    this.basePage.navigateToHome();
+  public navigateToHome(waitForPage = true): void {
+    this.basePage.navigateToHome(waitForPage);
   }
 
   public loginAdmin(): void {

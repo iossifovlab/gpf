@@ -13,7 +13,7 @@ describe('Autism gene profiles block tests', () => {
   });
 
   beforeEach(() => {
-    page.navigateToHome();
+    page.navigateToHome(false);
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 

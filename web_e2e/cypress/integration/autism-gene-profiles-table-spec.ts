@@ -7,7 +7,7 @@ describe('Autism gene profiles table tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome();
+    page.navigateToHome(false);
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
@@ -37,7 +37,7 @@ describe('Autism gene profiles table row data tests', () => {
   });
 
   beforeEach(() => {
-    page.navigateToHome();
+    page.navigateToHome(false);
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
@@ -133,7 +133,7 @@ describe('Autism gene profiles table row highlight tests', () => {
   });
 
   beforeEach(() => {
-    page.navigateToHome();
+    page.navigateToHome(false);
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
@@ -191,7 +191,7 @@ describe('Autism gene profiles table functionality tests', () => {
   });
 
   beforeEach(() => {
-    page.navigateToHome();
+    page.navigateToHome(false);
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
