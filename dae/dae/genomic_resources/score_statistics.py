@@ -5,7 +5,7 @@ import yaml
 import pandas as pd
 from typing import Dict
 
-from concurrent.futures import ProcessPoolExecutor
+from dask.distributed import Client
 
 from dae.genomic_resources.genomic_scores import open_score_from_resource
 
@@ -134,7 +134,7 @@ class Histogram:
 class HistogramBuilder:
     def __init__(self, resource, jobs=None) -> None:
         self.resource = resource
-        self.jobs = jobs
+        self.jobs = jobs or os.cpu_count()
 
     def build(self) -> dict[str, Histogram]:
         histogram_desc = self.resource.get_config().get("histograms", [])
@@ -161,11 +161,11 @@ class HistogramBuilder:
             hist_configs[hist_conf["score"]] = hist_conf
 
         chrom_histograms = []
-        with ProcessPoolExecutor(max_workers=self.jobs) as executor:
+        with Client(n_workers=self.jobs, threads_per_worker=1) as client:
             futures = []
             chromosomes = score.get_all_chromosomes()
             for chrom in chromosomes:
-                futures.append(executor.submit(self._do_hist,
+                futures.append(client.submit(self._do_hist,
                                                chrom, hist_configs))
             for future in futures:
                 chrom_histograms.append(future.result())
@@ -203,10 +203,10 @@ class HistogramBuilder:
 
         chromosomes = score.get_all_chromosomes()
         min_maxes = []
-        with ProcessPoolExecutor(max_workers=self.jobs) as executor:
+        with Client(n_workers=self.jobs, threads_per_worker=1) as client:
             futures = []
             for chrom in chromosomes:
-                futures.append(executor.submit(self._min_max_for_chrom,
+                futures.append(client.submit(self._min_max_for_chrom,
                                                chrom, score_ids))
             for future in futures:
                 min_maxes.append(future.result())
