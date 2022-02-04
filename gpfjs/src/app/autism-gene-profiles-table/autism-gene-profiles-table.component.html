@@ -43,6 +43,7 @@
       <div class="cell header-cell"
         [style.grid-column]="column.gridColumn"
         [style.grid-row]="column.gridRow"
+        style="cursor: pointer"
         (click)="sort(column.id, orderBy === 'desc' ? 'asc' : 'desc')"
       >
         <div class="header-cell-content"
