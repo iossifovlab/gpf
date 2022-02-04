@@ -154,12 +154,11 @@ describe('Gene weights panel tests', () => {
       const genotypeBrowserPage = new GenotypeBrowserPage();
 
       page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-      genotypeBrowserController.setEffectTypesGroup('All');
       genesBlockPage.geneWeightsButton.click();
-
       page.dropdownButton.select(geneWeight.desc);
       page.allGeneWeights.should('not.contain', '~');
 
+      genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.showTablePreview();
       genotypeBrowserPage.overviewParagraph.should(
         'have.text',
