@@ -154,7 +154,7 @@ describe('Gene weights panel tests', () => {
       const genotypeBrowserPage = new GenotypeBrowserPage();
 
       page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-      genotypeBrowserController.setEffectTypesToAll();
+      genotypeBrowserController.setEffectTypesGroup('All');
       genesBlockPage.geneWeightsButton.click();
 
       page.dropdownButton.select(geneWeight.desc);

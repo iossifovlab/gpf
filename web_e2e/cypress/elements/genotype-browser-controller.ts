@@ -75,9 +75,9 @@ export class GenotypeBrowserController extends BaseController {
     this.setEffectTypes(this.genotypeBlockPage.effectTypesGroups.get(group));
   }
 
-  public setEffectTypesToAll(): void {
-    this.genotypeBlockPage.findButtonInComponentContainingText('gpf-effect-types', 'All').click();
-  }
+  // public setEffectTypesToAll(): void {
+  //   this.genotypeBlockPage.findButtonInComponentContainingText('gpf-effect-types', 'All').click();
+  // }
 
   // public setPhenotypeToAll(): void {
   //   cy.get('gpf-pedigree-selector').contains('Phenotype').should('exist');
