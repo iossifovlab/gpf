@@ -5,8 +5,6 @@ import yaml
 import pandas as pd
 from typing import Dict
 
-from dask.distributed import Client
-
 from dae.genomic_resources.genomic_scores import open_score_from_resource
 
 logger = logging.getLogger(__name__)
@@ -132,11 +130,10 @@ class Histogram:
 
 
 class HistogramBuilder:
-    def __init__(self, resource, jobs=None) -> None:
+    def __init__(self, resource) -> None:
         self.resource = resource
-        self.jobs = jobs or os.cpu_count()
 
-    def build(self) -> dict[str, Histogram]:
+    def build(self, client) -> dict[str, Histogram]:
         histogram_desc = self.resource.get_config().get("histograms", [])
         if len(histogram_desc) == 0:
             return {}
@@ -150,7 +147,8 @@ class HistogramBuilder:
         score = open_score_from_resource(self.resource)
         score_limits = {}
         if len(scores_missing_limits) > 0:
-            score_limits = self._score_min_max(score, scores_missing_limits)
+            score_limits = self._score_min_max(client, score,
+                                               scores_missing_limits)
 
         hist_configs = {}
         for hist_conf in histogram_desc:
@@ -161,14 +159,13 @@ class HistogramBuilder:
             hist_configs[hist_conf["score"]] = hist_conf
 
         chrom_histograms = []
-        with Client(n_workers=self.jobs, threads_per_worker=1) as client:
-            futures = []
-            chromosomes = score.get_all_chromosomes()
-            for chrom in chromosomes:
-                futures.append(client.submit(self._do_hist,
-                                               chrom, hist_configs))
-            for future in futures:
-                chrom_histograms.append(future.result())
+        futures = []
+        chromosomes = score.get_all_chromosomes()
+        for chrom in chromosomes:
+            futures.append(client.submit(self._do_hist,
+                                         chrom, hist_configs))
+        for future in futures:
+            chrom_histograms.append(future.result())
 
         return self._merge_histograms(chrom_histograms)
 
@@ -198,18 +195,17 @@ class HistogramBuilder:
                     res[scr_id] = Histogram.merge(res[scr_id], histogram)
         return res
 
-    def _score_min_max(self, score, score_ids):
+    def _score_min_max(self, client, score, score_ids):
         logger.info(f"Calculating min max for {score_ids}")
 
         chromosomes = score.get_all_chromosomes()
         min_maxes = []
-        with Client(n_workers=self.jobs, threads_per_worker=1) as client:
-            futures = []
-            for chrom in chromosomes:
-                futures.append(client.submit(self._min_max_for_chrom,
-                                               chrom, score_ids))
-            for future in futures:
-                min_maxes.append(future.result())
+        futures = []
+        for chrom in chromosomes:
+            futures.append(client.submit(self._min_max_for_chrom,
+                                         chrom, score_ids))
+        for future in futures:
+            min_maxes.append(future.result())
 
         res = {}
         for partial_res in min_maxes:

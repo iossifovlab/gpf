@@ -1,3 +1,4 @@
+import os
 import sys
 import logging
 import pathlib
@@ -11,6 +12,8 @@ from dae.genomic_resources.repository_factory import \
     get_configured_definition
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 from dae.genomic_resources.score_statistics import HistogramBuilder
+
+from dask.distributed import Client
 
 logger = logging.getLogger(__file__)
 
@@ -96,8 +99,10 @@ def cli_manage(cli_args=None):
         if gr is None:
             print(f"Cannot find resource {args.resource}")
             sys.exit(1)
-        builder = HistogramBuilder(gr, args.jobs)
-        histograms = builder.build()
+        builder = HistogramBuilder(gr)
+        n_jobs = args.jobs or os.cpu_count()
+        with Client(n_workers=n_jobs, threads_per_worker=1) as client:
+            histograms = builder.build(client)
         resource_path = pathlib.Path(args.resource)
         hist_out_dir = dr / resource_path / 'histograms'
         print(f"Saving histograms in {hist_out_dir}")
