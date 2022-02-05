@@ -51,6 +51,10 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  height: 35px;
+  justify-content: center;
+  align-items: center;
+  display: flex;
 }
 
 .header-cell {
