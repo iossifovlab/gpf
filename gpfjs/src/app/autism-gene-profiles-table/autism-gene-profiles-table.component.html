@@ -82,13 +82,20 @@
 </span>
 
 <div id="highlighted-genes" *ngIf="highlightedGenes.size > 0">
-  <button 
-    *ngFor="let gene of highlightedGenes"
-    class="btn btn-primary"
-    style="margin: 2px"
-    (click)="toggleHighlightGene(gene)"
-    >{{ gene }}<span class="badge text-light" style="margin-left: 5px">X</span></button
-  >
+  <div class="btn-group" *ngFor="let gene of highlightedGenes" style="margin:2px" role="group">
+    <button 
+      type="button"
+      class="btn btn-primary"
+      (click)="emitCreateTabEvent(gene, true)"
+      >{{ gene }}</button
+    >
+    <button 
+      type="button"
+      class="btn btn-primary"
+      (click)="toggleHighlightGene(gene)"
+      >X</button
+    >
+  </div>
   <br>
   <button
     class="btn btn-success"
