@@ -25,13 +25,13 @@
   
   <div *ngFor="let row of genes"
     class="table-row"
-    (middleclick)="toggleHighlightGene(row[geneSymbolColumnId])"
     [ngClass]="{'row-highlight': highlightedGenes.has(row[geneSymbolColumnId])}">
     <span *ngFor="let column of leaves"
       class="cell row-cell"
       [ngClass]="{'clickable': column.clickable !== null && row[column.id]}"
       [attr.title]="row[column.id]"
-      (click)="emitClickEvent(row, column)"
+      (click)="emitClickEvent($event, row, column)"
+      (middleclick)="column.clickable ? emitClickEvent($event, row, column, false) : toggleHighlightGene(row[geneSymbolColumnId])"
       >{{ row[column.id] }}</span
     >
   </div>

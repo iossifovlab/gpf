@@ -193,11 +193,14 @@ export class AgpTableComponent implements OnInit, OnChanges {
     }
   }
 
-  public emitClickEvent(row, column) {
+  public emitClickEvent($event, row, column, navigateToTab: boolean = true) {
     if (column.clickable === 'goToQuery' && row[column.id]) {
       this.goToQueryEvent.emit({geneSymbol: row[this.geneSymbolColumnId], statisticId: column.id});
     } else if (column.clickable === 'createTab') {
-      this.emitCreateTabEvent(row[this.geneSymbolColumnId])
+      if ($event.ctrlKey) {
+        navigateToTab = false;
+      }
+      this.emitCreateTabEvent(row[this.geneSymbolColumnId], navigateToTab)
     }
   }
 
