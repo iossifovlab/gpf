@@ -13,7 +13,8 @@ from dae.genomic_resources.repository_factory import \
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 from dae.genomic_resources.score_statistics import HistogramBuilder
 
-from dask.distributed import Client
+from dask.distributed import Client, LocalCluster
+from dask_kubernetes import KubeCluster, make_pod_spec
 
 logger = logging.getLogger(__file__)
 
@@ -72,6 +73,8 @@ def cli_manage(cli_args=None):
     parser_hist.add_argument('-j', '--jobs', type=int, default=None,
                              help='Number of jobs to run in parallel. \
  Defaults to the number of processors on the machine')
+    parser_hist.add_argument('--kubernetes', default=False, action='store_true',
+                             help='Run computation in a kubernetes cluster')
 
     args = parser.parse_args(cli_args)
 
@@ -101,8 +104,17 @@ def cli_manage(cli_args=None):
             sys.exit(1)
         builder = HistogramBuilder(gr)
         n_jobs = args.jobs or os.cpu_count()
-        with Client(n_workers=n_jobs, threads_per_worker=1) as client:
-            histograms = builder.build(client)
+
+        if args.kubernetes:
+            pod_spec = make_pod_spec(image='seqpipe/seqpipe-gpf-dask:latest')
+            cluster = KubeCluster(pod_spec)
+            cluster.scale(n_jobs)
+        else:
+            cluster = LocalCluster(n_workers=n_jobs, threads_per_worker=1)
+        with cluster:
+            with Client(cluster) as client:
+                histograms = builder.build(client)
+
         resource_path = pathlib.Path(args.resource)
         hist_out_dir = dr / resource_path / 'histograms'
         print(f"Saving histograms in {hist_out_dir}")
