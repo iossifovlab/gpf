@@ -26,11 +26,20 @@ import { SetPresentInParentValues } from 'app/present-in-parent/present-in-paren
 import { SetStudyTypes } from 'app/study-types/study-types.state';
 import { SetVariantTypes } from 'app/variant-types/variant-types.state';
 import { EffectTypes } from 'app/effect-types/effect-types';
+import {trigger, state, style, animate, transition} from '@angular/animations';
 
 @Component({
   selector: 'gpf-autism-gene-profile-single-view',
   templateUrl: './autism-gene-profile-single-view.component.html',
-  styleUrls: ['./autism-gene-profile-single-view.component.css']
+  styleUrls: ['./autism-gene-profile-single-view.component.css'],
+  animations: [
+    trigger('imgAnimation', [
+      transition(':enter', [
+          style({ opacity: 0 }),
+          animate('200ms', style({ opacity: 1 })),
+      ])
+    ])
+  ]
 })
 export class AutismGeneProfileSingleViewComponent implements OnInit {
   @Input() public readonly geneSymbol: string;
@@ -56,6 +65,8 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     Pubmed: '',
     SFARIgene: ''
   };
+
+  currentCopyState: string = 'assets/copy-link.jpg'; 
 
   public constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
@@ -213,5 +224,23 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
         newWindow.location.assign(url);
       });
     });
+  }
+
+  public copyGeneLink() {
+    let currentUrl = window.location.href;
+    if(!currentUrl.endsWith(this.geneSymbol)) {
+      currentUrl += (currentUrl.endsWith('/') ? '' : '/') + this.geneSymbol;
+    }
+    this.copyToClipboard(currentUrl);
+    this.currentCopyState = 'assets/green-check.png';
+  }
+
+  copyToClipboard(item) {
+    document.addEventListener('copy', (e: ClipboardEvent) => {
+      e.clipboardData.setData('text/plain', (item));
+      e.preventDefault();
+      document.removeEventListener('copy', null);
+    });
+    document.execCommand('copy');
   }
 }
