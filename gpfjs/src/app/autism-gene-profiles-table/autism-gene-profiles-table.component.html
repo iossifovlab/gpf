@@ -1,6 +1,6 @@
 <div *ngIf="config" class="table-container">
   <div style="display: flex; justify-content: space-between">
-    <div class="input-group mb-3" style="width: 300px">
+    <div class="input-group mb-3" style="width: 370px">
       <div class="input-group-prepend">
         <span class="input-group-text">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
@@ -25,13 +25,13 @@
   
   <div *ngFor="let row of genes"
     class="table-row"
-    (click)="toggleHighlightGene(row[geneSymbolColumnId])"
     [ngClass]="{'row-highlight': highlightedGenes.has(row[geneSymbolColumnId])}">
     <span *ngFor="let column of leaves"
       class="cell row-cell"
       [ngClass]="{'clickable': column.clickable !== null && row[column.id]}"
       [attr.title]="row[column.id]"
-      (middleclick)="emitClickEvent(row, column)"
+      (click)="emitClickEvent($event, row, column)"
+      (middleclick)="column.clickable ? emitClickEvent($event, row, column, false) : toggleHighlightGene(row[geneSymbolColumnId])"
       >{{ row[column.id] }}</span
     >
   </div>
@@ -82,13 +82,20 @@
 </span>
 
 <div id="highlighted-genes" *ngIf="highlightedGenes.size > 0">
-  <button 
-    *ngFor="let gene of highlightedGenes"
-    class="btn btn-primary"
-    style="margin: 2px"
-    (click)="toggleHighlightGene(gene)"
-    >{{ gene }}<span class="badge text-light" style="margin-left: 5px">X</span></button
-  >
+  <div class="btn-group" *ngFor="let gene of highlightedGenes" style="margin:2px" role="group">
+    <button 
+      type="button"
+      class="btn btn-primary"
+      (click)="emitCreateTabEvent(gene, true)"
+      >{{ gene }}</button
+    >
+    <button 
+      type="button"
+      class="btn btn-primary"
+      (click)="toggleHighlightGene(gene)"
+      >X</button
+    >
+  </div>
   <br>
   <button
     class="btn btn-success"

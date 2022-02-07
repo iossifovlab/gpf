@@ -51,6 +51,10 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  height: 35px;
+  justify-content: center;
+  align-items: center;
+  display: flex;
 }
 
 .header-cell {
@@ -107,7 +111,7 @@ multiple-select-menu {
   border: 1px solid #ddd;
   z-index: 101;
   padding: 8px;
-  width: 250px;
+  width: 265px;
 }
 
 .clickable {
