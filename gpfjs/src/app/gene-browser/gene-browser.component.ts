@@ -111,6 +111,9 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
 
   public selectGeneSymbol(geneSymbol: string) {
     this.geneSymbol = geneSymbol;
+    if(geneSymbol === '') {
+      this.location.go(`datasets/${this.selectedDatasetId}/gene-browser/`);
+    }
   }
 
   public openDropdown(): void {
