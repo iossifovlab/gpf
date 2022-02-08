@@ -94,7 +94,7 @@ class PermissionDeniedPromptView(QueryBaseView):
 
         dae_config = self.gpf_instance.dae_config
         if dae_config.gpfjs is None or \
-                dae_config.gpfjs.permission_denied_promtp_file is None:
+                dae_config.gpfjs.permission_denied_prompt_file is None:
             self.permission_denied_prompt = ""
         else:
             prompt_filepath = dae_config.gpfjs.permission_denied_prompt_file
