@@ -1,7 +1,7 @@
 import time 
 import json 
 import logging
-import sqlparse 
+import numpy as np
 from contextlib import closing
 from impala.util import as_pandas
 from dae.pedigrees.family import FamiliesData
@@ -10,7 +10,6 @@ from dae.backends.schema2.base_query_builder import Dialect
 from dae.backends.schema2.base_query_director import QueryDirector
 from dae.backends.schema2.family_builder import FamilyQueryBuilder
 from dae.backends.schema2.summary_builder import SummaryQueryBuilder
-from dae.variants.family_variant import FamilyVariantFactory
 from dae.variants.variant import SummaryVariantFactory
 
 logger = logging.getLogger(__name__)
@@ -141,8 +140,8 @@ class ImpalaVariants:
             affected_status=affected_status
         )
 
-        query = sqlparse.format(query_builder.product, reindent=True, keyword_case='upper')
-
+        # query = sqlparse.format(query_builder.product, reindent=True, keyword_case='upper')
+        query = query_builder.product
         result = self.client.query(query)
 
         for row in result:
@@ -208,10 +207,9 @@ class ImpalaVariants:
                 )
 
                 query = query_builder.product
-                query = sqlparse.format(query_builder.product, reindent=True, keyword_case='upper')
-
+                # query = sqlparse.format(query_builder.product, reindent=True, keyword_case='upper')
                 logger.info(f"FAMILY VARIANTS QUERY ({conn.host}): {query}")
-                
+
                 start = time.perf_counter()
                 cursor.execute(query)
                 end = time.perf_counter()
@@ -221,11 +219,13 @@ class ImpalaVariants:
                     try:
                         sv_record = json.loads(row.summary_data) 
                         fv_record = json.loads(row.family_data)
-                        fv = FamilyVariantFactory.family_variant_from_record(
+                
+                        fv = FamilyVariant(
                             SummaryVariantFactory.summary_variant_from_records(sv_record),
                             self.families[fv_record["family_id"]],
-                            fv_record)
-
+                            np.array(fv_record["genotype"]),
+                            np.array(fv_record["best_state"]))
+                        
                         if fv is None:
                             continue
                         yield fv

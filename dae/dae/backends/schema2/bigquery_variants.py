@@ -1,17 +1,15 @@
 import time
 import json 
 import logging
-import sqlparse
+import numpy as np 
 from contextlib import closing
 from dae.pedigrees.family import FamiliesData
 from dae.variants.attributes import Role, Status, Sex
-from dae.genome.gene_models import load_gene_models
 from dae.utils.variant_utils import mat2str
 from dae.backends.schema2.base_query_builder import Dialect
 from dae.backends.schema2.family_builder import FamilyQueryBuilder
 from dae.backends.schema2.summary_builder import SummaryQueryBuilder
 from dae.backends.schema2.base_query_director import QueryDirector
-from dae.variants.family_variant import FamilyVariantFactory
 from dae.variants.variant import SummaryVariantFactory
 from google.cloud import bigquery
 
@@ -181,8 +179,8 @@ class BigQueryVariants:
             affected_status=affected_status
         )
 
-        query = sqlparse.format(query_builder.product, reindent=True, keyword_case='upper')
-
+        # query = sqlparse.format(query_builder.product, reindent=True, keyword_case='upper')
+        query = query_builder.product 
         result = self.client.query(query)
 
         for row in result:
@@ -247,7 +245,7 @@ class BigQueryVariants:
         )
 
         query = query_builder.product
-        query = sqlparse.format(query_builder.product, reindent=True, keyword_case='upper')
+        # query = sqlparse.format(query_builder.product, reindent=True, keyword_case='upper')
 
         # ------------------ DEBUG ---------------------
         result = []
@@ -264,11 +262,13 @@ class BigQueryVariants:
             try:
                 sv_record = json.loads(row.summary_data) 
                 fv_record = json.loads(row.family_data)
-                fv = FamilyVariantFactory.family_variant_from_record(
+                
+                fv = FamilyVariant(
                     SummaryVariantFactory.summary_variant_from_records(sv_record),
                     self.families[fv_record["family_id"]],
-                    fv_record)
-                
+                    np.array(fv_record["genotype"]),
+                    np.array(fv_record["best_state"]))
+
                 if fv is None:
                     continue
                 yield fv
@@ -380,241 +380,3 @@ class BigQueryVariants:
 
         logger.debug(f"[DONE] FAMILY VARIANTS QUERY")
 
-if __name__ == "__main__":
-    import sys
-    from dae import FAMILY_IDS, GENE, CODING_EFFECT_TYPES, GENE_MULTIPLE
-    from dae.backends.schema2.impala_variants import ImpalaVariants
-    from dae.backends.impala.impala_helpers import ImpalaHelpers
-    import pandas as pd
-
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-
-    # count results 
-    def count_rows(iter):
-        logger.info(f"COUNT: {sum(1 for _ in iter)}")
-        iter.close()
-
-    # gather subset of fields to compare BigQuery sets and Impala sets
-    def fv_to_df(iter):
-        rows = []
-        for fv in iter:
-            row = {
-                'location': fv.location,
-                'summary_variant': str(fv.summary_variant),
-                'family_id': fv.family_id,
-                'best_state': mat2str(fv.gt)
-            }
-            rows.append(row)
-        return pd.DataFrame(rows)
-
-    def df_diff(bq_fv_iter, im_fv_iter):
-        bq_df = fv_to_df(bq_fv_iter)
-        im_df = fv_to_df(im_fv_iter)
-
-        result = pd.concat([bq_df, im_df]).drop_duplicates(keep=False)
-
-        logger.info(f"BQ row count: {bq_df.shape[0]}")
-        logger.info(f"IM row count: {im_df.shape[0]}")
-
-        if (len(result) == 0):
-            logger.info(f" {'-'*20} MATCH {'-'*20}")
-        else:
-            logger.info(f" {'-'*20} MISMATCH {'-'*20}")
-            logger.info(result)
-
-        return result
-    
-    gm = load_gene_models('./reference/refGene-20190211.gz')
-
-    # BigQuery Settings
-    project_id = "data-innov"
-    db = "sparkv3"
-    pedigree_table = 'pedigree'
-    family_table = "imported_family_variant"
-    summary_table = "imported_summary_allele"
-    
-    # Impala Settings:
-    impala_host = ['localhost']
-    impala_port = 21050
-    impala_database = 'gpf_variant_db'
-    impala_summary_table = 'imported_summary_allele'
-    impala_family_table = 'imported_family_variant'
-    impala_pedigree_table = 'spakrv3_pilot_pedigree'
-    impala_helper = ImpalaHelpers(impala_host, impala_port)
-
-    logger.info("Loading classes and schemas ... ")
-
-    q = BigQueryVariants(project_id, db, 
-        summary_table, family_table, pedigree_table, gm)
-
-    i = ImpalaVariants(impala_helper, impala_database, 
-        impala_family_table, impala_summary_table, impala_pedigree_table, gm)
-
-    logger.info("Executing queries ... ")
-    
-    logger.info("101, gene")
-    bq = q.query_variants(genes=GENE)
-    im = i.query_variants(genes=GENE)
-    df_diff(bq, im)
-
-    logger.info("102: gene + effect_type")
-    bq = q.query_variants(genes=GENE, effect_types=CODING_EFFECT_TYPES)
-    im = i.query_variants(genes=GENE, effect_types=CODING_EFFECT_TYPES)
-    df_diff(bq, im)
-
-    logger.info("201: single family_id ")
-    bq = q.query_variants(family_ids=FAMILY_IDS[:1])
-    im = i.query_variants(family_ids=FAMILY_IDS[:1])
-    df_diff(bq, im)
-
-    logger.info("202: single family_id + effect_type")
-    bq = q.query_variants(
-        family_ids=FAMILY_IDS[:1], effect_types=CODING_EFFECT_TYPES)
-    im = i.query_variants(
-        family_ids=FAMILY_IDS[:1], effect_types=CODING_EFFECT_TYPES)
-    df_diff(bq, im)
-
-    # logger.info("301: single family_id + custom effect_type + af")
-    # bq = q.query_variants(
-    #     effect_types=['splice-site', 'frame-shift', 'nonsense',
-    #                   'no-frame-shift-newStop',
-    #                   'noStart', 'noEnd', 'missense', 'no-frame-shift', 'CDS'],
-    #     family_ids=FAMILY_IDS[:1],
-    #     real_attr_filter=[('af_allele_freq', (None, 1))])
-    # im = i.query_variants(
-    #     effect_types=['splice-site', 'frame-shift', 'nonsense',
-    #                   'no-frame-shift-newStop',
-    #                   'noStart', 'noEnd', 'missense', 'no-frame-shift', 'CDS'],
-    #     family_ids=FAMILY_IDS[:1],
-    #     real_attr_filter=[('af_allele_freq', (None, 1))])
-    # df_diff(bq, im)
-
-    # logger.info("401: ultra rare w/ custom effect types")
-    # bq = q.query_variants(
-    #     effect_types=['splice-site', 'frame-shift', 'nonsense'],
-    #     ultra_rare=True)
-    # im = i.query_variants(
-    #     effect_types=['splice-site', 'frame-shift', 'nonsense'],
-    #     ultra_rare=True)
-    # df_diff(bq, im)
-
-    # logger.info("501: multiple genes, ultra rare, w/ custom effect types")
-    # bq = q.query_variants(
-    #     genes=GENE_MULTIPLE,
-    #     effect_types=['splice-site', 'frame-shift', 'nonsense'],
-    #     ultra_rare=True)
-
-    # im = i.query_variants(
-    #     genes=GENE_MULTIPLE,
-    #     effect_types=['splice-site', 'frame-shift', 'nonsense'],
-    #     ultra_rare=True)
-    # df_diff(bq, im)
-
-    # logger.info("601: ultra rare, roles, w/ custom effect type")
-    # bq = q.query_variants(
-    #     effect_types=['splice-site', 'frame-shift',
-    #                   'nonsense', 'no-frame-shift-newStop'],
-    #     ultra_rare=True,
-    #     roles='prb')
-    # im = i.query_variants(
-    #     effect_types=['splice-site', 'frame-shift',
-    #                   'nonsense', 'no-frame-shift-newStop'],
-    #     ultra_rare=True,
-    #     roles='prb')
-    # df_diff(bq, im)
-
-    # logger.info("701: multiple families, allee_freq, effect type, and role")
-    # bq = q.query_variants(
-    #     effect_types=['splice-site', 'nonsense', 'missense', 'frame-shift'],
-    #     real_attr_filter=[('af_allele_freq', (None, 1))],
-    #     family_ids=FAMILY_IDS,
-    #     roles='prb')
-    # im = i.query_variants(
-    #     effect_types=['splice-site', 'nonsense', 'missense', 'frame-shift'],
-    #     real_attr_filter=[('af_allele_freq', (None, 1))],
-    #     family_ids=FAMILY_IDS,
-    #     roles='prb')
-    # df_diff(bq, im)
-
-    # logger.info("801: all effects w/ frequency filter")
-    # bq = q.query_variants(
-    #     effect_types=['splice-site', 'nonsense', 'missense', 'frame-shift'],
-    #     real_attr_filter=[('af_allele_freq', (None, 1))],
-    #     roles='prb')
-    # im = i.query_variants(
-    #     effect_types=['splice-site', 'nonsense', 'missense', 'frame-shift'],
-    #     real_attr_filter=[('af_allele_freq', (None, 1))],
-    #     roles='prb')
-    # df_diff(bq, im)
-
-    # 1) build family variant object
-    # 2) get the same counts match bigquery + impala investigate table_properties
-    # 3) fix combined query
-    # 4) prepare for summary / family separation
-
-    # 1) remove pandas dependencies
-    # 2) investigate table properties
-
-    # 3) compare deserialized
-    # 4) built a set of tuples
-    #   (v.location, v.variant, v.familyId,mat2str(v.beststate))
-    # set should be the same as count
-
-    # summary variant
-    # more long term tasks
-    # - Check if new schema works in impala
-    # - Direct import into new schema
-    # - split the blobs of summary variant and
-    # - annotation tables, do we use external tables
-    # or do we have append annotations to summary allele table
-    # ... not too bad.
-    #
-    # annotation parallel tables . start preparing
-    # hardcoded table properties
-    # denovo vs transmitted ultra-rare
-    # denovo  => freq bin = 0
-    # ultra   => freq bin = 1
-    # rare    => freq bin = 2
-    # all other => freq bin = 3
-
-    # family bin => how many bins to have? 150
-    # ~ hash(family_id) % size = family_bin, pedigree table
-
-    # coding_bin => coding region or outside
-    # coding_bin = 0, 1
-
-    # TASKS:
-    # - Read code that uses impala variants
-    # -- imitated how big query
-    # -- look into testing (pytest, integration tests)
-    # -- bigquery specific testing (test datasets)
-    # - try to move this into GPF
-    # - integrating Web UI 
-
-    # from threading import Thread 
-
-    # def query(q):
-    #     q.query_variants(genes=GENE)
-    #     # count_rows(bq)
-
-    # def cancel(q):
-    #     q.cancel_query()
-
-    # def main(t):
-    #     # https://docs.python.org/3/library/asyncio-task.html
-    #     # Running Tasks Concurrently
-    
-    #     logger.info("thread: start")
-    #     task_query = Thread(target=query, args=[q])
-    #     # task_cancel = Thread(target=cancel, args=[q])
-    #     task_query.start()
-    #     # time.sleep(t)
-    #     # task_cancel.start()
-    #     task_query.join()
-    #     # task_cancel.join()
-    #     logger.info("thread:joined")
-
-    # for x in range(100, 101):
-    #     main(x)  
-
-    # ImpalaQueryRunner 
