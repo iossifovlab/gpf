@@ -61,8 +61,6 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
                       seekable=False):
 
         mode = mode if mode else "rb"
-        if 'w' in mode:
-            raise Exception("Can't handle writable files yet!")
 
         file_url = self.get_file_url(genomic_resource, filename)
         logger.debug(f"opening url resource: {file_url}")
@@ -70,14 +68,14 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
         if self.scheme in ["http", "https"] and not seekable:
             binary_stream = urlopen(file_url)
         else:
-            binary_stream = self.filesystem.open(file_url)
+            bin_mode = mode.replace('t', 'b')
+            binary_stream = self.filesystem.open(file_url, bin_mode)
 
         if filename.endswith(".gz") and uncompress:
             return gzip.open(binary_stream, mode)
 
         if 't' in mode:
             return io.TextIOWrapper(binary_stream, encoding=GR_ENCODING)
-
         return binary_stream
 
     def open_tabix_file(self, genomic_resource,  filename,
