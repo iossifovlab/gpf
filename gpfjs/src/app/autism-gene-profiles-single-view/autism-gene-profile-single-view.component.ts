@@ -31,15 +31,7 @@ import {trigger, state, style, animate, transition} from '@angular/animations';
 @Component({
   selector: 'gpf-autism-gene-profile-single-view',
   templateUrl: './autism-gene-profile-single-view.component.html',
-  styleUrls: ['./autism-gene-profile-single-view.component.css'],
-  animations: [
-    trigger('imgAnimation', [
-      transition(':enter', [
-          style({ opacity: 0 }),
-          animate('200ms', style({ opacity: 1 })),
-      ])
-    ])
-  ]
+  styleUrls: ['./autism-gene-profile-single-view.component.css']
 })
 export class AutismGeneProfileSingleViewComponent implements OnInit {
   @Input() public readonly geneSymbol: string;
@@ -66,7 +58,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     SFARIgene: ''
   };
 
-  currentCopyState: string = 'assets/copy-link.jpg'; 
+  currentCopyState: string = 'assets/link-solid.svg'; 
 
   public constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
@@ -232,7 +224,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
       currentUrl += (currentUrl.endsWith('/') ? '' : '/') + this.geneSymbol;
     }
     this.copyToClipboard(currentUrl);
-    this.currentCopyState = 'assets/green-check.png';
+    this.currentCopyState = 'assets/check-solid.svg';
   }
 
   copyToClipboard(item) {

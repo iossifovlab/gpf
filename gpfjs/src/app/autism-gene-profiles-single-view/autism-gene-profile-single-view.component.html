@@ -16,7 +16,7 @@
     <div style="padding: 25px">
       <div style="display: flex;align-items: baseline;margin-bottom: -5px;">
         <h2 style="margin-right: 15px">{{ geneSymbol }}</h2>
-        <img @imgAnimation (click)="copyGeneLink()" [src]="currentCopyState" style="height: 25px; width: 25px" >
+        <img (click)="copyGeneLink()" [src]="currentCopyState" style="width: 20px" >
       </div>
       <div
         class="wrapper"
