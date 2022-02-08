@@ -57,6 +57,7 @@ setuptools.setup(
 
     dae2parquet.py=dae.tools.dae2parquet:main
     vcf2parquet.py=dae.tools.vcf2parquet:main
+    vcf2schema2.py=dae.backends.schema2.vcf2schema2:main
     denovo2parquet.py=dae.tools.denovo2parquet:main
     cnv2parquet.py=dae.tools.cnv2parquet:main
     generate_vcf_score_histogram.py=dae.tools.generate_vcf_score_histogram:main

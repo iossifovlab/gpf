@@ -409,10 +409,14 @@ class QueryTreeToSQLListTransformer(QueryTreeToSQLTransformer):
 
 class QueryTreeToSQLBitwiseTransformer(QueryTreeToSQLTransformer):
     def ContainsNode(self, arg):
-        res = "(BITAND({}, {}) != 0)".format(
-            self.column_name, self.token_converter(arg)
-        )
-        return res
+        if self.add_unnest:
+            return "((SELECT BIT_AND(x) FROM UNNEST([{}, {}]) as x) != 0)".format(
+                self.column_name, self.token_converter(arg)
+            )
+        else:
+            return "(BITAND({}, {}) != 0)".format(
+                self.column_name, self.token_converter(arg)
+            )
 
     def LessThanNode(self, arg):
         raise NotImplementedError("unexpected bitwise query")
@@ -427,10 +431,14 @@ class QueryTreeToSQLBitwiseTransformer(QueryTreeToSQLTransformer):
         raise NotImplementedError("unexpected bitwise query")
 
     def ElementOfNode(self, arg):
-        res = "(BITAND({}, {}) != 0)".format(
-            self.column_name, self.token_converter(arg)
-        )
-        return res
+        if self.add_unnest:
+            return "((SELECT BIT_AND(x) FROM UNNEST([{}, {}]) as x) != 0)".format(
+                self.column_name, self.token_converter(arg)
+            )
+        else:
+            return "(BITAND({}, {}) != 0)".format(
+                self.column_name, self.token_converter(arg)
+            )
 
     def EqualsNode(self, arg):
         return self.column_name + " = " + self.token_converter(arg)

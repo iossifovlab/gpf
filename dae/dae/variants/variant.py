@@ -3,6 +3,7 @@ Created on Feb 13, 2018
 
 @author: lubo
 """
+import enum
 import itertools
 import logging
 
@@ -302,6 +303,37 @@ class SummaryAllele(core.Allele):
     @property
     def allele_index(self) -> int:
         return self._allele_index
+
+    @property
+    def to_record(self):
+
+        def enum_to_value(v):
+            if isinstance(v, enum.IntEnum): return int(v)
+            if isinstance(v, enum.Enum): return str(v)
+            return v
+
+        def encode_attributes(attributes):
+            filtered_attr = {}
+            for k, v in attributes.items():
+                if k is not None:
+                    filtered_attr[k] = enum_to_value(v)
+
+            return filtered_attr
+
+        attributes = encode_attributes(self._attributes)
+
+        return {**attributes, **{
+            "chrom":self.chromosome,
+            "position":self.position,
+            "reference":self.reference,
+            "alternative":self.alternative,
+            "end_position":self.end_position,
+            "summary_index":self.summary_index,
+            "allele_index":self.allele_index,
+            "transmission_type": enum_to_value(self.transmission_type),
+            "variant_type": self.variant_type.value if self.variant_type is not None else None,
+            "effect": str(self.effects) if self.effects is not None else None,
+        }}
 
     @property
     def variant_type(self) -> core.Allele.Type:
@@ -759,6 +791,10 @@ class SummaryVariant:
     @property
     def transmission_type(self):
         return self.alleles[-1].transmission_type
+
+    @property
+    def to_record(self):
+        return [allele.to_record for allele in self._alleles]
 
 
 class SummaryVariantFactory(object):

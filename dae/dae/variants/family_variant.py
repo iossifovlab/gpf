@@ -647,3 +647,13 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         for a in self.alt_alleles:
             members = members.union(filter(None, a.variant_in_members))
         return members
+
+    @property
+    def to_record(self):
+        return {
+            "family_id": self.family_id,
+            "summary_index":self.summary_index,
+            "family_index":self.family_index,
+            "genotype":self.gt.tolist(),
+            "best_state": self.best_state.tolist()
+        }
