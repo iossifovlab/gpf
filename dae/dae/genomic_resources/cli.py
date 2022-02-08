@@ -78,6 +78,9 @@ def cli_manage(cli_args=None):
     parser_hist.add_argument('--kubernetes', default=False,
                              action='store_true',
                              help='Run computation in a kubernetes cluster')
+    parser_hist.add_argument('--envvars', nargs='*',
+                             help='Environment variables to pass to '
+                             'kubernetes workers')
 
     args = parser.parse_args(cli_args)
 
@@ -108,8 +111,9 @@ def cli_manage(cli_args=None):
         n_jobs = args.jobs or os.cpu_count()
 
         if args.kubernetes:
+            env = _get_env_vars(args.envvars)
             pod_spec = make_pod_spec(image='seqpipe/seqpipe-gpf-dask:latest')
-            cluster = KubeCluster(pod_spec)
+            cluster = KubeCluster(pod_spec, env=env)
             cluster.scale(n_jobs)
         else:
             cluster = LocalCluster(n_workers=n_jobs, threads_per_worker=1)
@@ -165,6 +169,13 @@ def _create_repo(dr):
     else:
         GRR = GenomicResourceURLRepo("", dr)
     return GRR
+
+
+def _get_env_vars(var_names):
+    res = {}
+    for var_name in var_names:
+        res[var_name] = os.getenv(var_name)
+    return res
 
 
 if __name__ == '__main__':
