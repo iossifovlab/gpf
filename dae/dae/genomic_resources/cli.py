@@ -5,8 +5,10 @@ import pathlib
 import argparse
 import time
 from typing import cast
+from urllib.parse import urlparse
 
 from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
+from dae.genomic_resources.url_repository import GenomicResourceURLRepo
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository, load_definition_file, \
     get_configured_definition
@@ -73,15 +75,15 @@ def cli_manage(cli_args=None):
     parser_hist.add_argument('-j', '--jobs', type=int, default=None,
                              help='Number of jobs to run in parallel. \
  Defaults to the number of processors on the machine')
-    parser_hist.add_argument('--kubernetes', default=False, action='store_true',
+    parser_hist.add_argument('--kubernetes', default=False,
+                             action='store_true',
                              help='Run computation in a kubernetes cluster')
 
     args = parser.parse_args(cli_args)
 
     cmd, dr = args.command, args.repo_dir
 
-    dr = pathlib.Path(dr)
-    GRR = GenomicResourceDirRepo("", dr)
+    GRR = _create_repo(dr)
 
     if cmd == "index":
         for gr in GRR.get_all_resources():
@@ -115,8 +117,7 @@ def cli_manage(cli_args=None):
             with Client(cluster) as client:
                 histograms = builder.build(client)
 
-        resource_path = pathlib.Path(args.resource)
-        hist_out_dir = dr / resource_path / 'histograms'
+        hist_out_dir = 'histograms'
         print(f"Saving histograms in {hist_out_dir}")
         builder.save(histograms, hist_out_dir)
     else:
@@ -154,6 +155,16 @@ def cli_cache_repo(args=None):
     elapsed = time.time() - start
 
     logger.info(f"Cached all resources in {elapsed:.2f} secs")
+
+
+def _create_repo(dr):
+    repo_url = urlparse(dr)
+    if not repo_url.scheme or repo_url.scheme == 'file':
+        dr = pathlib.Path(dr)
+        GRR = GenomicResourceDirRepo("", dr)
+    else:
+        GRR = GenomicResourceURLRepo("", dr)
+    return GRR
 
 
 if __name__ == '__main__':

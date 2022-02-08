@@ -3,6 +3,7 @@ import os
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME, GenomicResource
 from dae.genomic_resources.score_statistics import Histogram, HistogramBuilder
 from dae.genomic_resources.test_tools import build_a_test_resource
+from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
 import numpy as np
 
 
@@ -262,11 +263,15 @@ def test_histogram_builder_no_explicit_min_max(client):
 
 
 def test_histogram_builder_save(tmpdir, client):
-    res: GenomicResource = build_a_test_resource(position_score_test_config)
+    for fn, content in position_score_test_config.items():
+        with open(os.path.join(tmpdir, fn), 'wt') as f:
+            f.write(content)
+
+    res = GenomicResourceDirRepo("", tmpdir).get_resource("")
     hbuilder = HistogramBuilder(res)
     hists = hbuilder.build(client)
-    hbuilder.save(hists, tmpdir)
+    hbuilder.save(hists, "")
 
     files = os.listdir(tmpdir)
     print(files)
-    assert len(files) == 4  # 2 histograms and 2 metadatas
+    assert len(files) == 6  # 2 config, 2 histograms and 2 metadatas

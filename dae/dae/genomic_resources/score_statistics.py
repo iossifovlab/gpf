@@ -232,28 +232,23 @@ class HistogramBuilder:
                     res[scr_id][1] = max(v, res[scr_id][1])
         return res
 
-    # def build():
-    #     over all chromosomes:
-    #         run build_region in parallel
-    #     merge all histograms.
-
     def save(self, histograms, out_dir):
         histogram_desc = self.resource.get_config().get("histograms", [])
         configs = {hist['score']: hist for hist in histogram_desc}
 
-        os.makedirs(out_dir, exist_ok=True)
         for score, histogram in histograms.items():
             df = pd.DataFrame({'bars': histogram.bars,
                                'bins': histogram.bins[:-1]})
-            hist_name = f"{score}.csv"
-            df.to_csv(os.path.join(out_dir, hist_name), index=None)
+            hist_file = os.path.join(out_dir, f"{score}.csv")
+            with self.resource.open_raw_file(hist_file, "wt") as f:
+                df.to_csv(f, index=None)
 
             metadata = {
                 'resource': self.resource.get_id(),
                 'histogram_config': configs.get(score, {}),
             }
-            metadata_name = f"{score}.metadata.yaml"
-            with open(os.path.join(out_dir, metadata_name), "wt") as f:
+            metadata_file = os.path.join(out_dir, f"{score}.metadata.yaml")
+            with self.resource.open_raw_file(metadata_file, "wt") as f:
                 yaml.dump(metadata, f)
 
 
