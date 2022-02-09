@@ -58,13 +58,13 @@
             *ngIf="column.sortable"
             [id]="column.id"
             class="header-button"
-            style="pointer-events: none;"
+            style="pointer-events: none; margin-left: -10px;"
           >
           </gpf-sorting-buttons>
           <button
             *ngIf="column.columns.length !== 0"
             #columnFilteringButton
-            class="header-button navbar-toggler"
+            class="header-button navbar-toggler column-filtering-button"
             (click)="openDropdown(column, $event);$event.stopPropagation()">
             &#9776;
           </button>
