@@ -122,8 +122,13 @@ export class AgpTableComponent implements OnInit, OnChanges {
   }
 
   public openDropdown(column: Column, $event): void {
+    if (this.ngbDropdownMenu.dropdown._open) {
+      return;
+    }
+
+    this.ngbDropdownMenu.dropdown.toggle();
+
     this.multipleSelectMenuComponent.columns = column.columns;
-    this.ngbDropdownMenu.dropdown.open();
     this.multipleSelectMenuComponent.refresh();
 
     // calculate modal position
