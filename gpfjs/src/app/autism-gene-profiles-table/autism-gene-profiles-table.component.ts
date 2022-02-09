@@ -123,31 +123,20 @@ export class AgpTableComponent implements OnInit, OnChanges {
 
   public openDropdown(column: Column, $event): void {
     this.multipleSelectMenuComponent.columns = column.columns;
+    this.ngbDropdownMenu.dropdown.open();
+    this.multipleSelectMenuComponent.refresh();
 
-    this.waitForDropdown().then(() => {
-      this.ngbDropdownMenu.dropdown.open();
-      this.multipleSelectMenuComponent.refresh();
-      // calculate modal position
-      let modalLeft = $event.target.getBoundingClientRect().left - document.body.getBoundingClientRect().left;
-      const modalTop = $event.target.getBoundingClientRect().bottom;
-      const dropdownMenuWidth = 400;
-      if (modalLeft + dropdownMenuWidth > window.innerWidth) {
-        modalLeft -= (modalLeft + dropdownMenuWidth - window.innerWidth);
-      }
-      this.renderer.setStyle(this.dropdownSpan.nativeElement, 'left', modalLeft + 'px');
-      this.renderer.setStyle(this.dropdownSpan.nativeElement, 'top',  modalTop + 'px');
-    }).catch(err => console.error(err));
-  }
+    // calculate modal position
+    let modalLeft = $event.target.getBoundingClientRect().left - document.body.getBoundingClientRect().left;
+    const modalTop = $event.target.getBoundingClientRect().bottom;
+    const dropdownMenuWidth = 400;
 
-  public async waitForDropdown(): Promise<void> {
-    return new Promise<void>(resolve => {
-      const timer = setInterval(() => {
-        if (this.ngbDropdownMenu !== undefined) {
-          resolve();
-          clearInterval(timer);
-        }
-      }, 15);
-    });
+    if (modalLeft + dropdownMenuWidth > window.innerWidth) {
+      modalLeft -= (modalLeft + dropdownMenuWidth - window.innerWidth);
+    }
+
+    this.renderer.setStyle(this.dropdownSpan.nativeElement, 'left', modalLeft + 'px');
+    this.renderer.setStyle(this.dropdownSpan.nativeElement, 'top',  modalTop + 'px');
   }
 
   public sort(sortBy: string, orderBy?: string): void {
