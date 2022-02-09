@@ -65,7 +65,7 @@
             *ngIf="column.columns.length !== 0"
             #columnFilteringButton
             class="header-button navbar-toggler"
-            (click)="openDropdown(column, $event)">
+            (click)="openDropdown(column, $event);$event.stopPropagation()">
             &#9776;
           </button>
         </div>
