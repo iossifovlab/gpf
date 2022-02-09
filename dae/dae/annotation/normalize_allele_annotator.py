@@ -137,14 +137,15 @@ class NormalizeAlleleAnnotator(Annotator):
     def _do_annotate(
             self, annotatable: Annotatable, _context: Dict) -> Dict:
 
-        assert isinstance(annotatable, VCFAllele), annotatable
         if annotatable.type in {
                 Annotatable.Type.large_deletion,
                 Annotatable.Type.large_duplication}:
             logger.warning(
                 f"{self.annotator_type()} not ready to annotate CNV variants: "
                 f"{annotatable}")
-            return {}
+            return {"normalized_allele": None}
+
+        assert isinstance(annotatable, VCFAllele), annotatable
 
         normalized_allele = normalize_allele(annotatable, self.genome)
         return {"normalized_allele": normalized_allele}
