@@ -177,6 +177,14 @@ class LiftOverAnnotator(Annotator):
     def _do_annotate(self, annotatable: Annotatable, _context: Dict):
         assert annotatable is not None
 
+        if annotatable.type in {
+                Annotatable.Type.large_deletion,
+                Annotatable.Type.large_duplication}:
+            logger.warning(
+                f"{self.annotator_type()} not ready to annotate CNV variants: "
+                f"{annotatable}")
+            return {}
+
         lo_allele = self.liftover_allele(cast(VCFAllele, annotatable))
         if lo_allele is None:
             logger.info(
