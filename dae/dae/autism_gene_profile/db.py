@@ -74,8 +74,7 @@ class AutismGeneProfileDB:
             for score in gs_category["scores"]:
                 score_name = score["score_name"]
                 value = row[f"{category_name}_{score_name}"]
-                result['.'.join([category_name, score_name])] = \
-                    value if value is not None else "-"
+                result['.'.join([category_name, score_name])] = value
 
         for gs_category in config["gene_sets"]:
             category_name = gs_category["category"]
