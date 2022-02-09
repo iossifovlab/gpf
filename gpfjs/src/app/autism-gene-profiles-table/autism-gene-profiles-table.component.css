@@ -87,6 +87,7 @@
 .column-filtering-button {
   position: absolute;
   right: 0;
+  padding: 6px 8px;
 }
 
 .dropdown-span {

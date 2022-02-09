@@ -127,13 +127,15 @@ export class AgpTableComponent implements OnInit, OnChanges {
     this.multipleSelectMenuComponent.refresh();
 
     // calculate modal position
-    let modalLeft = $event.target.getBoundingClientRect().left - document.body.getBoundingClientRect().left;
-    const modalTop = $event.target.getBoundingClientRect().bottom;
     const dropdownMenuWidth = 400;
+    const extraPaddingLeft = 8;
+    const extraPaddingBottom = 6;
 
-    if (modalLeft + dropdownMenuWidth > window.innerWidth) {
-      modalLeft -= (modalLeft + dropdownMenuWidth - window.innerWidth);
-    }
+    const modalLeft = $event.target.getBoundingClientRect().right
+      - dropdownMenuWidth
+      - document.body.getBoundingClientRect().left
+      - extraPaddingLeft;
+    const modalTop = $event.target.getBoundingClientRect().bottom - extraPaddingBottom;
 
     this.renderer.setStyle(this.dropdownSpan.nativeElement, 'left', modalLeft + 'px');
     this.renderer.setStyle(this.dropdownSpan.nativeElement, 'top',  modalTop + 'px');
