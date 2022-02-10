@@ -1,7 +1,9 @@
+import pytest
 import os
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME, GenomicResource
 from dae.genomic_resources.score_statistics import Histogram, HistogramBuilder
 from dae.genomic_resources.test_tools import build_a_test_resource
+from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
 import numpy as np
 
 
@@ -90,10 +92,19 @@ position_score_test_config = {
 }
 
 
-def test_histogram_builder_position_resource():
+@pytest.fixture(scope="module")
+def client():
+    from dask.distributed import Client
+
+    client = Client(n_workers=4, threads_per_worker=1)
+    yield client
+    client.close()
+
+
+def test_histogram_builder_position_resource(client):
     res: GenomicResource = build_a_test_resource(position_score_test_config)
     hbuilder = HistogramBuilder(res)
-    hists = hbuilder.build()
+    hists = hbuilder.build(client)
     assert len(hists) == 2
 
     phastCons100way_hist = hists["phastCons100way"]
@@ -113,7 +124,7 @@ def test_histogram_builder_position_resource():
     assert phastCons5way_hist.bars.sum() == (76 + 2 + 3)
 
 
-def test_histogram_builder_allele_resource():
+def test_histogram_builder_allele_resource(client):
     res: GenomicResource = build_a_test_resource({
         GR_CONF_FILE_NAME: '''
             type: allele_score
@@ -143,7 +154,7 @@ def test_histogram_builder_allele_resource():
         '''
     })
     hbuilder = HistogramBuilder(res)
-    hists = hbuilder.build()
+    hists = hbuilder.build(client)
     assert len(hists) == 1
 
     freq_hist = hists["freq"]
@@ -156,7 +167,7 @@ def test_histogram_builder_allele_resource():
     assert freq_hist.bars.sum() == (1 + 3 + 2 + 2)
 
 
-def test_histogram_builder_np_resource():
+def test_histogram_builder_np_resource(client):
     res: GenomicResource = build_a_test_resource({
         GR_CONF_FILE_NAME: '''
             type: np_score
@@ -198,7 +209,7 @@ def test_histogram_builder_np_resource():
         '''
     })
     hbuilder = HistogramBuilder(res)
-    hists = hbuilder.build()
+    hists = hbuilder.build(client)
     assert len(hists) == 2
 
     cadd_raw_hist = hists["cadd_raw"]
@@ -217,7 +228,7 @@ def test_histogram_builder_np_resource():
     assert cadd_test_hist.bars.sum() == (4 + 6 + 22)
 
 
-def test_histogram_builder_no_explicit_min_max():
+def test_histogram_builder_no_explicit_min_max(client):
     res: GenomicResource = build_a_test_resource({
         GR_CONF_FILE_NAME: '''
             type: position_score
@@ -244,19 +255,23 @@ def test_histogram_builder_no_explicit_min_max():
             '''
     })
     hbuilder = HistogramBuilder(res)
-    hists = hbuilder.build()
+    hists = hbuilder.build(client)
     assert len(hists) == 1
 
     assert hists["phastCons100way"].x_min == 0
     assert hists["phastCons100way"].x_max == 1
 
 
-def test_histogram_builder_save(tmpdir):
-    res: GenomicResource = build_a_test_resource(position_score_test_config)
+def test_histogram_builder_save(tmpdir, client):
+    for fn, content in position_score_test_config.items():
+        with open(os.path.join(tmpdir, fn), 'wt') as f:
+            f.write(content)
+
+    res = GenomicResourceDirRepo("", tmpdir).get_resource("")
     hbuilder = HistogramBuilder(res)
-    hists = hbuilder.build()
-    hbuilder.save(hists, tmpdir)
+    hists = hbuilder.build(client)
+    hbuilder.save(hists, "")
 
     files = os.listdir(tmpdir)
     print(files)
-    assert len(files) == 4  # 2 histograms and 2 metadatas
+    assert len(files) == 6  # 2 config, 2 histograms and 2 metadatas

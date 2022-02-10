@@ -44,3 +44,5 @@ dependencies:
   - jinja2=3.0.1
   - snakemake-minimal=6.12.1
   - ijson=3.1.4
+  - dask=2022.1.0
+  - dask-kubernetes=2022.1.0

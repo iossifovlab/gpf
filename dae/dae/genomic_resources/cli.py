@@ -1,16 +1,22 @@
+import os
 import sys
 import logging
 import pathlib
 import argparse
 import time
 from typing import cast
+from urllib.parse import urlparse
 
 from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
+from dae.genomic_resources.url_repository import GenomicResourceURLRepo
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository, load_definition_file, \
     get_configured_definition
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 from dae.genomic_resources.score_statistics import HistogramBuilder
+
+from dask.distributed import Client, LocalCluster
+from dask_kubernetes import KubeCluster, make_pod_spec
 
 logger = logging.getLogger(__file__)
 
@@ -69,13 +75,26 @@ def cli_manage(cli_args=None):
     parser_hist.add_argument('-j', '--jobs', type=int, default=None,
                              help='Number of jobs to run in parallel. \
  Defaults to the number of processors on the machine')
+    parser_hist.add_argument('--kubernetes', default=False,
+                             action='store_true',
+                             help='Run computation in a kubernetes cluster')
+    parser_hist.add_argument('--envvars', nargs='*',
+                             help='Environment variables to pass to '
+                             'kubernetes workers')
+    parser_hist.add_argument('--container-image',
+                             default='registry.seqpipe.org/seqpipe-gpf:'
+                             'dask-for-hist-compute_fc69179-14',
+                             help='Docker image to use when submitting '
+                             'jobs to kubernetes')
+    parser_hist.add_argument('--image-pull-secrets', nargs='*',
+                             help='Secrets to use when pulling '
+                             'the docker image')
 
     args = parser.parse_args(cli_args)
 
     cmd, dr = args.command, args.repo_dir
 
-    dr = pathlib.Path(dr)
-    GRR = GenomicResourceDirRepo("", dr)
+    GRR = _create_repo(dr)
 
     if cmd == "index":
         for gr in GRR.get_all_resources():
@@ -96,10 +115,27 @@ def cli_manage(cli_args=None):
         if gr is None:
             print(f"Cannot find resource {args.resource}")
             sys.exit(1)
-        builder = HistogramBuilder(gr, args.jobs)
-        histograms = builder.build()
-        resource_path = pathlib.Path(args.resource)
-        hist_out_dir = dr / resource_path / 'histograms'
+        builder = HistogramBuilder(gr)
+        n_jobs = args.jobs or os.cpu_count()
+
+        if args.kubernetes:
+            env = _get_env_vars(args.envvars)
+            extra_pod_config = {}
+            if args.image_pull_secrets:
+                extra_pod_config['imagePullSecrets'] = [
+                    {'name': name} for name in args.image_pull_secrets
+                ]
+            pod_spec = make_pod_spec(image=args.container_image,
+                                     extra_pod_config=extra_pod_config)
+            cluster = KubeCluster(pod_spec, env=env)
+            cluster.scale(n_jobs)
+        else:
+            cluster = LocalCluster(n_workers=n_jobs, threads_per_worker=1)
+        with cluster:
+            with Client(cluster) as client:
+                histograms = builder.build(client)
+
+        hist_out_dir = 'histograms'
         print(f"Saving histograms in {hist_out_dir}")
         builder.save(histograms, hist_out_dir)
     else:
@@ -137,6 +173,23 @@ def cli_cache_repo(args=None):
     elapsed = time.time() - start
 
     logger.info(f"Cached all resources in {elapsed:.2f} secs")
+
+
+def _create_repo(dr):
+    repo_url = urlparse(dr)
+    if not repo_url.scheme or repo_url.scheme == 'file':
+        dr = pathlib.Path(dr)
+        GRR = GenomicResourceDirRepo("", dr)
+    else:
+        GRR = GenomicResourceURLRepo("", dr)
+    return GRR
+
+
+def _get_env_vars(var_names):
+    res = {}
+    for var_name in var_names:
+        res[var_name] = os.getenv(var_name)
+    return res
 
 
 if __name__ == '__main__':

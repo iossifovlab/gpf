@@ -18,3 +18,11 @@ def test_s3_url_vs_dir_results(genomic_resource_fixture_dir_repo,
     file_content = dir_repo.get_resource("hg19/CADD")\
         .get_file_content("CADD.bedgraph.gz.tbi")
     assert s3_content == file_content
+
+
+def test_writing_to_s3_repo(genomic_resource_fixture_s3_repo):
+    resource = genomic_resource_fixture_s3_repo.get_resource("hg19/CADD")
+    with resource.open_raw_file("test-file", "wt") as file:
+        file.write("Test")
+    s3_filesystem = genomic_resource_fixture_s3_repo.filesystem
+    assert s3_filesystem.exists("test-bucket/hg19/CADD/test-file")

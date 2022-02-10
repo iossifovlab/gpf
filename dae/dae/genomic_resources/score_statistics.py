@@ -5,8 +5,6 @@ import yaml
 import pandas as pd
 from typing import Dict
 
-from concurrent.futures import ProcessPoolExecutor
-
 from dae.genomic_resources.genomic_scores import open_score_from_resource
 
 logger = logging.getLogger(__name__)
@@ -132,11 +130,10 @@ class Histogram:
 
 
 class HistogramBuilder:
-    def __init__(self, resource, jobs=None) -> None:
+    def __init__(self, resource) -> None:
         self.resource = resource
-        self.jobs = jobs
 
-    def build(self) -> dict[str, Histogram]:
+    def build(self, client) -> dict[str, Histogram]:
         histogram_desc = self.resource.get_config().get("histograms", [])
         if len(histogram_desc) == 0:
             return {}
@@ -150,7 +147,8 @@ class HistogramBuilder:
         score = open_score_from_resource(self.resource)
         score_limits = {}
         if len(scores_missing_limits) > 0:
-            score_limits = self._score_min_max(score, scores_missing_limits)
+            score_limits = self._score_min_max(client, score,
+                                               scores_missing_limits)
 
         hist_configs = {}
         for hist_conf in histogram_desc:
@@ -161,14 +159,13 @@ class HistogramBuilder:
             hist_configs[hist_conf["score"]] = hist_conf
 
         chrom_histograms = []
-        with ProcessPoolExecutor(max_workers=self.jobs) as executor:
-            futures = []
-            chromosomes = score.get_all_chromosomes()
-            for chrom in chromosomes:
-                futures.append(executor.submit(self._do_hist,
-                                               chrom, hist_configs))
-            for future in futures:
-                chrom_histograms.append(future.result())
+        futures = []
+        chromosomes = score.get_all_chromosomes()
+        for chrom in chromosomes:
+            futures.append(client.submit(self._do_hist,
+                                         chrom, hist_configs))
+        for future in futures:
+            chrom_histograms.append(future.result())
 
         return self._merge_histograms(chrom_histograms)
 
@@ -198,18 +195,17 @@ class HistogramBuilder:
                     res[scr_id] = Histogram.merge(res[scr_id], histogram)
         return res
 
-    def _score_min_max(self, score, score_ids):
+    def _score_min_max(self, client, score, score_ids):
         logger.info(f"Calculating min max for {score_ids}")
 
         chromosomes = score.get_all_chromosomes()
         min_maxes = []
-        with ProcessPoolExecutor(max_workers=self.jobs) as executor:
-            futures = []
-            for chrom in chromosomes:
-                futures.append(executor.submit(self._min_max_for_chrom,
-                                               chrom, score_ids))
-            for future in futures:
-                min_maxes.append(future.result())
+        futures = []
+        for chrom in chromosomes:
+            futures.append(client.submit(self._min_max_for_chrom,
+                                         chrom, score_ids))
+        for future in futures:
+            min_maxes.append(future.result())
 
         res = {}
         for partial_res in min_maxes:
@@ -236,28 +232,23 @@ class HistogramBuilder:
                     res[scr_id][1] = max(v, res[scr_id][1])
         return res
 
-    # def build():
-    #     over all chromosomes:
-    #         run build_region in parallel
-    #     merge all histograms.
-
     def save(self, histograms, out_dir):
         histogram_desc = self.resource.get_config().get("histograms", [])
         configs = {hist['score']: hist for hist in histogram_desc}
 
-        os.makedirs(out_dir, exist_ok=True)
         for score, histogram in histograms.items():
             df = pd.DataFrame({'bars': histogram.bars,
                                'bins': histogram.bins[:-1]})
-            hist_name = f"{score}.csv"
-            df.to_csv(os.path.join(out_dir, hist_name), index=None)
+            hist_file = os.path.join(out_dir, f"{score}.csv")
+            with self.resource.open_raw_file(hist_file, "wt") as f:
+                df.to_csv(f, index=None)
 
             metadata = {
                 'resource': self.resource.get_id(),
                 'histogram_config': configs.get(score, {}),
             }
-            metadata_name = f"{score}.metadata.yaml"
-            with open(os.path.join(out_dir, metadata_name), "wt") as f:
+            metadata_file = os.path.join(out_dir, f"{score}.metadata.yaml")
+            with self.resource.open_raw_file(metadata_file, "wt") as f:
                 yaml.dump(metadata, f)
 
 
