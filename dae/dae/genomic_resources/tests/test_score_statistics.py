@@ -1,9 +1,11 @@
 import pytest
 import os
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME, GenomicResource
-from dae.genomic_resources.score_statistics import Histogram, HistogramBuilder
+from dae.genomic_resources.score_statistics import Histogram, \
+    HistogramBuilder, load_histograms
 from dae.genomic_resources.test_tools import build_a_test_resource
 from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
+from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 import numpy as np
 
 
@@ -275,3 +277,38 @@ def test_histogram_builder_save(tmpdir, client):
     files = os.listdir(tmpdir)
     print(files)
     assert len(files) == 6  # 2 config, 2 histograms and 2 metadatas
+
+
+def test_load_histograms(tmpdir, client):
+    repo_dir = os.path.join(tmpdir, "repo")
+    os.makedirs(repo_dir)
+    for fn, content in position_score_test_config.items():
+        with open(os.path.join(repo_dir, fn), 'wt') as f:
+            f.write(content)
+
+    repo = GenomicResourceDirRepo("", repo_dir)
+    res = repo.get_resource("")
+    hbuilder = HistogramBuilder(res)
+    hists = hbuilder.build(client)
+
+    os.makedirs(os.path.join(repo_dir, "histograms"))
+    hbuilder.save(hists, "histograms")
+
+    cache_dir = os.path.join(tmpdir, "cache")
+    os.makedirs(cache_dir)
+    cache_repo = GenomicResourceCachedRepo(repo, cache_dir)
+
+    loaded = load_histograms(cache_repo, "")
+
+    # assert histograms are correctly loaded
+    assert len(loaded) == len(hists)
+    for score_id, hist in hists.items():
+        actual = loaded[score_id]
+        assert (hist.bins == actual.bins).all()
+        assert (hist.bars == actual.bars).all()
+        assert hist.x_min == actual.x_min
+        assert hist.x_max == actual.x_max
+
+    # assert nothing is cached
+    files = os.listdir(cache_dir)
+    assert len(files) == 0
