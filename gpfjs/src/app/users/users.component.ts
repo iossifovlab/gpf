@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, HostListener, ViewChild, ElementRef, ChangeDetectorRef, EventEmitter, Output } from '@angular/core';
 import { UsersService } from './users.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Observable } from 'rxjs';
@@ -25,6 +25,8 @@ export class UsersComponent implements OnInit {
   @ViewChild('dialog') dialog: ElementRef;
   @ViewChild('emailInput') emailInput: ElementRef;
   @ViewChild('passwordInput') passwordInput: ElementRef;
+
+  @Output() public loginDropdownClickEvent = new EventEmitter();
 
   constructor(
     private modalService: NgbModal,
@@ -124,18 +126,24 @@ export class UsersComponent implements OnInit {
     }
   }
 
-  focusEmailInput() {
+  public loginDropdownClick(): void {
+    this.hideDropdown = !this.hideDropdown;
+    this.focusEmailInput();
+    this.loginDropdownClickEvent.emit();
+  }
+
+  public focusEmailInput(): void {
     this.changeDetectorRef.detectChanges();
     this.emailInput.nativeElement.focus();
   }
 
-  focusPasswordInput() {
+  public focusPasswordInput(): void {
     this.waitForPasswordInput().then(() => {
       this.passwordInput.nativeElement.focus();
     });
   }
 
-  async waitForPasswordInput() {
+  private async waitForPasswordInput(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
         if (this.passwordInput !== undefined) {
