@@ -81,6 +81,14 @@ def cli_manage(cli_args=None):
     parser_hist.add_argument('--envvars', nargs='*',
                              help='Environment variables to pass to '
                              'kubernetes workers')
+    parser_hist.add_argument('--container-image',
+                             default='registry.seqpipe.org/seqpipe-gpf:'
+                             'dask-for-hist-compute_fc69179-14',
+                             help='Docker image to use when submitting '
+                             'jobs to kubernetes')
+    parser_hist.add_argument('--image-pull-secrets', nargs='*',
+                             help='Secrets to use when pulling '
+                             'the docker image')
 
     args = parser.parse_args(cli_args)
 
@@ -112,7 +120,13 @@ def cli_manage(cli_args=None):
 
         if args.kubernetes:
             env = _get_env_vars(args.envvars)
-            pod_spec = make_pod_spec(image='seqpipe/seqpipe-gpf-dask:latest')
+            extra_pod_config = {}
+            if args.image_pull_secrets:
+                extra_pod_config['imagePullSecrets'] = [
+                    {'name': name} for name in args.image_pull_secrets
+                ]
+            pod_spec = make_pod_spec(image=args.container_image,
+                                     extra_pod_config=extra_pod_config)
             cluster = KubeCluster(pod_spec, env=env)
             cluster.scale(n_jobs)
         else:
