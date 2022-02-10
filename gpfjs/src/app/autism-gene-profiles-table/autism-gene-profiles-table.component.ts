@@ -34,6 +34,9 @@ export class AgpTableComponent implements OnInit, OnChanges {
   public geneInput: string = null;
   public searchKeystrokes$: Subject<string> = new Subject();
 
+  private baseRowHeight = 35; // px, this should match the height found in the table-row CSS class
+  private actualRowHeight: number; // row height as it appears on screen, accounting for zoom level
+
   public pageIndex = 0;
   private loadMoreGenes = true;
   private scrollLoadThreshold = 500;
@@ -45,14 +48,18 @@ export class AgpTableComponent implements OnInit, OnChanges {
   ) { }
 
   public ngOnInit(): void {
-    this.updateGenes();
+    this.calculateActualRowHeight();
+    const pagesToLoad = Math.ceil(window.innerHeight / (this.baseRowHeight * this.config.pageSize));
+    for (let i = 0; i < pagesToLoad; i++) {
+      this.updateGenes();
+    }
     
     this.searchKeystrokes$.pipe(
       debounceTime(250),
       distinctUntilChanged()
     ).subscribe(searchTerm => {
       this.search(searchTerm);
-    });
+    })
   }
 
   public ngOnChanges(): void {
@@ -73,17 +80,33 @@ export class AgpTableComponent implements OnInit, OnChanges {
     }
   }
 
+  @HostListener('window:resize')
+  public onWindowResize(): void {
+    this.calculateActualRowHeight();
+  }
+
   @HostListener('window:scroll')
   public onWindowScroll(): void {
-    // TODO Add optimization to infinite scroll
-    // FIXME Doesn't autoload rows when there's no scrollbar initially
     if (!this.ref.nativeElement.hidden) {
-      const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
-      const totalScrollHeight = document.documentElement.scrollHeight;
-      if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
+      const tableBodyOffset = document.getElementById('table-body').offsetTop;
+      const topRowIdx = Math.floor(Math.max(window.scrollY - tableBodyOffset, 0) / this.baseRowHeight);
+      const bottomRowIdx = Math.floor(window.innerHeight / this.baseRowHeight) + topRowIdx;
+      console.log(topRowIdx, bottomRowIdx);
+
+      if (topRowIdx % this.config.pageSize > 1) {
+        this.genes = this.genes.slice(topRowIdx - 10);
+      }
+
+      if (this.genes.length - bottomRowIdx <= this.config.pageSize) {
         this.updateGenes();
       }
     }
+  }
+
+  private calculateActualRowHeight() {
+    const roundedZoomLevel = Math.round((window.devicePixelRatio + Number.EPSILON) * 100) / 100
+    this.actualRowHeight = Math.round(((this.baseRowHeight * roundedZoomLevel) + Number.EPSILON) * 100) / 100
+    console.log(this.actualRowHeight);
   }
 
   public calculateHeaderLayout(): void {
@@ -118,6 +141,8 @@ export class AgpTableComponent implements OnInit, OnChanges {
       .subscribe(res => {
         this.genes = this.genes.concat(res);
         this.loadMoreGenes = true;
+        document.getElementById('scroll-padder-bottom').style.height = `${(this.config.pageCount - this.pageIndex) * this.config.pageSize * this.actualRowHeight}px`;
+        // document.getElementById('scroll-padder-top').style.height = `${this.pageIndex * this.config.pageSize * this.actualRowHeight}px`;
       });
   }
 

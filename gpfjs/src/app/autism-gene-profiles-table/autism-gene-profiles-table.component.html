@@ -22,18 +22,23 @@
   <div class="header table-row">
     <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: config.columns }"></ng-container>
   </div>
-  
-  <div *ngFor="let row of genes"
-    class="table-row"
-    [ngClass]="{'row-highlight': highlightedGenes.has(row[geneSymbolColumnId])}">
-    <span *ngFor="let column of leaves"
-      class="cell row-cell"
-      [ngClass]="{'clickable': column.clickable !== null && row[column.id]}"
-      [attr.title]="row[column.id]"
-      (click)="$event.ctrlKey && !column.clickable ? toggleHighlightGene(row[geneSymbolColumnId]) : emitClickEvent($event, row, column)"
-      (middleclick)="column.clickable ? emitClickEvent($event, row, column, false) : toggleHighlightGene(row[geneSymbolColumnId])"
-      >{{ row[column.id] }}</span
-    >
+ 
+  <div id="table-body">
+    <div id="scroll-padder-top"></div>
+    <div *ngFor="let row of genes; let i = index"
+      class="table-row table-body-row"
+      [ngClass]="{'row-highlight': highlightedGenes.has(row[geneSymbolColumnId])}">
+      <span *ngFor="let column of leaves"
+        class="cell row-cell"
+        [ngClass]="{'clickable': column.clickable !== null && row[column.id]}"
+        [attr.title]="row[column.id]"
+        (click)="$event.ctrlKey && !column.clickable ? toggleHighlightGene(row[geneSymbolColumnId]) : emitClickEvent($event, row, column)"
+        (middleclick)="column.clickable ? emitClickEvent($event, row, column, false) : toggleHighlightGene(row[geneSymbolColumnId])"
+      >
+        {{ i }} | {{ row[column.id] }}
+      </span>
+    </div>
+    <div id="scroll-padder-bottom"></div>
   </div>
 </div>
 

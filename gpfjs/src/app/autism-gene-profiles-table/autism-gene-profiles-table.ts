@@ -99,4 +99,6 @@ export class AgpTableConfig {
   public defaultDataset: string;
   @Type(() => Column)
   public columns: Column[];
+  public pageSize: number;
+  public pageCount: number;
 }
