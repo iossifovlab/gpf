@@ -120,7 +120,7 @@ class LiftOverAnnotator(Annotator):
         if attributes:
             return attributes
         attributes = copy.deepcopy(self.DEFAULT_ANNOTATION["attributes"])
-        logger.info(
+        logger.debug(
             f"using default annotation for liftover "
             f"{self.config.get('chain')}: "
             f"{attributes}")
@@ -183,7 +183,7 @@ class LiftOverAnnotator(Annotator):
             logger.warning(
                 f"{self.annotator_type()} not ready to annotate CNV variants: "
                 f"{annotatable}")
-            return {}
+            return {"liftover_annotatable": None}
 
         lo_allele = self.liftover_allele(cast(VCFAllele, annotatable))
         if lo_allele is None:
