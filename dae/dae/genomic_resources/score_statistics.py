@@ -3,6 +3,8 @@ import numpy as np
 import logging
 import yaml
 import pandas as pd
+from typing import Dict
+
 from concurrent.futures import ProcessPoolExecutor
 
 from dae.genomic_resources.genomic_scores import open_score_from_resource
@@ -186,7 +188,7 @@ class HistogramBuilder:
         return histograms
 
     @staticmethod
-    def _merge_histograms(chrom_histograms):
+    def _merge_histograms(chrom_histograms) -> Dict[str, Histogram]:
         res = {}
         for histograms in chrom_histograms:
             for scr_id, histogram in histograms.items():

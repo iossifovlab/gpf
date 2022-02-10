@@ -97,7 +97,9 @@ class GenomicScore(abc.ABC):
     def get_resource_id(self):
         return self.config["id"]
 
-    def _fetch_lines(self, chrom, pos_begin, pos_end):
+    def _fetch_lines(
+            self, chrom: str,
+            pos_begin: int, pos_end: int) -> Generator[ScoreLine, None, None]:
         records = self.table.get_records_in_region(
             chrom, pos_begin, pos_end)
 
@@ -151,16 +153,16 @@ class PositionScore(GenomicScore):
             raise ValueError(
                 f"{chrom} is not among the available chromosomes.")
 
-        line = list(self._fetch_lines(chrom, position, position))
-        if not line:
+        lines = list(self._fetch_lines(chrom, position, position))
+        if not lines:
             return None
 
-        if len(line) != 1:
+        if len(lines) != 1:
             raise ValueError(
                 f"The resource {self.score_id()} has "
-                f"more than one ({len(line)}) lines for position "
+                f"more than one ({len(lines)}) lines for position "
                 f"{chrom}:{position}")
-        line = line[0]
+        line = lines[0]
 
         requested_scores = scores if scores else self.get_all_scores()
         return {scr: line.get_score_value(scr) for scr in requested_scores}
