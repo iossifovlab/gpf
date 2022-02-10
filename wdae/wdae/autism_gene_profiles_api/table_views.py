@@ -94,9 +94,10 @@ class TableConfigurationView(QueryBaseView):
                         ]
                     set_name = \
                         person_set_collection.person_sets[set_id].name
+                    stats = person_set_collection.get_stats()[set_id]
                     dataset_col["columns"].append(column(
                         f"datasets.{dataset_id}.{set_id}",
-                        set_name,
+                        f"{set_name} ({stats['children']})",
                         columns=[column(
                             f"datasets.{dataset_id}.{set_id}.{statistic.id}",
                             statistic.display_name,
