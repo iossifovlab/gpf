@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from .repository import GenomicResourceRepo
 from .repository import GenomicResource
@@ -6,7 +6,7 @@ from .repository import GenomicResource
 
 class GenomicResourceGroupRepo(GenomicResourceRepo):
     def __init__(self, children, repo_id=None):
-        self.children = children
+        self.children: List[GenomicResourceRepo] = children
         self.repo_id = repo_id
 
     def get_all_resources(self):
@@ -16,8 +16,8 @@ class GenomicResourceGroupRepo(GenomicResourceRepo):
 
     def get_resource(self, resource_id, version_constraint=None,
                      genomic_repository_id=None) -> Optional[GenomicResource]:
-        for chRepo in self.children:
-            gr = chRepo.get_resource(
+        for child_repo in self.children:
+            gr = child_repo.get_resource(
                 resource_id, version_constraint, genomic_repository_id)
             if gr:
                 return gr

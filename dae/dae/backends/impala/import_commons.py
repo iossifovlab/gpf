@@ -5,11 +5,11 @@ import argparse
 import time
 import logging
 import shutil
-import fsspec
+import fsspec  # type: ignore
 from urllib.parse import urlparse
 
 import toml
-from box import Box
+from box import Box  # type: ignore
 
 from typing import Optional, Any
 

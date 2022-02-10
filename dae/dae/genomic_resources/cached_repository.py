@@ -2,7 +2,7 @@ import os
 import pathlib
 import logging
 
-from typing import Optional, cast
+from typing import Optional, cast, Dict
 from concurrent.futures import ThreadPoolExecutor
 
 from .repository import GenomicResource
@@ -17,9 +17,9 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         logger.debug(
             f"creating cached GRR with cache directory: {cache_dir}")
 
-        self.child = child
+        self.child: GenomicResourceRepo = child
         self.cache_dir = pathlib.Path(cache_dir)
-        self.cache_repos = {}
+        self.cache_repos: Dict[str, GenomicResourceDirRepo] = {}
 
     def get_all_resources(self):
         yield from self.child.get_all_resources()
@@ -27,7 +27,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         for cache_repo in self.cache_repos.values():
             yield from cache_repo.get_all_resources()
 
-    def _get_or_create_cache_dir_repo(self, repo_id):
+    def _get_or_create_cache_dir_repo(self, repo_id) -> GenomicResourceDirRepo:
         if repo_id not in self.cache_repos:
             cached_repo_dir = self.cache_dir / repo_id
             logger.debug(

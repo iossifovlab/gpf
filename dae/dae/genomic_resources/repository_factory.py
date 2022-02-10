@@ -5,7 +5,7 @@ import yaml
 import pathlib
 import logging
 
-from typing import Type, Optional
+from typing import Type, Optional, cast
 
 from .repository import GenomicResourceRepo
 from .repository import GenomicResourceRealRepo
@@ -32,7 +32,7 @@ DEFAULT_DEFINITION = {
 
 def load_definition_file(filename) -> dict:
     with open(filename) as F:
-        return yaml.safe_load(F)
+        return cast(dict, yaml.safe_load(F))
 
 
 GRR_DEFINITION_FILE_ENV = "GRR_DEFINITION_FILE"

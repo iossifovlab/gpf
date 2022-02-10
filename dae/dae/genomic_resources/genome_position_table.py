@@ -2,12 +2,15 @@ import abc
 import collections
 import pysam  # type: ignore
 import os
+import logging
 
-from typing import Optional
+from typing import Optional, Tuple, List, Any, Deque
 
 from box import Box  # type: ignore
 
 from dae.genomic_resources.repository import GenomicResource
+
+logger = logging.getLogger(__name__)
 
 
 class GenomicPositionTable(abc.ABC):
@@ -265,11 +268,209 @@ class FlatGenomicPositionTable(GenomicPositionTable):
         pass
 
 
+class LineBuffer:
+
+    def __init__(self):
+        self.deque: Deque = collections.deque()
+        self.maxlen = 0
+        self.find_count = 0
+        self.maxdepth = 0
+        self.fetch_count = 0
+        self.append_count = 0
+        self.prune_count = 0
+
+    def __len__(self):
+        return len(self.deque)
+
+    def clear(self):
+        self.deque.clear()
+    
+    def append(self, chrom: str, pos_begin: int, pos_end: int, line: Any):
+        self.append_count += 1
+
+        if len(self.deque) > 0 and self.peek_first()[0] != chrom:
+            self.clear()
+        self.deque.append((chrom, pos_begin, pos_end, line))
+        if len(self.deque) > self.maxlen:
+            self.maxlen = len(self.deque)
+
+    def peek_first(self):
+        return self.deque[0]
+
+    def pop_first(self):
+        return self.deque.popleft()
+
+    def peek_last(self):
+        if len(self.deque) == 0:
+            return None, None, None, None
+        return self.deque[-1]
+
+    def region(self):
+        if len(self.deque) == 0:
+            return None, None, None
+
+        first_chrom, first_begin, first_end, _ = self.peek_first()
+        if len(self.deque) == 1:
+            return first_chrom, first_begin, first_end
+
+        last_chrom, _, last_end, _ = self.peek_last()
+        if first_chrom != last_chrom:
+            self.clear()
+            return None, None, None
+        if first_end > last_end:
+            self.clear()
+            return None, None, None
+        return first_chrom, first_begin, last_end
+
+    def prune(self, chrom: str, pos: int) -> None:
+        self.prune_count += 1
+
+        if len(self.deque) == 0:
+            return
+
+        first_chrom, first_beg, _, _ = self.peek_first()
+        if chrom != first_chrom:
+            self.clear()
+            return
+
+        while len(self.deque) > 0:
+            _, first_beg, first_end, _ = self.deque[0]
+
+            if pos <= first_end:
+                break
+            self.deque.popleft()
+
+    def contains(self, chrom: str, pos: int) -> bool:
+        bchrom, bbeg, bend = self.region()
+
+        if chrom == bchrom and pos >= bbeg and pos <= bend:
+            return True
+        return False
+
+    def find_index(self, chrom: str, pos: int) -> int:
+        self.find_count += 1
+
+        if len(self.deque) == 0:
+            return -1
+        if not self.contains(chrom, pos):
+            return -1
+        
+        if len(self.deque) == 1:
+            return 0
+        
+        first_index = 0
+        last_index = len(self.deque) - 1
+        depth = 0
+        while True:
+            depth += 1
+            mid_index = (last_index - first_index) // 2 + first_index
+            if last_index <= first_index:
+                break
+
+            _, mid_beg, mid_end, _ = self.deque[mid_index]
+            if pos >= mid_beg and pos <= mid_end:
+                break
+
+            if depth >= 100:
+                logger.error(
+                    f"chrom={chrom}; pos={pos}; region={self.region()}; "
+                    f"first_index={first_index}; last_index={last_index}; "
+                    f"mid_index={mid_index}; "
+                    f"mid_beg={mid_beg}; mid_end={mid_end}; "
+                )
+                logger.error(f"{self.deque}")
+
+            if pos < mid_beg:
+                last_index = mid_index - 1
+            else:
+                first_index = mid_index + 1
+
+        while mid_index > 0:
+            _, prev_beg, prev_end, _ = self.deque[mid_index - 1]
+            if pos > prev_beg:
+                break
+            mid_index -= 1
+
+        for index in range(mid_index, len(self.deque)):
+            _, t_beg, t_end, _ = self.deque[index]
+            if pos >= t_beg and pos <= t_end:
+                mid_index = index
+                break
+            if t_beg >= pos:
+                mid_index = index
+                break
+
+        if depth > self.maxdepth:
+            self.maxdepth = depth
+
+        return mid_index
+
+    def fetch(self, chrom, pos_begin, pos_end):
+        self.fetch_count += 1
+
+        beg_index = self.find_index(chrom, pos_begin)
+        if beg_index == -1:
+            return
+
+        for index in range(beg_index, len(self.deque)):
+            row = self.deque[index]
+            rchrom, rbeg, rend, rline = row
+            if rend < pos_begin:
+                continue
+            if pos_end is not None and rbeg > pos_end:
+                break
+            yield row
+
+    def dump_stats(self, resource_id):
+        logger.debug(
+            f"score {resource_id}; "
+            f"buffer stats: len={len(self.deque)} "
+            f"(maxlen={self.maxlen}); "
+            f"append={self.append_count}; "
+            f"prune={self.prune_count}; "
+            f"find={self.find_count} (depth={self.maxdepth}); "
+            f"fetch={self.fetch_count}; "
+            f"region={self.region()}"
+        )
+
+
 class TabixGenomicPositionTable(GenomicPositionTable):
+    BUFFER_MAXSIZE = 20_000
+
     def __init__(self, genomic_resource: GenomicResource, table_definition,
                  tabix_file: pysam.TabixFile):
-        self.tabix_file: pysam.TabixFile = tabix_file
         super().__init__(genomic_resource, table_definition)
+
+        self.jump_threshold: int = 2_500
+        if "jump_threshold" in self.definition:
+            jt = self.definition["jump_threshold"]
+            if jt == "none":
+                self.jump_threshold = 0
+            else:
+                self.jump_threshold = min(int(jt), self.BUFFER_MAXSIZE//2)
+
+        self.tabix_file: pysam.TabixFile = tabix_file
+        self.tabix_iterator = None
+    
+        self._last_call: Tuple[str, int, Optional[int]] = "", -1, -1
+        self.buffer = LineBuffer()
+
+        # stats counters
+        self.empty_count = 0
+        self.buffer_count = 0
+        self.sequential_count = 0
+        self.direct_count = 0
+
+    def dump_stats(self):
+        # self.buffer.dump_stats(self.genomic_resource.resource_id)
+
+        # logger.debug(
+        #     f"score {self.genomic_resource.resource_id}; "
+        #     f"empty/buffer/sequential/direct ("
+        #     f"{self.empty_count}/{self.buffer_count}/"
+        #     f"{self.sequential_count}/{self.direct_count}); "
+        # )
+        pass
 
     def load(self):
         if self.header_mode == "file":
@@ -284,34 +485,207 @@ class TabixGenomicPositionTable(GenomicPositionTable):
     def get_file_chromosomes(self):
         return self.tabix_file.contigs
 
+    def _map_file_chrom(self, chrom: str) -> str:
+        """
+        Transfroms chromosome (contig) name to the chromosomes (contigs)
+        used in the score table
+        """
+        if self.chrom_map:
+            return self.chrom_map.get(chrom)
+        return chrom
+
+    def _map_result_chrom(self, chrom: str) -> str:
+        """
+        Transfroms chromosome (contig) from score table to the 
+        chromosomes (contigs) used in the genome corrdinates.
+        """
+        if self.chrom_map:
+            return self.rev_chrom_map[chrom]
+        else:
+            return chrom
+
+    def _transform_result(self, line):
+        result = list(line)
+        rchrom = self._map_result_chrom(result[self.chrom_column_i])
+        if rchrom is None:
+            return None
+        result[self.chrom_column_i] = rchrom
+        return tuple(result)
+
     def get_all_records(self):
         for line in self.tabix_file.fetch(parser=pysam.asTuple()):
             if self.chrom_map:
                 fchrom = line[self.chrom_column_i]
                 if fchrom not in self.rev_chrom_map:
                     continue
-                linel = list(line)
-                linel[self.chrom_column_i] = self.rev_chrom_map[fchrom]
-                yield tuple(linel)
+                result = list(line)
+                result[self.chrom_column_i] = self.rev_chrom_map[fchrom]
+                yield tuple(result)
             else:
                 yield tuple(line)
 
-    def get_records_in_region(self, ch: str, beg: int = None, end: int = None):
-        if ch not in self.get_chromosomes():
-            raise ValueError(f"The chromosome {ch} is not part of the table.")
-        if beg:
-            beg -= 1
-        if self.chrom_map:
-            fch = self.chrom_map[ch]
-            for line in self.tabix_file.fetch(fch, beg, end,
-                                              parser=pysam.asTuple()):
-                linel = list(line)
-                linel[self.chrom_column_i] = self.rev_chrom_map[fch]
-                yield tuple(linel)
+    def _should_use_sequential(self, chrom, pos):
+        if self.jump_threshold == 0:
+            False
+
+        assert chrom is not None
+        if len(self.buffer) == 0:
+            return False
+
+        last_chrom, last_begin, last_end, _ = self.buffer.peek_last()
+        if chrom != last_chrom:
+            return False
+        if pos < last_end:
+            return False
+
+        if pos - last_end >= self.jump_threshold:
+            return False
+        return True
+
+    def _gen_from_tabix(self, chrom, pos, buffering=True):
+        try:
+            while True:
+                line = next(self.tabix_iterator)  # type: ignore
+                line_chrom = line[self.chrom_column_i]
+                line_beg = int(line[self.pos_begin_column_i])
+                line_end = int(line[self.pos_end_column_i])
+
+                if buffering:
+                    self.buffer.append(line_chrom, line_beg, line_end, line)
+
+                if line_chrom != chrom:
+                    return
+                if pos is not None and line_beg > pos:
+                    return
+                result = self._transform_result(line)
+                if result:
+                    yield line_chrom, line_beg, line_end, result
+        except StopIteration:
+            pass
+
+    def _sequential_rewind(self, chrom, pos):
+        assert len(self.buffer) > 0
+        assert self.jump_threshold > 0
+
+        last_chrom, last_begin, last_end, _ = self.buffer.peek_last()
+        assert chrom == last_chrom
+        assert pos >= last_begin
+
+        for row in self._gen_from_tabix(chrom, pos, buffering=True):
+            last_chrom, last_begin, last_end, _ = row
+        if pos >= last_end:
+            return True
         else:
-            for line in self.tabix_file.fetch(ch, beg, end,
-                                              parser=pysam.asTuple()):
-                yield tuple(line)
+            return False
+
+    def _gen_from_buffer_and_tabix(self, chrom, beg, end):
+        for row in self.buffer.fetch(chrom, beg, end):
+            line_chrom, line_beg, line_end, line = row
+            result = self._transform_result(line)
+            if result:
+                yield line_chrom, line_beg, line_end, result
+        _, last_beg, last_end, _ = self.buffer.peek_last()
+        if end < last_end:
+            return
+
+        yield from self._gen_from_tabix(chrom, end, buffering=True)
+
+    def get_records_in_region(
+            self, chrom: str, beg: int = None, end: int = None):
+
+        if chrom not in self.get_chromosomes():
+            logger.error(
+                f"chromosome {chrom} not found in the tabix file "
+                f"from {self.genomic_resource.resource_id}; "
+                f"{self.definition}")
+            raise ValueError(
+                f"The chromosome {chrom} is not part of the table.")
+
+        fchrom = self._map_file_chrom(chrom)
+        buffering = True
+        if beg is None:
+            beg = 1
+        if end is None:
+            buffering = False
+        elif end - beg > self.BUFFER_MAXSIZE:
+            buffering = False
+
+        self.dump_stats()
+        
+        prev_call_chrom, prev_call_beg, prev_call_end = self._last_call
+
+        if not buffering or len(self.buffer) == 0 or prev_call_chrom != fchrom:
+            # no buffering
+            self._last_call = "", -1, None
+        else:
+            self._last_call = fchrom, beg, end
+
+            first_chrom, first_beg, first_end, _ = self.buffer.peek_first()
+            if first_chrom == fchrom and prev_call_end is not None \
+                    and beg > prev_call_end and end < first_beg:
+
+                assert first_chrom == prev_call_chrom
+                self.empty_count += 1
+                # logger.info(
+                #     f"score {self.genomic_resource.resource_id}; "
+                #     f"EMPTY ({self.empty_count} times); "
+                #     f"current call is {fchrom, beg, end}; "
+                #     f"prev call was "
+                #     f"{prev_call_chrom, prev_call_beg, prev_call_end}; "
+                #     f"buffer region is {self.buffer.region()}; "
+                # )
+                return
+
+            elif self.buffer.contains(fchrom, beg):
+                self.buffer_count += 1
+                # logger.info(
+                #     f"score {self.genomic_resource.resource_id}; "
+                #     f"BUFFER ({self.buffer_count} times); "
+                #     f"current call is {fchrom, beg, end}; "
+                #     f"buffer region is {self.buffer.region()}; "
+                # )
+
+                for row in self._gen_from_buffer_and_tabix(fchrom, beg, end):
+                    _, _, _, line = row
+                    yield line
+
+                self.buffer.prune(fchrom, beg)
+                return
+
+            elif self._should_use_sequential(fchrom, beg):
+                self.sequential_count += 1
+                # logger.info(
+                #     f"score {self.genomic_resource.resource_id}; "
+                #     f"SEQUENTIAL ({self.sequential_count} times); "
+                #     f"current call is {fchrom, beg, end}; "
+                #     f"buffer region is {self.buffer.region()}; "
+                # )
+                self._sequential_rewind(fchrom, beg)
+
+                for row in self._gen_from_buffer_and_tabix(fchrom, beg, end):
+                    _, _, _, line = row
+                    yield line
+
+                self.buffer.prune(fchrom, beg)
+                return
+
+        self.tabix_iterator = self.tabix_file.fetch(
+            fchrom, beg - 1, None, parser=pysam.asTuple())
+        self.buffer.clear()
+
+        self.direct_count += 1
+        # logger.info(
+        #     f"score {self.genomic_resource.resource_id}; "
+        #     f"DIRECT ({self.direct_count} times); "
+        #     f"current call is {fchrom, beg, end}; "
+        #     f"buffer region is {self.buffer.region()}; "
+        # )
+
+        for row in self._gen_from_tabix(fchrom, end, buffering=buffering):
+            _, _, _, line = row
+            yield line
+
+        self.buffer.prune(fchrom, beg)
 
     def close(self):
         self.tabix_file.close()

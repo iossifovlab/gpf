@@ -4,7 +4,7 @@ import pandas as pd
 import math
 import json
 
-from box import Box
+from box import Box  # type:ignore
 
 from dae.genomic_resources.reference_genome import ReferenceGenome, \
     open_reference_genome_from_resource
@@ -29,9 +29,9 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.configuration.schemas.gene_info import gene_info_conf
 from dae.configuration.schemas.genomic_scores import genomic_scores_schema
-from dae.configuration.schemas.autism_gene_profile import (
+from dae.configuration.schemas.autism_gene_profile import \
     autism_gene_tool_config
-)
+
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.annotation.annotation_factory import build_annotation_pipeline

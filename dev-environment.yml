@@ -31,3 +31,4 @@ dependencies:
   - types-setuptools=57.4.7
   - sqlalchemy-stubs=0.4
   - data-science-types=0.2.23
+  - types-toml=0.10.3

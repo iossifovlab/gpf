@@ -4,7 +4,8 @@ import abc
 import logging
 from numbers import Number
 
-from typing import Generator, List, Tuple, cast
+from typing import Generator, List, Tuple, cast, Type, Dict, Any
+
 
 from . import GenomicResource
 from .repository import GenomicResourceRealRepo
@@ -46,6 +47,8 @@ class ScoreLine:
     def get_pos_end(self):
         return self.get_special_column_value("pos_end")
 
+    def __repr__(self):
+        return f"ScoreLine({self.values})"
 
 class GenomicScore(abc.ABC):
     def __init__(self, config, table, score_columns, special_columns):
@@ -63,9 +66,10 @@ class GenomicScore(abc.ABC):
     def score_id(self):
         return self.get_config().get("id")
 
-    def get_default_annotation(self):
+    def get_default_annotation(self) -> Dict[str, Any]:
         if "default_annotation" in self.get_config():
-            return self.get_config()["default_annotation"]
+            return cast(
+                Dict[str, Any], self.get_config()["default_annotation"])
         else:
             return {
                 "attributes": [{"source": score, "destination": score}
@@ -89,6 +93,9 @@ class GenomicScore(abc.ABC):
 
     def _get_header(self):
         return self.table.get_column_names()
+
+    def get_resource_id(self):
+        return self.config["id"]
 
     def _fetch_lines(self, chrom, pos_begin, pos_end):
         records = self.table.get_records_in_region(
@@ -132,10 +139,6 @@ class GenomicScore(abc.ABC):
 
 
 class PositionScore(GenomicScore):
-    def __init__(self, resourceId: str, version: tuple,
-                 repo: GenomicResourceRealRepo,
-                 config=None):
-        super().__init__(resourceId, version, repo, config)
 
     @staticmethod
     def get_resource_type():
@@ -192,12 +195,6 @@ class PositionScore(GenomicScore):
             aggregators[scr_id] = build_aggregator(aggregator_type)
 
         for line in score_lines:
-            logger.debug(
-                f"pos_end: {pos_end}; line.pos_end: {line.get_pos_end()}; "
-                f"pos_begin: {pos_begin}; "
-                f"line.pos_begin: {line.get_pos_begin()}"
-            )
-
             line_pos_begin, line_pos_end = self._line_to_begin_end(line)
 
             for scr_id, aggregator in aggregators.items():
@@ -460,9 +457,10 @@ def _configure_special_columns(table, extra_special_columns=None):
 
 
 def _open_genomic_score_from_resource(
-        clazz,
+        clazz: Type[GenomicScore],
         resource: GenomicResource,
         extra_special_columns=None) -> GenomicScore:
+
     config = resource.get_config()
     config["id"] = resource.resource_id
 

@@ -1,7 +1,7 @@
 import logging
 import copy
 
-from typing import Dict, List, cast
+from typing import Dict, List, cast, Any
 
 from .annotatable import Annotatable, VCFAllele
 from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
@@ -61,16 +61,16 @@ class VariantScoreAnnotatorBase(Annotator):
             })
         return result
 
-    def get_annotation_config(self) -> List[Dict]:
+    def get_annotation_config(self) -> List[Dict[str, Any]]:
         if self.config.get("attributes"):
-            return self.config["attributes"]
+            return cast(List[Dict[str, Any]], self.config["attributes"])
 
         if self.score.get_default_annotation():
             attributes = self.score.get_default_annotation()["attributes"]
-            logger.info(
-                f"using default annotation for {self.score.score_id()}: "
+            logger.debug(
+                f"using default score annotation for {self.score.score_id()}: "
                 f"{attributes}")
-            return attributes
+            return cast(List[Dict[str, Any]], attributes)
         logger.warning(
             f"can't find annotation config for resource: "
             f"{self.score.score_id()}")
@@ -364,6 +364,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
             return attributes
 
         if annotatable is None:
+            logger.info("annotatable is None")
             self._scores_not_found(attributes)
             return attributes
 
