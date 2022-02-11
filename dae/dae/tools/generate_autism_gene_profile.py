@@ -404,7 +404,7 @@ def main(gpf_instance=None, argv=None):
 
                 if statistic.variant_types:
                     variant_types = [
-                        Allele.Type.from_name(statistic.variant_types).repr()
+                        allele_type_from_name(statistic.variant_types).repr()
                     ]
                     kwargs["variant_type"] = " or ".join(variant_types)
 
