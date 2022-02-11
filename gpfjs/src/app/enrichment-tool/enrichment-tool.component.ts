@@ -64,7 +64,6 @@ export class EnrichmentToolComponent implements OnInit {
         this.loadingService.setLoadingStop();
       },
       error => {
-        console.error(error);
         this.loadingService.setLoadingStop();
       },
       () => {

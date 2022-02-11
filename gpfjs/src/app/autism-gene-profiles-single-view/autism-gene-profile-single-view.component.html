@@ -1,3 +1,4 @@
+<div *ngIf="!contentState.error">
 <div
   *ngIf="gene$ | async as gene"
   [ngClass]="{'compare-div': isInGeneCompare}"
@@ -146,4 +147,25 @@
       </div>
     </div>
   </ng-container>
+</div>
+</div>
+<div *ngIf="contentState.status">
+  <div style="align-items: center;" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true" [ngStyle]="{'display': errorModal ? 'flex' : 'none', 'opacity': 1}">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div style="margin-bottom: 0px;" class="modal-header alert alert-danger">
+          <h5 class="modal-title">Error</h5>
+          <button type="button" class="close" (click)="this.errorModal = false;" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div style="margin-bottom: 0px;width:400px;" class="modal-body alert alert-danger">
+          {{contentState.error}}
+        </div>
+        <div style="margin-bottom: 0px;flex-direction: column;" class="modal-footer alert alert-danger">
+          <button type="button" class="btn btn-secondary" (click)="this.errorModal = false;this.router.navigate(['/autism-gene-profiles']);">Back</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import {
   AgpDatasetPersonSet, AgpDatasetStatistic, AgpGene,
   AgpGenomicScores, AgpSingleViewConfig, AgpEffectType
@@ -71,14 +71,26 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     private store: Store
   ) { }
 
+  private contentState: {
+    error: string,
+    status: boolean
+  };
+
+  private errorModal: boolean = false;
+
   public ngOnInit(): void {
+    this.contentState = {
+      error: '',
+      status: false
+    };
+
     this.gene$ = this.autismGeneProfilesService.getGene(this.geneSymbol);
     this.gene$.pipe(
       switchMap(gene => {
         gene.geneSets.forEach(element => {
           if (element.match(/sfari/i)) {
             this.isGeneInSFARI = true;
-          }
+          } 
         });
 
         let scores: string;
@@ -102,6 +114,12 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
       switchMap(gene => zip(of(gene), this.datasetsService.getDataset(this.config.defaultDataset)))
     ).subscribe(([gene, dataset]) => {
       this.setLinks(this.geneSymbol, gene, dataset.genome);
+    }, (error) => {
+      this.contentState = {
+        error: this.geneSymbol + ' is not found in the genome!',
+        status: true
+      };
+      this.errorModal = true;
     });
   }
 
