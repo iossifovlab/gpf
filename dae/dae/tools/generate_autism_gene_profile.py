@@ -9,7 +9,7 @@ from dae.autism_gene_profile.statistic import AGPStatistic
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.utils.effect_utils import expand_effect_types
 from dae.variants.attributes import Role
-from dae.variants.core import Allele
+from dae.variants.variant import allele_type_from_name
 
 logger = logging.getLogger(__file__)
 
@@ -202,7 +202,7 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
 
             if statistic.get("variant_types"):
                 variant_types = {
-                    Allele.Type.from_name(t)
+                    allele_type_from_name(t)
                     for t in statistic.variant_types
                 }
                 do_count = do_count and \
