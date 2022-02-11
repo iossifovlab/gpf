@@ -224,3 +224,25 @@ def test_normalize_allele_annotator_pipeline_schema(grr_fixture):
     assert "normalized_allele" in schema
     assert "normalized_allele" not in schema.public_fields
     assert "normalized_allele" in schema.internal_fields
+
+
+@pytest.mark.parametrize("pos,ref,alt,npos, nref, nalt", [
+    (8, "C", "C", 8, "C", "C"),
+    (1, "G", "G", 1, "G", "G"),
+    (1, "G", "G", 1, "G", "G"),
+    (1, "GGGCA", "GGGCA", 1, "G", "G"),
+    (4, "CA", "CA", 4, "C", "C"),
+])
+def test_normalize_novariant_allele(
+        example_2_genome, pos, ref, alt, npos, nref, nalt):
+    genome = example_2_genome
+    allele = VCFAllele("1", pos, ref, alt)
+
+    check_ref = genome.get_sequence("1", pos, pos + len(ref) - 1)
+    assert ref == check_ref
+
+    normalized = normalize_allele(allele, genome)
+
+    assert normalized.pos == npos
+    assert normalized.ref == nref
+    assert normalized.alt == nalt

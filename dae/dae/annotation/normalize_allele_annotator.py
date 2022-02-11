@@ -20,14 +20,20 @@ def normalize_allele(allele: VCFAllele, genome: ReferenceGenome) -> VCFAllele:
     """
     while True:
         changed = False
+        logger.debug("normalizing allele: %s", allele)
 
         if len(allele.ref) > 0 and len(allele.alt) > 0 \
                 and allele.ref[-1] == allele.alt[-1]:
-            allele = VCFAllele(
-                allele.chrom, allele.pos, allele.ref[:-1], allele.alt[:-1])
-            changed = True
+            logger.debug("shrink from right: %s", allele)
+            if allele.ref == allele.alt and len(allele.ref) == 1:
+                logger.warning("no variant: %s", allele)
+            else:
+                allele = VCFAllele(
+                    allele.chrom, allele.pos, allele.ref[:-1], allele.alt[:-1])
+                changed = True
 
         if len(allele.ref) == 0 or len(allele.alt) == 0:
+            logger.debug("moving left allele: %s", allele)
             left = genome.get_sequence(
                 allele.chrom, allele.pos - 1, allele.pos - 1)
             allele = VCFAllele(
@@ -131,9 +137,6 @@ class NormalizeAlleleAnnotator(Annotator):
                 "internal": True,
             }
         ]
-        logger.debug(
-            f"using default annotation for normalized allele: "
-            f"{attributes}")
         return attributes
 
     def _do_annotate(

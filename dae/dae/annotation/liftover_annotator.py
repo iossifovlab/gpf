@@ -120,10 +120,6 @@ class LiftOverAnnotator(Annotator):
         if attributes:
             return attributes
         attributes = copy.deepcopy(self.DEFAULT_ANNOTATION["attributes"])
-        logger.debug(
-            f"using default annotation for liftover "
-            f"{self.config.get('chain')}: "
-            f"{attributes}")
         return attributes
 
     def liftover_allele(self, allele: VCFAllele):
@@ -168,6 +164,10 @@ class LiftOverAnnotator(Annotator):
                         lo_alt = f"{lo_ref[0]}{lo_alt}"
 
             result = VCFAllele(lo_chrom, lo_pos, lo_ref, lo_alt)
+            if lo_ref == lo_alt:
+                logger.warning(
+                    f"allele %s mapped to no variant: %s", allele, result)
+                return None
 
             return result
         except Exception as ex:
