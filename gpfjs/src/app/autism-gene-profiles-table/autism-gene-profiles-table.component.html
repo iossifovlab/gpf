@@ -35,6 +35,10 @@
       >{{ row[column.id] }}</span
     >
   </div>
+
+  <div *ngIf="geneSearchInput.value && genes.length === 0 && showSearchWarning" id="search-warning">
+    <span>Nothing found</span>
+  </div>
 </div>
 
 <ng-template #recursiveListTmpl let-columns="columns">

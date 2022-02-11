@@ -37,6 +37,7 @@ export class AgpTableComponent implements OnInit, OnChanges {
   public pageIndex = 0;
   private loadMoreGenes = true;
   private scrollLoadThreshold = 500;
+  public showSearchWarning = false;
 
   public constructor(
     private autismGeneProfilesService: AgpTableService,
@@ -112,12 +113,15 @@ export class AgpTableComponent implements OnInit, OnChanges {
   public updateGenes(): void {
     this.pageIndex++;
     this.loadMoreGenes = false;
+    this.showSearchWarning = false;
+
     this.autismGeneProfilesService
       .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
       .pipe(take(1))
       .subscribe(res => {
         this.genes = this.genes.concat(res);
         this.loadMoreGenes = true;
+        this.showSearchWarning = true;
       });
   }
 
