@@ -30,8 +30,8 @@
       class="cell row-cell"
       [ngClass]="{'clickable': column.clickable !== null && row[column.id]}"
       [attr.title]="row[column.id]"
-      (click)="$event.ctrlKey && !column.clickable ? toggleHighlightGene(row[geneSymbolColumnId]) : emitClickEvent($event, row, column)"
-      (middleclick)="column.clickable ? emitClickEvent($event, row, column, false) : toggleHighlightGene(row[geneSymbolColumnId])"
+      (click)="handleCellClick($event, row, column)"
+      (middleclick)="handleCellClick($event, row, column)"
       >{{ row[column.id] }}</span
     >
   </div>

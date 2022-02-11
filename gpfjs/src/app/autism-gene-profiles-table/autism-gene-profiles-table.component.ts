@@ -175,6 +175,16 @@ export class AgpTableComponent implements OnInit, OnChanges {
     }
   }
 
+  public handleCellClick($event, row, column): void {
+    if (column.clickable && row[column.id] && ($event.which === 2 || $event.ctrlKey)) {
+      this.emitClickEvent($event, row, column, false);
+    } else if ($event.which === 2 || $event.ctrlKey) {
+      this.toggleHighlightGene(row[this.geneSymbolColumnId])
+    } else {
+      this.emitClickEvent($event, row, column);
+    }
+  }
+
   public toggleHighlightGene(geneSymbol: string): void {
     if (this.highlightedGenes.has(geneSymbol)) {
       this.highlightedGenes.delete(geneSymbol);
