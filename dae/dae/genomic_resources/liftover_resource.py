@@ -76,8 +76,6 @@ def load_liftover_chain_from_resource(
             f"{config}")
         raise ValueError(f"wrong resource type: {config}")
 
-    print(config)
-
     filename: str = config["filename"]
     chain_file: TextIO = resource.open_raw_file(
         filename, "rb", uncompress=True)

@@ -1,4 +1,12 @@
 import pytest
+from typing import cast
+
+from dae.annotation.annotatable import VCFAllele
+
+from dae.genomic_resources.reference_genome import \
+    open_reference_genome_from_resource
+from dae.genomic_resources.liftover_resource import \
+    load_liftover_chain_from_resource
 
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.variants.core import Allele
@@ -83,3 +91,43 @@ def test_pipeline_liftover(
     allele = Allele.build_vcf_allele("chr1", 69094, "G", "A")
     attributes = pipeline.annotate(allele.get_annotatable())
     assert attributes.get("mpc") is not None
+
+
+@pytest.mark.parametrize("chrom,pos,ref,alt", [
+    ("1", 13199996, "C", "T"),
+    ("1", 13047220, "C", "G"),
+    ("1", 12892619, "C", "T"),
+    ("1", 2690489, "C", "G"),
+])
+def test_liftover_annotator_denovo_db_examples(
+        gpf_instance_2013, chrom, pos, ref, alt):
+
+    config = {
+        "annotator_type": "liftover_annotator",
+        "chain": "liftover/hg19ToHg38",
+        "target_genome": "hg38/genomes/GRCh38-hg38",
+    }
+
+    grr = gpf_instance_2013.grr
+
+    target_genome_resource = grr.get_resource("hg38/genomes/GRCh38-hg38")
+    assert target_genome_resource is not None
+    target_genome = open_reference_genome_from_resource(target_genome_resource)
+    assert target_genome is not None
+
+    lifover_chain_resource = grr.get_resource("liftover/hg19ToHg38")
+    assert lifover_chain_resource is not None
+    lifover_chain = load_liftover_chain_from_resource(lifover_chain_resource)
+    assert lifover_chain is not None
+
+    liftover_annotator = LiftOverAnnotator(
+        config, lifover_chain, target_genome)
+    assert liftover_annotator is not None
+
+    allele = VCFAllele(chrom, pos, ref, alt)
+
+    result = liftover_annotator.annotate(allele, {})
+    print(result)
+
+    liftover_allele = cast(VCFAllele, result.get("liftover_annotatable"))
+    assert liftover_allele is None
