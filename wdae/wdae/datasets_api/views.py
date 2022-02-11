@@ -54,7 +54,7 @@ class DatasetView(QueryBaseView):
 
             res = [
                 StudyWrapperBase.build_genotype_data_all_datasets(
-                    dataset.config,
+                    dataset.config
                 )
                 for dataset in datasets
             ]
@@ -63,10 +63,10 @@ class DatasetView(QueryBaseView):
                     res,
                     key=lambda desc: desc["name"]
                 )
-
             res = [self.augment_accessibility(ds, user) for ds in res]
             res = [self.augment_with_groups(ds) for ds in res]
             res = [self.augment_with_parents(ds) for ds in res]
+            
             return Response({"data": res})
         else:
             dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
@@ -80,6 +80,12 @@ class DatasetView(QueryBaseView):
                 res = self.augment_accessibility(res, user)
                 res = self.augment_with_groups(res)
                 res = self.augment_with_parents(res)
+
+                if(res["access_rights"] == False):
+                    res = StudyWrapperBase.build_genotype_data_all_datasets(dataset.config)
+                    res = self.augment_accessibility(res, user)
+                    res = self.augment_with_groups(res)
+                    res = self.augment_with_parents(res)
 
                 return Response({"data": res})
             return Response(
