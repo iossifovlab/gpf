@@ -44,7 +44,8 @@ class TableConfigurationView(QueryBaseView):
 
         response = {
             "defaultDataset": configuration.get("default_dataset"),
-            "columns": []
+            "columns": [],
+            "pageSize": self.gpf_instance._autism_gene_profile_db.PAGE_SIZE,
         }
         if len(configuration) == 0:
             return Response(response)
