@@ -100,5 +100,4 @@ export class AgpTableConfig {
   @Type(() => Column)
   public columns: Column[];
   public pageSize: number;
-  public pageCount: number;
 }

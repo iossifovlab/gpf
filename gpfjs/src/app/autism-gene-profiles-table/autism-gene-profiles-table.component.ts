@@ -3,9 +3,10 @@ import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 import { debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import { forkJoin, Subject } from 'rxjs';
 import { AgpTableConfig, Column } from './autism-gene-profiles-table';
 import { AgpTableService } from './autism-gene-profiles-table.service';
+import * as _ from 'lodash';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-table',
@@ -24,6 +25,7 @@ export class AgpTableComponent implements OnInit, OnChanges {
 
   public leaves: Column[];
   public genes = [];
+  public shownRows: number[] = []; // indexes
   public highlightedGenes: Set<string> = new Set();
 
   public geneSymbolColumnId = "geneSymbol"
@@ -35,11 +37,9 @@ export class AgpTableComponent implements OnInit, OnChanges {
   public searchKeystrokes$: Subject<string> = new Subject();
 
   private baseRowHeight = 35; // px, this should match the height found in the table-row CSS class
-  private actualRowHeight: number; // row height as it appears on screen, accounting for zoom level
 
   public pageIndex = 0;
   private loadMoreGenes = true;
-  private scrollLoadThreshold = 500;
 
   public constructor(
     private autismGeneProfilesService: AgpTableService,
@@ -48,11 +48,7 @@ export class AgpTableComponent implements OnInit, OnChanges {
   ) { }
 
   public ngOnInit(): void {
-    this.calculateActualRowHeight();
-    const pagesToLoad = Math.ceil(window.innerHeight / (this.baseRowHeight * this.config.pageSize));
-    for (let i = 0; i < pagesToLoad; i++) {
-      this.updateGenes();
-    }
+    this.fillTable();
     
     this.searchKeystrokes$.pipe(
       debounceTime(250),
@@ -80,33 +76,35 @@ export class AgpTableComponent implements OnInit, OnChanges {
     }
   }
 
-  @HostListener('window:resize')
-  public onWindowResize(): void {
-    this.calculateActualRowHeight();
-  }
-
   @HostListener('window:scroll')
   public onWindowScroll(): void {
     if (!this.ref.nativeElement.hidden) {
       const tableBodyOffset = document.getElementById('table-body').offsetTop;
       const topRowIdx = Math.floor(Math.max(window.scrollY - tableBodyOffset, 0) / this.baseRowHeight);
       const bottomRowIdx = Math.floor(window.innerHeight / this.baseRowHeight) + topRowIdx;
-      console.log(topRowIdx, bottomRowIdx);
-
-      if (topRowIdx % this.config.pageSize > 1) {
-        this.genes = this.genes.slice(topRowIdx - 10);
-      }
-
-      if (this.genes.length - bottomRowIdx <= this.config.pageSize) {
-        this.updateGenes();
-      }
+      this.updateShownGenes(topRowIdx - 5, bottomRowIdx + 5);
     }
   }
 
-  private calculateActualRowHeight() {
-    const roundedZoomLevel = Math.round((window.devicePixelRatio + Number.EPSILON) * 100) / 100
-    this.actualRowHeight = Math.round(((this.baseRowHeight * roundedZoomLevel) + Number.EPSILON) * 100) / 100
-    console.log(this.actualRowHeight);
+  private fillTable() {
+    const viewportPageCount = Math.ceil(window.innerHeight / (this.baseRowHeight * this.config.pageSize));
+    const agpRequests = [];
+    this.genes = [];
+    
+    for (let i = 1; i <= viewportPageCount; i++) {
+      agpRequests.push(
+        this.autismGeneProfilesService
+          .getGenes(i, this.geneInput, this.sortBy, this.orderBy)
+          .pipe(take(1))
+      )
+    }
+    this.pageIndex = viewportPageCount;
+    forkJoin(agpRequests).subscribe(res => {
+      for (const genes of res) {
+        this.genes = this.genes.concat(genes);
+      }
+      this.updateShownGenes(0, viewportPageCount * this.config.pageSize);
+    })
   }
 
   public calculateHeaderLayout(): void {
@@ -129,20 +127,28 @@ export class AgpTableComponent implements OnInit, OnChanges {
     this.geneInput = value;
     this.genes = [];
     this.pageIndex = 0;
-    this.updateGenes();
+    this.fillTable();
+  }
+
+  private updateShownGenes(fromRow: number, toRow: number): void {
+    this.shownRows = [];
+    for (let i = fromRow; i <= toRow; i++) {
+      this.shownRows.push(i);
+    }
+    if (toRow + 10 >= this.genes.length && this.loadMoreGenes) {
+      this.loadMoreGenes = false;
+      this.updateGenes();
+    }
   }
 
   public updateGenes(): void {
     this.pageIndex++;
-    this.loadMoreGenes = false;
     this.autismGeneProfilesService
       .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
       .pipe(take(1))
       .subscribe(res => {
         this.genes = this.genes.concat(res);
         this.loadMoreGenes = true;
-        document.getElementById('scroll-padder-bottom').style.height = `${(this.config.pageCount - this.pageIndex) * this.config.pageSize * this.actualRowHeight}px`;
-        // document.getElementById('scroll-padder-top').style.height = `${this.pageIndex * this.config.pageSize * this.actualRowHeight}px`;
       });
   }
 
@@ -186,8 +192,7 @@ export class AgpTableComponent implements OnInit, OnChanges {
     );
 
     sortButton.emitSort();
-
-    this.updateGenes();
+    this.fillTable();
   }
 
   public resetSortButtons(): void {
