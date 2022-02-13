@@ -13,7 +13,7 @@
   background-color: #fafafa;
 }
 
-.table-row:hover {
+.table-row:hover:not(#search-warning) {
   background-color: #edf3ff;
 }
 
@@ -136,4 +136,20 @@
   transform: rotate(180deg);
   max-height: 150px;
   text-align: left;
+}
+
+#search-warning {
+  display: table;
+  height: 44px;
+  background-color: #fafafa;
+  border-bottom: 1px solid #ddd;
+  width: 100%;
+}
+
+#search-warning span {
+  font-style: italic;
+  display: table-cell;
+  vertical-align: middle;
+  padding-left: 12px;
+  opacity: 75%;
 }

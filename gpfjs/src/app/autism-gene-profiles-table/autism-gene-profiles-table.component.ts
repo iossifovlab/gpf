@@ -40,6 +40,7 @@ export class AgpTableComponent implements OnInit, OnChanges {
 
   public pageIndex = 0;
   private loadMoreGenes = true;
+  public showSearchWarning = false;
 
   public constructor(
     private autismGeneProfilesService: AgpTableService,
@@ -136,19 +137,21 @@ export class AgpTableComponent implements OnInit, OnChanges {
       this.shownRows.push(i);
     }
     if (toRow + 10 >= this.genes.length && this.loadMoreGenes) {
-      this.loadMoreGenes = false;
       this.updateGenes();
     }
   }
 
   public updateGenes(): void {
     this.pageIndex++;
+    this.loadMoreGenes = false;
+    this.showSearchWarning = false;
     this.autismGeneProfilesService
       .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
       .pipe(take(1))
       .subscribe(res => {
         this.genes = this.genes.concat(res);
         this.loadMoreGenes = true;
+        this.showSearchWarning = true;
       });
   }
 
@@ -202,6 +205,16 @@ export class AgpTableComponent implements OnInit, OnChanges {
 
     if (sortButton) {
       sortButton.resetHideState();
+    }
+  }
+
+  public handleCellClick($event, row, column): void {
+    if (column.clickable && row[column.id] && ($event.which === 2 || $event.ctrlKey)) {
+      this.emitClickEvent($event, row, column, false);
+    } else if ($event.which === 2 || $event.ctrlKey) {
+      this.toggleHighlightGene(row[this.geneSymbolColumnId])
+    } else {
+      this.emitClickEvent($event, row, column);
     }
   }
 

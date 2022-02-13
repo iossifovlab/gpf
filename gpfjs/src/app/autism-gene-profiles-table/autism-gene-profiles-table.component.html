@@ -22,7 +22,6 @@
   <div class="header table-row">
     <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: config.columns }"></ng-container>
   </div>
- 
   <div id="table-body">
     <div *ngFor="let row of genes; let i = index"
       class="table-row table-body-row"
@@ -32,13 +31,16 @@
           class="cell row-cell"
           [ngClass]="{'clickable': column.clickable !== null && row[column.id]}"
           [attr.title]="row[column.id]"
-          (click)="$event.ctrlKey && !column.clickable ? toggleHighlightGene(row[geneSymbolColumnId]) : emitClickEvent($event, row, column)"
-          (middleclick)="column.clickable ? emitClickEvent($event, row, column, false) : toggleHighlightGene(row[geneSymbolColumnId])"
+          (click)="handleCellClick($event, row, column)"
+          (middleclick)="handleCellClick($event, row, column)"
+          >{{ row[column.id] }}</span
         >
-          {{ row[column.id] }}
-        </span>
       </ng-container>
     </div>
+  </div>
+
+  <div *ngIf="geneSearchInput.value && genes.length === 0 && showSearchWarning" id="search-warning">
+    <span>Nothing found</span>
   </div>
 </div>
 
