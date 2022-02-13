@@ -3,9 +3,10 @@ import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 import { debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import { forkJoin, Subject } from 'rxjs';
 import { AgpTableConfig, Column } from './autism-gene-profiles-table';
 import { AgpTableService } from './autism-gene-profiles-table.service';
+import * as _ from 'lodash';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-table',
@@ -24,6 +25,7 @@ export class AgpTableComponent implements OnInit, OnChanges {
 
   public leaves: Column[];
   public genes = [];
+  public shownRows: number[] = []; // indexes
   public highlightedGenes: Set<string> = new Set();
 
   public geneSymbolColumnId = "geneSymbol"
@@ -34,9 +36,10 @@ export class AgpTableComponent implements OnInit, OnChanges {
   public geneInput: string = null;
   public searchKeystrokes$: Subject<string> = new Subject();
 
+  private baseRowHeight = 35; // px, this should match the height found in the table-row CSS class
+
   public pageIndex = 0;
   private loadMoreGenes = true;
-  private scrollLoadThreshold = 500;
   public showSearchWarning = false;
 
   public constructor(
@@ -46,19 +49,18 @@ export class AgpTableComponent implements OnInit, OnChanges {
   ) { }
 
   public ngOnInit(): void {
-    this.updateGenes();
-    
     this.searchKeystrokes$.pipe(
       debounceTime(250),
       distinctUntilChanged()
     ).subscribe(searchTerm => {
       this.search(searchTerm);
-    });
+    })
   }
 
   public ngOnChanges(): void {
     if (this.config) {
       this.calculateHeaderLayout();
+      this.fillTable();
     }
   }
 
@@ -76,15 +78,33 @@ export class AgpTableComponent implements OnInit, OnChanges {
 
   @HostListener('window:scroll')
   public onWindowScroll(): void {
-    // TODO Add optimization to infinite scroll
-    // FIXME Doesn't autoload rows when there's no scrollbar initially
     if (!this.ref.nativeElement.hidden) {
-      const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
-      const totalScrollHeight = document.documentElement.scrollHeight;
-      if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
-        this.updateGenes();
-      }
+      const tableBodyOffset = document.getElementById('table-body').offsetTop;
+      const topRowIdx = Math.floor(Math.max(window.scrollY - tableBodyOffset, 0) / this.baseRowHeight);
+      const bottomRowIdx = Math.floor(window.innerHeight / this.baseRowHeight) + topRowIdx;
+      this.updateShownGenes(topRowIdx - 5, bottomRowIdx + 5);
     }
+  }
+
+  private fillTable() {
+    const viewportPageCount = Math.ceil(window.innerHeight / (this.baseRowHeight * this.config.pageSize));
+    const agpRequests = [];
+    this.genes = [];
+    
+    for (let i = 1; i <= viewportPageCount; i++) {
+      agpRequests.push(
+        this.autismGeneProfilesService
+          .getGenes(i, this.geneInput, this.sortBy, this.orderBy)
+          .pipe(take(1))
+      )
+    }
+    this.pageIndex = viewportPageCount;
+    forkJoin(agpRequests).subscribe(res => {
+      for (const genes of res) {
+        this.genes = this.genes.concat(genes);
+      }
+      this.updateShownGenes(0, viewportPageCount * this.config.pageSize);
+    })
   }
 
   public calculateHeaderLayout(): void {
@@ -107,14 +127,23 @@ export class AgpTableComponent implements OnInit, OnChanges {
     this.geneInput = value;
     this.genes = [];
     this.pageIndex = 0;
-    this.updateGenes();
+    this.fillTable();
+  }
+
+  private updateShownGenes(fromRow: number, toRow: number): void {
+    this.shownRows = [];
+    for (let i = fromRow; i <= toRow; i++) {
+      this.shownRows.push(i);
+    }
+    if (toRow + 10 >= this.genes.length && this.loadMoreGenes) {
+      this.updateGenes();
+    }
   }
 
   public updateGenes(): void {
     this.pageIndex++;
     this.loadMoreGenes = false;
     this.showSearchWarning = false;
-
     this.autismGeneProfilesService
       .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
       .pipe(take(1))
@@ -165,8 +194,7 @@ export class AgpTableComponent implements OnInit, OnChanges {
     );
 
     sortButton.emitSort();
-
-    this.updateGenes();
+    this.fillTable();
   }
 
   public resetSortButtons(): void {

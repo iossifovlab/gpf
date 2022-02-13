@@ -22,18 +22,21 @@
   <div class="header table-row">
     <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: config.columns }"></ng-container>
   </div>
-  
-  <div *ngFor="let row of genes"
-    class="table-row"
-    [ngClass]="{'row-highlight': highlightedGenes.has(row[geneSymbolColumnId])}">
-    <span *ngFor="let column of leaves"
-      class="cell row-cell"
-      [ngClass]="{'clickable': column.clickable !== null && row[column.id]}"
-      [attr.title]="row[column.id]"
-      (click)="handleCellClick($event, row, column)"
-      (middleclick)="handleCellClick($event, row, column)"
-      >{{ row[column.id] }}</span
-    >
+  <div id="table-body">
+    <div *ngFor="let row of genes; let i = index"
+      class="table-row table-body-row"
+      [ngClass]="{'row-highlight': highlightedGenes.has(row[geneSymbolColumnId])}">
+      <ng-container *ngIf="shownRows.indexOf(i) !== -1">
+        <span *ngFor="let column of leaves"
+          class="cell row-cell"
+          [ngClass]="{'clickable': column.clickable !== null && row[column.id]}"
+          [attr.title]="row[column.id]"
+          (click)="handleCellClick($event, row, column)"
+          (middleclick)="handleCellClick($event, row, column)"
+          >{{ row[column.id] }}</span
+        >
+      </ng-container>
+    </div>
   </div>
 
   <div *ngIf="geneSearchInput.value && genes.length === 0 && showSearchWarning" id="search-warning">
