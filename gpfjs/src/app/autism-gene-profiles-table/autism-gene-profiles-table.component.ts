@@ -49,8 +49,6 @@ export class AgpTableComponent implements OnInit, OnChanges {
   ) { }
 
   public ngOnInit(): void {
-    this.fillTable();
-    
     this.searchKeystrokes$.pipe(
       debounceTime(250),
       distinctUntilChanged()
@@ -62,6 +60,7 @@ export class AgpTableComponent implements OnInit, OnChanges {
   public ngOnChanges(): void {
     if (this.config) {
       this.calculateHeaderLayout();
+      this.fillTable();
     }
   }
 
