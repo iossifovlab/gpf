@@ -27,6 +27,9 @@ export class Column {
       if (this.parent !== null && this.parent.visibleChildren.length === 0) {
         this.parent.visibility = false;
       }
+      if (this.visibleChildren.length) {
+        this.visibleChildren.map(child => child.visibility = false);
+      }
     } else {
       if (this.parent !== null && this.parent.visibleChildren.length === 1) {
         this.parent.visibility = true;
