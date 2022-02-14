@@ -51,6 +51,10 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
         for mnfst in mnfst:
             yield mnfst['name'], int(mnfst['size']), mnfst['time']
 
+    def file_exists(self, genomic_resource, filename):
+        file_url = self.get_file_url(genomic_resource, filename)
+        return self.filesystem.exists(file_url)
+
     def get_file_url(self, genomic_resource, filename):
         return self.url + "/" + genomic_resource.get_genomic_resource_dir() + \
             "/" + filename

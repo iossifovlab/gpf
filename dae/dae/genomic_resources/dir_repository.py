@@ -58,6 +58,10 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         yield from find_genomic_resource_files_helper(
             content_dict, my_leaf_to_size_and_time)
 
+    def file_exists(self, genomic_resource, filename):
+        full_file_path = self.get_file_path(genomic_resource, filename)
+        return os.path.exists(full_file_path)
+
     def open_raw_file(self, genomic_resource: GenomicResource, filename: str,
                       mode=None, uncompress=False, _seekable=False):
         fullFilePath = self.get_file_path(genomic_resource, filename)

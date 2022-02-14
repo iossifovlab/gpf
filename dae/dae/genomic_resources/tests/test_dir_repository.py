@@ -138,3 +138,21 @@ def test_dir_repository_resource_update_delete(tmp_path):
 
     dir_repo2.update_resource(gr1)
     assert gr1.get_manifest() == gr2.get_manifest()
+
+
+def test_dir_repository_file_exists(tmp_path):
+    src_repo = GenomicResourceEmbededRepo("src", content={
+        "one": {
+            GR_CONF_FILE_NAME: "",
+            "data.txt": "alabala",
+            "alabala.txt": "alabala",
+        },
+    })
+
+    repo = GenomicResourceDirRepo('dir', directory=tmp_path / "t1")
+    repo.store_all_resources(src_repo)
+    res = repo.get_resource("one")
+
+    assert repo.file_exists(res, GR_CONF_FILE_NAME)
+    assert not repo.file_exists(res, "missing_file")
+    assert res.file_exists("data.txt")

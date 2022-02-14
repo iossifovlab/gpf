@@ -21,6 +21,13 @@ class GenomicResourceEmbededRepo(GenomicResourceRealRepo):
         for grId, grVr in find_genomic_resources_helper(self.content):
             yield self.build_genomic_resource(grId, grVr)
 
+    def file_exists(self, genomic_resource, filename):
+        try:
+            self.get_file_content(genomic_resource, filename, uncompress=False)
+            return True
+        except Exception:
+            return False
+
     def get_file_content(self, genomic_resource: GenomicResource, filename,
                          uncompress=True):
         content = self._get_file_content_and_time(

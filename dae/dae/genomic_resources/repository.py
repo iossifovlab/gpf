@@ -176,6 +176,12 @@ class GenomicResource:
         '''
         return self.repo.get_files(self)
 
+    def file_exists(self, filename):
+        '''
+        Returns whether filename exists in this resource
+        '''
+        return self.repo.file_exists(self, filename)
+
     def get_md5_sum(self, filename):
         with self.open_raw_file(filename, "rb") as infile:
             md5_hash = hashlib.md5()
@@ -318,6 +324,9 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
 
     @abc.abstractmethod
     def get_files(self, genomicResource):
+        raise Exception("Should not be called!")
+
+    def file_exists(self, genomic_resource, filename):
         raise Exception("Should not be called!")
 
     @abc.abstractmethod

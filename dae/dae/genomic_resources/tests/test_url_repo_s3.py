@@ -26,3 +26,12 @@ def test_writing_to_s3_repo(genomic_resource_fixture_s3_repo):
         file.write("Test")
     s3_filesystem = genomic_resource_fixture_s3_repo.filesystem
     assert s3_filesystem.exists("test-bucket/hg19/CADD/test-file")
+
+
+def test_url_repository_file_exists(genomic_resource_fixture_s3_repo):
+    repo = genomic_resource_fixture_s3_repo
+    res = repo.get_resource("hg19/CADD")
+
+    assert repo.file_exists(res, "CADD.bedgraph.gz.tbi")
+    assert not repo.file_exists(res, "missing_file")
+    assert res.file_exists("CADD.bedgraph.gz.tbi")
