@@ -275,8 +275,14 @@ def test_histogram_builder_save(tmpdir, client):
     hbuilder.save(hists, "")
 
     files = os.listdir(tmpdir)
-    print(files)
-    assert len(files) == 6  # 2 config, 2 histograms and 2 metadatas
+    assert len(files) == 7  # 2 config, 2 histograms, 2 metadatas, 1 manifest
+
+    # assert the manifest file is updated
+    manifest = res.load_manifest()
+    manifest_dict = {x['name']: x for x in manifest}
+    for score_id in ['phastCons5way', 'phastCons100way']:
+        assert f'{score_id}.csv' in manifest_dict
+        assert f'{score_id}.metadata.yaml' in manifest_dict
 
 
 def test_load_histograms(tmpdir, client):

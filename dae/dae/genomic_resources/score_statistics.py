@@ -251,6 +251,9 @@ class HistogramBuilder:
             with self.resource.open_raw_file(metadata_file, "wt") as f:
                 yaml.dump(metadata, f)
 
+        # update manifest with newly written files
+        self.resource.update_manifest()
+
 
 def load_histograms(repo, resource_id, version_constraint=None,
                     genomic_repository_id=None, path="histograms"):
