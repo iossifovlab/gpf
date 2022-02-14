@@ -318,3 +318,15 @@ def test_load_histograms(tmpdir, client):
     # assert nothing is cached
     files = os.listdir(cache_dir)
     assert len(files) == 0
+
+
+def test_histogram_builder_build_hashes():
+    res: GenomicResource = build_a_test_resource(position_score_test_config)
+    hbuilder = HistogramBuilder(res)
+    hashes = hbuilder._build_hashes()
+    assert len(hashes) == 2
+
+    hashes_again = hbuilder._build_hashes()
+    assert hashes["phastCons100way"] == hashes_again["phastCons100way"]
+    assert hashes["phastCons5way"] == hashes_again["phastCons5way"]
+    assert hashes["phastCons100way"] != hashes["phastCons5way"]

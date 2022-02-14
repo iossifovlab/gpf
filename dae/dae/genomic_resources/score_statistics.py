@@ -1,3 +1,4 @@
+import hashlib
 import os
 import numpy as np
 import logging
@@ -232,9 +233,31 @@ class HistogramBuilder:
                     res[scr_id][1] = max(v, res[scr_id][1])
         return res
 
+    def _build_hashes(self):
+        config = self.resource.get_config()
+        table_filename = config["table"]["filename"]
+        manifest = self.resource.get_manifest()
+        table_hash = ''
+        for rec in manifest:
+            if rec["name"] == table_filename:
+                table_hash = rec["md5"]
+                break
+
+        histogram_desc = config.get("histograms", [])
+        hist_configs = {hist['score']: hist for hist in histogram_desc}
+        hashes = {}
+        for score_id, hist_config in hist_configs.items():
+            md5_hash = hashlib.md5()
+            hist_hash_obj = {"table_hash": table_hash, "config": hist_config}
+            md5_hash.update(yaml.dump(hist_hash_obj).encode("utf-8"))
+            hashes[score_id] = md5_hash.hexdigest()
+
+        return hashes
+
     def save(self, histograms, out_dir):
         histogram_desc = self.resource.get_config().get("histograms", [])
         configs = {hist['score']: hist for hist in histogram_desc}
+        hist_hashes = self._build_hashes()
 
         for score, histogram in histograms.items():
             df = pd.DataFrame({'bars': histogram.bars,
@@ -246,6 +269,7 @@ class HistogramBuilder:
             metadata = {
                 'resource': self.resource.get_id(),
                 'histogram_config': configs.get(score, {}),
+                'md5': hist_hashes[score]
             }
             metadata_file = os.path.join(out_dir, f"{score}.metadata.yaml")
             with self.resource.open_raw_file(metadata_file, "wt") as f:
