@@ -95,25 +95,22 @@
   </gpf-multiple-select-menu>
 </span>
 
-<div id="highlighted-genes" *ngIf="highlightedGenes.size > 0">
-  <div class="btn-group" *ngFor="let gene of highlightedGenes" style="margin:2px" role="group">
-    <button 
-      type="button"
-      class="btn btn-primary"
-      (click)="emitCreateTabEvent(gene, true)"
-      >{{ gene }}</button
-    >
-    <button 
-      type="button"
-      class="btn btn-primary"
-      (click)="toggleHighlightGene(gene)"
-      >X</button
-    >
+<div id="compare-genes-modal" *ngIf="highlightedGenes.size >= 2">
+  <div *ngFor="let gene of highlightedGenes"
+    class="btn-group"
+    style="margin: 4px; background-color: none"
+    role="group">
+    <button type="button" style="border: 1px solid #ddd; padding-right: 0; width: 145px; background: none">
+      <span (click)="emitCreateTabEvent(gene, true)" class="compare-genes-gene-name clickable">{{ gene }}</span>
+      <button (click)="toggleHighlightGene(gene)" class="compare-gene-close font-weight-light" type="button">×</button>
+    </button>
   </div>
+
   <br>
+
   <button
-    class="btn btn-success"
-    style="margin: 2px; width: 100%; height: 48px"
+    id="compare-genes-compare-button"
+    class="btn btn-default"
     (click)="emitCreateTabEvent()">Compare</button
   >
 </div>
