@@ -161,7 +161,11 @@ export class AgpTableComponent implements OnInit, OnChanges {
 
     this.ngbDropdownMenu.dropdown.toggle();
 
-    this.multipleSelectMenuComponent.columns = column.columns;
+    if (column.id === this.geneSymbolColumnId) {
+      this.multipleSelectMenuComponent.columns = this.config.columns.filter(col => col.id !== this.geneSymbolColumnId);
+    } else {
+      this.multipleSelectMenuComponent.columns = column.columns;
+    }
     this.multipleSelectMenuComponent.refresh();
 
     // calculate modal position
@@ -169,14 +173,20 @@ export class AgpTableComponent implements OnInit, OnChanges {
     const extraPaddingLeft = 8;
     const extraPaddingBottom = 6;
 
-    const modalLeft = $event.target.getBoundingClientRect().right
+    let modalLeft = $event.target.getBoundingClientRect().right
       - dropdownMenuWidth
       - document.body.getBoundingClientRect().left
       - extraPaddingLeft;
+    modalLeft = Math.max(0 + extraPaddingLeft, modalLeft);
     const modalTop = $event.target.getBoundingClientRect().bottom - extraPaddingBottom;
 
     this.renderer.setStyle(this.dropdownSpan.nativeElement, 'left', modalLeft + 'px');
     this.renderer.setStyle(this.dropdownSpan.nativeElement, 'top',  modalTop + 'px');
+  }
+
+  public reorderHeader($event) {
+    this.config.columns.sort((a, b) => $event.indexOf(a.id) - $event.indexOf(b.id));
+    this.calculateHeaderLayout();
   }
 
   public sort(sortBy: string, orderBy?: string): void {

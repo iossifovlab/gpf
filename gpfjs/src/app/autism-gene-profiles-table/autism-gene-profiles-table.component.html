@@ -75,6 +75,13 @@
             (click)="openDropdown(column, $event); $event.stopPropagation()">
             &#9776;
           </button>
+          <button
+            *ngIf="column.id === geneSymbolColumnId"
+            #columnFilteringButton
+            class="header-button navbar-toggler column-filtering-button"
+            (click)="openDropdown(column, $event); $event.stopPropagation()">
+            &#9776;
+          </button>
         </div>
       </div>
       <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: column.columns }"></ng-container>
@@ -84,7 +91,7 @@
 
 <span #dropdownSpan class="dropdown-span" ngbDropdown>
   <button ngbDropdownToggle style="display: none"></button>
-  <gpf-multiple-select-menu class="multiple-select-menu" ngbDropdownMenu (applyEvent)="calculateHeaderLayout()">
+  <gpf-multiple-select-menu class="multiple-select-menu" ngbDropdownMenu (applyEvent)="calculateHeaderLayout()" (reorderEvent)="reorderHeader($event)">
   </gpf-multiple-select-menu>
 </span>
 
