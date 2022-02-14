@@ -5,8 +5,9 @@
 .table-row {
   width: max-content;
   display: grid;
-  grid-auto-columns: 150px;
+  grid-auto-columns: 100px;
   grid-auto-flow: column;
+  grid-template-columns: 150px; /* Set 150px to first column (gene symbol), rest are 100px */
 }
 
 .table-row:nth-child(odd) {
@@ -64,7 +65,6 @@
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  padding: 2px;
   position: relative;
 }
 
