@@ -119,6 +119,8 @@ autism_gene_tool_config = {
                             },
                             "collection_name": {"type": "string"},
                             "description": {"type": "string"},
+                            "default_visible": {
+                                "type": "boolean", "default": True},
                         }
                     }
                 },
