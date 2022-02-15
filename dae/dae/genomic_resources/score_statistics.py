@@ -133,7 +133,7 @@ class HistogramBuilder:
     def __init__(self, resource) -> None:
         self.resource = resource
 
-    def build(self, client) -> dict[str, Histogram]:
+    def build(self, client) -> Dict[str, Histogram]:
         histogram_desc = self.resource.get_config().get("histograms", [])
         if len(histogram_desc) == 0:
             return {}
