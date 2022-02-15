@@ -81,7 +81,7 @@ def cli_manage(cli_args=None):
     parser_hist.add_argument('--kubernetes', default=False,
                              action='store_true',
                              help='Run computation in a kubernetes cluster')
-    parser_hist.add_argument('--envvars', nargs='*',
+    parser_hist.add_argument('--envvars', nargs='*', default=[],
                              help='Environment variables to pass to '
                              'kubernetes workers')
     parser_hist.add_argument('--container-image',
