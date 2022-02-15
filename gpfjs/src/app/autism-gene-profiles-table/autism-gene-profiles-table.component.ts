@@ -37,6 +37,7 @@ export class AgpTableComponent implements OnInit, OnChanges {
   public searchKeystrokes$: Subject<string> = new Subject();
 
   private baseRowHeight = 35; // px, this should match the height found in the table-row CSS class
+  private prevVerticalScroll = 0;
 
   public pageIndex = 0;
   private loadMoreGenes = true;
@@ -76,13 +77,15 @@ export class AgpTableComponent implements OnInit, OnChanges {
     }
   }
 
-  @HostListener('window:scroll')
-  public onWindowScroll(): void {
-    if (!this.ref.nativeElement.hidden) {
+  @HostListener('window:scroll', ['$event'])
+  public onWindowScroll($event): void {
+    // execute this code only if the table is shown and the scroll event is a vertical scroll
+    if (!this.ref.nativeElement.hidden && this.prevVerticalScroll !== $event.srcElement.scrollingElement.scrollTop) {
       const tableBodyOffset = document.getElementById('table-body').offsetTop;
       const topRowIdx = Math.floor(Math.max(window.scrollY - tableBodyOffset, 0) / this.baseRowHeight);
       const bottomRowIdx = Math.floor(window.innerHeight / this.baseRowHeight) + topRowIdx;
       this.updateShownGenes(topRowIdx - 5, bottomRowIdx + 5);
+      this.prevVerticalScroll = $event.srcElement.scrollingElement.scrollTop;
     }
   }
 
@@ -149,7 +152,7 @@ export class AgpTableComponent implements OnInit, OnChanges {
       .pipe(take(1))
       .subscribe(res => {
         this.genes = this.genes.concat(res);
-        this.loadMoreGenes = true;
+        this.loadMoreGenes = Boolean(res.length); // stop making requests if the last response was empty
         this.showSearchWarning = true;
       });
   }
