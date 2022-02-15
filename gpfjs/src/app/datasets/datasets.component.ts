@@ -54,12 +54,12 @@ export class DatasetsComponent implements OnInit, OnDestroy {
         this.datasetTrees = new Array<DatasetNode>();
         datasets.filter(d => !d.parents.length).map(d => this.datasetTrees.push(new DatasetNode(d, datasets)));
       }),
-      this.datasetsService.getDatasetsLoadedObservable().subscribe((res) => {
+      this.datasetsService.getDatasetsLoadedObservable().subscribe(() => {
         this.setupSelectedDataset();
       }),
       this.datasets$.pipe(take(1)).subscribe(datasets => {
         if (this.router.url === '/datasets') {
-          this.router.navigate(['/', 'datasets', datasets[0].id]);
+          this.router.navigate(['/', 'datasets', this.datasetTrees[0].dataset.id]);
         }
       }),
       this.usersService.getUserInfoObservable().subscribe(() => {
