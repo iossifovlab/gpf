@@ -1,5 +1,12 @@
 import { Type } from 'class-transformer';
 
+export class AgpTableConfig {
+  public defaultDataset: string;
+  @Type(() => Column)
+  public columns: Column[];
+  public pageSize: number;
+}
+
 export class Column {
   @Type(() => Column)
   public columns: Column[];
@@ -96,11 +103,4 @@ export class Column {
       Column.calculateGridColumn(child);
     }
   }
-}
-
-export class AgpTableConfig {
-  public defaultDataset: string;
-  @Type(() => Column)
-  public columns: Column[];
-  public pageSize: number;
 }

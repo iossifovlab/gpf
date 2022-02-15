@@ -1,9 +1,9 @@
-import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, Renderer2, ViewChild, ViewChildren } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnInit, Output, Renderer2, ViewChild, ViewChildren } from '@angular/core';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 import { debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
-import { forkJoin, Subject } from 'rxjs';
+import { forkJoin, Subject, Subscription } from 'rxjs';
 import { AgpTableConfig, Column } from './autism-gene-profiles-table';
 import { AgpTableService } from './autism-gene-profiles-table.service';
 import * as _ from 'lodash';
@@ -13,7 +13,7 @@ import * as _ from 'lodash';
   templateUrl: './autism-gene-profiles-table.component.html',
   styleUrls: ['./autism-gene-profiles-table.component.css']
 })
-export class AgpTableComponent implements OnInit, OnChanges {
+export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() public config: AgpTableConfig;
   @Output() public createTabEvent = new EventEmitter();
   @Output() public goToQueryEvent = new EventEmitter();
@@ -28,20 +28,20 @@ export class AgpTableComponent implements OnInit, OnChanges {
   public shownRows: number[] = []; // indexes
   public highlightedGenes: Set<string> = new Set();
 
-  public geneSymbolColumnId = "geneSymbol"
+  public geneSymbolColumnId = "geneSymbol" // must match the gene symbol column id from the backend
 
   public sortBy = "autism_gene_sets_rank";
   public orderBy = "desc";
 
   public geneInput: string = null;
   public searchKeystrokes$: Subject<string> = new Subject();
+  public pageIndex = 0;
+  public showSearchWarning = false;
 
   private baseRowHeight = 35; // px, this should match the height found in the table-row CSS class
   private prevVerticalScroll = 0;
-
-  public pageIndex = 0;
   private loadMoreGenes = true;
-  public showSearchWarning = false;
+  private keystrokeSubscription: Subscription;
 
   public constructor(
     private autismGeneProfilesService: AgpTableService,
@@ -50,7 +50,7 @@ export class AgpTableComponent implements OnInit, OnChanges {
   ) { }
 
   public ngOnInit(): void {
-    this.searchKeystrokes$.pipe(
+    this.keystrokeSubscription = this.searchKeystrokes$.pipe(
       debounceTime(250),
       distinctUntilChanged()
     ).subscribe(searchTerm => {
@@ -65,14 +65,18 @@ export class AgpTableComponent implements OnInit, OnChanges {
     }
   }
 
+  public ngOnDestroy(): void {
+    this.keystrokeSubscription.unsubscribe();
+  }
+
   @HostListener('document:keydown.esc')
   public keybindClearHighlight() {
-    this.clearHighlightedGenes();
+    this.highlightedGenes.clear();
   }
 
   @HostListener('document:keydown.f')
   public keybindCompareGenes() {
-    if(this.highlightedGenes.size > 0 && (document.activeElement === document.body)) {
+    if(this.highlightedGenes.size && document.activeElement === document.body) {
       this.emitCreateTabEvent();
     }
   }
@@ -84,8 +88,11 @@ export class AgpTableComponent implements OnInit, OnChanges {
       const tableBodyOffset = document.getElementById('table-body').offsetTop;
       const topRowIdx = Math.floor(Math.max(window.scrollY - tableBodyOffset, 0) / this.baseRowHeight);
       const bottomRowIdx = Math.floor(window.innerHeight / this.baseRowHeight) + topRowIdx;
-      this.updateShownGenes(topRowIdx - 5, bottomRowIdx + 5);
       this.prevVerticalScroll = $event.srcElement.scrollingElement.scrollTop;
+      this.updateShownGenes(topRowIdx - 5, bottomRowIdx + 5);
+      if (bottomRowIdx + 10 >= this.genes.length && this.loadMoreGenes) {
+        this.updateGenes();
+      }
     }
   }
 
@@ -93,13 +100,16 @@ export class AgpTableComponent implements OnInit, OnChanges {
     const viewportPageCount = Math.ceil(window.innerHeight / (this.baseRowHeight * this.config.pageSize));
     const agpRequests = [];
     this.genes = [];
+    this.pageIndex = 1;
+    this.loadMoreGenes = true;
     
     for (let i = 1; i <= viewportPageCount; i++) {
       agpRequests.push(
         this.autismGeneProfilesService
-          .getGenes(i, this.geneInput, this.sortBy, this.orderBy)
+          .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
           .pipe(take(1))
       )
+      this.pageIndex++;
     }
     this.pageIndex = viewportPageCount;
     forkJoin(agpRequests).subscribe(res => {
@@ -107,6 +117,7 @@ export class AgpTableComponent implements OnInit, OnChanges {
         this.genes = this.genes.concat(genes);
       }
       this.updateShownGenes(0, viewportPageCount * this.config.pageSize);
+      this.showSearchWarning = !this.genes.length;
     })
   }
 
@@ -128,8 +139,6 @@ export class AgpTableComponent implements OnInit, OnChanges {
 
   public search(value: string): void {
     this.geneInput = value;
-    this.genes = [];
-    this.pageIndex = 0;
     this.fillTable();
   }
 
@@ -138,22 +147,17 @@ export class AgpTableComponent implements OnInit, OnChanges {
     for (let i = fromRow; i <= toRow; i++) {
       this.shownRows.push(i);
     }
-    if (toRow + 10 >= this.genes.length && this.loadMoreGenes) {
-      this.updateGenes();
-    }
   }
 
   public updateGenes(): void {
     this.pageIndex++;
     this.loadMoreGenes = false;
-    this.showSearchWarning = false;
     this.autismGeneProfilesService
       .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
       .pipe(take(1))
       .subscribe(res => {
         this.genes = this.genes.concat(res);
         this.loadMoreGenes = Boolean(res.length); // stop making requests if the last response was empty
-        this.showSearchWarning = true;
       });
   }
 
@@ -235,12 +239,6 @@ export class AgpTableComponent implements OnInit, OnChanges {
       this.highlightedGenes.delete(geneSymbol);
     } else {
       this.highlightedGenes.add(geneSymbol);
-    }
-  }
-
-  public clearHighlightedGenes(): void {
-    for (const gene of this.highlightedGenes) {
-      this.toggleHighlightGene(gene);
     }
   }
 

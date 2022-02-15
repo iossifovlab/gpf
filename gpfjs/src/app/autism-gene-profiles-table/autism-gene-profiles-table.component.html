@@ -20,7 +20,7 @@
   </div>
 
   <div class="header table-row">
-    <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: config.columns }"></ng-container>
+    <ng-container *ngTemplateOutlet="tableHeaderTemplate; context: { columns: config.columns }"></ng-container>
   </div>
   <div id="table-body">
     <div *ngFor="let row of genes; let i = index"
@@ -39,12 +39,12 @@
     </div>
   </div>
 
-  <div *ngIf="geneSearchInput.value && genes.length === 0 && showSearchWarning" id="search-warning">
+  <div id="search-warning" *ngIf="showSearchWarning">
     <span>Nothing found</span>
   </div>
 </div>
 
-<ng-template #recursiveListTmpl let-columns="columns">
+<ng-template #tableHeaderTemplate let-columns="columns">
   <ng-container *ngFor="let column of columns">
     <ng-container *ngIf="column.visibility">
       <div class="cell header-cell"
@@ -69,14 +69,7 @@
           >
           </gpf-sorting-buttons>
           <button
-            *ngIf="column.columns.length !== 0"
-            #columnFilteringButton
-            class="header-button navbar-toggler column-filtering-button"
-            (click)="openDropdown(column, $event); $event.stopPropagation()">
-            &#9776;
-          </button>
-          <button
-            *ngIf="column.id === geneSymbolColumnId"
+            *ngIf="column.columns.length || column.id === geneSymbolColumnId"
             #columnFilteringButton
             class="header-button navbar-toggler column-filtering-button"
             (click)="openDropdown(column, $event); $event.stopPropagation()">
@@ -84,7 +77,7 @@
           </button>
         </div>
       </div>
-      <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: column.columns }"></ng-container>
+      <ng-container *ngTemplateOutlet="tableHeaderTemplate; context: { columns: column.columns }"></ng-container>
     </ng-container>
   </ng-container>
 </ng-template>
