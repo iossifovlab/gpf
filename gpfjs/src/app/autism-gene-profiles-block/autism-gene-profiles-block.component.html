@@ -39,7 +39,7 @@
       *ngFor="let geneTab of geneTabs"
       class="nav-tabs"
       [ngbNavItem]="geneTab"
-      [destroyOnHide]="false"
+      [destroyOnHide]="true"
       [attr.title]="geneTab">
       <a ngbNavLink (middleclick)="closeTab($event, geneTab)">
         <span>{{ geneTab }}</span>
