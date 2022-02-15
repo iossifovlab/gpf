@@ -2,7 +2,6 @@ import logging
 from rest_framework import status
 from rest_framework.response import Response
 
-from dae.utils.helpers import to_response_json
 from query_base.query_base import QueryBaseView
 
 
@@ -118,7 +117,10 @@ class TableConfigurationView(QueryBaseView):
                     ))
                 response["columns"].append(dataset_col)
 
+        category_order = ["geneSymbol", *configuration["order"]]
+        response["columns"].sort(key=lambda col: category_order.index(col['id']))
         return Response(response)
+
 
 class TableRowsView(QueryBaseView):
     def get(self, request):
