@@ -266,11 +266,13 @@ class HistogramBuilder:
         config = self.resource.get_config()
         table_filename = config["table"]["filename"]
         manifest = self.resource.get_manifest()
-        table_hash = ''
+        table_hash = None
         for rec in manifest:
             if rec["name"] == table_filename:
                 table_hash = rec["md5"]
                 break
+        if table_hash is None:
+            return {}
 
         histogram_desc = config.get("histograms", [])
         hist_configs = {hist['score']: hist for hist in histogram_desc}
@@ -299,8 +301,9 @@ class HistogramBuilder:
             metadata = {
                 'resource': self.resource.get_id(),
                 'histogram_config': hist_config,
-                'md5': hist_hashes[score]
             }
+            if score in hist_hashes:
+                metadata['md5'] = hist_hashes[score]
             if 'min' not in hist_config:
                 metadata['calculated_min'] = histogram.x_min
             if 'max' not in hist_config:
