@@ -135,12 +135,16 @@ class HistogramBuilder:
     def __init__(self, resource) -> None:
         self.resource = resource
 
-    def build(self, client, path="histograms") -> dict[str, Histogram]:
+    def build(self, client, path="histograms",
+              force=False) -> dict[str, Histogram]:
+        histogram_desc = self.resource.get_config().get("histograms", [])
+        if force:
+            return self._do_build(client, histogram_desc)
+
         hists, metadata = _load_histograms(self.resource.repo,
                                            self.resource.get_id(), None, None,
                                            path)
         hashes = self._build_hashes()
-        histogram_desc = self.resource.get_config().get("histograms", [])
 
         configs_to_calculate = []
         result = {}

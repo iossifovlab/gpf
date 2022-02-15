@@ -89,6 +89,9 @@ def cli_manage(cli_args=None):
     parser_hist.add_argument('--image-pull-secrets', nargs='*',
                              help='Secrets to use when pulling '
                              'the docker image')
+    parser_hist.add_argument('-f', '--force', default=False,
+                             action='store_true', help='Ignore histogram '
+                             'hashes and always precompute all histograms')
 
     args = parser.parse_args(cli_args)
 
@@ -133,7 +136,7 @@ def cli_manage(cli_args=None):
             cluster = LocalCluster(n_workers=n_jobs, threads_per_worker=1)
         with cluster:
             with Client(cluster) as client:
-                histograms = builder.build(client)
+                histograms = builder.build(client, force=args.force)
 
         hist_out_dir = 'histograms'
         print(f"Saving histograms in {hist_out_dir}")
