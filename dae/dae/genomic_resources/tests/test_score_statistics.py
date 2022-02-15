@@ -1,3 +1,4 @@
+from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
 import pytest
 import os
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME, GenomicResource
@@ -283,6 +284,30 @@ def test_histogram_builder_save(tmpdir, client):
     for score_id in ['phastCons5way', 'phastCons100way']:
         assert f'{score_id}.csv' in manifest_dict
         assert f'{score_id}.metadata.yaml' in manifest_dict
+
+
+def test_building_already_calculated_histograms(tmpdir, client):
+    embedded_repo = GenomicResourceEmbededRepo("", position_score_test_config)
+    repo = GenomicResourceDirRepo("", tmpdir)
+    repo.store_all_resources(embedded_repo)
+
+    resource = repo.get_resource("")
+    hbuilder = HistogramBuilder(resource)
+    hists = hbuilder.build(client)
+    os.makedirs(os.path.join(tmpdir, "histograms"))
+    hbuilder.save(hists, "histograms")
+
+    hbuilder2 = HistogramBuilder(resource)
+    # All histograms are already calculated and should simply be loaded
+    # from disk without any actual computations being carried out.
+    # That's why we pass a None for the client as it shouldn't be used.
+    hists2 = hbuilder2.build(None, "histograms")
+
+    assert len(hists) == len(hists2)
+    for score, hist in hists.items():
+        assert score in hists2
+        assert (hist.bars == hists2[score].bars).all()
+        assert (hist.bins == hists2[score].bins).all()
 
 
 def test_load_histograms(tmpdir, client):
