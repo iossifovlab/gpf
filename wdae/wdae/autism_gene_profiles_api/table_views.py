@@ -117,8 +117,10 @@ class TableConfigurationView(QueryBaseView):
                     ))
                 response["columns"].append(dataset_col)
 
-        category_order = ["geneSymbol", *configuration["order"]]
-        response["columns"].sort(key=lambda col: category_order.index(col['id']))
+        if "order" in configuration:
+            category_order = ["geneSymbol", *configuration["order"]]
+            response["columns"].sort(key=lambda col: category_order.index(col['id']))
+
         return Response(response)
 
 
