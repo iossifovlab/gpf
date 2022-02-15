@@ -287,7 +287,37 @@ def test_histogram_builder_save(tmpdir, client):
 
 
 def test_building_already_calculated_histograms(tmpdir, client):
-    embedded_repo = GenomicResourceEmbededRepo("", position_score_test_config)
+    # the following config is missing min/max for phastCons100way
+    embedded_repo = GenomicResourceEmbededRepo("", {
+        GR_CONF_FILE_NAME: '''
+            type: position_score
+            table:
+                filename: data.mem
+            scores:
+                - id: phastCons100way
+                  type: float
+                  name: s1
+                - id: phastCons5way
+                  type: int
+                  position_aggregator: max
+                  na_values: "-1"
+                  name: s2
+            histograms:
+                - score: phastCons100way
+                  bins: 100
+                - score: phastCons5way
+                  bins: 4
+                  min: 0
+                  max: 4''',
+        "data.mem": '''
+            chrom  pos_begin  pos_end  s1    s2
+            1      10         15       0.02  -1
+            1      17         19       0.03  0
+            1      22         25       0.46  EMPTY
+            2      5          80       0.01  3
+            2      10         11       0.02  3
+            '''
+    })
     repo = GenomicResourceDirRepo("", tmpdir)
     repo.store_all_resources(embedded_repo)
 
@@ -296,6 +326,10 @@ def test_building_already_calculated_histograms(tmpdir, client):
     hists = hbuilder.build(client)
     os.makedirs(os.path.join(tmpdir, "histograms"))
     hbuilder.save(hists, "histograms")
+
+    # create a new repo to ensure clean start
+    repo = GenomicResourceDirRepo("", tmpdir)
+    resource = repo.get_resource("")
 
     hbuilder2 = HistogramBuilder(resource)
     # All histograms are already calculated and should simply be loaded

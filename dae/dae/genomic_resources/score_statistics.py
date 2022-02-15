@@ -5,6 +5,7 @@ import logging
 import yaml
 import pandas as pd
 from typing import Dict
+from copy import copy
 
 from dae.genomic_resources.genomic_scores import open_score_from_resource
 
@@ -174,6 +175,8 @@ class HistogramBuilder:
         score = open_score_from_resource(self.resource)
         score_limits = {}
         if len(scores_missing_limits) > 0:
+            # copy hist desc so that we don't overwrite the config
+            histogram_desc = [copy(d) for d in histogram_desc]
             score_limits = self._score_min_max(client, score,
                                                scores_missing_limits)
 
@@ -292,11 +295,16 @@ class HistogramBuilder:
             with self.resource.open_raw_file(hist_file, "wt") as f:
                 df.to_csv(f, index=None)
 
+            hist_config = configs.get(score, {})
             metadata = {
                 'resource': self.resource.get_id(),
-                'histogram_config': configs.get(score, {}),
+                'histogram_config': hist_config,
                 'md5': hist_hashes[score]
             }
+            if 'min' not in hist_config:
+                metadata['calculated_min'] = histogram.x_min
+            if 'max' not in hist_config:
+                metadata['calculated_max'] = histogram.x_max
             metadata_file = os.path.join(out_dir, f"{score}.metadata.yaml")
             with self.resource.open_raw_file(metadata_file, "wt") as f:
                 yaml.dump(metadata, f)
@@ -333,7 +341,12 @@ def _load_histograms(repo, resource_id, version_constraint,
                 df = pd.read_csv(f)
             with res.open_raw_file(metadata_file, "rt") as f:
                 metadata = yaml.safe_load(f)
-            hist = Histogram.from_config(metadata['histogram_config'])
+            hist_config = metadata['histogram_config']
+            if 'min' not in hist_config:
+                hist_config['min'] = metadata['calculated_min']
+            if 'max' not in hist_config:
+                hist_config['max'] = metadata['calculated_max']
+            hist = Histogram.from_config(hist_config)
             hist.bars = df["bars"].to_numpy()
             hists[score] = hist
             metadatas[score] = metadata
