@@ -88,9 +88,27 @@ class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
             with open(config_filename, "w") as outfile:
                 outfile.write(toml.dumps(result_config))
 
+    def _execute_datasets(self):
+        study_configs_dir = os.path.join(self.instance_dir, "datasets")
+        pattern = os.path.join(study_configs_dir, "**/*.conf")
+        config_filenames = glob.glob(pattern, recursive=True)
+    
+        for config_filename in config_filenames:
+            logger.info(f"processing study {config_filename}")
+            with open(config_filename, "rt") as infile:
+                dataset_config = toml.loads(infile.read())
+            dataset_id = dataset_config["id"]
+
+            result_config = self.adjust_dataset(dataset_id, dataset_config)
+
+            with open(config_filename, "w") as outfile:
+                outfile.write(toml.dumps(result_config))
+
     def adjust_study(self, study_id, study_config):
         return study_config
 
+    def adjust_dataset(self, dataset_id, dataset_config):
+        return dataset_config
 
 class DefaultGenotypeStorage(StudyConfigsAdjustmentCommand):
 
@@ -138,6 +156,7 @@ class DisableStudies(StudyConfigsAdjustmentCommand):
     def execute(self):
         logger.info(f"going to disable following studies: {self.study_ids}")
         self._execute_studies()
+        self._execute_datasets()
 
         gpfjs = self.config.get("gpfjs")
         if gpfjs is not None:
@@ -155,6 +174,21 @@ class DisableStudies(StudyConfigsAdjustmentCommand):
             logger.info(f"study {study_id} disabled")
             study_config["enable"] = False
         return study_config
+
+    def adjust_dataset(self, dataset_id, dataset_config):
+        if dataset_id in self.study_ids:
+            logger.info(f"dataset {dataset_id} disabled")
+            dataset_config["enable"] = False
+        studies = dataset_config["studies"]
+        result = []
+        for study_id in studies:
+            if study_id in self.study_ids:
+                logger.info(f"removing {study_id} from dataset {dataset_id}")
+                continue
+            result.append(study_id)
+        dataset_config["studies"] = result
+
+        return dataset_config
 
 
 def cli(argv=sys.argv[1:]):
