@@ -114,7 +114,7 @@
   right: 10px;
   bottom: 10px;
   background-color: #fff;
-  /* border: 1px solid #ddd; */
+  border: 1px solid #ddd;
   z-index: 101;
   padding: 8px;
   width: 328px;
@@ -125,17 +125,20 @@
   vertical-align: text-top;
   display: inline-block;
   width: 80%;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
-.compare-gene-close {
+.compare-genes-close {
   border: none;
   width: 20%;
   background: none;
   opacity: 50%;
   font-weight: lighter;
+  padding: 1px 6px;
 }
 
-.compare-gene-close:hover {
+.compare-genes-close:hover {
   opacity: 100% !important;
 }
 
