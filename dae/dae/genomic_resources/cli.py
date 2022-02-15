@@ -60,10 +60,12 @@ def cli_manage(cli_args=None):
     parser_index = subparsers.add_parser('index', help='Index a GR Repo')
     parser_index.add_argument('repo_dir', type=str,
                               help='Path to the GR Repo to index')
+    parser_index.add_argument('--verbose', '-V', action='count', default=0)
 
     parser_list = subparsers.add_parser('list', help='List a GR Repo')
     parser_list.add_argument('repo_dir', type=str,
                              help='Path to the GR Repo to list')
+    parser_list.add_argument('--verbose', '-V', action='count', default=0)
 
     parser_hist = subparsers.add_parser('histogram',
                                         help='Build the histograms \
@@ -72,6 +74,7 @@ def cli_manage(cli_args=None):
                              help='Path to the GR Repo')
     parser_hist.add_argument('resource', type=str,
                              help='Resource to generate histograms for')
+    parser_hist.add_argument('--verbose', '-V', action='count', default=0)
     parser_hist.add_argument('-j', '--jobs', type=int, default=None,
                              help='Number of jobs to run in parallel. \
  Defaults to the number of processors on the machine')
@@ -94,6 +97,14 @@ def cli_manage(cli_args=None):
                              'hashes and always precompute all histograms')
 
     args = parser.parse_args(cli_args)
+    if args.verbose == 1:
+        logging.basicConfig(level=logging.WARNING)
+    elif args.verbose == 2:
+        logging.basicConfig(level=logging.INFO)
+    elif args.verbose >= 3:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.WARNING)
 
     cmd, dr = args.command, args.repo_dir
 
@@ -116,7 +127,7 @@ def cli_manage(cli_args=None):
     elif cmd == "histogram":
         gr = GRR.get_resource(args.resource)
         if gr is None:
-            print(f"Cannot find resource {args.resource}")
+            logger.error(f"Cannot find resource {args.resource}")
             sys.exit(1)
         builder = HistogramBuilder(gr)
         n_jobs = args.jobs or os.cpu_count()
@@ -138,11 +149,12 @@ def cli_manage(cli_args=None):
             with Client(cluster) as client:
                 histograms = builder.build(client, force=args.force)
 
-        hist_out_dir = 'histograms'
-        print(f"Saving histograms in {hist_out_dir}")
+        hist_out_dir = "histograms"
+        logger.info(f"Saving histograms in {hist_out_dir}")
         builder.save(histograms, hist_out_dir)
     else:
-        print(f'Unknown command {cmd}. The known commands are index and list')
+        logger.error(f'Unknown command {cmd}. The known commands are index, '
+                     'list and histogram')
 
 
 def cli_cache_repo(args=None):
