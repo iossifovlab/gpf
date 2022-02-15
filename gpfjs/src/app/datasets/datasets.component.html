@@ -54,7 +54,7 @@
       <markdown [data]="permissionDeniedPrompt"></markdown>
   </div>
 
-  <div *ngIf="!findFirstTool(selectedDataset)" class="alert alert-warning" role="alert" style="margin: 10px">
+  <div *ngIf="showNoToolsWarning" class="alert alert-warning" role="alert" style="margin: 10px">
     <span>No tools have been configured for this dataset.</span>
   </div>
 

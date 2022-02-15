@@ -27,6 +27,8 @@ export class DatasetsComponent implements OnInit, OnDestroy {
 
   private subscriptions: Subscription[] = [];
 
+  public showNoToolsWarning: boolean;
+
   constructor(
     private usersService: UsersService,
     private datasetsService: DatasetsService,
@@ -79,9 +81,12 @@ export class DatasetsComponent implements OnInit, OnDestroy {
 
   private setupSelectedDataset(): void {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
+
     if (!this.selectedDataset) {
       return;
     }
+
+    this.showNoToolsWarning = !this.findFirstTool(this.selectedDataset);
 
     this.registerAlertVisible = !this.selectedDataset.accessRights;
 
@@ -154,6 +159,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
       firstTool = toolPageLinks.phenotypeTool;
     }
 
+    // console.log('firstTool', firstTool)
     return firstTool;
   }
 
