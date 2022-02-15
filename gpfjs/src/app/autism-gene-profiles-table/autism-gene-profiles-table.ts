@@ -34,9 +34,6 @@ export class Column {
       if (this.parent !== null && this.parent.visibleChildren.length === 0) {
         this.parent.visibility = false;
       }
-      if (this.visibleChildren.length) {
-        this.visibleChildren.map(child => child.visibility = false);
-      }
     } else {
       if (this.parent !== null && this.parent.visibleChildren.length === 1) {
         this.parent.visibility = true;
@@ -67,7 +64,7 @@ export class Column {
 
   get leaves(): Column[] {
     const result: Column[] = [];
-    for (const column of this.columns) { 
+    for (const column of this.visibleChildren) {
       if (column.columns.length > 0) {
         result.push(...column.leaves);
       } else {
