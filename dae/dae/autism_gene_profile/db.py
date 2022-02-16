@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class AutismGeneProfileDB:
 
-    PAGE_SIZE = 40
+    PAGE_SIZE = 20
 
     def __init__(self, configuration, dbfile, clear=False):
         self.dbfile = dbfile

@@ -2,7 +2,6 @@ import logging
 from rest_framework import status
 from rest_framework.response import Response
 
-from dae.utils.helpers import to_response_json
 from query_base.query_base import QueryBaseView
 
 
@@ -44,7 +43,8 @@ class TableConfigurationView(QueryBaseView):
 
         response = {
             "defaultDataset": configuration.get("default_dataset"),
-            "columns": []
+            "columns": [],
+            "pageSize": self.gpf_instance._autism_gene_profile_db.PAGE_SIZE,
         }
         if len(configuration) == 0:
             return Response(response)
@@ -57,10 +57,12 @@ class TableConfigurationView(QueryBaseView):
             response["columns"].append(column(
                 f"{category['category']}_rank",
                 category["display_name"],
+                visible=category.get("default_visible", True),
                 sortable=True,
                 columns=[column(
                     f"{category['category']}_rank.{gene_set['set_id']}",
                     gene_set["set_id"],
+                    visible=gene_set.get("default_visible", True),
                     display_vertical=True,
                     sortable=True) for gene_set in category["sets"]
                 ]
@@ -70,9 +72,11 @@ class TableConfigurationView(QueryBaseView):
             response["columns"].append(column(
                 category["category"],
                 category["display_name"],
+                visible=category.get("default_visible", True),
                 columns=[column(
                     f"{category['category']}.{genomic_score['score_name']}",
                     genomic_score["score_name"],
+                    visible=genomic_score.get("default_visible", True),
                     display_vertical=True,
                     sortable=True) for genomic_score in category["scores"]
                 ]
@@ -84,7 +88,9 @@ class TableConfigurationView(QueryBaseView):
                 display_name = dataset.get("display_name") \
                     or study_wrapper.config.get("name") \
                     or dataset_id
-                dataset_col = column(f"datasets.{dataset_id}", display_name)
+                dataset_col = column(
+                    f"datasets.{dataset_id}", display_name,
+                    visible=dataset.get("default_visible", True))
                 for person_set in dataset.get("person_sets", []):
                     set_id = person_set["set_name"]
                     collection_id = person_set["collection_name"]
@@ -98,16 +104,25 @@ class TableConfigurationView(QueryBaseView):
                     dataset_col["columns"].append(column(
                         f"datasets.{dataset_id}.{set_id}",
                         f"{set_name} ({stats['children']})",
+                        visible=person_set.get("default_visible", True),
                         columns=[column(
                             f"datasets.{dataset_id}.{set_id}.{statistic.id}",
                             statistic.display_name,
+                            visible=statistic.get("default_visible", True),
                             clickable="goToQuery",
-                            sortable=True) for statistic in dataset["statistics"]
+                            sortable=True)
+
+                            for statistic in dataset["statistics"]
                         ]
                     ))
                 response["columns"].append(dataset_col)
 
+        if configuration.get("order"):
+            category_order = ["geneSymbol", *configuration["order"]]
+            response["columns"].sort(key=lambda col: category_order.index(col['id']))
+
         return Response(response)
+
 
 class TableRowsView(QueryBaseView):
     def get(self, request):

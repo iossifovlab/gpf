@@ -1,4 +1,3 @@
-from functools import cache
 import logging
 
 from typing import List, Dict, Optional, cast
@@ -125,7 +124,6 @@ class NormalizeAlleleAnnotator(Annotator):
             }
         ]
 
-    @cache
     def get_annotation_config(self) -> List[Dict]:
         attributes: Optional[List[Dict]] = self.config.get("attributes")
         if attributes:

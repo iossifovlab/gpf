@@ -133,7 +133,7 @@ class HistogramBuilder:
     def __init__(self, resource) -> None:
         self.resource = resource
 
-    def build(self, client) -> dict[str, Histogram]:
+    def build(self, client) -> Dict[str, Histogram]:
         histogram_desc = self.resource.get_config().get("histograms", [])
         if len(histogram_desc) == 0:
             return {}
@@ -250,6 +250,31 @@ class HistogramBuilder:
             metadata_file = os.path.join(out_dir, f"{score}.metadata.yaml")
             with self.resource.open_raw_file(metadata_file, "wt") as f:
                 yaml.dump(metadata, f)
+
+
+def load_histograms(repo, resource_id, version_constraint=None,
+                    genomic_repository_id=None, path="histograms"):
+    from dae.genomic_resources.cached_repository import \
+        GenomicResourceCachedRepo
+    if isinstance(repo, GenomicResourceCachedRepo):
+        # score resources are huge so circumvent the caching
+        repo = repo.child
+
+    res = repo.get_resource(resource_id, version_constraint,
+                            genomic_repository_id)
+    hists = {}
+    for hist_config in res.get_config().get('histograms', []):
+        score = hist_config['score']
+        hist_file = os.path.join(path, f"{score}.csv")
+        with res.open_raw_file(hist_file, "rt") as f:
+            df = pd.read_csv(f)
+        metadata_file = os.path.join(path, f"{score}.metadata.yaml")
+        with res.open_raw_file(metadata_file, "rt") as f:
+            metadata = yaml.safe_load(f)
+        hist = Histogram.from_config(metadata['histogram_config'])
+        hist.bars = df["bars"].to_numpy()
+        hists[score] = hist
+    return hists
 
 
 class ScoreStatistic:
