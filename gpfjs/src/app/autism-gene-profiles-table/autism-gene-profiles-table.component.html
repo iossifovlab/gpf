@@ -82,7 +82,7 @@
   </ng-container>
 </ng-template>
 
-<span #dropdownSpan class="dropdown-span" ngbDropdown>
+<span #dropdownSpan class="dropdown-span" ngbDropdown [style.top.px]="modalPosition.top" [style.left.px]="modalPosition.left">
   <button ngbDropdownToggle style="display: none"></button>
   <gpf-multiple-select-menu class="multiple-select-menu" ngbDropdownMenu (applyEvent)="calculateHeaderLayout()" (reorderEvent)="reorderHeader($event)">
   </gpf-multiple-select-menu>

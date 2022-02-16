@@ -92,7 +92,7 @@
 }
 
 .dropdown-span {
-  position: absolute;
+  position: fixed;
 }
 
 .dropdown-toggle::after {

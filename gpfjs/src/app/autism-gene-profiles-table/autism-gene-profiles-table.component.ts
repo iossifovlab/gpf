@@ -23,6 +23,9 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild(MultipleSelectMenuComponent) public multipleSelectMenuComponent: MultipleSelectMenuComponent;
   @ViewChildren(SortingButtonsComponent) public sortingButtonsComponents: SortingButtonsComponent[];
 
+  private clickedColumnFilteringButton;
+  public modalPosition = {top: 0, left: 0};
+
   public leaves: Column[];
   public genes = [];
   public shownRows: number[] = []; // indexes
@@ -55,7 +58,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
       distinctUntilChanged()
     ).subscribe(searchTerm => {
       this.search(searchTerm);
-    })
+    });
   }
 
   public ngOnChanges(): void {
@@ -94,6 +97,12 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
         this.updateGenes();
       }
     }
+    this.updateModalPosition();
+  }
+
+  @HostListener('window:resize')
+  public onResize() {
+    this.updateModalPosition();
   }
 
   private fillTable() {
@@ -168,27 +177,43 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
     this.ngbDropdownMenu.dropdown.toggle();
 
+    this.clickedColumnFilteringButton = $event.target;
+    this.updateModalPosition();
+
     if (column.id === this.geneSymbolColumnId) {
       this.multipleSelectMenuComponent.columns = this.config.columns.filter(col => col.id !== this.geneSymbolColumnId);
     } else {
       this.multipleSelectMenuComponent.columns = column.columns;
     }
     this.multipleSelectMenuComponent.refresh();
+  }
 
-    // calculate modal position
-    const dropdownMenuWidth = 400;
-    const extraPaddingLeft = 8;
-    const extraPaddingBottom = 6;
+  public updateModalPosition(): void {
+    if (!this.ngbDropdownMenu.dropdown._open) {
+      return;
+    }
 
-    let modalLeft = $event.target.getBoundingClientRect().right
-      - dropdownMenuWidth
-      - document.body.getBoundingClientRect().left
-      - extraPaddingLeft;
-    modalLeft = Math.max(0 + extraPaddingLeft, modalLeft);
-    const modalTop = $event.target.getBoundingClientRect().bottom - extraPaddingBottom;
+    const buttonHeight = 30;
+    const topOffset = 10;
 
-    this.renderer.setStyle(this.dropdownSpan.nativeElement, 'left', modalLeft + 'px');
-    this.renderer.setStyle(this.dropdownSpan.nativeElement, 'top',  modalTop + 'px');
+    this.modalPosition.top = 
+      this.clickedColumnFilteringButton.getBoundingClientRect().top
+      + buttonHeight
+      - topOffset;
+
+    const leftOffset = 6;
+    const leftCap = 17;
+    const modalWidth = 400;
+    const leftPosition =
+      this.clickedColumnFilteringButton.getBoundingClientRect().right
+      - modalWidth
+      - leftOffset;
+
+    if (leftPosition > leftCap) {
+      this.modalPosition.left = leftPosition;
+    } else {
+      this.modalPosition.left = leftCap;
+    }
   }
 
   public reorderHeader($event) {
