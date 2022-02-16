@@ -48,6 +48,7 @@
   <ng-container *ngFor="let column of columns">
     <ng-container *ngIf="column.visibility">
       <div class="cell header-cell"
+        [ngClass]="'column-depth-' + column.depth"
         [style.grid-column]="column.gridColumn"
         [style.grid-row]="column.gridRow"
         [style.cursor]="column.sortable ? 'pointer' : 'default'"
@@ -56,7 +57,8 @@
         <div class="header-cell-content"
           [ngClass]="{'header-cell-vertical-content': column.displayVertical }"
         >
-          <span class="header-cell"
+          <span
+            class="header-cell-content-span"
             [attr.title]="column.displayName"
             [ngClass]="{'vertical-text': column.displayVertical }"
             >{{ column.displayName }}</span

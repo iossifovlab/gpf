@@ -6,7 +6,7 @@
 .table-row {
   width: max-content;
   display: grid;
-  grid-auto-columns: 100px;
+  grid-auto-columns: 110px;
   grid-auto-flow: column;
   grid-template-columns: 150px; /* Set 150px to first column (gene symbol), rest are 100px */
 }
@@ -67,11 +67,36 @@
   position: relative;
 }
 
+.header-cell.column-depth-1 {
+  white-space: nowrap;
+  line-height: 35px;
+  align-items: flex-end;
+  position: relative;
+}
+
+.header-cell-content-span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.column-depth-1 .header-cell-content-span,
+.column-depth-3 .header-cell-content-span,
+.column-depth-2 .header-cell-content-span:not(.vertical-text) {
+  width: 90%;
+  padding-left: 10px;
+}
+
 .header-cell-content {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 10px;
+}
+
+.header-cell-content:not(.header-cell-vertical-content) {
+  min-width: 100%;
+  gap: unset;
+  justify-content: flex-end;
 }
 
 .header-cell-vertical-content {
@@ -84,12 +109,11 @@
 .header-button {
   padding: 6px;
   font-size: 14px;
+  line-height: 25px;
 }
 
 .column-filtering-button {
-  position: absolute;
-  right: 0;
-  padding: 6px 8px;
+  min-width: 35px;
 }
 
 .dropdown-span {
