@@ -20,24 +20,31 @@
   </div>
 
   <div class="header table-row">
-    <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: config.columns }"></ng-container>
+    <ng-container *ngTemplateOutlet="tableHeaderTemplate; context: { columns: config.columns }"></ng-container>
   </div>
-  
-  <div *ngFor="let row of genes"
-    class="table-row"
-    (middleclick)="toggleHighlightGene(row[geneSymbolColumnId])"
-    [ngClass]="{'row-highlight': highlightedGenes.has(row[geneSymbolColumnId])}">
-    <span *ngFor="let column of leaves"
-      class="cell row-cell"
-      [ngClass]="{'clickable': column.clickable !== null && row[column.id]}"
-      [attr.title]="row[column.id]"
-      (click)="emitClickEvent(row, column)"
-      >{{ row[column.id] }}</span
-    >
+  <div id="table-body">
+    <div *ngFor="let row of genes; let i = index"
+      class="table-row table-body-row"
+      [ngClass]="{'row-highlight': highlightedGenes.has(row[geneSymbolColumnId])}">
+      <ng-container *ngIf="shownRows.indexOf(i) !== -1">
+        <span *ngFor="let column of leaves"
+          class="cell row-cell"
+          [ngClass]="{'clickable': column.clickable !== null && row[column.id]}"
+          [attr.title]="row[column.id]"
+          (click)="handleCellClick($event, row, column)"
+          (middleclick)="handleCellClick($event, row, column)"
+          >{{ row[column.id] }}</span
+        >
+      </ng-container>
+    </div>
+  </div>
+
+  <div id="search-warning" *ngIf="showSearchWarning">
+    <span>Nothing found</span>
   </div>
 </div>
 
-<ng-template #recursiveListTmpl let-columns="columns">
+<ng-template #tableHeaderTemplate let-columns="columns">
   <ng-container *ngFor="let column of columns">
     <ng-container *ngIf="column.visibility">
       <div class="cell header-cell"
@@ -58,41 +65,45 @@
             *ngIf="column.sortable"
             [id]="column.id"
             class="header-button"
-            style="pointer-events: none;"
+            style="pointer-events: none"
           >
           </gpf-sorting-buttons>
           <button
-            *ngIf="column.columns.length !== 0"
+            *ngIf="column.columns.length || column.id === geneSymbolColumnId"
             #columnFilteringButton
-            class="header-button navbar-toggler"
-            (click)="openDropdown(column, $event)">
+            class="header-button navbar-toggler column-filtering-button"
+            (click)="openDropdown(column, $event); $event.stopPropagation()">
             &#9776;
           </button>
         </div>
       </div>
-      <ng-container *ngTemplateOutlet="recursiveListTmpl; context: { columns: column.columns }"></ng-container>
+      <ng-container *ngTemplateOutlet="tableHeaderTemplate; context: { columns: column.columns }"></ng-container>
     </ng-container>
   </ng-container>
 </ng-template>
 
 <span #dropdownSpan class="dropdown-span" ngbDropdown>
   <button ngbDropdownToggle style="display: none"></button>
-  <gpf-multiple-select-menu class="multiple-select-menu" ngbDropdownMenu (applyEvent)="calculateHeaderLayout()">
+  <gpf-multiple-select-menu class="multiple-select-menu" ngbDropdownMenu (applyEvent)="calculateHeaderLayout()" (reorderEvent)="reorderHeader($event)">
   </gpf-multiple-select-menu>
 </span>
 
-<div id="highlighted-genes" *ngIf="highlightedGenes.size > 0">
-  <button 
-    *ngFor="let gene of highlightedGenes"
-    class="btn btn-primary"
-    style="margin: 2px"
-    (click)="toggleHighlightGene(gene)"
-    >{{ gene }}<span class="badge text-light" style="margin-left: 5px">X</span></button
-  >
+<div id="compare-genes-modal" *ngIf="highlightedGenes.size >= 1">
+  <div *ngFor="let gene of highlightedGenes"
+    class="btn-group"
+    style="margin: 4px; background-color: none"
+    role="group">
+    <button [attr.title]="gene" type="button" style="border: 1px solid #ddd; padding-right: 0; width: 145px; background: none">
+      <span (middleclick)="emitCreateTabEvent(gene, false)" (click)="emitCreateTabEvent(gene)" class="compare-genes-gene-name clickable">{{ gene }}</span>
+      <button (click)="toggleHighlightGene(gene)" class="compare-genes-close font-weight-light" type="button">×</button>
+    </button>
+  </div>
+
   <br>
+
   <button
-    class="btn btn-success"
-    style="margin: 2px; width: 100%; height: 48px"
+    id="compare-genes-compare-button"
+    class="btn btn-default"
     (click)="emitCreateTabEvent()">Compare</button
   >
 </div>

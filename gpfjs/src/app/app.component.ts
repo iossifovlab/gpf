@@ -66,6 +66,16 @@ export class AppComponent {
     this.hideSidenav();
   }
 
+  @HostListener('window:keydown.home')
+  public scrollToTop(): void {
+    window.scrollTo(0, 0);
+  }
+
+  @HostListener('window:keydown.end')
+  public scrollToBottom(): void {
+    window.scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight);
+  }
+
   constructor(
     private autismGeneProfilesService: AgpTableService,
     private bnIdle: BnNgIdleService,

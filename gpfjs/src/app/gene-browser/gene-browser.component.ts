@@ -109,8 +109,12 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.subscriptions.map(subscription => subscription.unsubscribe());
   }
 
-  public selectGeneSymbol(geneSymbol: string) {
+  public selectGeneSymbol(geneSymbol: string): void {
     this.geneSymbol = geneSymbol;
+
+    if (geneSymbol === '') {
+      this.location.go(`datasets/${this.selectedDatasetId}/gene-browser/`);
+    }
   }
 
   public openDropdown(): void {

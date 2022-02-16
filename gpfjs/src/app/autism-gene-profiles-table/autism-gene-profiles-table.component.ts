@@ -1,18 +1,19 @@
-import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, Renderer2, ViewChild, ViewChildren } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnInit, Output, Renderer2, ViewChild, ViewChildren } from '@angular/core';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 import { debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import { forkJoin, Subject, Subscription } from 'rxjs';
 import { AgpTableConfig, Column } from './autism-gene-profiles-table';
 import { AgpTableService } from './autism-gene-profiles-table.service';
+import * as _ from 'lodash';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-table',
   templateUrl: './autism-gene-profiles-table.component.html',
   styleUrls: ['./autism-gene-profiles-table.component.css']
 })
-export class AgpTableComponent implements OnInit, OnChanges {
+export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() public config: AgpTableConfig;
   @Output() public createTabEvent = new EventEmitter();
   @Output() public goToQueryEvent = new EventEmitter();
@@ -24,19 +25,23 @@ export class AgpTableComponent implements OnInit, OnChanges {
 
   public leaves: Column[];
   public genes = [];
+  public shownRows: number[] = []; // indexes
   public highlightedGenes: Set<string> = new Set();
 
-  public geneSymbolColumnId = "geneSymbol"
+  public geneSymbolColumnId = "geneSymbol" // must match the gene symbol column id from the backend
 
   public sortBy = "autism_gene_sets_rank";
   public orderBy = "desc";
 
   public geneInput: string = null;
   public searchKeystrokes$: Subject<string> = new Subject();
-
   public pageIndex = 0;
+  public showSearchWarning = false;
+
+  private baseRowHeight = 35; // px, this should match the height found in the table-row CSS class
+  private prevVerticalScroll = 0;
   private loadMoreGenes = true;
-  private scrollLoadThreshold = 500;
+  private keystrokeSubscription: Subscription;
 
   public constructor(
     private autismGeneProfilesService: AgpTableService,
@@ -45,45 +50,75 @@ export class AgpTableComponent implements OnInit, OnChanges {
   ) { }
 
   public ngOnInit(): void {
-    this.updateGenes();
-    
-    this.searchKeystrokes$.pipe(
+    this.keystrokeSubscription = this.searchKeystrokes$.pipe(
       debounceTime(250),
       distinctUntilChanged()
     ).subscribe(searchTerm => {
       this.search(searchTerm);
-    });
+    })
   }
 
   public ngOnChanges(): void {
     if (this.config) {
       this.calculateHeaderLayout();
+      this.fillTable();
     }
+  }
+
+  public ngOnDestroy(): void {
+    this.keystrokeSubscription.unsubscribe();
   }
 
   @HostListener('document:keydown.esc')
   public keybindClearHighlight() {
-    this.clearHighlightedGenes();
+    this.highlightedGenes.clear();
   }
 
   @HostListener('document:keydown.f')
   public keybindCompareGenes() {
-    if(this.highlightedGenes.size > 0 && (document.activeElement === document.body)) {
+    if(this.highlightedGenes.size && document.activeElement === document.body) {
       this.emitCreateTabEvent();
     }
   }
 
-  @HostListener('window:scroll')
-  public onWindowScroll(): void {
-    // TODO Add optimization to infinite scroll
-    // FIXME Doesn't autoload rows when there's no scrollbar initially
-    if (!this.ref.nativeElement.hidden) {
-      const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
-      const totalScrollHeight = document.documentElement.scrollHeight;
-      if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
+  @HostListener('window:scroll', ['$event'])
+  public onWindowScroll($event): void {
+    // execute this code only if the table is shown and the scroll event is a vertical scroll
+    if (!this.ref.nativeElement.hidden && this.prevVerticalScroll !== $event.srcElement.scrollingElement.scrollTop) {
+      const tableBodyOffset = document.getElementById('table-body').offsetTop;
+      const topRowIdx = Math.floor(Math.max(window.scrollY - tableBodyOffset, 0) / this.baseRowHeight);
+      const bottomRowIdx = Math.floor(window.innerHeight / this.baseRowHeight) + topRowIdx;
+      this.prevVerticalScroll = $event.srcElement.scrollingElement.scrollTop;
+      this.updateShownGenes(topRowIdx - 5, bottomRowIdx + 5);
+      if (bottomRowIdx + 10 >= this.genes.length && this.loadMoreGenes) {
         this.updateGenes();
       }
     }
+  }
+
+  private fillTable() {
+    const viewportPageCount = Math.ceil(window.innerHeight / (this.baseRowHeight * this.config.pageSize));
+    const agpRequests = [];
+    this.genes = [];
+    this.pageIndex = 1;
+    this.loadMoreGenes = true;
+    
+    for (let i = 1; i <= viewportPageCount; i++) {
+      agpRequests.push(
+        this.autismGeneProfilesService
+          .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
+          .pipe(take(1))
+      )
+      this.pageIndex++;
+    }
+    this.pageIndex = viewportPageCount;
+    forkJoin(agpRequests).subscribe(res => {
+      for (const genes of res) {
+        this.genes = this.genes.concat(genes);
+      }
+      this.updateShownGenes(0, viewportPageCount * this.config.pageSize);
+      this.showSearchWarning = !this.genes.length;
+    })
   }
 
   public calculateHeaderLayout(): void {
@@ -104,9 +139,14 @@ export class AgpTableComponent implements OnInit, OnChanges {
 
   public search(value: string): void {
     this.geneInput = value;
-    this.genes = [];
-    this.pageIndex = 0;
-    this.updateGenes();
+    this.fillTable();
+  }
+
+  private updateShownGenes(fromRow: number, toRow: number): void {
+    this.shownRows = [];
+    for (let i = fromRow; i <= toRow; i++) {
+      this.shownRows.push(i);
+    }
   }
 
   public updateGenes(): void {
@@ -117,37 +157,43 @@ export class AgpTableComponent implements OnInit, OnChanges {
       .pipe(take(1))
       .subscribe(res => {
         this.genes = this.genes.concat(res);
-        this.loadMoreGenes = true;
+        this.loadMoreGenes = Boolean(res.length); // stop making requests if the last response was empty
       });
   }
 
   public openDropdown(column: Column, $event): void {
-    this.multipleSelectMenuComponent.columns = column.columns;
+    if (this.ngbDropdownMenu.dropdown._open) {
+      return;
+    }
 
-    this.waitForDropdown().then(() => {
-      this.ngbDropdownMenu.dropdown.open();
-      this.multipleSelectMenuComponent.refresh();
-      // calculate modal position
-      let modalLeft = $event.target.getBoundingClientRect().left - document.body.getBoundingClientRect().left;
-      const modalTop = $event.target.getBoundingClientRect().bottom;
-      const dropdownMenuWidth = 400;
-      if (modalLeft + dropdownMenuWidth > window.innerWidth) {
-        modalLeft -= (modalLeft + dropdownMenuWidth - window.innerWidth);
-      }
-      this.renderer.setStyle(this.dropdownSpan.nativeElement, 'left', modalLeft + 'px');
-      this.renderer.setStyle(this.dropdownSpan.nativeElement, 'top',  modalTop + 'px');
-    }).catch(err => console.error(err));
+    this.ngbDropdownMenu.dropdown.toggle();
+
+    if (column.id === this.geneSymbolColumnId) {
+      this.multipleSelectMenuComponent.columns = this.config.columns.filter(col => col.id !== this.geneSymbolColumnId);
+    } else {
+      this.multipleSelectMenuComponent.columns = column.columns;
+    }
+    this.multipleSelectMenuComponent.refresh();
+
+    // calculate modal position
+    const dropdownMenuWidth = 400;
+    const extraPaddingLeft = 8;
+    const extraPaddingBottom = 6;
+
+    let modalLeft = $event.target.getBoundingClientRect().right
+      - dropdownMenuWidth
+      - document.body.getBoundingClientRect().left
+      - extraPaddingLeft;
+    modalLeft = Math.max(0 + extraPaddingLeft, modalLeft);
+    const modalTop = $event.target.getBoundingClientRect().bottom - extraPaddingBottom;
+
+    this.renderer.setStyle(this.dropdownSpan.nativeElement, 'left', modalLeft + 'px');
+    this.renderer.setStyle(this.dropdownSpan.nativeElement, 'top',  modalTop + 'px');
   }
 
-  public async waitForDropdown(): Promise<void> {
-    return new Promise<void>(resolve => {
-      const timer = setInterval(() => {
-        if (this.ngbDropdownMenu !== undefined) {
-          resolve();
-          clearInterval(timer);
-        }
-      }, 15);
-    });
+  public reorderHeader($event) {
+    this.config.columns.sort((a, b) => $event.indexOf(a.id) - $event.indexOf(b.id));
+    this.calculateHeaderLayout();
   }
 
   public sort(sortBy: string, orderBy?: string): void {
@@ -165,8 +211,7 @@ export class AgpTableComponent implements OnInit, OnChanges {
     );
 
     sortButton.emitSort();
-
-    this.updateGenes();
+    this.fillTable();
   }
 
   public resetSortButtons(): void {
@@ -179,6 +224,16 @@ export class AgpTableComponent implements OnInit, OnChanges {
     }
   }
 
+  public handleCellClick($event, row, column): void {
+    if (column.clickable && row[column.id] && ($event.which === 2 || $event.ctrlKey)) {
+      this.emitClickEvent($event, row, column, false);
+    } else if ($event.which === 2 || $event.ctrlKey) {
+      this.toggleHighlightGene(row[this.geneSymbolColumnId])
+    } else {
+      this.emitClickEvent($event, row, column);
+    }
+  }
+
   public toggleHighlightGene(geneSymbol: string): void {
     if (this.highlightedGenes.has(geneSymbol)) {
       this.highlightedGenes.delete(geneSymbol);
@@ -187,17 +242,14 @@ export class AgpTableComponent implements OnInit, OnChanges {
     }
   }
 
-  public clearHighlightedGenes(): void {
-    for (const gene of this.highlightedGenes) {
-      this.toggleHighlightGene(gene);
-    }
-  }
-
-  public emitClickEvent(row, column) {
+  public emitClickEvent($event, row, column, navigateToTab: boolean = true) {
     if (column.clickable === 'goToQuery' && row[column.id]) {
       this.goToQueryEvent.emit({geneSymbol: row[this.geneSymbolColumnId], statisticId: column.id});
     } else if (column.clickable === 'createTab') {
-      this.emitCreateTabEvent(row[this.geneSymbolColumnId])
+      if ($event.ctrlKey) {
+        navigateToTab = false;
+      }
+      this.emitCreateTabEvent(row[this.geneSymbolColumnId], navigateToTab)
     }
   }
 

@@ -10,6 +10,7 @@ import { Column } from 'app/autism-gene-profiles-table/autism-gene-profiles-tabl
 export class MultipleSelectMenuComponent implements OnChanges {
   @Input() public columns: Column[];
   @Output() public applyEvent = new EventEmitter<void>();
+  @Output() public reorderEvent = new EventEmitter<string[]>();
   @ViewChild('searchInput') public searchInput: ElementRef;
 
   public buttonLabel = 'Uncheck all';
@@ -62,6 +63,7 @@ export class MultipleSelectMenuComponent implements OnChanges {
   public drop(event: CdkDragDrop<string[]>): void {
     moveItemInArray(this.columns, event.previousIndex, event.currentIndex);
     this.apply();
+    this.reorderEvent.emit(this.filteredColumns.map(col => col.id));
   }
 
   public filterItems(substring: string): void {

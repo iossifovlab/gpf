@@ -27,6 +27,8 @@ export class DatasetsComponent implements OnInit, OnDestroy {
 
   private subscriptions: Subscription[] = [];
 
+  public showNoToolsWarning: boolean;
+
   constructor(
     private usersService: UsersService,
     private datasetsService: DatasetsService,
@@ -52,12 +54,12 @@ export class DatasetsComponent implements OnInit, OnDestroy {
         this.datasetTrees = new Array<DatasetNode>();
         datasets.filter(d => !d.parents.length).map(d => this.datasetTrees.push(new DatasetNode(d, datasets)));
       }),
-      this.datasetsService.getDatasetsLoadedObservable().subscribe((res) => {
+      this.datasetsService.getDatasetsLoadedObservable().subscribe(() => {
         this.setupSelectedDataset();
       }),
       this.datasets$.pipe(take(1)).subscribe(datasets => {
         if (this.router.url === '/datasets') {
-          this.router.navigate(['/', 'datasets', datasets[0].id]);
+          this.router.navigate(['/', 'datasets', this.datasetTrees[0].dataset.id]);
         }
       }),
       this.usersService.getUserInfoObservable().subscribe(() => {
@@ -79,9 +81,12 @@ export class DatasetsComponent implements OnInit, OnDestroy {
 
   private setupSelectedDataset(): void {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
+
     if (!this.selectedDataset) {
       return;
     }
+
+    this.showNoToolsWarning = !this.findFirstTool(this.selectedDataset);
 
     this.registerAlertVisible = !this.selectedDataset.accessRights;
 
@@ -154,6 +159,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
       firstTool = toolPageLinks.phenotypeTool;
     }
 
+    // console.log('firstTool', firstTool)
     return firstTool;
   }
 

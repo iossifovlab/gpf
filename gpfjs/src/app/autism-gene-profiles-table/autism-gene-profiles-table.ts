@@ -1,5 +1,12 @@
 import { Type } from 'class-transformer';
 
+export class AgpTableConfig {
+  public defaultDataset: string;
+  @Type(() => Column)
+  public columns: Column[];
+  public pageSize: number;
+}
+
 export class Column {
   @Type(() => Column)
   public columns: Column[];
@@ -57,7 +64,7 @@ export class Column {
 
   get leaves(): Column[] {
     const result: Column[] = [];
-    for (const column of this.columns) { 
+    for (const column of this.visibleChildren) {
       if (column.columns.length > 0) {
         result.push(...column.leaves);
       } else {
@@ -93,10 +100,4 @@ export class Column {
       Column.calculateGridColumn(child);
     }
   }
-}
-
-export class AgpTableConfig {
-  public defaultDataset: string;
-  @Type(() => Column)
-  public columns: Column[];
 }
