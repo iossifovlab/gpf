@@ -1,3 +1,4 @@
+from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
 import pytest
 import os
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME, GenomicResource
@@ -275,8 +276,73 @@ def test_histogram_builder_save(tmpdir, client):
     hbuilder.save(hists, "")
 
     files = os.listdir(tmpdir)
-    print(files)
-    assert len(files) == 6  # 2 config, 2 histograms and 2 metadatas
+    # 2 config, 2 histograms, 2 metadatas, 1 manifest, 2 png images
+    assert len(files) == 9
+
+    # assert the manifest file is updated
+    manifest = res.load_manifest()
+    manifest_dict = {x['name']: x for x in manifest}
+    for score_id in ['phastCons5way', 'phastCons100way']:
+        assert f'{score_id}.csv' in manifest_dict
+        assert f'{score_id}.metadata.yaml' in manifest_dict
+
+
+def test_building_already_calculated_histograms(tmpdir, client):
+    # the following config is missing min/max for phastCons100way
+    embedded_repo = GenomicResourceEmbededRepo("", {
+        GR_CONF_FILE_NAME: '''
+            type: position_score
+            table:
+                filename: data.mem
+            scores:
+                - id: phastCons100way
+                  type: float
+                  name: s1
+                - id: phastCons5way
+                  type: int
+                  position_aggregator: max
+                  na_values: "-1"
+                  name: s2
+            histograms:
+                - score: phastCons100way
+                  bins: 100
+                - score: phastCons5way
+                  bins: 4
+                  min: 0
+                  max: 4''',
+        "data.mem": '''
+            chrom  pos_begin  pos_end  s1    s2
+            1      10         15       0.02  -1
+            1      17         19       0.03  0
+            1      22         25       0.46  EMPTY
+            2      5          80       0.01  3
+            2      10         11       0.02  3
+            '''
+    })
+    repo = GenomicResourceDirRepo("", tmpdir)
+    repo.store_all_resources(embedded_repo)
+
+    resource = repo.get_resource("")
+    hbuilder = HistogramBuilder(resource)
+    hists = hbuilder.build(client)
+    os.makedirs(os.path.join(tmpdir, "histograms"))
+    hbuilder.save(hists, "histograms")
+
+    # create a new repo to ensure clean start
+    repo = GenomicResourceDirRepo("", tmpdir)
+    resource = repo.get_resource("")
+
+    hbuilder2 = HistogramBuilder(resource)
+    # All histograms are already calculated and should simply be loaded
+    # from disk without any actual computations being carried out.
+    # That's why we pass a None for the client as it shouldn't be used.
+    hists2 = hbuilder2.build(None, "histograms")
+
+    assert len(hists) == len(hists2)
+    for score, hist in hists.items():
+        assert score in hists2
+        assert (hist.bars == hists2[score].bars).all()
+        assert (hist.bins == hists2[score].bins).all()
 
 
 def test_load_histograms(tmpdir, client):
@@ -312,3 +378,15 @@ def test_load_histograms(tmpdir, client):
     # assert nothing is cached
     files = os.listdir(cache_dir)
     assert len(files) == 0
+
+
+def test_histogram_builder_build_hashes():
+    res: GenomicResource = build_a_test_resource(position_score_test_config)
+    hbuilder = HistogramBuilder(res)
+    hashes = hbuilder._build_hashes()
+    assert len(hashes) == 2
+
+    hashes_again = hbuilder._build_hashes()
+    assert hashes["phastCons100way"] == hashes_again["phastCons100way"]
+    assert hashes["phastCons5way"] == hashes_again["phastCons5way"]
+    assert hashes["phastCons100way"] != hashes["phastCons5way"]

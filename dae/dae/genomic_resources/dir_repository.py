@@ -58,9 +58,19 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         yield from find_genomic_resource_files_helper(
             content_dict, my_leaf_to_size_and_time)
 
+    def file_exists(self, genomic_resource, filename):
+        full_file_path = self.get_file_path(genomic_resource, filename)
+        return os.path.exists(full_file_path)
+
     def open_raw_file(self, genomic_resource: GenomicResource, filename: str,
                       mode=None, uncompress=False, _seekable=False):
         fullFilePath = self.get_file_path(genomic_resource, filename)
+        if 'w' in mode:
+            # Create the containing directory if it doesn't exists.
+            # This align DireRepo API with URL and fspec APIs
+            dirname = os.path.dirname(fullFilePath)
+            if dirname:
+                os.makedirs(dirname, exist_ok=True)
         if filename.endswith(".gz") and uncompress:
             return gzip.open(fullFilePath, "rb")
         else:
