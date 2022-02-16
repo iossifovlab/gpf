@@ -93,7 +93,6 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   }
 
   private selectNav(navId: string) {
-    //this.changeUrl(navId);
     this.nav.select(navId);
   }
   

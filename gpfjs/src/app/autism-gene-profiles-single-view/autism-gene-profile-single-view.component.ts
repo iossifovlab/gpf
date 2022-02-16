@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import {
   AgpDatasetPersonSet, AgpDatasetStatistic, AgpGene,
   AgpGenomicScores, AgpSingleViewConfig, AgpEffectType
@@ -26,7 +26,6 @@ import { SetPresentInParentValues } from 'app/present-in-parent/present-in-paren
 import { SetStudyTypes } from 'app/study-types/study-types.state';
 import { SetVariantTypes } from 'app/variant-types/variant-types.state';
 import { EffectTypes } from 'app/effect-types/effect-types';
-import {trigger, state, style, animate, transition} from '@angular/animations';
 
 @Component({
   selector: 'gpf-autism-gene-profile-single-view',
@@ -231,7 +230,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     this.currentCopyState = 'assets/check-solid.svg';
   }
 
-  copyToClipboard(item) {
+  private copyToClipboard(item) {
     document.addEventListener('copy', (e: ClipboardEvent) => {
       e.clipboardData.setData('text/plain', (item));
       e.preventDefault();
