@@ -39,7 +39,7 @@ class AutismGeneProfileDB:
         if order is None:
             order = []
             for gene_set in configuration["gene_sets"]:
-                order.append(gene_set["category"])
+                order.append(gene_set["category"] + "_rank")
             for genomic_score in configuration["genomic_scores"]:
                 order.append(genomic_score["category"])
             for dataset_id in configuration["datasets"].keys():

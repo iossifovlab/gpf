@@ -89,7 +89,7 @@ class TableConfigurationView(QueryBaseView):
                     or study_wrapper.config.get("name") \
                     or dataset_id
                 dataset_col = column(
-                    f"datasets.{dataset_id}", display_name,
+                    f"{dataset_id}", display_name,
                     visible=dataset.get("default_visible", True))
                 for person_set in dataset.get("person_sets", []):
                     set_id = person_set["set_name"]
@@ -102,11 +102,11 @@ class TableConfigurationView(QueryBaseView):
                         person_set_collection.person_sets[set_id].name
                     stats = person_set_collection.get_stats()[set_id]
                     dataset_col["columns"].append(column(
-                        f"datasets.{dataset_id}.{set_id}",
+                        f"{dataset_id}.{set_id}",
                         f"{set_name} ({stats['children']})",
                         visible=person_set.get("default_visible", True),
                         columns=[column(
-                            f"datasets.{dataset_id}.{set_id}.{statistic.id}",
+                            f"{dataset_id}.{set_id}.{statistic.id}",
                             statistic.display_name,
                             visible=statistic.get("default_visible", True),
                             clickable="goToQuery",
