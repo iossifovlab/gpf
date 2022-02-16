@@ -318,7 +318,9 @@ class HistogramBuilder:
                 yaml.dump(metadata, f)
 
             plt.hist(histogram.bins[:-1], histogram.bins,
-                     weights=histogram.bars)
+                     weights=histogram.bars, log=histogram.y_scale == "log")
+            if histogram.x_scale == "log":
+                plt.xscale("log")
             plt.grid(axis='y')
             plt.grid(axis='x')
             plot_file = os.path.join(out_dir, f"{score}.png")
