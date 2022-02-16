@@ -1,4 +1,4 @@
-from box import Box
+from box import Box  # type: ignore
 
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
 from dae.backends.storage.filesystem_genotype_storage import (

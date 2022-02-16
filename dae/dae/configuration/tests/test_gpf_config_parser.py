@@ -1,7 +1,7 @@
 import pytest
 import os
 
-from box import BoxError
+from box import BoxError  # type: ignore
 from dae.configuration.gpf_config_parser import GPFConfigParser, \
     DefaultBox, FrozenBox
 
