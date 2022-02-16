@@ -62,13 +62,13 @@ export class HistogramComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     this.rangeStartSubject
-    .pipe(debounceTime(350))
+    .pipe(debounceTime(100))
     .subscribe((start) => {
       this.rangeStartChange.emit(start);
     });
 
     this.rangeEndSubject
-    .pipe(debounceTime(350))
+    .pipe(debounceTime(100))
     .subscribe((end) => {
       this.rangeEndChange.emit(end);
     });
