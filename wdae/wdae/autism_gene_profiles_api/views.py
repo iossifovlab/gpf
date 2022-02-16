@@ -92,6 +92,5 @@ class ProfileView(QueryBaseView):
     def get(self, request, gene_symbol):
         agp = self.gpf_instance.get_agp_statistic(gene_symbol)
         if not agp:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+            return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(agp.to_json())

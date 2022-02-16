@@ -61,6 +61,8 @@ class AutismGeneProfileDB:
         s = s.where(table.c.symbol_name == gene_symbol)
         with self.engine.connect() as connection:
             row = connection.execute(s).fetchone()
+            if not row:
+                return None
             return self.agp_from_table_row_single_view(row)
 
     def agp_from_table_row(self, row) -> dict:
