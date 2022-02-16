@@ -26,6 +26,9 @@ class GenotypeStorageFactory:
         return self.get_genotype_storage(self.default_storage_id)
 
     def get_genotype_storage(self, genotype_storage_id):
+        if genotype_storage_id is None:
+            return self.get_default_genotype_storage()
+
         self._load_genotype_storage({genotype_storage_id})
 
         if genotype_storage_id not in self._genotype_storage_cache:
