@@ -57,6 +57,8 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     SFARIgene: ''
   };
 
+  currentCopyState: string = 'assets/link-solid.svg'; 
+
   public constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
     private geneWeightsService: GeneWeightsService,
@@ -68,6 +70,8 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     private store: Store
   ) { }
 
+  public errorModal: boolean = false;
+
   public ngOnInit(): void {
     this.gene$ = this.autismGeneProfilesService.getGene(this.geneSymbol);
     this.gene$.pipe(
@@ -75,7 +79,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
         gene.geneSets.forEach(element => {
           if (element.match(/sfari/i)) {
             this.isGeneInSFARI = true;
-          }
+          } 
         });
 
         let scores: string;
@@ -99,6 +103,8 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
       switchMap(gene => zip(of(gene), this.datasetsService.getDataset(this.config.defaultDataset)))
     ).subscribe(([gene, dataset]) => {
       this.setLinks(this.geneSymbol, gene, dataset.genome);
+    }, (error) => {
+      this.errorModal = true;
     });
   }
 
@@ -213,5 +219,28 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
         newWindow.location.assign(url);
       });
     });
+  }
+
+  public copyGeneLink() {
+    let currentUrl = window.location.href;
+    if(!currentUrl.endsWith(this.geneSymbol)) {
+      currentUrl += (currentUrl.endsWith('/') ? '' : '/') + this.geneSymbol;
+    }
+    this.copyToClipboard(currentUrl);
+    this.currentCopyState = 'assets/check-solid.svg';
+  }
+
+  private copyToClipboard(item) {
+    document.addEventListener('copy', (e: ClipboardEvent) => {
+      e.clipboardData.setData('text/plain', (item));
+      e.preventDefault();
+      document.removeEventListener('copy', null);
+    });
+    document.execCommand('copy');
+  }
+
+  public errorModalBack() {
+    this.errorModal = false;
+    this.router.navigate(['/autism-gene-profiles']);
   }
 }

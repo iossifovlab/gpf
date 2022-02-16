@@ -1,3 +1,4 @@
+<div *ngIf="!errorModal">
 <div
   *ngIf="gene$ | async as gene"
   [ngClass]="{'compare-div': isInGeneCompare}"
@@ -14,8 +15,10 @@
   
   <ng-container *ngIf="showTemplate">
     <div style="padding: 25px">
-      <h2 style="margin-right: 15px">{{ geneSymbol }}</h2>
-
+      <div style="display: flex;align-items: baseline;margin-bottom: -5px;">
+        <h2 style="margin-right: 15px">{{ geneSymbol }}</h2>
+        <img (click)="copyGeneLink()" [src]="currentCopyState" style="width: 20px" >
+      </div>
       <div
         class="wrapper"
         [ngClass]="{'compare-wrapper': isInGeneCompare}">
@@ -144,4 +147,20 @@
       </div>
     </div>
   </ng-container>
+</div>
+</div>
+<div *ngIf="errorModal">
+  <div style="display: flex; align-items: center" class="modal" role="dialog" aria-hidden="true">
+    <div class="modal-dialog error-modal">
+      <div class="modal-content">
+        <div class="modal-header" style="border-bottom: 0">
+          <h5 class="modal-title">Error</h5>
+        </div>
+        <div class="modal-body">"{{geneSymbol}}" is not found in the AGP database!</div>
+        <div class="modal-footer" style="border-top: 0">
+          <button type="button" class="btn btn-secondary" (click)="errorModalBack()">Back</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

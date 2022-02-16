@@ -102,3 +102,12 @@ td {
   writing-mode: vertical-rl;
   text-orientation: upright;
 }
+
+.error-modal div {
+  background-color: #f8d7da;
+}
+
+.modal-title, .modal-body {
+  color:#721c24;
+  text-align: center;
+}
