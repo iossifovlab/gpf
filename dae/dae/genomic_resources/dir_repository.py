@@ -65,6 +65,12 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
     def open_raw_file(self, genomic_resource: GenomicResource, filename: str,
                       mode=None, uncompress=False, _seekable=False):
         fullFilePath = self.get_file_path(genomic_resource, filename)
+        if 'w' in mode:
+            # Create the containing directory if it doesn't exists.
+            # This align DireRepo API with URL and fspec APIs
+            dirname = os.path.dirname(fullFilePath)
+            if dirname:
+                os.makedirs(dirname, exist_ok=True)
         if filename.endswith(".gz") and uncompress:
             return gzip.open(fullFilePath, "rb")
         else:
