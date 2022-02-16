@@ -143,7 +143,8 @@ class DefaultGenotypeStorage(StudyConfigsAdjustmentCommand):
     def adjust_study(self, study_id, study_config):
         genotype_storage = study_config.get("genotype_storage")
         if genotype_storage is not None:
-            genotype_storage["id"] = self.storage_id
+            if genotype_storage.get("id") is not None:
+                genotype_storage["id"] = self.storage_id
         return study_config
 
 
@@ -172,13 +173,13 @@ class DisableStudies(StudyConfigsAdjustmentCommand):
     def adjust_study(self, study_id, study_config):
         if study_id in self.study_ids:
             logger.info(f"study {study_id} disabled")
-            study_config["enable"] = False
+            study_config["enabled"] = False
         return study_config
 
     def adjust_dataset(self, dataset_id, dataset_config):
         if dataset_id in self.study_ids:
             logger.info(f"dataset {dataset_id} disabled")
-            dataset_config["enable"] = False
+            dataset_config["enabled"] = False
         studies = dataset_config["studies"]
         result = []
         for study_id in studies:
