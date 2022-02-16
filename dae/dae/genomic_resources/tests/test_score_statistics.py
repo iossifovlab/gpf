@@ -276,7 +276,8 @@ def test_histogram_builder_save(tmpdir, client):
     hbuilder.save(hists, "")
 
     files = os.listdir(tmpdir)
-    assert len(files) == 7  # 2 config, 2 histograms, 2 metadatas, 1 manifest
+    # 2 config, 2 histograms, 2 metadatas, 1 manifest, 2 png images
+    assert len(files) == 9
 
     # assert the manifest file is updated
     manifest = res.load_manifest()

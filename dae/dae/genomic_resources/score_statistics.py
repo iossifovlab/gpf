@@ -6,6 +6,7 @@ import yaml
 import pandas as pd
 from typing import Dict
 from copy import copy
+import matplotlib.pyplot as plt
 
 from dae.genomic_resources.genomic_scores import open_score_from_resource
 
@@ -315,6 +316,14 @@ class HistogramBuilder:
             metadata_file = os.path.join(out_dir, f"{score}.metadata.yaml")
             with self.resource.open_raw_file(metadata_file, "wt") as f:
                 yaml.dump(metadata, f)
+
+            plt.hist(histogram.bins[:-1], histogram.bins,
+                     weights=histogram.bars)
+            plt.grid(axis='y')
+            plt.grid(axis='x')
+            plot_file = os.path.join(out_dir, f"{score}.png")
+            with self.resource.open_raw_file(plot_file, "wb") as f:
+                plt.savefig(f)
 
         # update manifest with newly written files
         self.resource.update_manifest()
