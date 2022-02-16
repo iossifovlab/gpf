@@ -61,7 +61,7 @@
             class="header-cell-content-span"
             [attr.title]="column.displayName"
             [ngClass]="{'vertical-text': column.displayVertical }"
-            >{{ column.displayName }}</span
+            >{{ column.displayName | truncate : 48 }}</span
           >
           <gpf-sorting-buttons
             *ngIf="column.sortable"
