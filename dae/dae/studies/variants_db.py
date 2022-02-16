@@ -3,7 +3,7 @@ import logging
 import copy
 
 import toml
-from deprecation import deprecated
+from deprecation import deprecated  # type: ignore
 
 from dae.studies.study import GenotypeDataStudy, GenotypeDataGroup
 from dae.configuration.gpf_config_parser import GPFConfigParser
