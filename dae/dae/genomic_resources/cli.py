@@ -147,7 +147,8 @@ def cli_manage(cli_args=None):
             cluster = LocalCluster(n_workers=n_jobs, threads_per_worker=1)
         with cluster:
             with Client(cluster) as client:
-                histograms = builder.build(client, force=args.force)
+                histograms = builder.build(client, force=args.force,
+                                           only_dirty=True)
 
         hist_out_dir = "histograms"
         logger.info(f"Saving histograms in {hist_out_dir}")

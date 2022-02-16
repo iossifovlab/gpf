@@ -137,10 +137,19 @@ class HistogramBuilder:
         self.resource = resource
 
     def build(self, client, path="histograms",
-              force=False) -> dict[str, Histogram]:
+              force=False, only_dirty=False) -> dict[str, Histogram]:
+        loaded_hists, computed_hists = self._build(client, path, force)
+        if only_dirty:
+            return computed_hists
+        else:
+            for k, v in computed_hists.items():
+                loaded_hists[k] = v
+            return loaded_hists
+
+    def _build(self, client, path, force) -> dict[str, Histogram]:
         histogram_desc = self.resource.get_config().get("histograms", [])
         if force:
-            return self._do_build(client, histogram_desc)
+            return {}, self._do_build(client, histogram_desc)
 
         hists, metadata = _load_histograms(self.resource.repo,
                                            self.resource.get_id(), None, None,
@@ -148,7 +157,7 @@ class HistogramBuilder:
         hashes = self._build_hashes()
 
         configs_to_calculate = []
-        result = {}
+        loaded_hists = {}
         for hist_conf in histogram_desc:
             score_id = hist_conf["score"]
             actual_md5 = metadata.get(score_id, {}).get("md5", None)
@@ -157,15 +166,13 @@ class HistogramBuilder:
                 logger.info(f"Skipping calculation of score "
                             f"{hist_conf['score']} as it's already calculated"
                             )
-                result[score_id] = hists[score_id]
+                loaded_hists[score_id] = hists[score_id]
             else:
                 configs_to_calculate.append(hist_conf)
 
         remaining = self._do_build(client, configs_to_calculate)
 
-        for k, v in remaining.items():
-            result[k] = v
-        return result
+        return loaded_hists, remaining
 
     def _do_build(self, client, histogram_desc) -> dict[str, Histogram]:
         if len(histogram_desc) == 0:
