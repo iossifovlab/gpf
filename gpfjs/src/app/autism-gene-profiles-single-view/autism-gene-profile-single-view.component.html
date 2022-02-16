@@ -1,4 +1,4 @@
-<div *ngIf="!contentState.error">
+<div *ngIf="!errorModal">
 <div
   *ngIf="gene$ | async as gene"
   [ngClass]="{'compare-div': isInGeneCompare}"
@@ -149,21 +149,16 @@
   </ng-container>
 </div>
 </div>
-<div *ngIf="contentState.status">
-  <div style="align-items: center;" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true" [ngStyle]="{'display': errorModal ? 'flex' : 'none', 'opacity': 1}">
-    <div class="modal-dialog">
+<div *ngIf="errorModal">
+  <div style="display: flex; align-items: center" class="modal" role="dialog" aria-hidden="true">
+    <div class="modal-dialog error-modal">
       <div class="modal-content">
-        <div style="margin-bottom: 0px;" class="modal-header alert alert-danger">
+        <div class="modal-header" style="border-bottom: 0">
           <h5 class="modal-title">Error</h5>
-          <button type="button" class="close" (click)="this.errorModal = false;" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
         </div>
-        <div style="margin-bottom: 0px;width:400px;" class="modal-body alert alert-danger">
-          {{contentState.error}}
-        </div>
-        <div style="margin-bottom: 0px;flex-direction: column;" class="modal-footer alert alert-danger">
-          <button type="button" class="btn btn-secondary" (click)="this.errorModal = false;this.router.navigate(['/autism-gene-profiles']);">Back</button>
+        <div class="modal-body">"{{geneSymbol}}" is not found in the AGP database!</div>
+        <div class="modal-footer" style="border-top: 0">
+          <button type="button" class="btn btn-secondary" (click)="errorModalBack()">Back</button>
         </div>
       </div>
     </div>

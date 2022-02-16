@@ -71,19 +71,9 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     private store: Store
   ) { }
 
-  private contentState: {
-    error: string,
-    status: boolean
-  };
-
-  private errorModal: boolean = false;
+  public errorModal: boolean = false;
 
   public ngOnInit(): void {
-    this.contentState = {
-      error: '',
-      status: false
-    };
-
     this.gene$ = this.autismGeneProfilesService.getGene(this.geneSymbol);
     this.gene$.pipe(
       switchMap(gene => {
@@ -115,10 +105,6 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     ).subscribe(([gene, dataset]) => {
       this.setLinks(this.geneSymbol, gene, dataset.genome);
     }, (error) => {
-      this.contentState = {
-        error: this.geneSymbol + ' is not found in the genome!',
-        status: true
-      };
       this.errorModal = true;
     });
   }
@@ -252,5 +238,10 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
       document.removeEventListener('copy', null);
     });
     document.execCommand('copy');
+  }
+
+  public errorModalBack() {
+    this.errorModal = false;
+    this.router.navigate(['/autism-gene-profiles']);
   }
 }
