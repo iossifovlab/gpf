@@ -1,15 +1,15 @@
 import os
 import glob
 import logging
-import fsspec
+import fsspec  # type: ignore
 
 import yaml
 import toml
 
-from box import Box
+from box import Box  # type: ignore
 
-from typing import List, Any, Dict, Optional
-from cerberus import Validator
+from typing import List, Any, Dict, Optional, cast
+from cerberus import Validator  # type: ignore
 
 from dae.utils.dict_utils import recursive_dict_update
 
@@ -90,7 +90,7 @@ class GPFConfigParser:
     @classmethod
     def _get_file_contents(cls, filename: str) -> str:
         with fsspec.open(filename, "r") as infile:
-            return infile.read()
+            return cast(str, infile.read())
 
     @staticmethod
     def parse_and_interpolate(content: str, parser=yaml.safe_load) -> dict:
@@ -109,7 +109,7 @@ class GPFConfigParser:
 
         config = parser(interpolated_text)
         config.pop("vars", None)
-        return config
+        return cast(dict, config)
 
     @classmethod
     def parse_and_interpolate_file(cls, filename: str) -> dict:
@@ -152,7 +152,7 @@ class GPFConfigParser:
                 raise ValueError(f"{conf_dir}: {validator.errors}")
             else:
                 raise ValueError(f"{validator.errors}")
-        return validator.document
+        return cast(dict, validator.document)
 
     @staticmethod
     def process_config(
@@ -204,13 +204,24 @@ class GPFConfigParser:
             cls, dirname: str, schema: dict,
             default_config_filename: Optional[str] = None,
             default_config: Optional[dict] = None) -> List[Box]:
-        return [
-            cls.load_config(
-                config_path, schema,
-                default_config_filename=default_config_filename,
-                default_config=default_config)
-            for config_path in cls._collect_directory_configs(dirname)
-        ]
+        
+        result = []
+        for config_path in cls._collect_directory_configs(dirname):
+            try:
+                config = cls.load_config(
+                    config_path, schema,
+                    default_config_filename=default_config_filename,
+                    default_config=default_config)
+            
+                result.append(config)
+
+            except ValueError:
+                logger.error(
+                    f"unable to parse configuration file {config_path}; "
+                    f"skipped",
+                    exc_info=True)
+
+        return result
 
     @classmethod
     def modify_tuple(
