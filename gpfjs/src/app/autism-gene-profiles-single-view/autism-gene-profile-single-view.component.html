@@ -15,9 +15,9 @@
   
   <ng-container *ngIf="showTemplate">
     <div style="padding: 25px">
-      <div style="display: flex;align-items: baseline;margin-bottom: -5px;">
-        <h2 style="margin-right: 15px">{{ geneSymbol }}</h2>
-        <img (click)="copyGeneLink()" [src]="currentCopyState" style="width: 20px" >
+      <div #stickySpan [class.sticky]="sticky" style="display: flex;align-items: baseline;margin-bottom: -5px;">
+        <h2 [class.sticky]="sticky" [ngStyle]="{'margin-right' : sticky ? '0px' : '15px'}">{{ geneSymbol }}</h2>
+        <img *ngIf="!sticky" (click)="copyGeneLink()" [src]="currentCopyState" style="width: 20px;" >
       </div>
       <div
         class="wrapper"
@@ -104,10 +104,11 @@
       </div>
 
       <div
+        style="display: inline-flex; align-items: stretch; flex-wrap: wrap;"
         [ngClass]="{'compare-wrapper': isInGeneCompare}"
         class="wrapper">
         <ng-container *ngFor="let dataset of config.datasets">
-          <table class="table table-bordered table-centered datasets-table">
+          <table style="width:100%;" class="table table-bordered table-centered datasets-table">
             <thead>
               <tr class="card-block">
                 <th style="text-align: center; border-bottom: none" [attr.colspan]="dataset.personSets.length + 1">

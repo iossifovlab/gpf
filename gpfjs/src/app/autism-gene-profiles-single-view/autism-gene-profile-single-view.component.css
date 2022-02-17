@@ -111,3 +111,17 @@ td {
   color:#721c24;
   text-align: center;
 }
+
+.sticky {
+  position: sticky !important;
+  top: 0px !important;
+  overflow: hidden !important;
+  z-index: 999;
+  width: 100%;
+  border: 2px solid black;
+  padding: 5px;
+  background: white;
+  background-clip: padding-box;
+  display: flex;
+  justify-content: space-evenly;
+}
