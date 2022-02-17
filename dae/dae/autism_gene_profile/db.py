@@ -302,11 +302,8 @@ class AutismGeneProfileDB:
                 insert_map[f"{category}_{score_id}"] = score
 
         for study_id, ps_counts in agp.variant_counts.items():
-            print(f"{study_id}")
             for person_set_id, eff_type_counts in ps_counts.items():
-                print(f"{person_set_id}")
                 for eff_type, count in eff_type_counts.items():
-                    print(f"{study_id}:{person_set_id}:{eff_type}: {count}")
                     count_col = f"{study_id}_{person_set_id}_{eff_type}"
                     insert_map[count_col] = count["count"]
                     insert_map[f"{count_col}_rate"] = count["rate"]
