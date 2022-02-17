@@ -1,224 +1,170 @@
 import pytest
-import pandas as pd
 
-from collections import OrderedDict
-
-from .conftest import relative_to_this_test_folder
-
-from dae.annotation.tools.annotator_config import AnnotationConfigParser
-from dae.annotation.tools.score_annotator import (
+from dae.genomic_resources.genomic_scores import \
+    open_np_score_from_resource, \
+    open_position_score_from_resource
+from dae.annotation.schema import Schema
+from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.score_annotator import (
     PositionScoreAnnotator,
-    PositionMultiScoreAnnotator,
     NPScoreAnnotator,
 )
 
-try:
-    bigwig_enabled = True
-    from dae.annotation.tools.score_file_io_bigwig import BigWigAccess  # noqa
-except ImportError:
-    bigwig_enabled = False
 
-
-input2_phast_exptected = """RESULT_phastCons100way
-0.253
-0.251
-0.249
-0.247
-0.245
-"""
-
-input2_phast_pylo_expected = """RESULT_phastCons100way\tRESULT_phyloP100way
-0.253\t0.064
-0.251\t0.061
-0.249\t0.064
-0.247\t0.061
-0.245\t0.064
-"""
-
-
-@pytest.mark.parametrize("direct", [True, False])
-def test_variant_score_annotator_simple(
-        expected_df, variants_io, direct, capsys, genomes_db_2013):
-
-    options = {
-        "vcf": True,
-        "direct": direct,
-        "mode": "overwrite",
-        "scores_file": relative_to_this_test_folder(
-            "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz"
-        ),
+def test_position_score_annotator(
+        phastcons100way_variants_expected,
+        grr_fixture):
+    resource = grr_fixture.get_resource("hg38/TESTphastCons100way")
+    config = {
+        "annotator_type": "position_score",
+        "resource_id": "hg38/TESTphastCons100way"
     }
+    score = open_position_score_from_resource(resource)
 
-    columns = {
-        "TESTphastCons100way": "RESULT_phastCons100way",
+    annotator = PositionScoreAnnotator(config, score)
+    pipeline = AnnotationPipeline([], grr_fixture)
+    pipeline.add_annotator(annotator)
+
+    for sv, e in phastcons100way_variants_expected:
+        for sa in sv.alt_alleles:
+            result = pipeline.annotate(sa.get_annotatable())
+            assert result.get("phastCons100way") == e
+
+
+def test_position_score_annotator_schema(grr_fixture):
+    resource = grr_fixture.get_resource("hg38/TESTphastCons100way")
+    config = {
+        "annotator_type": "position_score",
+        "resource_id": "hg38/TESTphastCons100way"
     }
+    score = open_position_score_from_resource(resource)
+    annotator = PositionScoreAnnotator(
+        config,
+        score)
+    assert annotator is not None
 
-    config = AnnotationConfigParser.parse_section({
-            "options": options,
-            "columns": columns,
-            "annotator": "score_annotator.VariantScoreAnnotator",
-            "virtual_columns": [],
-        }
-    )
-
-    with variants_io("fixtures/input2.tsv") as io_manager:
-        score_annotator = PositionScoreAnnotator(config, genomes_db_2013)
-        assert score_annotator is not None
-
-        captured = capsys.readouterr()
-
-        score_annotator.annotate_file(io_manager)
-
-    captured = capsys.readouterr()
-    print(captured.err)
-    print(captured.out)
-    pd.testing.assert_frame_equal(
-        expected_df(captured.out),
-        expected_df(input2_phast_exptected),
-        rtol=10e-3)
+    schema = annotator.annotation_schema
+    assert schema is not None
 
 
-@pytest.mark.parametrize("direct", [True, False])
-def test_variant_multi_score_annotator_simple(
-        expected_df, variants_io, direct, capsys, genomes_db_2013):
-
-    options = {
-        "vcf": True,
-        "direct": direct,
-        "mode": "overwrite",
-        "scores_directory": relative_to_this_test_folder("fixtures/"),
+def test_np_score_annotator(cadd_variants_expected, grr_fixture):
+    resource = grr_fixture.get_resource("hg38/TESTCADD")
+    config = {
+        "annotator_type": "np_score",
+        "resource_id": "hg38/TESTCADD"
     }
+    score = open_np_score_from_resource(resource)
+    annotator = NPScoreAnnotator(config, score)
+    pipeline = AnnotationPipeline([], grr_fixture)
+    pipeline.add_annotator(annotator)
 
-    columns = {
-        "TESTphastCons100way": "RESULT_phastCons100way",
+    for sv, e in cadd_variants_expected:
+        for sa in sv.alt_alleles:
+            result = pipeline.annotate(sa.get_annotatable())
+            for score, value in e.items():
+                assert result.get(score) == pytest.approx(value, abs=1e-2)
+
+
+def test_np_score_annotator_schema(grr_fixture):
+    resource = grr_fixture.get_resource("hg38/TESTCADD")
+    config = {
+        "annotator_type": "np_score",
+        "resource_id": "hg38/TESTCADD"
     }
+    score = open_np_score_from_resource(resource)
+    annotator = NPScoreAnnotator(config, score)
 
-    config = AnnotationConfigParser.parse_section({
-            "options": options,
-            "columns": columns,
-            "annotator": "score_annotator.VariantScoreAnnotator",
-            "virtual_columns": [],
-        }
-    )
-    print(config.options)
-    print(type(config.options))
+    schema = annotator.annotation_schema
+    assert schema is not None
+    assert isinstance(schema, Schema)
+    assert "cadd_raw" in schema.names
+    assert "cadd_phred" in schema.names
 
-    with variants_io("fixtures/input2.tsv") as io_manager:
-        score_annotator = PositionMultiScoreAnnotator(config, genomes_db_2013)
-        assert score_annotator is not None
+    field = schema["cadd_raw"]
+    assert field.type == "float"
 
-        captured = capsys.readouterr()
+    field = schema["cadd_phred"]
+    assert field.type == "float"
 
-        score_annotator.annotate_file(io_manager)
-
-    captured = capsys.readouterr()
-    print(captured.err)
-    print(captured.out)
-
-    pd.testing.assert_frame_equal(
-        expected_df(captured.out),
-        expected_df(input2_phast_exptected),
-        rtol=10e-3)
+    assert len(schema) == 2
+    print(dir(schema))
 
 
-@pytest.mark.parametrize("direct", [True, False])
-def test_variant_multi_score_annotator_multi(
-    expected_df, variants_io, direct, capsys, genomes_db_2013
+def test_position_score_annotator_indels(
+        phastcons100way_indel_variants_expected,
+        grr_fixture):
+    resource = grr_fixture.get_resource("hg38/TESTphastCons100way")
+
+    config = {
+        "annotator_type": "position_score",
+        "resource_id": "hg38/TESTphastCons100way",
+        "attributes": [{
+            'source': 'phastCons100way',
+            'destination': 'phastCons100way',
+            'position_aggregator': "mean"
+        }]
+    }
+    score = open_position_score_from_resource(resource)
+
+    annotator = PositionScoreAnnotator(config, score)
+    pipeline = AnnotationPipeline([], grr_fixture)
+    pipeline.add_annotator(annotator)
+
+    for sv, e in phastcons100way_indel_variants_expected:
+        for sa in sv.alt_alleles:
+            result = pipeline.annotate(sa.get_annotatable())
+
+            assert result.get("phastCons100way") == \
+                pytest.approx(e, abs=1e-2)
+
+
+def test_position_score_annotator_mean_aggregate(
+    position_agg_mean_variants_expected, grr_fixture
 ):
-
-    options = {
-        "vcf": True,
-        "direct": direct,
-        "mode": "overwrite",
-        "scores_directory": relative_to_this_test_folder("fixtures/"),
+    resource = grr_fixture.get_resource("hg38/TESTPosAgg")
+    config = {
+        "annotator_type": "position_score",
+        "resource_id": "hg38/TESTPosAgg"
     }
+    score = open_position_score_from_resource(resource)
+    annotator = PositionScoreAnnotator(config, score)
+    pipeline = AnnotationPipeline([], grr_fixture)
+    pipeline.add_annotator(annotator)
 
-    columns = OrderedDict(
-        [
-            ("TESTphastCons100way", "RESULT_phastCons100way"),
-            ("TESTphyloP100way", "RESULT_phyloP100way"),
+    for sv, e in position_agg_mean_variants_expected:
+        for sa in sv.alt_alleles:
+            result = pipeline.annotate(sa.get_annotatable())
+
+            assert result.get("test_score") == pytest.approx(e, 1e-2)
+
+
+def test_np_score_annotator_indels(
+        cadd_indel_variants_expected,
+        grr_fixture):
+    resource = grr_fixture.get_resource("hg38/TESTCADD")
+    config = {
+        "annotator_type": "np_score",
+        "resource_id": "hg38/TESTCADD",
+        "attributes": [
+            {
+                'source': 'cadd_raw',
+                'destination': 'cadd_raw',
+            },
+            {
+                'source': 'cadd_phred',
+                'destination': 'cadd_phred',
+            }
         ]
-    )
-
-    config = AnnotationConfigParser.parse_section({
-            "options": options,
-            "columns": columns,
-            "annotator": "score_annotator.VariantScoreAnnotator",
-            "virtual_columns": [],
-        }
-    )
-    print(config.options)
-    print(type(config.options))
-
-    with variants_io("fixtures/input2.tsv") as io_manager:
-        score_annotator = PositionMultiScoreAnnotator(config, genomes_db_2013)
-        assert score_annotator is not None
-
-        captured = capsys.readouterr()
-
-        score_annotator.annotate_file(io_manager)
-
-    captured = capsys.readouterr()
-    print(captured.err)
-    print(captured.out)
-    pd.testing.assert_frame_equal(
-        expected_df(captured.out),
-        expected_df(input2_phast_pylo_expected),
-        rtol=10e-3,
-    )
-
-
-input2_cadd_expected = """RESULT_RawScore\tRESULT_PHRED
-0.40161\t6.631
-0.537788\t7.986
-0.371362\t6.298
-0.537794\t7.986
-0.391539\t6.522
-"""
-
-
-@pytest.mark.parametrize("direct", [True, False])
-def test_variant_score_annotator_cadd(
-    expected_df, variants_io, direct, capsys, genomes_db_2013
-):
-
-    options = {
-        "vcf": True,
-        "direct": direct,
-        "mode": "overwrite",
-        "scores_file": relative_to_this_test_folder(
-            "fixtures/TESTCADD/TESTwhole_genome_SNVs.tsv.gz"
-        )
     }
+    score = open_np_score_from_resource(resource)
+    annotator = NPScoreAnnotator(config, score)
 
-    columns = OrderedDict(
-        [("RawScore", "RESULT_RawScore"), ("PHRED", "RESULT_PHRED")]
-    )
+    pipeline = AnnotationPipeline([], grr_fixture)
+    pipeline.add_annotator(annotator)
 
-    config = AnnotationConfigParser.parse_section({
-            "options": options,
-            "columns": columns,
-            "annotator": "score_annotator.VariantScoreAnnotator",
-            "virtual_columns": [],
-        }
-    )
-    print(config.options)
-    print(type(config.options))
-
-    with variants_io("fixtures/input2.tsv") as io_manager:
-        score_annotator = NPScoreAnnotator(config, genomes_db_2013)
-        assert score_annotator is not None
-
-        captured = capsys.readouterr()
-
-        score_annotator.annotate_file(io_manager)
-
-    captured = capsys.readouterr()
-    print(captured.err)
-    print(captured.out)
-
-    pd.testing.assert_frame_equal(
-        expected_df(captured.out),
-        expected_df(input2_cadd_expected),
-        rtol=10e-3,
-    )
+    for sv, e in cadd_indel_variants_expected:
+        for sa in sv.alt_alleles:
+            result = pipeline.annotate(sa.get_annotatable())
+            print(sa, sa.get_annotatable())
+            for score, value in e.items():
+                assert result.get(score) == pytest.approx(value, rel=1e-3)

@@ -82,11 +82,11 @@ def test_agpdb_sort(agp_gpf_instance, sample_agp):
     stats_sorted = agp_gpf_instance.query_agp_statistics(
         1, sort_by="protection_scores_SFARI_gene_score", order="asc"
     )
-    assert stats_unsorted[0].gene_symbol == "CHD8"
-    assert stats_unsorted[1].gene_symbol == "CHD7"
+    assert stats_unsorted[0]["geneSymbol"] == "CHD8"
+    assert stats_unsorted[1]["geneSymbol"] == "CHD7"
 
-    assert stats_sorted[0].gene_symbol == "CHD7"
-    assert stats_sorted[1].gene_symbol == "CHD8"
+    assert stats_sorted[0]["geneSymbol"] == "CHD7"
+    assert stats_sorted[1]["geneSymbol"] == "CHD8"
 
     stats_sorted = agp_gpf_instance.query_agp_statistics(
         1, sort_by="autism_scores_SFARI_gene_score", order="desc"

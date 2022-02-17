@@ -1,0 +1,19 @@
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##contig=<ID=1>
+##INFO=<ID=REMAP_ALIGN,Number=1,Type=String,Description="Alignment type used for remapping (FP=first pass, SP=second pass)">
+##INFO=<ID=REF_EDIT,Number=0,Type=Flag,Description="REF base modified during remapping due to either left shifting or difference in REF base between source and target assemblies.">
+##NCBI_remap_source_assm="GCF_000001405.13"
+##NCBI_remap_target_assm="GCF_000001405.26"
+##NCBI_remap_align_date="2017-10-12 11:47:00"
+##NCBI_remap_run_date="2022-02-11T03:34:36"
+##NCBI_remap_batch_id="13416"
+##NCBI_remap_align_parameters=<minratio=0.5,maxratio=2,multiloc=Y,mergefrag=N>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	2773943	1	G	.	.	.	REF_EDIT;REMAP_ALIGN=FP
+1	12832765	2	T	.	.	.	REF_EDIT;REMAP_ALIGN=FP
+1	13094246	4	G	A	.	.	REF_EDIT;REMAP_ALIGN=FP
+1	13132543	4	T	.	.	.	REF_EDIT;REMAP_ALIGN=SP
+1	13184652	3	C	.	.	.	REF_EDIT;REMAP_ALIGN=FP
+HSCHR1_1_CTG3	337117	1	G	.	.	.	REF_EDIT;REMAP_ALIGN=SP
+HSCHR1_2_CTG3	78088	4	C	T	.	.	REMAP_ALIGN=SP

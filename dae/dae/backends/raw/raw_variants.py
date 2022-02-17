@@ -58,7 +58,7 @@ class RawVariantsQueryRunner(QueryRunner):
             logger.debug("variants iterator done")
 
         except BaseException as ex:
-            logger.warn(
+            logger.warning(
                 f"exception in runner run: {type(ex)}", exc_info=True)
         finally:
             self.close()
@@ -131,10 +131,10 @@ class RawFamilyVariants(abc.ABC):
     @staticmethod
     def filter_gene_effects(v, effect_types, genes):
         assert effect_types is not None or genes is not None
-        if v.effect is None:
+        if v.effects is None:
             return False
 
-        gene_effects = v.effect.genes
+        gene_effects = v.effects.genes
 
         if effect_types is None:
             result = [ge for ge in gene_effects if ge.symbol in genes]
@@ -197,7 +197,7 @@ class RawFamilyVariants(abc.ABC):
             if not cls.filter_gene_effects(allele, effect_types, genes):
                 return False
         if variant_type is not None:
-            if not variant_type.match([allele.variant_type]):
+            if not variant_type.match([allele.allele_type]):
                 return False
         if person_ids is not None:
             if allele.is_reference_allele:
@@ -245,7 +245,7 @@ class RawFamilyVariants(abc.ABC):
             if not cls.filter_gene_effects(allele, effect_types, genes):
                 return False
         if variant_type is not None:
-            if not variant_type.match([allele.variant_type]):
+            if not variant_type.match([allele.allele_type]):
                 return False
         if person_ids is not None:
             if allele.is_reference_allele:

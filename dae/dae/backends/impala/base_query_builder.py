@@ -38,7 +38,7 @@ class BaseQueryBuilder(ABC):
         self.variants_table = variants_table
         self.pedigree_table = pedigree_table
         self.table_properties = table_properties
-        self.variants_columns = variants_schema.columns
+        self.variants_columns = variants_schema.fields
         self.pedigree_columns = pedigree_schema
         self.ped_df = pedigree_df
         self.has_extra_attributes = \
@@ -254,8 +254,8 @@ class BaseQueryBuilder(ABC):
                 continue
             assert attr_name in self.variants_columns
             assert (
-                self.variants_columns[attr_name].type_py == float
-                or self.variants_columns[attr_name].type_py == int
+                self.variants_columns[attr_name].type == float
+                or self.variants_columns[attr_name].type == int
             ), self.variants_columns[attr_name]
             left, right = attr_range
             attr_name = self.where_accessors[attr_name]

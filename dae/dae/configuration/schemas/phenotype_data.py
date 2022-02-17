@@ -32,6 +32,12 @@ phenotype_data_schema = {
 }
 
 pheno_conf_schema = {
+    "conf_dir": {
+        "type": "string",
+        "check_with": validate_existing_path,
+        "coerce": "abspath",
+        "required": True,
+    },
     "phenotype_data": {"type": "dict", "schema": phenotype_data_schema},
     **regression_conf_schema,
 }

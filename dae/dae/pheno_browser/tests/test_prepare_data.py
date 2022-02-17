@@ -1,12 +1,15 @@
 import pytest
+import os
 
 import pandas as pd
 
 from dae.pheno_browser.prepare_data import PreparePhenoBrowserBase
+from dae.pheno_browser.graphs import violinplot, stripplot, gender_palette
 
 from dae.variants.attributes import Role, Sex
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
+import matplotlib.pyplot as plt
 
 
 def test_augment_measure(fake_phenotype_data, output_dir):
@@ -358,3 +361,49 @@ def test_handle_regressions_default_jitter(
     assert jitter == 0.12
     measure, reg_measure, jitter = mocked.call_args_list[1][0]
     assert jitter == 0.13
+
+
+def test_draw_violinplot(fake_phenotype_data, temp_dirname_figures):
+
+    df = fake_phenotype_data.get_persons_values_df(["i1.m5", "i1.m6"])
+    for i in range(len(df)):
+        df["i1.m5"][i] = i
+        df["i1.m6"][i] = i*2
+
+    violinplot(
+        data=df,
+        x="i1.m5",
+        y="i1.m6",
+        hue="sex",
+        hue_order=[Sex.male, Sex.female],
+        linewidth=1,
+        split=True,
+        scale="count",
+        scale_hue=False,
+        palette=gender_palette(),
+        saturation=1,
+    )
+
+    plt.savefig(os.path.join(temp_dirname_figures, "violinplot"))
+
+
+def test_draw_stripplot(fake_phenotype_data, temp_dirname_figures):
+
+    df = fake_phenotype_data.get_persons_values_df(["i1.m5", "i1.m6"])
+    for i in range(len(df)):
+        df["i1.m5"][i] = i
+        df["i1.m6"][i] = i*2
+
+    stripplot(
+        data=df,
+        x="i1.m5",
+        y="i1.m6",
+        hue="sex",
+        hue_order=[Sex.male, Sex.female],
+        jitter=0.025,
+        size=2,
+        palette=gender_palette(),
+        linewidth=0.1,
+    )
+
+    plt.savefig(os.path.join(temp_dirname_figures, "stripplot"))

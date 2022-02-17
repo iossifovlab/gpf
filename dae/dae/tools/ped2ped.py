@@ -75,7 +75,7 @@ def main(argv, gpf_instance=None):
             families,
             variants_filenames,
             params=variants_params,
-            genome=gpf_instance.genomes_db.get_genome(),
+            genome=gpf_instance.reference_genome,
         )
 
         families = variants_loader.families

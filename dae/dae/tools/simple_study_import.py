@@ -10,6 +10,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.backends.impala.import_commons import (
     construct_import_annotation_pipeline,
+    construct_import_effect_annotator,
     save_study_config,
 )
 
@@ -17,7 +18,8 @@ from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.vcf.loader import VcfLoader
 
 from dae.backends.cnv.loader import CNVLoader
-from dae.backends.raw.loader import AnnotationPipelineDecorator
+from dae.backends.raw.loader import AnnotationPipelineDecorator, \
+    EffectAnnotationDecorator
 
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -154,6 +156,17 @@ def generate_denovo_gene_sets(gpf_instance, study_id):
     main(gpf_instance=gpf_instance, argv=argv)
 
 
+def _decorate_loader(variants_loader, effect_annotator, annotation_pipeline):
+    variants_loader = EffectAnnotationDecorator(
+        variants_loader, effect_annotator)
+
+    if annotation_pipeline is not None:
+        variants_loader = AnnotationPipelineDecorator(
+            variants_loader, annotation_pipeline)
+
+    return variants_loader
+
+
 def main(argv, gpf_instance=None):
     dae_config = None
     if gpf_instance is not None:
@@ -162,9 +175,9 @@ def main(argv, gpf_instance=None):
         try:
             gpf_instance = GPFInstance()
             dae_config = gpf_instance.dae_config
-
-        except Exception:
+        except Exception as e:
             logger.warning("GPF not configured correctly")
+            logger.exception(e)
 
     argv = cli_arguments(dae_config, argv)
 
@@ -179,8 +192,7 @@ def main(argv, gpf_instance=None):
     logging.getLogger("impala").setLevel(logging.WARNING)
 
     genotype_storage_factory = gpf_instance.genotype_storage_db
-    genomes_db = gpf_instance.genomes_db
-    genome = genomes_db.get_genome()
+    genome = gpf_instance.reference_genome
 
     genotype_storage = genotype_storage_factory.get_genotype_storage(
         argv.genotype_storage
@@ -189,9 +201,8 @@ def main(argv, gpf_instance=None):
         f"genotype storage: {argv.genotype_storage}, {genotype_storage}")
     assert genotype_storage is not None, argv.genotype_storage
 
-    annotation_pipeline = construct_import_annotation_pipeline(
-        gpf_instance, annotation_configfile=None
-    )
+    annotation_pipeline = construct_import_annotation_pipeline(gpf_instance)
+    effect_annotator = construct_import_effect_annotator(gpf_instance)
 
     if argv.id is not None:
         study_id = argv.id
@@ -199,7 +210,9 @@ def main(argv, gpf_instance=None):
         study_id, _ = os.path.splitext(os.path.basename(argv.families))
 
     if argv.output is None:
-        output = dae_config.studies_db.dir
+        from pprint import pprint
+        pprint(dae_config)
+        output = dae_config.studies.dir
     else:
         output = argv.output
 
@@ -224,8 +237,9 @@ def main(argv, gpf_instance=None):
         denovo_loader = DenovoLoader(
             families, denovo_filename, genome=genome, params=denovo_params
         )
-        denovo_loader = AnnotationPipelineDecorator(
-            denovo_loader, annotation_pipeline
+
+        denovo_loader = _decorate_loader(
+            denovo_loader, effect_annotator, annotation_pipeline
         )
         variant_loaders.append(denovo_loader)
 
@@ -234,17 +248,16 @@ def main(argv, gpf_instance=None):
         cnv_loader = CNVLoader(
             families, cnv_filename, genome=genome, params=cnv_params
         )
-        cnv_loader = AnnotationPipelineDecorator(
-            cnv_loader, annotation_pipeline
-        )
+        cnv_loader = _decorate_loader(
+            cnv_loader, effect_annotator, annotation_pipeline)
         variant_loaders.append(cnv_loader)
 
     if argv.vcf_files is not None:
         vcf_files, vcf_params = VcfLoader.parse_cli_arguments(argv)
         vcf_loader = VcfLoader(families, vcf_files, genome, params=vcf_params)
-        vcf_loader = AnnotationPipelineDecorator(
-            vcf_loader, annotation_pipeline
-        )
+        vcf_loader = _decorate_loader(
+            vcf_loader, effect_annotator, annotation_pipeline)
+
         variant_loaders.append(vcf_loader)
 
     if argv.dae_summary_file is not None:
@@ -252,9 +265,8 @@ def main(argv, gpf_instance=None):
         dae_loader = DaeTransmittedLoader(
             families, dae_files, genome, params=dae_params
         )
-        dae_loader = AnnotationPipelineDecorator(
-            dae_loader, annotation_pipeline
-        )
+        dae_loader = _decorate_loader(
+            dae_loader, effect_annotator, annotation_pipeline)
         variant_loaders.append(dae_loader)
 
     study_config = genotype_storage.simple_study_import(
@@ -288,4 +300,5 @@ def main(argv, gpf_instance=None):
 
 
 if __name__ == "__main__":
+
     main(sys.argv[1:])

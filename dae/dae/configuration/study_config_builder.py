@@ -492,7 +492,8 @@ enabled = {{ denovo_gene_sets.enabled }}
 {%- endif %}
 
 {%- if denovo_gene_sets.selected_person_set_collections %}
-selected_person_set_collections = {{ denovo_gene_sets.selected_person_set_collections }}
+selected_person_set_collections = \
+"{{ denovo_gene_sets.selected_person_set_collections }}"
 {%- endif %}
 
 {%- if denovo_gene_sets.selected_standard_criterias_values %}

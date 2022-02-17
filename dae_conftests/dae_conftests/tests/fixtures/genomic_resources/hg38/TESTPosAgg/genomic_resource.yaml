@@ -1,0 +1,31 @@
+---
+
+type: position_score
+
+table:
+  filename: scores.tsv.gz
+  format: tabix
+  header_mode: none
+
+  # defined by score_type
+  chrom: 
+    index: 0
+  pos_begin:
+    index: 1
+  pos_end: 
+    index: 2
+
+
+# score values
+scores:
+    - id: test_score
+      type: float
+      desc: ""
+      index: 3
+      position_aggregator: mean
+
+default_annotation:
+  attributes:
+    - source: test_score
+      destination: test_score
+      position_aggregator: mean

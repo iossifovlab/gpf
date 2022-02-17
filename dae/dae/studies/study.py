@@ -543,7 +543,7 @@ class GenotypeData(ABC):
             assert ps_id in sets
             ps = sets[ps_id]
             pedigree_fields[ps_id] = {
-                "values": [val for val in ps["values"]],
+                "values": [val for val in ps.get("values",["unspecified"])],
                 "sources": [src.source for src in collection_config.sources]
             }
 

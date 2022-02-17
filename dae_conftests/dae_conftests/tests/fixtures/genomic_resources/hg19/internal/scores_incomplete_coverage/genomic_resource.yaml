@@ -1,0 +1,27 @@
+---
+
+type: position_score
+
+table:
+  filename: scores_incomplete_coverage.tsv.gz
+  format: tabix
+
+  # defined by score_type
+  chrom: 
+    name: CHROM
+  pos_begin:
+    name: POS
+  pos_end: 
+    name: POS
+
+# score values
+scores:
+    - id: score0_incomplete_cov
+      type: float
+      name: score0
+
+default_annotation:
+  attributes:
+    - source: score0_incomplete_cov
+      destination: score0_incomplete_cov
+      position_aggregator: max

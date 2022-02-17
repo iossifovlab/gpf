@@ -96,7 +96,9 @@ class FamiliesGroupCounters(object):
                 ].append(family)
 
             families_to_types = {
-                    k: v for k, v in sorted(families_to_types.items(), key=lambda item: len(item[1]), reverse=True)
+                    k: v for k, v in sorted(
+                        families_to_types.items(),
+                        key=lambda item: len(item[1]), reverse=True)
             }
 
             for family_type, families in families_to_types.items():

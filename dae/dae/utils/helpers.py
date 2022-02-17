@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from box import Box
+from box import Box  # type: ignore
 
 
 def study_id_from_path(filepath):

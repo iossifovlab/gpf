@@ -5,7 +5,9 @@ from lark.visitors import Interpreter
 from lark.reconstruct import Reconstructor
 from functools import reduce
 
-from dae.variants.attributes import Role, Inheritance, VariantType, Sex
+from dae.variants.core import Allele
+from dae.variants.attributes import Role, Inheritance, Sex
+from dae.variants.variant import allele_type_from_name
 
 
 QUERY_GRAMMAR = """
@@ -325,8 +327,8 @@ def inheritance_converter(a):
 
 
 def variant_type_converter(a):
-    if not isinstance(a, VariantType):
-        return VariantType.from_name(a)
+    if not isinstance(a, Allele.Type):
+        return allele_type_from_name(a)
     return a
 
 

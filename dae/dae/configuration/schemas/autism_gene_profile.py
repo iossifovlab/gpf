@@ -1,3 +1,5 @@
+from dae.configuration.gpf_config_parser import validate_existing_path
+
 from dae.variants.attributes import _VARIANT_TYPE_DISPLAY_NAME, \
     _ROLE_DISPLAY_NAME
 
@@ -7,21 +9,26 @@ variant_types = list(_VARIANT_TYPE_DISPLAY_NAME.keys()) + \
 roles = list(_ROLE_DISPLAY_NAME.keys()) + \
     list(_ROLE_DISPLAY_NAME.values())
 
+
 gene_set_schema = {
     "type": "dict",
     "schema": {
-        "collection_id": {"type": "string", "default": "main"},
+        "collection_id": {
+            "type": "string",
+            "regex": "^[^.\r\n]+$",
+            "default": "main"
+        },
         "display_name": {"type": "string"},
         "meta": {"type": "string"},
         "default_visible": {"type": "boolean", "default": True},
-        "set_id": {"type": "string"}
+        "set_id": {"type": "string", "regex": "^[^.\r\n]+$"}
     }
 }
 
 genomic_score_schema = {
     "type": "dict",
     "schema": {
-        "score_name": {"type": "string"},
+        "score_name": {"type": "string", "regex": "^[^.\r\n]+$"},
         "display_name": {"type": "string"},
         "meta": {"type": "string"},
         "default_visible": {"type": "boolean", "default": True},
@@ -32,7 +39,7 @@ genomic_score_schema = {
 variant_statistic_schema = {
     "type": "dict",
     "schema": {
-        "id": {"type": "string", "required": True},
+        "id": {"type": "string", "regex": "^[^.\r\n]+$", "required": True},
         "display_name": {"type": "string", "required": True},
         "description": {"type": "string"},
         "effects": {"type": "list", "schema": {"type": "string"}},
@@ -40,7 +47,7 @@ variant_statistic_schema = {
         "scores": {"type": "list", "schema": {
             "type": "dict",
             "schema": {
-                "name": {"type": "string"},
+                "name": {"type": "string", "regex": "^[^.\r\n]+$"},
                 "min": {"type": "float", "default": None, "nullable": True},
                 "max": {"type": "float", "default": None, "nullable": True}
             }
@@ -64,13 +71,20 @@ variant_statistic_schema = {
 }
 
 autism_gene_tool_config = {
+    "conf_dir": {
+        "type": "string",
+        "check_with": validate_existing_path,
+        "coerce": "abspath",
+        "required": True,
+    },
+
     "gene_sets": {
         "type": "list",
         "required": True,
         "schema": {
             "type": "dict",
             "schema": {
-                "category": {"type": "string"},
+                "category": {"type": "string", "regex": "^[^.\r\n]+$"},
                 "display_name": {"type": "string"},
                 "default_visible": {"type": "boolean", "default": True},
                 "sets": {"type": "list", "schema": gene_set_schema}
@@ -83,7 +97,7 @@ autism_gene_tool_config = {
         "schema": {
             "type": "dict",
             "schema": {
-                "category": {"type": "string"},
+                "category": {"type": "string", "regex": "^[^.\r\n]+$"},
                 "display_name": {"type": "string"},
                 "default_visible": {"type": "boolean", "default": True},
                 "scores": {"type": "list", "schema": genomic_score_schema}
@@ -99,9 +113,14 @@ autism_gene_tool_config = {
                 "person_sets": {"type": "list", "schema": {
                         "type": "dict",
                         "schema": {
-                            "set_name": {"type": "string"},
+                            "set_name": {
+                                "type": "string",
+                                "regex": "^[^.\r\n]+$"
+                            },
                             "collection_name": {"type": "string"},
                             "description": {"type": "string"},
+                            "default_visible": {
+                                "type": "boolean", "default": True},
                         }
                     }
                 },

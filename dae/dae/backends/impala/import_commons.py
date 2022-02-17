@@ -5,9 +5,11 @@ import argparse
 import time
 import logging
 import shutil
+import fsspec  # type: ignore
+from urllib.parse import urlparse
 
 import toml
-from box import Box
+from box import Box  # type: ignore
 
 from typing import Optional, Any
 
@@ -16,12 +18,14 @@ from collections import defaultdict
 
 from jinja2 import Template
 
-from dae.annotation.annotation_pipeline import PipelineAnnotator
+from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.effect_annotator import EffectAnnotatorAdapter
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.pedigrees.loader import FamiliesLoader
-from dae.backends.raw.loader import AnnotationPipelineDecorator
+from dae.backends.raw.loader import AnnotationPipelineDecorator, \
+    EffectAnnotationDecorator
 from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.cnv.loader import CNVLoader
@@ -41,7 +45,7 @@ logger = logging.getLogger(__name__)
 
 
 def save_study_config(dae_config, study_id, study_config, force=False):
-    dirname = os.path.join(dae_config.studies_db.dir, study_id)
+    dirname = os.path.join(dae_config.studies.dir, study_id)
     filename = os.path.join(dirname, "{}.conf".format(study_id))
 
     if os.path.exists(filename):
@@ -67,21 +71,40 @@ def construct_import_annotation_pipeline(
     if annotation_configfile is not None:
         config_filename = annotation_configfile
     else:
+        if gpf_instance.dae_config.annotation is None:
+            return None
         config_filename = gpf_instance.dae_config.annotation.conf_file
 
-    assert os.path.exists(config_filename), config_filename
-    options = {
-        "vcf": True,
-        "c": "chrom",
-        "p": "position",
-        "r": "reference",
-        "a": "alternative",
-    }
+    if not os.path.exists(config_filename):
+        logger.warning(f"missing annotation configuration: {config_filename}")
+        return None
 
-    pipeline = PipelineAnnotator.build(
-        options, config_filename, gpf_instance.genomes_db,
-    )
-    return pipeline
+    grr = gpf_instance.grr
+    assert os.path.exists(config_filename), config_filename
+    return build_annotation_pipeline(
+        pipeline_config_file=config_filename, grr_repository=grr)
+
+
+def construct_import_effect_annotator(gpf_instance):
+    genome = gpf_instance.reference_genome
+    gene_models = gpf_instance.gene_models
+
+    config = Box({
+        "annotator_type": "effect_annotator",
+        "genome": gpf_instance.dae_config.reference_genome.resource_id,
+        "gene_models": gpf_instance.dae_config.gene_models.resource_id,
+        "attributes": [
+            {
+                "source": "allele_effects",
+                "destination": "allele_effects",
+                "internal": True
+            }
+        ]
+    })
+
+    effect_annotator = EffectAnnotatorAdapter(
+        config, genome=genome, gene_models=gene_models)
+    return effect_annotator
 
 
 class MakefilePartitionHelper:
@@ -95,7 +118,7 @@ class MakefilePartitionHelper:
         self.genome = genome
         self.partition_descriptor = partition_descriptor
         self.chromosome_lengths = dict(
-            self.genome.get_genomic_sequence().get_all_chrom_lengths()
+            self.genome.get_all_chrom_lengths()
         )
 
         self._build_adjust_chrom(add_chrom_prefix, del_chrom_prefix)
@@ -168,7 +191,7 @@ class MakefilePartitionHelper:
         genome_chromosomes = [
             chrom
             for chrom, _ in
-            self.genome.get_genomic_sequence().get_all_chrom_lengths()
+            self.genome.get_all_chrom_lengths()
         ]
         # fmt: on
         variants_targets = self.generate_variants_targets(genome_chromosomes)
@@ -561,6 +584,106 @@ rule setup_remote:
         """)
 
 
+class SnakefileKubernetesGenerator(BatchGenerator):
+
+    def __init__(self):
+        super(SnakefileKubernetesGenerator, self).__init__()
+
+    def generate(self, context):
+        return SnakefileKubernetesGenerator.TEMPLATE.render(context)
+
+    TEMPLATE = Template(
+        """\
+# To run this file against an already-configured k8s cluster run:
+# snakemake -j --kubernetes --default-remote-provider S3 --default-remote-prefix {{bucket}}
+#           --envvars AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY --container-image seqpipe/seqpipe-gpf-snakemake
+
+
+rule default:
+    input:
+        "{{outdir}}/parquet.flag"
+
+
+rule pedigree:
+    input:
+{%- if partition_description %}
+        partition_description="{{partition_description}}",
+{%- endif %}
+        pedigree="{{pedigree.pedigree}}"
+    output:
+        parquet="{{pedigree.output}}",
+        flag=touch("{{outdir}}/pedigree.flag")
+    benchmark:
+        "logs/pedigree_benchmark.txt"
+    log:
+        stdout="logs/pedigree_stdout.log",
+        stderr="logs/pedigree_stderr.log"
+    shell:
+        '''
+        ped2parquet.py --study-id {{study_id}} {{pedigree.verbose}} \\
+{%- if partition_description %}
+            --pd {input.partition_description} \\
+{%- endif %}
+            {{pedigree.params}} {input.pedigree} \\
+            -o {output.parquet} > {log.stdout} 2> {log.stderr}
+        '''
+
+{% for prefix, context in variants.items() %}
+
+{{prefix}}_bins={{context.bins|tojson}}
+
+rule {{prefix}}_variants_region_bin:
+    input:
+        pedigree="{{pedigree.pedigree}}",
+{%- if partition_description %}
+        partition_description="{{partition_description}}",
+{%- endif %}
+    params:
+        variants="{{context.variants}}",
+    output:
+        {{prefix}}_flag=touch("{{outdir}}/{{prefix}}_{rb}.flag")
+    benchmark:
+        "logs/{{prefix}}_{rb}_benchmark.tsv"
+    log:
+        stdout="logs/{{prefix}}_{rb}_stdout.log",
+        stderr="logs/{{prefix}}_{rb}_stderr.log"
+    shell:
+        '''
+        {{prefix}}2parquet.py --study-id {{study_id}} {{context.verbose}} \\
+            {{pedigree.params}} {input.pedigree} \\
+            {{context.params}} \\
+{%- if partition_description %}
+            --pd {input.partition_description} \\
+{%- endif %}
+            -o {{variants_output}} \\
+            {params.variants} \\
+            --rb {wildcards.rb} > {log.stdout} 2> {log.stderr}
+        '''
+
+rule {{prefix}}_variants:
+    input:
+        {{prefix}}_flags=expand("{{outdir}}/{{prefix}}_{rb}.flag", rb={{prefix}}_bins)
+    output:
+        touch("{{outdir}}/{{prefix}}_variants.flag")
+
+{% endfor %}
+
+
+rule parquet:
+    input:
+        pedigree="{{outdir}}/pedigree.flag",
+{%- for prefix in variants %}
+        {{prefix}}_flags=expand("{{outdir}}/{{prefix}}_{rb}.flag", rb={{prefix}}_bins),
+{%- endfor %}
+
+    output:
+        touch("{{outdir}}/parquet.flag")
+    benchmark:
+        "logs/parquet_benchmark.tsv"
+
+        """)  # noqa
+
+
 class BatchImporter:
     def __init__(self, gpf_instance):
         self.gpf_instance = gpf_instance
@@ -608,7 +731,7 @@ class BatchImporter:
             self.families,
             variants_filenames,
             params=variants_params,
-            genome=self.gpf_instance.genomes_db.get_genome(),
+            genome=self.gpf_instance.reference_genome,
         )
         self.vcf_loader = variants_loader
         self.variants_loaders["vcf"] = variants_loader
@@ -624,7 +747,7 @@ class BatchImporter:
             self.families,
             variants_filename,
             params=variants_params,
-            genome=self.gpf_instance.genomes_db.get_genome(),
+            genome=self.gpf_instance.reference_genome,
         )
         self.denovo_loader = variants_loader
         self.variants_loaders["denovo"] = variants_loader
@@ -641,7 +764,7 @@ class BatchImporter:
             self.families,
             variants_filename,
             params=variants_params,
-            genome=self.gpf_instance.genomes_db.get_genome(),
+            genome=self.gpf_instance.reference_genome,
         )
         self.cnv_loader = variants_loader
         self.variants_loaders["cnv"] = variants_loader
@@ -657,7 +780,7 @@ class BatchImporter:
             self.families,
             variants_filename,
             params=variants_params,
-            genome=self.gpf_instance.genomes_db.get_genome(),
+            genome=self.gpf_instance.reference_genome,
         )
         self.dae_loader = variants_loader
         self.variants_loaders["dae"] = variants_loader
@@ -686,7 +809,7 @@ class BatchImporter:
 
         self.partition_helper = MakefilePartitionHelper(
             partition_description,
-            self.gpf_instance.genomes_db.get_genome(),
+            self.gpf_instance.reference_genome,
             add_chrom_prefix=add_chrom_prefix,
             del_chrom_prefix=del_chrom_prefix,
         )
@@ -728,18 +851,8 @@ class BatchImporter:
             .build_genotype_storage(argv)
         return self
 
-    def _create_output_directory(self, argv):
-        dirname = argv.output
-        if dirname is None:
-            dirname = "."
-        dirname = os.path.abspath(dirname)
-
-        os.makedirs(dirname, exist_ok=True)
-        os.makedirs(os.path.join(dirname, "logs"), exist_ok=True)
-        return dirname
-
     def generate_instructions(self, argv):
-        dirname = self._create_output_directory(argv)
+        dirname = argv.generator_output or argv.output
         context = self.build_context(argv)
         if argv.tool == "make":
             generator = MakefileGenerator()
@@ -747,16 +860,65 @@ class BatchImporter:
         elif argv.tool == "snakemake":
             generator = SnakefileGenerator()
             filename = os.path.join(dirname, "Snakefile")
+        elif argv.tool == "snakemake-kubernetes":
+            generator = SnakefileKubernetesGenerator()
+            filename = os.path.join(dirname, "Snakefile")
         else:
             assert False, f"unexpected tool format: {argv.tool}"
 
         content = generator.generate(context)
 
-        with open(filename, "w") as outfile:
+        with fsspec.open(filename, "w") as outfile:
             outfile.write(content)
 
     def build_context(self, argv):
-        outdir = self._create_output_directory(argv)
+        if urlparse(argv.output).scheme:
+            return self._build_context_remote(argv)
+        else:
+            return self._build_context_local(argv)
+
+    def _build_context_remote(self, argv):
+        context = self._build_context_local(argv)
+
+        out_url = urlparse(argv.output)
+        outdir = out_url.path[1:]  # strip leading '/' of path
+        bucket = out_url.netloc
+
+        context.update({
+            "outdir": outdir,
+            "bucket": bucket,
+        })
+
+        if argv.partition_description:
+            context["partition_description"] = \
+                urlparse(argv.partition_description).path[1:]
+
+        study_id = context["study_id"]
+
+        pedigree_output = os.path.join(
+            outdir, f"{study_id}_pedigree", "pedigree.parquet")
+        pedigree_pedigree = urlparse(self.families_loader.filename).path[1:]
+        context["pedigree"].update({
+            "pedigree": pedigree_pedigree,
+            "output": pedigree_output,
+        })
+
+        for prefix, variants_loader in self.variants_loaders.items():
+            variants_context = context["variants"][prefix]
+            variants_context["variants"] = " ".join(
+                [
+                    fn
+                    for fn in variants_loader.variants_filenames
+                ])
+
+        if self.variants_loaders:
+            context["variants_output"] = \
+                os.path.join(argv.output, f"{study_id}_variants")
+
+        return context
+
+    def _build_context_local(self, argv):
+        outdir = argv.output
         study_id = self.study_id
 
         context = {
@@ -830,7 +992,6 @@ class BatchImporter:
 
     def generate_study_config(self, argv):
         dirname = argv.output
-        assert os.path.exists(dirname)
 
         config_dict = {
             "id": self.study_id,
@@ -861,7 +1022,7 @@ class BatchImporter:
 
         config_builder = StudyConfigBuilder(config_dict)
         config = config_builder.build_config()
-        with open(os.path.join(
+        with fsspec.open(os.path.join(
                 dirname, f"{self.study_id}.conf"), "w") as outfile:
             outfile.write(config)
 
@@ -935,6 +1096,16 @@ class BatchImporter:
         )
 
         parser.add_argument(
+            "--generator-out",
+            type=str,
+            default=None,
+            dest="generator_output",
+            metavar="<output directory>",
+            help="generator output directory. "
+            "If none specified, the output directory is used"
+        )
+
+        parser.add_argument(
             "--pd",
             "--partition-description",
             type=str,
@@ -1002,8 +1173,9 @@ class BatchImporter:
         if gpf_instance is None:
             try:
                 gpf_instance = GPFInstance()
-            except Exception:
+            except Exception as e:
                 logger.warning("GPF not configured properly...")
+                logger.exception(e)
 
         parser = BatchImporter.cli_arguments_parser(gpf_instance)
         argv = parser.parse_args(argv)
@@ -1217,14 +1389,20 @@ class Variants2ParquetTool:
 
     @classmethod
     def _build_variants_loader_pipeline(
-        cls, gpf_instance, argv, variants_loader
-    ):
+            cls, gpf_instance: GPFInstance, argv, variants_loader):
+
+        effect_annotator = construct_import_effect_annotator(gpf_instance)
+
+        variants_loader = EffectAnnotationDecorator(
+            variants_loader, effect_annotator)
+
         annotation_pipeline = construct_import_annotation_pipeline(
             gpf_instance, annotation_configfile=argv.annotation_config,
         )
-        variants_loader = AnnotationPipelineDecorator(
-            variants_loader, annotation_pipeline
-        )
+        if annotation_pipeline is not None:
+            variants_loader = AnnotationPipelineDecorator(
+                variants_loader, annotation_pipeline
+            )
 
         return variants_loader
 
@@ -1237,7 +1415,7 @@ class Variants2ParquetTool:
             families,
             variants_filenames,
             params=variants_params,
-            genome=gpf_instance.genomes_db.get_genome(),
+            genome=gpf_instance.reference_genome,
         )
         return variants_loader
 
@@ -1259,7 +1437,7 @@ class Variants2ParquetTool:
 
         generator = MakefilePartitionHelper(
             partition_description,
-            gpf_instance.genomes_db.get_genome(),
+            gpf_instance.reference_genome,
             add_chrom_prefix=add_chrom_prefix,
             del_chrom_prefix=del_chrom_prefix,
         )

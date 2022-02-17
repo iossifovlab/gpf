@@ -7,12 +7,14 @@ from dae.backends.storage.filesystem_genotype_storage import (
 def test_get_genotype_storage_ids(genotype_storage_factory):
     genotype_storage_ids = genotype_storage_factory.get_genotype_storage_ids()
 
-    assert len(genotype_storage_ids) == 4
+    assert len(genotype_storage_ids) == 6
     assert genotype_storage_ids == [
         "genotype_impala",
         "genotype_impala_backends",
         "genotype_filesystem",
         "genotype_filesystem2",
+        "test_filesystem",
+        "test_impala",
     ]
 
 

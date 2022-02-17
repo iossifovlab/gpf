@@ -44,8 +44,7 @@ pipeline {
         try {
           junit 'test-results/wdae-junit.xml, test-results/dae-junit.xml'
 
-          cobertura coberturaReportFile: 'test-results/dae-coverage.xml', enableNewApi: true
-          cobertura coberturaReportFile: 'test-results/wdae-coverage.xml', enableNewApi: true
+          cobertura coberturaReportFile: 'test-results/coverage.xml', enableNewApi: true, onlyStable: false, sourceEncoding: 'ASCII'
 
           recordIssues(
             enabledForFailure: true, aggregatingResults: false,
@@ -55,6 +54,15 @@ pipeline {
               myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8', id: 'mypy-wdae', name: 'MyPy - wdae')
             ]
           )
+
+          publishHTML (target : [allowMissing: false,
+            alwaysLinkToLastBuild: true,
+            keepAll: true,
+            reportDir: 'test-results/coverage-html',
+            reportFiles: 'index.html',
+            reportName: 'GPF Coverage Report',
+            reportTitles: 'GPF Coverage Report'])
+          
         } finally {
           zulipNotification(
             topic: "${env.JOB_NAME}"

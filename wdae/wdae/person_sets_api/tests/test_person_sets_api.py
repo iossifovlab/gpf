@@ -117,6 +117,24 @@ def test_collection_configs_view(admin_client):
             'id': 'phenotype',
             'name': 'Phenotype'
         },
+        'status': {
+            'domain': [
+                {
+                    'color': '#e35252',
+                    'id': 'affected',
+                    'name': 'affected',
+                    'values': {'affected'}
+                },
+                {
+                    'color': '#ffffff',
+                    'id': 'unaffected',
+                    'name': 'unaffected',
+                    'values': {'unaffected'}
+                }
+            ],
+            'id': 'status',
+            'name': 'Affected Status'
+        }
     }
 
 

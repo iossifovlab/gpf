@@ -92,25 +92,5 @@ class ProfileView(QueryBaseView):
     def get(self, request, gene_symbol):
         agp = self.gpf_instance.get_agp_statistic(gene_symbol)
         if not agp:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+            return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(agp.to_json())
-
-
-class QueryProfilesView(QueryBaseView):
-    def get(self, request):
-        data = request.query_params
-        page = int(data.get("page", 1))
-        if page < 1:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        symbol_like = data.get("symbol", None)
-        sort_by = data.get("sortBy", None)
-        order = data.get("order", None)
-
-        agps = self.gpf_instance.query_agp_statistics(
-            page, symbol_like, sort_by, order)
-
-        if agps is None:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        return Response([agp.to_json() for agp in agps])

@@ -1,3 +1,5 @@
+from box import Box  # type: ignore
+
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
 from dae.backends.storage.filesystem_genotype_storage import (
     FilesystemGenotypeStorage,
@@ -6,15 +8,27 @@ from dae.backends.storage.filesystem_genotype_storage import (
 
 class GenotypeStorageFactory:
     def __init__(self, dae_config):
-        self.dae_config = dae_config
+        self.storage_config = dae_config.storage
+        self.default_storage_id = dae_config.genotype_storage.default
+
+        if self.storage_config is None:
+            default_config = {
+                "genotype_filesystem": {
+                    "dir": f"{dae_config.conf_dir}/studies",
+                    "storage_type": "filesystem",
+                }
+            }
+            self.storage_config = Box(default_config)
 
         self._genotype_storage_cache = {}
 
     def get_default_genotype_storage(self):
-        default_genotype_storage_id = self.dae_config.genotype_storage.default
-        return self.get_genotype_storage(default_genotype_storage_id)
+        return self.get_genotype_storage(self.default_storage_id)
 
     def get_genotype_storage(self, genotype_storage_id):
+        if genotype_storage_id is None:
+            return self.get_default_genotype_storage()
+
         self._load_genotype_storage({genotype_storage_id})
 
         if genotype_storage_id not in self._genotype_storage_cache:
@@ -23,7 +37,7 @@ class GenotypeStorageFactory:
         return self._genotype_storage_cache[genotype_storage_id]
 
     def get_genotype_storage_ids(self):
-        return list(self.dae_config["storage"].keys())
+        return list(self.storage_config.keys())
 
     def _load_genotype_storage(self, genotype_storage_ids=None):
         if genotype_storage_ids is None:
@@ -38,7 +52,7 @@ class GenotypeStorageFactory:
                 self._load_genotype_storage_in_cache(genotype_storage_id)
 
     def _load_genotype_storage_in_cache(self, genotype_storage_id):
-        conf = self.dae_config.storage.get(genotype_storage_id, None)
+        conf = self.storage_config.get(genotype_storage_id, None)
         if not conf:
             return
 

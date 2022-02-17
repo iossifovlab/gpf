@@ -7,7 +7,7 @@ from dae.tools.dae2parquet import main
 
 
 def test_dae2parquet_transmitted(
-    dae_transmitted_config, temp_filename, genomes_db_2013
+    dae_transmitted_config, temp_filename
 ):
 
     argv = [

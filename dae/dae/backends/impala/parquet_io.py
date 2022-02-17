@@ -6,14 +6,19 @@ import hashlib
 import itertools
 import logging
 from copy import copy
+from urllib.parse import urlparse
+from fsspec.core import url_to_fs
 
 import toml
 from box import Box
 
 import numpy as np
+
 import pyarrow as pa
-import pyarrow.parquet as pq
+from pyarrow import fs as pa_fs
+
 import configparser
+import fsspec
 
 from dae.utils.variant_utils import GENOTYPE_TYPE
 from dae.variants.attributes import TransmissionType
@@ -150,10 +155,12 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
 
     @staticmethod
     def from_config(config_path, root_dirname=""):
-        assert os.path.exists(config_path), config_path
+        fs, _ = url_to_fs(config_path)
+        assert fs.exists(config_path), config_path
 
         config = configparser.ConfigParser()
-        config.read(config_path)
+        with fs.open(config_path, "rt") as f:
+            config.read_file(f, config_path)
         assert config["region_bin"] is not None
 
         chromosomes = list(
@@ -206,7 +213,7 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
     def _evaluate_coding_bin(self, family_allele):
         if family_allele.is_reference_allele:
             return 0
-        variant_effects = set(family_allele.effect.types)
+        variant_effects = set(family_allele.effects.types)
         coding_effect_types = set(self._coding_effect_types)
 
         result = variant_effects.intersection(coding_effect_types)
@@ -332,9 +339,8 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
             config["frequency_bin"]["rare_boundary"] = str(self._rare_boundary)
 
         filename = os.path.join(self.output, "_PARTITION_DESCRIPTION")
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
 
-        with open(filename, "w") as configfile:
+        with fsspec.open(filename, "w") as configfile:
             config.write(configfile)
 
     def generate_file_access_glob(self):
@@ -370,17 +376,26 @@ class ContinuousParquetFileWriter:
             self, filepath, variant_loader, filesystem=None, rows=100_000):
 
         self.filepath = filepath
-        annotation_schema = variant_loader.get_attribute("annotation_schema")
         extra_attributes = variant_loader.get_attribute("extra_attributes")
+        logger.info(
+            f"using variant loader {variant_loader} with annotation schema "
+            f"{variant_loader.annotation_schema}")
+
         self.serializer = AlleleParquetSerializer(
-            annotation_schema, extra_attributes)
+            variant_loader.annotation_schema, extra_attributes
+        )
         self.schema = self.serializer.schema
 
-        dirname = os.path.dirname(filepath)
-        if dirname and not os.path.exists(dirname):
-            os.makedirs(dirname)
-        self.dirname = dirname
+        if filesystem is not None:
+            filesystem.create_dir(filepath)
+            self.dirname = filepath
+        else:
+            dirname = os.path.dirname(filepath)
+            if dirname and not os.path.exists(dirname):
+                os.makedirs(dirname)
+            self.dirname = dirname
 
+        import pyarrow.parquet as pq
         self._writer = pq.ParquetWriter(
             filepath, self.schema, compression="snappy", filesystem=filesystem
         )
@@ -438,8 +453,7 @@ class VariantsParquetWriter:
             partition_descriptor,
             bucket_index=1,
             rows=100_000,
-            include_reference=True,
-            filesystem=None):
+            include_reference=True):
 
         self.variants_loader = variants_loader
         self.families = variants_loader.families
@@ -447,7 +461,6 @@ class VariantsParquetWriter:
 
         self.bucket_index = bucket_index
         self.rows = rows
-        self.filesystem = filesystem
 
         self.include_reference = include_reference
 
@@ -456,12 +469,10 @@ class VariantsParquetWriter:
         assert isinstance(partition_descriptor, PartitionDescriptor)
         self.partition_descriptor = partition_descriptor
 
-        annotation_schema = self.variants_loader.get_attribute(
-            "annotation_schema")
         extra_attributes = self.variants_loader.get_attribute(
             "extra_attributes")
         self.serializer = AlleleParquetSerializer(
-            annotation_schema, extra_attributes)
+            self.variants_loader.annotation_schema, extra_attributes)
 
     def _setup_reference_allele(self, summary_variant, family):
         genotype = -1 * np.ones(shape=(2, len(family)), dtype=GENOTYPE_TYPE)
@@ -515,10 +526,15 @@ class VariantsParquetWriter:
         filename = self.partition_descriptor.variant_filename(family_allele)
 
         if filename not in self.data_writers:
+            if urlparse(filename).scheme:
+                filesystem, path = pa_fs.FileSystem.from_uri(filename)
+            else:
+                filesystem, path = None, filename
+
             self.data_writers[filename] = ContinuousParquetFileWriter(
-                filename,
+                path,
                 self.variants_loader,
-                filesystem=self.filesystem,
+                filesystem=filesystem,
                 rows=self.rows,
             )
         return self.data_writers[filename]
@@ -526,10 +542,8 @@ class VariantsParquetWriter:
     def _write_internal(self):
         family_variant_index = 0
         report = False
-
         for summary_variant_index, (summary_variant, family_variants) in \
                 enumerate(self.full_variants_iterator):
-
             summary_alleles = summary_variant.alleles
 
             summary_blobs = self.serializer.serialize_summary_data(
@@ -582,6 +596,8 @@ class VariantsParquetWriter:
 
                 variant_data = self.serializer.serialize_family_variant(
                     alleles, summary_blobs, scores_blob)
+                assert variant_data is not None
+
                 extra_attributes_data = \
                     self.serializer.serialize_extra_attributes(fv)
                 for family_allele in alleles:
@@ -638,18 +654,15 @@ class VariantsParquetWriter:
         for k, v in schema.items():
             config["blob"][k] = v
 
-        if os.path.isdir(self.partition_descriptor.output):
-            path = self.partition_descriptor.output
-        else:
-            path = os.path.dirname(self.partition_descriptor.output)
-        filename = os.path.join(path, "_VARIANTS_SCHEMA")
+        filename = os.path.join(
+            self.partition_descriptor.output, "_VARIANTS_SCHEMA")
 
         config["extra_attributes"] = {}
         extra_attributes = self.serializer.extra_attributes
         for attr in extra_attributes:
             config["extra_attributes"][attr] = "string"
 
-        with open(filename, "w") as configfile:
+        with fsspec.open(filename, "w") as configfile:
             content = toml.dumps(config)
             configfile.write(content)
 
@@ -712,7 +725,7 @@ class ParquetManager:
             variants_loader, partition_descriptor,
             bucket_index=1, rows=100_000, include_reference=False):
 
-        assert variants_loader.get_attribute("annotation_schema") is not None
+        # assert variants_loader.get_attribute("annotation_schema") is not None
         print(f"variants to parquet ({rows} rows)", file=sys.stderr)
 
         start = time.time()
@@ -787,4 +800,6 @@ def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
     ped_df, pps = add_missing_parquet_fields(pps, ped_df)
 
     table = pa.Table.from_pandas(ped_df, schema=pps)
+
+    import pyarrow.parquet as pq
     pq.write_table(table, filename, filesystem=filesystem)

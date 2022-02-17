@@ -1,3 +1,4 @@
+import os
 import math
 import logging
 from typing import Dict, Iterable, Any, List
@@ -1127,6 +1128,12 @@ class PhenoDb(object):
     def __init__(self, dae_config, config_override=False):
         super(PhenoDb, self).__init__()
         assert dae_config
+        # if dae_config.phenotype_data is None or \
+        #         dae_config.phenotype_data.dir is None:
+        #     pheno_dir = os.path.join(
+        #         dae_config.conf_dir, "pheno")
+        # else:
+        #     pheno_dir = dae_config.phenotype_data.dir
 
         if not config_override:
             pheno_data_dir = get_pheno_db_dir(

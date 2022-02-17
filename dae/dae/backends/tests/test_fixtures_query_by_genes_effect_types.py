@@ -38,7 +38,7 @@ def test_no_missense_effects(variants_impl, variants):
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
 @pytest.mark.parametrize(
-    "effect,count", [("missense", 3), ("frame-shift", 1), ("synonymous", 1),]
+    "effect,count", [("missense", 3), ("frame-shift", 1), ("synonymous", 1)]
 )
 def test_multi_alt_allele_effects(variants_impl, variants, effect, count):
     fvars = variants_impl(variants)("backends/effects_trio_multi")
@@ -87,7 +87,7 @@ def test_single_alt_allele_genes(
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
 @pytest.mark.parametrize(
     "regions,effects,genes,count",
-    [(None, None, None, 10), (None, None, [], 0), (None, [], None, 0),],
+    [(None, None, None, 10), (None, None, [], 0), (None, [], None, 0)],
 )
 def test_empty_lists(variants_impl, variants, regions, effects, genes, count):
     fvars = variants_impl(variants)("backends/effects_trio")

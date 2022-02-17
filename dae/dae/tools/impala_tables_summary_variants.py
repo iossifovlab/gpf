@@ -71,7 +71,7 @@ def collect_summary_schema(impala_variants):
     ])
 
     schema = {}
-    for field_name in impala_variants.schema.col_names:
+    for field_name in impala_variants.schema.names:
         if field_name in FAMILY_FIELDS:
             continue
         field_type = impala_variants.schema[field_name]
@@ -370,7 +370,7 @@ def main(argv=sys.argv[1:], gpf_instance=None):
 
         region_bin_helpers = RegionBinsHelper(
             study_backend.table_properties,
-            gpf_instance.get_genome()
+            gpf_instance.reference_genome
         )
         region_bin_helpers._build_region_bins()
 

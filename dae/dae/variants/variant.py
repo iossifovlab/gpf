@@ -3,108 +3,217 @@ Created on Feb 13, 2018
 
 @author: lubo
 """
+import itertools
 import logging
 
-from abc import ABC, abstractproperty
-from dae.utils.variant_utils import vcf2cshl
+from typing import List, Dict, Set, Any, Optional, cast
 
-from dae.variants.attributes import VariantType, TransmissionType, VariantDesc
-from typing import List, Dict, Set, Any, Optional
-from dae.variants.effects import Effect, EffectGene
-import itertools
+from dae.utils.variant_utils import trim_str_left_right, trim_str_right_left
+from dae.effect_annotation.effect import AlleleEffects, EffectGene
+
+from dae.variants import core
+from dae.variants.attributes import TransmissionType
 
 
 logger = logging.getLogger(__name__)
 
 
-# class AltAlleleItems:
-#     """
-#     1-based list for representing list of items relevant to the list
-#     of alternative alleles.
-#     """
+def allele_type_from_name(name):
+    name = name.lower().strip()
+    if name == "sub" or name == "substitution":
+        return core.Allele.Type.substitution
+    elif name == "ins" or name == "insertion":
+        return core.Allele.Type.small_insertion
+    elif name == "del" or name == "deletion":
+        return core.Allele.Type.small_deletion
+    elif name == "comp" or name == "complex":
+        return core.Allele.Type.complex
+    elif name in {"cnv_p", "cnv+", "large_duplication"}:
+        return core.Allele.Type.large_duplication
+    elif name in {"cnv_m", "cnv-", "large_deletion"}:
+        return core.Allele.Type.large_deletion
+    elif name in {"tr", "tandem_repeat"}:
+        return core.Allele.Type.tandem_repeat
 
-#     def __init__(self, items, alt_alleles=None):
-#         if not hasattr(items, "__iter__"):
-#             items = [items]
-
-#         if alt_alleles is None:
-#             self.items = items
-#             self.alt_alleles = list(range(1, len(self.items) + 1))
-#         else:
-#             assert len(alt_alleles) == len(items) or len(items) == 1
-#             if len(items) == 1:
-#                 item = items[0]
-#                 self.items = [item for _ in alt_alleles]
-#             else:
-#                 self.items = items
-
-#         self.size = len(self.items)
-
-#     def _to_zero_based(self, index):
-#         if isinstance(index, slice):
-#             return slice(
-#                 self._to_zero_based(index.start),
-#                 self._to_zero_based(index.stop),
-#                 index.step,
-#             )
-#         else:
-#             if index is None or index < 0:
-#                 return index
-#             elif not 1 <= index <= self.size:
-#                 raise IndexError("invalid allele index: {}".format(index))
-#             return index - 1
-
-#     def __getitem__(self, key):
-#         index = self._to_zero_based(key)
-#         if isinstance(index, int):
-#             return self.items[index]
-#         elif isinstance(index, slice):
-#             return [self.items[i] for i in range(*index.indices(self.size))]
-#         raise TypeError("bad allele index type: {}".format(index))
-
-#     def __iter__(self):
-#         return iter(self.items)
-
-#     def __len__(self):
-#         return self.size
-
-#     def __repr__(self):
-#         return self.items.__repr__()
-
-#     def __str__(self):
-#         return str(self.items)
-
-#     def __eq__(self, other):
-#         return len(self.items) == len(other.items) and all(
-#             [s == o for (s, o) in zip(self.items, other.items)]
-#         )
+    raise ValueError(f"unexpected variant type: {name}")
 
 
-# class VariantDetail:
-#     def __init__(self, chrom: str, position, variant_desc):
-#         self.variant_desc = variant_desc
-#         self.length = variant_desc.length
+def allele_type_from_cshl_variant(variant):
+    # FIXME: Change logic to use entire string
+    if variant is None:
+        return None
 
-#         self.chrom = chrom
-#         self.cshl_position = position
-#         self.cshl_variant = str(variant_desc)
+    vt = variant[0:2]
+    if vt == "su":
+        return core.Allele.Type.substitution
+    elif vt == "in":
+        return core.Allele.Type.small_insertion
+    elif vt == "de":
+        return core.Allele.Type.small_deletion
+    elif vt == "co":
+        return core.Allele.Type.complex
+    elif vt == "TR":
+        return core.Allele.Type.tandem_repeat
+    elif variant == "CNV+":
+        return core.Allele.Type.large_duplication
+    elif variant == "CNV-":
+        return core.Allele.Type.large_duplication
+    else:
+        raise ValueError(f"unexpected variant type: {variant}")
 
-#     def __repr__(self):
-#         return "{} {}".format(self.cshl_location, self.cshl_variant)
 
-#     @property
-#     def cshl_location(self):
-#         return "{}:{}".format(self.chrom, self.cshl_position)
+class VariantDesc:
 
-#     @property
-#     def variant_type(self):
-#         return self.variant_desc.variant_type
+    def __init__(
+            self, variant_type, position,
+            end_position=None,
+            ref=None, alt=None, length=None,
+            tr_ref=None, tr_alt=None, tr_unit=None):
 
-#     @staticmethod
-#     def from_vcf(chrom, position, reference, alternative):
-#         return VariantDetail(
-#             chrom, *vcf2cshl(position, reference, alternative)
-#         )
+        self.variant_type = variant_type
+        self.position = position
+        self.end_position = end_position
+
+        self.ref = ref
+        self.alt = alt
+        self.length = length
+
+        self.tr_ref = tr_ref
+        self.tr_alt = tr_alt
+        self.tr_unit = tr_unit
+
+    def __repr__(self):
+        return self.to_cshl_short()
+
+    def to_cshl_short(self):
+
+        if self.variant_type & core.Allele.Type.substitution:
+            return f"sub({self.ref}->{self.alt})"
+        elif self.variant_type & core.Allele.Type.small_insertion:
+            return f"ins({self.alt})"
+        elif self.variant_type & core.Allele.Type.small_deletion:
+            return f"del({self.length})"
+        elif self.variant_type & core.Allele.Type.complex:
+            return f"comp({self.ref}->{self.alt})"
+        elif self.variant_type & core.Allele.Type.large_duplication:
+            return "CNV+"
+        elif self.variant_type & core.Allele.Type.large_deletion:
+            return "CNV-"
+
+    def to_cshl_full(self):
+
+        if self.variant_type & core.Allele.Type.tandem_repeat:
+            return f"TR({self.tr_ref}x{self.tr_unit}->{self.tr_alt})"
+        elif self.variant_type & core.Allele.Type.substitution:
+            return f"sub({self.ref}->{self.alt})"
+        elif self.variant_type & core.Allele.Type.small_insertion:
+            return f"ins({self.alt})"
+        elif self.variant_type & core.Allele.Type.small_deletion:
+            return f"del({self.length})"
+        elif self.variant_type & core.Allele.Type.complex:
+            return f"comp({self.ref}->{self.alt})"
+        elif self.variant_type & core.Allele.Type.large_duplication:
+            return "CNV+"
+        elif self.variant_type & core.Allele.Type.large_deletion:
+            return "CNV-"
+
+    @staticmethod
+    def combine(variant_descs):
+        if all([variant_descs[0].variant_type == vd.variant_type
+                for vd in variant_descs]) or \
+            all([
+                vd.variant_type & core.Allele.Type.tandem_repeat
+                for vd in variant_descs]):
+
+            result = VariantDesc(
+                variant_descs[0].variant_type,
+                variant_descs[0].position,
+                ref=variant_descs[0].ref,
+                alt=",".join(filter(
+                    lambda a: a is not None,
+                    [vd.alt for vd in variant_descs])),
+                length=variant_descs[-1].length,
+                tr_ref=variant_descs[0].tr_ref,
+                tr_alt=",".join(filter(
+                    lambda a: a is not None,
+                    [str(vd.tr_alt) for vd in variant_descs])),
+                tr_unit=variant_descs[0].tr_unit
+            )
+            return [result.to_cshl_full()]
+        return [str(vd) for vd in variant_descs]
+
+
+def cshl_format(pos, ref, alt, trimmer=trim_str_left_right):
+    p, r, a = trimmer(pos, ref, alt)
+    if len(r) == len(a) and len(r) == 0:
+        return VariantDesc(
+            core.Allele.Type.complex, p, ref=r, alt=a, length=0)
+
+    if len(r) == len(a) and len(r) == 1:
+        return VariantDesc(
+            core.Allele.Type.substitution, p, ref=r, alt=a, length=1)
+
+    if len(r) > len(a) and len(a) == 0:
+        return VariantDesc(
+            core.Allele.Type.small_deletion, p, length=len(r)
+        )
+
+    # len(ref) < len(alt):
+    if len(r) < len(a) and len(r) == 0:
+        return VariantDesc(
+            core.Allele.Type.small_insertion, p, alt=a, length=len(a))
+
+    return VariantDesc(
+        core.Allele.Type.complex, p, ref=r, alt=a, length=max(len(r), len(a))
+    )
+
+
+def tandem_repeat(ref, alt, min_mono_reference=8):
+    for period in range(1, len(ref) // 2 + 1):
+        if len(ref) % period != 0:
+            continue
+        unit = ref[:period]
+
+        ref_repeats = len(ref) // period
+        if ref_repeats * unit != ref:
+            continue
+
+        if len(alt) % period != 0:
+            continue
+        alt_repeats = len(alt) // period
+        if alt_repeats * unit != alt:
+            continue
+
+        if len(unit) == 1 and len(ref) < min_mono_reference:
+            return None, None, None
+
+        return unit, ref_repeats, alt_repeats
+    return None, None, None
+
+
+def vcf2cshl(pos, ref, alt, trimmer=trim_str_right_left):
+    tr_vd = None
+    tr_unit, tr_ref, tr_alt = tandem_repeat(ref, alt)
+
+    if tr_unit is not None:
+
+        assert tr_ref is not None
+        assert tr_alt is not None
+
+        tr_vd = VariantDesc(
+            core.Allele.Type.tandem_repeat, pos,
+            tr_ref=tr_ref, tr_alt=tr_alt, tr_unit=tr_unit)
+
+        vd = cshl_format(pos, ref, alt, trimmer=trimmer)
+
+        vd.variant_type |= tr_vd.variant_type
+        vd.tr_unit = tr_vd.tr_unit
+        vd.tr_ref = tr_vd.tr_ref
+        vd.tr_alt = tr_vd.tr_alt
+
+        return vd
+
+    return cshl_format(pos, ref, alt, trimmer=trimmer)
 
 
 class VariantDetails:
@@ -116,7 +225,7 @@ class VariantDetails:
         self.variant_desc = variant_desc
 
         self.cshl_position = self.variant_desc.position
-        if VariantType.is_cnv(self.variant_desc.variant_type):
+        if core.Allele.Type.cnv & self.variant_desc.variant_type:
             self.cshl_location = f"{self.chrom}:" \
                 f"{self.variant_desc.position}-" \
                 f"{self.variant_desc.end_position}"
@@ -133,7 +242,7 @@ class VariantDetails:
 
     @staticmethod
     def from_cnv(variant):
-        assert VariantType.is_cnv(variant._variant_type)
+        assert core.Allele.Type.cnv & variant._variant_type
 
         variant_desc = VariantDesc(
             variant_type=variant._variant_type,
@@ -143,79 +252,173 @@ class VariantDetails:
             variant.chrom, variant_desc)
 
 
-class Allele(ABC):
+class SummaryAllele(core.Allele):
+    """
+    `SummaryAllele` represents a single allele for given position.
+    """
+    # class Type(core.Allele.Type):
+    #     def __and__(self, other):
+    #         assert isinstance(other, core.Allele.Type), type(other)
+    #         return self.value & other.value
 
-    @abstractproperty
-    def chromosome(self) -> str:
-        pass
+    #     def __or__(self, other):
+    #         assert isinstance(other, core.Allele.Type)
+    #         return self.value | other.value
+
+    #     def __ior__(self, other):
+    #         assert isinstance(other, SummaryAllele.Type)
+    #         return SummaryAllele.Type(self.value | other.value)
+
+    #     @classmethod
+    #     def from_value(cls, value):
+    #         if value is None:
+    #             return None
+    #         return cls(value)
+
+    #     # @classmethod
+    #     # def is_cnv(cls, vt):
+    #     #     if vt is None:
+    #     #         return False
+    #     #     assert isinstance(vt, core.Allele.Type)
+    #     #     return vt & cls.cnv
+
+    #     @classmethod
+    #     def is_tr(cls, vt):
+    #         if vt is None:
+    #             return False
+    #         assert isinstance(vt, core.Allele.Type)
+    #         return vt & core.Allele.Type.tandem_repeat
+
+    #     def __str__(self) -> str:
+    #         return self.TYPE_DISPLAY_NAME.get(self.name) or self.name
+
+    #     def __lt__(self, other):
+    #         return self.value < other.value
+
+    def __init__(
+        self,
+        chromosome: str,
+        position: int,
+        reference: str,
+        alternative: Optional[str] = None,
+        end_position: Optional[int] = None,
+        summary_index: int = -1,
+        allele_index: int = 0,
+        transmission_type: TransmissionType = TransmissionType.transmitted,
+        allele_type=None,
+        attributes: Dict[str, Any] = None,
+        effect: str = None,
+    ):
+        super(SummaryAllele, self).__init__(
+            chrom=chromosome, pos=position, pos_end=end_position,
+            ref=reference, alt=alternative,
+            allele_type=allele_type)
+
+        self._summary_index: int = summary_index
+        self._allele_index: int = allele_index
+        self._transmission_type: TransmissionType = transmission_type
+
+        self._details = None
+
+        self._effects = AlleleEffects.from_string(effect) if effect else None
+
+        self._attributes: Dict[str, Any] = {
+            "allele_index": allele_index,
+            "transmission_type": transmission_type
+        }
+        if attributes is not None:
+            self.update_attributes(attributes)
 
     @property
-    def chrom(self) -> str:
-        return self.chromosome
-
-    @abstractproperty
-    def position(self) -> int:
-        pass
-
-    @abstractproperty
-    def end_position(self) -> Optional[int]:
-        pass
-
-    @abstractproperty
-    def reference(self) -> str:
-        pass
-
-    @abstractproperty
-    def alternative(self) -> Optional[str]:
-        pass
-
-    @abstractproperty
     def summary_index(self) -> int:
-        """
-        index of the summary variant this allele belongs to
-        """
-        pass
+        return self._summary_index
 
-    @abstractproperty
-    def allele_index(self) -> int:
-        """
-        index of the allele in summary variant
-        """
-        pass
-
-    @abstractproperty
-    def transmission_type(self) -> TransmissionType:
-        pass
-
-    @abstractproperty
-    def attributes(self) -> Dict[str, Any]:
-        """
-        additional attributes of the allele
-        """
-        pass
-
-    @abstractproperty
-    def effect(self) -> Optional[Effect]:
-        """
-        effects of the allele; None for the reference allele.
-        """
-        pass
+    @summary_index.setter
+    def summary_index(self, summary_index):
+        self._summary_index = summary_index
 
     @property
-    def effects(self) -> Optional[Effect]:
-        return self.effect
+    def allele_index(self) -> int:
+        return self._allele_index
+
+    @property
+    def variant_type(self) -> core.Allele.Type:
+        return self.allele_type
+
+    @property
+    def transmission_type(self) -> TransmissionType:
+        return self._transmission_type
+
+    @property
+    def attributes(self) -> Dict[str, Any]:
+        return self._attributes
+
+    @property
+    def details(self) -> VariantDetails:
+        if self._details is None:
+            if self.Type.cnv & self.allele_type:
+                self._details = VariantDetails.from_cnv(self)
+            elif self.alternative is None:
+                raise ValueError(
+                    "variant detailf for allele without alternative "
+                    "has no meaning")
+            else:
+                self._details = VariantDetails.from_vcf(
+                    self.chromosome,
+                    self.position,
+                    self.reference,
+                    self.alternative,
+                )
+        return cast(VariantDetails, self._details)
+
+    @property
+    def effects(self) -> Optional[AlleleEffects]:
+        if self._effects is None:
+            record = self.attributes
+            if "effect_type" in record:
+                worst_effect = record["effect_type"]
+                if worst_effect is None:
+                    return None
+                effects = AlleleEffects.from_simplified_effects(
+                    worst_effect,
+                    list(
+                        zip(
+                            record["effect_gene_genes"],
+                            record["effect_gene_types"],
+                        )
+                    ),
+                    list(
+                        zip(
+                            record["effect_details_transcript_ids"],
+                            record["effect_details_details"],
+                        )
+                    ),
+                )
+                self._effects = effects
+            elif "effects" in record:
+                self._effects = AlleleEffects.from_string(
+                    record.get("effects"))
+            else:
+                self._effects = None
+        return self._effects
+
+    @property
+    def worst_effect(self) -> Optional[str]:
+        if self.effects:
+            return self.effects.worst
+        return None
 
     @property
     def effect_types(self) -> List[str]:
-        if self.effect:
-            return self.effect.types
+        if self.effects:
+            return self.effects.types
         else:
             return []
 
     @property
     def effect_genes(self) -> List[EffectGene]:
-        if self.effect:
-            return self.effect.genes
+        if self.effects:
+            return self.effects.genes
         else:
             return []
 
@@ -223,17 +426,9 @@ class Allele(ABC):
     def effect_gene_symbols(self) -> List[str]:
         return [eg.symbol for eg in self.effect_genes]
 
-    @abstractproperty
-    def variant_type(self) -> Optional[VariantType]:
-        pass
-
     @property
     def frequency(self) -> Optional[float]:
         return self.get_attribute("af_allele_freq")
-
-    @abstractproperty
-    def details(self) -> Optional[VariantDetails]:
-        pass
 
     @property
     def cshl_variant(self) -> Optional[str]:
@@ -242,19 +437,24 @@ class Allele(ABC):
         return self.details.cshl_variant  # type: ignore
 
     @property
-    def cshl_variant_full(self) -> Optional[str]:
+    def cshl_variant_full(self) -> str:
         if self.details is None:
-            return None
+            raise ValueError(
+                "cshl location for allele without details")
         return self.details.cshl_variant_full  # type: ignore
 
     @property
-    def cshl_location(self) -> Optional[str]:
-        if self.end_position and self.end_position != -1:
+    def cshl_location(self) -> str:
+        if self.Type.cnv & self.allele_type:
             return f"{self.chrom}:{self.position}-{self.end_position}"
         if self.alternative is None:
-            return None
+            raise ValueError(
+                "cshl location for allele without alternative "
+                "has no meaning")
         if self.details is None:
-            return None
+            raise ValueError(
+                "cshl location for allele without details")
+
         return self.details.cshl_location  # type: ignore
 
     @property
@@ -304,44 +504,113 @@ class Allele(ABC):
         """
         checks if additional variant attributes contain value for key `item`.
         """
-        return item in self.has_attributes(item)
+        return self.has_attribute(item)
 
     def __repr__(self) -> str:
-        if VariantType.is_cnv(self._variant_type):
+        if self.Type.cnv & self.allele_type:
             return f"{self.chromosome}:{self.position}-{self.end_position}"
         elif not self.alternative:
-            return f"{self.chrom}:{self.position} {self.reference}(ref)"
+            return f"{self.chrom}:{self.position} {self.reference} (ref)"
         else:
             return (
                 f"{self.chrom}:{self.position}"
                 f" {self.reference}->{self.alternative}"
             )
 
+    @staticmethod
+    def create_reference_allele(allele) -> "SummaryAllele":
+        new_attributes = {
+            "chrom": allele.attributes.get("chrom"),
+            "position": allele.attributes.get("position"),
+            "end_position": allele.attributes.get("end_position"),
+            "reference": allele.attributes.get("reference"),
+            "summary_variant_index": allele.attributes.get(
+                "summary_variant_index"),
+            "allele_count": allele.attributes.get("allele_count"),
+        }
 
-class Variant(ABC):
+        return SummaryAllele(
+            allele.chromosome,
+            allele.position,
+            allele.reference,
+            end_position=allele.end_position,
+            summary_index=allele.summary_index,
+            transmission_type=allele.transmission_type,
+            attributes=new_attributes,
+        )
 
-    def __init__(self):
-        self._matched_alleles: List[int] = []
+
+class SummaryVariant:
+
+    def __init__(self, alleles):
+        super(SummaryVariant, self).__init__()
+
+        assert len(alleles) >= 1
+        assert len(set([sa.position for sa in alleles])) == 1
+
+        assert alleles[0].is_reference_allele
+        self._alleles: List[SummaryAllele] = alleles
+        self._allele_count: int = len(self.alleles)
+
+        self._chromosome: str = self.ref_allele.chromosome
+        self._position: int = self.ref_allele.position
+        self._reference: str = self.ref_allele.reference
+        if len(alleles) > 1:
+            self._end_position = alleles[1].end_position
+        else:
+            self._end_position = None
+
+        for allele_index, allele in enumerate(alleles):
+            if allele.allele_index == 0:
+                allele._allele_index = allele_index
+
+        self._svuid: Optional[str] = None
+
+    @property
+    def chromosome(self) -> str:
+        return self._chromosome
 
     @property
     def chrom(self) -> str:
-        return self.chromosome
+        return self._chromosome
 
-    @abstractproperty
-    def chromosome(self) -> str:
-        pass
-
-    @abstractproperty
+    @property
     def position(self) -> int:
-        pass
+        return self._position
 
-    @abstractproperty
+    @property
     def end_position(self) -> Optional[int]:
-        pass
+        return self._end_position
 
-    @abstractproperty
+    @property
     def reference(self) -> str:
-        pass
+        return self._reference
+
+    @property
+    def allele_count(self) -> int:
+        return self._allele_count
+
+    @property
+    def summary_index(self):
+        return self.ref_allele.summary_index
+
+    @summary_index.setter
+    def summary_index(self, val):
+        for allele in self.alleles:
+            allele.summary_index = val
+
+    @property
+    def alleles(self):
+        return self._alleles
+
+    @property
+    def svuid(self):
+        if self._svuid is None:
+            self._svuid = \
+                f"{self.location}.{self.reference}.{self.alternative}." \
+                f"{self.transmission_type.value}"
+
+        return self._svuid
 
     @property
     def alternative(self) -> Optional[str]:
@@ -354,42 +623,29 @@ class Variant(ABC):
             ]
         )
 
-    @abstractproperty
-    def allele_count(self) -> int:
-        pass
-
     @property
     def location(self) -> str:
-        if self.end_position and self.end_position != -1:
+        types = self.variant_types
+        if core.Allele.Type.large_deletion in types \
+                or core.Allele.Type.large_duplication in types:
             return f"{self.chromosome}:{self.position}-{self.end_position}"
         else:
             return f"{self.chromosome}:{self.position}"
 
-    @abstractproperty
-    def summary_index(self) -> int:
-        pass
-
-    @abstractproperty
-    def alleles(self) -> List[Allele]:
-        """
-        list of all alleles of the variant
-        """
-        pass
-
     @property
-    def ref_allele(self) -> Allele:
+    def ref_allele(self) -> SummaryAllele:
         """
         the reference allele
         """
         return self.alleles[0]
 
     @property
-    def alt_alleles(self) -> List[Allele]:
+    def alt_alleles(self) -> List[SummaryAllele]:
         """list of all alternative alleles"""
         return self.alleles[1:]
 
     @property
-    def details(self) -> List[Allele]:
+    def details(self) -> List[VariantDetails]:
         """
         list of `VariantDetails`, that describe each
         alternative allele.
@@ -411,23 +667,23 @@ class Variant(ABC):
         return [aa.cshl_variant_full for aa in self.alt_alleles]
 
     @property
-    def cshl_location(self) -> Optional[str]:
+    def cshl_location(self) -> List[str]:
         if not self.alt_alleles:
             return []
         return [aa.cshl_location for aa in self.alt_alleles]
 
     @property
-    def effects(self) -> List[str]:
+    def effects(self) -> List[AlleleEffects]:
         """
         1-based list of `Effect`, that describes variant effects.
         """
         if not self.alt_alleles:
             return []
-        return [sa.effect for sa in self.alt_alleles]
+        return [sa.effects for sa in self.alt_alleles if sa.effects]
 
     @property
     def effect_types(self) -> List[str]:
-        ets = set()
+        ets: set = set()
         for a in self.alt_alleles:
             ets = ets.union(a.effect_types)
         return list(ets)
@@ -451,7 +707,7 @@ class Variant(ABC):
         """
         returns set of variant types.
         """
-        return set([aa.variant_type for aa in self.alt_alleles])
+        return set([aa.allele_type for aa in self.alt_alleles])
 
     def get_attribute(
             self, item: Any, default: Optional[Any] = None) -> List[Any]:
@@ -482,7 +738,8 @@ class Variant(ABC):
 
     def __repr__(self):
         types = self.variant_types
-        if VariantType.cnv_m in types or VariantType.cnv_p in types:
+        if core.Allele.Type.large_deletion in types \
+                or core.Allele.Type.large_duplication in types:
             types_str = ", ".join(map(str, types))
             return f"{self.location} {types_str}"
         else:
@@ -539,232 +796,6 @@ class Variant(ABC):
         return self.alleles[-1].transmission_type
 
 
-class SummaryAllele(Allele):
-    """
-    `SummaryAllele` represents a single allele for given position.
-    """
-
-    def __init__(
-        self,
-        chromosome: str,
-        position: int,
-        reference: str,
-        alternative: Optional[str] = None,
-        end_position: Optional[int] = None,
-        summary_index: int = -1,
-        allele_index: int = 0,
-        transmission_type: TransmissionType = TransmissionType.transmitted,
-        variant_type=None,
-        attributes: Dict[str, Any] = None,
-        effect: str = None,
-    ):
-
-        self._chromosome: str = chromosome
-        self._position: int = position
-        self._end_position: Optional[int] = end_position
-        self._reference: str = reference
-        self._alternative: Optional[str] = alternative
-
-        self._summary_index: int = summary_index
-        self._allele_index: int = allele_index
-        self._transmission_type: TransmissionType = transmission_type
-        self._variant_type = variant_type
-
-        self._details = None
-
-        self._effect = Effect.from_string(effect) if effect else None
-
-        self._attributes: Dict[str, Any] = {
-            "allele_index": allele_index,
-            "transmission_type": transmission_type
-        }
-        if attributes is not None:
-            self.update_attributes(attributes)
-
-    @property
-    def variant_type(self):
-        if self._variant_type is None and self.details:
-            self._variant_type = self.details.variant_desc.variant_type
-        return self._variant_type
-
-    @property
-    def chromosome(self) -> str:
-        return self._chromosome
-
-    @property
-    def position(self) -> int:
-        return self._position
-
-    @property
-    def end_position(self) -> Optional[int]:
-        return self._end_position
-
-    @property
-    def reference(self) -> str:
-        return self._reference
-
-    @property
-    def alternative(self) -> Optional[str]:
-        return self._alternative
-
-    @property
-    def summary_index(self) -> int:
-        return self._summary_index
-
-    @summary_index.setter
-    def summary_index(self, summary_index):
-        self._summary_index = summary_index
-
-    @property
-    def allele_index(self) -> int:
-        return self._allele_index
-
-    @property
-    def transmission_type(self) -> TransmissionType:
-        return self._transmission_type
-
-    @property
-    def attributes(self) -> Dict[str, Any]:
-        return self._attributes
-
-    @property
-    def details(self) -> Optional[VariantDetails]:
-        if self._details is None:
-            if VariantType.is_cnv(self._variant_type):
-                self._details = VariantDetails.from_cnv(self)
-            elif self.alternative is None:
-                return None
-            else:
-                self._details = VariantDetails.from_vcf(
-                    self.chromosome,
-                    self.position,
-                    self.reference,
-                    self.alternative,
-                )
-        return self._details
-
-    @property
-    def effect(self) -> Optional[Effect]:
-        if self._effect is None:
-            record = self.attributes
-            if "effect_type" in record:
-                worst_effect = record["effect_type"]
-                if worst_effect is None:
-                    return None
-                effects = Effect.from_effects(
-                    worst_effect,
-                    list(
-                        zip(
-                            record["effect_gene_genes"],
-                            record["effect_gene_types"],
-                        )
-                    ),
-                    list(
-                        zip(
-                            record["effect_details_transcript_ids"],
-                            record["effect_details_details"],
-                        )
-                    ),
-                )
-                self._effect = effects
-            elif "effects" in record:
-                self._effect = Effect.from_string(record.get("effects"))
-            else:
-                self._effect = None
-        return self._effect
-
-    @staticmethod
-    def create_reference_allele(allele) -> Allele:
-        new_attributes = {
-            "chrom": allele.attributes.get("chrom"),
-            "position": allele.attributes.get("position"),
-            "end_position": allele.attributes.get("end_position"),
-            "reference": allele.attributes.get("reference"),
-            "summary_variant_index": allele.attributes.get(
-                "summary_variant_index"),
-            "allele_count": allele.attributes.get("allele_count"),
-        }
-
-        return SummaryAllele(
-            allele.chromosome,
-            allele.position,
-            allele.reference,
-            end_position=allele.end_position,
-            summary_index=allele.summary_index,
-            transmission_type=allele.transmission_type,
-            attributes=new_attributes,
-        )
-
-
-class SummaryVariant(Variant):
-
-    def __init__(self, alleles):
-        super(SummaryVariant, self).__init__()
-
-        assert len(alleles) >= 1
-        assert len(set([sa.position for sa in alleles])) == 1
-
-        assert alleles[0].is_reference_allele
-        self._alleles: List[Allele] = alleles
-        self._allele_count: int = len(self.alleles)
-
-        self._chromosome: str = self.ref_allele.chromosome
-        self._position: int = self.ref_allele.position
-        self._reference: str = self.ref_allele.reference
-        if len(alleles) > 1:
-            self._end_position = alleles[1].end_position
-        else:
-            self._end_position = None
-
-        for allele_index, allele in enumerate(alleles):
-            if allele.allele_index == 0:
-                allele._allele_index = allele_index
-
-        self._svuid: Optional[str] = None
-
-    @property
-    def chromosome(self) -> str:
-        return self._chromosome
-
-    @property
-    def position(self) -> int:
-        return self._position
-
-    @property
-    def end_position(self) -> Optional[int]:
-        return self._end_position
-
-    @property
-    def reference(self) -> str:
-        return self._reference
-
-    @property
-    def allele_count(self) -> int:
-        return self._allele_count
-
-    @property
-    def summary_index(self):
-        return self.ref_allele.summary_index
-
-    @summary_index.setter
-    def summary_index(self, val):
-        for allele in self.alleles:
-            allele.summary_index = val
-
-    @property
-    def alleles(self):
-        return self._alleles
-
-    @property
-    def svuid(self):
-        if self._svuid is None:
-            self._svuid = \
-                f"{self.location}.{self.reference}.{self.alternative}." \
-                f"{self.transmission_type.value}"
-
-        return self._svuid
-
-
 class SummaryVariantFactory(object):
     @staticmethod
     def summary_allele_from_record(
@@ -782,20 +813,34 @@ class SummaryVariantFactory(object):
                 if k not in attr_filter
             }
 
-        if "summary_variant_index" not in record:
-            summary_index = record["summary_index"]
-        else:
+        if "summary_variant_index" in record:
             summary_index = record["summary_variant_index"]
+        else:
+            summary_index = record.get("summary_index")
+
+        allele_index = record.get("allele_index")
+
+        chrom = record.get("chrom")
+        position = record.get("position")
+        end_position = record.get("end_position")
+        reference = record.get("reference")
+        alternative = record.get("alternative")
+        allele_type = record.get("variant_type")
+
+        if position is not None and end_position is not None and \
+                reference is None and alternative is None and \
+                allele_type is None:
+            allele_type = SummaryAllele.Type.position
 
         return SummaryAllele(
-            record["chrom"],
-            record["position"],
-            record["reference"],
+            chrom,
+            position,
+            reference,
             alternative=alternative,
             summary_index=summary_index,
             end_position=record.get("end_position", None),
-            variant_type=record.get("variant_type", None),
-            allele_index=record["allele_index"],
+            allele_type=allele_type,
+            allele_index=allele_index,
             transmission_type=record.get("transmission_type"),
             attributes=attributes,
         )
@@ -813,6 +858,53 @@ class SummaryVariantFactory(object):
                 record, transmission_type=transmission_type,
                 attr_filter=attr_filter
             )
+            alleles.append(sa)
+        if not alleles[0].is_reference_allele:
+            ref_allele = SummaryAllele.create_reference_allele(alleles[0])
+            alleles.insert(0, ref_allele)
+
+        allele_count = {"allele_count": len(alleles)}
+        for allele in alleles:
+            allele.update_attributes(allele_count)
+
+        return SummaryVariant(alleles)
+
+    @staticmethod
+    def blank_summary_allele_from_record(record):
+        attributes = record
+
+        chrom = record.get("chrom", "1")
+        position = record.get("position", 1000)
+        reference = record.get("reference", "G")
+        alternative = record.get("alternative", "C")
+        summary_index = record.get("summary_index", -1)
+        end_position = record.get("end_position", None)
+        allele_type = record.get("variant_type", None)
+        allele_index = record.get("allele_index", 1)
+        transmission_type = record.get(
+            "transmission_type", TransmissionType.transmitted
+        )
+
+        return SummaryAllele(
+            chrom,
+            position,
+            reference,
+            alternative=alternative,
+            summary_index=summary_index,
+            end_position=end_position,
+            allele_type=allele_type,
+            allele_index=allele_index,
+            transmission_type=transmission_type,
+            attributes=attributes,
+        )
+
+    @staticmethod
+    def blank_summary_variant_from_records(records):
+        assert len(records) > 0
+
+        alleles = []
+        for record in records:
+            sa = SummaryVariantFactory.blank_summary_allele_from_record(record)
             alleles.append(sa)
         if not alleles[0].is_reference_allele:
             ref_allele = SummaryAllele.create_reference_allele(alleles[0])

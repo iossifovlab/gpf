@@ -1,4 +1,12 @@
+from dae.configuration.gpf_config_parser import validate_existing_path
+
 score_file_conf_schema = {
+    "conf_dir": {
+        "type": "string",
+        "check_with": validate_existing_path,
+        "coerce": "abspath",
+        "required": True,
+    },
     "general": {
         "type": "dict",
         "schema": {

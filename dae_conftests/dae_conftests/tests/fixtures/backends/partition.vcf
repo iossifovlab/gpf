@@ -4,7 +4,7 @@
 ##contig=<ID=1>
 ##contig=<ID=2>
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	mom1	dad1	ch1	mom2	dad2	ch2
-1	865582	.	C	T	.	.	EFF=SYN	GT	0/1	0/0	0/1	0/1	0/0	/01
+1	865582	.	C	T	.	.	EFF=SYN	GT	0/1	0/0	0/1	0/1	0/0	0/1
 1	865583	.	G	A	.	.	EFF=SYN	GT	0/1	0/0	0/1	0/1	0/0	0/1
 1	865624	.	G	A	.	.	EFF=MIS	GT	0/1	0/0	0/1	0/1	0/0	0/1
 1	865627	.	G	A	.	.	EFF=MIS	GT	0/1	0/0	0/1	0/1	0/0	0/1

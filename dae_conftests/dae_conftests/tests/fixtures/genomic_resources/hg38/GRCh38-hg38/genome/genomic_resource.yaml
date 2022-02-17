@@ -1,0 +1,19 @@
+type: genome 
+
+filename: GRCh38_full_analysis_set_plus_decoy_hla.fa
+
+chrom_prefix: ""
+
+PARS:
+  "X":
+    - "chrX:10000-2781479"
+    - "chrX:155701382-156030895"
+  "Y":
+    - "chrY:10000-2781479"
+    - "chrY:56887902-57217415"
+
+
+meta: |
+  ## HG38 Reference Genome 
+
+  Default HG38 reference genome used by GPF

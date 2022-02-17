@@ -67,6 +67,8 @@ class ScoresFactory(object):
         return result
 
     def _load(self):
+        if not self.config:
+            return
         for score_id, score_config in self.config.genomic_scores.items():
             s = Scores(score_config, score_id)
             if s.id in self.config.scores:

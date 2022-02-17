@@ -1,3 +1,5 @@
+import os
+
 from rest_framework.response import Response
 from rest_framework import status
 from guardian.shortcuts import get_groups_with_perms
@@ -52,7 +54,7 @@ class DatasetView(QueryBaseView):
 
             res = [
                 StudyWrapperBase.build_genotype_data_all_datasets(
-                    dataset.config,
+                    dataset.config
                 )
                 for dataset in datasets
             ]
@@ -61,20 +63,28 @@ class DatasetView(QueryBaseView):
                     res,
                     key=lambda desc: desc["name"]
                 )
-
             res = [self.augment_accessibility(ds, user) for ds in res]
             res = [self.augment_with_groups(ds) for ds in res]
             res = [self.augment_with_parents(ds) for ds in res]
+
             return Response({"data": res})
         else:
             dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
             if dataset:
-                res = StudyWrapperBase.build_genotype_data_group_description(
-                    self.gpf_instance,
-                    dataset.config,
-                    dataset.description,
-                    dataset.person_set_collection_configs
-                )
+                dataset_object = Dataset.objects.get(dataset_id=dataset_id)
+
+                if user_has_permission(user, dataset_object):
+                    res = StudyWrapperBase.build_genotype_data_group_description(
+                        self.gpf_instance,
+                        dataset.config,
+                        dataset.description,
+                        dataset.person_set_collection_configs
+                    )
+                else:
+                    res = StudyWrapperBase.build_genotype_data_all_datasets(
+                        dataset.config
+                    )
+
                 res = self.augment_accessibility(res, user)
                 res = self.augment_with_groups(res)
                 res = self.augment_with_parents(res)
@@ -90,12 +100,19 @@ class PermissionDeniedPromptView(QueryBaseView):
     def __init__(self):
         super(PermissionDeniedPromptView, self).__init__()
 
-        prompt_filepath = (
-            self.gpf_instance.dae_config.gpfjs.permission_denied_prompt_file
-        )
+        dae_config = self.gpf_instance.dae_config
+        if dae_config.gpfjs is None or \
+                dae_config.gpfjs.permission_denied_prompt_file is None:
+            self.permission_denied_prompt = ""
+        else:
+            prompt_filepath = dae_config.gpfjs.permission_denied_prompt_file
 
-        with open(prompt_filepath, "r") as infile:
-            self.permission_denied_prompt = infile.read()
+            if not os.path.exists(prompt_filepath) or\
+                    not os.path.isfile(prompt_filepath):
+                self.permission_denied_prompt = ""
+            else:
+                with open(prompt_filepath, "r") as infile:
+                    self.permission_denied_prompt = infile.read()
 
     def get(self, request):
         return Response({"data": self.permission_denied_prompt})
