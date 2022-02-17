@@ -34,6 +34,7 @@ import { EffectTypes } from 'app/effect-types/effect-types';
 })
 export class AutismGeneProfileSingleViewComponent implements OnInit {
   @ViewChild('stickySpan', {static:false}) menuElement: ElementRef;
+  @ViewChild('wrapperElement')  wrapperElement: ElementRef;
 
   @Input() public readonly geneSymbol: string;
   @Input() public config: AgpSingleViewConfig;
@@ -62,6 +63,8 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   private currentCopyState: string = 'assets/link-solid.svg'; 
   private menuPosition: any;
   private sticky: boolean;
+  private stickyWidth: any;
+  private set: boolean = false;
 
   public constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
@@ -250,8 +253,10 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
 
   @HostListener('window:scroll', ['$event'])
   handleScroll(){
-    if(this.menuElement !== undefined) {
+    if(this.menuElement !== undefined && this.set === false) {
       this.menuPosition = this.menuElement.nativeElement.offsetTop;
+      this.stickyWidth = this.wrapperElement.nativeElement.offsetWidth;
+      this.set = true;
     }
 
     const windowScroll = window.pageYOffset;
