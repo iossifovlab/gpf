@@ -1,7 +1,6 @@
 from dae.studies.study import GenotypeDataStudy
 from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper
 from studies.remote_study import RemoteGenotypeData
-from collections import KeysView
 from box import Box
 
 
@@ -104,16 +103,3 @@ def test_has_pheno_data_remote(wgpf_instance_fixture):
     wrapper = wgpf_instance_fixture.get_wdae_wrapper(
         "TEST_REMOTE_iossifov_2014")
     assert wgpf_instance_fixture.has_pheno_data(wrapper) is True
-
-
-def test_get_instruments(wgpf_instance_fixture):
-    wrapper = wgpf_instance_fixture.get_wdae_wrapper("quads_f1")
-    instruments = wgpf_instance_fixture.get_instruments(wrapper)
-    assert isinstance(instruments, KeysView)
-
-
-def test_get_instruments_remote(wgpf_instance_fixture):
-    wrapper = wgpf_instance_fixture.get_wdae_wrapper(
-        "TEST_REMOTE_iossifov_2014")
-    instruments = wgpf_instance_fixture.get_instruments(wrapper)
-    assert isinstance(instruments, list)

@@ -64,7 +64,7 @@ class PhenoInstrumentsView(QueryBaseView):
         if dataset is None or not self.gpf_instance.has_pheno_data(dataset):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        instruments = sorted(self.gpf_instance.get_instruments(dataset))
+        instruments = sorted(self.dataset.phenotype_data.get_instruments())
         res = {
             "instruments": instruments,
             "default": instruments[0],
@@ -85,7 +85,7 @@ class PhenoMeasuresInfoView(PhenoBrowserBaseView):
         if dataset is None or not self.gpf_instance.has_pheno_data(dataset):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        res = self.gpf_instance.get_measures_info(dataset)
+        res = self.dataset.phenotype_data.get_measures_info()
 
         return Response(res)
 
@@ -137,8 +137,9 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         if instrument and instrument not in pheno_instruments:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        data = self.gpf_instance.search_measures(
-            dataset, instrument, search_term)
+        data = self.dataset.phenotype_data.search_measures(
+            instrument, search_term
+        )
 
         response = StreamingHttpResponse(
             iterator_to_json(data),

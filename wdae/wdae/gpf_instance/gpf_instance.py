@@ -211,30 +211,6 @@ class WGPFInstance(GPFInstance):
     def get_measure_description(self, study_wrapper, measure_id):
         return study_wrapper.phenotype_data.get_measure_description(measure_id)
 
-    def get_instruments(self, study_wrapper):
-        logger.warning("WARNING: Using is_remote")
-        if not study_wrapper.is_remote:
-            return study_wrapper.phenotype_data.get_instruments()
-
-        return study_wrapper.rest_client.get_instruments(
-            study_wrapper._remote_study_id)
-
-    def get_regressions(self, study_wrapper):
-        logger.warning("WARNING: Using is_remote")
-        if not study_wrapper.is_remote:
-            return study_wrapper.phenotype_data.get_regressions()
-
-        return study_wrapper.rest_client.get_regressions(
-            study_wrapper._remote_study_id)
-
-    def get_measures_info(self, study_wrapper):
-        logger.warning("WARNING: Using is_remote")
-        if not study_wrapper.is_remote:
-            return study_wrapper.phenotype_data.get_measures_info()
-
-        client = study_wrapper.rest_client
-        return client.get_browser_measures_info(study_wrapper._remote_study_id)
-
     def search_measures(self, study_wrapper, instrument, search_term):
         logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
