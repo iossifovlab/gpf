@@ -157,6 +157,10 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
 
     for ps in filters.person_sets:
         pids = set(person_ids[dataset_id][ps.set_name])
+        logger.info(
+            f"{dataset_id}: "
+            f"person {ps.set_name} contains {len(pids)} individuals")
+
         for statistic in filters.statistics:
             if statistic.category == "denovo" and not denovo_flag:
                 continue
