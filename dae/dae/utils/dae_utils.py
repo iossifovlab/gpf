@@ -80,3 +80,11 @@ def get_pheno_browser_images_dir(no_environ_override=""):
     pheno_db_dir = get_pheno_db_dir(no_environ_override)
     browser_images_path = os.path.join(pheno_db_dir, "images")
     return browser_images_path
+
+
+def get_pheno_base_url():
+    url_prefix = ""
+    gpf_prefix = os.environ.get("GPF_PREFIX")
+    if gpf_prefix is not None:
+        url_prefix = f"/{gpf_prefix}"
+    return f"{url_prefix}/static/images/"

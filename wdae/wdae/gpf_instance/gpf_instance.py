@@ -1,5 +1,4 @@
 import logging
-import math
 import os
 from typing import Optional, List, Dict
 from threading import Lock
@@ -10,7 +9,6 @@ from dae.gpf_instance.gpf_instance import GPFInstance, cached
 from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper, \
     StudyWrapperBase
 from studies.remote_study_db import RemoteStudyDB
-from dae.pheno_browser.db import DbManager
 
 from remote.gene_sets_db import RemoteGeneSetsDb
 from remote.denovo_gene_sets_db import RemoteDenovoGeneSetsDb
@@ -20,7 +18,6 @@ from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.event_counters import CounterBase
 from enrichment_api.enrichment_builder import \
     EnrichmentBuilder, RemoteEnrichmentBuilder
-from dae.utils.helpers import isnan
 from dae.utils.dae_utils import get_pheno_browser_images_dir
 
 
@@ -212,28 +209,12 @@ class WGPFInstance(GPFInstance):
         return os.path.join(images_dir, config.name)
 
     def get_measure_description(self, study_wrapper, measure_id):
-        logger.warning("WARNING: Using is_remote")
-        if not study_wrapper.is_remote:
-            measure = study_wrapper.phenotype_data.measures[measure_id]
-
-            out = {
-                "instrument_name": measure.instrument_name,
-                "measure_name": measure.measure_name,
-                "measure_type": measure.measure_type.name,
-                "values_domain": measure.domain,
-            }
-            if not math.isnan(measure.min_value):
-                out["min_value"] = measure.min_value
-            if not math.isnan(measure.max_value):
-                out["max_value"] = measure.max_value
-            return out
-
         return study_wrapper.phenotype_data.get_measure_description(measure_id)
 
     def get_instruments(self, study_wrapper):
         logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
-            return super().get_instruments(study_wrapper)
+            return study_wrapper.phenotype_data.get_instruments()
 
         return study_wrapper.rest_client.get_instruments(
             study_wrapper._remote_study_id)
@@ -241,7 +222,7 @@ class WGPFInstance(GPFInstance):
     def get_regressions(self, study_wrapper):
         logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
-            return super().get_regressions(study_wrapper)
+            return study_wrapper.phenotype_data.get_regressions()
 
         return study_wrapper.rest_client.get_regressions(
             study_wrapper._remote_study_id)
@@ -249,15 +230,7 @@ class WGPFInstance(GPFInstance):
     def get_measures_info(self, study_wrapper):
         logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
-            dbfile = self.get_pheno_dbfile(study_wrapper)
-            images_url = self.get_pheno_images_url(study_wrapper)
-            db = DbManager(dbfile=dbfile)
-            db.build()
-            return {
-                "base_image_url": images_url,
-                "has_descriptions": db.has_descriptions,
-                "regression_names": db.regression_display_names,
-            }
+            return study_wrapper.phenotype_data.get_measures_info()
 
         client = study_wrapper.rest_client
         return client.get_browser_measures_info(study_wrapper._remote_study_id)
@@ -265,31 +238,11 @@ class WGPFInstance(GPFInstance):
     def search_measures(self, study_wrapper, instrument, search_term):
         logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
-            dbfile = self.get_pheno_dbfile(study_wrapper)
-            db = DbManager(dbfile=dbfile)
-            db.build()
-
-            measures = db.search_measures(instrument, search_term)
-
+            measures = study_wrapper.phenotype_data.search_measures(
+                instrument, search_term
+            )
             for m in measures:
-                if m["values_domain"] is None:
-                    m["values_domain"] = ""
-                m["measure_type"] = m["measure_type"].name
-
-                m["regressions"] = []
-                regressions = db.get_regression_values(m["measure_id"]) or []
-
-                for reg in regressions:
-                    reg = dict(reg)
-                    if isnan(reg["pvalue_regression_male"]):
-                        reg["pvalue_regression_male"] = "NaN"
-                    if isnan(reg["pvalue_regression_female"]):
-                        reg["pvalue_regression_female"] = "NaN"
-                    m["regressions"].append(reg)
-
-                yield {
-                    "measure": m,
-                }
+                yield m
             return
 
         client = study_wrapper.rest_client

@@ -17,9 +17,11 @@ from dae.pheno.db import DbManager
 from dae.pheno.common import MeasureType
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
-from dae.utils.dae_utils import get_pheno_db_dir
+from dae.utils.dae_utils import get_pheno_db_dir, get_pheno_base_url
+from itertools import chain
 
 from dae.variants.attributes import Sex, Status, Role
+from dae.utils.helpers import isnan
 
 from typing import Optional, Sequence, Union
 
@@ -186,6 +188,9 @@ class PhenotypeData(ABC):
     def instruments(self) -> Dict[str, Instrument]:
         return self._instruments
 
+    def get_instruments(self):
+        return self.instruments.keys()
+
     @abstractmethod
     def get_persons_df(
             self, roles: Optional[Iterable[Role]] = None,
@@ -277,13 +282,27 @@ class PhenotypeData(ABC):
 
         for instrument_name, instrument in instruments.items():
             for measure in instrument.measures.values():
-                print(measure, measure.measure_type)
                 if measure_type is not None and \
                         measure.measure_type != measure_type:
                     continue
                 result[measure.measure_id] = measure
 
         return result
+
+    def get_measure_description(self, measure_id):
+        measure = self.measures[measure_id]
+
+        out = {
+            "instrument_name": measure.instrument_name,
+            "measure_name": measure.measure_name,
+            "measure_type": measure.measure_type.name,
+            "values_domain": measure.domain,
+        }
+        if not math.isnan(measure.min_value):
+            out["min_value"] = measure.min_value
+        if not math.isnan(measure.max_value):
+            out["max_value"] = measure.max_value
+        return out
 
     @abstractmethod
     def get_measure_values_df(
@@ -469,11 +488,11 @@ class PhenotypeStudy(PhenotypeData):
     * `measures` -- dictionary of all measures
     """
 
-    def __init__(self, pheno_id: str, dbfile: str):
+    def __init__(self, pheno_id: str, dbfile: str, browser_dbfile: str = None):
         super(PhenotypeStudy, self).__init__(pheno_id)
 
         self.families = None
-        self.db = DbManager(dbfile=dbfile)
+        self.db = DbManager(dbfile=dbfile, browser_dbfile=browser_dbfile)
         self.db.build()
         self._load()
 
@@ -520,7 +539,7 @@ class PhenotypeStudy(PhenotypeData):
         if measure_type is not None:
             s = s.where(measure.c.measure_type == measure_type)
 
-        df = pd.read_sql(s, self.db.engine)
+        df = pd.read_sql(s, self.db.pheno_engine)
 
         df_columns = [
             "measure_id",
@@ -611,7 +630,7 @@ class PhenotypeStudy(PhenotypeData):
             s = s.where(self.db.person.c.person_id.in_(person_ids))
         if family_ids is not None:
             s = s.where(self.db.family.c.family_id.in_(family_ids))
-        df = pd.read_sql(s, self.db.engine)
+        df = pd.read_sql(s, self.db.pheno_engine)
         # df.rename(columns={'sex': 'sex'}, inplace=True)
         return df[["person_id", "family_id", "role", "sex", "status"]]
 
@@ -674,7 +693,7 @@ class PhenotypeStudy(PhenotypeData):
             if filter_clause is not None:
                 s = s.where(text(filter_clause))
 
-        df = pd.read_sql(s, self.db.engine)
+        df = pd.read_sql(s, self.db.pheno_engine)
         df.rename(columns={"value": measure.measure_id}, inplace=True)
         return df
 
@@ -739,7 +758,7 @@ class PhenotypeStudy(PhenotypeData):
 
             s = s.order_by(desc(self.db.person.c.person_id))
 
-            with self.db.engine.connect() as connection:
+            with self.db.pheno_engine.connect() as connection:
                 results = connection.execute(s)
                 for row in results:
                     person_id = row["person_id"]
@@ -886,15 +905,48 @@ class PhenotypeStudy(PhenotypeData):
             measure_ids, person_ids, family_ids, roles, default_filter
         )
 
+    def get_regressions(self):
+        return self.db.regression_display_names_with_ids
+
+    def get_measures_info(self):
+        return {
+            "base_image_url": get_pheno_base_url(),
+            "has_descriptions": self.db.has_descriptions,
+            "regression_names": self.db.regression_display_names,
+        }
+
+    def search_measures(self, instrument, search_term):
+        measures = self.db.search_measures(instrument, search_term)
+
+        for m in measures:
+            if m["values_domain"] is None:
+                m["values_domain"] = ""
+            m["measure_type"] = m["measure_type"].name
+
+            m["regressions"] = []
+            regressions = self.db.get_regression_values(m["measure_id"]) or []
+
+            for reg in regressions:
+                reg = dict(reg)
+                if isnan(reg["pvalue_regression_male"]):
+                    reg["pvalue_regression_male"] = "NaN"
+                if isnan(reg["pvalue_regression_female"]):
+                    reg["pvalue_regression_female"] = "NaN"
+                m["regressions"].append(reg)
+
+            yield {
+                "measure": m,
+            }
+
 
 class PhenotypeGroup(PhenotypeData):
 
     def __init__(self, pheno_id: str, phenotype_data: Iterable[PhenotypeData]):
         super(PhenotypeGroup, self).__init__(pheno_id)
-        self.phenotype_data = phenotype_data
-        self.families = FamiliesData.combine_studies(self.phenotype_data)
+        self.phenotype_datas = phenotype_data
+        self.families = FamiliesData.combine_studies(self.phenotype_datas)
         instruments, measures = self._merge_instruments(
-            [ph.instruments for ph in self.phenotype_data])
+            [ph.instruments for ph in self.phenotype_datas])
         self._instruments.update(instruments)
 
         self._measures.update(measures)
@@ -986,7 +1038,7 @@ class PhenotypeGroup(PhenotypeData):
             default_filter: str = "apply") -> pd.DataFrame:
 
         assert self.has_measure(measure_id), measure_id
-        for pheno in self.phenotype_data:
+        for pheno in self.phenotype_datas:
             if pheno.has_measure(measure_id):
                 return pheno.get_measure_values_df(
                     measure_id,
@@ -1012,7 +1064,7 @@ class PhenotypeGroup(PhenotypeData):
         assert all([self.has_measure(mid) for mid in measure_ids]), measure_ids
 
         dfs = []
-        for pheno in self.phenotype_data:
+        for pheno in self.phenotype_datas:
             pheno_measure_ids = []
             for mid in measure_ids:
                 if pheno.has_measure(mid):
@@ -1040,15 +1092,48 @@ class PhenotypeGroup(PhenotypeData):
 
         return res_df
 
+    def get_regressions(self):
+        res = []
+        for pheno in self.phenotype_datas:
+            res += pheno.get_regressions()
+        return res
+
+    def get_measures_info(self):
+        result = {
+            "base_image_url": get_pheno_base_url(),
+            "has_descriptions": False,
+            "regression_names": dict()
+        }
+        for pheno in self.phenotype_datas:
+            measures_info = pheno.get_measures_info()
+            result["has_descriptions"] = \
+                result["has_descriptions"] or measures_info["has_descriptions"]
+            result["regression_names"].update(
+                measures_info["regression_names"]
+            )
+        return result
+
+    def search_measures(self, instrument, search_term):
+        generators = [
+            pheno.search_measures(instrument, search_term)
+            for pheno in self.phenotype_datas
+        ]
+        measures = chain(*generators)
+        for m in measures:
+            yield m
+
 
 class PhenoDb(object):
-    def __init__(self, dae_config):
+    def __init__(self, dae_config, config_override=False):
         super(PhenoDb, self).__init__()
         assert dae_config
 
-        pheno_data_dir = get_pheno_db_dir(
-            no_environ_override=dae_config.phenotype_data.dir
-        )
+        if not config_override:
+            pheno_data_dir = get_pheno_db_dir(
+                no_environ_override=dae_config.phenotype_data.dir
+            )
+        else:
+            pheno_data_dir = dae_config.phenotype_data.dir
 
         configs = GPFConfigParser.load_directory_configs(
             pheno_data_dir, pheno_conf_schema
@@ -1064,6 +1149,9 @@ class PhenoDb(object):
 
     def get_dbfile(self, pheno_id):
         return self.config[pheno_id].dbfile
+
+    def get_browser_dbfile(self, pheno_id):
+        return self.config[pheno_id].browser_dbfile
 
     def get_dbconfig(self, pheno_id):
         return self.config[pheno_id]
@@ -1092,7 +1180,8 @@ class PhenoDb(object):
                 logger.info(f"loading pheno db <{pheno_id}>")
                 phenotype_data = PhenotypeStudy(
                     pheno_id,
-                    dbfile=self.get_dbfile(pheno_id)
+                    dbfile=self.get_dbfile(pheno_id),
+                    browser_dbfile=self.get_browser_dbfile(pheno_id)
                 )
             self.pheno_cache[pheno_id] = phenotype_data
         return phenotype_data

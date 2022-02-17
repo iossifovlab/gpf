@@ -14,7 +14,6 @@ from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
 from dae.studies.variants_db import VariantsDb
 
 from dae.pheno.pheno_db import PhenoDb
-from dae.pheno_browser.db import DbManager
 
 from dae.backends.storage.genotype_storage_factory import \
     GenotypeStorageFactory
@@ -220,23 +219,6 @@ class GPFInstance(object):
         return self._pheno_db.get_phenotype_data_config(phenotype_data_id)
 
     # Pheno browser
-
-    def get_regressions(self, study_wrapper):
-        dataset_config = self.get_genotype_data_config(
-            study_wrapper.study_id)
-
-        pheno_config = self.get_phenotype_db_config()
-        browser_dbfile = \
-            pheno_config[dataset_config.phenotype_data].browser_dbfile
-
-        db = DbManager(
-            browser_dbfile)
-        db.build()
-
-        if db is None:
-            return None
-
-        return db.regression_display_names_with_ids
 
     # Genomic scores
 

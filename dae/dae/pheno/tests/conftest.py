@@ -81,7 +81,7 @@ def fi1_df(fake_instrument_filename):
 
 @pytest.fixture(scope="session")
 def fake_pheno_db(fake_dae_conf):
-    return PhenoDb(fake_dae_conf)
+    return PhenoDb(fake_dae_conf, config_override=True)
 
 
 @pytest.fixture(scope="session")
