@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { AfterViewChecked, Component, Input, OnInit } from '@angular/core';
 import {
   AgpDatasetPersonSet, AgpDatasetStatistic, AgpGene,
   AgpGenomicScores, AgpSingleViewConfig, AgpEffectType
@@ -32,11 +32,13 @@ import { EffectTypes } from 'app/effect-types/effect-types';
   templateUrl: './autism-gene-profile-single-view.component.html',
   styleUrls: ['./autism-gene-profile-single-view.component.css']
 })
-export class AutismGeneProfileSingleViewComponent implements OnInit {
+export class AutismGeneProfileSingleViewComponent implements OnInit, AfterViewChecked {
   @Input() public readonly geneSymbol: string;
   @Input() public config: AgpSingleViewConfig;
   @Input() public isInGeneCompare = false;
   public showTemplate = true;
+
+  private tablesLoadedLast = 0;
 
   public genomicScoresGeneWeights = [];
   public gene$: Observable<AgpGene>;
@@ -106,6 +108,26 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     }, (error) => {
       this.errorModal = true;
     });
+  }
+
+  public ngAfterViewChecked(): void {
+    const tables = document.getElementsByClassName('datasets-table');
+    if (this.tablesLoadedLast === tables.length) {
+      return; // stop executing the code below if no new tables have loaded
+    }
+    this.tablesLoadedLast = 0;
+    // @ts-ignore
+    tables[0].onscroll = function(e) {
+      const tables = document.getElementsByClassName('datasets-table');
+      for (let j = 0; j < tables.length; j++) {
+        tables[j].scrollLeft = (e.srcElement.scrollLeft / (e.srcElement.scrollWidth - e.srcElement.clientWidth)) * (tables[j].scrollWidth - tables[j].clientWidth)
+      }
+    };
+    // @ts-ignore
+    for (const table of tables) {
+      table.scrollLeft = 0;
+      this.tablesLoadedLast++;
+    }
   }
 
   public setLinks(geneSymbol: string, gene: Gene, datasetGenome: string): void {
