@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnInit, Output, Renderer2, ViewChild, ViewChildren } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnInit, Output, ViewChild, ViewChildren } from '@angular/core';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
@@ -41,6 +41,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   public pageIndex = 0;
   public showSearchWarning = false;
 
+  private viewportPageCount;
   private baseRowHeight = 35; // px, this should match the height found in the table-row CSS class
   private prevVerticalScroll = 0;
   private loadMoreGenes = true;
@@ -49,7 +50,6 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   public constructor(
     private autismGeneProfilesService: AgpTableService,
     private ref: ElementRef,
-    private renderer: Renderer2,
   ) { }
 
   public ngOnInit(): void {
@@ -63,6 +63,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   public ngOnChanges(): void {
     if (this.config) {
+      this.viewportPageCount = Math.ceil(window.innerHeight / (this.baseRowHeight * this.config.pageSize));
       this.calculateHeaderLayout();
       this.fillTable();
     }
@@ -106,13 +107,12 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private fillTable() {
-    const viewportPageCount = Math.ceil(window.innerHeight / (this.baseRowHeight * this.config.pageSize));
     const agpRequests = [];
     this.genes = [];
     this.pageIndex = 1;
     this.loadMoreGenes = true;
     
-    for (let i = 1; i <= viewportPageCount; i++) {
+    for (let i = 1; i <= this.viewportPageCount; i++) {
       agpRequests.push(
         this.autismGeneProfilesService
           .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
@@ -120,12 +120,12 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
       )
       this.pageIndex++;
     }
-    this.pageIndex = viewportPageCount;
+    this.pageIndex = this.viewportPageCount;
     forkJoin(agpRequests).subscribe(res => {
       for (const genes of res) {
         this.genes = this.genes.concat(genes);
       }
-      this.updateShownGenes(0, viewportPageCount * this.config.pageSize);
+      this.updateShownGenes(0, this.viewportPageCount * this.config.pageSize);
       this.showSearchWarning = !this.genes.length;
     })
   }
@@ -281,6 +281,13 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   public emitCreateTabEvent($event = null, geneSymbol: string = null, navigateToTab: boolean = true): void {
     if ($event && ($event.ctrlKey || $event.metaKey)) {
       navigateToTab = false;
+    }
+
+    if (navigateToTab) {
+      /* navigating to another tab does not guarantee the scroll position
+       * will remain the same, so we reset it and update the shownGenes indices */
+      window.scrollTo(0, 0);
+      this.updateShownGenes(0, this.viewportPageCount * this.config.pageSize);
     }
 
     const geneSymbols: string[] = geneSymbol ? [geneSymbol] : Array.from(this.highlightedGenes);
