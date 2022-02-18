@@ -182,59 +182,6 @@ class WGPFInstance(GPFInstance):
                     line += "\n".encode("UTF-8")
                     yield line.decode("UTF-8")
 
-    def get_pheno_config(self, study_wrapper):
-        logger.warning("WARNING: Using is_remote")
-        if not study_wrapper.is_remote:
-            dbname = study_wrapper.config.phenotype_data
-            return self._pheno_db.config[dbname]
-
-        client = study_wrapper.rest_client
-        return client.get_pheno_browser_config(
-            study_wrapper.config.phenotype_data)
-
-    def has_pheno_data(self, study_wrapper):
-        logger.warning("WARNING: Using is_remote")
-        if not study_wrapper.is_remote:
-            return study_wrapper.phenotype_data.instruments.keys()
-
-        return "phenotype_data" in study_wrapper.config
-
-    def get_pheno_dbfile(self, study_wrapper):
-        config = self.get_pheno_config(study_wrapper)
-        return config.browser_dbfile
-
-    def get_pheno_images_url(self, study_wrapper):
-        config = self.get_pheno_config(study_wrapper)
-        images_dir = get_pheno_browser_images_dir()
-        return os.path.join(images_dir, config.name)
-
-    def get_measure_description(self, study_wrapper, measure_id):
-        return study_wrapper.phenotype_data.get_measure_description(measure_id)
-
-    def search_measures(self, study_wrapper, instrument, search_term):
-        logger.warning("WARNING: Using is_remote")
-        if not study_wrapper.is_remote:
-            measures = study_wrapper.phenotype_data.search_measures(
-                instrument, search_term
-            )
-            for m in measures:
-                yield m
-            return
-
-        client = study_wrapper.rest_client
-        measures = client.get_browser_measures(
-            study_wrapper._remote_study_id,
-            instrument,
-            search_term
-        )
-        base = client.build_host_url()
-        for m in measures:
-            m["measure"]["base_url"] = base
-            yield m
-
-    def has_measure(self, study_wrapper, measure_id):
-        return study_wrapper.phenotype_data.has_measure(measure_id)
-
     def get_study_enrichment_config(self, dataset_id):
         result = \
             super().get_study_enrichment_config(dataset_id)

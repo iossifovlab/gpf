@@ -75,31 +75,3 @@ def test_get_common_report_remote(wgpf_instance_fixture):
 def test_get_common_report_nonexistant(wgpf_instance_fixture):
     common_report = wgpf_instance_fixture.get_common_report("aklghs")
     assert common_report is None
-
-
-def test_get_pheno_config(wgpf_instance_fixture):
-    wrapper = wgpf_instance_fixture.get_wdae_wrapper("quads_f1")
-    pheno_config = wgpf_instance_fixture.get_pheno_config(wrapper)
-    assert isinstance(pheno_config, dict)
-
-
-def test_get_pheno_config_remote(wgpf_instance_fixture):
-    wrapper = wgpf_instance_fixture.get_wdae_wrapper(
-        "TEST_REMOTE_iossifov_2014")
-    pheno_config = wgpf_instance_fixture.get_pheno_config(wrapper)
-    assert isinstance(pheno_config, dict)
-
-
-def test_has_pheno_data(wgpf_instance_fixture):
-    wrapper = wgpf_instance_fixture.get_wdae_wrapper(
-        "quads_f1")
-    assert wgpf_instance_fixture.has_pheno_data(wrapper) is True
-    wrapper = wgpf_instance_fixture.get_wdae_wrapper(
-        "Study1")
-    assert wgpf_instance_fixture.has_pheno_data(wrapper) is False
-
-
-def test_has_pheno_data_remote(wgpf_instance_fixture):
-    wrapper = wgpf_instance_fixture.get_wdae_wrapper(
-        "TEST_REMOTE_iossifov_2014")
-    assert wgpf_instance_fixture.has_pheno_data(wrapper) is True

@@ -18,17 +18,6 @@ class PhenoBrowserBaseView(QueryBaseView):
     def __init__(self):
         super(PhenoBrowserBaseView, self).__init__()
         self.pheno_config = self.gpf_instance.get_phenotype_db_config()
-        print(self.pheno_config)
-
-    def get_browser_dbfile(self, dataset):
-        browser_dbfile = self.gpf_instance.get_pheno_dbfile(dataset)
-        assert browser_dbfile is not None
-        return browser_dbfile
-
-    def get_browser_images_url(self, dataset):
-        browser_images_url = self.gpf_instance.get_pheno_images_url(dataset)
-        assert browser_images_url is not None
-        return browser_images_url
 
 
 class PhenoConfigView(PhenoBrowserBaseView):
@@ -61,10 +50,10 @@ class PhenoInstrumentsView(QueryBaseView):
         dataset_id = request.query_params["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if dataset is None or not self.gpf_instance.has_pheno_data(dataset):
+        if dataset is None or not dataset.has_pheno_data():
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        instruments = sorted(self.dataset.phenotype_data.get_instruments())
+        instruments = sorted(dataset.phenotype_data.get_instruments())
         res = {
             "instruments": instruments,
             "default": instruments[0],
@@ -82,10 +71,10 @@ class PhenoMeasuresInfoView(PhenoBrowserBaseView):
         dataset_id = request.query_params["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if dataset is None or not self.gpf_instance.has_pheno_data(dataset):
+        if dataset is None or not dataset.has_pheno_data():
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        res = self.dataset.phenotype_data.get_measures_info()
+        res = dataset.phenotype_data.get_measures_info()
 
         return Response(res)
 
@@ -97,7 +86,7 @@ class PhenoMeasureDescriptionView(PhenoBrowserBaseView):
         dataset_id = request.query_params["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if dataset is None or not self.gpf_instance.has_pheno_data(dataset):
+        if dataset is None or not dataset.has_pheno_data():
             return Response(
                 {"error": "Dataset not found"},
                 status=status.HTTP_404_NOT_FOUND
@@ -105,13 +94,13 @@ class PhenoMeasureDescriptionView(PhenoBrowserBaseView):
 
         measure_id = request.query_params["measure_id"]
 
-        if not self.gpf_instance.has_measure(dataset, measure_id):
+        if not dataset.phenotype_data.has_measure(measure_id):
             return Response(
                 {"error": "Measure not found"},
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        res = self.gpf_instance.get_measure_description(dataset, measure_id)
+        res = dataset.phenotype_data.get_measure_description(measure_id)
 
         return Response(res)
 
@@ -126,7 +115,7 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         dataset_id = request.query_params["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if dataset is None or not self.gpf_instance.has_pheno_data(dataset):
+        if dataset is None or not dataset.has_pheno_data():
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         instrument = request.query_params.get("instrument", None)
@@ -137,7 +126,7 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         if instrument and instrument not in pheno_instruments:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        data = self.dataset.phenotype_data.search_measures(
+        data = dataset.phenotype_data.search_measures(
             instrument, search_term
         )
 
@@ -160,7 +149,7 @@ class PhenoMeasuresDownload(QueryBaseView):
         dataset_id = request.query_params["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if dataset is None or not self.gpf_instance.has_pheno_data(dataset):
+        if dataset is None or not dataset.has_pheno_data():
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         instrument = request.query_params.get("instrument", None)

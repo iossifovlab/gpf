@@ -196,6 +196,10 @@ class StudyWrapperBase:
             max_variants_message=False):
         pass
 
+    @abstractmethod
+    def has_pheno_data(self):
+        raise NotImplementedError()
+
 
 class StudyWrapper(StudyWrapperBase):
     def __init__(self, genotype_data_study, pheno_db, gene_weights_db):
@@ -298,6 +302,9 @@ class StudyWrapper(StudyWrapperBase):
                     )
                     return False
         return True
+
+    def has_pheno_data(self):
+        return self.phenotype_data is not None
 
     # def _query_variants_rows_iterator(
     #         self, sources, person_set_collection, **kwargs):
@@ -480,6 +487,9 @@ class RemoteStudyWrapper(StudyWrapperBase):
     @property
     def families(self):
         return self.remote_genotype_data._families
+
+    def has_pheno_data(self):
+        return self.phenotype_data is not None
 
     def get_studies_ids(self, leaves=True):
         return self.remote_genotype_data.get_studies_ids(leaves=leaves)
