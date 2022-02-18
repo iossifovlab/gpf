@@ -31,6 +31,8 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     'w'
   ];
 
+  private homeTabScrollLocation = {x: null, y: null};
+
   public constructor(
     private location: Location,
     private agpTableService: AgpTableService,
@@ -107,6 +109,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   public openHomeTab(): void {
     this.selectNav('autismGenesTool');
+    window.scrollTo(this.homeTabScrollLocation.x, this.homeTabScrollLocation.y);
   }
 
   public openPreviousTab(): void {
@@ -132,6 +135,11 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   }
 
   public openTabAtIndex(index: number): void {
+    if (this.nav.activeId === 'autismGenesTool') {
+      this.homeTabScrollLocation.x = window.scrollX;
+      this.homeTabScrollLocation.y = window.scrollY;
+    }
+
     this.selectNav([...this.geneTabs][index]);
   }
 
