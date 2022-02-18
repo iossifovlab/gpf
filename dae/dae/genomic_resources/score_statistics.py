@@ -326,6 +326,7 @@ class HistogramBuilder:
             plot_file = os.path.join(out_dir, f"{score}.png")
             with self.resource.open_raw_file(plot_file, "wb") as f:
                 plt.savefig(f)
+            plt.clf()
 
         # update manifest with newly written files
         self.resource.update_manifest()
