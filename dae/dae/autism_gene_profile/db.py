@@ -307,7 +307,6 @@ class AutismGeneProfileDB:
                     count_col = f"{study_id}_{person_set_id}_{eff_type}"
                     insert_map[count_col] = count["count"]
                     insert_map[f"{count_col}_rate"] = count["rate"]
-        logger.debug(f"insert map: {insert_map}")
         return insert_map
 
     def insert_agps(self, agps):
