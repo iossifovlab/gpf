@@ -3,8 +3,8 @@ import os
 
 import pandas as pd
 
-from dae.pheno_browser.prepare_data import PreparePhenoBrowserBase
-from dae.pheno_browser.graphs import violinplot, stripplot, gender_palette
+from dae.pheno.prepare_data import PreparePhenoBrowserBase
+from dae.pheno.graphs import violinplot, stripplot, gender_palette
 
 from dae.variants.attributes import Role, Sex
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -260,7 +260,7 @@ def test_build_regression_aug_df_is_none(
 
 
 def test_handle_regressions(
-    mocker, fake_phenotype_data, output_dir, fake_phenotype_data_desc_conf
+    mocker, fake_phenotype_data, output_dir, fake_phenotype_data_config
 ):
     def fake_build_regression(dependent_measure, independent_measure, jitter):
         return {
@@ -278,7 +278,7 @@ def test_handle_regressions(
     )
 
     reg = GPFConfigParser.load_config(
-        fake_phenotype_data_desc_conf, pheno_conf_schema
+        fake_phenotype_data_config, pheno_conf_schema
     )
     prep = PreparePhenoBrowserBase(
         "fake", fake_phenotype_data, output_dir, reg
@@ -301,10 +301,10 @@ def test_handle_regressions(
 
 
 def test_handle_regressions_non_continuous_or_ordinal_measure(
-    fake_phenotype_data, output_dir, fake_phenotype_data_desc_conf
+    fake_phenotype_data, output_dir, fake_phenotype_data_config
 ):
     reg = GPFConfigParser.load_config(
-        fake_phenotype_data_desc_conf, pheno_conf_schema
+        fake_phenotype_data_config, pheno_conf_schema
     )
     prep = PreparePhenoBrowserBase(
         "fake", fake_phenotype_data, output_dir, reg
@@ -320,10 +320,10 @@ def test_handle_regressions_non_continuous_or_ordinal_measure(
 
 
 def test_handle_regressions_regressand_is_regressor(
-    fake_phenotype_data, output_dir, fake_phenotype_data_desc_conf
+    fake_phenotype_data, output_dir, fake_phenotype_data_config
 ):
     reg = GPFConfigParser.load_config(
-        fake_phenotype_data_desc_conf, pheno_conf_schema
+        fake_phenotype_data_config, pheno_conf_schema
     )
     prep = PreparePhenoBrowserBase(
         "fake", fake_phenotype_data, output_dir, reg
@@ -335,7 +335,7 @@ def test_handle_regressions_regressand_is_regressor(
 
 
 def test_handle_regressions_default_jitter(
-    mocker, fake_phenotype_data, output_dir, fake_phenotype_data_desc_conf
+    mocker, fake_phenotype_data, output_dir, fake_phenotype_data_config
 ):
     def fake_build_regression(*args):
         return {"pvalue_regression_male": 0, "pvalue_regression_female": 0}
@@ -347,7 +347,7 @@ def test_handle_regressions_default_jitter(
     )
 
     reg = GPFConfigParser.load_config(
-        fake_phenotype_data_desc_conf, pheno_conf_schema
+        fake_phenotype_data_config, pheno_conf_schema
     )
     prep = PreparePhenoBrowserBase(
         "fake", fake_phenotype_data, output_dir, reg

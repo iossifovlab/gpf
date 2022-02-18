@@ -16,7 +16,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import to_rgb
 
-from dae.pheno_browser.palletes import \
+from dae.pheno.palletes import \
     color_palette, light_palette, \
     dark_palette, get_color_cycle, QUAL_PALETTES
 

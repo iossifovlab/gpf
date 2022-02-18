@@ -12,13 +12,13 @@ from dae.pheno.pheno_db import Measure
 
 import matplotlib.pyplot as plt
 
-from dae.pheno_browser.db import DbManager
+from dae.pheno.db import DbManager
 from dae.pheno.common import Role, MeasureType
 
-from dae.pheno_browser.graphs import draw_linregres
-from dae.pheno_browser.graphs import draw_measure_violinplot
-from dae.pheno_browser.graphs import draw_categorical_violin_distribution
-from dae.pheno_browser.graphs import draw_ordinal_violin_distribution
+from dae.pheno.graphs import draw_linregres
+from dae.pheno.graphs import draw_measure_violinplot
+from dae.pheno.graphs import draw_categorical_violin_distribution
+from dae.pheno.graphs import draw_ordinal_violin_distribution
 from dae.utils.progress import progress, progress_nl
 from dae.utils.dae_utils import get_pheno_browser_images_dir
 
@@ -314,7 +314,8 @@ class PreparePhenoBrowserBase(object):
                 yield res
 
     def run(self):
-        db = DbManager(dbfile=self.browser_db)
+        pheno_dbfile = self.phenotype_data.db.pheno_dbfile
+        db = DbManager(pheno_dbfile, browser_dbfile=self.browser_db)
         db.build()
 
         if self.pheno_regressions:

@@ -4,11 +4,14 @@
 # @author: lubo
 # """
 import os
-from dae.pheno_browser.db import DbManager
+from dae.pheno.db import DbManager
 
 
 def test_db_save(output_dir):
-    db = DbManager(os.path.join(output_dir, "temp_testing.db"))
+    db = DbManager(
+        os.path.join(output_dir, "temp_testing.db"),
+        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
+    )
     assert db is not None
 
     print(db.dbfile)
@@ -33,7 +36,10 @@ def test_db_save(output_dir):
 
 
 def test_db_update(output_dir):
-    db = DbManager(os.path.join(output_dir, "temp_testing.db"))
+    db = DbManager(
+        os.path.join(output_dir, "temp_testing.db"),
+        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
+    )
     assert db is not None
     db.build()
 
@@ -60,7 +66,10 @@ def test_db_update(output_dir):
 
 
 def test_has_descriptions(output_dir):
-    db = DbManager(os.path.join(output_dir, "test_fake.db"))
+    db = DbManager(
+        os.path.join(output_dir, "temp_testing.db"),
+        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
+    )
     assert db is not None
     db.build()
 
@@ -86,15 +95,25 @@ def test_has_descriptions(output_dir):
     assert db.has_descriptions
 
 
-def test_search_measures_get_all(fake_phenotype_data_browser_dir):
-    db = DbManager(fake_phenotype_data_browser_dir)
+def test_search_measures_get_all(
+    fake_phenotype_data_dbfile, fake_phenotype_data_browser_dbfile
+):
+    db = DbManager(
+        fake_phenotype_data_dbfile,
+        fake_phenotype_data_browser_dbfile
+    )
     assert db is not None
     db.build()
     assert len(list(db.search_measures())) == 15
 
 
-def test_search_measures_get_by_instrument(fake_phenotype_data_browser_dir):
-    db = DbManager(fake_phenotype_data_browser_dir)
+def test_search_measures_get_by_instrument(
+    fake_phenotype_data_dbfile, fake_phenotype_data_browser_dbfile
+):
+    db = DbManager(
+        fake_phenotype_data_dbfile,
+        fake_phenotype_data_browser_dbfile
+    )
     assert db is not None
     db.build()
     measure_df = db.search_measures_df("i1", None)
@@ -110,9 +129,12 @@ def test_search_measures_get_by_instrument(fake_phenotype_data_browser_dir):
 
 
 def test_search_measures_by_keyword_in_description(
-    fake_phenotype_data_browser_dir,
+    fake_phenotype_data_dbfile, fake_phenotype_data_browser_dbfile
 ):
-    db = DbManager(fake_phenotype_data_browser_dir)
+    db = DbManager(
+        fake_phenotype_data_dbfile,
+        fake_phenotype_data_browser_dbfile
+    )
     assert db is not None
     db.build()
     measure_df = db.search_measures_df(None, "number")
@@ -122,9 +144,12 @@ def test_search_measures_by_keyword_in_description(
 
 
 def test_search_measures_by_keyword_in_measure_id(
-    fake_phenotype_data_browser_dir,
+    fake_phenotype_data_dbfile, fake_phenotype_data_browser_dbfile
 ):
-    db = DbManager(fake_phenotype_data_browser_dir)
+    db = DbManager(
+        fake_phenotype_data_dbfile,
+        fake_phenotype_data_browser_dbfile
+    )
     assert db is not None
     db.build()
     measure_df = db.search_measures_df(None, "i1.m2")
@@ -134,9 +159,12 @@ def test_search_measures_by_keyword_in_measure_id(
 
 
 def test_search_measures_by_keyword_in_measure_name(
-    fake_phenotype_data_browser_dir,
+    fake_phenotype_data_dbfile, fake_phenotype_data_browser_dbfile
 ):
-    db = DbManager(fake_phenotype_data_browser_dir)
+    db = DbManager(
+        fake_phenotype_data_dbfile,
+        fake_phenotype_data_browser_dbfile
+    )
     assert db is not None
     db.build()
     measure_df = db.search_measures_df(None, "m2")
@@ -148,9 +176,12 @@ def test_search_measures_by_keyword_in_measure_name(
 
 
 def test_search_measures_by_keyword_in_instrument_name(
-    fake_phenotype_data_browser_dir,
+    fake_phenotype_data_dbfile, fake_phenotype_data_browser_dbfile
 ):
-    db = DbManager(fake_phenotype_data_browser_dir)
+    db = DbManager(
+        fake_phenotype_data_dbfile,
+        fake_phenotype_data_browser_dbfile
+    )
     assert db is not None
     db.build()
 
@@ -164,7 +195,10 @@ def test_search_measures_by_keyword_in_instrument_name(
 
 
 def test_db_search_character_escaping(output_dir):
-    db = DbManager(os.path.join(output_dir, "temp_testing.db"))
+    db = DbManager(
+        os.path.join(output_dir, "temp_testing.db"),
+        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
+    )
     assert db is not None
     db.build()
 
@@ -203,7 +237,10 @@ def test_db_search_character_escaping(output_dir):
 
 
 def test_save_and_get_regressions(output_dir):
-    db = DbManager(os.path.join(output_dir, "temp_testing.db"))
+    db = DbManager(
+        os.path.join(output_dir, "temp_testing.db"),
+        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
+    )
     assert db is not None
     db.build()
 
@@ -236,7 +273,10 @@ def test_save_and_get_regressions(output_dir):
 
 
 def test_get_regression_names(output_dir):
-    db = DbManager(os.path.join(output_dir, "temp_testing.db"))
+    db = DbManager(
+        os.path.join(output_dir, "temp_testing.db"),
+        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
+    )
     assert db is not None
     db.build()
 
@@ -261,7 +301,10 @@ def test_get_regression_names(output_dir):
 
 
 def test_save_and_get_regression_values(output_dir):
-    db = DbManager(os.path.join(output_dir, "temp_testing.db"))
+    db = DbManager(
+        os.path.join(output_dir, "temp_testing.db"),
+        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
+    )
     assert db is not None
     db.build()
 
@@ -304,7 +347,10 @@ def test_save_and_get_regression_values(output_dir):
 
 
 def test_update_regression_values(output_dir):
-    db = DbManager(os.path.join(output_dir, "temp_testing.db"))
+    db = DbManager(
+        os.path.join(output_dir, "temp_testing.db"),
+        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
+    )
     assert db is not None
     db.build()
 
@@ -350,7 +396,10 @@ def test_update_regression_values(output_dir):
 
 
 def test_regression_ids(output_dir):
-    db = DbManager(os.path.join(output_dir, "temp_testing.db"))
+    db = DbManager(
+        os.path.join(output_dir, "temp_testing.db"),
+        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
+    )
     assert db is not None
     db.build()
 

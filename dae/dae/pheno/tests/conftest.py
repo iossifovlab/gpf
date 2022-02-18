@@ -96,6 +96,20 @@ def fake_phenotype_data(fake_pheno_db):
 
 
 @pytest.fixture(scope="session")
+def fake_phenotype_data_dbfile():
+    return relative_to_this_folder(
+        "fixtures/fake_phenoDB/main_fake/fake.db"
+    )
+
+
+@pytest.fixture(scope="session")
+def fake_phenotype_data_browser_dbfile():
+    return relative_to_this_folder(
+        "fixtures/fake_phenoDB/main_fake/fake_browser.db"
+    )
+
+
+@pytest.fixture(scope="session")
 def dummy_pheno_missing_files_conf():
     return relative_to_this_folder("fixtures/dummy_pheno_missing_files.conf")
 
@@ -148,3 +162,30 @@ def valid_descriptions():
 @pytest.fixture
 def invalid_descriptions():
     return relative_to_this_folder("fixtures/descriptions_invalid.tsv")
+
+
+@pytest.fixture
+def output_dir(request):
+    tmpdir = tempfile.mkdtemp(prefix="pheno_browser")
+
+    def fin():
+        shutil.rmtree(tmpdir)
+
+    request.addfinalizer(fin)
+    return tmpdir
+
+
+@pytest.fixture(scope="session")
+def regressions_conf():
+    return relative_to_this_folder("fixtures/regressions.conf")
+
+
+@pytest.fixture
+def temp_dirname_figures(request, cleanup):
+    dirname = tempfile.mkdtemp(suffix="_plots", prefix="figures_")
+
+    def fin():
+        shutil.rmtree(dirname)
+    if cleanup:
+        request.addfinalizer(fin)
+    return dirname

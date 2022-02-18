@@ -10,7 +10,7 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import traceback
 
 from dae.pheno import pheno_db
-from dae.pheno_browser.prepare_data import PreparePhenoBrowserBase
+from dae.pheno.prepare_data import PreparePhenoBrowserBase
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
 

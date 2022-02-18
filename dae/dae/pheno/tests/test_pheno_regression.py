@@ -5,7 +5,7 @@ Created on Apr 10, 2017
 """
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
-from dae.pheno_browser.prepare_data import PreparePhenoBrowserBase
+from dae.pheno.prepare_data import PreparePhenoBrowserBase
 
 
 def test_pheno_regressions_from_conf_path(regressions_conf):

@@ -10,8 +10,8 @@ import pandas as pd  # noqa
 import numpy as np  # noqa
 
 from dae.variants.attributes import Status, Sex  # noqa
-from dae.pheno_browser.palletes import diverging_palette  # noqa
-from dae.pheno_browser.plots import violinplot, stripplot  # noqa
+from dae.pheno.palletes import diverging_palette  # noqa
+from dae.pheno.plots import violinplot, stripplot  # noqa
 from dae.pheno.common import ROLES_GRAPHS_DEFINITION  # noqa
 from dae.pheno.utils.lin_regress import LinearRegression  # noqa
 

@@ -25,13 +25,24 @@ class DbManager(object):
         else:
             self.pheno_engine = create_engine(f"sqlite:///{dbfile}")
 
+        self.update_browser_dbfile(browser_dbfile)
+
+    def has_browser_dbfile(self):
+        return self.browser_dbfile is not None
+
+    def update_browser_dbfile(self, browser_dbfile):
         self.browser_dbfile = browser_dbfile
         if browser_dbfile is not None:
             self.browser_metadata = MetaData()
             self.browser_engine = create_engine(f"sqlite:///{browser_dbfile}")
+        else:
+            self.browser_metadata = None
+            self.browser_engine = None
 
-    def has_browser_dbfile(self):
-        return self.browser_dbfile is not None
+    def build_browser(self):
+        if self.has_browser_dbfile():
+            self._build_browser_tables()
+            self.browser_metadata.create_all(self.browser_engine)
 
     def build(self):
         self._build_person_tables()
@@ -40,9 +51,7 @@ class DbManager(object):
 
         self.pheno_metadata.create_all(self.pheno_engine)
 
-        if self.has_browser_dbfile():
-            self._build_browser_tables()
-            self.browser_metadata.create_all(self.browser_engine)
+        self.build_browser()
 
     def _build_browser_tables(self):
         self.variable_browser = Table(

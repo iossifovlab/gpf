@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from dae.pheno_browser.graphs import draw_linregres
+from dae.pheno.graphs import draw_linregres
 from dae.variants.attributes import Role, Sex
 
 
