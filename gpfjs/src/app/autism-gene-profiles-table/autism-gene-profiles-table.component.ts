@@ -194,7 +194,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     const buttonHeight = 30;
-    const topOffset = 10;
+    const topOffset = 5;
 
     this.modalPosition.top = 
       this.clickedColumnFilteringButton.getBoundingClientRect().top
