@@ -179,7 +179,12 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     this.ngbDropdownMenu.dropdown.toggle();
 
     this.clickedColumnFilteringButton = $event.target;
-    this.updateModalPosition();
+
+    if (column.id === this.geneSymbolColumnId) {
+      this.updateModalPosition(1, -9);
+    } else {
+      this.updateModalPosition();
+    }
 
     if (column.id === this.geneSymbolColumnId) {
       this.multipleSelectMenuComponent.columns = this.config.columns.filter(col => col.id !== this.geneSymbolColumnId);
@@ -189,20 +194,17 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     this.multipleSelectMenuComponent.refresh();
   }
 
-  public updateModalPosition(): void {
+  public updateModalPosition(leftOffset = 6, topOffset = 5): void {
     if (!this.ngbDropdownMenu.dropdown._open) {
       return;
     }
 
     const buttonHeight = 30;
-    const topOffset = 5;
-
     this.modalPosition.top = 
       this.clickedColumnFilteringButton.getBoundingClientRect().top
       + buttonHeight
       - topOffset;
 
-    const leftOffset = 6;
     const leftCap = 17;
     const modalWidth = 400;
     const leftPosition =

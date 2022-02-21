@@ -21,16 +21,15 @@
     <div class="above-table-bar-item">
       <button
         #columnFilteringButton
-        class="header-button navbar-toggler column-filtering-button"
-        (click)="openDropdown({id: 'geneSymbol'}, $event); $event.stopPropagation()">
-        &#9776;
-      </button>
+        id="category-filtering-button"
+        class="btn btn-default"
+        (click)="openDropdown({id: 'geneSymbol'}, $event); $event.stopPropagation()"
+        >Categories filter</button
+      >
     </div>
 
-    <div class="above-table-bar-item" (mouseover)="showKeybinds = true" (mouseout)="showKeybinds = false" style="display: inline-flex; padding: 6px;">
-      <div class="keybinds-icon">
-        <span style="position: relative; top: 1px">?</span>
-      </div>
+    <div id="keybinds-icon" class="above-table-bar-item" (mouseover)="showKeybinds = true" (mouseout)="showKeybinds = false">
+      <span>?</span>
     </div>
 
     <div *ngIf="showKeybinds" class="keybinds-tooltip">
@@ -97,7 +96,7 @@
             >
             </gpf-sorting-buttons>
             <button
-              *ngIf="column.columns.length || column.id === geneSymbolColumnId"
+              *ngIf="column.columns.length"
               #columnFilteringButton
               class="header-button navbar-toggler column-filtering-button"
               (click)="openDropdown(column, $event); $event.stopPropagation()">
