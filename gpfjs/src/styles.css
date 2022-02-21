@@ -212,13 +212,6 @@ label {
   max-width: 500px;
 }
 
-gpf-global-error-display {
-  position: fixed;
-  bottom: 25px;
-  right: 25px;
-  width: 20%;
-}
-
 .modal-backdrop.fade {
   transition: none;
 }
