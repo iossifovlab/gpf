@@ -97,7 +97,7 @@ class PreparePersons(PrepareBase):
     def _save_families(self, ped_df):
         families = [{"family_id": fid} for fid in ped_df["family_id"].unique()]
         ins = self.db.family.insert()
-        with self.db.engine.connect() as connection:
+        with self.db.pheno_engine.connect() as connection:
             connection.execute(ins, families)
 
     @staticmethod
@@ -123,7 +123,7 @@ class PreparePersons(PrepareBase):
             }
             persons.append(p)
         ins = self.db.person.insert()
-        with self.db.engine.connect() as connection:
+        with self.db.pheno_engine.connect() as connection:
             connection.execute(ins, persons)
 
     def save_pedigree(self, ped_df):
@@ -382,7 +382,7 @@ class PrepareVariables(PreparePersons):
         to_save = measure.to_dict()
         assert "db_id" not in to_save, to_save
         ins = self.db.measure.insert().values(**to_save)
-        with self.db.engine.begin() as connection:
+        with self.db.pheno_engine.begin() as connection:
             result = connection.execute(ins)
             measure_id = result.inserted_primary_key[0]
 
@@ -399,7 +399,7 @@ class PrepareVariables(PreparePersons):
         value_table = self.db.get_value_table(measure.measure_type)
         ins = value_table.insert()
 
-        with self.db.engine.begin() as connection:
+        with self.db.pheno_engine.begin() as connection:
             connection.execute(ins, list(values.values()))
 
     def _collect_instruments(self, dirname):

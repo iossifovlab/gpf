@@ -251,7 +251,7 @@ class DbManager(object):
             with self.browser_engine.begin() as connection:
                 connection.execute(update)
 
-    def get_browser(self, measure_id):
+    def get_browser_measure(self, measure_id):
         s = select([self.variable_browser])
         s = s.where(self.variable_browser.c.measure_id == measure_id)
         with self.browser_engine.connect() as connection:

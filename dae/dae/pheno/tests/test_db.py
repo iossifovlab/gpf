@@ -14,7 +14,7 @@ def test_db_save(output_dir):
     )
     assert db is not None
 
-    print(db.dbfile)
+    print(db.browser_dbfile)
     db.build()
 
     v = {
@@ -27,7 +27,7 @@ def test_db_save(output_dir):
 
     db.save(v)
 
-    r = db.get("test.measure")
+    r = db.get_browser_measure("test.measure")
     assert r is not None
     assert r.measure_id == "test.measure"
     assert r.instrument_name == "test"
@@ -421,4 +421,4 @@ def test_regression_ids(output_dir):
 
 def test_pheno_db_disabled(fake_pheno_db):
     assert not fake_pheno_db.has_phenotype_data("fake_disabled")
-    assert len(fake_pheno_db.config) == 1
+    assert len(fake_pheno_db.config) == 4
