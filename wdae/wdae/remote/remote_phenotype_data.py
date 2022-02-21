@@ -212,7 +212,7 @@ class RemotePhenotypeData(PhenotypeData):
     def get_measures_info(self):
         self.rest_client.get_browser_measures_info(self.remote_dataset_id)
 
-    def search_measures(self, instrument, search_term)
+    def search_measures(self, instrument, search_term):
         measures = self.rest_client.get_browser_measures(
             self._remote_dataset_id,
             instrument,
