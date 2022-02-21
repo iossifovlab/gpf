@@ -98,12 +98,12 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
         this.updateGenes();
       }
     }
-    this.updateModalPosition();
+    this.ngbDropdownMenu.dropdown.close();
   }
 
   @HostListener('window:resize')
   public onResize() {
-    this.updateModalPosition();
+    this.ngbDropdownMenu.dropdown.close();
   }
 
   private fillTable() {
