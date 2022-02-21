@@ -11,8 +11,8 @@ ADD ${SOURCE_DIR}/dev-environment.yml /
 RUN /opt/conda/bin/mamba env create --name gpf --file /environment.yml
 RUN /opt/conda/bin/mamba env update --name gpf --file /dev-environment.yml
 
-# http range server for testing
-RUN /opt/conda/bin/conda run --no-capture-output -n gpf pip install rangehttpserver==1.2.0
+# # http range server for testing
+# RUN /opt/conda/bin/conda run --no-capture-output -n gpf pip install rangehttpserver==1.2.0
 
 # RUN echo "conda activate gpf" >> ~/.bashrc
 
