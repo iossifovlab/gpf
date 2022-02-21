@@ -33,7 +33,7 @@
 .header {
   border-top: 1px solid #ddd;
   position: sticky;
-  top: 50px;
+  top: 53px;
   font-weight: bold;
 }
 
@@ -215,7 +215,6 @@
   padding: 8px 0 6px 0;
   background: #fff;
   align-items: baseline;
-  z-index: 1;
 }
 
 .above-table-bar-item {
