@@ -3,7 +3,7 @@
   display: grid;
   grid-auto-columns: 110px;
   grid-auto-flow: column;
-  grid-template-columns: 150px; /* Set 150px to first column (gene symbol), rest are 100px */
+  grid-template-columns: 150px; /* Set 150px to first column (gene symbol), rest are 110px */
 }
 
 .table-body-row:nth-child(odd) {
