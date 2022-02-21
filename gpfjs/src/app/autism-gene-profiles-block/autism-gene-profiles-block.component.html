@@ -6,23 +6,8 @@
     style="justify-content: flex-start; padding: 0; padding-left: 25px"
     [ngClass]="{ 'tab-limit': geneTabs.size >= maxTabCount }">
     <li class="nav-tabs" [ngbNavItem]="'autismGenesTool'" [destroyOnHide]="false">
-      <a ngbNavLink style="display: inline-flex; align-items: center; padding-right: 9px; width: 200px">
+      <a ngbNavLink>
         <span>Autism genes tool</span>
-        <div style="display: inline-flex; margin-left: 6px">
-          <div (mouseover)="showKeybinds = true" (mouseout)="showKeybinds = false" class="keybinds-icon">
-            <span style="position: relative; top: 1px">?</span>
-          </div>
-        </div>
-
-        <div *ngIf="showKeybinds" class="keybinds-tooltip">
-          <span>1</span>&#160;<span>2</span>&#160;<span>3</span> - navigate to tab by index<br />
-          <span>e</span> or <span>n</span> - navigate to the next tab<br />
-          <span>q</span> or <span>p</span> - navigate to the previous tab<br />
-          <span>w</span> - close current tab<br />
-          <span>middleclick</span> or <span>ctrl</span>/<span>command</span> + <span>click</span> - highlight row<br />
-          <span>esc</span> - clear all highlights<br />
-          <span>f</span> - compare highlighted genes<br />
-        </div>
       </a>
 
       <ng-template ngbNavContent>

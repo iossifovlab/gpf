@@ -23,7 +23,6 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   public agpTableConfig: AgpTableConfig;
   public agpSingleViewConfig: AgpSingleViewConfig;
 
-  public showKeybinds = false;
   private keybinds = [
     '1', '2', '3', '4', '5', '6', '7', '8', '9',
     'q', 'p',

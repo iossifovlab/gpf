@@ -25,6 +25,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   private clickedColumnFilteringButton;
   public modalPosition = {top: 0, left: 0};
+  public showKeybinds = false;
 
   public leaves: Column[];
   public genes = [];
