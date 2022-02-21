@@ -6,6 +6,7 @@ import argparse
 import time
 from typing import cast
 from urllib.parse import urlparse
+import tempfile
 
 from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
 from dae.genomic_resources.url_repository import GenomicResourceURLRepo
@@ -95,6 +96,15 @@ def cli_manage(cli_args=None):
     parser_hist.add_argument('-f', '--force', default=False,
                              action='store_true', help='Ignore histogram '
                              'hashes and always precompute all histograms')
+    parser_hist.add_argument("--sge", default=False,
+                             action="store_true",
+                             help="Run computation on a Sun Grid Engine \
+cluster. When using this command it is highly advisable to manually specify \
+the number of workers using -j")
+    parser_hist.add_argument("--dashboard-port", type=int,
+                             help="Port on which to run Dask Dashboard")
+    parser_hist.add_argument("--log-dir",
+                             help="Directory where to store SGE worker logs")
 
     args = parser.parse_args(cli_args)
     if args.verbose == 1:
@@ -132,6 +142,8 @@ def cli_manage(cli_args=None):
         builder = HistogramBuilder(gr)
         n_jobs = args.jobs or os.cpu_count()
 
+        tmp_dir = tempfile.TemporaryDirectory()
+
         if args.kubernetes:
             env = _get_env_vars(args.envvars)
             extra_pod_config = {}
@@ -143,9 +155,36 @@ def cli_manage(cli_args=None):
                                      extra_pod_config=extra_pod_config)
             cluster = KubeCluster(pod_spec, env=env)
             cluster.scale(n_jobs)
+        elif args.sge:
+            try:
+                from dask_jobqueue import SGECluster
+            except Exception:
+                logger.error("No dask-jobqueue found. Please install it using:"
+                             " mamba install dask-jobqueue -c conda-forge")
+                sys.exit(1)
+
+            dashboard_config = {}
+            if args.dashboard_port:
+                dashboard_config["scheduler_options"] = \
+                    {"dashboard_address": f":{args.dashboard_port}"}
+            cluster = SGECluster(n_workers=n_jobs,
+                                 queue="all.q",
+                                 walltime="1500000",
+                                 cores=1,
+                                 processes=1,
+                                 memory='2GB',
+                                 log_directory=args.log_dir or tmp_dir.name,
+                                 local_directory=tmp_dir.name,
+                                 **dashboard_config)
         else:
-            cluster = LocalCluster(n_workers=n_jobs, threads_per_worker=1)
-        with cluster:
+            dashboard_config = {}
+            if args.dashboard_port:
+                dashboard_config["dashboard_address"] = \
+                    f":{args.dashboard_port}"
+            cluster = LocalCluster(n_workers=n_jobs, threads_per_worker=1,
+                                   local_directory=tmp_dir.name,
+                                   **dashboard_config)
+        with tmp_dir, cluster:
             with Client(cluster) as client:
                 histograms = builder.build(client, force=args.force,
                                            only_dirty=True)
