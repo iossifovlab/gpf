@@ -117,7 +117,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
         result = dataset.commonReport.enabled;
         break;
       case 'genotype-browser':
-        result = (dataset.genotypeBrowser && dataset.genotypeBrowserConfig) !== undefined ? true : false;
+        result = (dataset.genotypeBrowser && (dataset.genotypeBrowserConfig !== undefined) !== false) ? true : false;
         break;
       case 'phenotype-browser':
         result = dataset.phenotypeBrowser;
@@ -159,7 +159,6 @@ export class DatasetsComponent implements OnInit, OnDestroy {
       firstTool = toolPageLinks.phenotypeTool;
     }
 
-    // console.log('firstTool', firstTool)
     return firstTool;
   }
 
