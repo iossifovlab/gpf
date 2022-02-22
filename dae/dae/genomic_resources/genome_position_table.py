@@ -416,7 +416,9 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             if jt == "none":
                 self.jump_threshold = 0
             else:
-                self.jump_threshold = min(int(jt), self.BUFFER_MAXSIZE//2)
+                self.jump_threshold = int(jt)
+
+        self.jump_threshold = min(self.jump_threshold, self.BUFFER_MAXSIZE//2)
 
         self.tabix_file: pysam.TabixFile = tabix_file
         self.tabix_iterator = None
