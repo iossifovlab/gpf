@@ -7,11 +7,11 @@ from dae.pedigrees.family import Person
 class RemotePhenotypeData(PhenotypeData):
     def __init__(self, pheno_id, remote_dataset_id, rest_client):
         self._remote_pheno_id = pheno_id
+        self.rest_client = rest_client
         pheno_id = self.rest_client.prefix_remote_identifier(pheno_id)
         super(RemotePhenotypeData, self).__init__(pheno_id)
 
         self.remote_dataset_id = remote_dataset_id
-        self.rest_client = rest_client
         self._instruments = None
         self._measures = None
         # self.measures = self.get_measures()
