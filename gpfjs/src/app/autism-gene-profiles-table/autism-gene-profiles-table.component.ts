@@ -40,7 +40,8 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   public geneInput: string = null;
   public searchKeystrokes$: Subject<string> = new Subject();
   public pageIndex = 0;
-  public showSearchWarning = false;
+  public showNothingFound = false;
+  public showLoading = false;
 
   private viewportPageCount;
   private baseRowHeight = 35; // px, this should match the height found in the table-row CSS class
@@ -114,6 +115,8 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     this.genes = [];
     this.pageIndex = 1;
     this.loadMoreGenes = true;
+    this.showLoading = true;
+    this.showNothingFound = false;
     
     for (let i = 1; i <= this.viewportPageCount; i++) {
       agpRequests.push(
@@ -129,7 +132,8 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
         this.genes = this.genes.concat(genes);
       }
       this.updateShownGenes(0, this.viewportPageCount * this.config.pageSize);
-      this.showSearchWarning = !this.genes.length;
+      this.showNothingFound = !this.genes.length;
+      this.showLoading = false;
     })
   }
 

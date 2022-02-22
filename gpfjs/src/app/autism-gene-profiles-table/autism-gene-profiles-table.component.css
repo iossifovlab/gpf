@@ -10,7 +10,7 @@
   background-color: #fafafa;
 }
 
-.table-body-row:hover:not(#search-warning) {
+.table-body-row:hover {
   background-color: #edf3ff;
 }
 
@@ -200,15 +200,20 @@
   padding-bottom: 10px;
 }
 
-#search-warning {
+#nothing-found,
+#loading {
   display: table;
   height: 44px;
+}
+
+#nothing-found {
   background-color: #fafafa;
   border-bottom: 1px solid #ddd;
   width: 100%;
 }
 
-#search-warning span {
+#nothing-found span,
+#loading span {
   font-style: italic;
   display: table-cell;
   vertical-align: middle;

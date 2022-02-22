@@ -64,8 +64,12 @@
       </div>
     </div>
 
-    <div id="search-warning" *ngIf="showSearchWarning">
+    <div id="nothing-found" *ngIf="showNothingFound">
       <span>Nothing found</span>
+    </div>
+
+    <div id="loading" *ngIf="showLoading">
+      <span>Loading...</span>
     </div>
   </div>
 
