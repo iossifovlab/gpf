@@ -43,9 +43,7 @@ class PreparePhenoBrowserBase(object):
         assert os.path.exists(output_dir)
         self.output_dir = output_dir
         if images_dir is None:
-            images_dir = get_pheno_browser_images_dir(
-                no_environ_override=self.output_dir
-            )
+            images_dir = get_pheno_browser_images_dir()
         if not os.path.exists(images_dir):
             os.makedirs(images_dir)
 

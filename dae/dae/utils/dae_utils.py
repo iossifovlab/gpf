@@ -62,22 +62,25 @@ def join_line(ln, sep="\t"):
     return sep.join(tl) + "\n"
 
 
-def get_pheno_db_dir(no_environ_override=""):
-    pheno_db_dir = os.environ.get("DAE_PHENODB_DIR")
-    if pheno_db_dir is not None:
-        return pheno_db_dir
-    db_dir = os.environ.get("DAE_DB_DIR")
-    if db_dir is not None:
-        pheno_db_dir = os.path.join(
-            os.environ.get("DAE_DB_DIR"), "pheno"
-        )
+def get_pheno_db_dir(dae_config):
+    if dae_config is not None:
+        if dae_config.phenotype_data is None or \
+                dae_config.phenotype_data.dir is None:
+            pheno_data_dir = os.path.join(
+                dae_config.conf_dir, "pheno")
+        else:
+            pheno_data_dir = dae_config.phenotype_data.dir
     else:
-        pheno_db_dir = no_environ_override
-    return pheno_db_dir
+        pheno_data_dir = os.path.join(os.environ.get("DAE_DB_DIR"), "pheno")
+
+    return pheno_data_dir
 
 
-def get_pheno_browser_images_dir(no_environ_override=""):
-    pheno_db_dir = get_pheno_db_dir(no_environ_override)
+def get_pheno_browser_images_dir(dae_config=None):
+    pheno_db_dir = os.environ.get(
+        "DAE_PHENODB_DIR",
+        get_pheno_db_dir(dae_config)
+    )
     browser_images_path = os.path.join(pheno_db_dir, "images")
     return browser_images_path
 

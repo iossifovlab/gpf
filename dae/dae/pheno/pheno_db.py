@@ -1125,22 +1125,10 @@ class PhenotypeGroup(PhenotypeData):
 
 
 class PhenoDb(object):
-    def __init__(self, dae_config, config_override=False):
+    def __init__(self, dae_config):
         super(PhenoDb, self).__init__()
         assert dae_config
-        # if dae_config.phenotype_data is None or \
-        #         dae_config.phenotype_data.dir is None:
-        #     pheno_dir = os.path.join(
-        #         dae_config.conf_dir, "pheno")
-        # else:
-        #     pheno_dir = dae_config.phenotype_data.dir
-
-        if not config_override:
-            pheno_data_dir = get_pheno_db_dir(
-                no_environ_override=dae_config.phenotype_data.dir
-            )
-        else:
-            pheno_data_dir = dae_config.phenotype_data.dir
+        pheno_data_dir = get_pheno_db_dir(dae_config)
 
         configs = GPFConfigParser.load_directory_configs(
             pheno_data_dir, pheno_conf_schema
