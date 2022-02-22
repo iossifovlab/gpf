@@ -172,25 +172,28 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   public openDropdown(column: Column, $event): void {
+    $event.stopPropagation(); // stop propagation to avoid triggering sort
+
     if (this.ngbDropdownMenu.dropdown._open) {
       return;
     }
 
     this.ngbDropdownMenu.dropdown.toggle();
-
     this.clickedColumnFilteringButton = $event.target;
+    this.updateModalPosition();
+    this.multipleSelectMenuComponent.columns = column.columns;
+    this.multipleSelectMenuComponent.refresh();
+  }
 
-    if (column.id === this.geneSymbolColumnId) {
-      this.updateModalPosition(1, -9);
-    } else {
-      this.updateModalPosition();
+  public openCategoryFilterDropdown($event): void {
+    if (this.ngbDropdownMenu.dropdown._open) {
+      return;
     }
 
-    if (column.id === this.geneSymbolColumnId) {
-      this.multipleSelectMenuComponent.columns = this.config.columns.filter(col => col.id !== this.geneSymbolColumnId);
-    } else {
-      this.multipleSelectMenuComponent.columns = column.columns;
-    }
+    this.ngbDropdownMenu.dropdown.toggle();
+    this.clickedColumnFilteringButton = $event.target;
+    this.updateModalPosition(1, -9);
+    this.multipleSelectMenuComponent.columns = this.config.columns.filter(col => col.id !== this.geneSymbolColumnId);
     this.multipleSelectMenuComponent.refresh();
   }
 

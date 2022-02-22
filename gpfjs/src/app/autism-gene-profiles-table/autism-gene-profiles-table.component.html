@@ -23,7 +23,7 @@
         #columnFilteringButton
         id="category-filtering-button"
         class="btn btn-default"
-        (click)="openDropdown({id: 'geneSymbol'}, $event); $event.stopPropagation()"
+        (click)="openCategoryFilterDropdown($event)"
         >Categories filter</button
       >
     </div>
@@ -99,7 +99,7 @@
               *ngIf="column.columns.length"
               #columnFilteringButton
               class="header-button navbar-toggler column-filtering-button"
-              (click)="openDropdown(column, $event); $event.stopPropagation()">
+              (click)="openDropdown(column, $event)">
               &#9776;
             </button>
           </div>
