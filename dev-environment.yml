@@ -32,3 +32,6 @@ dependencies:
   - sqlalchemy-stubs=0.4
   - data-science-types=0.2.23
   - types-toml=0.10.3
+  - pip
+  - pip:
+    - rangehttpserver

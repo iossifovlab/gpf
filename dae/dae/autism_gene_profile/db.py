@@ -2,8 +2,8 @@ import logging
 from copy import copy
 
 from dae.autism_gene_profile.statistic import AGPStatistic
-from sqlalchemy import MetaData, create_engine, inspect, nullslast
-from sqlalchemy import Table, Column, Integer, String, Float
+from sqlalchemy import create_engine, inspect, nullslast  # type: ignore
+from sqlalchemy import MetaData, Table, Column, Integer, String, Float
 from sqlalchemy.sql import insert, desc, asc
 
 logger = logging.getLogger(__name__)
@@ -98,7 +98,7 @@ class AutismGeneProfileDB:
                     rate = row[
                         f"{dataset_id}_{person_set}_{statistic_id}_rate"
                     ]
-                    result['.'.join(["datasets", dataset_id, person_set, statistic_id])] = \
+                    result['.'.join([dataset_id, person_set, statistic_id])] = \
                         f"{count} ({round(rate, 2)})" if count else None
 
         return result
@@ -162,8 +162,6 @@ class AutismGeneProfileDB:
         sort_by_tokens = sort_by.split('.')
         if sort_by.startswith("gene_set_"):
             sort_by = sort_by.replace("gene_set_", "", 1)
-        if sort_by.startswith("datasets."):
-            sort_by = sort_by.replace("datasets.", "", 1)
         if "_rank" in sort_by_tokens[0]:
             collection_id = ""
             category = sort_by_tokens[0].replace("_rank", "")
@@ -309,7 +307,6 @@ class AutismGeneProfileDB:
                     count_col = f"{study_id}_{person_set_id}_{eff_type}"
                     insert_map[count_col] = count["count"]
                     insert_map[f"{count_col}_rate"] = count["rate"]
-
         return insert_map
 
     def insert_agps(self, agps):

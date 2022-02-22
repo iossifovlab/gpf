@@ -1,3 +1,36 @@
+SELECT 
+
+variants.bucket_index,
+variants.chromosome,
+variants.`position`,
+variants.end_position,
+variants.effect_types,
+variants.effect_gene_symbols,
+variants.summary_index,
+variants.allele_index,
+variants.variant_type,
+variants.transmission_type,
+variants.reference,
+variants.family_index,
+variants.family_id,
+variants.is_denovo,
+variants.variant_in_sexes,
+variants.variant_in_roles,
+variants.inheritance_in_members,
+variants.variant_in_members,
+pedigree.primaryphenotype,
+pedigree.person_id
+
+FROM data_hg38_seqclust.denovo_db_liftover_variants as variants JOIN data_hg38_seqclust.denovo_db_liftover_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_types in (  'nonsense' , 'frame-shift' , 'splice-site' , 'no-frame-shift-newStop'  )  ) ) 
+  AND ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) 
+  AND ( BITAND(4, variants.inheritance_in_members) != 0 ) 
+  AND ( (((BITAND(variants.variant_type, 4) != 0)) OR ((BITAND(variants.variant_type, 1) != 0))) OR ((BITAND(variants.variant_type, 2) != 0)) ) 
+  AND ( variants.allele_index > 0 )
+  AND ((pedigree.primaryphenotype = "control" )) AND variants.variant_in_members = pedigree.person_id
+
+
 --- AGP
 SELECT 
   COUNT(DISTINCT bucket_index, summary_index, family_index)

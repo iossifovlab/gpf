@@ -116,7 +116,7 @@ def calculate_rates(instance, agps, config):
                 person_set = psc.person_sets[set_name]
 
                 children_count = len(list(person_set.get_persons_with_roles(
-                    Role.prb, Role.sib
+                    Role.prb, Role.sib, Role.child
                 )))
 
                 for statistic in filters.statistics:
@@ -157,6 +157,7 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
 
     for ps in filters.person_sets:
         pids = set(person_ids[dataset_id][ps.set_name])
+
         for statistic in filters.statistics:
             if statistic.category == "denovo" and not denovo_flag:
                 continue
@@ -172,8 +173,8 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
 
             if statistic.get("effects"):
                 ets = set(expand_effect_types(statistic.effects))
-                in_effect_types = len(
-                    ets.intersection(v.effect_types)) > 0
+                in_effect_types = ets.intersection(v.effect_types)
+                in_effect_types = len(in_effect_types) > 0
                 do_count = do_count and in_effect_types
 
             if statistic.get("scores"):
@@ -227,12 +228,11 @@ def fill_variant_counts(
         variants, dataset_id, agps, config, person_ids, denovo_flag):
 
     seen = set()
-    logger.info(f"Counting variants in {dataset_id}")
 
     for idx, v in enumerate(variants, 1):
         if idx % 1000 == 0:
             logger.info(
-                f"Counted {idx} variants from {dataset_id}"
+                f"{dataset_id}: Counted {idx} variants from {dataset_id}"
             )
         if v.fvuid in seen:
             continue
@@ -396,7 +396,7 @@ def main(gpf_instance=None, argv=None):
                 if statistic.category == "denovo":
                     continue
                 kwargs = dict()
-                kwargs["roles"] = "prb or sib"
+                kwargs["roles"] = "prb or sib or child"
 
                 if statistic.effects is not None:
                     kwargs["effect_types"] = \
@@ -416,7 +416,7 @@ def main(gpf_instance=None, argv=None):
                         scores.append(score_filter)
                     kwargs["real_attr_filter"] = scores
 
-                if statistic.variant_types:
+                if statistic.roles:
                     roles = [
                         Role.from_name(statistic.roles).repr()
                     ]

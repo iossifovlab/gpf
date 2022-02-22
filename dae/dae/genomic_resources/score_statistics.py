@@ -113,22 +113,15 @@ class Histogram:
             logger.warning(
                 f"value {value} out of range: [{self.x_min},{self.x_max}]")
             return False
-        index = np.where(self.bins > value)
-        if len(index) == 0:
+        index = self.bins.searchsorted(value, side='right')
+        if index == 0:
             logger.warning(f"(1) empty index {index} for value {value}")
             return False
-        index = index[0]
-        if len(index) == 0:
-            logger.info(f"(2) empty index {index} for value {value}")
+        if value == self.bins[-1]:
             self.bars[-1] += 1
             return True
 
-        if index[0] == 0:
-            logger.warning(
-                f"value: {value}; with index {index} in bins: {self.bins}")
-
-        self.bars[index[0] - 1] += 1
-
+        self.bars[index - 1] += 1
         return True
 
 
@@ -333,6 +326,7 @@ class HistogramBuilder:
             plot_file = os.path.join(out_dir, f"{score}.png")
             with self.resource.open_raw_file(plot_file, "wb") as f:
                 plt.savefig(f)
+            plt.clf()
 
         # update manifest with newly written files
         self.resource.update_manifest()

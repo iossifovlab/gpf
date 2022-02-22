@@ -242,10 +242,10 @@ class VariantDetails:
 
     @staticmethod
     def from_cnv(variant):
-        assert core.Allele.Type.cnv & variant._variant_type
+        assert core.Allele.Type.is_cnv(variant._allele_type)
 
         variant_desc = VariantDesc(
-            variant_type=variant._variant_type,
+            variant_type=variant._allele_type,
             position=variant.position,
             end_position=variant.end_position)
         return VariantDetails(
@@ -256,44 +256,6 @@ class SummaryAllele(core.Allele):
     """
     `SummaryAllele` represents a single allele for given position.
     """
-    # class Type(core.Allele.Type):
-    #     def __and__(self, other):
-    #         assert isinstance(other, core.Allele.Type), type(other)
-    #         return self.value & other.value
-
-    #     def __or__(self, other):
-    #         assert isinstance(other, core.Allele.Type)
-    #         return self.value | other.value
-
-    #     def __ior__(self, other):
-    #         assert isinstance(other, SummaryAllele.Type)
-    #         return SummaryAllele.Type(self.value | other.value)
-
-    #     @classmethod
-    #     def from_value(cls, value):
-    #         if value is None:
-    #             return None
-    #         return cls(value)
-
-    #     # @classmethod
-    #     # def is_cnv(cls, vt):
-    #     #     if vt is None:
-    #     #         return False
-    #     #     assert isinstance(vt, core.Allele.Type)
-    #     #     return vt & cls.cnv
-
-    #     @classmethod
-    #     def is_tr(cls, vt):
-    #         if vt is None:
-    #             return False
-    #         assert isinstance(vt, core.Allele.Type)
-    #         return vt & core.Allele.Type.tandem_repeat
-
-    #     def __str__(self) -> str:
-    #         return self.TYPE_DISPLAY_NAME.get(self.name) or self.name
-
-    #     def __lt__(self, other):
-    #         return self.value < other.value
 
     def __init__(
         self,
@@ -400,25 +362,25 @@ class SummaryAllele(core.Allele):
                     record.get("effects"))
             else:
                 self._effects = None
-        return self._effects
+        return cast(AlleleEffects, self._effects)
 
     @property
     def worst_effect(self) -> Optional[str]:
         if self.effects:
-            return self.effects.worst
+            return cast(str, self.effects.worst)
         return None
 
     @property
     def effect_types(self) -> List[str]:
         if self.effects:
-            return self.effects.types
+            return cast(List[str], self.effects.types)
         else:
             return []
 
     @property
     def effect_genes(self) -> List[EffectGene]:
         if self.effects:
-            return self.effects.genes
+            return cast(List[EffectGene], self.effects.genes)
         else:
             return []
 
@@ -428,7 +390,7 @@ class SummaryAllele(core.Allele):
 
     @property
     def frequency(self) -> Optional[float]:
-        return self.get_attribute("af_allele_freq")
+        return cast(Optional[float], self.get_attribute("af_allele_freq"))
 
     @property
     def cshl_variant(self) -> Optional[str]:
@@ -507,7 +469,7 @@ class SummaryAllele(core.Allele):
         return self.has_attribute(item)
 
     def __repr__(self) -> str:
-        if self.Type.cnv & self.allele_type:
+        if self.Type.is_cnv(self.allele_type):
             return f"{self.chromosome}:{self.position}-{self.end_position}"
         elif not self.alternative:
             return f"{self.chrom}:{self.position} {self.reference} (ref)"
@@ -519,6 +481,8 @@ class SummaryAllele(core.Allele):
 
     @staticmethod
     def create_reference_allele(allele) -> "SummaryAllele":
+        allele_type = core.Allele.Type.position
+
         new_attributes = {
             "chrom": allele.attributes.get("chrom"),
             "position": allele.attributes.get("position"),
@@ -537,6 +501,7 @@ class SummaryAllele(core.Allele):
             summary_index=allele.summary_index,
             transmission_type=allele.transmission_type,
             attributes=new_attributes,
+            allele_type=allele_type,
         )
 
 
@@ -580,7 +545,7 @@ class SummaryVariant:
 
     @property
     def end_position(self) -> Optional[int]:
-        return self._end_position
+        return cast(Optional[int], self._end_position)
 
     @property
     def reference(self) -> str:
@@ -637,12 +602,12 @@ class SummaryVariant:
         """
         the reference allele
         """
-        return self.alleles[0]
+        return cast(SummaryAllele, self.alleles[0])
 
     @property
     def alt_alleles(self) -> List[SummaryAllele]:
         """list of all alternative alleles"""
-        return self.alleles[1:]
+        return cast(List[SummaryAllele], self.alleles[1:])
 
     @property
     def details(self) -> List[VariantDetails]:

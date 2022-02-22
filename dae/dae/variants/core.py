@@ -39,14 +39,23 @@ class Allele:
         tandem_repeat_del = tandem_repeat | small_deletion
 
         def __and__(self, other):
+            if other is None:
+                return 0
+
             assert isinstance(other, Allele.Type), type(other)
             return self.value & other.value
 
         def __or__(self, other):
+            if other is None:
+                return 0
+
             assert isinstance(other, Allele.Type)
             return self.value | other.value
 
         def __ior__(self, other):
+            if other is None:
+                return 0
+
             assert isinstance(other, Allele.Type)
             return Allele.Type(self.value | other.value)
 

@@ -1,6 +1,7 @@
 import pytest
 
 from dae.genomic_resources.genome_position_table import \
+    TabixGenomicPositionTable, \
     open_genome_position_table
 
 from dae.genomic_resources import build_genomic_resource_repository
@@ -961,6 +962,66 @@ def test_tabix_jump_config(tmp_path, jump_threshold, expected):
 
     rows = None
     rows = list(table.get_records_in_region('5', 180740301, 180740301))
+    assert rows == [
+        ('5', '180739426', '180742735', '0.065122'),
+    ]
+
+
+@pytest.mark.parametrize("buffer_maxsize,jump_threshold", [
+    (1, 0),
+    (2, 1),
+    (8, 4),
+    (10_000, 2_500),
+    (20_000, 2_500),
+])
+def test_tabix_max_buffer(tmp_path, buffer_maxsize, jump_threshold):
+    e_repo = build_genomic_resource_repository(
+        {"id": "b", "type": "embeded", "content": {
+            "one": {
+                "genomic_resource.yaml": """
+                    text_table:
+                        filename: data.mem
+                    tabix_table:
+                        filename: data.bgz
+                """,
+                "data.mem": """
+                    chrom  pos_begin  pos_end    c1
+                    5      180739426  180742735  0.065122
+                    5      180742736  180742736  0.156342
+                    5      180742737  180742813  0.327393    
+                """
+            }
+        }
+        })
+    d_repo = build_genomic_resource_repository(
+        {"id": "d", "type": "directory", "directory": tmp_path})
+    d_repo.store_all_resources(e_repo)
+    e_gr = e_repo.get_resource("one")
+    d_gr = d_repo.get_resource("one")
+    save_as_tabix_table(
+        open_genome_position_table(e_gr, e_gr.config["text_table"]),
+        str(d_repo.get_file_path(d_gr, "data.bgz")))
+
+    TabixGenomicPositionTable.BUFFER_MAXSIZE = buffer_maxsize
+
+    table = open_genome_position_table(d_gr, d_gr.config["tabix_table"])
+    assert table.BUFFER_MAXSIZE == buffer_maxsize
+    assert table.jump_threshold == jump_threshold
+
+    rows = None
+    rows = list(table.get_records_in_region('5', 180740299, 180740300))
+    assert rows == [
+        ('5', '180739426', '180742735', '0.065122'),
+    ]
+
+    rows = None
+    rows = list(table.get_records_in_region('5', 180740301, 180740301))
+    assert rows == [
+        ('5', '180739426', '180742735', '0.065122'),
+    ]
+
+    rows = None
+    rows = list(table.get_records_in_region('5', 180740301, 180742735))
     assert rows == [
         ('5', '180739426', '180742735', '0.065122'),
     ]

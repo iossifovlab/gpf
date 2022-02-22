@@ -45,7 +45,7 @@ def cli(raw_args: list[str] = None) -> None:
     context = Context(args)
 
     pipeline = context.get_pipeline()
-    annotation_attributes = pipeline.annotation_schema.names
+    annotation_attributes = pipeline.annotation_schema.public_fields
 
     if args.input == "-":
         in_file = sys.stdin
