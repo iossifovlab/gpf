@@ -10,7 +10,7 @@ LOGGER = logging.getLogger(__name__)
 
 def column(
     id, display_name, visible=True, clickable=None,
-    display_vertical=False, sortable=False, columns=None):
+    display_vertical=False, sortable=False, columns=None, meta=None):
     if columns is None:
         columns = list()
     return {
@@ -20,7 +20,8 @@ def column(
         "displayVertical": display_vertical,
         "sortable": sortable,
         "clickable": clickable,
-        "columns": columns
+        "columns": columns,
+        "meta": meta
     }
 
 
@@ -58,11 +59,13 @@ class TableConfigurationView(QueryBaseView):
                 f"{category['category']}_rank",
                 category["display_name"],
                 visible=category.get("default_visible", True),
+                meta=category.get("meta"),
                 sortable=True,
                 columns=[column(
                     f"{category['category']}_rank.{gene_set['set_id']}",
                     gene_set["set_id"],
                     visible=gene_set.get("default_visible", True),
+                    meta=gene_set.get("meta"),
                     display_vertical=True,
                     sortable=True) for gene_set in category["sets"]
                 ]
@@ -73,10 +76,12 @@ class TableConfigurationView(QueryBaseView):
                 category["category"],
                 category["display_name"],
                 visible=category.get("default_visible", True),
+                meta=category.get("meta"),
                 columns=[column(
                     f"{category['category']}.{genomic_score['score_name']}",
                     genomic_score["score_name"],
                     visible=genomic_score.get("default_visible", True),
+                    meta=genomic_score.get("meta"),
                     display_vertical=True,
                     sortable=True) for genomic_score in category["scores"]
                 ]
@@ -90,7 +95,9 @@ class TableConfigurationView(QueryBaseView):
                     or dataset_id
                 dataset_col = column(
                     f"{dataset_id}", display_name,
-                    visible=dataset.get("default_visible", True))
+                    visible=dataset.get("default_visible", True),
+                    meta=dataset.get("meta"),
+                )
                 for person_set in dataset.get("person_sets", []):
                     set_id = person_set["set_name"]
                     collection_id = person_set["collection_name"]
@@ -105,10 +112,12 @@ class TableConfigurationView(QueryBaseView):
                         f"{dataset_id}.{set_id}",
                         f"{set_name} ({stats['children']})",
                         visible=person_set.get("default_visible", True),
+                        meta=person_set.get("meta"),
                         columns=[column(
                             f"{dataset_id}.{set_id}.{statistic.id}",
                             statistic.display_name,
                             visible=statistic.get("default_visible", True),
+                            meta=statistic.get("meta"),
                             clickable="goToQuery",
                             sortable=True)
 
