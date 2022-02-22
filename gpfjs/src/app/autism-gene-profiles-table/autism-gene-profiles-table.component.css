@@ -62,6 +62,10 @@
   position: relative;
 }
 
+.active-sort-header {
+  background-color: #dfdfdf;
+}
+
 .header-cell.column-depth-1 {
   white-space: nowrap;
   line-height: 35px;

@@ -72,8 +72,8 @@
   <ng-template #tableHeaderTemplate let-columns="columns">
     <ng-container *ngFor="let column of columns">
       <ng-container *ngIf="column.visibility">
-        <div class="cell header-cell"
-          [ngClass]="'column-depth-' + column.depth"
+        <div class="cell header-cell {{'column-depth-' + column.depth}}"
+          [ngClass]="{'active-sort-header': column.id === sortingHeaderId}"
           [style.grid-column]="column.gridColumn"
           [style.grid-row]="column.gridRow"
           [style.cursor]="column.sortable ? 'pointer' : 'default'"
