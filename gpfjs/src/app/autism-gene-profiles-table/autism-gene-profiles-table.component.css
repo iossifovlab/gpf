@@ -116,6 +116,11 @@
   line-height: 25px;
 }
 
+.sorting-button {
+  position: relative;
+  top: -2px;
+}
+
 .column-filtering-button {
   min-width: 35px;
 }
@@ -123,6 +128,8 @@
 #category-filtering-button {
   position: relative;
   top: -1px;
+  box-shadow: none;
+  border-radius: 0;
 }
 
 .dropdown-span {
@@ -179,6 +186,7 @@
   margin: 8px 2px 2px;
   width: 100%;
   height: 40px;
+  border-radius: 0;
 }
 
 .clickable {
@@ -237,10 +245,13 @@
 }
 
 #keybinds-icon {
-  background-color: #fff;
   border: 1px solid #ddd;
-  padding: 6px 14px;
-  border-radius: 0.25rem;
+  padding: 0 9px;
+}
+
+#keybinds-icon span {
+  top: 1px;
+  position: relative;
 }
 
 .keybinds-tooltip {
@@ -248,7 +259,7 @@
   text-align: left;
   position: absolute;
   top: 49px;
-  left: 210px;
+  left: 199px;
   padding: 5px;
   background-color: #fff;
 }
