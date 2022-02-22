@@ -18,6 +18,7 @@ export class Column {
   public sortable: boolean;
   public displayVertical: boolean;
   public clickable: string | null;
+  public meta: string | null;
 
   public parent?: Column = null;
   public gridColumn?: string = null;
