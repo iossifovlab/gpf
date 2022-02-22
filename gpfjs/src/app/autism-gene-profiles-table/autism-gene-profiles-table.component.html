@@ -80,12 +80,12 @@
           (click)="column.sortable && sort(column.id, orderBy === 'desc' ? 'asc' : 'desc')"
         >
           <div class="header-cell-content"
-            [ngClass]="{'header-cell-vertical-content': column.displayVertical }"
+            [ngClass]="{'header-cell-vertical-content': column.displayVertical}"
           >
             <span
               class="header-cell-content-span"
               [attr.title]="column.displayName"
-              [ngClass]="{'vertical-text': column.displayVertical }"
+              [ngClass]="{'vertical-text': column.displayVertical, 'header-gene-symbol-span' : column.id === geneSymbolColumnId}"
               >{{ column.displayName | truncate : 48 }}</span
             >
             <gpf-sorting-buttons

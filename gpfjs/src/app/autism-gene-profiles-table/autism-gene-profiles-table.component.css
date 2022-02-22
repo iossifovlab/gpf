@@ -74,6 +74,11 @@
   text-overflow: ellipsis;
 }
 
+.header-gene-symbol-span {
+  width: 100% !important;
+  padding-left: 0 !important;
+}
+
 .column-depth-1 .header-cell-content-span,
 .column-depth-3 .header-cell-content-span,
 .column-depth-2 .header-cell-content-span:not(.vertical-text) {
