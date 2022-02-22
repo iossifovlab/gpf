@@ -79,6 +79,8 @@ def cli_manage(cli_args=None):
     parser_hist.add_argument('-j', '--jobs', type=int, default=None,
                              help='Number of jobs to run in parallel. \
  Defaults to the number of processors on the machine')
+    parser_hist.add_argument("--region-size", type=int, default=3000000,
+                             help="Number of records to process in parallel")
     parser_hist.add_argument('--kubernetes', default=False,
                              action='store_true',
                              help='Run computation in a kubernetes cluster')
@@ -187,7 +189,8 @@ the number of workers using -j")
         with tmp_dir, cluster:
             with Client(cluster) as client:
                 histograms = builder.build(client, force=args.force,
-                                           only_dirty=True)
+                                           only_dirty=True,
+                                           region_size=args.region_size)
 
         hist_out_dir = "histograms"
         logger.info(f"Saving histograms in {hist_out_dir}")

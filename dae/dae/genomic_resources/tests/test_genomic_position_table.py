@@ -1025,3 +1025,24 @@ def test_tabix_max_buffer(tmp_path, buffer_maxsize, jump_threshold):
     assert rows == [
         ('5', '180739426', '180742735', '0.065122'),
     ]
+
+
+def test_contig_length():
+    res = build_a_test_resource({
+        "genomic_resource.yaml": """
+            table:
+                filename: data.mem""",
+        "data.mem": """
+            chrom pos_begin pos2  c2
+            1     10        12    3.14
+            1     11        11    4.14
+            1     12        10    5.14
+            1     12        11    6.13
+            2     1         2    0"""})
+    tab = open_genome_position_table(res, res.config["table"])
+    assert tab.get_chromosome_length('1') == 13
+    assert tab.get_chromosome_length('2') == 2
+
+
+def test_contig_length_tabix_table(tabix_table):
+    assert tabix_table.get_chromosome_length('1') == 13
