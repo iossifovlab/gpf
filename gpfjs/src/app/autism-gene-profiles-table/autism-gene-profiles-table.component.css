@@ -258,10 +258,11 @@
   border: 1px solid #ddd;
   text-align: left;
   position: absolute;
-  top: 49px;
+  top: 48px;
   left: 199px;
   padding: 5px;
   background-color: #fff;
+  border-radius: 0.25rem;
 }
 
 .keybinds-tooltip span {
