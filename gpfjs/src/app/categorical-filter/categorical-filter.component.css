@@ -1,0 +1,10 @@
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  align-content: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  flex-direction: row;
+}
