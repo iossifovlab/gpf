@@ -32,7 +32,7 @@ function main() {
   libmain_init iossifovlab.gpfjs gpfjs
   libmain_init_build_env \
     clobber:"$clobber" preset:"$preset" build_no:"$build_no" generate_jenkins_init:"$generate_jenkins_init" expose_ports:"$expose_ports" \
-    seqpipe.seqpipe-containers
+    iossifovlab.iossifovlab-containers
   libmain_save_build_env_on_exit
   libbuild_init stage:"$stage" registry.seqpipe.org
 
@@ -40,7 +40,7 @@ function main() {
   defer_ret build_run_ctx_reset
 
   local node_base_image_ref
-  node_base_image_ref="$(e docker_img_seqpipe_node_base)"
+  node_base_image_ref="$(e docker_img_iossifovlab_node_base)"
   build_run_ctx_init "container" "$node_base_image_ref"
   defer_ret build_run_ctx_reset
 
