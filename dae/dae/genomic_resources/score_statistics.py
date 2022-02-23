@@ -7,6 +7,8 @@ import pandas as pd
 from typing import Dict
 from copy import copy
 import matplotlib.pyplot as plt
+from tqdm import tqdm
+from dask.distributed import as_completed
 
 from dae.genomic_resources.genomic_scores import open_score_from_resource
 
@@ -203,7 +205,7 @@ class HistogramBuilder:
             futures.append(client.submit(self._do_hist,
                                          chrom, hist_configs,
                                          start, end))
-        for future in futures:
+        for future in tqdm(as_completed(futures), total=len(futures)):
             chrom_histograms.append(future.result())
 
         return self._merge_histograms(chrom_histograms)
@@ -255,7 +257,7 @@ class HistogramBuilder:
             futures.append(client.submit(self._min_max_for_chrom,
                                          chrom, score_ids,
                                          start, end))
-        for future in futures:
+        for future in tqdm(as_completed(futures), total=len(futures)):
             min_maxes.append(future.result())
 
         res = {}
