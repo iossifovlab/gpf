@@ -99,8 +99,6 @@ def generate_phenotype_data_config(args, regressions):
             "name": args.pheno_name,
             "dbfile": dbfile,
             "browser_dbfile": browser_dbfile,
-            "browser_images_dir": os.path.join(
-                pheno_db_path, "images", args.pheno_name),
             "browser_images_url": f"/static/images/{args.pheno_name}/",
         },
     }
