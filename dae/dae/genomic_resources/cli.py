@@ -186,11 +186,14 @@ the number of workers using -j")
             cluster = LocalCluster(n_workers=n_jobs, threads_per_worker=1,
                                    local_directory=tmp_dir.name,
                                    **dashboard_config)
-        with tmp_dir, cluster:
+        try:
             with Client(cluster) as client:
                 histograms = builder.build(client, force=args.force,
                                            only_dirty=True,
                                            region_size=args.region_size)
+        finally:
+            cluster.close()
+            tmp_dir.cleanup()
 
         hist_out_dir = "histograms"
         logger.info(f"Saving histograms in {hist_out_dir}")
