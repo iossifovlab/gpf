@@ -12,7 +12,7 @@
           type="text" />
         <span
           *ngIf="searchBox.value !== '' && !showSearchLoading"
-          class="clear-search-icon"
+          class="search-clear-icon"
           (click)="searchBox.value = ''; search(searchBox.value); showSearchLoading = true">
         </span>
         <span
