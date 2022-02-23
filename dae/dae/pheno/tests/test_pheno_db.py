@@ -161,7 +161,7 @@ def test_get_measures(fake_phenotype_data, get, check):
 def test_default_get_measure_df(fake_phenotype_data):
     df = fake_phenotype_data._get_measures_df()
     assert df is not None
-    assert len(df) == 12
+    assert len(df) == 15
 
 
 def test_get_persons_df(fake_phenotype_data):

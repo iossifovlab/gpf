@@ -129,15 +129,15 @@ def test_build_regression(mocker, fake_phenotype_data, output_dir):
         return ("figsmall", "fig")
 
     mocked_linregres = mocker.patch(
-        "dae.pheno_browser.prepare_data.draw_linregres",
+        "dae.pheno.prepare_data.draw_linregres",
         side_effect=fake_linregres,
     )
     mocker.patch(
-        "dae.pheno_browser.prepare_data.PreparePhenoBrowserBase.save_fig",
+        "dae.pheno.prepare_data.PreparePhenoBrowserBase.save_fig",
         side_effect=fake_savefig,
     )
     mocker.patch(
-        "dae.pheno_browser.prepare_data."
+        "dae.pheno.prepare_data."
         "PreparePhenoBrowserBase._augment_measure_values_df",
         side_effect=fake_augment_df,
     )
@@ -172,7 +172,7 @@ def test_build_regression_min_vals(mocker, fake_phenotype_data, output_dir):
         return fake_df
 
     mocker.patch(
-        "dae.pheno_browser.prepare_data."
+        "dae.pheno.prepare_data."
         "PreparePhenoBrowserBase._augment_measure_values_df",
         side_effect=fake_augment_df,
     )
@@ -215,7 +215,7 @@ def test_build_regression_min_unique_vals(
         return fake_df
 
     mocker.patch(
-        "dae.pheno_browser.prepare_data."
+        "dae.pheno.prepare_data."
         "PreparePhenoBrowserBase._augment_measure_values_df",
         side_effect=fake_augment_df,
     )
@@ -246,7 +246,7 @@ def test_build_regression_aug_df_is_none(
         return None
 
     mocker.patch(
-        "dae.pheno_browser.prepare_data."
+        "dae.pheno.prepare_data."
         "PreparePhenoBrowserBase._augment_measure_values_df",
         side_effect=fake_augment_df,
     )
@@ -272,7 +272,7 @@ def test_handle_regressions(
         }
 
     mocked = mocker.patch(
-        "dae.pheno_browser.prepare_data."
+        "dae.pheno.prepare_data."
         "PreparePhenoBrowserBase.build_regression",
         side_effect=fake_build_regression,
     )
@@ -341,7 +341,7 @@ def test_handle_regressions_default_jitter(
         return {"pvalue_regression_male": 0, "pvalue_regression_female": 0}
 
     mocked = mocker.patch(
-        "dae.pheno_browser.prepare_data."
+        "dae.pheno.prepare_data."
         "PreparePhenoBrowserBase.build_regression",
         side_effect=fake_build_regression,
     )

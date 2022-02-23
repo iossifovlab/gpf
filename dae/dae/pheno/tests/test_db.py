@@ -57,7 +57,7 @@ def test_db_update(output_dir):
     v["figure_distribution"] = "test_figure.png"
     db.save(v)
 
-    r = db.get("test.measure")
+    r = db.get_browser_measure("test.measure")
     assert r is not None
     assert r.measure_id == "test.measure"
     assert r.instrument_name == "test"
@@ -421,4 +421,4 @@ def test_regression_ids(output_dir):
 
 def test_pheno_db_disabled(fake_pheno_db):
     assert not fake_pheno_db.has_phenotype_data("fake_disabled")
-    assert len(fake_pheno_db.config) == 4
+    assert len(fake_pheno_db.config) == 5

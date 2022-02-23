@@ -121,7 +121,7 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         instrument = request.query_params.get("instrument", None)
         search_term = request.query_params.get("search", None)
 
-        pheno_instruments = self.gpf_instance.get_instruments(dataset)
+        pheno_instruments = dataset.phenotype_data.get_instruments()
 
         if instrument and instrument not in pheno_instruments:
             return Response(status=status.HTTP_404_NOT_FOUND)
