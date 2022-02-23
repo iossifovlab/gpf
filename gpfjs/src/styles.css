@@ -305,6 +305,41 @@ label {
   right: 5px;
 }
 
+.search-loading-icon {
+  display: inline-block;
+  background-image: url("/assets/load-search-icon.png");
+  background-repeat: no-repeat;
+  background-position-y: center;
+  background-position-x: center;
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  right: 5px;
+  background-size: 18px;
+  opacity: 50%;
+  animation: rotation 0.8s steps(8) infinite;
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(90deg);
+  }
+
+  to {
+    transform: rotate(450deg);
+  }
+}
+
+@-webkit-keyframes rotation {
+  from {
+    transform: rotate(90deg);
+  }
+
+  to {
+    transform: rotate(450deg);
+  }
+}
+
 .form-label {
   width: 100%;
 }

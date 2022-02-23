@@ -1,6 +1,6 @@
 <div style="padding: 25px; padding-top: 16px;">
   <div id="above-table-bar">
-    <div class="above-table-bar-item" style="width: 440px">
+    <div class="above-table-bar-item" style="width: 290px">
       <div class="search-input-wrapper">
         <input
           #searchBox
@@ -11,9 +11,13 @@
           placeholder="Search"
           type="text" />
         <span
-          *ngIf="searchBox.value !== ''"
+          *ngIf="searchBox.value !== '' && !showSearchLoading"
           class="clear-search-icon"
-          (click)="searchBox.value = ''; search(searchBox.value)">
+          (click)="searchBox.value = ''; search(searchBox.value); showSearchLoading = true">
+        </span>
+        <span
+          *ngIf="showSearchLoading"
+          class="search-loading-icon">
         </span>
       </div>
     </div>
@@ -68,7 +72,7 @@
       <span>Nothing found</span>
     </div>
 
-    <div id="loading" *ngIf="showLoading">
+    <div id="loading" *ngIf="showInitialLoading">
       <span>Loading...</span>
     </div>
   </div>

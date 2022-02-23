@@ -2,7 +2,7 @@ import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, On
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
-import { debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, take, tap } from 'rxjs/operators';
 import { forkJoin, Subject, Subscription } from 'rxjs';
 import { AgpTableConfig, Column } from './autism-gene-profiles-table';
 import { AgpTableService } from './autism-gene-profiles-table.service';
@@ -41,7 +41,8 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   public searchKeystrokes$: Subject<string> = new Subject();
   public pageIndex = 0;
   public showNothingFound = false;
-  public showLoading = false;
+  public showInitialLoading = true;
+  public showSearchLoading;
 
   private viewportPageCount;
   private baseRowHeight = 35; // px, this should match the height found in the table-row CSS class
@@ -58,8 +59,12 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   public ngOnInit(): void {
     this.keystrokeSubscription = this.searchKeystrokes$.pipe(
-      debounceTime(250),
-      distinctUntilChanged()
+      distinctUntilChanged(),
+      tap(() => {
+        this.showSearchLoading = true;
+      })
+    ).pipe(
+      debounceTime(250)
     ).subscribe(searchTerm => {
       this.search(searchTerm);
     });
@@ -115,7 +120,6 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     this.genes = [];
     this.pageIndex = 1;
     this.loadMoreGenes = true;
-    this.showLoading = true;
     this.showNothingFound = false;
     
     for (let i = 1; i <= this.viewportPageCount; i++) {
@@ -133,7 +137,8 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
       }
       this.updateShownGenes(0, this.viewportPageCount * this.config.pageSize);
       this.showNothingFound = !this.genes.length;
-      this.showLoading = false;
+      this.showInitialLoading = false;
+      this.showSearchLoading = false;
     })
   }
 
