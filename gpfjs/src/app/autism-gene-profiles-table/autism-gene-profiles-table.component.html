@@ -81,7 +81,7 @@
     <ng-container *ngFor="let column of columns">
       <ng-container *ngIf="column.visibility">
         <div class="cell header-cell {{'column-depth-' + column.depth}}"
-          [ngClass]="{'active-sort-header': column.id === sortingHeaderId}"
+          [ngClass]="{'active-sort-header': column.id === sortBy}"
           [style.grid-column]="column.gridColumn"
           [style.grid-row]="column.gridRow"
           [style.cursor]="column.sortable ? 'pointer' : 'default'"
@@ -101,6 +101,7 @@
               [id]="column.id"
               class="header-button sorting-button"
               style="pointer-events: none"
+              [hideState]="column.id === sortBy ? -1 : 0"
             >
             </gpf-sorting-buttons>
             <button

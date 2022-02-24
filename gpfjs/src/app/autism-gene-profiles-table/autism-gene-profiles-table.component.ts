@@ -51,8 +51,6 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   private loadMoreGenes = true;
   private keystrokeSubscription: Subscription;
 
-  public sortingHeaderId: string;
-
   public constructor(
     private autismGeneProfilesService: AgpTableService,
     private ref: ElementRef,
@@ -251,7 +249,6 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   public sort(sortBy: string, orderBy?: string): void {
     if (this.sortBy !== sortBy) {
-      this.sortingHeaderId = '';
       this.resetSortButtons();
     }
 
@@ -259,7 +256,6 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     this.orderBy = orderBy;
     this.pageIndex = 1;
     this.genes = [];
-    this.sortingHeaderId = sortBy;
 
     const sortButton = this.sortingButtonsComponents.find(
       sortingButtonsComponent => sortingButtonsComponent.id === this.sortBy
