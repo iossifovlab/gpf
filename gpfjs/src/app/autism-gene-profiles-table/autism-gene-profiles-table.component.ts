@@ -15,6 +15,7 @@ import * as _ from 'lodash';
 })
 export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() public config: AgpTableConfig;
+  @Input() public sortBy: string;
   @Output() public createTabEvent = new EventEmitter();
   @Output() public goToQueryEvent = new EventEmitter();
   @Input() public isSingleViewVisible: boolean;
@@ -35,7 +36,6 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   public geneSymbolColumnId = "geneSymbol" // must match the gene symbol column id from the backend
 
-  public sortBy = "autism_gene_sets_rank";
   public orderBy = "desc";
 
   public geneInput: string = null;

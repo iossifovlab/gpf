@@ -16,6 +16,7 @@
           (createTabEvent)="createTabEventHandler($event)"
           (goToQueryEvent)="goToQueryEventHandler($event)"
           [config]="agpTableConfig"
+          [sortBy]="agpTableSortBy"
           [isSingleViewVisible]="nav.activeId !== homeTabId"
         ></gpf-autism-gene-profiles-table>
       </ng-template>

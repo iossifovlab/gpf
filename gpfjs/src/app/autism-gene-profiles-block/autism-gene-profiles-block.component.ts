@@ -21,6 +21,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   public geneTabs = new Set<string>();
   public maxTabCount = 20;
   public agpTableConfig: AgpTableConfig;
+  public agpTableSortBy: string;
   public agpSingleViewConfig: AgpSingleViewConfig;
 
   private keybinds = [
@@ -63,10 +64,15 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   public ngOnInit(): void {
     this.agpTableService.getConfig().pipe(take(1)).subscribe(config => {
       this.agpTableConfig = config;
+      this.agpTableSortBy = this.findFirstAgpSortableCategory(config);
     });
     this.autismGeneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
       this.agpSingleViewConfig = config;
     });
+  }
+
+  private findFirstAgpSortableCategory(agpTableConfig: AgpTableConfig): string {
+    return agpTableConfig.columns.filter(column => column.sortable)[0].id;
   }
 
   public createTabEventHandler($event: { geneSymbols: string[]; navigateToTab: boolean }): void {
