@@ -1164,11 +1164,11 @@ class PhenoDb(object):
             phenotype_data = self.pheno_cache[pheno_id]
         else:
             config = self.get_dbconfig(pheno_id)
-            if config.group_datas is not None:
+            if config.phenotype_data_list is not None:
                 logger.info(f"loading pheno db group <{pheno_id}>")
                 phenotype_studies = [
                     self.get_phenotype_data(ps_id)
-                    for ps_id in config.group_datas
+                    for ps_id in config.phenotype_data_list
                 ]
                 phenotype_data = PhenotypeGroup(pheno_id, phenotype_studies)
             else:
