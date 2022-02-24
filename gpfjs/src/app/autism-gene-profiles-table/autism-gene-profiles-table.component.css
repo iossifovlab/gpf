@@ -76,6 +76,7 @@
 .header-cell-content-span {
   overflow: hidden;
   text-overflow: ellipsis;
+  user-select: none;
 }
 
 .header-gene-symbol-span {
@@ -119,10 +120,12 @@
 .sorting-button {
   position: relative;
   top: -2px;
+  user-select: none;
 }
 
 .column-filtering-button {
   min-width: 35px;
+  user-select: none;
 }
 
 #category-filtering-button {
@@ -252,6 +255,7 @@
 #keybinds-icon span {
   top: 1px;
   position: relative;
+  user-select: none;
 }
 
 .keybinds-tooltip {
@@ -263,6 +267,7 @@
   padding: 5px;
   background-color: #fff;
   border-radius: 0.25rem;
+  user-select: none;
 }
 
 .keybinds-tooltip span {
