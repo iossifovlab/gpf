@@ -60,11 +60,9 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     SFARIgene: ''
   };
 
-  private currentCopyState: string = 'assets/link-solid.svg'; 
-  private menuPosition: any;
-  private sticky: boolean;
-  private stickyWidth: any;
-  private set: boolean = false;
+  public currentCopyState = 'assets/link-solid.svg'; 
+  private headerBottomYPosition = 116;
+  public isHeaderSticky: boolean;
 
   public constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
@@ -78,6 +76,17 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   ) { }
 
   public errorModal: boolean = false;
+
+  @HostListener('window:scroll', ['$event'])
+  public handleScroll(): void {
+    if (this.isInGeneCompare) {
+      if (window.pageYOffset >= this.headerBottomYPosition) {
+        this.isHeaderSticky = true;
+      } else {
+        this.isHeaderSticky = false;
+      }
+    }
+  }
 
   public ngOnInit(): void {
     this.gene$ = this.autismGeneProfilesService.getGene(this.geneSymbol);
@@ -249,21 +258,5 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   public errorModalBack() {
     this.errorModal = false;
     this.router.navigate(['/autism-gene-profiles']);
-  }
-
-  @HostListener('window:scroll', ['$event'])
-  handleScroll(){
-    if(this.menuElement !== undefined && this.set === false) {
-      this.menuPosition = this.menuElement.nativeElement.offsetTop;
-      this.stickyWidth = this.wrapperElement.nativeElement.offsetWidth;
-      this.set = true;
-    }
-
-    const windowScroll = window.pageYOffset;
-    if(windowScroll >= this.menuPosition){
-        this.sticky = true;
-    } else {
-        this.sticky = false;
-    }
   }
 }

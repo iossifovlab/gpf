@@ -15,9 +15,13 @@
   
   <ng-container *ngIf="showTemplate">
     <div style="padding: 25px">
-      <div #stickySpan [class.sticky]="sticky" [ngStyle]="{'width' : isInGeneCompare ? '100%' : '1455px'}" style="display: flex;align-items: baseline;margin-bottom: -5px;">
-        <h2 [class.sticky]="sticky" [ngStyle]="{'margin-right' : sticky ? '0px' : '15px', 'border' : 'none' }">{{ geneSymbol }}</h2>
-        <img *ngIf="!sticky" (click)="copyGeneLink()" [src]="currentCopyState" style="width: 20px;" >
+      <div
+        #stickySpan
+        [ngClass]="isInGeneCompare && isHeaderSticky ? 'sticky' : ''"
+        [ngStyle]="{'width' : isInGeneCompare ? '100%' : '1455px'}"
+        style="display: flex; align-items: baseline; height: 58px;">
+        <h2>{{ geneSymbol }}</h2>
+        <img *ngIf="!isHeaderSticky" (click)="copyGeneLink()" [src]="currentCopyState" style="width: 20px; margin-left: 10px;" >
       </div>
       <div
         class="wrapper"
