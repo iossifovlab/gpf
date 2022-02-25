@@ -104,10 +104,11 @@ def client():
     client.close()
 
 
-def test_histogram_builder_position_resource(client):
+@pytest.mark.parametrize("region_size", [1, 10, 10000])
+def test_histogram_builder_position_resource(client, region_size):
     res: GenomicResource = build_a_test_resource(position_score_test_config)
     hbuilder = HistogramBuilder(res)
-    hists = hbuilder.build(client)
+    hists = hbuilder.build(client, region_size=region_size)
     assert len(hists) == 2
 
     phastCons100way_hist = hists["phastCons100way"]
@@ -231,7 +232,8 @@ def test_histogram_builder_np_resource(client):
     assert cadd_test_hist.bars.sum() == (4 + 6 + 22)
 
 
-def test_histogram_builder_no_explicit_min_max(client):
+@pytest.mark.parametrize("region_size", [1, 10, 10000])
+def test_histogram_builder_no_explicit_min_max(client, region_size):
     res: GenomicResource = build_a_test_resource({
         GR_CONF_FILE_NAME: '''
             type: position_score
@@ -258,7 +260,7 @@ def test_histogram_builder_no_explicit_min_max(client):
             '''
     })
     hbuilder = HistogramBuilder(res)
-    hists = hbuilder.build(client)
+    hists = hbuilder.build(client, region_size=region_size)
     assert len(hists) == 1
 
     assert hists["phastCons100way"].x_min == 0

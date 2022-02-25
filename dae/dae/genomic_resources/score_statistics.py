@@ -7,6 +7,8 @@ import pandas as pd
 from typing import Dict
 from copy import copy
 import matplotlib.pyplot as plt
+from tqdm import tqdm
+from dask.distributed import as_completed
 
 from dae.genomic_resources.genomic_scores import open_score_from_resource
 
@@ -130,8 +132,10 @@ class HistogramBuilder:
         self.resource = resource
 
     def build(self, client, path="histograms",
-              force=False, only_dirty=False) -> dict[str, Histogram]:
-        loaded_hists, computed_hists = self._build(client, path, force)
+              force=False, only_dirty=False,
+              region_size=1000000) -> dict[str, Histogram]:
+        loaded_hists, computed_hists = self._build(client, path, force,
+                                                   region_size)
         if only_dirty:
             return computed_hists
         else:
@@ -139,10 +143,10 @@ class HistogramBuilder:
                 loaded_hists[k] = v
             return loaded_hists
 
-    def _build(self, client, path, force) -> dict[str, Histogram]:
+    def _build(self, client, path, force, region_size) -> dict[str, Histogram]:
         histogram_desc = self.resource.get_config().get("histograms", [])
         if force:
-            return {}, self._do_build(client, histogram_desc)
+            return {}, self._do_build(client, histogram_desc, region_size)
 
         hists, metadata = _load_histograms(self.resource.repo,
                                            self.resource.get_id(), None, None,
@@ -163,11 +167,12 @@ class HistogramBuilder:
             else:
                 configs_to_calculate.append(hist_conf)
 
-        remaining = self._do_build(client, configs_to_calculate)
+        remaining = self._do_build(client, configs_to_calculate, region_size)
 
         return loaded_hists, remaining
 
-    def _do_build(self, client, histogram_desc) -> dict[str, Histogram]:
+    def _do_build(self, client, histogram_desc,
+                  region_size) -> dict[str, Histogram]:
         if len(histogram_desc) == 0:
             return {}
 
@@ -183,7 +188,8 @@ class HistogramBuilder:
             # copy hist desc so that we don't overwrite the config
             histogram_desc = [copy(d) for d in histogram_desc]
             score_limits = self._score_min_max(client, score,
-                                               scores_missing_limits)
+                                               scores_missing_limits,
+                                               region_size)
 
         hist_configs = {}
         for hist_conf in histogram_desc:
@@ -195,23 +201,35 @@ class HistogramBuilder:
 
         chrom_histograms = []
         futures = []
-        chromosomes = score.get_all_chromosomes()
-        for chrom in chromosomes:
+        for chrom, start, end in self._split_into_regions(score, region_size):
             futures.append(client.submit(self._do_hist,
-                                         chrom, hist_configs))
-        for future in futures:
+                                         chrom, hist_configs,
+                                         start, end))
+        for future in tqdm(as_completed(futures), total=len(futures)):
             chrom_histograms.append(future.result())
 
         return self._merge_histograms(chrom_histograms)
 
-    def _do_hist(self, chrom, hist_configs):
+    @staticmethod
+    def _split_into_regions(score, region_size):
+        chromosomes = score.get_all_chromosomes()
+        for chrom in chromosomes:
+            chrom_len = score.table.get_chromosome_length(chrom)
+            logger.debug(f"Chromosome '{chrom}' has length {chrom_len}")
+            i = 1
+            while i < chrom_len - region_size:
+                yield chrom, i, i + region_size - 1
+                i += region_size
+            yield chrom, i, None
+
+    def _do_hist(self, chrom, hist_configs, start, end):
         histograms = {}
         for scr_id, config in hist_configs.items():
             histograms[scr_id] = Histogram.from_config(config)
         score_names = list(histograms.keys())
 
         score = open_score_from_resource(self.resource)
-        for rec in score.fetch_region(chrom, None, None, score_names):
+        for rec in score.fetch_region(chrom, start, end, score_names):
             for scr_id, v in rec.items():
                 hist = histograms[scr_id]
                 if v is not None:  # None designates missing values
@@ -230,16 +248,16 @@ class HistogramBuilder:
                     res[scr_id] = Histogram.merge(res[scr_id], histogram)
         return res
 
-    def _score_min_max(self, client, score, score_ids):
+    def _score_min_max(self, client, score, score_ids, region_size):
         logger.info(f"Calculating min max for {score_ids}")
 
-        chromosomes = score.get_all_chromosomes()
         min_maxes = []
         futures = []
-        for chrom in chromosomes:
+        for chrom, start, end in self._split_into_regions(score, region_size):
             futures.append(client.submit(self._min_max_for_chrom,
-                                         chrom, score_ids))
-        for future in futures:
+                                         chrom, score_ids,
+                                         start, end))
+        for future in tqdm(as_completed(futures), total=len(futures)):
             min_maxes.append(future.result())
 
         res = {}
@@ -255,11 +273,11 @@ class HistogramBuilder:
  res={res}")
         return res
 
-    def _min_max_for_chrom(self, chrom, score_ids):
+    def _min_max_for_chrom(self, chrom, score_ids, start, end):
         score = open_score_from_resource(self.resource)
         limits = np.iinfo(np.int64)
         res = {scr_id: [limits.max, limits.min] for scr_id in score_ids}
-        for rec in score.fetch_region(chrom, None, None, score_ids):
+        for rec in score.fetch_region(chrom, start, end, score_ids):
             for scr_id in score_ids:
                 v = rec[scr_id]
                 if v is not None:  # None designates missing values

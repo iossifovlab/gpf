@@ -46,3 +46,4 @@ dependencies:
   - ijson=3.1.4
   - dask=2022.1.0
   - dask-kubernetes=2022.1.0
+  - tqdm=4.62.3
