@@ -136,6 +136,8 @@ def main(argv=sys.argv[1:], gpf_instance=None):
     else:
         logging.basicConfig(level=logging.ERROR)
 
+    logging.getLogger("dae.effect_annotation").setLevel(logging.WARNING)
+
     grr = gpf_instance.grr
     source_genome_resource = grr.get_resource(argv.source_genome)
     assert source_genome_resource is not None
