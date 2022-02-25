@@ -243,7 +243,7 @@ def main(argv=sys.argv[1:], gpf_instance=None):
                     annotatable.ref, annotatable.alt,
 
                     fa.family_id,
-                    mat2str(fa.best_state),
+                    mat2str(fa.best_state, col_sep=" "),
                 ]
                 output.write("\t".join(line))
                 output.write("\n")
