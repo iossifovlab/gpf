@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, ElementRef, HostListener, Input, OnInit, ViewChild } from '@angular/core';
 import {
   AgpDatasetPersonSet, AgpDatasetStatistic, AgpGene,
   AgpGenomicScores, AgpSingleViewConfig, AgpEffectType
@@ -33,6 +33,9 @@ import { EffectTypes } from 'app/effect-types/effect-types';
   styleUrls: ['./autism-gene-profile-single-view.component.css']
 })
 export class AutismGeneProfileSingleViewComponent implements OnInit {
+  @ViewChild('stickySpan', {static:false}) menuElement: ElementRef;
+  @ViewChild('wrapperElement')  wrapperElement: ElementRef;
+
   @Input() public readonly geneSymbol: string;
   @Input() public config: AgpSingleViewConfig;
   @Input() public isInGeneCompare = false;
@@ -40,7 +43,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
 
   public genomicScoresGeneWeights = [];
   public gene$: Observable<AgpGene>;
-
+  
   public _histogramOptions = {
     width: 525,
     height: 110,
@@ -57,7 +60,9 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     SFARIgene: ''
   };
 
-  currentCopyState: string = 'assets/link-solid.svg'; 
+  public currentCopyState = 'assets/link-solid.svg'; 
+  private headerBottomYPosition = 116;
+  public isHeaderSticky: boolean;
 
   public constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
@@ -71,6 +76,17 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   ) { }
 
   public errorModal: boolean = false;
+
+  @HostListener('window:scroll', ['$event'])
+  public handleScroll(): void {
+    if (this.isInGeneCompare) {
+      if (window.pageYOffset >= this.headerBottomYPosition) {
+        this.isHeaderSticky = true;
+      } else {
+        this.isHeaderSticky = false;
+      }
+    }
+  }
 
   public ngOnInit(): void {
     this.gene$ = this.autismGeneProfilesService.getGene(this.geneSymbol);

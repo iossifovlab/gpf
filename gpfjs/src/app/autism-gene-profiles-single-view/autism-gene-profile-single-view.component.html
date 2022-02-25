@@ -15,13 +15,17 @@
   
   <ng-container *ngIf="showTemplate">
     <div style="padding: 25px">
-      <div style="display: flex;align-items: baseline;margin-bottom: -5px;">
-        <h2 style="margin-right: 15px">{{ geneSymbol }}</h2>
-        <img (click)="copyGeneLink()" [src]="currentCopyState" style="width: 20px" >
+      <div
+        #stickySpan
+        [ngClass]="isInGeneCompare && isHeaderSticky ? 'sticky' : ''"
+        [ngStyle]="{'width' : isInGeneCompare ? '100%' : '1455px'}"
+        style="display: flex; align-items: baseline; height: 58px;">
+        <h2>{{ geneSymbol }}</h2>
+        <img *ngIf="!isHeaderSticky" (click)="copyGeneLink()" [src]="currentCopyState" style="width: 20px; margin-left: 10px;" >
       </div>
       <div
         class="wrapper"
-        [ngClass]="{'compare-wrapper': isInGeneCompare}">
+        [ngClass]="{'compare-wrapper': isInGeneCompare}" #wrapperElement>
         <table id="links-table">
           <tr>
             <td style="border-right: 1px solid #dee2e6; padding-right: 25px;">Links</td>
@@ -103,10 +107,11 @@
       </div>
 
       <div
+        style="display: inline-flex; align-items: stretch; flex-wrap: wrap;"
         [ngClass]="{'compare-wrapper': isInGeneCompare}"
         class="wrapper">
         <ng-container *ngFor="let dataset of config.datasets">
-          <table class="table table-bordered table-centered datasets-table">
+          <table style="width:100%;" class="table table-bordered table-centered datasets-table">
             <thead>
               <tr class="card-block">
                 <th style="text-align: center; border-bottom: none" [attr.colspan]="dataset.personSets.length + 1">

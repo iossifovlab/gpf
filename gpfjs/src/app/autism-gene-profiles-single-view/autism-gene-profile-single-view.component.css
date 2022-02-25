@@ -107,7 +107,21 @@ td {
   background-color: #f8d7da;
 }
 
-.modal-title, .modal-body {
-  color:#721c24;
+.modal-title,
+.modal-body {
+  color: #721c24;
   text-align: center;
+}
+
+.sticky {
+  position: sticky;
+  top: 0;
+  background: #f1f1f1;
+  display: flex;
+  align-items: center !important;
+  justify-content: center;
+}
+
+h2 {
+  margin: 0;
 }
