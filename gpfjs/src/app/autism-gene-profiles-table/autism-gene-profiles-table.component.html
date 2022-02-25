@@ -1,7 +1,12 @@
 <div style="padding: 25px; padding-top: 16px;">
   <div id="above-table-bar">
-    <div class="above-table-bar-item" style="width: 290px">
+    <div style="width: 270px">
       <div class="search-input-wrapper">
+        <label for="gene-search-input" class="input-group-prepend" style="align-items: center; border: 1px solid #ced4da; padding-left: 10px; height: 38px;">
+          <svg style="opacity: 60%;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+          </svg>
+        </label>
         <input
           #searchBox
           (keyup)="searchKeystrokes$.next(searchBox.value)"
@@ -9,7 +14,8 @@
           class="search-input form-control"
           autocomplete="off"
           placeholder="Search gene"
-          type="text" />
+          type="text"
+          style="border-left: 0; padding-left: 10px" />
         <span
           *ngIf="searchBox.value !== '' && !showSearchLoading"
           class="search-clear-icon"
@@ -22,17 +28,19 @@
       </div>
     </div>
 
+    <div class="vertical-line"></div>
+
     <div class="above-table-bar-item">
       <button
         #columnFilteringButton
         id="category-filtering-button"
         class="btn btn-default"
         (click)="openCategoryFilterDropdown($event)"
-        >Categories filter</button
+        >&#9776;</button
       >
     </div>
 
-    <div id="keybinds-icon" class="above-table-bar-item" (mouseover)="showKeybinds = true" (mouseout)="showKeybinds = false">
+    <div id="keybinds-icon" (mouseover)="showKeybinds = true" (mouseout)="showKeybinds = false">
       <span>?</span>
     </div>
 
