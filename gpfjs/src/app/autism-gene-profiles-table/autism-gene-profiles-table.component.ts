@@ -202,6 +202,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     this.clickedColumnFilteringButton = $event.target;
     this.updateModalPosition();
     this.multipleSelectMenuComponent.columns = column.columns;
+    this.multipleSelectMenuComponent.sortByColumnId = this.sortBy;
     this.multipleSelectMenuComponent.refresh();
   }
 
@@ -214,6 +215,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     this.clickedColumnFilteringButton = $event.target;
     this.updateModalPosition(1, -9);
     this.multipleSelectMenuComponent.columns = this.config.columns.filter(col => col.id !== this.geneSymbolColumnId);
+    this.multipleSelectMenuComponent.sortByColumnId = this.sortBy;
     this.multipleSelectMenuComponent.refresh();
   }
 

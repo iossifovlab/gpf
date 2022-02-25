@@ -29,7 +29,9 @@
   <table cdkDropList (cdkDropListDropped)="drop($event)">
     <tr cdkDrag *ngFor="let column of filteredColumns" style="height: 30px">
       <td>
-        <label style="width: 100%; padding-top: 4px; padding-bottom: 2px; padding-left: 6px">
+        <label
+          [ngStyle]="{'background-color': column.id === sortByColumnId ? '#dfdfdf' : 'unset'}"
+          style="width: 100%; padding-top: 4px; padding-bottom: 2px; padding-left: 6px">
           <input type="checkbox"
             [checked]="column.visibility"
             (change)="toggleItem(column, $event)"
