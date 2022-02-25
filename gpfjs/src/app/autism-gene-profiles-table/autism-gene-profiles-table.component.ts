@@ -16,6 +16,7 @@ import * as _ from 'lodash';
 export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() public config: AgpTableConfig;
   @Input() public sortBy: string;
+  public defaultSortBy: string;
   @Output() public createTabEvent = new EventEmitter();
   @Output() public goToQueryEvent = new EventEmitter();
   @Input() public isSingleViewVisible: boolean;
@@ -57,6 +58,8 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   ) { }
 
   public ngOnInit(): void {
+    this.defaultSortBy = this.sortBy;
+
     this.keystrokeSubscription = this.searchKeystrokes$.pipe(
       distinctUntilChanged(),
       tap(() => {
@@ -165,6 +168,24 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     for (const column of this.config.columns) {
       Column.calculateGridColumn(column);
     }
+
+    this.handleSortAfterHide();
+  }
+  
+  private handleSortAfterHide(): void {
+    if (
+      this.sortBy !== this.defaultSortBy
+      && this.isCurrentSortInCategory() && this.config.columns.find(column => column.id === this.sortBy).visibility === false
+      || !this.isCurrentSortInCategory() && this.leaves.find(column => column.id === this.sortBy) === undefined
+    ) {
+      this.sortBy = this.defaultSortBy;
+      this.sort(this.sortBy);
+      this.multipleSelectMenuComponent.sortByColumnId = this.defaultSortBy;
+    }
+  }
+
+  private isCurrentSortInCategory(): boolean {
+    return this.config.columns.find(column => column.id === this.sortBy) ? true : false;
   }
 
   public search(value: string): void {
@@ -263,7 +284,10 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
       sortingButtonsComponent => sortingButtonsComponent.id === this.sortBy
     );
 
-    sortButton.emitSort();
+    if (sortButton) {
+      sortButton.emitSort();
+    }
+
     this.fillTable();
   }
 
