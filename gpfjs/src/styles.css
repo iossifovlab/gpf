@@ -212,13 +212,6 @@ label {
   max-width: 500px;
 }
 
-gpf-global-error-display {
-  position: fixed;
-  bottom: 25px;
-  right: 25px;
-  width: 20%;
-}
-
 .modal-backdrop.fade {
   transition: none;
 }
@@ -300,16 +293,51 @@ gpf-global-error-display {
   padding-top: 0.18em;
 }
 
-.clear-search-icon {
+.search-clear-icon {
   display: inline-block;
-  background-image: url("/assets/clear-search-icon.png");
+  background-image: url("/assets/search-clear-icon.png");
   background-repeat: no-repeat;
   background-position-y: center;
   background-position-x: center;
   width: 20px;
   height: 20px;
   position: absolute;
-  right: 5px;
+  right: 7px;
+}
+
+.search-loading-icon {
+  display: inline-block;
+  background-image: url("/assets/load-search-icon.png");
+  background-repeat: no-repeat;
+  background-position-y: center;
+  background-position-x: center;
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  right: 7px;
+  background-size: 18px;
+  opacity: 50%;
+  animation: rotation 0.8s steps(8) infinite;
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(90deg);
+  }
+
+  to {
+    transform: rotate(450deg);
+  }
+}
+
+@-webkit-keyframes rotation {
+  from {
+    transform: rotate(90deg);
+  }
+
+  to {
+    transform: rotate(450deg);
+  }
 }
 
 .form-label {

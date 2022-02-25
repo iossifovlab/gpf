@@ -56,29 +56,6 @@ button:click {
   outline-color: #000;
 }
 
-.keybinds-tooltip {
-  border: 1px solid #ddd;
-  text-align: left;
-  z-index: 10000;
-  position: absolute;
-  top: 33px;
-  left: 51px;
-  padding: 5px;
-  background-color: #fff;
-}
-
-.keybinds-tooltip span {
-  border: 1px solid rgba(126, 126, 126, 41.2%);
-  padding: 0 5px;
-}
-
-.keybinds-icon {
-  text-align: center;
-  padding-left: 5px;
-  padding-right: 5px;
-  margin-left: 20px;
-}
-
 #column-filtering-button {
   outline: none;
   font-size: 18px;

@@ -1,8 +1,8 @@
-import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnInit, Output, Renderer2, ViewChild, ViewChildren } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnInit, Output, ViewChild, ViewChildren } from '@angular/core';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
-import { debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, take, tap } from 'rxjs/operators';
 import { forkJoin, Subject, Subscription } from 'rxjs';
 import { AgpTableConfig, Column } from './autism-gene-profiles-table';
 import { AgpTableService } from './autism-gene-profiles-table.service';
@@ -15,8 +15,11 @@ import * as _ from 'lodash';
 })
 export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() public config: AgpTableConfig;
+  @Input() public sortBy: string;
+  public defaultSortBy: string;
   @Output() public createTabEvent = new EventEmitter();
   @Output() public goToQueryEvent = new EventEmitter();
+  @Input() public isSingleViewVisible: boolean;
 
   @ViewChild(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu;
   @ViewChild('dropdownSpan') public dropdownSpan;
@@ -25,6 +28,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   private clickedColumnFilteringButton;
   public modalPosition = {top: 0, left: 0};
+  public showKeybinds = false;
 
   public leaves: Column[];
   public genes = [];
@@ -33,14 +37,16 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   public geneSymbolColumnId = "geneSymbol" // must match the gene symbol column id from the backend
 
-  public sortBy = "autism_gene_sets_rank";
   public orderBy = "desc";
 
   public geneInput: string = null;
   public searchKeystrokes$: Subject<string> = new Subject();
   public pageIndex = 0;
-  public showSearchWarning = false;
+  public showNothingFound = false;
+  public showInitialLoading = true;
+  public showSearchLoading;
 
+  private viewportPageCount;
   private baseRowHeight = 35; // px, this should match the height found in the table-row CSS class
   private prevVerticalScroll = 0;
   private loadMoreGenes = true;
@@ -49,13 +55,18 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   public constructor(
     private autismGeneProfilesService: AgpTableService,
     private ref: ElementRef,
-    private renderer: Renderer2,
   ) { }
 
   public ngOnInit(): void {
+    this.defaultSortBy = this.sortBy;
+
     this.keystrokeSubscription = this.searchKeystrokes$.pipe(
-      debounceTime(250),
-      distinctUntilChanged()
+      distinctUntilChanged(),
+      tap(() => {
+        this.showSearchLoading = true;
+      })
+    ).pipe(
+      debounceTime(250)
     ).subscribe(searchTerm => {
       this.search(searchTerm);
     });
@@ -63,6 +74,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   public ngOnChanges(): void {
     if (this.config) {
+      this.viewportPageCount = Math.ceil(window.innerHeight / (this.baseRowHeight * this.config.pageSize));
       this.calculateHeaderLayout();
       this.fillTable();
     }
@@ -74,12 +86,22 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   @HostListener('document:keydown.esc')
   public keybindClearHighlight() {
-    this.highlightedGenes.clear();
+    if (this.isSingleViewVisible) {
+      return;
+    }
+
+    if (this.highlightedGenes.size && document.activeElement === document.body) {
+      this.highlightedGenes.clear();
+    }
   }
 
   @HostListener('document:keydown.f')
   public keybindCompareGenes() {
-    if(this.highlightedGenes.size && document.activeElement === document.body) {
+    if (this.isSingleViewVisible) {
+      return;
+    }
+
+    if (this.highlightedGenes.size && document.activeElement === document.body) {
       this.emitCreateTabEvent();
     }
   }
@@ -97,22 +119,22 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
         this.updateGenes();
       }
     }
-    this.updateModalPosition();
+    this.ngbDropdownMenu.dropdown.close();
   }
 
   @HostListener('window:resize')
   public onResize() {
-    this.updateModalPosition();
+    this.ngbDropdownMenu.dropdown.close();
   }
 
   private fillTable() {
-    const viewportPageCount = Math.ceil(window.innerHeight / (this.baseRowHeight * this.config.pageSize));
     const agpRequests = [];
     this.genes = [];
     this.pageIndex = 1;
     this.loadMoreGenes = true;
+    this.showNothingFound = false;
     
-    for (let i = 1; i <= viewportPageCount; i++) {
+    for (let i = 1; i <= this.viewportPageCount; i++) {
       agpRequests.push(
         this.autismGeneProfilesService
           .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
@@ -120,13 +142,15 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
       )
       this.pageIndex++;
     }
-    this.pageIndex = viewportPageCount;
+    this.pageIndex = this.viewportPageCount;
     forkJoin(agpRequests).subscribe(res => {
       for (const genes of res) {
         this.genes = this.genes.concat(genes);
       }
-      this.updateShownGenes(0, viewportPageCount * this.config.pageSize);
-      this.showSearchWarning = !this.genes.length;
+      this.updateShownGenes(0, this.viewportPageCount * this.config.pageSize);
+      this.showNothingFound = !this.genes.length;
+      this.showInitialLoading = false;
+      this.showSearchLoading = false;
     })
   }
 
@@ -144,6 +168,24 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     for (const column of this.config.columns) {
       Column.calculateGridColumn(column);
     }
+
+    this.handleSortAfterHide();
+  }
+  
+  private handleSortAfterHide(): void {
+    if (
+      this.sortBy !== this.defaultSortBy
+      && this.isCurrentSortInCategory() && this.config.columns.find(column => column.id === this.sortBy).visibility === false
+      || !this.isCurrentSortInCategory() && this.leaves.find(column => column.id === this.sortBy) === undefined
+    ) {
+      this.sortBy = this.defaultSortBy;
+      this.sort(this.sortBy);
+      this.multipleSelectMenuComponent.sortByColumnId = this.defaultSortBy;
+    }
+  }
+
+  private isCurrentSortInCategory(): boolean {
+    return this.config.columns.find(column => column.id === this.sortBy) ? true : false;
   }
 
   public search(value: string): void {
@@ -171,37 +213,44 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   public openDropdown(column: Column, $event): void {
+    $event.stopPropagation(); // stop propagation to avoid triggering sort
+
     if (this.ngbDropdownMenu.dropdown._open) {
       return;
     }
 
     this.ngbDropdownMenu.dropdown.toggle();
-
     this.clickedColumnFilteringButton = $event.target;
     this.updateModalPosition();
-
-    if (column.id === this.geneSymbolColumnId) {
-      this.multipleSelectMenuComponent.columns = this.config.columns.filter(col => col.id !== this.geneSymbolColumnId);
-    } else {
-      this.multipleSelectMenuComponent.columns = column.columns;
-    }
+    this.multipleSelectMenuComponent.columns = column.columns;
+    this.multipleSelectMenuComponent.sortByColumnId = this.sortBy;
     this.multipleSelectMenuComponent.refresh();
   }
 
-  public updateModalPosition(): void {
+  public openCategoryFilterDropdown($event): void {
+    if (this.ngbDropdownMenu.dropdown._open) {
+      return;
+    }
+
+    this.ngbDropdownMenu.dropdown.toggle();
+    this.clickedColumnFilteringButton = $event.target;
+    this.updateModalPosition(1, -9);
+    this.multipleSelectMenuComponent.columns = this.config.columns.filter(col => col.id !== this.geneSymbolColumnId);
+    this.multipleSelectMenuComponent.sortByColumnId = this.sortBy;
+    this.multipleSelectMenuComponent.refresh();
+  }
+
+  public updateModalPosition(leftOffset = 6, topOffset = 5): void {
     if (!this.ngbDropdownMenu.dropdown._open) {
       return;
     }
 
     const buttonHeight = 30;
-    const topOffset = 10;
-
     this.modalPosition.top = 
       this.clickedColumnFilteringButton.getBoundingClientRect().top
       + buttonHeight
       - topOffset;
 
-    const leftOffset = 6;
     const leftCap = 17;
     const modalWidth = 400;
     const leftPosition =
@@ -235,7 +284,10 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
       sortingButtonsComponent => sortingButtonsComponent.id === this.sortBy
     );
 
-    sortButton.emitSort();
+    if (sortButton) {
+      sortButton.emitSort();
+    }
+
     this.fillTable();
   }
 
@@ -281,6 +333,13 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   public emitCreateTabEvent($event = null, geneSymbol: string = null, navigateToTab: boolean = true): void {
     if ($event && ($event.ctrlKey || $event.metaKey)) {
       navigateToTab = false;
+    }
+
+    if (navigateToTab) {
+      /* navigating to another tab does not guarantee the scroll position
+       * will remain the same, so we reset it and update the shownGenes indices */
+      window.scrollTo(0, 0);
+      this.updateShownGenes(0, this.viewportPageCount * this.config.pageSize);
     }
 
     const geneSymbols: string[] = geneSymbol ? [geneSymbol] : Array.from(this.highlightedGenes);

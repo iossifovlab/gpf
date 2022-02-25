@@ -21,3 +21,7 @@ label {
 tr > td {
   padding-bottom: 8px;
 }
+
+#check-uncheck-all-button {
+  border-radius: 0;
+}

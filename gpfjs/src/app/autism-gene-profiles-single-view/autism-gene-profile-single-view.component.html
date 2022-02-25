@@ -97,7 +97,6 @@
             <td style="max-width: 665px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" [attr.title]="set.setId">{{ set.setId }}</td>
             <td style="text-align: center; width: 55px">
               <span style="font-size: 20px;" *ngIf="gene.geneSets.indexOf(set.collectionId + '_' + set.setId) !== -1">&#10003;</span>
-              <span style="font-size: 12px; opacity: 75%" *ngIf="gene.geneSets.indexOf(set.collectionId + '_' + set.setId) === -1">&#10005;</span>
             </td>
           </tr>
         </table>

@@ -8,10 +8,9 @@ import { environment } from 'environments/environment';
 })
 export class SortingButtonsComponent implements OnInit {
   @Input() public id: string;
+  @Input() public hideState = 0;
   @Output() public sortEvent = new EventEmitter<{id: string, order: string}>();
-
   private order = 'desc';
-  public hideState = 0;
   public imgPathPrefix: string;
 
   public ngOnInit(): void {

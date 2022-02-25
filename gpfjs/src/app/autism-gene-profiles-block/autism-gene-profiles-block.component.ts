@@ -21,15 +21,18 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   public geneTabs = new Set<string>();
   public maxTabCount = 20;
   public agpTableConfig: AgpTableConfig;
+  public agpTableSortBy: string;
   public agpSingleViewConfig: AgpSingleViewConfig;
 
-  public showKeybinds = false;
   private keybinds = [
     '1', '2', '3', '4', '5', '6', '7', '8', '9',
     'q', 'p',
     'e', 'n',
     'w'
   ];
+
+  private homeTabScrollLocation = {x: null, y: null};
+  public homeTabId = 'autismGenesTool';
 
   public constructor(
     private location: Location,
@@ -61,10 +64,15 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   public ngOnInit(): void {
     this.agpTableService.getConfig().pipe(take(1)).subscribe(config => {
       this.agpTableConfig = config;
+      this.agpTableSortBy = this.findFirstAgpSortableCategory(config);
     });
     this.autismGeneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
       this.agpSingleViewConfig = config;
     });
+  }
+
+  private findFirstAgpSortableCategory(agpTableConfig: AgpTableConfig): string {
+    return agpTableConfig.columns.filter(column => column.sortable)[0].id;
   }
 
   public createTabEventHandler($event: { geneSymbols: string[]; navigateToTab: boolean }): void {
@@ -97,7 +105,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   }
   
   public changeUrl(navId: string) {
-    const urlPart = navId === 'autismGenesTool' ? '' : `/${navId}`;
+    const urlPart = navId === this.homeTabId ? '' : `/${navId}`;
     this.location.go(`autism-gene-profiles${urlPart}`);
   }
 
@@ -106,7 +114,8 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   }
 
   public openHomeTab(): void {
-    this.selectNav('autismGenesTool');
+    this.selectNav(this.homeTabId);
+    window.scrollTo(this.homeTabScrollLocation.x, this.homeTabScrollLocation.y);
   }
 
   public openPreviousTab(): void {
@@ -132,11 +141,16 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   }
 
   public openTabAtIndex(index: number): void {
+    if (this.nav.activeId === this.homeTabId) {
+      this.homeTabScrollLocation.x = window.scrollX;
+      this.homeTabScrollLocation.y = window.scrollY;
+    }
+
     this.selectNav([...this.geneTabs][index]);
   }
 
   public closeTab(event: MouseEvent, tabId: string): void {
-    if (tabId === 'autismGenesTool') {
+    if (tabId === this.homeTabId) {
       return;
     }
 
@@ -151,7 +165,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   }
 
   public closeActiveTab(): void {
-    if (this.nav.activeId === 'autismGenesTool') {
+    if (this.nav.activeId === this.homeTabId) {
       return;
     }
 

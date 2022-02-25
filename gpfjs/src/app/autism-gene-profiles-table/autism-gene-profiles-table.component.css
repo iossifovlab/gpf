@@ -1,21 +1,16 @@
-.table-container {
-  padding: 25px;
-  padding-top: 16px;
-}
-
 .table-row {
   width: max-content;
   display: grid;
-  grid-auto-columns: 100px;
+  grid-auto-columns: 110px;
   grid-auto-flow: column;
-  grid-template-columns: 150px; /* Set 150px to first column (gene symbol), rest are 100px */
+  grid-template-columns: 150px; /* Set 150px to first column (gene symbol), rest are 110px */
 }
 
 .table-body-row:nth-child(odd) {
   background-color: #fafafa;
 }
 
-.table-body-row:hover:not(#search-warning) {
+.table-body-row:hover {
   background-color: #edf3ff;
 }
 
@@ -38,7 +33,7 @@
 .header {
   border-top: 1px solid #ddd;
   position: sticky;
-  top: 0;
+  top: 52px;
   font-weight: bold;
 }
 
@@ -67,11 +62,46 @@
   position: relative;
 }
 
+.active-sort-header {
+  background-color: #dfdfdf;
+}
+
+.header-cell.column-depth-1 {
+  white-space: nowrap;
+  line-height: 35px;
+  align-items: flex-end;
+  position: relative;
+}
+
+.header-cell-content-span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  user-select: none;
+}
+
+.header-gene-symbol-span {
+  width: 100% !important;
+  padding-left: 0 !important;
+}
+
+.column-depth-1 .header-cell-content-span,
+.column-depth-3 .header-cell-content-span,
+.column-depth-2 .header-cell-content-span:not(.vertical-text) {
+  width: 90%;
+  padding-left: 10px;
+}
+
 .header-cell-content {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 10px;
+}
+
+.header-cell-content:not(.header-cell-vertical-content) {
+  min-width: 100%;
+  gap: unset;
+  justify-content: flex-end;
 }
 
 .header-cell-vertical-content {
@@ -84,16 +114,29 @@
 .header-button {
   padding: 6px;
   font-size: 14px;
+  line-height: 25px;
+}
+
+.sorting-button {
+  position: relative;
+  top: -2px;
+  user-select: none;
 }
 
 .column-filtering-button {
-  position: absolute;
-  right: 0;
-  padding: 6px 8px;
+  min-width: 35px;
+  user-select: none;
+}
+
+#category-filtering-button {
+  box-shadow: none;
+  border-radius: 0;
+  margin-right: 8px;
 }
 
 .dropdown-span {
   position: fixed;
+  z-index: 3;
 }
 
 .dropdown-toggle::after {
@@ -105,7 +148,8 @@
 }
 
 #gene-search-input:focus {
-  box-shadow: inset 0 -1px 0 #ddd;
+  box-shadow: none;
+  border-color: #ced4da;
 }
 
 #compare-genes-modal {
@@ -145,6 +189,7 @@
   margin: 8px 2px 2px;
   width: 100%;
   height: 40px;
+  border-radius: 0;
 }
 
 .clickable {
@@ -163,20 +208,72 @@
   transform: rotate(180deg);
   max-height: 150px;
   text-align: left;
+  padding-bottom: 10px;
 }
 
-#search-warning {
+#nothing-found,
+#loading {
   display: table;
   height: 44px;
+}
+
+#nothing-found {
   background-color: #fafafa;
   border-bottom: 1px solid #ddd;
   width: 100%;
 }
 
-#search-warning span {
+#nothing-found span,
+#loading span {
   font-style: italic;
   display: table-cell;
   vertical-align: middle;
   padding-left: 12px;
   opacity: 75%;
+}
+
+#above-table-bar {
+  display: flex;
+  justify-content: flex-start;
+  position: sticky;
+  top: 0;
+  padding: 7px 0;
+  background: #fff;
+  align-items: center;
+  z-index: 1;
+}
+
+.vertical-line {
+  border-left: 1px solid #d9d9d9;
+  height: 38px;
+  margin: 0 18px;
+}
+
+#keybinds-icon {
+  border: 1px solid #ddd;
+  padding: 2px 10px;
+  border-radius: 100%;
+}
+
+#keybinds-icon span {
+  user-select: none;
+  position: relative;
+  top: 1px;
+}
+
+.keybinds-tooltip {
+  border: 1px solid #ddd;
+  text-align: left;
+  position: absolute;
+  top: 48px;
+  left: 149px;
+  padding: 5px;
+  background-color: #fff;
+  border-radius: 0.25rem;
+  user-select: none;
+}
+
+.keybinds-tooltip span {
+  border: 1px solid rgba(126, 126, 126, 41.2%);
+  padding: 0 5px;
 }
