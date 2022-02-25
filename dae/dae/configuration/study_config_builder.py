@@ -157,8 +157,6 @@ has_cnv = {{ has_cnv }}
 studies = {{ studies }}
 {%- endif %}
 
-[genotype_storage]
-id = "{{ genotype_storage.id }}"
 {% if genotype_storage.tables %}
 [genotype_storage.tables]
 pedigree = "{{ genotype_storage.tables.pedigree }}"
