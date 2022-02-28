@@ -21,6 +21,7 @@ from dae.annotation.annotatable import VCFAllele
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.backends.dae.loader import DaeTransmittedLoader
 from dae.pedigrees.loader import FamiliesLoader
+from dae.tools.stats_liftover import save_liftover_stats
 
 
 logger = logging.getLogger("dae_liftover")
@@ -73,64 +74,6 @@ def parse_cli_arguments():
     )
 
     return parser
-
-
-def save_liftover_stats(target_stats, stats_filename):
-
-    effects = [
-        "CNV+",
-        "CNV-",
-        "tRNA:ANTICODON",
-        "all",
-        "splice-site",
-        "frame-shift",
-        "nonsense",
-        "no-frame-shift-newStop",
-        "noStart",
-        "noEnd",
-        "missense",
-        "no-frame-shift",
-        "CDS",
-        "synonymous",
-        "coding_unknown",
-        "regulatory",
-        "3'UTR",
-        "5'UTR",
-        "intron",
-        "non-coding",
-        "5'UTR-intron",
-        "3'UTR-intron",
-        "promoter",
-        "non-coding-intron",
-        "unknown",
-        "intergenic",
-        "no-mutation",
-    ]
-
-    effects = [e for e in effects if e in target_stats.keys()]
-    assert len(effects) == len(target_stats.keys())
-
-    with open(stats_filename, "w") as output:
-        header = list(["source", *effects])
-
-        output.write("\t".join(header))
-        output.write("\n")
-
-        line = list(
-            [
-                "source",
-                *[str(target_stats[e]["source"]) for e in effects]
-            ]
-        )
-        output.write("\t".join(line))
-        output.write("\n")
-
-        for target in ["no_liftover", *effects]:
-            line = [target]
-            for source in effects:
-                line.append(str(target_stats[source].get(target, "")))
-            output.write("\t".join(line))
-            output.write("\n")
 
 
 def main(argv=sys.argv[1:], gpf_instance=None):
