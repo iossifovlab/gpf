@@ -73,7 +73,7 @@ describe('GpfTableHeaderCellComponent', () => {
     expect(component.onSortClick(testComponent.subcolumnsChildren.first)).toBe(true);
 
     expect(component.sortingInfoChange.emit).toHaveBeenCalledWith(
-      new SortInfo(testComponent.subcolumnsChildren.first, true)
+      new SortInfo(testComponent.subcolumnsChildren.first, false)
     );
   });
 });
