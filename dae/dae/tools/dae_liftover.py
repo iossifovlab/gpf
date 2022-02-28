@@ -63,12 +63,11 @@ def parse_cli_arguments():
         default="transmitted")
 
     parser.add_argument(
-        "--regions",
+        "--region",
         type=str,
-        dest="regions",
+        dest="region",
         metavar="region",
         default=None,
-        nargs="+",
         help="region to convert [default: None] "
         "ex. chr1:1-10000. "
     )
@@ -176,10 +175,14 @@ def main(argv=sys.argv[1:], gpf_instance=None):
         genome=source_genome,
     )
 
-    if argv.regions is not None:
-        regions = argv.regions
-        logger.info(f"resetting regions (region): {regions}")
-        variants_loader.reset_regions(regions)
+    summary_filename = f"{argv.output_prefix}.txt"
+    toomany_filename = f"{argv.output_prefix}-TOOMANY.txt"
+    if argv.region is not None:
+        region = argv.region
+        logger.info(f"resetting regions (region): {region}")
+        variants_loader.reset_regions(region)
+        summary_filename = f"{argv.output_prefix}-{region}.txt"
+        toomany_filename = f"{argv.output_prefix}-TOOMANY-{region}.txt"
 
     pipeline_config = textwrap.dedent(
         f"""
@@ -222,8 +225,8 @@ def main(argv=sys.argv[1:], gpf_instance=None):
 
     target_stats = defaultdict(Counter)
 
-    with open(f"{argv.output_prefix}.txt", "wt") as output_summary, \
-            open(f"{argv.output_prefix}-TOOMANY.txt", "wt") as output_toomany:
+    with open(summary_filename, "wt") as output_summary, \
+            open(toomany_filename, "wt") as output_toomany:
 
         summary_header = [
             "chr", "pos", "variant",
