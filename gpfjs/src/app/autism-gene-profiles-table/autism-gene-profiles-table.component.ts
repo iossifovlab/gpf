@@ -47,6 +47,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   public geneInput: string = null;
   public searchKeystrokes$: Subject<string> = new Subject();
+  @ViewChild('searchBox') public searchBox: ElementRef;
   public pageIndex = 0;
   public showNothingFound = false;
   public showInitialLoading = true;
@@ -77,6 +78,8 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     ).subscribe(searchTerm => {
       this.search(searchTerm);
     });
+
+    this.focusSearchBox();
   }
 
   public ngOnChanges(): void {
@@ -364,5 +367,22 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
     const geneSymbols: string[] = geneSymbol ? [geneSymbol] : Array.from(this.highlightedGenes);
     this.createTabEvent.emit({geneSymbols: geneSymbols, navigateToTab: navigateToTab});
+  }
+
+  private async waitForSearchBoxToLoad(): Promise<void> {
+    return new Promise<void>(resolve => {
+      const timer = setInterval(() => {
+        if (this.searchBox !== undefined) {
+          resolve();
+          clearInterval(timer);
+        }
+      }, 200);
+    });
+  }
+
+  private focusSearchBox(): void {
+    this.waitForSearchBoxToLoad().then(() => {
+      this.searchBox.nativeElement.focus();
+    });
   }
 }
