@@ -28,9 +28,6 @@ setuptools.setup(
         "dae/tools/pheno2browser.py",
         "dae/tools/simple_pheno_import.py",
         "dae/tools/simple_study_import.py",
-        # "dae/annotation/annotation_pipeline.py",
-        # "dae/tools/generate_histogram.py",
-        # "dae/tools/generate_histogram2.py",
         "dae/tools/run_gpf_impala.sh",
         "dae/tools/simple_family2pedigree.py",
         "dae/tools/ped2parquet.py",
@@ -42,7 +39,6 @@ setuptools.setup(
         "dae/tools/genotype_data_tool.py",
         "dae/tools/vcfinfo_extractor.py",
         "dae/tools/generate_autism_gene_profile.py",
-        "dae/tools/create_genomic_resource_repository.py",
     ],
     entry_points="""
     [dae.genomic_resources.plugins]
