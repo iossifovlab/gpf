@@ -1,5 +1,5 @@
 <div style="padding: 25px; padding-top: 16px;">
-  <div id="above-table-bar">
+  <div #aboveTableBar id="above-table-bar">
     <div style="width: 270px">
       <div class="search-input-wrapper">
         <label for="gene-search-input" class="input-group-prepend" style="align-items: center; border: 1px solid #ced4da; padding-left: 10px; height: 38px;">
@@ -57,7 +57,7 @@
   </div>
 
   <div *ngIf="config" class="table-container">
-    <div class="header table-row">
+    <div #header id="header" class="table-row">
       <ng-container *ngTemplateOutlet="tableHeaderTemplate; context: { columns: config.columns }"></ng-container>
     </div>
     <div id="table-body">
@@ -77,7 +77,7 @@
       </div>
     </div>
 
-    <div id="nothing-found" *ngIf="showNothingFound">
+    <div #nothingFound id="nothing-found" [hidden]="!showNothingFound">
       <span>Nothing found</span>
     </div>
 
