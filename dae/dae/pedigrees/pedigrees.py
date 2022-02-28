@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import abc
-import networkx as nx
+import networkx as nx  # type: ignore
 
 from collections import defaultdict
 

@@ -1,6 +1,6 @@
 import os
 import pytest
-from pandas.api.types import is_string_dtype
+from pandas.api.types import is_string_dtype  # type: ignore
 
 from dae.variants.attributes import Role
 

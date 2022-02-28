@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 import logging
 
-from typing import Dict, Iterator, Optional, Set, List
+from typing import Dict, Iterator, Optional, Set, List, cast
 from enum import Enum, auto
 from collections import defaultdict
 from collections.abc import Mapping
@@ -497,8 +497,8 @@ class Family(object):
 
 class FamiliesData(Mapping):
     def __init__(self):
-        self._ped_df = None
-        self._families = {}
+        self._ped_df: Optional[pd.DataFrame] = None
+        self._families: Dict[str, Family] = {}
         self.persons = {}
         self._broken = {}
         self._person_ids_with_parents = None
@@ -597,7 +597,7 @@ class FamiliesData(Mapping):
     def ped_df(self) -> pd.DataFrame:
         if self._ped_df is None:
             # build ped_df
-            column_names = set()
+            column_names: Set[str] = set()
             records = []
             for family in self.values():
                 for person in family.full_members:
@@ -620,7 +620,9 @@ class FamiliesData(Mapping):
                 set(["sample_index"])
             )
             columns.extend(sorted(extention_columns))
-            ped_df = pd.DataFrame.from_records(records, columns=columns)
+            ped_df = cast(
+                pd.DataFrame,
+                pd.DataFrame.from_records(records, columns=columns)) # type: ignore
             self._ped_df = ped_df
 
         return self._ped_df
@@ -635,7 +637,7 @@ class FamiliesData(Mapping):
         return len(self._families)
 
     def __iter__(self) -> Iterator[Family]:
-        return iter(self._families)
+        return iter(self._families.values())
 
     def __contains__(self, family_id) -> bool:
         return family_id in self._families
@@ -716,11 +718,13 @@ class FamiliesData(Mapping):
         return family_ids
 
     @staticmethod
-    def combine(first: FamiliesData, second: FamiliesData, forced=True):
+    def combine(
+            first: FamiliesData, second: FamiliesData,
+            forced=True) -> FamiliesData:
 
         same_families = set(first.keys()) & \
             set(second.keys())
-        combined_dict = {}
+        combined_dict: Dict[str, Family] = {}
         combined_dict.update(first)
         combined_dict.update(second)
         mismatched_families = []

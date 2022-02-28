@@ -1,4 +1,4 @@
-import networkx as nx
+import networkx as nx  # type: ignore
 import itertools
 from collections import deque
 import copy
