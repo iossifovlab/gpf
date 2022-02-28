@@ -172,13 +172,13 @@ def main(argv=sys.argv[1:], gpf_instance=None):
             open(toomany_filename, "wt") as output_toomany:
 
         summary_header = [
-            "chr", "pos", "variant",
+            "#chr", "position", "variant",
             "familyData",
             "all.nParCalled", "all.prcntParCalled",
             "all.nAltAlls", "all.altFreq"
         ]
         toomany_header = [
-            "chr", "pos", "variant",
+            "#chr", "position", "variant",
             "familyData",
         ]
 
