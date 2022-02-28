@@ -7,12 +7,12 @@ import numpy as np
 from typing import List, Optional, Dict, Any
 from contextlib import closing
 
-import pysam
+import pysam  # type: ignore
 import numpy as np
 import pandas as pd
 
 from dae.utils.regions import Region
-import fsspec
+import fsspec  # type: ignore
 from dae.utils import fs_utils
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
@@ -235,8 +235,8 @@ class DenovoLoader(VariantsGenotypesLoader):
         pos: int,
         genome: ReferenceGenome,
         family: Family,
-        members_with_variant: List[str],
-    ) -> np.array:
+        members_with_variant: List[str]) -> np.array:
+
         # TODO Add support for multiallelic variants
         # This method currently assumes biallelic variants
 
