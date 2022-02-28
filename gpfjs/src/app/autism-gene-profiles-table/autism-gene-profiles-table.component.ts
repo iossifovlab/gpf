@@ -22,7 +22,6 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   public defaultSortBy: string;
   @Output() public createTabEvent = new EventEmitter();
   @Output() public goToQueryEvent = new EventEmitter();
-  @Input() public disableKeybinds: boolean;
 
   @ViewChild(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu;
   @ViewChild('dropdownSpan') public dropdownSpan: ElementRef;
@@ -61,7 +60,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   public constructor(
     private autismGeneProfilesService: AgpTableService,
-    private ref: ElementRef,
+    private tableComponentRef: ElementRef,
     private renderer: Renderer2,
   ) { }
 
@@ -94,7 +93,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   @HostListener('document:keydown.esc')
   public keybindClearHighlight() {
-    if (this.disableKeybinds) {
+    if (this.tableComponentRef.nativeElement.hidden) {
       return;
     }
 
@@ -105,7 +104,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   @HostListener('document:keydown.f')
   public keybindCompareGenes() {
-    if (this.disableKeybinds) {
+    if (this.tableComponentRef.nativeElement.hidden) {
       return;
     }
 
@@ -117,7 +116,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   @HostListener('window:scroll', ['$event'])
   public onWindowScroll($event): void {
     // execute this code only if the table is shown and the scroll event is a vertical scroll
-    if (!this.ref.nativeElement.hidden && this.prevVerticalScroll !== $event.srcElement.scrollingElement.scrollTop) {
+    if (!this.tableComponentRef.nativeElement.hidden && this.prevVerticalScroll !== $event.srcElement.scrollingElement.scrollTop) {
       const tableBodyOffset = document.getElementById('table-body').offsetTop;
       const topRowIdx = Math.floor(Math.max(window.scrollY - tableBodyOffset, 0) / this.baseRowHeight);
       const bottomRowIdx = Math.floor(window.innerHeight / this.baseRowHeight) + topRowIdx;
@@ -132,6 +131,10 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   @HostListener('window:resize')
   public onResize() {
+    if (this.tableComponentRef.nativeElement.hidden) {
+      return;
+    }
+
     this.ngbDropdownMenu.dropdown.close();
   }
 
