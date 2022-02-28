@@ -19,7 +19,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   public defaultSortBy: string;
   @Output() public createTabEvent = new EventEmitter();
   @Output() public goToQueryEvent = new EventEmitter();
-  @Input() public isSingleViewVisible: boolean;
+  @Input() public disableKeybinds: boolean;
 
   @ViewChild(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu;
   @ViewChild('dropdownSpan') public dropdownSpan;
@@ -86,7 +86,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   @HostListener('document:keydown.esc')
   public keybindClearHighlight() {
-    if (this.isSingleViewVisible) {
+    if (this.disableKeybinds) {
       return;
     }
 
@@ -97,7 +97,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   @HostListener('document:keydown.f')
   public keybindCompareGenes() {
-    if (this.isSingleViewVisible) {
+    if (this.disableKeybinds) {
       return;
     }
 

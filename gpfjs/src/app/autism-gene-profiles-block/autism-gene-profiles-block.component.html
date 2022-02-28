@@ -17,7 +17,7 @@
           (goToQueryEvent)="goToQueryEventHandler($event)"
           [config]="agpTableConfig"
           [sortBy]="agpTableSortBy"
-          [isSingleViewVisible]="nav.activeId !== homeTabId"
+          [disableKeybinds]="nav.activeId !== homeTabId"
         ></gpf-autism-gene-profiles-table>
       </ng-template>
     </li>
