@@ -7,17 +7,13 @@ import pyarrow as pa
 
 from dae.variants.core import Allele
 from dae.variants.attributes import Inheritance, \
-    TransmissionType, Sex, Role
+    TransmissionType, Sex, Role, Status
 
 logger = logging.getLogger(__name__)
 
 
 class AlleleParquetSerializer:
-    
-    # core schema should contain summary blob, 
-    # possibly separate annotation blob 
-    # comment on schema, extensive comments on fields 
-    # partition part of the schema -> partition defines a subdirectory. 
+
     SUMMARY_SEARCHABLE_PROPERTIES_TYPES = {
         "bucket_index": pa.int32(),
         "summary_index": pa.int32(),
@@ -41,14 +37,15 @@ class AlleleParquetSerializer:
         "family_index": pa.int32(),
         "family_id": pa.string(),
         "is_denovo": pa.int8(),
-        "variant_in_sexes": pa.int8(),
-        "variant_in_roles": pa.int32(),
+        "allele_in_sexes": pa.int8(),
+        "allele_in_statuses": pa.int8(),
+        "allele_in_roles": pa.int32(),
         "inheritance_in_members": pa.int16(),
-        "variant_in_members": pa.list_(pa.string())
+        "allele_in_members": pa.list_(pa.string())
     }
 
     PRODUCT_PROPERTIES_LIST = [
-        "effect_gene", "variant_in_members"
+        "effect_gene", "allele_in_members"
     ]
 
     BASE_SEARCHABLE_PROPERTIES_TYPES = {
@@ -68,44 +65,27 @@ class AlleleParquetSerializer:
         "family_index": pa.int32(),
         "family_id": pa.string(),
         "is_denovo": pa.int8(),
-        "variant_in_sexes": pa.int8(),
-        "variant_in_roles": pa.int32(),
+        "allele_in_sexes": pa.int8(),
+        "allele_in_statuses": pa.int8(), 
+        "allele_in_roles": pa.int32(),
         "inheritance_in_members": pa.int16(),
-        "variant_in_members": pa.string(),
+        "allele_in_members": pa.string(),
     }
 
     LIST_TO_ROW_PROPERTIES_LISTS = [
         ["effect_gene"],
-        ["variant_in_members"]
+        ["allele_in_members"]
     ]
 
     ENUM_PROPERTIES = {
         "variant_type": Allele.Type,
         "transmission_type": TransmissionType,
-        "variant_in_sexes": Sex,
-        "variant_in_roles": Role,
+        "allele_in_sexes": Sex,
+        "allele_in_roles": Role,
+        "allele_in_statuses": Status,
         "inheritance_in_members": Inheritance,
     }
-
-    ALLELE_CREATION_PROPERTIES = [
-        "chromosome",
-        "position",
-        "end_position",
-        "variant_type",
-        "reference",
-        "alternative",
-        "allele_index",
-        "summary_index",
-        "transmission_type",
-        "family_id",
-        "gt",
-        "best_state",
-        "genetic_model",
-        "variant_in_roles",
-        "variant_in_sexes",
-        "inheritance_in_members",
-        "variant_in_members",
-    ]
+ 
 
     GENOMIC_SCORES_SCHEMA_CLEAN_UP = [
         "worst_effect",
@@ -131,7 +111,7 @@ class AlleleParquetSerializer:
         "effect_type",
         "effect_gene",
         "variant_inheritance",
-        "variant_in_member",
+        "allele_in_member",
         "variant_roles",
         "genetic_model_data",
         "frequency_data",

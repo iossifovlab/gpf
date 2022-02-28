@@ -74,12 +74,12 @@ class NoPartitionDescriptor(PartitionDescriptor):
 
     def summary_filename(self, summary_allele):
         bucket_index = summary_allele.get_attribute("bucket_index")
-        filename = f"nopart_{bucket_index:0>6}_summary_variants.parquet" 
+        filename = f"nopart_{bucket_index:0>6}_summary_alleles.parquet" 
         return os.path.join(self.output, filename) 
 
     def family_filename(self, family_allele):
         bucket_index = family_allele.get_attribute("bucket_index")
-        filename = f"nopart_{bucket_index:0>6}_family_variants.parquet"
+        filename = f"nopart_{bucket_index:0>6}_family_alleles.parquet"
         return os.path.join(self.output, filename) 
 
     def write_partition_configuration(self):
@@ -733,18 +733,18 @@ class ParquetManager:
         variants_dirname = os.path.join(prefix, "variants")
 
         summary_filename = os.path.join(
-            variants_dirname, f"{study_id}{filesuffix}_summary_variants.parquet") 
+            variants_dirname, f"{study_id}{filesuffix}_summary_alleles.parquet") 
 
         family_filename = os.path.join(
-            variants_dirname, f"{study_id}{filesuffix}_family_variants.parquet")
+            variants_dirname, f"{study_id}{filesuffix}_family_alleles.parquet")
 
         pedigree_filename = os.path.join(
             prefix, "pedigree", f"{study_id}{filesuffix}_pedigree.parquet")
 
         conf = {
             "variants_dirname": variants_dirname,
-            "family_variants": family_filename,
-            "summary_variants": summary_filename, 
+            "family_alleles": family_filename,
+            "summary_alleles": summary_filename, 
             "pedigree": pedigree_filename,
         }
 

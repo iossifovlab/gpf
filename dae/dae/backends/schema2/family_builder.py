@@ -105,8 +105,8 @@ class FamilyQueryBuilder(BaseQueryBuilder):
             return
 
         if where_clause:
-            in_members = "AND fa.variant_in_members = pedigree.person_id"
+            in_members = "AND fa.allele_in_members = pedigree.person_id"
         else:
             in_members = \
-                "WHERE fa.variant_in_members = pedigree.person_id"
+                "WHERE fa.allele_in_members = pedigree.person_id"
         self._add_to_product(in_members)

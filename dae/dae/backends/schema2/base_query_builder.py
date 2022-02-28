@@ -205,7 +205,7 @@ class BaseQueryBuilder(ABC):
             person_ids = set(person_ids) & set(self.families.persons.keys())
             where.append(
                 self._build_iterable_string_attr_where(
-                    self.where_accessors["variant_in_members"], person_ids
+                    self.where_accessors["allele_in_members"], person_ids
                 )
             )
         
@@ -218,13 +218,13 @@ class BaseQueryBuilder(ABC):
         if roles is not None:
             where.append(
                 self._build_bitwise_attr_where(
-                    self.where_accessors["variant_in_roles"], roles, role_query
+                    self.where_accessors["allele_in_roles"], roles, role_query
                 )
             )
         if sexes is not None:
             where.append(
                 self._build_bitwise_attr_where(
-                    self.where_accessors["variant_in_sexes"], sexes, sex_query
+                    self.where_accessors["allele_in_sexes"], sexes, sex_query
                 )
             )
         if variant_type is not None:
