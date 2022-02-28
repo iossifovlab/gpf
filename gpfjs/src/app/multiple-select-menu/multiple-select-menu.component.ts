@@ -16,7 +16,6 @@ export class MultipleSelectMenuComponent implements OnChanges {
   public buttonLabel = 'Uncheck all';
   public searchText: string;
   public filteredColumns: Column[];
-  public sortByColumnId: string;
 
   public ngOnChanges(): void {
     this.refresh();

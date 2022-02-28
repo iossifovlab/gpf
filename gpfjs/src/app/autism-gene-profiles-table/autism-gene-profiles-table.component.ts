@@ -167,20 +167,6 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     for (const column of this.config.columns) {
       Column.calculateGridColumn(column);
     }
-
-    this.handleSortAfterHide();
-  }
-  
-  private handleSortAfterHide(): void {
-    if (
-      this.sortBy !== this.defaultSortBy
-      && this.isCurrentSortInCategory() && this.config.columns.find(column => column.id === this.sortBy).visibility === false
-      || !this.isCurrentSortInCategory() && this.leaves.find(column => column.id === this.sortBy) === undefined
-    ) {
-      this.sortBy = this.defaultSortBy;
-      this.sort(this.sortBy);
-      this.multipleSelectMenuComponent.sortByColumnId = this.defaultSortBy;
-    }
   }
 
   private isCurrentSortInCategory(): boolean {
@@ -222,7 +208,6 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     this.clickedColumnFilteringButton = $event.target;
     this.updateModalPosition();
     this.multipleSelectMenuComponent.columns = column.columns;
-    this.multipleSelectMenuComponent.sortByColumnId = this.sortBy;
     this.multipleSelectMenuComponent.refresh();
   }
 
@@ -235,7 +220,6 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     this.clickedColumnFilteringButton = $event.target;
     this.updateModalPosition(1, -9);
     this.multipleSelectMenuComponent.columns = this.config.columns.filter(col => col.id !== this.geneSymbolColumnId);
-    this.multipleSelectMenuComponent.sortByColumnId = this.sortBy;
     this.multipleSelectMenuComponent.refresh();
   }
 
