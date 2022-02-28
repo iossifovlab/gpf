@@ -26,15 +26,15 @@ def mat2str(mat, col_sep="", row_sep="/"):
     )
 
 
-def str2mat(mat, col_sep="", row_sep="/"):
+def str2mat(mat, col_sep="", row_sep="/", dtype=GENOTYPE_TYPE):
     if col_sep == "":
         return np.array(
             [[int(c) for c in r] for r in mat.split(row_sep)],
-            dtype=GENOTYPE_TYPE,
+            dtype=dtype,
         )
     return np.array(
         [[int(v) for v in r.split(col_sep)] for r in mat.split(row_sep)],
-        dtype=GENOTYPE_TYPE,
+        dtype=dtype,
     )
 
 
@@ -109,9 +109,9 @@ def gt2str(gt):
     return ",".join(result)
 
 
-def str2gt(gts, split=","):
+def str2gt(gts, split=",", dtype=GENOTYPE_TYPE):
     gts = gts.split(split)
-    result = np.zeros(shape=(2,  len(gts)), dtype=GENOTYPE_TYPE)
+    result = np.zeros(shape=(2,  len(gts)), dtype=dtype)
 
     for col, pgts in enumerate(gts):
         vals = [

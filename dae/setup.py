@@ -28,9 +28,6 @@ setuptools.setup(
         "dae/tools/pheno2browser.py",
         "dae/tools/simple_pheno_import.py",
         "dae/tools/simple_study_import.py",
-        # "dae/annotation/annotation_pipeline.py",
-        # "dae/tools/generate_histogram.py",
-        # "dae/tools/generate_histogram2.py",
         "dae/tools/run_gpf_impala.sh",
         "dae/tools/simple_family2pedigree.py",
         "dae/tools/ped2parquet.py",
@@ -42,7 +39,6 @@ setuptools.setup(
         "dae/tools/genotype_data_tool.py",
         "dae/tools/vcfinfo_extractor.py",
         "dae/tools/generate_autism_gene_profile.py",
-        "dae/tools/create_genomic_resource_repository.py",
     ],
     entry_points="""
     [dae.genomic_resources.plugins]
@@ -65,6 +61,9 @@ setuptools.setup(
     generate_vcf_score_histogram.py=dae.tools.generate_vcf_score_histogram:main
     gpf_validation_runner=dae.tools.gpf_validation_runner:main
     gpf_instance_adjustments=dae.tools.gpf_instance_adjustments:cli
+    denovo_liftover=dae.tools.denovo_liftover:main
+    dae_liftover=dae.tools.dae_liftover:main
+    stats_liftover=dae.tools.stats_liftover:main
     """,
     classifiers=[
         "Development Status :: 4 - Beta",
