@@ -44,7 +44,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   public pageIndex = 0;
   public showNothingFound = false;
   public showInitialLoading = true;
-  public showSearchLoading;
+  public showSearchLoading: boolean;
 
   private viewportPageCount;
   private baseRowHeight = 35; // px, this should match the height found in the table-row CSS class
@@ -64,9 +64,8 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
       distinctUntilChanged(),
       tap(() => {
         this.showSearchLoading = true;
-      })
-    ).pipe(
-      debounceTime(250)
+      }),
+      debounceTime(250),
     ).subscribe(searchTerm => {
       this.search(searchTerm);
     });
