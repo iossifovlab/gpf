@@ -2,6 +2,7 @@ import os
 import gzip
 import warnings
 import logging
+import numpy as np
 
 from typing import List, Optional, Dict, Any
 from contextlib import closing
@@ -917,7 +918,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         best_states = {
             fid: (
                 str2mat(bs, col_sep="", row_sep="/"),
-                str2mat(rc, col_sep=" ", row_sep="/")
+                str2mat(rc, col_sep=" ", row_sep="/", dtype=np.int16)
             )
             for (fid, bs, rc) in [
                 fg.split(":") for fg in family_data.split(";")

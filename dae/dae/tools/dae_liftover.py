@@ -9,6 +9,8 @@ from typing import cast
 from collections import defaultdict, Counter
 
 from dae.utils.variant_utils import mat2str
+from dae.variants.variant import VariantDetails
+
 from dae.genomic_resources.reference_genome import \
     open_reference_genome_from_resource
 from dae.annotation.annotation_factory import \
@@ -17,20 +19,21 @@ from dae.annotation.annotation_factory import \
 from dae.annotation.annotatable import VCFAllele
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.backends.dae.loader import DenovoLoader
+from dae.backends.dae.loader import DaeTransmittedLoader
 from dae.pedigrees.loader import FamiliesLoader
 
 
-logger = logging.getLogger("denovo_liftover")
+logger = logging.getLogger("dae_liftover")
 
 
-def parse_cli_arguments(argv):
-    parser = argparse.ArgumentParser(description="liftover denovo to hg38")
+def parse_cli_arguments():
+    parser = argparse.ArgumentParser(
+        description="liftover denovo variants to hg38")
 
     parser.add_argument('--verbose', '-V', action='count', default=0)
 
     FamiliesLoader.cli_arguments(parser)
-    DenovoLoader.cli_arguments(parser)
+    DaeTransmittedLoader.cli_arguments(parser)
 
     parser.add_argument(
         "-c", "--chain", help="chain resource id",
@@ -56,11 +59,21 @@ def parse_cli_arguments(argv):
     )
 
     parser.add_argument(
-        "-o", "--output", help="output filename",
-        default="denovo_liftover.txt")
+        "-o", "--output-prefix", help="output filename prefix",
+        default="transmitted")
 
-    argv = parser.parse_args(argv)
-    return argv
+    parser.add_argument(
+        "--regions",
+        type=str,
+        dest="regions",
+        metavar="region",
+        default=None,
+        nargs="+",
+        help="region to convert [default: None] "
+        "ex. chr1:1-10000. "
+    )
+
+    return parser
 
 
 def save_liftover_stats(target_stats, stats_filename):
@@ -125,7 +138,8 @@ def main(argv=sys.argv[1:], gpf_instance=None):
     if gpf_instance is None:
         gpf_instance = GPFInstance()
 
-    argv = parse_cli_arguments(argv)
+    parser = parse_cli_arguments()
+    argv = parser.parse_args(argv)
 
     if argv.verbose == 1:
         logging.basicConfig(level=logging.WARNING)
@@ -153,14 +167,19 @@ def main(argv=sys.argv[1:], gpf_instance=None):
     families = families_loader.load()
 
     variants_filenames, variants_params = \
-        DenovoLoader.parse_cli_arguments(argv)
+        DaeTransmittedLoader.parse_cli_arguments(argv)
 
-    variants_loader = DenovoLoader(
+    variants_loader = DaeTransmittedLoader(
         families,
         variants_filenames,
         params=variants_params,
         genome=source_genome,
     )
+
+    if argv.regions is not None:
+        regions = argv.regions
+        logger.info(f"resetting regions (region): {regions}")
+        variants_loader.reset_regions(regions)
 
     pipeline_config = textwrap.dedent(
         f"""
@@ -203,16 +222,25 @@ def main(argv=sys.argv[1:], gpf_instance=None):
 
     target_stats = defaultdict(Counter)
 
-    with open(argv.output, "wt") as output:
+    with open(f"{argv.output_prefix}.txt", "wt") as output_summary, \
+            open(f"{argv.output_prefix}-TOOMANY.txt", "wt") as output_toomany:
 
-        header = [
-            "chrom38", "pos38", "ref38", "alt38",  # "location38", "variant38",
-            "chrom19", "pos19", "ref19", "alt19",  # "location19", "variant19",
-            "familyId", "bestSt",
+        summary_header = [
+            "chr", "pos", "variant",
+            "familyData",
+            "all.nParCalled", "all.prcntParCalled",
+            "all.nAltAlls", "all.altFreq"
+        ]
+        toomany_header = [
+            "chr", "pos", "variant",
+            "familyData",
         ]
 
-        output.write("\t".join(header))
-        output.write("\n")
+        output_summary.write("\t".join(summary_header))
+        output_summary.write("\n")
+
+        output_toomany.write("\t".join(toomany_header))
+        output_toomany.write("\n")
 
         for sv, fvs in variants_loader.full_variants_iterator():
             assert len(sv.alt_alleles) == 1
@@ -232,24 +260,56 @@ def main(argv=sys.argv[1:], gpf_instance=None):
                 target_stats[source_worst_effect]["no_liftover"] += 1
                 continue
 
+            liftover_cshl_variant = VariantDetails.from_vcf(
+                liftover_annotatable.chrom,
+                liftover_annotatable.pos,
+                liftover_annotatable.ref, liftover_annotatable.alt)
+            
             target_stats[source_worst_effect][target_worst_effect] += 1
 
+            summary_line = [
+                liftover_cshl_variant.chrom,
+                str(liftover_cshl_variant.cshl_position),
+                liftover_cshl_variant.cshl_variant,
+            ]
+            frequency_data = [
+                str(aa.attributes.get("af_parents_called_count", "")),
+                str(aa.attributes.get("af_parents_called_percent", "")),
+                str(aa.attributes.get("af_allele_count", "")),
+                str(aa.attributes.get("af_allele_freq", "")),
+            ]
+            toomany_line = [
+                liftover_cshl_variant.chrom,
+                str(liftover_cshl_variant.cshl_position),
+                liftover_cshl_variant.cshl_variant,
+            ]
+
+            families_data = []
             for fv in fvs:
                 fa = fv.alt_alleles[0]
 
-                line = [
-                    liftover_annotatable.chrom, str(liftover_annotatable.pos),
-                    liftover_annotatable.ref, liftover_annotatable.alt,
-
-                    annotatable.chrom, str(annotatable.pos),
-                    annotatable.ref, annotatable.alt,
-
+                fdata = [
                     fa.family_id,
-                    mat2str(fa.best_state, col_sep=" "),
+                    mat2str(fa.best_state),
+                    mat2str(
+                        fa.family_attributes.get("read_counts"), col_sep=" ")
                 ]
-                output.write("\t".join(line))
-                output.write("\n")
+                families_data.append(":".join(fdata))
 
+            if len(families_data) < 20:
+                summary_line.append(";".join(families_data))
+                summary_line.extend(frequency_data)
+                output_summary.write("\t".join(summary_line))
+                output_summary.write("\n")
+            else:
+                summary_line.append("TOOMANY")
+                summary_line.extend(frequency_data)
+                output_summary.write("\t".join(summary_line))
+                output_summary.write("\n")
+
+                toomany_line.append(";".join(families_data))
+                output_toomany.write("\t".join(toomany_line))
+                output_toomany.write("\n")
 
     save_liftover_stats(target_stats, argv.stats)
 
