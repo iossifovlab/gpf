@@ -94,7 +94,7 @@
           [style.grid-column]="column.gridColumn"
           [style.grid-row]="column.gridRow"
           [style.cursor]="column.sortable ? 'pointer' : 'default'"
-          (click)="column.sortable && sort(column.id, orderBy === 'desc' ? 'asc' : 'desc')"
+          (click)="column.sortable && sort(column.id, column.id === sortBy && orderBy === 'desc' ? 'asc' : 'desc')"
         >
           <div class="header-cell-content"
             [ngClass]="{'header-cell-vertical-content': column.displayVertical}"
@@ -110,7 +110,7 @@
               [id]="column.id"
               class="header-button sorting-button"
               style="pointer-events: none"
-              [hideState]="column.id === sortBy ? -1 : 0"
+              [hideState]="column.id !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1"
             >
             </gpf-sorting-buttons>
             <button
