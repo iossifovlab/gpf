@@ -4,7 +4,8 @@
     type="text"
     [ngModel]="familyIds.familyIds"
     (ngModelChange)="setFamilyIds($event)"
-    class="form-control">
+    class="form-control"
+    spellcheck="false">
   </textarea>
   <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
 </div>

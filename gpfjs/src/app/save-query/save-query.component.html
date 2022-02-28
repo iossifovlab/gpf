@@ -4,7 +4,7 @@
     <form (ngSubmit)="saveUserQuery(nameInput.value, descInput.value)" #queryStorageForm="ngForm" style="margin:10px">
       <div class="form-group">
         <label for="name">Query name</label>
-        <input #nameInput type="text" class="form-control" id="name" required autocomplete="off" maxlength=256 style="width:300px">
+        <input #nameInput type="text" class="form-control" id="name" required autocomplete="off" maxlength=256 style="width:300px" spellcheck="false">
         <div [hidden]="nameInput.value" class="alert alert-danger" style="padding-top:5px;padding-bottom:5px">Query name is required</div>
       </div>
 

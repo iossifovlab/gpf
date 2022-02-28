@@ -5,7 +5,8 @@
     class="form-control"
     type="text"
     [(ngModel)]="regionsFilter.regionsFilter"
-    (ngModelChange)="setRegionsFilter($event)">
+    (ngModelChange)="setRegionsFilter($event)"
+    spellcheck="false">
   </textarea>
 
   <gpf-errors-alert [errors]="errors"></gpf-errors-alert>

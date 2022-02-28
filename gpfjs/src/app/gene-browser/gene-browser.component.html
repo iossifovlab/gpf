@@ -8,6 +8,7 @@
           id="search-box"
           placeholder="Select or start typing to search"
           autocomplete="off"
+          spellcheck="false"
           [(ngModel)]="geneSymbol"
           (keyup)="openDropdown(); searchBoxInput$.next(geneSymbol)"
           (click)="selectGeneSymbol(''); showResults = false"

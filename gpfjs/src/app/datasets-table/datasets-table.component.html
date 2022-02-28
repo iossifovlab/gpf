@@ -29,7 +29,8 @@
                 <input #input
                   class="form-control"
                   [ngbTypeahead]="searchGroups(data.groups)"
-                  container="body"/>
+                  container="body"
+                  spellcheck="false" />
                 <div class="input-group-btn">
                   <button class="btn btn-primary" (click)="updatePermissions(data.dataset, input.value)">Add</button>
                 </div>

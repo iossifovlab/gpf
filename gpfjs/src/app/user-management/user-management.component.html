@@ -18,7 +18,8 @@
                     class="search-input form-control my-0 py-1"
                     type="text"
                     aria-label="Search"
-                    [ngModel]="input$ | async" />
+                    [ngModel]="input$ | async"
+                    spellcheck="false" />
                   <div class="search-placeholder-wrapper" *ngIf="searchBox.value === ''">
                     <span class="search-placeholder-text">Search</span>
                   </div>

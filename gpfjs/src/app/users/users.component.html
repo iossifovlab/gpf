@@ -30,7 +30,8 @@
                 [(ngModel)]="username"
                 [ngClass]="{ 'submitted-email-input': showPasswordField }"
                 type="text"
-                (focus)="back()" />
+                (focus)="back()"
+                spellcheck="false" />
             </div>
           </div>
           <div *ngIf="!showPasswordField" class="col-12">

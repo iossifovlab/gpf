@@ -17,7 +17,7 @@
         <form style="margin: 10px">
           <div class="form-group">
             <label for="groupName">Group name</label>
-            <input #groupInput type="text" class="form-control" id="groupName" required autocomplete="off" maxlength=256 style="width: 300px">
+            <input #groupInput type="text" class="form-control" id="groupName" required autocomplete="off" maxlength=256 style="width: 300px" spellcheck="false">
           </div>
           <button type="submit" class="btn btn-success" (click)="createGroup(groupInput.value)">Add</button>
         </form>

@@ -14,7 +14,8 @@
         name="search"
         [(ngModel)]="searchText"
         (ngModelChange)="filterItems($event)"
-        autocomplete="off" />
+        autocomplete="off"
+        spellcheck="false" />
       <div class="search-placeholder-wrapper" *ngIf="searchInput.value === ''">
         <span class="search-placeholder-text">Search</span>
       </div>
