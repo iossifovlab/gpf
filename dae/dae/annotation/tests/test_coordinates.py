@@ -10,6 +10,7 @@ from dae.variants.variant import SummaryAllele
         ("sub(A->T)", 150013938, 150013938, "A", "T"),
         ("ins(AA)", 150013937, 150013937, "A", "AAA"),
         ("del(1)", 150013937, 150013937, "AA", "A"),
+        ("comp(AA->G)", 150013938, 150013938, "AA", "G"),
     ],
 )
 def test_dae2vcf(

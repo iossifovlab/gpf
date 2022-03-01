@@ -960,42 +960,53 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
                     for summary_line in summary_iterator:
                         rec = dict(zip(summary_columns, summary_line))
+                        try:
+                            summary_variant = \
+                                self._summary_variant_from_dae_record(
+                                    summary_index, rec)
 
-                        summary_variant = \
-                            self._summary_variant_from_dae_record(
-                                summary_index, rec)
+                            family_data = rec["familyData"]
+                            if family_data == "TOOMANY":
+                                toomany_line = next(toomany_iterator)
+                                toomany_rec = dict(zip(
+                                    toomany_columns, toomany_line))
+                                family_data = toomany_rec["familyData"]
 
-                        family_data = rec["familyData"]
-                        if family_data == "TOOMANY":
-                            toomany_line = next(toomany_iterator)
-                            toomany_rec = dict(zip(
-                                toomany_columns, toomany_line))
-                            family_data = toomany_rec["familyData"]
+                                assert rec["cshl_position"] == int(
+                                    toomany_rec["cshl_position"]
+                                )
 
-                            assert rec["cshl_position"] == int(
-                                toomany_rec["cshl_position"]
-                            )
+                            family_data = self._explode_family_data(
+                                family_data)
 
-                        family_data = self._explode_family_data(family_data)
+                            families_genotypes = \
+                                DaeTransmittedFamiliesGenotypes(
+                                    self.families, family_data)
 
-                        families_genotypes = DaeTransmittedFamiliesGenotypes(
-                            self.families, family_data)
+                            family_variants = []
+                            for (fam, bs, rc) in families_genotypes\
+                                    .family_genotype_iterator():
 
-                        family_variants = []
-                        for (fam, bs, rc) in families_genotypes\
-                                .family_genotype_iterator():
+                                fv = FamilyVariant(
+                                    summary_variant, fam, None, bs)
+                                fv.gt, fv._genetic_model = self._calc_genotype(
+                                    fv, self.genome)
+                                for fa in fv.alleles:
+                                    fa.gt = fv.gt
+                                    fa._genetic_model = fv._genetic_model
+                                    fa.update_attributes({"read_counts": rc})
+                                family_variants.append(fv)
 
-                            fv = FamilyVariant(summary_variant, fam, None, bs)
-                            fv.gt, fv._genetic_model = self._calc_genotype(
-                                fv, self.genome)
-                            for fa in fv.alleles:
-                                fa.gt = fv.gt
-                                fa._genetic_model = fv._genetic_model
-                                fa.update_attributes({"read_counts": rc})
-                            family_variants.append(fv)
+                            yield summary_variant, family_variants
+                            summary_index += 1
+                        except:
+                            logger.error(
+                                "unable to process summary line: %s "
+                                "from %s: %s",
+                                summary_line, self.summary_filename,
+                                self.regions,
+                                exc_info=True)
 
-                        yield summary_variant, family_variants
-                        summary_index += 1
             except ValueError as ex:
                 logger.warning(
                     f"could not find region {region} in "

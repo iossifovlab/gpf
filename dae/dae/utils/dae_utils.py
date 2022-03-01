@@ -1,7 +1,7 @@
 import os
 import re
 
-SUB_COMPLEX_RE = re.compile(r"^(sub|complex)\(([NACGT]+)->([NACGT]+)\)$")
+SUB_COMPLEX_RE = re.compile(r"^(sub|complex|comp)\(([NACGT]+)->([NACGT]+)\)$")
 INS_RE = re.compile(r"^ins\(([NACGT]+)\)$")
 DEL_RE = re.compile(r"^del\((\d+)\)$")
 
