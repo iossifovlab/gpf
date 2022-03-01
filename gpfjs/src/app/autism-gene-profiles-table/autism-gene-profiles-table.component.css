@@ -151,13 +151,11 @@
 }
 
 .search-input-wrapper:hover {
-  transition: border-color 0.15s ease-in-out;
   border: 1px solid #c2c8cf;
 }
 
 .search-input-wrapper:focus-within {
   border: 1px solid #83befc;
-  transition: border-color 0.15s ease-in-out;
 }
 
 #gene-search-input {
