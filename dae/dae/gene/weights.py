@@ -1,11 +1,14 @@
 import itertools
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
+from typing import Optional
 
 import numpy as np
 import pandas as pd
 
 from dae.gene.gene_sets_db import cached
 from dae.utils.dae_utils import join_line
+
+from dae.genomic_resources import GenomicResource
 
 
 GeneWeightConfig = namedtuple(
@@ -22,21 +25,23 @@ class GeneWeight:
     in `geneInfo.conf`.
     """
 
-    def __init__(self, section_id, config):
-        self.config = config
+    def __init__(self, weight_id, file, desc, histogram_config, meta=None):
+        self.histogram_config = histogram_config
 
-        self.id = section_id
+        self.id = weight_id
         self.df = None
         self._dict = None
 
         self.genomic_values_col = "gene"
 
-        self.desc = self.config.desc
-        self.bins = self.config.bins
-        self.xscale = self.config.xscale
-        self.yscale = self.config.yscale
-        self.filename = self.config.file
-        self.range = getattr(self.config, "range", None)
+        self.desc = desc
+        self.bins = self.histogram_config["bins"]
+        self.xscale = self.histogram_config["xscale"]
+        self.yscale = self.histogram_config["yscale"]
+        self.file = file
+        self.range = getattr(self.histogram_config, "range", None)
+
+        self.meta = meta
 
         self._load_data()
         self.df.dropna(inplace=True)
@@ -44,14 +49,29 @@ class GeneWeight:
         self.histogram_bins, self.histogram_bars = self._bins_bars()
 
     def _load_data(self):
-        assert self.filename is not None
+        assert self.file is not None
 
-        df = pd.read_csv(self.filename)
+        df = pd.read_csv(self.file)
         assert self.id in df.columns, "{} not found in {}".format(
             self.id, df.columns
         )
         self.df = df[[self.genomic_values_col, self.id]].copy()
         return self.df
+
+    @staticmethod
+    def load_gene_weight_from_resource(
+            resource: Optional[GenomicResource]):
+        assert resource is not None
+        print(resource.get_type())
+        assert resource.get_type() == "gene_weight", "Invalid resource type"
+
+        config = resource.get_config()
+        gene_weight_id = config["id"]
+        file = resource.open_raw_file(config["filename"])
+        histogram_config = config["histogram"]
+        desc = config["desc"]
+        meta = getattr(config, "meta", None)
+        return GeneWeight(gene_weight_id, file, desc, histogram_config, meta)
 
     def values(self):
         return self.df[self.id].values
@@ -147,7 +167,7 @@ class GeneWeight:
         return set(genes.values)
 
 
-class GeneWeightsDb(object):
+class GeneWeightsDb:
     """
     Helper class used to load all defined gene weights.
 
@@ -159,26 +179,6 @@ class GeneWeightsDb(object):
         self.config = config
         self.weights = OrderedDict()
         self._load()
-
-    @staticmethod
-    def load_gene_weight_from_file(
-        filename,
-        bins=150,
-        xscale="linear",
-        yscale="linear",
-        desc=None,
-        range=None,
-    ):
-        config = GeneWeightConfig(
-            id=filename.split(".")[0],
-            file=filename,
-            desc=desc,
-            bins=bins,
-            xscale=xscale,
-            yscale=yscale,
-            range=range,
-        )
-        return GeneWeight(config)
 
     @cached
     def get_gene_weight_ids(self):

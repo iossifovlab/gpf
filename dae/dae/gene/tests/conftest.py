@@ -9,6 +9,9 @@ from dae.gene.denovo_gene_set_collection_factory import (
     DenovoGeneSetCollectionFactory,
 )
 
+from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
+from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+
 from dae.utils.fixtures import path_to_fixtures as _path_to_fixtures
 
 
@@ -132,3 +135,46 @@ def denovo_gene_set_f4(local_gpf_instance):
 @pytest.fixture(scope="session")
 def f4_trio_denovo_gene_set_config(local_gpf_instance):
     return local_gpf_instance.get_genotype_data_config("f4_trio")
+
+
+@pytest.fixture(scope="session")
+def weights_repo():
+    dae_dir = fixtures_dir()
+    with open(
+        os.path.join(dae_dir, "geneInfo", "GeneWeights", "RVIS.csv")
+    ) as f:
+        RVIS_content = f.read()
+    with open(
+        os.path.join(dae_dir, "geneInfo", "GeneWeights", "LGD.csv")
+    ) as f:
+        LGD_content = f.read()
+
+    weights_repo = GenomicResourceEmbededRepo("weights", content={
+        "RVIS_rank": {
+            GR_CONF_FILE_NAME: (
+                "type: gene_weight\n"
+                "id: RVIS_rank\n"
+                "filename: RVIS.csv\n"
+                "desc: RVIS rank\n"
+                "histogram:\n"
+                "  bins: 150\n"
+                "  xscale: linear\n"
+                "  yscale: linear\n"
+            ),
+            "RVIS.csv": RVIS_content
+        },
+        "LGD_rank": {
+            GR_CONF_FILE_NAME: (
+                "type: gene_weight\n"
+                "id: LGD_rank\n"
+                "filename: LGD.csv\n"
+                "desc: LGD rank\n"
+                "histogram:\n"
+                "  bins: 150\n"
+                "  xscale: linear\n"
+                "  yscale: linear\n"
+            ),
+            "LGD.csv": LGD_content
+        }
+    })
+    return weights_repo
