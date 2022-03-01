@@ -11,7 +11,8 @@ from dae.backends.schema2.base_query_director import QueryDirector
 from dae.backends.schema2.family_builder import FamilyQueryBuilder
 from dae.backends.schema2.summary_builder import SummaryQueryBuilder
 from dae.variants.variant import SummaryVariantFactory
-
+from dae.variants.family_variant import FamilyVariant
+import pprint
 logger = logging.getLogger(__name__)
 
 
@@ -146,7 +147,7 @@ class ImpalaVariants:
 
         for row in result:
             try:
-                sv_record = json.loads(row.summary_data) 
+                sv_record = json.loads(row[-1]) 
                 sv = SummaryVariantFactory.summary_variant_from_records(sv_record)            
                 if sv is None:
                     continue
@@ -215,11 +216,13 @@ class ImpalaVariants:
                 end = time.perf_counter()
                 logger.info(f"TIME (IMPALA DB): {end - start}")
 
+
                 for row in cursor:
                     try:
-                        sv_record = json.loads(row.summary_data) 
-                        fv_record = json.loads(row.family_data)
-                
+                        # columns: ..summary_data, family_data 
+                        sv_record = json.loads(row[-2])
+                        fv_record = json.loads(row[-1])
+
                         fv = FamilyVariant(
                             SummaryVariantFactory.summary_variant_from_records(sv_record),
                             self.families[fv_record["family_id"]],

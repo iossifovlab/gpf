@@ -794,7 +794,7 @@ class SummaryVariant:
 
     @property
     def to_record(self):
-        return [allele.to_record for allele in self._alleles]
+        return [allele.to_record for allele in self.alt_alleles]
 
 
 class SummaryVariantFactory(object):
@@ -821,17 +821,24 @@ class SummaryVariantFactory(object):
 
         allele_index = record.get("allele_index")
 
+        # DEBUG 
         chrom = record.get("chrom")
         position = record.get("position")
         end_position = record.get("end_position")
         reference = record.get("reference")
         alternative = record.get("alternative")
-        allele_type = record.get("variant_type")
+        allele_type = record.get("variant_type", None)
+        transmission_type = record.get("transmission_type", TransmissionType.transmitted)
 
         if position is not None and end_position is not None and \
                 reference is None and alternative is None and \
                 allele_type is None:
             allele_type = SummaryAllele.Type.position
+         
+     
+        if allele_type is not None:
+            allele_type = core.Allele.Type(allele_type)
+
 
         return SummaryAllele(
             chrom,
@@ -842,9 +849,9 @@ class SummaryVariantFactory(object):
             end_position=record.get("end_position", None),
             allele_type=allele_type,
             allele_index=allele_index,
-            transmission_type=record.get("transmission_type"),
+            transmission_type=transmission_type,
             attributes=attributes,
-        )
+        ) 
 
     @staticmethod
     def summary_variant_from_records(

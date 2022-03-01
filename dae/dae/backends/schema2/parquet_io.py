@@ -582,9 +582,7 @@ class VariantsParquetWriter:
                 enumerate(self.full_variants_iterator):
 
             # build summary json blob (concat all other alleles) INSIDE summary_variant 
-            summary_blobs_json = json.dumps(
-                    [allele.to_record for allele in summary_variant.alleles],
-                    sort_keys=True) 
+            summary_blobs_json = json.dumps(summary_variant.to_record, sort_keys=True) 
 
             # print("-" * 40, "SUMMARY VARIANT", "-" * 40) 
             # sv_json = json.dumps(summary_variant.to_record, sort_keys=True) 

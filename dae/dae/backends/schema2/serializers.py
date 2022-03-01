@@ -274,6 +274,7 @@ class AlleleParquetSerializer:
         
         for spr in self.FAMILY_SEARCHABLE_PROPERTIES_TYPES:
             prop_value = self._get_searchable_prop_value(allele, spr)
+            
             family_header.append(spr)
             family_properties.append(prop_value) 
 
