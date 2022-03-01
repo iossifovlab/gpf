@@ -1,3 +1,4 @@
+from distutils.command.config import config
 import os
 import math
 import logging
@@ -50,14 +51,6 @@ def get_pheno_browser_images_dir(dae_config=None):
     )
     browser_images_path = os.path.join(pheno_db_dir, "images")
     return browser_images_path
-
-
-def get_pheno_base_url():
-    url_prefix = ""
-    gpf_prefix = os.environ.get("GPF_PREFIX")
-    if gpf_prefix is not None:
-        url_prefix = f"/{gpf_prefix}"
-    return f"{url_prefix}/static/images/"
 
 
 class Instrument(object):
@@ -518,11 +511,15 @@ class PhenotypeStudy(PhenotypeData):
     * `measures` -- dictionary of all measures
     """
 
-    def __init__(self, pheno_id: str, dbfile: str, browser_dbfile: str = None):
+    def __init__(
+            self, pheno_id: str, dbfile: str, browser_dbfile: str = None,
+            config:Dict[str, str] = None):
+
         super(PhenotypeStudy, self).__init__(pheno_id)
 
         self.families = None
         self.db = DbManager(dbfile=dbfile, browser_dbfile=browser_dbfile)
+        self.config = config
         self.db.build()
         self._load()
 
@@ -938,9 +935,12 @@ class PhenotypeStudy(PhenotypeData):
     def get_regressions(self):
         return self.db.regression_display_names_with_ids
 
+    def _get_pheno_images_base_url(self):
+        return self.config.get("browser_images_url")
+
     def get_measures_info(self):
         return {
-            "base_image_url": get_pheno_base_url(),
+            "base_image_url": self._get_pheno_images_base_url(),
             "has_descriptions": self.db.has_descriptions,
             "regression_names": self.db.regression_display_names,
         }
@@ -971,7 +971,9 @@ class PhenotypeStudy(PhenotypeData):
 
 class PhenotypeGroup(PhenotypeData):
 
-    def __init__(self, pheno_id: str, phenotype_data: Iterable[PhenotypeData]):
+    def __init__(
+            self, pheno_id: str, phenotype_data: Iterable[PhenotypeData],
+            config=None):
         super(PhenotypeGroup, self).__init__(pheno_id)
         self.phenotype_datas = phenotype_data
         self.families = FamiliesData.combine_studies(self.phenotype_datas)
@@ -980,6 +982,7 @@ class PhenotypeGroup(PhenotypeData):
         self._instruments.update(instruments)
 
         self._measures.update(measures)
+        self.config = config
 
     @staticmethod
     def _merge_instruments(
@@ -1130,7 +1133,7 @@ class PhenotypeGroup(PhenotypeData):
 
     def get_measures_info(self):
         result = {
-            "base_image_url": get_pheno_base_url(),
+            "base_image_url": "",
             "has_descriptions": False,
             "regression_names": dict()
         }
@@ -1199,13 +1202,15 @@ class PhenoDb(object):
                     self.get_phenotype_data(ps_id)
                     for ps_id in config.phenotype_data_list
                 ]
-                phenotype_data = PhenotypeGroup(pheno_id, phenotype_studies)
+                phenotype_data = PhenotypeGroup(
+                    pheno_id, phenotype_studies, config)
             else:
                 logger.info(f"loading pheno db <{pheno_id}>")
                 phenotype_data = PhenotypeStudy(
                     pheno_id,
                     dbfile=self.get_dbfile(pheno_id),
-                    browser_dbfile=self.get_browser_dbfile(pheno_id)
+                    browser_dbfile=self.get_browser_dbfile(pheno_id),
+                    config=config
                 )
             self.pheno_cache[pheno_id] = phenotype_data
         return phenotype_data
