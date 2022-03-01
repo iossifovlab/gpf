@@ -636,8 +636,8 @@ class FamiliesData(Mapping):
     def __len__(self) -> int:
         return len(self._families)
 
-    def __iter__(self) -> Iterator[Family]:
-        return iter(self._families.values())
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._families.keys())
 
     def __contains__(self, family_id) -> bool:
         return family_id in self._families
