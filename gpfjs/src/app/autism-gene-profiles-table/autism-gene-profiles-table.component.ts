@@ -361,9 +361,9 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     if (navigateToTab) {
-      // /* navigating to another tab does not guarantee the scroll position
-      //  * will remain the same, so we reset it and update the shownGenes indices */
-      // window.scrollTo(0, 0);
+      /* navigating to another tab does not guarantee the scroll position
+       * will remain the same, so we reset it and update the shownGenes indices */
+      window.scrollTo(0, 0);
       this.updateShownGenes(0, this.viewportPageCount * this.config.pageSize);
     }
 
