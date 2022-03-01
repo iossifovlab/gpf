@@ -127,6 +127,7 @@
 .column-filtering-button {
   min-width: 35px;
   user-select: none;
+  outline: none;
 }
 
 #category-filtering-button {
