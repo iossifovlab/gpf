@@ -164,8 +164,9 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     // Important to match the values in the .table-row css
     const columnWidth = 110;
     const geneColumnWidth = 150;
+    const headerPadding = 25;
 
-    return ((Column.leaves(this.config.columns).length - 1) * columnWidth) + geneColumnWidth;
+    return ((Column.leaves(this.config.columns).length - 1) * columnWidth) + geneColumnWidth + headerPadding;
   }
 
   private fillTable() {
@@ -280,9 +281,9 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
       + leftOffset;
 
     const viewWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
-    const extraRightSpace = 23;
+    const extraRightSpace = 48;
 
-    if (leftPosition + modalWidth < viewWidth + extraRightSpace) {
+    if (leftPosition + modalWidth < viewWidth - extraRightSpace) {
       this.modalPosition.left = leftPosition;
     } else {
       this.modalPosition.left = viewWidth - modalWidth - extraRightSpace;

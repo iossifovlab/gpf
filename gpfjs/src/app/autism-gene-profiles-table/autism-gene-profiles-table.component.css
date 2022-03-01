@@ -31,10 +31,10 @@
 }
 
 #header {
-  border-top: 1px solid #ddd;
   position: sticky;
   top: 54px;
   font-weight: bold;
+  padding-right: 25px;
 }
 
 .cell {
@@ -71,6 +71,7 @@
   line-height: 35px;
   align-items: flex-end;
   position: relative;
+  border-top: 1px solid #ddd;
 }
 
 .header-cell-content-span {
