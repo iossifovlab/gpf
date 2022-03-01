@@ -302,3 +302,7 @@
   border: 1px solid rgba(126, 126, 126, 41.2%);
   padding: 0 5px;
 }
+
+.multiple-select-menu {
+  margin: 0;
+}

@@ -6,12 +6,9 @@
   box-shadow: inset 0 -1px 0 #ddd;
 }
 
-tr {
-  background-color: #fff;
-}
-
 label {
   border: 1px solid #dedede;
+  background-color: #fff;
 }
 
 .cdk-drag-placeholder {
@@ -19,7 +16,7 @@ label {
 }
 
 tr > td {
-  padding-bottom: 8px;
+  padding-top: 8px;
 }
 
 #check-uncheck-all-button {

@@ -1,5 +1,5 @@
 <div style="padding: 10px; min-width: 400px; display: grid;">
-  <div style="width: 100%; padding-bottom: 5px">
+  <div style="width: 100%">
     <button
       id="check-uncheck-all-button"
       type="button"
@@ -28,10 +28,11 @@
   </div>
 
   <table cdkDropList (cdkDropListDropped)="drop($event)">
-    <tr cdkDrag *ngFor="let column of filteredColumns" style="height: 30px">
+    <tr *ngFor="let column of filteredColumns" style="height: 30px">
       <td>
-        <label
-          style="width: 100%; padding-top: 4px; padding-bottom: 2px; padding-left: 6px">
+        <label 
+          cdkDrag
+          style="width: 100%; padding-top: 4px; padding-bottom: 4px; padding-left: 6px">
           <input type="checkbox"
             [checked]="column.visibility"
             (change)="toggleItem(column, $event)"
