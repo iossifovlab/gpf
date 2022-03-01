@@ -223,7 +223,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
     this.ngbDropdownMenu.dropdown.toggle();
     this.clickedColumnFilteringButton = $event.target;
-    this.updateModalPosition(0, -9);
+    this.updateModalPosition(0, -11);
     this.multipleSelectMenuComponent.columns = this.config.columns.filter(col => col.id !== this.geneSymbolColumnId);
     this.multipleSelectMenuComponent.refresh();
   }
