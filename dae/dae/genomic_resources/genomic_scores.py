@@ -402,9 +402,9 @@ def _configure_score_columns(table, config, ):
         scr_def.value_parser = type_parsers[scr_def.type]
 
         default_na_values = {
-            "str": [],
-            "float": ["", 'nan', '.'],
-            "int": ["", 'nan', '.']
+            "str": {},
+            "float": {"", "nan", ".", "NA",},
+            "int": {"", "nan", ".", "NA"}
         }
 
         scr_def.na_values = score_conf.get(
