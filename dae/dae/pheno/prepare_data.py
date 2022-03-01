@@ -8,7 +8,7 @@ import matplotlib as mpl
 
 import numpy as np
 
-from dae.pheno.pheno_db import Measure
+from dae.pheno.pheno_db import Measure, get_pheno_browser_images_dir
 
 import matplotlib.pyplot as plt
 
@@ -20,11 +20,10 @@ from dae.pheno.graphs import draw_measure_violinplot
 from dae.pheno.graphs import draw_categorical_violin_distribution
 from dae.pheno.graphs import draw_ordinal_violin_distribution
 from dae.utils.progress import progress, progress_nl
-from dae.utils.dae_utils import get_pheno_browser_images_dir
 
 
-mpl.use("PS")  # noqa
-plt.ioff()  # noqa
+mpl.use("PS")
+plt.ioff()  # type: ignore
 
 
 class PreparePhenoBrowserBase(object):

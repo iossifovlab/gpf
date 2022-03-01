@@ -1,6 +1,6 @@
 # Django settings for wdae project.
 import os
-from dae.utils.dae_utils import get_pheno_browser_images_dir
+from dae.pheno.pheno_db import get_pheno_browser_images_dir
 
 DEBUG = True
 

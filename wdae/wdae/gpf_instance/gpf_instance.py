@@ -18,7 +18,6 @@ from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.event_counters import CounterBase
 from enrichment_api.enrichment_builder import \
     EnrichmentBuilder, RemoteEnrichmentBuilder
-from dae.utils.dae_utils import get_pheno_browser_images_dir
 
 
 logger = logging.getLogger(__name__)

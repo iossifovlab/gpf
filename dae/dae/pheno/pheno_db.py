@@ -1,3 +1,4 @@
+import os
 import math
 import logging
 from typing import Dict, Iterable, Any, List, cast
@@ -17,7 +18,6 @@ from dae.pheno.db import DbManager
 from dae.pheno.common import MeasureType
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
-from dae.utils.dae_utils import get_pheno_db_dir, get_pheno_base_url
 from itertools import chain
 
 from dae.variants.attributes import Sex, Status, Role
@@ -27,6 +27,37 @@ from typing import Optional, Sequence, Union
 
 
 logger = logging.getLogger(__name__)
+
+
+def get_pheno_db_dir(dae_config):
+    if dae_config is not None:
+        if dae_config.phenotype_data is None or \
+                dae_config.phenotype_data.dir is None:
+            pheno_data_dir = os.path.join(
+                dae_config.conf_dir, "pheno")
+        else:
+            pheno_data_dir = dae_config.phenotype_data.dir
+    else:
+        pheno_data_dir = os.path.join(os.environ.get("DAE_DB_DIR"), "pheno")
+
+    return pheno_data_dir
+
+
+def get_pheno_browser_images_dir(dae_config=None):
+    pheno_db_dir = os.environ.get(
+        "DAE_PHENODB_DIR",
+        get_pheno_db_dir(dae_config)
+    )
+    browser_images_path = os.path.join(pheno_db_dir, "images")
+    return browser_images_path
+
+
+def get_pheno_base_url():
+    url_prefix = ""
+    gpf_prefix = os.environ.get("GPF_PREFIX")
+    if gpf_prefix is not None:
+        url_prefix = f"/{gpf_prefix}"
+    return f"{url_prefix}/static/images/"
 
 
 class Instrument(object):
