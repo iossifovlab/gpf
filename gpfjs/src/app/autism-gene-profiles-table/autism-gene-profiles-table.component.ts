@@ -258,12 +258,12 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
     this.ngbDropdownMenu.dropdown.toggle();
     this.clickedColumnFilteringButton = $event.target;
-    this.updateModalPosition(1, -9);
+    this.updateModalPosition(0, -9);
     this.multipleSelectMenuComponent.columns = this.config.columns.filter(col => col.id !== this.geneSymbolColumnId);
     this.multipleSelectMenuComponent.refresh();
   }
 
-  public updateModalPosition(leftOffset = 6, topOffset = 5): void {
+  public updateModalPosition(leftOffset = 6, topOffset = 3): void {
     if (!this.ngbDropdownMenu.dropdown._open) {
       return;
     }
@@ -274,17 +274,18 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
       + buttonHeight
       - topOffset;
 
-    const leftCap = 17;
     const modalWidth = 400;
     const leftPosition =
-      this.clickedColumnFilteringButton.getBoundingClientRect().right
-      - modalWidth
-      - leftOffset;
+      this.clickedColumnFilteringButton.getBoundingClientRect().left
+      + leftOffset;
 
-    if (leftPosition > leftCap) {
+    const viewWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
+    const extraRightSpace = 23;
+
+    if (leftPosition + modalWidth < viewWidth + extraRightSpace) {
       this.modalPosition.left = leftPosition;
     } else {
-      this.modalPosition.left = leftCap;
+      this.modalPosition.left = viewWidth - modalWidth - extraRightSpace;
     }
   }
 
@@ -359,9 +360,9 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     if (navigateToTab) {
-      /* navigating to another tab does not guarantee the scroll position
-       * will remain the same, so we reset it and update the shownGenes indices */
-      window.scrollTo(0, 0);
+      // /* navigating to another tab does not guarantee the scroll position
+      //  * will remain the same, so we reset it and update the shownGenes indices */
+      // window.scrollTo(0, 0);
       this.updateShownGenes(0, this.viewportPageCount * this.config.pageSize);
     }
 
