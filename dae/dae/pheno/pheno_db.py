@@ -1,7 +1,6 @@
-import os
 import math
 import logging
-from typing import Dict, Iterable, Any, List
+from typing import Dict, Iterable, Any, List, cast
 from abc import ABC, abstractmethod
 
 import pandas as pd
@@ -75,7 +74,8 @@ class Measure(object):
 
     """
 
-    def __init__(self, name: str):
+    def __init__(self, measure_id: str, name: str):
+        self.measure_id = measure_id
         self.name: str = name
         self.measure_name: str = name
         self.measure_type: MeasureType = MeasureType.other
@@ -113,8 +113,7 @@ class Measure(object):
         """
         assert row["measure_type"] is not None
 
-        m = Measure(row["measure_name"])
-        m.measure_id = row["measure_id"]
+        m = Measure(row["measure_id"], row["measure_name"])
         m.instrument_name = row["instrument_name"]
         m.measure_name = row["measure_name"]
         m.measure_type = row["measure_type"]
@@ -134,8 +133,7 @@ class Measure(object):
         """
         assert json["measureType"] is not None
 
-        m = Measure(json["measureName"])
-        m.measure_id = json["measureId"]
+        m = Measure(json["measureId"], json["measureName"])
         m.instrument_name = json["instrumentName"]
         m.measure_name = json["measureName"]
         m.measure_type = MeasureType.from_str(json["measureType"])
@@ -194,16 +192,16 @@ class PhenotypeData(ABC):
 
     @abstractmethod
     def get_persons_df(
-            self, roles: Optional[Iterable[Role]] = None,
-            person_ids: Optional[Iterable[str]] = None,
-            family_ids: Optional[Iterable[str]] = None) -> pd.DataFrame:
+            self, roles: Optional[List[Role]] = None,
+            person_ids: Optional[List[str]] = None,
+            family_ids: Optional[List[str]] = None) -> pd.DataFrame:
         pass
 
     def get_persons(
             self,
-            roles: Optional[Iterable[Role]] = None,
-            person_ids: Optional[Iterable[str]] = None,
-            family_ids: Optional[Iterable[str]] = None) -> Dict[str, Person]:
+            roles: Optional[List[Role]] = None,
+            person_ids: Optional[List[str]] = None,
+            family_ids: Optional[List[str]] = None) -> Dict[str, Person]:
 
         """Returns individuals data from phenotype database.
 
@@ -406,9 +404,9 @@ class PhenotypeData(ABC):
     def get_persons_values_df(
             self,
             measure_ids: Iterable[str],
-            person_ids: Optional[Iterable[str]] = None,
-            family_ids: Optional[Iterable[str]] = None,
-            roles: Optional[Iterable[Role]] = None,
+            person_ids: Optional[List[str]] = None,
+            family_ids: Optional[List[str]] = None,
+            roles: Optional[List[Role]] = None,
             default_filter: str = "apply") -> pd.DataFrame:
         """
         Returns a data frame with values for all measures in `measure_ids`
@@ -424,11 +422,11 @@ class PhenotypeData(ABC):
             roles=roles,
             default_filter=default_filter)
 
-        df = persons_df.join(
+        df = cast(pd.DataFrame, persons_df.join(
             value_df.set_index("person_id"),
             on="person_id",
             how="right",
-            rsuffix="_val")
+            rsuffix="_val"))  # type: ignore
         df = df.set_index("person_id")
         df = df.reset_index()
 
@@ -955,8 +953,8 @@ class PhenotypeGroup(PhenotypeData):
     @staticmethod
     def _merge_instruments(
             phenos_instruments: Iterable[Dict[str, Instrument]]):
-        group_instruments = {}
-        group_measures = {}
+        group_instruments: Dict[str, Instrument] = {}
+        group_measures: Dict[str, Measure] = {}
 
         for pheno_instruments in phenos_instruments:
             for instrument_name, instrument in pheno_instruments.items():
@@ -1015,9 +1013,9 @@ class PhenotypeGroup(PhenotypeData):
         return group_instruments, group_measures
 
     def get_persons_df(
-            self, roles: Optional[Iterable[Role]] = None,
-            person_ids: Optional[Iterable[str]] = None,
-            family_ids: Optional[Iterable[str]] = None) -> pd.DataFrame:
+            self, roles: Optional[List[Role]] = None,
+            person_ids: Optional[List[str]] = None,
+            family_ids: Optional[List[str]] = None) -> pd.DataFrame:
 
         ped_df = self.families.ped_df[[
             "person_id", "family_id", "role", "sex", "status"]]
@@ -1084,12 +1082,12 @@ class PhenotypeGroup(PhenotypeData):
 
         res_df = dfs[0]
         for i, df in enumerate(dfs[1:]):
-            res_df = res_df.join(
+            res_df = cast(pd.DataFrame, res_df.join(
                 df.set_index("person_id"),
                 on="person_id",
                 how="outer",
                 rsuffix="_val_{}".format(i),
-            )
+            ))  # type: ignore
 
         return res_df
 

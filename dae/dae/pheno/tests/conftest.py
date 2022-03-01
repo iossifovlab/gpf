@@ -4,7 +4,7 @@ import os
 import pandas as pd
 import tempfile
 import shutil
-from box import Box
+from box import Box  # type: ignore
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema

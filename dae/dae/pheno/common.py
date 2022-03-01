@@ -1,10 +1,5 @@
-"""
-Created on May 24, 2017
-
-@author: lubo
-"""
 import enum
-from box import Box
+from box import Box  # type: ignore
 from pprint import pprint
 from collections import OrderedDict
 from copy import deepcopy

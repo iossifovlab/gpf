@@ -1,7 +1,7 @@
 import numpy as np
-import scipy as sp
-from sklearn.linear_model import LinearRegression as LinearRegressionSK
-from scipy.stats import t
+import scipy as sp  # type: ignore
+from sklearn.linear_model import LinearRegression as LinearRegressionSK  # type: ignore
+from scipy.stats import t  # type: ignore
 
 
 class LinearRegression(LinearRegressionSK):

@@ -6,7 +6,7 @@ from collections import defaultdict, OrderedDict
 import numpy as np
 import pandas as pd
 from multiprocessing import Pool
-from box import Box
+from box import Box  # type: ignore
 
 from dae.pheno.db import DbManager
 from dae.pheno.common import RoleMapping, MeasureType
