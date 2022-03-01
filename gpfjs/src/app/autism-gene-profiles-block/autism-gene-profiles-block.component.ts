@@ -92,11 +92,11 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   public goToQueryEventHandler($event: { geneSymbol: string; statisticId: string }): void {
     const tokens: string[] = $event.statisticId.split('.');
-    const datasetId = tokens[1];
+    const datasetId = tokens[0];
     const personSet = this.agpSingleViewConfig.datasets
       .find(ds => ds.id === datasetId).personSets
-      .find(ps => ps.id === tokens[2]);
-    const statistic = personSet.statistics.find(st => st.id === tokens[3]);
+      .find(ps => ps.id === tokens[1]);
+    const statistic = personSet.statistics.find(st => st.id === tokens[2]);
     AutismGeneProfileSingleViewComponent.goToQuery(this.store, this.queryService, $event.geneSymbol, personSet, datasetId, statistic);
   }
 
