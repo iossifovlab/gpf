@@ -1,6 +1,6 @@
 import { 
   Component, ElementRef, EventEmitter, HostListener, Input, OnChanges,
-  OnDestroy, OnInit, Output, Renderer2,ViewChild, ViewChildren
+  OnDestroy, OnInit, Output, ViewChild, ViewChildren
 } from '@angular/core';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
@@ -27,10 +27,6 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild('dropdownSpan') public dropdownSpan: ElementRef;
   @ViewChild(MultipleSelectMenuComponent) public multipleSelectMenuComponent: MultipleSelectMenuComponent;
   @ViewChildren(SortingButtonsComponent) public sortingButtonsComponents: SortingButtonsComponent[];
-
-  @ViewChild('header') public header: ElementRef;
-  @ViewChild('nothingFound') public nothingFound: ElementRef;
-  @ViewChild('aboveTableBar') public aboveTableBar: ElementRef;
 
   private clickedColumnFilteringButton;
   public modalPosition = {top: 0, left: 0};
@@ -61,12 +57,10 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   public constructor(
     private autismGeneProfilesService: AgpTableService,
-    private tableComponentRef: ElementRef,
-    private renderer: Renderer2,
+    private tableComponentRef: ElementRef
   ) { }
 
   public ngOnInit(): void {
-    this.setNothingFoundAndAboveTableBarWidth();
     this.defaultSortBy = this.sortBy;
 
     this.keystrokeSubscription = this.searchKeystrokes$.pipe(
@@ -141,34 +135,6 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     this.ngbDropdownMenu.dropdown.close();
   }
 
-  private async waitForHeaderToLoad(): Promise<void> {
-    return new Promise<void>(resolve => {
-      const timer = setInterval(() => {
-        if (this.header.nativeElement.offsetWidth === this.calculateHeaderWidth()) {
-          resolve();
-          clearInterval(timer);
-        }
-      }, 100);
-    });
-  }
-
-  public setNothingFoundAndAboveTableBarWidth(): void {
-    this.waitForHeaderToLoad().then(() => {
-      const headerWidth = this.calculateHeaderWidth() + 'px';
-      this.renderer.setStyle(this.nothingFound.nativeElement, 'width', headerWidth);
-      this.renderer.setStyle(this.aboveTableBar.nativeElement, 'width', headerWidth);
-    });
-  }
-
-  private calculateHeaderWidth(): number {
-    // Important to match the values in the .table-row css
-    const columnWidth = 110;
-    const geneColumnWidth = 150;
-    const headerPadding = 25;
-
-    return ((Column.leaves(this.config.columns).length - 1) * columnWidth) + geneColumnWidth + headerPadding;
-  }
-
   private fillTable() {
     const agpRequests = [];
     this.genes = [];
@@ -210,8 +176,6 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     for (const column of this.config.columns) {
       Column.calculateGridColumn(column);
     }
-
-    this.setNothingFoundAndAboveTableBarWidth();
   }
 
   public search(value: string): void {

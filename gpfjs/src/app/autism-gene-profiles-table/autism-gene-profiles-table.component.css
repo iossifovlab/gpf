@@ -6,6 +6,10 @@
   grid-template-columns: 150px; /* Set 150px to first column (gene symbol), rest are 110px */
 }
 
+.table-body-row {
+  height: 35px;
+}
+
 .table-body-row:nth-child(odd) {
   background-color: #fafafa;
 }
@@ -26,15 +30,16 @@
   background-color: #e4e9d7 !important;
 }
 
-.table-body-row {
-  height: 35px;
-}
-
 #header {
   position: sticky;
-  top: 54px;
   font-weight: bold;
   padding-right: 25px;
+}
+
+#table-top {
+  display: grid;
+  top: 0;
+  position: sticky;
 }
 
 .cell {
@@ -226,22 +231,29 @@
   padding-bottom: 10px;
 }
 
-#nothing-found,
 #loading {
   display: table;
   height: 44px;
 }
 
+#loading span {
+  display: table-cell;
+  vertical-align: middle;
+}
+
 #nothing-found {
   background-color: #fafafa;
   border-bottom: 1px solid #ddd;
+  height: 43px;
 }
 
-#nothing-found span,
-#loading span {
+#nothing-found span {
+  line-height: 43px;
+}
+
+#loading span,
+#nothing-found span {
   font-style: italic;
-  display: table-cell;
-  vertical-align: middle;
   padding-left: 12px;
   opacity: 75%;
 }
@@ -250,7 +262,6 @@
   display: flex;
   justify-content: flex-start;
   position: sticky;
-  top: 0;
   padding: 7px 0;
   background: #fff;
   align-items: center;
