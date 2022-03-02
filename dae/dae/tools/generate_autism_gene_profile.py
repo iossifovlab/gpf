@@ -3,6 +3,7 @@ import os
 import time
 import argparse
 import logging
+import itertools
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.autism_gene_profile.statistic import AGPStatistic
@@ -311,6 +312,12 @@ def main(gpf_instance=None, argv=None):
     person_ids = dict()
     for dataset_id, filters in config.datasets.items():
         genotype_data = gpf_instance.get_genotype_data(dataset_id)
+        genotype_data_children = {
+            p.person_id 
+            for p in itertools.chain(
+                    genotype_data.families.persons_with_parents(),
+                    genotype_data.families.persons_with_roles(["prb", "sib", "child"]))
+        }
         assert genotype_data is not None, dataset_id
         person_ids[dataset_id] = dict()
         for ps in filters.person_sets:
@@ -318,10 +325,14 @@ def main(gpf_instance=None, argv=None):
                 ps.collection_name,
                 [ps.set_name]
             )
-            person_ids[dataset_id][ps.set_name] = \
+            person_set = \
                 genotype_data._transform_person_set_collection_query(
                     person_set_query, None
                 )
+            children_person_set = person_set & genotype_data_children
+
+            person_ids[dataset_id][ps.set_name] = children_person_set
+                
         for stat in filters.statistics:
             if stat.category == "denovo":
                 has_denovo = True
