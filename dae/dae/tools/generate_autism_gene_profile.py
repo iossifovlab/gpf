@@ -275,9 +275,6 @@ def main(gpf_instance=None, argv=None):
         gpf_instance = GPFInstance()
 
     config = gpf_instance._autism_gene_profile_config
-
-    # gpf_instance.gene_sets_db.get_all_gene_sets("main")
-
     collections_gene_sets = []
 
     for gs_category in config.gene_sets:
@@ -294,15 +291,8 @@ def main(gpf_instance=None, argv=None):
                 )
             )
 
-    # collections_gene_sets = []
-    # for name in config.gene_sets:
-    #     gene_set = gpf_instance.gene_sets_db.get_gene_set("main", name)
-    #     collections_gene_sets.append(gene_set)
     logger.info(f"collected gene sets: {len(collections_gene_sets)}")
 
-    # gene_sets = list(
-    #     filter(lambda gs: gs["name"] in config.gene_sets, gene_sets)
-    # )
     gene_symbols = set()
     if args.genes:
         gene_symbols = [gs.strip() for gs in args.genes.split(",")]
@@ -315,6 +305,7 @@ def main(gpf_instance=None, argv=None):
         gene_symbols = set(gene_models.gene_names())
     gs_count = len(gene_symbols)
     logger.info(f"Collected {gs_count} gene symbols")
+
     has_denovo = False
     has_rare = False
     person_ids = dict()
