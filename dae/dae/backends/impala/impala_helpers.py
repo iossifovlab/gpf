@@ -6,7 +6,7 @@ import logging
 
 from contextlib import closing
 
-from impala import dbapi
+from impala import dbapi  # type: ignore
 from sqlalchemy.pool import QueuePool
 
 

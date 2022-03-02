@@ -316,7 +316,8 @@ def main(gpf_instance=None, argv=None):
             p.person_id 
             for p in itertools.chain(
                     genotype_data.families.persons_with_parents(),
-                    genotype_data.families.persons_with_roles(["prb", "sib", "child"]))
+                    genotype_data.families.persons_with_roles(
+                        ["prb", "sib", "child"]))
         }
         assert genotype_data is not None, dataset_id
         person_ids[dataset_id] = dict()

@@ -5,11 +5,8 @@ import time
 from contextlib import closing
 from typing import Dict, Any
 
-import pyarrow as pa
-
-# from dae.utils.debug_closing import closing
-
-from impala.util import as_pandas
+import pyarrow as pa  # type: ignore
+from impala.util import as_pandas  # type: ignore
 
 from dae.backends.raw.raw_variants import RawFamilyVariants
 
