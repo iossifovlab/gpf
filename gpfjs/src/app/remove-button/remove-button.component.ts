@@ -1,6 +1,5 @@
-import { Component, Input, Output } from '@angular/core';
+import { Component, Input, OnInit, Output } from '@angular/core';
 import { EventEmitter } from '@angular/core';
-
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -8,18 +7,16 @@ import { environment } from '../../environments/environment';
   templateUrl: './remove-button.component.html',
   styleUrls: ['./remove-button.component.css']
 })
-export class RemoveButtonComponent {
-  @Input() field: any;
-  @Output() removeFilter: EventEmitter<any> = new EventEmitter(true);
+export class RemoveButtonComponent implements OnInit {
+  @Input() public field: any;
+  @Output() public removeFilter: EventEmitter<any> = new EventEmitter(true);
+  public imgPathPrefix: string;
 
-  get imgPathPrefix() {
-    return environment.imgPathPrefix;
+  public ngOnInit(): void {
+    this.imgPathPrefix = environment.imgPathPrefix;
   }
 
-  remove() {
+  public remove(): void {
     this.removeFilter.emit(this.field);
   }
-
-  constructor() { }
-
 }
