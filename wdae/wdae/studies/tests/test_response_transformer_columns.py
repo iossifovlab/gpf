@@ -14,7 +14,8 @@ def test_special_attrs_formatting(fixtures_wgpf_instance):
         genotype_data.config, genotype_data.download_columns
     )
     vs = genotype_data.query_variants_wdae({}, download_sources)
-    row = list(vs)[0]
+    vs = list(vs)
+    row = vs[0]
     assert row == [
         ["f1"],
         ["f1_study"],

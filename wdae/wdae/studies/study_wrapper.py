@@ -368,6 +368,9 @@ class StudyWrapper(StudyWrapperBase):
         try:
             variants_result = \
                 self.genotype_data_study.query_result_variants(**kwargs)
+            if variants_result is None:
+                return
+
             variants_result.start()
 
             with closing(variants_result) as variants:
