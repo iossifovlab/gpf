@@ -8,7 +8,7 @@
   >
   <div id="share-query-dropdown" ngbDropdownMenu aria-labelledby="share-query-dropdown-button">
     <div class="input-group" style="flex-wrap: nowrap;">
-      <input #link type="disabled" value="{{ url }}" width="400px" spellcheck="false" />
+      <input #link type="disabled" (click)="link.select()" value="{{ url }}" width="400px" spellcheck="false" />
       <span class="input-group-btn">
         <button class="btn btn-secondary" (click)="copyToClipboard(link)">{{ buttonValue }}</button>
       </span>
