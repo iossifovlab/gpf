@@ -192,9 +192,9 @@ class GenotypeData(ABC):
 
             if person_set_collection is not None:
                 collection_id, _ = person_set_collection
-                collection_config = genotype_study.config.person_set_collections.get(
-                    collection_id
-                )
+                collection_config = \
+                    genotype_study.config.person_set_collections.get(
+                        collection_id)
                 only_pedigree_sources = True
                 for src in collection_config.sources:
                     if src["from"] != "pedigree":
@@ -214,9 +214,9 @@ class GenotypeData(ABC):
                             len(pedigree_fields) == 0:
                         continue
                 else:
-                    person_ids = genotype_study._transform_person_set_collection_query(
-                        person_set_collection, person_ids
-                    )
+                    person_ids = \
+                        genotype_study._transform_person_set_collection_query(
+                            person_set_collection, person_ids)
 
             if person_ids is not None and len(person_ids) == 0:
                 continue
@@ -526,7 +526,6 @@ class GenotypeData(ABC):
                 self.person_set_collection_configs[collection_id] = \
                     collection_conf
 
-
     def _transform_person_set_collection_query(self, collection, person_ids):
         if collection is not None:
             collection_id, selected_sets = collection
@@ -671,7 +670,7 @@ class GenotypeDataStudy(GenotypeData):
 
             ps = sets[ps_id]
             pedigree_fields[ps_id] = {
-                "values": [val for val in ps.get("values",["unspecified"])],
+                "values": [val for val in ps.get("values", ["unspecified"])],
                 "sources": [src.source for src in collection_config.sources]
             }
 
