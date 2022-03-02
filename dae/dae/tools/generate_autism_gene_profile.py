@@ -3,6 +3,7 @@ import os
 import time
 import argparse
 import logging
+import itertools
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.autism_gene_profile.statistic import AGPStatistic
@@ -275,9 +276,6 @@ def main(gpf_instance=None, argv=None):
         gpf_instance = GPFInstance()
 
     config = gpf_instance._autism_gene_profile_config
-
-    # gpf_instance.gene_sets_db.get_all_gene_sets("main")
-
     collections_gene_sets = []
 
     for gs_category in config.gene_sets:
@@ -294,15 +292,8 @@ def main(gpf_instance=None, argv=None):
                 )
             )
 
-    # collections_gene_sets = []
-    # for name in config.gene_sets:
-    #     gene_set = gpf_instance.gene_sets_db.get_gene_set("main", name)
-    #     collections_gene_sets.append(gene_set)
     logger.info(f"collected gene sets: {len(collections_gene_sets)}")
 
-    # gene_sets = list(
-    #     filter(lambda gs: gs["name"] in config.gene_sets, gene_sets)
-    # )
     gene_symbols = set()
     if args.genes:
         gene_symbols = [gs.strip() for gs in args.genes.split(",")]
@@ -315,11 +306,18 @@ def main(gpf_instance=None, argv=None):
         gene_symbols = set(gene_models.gene_names())
     gs_count = len(gene_symbols)
     logger.info(f"Collected {gs_count} gene symbols")
+
     has_denovo = False
     has_rare = False
     person_ids = dict()
     for dataset_id, filters in config.datasets.items():
         genotype_data = gpf_instance.get_genotype_data(dataset_id)
+        genotype_data_children = {
+            p.person_id 
+            for p in itertools.chain(
+                    genotype_data.families.persons_with_parents(),
+                    genotype_data.families.persons_with_roles(["prb", "sib", "child"]))
+        }
         assert genotype_data is not None, dataset_id
         person_ids[dataset_id] = dict()
         for ps in filters.person_sets:
@@ -327,10 +325,14 @@ def main(gpf_instance=None, argv=None):
                 ps.collection_name,
                 [ps.set_name]
             )
-            person_ids[dataset_id][ps.set_name] = \
+            person_set = \
                 genotype_data._transform_person_set_collection_query(
                     person_set_query, None
                 )
+            children_person_set = person_set & genotype_data_children
+
+            person_ids[dataset_id][ps.set_name] = children_person_set
+                
         for stat in filters.statistics:
             if stat.category == "denovo":
                 has_denovo = True

@@ -577,9 +577,6 @@ class GenotypeData(ABC):
 
 class GenotypeDataGroup(GenotypeData):
 
-    _EXECUTOR_LOCK = threading.Lock()
-    EXECUTOR = None
-
     def __init__(self, genotype_data_group_config, studies):
         super(GenotypeDataGroup, self).__init__(
             genotype_data_group_config, studies
