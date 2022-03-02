@@ -43,19 +43,19 @@
             <span [attr.title]="enrichmentResult?.childrenStats?.female !== undefined ? 'Female: ' + enrichmentResult?.childrenStats?.female : 'Female: -'">
               F:{{ enrichmentResult?.childrenStats?.female }}
             </span>
-            <span *ngIf="enrichmentResult?.childrenStats?.female === undefined">-</span>
+            <span *ngIf="enrichmentResult?.childrenStats?.female === undefined" title="Female: -">-</span>
             <br>
 
             <span [attr.title]="enrichmentResult?.childrenStats?.male !== undefined ? 'Male: ' + enrichmentResult?.childrenStats?.male : 'Male: -'">
               M:{{ enrichmentResult?.childrenStats?.male }}
             </span>
-            <span *ngIf="enrichmentResult?.childrenStats?.male === undefined">-</span>
+            <span *ngIf="enrichmentResult?.childrenStats?.male === undefined" title="Male: -">-</span>
             <br>
 
             <span [attr.title]="enrichmentResult?.childrenStats?.unspecified !== undefined ? 'Unspecified: ' + enrichmentResult?.childrenStats?.unspecified : 'Unspecified: -'">
               U:{{ enrichmentResult?.childrenStats?.unspecified }}
             </span>
-            <span *ngIf="enrichmentResult?.childrenStats?.unspecified === undefined">-</span>
+            <span *ngIf="enrichmentResult?.childrenStats?.unspecified === undefined" title="Unspecified: -">-</span>
           </div>
         </td>
       </tr>
