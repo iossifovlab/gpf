@@ -33,6 +33,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         impala_port = self.storage_config.impala.port
         pool_size = self.storage_config.impala.pool_size
 
+
         self._impala_helpers = ImpalaHelpers(
             impala_hosts=impala_hosts, impala_port=impala_port,
             pool_size=pool_size)

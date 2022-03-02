@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class ImpalaHelpers:
 
-    def __init__(self, impala_hosts, impala_port=21050, pool_size=20):
+    def __init__(self, impala_hosts, impala_port=21050, pool_size=1):
 
         if os.environ.get("DAE_IMPALA_HOST", None) is not None:
             impala_host = os.environ.get("DAE_IMPALA_HOST", None)
@@ -34,10 +34,15 @@ class ImpalaHelpers:
             connection.host = impala_host
             return connection
 
+        if pool_size is None:
+            pool_size = 3 * len(impala_host) + 1
+
+        logger.info("impala connection pool size is: %s", pool_size)
+
         self._connection_pool = QueuePool(
-            create_connection, pool_size=3 * len(impala_hosts) + 1,
+            create_connection, pool_size=pool_size,
             reset_on_return=False,
-            max_overflow=3,
+            max_overflow=pool_size,
             # use_threadlocal=True,
         )
 
