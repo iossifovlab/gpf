@@ -55,7 +55,7 @@
           *ngFor="let genomicScoreCategory of config.genomicScores"
           [attr.id]="genomicScoreCategory.category"
           class="table table-bordered table-centered genomic-scores-table">
-          <th [attr.colspan]="2" style="text-align: center">{{ genomicScoreCategory.displayName }}</th>
+          <th [attr.colspan]="2">{{ genomicScoreCategory.displayName }}</th>
           <tr *ngFor="let score of genomicScoreCategory.scores" class="card-block">
             <td
               style="height: 135px; max-height: 135px; width: 135px; max-width: 135px; overflow-wrap: break-word"
@@ -96,7 +96,7 @@
           *ngFor="let geneSetCategory of config.geneSets"
           [attr.id]="geneSetCategory.category"
           class="table table-bordered table-centered gene-sets-table">
-          <th [attr.colspan]="2" style="text-align: center">{{ geneSetCategory.displayName }}</th>
+          <th [attr.colspan]="2">{{ geneSetCategory.displayName }}</th>
           <tr *ngFor="let set of geneSetCategory.sets" class="card-block">
             <td style="max-width: 665px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" [attr.title]="set.setId">{{ set.setId }}</td>
             <td style="text-align: center; width: 55px">
@@ -114,12 +114,12 @@
           <table style="width:100%;" class="table table-bordered table-centered datasets-table">
             <thead>
               <tr class="card-block">
-                <th style="text-align: center; border-bottom: none" [attr.colspan]="dataset.personSets.length + 1">
+                <th style="border-bottom: none" [attr.colspan]="dataset.personSets.length + 1">
                   <span>{{ dataset.displayName }}</span>
                 </th>
               </tr>
               <tr class="card-block">
-                <th style="text-align: center; border-bottom: none">Variant Statistics</th>
+                <th style="border-bottom: none">Variant Statistics</th>
                 <th *ngFor="let personSet of dataset.personSets" style="text-align: center; border-bottom: none">
                   <span class="vertical-text">{{ personSet.displayName }} ({{ personSet.childrenCount }})</span>
                 </th>
