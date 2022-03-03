@@ -15,6 +15,7 @@
           <gpf-multi-continuous-filter
             [continuousFilter]="getFilter(continuousFilter.id)"
             [continuousFilterState]="continuousFilter"
+            [isFamilyFilter]="isFamilyFilters"
             [datasetId]="dataset.id"
             (updateFilterEvent)="updateFilters()">
           </gpf-multi-continuous-filter>

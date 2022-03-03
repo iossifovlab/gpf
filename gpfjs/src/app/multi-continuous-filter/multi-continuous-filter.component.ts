@@ -15,6 +15,7 @@ export class MultiContinuousFilterComponent extends StatefulComponent implements
   @Input() datasetId: string;
   @Input() continuousFilter: PersonFilter;
   @Input() continuousFilterState: ContinuousFilterState;
+  @Input() isFamilyFilter: boolean;
   @Output() updateFilterEvent = new EventEmitter();
 
   measures: Array<ContinuousMeasure>;
@@ -34,7 +35,12 @@ export class MultiContinuousFilterComponent extends StatefulComponent implements
     if (!state['personFiltersState']) {
       return;
     }
-    const filters = state['personFiltersState']['familyFilters'];
+    let filters;
+    if(this.isFamilyFilter) {
+      filters = state['personFiltersState']['familyFilters'];
+    } else {
+      filters = state['personFiltersState']['personFilters'];
+    }
     filters.forEach(filter => {
       let selection = {
         name: filter.source,
@@ -47,10 +53,9 @@ export class MultiContinuousFilterComponent extends StatefulComponent implements
 
   set selectedMeasure(measure) {
     if (measure)  {
-      const selection = this.continuousFilterState.selection as ContinuousSelection;
       this.continuousFilterState.source = measure.name;
-      selection.domainMin = measure.min;
-      selection.domainMax = measure.max;
+      this.continuousFilterState.selection['min'] = measure.min;
+      this.continuousFilterState.selection['max'] = measure.max;
       this.internalSelectedMeasure = measure;
       this.updateFilterEvent.emit();
     } else {

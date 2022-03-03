@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { State, Action, StateContext } from '@ngxs/store';
 
 export class SetFamilyFilters {
-  static readonly type = '[Genotype] Set familyFiltes values';
+  static readonly type = '[Genotype] Set familyFilters values';
   constructor(public filters: object[]) {}
 }
 
@@ -29,13 +29,15 @@ export class PersonFiltersState {
   setFamilyFilters(ctx: StateContext<PersonFiltersModel>, action: SetFamilyFilters) {
     ctx.patchState({
       familyFilters: [...action.filters],
+      personFilters: ctx.getState().personFilters
     });
   }
 
   @Action(SetPersonFilters)
   setPersonFilters(ctx: StateContext<PersonFiltersModel>, action: SetPersonFilters) {
     ctx.patchState({
-      personFilters: [...action.filters],
+      familyFilters: ctx.getState().familyFilters,
+      personFilters: [...action.filters]
     });
   }
 }

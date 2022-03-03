@@ -2,7 +2,7 @@ import { Component, AfterViewInit, Input, ViewChild, OnInit } from '@angular/cor
 import { Dataset } from '../datasets/datasets';
 import { Store, Selector } from '@ngxs/store';
 import { PersonIdsState } from 'app/person-ids/person-ids.state';
-import { PersonFiltersState } from 'app/person-filters/person-filters.state';
+import { PersonFiltersState, SetPersonFilters } from 'app/person-filters/person-filters.state';
 import { StateReset } from 'ngxs-reset-plugin';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 
@@ -46,7 +46,8 @@ export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
   }
 
   onNavChange() {
-    this.store.dispatch(new StateReset(PersonIdsState, PersonFiltersState));
+    this.store.dispatch(new SetPersonFilters([]));
+    this.store.dispatch(new StateReset(PersonIdsState));
   }
 
 }

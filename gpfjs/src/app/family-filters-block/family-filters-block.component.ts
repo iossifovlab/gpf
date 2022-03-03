@@ -3,7 +3,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { Dataset } from '../datasets/datasets';
 import { Store, Selector } from '@ngxs/store';
 import { FamilyIdsState } from 'app/family-ids/family-ids.state';
-import { PersonFiltersState } from 'app/person-filters/person-filters.state';
+import { PersonFiltersState, SetFamilyFilters } from 'app/person-filters/person-filters.state';
 import { StateReset } from 'ngxs-reset-plugin';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 
@@ -42,7 +42,8 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   }
 
   onNavChange() {
-    this.store.dispatch(new StateReset(FamilyIdsState, PersonFiltersState));
+    this.store.dispatch(new SetFamilyFilters([]));
+    this.store.dispatch(new StateReset(FamilyIdsState));
   }
 
   @Selector([FamilyIdsState, PersonFiltersState])
