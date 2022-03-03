@@ -245,6 +245,10 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
 
     this.copyToClipboard(urlToCopy);
     this.currentCopyState = 'assets/check-solid.svg';
+
+    setTimeout(() => {
+      this.currentCopyState = 'assets/link-solid.svg'; 
+    }, 2000);
   }
 
   private copyToClipboard(item) {
