@@ -71,5 +71,9 @@ export class ShareQueryButtonComponent {
     inputElement.select();
     document.execCommand('Copy');
     this.buttonValue = 'Copied';
+
+    setTimeout(() => {
+      this.buttonValue = 'Copy';
+    }, 2000);
   }
 }
