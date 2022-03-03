@@ -69,6 +69,12 @@ td {
   margin-right: 0;
 }
 
+.datasets-table th,
+.datasets-table tr,
+.datasets-table td {
+  border: 1px solid #dee2e6;
+}
+
 .compare-wrapper .datasets-table {
   display: block;
   overflow-x: auto;
