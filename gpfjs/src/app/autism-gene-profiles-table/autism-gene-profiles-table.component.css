@@ -217,6 +217,10 @@
   cursor: pointer;
 }
 
+.cell .clickable {
+  padding: 5px;
+}
+
 .clickable:hover {
   text-decoration: underline;
 }

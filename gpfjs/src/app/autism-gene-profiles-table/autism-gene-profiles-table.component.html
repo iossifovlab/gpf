@@ -11,14 +11,13 @@
         class="table-row table-body-row"
         [ngClass]="{'row-highlight': highlightedGenes.has(row[geneSymbolColumnId])}">
         <ng-container *ngIf="shownRows.indexOf(i) !== -1">
-          <span *ngFor="let column of leaves"
+          <div *ngFor="let column of leaves"
             class="cell row-cell"
-            [ngClass]="{'clickable': column.clickable !== null && row[column.id]}"
             [attr.title]="row[column.id]"
             (click)="handleCellClick($event, row, column)"
-            (middleclick)="handleCellClick($event, row, column)"
-            >{{ row[column.id] }}</span
-          >
+            (middleclick)="handleCellClick($event, row, column)">
+            <span [ngClass]="{'clickable': column.clickable !== null && row[column.id]}">{{ row[column.id] }}</span>
+          </div>
         </ng-container>
       </div>
 

@@ -290,13 +290,23 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  public handleCellClick($event, row, column): void {
-    if (column.clickable && row[column.id] && ($event.which === 2 || ($event.ctrlKey || $event.metaKey))) {
-      this.emitClickEvent($event, row, column, false);
-    } else if ($event.which === 2 || ($event.ctrlKey || $event.metaKey)) {
-      this.toggleHighlightGene(row[this.geneSymbolColumnId])
-    } else {
-      this.emitClickEvent($event, row, column);
+  public handleCellClick($event, row, column: Column): void {
+    const linkClick: boolean = $event.target.className === 'clickable';
+
+    if (!linkClick) {
+      if ($event.which === 2 || ($event.ctrlKey || $event.metaKey)) {
+        this.toggleHighlightGene(row[this.geneSymbolColumnId]);
+      }
+    } else if (column.clickable === 'goToQuery') {
+      this.goToQueryEvent.emit({geneSymbol: row[this.geneSymbolColumnId], statisticId: column.id});
+    } else if (column.clickable === 'createTab' && linkClick) {
+      let navigateToTab: boolean = true;
+
+      if ($event.which === 2 || ($event.ctrlKey || $event.metaKey)) {
+        navigateToTab = false;
+      }
+
+      this.emitCreateTabEvent(null, row[this.geneSymbolColumnId], navigateToTab)
     }
   }
 
@@ -305,17 +315,6 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
       this.highlightedGenes.delete(geneSymbol);
     } else {
       this.highlightedGenes.add(geneSymbol);
-    }
-  }
-
-  public emitClickEvent($event, row, column, navigateToTab: boolean = true): void {
-    if (column.clickable === 'goToQuery' && row[column.id]) {
-      this.goToQueryEvent.emit({geneSymbol: row[this.geneSymbolColumnId], statisticId: column.id});
-    } else if (column.clickable === 'createTab') {
-      if ($event.ctrlKey || $event.metaKey) {
-        navigateToTab = false;
-      }
-      this.emitCreateTabEvent(null, row[this.geneSymbolColumnId], navigateToTab)
     }
   }
 
