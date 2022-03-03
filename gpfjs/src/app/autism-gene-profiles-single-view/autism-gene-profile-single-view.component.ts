@@ -237,12 +237,13 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     });
   }
 
-  public copyGeneLink() {
-    let currentUrl = window.location.href;
-    if(!currentUrl.endsWith(this.geneSymbol)) {
-      currentUrl += (currentUrl.endsWith('/') ? '' : '/') + this.geneSymbol;
-    }
-    this.copyToClipboard(currentUrl);
+  public copyGeneLink(): void {
+    let agpBaseUrl = window.location.href.slice(0, window.location.href.search('autism-gene-profiles')) + 'autism-gene-profiles';
+    let urlToCopy: string;
+
+    urlToCopy = `${agpBaseUrl}/${this.geneSymbol}`;
+
+    this.copyToClipboard(urlToCopy);
     this.currentCopyState = 'assets/check-solid.svg';
   }
 
