@@ -3,6 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { AgpSingleViewConfig } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
 import { Observable } from 'rxjs';
+import { Location } from '@angular/common';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-single-view-wrapper',
@@ -15,7 +16,8 @@ export class AutismGeneProfileSingleViewWrapperComponent implements OnInit, Afte
 
   public constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private location: Location
   ) { }
 
   public ngOnInit(): void {
@@ -29,5 +31,6 @@ export class AutismGeneProfileSingleViewWrapperComponent implements OnInit, Afte
         .filter(p => p)
         .map(p => p.trim().toUpperCase())
     );
+    this.location.replaceState('autism-gene-profiles/' + Array.from(this.geneSymbols));
   }
 }
