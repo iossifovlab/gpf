@@ -102,7 +102,7 @@ describe('PhenoBrowserComponent', () => {
   const resizeSpy = jasmine.createSpyObj('ResizeService', ['addResizeEventListener']);
 
   beforeEach(waitForAsync(() => { 
-    locationSpy = jasmine.createSpyObj('Location', ['go']);
+    locationSpy = jasmine.createSpyObj('Location', ['replaceState']);
 
     TestBed.configureTestingModule({
       imports: [ FormsModule, NgbModule ],
@@ -211,8 +211,8 @@ describe('PhenoBrowserComponent', () => {
     setQuery(fixture, 3, 'q20');
     fixture.whenStable().then(() => {
       // 2 (+1) calls since location is a jasmine spy obj
-      expect(location.go).toHaveBeenCalledTimes(3);
-      expect(location.go).toHaveBeenCalledWith('i3/q20');
+      expect(location.replaceState).toHaveBeenCalledTimes(3);
+      expect(location.replaceState).toHaveBeenCalledWith('i3/q20');
     });
   }));
 

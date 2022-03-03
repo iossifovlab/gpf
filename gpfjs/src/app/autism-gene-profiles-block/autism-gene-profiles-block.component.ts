@@ -104,11 +104,6 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     this.nav.select(navId);
   }
   
-  public changeUrl(navId: string) {
-    const urlPart = navId === this.homeTabId ? '' : `/${navId}`;
-    this.location.go(`autism-gene-profiles${urlPart}`);
-  }
-
   public getActiveTabIndex(): number {
     return [...this.geneTabs].indexOf(this.nav.activeId);
   }

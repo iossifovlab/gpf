@@ -77,7 +77,7 @@ export class PhenoBrowserComponent implements OnInit {
         }
         const url = this.router.createUrlTree(['.'], { /* Removed unsupported properties by Angular migration: replaceUrl. */ relativeTo: this.route,
       queryParams: queryParamsObject }).toString();
-        this.location.go(url);
+        this.location.replaceState(url);
       }),
       switchMap(([searchTerm, newSelection]) => {
         this.measuresToShow = null;

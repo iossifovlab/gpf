@@ -113,7 +113,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.geneSymbol = geneSymbol;
 
     if (geneSymbol === '') {
-      this.location.go(`datasets/${this.selectedDatasetId}/gene-browser/`);
+      this.location.replaceState(`datasets/${this.selectedDatasetId}/gene-browser/`);
     }
   }
 
@@ -148,7 +148,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       this.showError = true;
       return;
     }
-    this.location.go(`datasets/${this.selectedDatasetId}/gene-browser/${this.geneSymbol.toUpperCase()}`);
+    this.location.replaceState(`datasets/${this.selectedDatasetId}/gene-browser/${this.geneSymbol.toUpperCase()}`);
     this.showResults = false;
     this.loadingService.setLoadingStart();
     this.genotypePreviewVariantsArray = null;
