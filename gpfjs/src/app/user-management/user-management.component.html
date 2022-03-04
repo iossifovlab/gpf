@@ -12,6 +12,7 @@
                 <div class="search-input-wrapper">
                   <input
                     #searchBox
+                    placeholder="Search"
                     autocomplete="off"
                     (keyup)="search(searchBox.value)"
                     id="search-field"
@@ -20,9 +21,6 @@
                     aria-label="Search"
                     [ngModel]="input$ | async"
                     spellcheck="false" />
-                  <div class="search-placeholder-wrapper" *ngIf="searchBox.value === ''">
-                    <span class="search-placeholder-text">Search</span>
-                  </div>
                   <span 
                     class="search-clear-icon"
                     *ngIf="searchBox.value !== ''"

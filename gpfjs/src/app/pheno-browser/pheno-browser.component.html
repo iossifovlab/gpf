@@ -11,7 +11,8 @@
 
             <div class="col-4">
               <div class="search-input-wrapper" style="margin-bottom: 6px;">
-                <input 
+                <input
+                  placeholder="Search"
                   [ngModel]="input$ | async"
                   (input)="search(searchBox.value)"
                   #searchBox
@@ -20,9 +21,6 @@
                   type="text"
                   autocomplete="off"
                   spellcheck="false" />
-                <div class="search-placeholder-wrapper" *ngIf="searchBox.value === ''">
-                  <span class="search-placeholder-text">Search</span>
-                </div>
                 <span 
                   class="search-clear-icon"
                   *ngIf="searchBox.value !== ''"

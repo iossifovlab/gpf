@@ -12,13 +12,11 @@
         class="search-input form-control"
         type="text"
         name="search"
+        placeholder="Search"
         [(ngModel)]="searchText"
         (ngModelChange)="filterItems($event)"
         autocomplete="off"
         spellcheck="false" />
-      <div class="search-placeholder-wrapper" *ngIf="searchInput.value === ''">
-        <span class="search-placeholder-text">Search</span>
-      </div>
       <span 
         class="search-clear-icon"
         *ngIf="searchInput.value !== ''"

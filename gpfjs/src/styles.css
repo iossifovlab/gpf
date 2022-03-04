@@ -267,14 +267,6 @@ label {
   pointer-events: none;
 }
 
-.search-placeholder-wrapper {
-  display: flex;
-  align-items: center;
-  position: absolute;
-  pointer-events: none;
-  left: 14px;
-}
-
 .search-input-wrapper {
   display: inline-flex;
   position: relative;
@@ -284,13 +276,6 @@ label {
 
 .search-input {
   padding-right: 25px;
-}
-
-.search-placeholder-text {
-  opacity: 50%;
-  font-size: 14px;
-  font-weight: normal;
-  padding-top: 0.18em;
 }
 
 .search-clear-icon {
