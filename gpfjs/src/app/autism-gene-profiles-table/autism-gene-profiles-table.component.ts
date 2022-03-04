@@ -291,7 +291,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   public handleCellClick($event, row, column: Column): void {
-    const linkClick: boolean = $event.target.className === 'clickable';
+    const linkClick: boolean = $event.target.classList.contains('clickable');
 
     if (!linkClick) {
       if ($event.which === 2 || ($event.ctrlKey || $event.metaKey)) {

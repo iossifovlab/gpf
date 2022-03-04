@@ -16,7 +16,8 @@
             [attr.title]="row[column.id]"
             (click)="handleCellClick($event, row, column)"
             (middleclick)="handleCellClick($event, row, column)">
-            <span [ngClass]="{'clickable': column.clickable !== null && row[column.id]}">{{ row[column.id] }}</span>
+            <span *ngIf="column.clickable !== null && row[column.id]" class="clickable">{{ row[column.id] }}</span>
+            {{ column.clickable === null ? row[column.id] : '' }}
           </div>
         </ng-container>
       </div>
