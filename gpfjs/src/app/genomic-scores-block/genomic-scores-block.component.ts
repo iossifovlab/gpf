@@ -58,10 +58,6 @@ export class GenomicScoresBlockComponent extends StatefulComponent implements On
     });
   }
 
-  get imgPathPrefix() {
-    return environment.imgPathPrefix;
-  }
-
   trackById(index: number, data: any) {
     return data.score.score;
   }
