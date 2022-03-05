@@ -87,10 +87,6 @@ describe('GenomicScoresBlockComponent', () => {
     expect(component.genomicScoresArray).toBe(GENOMIC_SCORES_OBJECTS);
   });
 
-  it('should give image path prefix', () => {
-    expect(component.imgPathPrefix).toBe('assets/');
-  });
-
   it('should add and remove filter', () => {
     const genomicScores: GenomicScores = GenomicScores.fromJson({
       bars: [1, 2, 3], score: 'GenomicScores', bins: [4, 5, 6], range: [1, 3],
