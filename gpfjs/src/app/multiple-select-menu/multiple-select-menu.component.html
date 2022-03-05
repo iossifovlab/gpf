@@ -19,6 +19,7 @@
         spellcheck="false" />
       <span 
         class="search-clear-icon"
+        [style.background-image]="'url(' + imgPathPrefix + 'search-clear-icon.png)'"
         *ngIf="searchInput.value !== ''"
         (click)="searchInput.value = ''; searchText = ''; filterItems('')">
       </span>

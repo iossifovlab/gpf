@@ -10,6 +10,7 @@ import { forkJoin, Subject, Subscription } from 'rxjs';
 import { AgpTableConfig, Column } from './autism-gene-profiles-table';
 import { AgpTableService } from './autism-gene-profiles-table.service';
 import * as _ from 'lodash';
+import { environment } from 'environments/environment';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-table',
@@ -54,6 +55,8 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   private prevVerticalScroll = 0;
   private loadMoreGenes = true;
   private keystrokeSubscription: Subscription;
+
+  public imgPathPrefix = environment.imgPathPrefix;
 
   public constructor(
     private autismGeneProfilesService: AgpTableService,

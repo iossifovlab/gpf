@@ -11,6 +11,7 @@ import { SetGeneWeight, SetHistogramValues, GeneWeightsState } from './gene-weig
 import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { StatefulComponent } from 'app/common/stateful-component';
 import { ValidateNested } from 'class-validator';
+import { environment } from 'environments/environment';
 
 @Component({
   encapsulation: ViewEncapsulation.None, // TODO: What is this?
@@ -27,6 +28,8 @@ export class GeneWeightsComponent extends StatefulComponent implements OnInit {
 
   @ValidateNested()
   geneWeightsLocalState = new GeneWeightsLocalState();
+
+  public imgPathPrefix = environment.imgPathPrefix;
 
   constructor(
     protected store: Store,

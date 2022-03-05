@@ -6,6 +6,7 @@ import {
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { take } from 'rxjs/operators';
+import { environment } from 'environments/environment';
 
 @Pipe({ name: 'getPeopleCounterRow' })
 export class PeopleCounterRowPipe implements PipeTransform {
@@ -35,6 +36,8 @@ export class VariantReportsComponent implements OnInit {
   public pedigreeTables: PedigreeTable[];
 
   public selectedDataset: Dataset;
+
+  public imgPathPrefix = environment.imgPathPrefix;
 
   public constructor(
     private variantReportsService: VariantReportsService,

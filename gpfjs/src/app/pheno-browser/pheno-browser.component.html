@@ -23,6 +23,7 @@
                   spellcheck="false" />
                 <span 
                   class="search-clear-icon"
+                  [style.background-image]="'url(' + imgPathPrefix + 'search-clear-icon.png)'"
                   *ngIf="searchBox.value !== ''"
                   (click)="searchBox.value = ''; search(searchBox.value)">
                 </span>
@@ -32,6 +33,10 @@
                   <option value="">All instruments</option>
                   <option *ngFor="let instrument of (instruments | async)?.instruments" [ngValue]="instrument">{{ instrument }}</option>
                 </select>
+                <span
+                  class="select-dropdown-icon"
+                  [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'">
+                </span>
               </div>
               <a download [href]="downloadLink$ | async">Download instruments</a>
             </div>

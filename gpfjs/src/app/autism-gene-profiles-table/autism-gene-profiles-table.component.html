@@ -96,11 +96,13 @@
           <span
             *ngIf="searchBox.value !== '' && !showSearchLoading"
             class="search-clear-icon"
+            [style.background-image]="'url(' + imgPathPrefix + 'search-clear-icon.png)'"
             (click)="searchBox.value = ''; search(searchBox.value); showSearchLoading = true">
           </span>
           <span
             *ngIf="showSearchLoading"
-            class="search-loading-icon">
+            class="search-loading-icon"
+            [style.background-image]="'url(' + imgPathPrefix + 'load-search-icon.png)'">
           </span>
         </div>
       </div>

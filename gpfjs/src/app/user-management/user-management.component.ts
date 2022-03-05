@@ -1,5 +1,6 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
+import { environment } from 'environments/environment';
 
 import { Observable, ReplaySubject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } from 'rxjs/operators';
@@ -13,11 +14,12 @@ import { UsersService } from '../users/users.service';
   styleUrls: ['./user-management.component.css']
 })
 export class UserManagementComponent implements OnInit {
-
   input$ = new ReplaySubject<string>(1);
   users: User[] = [];
   usersToShow$: Observable<User[]>;
   @ViewChild('searchBox') private searchBox: ElementRef;
+
+  public imgPathPrefix = environment.imgPathPrefix;
 
   constructor(
     private usersService: UsersService,

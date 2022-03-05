@@ -4,6 +4,10 @@
         <select class="form-control" [(ngModel)]="selectedGeneWeights" required>
           <option *ngFor="let geneWeights of geneWeightsArray" [ngValue]="geneWeights">{{ geneWeights.desc }}</option>
         </select>
+        <span
+          class="select-dropdown-icon"
+          [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'">
+        </span>
       </div>
       <div *ngIf="selectedGeneWeights" style="margin-top: 5px;">
         <a href="{{ downloadUrl }}">Download</a>

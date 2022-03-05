@@ -4,6 +4,10 @@
       <select class="row-sm-3 form-control" [(ngModel)]="selectedGeneSetsCollection" required style="width: 100%" >
         <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{ collection.desc }}</option>
       </select>
+      <span
+        class="select-dropdown-icon"
+        [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'">
+      </span>
     </div>
     <ngb-accordion *ngIf="selectedGeneSetsCollection?.types" activeIds="{{defaultSelectedDenovoGeneSetId}}" [destroyOnHide]="false"
         #acc="ngbAccordion" class="gene-sets-types row-sm-3">

@@ -7,6 +7,7 @@ import { Store } from '@ngxs/store';
 import { SetEnrichmentModels, EnrichmentModelsState } from './enrichment-models.state';
 import { switchMap, take } from 'rxjs/operators';
 import { StatefulComponent } from 'app/common/stateful-component';
+import { environment } from 'environments/environment';
 
 @Component({
   selector: 'gpf-enrichment-models',
@@ -25,6 +26,8 @@ export class EnrichmentModelsComponent extends StatefulComponent implements OnIn
 
   countings: Array<IdDescription>
   backgrounds: Array<IdDescription>
+
+  public imgPathPrefix = environment.imgPathPrefix;
 
   constructor(
     protected store: Store,

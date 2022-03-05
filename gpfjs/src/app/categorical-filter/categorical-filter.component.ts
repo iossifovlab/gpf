@@ -4,6 +4,7 @@ import { PersonFilter } from '../datasets/datasets';
 import { PhenoBrowserService } from 'app/pheno-browser/pheno-browser.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Observable } from 'rxjs';
+import { environment } from 'environments/environment';
 
 @Component({
   selector: 'gpf-categorical-filter',
@@ -16,6 +17,7 @@ export class CategoricalFilterComponent implements OnInit {
   @Output() updateFilterEvent = new EventEmitter();
   sourceDescription$: Observable<Object>;
   valuesDomain: any = [];
+  public imgPathPrefix = environment.imgPathPrefix;
 
   constructor(
     private datasetsService: DatasetsService,

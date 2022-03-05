@@ -10,6 +10,7 @@ import { Store } from '@ngxs/store';
 import { SetGeneSetsValues, GeneSetsState } from './gene-sets.state';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, take } from 'rxjs/operators';
 import { StatefulComponent } from 'app/common/stateful-component';
+import { environment } from 'environments/environment';
 
 @Component({
   selector: 'gpf-gene-sets',
@@ -27,6 +28,8 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
 
   private selectedDatasetId: string;
   public downloadUrl: string;
+
+  public imgPathPrefix = environment.imgPathPrefix;
 
   @ValidateNested()
   private geneSetsLocalState = new GeneSetsLocalState();

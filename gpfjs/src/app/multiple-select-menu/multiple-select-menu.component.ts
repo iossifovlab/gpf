@@ -1,6 +1,7 @@
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Component, ElementRef, EventEmitter, Input, OnChanges, Output, ViewChild } from '@angular/core';
 import { Column } from 'app/autism-gene-profiles-table/autism-gene-profiles-table';
+import { environment } from 'environments/environment';
 
 @Component({
   selector: 'gpf-multiple-select-menu',
@@ -16,6 +17,8 @@ export class MultipleSelectMenuComponent implements OnChanges {
   public buttonLabel = 'Uncheck all';
   public searchText: string;
   public filteredColumns: Column[];
+
+  public imgPathPrefix = environment.imgPathPrefix;
 
   public ngOnChanges(): void {
     this.refresh();

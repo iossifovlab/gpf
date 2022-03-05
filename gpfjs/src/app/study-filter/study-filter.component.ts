@@ -1,6 +1,7 @@
-import { Component, Input, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 
 import { IsNotEmpty } from 'class-validator';
+import { environment } from 'environments/environment';
 
 export class Study {
   @IsNotEmpty() studyId: string;
@@ -22,7 +23,7 @@ export class StudyFilterComponent {
   @Input() errors: string[];
   @Output() changeSelectedStudyEvent = new EventEmitter<object>();
 
-  constructor() { }
+  public imgPathPrefix = environment.imgPathPrefix;
 
   set selectedStudyNames(selectedStudyId: string) {
     this.changeSelectedStudyEvent.emit({

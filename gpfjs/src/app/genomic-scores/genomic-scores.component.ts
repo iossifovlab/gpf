@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { environment } from 'environments/environment';
 // eslint-disable-next-line no-restricted-imports
 import { ReplaySubject } from 'rxjs';
 
@@ -19,6 +20,8 @@ export class GenomicScoresComponent {
   @Output() updateGenomicScoreEvent = new EventEmitter();
 
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
+
+  public imgPathPrefix = environment.imgPathPrefix;
 
   constructor(private modalService: NgbModal) {}
 

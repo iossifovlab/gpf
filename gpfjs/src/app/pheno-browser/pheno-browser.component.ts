@@ -11,6 +11,7 @@ import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure } from '
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from '../datasets/datasets.service';
 import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } from 'rxjs/operators';
+import { environment } from 'environments/environment';
 
 @Component({
   selector: 'gpf-pheno-browser',
@@ -31,6 +32,8 @@ export class PhenoBrowserComponent implements OnInit {
   public input$ = new ReplaySubject<string>(1);
 
   @ViewChild('searchBox') public searchBox: ElementRef;
+
+  public imgPathPrefix = environment.imgPathPrefix;
 
   constructor(
     private route: ActivatedRoute,
