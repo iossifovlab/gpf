@@ -52,7 +52,7 @@ import { AgpTableService } from './autism-gene-profiles-table/autism-gene-profil
 export class AppComponent {
   showSidenav = false;
   title = 'GPF: Genotypes and Phenotypes in Families';
-  public imgPathPrefix: string;
+  public imgPathPrefix = environment.imgPathPrefix;
   agpConfig: AgpTableConfig;
   private sessionTimeoutInSeconds = 7 * 24 * 60 * 60; // 1 week
 
@@ -86,8 +86,6 @@ export class AppComponent {
   }
 
   ngOnInit(): void {
-    this.imgPathPrefix = environment.imgPathPrefix;
-
     this.bnIdle.startWatching(this.sessionTimeoutInSeconds)
       .pipe(
         switchMap(() => {

@@ -9,11 +9,7 @@ import { environment } from '../../environments/environment';
 })
 export class AddButtonComponent {
   @Output() addFilter: EventEmitter<any> = new EventEmitter(true);
-  imgPathPrefix: string;
-
-  constructor() {
-    this.imgPathPrefix = environment.imgPathPrefix;
-  }
+  public imgPathPrefix = environment.imgPathPrefix;
 
   public add(): void {
     this.addFilter.emit(null);

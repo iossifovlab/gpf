@@ -1,4 +1,4 @@
-import { Output, EventEmitter, Input, Component, OnInit } from '@angular/core';
+import { Output, EventEmitter, Input, Component } from '@angular/core';
 import { GpfTableContentHeaderComponent } from '../../component/header.component';
 import { GpfTableSubheaderComponent } from '../../component/subheader.component';
 import { SortInfo } from '../../table.component';
@@ -9,15 +9,11 @@ import { environment } from '../../../../environments/environment';
   templateUrl: './header-cell.component.html',
   styleUrls: ['./header-cell.component.css']
 })
-export class GpfTableHeaderCellComponent implements OnInit {
+export class GpfTableHeaderCellComponent {
   @Input() columnInfo: GpfTableContentHeaderComponent;
   @Output() sortingInfoChange = new EventEmitter();
   @Input() sortingInfo: SortInfo;
-  public imgPathPrefix: string;
-
-  public ngOnInit(): void {
-    this.imgPathPrefix = environment.imgPathPrefix;
-  }
+  public imgPathPrefix = environment.imgPathPrefix;
 
   public onSortClick(sortBySubcolumn: GpfTableSubheaderComponent): boolean {
     if (!sortBySubcolumn.sortable) {
