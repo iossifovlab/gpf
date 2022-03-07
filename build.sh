@@ -189,7 +189,7 @@ EOT
     build_run_container_cp_to /root/ $HOME/.ssh
     build_run_container chown -R root:root /root/.ssh
     build_run_container bash -c "
-        /opt/conda/bin/conda run --no-capture-output -n gpf \
+        /opt/conda/bin/conda run --no-capture-output -n infra \
         ansible-playbook -i doc_inventory doc_publish.yml"
 
   }
