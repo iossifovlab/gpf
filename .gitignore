@@ -13,4 +13,6 @@ _html
 gpf-wdae-html.tar.gz
 temp
 build-env/*
-
+cache
+data
+results

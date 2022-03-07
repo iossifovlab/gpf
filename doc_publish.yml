@@ -4,7 +4,7 @@
   tasks:
 
   - name: copy gpf-user-html.tar.gz
-    copy: src=gpf-user-html.tar.gz dest="{{ base_path }}/gpf-user-html.tar.gz"
+    copy: src=results/gpf-user-html.tar.gz dest="{{ base_path }}/gpf-user-html.tar.gz"
 
   - name: clean user docs directory
     file: path={{ base_path }}/gpf_user_docs state=absent
@@ -25,8 +25,8 @@
   hosts: all
   tasks:
 
-  - name: copy gpf-html.tar.gz
-    copy: src=gpf-html.tar.gz dest="{{ base_path }}/gpf-html.tar.gz"
+  - name: copy gpf-dae-html.tar.gz
+    copy: src=results/gpf-dae-html.tar.gz dest="{{ base_path }}/gpf-dae-html.tar.gz"
 
   - name: clean API docs directory
     file: path={{ base_path }}/gpf_api_docs state=absent
@@ -34,20 +34,21 @@
   - name: ensure API docs directory exists
     file: path={{ base_path }}/gpf_api_docs state=directory
 
-  - name: unarchive gpf-html.tar.gz
+  - name: unarchive gpf-dae-html.tar.gz
     unarchive: |
-      src={{ base_path }}/gpf-html.tar.gz dest={{ base_path }}/gpf_api_docs
+      src={{ base_path }}/gpf-dae-html.tar.gz dest={{ base_path }}/gpf_api_docs
       remote_src=yes
 
-  - name: clean gpf-html.tar.gz
-    file: path={{ base_path }}/gpf-html.tar.gz state=absent
+  - name: clean gpf-dae-html.tar.gz
+    file: path={{ base_path }}/gpf-dae-html.tar.gz state=absent
+
 
 - name: deploy gpf wdae docs
   hosts: all
   tasks:
 
   - name: copy gpf-wdae-html.tar.gz
-    copy: src=gpf-wdae-html.tar.gz dest="{{ base_path }}/gpf-wdae-html.tar.gz"
+    copy: src=results/gpf-wdae-html.tar.gz dest="{{ base_path }}/gpf-wdae-html.tar.gz"
 
   - name: clean API docs directory
     file: path={{ base_path }}/gpf_wdae_docs state=absent
