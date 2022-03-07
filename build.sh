@@ -52,6 +52,8 @@ function main() {
     defer_ret build_run_ctx_reset
 
     build_run rm -rvf ./data/ ./results ./gpf
+    build_run rm -rf ./userdocs/gpf
+
     build_run_local mkdir -p ./data/ ./results ./cache
   }
 
@@ -64,6 +66,7 @@ function main() {
     # copy gpf package
     build_run_local mkdir -p ./iossifovlab-gpf/gpf
     build_docker_image_cp_from "$gpf_package_image" ./gpf/ /gpf
+    build_docker_image_cp_from "$gpf_package_image" ./userdocs/gpf/ /gpf
   }
 
   # prepare gpf data
