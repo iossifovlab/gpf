@@ -397,12 +397,12 @@ class QueryTransformer:
             request = set([
                 sf["studyId"] for sf in kwargs["studyFilters"]
             ])
-            if kwargs.get("allowed_studies"):
+            if kwargs.get("allowed_studies") is not None:
                 request = request & set(kwargs.pop("allowed_studies"))
             kwargs["study_filters"] = request
 
             del kwargs["studyFilters"]
-        elif kwargs.get("allowed_studies"):
+        elif kwargs.get("allowed_studies") is not None:
             kwargs["study_filters"] = set(kwargs.pop("allowed_studies"))
 
         if "personFilters" in kwargs:
