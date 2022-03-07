@@ -51,8 +51,8 @@ function main() {
     build_run_ctx_init "container" "ubuntu:20.04"
     defer_ret build_run_ctx_reset
 
-    build_run rm -rvf ./data/ ./import/ ./downloads ./results ./gpf
-    build_run_local mkdir -p ./data/ ./import/ ./downloads ./results ./cache
+    build_run rm -rvf ./data/ ./results ./gpf
+    build_run_local mkdir -p ./data/ ./results ./cache
   }
 
 
