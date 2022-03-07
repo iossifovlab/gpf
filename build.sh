@@ -437,8 +437,10 @@ EOT'
           --exclude dae/tmp \
           --exclude dae/build \
           --exclude wdae/build \
-          --exclude docs \
           --exclude tests \
+          --exclude dask-worker-space \
+          --exclude demo-scripts \
+          --exclude TESTphastCons100way.bedGraph.gz.tbi \
           --exclude conftest.py \
           --exclude gpf_wdae.egg-info \
           --transform "s,^,gpf/," \
