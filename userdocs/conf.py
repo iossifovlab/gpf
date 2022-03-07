@@ -42,15 +42,15 @@ django.setup()
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx.ext.todo',
-    'sphinx.ext.coverage',
-    'sphinx.ext.imgmath',
-    'sphinx.ext.viewcode',
-    'sphinx_copybutton',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.doctest",
+    "sphinx.ext.todo",
+    "sphinx.ext.coverage",
+    "sphinx.ext.imgmath",
+    "sphinx.ext.viewcode",
+    "sphinx_copybutton",
     "sphinxcontrib.httpdomain",
-    # 'sphinx_autorun',
+    "sphinx_autorun",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
