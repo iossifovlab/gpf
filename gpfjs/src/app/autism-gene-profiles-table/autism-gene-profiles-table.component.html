@@ -147,7 +147,7 @@
       class="btn-group"
       style="margin: 4px; background-color: none"
       role="group">
-      <button [attr.title]="gene" type="button" style="border: 1px solid #ddd; padding-right: 0; width: 145px; background: none">
+      <button class="compare-gene-item" [attr.title]="gene" type="button">
         <span (middleclick)="emitCreateTabEvent($event, gene, false)" (click)="emitCreateTabEvent($event, gene)" class="compare-genes-gene-name clickable">{{ gene }}</span>
         <button (click)="toggleHighlightGene(gene)" class="compare-genes-close font-weight-light" type="button">×</button>
       </button>
