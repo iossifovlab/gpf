@@ -3,10 +3,11 @@
 import os
 import sys
 import django
+from typing import Dict
+
 sys.path.insert(0, os.path.abspath('..'))
 os.environ['DJANGO_SETTINGS_MODULE'] = 'wdae.settings'
 django.setup()
-
 
 
 # -*- coding: utf-8 -*-
@@ -87,7 +88,7 @@ release = u'3.0.0'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = None  # type: ignore
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -167,8 +168,8 @@ html_theme = 'sphinx_rtd_theme'
 # html_logo = None
 
 # The name of an image file (relative to this directory) to use as a favicon of
-# the docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
-# pixels large.
+# the docs.  This file should be a Windows icon file (.ico)
+# being 16x16 or 32x32 pixels large.
 #
 html_favicon = 'imgs/logo-64x64.png'
 
@@ -259,7 +260,7 @@ htmlhelp_basename = 'gpfdoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
-latex_elements = {
+latex_elements: Dict[str, str] = {
      # The paper size ('letterpaper' or 'a4paper').
      #
      # 'papersize': 'letterpaper',
@@ -358,34 +359,3 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #
 # texinfo_no_detailmenu = False
-
-
-# class ExecDirective(SphinxDirective):
-#     """
-#         Execute the specified python code and insert the output into the document.
-#         This class is copied from:
-#         https://stackoverflow.com/questions/7250659/how-to-use-python-to-programmatically-generate-part-of-sphinx-documentation/18143318#18143318
-#     """
-#     has_content = True
-
-#     def run(self):
-#         oldStdout, sys.stdout = sys.stdout, StringIO()
-
-#         tab_width = self.options.get('tab-width', self.state.document.settings.tab_width)
-#         source = self.state_machine.input_lines.source(self.lineno - self.state_machine.input_offset - 1)
-
-#         try:
-#             exec('\n'.join(self.content))
-#             text = sys.stdout.getvalue()
-#             lines = statemachine.string2lines(text, tab_width, convert_whitespace=True)
-#             self.state_machine.insert_input(lines, source)
-#             return []
-#         except Exception:
-#             return [nodes.error(None, nodes.paragraph(text = "Unable to execute python code at %s:%d:" % (basename(source), self.lineno)), nodes.paragraph(text = str(sys.exc_info()[1])))]
-#         finally:
-#             sys.stdout = oldStdout
-
-
-# def setup(app):
-#     app.add_stylesheet('custom.css')
-#     app.add_directive('exec', ExecDirective)
