@@ -12,3 +12,5 @@ coverage/
 _html
 gpf-wdae-html.tar.gz
 temp
+build-env/*
+
