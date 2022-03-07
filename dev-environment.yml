@@ -22,6 +22,7 @@ dependencies:
   - pytest-mock=3.6.1
   - pytest-xdist=2.3.0
   - pytest-django=4.4.0
+  - pytest-doctestplus=0.9.0
   - pylint=2.9.1
   - pre-commit=2.13.0
   - moto=2.3.0
