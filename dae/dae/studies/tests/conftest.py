@@ -1,7 +1,7 @@
 import pytest
 import os
 
-from dae_conftests.dae_conftests import get_global_dae_fixtures_dir
+from dae_conftests.dae_conftests import get_global_dae_fixtures_dir  # type: ignore
 
 
 def fixtures_dir():
