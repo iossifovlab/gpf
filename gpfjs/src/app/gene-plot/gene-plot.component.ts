@@ -34,11 +34,12 @@ export class GenePlotComponent implements OnChanges {
     frequencyPlotPadding: 40, // Padding between the frequency plot and the transcripts
     denovoAxisGap: 8, // Gap between subdomain and denovo axis
     transcriptHeight: 20,
-    chromosomeLabelPadding: 50,
+    chromosomeLabelPadding: 60,
+    collapsedTranscriptPadding: 60,
     denovoSpacing: 22,
-    margin: { top: 10, right: 45, left: 120, bottom: 15 },
-    exonThickness: { normal: 3, collapsed: 6 },
-    cdsThickness: { normal: 6, collapsed: 12 },
+    margin: { top: 10, right: 45, left: 120, bottom: 50 },
+    exonThickness: { normal: 4, collapsed: 9 },
+    cdsThickness: { normal: 8, collapsed: 18 },
   };
 
   private readonly scale = {
@@ -70,6 +71,8 @@ export class GenePlotComponent implements OnChanges {
   private denovoLevels: number;
   private denovoAllelesSpacings: Map<string, number>;
 
+  public chromosomesTitle: string;
+
   constructor() {
     this.subdomainAxisY = this.constants.frequencyPlotSize * this.constants.axisSizes.domain;
   }
@@ -80,6 +83,8 @@ export class GenePlotComponent implements OnChanges {
       this.redraw();
       return;
     }
+
+    this.chromosomesTitle = this.findChromosomeTitle();
 
     this.genePlotModel = new GenePlotModel(this.gene, this.plotWidth);
     this.normalRange = this.genePlotModel.normalRange;
@@ -137,13 +142,17 @@ export class GenePlotComponent implements OnChanges {
   }
 
   private get svgHeight(): number {
-    // +1 transcript if transcripts are drawn due to the extra padding between the collapsed and normal transcripts
+    let result: number;
     const transcriptsCount = (this.showTranscripts ? this.genePlotModel.gene.transcripts.length + 1 : 0) + 1;
-    return this.frequencyPlotHeight
+
+    result =
+      this.frequencyPlotHeight
       + this.constants.margin.top
       + this.constants.margin.bottom
       + this.constants.frequencyPlotPadding
       + (transcriptsCount * this.constants.transcriptHeight);
+
+    return result;
   }
 
   private get frequencyPlotHeight(): number {
@@ -347,7 +356,7 @@ export class GenePlotComponent implements OnChanges {
     this.drawTranscript(collapsedTranscriptElement, this.genePlotModel.gene.collapsedTranscript, transcriptY);
 
     if (this.showTranscripts) {
-      transcriptY += this.constants.transcriptHeight; // Add some extra padding after the collapsed transcript
+      transcriptY += this.constants.collapsedTranscriptPadding; // Add some extra padding after the collapsed transcript
       const transcriptsElement = this.plotElement.append('g').attr('id', 'transcripts');
       for (const geneViewTranscript of this.genePlotModel.gene.transcripts) {
         transcriptY += this.constants.transcriptHeight;
@@ -400,17 +409,22 @@ export class GenePlotComponent implements OnChanges {
       }
     }
 
+    let svgTitle: string;
+
     if (transcriptId !== 'collapsed') {
-      const formattedExonsLength = this.formatExonsLength(exonsLength);
-      draw.hoverText(
-        svgGroup,
-        this.scale.x(firstSegmentStart) - 30,
-        yPos + brushSize.coding / 2 + 4.5,
-        formattedExonsLength,
-        `Transcript id: ${transcriptId}\nExons length: ${this.commaSeparateNumber(exonsLength)}`,
-        this.constants.fontSize
-      );
+      svgTitle = `Transcript id: ${transcriptId}\nChromosome: ${transcript.chromosome}\nExons length: ${this.commaSeparateNumber(exonsLength)}`;
+    } else {
+      svgTitle = `COLLAPSED TRANSCRIPT\n${this.chromosomesTitle}\nExons length: ${this.commaSeparateNumber(exonsLength)}`;
     }
+
+    draw.hoverText(
+      svgGroup,
+      this.scale.x(firstSegmentStart) - 30,
+      yPos + brushSize.coding / 2 + 4.5,
+      this.formatExonsLength(exonsLength),
+      svgTitle,
+      this.constants.fontSize
+    );
   }
 
   private drawExon(svgGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>, xStart: number, xEnd: number, y: number, title: string, cds: boolean, brushSize: { nonCoding: any; coding: any; }) {
@@ -450,16 +464,19 @@ export class GenePlotComponent implements OnChanges {
 
   private drawChromosomeLabels(element: d3.Selection<SVGGElement, unknown, HTMLElement, any>, yPos: number) {
     const [domainMin, domainMax] = this.xDomain;
+
     for (const [chromosome, range] of this.gene.chromosomes) {
       if (range[1] < domainMin || range[0] > domainMax) {
         continue;
       }
+
       const [fromX, toX] = [Math.max(range[0], domainMin), Math.min(range[1], domainMax)];
+
       draw.hoverText(
         element,
-        (this.scale.x(fromX) + this.scale.x(toX)) / 2 + 50,
+        (this.scale.x(fromX) + this.scale.x(toX)) / 2 + chromosome.length * 3.3,
         yPos + this.constants.chromosomeLabelPadding - this.constants.transcriptHeight,
-        `Chromosome: ${chromosome}`,
+        chromosome,
         `Chromosome: ${chromosome}`,
         this.constants.fontSize
       );
@@ -608,5 +625,10 @@ export class GenePlotComponent implements OnChanges {
     } else if (keyPressed === '5') {
       this.reset();
     }
+  }
+
+  private findChromosomeTitle(): string {
+    const chromosomes = [...this.gene.chromosomes.keys()];
+    return chromosomes.length === 1 ? `Chromosome: ${chromosomes}` : `Chromosomes: \n    ${chromosomes.join('\n    ')}`;
   }
 }
