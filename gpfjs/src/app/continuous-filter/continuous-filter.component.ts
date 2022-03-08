@@ -15,7 +15,6 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
   private rangeChanges = new Subject<[string, string, number, number]>();
   private partitions: Observable<Partitions>;
 
-  @Input() public filterId: string;
   @Input() public datasetId: string;
   @Input() public measureName: string;
   @Input() public continuousFilterState: ContinuousFilterState;
@@ -44,7 +43,7 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
     }
   }
 
-  public ngOnChanges(changes: SimpleChanges): void {
+  public ngOnChanges(): void {
     if (this.datasetId && this.measureName) {
       this.measuresService.getMeasureHistogram(this.datasetId, this.measureName)
         .subscribe(histogramData => {

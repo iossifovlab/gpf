@@ -2,8 +2,13 @@
   <div class="row">
     <div class="col-lg-6">
       <span>Proband Pheno Measure</span>
-      <gpf-pheno-measure-selector [(selectedMeasure)]="measure" (measuresChange)="measuresUpdate($event)">
-      </gpf-pheno-measure-selector>
+      <ng-container *ngIf="dataset">
+        <gpf-pheno-measure-selector
+          [datasetId]="dataset.id"
+          (selectedMeasureChange)="selectedMeasure = $event"
+          (measuresChange)="measuresUpdate($event)">
+        </gpf-pheno-measure-selector>
+      </ng-container>
 
       <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
     </div>

@@ -1,7 +1,7 @@
 <span>{{ continuousFilterState.id }}:</span>
 <gpf-pheno-measure-selector
-  [(selectedMeasure)]="selectedMeasure"
-  [initialSelectedMeasure]="continuousFilterState.source">
+  [datasetId]="datasetId"
+  (selectedMeasureChange)="selectedMeasure = $event">
 </gpf-pheno-measure-selector>
 
 <gpf-continuous-filter

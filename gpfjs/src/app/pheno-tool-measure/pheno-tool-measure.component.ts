@@ -33,6 +33,8 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
   regressions: Object = {};
   regressionNames: string[];
 
+  dataset;
+
   constructor(
     protected store: Store,
     private measuresService: MeasuresService,
@@ -51,9 +53,9 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
         this.normalizeBy = state.normalizeBy.length ? state.normalizeBy : [];
       });
 
-    const dataset = this.datasetsService.getSelectedDataset();
-    if (dataset?.phenotypeData) {
-      this.measuresService.getRegressions(dataset.id).subscribe(res => {
+    this.dataset = this.datasetsService.getSelectedDataset();
+    if (this.dataset?.phenotypeData) {
+      this.measuresService.getRegressions(this.dataset.id).subscribe(res => {
         this.regressions = res;
         this.regressionNames = Object.getOwnPropertyNames(this.regressions);
       });

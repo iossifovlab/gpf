@@ -1,21 +1,24 @@
-<div class="input-group" style="width: 100%; max-width: 100%;">
-  <gpf-searchable-select
-    style="width: 93%"
-    (search)="searchBoxChange($event)"
-    (selectItem)="selectedMeasure = $event"
-    [data]="filteredMeasures"
-    caption="{{ selectedMeasure?.name }}">
-    <div *gpf-searchable-select-template="let measure">
-      <span
-        data-toggle="tooltip"
-        data-placement="bottom"
-        title="{{ measure.name | boldMatching: searchString}}"
-        innerHtml="{{ measure.name | boldMatching: searchString}}">
-      </span>
-    </div>
-  </gpf-searchable-select>
-
-  <div style="width: 7%" class="input-group-btn">
+<div ngbDropdown class="input-group">
+  <input ngbDropdownAnchor
+    #searchBox
+    id="search-box"
+    placeholder="Select or start typing to search"
+    autocomplete="off"
+    spellcheck="false"
+    [(ngModel)]="searchString"
+    (keyup)="openDropdown(); searchBoxChange()"
+    (click)="clear(); openDropdown(); searchBoxChange()"
+    (keydown.escape)="closeDropdown()"
+   style="min-width: 450px">
+  <div ngbDropdownMenu style="z-index: 3; min-width: 450px; max-height: 200px; overflow-y: scroll">
+    <button *ngFor="let measure of filteredMeasures"
+      class="dropdown-item" type="button"
+      (click)="selectMeasure(measure)"
+      (keydown.enter)="selectMeasure(measure)">
+      <span innerHtml="{{ measure.name | boldMatching: searchString }}"></span>
+    </button>
+  </div>
+  <div class="input-group-append">
     <button class="btn btn-secondary" (click)="clear()">&times;</button>
   </div>
 </div>
