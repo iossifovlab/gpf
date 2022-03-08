@@ -103,4 +103,11 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
   isNormalizedBy(reg: string): boolean {
     return this.normalizeBy.some(norm => norm.measure_name === reg);
   }
+
+  public clearCheckbox() {
+    this.inputs.forEach((checkbox) => {
+      checkbox.nativeElement.checked = false;
+      checkbox.nativeElement.dispatchEvent(new Event("change"));
+    });
+  }
 }

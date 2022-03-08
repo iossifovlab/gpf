@@ -12,7 +12,6 @@ import { DatasetsService } from '../datasets/datasets.service';
   styleUrls: ['./pheno-measure-selector.component.css']
 })
 export class PhenoMeasureSelectorComponent implements OnInit {
-  @ViewChild('inputGroup') inputGroupSpan: any;
   @ViewChild('searchBox') searchBox: any;
 
   measures: Array<ContinuousMeasure>;
@@ -24,6 +23,8 @@ export class PhenoMeasureSelectorComponent implements OnInit {
 
   @Output() selectedMeasureChange = new EventEmitter(true);
   @Output() measuresChange = new EventEmitter(true);
+  @Output() clearEvent = new EventEmitter(true);
+  @Output() focusEvent = new EventEmitter(true);
   private subscription: Subscription;
 
   constructor(
@@ -62,12 +63,11 @@ export class PhenoMeasureSelectorComponent implements OnInit {
     this.selectedMeasure = null;
     (<HTMLInputElement>document.getElementById('search-box')).value = '';
     this.searchBoxChange('');
+    this.clearEvent.emit(true);
   }
 
-  onFocus(event) {
-    event.stopPropagation();
-    this.inputGroupSpan.nativeElement.classList.add('show');
-    this.selectedMeasure = null;
+  onFocus() {
+    this.focusEvent.emit(true);
   }
 
   searchBoxChange(searchFieldValue) {
