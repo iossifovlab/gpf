@@ -1,4 +1,4 @@
-<div style="padding: 10px; min-width: 400px; display: grid;">
+<div style="padding: 10px; min-width: 400px; display: grid">
   <div style="width: 100%; padding: 1px 0;">
     <button
       id="check-uncheck-all-button"
@@ -12,7 +12,7 @@
         class="search-input form-control"
         type="text"
         name="search"
-        placeholder="Search"
+        [attr.placeholder]="searchPlaceholder"
         [(ngModel)]="searchText"
         (ngModelChange)="filterItems($event)"
         autocomplete="off"

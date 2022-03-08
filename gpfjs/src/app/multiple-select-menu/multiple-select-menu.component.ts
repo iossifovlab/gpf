@@ -17,6 +17,7 @@ export class MultipleSelectMenuComponent implements OnChanges {
   public buttonLabel = 'Uncheck all';
   public searchText: string;
   public filteredColumns: Column[];
+  public searchPlaceholder: string;
 
   public imgPathPrefix = environment.imgPathPrefix;
 
@@ -28,7 +29,7 @@ export class MultipleSelectMenuComponent implements OnChanges {
     this.searchText = '';
     this.updateButtonLabel();
     this.filteredColumns = this.columns;
-    
+
     // focus search input field
     this.waitForSearchInputToLoad().then(() => {
       this.searchInput.nativeElement.focus();

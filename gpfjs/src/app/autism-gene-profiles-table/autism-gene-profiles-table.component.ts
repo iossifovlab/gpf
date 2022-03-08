@@ -215,6 +215,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     this.ngbDropdownMenu.dropdown.toggle();
     this.clickedColumnFilteringButton = $event.target;
     this.updateModalPosition();
+    this.multipleSelectMenuComponent.searchPlaceholder = `Search in "${column.displayName}"`;
     this.multipleSelectMenuComponent.columns = column.columns;
     this.multipleSelectMenuComponent.refresh();
   }
@@ -227,6 +228,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     this.ngbDropdownMenu.dropdown.toggle();
     this.clickedColumnFilteringButton = $event.target;
     this.updateModalPosition(0, -13);
+    this.multipleSelectMenuComponent.searchPlaceholder = 'Search in all categories';
     this.multipleSelectMenuComponent.columns = this.config.columns.filter(col => col.id !== this.geneSymbolColumnId);
     this.multipleSelectMenuComponent.refresh();
   }
