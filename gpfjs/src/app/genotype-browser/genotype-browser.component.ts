@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 
 import { Observable } from 'rxjs';
 
@@ -8,7 +8,7 @@ import { ConfigService } from '../config/config.service';
 import { DatasetsService } from '../datasets/datasets.service';
 import { Dataset, PersonSet } from '../datasets/datasets';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
-import { Store, Select, Selector } from '@ngxs/store';
+import { Select, Selector } from '@ngxs/store';
 import { GenotypeBlockComponent } from '../genotype-block/genotype-block.component';
 import { GenesBlockComponent } from '../genes-block/genes-block.component';
 import { RegionsFilterState } from 'app/regions-filter/regions-filter.state';
@@ -16,6 +16,7 @@ import { GenomicScoresBlockState } from 'app/genomic-scores-block/genomic-scores
 import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-filters-block.component';
 import { PersonFiltersBlockComponent } from 'app/person-filters-block/person-filters-block.component';
 import { ErrorsState, ErrorsModel } from '../common/errors.state';
+import { clone } from 'lodash';
 
 @Component({
   selector: 'gpf-genotype-browser',
@@ -74,7 +75,7 @@ export class GenotypeBrowserComponent implements OnInit {
     private datasetsService: DatasetsService,
   ) { }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     this.genotypeBrowserState = {};
 
     this.selectedDataset = this.datasetsService.getSelectedDataset();
@@ -89,7 +90,7 @@ export class GenotypeBrowserComponent implements OnInit {
     });
   }
 
-  submitQuery() {
+  public submitQuery(): void {
     this.loadingFinished = false;
     this.loadingService.setLoadingStart();
 
@@ -97,16 +98,7 @@ export class GenotypeBrowserComponent implements OnInit {
     this.genotypeBrowserState['datasetId'] = this.selectedDataset.id;
     this.legend = this.selectedDataset.personSetCollections.getLegend(this.genotypeBrowserState['personSetCollection']);
 
-    /* FIXME: Hack to remove presentInChild and presentInParent from
-    query arguments if they are not enabled (would interfere with results).
-    This should be removed when a central converter from state to query args
-    is implemented. */
-    if (!this.selectedDataset.genotypeBrowserConfig.hasPresentInChild) {
-      delete this.genotypeBrowserState['presentInChild'];
-    }
-    if (!this.selectedDataset.genotypeBrowserConfig.hasPresentInParent) {
-      delete this.genotypeBrowserState['presentInParent'];
-    }
+    this.patchState();
 
     this.queryService.streamingFinishedSubject.subscribe(
       () => { this.loadingFinished = true; }
@@ -116,11 +108,28 @@ export class GenotypeBrowserComponent implements OnInit {
     );
   }
 
-  onSubmit(event) {
-    const args: any = this.genotypeBrowserState;
+  public onSubmit(event): void {
+    this.patchState();
     this.genotypeBrowserState['datasetId'] = this.selectedDataset.id;
-    args.download = true;
+
+    const args = clone(this.genotypeBrowserState);
+    args['download'] = true;
+
     event.target.queryData.value = JSON.stringify(args);
     event.target.submit();
+  }
+
+  private patchState(): void {
+    /* FIXME: Hack to remove presentInChild and presentInParent from
+      query arguments if they are not enabled (would interfere with results).
+      This should be removed when a central converter from state to query args
+      is implemented. */
+    if (!this.selectedDataset.genotypeBrowserConfig.hasPresentInChild) {
+      delete this.genotypeBrowserState['presentInChild'];
+    }
+
+    if (!this.selectedDataset.genotypeBrowserConfig.hasPresentInParent) {
+      delete this.genotypeBrowserState['presentInParent'];
+    }
   }
 }
