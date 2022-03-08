@@ -136,7 +136,7 @@ class PhenoMeasureRegressionsView(QueryBaseView):
         if dataset is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        regressions = self.dataset.phenotype_data.get_regressions()
+        regressions = dataset.phenotype_data.get_regressions()
 
         if regressions is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
