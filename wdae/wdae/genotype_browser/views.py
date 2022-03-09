@@ -17,9 +17,7 @@ from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 from studies.study_wrapper import StudyWrapperBase
 
-from datasets_api.permissions import \
-    handle_partial_permissions
-
+from datasets_api.permissions import handle_partial_permissions, user_has_permission
 from dae.utils.dae_utils import join_line
 
 
@@ -47,6 +45,10 @@ class GenotypeBrowserQueryView(QueryBaseView):
         if "queryData" in data:
             data = self._parse_query_params(data)
         dataset_id = data.pop("datasetId", None)
+
+
+        if not user_has_permission(request.user, dataset_id):
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
