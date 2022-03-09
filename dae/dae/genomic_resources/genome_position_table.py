@@ -518,7 +518,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
     def _should_use_sequential(self, chrom, pos):
         if self.jump_threshold == 0:
-            False
+            return False
 
         assert chrom is not None
         if len(self.buffer) == 0:
