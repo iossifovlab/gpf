@@ -1,0 +1,5 @@
+chrom	position	reference	alternative	bucket_index	summary_variant_index	allele_index	allele_count	effects
+1	865664	G			0	0	2	
+1	865664	G	A		0	1	2	synonymous!SAMD11:synonymous!NM_152486:SAMD11:synonymous:68/681
+1	865691	C			1	0	2	
+1	865691	C	T		1	1	2	missense!SAMD11:missense!NM_152486:SAMD11:missense:77/681(Pro->Ser)
