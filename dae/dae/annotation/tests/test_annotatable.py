@@ -31,7 +31,7 @@ def test_vcf_allele(allele, allele_type):
     assert a.type == allele_type
 
 
-@pytest.mark.parametrize("allele,exprected,length,end_pos,allele_type", [
+@pytest.mark.parametrize("allele,expected,length,end_pos,allele_type", [
     ((1, "AA", "CA"), (1, "A", "C"), 1, 1, VCFAllele.Type.substitution),
     ((1, "CA", "CT"), (2, "A", "T"), 1, 2, VCFAllele.Type.substitution),
     ((1, "ACA", "A"), (1, "ACA", "A"), 4, 4, VCFAllele.Type.small_deletion),
