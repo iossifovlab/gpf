@@ -31,7 +31,7 @@ def test_vcf_allele(allele, allele_type):
     assert a.type == allele_type
 
 
-@pytest.mark.parametrize("allele,parsimonious,length,end_pos,allele_type", [
+@pytest.mark.parametrize("allele,exprected,length,end_pos,allele_type", [
     ((1, "AA", "CA"), (1, "A", "C"), 1, 1, VCFAllele.Type.substitution),
     ((1, "CA", "CT"), (2, "A", "T"), 1, 2, VCFAllele.Type.substitution),
     ((1, "ACA", "A"), (1, "ACA", "A"), 4, 4, VCFAllele.Type.small_deletion),
@@ -61,13 +61,13 @@ def test_vcf_allele(allele, allele_type):
     ),
 ])
 def test_parsimonious_vcf_allele(
-        allele, parsimonious, length, end_pos, allele_type):
+        allele, expected, length, end_pos, allele_type):
 
     parsimonious = trim_parsimonious(*allele)
     a = VCFAllele("1", *parsimonious)
 
     assert a.type == allele_type
     assert len(a) == length
-    assert a.pos == parsimonious[0]
-    assert a.ref == parsimonious[1]
-    assert a.alt == parsimonious[2]
+    assert a.pos == expected[0]
+    assert a.ref == expected[1]
+    assert a.alt == expected[2]
