@@ -1,11 +1,9 @@
-import pytest
 import numpy as np
 
 from dae.variants.attributes import GeneticModel
 from dae.backends.impala.serializers import AlleleParquetSerializer
 
 
-# @pytest.mark.skip("Incompatible API")
 def test_best_state_genetic_model(variants_impala, impala_genotype_storage):
     iv = variants_impala("backends/quads_f1")
     families = iv.families
