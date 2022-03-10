@@ -415,7 +415,9 @@ EOT'
     build_run_local echo $gpf_git_branch
     build_run_local echo "SONARQUBE_DEFAULT_TOKEN=$SONARQUBE_DEFAULT_TOKEN"
 
-    if [ "$SONARQUBE_DEFAULT_TOKEN" != "" ] && [ "$gpf_git_branch" = "sonarqube-experiments" ]; then
+    # if [ "$SONARQUBE_DEFAULT_TOKEN" != "" ] && [ "$gpf_git_branch" = "sonarqube-experiments" ]; then
+
+    if [ "$SONARQUBE_DEFAULT_TOKEN" != "" ]; then
       build_run_local echo "Sonarqube stage started"
 
       build_run_local docker run --rm \
