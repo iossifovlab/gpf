@@ -1,7 +1,7 @@
 import json
 from pprint import pprint
 
-from rest_framework import status
+from rest_framework import status  # type: ignore
 
 from utils.email_regex import email_regex, is_email_valid
 from utils.password_requirements import is_password_valid

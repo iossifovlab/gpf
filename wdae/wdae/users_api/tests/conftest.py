@@ -3,7 +3,7 @@ import pytest
 from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
 
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient  # type: ignore
 
 from users_api.models import WdaeUser
 
@@ -90,7 +90,6 @@ def admin_group(user):
 def researcher(db):
     res = WdaeUser.objects.create_user(email="fake@fake.com")
     res.name = "fname"
-    res.email = "fake@fake.com"
     res.set_password("alabala")
     res.save()
 
@@ -101,7 +100,6 @@ def researcher(db):
 def researcher_without_password(db):
     res = WdaeUser.objects.create_user(email="fake@fake.com")
     res.name = "fname"
-    res.email = "fake@fake.com"
     res.save()
 
     return res
