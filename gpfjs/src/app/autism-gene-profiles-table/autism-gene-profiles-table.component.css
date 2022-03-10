@@ -142,7 +142,7 @@
 }
 
 .dropdown-span {
-  position: fixed;
+  position: absolute;
   z-index: 3;
 }
 

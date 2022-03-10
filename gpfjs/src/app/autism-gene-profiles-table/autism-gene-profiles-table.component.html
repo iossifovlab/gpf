@@ -1,4 +1,4 @@
-<div style="padding: 25px; padding-top: 16px;">
+<div style="padding: 25px; padding-top: 0">
   <div *ngIf="config" class="table-container">
     <div id="table-top">
       <ng-container *ngTemplateOutlet="aboveTableBar"></ng-container>
@@ -22,7 +22,7 @@
         </ng-container>
       </div>
 
-      <div id="nothing-found" [style.grid-template-columns.px]="(leaves.length * 110) + 40" class="table-row table-body-row" [hidden]="!showNothingFound">
+      <div id="nothing-found" [style.grid-template-columns.px]="nothingFoundWidth" class="table-row table-body-row" [hidden]="!showNothingFound">
         <span>Nothing found</span>
       </div>
     </div>
@@ -125,10 +125,6 @@
       </div>
 
       <div *ngIf="showKeybinds" class="keybinds-tooltip">
-        <span>1</span>&#160;<span>2</span>&#160;<span>3</span> - navigate to tab by index<br />
-        <span>e</span> or <span>n</span> - navigate to the next tab<br />
-        <span>q</span> or <span>p</span> - navigate to the previous tab<br />
-        <span>w</span> - close current tab<br />
         <span>middleclick</span> or <span>ctrl</span>/<span>command</span> + <span>click</span> - highlight row<br />
         <span>esc</span> - clear all highlights<br />
         <span>f</span> - compare highlighted genes<br />
@@ -148,7 +144,10 @@
       style="margin: 4px; background-color: none"
       role="group">
       <button class="compare-gene-item" [attr.title]="gene" type="button">
-        <span (middleclick)="emitCreateTabEvent($event, gene, false)" (click)="emitCreateTabEvent($event, gene)" class="compare-genes-gene-name clickable">{{ gene }}</span>
+        <span
+          class="compare-genes-gene-name clickable"
+          (click)="openSingleView(gene)"
+          (middleclick)="openSingleView(gene)">{{ gene }}</span>
         <button (click)="toggleHighlightGene(gene)" class="compare-genes-close font-weight-light" type="button">×</button>
       </button>
     </div>
@@ -158,7 +157,8 @@
     <button
       id="compare-genes-compare-button"
       class="btn btn-default"
-      (click)="emitCreateTabEvent()"
+      (click)="openSingleView(highlightedGenes)"
+      (middleclick)="openSingleView(highlightedGenes)"
       title="Compare highlighted genes">Compare</button
     >
   </div>
