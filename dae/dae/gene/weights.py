@@ -83,7 +83,6 @@ class GeneWeight:
         bars, bins = np.histogram(
             list(self.values()), bins_in, range=[bleft, bright]
         )
-        # bins = np.round(bins, -int(np.log(step)))
 
         return (bins, bars)
 
