@@ -42,7 +42,7 @@ def inactive_user(db, user_model):
 
 
 @pytest.fixture()
-def logged_in_user(client, active_user):
+def logged_in_user(active_user):
     client = APIClient()
     client.login(email=active_user.email, password="secret")
     return active_user, client

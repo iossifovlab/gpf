@@ -3,16 +3,17 @@ from dae.backends.impala.parquet_io import VariantsParquetWriter
 from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 
 
+PARTITION_STUDY_DATA = "backends/partition"
+
+
 def test_region_partition(vcf_variants_loaders, temp_dirname):
-    fvars = vcf_variants_loaders("backends/partition")[0]
+    fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"], 10000, root_dirname=temp_dirname
     )
 
     parquet_writer = VariantsParquetWriter(fvars, partition_desc)
-
-    assert parquet_writer is not None
 
     parquet_writer.write_dataset()
 
@@ -39,16 +40,13 @@ def test_region_partition(vcf_variants_loaders, temp_dirname):
 def test_region_partition_chromosome_filter(
         vcf_variants_loaders, temp_dirname):
 
-    fvars = vcf_variants_loaders("backends/partition")[0]
+    fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1"], 10000, root_dirname=temp_dirname
     )
 
     parquet_writer = VariantsParquetWriter(fvars, partition_desc)
-
-    assert parquet_writer is not None
-
     parquet_writer.write_dataset()
 
     assert os.path.exists(os.path.join(temp_dirname, "region_bin=1_86"))
@@ -73,16 +71,13 @@ def test_region_partition_chromosome_filter(
 
 
 def test_region_partition_small_region(vcf_variants_loaders, temp_dirname):
-    fvars = vcf_variants_loaders("backends/partition")[0]
+    fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"], 10, root_dirname=temp_dirname
     )
 
     parquet_writer = VariantsParquetWriter(fvars, partition_desc)
-
-    assert parquet_writer is not None
-
     parquet_writer.write_dataset()
 
     assert os.path.exists(os.path.join(temp_dirname, "region_bin=1_86558"))
@@ -116,16 +111,13 @@ def test_region_partition_small_region(vcf_variants_loaders, temp_dirname):
 
 
 def test_region_partition_large_region(vcf_variants_loaders, temp_dirname):
-    fvars = vcf_variants_loaders("backends/partition")[0]
+    fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"], 10000000, root_dirname=temp_dirname
     )
 
     parquet_writer = VariantsParquetWriter(fvars, partition_desc)
-
-    assert parquet_writer is not None
-
     parquet_writer.write_dataset()
 
     assert os.path.exists(os.path.join(temp_dirname, "region_bin=1_0"))
@@ -143,16 +135,13 @@ def test_region_partition_large_region(vcf_variants_loaders, temp_dirname):
 
 
 def test_family_partition(vcf_variants_loaders, temp_dirname):
-    fvars = vcf_variants_loaders("backends/partition")[0]
+    fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"], 10000000, 1000, root_dirname=temp_dirname
     )
 
     parquet_writer = VariantsParquetWriter(fvars, partition_desc)
-
-    assert parquet_writer is not None
-
     parquet_writer.write_dataset()
 
     assert os.path.exists(
@@ -196,7 +185,7 @@ def test_family_partition(vcf_variants_loaders, temp_dirname):
 
 
 def test_coding_partition_1(vcf_variants_loaders, temp_dirname):
-    fvars = vcf_variants_loaders("backends/partition")[0]
+    fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"],
@@ -206,9 +195,6 @@ def test_coding_partition_1(vcf_variants_loaders, temp_dirname):
     )
 
     parquet_writer = VariantsParquetWriter(fvars, partition_desc)
-
-    assert parquet_writer is not None
-
     parquet_writer.write_dataset()
 
     assert os.path.exists(
@@ -247,10 +233,8 @@ def test_coding_partition_1(vcf_variants_loaders, temp_dirname):
 
 
 def test_coding_partition_2(vcf_variants_loaders, temp_dirname):
-    fvars = vcf_variants_loaders("backends/partition")[0]
 
-    temp_dirname = "/tmp/dataset-partition-test"
-
+    fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"],
         10000000,
@@ -264,9 +248,6 @@ def test_coding_partition_2(vcf_variants_loaders, temp_dirname):
     )
 
     parquet_writer = VariantsParquetWriter(fvars, partition_desc)
-
-    assert parquet_writer is not None
-
     parquet_writer.write_dataset()
 
     assert os.path.exists(
@@ -294,7 +275,7 @@ def test_coding_partition_2(vcf_variants_loaders, temp_dirname):
 
 
 def test_coding_partition_3(vcf_variants_loaders, temp_dirname):
-    fvars = vcf_variants_loaders("backends/partition")[0]
+    fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"],
@@ -304,9 +285,6 @@ def test_coding_partition_3(vcf_variants_loaders, temp_dirname):
     )
 
     parquet_writer = VariantsParquetWriter(fvars, partition_desc)
-
-    assert parquet_writer is not None
-
     parquet_writer.write_dataset()
 
     assert os.path.exists(
@@ -334,16 +312,13 @@ def test_coding_partition_3(vcf_variants_loaders, temp_dirname):
 
 
 def test_frequency_partition_1(vcf_variants_loaders, temp_dirname):
-    fvars = vcf_variants_loaders("backends/partition")[0]
+    fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"], 10000000, rare_boundary=30, root_dirname=temp_dirname
     )
 
     parquet_writer = VariantsParquetWriter(fvars, partition_desc)
-
-    assert parquet_writer is not None
-
     parquet_writer.write_dataset()
 
     assert os.path.exists(
@@ -393,16 +368,13 @@ def test_frequency_partition_1(vcf_variants_loaders, temp_dirname):
 
 
 def test_frequency_partition_2(vcf_variants_loaders, temp_dirname):
-    fvars = vcf_variants_loaders("backends/partition")[0]
+    fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"], 10000000, rare_boundary=1, root_dirname=temp_dirname
     )
 
     parquet_writer = VariantsParquetWriter(fvars, partition_desc)
-
-    assert parquet_writer is not None
-
     parquet_writer.write_dataset()
 
     assert os.path.exists(
@@ -430,16 +402,13 @@ def test_frequency_partition_2(vcf_variants_loaders, temp_dirname):
 
 
 def test_frequency_partition_3(vcf_variants_loaders, temp_dirname):
-    fvars = vcf_variants_loaders("backends/partition")[0]
+    fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"], 10000000, rare_boundary=100, root_dirname=temp_dirname
     )
 
     parquet_writer = VariantsParquetWriter(fvars, partition_desc)
-
-    assert parquet_writer is not None
-
     parquet_writer.write_dataset()
 
     assert os.path.exists(
@@ -467,7 +436,7 @@ def test_frequency_partition_3(vcf_variants_loaders, temp_dirname):
 
 
 def test_all(vcf_variants_loaders, temp_dirname):
-    fvars = vcf_variants_loaders("backends/partition")[0]
+    fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"],
@@ -484,9 +453,6 @@ def test_all(vcf_variants_loaders, temp_dirname):
     )
 
     parquet_writer = VariantsParquetWriter(fvars, partition_desc)
-
-    assert parquet_writer is not None
-
     parquet_writer.write_dataset()
 
     assert os.path.exists(
@@ -622,9 +588,7 @@ def test_all(vcf_variants_loaders, temp_dirname):
 
 
 def test_region_family_frequency(vcf_variants_loaders, temp_dirname):
-    fvars = vcf_variants_loaders("backends/partition")[0]
-
-    temp_dirname = temp_dirname
+    fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = ParquetPartitionDescriptor(
         ["1", "2"],
@@ -635,9 +599,6 @@ def test_region_family_frequency(vcf_variants_loaders, temp_dirname):
     )
 
     parquet_writer = VariantsParquetWriter(fvars, partition_desc)
-
-    assert parquet_writer is not None
-
     parquet_writer.write_dataset()
 
     assert os.path.exists(

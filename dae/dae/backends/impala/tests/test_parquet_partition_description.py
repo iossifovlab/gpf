@@ -102,38 +102,38 @@ def test_parquet_frequency_bin(fam1, gt, attributes, rare_boundary, expected):
             ["synonymous"],
             [0, 1, 1, 1],
         ),
-        # (
-        #     "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-        #     "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-        #     "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-        #     ["missense"],
-        #     [0, 0, 0, 0],
-        # ),
-        # (
-        #     "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-        #     "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-        #     "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-        #     ["missense", "synonymous"],
-        #     [0, 1, 1, 1],
-        # ),
-        # (
-        #     "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-        #     "missense!SAMD11:missense!NM_152486_1:54/681(Ser->Arg)",
-        #     "intergenic!intergenic:intergenic!intergenic:intergenic",
-        #     ["synonymous"],
-        #     [0, 1, 0, 0],
-        # ),
-        # (
-        #     "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-        #     "missense!SAMD11:missense!NM_152486_1:54/681(Ser->Arg)",
-        #     "missense!SAMD11:missense!NM_152486_1:54/681(Ser->Arg)",
-        #     ["nonsense", "intergenic"],
-        #     [0, 0, 0, 0],
-        # ),
+        (
+            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
+            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
+            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
+            ["missense"],
+            [0, 0, 0, 0],
+        ),
+        (
+            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
+            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
+            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
+            ["missense", "synonymous"],
+            [0, 1, 1, 1],
+        ),
+        (
+            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
+            "missense!SAMD11:missense!NM_152486_1:54/681(Ser->Arg)",
+            "intergenic!intergenic:intergenic!intergenic:intergenic",
+            ["synonymous"],
+            [0, 1, 0, 0],
+        ),
+        (
+            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
+            "missense!SAMD11:missense!NM_152486_1:54/681(Ser->Arg)",
+            "missense!SAMD11:missense!NM_152486_1:54/681(Ser->Arg)",
+            ["nonsense", "intergenic"],
+            [0, 0, 0, 0],
+        ),
     ],
 )
 def test_parquet_coding_bin(
-    fam1, gt, eff1, eff2, eff3, coding_effect_types, expected
+    fam1, eff1, eff2, eff3, coding_effect_types, expected
 ):
     summary_alleles = [
         SummaryAllele("1", 11539, "T", None, 0, 0),
@@ -175,7 +175,6 @@ def test_variant_filename_basedir():
         rare_boundary=5
     )
 
-    assert pd is not None
     res = pd.variants_filename_basedir(
         f"AGRE_WG_859_variants.parquet/{filename}")
     assert res == "AGRE_WG_859_variants.parquet/"
@@ -199,7 +198,6 @@ def test_no_partition_variant_filename_basedir():
     filename = "gosho_variants.parquet"
 
     pd = NoPartitionDescriptor()
-    assert pd is not None
 
     res = pd.variants_filename_basedir(
         f"AGRE_WG_859_variants.parquet/{filename}")

@@ -114,4 +114,4 @@ def test_build_a_configuration_with_embeded():
     assert gr is not None
 
     score = open_position_score_from_resource(gr)
-    score.fetch_scores('chr1', 23) == {"score": 0.01}
+    assert score.fetch_scores('chr1', 23) == {"score": 0.01}
