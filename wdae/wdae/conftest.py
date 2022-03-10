@@ -1,12 +1,12 @@
 import pytest
 import os
 
-from box import Box
+from box import Box  # type: ignore
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 
-from users_api.models import WdaeUser
+from users_api.models import WdaeUser, get_anonymous_user_instance
 
 from remote.rest_api_client import RESTClient
 
@@ -25,8 +25,8 @@ pytest_plugins = ["dae_conftests.dae_conftests"]
 
 @pytest.fixture()
 def user(db):
-    User = get_user_model()
-    u = User.objects.create(
+    user_model = get_user_model()
+    u = user_model.objects.create(
         email="user@example.com",
         name="User",
         is_staff=False,
@@ -41,8 +41,8 @@ def user(db):
 
 @pytest.fixture()
 def user_without_password(db):
-    User = get_user_model()
-    u = User.objects.create(
+    user_model = get_user_model()
+    u = user_model.objects.create(
         email="user_without_password@example.com",
         name="User",
         is_staff=False,
@@ -56,8 +56,8 @@ def user_without_password(db):
 
 @pytest.fixture()
 def admin(db):
-    User = get_user_model()
-    u = User.objects.create(
+    user_model = get_user_model()
+    u = user_model.objects.create(
         email="admin@example.com",
         name="User",
         is_staff=True,
@@ -76,6 +76,12 @@ def admin(db):
 @pytest.fixture()
 def user_client(user, client):
     client.login(email=user.email, password="secret")
+    return client
+
+
+@pytest.fixture()
+def anonymous_client(client):
+    client.logout()
     return client
 
 
@@ -120,18 +126,6 @@ def fixtures_wgpf_instance(wgpf_instance, global_dae_fixtures_dir):
 @pytest.fixture(scope="function")
 def wdae_gpf_instance(
         db, mocker, admin_client, fixtures_wgpf_instance, fixture_dirname):
-
-    # repositories = [
-    #     wdae_gpf_instance.grr
-    # ]
-    # repositories.append(
-    #         build_genomic_resource_repository(
-    #             Box({
-    #                 "id": "fixtures",
-    #                 "type": "directory",
-    #                 "directory": f"{fixture_dirname('genomic_resources')}"
-    #             })))
-    # wdae_gpf_instance.grr = GenomicResourceGroupRepo(repositories)
 
     reload_datasets(fixtures_wgpf_instance)
     mocker.patch(

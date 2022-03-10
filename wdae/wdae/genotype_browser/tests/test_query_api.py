@@ -4,7 +4,7 @@ import pytest
 
 from datasets_api.permissions import add_group_perm_to_user, \
     add_group_perm_to_dataset
-from rest_framework import status
+from rest_framework import status  # type: ignore
 
 
 pytestmark = pytest.mark.usefixtures(
@@ -17,6 +17,7 @@ EXAMPLE_REQUEST_F1 = {
 
 
 QUERY_VARIANTS_URL = "/api/v3/genotype_browser/query"
+JSON_CONTENT_TYPE = "application/json"
 
 
 def test_simple_query(db, admin_client, preview_sources):
@@ -24,7 +25,7 @@ def test_simple_query(db, admin_client, preview_sources):
     data['sources'] = list(preview_sources)
 
     response = admin_client.post(
-        QUERY_VARIANTS_URL, json.dumps(data), content_type="application/json"
+        QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE
     )
 
     assert status.HTTP_200_OK == response.status_code
@@ -32,6 +33,22 @@ def test_simple_query(db, admin_client, preview_sources):
     res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
 
     assert len(res) == 3
+
+
+def test_simple_query_download_anonymous(
+        db, anonymous_client, download_sources):
+    data = {
+        "queryData": json.dumps({
+            **EXAMPLE_REQUEST_F1,
+            "download": True,
+            "sources": download_sources
+        })
+    }
+
+    response = anonymous_client.post(
+        QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_simple_query_download(db, admin_client, download_sources):
@@ -44,7 +61,7 @@ def test_simple_query_download(db, admin_client, download_sources):
     }
 
     response = admin_client.post(
-        QUERY_VARIANTS_URL, json.dumps(data), content_type="application/json"
+        QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE
     )
     assert response.status_code == status.HTTP_200_OK
     res = list(response.streaming_content)
@@ -90,7 +107,7 @@ def test_simple_query_summary_variants(
     response = admin_client.post(
         QUERY_VARIANTS_URL,
         json.dumps(data),
-        content_type="application/json"
+        content_type=JSON_CONTENT_TYPE
     )
     assert status.HTTP_200_OK == response.status_code
     res = response.streaming_content
@@ -111,7 +128,7 @@ def test_simple_query_summary_variants_download(
     }
 
     response = admin_client.post(
-        QUERY_VARIANTS_URL, json.dumps(data), content_type="application/json"
+        QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE
     )
     assert response.status_code == status.HTTP_200_OK
     res = list(response.streaming_content)
@@ -148,7 +165,7 @@ def test_missing_dataset(db, user_client, url, preview_sources):
     del data["datasetId"]
 
     response = user_client.post(
-        url, json.dumps(data), content_type="application/json"
+        url, json.dumps(data), content_type=JSON_CONTENT_TYPE
     )
     assert status.HTTP_400_BAD_REQUEST, response.status_code
 
@@ -160,7 +177,7 @@ def test_bad_dataset(db, user_client, url, preview_sources):
     data["datasetId"] = "ala bala portokala"
 
     response = user_client.post(
-        url, json.dumps(data), content_type="application/json"
+        url, json.dumps(data), content_type=JSON_CONTENT_TYPE
     )
     assert status.HTTP_400_BAD_REQUEST, response.status_code
 
@@ -175,7 +192,7 @@ def test_normal_dataset_rights_query(db, user, user_client, preview_sources):
     add_group_perm_to_user("composite_dataset_ds", user)
 
     response = user_client.post(
-        QUERY_VARIANTS_URL, json.dumps(data), content_type="application/json"
+        QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE
     )
     assert status.HTTP_200_OK == response.status_code
     res = response.streaming_content
@@ -193,7 +210,7 @@ def test_mixed_dataset_rights_query(db, user, user_client, preview_sources):
     add_group_perm_to_user("inheritance_trio", user)
 
     response = user_client.post(
-        QUERY_VARIANTS_URL, json.dumps(data), content_type="application/json"
+        QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE
     )
     assert status.HTTP_200_OK == response.status_code
     res = response.streaming_content
@@ -214,7 +231,7 @@ def test_mixed_layered_dataset_rights_query(
     add_group_perm_to_user("composite_dataset_ds", user)
 
     response = user_client.post(
-        QUERY_VARIANTS_URL, json.dumps(data), content_type="application/json"
+        QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE
     )
     assert status.HTTP_200_OK == response.status_code
     res = response.streaming_content
@@ -236,7 +253,7 @@ def test_mixed_layered_diff_group_dataset_rights_query(
     add_group_perm_to_user("new_custom_group", user)
 
     response = user_client.post(
-        QUERY_VARIANTS_URL, json.dumps(data), content_type="application/json"
+        QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE
     )
     assert status.HTTP_200_OK == response.status_code
     res = response.streaming_content
@@ -260,7 +277,7 @@ def test_mixed_dataset_rights_download(
     add_group_perm_to_user("new_custom_group", user)
 
     response = user_client.post(
-        QUERY_VARIANTS_URL, json.dumps(data), content_type="application/json"
+        QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE
     )
     assert response.status_code == status.HTTP_200_OK
     res = list(response.streaming_content)
@@ -279,7 +296,7 @@ def test_mixed_dataset_rights_third_party_group(
     add_group_perm_to_user("new_custom_group", user)
 
     response = user_client.post(
-        QUERY_VARIANTS_URL, json.dumps(data), content_type="application/json"
+        QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE
     )
     assert status.HTTP_200_OK == response.status_code
     res = response.streaming_content
@@ -301,7 +318,7 @@ def test_mixed_dataset_rights_with_study_filters(
     add_group_perm_to_user("new_custom_group", user)
 
     response = user_client.post(
-        QUERY_VARIANTS_URL, json.dumps(data), content_type="application/json"
+        QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE
     )
     assert status.HTTP_200_OK == response.status_code
     res = response.streaming_content
