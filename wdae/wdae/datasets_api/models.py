@@ -2,7 +2,7 @@ import logging
 
 from django.db import models
 from django.contrib.auth.models import Group
-from guardian.shortcuts import assign_perm
+from guardian.shortcuts import assign_perm  # type: ignore
 from utils.logger import LOGGER
 
 
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class Dataset(models.Model):
-    dataset_id = models.TextField()
+    dataset_id: models.TextField = models.TextField()
 
     DEFAULT_GROUPS_FOR_DATASET = ["any_dataset"]
 

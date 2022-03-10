@@ -1,7 +1,7 @@
 from django.http.response import StreamingHttpResponse, FileResponse
 
-from rest_framework import status
-from rest_framework.response import Response
+from rest_framework import status  # type: ignore
+from rest_framework.response import Response  # type: ignore
 
 import json
 import logging
@@ -17,7 +17,8 @@ from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 from studies.study_wrapper import StudyWrapperBase
 
-from datasets_api.permissions import handle_partial_permissions, user_has_permission
+from datasets_api.permissions import handle_partial_permissions, \
+    user_has_permission
 from dae.utils.dae_utils import join_line
 
 
@@ -46,7 +47,6 @@ class GenotypeBrowserQueryView(QueryBaseView):
             data = self._parse_query_params(data)
         dataset_id = data.pop("datasetId", None)
 
-
         if not user_has_permission(request.user, dataset_id):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
@@ -64,9 +64,10 @@ class GenotypeBrowserQueryView(QueryBaseView):
             max_variants = data["maxVariantsCount"]
         else:
             if is_download:
-                max_variants = \
-                    None if user.has_unlimitted_download or user.is_staff \
-                    else 10000
+                max_variants = 10000
+                if not user.is_anonymous and \
+                        (user.is_staff or user.has_unlimitted_download):
+                    max_variants = None
             else:
                 max_variants = self.MAX_SHOWN_VARIANTS + 1
 

@@ -8,16 +8,15 @@ import uuid
 from django.db import models, transaction
 from django.core.mail import send_mail
 
-# from django.contrib.auth import get_user_model
-from django.contrib.auth.models import (
-    AbstractBaseUser,
-    BaseUserManager,
-    PermissionsMixin,
-)
+from django.contrib.auth.models import \
+    AbstractBaseUser, \
+    BaseUserManager, \
+    PermissionsMixin
+
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 from django.conf import settings
-from guardian.conf import settings as guardian_settings
+from guardian.conf import settings as guardian_settings  # type: ignore
 from django.contrib.auth.models import Group
 from django.db.models.signals import m2m_changed, post_delete, pre_delete
 
@@ -78,12 +77,12 @@ class WdaeUserManager(BaseUserManager):
 
 class WdaeUser(AbstractBaseUser, PermissionsMixin):
     app_label = "api"
-    name = models.CharField(max_length=100)
-    email = models.EmailField(unique=True)
+    name: models.CharField = models.CharField(max_length=100)
+    email: models.EmailField = models.EmailField(unique=True)
 
-    is_staff = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=False)
-    date_joined = models.DateTimeField(null=True)
+    is_staff: models.BooleanField = models.BooleanField(default=False)
+    is_active: models.BooleanField = models.BooleanField(default=False)
+    date_joined: models.DateTimeField = models.DateTimeField(null=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["name"]
@@ -103,9 +102,8 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
     @property
     def has_unlimitted_download(self):
-        return (
-            self.groups.filter(name=self.UMLIMITTED_DOWNLOAD_GROUP).count() > 0
-        )
+        return self.groups.filter(
+            name=self.UMLIMITTED_DOWNLOAD_GROUP).count() > 0
 
     @property
     def allowed_datasets(self):
@@ -316,18 +314,20 @@ def _create_verif_path(user):
     return verif_path
 
 
-def get_anonymous_user_instance(CurrentUserModel):
+def get_anonymous_user_instance(current_user_model):
     try:
-        user = CurrentUserModel.objects.get(
+        print("current_user_model:", current_user_model)
+        user = current_user_model.objects.get(
             email=guardian_settings.ANONYMOUS_USER_NAME
         )
         return user
-    except CurrentUserModel.DoesNotExist:
-        user = CurrentUserModel.objects.create_user(
+    except current_user_model.DoesNotExist:
+        user = current_user_model.objects.create_user(
             email=guardian_settings.ANONYMOUS_USER_NAME
         )
         user.set_unusable_password()
         user.is_active = True
+
         user.save()
         return user
 
