@@ -3,7 +3,7 @@ from itertools import cycle
 
 import numpy as np
 import matplotlib as mpl
-from matplotlib.colors import to_rgb
+from matplotlib.colors import to_rgb  # type: ignore
 
 import dae.pheno.husl as husl
 
@@ -104,20 +104,19 @@ class _ColorPalette(list):
     """Set the color palette in a with statement, otherwise be a list."""
     def __enter__(self):
         """Open the context."""
-        from .rcmod import set_palette
+        from .rcmod import set_palette  # type: ignore
         self._orig_palette = color_palette()
         set_palette(self)
         return self
 
     def __exit__(self, *args):
         """Close the context."""
-        from .rcmod import set_palette
+        from .rcmod import set_palette  # type: ignore
         set_palette(self._orig_palette)
 
     def as_hex(self):
         """Return a color palette with hex codes instead of RGB values."""
-        hex = [mpl.colors.rgb2hex(rgb) for rgb in self]
-        return _ColorPalette(hex)
+        return _ColorPalette([mpl.colors.rgb2hex(rgb) for rgb in self])
 
     def _repr_html_(self):
         """Rich display of the color palette in an HTML frontend."""
@@ -126,8 +125,9 @@ class _ColorPalette(list):
         html = f'<svg  width="{n * s}" height="{s}">'
         for i, c in enumerate(self.as_hex()):
             html += (
-                f'<rect x="{i * s}" y="0" width="{s}" height="{s}" style="fill:{c};'
-                'stroke-width:2;stroke:rgb(255,255,255)"/>'
+                f'<rect x="{i * s}" y="0" width="{s}" height="{s}" '
+                f'style="fill:{c};'
+                f'stroke-width:2;stroke:rgb(255,255,255)"/>'
             )
         html += '</svg>'
         return html
@@ -169,7 +169,8 @@ def color_palette(palette=None, n_colors=None, desat=None, as_cmap=False):
     """Return a list of colors or continuous colormap defining a palette.
 
     Possible ``palette`` values include:
-        - Name of a seaborn palette (deep, muted, bright, pastel, dark, colorblind)
+        - Name of a seaborn palette (deep, muted, bright, pastel, dark,
+            colorblind)
         - Name of matplotlib colormap
         - 'husl' or 'hls'
         - 'ch:<cubehelix arguments>'
@@ -223,7 +224,6 @@ def color_palette(palette=None, n_colors=None, desat=None, as_cmap=False):
             n_colors = len(palette)
 
     elif not isinstance(palette, str):
-        palette = palette
         if n_colors is None:
             n_colors = len(palette)
     else:
@@ -359,14 +359,15 @@ def dark_palette(color, n_colors=6, reverse=False, as_cmap=False, input="rgb"):
 
     """
     rgb = _color_to_rgb(color, input)
-    h, s, l = husl.rgb_to_husl(*rgb)
+    h, s, _l = husl.rgb_to_husl(*rgb)
     gray_s, gray_l = .15 * s, 15
     gray = _color_to_rgb((h, gray_s, gray_l), input="husl")
     colors = [rgb, gray] if reverse else [gray, rgb]
     return blend_palette(colors, n_colors, as_cmap)
 
 
-def light_palette(color, n_colors=6, reverse=False, as_cmap=False, input="rgb"):
+def light_palette(
+        color, n_colors=6, reverse=False, as_cmap=False, input="rgb"):
     """Make a sequential palette that blends from light to ``color``.
 
     This kind of palette is good for data that range between relatively
@@ -440,7 +441,7 @@ def light_palette(color, n_colors=6, reverse=False, as_cmap=False, input="rgb"):
 
     """
     rgb = _color_to_rgb(color, input)
-    h, s, l = husl.rgb_to_husl(*rgb)
+    h, s, _l = husl.rgb_to_husl(*rgb)
     gray_s, gray_l = .15 * s, 95
     gray = _color_to_rgb((h, gray_s, gray_l), input="husl")
     colors = [rgb, gray] if reverse else [gray, rgb]
