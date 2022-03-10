@@ -82,6 +82,7 @@ function main() {
           -v "$(pwd):/usr/src" \
           sonarsource/sonar-scanner-cli \
           -Dsonar.projectKey=gpfjs \
+          -Dsonar.python.version=3.9 \
           -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
 
     else
