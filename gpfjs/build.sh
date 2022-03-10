@@ -81,7 +81,9 @@ function main() {
           -e SONAR_LOGIN="${SONARQUBE_DEFAULT_TOKEN}" \
           -v "$(pwd):/usr/src" \
           sonarsource/sonar-scanner-cli \
-          -Dsonar.projectKey=gpfjs
+          -Dsonar.projectKey=gpfjs \
+          -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+
     else
       build_run_local echo "Sonarqube stage skipped"
     fi
