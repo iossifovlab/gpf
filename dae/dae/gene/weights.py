@@ -8,6 +8,12 @@ from dae.gene.gene_sets_db import cached
 from dae.utils.dae_utils import join_line
 
 
+GeneWeightConfig = namedtuple(
+    "GeneWeightConfig",
+    ["id", "file", "desc", "bins", "xscale", "yscale", "range"]
+)
+
+
 class GeneWeight:
     """
     Represents gene weights.
@@ -164,7 +170,7 @@ class GeneWeightsDb(object):
         desc=None,
         range=None,
     ):
-        config = namedtuple(
+        config = GeneWeightConfig(
             id=filename.split(".")[0],
             file=filename,
             desc=desc,
