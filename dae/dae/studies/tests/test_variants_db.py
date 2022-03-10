@@ -210,17 +210,17 @@ def test_get_non_existing(variants_db_fixture):
 
 def test_get_all(fixtures_gpf_instance, variants_db_fixture):
     studies = variants_db_fixture.get_all_genotype_data()
-    assert len(studies) == 41
+    assert len(studies) == 42
 
     studies = fixtures_gpf_instance.get_all_genotype_data()
-    assert len(studies) == 41
+    assert len(studies) == 42
 
 
 def test_get_all_studies_ids(fixtures_gpf_instance, variants_db_fixture):
     fixtures_gpf_instance.reload()
 
     genotype_ids = fixtures_gpf_instance.get_genotype_data_ids()
-    assert len(genotype_ids) == 41, genotype_ids
+    assert len(genotype_ids) == 42, genotype_ids
 
 
 def test_get_bad_study(fixtures_gpf_instance):

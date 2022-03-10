@@ -26,7 +26,7 @@ def test_get_wdae_wrapper_nonexistant(wgpf_instance_fixture):
 
 
 def test_get_genotype_data_ids(wgpf_instance_fixture):
-    assert len(wgpf_instance_fixture.get_genotype_data_ids()) == 42
+    assert len(wgpf_instance_fixture.get_genotype_data_ids()) == 43
 
 
 def test_get_genotype_data(wgpf_instance_fixture):
