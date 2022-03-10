@@ -19,9 +19,6 @@ from dae.configuration.schemas.dae_conf import dae_conf_schema
 
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
-from dae.variants.variant import SummaryVariant, SummaryAllele
-from dae.variants.family_variant import FamilyVariant
-
 from dae.backends.raw.loader import EffectAnnotationDecorator, \
     AnnotationPipelineDecorator
 from dae.backends.raw.raw_variants import RawMemoryVariants
@@ -46,14 +43,6 @@ from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 from dae.genomic_resources.gene_models import \
     load_gene_models_from_resource
-
-'''
-from urllib.request import urlopen
-with urlopen("https://www.iossifovlab.com/distribution/public/"
-             "genomic-resources-repository/.CONTENTS") as repo:
-    for line in repo:
-        print(line)
-'''
 
 
 logging.basicConfig(
@@ -123,19 +112,6 @@ def default_dae_config(request, cleanup, fixture_dirname):
     dae_config["studies"]["dir"] = studies_dirname
     dae_config["datasets"]["dir"] = datasets_dirname
 
-    # remote_config = {
-    #     "id": "TEST_REMOTE",
-    #     "host": "gpfremote",
-    #     "base_url": "api/v3",
-    #     "port": 21010,
-    #     "user": "admin@iossifovlab.com",
-    #     "password": "secret",
-    # }
-    # if "remotes" not in dae_config:
-    #     dae_config["remotes"] = list()
-    #     dae_config["remotes"].append(remote_config)
-    # else:
-    #     dae_config["remotes"][0] = remote_config
     dae_config = GPFConfigParser.process_config(
         dae_config,
         dae_conf_schema,
@@ -289,11 +265,13 @@ def temp_dirname_scores(request, cleanup):
     return dirname
 
 
+IMPORT_ANNOTATION_CONFIG = \
+    "fixtures/annotation_pipeline/import_annotation.yaml"
+
+
 @pytest.fixture(scope="session")
 def annotation_pipeline_config():
-    filename = relative_to_this_test_folder(
-        "fixtures/annotation_pipeline/import_annotation.yaml"
-    )
+    filename = relative_to_this_test_folder(IMPORT_ANNOTATION_CONFIG)
     return filename
 
 
@@ -310,9 +288,7 @@ def annotation_scores_dirname():
 
 @pytest.fixture(scope="session")
 def annotation_pipeline_vcf(gpf_instance_2013):
-    filename = relative_to_this_test_folder(
-        "fixtures/annotation_pipeline/import_annotation.yaml"
-    )
+    filename = relative_to_this_test_folder(IMPORT_ANNOTATION_CONFIG)
     pipeline = build_annotation_pipeline(
         pipeline_config_file=filename, grr_repository=gpf_instance_2013.grr)
     return pipeline
@@ -320,9 +296,7 @@ def annotation_pipeline_vcf(gpf_instance_2013):
 
 @pytest.fixture(scope="session")
 def annotation_pipeline_internal(gpf_instance_2013):
-    filename = relative_to_this_test_folder(
-        "fixtures/annotation_pipeline/import_annotation.yaml"
-    )
+    filename = relative_to_this_test_folder(IMPORT_ANNOTATION_CONFIG)
     pipeline = build_annotation_pipeline(
         pipeline_config_file=filename, grr_repository=gpf_instance_2013.grr)
     return pipeline
@@ -418,9 +392,6 @@ def dae_transmitted(
     dae_transmitted_config, gpf_instance_2013, annotation_pipeline_internal
 ):
 
-    # ped_df = FamiliesLoader.load_simple_family_file(
-    #     dae_transmitted_config.family_filename
-    # )
     families = FamiliesLoader.load_simple_families_file(
         dae_transmitted_config.family_filename
     )
@@ -428,7 +399,6 @@ def dae_transmitted(
     variants_loader = DaeTransmittedLoader(
         families,
         dae_transmitted_config.summary_filename,
-        # dae_transmitted_config.toomany_filename,
         genome=gpf_instance_2013.reference_genome,
         regions=None,
     )
@@ -639,7 +609,6 @@ def pytest_addoption(parser):
 
 def pytest_configure(config):
     logger.info("pytest_configure")
-    pass
 
 
 @pytest.fixture(scope="session")
@@ -896,18 +865,6 @@ def iossifov2014_impala(
     return fvars
 
 
-# @pytest.fixture(scope="function")
-# def test_fixture():
-#     print("start")
-#     yield "works"
-#     print("end")
-
-
-# @pytest.fixture(scope="session")
-# def variants_db_fixture(fixtures_gpf_instance):
-#     return fixtures_gpf_instance._variants_db
-
-
 @pytest.fixture(scope="session")
 def dae_calc_gene_sets(request, fixtures_gpf_instance, cleanup):
     genotype_data_names = ["f1_group", "f2_group", "f3_group"]
@@ -949,63 +906,6 @@ def fam1():
     family = families["f1"]
     assert len(family.trios) == 1
     return family
-
-
-@pytest.fixture(scope="session")
-def sv1():
-    return SummaryVariant(
-        [
-            SummaryAllele("1", 11539, "T", None, 0, 0),
-            SummaryAllele("1", 11539, "T", "TA", 0, 1),
-            SummaryAllele("1", 11539, "T", "TG", 0, 2),
-        ]
-    )
-
-
-@pytest.fixture(scope="session")
-def svX1():
-    return SummaryVariant(
-        [
-            SummaryAllele("X", 154931050, "T", None, 0, 0),
-            SummaryAllele("X", 154931050, "T", "A", 0, 1),
-            SummaryAllele("X", 154931050, "T", "G", 0, 2),
-        ]
-    )
-
-
-@pytest.fixture(scope="session")
-def svX2():
-    return SummaryVariant(
-        [
-            SummaryAllele("X", 3_000_000, "C", None, 0, 0),
-            SummaryAllele("X", 3_000_000, "C", "A", 0, 1),
-            SummaryAllele("X", 3_000_000, "C", "A", 0, 2),
-        ]
-    )
-
-
-@pytest.fixture
-def fv1(fam1, sv1):
-    def build(gt, best_st):
-        return FamilyVariant(sv1, fam1, gt, best_st)
-
-    return build
-
-
-@pytest.fixture
-def fvX1(fam1, svX1):
-    def build(gt, best_st):
-        return FamilyVariant(svX1, fam1, gt, best_st)
-
-    return build
-
-
-@pytest.fixture
-def fvX2(fam1, svX2):
-    def build(gt, best_st):
-        return FamilyVariant(svX2, fam1, gt, best_st)
-
-    return build
 
 
 @pytest.fixture
@@ -1188,7 +1088,7 @@ def s3_base():
     try:
         # should fail since we didn't start server yet
         r = requests.get(endpoint_uri)
-    except:  # NOQA
+    except Exception:  # noqa
         pass
     else:
         if r.ok:
@@ -1205,7 +1105,7 @@ def s3_base():
             r = requests.get(endpoint_uri)
             if r.ok:
                 break
-        except:  # NOQA
+        except Exception:  # noqa
             pass
         timeout -= 0.1
         time.sleep(0.1)
