@@ -64,7 +64,7 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
       this.searchBox.nativeElement.focus();
     });
     this.onSelect(null);
-    this.onFocusEvent.emit(null);
+    this.onFocusEvent.emit();
   }
 
   public onSelect(value) {
