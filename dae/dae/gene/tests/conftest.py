@@ -9,6 +9,8 @@ from dae.gene.denovo_gene_set_collection_factory import (
     DenovoGeneSetCollectionFactory,
 )
 
+from dae.gene.gene_scores import GeneScoresDb
+
 from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
@@ -38,9 +40,9 @@ def gene_info_config(local_gpf_instance):
     return local_gpf_instance._gene_info_config
 
 
-@pytest.fixture(scope="session")
-def gene_weights_db(local_gpf_instance):
-    return local_gpf_instance.gene_weights_db
+# @pytest.fixture(scope="session")
+# def gene_scores_db(local_gpf_instance):
+#     return local_gpf_instance.gene_scores_db
 
 
 @pytest.fixture(scope="session")
@@ -138,21 +140,21 @@ def f4_trio_denovo_gene_set_config(local_gpf_instance):
 
 
 @pytest.fixture(scope="session")
-def weights_repo():
+def scores_repo():
     dae_dir = fixtures_dir()
     with open(
-        os.path.join(dae_dir, "geneInfo", "GeneWeights", "RVIS.csv")
+        os.path.join(dae_dir, "geneInfo", "GeneScores", "RVIS.csv")
     ) as f:
         RVIS_content = f.read()
     with open(
-        os.path.join(dae_dir, "geneInfo", "GeneWeights", "LGD.csv")
+        os.path.join(dae_dir, "geneInfo", "GeneScores", "LGD.csv")
     ) as f:
         LGD_content = f.read()
 
-    weights_repo = GenomicResourceEmbededRepo("weights", content={
+    scores_repo = GenomicResourceEmbededRepo("scores", content={
         "RVIS_rank": {
             GR_CONF_FILE_NAME: (
-                "type: gene_weight\n"
+                "type: gene_score\n"
                 "id: RVIS_rank\n"
                 "filename: RVIS.csv\n"
                 "desc: RVIS rank\n"
@@ -165,7 +167,7 @@ def weights_repo():
         },
         "LGD_rank": {
             GR_CONF_FILE_NAME: (
-                "type: gene_weight\n"
+                "type: gene_score\n"
                 "id: LGD_rank\n"
                 "filename: LGD.csv\n"
                 "desc: LGD rank\n"
@@ -177,4 +179,13 @@ def weights_repo():
             "LGD.csv": LGD_content
         }
     })
-    return weights_repo
+    return scores_repo
+
+
+@pytest.fixture(scope="session")
+def gene_scores_db(scores_repo):
+    resources = [
+        scores_repo.get_resource("LGD_rank"),
+        scores_repo.get_resource("RVIS_rank"),
+    ]
+    return GeneScoresDb(resources)

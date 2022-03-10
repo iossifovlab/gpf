@@ -6,10 +6,10 @@ pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
-def test_gene_weights_partitions(user_client):
-    url = "/api/v3/gene_weights/partitions"
+def test_gene_scores_partitions(user_client):
+    url = "/api/v3/gene_scores/partitions"
     data = {
-        "weight": "LGD_rank",
+        "score": "LGD_rank",
         "min": 1.5,
         "max": 5.0,
     }
@@ -19,10 +19,10 @@ def test_gene_weights_partitions(user_client):
     assert response.status_code == 200
 
 
-def test_gene_weights_partitions_rvis(user_client):
-    url = "/api/v3/gene_weights/partitions"
+def test_gene_scores_partitions_rvis(user_client):
+    url = "/api/v3/gene_scores/partitions"
     data = {
-        "weight": "RVIS_rank",
+        "score": "RVIS_rank",
         "min": 1,
         "max": 100,
     }
@@ -32,10 +32,10 @@ def test_gene_weights_partitions_rvis(user_client):
     assert response.status_code == 200
 
 
-def test_bad_gene_weight_partition(user_client):
-    url = "/api/v3/gene_weights/partitions"
+def test_bad_gene_score_partition(user_client):
+    url = "/api/v3/gene_scores/partitions"
     data = {
-        "weight": "ala-bala",
+        "score": "ala-bala",
         "min": -8,
         "max": -3,
     }
@@ -46,9 +46,9 @@ def test_bad_gene_weight_partition(user_client):
 
 
 def test_full_patition(user_client):
-    url = "/api/v3/gene_weights/partitions"
+    url = "/api/v3/gene_scores/partitions"
     data = {
-        "weight": "RVIS_rank",
+        "score": "RVIS_rank",
         "min": 0,
         "max": 1000,
     }

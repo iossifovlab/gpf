@@ -1,4 +1,4 @@
-from dae.gene.weights import GeneWeight
+from dae.gene.gene_scores import GeneScore
 
 
 class GeneSymsMixin(object):
@@ -15,18 +15,18 @@ class GeneSymsMixin(object):
         return set([g.strip() for g in gene_symbols])
 
     @staticmethod
-    def get_gene_weights_query(gene_weights_config, **kwargs):
-        gene_weights = kwargs.get("geneWeights", None)
-        if gene_weights is None:
+    def get_gene_scores_query(gene_scores_config, **kwargs):
+        gene_scores = kwargs.get("geneScores", None)
+        if gene_scores is None:
             return None, None, None
-        if "weight" not in gene_weights:
+        if "score" not in gene_scores:
             return None, None, None
-        weights_id = gene_weights["weight"]
-        if not weights_id or not hasattr(gene_weights_config, weights_id):
+        scores_id = gene_scores["score"]
+        if not scores_id or not hasattr(gene_scores_config, scores_id):
             return None, None, None
-        range_start = gene_weights.get("rangeStart", None)
-        range_end = gene_weights.get("rangeEnd", None)
-        return weights_id, range_start, range_end
+        range_start = gene_scores.get("rangeStart", None)
+        range_end = gene_scores.get("rangeEnd", None)
+        return scores_id, range_start, range_end
 
     @staticmethod
     def get_gene_set_query(**kwargs):
@@ -43,23 +43,23 @@ class GeneSymsMixin(object):
         return gene_sets_collection, gene_set, gene_sets_types
 
     @classmethod
-    def get_gene_syms(cls, gene_weights_config, **kwargs):
-        result = cls.get_gene_symbols(**kwargs) | cls.get_gene_weights(
-            gene_weights_config, **kwargs
+    def get_gene_syms(cls, gene_scores_config, **kwargs):
+        result = cls.get_gene_symbols(**kwargs) | cls.get_gene_scores(
+            gene_scores_config, **kwargs
         )
 
         return result if result else None
 
     @classmethod
-    def get_gene_weights(cls, gene_weights_config, **kwargs):
-        weights_id, range_start, range_end = cls.get_gene_weights_query(
-            gene_weights_config, **kwargs
+    def get_gene_scores(cls, gene_scores_config, **kwargs):
+        scores_id, range_start, range_end = cls.get_gene_scores_query(
+            gene_scores_config, **kwargs
         )
 
-        if weights_id is None:
+        if scores_id is None:
             return set([])
 
-        weights = GeneWeight(
-            weights_id, getattr(gene_weights_config, weights_id)
+        scores = GeneScore(
+            scores_id, getattr(gene_scores_config, scores_id)
         )
-        return weights.get_genes(wmin=range_start, wmax=range_end)
+        return scores.get_genes(wmin=range_start, wmax=range_end)

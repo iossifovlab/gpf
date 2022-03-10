@@ -11,24 +11,18 @@ from dae.utils.dae_utils import join_line
 from dae.genomic_resources import GenomicResource
 
 
-GeneWeightConfig = namedtuple(
-    "GeneWeightConfig",
-    ["id", "file", "desc", "bins", "xscale", "yscale", "range"]
-)
-
-
-class GeneWeight:
+class GeneScore:
     """
-    Represents gene weights.
+    Represents gene scores.
 
-    Loads a CSV file with gene weights by gene weight id as described
-    in `geneInfo.conf`.
+    Loads a CSV file with gene scores by gene score id as described
+    in resource config.
     """
 
-    def __init__(self, weight_id, file, desc, histogram_config, meta=None):
+    def __init__(self, score_id, file, desc, histogram_config, meta=None):
         self.histogram_config = histogram_config
 
-        self.id = weight_id
+        self.id = score_id
         self.df = None
         self._dict = None
 
@@ -59,19 +53,19 @@ class GeneWeight:
         return self.df
 
     @staticmethod
-    def load_gene_weight_from_resource(
+    def load_gene_score_from_resource(
             resource: Optional[GenomicResource]):
         assert resource is not None
         print(resource.get_type())
-        assert resource.get_type() == "gene_weight", "Invalid resource type"
+        assert resource.get_type() == "gene_score", "Invalid resource type"
 
         config = resource.get_config()
-        gene_weight_id = config["id"]
+        gene_score_id = config["id"]
         file = resource.open_raw_file(config["filename"])
         histogram_config = config["histogram"]
         desc = config["desc"]
         meta = getattr(config, "meta", None)
-        return GeneWeight(gene_weight_id, file, desc, histogram_config, meta)
+        return GeneScore(gene_score_id, file, desc, histogram_config, meta)
 
     def values(self):
         return self.df[self.id].values
@@ -113,7 +107,7 @@ class GeneWeight:
     @cached
     def _to_dict(self):
         """
-        Returns dictionary of all defined weights keyed by gene symbol.
+        Returns dictionary of all defined scores keyed by gene symbol.
         """
         if self._dict is None:
             self._dict = self.df.set_index("gene")[self.id].to_dict()
@@ -133,25 +127,25 @@ class GeneWeight:
     @cached
     def min(self):
         """
-        Returns minimal weight value.
+        Returns minimal score value.
         """
         return self.df[self.id].min()
 
     @cached
     def max(self):
         """
-        Returns maximal weight value.
+        Returns maximal score value.
         """
         return self.df[self.id].max()
 
     def get_genes(self, wmin=None, wmax=None):
         """
-        Returns a set of genes which weights are between `wmin` and `wmax`.
+        Returns a set of genes which scores are between `wmin` and `wmax`.
 
-        `wmin` -- the lower bound of weights. If not specified or `None`
+        `wmin` -- the lower bound of scores. If not specified or `None`
         works without lower bound.
 
-        `wmax` -- the upper bound of weights. If not specified or `None`
+        `wmax` -- the upper bound of scores. If not specified or `None`
         works without upper bound.
         """
         df = self.df[self.id]
@@ -167,52 +161,48 @@ class GeneWeight:
         return set(genes.values)
 
 
-class GeneWeightsDb:
+class GeneScoresDb:
     """
-    Helper class used to load all defined gene weights.
+    Helper class used to load all defined gene scores.
 
     Used by Web interface.
     """
 
-    def __init__(self, config):
-        super(GeneWeightsDb, self).__init__()
-        self.config = config
-        self.weights = OrderedDict()
+    def __init__(self, resources):
+        super(GeneScoresDb, self).__init__()
+        self.resources = resources
+        self.scores = OrderedDict()
         self._load()
 
     @cached
-    def get_gene_weight_ids(self):
-        return list(self.weights.keys())
+    def get_gene_score_ids(self):
+        return list(self.scores.keys())
 
     @cached
-    def get_gene_weights(self):
-        return [self.get_gene_weight(weight_id) for weight_id in self.weights]
+    def get_gene_scores(self):
+        return [self.get_gene_score(score_id) for score_id in self.scores]
 
-    def get_gene_weight(self, weight_id):
-        assert self[weight_id].df is not None
-        return self[weight_id]
+    def get_gene_score(self, score_id):
+        assert self[score_id].df is not None
+        return self[score_id]
 
     def _load(self):
-        if self.config and self.config.gene_weights:
-            for section_id, weight_config in self.config.gene_weights.items():
-                if (
-                    section_id
-                    in self.config.gene_info.selected_gene_weights
-                ):
-                    w = GeneWeight(section_id, weight_config)
-                    self.weights[section_id] = w
+        if self.resources:
+            for r in self.resources:
+                w = GeneScore.load_gene_score_from_resource(r)
+                self.scores[w.id] = w
 
-    def __getitem__(self, weight_id):
-        if weight_id not in self.weights:
-            raise ValueError("unsupported gene weight {}".format(weight_id))
+    def __getitem__(self, score_id):
+        if score_id not in self.scores:
+            raise ValueError("unsupported gene score {}".format(score_id))
 
-        res = self.weights[weight_id]
+        res = self.scores[score_id]
         if res.df is None:
-            res.load_weights()
+            res.load_scores()
         return res
 
-    def __contains__(self, weight_id):
-        return weight_id in self.weights
+    def __contains__(self, score_id):
+        return score_id in self.scores
 
     def __len__(self):
-        return len(self.weights)
+        return len(self.scores)

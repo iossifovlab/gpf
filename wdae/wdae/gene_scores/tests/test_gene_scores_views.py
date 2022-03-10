@@ -6,26 +6,26 @@ pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
-def test_gene_weights_list_view(user_client):
-    url = "/api/v3/gene_weights"
+def test_gene_scores_list_view(user_client):
+    url = "/api/v3/gene_scores"
     response = user_client.get(url)
     assert response.status_code == 200
 
     data = response.data
-    print([d["weight"] for d in data])
+    print([d["score"] for d in data])
     assert len(data) == 5
 
     for w in response.data:
         assert "desc" in w
-        assert "weight" in w
+        assert "score" in w
         assert "bars" in w
         assert "bins" in w
 
 
-def test_gene_weights_get_genes_view(user_client):
-    url = "/api/v3/gene_weights/genes"
+def test_gene_scores_get_genes_view(user_client):
+    url = "/api/v3/gene_scores/genes"
     data = {
-        "weight": "LGD_rank",
+        "score": "LGD_rank",
         "min": 1.5,
         "max": 5.0,
     }

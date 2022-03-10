@@ -37,8 +37,8 @@ def pheno_db(local_gpf_instance):
 
 
 @pytest.fixture(scope="session")
-def gene_weights_db(local_gpf_instance):
-    return local_gpf_instance.gene_weights_db
+def gene_scores_db(local_gpf_instance):
+    return local_gpf_instance.gene_scores_db
 
 
 @pytest.fixture(scope="session")

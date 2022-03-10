@@ -11,7 +11,7 @@ from dae.genomic_resources.gene_models import \
     load_gene_models_from_resource
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
-from dae.gene.weights import GeneWeightsDb
+from dae.gene.gene_scores import GeneScoresDb, GeneScore
 from dae.gene.scores import ScoresFactory
 from dae.gene.gene_sets_db import GeneSetsDb
 from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
@@ -123,8 +123,13 @@ class GPFInstance(object):
 
     @property  # type: ignore
     @cached
-    def gene_weights_db(self):
-        return GeneWeightsDb(self._gene_info_config)
+    def gene_scores_db(self):
+        gene_scores = self.dae_config.gene_scores_db.gene_scores
+        resources = [self.grr.get_resource(gs) for gs in gene_scores]
+        gene_scores = [
+            GeneScore.load_gene_score_from_resource(r) for r in resources
+        ]
+        return GeneScoresDb(gene_scores)
 
     @property  # type: ignore
     @cached
@@ -274,16 +279,16 @@ class GPFInstance(object):
     def get_genomic_scores(self):
         return self._scores_factory.get_scores()
 
-    # Gene weights
+    # Gene scores
 
-    def has_gene_weight(self, weight_id):
-        return weight_id in self.gene_weights_db
+    def has_gene_score(self, gene_score_id):
+        return gene_score_id in self.gene_scores_db
 
-    def get_gene_weight(self, weight_id):
-        return self.gene_weights_db[weight_id]
+    def get_gene_score(self, gene_score_id):
+        return self.gene_scores_db[gene_score_id]
 
-    def get_all_gene_weights(self):
-        return self.gene_weights_db.get_gene_weights()
+    def get_all_gene_scores(self):
+        return self.gene_scores_db.get_gene_scores()
 
     # Gene info config
     def get_chromosomes(self):
@@ -304,9 +309,6 @@ class GPFInstance(object):
         )
 
         return [{"name": k, "bands": v} for k, v in reader.items()]
-
-    def get_gene_info_gene_weights(self):
-        return self._gene_info_config.gene_weights
 
     # Common reports
     def get_common_report(self, study_id):

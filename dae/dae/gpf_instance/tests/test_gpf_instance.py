@@ -21,7 +21,7 @@ def test_init(local_gpf_instance):
     assert local_gpf_instance.gene_models
     assert local_gpf_instance._pheno_db
     assert local_gpf_instance._gene_info_config is not None
-    assert local_gpf_instance.gene_weights_db is not None
+    assert local_gpf_instance.gene_scores_db is not None
     assert local_gpf_instance._score_config is not None
     assert local_gpf_instance._scores_factory
     assert local_gpf_instance._variants_db
@@ -41,7 +41,7 @@ def test_eager_init(gpf_instance):
     assert local_gpf_instance.gene_models
     assert local_gpf_instance._pheno_db
     assert local_gpf_instance._gene_info_config is not None
-    assert local_gpf_instance.gene_weights_db is not None
+    assert local_gpf_instance.gene_scores_db is not None
     assert local_gpf_instance._score_config is not None
     assert local_gpf_instance._scores_factory
     assert local_gpf_instance._variants_db

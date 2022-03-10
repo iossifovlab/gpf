@@ -61,25 +61,25 @@ class EnrichmentTestView(QueryBaseView):
             return desc
 
         (
-            weights_id,
+            gene_scores_id,
             range_start,
             range_end,
-        ) = GeneSymsMixin.get_gene_weights_query(
+        ) = GeneSymsMixin.get_gene_scores_query(
             self.gene_info_config.gene_weights, **query
         )
-        if weights_id:
+        if gene_scores_id:
             if range_start and range_end:
-                desc = "Gene Weights: {} from {} upto {}".format(
-                    weights_id, range_start, range_end
+                desc = "Gene Scores: {} from {} upto {}".format(
+                    gene_scores_id, range_start, range_end
                 )
             elif range_start:
-                desc = "Gene Weights: {} from {}".format(
-                    weights_id, range_start
+                desc = "Gene Scores: {} from {}".format(
+                    gene_scores_id, range_start
                 )
             elif range_end:
-                desc = "Gene Weights: {} upto {}".format(weights_id, range_end)
+                desc = "Gene Scores: {} upto {}".format(gene_scores_id, range_end)
             else:
-                desc = "Gene Weights: {}".format(weights_id)
+                desc = "Gene Scores: {}".format(gene_scores_id)
             return desc
 
         gene_syms = GeneSymsMixin.get_gene_symbols(**query)
