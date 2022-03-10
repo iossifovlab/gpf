@@ -96,7 +96,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  @HostListener('document:keydown.f')
+  @HostListener('document:keydown.c')
   public keybindCompareGenes() {
     if (this.highlightedGenes.size && document.activeElement === document.body) {
       this.openSingleView(this.highlightedGenes);

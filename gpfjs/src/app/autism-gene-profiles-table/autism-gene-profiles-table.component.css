@@ -303,15 +303,21 @@
   position: absolute;
   top: 51px;
   left: 355px;
-  padding: 5px;
+  padding: 3px 10px;
   background-color: #fff;
   border-radius: 0.25rem;
   user-select: none;
+  line-height: 190%;
 }
 
-.keybinds-tooltip span {
+.keybinds-tooltip-key {
   border: 1px solid rgba(126, 126, 126, 41.2%);
-  padding: 0 5px;
+  padding: 1px 5px;
+}
+
+.keybinds-tooltip-command {
+  display: inline-flex;
+  width: 165px;
 }
 
 .multiple-select-menu {
