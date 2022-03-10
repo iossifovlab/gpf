@@ -15,6 +15,7 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
   @Input() private hideDropdown: boolean;
   @Output() private search  = new EventEmitter();
   @Output() private selectItem  = new EventEmitter();
+  @Output() public onFocusEvent = new EventEmitter();
   @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
   @ViewChild('searchBox') private searchBox: ElementRef;
   @ContentChild(SearchableSelectTemplateDirective) public template: SearchableSelectTemplateDirective;
@@ -63,6 +64,7 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
       this.searchBox.nativeElement.focus();
     });
     this.onSelect(null);
+    this.onFocusEvent.emit();
   }
 
   public onSelect(value) {

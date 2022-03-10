@@ -1,7 +1,4 @@
-import { Component, OnInit, Input, forwardRef, ViewChild, Output, EventEmitter } from '@angular/core';
-
-import { Subscription } from 'rxjs';
-
+import { Component, OnInit, Input, ViewChild, Output, EventEmitter } from '@angular/core';
 import { MeasuresService } from '../measures/measures.service';
 import { ContinuousMeasure } from '../measures/measures';
 import { DatasetsService } from '../datasets/datasets.service';
@@ -12,7 +9,6 @@ import { DatasetsService } from '../datasets/datasets.service';
   styleUrls: ['./pheno-measure-selector.component.css']
 })
 export class PhenoMeasureSelectorComponent implements OnInit {
-  @ViewChild('inputGroup') inputGroupSpan: any;
   @ViewChild('searchBox') searchBox: any;
 
   measures: Array<ContinuousMeasure>;
@@ -24,7 +20,8 @@ export class PhenoMeasureSelectorComponent implements OnInit {
 
   @Output() selectedMeasureChange = new EventEmitter(true);
   @Output() measuresChange = new EventEmitter(true);
-  private subscription: Subscription;
+  @Output() clearEvent = new EventEmitter();
+  @Output() focusEvent = new EventEmitter();
 
   constructor(
     private measuresService: MeasuresService,
@@ -62,15 +59,14 @@ export class PhenoMeasureSelectorComponent implements OnInit {
     this.selectedMeasure = null;
     (<HTMLInputElement>document.getElementById('search-box')).value = '';
     this.searchBoxChange('');
+    this.clearEvent.emit();
   }
 
-  onFocus(event) {
-    event.stopPropagation();
-    this.inputGroupSpan.nativeElement.classList.add('show');
-    this.selectedMeasure = null;
+  public onFocus(): void {
+    this.focusEvent.emit();
   }
 
-  searchBoxChange(searchFieldValue) {
+  public searchBoxChange(searchFieldValue): void {
     this.searchString = searchFieldValue;
 
     if(this.measures !== undefined) {

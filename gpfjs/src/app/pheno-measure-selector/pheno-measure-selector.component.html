@@ -4,7 +4,8 @@
     (search)="searchBoxChange($event)"
     (selectItem)="selectedMeasure = $event"
     [data]="filteredMeasures"
-    caption="{{ selectedMeasure?.name }}">
+    caption="{{ selectedMeasure?.name }}"
+    (onFocusEvent)="onFocus()">
     <div *gpf-searchable-select-template="let measure">
       <span
         data-toggle="tooltip"

@@ -2,7 +2,11 @@
   <div class="row">
     <div class="col-lg-6">
       <span>Proband Pheno Measure</span>
-      <gpf-pheno-measure-selector [(selectedMeasure)]="measure" (measuresChange)="measuresUpdate($event)">
+      <gpf-pheno-measure-selector
+        [(selectedMeasure)]="measure"
+        (measuresChange)="measuresUpdate($event)"
+        (focusEvent)="clearCheckbox()"
+        (clearEvent)="clearCheckbox()">
       </gpf-pheno-measure-selector>
 
       <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
