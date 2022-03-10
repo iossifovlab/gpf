@@ -64,6 +64,29 @@ function main() {
     build_run bash -c 'npm run-script ng test -- --no-watch --no-progress --code-coverage --browsers=ChromeHeadlessCI | tee /dev/stderr | grep -e "^TOTAL: " && exit ${PIPESTATUS[0]} || false'
   }
 
+  build_stage "Sonarqube Analisys"
+  {
+    local gpfjs_git_branch=$(e gpfjs_git_branch)
+
+    build_run_local echo $gpfjs_git_branch
+    build_run_local echo "SONARQUBE_DEFAULT_TOKEN=$SONARQUBE_DEFAULT_TOKEN"
+
+    # if [ "$SONARQUBE_DEFAULT_TOKEN" != "" ] && [ "$gpfjs_git_branch" = "sonarqube-experiments" ]; then
+
+    if [ "$SONARQUBE_DEFAULT_TOKEN" != "" ]; then
+      build_run_local echo "Sonarqube stage started"
+
+      build_run_local docker run --rm \
+          -e SONAR_HOST_URL="http://sonarqube.seqpipe.org:9000" \
+          -e SONAR_LOGIN="${SONARQUBE_DEFAULT_TOKEN}" \
+          -v "$(pwd):/usr/src" \
+          sonarsource/sonar-scanner-cli \
+          -Dsonar.projectKey=gpfjs
+    else
+      build_run_local echo "Sonarqube stage skipped"
+    fi
+  }
+
   build_stage "Compile"
   {
     build_run rm -rf dist/
