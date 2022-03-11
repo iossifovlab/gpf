@@ -5,7 +5,7 @@ import logging
 import argparse
 import glob
 import toml
-import pprint
+import abc
 
 
 logger = logging.getLogger("gpf_instance_adjustments")
@@ -26,7 +26,7 @@ class VerbosityConfiguration:
             logging.basicConfig(level=logging.WARNING)
 
 
-class AdjustmentsCommand:
+class AdjustmentsCommand(abc.ABC):
 
     def __init__(self, instance_dir):
         self.instance_dir = instance_dir
@@ -40,6 +40,7 @@ class AdjustmentsCommand:
         with open(self.filename) as infile:
             self.config = yaml.safe_load(infile.read())
 
+    @abc.abstractmethod
     def execute(self):
         pass
 
@@ -61,8 +62,8 @@ class InstanceIdCommand(AdjustmentsCommand):
         self.instance_id = instance_id
 
     def execute(self):
-        vars = self.config["vars"]
-        vars["instance_id"] = self.instance_id
+        variables = self.config["vars"]
+        variables["instance_id"] = self.instance_id
         logger.info(
             f"replacing instance id with {self.instance_id}")
 
@@ -76,7 +77,7 @@ class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
         study_configs_dir = os.path.join(self.instance_dir, "studies")
         pattern = os.path.join(study_configs_dir, "**/*.conf")
         config_filenames = glob.glob(pattern, recursive=True)
-    
+
         for config_filename in config_filenames:
             logger.info(f"processing study {config_filename}")
             with open(config_filename, "rt") as infile:
@@ -92,7 +93,7 @@ class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
         study_configs_dir = os.path.join(self.instance_dir, "datasets")
         pattern = os.path.join(study_configs_dir, "**/*.conf")
         config_filenames = glob.glob(pattern, recursive=True)
-    
+
         for config_filename in config_filenames:
             logger.info(f"processing study {config_filename}")
             with open(config_filename, "rt") as infile:
@@ -109,6 +110,7 @@ class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
 
     def adjust_dataset(self, dataset_id, dataset_config):
         return dataset_config
+
 
 class DefaultGenotypeStorage(StudyConfigsAdjustmentCommand):
 
@@ -142,17 +144,18 @@ class DefaultGenotypeStorage(StudyConfigsAdjustmentCommand):
 
     def adjust_study(self, study_id, study_config):
         genotype_storage = study_config.get("genotype_storage")
-        if genotype_storage is not None:
-            if genotype_storage.get("id") is not None:
-                genotype_storage["id"] = self.storage_id
+        if genotype_storage is not None and \
+                genotype_storage.get("id") is not None:
+            genotype_storage["id"] = self.storage_id
         return study_config
 
 
-class DisableStudies(StudyConfigsAdjustmentCommand):
+class EnableDisableStudies(StudyConfigsAdjustmentCommand):
 
-    def __init__(self, instance_dir, study_ids):
+    def __init__(self, instance_dir, study_ids, enabled=False):
         super().__init__(instance_dir)
         self.study_ids = study_ids
+        self.enabled = enabled
 
     def execute(self):
         logger.info(f"going to disable following studies: {self.study_ids}")
@@ -173,13 +176,13 @@ class DisableStudies(StudyConfigsAdjustmentCommand):
     def adjust_study(self, study_id, study_config):
         if study_id in self.study_ids:
             logger.info(f"study {study_id} disabled")
-            study_config["enabled"] = False
+            study_config["enabled"] = self.enabled
         return study_config
 
     def adjust_dataset(self, dataset_id, dataset_config):
         if dataset_id in self.study_ids:
             logger.info(f"dataset {dataset_id} disabled")
-            dataset_config["enabled"] = False
+            dataset_config["enabled"] = self.enabled
         studies = dataset_config["studies"]
         result = []
         for study_id in studies:
@@ -198,7 +201,6 @@ def cli(argv=sys.argv[1:]):
         description="adjustments in GPF instance configuration")
     VerbosityConfiguration.set_argumnets(parser)
     parser.add_argument("-i", "--instance", type=str, default=None)
-    
 
     subparsers = parser.add_subparsers(dest='command',
                                        help='Command to execute')
@@ -221,6 +223,12 @@ def cli(argv=sys.argv[1:]):
         'study_id', type=str, nargs="+",
         help='study IDs to disable')
 
+    parser_enable_studies = subparsers.add_parser(
+        'enable-studies', help='enable studies from GPF instance')
+    parser_enable_studies.add_argument(
+        'study_id', type=str, nargs="+",
+        help='study IDs to enable')
+
     args = parser.parse_args(argv)
 
     instance_dir = args.instance
@@ -241,5 +249,11 @@ def cli(argv=sys.argv[1:]):
             cmd.execute()
 
     elif args.command == "disable-studies":
-        with DisableStudies(instance_dir, set(args.study_id)) as cmd:
+        with EnableDisableStudies(
+                instance_dir, set(args.study_id), enabled=False) as cmd:
+            cmd.execute()
+
+    elif args.command == "enable-studies":
+        with EnableDisableStudies(
+                instance_dir, set(args.study_id), enabled=True) as cmd:
             cmd.execute()
