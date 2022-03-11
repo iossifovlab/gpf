@@ -1,13 +1,14 @@
 import os
 import re
+import time
 import itertools
 import logging
-# from dae.utils.debug_closing import closing
 
 from contextlib import closing
 
 from impala import dbapi  # type: ignore
 from sqlalchemy.pool import QueuePool
+from sqlalchemy.exc import TimeoutError
 
 
 logger = logging.getLogger(__name__)
@@ -43,18 +44,27 @@ class ImpalaHelpers:
             create_connection, pool_size=pool_size,
             reset_on_return=False,
             max_overflow=pool_size,
-            # use_threadlocal=True,
-        )
+            timeout=1.0)
 
         logger.debug(
-            f"created impala pool with {self._connection_pool.status()} "
-            f"connections")
+            "created impala pool with %s connections",
+            self._connection_pool.status())
 
-    def connection(self):
+    def connection(self, timeout: float = None):
         logger.debug(
             f"going to get impala connection from the pool; "
             f"{self._connection_pool.status()}")
-        return self._connection_pool.connect()
+        started = time.time()
+        while True:
+            try:
+                connection = self._connection_pool.connect()
+                return connection
+            except TimeoutError:
+                elapsed = time.time() - started
+                logger.debug(
+                    "unable to connect; elapsed %0.2fsec", elapsed)
+                if timeout is not None and elapsed > timeout:
+                    return None
 
     def _import_single_file(self, cursor, db, table, import_file):
 
@@ -224,7 +234,6 @@ class ImpalaHelpers:
                     partition_description,
                     variants_sample=variants_sample,
                     variants_schema=variants_schema)
-                # statement = " ".join(statement)
                 logger.info(f"going to execute: {statement}")
                 cursor.execute(statement)
 

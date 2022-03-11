@@ -248,6 +248,7 @@ class GenotypeData(ABC):
                     return_unknown=return_unknown,
                     limit=limit,
                     pedigree_fields=local_fields)
+            runner.study_id = genotype_study.study_id
             logger.debug("runner created")
 
             study_name = genotype_study.name
@@ -391,6 +392,7 @@ class GenotypeData(ABC):
                     return_reference=return_reference,
                     return_unknown=return_unknown,
                     limit=limit)
+            runner.study_id = genotype_study.study_id
             runners.append(runner)
 
         if len(runners) == 0:

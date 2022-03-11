@@ -15,13 +15,14 @@ class QueryRunner(abc.ABC):
     def __init__(self, deserializer=None):
         super(QueryRunner, self).__init__()
 
-        self._status_lock = threading.Lock()
+        self._status_lock = threading.RLock()
         self._closed = False
         self._started = False
         self._done = False
 
         self._result_queue = None
         self._future = None
+        self.study_id = None
 
         if deserializer is not None:
             self.deserializer = deserializer
@@ -129,7 +130,7 @@ class QueryResult:
         for runner in self.runners:
             try:
                 runner.close()
-            except BaseException as ex:
+            except Exception as ex:
                 logger.info(
                     f"exception in result close: {type(ex)}", exc_info=True)
         while not self.result_queue.empty():
