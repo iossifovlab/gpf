@@ -1,3 +1,4 @@
+import time
 import itertools
 import logging
 from contextlib import closing
@@ -169,8 +170,8 @@ class StudyWrapperBase:
         if result["studies"] is not None:
             logger.debug(f"found studies in {config.id}")
             study_names = []
-            for studyId in result["studies"]:
-                wrapper = gpf_instance.get_wdae_wrapper(studyId)
+            for study_id in result["studies"]:
+                wrapper = gpf_instance.get_wdae_wrapper(study_id)
                 name = (
                     wrapper.config.name
                     if wrapper.config.name is not None
@@ -261,17 +262,6 @@ class StudyWrapper(StudyWrapperBase):
         else:
             self.gene_weight_column_sources = []
 
-        # LEGEND
-        # self.legend = {}
-
-        # collections_conf = self.config.person_set_collections
-        # if collections_conf and \
-        #         collections_conf.selected_person_set_collections:
-        #     for collection_id in \
-        #             collections_conf.selected_person_set_collections:
-        #         self.legend[collection_id] = \
-        #             self.person_set_collection_configs[collection_id]["domain"]
-
         # PREVIEW AND DOWNLOAD COLUMNS
         self.columns = genotype_browser_config.columns
         self.column_groups = genotype_browser_config.column_groups
@@ -306,38 +296,6 @@ class StudyWrapper(StudyWrapperBase):
     def has_pheno_data(self):
         return self.phenotype_data is not None
 
-    # def _query_variants_rows_iterator(
-    #         self, sources, person_set_collection, **kwargs):
-
-    #     if not kwargs.get("summaryVariantIds"):
-    #         def filter_allele(allele):
-    #             return True
-    #     else:
-    #         summary_variant_ids = set(kwargs.get("summaryVariantIds"))
-    #         # logger.debug(f"sumamry variants ids: {summary_variant_ids}")
-
-    #         def filter_allele(allele):
-    #             svid = f"{allele.cshl_location}:{allele.cshl_variant}"
-    #             return svid in summary_variant_ids
-
-    #     variants = self.query_variants(**kwargs)
-
-    #     for v in variants:
-    #         matched = True
-    #         for aa in v.matched_alleles:
-    #             assert not aa.is_reference_allele
-    #             if not filter_allele(aa):
-    #                 matched = False
-    #                 break
-    #         if not matched:
-    #             continue
-
-    #         row_variant = self.response_transformer._build_variant_row(
-    #             v, sources, person_set_collection=person_set_collection
-    #         )
-
-    #         yield row_variant
-
     @property
     def config_columns(self):
         return self.config.genotype_browser.columns
@@ -366,12 +324,17 @@ class StudyWrapper(StudyWrapperBase):
 
         index = 0
         try:
+            started = time.time()
             variants_result = \
                 self.genotype_data_study.query_result_variants(**kwargs)
             if variants_result is None:
                 return
 
             variants_result.start()
+            elapsed = time.time() - started
+            logger.info(
+                f"study wrapper ({self.name}) variant result started "
+                f"in {elapsed:0.3f}sec")
 
             with closing(variants_result) as variants:
 
@@ -411,9 +374,11 @@ class StudyWrapper(StudyWrapperBase):
         except GeneratorExit:
             pass
         finally:
+            elapsed = time.time() - started
             logger.info(
-                f"study wrapper query returned {index} variants from "
-                f"{self.name} closed")
+                f"study wrapper ({self.study_id})  query returned "
+                f"{index} variants; "
+                f"closed in {elapsed:0.3f}sec")
 
     def get_gene_view_summary_variants(self, frequency_column, **kwargs):
         kwargs = self.query_transformer.transform_kwargs(**kwargs)

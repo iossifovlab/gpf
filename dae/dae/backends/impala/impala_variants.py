@@ -7,6 +7,7 @@ from typing import Dict, Any
 
 import pyarrow as pa  # type: ignore
 from impala.util import as_pandas  # type: ignore
+from sqlalchemy.exc import TimeoutError
 
 from dae.backends.raw.raw_variants import RawFamilyVariants
 
@@ -37,29 +38,50 @@ class ImpalaQueryRunner(QueryRunner):
         self.connection_pool = connection_pool
         self.query = query
 
+    def connect(self):
+        while True:
+            try:
+                connection = self.connection_pool.connect()
+                return connection
+            except TimeoutError:
+                logger.info(
+                    "runner (%s) timeout in connect", self.study_id,
+                    exc_info=True)
+                if self.closed():
+                    logger.info(
+                        "runner (%s) closed before connection established",
+                        self.study_id)
+                    return None
+
     def run(self):
         started = time.time()
         if self.closed():
-            logger.info("runner closed before executing...")
+            logger.info(
+                "impala runner (%s) closed before executing...",
+                self.study_id)
             return
 
         logger.debug(
-            f"impala runner started; "
-            f"connectio pool: {self.connection_pool.status()}")
+            "impala runner (%s) started; "
+            "connectio pool: %s",
+            self.study_id, self.connection_pool.status())
 
-        with closing(self.connection_pool.connect()) as connection:
+        connection = self.connect()
+
+        if connection is None:
+            self._finalize(started)
+            return
+
+        with closing(connection) as connection:
+            elapsed = time.time() - started
+            logger.debug(
+                "runner (%s) waited %0.2fsec for connection",
+                self.study_id, elapsed)
             with connection.cursor() as cursor:
                 try:
                     cursor.execute_async(self.query)
+                    self._wait_cursor_executing(cursor)
 
-                    while True:
-                        if self.closed():
-                            logger.debug("query runner closed while executing")
-                            break
-                        if not cursor.is_executing():
-                            logger.debug("query runner execution finished")
-                            break
-                        time.sleep(0.1)
                     while not self.closed():
                         row = cursor.fetchone()
                         if row is None:
@@ -69,44 +91,70 @@ class ImpalaQueryRunner(QueryRunner):
                         if val is None:
                             continue
 
-                        no_interest = 0
-                        while True:
-                            try:
-                                self._result_queue.put(val, timeout=0.1)
-                                break
-                            except queue.Full:
-                                logger.debug("nobody interested")
-
-                                if self.closed():
-                                    break
-                                no_interest += 1
-                                if no_interest % 1_000 == 0:
-                                    logger.warning(
-                                        f"nobody interested {no_interest}; "
-                                        f"{self.query}")
-                                if no_interest > 5_000:
-                                    logger.warning(
-                                        f"nobody interested {no_interest}; "
-                                        f"{self.query}; "
-                                        f"closing...")
-                                    self.close()
-                                    break
+                        self._put_value_in_result_queue(val)
 
                         if self.closed():
-                            logger.debug("query runner closed while iterating")
+                            logger.debug(
+                                "query runner (%s) closed while iterating",
+                                self.study_id)
                             break
 
-                except BaseException as ex:
+                except Exception as ex:
                     logger.debug(
-                        f"exception in runner run: {type(ex)}", exc_info=True)
+                        "exception in runner (%s) run: %s",
+                        self.study_id, type(ex), exc_info=True)
                 finally:
-                    logger.debug("runner closing connection")
+                    logger.debug(
+                        "runner (%s) closing connection", self.study_id)
 
+        self._finalize(started)
+
+    def _put_value_in_result_queue(self, val):
+        no_interest = 0
+        while True:
+            try:
+                self._result_queue.put(val, timeout=0.1)
+                break
+            except queue.Full:
+                logger.debug(
+                    "runner (%s) nobody interested",
+                    self.study_id)
+
+                if self.closed():
+                    break
+                no_interest += 1
+                if no_interest % 1_000 == 0:
+                    logger.warning(
+                        "runner (%s) nobody interested %s",
+                        self.study_id, no_interest)
+                if no_interest > 5_000:
+                    logger.warning(
+                        "runner (%s) nobody interested %s"
+                        "closing...",
+                        self.study_id, no_interest)
+                    self.close()
+                    break
+
+    def _wait_cursor_executing(self, cursor):
+        while True:
+            if self.closed():
+                logger.debug(
+                    "query runner (%s) closed while executing",
+                    self.study_id)
+                break
+            if not cursor.is_executing():
+                logger.debug(
+                    "query runner (%s) execution finished",
+                    self.study_id)
+                break
+            time.sleep(0.1)
+
+    def _finalize(self, started):
         with self._status_lock:
             self._done = True
         elapsed = time.time() - started
-        logger.debug(f"runner done in {elapsed:0.3f}sec")
-        logger.debug(f"connection pool: {self.connection_pool.status()}")
+        logger.debug("runner (%s) done in %0.3f sec", self.study_id, elapsed)
+        logger.debug("connection pool: %s", self.connection_pool.status())
 
 
 class ImpalaVariants:
@@ -152,16 +200,6 @@ class ImpalaVariants:
             "rare_boundary": 0
         })
         self._fetch_tblproperties()
-
-    # def count_variants(self, **kwargs):
-    #     if not self.variants_table:
-    #         return 0
-    #     with closing(self.connection()) as conn:
-    #         with conn.cursor() as cursor:
-    #             query = self.build_count_query(**kwargs)
-    #             cursor.execute(query)
-    #             row = next(cursor)
-    #             return row[0]
 
     def connection(self):
         conn = self._impala_helpers.connection()
@@ -400,23 +438,21 @@ class ImpalaVariants:
         result = QueryResult(
                 runners=[runner], limit=limit)
         logger.debug("starting result")
-        try:
-            result.start()
+        result.start()
 
-            seen = set()
-            with closing(result) as result:
+        seen = set()
 
-                for v in result:
-                    if v is None:
-                        continue
-                    if v.svuid in seen:
-                        continue
-                    if v is None:
-                        continue
-                    yield v
-                    seen.add(v.svuid)
-        finally:
-            pass
+        with closing(result) as result:
+
+            for v in result:
+                if v is None:
+                    continue
+                if v.svuid in seen:
+                    continue
+                if v is None:
+                    continue
+                yield v
+                seen.add(v.svuid)
 
     def query_variants(
             self,
@@ -467,20 +503,18 @@ class ImpalaVariants:
         result = QueryResult(
                 runners=[runner], limit=limit)
         logger.debug("starting result")
-        try:
-            result.start()
 
-            with closing(result) as result:
-                seen = set()
-                for v in result:
-                    if v is None:
-                        continue
-                    if v.fvuid in seen:
-                        continue
-                    yield v
-                    seen.add(v.fvuid)
-        finally:
-            pass
+        result.start()
+
+        with closing(result) as result:
+            seen = set()
+            for v in result:
+                if v is None:
+                    continue
+                if v.fvuid in seen:
+                    continue
+                yield v
+                seen.add(v.fvuid)
 
     def _fetch_pedigree(self):
         with closing(self.connection()) as conn:
