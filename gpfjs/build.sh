@@ -68,10 +68,10 @@ function main() {
   {
     local gpfjs_git_branch=$(e gpfjs_git_branch)
 
-    build_run_local echo $gpfjs_git_branch
+    build_run_local echo "gpfjs_git_branch=$gpfjs_git_branch"
     build_run_local echo "SONARQUBE_DEFAULT_TOKEN=$SONARQUBE_DEFAULT_TOKEN"
 
-    if [ "$SONARQUBE_DEFAULT_TOKEN" != "" ] && [ "$gpfjs_git_branch" = "sonarqube-experiments" ]; then
+    if [ "$SONARQUBE_DEFAULT_TOKEN" != "" ] && [ "$gpfjs_git_branch" = "master" ]; then
 
       build_run_local echo "Sonarqube stage started"
 
