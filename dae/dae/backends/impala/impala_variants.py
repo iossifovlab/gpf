@@ -38,19 +38,21 @@ class ImpalaQueryRunner(QueryRunner):
         self.connection_pool = connection_pool
         self.query = query
 
-    def connect(self):
+    def connect(self, started=0.0):
         while True:
             try:
                 connection = self.connection_pool.connect()
                 return connection
             except TimeoutError:
-                logger.info(
-                    "runner (%s) timeout in connect", self.study_id,
-                    exc_info=True)
+                elapsed = time.time() - started
+                logger.debug(
+                    "runner (%s) timeout in connect; elapsed %0.2fsec",
+                    self.study_id, elapsed)
                 if self.closed():
                     logger.info(
-                        "runner (%s) closed before connection established",
-                        self.study_id)
+                        "runner (%s) closed before connection established "
+                        "after %0.2fsec",
+                        self.study_id, elapsed)
                     return None
 
     def run(self):
