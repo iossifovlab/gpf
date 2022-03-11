@@ -7,6 +7,7 @@ pipeline {
   environment {
     BUILD_SCRIPTS_BUILD_DOCKER_REGISTRY_USERNAME = credentials('jenkins-registry.seqpipe.org.user')
     BUILD_SCRIPTS_BUILD_DOCKER_REGISTRY_PASSWORD_FILE = credentials('jenkins-registry.seqpipe.org.passwd')
+    SONARQUBE_DEFAULT_TOKEN=credentials('sonarqube-default')
   }
 
   stages {

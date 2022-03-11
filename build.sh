@@ -408,6 +408,30 @@ EOT'
     build_run_container cp ./results/wdae-junit.xml coverage.xml ./test-results/
   }
 
+  build_stage "Sonarqube"
+  {
+    local gpf_git_branch=$(e gpf_git_branch)
+
+    build_run_local echo "gpf_git_branch=$gpf_git_branch"
+    build_run_local echo "SONARQUBE_DEFAULT_TOKEN=$SONARQUBE_DEFAULT_TOKEN"
+
+    if [ "$SONARQUBE_DEFAULT_TOKEN" != "" ] && [ "$gpf_git_branch" = "master" ]; then
+      build_run_local echo "Sonarqube stage started"
+
+      build_run_local docker run --rm \
+          -e SONAR_HOST_URL="http://sonarqube.seqpipe.org:9000" \
+          -e SONAR_LOGIN="${SONARQUBE_DEFAULT_TOKEN}" \
+          -v "$(pwd):/usr/src" \
+          sonarsource/sonar-scanner-cli \
+          -Dsonar.projectKey=gpf \
+          -Dsonar.python.version=3.9 \
+          -Dsonar.python.coverage.reportPaths="coverage.xml"
+
+    else
+      build_run_local echo "Sonarqube stage skipped"
+    fi
+  }
+
   build_stage "Package"
   {
     build_run_ctx_init "container" "ubuntu:20.04"
