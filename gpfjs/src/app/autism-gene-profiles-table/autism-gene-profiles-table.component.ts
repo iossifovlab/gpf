@@ -21,7 +21,6 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() public config: AgpTableConfig;
   @Input() public sortBy: string;
   public defaultSortBy: string;
-  @Output() public createTabEvent = new EventEmitter();
   @Output() public goToQueryEvent = new EventEmitter();
 
   @ViewChild(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu;
@@ -46,6 +45,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   public searchKeystrokes$: Subject<string> = new Subject();
   @ViewChild('searchBox') public searchBox: ElementRef;
   public pageIndex = 0;
+  public nothingFoundWidth: number;
   public showNothingFound = false;
   public showInitialLoading = true;
   public showSearchLoading: boolean;
@@ -55,12 +55,10 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   private prevVerticalScroll = 0;
   private loadMoreGenes = true;
   private keystrokeSubscription: Subscription;
-
   public imgPathPrefix = environment.imgPathPrefix;
 
   public constructor(
-    private autismGeneProfilesService: AgpTableService,
-    private tableComponentRef: ElementRef
+    private autismGeneProfilesService: AgpTableService
   ) { }
 
   public ngOnInit(): void {
@@ -93,30 +91,21 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   @HostListener('document:keydown.esc')
   public keybindClearHighlight() {
-    if (this.tableComponentRef.nativeElement.hidden) {
-      return;
-    }
-
     if (this.highlightedGenes.size && document.activeElement === document.body) {
       this.highlightedGenes.clear();
     }
   }
 
-  @HostListener('document:keydown.f')
+  @HostListener('document:keydown.c')
   public keybindCompareGenes() {
-    if (this.tableComponentRef.nativeElement.hidden) {
-      return;
-    }
-
     if (this.highlightedGenes.size && document.activeElement === document.body) {
-      this.emitCreateTabEvent();
+      this.openSingleView(this.highlightedGenes);
     }
   }
 
   @HostListener('window:scroll', ['$event'])
   public onWindowScroll($event): void {
-    // execute this code only if the table is shown and the scroll event is a vertical scroll
-    if (!this.tableComponentRef.nativeElement.hidden && this.prevVerticalScroll !== $event.srcElement.scrollingElement.scrollTop) {
+    if (this.prevVerticalScroll !== $event.srcElement.scrollingElement.scrollTop) {
       const tableBodyOffset = document.getElementById('table-body').offsetTop;
       const topRowIdx = Math.floor(Math.max(window.scrollY - tableBodyOffset, 0) / this.baseRowHeight);
       const bottomRowIdx = Math.floor(window.innerHeight / this.baseRowHeight) + topRowIdx;
@@ -131,10 +120,6 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   @HostListener('window:resize')
   public onResize() {
-    if (this.tableComponentRef.nativeElement.hidden) {
-      return;
-    }
-
     this.ngbDropdownMenu.dropdown.close();
   }
 
@@ -167,6 +152,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   public calculateHeaderLayout(): void {
     this.leaves = Column.leaves(this.config.columns);
+    this.nothingFoundWidth = (this.leaves.length * 110) + 40; // must match .table-row values
     let columnIdx = 0;
     const maxDepth: number = Math.max(...this.leaves.map(leaf => leaf.depth));
 
@@ -297,22 +283,31 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   public handleCellClick($event, row, column: Column): void {
     const linkClick: boolean = $event.target.classList.contains('clickable');
+    const geneSymbol = row[this.geneSymbolColumnId];
 
     if (!linkClick) {
       if ($event.which === 2 || ($event.ctrlKey || $event.metaKey)) {
-        this.toggleHighlightGene(row[this.geneSymbolColumnId]);
+        this.toggleHighlightGene(geneSymbol);
       }
     } else if (column.clickable === 'goToQuery') {
-      this.goToQueryEvent.emit({geneSymbol: row[this.geneSymbolColumnId], statisticId: column.id});
+      this.goToQueryEvent.emit({geneSymbol: geneSymbol, statisticId: column.id});
     } else if (column.clickable === 'createTab' && linkClick) {
-      let navigateToTab: boolean = true;
-
-      if ($event.which === 2 || ($event.ctrlKey || $event.metaKey)) {
-        navigateToTab = false;
-      }
-
-      this.emitCreateTabEvent(null, row[this.geneSymbolColumnId], navigateToTab)
+      this.openSingleView(geneSymbol);
     }
+  }
+
+  public openSingleView(geneSymbols: string | Set<string>): void {
+    const agpBaseUrl = window.location.href;
+    let genes: string;
+    
+    if (typeof(geneSymbols) === 'string') {
+      genes = geneSymbols;
+    } else {
+      genes = [...geneSymbols].join(',');
+    }
+
+    const newWindow = window.open('', '_blank');
+    newWindow.location.assign(`${agpBaseUrl}/${genes}`);
   }
 
   public toggleHighlightGene(geneSymbol: string): void {
@@ -321,22 +316,6 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     } else {
       this.highlightedGenes.add(geneSymbol);
     }
-  }
-
-  public emitCreateTabEvent($event = null, geneSymbol: string = null, navigateToTab: boolean = true): void {
-    if ($event && ($event.ctrlKey || $event.metaKey)) {
-      navigateToTab = false;
-    }
-
-    if (navigateToTab) {
-      /* navigating to another tab does not guarantee the scroll position
-       * will remain the same, so we reset it and update the shownGenes indices */
-      window.scrollTo(0, 0);
-      this.updateShownGenes(0, this.viewportPageCount * this.config.pageSize);
-    }
-
-    const geneSymbols: string[] = geneSymbol ? [geneSymbol] : Array.from(this.highlightedGenes);
-    this.createTabEvent.emit({geneSymbols: geneSymbols, navigateToTab: navigateToTab});
   }
 
   private async waitForSearchBoxToLoad(): Promise<void> {

@@ -1,49 +1,5 @@
-<div *ngIf="agpTableConfig && agpSingleViewConfig">
-  <nav
-    ngbNav
-    #nav="ngbNav"
-    class="navbar"
-    style="justify-content: flex-start; padding: 8px 0 0 25px;"
-    [ngClass]="{ 'tab-limit': geneTabs.size >= maxTabCount }">
-    <li class="nav-tabs" [ngbNavItem]="homeTabId" [destroyOnHide]="false">
-      <a ngbNavLink>
-        <span>Autism genes tool</span>
-      </a>
-
-      <ng-template ngbNavContent>
-        <gpf-autism-gene-profiles-table
-          [hidden]="nav.activeId !== homeTabId"
-          (createTabEvent)="createTabEventHandler($event)"
-          (goToQueryEvent)="goToQueryEventHandler($event)"
-          [config]="agpTableConfig"
-          [sortBy]="agpTableSortBy"
-        ></gpf-autism-gene-profiles-table>
-      </ng-template>
-    </li>
-
-    <li
-      *ngFor="let geneTab of geneTabs"
-      class="nav-tabs"
-      [ngbNavItem]="geneTab"
-      [destroyOnHide]="true"
-      [attr.title]="geneTab">
-      <a ngbNavLink (middleclick)="closeTab($event, geneTab)">
-        <span>{{ geneTab }}</span>
-        <span class="close position-relative pl-2 font-weight-light" (click)="closeTab($event, geneTab)">×</span>
-      </a>
-      <ng-template ngbNavContent>
-        <div style="display: flex">
-          <ng-container *ngFor="let geneSymbol of geneTab | split: ','">
-            <gpf-autism-gene-profile-single-view
-              [attr.id]="geneSymbol + '-single-view'"
-              [config]="agpSingleViewConfig"
-              [geneSymbol]="geneSymbol"
-              [isInGeneCompare]="geneTab.indexOf(',') !== -1">
-            </gpf-autism-gene-profile-single-view>
-          </ng-container>
-        </div>
-      </ng-template>
-    </li>
-  </nav>
-  <div [ngbNavOutlet]="nav" class="card-block"></div>
-</div>
+<gpf-autism-gene-profiles-table
+  (goToQueryEvent)="goToQueryEventHandler($event)"
+  [config]="agpTableConfig"
+  [sortBy]="agpTableSortBy">
+</gpf-autism-gene-profiles-table>

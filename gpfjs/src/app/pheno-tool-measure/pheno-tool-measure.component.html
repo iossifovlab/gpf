@@ -5,7 +5,7 @@
       <ng-container *ngIf="dataset">
         <gpf-pheno-measure-selector
           [datasetId]="dataset.id"
-          (selectedMeasureChange)="selectedMeasure = $event"
+          (selectedMeasureChange)="selectedMeasure = $event; clearCheckbox()"
           (measuresChange)="measuresUpdate($event)">
         </gpf-pheno-measure-selector>
       </ng-container>
