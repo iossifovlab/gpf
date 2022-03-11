@@ -5,10 +5,11 @@ from dae.variants.variant import SummaryVariant
 
 def test_hdfs_helpers(hdfs_host):
     hdfs = HdfsHelpers(hdfs_host, 8020)
-    assert hdfs is not None
 
     dirname = hdfs.tempdir()
     print(dirname)
+    assert hdfs.exists(dirname)
+    assert hdfs.isdir(dirname)
 
 
 @pytest.mark.parametrize("fixture_name", ["backends/a"])

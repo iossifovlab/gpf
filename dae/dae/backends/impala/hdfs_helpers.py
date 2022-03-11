@@ -3,6 +3,10 @@ import re
 import tempfile
 import logging
 
+from pyarrow import fs  # type: ignore
+from fsspec.implementations.arrow import ArrowFSWrapper  # type: ignore
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,16 +27,6 @@ class HdfsHelpers:
     @property
     def hdfs(self):
         if self._hdfs is None:
-            # from urllib.request import urlopen
-            # with urlopen(
-            #         "https://www.iossifovlab.com/distribution/public/"
-            #         "genomic-resources-repository/.CONTENTS") as repo:
-            #     for index, line in enumerate(repo):
-            #         pass
-
-            from pyarrow import fs
-            from fsspec.implementations.arrow import ArrowFSWrapper
-
             extra_conf = None
             if self.replication and self.replication > 0:
                 assert self.replication > 0, self.replication
@@ -68,7 +62,8 @@ class HdfsHelpers:
         return self.exists(current_path)
 
     def tempdir(self, prefix="", suffix=""):
-        dirname = tempfile.mktemp(prefix=prefix, suffix=suffix)
+        dirname = tempfile.mktemp(prefix=prefix, suffix=suffix)  # NOSONAR
+        logger.debug("creating temporary directory %s", dirname)
         self.mkdir(dirname)
         assert self.exists(dirname)
 
@@ -106,7 +101,6 @@ class HdfsHelpers:
             self.put_in_directory(local_path, hdfs_dirname)
 
     def get(self, hdfs_filename, local_filename):
-        # assert os.path.exists(local_filename)
         assert self.exists(hdfs_filename)
 
         with open(local_filename, "wb") as outfile:
@@ -136,9 +130,9 @@ class HdfsHelpers:
             for hfile in allfiles:
                 if self.isdir(hfile):
                     list_parquet_files_recursive(hfile, collection)
-                elif self.isfile(hfile) and regexp.match(hfile):
-                    if hfile not in collection:
-                        collection.append(hfile)
+                elif self.isfile(hfile) and regexp.match(hfile) and \
+                        hfile not in collection:
+                    collection.append(hfile)
 
         assert self.isdir(hdfs_dirname), hdfs_dirname
 

@@ -910,7 +910,7 @@ def fam1():
 
 @pytest.fixture
 def temp_dbfile(request, cleanup):
-    dbfile = tempfile.mktemp(prefix="dbfile_")
+    dbfile = tempfile.mktemp(prefix="dbfile_")  # NOSONAR
 
     def fin():
         if os.path.exists(dbfile):
