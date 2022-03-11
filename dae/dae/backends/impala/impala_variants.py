@@ -38,7 +38,8 @@ class ImpalaQueryRunner(QueryRunner):
         self.connection_pool = connection_pool
         self.query = query
 
-    def connect(self, started=0.0):
+    def connect(self):
+        started = time.time()
         while True:
             try:
                 connection = self.connection_pool.connect()
