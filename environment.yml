@@ -4,6 +4,7 @@
 # conda create -c conda-forge -c bioconda -n <env name> --file <this file>
 # - conda-forge 
 
+name: gpf
 channels:
   - bioconda
   - conda-forge
@@ -47,3 +48,4 @@ dependencies:
   - dask=2022.1.0
   - dask-kubernetes=2022.1.0
   - tqdm=4.62.3
+  - snakeobjects=3.0.7
