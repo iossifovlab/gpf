@@ -13,7 +13,7 @@
         <ng-container *ngIf="shownRows.indexOf(i) !== -1">
           <div *ngFor="let column of leaves"
             class="cell row-cell"
-            [attr.title]="row[column.id]"
+            [attr.title]="(row[column.id] === '✓' || row[column.id] === null || row[column.id] === row.geneSymbol) ? row.geneSymbol : row[column.id] + '\n' + row.geneSymbol"
             (click)="handleCellClick($event, row, column)"
             (middleclick)="handleCellClick($event, row, column)">
             <span *ngIf="column.clickable !== null && row[column.id]" class="clickable">{{ row[column.id] }}</span>
