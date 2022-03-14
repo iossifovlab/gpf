@@ -1,12 +1,12 @@
 import itertools
 import logging
-from fsspec.core import url_to_fs
+from fsspec.core import url_to_fs  # type: ignore
 
 from collections import Counter
 
 import numpy as np
 
-import pysam
+import pysam  # type: ignore
 
 from dae.utils.helpers import str2bool
 from dae.genomic_resources.reference_genome import ReferenceGenome
@@ -45,6 +45,39 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
     def get_family_genotype(self, family):
         raise NotImplementedError()
 
+    def _collect_family_genotype(self, family, samples_index, fill_value):
+        gt = []
+        for person in family.members_in_order:
+            vcf_index = samples_index.get(person.sample_id)
+            assert vcf_index is not None, (person, self.vcf_variants)
+
+            vcf_variant = self.vcf_variants[vcf_index]
+            if vcf_variant is None:
+                sample_genotype = (fill_value, fill_value)
+            else:
+                sample_genotype = vcf_variant.samples.get(person.sample_id)
+                assert sample_genotype is not None, (
+                    person, self.vcf_variants)
+
+                sample_genotype = sample_genotype["GT"]
+                if len(sample_genotype) == 1:
+                    sample_genotype = (sample_genotype[0], -2)
+                assert len(sample_genotype) == 2, (
+                    family, person, sample_genotype)
+                sample_genotype = tuple(map(
+                    lambda g: g if g is not None else -1,
+                    sample_genotype))
+            gt.append(sample_genotype)
+        return gt
+
+    def _collect_known_independent_genotypes(self, family, gt):
+        for index, person in enumerate(family.members_in_order):
+            if person.person_id not in self.loader.independent_persons:
+                continue
+            self.known_independent_genotypes.append(
+                gt[:, index]
+            )
+
     def family_genotype_iterator(self):
         self.known_independent_genotypes = []
 
@@ -52,29 +85,9 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         samples_index = self.loader.samples_vcf_index
 
         for family in self.loader.families.values():
+            gt = self._collect_family_genotype(
+                family, samples_index, fill_value)
 
-            gt = []
-            for person in family.members_in_order:
-                vcf_index = samples_index.get(person.sample_id)
-                assert vcf_index is not None, (person, self.vcf_variants)
-
-                vcf_variant = self.vcf_variants[vcf_index]
-                if vcf_variant is None:
-                    sample_genotype = (fill_value, fill_value)
-                else:
-                    sample_genotype = vcf_variant.samples.get(person.sample_id)
-                    assert sample_genotype is not None, (
-                        person, self.vcf_variants)
-
-                    sample_genotype = sample_genotype["GT"]
-                    if len(sample_genotype) == 1:
-                        sample_genotype = (sample_genotype[0], -2)
-                    assert len(sample_genotype) == 2, (
-                        family, person, sample_genotype)
-                    sample_genotype = tuple(map(
-                        lambda g: g if g is not None else -1,
-                        sample_genotype))
-                gt.append(sample_genotype)
             if len(gt) == 0:
                 continue
 
@@ -87,12 +100,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
                 if not self.loader.include_unknown_person_genotypes:
                     continue
             else:
-                for index, person in enumerate(family.members_in_order):
-                    if person.person_id not in self.loader.independent_persons:
-                        continue
-                    self.known_independent_genotypes.append(
-                        gt[:, index]
-                    )
+                self._collect_known_independent_genotypes(family, gt)
 
             if is_all_unknown_genotype(gt) and \
                     not self.loader.include_unknown_family_genotypes:
@@ -389,61 +397,6 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                     samples_index[person.sample_id] = index
                     break
         self.samples_vcf_index = samples_index
-
-    # def _build_family_alleles_indexes(self):
-    #     vcf_offsets = [0] * len(self.vcfs)
-    #     for vcf_index in range(1, len(self.vcfs)):
-    #         vcf_offsets[vcf_index] = vcf_offsets[vcf_index - 1] + len(
-    #             self.vcfs[vcf_index - 1].samples
-    #         )
-
-    #     self.families_allele_indexes = []
-
-    #     for family in self.families.values():
-    #         samples_indexes = []
-    #         for person in family.members_in_order:
-    #             vcf_index, sample_index = person.sample_index
-    #             if vcf_index is None or sample_index is None:
-    #                 assert vcf_index is None and sample_index is None
-    #                 continue
-    #             offset = vcf_offsets[vcf_index]
-    #             samples_indexes.append(sample_index + offset)
-    #         samples_indexes = np.array(tuple(samples_indexes))
-    #         allele_indexes = np.stack(
-    #             [2 * samples_indexes, 2 * samples_indexes + 1]
-    #         ).reshape([1, 2 * len(samples_indexes)], order="F")[0]
-
-    #         self.families_allele_indexes.append(
-    #             (family, allele_indexes)
-    #         )
-
-    # def _build_independent_persons_indexes(self):
-    #     self.independent = self.families.persons_without_parents()
-    #     self.independent_indexes = []
-
-    #     logger.debug(f"independent persons: {len(self.independent)}")
-    #     missing = 0
-    #     for person in self.independent:
-    #         if person.missing:
-    #             logger.debug(
-    #                 f"independent individual missing: "
-    #                 f"{person}; {person.missing}"
-    #             )
-    #             missing += 1
-    #             continue
-    #         self.independent_indexes.append(person.sample_index)
-    #     self.independent_indexes = np.array(tuple(self.independent_indexes))
-
-    #     logger.debug(
-    #         f"independent: found={len(self.independent_indexes)}; "
-    #         f"missing={missing}")
-
-    #     assert len(self.independent_indexes) + missing == \
-    #         len(self.independent), (
-    #             len(self.independent_indexes),
-    #             missing,
-    #             len(self.independent),
-    #         )
 
     def _compare_vcf_variants_gt(self, lhs, rhs):
         """
