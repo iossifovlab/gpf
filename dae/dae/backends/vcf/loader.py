@@ -135,9 +135,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             self._fill_missing_value = -1
         else:
             logger.warning(
-                "unexpected `vcf_multi_loader_fill_in_mode` value",
-                f"{fill_in_mode}; "
-                f"expected values are `reference` or `unknown`")
+                "unexpected `vcf_multi_loader_fill_in_mode` value%s; "
+                "expected values are `reference` or `unknown`", fill_in_mode)
             self._fill_missing_value = 0
 
         self.fixed_pedigree = params.get("vcf_pedigree_mode", "fixed") == \
@@ -150,8 +149,6 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         self.independent_persons = set([
             p.person_id for p in self.families.persons_without_parents()])
 
-        # self._build_family_alleles_indexes()
-        # self._build_independent_persons_indexes()
         self._init_chromosome_order()
         self._init_denovo_mode()
         self._init_omission_mode()
