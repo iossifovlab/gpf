@@ -82,6 +82,14 @@ class ImpalaQueryRunner(QueryRunner):
                 self.study_id, elapsed)
             with connection.cursor() as cursor:
                 try:
+                    if self.closed():
+                        logger.info(
+                            "runner (%s) closed before execution "
+                            "after %0.2fsec",
+                            self.study_id, elapsed)
+                        self._finalize(started)
+                        return
+
                     cursor.execute_async(self.query)
                     self._wait_cursor_executing(cursor)
 
