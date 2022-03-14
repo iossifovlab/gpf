@@ -214,7 +214,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     this.ngbDropdownMenu.dropdown.toggle();
     this.clickedColumnFilteringButton = $event.target;
     this.updateModalPosition(0, -13);
-    this.multipleSelectMenuComponent.searchPlaceholder = 'Search in all categories';
+    this.multipleSelectMenuComponent.searchPlaceholder = 'Search categories';
     this.multipleSelectMenuComponent.columns = this.config.columns.filter(col => col.id !== this.geneSymbolColumnId);
     this.multipleSelectMenuComponent.refresh();
   }
@@ -307,7 +307,9 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     const newWindow = window.open('', '_blank');
-    newWindow.location.assign(`${agpBaseUrl}/${genes}`);
+    if (newWindow) {
+      newWindow.location.assign(`${agpBaseUrl}/${genes}`);
+    }
   }
 
   public toggleHighlightGene(geneSymbol: string): void {
