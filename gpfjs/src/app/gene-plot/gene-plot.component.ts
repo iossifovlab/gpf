@@ -35,9 +35,10 @@ export class GenePlotComponent implements OnChanges {
     denovoAxisGap: 8, // Gap between subdomain and denovo axis
     transcriptHeight: 20,
     chromosomeLabelPadding: 60,
-    collapsedTranscriptPadding: 60,
+    collapsedTranscriptTextHeight: 20,
+    collapsedTranscriptPadding: 40,
     denovoSpacing: 22,
-    margin: { top: 10, right: 45, left: 120, bottom: 50 },
+    margin: { top: 10, right: 45, left: 120, bottom: 20 },
     exonThickness: { normal: 4, collapsed: 9 },
     cdsThickness: { normal: 8, collapsed: 18 },
   };
@@ -84,7 +85,7 @@ export class GenePlotComponent implements OnChanges {
       return;
     }
 
-    this.chromosomesTitle = this.findChromosomeTitle();
+    this.chromosomesTitle = this.constructChromosomeTitle();
 
     this.genePlotModel = new GenePlotModel(this.gene, this.plotWidth);
     this.normalRange = this.genePlotModel.normalRange;
@@ -142,17 +143,14 @@ export class GenePlotComponent implements OnChanges {
   }
 
   private get svgHeight(): number {
-    let result: number;
-    const transcriptsCount = (this.showTranscripts ? this.genePlotModel.gene.transcripts.length + 1 : 0) + 1;
-
-    result =
-      this.frequencyPlotHeight
+    const transcriptsCount = (this.showTranscripts ? this.genePlotModel.gene.transcripts.length : 0) + 1;
+    return this.frequencyPlotHeight
+      + this.constants.frequencyPlotPadding
       + this.constants.margin.top
       + this.constants.margin.bottom
-      + this.constants.frequencyPlotPadding
-      + (transcriptsCount * this.constants.transcriptHeight);
-
-    return result;
+      + this.constants.collapsedTranscriptTextHeight
+      + (this.showTranscripts ? this.constants.collapsedTranscriptPadding : 0)
+      + transcriptsCount * this.constants.transcriptHeight;
   }
 
   private get frequencyPlotHeight(): number {
@@ -356,8 +354,8 @@ export class GenePlotComponent implements OnChanges {
     this.drawTranscript(collapsedTranscriptElement, this.genePlotModel.gene.collapsedTranscript, transcriptY);
 
     if (this.showTranscripts) {
-      transcriptY += this.constants.collapsedTranscriptPadding; // Add some extra padding after the collapsed transcript
       const transcriptsElement = this.plotElement.append('g').attr('id', 'transcripts');
+      transcriptY += this.constants.collapsedTranscriptTextHeight + this.constants.collapsedTranscriptPadding; // Add some extra padding after the collapsed transcript
       for (const geneViewTranscript of this.genePlotModel.gene.transcripts) {
         transcriptY += this.constants.transcriptHeight;
         this.drawTranscript(transcriptsElement, geneViewTranscript, transcriptY);
@@ -627,8 +625,8 @@ export class GenePlotComponent implements OnChanges {
     }
   }
 
-  private findChromosomeTitle(): string {
+  private constructChromosomeTitle(): string {
     const chromosomes = [...this.gene.chromosomes.keys()];
-    return chromosomes.length === 1 ? `Chromosome: ${chromosomes}` : `Chromosomes: \n    ${chromosomes.join('\n    ')}`;
+    return chromosomes.length === 1 ? `Chromosome: ${chromosomes}` : `Chromosomes: \n\t${chromosomes.join('\n\t')}`;
   }
 }
