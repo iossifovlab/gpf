@@ -472,7 +472,7 @@ EOT'
           --exclude conftest.py \
           --exclude gpf_wdae.egg-info \
           --transform "s,^,gpf/," \
-          dae/ wdae/ environment.yml dev-environment.yml
+          dae/ wdae/ environment.yml dev-environment.yml VERSION
     )
   }
 
