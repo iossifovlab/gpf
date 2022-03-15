@@ -386,3 +386,41 @@ describe('Autism gene profiles table functionality tests', () => {
     });
   });
 });
+
+// describe('Autism gene profiles compare modal tests', () => {
+//   const page = new AutismGeneProfilesTable();
+//   const autismGeneProfilesBlock = new AutismGeneProfilesBlock();
+
+//   before(() => {
+//     autismGeneProfilesBlock.cleanup();
+//   });
+
+//   beforeEach(() => {
+//     autismGeneProfilesBlock.navigateToHome();
+//     autismGeneProfilesBlock.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+//   });
+
+//   it.only('should select multiple genes and check whether the modal appears correctly', () => {
+//     cy.intercept('GET', '/gpf/api/v3/autism_gene_tool/genes/?page=1&symbol=**').as('tableRequest');
+
+//     page.compareGenesModal.should('not.be.visible');
+//     page.geneSearchInput.clear().type('MYT1L');
+//     cy.wait('@tableRequest');
+//     page.allTableRows.eq(0).click({ctrlKey: true});
+//     page.compareGenesModal.should('be.visible');
+//     page.compareGeneItems.should('have.length', 1);
+
+//     page.allTableRows.eq(0).click({ctrlKey: true});
+//     page.compareGenesModal.should('not.be.visible');
+
+//     page.allTableRows.eq(0).click({ctrlKey: true});
+//     page.compareGenesModal.should('be.visible');
+//     page.compareGeneItems.should('have.length', 1);
+
+//     page.geneSearchInput.clear().type('SPAST');
+//     cy.wait('@tableRequest');
+//     page.allTableRows.eq(0).click({ctrlKey: true});
+//     page.compareGeneItems.should('have.length', 2);
+//   });
+// });
+

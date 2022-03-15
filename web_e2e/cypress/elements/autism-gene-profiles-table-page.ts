@@ -7,15 +7,15 @@ export class AutismGeneProfilesTable extends BasePage {
   }
 
   public get table(): element {
-    return cy.get('gpf-autism-gene-profiles-table table');
-  }
-
-  public get allTableCells(): element {
-    return this.table.find('tbody td');
+    return cy.get('.table-container');
   }
 
   public get allTableRows(): element {
-    return this.table.find('tbody tr');
+    return cy.get('.table-body-row:not(#nothing-found)');
+  }
+
+  public get allTableCells(): element {
+    return this.table.find('#table-body .row-cell');
   }
 
   public get firstGeneInTable(): element {
@@ -58,8 +58,8 @@ export class AutismGeneProfilesTable extends BasePage {
     return cy.get('#column-filtering-button');
   }
 
-  public get legend() : element {
-    return cy.get('div#compare-genes-menu');
+  public get compareGenesModal() : element {
+    return cy.get('#compare-genes-modal');
   }
 
   public get legendCompareButton(): element {
@@ -72,6 +72,10 @@ export class AutismGeneProfilesTable extends BasePage {
 
   public get legendSelectedGenes(): element {
     return cy.get('#compare-genes-menu > span');
+  }
+  
+  public get compareGeneItems(): element {
+    return cy.get('.compare-gene-item');
   }
 
   public clickSortButton(columnName: string): void {

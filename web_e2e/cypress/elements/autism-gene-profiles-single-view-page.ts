@@ -1,10 +1,20 @@
 import { AutismGeneProfilesTable } from './autism-gene-profiles-table-page';
 import { GenotypeBlockPage } from './genotype-block-page';
-import { BasePage } from './utils';
+import { BasePage, sidenavPageLinks } from './utils';
 
 export class AutismGeneProfilesSingleView extends BasePage {
   public get window(): element {
     return cy.get('gpf-autism-gene-profile-single-view');
+  }
+
+  public openSingleViewPage(geneSymbol: string): void {
+    let baseUrl = Cypress.config().baseUrl;
+    if (baseUrl.endsWith('/')) {
+      baseUrl = baseUrl.slice(0, -1);
+    }
+    const agpUrl = sidenavPageLinks.autismGeneProfiles;
+
+    cy.visit(`${baseUrl}/${agpUrl}/${geneSymbol}`);
   }
 
   public get header(): element {
@@ -43,43 +53,12 @@ export class AutismGeneProfilesSingleView extends BasePage {
     return cy.get('#autism_gene_sets');
   }
 
-  public get autismGeneToolAllView(): element {
-    return cy.get('a#ngb-nav-0.nav-link');
-  }
-
   public get geneRelevantGeneSetsTable(): element {
     return cy.get('#relevant_gene_sets');
   }
 
   public get datasetsTable(): element {
     return cy.get('.datasets-table');
-  }
-
-  public openSingleView(gene: string, force = false): void {
-    const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
-    const page = new AutismGeneProfilesSingleView();
-    page.autismGeneToolAllView.click();
-    autismGeneProfilesTablePage.geneSearchInput.clear().type(gene);
-    cy.intercept('GET', '/gpf/api/v3/autism_gene_tool/genes/?page=1&symbol=' + gene + '**').as('responseHandler');
-    cy.wait('@responseHandler');
-    autismGeneProfilesTablePage.allTableCells.first().click();
-    page.getView(gene, force);
-  }
-
-  public getView(name: string, force = true) {
-    cy.get('nav > li > a > span').not('.close').each(nav => {
-      cy.wrap(nav).eq(0).then(el => {
-        if(el.text() === name) {
-          cy.wrap(el).click();
-          return false;
-        } else {
-          if(force === true) {
-            cy.wrap(el).parent().children().eq(1).click();
-          }
-          return false;
-        }
-      });
-    });
   }
 
   public getGeneSymbols(id: string = null): any {
