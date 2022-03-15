@@ -418,7 +418,13 @@ class ContinuousParquetFileWriter:
 
     def append_summary_allele(self, allele, json_data):
         data = self.serializer.build_summary_allele_batch_dict(allele, json_data)
-        
+
+        # DEBUG 
+        # if data['position'] == [1102490]:
+        #     print(allele.effect_types)
+        #     print(allele.effect_gene_symbols)
+        #     print(data)
+
         for k, v in self._data.items():
             v.extend(data[k])
 

@@ -54,12 +54,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
         self._add_to_product(join_clause)
 
     def build_group_by(self):
-        if self.summary_allele_table is not None:
-            return
-
-        self._add_to_product(
-            "GROUP BY bucket_index, summary_index, "
-            "allele_index, variant_type, transmission_type")
+        pass
 
     def build_having(self, **kwargs):
         pass

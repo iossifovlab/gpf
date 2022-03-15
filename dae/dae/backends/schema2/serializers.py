@@ -211,45 +211,7 @@ class AlleleParquetSerializer:
     def searchable_properties(self):
         return self.searchable_properties_types.keys()
 
-    def build_searchable_vectors_summary(self, summary_variant):
-        
-        vectors = dict()
-        for allele in summary_variant.alleles:
-            vector = []
-            if allele.allele_index not in vectors:
-                vectors[allele.allele_index] = []
-            for spr in self.searchable_properties_summary:
-                if spr in self.PRODUCT_PROPERTIES_LIST:
-                    continue
-                prop_value = self._get_searchable_prop_value(allele, spr)
-                vector.append(prop_value)
-            # vector = [vector]
-
-            effect_types = getattr(allele, "effect_types", None)
-            if effect_types is None:
-                effect_types = allele.get_attribute("effect_types")
-            if not len(effect_types):
-                effect_types = [None]
-
-            effect_gene_syms = getattr(allele, "effect_gene_symbols", None)
-            if effect_gene_syms is None:
-                effect_gene_syms = allele.get_attribute("effect_gene_symbols")
-            if not len(effect_gene_syms):
-                effect_gene_syms = [None]
-            
-            effect_gene = [{"effect_types": e[0],"effect_gene_symbols": e[1]} for e in zip(effect_types, effect_gene_syms)]
-            vector.append(effect_gene)
-            vector = [vector]
-
-            vectors[allele.allele_index].append(list(vector))
-            
-        return {
-            k: list(itertools.chain.from_iterable(v))
-            for k, v in vectors.items()
-        }
-
     def _get_searchable_prop_value(self, allele, spr):
-
         prop_value = getattr(allele, spr, None)
         if prop_value is None:
             prop_value = allele.get_attribute(spr)
@@ -286,31 +248,20 @@ class AlleleParquetSerializer:
         return allele_data
 
     def build_summary_allele_batch_dict(self, allele, summary_data):
-        summary_header = [] 
-        summary_properties = []
+        allele_data = {'summary_data': [summary_data]}
 
         for spr in self.SUMMARY_SEARCHABLE_PROPERTIES_TYPES:
              
             if spr == 'effect_gene':
-                effect_types = allele.get_attribute("effect_types") 
-                effect_gene_syms = allele.get_attribute("effect_gene_symbols")
-
-                if effect_types is None or not len(effect_types): effect_types = [None]
-                if effect_gene_syms is None or not len(effect_gene_syms): effect_gene_syms = [None] 
-
-                prop_value = [{"effect_types": e[0],"effect_gene_symbols": e[1]} for e in zip(effect_types, effect_gene_syms)]
-            
+                if allele.effect_types is None:
+                    assert allele.effect_gene_symbols is None 
+                    prop_value = [{"effect_types": None,"effect_gene_symbols": None}]
+                else:
+                    prop_value = [{"effect_types": e[0],"effect_gene_symbols": e[1]} \
+                            for e in zip(allele.effect_types, allele.effect_gene_symbols)]
             else:
                 prop_value = self._get_searchable_prop_value(allele, spr)
             
-            summary_header.append(spr) 
-            summary_properties.append(prop_value)
-        
-        # data from schema 
-        allele_data = {name: [] for name in self.schema_summary.names}
-        for name, value in zip(summary_header, summary_properties): 
-            allele_data[name].append(value) 
-        
-        # composite data from all alleles 
-        allele_data['summary_data'] = [summary_data]
+            allele_data[spr] = [prop_value]
+
         return allele_data

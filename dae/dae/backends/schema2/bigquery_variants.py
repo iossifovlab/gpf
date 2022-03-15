@@ -11,6 +11,7 @@ from dae.backends.schema2.family_builder import FamilyQueryBuilder
 from dae.backends.schema2.summary_builder import SummaryQueryBuilder
 from dae.backends.schema2.base_query_director import QueryDirector
 from dae.variants.variant import SummaryVariantFactory
+from dae.variants.family_variant import FamilyVariant
 from google.cloud import bigquery
 
 logger = logging.getLogger(__name__)
@@ -27,6 +28,7 @@ class BigQueryDialect(Dialect):
 
     def float_type(self) -> str:
         return "FLOAT64"
+
 
 class BigQueryVariants:
 
@@ -245,18 +247,16 @@ class BigQueryVariants:
         )
 
         query = query_builder.product
-        # query = sqlparse.format(query_builder.product, reindent=True, keyword_case='upper')
 
         # ------------------ DEBUG ---------------------
         result = []
-        logger.info(f"run kicked at {time.time() - self.start_time}")
         logger.info(f"BQ QUERY BUILDER:\n{query}")
         start = time.perf_counter()
         bq_job = self.client.query(query)
         end = time.perf_counter()
         logger.info(f"TIME (BQ DB): {end - start}")
         result = bq_job
-         # ------------------ DEBUG ---------------------
+        # ------------------ DEBUG ---------------------
 
         for row in result:
             try:

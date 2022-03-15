@@ -208,9 +208,8 @@ class ImpalaVariants:
                 )
 
                 query = query_builder.product
-                # query = sqlparse.format(query_builder.product, reindent=True, keyword_case='upper')
-                logger.info(f"FAMILY VARIANTS QUERY ({conn.host}): {query}")
 
+                logger.info(f"FAMILY VARIANTS QUERY ({conn.host}):\n {query}")
                 start = time.perf_counter()
                 cursor.execute(query)
                 end = time.perf_counter()
@@ -222,6 +221,15 @@ class ImpalaVariants:
                         # columns: ..summary_data, family_data 
                         sv_record = json.loads(row[-2])
                         fv_record = json.loads(row[-1])
+
+
+                        # DEBUG, should be in schema2 
+                        # look specifically for SF0002235, "1:1233891" 
+                        # best/state 000/200
+                        if fv_record["family_id"] == 'SF0002235' and fv_record['family_index'] == 16964:
+                            print(fv_record)
+                            print(sv_record)
+
 
                         fv = FamilyVariant(
                             SummaryVariantFactory.summary_variant_from_records(sv_record),
