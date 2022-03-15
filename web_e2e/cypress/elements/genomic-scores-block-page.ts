@@ -34,6 +34,6 @@ export class GenomicScoresBlockPage extends BasePage {
   }
 
   public get removeFilterButton(): element {
-    return cy.get('gpf-remove-button > img.clickable');
+    return cy.get('gpf-remove-button .clickable');
   }
 }
