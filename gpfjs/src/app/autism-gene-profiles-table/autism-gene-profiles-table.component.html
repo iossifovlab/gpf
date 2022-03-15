@@ -16,9 +16,8 @@
             [attr.title]="(row[column.id] === '✓' || row[column.id] === null || row[column.id] === row.geneSymbol) ? row.geneSymbol : row[column.id] + '\n' + row.geneSymbol"
             (click)="handleCellClick($event, row, column)"
             (middleclick)="handleCellClick($event, row, column)">
-            <span *ngIf="column.clickable !== null && row[column.id]" class="clickable">{{ row[column.id] }}</span>
-            {{ column.clickable === null ? row[column.id] : '' }}
-          </div>
+            <span *ngIf="column.clickable !== null && row[column.id]" class="clickable">{{ row[column.id] }}</span>{{ column.clickable === null ? row[column.id] : '' }}</div
+          >
         </ng-container>
       </div>
 
@@ -62,6 +61,7 @@
             <button
               *ngIf="column.columns.length"
               #columnFilteringButton
+              [attr.id]="column.id + '-column-filtering-button'"
               class="header-button navbar-toggler column-filtering-button"
               (click)="openDropdown(column, $event)"
               title="Filter columns">
