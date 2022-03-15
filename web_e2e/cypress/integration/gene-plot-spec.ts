@@ -171,7 +171,7 @@ describe('Gene plot summary alleles count tests', () => {
   });
 });
 
-describe('Gene plot visual tests', () => {
+describe.skip('Gene plot visual tests', () => {
   const page = new GenePlotPage();
   const geneBrowserPage = new GeneBrowserPage();
 
