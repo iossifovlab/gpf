@@ -4,7 +4,9 @@ import logging
 from typing import Dict, List, Optional
 
 from dae.gene.utils import getGeneTerms, getGeneTermAtt, rename_gene_terms
-from dae.gene.gene_term import loadGeneTerm
+from dae.gene.gene_term import read_ewa_set_file, read_gmt_file, \
+    read_mapping_file
+from dae.genomic_resources.repository import GenomicResource
 from dae.utils.dae_utils import cached
 
 logger = logging.getLogger(__name__)
@@ -66,6 +68,43 @@ class GeneSetCollection(object):
             f"gene set collection loaded: {keys}...")
         return GeneSetCollection(collection_id, gene_sets)
 
+    @staticmethod
+    def from_resource(resource: Optional[GenomicResource]):
+        gene_sets = list()
+        config = resource.get_config()
+        collection_id = config["id"]
+        collection_format = config["format"]
+        logger.debug(f"loading {collection_id}: {config}")
+        if collection_format == "map":
+            filename = config["filename"]
+            names_filename = filename[:-4] + "names.txt"
+            gene_terms = read_mapping_file(
+                resource.open_raw_file(filename),
+                resource.open_raw_file(names_filename)
+            )
+        elif collection_format == "gmt":
+            filename = config["filename"]
+            gene_terms = read_gmt_file(resource.open_raw_file(filename))
+        elif collection_format == "directory":
+            directory = config["directory"]
+            filepaths = list()
+            if directory == ".":
+                directory = ""  # Easier check with startswith
+            for filepath, _, _ in resource:
+                if filepath.startswith(directory) and \
+                        filepath.endswith(".txt"):
+                    filepaths.append(filepath)
+            files = [resource.open_raw_file(f) for f in filepaths]
+            gene_terms = read_ewa_set_file(files)
+        else:
+            raise ValueError("Invalid collection format type")
+
+        gene_terms = rename_gene_terms(config, gene_terms, inNS="sym")
+        for key, value in gene_terms.tDesc.items():
+            syms = list(gene_terms.t2G[key].keys())
+            gene_sets.append(GeneSet(key, value, syms))
+        return GeneSetCollection(collection_id, gene_sets)
+
     def get_gene_set(self, gene_set_id: str) -> Optional[GeneSet]:
         gene_set = self.gene_sets.get(gene_set_id)
         if gene_set is None:
@@ -113,12 +152,12 @@ class GeneSetsDb(object):
                 )
         return gene_sets_collections_desc
 
-    @staticmethod
-    def load_gene_set_from_file(filename, config):
-        assert os.path.exists(filename) and os.path.isfile(filename)
-        gene_term = loadGeneTerm(filename)
-        gene_term = rename_gene_terms(config, gene_term, inNS="sym")
-        return gene_term
+    # @staticmethod
+    # def load_gene_set_from_file(filename, config):
+    #     assert os.path.exists(filename) and os.path.isfile(filename)
+    #     gene_term = loadGeneTerm(filename)
+    #     gene_term = rename_gene_terms(config, gene_term, inNS="sym")
+    #     return gene_term
 
     def _load_gene_set_collection(self, gene_sets_collection_id):
         if gene_sets_collection_id not in self.gene_set_collections:

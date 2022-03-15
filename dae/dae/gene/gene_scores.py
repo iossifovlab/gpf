@@ -17,6 +17,17 @@ class GeneScore:
 
     Loads a CSV file with gene scores by gene score id as described
     in resource config.
+
+    Gene Score resource configuration format:
+    type: gene_score
+    id: (gene score id)
+    filename: (filename to gene score)
+    desc: (gene score description)
+    histogram:
+      bins: (number of bins)
+      xscale: linear/log
+      yscale: linear/log
+    meta: (gene score metadata)
     """
 
     def __init__(self, score_id, file, desc, histogram_config, meta=None):

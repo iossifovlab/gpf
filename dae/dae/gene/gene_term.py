@@ -68,13 +68,14 @@ class GeneTerms(object):
         dscFn.close()
 
 
-def _ReadEwaSetFile(inputDir):
+def read_ewa_set_file(set_files):
     r = GeneTerms()
     r.geneNS = "sym"
-    for sf in glob.glob(inputDir + "/*.txt"):
-        p, fn = os.path.split(sf)
-        setname, ex = os.path.splitext(fn)
-        f = open(sf, "r")
+    # for sf in glob.glob(inputDir + "/*.txt"):
+    #     p, fn = os.path.split(sf)
+    #     setname, ex = os.path.splitext(fn)
+    #     f = open(sf, "r")
+    for setname, f in set_files:
         r.tDesc[setname] = f.readline().strip()
         for line in f:
             gSym = line.strip()
@@ -84,12 +85,11 @@ def _ReadEwaSetFile(inputDir):
     return r
 
 
-def _ReadGmtFile(inputFile):
+def read_gmt_file(input_file):
     r = GeneTerms()
     r.geneNS = "sym"
 
-    f = open(inputFile)
-    for ln in f:
+    for ln in input_file:
         line = ln.strip().split()
 
         t = line[0]
@@ -97,15 +97,14 @@ def _ReadGmtFile(inputFile):
         for gs in line[2:]:
             r.t2G[t][gs] += 1
             r.g2T[gs][t] += 1
-    f.close()
+    input_file.close()
     return r
 
 
-def _ReadMappingFile(inputFile):
+def read_mapping_file(input_file, names_file):
     r = GeneTerms()
     r.geneNS = "id"
-    f = open(inputFile)
-    for ln in f:
+    for ln in input_file:
         line = ln.strip().split()
         if line[0] == "#geneNS":
             r.geneNS = line[1]
@@ -115,25 +114,15 @@ def _ReadMappingFile(inputFile):
         for t in line:
             r.t2G[t][geneId] += 1
             r.g2T[geneId][t] += 1
-    f.close()
-    nmsFl = inputFile[:-4] + "names.txt"
+    input_file.close()
     try:
-        nf = open(nmsFl)
-        for line in nf:
+        for line in names_file:
             (t, desc) = line.strip().split("\t", 1)
             if t in r.t2G:
                 r.tDesc[t] = desc
     except IOError:
         pass
+    names_file.close()
     for t in set(r.t2G) - set(r.tDesc):
         r.tDesc[t] = ""
     return r
-
-
-def loadGeneTerm(path):
-    if path.endswith("-map.txt"):
-        return _ReadMappingFile(path)
-    elif path.endswith(".gmt"):
-        return _ReadGmtFile(path)
-    else:
-        return _ReadEwaSetFile(path)
