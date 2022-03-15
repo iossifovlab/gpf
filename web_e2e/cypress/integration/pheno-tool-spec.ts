@@ -65,7 +65,7 @@ describe('Pheno tool tests', () => {
     page.findButtonInComponentContainingText('gpf-pheno-tool', 'Download').should('be.visible');
   });
 
-  it.only('should display pheno tool results chart after "Report" button click', () => {
+  it('should display pheno tool results chart after "Report" button click', () => {
     const phenoToolMeasurePage = new PhenoToolMeasurePage();
 
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
