@@ -437,7 +437,7 @@ class BaseQueryBuilder(ABC):
             if any([m.match([Inheritance.denovo]) for m in matchers]):
                 frequency_bin.add(f"{frequency_bin_col} = 0")
 
-        has_transmitted_query = any([
+        has_transmitted_query = all([
             any(
                 m.match([inh]) for inh in [
                     Inheritance.mendelian,
@@ -480,6 +480,8 @@ class BaseQueryBuilder(ABC):
 
         if len(frequency_bin) == 4:
             return ""
+        
+        print("frequency_bin:", frequency_bin)
         return " OR ".join(frequency_bin)
 
     def _build_coding_heuristic(self, effect_types):
