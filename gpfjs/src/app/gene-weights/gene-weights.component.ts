@@ -58,10 +58,10 @@ export class GeneWeightsComponent extends StatefulComponent implements OnInit {
     super.ngOnInit();
     this.geneWeightsService.getGeneWeights().pipe(
       switchMap(geneWeights => {
-        return combineLatest(
+        return combineLatest([
           of(geneWeights),
-          this.store.selectOnce(state => state.geneWeightsState)
-        );
+          this.store.selectOnce(GeneWeightsState)
+        ]);
       })
     ).subscribe(([geneWeights, state]) => {
       this.geneWeightsArray = geneWeights;
