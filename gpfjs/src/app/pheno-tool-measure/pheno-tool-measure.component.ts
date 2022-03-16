@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, QueryList, ViewChildren } from '@angular/core';
+import { Component, OnInit, ElementRef, QueryList, ViewChildren, ViewChild } from '@angular/core';
 // eslint-disable-next-line no-restricted-imports
 import { combineLatest, ReplaySubject } from 'rxjs';
 import { ContinuousMeasure } from '../measures/measures';
@@ -10,6 +10,7 @@ import { SetPhenoToolMeasure, PhenoToolMeasureState } from './pheno-tool-measure
 import { StatefulComponent } from 'app/common/stateful-component';
 import { take } from 'rxjs/operators';
 import { Dataset } from 'app/datasets/datasets';
+import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
 
 interface Regression {
   display_name: string;
@@ -30,6 +31,7 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
   normalizeBy: Regression[] = new Array<Regression>();
 
   measuresLoaded$ = new ReplaySubject<Array<ContinuousMeasure>>();
+  @ViewChild(PhenoMeasureSelectorComponent) private measureSelectorComponent: PhenoMeasureSelectorComponent;
 
   regressions: Object = {};
   regressionNames: string[];
@@ -46,13 +48,6 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
 
   public ngOnInit() {
     super.ngOnInit();
-    combineLatest([this.store.selectOnce(PhenoToolMeasureState), this.measuresLoaded$]).pipe(take(1))
-      .subscribe(([state, measures]) => {
-        if (state.measureId) {
-          this.selectedMeasure = measures.find(m => m.name === state.measureId);
-        }
-        this.normalizeBy = state.normalizeBy.length ? state.normalizeBy : [];
-      });
 
     this.dataset = this.datasetsService.getSelectedDataset();
     if (this.dataset?.phenotypeData) {
@@ -64,6 +59,28 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
       this.regressions = {};
       this.regressionNames = [];
     }
+
+    combineLatest([this.store.selectOnce(PhenoToolMeasureState), this.measuresLoaded$]).pipe(take(1))
+      .subscribe(async ([state, measures]) => {
+        if (state.measureId) {
+          this.selectedMeasure = measures.find(m => m.name === state.measureId);
+          await this.waitForSelectorComponent();
+          this.measureSelectorComponent.selectMeasure(this.selectedMeasure, false);
+        }
+        this.normalizeBy = state.normalizeBy.length ? state.normalizeBy : [];
+        this.updateState();
+      });
+  }
+
+  private async waitForSelectorComponent() {
+    return new Promise<void>(resolve => {
+      const timer = setInterval(() => {
+        if (this.measureSelectorComponent !== undefined) {
+          resolve();
+          clearInterval(timer);
+        }
+      }, 100);
+    });
   }
 
   get measure() {
