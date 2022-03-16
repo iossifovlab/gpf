@@ -91,14 +91,14 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   @HostListener('document:keydown.esc')
   public keybindClearHighlight() {
-    if (this.highlightedGenes.size && document.activeElement === document.body) {
+    if (this.highlightedGenes.size && (document.activeElement === document.body || document.activeElement.nodeName === 'BUTTON')) {
       this.highlightedGenes.clear();
     }
   }
 
   @HostListener('document:keydown.c')
   public keybindCompareGenes() {
-    if (this.highlightedGenes.size && document.activeElement === document.body) {
+    if (this.highlightedGenes.size && (document.activeElement === document.body || document.activeElement.nodeName === 'BUTTON')) {
       this.openSingleView(this.highlightedGenes);
     }
   }
