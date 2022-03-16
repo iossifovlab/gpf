@@ -102,6 +102,8 @@ genotype_browser_schema = {
         "has_pedigree_selector": {"type": "boolean"},
         "has_study_types": {"type": "boolean"},
         "has_graphical_preview": {"type": "boolean"},
+        "show_all_unknown": {"type": "boolean", "default": False},
+
         "inheritance_type_filter": {
             "type": "list",
             "schema": {"type": "string"},
