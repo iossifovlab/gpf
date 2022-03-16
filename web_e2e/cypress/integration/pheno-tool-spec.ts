@@ -73,7 +73,7 @@ describe('Pheno tool tests', () => {
     page.findErrorAlertInComponent('gpf-pheno-tool-measure').should('be.visible');
 
     phenoToolMeasurePage.searchbox.click();
-    page.findButtonInComponentContainingText('gpf-searchable-select', 'i1.age').click();
+    page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.age').click();
     page.reportButton.click();
     page.resultsChart.should('be.visible');
   });

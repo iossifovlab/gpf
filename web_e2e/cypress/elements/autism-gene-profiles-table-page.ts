@@ -7,59 +7,63 @@ export class AutismGeneProfilesTable extends BasePage {
   }
 
   public get table(): element {
-    return cy.get('gpf-autism-gene-profiles-table table');
+    return cy.get('.table-container');
   }
 
-  public get allTableCells(): element {
-    return this.table.find('tbody td');
+  public get aboveTableBar(): element {
+    return cy.get('#above-table-bar');
+  }
+
+  public get categoryFilterButton(): element {
+    return cy.get('#category-filtering-button');
   }
 
   public get allTableRows(): element {
-    return this.table.find('tbody tr');
+    return cy.get('.table-body-row:not(#nothing-found)');
   }
 
-  public get firstGeneInTable(): element {
-    return this.allTableCells.first();
+  public get firstTableRow(): element {
+    return this.allTableRows.first();
+  }
+
+  public get allTableCells(): element {
+    return this.table.find('#table-body .row-cell');
+  }
+
+  public get secondTableCell(): element {
+    return this.allTableCells.eq(1);
   }
 
   public get geneSearchInput(): element {
     return cy.get('#gene-search-input');
   }
 
-  public get autismGeneSetsButton(): element {
-    return cy.get('#autism_gene_sets-button');
+  public get autismGeneSetColumnFilteringButton(): element {
+    return cy.get('#autism_gene_sets_rank-column-filtering-button');
   }
 
-  public get autismGeneSetsDropdown(): element {
-    return cy.get('#autism_gene_sets-dropdown');
+  public get multipleSelectMenu(): element {
+    return cy.get('gpf-multiple-select-menu');
   }
 
-  public get autismGeneSetsCheckUncheckAllButton(): element {
-    return this.autismGeneSetsDropdown.find('#check-uncheck-all-button');
+  public get multipleSelectMenuCheckUncheckAllButton(): element {
+    return this.multipleSelectMenu.find('#check-uncheck-all-button');
   }
 
-  public get autismGeneSetsDropdownSearch(): element {
-    return this.autismGeneSetsDropdown.find('input[name="search"]');
+  public get multipleSelectMenuSearch(): element {
+    return this.multipleSelectMenu.find('input[name="search"]');
   }
 
-  public get autismGeneSetsDropdownApplyButton(): element {
-    return this.autismGeneSetsDropdown.contains('Apply');
-  }
-
-  public get allAutismGeneSetsDropdownCheckboxes(): element {
-    return this.autismGeneSetsDropdown.find('label input');
+  public get allMultipleSelectMenuCheckboxes(): element {
+    return this.multipleSelectMenu.find('label input');
   }
 
   public get allSortingButtons(): element {
     return cy.get('gpf-sorting-buttons');
   }
 
-  public get allGeneSetsDropdownButton(): element {
-    return cy.get('#column-filtering-button');
-  }
-
-  public get legend() : element {
-    return cy.get('div#compare-genes-menu');
+  public get compareGenesModal() : element {
+    return cy.get('#compare-genes-modal');
   }
 
   public get legendCompareButton(): element {
@@ -73,18 +77,16 @@ export class AutismGeneProfilesTable extends BasePage {
   public get legendSelectedGenes(): element {
     return cy.get('#compare-genes-menu > span');
   }
+  
+  public get compareGeneItems(): element {
+    return cy.get('.compare-gene-item');
+  }
 
   public clickSortButton(columnName: string): void {
     cy.get('th').contains(columnName).then(column => {
       cy.wrap(column).parent().within(button => {
         cy.wrap(button).get('.clickable').click();
       });
-    });
-  }
-
-  public allGeneSetsClickApplyButton(): void {
-    cy.get('#column-filtering-dropdown').within(menu => {
-      cy.wrap(menu).get('button.btn-secondary').click();
     });
   }
 
@@ -99,8 +101,8 @@ export class AutismGeneProfilesTable extends BasePage {
     });
   }
 
-  public get searchResultWarning(): element {
-    return cy.get('#search-warning > td > span');
+  public get nothingFound(): element {
+    return cy.get('#nothing-found');
   }
 
   public get firstTabCloseButton(): element {
