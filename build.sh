@@ -34,7 +34,7 @@ function main() {
   libmain_init iossifovlab.gpf gpf
   libmain_init_build_env \
     clobber:"$clobber" preset:"$preset" build_no:"$build_no" generate_jenkins_init:"$generate_jenkins_init" expose_ports:"$expose_ports" \
-    seqpipe.data-hg19-startup
+    iossifovlab.data-hg19-startup
   libmain_save_build_env_on_exit
   libbuild_init stage:"$stage" registry.seqpipe.org
 
@@ -61,9 +61,9 @@ function main() {
   # create gpf docker image
   build_stage "Create gpf-dev docker image"
   {
-    local docker_img_seqpipe_anaconda_base_tag
-    docker_img_seqpipe_anaconda_base_tag="$(e docker_img_seqpipe_anaconda_base_tag)"
-    build_docker_image_create "$gpf_dev_image" . ./Dockerfile "$docker_img_seqpipe_anaconda_base_tag"
+    local docker_img_iossifovlab_anaconda_base_tag
+    docker_img_iossifovlab_anaconda_base_tag="$(e docker_img_iossifovlab_anaconda_base_tag)"
+    build_docker_image_create "$gpf_dev_image" . ./Dockerfile "$docker_img_iossifovlab_anaconda_base_tag"
     gpf_dev_image_ref="$(e docker_img_gpf_dev)"
   }
 
