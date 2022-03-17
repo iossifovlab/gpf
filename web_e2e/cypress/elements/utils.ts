@@ -62,7 +62,7 @@ export class BasePage {
     Cypress.Cookies.preserveOnce('sessionid');
   }
 
-  public navigateToHome(waitForPage = true): void {
+  public navigateToHome(hasAccessRights = true): void {
     let baseUrl = Cypress.config().baseUrl;
     if (baseUrl.endsWith('/')) {
       baseUrl = baseUrl.slice(0, -1);
@@ -70,14 +70,10 @@ export class BasePage {
 
     cy.visit(`${baseUrl}/datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`);
 
-    if (waitForPage) {
-      this.waitForPage(toolPageLinks.geneBrowser);
-    } else {
-      this.waitForPremissionDeniedPrompt();
-    }
+    this.waitForPageToLoad(toolPageLinks.geneBrowser, hasAccessRights);
   }
 
-  public login(username: string, password: string, waitForPage = true): void {
+  public login(username: string, password: string, hasAccessRights = true): void {
     const usersPage = new UsersPage();
 
     if (!username || !password) {
@@ -91,13 +87,9 @@ export class BasePage {
     usersPage.loginSubmitButton.click();
     usersPage.logoutButton.should('be.visible');
 
-    if (waitForPage) {
-      cy.url().then(currentUrl => {
-        this.waitForPage(currentUrl.split('/').pop())
-      });
-    } else {
-      this.waitForPremissionDeniedPrompt();
-    }
+    cy.url().then(currentUrl => {
+      this.waitForPageToLoad(currentUrl.split('/').pop(), hasAccessRights)
+    });
   }
 
   public loginAdmin(): void {
@@ -109,53 +101,49 @@ export class BasePage {
     usersPage.logoutButton.click();
   }
 
-  public navigateToDatasetPage(dataset: string, page: string, waitForPage = true): void {
+  public navigateToDatasetPage(dataset: string, page: string, hasAccessRights = true): void {
     this.openDatasetsDropdownMenu();
     this.datasetsDropdownMenuElements.contains(dataset).click();
     this.datasetsDropdownMenuButton.should('have.text', dataset);
     cy.get(`a.nav-link[href*="${page}"]`).click();
 
-    if (waitForPage) {
-      this.waitForPage(page);
+    this.waitForPageToLoad(page, hasAccessRights);
+  }
+
+  private waitForPageToLoad(page: string, hasAcessRights: boolean = true): void {
+    if (hasAcessRights) {
+      switch(page) {
+        case toolPageLinks.datasetStatistics:
+          cy.get('gpf-variant-reports').should('be.visible');
+          break;
+        case toolPageLinks.geneBrowser:
+          cy.get('gpf-gene-browser').should('be.visible');
+          break;
+        case toolPageLinks.genotypeBrowser:
+          cy.get('gpf-genotype-browser').should('be.visible');
+          break;
+        case toolPageLinks.phenotypeBrowser:
+          cy.get('gpf-pheno-browser-table').should('be.visible');
+          break;
+        case toolPageLinks.phenotypeTool:
+          cy.get('gpf-pheno-tool').should('be.visible');
+          break;
+        case toolPageLinks.enrichmentTool:
+          cy.get('gpf-enrichment-tool').should('be.visible');
+          break;
+        case sidenavPageLinks.savedQueries:
+          cy.get('gpf-saved-queries').should('be.visible');
+          break;
+        case sidenavPageLinks.autismGeneProfiles:
+          cy.get('.row-cell').eq(0).should('be.visible');
+          break;
+        case sidenavPageLinks.management:
+          cy.get('gpf-table-view-cell').eq(0).should('be.visible');
+          break;
+      }
     } else {
-      this.waitForPremissionDeniedPrompt();
+      cy.get('#permission-denied-prompt').should('be.visible');
     }
-  }
-
-  private waitForPage(page: string): void {
-    switch(page) {
-      case toolPageLinks.datasetStatistics:
-        cy.get('gpf-variant-reports').should('be.visible');
-        break;
-      case toolPageLinks.geneBrowser:
-        cy.get('gpf-gene-browser').should('be.visible');
-        break;
-      case toolPageLinks.genotypeBrowser:
-        cy.get('gpf-genotype-browser').should('be.visible');
-        break;
-      case toolPageLinks.phenotypeBrowser:
-        cy.get('gpf-pheno-browser-table').should('be.visible');
-        break;
-      case toolPageLinks.phenotypeTool:
-        cy.get('gpf-pheno-tool').should('be.visible');
-        break;
-      case toolPageLinks.enrichmentTool:
-        cy.get('gpf-enrichment-tool').should('be.visible');
-        break;
-      case sidenavPageLinks.savedQueries:
-        cy.get('gpf-saved-queries').should('be.visible');
-        break;
-      case sidenavPageLinks.autismGeneProfiles:
-        cy.get('.row-cell').eq(0).should('be.visible');
-        break;
-      case sidenavPageLinks.management:
-        cy.get('gpf-table-view-cell').eq(0).should('be.visible');
-        break;
-    }
-  }
-
-  private waitForPremissionDeniedPrompt(): void {
-    cy.get('#permission-denied-prompt').should('be.visible');
   }
 
   public get datasetsDropdownMenuButton(): element {
@@ -181,14 +169,12 @@ export class BasePage {
     this.sidenavTogglerButton.click({scrollBehavior: false});
   }
 
-  public navigateToSidenavPage(sidenavPageLink: string, waitForPage = true): void {
+  public navigateToSidenavPage(sidenavPageLink: string): void {
     this.sidenavTogglerButton.scrollIntoView();
     this.toggleSidenav();
     cy.get(`div.sidenav a[routerlink="/${sidenavPageLink}"]`).click({scrollBehavior: false});
 
-    if (waitForPage) {
-      this.waitForPage(sidenavPageLink.split('/').pop());
-    }
+    this.waitForPageToLoad(sidenavPageLink)
   }
 
   public findButtonInComponentContainingText(componentSelector: string, text: string): element {
