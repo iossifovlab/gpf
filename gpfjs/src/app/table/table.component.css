@@ -1,38 +1,35 @@
-gpf-table-view-cell {
-    display: table-cell;
-}
-
 gpf-table-view-empty-cell {
-    display: table-cell;
+  display: table-cell;
 }
 
 gpf-table-view-header-cell {
-    display: table-cell;
+  display: table-cell;
 }
 
 gpf-table-view-cell {
-    height: 111px;
-    max-height: 111px;
-    border: 1px solid #dddddd;
-    width: 150px;
-    max-width: 150px;
-    overflow: hidden;
-    padding: 8px;
-    text-align: center;
+  display: table-cell;
+  height: 111px;
+  max-height: 111px;
+  border: 1px solid #ddd;
+  width: 150px;
+  max-width: 150px;
+  overflow: hidden;
+  padding: 8px;
+  text-align: center;
 }
 
 .table-header-sticky-div {
-    display: table;
-    border-collapse: collapse;
-    position: sticky;
-    top: 0px;
-    background-color: white;
-    z-index: 1002;
+  display: table;
+  border-collapse: collapse;
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 1002;
 }
 
 .legend-div {
-    position: fixed;
-    bottom: 100px;
-    right: 100px;
-    background-color: white;
+  position: fixed;
+  bottom: 100px;
+  right: 100px;
+  background-color: white;
 }
