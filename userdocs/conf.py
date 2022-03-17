@@ -4,8 +4,8 @@ import os
 import sys
 import django
 from typing import Dict
-from dae.__version__ import VERSION as RELEASE
-from dae.__version__ import SERIES as VERSION
+from dae.__version__ import RELEASE
+from dae.__version__ import VERSION
 
 sys.path.insert(0, os.path.abspath('..'))
 os.environ['DJANGO_SETTINGS_MODULE'] = 'wdae.settings'
