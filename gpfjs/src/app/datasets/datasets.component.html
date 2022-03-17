@@ -35,7 +35,7 @@
       <li *ngIf="selectedDataset.geneBrowser.enabled" class="nav-item">
         <a class="nav-link" routerLink="{{toolPageLinks.geneBrowser}}" routerLinkActive="active">Gene Browser</a>
       </li>
-      <li *ngIf="selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig" class="nav-item">
+      <li *ngIf="selectedDataset.genotypeBrowser" class="nav-item">
         <a class="nav-link" routerLink="{{toolPageLinks.genotypeBrowser}}" routerLinkActive="active">Genotype Browser</a>
       </li>
       <li *ngIf="selectedDataset.phenotypeBrowser" class="nav-item">
