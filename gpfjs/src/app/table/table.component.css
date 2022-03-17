@@ -29,7 +29,7 @@ gpf-table-view-cell {
 
 .legend-div {
   position: fixed;
-  bottom: 100px;
-  right: 100px;
+  bottom: 1%;
+  right: 1.6%;
   background-color: white;
 }
