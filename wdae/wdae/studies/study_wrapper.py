@@ -370,6 +370,15 @@ class StudyWrapper(StudyWrapperBase):
                             "person_set_collection", (None, None))[0]
                     )
 
+                    index += 1
+                    if max_variants_count and index > max_variants_count:
+                        if max_variants_message:
+                            yield [
+                                f"# limit of {max_variants_count} variants "
+                                f"reached"
+                            ]
+                        break
+
                     yield row_variant
         except GeneratorExit:
             pass

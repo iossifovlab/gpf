@@ -297,64 +297,6 @@ def test_query_present_in_parent(
 @pytest.mark.parametrize(
     "option,count",
     [
-        (None, 16),
-        (25, 0),
-        (50, 0),
-        (100, 0)
-    ],
-)
-def test_query_min_alt_frequency(
-        iossifov_2014_wrappers, wrapper_type, option, count):
-    study_wrapper = iossifov_2014_wrappers[wrapper_type]
-    query = {
-        "minAltFrequencyPercent": option
-    }
-    variants = list(study_wrapper.query_variants_wdae(
-        query, [{"source": "location"}])
-    )
-
-    assert len(variants) == count
-
-
-@pytest.mark.parametrize(
-    "wrapper_type",
-    [
-        "local",
-        "remote"
-    ]
-)
-@pytest.mark.parametrize(
-    "option,count",
-    [
-        (None, 16),
-        (25, 0),
-        (50, 0),
-        (100, 0)
-    ],
-)
-def test_query_max_alt_frequency(
-        iossifov_2014_wrappers, wrapper_type, option, count):
-    study_wrapper = iossifov_2014_wrappers[wrapper_type]
-    query = {
-        "maxAltFrequencyPercent": option
-    }
-    variants = list(study_wrapper.query_variants_wdae(
-        query, [{"source": "location"}])
-    )
-
-    assert len(variants) == count
-
-
-@pytest.mark.parametrize(
-    "wrapper_type",
-    [
-        "local",
-        "remote"
-    ]
-)
-@pytest.mark.parametrize(
-    "option,count",
-    [
         (
             {"weight": "LGD_rank", "rangeStart": None, "rangeEnd": None},
             16

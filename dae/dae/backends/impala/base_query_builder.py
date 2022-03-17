@@ -365,7 +365,6 @@ class BaseQueryBuilder(ABC):
                 tree = inheritance_parser.parse(qv)
                 trees.append(tree)
 
-            # raise ValueError()
         else:
             tree = query_value
             trees.append(tree)
@@ -438,11 +437,17 @@ class BaseQueryBuilder(ABC):
             if any([m.match([Inheritance.denovo]) for m in matchers]):
                 frequency_bin.add(f"{frequency_bin_col} = 0")
 
-        if inheritance is None or any([m.match(
-            [Inheritance.mendelian,
-                Inheritance.possible_denovo,
-                Inheritance.possible_omission]) for m in matchers]):
+        has_transmitted_query = all([
+            any(
+                m.match([inh]) for inh in [
+                    Inheritance.mendelian,
+                    Inheritance.possible_denovo,
+                    Inheritance.possible_omission,
+                    Inheritance.unknown,
+                    Inheritance.missing
+                ]) for m in matchers])
 
+        if inheritance is None or has_transmitted_query:
             if ultra_rare:
                 frequency_bin.update([
                     f"{frequency_bin_col} = 0",
@@ -475,6 +480,8 @@ class BaseQueryBuilder(ABC):
 
         if len(frequency_bin) == 4:
             return ""
+        
+        print("frequency_bin:", frequency_bin)
         return " OR ".join(frequency_bin)
 
     def _build_coding_heuristic(self, effect_types):

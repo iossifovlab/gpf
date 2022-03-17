@@ -101,7 +101,9 @@ class QueryTransformer:
 
     @staticmethod
     def _transform_present_in_child_and_parent_inheritance(
-            present_in_child, present_in_parent):
+            present_in_child, present_in_parent,
+            show_all_unknown=False):
+
         inheritance = None
         if present_in_child == set(["neither"]) and \
                 present_in_parent != set(["neither"]):
@@ -113,12 +115,18 @@ class QueryTransformer:
             inheritance = [
                 Inheritance.denovo,
                 Inheritance.mendelian,
-                Inheritance.missing]
+                Inheritance.missing,
+                Inheritance.omission
+            ]
+            if show_all_unknown:
+                inheritance.append(Inheritance.unknown)
+
         inheritance = ",".join([str(inh) for inh in inheritance])
         return f"any({inheritance})"
 
+    @staticmethod
     def _transform_present_in_child_and_parent_frequency(
-            self, present_in_child, present_in_parent,
+            present_in_child, present_in_parent,
             rarity, frequency_filter):
         ultra_rare = rarity.get("ultraRare", None)
         ultra_rare = bool(ultra_rare)
@@ -294,32 +302,24 @@ class QueryTransformer:
         if "regions" in kwargs:
             kwargs["regions"] = list(map(Region.from_str, kwargs["regions"]))
 
+        present_in_child = set()
+        present_in_parent = set()
+        rarity = None
         if "presentInChild" in kwargs or "presentInParent" in kwargs:
             if "presentInChild" in kwargs:
                 present_in_child = set(kwargs["presentInChild"])
                 kwargs.pop("presentInChild")
-            else:
-                present_in_child = set()
 
             if "presentInParent" in kwargs:
                 present_in_parent = \
                     set(kwargs["presentInParent"]["presentInParent"])
                 rarity = kwargs["presentInParent"].get("rarity", None)
                 kwargs.pop("presentInParent")
-            else:
-                present_in_parent = set()
-                rarity = None
 
             roles_query = self._transform_present_in_child_and_parent_roles(
                 present_in_child, present_in_parent
             )
             self._add_roles_to_query(roles_query, kwargs)
-
-            inheritance = \
-                self._transform_present_in_child_and_parent_inheritance(
-                    present_in_child, present_in_parent
-                )
-            self._add_inheritance_to_query(inheritance, kwargs)
 
             if present_in_parent != {"neither"} and rarity is not None:
                 frequency_filter = kwargs.get("frequency_filter", [])
@@ -331,21 +331,28 @@ class QueryTransformer:
                 print("frequency filter:", arg, val)
                 if arg is not None:
                     kwargs[arg] = val
-                print(kwargs)
 
-        if (
-            "minAltFrequencyPercent" in kwargs
-            or "maxAltFrequencyPercent" in kwargs
-        ):
-            min_value = kwargs.pop("minAltFrequencyPercent", None)
-            max_value = kwargs.pop("maxAltFrequencyPercent", None)
-            if "real_attr_filter" not in kwargs:
-                kwargs["real_attr_filter"] = []
-            value_range = self._transform_min_max_alt_frequency(
-                min_value, max_value
-            )
-            if value_range is not None:
-                kwargs["real_attr_filter"].append(value_range)
+        show_all_unknown = \
+            self.study_wrapper.config.genotype_browser.show_all_unknown
+
+        if kwargs.get("inheritanceTypeFilter"):
+            inheritance_types = set(kwargs["inheritanceTypeFilter"])
+            if show_all_unknown \
+                    and inheritance_types & {"mendelian", "missing"}:
+                inheritance_types.add("unknown")
+
+            query = "any({})".format(
+                    ",".join(inheritance_types))
+            print("query (1):", query)
+
+            self._add_inheritance_to_query(query, kwargs)
+            kwargs.pop("inheritanceTypeFilter")
+        else:
+            inheritance = \
+                self._transform_present_in_child_and_parent_inheritance(
+                    present_in_child, present_in_parent, show_all_unknown)
+
+            self._add_inheritance_to_query(inheritance, kwargs)
 
         if "genomicScores" in kwargs:
             genomic_scores = kwargs.pop("genomicScores", [])
@@ -453,14 +460,6 @@ class QueryTransformer:
                     )
                 kwargs["familyIds"] = family_ids_with_types
 
-        if kwargs.get("inheritanceTypeFilter"):
-            inheritance = kwargs.get("inheritance", [])
-            inheritance.append(
-                "any({})".format(
-                    ",".join(kwargs["inheritanceTypeFilter"])))
-            kwargs["inheritance"] = inheritance
-
-            kwargs.pop("inheritanceTypeFilter")
         if "affectedStatus" in kwargs:
             statuses = kwargs.pop("affectedStatus")
             kwargs["affected_status"] = [
