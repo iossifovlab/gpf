@@ -214,12 +214,16 @@ class GPFInstance(object):
     @cached
     def gene_sets_db(self):
         logger.debug("creating new instance of GeneSetsDb")
-        gsc_ids = self.dae_config.gene_sets_db.gene_set_collections
-        resources = [self.grr.get_resource(gsc_id) for gsc_id in gsc_ids]
-        gscs = [
-            GeneSetCollection.from_resource(r) for r in resources
-        ]
-        return GeneSetsDb(gscs)
+        if "gene_sets_db" in self.dae_config:
+            gsc_ids = self.dae_config.gene_sets_db.gene_set_collections
+            resources = [self.grr.get_resource(gsc_id) for gsc_id in gsc_ids]
+            gscs = [
+                GeneSetCollection.from_resource(r) for r in resources
+            ]
+            return GeneSetsDb(gscs)
+        else:
+            logger.debug("No gene sets DB configured")
+            return None
 
     @property  # type: ignore
     @cached
