@@ -13,7 +13,7 @@ from dae.enrichment_tool.background_facade import BackgroundFacade
 
 from dae.gene.gene_scores import GeneScoresDb, GeneScore
 from dae.gene.scores import ScoresFactory
-from dae.gene.gene_sets_db import GeneSetsDb
+from dae.gene.gene_sets_db import GeneSetsDb, GeneSetCollection
 from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
 
 from dae.studies.variants_db import VariantsDb
@@ -214,8 +214,12 @@ class GPFInstance(object):
     @cached
     def gene_sets_db(self):
         logger.debug("creating new instance of GeneSetsDb")
-        return GeneSetsDb(
-            self._gene_info_config, load_eagerly=self.load_eagerly)
+        gsc_ids = self.dae_config.gene_sets_db.gene_set_collections
+        resources = [self.grr.get_resource(gsc_id) for gsc_id in gsc_ids]
+        gscs = [
+            GeneSetCollection.from_resource(r) for r in resources
+        ]
+        return GeneSetsDb(gscs)
 
     @property  # type: ignore
     @cached

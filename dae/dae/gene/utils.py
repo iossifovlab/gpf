@@ -3,7 +3,7 @@ from copy import deepcopy
 from box import Box  # type: ignore
 
 from dae.configuration.gpf_config_parser import FrozenBox
-from dae.gene.gene_term import loadGeneTerm
+# from dae.gene.gene_term import loadGeneTerm
 
 
 def rename_gene_terms(config, gene_terms, inNS):
@@ -39,19 +39,19 @@ def getGeneTermAtt(config, gt_id, attName):
     return getattr(gene_term, attName)
 
 
-def getGeneTerms(config, gt_id="main", inNS="sym"):
-    fl = getattr(config.gene_terms, gt_id).file
-    gt = loadGeneTerm(fl)
-    try:
-        gt = rename_gene_terms(config, gt, inNS)
-    except AssertionError:
-        raise Exception(
-            (
-                f"Unknown namespace(s) for the {gt_id} gene terms:"
-                " |{gt.geneNS}| -> |{inNS}|"
-            )
-        )
-    return gt
+# def getGeneTerms(config, gt_id="main", inNS="sym"):
+#     fl = getattr(config.gene_terms, gt_id).file
+#     gt = loadGeneTerm(fl)
+#     try:
+#         gt = rename_gene_terms(config, gt, inNS)
+#     except AssertionError:
+#         raise Exception(
+#             (
+#                 f"Unknown namespace(s) for the {gt_id} gene terms:"
+#                 " |{gt.geneNS}| -> |{inNS}|"
+#             )
+#         )
+#     return gt
 
 
 def _parseNCBIGeneInfo(config):

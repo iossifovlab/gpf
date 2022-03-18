@@ -96,6 +96,9 @@ gene_scores_db_schema = {
     "gene_scores": {"type": "list", "schema": {"type": "string"}}
 }
 
+gene_sets_db_schema = {
+    "gene_set_collections": {"type": "list", "schema": {"type": "string"}}
+}
 
 dae_conf_schema = {
     "dae_data_dir": {
@@ -170,6 +173,7 @@ dae_conf_schema = {
 
     "gene_info_db": {"type": "dict", "schema": config_reference_schema},
     "gene_scores_db": {"type": "dict", "schema": gene_scores_db_schema},
+    "gene_sets_db": {"type": "dict", "schema": gene_sets_db_schema},
     "default_study_config": {
         "type": "dict",
         "schema": config_reference_schema,

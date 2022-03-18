@@ -9,7 +9,8 @@ from dae.gene.denovo_gene_set_collection_factory import (
     DenovoGeneSetCollectionFactory,
 )
 
-from dae.gene.gene_scores import GeneScoresDb
+from dae.gene.gene_scores import GeneScoresDb, GeneScore
+from dae.gene.gene_sets_db import GeneSetCollection, GeneSetsDb
 
 from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
@@ -60,9 +61,9 @@ def denovo_gene_sets_db(local_gpf_instance):
     return local_gpf_instance.denovo_gene_sets_db
 
 
-@pytest.fixture(scope="session")
-def gene_sets_db(local_gpf_instance):
-    return local_gpf_instance.gene_sets_db
+# @pytest.fixture(scope="session")
+# def gene_sets_db(local_gpf_instance):
+#     return local_gpf_instance.gene_sets_db
 
 
 @pytest.fixture(scope="module")
@@ -183,9 +184,89 @@ def scores_repo():
 
 
 @pytest.fixture(scope="session")
+def gene_sets_repo():
+    sets_repo = GenomicResourceEmbededRepo("gene_sets", content={
+        "main": {
+            GR_CONF_FILE_NAME: (
+                "type: gene_set\n"
+                "id: main\n"
+                "format: directory\n"
+                "directory: GeneSets\n"
+                "web_label: Main\n"
+                "web_format_str: \"key| (|count|): |desc\"\n"
+            ),
+            "GeneSets": {
+                "main_candidates.txt": (
+                    "Main Candidates\n"
+                    "POGZ\n"
+                    "CHD8\n"
+                    "ANK2\n"
+                    "FAT4\n"
+                    "NBEA\n"
+                    "CELSR1\n"
+                    "USP7\n"
+                    "GOLGA5\n"
+                    "PCSK2\n"
+                )
+            }
+        },
+        "test_mapping": {
+            GR_CONF_FILE_NAME: (
+                "type: gene_set\n"
+                "id: test_mapping\n"
+                "format: map\n"
+                "filename: test-map.txt\n"
+                "web_label: Test mapping\n"
+                "web_format_str: \"key| (|count|)\"\n"
+            ),
+            "test-map.txt": (
+                "#geneNS\tsym\n"
+                "POGZ\ttest:01 test:02\n"
+                "CHD8\ttest:02 test:03\n"
+            ),
+            "test-mapnames.txt": (
+                "test:01\ttest_first\n"
+                "test:02\ttest_second\n"
+                "test:03\ttest_third\n"
+            )
+        },
+        "test_gmt": {
+            GR_CONF_FILE_NAME: (
+                "type: gene_set\n"
+                "id: test_gmt\n"
+                "format: gmt\n"
+                "filename: test-gmt.gmt\n"
+                "web_label: Test GMT\n"
+                "web_format_str: \"key| (|count|)\"\n"
+            ),
+            "test-gmt.gmt": (
+                "TEST_GENE_SET1\tsomedescription\tPOGZ\tCHD8\n"
+                "TEST_GENE_SET2\tsomedescription\tANK2\tFAT4\n"
+                "TEST_GENE_SET3\tsomedescription\tPOGZ\n"
+            )
+        }
+    })
+    return sets_repo
+
+
+@pytest.fixture(scope="session")
 def gene_scores_db(scores_repo):
     resources = [
         scores_repo.get_resource("LGD_rank"),
         scores_repo.get_resource("RVIS_rank"),
     ]
-    return GeneScoresDb(resources)
+    scores = [GeneScore.load_gene_score_from_resource(r) for r in resources]
+    return GeneScoresDb(scores)
+
+
+@pytest.fixture(scope="session")
+def gene_sets_db(gene_sets_repo):
+    resources = [
+        gene_sets_repo.get_resource("main"),
+        gene_sets_repo.get_resource("test_mapping"),
+        gene_sets_repo.get_resource("test_gmt"),
+    ]
+    gene_set_collections = [
+        GeneSetCollection.from_resource(r) for r in resources
+    ]
+    return GeneSetsDb(gene_set_collections)

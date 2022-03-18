@@ -1,12 +1,8 @@
-from dae.gene.gene_sets_db import GeneSetsDb, GeneSetCollection
-from dae.gene.gene_term import GeneTerms
-from dae.gene.tests.conftest import path_to_fixtures
-
-
 def test_get_gene_set_collection_ids(gene_sets_db):
     assert gene_sets_db.get_gene_set_collection_ids() == {
         "main",
-        "term_curated",
+        "test_mapping",
+        "test_gmt"
     }
 
 
@@ -23,8 +19,14 @@ def test_get_collections_descriptions(gene_sets_db):
             "types": [],
         },
         {
-            "desc": "Term",
-            "name": "term_curated",
+            "desc": "Test mapping",
+            "name": "test_mapping",
+            "format": ["key", " (", "count", ")"],
+            "types": [],
+        },
+        {
+            "desc": "Test GMT",
+            "name": "test_gmt",
             "format": ["key", " (", "count", ")"],
             "types": [],
         },
@@ -33,15 +35,9 @@ def test_get_collections_descriptions(gene_sets_db):
 
 def test_has_gene_set_collection(gene_sets_db):
     assert gene_sets_db.has_gene_set_collection("main")
-    assert gene_sets_db.has_gene_set_collection("term_curated")
+    assert gene_sets_db.has_gene_set_collection("test_mapping")
+    assert gene_sets_db.has_gene_set_collection("test_gmt")
     assert not gene_sets_db.has_gene_set_collection("nonexistent_gsc")
-
-
-def test_load_gene_sets_collection(gene_sets_db):
-    gene_sets_db.gene_set_collections = {}
-    gsc = gene_sets_db._load_gene_set_collection("main")
-    assert gene_sets_db.has_gene_set_collection("main")
-    assert isinstance(gsc, GeneSetCollection)
 
 
 def test_get_all_gene_sets(gene_sets_db):
@@ -54,6 +50,48 @@ def test_get_all_gene_sets(gene_sets_db):
     assert gene_set["name"] == "main_candidates"
     assert gene_set["count"] == 9
     assert gene_set["desc"] == "Main Candidates"
+
+
+def test_get_all_gene_sets_gmt(gene_sets_db):
+    gene_sets = gene_sets_db.get_all_gene_sets("test_gmt")
+
+    assert len(gene_sets) == 3
+
+    assert gene_sets[0] is not None
+    assert gene_sets[0]["name"] == "TEST_GENE_SET1"
+    assert gene_sets[0]["count"] == 2
+    assert gene_sets[0]["desc"] == "somedescription"
+
+    assert gene_sets[1] is not None
+    assert gene_sets[1]["name"] == "TEST_GENE_SET2"
+    assert gene_sets[1]["count"] == 2
+    assert gene_sets[1]["desc"] == "somedescription"
+
+    assert gene_sets[2] is not None
+    assert gene_sets[2]["name"] == "TEST_GENE_SET3"
+    assert gene_sets[2]["count"] == 1
+    assert gene_sets[2]["desc"] == "somedescription"
+
+
+def test_get_all_gene_sets_mapping(gene_sets_db):
+    gene_sets = gene_sets_db.get_all_gene_sets("test_mapping")
+
+    assert len(gene_sets) == 3
+
+    assert gene_sets[0] is not None
+    assert gene_sets[0]["name"] == "test:01"
+    assert gene_sets[0]["count"] == 1
+    assert gene_sets[0]["desc"] == "test_first"
+
+    assert gene_sets[1] is not None
+    assert gene_sets[1]["name"] == "test:02"
+    assert gene_sets[1]["count"] == 2
+    assert gene_sets[1]["desc"] == "test_second"
+
+    assert gene_sets[2] is not None
+    assert gene_sets[2]["name"] == "test:03"
+    assert gene_sets[2]["count"] == 1
+    assert gene_sets[2]["desc"] == "test_third"
 
 
 def test_get_gene_set(gene_sets_db):
@@ -76,26 +114,17 @@ def test_get_gene_set(gene_sets_db):
     assert gene_set["desc"] == "Main Candidates"
 
 
-def test_load_gene_set_from_file(gene_sets_db):
-    expected = {
-        "POGZ": {"abc-(1)": 1, "abc-(11)": 1},
-        "CHD8": {"abc-(2)": 1},
-        "ANK2": {"abc-(3)": 1},
-        "FAT4": {"abc-(4)": 1},
-        "NBEA": {"abc-(5)": 1},
-        "CELSR1": {"abc-(6)": 1, "abc-(61)": 1, "abc-(62)": 1, "abc-(63)": 1},
-        "USP7": {"abc-(7)": 1},
-        "GOLGA5": {"abc-(8)": 1},
-        "PCSK2": {"abc-(9)": 1},
-    }
+def test_get_gene_set_gmt(gene_sets_db):
+    gene_set = gene_sets_db.get_gene_set("test_gmt", "TEST_GENE_SET1")
+    assert gene_set["name"] == "TEST_GENE_SET1"
+    assert gene_set["count"] == 2
+    assert gene_set["desc"] == "somedescription"
+    assert set(gene_set["syms"]) == {"POGZ", "CHD8"}
 
-    filepath = path_to_fixtures("geneInfo/sample-map.txt")
-    gene_term = GeneSetsDb.load_gene_set_from_file(
-        filepath, gene_sets_db.config
-    )
-    assert isinstance(gene_term, GeneTerms)
 
-    for key, val in gene_term.g2T.items():
-        assert key in expected
-        for term, count in expected[key].items():
-            assert count == expected[key][term]
+def test_get_gene_set_mapping(gene_sets_db):
+    gene_set = gene_sets_db.get_gene_set("test_mapping", "test:01")
+    assert gene_set["name"] == "test:01"
+    assert gene_set["count"] == 1
+    assert gene_set["desc"] == "test_first"
+    assert set(gene_set["syms"]) == {"POGZ"}

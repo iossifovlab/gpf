@@ -1,9 +1,9 @@
 import os
 import logging
+from pathlib import Path
 
 from typing import Dict, List, Optional
 
-from dae.gene.utils import getGeneTerms, getGeneTermAtt, rename_gene_terms
 from dae.gene.gene_term import read_ewa_set_file, read_gmt_file, \
     read_mapping_file
 from dae.genomic_resources.repository import GenomicResource
@@ -43,11 +43,16 @@ class GeneSetCollection(object):
     collection_id: str
     gene_sets: Dict[str, GeneSet]
 
-    def __init__(self, collection_id: str, gene_sets: List[GeneSet]):
+    def __init__(
+        self, collection_id: str, gene_sets: List[GeneSet],
+        web_label: str = None, web_format_str: str = None
+    ):
         assert collection_id != "denovo"
 
         self.collection_id = collection_id
         self.gene_sets = dict()
+        self.web_label = web_label
+        self.web_format_str = web_format_str
 
         for gene_set in gene_sets:
             self.gene_sets[gene_set.name] = gene_set
@@ -55,24 +60,11 @@ class GeneSetCollection(object):
         assert self.collection_id, self.gene_sets
 
     @staticmethod
-    def from_config(collection_id: str, config) -> "GeneSetCollection":
-        gene_sets = list()
-        logger.debug(f"loading {collection_id}: {config}")
-
-        gene_terms = getGeneTerms(config, collection_id, inNS="sym")
-        for key, value in gene_terms.tDesc.items():
-            syms = list(gene_terms.t2G[key].keys())
-            gene_sets.append(GeneSet(key, value, syms))
-        keys = [gs.name for gs in gene_sets[:min(len(gene_sets), 7)]]
-        logger.debug(
-            f"gene set collection loaded: {keys}...")
-        return GeneSetCollection(collection_id, gene_sets)
-
-    @staticmethod
     def from_resource(resource: Optional[GenomicResource]):
         gene_sets = list()
         config = resource.get_config()
         collection_id = config["id"]
+        assert resource.get_type() == "gene_set", "Invalid resource type"
         collection_format = config["format"]
         logger.debug(f"loading {collection_id}: {config}")
         if collection_format == "map":
@@ -90,20 +82,28 @@ class GeneSetCollection(object):
             filepaths = list()
             if directory == ".":
                 directory = ""  # Easier check with startswith
-            for filepath, _, _ in resource:
+            for filepath, _, _ in resource.get_files():
                 if filepath.startswith(directory) and \
                         filepath.endswith(".txt"):
                     filepaths.append(filepath)
-            files = [resource.open_raw_file(f) for f in filepaths]
+            files = [
+                (Path(f).stem, resource.open_raw_file(f)) for f in filepaths
+            ]
             gene_terms = read_ewa_set_file(files)
         else:
             raise ValueError("Invalid collection format type")
 
-        gene_terms = rename_gene_terms(config, gene_terms, inNS="sym")
         for key, value in gene_terms.tDesc.items():
             syms = list(gene_terms.t2G[key].keys())
             gene_sets.append(GeneSet(key, value, syms))
-        return GeneSetCollection(collection_id, gene_sets)
+
+        web_label = config.get("web_label", None)
+        web_format_str = config.get("web_format_str", None)
+
+        return GeneSetCollection(
+            collection_id, gene_sets,
+            web_label=web_label, web_format_str=web_format_str
+        )
 
     def get_gene_set(self, gene_set_id: str) -> Optional[GeneSet]:
         gene_set = self.gene_sets.get(gene_set_id)
@@ -113,65 +113,31 @@ class GeneSetCollection(object):
 
 
 class GeneSetsDb(object):
-    def __init__(self, config, load_eagerly=False):
-        assert config is not None
-        self.config = config
-        self.gene_set_collections: Dict[str, GeneSetCollection] = dict()
-        self.load_eagerly = load_eagerly
-        if load_eagerly:
-            logger.info(
-                f"GeneSetsDb created with load_eagerly={load_eagerly}")
-
-            for collection_id in self.get_gene_set_collection_ids():
-                logger.debug(
-                    f"loading gene set collection <{collection_id}>")
-                self._load_gene_set_collection(collection_id)
-            logger.info(
-                f"gene set collections <{self.get_gene_set_collection_ids()}> "
-                f"loaded")
+    def __init__(self, gene_set_collections):
+        self.gene_set_collections: Dict[str, GeneSetCollection] = {
+            gsc.collection_id: gsc
+            for gsc in gene_set_collections
+        }
 
     @property  # type: ignore
     @cached
     def collections_descriptions(self):
         gene_sets_collections_desc = []
-        if self.config.gene_terms:
-            for gsc_id in self.config.gene_terms:
-                label = getGeneTermAtt(self.config, gsc_id, "web_label")
-                format_str = getGeneTermAtt(
-                    self.config, gsc_id, "web_format_str"
-                )
-                if not label or not format_str:
-                    continue
-                gene_sets_collections_desc.append(
-                    {
-                        "desc": label,
-                        "name": gsc_id,
-                        "format": format_str.split("|"),
-                        "types": [],
-                    }
-                )
+        for gsc in self.gene_set_collections.values():
+            label = gsc.web_label
+            format_str = gsc.web_format_str
+            gsc_id = gsc.collection_id
+            if not label or not format_str:
+                continue
+            gene_sets_collections_desc.append(
+                {
+                    "desc": label,
+                    "name": gsc_id,
+                    "format": format_str.split("|"),
+                    "types": [],
+                }
+            )
         return gene_sets_collections_desc
-
-    # @staticmethod
-    # def load_gene_set_from_file(filename, config):
-    #     assert os.path.exists(filename) and os.path.isfile(filename)
-    #     gene_term = loadGeneTerm(filename)
-    #     gene_term = rename_gene_terms(config, gene_term, inNS="sym")
-    #     return gene_term
-
-    def _load_gene_set_collection(self, gene_sets_collection_id):
-        if gene_sets_collection_id not in self.gene_set_collections:
-            logger.info(
-                f"gene set collection <{gene_sets_collection_id}> "
-                f"not found in GeneSetDb cache")
-            self.gene_set_collections[gene_sets_collection_id] = \
-                GeneSetCollection.from_config(
-                    gene_sets_collection_id, self.config
-                )
-            logger.info(
-                f"gene set collection <{gene_sets_collection_id}> "
-                f"loaded into GeneSetsDb cache")
-        return self.gene_set_collections[gene_sets_collection_id]
 
     def has_gene_set_collection(self, gsc_id):
         return any(
@@ -183,18 +149,18 @@ class GeneSetsDb(object):
         Return all gene set collection ids (including the ids
         of collections which have not been loaded).
         """
-        return set(self.config.gene_terms)
+        return set(self.gene_set_collections.keys())
 
     def get_gene_set_ids(self, collection_id):
-        gsc = self._load_gene_set_collection(collection_id)
+        gsc = self.gene_set_collections[collection_id]
         return set(gsc.gene_sets.keys())
 
     def get_all_gene_sets(self, collection_id):
-        gsc = self._load_gene_set_collection(collection_id)
+        gsc = self.gene_set_collections[collection_id]
         logger.debug(
             f"gene sets from {collection_id}: {len(gsc.gene_sets.keys())}")
         return list(gsc.gene_sets.values())
 
     def get_gene_set(self, collection_id, gene_set_id):
-        gsc = self._load_gene_set_collection(collection_id)
+        gsc = self.gene_set_collections[collection_id]
         return gsc.get_gene_set(gene_set_id)
