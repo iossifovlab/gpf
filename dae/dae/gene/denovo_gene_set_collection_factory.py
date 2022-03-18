@@ -26,14 +26,19 @@ class DenovoGeneSetCollectionFactory:
         """
         config = genotype_data_study.config
         assert config is not None, genotype_data_study.id
+        selected_person_set_collections = \
+            config.denovo_gene_sets.selected_person_set_collections
+        person_set_collection_configs = {
+            psc.id: psc.config_json()
+            for psc in genotype_data_study.person_set_collections.values()
+            if psc.id in selected_person_set_collections
+        }
         collection = DenovoGeneSetCollection(
             genotype_data_study.study_id, genotype_data_study.name, config,
             {
                 collection_id: collection_config
                 for collection_id, collection_config
-                in genotype_data_study.person_set_collection_configs.items()
-                if collection_id in
-                config.denovo_gene_sets.selected_person_set_collections
+                in person_set_collection_configs.items()
             }
         )
 

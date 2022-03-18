@@ -25,7 +25,6 @@ class GenotypeData(ABC):
         self._description = None
 
         self._person_set_collections: Dict[str, PersonSetCollection] = dict()
-        self._person_set_collection_configs = dict()
         self._parents = set()
         self._executor = None
 
@@ -507,37 +506,6 @@ class GenotypeData(ABC):
                 collections_config.selected_person_set_collections or []
             for collection_id in selected_collections:
                 self._build_person_set_collection(collection_id)
-
-            # build person set collection configs
-            for collection_id, collection in \
-                    self.person_set_collections.items():
-                domain = list()
-                for person_set in collection.person_sets.values():
-                    if collection.default.id == person_set.id:
-                        continue
-                    domain.append({
-                        "id": person_set.id,
-                        "name": person_set.name,
-                        "values": person_set.values,
-                        "color": person_set.color,
-                    })
-                sources = [
-                    {"from":s.sfrom, "source": s.ssource}
-                    for s in collection.sources
-                ]
-                collection_conf = {
-                    "id": collection.id,
-                    "name": collection.name,
-                    "sources": sources,
-                    "domain": domain,
-                    "default": {
-                        "id": collection.default.id,
-                        "name": collection.default.name,
-                        "color": collection.default.color,
-                    }
-                }
-                self.person_set_collection_configs[collection_id] = \
-                    collection_conf
 
     def _transform_person_set_collection_query(self, collection, person_ids):
         if collection is not None:

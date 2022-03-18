@@ -4,25 +4,6 @@ from rest_framework import status  # type: ignore
 from query_base.query_base import QueryBaseView
 
 
-class ListAllCollectionsView(QueryBaseView):
-    def get(self, request, dataset_id):
-        if dataset_id is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if dataset is None:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-        pscs = dataset.person_set_collections.values()
-
-        result = [psc.to_json() for psc in pscs]
-
-        return Response(
-            result,
-            status.HTTP_200_OK
-        )
-
-
 class CollectionConfigsView(QueryBaseView):
     def get(self, request, dataset_id):
         if dataset_id is None:
@@ -32,8 +13,12 @@ class CollectionConfigsView(QueryBaseView):
         if dataset is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+        result = {
+            psc.id: psc.config_json()
+            for psc in dataset.person_set_collections.values()
+        }
         return Response(
-            dataset.person_set_collection_configs,
+            result,
             status.HTTP_200_OK
         )
 

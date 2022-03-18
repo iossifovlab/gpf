@@ -509,14 +509,6 @@ class RESTClient:
 
         return response.json()
 
-    def get_all_person_set_collections(self, dataset_id):
-        response = self._get(f"person_sets/{dataset_id}/all")
-
-        if response.status_code != 200:
-            return None
-
-        return response.json()
-
     def get_person_set_collection_configs(self, dataset_id):
         response = self._get(f"person_sets/{dataset_id}/configs")
 

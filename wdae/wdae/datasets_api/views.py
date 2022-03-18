@@ -1,8 +1,8 @@
 import os
 
-from rest_framework.response import Response
-from rest_framework import status
-from guardian.shortcuts import get_groups_with_perms
+from rest_framework.response import Response  # type: ignore
+from rest_framework import status  # type: ignore
+from guardian.shortcuts import get_groups_with_perms  # type: ignore
 
 from query_base.query_base import QueryBaseView
 from studies.study_wrapper import StudyWrapperBase
@@ -74,12 +74,17 @@ class DatasetView(QueryBaseView):
                 dataset_object = Dataset.objects.get(dataset_id=dataset_id)
 
                 if user_has_permission(user, dataset_object):
-                    res = StudyWrapperBase.build_genotype_data_group_description(
-                        self.gpf_instance,
-                        dataset.config,
-                        dataset.description,
-                        dataset.person_set_collection_configs
-                    )
+                    person_set_collection_configs = {
+                        psc.id: psc.config_json()
+                        for psc in dataset.person_set_collections.values()
+                    }
+                    res = StudyWrapperBase\
+                        .build_genotype_data_group_description(
+                            self.gpf_instance,
+                            dataset.config,
+                            dataset.description,
+                            person_set_collection_configs
+                        )
                 else:
                     res = StudyWrapperBase.build_genotype_data_all_datasets(
                         dataset.config
@@ -125,8 +130,6 @@ class DatasetDetailsView(QueryBaseView):
                 {"error": "No dataset ID given"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        # genotype_data = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
         genotype_data_config = \
             self.gpf_instance.get_genotype_data_config(dataset_id)

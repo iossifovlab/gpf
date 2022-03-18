@@ -284,6 +284,8 @@ class PersonSetCollection:
                     "trying to merge different type of collections")
             for person_set in collection.person_sets.values():
                 if person_set.id in domain:
+                    # check if this person set is compatible
+                    # with the existing one
                     pass
                 else:
                     result_def = {
@@ -310,14 +312,34 @@ class PersonSetCollection:
         raise ValueError(
             f"person {person_id} not in person set collection {self.id}")
 
-    def to_json(self):
-        return {
+    def config_json(self):
+        domain = list()
+        for person_set in self.person_sets.values():
+            if self.default.id == person_set.id:
+                continue
+            domain.append({
+                "id": person_set.id,
+                "name": person_set.name,
+                "values": person_set.values,
+                "color": person_set.color,
+            })
+        sources = [
+            {"from": s.sfrom, "source": s.ssource}
+            for s in self.sources
+        ]
+        conf = {
             "id": self.id,
             "name": self.name,
-            "config": self.config,
-            "person_sets": [ps.to_json() for ps in self.person_sets.values()],
-            "default": self.default.to_json()
+            "sources": sources,
+            "domain": domain,
+            "default": {
+                "id": self.default.id,
+                "name": self.default.name,
+                "color": self.default.color,
+            }
         }
+
+        return conf
 
     @staticmethod
     def from_json(config_json, families):
