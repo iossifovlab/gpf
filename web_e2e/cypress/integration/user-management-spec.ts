@@ -143,7 +143,7 @@ describe('User management tests', () => {
     deleteTestUser(page);
   });
 
-  it.only('should go in user creation and search and find specific group', () => {
+  it('should go in user creation and search and find specific group', () => {
     createTestGroup(page, 'test_group');
 
     page.usersButton.click();
@@ -164,7 +164,7 @@ describe('User management tests', () => {
     deleteTestGroup(page);
   });
 
-  it.only('should give dataset access to user', () => {
+  it('should give dataset access to user', () => {
     createTestGroup(page, 'test_group');
     createTestUser(page, 'test_email@email.com', 'test_name');
 

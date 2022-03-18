@@ -25,7 +25,7 @@ describe('Save query tests', () => {
     page.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu show');
   });
 
-  it.only('should save a query, load it, open all tools tabs and delete the query', () => {
+  it('should save a query, load it, open all tools tabs and delete the query', () => {
     const datasetsPage = new DatasetsPage();
 
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
@@ -46,7 +46,7 @@ describe('Save query tests', () => {
     page.tableFirstDeleteButton.click();
   });
 
-  it.only('should navigate to genotype browser, check all effect types checkboxes, save a query, ' +
+  it('should navigate to genotype browser, check all effect types checkboxes, save a query, ' +
      'load it and validate that all effect types checkboxes are checked', () => {
     const genotypeBlockPage = new GenotypeBlockPage();
 

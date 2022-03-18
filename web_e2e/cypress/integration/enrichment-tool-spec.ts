@@ -77,7 +77,7 @@ describe('Enrichment tool common tests', () => {
     page.findErrorAlertInComponent('gpf-gene-sets').should('not.exist');
   });
 
-  it.only('should display "55" and "169" in the affected person\'s observed column ' +
+  it('should display "55" and "169" in the affected person\'s observed column ' +
      'of LGDs and missense\'s rows respectively with gene set Main: FMRP Darnell', () => {
     const genesBlockPage = new GenesBlockPage();
 
