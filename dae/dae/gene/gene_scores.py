@@ -179,11 +179,11 @@ class GeneScoresDb:
     Used by Web interface.
     """
 
-    def __init__(self, resources):
+    def __init__(self, gene_scores):
         super(GeneScoresDb, self).__init__()
-        self.resources = resources
         self.scores = OrderedDict()
-        self._load()
+        for score in gene_scores:
+            self.scores[score.id] = score
 
     @cached
     def get_gene_score_ids(self):
@@ -196,12 +196,6 @@ class GeneScoresDb:
     def get_gene_score(self, score_id):
         assert self[score_id].df is not None
         return self[score_id]
-
-    def _load(self):
-        if self.resources:
-            for r in self.resources:
-                w = GeneScore.load_gene_score_from_resource(r)
-                self.scores[w.id] = w
 
     def __getitem__(self, score_id):
         if score_id not in self.scores:
