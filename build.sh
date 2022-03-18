@@ -380,7 +380,7 @@ EOT'
     done
 
     build_run_container bash -c 'cd /wd/dae_conftests; /opt/conda/bin/conda run --no-capture-output -n gpf \
-      py.test -s -v --reimport --no-cleanup dae_conftests/tests/'
+      py.test -s -vv --reimport --no-cleanup dae_conftests/tests/'
 
     build_run_container bash -c 'cd /wd/dae; /opt/conda/bin/conda run --no-capture-output -n gpf \
       py.test -v --no-cleanup dae/gene/tests/test_denovo_gene_sets_db.py'
