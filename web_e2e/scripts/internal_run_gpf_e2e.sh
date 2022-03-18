@@ -8,7 +8,7 @@ echo "CONTAINER_GPF_DEV         : ${CONTAINER_GPF_DEV}"
 cd ${E2E}
 
 rm -rf node_modules package-lock.json
-npm install
+npm install --legacy-peer-deps
 
 
 ${WD}/scripts/wait-for-it.sh ${CONTAINER_GPF_DEV}:9001 --timeout=360
