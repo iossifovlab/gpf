@@ -223,7 +223,7 @@ class GPFInstance(object):
             return GeneSetsDb(gscs)
         else:
             logger.debug("No gene sets DB configured")
-            return None
+            return GeneSetsDb([])
 
     @property  # type: ignore
     @cached
