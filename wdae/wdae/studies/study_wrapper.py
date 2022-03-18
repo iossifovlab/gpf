@@ -496,7 +496,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
         assert fam_id_idx >= 0, fam_id_idx
 
         response = self.rest_client.post_query_variants(
-            kwargs, reduceAlleles=False
+            kwargs, reduce_alleles=False
         )
 
         def get_source(col):

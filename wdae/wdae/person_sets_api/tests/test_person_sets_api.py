@@ -1,17 +1,24 @@
 import pytest
-from rest_framework import status
+from rest_framework import status  # type: ignore
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
+@pytest.mark.skip("going to remove this api")
 def test_list_collections_view(admin_client):
     url = "/api/v3/person_sets/Study1/all"
     response = admin_client.get(url)
     assert response.status_code == status.HTTP_200_OK
+
+    print(response.data[0])
+
     assert response.data[0] == {
         'id': 'phenotype',
         'name': 'Phenotype',
+        'config': {
+
+        },
         'person_sets': [
             {
                 'color': '#e35252',
@@ -78,7 +85,20 @@ def test_list_collections_view(admin_client):
                 ],
                 'values': {'DEFAULT'}
             }
-        ]
+        ],
+        "default": {
+                'color': '#aaaaaa',
+                'id': 'unknown',
+                'name': 'unknown',
+                'person_ids': [
+                    'dad4',
+                    'dad5',
+                    'dad7',
+                    'dad8'
+                ],
+                'values': {'DEFAULT'}
+            }
+
     }
 
 
@@ -107,15 +127,17 @@ def test_collection_configs_view(admin_client):
                     'name': 'unaffected',
                     'values': {'unaffected'}
                 },
-                {
-                    'color': '#aaaaaa',
-                    'id': 'unknown',
-                    'name': 'unknown',
-                    'values': {'DEFAULT'}
-                }
             ],
             'id': 'phenotype',
-            'name': 'Phenotype'
+            'name': 'Phenotype',
+            'default': {
+                "id": "unknown",
+                "name": "unknown",
+                "color": "#aaaaaa",
+            },
+            'sources': [
+                {'from': 'pedigree', "source": "phenotype"},
+            ],
         },
         'status': {
             'domain': [
@@ -132,8 +154,14 @@ def test_collection_configs_view(admin_client):
                     'values': {'unaffected'}
                 }
             ],
+            "default": {
+                "id": "unspecified",
+                "name": "unspecified",
+                "color": "#aaaaaa",
+            },
             'id': 'status',
-            'name': 'Affected Status'
+            'name': 'Affected Status',
+            'sources': [{'from': 'pedigree', "source": "status"}],
         }
     }
 

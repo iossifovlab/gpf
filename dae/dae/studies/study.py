@@ -513,17 +513,28 @@ class GenotypeData(ABC):
                     self.person_set_collections.items():
                 domain = list()
                 for person_set in collection.person_sets.values():
-                    if person_set.persons:
-                        domain.append({
-                            "id": person_set.id,
-                            "name": person_set.name,
-                            "values": person_set.values,
-                            "color": person_set.color,
-                        })
+                    if collection.default.id == person_set.id:
+                        continue
+                    domain.append({
+                        "id": person_set.id,
+                        "name": person_set.name,
+                        "values": person_set.values,
+                        "color": person_set.color,
+                    })
+                sources = [
+                    {"from":s.sfrom, "source": s.ssource}
+                    for s in collection.sources
+                ]
                 collection_conf = {
                     "id": collection.id,
                     "name": collection.name,
-                    "domain": domain
+                    "sources": sources,
+                    "domain": domain,
+                    "default": {
+                        "id": collection.default.id,
+                        "name": collection.default.name,
+                        "color": collection.default.color,
+                    }
                 }
                 self.person_set_collection_configs[collection_id] = \
                     collection_conf
@@ -597,17 +608,13 @@ class GenotypeDataGroup(GenotypeData):
                 person_set_collection_id
             ))
 
-        sample_collection = self.studies[0].get_person_set_collection(
-            person_set_collection_id
-        )
+        person_set_collection_config = PersonSetCollection.merge_configs(
+            collections)
 
         self.person_set_collections[person_set_collection_id] = \
-            PersonSetCollection.merge(
-                collections,
-                self.families,
-                person_set_collection_id,
-                sample_collection.name
-            )
+            PersonSetCollection.from_families(
+                person_set_collection_config,
+                self.families)
 
 
 class GenotypeDataStudy(GenotypeData):
@@ -644,7 +651,7 @@ class GenotypeDataStudy(GenotypeData):
     def _collect_pedigree_fields(self, collection, pedigree_fields):
         if collection is None:
             return None
-
+        print("_collect_pedigree_fields:", collection, pedigree_fields)
         collection_id, selected_sets = collection
         if selected_sets is None:
             return None
