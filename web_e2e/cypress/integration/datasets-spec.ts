@@ -9,11 +9,11 @@ describe('Datasets tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome();
+    page.navigateToHome(false);
   });
 
   beforeEach(() => {
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics, false);
   });
 
   afterEach(() => {
@@ -103,7 +103,7 @@ describe('Datasets Iossifov dataset count tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome();
+    page.navigateToHome(false);
     page.loginAdmin();
   });
 
@@ -174,7 +174,7 @@ describe('Datasets visual tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome();
+    page.navigateToHome(false);
     page.loginAdmin();
   });
 

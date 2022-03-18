@@ -6,7 +6,7 @@ describe('Genomic scores panel tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome();
+    page.navigateToHome(false);
     page.loginAdmin();
   });
 

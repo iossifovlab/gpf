@@ -58,7 +58,7 @@ describe('Gene weights panel tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome();
+    page.navigateToHome(false);
     page.loginAdmin();
   });
 
@@ -154,12 +154,11 @@ describe('Gene weights panel tests', () => {
       const genotypeBrowserPage = new GenotypeBrowserPage();
 
       page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-      genotypeBrowserController.setEffectTypesToAll();
       genesBlockPage.geneWeightsButton.click();
-
       page.dropdownButton.select(geneWeight.desc);
       page.allGeneWeights.should('not.contain', '~');
 
+      genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.showTablePreview();
       genotypeBrowserPage.overviewParagraph.should(
         'have.text',
@@ -175,7 +174,7 @@ describe('Gene weights visual tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome();
+    page.navigateToHome(false);
     page.loginAdmin();
   });
 

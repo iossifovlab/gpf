@@ -18,15 +18,13 @@ describe('Genotype browser tests', () => {
 
   before(() => {
     page.cleanup();
-  });
-
-  beforeEach(() => {
-    page.navigateToHome();
+    page.navigateToHome(false);
     page.loginAdmin();
   });
 
-  afterEach(() => {
-    page.logout();
+  beforeEach(() => {
+    page.preserveLogin();
+    page.navigateToHome();
   });
 
   datasetList.forEach(dataset => {
@@ -100,7 +98,7 @@ describe('Genotype browser tests', () => {
   });
 
   datasetList.forEach(dataset => {
-    it('should display genotype preview table after table preview button click at /' + dataset + '/browser',  () => {
+    it('should display genotype preview table after table preview button click at /' + dataset + '/browser', () => {
       const genotypePreviewTablePage = new GenotypePreviewTablePage();
 
       page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
@@ -118,7 +116,7 @@ describe('Genotype browser table preview result tests', () => {
 
   before(() => {
     genotypeBrowserController.cleanup();
-    genotypeBrowserController.navigateToHome();
+    genotypeBrowserController.navigateToHome(false);
     genotypeBrowserController.loginAdmin();
   });
 
@@ -472,7 +470,7 @@ describe('Genotype browser family variants download tests', () => {
 
   before(() => {
     genotypeBrowserController.cleanup();
-    genotypeBrowserController.navigateToHome();
+    genotypeBrowserController.navigateToHome(false);
     genotypeBrowserController.loginAdmin();
   });
 
@@ -513,7 +511,7 @@ describe('Genotype browser UCSC url tests', () => {
 
   before(() => {
     genotypeBrowserController.cleanup();
-    genotypeBrowserController.navigateToHome();
+    genotypeBrowserController.navigateToHome(false);
     genotypeBrowserController.loginAdmin();
   });
 
@@ -547,7 +545,7 @@ describe('Genotype browser table preview visual tests', () => {
 
   before(() => {
     genotypeBrowserController.cleanup();
-    genotypeBrowserController.navigateToHome();
+    genotypeBrowserController.navigateToHome(false);
     genotypeBrowserController.loginAdmin();
   });
 

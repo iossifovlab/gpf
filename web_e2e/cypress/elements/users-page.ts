@@ -1,33 +1,37 @@
 export class UsersPage {
+  private get window(): element {
+    return cy.get('gpf-users');
+  }
+  
   public get loginDropdownToggleButton(): element {
-    return cy.get('gpf-users').find('#login-dropdown-toggle-button');
+    return this.window.find('#login-dropdown-toggle-button');
   }
 
   public get usernameInput(): element {
-    return cy.get('gpf-users').find('#username');
+    return this.window.find('#username');
   }
 
   public get passwordInput(): element {
-    return cy.get('gpf-users').find('#password');
+    return this.window.find('#password');
   }
 
   public get nextButton(): element {
-    return cy.get('gpf-users').find('#next-button');
+    return this.window.find('#next-button');
   }
 
   public get loginSubmitButton(): element {
-    return cy.get('gpf-users').find('#login-button');
+    return this.window.find('#login-button');
   }
 
   public get logoutButton(): element {
-    return cy.get('gpf-users').find('#logout-button');
+    return this.window.find('#logout-button');
   }
 
   public get forgottenPasswordButton(): element {
-    return cy.get('gpf-users').contains('Forgotten password');
+    return this.window.contains('Forgotten password');
   }
 
   public get registerButton(): element {
-    return cy.get('gpf-users').contains('Register');
+    return this.window.contains('Register');
   }
 }
