@@ -18,15 +18,13 @@ describe('Genotype browser tests', () => {
 
   before(() => {
     page.cleanup();
-  });
-
-  beforeEach(() => {
     page.navigateToHome(false);
     page.loginAdmin();
   });
 
-  afterEach(() => {
-    page.logout();
+  beforeEach(() => {
+    page.preserveLogin();
+    page.navigateToHome();
   });
 
   datasetList.forEach(dataset => {
