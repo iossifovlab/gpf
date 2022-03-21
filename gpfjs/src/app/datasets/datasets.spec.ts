@@ -231,6 +231,7 @@ describe('PersonSetCollections', () => {
     const mockPersonSetCollections2 = [];
     mockPersonSetCollections2.push(new PersonSet('id1', 'name2', ['value2', 'value2'], 'color3'));
     mockPersonSetCollections2.push(new PersonSet('id2', 'name3', ['value2', 'value3'], 'color4'));
+    mockPersonSetCollections2.push(new PersonSet('id1', 'name1', ['value1', 'value2'], 'color1'));
     mockPersonSetCollections2.push({'color': '#E0E0E0', 'id': 'missing-person', 'name': 'missing-person'});
 
     expect(mockPersonSetCollections1.getLegend(mockPersonSetCollections1.collections[0]))
