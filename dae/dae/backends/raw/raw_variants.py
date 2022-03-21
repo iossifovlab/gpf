@@ -421,6 +421,10 @@ class RawFamilyVariants(abc.ABC):
 
         return filter_func
 
+    def build_person_set_collection_query(
+            self, person_set_collection, person_set_collection_query):
+        return None
+
     def build_family_variants_query_runner(
             self,
             regions=None,

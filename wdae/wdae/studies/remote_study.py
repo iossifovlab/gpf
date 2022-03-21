@@ -67,12 +67,12 @@ class RemoteGenotypeData(GenotypeData):
     def _build_person_set_collections(self):
         person_set_collections = dict()
 
-        collections_json = self.rest_client.get_all_person_set_collections(
+        configs = self.rest_client.get_person_set_collection_configs(
             self._remote_study_id
         )
 
-        for coll_json in collections_json:
-            psc = PersonSetCollection.from_json(coll_json, self._families)
+        for conf in configs.values():
+            psc = PersonSetCollection.from_json(conf, self._families)
             person_set_collections[psc.id] = psc
 
         self._person_set_collections = person_set_collections

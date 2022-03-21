@@ -2,9 +2,12 @@
 individuals from a study or study group into various
 sets based on what value they have in a given mapping.
 """
+from __future__ import annotations
+from dataclasses import dataclass
+
 import logging
 
-from typing import Dict, NamedTuple, Set
+from typing import Dict, Set, Optional, Any, FrozenSet, List
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.pedigrees.family import Person, FamiliesData
 from dae.pheno.pheno_db import PhenotypeData, MeasureType
@@ -14,16 +17,21 @@ from dae.variants.attributes import Role
 logger = logging.getLogger(__name__)
 
 
-class PersonSet(NamedTuple):
+@dataclass
+class PersonSet:
     """A set of individuals which are all mapped to a
     common value in the source.
     """
 
-    id: str
-    name: str
-    values: Set[str]
-    color: str
-    persons: Dict[str, Person]
+    def __init__(
+            self, psid: str, name: str,
+            values: List[str], color: str,
+            persons: Dict[str, Person]):
+        self.id: str = psid
+        self.name: str = name
+        self.values: List[str] = values
+        self.color: str = color
+        self.persons: Dict[str, Person] = persons
 
     def __repr__(self):
         return f"PersonSet({self.id}: {self.name}, {len(self.persons)})"
@@ -55,22 +63,54 @@ class PersonSet(NamedTuple):
         return PersonSet(
             json["id"],
             json["name"],
-            set(json["values"]),
+            json["values"],
             json["color"],
             persons
         )
 
 
-class PersonSetCollection(NamedTuple):
+class PersonSetCollection:
     """The collection of all possible person sets in a given source."""
 
-    id: str
-    name: str
-    person_sets: Dict[str, PersonSet]
-    families: FamiliesData
+    @dataclass(frozen=True, eq=True)
+    class Source:
+        sfrom: str
+        ssource: str
+
+    def __init__(
+            self, pscid: str, name: str, config: FrozenBox,
+            sources: List[Source],
+            person_sets: Dict[str, PersonSet],
+            default: PersonSet,
+            families: FamiliesData):
+
+        assert config.get("default") is not None
+
+        self.id: str = pscid
+        self.name: str = name
+        self.config = config
+        self.sources = sources
+
+        self.person_sets: Dict[str, PersonSet] = person_sets
+        self.default: PersonSet = default
+
+        self.person_sets[default.id] = default
+
+        self.families: FamiliesData = families
 
     def __repr__(self):
         return f"PersonSetCollection({self.id}: {self.person_sets})"
+
+    def is_pedigree_only(self):
+        return all([s.sfrom == "pedigree" for s in self.sources])
+
+    @staticmethod
+    def _sources_from_config(person_set_collection) -> List[Source]:
+        sources = [
+            PersonSetCollection.Source(src["from"], src["source"])
+            for src in person_set_collection["sources"]
+        ]
+        return sources
 
     @staticmethod
     def _produce_sets(config: FrozenBox) -> Dict[str, PersonSet]:
@@ -83,23 +123,27 @@ class PersonSetCollection(NamedTuple):
             result[person_set.id] = PersonSet(
                 person_set.id,
                 person_set.name,
-                set(person_set["values"]),
+                person_set["values"],
                 person_set.color,
-                dict(),
-            )
-        if config.default is not None:
-            result[config.default.id] = PersonSet(
-                config.default.id,
-                config.default.name,
-                {"DEFAULT"},
-                config.default.color,
                 dict(),
             )
         return result
 
     @staticmethod
+    def _produce_default_person_set(config: FrozenBox) -> PersonSet:
+        assert config.default is not None, config
+
+        return PersonSet(
+            config.default.id,
+            config.default.name,
+            [],
+            config.default.color,
+            dict(),
+        )
+
+    @staticmethod
     def get_person_color(
-            person: Person, person_set_collection: "PersonSetCollection"):
+            person: Person, person_set_collection: PersonSetCollection) -> str:
 
         if person.generated:
             return "#E0E0E0"
@@ -120,141 +164,190 @@ class PersonSetCollection(NamedTuple):
         return "#AAAAAA"
 
     @staticmethod
-    def remove_empty_person_sets(person_set_collection):
+    def remove_empty_person_sets(
+            person_set_collection: PersonSetCollection) -> PersonSetCollection:
         empty_person_sets = set()
         for set_id, person_set in person_set_collection.person_sets.items():
             if len(person_set.persons) == 0:
                 empty_person_sets.add(set_id)
+        logger.debug(
+            "empty person sets to remove from  person set collection <%s>: %s",
+            person_set_collection.id, empty_person_sets)
+
         for set_id in empty_person_sets:
             del person_set_collection.person_sets[set_id]
         return person_set_collection
+
+    def _collect_person_collection_attributes(
+            self, person: Person,
+            pheno_db: Optional[PhenotypeData]) -> FrozenSet[str]:
+
+        values = list()
+        for source in self.sources:
+            if source.sfrom == "pedigree":
+                value = person.get_attr(source.ssource)
+                # Convert to string since some of the person's
+                # attributes can be of an enum type
+                if value is not None:
+                    value = str(value)
+            elif source.sfrom == "phenodb" and pheno_db is not None:
+                assert pheno_db.get_measure(source.ssource).measure_type \
+                    in {MeasureType.categorical, MeasureType.ordinal}, \
+                    f"Continuous measures not allowed in person sets! " \
+                    f"({source.ssource})"
+
+                pheno_values = pheno_db.get_values(
+                    measure_ids=[source.ssource],
+                    person_ids=[person.person_id],
+                )
+                value = pheno_values[person.person_id][source.ssource] \
+                    if person.person_id in pheno_values else None
+            else:
+                raise ValueError(f"Invalid source type {source.sfrom}!")
+            values.append(value)
+
+        # make unified frozenset value
+        return frozenset(values)
 
     @staticmethod
     def from_families(
             collection_config: FrozenBox,
             families_data: FamiliesData,
-            pheno_db: PhenotypeData = None) -> "PersonSetCollection":
+            pheno_db: Optional[PhenotypeData] = None) -> PersonSetCollection:
 
         """Produce a PersonSetCollection from its given configuration
         with a pedigree as its source.
         """
-        person_set_collection = PersonSetCollection(
+        collection = PersonSetCollection(
             collection_config.id,
             collection_config.name,
+            collection_config,
+            PersonSetCollection._sources_from_config(collection_config),
             PersonSetCollection._produce_sets(collection_config),
+            PersonSetCollection._produce_default_person_set(collection_config),
             families_data,
         )
         value_to_id = {
             frozenset(person_set["values"]): person_set.id
             for person_set in collection_config.domain
         }
-        if collection_config.default is not None:
-            value_to_id[
-                frozenset(["DEFAULT"])
-            ] = collection_config.default.id
 
         for person_id, person in families_data.persons.items():
-            values = list()
-            for source in collection_config.sources:
-                if source["from"] == "pedigree":
-                    value = person.get_attr(source.source)
-                    # Convert to string since some of the person's
-                    # attributes can be of an enum type
-                    if value is not None:
-                        value = str(value)
-                elif source["from"] == "phenodb" and pheno_db is not None:
-                    assert pheno_db.get_measure(source.source).measure_type \
-                        in {MeasureType.categorical, MeasureType.ordinal}, \
-                        f"Continuous measures not allowed in person sets! " \
-                        f"({source.source})"
-
-                    pheno_values = pheno_db.get_values(
-                        measure_ids=[source.source],
-                        person_ids=[person_id],
-                    )
-                    value = pheno_values[person_id][source.source] \
-                        if person_id in pheno_values else None
-                else:
-                    raise ValueError(f"Invalid source type {source['from']}!")
-                values.append(value)
-
-            # make unified frozenset value
-            value = frozenset(values)
-
+            value = collection._collect_person_collection_attributes(
+                person, pheno_db)
             if value not in value_to_id:
-                if collection_config.default is not None:
-                    value = frozenset(["DEFAULT"])
-                else:
-                    assert value in value_to_id, (
-                        f"Domain for '{collection_config.id}'"
-                        f" does not have the value '{value}'!"
-                    )
+                collection.default.persons[person_id] = person
+            else:
+                set_id = value_to_id[value]
+                collection.person_sets[set_id].persons[person_id] = person
 
-            set_id = value_to_id[value]
-            person_set_collection.person_sets[set_id].persons[
-                person_id
-            ] = person
-
-        return PersonSetCollection.remove_empty_person_sets(
-            person_set_collection)
+        return PersonSetCollection.remove_empty_person_sets(collection)
 
     @staticmethod
-    def from_json(json, families):
-        person_sets = {
-            ps_json["id"]: PersonSet.from_json(ps_json, families)
-            for ps_json in json["person_sets"]
+    def merge_configs(
+            person_set_collections: List[PersonSetCollection]) -> FrozenBox:
+        assert len(person_set_collections) > 0
+        collections_iterator = iter(person_set_collections)
+        first = next(collections_iterator)
+
+        result: Dict[str, Any] = {}
+        result["id"] = first.id
+        result["name"] = first.name
+
+        sources = []
+        for source in first.sources:
+            sources.append({
+                "from": source.sfrom,
+                "source": source.ssource
+            })
+        result["sources"] = sources
+
+        result["default"] = {
+            "id": first.default.id,
+            "name": first.default.name,
+            "color": first.default.color,
         }
-        return PersonSetCollection(
-            json["id"],
-            json["name"],
-            person_sets,
-            families
-        )
 
-    @staticmethod
-    def merge(person_set_collections, families, id, name):
+        domain = {}
+        for person_set in first.person_sets.values():
+            result_def = {
+                "id": person_set.id,
+                "name": person_set.name,
+                "values": list(person_set.values),
+                "color": person_set.color
+            }
+            domain[person_set.id] = result_def
 
-        new_collection = PersonSetCollection(
-            id, name, dict(), families,
-        )
+        for collection in collections_iterator:
+            if result["id"] != collection.id:
+                logger.error(
+                    "trying to merge different type of collections: %s <-> %s",
+                    collection.id, result["id"])
+                raise ValueError(
+                    "trying to merge different type of collections")
+            for person_set in collection.person_sets.values():
+                if person_set.id in domain:
+                    # check if this person set is compatible
+                    # with the existing one
+                    pass
+                else:
+                    result_def = {
+                        "id": person_set.id,
+                        "name": person_set.name,
+                        "values": list(person_set.values),
+                        "color": person_set.color
+                    }
+                    domain[person_set.id] = result_def
 
-        all_person_sets = list()
+        if first.default.id in domain:
+            del domain[first.default.id]
 
-        for collection in person_set_collections:
-            assert collection.id == new_collection.id
-            all_person_sets.extend(collection.person_sets.items())
+        result["domain"] = [
+            domain[vid] for vid in sorted(domain.keys())
+        ]
 
-        all_person_sets = sorted(all_person_sets, key=lambda i: i[0])
+        return FrozenBox(result)
 
-        for person_set_id, person_set in all_person_sets:
-            if person_set_id not in new_collection.person_sets:
-                new_collection.person_sets[person_set_id] = PersonSet(
-                    person_set.id,
-                    person_set.name,
-                    person_set.values,
-                    person_set.color,
-                    dict(),
-                )
-            for person_id, person in person_set.persons.items():
-                if person_id in families.persons:
-                    new_collection.person_sets[person_set_id].persons[
-                        person_id
-                    ] = person
-
-        return new_collection
-
-    def get_person_set_of_person(self, person_id: str):
+    def get_person_set_of_person(self, person_id: str) -> PersonSet:
         for person_set in self.person_sets.values():
             if person_id in person_set.persons:
                 return person_set
-        return None
+        raise ValueError(
+            f"person {person_id} not in person set collection {self.id}")
 
-    def to_json(self):
-        return {
+    def config_json(self):
+        domain = list()
+        for person_set in self.person_sets.values():
+            if self.default.id == person_set.id:
+                continue
+            domain.append({
+                "id": person_set.id,
+                "name": person_set.name,
+                "values": person_set.values,
+                "color": person_set.color,
+            })
+        sources = [
+            {"from": s.sfrom, "source": s.ssource}
+            for s in self.sources
+        ]
+        conf = {
             "id": self.id,
             "name": self.name,
-            "person_sets": [ps.to_json() for ps in self.person_sets.values()]
+            "sources": sources,
+            "domain": domain,
+            "default": {
+                "id": self.default.id,
+                "name": self.default.name,
+                "color": self.default.color,
+            }
         }
+
+        return conf
+
+    @staticmethod
+    def from_json(config_json, families):
+        config = FrozenBox(config_json)
+        return PersonSetCollection.from_families(config, families)
 
     def get_stats(self):
         result = dict()

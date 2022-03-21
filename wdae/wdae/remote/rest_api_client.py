@@ -1,5 +1,5 @@
-import requests
-import ijson
+import requests  # type: ignore
+import ijson  # type: ignore
 import logging
 
 
@@ -144,9 +144,9 @@ class RESTClient:
         )
         return response
 
-    def post_query_variants(self, data, reduceAlleles=False):
+    def post_query_variants(self, data, reduce_alleles=False):
         assert data.get("download", False) is False
-        data["reduceAlleles"] = reduceAlleles
+        data["reduceAlleles"] = reduce_alleles
         response = self._post(
             "genotype_browser/query",
             data=data,
@@ -162,10 +162,6 @@ class RESTClient:
             stream=True
         )
         return self._read_json_list_stream(response)
-
-    # def get_browser_preview_info(self, data):
-    #     response = self._post("genotype_browser/preview", data=data)
-    #     return response.json()
 
     def get_common_report(self, common_report_id):
         response = self._get(f"common_reports/studies/{common_report_id}")
@@ -507,14 +503,6 @@ class RESTClient:
         response = self._get(
             f"families/{dataset_id}/all"
         )
-
-        if response.status_code != 200:
-            return None
-
-        return response.json()
-
-    def get_all_person_set_collections(self, dataset_id):
-        response = self._get(f"person_sets/{dataset_id}/all")
 
         if response.status_code != 200:
             return None

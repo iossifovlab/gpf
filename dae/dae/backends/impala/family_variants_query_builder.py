@@ -25,7 +25,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         elif source == "sex":
             value = Sex.from_name(str_value).value
         else:
-            value = str_value
+            value = f'"{str_value}"'
         return value
 
     def _query_columns(self):
@@ -71,6 +71,47 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         join_clause = f"JOIN {self.db}.{self.pedigree_table} as pedigree"
         self._add_to_product(join_clause)
 
+    def _build_pedigree_where(self, pedigree_fields):
+        assert len(pedigree_fields) == 2, pedigree_fields
+
+        def pedigree_where_clause(query_fields, sign):
+            clause = []
+            for person_set_query in query_fields:
+
+                person_set_clause = []
+                for source, str_value in person_set_query.items():
+                    value = self._get_pedigree_column_value(
+                        source, str_value)
+                    person_set_clause.append(
+                        f"pedigree.{source} {sign} {value}"
+                    )
+                clause.append(person_set_clause)
+            return clause
+
+        positive, negative = pedigree_fields
+
+        if len(positive) > 0:
+            assert len(negative) == 0
+            clause = []
+            for person_set_clause in pedigree_where_clause(positive, "="):
+                clause.append(" AND ".join(person_set_clause))
+            pedigree_where = " OR ".join([
+                f"( {wc} )" for wc in clause])
+            return pedigree_where
+        elif len(negative) > 0:
+            assert len(positive) == 0
+            clause = []
+            for person_set_clause in pedigree_where_clause(negative, "!="):
+                clause.append(" OR ".join(person_set_clause))
+            pedigree_where = " AND ".join([
+                f"( {wc} )" for wc in clause])
+            return pedigree_where
+        else:
+            logger.error(
+                "unexpected pedigree_fields argument: %s",
+                pedigree_fields)
+            raise ValueError("unexpected pedigree_fields argument")
+
     def build_where(
         self,
         regions=None,
@@ -87,7 +128,6 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         frequency_filter=None,
         return_reference=None,
         return_unknown=None,
-        affected_status=None,
         pedigree_fields=None
     ):
         where_clause = self._base_build_where(
@@ -111,34 +151,14 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         if not self.do_join:
             return
 
-        if pedigree_fields is not None:
+        if pedigree_fields is not None and len(pedigree_fields) > 0:
             if where_clause:
-                pedigree_where = "AND ("
+                pedigree_where = "AND ( "
             else:
-                pedigree_where = "WHERE ("
+                pedigree_where = "WHERE ( "
 
-            first_or = True
-
-            for field in pedigree_fields.values():
-                if not first_or:
-                    pedigree_where += " OR "
-                values = field["values"]
-                sources = field["sources"]
-                first_and = True
-                pedigree_where += "("
-                for source, str_value in zip(sources, values):
-                    if not first_and:
-                        pedigree_where += "AND "
-                    value = self._get_pedigree_column_value(source, str_value)
-                    if source == "status":
-                        pedigree_where += f"pedigree.{source} = {value} "
-                    else:
-                        pedigree_where += f'pedigree.{source} = "{value}" '
-                    first_and = False
-                pedigree_where += ")"
-                first_or = False
-            pedigree_where += ")"
-
+            pedigree_where += self._build_pedigree_where(pedigree_fields)
+            pedigree_where += " )"
             self._add_to_product(pedigree_where)
 
         if where_clause:
@@ -149,9 +169,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         self._add_to_product(in_members)
 
     def build_group_by(self):
-        pass
-
-    def build_having(self, **kwargs):
+        # nothing to do for family variants
         pass
 
     def create_row_deserializer(self, serializer):
@@ -185,10 +203,6 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
                     f"{position}, {end_position}, {reference}")
                 variant_data = bytes(variant_data, "utf8")
             if type(extra_attributes) == str:
-                # logger.debug(
-                #     f"extra_attributes is string!!!! "
-                #     f"{family_id}, {chrom}, "
-                #     f"{position}, {end_position}, {reference}")
                 extra_attributes = bytes(extra_attributes, "utf8")
 
             family = self.families.get(family_id)

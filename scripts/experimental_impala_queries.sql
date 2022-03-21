@@ -1,3 +1,34 @@
+SELECT variants.bucket_index, variants.summary_index, variants.chromosome, variants.`position`, variants.end_position, variants.variant_type, variants.reference, variants.family_id, variants.variant_data, variants.extra_attributes 
+FROM data_hg38_seqclust.SFARI_ABN_WGS_V1_variants as variants JOIN data_hg38_seqclust.SFARI_ABN_WGS_V1_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'CHD8'  )  ) ) AND 
+  ( (`chromosome` = 'chr14' AND ((`position` >= 21365194 AND `position` <= 21457298) OR (COALESCE(end_position, -1) >= 21365194 AND COALESCE(end_position, -1) <= 21457298) OR (21365194 >= `position` AND 21457298 <= COALESCE(end_position, -1)))) ) AND 
+  ( (  variants.effect_types in (  'nonsense' , 'frame-shift' , 'splice-site' , 'no-frame-shift-newStop' , 'missense'  )  ) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(406, variants.inheritance_in_members) != 0 ) AND 
+  ( (((BITAND(variants.variant_type, 4) != 0)) OR ((BITAND(variants.variant_type, 2) != 0))) OR ((BITAND(variants.variant_type, 1) != 0)) ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.coding_bin = 1 ) AND 
+  ( variants.region_bin IN ('chr14_0') )AND 
+  ((pedigree.asd_status_label = "ASD confirmed" ) OR (pedigree.asd_status_label = "ASD under review" ) OR (pedigree.asd_status_label = "unspecified" )) AND 
+  variants.variant_in_members = pedigree.person_id
+
+
+SELECT bucket_index, summary_index, chromosome, `position`, end_position, variant_type, reference, family_id, variant_data, extra_attributes 
+FROM data_hg38_seqclust.SFARI_ABN_WGS_V1_variants                                                                                              
+WHERE                                                                                                                                                                                                                                                                                                                                                                            
+  ( (  effect_gene_symbols in (  'CHD8'  )  ) ) AND 
+  ( (`chromosome` = 'chr14' AND ((`position` >= 21385194 AND `position` <= 21437298) OR (COALESCE(end_position, -1) >= 21385194 AND COALESCE(end_position, -1) <= 21437298) OR (21385194 >= `position` AND 21437298 <= COALESCE(end_position, -1)))) ) AND 
+  ( (  effect_types in (  'frame-shift' , 'nonsense' , 'splice-site', 'no-frame-shift-newStop' , 'missense'  )  ) ) AND 
+  ( BITAND(8, inheritance_in_members) = 0 AND BITAND(32, inheritance_in_members) = 0 ) AND ( BITAND(406, inheritance_in_members) != 0 ) AND 
+  ( (((((BITAND(variant_type, 16) != 0)) OR ((BITAND(variant_type, 32) != 0))) OR ((BITAND(variant_type, 2) != 0))) OR ((BITAND(variant_type, 1) != 0))) OR ((BITAND(variant_type, 4) != 0))) AND 
+  ( (genome_gnomad_v3_af_percent <= 100 or genome_gnomad_v3_af_percent is null) ) AND 
+  ( allele_index > 0 ) AND 
+  ( coding_bin = 1 ) AND 
+  ( region_bin IN ('chr14_0') )
+
+
+
+
 SELECT 
 
 variants.bucket_index,

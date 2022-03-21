@@ -74,9 +74,6 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
             "GROUP BY bucket_index, summary_index, "
             "allele_index, variant_type, transmission_type")
 
-    def build_having(self, **kwargs):
-        pass
-
     def build_where(
             self,
             regions=None,

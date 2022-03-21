@@ -227,10 +227,6 @@ class BaseQueryBuilder(ABC):
             self._add_to_product(f"LIMIT {limit}")
 
     @abstractmethod
-    def build_having(self, **kwargs):
-        pass
-
-    @abstractmethod
     def create_row_deserializer(self, serializer):
         pass
 
@@ -480,8 +476,7 @@ class BaseQueryBuilder(ABC):
 
         if len(frequency_bin) == 4:
             return ""
-        
-        print("frequency_bin:", frequency_bin)
+
         return " OR ".join(frequency_bin)
 
     def _build_coding_heuristic(self, effect_types):
