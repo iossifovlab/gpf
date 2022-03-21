@@ -20,7 +20,6 @@ class ImpalaQueryDirector:
             return_reference=None,
             return_unknown=None,
             limit=None,
-            affected_status=None,
             pedigree_fields=None):
 
         self.query_builder.reset_product()
@@ -50,7 +49,4 @@ class ImpalaQueryDirector:
         )
 
         self.query_builder.build_group_by()
-
-        self.query_builder.build_having(affected_status=affected_status)
-
         self.query_builder.build_limit(limit)

@@ -339,8 +339,9 @@ class ImpalaVariants:
                 person_set = person_set_collection.person_sets[person_set_id]
                 assert len(person_set.values) == \
                     len(person_set_collection.sources)
-                person_set_query = {}                
-                for source, value in zip(person_set_collection.sources, person_set.values):
+                person_set_query = {}
+                for source, value in zip(
+                        person_set_collection.sources, person_set.values):
                     person_set_query[source.ssource] = value
                 result.append(person_set_query)
             return result

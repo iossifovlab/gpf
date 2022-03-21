@@ -128,7 +128,6 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         frequency_filter=None,
         return_reference=None,
         return_unknown=None,
-        affected_status=None,
         pedigree_fields=None
     ):
         where_clause = self._base_build_where(
@@ -170,9 +169,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         self._add_to_product(in_members)
 
     def build_group_by(self):
-        pass
-
-    def build_having(self, **kwargs):
+        # nothing to do for family variants
         pass
 
     def create_row_deserializer(self, serializer):

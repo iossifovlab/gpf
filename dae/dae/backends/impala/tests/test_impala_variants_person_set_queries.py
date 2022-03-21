@@ -10,7 +10,7 @@ from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.person_sets import person_set_collections_schema
 from dae.pedigrees.loader import FamiliesLoader
-from dae.person_sets import PersonSet, PersonSetCollection
+from dae.person_sets import PersonSetCollection
 
 
 @pytest.fixture

@@ -227,10 +227,6 @@ class BaseQueryBuilder(ABC):
             self._add_to_product(f"LIMIT {limit}")
 
     @abstractmethod
-    def build_having(self, **kwargs):
-        pass
-
-    @abstractmethod
     def create_row_deserializer(self, serializer):
         pass
 
