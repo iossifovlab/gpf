@@ -52,6 +52,7 @@ export class PersonSetCollection extends IdName {
     readonly domain: PersonSet[]
   ) {
     super(id, name);
+    domain.push(defaultValue);
   }
 
   public static fromJson(json: any): PersonSetCollection[] {
