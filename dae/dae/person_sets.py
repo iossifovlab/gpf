@@ -25,11 +25,11 @@ class PersonSet:
 
     def __init__(
             self, psid: str, name: str,
-            values: Set[str], color: str,
+            values: List[str], color: str,
             persons: Dict[str, Person]):
         self.id: str = psid
         self.name: str = name
-        self.values: Set[str] = values
+        self.values: List[str] = values
         self.color: str = color
         self.persons: Dict[str, Person] = persons
 
@@ -63,7 +63,7 @@ class PersonSet:
         return PersonSet(
             json["id"],
             json["name"],
-            set(json["values"]),
+            json["values"],
             json["color"],
             persons
         )
@@ -79,7 +79,7 @@ class PersonSetCollection:
 
     def __init__(
             self, pscid: str, name: str, config: FrozenBox,
-            sources: Set[Source],
+            sources: List[Source],
             person_sets: Dict[str, PersonSet],
             default: PersonSet,
             families: FamiliesData):
@@ -101,12 +101,15 @@ class PersonSetCollection:
     def __repr__(self):
         return f"PersonSetCollection({self.id}: {self.person_sets})"
 
+    def is_pedigree_only(self):
+        return all([s.sfrom == "pedigree" for s in self.sources])
+
     @staticmethod
-    def _sources_from_config(person_set_collection) -> Set[Source]:
-        sources = {
+    def _sources_from_config(person_set_collection) -> List[Source]:
+        sources = [
             PersonSetCollection.Source(src["from"], src["source"])
             for src in person_set_collection["sources"]
-        }
+        ]
         return sources
 
     @staticmethod
@@ -120,7 +123,7 @@ class PersonSetCollection:
             result[person_set.id] = PersonSet(
                 person_set.id,
                 person_set.name,
-                set(person_set["values"]),
+                person_set["values"],
                 person_set.color,
                 dict(),
             )
@@ -133,7 +136,7 @@ class PersonSetCollection:
         return PersonSet(
             config.default.id,
             config.default.name,
-            {"DEFAULT"},
+            [],
             config.default.color,
             dict(),
         )

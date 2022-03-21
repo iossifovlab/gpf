@@ -52,21 +52,6 @@ class GPFConfigValidator(Validator):
             value = os.path.join(directory, value)
         return os.path.normpath(value)
 
-    # def _validate_is_aggregator(self, constraint, field, value):
-    #     "{'type': 'boolean'}"
-
-    #     if constraint is not True:
-    #         return
-    #     if value not in AGGREGATOR_CLASS_DICT.keys() and \
-    #             not value.startswith("join"):
-    #         self._error(
-    #             field, f"Invalid aggregator type supplied {value}"
-    #         )
-    #     join_regex = r"^join\(.+\)"
-    #     if value.startswith("join") and \
-    #             re.match(join_regex, value) is None:
-    #         self._error(field, "Incorrect join aggregator format")
-
 
 class GPFConfigParser:
 
@@ -204,7 +189,7 @@ class GPFConfigParser:
             cls, dirname: str, schema: dict,
             default_config_filename: Optional[str] = None,
             default_config: Optional[dict] = None) -> List[Box]:
-        
+
         result = []
         for config_path in cls._collect_directory_configs(dirname):
             try:
@@ -212,7 +197,7 @@ class GPFConfigParser:
                     config_path, schema,
                     default_config_filename=default_config_filename,
                     default_config=default_config)
-            
+
                 result.append(config)
 
             except ValueError:

@@ -3,11 +3,13 @@ import queue
 import time
 
 from contextlib import closing
-from typing import Dict, Any
+from typing import Dict, Any, Tuple, Set
 
 import pyarrow as pa  # type: ignore
 from impala.util import as_pandas  # type: ignore
 from sqlalchemy.exc import TimeoutError
+
+from dae.person_sets import PersonSetCollection
 
 from dae.backends.raw.raw_variants import RawFamilyVariants
 
@@ -313,6 +315,43 @@ class ImpalaVariants:
         runner.adapt(filter_func)
 
         return runner
+
+    @staticmethod
+    def build_person_set_collection_query(
+            person_set_collection: PersonSetCollection,
+            person_set_collection_query: Tuple[str, Set[str]]):
+        collection_id, selected_person_sets = person_set_collection_query
+        assert collection_id == person_set_collection.id
+        selected_person_sets = set(selected_person_sets)
+        assert type(selected_person_sets) == set
+
+        if not person_set_collection.is_pedigree_only():
+            return None
+
+        available_person_sets = set(person_set_collection.person_sets.keys())
+        if (available_person_sets & selected_person_sets) == \
+                available_person_sets:
+            return ()
+
+        def pedigree_columns(selected_person_sets):
+            result = []
+            for person_set_id in sorted(selected_person_sets):
+                person_set = person_set_collection.person_sets[person_set_id]
+                assert len(person_set.values) == \
+                    len(person_set_collection.sources)
+                person_set_query = {}                
+                for source, value in zip(person_set_collection.sources, person_set.values):
+                    person_set_query[source.ssource] = value
+                result.append(person_set_query)
+            return result
+
+        if person_set_collection.default.id not in selected_person_sets:
+            return (pedigree_columns(selected_person_sets), [])
+        else:
+            return (
+                [],
+                pedigree_columns(available_person_sets - selected_person_sets)
+            )
 
     def build_family_variants_query_runner(
             self,
