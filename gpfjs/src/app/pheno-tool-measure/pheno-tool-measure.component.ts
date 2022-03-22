@@ -34,7 +34,7 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
   @ViewChild(PhenoMeasureSelectorComponent) private measureSelectorComponent: PhenoMeasureSelectorComponent;
 
   regressions: Object = {};
-  regressionNames: string[];
+  regressionNames: string[] = [];
 
   public dataset: Dataset;
 
@@ -51,13 +51,13 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
 
     this.dataset = this.datasetsService.getSelectedDataset();
     if (this.dataset?.phenotypeData) {
-      this.measuresService.getRegressions(this.dataset.id).subscribe(res => {
+      this.measuresService.getRegressions(this.dataset.id).pipe(take(1)).subscribe(res => {
         this.regressions = res;
         this.regressionNames = Object.getOwnPropertyNames(this.regressions);
+      }, () => {
+        // no regressions found in backend
+        // empty error handling block to prevent 404 error showing up in the pheno tool
       });
-    } else {
-      this.regressions = {};
-      this.regressionNames = [];
     }
 
     combineLatest([this.store.selectOnce(PhenoToolMeasureState), this.measuresLoaded$]).pipe(take(1))
