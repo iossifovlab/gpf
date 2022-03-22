@@ -1,3 +1,3 @@
-RELEASE = "3.6.rc0"
+RELEASE = "3.6.0"
 
 VERSION = '.'.join(RELEASE.split('.')[:2])
