@@ -35,11 +35,6 @@ def fv_to_record(iter):
             'family_variant': str(fv)
         }
 
-        # DEBUG
-        if fv.family_id == 'SF0002235' and fv.location == '1:1233891':
-            print(row)
-
-
         rows.append(json.dumps(row, sort_keys=True))
 
     # set(tuple(loca..) 
@@ -106,13 +101,76 @@ if __name__ == "__main__":
     # - case when some of the members unknown genotype. 
     # - in serialization + storage consider "continue" on reference alleles 
     # - families and queries 
+    GENES_MULTIPLE = [
+        'SCNN1D', 'MIR6808', 'TTLL10', 'B3GALT6', 'MIR6727', 
+        'C1QTNF12', 'ACAP3', 'MIR429', 'SDF4', 'MIR200B']
+
+    FAMILY_IDS = [
+        'SF0001111', 'SF0010429', 'SF0034120', 'SF0027065', 'SF0000691', 
+        'SF0025437', 'SF0047329', 'SF0045260', 'SF0035260', 'SF0000076']
+    
+    CUSTOM_EFFECT_TYPES = ['splice-site', 'frame-shift', 'nonsense']
+    
+    CUSTOM_EFFECT_TYPES_2 = [
+        'splice-site', 'frame-shift', 'nonsense',
+        'no-frame-shift-newStop',
+        'noStart', 'noEnd', 'missense', 'no-frame-shift', 'CDS']
+
+    CODING_EFFECT_TYPES = [
+       'splice-site',
+        'frame-shift',
+        'nonsense',
+        'no-frame-shift-newStop',
+        'noStart',
+        'noEnd',
+        'missense',
+        'no-frame-shift',
+        'CDS',
+        'synonymous',
+        'coding_unknown',
+        'regulatory',
+        "3'UTR",
+        "5'UTR"]
 
     queries = [
-        {'genes':['MIR200B']},
-        {'effect_types':['intergenic']}
-        ]
+        {
+            'genes':GENES_MULTIPLE
+        },
+        {
+            'effect_types':['intergenic']
+        },
+        {
+            'effect_types':CUSTOM_EFFECT_TYPES,
+            'ultra_rare':True
+        },
+        {
+            'genes':GENES_MULTIPLE,
+            'effect_types':CUSTOM_EFFECT_TYPES,
+            'ultra_rare':True
+        },
+        {
+            'genes':GENES_MULTIPLE,
+            'effect_types':CUSTOM_EFFECT_TYPES + ['no-frame-shift-newStop'],
+            'ultra_rare':True,
+            'roles':'prb'
+        },
+        {
+            'family_ids':FAMILY_IDS[:1],
+            'real_attr_filter':[('af_allele_freq', (None, 1))],
+            'effect_types':CUSTOM_EFFECT_TYPES_2 
+        },
+        {
+            'family_ids':FAMILY_IDS,
+            'real_attr_filter':[('af_allele_freq', (None, 1))],
+            'effect_types':CODING_EFFECT_TYPES
+        }
+    ]
 
     for query in queries:
+        print("Test:")
+        print(json.dumps(query))
+        print("=" * 40) 
+
         truth = list(i1.query_variants(**query)) 
         bq = list(b2.query_variants(**query))
         im = list(i2.query_variants(**query)) 

@@ -27,7 +27,11 @@ class AlleleParquetSerializer:
         ]))),
         "variant_type": pa.int8(),
         "transmission_type": pa.int8(),
-        "reference": pa.string()
+        "reference": pa.string(),
+        "af_allele_count": pa.int32(), 
+        "af_allele_freq": pa.float32(),
+        "af_parents_called": pa.int32(),
+        "af_parents_freq": pa.float32()
     }
 
     FAMILY_SEARCHABLE_PROPERTIES_TYPES = {

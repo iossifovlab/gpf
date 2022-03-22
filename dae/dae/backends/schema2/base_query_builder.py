@@ -23,10 +23,10 @@ class Dialect(ABC):
         return False 
 
     def float_type(self) -> str:
-        return "FLOAT"
+        return "float"
 
     def int_type(self) -> str:
-        return "INT" 
+        return "int" 
 
     def build_table_name(self, table:str, db:str) -> str:
         return f"`{self.ns}`.{db}.{table}" if self.ns else f"{db}.{table}"
@@ -305,7 +305,8 @@ class BaseQueryBuilder(ABC):
             assert (
                 self.combined_columns[attr_name] == self.dialect.float_type()
                 or self.combined_columns[attr_name] == self.dialect.int_type()
-            ), self.combined_columns[attr_name]
+            ), f'{attr_name} - {self.combined_columns}'
+
             left, right = attr_range
             attr_name = self.where_accessors[attr_name]
 

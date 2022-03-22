@@ -333,8 +333,9 @@ def variant_type_converter(a):
 
 
 class QueryTreeToSQLTransformer(BaseTreeTransformer):
-    def __init__(self, column_name):
+    def __init__(self, column_name, add_unnest = False):
         self.column_name = column_name
+        self.add_unnest = add_unnest
         super(QueryTreeToSQLTransformer, self).__init__()
 
     def token_converter(self, arg):

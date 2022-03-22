@@ -92,6 +92,11 @@ class BigQueryVariants:
             db=self.db, table=table
         )
         df = self.client.query(q).result().to_dataframe()
+        
+        print("DEBUG")
+        print("*" * 80)
+        print(df[['column_name', 'data_type']])
+
         records = df[["column_name", "data_type"]].to_records()
         schema = {
             col_name: col_type for (_, col_name, col_type) in records

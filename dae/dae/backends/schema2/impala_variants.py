@@ -222,15 +222,6 @@ class ImpalaVariants:
                         sv_record = json.loads(row[-2])
                         fv_record = json.loads(row[-1])
 
-
-                        # DEBUG, should be in schema2 
-                        # look specifically for SF0002235, "1:1233891" 
-                        # best/state 000/200
-                        if fv_record["family_id"] == 'SF0002235' and fv_record['family_index'] == 16964:
-                            print(fv_record)
-                            print(sv_record)
-
-
                         fv = FamilyVariant(
                             SummaryVariantFactory.summary_variant_from_records(sv_record),
                             self.families[fv_record["family_id"]],
