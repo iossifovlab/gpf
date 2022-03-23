@@ -189,18 +189,19 @@ class GenotypeData(ABC):
         for genotype_study in self._get_query_children(study_filters):
             person_sets_query = None
             if person_set_collection is not None:
-                collection_id, _ = person_set_collection
-                collection = genotype_study\
-                    .get_person_set_collection(collection_id)
+                collection_id, selected_person_sets = person_set_collection
+                if selected_person_sets is not None:
+                    collection = genotype_study\
+                        .get_person_set_collection(collection_id)
 
-                person_sets_query = genotype_study\
-                    ._backend\
-                    .build_person_set_collection_query(
-                        collection, person_set_collection)
-                if person_sets_query is None:
-                    person_ids = \
-                        genotype_study._transform_person_set_collection_query(
-                            person_set_collection, person_ids)
+                    person_sets_query = genotype_study\
+                        ._backend\
+                        .build_person_set_collection_query(
+                            collection, person_set_collection)
+                    if person_sets_query is None:
+                        person_ids = genotype_study\
+                            ._transform_person_set_collection_query(
+                                person_set_collection, person_ids)
 
             if person_ids is not None and len(person_ids) == 0:
                 continue

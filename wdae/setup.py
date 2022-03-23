@@ -20,7 +20,7 @@ setuptools.setup(
     package_dir={"": "wdae"},
 
     package_data={"gpfjs": [
-        "static/gpfjs/*", "static/gpfjs/assets/*", "static/gpfjs/empty*"], },
+        "static/gpfjs/*", "static/gpfjs/assets/*", "static/gpfjs/empty/*"], },
 
     scripts=[
         "wdae/wdaemanage.py",
