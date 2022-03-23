@@ -124,7 +124,7 @@ function main() {
   {
     build_run rm -rf dist/
   
-    build_run npm run-script ng build -- --aot --configuration 'conda' --base-href '/gpfjs/' --deploy-url '/gpfjs/'
+    build_run npm run-script ng build -- --aot --configuration 'conda' --base-href '' --deploy-url '/static/gpfjs/'
     build_run python ppindex.py
   }
 
