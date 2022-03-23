@@ -80,10 +80,27 @@ remotes:
 annotation:
   conf_file: "%(wd)s/annotation_pipeline/import_annotation.conf"
 
+grr:
+  id: "test"
+  type: group
+  children:
+  - id: "grr_test_repo"
+    type: "directory"
+    directory: "$(wd)s/test_repo"
+
+gene_sets_db:
+  gene_sets_collections:
+    - gene_sets/main
+    - gene_sets/test_mapping
+    - gene_sets/test_gmt
+
+gene_scores_db:
+  gene_scores:
+    - gene_scores/LGD_rank
+    - gene_scores/RVIS_rank
 
 phenotype_data:
   dir: "%(wd)s/pheno"
-
 
 studies:
   dir: "%(wd)s/studies"

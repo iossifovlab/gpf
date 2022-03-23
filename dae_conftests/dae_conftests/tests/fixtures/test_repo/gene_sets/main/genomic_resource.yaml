@@ -1,0 +1,6 @@
+type: gene_set
+id: main
+format: directory
+directory: GeneSets
+web_label: Main
+web_format_str: "key| (|count|): |desc"

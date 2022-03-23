@@ -1,0 +1,6 @@
+type: gene_set
+id: test_gmt
+format: gmt
+filename: test-gmt.gmt
+web_label: Test GMT
+web_format_str: "key| (|count|)"
