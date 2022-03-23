@@ -18,7 +18,10 @@ setuptools.setup(
     ),
     include_package_data=True,
     package_dir={"": "wdae"},
-    package_data={"gpfjs": ["static/gpfjs/*", "static/gpfjs/assets/*"], },
+
+    package_data={"gpfjs": [
+        "static/gpfjs/*", "static/gpfjs/assets/*", "static/gpfjs/empty*"], },
+
     scripts=[
         "wdae/wdaemanage.py",
         "wdae/wdae_create_dev_users.sh",
