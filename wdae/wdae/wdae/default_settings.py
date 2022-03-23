@@ -166,7 +166,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "utils",
-    "gene_weights",
+    "gene_scores",
     "gene_sets",
     "datasets_api",
     "genotype_browser",

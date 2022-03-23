@@ -203,7 +203,7 @@ class StudyWrapperBase:
 
 
 class StudyWrapper(StudyWrapperBase):
-    def __init__(self, genotype_data_study, pheno_db, gene_weights_db):
+    def __init__(self, genotype_data_study, pheno_db, gene_scores_db):
 
         assert genotype_data_study is not None
 
@@ -217,7 +217,7 @@ class StudyWrapper(StudyWrapperBase):
         self.pheno_db = pheno_db
         self._init_pheno(self.pheno_db)
 
-        self.gene_weights_db = gene_weights_db
+        self.gene_scores_db = gene_scores_db
         self.query_transformer = QueryTransformer(self)
         self.response_transformer = ResponseTransformer(self)
 
@@ -251,16 +251,16 @@ class StudyWrapper(StudyWrapperBase):
         self.person_filters = genotype_browser_config.person_filters or None
         self.family_filters = genotype_browser_config.family_filters or None
 
-        # GENE WEIGHTS
+        # GENE SCORES
         if genotype_browser_config.column_groups:
-            self.gene_weight_column_sources = [
+            self.gene_score_column_sources = [
                 genotype_browser_config.columns.genotype[slot].source
                 for slot in (
-                    genotype_browser_config.column_groups.weights.columns or []
+                    genotype_browser_config.column_groups.scores.columns or []
                 )
             ]
         else:
-            self.gene_weight_column_sources = []
+            self.gene_score_column_sources = []
 
         # PREVIEW AND DOWNLOAD COLUMNS
         self.columns = genotype_browser_config.columns
