@@ -44,11 +44,11 @@
             "namedChunks": true
           },
           "configurations": {
-            "gpfjs": {
+            "conda": {
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.gpfjs.ts"
+                  "with": "src/environments/environment.conda.ts"
                 }
               ],
               "optimization": true,
@@ -67,11 +67,11 @@
                 }
               ]
             },
-            "default": {
+            "production": {
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.default.ts"
+                  "with": "src/environments/environment.prod.ts"
                 }
               ],
               "optimization": true,

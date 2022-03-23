@@ -93,7 +93,7 @@ function main() {
   {
     build_run rm -rf dist/
   
-    build_run npm run-script ng build -- --aot --configuration 'default' --base-href '/gpf_prefix/' --deploy-url '/gpf_prefix/'
+    build_run npm run-script ng build -- --aot --configuration 'production' --base-href '/gpf_prefix/' --deploy-url '/gpf_prefix/'
     build_run python ppindex.py
   }
 
@@ -124,7 +124,7 @@ function main() {
   {
     build_run rm -rf dist/
   
-    build_run npm run-script ng build -- --aot --configuration 'gpfjs' --base-href '/gpfjs/' --deploy-url '/gpfjs/'
+    build_run npm run-script ng build -- --aot --configuration 'conda' --base-href '/gpfjs/' --deploy-url '/gpfjs/'
     build_run python ppindex.py
   }
 
