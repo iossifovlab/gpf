@@ -81,9 +81,17 @@ annotation:
   conf_file: "%(wd)s/annotation_pipeline/import_annotation.conf"
 
 grr:
-  id: "grr_test_repo"
-  type: "directory"
-  directory: "%(wd)s/test_repo"
+  id: "root"
+  type: "group"
+  children:
+    - id: "grr_test_repo"
+      type: "directory"
+      directory: "%(wd)s/test_repo"
+    - id: "seqpipe"
+      type: "url"
+      url: "https://grr.seqpipe.org"
+      cache_dir: "%($HOME)s/grrCache"
+
 
 gene_sets_db:
   gene_set_collections:

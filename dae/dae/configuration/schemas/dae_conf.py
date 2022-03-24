@@ -56,7 +56,7 @@ remote_schema = {
     "password": {"type": "string"},
 }
 
-grr_schema = {
+repository_schema = {
     "id": {"type": "string", },
     "type": {"type": "string", },
     "url": {"type": "string", },
@@ -70,6 +70,13 @@ grr_schema = {
         "check_with": validate_path,
         "coerce": "abspath",
     },
+}
+grr_schema = {
+    **repository_schema,
+    "children": {"type": "list", "schema": {
+        "type": "dict",
+        "schema": repository_schema
+    }}
 
 }
 
