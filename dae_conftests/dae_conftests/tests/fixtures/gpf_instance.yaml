@@ -83,7 +83,7 @@ annotation:
 grr:
   id: "grr_test_repo"
   type: "directory"
-  directory: "$(wd)s/test_repo"
+  directory: "%(wd)s/test_repo"
 
 gene_sets_db:
   gene_set_collections:
