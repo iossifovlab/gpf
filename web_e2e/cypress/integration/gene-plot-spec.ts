@@ -85,7 +85,7 @@ describe('Gene plot tests', () => {
 
   it('should have table legend', () => {
     cy.scrollTo('bottom');
-    geneBrowserPage.legend.should('contain.text', 'affectedunaffectedmissing-person');
+    geneBrowserPage.legend.should('contain.text', 'affectedunaffectedunspecifiedmissing-person');
   });
 });
 
