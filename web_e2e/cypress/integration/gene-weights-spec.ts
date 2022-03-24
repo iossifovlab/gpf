@@ -168,7 +168,7 @@ describe('Gene weights panel tests', () => {
   });
 });
 
-describe('Gene weights visual tests', () => {
+describe.skip('Gene weights visual tests', () => {
   const page = new GeneWeightsPage();
   const genesBlockPage = new GenesBlockPage();
 
@@ -183,7 +183,7 @@ describe('Gene weights visual tests', () => {
     page.navigateToHome();
   });
 
-  it('should inspect gene weights on drag', () => {
+  it.skip('should inspect gene weights on drag', () => {
     function moveSlider(which: string, dragValue, heightValue = 0): void {
       if (which === 'right') {
         dragValue = -dragValue;
