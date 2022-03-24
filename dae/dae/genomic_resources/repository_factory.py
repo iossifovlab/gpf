@@ -92,6 +92,8 @@ def build_genomic_resource_repository(
                 f"The definition for group repository {definition} "
                 "has no children attiribute.")
         if not isinstance(definition["children"], list):
+            logger.warning(definition)
+            logger.warning(definition["children"])
             raise ValueError(
                 "The children attribute in the definition of a group "
                 "repository must be a list")
