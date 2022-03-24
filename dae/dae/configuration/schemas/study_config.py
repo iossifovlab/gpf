@@ -449,6 +449,7 @@ study_config_schema = {
                 "min": 0.0,
                 "max": 100.0,
             },
+            "has_affected_status": {"type": "boolean", "default": True},
         },
     },
     "person_set_collections": person_set_collections_schema,
