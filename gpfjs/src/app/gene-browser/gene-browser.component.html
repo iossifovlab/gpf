@@ -43,7 +43,8 @@
 
   <div *ngIf="showResults">
     <div #filters id="filters" class="row" style="margin-left: 0px">
-      <div id="affected-status-filters" class="effect-card card filter">
+
+      <div id="affected-status-filters" class="effect-card card filter" *ngIf="geneBrowserConfig.hasAffectedStatus">
         <div class="card-header card-title">Affected Status</div>
         <div class="card-block">
           <div *ngFor="let affectedStatus of affectedStatusValues; let i=index" class="checkbox">
@@ -62,7 +63,7 @@
         </div>
       </div>
 
-      <div id="effect-types-filters" class="effect-card card filter" style="margin-left: 30px">
+      <div id="effect-types-filters" class="effect-card card filter" [ngStyle]="{'margin-left': geneBrowserConfig.hasAffectedStatus ? '30px': '0'}">
         <div class="card-header card-title">Effect Types</div>
         <div class="card-block">
           <div *ngFor="let effect of effectTypeValues; let i=index" class="checkbox">

@@ -490,7 +490,7 @@ describe('GenotypeBrowser', () => {
 describe('GeneBrowser', () => {
   it('should create gene browser from json', () => {
     const mockBrowser1 = new GeneBrowser(
-      true, 'frequencyCol1', 'frequencyName1', 'effectCol1', 'locationCol1', 5, 6
+      true, 'frequencyCol1', 'frequencyName1', 'effectCol1', 'locationCol1', 5, 6, true
     );
     const mockBrowser2 = GeneBrowser.fromJson({
       enabled: true,
@@ -499,7 +499,8 @@ describe('GeneBrowser', () => {
       effect_column: 'effectCol1',
       location_column: 'locationCol1',
       domain_min: 5,
-      domain_max: 6
+      domain_max: 6,
+      has_affected_status: true
     });
 
     expect(mockBrowser1).toEqual(mockBrowser2);
@@ -579,7 +580,7 @@ describe('Dataset', () => {
       new UserGroup(3, 'name1', ['user1', 'user2'], ['dataset2', 'dataset3']),
       new UserGroup(5, 'name2', ['user12', 'user5'], ['dataset1', 'dataset2'])
     ],
-    new GeneBrowser(true, 'frequencyCol1', 'frequencyName1', 'effectCol1', 'locationCol1', 5, 6),
+    new GeneBrowser(true, 'frequencyCol1', 'frequencyName1', 'effectCol1', 'locationCol1', 5, 6, true),
     false,
     'genome1'
   );
@@ -654,7 +655,7 @@ describe('Dataset', () => {
       new UserGroup(9, 'name13', ['user9', 'user6'], ['dataset4', 'dataset3']),
       new UserGroup(6, 'name8', ['user10', 'user12'], ['dataset14', 'dataset16'])
     ],
-    new GeneBrowser(false, 'frequencyCol6', 'frequencyName7', 'effectCol4', 'locationCol2', 7, 8),
+    new GeneBrowser(false, 'frequencyCol6', 'frequencyName7', 'effectCol4', 'locationCol2', 7, 8, true),
     true,
     'genome2'
   );
@@ -808,7 +809,8 @@ describe('Dataset', () => {
       effect_column: 'effectCol1',
       location_column: 'locationCol1',
       domain_min: 5,
-      domain_max: 6
+      domain_max: 6,
+      has_affected_status: true
     },
     has_denovo: false,
     genome: 'genome1'
@@ -963,7 +965,8 @@ describe('Dataset', () => {
       effect_column: 'effectCol4',
       location_column: 'locationCol2',
       domain_min: 7,
-      domain_max: 8
+      domain_max: 8,
+      has_affected_status: true
     },
     has_denovo: true,
     genome: 'genome2'
@@ -1127,7 +1130,8 @@ describe('Dataset', () => {
         effect_column: 'effectCol1',
         location_column: 'locationCol1',
         domain_min: 5,
-        domain_max: 6
+        domain_max: 6,
+        has_affected_status: true
       },
     }, {
       has_denovo: false,
