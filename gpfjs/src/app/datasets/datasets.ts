@@ -231,6 +231,7 @@ export class GeneBrowser {
       json['location_column'],
       json['domain_min'],
       json['domain_max'],
+      json['has_affected_status']
     );
   }
 
@@ -242,6 +243,7 @@ export class GeneBrowser {
     readonly locationColumn: string,
     readonly domainMin: number,
     readonly domainMax: number,
+    readonly hasAffectedStatus: boolean,
   ) { }
 }
 
