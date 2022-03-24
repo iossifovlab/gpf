@@ -60,7 +60,11 @@ grr_schema = {
     "id": {"type": "string", },
     "type": {"type": "string", },
     "url": {"type": "string", },
-    "directory": {"type": "string", },
+    "directory": {
+        "type": "string",
+        "required": False,
+        "coerce": "abspath",
+    },
     "cache_dir": {
         "type": "string",
         "check_with": validate_path,
