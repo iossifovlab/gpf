@@ -115,15 +115,16 @@ def read_mapping_file(input_file, names_file):
             r.t2G[t][geneId] += 1
             r.g2T[geneId][t] += 1
     input_file.close()
-    try:
-        for line in names_file:
-            line = line.decode()
-            (t, desc) = line.strip().split("\t", 1)
-            if t in r.t2G:
-                r.tDesc[t] = desc
-    except IOError:
-        pass
-    names_file.close()
+    if names_file is not None:
+        try:
+            for line in names_file:
+                line = line.decode()
+                (t, desc) = line.strip().split("\t", 1)
+                if t in r.t2G:
+                    r.tDesc[t] = desc
+        except IOError:
+            pass
+        names_file.close()
     for t in set(r.t2G) - set(r.tDesc):
         r.tDesc[t] = ""
     return r

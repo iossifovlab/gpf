@@ -70,9 +70,12 @@ class GeneSetCollection(object):
         if collection_format == "map":
             filename = config["filename"]
             names_filename = filename[:-4] + "names.txt"
+            names_file = None
+            if resource.file_exists(names_filename):
+                names_file = resource.open_raw_file(names_filename)
             gene_terms = read_mapping_file(
                 resource.open_raw_file(filename),
-                resource.open_raw_file(names_filename)
+                names_file
             )
         elif collection_format == "gmt":
             filename = config["filename"]
