@@ -58,7 +58,7 @@ describe('Gene weights panel tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome(false);
+    page.navigateToHome();
     page.loginAdmin();
   });
 
@@ -174,7 +174,7 @@ describe.skip('Gene weights visual tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome(false);
+    page.navigateToHome();
     page.loginAdmin();
   });
 

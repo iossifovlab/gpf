@@ -6,7 +6,7 @@ describe('Regions block tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome(false);
+    page.navigateToHome();
     page.loginAdmin();
   });
 

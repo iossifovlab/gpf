@@ -8,7 +8,7 @@ describe('Effect types tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome(false);
+    page.navigateToHome();
     page.loginAdmin();
   });
 

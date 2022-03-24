@@ -6,7 +6,7 @@ describe('Pheno browser tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome(false);
+    page.navigateToHome();
     page.loginAdmin();
   });
 

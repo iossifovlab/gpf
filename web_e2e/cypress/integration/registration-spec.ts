@@ -10,7 +10,7 @@ describe('Register tests', () => {
   });
 
   it('should open register window', () => {
-    page.navigateToHome(false);
+    page.navigateToHome();
     usersPage.loginDropdownToggleButton.click();
     page.window.should('not.exist');
 

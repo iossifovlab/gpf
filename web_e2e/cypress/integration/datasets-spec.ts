@@ -9,7 +9,7 @@ describe('Datasets tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome(false);
+    page.navigateToHome();
   });
 
   beforeEach(() => {
@@ -103,7 +103,7 @@ describe('Datasets Iossifov dataset count tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome(false);
+    page.navigateToHome();
     page.loginAdmin();
   });
 
@@ -174,7 +174,7 @@ describe('Datasets visual tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome(false);
+    page.navigateToHome();
     page.loginAdmin();
   });
 

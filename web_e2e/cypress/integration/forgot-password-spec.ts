@@ -10,7 +10,7 @@ describe('Forgotten password tests', () => {
   });
 
   it('should open forgotten password window', () => {
-    page.navigateToHome(false);
+    page.navigateToHome();
     usersPage.loginDropdownToggleButton.click();
     page.window.should('not.exist');
 

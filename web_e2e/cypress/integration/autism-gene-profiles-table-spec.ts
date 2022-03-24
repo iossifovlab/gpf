@@ -6,7 +6,7 @@ describe('Autism gene profiles table tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome(false);
+    page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
@@ -36,7 +36,7 @@ describe('Autism gene profiles table row data tests', () => {
   });
 
   beforeEach(() => {
-    page.navigateToHome(false);
+    page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
@@ -60,7 +60,7 @@ describe('Autism gene profiles table column filtering modal tests', {scrollBehav
   const page = new AutismGeneProfilesTable();
 
   beforeEach(() => {
-    page.navigateToHome(false);
+    page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
     page.autismGeneSetColumnFilteringButton.click();
   });
@@ -118,7 +118,7 @@ describe('Autism gene profiles table row highlight tests', {scrollBehavior: fals
   });
 
   beforeEach(() => {
-    page.navigateToHome(false);
+    page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
@@ -177,7 +177,7 @@ describe('Autism gene profiles table functionality tests', () => {
   });
 
   beforeEach(() => {
-    page.navigateToHome(false);
+    page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 

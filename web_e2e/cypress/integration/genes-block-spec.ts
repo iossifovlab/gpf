@@ -7,7 +7,7 @@ describe('Genes block tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome(false);
+    page.navigateToHome();
     page.loginAdmin();
   });
 
@@ -68,7 +68,7 @@ describe('Genes block gene sets names and count tests', () => {
 
   before(() => {
     genotypeBrowserController.cleanup();
-    genotypeBrowserController.navigateToHome(false);
+    genotypeBrowserController.navigateToHome();
     genotypeBrowserController.loginAdmin();
   });
 
@@ -189,7 +189,7 @@ describe('Genes block gene set file length tests', () => {
 
   before(() => {
     genotypeBrowserController.cleanup();
-    genotypeBrowserController.navigateToHome(false);
+    genotypeBrowserController.navigateToHome();
     genotypeBrowserController.loginAdmin();
   });
 
@@ -320,7 +320,7 @@ describe('Genes block denovo gene set gene symbols tests', () => {
 
   before(() => {
     genotypeBrowserController.cleanup();
-    genotypeBrowserController.navigateToHome(false);
+    genotypeBrowserController.navigateToHome();
     genotypeBrowserController.loginAdmin();
   });
 
