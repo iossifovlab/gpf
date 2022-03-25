@@ -127,7 +127,7 @@ def read_mapping_file(input_file, names_file):
     if names_file is not None:
         try:
             for line in names_file:
-                if isinstance(ln, bytes):
+                if isinstance(line, bytes):
                     line = line.decode()
                 (t, desc) = line.strip().split("\t", 1)
                 if t in r.t2G:
