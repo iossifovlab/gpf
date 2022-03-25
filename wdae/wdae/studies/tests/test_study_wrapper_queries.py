@@ -327,7 +327,7 @@ def test_query_present_in_parent(
         ),
     ],
 )
-def test_query_gene_weights(
+def test_query_gene_scores(
         iossifov_2014_wrappers, wrapper_type, option, count):
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     query = {
