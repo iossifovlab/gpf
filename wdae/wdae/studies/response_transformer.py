@@ -198,13 +198,13 @@ class ResponseTransformer:
         return pheno_values
 
     def _get_gene_scores_values(self, allele, default=None):
-        if not self.study_wrapper.gene_scores_column_sources:
+        if not self.study_wrapper.gene_score_column_sources:
             return {}
         genes = gene_effect_get_genes(allele.effects).split(";")
         gene = genes[0]
 
         gene_scores_values = {}
-        for gwc in self.study_wrapper.gene_scores_column_sources:
+        for gwc in self.study_wrapper.gene_score_column_sources:
             if gwc not in self.study_wrapper.gene_scores_db:
                 continue
 
