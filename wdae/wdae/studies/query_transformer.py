@@ -56,9 +56,9 @@ class QueryTransformer:
         range_start = gene_scores.get("rangeStart", None)
         range_end = gene_scores.get("rangeEnd", None)
 
-        if score_name and score_name in self.study_wrapper.gene_scores_db:
+        if scores_name and scores_name in self.study_wrapper.gene_scores_db:
             score = self.study_wrapper.gene_scores_db[
-                gene_scores.get("score")
+                scores_name
             ]
 
             genes = score.get_genes(range_start, range_end)
