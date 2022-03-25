@@ -150,7 +150,6 @@ export class BasePage {
   }
 
   public get datasetsDropdownMenuButton(): element {
-    cy.get('#datasets-dropdown-menu-button').should('be.visible'); // useful?
     return cy.get('#datasets-dropdown-menu-button');
   }
 

@@ -21,9 +21,32 @@ describe('Share query tests', () => {
   it('should open share query dropdown menu after share query button click', () => {
     page.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu');
 
-    page.button.should('be.visible');
     page.button.click();
-    page.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu');
+    page.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu show');
+  });
+
+  it('should open share query menu and check if it displays the input field and the copy button', () => {
+    page.copyButton.should('not.be.visible');
+    page.input.should('not.be.visible')
+
+    page.button.click();
+    page.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu show');
+    page.copyButton.should('be.visible');
+    page.input.should('be.visible');
+  });
+
+  it('should open share query menu, click on the copy button and check whether the text changes properly', () => {
+    page.copyButton.should('not.be.visible');
+    page.input.should('not.be.visible')
+
+    page.button.click();
+    page.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu show');
+    page.copyButton.should('have.text', 'Copy');
+
+    page.copyButton.click();
+    page.copyButton.should('have.text', 'Copied');
+
+    page.copyButton.should('have.text', 'Copy');
   });
 
   it('should share a query, load it and open all tools tabs', () => {
@@ -31,21 +54,18 @@ describe('Share query tests', () => {
 
     page.button.should('be.visible');
     page.button.click();
-    page.input.contains(/\.*/).invoke('val').then(url => {
-      cy.visit(String(url)).then(() => {
-        cy.wait(1500);
-        page.datasetsDropdownMenuButton.should('have.text', 'comp_all');
-        datasetsPage.datasetStatisticsButton.click();
-        datasetsPage.genotypeBrowserButton.should('be.visible');
-        datasetsPage.genotypeBrowserButton.click();
-        datasetsPage.phenotypeBrowserButton.should('be.visible');
-        datasetsPage.phenotypeBrowserButton.click();
-        datasetsPage.phenotypeToolButton.should('be.visible');
-        datasetsPage.phenotypeToolButton.click();
-        datasetsPage.geneBrowserButton.should('be.visible');
-        datasetsPage.geneBrowserButton.click();
-      });
-    })
+    page.input.invoke('val').then(url => cy.visit(String(url)));
+
+    page.datasetsDropdownMenuButton.should('have.text', 'comp_all');
+    datasetsPage.datasetStatisticsButton.click();
+    datasetsPage.genotypeBrowserButton.should('be.visible');
+    datasetsPage.genotypeBrowserButton.click();
+    datasetsPage.phenotypeBrowserButton.should('be.visible');
+    datasetsPage.phenotypeBrowserButton.click();
+    datasetsPage.phenotypeToolButton.should('be.visible');
+    datasetsPage.phenotypeToolButton.click();
+    datasetsPage.geneBrowserButton.should('be.visible');
+    datasetsPage.geneBrowserButton.click();
   });
 
   it('should navigate to genotype browser, check all effect types checkboxes, generate a share query, ' +
@@ -56,13 +76,10 @@ describe('Share query tests', () => {
 
     page.button.should('be.visible');
     page.button.click();
-    page.input.invoke('val').then(url => {
-      cy.visit(String(url)).then(() => {
-        genotypeBlockPage.findAllCheckboxesInComponent('.effect-card').each(element => {
-          cy.wrap(element).should('be.visible');
-          cy.wrap(element).should('be.checked');
-        });
-      })
-    })
+    page.input.invoke('val').then(url => cy.visit(String(url)));
+    genotypeBlockPage.findAllCheckboxesInComponent('.effect-card').each(element => {
+      cy.wrap(element).should('be.visible');
+      cy.wrap(element).should('be.checked');
+    });
   });
 });

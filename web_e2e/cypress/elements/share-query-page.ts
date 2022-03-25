@@ -12,4 +12,8 @@ export class ShareQueryPage extends BasePage {
   public get input(): element {
     return cy.get('div#share-query-dropdown input');
   }
+
+  public get copyButton(): element {
+    return cy.get('gpf-share-query-button #copy-button');
+  }
 }
