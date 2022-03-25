@@ -12,7 +12,7 @@ describe('App tests', () => {
   });
 
   beforeEach(() => {
-    page.navigateToHome();
+    page.navigateToHome(false);
   });
 
   it('should display "GPF: Genotypes and Phenotypes in Families" as a title', () => {
@@ -23,33 +23,42 @@ describe('App tests', () => {
 
   it('should toggle sidenav, click on the "Datasets" button and ' +
      'navigate to "/datasets/ALL_genotypes/gene-browser"', () => {
+    const baseUrl = Cypress.config().baseUrl;
+    const expectedUrl = `${baseUrl}datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`;
+
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.datasets);
 
     cy.url().then(currentUrl => {
-      expect(currentUrl).to.eq(`${Cypress.config().baseUrl}datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`);
+      expect(currentUrl).to.eq(expectedUrl);
     });
 
     page.logout();
   });
 
   it('should toggle sidenav, click on the "Saved queries" button and navigate to "/saved-queries"', () => {
+    const baseUrl = Cypress.config().baseUrl;
+    const savedQueriesUrl = `${baseUrl}saved-queries`;
+
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.savedQueries);
 
     cy.url().then(currentUrl => {
-      expect(currentUrl).to.eq(`${Cypress.config().baseUrl}saved-queries`);
+      expect(currentUrl).to.eq(savedQueriesUrl);
     });
 
     page.logout();
   });
 
   it('should toggle sidenav, click on the "Management" button and navigate to "/management"', () => {
+    const baseUrl = Cypress.config().baseUrl;
+    const managementUrl = `${baseUrl}management`;
+
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
 
     cy.url().then(currentUrl => {
-      expect(currentUrl).to.eq(`${Cypress.config().baseUrl}management`);
+      expect(currentUrl).to.eq(managementUrl);
     });
 
     page.logout();
@@ -80,7 +89,7 @@ describe('App user access rights tests', () => {
   });
 
   beforeEach(() => {
-    page.navigateToHome();
+    page.navigateToHome(false);
   });
 
   Object.values(userData).forEach(data => {

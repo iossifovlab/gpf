@@ -10,7 +10,7 @@ describe('Enrichment tool common tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome();
+    page.navigateToHome(false);
     page.loginAdmin();
   });
 
@@ -120,7 +120,7 @@ if (Cypress.env().yamlPath !== undefined) {
 
     before(() => {
       page.cleanup();
-      page.navigateToHome();
+      page.navigateToHome(false);
       page.loginAdmin();
     });
 

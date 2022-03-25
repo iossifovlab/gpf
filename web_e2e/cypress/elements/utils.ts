@@ -55,21 +55,22 @@ export class BasePage {
   private readonly adminPassword = 'secret';
 
   public cleanup(): void {
-    cy.clearCookie('sessionid');
-    cy.getCookie('sessionid').should('be.null');
+    cy.clearCookie('sessionid')
   }
 
   public preserveLogin(): void {
     Cypress.Cookies.preserveOnce('sessionid');
   }
 
-  public navigateToHome(): void {
+  public navigateToHome(hasAccessRights = true): void {
     let baseUrl = Cypress.config().baseUrl;
     if (baseUrl.endsWith('/')) {
       baseUrl = baseUrl.slice(0, -1);
     }
 
     cy.visit(`${baseUrl}/datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`);
+
+    this.waitForPageToLoad(toolPageLinks.geneBrowser, hasAccessRights);
   }
 
   public login(username: string, password: string, hasAccessRights = true): void {
@@ -104,9 +105,9 @@ export class BasePage {
     this.openDatasetsDropdownMenu();
     this.datasetsDropdownMenuElements.contains(dataset).click();
     this.datasetsDropdownMenuButton.should('have.text', dataset);
-    cy.get(`a.nav-link[href*="${page}"]`).click().then(() => {
-      this.waitForPageToLoad(page, hasAccessRights);
-    });
+    cy.get(`a.nav-link[href*="${page}"]`).click();
+
+    this.waitForPageToLoad(page, hasAccessRights);
   }
 
   private waitForPageToLoad(page: string, hasAcessRights: boolean = true): void {
@@ -171,10 +172,9 @@ export class BasePage {
   public navigateToSidenavPage(sidenavPageLink: string): void {
     this.sidenavTogglerButton.scrollIntoView();
     this.toggleSidenav();
+    cy.get(`div.sidenav a[routerlink="/${sidenavPageLink}"]`).click({scrollBehavior: false});
 
-    cy.get(`div.sidenav a[routerlink="/${sidenavPageLink}"]`).click({scrollBehavior: false}).then(() => {
-      this.waitForPageToLoad(sidenavPageLink);
-    });
+    this.waitForPageToLoad(sidenavPageLink)
   }
 
   public findButtonInComponentContainingText(componentSelector: string, text: string): element {

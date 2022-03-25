@@ -9,7 +9,7 @@ describe('Autism gene profiles single view tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome();
+    page.navigateToHome(false);
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
@@ -60,7 +60,7 @@ describe('Autism gene profiles single view links tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome();
+    page.navigateToHome(false);
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
@@ -157,7 +157,7 @@ describe.skip('Autism gene profiles single view visual tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome();
+    page.navigateToHome(false);
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
@@ -330,7 +330,7 @@ describe.skip('Autism gene profiles single view dynamic data tests', () => {
 
   before(() => {
     page.cleanup();
-    page.navigateToHome();
+    page.navigateToHome(false);
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
