@@ -55,7 +55,8 @@ export class BasePage {
   private readonly adminPassword = 'secret';
 
   public cleanup(): void {
-    cy.clearCookie('sessionid')
+    cy.clearCookie('sessionid');
+    cy.getCookie('sessionid').should('be.null');
   }
 
   public preserveLogin(): void {
@@ -69,7 +70,6 @@ export class BasePage {
     }
 
     cy.visit(`${baseUrl}/datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`);
-
     this.waitForPageToLoad(toolPageLinks.geneBrowser, hasAccessRights);
   }
 
@@ -98,7 +98,10 @@ export class BasePage {
 
   public logout(): void {
     const usersPage = new UsersPage();
+    cy.intercept('GET', '/gpf/api/v3/datasets').as('datasets');
+
     usersPage.logoutButton.click();
+    cy.wait('@datasets');
   }
 
   public navigateToDatasetPage(dataset: string, page: string, hasAccessRights = true): void {
