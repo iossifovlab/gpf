@@ -54,8 +54,10 @@ describe('Share query tests', () => {
 
     page.button.should('be.visible');
     page.button.click();
-    page.input.invoke('val').then(url => cy.visit(String(url)));
-    page.waitForPageToLoad(toolPageLinks.genotypeBrowser);
+    page.input.invoke('val').then(url => {
+      cy.visit(String(url));
+      page.waitForPageToLoad(toolPageLinks.genotypeBrowser);
+    });
 
     page.datasetsDropdownMenuButton.should('have.text', 'comp_all');
     datasetsPage.datasetStatisticsButton.click();
@@ -77,8 +79,10 @@ describe('Share query tests', () => {
 
     page.button.should('be.visible');
     page.button.click();
-    page.input.invoke('val').then(url => cy.visit(String(url)));
-    page.waitForPageToLoad(toolPageLinks.genotypeBrowser);
+    page.input.invoke('val').then(url => {
+      cy.visit(String(url));
+      page.waitForPageToLoad(toolPageLinks.genotypeBrowser);
+    });
 
     genotypeBlockPage.findAllCheckboxesInComponent('.effect-card').each(element => {
       cy.wrap(element).should('be.visible');
