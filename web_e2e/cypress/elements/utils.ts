@@ -113,7 +113,7 @@ export class BasePage {
     this.waitForPageToLoad(page, hasAccessRights);
   }
 
-  private waitForPageToLoad(page: string, hasAcessRights: boolean = true): void {
+  public waitForPageToLoad(page: string, hasAcessRights: boolean = true): void {
     if (hasAcessRights) {
       switch(page) {
         case toolPageLinks.datasetStatistics:

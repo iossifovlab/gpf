@@ -135,6 +135,7 @@ describe('Autism gene profiles single view dataset table tests', () => {
   //     if (req !== null) {
   //       const genotypeBlockPage = new GenotypeBlockPage();
   //       cy.visit(Cypress.config().baseUrl + '/load-query/' + req['response'].body.uuid);
+  //       // add waitForPageToLoad logic after visit...
   //       genotypeBlockPage.findCheckboxInComponentContainingText('.pedigree-selector-card', 'affected').parent().within(checkBoxes => {
   //         cy.wrap(checkBoxes).get('input').should('be.checked');
   //         cy.get('@effectType').then(effectType => {

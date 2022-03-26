@@ -15,6 +15,7 @@ export class AutismGeneProfilesSingleView extends BasePage {
     const agpUrl = sidenavPageLinks.autismGeneProfiles;
 
     cy.visit(`${baseUrl}/${agpUrl}/${geneSymbol}`);
+    this.window.find('gpf-histogram svg').should('be.visible');
   }
 
   public get header(): element {

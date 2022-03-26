@@ -198,6 +198,7 @@ describe('Autism gene profiles table functionality tests', () => {
   //       const genotypeBlockPage = new GenotypeBlockPage();
   //       cy.visit(Cypress.config().baseUrl + '/load-query/' + req.response.body.uuid);
   //       genotypeBlockPage.findCheckboxInComponentContainingText('.pedigree-selector-card', 'affected').parent().within(checkBoxes => {
+  //       // add waitForPageToLoad logic after visit...
   //         cy.wrap(checkBoxes).get('input').should('be.checked');
   //         cy.get('@effectType').then(effectType => {
   //           page.getStudyExpectedDataFromGenotype(effectType);
