@@ -75,6 +75,7 @@ export class BasePage {
 
   public login(username: string, password: string, hasAccessRights = true): void {
     const usersPage = new UsersPage();
+    cy.intercept('GET', '/gpf/api/v3/datasets').as('datasets');
 
     if (!username || !password) {
       return;
@@ -88,20 +89,26 @@ export class BasePage {
     usersPage.logoutButton.should('be.visible');
 
     cy.url().then(currentUrl => {
-      this.waitForPageToLoad(currentUrl.split('/').pop(), hasAccessRights)
+      this.waitForPageToLoad(currentUrl.split('/').pop(), hasAccessRights);
     });
+    cy.wait('@datasets');
   }
 
   public loginAdmin(): void {
     this.login(this.adminUsername, this.adminPassword);
   }
 
-  public logout(): void {
+  public logout(hasAccessRights = false): void {
     const usersPage = new UsersPage();
     cy.intercept('GET', '/gpf/api/v3/datasets').as('datasets');
 
     usersPage.logoutButton.click();
     cy.wait('@datasets');
+
+    cy.url().then(currentUrl => {
+      this.waitForPageToLoad(currentUrl.split('/').pop(), hasAccessRights)
+    });
+
   }
 
   public navigateToDatasetPage(dataset: string, page: string, hasAccessRights = true): void {
@@ -154,13 +161,14 @@ export class BasePage {
   }
 
   public get datasetsDropdownMenuElements(): element {
-    cy.get('.dataset-selector a').should('have.length', Object.keys(datasetIds).length)
+    cy.get('.dataset-selector a').should('have.length', Object.keys(datasetIds).length);
     return cy.get('.dataset-selector a');
   }
 
   public openDatasetsDropdownMenu(): void {
     this.datasetsDropdownMenuButton.click();
     cy.get('.dataset-selector.dropdown-menu').should('have.class', 'show');
+    cy.get('.dataset-selector a').should('have.length', Object.keys(datasetIds).length);
   }
 
   private get sidenavTogglerButton(): element {
@@ -169,6 +177,7 @@ export class BasePage {
 
   public toggleSidenav(): void {
     this.sidenavTogglerButton.click({scrollBehavior: false});
+    cy.wait(1000);
   }
 
   public navigateToSidenavPage(sidenavPageLink: string): void {
@@ -176,7 +185,7 @@ export class BasePage {
     this.toggleSidenav();
     cy.get(`div.sidenav a[routerlink="/${sidenavPageLink}"]`).click({scrollBehavior: false});
 
-    this.waitForPageToLoad(sidenavPageLink)
+    this.waitForPageToLoad(sidenavPageLink);
   }
 
   public findButtonInComponentContainingText(componentSelector: string, text: string): element {

@@ -15,8 +15,8 @@ export class BaseController {
     this.basePage.login(username, password);
   }
 
-  public logout(): void {
-    this.basePage.logout();
+  public logout(hasAccessRights = false): void {
+    this.basePage.logout(hasAccessRights);
   }
 
   public cleanup(): void {

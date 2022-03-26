@@ -169,7 +169,7 @@ describe('Datasets Iossifov dataset count tests', () => {
   });
 });
 
-describe('Datasets visual tests', () => {
+describe.skip('Datasets visual tests', () => {
   const page = new DatasetsPage();
 
   before(() => {
