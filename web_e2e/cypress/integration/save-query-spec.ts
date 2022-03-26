@@ -37,10 +37,15 @@ describe('Save query tests', () => {
     page.tableFirstLoadButton.click();
 
     datasetsPage.datasetStatisticsButton.click();
+    datasetsPage.waitForPageToLoad(toolPageLinks.datasetStatistics);
     datasetsPage.genotypeBrowserButton.click();
+    datasetsPage.waitForPageToLoad(toolPageLinks.genotypeBrowser);
     datasetsPage.phenotypeBrowserButton.click();
+    datasetsPage.waitForPageToLoad(toolPageLinks.phenotypeBrowser);
     datasetsPage.phenotypeToolButton.click();
+    datasetsPage.waitForPageToLoad(toolPageLinks.phenotypeTool);
     datasetsPage.geneBrowserButton.click();
+    datasetsPage.waitForPageToLoad(toolPageLinks.geneBrowser);
 
     page.navigateToSidenavPage(sidenavPageLinks.savedQueries);
     page.tableFirstDeleteButton.click();

@@ -59,16 +59,17 @@ describe('Share query tests', () => {
       page.waitForPageToLoad(toolPageLinks.genotypeBrowser);
     });
 
-    page.datasetsDropdownMenuButton.should('have.text', 'comp_all');
     datasetsPage.datasetStatisticsButton.click();
-    datasetsPage.genotypeBrowserButton.should('be.visible');
+    datasetsPage.waitForPageToLoad(toolPageLinks.datasetStatistics);
     datasetsPage.genotypeBrowserButton.click();
-    datasetsPage.phenotypeBrowserButton.should('be.visible');
+    datasetsPage.waitForPageToLoad(toolPageLinks.genotypeBrowser);
     datasetsPage.phenotypeBrowserButton.click();
-    datasetsPage.phenotypeToolButton.should('be.visible');
+    datasetsPage.waitForPageToLoad(toolPageLinks.phenotypeBrowser);
     datasetsPage.phenotypeToolButton.click();
-    datasetsPage.geneBrowserButton.should('be.visible');
+    datasetsPage.waitForPageToLoad(toolPageLinks.phenotypeTool);
     datasetsPage.geneBrowserButton.click();
+    datasetsPage.waitForPageToLoad(toolPageLinks.geneBrowser);
+
   });
 
   it('should navigate to genotype browser, check all effect types checkboxes, generate a share query, ' +
