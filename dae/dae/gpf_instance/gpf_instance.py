@@ -71,7 +71,6 @@ class GPFInstance(object):
             self.reference_genome
             self.gene_models
             self.gene_sets_db
-            self._gene_info_config
             self._pheno_db
             self._variants_db
             self.denovo_gene_sets_db
@@ -102,24 +101,6 @@ class GPFInstance(object):
     @cached
     def _pheno_db(self):
         return PhenoDb(dae_config=self.dae_config)
-
-    @property  # type: ignore
-    @cached
-    def _gene_info_config(self):
-        if self.dae_config.gene_info_db is None or \
-                self.dae_config.gene_info_db.conf_file is None:
-            logger.warning(
-                "gene sets and weights are not configured...")
-            return Box({}, default_box=True)
-
-        conf_file = self.dae_config.gene_info_db.conf_file
-        logger.debug(
-            f"loading gene info config file: {conf_file}")
-        if not os.path.exists(conf_file):
-            return Box({}, default_box=True)
-        return GPFConfigParser.load_config(
-            self.dae_config.gene_info_db.conf_file, gene_info_conf
-        )
 
     @property  # type: ignore
     @cached
@@ -297,26 +278,6 @@ class GPFInstance(object):
 
     def get_all_gene_scores(self):
         return self.gene_scores_db.get_gene_scores()
-
-    # Gene info config
-    def get_chromosomes(self):
-        csvfile = self._gene_info_config.chromosomes.file
-        reader = pd.read_csv(csvfile, delimiter="\t")
-
-        reader["#chrom"] = reader["#chrom"].map(lambda x: x[3:])
-        col_rename = {"chromStart": "start", "chromEnd": "end"}
-        reader = reader.rename(columns=col_rename)
-
-        cols = ["start", "end", "name", "gieStain"]
-        reader["start"] = pd.to_numeric(reader["start"], downcast="integer")
-        reader["end"] = pd.to_numeric(reader["end"], downcast="integer")
-        reader = (
-            reader.groupby("#chrom")[cols]
-            .apply(lambda x: x.to_dict(orient="records"))
-            .to_dict()
-        )
-
-        return [{"name": k, "bands": v} for k, v in reader.items()]
 
     # Common reports
     def get_common_report(self, study_id):
