@@ -54,7 +54,6 @@ describe('Share query tests', () => {
 
     page.button.should('be.visible');
     page.button.click();
-    page.input.should('not.have.value', '');
 
     page.input.invoke('val').then(url => {
       cy.visit(String(url));
@@ -81,7 +80,6 @@ describe('Share query tests', () => {
 
     page.button.should('be.visible');
     page.button.click();
-    page.input.should('not.have.value', '');
 
     page.input.invoke('val').then(url => {
       cy.visit(String(url));
