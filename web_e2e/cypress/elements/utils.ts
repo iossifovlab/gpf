@@ -166,6 +166,7 @@ export class BasePage {
   }
 
   public openDatasetsDropdownMenu(): void {
+    this.datasetsDropdownMenuButton.find('span').should('not.have.text', 'Loading datasets...');
     this.datasetsDropdownMenuButton.click();
     cy.get('.dataset-selector.dropdown-menu').should('have.class', 'show');
     cy.get('.dataset-selector a').should('have.length', Object.keys(datasetIds).length);
