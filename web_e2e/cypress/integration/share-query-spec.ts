@@ -49,7 +49,7 @@ describe('Share query tests', () => {
     page.copyButton.should('have.text', 'Copy');
   });
 
-  it.only('should share a query, load it and open all tools tabs', () => {
+  it('should share a query, load it and open all tools tabs', () => {
     const datasetsPage = new DatasetsPage();
 
     page.button.should('be.visible');
