@@ -27,11 +27,13 @@ describe('Save query tests', () => {
 
   it('should save a query, load it, open all tools tabs and delete the query', () => {
     const datasetsPage = new DatasetsPage();
+    cy.intercept('POST', '/gpf/api/v3/user_queries/save').as('save');
 
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     page.button.click();
     page.dropdownNameInput.type('Test');
     page.saveButton.click();
+    cy.wait('@save');
 
     page.navigateToSidenavPage(sidenavPageLinks.savedQueries);
     page.tableFirstLoadButton.click();
@@ -54,12 +56,14 @@ describe('Save query tests', () => {
   it('should navigate to genotype browser, check all effect types checkboxes, save a query, ' +
      'load it and validate that all effect types checkboxes are checked', () => {
     const genotypeBlockPage = new GenotypeBlockPage();
+    cy.intercept('POST', '/gpf/api/v3/user_queries/save').as('save');
 
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genotypeBlockPage.findButtonInComponentContainingText('gpf-effect-types', 'All').click();
     page.button.click();
     page.dropdownNameInput.type('Test');
     page.saveButton.click();
+    cy.wait('@save');
 
     page.navigateToSidenavPage(sidenavPageLinks.savedQueries);
     page.tableFirstLoadButton.click();
