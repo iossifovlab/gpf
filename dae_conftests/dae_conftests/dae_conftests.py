@@ -574,6 +574,27 @@ def pytest_addoption(parser):
         "--logger-default", default="ERROR",
         help="default logging level"
     )
+    parser.addoption(
+        "--logger-debug",
+        default=[],
+        type=str,
+        nargs="+",
+        help="list of loggers with logging level DEBUG"
+    )
+    parser.addoption(
+        "--logger-info",
+        default=[],
+        type=str,
+        nargs="+",
+        help="list of loggers with logging level INFO"
+    )
+    parser.addoption(
+        "--logger-warning",
+        default=[],
+        type=str,
+        nargs="+",
+        help="list of loggers with logging level WARNING"
+    )
 
 
 def pytest_configure(config):
@@ -609,6 +630,18 @@ def pytest_configure(config):
 
     logging.getLogger("dae.effect_annotation") \
         .setLevel(logging.INFO)
+
+    loggers = config.getoption("--logger-warning")
+    for logger_name in loggers:
+        logging.getLogger(logger_name).setLevel(logging.WARNING)
+
+    loggers = config.getoption("--logger-info")
+    for logger_name in loggers:
+        logging.getLogger(logger_name).setLevel(logging.INFO)
+
+    loggers = config.getoption("--logger-debug")
+    for logger_name in loggers:
+        logging.getLogger(logger_name).setLevel(logging.DEBUG)
 
 
 @pytest.fixture(scope="session")
