@@ -49,7 +49,6 @@ def cnv_impala(
         impala_host,
         impala_genotype_storage,
         reimport,
-        cleanup,
         data_import):
 
     from dae.backends.impala.impala_helpers import ImpalaHelpers

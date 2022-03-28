@@ -181,11 +181,11 @@ def regressions_conf():
 
 
 @pytest.fixture
-def temp_dirname_figures(request, cleanup):
+def temp_dirname_figures(request):
     dirname = tempfile.mkdtemp(suffix="_plots", prefix="figures_")
 
     def fin():
         shutil.rmtree(dirname)
-    if cleanup:
-        request.addfinalizer(fin)
+
+    request.addfinalizer(fin)
     return dirname

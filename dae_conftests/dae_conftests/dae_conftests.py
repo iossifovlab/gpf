@@ -45,27 +45,7 @@ from dae.genomic_resources.gene_models import \
     load_gene_models_from_resource
 
 
-logging.basicConfig(
-    stream=sys.stderr, level=logging.DEBUG,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-
-# suppress impala logger
-logger = logging.getLogger("impala")
-logger.setLevel(logging.WARNING)
-
-# suppress url connection pool
-logger = logging.getLogger("urllib3.connectionpool")
-logger.setLevel(logging.INFO)
-
-# suppress fsspec
-logger = logging.getLogger("fsspec")
-logger.setLevel(logging.INFO)
-
-logger = logging.getLogger("dae.effect_annotation")
-logger.setLevel(logging.INFO)
-
-logger = logging.getLogger("dae.annotation")
-logger.setLevel(logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 def relative_to_this_test_folder(path):
@@ -92,7 +72,7 @@ def global_dae_fixtures_dir():
 
 
 @pytest.fixture(scope="session")
-def default_dae_config(request, cleanup, fixture_dirname):
+def default_dae_config(request, fixture_dirname):
     studies_dirname = tempfile.mkdtemp(prefix="studies_", suffix="_test")
     datasets_dirname = tempfile.mkdtemp(prefix="datasets_", suffix="_test")
 
@@ -100,8 +80,8 @@ def default_dae_config(request, cleanup, fixture_dirname):
         shutil.rmtree(studies_dirname)
         shutil.rmtree(datasets_dirname)
 
-    if cleanup:
-        request.addfinalizer(fin)
+    request.addfinalizer(fin)
+
     conf_dir = fixture_dirname("")
     assert conf_dir is not None
 
@@ -220,49 +200,38 @@ def result_df():
 
 
 @pytest.fixture
-def temp_dirname(request, cleanup):
+def temp_dirname(request):
     dirname = tempfile.mkdtemp(suffix="_data", prefix="variants_")
 
     def fin():
         shutil.rmtree(dirname)
-    if cleanup:
-        request.addfinalizer(fin)
+
+    request.addfinalizer(fin)
     return dirname
 
 
 @pytest.fixture
-def temp_dirname_grdb(request, cleanup):
+def temp_dirname_grdb(request):
     dirname = tempfile.mkdtemp(suffix="_data", prefix="grdb_")
 
     def fin():
         shutil.rmtree(dirname)
-    if cleanup:
-        request.addfinalizer(fin)
+
+    request.addfinalizer(fin)
     return dirname
 
 
 @pytest.fixture
-def temp_filename(request, cleanup):
+def temp_filename(request):
     dirname = tempfile.mkdtemp(suffix="_eff", prefix="variants_")
 
     def fin():
         shutil.rmtree(dirname)
-    if cleanup:
-        request.addfinalizer(fin)
+
+    request.addfinalizer(fin)
 
     output = os.path.join(dirname, "temp_filename.tmp")
     return output
-
-
-@pytest.fixture
-def temp_dirname_scores(request, cleanup):
-    dirname = tempfile.mkdtemp(suffix="_data", prefix="scores_")
-
-    def fin():
-        shutil.rmtree(dirname)
-    if cleanup:
-        request.addfinalizer(fin)
-    return dirname
 
 
 IMPORT_ANNOTATION_CONFIG = \
@@ -602,23 +571,49 @@ def pytest_addoption(parser):
         default=False, help="force reimport"
     )
     parser.addoption(
-        "--no-cleanup", action="store_true",
-        default=False, help="skip clean up after fixtures setup"
+        "--logger-default", default="ERROR",
+        help="default logging level"
     )
 
 
 def pytest_configure(config):
-    logger.info("pytest_configure")
+
+    logging_level_opt = config.getoption("--logger-default")
+
+    if logging_level_opt == "DEBUG":
+        level = logging.DEBUG
+    elif logging_level_opt == "INFO":
+        level = logging.INFO
+    elif logging_level_opt == "WARNING":
+        level = logging.WARNING
+    elif logging_level_opt == "ERROR":
+        level = logging.ERROR
+    else:
+        raise ValueError(f"wrong loggge default level: {logging_level_opt}")
+
+    logging.basicConfig(
+        stream=sys.stderr, level=level,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+
+    # suppress impala logger
+    logging.getLogger("impala") \
+        .setLevel(logging.WARNING)
+
+    # suppress url connection pool
+    logging.getLogger("urllib3.connectionpool") \
+        .setLevel(logging.INFO)
+
+    # suppress fsspec
+    logging.getLogger("fsspec") \
+        .setLevel(logging.INFO)
+
+    logging.getLogger("dae.effect_annotation") \
+        .setLevel(logging.INFO)
 
 
 @pytest.fixture(scope="session")
 def reimport(request):
     return bool(request.config.getoption("--reimport"))
-
-
-@pytest.fixture(scope="session")
-def cleanup(request):
-    return not bool(request.config.getoption("--no-cleanup"))
 
 
 @pytest.fixture(scope="session")
@@ -683,7 +678,6 @@ def data_import(
         impala_host,
         impala_genotype_storage,
         reimport,
-        cleanup,
         default_dae_config,
         gpf_instance_2013):
 
@@ -702,8 +696,7 @@ def data_import(
     def fin():
         hdfs.delete(temp_dirname, recursive=True)
 
-    if cleanup:
-        request.addfinalizer(fin)
+    request.addfinalizer(fin)
 
     effect_annotator = construct_import_effect_annotator(
         gpf_instance_2013
@@ -866,7 +859,7 @@ def iossifov2014_impala(
 
 
 @pytest.fixture(scope="session")
-def dae_calc_gene_sets(request, fixtures_gpf_instance, cleanup):
+def dae_calc_gene_sets(request, fixtures_gpf_instance):
     genotype_data_names = ["f1_group", "f2_group", "f3_group"]
     for dgs in genotype_data_names:
         genotype_data = fixtures_gpf_instance.get_genotype_data(dgs)
@@ -886,8 +879,7 @@ def dae_calc_gene_sets(request, fixtures_gpf_instance, cleanup):
             if os.path.exists(cache_file):
                 os.remove(cache_file)
 
-    if cleanup:
-        request.addfinalizer(remove_gene_sets)
+    request.addfinalizer(remove_gene_sets)
 
 
 PED1 = """
@@ -909,15 +901,14 @@ def fam1():
 
 
 @pytest.fixture
-def temp_dbfile(request, cleanup):
+def temp_dbfile(request):
     dbfile = tempfile.mktemp(prefix="dbfile_")  # NOSONAR
 
     def fin():
         if os.path.exists(dbfile):
             os.remove(dbfile)
 
-    if cleanup:
-        request.addfinalizer(fin)
+    request.addfinalizer(fin)
     return dbfile
 
 
