@@ -8,7 +8,6 @@ urlpatterns = [
     re_path(r"^api/v3/datasets", include("datasets_api.urls")),
     re_path(r"^api/v3/gene_scores", include("gene_scores.urls")),
     re_path(r"^api/v3/gene_sets", include("gene_sets.urls")),
-    re_path(r"^api/v3/chromosomes", include("chromosome.urls")),
     re_path(r"^api/v3/genotype_browser", include("genotype_browser.urls")),
     re_path(r"^api/v3/enrichment", include("enrichment_api.urls")),
     re_path(r"^api/v3/", include("users_api.urls")),
