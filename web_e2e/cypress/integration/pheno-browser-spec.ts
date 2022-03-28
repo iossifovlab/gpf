@@ -110,13 +110,7 @@ describe('Pheno browser tests', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
     page.instrumentsBox.select('All instruments');
 
-    cy.window().document().then(function(doc) {
-      doc.addEventListener('click', () => {
-        setTimeout(function() { doc.location.reload() }, 5000)
-      })
-      page.downloadInstrumentsButton.click();
-    });
-
+    page.downloadInstrumentsButton.click();
     cy.readFile(downloadFilePath, { timeout: 5000 }).then(downloadedFile => {
       cy.readFile(expectedFilePath, { timeout: 5000 }).then(expectedFile => {
         const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
