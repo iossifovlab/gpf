@@ -61,7 +61,7 @@ def gene_sets_db(local_gpf_instance):
 
 
 @pytest.fixture(scope="module")
-def gene_info_cache_dir(cleanup):
+def gene_info_cache_dir():
     cache_dir = path_to_fixtures("geneInfo", "cache")
     # assert not os.path.exists(
     #     cache_dir
@@ -78,8 +78,7 @@ def gene_info_cache_dir(cleanup):
     for val in change_environment(new_envs):
         yield val
 
-    if cleanup:
-        shutil.rmtree(cache_dir)
+    shutil.rmtree(cache_dir)
 
 
 @pytest.fixture(scope="session")
@@ -88,7 +87,7 @@ def genotype_data_names():
 
 
 @pytest.fixture(scope="session")
-def calc_gene_sets(request, local_gpf_instance, genotype_data_names, cleanup):
+def calc_gene_sets(request, local_gpf_instance, genotype_data_names):
     for dgs in genotype_data_names:
         genotype_data = local_gpf_instance.get_genotype_data(dgs)
         DenovoGeneSetCollectionFactory.build_collection(genotype_data)
@@ -105,8 +104,7 @@ def calc_gene_sets(request, local_gpf_instance, genotype_data_names, cleanup):
             if os.path.exists(cache_file):
                 os.remove(cache_file)
 
-    if cleanup:
-        request.addfinalizer(remove_gene_sets)
+    request.addfinalizer(remove_gene_sets)
 
 
 @pytest.fixture(scope="session")

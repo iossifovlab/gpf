@@ -332,14 +332,6 @@ EOT'
         pip install -e .'
     done
 
-    build_run_container bash -c 'cd /wd/dae_conftests; /opt/conda/bin/conda run --no-capture-output -n gpf \
-      py.test -v --reimport --no-cleanup dae_conftests/tests/'
-
-    build_run_container bash -c 'cd /wd/dae; /opt/conda/bin/conda run --no-capture-output -n gpf \
-      py.test -v --no-cleanup dae/gene/tests/test_denovo_gene_sets_db.py'
-    build_run_container bash -c 'cd /wd/dae; /opt/conda/bin/conda run --no-capture-output -n gpf \
-      py.test -v --no-cleanup dae/backends/tests/test_cnv_variants.py::test_cnv_impala'
-
   }
 
   # Tests - dae
@@ -364,7 +356,8 @@ EOT'
     build_run_container bash -c '
         cd /wd/dae;
         export PYTHONHASHSEED=0;
-        /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup --durations 20 \
+        /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
+           --durations 20 \
           --cov-config /wd/coveragerc \
           --junitxml=/wd/results/dae-junit.xml \
           --cov dae \
@@ -395,7 +388,8 @@ EOT'
     build_run_container bash -c '
         cd /wd/wdae;
         export PYTHONHASHSEED=0;
-        /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v --no-cleanup --durations 20 \
+        /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
+          --durations 20 \
           --cov-config /wd/coveragerc \
           --junitxml=/wd/results/wdae-junit.xml \
           --cov wdae \
