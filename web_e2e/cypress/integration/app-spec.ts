@@ -183,6 +183,7 @@ describe('App user access rights tests', () => {
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowSubmitButton.click();
+    userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout(true);
 
     page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics, false);
@@ -207,6 +208,7 @@ describe('App user access rights tests', () => {
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowSubmitButton.click();
+    userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout(true);
 
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics, false);
@@ -259,6 +261,7 @@ describe('App user access rights tests', () => {
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowSubmitButton.click();
+    userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout(true);
 
     page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.genotypeBrowser, false);
@@ -302,6 +305,7 @@ describe('App user access rights tests', () => {
     userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
     userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true});
     userManagementPage.userWindowSubmitButton.click();
+    userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout(true);
 
     page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.genotypeBrowser, false);
