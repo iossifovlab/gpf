@@ -5,8 +5,6 @@ import logging
 
 from query_base.query_base import QueryBaseView
 
-from dae.utils.gene_utils import GeneSymsMixin
-
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 
@@ -52,7 +50,17 @@ class EnrichmentTestView(QueryBaseView):
     def __init__(self):
         super(EnrichmentTestView, self).__init__()
 
-        self.gene_info_config = self.gpf_instance._gene_info_config
+        self.gene_scores_db = self.gpf_instance.gene_scores_db
+
+    def _parse_gene_syms(self, query):
+        gene_syms = query.get("geneSymbols", None)
+        if gene_syms is None:
+            gene_syms = set([])
+        else:
+            if isinstance(gene_syms, str):
+                gene_syms = gene_syms.split(",")
+            gene_syms = set([g.strip() for g in gene_syms])
+        return gene_syms
 
     def enrichment_description(self, query):
         gene_set = query.get("geneSet")
@@ -60,14 +68,13 @@ class EnrichmentTestView(QueryBaseView):
             desc = "Gene Set: {}".format(gene_set)
             return desc
 
-        (
-            gene_scores_id,
-            range_start,
-            range_end,
-        ) = GeneSymsMixin.get_gene_scores_query(
-            self.gene_info_config.gene_weights, **query
-        )
-        if gene_scores_id:
+        gene_score_request = query.get("geneScores", None)
+        if gene_score_request is not None:
+            gene_scores_id = gene_score_request.get("score", None)
+            range_start = gene_score_request.get("rangeStart", None)
+            range_end = gene_score_request.get("rangeEnd", None)
+        if gene_scores_id is not None and \
+                gene_scores_id in self.gene_scores_db:
             if range_start and range_end:
                 desc = "Gene Scores: {} from {} upto {}".format(
                     gene_scores_id, range_start, range_end
@@ -77,17 +84,17 @@ class EnrichmentTestView(QueryBaseView):
                     gene_scores_id, range_start
                 )
             elif range_end:
-                desc = "Gene Scores: {} upto {}".format(gene_scores_id, range_end)
+                desc = "Gene Scores: {} upto {}".format(
+                    gene_scores_id, range_end
+                )
             else:
                 desc = "Gene Scores: {}".format(gene_scores_id)
             return desc
 
-        gene_syms = GeneSymsMixin.get_gene_symbols(**query)
-        if gene_syms:
-            desc = "Gene Symbols: {}".format(",".join(gene_syms))
-            return desc
+        gene_syms = self._parse_gene_syms(query)
 
-        return None
+        desc = "Gene Symbols: {}".format(",".join(gene_syms))
+        return desc
 
     @expand_gene_set
     def post(self, request):
@@ -100,9 +107,31 @@ class EnrichmentTestView(QueryBaseView):
         if not dataset:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        gene_syms = GeneSymsMixin.get_gene_syms(
-            self.gpf_instance.get_gene_info_gene_weights(), **query
-        )
+        gene_syms = None
+        if "geneSymbols" in query:
+            gene_syms = self._parse_gene_syms(query)
+        else:
+            gene_score_request = query.get("geneScores", None)
+            if gene_score_request is None:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
+            gene_score_id = gene_score_request.get("score", None)
+            range_start = gene_score_request.get("rangeStart", None)
+            range_end = gene_score_request.get("rangeEnd", None)
+
+            if gene_score_id is None:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
+            if gene_score_id in self.gene_scores_db:
+                gene_score = self.gene_scores_db.get_gene_score(
+                    gene_score_id
+                )
+                gene_syms = gene_score.get_genes(
+                    wmin=range_start,
+                    wmax=range_end
+                )
+            else:
+                return Response(status=status.HTTP_404_NOT_FOUND)
         if gene_syms is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
