@@ -69,6 +69,7 @@ class EnrichmentTestView(QueryBaseView):
             return desc
 
         gene_score_request = query.get("geneScores", None)
+        gene_scores_id = None
         if gene_score_request is not None:
             gene_scores_id = gene_score_request.get("score", None)
             range_start = gene_score_request.get("rangeStart", None)

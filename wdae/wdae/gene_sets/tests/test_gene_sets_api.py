@@ -37,7 +37,11 @@ def test_gene_sets_collections(db, admin_client):
     assert "denovo" == denovo["name"]
     remote_denovo = data[2]
     assert "TEST_REMOTE_denovo" == remote_denovo["name"]
-    remote_main = data[3]
+    local_mapping = data[3]
+    assert "test_mapping" == local_mapping["name"]
+    local_gmt = data[4]
+    assert "test_gmt" == local_gmt["name"]
+    remote_main = data[5]
     assert "TEST_REMOTE_main" == remote_main["name"]
     # self.assertEquals(8, len(denovo['types']))
 
