@@ -26,8 +26,8 @@ describe('Share query tests', () => {
   });
 
   it('should open share query menu and check if it displays the input field and the copy button', () => {
-    page.copyButton.should('not.be.visible');
-    page.input.should('not.be.visible')
+    page.copyButton.should('not.exist');
+    page.input.should('not.exist');
 
     page.button.click();
     page.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu show');
@@ -36,8 +36,8 @@ describe('Share query tests', () => {
   });
 
   it('should open share query menu, click on the copy button and check whether the text changes properly', () => {
-    page.copyButton.should('not.be.visible');
-    page.input.should('not.be.visible')
+    page.copyButton.should('not.exist');
+    page.input.should('not.exist')
 
     page.button.click();
     page.dropdownMenu.invoke('attr', 'class').should('contain', 'dropdown-menu show');
