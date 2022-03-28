@@ -29,7 +29,7 @@ def test_gene_sets_collections(db, admin_client):
     assert status.HTTP_200_OK == response.status_code, repr(response.content)
 
     data = response.data
-    assert len(data) == 10
+    assert len(data) == 12
 
     local_main = data[0]
     assert "main" == local_main["name"]

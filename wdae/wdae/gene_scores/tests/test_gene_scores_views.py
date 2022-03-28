@@ -13,7 +13,7 @@ def test_gene_scores_list_view(user_client):
 
     data = response.data
     print([d["score"] for d in data])
-    assert len(data) == 5
+    assert len(data) == 2
 
     for w in response.data:
         assert "desc" in w
