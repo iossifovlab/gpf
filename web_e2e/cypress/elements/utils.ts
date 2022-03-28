@@ -177,7 +177,6 @@ export class BasePage {
 
   public toggleSidenav(): void {
     this.sidenavTogglerButton.click({scrollBehavior: false});
-    cy.wait(1000);
   }
 
   public navigateToSidenavPage(sidenavPageLink: string): void {
