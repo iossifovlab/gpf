@@ -49,11 +49,13 @@ describe('Share query tests', () => {
     page.copyButton.should('have.text', 'Copy');
   });
 
-  it('should share a query, load it and open all tools tabs', () => {
+  it.only('should share a query, load it and open all tools tabs', () => {
     const datasetsPage = new DatasetsPage();
 
     page.button.should('be.visible');
     page.button.click();
+    page.input.should('not.have.value', '');
+
     page.input.invoke('val').then(url => {
       cy.visit(String(url));
       page.waitForPageToLoad(toolPageLinks.genotypeBrowser);
@@ -69,7 +71,6 @@ describe('Share query tests', () => {
     datasetsPage.waitForPageToLoad(toolPageLinks.phenotypeTool);
     datasetsPage.geneBrowserButton.click();
     datasetsPage.waitForPageToLoad(toolPageLinks.geneBrowser);
-
   });
 
   it('should navigate to genotype browser, check all effect types checkboxes, generate a share query, ' +
@@ -80,6 +81,8 @@ describe('Share query tests', () => {
 
     page.button.should('be.visible');
     page.button.click();
+    page.input.should('not.have.value', '');
+
     page.input.invoke('val').then(url => {
       cy.visit(String(url));
       page.waitForPageToLoad(toolPageLinks.genotypeBrowser);
