@@ -4,13 +4,11 @@ import itertools
 import logging
 
 import pyarrow as pa
-
 from dae.variants.core import Allele
 from dae.variants.attributes import Inheritance, \
     TransmissionType, Sex, Role, Status
 
 logger = logging.getLogger(__name__)
-
 
 class AlleleParquetSerializer:
 
@@ -124,14 +122,8 @@ class AlleleParquetSerializer:
         "family_variant_index"
     ]
 
-    def __init__(self, variants_schema, extra_attributes=None):
-        if variants_schema is None:
-            logger.info(
-                "serializer called without variants schema")
-        else:
-            logger.debug(
-                f"serializer variants schema {variants_schema.col_names}")
-
+    def __init__(self, annotation_schema, extra_attributes=None):
+        self.annotation_schema = annotation_schema       
         self._schema_summary = None 
         self._schema_family = None 
 
@@ -139,27 +131,6 @@ class AlleleParquetSerializer:
         scores_searchable = {}
         scores_binary = {}
         
-        if variants_schema:
-            if "af_allele_freq" in variants_schema.col_names:
-                additional_searchable_props["af_allele_freq"] = pa.float32()
-                additional_searchable_props["af_allele_count"] = pa.int32()
-                additional_searchable_props[
-                    "af_parents_called_percent"
-                ] = pa.float32()
-                additional_searchable_props[
-                    "af_parents_called_count"
-                ] = pa.int32()
-            for col_name in variants_schema.col_names:
-                if (
-                    col_name
-                    not in self.BASE_SEARCHABLE_PROPERTIES_TYPES.keys()
-                    and col_name not in additional_searchable_props.keys()
-                    and col_name not in self.GENOMIC_SCORES_SCHEMA_CLEAN_UP
-                    and col_name != "extra_attributes"
-                ):
-                    scores_binary[col_name] = FloatSerializer
-                    scores_searchable[col_name] = pa.float32()
-
         self.scores_serializers = scores_binary
     
         self.searchable_properties_summary_types = {
@@ -188,6 +159,21 @@ class AlleleParquetSerializer:
         if self._schema_summary is None:
             fields = [pa.field(spr, pat) for spr, pat in self.SUMMARY_SEARCHABLE_PROPERTIES_TYPES.items()]
             fields.append(pa.field("summary_data", pa.string()))
+
+            annotation_type_to_pa_type = {
+                "float": pa.float32(),
+                "int": pa.int32()
+            }
+            
+            for annotation in self.annotation_schema.public_fields:
+                annotation_field_type=self.annotation_schema[annotation].type
+
+                if annotation_field_type in annotation_type_to_pa_type:
+                    fields.append(pa.field(
+                        annotation, 
+                        annotation_type_to_pa_type[annotation_field_type]
+                    ))
+            
             self._schema_summary = pa.schema(fields)
         return self._schema_summary 
 
@@ -267,5 +253,8 @@ class AlleleParquetSerializer:
                 prop_value = self._get_searchable_prop_value(allele, spr)
             
             allele_data[spr] = [prop_value]
+ 
+        for a in self.annotation_schema.public_fields:
+            allele_data[a] = [allele.get_attribute(a)]
 
         return allele_data

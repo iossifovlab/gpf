@@ -166,6 +166,17 @@ if __name__ == "__main__":
         }
     ]
 
+    queries = [
+        {
+            'real_attr_filter':[('cadd_phred', (10, None))]
+        }
+    ]
+
+    # revive partitions, 
+    # right now 1 parquet for all variants 
+    # multiple parquet files - study schema 1 partition schema
+    # port it to schema 2. write dataset incrementally (check in pa documentation) 
+
     for query in queries:
         print("Test:")
         print(json.dumps(query))
