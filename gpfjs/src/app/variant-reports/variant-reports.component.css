@@ -86,7 +86,7 @@ table {
   border-bottom: 1px;
 }
 
-.legend-report {
+.legend-report span {
   color: #6c757d !important;
   font-size: 80%;
   font-weight: 400;
@@ -114,4 +114,12 @@ table {
   bottom: 0;
   box-sizing: border-box;
   z-index: 99;
+}
+
+.effect-type-data-values {
+  display: inline-block;
+  padding-left: 10px;
+  padding-right: 10px;
+  margin-left: -10px;
+  margin-right: -10px;
 }

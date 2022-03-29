@@ -112,8 +112,10 @@
   <div *ngIf="variantReport.denovoReport">
     <div class="col-12 mb-1">
       <h5>De Novo Variants of:</h5>
-      <h5>
-        <span class="legend-report">Legend: "number of observed events", "observed rate per individual" ("number of individuals with events", "percent of individuals with events")</span>
+      <h5 class="legend-report">
+        <span>Legend:<br /></span>
+        <span style="padding-left: 6px">"number of observed events", "observed rate per individual"</span><br />
+        <span style="padding-left: 6px">("number of individuals with events", "percent of individuals with events")</span>
       </h5>
     </div>
 
@@ -146,9 +148,13 @@
               *ngFor="let effectType of getRows(currentDenovoReport.effectGroups, currentDenovoReport.effectTypes)"
               [ngClass]="{ 'effect-type-group-row' : (currentDenovoReport.effectGroups.indexOf(effectType) !== -1) }">
               <th>{{ effectType }}</th>
-              <td *ngFor="let effectTypeData of getEffectTypeOrderByColumOrder(effectType, currentDenovoReport, currentDenovoReport.columns)">
-                <div>{{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number }}</div>
-                <div>({{ effectTypeData.numberOfChildrenWithEvent }}, {{ effectTypeData.percentOfChildrenWithEvents | percent }})</div>
+              <td 
+                *ngFor="let effectTypeData of getEffectTypeOrderByColumOrder(effectType, currentDenovoReport, currentDenovoReport.columns)">
+                <div
+                  class="effect-type-data-values"
+                  title="number of observed events: {{ effectTypeData.numberOfObservedEvents }}&#10;observed rate per individual: {{ effectTypeData.observedRatePerChild | number}}&#10;number of individuals with events: {{ effectTypeData.numberOfChildrenWithEvent}}&#10;percent of individuals with events: {{ effectTypeData.percentOfChildrenWithEvents | percent }}"
+                  >{{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number }}<br />({{ effectTypeData.numberOfChildrenWithEvent }}, {{ effectTypeData.percentOfChildrenWithEvents | percent }})</div
+                >
               </td>
             </tr>
           </tbody>
