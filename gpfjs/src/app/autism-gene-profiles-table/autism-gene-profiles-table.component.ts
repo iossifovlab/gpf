@@ -115,7 +115,11 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
         this.updateGenes();
       }
     }
-    this.ngbDropdownMenu.dropdown.close();
+
+    const viewWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+    if (window.scrollX + viewWidth < document.body.scrollWidth) {
+      this.ngbDropdownMenu.dropdown.close();
+    }
   }
 
   @HostListener('window:resize')
@@ -235,7 +239,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
       this.clickedColumnFilteringButton.getBoundingClientRect().left
       + leftOffset;
 
-    const viewWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
+    const viewWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
     const extraRightSpace = 48;
 
     if (leftPosition + modalWidth < viewWidth - extraRightSpace) {
