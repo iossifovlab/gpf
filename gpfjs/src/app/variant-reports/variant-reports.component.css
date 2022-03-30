@@ -43,12 +43,11 @@ tr:hover {
 th.rotate > div {
   display: inline-block;
   position: relative;
-  height: 210px;
+  height: 180px;
   width: auto;
   margin: auto;
   margin-top: 0;
   margin-bottom: 0;
-  writing-mode: vertical-lr;
   filter: flipv fliph;
   transform: rotate(180deg);
 }
@@ -56,6 +55,14 @@ th.rotate > div {
 th.rotate {
   padding-bottom: 10px;
   vertical-align: bottom;
+}
+
+.column-header {
+  word-break: break-word;
+  writing-mode: vertical-rl;
+  max-height: 210px;
+  text-align: left;
+  padding-bottom: 10px;
 }
 
 table {

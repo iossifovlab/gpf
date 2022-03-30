@@ -136,11 +136,11 @@
 
     <div *ngIf="currentDenovoReport" id="denovo-variants-div" class="row mb-3">
       <div class="col-12">
-        <table class="table table-bordered table-sm table-centered">
+        <table class="table table-bordered table-sm table-centered" [style.width.px]="denovoVariantsTableWidth">
           <thead>
             <th>Effect type</th>
             <th class="rotate" *ngFor="let column of currentDenovoReport.columns">
-              <div>{{ column }}</div>
+              <div class="column-header">{{ column }}</div>
             </th>
           </thead>
           <tbody>
@@ -148,8 +148,7 @@
               *ngFor="let effectType of getRows(currentDenovoReport.effectGroups, currentDenovoReport.effectTypes)"
               [ngClass]="{ 'effect-type-group-row' : (currentDenovoReport.effectGroups.indexOf(effectType) !== -1) }">
               <th>{{ effectType }}</th>
-              <td 
-                *ngFor="let effectTypeData of getEffectTypeOrderByColumOrder(effectType, currentDenovoReport, currentDenovoReport.columns)">
+              <td *ngFor="let effectTypeData of getEffectTypeOrderByColumOrder(effectType, currentDenovoReport, currentDenovoReport.columns)">
                 <div
                   class="effect-type-data-values"
                   title="number of observed events: {{ effectTypeData.numberOfObservedEvents }}&#10;observed rate per individual: {{ effectTypeData.observedRatePerChild | number}}&#10;number of individuals with events: {{ effectTypeData.numberOfChildrenWithEvent}}&#10;percent of individuals with events: {{ effectTypeData.percentOfChildrenWithEvents | percent }}"

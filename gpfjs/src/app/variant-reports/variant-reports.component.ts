@@ -39,6 +39,9 @@ export class VariantReportsComponent implements OnInit {
 
   public imgPathPrefix = environment.imgPathPrefix;
 
+  public denovoVariantsTableWidth: number;
+  private denovoVariantsTableColumnWidth = 140;
+
   public constructor(
     private variantReportsService: VariantReportsService,
     private datasetsService: DatasetsService
@@ -46,7 +49,7 @@ export class VariantReportsComponent implements OnInit {
 
   @HostListener('window:scroll', ['$event'])
   @HostListener('click', ['$event'])
-  private onWindowScroll(): void {
+  public onWindowScroll(): void {
     if (this.familiesPedigree && this.familiesPedigree.nativeElement) {
       this.familiesPedigreeTop = (this.familiesPedigree.nativeElement as Element).getBoundingClientRect().top;
       this.familiesPedigreeBottom = (this.familiesPedigree.nativeElement as Element).getBoundingClientRect().bottom;
@@ -55,6 +58,11 @@ export class VariantReportsComponent implements OnInit {
     if (this.legend && this.legend.nativeElement) {
       this.legendTop = (this.legend.nativeElement as Element).getBoundingClientRect().top;
     }
+  }
+
+  @HostListener('window:resize')
+  public onResize(): void {
+    this.calculateDenovoVariantsTableWidth();
   }
 
   public ngOnInit(): void {
@@ -73,8 +81,17 @@ export class VariantReportsComponent implements OnInit {
       this.currentPedigreeTable = this.pedigreeTables[0];
       if (this.variantReport.denovoReport !== null) {
         this.currentDenovoReport = this.variantReport.denovoReport.tables[0];
+        this.calculateDenovoVariantsTableWidth();
       }
     });
+  }
+
+  private calculateDenovoVariantsTableWidth(): void {
+    const viewWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+    const tableWidth = (this.currentDenovoReport.columns.length * this.denovoVariantsTableColumnWidth) + this.denovoVariantsTableColumnWidth;
+    const offset = 75;
+
+    this.denovoVariantsTableWidth = viewWidth > tableWidth ? viewWidth - offset : tableWidth;
   }
 
   public getRows(effectGroups: string[], effectTypes: string[]): string[] {
