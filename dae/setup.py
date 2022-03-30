@@ -47,6 +47,7 @@ setuptools.setup(
 
     grr_manage=dae.genomic_resources.cli:cli_manage
     grr_browse=dae.genomic_resources.cli:cli_browse
+    grr_cache_repo=dae.genomic_resources.cli:cli_cache_repo
 
     annotate_variant_effects=dae.effect_annotation.cli:cli_columns
     annotate_variant_effects_vcf=dae.effect_annotation.cli:cli_vcf
