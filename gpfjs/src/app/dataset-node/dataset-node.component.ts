@@ -23,13 +23,22 @@ export class DatasetNodeComponent implements OnInit {
     this.selectedDataset$ = this.datasetsService.getSelectedDatasetObservable();
   }
 
-  select() {
+  public select(openInNewTab = false): void {
     if (this.datasetNode !== undefined && this.datasetNode.dataset !== undefined) {
+      let url: string;
       const firstTool = this.findFirstTool(this.datasetNode.dataset);
+
       if (firstTool) {
-        this.router.navigate(['/', 'datasets', this.datasetNode.dataset.id, this.findFirstTool(this.datasetNode.dataset)]);
+        url = `/datasets/${this.datasetNode.dataset.id}/${this.findFirstTool(this.datasetNode.dataset)}`;
       } else {
-        this.router.navigate(['/', 'datasets', this.datasetNode.dataset.id]);
+        url = `/datasets/${this.datasetNode.dataset.id}`;
+      }
+
+      if (!openInNewTab) {
+        this.router.navigate([url]);
+      } else {
+        const newWindow = window.open('', '_blank');
+        newWindow.location.assign(url);
       }
     }
   }
