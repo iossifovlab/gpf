@@ -87,6 +87,10 @@ export class VariantReportsComponent implements OnInit {
   }
 
   private calculateDenovoVariantsTableWidth(): void {
+    if (!this.currentDenovoReport.columns) {
+      return;
+    }
+
     const viewWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
     const tableWidth = (this.currentDenovoReport.columns.length * this.denovoVariantsTableColumnWidth) + this.denovoVariantsTableColumnWidth;
     const offset = 75;
