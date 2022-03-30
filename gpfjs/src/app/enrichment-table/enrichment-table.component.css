@@ -2,15 +2,18 @@ table {
   border-collapse: collapse;
 }
 
-table, th, td {
-  border: 1px solid #dddddd;
+table,
+th,
+td {
+  border: 1px solid #ddd;
 }
 
 td {
-  text-align: right
+  text-align: right;
 }
 
-th, td {
+th,
+td {
   padding: 5px;
 }
 
@@ -18,7 +21,7 @@ th {
   font-size: 0.9em;
   background: #eee;
   font-weight: 500;
-  text-align: center
+  text-align: center;
 }
 
 .value-cell {
@@ -27,7 +30,7 @@ th {
 
 .enrichment-table {
   margin-top: 20px;
-  border-top: 1px solid rgba(0,0,0,0.125);
+  border-top: 1px solid rgba(0, 0, 0, 12.5%);
   padding-top: 20px;
   font-size: 0.8em;
   margin-bottom: 50px;
