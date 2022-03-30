@@ -60,8 +60,8 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         return cached_repo.get_resource(resource_id,
                                         exact_version_constraint)
 
-    def cache_all_resources(self, download_limit=4):
-        executor = ThreadPoolExecutor(max_workers=download_limit)
+    def cache_all_resources(self, workers=4):
+        executor = ThreadPoolExecutor(max_workers=workers)
         futures = []
         for gr_child in self.child.get_all_resources():
             cached_repo = self._get_or_create_cache_dir_repo(

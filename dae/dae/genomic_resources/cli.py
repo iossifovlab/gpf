@@ -203,9 +203,9 @@ the number of workers using -j")
                      'list and histogram')
 
 
-def cli_cache_repo(args=None):
-    if not args:
-        args = sys.argv[1:]
+def cli_cache_repo(argv=None):
+    if not argv:
+        argv = sys.argv[1:]
 
     description = "Repository cache tool - caches all resources in a given "
     "repository"
@@ -213,9 +213,13 @@ def cli_cache_repo(args=None):
     parser.add_argument(
         "--definition", default=None, help="Repository definition file"
     )
+    parser.add_argument(
+        "--jobs", "-j", help="Number of jobs running in parallel", 
+        default=4, type=int,
+    )
     VerbosityConfiguration.set_argumnets(parser)
 
-    args = parser.parse_args(args)
+    args = parser.parse_args(argv)
     VerbosityConfiguration.set(args)
 
     start = time.time()
@@ -226,10 +230,10 @@ def cli_cache_repo(args=None):
 
     repository = build_genomic_resource_repository(definition=definition)
     if not isinstance(repository, GenomicResourceCachedRepo):
-        raise Exception("This tool works only if the top configured "
+        raise ValueError("This tool works only if the top configured "
                         "repository is cached.")
     repository = cast(GenomicResourceCachedRepo, repository)
-    repository.cache_all_resources()
+    repository.cache_all_resources(workers=args.jobs)
 
     elapsed = time.time() - start
 
