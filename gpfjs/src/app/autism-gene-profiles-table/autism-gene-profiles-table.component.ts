@@ -50,7 +50,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   public showInitialLoading = true;
   public showSearchLoading: boolean;
 
-  private viewportPageCount;
+  private viewportPageCount: number;
   private baseRowHeight = 35; // px, this should match the height found in the table-row CSS class
   private prevVerticalScroll = 0;
   private loadMoreGenes = true;
@@ -133,7 +133,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     this.pageIndex = 1;
     this.loadMoreGenes = true;
     this.showNothingFound = false;
-    
+
     for (let i = 1; i <= this.viewportPageCount; i++) {
       agpRequests.push(
         this.autismGeneProfilesService
@@ -151,7 +151,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
       this.showNothingFound = !this.genes.length;
       this.showInitialLoading = false;
       this.showSearchLoading = false;
-    })
+    });
   }
 
   public calculateHeaderLayout(): void {
@@ -262,7 +262,6 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     this.sortBy = sortBy;
     this.orderBy = orderBy;
     this.pageIndex = 1;
-    this.genes = [];
 
     const sortButton = this.sortingButtonsComponents.find(
       sortingButtonsComponent => sortingButtonsComponent.id === this.sortBy
@@ -275,7 +274,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     this.fillTable();
   }
 
-  public resetSortButtons(): void {
+  private resetSortButtons(): void {
     const sortButton = this.sortingButtonsComponents.find(
       sortingButtonsComponent => sortingButtonsComponent.id === this.sortBy
     );
