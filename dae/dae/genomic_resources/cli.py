@@ -16,8 +16,9 @@ from dae.genomic_resources.repository_factory import \
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 from dae.genomic_resources.score_statistics import HistogramBuilder
 
-from dask.distributed import Client, LocalCluster
-from dask_kubernetes import KubeCluster, make_pod_spec
+from dask.distributed import Client, LocalCluster  # type: ignore
+from dask_kubernetes import KubeCluster, make_pod_spec  # type: ignore
+
 
 logger = logging.getLogger(__file__)
 
@@ -159,7 +160,7 @@ the number of workers using -j")
             cluster.scale(n_jobs)
         elif args.sge:
             try:
-                from dask_jobqueue import SGECluster
+                from dask_jobqueue import SGECluster  # type: ignore
             except Exception:
                 logger.error("No dask-jobqueue found. Please install it using:"
                              " mamba install dask-jobqueue -c conda-forge")
@@ -214,7 +215,7 @@ def cli_cache_repo(argv=None):
         "--definition", default=None, help="Repository definition file"
     )
     parser.add_argument(
-        "--jobs", "-j", help="Number of jobs running in parallel", 
+        "--jobs", "-j", help="Number of jobs running in parallel",
         default=4, type=int,
     )
     VerbosityConfiguration.set_argumnets(parser)
@@ -230,8 +231,9 @@ def cli_cache_repo(argv=None):
 
     repository = build_genomic_resource_repository(definition=definition)
     if not isinstance(repository, GenomicResourceCachedRepo):
-        raise ValueError("This tool works only if the top configured "
-                        "repository is cached.")
+        raise ValueError(
+            "This tool works only if the top configured "
+            "repository is cached.")
     repository = cast(GenomicResourceCachedRepo, repository)
     repository.cache_all_resources(workers=args.jobs)
 

@@ -1,5 +1,5 @@
 import pytest
-from rest_framework import status
+from rest_framework import status  # type: ignore
 from dae.variants.attributes import Sex, Role, Status
 
 pytestmark = pytest.mark.usefixtures(

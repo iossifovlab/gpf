@@ -3,7 +3,7 @@ import pathlib
 import logging
 
 from typing import Optional, cast, Dict
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .repository import GenomicResource
 from .repository import GenomicResourceRepo
@@ -70,7 +70,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
             futures.append(
                 executor.submit(cached_repo.store_resource, gr_child)
             )
-        for future in futures:
+        for future in as_completed(futures):
             future.result()
 
     def refresh_cached_genomic_resource(self, cached: GenomicResource,
