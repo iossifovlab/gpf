@@ -33,7 +33,7 @@
               "node_modules/tether/dist/js/tether.min.js",
               "node_modules/popper.js/dist/umd/popper.min.js",
               "node_modules/bootstrap/dist/js/bootstrap.min.js",
-              "node_modules/marked/lib/marked.js"
+              "node_modules/marked/marked.min.js"
             ],
             "aot": false,
             "vendorChunk": true,
