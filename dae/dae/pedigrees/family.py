@@ -622,7 +622,7 @@ class FamiliesData(Mapping):
             columns.extend(sorted(extention_columns))
             ped_df = cast(
                 pd.DataFrame,
-                pd.DataFrame.from_records(records, columns=columns)) # type: ignore
+                pd.DataFrame.from_records(records, columns=columns))  # type: ignore
             self._ped_df = ped_df
 
         return self._ped_df

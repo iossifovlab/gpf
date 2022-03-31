@@ -1,6 +1,6 @@
 from collections import Counter, defaultdict
 
-from dae.variants.attributes import Inheritance
+from dae.variants.attributes import Inheritance, Role
 
 
 class GenotypeHelper(object):
@@ -22,11 +22,15 @@ class GenotypeHelper(object):
 
     def _build_children_stats(self):
         families = self.genotype_data.families
+        children = list(
+            families.persons_with_roles(
+                    roles=[Role.prb, Role.sib, Role.child]))
+
         for person_set_id, person_set in \
                 self.person_set_collection.person_sets.items():
             children_by_sex = defaultdict(set)
             seen = set()
-            for p in families.persons_with_parents():
+            for p in children:
                 iid = "{}:{}".format(p.family_id, p.person_id)
                 if iid in seen:
                     continue
