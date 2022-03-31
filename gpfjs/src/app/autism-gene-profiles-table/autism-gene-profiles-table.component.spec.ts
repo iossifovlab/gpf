@@ -243,7 +243,7 @@ class AgpTableServiceMock {
   }
 }
 
-fdescribe('AgpTableComponent', () => {
+describe('AgpTableComponent', () => {
   let component: AgpTableComponent;
   let fixture: ComponentFixture<AgpTableComponent>;
   const agpTableServiceMock = new AgpTableServiceMock();
