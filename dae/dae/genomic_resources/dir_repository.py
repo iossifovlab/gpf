@@ -146,32 +146,38 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
             dest_gr.get_genomic_resource_dir() / filename)
         os.makedirs(dest_filename.parent, exist_ok=True)
 
-        with src_gr.open_raw_file(
-                filename, "rb",
-                uncompress=False) as infile, \
-                dest_gr.open_raw_file(
-                    filename, 'wb',
-                    uncompress=False) as outfile:
+        try:
+            with src_gr.open_raw_file(
+                    filename, "rb",
+                    uncompress=False) as infile, \
+                    dest_gr.open_raw_file(
+                        filename, 'wb',
+                        uncompress=False) as outfile:
 
-            md5_hash = hashlib.md5()
-            while b := infile.read(32768):
-                outfile.write(b)
-                md5_hash.update(b)
-        md5 = md5_hash.hexdigest()
+                md5_hash = hashlib.md5()
+                while b := infile.read(32768):
+                    outfile.write(b)
+                    md5_hash.update(b)
+            md5 = md5_hash.hexdigest()
 
-        if src_mnfst_file["md5"] != md5:
+            if src_mnfst_file["md5"] != md5:
+                logger.error(
+                    f"storing {src_gr.resource_id} failed; "
+                    f"expected md5 is {src_mnfst_file['md5']}; "
+                    f"calculated md5 for the stored file is {md5}")
+                raise IOError(f"storing of {src_gr.resource_id} failed")
+            src_modtime = datetime.datetime.fromisoformat(
+                src_mnfst_file["time"]).timestamp()
+
+            assert dest_filename.exists()
+
+            os.utime(dest_filename, (src_modtime, src_modtime))
+            return src_mnfst_file
+        except Exception:
             logger.error(
-                f"storing {src_gr.resource_id} failed; "
-                f"expected md5 is {src_mnfst_file['md5']}; "
-                f"calculated md5 for the stored file is {md5}")
-            raise IOError(f"storing of {src_gr.resource_id} failed")
-        src_modtime = datetime.datetime.fromisoformat(
-            src_mnfst_file["time"]).timestamp()
-
-        assert dest_filename.exists()
-
-        os.utime(dest_filename, (src_modtime, src_modtime))
-        return src_mnfst_file
+                "problem copying remote resource file: %s (%s)", 
+                filename, src_gr.resource_id, exc_info=True)
+            return None
 
     def store_all_resources(self, source_repo: GenomicResourceRepo):
         for gr in source_repo.get_all_resources():
@@ -185,6 +191,15 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         for mnf_file in manifest:
             dest_mnf_file = \
                 self._copy_manifest_entry(temp_gr, resource, mnf_file)
+            if dest_mnf_file is None:
+                logger.error(
+                    "unable to copy a (%s) manifest entry: %s",
+                    resource.resource_id, mnf_file["name"])
+                logger.error(
+                    "skipping resource: %s", resource.resource_id)
+                self._all_resources = None
+                return
+                
             assert dest_mnf_file == mnf_file
 
         # new_gr = self.get_resource(
