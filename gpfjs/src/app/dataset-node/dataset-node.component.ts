@@ -38,7 +38,9 @@ export class DatasetNodeComponent implements OnInit {
         this.router.navigate([url]);
       } else {
         const newWindow = window.open('', '_blank');
-        newWindow.location.assign(url);
+        if (newWindow) {
+          newWindow.location.assign(url);
+        }
       }
     }
   }
