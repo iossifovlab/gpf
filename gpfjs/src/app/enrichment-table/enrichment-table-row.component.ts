@@ -61,7 +61,7 @@ export class EnrichmentTableRowComponent {
     if (testResult.overlapped > testResult.expected) {
       return `rgba(255, ${intensity}, ${intensity}, 0.8)`;
     } else {
-      return `rgba(${intensity}, ${intensity}, 255, 0.8)`;
+      return `rgba(${intensity}, ${intensity}, 255, 0.5)`;
     }
   }
 }
