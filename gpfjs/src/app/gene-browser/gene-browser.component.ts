@@ -283,11 +283,13 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   public setSelectedRegion(region: [number, number]): void {
+    this.familyLoadingFinished = false;
     this.summaryVariantsFilter.selectedRegion = region;
     this.updateVariants();
   }
 
   public setSelectedFrequencies(frequencies: [number, number]): void {
+    this.familyLoadingFinished = false;
     this.summaryVariantsFilter.selectedFrequencies = frequencies;
     this.updateVariants();
   }
