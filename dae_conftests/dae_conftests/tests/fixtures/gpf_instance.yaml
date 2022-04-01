@@ -101,8 +101,11 @@ gene_sets_db:
 
 gene_scores_db:
   gene_scores:
+    - gene_scores/SFARI_gene_score
     - gene_scores/LGD_rank
+    - gene_scores/LGD_score
     - gene_scores/RVIS_rank
+    - gene_scores/RVIS
 
 phenotype_data:
   dir: "%(wd)s/pheno"

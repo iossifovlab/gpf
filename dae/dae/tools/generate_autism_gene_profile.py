@@ -30,10 +30,10 @@ def generate_agp(gpf_instance, gene_symbol, collections_gene_sets):
         category_name = category["category"]
         scores[category_name] = dict()
         for score in category["scores"]:
-            gene_score_name = score["gene_score_name"]
-            gw = gene_scores_db.get_gene_score(gene_score_name)
-            if gene_symbol in gw.get_genes():
-                value = gw.get_gene_value(gene_symbol)
+            gene_score_name = score["score_name"]
+            gs = gene_scores_db.get_gene_score(gene_score_name)
+            if gene_symbol in gs.get_genes():
+                value = gs.get_gene_value(gene_symbol)
             else:
                 value = None
             scores[category_name][gene_score_name] = value
