@@ -35,7 +35,7 @@
               "node_modules/bootstrap/dist/js/bootstrap.min.js",
               "node_modules/marked/marked.min.js"
             ],
-            "aot": false,
+            "aot": true,
             "vendorChunk": true,
             "extractLicenses": false,
             "buildOptimizer": false,
