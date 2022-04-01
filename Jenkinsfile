@@ -26,18 +26,6 @@ pipeline {
         }
       }
     }
-/*
-    stage('SonarQube') {
-      steps {
-        script {
-          def scannerHome = tool 'sonarqube-scanner-default';
-          withSonarQubeEnv() {
-            sh "${scannerHome}/bin/sonar-scanner"
-          }
-        }
-      }
-    }
-*/
   }
   post {
     always {
@@ -61,8 +49,8 @@ pipeline {
             keepAll: true,
             reportDir: 'test-results/coverage-html',
             reportFiles: 'index.html',
-            reportName: 'GPF Coverage Report',
-            reportTitles: 'GPF Coverage Report'])
+            reportName: 'gpf-coverage-report',
+            reportTitles: 'gpf-coverage-report'])
           
         } finally {
           zulipNotification(
