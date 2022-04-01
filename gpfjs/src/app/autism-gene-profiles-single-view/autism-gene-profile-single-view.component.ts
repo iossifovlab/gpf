@@ -60,7 +60,6 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     SFARIgene: ''
   };
 
-  public currentCopyState = 'assets/link-solid.svg'; 
   private headerBottomYPosition = 116;
   public isHeaderSticky: boolean;
 
@@ -235,29 +234,6 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
         newWindow.location.assign(url);
       });
     });
-  }
-
-  public copyGeneLink(): void {
-    let agpBaseUrl = window.location.href.slice(0, window.location.href.search('autism-gene-profiles')) + 'autism-gene-profiles';
-    let urlToCopy: string;
-
-    urlToCopy = `${agpBaseUrl}/${this.geneSymbol}`;
-
-    this.copyToClipboard(urlToCopy);
-    this.currentCopyState = 'assets/check-solid.svg';
-
-    setTimeout(() => {
-      this.currentCopyState = 'assets/link-solid.svg'; 
-    }, 2000);
-  }
-
-  private copyToClipboard(item) {
-    document.addEventListener('copy', (e: ClipboardEvent) => {
-      e.clipboardData.setData('text/plain', (item));
-      e.preventDefault();
-      document.removeEventListener('copy', null);
-    });
-    document.execCommand('copy');
   }
 
   public errorModalBack() {

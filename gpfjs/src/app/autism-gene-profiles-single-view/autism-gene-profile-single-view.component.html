@@ -21,7 +21,6 @@
         [ngStyle]="{'width' : isInGeneCompare ? '100%' : '1455px'}"
         style="display: flex; align-items: baseline; height: 58px;">
         <h2>{{ geneSymbol }}</h2>
-        <img *ngIf="!isHeaderSticky" (click)="copyGeneLink()" [src]="currentCopyState" style="width: 20px; margin-left: 10px;" >
       </div>
       <div
         class="wrapper"
