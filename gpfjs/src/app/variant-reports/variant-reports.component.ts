@@ -86,7 +86,7 @@ export class VariantReportsComponent implements OnInit {
     });
   }
 
-  private calculateDenovoVariantsTableWidth(): void {
+  public calculateDenovoVariantsTableWidth(): void {
     if (!this.currentDenovoReport.columns) {
       return;
     }
