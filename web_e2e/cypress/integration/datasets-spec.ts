@@ -139,10 +139,10 @@ describe('Datasets Iossifov dataset count tests', () => {
   });
 
   [
-    {effectType: 'LGDs', expectedCounts: ['393, 0.157', '(366, 15%)', '180, 0.094', '(169, 9%)']},
-    {effectType: 'UTRs', expectedCounts: ['244, 0.097', '(237, 9%)', '154, 0.081', '(144, 8%)']},
-    {effectType: 'Missense', expectedCounts: ['1680, 0.67', '(1185, 47%)', '1149, 0.602', '(843, 44%)']},
-    {effectType: 'Intron', expectedCounts: ['821, 0.327', '(671, 27%)', '558, 0.292', '(464, 24%)']}
+    {effectType: 'LGDs', expectedCounts: ['393, 0.157(366, 15%)', '180, 0.094(169, 9%)']},
+    {effectType: 'UTRs', expectedCounts: ['244, 0.097(237, 9%)', '154, 0.081(144, 8%)']},
+    {effectType: 'Missense', expectedCounts: ['1680, 0.67(1185, 47%)', '1149, 0.602(843, 44%)']},
+    {effectType: 'Intron', expectedCounts: ['821, 0.327(671, 27%)', '558, 0.292(464, 24%)']}
   ].forEach(data => {
     it('should display the correct numbers for ' + data.effectType +
        ' effectType in the "Denovo variants of:" role table', () => {
@@ -154,10 +154,10 @@ describe('Datasets Iossifov dataset count tests', () => {
   });
 
   [
-    {effectType: 'LGDs', expectedCounts: ['393, 0.157', '(366, 15%)', '180, 0.094', '(169, 9%)']},
-    {effectType: 'UTRs', expectedCounts: ['244, 0.097', '(237, 9%)', '154, 0.081', '(144, 8%)']},
-    {effectType: 'Missense', expectedCounts: ['1680, 0.67', '(1185, 47%)', '1149, 0.602', '(843, 44%)']},
-    {effectType: 'Intron', expectedCounts: ['821, 0.327', '(671, 27%)', '558, 0.292', '(464, 24%)']}
+    {effectType: 'LGDs', expectedCounts: ['393, 0.157(366, 15%)', '180, 0.094(169, 9%)']},
+    {effectType: 'UTRs', expectedCounts: ['244, 0.097(237, 9%)', '154, 0.081(144, 8%)']},
+    {effectType: 'Missense', expectedCounts: ['1680, 0.67(1185, 47%)', '1149, 0.602(843, 44%)']},
+    {effectType: 'Intron', expectedCounts: ['821, 0.327(671, 27%)', '558, 0.292(464, 24%)']}
   ].forEach(data => {
     it('should display the correct numbers for ' + data.effectType +
        ' effectType in the "Denovo variants of:" status table', () => {
