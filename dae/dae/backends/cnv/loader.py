@@ -1,7 +1,7 @@
 import logging
+import argparse
 
-from argparse import Namespace
-from typing import List, Optional, Dict, Any, Tuple, Generator, cast
+from typing import List, Optional, Dict, Any, Tuple, Generator
 from copy import copy
 import numpy as np
 import pandas as pd
@@ -33,7 +33,7 @@ class CNVLoader(VariantsGenotypesLoader):
 
         if params is None:
             params = {}
-        if params.get("cnv_inheritance_type") == "denovo":
+        if params.get("cnv_transmission_type") == "denovo":
             transmission_type = TransmissionType.denovo
         else:
             transmission_type = TransmissionType.transmitted
@@ -146,10 +146,10 @@ class CNVLoader(VariantsGenotypesLoader):
             help_text="CNV file field separator. [Default: `\\t`]",
         ))
         arguments.append(CLIArgument(
-            "--cnv-inheritance-type",
+            "--cnv-transmission-type",
             value_type=str,
             default_value="denovo",
-            help_text="CNV inheritance type. [Default: `denovo`]",
+            help_text="CNV transmission type. [Default: `denovo`]",
         ))
         return arguments
 
@@ -286,6 +286,7 @@ class CNVLoader(VariantsGenotypesLoader):
             cnv_plus_values: List[str] = ["CNV+"],
             cnv_minus_values: List[str] = ["CNV-"],
             cnv_sep: str = "\t",
+            cnv_transmission_type: str = "denovo",
             adjust_chrom_prefix=None,
             **kwargs) -> pd.DataFrame:
 
@@ -307,12 +308,15 @@ class CNVLoader(VariantsGenotypesLoader):
             if not cnv_family_id:
                 cnv_family_id = "familyId"
 
-        dtype_dict = {
+        dtype_dict: Dict[str, Any] = {
             cnv_variant_type: str,
         }
         if cnv_location:
             dtype_dict[cnv_location] = str
         else:
+            assert cnv_chrom is not None and cnv_start is not None and \
+                cnv_end is not None
+
             dtype_dict[cnv_chrom] = str
             dtype_dict[cnv_start] = int
             dtype_dict[cnv_end] = int
@@ -320,6 +324,8 @@ class CNVLoader(VariantsGenotypesLoader):
         if cnv_person_id:
             dtype_dict[cnv_person_id] = str
         else:
+            assert cnv_family_id is not None and cnv_best_state is not None
+
             dtype_dict[cnv_family_id] = str
             dtype_dict[cnv_best_state] = str
 
@@ -330,16 +336,36 @@ class CNVLoader(VariantsGenotypesLoader):
         )
 
         if cnv_location:
-            location = raw_df[cnv_location]
-            chrom_col, full_pos = zip(*map(lambda x: x.split(":"), location))
-            start_col, end_col = zip(*map(lambda x: x.split("-"), full_pos))
+            location: pd.Series = raw_df[cnv_location]
+
+            def location_split(v: str) -> Tuple[str, ...]:
+                return tuple(v.split(":"))
+
+            chrom_col_data, full_pos_data = \
+                zip(*map(location_split, location))
+            chrom_col: pd.Series = pd.Series(
+                index=raw_df.index, data=list(chrom_col_data))
+
+            def range_split(v: str) -> Tuple[str, ...]:
+                return tuple(v.split("-"))
+
+            start_col_data, end_col_data = zip(
+                *map(range_split, full_pos_data))
+
+            start_col: pd.Series = pd.Series(
+                index=raw_df.index, data=list(start_col_data))
+            end_col: pd.Series = pd.Series(
+                index=raw_df.index, data=list(end_col_data))
+
         else:
+            assert cnv_chrom is not None and cnv_start is not None and \
+                cnv_end is not None
+
             chrom_col = raw_df[cnv_chrom]
             start_col = raw_df[cnv_start]
             end_col = raw_df[cnv_end]
 
-        if adjust_chrom_prefix is not None:
-            chrom_col = tuple(map(adjust_chrom_prefix, chrom_col))
+        chrom_col = chrom_col.apply(adjust_chrom_prefix)
 
         def translate_variant_type(variant_type):
             if variant_type in cnv_plus_values:
@@ -353,14 +379,13 @@ class CNVLoader(VariantsGenotypesLoader):
         variant_types_transformed = raw_df[cnv_variant_type].apply(
             translate_variant_type
         )
-        variant_type_col = tuple(
-            map(allele_type_from_name, variant_types_transformed)
-        )
+        variant_type_col = \
+            variant_types_transformed.apply(allele_type_from_name)
 
         if cnv_person_id:
-            best_state_col = []
-            family_id_col = []
-            variant_best_states = dict()
+            best_state_col_data = []
+            family_id_col_data = []
+            variant_best_states: Dict[Tuple[Any, ...], np.ndarray] = dict()
 
             person_id_col = raw_df[cnv_person_id]
             for chrom, pos_start, pos_end, variant_type, person_id in zip(
@@ -371,6 +396,7 @@ class CNVLoader(VariantsGenotypesLoader):
                 family_id = person.family_id
                 family = families[family_id]
                 members = family.members_in_order
+
                 variant_index = (
                     chrom, pos_start, pos_end, variant_type, family_id
                 )
@@ -401,8 +427,10 @@ class CNVLoader(VariantsGenotypesLoader):
                         [ref, alt], dtype=GENOTYPE_TYPE)
 
                 best_state = variant_best_states[variant_index]
-                best_state_col.append(best_state)
-                family_id_col.append(family_id)
+                best_state_col_data.append(best_state)
+                family_id_col_data.append(family_id)
+            family_id_col = pd.Series(family_id_col_data, index=raw_df.index)
+            best_state_col = pd.Series(best_state_col_data, index=raw_df.index)
 
         else:
 
@@ -418,6 +446,7 @@ class CNVLoader(VariantsGenotypesLoader):
                     for person in families[family_id].members_in_order
                 ])
 
+            assert cnv_family_id is not None
             family_id_col = raw_df[cnv_family_id]
             expected_ploidy_col = tuple(
                 map(
@@ -425,18 +454,20 @@ class CNVLoader(VariantsGenotypesLoader):
                     zip(chrom_col, start_col, end_col, family_id_col),
                 )
             )
-            best_state_col = tuple(
-                map(
+            assert cnv_best_state is not None
+
+            best_state_col_data = \
+                list(map(
                     lambda x: cls._calc_cnv_best_state(*x),
                     zip(
                         raw_df[cnv_best_state],
                         variant_type_col,
                         expected_ploidy_col,
                     ),
-                )
-            )
+                ))
+            best_state_col = pd.Series(best_state_col_data, index=raw_df.index)
 
-        result = {
+        result: Dict[str, pd._ListLike] = {
             "chrom": chrom_col,
             "position": start_col,
             "end_position": end_col,
@@ -445,11 +476,11 @@ class CNVLoader(VariantsGenotypesLoader):
             "family_id": family_id_col
         }
 
-        return pd.DataFrame(result)
+        return pd.DataFrame(data=result)
 
     @classmethod
     def parse_cli_arguments(
-        cls, argv: Namespace
+        cls, argv: argparse.Namespace, use_defaults: bool = False
     ) -> Tuple[str, Dict[str, Any]]:
         return argv.cnv_file, \
             {
@@ -461,6 +492,7 @@ class CNVLoader(VariantsGenotypesLoader):
                 "cnv_minus_values": argv.cnv_minus_values,
                 "cnv_best_state": argv.cnv_best_state,
                 "cnv_sep": argv.cnv_sep,
+                "cnv_transmission_type": argv.cnv_transmission_type,
                 "add_chrom_prefix": argv.add_chrom_prefix,
                 "del_chrom_prefix": argv.del_chrom_prefix,
             }

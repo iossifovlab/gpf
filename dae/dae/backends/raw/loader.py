@@ -1,3 +1,4 @@
+import argparse
 import os
 import pathlib
 import time
@@ -198,7 +199,8 @@ class CLILoader(ABC):
 
     @classmethod
     def parse_cli_arguments(
-            cls, argv, use_defaults=False) -> Tuple[str, Dict[str, Any]]:
+            cls, argv: argparse.Namespace,
+            use_defaults=False) -> Tuple[str, Dict[str, Any]]:
 
         for arg in cls._arguments():
             arg.parse_cli_argument(argv, use_defaults=use_defaults)
@@ -718,7 +720,7 @@ class VariantsGenotypesLoader(VariantsLoader):
             cls,
             family_variant: FamilyVariant,
             genome: ReferenceGenome,
-            force: bool = True) -> np.ndarray:
+            force: bool = True) -> Optional[np.ndarray]:
 
         male_ploidy = get_locus_ploidy(
             family_variant.chromosome, family_variant.position, Sex.M, genome
@@ -754,8 +756,7 @@ class VariantsGenotypesLoader(VariantsLoader):
             return calculate_simple_best_state(
                 family_variant.gt, family_variant.allele_count
             )
-        # else:
-        #     raise ValueError("unexpected state")
+        return None
 
     @classmethod
     def _calc_genotype(
