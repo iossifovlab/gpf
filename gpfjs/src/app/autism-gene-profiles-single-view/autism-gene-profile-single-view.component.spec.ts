@@ -4,7 +4,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { GeneWeightsService } from 'app/gene-weights/gene-weights.service';
+import { GeneScoresService } from 'app/gene-scores/gene-scores.service';
 import { UsersService } from 'app/users/users.service';
 import { of } from 'rxjs';
 import { AutismGeneProfileSingleViewComponent } from './autism-gene-profile-single-view.component';
@@ -17,7 +17,7 @@ describe('AutismGeneProfileSingleViewComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [AutismGeneProfileSingleViewComponent],
-      providers: [ConfigService, GeneWeightsService, DatasetsService, UsersService, QueryService],
+      providers: [ConfigService, GeneScoresService, DatasetsService, UsersService, QueryService],
       imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
     }).compileComponents();
   }));
@@ -49,21 +49,21 @@ describe('AutismGeneProfileSingleViewComponent', () => {
     } as any);
     getGeneSpy.mockReturnValue(geneMock);
 
-    const getGeneWeightsSpy = jest.spyOn(component['geneWeightsService'], 'getGeneWeights');
-    getGeneWeightsSpy.mockReturnValue(of('fakeWeight' as any));
+    const getGeneScoresSpy = jest.spyOn(component['geneScoresService'], 'getGeneScores');
+    getGeneScoresSpy.mockReturnValue(of('fakeScore' as any));
 
     expect(component.isGeneInSFARI).toBeFalsy();
     component.ngOnInit();
     expect(component['gene$']).toEqual(geneMock);
     expect(component.isGeneInSFARI).toBeTruthy();
     expect(getGeneSpy).toHaveBeenCalledWith('mockGeneSymbol');
-    expect(getGeneWeightsSpy.mock.calls).toEqual([
+    expect(getGeneScoresSpy.mock.calls).toEqual([
       ['fakeScore1'],
       ['fakeScore2']
     ]);
-    expect(component['genomicScoresGeneWeights']).toEqual([
-      {category: 'fakeGenomicScore1', scores: 'fakeWeight'},
-      {category: 'fakeGenomicScore2', scores: 'fakeWeight' }
+    expect(component['genomicScoresGeneScores']).toEqual([
+      {category: 'fakeGenomicScore1', scores: 'fakeScore'},
+      {category: 'fakeGenomicScore2', scores: 'fakeScore' }
     ] as any);
 
     geneMock = of({
@@ -77,16 +77,16 @@ describe('AutismGeneProfileSingleViewComponent', () => {
     expect(component.isGeneInSFARI).toBeFalsy();
   });
 
-  it('should get autism score gene weight', () => {
-    const mocksWeights = [
-      {category: 'autismScore', scores: [{weight: 'weight1'}, {weight: 'weight2'}]},
-      {category: 'protectionScore', scores: [{weight: 'weight3'}, {weight: 'weight4'}]},
+  it('should get autism score gene Score', () => {
+    const mocksScores = [
+      {category: 'autismScore', scores: [{Score: 'Score1'}, {Score: 'Score2'}]},
+      {category: 'protectionScore', scores: [{Score: 'Score3'}, {Score: 'Score4'}]},
     ];
-    component['genomicScoresGeneWeights'] = mocksWeights as any;
-    expect(component.getGeneWeightByKey('autismScore', 'weight1')).toEqual({weight: 'weight1'} as any);
-    expect(component.getGeneWeightByKey('autismScore', 'weight2')).toEqual({weight: 'weight2'}as any);
-    expect(component.getGeneWeightByKey('protectionScore', 'weight3')).toEqual({weight: 'weight3'} as any);
-    expect(component.getGeneWeightByKey('protectionScore', 'weight4')).toEqual({weight: 'weight4'} as any);
+    component['genomicScoresGeneScores'] = mocksScores as any;
+    expect(component.getGeneScoreByKey('autismScore', 'Score1')).toEqual({Score: 'Score1'} as any);
+    expect(component.getGeneScoreByKey('autismScore', 'Score2')).toEqual({Score: 'Score2'}as any);
+    expect(component.getGeneScoreByKey('protectionScore', 'Score3')).toEqual({Score: 'Score3'} as any);
+    expect(component.getGeneScoreByKey('protectionScore', 'Score4')).toEqual({Score: 'Score4'} as any);
   });
 
   it('should get gene dataset value', () => {

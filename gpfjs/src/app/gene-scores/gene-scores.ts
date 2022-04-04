@@ -2,13 +2,13 @@ import { IsNotEmpty, IsNumber, ValidateIf } from 'class-validator';
 import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
 import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
 
-export class GeneWeights {
+export class GeneScores {
   readonly logScaleX: boolean;
   readonly logScaleY: boolean;
-  static fromJson(json: any): GeneWeights {
-    return new GeneWeights(
+  static fromJson(json: any): GeneScores {
+    return new GeneScores(
       json['bars'],
-      json['weight'],
+      json['score'],
       json['bins'],
       json['desc'],
       json['range'],
@@ -17,14 +17,14 @@ export class GeneWeights {
     );
   }
 
-  static fromJsonArray(jsonArray: Array<Object>): Array<GeneWeights> {
-    return jsonArray.map((json) => GeneWeights.fromJson(json));
+  static fromJsonArray(jsonArray: Array<Object>): Array<GeneScores> {
+    return jsonArray.map((json) => GeneScores.fromJson(json));
   }
 
 
   constructor(
     readonly bars: number[],
-    readonly weight: string,
+    readonly score: string,
     readonly bins: number[],
     readonly desc: string,
     readonly domain: number[],
@@ -64,9 +64,9 @@ export class Partitions {
 
 }
 
-export class GeneWeightsLocalState {
+export class GeneScoresLocalState {
   @IsNotEmpty()
-  weight: GeneWeights = null;
+  score: GeneScores = null;
 
   @ValidateIf(o => o.rangeStart !== null)
   @IsNumber()

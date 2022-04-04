@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
 import { Observable } from 'rxjs';
 import { ContinuousMeasure, HistogramData } from './measures';
-import { Partitions } from '../gene-weights/gene-weights';
+import { Partitions } from '../gene-scores/gene-scores';
 import { map } from 'rxjs/operators';
 
 @Injectable()

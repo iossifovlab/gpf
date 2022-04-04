@@ -3,7 +3,7 @@ import { MeasuresService } from '../measures/measures.service';
 import { HistogramData } from '../measures/measures';
 import { ContinuousFilterState, ContinuousSelection } from '../person-filters/person-filters';
 import { Observable, Subject } from 'rxjs';
-import { Partitions } from '../gene-weights/gene-weights';
+import { Partitions } from '../gene-scores/gene-scores';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
 @Component({

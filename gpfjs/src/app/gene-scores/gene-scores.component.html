@@ -1,28 +1,28 @@
-<div class="row panel" id="gene-weights-panel" style="margin-left: 0px; margin-right: 0px">
+<div class="row panel" id="gene-scores-panel" style="margin-left: 0px; margin-right: 0px">
     <div class="col-sm-3">
       <div class="select-wrapper">
-        <select class="form-control" [(ngModel)]="selectedGeneWeights" required>
-          <option *ngFor="let geneWeights of geneWeightsArray" [ngValue]="geneWeights">{{ geneWeights.desc }}</option>
+        <select class="form-control" [(ngModel)]="selectedGeneScores" required>
+          <option *ngFor="let geneScores of geneScoresArray" [ngValue]="geneScores">{{ geneScores.desc }}</option>
         </select>
         <span
           class="select-dropdown-icon"
           [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'">
         </span>
       </div>
-      <div *ngIf="selectedGeneWeights" style="margin-top: 5px;">
+      <div *ngIf="selectedGeneScores" style="margin-top: 5px;">
         <a href="{{ downloadUrl }}">Download</a>
       </div>
     </div>
 
     <div class="col-sm-9">
       <gpf-histogram
-		    *ngIf="selectedGeneWeights"
+		    *ngIf="selectedGeneScores"
 		    [width]="650"
         [height]="145"
-		    [bins]="selectedGeneWeights.bins"
-        [bars]="selectedGeneWeights.bars"
-        [logScaleX]="selectedGeneWeights.logScaleX"
-		  	[logScaleY]="selectedGeneWeights.logScaleY"
+		    [bins]="selectedGeneScores.bins"
+        [bars]="selectedGeneScores.bars"
+        [logScaleX]="selectedGeneScores.logScaleX"
+		  	[logScaleY]="selectedGeneScores.logScaleY"
 		    [rangesCounts]="rangesCounts | async"
 		    [(rangeStart)]="rangeStart"
         [(rangeEnd)]="rangeEnd">

@@ -1,8 +1,8 @@
 import { Component, Input, ViewChild, AfterViewInit } from '@angular/core';
 import { Store, Selector } from '@ngxs/store';
 import { GeneSymbolsState, GeneSymbolsModel } from 'app/gene-symbols/gene-symbols.state';
-import { GeneSetsState } from 'app/gene-sets/gene-sets.state';
-import { GeneWeightsState } from 'app/gene-weights/gene-weights.state';
+import { GeneSetsState, GeneSetsModel } from 'app/gene-sets/gene-sets.state';
+import { GeneScoresState, GeneScoresModel } from 'app/gene-scores/gene-scores.state';
 import { StateReset } from 'ngxs-reset-plugin';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 
@@ -15,17 +15,19 @@ export class GenesBlockComponent implements AfterViewInit {
   @Input() public showAllTab = true;
   @ViewChild('nav') public ngbNav: NgbNav;
 
-  @Selector([GeneSymbolsState, GeneSetsState.queryStateSelector, GeneWeightsState.queryStateSelector])
-  public static genesBlockState(geneSymbolsState: GeneSymbolsModel, geneSetsQueryState, geneWeightsState): object {
+  @Selector([GeneSymbolsState, GeneSetsState.queryStateSelector, GeneScoresState.queryStateSelector])
+  public static genesBlockState(
+    geneSymbolsState: GeneSymbolsModel, geneSetsQueryState: GeneScoresModel, geneScoresState: GeneSetsModel,
+  ): object {
     let result = {};
     if (geneSymbolsState.geneSymbols.length) {
       result['geneSymbols'] = geneSymbolsState.geneSymbols;
     }
     if (geneSetsQueryState) {
-      result = {...result, ...geneSetsQueryState} as object;
+      result = {...result, ...geneSetsQueryState};
     }
-    if (geneWeightsState) {
-      result = {...result, ...geneWeightsState} as object;
+    if (geneScoresState) {
+      result = {...result, ...geneScoresState};
     }
     return result;
   }
@@ -38,13 +40,13 @@ export class GenesBlockComponent implements AfterViewInit {
         setTimeout(() => this.ngbNav.select('geneSymbols'));
       } else if (state['geneSet']) {
         setTimeout(() => this.ngbNav.select('geneSets'));
-      } else if (state['geneWeights']) {
-        setTimeout(() => this.ngbNav.select('geneWeights'));
+      } else if (state['geneScores']) {
+        setTimeout(() => this.ngbNav.select('geneScores'));
       }
     });
   }
 
   public onNavChange(): void {
-    this.store.dispatch(new StateReset(GeneSymbolsState, GeneSetsState, GeneWeightsState));
+    this.store.dispatch(new StateReset(GeneSymbolsState, GeneSetsState, GeneScoresState));
   }
 }

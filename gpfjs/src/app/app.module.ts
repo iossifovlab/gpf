@@ -29,9 +29,9 @@ import { RegionsFilterComponent } from './regions-filter/regions-filter.componen
 import { RegionsBlockComponent } from './regions-block/regions-block.component';
 import { PedigreeChartModule } from './pedigree-chart/pedigree-chart.module';
 import { HistogramModule } from './histogram/histogram.module';
-import { GeneWeightsComponent } from './gene-weights/gene-weights.component';
-import { GeneWeightsService } from './gene-weights/gene-weights.service';
-import { GeneWeightsState } from './gene-weights/gene-weights.state';
+import { GeneScoresComponent } from './gene-scores/gene-scores.component';
+import { GeneScoresService } from './gene-scores/gene-scores.service';
+import { GeneScoresState } from './gene-scores/gene-scores.state';
 import { GeneSetsComponent } from './gene-sets/gene-sets.component';
 import { GeneSetsState } from './gene-sets/gene-sets.state';
 import { GeneSetsService } from './gene-sets/gene-sets.service';
@@ -267,7 +267,7 @@ const appRoutes: Routes = [
     GenotypeBlockComponent,
     GenesBlockComponent,
     RegionsBlockComponent,
-    GeneWeightsComponent,
+    GeneScoresComponent,
     MinValidatorDirective,
     MaxValidatorDirective,
     GeneSetsComponent,
@@ -380,18 +380,14 @@ const appRoutes: Routes = [
       confirmButtonType: 'danger'
     }),
     NgMultiSelectDropDownModule.forRoot(),
-    NgxsModule.forRoot(
-      [
-        VarianttypesState, EffecttypesState, GenderState,
-        InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,
-        GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState, GeneSetsState,
-        GeneWeightsState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
-        StudyFiltersBlockState, PersonFiltersState, GenomicScoresBlockState, PhenoToolMeasureState,
-        UniqueFamilyVariantsFilterState, ErrorsState
-      ],
-      {
-        compatibility: { strictContentSecurityPolicy: true }
-      }
+    NgxsModule.forRoot([
+      VarianttypesState, EffecttypesState, GenderState,
+      InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,
+      GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState, GeneSetsState,
+      GeneScoresState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
+      StudyFiltersBlockState, PersonFiltersState, GenomicScoresBlockState, PhenoToolMeasureState,
+      UniqueFamilyVariantsFilterState, ErrorsState
+    ], {compatibility: { strictContentSecurityPolicy: true }}
     ),
     NgxsResetPluginModule.forRoot(),
     DragDropModule,
@@ -402,7 +398,7 @@ const appRoutes: Routes = [
     ConfigService,
     DatasetsService,
     QueryService,
-    GeneWeightsService,
+    GeneScoresService,
     GeneSetsService,
     UsersService,
     EnrichmentModelsService,
