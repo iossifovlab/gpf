@@ -4,7 +4,7 @@ import time
 import copy
 import logging
 
-from abc import ABC, abstractclassmethod, abstractmethod
+from abc import ABC, abstractmethod
 from enum import Enum
 
 from typing import Iterator, Tuple, List, Dict, Any, Optional, Sequence
@@ -26,7 +26,7 @@ from dae.variants.family_variant import (
 from dae.variants.attributes import Sex, GeneticModel
 from dae.variants.attributes import TransmissionType
 from dae.utils.variant_utils import get_locus_ploidy, best2gt
-from dae.utils import fs_utils
+# from dae.utils import fs_utils
 
 
 logger = logging.getLogger(__name__)
@@ -156,14 +156,14 @@ class CLILoader(ABC):
     def _add_argument(self, argument):
         self.arguments.append(argument)
 
-    @abstractclassmethod
-    def _arguments(cls):
-        pass
+    @classmethod
+    def _arguments(cls) -> List[CLIArgument]:
+        return []
 
     @classmethod
     def cli_defaults(cls):
-        argument_destinations = [arg.destination for arg in cls._arguments]
-        defaults = [arg.default_value for arg in cls._arguments]
+        argument_destinations = [arg.destination for arg in cls._arguments()]
+        defaults = [arg.default_value for arg in cls._arguments()]
         return {k: v for (k, v) in zip(argument_destinations, defaults)}
 
     @classmethod
@@ -197,9 +197,12 @@ class CLILoader(ABC):
         return result
 
     @classmethod
-    def parse_cli_arguments(cls, argv, use_defaults=False):
+    def parse_cli_arguments(
+            cls, argv, use_defaults=False) -> Tuple[str, Dict[str, Any]]:
+
         for arg in cls._arguments():
             arg.parse_cli_argument(argv, use_defaults=use_defaults)
+        return "", {}
 
 
 class VariantsLoader(CLILoader):
@@ -215,7 +218,7 @@ class VariantsLoader(CLILoader):
         super().__init__(params=params)
         assert isinstance(families, FamiliesData)
         self.families = families
-        assert all([fs_utils.exists(fn) for fn in filenames]), filenames
+        # assert all([fs_utils.exists(fn) for fn in filenames]), filenames
         self.filenames = filenames
 
         assert isinstance(transmission_type, TransmissionType)
@@ -715,7 +718,7 @@ class VariantsGenotypesLoader(VariantsLoader):
             cls,
             family_variant: FamilyVariant,
             genome: ReferenceGenome,
-            force: bool = True) -> np.array:
+            force: bool = True) -> np.ndarray:
 
         male_ploidy = get_locus_ploidy(
             family_variant.chromosome, family_variant.position, Sex.M, genome
@@ -751,11 +754,13 @@ class VariantsGenotypesLoader(VariantsLoader):
             return calculate_simple_best_state(
                 family_variant.gt, family_variant.allele_count
             )
+        # else:
+        #     raise ValueError("unexpected state")
 
     @classmethod
     def _calc_genotype(
             cls, family_variant: FamilyVariant,
-            genome: ReferenceGenome) -> np.array:
+            genome: ReferenceGenome) -> Tuple[np.ndarray, GeneticModel]:
 
         best_state = family_variant._best_state
         genotype = best2gt(best_state)

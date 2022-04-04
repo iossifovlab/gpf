@@ -1,7 +1,7 @@
 import logging
 
 from argparse import Namespace
-from typing import List, Optional, Dict, Any, Tuple, Generator
+from typing import List, Optional, Dict, Any, Tuple, Generator, cast
 from copy import copy
 import numpy as np
 import pandas as pd
@@ -29,12 +29,19 @@ class CNVLoader(VariantsGenotypesLoader):
             cnv_filename: str,
             genome: ReferenceGenome,
             regions: List[str] = None,
-            params: Dict[str, Any] = {}):
+            params: Dict[str, Any] = None):
+
+        if params is None:
+            params = {}
+        if params.get("cnv_inheritance_type") == "denovo":
+            transmission_type = TransmissionType.denovo
+        else:
+            transmission_type = TransmissionType.transmitted
 
         super(CNVLoader, self).__init__(
             families=families,
             filenames=[cnv_filename],
-            transmission_type=TransmissionType.denovo,
+            transmission_type=transmission_type,
             genome=genome,
             regions=regions,
             expect_genotype=False,
@@ -138,6 +145,12 @@ class CNVLoader(VariantsGenotypesLoader):
             default_value="\t",
             help_text="CNV file field separator. [Default: `\\t`]",
         ))
+        arguments.append(CLIArgument(
+            "--cnv-inheritance-type",
+            value_type=str,
+            default_value="denovo",
+            help_text="CNV inheritance type. [Default: `denovo`]",
+        ))
         return arguments
 
     def reset_regions(self, regions):
@@ -173,7 +186,7 @@ class CNVLoader(VariantsGenotypesLoader):
                 lambda x: list(x)
             )
         for num_idx, (idx, values) in enumerate(group.iterrows()):
-            chrom, position, end_position, variant_type = idx
+            chrom, position, end_position, variant_type = idx  # type: ignore
             position = int(position)
             end_position = int(end_position)
             summary_rec = {
@@ -220,16 +233,19 @@ class CNVLoader(VariantsGenotypesLoader):
 
     def full_variants_iterator(self):
         full_iterator = super(CNVLoader, self).full_variants_iterator()
+
         for summary_variants, family_variants in full_iterator:
             for fv in family_variants:
                 for fa in fv.alt_alleles:
-                    inheritance = [
-                        Inheritance.denovo if mem is not None else inh
-                        for inh, mem in zip(
-                            fa.inheritance_in_members, fa.variant_in_members
-                        )
-                    ]
-                    fa._inheritance_in_members = inheritance
+                    if self.transmission_type == TransmissionType.denovo:
+                        inheritance = [
+                            Inheritance.denovo if mem is not None else inh
+                            for inh, mem in zip(
+                                fa.inheritance_in_members,
+                                fa.variant_in_members
+                            )
+                        ]
+                        fa._inheritance_in_members = inheritance
 
             yield summary_variants, family_variants
 
