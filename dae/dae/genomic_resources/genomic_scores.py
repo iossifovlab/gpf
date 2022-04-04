@@ -8,7 +8,6 @@ from typing import Generator, List, Tuple, cast, Type, Dict, Any
 
 
 from . import GenomicResource
-from .repository import GenomicResourceRealRepo
 from .genome_position_table import open_genome_position_table
 
 from .aggregators import build_aggregator
@@ -49,6 +48,7 @@ class ScoreLine:
 
     def __repr__(self):
         return f"ScoreLine({self.values})"
+
 
 class GenomicScore(abc.ABC):
     def __init__(self, config, table, score_columns, special_columns):
@@ -403,7 +403,7 @@ def _configure_score_columns(table, config, ):
 
         default_na_values = {
             "str": {},
-            "float": {"", "nan", ".", "NA",},
+            "float": {"", "nan", ".", "NA"},
             "int": {"", "nan", ".", "NA"}
         }
 
