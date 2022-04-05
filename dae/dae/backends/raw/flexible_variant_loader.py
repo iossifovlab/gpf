@@ -64,6 +64,23 @@ def cnv_location_to_vcf_trasformer() \
     return trasformer
 
 
+def cnv_vcf_to_vcf_trasformer() \
+        -> Callable[[Dict[str, Any]], Dict[str, Any]]:
+
+    def trasformer(result: Dict[str, Any]) -> Dict[str, Any]:
+        chrom = result["chrom"]
+        pos = int(result["pos"])
+        pos_end = int(result["pos_end"])
+
+        result["chrom"] = chrom
+        result["pos"] = pos
+        result["pos_end"] = pos_end
+
+        return result
+
+    return trasformer
+
+
 def cnv_dae_best_state_to_best_state(
         families: FamiliesData, genome: ReferenceGenome) \
         -> Callable[[Dict[str, Any]], Dict[str, Any]]:
@@ -90,6 +107,36 @@ def cnv_dae_best_state_to_best_state(
         else:
             raise ValueError(
                 f"unexpected variant type: {variant_type}")
+        ref_row = expected_ploidy - alt_row
+        best_state = np.stack((ref_row, alt_row)).astype(np.int8)
+        result["best_state"] = best_state
+
+        return result
+
+    return transformer
+
+
+def cnv_person_id_to_best_state(
+        families: FamiliesData, genome: ReferenceGenome) \
+        -> Callable[[Dict[str, Any]], Dict[str, Any]]:
+
+    def transformer(result: Dict[str, Any]) -> Dict[str, Any]:
+        person_id = result["person_id"]
+        person = families.persons[person_id]
+        family = families[person.family_id]
+
+        chrom = result["chrom"]
+        pos = result["pos"]
+        pos_end = result["pos_end"]
+
+        expected_ploidy = np.asarray([
+            get_interval_locus_ploidy(
+                chrom, pos, pos_end, p.sex, genome
+            ) for p in family.members_in_order
+        ])
+        alt_row = np.zeros(len(family.members_in_order), dtype=np.int8)
+        alt_row[person.index] = 1
+
         ref_row = expected_ploidy - alt_row
         best_state = np.stack((ref_row, alt_row)).astype(np.int8)
         result["best_state"] = best_state

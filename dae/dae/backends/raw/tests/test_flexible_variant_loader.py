@@ -12,9 +12,11 @@ from dae.backends.raw.flexible_variant_loader import \
     cnv_location_to_vcf_trasformer, \
     cnv_variant_to_variant_type, \
     cnv_dae_best_state_to_best_state, \
+    cnv_person_id_to_best_state, \
     flexible_variant_loader, \
     location_variant_to_vcf_transformer, \
-    variant_to_variant_type
+    variant_to_variant_type, \
+    cnv_vcf_to_vcf_trasformer
 
 
 @pytest.fixture
@@ -265,6 +267,104 @@ def test_cnv_dae_best_state(
     generator = flexible_variant_loader(
         cnv_dae,
         in_header=["family_id", "location", "variant", "best_state"],
+        line_splitter=lambda ln: ln.strip("\n\r").split("\t"),
+        transformers=transformers)
+
+    results = list(generator)
+    assert len(results) == 4
+
+    result = results[index]
+
+    assert mat2str(result["best_state"]) == expected
+
+
+@pytest.fixture
+def cnv_person_id():
+    content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
+        """
+        person_id  location               variant
+        f1.s2      1:1590681-1628197      CNV+
+        f2.p1      1:28298951-28369279    CNV-
+        f1.s2      X:22944530-23302214    CNV-
+        f1.p1      X:153576690-153779907  CNV+
+        """
+    )))
+    return content
+
+
+@pytest.mark.parametrize(
+    "index,expected", [
+        (0, "2221/0001"),
+        (1, "221/001"),
+        (2, "2111/0001"),
+        (3, "2102/0010"),
+    ]
+)
+def test_cnv_person_id_best_state(
+        families, cnv_person_id, gpf_instance_2013,
+        index, expected):
+
+    genome = gpf_instance_2013.reference_genome
+    next(cnv_person_id)
+
+    transformers = [
+        cnv_location_to_vcf_trasformer(),
+        cnv_variant_to_variant_type(),
+        cnv_person_id_to_best_state(families, genome)
+    ]
+
+    generator = flexible_variant_loader(
+        cnv_person_id,
+        in_header=["person_id", "location", "variant"],
+        line_splitter=lambda ln: ln.strip("\n\r").split("\t"),
+        transformers=transformers)
+
+    results = list(generator)
+    assert len(results) == 4
+
+    result = results[index]
+
+    assert mat2str(result["best_state"]) == expected
+
+
+@pytest.fixture
+def cnv_vcf():
+    content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
+        """
+        person_id  chr  pos         pos_end      variant
+        f1.s2      1    1590681     1628197      CNV+
+        f2.p1      1    28298951    28369279     CNV-
+        f1.s2      X    22944530    23302214     CNV-
+        f1.p1      X    153576690   153779907    CNV+
+        """
+    )))
+    return content
+
+
+@pytest.mark.parametrize(
+    "index,expected", [
+        (0, "2221/0001"),
+        (1, "221/001"),
+        (2, "2111/0001"),
+        (3, "2102/0010"),
+    ]
+)
+def test_cnv_vcf_position(
+        families, cnv_vcf, gpf_instance_2013,
+        index, expected):
+
+    genome = gpf_instance_2013.reference_genome
+    next(cnv_vcf)
+
+    transformers = [
+        cnv_vcf_to_vcf_trasformer(),
+        cnv_variant_to_variant_type(),
+        cnv_person_id_to_best_state(families, genome)
+    ]
+
+    generator = flexible_variant_loader(
+        cnv_vcf,
+        in_header=["person_id", "chrom", "pos", "pos_end", "variant"],
         line_splitter=lambda ln: ln.strip("\n\r").split("\t"),
         transformers=transformers)
 

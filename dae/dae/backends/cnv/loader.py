@@ -1,13 +1,21 @@
+import io
 import logging
 import argparse
 
-from typing import List, Optional, Dict, Any, Tuple, Generator
-from copy import copy
+from typing import Callable, List, Optional, Dict, Any, Tuple, Generator
+
+from copy import copy, deepcopy
 import numpy as np
 import pandas as pd
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.backends.raw.loader import VariantsGenotypesLoader, TransmissionType
+from dae.backends.raw.flexible_variant_loader import \
+    cnv_location_to_vcf_trasformer,\
+    cnv_person_id_to_best_state, \
+    cnv_vcf_to_vcf_trasformer, \
+    cnv_dae_best_state_to_best_state
+
 from dae.pedigrees.family import FamiliesData
 from dae.variants.attributes import Inheritance
 from dae.variants.variant import SummaryVariantFactory, SummaryVariant, \
@@ -286,7 +294,6 @@ class CNVLoader(VariantsGenotypesLoader):
             cnv_plus_values: List[str] = ["CNV+"],
             cnv_minus_values: List[str] = ["CNV-"],
             cnv_sep: str = "\t",
-            cnv_transmission_type: str = "denovo",
             adjust_chrom_prefix=None,
             **kwargs) -> pd.DataFrame:
 
@@ -365,7 +372,8 @@ class CNVLoader(VariantsGenotypesLoader):
             start_col = raw_df[cnv_start]
             end_col = raw_df[cnv_end]
 
-        chrom_col = chrom_col.apply(adjust_chrom_prefix)
+        if adjust_chrom_prefix is not None:
+            chrom_col = chrom_col.apply(adjust_chrom_prefix)
 
         def translate_variant_type(variant_type):
             if variant_type in cnv_plus_values:
@@ -477,6 +485,363 @@ class CNVLoader(VariantsGenotypesLoader):
         }
 
         return pd.DataFrame(data=result)
+
+    @staticmethod
+    def _configure_cnv_location(
+            header: List[str],
+            transformers: List[Callable[[Dict[str, Any]], Dict[str, Any]]],
+            cnv_chrom: Optional[str] = None,
+            cnv_start: Optional[str] = None,
+            cnv_end: Optional[str] = None,
+            cnv_location: Optional[str] = None) -> None:
+        
+        if cnv_chrom is not None or cnv_start is not None or \
+                cnv_end is not None:
+            if cnv_location is not None:
+                raise ValueError(
+                    f"mixed variant location definitions: "
+                    f"vcf({cnv_chrom}:{cnv_start}-{cnv_end}) and "
+                    f"location({cnv_location})")
+            if cnv_chrom is None:
+                cnv_chrom = "chrom"
+            if cnv_start is None:
+                cnv_start = "pos"
+            if cnv_end is None:
+                cnv_end = "pos_end"
+            
+            chrom_index = header.index(cnv_chrom)
+            start_index = header.index(cnv_start)
+            end_index = header.index(cnv_end)
+
+            if chrom_index == -1 or start_index == -1 or end_index == -1:
+                raise ValueError(
+                    f"cant find cnv vcf position like columns "
+                    f"vcf({cnv_chrom}:{cnv_start}-{cnv_end}) in header: "
+                    f"{header}"
+                )
+            header[chrom_index] = "chrom"
+            header[start_index] = "pos"
+            header[end_index] = "pos_end"
+            transformers.append(cnv_vcf_to_vcf_trasformer())
+        else:
+            if cnv_location is None:
+                cnv_location = "location"
+            location_index = header.index(cnv_location)
+            if location_index == -1:
+                raise ValueError(
+                    f"can find cnv location column "
+                    f"location({cnv_location}) in header: "
+                    f"{header}"
+                )
+            header[location_index] = "location"
+            transformers.append(cnv_location_to_vcf_trasformer())
+
+    @staticmethod
+    def _configure_cnv_best_state(
+            header: List[str],
+            transformers: List[Callable[[Dict[str, Any]], Dict[str, Any]]],
+            families: FamiliesData,
+            genome: ReferenceGenome,
+            cnv_person_id: Optional[str] = None,
+            cnv_family_id: Optional[str] = None,
+            cnv_best_state: Optional[str] = None) -> None:
+
+        if cnv_person_id is not None:
+            if cnv_family_id is not None or cnv_best_state is not None:
+                raise ValueError(
+                    f"mixed configuration of cnv best state: "
+                    f"person_id({cnv_person_id} <-> "
+                    f"family_id({cnv_family_id}) and "
+                    f"best_state({cnv_best_state})"
+                )
+            person_index = header.index(cnv_person_id)
+            if person_index == -1:
+                raise ValueError(
+                    f"cant find person_id({cnv_person_id}) in header: "
+                    f"{header}")
+
+            header[person_index] = "person_id"
+
+            transformers.append(
+                cnv_person_id_to_best_state(families, genome)
+            )
+        else:
+            if cnv_family_id is None:
+                cnv_family_id = "family_id"
+            if cnv_best_state is None:
+                cnv_best_state = "best_state"
+            family_index = header.index(cnv_family_id)
+            best_state_index = header.index(cnv_best_state)
+            if family_index == -1 or best_state_index == -1:
+                raise ValueError(
+                    f"cant find family_id({cnv_family_id}) or "
+                    f"best_state({cnv_best_state}) in header: "
+                    f"{header}")
+            header[family_index] = "family_id"
+            header[best_state_index] = "best_state"
+
+            transformers.append(
+                cnv_dae_best_state_to_best_state(families, genome))
+
+    @staticmethod
+    def _configure_loader(
+            header: List[str],
+            families: FamiliesData,
+            genome: ReferenceGenome,
+            cnv_chrom: Optional[str] = None,
+            cnv_start: Optional[str] = None,
+            cnv_end: Optional[str] = None,
+            cnv_location: Optional[str] = None,
+            cnv_person_id: Optional[str] = None,
+            cnv_family_id: Optional[str] = None,
+            cnv_best_state: Optional[str] = None,
+            cnv_variant_type: Optional[str] = None,
+            cnv_plus_values: List[str] = ["CNV+"],
+            cnv_minus_values: List[str] = ["CNV-"],
+            cnv_sep: str = "\t",
+            adjust_chrom_prefix=None,
+            **kwargs) \
+            -> Tuple[
+                List[str], 
+                List[Callable[[Dict[str, Any]], Dict[str, Any]]]]:
+
+        transformers: List[
+            Callable[[Dict[str, Any]], Dict[str, Any]]] = []
+        header = deepcopy(header)
+
+        CNVLoader._configure_cnv_location(
+            header, transformers,
+            cnv_chrom, cnv_start, cnv_end,
+            cnv_location
+        )
+        CNVLoader._configure_cnv_best_state(
+            header, transformers,
+            families, genome,
+            cnv_person_id,
+            cnv_family_id, cnv_best_state)
+
+        return header, transformers
+
+    @classmethod
+    def load_cnv_ng(
+            cls,
+            filepath: str,
+            families: FamiliesData,
+            genome: ReferenceGenome,
+            cnv_chrom: Optional[str] = None,
+            cnv_start: Optional[str] = None,
+            cnv_end: Optional[str] = None,
+            cnv_location: Optional[str] = None,
+            cnv_person_id: Optional[str] = None,
+            cnv_family_id: Optional[str] = None,
+            cnv_best_state: Optional[str] = None,
+            cnv_variant_type: Optional[str] = None,
+            cnv_plus_values: List[str] = ["CNV+"],
+            cnv_minus_values: List[str] = ["CNV-"],
+            cnv_sep: str = "\t",
+            adjust_chrom_prefix=None,
+            **kwargs) -> pd.DataFrame:
+
+        # TODO: Remove effect types when effect annotation is made
+        assert families is not None
+        assert isinstance(families, FamiliesData)
+
+        if isinstance(filepath, io.TextIOBase):
+            infile = filepath
+        else:
+            infile = open(filepath, "rt")
+
+        with infile as infile:
+            line = next(infile)
+            header = line.strip("\n\r").split(cnv_sep)
+
+        print(header)
+
+        if isinstance(cnv_plus_values, str):
+            cnv_plus_values = [cnv_plus_values]
+        if isinstance(cnv_minus_values, str):
+            cnv_minus_values = [cnv_minus_values]
+        if not cnv_location and not cnv_chrom:
+            cnv_location = "location"
+        if not cnv_variant_type:
+            cnv_variant_type = "variant"
+        if not cnv_person_id:
+            if not cnv_best_state:
+                cnv_best_state = "bestState"
+            if not cnv_family_id:
+                cnv_family_id = "familyId"
+
+        dtype_dict: Dict[str, Any] = {
+            cnv_variant_type: str,
+        }
+        if cnv_location:
+            dtype_dict[cnv_location] = str
+        else:
+            assert cnv_chrom is not None and cnv_start is not None and \
+                cnv_end is not None
+
+            dtype_dict[cnv_chrom] = str
+            dtype_dict[cnv_start] = int
+            dtype_dict[cnv_end] = int
+
+        if cnv_person_id:
+            dtype_dict[cnv_person_id] = str
+        else:
+            assert cnv_family_id is not None and cnv_best_state is not None
+
+            dtype_dict[cnv_family_id] = str
+            dtype_dict[cnv_best_state] = str
+
+        raw_df = pd.read_csv(
+            filepath,
+            sep=cnv_sep,
+            dtype=dtype_dict
+        )
+
+        if cnv_location:
+            location: pd.Series = raw_df[cnv_location]
+
+            def location_split(v: str) -> Tuple[str, ...]:
+                return tuple(v.split(":"))
+
+            chrom_col_data, full_pos_data = \
+                zip(*map(location_split, location))
+            chrom_col: pd.Series = pd.Series(
+                index=raw_df.index, data=list(chrom_col_data))
+
+            def range_split(v: str) -> Tuple[str, ...]:
+                return tuple(v.split("-"))
+
+            start_col_data, end_col_data = zip(
+                *map(range_split, full_pos_data))
+
+            start_col: pd.Series = pd.Series(
+                index=raw_df.index, data=list(start_col_data))
+            end_col: pd.Series = pd.Series(
+                index=raw_df.index, data=list(end_col_data))
+
+        else:
+            assert cnv_chrom is not None and cnv_start is not None and \
+                cnv_end is not None
+
+            chrom_col = raw_df[cnv_chrom]
+            start_col = raw_df[cnv_start]
+            end_col = raw_df[cnv_end]
+
+        if adjust_chrom_prefix is not None:
+            chrom_col = chrom_col.apply(adjust_chrom_prefix)
+
+        def translate_variant_type(variant_type):
+            if variant_type in cnv_plus_values:
+                return "CNV+"
+            if variant_type in cnv_minus_values:
+                return "CNV-"
+            else:
+                logger.error(f"unexpected CNV variant type: {variant_type}")
+            return None
+
+        variant_types_transformed = raw_df[cnv_variant_type].apply(
+            translate_variant_type
+        )
+        variant_type_col = \
+            variant_types_transformed.apply(allele_type_from_name)
+
+        if cnv_person_id:
+            best_state_col_data = []
+            family_id_col_data = []
+            variant_best_states: Dict[Tuple[Any, ...], np.ndarray] = dict()
+
+            person_id_col = raw_df[cnv_person_id]
+            for chrom, pos_start, pos_end, variant_type, person_id in zip(
+                    chrom_col, start_col, end_col,
+                    variant_type_col, person_id_col):
+
+                person = families.persons.get(person_id)
+                family_id = person.family_id
+                family = families[family_id]
+                members = family.members_in_order
+
+                variant_index = (
+                    chrom, pos_start, pos_end, variant_type, family_id
+                )
+                if variant_index in variant_best_states:
+                    idx = person.index
+                    ref = variant_best_states[variant_index][0]
+                    alt = variant_best_states[variant_index][1]
+                    ref[idx] = ref[idx] - 1
+                    alt[idx] = alt[idx] + 1
+                else:
+                    ref = []
+                    alt = []
+                    for idx, member in enumerate(members):
+                        ref.append(
+                            get_interval_locus_ploidy(
+                                chrom,
+                                int(pos_start),
+                                int(pos_end),
+                                member.sex,
+                                genome
+                            )
+                        )
+                        alt.append(0)
+                        if member.person_id == person_id:
+                            ref[idx] = ref[idx] - 1
+                            alt[idx] = alt[idx] + 1
+                    variant_best_states[variant_index] = np.asarray(
+                        [ref, alt], dtype=GENOTYPE_TYPE)
+
+                best_state = variant_best_states[variant_index]
+                best_state_col_data.append(best_state)
+                family_id_col_data.append(family_id)
+            family_id_col = pd.Series(family_id_col_data, index=raw_df.index)
+            best_state_col = pd.Series(best_state_col_data, index=raw_df.index)
+
+        else:
+
+            def get_expected_ploidy(chrom, pos_start, pos_end, family_id):
+                return np.asarray([
+                    get_interval_locus_ploidy(
+                        chrom,
+                        int(pos_start),
+                        int(pos_end),
+                        person.sex,
+                        genome
+                    )
+                    for person in families[family_id].members_in_order
+                ])
+
+            assert cnv_family_id is not None
+            family_id_col = raw_df[cnv_family_id]
+            expected_ploidy_col = tuple(
+                map(
+                    lambda row: get_expected_ploidy(*row),
+                    zip(chrom_col, start_col, end_col, family_id_col),
+                )
+            )
+            assert cnv_best_state is not None
+
+            best_state_col_data = \
+                list(map(
+                    lambda x: cls._calc_cnv_best_state(*x),
+                    zip(
+                        raw_df[cnv_best_state],
+                        variant_type_col,
+                        expected_ploidy_col,
+                    ),
+                ))
+            best_state_col = pd.Series(best_state_col_data, index=raw_df.index)
+
+        result: Dict[str, pd._ListLike] = {
+            "chrom": chrom_col,
+            "position": start_col,
+            "end_position": end_col,
+            "variant_type": variant_type_col,
+            "best_state": best_state_col,
+            "family_id": family_id_col
+        }
+
+        return pd.DataFrame(data=result)
+
 
     @classmethod
     def parse_cli_arguments(
