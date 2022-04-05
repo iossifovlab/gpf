@@ -77,16 +77,16 @@ describe('AutismGeneProfileSingleViewComponent', () => {
     expect(component.isGeneInSFARI).toBeFalsy();
   });
 
-  it('should get autism score gene Score', () => {
+  it('should get autism score gene score', () => {
     const mocksScores = [
-      {category: 'autismScore', scores: [{Score: 'Score1'}, {Score: 'Score2'}]},
-      {category: 'protectionScore', scores: [{Score: 'Score3'}, {Score: 'Score4'}]},
+      {category: 'autismScore', scores: [{score: 'score1'}, {score: 'score2'}]},
+      {category: 'protectionScore', scores: [{score: 'score3'}, {score: 'score4'}]},
     ];
     component['genomicScoresGeneScores'] = mocksScores as any;
-    expect(component.getGeneScoreByKey('autismScore', 'Score1')).toEqual({Score: 'Score1'} as any);
-    expect(component.getGeneScoreByKey('autismScore', 'Score2')).toEqual({Score: 'Score2'}as any);
-    expect(component.getGeneScoreByKey('protectionScore', 'Score3')).toEqual({Score: 'Score3'} as any);
-    expect(component.getGeneScoreByKey('protectionScore', 'Score4')).toEqual({Score: 'Score4'} as any);
+    expect(component.getGeneScoreByKey('autismScore', 'score1')).toEqual({score: 'score1'} as any);
+    expect(component.getGeneScoreByKey('autismScore', 'score2')).toEqual({score: 'score2'}as any);
+    expect(component.getGeneScoreByKey('protectionScore', 'score3')).toEqual({score: 'score3'} as any);
+    expect(component.getGeneScoreByKey('protectionScore', 'score4')).toEqual({score: 'score4'} as any);
   });
 
   it('should get gene dataset value', () => {

@@ -159,7 +159,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   public getGeneScoreByKey(category: string, key: string): GeneScores {
     return this.genomicScoresGeneScores
       .find(genomicScoresCategory => genomicScoresCategory.category === category).scores
-      .find(score => score.Score === key);
+      .find(score => score.score === key);
   }
 
   public getSingleScoreValue(genomicScores: AgpGenomicScores[], categoryId: string, scoreId: string): number {
