@@ -16,4 +16,4 @@ def test_scores_has_rvis_rank(gene_scores_db):
 
 
 def test_loaded_scores(gene_scores_db):
-    assert len(gene_scores_db) == 5
+    assert len(gene_scores_db) == 2

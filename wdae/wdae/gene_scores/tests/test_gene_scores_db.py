@@ -8,4 +8,4 @@ def test_get_gene_gene_scores_db(db, wdae_gpf_instance):
 
     assert gene_scores_db is not None
 
-    assert len(gene_scores_db) == 2
+    assert len(gene_scores_db) == 5
