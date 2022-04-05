@@ -4,6 +4,8 @@ import pytest
 import io
 
 from dae.variants.attributes import Inheritance
+from dae.variants.core import Allele
+
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -39,7 +41,7 @@ def canvas_cnv():
         ("denovo", Inheritance.denovo),
     ]
 )
-def test_cnv_loader_simple(
+def test_cnv_loader_expected_inheritance(
         abn_families, canvas_cnv, gpf_instance_2013,
         transmission_type, expected_inheritance):
 
@@ -63,6 +65,38 @@ def test_cnv_loader_simple(
         for fv in fvs:
             for fa in fv.alt_alleles:
                 assert expected_inheritance in fa.inheritance_in_members
+
+
+@pytest.mark.parametrize(
+    "variant_index,expected_variant_type", [
+        (0, Allele.Type.large_deletion),
+        (1, Allele.Type.large_duplication),
+    ]
+)
+def test_cnv_loader_expected_variant_type(
+        abn_families, canvas_cnv, gpf_instance_2013,
+        variant_index, expected_variant_type):
+
+    loader = CNVLoader(
+        abn_families, canvas_cnv, gpf_instance_2013.reference_genome,
+        params={
+           "cnv_person_id": "person_id",
+           "cnv_family_id": "family_id",
+           "cnv_location": "location",
+           "cnv_variant_type": "variant",
+           "cnv_plus_values": ["GAIN"],
+           "cnv_minus_values": ["LOSS"],
+           "cnv_transmission_type": "transmitted",
+        }
+    )
+
+    variants = list(loader.full_variants_iterator())
+    print(variants)
+    assert len(variants) == 2
+    _sv, fvs = variants[variant_index]
+    for fv in fvs:
+        for fa in fv.alt_alleles:
+            assert expected_variant_type == fa.variant_type
 
 
 @pytest.mark.parametrize(
