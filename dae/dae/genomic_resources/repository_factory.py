@@ -25,8 +25,9 @@ def register_real_genomic_resource_repository_type(
 DEFAULT_DEFINITION = {
     "id": "default",
     "type": "url",
-    "url": "https://www.iossifovlab.com/distribution/"
-           "public/genomic-resources-repository/"
+    # "url": "https://www.iossifovlab.com/distribution/"
+    #        "public/genomic-resources-repository/"
+    "url": "https://grr.seqpipe.org/"
 }
 
 
