@@ -1,4 +1,3 @@
-import os
 import re
 
 SUB_COMPLEX_RE = re.compile(r"^(sub|complex|comp)\(([NACGT]+)->([NACGT]+)\)$")
