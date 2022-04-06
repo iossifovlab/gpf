@@ -40,7 +40,6 @@ export class QueryService {
     private router: Router,
     private http: HttpClient,
     private config: ConfigService,
-    private datasetsService: DatasetsService,
   ) { }
 
   public streamPost(url: string, filter) {
@@ -99,7 +98,7 @@ export class QueryService {
   }
 
   getGenotypePreviewVariantsByFilter(
-    dataset: Dataset, filter, loadingService?: any, maxVariantsCount: number = 1001
+    dataset: Dataset, filter, maxVariantsCount: number = 1001
   ): GenotypePreviewVariantsArray {
     const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
     const queryFilter = { ...filter };
@@ -117,9 +116,6 @@ export class QueryService {
         genotypePreviewVariantsArray.genotypePreviews[
           genotypePreviewVariantsArray.genotypePreviews.length - 1
         ].data.set('genome', dataset.genome);
-      }
-      if (loadingService) {
-        loadingService.setLoadingStop(); // Stop the loading overlay when at least one variant has been loaded
       }
     });
 

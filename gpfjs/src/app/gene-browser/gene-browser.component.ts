@@ -7,7 +7,7 @@ import { SummaryAllelesArray, SummaryAllelesFilter, codingEffectTypes,
   affectedStatusValues, effectTypeValues, variantTypeValues } from 'app/gene-browser/summary-variants';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
-import { first, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { first, debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
 import { Subject, Subscription } from 'rxjs';
 import { Dataset, GeneBrowser, PersonSet } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -98,7 +98,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
           this.geneSymbolSuggestions = [];
           return;
         }
-        this.geneService.searchGenes(this.geneSymbol).subscribe((response: { 'gene_symbols': string[] }) => {
+        this.geneService.searchGenes(this.geneSymbol).pipe(take(1)).subscribe((response: { 'gene_symbols': string[] }) => {
           this.geneSymbolSuggestions = response.gene_symbols;
         });
       })
@@ -106,7 +106,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   public ngOnDestroy(): void {
-    this.subscriptions.map(subscription => subscription.unsubscribe());
+    this.subscriptions.map(subscription => { subscription.unsubscribe() });
   }
 
   public selectGeneSymbol(geneSymbol: string): void {
@@ -165,11 +165,12 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.summaryVariantsFilter.selectedFrequencies = [
       0, this.geneBrowserConfig.domainMax
     ];
+      
+    await this.waitForGenePlotComponent();
 
     this.updateShownTablePreviewVariantsArray();
 
     if (!this.summaryVariantsFilter.codingOnly) {
-      await this.waitForGenePlotComponent();
       this.genePlotComponent.toggleCondenseIntrons();
     }
   }
