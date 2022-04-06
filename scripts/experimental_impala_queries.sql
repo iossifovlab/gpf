@@ -1,3 +1,132 @@
+SELECT variants.bucket_index, variants.summary_index, variants.chromosome, variants.`position`, variants.variant_type, variants.family_id, variants.inheritance_in_members, variants.variant_in_roles 
+FROM data_hg38_production_202005.iWES_v1_variants as variants JOIN data_hg38_production_202005.iWES_v1_pedigree as pedigree 
+WHERE
+  variants.family_id = 'SF0018681' AND
+  variants.effect_gene_symbols = 'POGZ' AND
+  variants.effect_types = 'missense' AND
+  ( variants.frequency_bin = 0 OR variants.frequency_bin = 1 ) AND ( variants.coding_bin = 1 ) AND ( variants.region_bin IN ('chr1_5') ) AND
+  variants.variant_in_members = pedigree.person_id;
+
+
+SELECT DISTINCT(variants.variant_in_roles)
+FROM data_hg38_production_202005.iWES_v1_variants as variants JOIN data_hg38_production_202005.iWES_v1_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_types in (  'nonsense' , 'frame-shift' , 'splice-site' , 'no-frame-shift-newStop'  )  ) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(150, variants.inheritance_in_members) != 0 ) AND 
+  ( (((BITAND(variants.variant_type, 4) != 0)) OR ((BITAND(variants.variant_type, 2) != 0))) OR ((BITAND(variants.variant_type, 1) != 0)) ) AND 
+  ( (variants.af_allele_count <= 1 or variants.af_allele_count is null) ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.frequency_bin = 0 OR variants.frequency_bin = 1 ) AND 
+  ( variants.coding_bin = 1 ) AND 
+  variants.variant_in_members = pedigree.person_id;
+
+SELECT variants.bucket_index, variants.summary_index, variants.chromosome, variants.`position`, variants.variant_type, variants.family_id, variants.inheritance_in_members, variants.variant_in_roles 
+FROM data_hg38_production_202005.iWES_v1_variants as variants JOIN data_hg38_production_202005.iWES_v1_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_types in (  'nonsense' , 'frame-shift' , 'splice-site' , 'no-frame-shift-newStop'  )  ) ) AND 
+  BITAND(256, variants.variant_in_roles) != 0 AND
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(150, variants.inheritance_in_members) != 0 ) AND 
+  ( (((BITAND(variants.variant_type, 4) != 0)) OR ((BITAND(variants.variant_type, 2) != 0))) OR ((BITAND(variants.variant_type, 1) != 0)) ) AND 
+  ( (variants.af_allele_count <= 1 or variants.af_allele_count is null) ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.frequency_bin = 0 OR variants.frequency_bin = 1 ) AND 
+  ( variants.coding_bin = 1 ) AND 
+  variants.variant_in_members = pedigree.person_id;
+
+
+SELECT COUNT(*)
+FROM data_hg38_production_202005.iWES_v1_variants as variants JOIN data_hg38_production_202005.iWES_v1_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_types in (  'nonsense' , 'frame-shift' , 'splice-site' , 'no-frame-shift-newStop'  )  ) ) AND 
+  variants.variant_in_roles = 128 AND
+  ( (((BITAND(variants.variant_type, 4) != 0)) OR ((BITAND(variants.variant_type, 2) != 0))) OR ((BITAND(variants.variant_type, 1) != 0)) ) AND 
+  ( (variants.af_allele_count <= 1 or variants.af_allele_count is null) ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.frequency_bin = 0 OR variants.frequency_bin = 1 ) AND 
+  ( variants.coding_bin = 1 ) AND 
+  variants.variant_in_members = pedigree.person_id
+
+
+
+SELECT DISTINCT(variants.inheritance_in_members)
+FROM data_hg38_production_202005.iWES_v1_variants as variants JOIN data_hg38_production_202005.iWES_v1_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_types in (  'nonsense' , 'frame-shift' , 'splice-site' , 'no-frame-shift-newStop'  )  ) ) AND 
+  variants.variant_in_roles = 128 AND
+  ( (((BITAND(variants.variant_type, 4) != 0)) OR ((BITAND(variants.variant_type, 2) != 0))) OR ((BITAND(variants.variant_type, 1) != 0)) ) AND 
+  ( (variants.af_allele_count <= 1 or variants.af_allele_count is null) ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.frequency_bin = 0 OR variants.frequency_bin = 1 ) AND 
+  ( variants.coding_bin = 1 ) AND 
+  variants.variant_in_members = pedigree.person_id
+
+
+-- (
+--   ((BITAND(variants.variant_in_roles, 128) != 0)) AND ((NOT ((BITAND(variants.variant_in_roles, 256) != 0))))    -- prb and not sib
+-- ) 
+-- OR 
+-- (
+--   ((NOT ((BITAND(variants.variant_in_roles, 128) != 0)))) AND ((BITAND(variants.variant_in_roles, 256) != 0))    -- not sib and prb
+-- ) 
+-- OR 
+-- (
+--   ((BITAND(variants.variant_in_roles, 128) != 0)) AND ((BITAND(variants.variant_in_roles, 256) != 0))            -- prb or sib
+-- )
+
+
+
+
+SELECT DISTINCT(variants.variant_in_roles)
+FROM data_hg38_production_202005.iWES_v1_variants as variants JOIN data_hg38_production_202005.iWES_v1_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_types in (  'nonsense' , 'frame-shift' , 'splice-site' , 'no-frame-shift-newStop'  )  ) ) AND 
+  ( (((BITAND(variants.variant_type, 4) != 0)) OR ((BITAND(variants.variant_type, 2) != 0))) OR ((BITAND(variants.variant_type, 1) != 0)) ) AND 
+  ( (variants.af_allele_count <= 1 or variants.af_allele_count is null) ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.frequency_bin = 0 OR variants.frequency_bin = 1 ) AND 
+  ( variants.coding_bin = 1 ) AND 
+  variants.variant_in_members = pedigree.person_id
+
+SELECT DISTINCT(variants.variant_in_roles)
+FROM data_hg38_production_202005.iWES_v1_variants as variants JOIN data_hg38_production_202005.iWES_v1_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_types in (  'nonsense' , 'frame-shift' , 'splice-site' , 'no-frame-shift-newStop'  )  ) ) AND 
+  ( ((((BITAND(variants.variant_in_roles, 128) != 0)) AND ((NOT ((BITAND(variants.variant_in_roles, 256) != 0))))) OR (((NOT ((BITAND(variants.variant_in_roles, 128) != 0)))) AND ((BITAND(variants.variant_in_roles, 256) != 0)))) OR (((BITAND(variants.variant_in_roles, 128) != 0)) AND ((BITAND(variants.variant_in_roles, 256) != 0))) ) AND 
+  ( (((BITAND(variants.variant_type, 4) != 0)) OR ((BITAND(variants.variant_type, 2) != 0))) OR ((BITAND(variants.variant_type, 1) != 0)) ) AND 
+  ( (variants.af_allele_count <= 1 or variants.af_allele_count is null) ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.frequency_bin = 0 OR variants.frequency_bin = 1 ) AND 
+  ( variants.coding_bin = 1 ) AND 
+  variants.variant_in_members = pedigree.person_id
+
+
+SELECT variants.bucket_index, variants.summary_index, variants.chromosome, variants.`position`, variants.variant_type, variants.inheritance_in_members, variants.variant_in_roles, variants.family_id
+FROM data_hg38_production_202005.iWES_v1_variants as variants JOIN data_hg38_production_202005.iWES_v1_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_types in (  'nonsense' , 'frame-shift' , 'splice-site' , 'no-frame-shift-newStop'  )  ) ) AND 
+  ( ((((BITAND(variants.variant_in_roles, 128) != 0)) AND ((NOT ((BITAND(variants.variant_in_roles, 256) != 0))))) OR (((NOT ((BITAND(variants.variant_in_roles, 128) != 0)))) AND ((BITAND(variants.variant_in_roles, 256) != 0)))) OR (((BITAND(variants.variant_in_roles, 128) != 0)) AND ((BITAND(variants.variant_in_roles, 256) != 0))) ) AND 
+  ( (((BITAND(variants.variant_type, 4) != 0)) OR ((BITAND(variants.variant_type, 2) != 0))) OR ((BITAND(variants.variant_type, 1) != 0)) ) AND 
+  ( (variants.af_allele_count <= 1 or variants.af_allele_count is null) ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.frequency_bin = 0 OR variants.frequency_bin = 1 ) AND 
+  ( variants.coding_bin = 1 ) AND 
+  variants.variant_in_members = pedigree.person_id
+
+
+SELECT variants.bucket_index, variants.summary_index, variants.chromosome, variants.`position`, variants.end_position, variants.variant_type, variants.reference, variants.family_id
+FROM data_hg38_production_202005.iWES_v1_variants as variants JOIN data_hg38_production_202005.iWES_v1_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_types in (  'nonsense' , 'frame-shift' , 'splice-site' , 'no-frame-shift-newStop'  )  ) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(150, variants.inheritance_in_members) != 0 ) AND 
+  ( ((((BITAND(variants.variant_in_roles, 128) != 0)) AND ((NOT ((BITAND(variants.variant_in_roles, 256) != 0))))) OR (((NOT ((BITAND(variants.variant_in_roles, 128) != 0)))) AND ((BITAND(variants.variant_in_roles, 256) != 0)))) OR (((BITAND(variants.variant_in_roles, 128) != 0)) AND ((BITAND(variants.variant_in_roles, 256) != 0))) ) AND 
+  ( (((BITAND(variants.variant_type, 4) != 0)) OR ((BITAND(variants.variant_type, 2) != 0))) OR ((BITAND(variants.variant_type, 1) != 0)) ) AND 
+  ( (variants.af_allele_count <= 1 or variants.af_allele_count is null) ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.frequency_bin = 0 OR variants.frequency_bin = 1 ) AND 
+  ( variants.coding_bin = 1 ) AND 
+  variants.variant_in_members = pedigree.person_id
+
+
 SELECT variants.bucket_index, variants.summary_index, variants.chromosome, variants.`position`, variants.end_position, variants.variant_type, variants.reference, variants.family_id, variants.variant_data, variants.extra_attributes 
 FROM data_hg38_seqclust.SFARI_ABN_WGS_V1_variants as variants JOIN data_hg38_seqclust.SFARI_ABN_WGS_V1_pedigree as pedigree 
 WHERE
