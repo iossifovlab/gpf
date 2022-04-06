@@ -1322,6 +1322,13 @@ class Variants2ParquetTool:
         else:
             logging.basicConfig(level=logging.ERROR)
 
+        cls.run(argv, gpf_instance)
+
+    @classmethod
+    def run(cls, argv, gpf_instance=None):
+        if gpf_instance is None:
+            gpf_instance = GPFInstance()
+
         families_filename, families_params = \
             FamiliesLoader.parse_cli_arguments(argv)
 

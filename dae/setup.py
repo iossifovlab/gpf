@@ -65,6 +65,8 @@ setuptools.setup(
     denovo_liftover=dae.tools.denovo_liftover:main
     dae_liftover=dae.tools.dae_liftover:main
     stats_liftover=dae.tools.stats_liftover:main
+
+    import_tools=dae.import_tools.import_tools:main
     """,
     classifiers=[
         "Development Status :: 4 - Beta",
