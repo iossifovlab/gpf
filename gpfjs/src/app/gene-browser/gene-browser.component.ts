@@ -156,6 +156,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.summaryVariantsArray = this.queryService.getSummaryVariants(this.requestParamsSummary);
     this.summaryVariantsArrayFiltered = clone(this.summaryVariantsArray);
 
+    this.summaryVariantsFilter =  new SummaryAllelesFilter();
+
     this.summaryVariantsFilter.selectedRegion = [
       this.selectedGene.collapsedTranscript.start,
       this.selectedGene.collapsedTranscript.stop
