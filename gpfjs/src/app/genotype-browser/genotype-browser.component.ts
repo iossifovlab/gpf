@@ -17,6 +17,7 @@ import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-fil
 import { PersonFiltersBlockComponent } from 'app/person-filters-block/person-filters-block.component';
 import { ErrorsState, ErrorsModel } from '../common/errors.state';
 import { clone } from 'lodash';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-genotype-browser',
@@ -85,6 +86,11 @@ export class GenotypeBrowserComponent implements OnInit {
       this.genotypePreviewVariantsArray = null;
     });
 
+    this.queryService.streamingSubject.pipe(take(1)).subscribe(() => {
+      this.loadingFinished = true;
+      this.loadingService.setLoadingStop();
+    });
+
     this.errorsState$.subscribe(state => {
       setTimeout(() => this.disableQueryButtons = state.componentErrors.size > 0);
     });
@@ -99,12 +105,8 @@ export class GenotypeBrowserComponent implements OnInit {
     this.legend = this.selectedDataset.personSetCollections.getLegend(this.genotypeBrowserState['personSetCollection']);
 
     this.patchState();
-
-    this.queryService.streamingFinishedSubject.subscribe(
-      () => { this.loadingFinished = true; }
-    );
     this.genotypePreviewVariantsArray = this.queryService.getGenotypePreviewVariantsByFilter(
-      this.selectedDataset, this.genotypeBrowserState, this.loadingService
+      this.selectedDataset, this.genotypeBrowserState
     );
   }
 
