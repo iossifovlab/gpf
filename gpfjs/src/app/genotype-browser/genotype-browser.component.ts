@@ -15,6 +15,7 @@ import { RegionsFilterState } from 'app/regions-filter/regions-filter.state';
 import { GenomicScoresBlockState } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-filters-block.component';
 import { PersonFiltersBlockComponent } from 'app/person-filters-block/person-filters-block.component';
+import { UniqueFamilyVariantsFilterState } from 'app/unique-family-variants-filter/unique-family-variants-filter.state';
 import { ErrorsState, ErrorsModel } from '../common/errors.state';
 import { clone } from 'lodash';
 import { take } from 'rxjs/operators';
@@ -47,6 +48,7 @@ export class GenotypeBrowserComponent implements OnInit {
     GenomicScoresBlockState,
     FamilyFiltersBlockComponent.familyFiltersBlockState,
     PersonFiltersBlockComponent.personFiltersBlockState,
+    UniqueFamilyVariantsFilterState,
   ])
   static genotypeBrowserStateSelector(
     genotypeBlockState,
@@ -55,6 +57,7 @@ export class GenotypeBrowserComponent implements OnInit {
     genomicScoresBlockState,
     familyFiltersBlockState,
     personFiltersBlockState,
+    uniqueFamilyVariantsFilterState,
   ) {
     const res = {
       ...genotypeBlockState,
@@ -62,6 +65,7 @@ export class GenotypeBrowserComponent implements OnInit {
       ...genomicScoresBlockState,
       ...familyFiltersBlockState,
       ...personFiltersBlockState,
+      ...uniqueFamilyVariantsFilterState,
     };
     if (regionsFilterState['regionsFilters'].length) {
       res['regions'] = regionsFilterState['regionsFilters'];
