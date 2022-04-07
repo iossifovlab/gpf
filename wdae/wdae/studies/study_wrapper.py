@@ -308,14 +308,17 @@ class StudyWrapper(StudyWrapperBase):
         max_variants_message=False
     ):
         max_variants_count = kwargs.pop("maxVariantsCount", max_variants_count)
-        summary_variant_ids = set(kwargs.pop("summaryVariantIds", None))
+        summary_variant_ids = kwargs.pop("summaryVariantIds", None)
 
         kwargs = self.query_transformer.transform_kwargs(**kwargs)
 
         if summary_variant_ids is None:
             def filter_allele(allele):
                 return True
+
         elif len(summary_variant_ids) > 0:
+            summary_variant_ids = set(summary_variant_ids)
+
             def filter_allele(allele):
                 svid = f"{allele.cshl_location}:{allele.cshl_variant}"
                 return svid in summary_variant_ids
