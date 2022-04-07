@@ -136,6 +136,19 @@
 
       <hr>
 
+      <div class="form-block">
+        <div class="card">
+          <ul ngbNav class="navbar bg-light nav-pills" style="justify-content: flex-start">
+            <div class="nav-title-custom" style="width: unset">Unique family variants</div>
+            <li ngbNavItem style="padding-left: 10px">
+              <input type="checkbox" (click)="checkUniqueFamilyVariantsFilter()">
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <hr>
+
       <div class="row">
         <div class="col-6">
           <gpf-loading-spinner

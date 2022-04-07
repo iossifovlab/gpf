@@ -45,6 +45,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   public summaryVariantsArray: SummaryAllelesArray;
   public summaryVariantsArrayFiltered: SummaryAllelesArray;
   public summaryVariantsFilter: SummaryAllelesFilter = new SummaryAllelesFilter();
+  public uniqueFamilyVariants = false;
 
   private variantUpdate$: Subject<void> = new Subject();
 
@@ -225,7 +226,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     const requestParams = {
       ...this.requestParams,
       'maxVariantsCount': this.maxFamilyVariants,
-      'uniqueFamilyVariants': false,
+      'uniqueFamilyVariants': this.uniqueFamilyVariants,
     };
 
     this.genotypePreviewVariantsArray = this.queryService.getGenotypePreviewVariantsByFilter(
@@ -291,6 +292,11 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
 
   public checkShowTransmitted(value: boolean): void {
     this.summaryVariantsFilter.transmitted = value;
+  }
+
+  public checkUniqueFamilyVariantsFilter(): void {
+    this.uniqueFamilyVariants = !this.uniqueFamilyVariants;
+    this.updateShownTablePreviewVariantsArray();
   }
 
   public setSelectedRegion(region: [number, number]): void {
