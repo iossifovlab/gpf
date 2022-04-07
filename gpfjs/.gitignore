@@ -34,10 +34,8 @@ npm-debug.log
 testem.log
 /typings
 package-lock.json
-
-# e2e
-/e2e/*.js
-/e2e/*.map
+css-lint-report.xml
+ts-lint-report.xml
 
 #System Files
 .DS_Store
