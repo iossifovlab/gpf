@@ -113,7 +113,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.geneSymbol = geneSymbol;
 
     if (geneSymbol === '') {
-      this.location.replaceState(`datasets/${this.selectedDatasetId}/gene-browser/`);
+      this.location.replaceState(`datasets/${this.selectedDatasetId}/gene-browser`);
     }
   }
 
