@@ -63,7 +63,8 @@ def get_configured_definition():
 
 def build_genomic_resource_repository(
         definition: Optional[dict] = None,
-        file_name: str = None) -> GenomicResourceRepo:
+        file_name: str = None,
+        use_cache: bool = True) -> GenomicResourceRepo:
 
     if not definition:
         if file_name is not None:
@@ -107,6 +108,6 @@ def build_genomic_resource_repository(
             repo_id, **definition)
     else:
         raise ValueError(f"unknown genomic repository type {repo_type}")
-    if "cache_dir" in definition:
+    if use_cache and "cache_dir" in definition:
         return GenomicResourceCachedRepo(repo, definition["cache_dir"])
     return repo

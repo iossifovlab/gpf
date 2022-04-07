@@ -1,6 +1,5 @@
 import os
 import logging
-import pandas as pd
 import json
 
 from box import Box  # type:ignore
@@ -25,7 +24,6 @@ from dae.backends.storage.genotype_storage_factory import \
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
-from dae.configuration.schemas.gene_info import gene_info_conf
 from dae.configuration.schemas.genomic_scores import genomic_scores_schema
 from dae.configuration.schemas.autism_gene_profile import \
     autism_gene_tool_config

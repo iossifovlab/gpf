@@ -1,6 +1,9 @@
-import os
 import logging
 from pathlib import Path
+from sqlalchemy import create_engine  # type: ignore
+from sqlalchemy import MetaData, Table, Column, String
+from sqlalchemy.sql import insert
+from dae.file_cache.cache import ResourceFileCache
 
 from typing import Dict, List, Optional
 
@@ -66,6 +69,8 @@ class GeneSetCollection(object):
         collection_id = config["id"]
         assert resource.get_type() == "gene_set", "Invalid resource type"
         collection_format = config["format"]
+        web_label = config.get("web_label", None)
+        web_format_str = config.get("web_format_str", None)
         logger.debug(f"loading {collection_id}: {config}")
         if collection_format == "map":
             filename = config["filename"]
@@ -93,15 +98,26 @@ class GeneSetCollection(object):
                 (Path(f).stem, resource.open_raw_file(f)) for f in filepaths
             ]
             gene_terms = read_ewa_set_file(files)
+        elif collection_format == "sqlite":
+            resource_file_cache = ResourceFileCache("gene_sets")
+            dbfile = config["dbfile"]
+            dbfile_cache = resource_file_cache.get_file_path_from_resource(
+                resource,
+                dbfile,
+                is_binary=True
+            )
+            return SqliteGeneSetCollectionDB(
+                collection_id,
+                dbfile_cache,
+                web_label,
+                web_format_str
+            )
         else:
             raise ValueError("Invalid collection format type")
 
         for key, value in gene_terms.tDesc.items():
             syms = list(gene_terms.t2G[key].keys())
             gene_sets.append(GeneSet(key, value, syms))
-
-        web_label = config.get("web_label", None)
-        web_format_str = config.get("web_format_str", None)
 
         return GeneSetCollection(
             collection_id, gene_sets,
@@ -113,6 +129,54 @@ class GeneSetCollection(object):
         if gene_set is None:
             print(f"{gene_set_id} not found in {self.gene_sets.keys()}")
         return gene_set
+
+
+class SqliteGeneSetCollectionDB:
+    def __init__(
+        self, collection_id: str, dbfile: str,
+        web_label: str = None, web_format_str: str = None
+    ):
+        self.collection_id = collection_id
+        self.web_label = web_label
+        self.web_format_str = web_format_str
+        self.dbfile = dbfile
+        self.engine = create_engine("sqlite:///{}".format(dbfile))
+        self.metadata = MetaData(self.engine)
+        self._create_gene_sets_table()
+
+    def _create_gene_sets_table(self):
+        self.gene_sets_table = Table(
+            "gene_sets",
+            self.metadata,
+            Column("name", String(), primary_key=True),
+            Column("desc", String()),
+            Column("syms", String()),
+        )
+
+        self.metadata.create_all()
+
+    def add_gene_set(self, gene_set):
+        with self.engine.connect() as connection:
+            insert_values = {
+                "name": gene_set.name,
+                "desc": gene_set.desc,
+                "syms": ",".join(gene_set.syms)
+            }
+            connection.execute(
+                insert(self.gene_sets_table).values(insert_values)
+            )
+
+    def get_gene_set(self, gene_set_id):
+        table = self.gene_sets_table
+        s = table.select().where(table.c.name == gene_set_id)
+        with self.engine.connect() as connection:
+            row = connection.execute(s).fetchone()
+            gene_set = GeneSet(
+                row["name"],
+                row["desc"],
+                row["syms"].split(",")
+            )
+            return gene_set
 
 
 class GeneSetsDb(object):
