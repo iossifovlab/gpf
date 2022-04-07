@@ -24,7 +24,10 @@ def cnv_loader(
     families = families_loader.load()
 
     variants_loader = CNVLoader(
-        families, variants_filename, gpf_instance_2013.reference_genome)
+        families, variants_filename, gpf_instance_2013.reference_genome,
+        params={
+            "cnv_family_id": "familyId",
+            "cnv_best_state": "bestState"})
 
     variants_loader = AnnotationPipelineDecorator(
         variants_loader, annotation_pipeline_internal
