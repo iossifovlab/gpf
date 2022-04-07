@@ -53,9 +53,9 @@ function main() {
 
   build_stage "Lint"
   {
-    build_run ./node_modules/eslint/bin/eslint.js "**/*.{html,ts}" --format checkstyle >ts-lint-report.xml || echo "eslint exited with $?"
-    build_run ./node_modules/.bin/stylelint --custom-formatter ./node_modules/stylelint-checkstyle-formatter "**/*.css" >css-lint-report.xml \
-      || echo "stylelint exited with $?"
+    build_run bash -c './node_modules/eslint/bin/eslint.js "**/*.{html,ts}" --format checkstyle >ts-lint-report.xml || echo "eslint exited with $?"'
+    build_run bash -c './node_modules/.bin/stylelint --custom-formatter ./node_modules/stylelint-checkstyle-formatter "**/*.css" >css-lint-report.xml \
+      || echo "stylelint exited with $?"'
   }
 
   build_stage "Tests"
