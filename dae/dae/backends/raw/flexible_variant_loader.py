@@ -1,14 +1,7 @@
-from dae.pedigrees.family import FamiliesData
-import numpy as np
-
-from typing import Callable, Generator, Dict, Any, Sequence, TextIO, Tuple
+from typing import Callable, Generator, Dict, Any, Sequence, TextIO, List
 
 from dae.utils.dae_utils import dae2vcf_variant
-from dae.utils.variant_utils import get_interval_locus_ploidy
-
 from dae.variants.variant import allele_type_from_cshl_variant
-from dae.variants.core import Allele
-
 from dae.genomic_resources.reference_genome import ReferenceGenome
 
 
@@ -48,127 +41,40 @@ def variant_to_variant_type() \
     return transformer
 
 
-def cnv_location_to_vcf_trasformer() \
+def adjust_chrom_prefix(add_chrom_prefix=None, del_chrom_prefix=None) \
         -> Callable[[Dict[str, Any]], Dict[str, Any]]:
 
-    def trasformer(result: Dict[str, Any]) -> Dict[str, Any]:
-        location = result["location"]
-        chrom, range = location.split(":")
-        beg, end = range.split("-")
-        result["chrom"] = chrom
-        result["pos"] = int(beg)
-        result["pos_end"] = int(end)
+    if add_chrom_prefix is not None:
 
-        return result
+        def _add_chrom_prefix(record: Dict[str, Any]) -> Dict[str, Any]:
+            chrom = record["chrom"]
+            if add_chrom_prefix not in chrom:
+                record["chrom"] = f"{add_chrom_prefix}{chrom}"
+            return record
 
-    return trasformer
+        return _add_chrom_prefix
 
+    elif del_chrom_prefix is not None:
 
-def cnv_vcf_to_vcf_trasformer() \
-        -> Callable[[Dict[str, Any]], Dict[str, Any]]:
+        def _del_chrom_prefix(record: Dict[str, Any]) -> Dict[str, Any]:
+            chrom = record["chrom"]
+            if del_chrom_prefix in chrom:
+                record["chrom"] = chrom[len(del_chrom_prefix):]
+            return record
 
-    def trasformer(result: Dict[str, Any]) -> Dict[str, Any]:
-        chrom = result["chrom"]
-        pos = int(result["pos"])
-        pos_end = int(result["pos_end"])
+        return _del_chrom_prefix
 
-        result["chrom"] = chrom
-        result["pos"] = pos
-        result["pos_end"] = pos_end
+    else:
 
-        return result
+        def _identity(record: Dict[str, Any]) -> Dict[str, Any]:
+            return record
 
-    return trasformer
-
-
-def cnv_dae_best_state_to_best_state(
-        families: FamiliesData, genome: ReferenceGenome) \
-        -> Callable[[Dict[str, Any]], Dict[str, Any]]:
-
-    def transformer(result: Dict[str, Any]) -> Dict[str, Any]:
-        variant_type = result["variant_type"]
-        actual_ploidy = np.fromstring(
-            result["best_state"], dtype=np.int8, sep=" ")
-        family_id = result["family_id"]
-        family = families[family_id]
-        chrom = result["chrom"]
-        pos = result["pos"]
-        pos_end = result["pos_end"]
-
-        expected_ploidy = np.asarray([
-            get_interval_locus_ploidy(
-                chrom, pos, pos_end, p.sex, genome
-            ) for p in family.members_in_order
-        ])
-        if variant_type == Allele.Type.large_duplication:
-            alt_row = actual_ploidy - expected_ploidy
-        elif variant_type == Allele.Type.large_deletion:
-            alt_row = expected_ploidy - actual_ploidy
-        else:
-            raise ValueError(
-                f"unexpected variant type: {variant_type}")
-        ref_row = expected_ploidy - alt_row
-        best_state = np.stack((ref_row, alt_row)).astype(np.int8)
-        result["best_state"] = best_state
-
-        return result
-
-    return transformer
-
-
-def cnv_person_id_to_best_state(
-        families: FamiliesData, genome: ReferenceGenome) \
-        -> Callable[[Dict[str, Any]], Dict[str, Any]]:
-
-    def transformer(result: Dict[str, Any]) -> Dict[str, Any]:
-        person_id = result["person_id"]
-        person = families.persons[person_id]
-        family = families[person.family_id]
-
-        chrom = result["chrom"]
-        pos = result["pos"]
-        pos_end = result["pos_end"]
-
-        expected_ploidy = np.asarray([
-            get_interval_locus_ploidy(
-                chrom, pos, pos_end, p.sex, genome
-            ) for p in family.members_in_order
-        ])
-        alt_row = np.zeros(len(family.members_in_order), dtype=np.int8)
-        alt_row[person.index] = 1
-
-        ref_row = expected_ploidy - alt_row
-        best_state = np.stack((ref_row, alt_row)).astype(np.int8)
-        result["best_state"] = best_state
-
-        return result
-
-    return transformer
-
-
-def cnv_variant_to_variant_type(
-        cnv_plus_values=set(["CNV+"]),
-        cnv_minus_values=set(["CNV-"])) \
-            -> Callable[[Dict[str, Any]], Dict[str, Any]]:
-
-    def transformer(result: Dict[str, Any]) -> Dict[str, Any]:
-        variant = result["variant"]
-        if variant in cnv_plus_values:
-            variant_type = Allele.Type.large_duplication
-        elif variant in cnv_minus_values:
-            variant_type = Allele.Type.large_deletion
-        else:
-            raise ValueError(f"unexpected CNV variant type: {variant}")
-
-        result["variant_type"] = variant_type
-        return result
-
-    return transformer
+        return _identity
 
 
 def flexible_variant_loader(
         infile: TextIO,
-        in_header: Tuple[str, ...],
+        in_header: List[str],
         line_splitter: Callable,
         transformers: Sequence[Callable[[Dict[str, Any]], Dict[str, Any]]]) \
             -> Generator[Dict[str, Any], None, None]:

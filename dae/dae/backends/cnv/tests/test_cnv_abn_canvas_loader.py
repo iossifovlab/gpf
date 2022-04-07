@@ -49,7 +49,6 @@ def test_cnv_loader_expected_inheritance(
         abn_families, canvas_cnv, gpf_instance_2013.reference_genome,
         params={
            "cnv_person_id": "person_id",
-           "cnv_family_id": "family_id",
            "cnv_location": "location",
            "cnv_variant_type": "variant",
            "cnv_plus_values": ["GAIN"],
@@ -81,7 +80,6 @@ def test_cnv_loader_expected_variant_type(
         abn_families, canvas_cnv, gpf_instance_2013.reference_genome,
         params={
            "cnv_person_id": "person_id",
-           "cnv_family_id": "family_id",
            "cnv_location": "location",
            "cnv_variant_type": "variant",
            "cnv_plus_values": ["GAIN"],
@@ -118,7 +116,6 @@ def test_cnv_loader_regions(
         abn_families, canvas_cnv, gpf_instance_2013.reference_genome,
         params={
            "cnv_person_id": "person_id",
-           "cnv_family_id": "family_id",
            "cnv_location": "location",
            "cnv_variant_type": "variant",
            "cnv_plus_values": ["GAIN"],
@@ -162,7 +159,6 @@ def test_cnv_loader_del_chrom_prefix_regions(
         abn_families, content, gpf_instance_2013.reference_genome,
         params={
            "cnv_person_id": "person_id",
-           "cnv_family_id": "family_id",
            "cnv_location": "location",
            "cnv_variant_type": "variant",
            "cnv_plus_values": ["GAIN"],

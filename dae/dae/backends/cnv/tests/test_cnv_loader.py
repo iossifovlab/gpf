@@ -10,7 +10,11 @@ def test_cnv_loader(fixture_dirname, gpf_instance_2013):
     variants_file = fixture_dirname("backends/cnv_variants.txt")
 
     loader = CNVLoader(
-        families, variants_file, gpf_instance_2013.reference_genome)
+        families, variants_file, gpf_instance_2013.reference_genome,
+        params={
+            "cnv_family_id": "familyId",
+            "cnv_best_state": "bestState"
+        })
     assert loader is not None
 
     svs = []
@@ -29,7 +33,12 @@ def test_cnv_loader_avoids_duplication(fixture_dirname, gpf_instance_2013):
     variants_file = fixture_dirname("backends/cnv_variants_dup.txt")
 
     loader = CNVLoader(
-        families, variants_file, gpf_instance_2013.reference_genome)
+        families, variants_file, gpf_instance_2013.reference_genome,
+        params={
+            "cnv_family_id": "familyId",
+            "cnv_best_state": "bestState"
+        })
+
     assert loader is not None
 
     svs = []
