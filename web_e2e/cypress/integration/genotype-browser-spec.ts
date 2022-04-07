@@ -538,7 +538,7 @@ describe('Genotype browser UCSC url tests', () => {
   });
 });
 
-describe('Genotype browser table preview visual tests', () => {
+describe.skip('Genotype browser table preview visual tests', () => {
   const genotypeBrowserController = new GenotypeBrowserController();
   const page = new GenotypeBrowserPage();
   const genotypePreviewTablePage = new GenotypePreviewTablePage();
