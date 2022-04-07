@@ -86,11 +86,6 @@ export class GenotypeBrowserComponent implements OnInit {
       this.genotypePreviewVariantsArray = null;
     });
 
-    this.queryService.streamingSubject.pipe(take(1)).subscribe(() => {
-      this.loadingFinished = true;
-      this.loadingService.setLoadingStop();
-    });
-
     this.errorsState$.subscribe(state => {
       setTimeout(() => this.disableQueryButtons = state.componentErrors.size > 0);
     });
@@ -103,6 +98,11 @@ export class GenotypeBrowserComponent implements OnInit {
     this.genotypePreviewVariantsArray = null;
     this.genotypeBrowserState['datasetId'] = this.selectedDataset.id;
     this.legend = this.selectedDataset.personSetCollections.getLegend(this.genotypeBrowserState['personSetCollection']);
+
+    this.queryService.streamingSubject.pipe(take(1)).subscribe(() => {
+      this.loadingFinished = true;
+      this.loadingService.setLoadingStop();
+    });
 
     this.patchState();
     this.genotypePreviewVariantsArray = this.queryService.getGenotypePreviewVariantsByFilter(
