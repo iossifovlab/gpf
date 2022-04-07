@@ -328,7 +328,6 @@ class QueryTransformer:
                         present_in_child, present_in_parent,
                         rarity, frequency_filter
                     )
-                print("frequency filter:", arg, val)
                 if arg is not None:
                     kwargs[arg] = val
 
@@ -343,7 +342,6 @@ class QueryTransformer:
 
             query = "any({})".format(
                     ",".join(inheritance_types))
-            print("query (1):", query)
 
             self._add_inheritance_to_query(query, kwargs)
             kwargs.pop("inheritanceTypeFilter")
