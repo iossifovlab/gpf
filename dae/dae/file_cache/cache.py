@@ -1,25 +1,11 @@
 import os
 
-from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.configuration.schemas.dae_conf import dae_conf_schema
-from dae.genomic_resources import build_genomic_resource_repository
-
 
 class ResourceFileCache:
-    def __init__(self, cache_dir):
-        dae_db_dir = os.environ["DAE_DB_DIR"]
-        dae_config = GPFConfigParser.load_config(
-            os.path.join(dae_db_dir, "gpf_instance.yaml"),
-            dae_conf_schema
-        )
-        if dae_config.grr:
-            self.grr = build_genomic_resource_repository(
-                dae_config.grr, use_cache=False
-            )
-        else:
-            self.grr = build_genomic_resource_repository(use_cache=False)
-
+    def __init__(self, cache_dir, grr=None):
+        dae_db_dir = os.environ.get("DAE_DB_DIR")
         self.cache_dir = os.path.join(dae_db_dir, "file_cache", cache_dir)
+        self.grr = grr
 
     def _save_resource_file(self, resource, file, save_filepath, is_binary):
         read_mode = "rb" if is_binary else "r"
@@ -31,6 +17,7 @@ class ResourceFileCache:
         file.close()
 
     def get_file_path(self, resource_id, file, is_binary=False):
+        assert self.grr is not None
         filepath = os.path.join(self.cache_dir, resource_id, file)
         if not os.path.exists(filepath):
             resource = self.grr.get_resource(resource_id)
