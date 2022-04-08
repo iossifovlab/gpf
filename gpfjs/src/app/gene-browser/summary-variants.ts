@@ -2,11 +2,11 @@
 const lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
 export const codingEffectTypes = [
   'lgds', 'nonsense', 'frame-shift', 'splice-site', 'no-frame-shift-newStop',
-  'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift', 'CDS', 'CNV+', 'CNV-'
+  'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift', 'CDS', 'cnv+', 'cnv-'
 ];
 const otherEffectTypes = [
   'noStart', 'noEnd', 'no-frame-shift', 'non-coding', 'intron', 'intergenic',
-  '3\'UTR', '3\'UTR-intron', '5\'UTR', '5\'UTR-intron', 'CDS', 'CNV+', 'CNV-'
+  '3\'UTR', '3\'UTR-intron', '5\'UTR', '5\'UTR-intron', 'CDS'
 ];
 type affectedStatusType = 'Affected only' | 'Unaffected only' | 'Affected and unaffected';
 export const affectedStatusValues: Array<affectedStatusType> = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
