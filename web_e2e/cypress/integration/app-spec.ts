@@ -184,7 +184,7 @@ describe('App user access rights tests', () => {
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowSubmitButton.click();
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
-    page.logout(true);
+    page.logout();
 
     page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics, false);
     page.login(userData.normal.username, userData.normal.password);
@@ -209,7 +209,7 @@ describe('App user access rights tests', () => {
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowSubmitButton.click();
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
-    page.logout(true);
+    page.logout();
 
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics, false);
     page.login(userData.normal.username, userData.normal.password, false);
@@ -262,7 +262,7 @@ describe('App user access rights tests', () => {
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowSubmitButton.click();
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
-    page.logout(true);
+    page.logout();
 
     page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.genotypeBrowser, false);
     page.login(userData.normal.username, userData.normal.password);
@@ -306,7 +306,7 @@ describe('App user access rights tests', () => {
     userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true});
     userManagementPage.userWindowSubmitButton.click();
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
-    page.logout(true);
+    page.logout();
 
     page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.genotypeBrowser, false);
     page.login(userData.normal.username, userData.normal.password, false);
