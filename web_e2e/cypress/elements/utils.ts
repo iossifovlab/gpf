@@ -103,12 +103,10 @@ export class BasePage {
     cy.intercept('GET', '/gpf/api/v3/datasets').as('datasets');
 
     usersPage.logoutButton.click();
+
     cy.wait('@datasets');
-
-    cy.url().then(currentUrl => {
-      this.waitForPageToLoad(currentUrl.split('/').pop(), hasAccessRights)
-    });
-
+    cy.location('pathname').should('eq', `/gpf/datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`);
+    this.waitForPageToLoad(toolPageLinks.geneBrowser, hasAccessRights);
   }
 
   public navigateToDatasetPage(dataset: string, page: string, hasAccessRights = true): void {
@@ -178,6 +176,7 @@ export class BasePage {
 
   public toggleSidenav(): void {
     this.sidenavTogglerButton.click({scrollBehavior: false});
+    cy.wait(1000);
   }
 
   public navigateToSidenavPage(sidenavPageLink: string): void {
