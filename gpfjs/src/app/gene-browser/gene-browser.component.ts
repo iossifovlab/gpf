@@ -281,7 +281,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   public checkVariantType(variantType: string, value: boolean): void {
-    variantType = variantType.toLowerCase();
     value ? this.summaryVariantsFilter.selectedVariantTypes.add(variantType)
           : this.summaryVariantsFilter.selectedVariantTypes.delete(variantType);
   }

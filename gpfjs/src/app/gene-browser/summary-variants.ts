@@ -188,7 +188,7 @@ export class SummaryAllelesFilter {
       (!this.denovo && summaryAllele.seenAsDenovo)
       || (!this.transmitted && !summaryAllele.seenAsDenovo)
       || (!this.selectedAffectedStatus.has(summaryAllele.affectedStatus))
-      || (!this.selectedVariantTypes.has(summaryAllele.variantType.toLowerCase()))
+      || (!this.selectedVariantTypes.has(summaryAllele.variantType))
       || (!this.isEffectTypeSelected(summaryAllele.effect))
     ) {
       return false;

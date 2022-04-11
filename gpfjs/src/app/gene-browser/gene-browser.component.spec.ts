@@ -75,52 +75,42 @@ describe('GeneBrowserComponent', () => {
   });
 
   it('should select affected status', () => {
-    spyOn<any>(component, 'updateVariants');
     // There are default values to account for, so we use prevLength
     const prevLength = component.summaryVariantsFilter.selectedAffectedStatus.size;
     component.checkAffectedStatus('test', true);
     expect(component.summaryVariantsFilter.selectedAffectedStatus.size).toEqual(prevLength + 1);
     component.checkAffectedStatus('test', false);
     expect(component.summaryVariantsFilter.selectedAffectedStatus.size).toEqual(prevLength);
-    expect(component['updateVariants']).toHaveBeenCalledTimes(2);
   });
 
   it('should select effect type', () => {
-    spyOn<any>(component, 'updateVariants');
     const prevLength = component.summaryVariantsFilter.selectedEffectTypes.size;
     component.checkEffectType('test', true);
     expect(component.summaryVariantsFilter.selectedEffectTypes.size).toEqual(prevLength + 1);
     component.checkEffectType('test', false);
     expect(component.summaryVariantsFilter.selectedEffectTypes.size).toEqual(prevLength);
-    expect(component['updateVariants']).toHaveBeenCalledTimes(2);
   });
 
   it('should select variant type', () => {
-    spyOn<any>(component, 'updateVariants');
     const prevLength = component.summaryVariantsFilter.selectedVariantTypes.size;
     component.checkVariantType('test', true);
     expect(component.summaryVariantsFilter.selectedVariantTypes.size).toEqual(prevLength + 1);
     component.checkVariantType('test', false);
     expect(component.summaryVariantsFilter.selectedVariantTypes.size).toEqual(prevLength);
-    expect(component['updateVariants']).toHaveBeenCalledTimes(2);
   });
 
   it('should toggle denovo', () => {
-    spyOn<any>(component, 'updateVariants');
     component.checkShowDenovo(true);
     expect(component.summaryVariantsFilter.denovo).toEqual(true);
     component.checkShowDenovo(false);
     expect(component.summaryVariantsFilter.denovo).toEqual(false);
-    expect(component['updateVariants']).toHaveBeenCalledTimes(2);
   });
 
   it('should toggle transmitted', () => {
-    spyOn<any>(component, 'updateVariants');
     component.checkShowTransmitted(true);
     expect(component.summaryVariantsFilter.transmitted).toEqual(true);
     component.checkShowTransmitted(false);
     expect(component.summaryVariantsFilter.transmitted).toEqual(false);
-    expect(component['updateVariants']).toHaveBeenCalledTimes(2);
   });
 
   it('should set selected region', () => {
