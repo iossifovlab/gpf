@@ -83,7 +83,7 @@ def _configure_cnv_location(
             cnv_start = "pos"
         if cnv_end is None:
             cnv_end = "pos_end"
-        
+
         chrom_index = header.index(cnv_chrom)
         start_index = header.index(cnv_start)
         end_index = header.index(cnv_end)
@@ -287,7 +287,7 @@ def _configure_loader(
         cnv_plus_values: List[str] = ["CNV+"],
         cnv_minus_values: List[str] = ["CNV-"]) \
         -> Tuple[
-            List[str], 
+            List[str],
             List[Callable[[Dict[str, Any]], Dict[str, Any]]]]:
 
     transformers: List[
@@ -382,7 +382,7 @@ def _cnv_loader(
 
         df = df.rename(
             columns={
-                "pos": "position", 
+                "pos": "position",
                 "pos_end": "end_position"
             })
         return cast(pd.DataFrame, df)
