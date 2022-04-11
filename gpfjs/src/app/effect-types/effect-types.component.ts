@@ -46,12 +46,12 @@ export class EffectTypesComponent extends StatefulComponent implements OnInit {
 
   private initButtonGroups(): void {
     this.effectTypesButtons = new Map<string, Set<string>>();
-    this.effectTypesButtons.set('ALL', ALL);
+    this.effectTypesButtons.set('ALL', new Set(ALL));
     this.effectTypesButtons.set('NONE', new Set());
-    this.effectTypesButtons.set('LGDS', LGDS);
-    this.effectTypesButtons.set('CODING', CODING);
-    this.effectTypesButtons.set('NONSYNONYMOUS', NONSYNONYMOUS);
-    this.effectTypesButtons.set('UTRS', UTRS);
+    this.effectTypesButtons.set('LGDS', new Set(LGDS));
+    this.effectTypesButtons.set('CODING', new Set(CODING));
+    this.effectTypesButtons.set('NONSYNONYMOUS', new Set(NONSYNONYMOUS));
+    this.effectTypesButtons.set('UTRS', new Set(UTRS));
   }
 
   selectButtonGroup(groupId: string): void {
@@ -60,8 +60,8 @@ export class EffectTypesComponent extends StatefulComponent implements OnInit {
   }
 
   setEffectTypes(effectTypes: Set<string>) {
-    this.effectTypes.selected = effectTypes;
-    this.store.dispatch(new SetEffectTypes(effectTypes));
+    this.effectTypes.selected = new Set(effectTypes);
+    this.store.dispatch(new SetEffectTypes(this.effectTypes.selected));
   }
 
   onEffectTypeChange(value: any): void {
