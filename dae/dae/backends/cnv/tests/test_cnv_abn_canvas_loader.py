@@ -28,8 +28,8 @@ def canvas_cnv():
     content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
         study_id  family_id  person_id  location            variant
-        st1       p1         p1         1:10000000-2000000  LOSS
-        st1       p2         p2         2:10000000-2000000  GAIN
+        st1       f1         p1         1:10000000-2000000  LOSS
+        st1       f2         p2         2:10000000-2000000  GAIN
         """
     )))
     return content

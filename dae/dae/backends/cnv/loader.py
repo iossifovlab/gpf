@@ -1,3 +1,76 @@
+"""
+Copy Number Variants (CNV) loader :class:`CNVLoader`
+====================================================
+
+This modules provides a class :class:`CNVLoader` to facilitate loading CNVs
+specified in variauous input formats.
+
+There are three groups of input parameters that could be configured
+by the CNVLoader parameters:
+
+- location of the variant - VCF-like vs CSHL-like of the variant position;
+
+- variant genotype - list of person_ids vs CSHL-like family/best state
+  description of the genotype for given family
+
+- variant type - flexible CNV+/CNV- variant type description.
+
+To configure the :class:`CNVLoader` you need to pass `params` dictionary
+to the constructor of the class.
+
+Parameters that are used to configure input data colums are:
+
+Location of the CNVs
+--------------------
+
+- `cnv_location` - column name, that is interpreted as variant
+  location
+
+- `cnv_chrom` - column name, interpreted as the chromosome
+
+- `cnv_start` - column name, interpreted as the start position of the CNVs
+
+- `cnv_end` - column name, interpreted as the end position of the CNVs
+
+
+Genotype of the CNVs
+--------------------
+
+- `cnv_family_id` - column name, specifying the family for the CNVs
+
+- `cnv_best_state` - column name, specifying the best state fore the CNVs
+
+- `cnv_person_id` - column name, specifying a person, that has given CNV
+
+
+Variant type for CNVs
+---------------------
+
+
+- `cnv_variant_type` - column name, specifying the CNV variant type
+
+- `cnv_plus_values` - list of the values in column `cnv_variant_type` that
+  are interpreted as `CNV+`
+
+- `cnv_minus_values` - list of values in column `cnv_variant_type` that are
+  interpreted as `CNV-`
+
+Additional parameters
+---------------------
+
+Additional parameters, that configure the behavior of the :class:`CNVLoader`
+are:
+
+- `cnv_sep` - separator character, that split columns in the lines of the
+  input file
+
+- `cnv_transmission_type` - the CNV loader is used mostly for importing
+  de Novo variants. In rare cases when we use this loader to import
+  transmitted CNV variants we should pass this parameter to specify
+  that the varirants are not `denovo`.
+
+
+"""
 import logging
 import argparse
 from pathlib import Path
@@ -30,7 +103,10 @@ logger = logging.getLogger(__name__)
 
 def _cnv_location_to_vcf_trasformer() \
         -> Callable[[Dict[str, Any]], Dict[str, Any]]:
-
+    """
+    In case the input uses CNV location this transormer will product
+    internal (chrom, pos, pos_end) description of the CNV position.
+    """
     def trasformer(result: Dict[str, Any]) -> Dict[str, Any]:
         location = result["location"]
         chrom, range = location.split(":")
@@ -46,7 +122,11 @@ def _cnv_location_to_vcf_trasformer() \
 
 def _cnv_vcf_to_vcf_trasformer() \
         -> Callable[[Dict[str, Any]], Dict[str, Any]]:
-
+    """
+    In case the input uses VCF-like description of the CNVs this
+    transformer will chec it and handle the proper type conversion for
+    `pos` and `pos_end` values.
+    """
     def trasformer(result: Dict[str, Any]) -> Dict[str, Any]:
         chrom = result["chrom"]
         pos = int(result["pos"])
@@ -68,7 +148,10 @@ def _configure_cnv_location(
         cnv_start: Optional[str] = None,
         cnv_end: Optional[str] = None,
         cnv_location: Optional[str] = None) -> None:
-
+    """
+    This helper function will **configure** the header and transformers needed
+    to handle position of CNVs in the input record.
+    """
     if cnv_chrom is not None or cnv_start is not None or \
             cnv_end is not None:
         if cnv_location is not None:
@@ -114,7 +197,11 @@ def _configure_cnv_location(
 def _cnv_dae_best_state_to_best_state(
         families: FamiliesData, genome: ReferenceGenome) \
         -> Callable[[Dict[str, Any]], Dict[str, Any]]:
-
+    """
+    In case the genotype of the CNVs is specified in old
+    dae family id/best state notation, this transformer will handle it
+    and transform it to canonical family id/best state form
+    """
     def transformer(result: Dict[str, Any]) -> Dict[str, Any]:
         variant_type = result["variant_type"]
         actual_ploidy = np.fromstring(
@@ -150,6 +237,11 @@ def _cnv_person_id_to_best_state(
         families: FamiliesData, genome: ReferenceGenome) \
         -> Callable[[Dict[str, Any]], Dict[str, Any]]:
 
+    """
+    In case the genotype is specified by person id having the variant
+    this transformer will transform it into canonical family id/best state
+    form
+    """
     def transformer(result: Dict[str, Any]) -> Dict[str, Any]:
         person_id = result["person_id"]
         person = families.persons[person_id]
@@ -185,6 +277,10 @@ def _configure_cnv_best_state(
         cnv_person_id: Optional[str] = None,
         cnv_family_id: Optional[str] = None,
         cnv_best_state: Optional[str] = None) -> None:
+    """
+    This helper function will **configure** the header and transformers
+    needed to handle family genotypes of CNVs.
+    """
 
     if cnv_person_id is not None:
         if cnv_family_id is not None or cnv_best_state is not None:
@@ -228,7 +324,11 @@ def _cnv_variant_to_variant_type(
         cnv_plus_values=set(["CNV+"]),
         cnv_minus_values=set(["CNV-"])) \
             -> Callable[[Dict[str, Any]], Dict[str, Any]]:
-
+    """
+    This transformer is used to transform variant type to canonical
+    inernal representation using :class:`Allele.Type.large_duplication` and
+    :class:`Allele.Type.large_deletion`.
+    """
     def transformer(result: Dict[str, Any]) -> Dict[str, Any]:
         variant = result["variant"]
         if variant in cnv_plus_values:
@@ -256,6 +356,10 @@ def _configure_cnv_variant_type(
     if isinstance(cnv_minus_values, str):
         cnv_minus_values = [cnv_minus_values]
 
+    """
+    This helper function **configures** the header and transformer needed
+    to handle CNV variant type in the input data.
+    """
     if cnv_variant_type is None:
         cnv_variant_type = "variant"
 
@@ -288,6 +392,10 @@ def _configure_loader(
         -> Tuple[
             List[str],
             List[Callable[[Dict[str, Any]], Dict[str, Any]]]]:
+    """
+    This funciton configures all headers and transformers needed to
+    handle CNVs input data.
+    """
 
     transformers: List[
         Callable[[Dict[str, Any]], Dict[str, Any]]] = []
@@ -330,6 +438,11 @@ def _cnv_loader(
         add_chrom_prefix: Optional[str] = None,
         del_chrom_prefix: Optional[str] = None,
         **kwargs) -> pd.DataFrame:
+    """
+    This function uses flexible variant loader infrastructure to
+    load variants from a CNVs data input and transform them into a pandas
+    `DataFrame`.
+    """
 
     if isinstance(filepath_or_buffer, str) or \
             isinstance(filepath_or_buffer, Path):
@@ -455,20 +568,36 @@ class CNVLoader(VariantsGenotypesLoader):
             " location of the variant. [Default: location]",
         ))
         arguments.append(CLIArgument(
+            "--cnv-chrom",
+            value_type=str,
+            default_value="chrom",
+            help_text="The label or index of the"
+            " column containing the chromosome"
+            " of the variant. [Default: chrom]",
+        ))
+        arguments.append(CLIArgument(
+            "--cnv-start",
+            value_type=str,
+            default_value="pos",
+            help_text="The label or index of the"
+            " column containing the start"
+            " of the CNV. [Default: pos]",
+        ))
+        arguments.append(CLIArgument(
+            "--cnv-end",
+            value_type=str,
+            default_value="pos_end",
+            help_text="The label or index of the"
+            " column containing the end"
+            " of the CNV variant. [Default: pos_end]",
+        ))
+        arguments.append(CLIArgument(
             "--cnv-family-id",
             value_type=str,
             default_value="familyId",
             help_text="The label or index of the"
             " column containing family's ID."
             " [Default: familyId]",
-        ))
-        arguments.append(CLIArgument(
-            "--cnv-variant-type",
-            value_type=str,
-            default_value="variant",
-            help_text="The label or index of the"
-            " column containing the variant's"
-            " type. [Default: variant]",
         ))
         arguments.append(CLIArgument(
             "--cnv-best-state",
@@ -484,6 +613,14 @@ class CNVLoader(VariantsGenotypesLoader):
             help_text="The label or index of the"
             " column containing the ids of the people in which"
             " the variant is. [Default: None]",
+        ))
+        arguments.append(CLIArgument(
+            "--cnv-variant-type",
+            value_type=str,
+            default_value="variant",
+            help_text="The label or index of the"
+            " column containing the variant's"
+            " type. [Default: variant]",
         ))
         arguments.append(CLIArgument(
             "--cnv-plus-values",

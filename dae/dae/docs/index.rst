@@ -16,4 +16,5 @@ dae Interface
    enrichment_tool
    gene
    annotation
+   backends
 
