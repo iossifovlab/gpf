@@ -27,18 +27,6 @@ def families():
     return families
 
 
-@pytest.fixture
-def cnv_vcf_like():
-    content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
-        """
-        person_id  chr  pos         pos_end      variant  extra
-        f1.s2      1    1590681     1628197      CNV+     0
-        f2.p1      1    28298951    28369279     CNV-     1
-        """
-    )))
-    return content
-
-
 def test_configure_cnv_loader_vcf_like_pos():
     header = ["person_id", "Chr", "Start", "End", "variant", "extra"]
     transformers = []
