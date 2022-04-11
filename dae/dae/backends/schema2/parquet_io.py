@@ -196,9 +196,9 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
             root_dirname=root_dirname,
         )
 
-    def _evaluate_region_bin(self, family_allele):
-        chromosome = family_allele.chromosome
-        pos = family_allele.position // self._region_length
+    def _evaluate_region_bin(self, summary_allele):
+        chromosome = summary_allele.chromosome
+        pos = summary_allele.position // self._region_length
         if chromosome in self._chromosomes:
             return f"{chromosome}_{pos}"
         else:
@@ -213,10 +213,11 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
     def _evaluate_family_bin(self, family_allele):
         return self._family_bin_from_id(family_allele.family_id)
 
-    def _evaluate_coding_bin(self, family_allele):
-        if family_allele.is_reference_allele:
+    def _evaluate_coding_bin(self, summary_allele):
+        if summary_allele.is_reference_allele:
             return 0
-        variant_effects = set(family_allele.effect.types)
+
+        variant_effects = set(summary_allele.effect_types)
         coding_effect_types = set(self._coding_effect_types)
 
         result = variant_effects.intersection(coding_effect_types)
@@ -225,10 +226,10 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         else:
             return 1
 
-    def _evaluate_frequency_bin(self, family_allele):
-        count = family_allele.get_attribute("af_allele_count")
-        frequency = family_allele.get_attribute("af_allele_freq")
-        transmission_type = family_allele.transmission_type
+    def _evaluate_frequency_bin(self, summary_allele):
+        count = summary_allele.get_attribute("af_allele_count")
+        frequency = summary_allele.get_attribute("af_allele_freq")
+        transmission_type = summary_allele.transmission_type
         if transmission_type == TransmissionType.denovo:
             frequency_bin = 0
         elif count and int(count) == 1:  # Ultra rare
@@ -240,23 +241,41 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
 
         return frequency_bin
 
-    def variant_filename(self, family_allele):
-        current_bin = self._evaluate_region_bin(family_allele)
-        filepath = os.path.join(self.output, f"region_bin={current_bin}")
+    def summary_filename(self, summary_allele): 
+        filepath = os.path.join(self.output, "summary") 
+        filename = "summary"
 
-        filename = f"variants_region_bin_{current_bin}"
+        current_bin = self._evaluate_region_bin(summary_allele)
+        filepath = os.path.join(filepath, f"region_bin={current_bin}")
+        filename += f"_region_bin_{current_bin}"
+        
         if self._rare_boundary > 0:
-            current_bin = self._evaluate_frequency_bin(family_allele)
+            current_bin = self._evaluate_frequency_bin(summary_allele)
             filepath = os.path.join(filepath, f"frequency_bin={current_bin}")
             filename += f"_frequency_bin_{current_bin}"
+         
         if len(self._coding_effect_types) > 0:
-            current_bin = self._evaluate_coding_bin(family_allele)
+            current_bin = self._evaluate_coding_bin(summary_allele)
             filepath = os.path.join(filepath, f"coding_bin={current_bin}")
             filename += f"_coding_bin_{current_bin}"
+
+        bucket_index = summary_allele.get_attribute("bucket_index")
+        filename += f"_bucket_index_{bucket_index:0>6}"
+        filename += ".parquet"
+
+        return os.path.join(filepath, filename)
+
+    def family_filename(self, family_allele):
+        filepath = os.path.join(self.output, "family") 
+        filename = "family"
+
         if self._family_bin_size > 0:
             current_bin = self._evaluate_family_bin(family_allele)
             filepath = os.path.join(filepath, f"family_bin={current_bin}")
             filename += f"_family_bin_{current_bin}"
+        
+        bucket_index = family_allele.get_attribute("bucket_index")
+        filename += f"_bucket_index_{bucket_index:0>6}"
         filename += ".parquet"
 
         return os.path.join(filepath, filename)
