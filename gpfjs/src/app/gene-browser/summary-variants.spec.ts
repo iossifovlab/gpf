@@ -602,12 +602,12 @@ describe('SummaryAllelesFilter', () => {
         'lgds',
         'missense',
         'synonymous',
+        'cnv+',
+        'cnv-',
         'noStart',
         'noEnd',
         'no-frame-shift',
         'CDS',
-        'CNV+',
-        'CNV-'
       ],
       'inheritanceTypeFilter': [
         'denovo',
@@ -652,8 +652,6 @@ describe('SummaryAllelesFilter', () => {
         '5\'UTR',
         '5\'UTR-intron',
         'CDS',
-        'CNV+',
-        'CNV-'
       ],
       'inheritanceTypeFilter': [],
       'affectedStatus': [
