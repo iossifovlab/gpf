@@ -17,7 +17,7 @@ import { clone } from 'lodash';
 import * as d3 from 'd3';
 import * as draw from 'app/utils/svg-drawing';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
-import { LGDS, CNV, OTHER } from 'app/effect-types/effect-types';
+import { LGDS, CNV, OTHER, CODING } from 'app/effect-types/effect-types';
 
 @Component({
   selector: 'gpf-gene-browser',
@@ -215,7 +215,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       'inheritanceTypeFilter': ['denovo', 'mendelian', 'omission', 'missing'],
     };
     if (this.summaryVariantsFilter.codingOnly) {
-      requestParams['effectTypes'] = [...LGDS, ...OTHER, ...CNV, 'CDS'];
+      requestParams['effectTypes'] = [...LGDS, ...CODING, ...CNV, 'CDS'];
     }
     return requestParams;
   }
