@@ -42,11 +42,11 @@ export const CODING: Set<string> = new Set([
 ]);
 
 export const NONCODING: Set<string> = new Set([
-  'non coding',
+  'non-coding',
   'intron',
   'intergenic',
-  '3\'-UTR',
-  '5\'-UTR',
+  '3\'UTR',
+  '5\'UTR',
 ]);
 
 export const CNV: Set<string> = new Set([
