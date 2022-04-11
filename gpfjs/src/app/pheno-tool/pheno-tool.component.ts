@@ -56,6 +56,7 @@ export class PhenoToolComponent implements OnInit {
 
     this.state$.subscribe(state => {
       this.phenoToolState = state;
+      this.phenoToolResults = null;
     });
 
     this.errorsState$.subscribe(state => {
