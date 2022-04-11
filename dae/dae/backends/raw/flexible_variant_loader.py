@@ -76,7 +76,8 @@ def flexible_variant_loader(
         infile: TextIO,
         in_header: List[str],
         line_splitter: Callable,
-        transformers: Sequence[Callable[[Dict[str, Any]], Dict[str, Any]]]) \
+        transformers: Sequence[Callable[[Dict[str, Any]], Dict[str, Any]]],
+        filters: Sequence[Callable[[Dict[str, Any]], bool]]) \
             -> Generator[Dict[str, Any], None, None]:
 
     for line in infile:
@@ -87,4 +88,6 @@ def flexible_variant_loader(
         }
         for transformer in transformers:
             result = transformer(result)
+        if not all([f(result) for f in filters]):
+            continue
         yield result

@@ -424,6 +424,7 @@ def _cnv_loader(
         filepath_or_buffer: Union[str, Path, TextIO],
         families: FamiliesData,
         genome: ReferenceGenome,
+        regions: List[Region],
         cnv_chrom: Optional[str] = None,
         cnv_start: Optional[str] = None,
         cnv_end: Optional[str] = None,
@@ -475,8 +476,16 @@ def _cnv_loader(
         transformers.append(adjust_chrom_prefix(
             add_chrom_prefix, del_chrom_prefix))
 
+        def regions_filter(rec):
+            if len(regions) == 0:
+                return True
+            chrom = rec["chrom"]
+            pos = rec["pos"]
+            return any([r.isin(chrom, pos) for r in regions])
+
         variant_generator = flexible_variant_loader(
-                infile, header, line_splitter, transformers)
+                infile, header, line_splitter, transformers,
+                filters=[regions_filter])
 
         data = []
         for record in variant_generator:
@@ -490,6 +499,9 @@ def _cnv_loader(
                     "variant_type",
                     "family_id", "best_state"
                 ]))
+
+        df = df.sort_values(
+            by=["chrom", "pos", "pos_end"])
 
         df = df.rename(
             columns={
@@ -505,8 +517,8 @@ class CNVLoader(VariantsGenotypesLoader):
             families: FamiliesData,
             cnv_filename: str,
             genome: ReferenceGenome,
-            regions: List[str] = None,
-            params: Dict[str, Any] = None):
+            regions: Optional[List[str]] = None,
+            params: Optional[Dict[str, Any]] = None):
 
         if params is None:
             params = {}
@@ -529,12 +541,19 @@ class CNVLoader(VariantsGenotypesLoader):
         logger.info(f"CNV loader params: {params}")
         self.genome = genome
         self.set_attribute("source_type", "cnv")
+        self.reset_regions(regions)
 
-        logger.info(f"CNV loader params: {self.params}")
+        regions_list: List[Region] = []
+        if regions is not None:
+            regions_list = [Region.from_str(r) for r in regions]
+        logger.info("CNV loader with regions list: %s", regions_list)
+
+        logger.info("CNV loader params: %s", self.params)
         self.cnv_df = _cnv_loader(
             cnv_filename,
             families,
             genome,
+            regions_list,
             **self.params,
         )
 
@@ -655,19 +674,17 @@ class CNVLoader(VariantsGenotypesLoader):
 
         result = []
         for r in self.regions:
-            if r is None:
-                result.append(r)
-            else:
-                result.append(Region.from_str(r))
+            assert r is not None
+            result.append(Region.from_str(r))
         self.regions = result
 
     def _is_in_regions(self, summary_variant: SummaryVariant) -> bool:
+        if len(self.regions) == 0:
+            return True
         isin = [
             r.isin(  # type: ignore
                 summary_variant.chrom, summary_variant.position
             )
-            if r is not None
-            else True
             for r in self.regions
         ]
         return any(isin)

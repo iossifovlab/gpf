@@ -60,7 +60,8 @@ def test_denovo_short_simple(denovo_short):
         denovo_short,
         in_header=["familyId", "location", "variant", "bestState"],
         line_splitter=lambda ln: ln.strip("\n\r").split("\t"),
-        transformers=[])
+        transformers=[],
+        filters=[])
 
     results = list(generator)
     assert len(results) == 3
@@ -80,7 +81,8 @@ def test_denovo_short_location_variant_transformation(
         denovo_short,
         in_header=["familyId", "location", "variant", "bestState"],
         line_splitter=lambda ln: ln.strip("\n\r").split("\t"),
-        transformers=transformers)
+        transformers=transformers,
+        filters=[])
 
     results = list(generator)
     assert len(results) == 3
@@ -117,7 +119,8 @@ def test_denovo_short_variant_type_transformation(denovo_short):
         denovo_short,
         in_header=["familyId", "location", "variant", "bestState"],
         line_splitter=lambda ln: ln.strip("\n\r").split("\t"),
-        transformers=transformers)
+        transformers=transformers,
+        filters=[])
 
     results = list(generator)
     assert len(results) == 3

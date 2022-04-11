@@ -136,6 +136,40 @@ def test_cnv_loader_regions(
 
 
 @pytest.mark.parametrize(
+    "add_chrom_prefix,region,expected", [
+        (None, "1", 1),
+        (None, "2", 1),
+        (None, "3", 0),
+        ("chr", "chr1", 1),
+        ("chr", "chr2", 1),
+        ("chr", "1", 0),
+        ("chr", "2", 0),
+    ]
+)
+def test_cnv_loader_constructor_regions(
+        abn_families, canvas_cnv, gpf_instance_2013,
+        add_chrom_prefix, region, expected):
+
+    loader = CNVLoader(
+        abn_families, canvas_cnv, gpf_instance_2013.reference_genome,
+        regions=[region],
+        params={
+           "cnv_person_id": "person_id",
+           "cnv_location": "location",
+           "cnv_variant_type": "variant",
+           "cnv_plus_values": ["GAIN"],
+           "cnv_minus_values": ["LOSS"],
+           "cnv_transmission_type": "transmitted",
+           "add_chrom_prefix": add_chrom_prefix,
+        }
+    )
+
+    variants = list(loader.family_variants_iterator())
+    print(variants)
+    assert len(variants) == expected
+
+
+@pytest.mark.parametrize(
     "region,expected", [
         ("1", 1),
         ("2", 1),

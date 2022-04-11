@@ -2,6 +2,7 @@ import textwrap
 import pytest
 import io
 
+from dae.utils.regions import Region
 from dae.utils.variant_utils import mat2str
 from dae.variants.core import Allele
 from dae.pedigrees.loader import FamiliesLoader
@@ -61,7 +62,8 @@ def test_cnv_dae_location(cnv_dae):
         cnv_dae,
         in_header=["familyId", "location", "variant", "bestState"],
         line_splitter=lambda ln: ln.strip("\n\r").split("\t"),
-        transformers=transformers)
+        transformers=transformers,
+        filters=[])
 
     results = list(generator)
     assert len(results) == 4
@@ -88,7 +90,8 @@ def test_cnv_dae_variant_type(cnv_dae):
         cnv_dae,
         in_header=["familyId", "location", "variant", "bestState"],
         line_splitter=lambda ln: ln.strip("\n\r").split("\t"),
-        transformers=transformers)
+        transformers=transformers,
+        filters=[])
 
     results = list(generator)
     assert len(results) == 4
@@ -166,7 +169,8 @@ def test_cnv_dae_best_state(
         cnv_dae,
         in_header=["family_id", "location", "variant", "best_state"],
         line_splitter=lambda ln: ln.strip("\n\r").split("\t"),
-        transformers=transformers)
+        transformers=transformers,
+        filters=[])
 
     results = list(generator)
     assert len(results) == 4
@@ -215,7 +219,8 @@ def test_cnv_person_id_best_state(
         cnv_person_id,
         in_header=["person_id", "location", "variant"],
         line_splitter=lambda ln: ln.strip("\n\r").split("\t"),
-        transformers=transformers)
+        transformers=transformers,
+        filters=[])
 
     results = list(generator)
     assert len(results) == 4
@@ -264,7 +269,8 @@ def test_cnv_vcf_position(
         cnv_vcf,
         in_header=["person_id", "chrom", "pos", "pos_end", "variant"],
         line_splitter=lambda ln: ln.strip("\n\r").split("\t"),
-        transformers=transformers)
+        transformers=transformers,
+        filters=[])
 
     results = list(generator)
     assert len(results) == 4
@@ -277,7 +283,28 @@ def test_cnv_vcf_position(
 def test_cnv_loader_simple(families, cnv_dae, gpf_instance_2013):
 
     df = _cnv_loader(
-        cnv_dae, families, gpf_instance_2013.reference_genome)
+        cnv_dae, families, gpf_instance_2013.reference_genome, regions=[])
     assert df is not None
 
     assert len(df) == 4
+
+
+@pytest.mark.parametrize(
+    "regions,expected", [
+        ([], 4),
+        (["1"], 2),
+        (["X"], 2),
+        (["1", "X"], 4),
+        (["3"], 0),
+    ]
+)
+def test_cnv_loader_with_regions(
+        families, cnv_dae, gpf_instance_2013, regions, expected):
+
+    regions_list = [Region.from_str(r) for r in regions]
+
+    df = _cnv_loader(
+        cnv_dae, families, gpf_instance_2013.reference_genome,
+        regions=regions_list)
+    assert df is not None
+    assert len(df) == expected
