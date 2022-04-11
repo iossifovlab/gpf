@@ -1,10 +1,10 @@
-import { GeneWeightsPage } from 'cypress/elements/gene-weights-page';
+import { GeneScoresPage } from 'cypress/elements/gene-scores-page';
 import { GenesBlockPage } from 'cypress/elements/genes-block-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 import { GenotypeBrowserController } from 'cypress/elements/genotype-browser-controller';
 import { GenotypeBrowserPage } from 'cypress/elements/genotype-browser-page';
 
-const geneWeightsData = [
+const geneScoresData = [
   {
     desc: "SFARI gene score",
     inputField: false,
@@ -53,7 +53,7 @@ const geneWeightsData = [
 ];
 
 describe('Gene weights panel tests', () => {
-  const page = new GeneWeightsPage();
+  const page = new GeneScoresPage();
   const genesBlockPage = new GenesBlockPage();
 
   before(() => {
@@ -71,33 +71,33 @@ describe('Gene weights panel tests', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genesBlockPage.genesWeightsPanel.should('not.exist');
 
-    genesBlockPage.geneWeightsButton.click();
+    genesBlockPage.geneScoresButton.click();
     genesBlockPage.genesWeightsPanel.should('be.visible');
   });
 
   it('should display the correct gene weights in the selector dropdown', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    genesBlockPage.geneWeightsButton.click();
+    genesBlockPage.geneScoresButton.click();
 
-    geneWeightsData.forEach(geneWeight => {
-      page.dropdownButton.contains(geneWeight.desc);
+    geneScoresData.forEach(geneScore => {
+      page.dropdownButton.contains(geneScore.desc);
     });
   });
 
   it('should go through all gene weights and check whether from/to buttons are shown', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    genesBlockPage.geneWeightsButton.click();
+    genesBlockPage.geneScoresButton.click();
 
-    geneWeightsData.forEach(geneWeight => {
-      page.dropdownButton.select(geneWeight.desc);
-      page.fromInputField.should(geneWeight.inputField ? 'be.visible' : 'not.exist');
-      page.toInputField.should(geneWeight.inputField ? 'be.visible' : 'not.exist');
+    geneScoresData.forEach(geneScore => {
+      page.dropdownButton.select(geneScore.desc);
+      page.fromInputField.should(geneScore.inputField ? 'be.visible' : 'not.exist');
+      page.toInputField.should(geneScore.inputField ? 'be.visible' : 'not.exist');
     });
   });
 
   it('should have working from/to step up/down buttons in RVIS rank', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    genesBlockPage.geneWeightsButton.click();
+    genesBlockPage.geneScoresButton.click();
     page.dropdownButton.select('RVIS rank');
 
     page.fromInputField.should('have.value', '1');
@@ -121,7 +121,7 @@ describe('Gene weights panel tests', () => {
 
   it('should have working from/to step up/down buttons in ExAC pLI', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    genesBlockPage.geneWeightsButton.click();
+    genesBlockPage.geneScoresButton.click();
     page.dropdownButton.select('ExAC pLI');
 
     page.fromInputField.should('have.value', '0');
@@ -148,28 +148,28 @@ describe('Gene weights panel tests', () => {
     page.toInputField.should('have.value', '1.01');
   });
 
-  geneWeightsData.forEach(geneWeight => {
-    it('should filter variants when "' + geneWeight.desc + '" gene weight is selected', () => {
+  geneScoresData.forEach(geneScore => {
+    it('should filter variants when "' + geneScore.desc + '" gene score is selected', () => {
       const genotypeBrowserController = new GenotypeBrowserController();
       const genotypeBrowserPage = new GenotypeBrowserPage();
 
       page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-      genesBlockPage.geneWeightsButton.click();
-      page.dropdownButton.select(geneWeight.desc);
-      page.allGeneWeights.should('not.contain', '~');
+      genesBlockPage.geneScoresButton.click();
+      page.dropdownButton.select(geneScore.desc);
+      page.allGeneScores.should('not.contain', '~');
 
       genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.showTablePreview();
       genotypeBrowserPage.overviewParagraph.should(
         'have.text',
-        geneWeight.allVariants + ' variants selected (' + geneWeight.allVariants + ' shown)'
+        geneScore.allVariants + ' variants selected (' + geneScore.allVariants + ' shown)'
       );
     });
   });
 });
 
 describe.skip('Gene weights visual tests', () => {
-  const page = new GeneWeightsPage();
+  const page = new GeneScoresPage();
   const genesBlockPage = new GenesBlockPage();
 
   before(() => {
@@ -211,23 +211,23 @@ describe.skip('Gene weights visual tests', () => {
     }
 
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    genesBlockPage.geneWeightsButton.click();
+    genesBlockPage.geneScoresButton.click();
 
     moveSlider('left', 200);
-    page.allGeneWeights.should('not.contain.text', '~');
+    page.allGeneScores.should('not.contain.text', '~');
     page.histogram.matchImageSnapshot('histogram-left-drag-200');
 
     moveSlider('left', -100);
-    page.allGeneWeights.should('not.contain.text', '~');
+    page.allGeneScores.should('not.contain.text', '~');
     page.histogram.matchImageSnapshot('histogram-left-drag-100');
 
     moveSlider('left', -100);
     moveSlider('right', 100);
-    page.allGeneWeights.should('not.contain.text', '~');
+    page.allGeneScores.should('not.contain.text', '~');
     page.histogram.matchImageSnapshot('histogram-right-drag-100');
 
     moveSlider('left', 200);
-    page.allGeneWeights.should('not.contain.text', '~');
+    page.allGeneScores.should('not.contain.text', '~');
     page.histogram.matchImageSnapshot('histogram-left-right-drag-overlap');
   });
 });

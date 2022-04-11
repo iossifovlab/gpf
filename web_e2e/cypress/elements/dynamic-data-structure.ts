@@ -4,7 +4,7 @@ import * as YAML from 'yaml';
 
 import { GenesBlockPage } from './genes-block-page';
 import { EnrichmentModelsBockPage } from './enrichment-models-block-page';
-import { GeneWeightsPage } from './gene-weights-page';
+import { GeneScoresPage } from './gene-scores-page';
 
 export class EnrichmentToolData {
   public name: string;
@@ -37,7 +37,7 @@ export class Params {
   public models: Models;
 
   @Type(() => GeneWeight)
-  public geneWeight: GeneWeight;
+  public geneScore: GeneWeight;
 
   @Type(() => GeneSet)
   public geneSet: GeneSet;
@@ -86,7 +86,7 @@ export function parseYamlData(filePath: string): EnrichmentToolData[] {
 
 export function applyData(params: Params): void {
   const genesBlockPage = new GenesBlockPage();
-  const geneWeightsPage = new GeneWeightsPage();
+  const geneScoresPage = new GeneScoresPage();
   const enrichmentModelsBockPage = new EnrichmentModelsBockPage();
 
   if (params.geneSymbols) {
@@ -104,18 +104,18 @@ export function applyData(params: Params): void {
     if (params.geneSet.collection.id === 'Denovo' && params.geneSet.collection.affectedStatus) {
       // TODO
     }
-  } else if (params.geneWeight) {
-    genesBlockPage.geneWeightsButton.click();
-    geneWeightsPage.dropdownButton.select(params.geneWeight.id);
+  } else if (params.geneScore) {
+    genesBlockPage.geneScoresButton.click();
+    geneScoresPage.dropdownButton.select(params.geneScore.id);
 
-    if (params.geneWeight.from) {
-      geneWeightsPage.fromInputField.clear();
-      geneWeightsPage.fromInputField.type(params.geneWeight.from.toString())
+    if (params.geneScore.from) {
+      geneScoresPage.fromInputField.clear();
+      geneScoresPage.fromInputField.type(params.geneScore.from.toString())
     }
 
-    if (params.geneWeight.to) {
-      geneWeightsPage.fromInputField.clear();
-      geneWeightsPage.fromInputField.type(params.geneWeight.to.toString())
+    if (params.geneScore.to) {
+      geneScoresPage.fromInputField.clear();
+      geneScoresPage.fromInputField.type(params.geneScore.to.toString())
     }
   }
 

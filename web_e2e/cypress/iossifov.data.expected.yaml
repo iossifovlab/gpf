@@ -78,7 +78,7 @@
   cases:
     - name: "-"
       params:
-        geneWeight:
+        geneScore:
           id: "RVIS"
           from: 0
           to: 5

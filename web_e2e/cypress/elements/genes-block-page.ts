@@ -57,12 +57,12 @@ export class GenesBlockPage extends BasePage {
     return cy.get('gpf-gene-sets select.form-control');
   }
 
-  public get geneWeightsButton(): element {
-    return cy.get('#gene-weights');
+  public get geneScoresButton(): element {
+    return cy.get('#gene-scores');
   }
 
   public get genesWeightsPanel(): element {
-    return cy.get('#gene-weights-panel');
+    return cy.get('#gene-scores-panel');
   }
 
   public findDenovoGeneSetCollectionCheckbox(genotypeDataId: string, peopleGroupValue: string): element {

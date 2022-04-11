@@ -1,8 +1,8 @@
 import { BasePage } from './utils';
 
-export class GeneWeightsPage extends BasePage {
+export class GeneScoresPage extends BasePage {
   public get dropdownButton(): element {
-    return cy.get('gpf-gene-weights select');
+    return cy.get('gpf-gene-scores select');
   }
 
   public get fromInputField(): element {
@@ -29,7 +29,7 @@ export class GeneWeightsPage extends BasePage {
     return cy.get('.histogram-to .step.down');
   }
 
-  public get allGeneWeights(): element {
+  public get allGeneScores(): element {
     return cy.get('text#sumOfBarsLabel');
   }
 
