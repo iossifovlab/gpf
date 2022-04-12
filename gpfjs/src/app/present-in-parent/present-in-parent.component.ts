@@ -14,7 +14,7 @@ import { StatefulComponent } from 'app/common/stateful-component';
 })
 export class PresentInParentComponent extends StatefulComponent implements OnInit {
 
-  @ValidateIf(o => o.selectedRarityType !== 'ultraRare')
+  @ValidateIf(o => o.selectedRarityType !== 'ultraRare' && o.rarityIntervalStart !== null)
   @Min(0) @Max(100)
   @IsLessThanOrEqual('rarityIntervalEnd')
   rarityIntervalStart = 0;
@@ -77,6 +77,8 @@ export class PresentInParentComponent extends StatefulComponent implements OnIni
   updateRarityType(newValue: string): void {
     this.selectedRarityType = newValue;
     if (this.selectedRarityType === 'rare') {
+      this.rarityIntervalStart = null;
+    } else if (this.selectedRarityType === 'interval') {
       this.rarityIntervalStart = 0;
     }
     this.updateState();
