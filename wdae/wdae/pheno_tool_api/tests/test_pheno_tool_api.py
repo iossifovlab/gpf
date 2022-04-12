@@ -3,7 +3,7 @@ import pytest
 import copy
 import json
 
-from rest_framework import status
+from rest_framework import status  # type: ignore
 
 
 pytestmark = pytest.mark.usefixtures(
@@ -34,10 +34,9 @@ def test_pheno_tool_view_valid_request(admin_client):
     assert response.status_code == status.HTTP_200_OK
 
 
-@pytest.mark.xfail(reason="[gene models] wrong annotation")
-def test_pheno_tool_view_lgds(admin_client):
+def test_pheno_tool_view_missense(admin_client):
     query = copy.deepcopy(QUERY)
-    query["effectTypes"] = ["LGDs"]
+    query["effectTypes"] = ["Missense"]
 
     response = admin_client.post(
         TOOL_URL,
@@ -49,25 +48,30 @@ def test_pheno_tool_view_lgds(admin_client):
     result = response.data["results"][0]
     assert len(response.data["results"]) == 1
 
-    assert result["effect"] == "LGDs"
-    assert result["maleResults"]["positive"]["count"] == 1
+    assert result["effect"] == "Missense"
+    assert result["maleResults"]["positive"]["count"] == 0
     assert result["maleResults"]["positive"]["deviation"] == 0
-    assert result["maleResults"]["positive"]["mean"]
-    assert result["maleResults"]["negative"]["count"] == 1
-    assert result["maleResults"]["negative"]["deviation"] == 0
-    assert result["maleResults"]["negative"]["mean"]
-    assert result["femaleResults"]["positive"]["count"] == 1
+    assert result["maleResults"]["positive"]["mean"] == \
+        pytest.approx(59.2852, abs=1e-3)
+    assert result["maleResults"]["negative"]["count"] == 2
+    assert result["maleResults"]["negative"]["deviation"] == \
+        pytest.approx(33.9863, abs=1e-3)
+    assert result["maleResults"]["negative"]["mean"] == \
+        pytest.approx(59.2852, abs=1e-3)
+    assert result["femaleResults"]["positive"]["count"] == 0
     assert result["femaleResults"]["positive"]["deviation"] == 0
-    assert result["femaleResults"]["positive"]["mean"]
-    assert result["femaleResults"]["negative"]["count"] == 1
-    assert result["femaleResults"]["negative"]["deviation"] == 0
-    assert result["femaleResults"]["negative"]["mean"]
+    assert result["femaleResults"]["positive"]["mean"] == \
+        pytest.approx(69.0976, abs=1e-3)
+    assert result["femaleResults"]["negative"]["count"] == 2
+    assert result["femaleResults"]["negative"]["deviation"] == \
+        pytest.approx(7.9317, abs=1e-3)
+    assert result["femaleResults"]["negative"]["mean"] == \
+        pytest.approx(69.0976, abs=1e-3)
 
 
-@pytest.mark.xfail(reason="[gene models] wrong annotation")
 def test_pheno_tool_view_normalize(admin_client):
     query = copy.deepcopy(QUERY)
-    query["effectTypes"] = ["LGDs"]
+    query["effectTypes"] = ["Missense"]
 
     response = admin_client.post(
         TOOL_URL,
@@ -88,27 +92,31 @@ def test_pheno_tool_view_normalize(admin_client):
     assert response_normalized.status_code == status.HTTP_200_OK
     result_normalized = response_normalized.data["results"][0]
 
-    assert result["effect"] == "LGDs"
-    assert result_normalized["effect"] == "LGDs"
+    assert result["effect"] == "Missense"
+    assert result_normalized["effect"] == "Missense"
 
-    assert result["maleResults"]["positive"]["count"] == 1
-    assert result_normalized["maleResults"]["positive"]["count"] == 1
+    assert result["maleResults"]["negative"]["count"] == 2
+    assert result_normalized["maleResults"]["negative"]["count"] == 2
 
-    assert result["maleResults"]["positive"]["deviation"] == 0
-    assert result_normalized["maleResults"]["positive"]["deviation"] == 0
-
-    assert result["maleResults"]["positive"]["mean"] != pytest.approx(
-        result_normalized["maleResults"]["positive"]["mean"], abs=1e-3
-    )
-
-    assert result["maleResults"]["negative"]["count"] == 1
-    assert result_normalized["maleResults"]["negative"]["count"] == 1
-
-    assert result["maleResults"]["negative"]["deviation"] == 0
-    assert result_normalized["maleResults"]["negative"]["deviation"] == 0
+    assert result["maleResults"]["negative"]["deviation"] == \
+        pytest.approx(33.9863, abs=1e-3)
+    assert result_normalized["maleResults"]["negative"]["deviation"] == \
+        pytest.approx(31.3010, abs=1e-3)
 
     assert result["maleResults"]["negative"]["mean"] != pytest.approx(
         result_normalized["maleResults"]["negative"]["mean"], abs=1e-3
+    )
+
+    assert result["femaleResults"]["negative"]["count"] == 2
+    assert result_normalized["femaleResults"]["negative"]["count"] == 2
+
+    assert result["femaleResults"]["negative"]["deviation"] == \
+        pytest.approx(7.9317, abs=1e-3)
+    assert result_normalized["femaleResults"]["negative"]["deviation"] == \
+        pytest.approx(12.5952, abs=1e-3)
+
+    assert result["femaleResults"]["negative"]["mean"] != pytest.approx(
+        result_normalized["femaleResults"]["negative"]["mean"], abs=1e-3
     )
 
 
@@ -225,10 +233,9 @@ def test_pheno_tool_view_missing_measure(admin_client):
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-@pytest.mark.xfail(reason="[gene models] wrong annotation")
 def test_pheno_tool_download_valid_request(admin_client):
     query = copy.deepcopy(QUERY)
-    query["effectTypes"] = ["LGDs"]
+    query["effectTypes"] = ["Missense"]
     query["normalizeBy"] = [{"measure_name": "age", "instrument_name": "i1"}]
 
     response = admin_client.post(
@@ -243,16 +250,25 @@ def test_pheno_tool_download_valid_request(admin_client):
     assert len(response.data["results"]) == 1
 
     result = response.data["results"][0]
-    assert result["effect"] == "LGDs"
-    assert result["maleResults"]["positive"]["count"] == 1
+    assert result["effect"] == "Missense"
+    assert result["maleResults"]["positive"]["count"] == 0
     assert result["maleResults"]["positive"]["deviation"] == 0
-    assert result["maleResults"]["positive"]["mean"]
-    assert result["maleResults"]["negative"]["count"] == 1
-    assert result["maleResults"]["negative"]["deviation"] == 0
-    assert result["maleResults"]["negative"]["mean"]
-    assert result["femaleResults"]["positive"]["count"] == 1
+    assert result["maleResults"]["positive"]["mean"] == \
+        pytest.approx(-6.0038, 1e-3)
+
+    assert result["maleResults"]["negative"]["count"] == 2
+    assert result["maleResults"]["negative"]["deviation"] == \
+        pytest.approx(31.3010, 1e-3)
+    assert result["maleResults"]["negative"]["mean"] == \
+        pytest.approx(-6.0038, 1e-3)
+
+    assert result["femaleResults"]["positive"]["count"] == 0
     assert result["femaleResults"]["positive"]["deviation"] == 0
-    assert result["femaleResults"]["positive"]["mean"]
-    assert result["femaleResults"]["negative"]["count"] == 1
-    assert result["femaleResults"]["negative"]["deviation"] == 0
-    assert result["femaleResults"]["negative"]["mean"]
+    assert result["femaleResults"]["positive"]["mean"] == \
+        pytest.approx(6.0038, 1e-3)
+
+    assert result["femaleResults"]["negative"]["count"] == 2
+    assert result["femaleResults"]["negative"]["deviation"] == \
+        pytest.approx(12.5952, 1e-3)
+    assert result["femaleResults"]["negative"]["mean"] == \
+        pytest.approx(6.0038, 1e-3)
