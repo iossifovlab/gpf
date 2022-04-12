@@ -50,8 +50,8 @@
     </ul>
   </nav>
 
-  <div *ngIf="registerAlertVisible" class="alert alert-danger" style="margin: 10px" id="permission-denied-prompt">
-      <markdown [data]="permissionDeniedPrompt"></markdown>
+  <div *ngIf="registerAlertVisible && permissionDeniedPrompt" class="alert alert-danger" style="margin: 10px" id="permission-denied-prompt">
+    <markdown [data]="permissionDeniedPrompt"></markdown>
   </div>
 
   <div *ngIf="showNoToolsWarning && !registerAlertVisible" class="alert alert-warning" role="alert" style="margin: 10px">
