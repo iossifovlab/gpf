@@ -23,8 +23,8 @@ describe('Gene plot tests', () => {
 
   it('should have effect types checkboxes', () => {
     geneBrowserPage.getEffectTypesCheckbox('LGDs').should('be.visible');
-    geneBrowserPage.getEffectTypesCheckbox('Missense').should('be.visible');
-    geneBrowserPage.getEffectTypesCheckbox('Synonymous').should('be.visible');
+    geneBrowserPage.getEffectTypesCheckbox('missense').should('be.visible');
+    geneBrowserPage.getEffectTypesCheckbox('synonymous').should('be.visible');
     geneBrowserPage.getEffectTypesCheckbox('CNV+').should('be.visible');
     geneBrowserPage.getEffectTypesCheckbox('CNV-').should('be.visible');
     geneBrowserPage.getEffectTypesCheckbox('Other').should('be.visible');
@@ -120,8 +120,8 @@ describe('Gene plot summary alleles count tests', () => {
 
   [
     {checkbox: 'LGDs', expectedSummaryAllelesCount: '1 / 8'},
-    {checkbox: 'Missense', expectedSummaryAllelesCount: '8 / 8'},
-    {checkbox: 'Synonymous', expectedSummaryAllelesCount: '8 / 8'},
+    {checkbox: 'missense', expectedSummaryAllelesCount: '8 / 8'},
+    {checkbox: 'synonymous', expectedSummaryAllelesCount: '8 / 8'},
     {checkbox: 'CNV+', expectedSummaryAllelesCount: '8 / 8'},
     {checkbox: 'CNV-', expectedSummaryAllelesCount: '8 / 8'},
     {checkbox: 'Other', expectedSummaryAllelesCount: '7 / 8'}

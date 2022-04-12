@@ -204,8 +204,8 @@ export class AutismGeneProfilesSingleView extends BasePage {
 
     const studyWrapper = {
       'denovo_lgds': genotypeBlockPage.effectTypesGroups.get('LGDs'),
-      'denovo_missense': [ 'Missense' ],
-      'denovo_intron': [ 'Intron' ]
+      'denovo_missense': [ 'missense' ],
+      'denovo_intron': [ 'intron' ]
     }
     let effectModelFromGenotypeWrapper = new Map<String, String>();
     for(var value in studyWrapper) {
