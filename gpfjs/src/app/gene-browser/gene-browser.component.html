@@ -31,8 +31,9 @@
         <label>
           <input (change)="showResults = false" style="margin-right: 6px;"
             type="checkbox" id="coding-only-checkbox" 
-            [(ngModel)]="summaryVariantsFilter.codingOnly">Coding only
-        </label>
+            [(ngModel)]="summaryVariantsFilter.codingOnly"
+          >Coding only</label
+        >
       </div>
     </div>
   </div>
@@ -50,7 +51,7 @@
           <div *ngFor="let affectedStatus of affectedStatusValues; let i=index" class="checkbox">
             <label class="filter-label">
               <input #affectedStatusCheckbox checked type="checkbox" id="affectedStatus{{affectedStatus}}-checkbox"
-              (change)="checkAffectedStatus(affectedStatus, affectedStatusCheckbox.checked)">
+              (change)="checkAffectedStatus(affectedStatus, affectedStatusCheckbox.checked); updateVariants()">
               <span class="pedigree-icon" [style.background-color]="getAffectedStatusColor(affectedStatus)" style="opacity: 0.75;"></span>
               <span style="display: inline-block; vertical-align: middle; line-height: 95%;"
                 [ngStyle]="{width: affectedStatus === 'Affected only' ? '70px' :
@@ -68,7 +69,10 @@
         <div class="card-block">
           <div *ngFor="let effect of effectTypeValues; let i=index" class="checkbox">
             <label class="filter-label">
-              <input #effectTypeCheckbox checked type="checkbox" (change)="checkEffectType(effect, effectTypeCheckbox.checked)">
+              <input #effectTypeCheckbox
+                type="checkbox"
+                [checked]="this.summaryVariantsFilter.isEffectTypeSelected(effect)"
+                (change)="checkEffectType(effect, effectTypeCheckbox.checked); updateVariants()">
               <svg id={{effect}} width="20" height="20"></svg>
               <span>{{ effect }}</span>
             </label>
@@ -81,14 +85,14 @@
         <div class="card-block">
           <div class="checkbox">
             <label class="filter-label">
-              <input #denovoCheckbox style="margin-right: 5px;" checked type="checkbox" (click)="checkShowDenovo(denovoCheckbox.checked)">
+              <input #denovoCheckbox style="margin-right: 5px;" checked type="checkbox" (click)="checkShowDenovo(denovoCheckbox.checked); updateVariants()">
               <svg id="denovo" width="120" height="20"></svg>
               <span>Denovo</span>
             </label>
           </div>
           <div class="checkbox">
             <label class="filter-label">
-              <input #transmittedCheckbox checked type="checkbox" (click)="checkShowTransmitted(transmittedCheckbox.checked)">
+              <input #transmittedCheckbox checked type="checkbox" (click)="checkShowTransmitted(transmittedCheckbox.checked); updateVariants()">
               <svg id="transmitted" width="125" height="20"></svg>
               <span>Transmitted</span>
             </label>
@@ -102,7 +106,7 @@
           <div *ngFor="let variantType of variantTypeValues; let i=index" class="checkbox">
             <label class="filter-label">
               <input #variantTypeCheckbox checked type="checkbox"
-                (change)="checkVariantType(variantType, variantTypeCheckbox.checked)">
+                (change)="checkVariantType(variantType, variantTypeCheckbox.checked); updateVariants()">
               <span>{{ variantType }}</span>
             </label>
           </div>
@@ -127,6 +131,19 @@
             <input name="queryData" type="hidden">
             <button class="btn btn-md btn-primary btn-right" id="download-summary-button" type="submit">Download Summary</button>
           </form>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="form-block">
+        <div class="card">
+          <ul ngbNav class="navbar bg-light nav-pills" style="justify-content: flex-start">
+            <div class="nav-title-custom" style="width: unset">Unique family variants</div>
+            <li ngbNavItem style="padding-left: 10px">
+              <input type="checkbox" (click)="checkUniqueFamilyVariantsFilter()">
+            </li>
+          </ul>
         </div>
       </div>
 

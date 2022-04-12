@@ -3,8 +3,7 @@ import { ActivatedRoute, Params } from '@angular/router';
 import { Location } from '@angular/common';
 import { GeneService } from 'app/gene-browser/gene.service';
 import { Gene } from 'app/gene-browser/gene';
-import { SummaryAllelesArray, SummaryAllelesFilter, codingEffectTypes,
-  affectedStatusValues, effectTypeValues, variantTypeValues } from 'app/gene-browser/summary-variants';
+import { SummaryAllelesArray, SummaryAllelesFilter } from 'app/gene-browser/summary-variants';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
 import { first, debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
@@ -18,6 +17,7 @@ import { clone } from 'lodash';
 import * as d3 from 'd3';
 import * as draw from 'app/utils/svg-drawing';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
+import { LGDS, CNV, OTHER, CODING } from 'app/effect-types/effect-types';
 
 @Component({
   selector: 'gpf-gene-browser',
@@ -37,14 +37,15 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   public geneBrowserConfig: GeneBrowser;
   private subscriptions: Subscription[] = [];
 
-  public readonly affectedStatusValues = affectedStatusValues;
-  public readonly effectTypeValues = effectTypeValues;
-  public readonly variantTypeValues = variantTypeValues;
+  public readonly affectedStatusValues = ['Affected only', 'Unaffected only', 'Affected and unaffected'];;
+  public readonly effectTypeValues = ['LGDs', 'missense', 'synonymous', 'CNV+', 'CNV-', 'Other'];
+  public readonly variantTypeValues = ['sub', 'ins', 'del', 'CNV+', 'CNV-'];
 
   public genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
   public summaryVariantsArray: SummaryAllelesArray;
   public summaryVariantsArrayFiltered: SummaryAllelesArray;
   public summaryVariantsFilter: SummaryAllelesFilter = new SummaryAllelesFilter();
+  public uniqueFamilyVariants = false;
 
   private variantUpdate$: Subject<void> = new Subject();
 
@@ -156,7 +157,11 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.summaryVariantsArray = this.queryService.getSummaryVariants(this.requestParamsSummary);
     this.summaryVariantsArrayFiltered = clone(this.summaryVariantsArray);
 
-    this.summaryVariantsFilter =  new SummaryAllelesFilter();
+    // reset summary variants filter, without the coding only field
+    this.summaryVariantsFilter = new SummaryAllelesFilter(true, true, this.summaryVariantsFilter.codingOnly);
+    this.effectTypeValues.forEach(eff => this.checkEffectType(eff, true));
+    this.affectedStatusValues.forEach(status => this.checkAffectedStatus(status, true));
+    this.variantTypeValues.forEach(vt => this.checkVariantType(vt, true));
 
     this.summaryVariantsFilter.selectedRegion = [
       this.selectedGene.collapsedTranscript.start,
@@ -211,9 +216,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       'inheritanceTypeFilter': ['denovo', 'mendelian', 'omission', 'missing'],
     };
     if (this.summaryVariantsFilter.codingOnly) {
-      return { ...requestParams, effectTypes: codingEffectTypes };
+      requestParams['effectTypes'] = [...LGDS, ...CODING, ...CNV, 'CDS'];
     }
-
     return requestParams;
   }
 
@@ -222,8 +226,9 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     const requestParams = {
       ...this.requestParams,
       'maxVariantsCount': this.maxFamilyVariants,
-      'uniqueFamilyVariants': false,
+      'uniqueFamilyVariants': this.uniqueFamilyVariants,
     };
+
     this.genotypePreviewVariantsArray = this.queryService.getGenotypePreviewVariantsByFilter(
       this.selectedDataset, requestParams
     );
@@ -248,7 +253,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     target.submit();
   }
 
-  private updateVariants(): void {
+  public updateVariants(): void {
     this.summaryVariantsArrayFiltered = this.summaryVariantsFilter.filterSummaryVariantsArray(
       this.summaryVariantsArray
     );
@@ -258,31 +263,40 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   public checkAffectedStatus(affectedStatus: string, value: boolean): void {
     value ? this.summaryVariantsFilter.selectedAffectedStatus.add(affectedStatus)
           : this.summaryVariantsFilter.selectedAffectedStatus.delete(affectedStatus);
-    this.updateVariants();
   }
 
   public checkEffectType(effectType: string, value: boolean): void {
-    effectType = effectType.toLowerCase();
-    value ? this.summaryVariantsFilter.selectedEffectTypes.add(effectType)
-          : this.summaryVariantsFilter.selectedEffectTypes.delete(effectType);
-    this.updateVariants();
+    let effectTypes: string[];
+    if (effectType === 'LGDs') {
+      effectTypes = Array.from(LGDS);
+    } else if (effectType === 'Other') {
+      effectTypes = Array.from(OTHER);
+    } else {
+      effectTypes = [effectType];
+    }
+    effectTypes.forEach(
+      value ? this.summaryVariantsFilter.selectedEffectTypes.add
+            : this.summaryVariantsFilter.selectedEffectTypes.delete,
+      this.summaryVariantsFilter.selectedEffectTypes
+    );
   }
 
   public checkVariantType(variantType: string, value: boolean): void {
-    variantType = variantType.toLowerCase();
     value ? this.summaryVariantsFilter.selectedVariantTypes.add(variantType)
           : this.summaryVariantsFilter.selectedVariantTypes.delete(variantType);
-    this.updateVariants();
   }
 
   public checkShowDenovo(value: boolean): void {
     this.summaryVariantsFilter.denovo = value;
-    this.updateVariants();
   }
 
   public checkShowTransmitted(value: boolean): void {
     this.summaryVariantsFilter.transmitted = value;
-    this.updateVariants();
+  }
+
+  public checkUniqueFamilyVariantsFilter(): void {
+    this.uniqueFamilyVariants = !this.uniqueFamilyVariants;
+    this.updateShownTablePreviewVariantsArray();
   }
 
   public setSelectedRegion(region: [number, number]): void {
@@ -297,7 +311,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.updateVariants();
   }
 
-  public getAffectedStatusColor(affectedStatus: 'Affected only' | 'Unaffected only' | 'Affected and unaffected'): string {
+  public getAffectedStatusColor(affectedStatus: string): string {
     return draw.affectedStatusColors[affectedStatus];
   }
 
@@ -330,8 +344,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   private drawEffectTypesIcons() {
     const effectIcons = {
       '#LGDs': draw.star,
-      '#Missense': draw.triangle,
-      '#Synonymous': draw.circle,
+      '#missense': draw.triangle,
+      '#synonymous': draw.circle,
       '#Other': draw.dot
     };
     let svgElement;

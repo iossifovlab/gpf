@@ -1,17 +1,4 @@
-// TODO: Use effects from effect-types.ts
-const lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
-export const codingEffectTypes = [
-  'lgds', 'nonsense', 'frame-shift', 'splice-site', 'no-frame-shift-newStop',
-  'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift', 'CDS', 'CNV+', 'CNV-'
-];
-const otherEffectTypes = [
-  'noStart', 'noEnd', 'no-frame-shift', 'non-coding', 'intron', 'intergenic',
-  '3\'UTR', '3\'UTR-intron', '5\'UTR', '5\'UTR-intron', 'CDS', 'CNV+', 'CNV-'
-];
-type affectedStatusType = 'Affected only' | 'Unaffected only' | 'Affected and unaffected';
-export const affectedStatusValues: Array<affectedStatusType> = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
-export const effectTypeValues = ['LGDs', 'Missense', 'Synonymous', 'CNV+', 'CNV-', 'Other'];
-export const variantTypeValues = ['sub', 'ins', 'del', 'CNV+', 'CNV-'];
+import { CNV, CODING, LGDS, OTHER } from 'app/effect-types/effect-types';
 
 export class SummaryAllele {
   public location: string;
@@ -57,7 +44,7 @@ export class SummaryAllele {
     return result;
   }
 
-  public get affectedStatus(): affectedStatusType {
+  public get affectedStatus() {
     if (this.seenInAffected) {
       if (this.seenInUnaffected) {
         return 'Affected and unaffected';
@@ -74,7 +61,7 @@ export class SummaryAllele {
   }
 
   public isLGDs(): boolean {
-    return (lgds.indexOf(this.effect) !== -1 || this.effect === 'lgds');
+    return LGDS.has(this.effect) || this.effect === 'lgds';
   }
 
   public isMissense(): boolean {
@@ -168,9 +155,9 @@ export class SummaryAllelesFilter {
     public denovo = true,
     public transmitted = true,
     public codingOnly = true,
-    public selectedAffectedStatus: Set<string> = new Set(affectedStatusValues),
-    public selectedEffectTypes: Set<string> = new Set(effectTypeValues.map(eff => eff.toLowerCase())),
-    public selectedVariantTypes: Set<string> = new Set(variantTypeValues.map(vt => vt.toLowerCase())),
+    public selectedAffectedStatus: Set<string> = new Set(),
+    public selectedEffectTypes: Set<string> = new Set(),
+    public selectedVariantTypes: Set<string> = new Set(),
     public selectedFrequencies: [number, number] = [0, 0],
     public selectedRegion: [number, number] = [0, 0],
   ) {}
@@ -183,10 +170,14 @@ export class SummaryAllelesFilter {
     return this.selectedFrequencies[1];
   }
 
-  private isEffectTypeSelected(variantEffect: string): boolean {
-    return this.selectedEffectTypes.has(variantEffect)
-      || (this.selectedEffectTypes.has('lgds') && lgds.includes(variantEffect))
-      || (this.selectedEffectTypes.has('other') && otherEffectTypes.includes(variantEffect));
+  public isEffectTypeSelected(variantEffect: string): boolean {
+    if (variantEffect === 'LGDs') {
+      return Array.from(LGDS).every(eff => this.selectedEffectTypes.has(eff));
+    } else if (variantEffect === 'Other') {
+      return Array.from(OTHER).every(eff => this.selectedEffectTypes.has(eff));
+    } else {
+      return this.selectedEffectTypes.has(variantEffect);
+    }
   }
 
   private filterSummaryAllele(summaryAllele: SummaryAllele): boolean {
@@ -197,8 +188,8 @@ export class SummaryAllelesFilter {
       (!this.denovo && summaryAllele.seenAsDenovo)
       || (!this.transmitted && !summaryAllele.seenAsDenovo)
       || (!this.selectedAffectedStatus.has(summaryAllele.affectedStatus))
-      || (!this.selectedVariantTypes.has(summaryAllele.variantType.toLowerCase()))
-      || (!this.isEffectTypeSelected(summaryAllele.effect.toLowerCase()))
+      || (!this.selectedVariantTypes.has(summaryAllele.variantType))
+      || (!this.isEffectTypeSelected(summaryAllele.effect))
     ) {
       return false;
     }
@@ -239,12 +230,10 @@ export class SummaryAllelesFilter {
     }
 
     let effects: string[] = Array.from(this.selectedEffectTypes);
-    if (effects.includes('other')) {
-      effects = effects.filter(ef => ef !== 'other').concat(otherEffectTypes);
-      if (this.codingOnly) {
-        effects = effects.filter(et => codingEffectTypes.includes(et));
-      }
+    if (this.codingOnly) {
+      effects = effects.filter(et => LGDS.has(et) || CODING.has(et) || CNV.has(et) || et === 'CDS');
     }
+
     const affectedStatus = new Set(this.selectedAffectedStatus);
     if (this.selectedAffectedStatus.has('Affected and unaffected')) {
       affectedStatus.add('Affected only');

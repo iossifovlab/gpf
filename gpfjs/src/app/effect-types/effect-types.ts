@@ -7,42 +7,46 @@ export class EffectTypes {
 }
 
 export const ALL: Set<string> = new Set([
-  'Nonsense',
-  'Frame-shift',
-  'Splice-site',
-  'No-frame-shift-newStop',
-  'Missense',
-  'No-frame-shift',
-  'noStart',
+  '3\'UTR',
+  '3\'UTR-intron',
+  '5\'UTR',
+  '5\'UTR-intron',
+  'frame-shift',
+  'intergenic',
+  'intron',
+  'missense',
+  'no-frame-shift',
+  'no-frame-shift-newStop',
   'noEnd',
-  'Synonymous',
-  'Non coding',
-  'Intron',
-  'Intergenic',
-  '3\'-UTR',
-  '5\'-UTR',
+  'noStart',
+  'non-coding',
+  'non-coding-intron',
+  'nonsense',
+  'splice-site',
+  'synonymous',
+  'CDS',
   'CNV+',
-  'CNV-'
+  'CNV-',
 ]);
 
 export const CODING: Set<string> = new Set([
-  'Nonsense',
-  'Frame-shift',
-  'Splice-site',
-  'No-frame-shift-newStop',
-  'Missense',
-  'No-frame-shift',
+  'nonsense',
+  'frame-shift',
+  'splice-site',
+  'no-frame-shift-newStop',
+  'missense',
+  'no-frame-shift',
   'noStart',
   'noEnd',
-  'Synonymous',
+  'synonymous',
 ]);
 
 export const NONCODING: Set<string> = new Set([
-  'Non coding',
-  'Intron',
-  'Intergenic',
-  '3\'-UTR',
-  '5\'-UTR',
+  'non-coding',
+  'intron',
+  'intergenic',
+  '3\'UTR',
+  '5\'UTR',
 ]);
 
 export const CNV: Set<string> = new Set([
@@ -51,19 +55,19 @@ export const CNV: Set<string> = new Set([
 ]);
 
 export const LGDS: Set<string> = new Set([
-  'Nonsense',
-  'Frame-shift',
-  'Splice-site',
-  'No-frame-shift-newStop',
+  'frame-shift',
+  'nonsense',
+  'splice-site',
+  'no-frame-shift-newStop',
 ]);
 
 export const NONSYNONYMOUS: Set<string> = new Set([
-  'Nonsense',
-  'Frame-shift',
-  'Splice-site',
-  'No-frame-shift-newStop',
-  'Missense',
-  'No-frame-shift',
+  'nonsense',
+  'frame-shift',
+  'splice-site',
+  'no-frame-shift-newStop',
+  'missense',
+  'no-frame-shift',
   'noStart',
   'noEnd',
 ]);
@@ -71,4 +75,19 @@ export const NONSYNONYMOUS: Set<string> = new Set([
 export const UTRS: Set<string> = new Set([
   '3\'-UTR',
   '5\'-UTR',
+]);
+
+export const OTHER: Set<string> = new Set([
+  '3\'UTR',
+  '3\'UTR-intron',
+  '5\'UTR',
+  '5\'UTR-intron',
+  'intergenic',
+  'intron',
+  'no-frame-shift',
+  'noEnd',
+  'noStart',
+  'non-coding',
+  'non-coding-intron',
+  'CDS',
 ]);

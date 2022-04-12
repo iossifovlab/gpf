@@ -1,11 +1,5 @@
-import {
-  affectedStatusValues,
-  effectTypeValues,
-  SummaryAllele,
-  SummaryAllelesArray,
-  SummaryAllelesFilter,
-  variantTypeValues
-} from './summary-variants';
+import { CNV, CODING, LGDS, OTHER } from 'app/effect-types/effect-types';
+import { SummaryAllele, SummaryAllelesArray, SummaryAllelesFilter } from './summary-variants';
 
 describe('SummaryAllele', () => {
   it('should create from row', () => {
@@ -379,9 +373,9 @@ describe('SummaryAllelesFilter', () => {
     expect(summaryAllelesFilter.denovo).toBeTrue();
     expect(summaryAllelesFilter.transmitted).toBeTrue();
     expect(summaryAllelesFilter.codingOnly).toBeTrue();
-    expect(summaryAllelesFilter.selectedAffectedStatus).toEqual(new Set(affectedStatusValues));
-    expect(summaryAllelesFilter.selectedEffectTypes).toEqual(new Set(effectTypeValues.map(eff => eff.toLowerCase())));
-    expect(summaryAllelesFilter.selectedVariantTypes).toEqual(new Set(variantTypeValues.map(eff => eff.toLowerCase())));
+    expect(summaryAllelesFilter.selectedAffectedStatus).toEqual(new Set());
+    expect(summaryAllelesFilter.selectedEffectTypes).toEqual(new Set());
+    expect(summaryAllelesFilter.selectedVariantTypes).toEqual(new Set());
   });
 
   it('should get min frequency', () => {
@@ -398,7 +392,7 @@ describe('SummaryAllelesFilter', () => {
     expect(summaryAllelesFilter.maxFreq).toBe(17);
   });
 
-  it('should filter summary variatns array', () => {
+  it('should filter summary variants array', () => {
     const summaryAllelesFilter = new SummaryAllelesFilter();
     const summaryAlleleArray = new SummaryAllelesArray();
 
@@ -411,7 +405,7 @@ describe('SummaryAllelesFilter', () => {
           seen_in_affected: true,
           seen_in_unaffected: false,
           variant: 'sub',
-          effect: 'lgds',
+          effect: 'frame-shift',
           frequency: 10,
           position: 30,
           end_position: 30,
@@ -582,7 +576,8 @@ describe('SummaryAllelesFilter', () => {
 
     summaryAllelesFilter.denovo = false;
     summaryAllelesFilter.selectedAffectedStatus = new Set(['Affected only']);
-    summaryAllelesFilter.selectedEffectTypes.delete('other');
+    summaryAllelesFilter.selectedEffectTypes = new Set([...LGDS, ...CODING, ...CNV]);
+    summaryAllelesFilter.selectedVariantTypes = new Set(['sub', 'ins', 'del', 'CNV+', 'CNV-']);
     summaryAllelesFilter.selectedFrequencies = [5, 15];
     summaryAllelesFilter.selectedRegion = [25, 35];
 
@@ -596,72 +591,36 @@ describe('SummaryAllelesFilter', () => {
 
   it('should get query params', () => {
     const summaryAllelesFilter = new SummaryAllelesFilter();
-
-    expect(summaryAllelesFilter.queryParams).toEqual({
-      'effectTypes': [
-        'lgds',
-        'missense',
-        'synonymous',
-        'noStart',
-        'noEnd',
-        'no-frame-shift',
-        'CDS',
-        'CNV+',
-        'CNV-'
-      ],
-      'inheritanceTypeFilter': [
-        'denovo',
-        'mendelian',
-        'omission',
-        'missing'
-      ],
-      'affectedStatus': [
-        'Affected only',
-        'Unaffected only',
-        'Affected and unaffected'
-      ],
-      'variantTypes': [
-        'sub',
-        'ins',
-        'del',
-        'cnv+',
-        'cnv-'
-      ]
-    });
-
-    summaryAllelesFilter.denovo = false;
-    summaryAllelesFilter.transmitted = false;
     summaryAllelesFilter.codingOnly = false;
     summaryAllelesFilter.selectedAffectedStatus = new Set(['Affected only']);
-    summaryAllelesFilter.selectedVariantTypes = new Set(['fakeVariantType']);
+    summaryAllelesFilter.selectedEffectTypes = new Set([...LGDS, ...CODING, ...CNV, ...OTHER]);
+    summaryAllelesFilter.selectedVariantTypes = new Set(['sub', 'ins']);
     expect(summaryAllelesFilter.queryParams).toEqual({
       'effectTypes': [
-        'lgds',
+        'frame-shift',
+        'nonsense',
+        'splice-site',
+        'no-frame-shift-newStop',
         'missense',
-        'synonymous',
-        'cnv+',
-        'cnv-',
+        'no-frame-shift',
         'noStart',
         'noEnd',
-        'no-frame-shift',
-        'non-coding',
-        'intron',
-        'intergenic',
+        'synonymous',
+        'CNV+',
+        'CNV-',
         '3\'UTR',
         '3\'UTR-intron',
         '5\'UTR',
         '5\'UTR-intron',
+        'intergenic',
+        'intron',
+        'non-coding',
+        'non-coding-intron',
         'CDS',
-        'CNV+',
-        'CNV-'
       ],
-      'inheritanceTypeFilter': [],
-      'affectedStatus': [
-        'Affected only'
-      ],
-      'variantTypes': [
-        'fakeVariantType'
-      ]
+      'inheritanceTypeFilter': ['denovo', 'mendelian', 'omission', 'missing'],
+      'affectedStatus': ['Affected only'],
+      'variantTypes': ['sub', 'ins']
     });
   });
 });

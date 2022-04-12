@@ -185,6 +185,8 @@ import { MiddleClickDirective } from './autism-gene-profiles-table/middle-click.
 import { AgpTableComponent } from './autism-gene-profiles-table/autism-gene-profiles-table.component';
 import { AutismGeneProfileSingleViewWrapperComponent } from './autism-gene-profiles-single-view-wrapper/autism-gene-profiles-single-view-wrapper.component';
 import { TruncatePipe } from './truncate.pipe';
+import { UniqueFamilyVariantsFilterComponent } from './unique-family-variants-filter/unique-family-variants-filter.component';
+import { UniqueFamilyVariantsFilterState } from './unique-family-variants-filter/unique-family-variants-filter.state';
 
 const appRoutes: Routes = [
   {
@@ -383,7 +385,8 @@ const appRoutes: Routes = [
     PeopleCounterRowPipe,
     SplitPipe,
     AgpTableComponent,
-    TruncatePipe
+    TruncatePipe,
+    UniqueFamilyVariantsFilterComponent
   ],
   imports: [
     BrowserModule,
@@ -406,7 +409,7 @@ const appRoutes: Routes = [
       GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState, GeneSetsState,
       GeneWeightsState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
       StudyFiltersBlockState, PersonFiltersState, GenomicScoresBlockState, PhenoToolMeasureState,
-      ErrorsState],
+      UniqueFamilyVariantsFilterState, ErrorsState],
       {compatibility: { strictContentSecurityPolicy: true }}
     ),
     NgxsResetPluginModule.forRoot(),
