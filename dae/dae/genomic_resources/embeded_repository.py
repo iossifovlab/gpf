@@ -73,10 +73,10 @@ class GenomicResourceEmbededRepo(GenomicResourceRealRepo):
         mode = mode if mode else "rb"
         if 'w' in mode:
             raise Exception("Can't handle writable files yet!")
-        if 't' in mode:
-            return io.StringIO(content.decode(GR_ENCODING))
-        else:
+        if 'b' in mode:
             return io.BytesIO(content)
+        else:
+            return io.StringIO(content.decode(GR_ENCODING))
 
     def get_files(self, genomic_resource):
         path_array = genomic_resource.get_genomic_resource_dir().split("/")
