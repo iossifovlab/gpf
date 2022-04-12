@@ -3,21 +3,21 @@ import { State, Action, StateContext } from '@ngxs/store';
 
 export class SetUniqueFamilyVariantsFilter {
   static readonly type = '[Genotype] Set Unique Family Variants Filter';
-  constructor(public uniqueFamilyVariantsFilter: boolean) {}
+  constructor(public uniqueFamilyVariants: boolean) {}
 }
 
 export interface UniqueFamilyVariantsFilterModel {
-  uniqueFamilyVariantsFilter: boolean;
+  uniqueFamilyVariants: boolean;
 }
 
 @State<UniqueFamilyVariantsFilterModel >({
   name: 'uniqueFamilyVariantsFilterState',
-  defaults: { uniqueFamilyVariantsFilter: false },
+  defaults: { uniqueFamilyVariants: false },
 })
 @Injectable()
 export class UniqueFamilyVariantsFilterState {
   @Action(SetUniqueFamilyVariantsFilter)
   setUniqueFamilyVariantsFilter(ctx: StateContext<UniqueFamilyVariantsFilterModel>, action: SetUniqueFamilyVariantsFilter) {
-    ctx.patchState({ uniqueFamilyVariantsFilter: action.uniqueFamilyVariantsFilter });
+    ctx.patchState({ uniqueFamilyVariants: action.uniqueFamilyVariants });
   }
 }
