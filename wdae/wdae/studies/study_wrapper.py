@@ -308,21 +308,32 @@ class StudyWrapper(StudyWrapperBase):
         max_variants_message=False
     ):
         max_variants_count = kwargs.pop("maxVariantsCount", max_variants_count)
-        summary_variant_ids = set(kwargs.pop("summaryVariantIds", []))
+        summary_variant_ids = kwargs.pop("summaryVariantIds", None)
 
         kwargs = self.query_transformer.transform_kwargs(**kwargs)
 
-        if not summary_variant_ids:
+        if summary_variant_ids is None:
             def filter_allele(allele):
                 return True
-        else:
+
+        elif len(summary_variant_ids) > 0:
+            summary_variant_ids = set(summary_variant_ids)
+
             def filter_allele(allele):
                 svid = f"{allele.cshl_location}:{allele.cshl_variant}"
                 return svid in summary_variant_ids
+        else:
+            # passed empty list of summary variants; empty result
+            return
 
         transform = self.response_transformer.variant_transformer()
 
         index = 0
+        seen = set()
+        unique_family_variants = kwargs.get("unique_family_variants", False)
+        print(100*"+")
+        print("unique_family_variants=", unique_family_variants, type(unique_family_variants))
+        print(100*"+")
         try:
             started = time.time()
             variants_result = \
@@ -355,6 +366,11 @@ class StudyWrapper(StudyWrapperBase):
                         yield None
                         continue
 
+                    fvuid = variant.fvuid
+                    if unique_family_variants and fvuid in seen:
+                        continue
+                    seen.add(fvuid)
+
                     index += 1
                     if max_variants_count and index > max_variants_count:
                         if max_variants_message:
@@ -363,7 +379,6 @@ class StudyWrapper(StudyWrapperBase):
                                 f"reached"
                             ]
                         break
-
                     row_variant = self.response_transformer._build_variant_row(
                         v, sources,
                         person_set_collection=kwargs.get(

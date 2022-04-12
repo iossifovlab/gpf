@@ -8,7 +8,7 @@ from collections import Counter
 import logging
 import numpy as np
 import pandas as pd
-from scipy.stats.stats import ttest_ind
+from scipy.stats.stats import ttest_ind  # type: ignore
 from dae.pheno.utils.lin_regress import LinearRegression
 
 from dae.pheno.common import MeasureType
@@ -56,7 +56,6 @@ class PhenoToolHelper(object):
     """
 
     def __init__(self, genotype_data, phenotype_data):
-        # assert isinstance(genotype_data, GenotypeData), type(genotype_data)
         assert genotype_data
         self.genotype_data = genotype_data
         self.phenotype_data = phenotype_data
@@ -116,7 +115,8 @@ class PhenoToolHelper(object):
             )
         LOGGER.debug(f"variants_by_effect: {list(variants_by_effect.keys())}")
         variants_by_effect = {
-            k: variants_by_effect[k.lower()] for k in effect_groups
+            k: variants_by_effect[k.lower()]
+            for k in effect_groups if k.lower() in variants_by_effect
         }
         LOGGER.debug(f"variants_by_effect: {list(variants_by_effect.keys())}")
 

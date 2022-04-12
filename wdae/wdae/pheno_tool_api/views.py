@@ -2,8 +2,8 @@ import json
 import math
 import logging
 
-from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.response import Response  # type: ignore
+from rest_framework import status  # type: ignore
 
 from django.http.response import StreamingHttpResponse
 
