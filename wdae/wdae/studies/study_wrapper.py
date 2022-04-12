@@ -329,6 +329,11 @@ class StudyWrapper(StudyWrapperBase):
         transform = self.response_transformer.variant_transformer()
 
         index = 0
+        seen = set()
+        unique_family_variants = kwargs.get("unique_family_variants", False)
+        print(100*"+")
+        print("unique_family_variants=", unique_family_variants, type(unique_family_variants))
+        print(100*"+")
         try:
             started = time.time()
             variants_result = \
@@ -369,7 +374,10 @@ class StudyWrapper(StudyWrapperBase):
                                 f"reached"
                             ]
                         break
-
+                    fvuid = variant.fvuid
+                    if unique_family_variants and fvuid in seen:
+                        continue
+                    seen.add(fvuid)
                     row_variant = self.response_transformer._build_variant_row(
                         v, sources,
                         person_set_collection=kwargs.get(
