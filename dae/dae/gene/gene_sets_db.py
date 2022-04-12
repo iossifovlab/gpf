@@ -1,3 +1,4 @@
+import os
 import logging
 from pathlib import Path
 from sqlalchemy import create_engine  # type: ignore
@@ -99,7 +100,9 @@ class GeneSetCollection(object):
             ]
             gene_terms = read_ewa_set_file(files)
         elif collection_format == "sqlite":
-            resource_file_cache = ResourceFileCache("gene_sets")
+            dae_db_dir = os.environ.get("dae_db_dir")
+            cache_dir = os.path.join(dae_db_dir, "file_cache", "gene_sets")
+            resource_file_cache = ResourceFileCache(cache_dir)
             dbfile = config["dbfile"]
             dbfile_cache = resource_file_cache.get_file_path_from_resource(
                 resource,
