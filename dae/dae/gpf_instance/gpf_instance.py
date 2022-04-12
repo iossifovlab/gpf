@@ -24,7 +24,6 @@ from dae.backends.storage.genotype_storage_factory import \
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
-from dae.configuration.schemas.genomic_scores import genomic_scores_schema
 from dae.configuration.schemas.autism_gene_profile import \
     autism_gene_tool_config
 
@@ -79,7 +78,7 @@ class GPFInstance(object):
             self._variants_db
             self.denovo_gene_sets_db
             self._score_config
-            self._scores_factory
+            self.genomic_scores_db
             self.genotype_storage_db
             self._background_facade
 
@@ -259,7 +258,7 @@ class GPFInstance(object):
     # Genomic scores
 
     def get_genomic_scores(self):
-        return self._scores_factory.get_scores()
+        return self.genomic_scores_db.get_scores()
 
     # Gene scores
 
