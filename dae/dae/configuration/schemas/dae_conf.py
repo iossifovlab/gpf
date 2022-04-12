@@ -112,6 +112,11 @@ gene_sets_db_schema = {
     "gene_set_collections": {"type": "list", "schema": {"type": "string"}}
 }
 
+genomic_score_schema = {
+    "resource": {"type": "string"},
+    "score": {"type": "string"}
+}
+
 dae_conf_schema = {
     "dae_data_dir": {
         "type": "string",
@@ -155,7 +160,10 @@ dae_conf_schema = {
         "schema": config_reference_schema,
         "default": {"dir": "datasets"}
     },
-    "genomic_scores_db": {"type": "dict", "schema": config_reference_schema},
+    "genomic_scores_db": {
+        "type": "list",
+        "valuesrules": {"type": "dict", "schema": genomic_score_schema}
+    },
     "autism_gene_tool_config": {
         "type": "dict", "schema": config_reference_schema
     },

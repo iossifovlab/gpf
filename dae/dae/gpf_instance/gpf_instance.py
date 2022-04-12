@@ -11,7 +11,7 @@ from dae.genomic_resources.gene_models import \
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
 from dae.gene.gene_scores import GeneScoresDb, GeneScore
-from dae.gene.scores import ScoresFactory
+from dae.gene.scores import GenomicScoresDB
 from dae.gene.gene_sets_db import GeneSetsDb, GeneSetCollection
 from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
 
@@ -62,8 +62,14 @@ class GPFInstance(object):
 
         if self.dae_config.grr:
             self.grr = build_genomic_resource_repository(self.dae_config.grr)
+            self.grr_no_cache = build_genomic_resource_repository(
+                self.dae_config.grr, use_cache=False
+            )
         else:
             self.grr = build_genomic_resource_repository()
+            self.grr_no_cache = build_genomic_resource_repository(
+                use_cache=False
+            )
 
         if load_eagerly:
             self.reference_genome
@@ -112,23 +118,12 @@ class GPFInstance(object):
 
     @property  # type: ignore
     @cached
-    def _score_config(self):
-        if self.dae_config.genomic_scores_db is None or \
-                self.dae_config.genomic_scores_db.conf_file is None:
-            logger.warning(
-                "scores are not configured...")
-            return Box({}, default_box=True)
-        conf_file = self.dae_config.genomic_scores_db.conf_file
-        if not os.path.exists(conf_file):
-            return Box({}, default_box=True)
-        return GPFConfigParser.load_config(
-            conf_file, genomic_scores_schema
-        )
-
-    @property  # type: ignore
-    @cached
-    def _scores_factory(self):
-        return ScoresFactory(self._score_config)
+    def genomic_scores_db(self):
+        scores = []
+        if self.dae_config.genomic_scores_db is not None:
+            for score_def in self.dae_config.genomic_scores_db:
+                scores.append((score_def["resource"], score_def["score"]))
+        return GenomicScoresDB(self.grr_no_cache, scores)
 
     @property  # type: ignore
     @cached
