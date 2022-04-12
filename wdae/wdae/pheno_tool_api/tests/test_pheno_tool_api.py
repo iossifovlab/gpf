@@ -69,6 +69,19 @@ def test_pheno_tool_view_missense(admin_client):
         pytest.approx(69.0976, abs=1e-3)
 
 
+def test_pheno_tool_view_cnv_on_non_cnv_study(admin_client):
+    query = copy.deepcopy(QUERY)
+    query["effectTypes"] = ["Missense", "CNV+"]
+
+    response = admin_client.post(
+        TOOL_URL,
+        json.dumps(query),
+        format="json",
+        content_type="application/json",
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+
 def test_pheno_tool_view_normalize(admin_client):
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["Missense"]
