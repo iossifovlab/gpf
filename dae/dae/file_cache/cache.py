@@ -3,8 +3,7 @@ import os
 
 class ResourceFileCache:
     def __init__(self, cache_dir, grr=None):
-        dae_db_dir = os.environ.get("DAE_DB_DIR")
-        self.cache_dir = os.path.join(dae_db_dir, "file_cache", cache_dir)
+        self.cache_dir = cache_dir
         self.grr = grr
 
     def _save_resource_file(self, resource, file, save_filepath, is_binary):
@@ -21,11 +20,15 @@ class ResourceFileCache:
         filepath = os.path.join(self.cache_dir, resource_id, file)
         if not os.path.exists(filepath):
             resource = self.grr.get_resource(resource_id)
+            if not resource.file_exists(file):
+                return None
             self._save_resource_file(resource, file, filepath, is_binary)
         return filepath
 
     def get_file_path_from_resource(self, resource, file, is_binary=False):
         filepath = os.path.join(self.cache_dir, resource.resource_id, file)
         if not os.path.exists(filepath):
+            if not resource.file_exists(file):
+                return None
             self._save_resource_file(resource, file, filepath, is_binary)
         return filepath
