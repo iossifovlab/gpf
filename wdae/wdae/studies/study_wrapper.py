@@ -366,6 +366,11 @@ class StudyWrapper(StudyWrapperBase):
                         yield None
                         continue
 
+                    fvuid = variant.fvuid
+                    if unique_family_variants and fvuid in seen:
+                        continue
+                    seen.add(fvuid)
+
                     index += 1
                     if max_variants_count and index > max_variants_count:
                         if max_variants_message:
@@ -374,10 +379,6 @@ class StudyWrapper(StudyWrapperBase):
                                 f"reached"
                             ]
                         break
-                    fvuid = variant.fvuid
-                    if unique_family_variants and fvuid in seen:
-                        continue
-                    seen.add(fvuid)
                     row_variant = self.response_transformer._build_variant_row(
                         v, sources,
                         person_set_collection=kwargs.get(
