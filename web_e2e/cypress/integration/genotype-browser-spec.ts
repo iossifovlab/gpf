@@ -412,14 +412,14 @@ describe('Genotype browser table preview result tests', () => {
       study: datasetIds.iossifov2014,
       collection: 'GO Terms',
       geneSet: 'GO:0016917',
-      effectTypes: ['Missense'],
+      effectTypes: ['missense'],
       expectedOverviewParagraph: '4 variants selected (4 shown)'
     },
     {
       study: datasetIds.iossifov2014,
       collection: 'GO Terms',
       geneSet: 'GO:0016917',
-      effectTypes: ['Missense', 'Synonymous'],
+      effectTypes: ['missense', 'synonymous'],
       expectedOverviewParagraph: '5 variants selected (5 shown)'
     }
   ].forEach(data => {
