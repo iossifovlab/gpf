@@ -10,13 +10,13 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.backends.raw.flexible_variant_loader import flexible_variant_loader
 
-from dae.backends.cnv.loader import \
+from dae.backends.cnv.flexible_cnv_loader import \
     _cnv_location_to_vcf_trasformer, \
     _cnv_variant_to_variant_type, \
     _cnv_dae_best_state_to_best_state, \
     _cnv_person_id_to_best_state, \
     _cnv_vcf_to_vcf_trasformer, \
-    _cnv_loader
+    flexible_cnv_loader
 
 
 @pytest.fixture
@@ -52,7 +52,7 @@ def cnv_dae():
 
 
 def test_cnv_dae_location(cnv_dae):
-    next(cnv_dae)
+    next(cnv_dae)  # skip the header
 
     transformers = [
         _cnv_location_to_vcf_trasformer()
@@ -80,7 +80,7 @@ def test_cnv_dae_location(cnv_dae):
 
 
 def test_cnv_dae_variant_type(cnv_dae):
-    next(cnv_dae)
+    next(cnv_dae)  # skip header
 
     transformers = [
         _cnv_variant_to_variant_type()
@@ -109,6 +109,8 @@ def test_cnv_dae_variant_type(cnv_dae):
         (["CNV+"], ["CNV-"], "CNV-", Allele.Type.large_deletion),
         (["GAIN"], ["LOSS"], "GAIN", Allele.Type.large_duplication),
         (["GAIN"], ["LOSS"], "LOSS", Allele.Type.large_deletion),
+        ("GAIN", "LOSS", "GAIN", Allele.Type.large_duplication),
+        ("GAIN", "LOSS", "LOSS", Allele.Type.large_deletion),
         (["Dup", "Dup_Germline"], ["Del", "Del_Germline"],
          "Dup_Germline", Allele.Type.large_duplication),
         (["Dup", "Dup_Germline"], ["Del", "Del_Germline"],
@@ -282,11 +284,11 @@ def test_cnv_vcf_position(
 
 def test_cnv_loader_simple(families, cnv_dae, gpf_instance_2013):
 
-    df = _cnv_loader(
-        cnv_dae, families, gpf_instance_2013.reference_genome, regions=[])
-    assert df is not None
-
-    assert len(df) == 4
+    generator = flexible_cnv_loader(
+        cnv_dae, families, gpf_instance_2013.reference_genome,
+        regions=[])
+    result = list(generator)
+    assert len(result) == 4
 
 
 @pytest.mark.parametrize(
@@ -303,8 +305,8 @@ def test_cnv_loader_with_regions(
 
     regions_list = [Region.from_str(r) for r in regions]
 
-    df = _cnv_loader(
+    generator = flexible_cnv_loader(
         cnv_dae, families, gpf_instance_2013.reference_genome,
         regions=regions_list)
-    assert df is not None
-    assert len(df) == expected
+    result = list(generator)
+    assert len(result) == expected

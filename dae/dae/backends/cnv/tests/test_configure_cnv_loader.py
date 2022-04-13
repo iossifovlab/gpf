@@ -5,7 +5,7 @@ import io
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.pedigrees.loader import FamiliesLoader
 
-from dae.backends.cnv.loader import _configure_cnv_location, \
+from dae.backends.cnv.flexible_cnv_loader import _configure_cnv_location, \
     _configure_cnv_best_state
 
 
