@@ -5,9 +5,11 @@ import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
 import { GenotypeBrowserController } from 'cypress/elements/genotype-browser-controller';
 import { GenotypeBrowserPage } from 'cypress/elements/genotype-browser-page';
 import { GenotypePreviewTablePage } from 'cypress/elements/genotype-preview-table-page';
+import { PersonFiltersBlockPage } from 'cypress/elements/person-filters-block-page';
 import { RegionsBlockPage } from 'cypress/elements/regions-block-page';
 import { SaveQueryPage } from 'cypress/elements/save-query-page';
 import { ShareQueryPage } from 'cypress/elements/share-query-page';
+import { UniqueFamilyVariantsFilterPage } from 'cypress/elements/unique-family-variants-filter-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Genotype browser tests', () => {
@@ -67,6 +69,13 @@ describe('Genotype browser tests', () => {
     });
   });
 
+  datasetList.forEach(dataset => {
+    it('should display person filters block at /' + dataset + '/browser', () => {
+      const personFiltersBlockPage = new PersonFiltersBlockPage();
+      page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
+      personFiltersBlockPage.block.should('be.visible');
+    });
+  });
   datasetList.forEach(dataset => {
     it('should display "Table Preview" button in genotype browser at /' + dataset + '/browser', () => {
       page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
