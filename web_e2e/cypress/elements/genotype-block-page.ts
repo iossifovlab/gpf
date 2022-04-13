@@ -47,8 +47,8 @@ export class GenotypeBlockPage extends BasePage {
       'synonymous'
     ]],
     ['UTRs', [
-      '3\'-UTR',
-      '5\'-UTR'
+      '3\'UTR',
+      '5\'UTR'
     ]]
   ]);
 
