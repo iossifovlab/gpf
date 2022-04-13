@@ -97,7 +97,7 @@ position_score_test_config = {
 
 @pytest.fixture(scope="module")
 def client():
-    from dask.distributed import Client
+    from dask.distributed import Client  # type: ignore
 
     client = Client(n_workers=4, threads_per_worker=1)
     yield client

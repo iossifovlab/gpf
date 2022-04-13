@@ -4,11 +4,11 @@ import numpy as np
 import logging
 import yaml
 import pandas as pd
-from typing import Dict
+from typing import Dict, Tuple
 from copy import copy
 import matplotlib.pyplot as plt
-from tqdm import tqdm
-from dask.distributed import as_completed
+from tqdm import tqdm  # type: ignore
+from dask.distributed import as_completed  # type: ignore
 
 from dae.genomic_resources.genomic_scores import open_score_from_resource
 
@@ -143,7 +143,9 @@ class HistogramBuilder:
                 loaded_hists[k] = v
             return loaded_hists
 
-    def _build(self, client, path, force, region_size) -> dict[str, Histogram]:
+    def _build(self, client, path, force, region_size) \
+            -> Tuple[Dict[str, Histogram], Dict[str, Histogram]]:
+
         histogram_desc = self.resource.get_config().get("histograms", [])
         if force:
             return {}, self._do_build(client, histogram_desc, region_size)
@@ -335,8 +337,13 @@ class HistogramBuilder:
             with self.resource.open_raw_file(metadata_file, "wt") as f:
                 yaml.dump(metadata, f)
 
-            plt.hist(histogram.bins[:-1], histogram.bins,
-                     weights=histogram.bars, log=histogram.y_scale == "log")
+            width = histogram.bins[1:] - histogram.bins[:-1]
+            plt.bar(
+                x=histogram.bins[:-1], height=histogram.bars,
+                log=histogram.y_scale == "log",
+                width=width,
+                align="edge")
+
             if histogram.x_scale == "log":
                 plt.xscale("log")
             plt.grid(axis='y')
