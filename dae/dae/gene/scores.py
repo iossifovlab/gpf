@@ -1,7 +1,11 @@
 import os
 import pandas as pd
+import logging
 
 from dae.file_cache.cache import ResourceFileCache
+
+
+logger = logging.getLogger(__name__)
 
 
 class GenomicScore:
@@ -74,9 +78,15 @@ class GenomicScoresDB:
         self.scores = {}
         for resource_id, score_id in scores:
             resource = self.grr.get_resource(resource_id)
-            self.scores[score_id] = GenomicScore(
-                resource, score_id, self.file_cache
-            )
+            try:
+                score = GenomicScore(
+                    resource, score_id, self.file_cache
+                )
+                self.scores[score_id] = score
+            except KeyError:
+                logger.warn(
+                    f"Failed to load histogram configuration of {resource_id}"
+                )
 
     def get_scores(self):
         result = []
