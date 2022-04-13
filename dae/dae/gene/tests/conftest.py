@@ -41,16 +41,6 @@ def gene_info_config(local_gpf_instance):
 
 
 @pytest.fixture(scope="session")
-def score_config(local_gpf_instance):
-    return local_gpf_instance._score_config
-
-
-@pytest.fixture(scope="session")
-def scores_factory(local_gpf_instance):
-    return local_gpf_instance._scores_factory
-
-
-@pytest.fixture(scope="session")
 def denovo_gene_sets_db(local_gpf_instance):
     return local_gpf_instance.denovo_gene_sets_db
 

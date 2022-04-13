@@ -7,8 +7,7 @@ def test_init(fixtures_gpf_instance):
     assert fixtures_gpf_instance.gene_models
     assert fixtures_gpf_instance._pheno_db
     assert fixtures_gpf_instance.gene_scores_db is not None
-    assert fixtures_gpf_instance._score_config is not None
-    assert fixtures_gpf_instance._scores_factory
+    assert fixtures_gpf_instance.genomic_scores_db
     assert fixtures_gpf_instance._variants_db
     assert fixtures_gpf_instance.gene_sets_db
     assert fixtures_gpf_instance.denovo_gene_sets_db is not None
@@ -26,8 +25,7 @@ def test_eager_init(gpf_instance, global_dae_fixtures_dir):
     assert fixtures_gpf_instance.gene_models
     assert fixtures_gpf_instance._pheno_db
     assert fixtures_gpf_instance.gene_scores_db is not None
-    assert fixtures_gpf_instance._score_config is not None
-    assert fixtures_gpf_instance._scores_factory
+    assert fixtures_gpf_instance.genomic_scores_db
     assert fixtures_gpf_instance._variants_db
     assert fixtures_gpf_instance.gene_sets_db
     assert fixtures_gpf_instance.denovo_gene_sets_db is not None

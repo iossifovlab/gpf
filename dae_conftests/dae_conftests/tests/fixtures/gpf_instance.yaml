@@ -107,6 +107,16 @@ gene_scores_db:
     - gene_scores/RVIS_rank
     - gene_scores/RVIS
 
+genomic_scores_db:
+  - resource: genomic_scores/test_scores
+    score: score_raw_rankscore
+  - resource: genomic_scores/test_scores
+    score: score_raw
+  - resource: genomic_scores/test_scores
+    score: score_phred
+  - resource: genomic_scores/test_scores
+    score: score_phred_disabled
+
 phenotype_data:
   dir: "%(wd)s/pheno"
 
