@@ -15,8 +15,8 @@ export class GenotypeBlockPage extends BasePage {
       'non-coding',
       'intron',
       'intergenic',
-      '3\'-UTR',
-      '5\'-UTR'
+      '3\'UTR',
+      '5\'UTR'
     ]],
     ['None', []],
     ['LGDs', [
