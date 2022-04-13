@@ -26,7 +26,7 @@ describe('CheckboxListComponent', () => {
   });
 
   it('should initialize', () => {
-    const selectAllSpy = spyOn(component, 'selectAll');
+    const selectAllSpy = jest.spyOn(component, 'selectAll');
 
     component.selectedItems = new Set();
     component.ngOnInit();
@@ -39,7 +39,7 @@ describe('CheckboxListComponent', () => {
 
   it('should emit', () => {
     component.itemsUpdateEvent = {emit() {}} as any;
-    const emitSpy = spyOn(component.itemsUpdateEvent, 'emit');
+    const emitSpy = jest.spyOn(component.itemsUpdateEvent, 'emit');
 
     component.selectedItems = undefined;
     component.emit();
@@ -53,7 +53,7 @@ describe('CheckboxListComponent', () => {
   });
 
   it('should select none', () => {
-    const emitSpy = spyOn(component, 'emit');
+    const emitSpy = jest.spyOn(component, 'emit');
     component.selectedItems = new Set([...component.items]);
 
     component.selectNone();
@@ -62,7 +62,7 @@ describe('CheckboxListComponent', () => {
   });
 
   it('should select all', () => {
-    const emitSpy = spyOn(component, 'emit');
+    const emitSpy = jest.spyOn(component, 'emit');
     component.selectedItems = new Set([]);
 
     component.selectAll();
@@ -71,7 +71,7 @@ describe('CheckboxListComponent', () => {
   });
 
   it('should toggle item', () => {
-    const emitSpy = spyOn(component, 'emit');
+    const emitSpy = jest.spyOn(component, 'emit');
 
     component.toggleItem('testItem3');
     expect(component.selectedItems).toEqual(new Set(['testItem1', 'testItem2', 'testItem3']));

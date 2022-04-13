@@ -46,7 +46,7 @@ describe('PresentInChildComponent', () => {
   it('should update present in child', () => {
     component.selectedValues = undefined;
     component['store'] = { dispatch(set) {} } as any;
-    const dispatchSpy = spyOn(component['store'], 'dispatch');
+    const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     const mockSet = new Set(['value1', 'value2', 'value3']);
 
     component.updatePresentInChild(mockSet);

@@ -46,7 +46,7 @@ describe('StudyTypesComponent', () => {
   it('should update variant types', () => {
     component.selectedValues = undefined;
     component['store'] = { dispatch() {} } as any;
-    const dispatchSpy = spyOn(component['store'], 'dispatch');
+    const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     const mockSet = new Set(['value1', 'value2', 'value3']);
 
     component.updateStudyTypes(mockSet);

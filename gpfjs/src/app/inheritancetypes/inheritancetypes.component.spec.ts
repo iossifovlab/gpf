@@ -44,7 +44,7 @@ describe('InheritancetypesComponent', () => {
       },
       dispatch(set) {}
     } as any;
-    dispatchSpy = spyOn(component['store'], 'dispatch');
+    dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     component.ngOnChanges();
     expect(component.selectedValues).toEqual(new Set(['value1', 'value2']));
     expect(dispatchSpy).not.toHaveBeenCalled();
@@ -56,7 +56,7 @@ describe('InheritancetypesComponent', () => {
       },
       dispatch(set) {}
     } as any;
-    dispatchSpy = spyOn(component['store'], 'dispatch');
+    dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     component.ngOnChanges();
     expect(component.selectedValues).toEqual(new Set(['value3']));
     expect(dispatchSpy).toHaveBeenCalled();
@@ -66,7 +66,7 @@ describe('InheritancetypesComponent', () => {
   it('should update variant types', () => {
     component.selectedValues = undefined;
     component['store'] = { dispatch(set) {} } as any;
-    const dispatchSpy = spyOn(component['store'], 'dispatch');
+    const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     const mockSet = new Set(['value1', 'value2', 'value3']);
 
     component.updateInheritanceTypes(mockSet);

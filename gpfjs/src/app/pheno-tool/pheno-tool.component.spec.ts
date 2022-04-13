@@ -126,7 +126,7 @@ describe('PhenoToolComponent', () => {
     event.target.queryData = {
       value: 'id'
     };
-    const submitSpy = spyOn(event.target, 'submit');
+    const submitSpy = jest.spyOn(event.target, 'submit');
 
     component.onDownload(event as any);
     expect(submitSpy).toHaveBeenCalledTimes(1);

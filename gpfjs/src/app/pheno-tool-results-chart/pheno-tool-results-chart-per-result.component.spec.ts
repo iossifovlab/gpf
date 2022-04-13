@@ -16,8 +16,11 @@ describe('PhenoToolResultsChartPerResultComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(PhenoToolResultsChartPerResultComponent);
     component = fixture.componentInstance;
-    component.results = jasmine.createSpyObj('PhenoToolResult', ['rangeStart', 'rangeEnd']);
-    component.yScale = jasmine.createSpy() as any;
+    component.results = {
+      'rangeStart': jest.fn(),
+      'rangeEnd': jest.fn()
+    };
+    component.yScale = jest.fn() as any;
     fixture.detectChanges();
   });
 

@@ -100,7 +100,7 @@ describe('HistogramComponent', () => {
   }));
 
   it('should redraw the histogram on changes', waitForAsync(() => {
-    spyOn(component.histogramEl, 'redrawHistogram').and.callThrough();
+    jest.spyOn(component.histogramEl, 'redrawHistogram');
     const bins = [7, 8, 9, 10];
     const bars = [8, 9, 10, 11];
     const binsChange = new SimpleChange(component.bins, bins, true);

@@ -52,7 +52,7 @@ describe('PresentInParentComponent', () => {
   it('should update rarity interval start', () => {
     component.rarityIntervalStart = undefined;
     component.rarityIntervalEnd = undefined;
-    const updateStateSpy = spyOn(component, 'updateState');
+    const updateStateSpy = jest.spyOn(component, 'updateState');
 
     component.updateRarityIntervalStart('fakeStartNumber' as any);
     expect(component.rarityIntervalStart).toEqual('fakeStartNumber' as any);
@@ -63,7 +63,7 @@ describe('PresentInParentComponent', () => {
   it('should update rarity interval end', () => {
     component.rarityIntervalStart = undefined;
     component.rarityIntervalEnd = undefined;
-    const updateStateSpy = spyOn(component, 'updateState');
+    const updateStateSpy = jest.spyOn(component, 'updateState');
 
     component.updateRarityIntervalEnd('fakeEndNumber' as any);
     expect(component.rarityIntervalEnd).toEqual('fakeEndNumber' as any);
@@ -75,7 +75,7 @@ describe('PresentInParentComponent', () => {
     component.selectedRarityType = undefined;
     component.rarityIntervalStart = undefined;
     component.rarityIntervalEnd = undefined;
-    const updateStateSpy = spyOn(component, 'updateState');
+    const updateStateSpy = jest.spyOn(component, 'updateState');
 
     component.updateRarityType('fakeRarityType' as any);
     expect(component.selectedRarityType).toEqual('fakeRarityType');
@@ -91,7 +91,7 @@ describe('PresentInParentComponent', () => {
   });
 
   it('should update state', () => {
-    const dispatchSpy = spyOn(component['store'], 'dispatch');
+    const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
 
     component.updateState();
     expect(dispatchSpy).toHaveBeenCalledWith(new SetPresentInParentValues(

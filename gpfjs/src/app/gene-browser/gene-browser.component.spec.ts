@@ -65,9 +65,9 @@ describe('GeneBrowserComponent', () => {
 
   it('should draw legend on filters div set', () => {
     expect(component).toBeTruthy();
-    spyOn<any>(component, 'drawDenovoIcons');
-    spyOn<any>(component, 'drawTransmittedIcons');
-    spyOn<any>(component, 'drawEffectTypesIcons');
+    jest.spyOn<any>(component, 'drawDenovoIcons').mockImplementation(() => {});
+    jest.spyOn<any>(component, 'drawTransmittedIcons').mockImplementation(() => {});
+    jest.spyOn<any>(component, 'drawEffectTypesIcons').mockImplementation(() => {});
     component.filters = null;
     expect(component['drawDenovoIcons']).toHaveBeenCalled();
     expect(component['drawTransmittedIcons']).toHaveBeenCalled();
@@ -114,14 +114,14 @@ describe('GeneBrowserComponent', () => {
   });
 
   it('should set selected region', () => {
-    spyOn<any>(component, 'updateVariants');
+    jest.spyOn<any>(component, 'updateVariants').mockImplementation(() => {});
     component.setSelectedRegion([1, 2]);
     expect(component.summaryVariantsFilter.selectedRegion).toEqual([1, 2]);
     expect(component['updateVariants']).toHaveBeenCalled();
   });
 
   it('should set selected frequencies', () => {
-    spyOn<any>(component, 'updateVariants');
+    jest.spyOn<any>(component, 'updateVariants').mockImplementation(() => {});
     component.setSelectedFrequencies([3, 4]);
     expect(component.summaryVariantsFilter.selectedFrequencies).toEqual([3, 4]);
     expect(component['updateVariants']).toHaveBeenCalled();

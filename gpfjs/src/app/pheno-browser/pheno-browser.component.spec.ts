@@ -99,10 +99,14 @@ describe('PhenoBrowserComponent', () => {
   const datasetServiceMock = new MockDatasetsService();
 
   let locationSpy: jasmine.SpyObj<Location>;
-  const resizeSpy = jasmine.createSpyObj('ResizeService', ['addResizeEventListener']);
+  const resizeSpy = {
+    'addResizeEventListener': jest.fn()
+  };
 
   beforeEach(waitForAsync(() => { 
-    locationSpy = jasmine.createSpyObj('Location', ['replaceState']);
+    locationSpy = {
+      'replaceState': jest.fn()
+    };
 
     TestBed.configureTestingModule({
       imports: [ FormsModule, NgbModule ],
@@ -150,7 +154,7 @@ describe('PhenoBrowserComponent', () => {
     for (let option of selectElemOptions) {
       receivedInstruments.push(option.nativeElement.textContent);
     }
-    expect(receivedInstruments).toEqual(jasmine.arrayContaining(expectedInstruments));
+    expect(receivedInstruments).toEqual(expect.arrayContaining(expectedInstruments));
   }));
 
   it('should set the selected instrument to all instruments by default', waitForAsync(() => {
@@ -186,7 +190,7 @@ describe('PhenoBrowserComponent', () => {
   }));
 
   it('should pass search terms to the service correctly', waitForAsync(() => {
-    spyOn(phenoBrowserServiceMock, 'getMeasures').and.callThrough();
+    jest.spyOn(phenoBrowserServiceMock, 'getMeasures');
     setQuery(fixture, 1, 'q10');
     fixture.whenStable().then(() => {
       expect(phenoBrowserServiceMock.getMeasures).toHaveBeenCalledTimes(2);
@@ -196,7 +200,7 @@ describe('PhenoBrowserComponent', () => {
   }));
 
   it('should set the url with the selected instrument and search term', waitForAsync(() => {
-    spyOn(router, 'createUrlTree').and.callThrough();
+    jest.spyOn(router, 'createUrlTree');
     setQuery(fixture, 2, 'q12');
     fixture.whenStable().then(() => {
       expect(router.createUrlTree).toHaveBeenCalledTimes(2);
@@ -219,12 +223,12 @@ describe('PhenoBrowserComponent', () => {
   it('should fetch and display all fields of a measure', waitForAsync(() => {
     fixture.detectChanges();
     fixture.whenStable().then(() => {
-      expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('i1'));
-      expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('1.00e-6'));
-      expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('0.2'));
-      expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('test_measure'));
-      expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('ordinal'));
-      expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('a test measure'));
+      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('i1'));
+      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('1.00e-6'));
+      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('0.2'));
+      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('test_measure'));
+      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('ordinal'));
+      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('a test measure'));
     });
   }));
 

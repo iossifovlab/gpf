@@ -42,8 +42,8 @@ describe('EffectTypesComponent', () => {
   });
 
   it('should initialize', () => {
-    const onEffectTypeChangeSpy = spyOn(component, 'onEffectTypeChange');
-    const selectInitialValuesSpy = spyOn(component, 'selectInitialValues');
+    const onEffectTypeChangeSpy = jest.spyOn(component, 'onEffectTypeChange');
+    const selectInitialValuesSpy = jest.spyOn(component, 'selectInitialValues');
 
     component.ngOnInit();
     expect(onEffectTypeChangeSpy.calls.allArgs()).toEqual([
@@ -81,7 +81,7 @@ describe('EffectTypesComponent', () => {
   it('should update variant types', () => {
     component.effectTypes.selected = undefined;
     component['store'] = { dispatch(_: any) {} } as any;
-    const dispatchSpy = spyOn(component['store'], 'dispatch');
+    const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     const mockSet = new Set(['value1', 'value2', 'value3']);
 
     component.setEffectTypes(mockSet);
@@ -91,7 +91,7 @@ describe('EffectTypesComponent', () => {
   });
 
   it('should effect type change', () => {
-    const dispatchSpy = spyOn(component['store'], 'dispatch');
+    const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     component.effectTypes.selected = new Set();
 
     component.onEffectTypeChange({checked: true, effectType: 'effectType1'});

@@ -39,8 +39,8 @@ describe('DatasetService', () => {
   });
 
   it('should fetch datasets', () => {
-    const httpGetSpy = spyOn(HttpClient.prototype, 'get');
-    httpGetSpy.and.returnValue(of('fakeResponse'));
+    const httpGetSpy = jest.spyOn(HttpClient.prototype, 'get');
+    httpGetSpy.mockReturnValue(of('fakeResponse'));
 
     service.getDatasets().subscribe((post: Dataset[]) => {
       expect(httpGetSpy.calls.allArgs()).toEqual([['testUrl/datasets', {withCredentials: true}]]);
@@ -48,10 +48,10 @@ describe('DatasetService', () => {
   });
 
   it('should get dataset', () => {
-    const datasetFromJsonSpy = spyOn(Dataset, 'fromDatasetAndDetailsJson');
-    datasetFromJsonSpy.and.returnValue('fakeDataset' as any);
-    const httpGetSpy = spyOn(HttpClient.prototype, 'get');
-    httpGetSpy.and.returnValue(of('fakeResponse'));
+    const datasetFromJsonSpy = jest.spyOn(Dataset, 'fromDatasetAndDetailsJson');
+    datasetFromJsonSpy.mockReturnValue('fakeDataset' as any);
+    const httpGetSpy = jest.spyOn(HttpClient.prototype, 'get');
+    httpGetSpy.mockReturnValue(of('fakeResponse'));
 
     service.getDataset('geneSymbol').pipe(take(1)).subscribe((response) => {
       expect(response).toEqual('fakeDataset' as any);

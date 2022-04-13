@@ -27,8 +27,8 @@ const rangeMockGene = {
 
 describe('GenePlotModel', () => {
   it('should build a domain and a normal and condensed range on instantiation', () => {
-    spyOn(GenePlotModel.prototype, 'buildDomain').and.callFake(() => [1]);
-    spyOn(GenePlotModel.prototype, 'buildRange').and.callFake(() => [2]);
+    jest.spyOn(GenePlotModel.prototype, 'buildDomain').mockImplementation(() => [1]);
+    jest.spyOn(GenePlotModel.prototype, 'buildRange').mockImplementation(() => [2]);
     const plotModel = new GenePlotModel(new Gene('CYP2D6', [new Transcript('id1', 'chr1', 'strand1', ['1', 2, 3] as any, ['2', 3, 4] as any)]), 123, 150);
     expect(plotModel.buildDomain).toHaveBeenCalledWith(0, 3000000000);
     expect(plotModel.buildRange).toHaveBeenCalledWith(0, 3000000000, 123, false);
@@ -39,14 +39,14 @@ describe('GenePlotModel', () => {
   });
 
   it('should build correct domains', () => {
-    spyOn(GenePlotModel.prototype, 'buildRange').and.callFake(() => [1]);
+    jest.spyOn(GenePlotModel.prototype, 'buildRange').mockImplementation(() => [1]);
     const gene = Gene.fromJson(simpleMockGene);
     const plotModel = new GenePlotModel(gene, null);
     expect(plotModel.buildDomain(1, 7)).toEqual([1, 2, 3, 4, 5, 6, 7]);
   });
 
   it('should build correct normal ranges', () => {
-    spyOn(GenePlotModel.prototype, 'buildDomain').and.callFake(() => [1]);
+    jest.spyOn(GenePlotModel.prototype, 'buildDomain').mockImplementation(() => [1]);
     const gene = Gene.fromJson(rangeMockGene);
     const plotModel = new GenePlotModel(gene, 1000);
     expect(plotModel.buildRange(0, 18000, 1000, false).map(Math.round)).toEqual(
@@ -55,7 +55,7 @@ describe('GenePlotModel', () => {
   });
 
   it('should build correct condensed ranges', () => {
-    spyOn(GenePlotModel.prototype, 'buildDomain').and.callFake(() => [1]);
+    jest.spyOn(GenePlotModel.prototype, 'buildDomain').mockImplementation(() => [1]);
     const gene = Gene.fromJson(rangeMockGene);
     const plotModel = new GenePlotModel(gene, 1000);
     expect(plotModel.buildRange(3000, 13000, 1000, true).map(Math.round)).toEqual(
@@ -74,7 +74,7 @@ describe('GenePlotScaleState ', () => {
 
 describe('GenePlotZoomHistory ', () => {
   it('should reset to default on instantiation', () => {
-    spyOn(GenePlotZoomHistory.prototype, 'reset');
+    jest.spyOn(GenePlotZoomHistory.prototype, 'reset').mockImplementation(() => {});
     const history = new GenePlotZoomHistory(new GenePlotScaleState(null, null, null, null, null));
     expect(history.reset).toHaveBeenCalled();
   });

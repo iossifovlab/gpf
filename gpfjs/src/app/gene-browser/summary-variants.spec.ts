@@ -8,17 +8,17 @@ describe('SummaryAllele', () => {
     const b = new SummaryAllele();
     const bComparisonValue = spyOnProperty(b, 'comparisonValue');
 
-    aComparisonValue.and.returnValue(1);
-    bComparisonValue.and.returnValue(0);
+    aComparisonValue.mockReturnValue(1);
+    bComparisonValue.mockReturnValue(0);
     expect(SummaryAllele.comparator(a, b)).toBe(1);
-    aComparisonValue.and.returnValue(0);
-    bComparisonValue.and.returnValue(1);
+    aComparisonValue.mockReturnValue(0);
+    bComparisonValue.mockReturnValue(1);
     expect(SummaryAllele.comparator(a, b)).toBe(-1);
-    aComparisonValue.and.returnValue(1);
-    bComparisonValue.and.returnValue(1);
+    aComparisonValue.mockReturnValue(1);
+    bComparisonValue.mockReturnValue(1);
     expect(SummaryAllele.comparator(a, b)).toBe(0);
-    aComparisonValue.and.returnValue(0);
-    bComparisonValue.and.returnValue(0);
+    aComparisonValue.mockReturnValue(0);
+    bComparisonValue.mockReturnValue(0);
     expect(SummaryAllele.comparator(a, b)).toBe(0);
   });
 

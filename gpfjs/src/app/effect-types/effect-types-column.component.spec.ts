@@ -29,7 +29,7 @@ describe('EffecttypesColumnComponent', () => {
   });
 
   it('should check effect type', () => {
-    const emitSpy = spyOn(component.effectTypeEvent, 'emit');
+    const emitSpy = jest.spyOn(component.effectTypeEvent, 'emit');
     component.effectTypesLabels = new Set(['label1', 'label2', 'label3']);
 
     component.checkEffectType('label0', true);

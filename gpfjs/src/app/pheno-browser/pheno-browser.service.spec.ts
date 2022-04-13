@@ -14,9 +14,13 @@ describe('pheno browser service', () => {
   let httpSpy;
 
   beforeEach(() => {
-    const cookieSpyObj = jasmine.createSpyObj('CookieService', ['get']);
+    const cookieSpyObj = {
+      'get': jest.fn()
+    };
     const configMock = { 'baseUrl': 'testUrl/' };
-    const httpSpyObj = jasmine.createSpyObj('HttpClient', ['get']);
+    const httpSpyObj = {
+      'get': jest.fn()
+    };
 
     TestBed.configureTestingModule({
       'providers': [
@@ -36,7 +40,7 @@ describe('pheno browser service', () => {
     const expectedInstruments: PhenoInstruments = ['i1', 'i2', 'i3'] as unknown as PhenoInstruments;
     const response = ['i1', 'i2', 'i3'];
 
-    httpSpy.get.and.returnValue(of(response));
+    httpSpy.get.mockReturnValue(of(response));
     phenoBrowserService.getInstruments(null).subscribe(
       instruments => expect(instruments).toEqual(expectedInstruments),
       fail
@@ -48,7 +52,7 @@ describe('pheno browser service', () => {
     const expectedMeasure: PhenoMeasure = PhenoMeasure.fromJson(fakeJsonMeasure);
     const response = phenoMeasuresJson;
 
-    httpSpy.get.and.returnValue(of(response));
+    httpSpy.get.mockReturnValue(of(response));
     phenoBrowserService.getMeasures(null, null, null).subscribe(
       measures => expect(measures).toEqual(expectedMeasure),
       fail
