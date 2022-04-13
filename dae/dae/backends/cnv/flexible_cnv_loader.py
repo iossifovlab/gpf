@@ -85,12 +85,6 @@ def _configure_cnv_location(
         start_index = header.index(cnv_start)
         end_index = header.index(cnv_end)
 
-        if chrom_index == -1 or start_index == -1 or end_index == -1:
-            raise ValueError(
-                f"cant find cnv vcf position like columns "
-                f"vcf({cnv_chrom}:{cnv_start}-{cnv_end}) in header: "
-                f"{header}"
-            )
         header[chrom_index] = "chrom"
         header[start_index] = "pos"
         header[end_index] = "pos_end"
@@ -99,12 +93,6 @@ def _configure_cnv_location(
         if cnv_location is None:
             cnv_location = "location"
         location_index = header.index(cnv_location)
-        if location_index == -1:
-            raise ValueError(
-                f"can find cnv location column "
-                f"location({cnv_location}) in header: "
-                f"{header}"
-            )
         header[location_index] = "location"
         transformers.append(_cnv_location_to_vcf_trasformer())
 
@@ -206,11 +194,6 @@ def _configure_cnv_best_state(
                 f"best_state({cnv_best_state})"
             )
         person_index = header.index(cnv_person_id)
-        if person_index == -1:
-            raise ValueError(
-                f"cant find person_id({cnv_person_id}) in header: "
-                f"{header}")
-
         header[person_index] = "person_id"
 
         transformers.append(
@@ -221,13 +204,10 @@ def _configure_cnv_best_state(
             cnv_family_id = "family_id"
         if cnv_best_state is None:
             cnv_best_state = "best_state"
+
         family_index = header.index(cnv_family_id)
         best_state_index = header.index(cnv_best_state)
-        if family_index == -1 or best_state_index == -1:
-            raise ValueError(
-                f"cant find family_id({cnv_family_id}) or "
-                f"best_state({cnv_best_state}) in header: "
-                f"{header}")
+
         header[family_index] = "family_id"
         header[best_state_index] = "best_state"
 
@@ -279,10 +259,6 @@ def _configure_cnv_variant_type(
         cnv_variant_type = "variant"
 
     variant_type_index = header.index(cnv_variant_type)
-    if variant_type_index == -1:
-        raise ValueError(
-            f"missing variant type column {cnv_variant_type} in header: "
-            f"{header}")
     header[variant_type_index] = "variant"
 
     transformers.append(

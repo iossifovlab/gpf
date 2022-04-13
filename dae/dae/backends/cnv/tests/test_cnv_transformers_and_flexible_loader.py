@@ -109,8 +109,6 @@ def test_cnv_dae_variant_type(cnv_dae):
         (["CNV+"], ["CNV-"], "CNV-", Allele.Type.large_deletion),
         (["GAIN"], ["LOSS"], "GAIN", Allele.Type.large_duplication),
         (["GAIN"], ["LOSS"], "LOSS", Allele.Type.large_deletion),
-        ("GAIN", "LOSS", "GAIN", Allele.Type.large_duplication),
-        ("GAIN", "LOSS", "LOSS", Allele.Type.large_deletion),
         (["Dup", "Dup_Germline"], ["Del", "Del_Germline"],
          "Dup_Germline", Allele.Type.large_duplication),
         (["Dup", "Dup_Germline"], ["Del", "Del_Germline"],
