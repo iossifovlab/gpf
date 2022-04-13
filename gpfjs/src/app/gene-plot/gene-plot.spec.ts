@@ -84,29 +84,29 @@ describe('GenePlotZoomHistory ', () => {
     history.addStateToHistory(new GenePlotScaleState([1, 2, 3], null, null, null, null));
     history.reset();
     expect(history.currentState.xDomain).toEqual([0, 1, 2]);
-    expect(history.canGoForward).toBeFalse();
-    expect(history.canGoBackward).toBeFalse();
+    expect(history.canGoForward).toBeFalsy();
+    expect(history.canGoBackward).toBeFalsy();
   });
 
   it('should correctly determine if it can go forward and/or backward', () => {
     const history = new GenePlotZoomHistory(new GenePlotScaleState([0, 1, 2], null, null, null, null));
-    expect(history.canGoForward).toBeFalse();
-    expect(history.canGoBackward).toBeFalse();
+    expect(history.canGoForward).toBeFalsy();
+    expect(history.canGoBackward).toBeFalsy();
 
     history.addStateToHistory(new GenePlotScaleState([1, 2, 3], null, null, null, null));
-    expect(history.canGoForward).toBeFalse();
-    expect(history.canGoBackward).toBeTrue();
+    expect(history.canGoForward).toBeFalsy();
+    expect(history.canGoBackward).toBeTruthy();
 
     history.moveToPrevious();
-    expect(history.canGoForward).toBeTrue();
-    expect(history.canGoBackward).toBeFalse();
+    expect(history.canGoForward).toBeTruthy();
+    expect(history.canGoBackward).toBeFalsy();
   });
 
   it('should be able to add a new state to the list and give the correct current state', () => {
     const history = new GenePlotZoomHistory(new GenePlotScaleState([0, 1, 2], null, null, null, null));
     history.addStateToHistory(new GenePlotScaleState([1, 2, 3], null, null, null, null));
     history.addStateToHistory(new GenePlotScaleState([2, 3, 4], null, null, null, null));
-    expect(history.canGoBackward).toBeTrue();
+    expect(history.canGoBackward).toBeTruthy();
     expect(history.currentState.xDomain).toEqual([2, 3, 4]);
   });
 
@@ -115,7 +115,7 @@ describe('GenePlotZoomHistory ', () => {
     history.addStateToHistory(new GenePlotScaleState([1, 2, 3], null, null, null, null));
     history.moveToPrevious();
     history.addStateToHistory(new GenePlotScaleState([2, 3, 4], null, null, null, null));
-    expect(history.canGoForward).toBeFalse();
+    expect(history.canGoForward).toBeFalsy();
   });
 
   it('should be able to go forwards and backwards in history', () => {

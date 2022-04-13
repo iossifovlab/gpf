@@ -293,7 +293,7 @@ describe('AgpTableComponent', () => {
       expect(leaf.parent?.id).toEqual(gridData[index].parent);
       expect(leaf.depth).toEqual(gridData[index].depth);
     });
-    expect(component.pageIndex > 1).toBeTrue();
+    expect(component.pageIndex > 1).toBeTruthy();
     expect(component.genes[0]).toEqual(genesMock[0]);
     expect(component.genes[1]).toEqual(genesMock[1]);
     expect(component.genes[2]).toEqual(genesMock[2]);
@@ -360,10 +360,10 @@ describe('AgpTableComponent', () => {
     component.highlightedGenes = new Set(['gene1', 'gene2', 'gene3', 'gene4']);
 
     component.toggleHighlightGene('gene3');
-    expect(component.highlightedGenes.has('gene3')).toBeFalse();
+    expect(component.highlightedGenes.has('gene3')).toBeFalsy();
     component.toggleHighlightGene('gene3');
-    expect(component.highlightedGenes.has('gene3')).toBeTrue();
+    expect(component.highlightedGenes.has('gene3')).toBeTruthy();
     component.toggleHighlightGene('gene5');
-    expect(component.highlightedGenes.has('gene5')).toBeTrue();
+    expect(component.highlightedGenes.has('gene5')).toBeTruthy();
   });
 });

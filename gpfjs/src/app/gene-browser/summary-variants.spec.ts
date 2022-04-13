@@ -99,58 +99,58 @@ describe('SummaryAllele', () => {
     const summaryAllele = new SummaryAllele();
 
     summaryAllele.effect = 'lgds';
-    expect(summaryAllele.isLGDs()).toBeTrue();
+    expect(summaryAllele.isLGDs()).toBeTruthy();
     summaryAllele.effect = 'nonsense';
-    expect(summaryAllele.isLGDs()).toBeTrue();
+    expect(summaryAllele.isLGDs()).toBeTruthy();
     summaryAllele.effect = '';
-    expect(summaryAllele.isLGDs()).toBeFalse();
+    expect(summaryAllele.isLGDs()).toBeFalsy();
   });
 
   it('should check is missense', () => {
     const summaryAllele = new SummaryAllele();
 
     summaryAllele.effect = 'missense';
-    expect(summaryAllele.isMissense()).toBeTrue();
+    expect(summaryAllele.isMissense()).toBeTruthy();
     summaryAllele.effect = '';
-    expect(summaryAllele.isMissense()).toBeFalse();
+    expect(summaryAllele.isMissense()).toBeFalsy();
   });
 
   it('should check is synonymous', () => {
     const summaryAllele = new SummaryAllele();
 
     summaryAllele.effect = 'synonymous';
-    expect(summaryAllele.isSynonymous()).toBeTrue();
+    expect(summaryAllele.isSynonymous()).toBeTruthy();
     summaryAllele.effect = '';
-    expect(summaryAllele.isSynonymous()).toBeFalse();
+    expect(summaryAllele.isSynonymous()).toBeFalsy();
   });
 
   it('should check is CNV+', () => {
     const summaryAllele = new SummaryAllele();
 
     summaryAllele.effect = 'CNV+';
-    expect(summaryAllele.isCNVPlus()).toBeTrue();
+    expect(summaryAllele.isCNVPlus()).toBeTruthy();
     summaryAllele.effect = '';
-    expect(summaryAllele.isCNVPlus()).toBeFalse();
+    expect(summaryAllele.isCNVPlus()).toBeFalsy();
   });
 
   it('should check is CNV-', () => {
     const summaryAllele = new SummaryAllele();
 
     summaryAllele.effect = 'CNV-';
-    expect(summaryAllele.isCNVMinus()).toBeTrue();
+    expect(summaryAllele.isCNVMinus()).toBeTruthy();
     summaryAllele.effect = '';
-    expect(summaryAllele.isCNVMinus()).toBeFalse();
+    expect(summaryAllele.isCNVMinus()).toBeFalsy();
   });
 
   it('should check is CNV', () => {
     const summaryAllele = new SummaryAllele();
 
     summaryAllele.effect = 'CNV+';
-    expect(summaryAllele.isCNV()).toBeTrue();
+    expect(summaryAllele.isCNV()).toBeTruthy();
     summaryAllele.effect = 'CNV-';
-    expect(summaryAllele.isCNV()).toBeTrue();
+    expect(summaryAllele.isCNV()).toBeTruthy();
     summaryAllele.effect = '';
-    expect(summaryAllele.isCNV()).toBeFalse();
+    expect(summaryAllele.isCNV()).toBeFalsy();
   });
 
   it('should get comparison value', () => {
@@ -196,14 +196,14 @@ describe('SummaryAllele', () => {
     summaryAllele9.seenAsDenovo = true;
     summaryAllele9.effect = 'lgds';
 
-    expect(summaryAllele1.comparisonValue < summaryAllele2.comparisonValue).toBeTrue();
-    expect(summaryAllele2.comparisonValue < summaryAllele3.comparisonValue).toBeTrue();
-    expect(summaryAllele3.comparisonValue < summaryAllele4.comparisonValue).toBeTrue();
-    expect(summaryAllele4.comparisonValue < summaryAllele5.comparisonValue).toBeTrue();
-    expect(summaryAllele5.comparisonValue < summaryAllele6.comparisonValue).toBeTrue();
-    expect(summaryAllele6.comparisonValue < summaryAllele7.comparisonValue).toBeTrue();
-    expect(summaryAllele7.comparisonValue < summaryAllele8.comparisonValue).toBeTrue();
-    expect(summaryAllele8.comparisonValue < summaryAllele9.comparisonValue).toBeTrue();
+    expect(summaryAllele1.comparisonValue < summaryAllele2.comparisonValue).toBeTruthy();
+    expect(summaryAllele2.comparisonValue < summaryAllele3.comparisonValue).toBeTruthy();
+    expect(summaryAllele3.comparisonValue < summaryAllele4.comparisonValue).toBeTruthy();
+    expect(summaryAllele4.comparisonValue < summaryAllele5.comparisonValue).toBeTruthy();
+    expect(summaryAllele5.comparisonValue < summaryAllele6.comparisonValue).toBeTruthy();
+    expect(summaryAllele6.comparisonValue < summaryAllele7.comparisonValue).toBeTruthy();
+    expect(summaryAllele7.comparisonValue < summaryAllele8.comparisonValue).toBeTruthy();
+    expect(summaryAllele8.comparisonValue < summaryAllele9.comparisonValue).toBeTruthy();
   });
 
   it('should check if intersects', () => {
@@ -214,12 +214,12 @@ describe('SummaryAllele', () => {
     summaryAllele1.position = 13;
     summaryAllele2.effect = 'lgds';
     summaryAllele2.position = 13;
-    expect(summaryAllele1.intersects(summaryAllele2)).toBeTrue();
-    expect(summaryAllele2.intersects(summaryAllele1)).toBeTrue();
+    expect(summaryAllele1.intersects(summaryAllele2)).toBeTruthy();
+    expect(summaryAllele2.intersects(summaryAllele1)).toBeTruthy();
     summaryAllele1.position = 13;
     summaryAllele2.position = 14;
-    expect(summaryAllele1.intersects(summaryAllele2)).toBeFalse();
-    expect(summaryAllele2.intersects(summaryAllele1)).toBeFalse();
+    expect(summaryAllele1.intersects(summaryAllele2)).toBeFalsy();
+    expect(summaryAllele2.intersects(summaryAllele1)).toBeFalsy();
 
     summaryAllele1.effect = 'CNV+';
     summaryAllele1.position = 13;
@@ -227,44 +227,44 @@ describe('SummaryAllele', () => {
     summaryAllele2.effect = 'CNV-';
     summaryAllele2.position = 3;
     summaryAllele2.endPosition = 15;
-    expect(summaryAllele1.intersects(summaryAllele2)).toBeTrue();
-    expect(summaryAllele2.intersects(summaryAllele1)).toBeTrue();
+    expect(summaryAllele1.intersects(summaryAllele2)).toBeTruthy();
+    expect(summaryAllele2.intersects(summaryAllele1)).toBeTruthy();
     summaryAllele1.position = 13;
     summaryAllele1.endPosition = 17;
     summaryAllele2.position = 14;
     summaryAllele2.endPosition = 23;
-    expect(summaryAllele1.intersects(summaryAllele2)).toBeTrue();
-    expect(summaryAllele2.intersects(summaryAllele1)).toBeTrue();
+    expect(summaryAllele1.intersects(summaryAllele2)).toBeTruthy();
+    expect(summaryAllele2.intersects(summaryAllele1)).toBeTruthy();
     summaryAllele1.position = 13;
     summaryAllele1.endPosition = 17;
     summaryAllele2.position = 18;
     summaryAllele2.endPosition = 23;
-    expect(summaryAllele1.intersects(summaryAllele2)).toBeFalse();
-    expect(summaryAllele2.intersects(summaryAllele1)).toBeFalse();
+    expect(summaryAllele1.intersects(summaryAllele2)).toBeFalsy();
+    expect(summaryAllele2.intersects(summaryAllele1)).toBeFalsy();
     summaryAllele1.position = 13;
     summaryAllele1.endPosition = 17;
     summaryAllele2.position = 1;
     summaryAllele2.endPosition = 12;
-    expect(summaryAllele1.intersects(summaryAllele2)).toBeFalse();
-    expect(summaryAllele2.intersects(summaryAllele1)).toBeFalse();
+    expect(summaryAllele1.intersects(summaryAllele2)).toBeFalsy();
+    expect(summaryAllele2.intersects(summaryAllele1)).toBeFalsy();
 
     summaryAllele1.effect = 'lgds';
     summaryAllele1.position = 13;
     summaryAllele2.effect = 'CNV+';
     summaryAllele2.position = 3;
     summaryAllele2.endPosition = 15;
-    expect(summaryAllele1.intersects(summaryAllele2)).toBeTrue();
-    expect(summaryAllele2.intersects(summaryAllele1)).toBeTrue();
+    expect(summaryAllele1.intersects(summaryAllele2)).toBeTruthy();
+    expect(summaryAllele2.intersects(summaryAllele1)).toBeTruthy();
     summaryAllele1.position = 13;
     summaryAllele2.position = 14;
     summaryAllele2.endPosition = 15;
-    expect(summaryAllele1.intersects(summaryAllele2)).toBeFalse();
-    expect(summaryAllele2.intersects(summaryAllele1)).toBeFalse();
+    expect(summaryAllele1.intersects(summaryAllele2)).toBeFalsy();
+    expect(summaryAllele2.intersects(summaryAllele1)).toBeFalsy();
     summaryAllele1.position = 13;
     summaryAllele2.position = 3;
     summaryAllele2.endPosition = 12;
-    expect(summaryAllele1.intersects(summaryAllele2)).toBeFalse();
-    expect(summaryAllele2.intersects(summaryAllele1)).toBeFalse();
+    expect(summaryAllele1.intersects(summaryAllele2)).toBeFalsy();
+    expect(summaryAllele2.intersects(summaryAllele1)).toBeFalsy();
   });
 });
 
@@ -340,9 +340,9 @@ describe('SummaryAllelesArray', () => {
     summaryAlleleArray.addSummaryAllele(summaryAllele3);
     expect(summaryAlleleArray.summaryAlleles[0].sauid).toEqual('sauid1');
     expect(summaryAlleleArray.summaryAlleles[0].numberOfFamilyVariants).toEqual(10);
-    expect(summaryAlleleArray.summaryAlleles[0].seenAsDenovo).toBeTrue();
-    expect(summaryAlleleArray.summaryAlleles[0].seenInAffected).toBeTrue();
-    expect(summaryAlleleArray.summaryAlleles[0].seenInUnaffected).toBeFalse();
+    expect(summaryAlleleArray.summaryAlleles[0].seenAsDenovo).toBeTruthy();
+    expect(summaryAlleleArray.summaryAlleles[0].seenInAffected).toBeTruthy();
+    expect(summaryAlleleArray.summaryAlleles[0].seenInUnaffected).toBeFalsy();
     expect(summaryAlleleArray.summaryAlleleIds).toEqual(['sauid1', 'sauid2']);
   });
 
@@ -370,9 +370,9 @@ describe('SummaryAllelesArray', () => {
 describe('SummaryAllelesFilter', () => {
   it('should construct with default values', () => {
     const summaryAllelesFilter = new SummaryAllelesFilter();
-    expect(summaryAllelesFilter.denovo).toBeTrue();
-    expect(summaryAllelesFilter.transmitted).toBeTrue();
-    expect(summaryAllelesFilter.codingOnly).toBeTrue();
+    expect(summaryAllelesFilter.denovo).toBeTruthy();
+    expect(summaryAllelesFilter.transmitted).toBeTruthy();
+    expect(summaryAllelesFilter.codingOnly).toBeTruthy();
     expect(summaryAllelesFilter.selectedAffectedStatus).toEqual(new Set());
     expect(summaryAllelesFilter.selectedEffectTypes).toEqual(new Set());
     expect(summaryAllelesFilter.selectedVariantTypes).toEqual(new Set());

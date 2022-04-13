@@ -53,10 +53,10 @@ describe('AutismGeneProfileSingleViewComponent', () => {
     const getGeneWeightsSpy = jest.spyOn(component['geneWeightsService'], 'getGeneWeights');
     getGeneWeightsSpy.mockReturnValue(of('fakeWeight' as any));
 
-    expect(component.isGeneInSFARI).toBeFalse();
+    expect(component.isGeneInSFARI).toBeFalsy();
     component.ngOnInit();
     expect(component['gene$']).toEqual(geneMock);
-    expect(component.isGeneInSFARI).toBeTrue();
+    expect(component.isGeneInSFARI).toBeTruthy();
     expect(getGeneSpy).toHaveBeenCalledWith('mockGeneSymbol');
     expect(getGeneWeightsSpy.calls.allArgs()).toEqual([
       ['fakeScore1'],
@@ -75,7 +75,7 @@ describe('AutismGeneProfileSingleViewComponent', () => {
     getGeneSpy.mockReturnValue(geneMock);
     component.ngOnInit();
     expect(component['gene$']).toEqual(geneMock);
-    expect(component.isGeneInSFARI).toBeFalse();
+    expect(component.isGeneInSFARI).toBeFalsy();
   });
 
   it('should get autism score gene weight', () => {
