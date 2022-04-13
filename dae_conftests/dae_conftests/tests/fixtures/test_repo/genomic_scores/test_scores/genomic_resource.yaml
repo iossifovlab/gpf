@@ -9,22 +9,16 @@ scores:
     desc: "SCORE raw"
   - id: score_phred
     desc: "SCORE phred"
-  - id: score_phred_disabled
-    desc: "SCORE phred Disabled"
 histograms:
-  - id: score_raw_rankscore
+  - score: score_raw_rankscore
     bins: 101
     yscale: "log"
     xscale: "linear"
-  - id: score_raw
+  - score: score_raw
     bins: 101
     yscale: "log"
     xscale: "linear"
-  - id: score_phred
+  - score: score_phred
     bins: 101
     yscale: "log"
-    xscale: "linear"
-  - id: score_phred_disabled
-    bins: 11
-    yscale: "linear"
     xscale: "linear"

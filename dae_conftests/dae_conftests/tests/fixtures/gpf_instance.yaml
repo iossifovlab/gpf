@@ -114,8 +114,6 @@ genomic_scores_db:
     score: score_raw
   - resource: genomic_scores/test_scores
     score: score_phred
-  - resource: genomic_scores/test_scores
-    score: score_phred_disabled
 
 phenotype_data:
   dir: "%(wd)s/pheno"

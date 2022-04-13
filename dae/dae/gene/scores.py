@@ -83,9 +83,10 @@ class GenomicScoresDB:
                     resource, score_id, self.file_cache
                 )
                 self.scores[score_id] = score
-            except KeyError:
-                logger.warn(
+            except KeyError as err:
+                logger.error(
                     f"Failed to load histogram configuration of {resource_id}"
+                    f"\n{err}"
                 )
 
     def get_scores(self):

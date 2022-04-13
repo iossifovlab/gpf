@@ -41,4 +41,4 @@ def test_dae_config(fixtures_gpf_instance, global_dae_fixtures_dir):
 def test_variants_db(fixtures_gpf_instance):
     variants_db = fixtures_gpf_instance._variants_db
 
-    assert len(variants_db.get_all_genotype_data()) == 41
+    assert len(variants_db.get_all_genotype_data()) == 42
