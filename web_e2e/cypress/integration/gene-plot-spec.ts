@@ -15,34 +15,6 @@ describe('Gene plot tests', () => {
     geneBrowserPage.goButton.click();
   });
 
-  it('should have Affected status checkboxes', () => {
-    geneBrowserPage.getAffectedStatusCheckbox('Affected only').should('be.visible');
-    geneBrowserPage.getAffectedStatusCheckbox('Unaffected only').should('be.visible');
-    geneBrowserPage.getAffectedStatusCheckbox('Affected and unaffected').should('be.visible');
-  });
-
-  it('should have effect types checkboxes', () => {
-    geneBrowserPage.getEffectTypesCheckbox('LGDs').should('be.visible');
-    geneBrowserPage.getEffectTypesCheckbox('missense').should('be.visible');
-    geneBrowserPage.getEffectTypesCheckbox('synonymous').should('be.visible');
-    geneBrowserPage.getEffectTypesCheckbox('CNV+').should('be.visible');
-    geneBrowserPage.getEffectTypesCheckbox('CNV-').should('be.visible');
-    geneBrowserPage.getEffectTypesCheckbox('Other').should('be.visible');
-  });
-
-  it('should have effect types checkboxes', () => {
-    geneBrowserPage.getInheritanceTypes('Denovo').should('be.visible');
-    geneBrowserPage.getInheritanceTypes('Transmitted').should('be.visible');
-  });
-
-  it('should have variant types checkboxes', () => {
-    geneBrowserPage.getVariantTypes('del').should('be.visible');
-    geneBrowserPage.getVariantTypes('ins').should('be.visible');
-    geneBrowserPage.getVariantTypes('del').should('be.visible');
-    geneBrowserPage.getVariantTypes('CNV+').should('be.visible');
-    geneBrowserPage.getVariantTypes('CNV-').should('be.visible');
-  });
-
   it('should have undo button', () => {
     page.undoButton.should('be.visible');
   });

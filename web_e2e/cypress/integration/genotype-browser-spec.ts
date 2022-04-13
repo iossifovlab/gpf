@@ -76,6 +76,15 @@ describe('Genotype browser tests', () => {
       personFiltersBlockPage.block.should('be.visible');
     });
   });
+
+  datasetList.forEach(dataset => {
+    it.only('should display unique family variants block at /' + dataset + '/browser', () => {
+      const uniqueFamilyVariantsFilterPage = new UniqueFamilyVariantsFilterPage();
+      page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
+      uniqueFamilyVariantsFilterPage.block.should('be.visible');
+    });
+  });
+
   datasetList.forEach(dataset => {
     it('should display "Table Preview" button in genotype browser at /' + dataset + '/browser', () => {
       page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);

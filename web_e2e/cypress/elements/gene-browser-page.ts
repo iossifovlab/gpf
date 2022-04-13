@@ -5,6 +5,10 @@ export class GeneBrowserPage extends BasePage {
     return cy.get('gpf-gene-browser');
   }
 
+  public get geneSymbolsHeader(): element {
+    return cy.get('div').contains('Gene Symbols');
+  }
+
   public get searchInputBox(): element {
     return cy.get('gpf-gene-browser input#search-box');
   }
@@ -19,6 +23,10 @@ export class GeneBrowserPage extends BasePage {
 
   public get codingOnlyCheckbox(): element {
     return cy.get('input#coding-only-checkbox');
+  }
+
+  public get filters(): element {
+    return cy.get('#filters');
   }
 
   public get affectedStatusField(): element {
