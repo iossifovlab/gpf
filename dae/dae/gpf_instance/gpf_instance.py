@@ -77,7 +77,6 @@ class GPFInstance(object):
             self._pheno_db
             self._variants_db
             self.denovo_gene_sets_db
-            self._score_config
             self.genomic_scores_db
             self.genotype_storage_db
             self._background_facade
