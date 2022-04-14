@@ -72,6 +72,6 @@ describe('InheritancetypesComponent', () => {
     component.updateInheritanceTypes(mockSet);
 
     expect(component.selectedValues).toEqual(mockSet);
-    expect(dispatchSpy).toHaveBeenCalledOnceWith(new SetInheritanceTypes(mockSet));
+    expect(dispatchSpy).toHaveBeenNthCalledWith(1, new SetInheritanceTypes(mockSet));
   });
 });

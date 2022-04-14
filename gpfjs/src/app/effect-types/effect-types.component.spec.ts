@@ -87,7 +87,7 @@ describe('EffectTypesComponent', () => {
     component.setEffectTypes(mockSet);
 
     expect(component.effectTypes.selected).toEqual(mockSet);
-    expect(dispatchSpy).toHaveBeenCalledOnceWith(new SetEffectTypes(mockSet));
+    expect(dispatchSpy).toHaveBeenNthCalledWith(1, new SetEffectTypes(mockSet));
   });
 
   it('should effect type change', () => {

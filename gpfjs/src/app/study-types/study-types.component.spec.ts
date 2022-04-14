@@ -52,6 +52,6 @@ describe('StudyTypesComponent', () => {
     component.updateStudyTypes(mockSet);
 
     expect(component.selectedValues).toEqual(mockSet);
-    expect(dispatchSpy).toHaveBeenCalledOnceWith(new SetStudyTypes(mockSet));
+    expect(dispatchSpy).toHaveBeenNthCalledWith(1, new SetStudyTypes(mockSet));
   });
 });

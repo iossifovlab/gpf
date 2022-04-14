@@ -77,6 +77,6 @@ describe('VariantTypesComponent', () => {
     component.updateVariantTypes(mockSet);
 
     expect(component.selectedVariantTypes).toEqual(mockSet);
-    expect(dispatchSpy).toHaveBeenCalledOnceWith(new SetVariantTypes(mockSet));
+    expect(dispatchSpy).toHaveBeenNthCalledWith(1, new SetVariantTypes(mockSet));
   });
 });

@@ -8,8 +8,6 @@
   },
   "exclude": [
     "node_modules",
-    "test-files.ts",
-    "test.ts",
     "**/*.spec.ts"
   ]
 }
