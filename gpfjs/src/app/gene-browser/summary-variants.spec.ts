@@ -4,9 +4,9 @@ import { SummaryAllele, SummaryAllelesArray, SummaryAllelesFilter } from './summ
 describe('SummaryAllele', () => {
   it('should create from row', () => {
     const a = new SummaryAllele();
-    const aComparisonValue = spyOnProperty(a, 'comparisonValue');
+    const aComparisonValue = jest.spyOn(a, 'comparisonValue', 'get');
     const b = new SummaryAllele();
-    const bComparisonValue = spyOnProperty(b, 'comparisonValue');
+    const bComparisonValue = jest.spyOn(b, 'comparisonValue', 'get');
 
     aComparisonValue.mockReturnValue(1);
     bComparisonValue.mockReturnValue(0);

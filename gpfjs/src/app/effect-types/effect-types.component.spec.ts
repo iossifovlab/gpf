@@ -46,7 +46,7 @@ describe('EffectTypesComponent', () => {
     const selectInitialValuesSpy = jest.spyOn(component, 'selectInitialValues');
 
     component.ngOnInit();
-    expect(onEffectTypeChangeSpy.calls.allArgs()).toEqual([
+    expect(onEffectTypeChangeSpy.mock.calls).toEqual([
       [{ checked: true, effectType: 'value1' }],
       [{ checked: true, effectType: 'value2' }],
       [{ checked: true, effectType: 'value3' }]
@@ -115,7 +115,7 @@ describe('EffectTypesComponent', () => {
     component.onEffectTypeChange({checked: false, effectType: 'effectType2'});
     expect(component.effectTypes.selected).toEqual(new Set([]));
 
-    expect(dispatchSpy.calls.allArgs()).toEqual([
+    expect(dispatchSpy.mock.calls).toEqual([
       [new AddEffectType('effectType1')],
       [new AddEffectType('effectType2')],
       [new RemoveEffectType('effectType1')],

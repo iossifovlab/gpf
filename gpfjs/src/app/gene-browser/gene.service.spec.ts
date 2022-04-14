@@ -33,10 +33,10 @@ describe('GeneService', () => {
 
     service.getGene('fakeSymbol').pipe(take(1)).subscribe((response) => {
       expect(response).toEqual('fakeGene' as any);
-      expect(httpGetSpy.calls.allArgs()).toEqual([[
+      expect(httpGetSpy.mock.calls).toEqual([[
         environment.apiPath + 'genome/gene_models/default/' + 'fakeSymbol'
       ]]);
-      expect(geneFromJsonSpy.calls.allArgs()).toEqual([['fakeResponse' as any]]);
+      expect(geneFromJsonSpy.mock.calls).toEqual([['fakeResponse' as any]]);
     });
   });
 
@@ -46,7 +46,7 @@ describe('GeneService', () => {
 
     service.searchGenes('fakeSearchTerm').pipe(take(1)).subscribe((response) => {
       expect(response).toEqual('fakeResponse' as any);
-      expect(httpGetSpy.calls.allArgs()).toEqual([[
+      expect(httpGetSpy.mock.calls).toEqual([[
         environment.apiPath + 'genome/gene_models/search/' + 'FAKESEARCHTERM'
       ]]);
     });

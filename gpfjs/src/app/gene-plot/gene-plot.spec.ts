@@ -26,6 +26,10 @@ const rangeMockGene = {
 };
 
 describe('GenePlotModel', () => {
+  beforeEach(() => {
+    jest.restoreAllMocks();
+  })
+
   it('should build a domain and a normal and condensed range on instantiation', () => {
     jest.spyOn(GenePlotModel.prototype, 'buildDomain').mockImplementation(() => [1]);
     jest.spyOn(GenePlotModel.prototype, 'buildRange').mockImplementation(() => [2]);
@@ -77,6 +81,7 @@ describe('GenePlotZoomHistory ', () => {
     jest.spyOn(GenePlotZoomHistory.prototype, 'reset').mockImplementation(() => {});
     const history = new GenePlotZoomHistory(new GenePlotScaleState(null, null, null, null, null));
     expect(history.reset).toHaveBeenCalled();
+    jest.restoreAllMocks();
   });
 
   it('should reset properly to default', () => {

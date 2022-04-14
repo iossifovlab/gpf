@@ -46,7 +46,7 @@ describe('CheckboxListComponent', () => {
     component.selectedItems = new Set([...component.items]);
     component.emit();
 
-    expect(emitSpy.calls.allArgs()).toEqual([
+    expect(emitSpy.mock.calls).toEqual([
       [undefined],
       [component.selectedItems]
     ]);
