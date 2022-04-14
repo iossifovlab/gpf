@@ -179,13 +179,6 @@
             "browserTarget": "gpfjs:build"
           }
         },
-        "test": {
-          "builder": "@angular-builders/jest:run",
-          "options": {
-            "configPath": "jest.config.js",
-            "tsConfig": "src/tsconfig.spec.json"
-          }
-        },
         "lint": {
           "builder": "@angular-eslint/builder:lint",
           "options": {
