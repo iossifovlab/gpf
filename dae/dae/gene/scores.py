@@ -13,34 +13,35 @@ class GenomicScore:
 
         self.resource = resource
         self.config = resource.get_config()
-        self.genomic_values_col = "scores"
 
         self.id = score_id
         self.df = None
         self.file_cache = file_cache
 
+        self.source = None
+        print(self.config)
+        annotation_conf = self.config["default_annotation"]
+        for attr in annotation_conf["attributes"]:
+            print(attr)
+            if attr["destination"] == self.id:
+                self.source = attr["source"]
+        assert self.source is not None, f"{score_id} source not found"
         for score_conf in self.config["scores"]:
-            if score_conf["id"] == score_id:
+            if score_conf["id"] == self.source:
                 self.score_config = score_conf
         for hist_conf in self.config["histograms"]:
-            if hist_conf["score"] == score_id:
+            if hist_conf["score"] == self.source:
                 self.histogram_config = hist_conf
 
         self.desc = self.score_config["desc"]
-        self.bins = self.histogram_config["bins"]
+        self.bins_count = self.histogram_config["bins"]
+        self.min = self.histogram_config.get("min", None)
+        self.max = self.histogram_config.get("max", None)
         self.xscale = self.histogram_config.get("xscale", "linear")
         self.yscale = self.histogram_config.get("yscale", "linear")
-        self.filename = os.path.join("histograms", score_id)
-        self.help_filename = os.path.join("histograms", f"{score_id}.md")
+        self.filename = os.path.join("histograms", f"{self.source}.csv")
+        self.help = self.config.get("meta", None)
         self.range = None
-        help_filepath = self.file_cache.get_file_path_from_resource(
-            self.resource, self.help_filename
-        )
-        if help_filepath is not None:
-            with open(help_filepath, "r") as infile:
-                self.help = infile.read()
-        else:
-            self.help = None
 
         self._load_data()
         self.df.fillna(value=0, inplace=True)
@@ -50,19 +51,21 @@ class GenomicScore:
         filepath = self.file_cache.get_file_path_from_resource(
             self.resource, self.filename
         )
+        assert filepath is not None, \
+            f"Couldn't find csv {self.filename} in {self.resource.resource_id}"
 
         df = pd.read_csv(filepath)
-        assert self.id in df.columns, "{} not found in {}".format(
-            self.id, df.columns
-        )
-        self.df = df[[self.genomic_values_col, self.id]].copy()
+        assert set(df.columns) == set(["bars", "bins"]), "Incorrect CSV file"
+        self.df = df
         return self.df
 
-    def values(self):
-        return self.df[self.id].values
+    @property
+    def bars(self):
+        return self.df["bars"].values
 
-    def get_scores(self):
-        return self.df[self.genomic_values_col].values
+    @property
+    def bins(self):
+        return self.df["bins"].values
 
 
 class GenomicScoresDB:
@@ -85,8 +88,13 @@ class GenomicScoresDB:
                 self.scores[score_id] = score
             except KeyError as err:
                 logger.error(
-                    f"Failed to load histogram configuration of {resource_id}"
-                    f"\n{err}"
+                    f"Failed to load histogram of {resource_id}"
+                    f"\nCouldn't find key {err}"
+                )
+            except AssertionError as err:
+                logger.error(
+                    f"Incorrect configuration of {resource_id} "
+                    f"histogram resource\n{err}"
                 )
 
     def get_scores(self):

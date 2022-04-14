@@ -12,8 +12,8 @@ class GenomicScoresView(QueryBaseView):
             {
                 "score": score.id,
                 "desc": score.desc,
-                "bars": score.values(),
-                "bins": score.get_scores(),
+                "bars": score.bars,
+                "bins": score.bins,
                 "xscale": score.xscale,
                 "yscale": score.yscale,
                 "range": score.range,

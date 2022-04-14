@@ -22,3 +22,11 @@ histograms:
     bins: 101
     yscale: "log"
     xscale: "linear"
+default_annotation:
+  attributes:
+    - source: score_raw_rankscore
+      destination: score_raw_rankscore
+    - source: score_raw
+      destination: score_raw
+    - source: score_phred
+      destination: score_phred
