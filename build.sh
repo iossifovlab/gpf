@@ -313,7 +313,7 @@ EOT'
           > /wd/results/mypy_wdae_report || true'
 
       build_run_local cp ./results/mypy_dae_report ./results/mypy_wdae_report ./test-results/
-      build_run_local cp ./results/mypy_dae_html_report ./results/mypy_wdae_html_report ./test-results/
+      build_run_local cp -r ./results/mypy_dae_html_report ./results/mypy_wdae_html_report ./test-results/
   }
 
   # import test data to impala
