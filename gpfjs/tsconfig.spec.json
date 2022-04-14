@@ -1,10 +1,10 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../out-tsc/spec",
+    "outDir": "./out-tsc/spec",
     "module": "CommonJs",
     "typeRoots": [
-      "../node_modules/@types"
+      "./node_modules/@types"
     ]
   },
   "include": ["src/**/*.spec.ts", "src/**/*.d.ts"]
