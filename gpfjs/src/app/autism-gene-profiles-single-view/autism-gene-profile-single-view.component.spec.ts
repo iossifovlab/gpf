@@ -58,7 +58,7 @@ describe('AutismGeneProfileSingleViewComponent', () => {
     expect(component['gene$']).toEqual(geneMock);
     expect(component.isGeneInSFARI).toBeTruthy();
     expect(getGeneSpy).toHaveBeenCalledWith('mockGeneSymbol');
-    expect(getGeneWeightsSpy.calls.allArgs()).toEqual([
+    expect(getGeneWeightsSpy.mock.calls).toEqual([
       ['fakeScore1'],
       ['fakeScore2']
     ]);
