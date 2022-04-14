@@ -16,6 +16,10 @@ import { ConfigService } from './config/config.service';
 import { UsersService } from './users/users.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule } from '@ngxs/store';
+import { FullscreenLoadingComponent } from './fullscreen-loading/fullscreen-loading.component';
+import { UsersComponent } from './users/users.component';
+import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loading.service';
+import { FormsModule } from '@angular/forms';
 
 class MockDatasetsService {
   public getSelectedDataset(): object {
@@ -39,15 +43,21 @@ describe('AppComponent', () => {
         RegionsBlockComponent,
         GenesBlockComponent,
         PedigreeSelectorComponent,
+        FullscreenLoadingComponent,
+        UsersComponent
       ],
       imports: [
         NgbModule,
         HttpClientTestingModule,
         RouterTestingModule,
+        FormsModule,
         NgxsModule.forRoot()
       ],
       providers: [
-        { provide: DatasetsService, useValue: datasetsServiceMock }, ConfigService, UsersService
+        { provide: DatasetsService, useValue: datasetsServiceMock },
+        ConfigService,
+        UsersService,
+        FullscreenLoadingService
       ]
     });
     TestBed.compileComponents();

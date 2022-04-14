@@ -10,9 +10,11 @@ import { MultiContinuousFilterComponent } from './multi-continuous-filter.compon
 import { Component, Input, Output } from '@angular/core';
 import { of } from 'rxjs';
 import { NgxsModule } from '@ngxs/store';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'gpf-searchable-select',
+  template: ''
 })
 export class SearchableSelectMockComponent {
   @Input() data;
@@ -76,7 +78,8 @@ describe('MultiContinuousFilterComponent', () => {
       ],
       imports: [
         RouterTestingModule,
-        NgxsModule.forRoot([])
+        NgxsModule.forRoot([]),
+        FormsModule
       ]
     })
     .compileComponents();
