@@ -5,19 +5,15 @@ import { DebugElement } from '@angular/core';
 
 import { DatasetsComponent } from './datasets.component';
 import { DatasetsService } from './datasets.service';
-/*
-import { DatasetsServiceStub } from '../datasets/datasets.service.spec';
+// import { DatasetsServiceStub } from '../datasets/datasets.service.spec';
 
+// let datasetService = new DatasetsServiceStub();
 
-
-let datasetService = new DatasetsServiceStub();
-
-
-describe('DatasetComponent', () => {
+xdescribe('DatasetComponent', () => {
   let component: DatasetsComponent;
   let fixture: ComponentFixture<DatasetsComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({
       declarations: [DatasetsComponent],
       imports: [
@@ -25,14 +21,14 @@ describe('DatasetComponent', () => {
       ],
       providers: [
         {
-          provide: DatasetsService,
-          useValue: datasetService
+          // provide: DatasetsService,
+          // useValue: datasetService
         }
       ]
 
     })
       .compileComponents();
-  }));
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(DatasetsComponent);
@@ -50,4 +46,3 @@ describe('DatasetComponent', () => {
 
   });
 });
-*/
