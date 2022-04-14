@@ -24,7 +24,7 @@ describe('PresentInParentComponent', () => {
     fixture = TestBed.createComponent(PresentInParentComponent);
     component = fixture.componentInstance;
     component['store'] = {
-      selectOnce(f) {
+      selectOnce() {
         return of({
           presentInParent: ['value1', 'value2'],
           rarityType: 'rarityType',
@@ -32,7 +32,7 @@ describe('PresentInParentComponent', () => {
           rarityIntervalEnd: 'fakeEndNumber',
         });
       },
-      dispatch(set) {}
+      dispatch() {}
     } as any;
     fixture.detectChanges();
   });

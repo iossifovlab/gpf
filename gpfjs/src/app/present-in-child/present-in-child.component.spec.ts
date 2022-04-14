@@ -25,10 +25,10 @@ describe('PresentInChildComponent', () => {
     fixture = TestBed.createComponent(PresentInChildComponent);
     component = fixture.componentInstance;
     component['store'] = {
-      selectOnce(f) {
+      selectOnce() {
         return of({presentInChild: ['value1', 'value2']});
       },
-      dispatch(set) {}
+      dispatch() {}
     } as any;
     fixture.detectChanges();
   });

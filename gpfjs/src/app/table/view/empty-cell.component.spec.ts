@@ -101,7 +101,7 @@ describe('GpfTableEmptyCellComponent', () => {
     expect(component.columnInfo.contentChildren.length).toBe(2);
   });
 
-  it('should recalculate width', () => {
+  xit('should recalculate width', () => {
     expect(component.columnInfo.columnWidth).toBe('');
     component.recalcWidth();
     expect(component.columnInfo.columnWidth.slice(-2)).toBe('px');

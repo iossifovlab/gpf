@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { UniqueFamilyVariantsFilterComponent } from './unique-family-variants-filter.component';
+import { NgxsModule } from '@ngxs/store';
+import { FormsModule } from '@angular/forms';
 
 describe('UniqueFamilyVariantsFilterComponent', () => {
   let component: UniqueFamilyVariantsFilterComponent;
@@ -8,7 +9,8 @@ describe('UniqueFamilyVariantsFilterComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ UniqueFamilyVariantsFilterComponent ]
+      declarations: [ UniqueFamilyVariantsFilterComponent ],
+      imports: [ NgxsModule.forRoot(), FormsModule ]
     })
     .compileComponents();
   });
