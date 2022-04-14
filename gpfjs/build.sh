@@ -63,7 +63,7 @@ function main() {
     build_run bash -c 'npm run-script ng test -- --no-watch --no-progress --code-coverage --browsers=ChromeHeadlessCI | tee /dev/stderr | grep -e "^TOTAL: " && exit ${PIPESTATUS[0]} || false'
   }
 
-  build_stage "Sonarqube Analisys"
+  build_stage "Sonarqube Analysis"
   {
     local gpfjs_git_branch=$(e gpfjs_git_branch)
 
