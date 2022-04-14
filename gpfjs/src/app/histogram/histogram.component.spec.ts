@@ -59,7 +59,7 @@ class TestHostComponentManyBins {
   @ViewChild('gpfhistogram') histogramEl;
 }
 
-describe('HistogramComponent', () => {
+xdescribe('HistogramComponent', () => {
   let component: TestHostComponent;
   let fixture: ComponentFixture<TestHostComponent>;
 
@@ -142,7 +142,7 @@ describe('HistogramComponent', () => {
   }));
 });
 
-describe('HistogramComponentManyBins', () => {
+xdescribe('HistogramComponentManyBins', () => {
   let component: TestHostComponentManyBins;
   let fixture: ComponentFixture<TestHostComponentManyBins>;
 
@@ -184,5 +184,4 @@ describe('HistogramComponentManyBins', () => {
     expect(rangeInputElTo.query(By.css('.step.up'))).not.toBeNull();
     expect(rangeInputElTo.query(By.css('.step.down'))).not.toBeNull();
   });
-
 });

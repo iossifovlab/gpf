@@ -17,8 +17,11 @@ describe('PhenoToolResultsChartPerResultComponent', () => {
     fixture = TestBed.createComponent(PhenoToolResultsChartPerResultComponent);
     component = fixture.componentInstance;
     component.results = {
-      'rangeStart': jest.fn(),
-      'rangeEnd': jest.fn()
+      rangeStart: undefined,
+      rangeEnd: undefined,
+      count: undefined,
+      deviation: undefined,
+      mean: undefined,
     };
     component.yScale = jest.fn() as any;
     fixture.detectChanges();

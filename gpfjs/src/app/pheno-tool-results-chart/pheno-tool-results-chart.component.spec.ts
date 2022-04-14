@@ -16,7 +16,8 @@ describe('PhenoToolResultsChartComponent', () => {
     fixture = TestBed.createComponent(PhenoToolResultsChartComponent);
     component = fixture.componentInstance;
     component.phenoToolResults = {
-      'fromJson': jest.fn()
+      description: undefined,
+      results: undefined
     };
     fixture.detectChanges();
   });
