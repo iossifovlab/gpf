@@ -279,6 +279,24 @@ EOT'
     build_run_local cp ./results/flake8_report ./test-results/
   }
 
+  build_stage "pylint"
+  {
+    build_run_ctx_init "container" "${gpf_dev_image_ref}"
+    defer_ret build_run_ctx_reset
+
+    build_run_container bash -c '
+      cd /wd/dae; 
+      pylint \
+        --output /wd/results/pylint_dae_report || true'
+
+    build_run_container bash -c '
+      cd /wd/wdae; 
+      pylint \
+        --output /wd/results/pylint_wdae_report || true'
+
+    build_run_local cp ./results/pylint_dae_report ./results/pylint_wdae_report ./test-results/
+  }
+
   # mypy
   build_stage "MyPy"
   {

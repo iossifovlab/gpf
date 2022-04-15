@@ -41,7 +41,8 @@ pipeline {
             tools: [
               flake8(pattern: 'test-results/flake8_report', reportEncoding: 'UTF-8'),
               myPy(pattern: 'test-results/mypy_dae_report', reportEncoding: 'UTF-8', id: 'mypy-dae', name: 'MyPy - dae'),
-              myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8', id: 'mypy-wdae', name: 'MyPy - wdae')
+              myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8', id: 'mypy-wdae', name: 'MyPy - wdae'),
+              pyLint(pattern: 'test-results/pylint_*_report', reportEncoding: 'UTF-8')
             ]
           )
 
