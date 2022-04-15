@@ -19,10 +19,8 @@ class GenomicScore:
         self.file_cache = file_cache
 
         self.source = None
-        print(self.config)
         annotation_conf = self.config["default_annotation"]
         for attr in annotation_conf["attributes"]:
-            print(attr)
             if attr["destination"] == self.id:
                 self.source = attr["source"]
         assert self.source is not None, f"{score_id} source not found"
