@@ -64,12 +64,7 @@ export class BasePage {
   }
 
   public navigateToHome(hasAccessRights = true): void {
-    let baseUrl = Cypress.config().baseUrl;
-    if (baseUrl.endsWith('/')) {
-      baseUrl = baseUrl.slice(0, -1);
-    }
-
-    cy.visit(`${baseUrl}/datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`);
+    cy.visit(`${Cypress.config().baseUrl}/datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`);
     this.waitForPageToLoad(toolPageLinks.geneBrowser, hasAccessRights);
   }
 
@@ -100,12 +95,12 @@ export class BasePage {
 
   public logout(hasAccessRights = false): void {
     const usersPage = new UsersPage();
-    cy.intercept('GET', '/gpf/api/v3/datasets').as('datasets');
+    cy.intercept('GET', '/gpf/api/v3/datasets/ALL_genotypes').as('allGenotypesRequest');
 
     usersPage.logoutButton.click();
 
-    cy.wait('@datasets');
     cy.location('pathname').should('eq', `/gpf/datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`);
+    cy.wait('@allGenotypesRequest');
     this.waitForPageToLoad(toolPageLinks.geneBrowser, hasAccessRights);
   }
 

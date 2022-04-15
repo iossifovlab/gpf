@@ -46,19 +46,6 @@ describe('Gene plot tests', () => {
   it('should have family variants count field', () => {
     page.familyVariantsCount.should('be.visible');
   });
-
-  it('should have download button', () => {
-    page.downloadButton.should('be.visible');
-  });
-
-  it('should have download summary button', () => {
-    page.downloadSummaryButton.should('be.visible');
-  });
-
-  it('should have table legend', () => {
-    cy.scrollTo('bottom');
-    geneBrowserPage.legend.should('contain.text', 'affectedunaffectedunspecifiedmissing-person');
-  });
 });
 
 describe('Gene plot summary alleles count tests', () => {

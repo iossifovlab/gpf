@@ -1,5 +1,6 @@
 import { GeneBrowserPage } from 'cypress/elements/gene-browser-page';
 import { GenePlotPage } from 'cypress/elements/gene-plot-page';
+import { GenotypePreviewTablePage } from 'cypress/elements/genotype-preview-table-page';
 import { UniqueFamilyVariantsFilterPage } from 'cypress/elements/unique-family-variants-filter-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
@@ -45,7 +46,8 @@ describe('Gene browser basic display tests before query', () => {
   });
 
   it('should NOT display the genotype preview table', () => {
-    page.genotypePreviewTable.should('not.exist');
+    const genotypePreviewTablePage = new GenotypePreviewTablePage();
+    genotypePreviewTablePage.table.should('not.exist');
   });
 });
 
@@ -76,7 +78,8 @@ describe('Gene browser basic display tests after query', () => {
   });
 
   it('should display the genotype preview table', () => {
-    page.genotypePreviewTable.should('be.visible');
+    const genotypePreviewTablePage = new GenotypePreviewTablePage();
+    genotypePreviewTablePage.table.should('be.visible');
   });
 
   it('should have Affected status checkboxes', () => {
@@ -105,5 +108,13 @@ describe('Gene browser basic display tests after query', () => {
     page.getVariantTypes('del').should('be.visible');
     page.getVariantTypes('CNV+').should('be.visible');
     page.getVariantTypes('CNV-').should('be.visible');
+  });
+
+  it('should have download summary button', () => {
+    page.downloadSummaryButton.should('be.visible');
+  });
+
+  it('should have download button', () => {
+    page.downloadButton.should('be.visible');
   });
 });

@@ -40,12 +40,4 @@ export class GenePlotPage extends BasePage {
   public get familyVariantsCount(): element {
     return cy.get('#family-variants-count span');
   }
-
-  public get downloadSummaryButton(): element {
-    return cy.get('button').contains('Download Summary');
-  }
-
-  public get downloadButton(): element {
-    return cy.get('button').contains(/^Download$/);
-  }
 }

@@ -17,10 +17,6 @@ export class GeneBrowserPage extends BasePage {
     return cy.get('input[value=\'Go\']');
   }
 
-  public get genotypePreviewTable(): element {
-    return cy.get('gpf-genotype-preview-table');
-  }
-
   public get codingOnlyCheckbox(): element {
     return cy.get('input#coding-only-checkbox');
   }
@@ -63,5 +59,13 @@ export class GeneBrowserPage extends BasePage {
 
   public get legend(): element {
     return cy.get('.legend-div');
+  }
+
+  public get downloadSummaryButton(): element {
+    return cy.get('button').contains('Download Summary');
+  }
+
+  public get downloadButton(): element {
+    return cy.get('#download-button');
   }
 }
