@@ -99,7 +99,7 @@ def build_genomic_resource_repository(
                 "repository must be a list")
         repo_id = definition.get("repo_id")
         repo = GenomicResourceGroupRepo([
-            build_genomic_resource_repository(child_def)
+            build_genomic_resource_repository(child_def, use_cache=use_cache)
             for child_def in definition["children"]
         ], repo_id=repo_id)
     elif repo_type in _registered_real_genomic_resource_repository_types:
