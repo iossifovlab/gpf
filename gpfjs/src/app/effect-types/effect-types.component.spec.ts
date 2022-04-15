@@ -122,4 +122,14 @@ describe('EffectTypesComponent', () => {
       [new RemoveEffectType('effectType2')]
     ]);
   });
+
+  it('should not modify original effect group values', () => {
+    const initial = new Set(['testEffect']);
+    component.setEffectTypes(initial);
+    component.onEffectTypeChange({effectType: 'newTestEffect', checked: true});
+    // component has properly selected new effect
+    expect(component.effectTypes.selected).toEqual(new Set(['testEffect', 'newTestEffect']));
+    // but the original set is not modified
+    expect(initial).toEqual(new Set(['testEffect']));
+  })
 });
