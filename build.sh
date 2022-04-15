@@ -286,12 +286,12 @@ EOT'
 
     build_run_container bash -c '
       cd /wd/dae; 
-      pylint \
+      pylint dae \
         --output /wd/results/pylint_dae_report || true'
 
     build_run_container bash -c '
       cd /wd/wdae; 
-      pylint \
+      pylint wdae \
         --output /wd/results/pylint_wdae_report || true'
 
     build_run_local cp ./results/pylint_dae_report ./results/pylint_wdae_report ./test-results/
