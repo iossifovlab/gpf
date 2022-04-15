@@ -15,6 +15,7 @@ import { GeneBrowserComponent } from './gene-browser.component';
 import { SearchableSelectComponent } from '../searchable-select/searchable-select.component';
 import { FormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { SummaryAllelesFilter } from './summary-variants';
 
 jest.mock('../utils/svg-drawing');
 
@@ -129,4 +130,19 @@ describe('GeneBrowserComponent', () => {
     expect(component['updateVariants']).toHaveBeenCalled();
   });
 
+  it('should toggle CNV effects properly if "Other" effect type is selected', () => {
+    component.summaryVariantsFilter = new SummaryAllelesFilter(true, true, false);
+    component.effectTypeValues.forEach(eff => component.checkEffectType(eff, true));
+    expect(component.summaryVariantsFilter.queryParams['effectTypes']).toEqual([
+      'frame-shift', 'nonsense', 'splice-site','no-frame-shift-newStop',
+      'missense', 'synonymous', 'CNV+', 'CNV-', '3\'UTR', '3\'UTR-intron', '5\'UTR', '5\'UTR-intron',
+      'intergenic', 'intron', 'no-frame-shift', 'noEnd', 'noStart', 'non-coding', 'non-coding-intron', 'CDS',
+    ]);
+
+    component.checkEffectType('Other', false);
+    expect(component.summaryVariantsFilter.queryParams['effectTypes']).toEqual([
+      'frame-shift', 'nonsense', 'splice-site','no-frame-shift-newStop',
+      'missense', 'synonymous', 'CNV+', 'CNV-'
+    ]);
+  });
 });
