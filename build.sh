@@ -310,7 +310,7 @@ EOT'
       cd /wd/wdae; 
       bandit -r wdae/ -o /wd/results/bandit_wdae_report.html -f html --exclude "*tests/*" -s B101 || true'
 
-    build_run_local cp ./results/bandit_dae_report ./results/bandit_wdae_report ./test-results/
+    build_run_local cp ./results/bandit_dae_report.html ./results/bandit_wdae_report.html ./test-results/
   }
 
   # mypy
