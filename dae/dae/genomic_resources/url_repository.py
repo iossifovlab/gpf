@@ -70,7 +70,6 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
         logger.debug(f"opening url resource: {file_url}")
 
         if self.scheme in ["http", "https"] and not seekable:
-            print("AAAAAAAAAAA")
             binary_stream = urlopen(file_url)
         else:
             bin_mode = mode.replace('t', 'b')
