@@ -202,7 +202,7 @@ describe('PedigreeChartComponent', () => {
     expect(component.positionedIndividuals[0][0].individual.matingUnits[0].children.childrenSet()).toEqual(new Set());
     expect(component.positionedIndividuals[0][0].individual.pedigreeData.id).toBe('mom2');
     expect(component.positionedIndividuals[0][0].individual.parents).toBe(undefined);
-    expect(component.positionedIndividuals[0][0].individual.rank).toBe(0);
+    expect(-component.positionedIndividuals[0][0].individual.rank).toBe(0);
     expect(component.positionedIndividuals[0][0].xCenter).toBe(20);
     expect(component.positionedIndividuals[0][0].yCenter).toBe(20);
     expect(component.positionedIndividuals[0][0].size).toBe(21.0);
@@ -218,7 +218,7 @@ describe('PedigreeChartComponent', () => {
     expect(component.positionedIndividuals[0][1].individual.matingUnits[0].children.childrenSet()).toEqual(new Set());
     expect(component.positionedIndividuals[0][1].individual.pedigreeData.id).toBe('dad2');
     expect(component.positionedIndividuals[0][1].individual.parents).toBe(undefined);
-    expect(component.positionedIndividuals[0][1].individual.rank).toBe(0);
+    expect(component.positionedIndividuals[0][1].individual.rank === 0).toBe(true);
     expect(component.positionedIndividuals[0][1].xCenter).toBe(49);
     expect(component.positionedIndividuals[0][1].yCenter).toBe(20);
     expect(component.positionedIndividuals[0][1].size).toBe(21.0);

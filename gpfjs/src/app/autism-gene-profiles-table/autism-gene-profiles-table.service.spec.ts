@@ -23,8 +23,8 @@ describe('AgpTableService', () => {
   });
 
   it('should get config', () => {
-    const getConfigSpy = spyOn(service['http'], 'get');
-    getConfigSpy.and.returnValue(of({ mockConfigProperty: 'mockConfigValue' }));
+    const getConfigSpy = jest.spyOn(service['http'], 'get');
+    getConfigSpy.mockReturnValue(of({ mockConfigProperty: 'mockConfigValue' }));
 
     const resultConfig = service.getConfig();
 
@@ -36,13 +36,13 @@ describe('AgpTableService', () => {
   });
 
   it('should get genes', () => {
-    const getGenesSpy = spyOn(service['http'], 'get');
+    const getGenesSpy = jest.spyOn(service['http'], 'get');
 
-    getGenesSpy.and.returnValue(of({}));
+    getGenesSpy.mockReturnValue(of({}));
     service.getGenes(1);
     service.getGenes(1, 'mockSearch');
     service.getGenes(1, 'mockSearch', 'mockSort', 'desc');
-    expect(getGenesSpy.calls.allArgs()).toEqual([
+    expect(getGenesSpy.mock.calls).toEqual([
       [service['config'].baseUrl + service['genesUrl'] + '?page=1'],
       [service['config'].baseUrl + service['genesUrl'] + '?page=1' + '&symbol=mockSearch'],
       [service['config'].baseUrl + service['genesUrl'] + '?page=1' + '&symbol=mockSearch' + '&sortBy=mockSort&order=desc']

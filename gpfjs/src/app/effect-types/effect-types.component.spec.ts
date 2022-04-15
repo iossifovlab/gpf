@@ -42,11 +42,11 @@ describe('EffectTypesComponent', () => {
   });
 
   it('should initialize', () => {
-    const onEffectTypeChangeSpy = spyOn(component, 'onEffectTypeChange');
-    const selectInitialValuesSpy = spyOn(component, 'selectInitialValues');
+    const onEffectTypeChangeSpy = jest.spyOn(component, 'onEffectTypeChange');
+    const selectInitialValuesSpy = jest.spyOn(component, 'selectInitialValues');
 
     component.ngOnInit();
-    expect(onEffectTypeChangeSpy.calls.allArgs()).toEqual([
+    expect(onEffectTypeChangeSpy.mock.calls).toEqual([
       [{ checked: true, effectType: 'value1' }],
       [{ checked: true, effectType: 'value2' }],
       [{ checked: true, effectType: 'value3' }]
@@ -81,17 +81,17 @@ describe('EffectTypesComponent', () => {
   it('should update variant types', () => {
     component.effectTypes.selected = undefined;
     component['store'] = { dispatch(_: any) {} } as any;
-    const dispatchSpy = spyOn(component['store'], 'dispatch');
+    const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     const mockSet = new Set(['value1', 'value2', 'value3']);
 
     component.setEffectTypes(mockSet);
 
     expect(component.effectTypes.selected).toEqual(mockSet);
-    expect(dispatchSpy).toHaveBeenCalledOnceWith(new SetEffectTypes(mockSet));
+    expect(dispatchSpy).toHaveBeenNthCalledWith(1, new SetEffectTypes(mockSet));
   });
 
   it('should effect type change', () => {
-    const dispatchSpy = spyOn(component['store'], 'dispatch');
+    const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     component.effectTypes.selected = new Set();
 
     component.onEffectTypeChange({checked: true, effectType: 'effectType1'});
@@ -115,7 +115,7 @@ describe('EffectTypesComponent', () => {
     component.onEffectTypeChange({checked: false, effectType: 'effectType2'});
     expect(component.effectTypes.selected).toEqual(new Set([]));
 
-    expect(dispatchSpy.calls.allArgs()).toEqual([
+    expect(dispatchSpy.mock.calls).toEqual([
       [new AddEffectType('effectType1')],
       [new AddEffectType('effectType2')],
       [new RemoveEffectType('effectType1')],

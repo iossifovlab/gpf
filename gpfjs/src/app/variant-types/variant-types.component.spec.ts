@@ -49,7 +49,7 @@ describe('VariantTypesComponent', () => {
       },
       dispatch(set: SetVariantTypes) {}
     } as any;
-    dispatchSpy = spyOn(component['store'], 'dispatch');
+    dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     component.ngOnChanges();
     expect(component.selectedVariantTypes).toEqual(new Set(['value1', 'value2']));
     expect(dispatchSpy).not.toHaveBeenCalled();
@@ -61,7 +61,7 @@ describe('VariantTypesComponent', () => {
       },
       dispatch(set: SetVariantTypes) {}
     } as any;
-    dispatchSpy = spyOn(component['store'], 'dispatch');
+    dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     component.ngOnChanges();
     expect(component.selectedVariantTypes).toEqual(new Set(['value3']));
     expect(dispatchSpy).toHaveBeenCalled();
@@ -71,12 +71,12 @@ describe('VariantTypesComponent', () => {
   it('should update variant types', () => {
     component.selectedVariantTypes = undefined;
     component['store'] = { dispatch(set: SetVariantTypes) {} } as any;
-    const dispatchSpy = spyOn(component['store'], 'dispatch');
+    const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     const mockSet = new Set(['value1', 'value2', 'value3']);
 
     component.updateVariantTypes(mockSet);
 
     expect(component.selectedVariantTypes).toEqual(mockSet);
-    expect(dispatchSpy).toHaveBeenCalledOnceWith(new SetVariantTypes(mockSet));
+    expect(dispatchSpy).toHaveBeenNthCalledWith(1, new SetVariantTypes(mockSet));
   });
 });

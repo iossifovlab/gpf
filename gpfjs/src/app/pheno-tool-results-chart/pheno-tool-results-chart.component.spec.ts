@@ -15,7 +15,10 @@ describe('PhenoToolResultsChartComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(PhenoToolResultsChartComponent);
     component = fixture.componentInstance;
-    component.phenoToolResults = jasmine.createSpyObj('PhenoToolResults', ['fromJson']);
+    component.phenoToolResults = {
+      description: undefined,
+      results: undefined
+    };
     fixture.detectChanges();
   });
 

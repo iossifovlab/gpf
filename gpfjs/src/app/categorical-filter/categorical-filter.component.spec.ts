@@ -37,9 +37,7 @@ describe('CategoricalFilterComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(CategoricalFilterComponent);
     component = fixture.componentInstance;
-    component.categoricalFilterState = jasmine.createSpyObj('CategoricalFilterState', ['selection']);
-    component.categoricalFilterState.selection = jasmine.createSpyObj('CategoricalSelection', ['selection']);
-    component.categoricalFilter = jasmine.createSpyObj('CategoricalFilter', ['selection'], {'from': 'phenodb'});
+    (component.categoricalFilter as any) = {'from': 'phenodb'};
     fixture.detectChanges();
   });
 

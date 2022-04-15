@@ -162,24 +162,24 @@ describe('AgpTableConfig', () => {
 
     // Basic visibility
     config.columns[0].visibility = false;
-    expect(config.columns[0].visibility).toBeFalse();
+    expect(config.columns[0].visibility).toBeFalsy();
     config.columns[0].visibility = true;
-    expect(config.columns[0].visibility).toBeTrue();
+    expect(config.columns[0].visibility).toBeTruthy();
 
     // Parent visibility when children change
     config.columns[2].columns[0].visibility = false;
-    expect(config.columns[2].visibility).toBeTrue();
+    expect(config.columns[2].visibility).toBeTruthy();
 
     config.columns[2].columns[0].visibility = false;
     config.columns[2].columns[1].visibility = false;
-    expect(config.columns[2].visibility).toBeFalse();
+    expect(config.columns[2].visibility).toBeFalsy();
 
     // Children visibility when parent change
     config.columns[2].columns[0].columns[0].visibility = false;
     config.columns[2].columns[0].columns[1].visibility = false;
     config.columns[2].columns[0].visibility = true;
-    expect(config.columns[2].columns[0].columns[0].visibility).toBeTrue();
-    expect(config.columns[2].columns[0].columns[1].visibility).toBeTrue();
+    expect(config.columns[2].columns[0].columns[0].visibility).toBeTruthy();
+    expect(config.columns[2].columns[0].columns[1].visibility).toBeTruthy();
   });
 
   it('should get visible children', () => {

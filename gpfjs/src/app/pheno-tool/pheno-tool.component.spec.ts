@@ -121,12 +121,13 @@ describe('PhenoToolComponent', () => {
   });
 
   it('should test on download event', () => {
-    const form = document.createElement('form')
+    const form = document.createElement('form');
+    form.onsubmit = () => {return false}; // This supresses an error from JSDOM, purely cosmetic
     const event = {target: form};
     event.target.queryData = {
       value: 'id'
     };
-    const submitSpy = spyOn(event.target, 'submit');
+    const submitSpy = jest.spyOn(event.target, 'submit');
 
     component.onDownload(event as any);
     expect(submitSpy).toHaveBeenCalledTimes(1);

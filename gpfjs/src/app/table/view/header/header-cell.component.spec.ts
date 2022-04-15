@@ -67,7 +67,7 @@ describe('GpfTableHeaderCellComponent', () => {
   });
 
   it('should sort on click', () => {
-    spyOn(component.sortingInfoChange, 'emit');
+    jest.spyOn(component.sortingInfoChange, 'emit').mockImplementation(() => {});
 
     expect(testComponent.subcolumnsChildren.length).toBe(1);
     expect(component.onSortClick(testComponent.subcolumnsChildren.first)).toBe(true);

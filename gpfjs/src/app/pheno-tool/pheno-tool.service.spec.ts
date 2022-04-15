@@ -24,11 +24,11 @@ describe('PhenoToolService', () => {
   });
 
   it('should get pheno tool results', () => {
-    const httpGetSpy = spyOn(HttpClient.prototype, 'post');
-    httpGetSpy.and.returnValue(of('fakeResponse'));
+    const httpGetSpy = jest.spyOn(HttpClient.prototype, 'post');
+    httpGetSpy.mockReturnValue(of('fakeResponse'));
     service.getPhenoToolResults('filter' as any);
 
-    expect(httpGetSpy.calls.allArgs()).toEqual(
+    expect(httpGetSpy.mock.calls).toEqual(
       [
         [
           'testUrl/pheno_tool',

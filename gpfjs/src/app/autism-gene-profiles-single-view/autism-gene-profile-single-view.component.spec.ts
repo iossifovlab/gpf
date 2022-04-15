@@ -36,7 +36,7 @@ describe('AutismGeneProfileSingleViewComponent', () => {
 
   it('should initialize', () => {
     (component as any).geneSymbol = 'mockGeneSymbol';
-    const getGeneSpy = spyOn(component['autismGeneProfilesService'], 'getGene');
+    const getGeneSpy = jest.spyOn(component['autismGeneProfilesService'], 'getGene');
     const fakeScores1 = [{id: 'fakeScore1', value: 1, format: ''}];
     const fakeScores2 = [{id: 'fakeScore2', value: 1, format: ''}];
     const mockGenomicScores = [
@@ -48,17 +48,17 @@ describe('AutismGeneProfileSingleViewComponent', () => {
       genomicScores: mockGenomicScores,
       geneSets: ['test1', 'test2', 'test3_sfari']
     } as any);
-    getGeneSpy.and.returnValue(geneMock);
+    getGeneSpy.mockReturnValue(geneMock);
 
-    const getGeneWeightsSpy = spyOn(component['geneWeightsService'], 'getGeneWeights');
-    getGeneWeightsSpy.and.returnValue(of('fakeWeight' as any));
+    const getGeneWeightsSpy = jest.spyOn(component['geneWeightsService'], 'getGeneWeights');
+    getGeneWeightsSpy.mockReturnValue(of('fakeWeight' as any));
 
-    expect(component.isGeneInSFARI).toBeFalse();
+    expect(component.isGeneInSFARI).toBeFalsy();
     component.ngOnInit();
     expect(component['gene$']).toEqual(geneMock);
-    expect(component.isGeneInSFARI).toBeTrue();
+    expect(component.isGeneInSFARI).toBeTruthy();
     expect(getGeneSpy).toHaveBeenCalledWith('mockGeneSymbol');
-    expect(getGeneWeightsSpy.calls.allArgs()).toEqual([
+    expect(getGeneWeightsSpy.mock.calls).toEqual([
       ['fakeScore1'],
       ['fakeScore2']
     ]);
@@ -72,10 +72,10 @@ describe('AutismGeneProfileSingleViewComponent', () => {
       geneSets: ['test1', 'test2', 'test3']
     } as any);
     component.isGeneInSFARI = false;
-    getGeneSpy.and.returnValue(geneMock);
+    getGeneSpy.mockReturnValue(geneMock);
     component.ngOnInit();
     expect(component['gene$']).toEqual(geneMock);
-    expect(component.isGeneInSFARI).toBeFalse();
+    expect(component.isGeneInSFARI).toBeFalsy();
   });
 
   it('should get autism score gene weight', () => {

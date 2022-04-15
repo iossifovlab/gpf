@@ -60,7 +60,7 @@ function main() {
 
   build_stage "Tests"
   {
-    build_run bash -c 'npm run-script ng test -- --no-watch --no-progress --code-coverage --browsers=ChromeHeadlessCI | tee /dev/stderr | grep -e "^TOTAL: " && exit ${PIPESTATUS[0]} || false'
+    build_run bash -c 'npm run-script test:ci || false'
   }
 
   build_stage "Sonarqube Analysis"

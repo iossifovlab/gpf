@@ -39,10 +39,10 @@ describe('StudyFiltersBlockComponent', () => {
     fixture = TestBed.createComponent(StudyFiltersBlockComponent);
     component = fixture.componentInstance;
     component['store'] = {
-      selectOnce(f) {
+      selectOnce() {
         return of({studyFilters: ['value1', 'value2']});
       },
-      dispatch(set) {}
+      dispatch() {}
     } as any;
     fixture.detectChanges();
     component.dataset = datasetConfigMock;

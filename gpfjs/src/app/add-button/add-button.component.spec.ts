@@ -28,7 +28,7 @@ describe('AddButtonComponent', () => {
   });
 
   it('should emit on click', () => {
-    spyOn(component.addFilter, 'emit');
+    jest.spyOn(component.addFilter, 'emit').mockImplementation(() => {});
     component.add();
     expect(component.addFilter.emit).toHaveBeenCalledWith(null);
   });

@@ -38,7 +38,7 @@ export class ResetPasswordComponent implements AfterViewInit {
   }
 
   private isEmptyPass(pass: string): boolean {
-    return (!pass || !/[^\s]+/.test(pass));
+    return !pass || !/[^\s]+/.test(pass);
   }
 
   resetPassword() {

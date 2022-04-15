@@ -25,10 +25,10 @@ describe('PresentInChildComponent', () => {
     fixture = TestBed.createComponent(PresentInChildComponent);
     component = fixture.componentInstance;
     component['store'] = {
-      selectOnce(f) {
+      selectOnce() {
         return of({presentInChild: ['value1', 'value2']});
       },
-      dispatch(set) {}
+      dispatch() {}
     } as any;
     fixture.detectChanges();
   });
@@ -46,12 +46,12 @@ describe('PresentInChildComponent', () => {
   it('should update present in child', () => {
     component.selectedValues = undefined;
     component['store'] = { dispatch(set) {} } as any;
-    const dispatchSpy = spyOn(component['store'], 'dispatch');
+    const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     const mockSet = new Set(['value1', 'value2', 'value3']);
 
     component.updatePresentInChild(mockSet);
 
     expect(component.selectedValues).toEqual(mockSet);
-    expect(dispatchSpy).toHaveBeenCalledOnceWith(new SetPresentInChildValues(mockSet));
+    expect(dispatchSpy).toHaveBeenNthCalledWith(1, new SetPresentInChildValues(mockSet));
   });
 });

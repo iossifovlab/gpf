@@ -8,9 +8,10 @@
     "build": "ng build",
     "build:prod": "ng build --aot --configuration 'production' --base-href '/gpf/' --deploy-url '/gpf/'",
     "lint": "ng lint",
-    "test": "ng test",
-    "pree2e": "webdriver-manager update --standalone false --gecko false",
-    "e2e": "ng e2e"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:ci": "jest --collectCoverage --ci --watchAll=false",
+    "pree2e": "webdriver-manager update --standalone false --gecko false"
   },
   "private": true,
   "dependencies": {
@@ -44,7 +45,6 @@
     "element-resize-detector": "1.2.3",
     "font-awesome": "4.7.0",
     "jquery": "3.6.0",
-    "karma-junit-reporter": "2.0.1",
     "lodash": "4.17.21",
     "ng-multiselect-dropdown": "0.3.4",
     "ngx-cookie-service": "12.0.3",
@@ -60,6 +60,7 @@
     "zone.js": "0.11.4"
   },
   "devDependencies": {
+    "@angular-builders/jest": "^13.0.3",
     "@angular-eslint/builder": "12.5.0",
     "@angular-eslint/eslint-plugin": "12.5.0",
     "@angular-eslint/eslint-plugin-template": "12.5.0",
@@ -67,7 +68,7 @@
     "@angular-eslint/template-parser": "12.5.0",
     "@angular/cli": "12.2.16",
     "@angular/compiler-cli": "12.2.16",
-    "@types/jasmine": "3.10.1",
+    "@types/jest": "^27.4.1",
     "@typescript-eslint/eslint-plugin": "4.28.2",
     "@typescript-eslint/parser": "4.28.2",
     "eslint": "7.32.0",
@@ -77,11 +78,9 @@
     "eslint-plugin-only-warn": "1.0.3",
     "eslint-plugin-prefer-arrow": "1.2.3",
     "eslint-plugin-prettier": "3.4.1",
-    "jasmine-core": "3.10.1",
-    "karma": "6.3.17",
-    "karma-chrome-launcher": "3.1.0",
-    "karma-coverage-istanbul-reporter": "3.0.3",
-    "karma-jasmine": "4.0.1",
+    "jest": "^27.5.1",
+    "jest-junit": "^13.1.0",
+    "jest-preset-angular": "^11.1.1",
     "prettier": "2.4.1",
     "stylelint": "14.0.1",
     "stylelint-config-standard": "23.0.0",

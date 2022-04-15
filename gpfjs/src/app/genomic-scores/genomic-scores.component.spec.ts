@@ -82,7 +82,7 @@ describe('GenomicScoresComponent', () => {
   });
 
   it('should show help', () => {
-    spyOn(modalService, 'open').and.returnValue(modalRef);
+    jest.spyOn(modalService, 'open').mockReturnValue(modalRef);
     component.genomicScoresComponent.showHelp();
     expect(modalService.open).toHaveBeenCalled();
     expect(modalService.open).toHaveBeenCalledWith(PopupComponent, {

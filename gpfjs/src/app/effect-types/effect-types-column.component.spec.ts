@@ -29,7 +29,7 @@ describe('EffecttypesColumnComponent', () => {
   });
 
   it('should check effect type', () => {
-    const emitSpy = spyOn(component.effectTypeEvent, 'emit');
+    const emitSpy = jest.spyOn(component.effectTypeEvent, 'emit');
     component.effectTypesLabels = new Set(['label1', 'label2', 'label3']);
 
     component.checkEffectType('label0', true);
@@ -44,7 +44,7 @@ describe('EffecttypesColumnComponent', () => {
     component.checkEffectType('label2', false);
     component.checkEffectType('label3', true);
     component.checkEffectType('label3', false);
-    expect(emitSpy.calls.allArgs()).toEqual([
+    expect(emitSpy.mock.calls).toEqual([
       [{ effectType: 'label1', checked: true }],
       [{ effectType: 'label1', checked: false }],
       [{ effectType: 'label2', checked: true }],

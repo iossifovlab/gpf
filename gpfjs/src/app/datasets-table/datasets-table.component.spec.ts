@@ -17,6 +17,18 @@ import { ResizeService } from 'app/table/resize.service';
 import { GpfTableContentHeaderComponent } from 'app/table/component/header.component';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NgxsModule } from '@ngxs/store';
+import { of } from 'rxjs';
+
+class MockUsersService {
+  
+  public searchUsersByGroup() {
+    return of(null);
+  }
+
+  public getUserInfoObservable() {
+    return of(null);
+  }
+}
 
 describe('DatasetsTableComponent', () => {
   let component: DatasetsTableComponent;
@@ -40,7 +52,7 @@ describe('DatasetsTableComponent', () => {
       providers: [
         ConfigService,
         DatasetsService,
-        UsersService,
+        { provide: UsersService, useClass: MockUsersService },
         UsersGroupsService,
         ResizeService
       ],

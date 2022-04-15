@@ -4,9 +4,9 @@ describe('TranscriptSegment', () => {
   it('should check is intron', () => {
     let transcriptSegment;
     transcriptSegment = new TranscriptSegment('chrom', 1, 10, true, true, true, 'label');
-    expect(transcriptSegment.isIntron).toBeFalse();
+    expect(transcriptSegment.isIntron).toBeFalsy();
     transcriptSegment = new TranscriptSegment('chrom', 1, 10, true, false, true, 'label');
-    expect(transcriptSegment.isIntron).toBeTrue();
+    expect(transcriptSegment.isIntron).toBeTruthy();
   });
 
   it('should get intersection length', () => {
@@ -27,15 +27,15 @@ describe('TranscriptSegment', () => {
     let transcriptSegment;
     transcriptSegment = new TranscriptSegment('chrom', 10, 20, true, true, true, 'label');
 
-    expect(transcriptSegment.isSubSegment(5, 10)).toBeFalse();
-    expect(transcriptSegment.isSubSegment(5, 15)).toBeFalse();
-    expect(transcriptSegment.isSubSegment(20, 25)).toBeFalse();
-    expect(transcriptSegment.isSubSegment(15, 25)).toBeFalse();
-    expect(transcriptSegment.isSubSegment(12, 18)).toBeFalse();
+    expect(transcriptSegment.isSubSegment(5, 10)).toBeFalsy();
+    expect(transcriptSegment.isSubSegment(5, 15)).toBeFalsy();
+    expect(transcriptSegment.isSubSegment(20, 25)).toBeFalsy();
+    expect(transcriptSegment.isSubSegment(15, 25)).toBeFalsy();
+    expect(transcriptSegment.isSubSegment(12, 18)).toBeFalsy();
 
-    expect(transcriptSegment.isSubSegment(5, 20)).toBeTrue();
-    expect(transcriptSegment.isSubSegment(10, 25)).toBeTrue();
-    expect(transcriptSegment.isSubSegment(10, 20)).toBeTrue();
+    expect(transcriptSegment.isSubSegment(5, 20)).toBeTruthy();
+    expect(transcriptSegment.isSubSegment(10, 25)).toBeTruthy();
+    expect(transcriptSegment.isSubSegment(10, 20)).toBeTruthy();
   });
 });
 
@@ -203,14 +203,14 @@ describe('Transcript', () => {
       [ { chromosome: 'exon1', start: 1, stop: 5 }]
     );
 
-    expect(transcript.isAreaInCDS(0, 1)).toBeFalse();
-    expect(transcript.isAreaInCDS(5, 7)).toBeFalse();
-    expect(transcript.isAreaInCDS(8, 14)).toBeFalse();
-    expect(transcript.isAreaInCDS(20, 21)).toBeFalse();
-    expect(transcript.isAreaInCDS(2, 5)).toBeTrue();
-    expect(transcript.isAreaInCDS(7, 11)).toBeTrue();
-    expect(transcript.isAreaInCDS(8, 11)).toBeTrue();
-    expect(transcript.isAreaInCDS(15, 16)).toBeTrue();
+    expect(transcript.isAreaInCDS(0, 1)).toBeFalsy();
+    expect(transcript.isAreaInCDS(5, 7)).toBeFalsy();
+    expect(transcript.isAreaInCDS(8, 14)).toBeFalsy();
+    expect(transcript.isAreaInCDS(20, 21)).toBeFalsy();
+    expect(transcript.isAreaInCDS(2, 5)).toBeTruthy();
+    expect(transcript.isAreaInCDS(7, 11)).toBeTruthy();
+    expect(transcript.isAreaInCDS(8, 11)).toBeTruthy();
+    expect(transcript.isAreaInCDS(15, 16)).toBeTruthy();
   });
 });
 

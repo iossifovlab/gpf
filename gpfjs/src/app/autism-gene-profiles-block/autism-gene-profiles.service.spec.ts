@@ -23,8 +23,8 @@ describe('AutismGeneProfilesService', () => {
   });
 
   it('should get config', () => {
-    const getConfigSpy = spyOn(service['http'], 'get');
-    getConfigSpy.and.returnValue(of({ mockConfigProperty: 'mockConfigValue' }));
+    const getConfigSpy = jest.spyOn(service['http'], 'get');
+    getConfigSpy.mockReturnValue(of({ mockConfigProperty: 'mockConfigValue' }));
 
     const resultConfig = service.getConfig();
 
@@ -36,8 +36,8 @@ describe('AutismGeneProfilesService', () => {
   });
 
   it('should get single gene', () => {
-    const getGeneSpy = spyOn(service['http'], 'get');
-    getGeneSpy.and.returnValue(of({ mockGeneProperty: 'mockGeneValue' }));
+    const getGeneSpy = jest.spyOn(service['http'], 'get');
+    getGeneSpy.mockReturnValue(of({ mockGeneProperty: 'mockGeneValue' }));
 
     const resultGene = service.getGene('geneMock1');
 
