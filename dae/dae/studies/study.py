@@ -552,14 +552,8 @@ class GenotypeDataGroup(GenotypeData):
             collections.append(study.get_person_set_collection(
                 person_set_collection_id
             ))
-
-        person_set_collection_config = PersonSetCollection.merge_configs(
-            collections)
-
-        self.person_set_collections[person_set_collection_id] = \
-            PersonSetCollection.from_families(
-                person_set_collection_config,
-                self.families)
+        self._person_set_collections[person_set_collection_id] = \
+            PersonSetCollection.combine(collections)
 
 
 class GenotypeDataStudy(GenotypeData):
