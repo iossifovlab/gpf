@@ -46,7 +46,7 @@ pipeline {
             ]
           )
 
-          publishHTML (target : [allowMissing: false,
+          publishHTML (target : [allowMissing: true,
             alwaysLinkToLastBuild: true,
             keepAll: true,
             reportDir: 'test-results/coverage-html',
@@ -69,6 +69,21 @@ pipeline {
             reportFiles: 'index.html',
             reportName: 'wdae-mypy-report',
             reportTitles: 'wdae-mypy-report'])
+          publishHTML (target : [allowMissing: true,
+            alwaysLinkToLastBuild: true,
+            keepAll: true,
+            reportDir: 'test-results/',
+            reportFiles: 'bandit_dae_report.html',
+            reportName: 'bandit-dae-report',
+            reportTitles: 'bandit-dae-report'])
+
+          publishHTML (target : [allowMissing: true,
+            alwaysLinkToLastBuild: true,
+            keepAll: true,
+            reportDir: 'test-results/',
+            reportFiles: 'bandit_wdae_report.html',
+            reportName: 'bandit-wdae-report',
+            reportTitles: 'bandit-wdae-report'])
 
         } finally {
           zulipNotification(

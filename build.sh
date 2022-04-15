@@ -297,6 +297,22 @@ EOT'
     build_run_local cp ./results/pylint_dae_report ./results/pylint_wdae_report ./test-results/
   }
 
+  build_stage "bandit"
+  {
+    build_run_ctx_init "container" "${gpf_dev_image_ref}"
+    defer_ret build_run_ctx_reset
+
+    build_run_container bash -c '
+      cd /wd/dae; 
+      bandit -r dae/ -o /wd/results/bandit_dae_report.html -f html --exclude "*tests/*" -s B101 || true'
+
+    build_run_container bash -c '
+      cd /wd/wdae; 
+      bandit -r wdae/ -o /wd/results/bandit_wdae_report.html -f html --exclude "*tests/*" -s B101 || true'
+
+    build_run_local cp ./results/bandit_dae_report ./results/bandit_wdae_report ./test-results/
+  }
+
   # mypy
   build_stage "MyPy"
   {
