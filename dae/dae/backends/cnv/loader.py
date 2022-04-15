@@ -3,7 +3,7 @@ Copy Number Variants (CNV) loader :class:`CNVLoader`
 ====================================================
 
 This modules provides a class :class:`CNVLoader` to facilitate loading CNVs
-specified in variauous input formats.
+specified in various input formats.
 
 There are three groups of input parameters that could be configured
 by the CNVLoader parameters:
@@ -110,8 +110,8 @@ def _cnv_loader(
         cnv_family_id: Optional[str] = None,
         cnv_best_state: Optional[str] = None,
         cnv_variant_type: Optional[str] = None,
-        cnv_plus_values: List[str] = ["CNV+"],
-        cnv_minus_values: List[str] = ["CNV-"],
+        cnv_plus_values: Optional[List[str]] = None,
+        cnv_minus_values: Optional[List[str]] = None,
         cnv_sep: str = "\t",
         add_chrom_prefix: Optional[str] = None,
         del_chrom_prefix: Optional[str] = None,
@@ -147,14 +147,12 @@ def _cnv_loader(
     for record in variant_generator:
         data.append(record)
 
-    df: pd.DataFarme = cast(
-        pd.DataFrame,
-        pd.DataFrame.from_records(  # type: ignore
+    df: pd.DataFrame = pd.DataFrame.from_records(  # type: ignore
             data, columns=[
                 "chrom", "pos", "pos_end",
                 "variant_type",
                 "family_id", "best_state"
-            ]))
+            ])
 
     df = df.sort_values(
         by=["chrom", "pos", "pos_end"])

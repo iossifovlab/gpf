@@ -19,10 +19,10 @@ from dae.pedigrees.family import FamiliesData
 def _cnv_location_to_vcf_trasformer() \
         -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """
-    In case the input uses CNV location this transormer will product
+    In case the input uses CNV location this transformer will produce
     internal (chrom, pos, pos_end) description of the CNV position.
     """
-    def trasformer(result: Dict[str, Any]) -> Dict[str, Any]:
+    def transformer(result: Dict[str, Any]) -> Dict[str, Any]:
         location = result["location"]
         chrom, range = location.split(":")
         beg, end = range.split("-")
@@ -32,14 +32,14 @@ def _cnv_location_to_vcf_trasformer() \
 
         return result
 
-    return trasformer
+    return transformer
 
 
 def _cnv_vcf_to_vcf_trasformer() \
         -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """
     In case the input uses VCF-like description of the CNVs this
-    transformer will chec it and handle the proper type conversion for
+    transformer will check it and handle the proper type conversion for
     `pos` and `pos_end` values.
     """
     def trasformer(result: Dict[str, Any]) -> Dict[str, Any]:
@@ -216,14 +216,19 @@ def _configure_cnv_best_state(
 
 
 def _cnv_variant_to_variant_type(
-        cnv_plus_values=set(["CNV+"]),
-        cnv_minus_values=set(["CNV-"])) \
+        cnv_plus_values=None,
+        cnv_minus_values=None) \
             -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """
     This transformer is used to transform variant type to canonical
     inernal representation using :class:`Allele.Type.large_duplication` and
     :class:`Allele.Type.large_deletion`.
     """
+    if cnv_minus_values is None:
+        cnv_minus_values = ["CNV-"]
+    if cnv_plus_values is None:
+        cnv_plus_values = ["CNV+"]
+
     def transformer(result: Dict[str, Any]) -> Dict[str, Any]:
         variant = result["variant"]
         if variant in cnv_plus_values:
@@ -243,11 +248,16 @@ def _configure_cnv_variant_type(
         header: List[str],
         transformers: List[Callable[[Dict[str, Any]], Dict[str, Any]]],
         cnv_variant_type: Optional[str] = None,
-        cnv_plus_values: Union[str, List[str]] = ["CNV+"],
-        cnv_minus_values: Union[str, List[str]] = ["CNV-"]):
+        cnv_plus_values: Optional[Union[str, List[str]]] = None,
+        cnv_minus_values: Optional[Union[str, List[str]]] = None):
 
-    if isinstance(cnv_plus_values, str):
+    if cnv_plus_values is None:
+        cnv_plus_values = ["CNV+"]
+    elif isinstance(cnv_plus_values, str):
         cnv_plus_values = [cnv_plus_values]
+
+    if cnv_minus_values is None:
+        cnv_minus_values = ["CNV-"]
     if isinstance(cnv_minus_values, str):
         cnv_minus_values = [cnv_minus_values]
 
@@ -278,8 +288,8 @@ def _configure_loader(
         cnv_family_id: Optional[str] = None,
         cnv_best_state: Optional[str] = None,
         cnv_variant_type: Optional[str] = None,
-        cnv_plus_values: List[str] = ["CNV+"],
-        cnv_minus_values: List[str] = ["CNV-"]) \
+        cnv_plus_values: Optional[List[str]] = None,
+        cnv_minus_values: Optional[List[str]] = None) \
         -> Tuple[
             List[str],
             List[Callable[[Dict[str, Any]], Dict[str, Any]]]]:
@@ -324,8 +334,8 @@ def flexible_cnv_loader(
         cnv_family_id: Optional[str] = None,
         cnv_best_state: Optional[str] = None,
         cnv_variant_type: Optional[str] = None,
-        cnv_plus_values: List[str] = ["CNV+"],
-        cnv_minus_values: List[str] = ["CNV-"],
+        cnv_plus_values: Optional[List[str]] = None,
+        cnv_minus_values: Optional[List[str]] = None,
         cnv_sep: str = "\t",
         add_chrom_prefix: Optional[str] = None,
         del_chrom_prefix: Optional[str] = None,

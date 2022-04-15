@@ -58,7 +58,6 @@ def test_cnv_loader_expected_inheritance(
     )
 
     variants = list(loader.full_variants_iterator())
-    print(variants)
     assert len(variants) == 2
     for sv, fvs in variants:
         for fv in fvs:
@@ -89,7 +88,6 @@ def test_cnv_loader_expected_variant_type(
     )
 
     variants = list(loader.full_variants_iterator())
-    print(variants)
     assert len(variants) == 2
     _sv, fvs = variants[variant_index]
     for fv in fvs:
@@ -126,12 +124,10 @@ def test_cnv_loader_regions(
     )
 
     variants = list(loader.full_variants_iterator())
-    print(variants)
     assert len(variants) == 2
 
     loader.reset_regions(region)
     variants = list(loader.family_variants_iterator())
-    print(variants)
     assert len(variants) == expected
 
 
@@ -165,7 +161,6 @@ def test_cnv_loader_constructor_regions(
     )
 
     variants = list(loader.family_variants_iterator())
-    print(variants)
     assert len(variants) == expected
 
 
@@ -203,10 +198,8 @@ def test_cnv_loader_del_chrom_prefix_regions(
     )
 
     variants = list(loader.full_variants_iterator())
-    print(variants)
     assert len(variants) == 2
 
     loader.reset_regions(region)
     variants = list(loader.family_variants_iterator())
-    print(variants)
     assert len(variants) == expected

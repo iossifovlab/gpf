@@ -53,8 +53,7 @@ def test_families_simple(families):
 
 
 def test_denovo_short_simple(denovo_short):
-    header = next(denovo_short)
-    print(header)
+    next(denovo_short)
 
     generator = flexible_variant_loader(
         denovo_short,
@@ -70,8 +69,7 @@ def test_denovo_short_simple(denovo_short):
 def test_denovo_short_location_variant_transformation(
         denovo_short, gpf_instance_2013):
 
-    header = next(denovo_short)
-    print(header)
+    next(denovo_short)
 
     transformers = [
         location_variant_to_vcf_transformer(gpf_instance_2013.reference_genome)
@@ -108,8 +106,7 @@ def test_denovo_short_location_variant_transformation(
 
 def test_denovo_short_variant_type_transformation(denovo_short):
 
-    header = next(denovo_short)
-    print(header)
+    next(denovo_short)
 
     transformers = [
         variant_to_variant_type()

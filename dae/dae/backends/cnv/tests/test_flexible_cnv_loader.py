@@ -34,7 +34,7 @@ def genome(gpf_instance_2013):
 
 
 @pytest.mark.parametrize(
-    # params = (cnv_family_id, cnv_location, cnv_variant_type, cnv_best_state)
+    # params: (cnv_family_id, cnv_location, cnv_variant_type, cnv_best_state)
     "content,params", [
         (
             """
@@ -79,7 +79,7 @@ def test_legacy_dae_cnv_variants(families, genome, content, params):
 
 
 @pytest.mark.parametrize(
-    # params = (cnv_person_id, cnv_chrom, cnv_start, cnv_end, cnv_variant_type)
+    # params: (cnv_person_id, cnv_chrom, cnv_start, cnv_end, cnv_variant_type)
     "content,params", [
         (
             """
@@ -235,7 +235,7 @@ def test_vcf_like_cnv_variants(families, genome, content, params):
 )
 def test_flexible_cnv_variants_bad_configs(header, params, families, genome):
     content = io.StringIO(convert_to_tab_separated(header))
-    with pytest.raises(ValueError) as ex:
+    with pytest.raises(ValueError):
         next(
             flexible_cnv_loader(
                 content,
@@ -244,4 +244,3 @@ def test_flexible_cnv_variants_bad_configs(header, params, families, genome):
                 [],
                 **params)
             )
-    print(ex)
