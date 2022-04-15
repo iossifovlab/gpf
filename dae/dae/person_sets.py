@@ -4,10 +4,9 @@ sets based on what value they have in a given mapping.
 """
 from __future__ import annotations
 from dataclasses import dataclass
-
 import logging
 
-from typing import Dict, Set, Optional, Any, FrozenSet, List
+from typing import Dict, Optional, Any, FrozenSet, List
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.pedigrees.family import Person, FamiliesData
 from dae.pheno.pheno_db import PhenotypeData, MeasureType
@@ -101,6 +100,9 @@ class PersonSetCollection:
     def __repr__(self):
         return f"PersonSetCollection({self.id}: {self.person_sets})"
 
+    def __len__(self):
+        return len(self.person_sets)
+
     def is_pedigree_only(self):
         return all([s.sfrom == "pedigree" for s in self.sources])
 
@@ -127,6 +129,7 @@ class PersonSetCollection:
                 person_set.color,
                 dict(),
             )
+        print(result)
         return result
 
     @staticmethod
@@ -307,6 +310,64 @@ class PersonSetCollection:
         ]
 
         return FrozenBox(result)
+
+    def get_person_set(self, person_id: str) -> Optional[PersonSet]:
+        for person_set in self.person_sets.values():
+            if person_id in person_set.persons:
+                return person_set
+        return None
+
+    @staticmethod
+    def _combine(first: PersonSetCollection, second: PersonSetCollection) \
+            -> PersonSetCollection:
+
+        if first.id != second.id:
+            raise ValueError(
+                f"trying to combine different person set collections: "
+                f"different ids {first.id} <-> {second.id}")
+        if first.name != second.name:
+            raise ValueError(
+                f"trying to combine different person set collections: "
+                f"different names {first.name} <-> {second.name}")
+
+        families = FamiliesData.combine(first.families, second.families)
+        config = PersonSetCollection.merge_configs([first, second])
+        result = PersonSetCollection(
+            first.id, first.name, config,
+            PersonSetCollection._sources_from_config(config),
+            PersonSetCollection._produce_sets(config),
+            PersonSetCollection._produce_default_person_set(config),
+            families)
+
+        for person_id, person in families.persons.items():
+            ps = first.get_person_set(person_id)
+            if ps is not None:
+                result.person_sets[ps.id].persons[person_id] = person
+                continue
+            ps = second.get_person_set(person_id)
+            if ps is not None:
+                result.person_sets[ps.id].persons[person_id] = person
+                continue
+
+            logger.warning(
+                "person %s not found in any of the person sets; "
+                "addint to default: %s", person_id, result.default.id)
+            result.default.persons[person_id] = person
+
+        return PersonSetCollection.remove_empty_person_sets(result)
+
+    @staticmethod
+    def combine(collections: List[PersonSetCollection]) \
+            -> PersonSetCollection:
+        if len(collections) == 0:
+            raise ValueError("can't combine empty list of collections")
+        if len(collections) == 1:
+            return collections[0]
+
+        first = collections[0]
+        for second in collections[1:]:
+            first = PersonSetCollection._combine(first, second)
+        return first
 
     def get_person_set_of_person(self, person_id: str) -> PersonSet:
         for person_set in self.person_sets.values():

@@ -363,6 +363,7 @@ def test_genotype_group_person_sets(fixtures_gpf_instance):
     genotype_data_group = fixtures_gpf_instance.get_genotype_data(
         "person_sets_dataset_1"
     )
+    print(genotype_data_group._person_set_collections)
 
     phenotype_collection = genotype_data_group.get_person_set_collection(
         "phenotype"
@@ -391,13 +392,13 @@ def test_genotype_group_person_sets_overlapping(fixtures_gpf_instance):
     unaffected_persons = set(
         phenotype_collection.person_sets["unaffected"].persons.keys()
     )
-    assert "phenotype1" not in phenotype_collection.person_sets
+    assert "phenotype2" not in phenotype_collection.person_sets
 
     phenotype2_persons = set(
-        phenotype_collection.person_sets["phenotype2"].persons.keys()
+        phenotype_collection.person_sets["phenotype1"].persons.keys()
     )
-    assert "person3" in unaffected_persons
-    assert "person3" not in phenotype2_persons
+    assert "person3" not in unaffected_persons
+    assert "person3" in phenotype2_persons
 
 
 def test_genotype_group_person_sets_subset(fixtures_gpf_instance):
@@ -424,8 +425,71 @@ def test_genotype_group_person_sets_subset(fixtures_gpf_instance):
     )
     assert (
         "person4" not in unaffected_persons
-        and "person4" not in phenotype1_persons
+        and "person4" in phenotype1_persons
     )
+
+
+@pytest.fixture
+def families_fixture2():
+    ped_content = io.StringIO(convert_to_tab_separated(
+        """
+            familyId personId  dadId	momId    sex status role
+            ff1      ff1.mom1  0        0        2   1      mom
+            ff1      ff1.dad1  0        0        1   1      dad
+            ff1      ff1.prb1  ff1.dad1 ff1.mom1 1   2      prb
+            ff1      ff1.sib1  ff1.dad1 ff1.mom1 2   2      sib
+            ff2      ff2.mom2  0        0        2   1      mom
+            ff2      ff2.dad2  0        0        1   1      dad
+            ff2      ff2.prb2  ff2.dad2 ff2.mom2 1   2      prb
+            ff2      ff2.sib2  ff2.dad2 ff2.mom2 2   2      sib
+        """))
+    families = FamiliesLoader(ped_content).load()
+    assert families is not None
+    return families
+
+
+def test_merge_person_sets(families_fixture, families_fixture2):
+
+    content1 = textwrap.dedent("""
+    [person_set_collections]
+    selected_person_set_collections = ["phenotype"]
+    phenotype.id = "phenotype"
+    phenotype.name = "Phenotype"
+    phenotype.sources = [{ from = "pedigree", source = "status" }]
+    phenotype.domain = [
+    {id = "aa",name = "aa",values = ["affected"],color = "1"},
+    {id = "unaffected",name = "unaffected",values = ["unaffected"],color = "9"}
+    ]
+    phenotype.default = {id = "unknown",name = "unknown",color = "#aaaaaa"}
+    """)
+    config1 = get_person_set_collections_config(content1)
+    collection1 = PersonSetCollection.from_families(
+        config1.phenotype, families_fixture)
+    assert collection1.person_sets is not None, (config1, collection1)
+
+    content2 = textwrap.dedent("""
+    [person_set_collections]
+    selected_person_set_collections = ["phenotype"]
+    phenotype.id = "phenotype"
+    phenotype.name = "Phenotype"
+    phenotype.sources = [{ from = "pedigree", source = "status" }]
+    phenotype.domain = [
+    {id = "dd",name = "dd",values = ["affected"],color = "2"},
+    {id = "unaffected",name = "unaffected",values = ["unaffected"],color = "9"}
+    ]
+    phenotype.default = {id = "unknown",name = "unknown",color = "#aaaaaa"}
+    """)
+    config2 = get_person_set_collections_config(content2)
+    collection2 = PersonSetCollection.from_families(
+        config2.phenotype, families_fixture2)
+    assert collection2.person_sets is not None, (config2, collection2)
+
+    combined_collection = PersonSetCollection.combine(
+        [collection1, collection2])
+
+    print(combined_collection)
+
+    assert len(combined_collection) == 3
 
 
 # # TODO Add unit test for default values in person sets (normal and phenotype)
