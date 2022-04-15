@@ -245,24 +245,11 @@ class AgpTableServiceMock {
 
 describe('AgpTableComponent', () => {
   let component: AgpTableComponent;
-  let fixture: ComponentFixture<AgpTableComponent>;
   const agpTableServiceMock = new AgpTableServiceMock();
 
-  beforeEach(async() => {
-    await TestBed.configureTestingModule({
-      declarations: [ AgpTableComponent, MultipleSelectMenuComponent],
-      providers: [
-        ConfigService,
-        { provide: AgpTableService, useValue: agpTableServiceMock }
-      ],
-      imports: [HttpClientTestingModule, FormsModule]
-    }).compileComponents();
-  });
-
   beforeEach(() => {
-    fixture = TestBed.createComponent(AgpTableComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+    component = new AgpTableComponent(agpTableServiceMock as any);
+    component.sortingButtonsComponents = [];
   });
 
   it('should create', () => {
