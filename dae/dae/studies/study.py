@@ -198,6 +198,9 @@ class GenotypeData(ABC):
                         ._backend\
                         .build_person_set_collection_query(
                             collection, person_set_collection)
+                    if person_sets_query == ([], []):
+                        continue
+
                     if person_sets_query is None:
                         person_ids = genotype_study\
                             ._transform_person_set_collection_query(

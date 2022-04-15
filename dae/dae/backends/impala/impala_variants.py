@@ -336,6 +336,8 @@ class ImpalaVariants:
         def pedigree_columns(selected_person_sets):
             result = []
             for person_set_id in sorted(selected_person_sets):
+                if person_set_id not in person_set_collection.person_sets:
+                    continue
                 person_set = person_set_collection.person_sets[person_set_id]
                 assert len(person_set.values) == \
                     len(person_set_collection.sources)

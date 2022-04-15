@@ -4,7 +4,6 @@ sets based on what value they have in a given mapping.
 """
 from __future__ import annotations
 from dataclasses import dataclass
-import itertools
 import logging
 
 from typing import Dict, Optional, Any, FrozenSet, List
