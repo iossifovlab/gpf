@@ -21,7 +21,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
   geneSetsCollections: Array<GeneSetsCollection>;
   geneSets: Array<GeneSet>;
   public searchQuery: string;
-  public defaultSelectedDenovoGeneSetId: string;
+  public defaultSelectedDenovoGeneSetId: string[] = [];
 
   private geneSetsQueryChange = new Subject<[string, string, Object]>();
   private geneSetsResult: Observable<GeneSet[]>;
@@ -72,8 +72,8 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
         ) || denovoGeneSetTypes[0];
 
         if (selectedStudyTypes) {
-          this.defaultSelectedDenovoGeneSetId = selectedStudyTypes.datasetId +
-            '-' + selectedStudyTypes.personSetCollectionId + '-denovo-geneset';
+          this.defaultSelectedDenovoGeneSetId.push(selectedStudyTypes.datasetId +
+            '-' + selectedStudyTypes.personSetCollectionId + '-denovo-geneset');
         }
       }
       this.geneSetsCollections = geneSetsCollections;
@@ -136,6 +136,10 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
         const personSetCollectionId = geneType.personSetCollectionId;
         for (const personSet of geneType.personSetCollectionLegend) {
           if (geneSetsTypes[datasetId][personSetCollectionId].indexOf(personSet.id) > -1) {
+            if(!this.defaultSelectedDenovoGeneSetId.includes(datasetId +
+              '-' + personSetCollectionId + '-denovo-geneset'))
+              this.defaultSelectedDenovoGeneSetId.push(datasetId +
+                '-' + personSetCollectionId + '-denovo-geneset');
             this.geneSetsLocalState.select(datasetId, personSetCollectionId, personSet.id);
           }
         }
