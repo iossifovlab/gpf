@@ -57,7 +57,10 @@ export class DatasetDescriptionComponent implements OnInit {
 
   public save(): void {
     this.datasetsService.writeDatasetDescription(this.datasetId, this.markdownText).subscribe(() => {
-      this.editMode = false;
+      window.location.reload();
+      document.addEventListener('DOMContentLoaded', () => {
+        this.editMode = false;
+      });
     });
   }
 
