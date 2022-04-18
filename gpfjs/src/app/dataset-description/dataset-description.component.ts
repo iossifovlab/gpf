@@ -49,7 +49,6 @@ export class DatasetDescriptionComponent implements OnInit {
   }
 
   public edit(): void {
-    // check for admin rights
     this.editMode = true;
   }
 

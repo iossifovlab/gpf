@@ -1,6 +1,6 @@
 <div *ngIf="dataset$ | async as dataset" class="container" style="margin-top: 20px">
   <div *ngIf="!editMode">
-    <button (click)="edit()">EDIT</button>
+    <button *ngIf="('' | userInfo)?.isAdministrator" (click)="edit()">Edit</button>
     <div class="row">
       <markdown [data]="dataset.description || ''"></markdown>
     </div>
