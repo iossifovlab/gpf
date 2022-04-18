@@ -1,8 +1,6 @@
 #!/bin/env python
 
 from collections import defaultdict
-import glob
-import os
 
 
 def dd():
@@ -75,14 +73,11 @@ def read_ewa_set_file(set_files):
     #     p, fn = os.path.split(sf)
     #     setname, ex = os.path.splitext(fn)
     #     f = open(sf, "r")
-    for setname, f in set_files:
+    for f in set_files:
+        setname = f.readline().strip()
         line = f.readline()
-        if isinstance(line, bytes):
-            line = line.decode()
         r.tDesc[setname] = line.strip()
         for line in f:
-            if isinstance(line, bytes):
-                line = line.decode()
             gSym = line.strip()
             r.t2G[setname][gSym] += 1
             r.g2T[gSym][setname] += 1
@@ -95,8 +90,6 @@ def read_gmt_file(input_file):
     r.geneNS = "sym"
 
     for ln in input_file:
-        if isinstance(ln, bytes):
-            ln = ln.decode()
         line = ln.strip().split()
 
         t = line[0]
@@ -112,8 +105,6 @@ def read_mapping_file(input_file, names_file):
     r = GeneTerms()
     r.geneNS = "id"
     for ln in input_file:
-        if isinstance(ln, bytes):
-            ln = ln.decode()
         line = ln.strip().split()
         if line[0] == "#geneNS":
             r.geneNS = line[1]
@@ -127,8 +118,6 @@ def read_mapping_file(input_file, names_file):
     if names_file is not None:
         try:
             for line in names_file:
-                if isinstance(line, bytes):
-                    line = line.decode()
                 (t, desc) = line.strip().split("\t", 1)
                 if t in r.t2G:
                     r.tDesc[t] = desc

@@ -19,6 +19,7 @@ def gene_sets_repo():
             ),
             "GeneSets": {
                 "main_candidates.txt": (
+                    "main_candidates\n"
                     "Main Candidates\n"
                     "POGZ\n"
                     "CHD8\n"

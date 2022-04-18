@@ -1,6 +1,5 @@
 import os
 import logging
-from pathlib import Path
 from sqlalchemy import create_engine  # type: ignore
 from sqlalchemy import MetaData, Table, Column, String
 from sqlalchemy.sql import insert
@@ -64,7 +63,8 @@ class GeneSetCollection(object):
         assert self.collection_id, self.gene_sets
 
     @staticmethod
-    def from_resource(resource: Optional[GenomicResource]):
+    def from_resource(resource: GenomicResource):
+        assert resource is not None
         gene_sets = list()
         config = resource.get_config()
         collection_id = config["id"]
@@ -95,9 +95,9 @@ class GeneSetCollection(object):
                 if filepath.startswith(directory) and \
                         filepath.endswith(".txt"):
                     filepaths.append(filepath)
-            files = [
-                (Path(f).stem, resource.open_raw_file(f)) for f in filepaths
-            ]
+
+            files = [resource.open_raw_file(f) for f in filepaths]
+
             gene_terms = read_ewa_set_file(files)
         elif collection_format == "sqlite":
             dae_db_dir = os.environ.get("dae_db_dir")
