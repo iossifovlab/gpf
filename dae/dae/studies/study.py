@@ -48,13 +48,16 @@ class GenotypeData(ABC):
 
     @property
     def description(self):
-        if self._description is None:
-            if self.config.description_file:
-                with open(self.config.description_file, "r") as infile:
-                    self._description = infile.read()
-            else:
-                self._description = self.config.description
+        if self._description is None and self.config.description_file:
+            with open(self.config.description_file, "r") as infile:
+                self._description = infile.read()
         return self._description
+
+    @description.setter
+    def description(self, input_text: str):
+        self._description = None
+        with open(self.config.description_file, "w") as outfile:
+            outfile.write(input_text)
 
     @property
     def year(self):
