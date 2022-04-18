@@ -70,7 +70,7 @@ class GenomicResourceEmbededRepo(GenomicResourceRealRepo):
         content = self.get_file_content(genomic_resource, filename, uncompress)
         if filename.endswith(".gz") and uncompress:
             raise Exception("Can't handle uncompressing zip files yet!")
-        mode = mode if mode else "rb"
+        mode = mode if mode else "r"
         if 'w' in mode:
             raise Exception("Can't handle writable files yet!")
         if 'b' in mode:
