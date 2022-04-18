@@ -67,7 +67,6 @@ class GeneScore:
     def load_gene_score_from_resource(
             resource: Optional[GenomicResource]):
         assert resource is not None
-        print(resource.get_type())
         assert resource.get_type() == "gene_score", "Invalid resource type"
 
         config = resource.get_config()
