@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { DatasetsService } from '../datasets/datasets.service';
 import { Dataset } from '../datasets/datasets';
 import { filter, map, switchMap, take } from 'rxjs/operators';
+import { EditorOption } from 'angular-markdown-editor';
 
 @Component({
   selector: 'gpf-dataset-description',
@@ -12,6 +13,16 @@ import { filter, map, switchMap, take } from 'rxjs/operators';
 })
 export class DatasetDescriptionComponent implements OnInit {
   public dataset$: Observable<Dataset>;
+
+  public editMode = false;
+  public markdownText: string;
+  public editorOptions: EditorOption = {
+    autofocus: true,
+    iconlibrary: 'fa',
+    width: 700,
+    resize: 'both',
+    fullscreen: {enable: false, icons: undefined},
+  };
 
   public constructor(
     private route: ActivatedRoute,
@@ -29,7 +40,26 @@ export class DatasetDescriptionComponent implements OnInit {
     this.dataset$.pipe(take(1)).subscribe(dataset => {
       if (!dataset.description) {
         this.router.navigate(['..', 'browser'], {relativeTo: this.route});
+      } else {
+        this.markdownText = dataset.description;
       }
+    });
+  }
+
+  public edit(): void {
+    // check for admin rights
+    this.editMode = true;
+  }
+
+  public save(): void {
+    // post req
+    this.editMode = false;
+  }
+
+  public close(): void {
+    this.editMode = false;
+    this.dataset$.pipe(take(1)).subscribe(dataset => {
+      this.markdownText = dataset.description;
     });
   }
 }
