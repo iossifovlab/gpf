@@ -5,6 +5,7 @@ import { DatasetsService } from '../datasets/datasets.service';
 import { Dataset } from '../datasets/datasets';
 import { filter, map, switchMap, take } from 'rxjs/operators';
 import { EditorOption } from 'angular-markdown-editor';
+import { MarkdownService } from 'ngx-markdown';
 
 @Component({
   selector: 'gpf-dataset-description',
@@ -23,12 +24,14 @@ export class DatasetDescriptionComponent implements OnInit {
     width: 700,
     resize: 'both',
     fullscreen: {enable: false, icons: undefined},
+    parser: (val) => this.markdownService.compile(val.trim())
   };
 
   public constructor(
     private route: ActivatedRoute,
     private router: Router,
     private datasetsService: DatasetsService,
+    private markdownService: MarkdownService
   ) { }
 
   public ngOnInit(): void {
