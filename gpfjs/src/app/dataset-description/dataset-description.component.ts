@@ -13,6 +13,7 @@ import { EditorOption } from 'angular-markdown-editor';
 })
 export class DatasetDescriptionComponent implements OnInit {
   public dataset$: Observable<Dataset>;
+  public datasetId: string;
 
   public editMode = false;
   public markdownText: string;
@@ -38,6 +39,7 @@ export class DatasetDescriptionComponent implements OnInit {
     );
 
     this.dataset$.pipe(take(1)).subscribe(dataset => {
+      this.datasetId = dataset.id;
       if (!dataset.description) {
         this.router.navigate(['..', 'browser'], {relativeTo: this.route});
       } else {
@@ -52,8 +54,9 @@ export class DatasetDescriptionComponent implements OnInit {
   }
 
   public save(): void {
-    // post req
-    this.editMode = false;
+    this.datasetsService.writeDatasetDescription(this.datasetId, this.markdownText).subscribe(() => {
+      this.editMode = false;
+    });
   }
 
   public close(): void {

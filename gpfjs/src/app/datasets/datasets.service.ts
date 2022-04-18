@@ -111,4 +111,9 @@ export class DatasetsService {
     const options = { headers: this.headers, withCredentials: true };
     return this.http.get(`${this.config.baseUrl}${this.datasetPedigreeUrl}/${datasetId}/${column}`, options);
   }
+
+  public writeDatasetDescription(datasetId: string, description: string) {
+    const options = { headers: this.headers, withCredentials: true };
+    return this.http.post(`${this.config.baseUrl}${this.datasetUrl}/description/${datasetId}`, {description: description}, options);
+  }
 }
