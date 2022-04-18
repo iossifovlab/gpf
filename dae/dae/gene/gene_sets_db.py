@@ -73,6 +73,7 @@ class GeneSetCollection(object):
         web_label = config.get("web_label", None)
         web_format_str = config.get("web_format_str", None)
         logger.debug(f"loading {collection_id}: {config}")
+
         if collection_format == "map":
             filename = config["filename"]
             names_filename = filename[:-4] + "names.txt"

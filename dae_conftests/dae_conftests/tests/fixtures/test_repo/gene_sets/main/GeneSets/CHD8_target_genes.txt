@@ -1,3 +1,4 @@
+CHD8 target genes
 Cotney J, et al. The autism-associated chromatin modifier CHD8 regulates other autism risk genes during human neurodevelopment. Nat Commun. (2015)
 AAMDC
 AASDHPPT

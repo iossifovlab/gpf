@@ -35,8 +35,8 @@ class GenomicScore:
         self.bins_count = self.histogram_config["bins"]
         self.min = self.histogram_config.get("min", None)
         self.max = self.histogram_config.get("max", None)
-        self.xscale = self.histogram_config.get("xscale", "linear")
-        self.yscale = self.histogram_config.get("yscale", "linear")
+        self.xscale = self.histogram_config.get("x_scale", "linear")
+        self.yscale = self.histogram_config.get("y_scale", "linear")
         self.filename = os.path.join("histograms", f"{self.source}.csv")
         self.help = self.config.get("meta", None)
         self.range = None

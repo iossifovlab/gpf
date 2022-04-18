@@ -69,18 +69,14 @@ class GeneTerms(object):
 def read_ewa_set_file(set_files):
     r = GeneTerms()
     r.geneNS = "sym"
-    # for sf in glob.glob(inputDir + "/*.txt"):
-    #     p, fn = os.path.split(sf)
-    #     setname, ex = os.path.splitext(fn)
-    #     f = open(sf, "r")
     for f in set_files:
         setname = f.readline().strip()
         line = f.readline()
         r.tDesc[setname] = line.strip()
         for line in f:
-            gSym = line.strip()
-            r.t2G[setname][gSym] += 1
-            r.g2T[gSym][setname] += 1
+            gene_sym = line.strip()
+            r.t2G[setname][gene_sym] += 1
+            r.g2T[gene_sym][setname] += 1
         f.close()
     return r
 

@@ -282,15 +282,14 @@ def main(gpf_instance=None, argv=None):
         for gs in gs_category.sets:
             gs_id = gs["set_id"]
             collection_id = gs["collection_id"]
+            gene_set = gpf_instance.gene_sets_db.get_gene_set(
+                collection_id, gs_id)
+            if gene_set is None:
+                logger.error("missing gene set: %s, %s", collection_id, gs_id)
+                raise ValueError(
+                    f"missing gene set: {collection_id}: {gs_id}")
 
-            collections_gene_sets.append(
-                (
-                    collection_id,
-                    gpf_instance.gene_sets_db.get_gene_set(
-                        collection_id, gs_id
-                    )
-                )
-            )
+            collections_gene_sets.append((collection_id, gene_set))
 
     logger.info(f"collected gene sets: {len(collections_gene_sets)}")
 
