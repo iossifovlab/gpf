@@ -33,7 +33,7 @@
 
   <div *ngIf="currentPeopleCounter" id="families-by-number-div" class="row mb-3">
     <div class="col-12">
-      <table class="table table-bordered">
+      <table class="gpf-basic-table">
         <thead>
           <th class="first-header-cell">
             <div style="padding: 0">
@@ -79,7 +79,7 @@
 
   <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row mb-3" #families_pedigree>
     <div class="col-12">
-      <table class="table table-bordered table-sm table-centered">
+      <table class="gpf-basic-table">
         <colgroup>
           <col />
           <col />
@@ -136,7 +136,7 @@
 
     <div *ngIf="currentDenovoReport" id="denovo-variants-div" class="row mb-3">
       <div class="col-12">
-        <table class="table table-bordered table-sm table-centered" [style.width.px]="denovoVariantsTableWidth">
+        <table class="gpf-basic-table" [style.width.px]="denovoVariantsTableWidth">
           <thead>
             <th>Effect type</th>
             <th class="rotate" *ngFor="let column of currentDenovoReport.columns">

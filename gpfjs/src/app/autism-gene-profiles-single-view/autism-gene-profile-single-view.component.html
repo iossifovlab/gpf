@@ -53,7 +53,7 @@
         <table
           *ngFor="let genomicScoreCategory of config.genomicScores"
           [attr.id]="genomicScoreCategory.category"
-          class="table table-bordered table-centered genomic-scores-table">
+          class="gpf-basic-table genomic-scores-table">
           <th [attr.colspan]="2">{{ genomicScoreCategory.displayName }}</th>
           <tr *ngFor="let score of genomicScoreCategory.scores" class="card-block">
             <td
@@ -94,7 +94,7 @@
         <table
           *ngFor="let geneSetCategory of config.geneSets"
           [attr.id]="geneSetCategory.category"
-          class="table table-bordered table-centered gene-sets-table">
+          class="gpf-basic-table gene-sets-table">
           <th [attr.colspan]="2">{{ geneSetCategory.displayName }}</th>
           <tr *ngFor="let set of geneSetCategory.sets" class="card-block">
             <td style="max-width: 665px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" [attr.title]="set.setId">{{ set.setId }}</td>
@@ -110,7 +110,7 @@
         [ngClass]="{'compare-wrapper': isInGeneCompare}"
         class="wrapper">
         <ng-container *ngFor="let dataset of config.datasets">
-          <table style="width:100%;" class="table table-centered datasets-table">
+          <table style="width:100%;" class="gpf-basic-table datasets-table">
             <thead>
               <tr class="card-block">
                 <th style="border-bottom: none" [attr.colspan]="dataset.personSets.length + 1">

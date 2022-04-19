@@ -9,6 +9,11 @@ td {
   vertical-align: middle;
 }
 
+th, td {
+  text-align: left;
+  padding: 12px;
+}
+
 .gene-sets-table tr,
 .gene-sets-table td,
 #links-table td {

@@ -133,6 +133,8 @@
   min-width: 35px;
   user-select: none;
   outline: none;
+  border: none;
+  background: none;
 }
 
 #category-filtering-button {
@@ -142,8 +144,8 @@
 }
 
 .dropdown-span {
-  position: absolute;
-  z-index: 3;
+  position: absolute !important;
+  /* z-index: 3; */
 }
 
 .dropdown-toggle::after {
