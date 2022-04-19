@@ -161,6 +161,10 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         config = configparser.ConfigParser()
         with fs.open(config_path, "rt") as f:
             config.read_file(f, config_path)
+        return ParquetPartitionDescriptor.from_dict(config, root_dirname)
+
+    @staticmethod
+    def from_dict(config, root_dirname=""):
         assert config["region_bin"] is not None
 
         chromosomes = list(
