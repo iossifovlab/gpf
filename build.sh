@@ -265,7 +265,7 @@ EOT'
   }
 
   # lint
-  build_stage "Lint"
+  build_stage "flake8"
   {
     build_run_ctx_init "container" "${gpf_dev_image_ref}"
     defer_ret build_run_ctx_reset
@@ -274,13 +274,13 @@ EOT'
       cd /wd; 
       flake8 --format=pylint \
         --output-file=/wd/results/flake8_report \
-        --exclude "*old*,*tmp*,*temp*,data-hg19*,gpf*" . || true'
+        --exclude "*old*,*tmp*,*temp*,data-hg19*,gpf*,*build*" . || true'
 
     build_run_local cp ./results/flake8_report ./test-results/
   }
 
   # mypy
-  build_stage "Type Check"
+  build_stage "MyPy"
   {
     build_run_ctx_init "container" "${gpf_dev_image_ref}"
     defer_ret build_run_ctx_reset
@@ -295,6 +295,7 @@ EOT'
           --warn-redundant-casts \
           --show-error-context \
           --no-incremental \
+          --html-report /wd/results/mypy_dae_html_report \
           > /wd/results/mypy_dae_report || true'
 
     build_run_container bash -c '
@@ -308,9 +309,11 @@ EOT'
           --warn-redundant-casts \
           --show-error-context \
           --no-incremental \
+          --html-report /wd/results/mypy_wdae_html_report \
           > /wd/results/mypy_wdae_report || true'
 
       build_run_local cp ./results/mypy_dae_report ./results/mypy_wdae_report ./test-results/
+      build_run_local cp -r ./results/mypy_dae_html_report ./results/mypy_wdae_html_report ./test-results/
   }
 
   # import test data to impala

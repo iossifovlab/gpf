@@ -9,9 +9,11 @@ def build_a_test_resource(content: str):
 
 
 def convert_to_tab_separated(s: str):
-    return "\n".join("\t".join(line.strip("\n\r").split())
-                     for line in s.split("\n")
-                     if line.strip("\r\n") != "")
+    result = "\n".join(
+        "\t".join(line.strip("\n\r").split())
+        for line in s.split("\n")
+        if line.strip("\r\n") != "")
+    return result.replace("||", " ")
 
 
 def build_test_repos(pth, content):

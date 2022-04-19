@@ -33,7 +33,8 @@ pipeline {
         try {
           junit 'test-results/wdae-junit.xml, test-results/dae-junit.xml'
 
-          cobertura coberturaReportFile: 'test-results/coverage.xml', enableNewApi: true, onlyStable: false, sourceEncoding: 'ASCII'
+          cobertura coberturaReportFile: 'test-results/coverage.xml',
+            enableNewApi: false, onlyStable: false, sourceEncoding: 'ASCII'
 
           recordIssues(
             enabledForFailure: true, aggregatingResults: false,
@@ -51,7 +52,23 @@ pipeline {
             reportFiles: 'index.html',
             reportName: 'gpf-coverage-report',
             reportTitles: 'gpf-coverage-report'])
-          
+
+          publishHTML (target : [allowMissing: false,
+            alwaysLinkToLastBuild: true,
+            keepAll: true,
+            reportDir: 'test-results/mypy_dae_html_report',
+            reportFiles: 'index.html',
+            reportName: 'dae-mypy-report',
+            reportTitles: 'dae-mypy-report'])
+
+          publishHTML (target : [allowMissing: false,
+            alwaysLinkToLastBuild: true,
+            keepAll: true,
+            reportDir: 'test-results/mypy_wdae_html_report',
+            reportFiles: 'index.html',
+            reportName: 'wdae-mypy-report',
+            reportTitles: 'wdae-mypy-report'])
+
         } finally {
           zulipNotification(
             topic: "${env.JOB_NAME}"

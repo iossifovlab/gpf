@@ -1017,7 +1017,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             self.lines_iterator = None
 
     @classmethod
-    def _arguments(cls):
+    def _arguments(cls) -> List[CLIArgument]:
         arguments = super()._arguments()
         arguments.append(CLIArgument(
             "dae_summary_file",
