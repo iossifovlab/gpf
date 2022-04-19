@@ -2,7 +2,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NgxsModule } from '@ngxs/store';
+import { NgxsModule, Store } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
@@ -15,7 +15,7 @@ import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { PhenoToolMeasureComponent } from 'app/pheno-tool-measure/pheno-tool-measure.component';
 import { MeasuresService } from 'app/measures/measures.service';
 import { GeneSymbolsComponent } from 'app/gene-symbols/gene-symbols.component';
-import { GeneSymbolsState } from 'app/gene-symbols/gene-symbols.state';
+import { GeneSymbolsState, SetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { of } from 'rxjs/internal/observable/of';
 import { Observable } from 'rxjs/internal/Observable';
@@ -34,6 +34,7 @@ class MockDatasetsService {
 describe('PhenoToolComponent', () => {
   let component: PhenoToolComponent;
   let fixture: ComponentFixture<PhenoToolComponent>;
+  let store: Store;
   const phenoToolMockService = new PhenoToolServiceMock();
 
   beforeEach(waitForAsync(() => {
@@ -72,7 +73,7 @@ describe('PhenoToolComponent', () => {
       schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();
-
+    store = TestBed.inject(Store);
   }));
 
   beforeEach(() => {
@@ -132,5 +133,13 @@ describe('PhenoToolComponent', () => {
     component.onDownload(event as any);
     expect(submitSpy).toHaveBeenCalledTimes(1);
     expect(event.target.queryData.value).toEqual('{"datasetId":"testDatasetId"}');
+  });
+
+  it('should hide results on a state change', () => {
+    fixture.detectChanges();
+    component.submitQuery();
+    expect(component.phenoToolResults).toEqual('fakeValue' as any);
+    store.dispatch(new SetGeneSymbols(['POGZ']));
+    expect(component.phenoToolResults).toEqual(null);
   });
 });
