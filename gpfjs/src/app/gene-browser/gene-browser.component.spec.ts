@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule } from '@ngxs/store';
-import { of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { GeneSymbolsState } from 'app/gene-symbols/gene-symbols.state';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -15,24 +15,39 @@ import { GeneBrowserComponent } from './gene-browser.component';
 import { SearchableSelectComponent } from '../searchable-select/searchable-select.component';
 import { FormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { SummaryAllelesFilter } from './summary-variants';
+import { SummaryAllelesArray, SummaryAllelesFilter } from './summary-variants';
+import { GenePlotComponent } from 'app/gene-plot/gene-plot.component';
+import { GenotypePreviewTableComponent } from 'app/genotype-preview-table/genotype-preview-table.component';
 
 jest.mock('../utils/svg-drawing');
 
 class MockActivatedRoute {
-  public params = {dataset: 'testDatasetId', get: () => ''};
-  public parent = {params: of(this.params)};
-  public queryParamMap = of(this.params);
+  public static params = {dataset: 'testDatasetId', get: (): string => ''};
+  public parent = {params: of(MockActivatedRoute.params)};
+  public queryParamMap = of(MockActivatedRoute.params);
   public snapshot = {params: {gene: 'mockGeneSymbol'}};
 }
 
 class MockDatasetsService {
-  public getSelectedDataset(): object {
+  public getSelectedDataset(): Record<string, unknown> {
     return {
       id: 'testDataset',
       geneBrowser: { domainMax: 100, frequencyColumn: 'testColumn'},
-      personSetCollections: { getLegend: () => [] },
+      personSetCollections: { getLegend: (): Array<unknown> => [] },
     };
+  }
+}
+
+class MockGeneService {
+  public getGene(): Observable<Record<string, unknown>> {
+    return of({
+      geneSymbol: 'POGZ',
+      collapsedTranscript: {
+        start: 1,
+        stop: 2
+      },
+      getRegionString: () => ''
+    });
   }
 }
 
@@ -43,22 +58,29 @@ describe('GeneBrowserComponent', () => {
 
   beforeEach(async() => {
     await TestBed.configureTestingModule({
-      declarations: [ GeneBrowserComponent, SearchableSelectComponent ],
+      declarations: [
+        GeneBrowserComponent, GenePlotComponent,
+        GenotypePreviewTableComponent, SearchableSelectComponent
+      ],
       providers: [
-        ConfigService, {provide: ActivatedRoute, useValue: new MockActivatedRoute()},
-        QueryService, UsersService, GeneService, {provide: DatasetsService, useValue: mockDatasetsService},
-        FullscreenLoadingService,
+        ConfigService, UsersService, FullscreenLoadingService, QueryService,
+        {provide: ActivatedRoute, useValue: new MockActivatedRoute()},
+        {provide: GeneService, useValue: new MockGeneService()},
+        {provide: DatasetsService, useValue: mockDatasetsService},
       ],
       imports: [
         HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([GeneSymbolsState]), NgbModule, FormsModule
       ],
-    })
-    .compileComponents();
+    }).compileComponents();
   });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(GeneBrowserComponent);
     component = fixture.componentInstance;
+    component.summaryVariantsArray = new SummaryAllelesArray();
+    jest.spyOn<any, any>(component['queryService'], 'getSummaryVariants').mockImplementation(
+      () => new SummaryAllelesArray()
+    );
     fixture.detectChanges();
   });
 
@@ -68,9 +90,9 @@ describe('GeneBrowserComponent', () => {
 
   it('should draw legend on filters div set', () => {
     expect(component).toBeTruthy();
-    jest.spyOn<any, any>(component, 'drawDenovoIcons').mockImplementation(() => {});
-    jest.spyOn<any, any>(component, 'drawTransmittedIcons').mockImplementation(() => {});
-    jest.spyOn<any, any>(component, 'drawEffectTypesIcons').mockImplementation(() => {});
+    jest.spyOn<any, any>(component, 'drawDenovoIcons').mockImplementation(() => null);
+    jest.spyOn<any, any>(component, 'drawTransmittedIcons').mockImplementation(() => null);
+    jest.spyOn<any, any>(component, 'drawEffectTypesIcons').mockImplementation(() => null);
     component.filters = null;
     expect(component['drawDenovoIcons']).toHaveBeenCalled();
     expect(component['drawTransmittedIcons']).toHaveBeenCalled();
@@ -117,32 +139,73 @@ describe('GeneBrowserComponent', () => {
   });
 
   it('should set selected region', () => {
-    jest.spyOn<any, any>(component, 'updateVariants').mockImplementation(() => {});
+    jest.spyOn<any, any>(component, 'updateVariants');
     component.setSelectedRegion([1, 2]);
     expect(component.summaryVariantsFilter.selectedRegion).toEqual([1, 2]);
     expect(component['updateVariants']).toHaveBeenCalled();
   });
 
   it('should set selected frequencies', () => {
-    jest.spyOn<any, any>(component, 'updateVariants').mockImplementation(() => {});
+    jest.spyOn<any, any>(component, 'updateVariants');
     component.setSelectedFrequencies([3, 4]);
     expect(component.summaryVariantsFilter.selectedFrequencies).toEqual([3, 4]);
     expect(component['updateVariants']).toHaveBeenCalled();
   });
 
-  it('should toggle CNV effects properly if "Other" effect type is selected', () => {
+  it('should not reset coding only on request and properly handle CNV and Other effect types', () => {
     component.summaryVariantsFilter = new SummaryAllelesFilter(true, true, false);
     component.effectTypeValues.forEach(eff => component.checkEffectType(eff, true));
+
+    // Make sure "Coding only" didn't get re-toggled
     expect(component.summaryVariantsFilter.queryParams['effectTypes']).toEqual([
-      'frame-shift', 'nonsense', 'splice-site','no-frame-shift-newStop',
+      'frame-shift', 'nonsense', 'splice-site', 'no-frame-shift-newStop',
       'missense', 'synonymous', 'CNV+', 'CNV-', '3\'UTR', '3\'UTR-intron', '5\'UTR', '5\'UTR-intron',
       'intergenic', 'intron', 'no-frame-shift', 'noEnd', 'noStart', 'non-coding', 'non-coding-intron', 'CDS',
     ]);
 
+    // Untoggling "Other" shouldn't remove CNVs
     component.checkEffectType('Other', false);
     expect(component.summaryVariantsFilter.queryParams['effectTypes']).toEqual([
-      'frame-shift', 'nonsense', 'splice-site','no-frame-shift-newStop',
+      'frame-shift', 'nonsense', 'splice-site', 'no-frame-shift-newStop',
       'missense', 'synonymous', 'CNV+', 'CNV-'
     ]);
+  });
+
+  it('should reset filters on new request', async() => {
+    jest.spyOn<any, any>(component, 'updateShownTablePreviewVariantsArray').mockImplementation(() => null);
+    jest.spyOn<any, any>(component, 'waitForGenePlotComponent').mockImplementation(
+      () => new Promise<void>(resolve => resolve())
+    );
+    component.summaryVariantsFilter = new SummaryAllelesFilter(true, false, true);
+    component.checkEffectType('CNV+', true);
+    component.checkEffectType('missense', true);
+    component.checkVariantType('sub', true);
+    component.checkAffectedStatus('Affected only', true);
+    expect(component.summaryVariantsFilter.queryParams).toEqual({
+      effectTypes: ['CNV+', 'missense'],
+      inheritanceTypeFilter: ['denovo'],
+      affectedStatus: ['Affected only'],
+      variantTypes: ['sub']
+    });
+    await component.submitGeneRequest('POGZ');
+    expect(component.summaryVariantsFilter.queryParams).toEqual({
+      effectTypes: [
+        'frame-shift',
+        'nonsense',
+        'splice-site',
+        'no-frame-shift-newStop',
+        'missense',
+        'synonymous',
+        'CNV+',
+        'CNV-',
+        'no-frame-shift',
+        'noEnd',
+        'noStart',
+        'CDS'
+      ],
+      inheritanceTypeFilter: ['denovo', 'mendelian', 'omission', 'missing'],
+      affectedStatus: ['Affected only', 'Unaffected only', 'Affected and unaffected'],
+      variantTypes: ['sub', 'ins', 'del', 'CNV+', 'CNV-']
+    });
   });
 });

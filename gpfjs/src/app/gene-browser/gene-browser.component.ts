@@ -26,16 +26,22 @@ import { LGDS, CNV, OTHER, CODING } from 'app/effect-types/effect-types';
 })
 export class GeneBrowserComponent implements OnInit, OnDestroy {
   @ViewChild(GenePlotComponent) private genePlotComponent: GenePlotComponent;
+  @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
+  @ViewChild('searchBox') private searchBox: ElementRef;
+  @ViewChild('filters', { static: false }) public set filters(element: HTMLElement) {
+    this.drawDenovoIcons();
+    this.drawTransmittedIcons();
+    this.drawEffectTypesIcons();
+  }
+
   public selectedGene: Gene;
   public geneSymbol = '';
   public maxFamilyVariants = 1000;
   public selectedDataset: Dataset;
-  private selectedDatasetId: string;
   public showResults: boolean;
   public showError = false;
   public familyLoadingFinished: boolean;
   public geneBrowserConfig: GeneBrowser;
-  private subscriptions: Subscription[] = [];
 
   public readonly affectedStatusValues = ['Affected only', 'Unaffected only', 'Affected and unaffected'];;
   public readonly effectTypeValues = ['LGDs', 'missense', 'synonymous', 'CNV+', 'CNV-', 'Other'];
@@ -47,23 +53,16 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   public summaryVariantsFilter: SummaryAllelesFilter = new SummaryAllelesFilter();
   public uniqueFamilyVariants = false;
 
-  private variantUpdate$: Subject<void> = new Subject();
-
   public legend: Array<PersonSet>;
-
-  @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
-  @ViewChild('searchBox') private searchBox: ElementRef;
   public geneSymbolSuggestions: string[] = [];
   public searchBoxInput$: Subject<string> = new Subject();
 
-  @ViewChild('filters', { static: false }) public set filters(element: any) {
-    this.drawDenovoIcons();
-    this.drawTransmittedIcons();
-    this.drawEffectTypesIcons();
-  }
+  private subscriptions: Subscription[] = [];
+  private selectedDatasetId: string;
+  private variantUpdate$: Subject<void> = new Subject();
 
-  constructor(
-    readonly configService: ConfigService,
+  public constructor(
+    public readonly configService: ConfigService,
     private route: ActivatedRoute,
     private location: Location,
     private queryService: QueryService,
@@ -77,37 +76,38 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.legend = this.selectedDataset.personSetCollections.getLegend(this.selectedDataset.defaultPersonSetCollection);
     this.geneBrowserConfig = this.selectedDataset.geneBrowser;
     if (this.route.snapshot.params.gene) {
-      this.submitGeneRequest(this.route.snapshot.params.gene);
+      void this.submitGeneRequest(this.route.snapshot.params.gene);
     }
 
     this.subscriptions.push(
       this.queryService.streamingFinishedSubject.subscribe(() => {
         this.familyLoadingFinished = true;
       }),
-      this.queryService.summaryStreamingFinishedSubject.subscribe(async() => {
+      this.queryService.summaryStreamingFinishedSubject.subscribe(() => {
         this.showResults = true;
         this.loadingService.setLoadingStop();
       }),
-      this.route.parent.params.subscribe(
-        (params: Params) => {
-          this.selectedDatasetId = params['dataset'];
-        }
-      ),
+      this.route.parent.params.subscribe((params: Params) => {
+        this.selectedDatasetId = params['dataset'] as string;
+      }),
       this.variantUpdate$.pipe(debounceTime(750)).subscribe(() => this.updateShownTablePreviewVariantsArray()),
       this.searchBoxInput$.pipe(debounceTime(100), distinctUntilChanged()).subscribe(() => {
         if (!this.geneSymbol) {
           this.geneSymbolSuggestions = [];
           return;
         }
-        this.geneService.searchGenes(this.geneSymbol).pipe(take(1)).subscribe((response: { 'gene_symbols': string[] }) => {
-          this.geneSymbolSuggestions = response.gene_symbols;
-        });
+        this.geneService
+          .searchGenes(this.geneSymbol)
+          .pipe(take(1))
+          .subscribe((response: { 'gene_symbols': string[] }) => {
+            this.geneSymbolSuggestions = response.gene_symbols;
+          });
       })
     );
   }
 
   public ngOnDestroy(): void {
-    this.subscriptions.map(subscription => { subscription.unsubscribe() });
+    this.subscriptions.map(subscription => subscription.unsubscribe());
   }
 
   public selectGeneSymbol(geneSymbol: string): void {
@@ -127,11 +127,11 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   public closeDropdown(): void {
     if (this.dropdown && this.dropdown.isOpen()) {
       this.dropdown.close();
-      this.searchBox.nativeElement.blur();
+      (this.searchBox.nativeElement as HTMLElement).blur();
     }
   }
 
-  public async submitGeneRequest(geneSymbol?: string) {
+  public async submitGeneRequest(geneSymbol?: string): Promise<void> {
     this.showError = false;
     if (geneSymbol) {
       this.geneSymbol = geneSymbol.toUpperCase().trim();
@@ -170,7 +170,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.summaryVariantsFilter.selectedFrequencies = [
       0, this.geneBrowserConfig.domainMax
     ];
-      
+
     await this.waitForGenePlotComponent();
 
     this.updateShownTablePreviewVariantsArray();
@@ -180,74 +180,20 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async waitForGenePlotComponent() {
-    return new Promise<void>(resolve => {
-      const timer = setInterval(() => {
-        if (this.genePlotComponent !== undefined) {
-          resolve();
-          clearInterval(timer);
-        }
-      }, 100);
-    });
-  }
-
-  private get requestParams(): object {
-    return {
-      ...this.summaryVariantsFilter.queryParams,
-      'geneSymbols': [this.selectedGene.geneSymbol],
-      'datasetId': this.selectedDatasetId,
-      'regions': this.selectedGene.getRegionString(...this.summaryVariantsFilter.selectedRegion),
-      'summaryVariantIds': this.summaryVariantsArrayFiltered.summaryAlleleIds.reduce(
-        (a, b) => a.concat(b), []
-      ),
-      'genomicScores': [{
-        'metric': this.geneBrowserConfig.frequencyColumn,
-        'rangeStart': this.summaryVariantsFilter.minFreq,
-        'rangeEnd': this.summaryVariantsFilter.maxFreq,
-      }],
-    };
-  }
-
-  private get requestParamsSummary(): object {
-    let requestParams = {
-      'datasetId': this.selectedDatasetId,
-      'geneSymbols': [this.geneSymbol.toUpperCase().trim()],
-      'maxVariantsCount': 10000,
-      'inheritanceTypeFilter': ['denovo', 'mendelian', 'omission', 'missing'],
-    };
-    if (this.summaryVariantsFilter.codingOnly) {
-      requestParams['effectTypes'] = [...LGDS, ...CODING, ...CNV, 'CDS'];
-    }
-    return requestParams;
-  }
-
-  private updateShownTablePreviewVariantsArray() {
-    this.familyLoadingFinished = false;
-    const requestParams = {
-      ...this.requestParams,
-      'maxVariantsCount': this.maxFamilyVariants,
-      'uniqueFamilyVariants': this.uniqueFamilyVariants,
-    };
-
-    this.genotypePreviewVariantsArray = this.queryService.getGenotypePreviewVariantsByFilter(
-      this.selectedDataset, requestParams
-    );
-  }
-
   public onSubmit(event: Event): void {
-    const target = <HTMLFormElement>event.target;
+    const target = event.target as HTMLFormElement;
 
-    target.queryData.value = JSON.stringify({...this.requestParams, 'download': true});
+    target.queryData.value = JSON.stringify({...this.requestParams, download: true});
     target.submit();
   }
 
   public onSubmitSummary(event: Event): void {
-    const target = <HTMLFormElement>event.target;
+    const target = event.target as HTMLFormElement;
 
     target.queryData.value = JSON.stringify({
       ...this.requestParamsSummary,
-      'summaryVariantIds': this.summaryVariantsArrayFiltered.summaryAlleleIds.reduce(
-        (a, b) => a.concat(b), []
+      summaryVariantIds: this.summaryVariantsArrayFiltered.summaryAlleleIds.reduce(
+        (a: string[], b) => a.concat(b), []
       ),
     });
     target.submit();
@@ -261,8 +207,11 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   public checkAffectedStatus(affectedStatus: string, value: boolean): void {
-    value ? this.summaryVariantsFilter.selectedAffectedStatus.add(affectedStatus)
-          : this.summaryVariantsFilter.selectedAffectedStatus.delete(affectedStatus);
+    if (value) {
+      this.summaryVariantsFilter.selectedAffectedStatus.add(affectedStatus);
+    } else {
+      this.summaryVariantsFilter.selectedAffectedStatus.delete(affectedStatus);
+    }
   }
 
   public checkEffectType(effectType: string, value: boolean): void {
@@ -274,16 +223,22 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     } else {
       effectTypes = [effectType];
     }
-    effectTypes.forEach(
-      value ? this.summaryVariantsFilter.selectedEffectTypes.add
-            : this.summaryVariantsFilter.selectedEffectTypes.delete,
-      this.summaryVariantsFilter.selectedEffectTypes
-    );
+
+    for (const et of effectTypes) {
+      if (value) {
+        this.summaryVariantsFilter.selectedEffectTypes.add(et);
+      } else {
+        this.summaryVariantsFilter.selectedEffectTypes.delete(et);
+      }
+    }
   }
 
   public checkVariantType(variantType: string, value: boolean): void {
-    value ? this.summaryVariantsFilter.selectedVariantTypes.add(variantType)
-          : this.summaryVariantsFilter.selectedVariantTypes.delete(variantType);
+    if (value) {
+      this.summaryVariantsFilter.selectedVariantTypes.add(variantType);
+    } else {
+      this.summaryVariantsFilter.selectedVariantTypes.delete(variantType);
+    }
   }
 
   public checkShowDenovo(value: boolean): void {
@@ -315,7 +270,62 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     return draw.affectedStatusColors[affectedStatus];
   }
 
-  private drawDenovoIcons() {
+
+  private async waitForGenePlotComponent(): Promise<void> {
+    return new Promise<void>(resolve => {
+      const timer = setInterval(() => {
+        if (this.genePlotComponent !== undefined) {
+          resolve();
+          clearInterval(timer);
+        }
+      }, 100);
+    });
+  }
+
+  private get requestParams(): Record<string, unknown> {
+    return {
+      ...this.summaryVariantsFilter.queryParams,
+      geneSymbols: [this.selectedGene.geneSymbol],
+      datasetId: this.selectedDatasetId,
+      regions: this.selectedGene.getRegionString(...this.summaryVariantsFilter.selectedRegion),
+      summaryVariantIds: this.summaryVariantsArrayFiltered.summaryAlleleIds.reduce(
+        (a: string[], b) => a.concat(b), []
+      ),
+      genomicScores: [{
+        metric: this.geneBrowserConfig.frequencyColumn,
+        rangeStart: this.summaryVariantsFilter.minFreq,
+        rangeEnd: this.summaryVariantsFilter.maxFreq,
+      }],
+    };
+  }
+
+  private get requestParamsSummary(): Record<string, unknown> {
+    const requestParams = {
+      datasetId: this.selectedDatasetId,
+      geneSymbols: [this.geneSymbol.toUpperCase().trim()],
+      maxVariantsCount: 10000,
+      inheritanceTypeFilter: ['denovo', 'mendelian', 'omission', 'missing'],
+    };
+    if (this.summaryVariantsFilter.codingOnly) {
+      requestParams['effectTypes'] = [...LGDS, ...CODING, ...CNV, 'CDS'];
+    }
+    return requestParams;
+  }
+
+  private updateShownTablePreviewVariantsArray(): void {
+    this.familyLoadingFinished = false;
+    const requestParams = {
+      ...this.requestParams,
+      maxVariantsCount: this.maxFamilyVariants,
+      uniqueFamilyVariants: this.uniqueFamilyVariants,
+    };
+
+    this.genotypePreviewVariantsArray = this.queryService.getGenotypePreviewVariantsByFilter(
+      this.selectedDataset, requestParams
+    );
+  }
+
+  private drawDenovoIcons(): void {
     const svgElement = d3.select('#denovo');
     draw.surroundingRectangle(svgElement, 10, 7.5, '#000000', 'Denovo LGDs');
     draw.star(svgElement, 10, 7.5, '#000000', 'Denovo LGDs');
@@ -331,7 +341,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     draw.rect(svgElement, 102, 118, 7.5, 1, '#000000', 0.4, 'Denovo CNV-');
   }
 
-  private drawTransmittedIcons() {
+  private drawTransmittedIcons(): void {
     const svgElement = d3.select('#transmitted');
     draw.star(svgElement, 10, 7.5, '#000000', 'LGDs');
     draw.triangle(svgElement, 30, 8, '#000000', 'Missense');
@@ -341,7 +351,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     draw.rect(svgElement, 107, 125, 7.5, 1, '#000000', 0.4, 'CNV-');
   }
 
-  private drawEffectTypesIcons() {
+  private drawEffectTypesIcons(): void {
     const effectIcons = {
       '#LGDs': draw.star,
       '#missense': draw.triangle,

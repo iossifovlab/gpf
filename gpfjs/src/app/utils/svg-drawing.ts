@@ -1,6 +1,6 @@
 import { BaseType, Selection } from "d3-selection";
 
-export const affectedStatusColors = {
+export const affectedStatusColors: Record<string, string> = {
   'Affected only': '#AA0000',
   'Unaffected only': '#04613a',
   'Affected and unaffected': '#8a8a8a',

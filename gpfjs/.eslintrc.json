@@ -70,7 +70,6 @@
         "no-useless-escape": "warn",
         "no-useless-rename": "warn",
         "no-useless-return": "warn",
-        "no-void": "warn",
         "no-with": "warn",
         "prefer-numeric-literals": "warn",
         "prefer-object-spread": "warn",
