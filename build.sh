@@ -286,11 +286,11 @@ EOT'
 
     build_run_container bash -c '
       cd /wd/dae; 
-      pylint dae -f parseable --reports=no > /wd/results/pylint_dae_report || true'
+      pylint dae -f parseable --reports=no --disable missing-class-docstring,missing-function-docstring,missing-module-docstring > /wd/results/pylint_dae_report || true'
 
     build_run_container bash -c '
       cd /wd/wdae; 
-      pylint wdae  -f parseable --reports=no > /wd/results/pylint_wdae_report || true'
+      pylint wdae  -f parseable --reports=no --disable missing-class-docstring,missing-function-docstring,missing-module-docstring > /wd/results/pylint_wdae_report || true'
 
     build_run_local cp ./results/pylint_dae_report ./results/pylint_wdae_report ./test-results/
   }
