@@ -108,11 +108,16 @@ class GPFInstance(object):
     @cached
     def gene_scores_db(self):
         gene_scores = self.dae_config.gene_scores_db.gene_scores
-        resources = [self.grr.get_resource(gs) for gs in gene_scores]
-        gene_scores = [
-            GeneScore.load_gene_score_from_resource(r) for r in resources
-        ]
-        return GeneScoresDb(gene_scores)
+        result = []
+        for gs in gene_scores:
+            resource = self.grr.get_resource(gs)
+            if resource is None:
+                logger.error("unable to find gene score: %s", gs)
+                continue
+            gene_score = GeneScore.load_gene_score_from_resource(resource)
+            result.append(gene_score)
+
+        return GeneScoresDb(result)
 
     @property  # type: ignore
     @cached
