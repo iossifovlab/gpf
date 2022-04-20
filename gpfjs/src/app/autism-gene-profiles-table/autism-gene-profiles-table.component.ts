@@ -1,4 +1,4 @@
-import { 
+import {
   Component, ElementRef, EventEmitter, HostListener, Input, OnChanges,
   OnDestroy, OnInit, Output, ViewChild, ViewChildren
 } from '@angular/core';
@@ -9,7 +9,6 @@ import { debounceTime, distinctUntilChanged, take, tap } from 'rxjs/operators';
 import { forkJoin, Subject, Subscription } from 'rxjs';
 import { AgpTableConfig, Column } from './autism-gene-profiles-table';
 import { AgpTableService } from './autism-gene-profiles-table.service';
-import * as _ from 'lodash';
 import { environment } from 'environments/environment';
 
 @Component({
@@ -37,9 +36,9 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   public shownRows: number[] = []; // indexes
   public highlightedGenes: Set<string> = new Set();
 
-  public geneSymbolColumnId = "geneSymbol" // must match the gene symbol column id from the backend
+  public geneSymbolColumnId = 'geneSymbol'; // must match the gene symbol column id from the backend
 
-  public orderBy = "desc";
+  public orderBy = 'desc';
 
   public geneInput: string = null;
   public searchKeystrokes$: Subject<string> = new Subject();
@@ -90,15 +89,17 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   @HostListener('document:keydown.esc')
-  public keybindClearHighlight() {
-    if (this.highlightedGenes.size && (document.activeElement === document.body || document.activeElement.nodeName === 'BUTTON')) {
+  public keybindClearHighlight(): void {
+    if (this.highlightedGenes.size
+        && (document.activeElement === document.body || document.activeElement.nodeName === 'BUTTON')) {
       this.highlightedGenes.clear();
     }
   }
 
   @HostListener('document:keydown.c')
-  public keybindCompareGenes() {
-    if (this.highlightedGenes.size && (document.activeElement === document.body || document.activeElement.nodeName === 'BUTTON')) {
+  public keybindCompareGenes(): void {
+    if (this.highlightedGenes.size
+        && (document.activeElement === document.body || document.activeElement.nodeName === 'BUTTON')) {
       this.openSingleView(this.highlightedGenes);
     }
   }
@@ -123,11 +124,11 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   @HostListener('window:resize')
-  public onResize() {
+  public onResize(): void {
     this.ngbDropdownMenu.dropdown.close();
   }
 
-  private fillTable() {
+  private fillTable(): void {
     const agpRequests = [];
     this.genes = [];
     this.pageIndex = 1;
@@ -139,7 +140,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
         this.autismGeneProfilesService
           .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
           .pipe(take(1))
-      )
+      );
       this.pageIndex++;
     }
     this.pageIndex = this.viewportPageCount;
@@ -229,14 +230,14 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     const buttonHeight = 30;
-    this.modalPosition.top = 
-      this.clickedColumnFilteringButton.getBoundingClientRect().top
+    this.modalPosition.top =
+      (this.clickedColumnFilteringButton.getBoundingClientRect().top as number)
       + buttonHeight
       - topOffset;
 
     const modalWidth = 400;
     const leftPosition =
-      this.clickedColumnFilteringButton.getBoundingClientRect().left
+      (this.clickedColumnFilteringButton.getBoundingClientRect().left as number)
       + leftOffset;
 
     const viewWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
@@ -286,14 +287,14 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   public handleCellClick($event, row, column: Column): void {
     const linkClick: boolean = $event.target.classList.contains('clickable');
-    const geneSymbol = row[this.geneSymbolColumnId];
+    const geneSymbol = row[this.geneSymbolColumnId] as string;
 
     if (!linkClick) {
       if ($event.which === 2 || ($event.ctrlKey || $event.metaKey)) {
         this.toggleHighlightGene(geneSymbol);
       }
     } else if (column.clickable === 'goToQuery') {
-      this.goToQueryEvent.emit({geneSymbol: geneSymbol, statisticId: column.id});
+      this.goToQueryEvent.emit({geneSymbol, statisticId: column.id});
     } else if (column.clickable === 'createTab' && linkClick) {
       this.openSingleView(geneSymbol);
     }
@@ -302,8 +303,8 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   public openSingleView(geneSymbols: string | Set<string>): void {
     const agpBaseUrl = window.location.href;
     let genes: string;
-    
-    if (typeof(geneSymbols) === 'string') {
+
+    if (typeof geneSymbols === 'string') {
       genes = geneSymbols;
     } else {
       genes = [...geneSymbols].join(',');

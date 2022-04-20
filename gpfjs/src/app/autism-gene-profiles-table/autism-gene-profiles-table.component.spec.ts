@@ -1,14 +1,8 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ConfigService } from 'app/config/config.service';
-import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { AgpTableComponent } from './autism-gene-profiles-table.component';
-import { AgpTableConfig, Column } from './autism-gene-profiles-table';
+import { AgpTableConfig } from './autism-gene-profiles-table';
 import { plainToClass } from 'class-transformer';
-import { AgpTableService } from './autism-gene-profiles-table.service';
-import { of, Subject } from 'rxjs';
-import { clone, cloneDeep } from 'lodash';
-import { FormsModule } from '@angular/forms';
+import { Observable, of } from 'rxjs';
+import { cloneDeep } from 'lodash';
 
 const column1 = {
   clickable: 'createTab',
@@ -40,7 +34,7 @@ const column22 = {
   meta: null,
   sortable: false,
   visible: true
-}
+};
 
 const column2 = {
   clickable: 'createTab',
@@ -117,7 +111,7 @@ const column32 = {
   meta: null,
   sortable: false,
   visible: true
-}
+};
 
 const column3 = {
   clickable: 'createTab',
@@ -232,7 +226,7 @@ const genesMock = [
 ];
 
 class AgpTableServiceMock {
-  public getGenes(pageIndex: number, geneInput: string, sortBy: string, orderBy: string) {
+  public getGenes(pageIndex: number, geneInput: string): Observable<Record<string, any>> {
     const res = cloneDeep(genesMock);
     if (geneInput) {
       res.forEach(gene => {

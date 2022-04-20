@@ -4,12 +4,10 @@ import { Directive, EventEmitter, HostListener, Output } from '@angular/core';
   selector: '[middleclick]'
 })
 export class MiddleClickDirective {
-  @Output('middleclick') middleClick = new EventEmitter();
-
-  constructor() {}
+  @Output('middleclick') public middleClick = new EventEmitter();
 
   @HostListener('mouseup', ['$event'])
-  middleclickEvent(event) {
+  public middleclickEvent(event): void {
     if (event.which === 2) {
       this.middleClick.emit(event);
     }
