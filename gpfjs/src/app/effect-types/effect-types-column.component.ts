@@ -9,7 +9,7 @@ export class EffecttypesColumnComponent {
   @Input() public effectTypes: EffectTypes;
   @Input() public columnName: string;
   @Input() public effectTypesLabels: Set<string>;
-  @Output() public effectTypeEvent = new EventEmitter<object>();
+  @Output() public effectTypeEvent = new EventEmitter<{effectType: string; checked: boolean}>();
 
   public checkEffectType(effectType: string, value: boolean): void {
     if (!this.effectTypesLabels.has(effectType)) {
