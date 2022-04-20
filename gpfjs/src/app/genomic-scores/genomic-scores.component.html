@@ -1,38 +1,37 @@
-<div class="row">
-    <div class="col-sm-9" style="margin-left: 12%">
-      <div class="select-wrapper">
-        <select class="form-control"
-          [(ngModel)]="selectedGenomicScores"
-          required>
-          <option *ngFor="let genomicScores of genomicScoresArray" [ngValue]="genomicScores">
-            <span>{{ genomicScores.desc }}</span>
-          </option>
-        </select>
-        <span
-          class="select-dropdown-icon"
-          [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'">
-        </span>
-      </div>
+<div style="display: flex; flex-wrap: wrap">
+  <div class="col-sm-9" style="margin-left: 12%">
+    <div class="select-wrapper">
+      <select class="form-control" [(ngModel)]="selectedGenomicScores" required>
+        <option *ngFor="let genomicScores of genomicScoresArray" [ngValue]="genomicScores">
+          <span>{{ genomicScores.desc }}</span>
+        </option>
+      </select>
+      <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"> </span>
     </div>
-    <div>
-      <i [style.visibility]="this.genomicScoreState.score.help ? 'visible': 'hidden'" class="clickable fa fa-question-circle-o fa-2x" (click)="showHelp()"></i>
-    </div>
-    <div class="col-sm-12">
-      <gpf-histogram
-        *ngIf="selectedGenomicScores"
-        [width]="800"
-        [height]="145"
-        [marginLeft]="180"
-        [bins]="selectedGenomicScores.bins"
-        [bars]="selectedGenomicScores.bars"
-        [domainMin]="domainMin"
-        [domainMax]="domainMax"
-        [logScaleX]="selectedGenomicScores.logScaleX"
-        [logScaleY]="selectedGenomicScores.logScaleY"
-        [(rangeStart)]="rangeStart"
-        [(rangeEnd)]="rangeEnd"
-        style="display:block; margin-top: 17px;">
-      </gpf-histogram>
-      <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
-    </div>
+  </div>
+  <div>
+    <i
+      [style.visibility]="this.genomicScoreState.score.help ? 'visible' : 'hidden'"
+      class="clickable fa fa-question-circle-o fa-2x"
+      (click)="showHelp()"
+      style="margin-left: 15px"></i>
+  </div>
+  <div class="col-sm-12">
+    <gpf-histogram
+      *ngIf="selectedGenomicScores"
+      [width]="800"
+      [height]="145"
+      [marginLeft]="180"
+      [bins]="selectedGenomicScores.bins"
+      [bars]="selectedGenomicScores.bars"
+      [domainMin]="domainMin"
+      [domainMax]="domainMax"
+      [logScaleX]="selectedGenomicScores.logScaleX"
+      [logScaleY]="selectedGenomicScores.logScaleY"
+      [(rangeStart)]="rangeStart"
+      [(rangeEnd)]="rangeEnd"
+      style="display: block; margin-top: 17px">
+    </gpf-histogram>
+    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+  </div>
 </div>

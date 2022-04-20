@@ -29,7 +29,7 @@ describe('CategoricalFilterComponent', () => {
         ConfigService,
         UsersService
       ],
-      imports: [HttpClientTestingModule, RouterTestingModule, FormsModule, NgxsModule.forRoot([])]
+      imports: [HttpClientTestingModule, RouterTestingModule, FormsModule, NgxsModule.forRoot([], {developmentMode: true})]
     })
     .compileComponents();
   }));

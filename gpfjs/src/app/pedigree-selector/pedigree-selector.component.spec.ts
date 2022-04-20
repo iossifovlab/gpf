@@ -11,7 +11,7 @@ describe('PedigreeSelectorComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [PedigreeSelectorComponent],
-      imports: [NgxsModule.forRoot([PedigreeSelectorState])],
+      imports: [NgxsModule.forRoot([PedigreeSelectorState], {developmentMode: true})],
     })
       .compileComponents();
   }));

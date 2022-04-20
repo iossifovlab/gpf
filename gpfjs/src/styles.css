@@ -339,3 +339,20 @@ label {
   padding-left: 8px;
   padding-right: 8px;
 }
+
+.gpf-basic-table {
+  width: 100%;
+}
+
+.gpf-basic-table, .gpf-basic-table th, .gpf-basic-table td {
+  border: 1px solid #dee2e6;
+  text-align: center;
+}
+
+.gpf-basic-table th {
+  vertical-align: bottom;
+}
+
+.gpf-basic-table th, .gpf-basic-table td {
+  padding: 5px;
+}

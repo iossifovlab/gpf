@@ -22,7 +22,7 @@ describe('ForgotPasswordComponent', () => {
         UsersService,
         ConfigService,
       ],
-      imports: [HttpClientTestingModule, RouterTestingModule, FormsModule, NgxsModule.forRoot([])]
+      imports: [HttpClientTestingModule, RouterTestingModule, FormsModule, NgxsModule.forRoot([], {developmentMode: true})]
     })
     .compileComponents();
   }));

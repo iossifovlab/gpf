@@ -2,8 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
-import { of } from 'rxjs/internal/observable/of';
-import { PhenoToolResults } from './pheno-tool-results';
+import { of } from 'rxjs';
 import { PhenoToolService } from './pheno-tool.service';
 
 describe('PhenoToolService', () => {

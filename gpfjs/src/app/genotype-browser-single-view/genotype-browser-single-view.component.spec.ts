@@ -25,7 +25,7 @@ describe('GenotypeBrowserSingleViewComponent', () => {
       providers: [
         {provide: ActivatedRoute, useValue: activatedRoute},
       ],
-      imports: [NgxsModule.forRoot([ErrorsState])],
+      imports: [NgxsModule.forRoot([ErrorsState], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();

@@ -1,5 +1,5 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -7,7 +7,6 @@ import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { UsersService } from 'app/users/users.service';
-import { Observable, of } from 'rxjs';
 import { DatasetDescriptionComponent } from './dataset-description.component';
 
 @Component({
@@ -16,7 +15,9 @@ import { DatasetDescriptionComponent } from './dataset-description.component';
   styleUrls: ['./dataset-description.component.css']
 })
 export class MockDatasetDescriptionComponent extends DatasetDescriptionComponent {
-  ngOnInit() {}
+  public ngOnInit(): void {
+    return null;
+  }
 }
 
 describe('DatasetDescriptionComponent', () => {
@@ -24,7 +25,6 @@ describe('DatasetDescriptionComponent', () => {
   let fixture: ComponentFixture<MockDatasetDescriptionComponent>;
 
   beforeEach(waitForAsync(() => {
-
     TestBed.configureTestingModule({
       declarations: [MockDatasetDescriptionComponent],
       providers: [
@@ -33,7 +33,7 @@ describe('DatasetDescriptionComponent', () => {
         UsersService,
         ConfigService,
       ],
-      imports: [RouterTestingModule, HttpClientTestingModule, NgxsModule.forRoot([])]
+      imports: [RouterTestingModule, HttpClientTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
     })
     .compileComponents();
   }));

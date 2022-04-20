@@ -10,7 +10,7 @@ describe('UniqueFamilyVariantsFilterComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [ UniqueFamilyVariantsFilterComponent ],
-      imports: [ NgxsModule.forRoot(), FormsModule ]
+      imports: [ NgxsModule.forRoot([], {developmentMode: true}), FormsModule ]
     })
     .compileComponents();
   });

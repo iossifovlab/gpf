@@ -13,7 +13,7 @@ describe('PersonIdsComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ PersonIdsComponent, ErrorsAlertComponent ],
-      imports: [ FormsModule, NgxsModule.forRoot([PersonIdsState])],
+      imports: [ FormsModule, NgxsModule.forRoot([PersonIdsState], {developmentMode: true})],
     })
     .compileComponents();
   }));

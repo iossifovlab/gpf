@@ -1,14 +1,10 @@
 <div ngbDropdown class="d-inline-block" autoClose="outside" placement="top" (openChange)="saveIfOpened($event)">
-  <button
-    id="share-query-dropdown-button"
-    class="btn btn-default" 
-    [disabled]="disabled"
-    ngbDropdownToggle
-    >Share query</button
-  >
+  <button id="share-query-dropdown-button" class="btn btn-default" [disabled]="disabled" ngbDropdownToggle>
+    Share query
+  </button>
   <div id="share-query-dropdown" ngbDropdownMenu aria-labelledby="share-query-dropdown-button">
     <div *ngIf="url">
-      <div class="input-group" style="flex-wrap: nowrap;">
+      <div class="input-group" style="flex-wrap: nowrap">
         <input #link type="disabled" (click)="link.select()" value="{{ url }}" width="400px" spellcheck="false" />
         <span class="input-group-btn">
           <button id="copy-button" class="btn btn-secondary" (click)="copyToClipboard(link)">{{ buttonValue }}</button>

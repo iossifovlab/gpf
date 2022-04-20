@@ -3,7 +3,7 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import { TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 import { environment } from 'environments/environment';
-import { of } from 'rxjs/internal/observable/of';
+import { of } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { Gene } from './gene';
 import { GeneService } from './gene.service';

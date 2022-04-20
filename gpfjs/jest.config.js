@@ -5,7 +5,7 @@ module.exports = {
   globalSetup: 'jest-preset-angular/global-setup',
   setupFilesAfterEnv: ['<rootDir>/setup-jest.ts'],
   modulePaths: ['<rootDir>/src'],
-  transformIgnorePatterns: [`node_modules/(?!${esModules})`],
+  transformIgnorePatterns: [`node_modules/(?!${esModules}|.*.mjs$)`],
   coverageReporters: ['html', 'text', 'text-summary', 'cobertura'],
   reporters: [
     'default',

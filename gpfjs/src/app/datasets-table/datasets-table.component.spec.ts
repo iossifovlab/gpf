@@ -59,7 +59,7 @@ describe('DatasetsTableComponent', () => {
       imports: [
         RouterTestingModule,
         HttpClientTestingModule,
-        NgxsModule.forRoot([])
+        NgxsModule.forRoot([], {developmentMode: true})
       ],
     })
     .compileComponents();

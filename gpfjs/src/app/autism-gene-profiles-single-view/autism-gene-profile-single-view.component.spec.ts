@@ -18,7 +18,7 @@ describe('AutismGeneProfileSingleViewComponent', () => {
     TestBed.configureTestingModule({
       declarations: [ AutismGeneProfileSingleViewComponent ],
       providers: [ConfigService, GeneWeightsService, DatasetsService, UsersService, QueryService],
-      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([])]
+      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
     })
     .compileComponents();
   }));

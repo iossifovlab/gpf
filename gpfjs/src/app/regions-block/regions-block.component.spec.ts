@@ -13,7 +13,7 @@ describe('RegionsBlockComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [RegionsBlockComponent],
-      imports: [NgbModule, RouterTestingModule, NgxsModule.forRoot([RegionsFilterState])],
+      imports: [NgbModule, RouterTestingModule, NgxsModule.forRoot([RegionsFilterState], {developmentMode: true})],
     })
       .compileComponents();
   }));

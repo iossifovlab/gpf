@@ -78,7 +78,7 @@ describe('MultiContinuousFilterComponent', () => {
       ],
       imports: [
         RouterTestingModule,
-        NgxsModule.forRoot([]),
+        NgxsModule.forRoot([], {developmentMode: true}),
         FormsModule
       ]
     })

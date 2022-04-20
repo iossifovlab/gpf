@@ -32,3 +32,8 @@
   border-radius: 5px;
   min-width: 250px;
 }
+
+#filters {
+  display: flex;
+  flex-wrap: wrap;
+}

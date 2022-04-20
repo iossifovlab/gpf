@@ -14,7 +14,7 @@ describe('PresentInParentComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ PresentInParentComponent ],
-      imports: [NgxsModule.forRoot([])],
+      imports: [NgxsModule.forRoot([], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();

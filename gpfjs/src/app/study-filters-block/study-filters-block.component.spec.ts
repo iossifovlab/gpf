@@ -30,7 +30,7 @@ describe('StudyFiltersBlockComponent', () => {
         ErrorsAlertComponent
       ],
       providers: [NgbNavModule, NgbModule, FormsModule],
-      imports: [NgbNavModule, NgbModule, FormsModule, NgxsModule.forRoot([])],
+      imports: [NgbNavModule, NgbModule, FormsModule, NgxsModule.forRoot([], {developmentMode: true})],
     })
     .compileComponents();
   }));

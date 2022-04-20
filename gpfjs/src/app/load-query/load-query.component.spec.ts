@@ -27,7 +27,7 @@ describe('LoadQueryComponent', () => {
       ],
       imports: [
         RouterTestingModule,
-        NgxsModule.forRoot([ErrorsState])
+        NgxsModule.forRoot([ErrorsState], {developmentMode: true})
       ],
     })
     .compileComponents();

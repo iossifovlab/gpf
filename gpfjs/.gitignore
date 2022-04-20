@@ -36,6 +36,7 @@ testem.log
 package-lock.json
 css-lint-report.xml
 ts-lint-report.xml
+.angular
 
 #System Files
 .DS_Store

@@ -12,7 +12,7 @@ describe('GenderComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [GenderComponent, ErrorsAlertComponent],
-      imports: [NgxsModule.forRoot([])]
+      imports: [NgxsModule.forRoot([], {developmentMode: true})]
     })
       .compileComponents();
   }));

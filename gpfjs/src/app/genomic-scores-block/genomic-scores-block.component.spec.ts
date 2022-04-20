@@ -62,7 +62,7 @@ describe('GenomicScoresBlockComponent', () => {
         NgbModule,
         FormsModule,
         MarkdownModule,
-        NgxsModule.forRoot([GenomicScoresBlockState]),
+        NgxsModule.forRoot([GenomicScoresBlockState], {developmentMode: true}),
       ],
       providers: [
         { provide: GenomicScoresBlockService, useClass: MockGenomicScoresBlockService },

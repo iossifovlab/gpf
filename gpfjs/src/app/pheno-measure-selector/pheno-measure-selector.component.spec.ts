@@ -32,7 +32,7 @@ describe('PhenoMeasureSelectorComponent', () => {
         UsersService,
         SearchableSelectComponent
       ],
-      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([])],
+      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();

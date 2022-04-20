@@ -40,7 +40,7 @@ describe('SavedQueriesComponent', () => {
       providers: [
         QueryService, ConfigService, UsersService, ResizeService, DatasetsService
       ],
-      imports: [RouterTestingModule, HttpClientTestingModule, NgbNavModule, NgxsModule.forRoot([])]
+      imports: [RouterTestingModule, HttpClientTestingModule, NgbNavModule, NgxsModule.forRoot([], {developmentMode: true})]
     })
     .compileComponents();
   }));

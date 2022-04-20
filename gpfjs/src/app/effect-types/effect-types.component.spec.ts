@@ -19,7 +19,7 @@ describe('EffectTypesComponent', () => {
         EffectTypesComponent,
         EffecttypesColumnComponent,
       ],
-      imports: [NgxsModule.forRoot([EffecttypesState])],
+      imports: [NgxsModule.forRoot([EffecttypesState], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();

@@ -16,7 +16,7 @@ describe('StudyTypesComponent', () => {
     TestBed.configureTestingModule({
       declarations: [StudyTypesComponent, ErrorsAlertComponent],
       providers: [],
-      imports: [ NgxsModule.forRoot([]) ],
+      imports: [ NgxsModule.forRoot([], {developmentMode: true}) ],
       schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();

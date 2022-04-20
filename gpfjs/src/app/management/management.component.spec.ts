@@ -15,7 +15,7 @@ describe('ManagementComponent', () => {
     TestBed.configureTestingModule({
       declarations: [ManagementComponent],
       providers: [UsersService, ConfigService],
-      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([])]
+      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
     })
     .compileComponents();
   }));
