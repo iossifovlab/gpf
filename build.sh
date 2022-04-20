@@ -287,7 +287,7 @@ EOT'
     build_run_container bash -c '
       cd /wd/; 
       wdae_files=$(find wdae/wdae -name "*.py")
-      pylint dae/dae $wdae_files > /wd/results/pylint_gpf_report || true'
+      pylint dae/dae $wdae_files -f parseable --reports=no > /wd/results/pylint_gpf_report || true'
 
     build_run_local cp ./results/pylint_gpf_report ./test-results/
   }
