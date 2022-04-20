@@ -146,7 +146,8 @@
           "never"
         ],
         "valid-typeof": "warn",
-        "yoda": "warn"
+        "yoda": "warn",
+        "object-shorthand": ["warn", "never"]
       }
     },
     {
