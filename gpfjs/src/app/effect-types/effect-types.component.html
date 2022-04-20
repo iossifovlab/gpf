@@ -2,27 +2,14 @@
   <div class="card-header card-title">Effect Types</div>
   <div class="card-block">
     <div class="btn-group btn-group-sm">
-      <button
-        (click)="selectButtonGroup('ALL')"
-        class="btn btn-default">All</button>
-      <button
-        (click)="selectButtonGroup('NONE')"
-        class="btn btn-default">None</button>
-      <button
-        (click)="selectButtonGroup('LGDS')"
-        class="btn btn-default">LGDs</button>
-      <button
-        (click)="selectButtonGroup('NONSYNONYMOUS')"
-        class="btn btn-default">Nonsynonymous</button>
-      <button
-        (click)="selectButtonGroup('CODING')"
-        class="btn btn-default">Coding</button>
-      <button
-        (click)="selectButtonGroup('UTRS')"
-        class="btn btn-default">UTRs</button>
+      <button (click)="selectButtonGroup('ALL')" class="btn btn-default">All</button>
+      <button (click)="selectButtonGroup('NONE')" class="btn btn-default">None</button>
+      <button (click)="selectButtonGroup('LGDS')" class="btn btn-default">LGDs</button>
+      <button (click)="selectButtonGroup('NONSYNONYMOUS')" class="btn btn-default">Nonsynonymous</button>
+      <button (click)="selectButtonGroup('CODING')" class="btn btn-default">Coding</button>
+      <button (click)="selectButtonGroup('UTRS')" class="btn btn-default">UTRs</button>
     </div>
     <div class="row">
-
       <gpf-effect-types-column
         [columnName]="'Coding'"
         [effectTypesLabels]="codingColumn"
@@ -32,20 +19,20 @@
       </gpf-effect-types-column>
 
       <div class="col-lg-4">
-      <gpf-effect-types-column
-        [columnName]="'Noncoding'"
-        [effectTypesLabels]="nonCodingColumn"
-        [effectTypes]="effectTypes"
-        (effectTypeEvent)="onEffectTypeChange($event)">
-      </gpf-effect-types-column>
+        <gpf-effect-types-column
+          [columnName]="'Noncoding'"
+          [effectTypesLabels]="nonCodingColumn"
+          [effectTypes]="effectTypes"
+          (effectTypeEvent)="onEffectTypeChange($event)">
+        </gpf-effect-types-column>
 
-      <gpf-effect-types-column
-        *ngIf="variantTypes && variantTypes.has('CNV')"
-        [columnName]="'CNV'"
-        [effectTypesLabels]="cnvColumn"
-        [effectTypes]="effectTypes"
-        (effectTypeEvent)="onEffectTypeChange($event)">
-      </gpf-effect-types-column>
+        <gpf-effect-types-column
+          *ngIf="variantTypes && variantTypes.has('CNV')"
+          [columnName]="'CNV'"
+          [effectTypesLabels]="cnvColumn"
+          [effectTypes]="effectTypes"
+          (effectTypeEvent)="onEffectTypeChange($event)">
+        </gpf-effect-types-column>
       </div>
     </div>
   </div>

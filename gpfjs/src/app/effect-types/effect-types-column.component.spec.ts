@@ -1,7 +1,5 @@
-/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-
 import { EffecttypesColumnComponent } from './effect-types-column.component';
 
 describe('EffecttypesColumnComponent', () => {
@@ -14,8 +12,7 @@ describe('EffecttypesColumnComponent', () => {
         EffecttypesColumnComponent,
       ],
       schemas: [NO_ERRORS_SCHEMA]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

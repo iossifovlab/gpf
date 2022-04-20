@@ -6,19 +6,19 @@ import { EffectTypes } from './effect-types';
   templateUrl: './effect-types-column.component.html'
 })
 export class EffecttypesColumnComponent {
-  @Input() effectTypes: EffectTypes;
-  @Input() columnName: string;
-  @Input() effectTypesLabels: Set<string>;
-  @Output('effectTypeEvent') effectTypeEvent = new EventEmitter<any>();
+  @Input() public effectTypes: EffectTypes;
+  @Input() public columnName: string;
+  @Input() public effectTypesLabels: Set<string>;
+  @Output() public effectTypeEvent = new EventEmitter<object>();
 
-  checkEffectType(effectType: string, value: any) {
+  public checkEffectType(effectType: string, value: boolean): void {
     if (!this.effectTypesLabels.has(effectType)) {
       return;
     }
 
     this.effectTypeEvent.emit({
-      'effectType': effectType,
-      'checked': value
+      effectType: effectType,
+      checked: value
     });
   }
 }

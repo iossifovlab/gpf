@@ -6,7 +6,7 @@
         #checkbox
         type="checkbox"
         [checked]="effectTypes.selected.has(effect)"
-        (change)="checkEffectType(effect, checkbox.checked); $event.stopPropagation()">
+        (change)="checkEffectType(effect, checkbox.checked); $event.stopPropagation()" />
       <span style="margin-left: 5px">{{ effect }}</span>
     </label>
   </div>
