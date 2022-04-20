@@ -71,7 +71,7 @@ class MockActivatedRoute {
 }
 
 class MockRouter {
-  createUrlTree(navigationExtras: any) {
+  createUrlTree(commands: any[], navigationExtras: any) {
     return `${navigationExtras.queryParams.instrument}/${navigationExtras.queryParams.search}`;
   }
 }
