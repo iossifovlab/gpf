@@ -9,9 +9,16 @@ td {
   vertical-align: middle;
 }
 
-th, td {
+th,
+td {
   text-align: left;
   padding: 12px;
+}
+
+.datasets-table th,
+.datasets-table tr,
+.datasets-table td {
+  border: 1px solid #dee2e6;
 }
 
 .gene-sets-table tr,
@@ -72,12 +79,6 @@ th, td {
 
 .compare-wrapper table {
   margin-right: 0;
-}
-
-.datasets-table th,
-.datasets-table tr,
-.datasets-table td {
-  border: 1px solid #dee2e6;
 }
 
 .compare-wrapper .datasets-table {

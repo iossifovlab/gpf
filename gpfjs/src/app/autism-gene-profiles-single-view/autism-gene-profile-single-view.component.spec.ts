@@ -16,11 +16,10 @@ describe('AutismGeneProfileSingleViewComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ AutismGeneProfileSingleViewComponent ],
+      declarations: [AutismGeneProfileSingleViewComponent],
       providers: [ConfigService, GeneWeightsService, DatasetsService, UsersService, QueryService],
       imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -167,14 +166,9 @@ describe('AutismGeneProfileSingleViewComponent', () => {
       .toEqual({id: 'effectTypeId8'} as any);
   });
 
-  it('should get histogram options', () => {
-    component['_histogramOptions'] = {option: 'fakeOption'} as any;
-    expect(component.histogramOptions).toEqual({option: 'fakeOption'} as any);
-  });
-
   it('should get browser url', () => {
     component.config = undefined;
-    let link = component.getGeneBrowserLink()
+    let link = component.getGeneBrowserLink();
     expect(link).toEqual(undefined);
 
     component.config = {defaultDataset: 'fakeDataset'} as any;
