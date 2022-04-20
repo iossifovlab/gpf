@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
@@ -14,8 +13,7 @@ describe('RegionsBlockComponent', () => {
     TestBed.configureTestingModule({
       declarations: [RegionsBlockComponent],
       imports: [NgbModule, RouterTestingModule, NgxsModule.forRoot([RegionsFilterState], {developmentMode: true})],
-    })
-      .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

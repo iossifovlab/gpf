@@ -9,31 +9,30 @@ import { UsersService } from '../users/users.service';
   styleUrls: ['./reset-password.component.css']
 })
 export class ResetPasswordComponent implements AfterViewInit {
-  @ViewChild('content') content;
-  password: string;
-  confirmPassword: string;
-  verifPath: string;
+  @ViewChild('content') public content;
+  public password: string;
+  public confirmPassword: string;
+  private verifPath: string;
 
-  resetPasswordError = '';
-  verifPathValid = false;
+  public resetPasswordError = '';
+  public verifPathValid = false;
 
-  constructor(
+  public constructor(
     private router: Router,
     private usersService: UsersService,
     private route: ActivatedRoute,
     private config: ConfigService,
   ) { }
 
-  ngAfterViewInit() {
+  public ngAfterViewInit(): void {
     this.verifPath = this.route.snapshot.params['validateString'];
-    this.usersService.checkVerification(this.verifPath).subscribe(
-      (res) => {
-        if (res) {
-          this.verifPathValid = true;
-        } else {
-          this.verifPathValid = false;
-          this.resetPasswordError = 'Invalid verification URL';
-        }
+    this.usersService.checkVerification(this.verifPath).subscribe((res) => {
+      if (res) {
+        this.verifPathValid = true;
+      } else {
+        this.verifPathValid = false;
+        this.resetPasswordError = 'Invalid verification URL';
+      }
     });
   }
 
@@ -41,7 +40,7 @@ export class ResetPasswordComponent implements AfterViewInit {
     return !pass || !/[^\s]+/.test(pass);
   }
 
-  resetPassword() {
+  public resetPassword(): void {
     if (this.isEmptyPass(this.password) || this.isEmptyPass(this.confirmPassword)) {
       this.resetPasswordError = 'Password field is empty';
       return;

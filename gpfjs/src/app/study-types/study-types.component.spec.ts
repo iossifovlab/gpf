@@ -1,8 +1,6 @@
-/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { StudyTypesComponent } from './study-types.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
-// eslint-disable-next-line no-restricted-imports
 import { of } from 'rxjs';
 import { NgxsModule } from '@ngxs/store';
 import { SetStudyTypes } from './study-types.state';
@@ -16,10 +14,9 @@ describe('StudyTypesComponent', () => {
     TestBed.configureTestingModule({
       declarations: [StudyTypesComponent, ErrorsAlertComponent],
       providers: [],
-      imports: [ NgxsModule.forRoot([], {developmentMode: true}) ],
+      imports: [NgxsModule.forRoot([], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

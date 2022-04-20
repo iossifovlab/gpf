@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-
 import { SortingButtonsComponent } from './sorting-buttons.component';
 
 describe('SortingButtonsComponent', () => {
@@ -8,9 +7,8 @@ describe('SortingButtonsComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ SortingButtonsComponent ]
-    })
-    .compileComponents();
+      declarations: [SortingButtonsComponent]
+    }).compileComponents();
   }));
 
   beforeEach(() => {

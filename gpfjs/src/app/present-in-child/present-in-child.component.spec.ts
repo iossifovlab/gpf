@@ -13,12 +13,11 @@ describe('PresentInChildComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ PresentInChildComponent ],
+      declarations: [PresentInChildComponent],
       providers: [],
       imports: [NgxsModule.forRoot([], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -45,7 +44,7 @@ describe('PresentInChildComponent', () => {
 
   it('should update present in child', () => {
     component.selectedValues = undefined;
-    component['store'] = { dispatch(set) {} } as any;
+    component['store'] = { dispatch() {} } as any;
     const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     const mockSet = new Set(['value1', 'value2', 'value3']);
 

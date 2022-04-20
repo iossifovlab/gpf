@@ -1,12 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { PhenoBrowserService } from './pheno-browser.service';
-import { PhenoInstruments, PhenoMeasures, PhenoMeasure } from './pheno-browser';
+import { PhenoInstruments, PhenoMeasure } from './pheno-browser';
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie-service';
-// eslint-disable-next-line no-restricted-imports
-import { Observable, of } from 'rxjs';
+import { of } from 'rxjs';
 import { fakeJsonMeasure } from './pheno-browser.spec';
-
 import { HttpClient } from '@angular/common/http';
 
 describe('pheno browser service', () => {
@@ -15,15 +13,15 @@ describe('pheno browser service', () => {
 
   beforeEach(() => {
     const cookieSpyObj = {
-      'get': jest.fn()
+      get: jest.fn()
     };
-    const configMock = { 'baseUrl': 'http://testUrl/' };
+    const configMock = { baseUrl: 'http://testUrl/' };
     const httpSpyObj = {
-      'get': jest.fn()
+      get: jest.fn()
     };
 
     TestBed.configureTestingModule({
-      'providers': [
+      providers: [
         PhenoBrowserService,
         { provide: CookieService, useValue: cookieSpyObj },
         { provide: ConfigService, useValue: configMock },

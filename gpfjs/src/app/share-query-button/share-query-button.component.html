@@ -1,7 +1,10 @@
 <div ngbDropdown class="d-inline-block" autoClose="outside" placement="top" (openChange)="saveIfOpened($event)">
-  <button id="share-query-dropdown-button" class="btn btn-default" [disabled]="disabled" ngbDropdownToggle>
-    Share query
-  </button>
+  <button
+    id="share-query-dropdown-button"
+    class="btn btn-default"
+    [disabled]="disabled"
+    ngbDropdownToggle>Share query</button
+  >
   <div id="share-query-dropdown" ngbDropdownMenu aria-labelledby="share-query-dropdown-button">
     <div *ngIf="url">
       <div class="input-group" style="flex-wrap: nowrap">

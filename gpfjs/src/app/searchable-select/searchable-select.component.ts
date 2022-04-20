@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter, ViewChild, ContentChild, AfterViewInit, OnChanges, ElementRef } from '@angular/core';
+import {
+  Component, Input, Output, EventEmitter, ViewChild, ContentChild, AfterViewInit, OnChanges, ElementRef, NgZone
+} from '@angular/core';
 import { SearchableSelectTemplateDirective } from './searchable-select-template.directive';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
-import { NgZone } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
@@ -13,21 +14,21 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
   @Input() public caption: string;
   @Input() public isInGeneBrowser = false;
   @Input() private hideDropdown: boolean;
-  @Output() private search  = new EventEmitter();
-  @Output() private selectItem  = new EventEmitter();
-  @Output() public onFocusEvent = new EventEmitter();
+  @Output() private search = new EventEmitter();
+  @Output() private selectItem = new EventEmitter();
+  @Output() public focusEvent = new EventEmitter();
   @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
   @ViewChild('searchBox') private searchBox: ElementRef;
   @ContentChild(SearchableSelectTemplateDirective) public template: SearchableSelectTemplateDirective;
 
-  public onEnterPress() {
+  public onEnterPress(): void {
     if (this.isInGeneBrowser) {
       this.onSelect(this.searchBox.nativeElement.value);
       this.dropdown.close();
     }
   }
 
-  constructor(
+  public constructor(
     private ngZone: NgZone,
     private route: ActivatedRoute,
   ) {}
@@ -47,11 +48,11 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
     this.dropdown.autoClose = 'inside';
   }
 
-  public searchBoxChange(searchFieldValue) {
+  public searchBoxChange(searchFieldValue): void {
     this.search.emit(searchFieldValue);
   }
 
-  public onFocus(event) {
+  public onFocus(event): void {
     this.searchBoxChange('');
     event.stopPropagation();
 
@@ -64,17 +65,13 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
       this.searchBox.nativeElement.focus();
     });
     this.onSelect(null);
-    this.onFocusEvent.emit();
+    this.focusEvent.emit();
   }
 
-  public onSelect(value) {
+  public onSelect(value): void {
     this.selectItem.emit(value);
   }
 
-  /**
-  * Waits search box element to load.
-  * @returns promise
-  */
   private async waitForSearchBoxToLoad(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
@@ -86,7 +83,7 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
     });
   }
 
-  private focusSearchBox() {
+  private focusSearchBox(): void {
     this.waitForSearchBoxToLoad().then(() => {
       this.searchBox.nativeElement.focus();
     });

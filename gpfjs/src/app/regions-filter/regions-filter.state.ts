@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { State, Action, StateContext } from '@ngxs/store';
 
 export class SetRegionsFilter {
-  static readonly type = '[Genotype] Set regions filter';
-  constructor(public regionsFilters: string[]) {}
+  public static readonly type = '[Genotype] Set regions filter';
+  public constructor(public regionsFilters: string[]) {}
 }
 
 export interface RegionsFilterModel {
@@ -19,9 +19,9 @@ export interface RegionsFilterModel {
 @Injectable()
 export class RegionsFilterState {
   @Action(SetRegionsFilter)
-  addEffectType(ctx: StateContext<RegionsFilterModel>, action: SetRegionsFilter) {
+  public addEffectType(ctx: StateContext<RegionsFilterModel>, action: SetRegionsFilter): void {
     ctx.patchState({
-        regionsFilters: action.regionsFilters
+      regionsFilters: action.regionsFilters
     });
   }
 }

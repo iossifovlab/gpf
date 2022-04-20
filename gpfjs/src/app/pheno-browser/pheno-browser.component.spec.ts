@@ -16,13 +16,12 @@ import { PhenoBrowserTableComponent } from '../pheno-browser-table/pheno-browser
 import { GpfTableColumnComponent } from '../table/component/column.component';
 import { GpfTableContentHeaderComponent } from '../table/component/header.component';
 import { GpfTableContentComponent } from '../table/component/content.component';
-import { GpfTableCellContentDirective  } from '../table/component/content.directive';
+import { GpfTableCellContentDirective } from '../table/component/content.directive';
 import { GpfTableSubcontentComponent } from '../table/component/subcontent.component';
 import { GpfTableSubheaderComponent } from '../table/component/subheader.component';
 import { NumberWithExpPipe } from '../utils/number-with-exp.pipe';
 import { PValueIntensityPipe } from '../utils/p-value-intensity.pipe';
-import { ActivatedRoute, Router, Event, UrlTree } from '@angular/router';
-import { RouterTestingModule } from '@angular/router/testing';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { Observable, of } from 'rxjs';
 import { ResizeService } from '../table/resize.service';
@@ -35,16 +34,16 @@ fakeJsonMeasurei1.measure_name = 'test_measure';
 fakeJsonMeasurei1.regressions[0].measure_id = 'i1.test_measure';
 
 class MockPhenoBrowserService {
-  getInstruments(datasetId: string): Observable<PhenoInstruments> {
+  getInstruments(): Observable<PhenoInstruments> {
     return of(new PhenoInstruments('i1', ['i1', 'i2', 'i3']));
   }
 
-  getMeasures(datasetId: string, instrument: PhenoInstrument, search: string): Observable<PhenoMeasure> {
+  getMeasures(): Observable<PhenoMeasure> {
     let measures = PhenoMeasure.fromJson(fakeJsonMeasurei1);
     return of(measures);
   }
 
-  getMeasuresInfo(datasetId: string): Observable<PhenoMeasures> {
+  getMeasuresInfo(): Observable<PhenoMeasures> {
     let measuresInfo = PhenoMeasures.fromJson({'base_image_url': 'base', 'has_descriptions': true, 'regression_names': {'age': 'age'}});
     return of(measuresInfo);
   }
@@ -72,7 +71,7 @@ class MockActivatedRoute {
 }
 
 class MockRouter {
-  createUrlTree(commands: any[], navigationExtras: any) {
+  createUrlTree(navigationExtras: any) {
     return `${navigationExtras.queryParams.instrument}/${navigationExtras.queryParams.search}`;
   }
 }
@@ -103,21 +102,21 @@ describe('PhenoBrowserComponent', () => {
     'addResizeEventListener': jest.fn()
   };
 
-  beforeEach(waitForAsync(() => { 
+  beforeEach(waitForAsync(() => {
     locationSpy = {
       'replaceState': jest.fn()
     };
 
     TestBed.configureTestingModule({
-      imports: [ FormsModule, NgbModule ],
-      declarations: [ GpfTableHeaderComponent, GpfTableHeaderCellComponent, 
-        GpfTableComponent, GpfTableCellComponent, 
-        GpfTableEmptyCellComponent, PhenoBrowserTableComponent, 
-        GpfTableColumnComponent, GpfTableContentComponent, 
+      imports: [FormsModule, NgbModule],
+      declarations: [GpfTableHeaderComponent, GpfTableHeaderCellComponent,
+        GpfTableComponent, GpfTableCellComponent,
+        GpfTableEmptyCellComponent, PhenoBrowserTableComponent,
+        GpfTableColumnComponent, GpfTableContentComponent,
         GpfTableContentHeaderComponent, GpfTableSubcontentComponent,
         GpfTableSubheaderComponent, NumberWithExpPipe,
         PValueIntensityPipe, GpfTableCellContentDirective,
-        PhenoBrowserComponent ],
+        PhenoBrowserComponent],
       providers: [
         PhenoBrowserComponent,
         { provide: DatasetsService, useValue: datasetServiceMock },
@@ -128,8 +127,7 @@ describe('PhenoBrowserComponent', () => {
         { provide: PValueIntensityPipe, useClass: PValueIntensityPipe },
         { provide: ResizeService, useValue: resizeSpy },
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     router = TestBed.inject(Router);
     location = TestBed.inject(Location);

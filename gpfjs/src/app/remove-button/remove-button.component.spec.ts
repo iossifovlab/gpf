@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-
 import { RemoveButtonComponent } from './remove-button.component';
 
 describe('RemoveButtonComponent', () => {
@@ -8,9 +7,8 @@ describe('RemoveButtonComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ RemoveButtonComponent ]
-    })
-    .compileComponents();
+      declarations: [RemoveButtonComponent]
+    }).compileComponents();
   }));
 
   beforeEach(() => {

@@ -1,13 +1,9 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router, Params } from '@angular/router';
 import { Location } from '@angular/common';
-
-// eslint-disable-next-line no-restricted-imports
 import { Observable, BehaviorSubject, ReplaySubject, combineLatest, of } from 'rxjs';
-
 import { PhenoBrowserService } from './pheno-browser.service';
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure } from './pheno-browser';
-
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from '../datasets/datasets.service';
 import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } from 'rxjs/operators';
@@ -35,7 +31,7 @@ export class PhenoBrowserComponent implements OnInit {
 
   public imgPathPrefix = environment.imgPathPrefix;
 
-  constructor(
+  public constructor(
     private route: ActivatedRoute,
     private router: Router,
     private phenoBrowserService: PhenoBrowserService,
@@ -43,7 +39,7 @@ export class PhenoBrowserComponent implements OnInit {
     private datasetsService: DatasetsService,
   ) { }
 
-  public ngOnInit() {
+  public ngOnInit(): void {
     const datasetId$ = this.route.parent.params.pipe(
       take(1),
       map(params => <string>params['dataset'])
@@ -61,7 +57,7 @@ export class PhenoBrowserComponent implements OnInit {
     this.focusSearchBox();
   }
 
-  private initMeasuresToShow(datasetId: string) {
+  private initMeasuresToShow(datasetId: string): void {
     const searchTermObs$ = this.input$.pipe(
       map((searchTerm: string) => searchTerm.trim()),
       debounceTime(300),
@@ -78,16 +74,19 @@ export class PhenoBrowserComponent implements OnInit {
         if (searchTerm) {
           queryParamsObject.search = searchTerm;
         }
-        const url = this.router.createUrlTree(['.'], { /* Removed unsupported properties by Angular migration: replaceUrl. */ relativeTo: this.route,
-      queryParams: queryParamsObject }).toString();
+        const url = this.router.createUrlTree(['.'], {
+          /* Removed unsupported properties by Angular migration: replaceUrl. */
+          relativeTo: this.route,
+          queryParams: queryParamsObject
+        }).toString();
         this.location.replaceState(url);
       }),
       switchMap(([searchTerm, newSelection]) => {
         this.measuresToShow = null;
         return combineLatest([
-            of(searchTerm),
-            of(newSelection),
-            this.phenoBrowserService.getMeasuresInfo(datasetId)
+          of(searchTerm),
+          of(newSelection),
+          this.phenoBrowserService.getMeasuresInfo(datasetId)
         ]);
       }),
       switchMap(([searchTerm, newSelection, measuresInfo]) => {
@@ -95,17 +94,17 @@ export class PhenoBrowserComponent implements OnInit {
         return this.phenoBrowserService.getMeasures(datasetId, newSelection, searchTerm);
       }),
       map((measure: PhenoMeasure) => {
-          if(this.measuresToShow === null) {
-            return null;
-          }
-          this.measuresToShow._addMeasure(measure)
-          return this.measuresToShow;
+        if (this.measuresToShow === null) {
+          return null;
+        }
+        this.measuresToShow._addMeasure(measure);
+        return this.measuresToShow;
       }),
       share()
     );
 
     this.route.queryParamMap.pipe(
-      map(params => [params.get('instrument') || '',  params.get('search') || '']),
+      map(params => [params.get('instrument') || '', params.get('search') || '']),
       take(1)
     ).subscribe(([instrument, queryTerm]) => {
       this.search(queryTerm);
@@ -117,11 +116,11 @@ export class PhenoBrowserComponent implements OnInit {
     this.instruments = this.phenoBrowserService.getInstruments(datasetId);
   }
 
-  public emitInstrument(instrument: PhenoInstrument) {
+  public emitInstrument(instrument: PhenoInstrument): void {
     this.selectedInstrument$.next(instrument);
   }
 
-  private initDownloadLink(datasetId: string) {
+  private initDownloadLink(datasetId: string): void {
     this.downloadLink$ = this.selectedInstrument$.pipe(
       map(instrument =>
         this.phenoBrowserService.getDownloadLink(instrument, datasetId)
@@ -129,14 +128,10 @@ export class PhenoBrowserComponent implements OnInit {
     );
   }
 
-  public search(value: string) {
+  public search(value: string): void {
     this.input$.next(value);
   }
 
-  /**
-  * Waits search box element to load.
-  * @returns promise
-  */
   private async waitForSearchBoxToLoad(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {

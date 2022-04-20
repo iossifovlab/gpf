@@ -6,13 +6,13 @@ import { Component, Output, EventEmitter, Input } from '@angular/core';
   styleUrls: ['./small-remove-button.component.css']
 })
 export class SmallRemoveButtonComponent {
-  @Input() hide = false;
-  @Input() message = '';
-  @Input() confirmText = 'Remove';
-  @Input() title = 'Remove';
-  @Output() clicked = new EventEmitter(true);
+  @Input() public hide = false;
+  @Input() public message = '';
+  @Input() public confirmText = 'Remove';
+  @Input() public title = 'Remove';
+  @Output() public clicked = new EventEmitter(true);
 
-  onClick(event: any) {
+  public onClick(event: any): void {
     this.clicked.next(event);
   }
 }

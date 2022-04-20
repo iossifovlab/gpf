@@ -1,23 +1,19 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 // eslint-disable-next-line no-restricted-imports
 import { Observable, Subject } from 'rxjs';
-
 const oboe = require('oboe');
-
 import { environment } from 'environments/environment';
 import { ConfigService } from '../config/config.service';
 import { GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
 import { SummaryAllelesArray } from '../gene-browser/summary-variants';
-import { DatasetsService } from 'app/datasets/datasets.service';
 import { map } from 'rxjs/operators';
 import { Dataset } from 'app/datasets/datasets';
 
 @Injectable()
 export class QueryService {
-  private readonly genotypeBrowserConfigUrl = 'genotype_browser/config';
   private readonly genotypePreviewVariantsUrl = 'genotype_browser/query';
   private readonly geneViewVariants = 'gene_view/query_summary_variants';
   private readonly saveQueryEndpoint = 'query_state/save';
@@ -35,7 +31,7 @@ export class QueryService {
   public streamingFinishedSubject = new Subject();
   public summaryStreamingFinishedSubject = new Subject();
 
-  constructor(
+  public constructor(
     private location: Location,
     private router: Router,
     private http: HttpClient,
@@ -70,7 +66,7 @@ export class QueryService {
     return this.streamingSubject;
   }
 
-  public summaryStreamPost(url: string, filter) {
+  public summaryStreamPost(url: string, filter): Subject<unknown> {
     if (this.summaryOboeInstance) {
       this.summaryOboeInstance.abort();
       this.summaryOboeInstance = null;
@@ -84,7 +80,7 @@ export class QueryService {
       withCredentials: true
     }).node('!.*', data => {
       this.summaryStreamingSubject.next(data);
-    }).done(data => {
+    }).done(() => {
       this.summaryStreamingFinishedSubject.next(true);
       this.summaryStreamingSubject.next(null);
     }).fail(error => {
@@ -97,7 +93,7 @@ export class QueryService {
     return this.summaryStreamingSubject;
   }
 
-  getGenotypePreviewVariantsByFilter(
+  public getGenotypePreviewVariantsByFilter(
     dataset: Dataset, filter, maxVariantsCount: number = 1001
   ): GenotypePreviewVariantsArray {
     const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
@@ -122,7 +118,7 @@ export class QueryService {
     return genotypePreviewVariantsArray;
   }
 
-  getSummaryVariants(filter) {
+  public getSummaryVariants(filter): SummaryAllelesArray {
     const summaryVariantsArray = new SummaryAllelesArray();
     this.summaryStreamPost(this.geneViewVariants, filter).subscribe((variant: string[]) => {
       summaryVariantsArray.addSummaryRow(variant);
@@ -130,7 +126,7 @@ export class QueryService {
     return summaryVariantsArray;
   }
 
-  saveQuery(queryData: {}, page: string) {
+  public saveQuery(queryData: {}, page: string): Observable<object> {
     const options = { headers: this.headers };
 
     queryData = {...queryData};
@@ -146,7 +142,7 @@ export class QueryService {
       .pipe(map(response => response));
   }
 
-  loadQuery(uuid: string) {
+  public loadQuery(uuid: string): Observable<object> {
     const options = { headers: this.headers, withCredentials: true };
 
     return this.http
@@ -154,7 +150,7 @@ export class QueryService {
       .pipe(map(response => response));
   }
 
-  deleteQuery(uuid: string) {
+  public deleteQuery(uuid: string): Observable<object> {
     const options = { headers: this.headers, withCredentials: true };
 
     return this.http
@@ -162,19 +158,18 @@ export class QueryService {
       .pipe(map(response => response));
   }
 
-  getLoadUrl(uuid: string) {
-    let pathname = this.router.createUrlTree(
-      ['load-query', uuid]).toString();
+  public getLoadUrl(uuid: string): string {
+    let pathname = this.router.createUrlTree(['load-query', uuid]).toString();
     pathname = this.location.prepareExternalUrl(pathname);
 
     return window.location.origin + pathname;
   }
 
-  getLoadUrlFromResponse(response: {}) {
+  public getLoadUrlFromResponse(response: {}): string {
     return this.getLoadUrl(response['uuid']);
   }
 
-  saveUserQuery(uuid: string, query_name: string, query_description: string) {
+  public saveUserQuery(uuid: string, query_name: string, query_description: string): Observable<object> {
     const options = { headers: this.headers, withCredentials: true };
 
     const data = {
@@ -188,7 +183,7 @@ export class QueryService {
       .pipe(map(response => response));
   }
 
-  collectUserSavedQueries() {
+  public collectUserSavedQueries(): Observable<object> {
     const options = { withCredentials: true };
     return this.http
       .get(this.config.baseUrl + this.userCollectQueriesEndpoint, options)

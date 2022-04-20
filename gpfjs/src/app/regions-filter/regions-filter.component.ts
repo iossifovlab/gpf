@@ -10,15 +10,14 @@ import { StatefulComponent } from 'app/common/stateful-component';
   templateUrl: './regions-filter.component.html',
 })
 export class RegionsFilterComponent extends StatefulComponent implements OnInit {
-  @ValidateNested()
-  regionsFilter = new RegionsFilter();
+  @ValidateNested() public regionsFilter = new RegionsFilter();
   @ViewChild('textArea') private textArea: ElementRef;
 
-  constructor(protected store: Store) {
+  public constructor(protected store: Store) {
     super(store, RegionsFilterState, 'regionsFilter');
   }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     super.ngOnInit();
     this.focusTextInputArea();
     this.store.selectOnce(state => state.regionsFiltersState).subscribe(state => {
@@ -26,7 +25,7 @@ export class RegionsFilterComponent extends StatefulComponent implements OnInit 
     });
   }
 
-  setRegionsFilter(regionsFilter: string) {
+  public setRegionsFilter(regionsFilter: string): void {
     const result = regionsFilter
       .split(/[\s]/)
       .map(s => s.replace(/[,]/g, ''))
@@ -35,11 +34,7 @@ export class RegionsFilterComponent extends StatefulComponent implements OnInit 
     this.store.dispatch(new SetRegionsFilter(result));
   }
 
-  /**
-  * Waits text input area element to load.
-  * @returns promise
-  */
-   private async waitForTextInputAreaToLoad(): Promise<void> {
+  private async waitForTextInputAreaToLoad(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
         if (this.textArea !== undefined) {
@@ -50,7 +45,7 @@ export class RegionsFilterComponent extends StatefulComponent implements OnInit 
     });
   }
 
-  private focusTextInputArea() {
+  private focusTextInputArea(): void {
     this.waitForTextInputAreaToLoad().then(() => {
       this.textArea.nativeElement.focus();
     });

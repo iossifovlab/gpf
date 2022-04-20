@@ -1,18 +1,20 @@
 <div class="input-group mr-3">
   <div ngbDropdown role="group" style="width: 100%" placement="bottom-right" class="input-group-append">
-    <input style="width: 100%"
+    <input
+      style="width: 100%"
       [hidden]="caption"
       #searchBox
       id="search-box"
       autocomplete="off"
       (keyup)="searchBoxChange(searchBox.value)"
       placeholder="Select or start typing to search"
-      (click)="searchBox.value=''; onFocus($event)"
+      (click)="searchBox.value = ''; onFocus($event)"
       (keydown.enter)="onEnterPress()"
-      spellcheck="false"
-    />
-    <span style="width: 100%"
-      [hidden]="!caption" id="selected-value"
+      spellcheck="false" />
+    <span
+      style="width: 100%"
+      [hidden]="!caption"
+      id="selected-value"
       class="clickable"
       (click)="searchBox.value = ''; onFocus($event)">
       <span>{{ caption }}</span>
@@ -21,7 +23,8 @@
       <span class="caret"></span>
     </button>
     <div ngbDropdownMenu style="width: 100%; overflow-x: hidden; max-height: 300px; overflow-y: scroll; z-index: 150">
-      <button *ngFor="let element of data"
+      <button
+        *ngFor="let element of data"
         class="dropdown-item"
         type="button"
         style="cursor: pointer; padding: 8px"
@@ -29,7 +32,7 @@
         <ng-template
           *ngIf="template?.templateRef"
           [ngTemplateOutlet]="template.templateRef"
-          [ngTemplateOutletContext]="{$implicit: element}">
+          [ngTemplateOutletContext]="{ $implicit: element }">
         </ng-template>
       </button>
     </div>

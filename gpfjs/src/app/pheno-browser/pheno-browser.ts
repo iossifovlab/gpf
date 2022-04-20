@@ -8,7 +8,6 @@ function addBaseUrlIfNotNull(currentPath: string, bp: string): string {
 };
 
 export class PhenoRegression {
-
   regressionId: string;
   measureId: string;
   figureRegression: string;
@@ -32,7 +31,6 @@ export class PhenoRegression {
 }
 
 export class PhenoRegressions {
-
   static emptyRegression = new PhenoRegression({
     'figure_regression': null,
     'figure_regression_small': null,
@@ -40,7 +38,7 @@ export class PhenoRegressions {
     'pvalue_regression_female': null
   });
 
-  constructor(regArr: Object[]) {
+  public constructor(regArr: Object[]) {
     for (let i = 0; i < regArr.length; i++) {
       this[regArr[i]['regression_id']] = new PhenoRegression(regArr[i]);
     }
@@ -65,7 +63,7 @@ export type PhenoInstrument = string;
 
 export class PhenoInstruments {
   readonly default: PhenoInstrument;
-  constructor(
+  public constructor(
     default_: PhenoInstrument, // `readonly default: string` makes TypeScript upset :(
     readonly instruments: Array<PhenoInstrument>
   ) {
@@ -117,7 +115,7 @@ export class PhenoMeasure {
     return newMeasure
   }
 
-  constructor(
+  public constructor(
     readonly index: number,
     readonly instrumentName: string,
     readonly valuesDomain: string,
@@ -137,7 +135,6 @@ export class PhenoMeasure {
 }
 
 export class PhenoMeasures {
-
   public _addMeasure(measure: PhenoMeasure) {
     let basePath: string;;
     if (measure.base_url) {
@@ -184,11 +181,10 @@ export class PhenoMeasures {
     return measures;
   }
 
-  constructor(
+  public constructor(
     readonly baseImageUrl: string,
     readonly measures: Array<PhenoMeasure>,
     readonly hasDescriptions: boolean,
     readonly regressionNames: object
   ) { }
-
 }

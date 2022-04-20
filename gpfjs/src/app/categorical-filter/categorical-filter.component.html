@@ -4,7 +4,7 @@
     <select class="form-control" [(ngModel)]="selectedValue" required>
       <option *ngFor="let value of valuesDomain" [ngValue]="value">{{ value }}</option>
     </select>
-    <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"> </span>
+    <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
   </div>
   <span class="input-group-btn">
     <button class="btn btn-secondary" (click)="clear()">&times;</button>

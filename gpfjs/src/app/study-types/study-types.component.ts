@@ -10,14 +10,13 @@ import { StatefulComponent } from 'app/common/stateful-component';
   templateUrl: './study-types.component.html',
 })
 export class StudyTypesComponent extends StatefulComponent implements OnInit {
-
-  studyTypes: Set<string> = new Set(['we', 'wg', 'tg']);
-  studyTypesDisplayNames: Map<string, string>;
+  public studyTypes: Set<string> = new Set(['we', 'wg', 'tg']);
+  public studyTypesDisplayNames: Map<string, string>;
 
   @Validate(SetNotEmpty, {message: 'Select at least one.'})
-  selectedValues: Set<string> = new Set([]);
+  public selectedValues: Set<string> = new Set([]);
 
-  constructor(protected store: Store) {
+  public constructor(protected store: Store) {
     super(store, StudyTypesState, 'studyTypes');
     this.studyTypesDisplayNames = new Map();
     this.studyTypesDisplayNames.set('we', 'Whole exome');
@@ -25,7 +24,7 @@ export class StudyTypesComponent extends StatefulComponent implements OnInit {
     this.studyTypesDisplayNames.set('wg', 'Whole genome');
   }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     super.ngOnInit();
     this.store.selectOnce(state => state.studyTypesState).subscribe(state => {
       // restore state
@@ -35,7 +34,7 @@ export class StudyTypesComponent extends StatefulComponent implements OnInit {
     });
   }
 
-  updateStudyTypes(newValues: Set<string>): void {
+  public updateStudyTypes(newValues: Set<string>): void {
     this.selectedValues = newValues;
     this.store.dispatch(new SetStudyTypes(newValues));
   }

@@ -7,13 +7,13 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
   styleUrls: ['./popup.component.css']
 })
 export class PopupComponent {
+  @Input() public data;
 
-  @Input() data;
+  public constructor(
+    public activeModal: NgbActiveModal
+  ) {}
 
-  constructor(
-    public activeModal: NgbActiveModal) {}
-
-  closeModal() {
+  public closeModal(): void {
     this.activeModal.close();
   }
 }

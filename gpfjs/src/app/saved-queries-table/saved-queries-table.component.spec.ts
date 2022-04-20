@@ -39,8 +39,7 @@ describe('SavedQueriesTableComponent', () => {
         QueryService, ConfigService, ResizeService, DatasetsService, UsersService
       ],
       imports: [RouterTestingModule, HttpClientTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

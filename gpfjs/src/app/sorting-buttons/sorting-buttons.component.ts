@@ -17,10 +17,10 @@ export class SortingButtonsComponent {
     this.sortEvent.emit({ id: this.id, order: order });
   }
 
-  public emitSort() {
-    this.hideState = (this.hideState === 1 ? -1 : 1);
+  public emitSort(): void {
+    this.hideState = this.hideState === 1 ? -1 : 1;
     this.sortEvent.emit({id: this.id, order: this.order});
-    this.order = (this.order === 'desc' ? 'asc' : 'desc');
+    this.order = this.order === 'desc' ? 'asc' : 'desc';
   }
 
   public resetHideState(): void {

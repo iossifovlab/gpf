@@ -10,7 +10,7 @@
             </div>
 
             <div class="col-4">
-              <div class="search-input-wrapper" style="margin-bottom: 6px;">
+              <div class="search-input-wrapper" style="margin-bottom: 6px">
                 <input
                   placeholder="Search"
                   [ngModel]="input$ | async"
@@ -21,7 +21,7 @@
                   type="text"
                   autocomplete="off"
                   spellcheck="false" />
-                <span 
+                <span
                   class="search-clear-icon"
                   [style.background-image]="'url(' + imgPathPrefix + 'search-clear-icon.png)'"
                   *ngIf="searchBox.value !== ''"
@@ -29,13 +29,14 @@
                 </span>
               </div>
               <div class="select-wrapper">
-                <select class="form-control" [ngModel]="selectedInstrument$ | async" (ngModelChange)="emitInstrument($event)">
+                <select
+                  class="form-control"
+                  [ngModel]="selectedInstrument$ | async"
+                  (ngModelChange)="emitInstrument($event)">
                   <option value="">All instruments</option>
                   <option *ngFor="let instrument of (instruments | async)?.instruments" [ngValue]="instrument">{{ instrument }}</option>
                 </select>
-                <span
-                  class="select-dropdown-icon"
-                  [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'">
+                <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'">
                 </span>
               </div>
               <a download [href]="downloadLink$ | async">Download instruments</a>
@@ -47,6 +48,6 @@
   </div>
 </div>
 
-<div *ngIf="(measuresToShow$ | async) as measuresToShow" class="col-lg-12">
+<div *ngIf="measuresToShow$ | async as measuresToShow" class="col-lg-12">
   <gpf-pheno-browser-table [measures]="measuresToShow"></gpf-pheno-browser-table>
 </div>

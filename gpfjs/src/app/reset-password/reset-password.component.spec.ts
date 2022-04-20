@@ -4,7 +4,6 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { UsersService } from 'app/users/users.service';
-
 import { ResetPasswordComponent } from './reset-password.component';
 
 describe('ResetPasswordComponent', () => {
@@ -16,8 +15,7 @@ describe('ResetPasswordComponent', () => {
       declarations: [ResetPasswordComponent],
       providers: [UsersService, ConfigService],
       imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
