@@ -13,16 +13,16 @@ import { filter, map, switchMap, take } from 'rxjs/operators';
 export class DatasetDescriptionComponent implements OnInit {
   public dataset$: Observable<Dataset>;
 
-  constructor(
+  public constructor(
     private route: ActivatedRoute,
     private router: Router,
     private datasetsService: DatasetsService,
   ) { }
 
-  public ngOnInit() {
+  public ngOnInit(): void {
     this.dataset$ = this.route.parent.params.pipe(
-      map((params: Params) => params['dataset']),
-      filter(datasetId => !!datasetId),
+      map((params: Params) => params['dataset'] as string),
+      filter(datasetId => Boolean(datasetId)),
       switchMap(datasetId => this.datasetsService.getDataset(datasetId))
     );
 
