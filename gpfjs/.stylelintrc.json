@@ -1,4 +1,7 @@
 {
     "extends": "stylelint-config-standard",
-    "defaultSeverity": "warning"
+    "defaultSeverity": "warning",
+    "rules": {
+        "alpha-value-notation": "percentage"
+    }
 }
