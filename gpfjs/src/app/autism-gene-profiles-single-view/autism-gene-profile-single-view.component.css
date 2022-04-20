@@ -9,8 +9,7 @@ td {
   vertical-align: middle;
 }
 
-th,
-td {
+th, td {
   text-align: left;
   padding: 12px;
 }
@@ -23,6 +22,7 @@ td {
 }
 
 .link-external-page {
+  text-decoration: underline;
   padding-right: 25px;
 }
 
@@ -44,6 +44,7 @@ td {
 
 .link-genotype-browser,
 .link-genotype-browser:hover {
+  color: #2372c6;
   cursor: pointer;
   padding: 15px;
 }

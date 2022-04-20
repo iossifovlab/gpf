@@ -62,6 +62,7 @@
 }
 
 #logo {
+  min-height: 58px;
   z-index: 199;
   position: relative;
   background-color: white;
@@ -96,9 +97,7 @@
 }
 
 .navbar-button .navbar-toggler {
-  padding: 0.25rem 0.55rem;
-  outline: none;
-  box-shadow: none;
+  padding: .25rem .55rem;
 }
 
 .blackscreen {

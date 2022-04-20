@@ -29,27 +29,8 @@ body {
 }
 
 a {
-  color: #0645ad;
-  text-decoration: none;
-}
-
-a:hover {
-  color: #0645ad;
-  text-decoration: underline;
-}
-
-a.nav-link,
-a.dropdown-item,
-a.btn:hover {
-  text-decoration: none;
-}
-
-.nav-item a {
   color: #2a6395;
-}
-
-.nav-item a:hover {
-  color: #1c3e5c;
+  text-decoration: none;
 }
 
 input,
@@ -201,7 +182,6 @@ label {
 
 .nav-link {
   margin-right: 8px;
-  transition: none;
 }
 
 .nav-pills .nav-link.active {
@@ -365,9 +345,7 @@ label {
   width: 100%;
 }
 
-.gpf-basic-table,
-.gpf-basic-table th,
-.gpf-basic-table td {
+.gpf-basic-table, .gpf-basic-table th, .gpf-basic-table td {
   border: 1px solid #dee2e6;
   text-align: center;
 }
@@ -376,11 +354,6 @@ label {
   vertical-align: bottom;
 }
 
-.gpf-basic-table th,
-.gpf-basic-table td {
+.gpf-basic-table th, .gpf-basic-table td {
   padding: 5px;
-}
-
-.container {
-  max-width: 1140px;
 }
