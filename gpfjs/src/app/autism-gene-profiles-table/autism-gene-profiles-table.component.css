@@ -144,8 +144,8 @@
 }
 
 .dropdown-span {
-  position: absolute !important;
-  /* z-index: 3; */
+  position: absolute;
+  z-index: 3;
 }
 
 .dropdown-toggle::after {
