@@ -16,21 +16,19 @@ export interface EnrichmentModels {
 export class EnrichmentModelsService {
   private readonly enrichmentModelsUrl = 'enrichment/models';
 
-  constructor(
+  public constructor(
     private http: HttpClient,
     private config: ConfigService
   ) {}
 
-  getBackgroundModels(datasetId: String): Observable<EnrichmentModels> {
+  public getBackgroundModels(datasetId: string): Observable<EnrichmentModels> {
     const url = `${this.config.baseUrl}${this.enrichmentModelsUrl}/${datasetId}`;
 
     return this.http
       .get(url)
-      .pipe(map((res: {counting: {name: string, desc: string}[], background: {name: string, desc: string}[]}) => {
-        return {
-          countings: res['counting'].map(j => new IdDescription(j.name, j.desc)),
-          backgrounds: res['background'].map(j => new IdDescription(j.name, j.desc)),
-        }
-      }));
+      .pipe(map((res: {counting: {name: string; desc: string}[]; background: {name: string; desc: string}[]}) => ({
+        countings: res['counting'].map(j => new IdDescription(j.name, j.desc)),
+        backgrounds: res['background'].map(j => new IdDescription(j.name, j.desc)),
+      })));
   }
 }
