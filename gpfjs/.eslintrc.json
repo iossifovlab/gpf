@@ -121,6 +121,7 @@
         "@typescript-eslint/dot-notation": "off",
         "@typescript-eslint/explicit-function-return-type": "warn",
         "@typescript-eslint/no-extra-parens": ["warn", "all", { "nestedBinaryExpressions": false }],
+        "@typescript-eslint/no-floating-promises": "off",
         "indent": ["warn", 2],
         "max-len": [
           "warn",
