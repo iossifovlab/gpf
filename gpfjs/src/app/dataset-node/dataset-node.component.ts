@@ -11,15 +11,15 @@ import { DatasetNode } from './dataset-node';
   styleUrls: ['./dataset-node.component.css']
 })
 export class DatasetNodeComponent implements OnInit {
-  @Input() datasetNode: DatasetNode;
-  selectedDataset$: Observable<Dataset>;
+  @Input() public datasetNode: DatasetNode;
+  public selectedDataset$: Observable<Dataset>;
 
-  constructor(
+  public constructor(
     private router: Router,
     private datasetsService: DatasetsService,
   ) { }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.selectedDataset$ = this.datasetsService.getSelectedDatasetObservable();
   }
 
@@ -45,7 +45,7 @@ export class DatasetNodeComponent implements OnInit {
     }
   }
 
-  findFirstTool(selectedDataset: Dataset) {
+  public findFirstTool(selectedDataset: Dataset): string {
     if (selectedDataset.description) {
       return toolPageLinks.datasetDescription;
     } else if (selectedDataset.commonReport.enabled) {

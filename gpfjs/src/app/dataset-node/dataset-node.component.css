@@ -4,7 +4,7 @@
 
 .dataset-dropdown-item {
   padding-left: 15px;
-  padding-right: 0px;
+  padding-right: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
