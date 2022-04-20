@@ -3,7 +3,7 @@ from dae.pedigrees.loader import FamiliesLoader
 
 
 def test_cnv_loader(fixture_dirname, gpf_instance_2013):
-    families_file = fixture_dirname("backends/cnv_ped.txt")
+    families_file = fixture_dirname("backends/cnv_ped.txt")  # NOSONAR
     families = FamiliesLoader.load_simple_families_file(families_file)
     assert families is not None
 
@@ -25,7 +25,7 @@ def test_cnv_loader(fixture_dirname, gpf_instance_2013):
 
 
 def test_cnv_loader_avoids_duplication(fixture_dirname, gpf_instance_2013):
-    families_file = fixture_dirname("backends/cnv_ped.txt")
+    families_file = fixture_dirname("backends/cnv_ped.txt")  # NOSONAR
     families = FamiliesLoader.load_simple_families_file(families_file)
     assert families is not None
 

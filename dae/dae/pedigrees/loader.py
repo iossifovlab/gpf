@@ -1,9 +1,9 @@
 import warnings
 import logging
-import pandas as pd
-
 from functools import partial
 from collections import defaultdict
+
+import pandas as pd
 
 from dae.utils.helpers import str2bool
 from dae.variants.attributes import Role, Sex, Status
@@ -32,7 +32,7 @@ class FamiliesLoader(CLILoader):
 
         super().__init__(params=params)
         self.filename = families_filename
-        # TODO FIXME Params should be able to accept namedtuple instances
+        # FIXME: Params should be able to accept namedtuple instances
         # self.params["ped_sep"] = ped_sep
         self.file_format = self.params.get("ped_file_format", "pedigree")
 
