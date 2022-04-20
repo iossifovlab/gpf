@@ -100,7 +100,7 @@ def test_cache_all(tmpdir):
 
     cache_repo = GenomicResourceCachedRepo(src_repo, tmpdir)
     assert len(list(cache_repo.get_all_resources())) == 3
-    cache_repo.cache_all_resources()
+    cache_repo.cache_resources()
 
     assert len(list(cache_repo.get_all_resources())) == 6
 

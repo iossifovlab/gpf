@@ -15,6 +15,9 @@ from dae.genomic_resources.repository_factory import \
     get_configured_definition
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 from dae.genomic_resources.score_statistics import HistogramBuilder
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.dae_conf import dae_conf_schema
+from dae.annotation.annotation_factory import AnnotationConfigParser
 
 from dask.distributed import Client, LocalCluster  # type: ignore
 from dask_kubernetes import KubeCluster, make_pod_spec  # type: ignore
@@ -204,6 +207,21 @@ the number of workers using -j")
                      'list and histogram')
 
 
+def _extract_resource_ids_from_annotation_conf(config):
+    resources = set()
+    for annotator in config:
+        print(annotator)
+        for k, v in annotator.items():
+            if k in [
+                "resource_id",
+                "target_genome",
+                "chain",
+                "genome"
+            ]:
+                resources.add(v)
+    return resources
+
+
 def cli_cache_repo(argv=None):
     if not argv:
         argv = sys.argv[1:]
@@ -217,6 +235,14 @@ def cli_cache_repo(argv=None):
     parser.add_argument(
         "--jobs", "-j", help="Number of jobs running in parallel",
         default=4, type=int,
+    )
+    parser.add_argument(
+        "--instance", default=None,
+        help="gpf_instance.yaml to use for selective cache"
+    )
+    parser.add_argument(
+        "--annotation", default=None,
+        help="annotation.yaml to use for selective cache"
     )
     VerbosityConfiguration.set_argumnets(parser)
 
@@ -235,7 +261,33 @@ def cli_cache_repo(argv=None):
             "This tool works only if the top configured "
             "repository is cached.")
     repository = cast(GenomicResourceCachedRepo, repository)
-    repository.cache_all_resources(workers=args.jobs)
+
+    resources = set()
+    annotation = None
+
+    if args.instance is not None and args.annotation is not None:
+        raise ValueError(
+            "This tool cannot handle both annotation and instance flags"
+        )
+
+    if args.instance is not None:
+        config = GPFConfigParser.load_config(args.instance, dae_conf_schema)
+        resources.add(config.reference_genome.resource_id)
+        resources.add(config.gene_models.resource_id)
+        annotation = config.annotation.conf_file
+    elif args.annotation is not None:
+        annotation = args.annotation
+
+    if annotation is not None:
+        config = AnnotationConfigParser.parse_config_file(annotation)
+        resources.update(_extract_resource_ids_from_annotation_conf(config))
+
+    if len(resources) > 0:
+        resources = list(resources)
+    else:
+        resources = None
+
+    repository.cache_resources(workers=args.jobs, resources=resources)
 
     elapsed = time.time() - start
 

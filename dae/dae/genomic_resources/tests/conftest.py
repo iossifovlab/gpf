@@ -1,5 +1,7 @@
 import logging
 import os
+import tempfile
+import shutil
 
 from threading import Thread, Condition
 from functools import partial
@@ -11,6 +13,30 @@ import pytest
 from RangeHTTPServer import RangeRequestHandler  # type: ignore
 
 logger = logging.getLogger(__name__)
+
+
+def relative_to_this_test_folder(path):
+    return os.path.join(os.path.dirname(os.path.realpath(__file__)), path)
+
+
+@pytest.fixture(scope="session")
+def fixture_path(request):
+    def builder(relpath):
+        return relative_to_this_test_folder(os.path.join("fixtures", relpath))
+
+    return builder
+
+
+@pytest.fixture(scope="function")
+def temp_cache_dir(request):
+    temp_directory = tempfile.mkdtemp(prefix="cache_repo_", suffix="_test")
+
+    def fin():
+        shutil.rmtree(temp_directory)
+
+    request.addfinalizer(fin)
+
+    return temp_directory
 
 
 class HTTPRepositoryServer(Thread):
