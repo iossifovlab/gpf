@@ -1,11 +1,5 @@
 {
     "extends": "stylelint-config-standard",
-    "ignoreFiles": [
-        "build/",
-        "node_modules/",
-        "coverage/",
-        "dist/"
-    ],
     "defaultSeverity": "warning",
     "rules": {
         "alpha-value-notation": "percentage"
