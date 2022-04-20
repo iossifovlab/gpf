@@ -273,6 +273,7 @@ EOT'
     build_run_container bash -c '
       cd /wd; 
       flake8 --format=pylint --max-complexity 15 \
+        --inline-quotes 'double' --docstring-quotes '"""' --multiline-quotes '"""' \
         --output-file=/wd/results/flake8_report \
         --exclude "*old*,*tmp*,*temp*,data-hg19*,gpf*,*build*" . || true'
 
