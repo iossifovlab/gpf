@@ -24,7 +24,7 @@ describe('UserCreateComponent', () => {
         RouterTestingModule,
         FormsModule,
         NgMultiSelectDropDownModule,
-        NgxsModule.forRoot([])
+        NgxsModule.forRoot([], {developmentMode: true})
       ],
       schemas: [NO_ERRORS_SCHEMA]
     })

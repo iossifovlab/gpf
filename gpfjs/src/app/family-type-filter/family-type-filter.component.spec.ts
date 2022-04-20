@@ -12,7 +12,7 @@ describe('FamilyTypeFilterComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ FamilyTypeFilterComponent, CheckboxListComponent, ErrorsAlertComponent, DisplayNamePipe ],
-      imports: [NgxsModule.forRoot([])]
+      imports: [NgxsModule.forRoot([], {developmentMode: true})]
     })
     .compileComponents();
   }));

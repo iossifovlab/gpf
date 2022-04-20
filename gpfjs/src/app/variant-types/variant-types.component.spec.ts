@@ -25,7 +25,7 @@ describe('VariantTypesComponent', () => {
         ConfigService,
         UsersService,
       ],
-      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([])]
+      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
     })
       .compileComponents();
   }));

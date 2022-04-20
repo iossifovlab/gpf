@@ -30,7 +30,7 @@ describe('PhenoToolMeasureComponent', () => {
         DatasetsService,
         UsersService
       ],
-      imports: [RouterTestingModule, NgxsModule.forRoot([])],
+      imports: [RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();

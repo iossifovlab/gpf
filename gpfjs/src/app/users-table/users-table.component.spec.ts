@@ -38,7 +38,7 @@ describe('UsersTableComponent', () => {
         GpfTableSubcontentComponent
       ],
       providers: [UsersService, ConfigService, ResizeService],
-      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([])]
+      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
     })
     .compileComponents();
   }));

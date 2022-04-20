@@ -46,7 +46,7 @@ describe('GenotypeBlockComponent', () => {
         NgbModule,
         HttpClientTestingModule,
         RouterTestingModule,
-        NgxsModule.forRoot([EffecttypesState, GenderState, VarianttypesState])
+        NgxsModule.forRoot([EffecttypesState, GenderState, VarianttypesState], {developmentMode: true})
       ],
       schemas: [
         NO_ERRORS_SCHEMA

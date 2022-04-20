@@ -20,7 +20,7 @@ describe('UsersActionsComponent', () => {
         UsersService,
         ConfigService,
         {provide: User, useValue: new User(0, '', '', [''], true, [''])}],
-      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([])],
+      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();

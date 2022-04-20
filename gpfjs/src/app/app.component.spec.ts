@@ -51,7 +51,7 @@ describe('AppComponent', () => {
         HttpClientTestingModule,
         RouterTestingModule,
         FormsModule,
-        NgxsModule.forRoot()
+        NgxsModule.forRoot([], {developmentMode: true})
       ],
       providers: [
         { provide: DatasetsService, useValue: datasetsServiceMock },

@@ -15,7 +15,7 @@ describe('PresentInChildComponent', () => {
     TestBed.configureTestingModule({
       declarations: [ PresentInChildComponent ],
       providers: [],
-      imports: [NgxsModule.forRoot([])],
+      imports: [NgxsModule.forRoot([], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();

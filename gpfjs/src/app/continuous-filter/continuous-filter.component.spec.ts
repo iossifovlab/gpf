@@ -5,8 +5,7 @@ import { ConfigService } from 'app/config/config.service';
 import { HistogramData } from 'app/measures/measures';
 import { MeasuresService } from 'app/measures/measures.service';
 import * as _ from 'lodash';
-import { Observable } from 'rxjs';
-import { of } from 'rxjs/internal/observable/of';
+import { Observable, of } from 'rxjs';
 
 import { ContinuousFilterComponent } from './continuous-filter.component';
 

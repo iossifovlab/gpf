@@ -22,7 +22,7 @@ describe('ShareQueryButtonComponent', () => {
         UsersService,
         QueryService,
       ],
-      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([])]
+      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
     })
     .compileComponents();
   }));

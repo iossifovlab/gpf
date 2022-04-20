@@ -45,7 +45,7 @@ describe('UserManagementComponent', () => {
         RouterTestingModule,
         NgbNavModule,
         FormsModule,
-        NgxsModule.forRoot([])
+        NgxsModule.forRoot([], {developmentMode: true})
       ]
     })
     .compileComponents();

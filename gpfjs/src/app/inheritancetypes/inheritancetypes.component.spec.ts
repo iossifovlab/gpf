@@ -20,7 +20,7 @@ describe('InheritancetypesComponent', () => {
         InheritancetypesComponent,
         CheckboxListComponent
       ],
-      imports: [NgxsModule.forRoot([]) ],
+      imports: [NgxsModule.forRoot([], {developmentMode: true}) ],
     })
     .compileComponents();
   }));

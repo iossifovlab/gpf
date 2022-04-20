@@ -17,8 +17,7 @@ import { MeasuresService } from 'app/measures/measures.service';
 import { GeneSymbolsComponent } from 'app/gene-symbols/gene-symbols.component';
 import { GeneSymbolsState, SetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { of } from 'rxjs/internal/observable/of';
-import { Observable } from 'rxjs/internal/Observable';
+import { Observable, of } from 'rxjs';
 
 class PhenoToolServiceMock {
   public getPhenoToolResults(): Observable<any> {
@@ -67,7 +66,7 @@ describe('PhenoToolComponent', () => {
       imports: [
         HttpClientTestingModule,
         RouterTestingModule,
-        NgxsModule.forRoot([ErrorsState, GeneSymbolsState]),
+        NgxsModule.forRoot([ErrorsState, GeneSymbolsState], {developmentMode: true}),
         NgbNavModule
       ],
       schemas: [NO_ERRORS_SCHEMA]

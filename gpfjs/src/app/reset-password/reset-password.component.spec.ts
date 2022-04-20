@@ -15,7 +15,7 @@ describe('ResetPasswordComponent', () => {
     TestBed.configureTestingModule({
       declarations: [ResetPasswordComponent],
       providers: [UsersService, ConfigService],
-      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([])]
+      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
     })
     .compileComponents();
   }));

@@ -17,7 +17,7 @@ describe('RegistrationComponent', () => {
     TestBed.configureTestingModule({
       declarations: [RegistrationComponent],
       providers: [NgbActiveModal, UsersService, HttpClient, HttpHandler, ConfigService],
-      imports: [RouterTestingModule, FormsModule, NgxsModule.forRoot([])],
+      imports: [RouterTestingModule, FormsModule, NgxsModule.forRoot([], {developmentMode: true})],
     })
     .compileComponents();
   }));
