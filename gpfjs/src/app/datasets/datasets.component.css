@@ -18,6 +18,9 @@
   text-overflow: ellipsis;
 }
 
+.dataset-selector .dropdown-item.active {
+  color: white;
+}
 
 .content {
   margin: 0;
@@ -26,7 +29,13 @@
   position: relative;
 }
 
-#datasets-dropdown-menu-button:hover {
+#datasets-dropdown-menu-button {
+  color: #000;
+}
+
+.show > #datasets-dropdown-menu-button,
+#datasets-dropdown-menu-button:hover,
+#datasets-dropdown-menu-button:active {
   color: #fff;
 }
 
