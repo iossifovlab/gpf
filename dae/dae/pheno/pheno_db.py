@@ -49,7 +49,7 @@ def get_pheno_browser_images_dir(dae_config=None):
         "DAE_PHENODB_DIR",
         get_pheno_db_dir(dae_config)
     )
-    browser_images_path = os.path.join(pheno_db_dir, "images")
+    browser_images_path = os.path.join(pheno_db_dir, "pheno", "images")
     return browser_images_path
 
 
