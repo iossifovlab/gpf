@@ -18,11 +18,13 @@ describe('AutismGeneProfilesBlockComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ AutismGeneProfilesBlockComponent, AgpTableComponent, MultipleSelectMenuComponent ],
+      declarations: [AutismGeneProfilesBlockComponent, AgpTableComponent, MultipleSelectMenuComponent],
       providers: [ConfigService, QueryService, DatasetsService, UsersService],
-      imports: [HttpClientTestingModule, NgbNavModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true}), FormsModule]
-    })
-    .compileComponents();
+      imports: [
+        HttpClientTestingModule, NgbNavModule, RouterTestingModule, FormsModule,
+        NgxsModule.forRoot([], {developmentMode: true})
+      ]
+    }).compileComponents();
   }));
 
   beforeEach(() => {
