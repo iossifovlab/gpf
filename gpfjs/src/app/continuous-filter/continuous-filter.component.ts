@@ -1,4 +1,4 @@
-import { Component, OnInit, OnChanges, SimpleChanges, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnChanges, Input, Output, EventEmitter } from '@angular/core';
 import { MeasuresService } from '../measures/measures.service';
 import { HistogramData } from '../measures/measures';
 import { ContinuousFilterState, ContinuousSelection } from '../person-filters/person-filters';
@@ -23,16 +23,14 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
 
   public rangesCounts: Array<number>;
 
-  constructor(private measuresService: MeasuresService) { }
+  public constructor(private measuresService: MeasuresService) { }
 
   public ngOnInit(): void {
     this.partitions = this.rangeChanges.pipe(
       debounceTime(100),
       distinctUntilChanged(),
-      switchMap(([datasetId, measureName, internalRangeStart, internalRangeEnd]) => {
-        return this.measuresService
-          .getMeasurePartitions(datasetId, measureName, internalRangeStart, internalRangeEnd);
-      })
+      switchMap(([datasetId, measureName, internalRangeStart, internalRangeEnd]) => this.measuresService
+        .getMeasurePartitions(datasetId, measureName, internalRangeStart, internalRangeEnd))
     );
 
     this.partitions.subscribe(partitions => {
@@ -47,7 +45,7 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
     if (this.datasetId && this.measureName) {
       this.measuresService.getMeasureHistogram(this.datasetId, this.measureName)
         .subscribe(histogramData => {
-          const selection = (this.continuousFilterState.selection as ContinuousSelection);
+          const selection = this.continuousFilterState.selection as ContinuousSelection;
           this.histogramData = histogramData;
           if (!selection.min) {
             selection.min = histogramData.min;
@@ -60,7 +58,7 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
   }
 
   public set rangeStart(value) {
-    const selection = (this.continuousFilterState.selection as ContinuousSelection);
+    const selection = this.continuousFilterState.selection as ContinuousSelection;
     selection.min = value;
     this.updateFilterEvent.emit();
     this.rangeChanges.next([
@@ -76,7 +74,7 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
   }
 
   public set rangeEnd(value) {
-    const selection = (this.continuousFilterState.selection as ContinuousSelection);
+    const selection = this.continuousFilterState.selection as ContinuousSelection;
     selection.max = value;
     this.updateFilterEvent.emit();
     this.rangeChanges.next([
@@ -90,5 +88,4 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
   public get rangeEnd(): number {
     return (this.continuousFilterState.selection as ContinuousSelection).max;
   }
-
 }
