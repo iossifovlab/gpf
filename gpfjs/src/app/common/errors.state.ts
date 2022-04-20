@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { State, Action, StateContext } from '@ngxs/store';
 
 export class SetComponentErrors {
-  static readonly type = '[Error handling] Set component errors';
-  constructor(
+  public static readonly type = '[Error handling] Set component errors';
+  public constructor(
     public componentId: string, public errors: Array<string>
   ) {}
 }
@@ -21,7 +21,7 @@ export interface ErrorsModel {
 @Injectable()
 export class ErrorsState {
   @Action(SetComponentErrors)
-  setComponentErrors(ctx: StateContext<ErrorsModel>, action: SetComponentErrors) {
+  public setComponentErrors(ctx: StateContext<ErrorsModel>, action: SetComponentErrors): void {
     const errors: Map<string, Array<string>> = ctx.getState().componentErrors;
     if (action.errors.length) {
       errors.set(action.componentId, action.errors);

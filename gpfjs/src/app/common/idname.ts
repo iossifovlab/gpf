@@ -1,15 +1,14 @@
 export class IdName {
-  static idNameFromJson(json: any): IdName {
-    return new IdName(json['id'], json['name']);
+  public static idNameFromJson(json: object): IdName {
+    return new IdName(json['id'] as string, json['name'] as string);
   }
 
-  static fromJsonArray(jsonArray: Array<Object>): Array<IdName> {
+  public static fromJsonArray(jsonArray: Array<object>): Array<IdName> {
     return jsonArray.map((json) => IdName.idNameFromJson(json));
   }
 
-  constructor(
-    readonly id: string,
-    readonly name: string
-  ) { }
-
+  public constructor(
+    public readonly id: string,
+    public readonly name: string
+  ) {}
 }
