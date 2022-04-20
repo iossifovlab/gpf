@@ -13,7 +13,7 @@ import { of, take } from 'rxjs';
 describe('DatasetService', () => {
   let service: DatasetsService;
   beforeEach(waitForAsync(() => {
-    const configMock = { 'baseUrl': 'testUrl/' };
+    const configMock = { baseUrl: 'testUrl/' };
     TestBed.configureTestingModule({
       imports: [NgxsModule.forRoot([], {developmentMode: true}), RouterTestingModule, HttpClientTestingModule],
       providers: [
@@ -35,7 +35,7 @@ describe('DatasetService', () => {
     const httpGetSpy = jest.spyOn(HttpClient.prototype, 'get');
     httpGetSpy.mockReturnValue(of('fakeResponse'));
 
-    service.getDatasets().subscribe((post: Dataset[]) => {
+    service.getDatasets().subscribe(() => {
       expect(httpGetSpy.mock.calls).toEqual([['testUrl/datasets', {withCredentials: true}]]);
     });
   });

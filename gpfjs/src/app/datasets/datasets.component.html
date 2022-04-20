@@ -14,11 +14,11 @@
               <span *ngIf="datasetsLoading">Loading datasets...</span>
               <span *ngIf="!datasetsLoading">{{ selectedDataset.name }}</span>
             </button>
-            <div 
+            <div
               ngbDropdownMenu
               class="dataset-selector"
               aria-labelledby="datasets-dropdown-menu-button"
-              style="z-index: 199;">
+              style="z-index: 199">
               <ng-container *ngIf="!datasetsLoading">
                 <gpf-dataset-node *ngFor="let tree of datasetTrees" [datasetNode]="tree"></gpf-dataset-node>
               </ng-container>
@@ -27,34 +27,52 @@
         </div>
       </li>
       <li *ngIf="selectedDataset.description" class="nav-item">
-        <a class="nav-link" routerLink="{{toolPageLinks.datasetDescription}}" routerLinkActive="active">Dataset Description</a>
+        <a class="nav-link" routerLink="{{ toolPageLinks.datasetDescription }}" routerLinkActive="active"
+          >Dataset Description</a
+        >
       </li>
       <li *ngIf="selectedDataset.commonReport.enabled" class="nav-item">
-        <a class="nav-link" routerLink="{{toolPageLinks.datasetStatistics}}" routerLinkActive="active">Dataset Statistics</a>
+        <a class="nav-link" routerLink="{{ toolPageLinks.datasetStatistics }}" routerLinkActive="active"
+          >Dataset Statistics</a
+        >
       </li>
       <li *ngIf="selectedDataset.geneBrowser.enabled" class="nav-item">
-        <a class="nav-link" routerLink="{{toolPageLinks.geneBrowser}}" routerLinkActive="active">Gene Browser</a>
+        <a class="nav-link" routerLink="{{ toolPageLinks.geneBrowser }}" routerLinkActive="active">Gene Browser</a>
       </li>
       <li *ngIf="selectedDataset.genotypeBrowser" class="nav-item">
-        <a class="nav-link" routerLink="{{toolPageLinks.genotypeBrowser}}" routerLinkActive="active">Genotype Browser</a>
+        <a class="nav-link" routerLink="{{ toolPageLinks.genotypeBrowser }}" routerLinkActive="active"
+          >Genotype Browser</a
+        >
       </li>
       <li *ngIf="selectedDataset.phenotypeBrowser" class="nav-item">
-        <a class="nav-link" routerLink="{{toolPageLinks.phenotypeBrowser}}" routerLinkActive="active">Phenotype Browser</a>
+        <a class="nav-link" routerLink="{{ toolPageLinks.phenotypeBrowser }}" routerLinkActive="active"
+          >Phenotype Browser</a
+        >
       </li>
       <li *ngIf="selectedDataset.enrichmentTool" class="nav-item">
-        <a class="nav-link" routerLink="{{toolPageLinks.enrichmentTool}}" routerLinkActive="active">Enrichment Tool</a>
+        <a class="nav-link" routerLink="{{ toolPageLinks.enrichmentTool }}" routerLinkActive="active"
+          >Enrichment Tool</a
+        >
       </li>
       <li *ngIf="selectedDataset.phenotypeTool" class="nav-item">
-        <a class="nav-link" routerLink="{{toolPageLinks.phenotypeTool}}" routerLinkActive="active">Phenotype Tool</a>
+        <a class="nav-link" routerLink="{{ toolPageLinks.phenotypeTool }}" routerLinkActive="active">Phenotype Tool</a>
       </li>
     </ul>
   </nav>
 
-  <div *ngIf="registerAlertVisible && permissionDeniedPrompt" class="alert alert-danger" style="margin: 10px" id="permission-denied-prompt">
+  <div
+    *ngIf="registerAlertVisible && permissionDeniedPrompt"
+    class="alert alert-danger"
+    style="margin: 10px"
+    id="permission-denied-prompt">
     <markdown [data]="permissionDeniedPrompt"></markdown>
   </div>
 
-  <div *ngIf="showNoToolsWarning && !registerAlertVisible" class="alert alert-warning" role="alert" style="margin: 10px">
+  <div
+    *ngIf="showNoToolsWarning && !registerAlertVisible"
+    class="alert alert-warning"
+    role="alert"
+    style="margin: 10px">
     <span>No tools have been configured for this dataset.</span>
   </div>
 

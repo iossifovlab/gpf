@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-// eslint-disable-next-line no-restricted-imports
 import { Observable, ReplaySubject, BehaviorSubject, zip, Subject } from 'rxjs';
 
 import { Dataset } from '../datasets/datasets';
@@ -15,13 +14,14 @@ export class DatasetsService {
   private readonly datasetsDetailsUrl = 'datasets/details';
   private readonly datasetPedigreeUrl = 'datasets/pedigree';
 
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
   private datasets$ = new ReplaySubject<Array<Dataset>>(1);
   private selectedDataset$ = new BehaviorSubject<Dataset>(null);
   private datasetLoaded$ = new Subject<void>();
   public datasetsLoading = false;
 
-  constructor(
+  public constructor(
     private http: HttpClient,
     private config: ConfigService,
     private usersService: UsersService
@@ -55,7 +55,9 @@ export class DatasetsService {
     const dataset$ = this.http.get(this.config.baseUrl + url, options);
     const details$ = this.http.get(`${this.config.baseUrl}${this.datasetsDetailsUrl}/${datasetId}`, options);
 
-    return zip(dataset$, details$).pipe(map((datasetPack: [any, any]) => Dataset.fromDatasetAndDetailsJson(datasetPack[0]['data'], datasetPack[1])));
+    return zip(dataset$, details$).pipe(map(
+      (datasetPack: [any, any]) => Dataset.fromDatasetAndDetailsJson(datasetPack[0]['data'], datasetPack[1]))
+    );
   }
 
   public setSelectedDatasetById(datasetId: string, force = false): void {
@@ -94,18 +96,18 @@ export class DatasetsService {
   }
 
   private reloadAllDatasets(): void {
-    this.getDatasets().pipe(take(1)).subscribe(() => {});
+    this.getDatasets().pipe(take(1)).subscribe(() => null);
   }
 
-  public getPermissionDeniedPrompt() {
+  public getPermissionDeniedPrompt(): Observable<string> {
     const options = { withCredentials: true };
 
     return this.http.get(this.config.baseUrl + this.permissionDeniedPromptUrl, options).pipe(
-      map((res: any) => res['data'])
+      map(res => res['data'] as string)
     );
   }
 
-  public getDatasetPedigreeColumnDetails(datasetId: string, column: string): Observable<Object> {
+  public getDatasetPedigreeColumnDetails(datasetId: string, column: string): Observable<object> {
     const options = { headers: this.headers, withCredentials: true };
     return this.http.get(`${this.config.baseUrl}${this.datasetPedigreeUrl}/${datasetId}/${column}`, options);
   }
