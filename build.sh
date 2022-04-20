@@ -285,14 +285,11 @@ EOT'
     defer_ret build_run_ctx_reset
 
     build_run_container bash -c '
-      cd /wd/dae; 
-      pylint dae -f parseable --reports=no --disable missing-class-docstring,missing-function-docstring,missing-module-docstring > /wd/results/pylint_dae_report || true'
+      cd /wd/; 
+      wdae_files=$(find wdae/wdae -name "*.py")
+      pylint dae/dae $wdae_files > /wd/results/pylint_gpf_report || true'
 
-    build_run_container bash -c '
-      cd /wd/wdae; 
-      pylint wdae  -f parseable --reports=no --disable missing-class-docstring,missing-function-docstring,missing-module-docstring > /wd/results/pylint_wdae_report || true'
-
-    build_run_local cp ./results/pylint_dae_report ./results/pylint_wdae_report ./test-results/
+    build_run_local cp ./results/pylint_gpf_report ./test-results/
   }
 
   build_stage "bandit"
