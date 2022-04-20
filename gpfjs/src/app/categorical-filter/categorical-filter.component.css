@@ -5,6 +5,5 @@
   width: 100%;
   align-content: center;
   justify-content: flex-end;
-  flex-wrap: nowrap;
-  flex-direction: row;
+  flex-flow: row nowrap;
 }

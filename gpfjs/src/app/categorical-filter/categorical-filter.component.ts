@@ -12,20 +12,19 @@ import { environment } from 'environments/environment';
   styleUrls: ['./categorical-filter.component.css']
 })
 export class CategoricalFilterComponent implements OnInit {
-  @Input() categoricalFilter: PersonFilter;
-  @Input() categoricalFilterState: CategoricalFilterState;
-  @Output() updateFilterEvent = new EventEmitter();
-  sourceDescription$: Observable<Object>;
-  valuesDomain: any = [];
+  @Input() public categoricalFilter: PersonFilter;
+  @Input() public categoricalFilterState: CategoricalFilterState;
+  @Output() public updateFilterEvent = new EventEmitter();
+  public sourceDescription$: Observable<object>;
+  public valuesDomain: any = [];
   public imgPathPrefix = environment.imgPathPrefix;
 
-  constructor(
+  public constructor(
     private datasetsService: DatasetsService,
     private phenoBrowserService: PhenoBrowserService,
-  ) {
-  }
+  ) {}
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     if (this.categoricalFilter.from === 'phenodb') {
       this.sourceDescription$ = this.phenoBrowserService.getMeasureDescription(
         this.datasetsService.getSelectedDataset().id, this.categoricalFilter.source
@@ -40,16 +39,16 @@ export class CategoricalFilterComponent implements OnInit {
     });
   }
 
-  set selectedValue(value) {
+  public set selectedValue(value) {
     (this.categoricalFilterState.selection as CategoricalSelection).selection = [value];
     this.updateFilterEvent.emit();
   }
 
-  get selectedValue(): string {
+  public get selectedValue(): string {
     return (this.categoricalFilterState.selection as CategoricalSelection).selection[0];
   }
 
-  clear() {
+  public clear(): void {
     (this.categoricalFilterState.selection as CategoricalSelection).selection = [];
     this.updateFilterEvent.emit();
   }
