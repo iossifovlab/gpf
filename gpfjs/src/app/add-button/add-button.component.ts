@@ -1,5 +1,4 @@
-import { Component, Output } from '@angular/core';
-import { EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter } from '@angular/core';
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -8,7 +7,7 @@ import { environment } from '../../environments/environment';
   styleUrls: ['./add-button.component.css']
 })
 export class AddButtonComponent {
-  @Output() addFilter: EventEmitter<any> = new EventEmitter(true);
+  @Output() public addFilter: EventEmitter<any> = new EventEmitter(true);
   public imgPathPrefix = environment.imgPathPrefix;
 
   public add(): void {

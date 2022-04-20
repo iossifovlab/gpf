@@ -8,9 +8,8 @@ describe('AddButtonComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ AddButtonComponent ]
-    })
-    .compileComponents();
+      declarations: [AddButtonComponent]
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -28,7 +27,7 @@ describe('AddButtonComponent', () => {
   });
 
   it('should emit on click', () => {
-    jest.spyOn(component.addFilter, 'emit').mockImplementation(() => {});
+    jest.spyOn(component.addFilter, 'emit').mockImplementation(() => null);
     component.add();
     expect(component.addFilter.emit).toHaveBeenCalledWith(null);
   });
