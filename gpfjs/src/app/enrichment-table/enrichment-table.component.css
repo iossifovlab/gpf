@@ -21,7 +21,7 @@ th {
 
 .enrichment-table {
   margin-top: 20px;
-  border-top: 1px solid rgba(0, 0, 0, 12.5%);
+  border-top: 1px solid rgb(0 0 0 / 12.5%);
   padding-top: 20px;
   margin-bottom: 50px;
 }

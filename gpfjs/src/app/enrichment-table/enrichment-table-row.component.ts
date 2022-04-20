@@ -17,16 +17,16 @@ import { take } from 'rxjs/operators';
   styleUrls: ['./enrichment-table-row.component.css']
 })
 export class EnrichmentTableRowComponent {
-  @Input() label: string;
-  @Input() effectResult: EnrichmentEffectResult;
+  @Input() public label: string;
+  @Input() public effectResult: EnrichmentEffectResult;
 
-  constructor(
+  public constructor(
     private pValueIntensityPipe: PValueIntensityPipe,
     private queryService: QueryService,
     private store: Store,
   ) {}
 
-  goToQuery(browserQueryFilter: BrowserQueryFilter) {
+  public goToQuery(browserQueryFilter: BrowserQueryFilter): void {
     // Create new window now because we are in a 'click' event callback, update
     // it's url later. Otherwise this window.open is treated as a pop-up and
     // being blocked by most browsers.
@@ -44,19 +44,19 @@ export class EnrichmentTableRowComponent {
       new SetVariantTypes(new Set(browserQueryFilter['variantTypes'])),
     ]);
 
-    this.store.selectOnce(state => state).subscribe(state => {
+    this.store.selectOnce(state => state as object).subscribe(state => {
       state['datasetId'] = browserQueryFilter['datasetId'];
       this.queryService.saveQuery(state, 'genotype')
-      .pipe(take(1))
-      .subscribe(urlObject => {
-        const url = this.queryService.getLoadUrlFromResponse(urlObject);
-        newWindow.location.assign(url);
-      });
+        .pipe(take(1))
+        .subscribe(urlObject => {
+          const url = this.queryService.getLoadUrlFromResponse(urlObject);
+          newWindow.location.assign(url);
+        });
     });
   }
 
-  getBackgroundColor(testResult: EnrichmentTestResult) {
-    const intensity = this.pValueIntensityPipe.transform(testResult.pvalue);
+  public getBackgroundColor(testResult: EnrichmentTestResult): string {
+    const intensity = this.pValueIntensityPipe.transform(testResult.pvalue) as string;
 
     if (testResult.overlapped > testResult.expected) {
       return `rgba(255, ${intensity}, ${intensity}, 0.8)`;
