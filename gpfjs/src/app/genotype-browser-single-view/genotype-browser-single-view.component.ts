@@ -7,19 +7,17 @@ import { ActivatedRoute, Params } from '@angular/router';
   styleUrls: ['./genotype-browser-single-view.component.css']
 })
 export class GenotypeBrowserSingleViewComponent implements OnInit {
+  public selectedDatasetId: string;
 
-  selectedDatasetId: string;
-
-  constructor(
+  public constructor(
     private route: ActivatedRoute
-   ) { }
+  ) { }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     this.route.parent.params.subscribe(
       (params: Params) => {
-        this.selectedDatasetId = params['dataset'];
+        this.selectedDatasetId = params.dataset;
       }
-     );
+    );
   }
-
 }

@@ -7,10 +7,10 @@ import { GenotypeBrowserSingleViewComponent } from './genotype-browser-single-vi
 import { ErrorsState } from 'app/common/errors.state';
 
 class MockActivatedRoute {
-  params = {dataset: 'testDatasetId', get: () => ''};
-  parent = {params: of(this.params)};
+  public params = {dataset: 'testDatasetId'};
+  public parent = {params: of(this.params)};
 
-  queryParamMap = of(this.params);
+  public queryParamMap = of(this.params);
 }
 
 describe('GenotypeBrowserSingleViewComponent', () => {
@@ -27,8 +27,7 @@ describe('GenotypeBrowserSingleViewComponent', () => {
       ],
       imports: [NgxsModule.forRoot([ErrorsState], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
