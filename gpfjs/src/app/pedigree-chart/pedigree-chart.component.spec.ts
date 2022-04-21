@@ -11,20 +11,20 @@ import { ResizeService } from 'app/table/resize.service';
 
 const FAMILY_WITH_POSITIONS = [
   new PedigreeData('f1', 'prb1', 'mom1', 'dad1', 'M', 'prb',
-                   '#E35252', [75, 100], false, 'label', 'sl'),
+    '#E35252', [75, 100], false, 'label', 'sl'),
   new PedigreeData('f1', 'dad1', '', '', 'M', 'dad', '#E0E0E0',
-                   [50, 50], true, 'label', 'sl'),
+    [50, 50], true, 'label', 'sl'),
   new PedigreeData('f1', 'mom1', '', '', 'F', 'mom', '#FFFFFF',
-                   [100, 50], false, 'label', 'sl')
+    [100, 50], false, 'label', 'sl')
 ];
 
 const FAMILY_WITHOUT_POSITIONS = [
   new PedigreeData('f2', 'prb2', 'mom2', 'dad2', 'M', 'prb',
-                   '#E35252', null, false, 'label', 'sl'),
+    '#E35252', null, false, 'label', 'sl'),
   new PedigreeData('f2', 'dad2', '', '', 'M', 'dad', '#E0E0E0',
-                   null, true, 'label', 'sl'),
+    null, true, 'label', 'sl'),
   new PedigreeData('f2', 'mom2', '', '', 'F', 'mom', '#FFFFFF',
-                   null, false, 'label', 'sl')
+    null, false, 'label', 'sl')
 ];
 
 describe('PedigreeChartComponent', () => {
@@ -46,7 +46,7 @@ describe('PedigreeChartComponent', () => {
         ChangeDetectorRef
       ]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {
@@ -270,5 +270,4 @@ describe('PedigreeChartComponent', () => {
     expect(component.width).toBe(60.5);
     expect(component.height).toBe(61.5);
   });
-
 });

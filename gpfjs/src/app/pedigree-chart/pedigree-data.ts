@@ -2,24 +2,22 @@ import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 import { IntervalForVertex } from '../utils/interval-sandwich';
 
 export abstract class IndividualSet {
+  public abstract individualSet(): Set<Individual>;
 
-    abstract individualSet(): Set<Individual>;
+  public generationRanks(): Set<number> {
+    const individuals = this.individualSet();
+    const ranks = new Set<number>();
 
-    generationRanks(): Set<number> {
-      const individuals = this.individualSet();
-      const ranks = new Set<number>();
+    individuals.forEach(individual => ranks.add(individual.rank));
 
-      individuals.forEach(individual => ranks.add(individual.rank));
+    return ranks;
+  }
 
-      return ranks;
-    }
-
-    abstract childrenSet(): Set<Individual>;
-
+  public abstract childrenSet(): Set<Individual>;
 }
 
 export class ParentalUnit {
-  constructor(
+  public constructor(
     public mother: Individual,
     public father: Individual
   ) {}
@@ -28,16 +26,16 @@ export class ParentalUnit {
 export const NO_RANK = -3673473456;
 
 export class Individual extends IndividualSet {
-  matingUnits = new Array<MatingUnit>();
-  pedigreeData: PedigreeData;
-  parents: ParentalUnit;
-  rank: number = NO_RANK;
+  public matingUnits = new Array<MatingUnit>();
+  public pedigreeData: PedigreeData;
+  public parents: ParentalUnit;
+  public rank: number = NO_RANK;
 
-  individualSet() {
+  public individualSet(): Set<Individual> {
     return new Set([this]);
   }
 
-  toString() {
+  public toString(): string {
     try {
       return this.pedigreeData.id;
     } catch (exception) {
@@ -45,7 +43,7 @@ export class Individual extends IndividualSet {
     }
   }
 
-  addRank(rank: number) {
+  public addRank(rank: number): void {
     if (this.rank !== NO_RANK) {
       return;
     }
@@ -59,15 +57,18 @@ export class Individual extends IndividualSet {
 
       matingUnit.father.addRank(rank);
       matingUnit.mother.addRank(rank);
-
     }
     if (this.parents) {
-      if (this.parents.father) { this.parents.father.addRank(rank + 1); }
-      if (this.parents.mother) { this.parents.mother.addRank(rank + 1); }
+      if (this.parents.father) {
+        this.parents.father.addRank(rank + 1);
+      }
+      if (this.parents.mother) {
+        this.parents.mother.addRank(rank + 1);
+      }
     }
   }
 
-  childrenSet() {
+  public childrenSet(): Set<Individual> {
     const childrenSet = new Set<Individual>();
 
     for (const matingUnit of this.matingUnits) {
@@ -78,7 +79,7 @@ export class Individual extends IndividualSet {
   }
 
 
-  areMates(second: Individual) {
+  public areMates(second: Individual): boolean {
     let areInMatingUnit = false;
 
     for (const matingUnit of this.matingUnits) {
@@ -90,20 +91,20 @@ export class Individual extends IndividualSet {
     return areInMatingUnit;
   }
 
-  areSiblings(second: Individual) {
+  public areSiblings(second: Individual): boolean {
     if (!this.parents || !second.parents) {
       return false;
     }
 
     if (this.parents.father === second.parents.father &&
         this.parents.mother === second.parents.mother) {
-        return true;
-      }
+      return true;
+    }
 
     return false;
   }
 
-  isChildOf(father: Individual, mother?: Individual) {
+  public isChildOf(father: Individual, mother?: Individual): boolean {
     if (!this.parents) {
       return false;
     }
@@ -115,19 +116,19 @@ export class Individual extends IndividualSet {
 }
 
 export class MatingUnit extends IndividualSet {
-  children = new SibshipUnit();
-  visited = false;
+  public children = new SibshipUnit();
+  public visited = false;
 
-  constructor(
-    readonly mother: Individual,
-    readonly father: Individual
+  public constructor(
+    public readonly mother: Individual,
+    public readonly father: Individual
   ) {
     super();
     mother.matingUnits.push(this);
     father.matingUnits.push(this);
   }
 
-  toString() {
+  public toString(): string {
     const ids = this.individualSet();
     const sortedIds = Array.from(ids)
       .map(individual => individual.pedigreeData.id)
@@ -136,17 +137,17 @@ export class MatingUnit extends IndividualSet {
     return `m{${sortedIds}}`;
   }
 
-  individualSet() {
+  public individualSet(): Set<Individual> {
     return new Set([this.mother, this.father]);
   }
 
-  childrenSet() {
+  public childrenSet(): Set<Individual> {
     return new Set(this.children.individuals);
   }
 }
 
 export class MatingUnitWithIntervals {
-  constructor(
+  public constructor(
     public mother: IntervalForVertex<Individual>,
     public father: IntervalForVertex<Individual>,
     public children: Array<IntervalForVertex<Individual>>,
@@ -154,9 +155,9 @@ export class MatingUnitWithIntervals {
 }
 
 export class SibshipUnit extends IndividualSet {
-  individuals = new Array<Individual>();
+  public individuals = new Array<Individual>();
 
-  toString() {
+  public toString(): string {
     const ids = this.individualSet();
     const sortedIds = Array.from(ids)
       .map(individual => individual.pedigreeData.id)
@@ -165,18 +166,18 @@ export class SibshipUnit extends IndividualSet {
     return `s{${sortedIds}}`;
   }
 
-  individualSet() {
+  public individualSet(): Set<Individual> {
     return new Set(this.individuals);
   }
 
-  childrenSet() {
+  public childrenSet(): Set<Individual> {
     return new Set<Individual>();
   }
 }
 
 
-export class IndividualWithPosition  {
-  constructor(
+export class IndividualWithPosition {
+  public constructor(
     public individual: Individual,
     public xCenter: number,
     public yCenter: number,
@@ -184,17 +185,17 @@ export class IndividualWithPosition  {
     public scaleFactor: number
   ) { }
 
-  get xUpperLeftCorner() {
+  public get xUpperLeftCorner(): number {
     return this.xCenter - this.size / 2;
   }
 
-  get yUpperLeftCorner() {
+  public get yUpperLeftCorner(): number {
     return this.yCenter - this.size / 2;
   }
 }
 
 export class Line {
-  constructor(
+  public constructor(
     public startX: number,
     public startY: number,
     public endX: number,
@@ -203,38 +204,38 @@ export class Line {
     public curvedBaseHeight: number = NaN
   ) { }
 
-  get path() {
+  public get path(): string {
     return 'M' + this.curveP0[0].toString() + ',' + this.curveP0[1].toString() +
       ' C' + this.curveP1[0].toString() + ',' + this.inverseCurveP1[1].toString() + ' ' +
       this.curveP2[0].toString() + ',' + this.curveP2[1].toString() + ' ' +
       this.curveP3[0].toString() + ',' + this.curveP3[1].toString();
   }
 
-  get curveP0() {
+  public get curveP0(): number[] {
     return [this.startX, this.startY];
   }
 
-  get curveP1() {
+  public get curveP1(): number[] {
     return [this.startX + 10, this.startY + this.curvedBaseHeight * 3.0];
   }
 
-  get curveP2() {
+  public get curveP2(): number[] {
     return [this.endX, this.endY];
   }
 
-  get curveP3() {
+  public get curveP3(): number[] {
     return [this.endX, this.endY];
   }
 
-  get inverseCurveP1() {
+  public get inverseCurveP1(): number[] {
     return [this.startX + 10, this.startY - this.curvedBaseHeight * 3.0];
   }
 
-  get inverseCurveP2() {
+  public get inverseCurveP2(): number[] {
     return [this.endX, this.endY];
   }
 
-  curveYAt(t: number) {
+  public curveYAt(t: number): number {
     const one_minus_t = 1.0 - t;
 
     return (one_minus_t ** 3) * this.curveP0[1] +
@@ -243,7 +244,7 @@ export class Line {
         (t ** 3) * this.curveP3[1];
   }
 
-  inverseCurveYAt(t: number) {
+  public inverseCurveYAt(t: number): number {
     const one_minus_t = 1.0 - t;
 
     return (one_minus_t ** 3) * this.curveP0[1] +
@@ -254,7 +255,7 @@ export class Line {
 }
 
 export class SameLevelGroup {
-  constructor(
+  public constructor(
     public yCenter: number,
     public members: Individual[] = [],
     public startX = 0,
@@ -262,19 +263,19 @@ export class SameLevelGroup {
     public gapSize = 8
   ) {}
 
-  get width() {
+  public get width(): number {
     return Math.max(0, this.members.length * this.memberSize +
       (this.members.length - 1) * this.gapSize);
   }
 
-  get lastMember() {
+  public get lastMember(): Individual {
     if (this.members.length === 0) {
       return null;
     }
     return this.members[this.members.length - 1];
   }
 
-  get individualsWithPositions() {
+  public get individualsWithPositions(): IndividualWithPosition[] {
     const result: Array<IndividualWithPosition> = [];
 
     for (let i = 0; i < this.members.length; i++) {
@@ -287,17 +288,15 @@ export class SameLevelGroup {
     return result;
   }
 
-  private getXFromIndex(i: number) {
-    return this.startX + i * this.memberSize +
-      i * this.gapSize;
+  private getXFromIndex(i: number): number {
+    return this.startX + i * this.memberSize + i * this.gapSize;
   }
 
-  getXForMember(member: Individual) {
+  public getXForMember(member: Individual): number {
     const index = this.members.indexOf(member);
     if (index === -1) {
       return -1;
     }
     return this.getXFromIndex(index);
   }
-
 }

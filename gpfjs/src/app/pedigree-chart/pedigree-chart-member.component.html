@@ -1,81 +1,80 @@
 <svg:defs>
-     <marker id="arrowhead" markerWidth="7" markerHeight="5"
-     refX="7" refY="2.5" orient="auto">
-         <polygon points="0 0, 7 2.5, 0 5" />
-     </marker>
+  <marker id="arrowhead" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+    <polygon points="0 0, 7 2.5, 0 5" />
+  </marker>
 </svg:defs>
 
-<svg:rect *ngIf="pedigreeData.gender=='M'"
-     x=0
-     y=0
-     width=21
-     height=21
-     stroke-width="1"
-     fill-opacity="1"
-     [attr.stroke]="pedigreeData.generated ? pedigreeData.color : '#000000'"
-     [attr.fill]="pedigreeData.color"
-/>
+<svg:rect
+  *ngIf="pedigreeData.gender === 'M'"
+  x="0"
+  y="0"
+  width="21"
+  height="21"
+  stroke-width="1"
+  fill-opacity="1"
+  [attr.stroke]="pedigreeData.generated ? pedigreeData.color : '#000000'"
+  [attr.fill]="pedigreeData.color" />
 
-<svg:circle *ngIf="pedigreeData.gender=='F'"
-     cx=10.5
-     cy=10.5
-     r=10.5
-     stroke-width="1"
-     fill-opacity="1"
-     [attr.stroke]="pedigreeData.generated ? pedigreeData.color : '#000000'"
-     [attr.fill]="pedigreeData.color"
-/>
+<svg:circle
+  *ngIf="pedigreeData.gender === 'F'"
+  cx="10.5"
+  cy="10.5"
+  r="10.5"
+  stroke-width="1"
+  fill-opacity="1"
+  [attr.stroke]="pedigreeData.generated ? pedigreeData.color : '#000000'"
+  [attr.fill]="pedigreeData.color" />
 
-<svg:rect *ngIf="pedigreeData.gender=='U'"
-     x=3.0753787975412514
-     y=3.0753787975412514
-     width=14.849242404917497
-     height=14.849242404917497
-     stroke-width="1"
-     fill-opacity="1"
-     [attr.stroke]="pedigreeData.generated ? pedigreeData.color : '#000000'"
-     [attr.fill]="pedigreeData.color"
-     [attr.transform]="'rotate(45 10.5 10.5)'"
-/>
+<svg:rect
+  *ngIf="pedigreeData.gender === 'U'"
+  x="3.0753787975412514"
+  y="3.0753787975412514"
+  width="14.849242404917497"
+  height="14.849242404917497"
+  stroke-width="1"
+  fill-opacity="1"
+  [attr.stroke]="pedigreeData.generated ? pedigreeData.color : '#000000'"
+  [attr.fill]="pedigreeData.color"
+  [attr.transform]="'rotate(45 10.5 10.5)'" />
 
-<svg:line *ngIf="pedigreeData.gender=='M' && pedigreeData.role == 'prb'"
-     x1=-8
-     y1=29
-     x2=0
-     y2=21
-     stroke="#000"
-     stroke-width="1"
-     marker-end="url(#arrowhead)"
-/>
+<svg:line
+  *ngIf="pedigreeData.gender === 'M' && pedigreeData.role === 'prb'"
+  x1="-8"
+  y1="29"
+  x2="0"
+  y2="21"
+  stroke="#000"
+  stroke-width="1"
+  marker-end="url(#arrowhead)" />
 
-<svg:line *ngIf="pedigreeData.gender=='F' && pedigreeData.role == 'prb'"
-     x1=-5.075378798
-     y1=25.924621202
-     x2=3.075378798
-     y2=17.924621202
-     stroke="#000"
-     stroke-width="1"
-     marker-end="url(#arrowhead)"
-/>
+<svg:line
+  *ngIf="pedigreeData.gender === 'F' && pedigreeData.role === 'prb'"
+  x1="-5.075378798"
+  y1="25.924621202"
+  x2="3.075378798"
+  y2="17.924621202"
+  stroke="#000"
+  stroke-width="1"
+  marker-end="url(#arrowhead)" />
 
-<svg:line *ngIf="pedigreeData.gender=='U' && pedigreeData.role == 'prb'"
-     x1=-3
-     y1=24
-     x2=5
-     y2=16
-     stroke="#000"
-     stroke-width="1"
-     marker-end="url(#arrowhead)"
-/>
+<svg:line
+  *ngIf="pedigreeData.gender === 'U' && pedigreeData.role === 'prb'"
+  x1="-3"
+  y1="24"
+  x2="5"
+  y2="16"
+  stroke="#000"
+  stroke-width="1"
+  marker-end="url(#arrowhead)" />
 
 <svg:text *ngIf="pedigreeData.label" x="10.5" y="15" font-size="11.5" text-anchor="middle">
-     {{ pedigreeData.label }}
+  {{ pedigreeData.label }}
 </svg:text>
 
-<svg:g  *ngIf="pedigreeData.smallLabel">
-     <svg:text x="15.5" y="18" font-size="9" text-anchor="middle">
-          {{ pedigreeData.smallLabel }}
-     </svg:text>
-     <svg:line x1=10.5 y1=10.5 x2=21 y2=10.5 stroke="black" stroke-width="1" />
-     <svg:line x1=10.5 y1=10.5 x2=10.5 y2=21 stroke="black" stroke-width="1" />
+<svg:g *ngIf="pedigreeData.smallLabel">
+  <svg:text x="15.5" y="18" font-size="9" text-anchor="middle">
+    {{ pedigreeData.smallLabel }}
+  </svg:text>
+  <svg:line x1="10.5" y1="10.5" x2="21" y2="10.5" stroke="black" stroke-width="1" />
+  <svg:line x1="10.5" y1="10.5" x2="10.5" y2="21" stroke="black" stroke-width="1" />
 </svg:g>
