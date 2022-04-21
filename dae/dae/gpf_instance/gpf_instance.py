@@ -58,6 +58,8 @@ class GPFInstance(object):
 
         self.dae_config = dae_config
         self.dae_db_dir = work_dir
+        # self.__autism_gene_profile_config = None
+
         self.load_eagerly = load_eagerly
 
         if self.dae_config.grr:

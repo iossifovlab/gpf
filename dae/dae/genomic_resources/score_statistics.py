@@ -1,11 +1,17 @@
+"""Handling of genomic scores statistics
+
+Currently we support only genomic scores histograms.
+"""
+from __future__ import annotations
+
 import hashlib
 import os
-import numpy as np
 import logging
+from typing import Dict, Tuple, Any
+from copy import copy
 import yaml
 import pandas as pd
-from typing import Dict, Tuple
-from copy import copy
+import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm  # type: ignore
 from dask.distributed import as_completed  # type: ignore
@@ -16,6 +22,8 @@ logger = logging.getLogger(__name__)
 
 
 class Histogram:
+    """Class to represent a histogram"""
+
     def __init__(
         self, bins_count,
         x_min, x_max, x_scale, y_scale,
@@ -43,17 +51,17 @@ class Histogram:
                     bins_count
                 )])
         else:
-            assert False, f"unexpected xscale: {self.x_scale}"
+            raise ValueError(f"unexpected histogram xscale: {self.x_scale}")
 
-        assert self.y_scale in ("linear", "log"), \
-            f"unexpected yscale {self.y_scale}"
+        if self.y_scale not in ("linear", "log"):
+            raise ValueError(f"unexpected yscale {self.y_scale}")
 
         self.y_scale = y_scale
-
         self.bars = np.zeros(bins_count, dtype=np.int64)
 
     @staticmethod
-    def from_config(conf):
+    def from_config(conf: Dict[str, Any]) -> Histogram:
+        """Constructs a histogram from configuration dict"""
         return Histogram(
             conf["bins"],
             conf["min"],
@@ -64,6 +72,7 @@ class Histogram:
         )
 
     def to_dict(self):
+        """Builds dict representation of a histogram"""
         return {
             "bins_count": len(self.bins),
             "bins": self.bins.tolist(),
@@ -75,7 +84,8 @@ class Histogram:
         }
 
     @staticmethod
-    def from_dict(d):
+    def from_dict(d: Dict[str, Any]) -> Histogram:
+        """Creates a histogram from dict"""
         hist = Histogram(
             d["bins_count"], d["x_min"], d["x_max"],
             d["x_scale"], d["y_scale"]
@@ -87,7 +97,8 @@ class Histogram:
         return hist
 
     @staticmethod
-    def merge(hist1, hist2):
+    def merge(hist1: Histogram, hist2: Histogram) -> Histogram:
+        """Merges two histograms"""
         assert hist1.x_scale == hist2.x_scale
         assert hist1.x_min == hist2.x_min
         assert hist1.x_min_log == hist2.x_min_log
@@ -111,13 +122,17 @@ class Histogram:
         return result
 
     def add_value(self, value):
+        """Adds value to the histogram"""
         if value < self.x_min or value > self.x_max:
             logger.warning(
-                f"value {value} out of range: [{self.x_min},{self.x_max}]")
+                "value %s out of range: [%s, %s]",
+                value, self.x_min, self.x_max)
             return False
         index = self.bins.searchsorted(value, side='right')
         if index == 0:
-            logger.warning(f"(1) empty index {index} for value {value}")
+            logger.warning(
+                "(1) empty index %s for value %s",
+                index, value)
             return False
         if value == self.bins[-1]:
             self.bars[-1] += 1
@@ -128,6 +143,8 @@ class Histogram:
 
 
 class HistogramBuilder:
+    """Class to build genomic scores histograms for given resource"""
+
     def __init__(self, resource) -> None:
         self.resource = resource
 
@@ -316,8 +333,11 @@ class HistogramBuilder:
         hist_hashes = self._build_hashes()
 
         for score, histogram in histograms.items():
-            df = pd.DataFrame({'bars': histogram.bars,
-                               'bins': histogram.bins[:-1]})
+            bars = list(histogram.bars)
+            bars.append(np.nan)
+
+            df = pd.DataFrame({'bars': bars,
+                               'bins': histogram.bins})
             hist_file = os.path.join(out_dir, f"{score}.csv")
             with self.resource.open_raw_file(hist_file, "wt") as f:
                 df.to_csv(f, index=None)
