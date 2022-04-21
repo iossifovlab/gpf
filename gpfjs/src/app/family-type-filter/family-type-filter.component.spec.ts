@@ -2,7 +2,6 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NgxsModule } from '@ngxs/store';
 import { CheckboxListComponent, DisplayNamePipe } from 'app/checkbox-list/checkbox-list.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
-
 import { FamilyTypeFilterComponent } from './family-type-filter.component';
 
 describe('FamilyTypeFilterComponent', () => {
@@ -11,10 +10,9 @@ describe('FamilyTypeFilterComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ FamilyTypeFilterComponent, CheckboxListComponent, ErrorsAlertComponent, DisplayNamePipe ],
+      declarations: [FamilyTypeFilterComponent, CheckboxListComponent, ErrorsAlertComponent, DisplayNamePipe],
       imports: [NgxsModule.forRoot([], {developmentMode: true})]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
