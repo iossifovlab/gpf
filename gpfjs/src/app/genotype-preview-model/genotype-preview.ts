@@ -49,7 +49,8 @@ export class GenotypePreview {
 
   public static fromJson(row: Array<any>, columns: Array<string>): GenotypePreview {
     const result = new GenotypePreview();
-    for (let elem = 0; elem < row.length; elem++) {
+    // eslint-disable-next-line @typescript-eslint/no-for-in-array
+    for (const elem in row) {
       if (row.hasOwnProperty(elem)) {
         const mapper = KEY_TO_MAPPER.get(columns[elem]);
         const propertyValue = row[elem];
