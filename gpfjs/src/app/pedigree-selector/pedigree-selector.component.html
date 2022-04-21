@@ -1,18 +1,10 @@
-
-<div
-  *ngIf="pedigreeSelectorSwitch()"
-  class="pedigree-selector-card card">
-
-  <div
-    *ngIf="pedigreeSelectorSwitch() == 'single'"
-    class="card-header card-title">{{ selectedCollection?.name }}</div>
-  <div
-    *ngIf="pedigreeSelectorSwitch() == 'multi'"
-    class="card-header card-title">
+<div *ngIf="pedigreeSelectorSwitch()" class="pedigree-selector-card card">
+  <div *ngIf="pedigreeSelectorSwitch() === 'single'" class="card-header card-title">{{ selectedCollection?.name }}</div>
+  <div *ngIf="pedigreeSelectorSwitch() === 'multi'" class="card-header card-title">
     <div class="btn-group">
       <div class="dropdown">
         <button
-          style="font-weight: 500; padding: 0px; border: 0px;"
+          style="font-weight: 500; padding: 0px; border: 0px"
           class="btn btn-sm dropdown-toggle"
           type="button"
           id="pedigree-dropdown-menu-button"
@@ -21,13 +13,14 @@
           aria-expanded="false">
           <span>{{ selectedCollection?.name }}</span>
         </button>
-        <div
-          class="dropdown-menu"
-          aria-labelledby="pedigree-dropdown-menu-button">
-          <a *ngFor="let collection of collections; let i=index"
+        <div class="dropdown-menu" aria-labelledby="pedigree-dropdown-menu-button">
+          <a
+            *ngFor="let collection of collections; let i = index"
             class="dropdown-item"
             (click)="selectPedigreeClicked(i, $event)"
-            href="#">{{ collection.name }}</a>
+            href="#"
+            >{{ collection.name }}</a
+          >
         </div>
       </div>
     </div>
@@ -35,24 +28,18 @@
 
   <div class="card-block">
     <div class="btn-group btn-group-sm">
-      <button
-        (click)="selectAll()"
-        class="btn btn-default">All</button>
-      <button
-        (click)="selectNone()"
-        class="btn btn-default">None</button>
+      <button (click)="selectAll()" class="btn btn-default">All</button>
+      <button (click)="selectNone()" class="btn btn-default">None</button>
     </div>
-    <div
-      *ngFor="let selectorValue of selectedCollection?.domain"
-      class="checkbox">
+    <div *ngFor="let selectorValue of selectedCollection?.domain" class="checkbox">
       <label>
         <input
           #checkbox
           type="checkbox"
           [checked]="selectedValues.has(selectorValue.id)"
-          (change)="pedigreeCheckValue(selectorValue, checkbox.checked)">
-          <span class="pedigree-icon" [style.background-color]="selectorValue.color"></span>
-          <span>{{ selectorValue.name }}</span>
+          (change)="pedigreeCheckValue(selectorValue, checkbox.checked)" />
+        <span class="pedigree-icon" [style.background-color]="selectorValue.color"></span>
+        <span>{{ selectorValue.name }}</span>
       </label>
     </div>
   </div>
