@@ -2,18 +2,18 @@ import { Injectable } from '@angular/core';
 import { State, Action, StateContext } from '@ngxs/store';
 
 export class AddGender {
-  static readonly type = '[Genotype] Add Gender';
-  constructor(public gender: string) {}
+  public static readonly type = '[Genotype] Add Gender';
+  public constructor(public gender: string) {}
 }
 
 export class RemoveGender {
-  static readonly type = '[Genotype] Remove Gender';
-  constructor(public gender: string) {}
+  public static readonly type = '[Genotype] Remove Gender';
+  public constructor(public gender: string) {}
 }
 
 export class SetGender {
-  static readonly type = '[Genotype] Set Gender';
-  constructor(public gender: string[]) {}
+  public static readonly type = '[Genotype] Set Gender';
+  public constructor(public gender: string[]) {}
 }
 
 export interface GenderModel {
@@ -29,7 +29,7 @@ export interface GenderModel {
 @Injectable()
 export class GenderState {
   @Action(AddGender)
-  addGender(ctx: StateContext<GenderModel>, action: AddGender) {
+  public addGender(ctx: StateContext<GenderModel>, action: AddGender): void {
     const state = ctx.getState();
     ctx.patchState({
       genders: [...state.genders, action.gender]
@@ -37,7 +37,7 @@ export class GenderState {
   }
 
   @Action(RemoveGender)
-  removeGender(ctx: StateContext<GenderModel>, action: RemoveGender) {
+  public removeGender(ctx: StateContext<GenderModel>, action: RemoveGender): void {
     const state = ctx.getState();
     ctx.patchState({
       genders: state.genders.filter(gender => gender !== action.gender)
@@ -45,7 +45,7 @@ export class GenderState {
   }
 
   @Action(SetGender)
-  setEffectTypes(ctx: StateContext<GenderModel>, action: SetGender) {
+  public setGender(ctx: StateContext<GenderModel>, action: SetGender): void {
     ctx.patchState({
       genders: Array.from(action.gender)
     });

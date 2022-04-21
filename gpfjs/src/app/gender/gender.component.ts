@@ -1,7 +1,7 @@
 import { Gender } from './gender';
 import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngxs/store';
-import { AddGender, GenderState, RemoveGender } from './gender.state';
+import { AddGender, GenderModel, GenderState, RemoveGender } from './gender.state';
 import { StatefulComponent } from 'app/common/stateful-component';
 import { ValidateNested } from 'class-validator';
 
@@ -11,18 +11,17 @@ import { ValidateNested } from 'class-validator';
   styleUrls: ['./gender.component.css'],
 })
 export class GenderComponent extends StatefulComponent implements OnInit {
-
   @ValidateNested()
-  gender = new Gender();
-  supportedGenders = ['male', 'female', 'unspecified'];
+  public gender = new Gender();
+  public supportedGenders = ['male', 'female', 'unspecified'];
 
-  constructor(protected store: Store) {
+  public constructor(protected store: Store) {
     super(store, GenderState, 'gender');
   }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     super.ngOnInit();
-    this.store.selectOnce(state => state.genderState).subscribe(state => {
+    this.store.selectOnce(state => (state.genderState as GenderModel)).subscribe(state => {
       if (state.genders) {
         this.selectNone();
         for (const gender of state.genders) {
@@ -32,21 +31,21 @@ export class GenderComponent extends StatefulComponent implements OnInit {
     });
   }
 
-  selectAll() {
+  public selectAll(): void {
     for (const gender of this.supportedGenders) {
       this.gender[gender] = true;
       this.store.dispatch(new AddGender(gender));
     }
   }
 
-  selectNone() {
+  public selectNone(): void {
     for (const gender of this.supportedGenders) {
       this.gender[gender] = false;
       this.store.dispatch(new RemoveGender(gender));
     }
   }
 
-  genderCheckValue(gender: string, value: boolean): void {
+  public genderCheckValue(gender: string, value: boolean): void {
     this.gender[gender] = value;
 
     if (value) {

@@ -1,25 +1,25 @@
 .gender-icon {
-    margin-top: 0px;
-    margin-bottom: -2px;
-    margin-left: 7px;
-    background-color: white;
-    border: 1px solid black;
-    width: 18px;
-    height: 18px;
-    display: inline-block;
+  margin-top: 0;
+  margin-bottom: -2px;
+  margin-left: 7px;
+  background-color: white;
+  border: 1px solid black;
+  width: 18px;
+  height: 18px;
+  display: inline-block;
 }
 
 .gender-icon.male {
-    border-radius: 0px;
+  border-radius: 0;
 }
 
 .gender-icon.female {
-    border-radius: 40px;
+  border-radius: 40px;
 }
 
 .gender-icon.unspecified {
-    border-radius: 0px;
-    -ms-transform: rotate(45deg);
-    -webkit-transform: rotate(45deg);
-    transform: rotate(45deg);
+  border-radius: 0;
+  -ms-transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+  transform: rotate(45deg);
 }
