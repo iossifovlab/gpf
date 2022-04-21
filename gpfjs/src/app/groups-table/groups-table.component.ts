@@ -11,15 +11,13 @@ import { UsersGroupsService } from '../users-groups/users-groups.service';
   styleUrls: ['./groups-table.component.css']
 })
 export class GroupsTableComponent implements OnInit {
-
-  constructor(
+  public constructor(
     private usersGroupsService: UsersGroupsService
   ) { }
 
-  groups$: Observable<UserGroup[]>;
+  public groups$: Observable<UserGroup[]>;
 
-  ngOnInit() {
+  public ngOnInit(): void {
     this.groups$ = this.usersGroupsService.getAllGroups();
   }
-
 }
