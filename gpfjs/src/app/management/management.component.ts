@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 import { UsersService } from '../users/users.service';
 
@@ -9,28 +10,27 @@ import { UsersService } from '../users/users.service';
   styleUrls: ['./management.component.css']
 })
 export class ManagementComponent implements OnInit, OnDestroy {
-  private subscription;
+  private subscription: Subscription;
 
-  constructor(
+  public constructor(
     private router: Router,
     private usersService: UsersService
   ) { }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     this.subscription = this.usersService.getUserInfoObservable()
       .subscribe(userInfo => this.checkUserInfo(userInfo));
   }
 
-  ngOnDestroy() {
+  public ngOnDestroy(): void {
     if (this.subscription) {
       this.subscription.unsubscribe();
     }
   }
 
-  checkUserInfo(value) {
+  public checkUserInfo(value): void {
     if (!value || !value.isAdministrator) {
       this.router.navigate(['/']);
     }
   }
-
 }

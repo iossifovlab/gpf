@@ -16,8 +16,7 @@ describe('ManagementComponent', () => {
       declarations: [ManagementComponent],
       providers: [UsersService, ConfigService],
       imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
