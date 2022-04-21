@@ -7,22 +7,23 @@ import { MeasuresService } from 'app/measures/measures.service';
 import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
 import { UsersService } from 'app/users/users.service';
 import { MultiContinuousFilterComponent } from './multi-continuous-filter.component';
-import { Component, Input, Output } from '@angular/core';
-import { of } from 'rxjs';
+import { Component, Input } from '@angular/core';
+import { Observable, of } from 'rxjs';
 import { NgxsModule } from '@ngxs/store';
 import { FormsModule } from '@angular/forms';
+import { PhenoMeasure } from 'app/pheno-browser/pheno-browser';
 
 @Component({
   selector: 'gpf-searchable-select',
   template: ''
 })
 export class SearchableSelectMockComponent {
-  @Input() data;
-  @Input() caption;
+  @Input() public data;
+  @Input() public caption;
 }
 
 const SelectionMock = {
-  isEmpty() { return true; }
+  isEmpty: (): boolean => true,
 };
 
 const ContinuousFilterStateMock = {
@@ -33,7 +34,7 @@ const ContinuousFilterStateMock = {
   source: '',
   sourceType: '',
   selection: SelectionMock,
-  isEmpty() { return true; },
+  isEmpty: (): boolean => true,
   min: 0,
   max: 0,
   domainMin: 0,
@@ -70,7 +71,7 @@ describe('MultiContinuousFilterComponent', () => {
       ],
       providers: [
         MultiContinuousFilterComponent,
-        {provide: MeasuresService, useValue: {getContinuousMeasures: () => of([])}},
+        {provide: MeasuresService, useValue: {getContinuousMeasures: (): Observable<PhenoMeasure[]> => of()}},
         HttpClientTestingModule,
         ConfigService,
         {provide: DatasetsService, useValue: mockDatasetsService},
@@ -81,8 +82,7 @@ describe('MultiContinuousFilterComponent', () => {
         NgxsModule.forRoot([], {developmentMode: true}),
         FormsModule
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
