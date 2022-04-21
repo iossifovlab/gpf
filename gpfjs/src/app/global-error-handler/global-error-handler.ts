@@ -5,19 +5,22 @@ import { environment } from '../../environments/environment';
 
 @Injectable()
 export class GlobalErrorHandler implements ErrorHandler {
-  constructor(
+  public constructor(
     private injector: Injector,
   ) { }
 
-  modalService: NgbModal;
+  private modalService: NgbModal;
 
-  handleError(error: any): void {
+  public handleError(error): void {
     console.error(error);
 
     if (!environment.production) {
       this.modalService = this.injector.get(NgbModal);
       if (!this.modalService.hasOpenModals()) {
-        this.modalService.open(GlobalErrorDisplayComponent, {centered: true, size: 'sm', windowClass: 'global-error-modal'});
+        this.modalService.open(
+          GlobalErrorDisplayComponent,
+          {centered: true, size: 'sm', windowClass: 'global-error-modal'}
+        );
       }
     }
   }

@@ -7,9 +7,9 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
   styleUrls: ['./global-error-display.component.css']
 })
 export class GlobalErrorDisplayComponent {
-  constructor(private activeModal: NgbActiveModal) { }
+  public constructor(private activeModal: NgbActiveModal) { }
 
-  closeModal(): void {
+  public closeModal(): void {
     this.activeModal.close();
   }
 }
