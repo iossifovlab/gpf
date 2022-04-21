@@ -19,55 +19,57 @@ import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
   styleUrls: ['./enrichment-tool.component.css'],
 })
 export class EnrichmentToolComponent implements OnInit {
-  enrichmentResults: EnrichmentResults;
-  selectedDataset: Dataset;
+  public enrichmentResults: EnrichmentResults;
+  public selectedDataset: Dataset;
   public disableQueryButtons = false;
 
-  @Select(EnrichmentToolComponent.enrichmentToolStateSelector) state$: Observable<any[]>;
-  @Select(ErrorsState) errorsState$: Observable<ErrorsModel>;
+  @Select(EnrichmentToolComponent.enrichmentToolStateSelector) public state$: Observable<object[]>;
+  @Select(ErrorsState) public errorsState$: Observable<ErrorsModel>;
   private enrichmentToolState = {};
 
-  constructor(
+  public constructor(
     private enrichmentQueryService: EnrichmentQueryService,
     private loadingService: FullscreenLoadingService,
     private route: ActivatedRoute,
     private datasetsService: DatasetsService,
   ) { }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
     this.state$.subscribe(state => {
       this.enrichmentToolState = {
-        'datasetId': this.selectedDataset.id,
+        datasetId: this.selectedDataset.id,
         ...state
       };
       this.enrichmentResults = null;
     });
 
     this.errorsState$.subscribe(state => {
-      setTimeout(() => this.disableQueryButtons = state.componentErrors.size > 0);
+      setTimeout(() => {
+        this.disableQueryButtons = state.componentErrors.size > 0;
+      });
     });
   }
 
   @Selector([GenesBlockComponent.genesBlockState, EnrichmentModelsState])
-  static enrichmentToolStateSelector(genesBlockState: object, enrichmentModelsState: object) {
+  public static enrichmentToolStateSelector(genesBlockState: object, enrichmentModelsState: object): object {
     return {
       ...genesBlockState, ...enrichmentModelsState,
     };
   }
 
-  submitQuery() {
+  public submitQuery(): void {
     this.loadingService.setLoadingStart();
     this.enrichmentQueryService.getEnrichmentTest(this.enrichmentToolState).subscribe(
       (enrichmentResults) => {
         this.enrichmentResults = enrichmentResults;
         this.loadingService.setLoadingStop();
       },
-      error => {
+      () => {
         this.loadingService.setLoadingStop();
       },
       () => {
         this.loadingService.setLoadingStop();
-    });
+      });
   }
 }
