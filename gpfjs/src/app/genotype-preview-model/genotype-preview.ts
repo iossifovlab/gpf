@@ -1,16 +1,15 @@
 export class PedigreeData {
-
-  static parsePosition(position: string) {
-    if (position != null) {
-        const layout = position.split(':');
-        const coordinates = layout[layout.length - 1];
-        const result = coordinates.split(',').map(x => parseFloat(x));
-        return result as [number, number];
+  public static parsePosition(position: string): [number, number] {
+    if (position !== null) {
+      const layout = position.split(':');
+      const coordinates = layout[layout.length - 1];
+      const result = coordinates.split(',').map(x => parseFloat(x));
+      return result as [number, number];
     }
     return null;
   }
 
-  static fromArray(arr: Array<any>): PedigreeData {
+  public static fromArray(arr: Array<any>): PedigreeData {
     return new PedigreeData(
       arr[0],
       arr[1],
@@ -26,20 +25,19 @@ export class PedigreeData {
     );
   }
 
-  constructor(
-    readonly pedigreeIdentifier: string,
-    readonly id: string,
-    readonly mother: string,
-    readonly father: string,
-    readonly gender: string,
-    readonly role: string,
-    readonly color: string,
-    readonly position: [number, number],
-    readonly generated: boolean,
-    readonly label: string,
-    readonly smallLabel: string
+  public constructor(
+    public readonly pedigreeIdentifier: string,
+    public readonly id: string,
+    public readonly mother: string,
+    public readonly father: string,
+    public readonly gender: string,
+    public readonly role: string,
+    public readonly color: string,
+    public readonly position: [number, number],
+    public readonly generated: boolean,
+    public readonly label: string,
+    public readonly smallLabel: string
   ) { }
-
 }
 
 const KEY_TO_MAPPER: Map<string, any> = new Map([
@@ -47,11 +45,11 @@ const KEY_TO_MAPPER: Map<string, any> = new Map([
 ]);
 
 export class GenotypePreview {
-  data: any = new Map<string, any>();
+  public data = new Map<string, any>();
 
-  static fromJson(row: Array<any>, columns: Array<string>): GenotypePreview {
+  public static fromJson(row: Array<any>, columns: Array<string>): GenotypePreview {
     const result = new GenotypePreview();
-    for (const elem in row) {
+    for (let elem = 0; elem < row.length; elem++) {
       if (row.hasOwnProperty(elem)) {
         const mapper = KEY_TO_MAPPER.get(columns[elem]);
         const propertyValue = row[elem];
@@ -66,25 +64,24 @@ export class GenotypePreview {
     return result;
   }
 
-  get(key: string): any {
+  public get(key: string) {
     return this.data.get(key);
   }
-
 }
 
 export class GenotypePreviewVariantsArray {
-  genotypePreviews: GenotypePreview[] = [];
+  public genotypePreviews: GenotypePreview[] = [];
 
-  constructor() { }
+  public constructor() { }
 
-  addPreviewVariant(row: Array<string>, column_ids: Array<string>) {
-    const genotypePreview = GenotypePreview.fromJson(row, column_ids);
+  public addPreviewVariant(row: Array<string>, columnIds: Array<string>): void {
+    const genotypePreview = GenotypePreview.fromJson(row, columnIds);
     if (genotypePreview.data.size) {
       this.genotypePreviews.push(genotypePreview);
     }
   }
 
-  getVariantsCount(maxVariantsCount: number) {
+  public getVariantsCount(maxVariantsCount: number): string {
     let variantsCount: string;
 
     if (this.genotypePreviews.length > maxVariantsCount) {
@@ -98,7 +95,7 @@ export class GenotypePreviewVariantsArray {
     return variantsCount;
   }
 
-  setGenotypePreviews(genotypePreviews: GenotypePreview[]) {
+  public setGenotypePreviews(genotypePreviews: GenotypePreview[]): void {
     this.genotypePreviews = genotypePreviews;
   }
 }
