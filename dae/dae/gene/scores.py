@@ -1,6 +1,6 @@
 import os
-import pandas as pd
 import logging
+import pandas as pd
 
 from dae.file_cache.cache import ResourceFileCache
 
@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class GenomicScore:
+    """Genomic scores histograms"""
     def __init__(self, resource, score_id, file_cache):
 
         self.resource = resource
@@ -67,6 +68,7 @@ class GenomicScore:
 
 
 class GenomicScoresDB:
+    """Genomic scores DB allowing access to gnomic scores histograms"""
     def __init__(self, grr, scores, cache_dir=None):
         self.grr = grr
         if cache_dir is None:
@@ -79,6 +81,10 @@ class GenomicScoresDB:
         self.scores = {}
         for resource_id, score_id in scores:
             resource = self.grr.get_resource(resource_id)
+            if resource is None:
+                logger.error(
+                    "unable to find resource %s in GRR", resource_id)
+                continue
             try:
                 score = GenomicScore(
                     resource, score_id, self.file_cache
@@ -86,16 +92,15 @@ class GenomicScoresDB:
                 self.scores[score_id] = score
             except KeyError as err:
                 logger.error(
-                    f"Failed to load histogram of {resource_id}"
-                    f"\nCouldn't find key {err}"
-                )
+                    "Failed to load histogram of %s; "
+                    "Couldn't find key %s", resource_id, err)
             except AssertionError as err:
                 logger.error(
-                    f"Incorrect configuration of {resource_id} "
-                    f"histogram resource\n{err}"
-                )
+                    "Incorrect configuration of %s; "
+                    "histogram resource: %s", resource_id, err)
 
     def get_scores(self):
+        "Returns all genomic scores histograms"
         result = []
 
         for score in self.scores.values():

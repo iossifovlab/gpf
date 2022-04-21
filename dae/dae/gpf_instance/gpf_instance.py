@@ -122,6 +122,7 @@ class GPFInstance(object):
     @property  # type: ignore
     @cached
     def genomic_scores_db(self):
+        "Loads genomic scores db"
         scores = []
         if self.dae_config.genomic_scores_db is not None:
             for score_def in self.dae_config.genomic_scores_db:
