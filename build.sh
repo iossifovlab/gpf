@@ -270,12 +270,12 @@ EOT'
     build_run_ctx_init "container" "${gpf_dev_image_ref}"
     defer_ret build_run_ctx_reset
 
-    build_run_container bash -c '
+    build_run_container bash -c "
       cd /wd; 
       flake8 --format=pylint --max-complexity 15 \
-        --inline-quotes 'double' --docstring-quotes '"""' --multiline-quotes '"""' \
+        --inline-quotes 'double' --docstring-quotes 'double' --multiline-quotes 'double' \
         --output-file=/wd/results/flake8_report \
-        --exclude "*old*,*tmp*,*temp*,data-hg19*,gpf*,*build*" . || true'
+        --exclude '*old*,*tmp*,*temp*,data-hg19*,gpf*,*build*' . || true"
 
     build_run_local cp ./results/flake8_report ./test-results/
   }
