@@ -1,8 +1,8 @@
 import { Component, Input, ViewChild, AfterViewInit } from '@angular/core';
 import { Store, Selector } from '@ngxs/store';
 import { GeneSymbolsState, GeneSymbolsModel } from 'app/gene-symbols/gene-symbols.state';
-import { GeneSetsState, GeneSetsModel } from 'app/gene-sets/gene-sets.state';
-import { GeneWeightsState, GeneWeightsModel } from 'app/gene-weights/gene-weights.state';
+import { GeneSetsState } from 'app/gene-sets/gene-sets.state';
+import { GeneWeightsState } from 'app/gene-weights/gene-weights.state';
 import { StateReset } from 'ngxs-reset-plugin';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 
@@ -12,12 +12,27 @@ import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
   styleUrls: ['./genes-block.component.css'],
 })
 export class GenesBlockComponent implements AfterViewInit {
-  @Input() showAllTab = true;
-  @ViewChild('nav') ngbNav: NgbNav;
+  @Input() public showAllTab = true;
+  @ViewChild('nav') public ngbNav: NgbNav;
 
-  constructor(private store: Store) { }
+  @Selector([GeneSymbolsState, GeneSetsState.queryStateSelector, GeneWeightsState.queryStateSelector])
+  public static genesBlockState(geneSymbolsState: GeneSymbolsModel, geneSetsQueryState, geneWeightsState): object {
+    let result = {};
+    if (geneSymbolsState.geneSymbols.length) {
+      result['geneSymbols'] = geneSymbolsState.geneSymbols;
+    }
+    if (geneSetsQueryState) {
+      result = {...result, ...geneSetsQueryState} as object;
+    }
+    if (geneWeightsState) {
+      result = {...result, ...geneWeightsState} as object;
+    }
+    return result;
+  }
 
-  ngAfterViewInit() {
+  public constructor(private store: Store) { }
+
+  public ngAfterViewInit(): void {
     this.store.selectOnce(GenesBlockComponent.genesBlockState).subscribe(state => {
       if (state['geneSymbols']) {
         setTimeout(() => this.ngbNav.select('geneSymbols'));
@@ -29,24 +44,7 @@ export class GenesBlockComponent implements AfterViewInit {
     });
   }
 
-  onNavChange() {
+  public onNavChange(): void {
     this.store.dispatch(new StateReset(GeneSymbolsState, GeneSetsState, GeneWeightsState));
-  }
-
-  @Selector([GeneSymbolsState, GeneSetsState.queryStateSelector, GeneWeightsState.queryStateSelector])
-  static genesBlockState(
-    geneSymbolsState: GeneSymbolsModel, geneSetsQueryState, geneWeightsState,
-  ) {
-    let result = {};
-    if (geneSymbolsState.geneSymbols.length) {
-      result['geneSymbols'] = geneSymbolsState.geneSymbols;
-    }
-    if (geneSetsQueryState) {
-      result = {...result, ...geneSetsQueryState};
-    }
-    if (geneWeightsState) {
-      result = {...result, ...geneWeightsState};
-    }
-    return result;
   }
 }

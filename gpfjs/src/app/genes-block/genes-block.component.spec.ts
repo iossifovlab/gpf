@@ -17,8 +17,7 @@ describe('GenesBlockComponent', () => {
     TestBed.configureTestingModule({
       declarations: [GeneSymbolsComponent, GenesBlockComponent],
       imports: [NgbModule, NgxsModule.forRoot([GeneSymbolsState], {developmentMode: true}), FormsModule],
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
