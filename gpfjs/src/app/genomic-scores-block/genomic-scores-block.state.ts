@@ -2,8 +2,10 @@ import { Injectable } from '@angular/core';
 import { State, Action, StateContext } from '@ngxs/store';
 
 export class SetGenomicScores {
-  static readonly type = '[Genotype] Set genomicScores values';
-  constructor(public genomicScores: object[]) {}
+  public static readonly type = '[Genotype] Set genomicScores values';
+  public constructor(
+    public genomicScores: object[]
+  ) {}
 }
 
 export interface GenomicScoresBlockModel {
@@ -19,7 +21,7 @@ export interface GenomicScoresBlockModel {
 @Injectable()
 export class GenomicScoresBlockState {
   @Action(SetGenomicScores)
-  setGenomicScores(ctx: StateContext<GenomicScoresBlockModel>, action: SetGenomicScores) {
+  public setGenomicScores(ctx: StateContext<GenomicScoresBlockModel>, action: SetGenomicScores): void {
     ctx.patchState({
       genomicScores: [...action.genomicScores]
     });

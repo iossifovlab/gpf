@@ -1,7 +1,7 @@
 export class GenomicScores {
-  readonly logScaleX: boolean;
-  readonly logScaleY: boolean;
-  static fromJson(json: any): GenomicScores {
+  public readonly logScaleX: boolean;
+  public readonly logScaleY: boolean;
+  public static fromJson(json): GenomicScores {
     return new GenomicScores(
       json['bars'],
       json['score'],
@@ -14,19 +14,19 @@ export class GenomicScores {
     );
   }
 
-  static fromJsonArray(jsonArray: Array<Object>): Array<GenomicScores> {
+  public static fromJsonArray(jsonArray: Array<object>): Array<GenomicScores> {
     return jsonArray.map((json) => GenomicScores.fromJson(json));
   }
 
-  constructor(
-    readonly bars: number[],
-    readonly score: string,
-    readonly bins: number[],
-    readonly domain: number[],
-    readonly desc: string,
-    readonly help: string,
+  public constructor(
+    public readonly bars: number[],
+    public readonly score: string,
+    public readonly bins: number[],
+    public readonly domain: number[],
+    public readonly desc: string,
+    public readonly help: string,
     xScale: string,
-    yScale:  string
+    yScale: string
   ) {
     this.logScaleX = xScale === 'log';
     this.logScaleY = yScale === 'log';

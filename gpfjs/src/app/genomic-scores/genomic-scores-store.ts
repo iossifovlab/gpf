@@ -5,15 +5,14 @@ import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
 import { GenomicScores } from '../genomic-scores-block/genomic-scores-block';
 
 export class GenomicScoreState {
-  @IsNotEmpty()
-  score: GenomicScores;
+  @IsNotEmpty() public score: GenomicScores;
 
   @ValidateIf(o => o.rangeStart !== null)
   @IsNumber()
   @IsLessThanOrEqual('rangeEnd')
   @IsMoreThanOrEqual('domainMin')
   @IsLessThanOrEqual('domainMax')
-  rangeStart: number;
+    rangeStart: number;
 
 
   @ValidateIf(o => o.rangeEnd !== null)
@@ -23,10 +22,10 @@ export class GenomicScoreState {
   @IsLessThanOrEqual('domainMax')
   rangeEnd: number;
 
-  domainMin: any;
-  domainMax: any;
+  public domainMin: any;
+  public domainMax: any;
 
-  changeDomain(score: GenomicScores) {
+  public changeDomain(score: GenomicScores): void {
     if (this.score.domain != null) {
       this.domainMin = score.domain[0];
       this.domainMax = score.domain[1];
@@ -36,7 +35,7 @@ export class GenomicScoreState {
     }
   }
 
-  constructor(score?: GenomicScores) {
+  public constructor(score?: GenomicScores) {
     if (score) {
       this.score = score;
       this.changeDomain(score);
@@ -52,5 +51,5 @@ export class GenomicScoresState {
   @ValidateNested({
     each: true
   })
-  genomicScoresState: GenomicScoreState[] = [];
+  public genomicScoresState: GenomicScoreState[] = [];
 }

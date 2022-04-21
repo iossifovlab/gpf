@@ -28,19 +28,10 @@ const GENOMIC_SCORES_OBJECTS: GenomicScores[] = [GenomicScores.fromJson({
 })];
 
 class MockGenomicScoresBlockService {
-
-  getGenomicScores(): Observable<GenomicScores[]> {
+  public getGenomicScores(): Observable<GenomicScores[]> {
     return of(GENOMIC_SCORES_OBJECTS);
   }
 }
-
-const STATE_RESTORE_OBJECT: any = {
-  genomicScores: [{
-    metric: 'GenomicScores',
-    rangeStart: 2,
-    rangeEnd: 2
-  }]
-};
 
 describe('GenomicScoresBlockComponent', () => {
   let component: GenomicScoresBlockComponent;
@@ -67,8 +58,7 @@ describe('GenomicScoresBlockComponent', () => {
       providers: [
         { provide: GenomicScoresBlockService, useClass: MockGenomicScoresBlockService },
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

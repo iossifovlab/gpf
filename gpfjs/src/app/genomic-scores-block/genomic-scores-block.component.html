@@ -4,19 +4,16 @@
       <div class="nav-title-custom">Genomic scores</div>
       <li ngbNavItem>
         <a ngbNavLink>
-          <gpf-add-button
-            (addFilter)="addFilter($event)">
-          </gpf-add-button>
+          <gpf-add-button (addFilter)="addFilter($event)"></gpf-add-button>
         </a>
       </li>
     </ul>
     <div class="card-block">
-      <div style="padding: 5px" *ngFor="let score of genomicScoresState.genomicScoresState; trackBy: trackById; let i = index">
+      <div
+        style="padding: 5px"
+        *ngFor="let score of genomicScoresState.genomicScoresState; trackBy: trackById; let i = index">
         <span style="padding: 5px; display: block; overflow: hidden">
-          <gpf-remove-button
-            [field]="score"
-            (removeFilter)="removeFilter($event)">
-          </gpf-remove-button>
+          <gpf-remove-button [field]="score" (removeFilter)="removeFilter($event)"> </gpf-remove-button>
           <gpf-genomic-scores
             [genomicScoreState]="score"
             [errors]="errors"

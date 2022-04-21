@@ -11,17 +11,15 @@ import { map } from 'rxjs/operators';
 export class GenomicScoresBlockService {
   private readonly genomicScoresUrl = 'genomic_scores';
 
-  constructor(
+  public constructor(
     private http: HttpClient,
     private config: ConfigService
   ) {}
 
-  getGenomicScores(): Observable<GenomicScores[]> {
+  public getGenomicScores(): Observable<GenomicScores[]> {
     return this.http
       .get(this.config.baseUrl + this.genomicScoresUrl).pipe(
-        map((res: any) => {
-          return GenomicScores.fromJsonArray(res);
-        })
+        map((res: object[]) => GenomicScores.fromJsonArray(res))
       );
   }
 }
