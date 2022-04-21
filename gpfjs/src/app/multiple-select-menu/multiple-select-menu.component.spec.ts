@@ -10,8 +10,7 @@ describe('MultipleSelectMenuComponent', () => {
     TestBed.configureTestingModule({
       declarations: [MultipleSelectMenuComponent],
       imports: [FormsModule]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
