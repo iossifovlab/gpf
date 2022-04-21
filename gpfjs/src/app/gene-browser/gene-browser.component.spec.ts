@@ -69,7 +69,9 @@ describe('GeneBrowserComponent', () => {
         {provide: DatasetsService, useValue: mockDatasetsService},
       ],
       imports: [
-        HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([GeneSymbolsState], {developmentMode: true}), NgbModule, FormsModule
+        HttpClientTestingModule, RouterTestingModule,
+        NgxsModule.forRoot([GeneSymbolsState], {developmentMode: true}),
+        NgbModule, FormsModule
       ],
     }).compileComponents();
   });
